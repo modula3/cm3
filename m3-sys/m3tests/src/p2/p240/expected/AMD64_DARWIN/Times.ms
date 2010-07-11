@@ -1,809 +1,28 @@
 	.text
-.globl _Times__uTimes_var_u16_u16
-	.private_extern _Times__uTimes_var_u16_u16
-_Times__uTimes_var_u16_u16:
+.globl _Times__uTimes_var_i64_i64
+	.private_extern _Times__uTimes_var_i64_i64
+_Times__uTimes_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_u16
-	.private_extern _Times__Times_var_u16_u16
-_Times__Times_var_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L4
-	cmpq	$32767, -16(%rbp)
-	jle	L5
-L4:
-	movl	$1761, %edi
-	call	__m3_fault
-L5:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_u16
-	.private_extern _Times__uTimes_param_u16_u16
-_Times__uTimes_param_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rdx
-	movswq	-20(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_u16
-	.private_extern _Times__Times_param_u16_u16
-_Times__Times_param_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
-	movswq	-20(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L10
-	cmpq	$32767, -16(%rbp)
-	jle	L11
-L10:
-	movl	$1825, %edi
-	call	__m3_fault
-L11:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_u64
-	.private_extern _Times__uTimes_var_u16_u64
-_Times__uTimes_var_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_u64
-	.private_extern _Times__Times_var_u16_u64
-_Times__Times_var_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_u64
-	.private_extern _Times__uTimes_param_u16_u64
-_Times__uTimes_param_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_u64
-	.private_extern _Times__Times_param_u16_u64
-_Times__Times_param_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_LC
-	.private_extern _Times__uTimes_var_u16_LC
-_Times__uTimes_var_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_LC
-	.private_extern _Times__Times_var_u16_LC
-_Times__Times_var_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_LC
-	.private_extern _Times__uTimes_param_u16_LC
-_Times__uTimes_param_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_LC
-	.private_extern _Times__Times_param_u16_LC
-_Times__Times_param_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_i16
-	.private_extern _Times__uTimes_var_u16_i16
-_Times__uTimes_var_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_i16
-	.private_extern _Times__Times_var_u16_i16
-_Times__Times_var_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L32
-	cmpq	$32767, -16(%rbp)
-	jle	L33
-L32:
-	movl	$2145, %edi
-	call	__m3_fault
-L33:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_i16
-	.private_extern _Times__uTimes_param_u16_i16
-_Times__uTimes_param_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rdx
-	movzwl	-20(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_i16
-	.private_extern _Times__Times_param_u16_i16
-_Times__Times_param_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
-	movzwl	-20(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L38
-	cmpq	$32767, -16(%rbp)
-	jle	L39
-L38:
-	movl	$2209, %edi
-	call	__m3_fault
-L39:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_i32
-	.private_extern _Times__uTimes_var_u16_i32
-_Times__uTimes_var_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_i32
-	.private_extern _Times__Times_var_u16_i32
-_Times__Times_var_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L44
-	cmpq	$32767, -16(%rbp)
-	jle	L45
-L44:
-	movl	$2273, %edi
-	call	__m3_fault
-L45:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_i32
-	.private_extern _Times__uTimes_param_u16_i32
-_Times__uTimes_param_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rdx
-	mov	-24(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_i32
-	.private_extern _Times__Times_param_u16_i32
-_Times__Times_param_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rax
-	mov	-24(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L50
-	cmpq	$32767, -16(%rbp)
-	jle	L51
-L50:
-	movl	$2337, %edi
-	call	__m3_fault
-L51:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_I
-	.private_extern _Times__uTimes_var_u16_I
-_Times__uTimes_var_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_I
-	.private_extern _Times__Times_var_u16_I
-_Times__Times_var_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L56
-	cmpq	$32767, -16(%rbp)
-	jle	L57
-L56:
-	movl	$2401, %edi
-	call	__m3_fault
-L57:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_I
-	.private_extern _Times__uTimes_param_u16_I
-_Times__uTimes_param_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_I
-	.private_extern _Times__Times_param_u16_I
-_Times__Times_param_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L62
-	cmpq	$32767, -16(%rbp)
-	jle	L63
-L62:
-	movl	$2465, %edi
-	call	__m3_fault
-L63:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_i64
-	.private_extern _Times__uTimes_var_u16_i64
-_Times__uTimes_var_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_i64
-	.private_extern _Times__Times_var_u16_i64
-_Times__Times_var_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_i64
-	.private_extern _Times__uTimes_param_u16_i64
-_Times__uTimes_param_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_i64
-	.private_extern _Times__Times_param_u16_i64
-_Times__Times_param_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_C
-	.private_extern _Times__uTimes_var_u16_C
-_Times__uTimes_var_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_C
-	.private_extern _Times__Times_var_u16_C
-_Times__Times_var_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L76
-	cmpq	$32767, -16(%rbp)
-	jle	L77
-L76:
-	movl	$2657, %edi
-	call	__m3_fault
-L77:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_C
-	.private_extern _Times__uTimes_param_u16_C
-_Times__uTimes_param_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_C
-	.private_extern _Times__Times_param_u16_C
-_Times__Times_param_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	-32(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L82
-	cmpq	$32767, -16(%rbp)
-	jle	L83
-L82:
-	movl	$2721, %edi
-	call	__m3_fault
-L83:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_u8
-	.private_extern _Times__uTimes_var_u16_u8
-_Times__uTimes_var_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_u8
-	.private_extern _Times__Times_var_u16_u8
-_Times__Times_var_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L88
-	cmpq	$32767, -16(%rbp)
-	jle	L89
-L88:
-	movl	$2785, %edi
-	call	__m3_fault
-L89:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_u8
-	.private_extern _Times__uTimes_param_u16_u8
-_Times__uTimes_param_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rdx
-	movsbq	-19(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_u8
-	.private_extern _Times__Times_param_u16_u8
-_Times__Times_param_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rax
-	movsbq	-19(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L94
-	cmpq	$32767, -16(%rbp)
-	jle	L95
-L94:
-	movl	$2849, %edi
-	call	__m3_fault
-L95:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_i8
-	.private_extern _Times__uTimes_var_u16_i8
-_Times__uTimes_var_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_i8
-	.private_extern _Times__Times_var_u16_i8
-_Times__Times_var_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L100
-	cmpq	$32767, -16(%rbp)
-	jle	L101
-L100:
-	movl	$2913, %edi
-	call	__m3_fault
-L101:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_i8
-	.private_extern _Times__uTimes_param_u16_i8
-_Times__uTimes_param_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rdx
-	movzbl	-19(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_i8
-	.private_extern _Times__Times_param_u16_i8
-_Times__Times_param_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rax
-	movzbl	-19(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L106
-	cmpq	$32767, -16(%rbp)
-	jle	L107
-L106:
-	movl	$2977, %edi
-	call	__m3_fault
-L107:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_L
-	.private_extern _Times__uTimes_var_u16_L
-_Times__uTimes_var_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_L
-	.private_extern _Times__Times_var_u16_L
-_Times__Times_var_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_L
-	.private_extern _Times__uTimes_param_u16_L
-_Times__uTimes_param_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_L
-	.private_extern _Times__Times_param_u16_L
-_Times__Times_param_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u16_u32
-	.private_extern _Times__uTimes_var_u16_u32
-_Times__uTimes_var_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u16_u32
-	.private_extern _Times__Times_var_u16_u32
-_Times__Times_var_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L120
-	cmpq	$32767, -16(%rbp)
-	jle	L121
-L120:
-	movl	$3169, %edi
-	call	__m3_fault
-L121:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u16_u32
-	.private_extern _Times__uTimes_param_u16_u32
-_Times__uTimes_param_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u16_u32
-	.private_extern _Times__Times_param_u16_u32
-_Times__Times_param_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L126
-	cmpq	$32767, -16(%rbp)
-	jle	L127
-L126:
-	movl	$3233, %edi
-	call	__m3_fault
-L127:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_u16
-	.private_extern _Times__uTimes_var_u64_u16
-_Times__uTimes_var_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u64_u16
-	.private_extern _Times__Times_var_u64_u16
-_Times__Times_var_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u64_u16
-	.private_extern _Times__uTimes_param_u64_u16
-_Times__uTimes_param_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u64_u16
-	.private_extern _Times__Times_param_u64_u16
-_Times__Times_param_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_u64
-	.private_extern _Times__uTimes_var_u64_u64
-_Times__uTimes_var_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u64_u64
-	.private_extern _Times__Times_var_u64_u64
-_Times__Times_var_u64_u64:
+.globl _Times__Times_var_i64_i64
+	.private_extern _Times__Times_var_i64_i64
+_Times__Times_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u64_u64
-	.private_extern _Times__uTimes_param_u64_u64
-_Times__uTimes_param_u64_u64:
+.globl _Times__uTimes_param_i64_i64
+	.private_extern _Times__uTimes_param_i64_i64
+_Times__uTimes_param_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -813,9 +32,9 @@ _Times__uTimes_param_u64_u64:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u64_u64
-	.private_extern _Times__Times_param_u64_u64
-_Times__Times_param_u64_u64:
+.globl _Times__Times_param_i64_i64
+	.private_extern _Times__Times_param_i64_i64
+_Times__Times_param_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -824,30 +43,30 @@ _Times__Times_param_u64_u64:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u64_LC
-	.private_extern _Times__uTimes_var_u64_LC
-_Times__uTimes_var_u64_LC:
+.globl _Times__uTimes_var_i64_LC
+	.private_extern _Times__uTimes_var_i64_LC
+_Times__uTimes_var_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u64_LC
-	.private_extern _Times__Times_var_u64_LC
-_Times__Times_var_u64_LC:
+.globl _Times__Times_var_i64_LC
+	.private_extern _Times__Times_var_i64_LC
+_Times__Times_var_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u64_LC
-	.private_extern _Times__uTimes_param_u64_LC
-_Times__uTimes_param_u64_LC:
+.globl _Times__uTimes_param_i64_LC
+	.private_extern _Times__uTimes_param_i64_LC
+_Times__uTimes_param_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -856,9 +75,9 @@ _Times__uTimes_param_u64_LC:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_param_u64_LC
-	.private_extern _Times__Times_param_u64_LC
-_Times__Times_param_u64_LC:
+.globl _Times__Times_param_i64_LC
+	.private_extern _Times__Times_param_i64_LC
+_Times__Times_param_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -867,252 +86,31 @@ _Times__Times_param_u64_LC:
 	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u64_i16
-	.private_extern _Times__uTimes_var_u64_i16
-_Times__uTimes_var_u64_i16:
+.globl _Times__uTimes_var_i64_u8
+	.private_extern _Times__uTimes_var_i64_u8
+_Times__uTimes_var_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u64_i16
-	.private_extern _Times__Times_var_u64_i16
-_Times__Times_var_u64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u64_i16
-	.private_extern _Times__uTimes_param_u64_i16
-_Times__uTimes_param_u64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u64_i16
-	.private_extern _Times__Times_param_u64_i16
-_Times__Times_param_u64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_i32
-	.private_extern _Times__uTimes_var_u64_i32
-_Times__uTimes_var_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u64_i32
-	.private_extern _Times__Times_var_u64_i32
-_Times__Times_var_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u64_i32
-	.private_extern _Times__uTimes_param_u64_i32
-_Times__uTimes_param_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u64_i32
-	.private_extern _Times__Times_param_u64_i32
-_Times__Times_param_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_I
-	.private_extern _Times__uTimes_var_u64_I
-_Times__uTimes_var_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u64_I
-	.private_extern _Times__Times_var_u64_I
-_Times__Times_var_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u64_I
-	.private_extern _Times__uTimes_param_u64_I
-_Times__uTimes_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u64_I
-	.private_extern _Times__Times_param_u64_I
-_Times__Times_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_i64
-	.private_extern _Times__uTimes_var_u64_i64
-_Times__uTimes_var_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u64_i64
-	.private_extern _Times__Times_var_u64_i64
-_Times__Times_var_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u64_i64
-	.private_extern _Times__uTimes_param_u64_i64
-_Times__uTimes_param_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u64_i64
-	.private_extern _Times__Times_param_u64_i64
-_Times__Times_param_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_C
-	.private_extern _Times__uTimes_var_u64_C
-_Times__uTimes_var_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u64_C
-	.private_extern _Times__Times_var_u64_C
-_Times__Times_var_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u64_C
-	.private_extern _Times__uTimes_param_u64_C
-_Times__uTimes_param_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_u64_C
-	.private_extern _Times__Times_param_u64_C
-_Times__Times_param_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_u8
-	.private_extern _Times__uTimes_var_u64_u8
-_Times__uTimes_var_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
+	movzbl	124+_MM_Times(%rip), %eax
 	movsbq	%al,%rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u64_u8
-	.private_extern _Times__Times_var_u64_u8
-_Times__Times_var_u64_u8:
+.globl _Times__Times_var_i64_u8
+	.private_extern _Times__Times_var_i64_u8
+_Times__Times_var_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
+	movzbl	124+_MM_Times(%rip), %eax
 	movsbq	%al,%rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u64_u8
-	.private_extern _Times__uTimes_param_u64_u8
-_Times__uTimes_param_u64_u8:
+.globl _Times__uTimes_param_i64_u8
+	.private_extern _Times__uTimes_param_i64_u8
+_Times__uTimes_param_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1122,9 +120,9 @@ _Times__uTimes_param_u64_u8:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u64_u8
-	.private_extern _Times__Times_param_u64_u8
-_Times__Times_param_u64_u8:
+.globl _Times__Times_param_i64_u8
+	.private_extern _Times__Times_param_i64_u8
+_Times__Times_param_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1133,31 +131,75 @@ _Times__Times_param_u64_u8:
 	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u64_i8
-	.private_extern _Times__uTimes_var_u64_i8
-_Times__uTimes_var_u64_i8:
+.globl _Times__uTimes_var_i64_I
+	.private_extern _Times__uTimes_var_i64_I
+_Times__uTimes_var_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u64_i8
-	.private_extern _Times__Times_var_u64_i8
-_Times__Times_var_u64_i8:
+.globl _Times__Times_var_i64_I
+	.private_extern _Times__Times_var_i64_I
+_Times__Times_var_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u64_i8
-	.private_extern _Times__uTimes_param_u64_i8
-_Times__uTimes_param_u64_i8:
+.globl _Times__uTimes_param_i64_I
+	.private_extern _Times__uTimes_param_i64_I
+_Times__uTimes_param_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i64_I
+	.private_extern _Times__Times_param_i64_I
+_Times__Times_param_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i64_i8
+	.private_extern _Times__uTimes_var_i64_i8
+_Times__uTimes_var_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i64_i8
+	.private_extern _Times__Times_var_i64_i8
+_Times__Times_var_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i64_i8
+	.private_extern _Times__uTimes_param_i64_i8
+_Times__uTimes_param_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1167,9 +209,9 @@ _Times__uTimes_param_u64_i8:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u64_i8
-	.private_extern _Times__Times_param_u64_i8
-_Times__Times_param_u64_i8:
+.globl _Times__Times_param_i64_i8
+	.private_extern _Times__Times_param_i64_i8
+_Times__Times_param_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1178,75 +220,31 @@ _Times__Times_param_u64_i8:
 	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u64_L
-	.private_extern _Times__uTimes_var_u64_L
-_Times__uTimes_var_u64_L:
+.globl _Times__uTimes_var_i64_u32
+	.private_extern _Times__uTimes_var_i64_u32
+_Times__uTimes_var_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u64_L
-	.private_extern _Times__Times_var_u64_L
-_Times__Times_var_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Times(%rip), %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u64_L
-	.private_extern _Times__uTimes_param_u64_L
-_Times__uTimes_param_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u64_L
-	.private_extern _Times__Times_param_u64_L
-_Times__Times_param_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u64_u32
-	.private_extern _Times__uTimes_var_u64_u32
-_Times__uTimes_var_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
+	movl	140+_MM_Times(%rip), %eax
 	movslq	%eax,%rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u64_u32
-	.private_extern _Times__Times_var_u64_u32
-_Times__Times_var_u64_u32:
+.globl _Times__Times_var_i64_u32
+	.private_extern _Times__Times_var_i64_u32
+_Times__Times_var_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
+	movl	140+_MM_Times(%rip), %eax
 	movslq	%eax,%rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u64_u32
-	.private_extern _Times__uTimes_param_u64_u32
-_Times__uTimes_param_u64_u32:
+.globl _Times__uTimes_param_i64_u32
+	.private_extern _Times__uTimes_param_i64_u32
+_Times__uTimes_param_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1257,9 +255,9 @@ _Times__uTimes_param_u64_u32:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u64_u32
-	.private_extern _Times__Times_param_u64_u32
-_Times__Times_param_u64_u32:
+.globl _Times__Times_param_i64_u32
+	.private_extern _Times__Times_param_i64_u32
+_Times__Times_param_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1269,14 +267,591 @@ _Times__Times_param_u64_u32:
 	imulq	-24(%rbp), %rax
 	leave
 	ret
+.globl _Times__uTimes_var_i64_C
+	.private_extern _Times__uTimes_var_i64_C
+_Times__uTimes_var_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i64_C
+	.private_extern _Times__Times_var_i64_C
+_Times__Times_var_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i64_C
+	.private_extern _Times__uTimes_param_i64_C
+_Times__uTimes_param_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_i64_C
+	.private_extern _Times__Times_param_i64_C
+_Times__Times_param_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i64_u16
+	.private_extern _Times__uTimes_var_i64_u16
+_Times__uTimes_var_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i64_u16
+	.private_extern _Times__Times_var_i64_u16
+_Times__Times_var_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i64_u16
+	.private_extern _Times__uTimes_param_i64_u16
+_Times__uTimes_param_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i64_u16
+	.private_extern _Times__Times_param_i64_u16
+_Times__Times_param_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i64_u64
+	.private_extern _Times__uTimes_var_i64_u64
+_Times__uTimes_var_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i64_u64
+	.private_extern _Times__Times_var_i64_u64
+_Times__Times_var_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Times(%rip), %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i64_u64
+	.private_extern _Times__uTimes_param_i64_u64
+_Times__uTimes_param_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i64_u64
+	.private_extern _Times__Times_param_i64_u64
+_Times__Times_param_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i64_L
+	.private_extern _Times__uTimes_var_i64_L
+_Times__uTimes_var_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i64_L
+	.private_extern _Times__Times_var_i64_L
+_Times__Times_var_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Times(%rip), %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i64_L
+	.private_extern _Times__uTimes_param_i64_L
+_Times__uTimes_param_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i64_L
+	.private_extern _Times__Times_param_i64_L
+_Times__Times_param_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i64_i16
+	.private_extern _Times__uTimes_var_i64_i16
+_Times__uTimes_var_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i64_i16
+	.private_extern _Times__Times_var_i64_i16
+_Times__Times_var_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i64_i16
+	.private_extern _Times__uTimes_param_i64_i16
+_Times__uTimes_param_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i64_i16
+	.private_extern _Times__Times_param_i64_i16
+_Times__Times_param_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i64_i32
+	.private_extern _Times__uTimes_var_i64_i32
+_Times__uTimes_var_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i64_i32
+	.private_extern _Times__Times_var_i64_i32
+_Times__Times_var_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i64_i32
+	.private_extern _Times__uTimes_param_i64_i32
+_Times__uTimes_param_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i64_i32
+	.private_extern _Times__Times_param_i64_i32
+_Times__Times_param_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_LC_i64
+	.private_extern _Times__uTimes_var_LC_i64
+_Times__uTimes_var_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_LC_i64
+	.private_extern _Times__Times_var_LC_i64
+_Times__Times_var_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_LC_i64
+	.private_extern _Times__uTimes_param_LC_i64
+_Times__uTimes_param_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_i64
+	.private_extern _Times__Times_param_LC_i64
+_Times__Times_param_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_LC_LC
+	.private_extern _Times__uTimes_var_LC_LC
+_Times__uTimes_var_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_LC_LC
+	.private_extern _Times__Times_var_LC_LC
+_Times__Times_var_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_LC_LC
+	.private_extern _Times__uTimes_param_LC_LC
+_Times__uTimes_param_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_LC
+	.private_extern _Times__Times_param_LC_LC
+_Times__Times_param_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_LC_u8
+	.private_extern _Times__uTimes_var_LC_u8
+_Times__uTimes_var_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_LC_u8
+	.private_extern _Times__Times_var_LC_u8
+_Times__Times_var_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_LC_u8
+	.private_extern _Times__uTimes_param_LC_u8
+_Times__uTimes_param_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_u8
+	.private_extern _Times__Times_param_LC_u8
+_Times__Times_param_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_LC_I
+	.private_extern _Times__uTimes_var_LC_I
+_Times__uTimes_var_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_LC_I
+	.private_extern _Times__Times_var_LC_I
+_Times__Times_var_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_LC_I
+	.private_extern _Times__uTimes_param_LC_I
+_Times__uTimes_param_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_I
+	.private_extern _Times__Times_param_LC_I
+_Times__Times_param_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_LC_i8
+	.private_extern _Times__uTimes_var_LC_i8
+_Times__uTimes_var_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_LC_i8
+	.private_extern _Times__Times_var_LC_i8
+_Times__Times_var_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_LC_i8
+	.private_extern _Times__uTimes_param_LC_i8
+_Times__uTimes_param_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_i8
+	.private_extern _Times__Times_param_LC_i8
+_Times__Times_param_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_LC_u32
+	.private_extern _Times__uTimes_var_LC_u32
+_Times__uTimes_var_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_LC_u32
+	.private_extern _Times__Times_var_LC_u32
+_Times__Times_var_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_LC_u32
+	.private_extern _Times__uTimes_param_LC_u32
+_Times__uTimes_param_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_u32
+	.private_extern _Times__Times_param_LC_u32
+_Times__Times_param_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_LC_C
+	.private_extern _Times__uTimes_var_LC_C
+_Times__uTimes_var_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_LC_C
+	.private_extern _Times__Times_var_LC_C
+_Times__Times_var_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_LC_C
+	.private_extern _Times__uTimes_param_LC_C
+_Times__uTimes_param_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_C
+	.private_extern _Times__Times_param_LC_C
+_Times__Times_param_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
 .globl _Times__uTimes_var_LC_u16
 	.private_extern _Times__uTimes_var_LC_u16
 _Times__uTimes_var_LC_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
+	movzwl	152+_MM_Times(%rip), %eax
 	movswq	%ax,%rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1285,9 +860,9 @@ _Times__uTimes_var_LC_u16:
 _Times__Times_var_LC_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
+	movzwl	152+_MM_Times(%rip), %eax
 	movswq	%ax,%rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1319,8 +894,8 @@ _Times__Times_param_LC_u16:
 _Times__uTimes_var_LC_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rdx
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1329,9 +904,9 @@ _Times__uTimes_var_LC_u64:
 _Times__Times_var_LC_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
 	movq	112+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1357,30 +932,41 @@ _Times__Times_param_LC_u64:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_LC_LC
-	.private_extern _Times__uTimes_var_LC_LC
-_Times__uTimes_var_LC_LC:
+.globl _Times__uTimes_var_LC_L
+	.private_extern _Times__uTimes_var_LC_L
+_Times__uTimes_var_LC_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rdx
+	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_LC_LC
-	.private_extern _Times__Times_var_LC_LC
-_Times__Times_var_LC_LC:
+.globl _Times__Times_var_LC_L
+	.private_extern _Times__Times_var_LC_L
+_Times__Times_var_LC_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_LC_LC
-	.private_extern _Times__uTimes_param_LC_LC
-_Times__uTimes_param_LC_LC:
+.globl _Times__uTimes_param_LC_L
+	.private_extern _Times__uTimes_param_LC_L
+_Times__uTimes_param_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_LC_L
+	.private_extern _Times__Times_param_LC_L
+_Times__Times_param_LC_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1389,26 +975,14 @@ _Times__uTimes_param_LC_LC:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_param_LC_LC
-	.private_extern _Times__Times_param_LC_LC
-_Times__Times_param_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
 .globl _Times__uTimes_var_LC_i16
 	.private_extern _Times__uTimes_var_LC_i16
 _Times__uTimes_var_LC_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
+	movzwl	184+_MM_Times(%rip), %eax
 	movzwl	%ax, %edx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1417,9 +991,9 @@ _Times__uTimes_var_LC_i16:
 _Times__Times_var_LC_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
+	movzwl	184+_MM_Times(%rip), %eax
 	movzwl	%ax, %edx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1451,9 +1025,9 @@ _Times__Times_param_LC_i16:
 _Times__uTimes_var_LC_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
+	movl	188+_MM_Times(%rip), %eax
 	mov	%eax, %edx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1462,9 +1036,9 @@ _Times__uTimes_var_LC_i32:
 _Times__Times_var_LC_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
+	movl	188+_MM_Times(%rip), %eax
 	mov	%eax, %edx
-	movq	120+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -1491,172 +1065,876 @@ _Times__Times_param_LC_i32:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_var_LC_I
-	.private_extern _Times__uTimes_var_LC_I
-_Times__uTimes_var_LC_I:
+.globl _Times__Times_var_f32_f32
+	.private_extern _Times__Times_var_f32_f32
+_Times__Times_var_f32_f32:
 	pushq	%rbp
 	movq	%rsp, %rbp
+	movss	120+_MM_Times(%rip), %xmm1
+	movss	120+_MM_Times(%rip), %xmm0
+	mulss	%xmm1, %xmm0
+	leave
+	ret
+.globl _Times__Times_param_f32_f32
+	.private_extern _Times__Times_param_f32_f32
+_Times__Times_param_f32_f32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movss	%xmm0, -20(%rbp)
+	movss	%xmm1, -24(%rbp)
+	movss	-20(%rbp), %xmm0
+	mulss	-24(%rbp), %xmm0
+	leave
+	ret
+.globl _Times__uTimes_var_u8_i64
+	.private_extern _Times__uTimes_var_u8_i64
+_Times__uTimes_var_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_i64
+	.private_extern _Times__Times_var_u8_i64
+_Times__Times_var_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_i64
+	.private_extern _Times__uTimes_param_u8_i64
+_Times__uTimes_param_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_i64
+	.private_extern _Times__Times_param_u8_i64
+_Times__Times_param_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_LC
+	.private_extern _Times__uTimes_var_u8_LC
+_Times__uTimes_var_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_LC
+	.private_extern _Times__Times_var_u8_LC
+_Times__Times_var_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_LC
+	.private_extern _Times__uTimes_param_u8_LC
+_Times__uTimes_param_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_LC
+	.private_extern _Times__Times_param_u8_LC
+_Times__Times_param_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_u8
+	.private_extern _Times__uTimes_var_u8_u8
+_Times__uTimes_var_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_u8
+	.private_extern _Times__Times_var_u8_u8
+_Times__Times_var_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L216
+	cmpq	$127, -16(%rbp)
+	jle	L217
+L216:
+	movl	$5153, %edi
+	call	__m3_fault
+L217:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_u8
+	.private_extern _Times__uTimes_param_u8_u8
+_Times__uTimes_param_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movsbq	-18(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_u8
+	.private_extern _Times__Times_param_u8_u8
+_Times__Times_param_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rax
+	movsbq	-18(%rbp),%rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L222
+	cmpq	$127, -16(%rbp)
+	jle	L223
+L222:
+	movl	$5217, %edi
+	call	__m3_fault
+L223:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_I
+	.private_extern _Times__uTimes_var_u8_I
+_Times__uTimes_var_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_I
+	.private_extern _Times__Times_var_u8_I
+_Times__Times_var_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L228
+	cmpq	$127, -16(%rbp)
+	jle	L229
+L228:
+	movl	$5281, %edi
+	call	__m3_fault
+L229:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_I
+	.private_extern _Times__uTimes_param_u8_I
+_Times__uTimes_param_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_I
+	.private_extern _Times__Times_param_u8_I
+_Times__Times_param_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L234
+	cmpq	$127, -16(%rbp)
+	jle	L235
+L234:
+	movl	$5345, %edi
+	call	__m3_fault
+L235:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_i8
+	.private_extern _Times__uTimes_var_u8_i8
+_Times__uTimes_var_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_i8
+	.private_extern _Times__Times_var_u8_i8
+_Times__Times_var_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L240
+	cmpq	$127, -16(%rbp)
+	jle	L241
+L240:
+	movl	$5409, %edi
+	call	__m3_fault
+L241:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_i8
+	.private_extern _Times__uTimes_param_u8_i8
+_Times__uTimes_param_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movzbl	-18(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_i8
+	.private_extern _Times__Times_param_u8_i8
+_Times__Times_param_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rax
+	movzbl	-18(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L246
+	cmpq	$127, -16(%rbp)
+	jle	L247
+L246:
+	movl	$5473, %edi
+	call	__m3_fault
+L247:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_u32
+	.private_extern _Times__uTimes_var_u8_u32
+_Times__uTimes_var_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_u32
+	.private_extern _Times__Times_var_u8_u32
+_Times__Times_var_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L252
+	cmpq	$127, -16(%rbp)
+	jle	L253
+L252:
+	movl	$5537, %edi
+	call	__m3_fault
+L253:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_u32
+	.private_extern _Times__uTimes_param_u8_u32
+_Times__uTimes_param_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_u32
+	.private_extern _Times__Times_param_u8_u32
+_Times__Times_param_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L258
+	cmpq	$127, -16(%rbp)
+	jle	L259
+L258:
+	movl	$5601, %edi
+	call	__m3_fault
+L259:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_C
+	.private_extern _Times__uTimes_var_u8_C
+_Times__uTimes_var_u8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
 	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_LC_I
-	.private_extern _Times__Times_var_LC_I
-_Times__Times_var_LC_I:
+.globl _Times__Times_var_u8_C
+	.private_extern _Times__Times_var_u8_C
+_Times__Times_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	144+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L264
+	cmpq	$127, -16(%rbp)
+	jle	L265
+L264:
+	movl	$5665, %edi
+	call	__m3_fault
+L265:
+	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_LC_I
-	.private_extern _Times__uTimes_param_LC_I
-_Times__uTimes_param_LC_I:
+.globl _Times__uTimes_param_u8_C
+	.private_extern _Times__uTimes_param_u8_C
+_Times__uTimes_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_LC_I
-	.private_extern _Times__Times_param_LC_I
-_Times__Times_param_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
+	movsbq	-17(%rbp),%rax
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_LC_i64
-	.private_extern _Times__uTimes_var_LC_i64
-_Times__uTimes_var_LC_i64:
+.globl _Times__Times_param_u8_C
+	.private_extern _Times__Times_param_u8_C
+_Times__Times_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_LC_i64
-	.private_extern _Times__Times_var_LC_i64
-_Times__Times_var_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_LC_i64
-	.private_extern _Times__uTimes_param_LC_i64
-_Times__uTimes_param_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_LC_i64
-	.private_extern _Times__Times_param_LC_i64
-_Times__Times_param_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_LC_C
-	.private_extern _Times__uTimes_var_LC_C
-_Times__uTimes_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_LC_C
-	.private_extern _Times__Times_var_LC_C
-_Times__Times_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_LC_C
-	.private_extern _Times__uTimes_param_LC_C
-_Times__uTimes_param_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_LC_C
-	.private_extern _Times__Times_param_LC_C
-_Times__Times_param_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
 	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
 	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L270
+	cmpq	$127, -16(%rbp)
+	jle	L271
+L270:
+	movl	$5729, %edi
+	call	__m3_fault
+L271:
+	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_LC_u8
-	.private_extern _Times__uTimes_var_LC_u8
-_Times__uTimes_var_LC_u8:
+.globl _Times__uTimes_var_u8_u16
+	.private_extern _Times__uTimes_var_u8_u16
+_Times__uTimes_var_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
+	movzbl	124+_MM_Times(%rip), %eax
 	movsbq	%al,%rdx
-	movq	120+_MM_Times(%rip), %rax
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_LC_u8
-	.private_extern _Times__Times_var_LC_u8
-_Times__Times_var_LC_u8:
+.globl _Times__Times_var_u8_u16
+	.private_extern _Times__Times_var_u8_u16
+_Times__Times_var_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
 	movsbq	%al,%rdx
-	movq	120+_MM_Times(%rip), %rax
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L276
+	cmpq	$127, -16(%rbp)
+	jle	L277
+L276:
+	movl	$5793, %edi
+	call	__m3_fault
+L277:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_u16
+	.private_extern _Times__uTimes_param_u8_u16
+_Times__uTimes_param_u8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movswq	-20(%rbp),%rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_LC_u8
-	.private_extern _Times__uTimes_param_LC_u8
-_Times__uTimes_param_LC_u8:
+.globl _Times__Times_param_u8_u16
+	.private_extern _Times__Times_param_u8_u16
+_Times__Times_param_u8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rax
+	movswq	-20(%rbp),%rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L282
+	cmpq	$127, -16(%rbp)
+	jle	L283
+L282:
+	movl	$5857, %edi
+	call	__m3_fault
+L283:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_u64
+	.private_extern _Times__uTimes_var_u8_u64
+_Times__uTimes_var_u8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_u64
+	.private_extern _Times__Times_var_u8_u64
+_Times__Times_var_u8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_u64
+	.private_extern _Times__uTimes_param_u8_u64
+_Times__uTimes_param_u8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_u64
+	.private_extern _Times__Times_param_u8_u64
+_Times__Times_param_u8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_L
+	.private_extern _Times__uTimes_var_u8_L
+_Times__uTimes_var_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_L
+	.private_extern _Times__Times_var_u8_L
+_Times__Times_var_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_L
+	.private_extern _Times__uTimes_param_u8_L
+_Times__uTimes_param_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_L
+	.private_extern _Times__Times_param_u8_L
+_Times__Times_param_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_i16
+	.private_extern _Times__uTimes_var_u8_i16
+_Times__uTimes_var_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_i16
+	.private_extern _Times__Times_var_u8_i16
+_Times__Times_var_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L304
+	cmpq	$127, -16(%rbp)
+	jle	L305
+L304:
+	movl	$6177, %edi
+	call	__m3_fault
+L305:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_i16
+	.private_extern _Times__uTimes_param_u8_i16
+_Times__uTimes_param_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movzwl	-20(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_i16
+	.private_extern _Times__Times_param_u8_i16
+_Times__Times_param_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rax
+	movzwl	-20(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L310
+	cmpq	$127, -16(%rbp)
+	jle	L311
+L310:
+	movl	$6241, %edi
+	call	__m3_fault
+L311:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u8_i32
+	.private_extern _Times__uTimes_var_u8_i32
+_Times__uTimes_var_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u8_i32
+	.private_extern _Times__Times_var_u8_i32
+_Times__Times_var_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L316
+	cmpq	$127, -16(%rbp)
+	jle	L317
+L316:
+	movl	$6305, %edi
+	call	__m3_fault
+L317:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u8_i32
+	.private_extern _Times__uTimes_param_u8_i32
+_Times__uTimes_param_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rdx
+	mov	-24(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u8_i32
+	.private_extern _Times__Times_param_u8_i32
+_Times__Times_param_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rax
+	mov	-24(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L322
+	cmpq	$127, -16(%rbp)
+	jle	L323
+L322:
+	movl	$6369, %edi
+	call	__m3_fault
+L323:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_I_i64
+	.private_extern _Times__uTimes_var_I_i64
+_Times__uTimes_var_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_I_i64
+	.private_extern _Times__Times_var_I_i64
+_Times__Times_var_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_I_i64
+	.private_extern _Times__uTimes_param_I_i64
+_Times__uTimes_param_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_I_i64
+	.private_extern _Times__Times_param_I_i64
+_Times__Times_param_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_I_LC
+	.private_extern _Times__uTimes_var_I_LC
+_Times__uTimes_var_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_I_LC
+	.private_extern _Times__Times_var_I_LC
+_Times__Times_var_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_I_LC
+	.private_extern _Times__uTimes_param_I_LC
+_Times__uTimes_param_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_I_LC
+	.private_extern _Times__Times_param_I_LC
+_Times__Times_param_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
 	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_param_LC_u8
-	.private_extern _Times__Times_param_LC_u8
-_Times__Times_param_LC_u8:
+.globl _Times__uTimes_var_I_u8
+	.private_extern _Times__uTimes_var_I_u8
+_Times__uTimes_var_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_I_u8
+	.private_extern _Times__Times_var_I_u8
+_Times__Times_var_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_I_u8
+	.private_extern _Times__uTimes_param_I_u8
+_Times__uTimes_param_I_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1666,42 +1944,87 @@ _Times__Times_param_LC_u8:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_var_LC_i8
-	.private_extern _Times__uTimes_var_LC_i8
-_Times__uTimes_var_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_LC_i8
-	.private_extern _Times__Times_var_LC_i8
-_Times__Times_var_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_LC_i8
-	.private_extern _Times__uTimes_param_LC_i8
-_Times__uTimes_param_LC_i8:
+.globl _Times__Times_param_I_u8
+	.private_extern _Times__Times_param_I_u8
+_Times__Times_param_I_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
+	movsbq	-25(%rbp),%rax
 	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_param_LC_i8
-	.private_extern _Times__Times_param_LC_i8
-_Times__Times_param_LC_i8:
+.globl _Times__uTimes_var_I_I
+	.private_extern _Times__uTimes_var_I_I
+_Times__uTimes_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_I_I
+	.private_extern _Times__Times_var_I_I
+_Times__Times_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_I_I
+	.private_extern _Times__uTimes_param_I_I
+_Times__uTimes_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_I_I
+	.private_extern _Times__Times_param_I_I
+_Times__Times_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_I_i8
+	.private_extern _Times__uTimes_var_I_i8
+_Times__uTimes_var_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_I_i8
+	.private_extern _Times__Times_var_I_i8
+_Times__Times_var_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_I_i8
+	.private_extern _Times__uTimes_param_I_i8
+_Times__uTimes_param_I_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1711,86 +2034,43 @@ _Times__Times_param_LC_i8:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_var_LC_L
-	.private_extern _Times__uTimes_var_LC_L
-_Times__uTimes_var_LC_L:
+.globl _Times__Times_param_I_i8
+	.private_extern _Times__Times_param_I_i8
+_Times__Times_param_I_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_var_LC_L
-	.private_extern _Times__Times_var_LC_L
-_Times__Times_var_LC_L:
+.globl _Times__uTimes_var_I_u32
+	.private_extern _Times__uTimes_var_I_u32
+_Times__uTimes_var_I_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	120+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_LC_L
-	.private_extern _Times__uTimes_param_LC_L
-_Times__uTimes_param_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_LC_L
-	.private_extern _Times__Times_param_LC_L
-_Times__Times_param_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_LC_u32
-	.private_extern _Times__uTimes_var_LC_u32
-_Times__uTimes_var_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_LC_u32
-	.private_extern _Times__Times_var_LC_u32
-_Times__Times_var_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_LC_u32
-	.private_extern _Times__uTimes_param_LC_u32
-_Times__uTimes_param_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
+	movl	140+_MM_Times(%rip), %eax
 	cltq
-	imulq	-24(%rbp), %rax
+	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_LC_u32
-	.private_extern _Times__Times_param_LC_u32
-_Times__Times_param_LC_u32:
+.globl _Times__Times_var_I_u32
+	.private_extern _Times__Times_var_I_u32
+_Times__Times_var_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_I_u32
+	.private_extern _Times__uTimes_param_I_u32
+_Times__uTimes_param_I_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -1801,1513 +2081,59 @@ _Times__Times_param_LC_u32:
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_f64_f64
-	.private_extern _Times__Times_var_f64_f64
-_Times__Times_var_f64_f64:
+.globl _Times__Times_param_I_u32
+	.private_extern _Times__Times_param_I_u32
+_Times__Times_param_I_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movsd	128+_MM_Times(%rip), %xmm1
-	movsd	128+_MM_Times(%rip), %xmm0
-	mulsd	%xmm1, %xmm0
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_param_f64_f64
-	.private_extern _Times__Times_param_f64_f64
-_Times__Times_param_f64_f64:
+.globl _Times__uTimes_var_I_C
+	.private_extern _Times__uTimes_var_I_C
+_Times__uTimes_var_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movsd	%xmm0, -24(%rbp)
-	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm0
-	mulsd	-32(%rbp), %xmm0
-	leave
-	ret
-.globl _Times__uTimes_var_i16_u16
-	.private_extern _Times__uTimes_var_i16_u16
-_Times__uTimes_var_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_u16
-	.private_extern _Times__Times_var_i16_u16
-_Times__Times_var_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L328
-	cmpq	$65535, -16(%rbp)
-	jle	L329
-L328:
-	movl	$6433, %edi
-	call	__m3_fault
-L329:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_u16
-	.private_extern _Times__uTimes_param_i16_u16
-_Times__uTimes_param_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %edx
-	movswq	-20(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_u16
-	.private_extern _Times__Times_param_i16_u16
-_Times__Times_param_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movswq	-20(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L334
-	cmpq	$65535, -16(%rbp)
-	jle	L335
-L334:
-	movl	$6497, %edi
-	call	__m3_fault
-L335:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_u64
-	.private_extern _Times__uTimes_var_i16_u64
-_Times__uTimes_var_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_u64
-	.private_extern _Times__Times_var_i16_u64
-_Times__Times_var_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_u64
-	.private_extern _Times__uTimes_param_i16_u64
-_Times__uTimes_param_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_u64
-	.private_extern _Times__Times_param_i16_u64
-_Times__Times_param_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_LC
-	.private_extern _Times__uTimes_var_i16_LC
-_Times__uTimes_var_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_LC
-	.private_extern _Times__Times_var_i16_LC
-_Times__Times_var_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_LC
-	.private_extern _Times__uTimes_param_i16_LC
-_Times__uTimes_param_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_LC
-	.private_extern _Times__Times_param_i16_LC
-_Times__Times_param_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_i16
-	.private_extern _Times__uTimes_var_i16_i16
-_Times__uTimes_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_i16
-	.private_extern _Times__Times_var_i16_i16
-_Times__Times_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L356
-	cmpq	$65535, -16(%rbp)
-	jle	L357
-L356:
-	movl	$6817, %edi
-	call	__m3_fault
-L357:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_i16
-	.private_extern _Times__uTimes_param_i16_i16
-_Times__uTimes_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %edx
-	movzwl	-20(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_i16
-	.private_extern _Times__Times_param_i16_i16
-_Times__Times_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movzwl	-20(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L362
-	cmpq	$65535, -16(%rbp)
-	jle	L363
-L362:
-	movl	$6881, %edi
-	call	__m3_fault
-L363:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_i32
-	.private_extern _Times__uTimes_var_i16_i32
-_Times__uTimes_var_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_i32
-	.private_extern _Times__Times_var_i16_i32
-_Times__Times_var_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L368
-	cmpq	$65535, -16(%rbp)
-	jle	L369
-L368:
-	movl	$6945, %edi
-	call	__m3_fault
-L369:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_i32
-	.private_extern _Times__uTimes_param_i16_i32
-_Times__uTimes_param_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %edx
-	mov	-24(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_i32
-	.private_extern _Times__Times_param_i16_i32
-_Times__Times_param_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %eax
-	mov	-24(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L374
-	cmpq	$65535, -16(%rbp)
-	jle	L375
-L374:
-	movl	$7009, %edi
-	call	__m3_fault
-L375:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_I
-	.private_extern _Times__uTimes_var_i16_I
-_Times__uTimes_var_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
 	movq	144+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_i16_I
-	.private_extern _Times__Times_var_i16_I
-_Times__Times_var_i16_I:
+.globl _Times__Times_var_I_C
+	.private_extern _Times__Times_var_I_C
+_Times__Times_var_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L380
-	cmpq	$65535, -16(%rbp)
-	jle	L381
-L380:
-	movl	$7073, %edi
-	call	__m3_fault
-L381:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_I
-	.private_extern _Times__uTimes_param_i16_I
-_Times__uTimes_param_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_I
-	.private_extern _Times__Times_param_i16_I
-_Times__Times_param_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L386
-	cmpq	$65535, -16(%rbp)
-	jle	L387
-L386:
-	movl	$7137, %edi
-	call	__m3_fault
-L387:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_i64
-	.private_extern _Times__uTimes_var_i16_i64
-_Times__uTimes_var_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_i64
-	.private_extern _Times__Times_var_i16_i64
-_Times__Times_var_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_i64
-	.private_extern _Times__uTimes_param_i16_i64
-_Times__uTimes_param_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_i64
-	.private_extern _Times__Times_param_i16_i64
-_Times__Times_param_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_C
-	.private_extern _Times__uTimes_var_i16_C
-_Times__uTimes_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_C
-	.private_extern _Times__Times_var_i16_C
-_Times__Times_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L400
-	cmpq	$65535, -16(%rbp)
-	jle	L401
-L400:
-	movl	$7329, %edi
-	call	__m3_fault
-L401:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_C
-	.private_extern _Times__uTimes_param_i16_C
-_Times__uTimes_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_C
-	.private_extern _Times__Times_param_i16_C
-_Times__Times_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	-32(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L406
-	cmpq	$65535, -16(%rbp)
-	jle	L407
-L406:
-	movl	$7393, %edi
-	call	__m3_fault
-L407:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_u8
-	.private_extern _Times__uTimes_var_i16_u8
-_Times__uTimes_var_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_u8
-	.private_extern _Times__Times_var_i16_u8
-_Times__Times_var_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L412
-	cmpq	$65535, -16(%rbp)
-	jle	L413
-L412:
-	movl	$7457, %edi
-	call	__m3_fault
-L413:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_u8
-	.private_extern _Times__uTimes_param_i16_u8
-_Times__uTimes_param_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %edx
-	movsbq	-19(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_u8
-	.private_extern _Times__Times_param_i16_u8
-_Times__Times_param_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movsbq	-19(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L418
-	cmpq	$65535, -16(%rbp)
-	jle	L419
-L418:
-	movl	$7521, %edi
-	call	__m3_fault
-L419:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_i8
-	.private_extern _Times__uTimes_var_i16_i8
-_Times__uTimes_var_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_i8
-	.private_extern _Times__Times_var_i16_i8
-_Times__Times_var_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L424
-	cmpq	$65535, -16(%rbp)
-	jle	L425
-L424:
-	movl	$7585, %edi
-	call	__m3_fault
-L425:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_i8
-	.private_extern _Times__uTimes_param_i16_i8
-_Times__uTimes_param_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %edx
-	movzbl	-19(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_i8
-	.private_extern _Times__Times_param_i16_i8
-_Times__Times_param_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movzbl	-19(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L430
-	cmpq	$65535, -16(%rbp)
-	jle	L431
-L430:
-	movl	$7649, %edi
-	call	__m3_fault
-L431:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_L
-	.private_extern _Times__uTimes_var_i16_L
-_Times__uTimes_var_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_L
-	.private_extern _Times__Times_var_i16_L
-_Times__Times_var_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_L
-	.private_extern _Times__uTimes_param_i16_L
-_Times__uTimes_param_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_L
-	.private_extern _Times__Times_param_i16_L
-_Times__Times_param_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i16_u32
-	.private_extern _Times__uTimes_var_i16_u32
-_Times__uTimes_var_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i16_u32
-	.private_extern _Times__Times_var_i16_u32
-_Times__Times_var_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L444
-	cmpq	$65535, -16(%rbp)
-	jle	L445
-L444:
-	movl	$7841, %edi
-	call	__m3_fault
-L445:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i16_u32
-	.private_extern _Times__uTimes_param_i16_u32
-_Times__uTimes_param_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i16_u32
-	.private_extern _Times__Times_param_i16_u32
-_Times__Times_param_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L450
-	cmpq	$65535, -16(%rbp)
-	jle	L451
-L450:
-	movl	$7905, %edi
-	call	__m3_fault
-L451:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_u16
-	.private_extern _Times__uTimes_var_i32_u16
-_Times__uTimes_var_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_u16
-	.private_extern _Times__Times_var_i32_u16
-_Times__Times_var_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L456
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L457
-L456:
-	movl	$7969, %edi
-	call	__m3_fault
-L457:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_u16
-	.private_extern _Times__uTimes_param_i32_u16
-_Times__uTimes_param_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %edx
-	movswq	-22(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_u16
-	.private_extern _Times__Times_param_i32_u16
-_Times__Times_param_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movswq	-22(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L462
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L463
-L462:
-	movl	$8033, %edi
-	call	__m3_fault
-L463:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_u64
-	.private_extern _Times__uTimes_var_i32_u64
-_Times__uTimes_var_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_u64
-	.private_extern _Times__Times_var_i32_u64
-_Times__Times_var_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_u64
-	.private_extern _Times__uTimes_param_i32_u64
-_Times__uTimes_param_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_u64
-	.private_extern _Times__Times_param_i32_u64
-_Times__Times_param_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_LC
-	.private_extern _Times__uTimes_var_i32_LC
-_Times__uTimes_var_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_LC
-	.private_extern _Times__Times_var_i32_LC
-_Times__Times_var_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_LC
-	.private_extern _Times__uTimes_param_i32_LC
-_Times__uTimes_param_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_LC
-	.private_extern _Times__Times_param_i32_LC
-_Times__Times_param_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_i16
-	.private_extern _Times__uTimes_var_i32_i16
-_Times__uTimes_var_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_i16
-	.private_extern _Times__Times_var_i32_i16
-_Times__Times_var_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L484
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L485
-L484:
-	movl	$8353, %edi
-	call	__m3_fault
-L485:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_i16
-	.private_extern _Times__uTimes_param_i32_i16
-_Times__uTimes_param_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %edx
-	movzwl	-22(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_i16
-	.private_extern _Times__Times_param_i32_i16
-_Times__Times_param_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movzwl	-22(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L490
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L491
-L490:
-	movl	$8417, %edi
-	call	__m3_fault
-L491:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_i32
-	.private_extern _Times__uTimes_var_i32_i32
-_Times__uTimes_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_i32
-	.private_extern _Times__Times_var_i32_i32
-_Times__Times_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L496
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L497
-L496:
-	movl	$8481, %edi
-	call	__m3_fault
-L497:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_i32
-	.private_extern _Times__uTimes_param_i32_i32
-_Times__uTimes_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %edx
-	mov	-24(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_i32
-	.private_extern _Times__Times_param_i32_i32
-_Times__Times_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %eax
-	mov	-24(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L502
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L503
-L502:
-	movl	$8545, %edi
-	call	__m3_fault
-L503:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_I
-	.private_extern _Times__uTimes_var_i32_I
-_Times__uTimes_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
+	movq	128+_MM_Times(%rip), %rdx
 	movq	144+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_i32_I
-	.private_extern _Times__Times_var_i32_I
-_Times__Times_var_i32_I:
+.globl _Times__uTimes_param_I_C
+	.private_extern _Times__uTimes_param_I_C
+_Times__uTimes_param_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L508
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L509
-L508:
-	movl	$8609, %edi
-	call	__m3_fault
-L509:
-	movq	-16(%rbp), %rax
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_i32_I
-	.private_extern _Times__uTimes_param_i32_I
-_Times__uTimes_param_i32_I:
+.globl _Times__Times_param_I_C
+	.private_extern _Times__Times_param_I_C
+_Times__Times_param_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
 	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_I
-	.private_extern _Times__Times_param_i32_I
-_Times__Times_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L514
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L515
-L514:
-	movl	$8673, %edi
-	call	__m3_fault
-L515:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_i64
-	.private_extern _Times__uTimes_var_i32_i64
-_Times__uTimes_var_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_i64
-	.private_extern _Times__Times_var_i32_i64
-_Times__Times_var_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_i64
-	.private_extern _Times__uTimes_param_i32_i64
-_Times__uTimes_param_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_i64
-	.private_extern _Times__Times_param_i32_i64
-_Times__Times_param_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_C
-	.private_extern _Times__uTimes_var_i32_C
-_Times__uTimes_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_C
-	.private_extern _Times__Times_var_i32_C
-_Times__Times_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L528
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L529
-L528:
-	movl	$8865, %edi
-	call	__m3_fault
-L529:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_C
-	.private_extern _Times__uTimes_param_i32_C
-_Times__uTimes_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_C
-	.private_extern _Times__Times_param_i32_C
-_Times__Times_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	-32(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L534
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L535
-L534:
-	movl	$8929, %edi
-	call	__m3_fault
-L535:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_u8
-	.private_extern _Times__uTimes_var_i32_u8
-_Times__uTimes_var_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_u8
-	.private_extern _Times__Times_var_i32_u8
-_Times__Times_var_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L540
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L541
-L540:
-	movl	$8993, %edi
-	call	__m3_fault
-L541:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_u8
-	.private_extern _Times__uTimes_param_i32_u8
-_Times__uTimes_param_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %edx
-	movsbq	-21(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_u8
-	.private_extern _Times__Times_param_i32_u8
-_Times__Times_param_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movsbq	-21(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L546
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L547
-L546:
-	movl	$9057, %edi
-	call	__m3_fault
-L547:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_i8
-	.private_extern _Times__uTimes_var_i32_i8
-_Times__uTimes_var_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_i8
-	.private_extern _Times__Times_var_i32_i8
-_Times__Times_var_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L552
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L553
-L552:
-	movl	$9121, %edi
-	call	__m3_fault
-L553:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_i8
-	.private_extern _Times__uTimes_param_i32_i8
-_Times__uTimes_param_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %edx
-	movzbl	-21(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_i8
-	.private_extern _Times__Times_param_i32_i8
-_Times__Times_param_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movzbl	-21(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L558
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L559
-L558:
-	movl	$9185, %edi
-	call	__m3_fault
-L559:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_L
-	.private_extern _Times__uTimes_var_i32_L
-_Times__uTimes_var_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_L
-	.private_extern _Times__Times_var_i32_L
-_Times__Times_var_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_L
-	.private_extern _Times__uTimes_param_i32_L
-_Times__uTimes_param_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_L
-	.private_extern _Times__Times_param_i32_L
-_Times__Times_param_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i32_u32
-	.private_extern _Times__uTimes_var_i32_u32
-_Times__uTimes_var_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i32_u32
-	.private_extern _Times__Times_var_i32_u32
-_Times__Times_var_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L572
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L573
-L572:
-	movl	$9377, %edi
-	call	__m3_fault
-L573:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i32_u32
-	.private_extern _Times__uTimes_param_i32_u32
-_Times__uTimes_param_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i32_u32
-	.private_extern _Times__Times_param_i32_u32
-_Times__Times_param_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L578
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L579
-L578:
-	movl	$9441, %edi
-	call	__m3_fault
-L579:
-	movq	-16(%rbp), %rax
+	imulq	-24(%rbp), %rax
 	leave
 	ret
 .globl _Times__uTimes_var_I_u16
@@ -3315,9 +2141,9 @@ L579:
 _Times__uTimes_var_I_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movzwl	104+_MM_Times(%rip), %eax
+	movzwl	152+_MM_Times(%rip), %eax
 	movswq	%ax,%rax
 	imulq	%rdx, %rax
 	leave
@@ -3327,8 +2153,8 @@ _Times__uTimes_var_I_u16:
 _Times__Times_var_I_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movzwl	104+_MM_Times(%rip), %eax
+	movq	128+_MM_Times(%rip), %rdx
+	movzwl	152+_MM_Times(%rip), %eax
 	movswq	%ax,%rax
 	imulq	%rdx, %rax
 	leave
@@ -3361,9 +2187,9 @@ _Times__Times_param_I_u16:
 _Times__uTimes_var_I_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -3372,8 +2198,8 @@ _Times__uTimes_var_I_u64:
 _Times__Times_var_I_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rdx
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -3400,30 +2226,42 @@ _Times__Times_param_I_u64:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_I_LC
-	.private_extern _Times__uTimes_var_I_LC
-_Times__uTimes_var_I_LC:
+.globl _Times__uTimes_var_I_L
+	.private_extern _Times__uTimes_var_I_L
+_Times__uTimes_var_I_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_I_LC
-	.private_extern _Times__Times_var_I_LC
-_Times__Times_var_I_LC:
+.globl _Times__Times_var_I_L
+	.private_extern _Times__Times_var_I_L
+_Times__Times_var_I_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rdx
+	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_I_LC
-	.private_extern _Times__uTimes_param_I_LC
-_Times__uTimes_param_I_LC:
+.globl _Times__uTimes_param_I_L
+	.private_extern _Times__uTimes_param_I_L
+_Times__uTimes_param_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_I_L
+	.private_extern _Times__Times_param_I_L
+_Times__Times_param_I_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -3432,25 +2270,14 @@ _Times__uTimes_param_I_LC:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_param_I_LC
-	.private_extern _Times__Times_param_I_LC
-_Times__Times_param_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
 .globl _Times__uTimes_var_I_i16
 	.private_extern _Times__uTimes_var_I_i16
 _Times__uTimes_var_I_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movzwl	136+_MM_Times(%rip), %eax
+	movzwl	184+_MM_Times(%rip), %eax
 	movzwl	%ax, %eax
 	imulq	%rdx, %rax
 	leave
@@ -3460,8 +2287,8 @@ _Times__uTimes_var_I_i16:
 _Times__Times_var_I_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movzwl	136+_MM_Times(%rip), %eax
+	movq	128+_MM_Times(%rip), %rdx
+	movzwl	184+_MM_Times(%rip), %eax
 	movzwl	%ax, %eax
 	imulq	%rdx, %rax
 	leave
@@ -3494,9 +2321,9 @@ _Times__Times_param_I_i16:
 _Times__uTimes_var_I_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
+	movq	128+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movl	140+_MM_Times(%rip), %eax
+	movl	188+_MM_Times(%rip), %eax
 	mov	%eax, %eax
 	imulq	%rdx, %rax
 	leave
@@ -3506,8 +2333,8 @@ _Times__uTimes_var_I_i32:
 _Times__Times_var_I_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movl	140+_MM_Times(%rip), %eax
+	movq	128+_MM_Times(%rip), %rdx
+	movl	188+_MM_Times(%rip), %eax
 	mov	%eax, %eax
 	imulq	%rdx, %rax
 	leave
@@ -3535,2653 +2362,14 @@ _Times__Times_param_I_i32:
 	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_I_I
-	.private_extern _Times__uTimes_var_I_I
-_Times__uTimes_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_I_I
-	.private_extern _Times__Times_var_I_I
-_Times__Times_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_I_I
-	.private_extern _Times__uTimes_param_I_I
-_Times__uTimes_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_I_I
-	.private_extern _Times__Times_param_I_I
-_Times__Times_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_I_i64
-	.private_extern _Times__uTimes_var_I_i64
-_Times__uTimes_var_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_I_i64
-	.private_extern _Times__Times_var_I_i64
-_Times__Times_var_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_I_i64
-	.private_extern _Times__uTimes_param_I_i64
-_Times__uTimes_param_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_I_i64
-	.private_extern _Times__Times_param_I_i64
-_Times__Times_param_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_I_C
-	.private_extern _Times__uTimes_var_I_C
-_Times__uTimes_var_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_I_C
-	.private_extern _Times__Times_var_I_C
-_Times__Times_var_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_I_C
-	.private_extern _Times__uTimes_param_I_C
-_Times__uTimes_param_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_I_C
-	.private_extern _Times__Times_param_I_C
-_Times__Times_param_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_I_u8
-	.private_extern _Times__uTimes_var_I_u8
-_Times__uTimes_var_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_I_u8
-	.private_extern _Times__Times_var_I_u8
-_Times__Times_var_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_I_u8
-	.private_extern _Times__uTimes_param_I_u8
-_Times__uTimes_param_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_I_u8
-	.private_extern _Times__Times_param_I_u8
-_Times__Times_param_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_I_i8
-	.private_extern _Times__uTimes_var_I_i8
-_Times__uTimes_var_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_I_i8
-	.private_extern _Times__Times_var_I_i8
-_Times__Times_var_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_I_i8
-	.private_extern _Times__uTimes_param_I_i8
-_Times__uTimes_param_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_I_i8
-	.private_extern _Times__Times_param_I_i8
-_Times__Times_param_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_I_L
-	.private_extern _Times__uTimes_var_I_L
-_Times__uTimes_var_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_I_L
-	.private_extern _Times__Times_var_I_L
-_Times__Times_var_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_I_L
-	.private_extern _Times__uTimes_param_I_L
-_Times__uTimes_param_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_I_L
-	.private_extern _Times__Times_param_I_L
-_Times__Times_param_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_I_u32
-	.private_extern _Times__uTimes_var_I_u32
-_Times__uTimes_var_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_I_u32
-	.private_extern _Times__Times_var_I_u32
-_Times__Times_var_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_I_u32
-	.private_extern _Times__uTimes_param_I_u32
-_Times__uTimes_param_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_I_u32
-	.private_extern _Times__Times_param_I_u32
-_Times__Times_param_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_u16
-	.private_extern _Times__uTimes_var_i64_u16
-_Times__uTimes_var_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_u16
-	.private_extern _Times__Times_var_i64_u16
-_Times__Times_var_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_u16
-	.private_extern _Times__uTimes_param_i64_u16
-_Times__uTimes_param_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_u16
-	.private_extern _Times__Times_param_i64_u16
-_Times__Times_param_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_u64
-	.private_extern _Times__uTimes_var_i64_u64
-_Times__uTimes_var_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_u64
-	.private_extern _Times__Times_var_i64_u64
-_Times__Times_var_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_u64
-	.private_extern _Times__uTimes_param_i64_u64
-_Times__uTimes_param_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_u64
-	.private_extern _Times__Times_param_i64_u64
-_Times__Times_param_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_LC
-	.private_extern _Times__uTimes_var_i64_LC
-_Times__uTimes_var_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_LC
-	.private_extern _Times__Times_var_i64_LC
-_Times__Times_var_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_LC
-	.private_extern _Times__uTimes_param_i64_LC
-_Times__uTimes_param_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_LC
-	.private_extern _Times__Times_param_i64_LC
-_Times__Times_param_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_i16
-	.private_extern _Times__uTimes_var_i64_i16
-_Times__uTimes_var_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_i16
-	.private_extern _Times__Times_var_i64_i16
-_Times__Times_var_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_i16
-	.private_extern _Times__uTimes_param_i64_i16
-_Times__uTimes_param_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_i16
-	.private_extern _Times__Times_param_i64_i16
-_Times__Times_param_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_i32
-	.private_extern _Times__uTimes_var_i64_i32
-_Times__uTimes_var_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_i32
-	.private_extern _Times__Times_var_i64_i32
-_Times__Times_var_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_i32
-	.private_extern _Times__uTimes_param_i64_i32
-_Times__uTimes_param_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_i32
-	.private_extern _Times__Times_param_i64_i32
-_Times__Times_param_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_I
-	.private_extern _Times__uTimes_var_i64_I
-_Times__uTimes_var_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_I
-	.private_extern _Times__Times_var_i64_I
-_Times__Times_var_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_I
-	.private_extern _Times__uTimes_param_i64_I
-_Times__uTimes_param_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_I
-	.private_extern _Times__Times_param_i64_I
-_Times__Times_param_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_i64
-	.private_extern _Times__uTimes_var_i64_i64
-_Times__uTimes_var_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_i64
-	.private_extern _Times__Times_var_i64_i64
-_Times__Times_var_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_i64
-	.private_extern _Times__uTimes_param_i64_i64
-_Times__uTimes_param_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_i64
-	.private_extern _Times__Times_param_i64_i64
-_Times__Times_param_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_C
-	.private_extern _Times__uTimes_var_i64_C
-_Times__uTimes_var_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_C
-	.private_extern _Times__Times_var_i64_C
-_Times__Times_var_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_C
-	.private_extern _Times__uTimes_param_i64_C
-_Times__uTimes_param_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_C
-	.private_extern _Times__Times_param_i64_C
-_Times__Times_param_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_u8
-	.private_extern _Times__uTimes_var_i64_u8
-_Times__uTimes_var_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_u8
-	.private_extern _Times__Times_var_i64_u8
-_Times__Times_var_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_u8
-	.private_extern _Times__uTimes_param_i64_u8
-_Times__uTimes_param_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_u8
-	.private_extern _Times__Times_param_i64_u8
-_Times__Times_param_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_i8
-	.private_extern _Times__uTimes_var_i64_i8
-_Times__uTimes_var_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_i8
-	.private_extern _Times__Times_var_i64_i8
-_Times__Times_var_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_i8
-	.private_extern _Times__uTimes_param_i64_i8
-_Times__uTimes_param_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_i8
-	.private_extern _Times__Times_param_i64_i8
-_Times__Times_param_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_L
-	.private_extern _Times__uTimes_var_i64_L
-_Times__uTimes_var_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_L
-	.private_extern _Times__Times_var_i64_L
-_Times__Times_var_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Times(%rip), %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_L
-	.private_extern _Times__uTimes_param_i64_L
-_Times__uTimes_param_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_L
-	.private_extern _Times__Times_param_i64_L
-_Times__Times_param_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i64_u32
-	.private_extern _Times__uTimes_var_i64_u32
-_Times__uTimes_var_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i64_u32
-	.private_extern _Times__Times_var_i64_u32
-_Times__Times_var_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i64_u32
-	.private_extern _Times__uTimes_param_i64_u32
-_Times__uTimes_param_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i64_u32
-	.private_extern _Times__Times_param_i64_u32
-_Times__Times_param_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_u16
-	.private_extern _Times__uTimes_var_C_u16
-_Times__uTimes_var_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_u16
-	.private_extern _Times__Times_var_C_u16
-_Times__Times_var_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L776
-	movl	$12577, %edi
-	call	__m3_fault
-L776:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_u16
-	.private_extern _Times__uTimes_param_C_u16
-_Times__uTimes_param_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_u16
-	.private_extern _Times__Times_param_C_u16
-_Times__Times_param_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	movq	-24(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L781
-	movl	$12641, %edi
-	call	__m3_fault
-L781:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_u64
-	.private_extern _Times__uTimes_var_C_u64
-_Times__uTimes_var_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_u64
-	.private_extern _Times__Times_var_C_u64
-_Times__Times_var_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_u64
-	.private_extern _Times__uTimes_param_C_u64
-_Times__uTimes_param_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_u64
-	.private_extern _Times__Times_param_C_u64
-_Times__Times_param_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_LC
-	.private_extern _Times__uTimes_var_C_LC
-_Times__uTimes_var_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_LC
-	.private_extern _Times__Times_var_C_LC
-_Times__Times_var_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_LC
-	.private_extern _Times__uTimes_param_C_LC
-_Times__uTimes_param_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_LC
-	.private_extern _Times__Times_param_C_LC
-_Times__Times_param_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_i16
-	.private_extern _Times__uTimes_var_C_i16
-_Times__uTimes_var_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_i16
-	.private_extern _Times__Times_var_C_i16
-_Times__Times_var_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L802
-	movl	$12961, %edi
-	call	__m3_fault
-L802:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_i16
-	.private_extern _Times__uTimes_param_C_i16
-_Times__uTimes_param_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_i16
-	.private_extern _Times__Times_param_C_i16
-_Times__Times_param_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	movq	-24(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L807
-	movl	$13025, %edi
-	call	__m3_fault
-L807:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_i32
-	.private_extern _Times__uTimes_var_C_i32
-_Times__uTimes_var_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_i32
-	.private_extern _Times__Times_var_C_i32
-_Times__Times_var_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L812
-	movl	$13089, %edi
-	call	__m3_fault
-L812:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_i32
-	.private_extern _Times__uTimes_param_C_i32
-_Times__uTimes_param_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_i32
-	.private_extern _Times__Times_param_C_i32
-_Times__Times_param_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	movq	-24(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L817
-	movl	$13153, %edi
-	call	__m3_fault
-L817:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_I
-	.private_extern _Times__uTimes_var_C_I
-_Times__uTimes_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_I
-	.private_extern _Times__Times_var_C_I
-_Times__Times_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L822
-	movl	$13217, %edi
-	call	__m3_fault
-L822:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_I
-	.private_extern _Times__uTimes_param_C_I
-_Times__uTimes_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_I
-	.private_extern _Times__Times_param_C_I
-_Times__Times_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L827
-	movl	$13281, %edi
-	call	__m3_fault
-L827:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_i64
-	.private_extern _Times__uTimes_var_C_i64
-_Times__uTimes_var_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_i64
-	.private_extern _Times__Times_var_C_i64
-_Times__Times_var_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_i64
-	.private_extern _Times__uTimes_param_C_i64
-_Times__uTimes_param_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_i64
-	.private_extern _Times__Times_param_C_i64
-_Times__Times_param_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_C
-	.private_extern _Times__uTimes_var_C_C
-_Times__uTimes_var_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_C
-	.private_extern _Times__Times_var_C_C
-_Times__Times_var_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L840
-	movl	$13473, %edi
-	call	__m3_fault
-L840:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_C
-	.private_extern _Times__uTimes_param_C_C
-_Times__uTimes_param_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_C
-	.private_extern _Times__Times_param_C_C
-_Times__Times_param_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	-32(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L845
-	movl	$13537, %edi
-	call	__m3_fault
-L845:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_u8
-	.private_extern _Times__uTimes_var_C_u8
-_Times__uTimes_var_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_u8
-	.private_extern _Times__Times_var_C_u8
-_Times__Times_var_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L850
-	movl	$13601, %edi
-	call	__m3_fault
-L850:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_u8
-	.private_extern _Times__uTimes_param_C_u8
-_Times__uTimes_param_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_u8
-	.private_extern _Times__Times_param_C_u8
-_Times__Times_param_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	movq	-24(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L855
-	movl	$13665, %edi
-	call	__m3_fault
-L855:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_i8
-	.private_extern _Times__uTimes_var_C_i8
-_Times__uTimes_var_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_i8
-	.private_extern _Times__Times_var_C_i8
-_Times__Times_var_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L860
-	movl	$13729, %edi
-	call	__m3_fault
-L860:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_i8
-	.private_extern _Times__uTimes_param_C_i8
-_Times__uTimes_param_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_i8
-	.private_extern _Times__Times_param_C_i8
-_Times__Times_param_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	movq	-24(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L865
-	movl	$13793, %edi
-	call	__m3_fault
-L865:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_L
-	.private_extern _Times__uTimes_var_C_L
-_Times__uTimes_var_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_L
-	.private_extern _Times__Times_var_C_L
-_Times__Times_var_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_L
-	.private_extern _Times__uTimes_param_C_L
-_Times__uTimes_param_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_L
-	.private_extern _Times__Times_param_C_L
-_Times__Times_param_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_C_u32
-	.private_extern _Times__uTimes_var_C_u32
-_Times__uTimes_var_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_C_u32
-	.private_extern _Times__Times_var_C_u32
-_Times__Times_var_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L878
-	movl	$13985, %edi
-	call	__m3_fault
-L878:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_C_u32
-	.private_extern _Times__uTimes_param_C_u32
-_Times__uTimes_param_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_C_u32
-	.private_extern _Times__Times_param_C_u32
-_Times__Times_param_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L883
-	movl	$14049, %edi
-	call	__m3_fault
-L883:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_var_f32_f32
-	.private_extern _Times__Times_var_f32_f32
-_Times__Times_var_f32_f32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movss	168+_MM_Times(%rip), %xmm1
-	movss	168+_MM_Times(%rip), %xmm0
-	mulss	%xmm1, %xmm0
-	leave
-	ret
-.globl _Times__Times_param_f32_f32
-	.private_extern _Times__Times_param_f32_f32
-_Times__Times_param_f32_f32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movss	%xmm0, -20(%rbp)
-	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm0
-	mulss	-24(%rbp), %xmm0
-	leave
-	ret
-.globl _Times__uTimes_var_u8_u16
-	.private_extern _Times__uTimes_var_u8_u16
-_Times__uTimes_var_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_u16
-	.private_extern _Times__Times_var_u8_u16
-_Times__Times_var_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L892
-	cmpq	$127, -16(%rbp)
-	jle	L893
-L892:
-	movl	$14177, %edi
-	call	__m3_fault
-L893:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_u16
-	.private_extern _Times__uTimes_param_u8_u16
-_Times__uTimes_param_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movswq	-20(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_u16
-	.private_extern _Times__Times_param_u8_u16
-_Times__Times_param_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movswq	-20(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L898
-	cmpq	$127, -16(%rbp)
-	jle	L899
-L898:
-	movl	$14241, %edi
-	call	__m3_fault
-L899:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_u64
-	.private_extern _Times__uTimes_var_u8_u64
-_Times__uTimes_var_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_u64
-	.private_extern _Times__Times_var_u8_u64
-_Times__Times_var_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_u64
-	.private_extern _Times__uTimes_param_u8_u64
-_Times__uTimes_param_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_u64
-	.private_extern _Times__Times_param_u8_u64
-_Times__Times_param_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_LC
-	.private_extern _Times__uTimes_var_u8_LC
-_Times__uTimes_var_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_LC
-	.private_extern _Times__Times_var_u8_LC
-_Times__Times_var_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_LC
-	.private_extern _Times__uTimes_param_u8_LC
-_Times__uTimes_param_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_LC
-	.private_extern _Times__Times_param_u8_LC
-_Times__Times_param_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_i16
-	.private_extern _Times__uTimes_var_u8_i16
-_Times__uTimes_var_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_i16
-	.private_extern _Times__Times_var_u8_i16
-_Times__Times_var_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L920
-	cmpq	$127, -16(%rbp)
-	jle	L921
-L920:
-	movl	$14561, %edi
-	call	__m3_fault
-L921:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_i16
-	.private_extern _Times__uTimes_param_u8_i16
-_Times__uTimes_param_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movzwl	-20(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_i16
-	.private_extern _Times__Times_param_u8_i16
-_Times__Times_param_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movzwl	-20(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L926
-	cmpq	$127, -16(%rbp)
-	jle	L927
-L926:
-	movl	$14625, %edi
-	call	__m3_fault
-L927:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_i32
-	.private_extern _Times__uTimes_var_u8_i32
-_Times__uTimes_var_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_i32
-	.private_extern _Times__Times_var_u8_i32
-_Times__Times_var_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L932
-	cmpq	$127, -16(%rbp)
-	jle	L933
-L932:
-	movl	$14689, %edi
-	call	__m3_fault
-L933:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_i32
-	.private_extern _Times__uTimes_param_u8_i32
-_Times__uTimes_param_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	mov	-24(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_i32
-	.private_extern _Times__Times_param_u8_i32
-_Times__Times_param_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rax
-	mov	-24(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L938
-	cmpq	$127, -16(%rbp)
-	jle	L939
-L938:
-	movl	$14753, %edi
-	call	__m3_fault
-L939:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_I
-	.private_extern _Times__uTimes_var_u8_I
-_Times__uTimes_var_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_I
-	.private_extern _Times__Times_var_u8_I
-_Times__Times_var_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L944
-	cmpq	$127, -16(%rbp)
-	jle	L945
-L944:
-	movl	$14817, %edi
-	call	__m3_fault
-L945:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_I
-	.private_extern _Times__uTimes_param_u8_I
-_Times__uTimes_param_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_I
-	.private_extern _Times__Times_param_u8_I
-_Times__Times_param_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L950
-	cmpq	$127, -16(%rbp)
-	jle	L951
-L950:
-	movl	$14881, %edi
-	call	__m3_fault
-L951:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_i64
-	.private_extern _Times__uTimes_var_u8_i64
-_Times__uTimes_var_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_i64
-	.private_extern _Times__Times_var_u8_i64
-_Times__Times_var_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_i64
-	.private_extern _Times__uTimes_param_u8_i64
-_Times__uTimes_param_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_i64
-	.private_extern _Times__Times_param_u8_i64
-_Times__Times_param_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_C
-	.private_extern _Times__uTimes_var_u8_C
-_Times__uTimes_var_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_C
-	.private_extern _Times__Times_var_u8_C
-_Times__Times_var_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L964
-	cmpq	$127, -16(%rbp)
-	jle	L965
-L964:
-	movl	$15073, %edi
-	call	__m3_fault
-L965:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_C
-	.private_extern _Times__uTimes_param_u8_C
-_Times__uTimes_param_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_C
-	.private_extern _Times__Times_param_u8_C
-_Times__Times_param_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	-32(%rbp), %rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L970
-	cmpq	$127, -16(%rbp)
-	jle	L971
-L970:
-	movl	$15137, %edi
-	call	__m3_fault
-L971:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_u8
-	.private_extern _Times__uTimes_var_u8_u8
-_Times__uTimes_var_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_u8
-	.private_extern _Times__Times_var_u8_u8
-_Times__Times_var_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L976
-	cmpq	$127, -16(%rbp)
-	jle	L977
-L976:
-	movl	$15201, %edi
-	call	__m3_fault
-L977:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_u8
-	.private_extern _Times__uTimes_param_u8_u8
-_Times__uTimes_param_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movsbq	-18(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_u8
-	.private_extern _Times__Times_param_u8_u8
-_Times__Times_param_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rax
-	movsbq	-18(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L982
-	cmpq	$127, -16(%rbp)
-	jle	L983
-L982:
-	movl	$15265, %edi
-	call	__m3_fault
-L983:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_i8
-	.private_extern _Times__uTimes_var_u8_i8
-_Times__uTimes_var_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_i8
-	.private_extern _Times__Times_var_u8_i8
-_Times__Times_var_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L988
-	cmpq	$127, -16(%rbp)
-	jle	L989
-L988:
-	movl	$15329, %edi
-	call	__m3_fault
-L989:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_i8
-	.private_extern _Times__uTimes_param_u8_i8
-_Times__uTimes_param_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movzbl	-18(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_i8
-	.private_extern _Times__Times_param_u8_i8
-_Times__Times_param_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rax
-	movzbl	-18(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L994
-	cmpq	$127, -16(%rbp)
-	jle	L995
-L994:
-	movl	$15393, %edi
-	call	__m3_fault
-L995:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_L
-	.private_extern _Times__uTimes_var_u8_L
-_Times__uTimes_var_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_L
-	.private_extern _Times__Times_var_u8_L
-_Times__Times_var_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_L
-	.private_extern _Times__uTimes_param_u8_L
-_Times__uTimes_param_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_L
-	.private_extern _Times__Times_param_u8_L
-_Times__Times_param_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u8_u32
-	.private_extern _Times__uTimes_var_u8_u32
-_Times__uTimes_var_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u8_u32
-	.private_extern _Times__Times_var_u8_u32
-_Times__Times_var_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1008
-	cmpq	$127, -16(%rbp)
-	jle	L1009
-L1008:
-	movl	$15585, %edi
-	call	__m3_fault
-L1009:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u8_u32
-	.private_extern _Times__uTimes_param_u8_u32
-_Times__uTimes_param_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u8_u32
-	.private_extern _Times__Times_param_u8_u32
-_Times__Times_param_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1014
-	cmpq	$127, -16(%rbp)
-	jle	L1015
-L1014:
-	movl	$15649, %edi
-	call	__m3_fault
-L1015:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i8_u16
-	.private_extern _Times__uTimes_var_i8_u16
-_Times__uTimes_var_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i8_u16
-	.private_extern _Times__Times_var_i8_u16
-_Times__Times_var_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1020
-	cmpq	$255, -16(%rbp)
-	jle	L1021
-L1020:
-	movl	$15713, %edi
-	call	__m3_fault
-L1021:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i8_u16
-	.private_extern _Times__uTimes_param_i8_u16
-_Times__uTimes_param_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %edx
-	movswq	-20(%rbp),%rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i8_u16
-	.private_extern _Times__Times_param_i8_u16
-_Times__Times_param_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
-	movswq	-20(%rbp),%rdx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1026
-	cmpq	$255, -16(%rbp)
-	jle	L1027
-L1026:
-	movl	$15777, %edi
-	call	__m3_fault
-L1027:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i8_u64
-	.private_extern _Times__uTimes_var_i8_u64
-_Times__uTimes_var_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i8_u64
-	.private_extern _Times__Times_var_i8_u64
-_Times__Times_var_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i8_u64
-	.private_extern _Times__uTimes_param_i8_u64
-_Times__uTimes_param_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i8_u64
-	.private_extern _Times__Times_param_i8_u64
-_Times__Times_param_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i8_LC
-	.private_extern _Times__uTimes_var_i8_LC
-_Times__uTimes_var_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i8_LC
-	.private_extern _Times__Times_var_i8_LC
-_Times__Times_var_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i8_LC
-	.private_extern _Times__uTimes_param_i8_LC
-_Times__uTimes_param_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_i8_LC
-	.private_extern _Times__Times_param_i8_LC
-_Times__Times_param_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i8_i16
-	.private_extern _Times__uTimes_var_i8_i16
-_Times__uTimes_var_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i8_i16
-	.private_extern _Times__Times_var_i8_i16
-_Times__Times_var_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1048
-	cmpq	$255, -16(%rbp)
-	jle	L1049
-L1048:
-	movl	$16097, %edi
-	call	__m3_fault
-L1049:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i8_i16
-	.private_extern _Times__uTimes_param_i8_i16
-_Times__uTimes_param_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %edx
-	movzwl	-20(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i8_i16
-	.private_extern _Times__Times_param_i8_i16
-_Times__Times_param_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
-	movzwl	-20(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1054
-	cmpq	$255, -16(%rbp)
-	jle	L1055
-L1054:
-	movl	$16161, %edi
-	call	__m3_fault
-L1055:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i8_i32
-	.private_extern _Times__uTimes_var_i8_i32
-_Times__uTimes_var_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i8_i32
-	.private_extern _Times__Times_var_i8_i32
-_Times__Times_var_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1060
-	cmpq	$255, -16(%rbp)
-	jle	L1061
-L1060:
-	movl	$16225, %edi
-	call	__m3_fault
-L1061:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i8_i32
-	.private_extern _Times__uTimes_param_i8_i32
-_Times__uTimes_param_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %edx
-	mov	-24(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i8_i32
-	.private_extern _Times__Times_param_i8_i32
-_Times__Times_param_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %eax
-	mov	-24(%rbp), %edx
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1066
-	cmpq	$255, -16(%rbp)
-	jle	L1067
-L1066:
-	movl	$16289, %edi
-	call	__m3_fault
-L1067:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i8_I
-	.private_extern _Times__uTimes_var_i8_I
-_Times__uTimes_var_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i8_I
-	.private_extern _Times__Times_var_i8_I
-_Times__Times_var_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	144+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1072
-	cmpq	$255, -16(%rbp)
-	jle	L1073
-L1072:
-	movl	$16353, %edi
-	call	__m3_fault
-L1073:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i8_I
-	.private_extern _Times__uTimes_param_i8_I
-_Times__uTimes_param_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i8_I
-	.private_extern _Times__Times_param_i8_I
-_Times__Times_param_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	imulq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1078
-	cmpq	$255, -16(%rbp)
-	jle	L1079
-L1078:
-	movl	$16417, %edi
-	call	__m3_fault
-L1079:
-	movq	-16(%rbp), %rax
-	leave
-	ret
 .globl _Times__uTimes_var_i8_i64
 	.private_extern _Times__uTimes_var_i8_i64
 _Times__uTimes_var_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movq	152+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -6190,9 +2378,9 @@ _Times__uTimes_var_i8_i64:
 _Times__Times_var_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movq	152+_MM_Times(%rip), %rax
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -6219,42 +2407,31 @@ _Times__Times_param_i8_i64:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_i8_C
-	.private_extern _Times__uTimes_var_i8_C
-_Times__uTimes_var_i8_C:
+.globl _Times__uTimes_var_i8_LC
+	.private_extern _Times__uTimes_var_i8_LC
+_Times__uTimes_var_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movq	160+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_i8_C
-	.private_extern _Times__Times_var_i8_C
-_Times__Times_var_i8_C:
+.globl _Times__Times_var_i8_LC
+	.private_extern _Times__Times_var_i8_LC
+_Times__Times_var_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movq	160+_MM_Times(%rip), %rax
+	movq	112+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1092
-	cmpq	$255, -16(%rbp)
-	jle	L1093
-L1092:
-	movl	$16609, %edi
-	call	__m3_fault
-L1093:
-	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_i8_C
-	.private_extern _Times__uTimes_param_i8_C
-_Times__uTimes_param_i8_C:
+.globl _Times__uTimes_param_i8_LC
+	.private_extern _Times__uTimes_param_i8_LC
+_Times__uTimes_param_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movb	%dil, -17(%rbp)
@@ -6263,27 +2440,16 @@ _Times__uTimes_param_i8_C:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__Times_param_i8_C
-	.private_extern _Times__Times_param_i8_C
-_Times__Times_param_i8_C:
+.globl _Times__Times_param_i8_LC
+	.private_extern _Times__Times_param_i8_LC
+_Times__Times_param_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	-32(%rbp), %rdx
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
 	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1098
-	cmpq	$255, -16(%rbp)
-	jle	L1099
-L1098:
-	movl	$16673, %edi
-	call	__m3_fault
-L1099:
-	movq	-16(%rbp), %rax
 	leave
 	ret
 .globl _Times__uTimes_var_i8_u8
@@ -6291,9 +2457,9 @@ L1099:
 _Times__uTimes_var_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movzbl	172+_MM_Times(%rip), %eax
+	movzbl	124+_MM_Times(%rip), %eax
 	movsbq	%al,%rax
 	imulq	%rdx, %rax
 	leave
@@ -6304,20 +2470,20 @@ _Times__Times_var_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movzbl	172+_MM_Times(%rip), %eax
+	movzbl	124+_MM_Times(%rip), %eax
 	movsbq	%al,%rax
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1104
+	js	L440
 	cmpq	$255, -16(%rbp)
-	jle	L1105
-L1104:
-	movl	$16737, %edi
+	jle	L441
+L440:
+	movl	$8225, %edi
 	call	__m3_fault
-L1105:
+L441:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -6346,13 +2512,80 @@ _Times__Times_param_i8_u8:
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1110
+	js	L446
 	cmpq	$255, -16(%rbp)
-	jle	L1111
-L1110:
-	movl	$16801, %edi
+	jle	L447
+L446:
+	movl	$8289, %edi
 	call	__m3_fault
-L1111:
+L447:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i8_I
+	.private_extern _Times__uTimes_var_i8_I
+_Times__uTimes_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i8_I
+	.private_extern _Times__Times_var_i8_I
+_Times__Times_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L452
+	cmpq	$255, -16(%rbp)
+	jle	L453
+L452:
+	movl	$8353, %edi
+	call	__m3_fault
+L453:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i8_I
+	.private_extern _Times__uTimes_param_i8_I
+_Times__uTimes_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i8_I
+	.private_extern _Times__Times_param_i8_I
+_Times__Times_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L458
+	cmpq	$255, -16(%rbp)
+	jle	L459
+L458:
+	movl	$8417, %edi
+	call	__m3_fault
+L459:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -6361,9 +2594,9 @@ L1111:
 _Times__uTimes_var_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %eax
 	imulq	%rdx, %rax
 	leave
@@ -6374,20 +2607,20 @@ _Times__Times_var_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %eax
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1116
+	js	L464
 	cmpq	$255, -16(%rbp)
-	jle	L1117
-L1116:
-	movl	$16865, %edi
+	jle	L465
+L464:
+	movl	$8481, %edi
 	call	__m3_fault
-L1117:
+L465:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -6416,59 +2649,14 @@ _Times__Times_param_i8_i8:
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1122
+	js	L470
 	cmpq	$255, -16(%rbp)
-	jle	L1123
-L1122:
-	movl	$16929, %edi
+	jle	L471
+L470:
+	movl	$8545, %edi
 	call	__m3_fault
-L1123:
+L471:
 	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_i8_L
-	.private_extern _Times__uTimes_var_i8_L
-_Times__uTimes_var_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_i8_L
-	.private_extern _Times__Times_var_i8_L
-_Times__Times_var_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_i8_L
-	.private_extern _Times__uTimes_param_i8_L
-_Times__uTimes_param_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_i8_L
-	.private_extern _Times__Times_param_i8_L
-_Times__Times_param_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	imulq	-32(%rbp), %rax
 	leave
 	ret
 .globl _Times__uTimes_var_i8_u32
@@ -6476,9 +2664,9 @@ _Times__Times_param_i8_L:
 _Times__uTimes_var_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movl	184+_MM_Times(%rip), %eax
+	movl	140+_MM_Times(%rip), %eax
 	cltq
 	imulq	%rdx, %rax
 	leave
@@ -6489,20 +2677,20 @@ _Times__Times_var_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzbl	173+_MM_Times(%rip), %eax
+	movzbl	136+_MM_Times(%rip), %eax
 	movzbl	%al, %edx
-	movl	184+_MM_Times(%rip), %eax
+	movl	140+_MM_Times(%rip), %eax
 	cltq
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1136
+	js	L476
 	cmpq	$255, -16(%rbp)
-	jle	L1137
-L1136:
-	movl	$17121, %edi
+	jle	L477
+L476:
+	movl	$8609, %edi
 	call	__m3_fault
-L1137:
+L477:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -6533,14 +2721,3409 @@ _Times__Times_param_i8_u32:
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1142
+	js	L482
 	cmpq	$255, -16(%rbp)
-	jle	L1143
-L1142:
-	movl	$17185, %edi
+	jle	L483
+L482:
+	movl	$8673, %edi
 	call	__m3_fault
-L1143:
+L483:
 	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i8_C
+	.private_extern _Times__uTimes_var_i8_C
+_Times__uTimes_var_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i8_C
+	.private_extern _Times__Times_var_i8_C
+_Times__Times_var_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L488
+	cmpq	$255, -16(%rbp)
+	jle	L489
+L488:
+	movl	$8737, %edi
+	call	__m3_fault
+L489:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i8_C
+	.private_extern _Times__uTimes_param_i8_C
+_Times__uTimes_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_i8_C
+	.private_extern _Times__Times_param_i8_C
+_Times__Times_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	-32(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L494
+	cmpq	$255, -16(%rbp)
+	jle	L495
+L494:
+	movl	$8801, %edi
+	call	__m3_fault
+L495:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i8_u16
+	.private_extern _Times__uTimes_var_i8_u16
+_Times__uTimes_var_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i8_u16
+	.private_extern _Times__Times_var_i8_u16
+_Times__Times_var_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L500
+	cmpq	$255, -16(%rbp)
+	jle	L501
+L500:
+	movl	$8865, %edi
+	call	__m3_fault
+L501:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i8_u16
+	.private_extern _Times__uTimes_param_i8_u16
+_Times__uTimes_param_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %edx
+	movswq	-20(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i8_u16
+	.private_extern _Times__Times_param_i8_u16
+_Times__Times_param_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movswq	-20(%rbp),%rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L506
+	cmpq	$255, -16(%rbp)
+	jle	L507
+L506:
+	movl	$8929, %edi
+	call	__m3_fault
+L507:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i8_u64
+	.private_extern _Times__uTimes_var_i8_u64
+_Times__uTimes_var_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i8_u64
+	.private_extern _Times__Times_var_i8_u64
+_Times__Times_var_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i8_u64
+	.private_extern _Times__uTimes_param_i8_u64
+_Times__uTimes_param_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i8_u64
+	.private_extern _Times__Times_param_i8_u64
+_Times__Times_param_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i8_L
+	.private_extern _Times__uTimes_var_i8_L
+_Times__uTimes_var_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i8_L
+	.private_extern _Times__Times_var_i8_L
+_Times__Times_var_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i8_L
+	.private_extern _Times__uTimes_param_i8_L
+_Times__uTimes_param_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i8_L
+	.private_extern _Times__Times_param_i8_L
+_Times__Times_param_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i8_i16
+	.private_extern _Times__uTimes_var_i8_i16
+_Times__uTimes_var_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i8_i16
+	.private_extern _Times__Times_var_i8_i16
+_Times__Times_var_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L528
+	cmpq	$255, -16(%rbp)
+	jle	L529
+L528:
+	movl	$9249, %edi
+	call	__m3_fault
+L529:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i8_i16
+	.private_extern _Times__uTimes_param_i8_i16
+_Times__uTimes_param_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %edx
+	movzwl	-20(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i8_i16
+	.private_extern _Times__Times_param_i8_i16
+_Times__Times_param_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movzwl	-20(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L534
+	cmpq	$255, -16(%rbp)
+	jle	L535
+L534:
+	movl	$9313, %edi
+	call	__m3_fault
+L535:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i8_i32
+	.private_extern _Times__uTimes_var_i8_i32
+_Times__uTimes_var_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i8_i32
+	.private_extern _Times__Times_var_i8_i32
+_Times__Times_var_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L540
+	cmpq	$255, -16(%rbp)
+	jle	L541
+L540:
+	movl	$9377, %edi
+	call	__m3_fault
+L541:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i8_i32
+	.private_extern _Times__uTimes_param_i8_i32
+_Times__uTimes_param_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %edx
+	mov	-24(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i8_i32
+	.private_extern _Times__Times_param_i8_i32
+_Times__Times_param_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %eax
+	mov	-24(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L546
+	cmpq	$255, -16(%rbp)
+	jle	L547
+L546:
+	movl	$9441, %edi
+	call	__m3_fault
+L547:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_i64
+	.private_extern _Times__uTimes_var_u32_i64
+_Times__uTimes_var_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_i64
+	.private_extern _Times__Times_var_u32_i64
+_Times__Times_var_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_i64
+	.private_extern _Times__uTimes_param_u32_i64
+_Times__uTimes_param_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_i64
+	.private_extern _Times__Times_param_u32_i64
+_Times__Times_param_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_LC
+	.private_extern _Times__uTimes_var_u32_LC
+_Times__uTimes_var_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_LC
+	.private_extern _Times__Times_var_u32_LC
+_Times__Times_var_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_LC
+	.private_extern _Times__uTimes_param_u32_LC
+_Times__uTimes_param_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_LC
+	.private_extern _Times__Times_param_u32_LC
+_Times__Times_param_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_u8
+	.private_extern _Times__uTimes_var_u32_u8
+_Times__uTimes_var_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_u8
+	.private_extern _Times__Times_var_u32_u8
+_Times__Times_var_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L568
+	cmpq	$2147483647, -16(%rbp)
+	jle	L569
+L568:
+	movl	$9761, %edi
+	call	__m3_fault
+L569:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_u8
+	.private_extern _Times__uTimes_param_u32_u8
+_Times__uTimes_param_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movsbq	-21(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_u8
+	.private_extern _Times__Times_param_u32_u8
+_Times__Times_param_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movsbq	-21(%rbp),%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L574
+	cmpq	$2147483647, -16(%rbp)
+	jle	L575
+L574:
+	movl	$9825, %edi
+	call	__m3_fault
+L575:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_I
+	.private_extern _Times__uTimes_var_u32_I
+_Times__uTimes_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_I
+	.private_extern _Times__Times_var_u32_I
+_Times__Times_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L580
+	cmpq	$2147483647, -16(%rbp)
+	jle	L581
+L580:
+	movl	$9889, %edi
+	call	__m3_fault
+L581:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_I
+	.private_extern _Times__uTimes_param_u32_I
+_Times__uTimes_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_I
+	.private_extern _Times__Times_param_u32_I
+_Times__Times_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	imulq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L586
+	cmpq	$2147483647, -16(%rbp)
+	jle	L587
+L586:
+	movl	$9953, %edi
+	call	__m3_fault
+L587:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_i8
+	.private_extern _Times__uTimes_var_u32_i8
+_Times__uTimes_var_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_i8
+	.private_extern _Times__Times_var_u32_i8
+_Times__Times_var_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L592
+	cmpq	$2147483647, -16(%rbp)
+	jle	L593
+L592:
+	movl	$10017, %edi
+	call	__m3_fault
+L593:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_i8
+	.private_extern _Times__uTimes_param_u32_i8
+_Times__uTimes_param_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzbl	-21(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_i8
+	.private_extern _Times__Times_param_u32_i8
+_Times__Times_param_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzbl	-21(%rbp), %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L598
+	cmpq	$2147483647, -16(%rbp)
+	jle	L599
+L598:
+	movl	$10081, %edi
+	call	__m3_fault
+L599:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_u32
+	.private_extern _Times__uTimes_var_u32_u32
+_Times__uTimes_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_u32
+	.private_extern _Times__Times_var_u32_u32
+_Times__Times_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L604
+	cmpq	$2147483647, -16(%rbp)
+	jle	L605
+L604:
+	movl	$10145, %edi
+	call	__m3_fault
+L605:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_u32
+	.private_extern _Times__uTimes_param_u32_u32
+_Times__uTimes_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_u32
+	.private_extern _Times__Times_param_u32_u32
+_Times__Times_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L610
+	cmpq	$2147483647, -16(%rbp)
+	jle	L611
+L610:
+	movl	$10209, %edi
+	call	__m3_fault
+L611:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_C
+	.private_extern _Times__uTimes_var_u32_C
+_Times__uTimes_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_C
+	.private_extern _Times__Times_var_u32_C
+_Times__Times_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L616
+	cmpq	$2147483647, -16(%rbp)
+	jle	L617
+L616:
+	movl	$10273, %edi
+	call	__m3_fault
+L617:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_C
+	.private_extern _Times__uTimes_param_u32_C
+_Times__uTimes_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_C
+	.private_extern _Times__Times_param_u32_C
+_Times__Times_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L622
+	cmpq	$2147483647, -16(%rbp)
+	jle	L623
+L622:
+	movl	$10337, %edi
+	call	__m3_fault
+L623:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_u16
+	.private_extern _Times__uTimes_var_u32_u16
+_Times__uTimes_var_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_u16
+	.private_extern _Times__Times_var_u32_u16
+_Times__Times_var_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L628
+	cmpq	$2147483647, -16(%rbp)
+	jle	L629
+L628:
+	movl	$10401, %edi
+	call	__m3_fault
+L629:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_u16
+	.private_extern _Times__uTimes_param_u32_u16
+_Times__uTimes_param_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movswq	-22(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_u16
+	.private_extern _Times__Times_param_u32_u16
+_Times__Times_param_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movswq	-22(%rbp),%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L634
+	cmpq	$2147483647, -16(%rbp)
+	jle	L635
+L634:
+	movl	$10465, %edi
+	call	__m3_fault
+L635:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_u64
+	.private_extern _Times__uTimes_var_u32_u64
+_Times__uTimes_var_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_u64
+	.private_extern _Times__Times_var_u32_u64
+_Times__Times_var_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_u64
+	.private_extern _Times__uTimes_param_u32_u64
+_Times__uTimes_param_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_u64
+	.private_extern _Times__Times_param_u32_u64
+_Times__Times_param_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_L
+	.private_extern _Times__uTimes_var_u32_L
+_Times__uTimes_var_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_L
+	.private_extern _Times__Times_var_u32_L
+_Times__Times_var_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_L
+	.private_extern _Times__uTimes_param_u32_L
+_Times__uTimes_param_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_L
+	.private_extern _Times__Times_param_u32_L
+_Times__Times_param_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_i16
+	.private_extern _Times__uTimes_var_u32_i16
+_Times__uTimes_var_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_i16
+	.private_extern _Times__Times_var_u32_i16
+_Times__Times_var_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L656
+	cmpq	$2147483647, -16(%rbp)
+	jle	L657
+L656:
+	movl	$10785, %edi
+	call	__m3_fault
+L657:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_i16
+	.private_extern _Times__uTimes_param_u32_i16
+_Times__uTimes_param_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzwl	-22(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_i16
+	.private_extern _Times__Times_param_u32_i16
+_Times__Times_param_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzwl	-22(%rbp), %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L662
+	cmpq	$2147483647, -16(%rbp)
+	jle	L663
+L662:
+	movl	$10849, %edi
+	call	__m3_fault
+L663:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u32_i32
+	.private_extern _Times__uTimes_var_u32_i32
+_Times__uTimes_var_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u32_i32
+	.private_extern _Times__Times_var_u32_i32
+_Times__Times_var_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L668
+	cmpq	$2147483647, -16(%rbp)
+	jle	L669
+L668:
+	movl	$10913, %edi
+	call	__m3_fault
+L669:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u32_i32
+	.private_extern _Times__uTimes_param_u32_i32
+_Times__uTimes_param_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	mov	-24(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u32_i32
+	.private_extern _Times__Times_param_u32_i32
+_Times__Times_param_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	mov	-24(%rbp), %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L674
+	cmpq	$2147483647, -16(%rbp)
+	jle	L675
+L674:
+	movl	$10977, %edi
+	call	__m3_fault
+L675:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_i64
+	.private_extern _Times__uTimes_var_C_i64
+_Times__uTimes_var_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_i64
+	.private_extern _Times__Times_var_C_i64
+_Times__Times_var_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_i64
+	.private_extern _Times__uTimes_param_C_i64
+_Times__uTimes_param_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_i64
+	.private_extern _Times__Times_param_C_i64
+_Times__Times_param_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_LC
+	.private_extern _Times__uTimes_var_C_LC
+_Times__uTimes_var_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_LC
+	.private_extern _Times__Times_var_C_LC
+_Times__Times_var_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_LC
+	.private_extern _Times__uTimes_param_C_LC
+_Times__uTimes_param_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_LC
+	.private_extern _Times__Times_param_C_LC
+_Times__Times_param_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_u8
+	.private_extern _Times__uTimes_var_C_u8
+_Times__uTimes_var_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_u8
+	.private_extern _Times__Times_var_C_u8
+_Times__Times_var_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L696
+	movl	$11297, %edi
+	call	__m3_fault
+L696:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_u8
+	.private_extern _Times__uTimes_param_C_u8
+_Times__uTimes_param_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_u8
+	.private_extern _Times__Times_param_C_u8
+_Times__Times_param_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	movq	-24(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L701
+	movl	$11361, %edi
+	call	__m3_fault
+L701:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_I
+	.private_extern _Times__uTimes_var_C_I
+_Times__uTimes_var_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_I
+	.private_extern _Times__Times_var_C_I
+_Times__Times_var_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L706
+	movl	$11425, %edi
+	call	__m3_fault
+L706:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_I
+	.private_extern _Times__uTimes_param_C_I
+_Times__uTimes_param_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_I
+	.private_extern _Times__Times_param_C_I
+_Times__Times_param_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L711
+	movl	$11489, %edi
+	call	__m3_fault
+L711:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_i8
+	.private_extern _Times__uTimes_var_C_i8
+_Times__uTimes_var_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_i8
+	.private_extern _Times__Times_var_C_i8
+_Times__Times_var_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L716
+	movl	$11553, %edi
+	call	__m3_fault
+L716:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_i8
+	.private_extern _Times__uTimes_param_C_i8
+_Times__uTimes_param_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_i8
+	.private_extern _Times__Times_param_C_i8
+_Times__Times_param_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	movq	-24(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L721
+	movl	$11617, %edi
+	call	__m3_fault
+L721:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_u32
+	.private_extern _Times__uTimes_var_C_u32
+_Times__uTimes_var_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_u32
+	.private_extern _Times__Times_var_C_u32
+_Times__Times_var_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L726
+	movl	$11681, %edi
+	call	__m3_fault
+L726:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_u32
+	.private_extern _Times__uTimes_param_C_u32
+_Times__uTimes_param_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_u32
+	.private_extern _Times__Times_param_C_u32
+_Times__Times_param_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L731
+	movl	$11745, %edi
+	call	__m3_fault
+L731:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_C
+	.private_extern _Times__uTimes_var_C_C
+_Times__uTimes_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_C
+	.private_extern _Times__Times_var_C_C
+_Times__Times_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L736
+	movl	$11809, %edi
+	call	__m3_fault
+L736:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_C
+	.private_extern _Times__uTimes_param_C_C
+_Times__uTimes_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_C
+	.private_extern _Times__Times_param_C_C
+_Times__Times_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	-32(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L741
+	movl	$11873, %edi
+	call	__m3_fault
+L741:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_u16
+	.private_extern _Times__uTimes_var_C_u16
+_Times__uTimes_var_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_u16
+	.private_extern _Times__Times_var_C_u16
+_Times__Times_var_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L746
+	movl	$11937, %edi
+	call	__m3_fault
+L746:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_u16
+	.private_extern _Times__uTimes_param_C_u16
+_Times__uTimes_param_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_u16
+	.private_extern _Times__Times_param_C_u16
+_Times__Times_param_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	movq	-24(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L751
+	movl	$12001, %edi
+	call	__m3_fault
+L751:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_u64
+	.private_extern _Times__uTimes_var_C_u64
+_Times__uTimes_var_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_u64
+	.private_extern _Times__Times_var_C_u64
+_Times__Times_var_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_u64
+	.private_extern _Times__uTimes_param_C_u64
+_Times__uTimes_param_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_u64
+	.private_extern _Times__Times_param_C_u64
+_Times__Times_param_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_L
+	.private_extern _Times__uTimes_var_C_L
+_Times__uTimes_var_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_L
+	.private_extern _Times__Times_var_C_L
+_Times__Times_var_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_L
+	.private_extern _Times__uTimes_param_C_L
+_Times__uTimes_param_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_L
+	.private_extern _Times__Times_param_C_L
+_Times__Times_param_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_i16
+	.private_extern _Times__uTimes_var_C_i16
+_Times__uTimes_var_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_i16
+	.private_extern _Times__Times_var_C_i16
+_Times__Times_var_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L772
+	movl	$12321, %edi
+	call	__m3_fault
+L772:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_i16
+	.private_extern _Times__uTimes_param_C_i16
+_Times__uTimes_param_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_i16
+	.private_extern _Times__Times_param_C_i16
+_Times__Times_param_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	movq	-24(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L777
+	movl	$12385, %edi
+	call	__m3_fault
+L777:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_C_i32
+	.private_extern _Times__uTimes_var_C_i32
+_Times__uTimes_var_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_C_i32
+	.private_extern _Times__Times_var_C_i32
+_Times__Times_var_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L782
+	movl	$12449, %edi
+	call	__m3_fault
+L782:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_C_i32
+	.private_extern _Times__uTimes_param_C_i32
+_Times__uTimes_param_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_C_i32
+	.private_extern _Times__Times_param_C_i32
+_Times__Times_param_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	movq	-24(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L787
+	movl	$12513, %edi
+	call	__m3_fault
+L787:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_i64
+	.private_extern _Times__uTimes_var_u16_i64
+_Times__uTimes_var_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_i64
+	.private_extern _Times__Times_var_u16_i64
+_Times__Times_var_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_i64
+	.private_extern _Times__uTimes_param_u16_i64
+_Times__uTimes_param_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_i64
+	.private_extern _Times__Times_param_u16_i64
+_Times__Times_param_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_LC
+	.private_extern _Times__uTimes_var_u16_LC
+_Times__uTimes_var_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_LC
+	.private_extern _Times__Times_var_u16_LC
+_Times__Times_var_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_LC
+	.private_extern _Times__uTimes_param_u16_LC
+_Times__uTimes_param_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_LC
+	.private_extern _Times__Times_param_u16_LC
+_Times__Times_param_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_u8
+	.private_extern _Times__uTimes_var_u16_u8
+_Times__uTimes_var_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_u8
+	.private_extern _Times__Times_var_u16_u8
+_Times__Times_var_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L808
+	cmpq	$32767, -16(%rbp)
+	jle	L809
+L808:
+	movl	$12833, %edi
+	call	__m3_fault
+L809:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_u8
+	.private_extern _Times__uTimes_param_u16_u8
+_Times__uTimes_param_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rdx
+	movsbq	-19(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_u8
+	.private_extern _Times__Times_param_u16_u8
+_Times__Times_param_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rax
+	movsbq	-19(%rbp),%rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L814
+	cmpq	$32767, -16(%rbp)
+	jle	L815
+L814:
+	movl	$12897, %edi
+	call	__m3_fault
+L815:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_I
+	.private_extern _Times__uTimes_var_u16_I
+_Times__uTimes_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_I
+	.private_extern _Times__Times_var_u16_I
+_Times__Times_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L820
+	cmpq	$32767, -16(%rbp)
+	jle	L821
+L820:
+	movl	$12961, %edi
+	call	__m3_fault
+L821:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_I
+	.private_extern _Times__uTimes_param_u16_I
+_Times__uTimes_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_I
+	.private_extern _Times__Times_param_u16_I
+_Times__Times_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L826
+	cmpq	$32767, -16(%rbp)
+	jle	L827
+L826:
+	movl	$13025, %edi
+	call	__m3_fault
+L827:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_i8
+	.private_extern _Times__uTimes_var_u16_i8
+_Times__uTimes_var_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_i8
+	.private_extern _Times__Times_var_u16_i8
+_Times__Times_var_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L832
+	cmpq	$32767, -16(%rbp)
+	jle	L833
+L832:
+	movl	$13089, %edi
+	call	__m3_fault
+L833:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_i8
+	.private_extern _Times__uTimes_param_u16_i8
+_Times__uTimes_param_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rdx
+	movzbl	-19(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_i8
+	.private_extern _Times__Times_param_u16_i8
+_Times__Times_param_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rax
+	movzbl	-19(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L838
+	cmpq	$32767, -16(%rbp)
+	jle	L839
+L838:
+	movl	$13153, %edi
+	call	__m3_fault
+L839:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_u32
+	.private_extern _Times__uTimes_var_u16_u32
+_Times__uTimes_var_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_u32
+	.private_extern _Times__Times_var_u16_u32
+_Times__Times_var_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L844
+	cmpq	$32767, -16(%rbp)
+	jle	L845
+L844:
+	movl	$13217, %edi
+	call	__m3_fault
+L845:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_u32
+	.private_extern _Times__uTimes_param_u16_u32
+_Times__uTimes_param_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_u32
+	.private_extern _Times__Times_param_u16_u32
+_Times__Times_param_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L850
+	cmpq	$32767, -16(%rbp)
+	jle	L851
+L850:
+	movl	$13281, %edi
+	call	__m3_fault
+L851:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_C
+	.private_extern _Times__uTimes_var_u16_C
+_Times__uTimes_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_C
+	.private_extern _Times__Times_var_u16_C
+_Times__Times_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L856
+	cmpq	$32767, -16(%rbp)
+	jle	L857
+L856:
+	movl	$13345, %edi
+	call	__m3_fault
+L857:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_C
+	.private_extern _Times__uTimes_param_u16_C
+_Times__uTimes_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_C
+	.private_extern _Times__Times_param_u16_C
+_Times__Times_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	-32(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L862
+	cmpq	$32767, -16(%rbp)
+	jle	L863
+L862:
+	movl	$13409, %edi
+	call	__m3_fault
+L863:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_u16
+	.private_extern _Times__uTimes_var_u16_u16
+_Times__uTimes_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_u16
+	.private_extern _Times__Times_var_u16_u16
+_Times__Times_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L868
+	cmpq	$32767, -16(%rbp)
+	jle	L869
+L868:
+	movl	$13473, %edi
+	call	__m3_fault
+L869:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_u16
+	.private_extern _Times__uTimes_param_u16_u16
+_Times__uTimes_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rdx
+	movswq	-20(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_u16
+	.private_extern _Times__Times_param_u16_u16
+_Times__Times_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movswq	-20(%rbp),%rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L874
+	cmpq	$32767, -16(%rbp)
+	jle	L875
+L874:
+	movl	$13537, %edi
+	call	__m3_fault
+L875:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_u64
+	.private_extern _Times__uTimes_var_u16_u64
+_Times__uTimes_var_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_u64
+	.private_extern _Times__Times_var_u16_u64
+_Times__Times_var_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_u64
+	.private_extern _Times__uTimes_param_u16_u64
+_Times__uTimes_param_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_u64
+	.private_extern _Times__Times_param_u16_u64
+_Times__Times_param_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_L
+	.private_extern _Times__uTimes_var_u16_L
+_Times__uTimes_var_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_L
+	.private_extern _Times__Times_var_u16_L
+_Times__Times_var_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_L
+	.private_extern _Times__uTimes_param_u16_L
+_Times__uTimes_param_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_L
+	.private_extern _Times__Times_param_u16_L
+_Times__Times_param_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_i16
+	.private_extern _Times__uTimes_var_u16_i16
+_Times__uTimes_var_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_i16
+	.private_extern _Times__Times_var_u16_i16
+_Times__Times_var_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L896
+	cmpq	$32767, -16(%rbp)
+	jle	L897
+L896:
+	movl	$13857, %edi
+	call	__m3_fault
+L897:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_i16
+	.private_extern _Times__uTimes_param_u16_i16
+_Times__uTimes_param_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rdx
+	movzwl	-20(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_i16
+	.private_extern _Times__Times_param_u16_i16
+_Times__Times_param_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movzwl	-20(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L902
+	cmpq	$32767, -16(%rbp)
+	jle	L903
+L902:
+	movl	$13921, %edi
+	call	__m3_fault
+L903:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u16_i32
+	.private_extern _Times__uTimes_var_u16_i32
+_Times__uTimes_var_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u16_i32
+	.private_extern _Times__Times_var_u16_i32
+_Times__Times_var_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L908
+	cmpq	$32767, -16(%rbp)
+	jle	L909
+L908:
+	movl	$13985, %edi
+	call	__m3_fault
+L909:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u16_i32
+	.private_extern _Times__uTimes_param_u16_i32
+_Times__uTimes_param_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rdx
+	mov	-24(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u16_i32
+	.private_extern _Times__Times_param_u16_i32
+_Times__Times_param_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rax
+	mov	-24(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L914
+	cmpq	$32767, -16(%rbp)
+	jle	L915
+L914:
+	movl	$14049, %edi
+	call	__m3_fault
+L915:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_i64
+	.private_extern _Times__uTimes_var_u64_i64
+_Times__uTimes_var_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_i64
+	.private_extern _Times__Times_var_u64_i64
+_Times__Times_var_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_i64
+	.private_extern _Times__uTimes_param_u64_i64
+_Times__uTimes_param_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_i64
+	.private_extern _Times__Times_param_u64_i64
+_Times__Times_param_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_LC
+	.private_extern _Times__uTimes_var_u64_LC
+_Times__uTimes_var_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_LC
+	.private_extern _Times__Times_var_u64_LC
+_Times__Times_var_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_LC
+	.private_extern _Times__uTimes_param_u64_LC
+_Times__uTimes_param_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_LC
+	.private_extern _Times__Times_param_u64_LC
+_Times__Times_param_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_u8
+	.private_extern _Times__uTimes_var_u64_u8
+_Times__uTimes_var_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_u8
+	.private_extern _Times__Times_var_u64_u8
+_Times__Times_var_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_u8
+	.private_extern _Times__uTimes_param_u64_u8
+_Times__uTimes_param_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_u8
+	.private_extern _Times__Times_param_u64_u8
+_Times__Times_param_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_I
+	.private_extern _Times__uTimes_var_u64_I
+_Times__uTimes_var_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_I
+	.private_extern _Times__Times_var_u64_I
+_Times__Times_var_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_I
+	.private_extern _Times__uTimes_param_u64_I
+_Times__uTimes_param_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_I
+	.private_extern _Times__Times_param_u64_I
+_Times__Times_param_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_i8
+	.private_extern _Times__uTimes_var_u64_i8
+_Times__uTimes_var_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_i8
+	.private_extern _Times__Times_var_u64_i8
+_Times__Times_var_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_i8
+	.private_extern _Times__uTimes_param_u64_i8
+_Times__uTimes_param_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_i8
+	.private_extern _Times__Times_param_u64_i8
+_Times__Times_param_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_u32
+	.private_extern _Times__uTimes_var_u64_u32
+_Times__uTimes_var_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_u32
+	.private_extern _Times__Times_var_u64_u32
+_Times__Times_var_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_u32
+	.private_extern _Times__uTimes_param_u64_u32
+_Times__uTimes_param_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_u32
+	.private_extern _Times__Times_param_u64_u32
+_Times__Times_param_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_C
+	.private_extern _Times__uTimes_var_u64_C
+_Times__uTimes_var_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_C
+	.private_extern _Times__Times_var_u64_C
+_Times__Times_var_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_C
+	.private_extern _Times__uTimes_param_u64_C
+_Times__uTimes_param_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_C
+	.private_extern _Times__Times_param_u64_C
+_Times__Times_param_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_u16
+	.private_extern _Times__uTimes_var_u64_u16
+_Times__uTimes_var_u64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_u16
+	.private_extern _Times__Times_var_u64_u16
+_Times__Times_var_u64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_u16
+	.private_extern _Times__uTimes_param_u64_u16
+_Times__uTimes_param_u64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_u16
+	.private_extern _Times__Times_param_u64_u16
+_Times__Times_param_u64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_u64
+	.private_extern _Times__uTimes_var_u64_u64
+_Times__uTimes_var_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_u64
+	.private_extern _Times__Times_var_u64_u64
+_Times__Times_var_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rdx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_u64
+	.private_extern _Times__uTimes_param_u64_u64
+_Times__uTimes_param_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_u64
+	.private_extern _Times__Times_param_u64_u64
+_Times__Times_param_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_L
+	.private_extern _Times__uTimes_var_u64_L
+_Times__uTimes_var_u64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_L
+	.private_extern _Times__Times_var_u64_L
+_Times__Times_var_u64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Times(%rip), %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_L
+	.private_extern _Times__uTimes_param_u64_L
+_Times__uTimes_param_u64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_L
+	.private_extern _Times__Times_param_u64_L
+_Times__Times_param_u64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_i16
+	.private_extern _Times__uTimes_var_u64_i16
+_Times__uTimes_var_u64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_i16
+	.private_extern _Times__Times_var_u64_i16
+_Times__Times_var_u64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_i16
+	.private_extern _Times__uTimes_param_u64_i16
+_Times__uTimes_param_u64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_i16
+	.private_extern _Times__Times_param_u64_i16
+_Times__Times_param_u64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_u64_i32
+	.private_extern _Times__uTimes_var_u64_i32
+_Times__uTimes_var_u64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_u64_i32
+	.private_extern _Times__Times_var_u64_i32
+_Times__Times_var_u64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_u64_i32
+	.private_extern _Times__uTimes_param_u64_i32
+_Times__uTimes_param_u64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_u64_i32
+	.private_extern _Times__Times_param_u64_i32
+_Times__Times_param_u64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_var_f64_f64
+	.private_extern _Times__Times_var_f64_f64
+_Times__Times_var_f64_f64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movsd	168+_MM_Times(%rip), %xmm1
+	movsd	168+_MM_Times(%rip), %xmm0
+	mulsd	%xmm1, %xmm0
+	leave
+	ret
+.globl _Times__Times_param_f64_f64
+	.private_extern _Times__Times_param_f64_f64
+_Times__Times_param_f64_f64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movsd	%xmm0, -24(%rbp)
+	movsd	%xmm1, -32(%rbp)
+	movsd	-24(%rbp), %xmm0
+	mulsd	-32(%rbp), %xmm0
+	leave
+	ret
+.globl _Times__uTimes_var_L_i64
+	.private_extern _Times__uTimes_var_L_i64
+_Times__uTimes_var_L_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_i64
+	.private_extern _Times__Times_var_L_i64
+_Times__Times_var_L_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Times(%rip), %rdx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_i64
+	.private_extern _Times__uTimes_param_L_i64
+_Times__uTimes_param_L_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_L_i64
+	.private_extern _Times__Times_param_L_i64
+_Times__Times_param_L_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_L_LC
+	.private_extern _Times__uTimes_var_L_LC
+_Times__uTimes_var_L_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_LC
+	.private_extern _Times__Times_var_L_LC
+_Times__Times_var_L_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Times(%rip), %rdx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_LC
+	.private_extern _Times__uTimes_param_L_LC
+_Times__uTimes_param_L_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_L_LC
+	.private_extern _Times__Times_param_L_LC
+_Times__Times_param_L_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_L_u8
+	.private_extern _Times__uTimes_var_L_u8
+_Times__uTimes_var_L_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_u8
+	.private_extern _Times__Times_var_L_u8
+_Times__Times_var_L_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_u8
+	.private_extern _Times__uTimes_param_L_u8
+_Times__uTimes_param_L_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_L_u8
+	.private_extern _Times__Times_param_L_u8
+_Times__Times_param_L_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_L_I
+	.private_extern _Times__uTimes_var_L_I
+_Times__uTimes_var_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_I
+	.private_extern _Times__Times_var_L_I
+_Times__Times_var_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Times(%rip), %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_I
+	.private_extern _Times__uTimes_param_L_I
+_Times__uTimes_param_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_L_I
+	.private_extern _Times__Times_param_L_I
+_Times__Times_param_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_L_i8
+	.private_extern _Times__uTimes_var_L_i8
+_Times__uTimes_var_L_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_i8
+	.private_extern _Times__Times_var_L_i8
+_Times__Times_var_L_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_i8
+	.private_extern _Times__uTimes_param_L_i8
+_Times__uTimes_param_L_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_L_i8
+	.private_extern _Times__Times_param_L_i8
+_Times__Times_param_L_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_L_u32
+	.private_extern _Times__uTimes_var_L_u32
+_Times__uTimes_var_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_u32
+	.private_extern _Times__Times_var_L_u32
+_Times__Times_var_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Times(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_u32
+	.private_extern _Times__uTimes_param_L_u32
+_Times__uTimes_param_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_L_u32
+	.private_extern _Times__Times_param_L_u32
+_Times__Times_param_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_L_C
+	.private_extern _Times__uTimes_var_L_C
+_Times__uTimes_var_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_C
+	.private_extern _Times__Times_var_L_C
+_Times__Times_var_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Times(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_C
+	.private_extern _Times__uTimes_param_L_C
+_Times__uTimes_param_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_L_C
+	.private_extern _Times__Times_param_L_C
+_Times__Times_param_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	imulq	-24(%rbp), %rax
 	leave
 	ret
 .globl _Times__uTimes_var_L_u16
@@ -6548,7 +6131,7 @@ L1143:
 _Times__uTimes_var_L_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
+	movzwl	152+_MM_Times(%rip), %eax
 	movswq	%ax,%rdx
 	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
@@ -6559,7 +6142,7 @@ _Times__uTimes_var_L_u16:
 _Times__Times_var_L_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Times(%rip), %eax
+	movzwl	152+_MM_Times(%rip), %eax
 	movswq	%ax,%rdx
 	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
@@ -6595,7 +6178,7 @@ _Times__uTimes_var_L_u64:
 	movq	%rsp, %rbp
 	movq	176+_MM_Times(%rip), %rax
 	movq	%rax, %rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -6605,7 +6188,7 @@ _Times__Times_var_L_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Times(%rip), %rdx
-	movq	112+_MM_Times(%rip), %rax
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
@@ -6630,360 +6213,6 @@ _Times__Times_param_L_u64:
 	movq	%rsi, -32(%rbp)
 	movq	-24(%rbp), %rax
 	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_LC
-	.private_extern _Times__uTimes_var_L_LC
-_Times__uTimes_var_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_LC
-	.private_extern _Times__Times_var_L_LC
-_Times__Times_var_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Times(%rip), %rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_LC
-	.private_extern _Times__uTimes_param_L_LC
-_Times__uTimes_param_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_L_LC
-	.private_extern _Times__Times_param_L_LC
-_Times__Times_param_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_i16
-	.private_extern _Times__uTimes_var_L_i16
-_Times__uTimes_var_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_i16
-	.private_extern _Times__Times_var_L_i16
-_Times__Times_var_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_i16
-	.private_extern _Times__uTimes_param_L_i16
-_Times__uTimes_param_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_L_i16
-	.private_extern _Times__Times_param_L_i16
-_Times__Times_param_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_i32
-	.private_extern _Times__uTimes_var_L_i32
-_Times__uTimes_var_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_i32
-	.private_extern _Times__Times_var_L_i32
-_Times__Times_var_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_i32
-	.private_extern _Times__uTimes_param_L_i32
-_Times__uTimes_param_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_L_i32
-	.private_extern _Times__Times_param_L_i32
-_Times__Times_param_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_I
-	.private_extern _Times__uTimes_var_L_I
-_Times__uTimes_var_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_I
-	.private_extern _Times__Times_var_L_I
-_Times__Times_var_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Times(%rip), %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_I
-	.private_extern _Times__uTimes_param_L_I
-_Times__uTimes_param_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_L_I
-	.private_extern _Times__Times_param_L_I
-_Times__Times_param_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_i64
-	.private_extern _Times__uTimes_var_L_i64
-_Times__uTimes_var_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_i64
-	.private_extern _Times__Times_var_L_i64
-_Times__Times_var_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Times(%rip), %rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_i64
-	.private_extern _Times__uTimes_param_L_i64
-_Times__uTimes_param_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_L_i64
-	.private_extern _Times__Times_param_L_i64
-_Times__Times_param_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_C
-	.private_extern _Times__uTimes_var_L_C
-_Times__uTimes_var_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_C
-	.private_extern _Times__Times_var_L_C
-_Times__Times_var_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Times(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_C
-	.private_extern _Times__uTimes_param_L_C
-_Times__uTimes_param_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_L_C
-	.private_extern _Times__Times_param_L_C
-_Times__Times_param_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_u8
-	.private_extern _Times__uTimes_var_L_u8
-_Times__uTimes_var_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_u8
-	.private_extern _Times__Times_var_L_u8
-_Times__Times_var_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_u8
-	.private_extern _Times__uTimes_param_L_u8
-_Times__uTimes_param_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_L_u8
-	.private_extern _Times__Times_param_L_u8
-_Times__Times_param_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	imulq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_L_i8
-	.private_extern _Times__uTimes_var_L_i8
-_Times__uTimes_var_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_L_i8
-	.private_extern _Times__Times_var_L_i8
-_Times__Times_var_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_L_i8
-	.private_extern _Times__uTimes_param_L_i8
-_Times__uTimes_param_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_L_i8
-	.private_extern _Times__Times_param_L_i8
-_Times__Times_param_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	imulq	-24(%rbp), %rax
 	leave
 	ret
 .globl _Times__uTimes_var_L_L
@@ -7030,246 +6259,1020 @@ _Times__Times_param_L_L:
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_L_u32
-	.private_extern _Times__uTimes_var_L_u32
-_Times__uTimes_var_L_u32:
+.globl _Times__uTimes_var_L_i16
+	.private_extern _Times__uTimes_var_L_i16
+_Times__uTimes_var_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
 	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_L_u32
-	.private_extern _Times__Times_var_L_u32
-_Times__Times_var_L_u32:
+.globl _Times__Times_var_L_i16
+	.private_extern _Times__Times_var_L_i16
+_Times__Times_var_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
 	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__uTimes_param_L_u32
-	.private_extern _Times__uTimes_param_L_u32
-_Times__uTimes_param_L_u32:
+.globl _Times__uTimes_param_L_i16
+	.private_extern _Times__uTimes_param_L_i16
+_Times__uTimes_param_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
 	movq	-24(%rbp), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_L_u32
-	.private_extern _Times__Times_param_L_u32
-_Times__Times_param_L_u32:
+.globl _Times__Times_param_L_i16
+	.private_extern _Times__Times_param_L_i16
+_Times__Times_param_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	imulq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_L_i32
+	.private_extern _Times__uTimes_var_L_i32
+_Times__uTimes_var_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_L_i32
+	.private_extern _Times__Times_var_L_i32
+_Times__Times_var_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_L_i32
+	.private_extern _Times__uTimes_param_L_i32
+_Times__uTimes_param_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_L_i32
+	.private_extern _Times__Times_param_L_i32
+_Times__Times_param_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
 	imulq	-24(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u32_u16
-	.private_extern _Times__uTimes_var_u32_u16
-_Times__uTimes_var_u32_u16:
+.globl _Times__uTimes_var_i16_i64
+	.private_extern _Times__uTimes_var_i16_i64
+_Times__uTimes_var_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u32_u16
-	.private_extern _Times__Times_var_u32_u16
-_Times__Times_var_u32_u16:
+.globl _Times__Times_var_i16_i64
+	.private_extern _Times__Times_var_i16_i64
+_Times__Times_var_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_i64
+	.private_extern _Times__uTimes_param_i16_i64
+_Times__uTimes_param_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_i64
+	.private_extern _Times__Times_param_i16_i64
+_Times__Times_param_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_LC
+	.private_extern _Times__uTimes_var_i16_LC
+_Times__uTimes_var_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_LC
+	.private_extern _Times__Times_var_i16_LC
+_Times__Times_var_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_LC
+	.private_extern _Times__uTimes_param_i16_LC
+_Times__uTimes_param_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_LC
+	.private_extern _Times__Times_param_i16_LC
+_Times__Times_param_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_u8
+	.private_extern _Times__uTimes_var_i16_u8
+_Times__uTimes_var_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_u8
+	.private_extern _Times__Times_var_i16_u8
+_Times__Times_var_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	104+_MM_Times(%rip), %eax
-	movswq	%ax,%rax
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1244
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1245
-L1244:
-	movl	$18785, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1132
+	cmpq	$65535, -16(%rbp)
+	jle	L1133
+L1132:
+	movl	$17505, %edi
 	call	__m3_fault
-L1245:
+L1133:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u32_u16
-	.private_extern _Times__uTimes_param_u32_u16
-_Times__uTimes_param_u32_u16:
+.globl _Times__uTimes_param_i16_u8
+	.private_extern _Times__uTimes_param_i16_u8
+_Times__uTimes_param_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movswq	-22(%rbp),%rax
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %edx
+	movsbq	-19(%rbp),%rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_u16
-	.private_extern _Times__Times_param_u32_u16
-_Times__Times_param_u32_u16:
+.globl _Times__Times_param_i16_u8
+	.private_extern _Times__Times_param_i16_u8
+_Times__Times_param_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movsbq	-19(%rbp),%rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1138
+	cmpq	$65535, -16(%rbp)
+	jle	L1139
+L1138:
+	movl	$17569, %edi
+	call	__m3_fault
+L1139:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_I
+	.private_extern _Times__uTimes_var_i16_I
+_Times__uTimes_var_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_I
+	.private_extern _Times__Times_var_i16_I
+_Times__Times_var_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	128+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1144
+	cmpq	$65535, -16(%rbp)
+	jle	L1145
+L1144:
+	movl	$17633, %edi
+	call	__m3_fault
+L1145:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_I
+	.private_extern _Times__uTimes_param_i16_I
+_Times__uTimes_param_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_I
+	.private_extern _Times__Times_param_i16_I
+_Times__Times_param_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1150
+	cmpq	$65535, -16(%rbp)
+	jle	L1151
+L1150:
+	movl	$17697, %edi
+	call	__m3_fault
+L1151:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_i8
+	.private_extern _Times__uTimes_var_i16_i8
+_Times__uTimes_var_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_i8
+	.private_extern _Times__Times_var_i16_i8
+_Times__Times_var_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1156
+	cmpq	$65535, -16(%rbp)
+	jle	L1157
+L1156:
+	movl	$17761, %edi
+	call	__m3_fault
+L1157:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_i8
+	.private_extern _Times__uTimes_param_i16_i8
+_Times__uTimes_param_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %edx
+	movzbl	-19(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_i8
+	.private_extern _Times__Times_param_i16_i8
+_Times__Times_param_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movzbl	-19(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1162
+	cmpq	$65535, -16(%rbp)
+	jle	L1163
+L1162:
+	movl	$17825, %edi
+	call	__m3_fault
+L1163:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_u32
+	.private_extern _Times__uTimes_var_i16_u32
+_Times__uTimes_var_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_u32
+	.private_extern _Times__Times_var_i16_u32
+_Times__Times_var_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1168
+	cmpq	$65535, -16(%rbp)
+	jle	L1169
+L1168:
+	movl	$17889, %edi
+	call	__m3_fault
+L1169:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_u32
+	.private_extern _Times__uTimes_param_i16_u32
+_Times__uTimes_param_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_u32
+	.private_extern _Times__Times_param_i16_u32
+_Times__Times_param_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1174
+	cmpq	$65535, -16(%rbp)
+	jle	L1175
+L1174:
+	movl	$17953, %edi
+	call	__m3_fault
+L1175:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_C
+	.private_extern _Times__uTimes_var_i16_C
+_Times__uTimes_var_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_C
+	.private_extern _Times__Times_var_i16_C
+_Times__Times_var_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	144+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1180
+	cmpq	$65535, -16(%rbp)
+	jle	L1181
+L1180:
+	movl	$18017, %edi
+	call	__m3_fault
+L1181:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_C
+	.private_extern _Times__uTimes_param_i16_C
+_Times__uTimes_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_C
+	.private_extern _Times__Times_param_i16_C
+_Times__Times_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	-32(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1186
+	cmpq	$65535, -16(%rbp)
+	jle	L1187
+L1186:
+	movl	$18081, %edi
+	call	__m3_fault
+L1187:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_u16
+	.private_extern _Times__uTimes_var_i16_u16
+_Times__uTimes_var_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_u16
+	.private_extern _Times__Times_var_i16_u16
+_Times__Times_var_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1192
+	cmpq	$65535, -16(%rbp)
+	jle	L1193
+L1192:
+	movl	$18145, %edi
+	call	__m3_fault
+L1193:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_u16
+	.private_extern _Times__uTimes_param_i16_u16
+_Times__uTimes_param_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %edx
+	movswq	-20(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_u16
+	.private_extern _Times__Times_param_i16_u16
+_Times__Times_param_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movswq	-20(%rbp),%rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1198
+	cmpq	$65535, -16(%rbp)
+	jle	L1199
+L1198:
+	movl	$18209, %edi
+	call	__m3_fault
+L1199:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_u64
+	.private_extern _Times__uTimes_var_i16_u64
+_Times__uTimes_var_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_u64
+	.private_extern _Times__Times_var_i16_u64
+_Times__Times_var_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_u64
+	.private_extern _Times__uTimes_param_i16_u64
+_Times__uTimes_param_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_u64
+	.private_extern _Times__Times_param_i16_u64
+_Times__Times_param_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_L
+	.private_extern _Times__uTimes_var_i16_L
+_Times__uTimes_var_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_L
+	.private_extern _Times__Times_var_i16_L
+_Times__Times_var_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_L
+	.private_extern _Times__uTimes_param_i16_L
+_Times__uTimes_param_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_L
+	.private_extern _Times__Times_param_i16_L
+_Times__Times_param_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_i16
+	.private_extern _Times__uTimes_var_i16_i16
+_Times__uTimes_var_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_i16
+	.private_extern _Times__Times_var_i16_i16
+_Times__Times_var_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1220
+	cmpq	$65535, -16(%rbp)
+	jle	L1221
+L1220:
+	movl	$18529, %edi
+	call	__m3_fault
+L1221:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_i16
+	.private_extern _Times__uTimes_param_i16_i16
+_Times__uTimes_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %edx
+	movzwl	-20(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_i16
+	.private_extern _Times__Times_param_i16_i16
+_Times__Times_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movzwl	-20(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1226
+	cmpq	$65535, -16(%rbp)
+	jle	L1227
+L1226:
+	movl	$18593, %edi
+	call	__m3_fault
+L1227:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i16_i32
+	.private_extern _Times__uTimes_var_i16_i32
+_Times__uTimes_var_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i16_i32
+	.private_extern _Times__Times_var_i16_i32
+_Times__Times_var_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %edx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1232
+	cmpq	$65535, -16(%rbp)
+	jle	L1233
+L1232:
+	movl	$18657, %edi
+	call	__m3_fault
+L1233:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i16_i32
+	.private_extern _Times__uTimes_param_i16_i32
+_Times__uTimes_param_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %edx
+	mov	-24(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i16_i32
+	.private_extern _Times__Times_param_i16_i32
+_Times__Times_param_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %eax
+	mov	-24(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1238
+	cmpq	$65535, -16(%rbp)
+	jle	L1239
+L1238:
+	movl	$18721, %edi
+	call	__m3_fault
+L1239:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i32_i64
+	.private_extern _Times__uTimes_var_i32_i64
+_Times__uTimes_var_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i32_i64
+	.private_extern _Times__Times_var_i32_i64
+_Times__Times_var_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i32_i64
+	.private_extern _Times__uTimes_param_i32_i64
+_Times__uTimes_param_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i32_i64
+	.private_extern _Times__Times_param_i32_i64
+_Times__Times_param_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i32_LC
+	.private_extern _Times__uTimes_var_i32_LC
+_Times__uTimes_var_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i32_LC
+	.private_extern _Times__Times_var_i32_LC
+_Times__Times_var_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	112+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i32_LC
+	.private_extern _Times__uTimes_param_i32_LC
+_Times__uTimes_param_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_i32_LC
+	.private_extern _Times__Times_param_i32_LC
+_Times__Times_param_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i32_u8
+	.private_extern _Times__uTimes_var_i32_u8
+_Times__uTimes_var_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i32_u8
+	.private_extern _Times__Times_var_i32_u8
+_Times__Times_var_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzbl	124+_MM_Times(%rip), %eax
+	movsbq	%al,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1260
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1261
+L1260:
+	movl	$19041, %edi
+	call	__m3_fault
+L1261:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i32_u8
+	.private_extern _Times__uTimes_param_i32_u8
+_Times__uTimes_param_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %edx
+	movsbq	-21(%rbp),%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i32_u8
+	.private_extern _Times__Times_param_i32_u8
+_Times__Times_param_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movswq	-22(%rbp),%rax
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
+	movsbq	-21(%rbp),%rdx
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1250
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1251
-L1250:
-	movl	$18849, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1266
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1267
+L1266:
+	movl	$19105, %edi
 	call	__m3_fault
-L1251:
+L1267:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u32_u64
-	.private_extern _Times__uTimes_var_u32_u64
-_Times__uTimes_var_u32_u64:
+.globl _Times__uTimes_var_i32_I
+	.private_extern _Times__uTimes_var_i32_I
+_Times__uTimes_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	112+_MM_Times(%rip), %rax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	128+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u32_u64
-	.private_extern _Times__Times_var_u32_u64
-_Times__Times_var_u32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	112+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u32_u64
-	.private_extern _Times__uTimes_param_u32_u64
-_Times__uTimes_param_u32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u32_u64
-	.private_extern _Times__Times_param_u32_u64
-_Times__Times_param_u32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u32_LC
-	.private_extern _Times__uTimes_var_u32_LC
-_Times__uTimes_var_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u32_LC
-	.private_extern _Times__Times_var_u32_LC
-_Times__Times_var_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u32_LC
-	.private_extern _Times__uTimes_param_u32_LC
-_Times__uTimes_param_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__Times_param_u32_LC
-	.private_extern _Times__Times_param_u32_LC
-_Times__Times_param_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u32_i16
-	.private_extern _Times__uTimes_var_u32_i16
-_Times__uTimes_var_u32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u32_i16
-	.private_extern _Times__Times_var_u32_i16
-_Times__Times_var_u32_i16:
+.globl _Times__Times_var_i32_I
+	.private_extern _Times__Times_var_i32_I
+_Times__Times_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	136+_MM_Times(%rip), %eax
-	movzwl	%ax, %eax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	128+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1272
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1272
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1273
 L1272:
 	movl	$19169, %edi
@@ -7278,35 +7281,33 @@ L1273:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u32_i16
-	.private_extern _Times__uTimes_param_u32_i16
-_Times__uTimes_param_u32_i16:
+.globl _Times__uTimes_param_i32_I
+	.private_extern _Times__uTimes_param_i32_I
+_Times__uTimes_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzwl	-22(%rbp), %eax
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_i16
-	.private_extern _Times__Times_param_u32_i16
-_Times__Times_param_u32_i16:
+.globl _Times__Times_param_i32_I
+	.private_extern _Times__Times_param_i32_I
+_Times__Times_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzwl	-22(%rbp), %eax
-	imulq	%rdx, %rax
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	imulq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1278
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1278
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1279
 L1278:
 	movl	$19233, %edi
@@ -7315,33 +7316,34 @@ L1279:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u32_i32
-	.private_extern _Times__uTimes_var_u32_i32
-_Times__uTimes_var_u32_i32:
+.globl _Times__uTimes_var_i32_i8
+	.private_extern _Times__uTimes_var_i32_i8
+_Times__uTimes_var_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u32_i32
-	.private_extern _Times__Times_var_u32_i32
-_Times__Times_var_u32_i32:
+.globl _Times__Times_var_i32_i8
+	.private_extern _Times__Times_var_i32_i8
+_Times__Times_var_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movl	140+_MM_Times(%rip), %eax
-	mov	%eax, %eax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzbl	136+_MM_Times(%rip), %eax
+	movzbl	%al, %eax
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1284
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1284
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1285
 L1284:
 	movl	$19297, %edi
@@ -7350,35 +7352,34 @@ L1285:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u32_i32
-	.private_extern _Times__uTimes_param_u32_i32
-_Times__uTimes_param_u32_i32:
+.globl _Times__uTimes_param_i32_i8
+	.private_extern _Times__uTimes_param_i32_i8
+_Times__uTimes_param_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	mov	-24(%rbp), %eax
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %edx
+	movzbl	-21(%rbp), %eax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_i32
-	.private_extern _Times__Times_param_u32_i32
-_Times__Times_param_u32_i32:
+.globl _Times__Times_param_i32_i8
+	.private_extern _Times__Times_param_i32_i8
+_Times__Times_param_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	mov	-24(%rbp), %eax
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
+	movzbl	-21(%rbp), %edx
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1290
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1290
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1291
 L1290:
 	movl	$19361, %edi
@@ -7387,31 +7388,34 @@ L1291:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u32_I
-	.private_extern _Times__uTimes_var_u32_I
-_Times__uTimes_var_u32_I:
+.globl _Times__uTimes_var_i32_u32
+	.private_extern _Times__uTimes_var_i32_u32
+_Times__uTimes_var_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	144+_MM_Times(%rip), %rax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u32_I
-	.private_extern _Times__Times_var_u32_I
-_Times__Times_var_u32_I:
+.globl _Times__Times_var_i32_u32
+	.private_extern _Times__Times_var_i32_u32
+_Times__Times_var_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	144+_MM_Times(%rip), %rax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movl	140+_MM_Times(%rip), %eax
+	cltq
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1296
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1296
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1297
 L1296:
 	movl	$19425, %edi
@@ -7420,34 +7424,36 @@ L1297:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u32_I
-	.private_extern _Times__uTimes_param_u32_I
-_Times__uTimes_param_u32_I:
+.globl _Times__uTimes_param_i32_u32
+	.private_extern _Times__uTimes_param_i32_u32
+_Times__uTimes_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
+	movl	%esi, -24(%rbp)
+	mov	-20(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_I
-	.private_extern _Times__Times_param_u32_I
-_Times__Times_param_u32_I:
+.globl _Times__Times_param_i32_u32
+	.private_extern _Times__Times_param_i32_u32
+_Times__Times_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
+	movl	%esi, -24(%rbp)
+	mov	-20(%rbp), %edx
+	movl	-24(%rbp), %eax
 	cltq
-	imulq	-32(%rbp), %rax
+	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1302
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1302
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1303
 L1302:
 	movl	$19489, %edi
@@ -7456,340 +7462,337 @@ L1303:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u32_i64
-	.private_extern _Times__uTimes_var_u32_i64
-_Times__uTimes_var_u32_i64:
+.globl _Times__uTimes_var_i32_C
+	.private_extern _Times__uTimes_var_i32_C
+_Times__uTimes_var_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Times(%rip), %rax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	144+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u32_i64
-	.private_extern _Times__Times_var_u32_i64
-_Times__Times_var_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u32_i64
-	.private_extern _Times__uTimes_param_u32_i64
-_Times__uTimes_param_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u32_i64
-	.private_extern _Times__Times_param_u32_i64
-_Times__Times_param_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	imulq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u32_C
-	.private_extern _Times__uTimes_var_u32_C
-_Times__uTimes_var_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	160+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u32_C
-	.private_extern _Times__Times_var_u32_C
-_Times__Times_var_u32_C:
+.globl _Times__Times_var_i32_C
+	.private_extern _Times__Times_var_i32_C
+_Times__Times_var_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	160+_MM_Times(%rip), %rax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	144+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1316
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1317
-L1316:
+	cmpq	$0, -16(%rbp)
+	js	L1308
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1309
+L1308:
+	movl	$19553, %edi
+	call	__m3_fault
+L1309:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i32_C
+	.private_extern _Times__uTimes_param_i32_C
+_Times__uTimes_param_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__Times_param_i32_C
+	.private_extern _Times__Times_param_i32_C
+_Times__Times_param_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	movq	-32(%rbp), %rdx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1314
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1315
+L1314:
+	movl	$19617, %edi
+	call	__m3_fault
+L1315:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i32_u16
+	.private_extern _Times__uTimes_var_i32_u16
+_Times__uTimes_var_i32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i32_u16
+	.private_extern _Times__Times_var_i32_u16
+_Times__Times_var_i32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzwl	152+_MM_Times(%rip), %eax
+	movswq	%ax,%rax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1320
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1321
+L1320:
 	movl	$19681, %edi
 	call	__m3_fault
-L1317:
+L1321:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u32_C
-	.private_extern _Times__uTimes_param_u32_C
-_Times__uTimes_param_u32_C:
+.globl _Times__uTimes_param_i32_u16
+	.private_extern _Times__uTimes_param_i32_u16
+_Times__uTimes_param_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	imulq	-32(%rbp), %rax
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %edx
+	movswq	-22(%rbp),%rax
+	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_C
-	.private_extern _Times__Times_param_u32_C
-_Times__Times_param_u32_C:
+.globl _Times__Times_param_i32_u16
+	.private_extern _Times__Times_param_i32_u16
+_Times__Times_param_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
+	movswq	-22(%rbp),%rdx
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1322
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1323
-L1322:
+	cmpq	$0, -16(%rbp)
+	js	L1326
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1327
+L1326:
 	movl	$19745, %edi
 	call	__m3_fault
-L1323:
+L1327:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u32_u8
-	.private_extern _Times__uTimes_var_u32_u8
-_Times__uTimes_var_u32_u8:
+.globl _Times__uTimes_var_i32_u64
+	.private_extern _Times__uTimes_var_i32_u64
+_Times__uTimes_var_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u32_u8
-	.private_extern _Times__Times_var_u32_u8
-_Times__Times_var_u32_u8:
+.globl _Times__Times_var_i32_u64
+	.private_extern _Times__Times_var_i32_u64
+_Times__Times_var_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	172+_MM_Times(%rip), %eax
-	movsbq	%al,%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1328
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1329
-L1328:
-	movl	$19809, %edi
-	call	__m3_fault
-L1329:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u32_u8
-	.private_extern _Times__uTimes_param_u32_u8
-_Times__uTimes_param_u32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movsbq	-21(%rbp),%rax
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_u8
-	.private_extern _Times__Times_param_u32_u8
-_Times__Times_param_u32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movsbq	-21(%rbp),%rax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1334
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1335
-L1334:
-	movl	$19873, %edi
-	call	__m3_fault
-L1335:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u32_i8
-	.private_extern _Times__uTimes_var_u32_i8
-_Times__uTimes_var_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u32_i8
-	.private_extern _Times__Times_var_u32_i8
-_Times__Times_var_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	173+_MM_Times(%rip), %eax
-	movzbl	%al, %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1340
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1341
-L1340:
-	movl	$19937, %edi
-	call	__m3_fault
-L1341:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u32_i8
-	.private_extern _Times__uTimes_param_u32_i8
-_Times__uTimes_param_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzbl	-21(%rbp), %eax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_param_u32_i8
-	.private_extern _Times__Times_param_u32_i8
-_Times__Times_param_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzbl	-21(%rbp), %eax
-	imulq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1346
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1347
-L1346:
-	movl	$20001, %edi
-	call	__m3_fault
-L1347:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Times__uTimes_var_u32_L
-	.private_extern _Times__uTimes_var_u32_L
-_Times__uTimes_var_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__Times_var_u32_L
-	.private_extern _Times__Times_var_u32_L
-_Times__Times_var_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movq	176+_MM_Times(%rip), %rax
-	imulq	%rdx, %rax
-	leave
-	ret
-.globl _Times__uTimes_param_u32_L
-	.private_extern _Times__uTimes_param_u32_L
-_Times__uTimes_param_u32_L:
+.globl _Times__uTimes_param_i32_u64
+	.private_extern _Times__uTimes_param_i32_u64
+_Times__uTimes_param_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
+	mov	-20(%rbp), %edx
 	movq	-32(%rbp), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_L
-	.private_extern _Times__Times_param_u32_L
-_Times__Times_param_u32_L:
+.globl _Times__Times_param_i32_u64
+	.private_extern _Times__Times_param_i32_u64
+_Times__Times_param_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	imulq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_var_u32_u32
-	.private_extern _Times__uTimes_var_u32_u32
-_Times__uTimes_var_u32_u32:
+.globl _Times__uTimes_var_i32_L
+	.private_extern _Times__uTimes_var_i32_L
+_Times__uTimes_var_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	176+_MM_Times(%rip), %rax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_var_u32_u32
-	.private_extern _Times__Times_var_u32_u32
-_Times__Times_var_u32_u32:
+.globl _Times__Times_var_i32_L
+	.private_extern _Times__Times_var_i32_L
+_Times__Times_var_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movq	176+_MM_Times(%rip), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i32_L
+	.private_extern _Times__uTimes_param_i32_L
+_Times__uTimes_param_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i32_L
+	.private_extern _Times__Times_param_i32_L
+_Times__Times_param_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	imulq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i32_i16
+	.private_extern _Times__uTimes_var_i32_i16
+_Times__uTimes_var_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i32_i16
+	.private_extern _Times__Times_var_i32_i16
+_Times__Times_var_i32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Times(%rip), %eax
-	movslq	%eax,%rdx
-	movl	184+_MM_Times(%rip), %eax
-	cltq
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movzwl	184+_MM_Times(%rip), %eax
+	movzwl	%ax, %eax
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1360
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1348
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1349
+L1348:
+	movl	$20065, %edi
+	call	__m3_fault
+L1349:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_param_i32_i16
+	.private_extern _Times__uTimes_param_i32_i16
+_Times__uTimes_param_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %edx
+	movzwl	-22(%rbp), %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_param_i32_i16
+	.private_extern _Times__Times_param_i32_i16
+_Times__Times_param_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
+	movzwl	-22(%rbp), %edx
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1354
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1355
+L1354:
+	movl	$20129, %edi
+	call	__m3_fault
+L1355:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Times__uTimes_var_i32_i32
+	.private_extern _Times__uTimes_var_i32_i32
+_Times__uTimes_var_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	leave
+	ret
+.globl _Times__Times_var_i32_i32
+	.private_extern _Times__Times_var_i32_i32
+_Times__Times_var_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %edx
+	movl	188+_MM_Times(%rip), %eax
+	mov	%eax, %eax
+	imulq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1360
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1361
 L1360:
 	movl	$20193, %edi
@@ -7798,37 +7801,34 @@ L1361:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Times__uTimes_param_u32_u32
-	.private_extern _Times__uTimes_param_u32_u32
-_Times__uTimes_param_u32_u32:
+.globl _Times__uTimes_param_i32_i32
+	.private_extern _Times__uTimes_param_i32_i32
+_Times__uTimes_param_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movl	-24(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %edx
+	mov	-24(%rbp), %eax
 	imulq	%rdx, %rax
 	leave
 	ret
-.globl _Times__Times_param_u32_u32
-	.private_extern _Times__Times_param_u32_u32
-_Times__Times_param_u32_u32:
+.globl _Times__Times_param_i32_i32
+	.private_extern _Times__Times_param_i32_i32
+_Times__Times_param_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movl	-24(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
+	mov	-24(%rbp), %edx
 	imulq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1366
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1366
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1367
 L1366:
 	movl	$20257, %edi
@@ -7860,738 +7860,6 @@ __m3_fault:
 _L_1:
 	.ascii "Times_M3"
 	.space 1
-	.ascii "Times_param_u32_u32"
-	.space 1
-	.ascii "uTimes_param_u32_u32"
-	.space 1
-	.ascii "Times_var_u32_u32"
-	.space 1
-	.ascii "uTimes_var_u32_u32"
-	.space 1
-	.ascii "Times_param_u32_L"
-	.space 1
-	.ascii "uTimes_param_u32_L"
-	.space 1
-	.ascii "Times_var_u32_L"
-	.space 1
-	.ascii "uTimes_var_u32_L"
-	.space 1
-	.ascii "Times_param_u32_i8"
-	.space 1
-	.ascii "uTimes_param_u32_i8"
-	.space 1
-	.ascii "Times_var_u32_i8"
-	.space 1
-	.ascii "uTimes_var_u32_i8"
-	.space 1
-	.ascii "Times_param_u32_u8"
-	.space 1
-	.ascii "uTimes_param_u32_u8"
-	.space 1
-	.ascii "Times_var_u32_u8"
-	.space 1
-	.ascii "uTimes_var_u32_u8"
-	.space 1
-	.ascii "Times_param_u32_C"
-	.space 1
-	.ascii "uTimes_param_u32_C"
-	.space 1
-	.ascii "Times_var_u32_C"
-	.space 1
-	.ascii "uTimes_var_u32_C"
-	.space 1
-	.ascii "Times_param_u32_i64"
-	.space 1
-	.ascii "uTimes_param_u32_i64"
-	.space 1
-	.ascii "Times_var_u32_i64"
-	.space 1
-	.ascii "uTimes_var_u32_i64"
-	.space 1
-	.ascii "Times_param_u32_I"
-	.space 1
-	.ascii "uTimes_param_u32_I"
-	.space 1
-	.ascii "Times_var_u32_I"
-	.space 1
-	.ascii "uTimes_var_u32_I"
-	.space 1
-	.ascii "Times_param_u32_i32"
-	.space 1
-	.ascii "uTimes_param_u32_i32"
-	.space 1
-	.ascii "Times_var_u32_i32"
-	.space 1
-	.ascii "uTimes_var_u32_i32"
-	.space 1
-	.ascii "Times_param_u32_i16"
-	.space 1
-	.ascii "uTimes_param_u32_i16"
-	.space 1
-	.ascii "Times_var_u32_i16"
-	.space 1
-	.ascii "uTimes_var_u32_i16"
-	.space 1
-	.ascii "Times_param_u32_LC"
-	.space 1
-	.ascii "uTimes_param_u32_LC"
-	.space 1
-	.ascii "Times_var_u32_LC"
-	.space 1
-	.ascii "uTimes_var_u32_LC"
-	.space 1
-	.ascii "Times_param_u32_u64"
-	.space 1
-	.ascii "uTimes_param_u32_u64"
-	.space 1
-	.ascii "Times_var_u32_u64"
-	.space 1
-	.ascii "uTimes_var_u32_u64"
-	.space 1
-	.ascii "Times_param_u32_u16"
-	.space 1
-	.ascii "uTimes_param_u32_u16"
-	.space 1
-	.ascii "Times_var_u32_u16"
-	.space 1
-	.ascii "uTimes_var_u32_u16"
-	.space 1
-	.ascii "Times_param_L_u32"
-	.space 1
-	.ascii "uTimes_param_L_u32"
-	.space 1
-	.ascii "Times_var_L_u32"
-	.space 1
-	.ascii "uTimes_var_L_u32"
-	.space 1
-	.ascii "Times_param_L_L"
-	.space 1
-	.ascii "uTimes_param_L_L"
-	.space 1
-	.ascii "Times_var_L_L"
-	.space 1
-	.ascii "uTimes_var_L_L"
-	.space 1
-	.ascii "Times_param_L_i8"
-	.space 1
-	.ascii "uTimes_param_L_i8"
-	.space 1
-	.ascii "Times_var_L_i8"
-	.space 1
-	.ascii "uTimes_var_L_i8"
-	.space 1
-	.ascii "Times_param_L_u8"
-	.space 1
-	.ascii "uTimes_param_L_u8"
-	.space 1
-	.ascii "Times_var_L_u8"
-	.space 1
-	.ascii "uTimes_var_L_u8"
-	.space 1
-	.ascii "Times_param_L_C"
-	.space 1
-	.ascii "uTimes_param_L_C"
-	.space 1
-	.ascii "Times_var_L_C"
-	.space 1
-	.ascii "uTimes_var_L_C"
-	.space 1
-	.ascii "Times_param_L_i64"
-	.space 1
-	.ascii "uTimes_param_L_i64"
-	.space 1
-	.ascii "Times_var_L_i64"
-	.space 1
-	.ascii "uTimes_var_L_i64"
-	.space 1
-	.ascii "Times_param_L_I"
-	.space 1
-	.ascii "uTimes_param_L_I"
-	.space 1
-	.ascii "Times_var_L_I"
-	.space 1
-	.ascii "uTimes_var_L_I"
-	.space 1
-	.ascii "Times_param_L_i32"
-	.space 1
-	.ascii "uTimes_param_L_i32"
-	.space 1
-	.ascii "Times_var_L_i32"
-	.space 1
-	.ascii "uTimes_var_L_i32"
-	.space 1
-	.ascii "Times_param_L_i16"
-	.space 1
-	.ascii "uTimes_param_L_i16"
-	.space 1
-	.ascii "Times_var_L_i16"
-	.space 1
-	.ascii "uTimes_var_L_i16"
-	.space 1
-	.ascii "Times_param_L_LC"
-	.space 1
-	.ascii "uTimes_param_L_LC"
-	.space 1
-	.ascii "Times_var_L_LC"
-	.space 1
-	.ascii "uTimes_var_L_LC"
-	.space 1
-	.ascii "Times_param_L_u64"
-	.space 1
-	.ascii "uTimes_param_L_u64"
-	.space 1
-	.ascii "Times_var_L_u64"
-	.space 1
-	.ascii "uTimes_var_L_u64"
-	.space 1
-	.ascii "Times_param_L_u16"
-	.space 1
-	.ascii "uTimes_param_L_u16"
-	.space 1
-	.ascii "Times_var_L_u16"
-	.space 1
-	.ascii "uTimes_var_L_u16"
-	.space 1
-	.ascii "Times_param_i8_u32"
-	.space 1
-	.ascii "uTimes_param_i8_u32"
-	.space 1
-	.ascii "Times_var_i8_u32"
-	.space 1
-	.ascii "uTimes_var_i8_u32"
-	.space 1
-	.ascii "Times_param_i8_L"
-	.space 1
-	.ascii "uTimes_param_i8_L"
-	.space 1
-	.ascii "Times_var_i8_L"
-	.space 1
-	.ascii "uTimes_var_i8_L"
-	.space 1
-	.ascii "Times_param_i8_i8"
-	.space 1
-	.ascii "uTimes_param_i8_i8"
-	.space 1
-	.ascii "Times_var_i8_i8"
-	.space 1
-	.ascii "uTimes_var_i8_i8"
-	.space 1
-	.ascii "Times_param_i8_u8"
-	.space 1
-	.ascii "uTimes_param_i8_u8"
-	.space 1
-	.ascii "Times_var_i8_u8"
-	.space 1
-	.ascii "uTimes_var_i8_u8"
-	.space 1
-	.ascii "Times_param_i8_C"
-	.space 1
-	.ascii "uTimes_param_i8_C"
-	.space 1
-	.ascii "Times_var_i8_C"
-	.space 1
-	.ascii "uTimes_var_i8_C"
-	.space 1
-	.ascii "Times_param_i8_i64"
-	.space 1
-	.ascii "uTimes_param_i8_i64"
-	.space 1
-	.ascii "Times_var_i8_i64"
-	.space 1
-	.ascii "uTimes_var_i8_i64"
-	.space 1
-	.ascii "Times_param_i8_I"
-	.space 1
-	.ascii "uTimes_param_i8_I"
-	.space 1
-	.ascii "Times_var_i8_I"
-	.space 1
-	.ascii "uTimes_var_i8_I"
-	.space 1
-	.ascii "Times_param_i8_i32"
-	.space 1
-	.ascii "uTimes_param_i8_i32"
-	.space 1
-	.ascii "Times_var_i8_i32"
-	.space 1
-	.ascii "uTimes_var_i8_i32"
-	.space 1
-	.ascii "Times_param_i8_i16"
-	.space 1
-	.ascii "uTimes_param_i8_i16"
-	.space 1
-	.ascii "Times_var_i8_i16"
-	.space 1
-	.ascii "uTimes_var_i8_i16"
-	.space 1
-	.ascii "Times_param_i8_LC"
-	.space 1
-	.ascii "uTimes_param_i8_LC"
-	.space 1
-	.ascii "Times_var_i8_LC"
-	.space 1
-	.ascii "uTimes_var_i8_LC"
-	.space 1
-	.ascii "Times_param_i8_u64"
-	.space 1
-	.ascii "uTimes_param_i8_u64"
-	.space 1
-	.ascii "Times_var_i8_u64"
-	.space 1
-	.ascii "uTimes_var_i8_u64"
-	.space 1
-	.ascii "Times_param_i8_u16"
-	.space 1
-	.ascii "uTimes_param_i8_u16"
-	.space 1
-	.ascii "Times_var_i8_u16"
-	.space 1
-	.ascii "uTimes_var_i8_u16"
-	.space 1
-	.ascii "Times_param_u8_u32"
-	.space 1
-	.ascii "uTimes_param_u8_u32"
-	.space 1
-	.ascii "Times_var_u8_u32"
-	.space 1
-	.ascii "uTimes_var_u8_u32"
-	.space 1
-	.ascii "Times_param_u8_L"
-	.space 1
-	.ascii "uTimes_param_u8_L"
-	.space 1
-	.ascii "Times_var_u8_L"
-	.space 1
-	.ascii "uTimes_var_u8_L"
-	.space 1
-	.ascii "Times_param_u8_i8"
-	.space 1
-	.ascii "uTimes_param_u8_i8"
-	.space 1
-	.ascii "Times_var_u8_i8"
-	.space 1
-	.ascii "uTimes_var_u8_i8"
-	.space 1
-	.ascii "Times_param_u8_u8"
-	.space 1
-	.ascii "uTimes_param_u8_u8"
-	.space 1
-	.ascii "Times_var_u8_u8"
-	.space 1
-	.ascii "uTimes_var_u8_u8"
-	.space 1
-	.ascii "Times_param_u8_C"
-	.space 1
-	.ascii "uTimes_param_u8_C"
-	.space 1
-	.ascii "Times_var_u8_C"
-	.space 1
-	.ascii "uTimes_var_u8_C"
-	.space 1
-	.ascii "Times_param_u8_i64"
-	.space 1
-	.ascii "uTimes_param_u8_i64"
-	.space 1
-	.ascii "Times_var_u8_i64"
-	.space 1
-	.ascii "uTimes_var_u8_i64"
-	.space 1
-	.ascii "Times_param_u8_I"
-	.space 1
-	.ascii "uTimes_param_u8_I"
-	.space 1
-	.ascii "Times_var_u8_I"
-	.space 1
-	.ascii "uTimes_var_u8_I"
-	.space 1
-	.ascii "Times_param_u8_i32"
-	.space 1
-	.ascii "uTimes_param_u8_i32"
-	.space 1
-	.ascii "Times_var_u8_i32"
-	.space 1
-	.ascii "uTimes_var_u8_i32"
-	.space 1
-	.ascii "Times_param_u8_i16"
-	.space 1
-	.ascii "uTimes_param_u8_i16"
-	.space 1
-	.ascii "Times_var_u8_i16"
-	.space 1
-	.ascii "uTimes_var_u8_i16"
-	.space 1
-	.ascii "Times_param_u8_LC"
-	.space 1
-	.ascii "uTimes_param_u8_LC"
-	.space 1
-	.ascii "Times_var_u8_LC"
-	.space 1
-	.ascii "uTimes_var_u8_LC"
-	.space 1
-	.ascii "Times_param_u8_u64"
-	.space 1
-	.ascii "uTimes_param_u8_u64"
-	.space 1
-	.ascii "Times_var_u8_u64"
-	.space 1
-	.ascii "uTimes_var_u8_u64"
-	.space 1
-	.ascii "Times_param_u8_u16"
-	.space 1
-	.ascii "uTimes_param_u8_u16"
-	.space 1
-	.ascii "Times_var_u8_u16"
-	.space 1
-	.ascii "uTimes_var_u8_u16"
-	.space 1
-	.ascii "Times_param_f32_f32"
-	.space 1
-	.ascii "Times_var_f32_f32"
-	.space 1
-	.ascii "Times_param_C_u32"
-	.space 1
-	.ascii "uTimes_param_C_u32"
-	.space 1
-	.ascii "Times_var_C_u32"
-	.space 1
-	.ascii "uTimes_var_C_u32"
-	.space 1
-	.ascii "Times_param_C_L"
-	.space 1
-	.ascii "uTimes_param_C_L"
-	.space 1
-	.ascii "Times_var_C_L"
-	.space 1
-	.ascii "uTimes_var_C_L"
-	.space 1
-	.ascii "Times_param_C_i8"
-	.space 1
-	.ascii "uTimes_param_C_i8"
-	.space 1
-	.ascii "Times_var_C_i8"
-	.space 1
-	.ascii "uTimes_var_C_i8"
-	.space 1
-	.ascii "Times_param_C_u8"
-	.space 1
-	.ascii "uTimes_param_C_u8"
-	.space 1
-	.ascii "Times_var_C_u8"
-	.space 1
-	.ascii "uTimes_var_C_u8"
-	.space 1
-	.ascii "Times_param_C_C"
-	.space 1
-	.ascii "uTimes_param_C_C"
-	.space 1
-	.ascii "Times_var_C_C"
-	.space 1
-	.ascii "uTimes_var_C_C"
-	.space 1
-	.ascii "Times_param_C_i64"
-	.space 1
-	.ascii "uTimes_param_C_i64"
-	.space 1
-	.ascii "Times_var_C_i64"
-	.space 1
-	.ascii "uTimes_var_C_i64"
-	.space 1
-	.ascii "Times_param_C_I"
-	.space 1
-	.ascii "uTimes_param_C_I"
-	.space 1
-	.ascii "Times_var_C_I"
-	.space 1
-	.ascii "uTimes_var_C_I"
-	.space 1
-	.ascii "Times_param_C_i32"
-	.space 1
-	.ascii "uTimes_param_C_i32"
-	.space 1
-	.ascii "Times_var_C_i32"
-	.space 1
-	.ascii "uTimes_var_C_i32"
-	.space 1
-	.ascii "Times_param_C_i16"
-	.space 1
-	.ascii "uTimes_param_C_i16"
-	.space 1
-	.ascii "Times_var_C_i16"
-	.space 1
-	.ascii "uTimes_var_C_i16"
-	.space 1
-	.ascii "Times_param_C_LC"
-	.space 1
-	.ascii "uTimes_param_C_LC"
-	.space 1
-	.ascii "Times_var_C_LC"
-	.space 1
-	.ascii "uTimes_var_C_LC"
-	.space 1
-	.ascii "Times_param_C_u64"
-	.space 1
-	.ascii "uTimes_param_C_u64"
-	.space 1
-	.ascii "Times_var_C_u64"
-	.space 1
-	.ascii "uTimes_var_C_u64"
-	.space 1
-	.ascii "Times_param_C_u16"
-	.space 1
-	.ascii "uTimes_param_C_u16"
-	.space 1
-	.ascii "Times_var_C_u16"
-	.space 1
-	.ascii "uTimes_var_C_u16"
-	.space 1
-	.ascii "Times_param_i64_u32"
-	.space 1
-	.ascii "uTimes_param_i64_u32"
-	.space 1
-	.ascii "Times_var_i64_u32"
-	.space 1
-	.ascii "uTimes_var_i64_u32"
-	.space 1
-	.ascii "Times_param_i64_L"
-	.space 1
-	.ascii "uTimes_param_i64_L"
-	.space 1
-	.ascii "Times_var_i64_L"
-	.space 1
-	.ascii "uTimes_var_i64_L"
-	.space 1
-	.ascii "Times_param_i64_i8"
-	.space 1
-	.ascii "uTimes_param_i64_i8"
-	.space 1
-	.ascii "Times_var_i64_i8"
-	.space 1
-	.ascii "uTimes_var_i64_i8"
-	.space 1
-	.ascii "Times_param_i64_u8"
-	.space 1
-	.ascii "uTimes_param_i64_u8"
-	.space 1
-	.ascii "Times_var_i64_u8"
-	.space 1
-	.ascii "uTimes_var_i64_u8"
-	.space 1
-	.ascii "Times_param_i64_C"
-	.space 1
-	.ascii "uTimes_param_i64_C"
-	.space 1
-	.ascii "Times_var_i64_C"
-	.space 1
-	.ascii "uTimes_var_i64_C"
-	.space 1
-	.ascii "Times_param_i64_i64"
-	.space 1
-	.ascii "uTimes_param_i64_i64"
-	.space 1
-	.ascii "Times_var_i64_i64"
-	.space 1
-	.ascii "uTimes_var_i64_i64"
-	.space 1
-	.ascii "Times_param_i64_I"
-	.space 1
-	.ascii "uTimes_param_i64_I"
-	.space 1
-	.ascii "Times_var_i64_I"
-	.space 1
-	.ascii "uTimes_var_i64_I"
-	.space 1
-	.ascii "Times_param_i64_i32"
-	.space 1
-	.ascii "uTimes_param_i64_i32"
-	.space 1
-	.ascii "Times_var_i64_i32"
-	.space 1
-	.ascii "uTimes_var_i64_i32"
-	.space 1
-	.ascii "Times_param_i64_i16"
-	.space 1
-	.ascii "uTimes_param_i64_i16"
-	.space 1
-	.ascii "Times_var_i64_i16"
-	.space 1
-	.ascii "uTimes_var_i64_i16"
-	.space 1
-	.ascii "Times_param_i64_LC"
-	.space 1
-	.ascii "uTimes_param_i64_LC"
-	.space 1
-	.ascii "Times_var_i64_LC"
-	.space 1
-	.ascii "uTimes_var_i64_LC"
-	.space 1
-	.ascii "Times_param_i64_u64"
-	.space 1
-	.ascii "uTimes_param_i64_u64"
-	.space 1
-	.ascii "Times_var_i64_u64"
-	.space 1
-	.ascii "uTimes_var_i64_u64"
-	.space 1
-	.ascii "Times_param_i64_u16"
-	.space 1
-	.ascii "uTimes_param_i64_u16"
-	.space 1
-	.ascii "Times_var_i64_u16"
-	.space 1
-	.ascii "uTimes_var_i64_u16"
-	.space 1
-	.ascii "Times_param_I_u32"
-	.space 1
-	.ascii "uTimes_param_I_u32"
-	.space 1
-	.ascii "Times_var_I_u32"
-	.space 1
-	.ascii "uTimes_var_I_u32"
-	.space 1
-	.ascii "Times_param_I_L"
-	.space 1
-	.ascii "uTimes_param_I_L"
-	.space 1
-	.ascii "Times_var_I_L"
-	.space 1
-	.ascii "uTimes_var_I_L"
-	.space 1
-	.ascii "Times_param_I_i8"
-	.space 1
-	.ascii "uTimes_param_I_i8"
-	.space 1
-	.ascii "Times_var_I_i8"
-	.space 1
-	.ascii "uTimes_var_I_i8"
-	.space 1
-	.ascii "Times_param_I_u8"
-	.space 1
-	.ascii "uTimes_param_I_u8"
-	.space 1
-	.ascii "Times_var_I_u8"
-	.space 1
-	.ascii "uTimes_var_I_u8"
-	.space 1
-	.ascii "Times_param_I_C"
-	.space 1
-	.ascii "uTimes_param_I_C"
-	.space 1
-	.ascii "Times_var_I_C"
-	.space 1
-	.ascii "uTimes_var_I_C"
-	.space 1
-	.ascii "Times_param_I_i64"
-	.space 1
-	.ascii "uTimes_param_I_i64"
-	.space 1
-	.ascii "Times_var_I_i64"
-	.space 1
-	.ascii "uTimes_var_I_i64"
-	.space 1
-	.ascii "Times_param_I_I"
-	.space 1
-	.ascii "uTimes_param_I_I"
-	.space 1
-	.ascii "Times_var_I_I"
-	.space 1
-	.ascii "uTimes_var_I_I"
-	.space 1
-	.ascii "Times_param_I_i32"
-	.space 1
-	.ascii "uTimes_param_I_i32"
-	.space 1
-	.ascii "Times_var_I_i32"
-	.space 1
-	.ascii "uTimes_var_I_i32"
-	.space 1
-	.ascii "Times_param_I_i16"
-	.space 1
-	.ascii "uTimes_param_I_i16"
-	.space 1
-	.ascii "Times_var_I_i16"
-	.space 1
-	.ascii "uTimes_var_I_i16"
-	.space 1
-	.ascii "Times_param_I_LC"
-	.space 1
-	.ascii "uTimes_param_I_LC"
-	.space 1
-	.ascii "Times_var_I_LC"
-	.space 1
-	.ascii "uTimes_var_I_LC"
-	.space 1
-	.ascii "Times_param_I_u64"
-	.space 1
-	.ascii "uTimes_param_I_u64"
-	.space 1
-	.ascii "Times_var_I_u64"
-	.space 1
-	.ascii "uTimes_var_I_u64"
-	.space 1
-	.ascii "Times_param_I_u16"
-	.space 1
-	.ascii "uTimes_param_I_u16"
-	.space 1
-	.ascii "Times_var_I_u16"
-	.space 1
-	.ascii "uTimes_var_I_u16"
-	.space 1
-	.ascii "Times_param_i32_u32"
-	.space 1
-	.ascii "uTimes_param_i32_u32"
-	.space 1
-	.ascii "Times_var_i32_u32"
-	.space 1
-	.ascii "uTimes_var_i32_u32"
-	.space 1
-	.ascii "Times_param_i32_L"
-	.space 1
-	.ascii "uTimes_param_i32_L"
-	.space 1
-	.ascii "Times_var_i32_L"
-	.space 1
-	.ascii "uTimes_var_i32_L"
-	.space 1
-	.ascii "Times_param_i32_i8"
-	.space 1
-	.ascii "uTimes_param_i32_i8"
-	.space 1
-	.ascii "Times_var_i32_i8"
-	.space 1
-	.ascii "uTimes_var_i32_i8"
-	.space 1
-	.ascii "Times_param_i32_u8"
-	.space 1
-	.ascii "uTimes_param_i32_u8"
-	.space 1
-	.ascii "Times_var_i32_u8"
-	.space 1
-	.ascii "uTimes_var_i32_u8"
-	.space 1
-	.ascii "Times_param_i32_C"
-	.space 1
-	.ascii "uTimes_param_i32_C"
-	.space 1
-	.ascii "Times_var_i32_C"
-	.space 1
-	.ascii "uTimes_var_i32_C"
-	.space 1
-	.ascii "Times_param_i32_i64"
-	.space 1
-	.ascii "uTimes_param_i32_i64"
-	.space 1
-	.ascii "Times_var_i32_i64"
-	.space 1
-	.ascii "uTimes_var_i32_i64"
-	.space 1
-	.ascii "Times_param_i32_I"
-	.space 1
-	.ascii "uTimes_param_i32_I"
-	.space 1
-	.ascii "Times_var_i32_I"
-	.space 1
-	.ascii "uTimes_var_i32_I"
-	.space 1
 	.ascii "Times_param_i32_i32"
 	.space 1
 	.ascii "uTimes_param_i32_i32"
@@ -8608,13 +7876,13 @@ _L_1:
 	.space 1
 	.ascii "uTimes_var_i32_i16"
 	.space 1
-	.ascii "Times_param_i32_LC"
+	.ascii "Times_param_i32_L"
 	.space 1
-	.ascii "uTimes_param_i32_LC"
+	.ascii "uTimes_param_i32_L"
 	.space 1
-	.ascii "Times_var_i32_LC"
+	.ascii "Times_var_i32_L"
 	.space 1
-	.ascii "uTimes_var_i32_LC"
+	.ascii "uTimes_var_i32_L"
 	.space 1
 	.ascii "Times_param_i32_u64"
 	.space 1
@@ -8632,61 +7900,61 @@ _L_1:
 	.space 1
 	.ascii "uTimes_var_i32_u16"
 	.space 1
-	.ascii "Times_param_i16_u32"
+	.ascii "Times_param_i32_C"
 	.space 1
-	.ascii "uTimes_param_i16_u32"
+	.ascii "uTimes_param_i32_C"
 	.space 1
-	.ascii "Times_var_i16_u32"
+	.ascii "Times_var_i32_C"
 	.space 1
-	.ascii "uTimes_var_i16_u32"
+	.ascii "uTimes_var_i32_C"
 	.space 1
-	.ascii "Times_param_i16_L"
+	.ascii "Times_param_i32_u32"
 	.space 1
-	.ascii "uTimes_param_i16_L"
+	.ascii "uTimes_param_i32_u32"
 	.space 1
-	.ascii "Times_var_i16_L"
+	.ascii "Times_var_i32_u32"
 	.space 1
-	.ascii "uTimes_var_i16_L"
+	.ascii "uTimes_var_i32_u32"
 	.space 1
-	.ascii "Times_param_i16_i8"
+	.ascii "Times_param_i32_i8"
 	.space 1
-	.ascii "uTimes_param_i16_i8"
+	.ascii "uTimes_param_i32_i8"
 	.space 1
-	.ascii "Times_var_i16_i8"
+	.ascii "Times_var_i32_i8"
 	.space 1
-	.ascii "uTimes_var_i16_i8"
+	.ascii "uTimes_var_i32_i8"
 	.space 1
-	.ascii "Times_param_i16_u8"
+	.ascii "Times_param_i32_I"
 	.space 1
-	.ascii "uTimes_param_i16_u8"
+	.ascii "uTimes_param_i32_I"
 	.space 1
-	.ascii "Times_var_i16_u8"
+	.ascii "Times_var_i32_I"
 	.space 1
-	.ascii "uTimes_var_i16_u8"
+	.ascii "uTimes_var_i32_I"
 	.space 1
-	.ascii "Times_param_i16_C"
+	.ascii "Times_param_i32_u8"
 	.space 1
-	.ascii "uTimes_param_i16_C"
+	.ascii "uTimes_param_i32_u8"
 	.space 1
-	.ascii "Times_var_i16_C"
+	.ascii "Times_var_i32_u8"
 	.space 1
-	.ascii "uTimes_var_i16_C"
+	.ascii "uTimes_var_i32_u8"
 	.space 1
-	.ascii "Times_param_i16_i64"
+	.ascii "Times_param_i32_LC"
 	.space 1
-	.ascii "uTimes_param_i16_i64"
+	.ascii "uTimes_param_i32_LC"
 	.space 1
-	.ascii "Times_var_i16_i64"
+	.ascii "Times_var_i32_LC"
 	.space 1
-	.ascii "uTimes_var_i16_i64"
+	.ascii "uTimes_var_i32_LC"
 	.space 1
-	.ascii "Times_param_i16_I"
+	.ascii "Times_param_i32_i64"
 	.space 1
-	.ascii "uTimes_param_i16_I"
+	.ascii "uTimes_param_i32_i64"
 	.space 1
-	.ascii "Times_var_i16_I"
+	.ascii "Times_var_i32_i64"
 	.space 1
-	.ascii "uTimes_var_i16_I"
+	.ascii "uTimes_var_i32_i64"
 	.space 1
 	.ascii "Times_param_i16_i32"
 	.space 1
@@ -8704,13 +7972,13 @@ _L_1:
 	.space 1
 	.ascii "uTimes_var_i16_i16"
 	.space 1
-	.ascii "Times_param_i16_LC"
+	.ascii "Times_param_i16_L"
 	.space 1
-	.ascii "uTimes_param_i16_LC"
+	.ascii "uTimes_param_i16_L"
 	.space 1
-	.ascii "Times_var_i16_LC"
+	.ascii "Times_var_i16_L"
 	.space 1
-	.ascii "uTimes_var_i16_LC"
+	.ascii "uTimes_var_i16_L"
 	.space 1
 	.ascii "Times_param_i16_u64"
 	.space 1
@@ -8728,161 +7996,161 @@ _L_1:
 	.space 1
 	.ascii "uTimes_var_i16_u16"
 	.space 1
+	.ascii "Times_param_i16_C"
+	.space 1
+	.ascii "uTimes_param_i16_C"
+	.space 1
+	.ascii "Times_var_i16_C"
+	.space 1
+	.ascii "uTimes_var_i16_C"
+	.space 1
+	.ascii "Times_param_i16_u32"
+	.space 1
+	.ascii "uTimes_param_i16_u32"
+	.space 1
+	.ascii "Times_var_i16_u32"
+	.space 1
+	.ascii "uTimes_var_i16_u32"
+	.space 1
+	.ascii "Times_param_i16_i8"
+	.space 1
+	.ascii "uTimes_param_i16_i8"
+	.space 1
+	.ascii "Times_var_i16_i8"
+	.space 1
+	.ascii "uTimes_var_i16_i8"
+	.space 1
+	.ascii "Times_param_i16_I"
+	.space 1
+	.ascii "uTimes_param_i16_I"
+	.space 1
+	.ascii "Times_var_i16_I"
+	.space 1
+	.ascii "uTimes_var_i16_I"
+	.space 1
+	.ascii "Times_param_i16_u8"
+	.space 1
+	.ascii "uTimes_param_i16_u8"
+	.space 1
+	.ascii "Times_var_i16_u8"
+	.space 1
+	.ascii "uTimes_var_i16_u8"
+	.space 1
+	.ascii "Times_param_i16_LC"
+	.space 1
+	.ascii "uTimes_param_i16_LC"
+	.space 1
+	.ascii "Times_var_i16_LC"
+	.space 1
+	.ascii "uTimes_var_i16_LC"
+	.space 1
+	.ascii "Times_param_i16_i64"
+	.space 1
+	.ascii "uTimes_param_i16_i64"
+	.space 1
+	.ascii "Times_var_i16_i64"
+	.space 1
+	.ascii "uTimes_var_i16_i64"
+	.space 1
+	.ascii "Times_param_L_i32"
+	.space 1
+	.ascii "uTimes_param_L_i32"
+	.space 1
+	.ascii "Times_var_L_i32"
+	.space 1
+	.ascii "uTimes_var_L_i32"
+	.space 1
+	.ascii "Times_param_L_i16"
+	.space 1
+	.ascii "uTimes_param_L_i16"
+	.space 1
+	.ascii "Times_var_L_i16"
+	.space 1
+	.ascii "uTimes_var_L_i16"
+	.space 1
+	.ascii "Times_param_L_L"
+	.space 1
+	.ascii "uTimes_param_L_L"
+	.space 1
+	.ascii "Times_var_L_L"
+	.space 1
+	.ascii "uTimes_var_L_L"
+	.space 1
+	.ascii "Times_param_L_u64"
+	.space 1
+	.ascii "uTimes_param_L_u64"
+	.space 1
+	.ascii "Times_var_L_u64"
+	.space 1
+	.ascii "uTimes_var_L_u64"
+	.space 1
+	.ascii "Times_param_L_u16"
+	.space 1
+	.ascii "uTimes_param_L_u16"
+	.space 1
+	.ascii "Times_var_L_u16"
+	.space 1
+	.ascii "uTimes_var_L_u16"
+	.space 1
+	.ascii "Times_param_L_C"
+	.space 1
+	.ascii "uTimes_param_L_C"
+	.space 1
+	.ascii "Times_var_L_C"
+	.space 1
+	.ascii "uTimes_var_L_C"
+	.space 1
+	.ascii "Times_param_L_u32"
+	.space 1
+	.ascii "uTimes_param_L_u32"
+	.space 1
+	.ascii "Times_var_L_u32"
+	.space 1
+	.ascii "uTimes_var_L_u32"
+	.space 1
+	.ascii "Times_param_L_i8"
+	.space 1
+	.ascii "uTimes_param_L_i8"
+	.space 1
+	.ascii "Times_var_L_i8"
+	.space 1
+	.ascii "uTimes_var_L_i8"
+	.space 1
+	.ascii "Times_param_L_I"
+	.space 1
+	.ascii "uTimes_param_L_I"
+	.space 1
+	.ascii "Times_var_L_I"
+	.space 1
+	.ascii "uTimes_var_L_I"
+	.space 1
+	.ascii "Times_param_L_u8"
+	.space 1
+	.ascii "uTimes_param_L_u8"
+	.space 1
+	.ascii "Times_var_L_u8"
+	.space 1
+	.ascii "uTimes_var_L_u8"
+	.space 1
+	.ascii "Times_param_L_LC"
+	.space 1
+	.ascii "uTimes_param_L_LC"
+	.space 1
+	.ascii "Times_var_L_LC"
+	.space 1
+	.ascii "uTimes_var_L_LC"
+	.space 1
+	.ascii "Times_param_L_i64"
+	.space 1
+	.ascii "uTimes_param_L_i64"
+	.space 1
+	.ascii "Times_var_L_i64"
+	.space 1
+	.ascii "uTimes_var_L_i64"
+	.space 1
 	.ascii "Times_param_f64_f64"
 	.space 1
 	.ascii "Times_var_f64_f64"
-	.space 1
-	.ascii "Times_param_LC_u32"
-	.space 1
-	.ascii "uTimes_param_LC_u32"
-	.space 1
-	.ascii "Times_var_LC_u32"
-	.space 1
-	.ascii "uTimes_var_LC_u32"
-	.space 1
-	.ascii "Times_param_LC_L"
-	.space 1
-	.ascii "uTimes_param_LC_L"
-	.space 1
-	.ascii "Times_var_LC_L"
-	.space 1
-	.ascii "uTimes_var_LC_L"
-	.space 1
-	.ascii "Times_param_LC_i8"
-	.space 1
-	.ascii "uTimes_param_LC_i8"
-	.space 1
-	.ascii "Times_var_LC_i8"
-	.space 1
-	.ascii "uTimes_var_LC_i8"
-	.space 1
-	.ascii "Times_param_LC_u8"
-	.space 1
-	.ascii "uTimes_param_LC_u8"
-	.space 1
-	.ascii "Times_var_LC_u8"
-	.space 1
-	.ascii "uTimes_var_LC_u8"
-	.space 1
-	.ascii "Times_param_LC_C"
-	.space 1
-	.ascii "uTimes_param_LC_C"
-	.space 1
-	.ascii "Times_var_LC_C"
-	.space 1
-	.ascii "uTimes_var_LC_C"
-	.space 1
-	.ascii "Times_param_LC_i64"
-	.space 1
-	.ascii "uTimes_param_LC_i64"
-	.space 1
-	.ascii "Times_var_LC_i64"
-	.space 1
-	.ascii "uTimes_var_LC_i64"
-	.space 1
-	.ascii "Times_param_LC_I"
-	.space 1
-	.ascii "uTimes_param_LC_I"
-	.space 1
-	.ascii "Times_var_LC_I"
-	.space 1
-	.ascii "uTimes_var_LC_I"
-	.space 1
-	.ascii "Times_param_LC_i32"
-	.space 1
-	.ascii "uTimes_param_LC_i32"
-	.space 1
-	.ascii "Times_var_LC_i32"
-	.space 1
-	.ascii "uTimes_var_LC_i32"
-	.space 1
-	.ascii "Times_param_LC_i16"
-	.space 1
-	.ascii "uTimes_param_LC_i16"
-	.space 1
-	.ascii "Times_var_LC_i16"
-	.space 1
-	.ascii "uTimes_var_LC_i16"
-	.space 1
-	.ascii "Times_param_LC_LC"
-	.space 1
-	.ascii "uTimes_param_LC_LC"
-	.space 1
-	.ascii "Times_var_LC_LC"
-	.space 1
-	.ascii "uTimes_var_LC_LC"
-	.space 1
-	.ascii "Times_param_LC_u64"
-	.space 1
-	.ascii "uTimes_param_LC_u64"
-	.space 1
-	.ascii "Times_var_LC_u64"
-	.space 1
-	.ascii "uTimes_var_LC_u64"
-	.space 1
-	.ascii "Times_param_LC_u16"
-	.space 1
-	.ascii "uTimes_param_LC_u16"
-	.space 1
-	.ascii "Times_var_LC_u16"
-	.space 1
-	.ascii "uTimes_var_LC_u16"
-	.space 1
-	.ascii "Times_param_u64_u32"
-	.space 1
-	.ascii "uTimes_param_u64_u32"
-	.space 1
-	.ascii "Times_var_u64_u32"
-	.space 1
-	.ascii "uTimes_var_u64_u32"
-	.space 1
-	.ascii "Times_param_u64_L"
-	.space 1
-	.ascii "uTimes_param_u64_L"
-	.space 1
-	.ascii "Times_var_u64_L"
-	.space 1
-	.ascii "uTimes_var_u64_L"
-	.space 1
-	.ascii "Times_param_u64_i8"
-	.space 1
-	.ascii "uTimes_param_u64_i8"
-	.space 1
-	.ascii "Times_var_u64_i8"
-	.space 1
-	.ascii "uTimes_var_u64_i8"
-	.space 1
-	.ascii "Times_param_u64_u8"
-	.space 1
-	.ascii "uTimes_param_u64_u8"
-	.space 1
-	.ascii "Times_var_u64_u8"
-	.space 1
-	.ascii "uTimes_var_u64_u8"
-	.space 1
-	.ascii "Times_param_u64_C"
-	.space 1
-	.ascii "uTimes_param_u64_C"
-	.space 1
-	.ascii "Times_var_u64_C"
-	.space 1
-	.ascii "uTimes_var_u64_C"
-	.space 1
-	.ascii "Times_param_u64_i64"
-	.space 1
-	.ascii "uTimes_param_u64_i64"
-	.space 1
-	.ascii "Times_var_u64_i64"
-	.space 1
-	.ascii "uTimes_var_u64_i64"
-	.space 1
-	.ascii "Times_param_u64_I"
-	.space 1
-	.ascii "uTimes_param_u64_I"
-	.space 1
-	.ascii "Times_var_u64_I"
-	.space 1
-	.ascii "uTimes_var_u64_I"
 	.space 1
 	.ascii "Times_param_u64_i32"
 	.space 1
@@ -8900,13 +8168,13 @@ _L_1:
 	.space 1
 	.ascii "uTimes_var_u64_i16"
 	.space 1
-	.ascii "Times_param_u64_LC"
+	.ascii "Times_param_u64_L"
 	.space 1
-	.ascii "uTimes_param_u64_LC"
+	.ascii "uTimes_param_u64_L"
 	.space 1
-	.ascii "Times_var_u64_LC"
+	.ascii "Times_var_u64_L"
 	.space 1
-	.ascii "uTimes_var_u64_LC"
+	.ascii "uTimes_var_u64_L"
 	.space 1
 	.ascii "Times_param_u64_u64"
 	.space 1
@@ -8924,61 +8192,61 @@ _L_1:
 	.space 1
 	.ascii "uTimes_var_u64_u16"
 	.space 1
-	.ascii "Times_param_u16_u32"
+	.ascii "Times_param_u64_C"
 	.space 1
-	.ascii "uTimes_param_u16_u32"
+	.ascii "uTimes_param_u64_C"
 	.space 1
-	.ascii "Times_var_u16_u32"
+	.ascii "Times_var_u64_C"
 	.space 1
-	.ascii "uTimes_var_u16_u32"
+	.ascii "uTimes_var_u64_C"
 	.space 1
-	.ascii "Times_param_u16_L"
+	.ascii "Times_param_u64_u32"
 	.space 1
-	.ascii "uTimes_param_u16_L"
+	.ascii "uTimes_param_u64_u32"
 	.space 1
-	.ascii "Times_var_u16_L"
+	.ascii "Times_var_u64_u32"
 	.space 1
-	.ascii "uTimes_var_u16_L"
+	.ascii "uTimes_var_u64_u32"
 	.space 1
-	.ascii "Times_param_u16_i8"
+	.ascii "Times_param_u64_i8"
 	.space 1
-	.ascii "uTimes_param_u16_i8"
+	.ascii "uTimes_param_u64_i8"
 	.space 1
-	.ascii "Times_var_u16_i8"
+	.ascii "Times_var_u64_i8"
 	.space 1
-	.ascii "uTimes_var_u16_i8"
+	.ascii "uTimes_var_u64_i8"
 	.space 1
-	.ascii "Times_param_u16_u8"
+	.ascii "Times_param_u64_I"
 	.space 1
-	.ascii "uTimes_param_u16_u8"
+	.ascii "uTimes_param_u64_I"
 	.space 1
-	.ascii "Times_var_u16_u8"
+	.ascii "Times_var_u64_I"
 	.space 1
-	.ascii "uTimes_var_u16_u8"
+	.ascii "uTimes_var_u64_I"
 	.space 1
-	.ascii "Times_param_u16_C"
+	.ascii "Times_param_u64_u8"
 	.space 1
-	.ascii "uTimes_param_u16_C"
+	.ascii "uTimes_param_u64_u8"
 	.space 1
-	.ascii "Times_var_u16_C"
+	.ascii "Times_var_u64_u8"
 	.space 1
-	.ascii "uTimes_var_u16_C"
+	.ascii "uTimes_var_u64_u8"
 	.space 1
-	.ascii "Times_param_u16_i64"
+	.ascii "Times_param_u64_LC"
 	.space 1
-	.ascii "uTimes_param_u16_i64"
+	.ascii "uTimes_param_u64_LC"
 	.space 1
-	.ascii "Times_var_u16_i64"
+	.ascii "Times_var_u64_LC"
 	.space 1
-	.ascii "uTimes_var_u16_i64"
+	.ascii "uTimes_var_u64_LC"
 	.space 1
-	.ascii "Times_param_u16_I"
+	.ascii "Times_param_u64_i64"
 	.space 1
-	.ascii "uTimes_param_u16_I"
+	.ascii "uTimes_param_u64_i64"
 	.space 1
-	.ascii "Times_var_u16_I"
+	.ascii "Times_var_u64_i64"
 	.space 1
-	.ascii "uTimes_var_u16_I"
+	.ascii "uTimes_var_u64_i64"
 	.space 1
 	.ascii "Times_param_u16_i32"
 	.space 1
@@ -8996,13 +8264,13 @@ _L_1:
 	.space 1
 	.ascii "uTimes_var_u16_i16"
 	.space 1
-	.ascii "Times_param_u16_LC"
+	.ascii "Times_param_u16_L"
 	.space 1
-	.ascii "uTimes_param_u16_LC"
+	.ascii "uTimes_param_u16_L"
 	.space 1
-	.ascii "Times_var_u16_LC"
+	.ascii "Times_var_u16_L"
 	.space 1
-	.ascii "uTimes_var_u16_LC"
+	.ascii "uTimes_var_u16_L"
 	.space 1
 	.ascii "Times_param_u16_u64"
 	.space 1
@@ -9019,1168 +8287,1900 @@ _L_1:
 	.ascii "Times_var_u16_u16"
 	.space 1
 	.ascii "uTimes_var_u16_u16"
+	.space 1
+	.ascii "Times_param_u16_C"
+	.space 1
+	.ascii "uTimes_param_u16_C"
+	.space 1
+	.ascii "Times_var_u16_C"
+	.space 1
+	.ascii "uTimes_var_u16_C"
+	.space 1
+	.ascii "Times_param_u16_u32"
+	.space 1
+	.ascii "uTimes_param_u16_u32"
+	.space 1
+	.ascii "Times_var_u16_u32"
+	.space 1
+	.ascii "uTimes_var_u16_u32"
+	.space 1
+	.ascii "Times_param_u16_i8"
+	.space 1
+	.ascii "uTimes_param_u16_i8"
+	.space 1
+	.ascii "Times_var_u16_i8"
+	.space 1
+	.ascii "uTimes_var_u16_i8"
+	.space 1
+	.ascii "Times_param_u16_I"
+	.space 1
+	.ascii "uTimes_param_u16_I"
+	.space 1
+	.ascii "Times_var_u16_I"
+	.space 1
+	.ascii "uTimes_var_u16_I"
+	.space 1
+	.ascii "Times_param_u16_u8"
+	.space 1
+	.ascii "uTimes_param_u16_u8"
+	.space 1
+	.ascii "Times_var_u16_u8"
+	.space 1
+	.ascii "uTimes_var_u16_u8"
+	.space 1
+	.ascii "Times_param_u16_LC"
+	.space 1
+	.ascii "uTimes_param_u16_LC"
+	.space 1
+	.ascii "Times_var_u16_LC"
+	.space 1
+	.ascii "uTimes_var_u16_LC"
+	.space 1
+	.ascii "Times_param_u16_i64"
+	.space 1
+	.ascii "uTimes_param_u16_i64"
+	.space 1
+	.ascii "Times_var_u16_i64"
+	.space 1
+	.ascii "uTimes_var_u16_i64"
+	.space 1
+	.ascii "Times_param_C_i32"
+	.space 1
+	.ascii "uTimes_param_C_i32"
+	.space 1
+	.ascii "Times_var_C_i32"
+	.space 1
+	.ascii "uTimes_var_C_i32"
+	.space 1
+	.ascii "Times_param_C_i16"
+	.space 1
+	.ascii "uTimes_param_C_i16"
+	.space 1
+	.ascii "Times_var_C_i16"
+	.space 1
+	.ascii "uTimes_var_C_i16"
+	.space 1
+	.ascii "Times_param_C_L"
+	.space 1
+	.ascii "uTimes_param_C_L"
+	.space 1
+	.ascii "Times_var_C_L"
+	.space 1
+	.ascii "uTimes_var_C_L"
+	.space 1
+	.ascii "Times_param_C_u64"
+	.space 1
+	.ascii "uTimes_param_C_u64"
+	.space 1
+	.ascii "Times_var_C_u64"
+	.space 1
+	.ascii "uTimes_var_C_u64"
+	.space 1
+	.ascii "Times_param_C_u16"
+	.space 1
+	.ascii "uTimes_param_C_u16"
+	.space 1
+	.ascii "Times_var_C_u16"
+	.space 1
+	.ascii "uTimes_var_C_u16"
+	.space 1
+	.ascii "Times_param_C_C"
+	.space 1
+	.ascii "uTimes_param_C_C"
+	.space 1
+	.ascii "Times_var_C_C"
+	.space 1
+	.ascii "uTimes_var_C_C"
+	.space 1
+	.ascii "Times_param_C_u32"
+	.space 1
+	.ascii "uTimes_param_C_u32"
+	.space 1
+	.ascii "Times_var_C_u32"
+	.space 1
+	.ascii "uTimes_var_C_u32"
+	.space 1
+	.ascii "Times_param_C_i8"
+	.space 1
+	.ascii "uTimes_param_C_i8"
+	.space 1
+	.ascii "Times_var_C_i8"
+	.space 1
+	.ascii "uTimes_var_C_i8"
+	.space 1
+	.ascii "Times_param_C_I"
+	.space 1
+	.ascii "uTimes_param_C_I"
+	.space 1
+	.ascii "Times_var_C_I"
+	.space 1
+	.ascii "uTimes_var_C_I"
+	.space 1
+	.ascii "Times_param_C_u8"
+	.space 1
+	.ascii "uTimes_param_C_u8"
+	.space 1
+	.ascii "Times_var_C_u8"
+	.space 1
+	.ascii "uTimes_var_C_u8"
+	.space 1
+	.ascii "Times_param_C_LC"
+	.space 1
+	.ascii "uTimes_param_C_LC"
+	.space 1
+	.ascii "Times_var_C_LC"
+	.space 1
+	.ascii "uTimes_var_C_LC"
+	.space 1
+	.ascii "Times_param_C_i64"
+	.space 1
+	.ascii "uTimes_param_C_i64"
+	.space 1
+	.ascii "Times_var_C_i64"
+	.space 1
+	.ascii "uTimes_var_C_i64"
+	.space 1
+	.ascii "Times_param_u32_i32"
+	.space 1
+	.ascii "uTimes_param_u32_i32"
+	.space 1
+	.ascii "Times_var_u32_i32"
+	.space 1
+	.ascii "uTimes_var_u32_i32"
+	.space 1
+	.ascii "Times_param_u32_i16"
+	.space 1
+	.ascii "uTimes_param_u32_i16"
+	.space 1
+	.ascii "Times_var_u32_i16"
+	.space 1
+	.ascii "uTimes_var_u32_i16"
+	.space 1
+	.ascii "Times_param_u32_L"
+	.space 1
+	.ascii "uTimes_param_u32_L"
+	.space 1
+	.ascii "Times_var_u32_L"
+	.space 1
+	.ascii "uTimes_var_u32_L"
+	.space 1
+	.ascii "Times_param_u32_u64"
+	.space 1
+	.ascii "uTimes_param_u32_u64"
+	.space 1
+	.ascii "Times_var_u32_u64"
+	.space 1
+	.ascii "uTimes_var_u32_u64"
+	.space 1
+	.ascii "Times_param_u32_u16"
+	.space 1
+	.ascii "uTimes_param_u32_u16"
+	.space 1
+	.ascii "Times_var_u32_u16"
+	.space 1
+	.ascii "uTimes_var_u32_u16"
+	.space 1
+	.ascii "Times_param_u32_C"
+	.space 1
+	.ascii "uTimes_param_u32_C"
+	.space 1
+	.ascii "Times_var_u32_C"
+	.space 1
+	.ascii "uTimes_var_u32_C"
+	.space 1
+	.ascii "Times_param_u32_u32"
+	.space 1
+	.ascii "uTimes_param_u32_u32"
+	.space 1
+	.ascii "Times_var_u32_u32"
+	.space 1
+	.ascii "uTimes_var_u32_u32"
+	.space 1
+	.ascii "Times_param_u32_i8"
+	.space 1
+	.ascii "uTimes_param_u32_i8"
+	.space 1
+	.ascii "Times_var_u32_i8"
+	.space 1
+	.ascii "uTimes_var_u32_i8"
+	.space 1
+	.ascii "Times_param_u32_I"
+	.space 1
+	.ascii "uTimes_param_u32_I"
+	.space 1
+	.ascii "Times_var_u32_I"
+	.space 1
+	.ascii "uTimes_var_u32_I"
+	.space 1
+	.ascii "Times_param_u32_u8"
+	.space 1
+	.ascii "uTimes_param_u32_u8"
+	.space 1
+	.ascii "Times_var_u32_u8"
+	.space 1
+	.ascii "uTimes_var_u32_u8"
+	.space 1
+	.ascii "Times_param_u32_LC"
+	.space 1
+	.ascii "uTimes_param_u32_LC"
+	.space 1
+	.ascii "Times_var_u32_LC"
+	.space 1
+	.ascii "uTimes_var_u32_LC"
+	.space 1
+	.ascii "Times_param_u32_i64"
+	.space 1
+	.ascii "uTimes_param_u32_i64"
+	.space 1
+	.ascii "Times_var_u32_i64"
+	.space 1
+	.ascii "uTimes_var_u32_i64"
+	.space 1
+	.ascii "Times_param_i8_i32"
+	.space 1
+	.ascii "uTimes_param_i8_i32"
+	.space 1
+	.ascii "Times_var_i8_i32"
+	.space 1
+	.ascii "uTimes_var_i8_i32"
+	.space 1
+	.ascii "Times_param_i8_i16"
+	.space 1
+	.ascii "uTimes_param_i8_i16"
+	.space 1
+	.ascii "Times_var_i8_i16"
+	.space 1
+	.ascii "uTimes_var_i8_i16"
+	.space 1
+	.ascii "Times_param_i8_L"
+	.space 1
+	.ascii "uTimes_param_i8_L"
+	.space 1
+	.ascii "Times_var_i8_L"
+	.space 1
+	.ascii "uTimes_var_i8_L"
+	.space 1
+	.ascii "Times_param_i8_u64"
+	.space 1
+	.ascii "uTimes_param_i8_u64"
+	.space 1
+	.ascii "Times_var_i8_u64"
+	.space 1
+	.ascii "uTimes_var_i8_u64"
+	.space 1
+	.ascii "Times_param_i8_u16"
+	.space 1
+	.ascii "uTimes_param_i8_u16"
+	.space 1
+	.ascii "Times_var_i8_u16"
+	.space 1
+	.ascii "uTimes_var_i8_u16"
+	.space 1
+	.ascii "Times_param_i8_C"
+	.space 1
+	.ascii "uTimes_param_i8_C"
+	.space 1
+	.ascii "Times_var_i8_C"
+	.space 1
+	.ascii "uTimes_var_i8_C"
+	.space 1
+	.ascii "Times_param_i8_u32"
+	.space 1
+	.ascii "uTimes_param_i8_u32"
+	.space 1
+	.ascii "Times_var_i8_u32"
+	.space 1
+	.ascii "uTimes_var_i8_u32"
+	.space 1
+	.ascii "Times_param_i8_i8"
+	.space 1
+	.ascii "uTimes_param_i8_i8"
+	.space 1
+	.ascii "Times_var_i8_i8"
+	.space 1
+	.ascii "uTimes_var_i8_i8"
+	.space 1
+	.ascii "Times_param_i8_I"
+	.space 1
+	.ascii "uTimes_param_i8_I"
+	.space 1
+	.ascii "Times_var_i8_I"
+	.space 1
+	.ascii "uTimes_var_i8_I"
+	.space 1
+	.ascii "Times_param_i8_u8"
+	.space 1
+	.ascii "uTimes_param_i8_u8"
+	.space 1
+	.ascii "Times_var_i8_u8"
+	.space 1
+	.ascii "uTimes_var_i8_u8"
+	.space 1
+	.ascii "Times_param_i8_LC"
+	.space 1
+	.ascii "uTimes_param_i8_LC"
+	.space 1
+	.ascii "Times_var_i8_LC"
+	.space 1
+	.ascii "uTimes_var_i8_LC"
+	.space 1
+	.ascii "Times_param_i8_i64"
+	.space 1
+	.ascii "uTimes_param_i8_i64"
+	.space 1
+	.ascii "Times_var_i8_i64"
+	.space 1
+	.ascii "uTimes_var_i8_i64"
+	.space 1
+	.ascii "Times_param_I_i32"
+	.space 1
+	.ascii "uTimes_param_I_i32"
+	.space 1
+	.ascii "Times_var_I_i32"
+	.space 1
+	.ascii "uTimes_var_I_i32"
+	.space 1
+	.ascii "Times_param_I_i16"
+	.space 1
+	.ascii "uTimes_param_I_i16"
+	.space 1
+	.ascii "Times_var_I_i16"
+	.space 1
+	.ascii "uTimes_var_I_i16"
+	.space 1
+	.ascii "Times_param_I_L"
+	.space 1
+	.ascii "uTimes_param_I_L"
+	.space 1
+	.ascii "Times_var_I_L"
+	.space 1
+	.ascii "uTimes_var_I_L"
+	.space 1
+	.ascii "Times_param_I_u64"
+	.space 1
+	.ascii "uTimes_param_I_u64"
+	.space 1
+	.ascii "Times_var_I_u64"
+	.space 1
+	.ascii "uTimes_var_I_u64"
+	.space 1
+	.ascii "Times_param_I_u16"
+	.space 1
+	.ascii "uTimes_param_I_u16"
+	.space 1
+	.ascii "Times_var_I_u16"
+	.space 1
+	.ascii "uTimes_var_I_u16"
+	.space 1
+	.ascii "Times_param_I_C"
+	.space 1
+	.ascii "uTimes_param_I_C"
+	.space 1
+	.ascii "Times_var_I_C"
+	.space 1
+	.ascii "uTimes_var_I_C"
+	.space 1
+	.ascii "Times_param_I_u32"
+	.space 1
+	.ascii "uTimes_param_I_u32"
+	.space 1
+	.ascii "Times_var_I_u32"
+	.space 1
+	.ascii "uTimes_var_I_u32"
+	.space 1
+	.ascii "Times_param_I_i8"
+	.space 1
+	.ascii "uTimes_param_I_i8"
+	.space 1
+	.ascii "Times_var_I_i8"
+	.space 1
+	.ascii "uTimes_var_I_i8"
+	.space 1
+	.ascii "Times_param_I_I"
+	.space 1
+	.ascii "uTimes_param_I_I"
+	.space 1
+	.ascii "Times_var_I_I"
+	.space 1
+	.ascii "uTimes_var_I_I"
+	.space 1
+	.ascii "Times_param_I_u8"
+	.space 1
+	.ascii "uTimes_param_I_u8"
+	.space 1
+	.ascii "Times_var_I_u8"
+	.space 1
+	.ascii "uTimes_var_I_u8"
+	.space 1
+	.ascii "Times_param_I_LC"
+	.space 1
+	.ascii "uTimes_param_I_LC"
+	.space 1
+	.ascii "Times_var_I_LC"
+	.space 1
+	.ascii "uTimes_var_I_LC"
+	.space 1
+	.ascii "Times_param_I_i64"
+	.space 1
+	.ascii "uTimes_param_I_i64"
+	.space 1
+	.ascii "Times_var_I_i64"
+	.space 1
+	.ascii "uTimes_var_I_i64"
+	.space 1
+	.ascii "Times_param_u8_i32"
+	.space 1
+	.ascii "uTimes_param_u8_i32"
+	.space 1
+	.ascii "Times_var_u8_i32"
+	.space 1
+	.ascii "uTimes_var_u8_i32"
+	.space 1
+	.ascii "Times_param_u8_i16"
+	.space 1
+	.ascii "uTimes_param_u8_i16"
+	.space 1
+	.ascii "Times_var_u8_i16"
+	.space 1
+	.ascii "uTimes_var_u8_i16"
+	.space 1
+	.ascii "Times_param_u8_L"
+	.space 1
+	.ascii "uTimes_param_u8_L"
+	.space 1
+	.ascii "Times_var_u8_L"
+	.space 1
+	.ascii "uTimes_var_u8_L"
+	.space 1
+	.ascii "Times_param_u8_u64"
+	.space 1
+	.ascii "uTimes_param_u8_u64"
+	.space 1
+	.ascii "Times_var_u8_u64"
+	.space 1
+	.ascii "uTimes_var_u8_u64"
+	.space 1
+	.ascii "Times_param_u8_u16"
+	.space 1
+	.ascii "uTimes_param_u8_u16"
+	.space 1
+	.ascii "Times_var_u8_u16"
+	.space 1
+	.ascii "uTimes_var_u8_u16"
+	.space 1
+	.ascii "Times_param_u8_C"
+	.space 1
+	.ascii "uTimes_param_u8_C"
+	.space 1
+	.ascii "Times_var_u8_C"
+	.space 1
+	.ascii "uTimes_var_u8_C"
+	.space 1
+	.ascii "Times_param_u8_u32"
+	.space 1
+	.ascii "uTimes_param_u8_u32"
+	.space 1
+	.ascii "Times_var_u8_u32"
+	.space 1
+	.ascii "uTimes_var_u8_u32"
+	.space 1
+	.ascii "Times_param_u8_i8"
+	.space 1
+	.ascii "uTimes_param_u8_i8"
+	.space 1
+	.ascii "Times_var_u8_i8"
+	.space 1
+	.ascii "uTimes_var_u8_i8"
+	.space 1
+	.ascii "Times_param_u8_I"
+	.space 1
+	.ascii "uTimes_param_u8_I"
+	.space 1
+	.ascii "Times_var_u8_I"
+	.space 1
+	.ascii "uTimes_var_u8_I"
+	.space 1
+	.ascii "Times_param_u8_u8"
+	.space 1
+	.ascii "uTimes_param_u8_u8"
+	.space 1
+	.ascii "Times_var_u8_u8"
+	.space 1
+	.ascii "uTimes_var_u8_u8"
+	.space 1
+	.ascii "Times_param_u8_LC"
+	.space 1
+	.ascii "uTimes_param_u8_LC"
+	.space 1
+	.ascii "Times_var_u8_LC"
+	.space 1
+	.ascii "uTimes_var_u8_LC"
+	.space 1
+	.ascii "Times_param_u8_i64"
+	.space 1
+	.ascii "uTimes_param_u8_i64"
+	.space 1
+	.ascii "Times_var_u8_i64"
+	.space 1
+	.ascii "uTimes_var_u8_i64"
+	.space 1
+	.ascii "Times_param_f32_f32"
+	.space 1
+	.ascii "Times_var_f32_f32"
+	.space 1
+	.ascii "Times_param_LC_i32"
+	.space 1
+	.ascii "uTimes_param_LC_i32"
+	.space 1
+	.ascii "Times_var_LC_i32"
+	.space 1
+	.ascii "uTimes_var_LC_i32"
+	.space 1
+	.ascii "Times_param_LC_i16"
+	.space 1
+	.ascii "uTimes_param_LC_i16"
+	.space 1
+	.ascii "Times_var_LC_i16"
+	.space 1
+	.ascii "uTimes_var_LC_i16"
+	.space 1
+	.ascii "Times_param_LC_L"
+	.space 1
+	.ascii "uTimes_param_LC_L"
+	.space 1
+	.ascii "Times_var_LC_L"
+	.space 1
+	.ascii "uTimes_var_LC_L"
+	.space 1
+	.ascii "Times_param_LC_u64"
+	.space 1
+	.ascii "uTimes_param_LC_u64"
+	.space 1
+	.ascii "Times_var_LC_u64"
+	.space 1
+	.ascii "uTimes_var_LC_u64"
+	.space 1
+	.ascii "Times_param_LC_u16"
+	.space 1
+	.ascii "uTimes_param_LC_u16"
+	.space 1
+	.ascii "Times_var_LC_u16"
+	.space 1
+	.ascii "uTimes_var_LC_u16"
+	.space 1
+	.ascii "Times_param_LC_C"
+	.space 1
+	.ascii "uTimes_param_LC_C"
+	.space 1
+	.ascii "Times_var_LC_C"
+	.space 1
+	.ascii "uTimes_var_LC_C"
+	.space 1
+	.ascii "Times_param_LC_u32"
+	.space 1
+	.ascii "uTimes_param_LC_u32"
+	.space 1
+	.ascii "Times_var_LC_u32"
+	.space 1
+	.ascii "uTimes_var_LC_u32"
+	.space 1
+	.ascii "Times_param_LC_i8"
+	.space 1
+	.ascii "uTimes_param_LC_i8"
+	.space 1
+	.ascii "Times_var_LC_i8"
+	.space 1
+	.ascii "uTimes_var_LC_i8"
+	.space 1
+	.ascii "Times_param_LC_I"
+	.space 1
+	.ascii "uTimes_param_LC_I"
+	.space 1
+	.ascii "Times_var_LC_I"
+	.space 1
+	.ascii "uTimes_var_LC_I"
+	.space 1
+	.ascii "Times_param_LC_u8"
+	.space 1
+	.ascii "uTimes_param_LC_u8"
+	.space 1
+	.ascii "Times_var_LC_u8"
+	.space 1
+	.ascii "uTimes_var_LC_u8"
+	.space 1
+	.ascii "Times_param_LC_LC"
+	.space 1
+	.ascii "uTimes_param_LC_LC"
+	.space 1
+	.ascii "Times_var_LC_LC"
+	.space 1
+	.ascii "uTimes_var_LC_LC"
+	.space 1
+	.ascii "Times_param_LC_i64"
+	.space 1
+	.ascii "uTimes_param_LC_i64"
+	.space 1
+	.ascii "Times_var_LC_i64"
+	.space 1
+	.ascii "uTimes_var_LC_i64"
+	.space 1
+	.ascii "Times_param_i64_i32"
+	.space 1
+	.ascii "uTimes_param_i64_i32"
+	.space 1
+	.ascii "Times_var_i64_i32"
+	.space 1
+	.ascii "uTimes_var_i64_i32"
+	.space 1
+	.ascii "Times_param_i64_i16"
+	.space 1
+	.ascii "uTimes_param_i64_i16"
+	.space 1
+	.ascii "Times_var_i64_i16"
+	.space 1
+	.ascii "uTimes_var_i64_i16"
+	.space 1
+	.ascii "Times_param_i64_L"
+	.space 1
+	.ascii "uTimes_param_i64_L"
+	.space 1
+	.ascii "Times_var_i64_L"
+	.space 1
+	.ascii "uTimes_var_i64_L"
+	.space 1
+	.ascii "Times_param_i64_u64"
+	.space 1
+	.ascii "uTimes_param_i64_u64"
+	.space 1
+	.ascii "Times_var_i64_u64"
+	.space 1
+	.ascii "uTimes_var_i64_u64"
+	.space 1
+	.ascii "Times_param_i64_u16"
+	.space 1
+	.ascii "uTimes_param_i64_u16"
+	.space 1
+	.ascii "Times_var_i64_u16"
+	.space 1
+	.ascii "uTimes_var_i64_u16"
+	.space 1
+	.ascii "Times_param_i64_C"
+	.space 1
+	.ascii "uTimes_param_i64_C"
+	.space 1
+	.ascii "Times_var_i64_C"
+	.space 1
+	.ascii "uTimes_var_i64_C"
+	.space 1
+	.ascii "Times_param_i64_u32"
+	.space 1
+	.ascii "uTimes_param_i64_u32"
+	.space 1
+	.ascii "Times_var_i64_u32"
+	.space 1
+	.ascii "uTimes_var_i64_u32"
+	.space 1
+	.ascii "Times_param_i64_i8"
+	.space 1
+	.ascii "uTimes_param_i64_i8"
+	.space 1
+	.ascii "Times_var_i64_i8"
+	.space 1
+	.ascii "uTimes_var_i64_i8"
+	.space 1
+	.ascii "Times_param_i64_I"
+	.space 1
+	.ascii "uTimes_param_i64_I"
+	.space 1
+	.ascii "Times_var_i64_I"
+	.space 1
+	.ascii "uTimes_var_i64_I"
+	.space 1
+	.ascii "Times_param_i64_u8"
+	.space 1
+	.ascii "uTimes_param_i64_u8"
+	.space 1
+	.ascii "Times_var_i64_u8"
+	.space 1
+	.ascii "uTimes_var_i64_u8"
+	.space 1
+	.ascii "Times_param_i64_LC"
+	.space 1
+	.ascii "uTimes_param_i64_LC"
+	.space 1
+	.ascii "Times_var_i64_LC"
+	.space 1
+	.ascii "uTimes_var_i64_LC"
+	.space 1
+	.ascii "Times_param_i64_i64"
+	.space 1
+	.ascii "uTimes_param_i64_i64"
+	.space 1
+	.ascii "Times_var_i64_i64"
+	.space 1
+	.ascii "uTimes_var_i64_i64"
 	.space 4
 	.quad	_Times_M3
 	.quad	_L_1
-	.quad	_Times__Times_param_u32_u32
-	.quad	_L_1+9
-	.quad	_Times__uTimes_param_u32_u32
-	.quad	_L_1+29
-	.quad	_Times__Times_var_u32_u32
-	.quad	_L_1+50
-	.quad	_Times__uTimes_var_u32_u32
-	.quad	_L_1+68
-	.quad	_Times__Times_param_u32_L
-	.quad	_L_1+87
-	.quad	_Times__uTimes_param_u32_L
-	.quad	_L_1+105
-	.quad	_Times__Times_var_u32_L
-	.quad	_L_1+124
-	.quad	_Times__uTimes_var_u32_L
-	.quad	_L_1+140
-	.quad	_Times__Times_param_u32_i8
-	.quad	_L_1+157
-	.quad	_Times__uTimes_param_u32_i8
-	.quad	_L_1+176
-	.quad	_Times__Times_var_u32_i8
-	.quad	_L_1+196
-	.quad	_Times__uTimes_var_u32_i8
-	.quad	_L_1+213
-	.quad	_Times__Times_param_u32_u8
-	.quad	_L_1+231
-	.quad	_Times__uTimes_param_u32_u8
-	.quad	_L_1+250
-	.quad	_Times__Times_var_u32_u8
-	.quad	_L_1+270
-	.quad	_Times__uTimes_var_u32_u8
-	.quad	_L_1+287
-	.quad	_Times__Times_param_u32_C
-	.quad	_L_1+305
-	.quad	_Times__uTimes_param_u32_C
-	.quad	_L_1+323
-	.quad	_Times__Times_var_u32_C
-	.quad	_L_1+342
-	.quad	_Times__uTimes_var_u32_C
-	.quad	_L_1+358
-	.quad	_Times__Times_param_u32_i64
-	.quad	_L_1+375
-	.quad	_Times__uTimes_param_u32_i64
-	.quad	_L_1+395
-	.quad	_Times__Times_var_u32_i64
-	.quad	_L_1+416
-	.quad	_Times__uTimes_var_u32_i64
-	.quad	_L_1+434
-	.quad	_Times__Times_param_u32_I
-	.quad	_L_1+453
-	.quad	_Times__uTimes_param_u32_I
-	.quad	_L_1+471
-	.quad	_Times__Times_var_u32_I
-	.quad	_L_1+490
-	.quad	_Times__uTimes_var_u32_I
-	.quad	_L_1+506
-	.quad	_Times__Times_param_u32_i32
-	.quad	_L_1+523
-	.quad	_Times__uTimes_param_u32_i32
-	.quad	_L_1+543
-	.quad	_Times__Times_var_u32_i32
-	.quad	_L_1+564
-	.quad	_Times__uTimes_var_u32_i32
-	.quad	_L_1+582
-	.quad	_Times__Times_param_u32_i16
-	.quad	_L_1+601
-	.quad	_Times__uTimes_param_u32_i16
-	.quad	_L_1+621
-	.quad	_Times__Times_var_u32_i16
-	.quad	_L_1+642
-	.quad	_Times__uTimes_var_u32_i16
-	.quad	_L_1+660
-	.quad	_Times__Times_param_u32_LC
-	.quad	_L_1+679
-	.quad	_Times__uTimes_param_u32_LC
-	.quad	_L_1+698
-	.quad	_Times__Times_var_u32_LC
-	.quad	_L_1+718
-	.quad	_Times__uTimes_var_u32_LC
-	.quad	_L_1+735
-	.quad	_Times__Times_param_u32_u64
-	.quad	_L_1+753
-	.quad	_Times__uTimes_param_u32_u64
-	.quad	_L_1+773
-	.quad	_Times__Times_var_u32_u64
-	.quad	_L_1+794
-	.quad	_Times__uTimes_var_u32_u64
-	.quad	_L_1+812
-	.quad	_Times__Times_param_u32_u16
-	.quad	_L_1+831
-	.quad	_Times__uTimes_param_u32_u16
-	.quad	_L_1+851
-	.quad	_Times__Times_var_u32_u16
-	.quad	_L_1+872
-	.quad	_Times__uTimes_var_u32_u16
-	.quad	_L_1+890
-	.quad	_Times__Times_param_L_u32
-	.quad	_L_1+909
-	.quad	_Times__uTimes_param_L_u32
-	.quad	_L_1+927
-	.quad	_Times__Times_var_L_u32
-	.quad	_L_1+946
-	.quad	_Times__uTimes_var_L_u32
-	.quad	_L_1+962
-	.quad	_Times__Times_param_L_L
-	.quad	_L_1+979
-	.quad	_Times__uTimes_param_L_L
-	.quad	_L_1+995
-	.quad	_Times__Times_var_L_L
-	.quad	_L_1+1012
-	.quad	_Times__uTimes_var_L_L
-	.quad	_L_1+1026
-	.quad	_Times__Times_param_L_i8
-	.quad	_L_1+1041
-	.quad	_Times__uTimes_param_L_i8
-	.quad	_L_1+1058
-	.quad	_Times__Times_var_L_i8
-	.quad	_L_1+1076
-	.quad	_Times__uTimes_var_L_i8
-	.quad	_L_1+1091
-	.quad	_Times__Times_param_L_u8
-	.quad	_L_1+1107
-	.quad	_Times__uTimes_param_L_u8
-	.quad	_L_1+1124
-	.quad	_Times__Times_var_L_u8
-	.quad	_L_1+1142
-	.quad	_Times__uTimes_var_L_u8
-	.quad	_L_1+1157
-	.quad	_Times__Times_param_L_C
-	.quad	_L_1+1173
-	.quad	_Times__uTimes_param_L_C
-	.quad	_L_1+1189
-	.quad	_Times__Times_var_L_C
-	.quad	_L_1+1206
-	.quad	_Times__uTimes_var_L_C
-	.quad	_L_1+1220
-	.quad	_Times__Times_param_L_i64
-	.quad	_L_1+1235
-	.quad	_Times__uTimes_param_L_i64
-	.quad	_L_1+1253
-	.quad	_Times__Times_var_L_i64
-	.quad	_L_1+1272
-	.quad	_Times__uTimes_var_L_i64
-	.quad	_L_1+1288
-	.quad	_Times__Times_param_L_I
-	.quad	_L_1+1305
-	.quad	_Times__uTimes_param_L_I
-	.quad	_L_1+1321
-	.quad	_Times__Times_var_L_I
-	.quad	_L_1+1338
-	.quad	_Times__uTimes_var_L_I
-	.quad	_L_1+1352
-	.quad	_Times__Times_param_L_i32
-	.quad	_L_1+1367
-	.quad	_Times__uTimes_param_L_i32
-	.quad	_L_1+1385
-	.quad	_Times__Times_var_L_i32
-	.quad	_L_1+1404
-	.quad	_Times__uTimes_var_L_i32
-	.quad	_L_1+1420
-	.quad	_Times__Times_param_L_i16
-	.quad	_L_1+1437
-	.quad	_Times__uTimes_param_L_i16
-	.quad	_L_1+1455
-	.quad	_Times__Times_var_L_i16
-	.quad	_L_1+1474
-	.quad	_Times__uTimes_var_L_i16
-	.quad	_L_1+1490
-	.quad	_Times__Times_param_L_LC
-	.quad	_L_1+1507
-	.quad	_Times__uTimes_param_L_LC
-	.quad	_L_1+1524
-	.quad	_Times__Times_var_L_LC
-	.quad	_L_1+1542
-	.quad	_Times__uTimes_var_L_LC
-	.quad	_L_1+1557
-	.quad	_Times__Times_param_L_u64
-	.quad	_L_1+1573
-	.quad	_Times__uTimes_param_L_u64
-	.quad	_L_1+1591
-	.quad	_Times__Times_var_L_u64
-	.quad	_L_1+1610
-	.quad	_Times__uTimes_var_L_u64
-	.quad	_L_1+1626
-	.quad	_Times__Times_param_L_u16
-	.quad	_L_1+1643
-	.quad	_Times__uTimes_param_L_u16
-	.quad	_L_1+1661
-	.quad	_Times__Times_var_L_u16
-	.quad	_L_1+1680
-	.quad	_Times__uTimes_var_L_u16
-	.quad	_L_1+1696
-	.quad	_Times__Times_param_i8_u32
-	.quad	_L_1+1713
-	.quad	_Times__uTimes_param_i8_u32
-	.quad	_L_1+1732
-	.quad	_Times__Times_var_i8_u32
-	.quad	_L_1+1752
-	.quad	_Times__uTimes_var_i8_u32
-	.quad	_L_1+1769
-	.quad	_Times__Times_param_i8_L
-	.quad	_L_1+1787
-	.quad	_Times__uTimes_param_i8_L
-	.quad	_L_1+1804
-	.quad	_Times__Times_var_i8_L
-	.quad	_L_1+1822
-	.quad	_Times__uTimes_var_i8_L
-	.quad	_L_1+1837
-	.quad	_Times__Times_param_i8_i8
-	.quad	_L_1+1853
-	.quad	_Times__uTimes_param_i8_i8
-	.quad	_L_1+1871
-	.quad	_Times__Times_var_i8_i8
-	.quad	_L_1+1890
-	.quad	_Times__uTimes_var_i8_i8
-	.quad	_L_1+1906
-	.quad	_Times__Times_param_i8_u8
-	.quad	_L_1+1923
-	.quad	_Times__uTimes_param_i8_u8
-	.quad	_L_1+1941
-	.quad	_Times__Times_var_i8_u8
-	.quad	_L_1+1960
-	.quad	_Times__uTimes_var_i8_u8
-	.quad	_L_1+1976
-	.quad	_Times__Times_param_i8_C
-	.quad	_L_1+1993
-	.quad	_Times__uTimes_param_i8_C
-	.quad	_L_1+2010
-	.quad	_Times__Times_var_i8_C
-	.quad	_L_1+2028
-	.quad	_Times__uTimes_var_i8_C
-	.quad	_L_1+2043
-	.quad	_Times__Times_param_i8_i64
-	.quad	_L_1+2059
-	.quad	_Times__uTimes_param_i8_i64
-	.quad	_L_1+2078
-	.quad	_Times__Times_var_i8_i64
-	.quad	_L_1+2098
-	.quad	_Times__uTimes_var_i8_i64
-	.quad	_L_1+2115
-	.quad	_Times__Times_param_i8_I
-	.quad	_L_1+2133
-	.quad	_Times__uTimes_param_i8_I
-	.quad	_L_1+2150
-	.quad	_Times__Times_var_i8_I
-	.quad	_L_1+2168
-	.quad	_Times__uTimes_var_i8_I
-	.quad	_L_1+2183
-	.quad	_Times__Times_param_i8_i32
-	.quad	_L_1+2199
-	.quad	_Times__uTimes_param_i8_i32
-	.quad	_L_1+2218
-	.quad	_Times__Times_var_i8_i32
-	.quad	_L_1+2238
-	.quad	_Times__uTimes_var_i8_i32
-	.quad	_L_1+2255
-	.quad	_Times__Times_param_i8_i16
-	.quad	_L_1+2273
-	.quad	_Times__uTimes_param_i8_i16
-	.quad	_L_1+2292
-	.quad	_Times__Times_var_i8_i16
-	.quad	_L_1+2312
-	.quad	_Times__uTimes_var_i8_i16
-	.quad	_L_1+2329
-	.quad	_Times__Times_param_i8_LC
-	.quad	_L_1+2347
-	.quad	_Times__uTimes_param_i8_LC
-	.quad	_L_1+2365
-	.quad	_Times__Times_var_i8_LC
-	.quad	_L_1+2384
-	.quad	_Times__uTimes_var_i8_LC
-	.quad	_L_1+2400
-	.quad	_Times__Times_param_i8_u64
-	.quad	_L_1+2417
-	.quad	_Times__uTimes_param_i8_u64
-	.quad	_L_1+2436
-	.quad	_Times__Times_var_i8_u64
-	.quad	_L_1+2456
-	.quad	_Times__uTimes_var_i8_u64
-	.quad	_L_1+2473
-	.quad	_Times__Times_param_i8_u16
-	.quad	_L_1+2491
-	.quad	_Times__uTimes_param_i8_u16
-	.quad	_L_1+2510
-	.quad	_Times__Times_var_i8_u16
-	.quad	_L_1+2530
-	.quad	_Times__uTimes_var_i8_u16
-	.quad	_L_1+2547
-	.quad	_Times__Times_param_u8_u32
-	.quad	_L_1+2565
-	.quad	_Times__uTimes_param_u8_u32
-	.quad	_L_1+2584
-	.quad	_Times__Times_var_u8_u32
-	.quad	_L_1+2604
-	.quad	_Times__uTimes_var_u8_u32
-	.quad	_L_1+2621
-	.quad	_Times__Times_param_u8_L
-	.quad	_L_1+2639
-	.quad	_Times__uTimes_param_u8_L
-	.quad	_L_1+2656
-	.quad	_Times__Times_var_u8_L
-	.quad	_L_1+2674
-	.quad	_Times__uTimes_var_u8_L
-	.quad	_L_1+2689
-	.quad	_Times__Times_param_u8_i8
-	.quad	_L_1+2705
-	.quad	_Times__uTimes_param_u8_i8
-	.quad	_L_1+2723
-	.quad	_Times__Times_var_u8_i8
-	.quad	_L_1+2742
-	.quad	_Times__uTimes_var_u8_i8
-	.quad	_L_1+2758
-	.quad	_Times__Times_param_u8_u8
-	.quad	_L_1+2775
-	.quad	_Times__uTimes_param_u8_u8
-	.quad	_L_1+2793
-	.quad	_Times__Times_var_u8_u8
-	.quad	_L_1+2812
-	.quad	_Times__uTimes_var_u8_u8
-	.quad	_L_1+2828
-	.quad	_Times__Times_param_u8_C
-	.quad	_L_1+2845
-	.quad	_Times__uTimes_param_u8_C
-	.quad	_L_1+2862
-	.quad	_Times__Times_var_u8_C
-	.quad	_L_1+2880
-	.quad	_Times__uTimes_var_u8_C
-	.quad	_L_1+2895
-	.quad	_Times__Times_param_u8_i64
-	.quad	_L_1+2911
-	.quad	_Times__uTimes_param_u8_i64
-	.quad	_L_1+2930
-	.quad	_Times__Times_var_u8_i64
-	.quad	_L_1+2950
-	.quad	_Times__uTimes_var_u8_i64
-	.quad	_L_1+2967
-	.quad	_Times__Times_param_u8_I
-	.quad	_L_1+2985
-	.quad	_Times__uTimes_param_u8_I
-	.quad	_L_1+3002
-	.quad	_Times__Times_var_u8_I
-	.quad	_L_1+3020
-	.quad	_Times__uTimes_var_u8_I
-	.quad	_L_1+3035
-	.quad	_Times__Times_param_u8_i32
-	.quad	_L_1+3051
-	.quad	_Times__uTimes_param_u8_i32
-	.quad	_L_1+3070
-	.quad	_Times__Times_var_u8_i32
-	.quad	_L_1+3090
-	.quad	_Times__uTimes_var_u8_i32
-	.quad	_L_1+3107
-	.quad	_Times__Times_param_u8_i16
-	.quad	_L_1+3125
-	.quad	_Times__uTimes_param_u8_i16
-	.quad	_L_1+3144
-	.quad	_Times__Times_var_u8_i16
-	.quad	_L_1+3164
-	.quad	_Times__uTimes_var_u8_i16
-	.quad	_L_1+3181
-	.quad	_Times__Times_param_u8_LC
-	.quad	_L_1+3199
-	.quad	_Times__uTimes_param_u8_LC
-	.quad	_L_1+3217
-	.quad	_Times__Times_var_u8_LC
-	.quad	_L_1+3236
-	.quad	_Times__uTimes_var_u8_LC
-	.quad	_L_1+3252
-	.quad	_Times__Times_param_u8_u64
-	.quad	_L_1+3269
-	.quad	_Times__uTimes_param_u8_u64
-	.quad	_L_1+3288
-	.quad	_Times__Times_var_u8_u64
-	.quad	_L_1+3308
-	.quad	_Times__uTimes_var_u8_u64
-	.quad	_L_1+3325
-	.quad	_Times__Times_param_u8_u16
-	.quad	_L_1+3343
-	.quad	_Times__uTimes_param_u8_u16
-	.quad	_L_1+3362
-	.quad	_Times__Times_var_u8_u16
-	.quad	_L_1+3382
-	.quad	_Times__uTimes_var_u8_u16
-	.quad	_L_1+3399
-	.quad	_Times__Times_param_f32_f32
-	.quad	_L_1+3417
-	.quad	_Times__Times_var_f32_f32
-	.quad	_L_1+3437
-	.quad	_Times__Times_param_C_u32
-	.quad	_L_1+3455
-	.quad	_Times__uTimes_param_C_u32
-	.quad	_L_1+3473
-	.quad	_Times__Times_var_C_u32
-	.quad	_L_1+3492
-	.quad	_Times__uTimes_var_C_u32
-	.quad	_L_1+3508
-	.quad	_Times__Times_param_C_L
-	.quad	_L_1+3525
-	.quad	_Times__uTimes_param_C_L
-	.quad	_L_1+3541
-	.quad	_Times__Times_var_C_L
-	.quad	_L_1+3558
-	.quad	_Times__uTimes_var_C_L
-	.quad	_L_1+3572
-	.quad	_Times__Times_param_C_i8
-	.quad	_L_1+3587
-	.quad	_Times__uTimes_param_C_i8
-	.quad	_L_1+3604
-	.quad	_Times__Times_var_C_i8
-	.quad	_L_1+3622
-	.quad	_Times__uTimes_var_C_i8
-	.quad	_L_1+3637
-	.quad	_Times__Times_param_C_u8
-	.quad	_L_1+3653
-	.quad	_Times__uTimes_param_C_u8
-	.quad	_L_1+3670
-	.quad	_Times__Times_var_C_u8
-	.quad	_L_1+3688
-	.quad	_Times__uTimes_var_C_u8
-	.quad	_L_1+3703
-	.quad	_Times__Times_param_C_C
-	.quad	_L_1+3719
-	.quad	_Times__uTimes_param_C_C
-	.quad	_L_1+3735
-	.quad	_Times__Times_var_C_C
-	.quad	_L_1+3752
-	.quad	_Times__uTimes_var_C_C
-	.quad	_L_1+3766
-	.quad	_Times__Times_param_C_i64
-	.quad	_L_1+3781
-	.quad	_Times__uTimes_param_C_i64
-	.quad	_L_1+3799
-	.quad	_Times__Times_var_C_i64
-	.quad	_L_1+3818
-	.quad	_Times__uTimes_var_C_i64
-	.quad	_L_1+3834
-	.quad	_Times__Times_param_C_I
-	.quad	_L_1+3851
-	.quad	_Times__uTimes_param_C_I
-	.quad	_L_1+3867
-	.quad	_Times__Times_var_C_I
-	.quad	_L_1+3884
-	.quad	_Times__uTimes_var_C_I
-	.quad	_L_1+3898
-	.quad	_Times__Times_param_C_i32
-	.quad	_L_1+3913
-	.quad	_Times__uTimes_param_C_i32
-	.quad	_L_1+3931
-	.quad	_Times__Times_var_C_i32
-	.quad	_L_1+3950
-	.quad	_Times__uTimes_var_C_i32
-	.quad	_L_1+3966
-	.quad	_Times__Times_param_C_i16
-	.quad	_L_1+3983
-	.quad	_Times__uTimes_param_C_i16
-	.quad	_L_1+4001
-	.quad	_Times__Times_var_C_i16
-	.quad	_L_1+4020
-	.quad	_Times__uTimes_var_C_i16
-	.quad	_L_1+4036
-	.quad	_Times__Times_param_C_LC
-	.quad	_L_1+4053
-	.quad	_Times__uTimes_param_C_LC
-	.quad	_L_1+4070
-	.quad	_Times__Times_var_C_LC
-	.quad	_L_1+4088
-	.quad	_Times__uTimes_var_C_LC
-	.quad	_L_1+4103
-	.quad	_Times__Times_param_C_u64
-	.quad	_L_1+4119
-	.quad	_Times__uTimes_param_C_u64
-	.quad	_L_1+4137
-	.quad	_Times__Times_var_C_u64
-	.quad	_L_1+4156
-	.quad	_Times__uTimes_var_C_u64
-	.quad	_L_1+4172
-	.quad	_Times__Times_param_C_u16
-	.quad	_L_1+4189
-	.quad	_Times__uTimes_param_C_u16
-	.quad	_L_1+4207
-	.quad	_Times__Times_var_C_u16
-	.quad	_L_1+4226
-	.quad	_Times__uTimes_var_C_u16
-	.quad	_L_1+4242
-	.quad	_Times__Times_param_i64_u32
-	.quad	_L_1+4259
-	.quad	_Times__uTimes_param_i64_u32
-	.quad	_L_1+4279
-	.quad	_Times__Times_var_i64_u32
-	.quad	_L_1+4300
-	.quad	_Times__uTimes_var_i64_u32
-	.quad	_L_1+4318
-	.quad	_Times__Times_param_i64_L
-	.quad	_L_1+4337
-	.quad	_Times__uTimes_param_i64_L
-	.quad	_L_1+4355
-	.quad	_Times__Times_var_i64_L
-	.quad	_L_1+4374
-	.quad	_Times__uTimes_var_i64_L
-	.quad	_L_1+4390
-	.quad	_Times__Times_param_i64_i8
-	.quad	_L_1+4407
-	.quad	_Times__uTimes_param_i64_i8
-	.quad	_L_1+4426
-	.quad	_Times__Times_var_i64_i8
-	.quad	_L_1+4446
-	.quad	_Times__uTimes_var_i64_i8
-	.quad	_L_1+4463
-	.quad	_Times__Times_param_i64_u8
-	.quad	_L_1+4481
-	.quad	_Times__uTimes_param_i64_u8
-	.quad	_L_1+4500
-	.quad	_Times__Times_var_i64_u8
-	.quad	_L_1+4520
-	.quad	_Times__uTimes_var_i64_u8
-	.quad	_L_1+4537
-	.quad	_Times__Times_param_i64_C
-	.quad	_L_1+4555
-	.quad	_Times__uTimes_param_i64_C
-	.quad	_L_1+4573
-	.quad	_Times__Times_var_i64_C
-	.quad	_L_1+4592
-	.quad	_Times__uTimes_var_i64_C
-	.quad	_L_1+4608
-	.quad	_Times__Times_param_i64_i64
-	.quad	_L_1+4625
-	.quad	_Times__uTimes_param_i64_i64
-	.quad	_L_1+4645
-	.quad	_Times__Times_var_i64_i64
-	.quad	_L_1+4666
-	.quad	_Times__uTimes_var_i64_i64
-	.quad	_L_1+4684
-	.quad	_Times__Times_param_i64_I
-	.quad	_L_1+4703
-	.quad	_Times__uTimes_param_i64_I
-	.quad	_L_1+4721
-	.quad	_Times__Times_var_i64_I
-	.quad	_L_1+4740
-	.quad	_Times__uTimes_var_i64_I
-	.quad	_L_1+4756
-	.quad	_Times__Times_param_i64_i32
-	.quad	_L_1+4773
-	.quad	_Times__uTimes_param_i64_i32
-	.quad	_L_1+4793
-	.quad	_Times__Times_var_i64_i32
-	.quad	_L_1+4814
-	.quad	_Times__uTimes_var_i64_i32
-	.quad	_L_1+4832
-	.quad	_Times__Times_param_i64_i16
-	.quad	_L_1+4851
-	.quad	_Times__uTimes_param_i64_i16
-	.quad	_L_1+4871
-	.quad	_Times__Times_var_i64_i16
-	.quad	_L_1+4892
-	.quad	_Times__uTimes_var_i64_i16
-	.quad	_L_1+4910
-	.quad	_Times__Times_param_i64_LC
-	.quad	_L_1+4929
-	.quad	_Times__uTimes_param_i64_LC
-	.quad	_L_1+4948
-	.quad	_Times__Times_var_i64_LC
-	.quad	_L_1+4968
-	.quad	_Times__uTimes_var_i64_LC
-	.quad	_L_1+4985
-	.quad	_Times__Times_param_i64_u64
-	.quad	_L_1+5003
-	.quad	_Times__uTimes_param_i64_u64
-	.quad	_L_1+5023
-	.quad	_Times__Times_var_i64_u64
-	.quad	_L_1+5044
-	.quad	_Times__uTimes_var_i64_u64
-	.quad	_L_1+5062
-	.quad	_Times__Times_param_i64_u16
-	.quad	_L_1+5081
-	.quad	_Times__uTimes_param_i64_u16
-	.quad	_L_1+5101
-	.quad	_Times__Times_var_i64_u16
-	.quad	_L_1+5122
-	.quad	_Times__uTimes_var_i64_u16
-	.quad	_L_1+5140
-	.quad	_Times__Times_param_I_u32
-	.quad	_L_1+5159
-	.quad	_Times__uTimes_param_I_u32
-	.quad	_L_1+5177
-	.quad	_Times__Times_var_I_u32
-	.quad	_L_1+5196
-	.quad	_Times__uTimes_var_I_u32
-	.quad	_L_1+5212
-	.quad	_Times__Times_param_I_L
-	.quad	_L_1+5229
-	.quad	_Times__uTimes_param_I_L
-	.quad	_L_1+5245
-	.quad	_Times__Times_var_I_L
-	.quad	_L_1+5262
-	.quad	_Times__uTimes_var_I_L
-	.quad	_L_1+5276
-	.quad	_Times__Times_param_I_i8
-	.quad	_L_1+5291
-	.quad	_Times__uTimes_param_I_i8
-	.quad	_L_1+5308
-	.quad	_Times__Times_var_I_i8
-	.quad	_L_1+5326
-	.quad	_Times__uTimes_var_I_i8
-	.quad	_L_1+5341
-	.quad	_Times__Times_param_I_u8
-	.quad	_L_1+5357
-	.quad	_Times__uTimes_param_I_u8
-	.quad	_L_1+5374
-	.quad	_Times__Times_var_I_u8
-	.quad	_L_1+5392
-	.quad	_Times__uTimes_var_I_u8
-	.quad	_L_1+5407
-	.quad	_Times__Times_param_I_C
-	.quad	_L_1+5423
-	.quad	_Times__uTimes_param_I_C
-	.quad	_L_1+5439
-	.quad	_Times__Times_var_I_C
-	.quad	_L_1+5456
-	.quad	_Times__uTimes_var_I_C
-	.quad	_L_1+5470
-	.quad	_Times__Times_param_I_i64
-	.quad	_L_1+5485
-	.quad	_Times__uTimes_param_I_i64
-	.quad	_L_1+5503
-	.quad	_Times__Times_var_I_i64
-	.quad	_L_1+5522
-	.quad	_Times__uTimes_var_I_i64
-	.quad	_L_1+5538
-	.quad	_Times__Times_param_I_I
-	.quad	_L_1+5555
-	.quad	_Times__uTimes_param_I_I
-	.quad	_L_1+5571
-	.quad	_Times__Times_var_I_I
-	.quad	_L_1+5588
-	.quad	_Times__uTimes_var_I_I
-	.quad	_L_1+5602
-	.quad	_Times__Times_param_I_i32
-	.quad	_L_1+5617
-	.quad	_Times__uTimes_param_I_i32
-	.quad	_L_1+5635
-	.quad	_Times__Times_var_I_i32
-	.quad	_L_1+5654
-	.quad	_Times__uTimes_var_I_i32
-	.quad	_L_1+5670
-	.quad	_Times__Times_param_I_i16
-	.quad	_L_1+5687
-	.quad	_Times__uTimes_param_I_i16
-	.quad	_L_1+5705
-	.quad	_Times__Times_var_I_i16
-	.quad	_L_1+5724
-	.quad	_Times__uTimes_var_I_i16
-	.quad	_L_1+5740
-	.quad	_Times__Times_param_I_LC
-	.quad	_L_1+5757
-	.quad	_Times__uTimes_param_I_LC
-	.quad	_L_1+5774
-	.quad	_Times__Times_var_I_LC
-	.quad	_L_1+5792
-	.quad	_Times__uTimes_var_I_LC
-	.quad	_L_1+5807
-	.quad	_Times__Times_param_I_u64
-	.quad	_L_1+5823
-	.quad	_Times__uTimes_param_I_u64
-	.quad	_L_1+5841
-	.quad	_Times__Times_var_I_u64
-	.quad	_L_1+5860
-	.quad	_Times__uTimes_var_I_u64
-	.quad	_L_1+5876
-	.quad	_Times__Times_param_I_u16
-	.quad	_L_1+5893
-	.quad	_Times__uTimes_param_I_u16
-	.quad	_L_1+5911
-	.quad	_Times__Times_var_I_u16
-	.quad	_L_1+5930
-	.quad	_Times__uTimes_var_I_u16
-	.quad	_L_1+5946
-	.quad	_Times__Times_param_i32_u32
-	.quad	_L_1+5963
-	.quad	_Times__uTimes_param_i32_u32
-	.quad	_L_1+5983
-	.quad	_Times__Times_var_i32_u32
-	.quad	_L_1+6004
-	.quad	_Times__uTimes_var_i32_u32
-	.quad	_L_1+6022
-	.quad	_Times__Times_param_i32_L
-	.quad	_L_1+6041
-	.quad	_Times__uTimes_param_i32_L
-	.quad	_L_1+6059
-	.quad	_Times__Times_var_i32_L
-	.quad	_L_1+6078
-	.quad	_Times__uTimes_var_i32_L
-	.quad	_L_1+6094
-	.quad	_Times__Times_param_i32_i8
-	.quad	_L_1+6111
-	.quad	_Times__uTimes_param_i32_i8
-	.quad	_L_1+6130
-	.quad	_Times__Times_var_i32_i8
-	.quad	_L_1+6150
-	.quad	_Times__uTimes_var_i32_i8
-	.quad	_L_1+6167
-	.quad	_Times__Times_param_i32_u8
-	.quad	_L_1+6185
-	.quad	_Times__uTimes_param_i32_u8
-	.quad	_L_1+6204
-	.quad	_Times__Times_var_i32_u8
-	.quad	_L_1+6224
-	.quad	_Times__uTimes_var_i32_u8
-	.quad	_L_1+6241
-	.quad	_Times__Times_param_i32_C
-	.quad	_L_1+6259
-	.quad	_Times__uTimes_param_i32_C
-	.quad	_L_1+6277
-	.quad	_Times__Times_var_i32_C
-	.quad	_L_1+6296
-	.quad	_Times__uTimes_var_i32_C
-	.quad	_L_1+6312
-	.quad	_Times__Times_param_i32_i64
-	.quad	_L_1+6329
-	.quad	_Times__uTimes_param_i32_i64
-	.quad	_L_1+6349
-	.quad	_Times__Times_var_i32_i64
-	.quad	_L_1+6370
-	.quad	_Times__uTimes_var_i32_i64
-	.quad	_L_1+6388
-	.quad	_Times__Times_param_i32_I
-	.quad	_L_1+6407
-	.quad	_Times__uTimes_param_i32_I
-	.quad	_L_1+6425
-	.quad	_Times__Times_var_i32_I
-	.quad	_L_1+6444
-	.quad	_Times__uTimes_var_i32_I
-	.quad	_L_1+6460
 	.quad	_Times__Times_param_i32_i32
-	.quad	_L_1+6477
+	.quad	_L_1+9
 	.quad	_Times__uTimes_param_i32_i32
-	.quad	_L_1+6497
+	.quad	_L_1+29
 	.quad	_Times__Times_var_i32_i32
-	.quad	_L_1+6518
+	.quad	_L_1+50
 	.quad	_Times__uTimes_var_i32_i32
-	.quad	_L_1+6536
+	.quad	_L_1+68
 	.quad	_Times__Times_param_i32_i16
-	.quad	_L_1+6555
+	.quad	_L_1+87
 	.quad	_Times__uTimes_param_i32_i16
-	.quad	_L_1+6575
+	.quad	_L_1+107
 	.quad	_Times__Times_var_i32_i16
-	.quad	_L_1+6596
+	.quad	_L_1+128
 	.quad	_Times__uTimes_var_i32_i16
-	.quad	_L_1+6614
-	.quad	_Times__Times_param_i32_LC
-	.quad	_L_1+6633
-	.quad	_Times__uTimes_param_i32_LC
-	.quad	_L_1+6652
-	.quad	_Times__Times_var_i32_LC
-	.quad	_L_1+6672
-	.quad	_Times__uTimes_var_i32_LC
-	.quad	_L_1+6689
+	.quad	_L_1+146
+	.quad	_Times__Times_param_i32_L
+	.quad	_L_1+165
+	.quad	_Times__uTimes_param_i32_L
+	.quad	_L_1+183
+	.quad	_Times__Times_var_i32_L
+	.quad	_L_1+202
+	.quad	_Times__uTimes_var_i32_L
+	.quad	_L_1+218
 	.quad	_Times__Times_param_i32_u64
-	.quad	_L_1+6707
+	.quad	_L_1+235
 	.quad	_Times__uTimes_param_i32_u64
-	.quad	_L_1+6727
+	.quad	_L_1+255
 	.quad	_Times__Times_var_i32_u64
-	.quad	_L_1+6748
+	.quad	_L_1+276
 	.quad	_Times__uTimes_var_i32_u64
-	.quad	_L_1+6766
+	.quad	_L_1+294
 	.quad	_Times__Times_param_i32_u16
-	.quad	_L_1+6785
+	.quad	_L_1+313
 	.quad	_Times__uTimes_param_i32_u16
-	.quad	_L_1+6805
+	.quad	_L_1+333
 	.quad	_Times__Times_var_i32_u16
-	.quad	_L_1+6826
+	.quad	_L_1+354
 	.quad	_Times__uTimes_var_i32_u16
-	.quad	_L_1+6844
-	.quad	_Times__Times_param_i16_u32
-	.quad	_L_1+6863
-	.quad	_Times__uTimes_param_i16_u32
-	.quad	_L_1+6883
-	.quad	_Times__Times_var_i16_u32
-	.quad	_L_1+6904
-	.quad	_Times__uTimes_var_i16_u32
-	.quad	_L_1+6922
-	.quad	_Times__Times_param_i16_L
-	.quad	_L_1+6941
-	.quad	_Times__uTimes_param_i16_L
-	.quad	_L_1+6959
-	.quad	_Times__Times_var_i16_L
-	.quad	_L_1+6978
-	.quad	_Times__uTimes_var_i16_L
-	.quad	_L_1+6994
-	.quad	_Times__Times_param_i16_i8
-	.quad	_L_1+7011
-	.quad	_Times__uTimes_param_i16_i8
-	.quad	_L_1+7030
-	.quad	_Times__Times_var_i16_i8
-	.quad	_L_1+7050
-	.quad	_Times__uTimes_var_i16_i8
-	.quad	_L_1+7067
-	.quad	_Times__Times_param_i16_u8
-	.quad	_L_1+7085
-	.quad	_Times__uTimes_param_i16_u8
-	.quad	_L_1+7104
-	.quad	_Times__Times_var_i16_u8
-	.quad	_L_1+7124
-	.quad	_Times__uTimes_var_i16_u8
-	.quad	_L_1+7141
-	.quad	_Times__Times_param_i16_C
-	.quad	_L_1+7159
-	.quad	_Times__uTimes_param_i16_C
-	.quad	_L_1+7177
-	.quad	_Times__Times_var_i16_C
-	.quad	_L_1+7196
-	.quad	_Times__uTimes_var_i16_C
-	.quad	_L_1+7212
-	.quad	_Times__Times_param_i16_i64
-	.quad	_L_1+7229
-	.quad	_Times__uTimes_param_i16_i64
-	.quad	_L_1+7249
-	.quad	_Times__Times_var_i16_i64
-	.quad	_L_1+7270
-	.quad	_Times__uTimes_var_i16_i64
-	.quad	_L_1+7288
-	.quad	_Times__Times_param_i16_I
-	.quad	_L_1+7307
-	.quad	_Times__uTimes_param_i16_I
-	.quad	_L_1+7325
-	.quad	_Times__Times_var_i16_I
-	.quad	_L_1+7344
-	.quad	_Times__uTimes_var_i16_I
-	.quad	_L_1+7360
+	.quad	_L_1+372
+	.quad	_Times__Times_param_i32_C
+	.quad	_L_1+391
+	.quad	_Times__uTimes_param_i32_C
+	.quad	_L_1+409
+	.quad	_Times__Times_var_i32_C
+	.quad	_L_1+428
+	.quad	_Times__uTimes_var_i32_C
+	.quad	_L_1+444
+	.quad	_Times__Times_param_i32_u32
+	.quad	_L_1+461
+	.quad	_Times__uTimes_param_i32_u32
+	.quad	_L_1+481
+	.quad	_Times__Times_var_i32_u32
+	.quad	_L_1+502
+	.quad	_Times__uTimes_var_i32_u32
+	.quad	_L_1+520
+	.quad	_Times__Times_param_i32_i8
+	.quad	_L_1+539
+	.quad	_Times__uTimes_param_i32_i8
+	.quad	_L_1+558
+	.quad	_Times__Times_var_i32_i8
+	.quad	_L_1+578
+	.quad	_Times__uTimes_var_i32_i8
+	.quad	_L_1+595
+	.quad	_Times__Times_param_i32_I
+	.quad	_L_1+613
+	.quad	_Times__uTimes_param_i32_I
+	.quad	_L_1+631
+	.quad	_Times__Times_var_i32_I
+	.quad	_L_1+650
+	.quad	_Times__uTimes_var_i32_I
+	.quad	_L_1+666
+	.quad	_Times__Times_param_i32_u8
+	.quad	_L_1+683
+	.quad	_Times__uTimes_param_i32_u8
+	.quad	_L_1+702
+	.quad	_Times__Times_var_i32_u8
+	.quad	_L_1+722
+	.quad	_Times__uTimes_var_i32_u8
+	.quad	_L_1+739
+	.quad	_Times__Times_param_i32_LC
+	.quad	_L_1+757
+	.quad	_Times__uTimes_param_i32_LC
+	.quad	_L_1+776
+	.quad	_Times__Times_var_i32_LC
+	.quad	_L_1+796
+	.quad	_Times__uTimes_var_i32_LC
+	.quad	_L_1+813
+	.quad	_Times__Times_param_i32_i64
+	.quad	_L_1+831
+	.quad	_Times__uTimes_param_i32_i64
+	.quad	_L_1+851
+	.quad	_Times__Times_var_i32_i64
+	.quad	_L_1+872
+	.quad	_Times__uTimes_var_i32_i64
+	.quad	_L_1+890
 	.quad	_Times__Times_param_i16_i32
-	.quad	_L_1+7377
+	.quad	_L_1+909
 	.quad	_Times__uTimes_param_i16_i32
-	.quad	_L_1+7397
+	.quad	_L_1+929
 	.quad	_Times__Times_var_i16_i32
-	.quad	_L_1+7418
+	.quad	_L_1+950
 	.quad	_Times__uTimes_var_i16_i32
-	.quad	_L_1+7436
+	.quad	_L_1+968
 	.quad	_Times__Times_param_i16_i16
-	.quad	_L_1+7455
+	.quad	_L_1+987
 	.quad	_Times__uTimes_param_i16_i16
-	.quad	_L_1+7475
+	.quad	_L_1+1007
 	.quad	_Times__Times_var_i16_i16
-	.quad	_L_1+7496
+	.quad	_L_1+1028
 	.quad	_Times__uTimes_var_i16_i16
-	.quad	_L_1+7514
-	.quad	_Times__Times_param_i16_LC
-	.quad	_L_1+7533
-	.quad	_Times__uTimes_param_i16_LC
-	.quad	_L_1+7552
-	.quad	_Times__Times_var_i16_LC
-	.quad	_L_1+7572
-	.quad	_Times__uTimes_var_i16_LC
-	.quad	_L_1+7589
+	.quad	_L_1+1046
+	.quad	_Times__Times_param_i16_L
+	.quad	_L_1+1065
+	.quad	_Times__uTimes_param_i16_L
+	.quad	_L_1+1083
+	.quad	_Times__Times_var_i16_L
+	.quad	_L_1+1102
+	.quad	_Times__uTimes_var_i16_L
+	.quad	_L_1+1118
 	.quad	_Times__Times_param_i16_u64
-	.quad	_L_1+7607
+	.quad	_L_1+1135
 	.quad	_Times__uTimes_param_i16_u64
-	.quad	_L_1+7627
+	.quad	_L_1+1155
 	.quad	_Times__Times_var_i16_u64
-	.quad	_L_1+7648
+	.quad	_L_1+1176
 	.quad	_Times__uTimes_var_i16_u64
-	.quad	_L_1+7666
+	.quad	_L_1+1194
 	.quad	_Times__Times_param_i16_u16
-	.quad	_L_1+7685
+	.quad	_L_1+1213
 	.quad	_Times__uTimes_param_i16_u16
-	.quad	_L_1+7705
+	.quad	_L_1+1233
 	.quad	_Times__Times_var_i16_u16
-	.quad	_L_1+7726
+	.quad	_L_1+1254
 	.quad	_Times__uTimes_var_i16_u16
-	.quad	_L_1+7744
+	.quad	_L_1+1272
+	.quad	_Times__Times_param_i16_C
+	.quad	_L_1+1291
+	.quad	_Times__uTimes_param_i16_C
+	.quad	_L_1+1309
+	.quad	_Times__Times_var_i16_C
+	.quad	_L_1+1328
+	.quad	_Times__uTimes_var_i16_C
+	.quad	_L_1+1344
+	.quad	_Times__Times_param_i16_u32
+	.quad	_L_1+1361
+	.quad	_Times__uTimes_param_i16_u32
+	.quad	_L_1+1381
+	.quad	_Times__Times_var_i16_u32
+	.quad	_L_1+1402
+	.quad	_Times__uTimes_var_i16_u32
+	.quad	_L_1+1420
+	.quad	_Times__Times_param_i16_i8
+	.quad	_L_1+1439
+	.quad	_Times__uTimes_param_i16_i8
+	.quad	_L_1+1458
+	.quad	_Times__Times_var_i16_i8
+	.quad	_L_1+1478
+	.quad	_Times__uTimes_var_i16_i8
+	.quad	_L_1+1495
+	.quad	_Times__Times_param_i16_I
+	.quad	_L_1+1513
+	.quad	_Times__uTimes_param_i16_I
+	.quad	_L_1+1531
+	.quad	_Times__Times_var_i16_I
+	.quad	_L_1+1550
+	.quad	_Times__uTimes_var_i16_I
+	.quad	_L_1+1566
+	.quad	_Times__Times_param_i16_u8
+	.quad	_L_1+1583
+	.quad	_Times__uTimes_param_i16_u8
+	.quad	_L_1+1602
+	.quad	_Times__Times_var_i16_u8
+	.quad	_L_1+1622
+	.quad	_Times__uTimes_var_i16_u8
+	.quad	_L_1+1639
+	.quad	_Times__Times_param_i16_LC
+	.quad	_L_1+1657
+	.quad	_Times__uTimes_param_i16_LC
+	.quad	_L_1+1676
+	.quad	_Times__Times_var_i16_LC
+	.quad	_L_1+1696
+	.quad	_Times__uTimes_var_i16_LC
+	.quad	_L_1+1713
+	.quad	_Times__Times_param_i16_i64
+	.quad	_L_1+1731
+	.quad	_Times__uTimes_param_i16_i64
+	.quad	_L_1+1751
+	.quad	_Times__Times_var_i16_i64
+	.quad	_L_1+1772
+	.quad	_Times__uTimes_var_i16_i64
+	.quad	_L_1+1790
+	.quad	_Times__Times_param_L_i32
+	.quad	_L_1+1809
+	.quad	_Times__uTimes_param_L_i32
+	.quad	_L_1+1827
+	.quad	_Times__Times_var_L_i32
+	.quad	_L_1+1846
+	.quad	_Times__uTimes_var_L_i32
+	.quad	_L_1+1862
+	.quad	_Times__Times_param_L_i16
+	.quad	_L_1+1879
+	.quad	_Times__uTimes_param_L_i16
+	.quad	_L_1+1897
+	.quad	_Times__Times_var_L_i16
+	.quad	_L_1+1916
+	.quad	_Times__uTimes_var_L_i16
+	.quad	_L_1+1932
+	.quad	_Times__Times_param_L_L
+	.quad	_L_1+1949
+	.quad	_Times__uTimes_param_L_L
+	.quad	_L_1+1965
+	.quad	_Times__Times_var_L_L
+	.quad	_L_1+1982
+	.quad	_Times__uTimes_var_L_L
+	.quad	_L_1+1996
+	.quad	_Times__Times_param_L_u64
+	.quad	_L_1+2011
+	.quad	_Times__uTimes_param_L_u64
+	.quad	_L_1+2029
+	.quad	_Times__Times_var_L_u64
+	.quad	_L_1+2048
+	.quad	_Times__uTimes_var_L_u64
+	.quad	_L_1+2064
+	.quad	_Times__Times_param_L_u16
+	.quad	_L_1+2081
+	.quad	_Times__uTimes_param_L_u16
+	.quad	_L_1+2099
+	.quad	_Times__Times_var_L_u16
+	.quad	_L_1+2118
+	.quad	_Times__uTimes_var_L_u16
+	.quad	_L_1+2134
+	.quad	_Times__Times_param_L_C
+	.quad	_L_1+2151
+	.quad	_Times__uTimes_param_L_C
+	.quad	_L_1+2167
+	.quad	_Times__Times_var_L_C
+	.quad	_L_1+2184
+	.quad	_Times__uTimes_var_L_C
+	.quad	_L_1+2198
+	.quad	_Times__Times_param_L_u32
+	.quad	_L_1+2213
+	.quad	_Times__uTimes_param_L_u32
+	.quad	_L_1+2231
+	.quad	_Times__Times_var_L_u32
+	.quad	_L_1+2250
+	.quad	_Times__uTimes_var_L_u32
+	.quad	_L_1+2266
+	.quad	_Times__Times_param_L_i8
+	.quad	_L_1+2283
+	.quad	_Times__uTimes_param_L_i8
+	.quad	_L_1+2300
+	.quad	_Times__Times_var_L_i8
+	.quad	_L_1+2318
+	.quad	_Times__uTimes_var_L_i8
+	.quad	_L_1+2333
+	.quad	_Times__Times_param_L_I
+	.quad	_L_1+2349
+	.quad	_Times__uTimes_param_L_I
+	.quad	_L_1+2365
+	.quad	_Times__Times_var_L_I
+	.quad	_L_1+2382
+	.quad	_Times__uTimes_var_L_I
+	.quad	_L_1+2396
+	.quad	_Times__Times_param_L_u8
+	.quad	_L_1+2411
+	.quad	_Times__uTimes_param_L_u8
+	.quad	_L_1+2428
+	.quad	_Times__Times_var_L_u8
+	.quad	_L_1+2446
+	.quad	_Times__uTimes_var_L_u8
+	.quad	_L_1+2461
+	.quad	_Times__Times_param_L_LC
+	.quad	_L_1+2477
+	.quad	_Times__uTimes_param_L_LC
+	.quad	_L_1+2494
+	.quad	_Times__Times_var_L_LC
+	.quad	_L_1+2512
+	.quad	_Times__uTimes_var_L_LC
+	.quad	_L_1+2527
+	.quad	_Times__Times_param_L_i64
+	.quad	_L_1+2543
+	.quad	_Times__uTimes_param_L_i64
+	.quad	_L_1+2561
+	.quad	_Times__Times_var_L_i64
+	.quad	_L_1+2580
+	.quad	_Times__uTimes_var_L_i64
+	.quad	_L_1+2596
 	.quad	_Times__Times_param_f64_f64
-	.quad	_L_1+7763
+	.quad	_L_1+2613
 	.quad	_Times__Times_var_f64_f64
-	.quad	_L_1+7783
-	.quad	_Times__Times_param_LC_u32
-	.quad	_L_1+7801
-	.quad	_Times__uTimes_param_LC_u32
-	.quad	_L_1+7820
-	.quad	_Times__Times_var_LC_u32
-	.quad	_L_1+7840
-	.quad	_Times__uTimes_var_LC_u32
-	.quad	_L_1+7857
-	.quad	_Times__Times_param_LC_L
-	.quad	_L_1+7875
-	.quad	_Times__uTimes_param_LC_L
-	.quad	_L_1+7892
-	.quad	_Times__Times_var_LC_L
-	.quad	_L_1+7910
-	.quad	_Times__uTimes_var_LC_L
-	.quad	_L_1+7925
-	.quad	_Times__Times_param_LC_i8
-	.quad	_L_1+7941
-	.quad	_Times__uTimes_param_LC_i8
-	.quad	_L_1+7959
-	.quad	_Times__Times_var_LC_i8
-	.quad	_L_1+7978
-	.quad	_Times__uTimes_var_LC_i8
-	.quad	_L_1+7994
-	.quad	_Times__Times_param_LC_u8
-	.quad	_L_1+8011
-	.quad	_Times__uTimes_param_LC_u8
-	.quad	_L_1+8029
-	.quad	_Times__Times_var_LC_u8
-	.quad	_L_1+8048
-	.quad	_Times__uTimes_var_LC_u8
-	.quad	_L_1+8064
-	.quad	_Times__Times_param_LC_C
-	.quad	_L_1+8081
-	.quad	_Times__uTimes_param_LC_C
-	.quad	_L_1+8098
-	.quad	_Times__Times_var_LC_C
-	.quad	_L_1+8116
-	.quad	_Times__uTimes_var_LC_C
-	.quad	_L_1+8131
-	.quad	_Times__Times_param_LC_i64
-	.quad	_L_1+8147
-	.quad	_Times__uTimes_param_LC_i64
-	.quad	_L_1+8166
-	.quad	_Times__Times_var_LC_i64
-	.quad	_L_1+8186
-	.quad	_Times__uTimes_var_LC_i64
-	.quad	_L_1+8203
-	.quad	_Times__Times_param_LC_I
-	.quad	_L_1+8221
-	.quad	_Times__uTimes_param_LC_I
-	.quad	_L_1+8238
-	.quad	_Times__Times_var_LC_I
-	.quad	_L_1+8256
-	.quad	_Times__uTimes_var_LC_I
-	.quad	_L_1+8271
-	.quad	_Times__Times_param_LC_i32
-	.quad	_L_1+8287
-	.quad	_Times__uTimes_param_LC_i32
-	.quad	_L_1+8306
-	.quad	_Times__Times_var_LC_i32
-	.quad	_L_1+8326
-	.quad	_Times__uTimes_var_LC_i32
-	.quad	_L_1+8343
-	.quad	_Times__Times_param_LC_i16
-	.quad	_L_1+8361
-	.quad	_Times__uTimes_param_LC_i16
-	.quad	_L_1+8380
-	.quad	_Times__Times_var_LC_i16
-	.quad	_L_1+8400
-	.quad	_Times__uTimes_var_LC_i16
-	.quad	_L_1+8417
-	.quad	_Times__Times_param_LC_LC
-	.quad	_L_1+8435
-	.quad	_Times__uTimes_param_LC_LC
-	.quad	_L_1+8453
-	.quad	_Times__Times_var_LC_LC
-	.quad	_L_1+8472
-	.quad	_Times__uTimes_var_LC_LC
-	.quad	_L_1+8488
-	.quad	_Times__Times_param_LC_u64
-	.quad	_L_1+8505
-	.quad	_Times__uTimes_param_LC_u64
-	.quad	_L_1+8524
-	.quad	_Times__Times_var_LC_u64
-	.quad	_L_1+8544
-	.quad	_Times__uTimes_var_LC_u64
-	.quad	_L_1+8561
-	.quad	_Times__Times_param_LC_u16
-	.quad	_L_1+8579
-	.quad	_Times__uTimes_param_LC_u16
-	.quad	_L_1+8598
-	.quad	_Times__Times_var_LC_u16
-	.quad	_L_1+8618
-	.quad	_Times__uTimes_var_LC_u16
-	.quad	_L_1+8635
-	.quad	_Times__Times_param_u64_u32
-	.quad	_L_1+8653
-	.quad	_Times__uTimes_param_u64_u32
-	.quad	_L_1+8673
-	.quad	_Times__Times_var_u64_u32
-	.quad	_L_1+8694
-	.quad	_Times__uTimes_var_u64_u32
-	.quad	_L_1+8712
-	.quad	_Times__Times_param_u64_L
-	.quad	_L_1+8731
-	.quad	_Times__uTimes_param_u64_L
-	.quad	_L_1+8749
-	.quad	_Times__Times_var_u64_L
-	.quad	_L_1+8768
-	.quad	_Times__uTimes_var_u64_L
-	.quad	_L_1+8784
-	.quad	_Times__Times_param_u64_i8
-	.quad	_L_1+8801
-	.quad	_Times__uTimes_param_u64_i8
-	.quad	_L_1+8820
-	.quad	_Times__Times_var_u64_i8
-	.quad	_L_1+8840
-	.quad	_Times__uTimes_var_u64_i8
-	.quad	_L_1+8857
-	.quad	_Times__Times_param_u64_u8
-	.quad	_L_1+8875
-	.quad	_Times__uTimes_param_u64_u8
-	.quad	_L_1+8894
-	.quad	_Times__Times_var_u64_u8
-	.quad	_L_1+8914
-	.quad	_Times__uTimes_var_u64_u8
-	.quad	_L_1+8931
-	.quad	_Times__Times_param_u64_C
-	.quad	_L_1+8949
-	.quad	_Times__uTimes_param_u64_C
-	.quad	_L_1+8967
-	.quad	_Times__Times_var_u64_C
-	.quad	_L_1+8986
-	.quad	_Times__uTimes_var_u64_C
-	.quad	_L_1+9002
-	.quad	_Times__Times_param_u64_i64
-	.quad	_L_1+9019
-	.quad	_Times__uTimes_param_u64_i64
-	.quad	_L_1+9039
-	.quad	_Times__Times_var_u64_i64
-	.quad	_L_1+9060
-	.quad	_Times__uTimes_var_u64_i64
-	.quad	_L_1+9078
-	.quad	_Times__Times_param_u64_I
-	.quad	_L_1+9097
-	.quad	_Times__uTimes_param_u64_I
-	.quad	_L_1+9115
-	.quad	_Times__Times_var_u64_I
-	.quad	_L_1+9134
-	.quad	_Times__uTimes_var_u64_I
-	.quad	_L_1+9150
+	.quad	_L_1+2633
 	.quad	_Times__Times_param_u64_i32
-	.quad	_L_1+9167
+	.quad	_L_1+2651
 	.quad	_Times__uTimes_param_u64_i32
-	.quad	_L_1+9187
+	.quad	_L_1+2671
 	.quad	_Times__Times_var_u64_i32
-	.quad	_L_1+9208
+	.quad	_L_1+2692
 	.quad	_Times__uTimes_var_u64_i32
-	.quad	_L_1+9226
+	.quad	_L_1+2710
 	.quad	_Times__Times_param_u64_i16
-	.quad	_L_1+9245
+	.quad	_L_1+2729
 	.quad	_Times__uTimes_param_u64_i16
-	.quad	_L_1+9265
+	.quad	_L_1+2749
 	.quad	_Times__Times_var_u64_i16
-	.quad	_L_1+9286
+	.quad	_L_1+2770
 	.quad	_Times__uTimes_var_u64_i16
-	.quad	_L_1+9304
-	.quad	_Times__Times_param_u64_LC
-	.quad	_L_1+9323
-	.quad	_Times__uTimes_param_u64_LC
-	.quad	_L_1+9342
-	.quad	_Times__Times_var_u64_LC
-	.quad	_L_1+9362
-	.quad	_Times__uTimes_var_u64_LC
-	.quad	_L_1+9379
+	.quad	_L_1+2788
+	.quad	_Times__Times_param_u64_L
+	.quad	_L_1+2807
+	.quad	_Times__uTimes_param_u64_L
+	.quad	_L_1+2825
+	.quad	_Times__Times_var_u64_L
+	.quad	_L_1+2844
+	.quad	_Times__uTimes_var_u64_L
+	.quad	_L_1+2860
 	.quad	_Times__Times_param_u64_u64
-	.quad	_L_1+9397
+	.quad	_L_1+2877
 	.quad	_Times__uTimes_param_u64_u64
-	.quad	_L_1+9417
+	.quad	_L_1+2897
 	.quad	_Times__Times_var_u64_u64
-	.quad	_L_1+9438
+	.quad	_L_1+2918
 	.quad	_Times__uTimes_var_u64_u64
-	.quad	_L_1+9456
+	.quad	_L_1+2936
 	.quad	_Times__Times_param_u64_u16
-	.quad	_L_1+9475
+	.quad	_L_1+2955
 	.quad	_Times__uTimes_param_u64_u16
-	.quad	_L_1+9495
+	.quad	_L_1+2975
 	.quad	_Times__Times_var_u64_u16
-	.quad	_L_1+9516
+	.quad	_L_1+2996
 	.quad	_Times__uTimes_var_u64_u16
-	.quad	_L_1+9534
-	.quad	_Times__Times_param_u16_u32
-	.quad	_L_1+9553
-	.quad	_Times__uTimes_param_u16_u32
-	.quad	_L_1+9573
-	.quad	_Times__Times_var_u16_u32
-	.quad	_L_1+9594
-	.quad	_Times__uTimes_var_u16_u32
-	.quad	_L_1+9612
-	.quad	_Times__Times_param_u16_L
-	.quad	_L_1+9631
-	.quad	_Times__uTimes_param_u16_L
-	.quad	_L_1+9649
-	.quad	_Times__Times_var_u16_L
-	.quad	_L_1+9668
-	.quad	_Times__uTimes_var_u16_L
-	.quad	_L_1+9684
-	.quad	_Times__Times_param_u16_i8
-	.quad	_L_1+9701
-	.quad	_Times__uTimes_param_u16_i8
-	.quad	_L_1+9720
-	.quad	_Times__Times_var_u16_i8
-	.quad	_L_1+9740
-	.quad	_Times__uTimes_var_u16_i8
-	.quad	_L_1+9757
-	.quad	_Times__Times_param_u16_u8
-	.quad	_L_1+9775
-	.quad	_Times__uTimes_param_u16_u8
-	.quad	_L_1+9794
-	.quad	_Times__Times_var_u16_u8
-	.quad	_L_1+9814
-	.quad	_Times__uTimes_var_u16_u8
-	.quad	_L_1+9831
-	.quad	_Times__Times_param_u16_C
-	.quad	_L_1+9849
-	.quad	_Times__uTimes_param_u16_C
-	.quad	_L_1+9867
-	.quad	_Times__Times_var_u16_C
-	.quad	_L_1+9886
-	.quad	_Times__uTimes_var_u16_C
-	.quad	_L_1+9902
-	.quad	_Times__Times_param_u16_i64
-	.quad	_L_1+9919
-	.quad	_Times__uTimes_param_u16_i64
-	.quad	_L_1+9939
-	.quad	_Times__Times_var_u16_i64
-	.quad	_L_1+9960
-	.quad	_Times__uTimes_var_u16_i64
-	.quad	_L_1+9978
-	.quad	_Times__Times_param_u16_I
-	.quad	_L_1+9997
-	.quad	_Times__uTimes_param_u16_I
-	.quad	_L_1+10015
-	.quad	_Times__Times_var_u16_I
-	.quad	_L_1+10034
-	.quad	_Times__uTimes_var_u16_I
-	.quad	_L_1+10050
+	.quad	_L_1+3014
+	.quad	_Times__Times_param_u64_C
+	.quad	_L_1+3033
+	.quad	_Times__uTimes_param_u64_C
+	.quad	_L_1+3051
+	.quad	_Times__Times_var_u64_C
+	.quad	_L_1+3070
+	.quad	_Times__uTimes_var_u64_C
+	.quad	_L_1+3086
+	.quad	_Times__Times_param_u64_u32
+	.quad	_L_1+3103
+	.quad	_Times__uTimes_param_u64_u32
+	.quad	_L_1+3123
+	.quad	_Times__Times_var_u64_u32
+	.quad	_L_1+3144
+	.quad	_Times__uTimes_var_u64_u32
+	.quad	_L_1+3162
+	.quad	_Times__Times_param_u64_i8
+	.quad	_L_1+3181
+	.quad	_Times__uTimes_param_u64_i8
+	.quad	_L_1+3200
+	.quad	_Times__Times_var_u64_i8
+	.quad	_L_1+3220
+	.quad	_Times__uTimes_var_u64_i8
+	.quad	_L_1+3237
+	.quad	_Times__Times_param_u64_I
+	.quad	_L_1+3255
+	.quad	_Times__uTimes_param_u64_I
+	.quad	_L_1+3273
+	.quad	_Times__Times_var_u64_I
+	.quad	_L_1+3292
+	.quad	_Times__uTimes_var_u64_I
+	.quad	_L_1+3308
+	.quad	_Times__Times_param_u64_u8
+	.quad	_L_1+3325
+	.quad	_Times__uTimes_param_u64_u8
+	.quad	_L_1+3344
+	.quad	_Times__Times_var_u64_u8
+	.quad	_L_1+3364
+	.quad	_Times__uTimes_var_u64_u8
+	.quad	_L_1+3381
+	.quad	_Times__Times_param_u64_LC
+	.quad	_L_1+3399
+	.quad	_Times__uTimes_param_u64_LC
+	.quad	_L_1+3418
+	.quad	_Times__Times_var_u64_LC
+	.quad	_L_1+3438
+	.quad	_Times__uTimes_var_u64_LC
+	.quad	_L_1+3455
+	.quad	_Times__Times_param_u64_i64
+	.quad	_L_1+3473
+	.quad	_Times__uTimes_param_u64_i64
+	.quad	_L_1+3493
+	.quad	_Times__Times_var_u64_i64
+	.quad	_L_1+3514
+	.quad	_Times__uTimes_var_u64_i64
+	.quad	_L_1+3532
 	.quad	_Times__Times_param_u16_i32
-	.quad	_L_1+10067
+	.quad	_L_1+3551
 	.quad	_Times__uTimes_param_u16_i32
-	.quad	_L_1+10087
+	.quad	_L_1+3571
 	.quad	_Times__Times_var_u16_i32
-	.quad	_L_1+10108
+	.quad	_L_1+3592
 	.quad	_Times__uTimes_var_u16_i32
-	.quad	_L_1+10126
+	.quad	_L_1+3610
 	.quad	_Times__Times_param_u16_i16
-	.quad	_L_1+10145
+	.quad	_L_1+3629
 	.quad	_Times__uTimes_param_u16_i16
-	.quad	_L_1+10165
+	.quad	_L_1+3649
 	.quad	_Times__Times_var_u16_i16
-	.quad	_L_1+10186
+	.quad	_L_1+3670
 	.quad	_Times__uTimes_var_u16_i16
-	.quad	_L_1+10204
-	.quad	_Times__Times_param_u16_LC
-	.quad	_L_1+10223
-	.quad	_Times__uTimes_param_u16_LC
-	.quad	_L_1+10242
-	.quad	_Times__Times_var_u16_LC
-	.quad	_L_1+10262
-	.quad	_Times__uTimes_var_u16_LC
-	.quad	_L_1+10279
+	.quad	_L_1+3688
+	.quad	_Times__Times_param_u16_L
+	.quad	_L_1+3707
+	.quad	_Times__uTimes_param_u16_L
+	.quad	_L_1+3725
+	.quad	_Times__Times_var_u16_L
+	.quad	_L_1+3744
+	.quad	_Times__uTimes_var_u16_L
+	.quad	_L_1+3760
 	.quad	_Times__Times_param_u16_u64
-	.quad	_L_1+10297
+	.quad	_L_1+3777
 	.quad	_Times__uTimes_param_u16_u64
-	.quad	_L_1+10317
+	.quad	_L_1+3797
 	.quad	_Times__Times_var_u16_u64
-	.quad	_L_1+10338
+	.quad	_L_1+3818
 	.quad	_Times__uTimes_var_u16_u64
-	.quad	_L_1+10356
+	.quad	_L_1+3836
 	.quad	_Times__Times_param_u16_u16
-	.quad	_L_1+10375
+	.quad	_L_1+3855
 	.quad	_Times__uTimes_param_u16_u16
-	.quad	_L_1+10395
+	.quad	_L_1+3875
 	.quad	_Times__Times_var_u16_u16
-	.quad	_L_1+10416
+	.quad	_L_1+3896
 	.quad	_Times__uTimes_var_u16_u16
+	.quad	_L_1+3914
+	.quad	_Times__Times_param_u16_C
+	.quad	_L_1+3933
+	.quad	_Times__uTimes_param_u16_C
+	.quad	_L_1+3951
+	.quad	_Times__Times_var_u16_C
+	.quad	_L_1+3970
+	.quad	_Times__uTimes_var_u16_C
+	.quad	_L_1+3986
+	.quad	_Times__Times_param_u16_u32
+	.quad	_L_1+4003
+	.quad	_Times__uTimes_param_u16_u32
+	.quad	_L_1+4023
+	.quad	_Times__Times_var_u16_u32
+	.quad	_L_1+4044
+	.quad	_Times__uTimes_var_u16_u32
+	.quad	_L_1+4062
+	.quad	_Times__Times_param_u16_i8
+	.quad	_L_1+4081
+	.quad	_Times__uTimes_param_u16_i8
+	.quad	_L_1+4100
+	.quad	_Times__Times_var_u16_i8
+	.quad	_L_1+4120
+	.quad	_Times__uTimes_var_u16_i8
+	.quad	_L_1+4137
+	.quad	_Times__Times_param_u16_I
+	.quad	_L_1+4155
+	.quad	_Times__uTimes_param_u16_I
+	.quad	_L_1+4173
+	.quad	_Times__Times_var_u16_I
+	.quad	_L_1+4192
+	.quad	_Times__uTimes_var_u16_I
+	.quad	_L_1+4208
+	.quad	_Times__Times_param_u16_u8
+	.quad	_L_1+4225
+	.quad	_Times__uTimes_param_u16_u8
+	.quad	_L_1+4244
+	.quad	_Times__Times_var_u16_u8
+	.quad	_L_1+4264
+	.quad	_Times__uTimes_var_u16_u8
+	.quad	_L_1+4281
+	.quad	_Times__Times_param_u16_LC
+	.quad	_L_1+4299
+	.quad	_Times__uTimes_param_u16_LC
+	.quad	_L_1+4318
+	.quad	_Times__Times_var_u16_LC
+	.quad	_L_1+4338
+	.quad	_Times__uTimes_var_u16_LC
+	.quad	_L_1+4355
+	.quad	_Times__Times_param_u16_i64
+	.quad	_L_1+4373
+	.quad	_Times__uTimes_param_u16_i64
+	.quad	_L_1+4393
+	.quad	_Times__Times_var_u16_i64
+	.quad	_L_1+4414
+	.quad	_Times__uTimes_var_u16_i64
+	.quad	_L_1+4432
+	.quad	_Times__Times_param_C_i32
+	.quad	_L_1+4451
+	.quad	_Times__uTimes_param_C_i32
+	.quad	_L_1+4469
+	.quad	_Times__Times_var_C_i32
+	.quad	_L_1+4488
+	.quad	_Times__uTimes_var_C_i32
+	.quad	_L_1+4504
+	.quad	_Times__Times_param_C_i16
+	.quad	_L_1+4521
+	.quad	_Times__uTimes_param_C_i16
+	.quad	_L_1+4539
+	.quad	_Times__Times_var_C_i16
+	.quad	_L_1+4558
+	.quad	_Times__uTimes_var_C_i16
+	.quad	_L_1+4574
+	.quad	_Times__Times_param_C_L
+	.quad	_L_1+4591
+	.quad	_Times__uTimes_param_C_L
+	.quad	_L_1+4607
+	.quad	_Times__Times_var_C_L
+	.quad	_L_1+4624
+	.quad	_Times__uTimes_var_C_L
+	.quad	_L_1+4638
+	.quad	_Times__Times_param_C_u64
+	.quad	_L_1+4653
+	.quad	_Times__uTimes_param_C_u64
+	.quad	_L_1+4671
+	.quad	_Times__Times_var_C_u64
+	.quad	_L_1+4690
+	.quad	_Times__uTimes_var_C_u64
+	.quad	_L_1+4706
+	.quad	_Times__Times_param_C_u16
+	.quad	_L_1+4723
+	.quad	_Times__uTimes_param_C_u16
+	.quad	_L_1+4741
+	.quad	_Times__Times_var_C_u16
+	.quad	_L_1+4760
+	.quad	_Times__uTimes_var_C_u16
+	.quad	_L_1+4776
+	.quad	_Times__Times_param_C_C
+	.quad	_L_1+4793
+	.quad	_Times__uTimes_param_C_C
+	.quad	_L_1+4809
+	.quad	_Times__Times_var_C_C
+	.quad	_L_1+4826
+	.quad	_Times__uTimes_var_C_C
+	.quad	_L_1+4840
+	.quad	_Times__Times_param_C_u32
+	.quad	_L_1+4855
+	.quad	_Times__uTimes_param_C_u32
+	.quad	_L_1+4873
+	.quad	_Times__Times_var_C_u32
+	.quad	_L_1+4892
+	.quad	_Times__uTimes_var_C_u32
+	.quad	_L_1+4908
+	.quad	_Times__Times_param_C_i8
+	.quad	_L_1+4925
+	.quad	_Times__uTimes_param_C_i8
+	.quad	_L_1+4942
+	.quad	_Times__Times_var_C_i8
+	.quad	_L_1+4960
+	.quad	_Times__uTimes_var_C_i8
+	.quad	_L_1+4975
+	.quad	_Times__Times_param_C_I
+	.quad	_L_1+4991
+	.quad	_Times__uTimes_param_C_I
+	.quad	_L_1+5007
+	.quad	_Times__Times_var_C_I
+	.quad	_L_1+5024
+	.quad	_Times__uTimes_var_C_I
+	.quad	_L_1+5038
+	.quad	_Times__Times_param_C_u8
+	.quad	_L_1+5053
+	.quad	_Times__uTimes_param_C_u8
+	.quad	_L_1+5070
+	.quad	_Times__Times_var_C_u8
+	.quad	_L_1+5088
+	.quad	_Times__uTimes_var_C_u8
+	.quad	_L_1+5103
+	.quad	_Times__Times_param_C_LC
+	.quad	_L_1+5119
+	.quad	_Times__uTimes_param_C_LC
+	.quad	_L_1+5136
+	.quad	_Times__Times_var_C_LC
+	.quad	_L_1+5154
+	.quad	_Times__uTimes_var_C_LC
+	.quad	_L_1+5169
+	.quad	_Times__Times_param_C_i64
+	.quad	_L_1+5185
+	.quad	_Times__uTimes_param_C_i64
+	.quad	_L_1+5203
+	.quad	_Times__Times_var_C_i64
+	.quad	_L_1+5222
+	.quad	_Times__uTimes_var_C_i64
+	.quad	_L_1+5238
+	.quad	_Times__Times_param_u32_i32
+	.quad	_L_1+5255
+	.quad	_Times__uTimes_param_u32_i32
+	.quad	_L_1+5275
+	.quad	_Times__Times_var_u32_i32
+	.quad	_L_1+5296
+	.quad	_Times__uTimes_var_u32_i32
+	.quad	_L_1+5314
+	.quad	_Times__Times_param_u32_i16
+	.quad	_L_1+5333
+	.quad	_Times__uTimes_param_u32_i16
+	.quad	_L_1+5353
+	.quad	_Times__Times_var_u32_i16
+	.quad	_L_1+5374
+	.quad	_Times__uTimes_var_u32_i16
+	.quad	_L_1+5392
+	.quad	_Times__Times_param_u32_L
+	.quad	_L_1+5411
+	.quad	_Times__uTimes_param_u32_L
+	.quad	_L_1+5429
+	.quad	_Times__Times_var_u32_L
+	.quad	_L_1+5448
+	.quad	_Times__uTimes_var_u32_L
+	.quad	_L_1+5464
+	.quad	_Times__Times_param_u32_u64
+	.quad	_L_1+5481
+	.quad	_Times__uTimes_param_u32_u64
+	.quad	_L_1+5501
+	.quad	_Times__Times_var_u32_u64
+	.quad	_L_1+5522
+	.quad	_Times__uTimes_var_u32_u64
+	.quad	_L_1+5540
+	.quad	_Times__Times_param_u32_u16
+	.quad	_L_1+5559
+	.quad	_Times__uTimes_param_u32_u16
+	.quad	_L_1+5579
+	.quad	_Times__Times_var_u32_u16
+	.quad	_L_1+5600
+	.quad	_Times__uTimes_var_u32_u16
+	.quad	_L_1+5618
+	.quad	_Times__Times_param_u32_C
+	.quad	_L_1+5637
+	.quad	_Times__uTimes_param_u32_C
+	.quad	_L_1+5655
+	.quad	_Times__Times_var_u32_C
+	.quad	_L_1+5674
+	.quad	_Times__uTimes_var_u32_C
+	.quad	_L_1+5690
+	.quad	_Times__Times_param_u32_u32
+	.quad	_L_1+5707
+	.quad	_Times__uTimes_param_u32_u32
+	.quad	_L_1+5727
+	.quad	_Times__Times_var_u32_u32
+	.quad	_L_1+5748
+	.quad	_Times__uTimes_var_u32_u32
+	.quad	_L_1+5766
+	.quad	_Times__Times_param_u32_i8
+	.quad	_L_1+5785
+	.quad	_Times__uTimes_param_u32_i8
+	.quad	_L_1+5804
+	.quad	_Times__Times_var_u32_i8
+	.quad	_L_1+5824
+	.quad	_Times__uTimes_var_u32_i8
+	.quad	_L_1+5841
+	.quad	_Times__Times_param_u32_I
+	.quad	_L_1+5859
+	.quad	_Times__uTimes_param_u32_I
+	.quad	_L_1+5877
+	.quad	_Times__Times_var_u32_I
+	.quad	_L_1+5896
+	.quad	_Times__uTimes_var_u32_I
+	.quad	_L_1+5912
+	.quad	_Times__Times_param_u32_u8
+	.quad	_L_1+5929
+	.quad	_Times__uTimes_param_u32_u8
+	.quad	_L_1+5948
+	.quad	_Times__Times_var_u32_u8
+	.quad	_L_1+5968
+	.quad	_Times__uTimes_var_u32_u8
+	.quad	_L_1+5985
+	.quad	_Times__Times_param_u32_LC
+	.quad	_L_1+6003
+	.quad	_Times__uTimes_param_u32_LC
+	.quad	_L_1+6022
+	.quad	_Times__Times_var_u32_LC
+	.quad	_L_1+6042
+	.quad	_Times__uTimes_var_u32_LC
+	.quad	_L_1+6059
+	.quad	_Times__Times_param_u32_i64
+	.quad	_L_1+6077
+	.quad	_Times__uTimes_param_u32_i64
+	.quad	_L_1+6097
+	.quad	_Times__Times_var_u32_i64
+	.quad	_L_1+6118
+	.quad	_Times__uTimes_var_u32_i64
+	.quad	_L_1+6136
+	.quad	_Times__Times_param_i8_i32
+	.quad	_L_1+6155
+	.quad	_Times__uTimes_param_i8_i32
+	.quad	_L_1+6174
+	.quad	_Times__Times_var_i8_i32
+	.quad	_L_1+6194
+	.quad	_Times__uTimes_var_i8_i32
+	.quad	_L_1+6211
+	.quad	_Times__Times_param_i8_i16
+	.quad	_L_1+6229
+	.quad	_Times__uTimes_param_i8_i16
+	.quad	_L_1+6248
+	.quad	_Times__Times_var_i8_i16
+	.quad	_L_1+6268
+	.quad	_Times__uTimes_var_i8_i16
+	.quad	_L_1+6285
+	.quad	_Times__Times_param_i8_L
+	.quad	_L_1+6303
+	.quad	_Times__uTimes_param_i8_L
+	.quad	_L_1+6320
+	.quad	_Times__Times_var_i8_L
+	.quad	_L_1+6338
+	.quad	_Times__uTimes_var_i8_L
+	.quad	_L_1+6353
+	.quad	_Times__Times_param_i8_u64
+	.quad	_L_1+6369
+	.quad	_Times__uTimes_param_i8_u64
+	.quad	_L_1+6388
+	.quad	_Times__Times_var_i8_u64
+	.quad	_L_1+6408
+	.quad	_Times__uTimes_var_i8_u64
+	.quad	_L_1+6425
+	.quad	_Times__Times_param_i8_u16
+	.quad	_L_1+6443
+	.quad	_Times__uTimes_param_i8_u16
+	.quad	_L_1+6462
+	.quad	_Times__Times_var_i8_u16
+	.quad	_L_1+6482
+	.quad	_Times__uTimes_var_i8_u16
+	.quad	_L_1+6499
+	.quad	_Times__Times_param_i8_C
+	.quad	_L_1+6517
+	.quad	_Times__uTimes_param_i8_C
+	.quad	_L_1+6534
+	.quad	_Times__Times_var_i8_C
+	.quad	_L_1+6552
+	.quad	_Times__uTimes_var_i8_C
+	.quad	_L_1+6567
+	.quad	_Times__Times_param_i8_u32
+	.quad	_L_1+6583
+	.quad	_Times__uTimes_param_i8_u32
+	.quad	_L_1+6602
+	.quad	_Times__Times_var_i8_u32
+	.quad	_L_1+6622
+	.quad	_Times__uTimes_var_i8_u32
+	.quad	_L_1+6639
+	.quad	_Times__Times_param_i8_i8
+	.quad	_L_1+6657
+	.quad	_Times__uTimes_param_i8_i8
+	.quad	_L_1+6675
+	.quad	_Times__Times_var_i8_i8
+	.quad	_L_1+6694
+	.quad	_Times__uTimes_var_i8_i8
+	.quad	_L_1+6710
+	.quad	_Times__Times_param_i8_I
+	.quad	_L_1+6727
+	.quad	_Times__uTimes_param_i8_I
+	.quad	_L_1+6744
+	.quad	_Times__Times_var_i8_I
+	.quad	_L_1+6762
+	.quad	_Times__uTimes_var_i8_I
+	.quad	_L_1+6777
+	.quad	_Times__Times_param_i8_u8
+	.quad	_L_1+6793
+	.quad	_Times__uTimes_param_i8_u8
+	.quad	_L_1+6811
+	.quad	_Times__Times_var_i8_u8
+	.quad	_L_1+6830
+	.quad	_Times__uTimes_var_i8_u8
+	.quad	_L_1+6846
+	.quad	_Times__Times_param_i8_LC
+	.quad	_L_1+6863
+	.quad	_Times__uTimes_param_i8_LC
+	.quad	_L_1+6881
+	.quad	_Times__Times_var_i8_LC
+	.quad	_L_1+6900
+	.quad	_Times__uTimes_var_i8_LC
+	.quad	_L_1+6916
+	.quad	_Times__Times_param_i8_i64
+	.quad	_L_1+6933
+	.quad	_Times__uTimes_param_i8_i64
+	.quad	_L_1+6952
+	.quad	_Times__Times_var_i8_i64
+	.quad	_L_1+6972
+	.quad	_Times__uTimes_var_i8_i64
+	.quad	_L_1+6989
+	.quad	_Times__Times_param_I_i32
+	.quad	_L_1+7007
+	.quad	_Times__uTimes_param_I_i32
+	.quad	_L_1+7025
+	.quad	_Times__Times_var_I_i32
+	.quad	_L_1+7044
+	.quad	_Times__uTimes_var_I_i32
+	.quad	_L_1+7060
+	.quad	_Times__Times_param_I_i16
+	.quad	_L_1+7077
+	.quad	_Times__uTimes_param_I_i16
+	.quad	_L_1+7095
+	.quad	_Times__Times_var_I_i16
+	.quad	_L_1+7114
+	.quad	_Times__uTimes_var_I_i16
+	.quad	_L_1+7130
+	.quad	_Times__Times_param_I_L
+	.quad	_L_1+7147
+	.quad	_Times__uTimes_param_I_L
+	.quad	_L_1+7163
+	.quad	_Times__Times_var_I_L
+	.quad	_L_1+7180
+	.quad	_Times__uTimes_var_I_L
+	.quad	_L_1+7194
+	.quad	_Times__Times_param_I_u64
+	.quad	_L_1+7209
+	.quad	_Times__uTimes_param_I_u64
+	.quad	_L_1+7227
+	.quad	_Times__Times_var_I_u64
+	.quad	_L_1+7246
+	.quad	_Times__uTimes_var_I_u64
+	.quad	_L_1+7262
+	.quad	_Times__Times_param_I_u16
+	.quad	_L_1+7279
+	.quad	_Times__uTimes_param_I_u16
+	.quad	_L_1+7297
+	.quad	_Times__Times_var_I_u16
+	.quad	_L_1+7316
+	.quad	_Times__uTimes_var_I_u16
+	.quad	_L_1+7332
+	.quad	_Times__Times_param_I_C
+	.quad	_L_1+7349
+	.quad	_Times__uTimes_param_I_C
+	.quad	_L_1+7365
+	.quad	_Times__Times_var_I_C
+	.quad	_L_1+7382
+	.quad	_Times__uTimes_var_I_C
+	.quad	_L_1+7396
+	.quad	_Times__Times_param_I_u32
+	.quad	_L_1+7411
+	.quad	_Times__uTimes_param_I_u32
+	.quad	_L_1+7429
+	.quad	_Times__Times_var_I_u32
+	.quad	_L_1+7448
+	.quad	_Times__uTimes_var_I_u32
+	.quad	_L_1+7464
+	.quad	_Times__Times_param_I_i8
+	.quad	_L_1+7481
+	.quad	_Times__uTimes_param_I_i8
+	.quad	_L_1+7498
+	.quad	_Times__Times_var_I_i8
+	.quad	_L_1+7516
+	.quad	_Times__uTimes_var_I_i8
+	.quad	_L_1+7531
+	.quad	_Times__Times_param_I_I
+	.quad	_L_1+7547
+	.quad	_Times__uTimes_param_I_I
+	.quad	_L_1+7563
+	.quad	_Times__Times_var_I_I
+	.quad	_L_1+7580
+	.quad	_Times__uTimes_var_I_I
+	.quad	_L_1+7594
+	.quad	_Times__Times_param_I_u8
+	.quad	_L_1+7609
+	.quad	_Times__uTimes_param_I_u8
+	.quad	_L_1+7626
+	.quad	_Times__Times_var_I_u8
+	.quad	_L_1+7644
+	.quad	_Times__uTimes_var_I_u8
+	.quad	_L_1+7659
+	.quad	_Times__Times_param_I_LC
+	.quad	_L_1+7675
+	.quad	_Times__uTimes_param_I_LC
+	.quad	_L_1+7692
+	.quad	_Times__Times_var_I_LC
+	.quad	_L_1+7710
+	.quad	_Times__uTimes_var_I_LC
+	.quad	_L_1+7725
+	.quad	_Times__Times_param_I_i64
+	.quad	_L_1+7741
+	.quad	_Times__uTimes_param_I_i64
+	.quad	_L_1+7759
+	.quad	_Times__Times_var_I_i64
+	.quad	_L_1+7778
+	.quad	_Times__uTimes_var_I_i64
+	.quad	_L_1+7794
+	.quad	_Times__Times_param_u8_i32
+	.quad	_L_1+7811
+	.quad	_Times__uTimes_param_u8_i32
+	.quad	_L_1+7830
+	.quad	_Times__Times_var_u8_i32
+	.quad	_L_1+7850
+	.quad	_Times__uTimes_var_u8_i32
+	.quad	_L_1+7867
+	.quad	_Times__Times_param_u8_i16
+	.quad	_L_1+7885
+	.quad	_Times__uTimes_param_u8_i16
+	.quad	_L_1+7904
+	.quad	_Times__Times_var_u8_i16
+	.quad	_L_1+7924
+	.quad	_Times__uTimes_var_u8_i16
+	.quad	_L_1+7941
+	.quad	_Times__Times_param_u8_L
+	.quad	_L_1+7959
+	.quad	_Times__uTimes_param_u8_L
+	.quad	_L_1+7976
+	.quad	_Times__Times_var_u8_L
+	.quad	_L_1+7994
+	.quad	_Times__uTimes_var_u8_L
+	.quad	_L_1+8009
+	.quad	_Times__Times_param_u8_u64
+	.quad	_L_1+8025
+	.quad	_Times__uTimes_param_u8_u64
+	.quad	_L_1+8044
+	.quad	_Times__Times_var_u8_u64
+	.quad	_L_1+8064
+	.quad	_Times__uTimes_var_u8_u64
+	.quad	_L_1+8081
+	.quad	_Times__Times_param_u8_u16
+	.quad	_L_1+8099
+	.quad	_Times__uTimes_param_u8_u16
+	.quad	_L_1+8118
+	.quad	_Times__Times_var_u8_u16
+	.quad	_L_1+8138
+	.quad	_Times__uTimes_var_u8_u16
+	.quad	_L_1+8155
+	.quad	_Times__Times_param_u8_C
+	.quad	_L_1+8173
+	.quad	_Times__uTimes_param_u8_C
+	.quad	_L_1+8190
+	.quad	_Times__Times_var_u8_C
+	.quad	_L_1+8208
+	.quad	_Times__uTimes_var_u8_C
+	.quad	_L_1+8223
+	.quad	_Times__Times_param_u8_u32
+	.quad	_L_1+8239
+	.quad	_Times__uTimes_param_u8_u32
+	.quad	_L_1+8258
+	.quad	_Times__Times_var_u8_u32
+	.quad	_L_1+8278
+	.quad	_Times__uTimes_var_u8_u32
+	.quad	_L_1+8295
+	.quad	_Times__Times_param_u8_i8
+	.quad	_L_1+8313
+	.quad	_Times__uTimes_param_u8_i8
+	.quad	_L_1+8331
+	.quad	_Times__Times_var_u8_i8
+	.quad	_L_1+8350
+	.quad	_Times__uTimes_var_u8_i8
+	.quad	_L_1+8366
+	.quad	_Times__Times_param_u8_I
+	.quad	_L_1+8383
+	.quad	_Times__uTimes_param_u8_I
+	.quad	_L_1+8400
+	.quad	_Times__Times_var_u8_I
+	.quad	_L_1+8418
+	.quad	_Times__uTimes_var_u8_I
+	.quad	_L_1+8433
+	.quad	_Times__Times_param_u8_u8
+	.quad	_L_1+8449
+	.quad	_Times__uTimes_param_u8_u8
+	.quad	_L_1+8467
+	.quad	_Times__Times_var_u8_u8
+	.quad	_L_1+8486
+	.quad	_Times__uTimes_var_u8_u8
+	.quad	_L_1+8502
+	.quad	_Times__Times_param_u8_LC
+	.quad	_L_1+8519
+	.quad	_Times__uTimes_param_u8_LC
+	.quad	_L_1+8537
+	.quad	_Times__Times_var_u8_LC
+	.quad	_L_1+8556
+	.quad	_Times__uTimes_var_u8_LC
+	.quad	_L_1+8572
+	.quad	_Times__Times_param_u8_i64
+	.quad	_L_1+8589
+	.quad	_Times__uTimes_param_u8_i64
+	.quad	_L_1+8608
+	.quad	_Times__Times_var_u8_i64
+	.quad	_L_1+8628
+	.quad	_Times__uTimes_var_u8_i64
+	.quad	_L_1+8645
+	.quad	_Times__Times_param_f32_f32
+	.quad	_L_1+8663
+	.quad	_Times__Times_var_f32_f32
+	.quad	_L_1+8683
+	.quad	_Times__Times_param_LC_i32
+	.quad	_L_1+8701
+	.quad	_Times__uTimes_param_LC_i32
+	.quad	_L_1+8720
+	.quad	_Times__Times_var_LC_i32
+	.quad	_L_1+8740
+	.quad	_Times__uTimes_var_LC_i32
+	.quad	_L_1+8757
+	.quad	_Times__Times_param_LC_i16
+	.quad	_L_1+8775
+	.quad	_Times__uTimes_param_LC_i16
+	.quad	_L_1+8794
+	.quad	_Times__Times_var_LC_i16
+	.quad	_L_1+8814
+	.quad	_Times__uTimes_var_LC_i16
+	.quad	_L_1+8831
+	.quad	_Times__Times_param_LC_L
+	.quad	_L_1+8849
+	.quad	_Times__uTimes_param_LC_L
+	.quad	_L_1+8866
+	.quad	_Times__Times_var_LC_L
+	.quad	_L_1+8884
+	.quad	_Times__uTimes_var_LC_L
+	.quad	_L_1+8899
+	.quad	_Times__Times_param_LC_u64
+	.quad	_L_1+8915
+	.quad	_Times__uTimes_param_LC_u64
+	.quad	_L_1+8934
+	.quad	_Times__Times_var_LC_u64
+	.quad	_L_1+8954
+	.quad	_Times__uTimes_var_LC_u64
+	.quad	_L_1+8971
+	.quad	_Times__Times_param_LC_u16
+	.quad	_L_1+8989
+	.quad	_Times__uTimes_param_LC_u16
+	.quad	_L_1+9008
+	.quad	_Times__Times_var_LC_u16
+	.quad	_L_1+9028
+	.quad	_Times__uTimes_var_LC_u16
+	.quad	_L_1+9045
+	.quad	_Times__Times_param_LC_C
+	.quad	_L_1+9063
+	.quad	_Times__uTimes_param_LC_C
+	.quad	_L_1+9080
+	.quad	_Times__Times_var_LC_C
+	.quad	_L_1+9098
+	.quad	_Times__uTimes_var_LC_C
+	.quad	_L_1+9113
+	.quad	_Times__Times_param_LC_u32
+	.quad	_L_1+9129
+	.quad	_Times__uTimes_param_LC_u32
+	.quad	_L_1+9148
+	.quad	_Times__Times_var_LC_u32
+	.quad	_L_1+9168
+	.quad	_Times__uTimes_var_LC_u32
+	.quad	_L_1+9185
+	.quad	_Times__Times_param_LC_i8
+	.quad	_L_1+9203
+	.quad	_Times__uTimes_param_LC_i8
+	.quad	_L_1+9221
+	.quad	_Times__Times_var_LC_i8
+	.quad	_L_1+9240
+	.quad	_Times__uTimes_var_LC_i8
+	.quad	_L_1+9256
+	.quad	_Times__Times_param_LC_I
+	.quad	_L_1+9273
+	.quad	_Times__uTimes_param_LC_I
+	.quad	_L_1+9290
+	.quad	_Times__Times_var_LC_I
+	.quad	_L_1+9308
+	.quad	_Times__uTimes_var_LC_I
+	.quad	_L_1+9323
+	.quad	_Times__Times_param_LC_u8
+	.quad	_L_1+9339
+	.quad	_Times__uTimes_param_LC_u8
+	.quad	_L_1+9357
+	.quad	_Times__Times_var_LC_u8
+	.quad	_L_1+9376
+	.quad	_Times__uTimes_var_LC_u8
+	.quad	_L_1+9392
+	.quad	_Times__Times_param_LC_LC
+	.quad	_L_1+9409
+	.quad	_Times__uTimes_param_LC_LC
+	.quad	_L_1+9427
+	.quad	_Times__Times_var_LC_LC
+	.quad	_L_1+9446
+	.quad	_Times__uTimes_var_LC_LC
+	.quad	_L_1+9462
+	.quad	_Times__Times_param_LC_i64
+	.quad	_L_1+9479
+	.quad	_Times__uTimes_param_LC_i64
+	.quad	_L_1+9498
+	.quad	_Times__Times_var_LC_i64
+	.quad	_L_1+9518
+	.quad	_Times__uTimes_var_LC_i64
+	.quad	_L_1+9535
+	.quad	_Times__Times_param_i64_i32
+	.quad	_L_1+9553
+	.quad	_Times__uTimes_param_i64_i32
+	.quad	_L_1+9573
+	.quad	_Times__Times_var_i64_i32
+	.quad	_L_1+9594
+	.quad	_Times__uTimes_var_i64_i32
+	.quad	_L_1+9612
+	.quad	_Times__Times_param_i64_i16
+	.quad	_L_1+9631
+	.quad	_Times__uTimes_param_i64_i16
+	.quad	_L_1+9651
+	.quad	_Times__Times_var_i64_i16
+	.quad	_L_1+9672
+	.quad	_Times__uTimes_var_i64_i16
+	.quad	_L_1+9690
+	.quad	_Times__Times_param_i64_L
+	.quad	_L_1+9709
+	.quad	_Times__uTimes_param_i64_L
+	.quad	_L_1+9727
+	.quad	_Times__Times_var_i64_L
+	.quad	_L_1+9746
+	.quad	_Times__uTimes_var_i64_L
+	.quad	_L_1+9762
+	.quad	_Times__Times_param_i64_u64
+	.quad	_L_1+9779
+	.quad	_Times__uTimes_param_i64_u64
+	.quad	_L_1+9799
+	.quad	_Times__Times_var_i64_u64
+	.quad	_L_1+9820
+	.quad	_Times__uTimes_var_i64_u64
+	.quad	_L_1+9838
+	.quad	_Times__Times_param_i64_u16
+	.quad	_L_1+9857
+	.quad	_Times__uTimes_param_i64_u16
+	.quad	_L_1+9877
+	.quad	_Times__Times_var_i64_u16
+	.quad	_L_1+9898
+	.quad	_Times__uTimes_var_i64_u16
+	.quad	_L_1+9916
+	.quad	_Times__Times_param_i64_C
+	.quad	_L_1+9935
+	.quad	_Times__uTimes_param_i64_C
+	.quad	_L_1+9953
+	.quad	_Times__Times_var_i64_C
+	.quad	_L_1+9972
+	.quad	_Times__uTimes_var_i64_C
+	.quad	_L_1+9988
+	.quad	_Times__Times_param_i64_u32
+	.quad	_L_1+10005
+	.quad	_Times__uTimes_param_i64_u32
+	.quad	_L_1+10025
+	.quad	_Times__Times_var_i64_u32
+	.quad	_L_1+10046
+	.quad	_Times__uTimes_var_i64_u32
+	.quad	_L_1+10064
+	.quad	_Times__Times_param_i64_i8
+	.quad	_L_1+10083
+	.quad	_Times__uTimes_param_i64_i8
+	.quad	_L_1+10102
+	.quad	_Times__Times_var_i64_i8
+	.quad	_L_1+10122
+	.quad	_Times__uTimes_var_i64_i8
+	.quad	_L_1+10139
+	.quad	_Times__Times_param_i64_I
+	.quad	_L_1+10157
+	.quad	_Times__uTimes_param_i64_I
+	.quad	_L_1+10175
+	.quad	_Times__Times_var_i64_I
+	.quad	_L_1+10194
+	.quad	_Times__uTimes_var_i64_I
+	.quad	_L_1+10210
+	.quad	_Times__Times_param_i64_u8
+	.quad	_L_1+10227
+	.quad	_Times__uTimes_param_i64_u8
+	.quad	_L_1+10246
+	.quad	_Times__Times_var_i64_u8
+	.quad	_L_1+10266
+	.quad	_Times__uTimes_var_i64_u8
+	.quad	_L_1+10283
+	.quad	_Times__Times_param_i64_LC
+	.quad	_L_1+10301
+	.quad	_Times__uTimes_param_i64_LC
+	.quad	_L_1+10320
+	.quad	_Times__Times_var_i64_LC
+	.quad	_L_1+10340
+	.quad	_Times__uTimes_var_i64_LC
+	.quad	_L_1+10357
+	.quad	_Times__Times_param_i64_i64
+	.quad	_L_1+10375
+	.quad	_Times__uTimes_param_i64_i64
+	.quad	_L_1+10395
+	.quad	_Times__Times_var_i64_i64
+	.quad	_L_1+10416
+	.quad	_Times__uTimes_var_i64_i64
 	.quad	_L_1+10434
 	.space 8
 	.ascii "../AMD64_DARWIN/Times.m3"
@@ -10196,25 +10196,26 @@ _MM_Times:
 	.space 8
 	.quad	_Times_M3
 	.quad	3
-	.word	177
-	.space 6
+	.quad	177
 	.quad	178
-	.quad	179
-	.long	3229815407
-	.long	1080460746
-	.word	182
-	.space 2
-	.long	183
-	.quad	184
+	.long	1127427604
+	.byte	-75
+	.space 3
+	.quad	182
+	.byte	-73
+	.space 3
+	.long	184
 	.quad	185
-	.quad	186
-	.long	1127952417
-	.byte	-67
-	.byte	-66
+	.word	186
+	.space 6
+	.quad	187
+	.long	1236950581
+	.long	1080526348
+	.quad	190
+	.word	191
 	.space 2
-	.quad	191
 	.long	192
-	.space 28
+	.space 24
 	.quad	_Times_I3
 	.quad	_MM_Times+232
 	.space 8

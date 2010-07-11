@@ -1,379 +1,4932 @@
 	.text
-.globl _Minus__uMinus_var_u16_u16
-	.private_extern _Minus__uMinus_var_u16_u16
-_Minus__uMinus_var_u16_u16:
+.globl _Minus__uMinus_var_i64_i64
+	.private_extern _Minus__uMinus_var_i64_i64
+_Minus__uMinus_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	$0, %eax
 	leave
 	ret
-.globl _Minus__Minus_var_u16_u16
-	.private_extern _Minus__Minus_var_u16_u16
-_Minus__Minus_var_u16_u16:
+.globl _Minus__Minus_var_i64_i64
+	.private_extern _Minus__Minus_var_i64_i64
+_Minus__Minus_var_i64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_i64
+	.private_extern _Minus__uMinus_param_i64_i64
+_Minus__uMinus_param_i64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_i64
+	.private_extern _Minus__Minus_param_i64_i64
+_Minus__Minus_param_i64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_LC
+	.private_extern _Minus__uMinus_var_i64_LC
+_Minus__uMinus_var_i64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_LC
+	.private_extern _Minus__Minus_var_i64_LC
+_Minus__Minus_var_i64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_LC
+	.private_extern _Minus__uMinus_param_i64_LC
+_Minus__uMinus_param_i64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_LC
+	.private_extern _Minus__Minus_param_i64_LC
+_Minus__Minus_param_i64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_u8
+	.private_extern _Minus__uMinus_var_i64_u8
+_Minus__uMinus_var_i64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_u8
+	.private_extern _Minus__Minus_var_i64_u8
+_Minus__Minus_var_i64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_u8
+	.private_extern _Minus__uMinus_param_i64_u8
+_Minus__uMinus_param_i64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movsbq	-25(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_u8
+	.private_extern _Minus__Minus_param_i64_u8
+_Minus__Minus_param_i64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_I
+	.private_extern _Minus__uMinus_var_i64_I
+_Minus__uMinus_var_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_I
+	.private_extern _Minus__Minus_var_i64_I
+_Minus__Minus_var_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_I
+	.private_extern _Minus__uMinus_param_i64_I
+_Minus__uMinus_param_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_I
+	.private_extern _Minus__Minus_param_i64_I
+_Minus__Minus_param_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_i8
+	.private_extern _Minus__uMinus_var_i64_i8
+_Minus__uMinus_var_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_i8
+	.private_extern _Minus__Minus_var_i64_i8
+_Minus__Minus_var_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_i8
+	.private_extern _Minus__uMinus_param_i64_i8
+_Minus__uMinus_param_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movzbl	-25(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_i8
+	.private_extern _Minus__Minus_param_i64_i8
+_Minus__Minus_param_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_u32
+	.private_extern _Minus__uMinus_var_i64_u32
+_Minus__uMinus_var_i64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_u32
+	.private_extern _Minus__Minus_var_i64_u32
+_Minus__Minus_var_i64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_u32
+	.private_extern _Minus__uMinus_param_i64_u32
+_Minus__uMinus_param_i64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_u32
+	.private_extern _Minus__Minus_param_i64_u32
+_Minus__Minus_param_i64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_C
+	.private_extern _Minus__uMinus_var_i64_C
+_Minus__uMinus_var_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_C
+	.private_extern _Minus__Minus_var_i64_C
+_Minus__Minus_var_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_C
+	.private_extern _Minus__uMinus_param_i64_C
+_Minus__uMinus_param_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_C
+	.private_extern _Minus__Minus_param_i64_C
+_Minus__Minus_param_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_u16
+	.private_extern _Minus__uMinus_var_i64_u16
+_Minus__uMinus_var_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_u16
+	.private_extern _Minus__Minus_var_i64_u16
+_Minus__Minus_var_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_u16
+	.private_extern _Minus__uMinus_param_i64_u16
+_Minus__uMinus_param_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rdx
+	movswq	-26(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_u16
+	.private_extern _Minus__Minus_param_i64_u16
+_Minus__Minus_param_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_u64
+	.private_extern _Minus__uMinus_var_i64_u64
+_Minus__uMinus_var_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_u64
+	.private_extern _Minus__Minus_var_i64_u64
+_Minus__Minus_var_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_u64
+	.private_extern _Minus__uMinus_param_i64_u64
+_Minus__uMinus_param_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_u64
+	.private_extern _Minus__Minus_param_i64_u64
+_Minus__Minus_param_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_L
+	.private_extern _Minus__uMinus_var_i64_L
+_Minus__uMinus_var_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_L
+	.private_extern _Minus__Minus_var_i64_L
+_Minus__Minus_var_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_L
+	.private_extern _Minus__uMinus_param_i64_L
+_Minus__uMinus_param_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_L
+	.private_extern _Minus__Minus_param_i64_L
+_Minus__Minus_param_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_i16
+	.private_extern _Minus__uMinus_var_i64_i16
+_Minus__uMinus_var_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_i16
+	.private_extern _Minus__Minus_var_i64_i16
+_Minus__Minus_var_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_i16
+	.private_extern _Minus__uMinus_param_i64_i16
+_Minus__uMinus_param_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rdx
+	movzwl	-26(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_i16
+	.private_extern _Minus__Minus_param_i64_i16
+_Minus__Minus_param_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i64_i32
+	.private_extern _Minus__uMinus_var_i64_i32
+_Minus__uMinus_var_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i64_i32
+	.private_extern _Minus__Minus_var_i64_i32
+_Minus__Minus_var_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Minus(%rip), %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i64_i32
+	.private_extern _Minus__uMinus_param_i64_i32
+_Minus__uMinus_param_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	mov	-28(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i64_i32
+	.private_extern _Minus__Minus_param_i64_i32
+_Minus__Minus_param_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_i64
+	.private_extern _Minus__uMinus_var_LC_i64
+_Minus__uMinus_var_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_i64
+	.private_extern _Minus__Minus_var_LC_i64
+_Minus__Minus_var_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_i64
+	.private_extern _Minus__uMinus_param_LC_i64
+_Minus__uMinus_param_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_i64
+	.private_extern _Minus__Minus_param_LC_i64
+_Minus__Minus_param_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_LC
+	.private_extern _Minus__uMinus_var_LC_LC
+_Minus__uMinus_var_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_LC
+	.private_extern _Minus__Minus_var_LC_LC
+_Minus__Minus_var_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_LC
+	.private_extern _Minus__uMinus_param_LC_LC
+_Minus__uMinus_param_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_LC
+	.private_extern _Minus__Minus_param_LC_LC
+_Minus__Minus_param_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_u8
+	.private_extern _Minus__uMinus_var_LC_u8
+_Minus__uMinus_var_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_u8
+	.private_extern _Minus__Minus_var_LC_u8
+_Minus__Minus_var_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_u8
+	.private_extern _Minus__uMinus_param_LC_u8
+_Minus__uMinus_param_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_u8
+	.private_extern _Minus__Minus_param_LC_u8
+_Minus__Minus_param_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movsbq	-25(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_I
+	.private_extern _Minus__uMinus_var_LC_I
+_Minus__uMinus_var_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_I
+	.private_extern _Minus__Minus_var_LC_I
+_Minus__Minus_var_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_I
+	.private_extern _Minus__uMinus_param_LC_I
+_Minus__uMinus_param_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_I
+	.private_extern _Minus__Minus_param_LC_I
+_Minus__Minus_param_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_i8
+	.private_extern _Minus__uMinus_var_LC_i8
+_Minus__uMinus_var_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_i8
+	.private_extern _Minus__Minus_var_LC_i8
+_Minus__Minus_var_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_i8
+	.private_extern _Minus__uMinus_param_LC_i8
+_Minus__uMinus_param_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_i8
+	.private_extern _Minus__Minus_param_LC_i8
+_Minus__Minus_param_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movzbl	-25(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_u32
+	.private_extern _Minus__uMinus_var_LC_u32
+_Minus__uMinus_var_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_u32
+	.private_extern _Minus__Minus_var_LC_u32
+_Minus__Minus_var_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_u32
+	.private_extern _Minus__uMinus_param_LC_u32
+_Minus__uMinus_param_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_u32
+	.private_extern _Minus__Minus_param_LC_u32
+_Minus__Minus_param_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_C
+	.private_extern _Minus__uMinus_var_LC_C
+_Minus__uMinus_var_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_C
+	.private_extern _Minus__Minus_var_LC_C
+_Minus__Minus_var_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_C
+	.private_extern _Minus__uMinus_param_LC_C
+_Minus__uMinus_param_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_C
+	.private_extern _Minus__Minus_param_LC_C
+_Minus__Minus_param_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_u16
+	.private_extern _Minus__uMinus_var_LC_u16
+_Minus__uMinus_var_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_u16
+	.private_extern _Minus__Minus_var_LC_u16
+_Minus__Minus_var_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_u16
+	.private_extern _Minus__uMinus_param_LC_u16
+_Minus__uMinus_param_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_u16
+	.private_extern _Minus__Minus_param_LC_u16
+_Minus__Minus_param_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rdx
+	movswq	-26(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_u64
+	.private_extern _Minus__uMinus_var_LC_u64
+_Minus__uMinus_var_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_u64
+	.private_extern _Minus__Minus_var_LC_u64
+_Minus__Minus_var_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_u64
+	.private_extern _Minus__uMinus_param_LC_u64
+_Minus__uMinus_param_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_u64
+	.private_extern _Minus__Minus_param_LC_u64
+_Minus__Minus_param_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_L
+	.private_extern _Minus__uMinus_var_LC_L
+_Minus__uMinus_var_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_L
+	.private_extern _Minus__Minus_var_LC_L
+_Minus__Minus_var_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_L
+	.private_extern _Minus__uMinus_param_LC_L
+_Minus__uMinus_param_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_L
+	.private_extern _Minus__Minus_param_LC_L
+_Minus__Minus_param_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_i16
+	.private_extern _Minus__uMinus_var_LC_i16
+_Minus__uMinus_var_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_i16
+	.private_extern _Minus__Minus_var_LC_i16
+_Minus__Minus_var_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_i16
+	.private_extern _Minus__uMinus_param_LC_i16
+_Minus__uMinus_param_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_i16
+	.private_extern _Minus__Minus_param_LC_i16
+_Minus__Minus_param_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rdx
+	movzwl	-26(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_LC_i32
+	.private_extern _Minus__uMinus_var_LC_i32
+_Minus__uMinus_var_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_LC_i32
+	.private_extern _Minus__Minus_var_LC_i32
+_Minus__Minus_var_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_LC_i32
+	.private_extern _Minus__uMinus_param_LC_i32
+_Minus__uMinus_param_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_LC_i32
+	.private_extern _Minus__Minus_param_LC_i32
+_Minus__Minus_param_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	mov	-28(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_f32_f32
+	.private_extern _Minus__Minus_var_f32_f32
+_Minus__Minus_var_f32_f32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movss	120+_MM_Minus(%rip), %xmm1
+	movss	120+_MM_Minus(%rip), %xmm0
+	movaps	%xmm1, %xmm2
+	subss	%xmm0, %xmm2
+	movaps	%xmm2, %xmm0
+	leave
+	ret
+.globl _Minus__Minus_param_f32_f32
+	.private_extern _Minus__Minus_param_f32_f32
+_Minus__Minus_param_f32_f32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movss	%xmm0, -20(%rbp)
+	movss	%xmm1, -24(%rbp)
+	movss	-20(%rbp), %xmm0
+	subss	-24(%rbp), %xmm0
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_i64
+	.private_extern _Minus__uMinus_var_u8_i64
+_Minus__uMinus_var_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_i64
+	.private_extern _Minus__Minus_var_u8_i64
+_Minus__Minus_var_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u8_i64
+	.private_extern _Minus__uMinus_param_u8_i64
+_Minus__uMinus_param_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u8_i64
+	.private_extern _Minus__Minus_param_u8_i64
+_Minus__Minus_param_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_LC
+	.private_extern _Minus__uMinus_var_u8_LC
+_Minus__uMinus_var_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_LC
+	.private_extern _Minus__Minus_var_u8_LC
+_Minus__Minus_var_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u8_LC
+	.private_extern _Minus__uMinus_param_u8_LC
+_Minus__uMinus_param_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u8_LC
+	.private_extern _Minus__Minus_param_u8_LC
+_Minus__Minus_param_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_u8
+	.private_extern _Minus__uMinus_var_u8_u8
+_Minus__uMinus_var_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_u8
+	.private_extern _Minus__Minus_var_u8_u8
+_Minus__Minus_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
 	movq	$0, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L4
-	cmpq	$32767, -16(%rbp)
-	jle	L5
-L4:
-	movl	$1761, %edi
+	cmpq	$-128, -16(%rbp)
+	jl	L216
+	cmpq	$127, -16(%rbp)
+	jle	L217
+L216:
+	movl	$5153, %edi
 	call	__m3_fault
-L5:
+L217:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u16_u16
-	.private_extern _Minus__uMinus_param_u16_u16
-_Minus__uMinus_param_u16_u16:
+.globl _Minus__uMinus_param_u8_u8
+	.private_extern _Minus__uMinus_param_u8_u8
+_Minus__uMinus_param_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movsbq	-18(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u8_u8
+	.private_extern _Minus__Minus_param_u8_u8
+_Minus__Minus_param_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rax
+	movsbq	-18(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L222
+	cmpq	$127, -16(%rbp)
+	jle	L223
+L222:
+	movl	$5217, %edi
+	call	__m3_fault
+L223:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_I
+	.private_extern _Minus__uMinus_var_u8_I
+_Minus__uMinus_var_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_I
+	.private_extern _Minus__Minus_var_u8_I
+_Minus__Minus_var_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L228
+	cmpq	$127, -16(%rbp)
+	jle	L229
+L228:
+	movl	$5281, %edi
+	call	__m3_fault
+L229:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u8_I
+	.private_extern _Minus__uMinus_param_u8_I
+_Minus__uMinus_param_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u8_I
+	.private_extern _Minus__Minus_param_u8_I
+_Minus__Minus_param_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	subq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L234
+	cmpq	$127, -16(%rbp)
+	jle	L235
+L234:
+	movl	$5345, %edi
+	call	__m3_fault
+L235:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_i8
+	.private_extern _Minus__uMinus_var_u8_i8
+_Minus__uMinus_var_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_i8
+	.private_extern _Minus__Minus_var_u8_i8
+_Minus__Minus_var_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jge	L240
+	movl	$5409, %edi
+	call	__m3_fault
+L240:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u8_i8
+	.private_extern _Minus__uMinus_param_u8_i8
+_Minus__uMinus_param_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movzbl	-18(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u8_i8
+	.private_extern _Minus__Minus_param_u8_i8
+_Minus__Minus_param_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rax
+	movzbl	-18(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jge	L245
+	movl	$5473, %edi
+	call	__m3_fault
+L245:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_u32
+	.private_extern _Minus__uMinus_var_u8_u32
+_Minus__uMinus_var_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_u32
+	.private_extern _Minus__Minus_var_u8_u32
+_Minus__Minus_var_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L250
+	cmpq	$127, -16(%rbp)
+	jle	L251
+L250:
+	movl	$5537, %edi
+	call	__m3_fault
+L251:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u8_u32
+	.private_extern _Minus__uMinus_param_u8_u32
+_Minus__uMinus_param_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u8_u32
+	.private_extern _Minus__Minus_param_u8_u32
+_Minus__Minus_param_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L256
+	cmpq	$127, -16(%rbp)
+	jle	L257
+L256:
+	movl	$5601, %edi
+	call	__m3_fault
+L257:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_C
+	.private_extern _Minus__uMinus_var_u8_C
+_Minus__uMinus_var_u8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_C
+	.private_extern _Minus__Minus_var_u8_C
+_Minus__Minus_var_u8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L262
+	cmpq	$127, -16(%rbp)
+	jle	L263
+L262:
+	movl	$5665, %edi
+	call	__m3_fault
+L263:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u8_C
+	.private_extern _Minus__uMinus_param_u8_C
+_Minus__uMinus_param_u8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u8_C
+	.private_extern _Minus__Minus_param_u8_C
+_Minus__Minus_param_u8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	-32(%rbp), %rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L268
+	cmpq	$127, -16(%rbp)
+	jle	L269
+L268:
+	movl	$5729, %edi
+	call	__m3_fault
+L269:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_u16
+	.private_extern _Minus__uMinus_var_u8_u16
+_Minus__uMinus_var_u8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u8_u16
+	.private_extern _Minus__Minus_var_u8_u16
+_Minus__Minus_var_u8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L274
+	cmpq	$127, -16(%rbp)
+	jle	L275
+L274:
+	movl	$5793, %edi
+	call	__m3_fault
+L275:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u8_u16
+	.private_extern _Minus__uMinus_param_u8_u16
+_Minus__uMinus_param_u8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rdx
+	movsbq	-17(%rbp),%rdx
 	movswq	-20(%rbp),%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u16_u16
-	.private_extern _Minus__Minus_param_u16_u16
-_Minus__Minus_param_u16_u16:
+.globl _Minus__Minus_param_u8_u16
+	.private_extern _Minus__Minus_param_u8_u16
+_Minus__Minus_param_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
+	movsbq	-17(%rbp),%rax
 	movswq	-20(%rbp),%rdx
 	subq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L10
-	cmpq	$32767, -16(%rbp)
-	jle	L11
-L10:
-	movl	$1825, %edi
+	cmpq	$-128, -16(%rbp)
+	jl	L280
+	cmpq	$127, -16(%rbp)
+	jle	L281
+L280:
+	movl	$5857, %edi
 	call	__m3_fault
-L11:
+L281:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u16_u64
-	.private_extern _Minus__uMinus_var_u16_u64
-_Minus__uMinus_var_u16_u64:
+.globl _Minus__uMinus_var_u8_u64
+	.private_extern _Minus__uMinus_var_u8_u64
+_Minus__uMinus_var_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	112+_MM_Minus(%rip), %rax
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u16_u64
-	.private_extern _Minus__Minus_var_u16_u64
-_Minus__Minus_var_u16_u64:
+.globl _Minus__Minus_var_u8_u64
+	.private_extern _Minus__Minus_var_u8_u64
+_Minus__Minus_var_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	112+_MM_Minus(%rip), %rax
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u16_u64
-	.private_extern _Minus__uMinus_param_u16_u64
-_Minus__uMinus_param_u16_u64:
+.globl _Minus__uMinus_param_u8_u64
+	.private_extern _Minus__uMinus_param_u8_u64
+_Minus__uMinus_param_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
+	movsbq	-17(%rbp),%rdx
 	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u16_u64
-	.private_extern _Minus__Minus_param_u16_u64
-_Minus__Minus_param_u16_u64:
+.globl _Minus__Minus_param_u8_u64
+	.private_extern _Minus__Minus_param_u8_u64
+_Minus__Minus_param_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
+	movsbq	-17(%rbp),%rax
 	subq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u16_LC
-	.private_extern _Minus__uMinus_var_u16_LC
-_Minus__uMinus_var_u16_LC:
+.globl _Minus__uMinus_var_u8_L
+	.private_extern _Minus__uMinus_var_u8_L
+_Minus__uMinus_var_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	120+_MM_Minus(%rip), %rax
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	176+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u16_LC
-	.private_extern _Minus__Minus_var_u16_LC
-_Minus__Minus_var_u16_LC:
+.globl _Minus__Minus_var_u8_L
+	.private_extern _Minus__Minus_var_u8_L
+_Minus__Minus_var_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	120+_MM_Minus(%rip), %rax
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movq	176+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u16_LC
-	.private_extern _Minus__uMinus_param_u16_LC
-_Minus__uMinus_param_u16_LC:
+.globl _Minus__uMinus_param_u8_L
+	.private_extern _Minus__uMinus_param_u8_L
+_Minus__uMinus_param_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u16_LC
-	.private_extern _Minus__Minus_param_u16_LC
-_Minus__Minus_param_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
+	movsbq	-17(%rbp),%rdx
 	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u16_i16
-	.private_extern _Minus__uMinus_var_u16_i16
-_Minus__uMinus_var_u16_i16:
+.globl _Minus__Minus_param_u8_L
+	.private_extern _Minus__Minus_param_u8_L
+_Minus__Minus_param_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movzwl	136+_MM_Minus(%rip), %eax
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u8_i16
+	.private_extern _Minus__uMinus_var_u8_i16
+_Minus__uMinus_var_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	184+_MM_Minus(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u16_i16
-	.private_extern _Minus__Minus_var_u16_i16
-_Minus__Minus_var_u16_i16:
+.globl _Minus__Minus_var_u8_i16
+	.private_extern _Minus__Minus_var_u8_i16
+_Minus__Minus_var_u8_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movzwl	136+_MM_Minus(%rip), %eax
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	184+_MM_Minus(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jge	L32
-	movl	$2145, %edi
+	cmpq	$-128, -16(%rbp)
+	jge	L302
+	movl	$6177, %edi
 	call	__m3_fault
-L32:
+L302:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u16_i16
-	.private_extern _Minus__uMinus_param_u16_i16
-_Minus__uMinus_param_u16_i16:
+.globl _Minus__uMinus_param_u8_i16
+	.private_extern _Minus__uMinus_param_u8_i16
+_Minus__uMinus_param_u8_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rdx
+	movsbq	-17(%rbp),%rdx
 	movzwl	-20(%rbp), %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u16_i16
-	.private_extern _Minus__Minus_param_u16_i16
-_Minus__Minus_param_u16_i16:
+.globl _Minus__Minus_param_u8_i16
+	.private_extern _Minus__Minus_param_u8_i16
+_Minus__Minus_param_u8_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
+	movsbq	-17(%rbp),%rax
 	movzwl	-20(%rbp), %edx
 	subq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jge	L37
-	movl	$2209, %edi
+	cmpq	$-128, -16(%rbp)
+	jge	L307
+	movl	$6241, %edi
 	call	__m3_fault
-L37:
+L307:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u16_i32
-	.private_extern _Minus__uMinus_var_u16_i32
-_Minus__uMinus_var_u16_i32:
+.globl _Minus__uMinus_var_u8_i32
+	.private_extern _Minus__uMinus_var_u8_i32
+_Minus__uMinus_var_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movl	140+_MM_Minus(%rip), %eax
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movl	188+_MM_Minus(%rip), %eax
 	mov	%eax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u16_i32
-	.private_extern _Minus__Minus_var_u16_i32
-_Minus__Minus_var_u16_i32:
+.globl _Minus__Minus_var_u8_i32
+	.private_extern _Minus__Minus_var_u8_i32
+_Minus__Minus_var_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movl	140+_MM_Minus(%rip), %eax
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rdx
+	movl	188+_MM_Minus(%rip), %eax
 	mov	%eax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jge	L42
-	movl	$2273, %edi
+	cmpq	$-128, -16(%rbp)
+	jge	L312
+	movl	$6305, %edi
 	call	__m3_fault
-L42:
+L312:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u16_i32
-	.private_extern _Minus__uMinus_param_u16_i32
-_Minus__uMinus_param_u16_i32:
+.globl _Minus__uMinus_param_u8_i32
+	.private_extern _Minus__uMinus_param_u8_i32
+_Minus__uMinus_param_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rdx
+	movsbq	-17(%rbp),%rdx
 	mov	-24(%rbp), %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u16_i32
-	.private_extern _Minus__Minus_param_u16_i32
-_Minus__Minus_param_u16_i32:
+.globl _Minus__Minus_param_u8_i32
+	.private_extern _Minus__Minus_param_u8_i32
+_Minus__Minus_param_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rax
+	movsbq	-17(%rbp),%rax
 	mov	-24(%rbp), %edx
 	subq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jge	L47
-	movl	$2337, %edi
+	cmpq	$-128, -16(%rbp)
+	jge	L317
+	movl	$6369, %edi
 	call	__m3_fault
-L47:
+L317:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u16_I
-	.private_extern _Minus__uMinus_var_u16_I
-_Minus__uMinus_var_u16_I:
+.globl _Minus__uMinus_var_I_i64
+	.private_extern _Minus__uMinus_var_I_i64
+_Minus__uMinus_var_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	144+_MM_Minus(%rip), %rax
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u16_I
-	.private_extern _Minus__Minus_var_u16_I
-_Minus__Minus_var_u16_I:
+.globl _Minus__Minus_var_I_i64
+	.private_extern _Minus__Minus_var_I_i64
+_Minus__Minus_var_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	144+_MM_Minus(%rip), %rax
+	movq	128+_MM_Minus(%rip), %rdx
+	movq	104+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L52
-	cmpq	$32767, -16(%rbp)
-	jle	L53
-L52:
-	movl	$2401, %edi
-	call	__m3_fault
-L53:
-	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u16_I
-	.private_extern _Minus__uMinus_param_u16_I
-_Minus__uMinus_param_u16_I:
+.globl _Minus__uMinus_param_I_i64
+	.private_extern _Minus__uMinus_param_I_i64
+_Minus__uMinus_param_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
+	movq	-24(%rbp), %rdx
 	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u16_I
-	.private_extern _Minus__Minus_param_u16_I
-_Minus__Minus_param_u16_I:
+.globl _Minus__Minus_param_I_i64
+	.private_extern _Minus__Minus_param_I_i64
+_Minus__Minus_param_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_LC
+	.private_extern _Minus__uMinus_var_I_LC
+_Minus__uMinus_var_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_LC
+	.private_extern _Minus__Minus_var_I_LC
+_Minus__Minus_var_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_LC
+	.private_extern _Minus__uMinus_param_I_LC
+_Minus__uMinus_param_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_LC
+	.private_extern _Minus__Minus_param_I_LC
+_Minus__Minus_param_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_u8
+	.private_extern _Minus__uMinus_var_I_u8
+_Minus__uMinus_var_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_u8
+	.private_extern _Minus__Minus_var_I_u8
+_Minus__Minus_var_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_u8
+	.private_extern _Minus__uMinus_param_I_u8
+_Minus__uMinus_param_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movsbq	-25(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_u8
+	.private_extern _Minus__Minus_param_I_u8
+_Minus__Minus_param_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_I
+	.private_extern _Minus__uMinus_var_I_I
+_Minus__uMinus_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_I_I
+	.private_extern _Minus__Minus_var_I_I
+_Minus__Minus_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_I
+	.private_extern _Minus__uMinus_param_I_I
+_Minus__uMinus_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_I
+	.private_extern _Minus__Minus_param_I_I
+_Minus__Minus_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_i8
+	.private_extern _Minus__uMinus_var_I_i8
+_Minus__uMinus_var_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_i8
+	.private_extern _Minus__Minus_var_I_i8
+_Minus__Minus_var_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_i8
+	.private_extern _Minus__uMinus_param_I_i8
+_Minus__uMinus_param_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movzbl	-25(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_i8
+	.private_extern _Minus__Minus_param_I_i8
+_Minus__Minus_param_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_u32
+	.private_extern _Minus__uMinus_var_I_u32
+_Minus__uMinus_var_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_u32
+	.private_extern _Minus__Minus_var_I_u32
+_Minus__Minus_var_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_u32
+	.private_extern _Minus__uMinus_param_I_u32
+_Minus__uMinus_param_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_u32
+	.private_extern _Minus__Minus_param_I_u32
+_Minus__Minus_param_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_C
+	.private_extern _Minus__uMinus_var_I_C
+_Minus__uMinus_var_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_C
+	.private_extern _Minus__Minus_var_I_C
+_Minus__Minus_var_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_C
+	.private_extern _Minus__uMinus_param_I_C
+_Minus__uMinus_param_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_C
+	.private_extern _Minus__Minus_param_I_C
+_Minus__Minus_param_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_u16
+	.private_extern _Minus__uMinus_var_I_u16
+_Minus__uMinus_var_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_u16
+	.private_extern _Minus__Minus_var_I_u16
+_Minus__Minus_var_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_u16
+	.private_extern _Minus__uMinus_param_I_u16
+_Minus__uMinus_param_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rdx
+	movswq	-26(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_u16
+	.private_extern _Minus__Minus_param_I_u16
+_Minus__Minus_param_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_u64
+	.private_extern _Minus__uMinus_var_I_u64
+_Minus__uMinus_var_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_u64
+	.private_extern _Minus__Minus_var_I_u64
+_Minus__Minus_var_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_u64
+	.private_extern _Minus__uMinus_param_I_u64
+_Minus__uMinus_param_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_u64
+	.private_extern _Minus__Minus_param_I_u64
+_Minus__Minus_param_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_L
+	.private_extern _Minus__uMinus_var_I_L
+_Minus__uMinus_var_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_L
+	.private_extern _Minus__Minus_var_I_L
+_Minus__Minus_var_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_L
+	.private_extern _Minus__uMinus_param_I_L
+_Minus__uMinus_param_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_L
+	.private_extern _Minus__Minus_param_I_L
+_Minus__Minus_param_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_i16
+	.private_extern _Minus__uMinus_var_I_i16
+_Minus__uMinus_var_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_i16
+	.private_extern _Minus__Minus_var_I_i16
+_Minus__Minus_var_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_i16
+	.private_extern _Minus__uMinus_param_I_i16
+_Minus__uMinus_param_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rdx
+	movzwl	-26(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_i16
+	.private_extern _Minus__Minus_param_I_i16
+_Minus__Minus_param_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_I_i32
+	.private_extern _Minus__uMinus_var_I_i32
+_Minus__uMinus_var_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_I_i32
+	.private_extern _Minus__Minus_var_I_i32
+_Minus__Minus_var_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Minus(%rip), %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_I_i32
+	.private_extern _Minus__uMinus_param_I_i32
+_Minus__uMinus_param_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	mov	-28(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_I_i32
+	.private_extern _Minus__Minus_param_I_i32
+_Minus__Minus_param_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_i64
+	.private_extern _Minus__uMinus_var_i8_i64
+_Minus__uMinus_var_i8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_i64
+	.private_extern _Minus__Minus_var_i8_i64
+_Minus__Minus_var_i8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_i64
+	.private_extern _Minus__uMinus_param_i8_i64
+_Minus__uMinus_param_i8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_i64
+	.private_extern _Minus__Minus_param_i8_i64
+_Minus__Minus_param_i8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_LC
+	.private_extern _Minus__uMinus_var_i8_LC
+_Minus__uMinus_var_i8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_LC
+	.private_extern _Minus__Minus_var_i8_LC
+_Minus__Minus_var_i8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_LC
+	.private_extern _Minus__uMinus_param_i8_LC
+_Minus__uMinus_param_i8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_LC
+	.private_extern _Minus__Minus_param_i8_LC
+_Minus__Minus_param_i8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_u8
+	.private_extern _Minus__uMinus_var_i8_u8
+_Minus__uMinus_var_i8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_u8
+	.private_extern _Minus__Minus_var_i8_u8
+_Minus__Minus_var_i8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L434
+	cmpq	$255, -16(%rbp)
+	jle	L435
+L434:
+	movl	$8225, %edi
+	call	__m3_fault
+L435:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_u8
+	.private_extern _Minus__uMinus_param_i8_u8
+_Minus__uMinus_param_i8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movzbl	-17(%rbp), %edx
+	movsbq	-18(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_u8
+	.private_extern _Minus__Minus_param_i8_u8
+_Minus__Minus_param_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movw	%di, -18(%rbp)
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movzbl	-17(%rbp), %eax
+	movsbq	-18(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L440
+	cmpq	$255, -16(%rbp)
+	jle	L441
+L440:
+	movl	$8289, %edi
+	call	__m3_fault
+L441:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_I
+	.private_extern _Minus__uMinus_var_i8_I
+_Minus__uMinus_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_I
+	.private_extern _Minus__Minus_var_i8_I
+_Minus__Minus_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L446
+	cmpq	$255, -16(%rbp)
+	jle	L447
+L446:
+	movl	$8353, %edi
+	call	__m3_fault
+L447:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_I
+	.private_extern _Minus__uMinus_param_i8_I
+_Minus__uMinus_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_I
+	.private_extern _Minus__Minus_param_i8_I
+_Minus__Minus_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
 	subq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L58
-	cmpq	$32767, -16(%rbp)
-	jle	L59
-L58:
-	movl	$2465, %edi
+	cmpq	$0, -16(%rbp)
+	js	L452
+	cmpq	$255, -16(%rbp)
+	jle	L453
+L452:
+	movl	$8417, %edi
 	call	__m3_fault
-L59:
+L453:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_i8
+	.private_extern _Minus__uMinus_var_i8_i8
+_Minus__uMinus_var_i8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_i8
+	.private_extern _Minus__Minus_var_i8_i8
+_Minus__Minus_var_i8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	$0, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L458
+	movl	$8481, %edi
+	call	__m3_fault
+L458:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_i8
+	.private_extern _Minus__uMinus_param_i8_i8
+_Minus__uMinus_param_i8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movzbl	-17(%rbp), %edx
+	movzbl	-18(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_i8
+	.private_extern _Minus__Minus_param_i8_i8
+_Minus__Minus_param_i8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movzbl	-17(%rbp), %eax
+	movzbl	-18(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L463
+	movl	$8545, %edi
+	call	__m3_fault
+L463:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_u32
+	.private_extern _Minus__uMinus_var_i8_u32
+_Minus__uMinus_var_i8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_u32
+	.private_extern _Minus__Minus_var_i8_u32
+_Minus__Minus_var_i8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L468
+	cmpq	$255, -16(%rbp)
+	jle	L469
+L468:
+	movl	$8609, %edi
+	call	__m3_fault
+L469:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_u32
+	.private_extern _Minus__uMinus_param_i8_u32
+_Minus__uMinus_param_i8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_u32
+	.private_extern _Minus__Minus_param_i8_u32
+_Minus__Minus_param_i8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L474
+	cmpq	$255, -16(%rbp)
+	jle	L475
+L474:
+	movl	$8673, %edi
+	call	__m3_fault
+L475:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_C
+	.private_extern _Minus__uMinus_var_i8_C
+_Minus__uMinus_var_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_C
+	.private_extern _Minus__Minus_var_i8_C
+_Minus__Minus_var_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L480
+	movl	$8737, %edi
+	call	__m3_fault
+L480:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_C
+	.private_extern _Minus__uMinus_param_i8_C
+_Minus__uMinus_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_C
+	.private_extern _Minus__Minus_param_i8_C
+_Minus__Minus_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	-32(%rbp), %rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L485
+	movl	$8801, %edi
+	call	__m3_fault
+L485:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_u16
+	.private_extern _Minus__uMinus_var_i8_u16
+_Minus__uMinus_var_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_u16
+	.private_extern _Minus__Minus_var_i8_u16
+_Minus__Minus_var_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L490
+	cmpq	$255, -16(%rbp)
+	jle	L491
+L490:
+	movl	$8865, %edi
+	call	__m3_fault
+L491:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_u16
+	.private_extern _Minus__uMinus_param_i8_u16
+_Minus__uMinus_param_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %edx
+	movswq	-20(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_u16
+	.private_extern _Minus__Minus_param_i8_u16
+_Minus__Minus_param_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movswq	-20(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L496
+	cmpq	$255, -16(%rbp)
+	jle	L497
+L496:
+	movl	$8929, %edi
+	call	__m3_fault
+L497:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_u64
+	.private_extern _Minus__uMinus_var_i8_u64
+_Minus__uMinus_var_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_u64
+	.private_extern _Minus__Minus_var_i8_u64
+_Minus__Minus_var_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_u64
+	.private_extern _Minus__uMinus_param_i8_u64
+_Minus__uMinus_param_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_u64
+	.private_extern _Minus__Minus_param_i8_u64
+_Minus__Minus_param_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_L
+	.private_extern _Minus__uMinus_var_i8_L
+_Minus__uMinus_var_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_L
+	.private_extern _Minus__Minus_var_i8_L
+_Minus__Minus_var_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_L
+	.private_extern _Minus__uMinus_param_i8_L
+_Minus__uMinus_param_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_L
+	.private_extern _Minus__Minus_param_i8_L
+_Minus__Minus_param_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_i16
+	.private_extern _Minus__uMinus_var_i8_i16
+_Minus__uMinus_var_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_i16
+	.private_extern _Minus__Minus_var_i8_i16
+_Minus__Minus_var_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L518
+	movl	$9249, %edi
+	call	__m3_fault
+L518:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_i16
+	.private_extern _Minus__uMinus_param_i8_i16
+_Minus__uMinus_param_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %edx
+	movzwl	-20(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_i16
+	.private_extern _Minus__Minus_param_i8_i16
+_Minus__Minus_param_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movzwl	-20(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L523
+	movl	$9313, %edi
+	call	__m3_fault
+L523:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i8_i32
+	.private_extern _Minus__uMinus_var_i8_i32
+_Minus__uMinus_var_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i8_i32
+	.private_extern _Minus__Minus_var_i8_i32
+_Minus__Minus_var_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %edx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L528
+	movl	$9377, %edi
+	call	__m3_fault
+L528:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i8_i32
+	.private_extern _Minus__uMinus_param_i8_i32
+_Minus__uMinus_param_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %edx
+	mov	-24(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i8_i32
+	.private_extern _Minus__Minus_param_i8_i32
+_Minus__Minus_param_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %eax
+	mov	-24(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L533
+	movl	$9441, %edi
+	call	__m3_fault
+L533:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_i64
+	.private_extern _Minus__uMinus_var_u32_i64
+_Minus__uMinus_var_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_i64
+	.private_extern _Minus__Minus_var_u32_i64
+_Minus__Minus_var_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_i64
+	.private_extern _Minus__uMinus_param_u32_i64
+_Minus__uMinus_param_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_i64
+	.private_extern _Minus__Minus_param_u32_i64
+_Minus__Minus_param_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_LC
+	.private_extern _Minus__uMinus_var_u32_LC
+_Minus__uMinus_var_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_LC
+	.private_extern _Minus__Minus_var_u32_LC
+_Minus__Minus_var_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_LC
+	.private_extern _Minus__uMinus_param_u32_LC
+_Minus__uMinus_param_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_LC
+	.private_extern _Minus__Minus_param_u32_LC
+_Minus__Minus_param_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_u8
+	.private_extern _Minus__uMinus_var_u32_u8
+_Minus__uMinus_var_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_u8
+	.private_extern _Minus__Minus_var_u32_u8
+_Minus__Minus_var_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L554
+	cmpq	$2147483647, -16(%rbp)
+	jle	L555
+L554:
+	movl	$9761, %edi
+	call	__m3_fault
+L555:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_u8
+	.private_extern _Minus__uMinus_param_u32_u8
+_Minus__uMinus_param_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movsbq	-21(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_u8
+	.private_extern _Minus__Minus_param_u32_u8
+_Minus__Minus_param_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movsbq	-21(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L560
+	cmpq	$2147483647, -16(%rbp)
+	jle	L561
+L560:
+	movl	$9825, %edi
+	call	__m3_fault
+L561:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_I
+	.private_extern _Minus__uMinus_var_u32_I
+_Minus__uMinus_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_I
+	.private_extern _Minus__Minus_var_u32_I
+_Minus__Minus_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L566
+	cmpq	$2147483647, -16(%rbp)
+	jle	L567
+L566:
+	movl	$9889, %edi
+	call	__m3_fault
+L567:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_I
+	.private_extern _Minus__uMinus_param_u32_I
+_Minus__uMinus_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_I
+	.private_extern _Minus__Minus_param_u32_I
+_Minus__Minus_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	subq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L572
+	cmpq	$2147483647, -16(%rbp)
+	jle	L573
+L572:
+	movl	$9953, %edi
+	call	__m3_fault
+L573:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_i8
+	.private_extern _Minus__uMinus_var_u32_i8
+_Minus__uMinus_var_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_i8
+	.private_extern _Minus__Minus_var_u32_i8
+_Minus__Minus_var_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jge	L578
+	movl	$10017, %edi
+	call	__m3_fault
+L578:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_i8
+	.private_extern _Minus__uMinus_param_u32_i8
+_Minus__uMinus_param_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzbl	-21(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_i8
+	.private_extern _Minus__Minus_param_u32_i8
+_Minus__Minus_param_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzbl	-21(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jge	L583
+	movl	$10081, %edi
+	call	__m3_fault
+L583:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_u32
+	.private_extern _Minus__uMinus_var_u32_u32
+_Minus__uMinus_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_u32
+	.private_extern _Minus__Minus_var_u32_u32
+_Minus__Minus_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	$0, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L588
+	cmpq	$2147483647, -16(%rbp)
+	jle	L589
+L588:
+	movl	$10145, %edi
+	call	__m3_fault
+L589:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_u32
+	.private_extern _Minus__uMinus_param_u32_u32
+_Minus__uMinus_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_u32
+	.private_extern _Minus__Minus_param_u32_u32
+_Minus__Minus_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L594
+	cmpq	$2147483647, -16(%rbp)
+	jle	L595
+L594:
+	movl	$10209, %edi
+	call	__m3_fault
+L595:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_C
+	.private_extern _Minus__uMinus_var_u32_C
+_Minus__uMinus_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_C
+	.private_extern _Minus__Minus_var_u32_C
+_Minus__Minus_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L600
+	cmpq	$2147483647, -16(%rbp)
+	jle	L601
+L600:
+	movl	$10273, %edi
+	call	__m3_fault
+L601:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_C
+	.private_extern _Minus__uMinus_param_u32_C
+_Minus__uMinus_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_C
+	.private_extern _Minus__Minus_param_u32_C
+_Minus__Minus_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L606
+	cmpq	$2147483647, -16(%rbp)
+	jle	L607
+L606:
+	movl	$10337, %edi
+	call	__m3_fault
+L607:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_u16
+	.private_extern _Minus__uMinus_var_u32_u16
+_Minus__uMinus_var_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_u16
+	.private_extern _Minus__Minus_var_u32_u16
+_Minus__Minus_var_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L612
+	cmpq	$2147483647, -16(%rbp)
+	jle	L613
+L612:
+	movl	$10401, %edi
+	call	__m3_fault
+L613:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_u16
+	.private_extern _Minus__uMinus_param_u32_u16
+_Minus__uMinus_param_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movswq	-22(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_u16
+	.private_extern _Minus__Minus_param_u32_u16
+_Minus__Minus_param_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movswq	-22(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L618
+	cmpq	$2147483647, -16(%rbp)
+	jle	L619
+L618:
+	movl	$10465, %edi
+	call	__m3_fault
+L619:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_u64
+	.private_extern _Minus__uMinus_var_u32_u64
+_Minus__uMinus_var_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_u64
+	.private_extern _Minus__Minus_var_u32_u64
+_Minus__Minus_var_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_u64
+	.private_extern _Minus__uMinus_param_u32_u64
+_Minus__uMinus_param_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_u64
+	.private_extern _Minus__Minus_param_u32_u64
+_Minus__Minus_param_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_L
+	.private_extern _Minus__uMinus_var_u32_L
+_Minus__uMinus_var_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_L
+	.private_extern _Minus__Minus_var_u32_L
+_Minus__Minus_var_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_L
+	.private_extern _Minus__uMinus_param_u32_L
+_Minus__uMinus_param_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_L
+	.private_extern _Minus__Minus_param_u32_L
+_Minus__Minus_param_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_i16
+	.private_extern _Minus__uMinus_var_u32_i16
+_Minus__uMinus_var_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_i16
+	.private_extern _Minus__Minus_var_u32_i16
+_Minus__Minus_var_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jge	L640
+	movl	$10785, %edi
+	call	__m3_fault
+L640:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_i16
+	.private_extern _Minus__uMinus_param_u32_i16
+_Minus__uMinus_param_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzwl	-22(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_i16
+	.private_extern _Minus__Minus_param_u32_i16
+_Minus__Minus_param_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzwl	-22(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jge	L645
+	movl	$10849, %edi
+	call	__m3_fault
+L645:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u32_i32
+	.private_extern _Minus__uMinus_var_u32_i32
+_Minus__uMinus_var_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u32_i32
+	.private_extern _Minus__Minus_var_u32_i32
+_Minus__Minus_var_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Minus(%rip), %eax
+	movslq	%eax,%rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jge	L650
+	movl	$10913, %edi
+	call	__m3_fault
+L650:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u32_i32
+	.private_extern _Minus__uMinus_param_u32_i32
+_Minus__uMinus_param_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	mov	-24(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u32_i32
+	.private_extern _Minus__Minus_param_u32_i32
+_Minus__Minus_param_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	mov	-24(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jge	L655
+	movl	$10977, %edi
+	call	__m3_fault
+L655:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_i64
+	.private_extern _Minus__uMinus_var_C_i64
+_Minus__uMinus_var_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_i64
+	.private_extern _Minus__Minus_var_C_i64
+_Minus__Minus_var_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_i64
+	.private_extern _Minus__uMinus_param_C_i64
+_Minus__uMinus_param_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_i64
+	.private_extern _Minus__Minus_param_C_i64
+_Minus__Minus_param_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_LC
+	.private_extern _Minus__uMinus_var_C_LC
+_Minus__uMinus_var_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_LC
+	.private_extern _Minus__Minus_var_C_LC
+_Minus__Minus_var_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_LC
+	.private_extern _Minus__uMinus_param_C_LC
+_Minus__uMinus_param_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_LC
+	.private_extern _Minus__Minus_param_C_LC
+_Minus__Minus_param_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_u8
+	.private_extern _Minus__uMinus_var_C_u8
+_Minus__uMinus_var_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_u8
+	.private_extern _Minus__Minus_var_C_u8
+_Minus__Minus_var_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L676
+	movl	$11297, %edi
+	call	__m3_fault
+L676:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_u8
+	.private_extern _Minus__uMinus_param_C_u8
+_Minus__uMinus_param_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_u8
+	.private_extern _Minus__Minus_param_C_u8
+_Minus__Minus_param_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movsbq	-25(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L681
+	movl	$11361, %edi
+	call	__m3_fault
+L681:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_I
+	.private_extern _Minus__uMinus_var_C_I
+_Minus__uMinus_var_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_I
+	.private_extern _Minus__Minus_var_C_I
+_Minus__Minus_var_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L686
+	movl	$11425, %edi
+	call	__m3_fault
+L686:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_I
+	.private_extern _Minus__uMinus_param_C_I
+_Minus__uMinus_param_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_I
+	.private_extern _Minus__Minus_param_C_I
+_Minus__Minus_param_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L691
+	movl	$11489, %edi
+	call	__m3_fault
+L691:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_i8
+	.private_extern _Minus__uMinus_var_C_i8
+_Minus__uMinus_var_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_i8
+	.private_extern _Minus__Minus_var_C_i8
+_Minus__Minus_var_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L696
+	movl	$11553, %edi
+	call	__m3_fault
+L696:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_i8
+	.private_extern _Minus__uMinus_param_C_i8
+_Minus__uMinus_param_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_i8
+	.private_extern _Minus__Minus_param_C_i8
+_Minus__Minus_param_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movzbl	-25(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L701
+	movl	$11617, %edi
+	call	__m3_fault
+L701:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_u32
+	.private_extern _Minus__uMinus_var_C_u32
+_Minus__uMinus_var_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_u32
+	.private_extern _Minus__Minus_var_C_u32
+_Minus__Minus_var_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L706
+	movl	$11681, %edi
+	call	__m3_fault
+L706:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_u32
+	.private_extern _Minus__uMinus_param_C_u32
+_Minus__uMinus_param_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_u32
+	.private_extern _Minus__Minus_param_C_u32
+_Minus__Minus_param_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L711
+	movl	$11745, %edi
+	call	__m3_fault
+L711:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_C
+	.private_extern _Minus__uMinus_var_C_C
+_Minus__uMinus_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_C_C
+	.private_extern _Minus__Minus_var_C_C
+_Minus__Minus_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	$0, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L716
+	movl	$11809, %edi
+	call	__m3_fault
+L716:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_C
+	.private_extern _Minus__uMinus_param_C_C
+_Minus__uMinus_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_C
+	.private_extern _Minus__Minus_param_C_C
+_Minus__Minus_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	-32(%rbp), %rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L721
+	movl	$11873, %edi
+	call	__m3_fault
+L721:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_u16
+	.private_extern _Minus__uMinus_var_C_u16
+_Minus__uMinus_var_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_u16
+	.private_extern _Minus__Minus_var_C_u16
+_Minus__Minus_var_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L726
+	movl	$11937, %edi
+	call	__m3_fault
+L726:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_u16
+	.private_extern _Minus__uMinus_param_C_u16
+_Minus__uMinus_param_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_u16
+	.private_extern _Minus__Minus_param_C_u16
+_Minus__Minus_param_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movswq	-26(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L731
+	movl	$12001, %edi
+	call	__m3_fault
+L731:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_u64
+	.private_extern _Minus__uMinus_var_C_u64
+_Minus__uMinus_var_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_u64
+	.private_extern _Minus__Minus_var_C_u64
+_Minus__Minus_var_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_u64
+	.private_extern _Minus__uMinus_param_C_u64
+_Minus__uMinus_param_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_u64
+	.private_extern _Minus__Minus_param_C_u64
+_Minus__Minus_param_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_L
+	.private_extern _Minus__uMinus_var_C_L
+_Minus__uMinus_var_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_L
+	.private_extern _Minus__Minus_var_C_L
+_Minus__Minus_var_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_L
+	.private_extern _Minus__uMinus_param_C_L
+_Minus__uMinus_param_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_L
+	.private_extern _Minus__Minus_param_C_L
+_Minus__Minus_param_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_i16
+	.private_extern _Minus__uMinus_var_C_i16
+_Minus__uMinus_var_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_i16
+	.private_extern _Minus__Minus_var_C_i16
+_Minus__Minus_var_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L752
+	movl	$12321, %edi
+	call	__m3_fault
+L752:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_i16
+	.private_extern _Minus__uMinus_param_C_i16
+_Minus__uMinus_param_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_i16
+	.private_extern _Minus__Minus_param_C_i16
+_Minus__Minus_param_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movzwl	-26(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L757
+	movl	$12385, %edi
+	call	__m3_fault
+L757:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_C_i32
+	.private_extern _Minus__uMinus_var_C_i32
+_Minus__uMinus_var_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Minus(%rip), %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_C_i32
+	.private_extern _Minus__Minus_var_C_i32
+_Minus__Minus_var_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L762
+	movl	$12449, %edi
+	call	__m3_fault
+L762:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_C_i32
+	.private_extern _Minus__uMinus_param_C_i32
+_Minus__uMinus_param_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_C_i32
+	.private_extern _Minus__Minus_param_C_i32
+_Minus__Minus_param_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	mov	-28(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L767
+	movl	$12513, %edi
+	call	__m3_fault
+L767:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -382,9 +4935,9 @@ L59:
 _Minus__uMinus_var_u16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movq	152+_MM_Minus(%rip), %rax
+	movq	104+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
@@ -395,9 +4948,9 @@ _Minus__uMinus_var_u16_i64:
 _Minus__Minus_var_u16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movq	152+_MM_Minus(%rip), %rax
+	movq	104+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
@@ -428,46 +4981,35 @@ _Minus__Minus_param_u16_i64:
 	subq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u16_C
-	.private_extern _Minus__uMinus_var_u16_C
-_Minus__uMinus_var_u16_C:
+.globl _Minus__uMinus_var_u16_LC
+	.private_extern _Minus__uMinus_var_u16_LC
+_Minus__uMinus_var_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movq	160+_MM_Minus(%rip), %rax
+	movq	112+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u16_C
-	.private_extern _Minus__Minus_var_u16_C
-_Minus__Minus_var_u16_C:
+.globl _Minus__Minus_var_u16_LC
+	.private_extern _Minus__Minus_var_u16_LC
+_Minus__Minus_var_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movq	160+_MM_Minus(%rip), %rax
+	movq	112+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L72
-	cmpq	$32767, -16(%rbp)
-	jle	L73
-L72:
-	movl	$2657, %edi
-	call	__m3_fault
-L73:
-	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u16_C
-	.private_extern _Minus__uMinus_param_u16_C
-_Minus__uMinus_param_u16_C:
+.globl _Minus__uMinus_param_u16_LC
+	.private_extern _Minus__uMinus_param_u16_LC
+_Minus__uMinus_param_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movw	%di, -18(%rbp)
@@ -476,27 +5018,18 @@ _Minus__uMinus_param_u16_C:
 	subq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u16_C
-	.private_extern _Minus__Minus_param_u16_C
-_Minus__Minus_param_u16_C:
+.globl _Minus__Minus_param_u16_LC
+	.private_extern _Minus__Minus_param_u16_LC
+_Minus__Minus_param_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	-32(%rbp), %rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L78
-	cmpq	$32767, -16(%rbp)
-	jle	L79
-L78:
-	movl	$2721, %edi
-	call	__m3_fault
-L79:
-	movq	-16(%rbp), %rax
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
 	leave
 	ret
 .globl _Minus__uMinus_var_u16_u8
@@ -504,9 +5037,9 @@ L79:
 _Minus__uMinus_var_u16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movzbl	172+_MM_Minus(%rip), %eax
+	movzbl	124+_MM_Minus(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -519,22 +5052,22 @@ _Minus__Minus_var_u16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movzbl	172+_MM_Minus(%rip), %eax
+	movzbl	124+_MM_Minus(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L84
+	jl	L788
 	cmpq	$32767, -16(%rbp)
-	jle	L85
-L84:
-	movl	$2785, %edi
+	jle	L789
+L788:
+	movl	$12833, %edi
 	call	__m3_fault
-L85:
+L789:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -565,13 +5098,86 @@ _Minus__Minus_param_u16_u8:
 	subq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L90
+	jl	L794
 	cmpq	$32767, -16(%rbp)
-	jle	L91
-L90:
-	movl	$2849, %edi
+	jle	L795
+L794:
+	movl	$12897, %edi
 	call	__m3_fault
-L91:
+L795:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u16_I
+	.private_extern _Minus__uMinus_var_u16_I
+_Minus__uMinus_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u16_I
+	.private_extern _Minus__Minus_var_u16_I
+_Minus__Minus_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L800
+	cmpq	$32767, -16(%rbp)
+	jle	L801
+L800:
+	movl	$12961, %edi
+	call	__m3_fault
+L801:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u16_I
+	.private_extern _Minus__uMinus_param_u16_I
+_Minus__uMinus_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u16_I
+	.private_extern _Minus__Minus_param_u16_I
+_Minus__Minus_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	subq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L806
+	cmpq	$32767, -16(%rbp)
+	jle	L807
+L806:
+	movl	$13025, %edi
+	call	__m3_fault
+L807:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -580,9 +5186,9 @@ L91:
 _Minus__uMinus_var_u16_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movzbl	173+_MM_Minus(%rip), %eax
+	movzbl	136+_MM_Minus(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -595,19 +5201,19 @@ _Minus__Minus_var_u16_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movzbl	173+_MM_Minus(%rip), %eax
+	movzbl	136+_MM_Minus(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jge	L96
-	movl	$2913, %edi
+	jge	L812
+	movl	$13089, %edi
 	call	__m3_fault
-L96:
+L812:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -638,62 +5244,11 @@ _Minus__Minus_param_u16_i8:
 	subq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jge	L101
-	movl	$2977, %edi
+	jge	L817
+	movl	$13153, %edi
 	call	__m3_fault
-L101:
+L817:
 	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u16_L
-	.private_extern _Minus__uMinus_var_u16_L
-_Minus__uMinus_var_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u16_L
-	.private_extern _Minus__Minus_var_u16_L
-_Minus__Minus_var_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u16_L
-	.private_extern _Minus__uMinus_param_u16_L
-_Minus__uMinus_param_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u16_L
-	.private_extern _Minus__Minus_param_u16_L
-_Minus__Minus_param_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	subq	-32(%rbp), %rax
 	leave
 	ret
 .globl _Minus__uMinus_var_u16_u32
@@ -701,9 +5256,9 @@ _Minus__Minus_param_u16_L:
 _Minus__uMinus_var_u16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movl	184+_MM_Minus(%rip), %eax
+	movl	140+_MM_Minus(%rip), %eax
 	cltq
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -716,22 +5271,22 @@ _Minus__Minus_var_u16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rdx
-	movl	184+_MM_Minus(%rip), %eax
+	movl	140+_MM_Minus(%rip), %eax
 	cltq
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L114
+	jl	L822
 	cmpq	$32767, -16(%rbp)
-	jle	L115
-L114:
-	movl	$3169, %edi
+	jle	L823
+L822:
+	movl	$13217, %edi
 	call	__m3_fault
-L115:
+L823:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -766,14 +5321,749 @@ _Minus__Minus_param_u16_u32:
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L120
+	jl	L828
 	cmpq	$32767, -16(%rbp)
-	jle	L121
-L120:
-	movl	$3233, %edi
+	jle	L829
+L828:
+	movl	$13281, %edi
 	call	__m3_fault
-L121:
+L829:
 	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u16_C
+	.private_extern _Minus__uMinus_var_u16_C
+_Minus__uMinus_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u16_C
+	.private_extern _Minus__Minus_var_u16_C
+_Minus__Minus_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L834
+	cmpq	$32767, -16(%rbp)
+	jle	L835
+L834:
+	movl	$13345, %edi
+	call	__m3_fault
+L835:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u16_C
+	.private_extern _Minus__uMinus_param_u16_C
+_Minus__uMinus_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u16_C
+	.private_extern _Minus__Minus_param_u16_C
+_Minus__Minus_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	-32(%rbp), %rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L840
+	cmpq	$32767, -16(%rbp)
+	jle	L841
+L840:
+	movl	$13409, %edi
+	call	__m3_fault
+L841:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u16_u16
+	.private_extern _Minus__uMinus_var_u16_u16
+_Minus__uMinus_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_u16_u16
+	.private_extern _Minus__Minus_var_u16_u16
+_Minus__Minus_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	$0, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L846
+	cmpq	$32767, -16(%rbp)
+	jle	L847
+L846:
+	movl	$13473, %edi
+	call	__m3_fault
+L847:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u16_u16
+	.private_extern _Minus__uMinus_param_u16_u16
+_Minus__uMinus_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rdx
+	movswq	-20(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u16_u16
+	.private_extern _Minus__Minus_param_u16_u16
+_Minus__Minus_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movswq	-20(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L852
+	cmpq	$32767, -16(%rbp)
+	jle	L853
+L852:
+	movl	$13537, %edi
+	call	__m3_fault
+L853:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u16_u64
+	.private_extern _Minus__uMinus_var_u16_u64
+_Minus__uMinus_var_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u16_u64
+	.private_extern _Minus__Minus_var_u16_u64
+_Minus__Minus_var_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u16_u64
+	.private_extern _Minus__uMinus_param_u16_u64
+_Minus__uMinus_param_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u16_u64
+	.private_extern _Minus__Minus_param_u16_u64
+_Minus__Minus_param_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u16_L
+	.private_extern _Minus__uMinus_var_u16_L
+_Minus__uMinus_var_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u16_L
+	.private_extern _Minus__Minus_var_u16_L
+_Minus__Minus_var_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u16_L
+	.private_extern _Minus__uMinus_param_u16_L
+_Minus__uMinus_param_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u16_L
+	.private_extern _Minus__Minus_param_u16_L
+_Minus__Minus_param_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u16_i16
+	.private_extern _Minus__uMinus_var_u16_i16
+_Minus__uMinus_var_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u16_i16
+	.private_extern _Minus__Minus_var_u16_i16
+_Minus__Minus_var_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jge	L874
+	movl	$13857, %edi
+	call	__m3_fault
+L874:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u16_i16
+	.private_extern _Minus__uMinus_param_u16_i16
+_Minus__uMinus_param_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rdx
+	movzwl	-20(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u16_i16
+	.private_extern _Minus__Minus_param_u16_i16
+_Minus__Minus_param_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movzwl	-20(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jge	L879
+	movl	$13921, %edi
+	call	__m3_fault
+L879:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u16_i32
+	.private_extern _Minus__uMinus_var_u16_i32
+_Minus__uMinus_var_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u16_i32
+	.private_extern _Minus__Minus_var_u16_i32
+_Minus__Minus_var_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jge	L884
+	movl	$13985, %edi
+	call	__m3_fault
+L884:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u16_i32
+	.private_extern _Minus__uMinus_param_u16_i32
+_Minus__uMinus_param_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rdx
+	mov	-24(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u16_i32
+	.private_extern _Minus__Minus_param_u16_i32
+_Minus__Minus_param_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rax
+	mov	-24(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jge	L889
+	movl	$14049, %edi
+	call	__m3_fault
+L889:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u64_i64
+	.private_extern _Minus__uMinus_var_u64_i64
+_Minus__uMinus_var_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u64_i64
+	.private_extern _Minus__Minus_var_u64_i64
+_Minus__Minus_var_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u64_i64
+	.private_extern _Minus__uMinus_param_u64_i64
+_Minus__uMinus_param_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u64_i64
+	.private_extern _Minus__Minus_param_u64_i64
+_Minus__Minus_param_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u64_LC
+	.private_extern _Minus__uMinus_var_u64_LC
+_Minus__uMinus_var_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u64_LC
+	.private_extern _Minus__Minus_var_u64_LC
+_Minus__Minus_var_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rdx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u64_LC
+	.private_extern _Minus__uMinus_param_u64_LC
+_Minus__uMinus_param_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u64_LC
+	.private_extern _Minus__Minus_param_u64_LC
+_Minus__Minus_param_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u64_u8
+	.private_extern _Minus__uMinus_var_u64_u8
+_Minus__uMinus_var_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u64_u8
+	.private_extern _Minus__Minus_var_u64_u8
+_Minus__Minus_var_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u64_u8
+	.private_extern _Minus__uMinus_param_u64_u8
+_Minus__uMinus_param_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movsbq	-25(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u64_u8
+	.private_extern _Minus__Minus_param_u64_u8
+_Minus__Minus_param_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u64_I
+	.private_extern _Minus__uMinus_var_u64_I
+_Minus__uMinus_var_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u64_I
+	.private_extern _Minus__Minus_var_u64_I
+_Minus__Minus_var_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u64_I
+	.private_extern _Minus__uMinus_param_u64_I
+_Minus__uMinus_param_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u64_I
+	.private_extern _Minus__Minus_param_u64_I
+_Minus__Minus_param_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u64_i8
+	.private_extern _Minus__uMinus_var_u64_i8
+_Minus__uMinus_var_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u64_i8
+	.private_extern _Minus__Minus_var_u64_i8
+_Minus__Minus_var_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u64_i8
+	.private_extern _Minus__uMinus_param_u64_i8
+_Minus__uMinus_param_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rdx
+	movzbl	-25(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u64_i8
+	.private_extern _Minus__Minus_param_u64_i8
+_Minus__Minus_param_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u64_u32
+	.private_extern _Minus__uMinus_var_u64_u32
+_Minus__uMinus_var_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u64_u32
+	.private_extern _Minus__Minus_var_u64_u32
+_Minus__Minus_var_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rdx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u64_u32
+	.private_extern _Minus__uMinus_param_u64_u32
+_Minus__uMinus_param_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rdx
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u64_u32
+	.private_extern _Minus__Minus_param_u64_u32
+_Minus__Minus_param_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_u64_C
+	.private_extern _Minus__uMinus_var_u64_C
+_Minus__uMinus_var_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_u64_C
+	.private_extern _Minus__Minus_var_u64_C
+_Minus__Minus_var_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Minus(%rip), %rdx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_u64_C
+	.private_extern _Minus__uMinus_param_u64_C
+_Minus__uMinus_param_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_u64_C
+	.private_extern _Minus__Minus_param_u64_C
+_Minus__Minus_param_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
 	leave
 	ret
 .globl _Minus__uMinus_var_u64_u16
@@ -781,9 +6071,9 @@ L121:
 _Minus__uMinus_var_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -795,8 +6085,8 @@ _Minus__uMinus_var_u64_u16:
 _Minus__Minus_var_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
+	movq	160+_MM_Minus(%rip), %rdx
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -871,45 +6161,48 @@ _Minus__Minus_param_u64_u64:
 	subq	%rdx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u64_LC
-	.private_extern _Minus__uMinus_var_u64_LC
-_Minus__uMinus_var_u64_LC:
+.globl _Minus__uMinus_var_u64_L
+	.private_extern _Minus__uMinus_var_u64_L
+_Minus__uMinus_var_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movq	120+_MM_Minus(%rip), %rax
+	movq	176+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u64_LC
-	.private_extern _Minus__Minus_var_u64_LC
-_Minus__Minus_var_u64_LC:
+.globl _Minus__Minus_var_u64_L
+	.private_extern _Minus__Minus_var_u64_L
+_Minus__Minus_var_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movq	120+_MM_Minus(%rip), %rax
+	movq	160+_MM_Minus(%rip), %rdx
+	movq	176+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u64_LC
-	.private_extern _Minus__uMinus_param_u64_LC
-_Minus__uMinus_param_u64_LC:
+.globl _Minus__uMinus_param_u64_L
+	.private_extern _Minus__uMinus_param_u64_L
+_Minus__uMinus_param_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u64_LC
-	.private_extern _Minus__Minus_param_u64_LC
-_Minus__Minus_param_u64_LC:
+.globl _Minus__Minus_param_u64_L
+	.private_extern _Minus__Minus_param_u64_L
+_Minus__Minus_param_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -924,9 +6217,9 @@ _Minus__Minus_param_u64_LC:
 _Minus__uMinus_var_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
+	movzwl	184+_MM_Minus(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -938,8 +6231,8 @@ _Minus__uMinus_var_u64_i16:
 _Minus__Minus_var_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
+	movq	160+_MM_Minus(%rip), %rdx
+	movzwl	184+_MM_Minus(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -977,9 +6270,9 @@ _Minus__Minus_param_u64_i16:
 _Minus__uMinus_var_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movl	140+_MM_Minus(%rip), %eax
+	movl	188+_MM_Minus(%rip), %eax
 	mov	%eax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -991,8 +6284,8 @@ _Minus__uMinus_var_u64_i32:
 _Minus__Minus_var_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movl	140+_MM_Minus(%rip), %eax
+	movq	160+_MM_Minus(%rip), %rdx
+	movl	188+_MM_Minus(%rip), %eax
 	mov	%eax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -1025,980 +6318,13 @@ _Minus__Minus_param_u64_i32:
 	subq	%rdx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u64_I
-	.private_extern _Minus__uMinus_var_u64_I
-_Minus__uMinus_var_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u64_I
-	.private_extern _Minus__Minus_var_u64_I
-_Minus__Minus_var_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u64_I
-	.private_extern _Minus__uMinus_param_u64_I
-_Minus__uMinus_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u64_I
-	.private_extern _Minus__Minus_param_u64_I
-_Minus__Minus_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u64_i64
-	.private_extern _Minus__uMinus_var_u64_i64
-_Minus__uMinus_var_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u64_i64
-	.private_extern _Minus__Minus_var_u64_i64
-_Minus__Minus_var_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u64_i64
-	.private_extern _Minus__uMinus_param_u64_i64
-_Minus__uMinus_param_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u64_i64
-	.private_extern _Minus__Minus_param_u64_i64
-_Minus__Minus_param_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u64_C
-	.private_extern _Minus__uMinus_var_u64_C
-_Minus__uMinus_var_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u64_C
-	.private_extern _Minus__Minus_var_u64_C
-_Minus__Minus_var_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u64_C
-	.private_extern _Minus__uMinus_param_u64_C
-_Minus__uMinus_param_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u64_C
-	.private_extern _Minus__Minus_param_u64_C
-_Minus__Minus_param_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u64_u8
-	.private_extern _Minus__uMinus_var_u64_u8
-_Minus__uMinus_var_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u64_u8
-	.private_extern _Minus__Minus_var_u64_u8
-_Minus__Minus_var_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u64_u8
-	.private_extern _Minus__uMinus_param_u64_u8
-_Minus__uMinus_param_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movsbq	-25(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u64_u8
-	.private_extern _Minus__Minus_param_u64_u8
-_Minus__Minus_param_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u64_i8
-	.private_extern _Minus__uMinus_var_u64_i8
-_Minus__uMinus_var_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u64_i8
-	.private_extern _Minus__Minus_var_u64_i8
-_Minus__Minus_var_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u64_i8
-	.private_extern _Minus__uMinus_param_u64_i8
-_Minus__uMinus_param_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movzbl	-25(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u64_i8
-	.private_extern _Minus__Minus_param_u64_i8
-_Minus__Minus_param_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u64_L
-	.private_extern _Minus__uMinus_var_u64_L
-_Minus__uMinus_var_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u64_L
-	.private_extern _Minus__Minus_var_u64_L
-_Minus__Minus_var_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u64_L
-	.private_extern _Minus__uMinus_param_u64_L
-_Minus__uMinus_param_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u64_L
-	.private_extern _Minus__Minus_param_u64_L
-_Minus__Minus_param_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u64_u32
-	.private_extern _Minus__uMinus_var_u64_u32
-_Minus__uMinus_var_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u64_u32
-	.private_extern _Minus__Minus_var_u64_u32
-_Minus__Minus_var_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Minus(%rip), %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u64_u32
-	.private_extern _Minus__uMinus_param_u64_u32
-_Minus__uMinus_param_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u64_u32
-	.private_extern _Minus__Minus_param_u64_u32
-_Minus__Minus_param_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_u16
-	.private_extern _Minus__uMinus_var_LC_u16
-_Minus__uMinus_var_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_u16
-	.private_extern _Minus__Minus_var_LC_u16
-_Minus__Minus_var_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_u16
-	.private_extern _Minus__uMinus_param_LC_u16
-_Minus__uMinus_param_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_u16
-	.private_extern _Minus__Minus_param_LC_u16
-_Minus__Minus_param_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rdx
-	movswq	-26(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_u64
-	.private_extern _Minus__uMinus_var_LC_u64
-_Minus__uMinus_var_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_u64
-	.private_extern _Minus__Minus_var_LC_u64
-_Minus__Minus_var_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_u64
-	.private_extern _Minus__uMinus_param_LC_u64
-_Minus__uMinus_param_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_u64
-	.private_extern _Minus__Minus_param_LC_u64
-_Minus__Minus_param_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_LC
-	.private_extern _Minus__uMinus_var_LC_LC
-_Minus__uMinus_var_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_LC
-	.private_extern _Minus__Minus_var_LC_LC
-_Minus__Minus_var_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_LC
-	.private_extern _Minus__uMinus_param_LC_LC
-_Minus__uMinus_param_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_LC
-	.private_extern _Minus__Minus_param_LC_LC
-_Minus__Minus_param_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_i16
-	.private_extern _Minus__uMinus_var_LC_i16
-_Minus__uMinus_var_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_i16
-	.private_extern _Minus__Minus_var_LC_i16
-_Minus__Minus_var_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_i16
-	.private_extern _Minus__uMinus_param_LC_i16
-_Minus__uMinus_param_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_i16
-	.private_extern _Minus__Minus_param_LC_i16
-_Minus__Minus_param_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rdx
-	movzwl	-26(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_i32
-	.private_extern _Minus__uMinus_var_LC_i32
-_Minus__uMinus_var_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_i32
-	.private_extern _Minus__Minus_var_LC_i32
-_Minus__Minus_var_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_i32
-	.private_extern _Minus__uMinus_param_LC_i32
-_Minus__uMinus_param_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_i32
-	.private_extern _Minus__Minus_param_LC_i32
-_Minus__Minus_param_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	mov	-28(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_I
-	.private_extern _Minus__uMinus_var_LC_I
-_Minus__uMinus_var_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_I
-	.private_extern _Minus__Minus_var_LC_I
-_Minus__Minus_var_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_I
-	.private_extern _Minus__uMinus_param_LC_I
-_Minus__uMinus_param_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_I
-	.private_extern _Minus__Minus_param_LC_I
-_Minus__Minus_param_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_i64
-	.private_extern _Minus__uMinus_var_LC_i64
-_Minus__uMinus_var_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_i64
-	.private_extern _Minus__Minus_var_LC_i64
-_Minus__Minus_var_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_i64
-	.private_extern _Minus__uMinus_param_LC_i64
-_Minus__uMinus_param_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_i64
-	.private_extern _Minus__Minus_param_LC_i64
-_Minus__Minus_param_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_C
-	.private_extern _Minus__uMinus_var_LC_C
-_Minus__uMinus_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_C
-	.private_extern _Minus__Minus_var_LC_C
-_Minus__Minus_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_C
-	.private_extern _Minus__uMinus_param_LC_C
-_Minus__uMinus_param_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_C
-	.private_extern _Minus__Minus_param_LC_C
-_Minus__Minus_param_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_u8
-	.private_extern _Minus__uMinus_var_LC_u8
-_Minus__uMinus_var_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_u8
-	.private_extern _Minus__Minus_var_LC_u8
-_Minus__Minus_var_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_u8
-	.private_extern _Minus__uMinus_param_LC_u8
-_Minus__uMinus_param_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_u8
-	.private_extern _Minus__Minus_param_LC_u8
-_Minus__Minus_param_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movsbq	-25(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_i8
-	.private_extern _Minus__uMinus_var_LC_i8
-_Minus__uMinus_var_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_i8
-	.private_extern _Minus__Minus_var_LC_i8
-_Minus__Minus_var_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_i8
-	.private_extern _Minus__uMinus_param_LC_i8
-_Minus__uMinus_param_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_i8
-	.private_extern _Minus__Minus_param_LC_i8
-_Minus__Minus_param_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movzbl	-25(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_L
-	.private_extern _Minus__uMinus_var_LC_L
-_Minus__uMinus_var_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_L
-	.private_extern _Minus__Minus_var_LC_L
-_Minus__Minus_var_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_L
-	.private_extern _Minus__uMinus_param_LC_L
-_Minus__uMinus_param_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_L
-	.private_extern _Minus__Minus_param_LC_L
-_Minus__Minus_param_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_LC_u32
-	.private_extern _Minus__uMinus_var_LC_u32
-_Minus__uMinus_var_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_LC_u32
-	.private_extern _Minus__Minus_var_LC_u32
-_Minus__Minus_var_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_LC_u32
-	.private_extern _Minus__uMinus_param_LC_u32
-_Minus__uMinus_param_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_LC_u32
-	.private_extern _Minus__Minus_param_LC_u32
-_Minus__Minus_param_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
 .globl _Minus__Minus_var_f64_f64
 	.private_extern _Minus__Minus_var_f64_f64
 _Minus__Minus_var_f64_f64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movsd	128+_MM_Minus(%rip), %xmm1
-	movsd	128+_MM_Minus(%rip), %xmm0
+	movsd	168+_MM_Minus(%rip), %xmm1
+	movsd	168+_MM_Minus(%rip), %xmm0
 	movapd	%xmm1, %xmm2
 	subsd	%xmm0, %xmm2
 	movapd	%xmm2, %xmm0
@@ -2015,1985 +6341,135 @@ _Minus__Minus_param_f64_f64:
 	subsd	-32(%rbp), %xmm0
 	leave
 	ret
-.globl _Minus__uMinus_var_i16_u16
-	.private_extern _Minus__uMinus_var_i16_u16
-_Minus__uMinus_var_i16_u16:
+.globl _Minus__uMinus_var_L_i64
+	.private_extern _Minus__uMinus_var_L_i64
+_Minus__uMinus_var_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_u16
-	.private_extern _Minus__Minus_var_i16_u16
-_Minus__Minus_var_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L322
-	cmpq	$65535, -16(%rbp)
-	jle	L323
-L322:
-	movl	$6433, %edi
-	call	__m3_fault
-L323:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_u16
-	.private_extern _Minus__uMinus_param_i16_u16
-_Minus__uMinus_param_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %edx
-	movswq	-20(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_u16
-	.private_extern _Minus__Minus_param_i16_u16
-_Minus__Minus_param_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movswq	-20(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L328
-	cmpq	$65535, -16(%rbp)
-	jle	L329
-L328:
-	movl	$6497, %edi
-	call	__m3_fault
-L329:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_u64
-	.private_extern _Minus__uMinus_var_i16_u64
-_Minus__uMinus_var_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_u64
-	.private_extern _Minus__Minus_var_i16_u64
-_Minus__Minus_var_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_u64
-	.private_extern _Minus__uMinus_param_i16_u64
-_Minus__uMinus_param_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_u64
-	.private_extern _Minus__Minus_param_i16_u64
-_Minus__Minus_param_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_LC
-	.private_extern _Minus__uMinus_var_i16_LC
-_Minus__uMinus_var_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_LC
-	.private_extern _Minus__Minus_var_i16_LC
-_Minus__Minus_var_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_LC
-	.private_extern _Minus__uMinus_param_i16_LC
-_Minus__uMinus_param_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_LC
-	.private_extern _Minus__Minus_param_i16_LC
-_Minus__Minus_param_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_i16
-	.private_extern _Minus__uMinus_var_i16_i16
-_Minus__uMinus_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_i16
-	.private_extern _Minus__Minus_var_i16_i16
-_Minus__Minus_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	$0, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L350
-	movl	$6817, %edi
-	call	__m3_fault
-L350:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_i16
-	.private_extern _Minus__uMinus_param_i16_i16
-_Minus__uMinus_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %edx
-	movzwl	-20(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_i16
-	.private_extern _Minus__Minus_param_i16_i16
-_Minus__Minus_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movzwl	-20(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L355
-	movl	$6881, %edi
-	call	__m3_fault
-L355:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_i32
-	.private_extern _Minus__uMinus_var_i16_i32
-_Minus__uMinus_var_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_i32
-	.private_extern _Minus__Minus_var_i16_i32
-_Minus__Minus_var_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L360
-	movl	$6945, %edi
-	call	__m3_fault
-L360:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_i32
-	.private_extern _Minus__uMinus_param_i16_i32
-_Minus__uMinus_param_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %edx
-	mov	-24(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_i32
-	.private_extern _Minus__Minus_param_i16_i32
-_Minus__Minus_param_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %eax
-	mov	-24(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L365
-	movl	$7009, %edi
-	call	__m3_fault
-L365:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_I
-	.private_extern _Minus__uMinus_var_i16_I
-_Minus__uMinus_var_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_I
-	.private_extern _Minus__Minus_var_i16_I
-_Minus__Minus_var_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L370
-	cmpq	$65535, -16(%rbp)
-	jle	L371
-L370:
-	movl	$7073, %edi
-	call	__m3_fault
-L371:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_I
-	.private_extern _Minus__uMinus_param_i16_I
-_Minus__uMinus_param_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_I
-	.private_extern _Minus__Minus_param_i16_I
-_Minus__Minus_param_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	subq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L376
-	cmpq	$65535, -16(%rbp)
-	jle	L377
-L376:
-	movl	$7137, %edi
-	call	__m3_fault
-L377:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_i64
-	.private_extern _Minus__uMinus_var_i16_i64
-_Minus__uMinus_var_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_i64
-	.private_extern _Minus__Minus_var_i16_i64
-_Minus__Minus_var_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_i64
-	.private_extern _Minus__uMinus_param_i16_i64
-_Minus__uMinus_param_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_i64
-	.private_extern _Minus__Minus_param_i16_i64
-_Minus__Minus_param_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_C
-	.private_extern _Minus__uMinus_var_i16_C
-_Minus__uMinus_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_C
-	.private_extern _Minus__Minus_var_i16_C
-_Minus__Minus_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L390
-	movl	$7329, %edi
-	call	__m3_fault
-L390:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_C
-	.private_extern _Minus__uMinus_param_i16_C
-_Minus__uMinus_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_C
-	.private_extern _Minus__Minus_param_i16_C
-_Minus__Minus_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	-32(%rbp), %rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L395
-	movl	$7393, %edi
-	call	__m3_fault
-L395:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_u8
-	.private_extern _Minus__uMinus_var_i16_u8
-_Minus__uMinus_var_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_u8
-	.private_extern _Minus__Minus_var_i16_u8
-_Minus__Minus_var_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L400
-	cmpq	$65535, -16(%rbp)
-	jle	L401
-L400:
-	movl	$7457, %edi
-	call	__m3_fault
-L401:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_u8
-	.private_extern _Minus__uMinus_param_i16_u8
-_Minus__uMinus_param_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %edx
-	movsbq	-19(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_u8
-	.private_extern _Minus__Minus_param_i16_u8
-_Minus__Minus_param_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movsbq	-19(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L406
-	cmpq	$65535, -16(%rbp)
-	jle	L407
-L406:
-	movl	$7521, %edi
-	call	__m3_fault
-L407:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_i8
-	.private_extern _Minus__uMinus_var_i16_i8
-_Minus__uMinus_var_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_i8
-	.private_extern _Minus__Minus_var_i16_i8
-_Minus__Minus_var_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L412
-	movl	$7585, %edi
-	call	__m3_fault
-L412:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_i8
-	.private_extern _Minus__uMinus_param_i16_i8
-_Minus__uMinus_param_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %edx
-	movzbl	-19(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_i8
-	.private_extern _Minus__Minus_param_i16_i8
-_Minus__Minus_param_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movzbl	-19(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L417
-	movl	$7649, %edi
-	call	__m3_fault
-L417:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_L
-	.private_extern _Minus__uMinus_var_i16_L
-_Minus__uMinus_var_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
 	movq	176+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_i16_L
-	.private_extern _Minus__Minus_var_i16_L
-_Minus__Minus_var_i16_L:
+.globl _Minus__Minus_var_L_i64
+	.private_extern _Minus__Minus_var_L_i64
+_Minus__Minus_var_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
+	movq	176+_MM_Minus(%rip), %rdx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_L_i64
+	.private_extern _Minus__uMinus_param_L_i64
+_Minus__uMinus_param_L_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_L_i64
+	.private_extern _Minus__Minus_param_L_i64
+_Minus__Minus_param_L_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_L_LC
+	.private_extern _Minus__uMinus_var_L_LC
+_Minus__uMinus_var_L_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
 	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_L
-	.private_extern _Minus__uMinus_param_i16_L
-_Minus__uMinus_param_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_L
-	.private_extern _Minus__Minus_param_i16_L
-_Minus__Minus_param_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i16_u32
-	.private_extern _Minus__uMinus_var_i16_u32
-_Minus__uMinus_var_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i16_u32
-	.private_extern _Minus__Minus_var_i16_u32
-_Minus__Minus_var_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %edx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L430
-	cmpq	$65535, -16(%rbp)
-	jle	L431
-L430:
-	movl	$7841, %edi
-	call	__m3_fault
-L431:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i16_u32
-	.private_extern _Minus__uMinus_param_i16_u32
-_Minus__uMinus_param_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i16_u32
-	.private_extern _Minus__Minus_param_i16_u32
-_Minus__Minus_param_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L436
-	cmpq	$65535, -16(%rbp)
-	jle	L437
-L436:
-	movl	$7905, %edi
-	call	__m3_fault
-L437:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_u16
-	.private_extern _Minus__uMinus_var_i32_u16
-_Minus__uMinus_var_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_u16
-	.private_extern _Minus__Minus_var_i32_u16
-_Minus__Minus_var_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L442
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L443
-L442:
-	movl	$7969, %edi
-	call	__m3_fault
-L443:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_u16
-	.private_extern _Minus__uMinus_param_i32_u16
-_Minus__uMinus_param_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %edx
-	movswq	-22(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_u16
-	.private_extern _Minus__Minus_param_i32_u16
-_Minus__Minus_param_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movswq	-22(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L448
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L449
-L448:
-	movl	$8033, %edi
-	call	__m3_fault
-L449:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_u64
-	.private_extern _Minus__uMinus_var_i32_u64
-_Minus__uMinus_var_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
+	movq	%rax, %rdx
 	movq	112+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_i32_u64
-	.private_extern _Minus__Minus_var_i32_u64
-_Minus__Minus_var_i32_u64:
+.globl _Minus__Minus_var_L_LC
+	.private_extern _Minus__Minus_var_L_LC
+_Minus__Minus_var_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
+	movq	176+_MM_Minus(%rip), %rdx
 	movq	112+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_i32_u64
-	.private_extern _Minus__uMinus_param_i32_u64
-_Minus__uMinus_param_i32_u64:
+.globl _Minus__uMinus_param_L_LC
+	.private_extern _Minus__uMinus_param_L_LC
+_Minus__uMinus_param_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_u64
-	.private_extern _Minus__Minus_param_i32_u64
-_Minus__Minus_param_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
+	movq	-24(%rbp), %rax
 	subq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_i32_LC
-	.private_extern _Minus__uMinus_var_i32_LC
-_Minus__uMinus_var_i32_LC:
+.globl _Minus__Minus_param_L_LC
+	.private_extern _Minus__Minus_param_L_LC
+_Minus__Minus_param_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_LC
-	.private_extern _Minus__Minus_var_i32_LC
-_Minus__Minus_var_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_LC
-	.private_extern _Minus__uMinus_param_i32_LC
-_Minus__uMinus_param_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_LC
-	.private_extern _Minus__Minus_param_i32_LC
-_Minus__Minus_param_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_i16
-	.private_extern _Minus__uMinus_var_i32_i16
-_Minus__uMinus_var_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_i16
-	.private_extern _Minus__Minus_var_i32_i16
-_Minus__Minus_var_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L470
-	movl	$8353, %edi
-	call	__m3_fault
-L470:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_i16
-	.private_extern _Minus__uMinus_param_i32_i16
-_Minus__uMinus_param_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %edx
-	movzwl	-22(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_i16
-	.private_extern _Minus__Minus_param_i32_i16
-_Minus__Minus_param_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movzwl	-22(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L475
-	movl	$8417, %edi
-	call	__m3_fault
-L475:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_i32
-	.private_extern _Minus__uMinus_var_i32_i32
-_Minus__uMinus_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_i32
-	.private_extern _Minus__Minus_var_i32_i32
-_Minus__Minus_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	$0, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L480
-	movl	$8481, %edi
-	call	__m3_fault
-L480:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_i32
-	.private_extern _Minus__uMinus_param_i32_i32
-_Minus__uMinus_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %edx
-	mov	-24(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_i32
-	.private_extern _Minus__Minus_param_i32_i32
-_Minus__Minus_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %eax
-	mov	-24(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L485
-	movl	$8545, %edi
-	call	__m3_fault
-L485:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_I
-	.private_extern _Minus__uMinus_var_i32_I
-_Minus__uMinus_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_I
-	.private_extern _Minus__Minus_var_i32_I
-_Minus__Minus_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L490
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L491
-L490:
-	movl	$8609, %edi
-	call	__m3_fault
-L491:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_I
-	.private_extern _Minus__uMinus_param_i32_I
-_Minus__uMinus_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_I
-	.private_extern _Minus__Minus_param_i32_I
-_Minus__Minus_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	subq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L496
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L497
-L496:
-	movl	$8673, %edi
-	call	__m3_fault
-L497:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_i64
-	.private_extern _Minus__uMinus_var_i32_i64
-_Minus__uMinus_var_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_i64
-	.private_extern _Minus__Minus_var_i32_i64
-_Minus__Minus_var_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_i64
-	.private_extern _Minus__uMinus_param_i32_i64
-_Minus__uMinus_param_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_i64
-	.private_extern _Minus__Minus_param_i32_i64
-_Minus__Minus_param_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_C
-	.private_extern _Minus__uMinus_var_i32_C
-_Minus__uMinus_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_C
-	.private_extern _Minus__Minus_var_i32_C
-_Minus__Minus_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L510
-	movl	$8865, %edi
-	call	__m3_fault
-L510:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_C
-	.private_extern _Minus__uMinus_param_i32_C
-_Minus__uMinus_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_C
-	.private_extern _Minus__Minus_param_i32_C
-_Minus__Minus_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
 	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
 	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L515
-	movl	$8929, %edi
-	call	__m3_fault
-L515:
-	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_i32_u8
-	.private_extern _Minus__uMinus_var_i32_u8
-_Minus__uMinus_var_i32_u8:
+.globl _Minus__uMinus_var_L_u8
+	.private_extern _Minus__uMinus_var_L_u8
+_Minus__uMinus_var_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_u8
-	.private_extern _Minus__Minus_var_i32_u8
-_Minus__Minus_var_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L520
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L521
-L520:
-	movl	$8993, %edi
-	call	__m3_fault
-L521:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_u8
-	.private_extern _Minus__uMinus_param_i32_u8
-_Minus__uMinus_param_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %edx
-	movsbq	-21(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_u8
-	.private_extern _Minus__Minus_param_i32_u8
-_Minus__Minus_param_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movsbq	-21(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L526
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L527
-L526:
-	movl	$9057, %edi
-	call	__m3_fault
-L527:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_i8
-	.private_extern _Minus__uMinus_var_i32_i8
-_Minus__uMinus_var_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_i8
-	.private_extern _Minus__Minus_var_i32_i8
-_Minus__Minus_var_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L532
-	movl	$9121, %edi
-	call	__m3_fault
-L532:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_i8
-	.private_extern _Minus__uMinus_param_i32_i8
-_Minus__uMinus_param_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %edx
-	movzbl	-21(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_i8
-	.private_extern _Minus__Minus_param_i32_i8
-_Minus__Minus_param_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movzbl	-21(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L537
-	movl	$9185, %edi
-	call	__m3_fault
-L537:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_L
-	.private_extern _Minus__uMinus_var_i32_L
-_Minus__uMinus_var_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
 	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_L
-	.private_extern _Minus__Minus_var_i32_L
-_Minus__Minus_var_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_L
-	.private_extern _Minus__uMinus_param_i32_L
-_Minus__uMinus_param_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_L
-	.private_extern _Minus__Minus_param_i32_L
-_Minus__Minus_param_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i32_u32
-	.private_extern _Minus__uMinus_var_i32_u32
-_Minus__uMinus_var_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i32_u32
-	.private_extern _Minus__Minus_var_i32_u32
-_Minus__Minus_var_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %edx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L550
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L551
-L550:
-	movl	$9377, %edi
-	call	__m3_fault
-L551:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i32_u32
-	.private_extern _Minus__uMinus_param_i32_u32
-_Minus__uMinus_param_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i32_u32
-	.private_extern _Minus__Minus_param_i32_u32
-_Minus__Minus_param_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L556
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L557
-L556:
-	movl	$9441, %edi
-	call	__m3_fault
-L557:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_u16
-	.private_extern _Minus__uMinus_var_I_u16
-_Minus__uMinus_var_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_u16
-	.private_extern _Minus__Minus_var_I_u16
-_Minus__Minus_var_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_u16
-	.private_extern _Minus__uMinus_param_I_u16
-_Minus__uMinus_param_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rdx
-	movswq	-26(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_u16
-	.private_extern _Minus__Minus_param_I_u16
-_Minus__Minus_param_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_u64
-	.private_extern _Minus__uMinus_var_I_u64
-_Minus__uMinus_var_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_u64
-	.private_extern _Minus__Minus_var_I_u64
-_Minus__Minus_var_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_u64
-	.private_extern _Minus__uMinus_param_I_u64
-_Minus__uMinus_param_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_u64
-	.private_extern _Minus__Minus_param_I_u64
-_Minus__Minus_param_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_LC
-	.private_extern _Minus__uMinus_var_I_LC
-_Minus__uMinus_var_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_LC
-	.private_extern _Minus__Minus_var_I_LC
-_Minus__Minus_var_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_LC
-	.private_extern _Minus__uMinus_param_I_LC
-_Minus__uMinus_param_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_LC
-	.private_extern _Minus__Minus_param_I_LC
-_Minus__Minus_param_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_i16
-	.private_extern _Minus__uMinus_var_I_i16
-_Minus__uMinus_var_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_i16
-	.private_extern _Minus__Minus_var_I_i16
-_Minus__Minus_var_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_i16
-	.private_extern _Minus__uMinus_param_I_i16
-_Minus__uMinus_param_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rdx
-	movzwl	-26(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_i16
-	.private_extern _Minus__Minus_param_I_i16
-_Minus__Minus_param_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_i32
-	.private_extern _Minus__uMinus_var_I_i32
-_Minus__uMinus_var_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_i32
-	.private_extern _Minus__Minus_var_I_i32
-_Minus__Minus_var_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_i32
-	.private_extern _Minus__uMinus_param_I_i32
-_Minus__uMinus_param_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	mov	-28(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_i32
-	.private_extern _Minus__Minus_param_I_i32
-_Minus__Minus_param_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_I
-	.private_extern _Minus__uMinus_var_I_I
-_Minus__uMinus_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_I_I
-	.private_extern _Minus__Minus_var_I_I
-_Minus__Minus_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_I
-	.private_extern _Minus__uMinus_param_I_I
-_Minus__uMinus_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_I
-	.private_extern _Minus__Minus_param_I_I
-_Minus__Minus_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_i64
-	.private_extern _Minus__uMinus_var_I_i64
-_Minus__uMinus_var_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_i64
-	.private_extern _Minus__Minus_var_I_i64
-_Minus__Minus_var_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_i64
-	.private_extern _Minus__uMinus_param_I_i64
-_Minus__uMinus_param_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_i64
-	.private_extern _Minus__Minus_param_I_i64
-_Minus__Minus_param_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_C
-	.private_extern _Minus__uMinus_var_I_C
-_Minus__uMinus_var_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_C
-	.private_extern _Minus__Minus_var_I_C
-_Minus__Minus_var_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_C
-	.private_extern _Minus__uMinus_param_I_C
-_Minus__uMinus_param_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_C
-	.private_extern _Minus__Minus_param_I_C
-_Minus__Minus_param_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_u8
-	.private_extern _Minus__uMinus_var_I_u8
-_Minus__uMinus_var_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
+	movzbl	124+_MM_Minus(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_I_u8
-	.private_extern _Minus__Minus_var_I_u8
-_Minus__Minus_var_I_u8:
+.globl _Minus__Minus_var_L_u8
+	.private_extern _Minus__Minus_var_L_u8
+_Minus__Minus_var_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
+	movq	176+_MM_Minus(%rip), %rdx
+	movzbl	124+_MM_Minus(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_I_u8
-	.private_extern _Minus__uMinus_param_I_u8
-_Minus__uMinus_param_I_u8:
+.globl _Minus__uMinus_param_L_u8
+	.private_extern _Minus__uMinus_param_L_u8
+_Minus__uMinus_param_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -4005,9 +6481,9 @@ _Minus__uMinus_param_I_u8:
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_I_u8
-	.private_extern _Minus__Minus_param_I_u8
-_Minus__Minus_param_I_u8:
+.globl _Minus__Minus_param_L_u8
+	.private_extern _Minus__Minus_param_L_u8
+_Minus__Minus_param_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -4017,36 +6493,87 @@ _Minus__Minus_param_I_u8:
 	subq	%rdx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_I_i8
-	.private_extern _Minus__uMinus_var_I_i8
-_Minus__uMinus_var_I_i8:
+.globl _Minus__uMinus_var_L_I
+	.private_extern _Minus__uMinus_var_L_I
+_Minus__uMinus_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
+	movq	176+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
+	movq	128+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_I_i8
-	.private_extern _Minus__Minus_var_I_i8
-_Minus__Minus_var_I_i8:
+.globl _Minus__Minus_var_L_I
+	.private_extern _Minus__Minus_var_L_I
+_Minus__Minus_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
+	movq	176+_MM_Minus(%rip), %rdx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_L_I
+	.private_extern _Minus__uMinus_param_L_I
+_Minus__uMinus_param_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_L_I
+	.private_extern _Minus__Minus_param_L_I
+_Minus__Minus_param_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_L_i8
+	.private_extern _Minus__uMinus_var_L_i8
+_Minus__uMinus_var_L_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_I_i8
-	.private_extern _Minus__uMinus_param_I_i8
-_Minus__uMinus_param_I_i8:
+.globl _Minus__Minus_var_L_i8
+	.private_extern _Minus__Minus_var_L_i8
+_Minus__Minus_var_L_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Minus(%rip), %rdx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_L_i8
+	.private_extern _Minus__uMinus_param_L_i8
+_Minus__uMinus_param_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -4058,9 +6585,9 @@ _Minus__uMinus_param_I_i8:
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_I_i8
-	.private_extern _Minus__Minus_param_I_i8
-_Minus__Minus_param_I_i8:
+.globl _Minus__Minus_param_L_i8
+	.private_extern _Minus__Minus_param_L_i8
+_Minus__Minus_param_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -4070,87 +6597,36 @@ _Minus__Minus_param_I_i8:
 	subq	%rdx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_I_L
-	.private_extern _Minus__uMinus_var_I_L
-_Minus__uMinus_var_I_L:
+.globl _Minus__uMinus_var_L_u32
+	.private_extern _Minus__uMinus_var_L_u32
+_Minus__uMinus_var_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
 	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_I_L
-	.private_extern _Minus__Minus_var_I_L
-_Minus__Minus_var_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_I_L
-	.private_extern _Minus__uMinus_param_I_L
-_Minus__uMinus_param_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_I_L
-	.private_extern _Minus__Minus_param_I_L
-_Minus__Minus_param_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_I_u32
-	.private_extern _Minus__uMinus_var_I_u32
-_Minus__uMinus_var_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movl	184+_MM_Minus(%rip), %eax
+	movl	140+_MM_Minus(%rip), %eax
 	cltq
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_I_u32
-	.private_extern _Minus__Minus_var_I_u32
-_Minus__Minus_var_I_u32:
+.globl _Minus__Minus_var_L_u32
+	.private_extern _Minus__Minus_var_L_u32
+_Minus__Minus_var_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Minus(%rip), %rdx
-	movl	184+_MM_Minus(%rip), %eax
+	movq	176+_MM_Minus(%rip), %rdx
+	movl	140+_MM_Minus(%rip), %eax
 	cltq
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_I_u32
-	.private_extern _Minus__uMinus_param_I_u32
-_Minus__uMinus_param_I_u32:
+.globl _Minus__uMinus_param_L_u32
+	.private_extern _Minus__uMinus_param_L_u32
+_Minus__uMinus_param_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -4163,9 +6639,9 @@ _Minus__uMinus_param_I_u32:
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_I_u32
-	.private_extern _Minus__Minus_param_I_u32
-_Minus__Minus_param_I_u32:
+.globl _Minus__Minus_param_L_u32
+	.private_extern _Minus__Minus_param_L_u32
+_Minus__Minus_param_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -4176,270 +6652,12 @@ _Minus__Minus_param_I_u32:
 	subq	%rdx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_i64_u16
-	.private_extern _Minus__uMinus_var_i64_u16
-_Minus__uMinus_var_i64_u16:
+.globl _Minus__uMinus_var_L_C
+	.private_extern _Minus__uMinus_var_L_C
+_Minus__uMinus_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_u16
-	.private_extern _Minus__Minus_var_i64_u16
-_Minus__Minus_var_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_u16
-	.private_extern _Minus__uMinus_param_i64_u16
-_Minus__uMinus_param_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rdx
-	movswq	-26(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_u16
-	.private_extern _Minus__Minus_param_i64_u16
-_Minus__Minus_param_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_u64
-	.private_extern _Minus__uMinus_var_i64_u64
-_Minus__uMinus_var_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_u64
-	.private_extern _Minus__Minus_var_i64_u64
-_Minus__Minus_var_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_u64
-	.private_extern _Minus__uMinus_param_i64_u64
-_Minus__uMinus_param_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_u64
-	.private_extern _Minus__Minus_param_i64_u64
-_Minus__Minus_param_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_LC
-	.private_extern _Minus__uMinus_var_i64_LC
-_Minus__uMinus_var_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_LC
-	.private_extern _Minus__Minus_var_i64_LC
-_Minus__Minus_var_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_LC
-	.private_extern _Minus__uMinus_param_i64_LC
-_Minus__uMinus_param_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_LC
-	.private_extern _Minus__Minus_param_i64_LC
-_Minus__Minus_param_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_i16
-	.private_extern _Minus__uMinus_var_i64_i16
-_Minus__uMinus_var_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_i16
-	.private_extern _Minus__Minus_var_i64_i16
-_Minus__Minus_var_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_i16
-	.private_extern _Minus__uMinus_param_i64_i16
-_Minus__uMinus_param_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rdx
-	movzwl	-26(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_i16
-	.private_extern _Minus__Minus_param_i64_i16
-_Minus__Minus_param_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_i32
-	.private_extern _Minus__uMinus_var_i64_i32
-_Minus__uMinus_var_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_i32
-	.private_extern _Minus__Minus_var_i64_i32
-_Minus__Minus_var_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_i32
-	.private_extern _Minus__uMinus_param_i64_i32
-_Minus__uMinus_param_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	mov	-28(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_i32
-	.private_extern _Minus__Minus_param_i64_i32
-_Minus__Minus_param_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_I
-	.private_extern _Minus__uMinus_var_i64_I
-_Minus__uMinus_var_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
+	movq	176+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
 	movq	144+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
@@ -4447,35 +6665,32 @@ _Minus__uMinus_var_i64_I:
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_i64_I
-	.private_extern _Minus__Minus_var_i64_I
-_Minus__Minus_var_i64_I:
+.globl _Minus__Minus_var_L_C
+	.private_extern _Minus__Minus_var_L_C
+_Minus__Minus_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
+	movq	176+_MM_Minus(%rip), %rdx
 	movq	144+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_i64_I
-	.private_extern _Minus__uMinus_param_i64_I
-_Minus__uMinus_param_i64_I:
+.globl _Minus__uMinus_param_L_C
+	.private_extern _Minus__uMinus_param_L_C
+_Minus__uMinus_param_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
+	movq	-24(%rbp), %rax
+	subq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Minus__Minus_param_i64_I
-	.private_extern _Minus__Minus_param_i64_I
-_Minus__Minus_param_i64_I:
+.globl _Minus__Minus_param_L_C
+	.private_extern _Minus__Minus_param_L_C
+_Minus__Minus_param_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -4483,2599 +6698,6 @@ _Minus__Minus_param_i64_I:
 	movq	-32(%rbp), %rdx
 	movq	-24(%rbp), %rax
 	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_i64
-	.private_extern _Minus__uMinus_var_i64_i64
-_Minus__uMinus_var_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_i64
-	.private_extern _Minus__Minus_var_i64_i64
-_Minus__Minus_var_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_i64
-	.private_extern _Minus__uMinus_param_i64_i64
-_Minus__uMinus_param_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_i64
-	.private_extern _Minus__Minus_param_i64_i64
-_Minus__Minus_param_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_C
-	.private_extern _Minus__uMinus_var_i64_C
-_Minus__uMinus_var_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_C
-	.private_extern _Minus__Minus_var_i64_C
-_Minus__Minus_var_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_C
-	.private_extern _Minus__uMinus_param_i64_C
-_Minus__uMinus_param_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_C
-	.private_extern _Minus__Minus_param_i64_C
-_Minus__Minus_param_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_u8
-	.private_extern _Minus__uMinus_var_i64_u8
-_Minus__uMinus_var_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_u8
-	.private_extern _Minus__Minus_var_i64_u8
-_Minus__Minus_var_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_u8
-	.private_extern _Minus__uMinus_param_i64_u8
-_Minus__uMinus_param_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movsbq	-25(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_u8
-	.private_extern _Minus__Minus_param_i64_u8
-_Minus__Minus_param_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_i8
-	.private_extern _Minus__uMinus_var_i64_i8
-_Minus__uMinus_var_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_i8
-	.private_extern _Minus__Minus_var_i64_i8
-_Minus__Minus_var_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_i8
-	.private_extern _Minus__uMinus_param_i64_i8
-_Minus__uMinus_param_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movzbl	-25(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_i8
-	.private_extern _Minus__Minus_param_i64_i8
-_Minus__Minus_param_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_L
-	.private_extern _Minus__uMinus_var_i64_L
-_Minus__uMinus_var_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_L
-	.private_extern _Minus__Minus_var_i64_L
-_Minus__Minus_var_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_L
-	.private_extern _Minus__uMinus_param_i64_L
-_Minus__uMinus_param_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_L
-	.private_extern _Minus__Minus_param_i64_L
-_Minus__Minus_param_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i64_u32
-	.private_extern _Minus__uMinus_var_i64_u32
-_Minus__uMinus_var_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i64_u32
-	.private_extern _Minus__Minus_var_i64_u32
-_Minus__Minus_var_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Minus(%rip), %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i64_u32
-	.private_extern _Minus__uMinus_param_i64_u32
-_Minus__uMinus_param_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i64_u32
-	.private_extern _Minus__Minus_param_i64_u32
-_Minus__Minus_param_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_u16
-	.private_extern _Minus__uMinus_var_C_u16
-_Minus__uMinus_var_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_u16
-	.private_extern _Minus__Minus_var_C_u16
-_Minus__Minus_var_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L754
-	movl	$12577, %edi
-	call	__m3_fault
-L754:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_u16
-	.private_extern _Minus__uMinus_param_C_u16
-_Minus__uMinus_param_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_u16
-	.private_extern _Minus__Minus_param_C_u16
-_Minus__Minus_param_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movswq	-26(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L759
-	movl	$12641, %edi
-	call	__m3_fault
-L759:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_u64
-	.private_extern _Minus__uMinus_var_C_u64
-_Minus__uMinus_var_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_u64
-	.private_extern _Minus__Minus_var_C_u64
-_Minus__Minus_var_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_u64
-	.private_extern _Minus__uMinus_param_C_u64
-_Minus__uMinus_param_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_u64
-	.private_extern _Minus__Minus_param_C_u64
-_Minus__Minus_param_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_LC
-	.private_extern _Minus__uMinus_var_C_LC
-_Minus__uMinus_var_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_LC
-	.private_extern _Minus__Minus_var_C_LC
-_Minus__Minus_var_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_LC
-	.private_extern _Minus__uMinus_param_C_LC
-_Minus__uMinus_param_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_LC
-	.private_extern _Minus__Minus_param_C_LC
-_Minus__Minus_param_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_i16
-	.private_extern _Minus__uMinus_var_C_i16
-_Minus__uMinus_var_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_i16
-	.private_extern _Minus__Minus_var_C_i16
-_Minus__Minus_var_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L780
-	movl	$12961, %edi
-	call	__m3_fault
-L780:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_i16
-	.private_extern _Minus__uMinus_param_C_i16
-_Minus__uMinus_param_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_i16
-	.private_extern _Minus__Minus_param_C_i16
-_Minus__Minus_param_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movzwl	-26(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L785
-	movl	$13025, %edi
-	call	__m3_fault
-L785:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_i32
-	.private_extern _Minus__uMinus_var_C_i32
-_Minus__uMinus_var_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_i32
-	.private_extern _Minus__Minus_var_C_i32
-_Minus__Minus_var_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L790
-	movl	$13089, %edi
-	call	__m3_fault
-L790:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_i32
-	.private_extern _Minus__uMinus_param_C_i32
-_Minus__uMinus_param_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_i32
-	.private_extern _Minus__Minus_param_C_i32
-_Minus__Minus_param_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	mov	-28(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L795
-	movl	$13153, %edi
-	call	__m3_fault
-L795:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_I
-	.private_extern _Minus__uMinus_var_C_I
-_Minus__uMinus_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_I
-	.private_extern _Minus__Minus_var_C_I
-_Minus__Minus_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L800
-	movl	$13217, %edi
-	call	__m3_fault
-L800:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_I
-	.private_extern _Minus__uMinus_param_C_I
-_Minus__uMinus_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_I
-	.private_extern _Minus__Minus_param_C_I
-_Minus__Minus_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L805
-	movl	$13281, %edi
-	call	__m3_fault
-L805:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_i64
-	.private_extern _Minus__uMinus_var_C_i64
-_Minus__uMinus_var_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_i64
-	.private_extern _Minus__Minus_var_C_i64
-_Minus__Minus_var_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_i64
-	.private_extern _Minus__uMinus_param_C_i64
-_Minus__uMinus_param_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_i64
-	.private_extern _Minus__Minus_param_C_i64
-_Minus__Minus_param_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_C
-	.private_extern _Minus__uMinus_var_C_C
-_Minus__uMinus_var_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_C_C
-	.private_extern _Minus__Minus_var_C_C
-_Minus__Minus_var_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	$0, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L818
-	movl	$13473, %edi
-	call	__m3_fault
-L818:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_C
-	.private_extern _Minus__uMinus_param_C_C
-_Minus__uMinus_param_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_C
-	.private_extern _Minus__Minus_param_C_C
-_Minus__Minus_param_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	-32(%rbp), %rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L823
-	movl	$13537, %edi
-	call	__m3_fault
-L823:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_u8
-	.private_extern _Minus__uMinus_var_C_u8
-_Minus__uMinus_var_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_u8
-	.private_extern _Minus__Minus_var_C_u8
-_Minus__Minus_var_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L828
-	movl	$13601, %edi
-	call	__m3_fault
-L828:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_u8
-	.private_extern _Minus__uMinus_param_C_u8
-_Minus__uMinus_param_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_u8
-	.private_extern _Minus__Minus_param_C_u8
-_Minus__Minus_param_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movsbq	-25(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L833
-	movl	$13665, %edi
-	call	__m3_fault
-L833:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_i8
-	.private_extern _Minus__uMinus_var_C_i8
-_Minus__uMinus_var_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_i8
-	.private_extern _Minus__Minus_var_C_i8
-_Minus__Minus_var_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L838
-	movl	$13729, %edi
-	call	__m3_fault
-L838:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_i8
-	.private_extern _Minus__uMinus_param_C_i8
-_Minus__uMinus_param_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_i8
-	.private_extern _Minus__Minus_param_C_i8
-_Minus__Minus_param_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movzbl	-25(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L843
-	movl	$13793, %edi
-	call	__m3_fault
-L843:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_L
-	.private_extern _Minus__uMinus_var_C_L
-_Minus__uMinus_var_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_L
-	.private_extern _Minus__Minus_var_C_L
-_Minus__Minus_var_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_L
-	.private_extern _Minus__uMinus_param_C_L
-_Minus__uMinus_param_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_L
-	.private_extern _Minus__Minus_param_C_L
-_Minus__Minus_param_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_C_u32
-	.private_extern _Minus__uMinus_var_C_u32
-_Minus__uMinus_var_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Minus(%rip), %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_C_u32
-	.private_extern _Minus__Minus_var_C_u32
-_Minus__Minus_var_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L856
-	movl	$13985, %edi
-	call	__m3_fault
-L856:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_C_u32
-	.private_extern _Minus__uMinus_param_C_u32
-_Minus__uMinus_param_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_C_u32
-	.private_extern _Minus__Minus_param_C_u32
-_Minus__Minus_param_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L861
-	movl	$14049, %edi
-	call	__m3_fault
-L861:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_var_f32_f32
-	.private_extern _Minus__Minus_var_f32_f32
-_Minus__Minus_var_f32_f32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movss	168+_MM_Minus(%rip), %xmm1
-	movss	168+_MM_Minus(%rip), %xmm0
-	movaps	%xmm1, %xmm2
-	subss	%xmm0, %xmm2
-	movaps	%xmm2, %xmm0
-	leave
-	ret
-.globl _Minus__Minus_param_f32_f32
-	.private_extern _Minus__Minus_param_f32_f32
-_Minus__Minus_param_f32_f32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movss	%xmm0, -20(%rbp)
-	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm0
-	subss	-24(%rbp), %xmm0
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_u16
-	.private_extern _Minus__uMinus_var_u8_u16
-_Minus__uMinus_var_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_u16
-	.private_extern _Minus__Minus_var_u8_u16
-_Minus__Minus_var_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L870
-	cmpq	$127, -16(%rbp)
-	jle	L871
-L870:
-	movl	$14177, %edi
-	call	__m3_fault
-L871:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_u16
-	.private_extern _Minus__uMinus_param_u8_u16
-_Minus__uMinus_param_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movswq	-20(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_u16
-	.private_extern _Minus__Minus_param_u8_u16
-_Minus__Minus_param_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movswq	-20(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L876
-	cmpq	$127, -16(%rbp)
-	jle	L877
-L876:
-	movl	$14241, %edi
-	call	__m3_fault
-L877:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_u64
-	.private_extern _Minus__uMinus_var_u8_u64
-_Minus__uMinus_var_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_u64
-	.private_extern _Minus__Minus_var_u8_u64
-_Minus__Minus_var_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_u64
-	.private_extern _Minus__uMinus_param_u8_u64
-_Minus__uMinus_param_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_u64
-	.private_extern _Minus__Minus_param_u8_u64
-_Minus__Minus_param_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_LC
-	.private_extern _Minus__uMinus_var_u8_LC
-_Minus__uMinus_var_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_LC
-	.private_extern _Minus__Minus_var_u8_LC
-_Minus__Minus_var_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_LC
-	.private_extern _Minus__uMinus_param_u8_LC
-_Minus__uMinus_param_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_LC
-	.private_extern _Minus__Minus_param_u8_LC
-_Minus__Minus_param_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_i16
-	.private_extern _Minus__uMinus_var_u8_i16
-_Minus__uMinus_var_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_i16
-	.private_extern _Minus__Minus_var_u8_i16
-_Minus__Minus_var_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jge	L898
-	movl	$14561, %edi
-	call	__m3_fault
-L898:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_i16
-	.private_extern _Minus__uMinus_param_u8_i16
-_Minus__uMinus_param_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movzwl	-20(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_i16
-	.private_extern _Minus__Minus_param_u8_i16
-_Minus__Minus_param_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movzwl	-20(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jge	L903
-	movl	$14625, %edi
-	call	__m3_fault
-L903:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_i32
-	.private_extern _Minus__uMinus_var_u8_i32
-_Minus__uMinus_var_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_i32
-	.private_extern _Minus__Minus_var_u8_i32
-_Minus__Minus_var_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jge	L908
-	movl	$14689, %edi
-	call	__m3_fault
-L908:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_i32
-	.private_extern _Minus__uMinus_param_u8_i32
-_Minus__uMinus_param_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	mov	-24(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_i32
-	.private_extern _Minus__Minus_param_u8_i32
-_Minus__Minus_param_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rax
-	mov	-24(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jge	L913
-	movl	$14753, %edi
-	call	__m3_fault
-L913:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_I
-	.private_extern _Minus__uMinus_var_u8_I
-_Minus__uMinus_var_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_I
-	.private_extern _Minus__Minus_var_u8_I
-_Minus__Minus_var_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L918
-	cmpq	$127, -16(%rbp)
-	jle	L919
-L918:
-	movl	$14817, %edi
-	call	__m3_fault
-L919:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_I
-	.private_extern _Minus__uMinus_param_u8_I
-_Minus__uMinus_param_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_I
-	.private_extern _Minus__Minus_param_u8_I
-_Minus__Minus_param_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	subq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L924
-	cmpq	$127, -16(%rbp)
-	jle	L925
-L924:
-	movl	$14881, %edi
-	call	__m3_fault
-L925:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_i64
-	.private_extern _Minus__uMinus_var_u8_i64
-_Minus__uMinus_var_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_i64
-	.private_extern _Minus__Minus_var_u8_i64
-_Minus__Minus_var_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_i64
-	.private_extern _Minus__uMinus_param_u8_i64
-_Minus__uMinus_param_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_i64
-	.private_extern _Minus__Minus_param_u8_i64
-_Minus__Minus_param_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_C
-	.private_extern _Minus__uMinus_var_u8_C
-_Minus__uMinus_var_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_C
-	.private_extern _Minus__Minus_var_u8_C
-_Minus__Minus_var_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L938
-	cmpq	$127, -16(%rbp)
-	jle	L939
-L938:
-	movl	$15073, %edi
-	call	__m3_fault
-L939:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_C
-	.private_extern _Minus__uMinus_param_u8_C
-_Minus__uMinus_param_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_C
-	.private_extern _Minus__Minus_param_u8_C
-_Minus__Minus_param_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	-32(%rbp), %rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L944
-	cmpq	$127, -16(%rbp)
-	jle	L945
-L944:
-	movl	$15137, %edi
-	call	__m3_fault
-L945:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_u8
-	.private_extern _Minus__uMinus_var_u8_u8
-_Minus__uMinus_var_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_u8
-	.private_extern _Minus__Minus_var_u8_u8
-_Minus__Minus_var_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	$0, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L950
-	cmpq	$127, -16(%rbp)
-	jle	L951
-L950:
-	movl	$15201, %edi
-	call	__m3_fault
-L951:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_u8
-	.private_extern _Minus__uMinus_param_u8_u8
-_Minus__uMinus_param_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movsbq	-18(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_u8
-	.private_extern _Minus__Minus_param_u8_u8
-_Minus__Minus_param_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rax
-	movsbq	-18(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L956
-	cmpq	$127, -16(%rbp)
-	jle	L957
-L956:
-	movl	$15265, %edi
-	call	__m3_fault
-L957:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_i8
-	.private_extern _Minus__uMinus_var_u8_i8
-_Minus__uMinus_var_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_i8
-	.private_extern _Minus__Minus_var_u8_i8
-_Minus__Minus_var_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jge	L962
-	movl	$15329, %edi
-	call	__m3_fault
-L962:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_i8
-	.private_extern _Minus__uMinus_param_u8_i8
-_Minus__uMinus_param_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movzbl	-18(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_i8
-	.private_extern _Minus__Minus_param_u8_i8
-_Minus__Minus_param_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rax
-	movzbl	-18(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jge	L967
-	movl	$15393, %edi
-	call	__m3_fault
-L967:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_L
-	.private_extern _Minus__uMinus_var_u8_L
-_Minus__uMinus_var_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_L
-	.private_extern _Minus__Minus_var_u8_L
-_Minus__Minus_var_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_L
-	.private_extern _Minus__uMinus_param_u8_L
-_Minus__uMinus_param_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_L
-	.private_extern _Minus__Minus_param_u8_L
-_Minus__Minus_param_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u8_u32
-	.private_extern _Minus__uMinus_var_u8_u32
-_Minus__uMinus_var_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u8_u32
-	.private_extern _Minus__Minus_var_u8_u32
-_Minus__Minus_var_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L980
-	cmpq	$127, -16(%rbp)
-	jle	L981
-L980:
-	movl	$15585, %edi
-	call	__m3_fault
-L981:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u8_u32
-	.private_extern _Minus__uMinus_param_u8_u32
-_Minus__uMinus_param_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u8_u32
-	.private_extern _Minus__Minus_param_u8_u32
-_Minus__Minus_param_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L986
-	cmpq	$127, -16(%rbp)
-	jle	L987
-L986:
-	movl	$15649, %edi
-	call	__m3_fault
-L987:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_u16
-	.private_extern _Minus__uMinus_var_i8_u16
-_Minus__uMinus_var_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_u16
-	.private_extern _Minus__Minus_var_i8_u16
-_Minus__Minus_var_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L992
-	cmpq	$255, -16(%rbp)
-	jle	L993
-L992:
-	movl	$15713, %edi
-	call	__m3_fault
-L993:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_u16
-	.private_extern _Minus__uMinus_param_i8_u16
-_Minus__uMinus_param_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %edx
-	movswq	-20(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_u16
-	.private_extern _Minus__Minus_param_i8_u16
-_Minus__Minus_param_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
-	movswq	-20(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L998
-	cmpq	$255, -16(%rbp)
-	jle	L999
-L998:
-	movl	$15777, %edi
-	call	__m3_fault
-L999:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_u64
-	.private_extern _Minus__uMinus_var_i8_u64
-_Minus__uMinus_var_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_u64
-	.private_extern _Minus__Minus_var_i8_u64
-_Minus__Minus_var_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_u64
-	.private_extern _Minus__uMinus_param_i8_u64
-_Minus__uMinus_param_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_u64
-	.private_extern _Minus__Minus_param_i8_u64
-_Minus__Minus_param_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_LC
-	.private_extern _Minus__uMinus_var_i8_LC
-_Minus__uMinus_var_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_LC
-	.private_extern _Minus__Minus_var_i8_LC
-_Minus__Minus_var_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_LC
-	.private_extern _Minus__uMinus_param_i8_LC
-_Minus__uMinus_param_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_LC
-	.private_extern _Minus__Minus_param_i8_LC
-_Minus__Minus_param_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_i16
-	.private_extern _Minus__uMinus_var_i8_i16
-_Minus__uMinus_var_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_i16
-	.private_extern _Minus__Minus_var_i8_i16
-_Minus__Minus_var_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1020
-	movl	$16097, %edi
-	call	__m3_fault
-L1020:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_i16
-	.private_extern _Minus__uMinus_param_i8_i16
-_Minus__uMinus_param_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %edx
-	movzwl	-20(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_i16
-	.private_extern _Minus__Minus_param_i8_i16
-_Minus__Minus_param_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
-	movzwl	-20(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1025
-	movl	$16161, %edi
-	call	__m3_fault
-L1025:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_i32
-	.private_extern _Minus__uMinus_var_i8_i32
-_Minus__uMinus_var_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_i32
-	.private_extern _Minus__Minus_var_i8_i32
-_Minus__Minus_var_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1030
-	movl	$16225, %edi
-	call	__m3_fault
-L1030:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_i32
-	.private_extern _Minus__uMinus_param_i8_i32
-_Minus__uMinus_param_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %edx
-	mov	-24(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_i32
-	.private_extern _Minus__Minus_param_i8_i32
-_Minus__Minus_param_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %eax
-	mov	-24(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1035
-	movl	$16289, %edi
-	call	__m3_fault
-L1035:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_I
-	.private_extern _Minus__uMinus_var_i8_I
-_Minus__uMinus_var_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_I
-	.private_extern _Minus__Minus_var_i8_I
-_Minus__Minus_var_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1040
-	cmpq	$255, -16(%rbp)
-	jle	L1041
-L1040:
-	movl	$16353, %edi
-	call	__m3_fault
-L1041:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_I
-	.private_extern _Minus__uMinus_param_i8_I
-_Minus__uMinus_param_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_I
-	.private_extern _Minus__Minus_param_i8_I
-_Minus__Minus_param_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	subq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1046
-	cmpq	$255, -16(%rbp)
-	jle	L1047
-L1046:
-	movl	$16417, %edi
-	call	__m3_fault
-L1047:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_i64
-	.private_extern _Minus__uMinus_var_i8_i64
-_Minus__uMinus_var_i8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_i64
-	.private_extern _Minus__Minus_var_i8_i64
-_Minus__Minus_var_i8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_i64
-	.private_extern _Minus__uMinus_param_i8_i64
-_Minus__uMinus_param_i8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_i64
-	.private_extern _Minus__Minus_param_i8_i64
-_Minus__Minus_param_i8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_C
-	.private_extern _Minus__uMinus_var_i8_C
-_Minus__uMinus_var_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_C
-	.private_extern _Minus__Minus_var_i8_C
-_Minus__Minus_var_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1060
-	movl	$16609, %edi
-	call	__m3_fault
-L1060:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_C
-	.private_extern _Minus__uMinus_param_i8_C
-_Minus__uMinus_param_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_C
-	.private_extern _Minus__Minus_param_i8_C
-_Minus__Minus_param_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	-32(%rbp), %rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1065
-	movl	$16673, %edi
-	call	__m3_fault
-L1065:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_u8
-	.private_extern _Minus__uMinus_var_i8_u8
-_Minus__uMinus_var_i8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_u8
-	.private_extern _Minus__Minus_var_i8_u8
-_Minus__Minus_var_i8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1070
-	cmpq	$255, -16(%rbp)
-	jle	L1071
-L1070:
-	movl	$16737, %edi
-	call	__m3_fault
-L1071:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_u8
-	.private_extern _Minus__uMinus_param_i8_u8
-_Minus__uMinus_param_i8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %edx
-	movsbq	-18(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_u8
-	.private_extern _Minus__Minus_param_i8_u8
-_Minus__Minus_param_i8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %eax
-	movsbq	-18(%rbp),%rdx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1076
-	cmpq	$255, -16(%rbp)
-	jle	L1077
-L1076:
-	movl	$16801, %edi
-	call	__m3_fault
-L1077:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_i8
-	.private_extern _Minus__uMinus_var_i8_i8
-_Minus__uMinus_var_i8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_i8
-	.private_extern _Minus__Minus_var_i8_i8
-_Minus__Minus_var_i8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	$0, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1082
-	movl	$16865, %edi
-	call	__m3_fault
-L1082:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_i8
-	.private_extern _Minus__uMinus_param_i8_i8
-_Minus__uMinus_param_i8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %edx
-	movzbl	-18(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_i8
-	.private_extern _Minus__Minus_param_i8_i8
-_Minus__Minus_param_i8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %eax
-	movzbl	-18(%rbp), %edx
-	subq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1087
-	movl	$16929, %edi
-	call	__m3_fault
-L1087:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_L
-	.private_extern _Minus__uMinus_var_i8_L
-_Minus__uMinus_var_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_L
-	.private_extern _Minus__Minus_var_i8_L
-_Minus__Minus_var_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_L
-	.private_extern _Minus__uMinus_param_i8_L
-_Minus__uMinus_param_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_L
-	.private_extern _Minus__Minus_param_i8_L
-_Minus__Minus_param_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_i8_u32
-	.private_extern _Minus__uMinus_var_i8_u32
-_Minus__uMinus_var_i8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_i8_u32
-	.private_extern _Minus__Minus_var_i8_u32
-_Minus__Minus_var_i8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %edx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1100
-	cmpq	$255, -16(%rbp)
-	jle	L1101
-L1100:
-	movl	$17121, %edi
-	call	__m3_fault
-L1101:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_i8_u32
-	.private_extern _Minus__uMinus_param_i8_u32
-_Minus__uMinus_param_i8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_i8_u32
-	.private_extern _Minus__Minus_param_i8_u32
-_Minus__Minus_param_i8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1106
-	cmpq	$255, -16(%rbp)
-	jle	L1107
-L1106:
-	movl	$17185, %edi
-	call	__m3_fault
-L1107:
-	movq	-16(%rbp), %rax
 	leave
 	ret
 .globl _Minus__uMinus_var_L_u16
@@ -7085,7 +6707,7 @@ _Minus__uMinus_var_L_u16:
 	movq	%rsp, %rbp
 	movq	176+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -7098,7 +6720,7 @@ _Minus__Minus_var_L_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Minus(%rip), %rdx
-	movzwl	104+_MM_Minus(%rip), %eax
+	movzwl	152+_MM_Minus(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
@@ -7138,7 +6760,7 @@ _Minus__uMinus_var_L_u64:
 	movq	%rsp, %rbp
 	movq	176+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movq	112+_MM_Minus(%rip), %rax
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
@@ -7150,7 +6772,7 @@ _Minus__Minus_var_L_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Minus(%rip), %rdx
-	movq	112+_MM_Minus(%rip), %rax
+	movq	160+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
@@ -7178,416 +6800,6 @@ _Minus__Minus_param_L_u64:
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_LC
-	.private_extern _Minus__uMinus_var_L_LC
-_Minus__uMinus_var_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_LC
-	.private_extern _Minus__Minus_var_L_LC
-_Minus__Minus_var_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_LC
-	.private_extern _Minus__uMinus_param_L_LC
-_Minus__uMinus_param_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_LC
-	.private_extern _Minus__Minus_param_L_LC
-_Minus__Minus_param_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_i16
-	.private_extern _Minus__uMinus_var_L_i16
-_Minus__uMinus_var_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_i16
-	.private_extern _Minus__Minus_var_L_i16
-_Minus__Minus_var_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_i16
-	.private_extern _Minus__uMinus_param_L_i16
-_Minus__uMinus_param_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rdx
-	movzwl	-26(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_i16
-	.private_extern _Minus__Minus_param_L_i16
-_Minus__Minus_param_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_i32
-	.private_extern _Minus__uMinus_var_L_i32
-_Minus__uMinus_var_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_i32
-	.private_extern _Minus__Minus_var_L_i32
-_Minus__Minus_var_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_i32
-	.private_extern _Minus__uMinus_param_L_i32
-_Minus__uMinus_param_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rdx
-	mov	-28(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_i32
-	.private_extern _Minus__Minus_param_L_i32
-_Minus__Minus_param_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_I
-	.private_extern _Minus__uMinus_var_L_I
-_Minus__uMinus_var_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_I
-	.private_extern _Minus__Minus_var_L_I
-_Minus__Minus_var_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_I
-	.private_extern _Minus__uMinus_param_L_I
-_Minus__uMinus_param_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_I
-	.private_extern _Minus__Minus_param_L_I
-_Minus__Minus_param_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_i64
-	.private_extern _Minus__uMinus_var_L_i64
-_Minus__uMinus_var_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_i64
-	.private_extern _Minus__Minus_var_L_i64
-_Minus__Minus_var_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_i64
-	.private_extern _Minus__uMinus_param_L_i64
-_Minus__uMinus_param_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_i64
-	.private_extern _Minus__Minus_param_L_i64
-_Minus__Minus_param_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_C
-	.private_extern _Minus__uMinus_var_L_C
-_Minus__uMinus_var_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_C
-	.private_extern _Minus__Minus_var_L_C
-_Minus__Minus_var_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_C
-	.private_extern _Minus__uMinus_param_L_C
-_Minus__uMinus_param_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_C
-	.private_extern _Minus__Minus_param_L_C
-_Minus__Minus_param_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_u8
-	.private_extern _Minus__uMinus_var_L_u8
-_Minus__uMinus_var_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_u8
-	.private_extern _Minus__Minus_var_L_u8
-_Minus__Minus_var_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movzbl	172+_MM_Minus(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_u8
-	.private_extern _Minus__uMinus_param_L_u8
-_Minus__uMinus_param_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movsbq	-25(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_u8
-	.private_extern _Minus__Minus_param_L_u8
-_Minus__Minus_param_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	subq	%rdx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_L_i8
-	.private_extern _Minus__uMinus_var_L_i8
-_Minus__uMinus_var_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_L_i8
-	.private_extern _Minus__Minus_var_L_i8
-_Minus__Minus_var_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Minus(%rip), %rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_L_i8
-	.private_extern _Minus__uMinus_param_L_i8
-_Minus__uMinus_param_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rdx
-	movzbl	-25(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_L_i8
-	.private_extern _Minus__Minus_param_L_i8
-_Minus__Minus_param_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
 	movq	-24(%rbp), %rax
 	subq	%rdx, %rax
 	leave
@@ -7634,840 +6846,1256 @@ _Minus__Minus_param_L_L:
 	subq	%rdx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_L_u32
-	.private_extern _Minus__uMinus_var_L_u32
-_Minus__uMinus_var_L_u32:
+.globl _Minus__uMinus_var_L_i16
+	.private_extern _Minus__uMinus_var_L_i16
+_Minus__uMinus_var_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Minus(%rip), %rax
 	movq	%rax, %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_L_u32
-	.private_extern _Minus__Minus_var_L_u32
-_Minus__Minus_var_L_u32:
+.globl _Minus__Minus_var_L_i16
+	.private_extern _Minus__Minus_var_L_i16
+_Minus__Minus_var_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Minus(%rip), %rdx
-	movl	184+_MM_Minus(%rip), %eax
-	cltq
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_L_u32
-	.private_extern _Minus__uMinus_param_L_u32
-_Minus__uMinus_param_L_u32:
+.globl _Minus__uMinus_param_L_i16
+	.private_extern _Minus__uMinus_param_L_i16
+_Minus__uMinus_param_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rdx
+	movzwl	-26(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_L_i16
+	.private_extern _Minus__Minus_param_L_i16
+_Minus__Minus_param_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	subq	%rdx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_L_i32
+	.private_extern _Minus__uMinus_var_L_i32
+_Minus__uMinus_var_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rax, %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_L_i32
+	.private_extern _Minus__Minus_var_L_i32
+_Minus__Minus_var_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Minus(%rip), %rdx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_L_i32
+	.private_extern _Minus__uMinus_param_L_i32
+_Minus__uMinus_param_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movq	-24(%rbp), %rdx
-	movl	-28(%rbp), %eax
-	cltq
+	mov	-28(%rbp), %eax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_L_u32
-	.private_extern _Minus__Minus_param_L_u32
-_Minus__Minus_param_L_u32:
+.globl _Minus__Minus_param_L_i32
+	.private_extern _Minus__Minus_param_L_i32
+_Minus__Minus_param_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
+	mov	-28(%rbp), %edx
 	movq	-24(%rbp), %rax
 	subq	%rdx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u32_u16
-	.private_extern _Minus__uMinus_var_u32_u16
-_Minus__uMinus_var_u32_u16:
+.globl _Minus__uMinus_var_i16_i64
+	.private_extern _Minus__uMinus_var_i16_i64
+_Minus__uMinus_var_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u32_u16
-	.private_extern _Minus__Minus_var_u32_u16
-_Minus__Minus_var_u32_u16:
+.globl _Minus__Minus_var_i16_i64
+	.private_extern _Minus__Minus_var_i16_i64
+_Minus__Minus_var_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	104+_MM_Minus(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1208
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1209
-L1208:
-	movl	$18785, %edi
-	call	__m3_fault
-L1209:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_u16
-	.private_extern _Minus__uMinus_param_u32_u16
-_Minus__uMinus_param_u32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movswq	-22(%rbp),%rax
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u32_u16
-	.private_extern _Minus__Minus_param_u32_u16
-_Minus__Minus_param_u32_u16:
+.globl _Minus__uMinus_param_i16_i64
+	.private_extern _Minus__uMinus_param_i16_i64
+_Minus__uMinus_param_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movswq	-22(%rbp),%rax
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1214
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1215
-L1214:
-	movl	$18849, %edi
-	call	__m3_fault
-L1215:
-	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u32_u64
-	.private_extern _Minus__uMinus_var_u32_u64
-_Minus__uMinus_var_u32_u64:
+.globl _Minus__Minus_param_i16_i64
+	.private_extern _Minus__Minus_param_i16_i64
+_Minus__Minus_param_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_LC
+	.private_extern _Minus__uMinus_var_i16_LC
+_Minus__uMinus_var_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
 	movq	112+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u32_u64
-	.private_extern _Minus__Minus_var_u32_u64
-_Minus__Minus_var_u32_u64:
+.globl _Minus__Minus_var_i16_LC
+	.private_extern _Minus__Minus_var_i16_LC
+_Minus__Minus_var_i16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
 	movq	112+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u32_u64
-	.private_extern _Minus__uMinus_param_u32_u64
-_Minus__uMinus_param_u32_u64:
+.globl _Minus__uMinus_param_i16_LC
+	.private_extern _Minus__uMinus_param_i16_LC
+_Minus__uMinus_param_i16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
+	movzwl	-18(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_LC
+	.private_extern _Minus__Minus_param_i16_LC
+_Minus__Minus_param_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
 	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u32_u64
-	.private_extern _Minus__Minus_param_u32_u64
-_Minus__Minus_param_u32_u64:
+.globl _Minus__uMinus_var_i16_u8
+	.private_extern _Minus__uMinus_var_i16_u8
+_Minus__uMinus_var_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_LC
-	.private_extern _Minus__uMinus_var_u32_LC
-_Minus__uMinus_var_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u32_LC
-	.private_extern _Minus__Minus_var_u32_LC
-_Minus__Minus_var_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_LC
-	.private_extern _Minus__uMinus_param_u32_LC
-_Minus__uMinus_param_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u32_LC
-	.private_extern _Minus__Minus_param_u32_LC
-_Minus__Minus_param_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_i16
-	.private_extern _Minus__uMinus_var_u32_i16
-_Minus__uMinus_var_u32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u32_i16
-	.private_extern _Minus__Minus_var_u32_i16
-_Minus__Minus_var_u32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	136+_MM_Minus(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jge	L1236
-	movl	$19169, %edi
-	call	__m3_fault
-L1236:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_i16
-	.private_extern _Minus__uMinus_param_u32_i16
-_Minus__uMinus_param_u32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzwl	-22(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u32_i16
-	.private_extern _Minus__Minus_param_u32_i16
-_Minus__Minus_param_u32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzwl	-22(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jge	L1241
-	movl	$19233, %edi
-	call	__m3_fault
-L1241:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_i32
-	.private_extern _Minus__uMinus_var_u32_i32
-_Minus__uMinus_var_u32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u32_i32
-	.private_extern _Minus__Minus_var_u32_i32
-_Minus__Minus_var_u32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movl	140+_MM_Minus(%rip), %eax
-	mov	%eax, %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jge	L1246
-	movl	$19297, %edi
-	call	__m3_fault
-L1246:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_i32
-	.private_extern _Minus__uMinus_param_u32_i32
-_Minus__uMinus_param_u32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	mov	-24(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u32_i32
-	.private_extern _Minus__Minus_param_u32_i32
-_Minus__Minus_param_u32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	mov	-24(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jge	L1251
-	movl	$19361, %edi
-	call	__m3_fault
-L1251:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_I
-	.private_extern _Minus__uMinus_var_u32_I
-_Minus__uMinus_var_u32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u32_I
-	.private_extern _Minus__Minus_var_u32_I
-_Minus__Minus_var_u32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	144+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1256
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1257
-L1256:
-	movl	$19425, %edi
-	call	__m3_fault
-L1257:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_I
-	.private_extern _Minus__uMinus_param_u32_I
-_Minus__uMinus_param_u32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u32_I
-	.private_extern _Minus__Minus_param_u32_I
-_Minus__Minus_param_u32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	subq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1262
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1263
-L1262:
-	movl	$19489, %edi
-	call	__m3_fault
-L1263:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_i64
-	.private_extern _Minus__uMinus_var_u32_i64
-_Minus__uMinus_var_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u32_i64
-	.private_extern _Minus__Minus_var_u32_i64
-_Minus__Minus_var_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_i64
-	.private_extern _Minus__uMinus_param_u32_i64
-_Minus__uMinus_param_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u32_i64
-	.private_extern _Minus__Minus_param_u32_i64
-_Minus__Minus_param_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_C
-	.private_extern _Minus__uMinus_var_u32_C
-_Minus__uMinus_var_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u32_C
-	.private_extern _Minus__Minus_var_u32_C
-_Minus__Minus_var_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	160+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1276
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1277
-L1276:
-	movl	$19681, %edi
-	call	__m3_fault
-L1277:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_C
-	.private_extern _Minus__uMinus_param_u32_C
-_Minus__uMinus_param_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	subq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u32_C
-	.private_extern _Minus__Minus_param_u32_C
-_Minus__Minus_param_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1282
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1283
-L1282:
-	movl	$19745, %edi
-	call	__m3_fault
-L1283:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_u8
-	.private_extern _Minus__uMinus_var_u32_u8
-_Minus__uMinus_var_u32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	172+_MM_Minus(%rip), %eax
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	124+_MM_Minus(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u32_u8
-	.private_extern _Minus__Minus_var_u32_u8
-_Minus__Minus_var_u32_u8:
+.globl _Minus__Minus_var_i16_u8
+	.private_extern _Minus__Minus_var_i16_u8
+_Minus__Minus_var_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	172+_MM_Minus(%rip), %eax
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	124+_MM_Minus(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1288
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1289
-L1288:
-	movl	$19809, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1106
+	cmpq	$65535, -16(%rbp)
+	jle	L1107
+L1106:
+	movl	$17505, %edi
 	call	__m3_fault
-L1289:
+L1107:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u32_u8
-	.private_extern _Minus__uMinus_param_u32_u8
-_Minus__uMinus_param_u32_u8:
+.globl _Minus__uMinus_param_i16_u8
+	.private_extern _Minus__uMinus_param_i16_u8
+_Minus__uMinus_param_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movsbq	-21(%rbp),%rax
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %edx
+	movsbq	-19(%rbp),%rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u32_u8
-	.private_extern _Minus__Minus_param_u32_u8
-_Minus__Minus_param_u32_u8:
+.globl _Minus__Minus_param_i16_u8
+	.private_extern _Minus__Minus_param_i16_u8
+_Minus__Minus_param_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movsbq	-21(%rbp),%rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movsbq	-19(%rbp),%rdx
+	subq	%rdx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1294
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1295
-L1294:
-	movl	$19873, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1112
+	cmpq	$65535, -16(%rbp)
+	jle	L1113
+L1112:
+	movl	$17569, %edi
 	call	__m3_fault
-L1295:
+L1113:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u32_i8
-	.private_extern _Minus__uMinus_var_u32_i8
-_Minus__uMinus_var_u32_i8:
+.globl _Minus__uMinus_var_i16_I
+	.private_extern _Minus__uMinus_var_i16_I
+_Minus__uMinus_var_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	128+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_var_u32_i8
-	.private_extern _Minus__Minus_var_u32_i8
-_Minus__Minus_var_u32_i8:
+.globl _Minus__Minus_var_i16_I
+	.private_extern _Minus__Minus_var_i16_I
+_Minus__Minus_var_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	173+_MM_Minus(%rip), %eax
-	movzbl	%al, %eax
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	128+_MM_Minus(%rip), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jge	L1300
-	movl	$19937, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1118
+	cmpq	$65535, -16(%rbp)
+	jle	L1119
+L1118:
+	movl	$17633, %edi
 	call	__m3_fault
-L1300:
+L1119:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u32_i8
-	.private_extern _Minus__uMinus_param_u32_i8
-_Minus__uMinus_param_u32_i8:
+.globl _Minus__uMinus_param_i16_I
+	.private_extern _Minus__uMinus_param_i16_I
+_Minus__uMinus_param_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzbl	-21(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_param_u32_i8
-	.private_extern _Minus__Minus_param_u32_i8
-_Minus__Minus_param_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzbl	-21(%rbp), %eax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jge	L1305
-	movl	$20001, %edi
-	call	__m3_fault
-L1305:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Minus__uMinus_var_u32_L
-	.private_extern _Minus__uMinus_var_u32_L
-_Minus__uMinus_var_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__Minus_var_u32_L
-	.private_extern _Minus__Minus_var_u32_L
-_Minus__Minus_var_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Minus(%rip), %eax
-	movslq	%eax,%rdx
-	movq	176+_MM_Minus(%rip), %rax
-	movq	%rdx, %rcx
-	subq	%rax, %rcx
-	movq	%rcx, %rax
-	leave
-	ret
-.globl _Minus__uMinus_param_u32_L
-	.private_extern _Minus__uMinus_param_u32_L
-_Minus__uMinus_param_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
+	movzwl	-18(%rbp), %edx
 	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u32_L
-	.private_extern _Minus__Minus_param_u32_L
-_Minus__Minus_param_u32_L:
+.globl _Minus__Minus_param_i16_I
+	.private_extern _Minus__Minus_param_i16_I
+_Minus__Minus_param_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
+	movzwl	-18(%rbp), %eax
+	subq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1124
+	cmpq	$65535, -16(%rbp)
+	jle	L1125
+L1124:
+	movl	$17697, %edi
+	call	__m3_fault
+L1125:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_i8
+	.private_extern _Minus__uMinus_var_i16_i8
+_Minus__uMinus_var_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i16_i8
+	.private_extern _Minus__Minus_var_i16_i8
+_Minus__Minus_var_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1130
+	movl	$17761, %edi
+	call	__m3_fault
+L1130:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i16_i8
+	.private_extern _Minus__uMinus_param_i16_i8
+_Minus__uMinus_param_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %edx
+	movzbl	-19(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_i8
+	.private_extern _Minus__Minus_param_i16_i8
+_Minus__Minus_param_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movzbl	-19(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1135
+	movl	$17825, %edi
+	call	__m3_fault
+L1135:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_u32
+	.private_extern _Minus__uMinus_var_i16_u32
+_Minus__uMinus_var_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movl	140+_MM_Minus(%rip), %eax
 	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i16_u32
+	.private_extern _Minus__Minus_var_i16_u32
+_Minus__Minus_var_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1140
+	cmpq	$65535, -16(%rbp)
+	jle	L1141
+L1140:
+	movl	$17889, %edi
+	call	__m3_fault
+L1141:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i16_u32
+	.private_extern _Minus__uMinus_param_i16_u32
+_Minus__uMinus_param_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_u32
+	.private_extern _Minus__Minus_param_i16_u32
+_Minus__Minus_param_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1146
+	cmpq	$65535, -16(%rbp)
+	jle	L1147
+L1146:
+	movl	$17953, %edi
+	call	__m3_fault
+L1147:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_C
+	.private_extern _Minus__uMinus_var_i16_C
+_Minus__uMinus_var_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i16_C
+	.private_extern _Minus__Minus_var_i16_C
+_Minus__Minus_var_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1152
+	movl	$18017, %edi
+	call	__m3_fault
+L1152:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i16_C
+	.private_extern _Minus__uMinus_param_i16_C
+_Minus__uMinus_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
 	subq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_var_u32_u32
-	.private_extern _Minus__uMinus_var_u32_u32
-_Minus__uMinus_var_u32_u32:
+.globl _Minus__Minus_param_i16_C
+	.private_extern _Minus__Minus_param_i16_C
+_Minus__Minus_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	-32(%rbp), %rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1157
+	movl	$18081, %edi
+	call	__m3_fault
+L1157:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_u16
+	.private_extern _Minus__uMinus_var_i16_u16
+_Minus__uMinus_var_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i16_u16
+	.private_extern _Minus__Minus_var_i16_u16
+_Minus__Minus_var_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1162
+	cmpq	$65535, -16(%rbp)
+	jle	L1163
+L1162:
+	movl	$18145, %edi
+	call	__m3_fault
+L1163:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i16_u16
+	.private_extern _Minus__uMinus_param_i16_u16
+_Minus__uMinus_param_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %edx
+	movswq	-20(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_u16
+	.private_extern _Minus__Minus_param_i16_u16
+_Minus__Minus_param_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movswq	-20(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1168
+	cmpq	$65535, -16(%rbp)
+	jle	L1169
+L1168:
+	movl	$18209, %edi
+	call	__m3_fault
+L1169:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_u64
+	.private_extern _Minus__uMinus_var_i16_u64
+_Minus__uMinus_var_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i16_u64
+	.private_extern _Minus__Minus_var_i16_u64
+_Minus__Minus_var_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i16_u64
+	.private_extern _Minus__uMinus_param_i16_u64
+_Minus__uMinus_param_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_u64
+	.private_extern _Minus__Minus_param_i16_u64
+_Minus__Minus_param_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_L
+	.private_extern _Minus__uMinus_var_i16_L
+_Minus__uMinus_var_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i16_L
+	.private_extern _Minus__Minus_var_i16_L
+_Minus__Minus_var_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i16_L
+	.private_extern _Minus__uMinus_param_i16_L
+_Minus__uMinus_param_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_L
+	.private_extern _Minus__Minus_param_i16_L
+_Minus__Minus_param_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_i16
+	.private_extern _Minus__uMinus_var_i16_i16
+_Minus__uMinus_var_i16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	$0, %eax
 	leave
 	ret
-.globl _Minus__Minus_var_u32_u32
-	.private_extern _Minus__Minus_var_u32_u32
-_Minus__Minus_var_u32_u32:
+.globl _Minus__Minus_var_i16_i16
+	.private_extern _Minus__Minus_var_i16_i16
+_Minus__Minus_var_i16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
 	movq	$0, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1318
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1319
-L1318:
-	movl	$20193, %edi
+	cmpq	$0, -16(%rbp)
+	jns	L1190
+	movl	$18529, %edi
 	call	__m3_fault
-L1319:
+L1190:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Minus__uMinus_param_u32_u32
-	.private_extern _Minus__uMinus_param_u32_u32
-_Minus__uMinus_param_u32_u32:
+.globl _Minus__uMinus_param_i16_i16
+	.private_extern _Minus__uMinus_param_i16_i16
+_Minus__uMinus_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %edx
+	movzwl	-20(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_i16
+	.private_extern _Minus__Minus_param_i16_i16
+_Minus__Minus_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movzwl	-20(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1195
+	movl	$18593, %edi
+	call	__m3_fault
+L1195:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i16_i32
+	.private_extern _Minus__uMinus_var_i16_i32
+_Minus__uMinus_var_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i16_i32
+	.private_extern _Minus__Minus_var_i16_i32
+_Minus__Minus_var_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %edx
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1200
+	movl	$18657, %edi
+	call	__m3_fault
+L1200:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i16_i32
+	.private_extern _Minus__uMinus_param_i16_i32
+_Minus__uMinus_param_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %edx
+	mov	-24(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i16_i32
+	.private_extern _Minus__Minus_param_i16_i32
+_Minus__Minus_param_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %eax
+	mov	-24(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1205
+	movl	$18721, %edi
+	call	__m3_fault
+L1205:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_i64
+	.private_extern _Minus__uMinus_var_i32_i64
+_Minus__uMinus_var_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_i64
+	.private_extern _Minus__Minus_var_i32_i64
+_Minus__Minus_var_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_i64
+	.private_extern _Minus__uMinus_param_i32_i64
+_Minus__uMinus_param_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_i64
+	.private_extern _Minus__Minus_param_i32_i64
+_Minus__Minus_param_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_LC
+	.private_extern _Minus__uMinus_var_i32_LC
+_Minus__uMinus_var_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_LC
+	.private_extern _Minus__Minus_var_i32_LC
+_Minus__Minus_var_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	112+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_LC
+	.private_extern _Minus__uMinus_param_i32_LC
+_Minus__uMinus_param_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_LC
+	.private_extern _Minus__Minus_param_i32_LC
+_Minus__Minus_param_i32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_u8
+	.private_extern _Minus__uMinus_var_i32_u8
+_Minus__uMinus_var_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_u8
+	.private_extern _Minus__Minus_var_i32_u8
+_Minus__Minus_var_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzbl	124+_MM_Minus(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1226
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1227
+L1226:
+	movl	$19041, %edi
+	call	__m3_fault
+L1227:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_u8
+	.private_extern _Minus__uMinus_param_i32_u8
+_Minus__uMinus_param_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %edx
+	movsbq	-21(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_u8
+	.private_extern _Minus__Minus_param_i32_u8
+_Minus__Minus_param_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
+	movsbq	-21(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1232
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1233
+L1232:
+	movl	$19105, %edi
+	call	__m3_fault
+L1233:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_I
+	.private_extern _Minus__uMinus_var_i32_I
+_Minus__uMinus_var_i32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_I
+	.private_extern _Minus__Minus_var_i32_I
+_Minus__Minus_var_i32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	128+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1238
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1239
+L1238:
+	movl	$19169, %edi
+	call	__m3_fault
+L1239:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_I
+	.private_extern _Minus__uMinus_param_i32_I
+_Minus__uMinus_param_i32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_I
+	.private_extern _Minus__Minus_param_i32_I
+_Minus__Minus_param_i32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	subq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1244
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1245
+L1244:
+	movl	$19233, %edi
+	call	__m3_fault
+L1245:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_i8
+	.private_extern _Minus__uMinus_var_i32_i8
+_Minus__uMinus_var_i32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_i8
+	.private_extern _Minus__Minus_var_i32_i8
+_Minus__Minus_var_i32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzbl	136+_MM_Minus(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1250
+	movl	$19297, %edi
+	call	__m3_fault
+L1250:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_i8
+	.private_extern _Minus__uMinus_param_i32_i8
+_Minus__uMinus_param_i32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %edx
+	movzbl	-21(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_i8
+	.private_extern _Minus__Minus_param_i32_i8
+_Minus__Minus_param_i32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
+	movzbl	-21(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1255
+	movl	$19361, %edi
+	call	__m3_fault
+L1255:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_u32
+	.private_extern _Minus__uMinus_var_i32_u32
+_Minus__uMinus_var_i32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_u32
+	.private_extern _Minus__Minus_var_i32_u32
+_Minus__Minus_var_i32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movl	140+_MM_Minus(%rip), %eax
+	cltq
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1260
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1261
+L1260:
+	movl	$19425, %edi
+	call	__m3_fault
+L1261:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_u32
+	.private_extern _Minus__uMinus_param_i32_u32
+_Minus__uMinus_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
+	mov	-20(%rbp), %edx
 	movl	-24(%rbp), %eax
 	cltq
 	movq	%rdx, %rcx
@@ -8475,27 +8103,399 @@ _Minus__uMinus_param_u32_u32:
 	movq	%rcx, %rax
 	leave
 	ret
-.globl _Minus__Minus_param_u32_u32
-	.private_extern _Minus__Minus_param_u32_u32
-_Minus__Minus_param_u32_u32:
+.globl _Minus__Minus_param_i32_u32
+	.private_extern _Minus__Minus_param_i32_u32
+_Minus__Minus_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
+	mov	-20(%rbp), %edx
 	movl	-24(%rbp), %eax
 	cltq
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	movq	%rcx, %rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1324
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1325
-L1324:
+	cmpq	$0, -16(%rbp)
+	js	L1266
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1267
+L1266:
+	movl	$19489, %edi
+	call	__m3_fault
+L1267:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_C
+	.private_extern _Minus__uMinus_var_i32_C
+_Minus__uMinus_var_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_C
+	.private_extern _Minus__Minus_var_i32_C
+_Minus__Minus_var_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	144+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1272
+	movl	$19553, %edi
+	call	__m3_fault
+L1272:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_C
+	.private_extern _Minus__uMinus_param_i32_C
+_Minus__uMinus_param_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_C
+	.private_extern _Minus__Minus_param_i32_C
+_Minus__Minus_param_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	movq	-32(%rbp), %rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1277
+	movl	$19617, %edi
+	call	__m3_fault
+L1277:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_u16
+	.private_extern _Minus__uMinus_var_i32_u16
+_Minus__uMinus_var_i32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_u16
+	.private_extern _Minus__Minus_var_i32_u16
+_Minus__Minus_var_i32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzwl	152+_MM_Minus(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1282
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1283
+L1282:
+	movl	$19681, %edi
+	call	__m3_fault
+L1283:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_u16
+	.private_extern _Minus__uMinus_param_i32_u16
+_Minus__uMinus_param_i32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %edx
+	movswq	-22(%rbp),%rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_u16
+	.private_extern _Minus__Minus_param_i32_u16
+_Minus__Minus_param_i32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
+	movswq	-22(%rbp),%rdx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1288
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1289
+L1288:
+	movl	$19745, %edi
+	call	__m3_fault
+L1289:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_u64
+	.private_extern _Minus__uMinus_var_i32_u64
+_Minus__uMinus_var_i32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_u64
+	.private_extern _Minus__Minus_var_i32_u64
+_Minus__Minus_var_i32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_u64
+	.private_extern _Minus__uMinus_param_i32_u64
+_Minus__uMinus_param_i32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_u64
+	.private_extern _Minus__Minus_param_i32_u64
+_Minus__Minus_param_i32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_L
+	.private_extern _Minus__uMinus_var_i32_L
+_Minus__uMinus_var_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_L
+	.private_extern _Minus__Minus_var_i32_L
+_Minus__Minus_var_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movq	176+_MM_Minus(%rip), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_L
+	.private_extern _Minus__uMinus_param_i32_L
+_Minus__uMinus_param_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_L
+	.private_extern _Minus__Minus_param_i32_L
+_Minus__Minus_param_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	subq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_i16
+	.private_extern _Minus__uMinus_var_i32_i16
+_Minus__uMinus_var_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_i16
+	.private_extern _Minus__Minus_var_i32_i16
+_Minus__Minus_var_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Minus(%rip), %eax
+	mov	%eax, %edx
+	movzwl	184+_MM_Minus(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1310
+	movl	$20065, %edi
+	call	__m3_fault
+L1310:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_i16
+	.private_extern _Minus__uMinus_param_i32_i16
+_Minus__uMinus_param_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %edx
+	movzwl	-22(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_i16
+	.private_extern _Minus__Minus_param_i32_i16
+_Minus__Minus_param_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
+	movzwl	-22(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1315
+	movl	$20129, %edi
+	call	__m3_fault
+L1315:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_var_i32_i32
+	.private_extern _Minus__uMinus_var_i32_i32
+_Minus__uMinus_var_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Minus__Minus_var_i32_i32
+	.private_extern _Minus__Minus_var_i32_i32
+_Minus__Minus_var_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	$0, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1320
+	movl	$20193, %edi
+	call	__m3_fault
+L1320:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Minus__uMinus_param_i32_i32
+	.private_extern _Minus__uMinus_param_i32_i32
+_Minus__uMinus_param_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	mov	-20(%rbp), %edx
+	mov	-24(%rbp), %eax
+	movq	%rdx, %rcx
+	subq	%rax, %rcx
+	movq	%rcx, %rax
+	leave
+	ret
+.globl _Minus__Minus_param_i32_i32
+	.private_extern _Minus__Minus_param_i32_i32
+_Minus__Minus_param_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	mov	-20(%rbp), %eax
+	mov	-24(%rbp), %edx
+	subq	%rdx, %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L1325
 	movl	$20257, %edi
 	call	__m3_fault
 L1325:
@@ -8525,738 +8525,6 @@ __m3_fault:
 _L_1:
 	.ascii "Minus_M3"
 	.space 1
-	.ascii "Minus_param_u32_u32"
-	.space 1
-	.ascii "uMinus_param_u32_u32"
-	.space 1
-	.ascii "Minus_var_u32_u32"
-	.space 1
-	.ascii "uMinus_var_u32_u32"
-	.space 1
-	.ascii "Minus_param_u32_L"
-	.space 1
-	.ascii "uMinus_param_u32_L"
-	.space 1
-	.ascii "Minus_var_u32_L"
-	.space 1
-	.ascii "uMinus_var_u32_L"
-	.space 1
-	.ascii "Minus_param_u32_i8"
-	.space 1
-	.ascii "uMinus_param_u32_i8"
-	.space 1
-	.ascii "Minus_var_u32_i8"
-	.space 1
-	.ascii "uMinus_var_u32_i8"
-	.space 1
-	.ascii "Minus_param_u32_u8"
-	.space 1
-	.ascii "uMinus_param_u32_u8"
-	.space 1
-	.ascii "Minus_var_u32_u8"
-	.space 1
-	.ascii "uMinus_var_u32_u8"
-	.space 1
-	.ascii "Minus_param_u32_C"
-	.space 1
-	.ascii "uMinus_param_u32_C"
-	.space 1
-	.ascii "Minus_var_u32_C"
-	.space 1
-	.ascii "uMinus_var_u32_C"
-	.space 1
-	.ascii "Minus_param_u32_i64"
-	.space 1
-	.ascii "uMinus_param_u32_i64"
-	.space 1
-	.ascii "Minus_var_u32_i64"
-	.space 1
-	.ascii "uMinus_var_u32_i64"
-	.space 1
-	.ascii "Minus_param_u32_I"
-	.space 1
-	.ascii "uMinus_param_u32_I"
-	.space 1
-	.ascii "Minus_var_u32_I"
-	.space 1
-	.ascii "uMinus_var_u32_I"
-	.space 1
-	.ascii "Minus_param_u32_i32"
-	.space 1
-	.ascii "uMinus_param_u32_i32"
-	.space 1
-	.ascii "Minus_var_u32_i32"
-	.space 1
-	.ascii "uMinus_var_u32_i32"
-	.space 1
-	.ascii "Minus_param_u32_i16"
-	.space 1
-	.ascii "uMinus_param_u32_i16"
-	.space 1
-	.ascii "Minus_var_u32_i16"
-	.space 1
-	.ascii "uMinus_var_u32_i16"
-	.space 1
-	.ascii "Minus_param_u32_LC"
-	.space 1
-	.ascii "uMinus_param_u32_LC"
-	.space 1
-	.ascii "Minus_var_u32_LC"
-	.space 1
-	.ascii "uMinus_var_u32_LC"
-	.space 1
-	.ascii "Minus_param_u32_u64"
-	.space 1
-	.ascii "uMinus_param_u32_u64"
-	.space 1
-	.ascii "Minus_var_u32_u64"
-	.space 1
-	.ascii "uMinus_var_u32_u64"
-	.space 1
-	.ascii "Minus_param_u32_u16"
-	.space 1
-	.ascii "uMinus_param_u32_u16"
-	.space 1
-	.ascii "Minus_var_u32_u16"
-	.space 1
-	.ascii "uMinus_var_u32_u16"
-	.space 1
-	.ascii "Minus_param_L_u32"
-	.space 1
-	.ascii "uMinus_param_L_u32"
-	.space 1
-	.ascii "Minus_var_L_u32"
-	.space 1
-	.ascii "uMinus_var_L_u32"
-	.space 1
-	.ascii "Minus_param_L_L"
-	.space 1
-	.ascii "uMinus_param_L_L"
-	.space 1
-	.ascii "Minus_var_L_L"
-	.space 1
-	.ascii "uMinus_var_L_L"
-	.space 1
-	.ascii "Minus_param_L_i8"
-	.space 1
-	.ascii "uMinus_param_L_i8"
-	.space 1
-	.ascii "Minus_var_L_i8"
-	.space 1
-	.ascii "uMinus_var_L_i8"
-	.space 1
-	.ascii "Minus_param_L_u8"
-	.space 1
-	.ascii "uMinus_param_L_u8"
-	.space 1
-	.ascii "Minus_var_L_u8"
-	.space 1
-	.ascii "uMinus_var_L_u8"
-	.space 1
-	.ascii "Minus_param_L_C"
-	.space 1
-	.ascii "uMinus_param_L_C"
-	.space 1
-	.ascii "Minus_var_L_C"
-	.space 1
-	.ascii "uMinus_var_L_C"
-	.space 1
-	.ascii "Minus_param_L_i64"
-	.space 1
-	.ascii "uMinus_param_L_i64"
-	.space 1
-	.ascii "Minus_var_L_i64"
-	.space 1
-	.ascii "uMinus_var_L_i64"
-	.space 1
-	.ascii "Minus_param_L_I"
-	.space 1
-	.ascii "uMinus_param_L_I"
-	.space 1
-	.ascii "Minus_var_L_I"
-	.space 1
-	.ascii "uMinus_var_L_I"
-	.space 1
-	.ascii "Minus_param_L_i32"
-	.space 1
-	.ascii "uMinus_param_L_i32"
-	.space 1
-	.ascii "Minus_var_L_i32"
-	.space 1
-	.ascii "uMinus_var_L_i32"
-	.space 1
-	.ascii "Minus_param_L_i16"
-	.space 1
-	.ascii "uMinus_param_L_i16"
-	.space 1
-	.ascii "Minus_var_L_i16"
-	.space 1
-	.ascii "uMinus_var_L_i16"
-	.space 1
-	.ascii "Minus_param_L_LC"
-	.space 1
-	.ascii "uMinus_param_L_LC"
-	.space 1
-	.ascii "Minus_var_L_LC"
-	.space 1
-	.ascii "uMinus_var_L_LC"
-	.space 1
-	.ascii "Minus_param_L_u64"
-	.space 1
-	.ascii "uMinus_param_L_u64"
-	.space 1
-	.ascii "Minus_var_L_u64"
-	.space 1
-	.ascii "uMinus_var_L_u64"
-	.space 1
-	.ascii "Minus_param_L_u16"
-	.space 1
-	.ascii "uMinus_param_L_u16"
-	.space 1
-	.ascii "Minus_var_L_u16"
-	.space 1
-	.ascii "uMinus_var_L_u16"
-	.space 1
-	.ascii "Minus_param_i8_u32"
-	.space 1
-	.ascii "uMinus_param_i8_u32"
-	.space 1
-	.ascii "Minus_var_i8_u32"
-	.space 1
-	.ascii "uMinus_var_i8_u32"
-	.space 1
-	.ascii "Minus_param_i8_L"
-	.space 1
-	.ascii "uMinus_param_i8_L"
-	.space 1
-	.ascii "Minus_var_i8_L"
-	.space 1
-	.ascii "uMinus_var_i8_L"
-	.space 1
-	.ascii "Minus_param_i8_i8"
-	.space 1
-	.ascii "uMinus_param_i8_i8"
-	.space 1
-	.ascii "Minus_var_i8_i8"
-	.space 1
-	.ascii "uMinus_var_i8_i8"
-	.space 1
-	.ascii "Minus_param_i8_u8"
-	.space 1
-	.ascii "uMinus_param_i8_u8"
-	.space 1
-	.ascii "Minus_var_i8_u8"
-	.space 1
-	.ascii "uMinus_var_i8_u8"
-	.space 1
-	.ascii "Minus_param_i8_C"
-	.space 1
-	.ascii "uMinus_param_i8_C"
-	.space 1
-	.ascii "Minus_var_i8_C"
-	.space 1
-	.ascii "uMinus_var_i8_C"
-	.space 1
-	.ascii "Minus_param_i8_i64"
-	.space 1
-	.ascii "uMinus_param_i8_i64"
-	.space 1
-	.ascii "Minus_var_i8_i64"
-	.space 1
-	.ascii "uMinus_var_i8_i64"
-	.space 1
-	.ascii "Minus_param_i8_I"
-	.space 1
-	.ascii "uMinus_param_i8_I"
-	.space 1
-	.ascii "Minus_var_i8_I"
-	.space 1
-	.ascii "uMinus_var_i8_I"
-	.space 1
-	.ascii "Minus_param_i8_i32"
-	.space 1
-	.ascii "uMinus_param_i8_i32"
-	.space 1
-	.ascii "Minus_var_i8_i32"
-	.space 1
-	.ascii "uMinus_var_i8_i32"
-	.space 1
-	.ascii "Minus_param_i8_i16"
-	.space 1
-	.ascii "uMinus_param_i8_i16"
-	.space 1
-	.ascii "Minus_var_i8_i16"
-	.space 1
-	.ascii "uMinus_var_i8_i16"
-	.space 1
-	.ascii "Minus_param_i8_LC"
-	.space 1
-	.ascii "uMinus_param_i8_LC"
-	.space 1
-	.ascii "Minus_var_i8_LC"
-	.space 1
-	.ascii "uMinus_var_i8_LC"
-	.space 1
-	.ascii "Minus_param_i8_u64"
-	.space 1
-	.ascii "uMinus_param_i8_u64"
-	.space 1
-	.ascii "Minus_var_i8_u64"
-	.space 1
-	.ascii "uMinus_var_i8_u64"
-	.space 1
-	.ascii "Minus_param_i8_u16"
-	.space 1
-	.ascii "uMinus_param_i8_u16"
-	.space 1
-	.ascii "Minus_var_i8_u16"
-	.space 1
-	.ascii "uMinus_var_i8_u16"
-	.space 1
-	.ascii "Minus_param_u8_u32"
-	.space 1
-	.ascii "uMinus_param_u8_u32"
-	.space 1
-	.ascii "Minus_var_u8_u32"
-	.space 1
-	.ascii "uMinus_var_u8_u32"
-	.space 1
-	.ascii "Minus_param_u8_L"
-	.space 1
-	.ascii "uMinus_param_u8_L"
-	.space 1
-	.ascii "Minus_var_u8_L"
-	.space 1
-	.ascii "uMinus_var_u8_L"
-	.space 1
-	.ascii "Minus_param_u8_i8"
-	.space 1
-	.ascii "uMinus_param_u8_i8"
-	.space 1
-	.ascii "Minus_var_u8_i8"
-	.space 1
-	.ascii "uMinus_var_u8_i8"
-	.space 1
-	.ascii "Minus_param_u8_u8"
-	.space 1
-	.ascii "uMinus_param_u8_u8"
-	.space 1
-	.ascii "Minus_var_u8_u8"
-	.space 1
-	.ascii "uMinus_var_u8_u8"
-	.space 1
-	.ascii "Minus_param_u8_C"
-	.space 1
-	.ascii "uMinus_param_u8_C"
-	.space 1
-	.ascii "Minus_var_u8_C"
-	.space 1
-	.ascii "uMinus_var_u8_C"
-	.space 1
-	.ascii "Minus_param_u8_i64"
-	.space 1
-	.ascii "uMinus_param_u8_i64"
-	.space 1
-	.ascii "Minus_var_u8_i64"
-	.space 1
-	.ascii "uMinus_var_u8_i64"
-	.space 1
-	.ascii "Minus_param_u8_I"
-	.space 1
-	.ascii "uMinus_param_u8_I"
-	.space 1
-	.ascii "Minus_var_u8_I"
-	.space 1
-	.ascii "uMinus_var_u8_I"
-	.space 1
-	.ascii "Minus_param_u8_i32"
-	.space 1
-	.ascii "uMinus_param_u8_i32"
-	.space 1
-	.ascii "Minus_var_u8_i32"
-	.space 1
-	.ascii "uMinus_var_u8_i32"
-	.space 1
-	.ascii "Minus_param_u8_i16"
-	.space 1
-	.ascii "uMinus_param_u8_i16"
-	.space 1
-	.ascii "Minus_var_u8_i16"
-	.space 1
-	.ascii "uMinus_var_u8_i16"
-	.space 1
-	.ascii "Minus_param_u8_LC"
-	.space 1
-	.ascii "uMinus_param_u8_LC"
-	.space 1
-	.ascii "Minus_var_u8_LC"
-	.space 1
-	.ascii "uMinus_var_u8_LC"
-	.space 1
-	.ascii "Minus_param_u8_u64"
-	.space 1
-	.ascii "uMinus_param_u8_u64"
-	.space 1
-	.ascii "Minus_var_u8_u64"
-	.space 1
-	.ascii "uMinus_var_u8_u64"
-	.space 1
-	.ascii "Minus_param_u8_u16"
-	.space 1
-	.ascii "uMinus_param_u8_u16"
-	.space 1
-	.ascii "Minus_var_u8_u16"
-	.space 1
-	.ascii "uMinus_var_u8_u16"
-	.space 1
-	.ascii "Minus_param_f32_f32"
-	.space 1
-	.ascii "Minus_var_f32_f32"
-	.space 1
-	.ascii "Minus_param_C_u32"
-	.space 1
-	.ascii "uMinus_param_C_u32"
-	.space 1
-	.ascii "Minus_var_C_u32"
-	.space 1
-	.ascii "uMinus_var_C_u32"
-	.space 1
-	.ascii "Minus_param_C_L"
-	.space 1
-	.ascii "uMinus_param_C_L"
-	.space 1
-	.ascii "Minus_var_C_L"
-	.space 1
-	.ascii "uMinus_var_C_L"
-	.space 1
-	.ascii "Minus_param_C_i8"
-	.space 1
-	.ascii "uMinus_param_C_i8"
-	.space 1
-	.ascii "Minus_var_C_i8"
-	.space 1
-	.ascii "uMinus_var_C_i8"
-	.space 1
-	.ascii "Minus_param_C_u8"
-	.space 1
-	.ascii "uMinus_param_C_u8"
-	.space 1
-	.ascii "Minus_var_C_u8"
-	.space 1
-	.ascii "uMinus_var_C_u8"
-	.space 1
-	.ascii "Minus_param_C_C"
-	.space 1
-	.ascii "uMinus_param_C_C"
-	.space 1
-	.ascii "Minus_var_C_C"
-	.space 1
-	.ascii "uMinus_var_C_C"
-	.space 1
-	.ascii "Minus_param_C_i64"
-	.space 1
-	.ascii "uMinus_param_C_i64"
-	.space 1
-	.ascii "Minus_var_C_i64"
-	.space 1
-	.ascii "uMinus_var_C_i64"
-	.space 1
-	.ascii "Minus_param_C_I"
-	.space 1
-	.ascii "uMinus_param_C_I"
-	.space 1
-	.ascii "Minus_var_C_I"
-	.space 1
-	.ascii "uMinus_var_C_I"
-	.space 1
-	.ascii "Minus_param_C_i32"
-	.space 1
-	.ascii "uMinus_param_C_i32"
-	.space 1
-	.ascii "Minus_var_C_i32"
-	.space 1
-	.ascii "uMinus_var_C_i32"
-	.space 1
-	.ascii "Minus_param_C_i16"
-	.space 1
-	.ascii "uMinus_param_C_i16"
-	.space 1
-	.ascii "Minus_var_C_i16"
-	.space 1
-	.ascii "uMinus_var_C_i16"
-	.space 1
-	.ascii "Minus_param_C_LC"
-	.space 1
-	.ascii "uMinus_param_C_LC"
-	.space 1
-	.ascii "Minus_var_C_LC"
-	.space 1
-	.ascii "uMinus_var_C_LC"
-	.space 1
-	.ascii "Minus_param_C_u64"
-	.space 1
-	.ascii "uMinus_param_C_u64"
-	.space 1
-	.ascii "Minus_var_C_u64"
-	.space 1
-	.ascii "uMinus_var_C_u64"
-	.space 1
-	.ascii "Minus_param_C_u16"
-	.space 1
-	.ascii "uMinus_param_C_u16"
-	.space 1
-	.ascii "Minus_var_C_u16"
-	.space 1
-	.ascii "uMinus_var_C_u16"
-	.space 1
-	.ascii "Minus_param_i64_u32"
-	.space 1
-	.ascii "uMinus_param_i64_u32"
-	.space 1
-	.ascii "Minus_var_i64_u32"
-	.space 1
-	.ascii "uMinus_var_i64_u32"
-	.space 1
-	.ascii "Minus_param_i64_L"
-	.space 1
-	.ascii "uMinus_param_i64_L"
-	.space 1
-	.ascii "Minus_var_i64_L"
-	.space 1
-	.ascii "uMinus_var_i64_L"
-	.space 1
-	.ascii "Minus_param_i64_i8"
-	.space 1
-	.ascii "uMinus_param_i64_i8"
-	.space 1
-	.ascii "Minus_var_i64_i8"
-	.space 1
-	.ascii "uMinus_var_i64_i8"
-	.space 1
-	.ascii "Minus_param_i64_u8"
-	.space 1
-	.ascii "uMinus_param_i64_u8"
-	.space 1
-	.ascii "Minus_var_i64_u8"
-	.space 1
-	.ascii "uMinus_var_i64_u8"
-	.space 1
-	.ascii "Minus_param_i64_C"
-	.space 1
-	.ascii "uMinus_param_i64_C"
-	.space 1
-	.ascii "Minus_var_i64_C"
-	.space 1
-	.ascii "uMinus_var_i64_C"
-	.space 1
-	.ascii "Minus_param_i64_i64"
-	.space 1
-	.ascii "uMinus_param_i64_i64"
-	.space 1
-	.ascii "Minus_var_i64_i64"
-	.space 1
-	.ascii "uMinus_var_i64_i64"
-	.space 1
-	.ascii "Minus_param_i64_I"
-	.space 1
-	.ascii "uMinus_param_i64_I"
-	.space 1
-	.ascii "Minus_var_i64_I"
-	.space 1
-	.ascii "uMinus_var_i64_I"
-	.space 1
-	.ascii "Minus_param_i64_i32"
-	.space 1
-	.ascii "uMinus_param_i64_i32"
-	.space 1
-	.ascii "Minus_var_i64_i32"
-	.space 1
-	.ascii "uMinus_var_i64_i32"
-	.space 1
-	.ascii "Minus_param_i64_i16"
-	.space 1
-	.ascii "uMinus_param_i64_i16"
-	.space 1
-	.ascii "Minus_var_i64_i16"
-	.space 1
-	.ascii "uMinus_var_i64_i16"
-	.space 1
-	.ascii "Minus_param_i64_LC"
-	.space 1
-	.ascii "uMinus_param_i64_LC"
-	.space 1
-	.ascii "Minus_var_i64_LC"
-	.space 1
-	.ascii "uMinus_var_i64_LC"
-	.space 1
-	.ascii "Minus_param_i64_u64"
-	.space 1
-	.ascii "uMinus_param_i64_u64"
-	.space 1
-	.ascii "Minus_var_i64_u64"
-	.space 1
-	.ascii "uMinus_var_i64_u64"
-	.space 1
-	.ascii "Minus_param_i64_u16"
-	.space 1
-	.ascii "uMinus_param_i64_u16"
-	.space 1
-	.ascii "Minus_var_i64_u16"
-	.space 1
-	.ascii "uMinus_var_i64_u16"
-	.space 1
-	.ascii "Minus_param_I_u32"
-	.space 1
-	.ascii "uMinus_param_I_u32"
-	.space 1
-	.ascii "Minus_var_I_u32"
-	.space 1
-	.ascii "uMinus_var_I_u32"
-	.space 1
-	.ascii "Minus_param_I_L"
-	.space 1
-	.ascii "uMinus_param_I_L"
-	.space 1
-	.ascii "Minus_var_I_L"
-	.space 1
-	.ascii "uMinus_var_I_L"
-	.space 1
-	.ascii "Minus_param_I_i8"
-	.space 1
-	.ascii "uMinus_param_I_i8"
-	.space 1
-	.ascii "Minus_var_I_i8"
-	.space 1
-	.ascii "uMinus_var_I_i8"
-	.space 1
-	.ascii "Minus_param_I_u8"
-	.space 1
-	.ascii "uMinus_param_I_u8"
-	.space 1
-	.ascii "Minus_var_I_u8"
-	.space 1
-	.ascii "uMinus_var_I_u8"
-	.space 1
-	.ascii "Minus_param_I_C"
-	.space 1
-	.ascii "uMinus_param_I_C"
-	.space 1
-	.ascii "Minus_var_I_C"
-	.space 1
-	.ascii "uMinus_var_I_C"
-	.space 1
-	.ascii "Minus_param_I_i64"
-	.space 1
-	.ascii "uMinus_param_I_i64"
-	.space 1
-	.ascii "Minus_var_I_i64"
-	.space 1
-	.ascii "uMinus_var_I_i64"
-	.space 1
-	.ascii "Minus_param_I_I"
-	.space 1
-	.ascii "uMinus_param_I_I"
-	.space 1
-	.ascii "Minus_var_I_I"
-	.space 1
-	.ascii "uMinus_var_I_I"
-	.space 1
-	.ascii "Minus_param_I_i32"
-	.space 1
-	.ascii "uMinus_param_I_i32"
-	.space 1
-	.ascii "Minus_var_I_i32"
-	.space 1
-	.ascii "uMinus_var_I_i32"
-	.space 1
-	.ascii "Minus_param_I_i16"
-	.space 1
-	.ascii "uMinus_param_I_i16"
-	.space 1
-	.ascii "Minus_var_I_i16"
-	.space 1
-	.ascii "uMinus_var_I_i16"
-	.space 1
-	.ascii "Minus_param_I_LC"
-	.space 1
-	.ascii "uMinus_param_I_LC"
-	.space 1
-	.ascii "Minus_var_I_LC"
-	.space 1
-	.ascii "uMinus_var_I_LC"
-	.space 1
-	.ascii "Minus_param_I_u64"
-	.space 1
-	.ascii "uMinus_param_I_u64"
-	.space 1
-	.ascii "Minus_var_I_u64"
-	.space 1
-	.ascii "uMinus_var_I_u64"
-	.space 1
-	.ascii "Minus_param_I_u16"
-	.space 1
-	.ascii "uMinus_param_I_u16"
-	.space 1
-	.ascii "Minus_var_I_u16"
-	.space 1
-	.ascii "uMinus_var_I_u16"
-	.space 1
-	.ascii "Minus_param_i32_u32"
-	.space 1
-	.ascii "uMinus_param_i32_u32"
-	.space 1
-	.ascii "Minus_var_i32_u32"
-	.space 1
-	.ascii "uMinus_var_i32_u32"
-	.space 1
-	.ascii "Minus_param_i32_L"
-	.space 1
-	.ascii "uMinus_param_i32_L"
-	.space 1
-	.ascii "Minus_var_i32_L"
-	.space 1
-	.ascii "uMinus_var_i32_L"
-	.space 1
-	.ascii "Minus_param_i32_i8"
-	.space 1
-	.ascii "uMinus_param_i32_i8"
-	.space 1
-	.ascii "Minus_var_i32_i8"
-	.space 1
-	.ascii "uMinus_var_i32_i8"
-	.space 1
-	.ascii "Minus_param_i32_u8"
-	.space 1
-	.ascii "uMinus_param_i32_u8"
-	.space 1
-	.ascii "Minus_var_i32_u8"
-	.space 1
-	.ascii "uMinus_var_i32_u8"
-	.space 1
-	.ascii "Minus_param_i32_C"
-	.space 1
-	.ascii "uMinus_param_i32_C"
-	.space 1
-	.ascii "Minus_var_i32_C"
-	.space 1
-	.ascii "uMinus_var_i32_C"
-	.space 1
-	.ascii "Minus_param_i32_i64"
-	.space 1
-	.ascii "uMinus_param_i32_i64"
-	.space 1
-	.ascii "Minus_var_i32_i64"
-	.space 1
-	.ascii "uMinus_var_i32_i64"
-	.space 1
-	.ascii "Minus_param_i32_I"
-	.space 1
-	.ascii "uMinus_param_i32_I"
-	.space 1
-	.ascii "Minus_var_i32_I"
-	.space 1
-	.ascii "uMinus_var_i32_I"
-	.space 1
 	.ascii "Minus_param_i32_i32"
 	.space 1
 	.ascii "uMinus_param_i32_i32"
@@ -9273,13 +8541,13 @@ _L_1:
 	.space 1
 	.ascii "uMinus_var_i32_i16"
 	.space 1
-	.ascii "Minus_param_i32_LC"
+	.ascii "Minus_param_i32_L"
 	.space 1
-	.ascii "uMinus_param_i32_LC"
+	.ascii "uMinus_param_i32_L"
 	.space 1
-	.ascii "Minus_var_i32_LC"
+	.ascii "Minus_var_i32_L"
 	.space 1
-	.ascii "uMinus_var_i32_LC"
+	.ascii "uMinus_var_i32_L"
 	.space 1
 	.ascii "Minus_param_i32_u64"
 	.space 1
@@ -9297,61 +8565,61 @@ _L_1:
 	.space 1
 	.ascii "uMinus_var_i32_u16"
 	.space 1
-	.ascii "Minus_param_i16_u32"
+	.ascii "Minus_param_i32_C"
 	.space 1
-	.ascii "uMinus_param_i16_u32"
+	.ascii "uMinus_param_i32_C"
 	.space 1
-	.ascii "Minus_var_i16_u32"
+	.ascii "Minus_var_i32_C"
 	.space 1
-	.ascii "uMinus_var_i16_u32"
+	.ascii "uMinus_var_i32_C"
 	.space 1
-	.ascii "Minus_param_i16_L"
+	.ascii "Minus_param_i32_u32"
 	.space 1
-	.ascii "uMinus_param_i16_L"
+	.ascii "uMinus_param_i32_u32"
 	.space 1
-	.ascii "Minus_var_i16_L"
+	.ascii "Minus_var_i32_u32"
 	.space 1
-	.ascii "uMinus_var_i16_L"
+	.ascii "uMinus_var_i32_u32"
 	.space 1
-	.ascii "Minus_param_i16_i8"
+	.ascii "Minus_param_i32_i8"
 	.space 1
-	.ascii "uMinus_param_i16_i8"
+	.ascii "uMinus_param_i32_i8"
 	.space 1
-	.ascii "Minus_var_i16_i8"
+	.ascii "Minus_var_i32_i8"
 	.space 1
-	.ascii "uMinus_var_i16_i8"
+	.ascii "uMinus_var_i32_i8"
 	.space 1
-	.ascii "Minus_param_i16_u8"
+	.ascii "Minus_param_i32_I"
 	.space 1
-	.ascii "uMinus_param_i16_u8"
+	.ascii "uMinus_param_i32_I"
 	.space 1
-	.ascii "Minus_var_i16_u8"
+	.ascii "Minus_var_i32_I"
 	.space 1
-	.ascii "uMinus_var_i16_u8"
+	.ascii "uMinus_var_i32_I"
 	.space 1
-	.ascii "Minus_param_i16_C"
+	.ascii "Minus_param_i32_u8"
 	.space 1
-	.ascii "uMinus_param_i16_C"
+	.ascii "uMinus_param_i32_u8"
 	.space 1
-	.ascii "Minus_var_i16_C"
+	.ascii "Minus_var_i32_u8"
 	.space 1
-	.ascii "uMinus_var_i16_C"
+	.ascii "uMinus_var_i32_u8"
 	.space 1
-	.ascii "Minus_param_i16_i64"
+	.ascii "Minus_param_i32_LC"
 	.space 1
-	.ascii "uMinus_param_i16_i64"
+	.ascii "uMinus_param_i32_LC"
 	.space 1
-	.ascii "Minus_var_i16_i64"
+	.ascii "Minus_var_i32_LC"
 	.space 1
-	.ascii "uMinus_var_i16_i64"
+	.ascii "uMinus_var_i32_LC"
 	.space 1
-	.ascii "Minus_param_i16_I"
+	.ascii "Minus_param_i32_i64"
 	.space 1
-	.ascii "uMinus_param_i16_I"
+	.ascii "uMinus_param_i32_i64"
 	.space 1
-	.ascii "Minus_var_i16_I"
+	.ascii "Minus_var_i32_i64"
 	.space 1
-	.ascii "uMinus_var_i16_I"
+	.ascii "uMinus_var_i32_i64"
 	.space 1
 	.ascii "Minus_param_i16_i32"
 	.space 1
@@ -9369,13 +8637,13 @@ _L_1:
 	.space 1
 	.ascii "uMinus_var_i16_i16"
 	.space 1
-	.ascii "Minus_param_i16_LC"
+	.ascii "Minus_param_i16_L"
 	.space 1
-	.ascii "uMinus_param_i16_LC"
+	.ascii "uMinus_param_i16_L"
 	.space 1
-	.ascii "Minus_var_i16_LC"
+	.ascii "Minus_var_i16_L"
 	.space 1
-	.ascii "uMinus_var_i16_LC"
+	.ascii "uMinus_var_i16_L"
 	.space 1
 	.ascii "Minus_param_i16_u64"
 	.space 1
@@ -9393,161 +8661,161 @@ _L_1:
 	.space 1
 	.ascii "uMinus_var_i16_u16"
 	.space 1
+	.ascii "Minus_param_i16_C"
+	.space 1
+	.ascii "uMinus_param_i16_C"
+	.space 1
+	.ascii "Minus_var_i16_C"
+	.space 1
+	.ascii "uMinus_var_i16_C"
+	.space 1
+	.ascii "Minus_param_i16_u32"
+	.space 1
+	.ascii "uMinus_param_i16_u32"
+	.space 1
+	.ascii "Minus_var_i16_u32"
+	.space 1
+	.ascii "uMinus_var_i16_u32"
+	.space 1
+	.ascii "Minus_param_i16_i8"
+	.space 1
+	.ascii "uMinus_param_i16_i8"
+	.space 1
+	.ascii "Minus_var_i16_i8"
+	.space 1
+	.ascii "uMinus_var_i16_i8"
+	.space 1
+	.ascii "Minus_param_i16_I"
+	.space 1
+	.ascii "uMinus_param_i16_I"
+	.space 1
+	.ascii "Minus_var_i16_I"
+	.space 1
+	.ascii "uMinus_var_i16_I"
+	.space 1
+	.ascii "Minus_param_i16_u8"
+	.space 1
+	.ascii "uMinus_param_i16_u8"
+	.space 1
+	.ascii "Minus_var_i16_u8"
+	.space 1
+	.ascii "uMinus_var_i16_u8"
+	.space 1
+	.ascii "Minus_param_i16_LC"
+	.space 1
+	.ascii "uMinus_param_i16_LC"
+	.space 1
+	.ascii "Minus_var_i16_LC"
+	.space 1
+	.ascii "uMinus_var_i16_LC"
+	.space 1
+	.ascii "Minus_param_i16_i64"
+	.space 1
+	.ascii "uMinus_param_i16_i64"
+	.space 1
+	.ascii "Minus_var_i16_i64"
+	.space 1
+	.ascii "uMinus_var_i16_i64"
+	.space 1
+	.ascii "Minus_param_L_i32"
+	.space 1
+	.ascii "uMinus_param_L_i32"
+	.space 1
+	.ascii "Minus_var_L_i32"
+	.space 1
+	.ascii "uMinus_var_L_i32"
+	.space 1
+	.ascii "Minus_param_L_i16"
+	.space 1
+	.ascii "uMinus_param_L_i16"
+	.space 1
+	.ascii "Minus_var_L_i16"
+	.space 1
+	.ascii "uMinus_var_L_i16"
+	.space 1
+	.ascii "Minus_param_L_L"
+	.space 1
+	.ascii "uMinus_param_L_L"
+	.space 1
+	.ascii "Minus_var_L_L"
+	.space 1
+	.ascii "uMinus_var_L_L"
+	.space 1
+	.ascii "Minus_param_L_u64"
+	.space 1
+	.ascii "uMinus_param_L_u64"
+	.space 1
+	.ascii "Minus_var_L_u64"
+	.space 1
+	.ascii "uMinus_var_L_u64"
+	.space 1
+	.ascii "Minus_param_L_u16"
+	.space 1
+	.ascii "uMinus_param_L_u16"
+	.space 1
+	.ascii "Minus_var_L_u16"
+	.space 1
+	.ascii "uMinus_var_L_u16"
+	.space 1
+	.ascii "Minus_param_L_C"
+	.space 1
+	.ascii "uMinus_param_L_C"
+	.space 1
+	.ascii "Minus_var_L_C"
+	.space 1
+	.ascii "uMinus_var_L_C"
+	.space 1
+	.ascii "Minus_param_L_u32"
+	.space 1
+	.ascii "uMinus_param_L_u32"
+	.space 1
+	.ascii "Minus_var_L_u32"
+	.space 1
+	.ascii "uMinus_var_L_u32"
+	.space 1
+	.ascii "Minus_param_L_i8"
+	.space 1
+	.ascii "uMinus_param_L_i8"
+	.space 1
+	.ascii "Minus_var_L_i8"
+	.space 1
+	.ascii "uMinus_var_L_i8"
+	.space 1
+	.ascii "Minus_param_L_I"
+	.space 1
+	.ascii "uMinus_param_L_I"
+	.space 1
+	.ascii "Minus_var_L_I"
+	.space 1
+	.ascii "uMinus_var_L_I"
+	.space 1
+	.ascii "Minus_param_L_u8"
+	.space 1
+	.ascii "uMinus_param_L_u8"
+	.space 1
+	.ascii "Minus_var_L_u8"
+	.space 1
+	.ascii "uMinus_var_L_u8"
+	.space 1
+	.ascii "Minus_param_L_LC"
+	.space 1
+	.ascii "uMinus_param_L_LC"
+	.space 1
+	.ascii "Minus_var_L_LC"
+	.space 1
+	.ascii "uMinus_var_L_LC"
+	.space 1
+	.ascii "Minus_param_L_i64"
+	.space 1
+	.ascii "uMinus_param_L_i64"
+	.space 1
+	.ascii "Minus_var_L_i64"
+	.space 1
+	.ascii "uMinus_var_L_i64"
+	.space 1
 	.ascii "Minus_param_f64_f64"
 	.space 1
 	.ascii "Minus_var_f64_f64"
-	.space 1
-	.ascii "Minus_param_LC_u32"
-	.space 1
-	.ascii "uMinus_param_LC_u32"
-	.space 1
-	.ascii "Minus_var_LC_u32"
-	.space 1
-	.ascii "uMinus_var_LC_u32"
-	.space 1
-	.ascii "Minus_param_LC_L"
-	.space 1
-	.ascii "uMinus_param_LC_L"
-	.space 1
-	.ascii "Minus_var_LC_L"
-	.space 1
-	.ascii "uMinus_var_LC_L"
-	.space 1
-	.ascii "Minus_param_LC_i8"
-	.space 1
-	.ascii "uMinus_param_LC_i8"
-	.space 1
-	.ascii "Minus_var_LC_i8"
-	.space 1
-	.ascii "uMinus_var_LC_i8"
-	.space 1
-	.ascii "Minus_param_LC_u8"
-	.space 1
-	.ascii "uMinus_param_LC_u8"
-	.space 1
-	.ascii "Minus_var_LC_u8"
-	.space 1
-	.ascii "uMinus_var_LC_u8"
-	.space 1
-	.ascii "Minus_param_LC_C"
-	.space 1
-	.ascii "uMinus_param_LC_C"
-	.space 1
-	.ascii "Minus_var_LC_C"
-	.space 1
-	.ascii "uMinus_var_LC_C"
-	.space 1
-	.ascii "Minus_param_LC_i64"
-	.space 1
-	.ascii "uMinus_param_LC_i64"
-	.space 1
-	.ascii "Minus_var_LC_i64"
-	.space 1
-	.ascii "uMinus_var_LC_i64"
-	.space 1
-	.ascii "Minus_param_LC_I"
-	.space 1
-	.ascii "uMinus_param_LC_I"
-	.space 1
-	.ascii "Minus_var_LC_I"
-	.space 1
-	.ascii "uMinus_var_LC_I"
-	.space 1
-	.ascii "Minus_param_LC_i32"
-	.space 1
-	.ascii "uMinus_param_LC_i32"
-	.space 1
-	.ascii "Minus_var_LC_i32"
-	.space 1
-	.ascii "uMinus_var_LC_i32"
-	.space 1
-	.ascii "Minus_param_LC_i16"
-	.space 1
-	.ascii "uMinus_param_LC_i16"
-	.space 1
-	.ascii "Minus_var_LC_i16"
-	.space 1
-	.ascii "uMinus_var_LC_i16"
-	.space 1
-	.ascii "Minus_param_LC_LC"
-	.space 1
-	.ascii "uMinus_param_LC_LC"
-	.space 1
-	.ascii "Minus_var_LC_LC"
-	.space 1
-	.ascii "uMinus_var_LC_LC"
-	.space 1
-	.ascii "Minus_param_LC_u64"
-	.space 1
-	.ascii "uMinus_param_LC_u64"
-	.space 1
-	.ascii "Minus_var_LC_u64"
-	.space 1
-	.ascii "uMinus_var_LC_u64"
-	.space 1
-	.ascii "Minus_param_LC_u16"
-	.space 1
-	.ascii "uMinus_param_LC_u16"
-	.space 1
-	.ascii "Minus_var_LC_u16"
-	.space 1
-	.ascii "uMinus_var_LC_u16"
-	.space 1
-	.ascii "Minus_param_u64_u32"
-	.space 1
-	.ascii "uMinus_param_u64_u32"
-	.space 1
-	.ascii "Minus_var_u64_u32"
-	.space 1
-	.ascii "uMinus_var_u64_u32"
-	.space 1
-	.ascii "Minus_param_u64_L"
-	.space 1
-	.ascii "uMinus_param_u64_L"
-	.space 1
-	.ascii "Minus_var_u64_L"
-	.space 1
-	.ascii "uMinus_var_u64_L"
-	.space 1
-	.ascii "Minus_param_u64_i8"
-	.space 1
-	.ascii "uMinus_param_u64_i8"
-	.space 1
-	.ascii "Minus_var_u64_i8"
-	.space 1
-	.ascii "uMinus_var_u64_i8"
-	.space 1
-	.ascii "Minus_param_u64_u8"
-	.space 1
-	.ascii "uMinus_param_u64_u8"
-	.space 1
-	.ascii "Minus_var_u64_u8"
-	.space 1
-	.ascii "uMinus_var_u64_u8"
-	.space 1
-	.ascii "Minus_param_u64_C"
-	.space 1
-	.ascii "uMinus_param_u64_C"
-	.space 1
-	.ascii "Minus_var_u64_C"
-	.space 1
-	.ascii "uMinus_var_u64_C"
-	.space 1
-	.ascii "Minus_param_u64_i64"
-	.space 1
-	.ascii "uMinus_param_u64_i64"
-	.space 1
-	.ascii "Minus_var_u64_i64"
-	.space 1
-	.ascii "uMinus_var_u64_i64"
-	.space 1
-	.ascii "Minus_param_u64_I"
-	.space 1
-	.ascii "uMinus_param_u64_I"
-	.space 1
-	.ascii "Minus_var_u64_I"
-	.space 1
-	.ascii "uMinus_var_u64_I"
 	.space 1
 	.ascii "Minus_param_u64_i32"
 	.space 1
@@ -9565,13 +8833,13 @@ _L_1:
 	.space 1
 	.ascii "uMinus_var_u64_i16"
 	.space 1
-	.ascii "Minus_param_u64_LC"
+	.ascii "Minus_param_u64_L"
 	.space 1
-	.ascii "uMinus_param_u64_LC"
+	.ascii "uMinus_param_u64_L"
 	.space 1
-	.ascii "Minus_var_u64_LC"
+	.ascii "Minus_var_u64_L"
 	.space 1
-	.ascii "uMinus_var_u64_LC"
+	.ascii "uMinus_var_u64_L"
 	.space 1
 	.ascii "Minus_param_u64_u64"
 	.space 1
@@ -9589,61 +8857,61 @@ _L_1:
 	.space 1
 	.ascii "uMinus_var_u64_u16"
 	.space 1
-	.ascii "Minus_param_u16_u32"
+	.ascii "Minus_param_u64_C"
 	.space 1
-	.ascii "uMinus_param_u16_u32"
+	.ascii "uMinus_param_u64_C"
 	.space 1
-	.ascii "Minus_var_u16_u32"
+	.ascii "Minus_var_u64_C"
 	.space 1
-	.ascii "uMinus_var_u16_u32"
+	.ascii "uMinus_var_u64_C"
 	.space 1
-	.ascii "Minus_param_u16_L"
+	.ascii "Minus_param_u64_u32"
 	.space 1
-	.ascii "uMinus_param_u16_L"
+	.ascii "uMinus_param_u64_u32"
 	.space 1
-	.ascii "Minus_var_u16_L"
+	.ascii "Minus_var_u64_u32"
 	.space 1
-	.ascii "uMinus_var_u16_L"
+	.ascii "uMinus_var_u64_u32"
 	.space 1
-	.ascii "Minus_param_u16_i8"
+	.ascii "Minus_param_u64_i8"
 	.space 1
-	.ascii "uMinus_param_u16_i8"
+	.ascii "uMinus_param_u64_i8"
 	.space 1
-	.ascii "Minus_var_u16_i8"
+	.ascii "Minus_var_u64_i8"
 	.space 1
-	.ascii "uMinus_var_u16_i8"
+	.ascii "uMinus_var_u64_i8"
 	.space 1
-	.ascii "Minus_param_u16_u8"
+	.ascii "Minus_param_u64_I"
 	.space 1
-	.ascii "uMinus_param_u16_u8"
+	.ascii "uMinus_param_u64_I"
 	.space 1
-	.ascii "Minus_var_u16_u8"
+	.ascii "Minus_var_u64_I"
 	.space 1
-	.ascii "uMinus_var_u16_u8"
+	.ascii "uMinus_var_u64_I"
 	.space 1
-	.ascii "Minus_param_u16_C"
+	.ascii "Minus_param_u64_u8"
 	.space 1
-	.ascii "uMinus_param_u16_C"
+	.ascii "uMinus_param_u64_u8"
 	.space 1
-	.ascii "Minus_var_u16_C"
+	.ascii "Minus_var_u64_u8"
 	.space 1
-	.ascii "uMinus_var_u16_C"
+	.ascii "uMinus_var_u64_u8"
 	.space 1
-	.ascii "Minus_param_u16_i64"
+	.ascii "Minus_param_u64_LC"
 	.space 1
-	.ascii "uMinus_param_u16_i64"
+	.ascii "uMinus_param_u64_LC"
 	.space 1
-	.ascii "Minus_var_u16_i64"
+	.ascii "Minus_var_u64_LC"
 	.space 1
-	.ascii "uMinus_var_u16_i64"
+	.ascii "uMinus_var_u64_LC"
 	.space 1
-	.ascii "Minus_param_u16_I"
+	.ascii "Minus_param_u64_i64"
 	.space 1
-	.ascii "uMinus_param_u16_I"
+	.ascii "uMinus_param_u64_i64"
 	.space 1
-	.ascii "Minus_var_u16_I"
+	.ascii "Minus_var_u64_i64"
 	.space 1
-	.ascii "uMinus_var_u16_I"
+	.ascii "uMinus_var_u64_i64"
 	.space 1
 	.ascii "Minus_param_u16_i32"
 	.space 1
@@ -9661,13 +8929,13 @@ _L_1:
 	.space 1
 	.ascii "uMinus_var_u16_i16"
 	.space 1
-	.ascii "Minus_param_u16_LC"
+	.ascii "Minus_param_u16_L"
 	.space 1
-	.ascii "uMinus_param_u16_LC"
+	.ascii "uMinus_param_u16_L"
 	.space 1
-	.ascii "Minus_var_u16_LC"
+	.ascii "Minus_var_u16_L"
 	.space 1
-	.ascii "uMinus_var_u16_LC"
+	.ascii "uMinus_var_u16_L"
 	.space 1
 	.ascii "Minus_param_u16_u64"
 	.space 1
@@ -9684,1168 +8952,1900 @@ _L_1:
 	.ascii "Minus_var_u16_u16"
 	.space 1
 	.ascii "uMinus_var_u16_u16"
+	.space 1
+	.ascii "Minus_param_u16_C"
+	.space 1
+	.ascii "uMinus_param_u16_C"
+	.space 1
+	.ascii "Minus_var_u16_C"
+	.space 1
+	.ascii "uMinus_var_u16_C"
+	.space 1
+	.ascii "Minus_param_u16_u32"
+	.space 1
+	.ascii "uMinus_param_u16_u32"
+	.space 1
+	.ascii "Minus_var_u16_u32"
+	.space 1
+	.ascii "uMinus_var_u16_u32"
+	.space 1
+	.ascii "Minus_param_u16_i8"
+	.space 1
+	.ascii "uMinus_param_u16_i8"
+	.space 1
+	.ascii "Minus_var_u16_i8"
+	.space 1
+	.ascii "uMinus_var_u16_i8"
+	.space 1
+	.ascii "Minus_param_u16_I"
+	.space 1
+	.ascii "uMinus_param_u16_I"
+	.space 1
+	.ascii "Minus_var_u16_I"
+	.space 1
+	.ascii "uMinus_var_u16_I"
+	.space 1
+	.ascii "Minus_param_u16_u8"
+	.space 1
+	.ascii "uMinus_param_u16_u8"
+	.space 1
+	.ascii "Minus_var_u16_u8"
+	.space 1
+	.ascii "uMinus_var_u16_u8"
+	.space 1
+	.ascii "Minus_param_u16_LC"
+	.space 1
+	.ascii "uMinus_param_u16_LC"
+	.space 1
+	.ascii "Minus_var_u16_LC"
+	.space 1
+	.ascii "uMinus_var_u16_LC"
+	.space 1
+	.ascii "Minus_param_u16_i64"
+	.space 1
+	.ascii "uMinus_param_u16_i64"
+	.space 1
+	.ascii "Minus_var_u16_i64"
+	.space 1
+	.ascii "uMinus_var_u16_i64"
+	.space 1
+	.ascii "Minus_param_C_i32"
+	.space 1
+	.ascii "uMinus_param_C_i32"
+	.space 1
+	.ascii "Minus_var_C_i32"
+	.space 1
+	.ascii "uMinus_var_C_i32"
+	.space 1
+	.ascii "Minus_param_C_i16"
+	.space 1
+	.ascii "uMinus_param_C_i16"
+	.space 1
+	.ascii "Minus_var_C_i16"
+	.space 1
+	.ascii "uMinus_var_C_i16"
+	.space 1
+	.ascii "Minus_param_C_L"
+	.space 1
+	.ascii "uMinus_param_C_L"
+	.space 1
+	.ascii "Minus_var_C_L"
+	.space 1
+	.ascii "uMinus_var_C_L"
+	.space 1
+	.ascii "Minus_param_C_u64"
+	.space 1
+	.ascii "uMinus_param_C_u64"
+	.space 1
+	.ascii "Minus_var_C_u64"
+	.space 1
+	.ascii "uMinus_var_C_u64"
+	.space 1
+	.ascii "Minus_param_C_u16"
+	.space 1
+	.ascii "uMinus_param_C_u16"
+	.space 1
+	.ascii "Minus_var_C_u16"
+	.space 1
+	.ascii "uMinus_var_C_u16"
+	.space 1
+	.ascii "Minus_param_C_C"
+	.space 1
+	.ascii "uMinus_param_C_C"
+	.space 1
+	.ascii "Minus_var_C_C"
+	.space 1
+	.ascii "uMinus_var_C_C"
+	.space 1
+	.ascii "Minus_param_C_u32"
+	.space 1
+	.ascii "uMinus_param_C_u32"
+	.space 1
+	.ascii "Minus_var_C_u32"
+	.space 1
+	.ascii "uMinus_var_C_u32"
+	.space 1
+	.ascii "Minus_param_C_i8"
+	.space 1
+	.ascii "uMinus_param_C_i8"
+	.space 1
+	.ascii "Minus_var_C_i8"
+	.space 1
+	.ascii "uMinus_var_C_i8"
+	.space 1
+	.ascii "Minus_param_C_I"
+	.space 1
+	.ascii "uMinus_param_C_I"
+	.space 1
+	.ascii "Minus_var_C_I"
+	.space 1
+	.ascii "uMinus_var_C_I"
+	.space 1
+	.ascii "Minus_param_C_u8"
+	.space 1
+	.ascii "uMinus_param_C_u8"
+	.space 1
+	.ascii "Minus_var_C_u8"
+	.space 1
+	.ascii "uMinus_var_C_u8"
+	.space 1
+	.ascii "Minus_param_C_LC"
+	.space 1
+	.ascii "uMinus_param_C_LC"
+	.space 1
+	.ascii "Minus_var_C_LC"
+	.space 1
+	.ascii "uMinus_var_C_LC"
+	.space 1
+	.ascii "Minus_param_C_i64"
+	.space 1
+	.ascii "uMinus_param_C_i64"
+	.space 1
+	.ascii "Minus_var_C_i64"
+	.space 1
+	.ascii "uMinus_var_C_i64"
+	.space 1
+	.ascii "Minus_param_u32_i32"
+	.space 1
+	.ascii "uMinus_param_u32_i32"
+	.space 1
+	.ascii "Minus_var_u32_i32"
+	.space 1
+	.ascii "uMinus_var_u32_i32"
+	.space 1
+	.ascii "Minus_param_u32_i16"
+	.space 1
+	.ascii "uMinus_param_u32_i16"
+	.space 1
+	.ascii "Minus_var_u32_i16"
+	.space 1
+	.ascii "uMinus_var_u32_i16"
+	.space 1
+	.ascii "Minus_param_u32_L"
+	.space 1
+	.ascii "uMinus_param_u32_L"
+	.space 1
+	.ascii "Minus_var_u32_L"
+	.space 1
+	.ascii "uMinus_var_u32_L"
+	.space 1
+	.ascii "Minus_param_u32_u64"
+	.space 1
+	.ascii "uMinus_param_u32_u64"
+	.space 1
+	.ascii "Minus_var_u32_u64"
+	.space 1
+	.ascii "uMinus_var_u32_u64"
+	.space 1
+	.ascii "Minus_param_u32_u16"
+	.space 1
+	.ascii "uMinus_param_u32_u16"
+	.space 1
+	.ascii "Minus_var_u32_u16"
+	.space 1
+	.ascii "uMinus_var_u32_u16"
+	.space 1
+	.ascii "Minus_param_u32_C"
+	.space 1
+	.ascii "uMinus_param_u32_C"
+	.space 1
+	.ascii "Minus_var_u32_C"
+	.space 1
+	.ascii "uMinus_var_u32_C"
+	.space 1
+	.ascii "Minus_param_u32_u32"
+	.space 1
+	.ascii "uMinus_param_u32_u32"
+	.space 1
+	.ascii "Minus_var_u32_u32"
+	.space 1
+	.ascii "uMinus_var_u32_u32"
+	.space 1
+	.ascii "Minus_param_u32_i8"
+	.space 1
+	.ascii "uMinus_param_u32_i8"
+	.space 1
+	.ascii "Minus_var_u32_i8"
+	.space 1
+	.ascii "uMinus_var_u32_i8"
+	.space 1
+	.ascii "Minus_param_u32_I"
+	.space 1
+	.ascii "uMinus_param_u32_I"
+	.space 1
+	.ascii "Minus_var_u32_I"
+	.space 1
+	.ascii "uMinus_var_u32_I"
+	.space 1
+	.ascii "Minus_param_u32_u8"
+	.space 1
+	.ascii "uMinus_param_u32_u8"
+	.space 1
+	.ascii "Minus_var_u32_u8"
+	.space 1
+	.ascii "uMinus_var_u32_u8"
+	.space 1
+	.ascii "Minus_param_u32_LC"
+	.space 1
+	.ascii "uMinus_param_u32_LC"
+	.space 1
+	.ascii "Minus_var_u32_LC"
+	.space 1
+	.ascii "uMinus_var_u32_LC"
+	.space 1
+	.ascii "Minus_param_u32_i64"
+	.space 1
+	.ascii "uMinus_param_u32_i64"
+	.space 1
+	.ascii "Minus_var_u32_i64"
+	.space 1
+	.ascii "uMinus_var_u32_i64"
+	.space 1
+	.ascii "Minus_param_i8_i32"
+	.space 1
+	.ascii "uMinus_param_i8_i32"
+	.space 1
+	.ascii "Minus_var_i8_i32"
+	.space 1
+	.ascii "uMinus_var_i8_i32"
+	.space 1
+	.ascii "Minus_param_i8_i16"
+	.space 1
+	.ascii "uMinus_param_i8_i16"
+	.space 1
+	.ascii "Minus_var_i8_i16"
+	.space 1
+	.ascii "uMinus_var_i8_i16"
+	.space 1
+	.ascii "Minus_param_i8_L"
+	.space 1
+	.ascii "uMinus_param_i8_L"
+	.space 1
+	.ascii "Minus_var_i8_L"
+	.space 1
+	.ascii "uMinus_var_i8_L"
+	.space 1
+	.ascii "Minus_param_i8_u64"
+	.space 1
+	.ascii "uMinus_param_i8_u64"
+	.space 1
+	.ascii "Minus_var_i8_u64"
+	.space 1
+	.ascii "uMinus_var_i8_u64"
+	.space 1
+	.ascii "Minus_param_i8_u16"
+	.space 1
+	.ascii "uMinus_param_i8_u16"
+	.space 1
+	.ascii "Minus_var_i8_u16"
+	.space 1
+	.ascii "uMinus_var_i8_u16"
+	.space 1
+	.ascii "Minus_param_i8_C"
+	.space 1
+	.ascii "uMinus_param_i8_C"
+	.space 1
+	.ascii "Minus_var_i8_C"
+	.space 1
+	.ascii "uMinus_var_i8_C"
+	.space 1
+	.ascii "Minus_param_i8_u32"
+	.space 1
+	.ascii "uMinus_param_i8_u32"
+	.space 1
+	.ascii "Minus_var_i8_u32"
+	.space 1
+	.ascii "uMinus_var_i8_u32"
+	.space 1
+	.ascii "Minus_param_i8_i8"
+	.space 1
+	.ascii "uMinus_param_i8_i8"
+	.space 1
+	.ascii "Minus_var_i8_i8"
+	.space 1
+	.ascii "uMinus_var_i8_i8"
+	.space 1
+	.ascii "Minus_param_i8_I"
+	.space 1
+	.ascii "uMinus_param_i8_I"
+	.space 1
+	.ascii "Minus_var_i8_I"
+	.space 1
+	.ascii "uMinus_var_i8_I"
+	.space 1
+	.ascii "Minus_param_i8_u8"
+	.space 1
+	.ascii "uMinus_param_i8_u8"
+	.space 1
+	.ascii "Minus_var_i8_u8"
+	.space 1
+	.ascii "uMinus_var_i8_u8"
+	.space 1
+	.ascii "Minus_param_i8_LC"
+	.space 1
+	.ascii "uMinus_param_i8_LC"
+	.space 1
+	.ascii "Minus_var_i8_LC"
+	.space 1
+	.ascii "uMinus_var_i8_LC"
+	.space 1
+	.ascii "Minus_param_i8_i64"
+	.space 1
+	.ascii "uMinus_param_i8_i64"
+	.space 1
+	.ascii "Minus_var_i8_i64"
+	.space 1
+	.ascii "uMinus_var_i8_i64"
+	.space 1
+	.ascii "Minus_param_I_i32"
+	.space 1
+	.ascii "uMinus_param_I_i32"
+	.space 1
+	.ascii "Minus_var_I_i32"
+	.space 1
+	.ascii "uMinus_var_I_i32"
+	.space 1
+	.ascii "Minus_param_I_i16"
+	.space 1
+	.ascii "uMinus_param_I_i16"
+	.space 1
+	.ascii "Minus_var_I_i16"
+	.space 1
+	.ascii "uMinus_var_I_i16"
+	.space 1
+	.ascii "Minus_param_I_L"
+	.space 1
+	.ascii "uMinus_param_I_L"
+	.space 1
+	.ascii "Minus_var_I_L"
+	.space 1
+	.ascii "uMinus_var_I_L"
+	.space 1
+	.ascii "Minus_param_I_u64"
+	.space 1
+	.ascii "uMinus_param_I_u64"
+	.space 1
+	.ascii "Minus_var_I_u64"
+	.space 1
+	.ascii "uMinus_var_I_u64"
+	.space 1
+	.ascii "Minus_param_I_u16"
+	.space 1
+	.ascii "uMinus_param_I_u16"
+	.space 1
+	.ascii "Minus_var_I_u16"
+	.space 1
+	.ascii "uMinus_var_I_u16"
+	.space 1
+	.ascii "Minus_param_I_C"
+	.space 1
+	.ascii "uMinus_param_I_C"
+	.space 1
+	.ascii "Minus_var_I_C"
+	.space 1
+	.ascii "uMinus_var_I_C"
+	.space 1
+	.ascii "Minus_param_I_u32"
+	.space 1
+	.ascii "uMinus_param_I_u32"
+	.space 1
+	.ascii "Minus_var_I_u32"
+	.space 1
+	.ascii "uMinus_var_I_u32"
+	.space 1
+	.ascii "Minus_param_I_i8"
+	.space 1
+	.ascii "uMinus_param_I_i8"
+	.space 1
+	.ascii "Minus_var_I_i8"
+	.space 1
+	.ascii "uMinus_var_I_i8"
+	.space 1
+	.ascii "Minus_param_I_I"
+	.space 1
+	.ascii "uMinus_param_I_I"
+	.space 1
+	.ascii "Minus_var_I_I"
+	.space 1
+	.ascii "uMinus_var_I_I"
+	.space 1
+	.ascii "Minus_param_I_u8"
+	.space 1
+	.ascii "uMinus_param_I_u8"
+	.space 1
+	.ascii "Minus_var_I_u8"
+	.space 1
+	.ascii "uMinus_var_I_u8"
+	.space 1
+	.ascii "Minus_param_I_LC"
+	.space 1
+	.ascii "uMinus_param_I_LC"
+	.space 1
+	.ascii "Minus_var_I_LC"
+	.space 1
+	.ascii "uMinus_var_I_LC"
+	.space 1
+	.ascii "Minus_param_I_i64"
+	.space 1
+	.ascii "uMinus_param_I_i64"
+	.space 1
+	.ascii "Minus_var_I_i64"
+	.space 1
+	.ascii "uMinus_var_I_i64"
+	.space 1
+	.ascii "Minus_param_u8_i32"
+	.space 1
+	.ascii "uMinus_param_u8_i32"
+	.space 1
+	.ascii "Minus_var_u8_i32"
+	.space 1
+	.ascii "uMinus_var_u8_i32"
+	.space 1
+	.ascii "Minus_param_u8_i16"
+	.space 1
+	.ascii "uMinus_param_u8_i16"
+	.space 1
+	.ascii "Minus_var_u8_i16"
+	.space 1
+	.ascii "uMinus_var_u8_i16"
+	.space 1
+	.ascii "Minus_param_u8_L"
+	.space 1
+	.ascii "uMinus_param_u8_L"
+	.space 1
+	.ascii "Minus_var_u8_L"
+	.space 1
+	.ascii "uMinus_var_u8_L"
+	.space 1
+	.ascii "Minus_param_u8_u64"
+	.space 1
+	.ascii "uMinus_param_u8_u64"
+	.space 1
+	.ascii "Minus_var_u8_u64"
+	.space 1
+	.ascii "uMinus_var_u8_u64"
+	.space 1
+	.ascii "Minus_param_u8_u16"
+	.space 1
+	.ascii "uMinus_param_u8_u16"
+	.space 1
+	.ascii "Minus_var_u8_u16"
+	.space 1
+	.ascii "uMinus_var_u8_u16"
+	.space 1
+	.ascii "Minus_param_u8_C"
+	.space 1
+	.ascii "uMinus_param_u8_C"
+	.space 1
+	.ascii "Minus_var_u8_C"
+	.space 1
+	.ascii "uMinus_var_u8_C"
+	.space 1
+	.ascii "Minus_param_u8_u32"
+	.space 1
+	.ascii "uMinus_param_u8_u32"
+	.space 1
+	.ascii "Minus_var_u8_u32"
+	.space 1
+	.ascii "uMinus_var_u8_u32"
+	.space 1
+	.ascii "Minus_param_u8_i8"
+	.space 1
+	.ascii "uMinus_param_u8_i8"
+	.space 1
+	.ascii "Minus_var_u8_i8"
+	.space 1
+	.ascii "uMinus_var_u8_i8"
+	.space 1
+	.ascii "Minus_param_u8_I"
+	.space 1
+	.ascii "uMinus_param_u8_I"
+	.space 1
+	.ascii "Minus_var_u8_I"
+	.space 1
+	.ascii "uMinus_var_u8_I"
+	.space 1
+	.ascii "Minus_param_u8_u8"
+	.space 1
+	.ascii "uMinus_param_u8_u8"
+	.space 1
+	.ascii "Minus_var_u8_u8"
+	.space 1
+	.ascii "uMinus_var_u8_u8"
+	.space 1
+	.ascii "Minus_param_u8_LC"
+	.space 1
+	.ascii "uMinus_param_u8_LC"
+	.space 1
+	.ascii "Minus_var_u8_LC"
+	.space 1
+	.ascii "uMinus_var_u8_LC"
+	.space 1
+	.ascii "Minus_param_u8_i64"
+	.space 1
+	.ascii "uMinus_param_u8_i64"
+	.space 1
+	.ascii "Minus_var_u8_i64"
+	.space 1
+	.ascii "uMinus_var_u8_i64"
+	.space 1
+	.ascii "Minus_param_f32_f32"
+	.space 1
+	.ascii "Minus_var_f32_f32"
+	.space 1
+	.ascii "Minus_param_LC_i32"
+	.space 1
+	.ascii "uMinus_param_LC_i32"
+	.space 1
+	.ascii "Minus_var_LC_i32"
+	.space 1
+	.ascii "uMinus_var_LC_i32"
+	.space 1
+	.ascii "Minus_param_LC_i16"
+	.space 1
+	.ascii "uMinus_param_LC_i16"
+	.space 1
+	.ascii "Minus_var_LC_i16"
+	.space 1
+	.ascii "uMinus_var_LC_i16"
+	.space 1
+	.ascii "Minus_param_LC_L"
+	.space 1
+	.ascii "uMinus_param_LC_L"
+	.space 1
+	.ascii "Minus_var_LC_L"
+	.space 1
+	.ascii "uMinus_var_LC_L"
+	.space 1
+	.ascii "Minus_param_LC_u64"
+	.space 1
+	.ascii "uMinus_param_LC_u64"
+	.space 1
+	.ascii "Minus_var_LC_u64"
+	.space 1
+	.ascii "uMinus_var_LC_u64"
+	.space 1
+	.ascii "Minus_param_LC_u16"
+	.space 1
+	.ascii "uMinus_param_LC_u16"
+	.space 1
+	.ascii "Minus_var_LC_u16"
+	.space 1
+	.ascii "uMinus_var_LC_u16"
+	.space 1
+	.ascii "Minus_param_LC_C"
+	.space 1
+	.ascii "uMinus_param_LC_C"
+	.space 1
+	.ascii "Minus_var_LC_C"
+	.space 1
+	.ascii "uMinus_var_LC_C"
+	.space 1
+	.ascii "Minus_param_LC_u32"
+	.space 1
+	.ascii "uMinus_param_LC_u32"
+	.space 1
+	.ascii "Minus_var_LC_u32"
+	.space 1
+	.ascii "uMinus_var_LC_u32"
+	.space 1
+	.ascii "Minus_param_LC_i8"
+	.space 1
+	.ascii "uMinus_param_LC_i8"
+	.space 1
+	.ascii "Minus_var_LC_i8"
+	.space 1
+	.ascii "uMinus_var_LC_i8"
+	.space 1
+	.ascii "Minus_param_LC_I"
+	.space 1
+	.ascii "uMinus_param_LC_I"
+	.space 1
+	.ascii "Minus_var_LC_I"
+	.space 1
+	.ascii "uMinus_var_LC_I"
+	.space 1
+	.ascii "Minus_param_LC_u8"
+	.space 1
+	.ascii "uMinus_param_LC_u8"
+	.space 1
+	.ascii "Minus_var_LC_u8"
+	.space 1
+	.ascii "uMinus_var_LC_u8"
+	.space 1
+	.ascii "Minus_param_LC_LC"
+	.space 1
+	.ascii "uMinus_param_LC_LC"
+	.space 1
+	.ascii "Minus_var_LC_LC"
+	.space 1
+	.ascii "uMinus_var_LC_LC"
+	.space 1
+	.ascii "Minus_param_LC_i64"
+	.space 1
+	.ascii "uMinus_param_LC_i64"
+	.space 1
+	.ascii "Minus_var_LC_i64"
+	.space 1
+	.ascii "uMinus_var_LC_i64"
+	.space 1
+	.ascii "Minus_param_i64_i32"
+	.space 1
+	.ascii "uMinus_param_i64_i32"
+	.space 1
+	.ascii "Minus_var_i64_i32"
+	.space 1
+	.ascii "uMinus_var_i64_i32"
+	.space 1
+	.ascii "Minus_param_i64_i16"
+	.space 1
+	.ascii "uMinus_param_i64_i16"
+	.space 1
+	.ascii "Minus_var_i64_i16"
+	.space 1
+	.ascii "uMinus_var_i64_i16"
+	.space 1
+	.ascii "Minus_param_i64_L"
+	.space 1
+	.ascii "uMinus_param_i64_L"
+	.space 1
+	.ascii "Minus_var_i64_L"
+	.space 1
+	.ascii "uMinus_var_i64_L"
+	.space 1
+	.ascii "Minus_param_i64_u64"
+	.space 1
+	.ascii "uMinus_param_i64_u64"
+	.space 1
+	.ascii "Minus_var_i64_u64"
+	.space 1
+	.ascii "uMinus_var_i64_u64"
+	.space 1
+	.ascii "Minus_param_i64_u16"
+	.space 1
+	.ascii "uMinus_param_i64_u16"
+	.space 1
+	.ascii "Minus_var_i64_u16"
+	.space 1
+	.ascii "uMinus_var_i64_u16"
+	.space 1
+	.ascii "Minus_param_i64_C"
+	.space 1
+	.ascii "uMinus_param_i64_C"
+	.space 1
+	.ascii "Minus_var_i64_C"
+	.space 1
+	.ascii "uMinus_var_i64_C"
+	.space 1
+	.ascii "Minus_param_i64_u32"
+	.space 1
+	.ascii "uMinus_param_i64_u32"
+	.space 1
+	.ascii "Minus_var_i64_u32"
+	.space 1
+	.ascii "uMinus_var_i64_u32"
+	.space 1
+	.ascii "Minus_param_i64_i8"
+	.space 1
+	.ascii "uMinus_param_i64_i8"
+	.space 1
+	.ascii "Minus_var_i64_i8"
+	.space 1
+	.ascii "uMinus_var_i64_i8"
+	.space 1
+	.ascii "Minus_param_i64_I"
+	.space 1
+	.ascii "uMinus_param_i64_I"
+	.space 1
+	.ascii "Minus_var_i64_I"
+	.space 1
+	.ascii "uMinus_var_i64_I"
+	.space 1
+	.ascii "Minus_param_i64_u8"
+	.space 1
+	.ascii "uMinus_param_i64_u8"
+	.space 1
+	.ascii "Minus_var_i64_u8"
+	.space 1
+	.ascii "uMinus_var_i64_u8"
+	.space 1
+	.ascii "Minus_param_i64_LC"
+	.space 1
+	.ascii "uMinus_param_i64_LC"
+	.space 1
+	.ascii "Minus_var_i64_LC"
+	.space 1
+	.ascii "uMinus_var_i64_LC"
+	.space 1
+	.ascii "Minus_param_i64_i64"
+	.space 1
+	.ascii "uMinus_param_i64_i64"
+	.space 1
+	.ascii "Minus_var_i64_i64"
+	.space 1
+	.ascii "uMinus_var_i64_i64"
 	.space 4
 	.quad	_Minus_M3
 	.quad	_L_1
-	.quad	_Minus__Minus_param_u32_u32
-	.quad	_L_1+9
-	.quad	_Minus__uMinus_param_u32_u32
-	.quad	_L_1+29
-	.quad	_Minus__Minus_var_u32_u32
-	.quad	_L_1+50
-	.quad	_Minus__uMinus_var_u32_u32
-	.quad	_L_1+68
-	.quad	_Minus__Minus_param_u32_L
-	.quad	_L_1+87
-	.quad	_Minus__uMinus_param_u32_L
-	.quad	_L_1+105
-	.quad	_Minus__Minus_var_u32_L
-	.quad	_L_1+124
-	.quad	_Minus__uMinus_var_u32_L
-	.quad	_L_1+140
-	.quad	_Minus__Minus_param_u32_i8
-	.quad	_L_1+157
-	.quad	_Minus__uMinus_param_u32_i8
-	.quad	_L_1+176
-	.quad	_Minus__Minus_var_u32_i8
-	.quad	_L_1+196
-	.quad	_Minus__uMinus_var_u32_i8
-	.quad	_L_1+213
-	.quad	_Minus__Minus_param_u32_u8
-	.quad	_L_1+231
-	.quad	_Minus__uMinus_param_u32_u8
-	.quad	_L_1+250
-	.quad	_Minus__Minus_var_u32_u8
-	.quad	_L_1+270
-	.quad	_Minus__uMinus_var_u32_u8
-	.quad	_L_1+287
-	.quad	_Minus__Minus_param_u32_C
-	.quad	_L_1+305
-	.quad	_Minus__uMinus_param_u32_C
-	.quad	_L_1+323
-	.quad	_Minus__Minus_var_u32_C
-	.quad	_L_1+342
-	.quad	_Minus__uMinus_var_u32_C
-	.quad	_L_1+358
-	.quad	_Minus__Minus_param_u32_i64
-	.quad	_L_1+375
-	.quad	_Minus__uMinus_param_u32_i64
-	.quad	_L_1+395
-	.quad	_Minus__Minus_var_u32_i64
-	.quad	_L_1+416
-	.quad	_Minus__uMinus_var_u32_i64
-	.quad	_L_1+434
-	.quad	_Minus__Minus_param_u32_I
-	.quad	_L_1+453
-	.quad	_Minus__uMinus_param_u32_I
-	.quad	_L_1+471
-	.quad	_Minus__Minus_var_u32_I
-	.quad	_L_1+490
-	.quad	_Minus__uMinus_var_u32_I
-	.quad	_L_1+506
-	.quad	_Minus__Minus_param_u32_i32
-	.quad	_L_1+523
-	.quad	_Minus__uMinus_param_u32_i32
-	.quad	_L_1+543
-	.quad	_Minus__Minus_var_u32_i32
-	.quad	_L_1+564
-	.quad	_Minus__uMinus_var_u32_i32
-	.quad	_L_1+582
-	.quad	_Minus__Minus_param_u32_i16
-	.quad	_L_1+601
-	.quad	_Minus__uMinus_param_u32_i16
-	.quad	_L_1+621
-	.quad	_Minus__Minus_var_u32_i16
-	.quad	_L_1+642
-	.quad	_Minus__uMinus_var_u32_i16
-	.quad	_L_1+660
-	.quad	_Minus__Minus_param_u32_LC
-	.quad	_L_1+679
-	.quad	_Minus__uMinus_param_u32_LC
-	.quad	_L_1+698
-	.quad	_Minus__Minus_var_u32_LC
-	.quad	_L_1+718
-	.quad	_Minus__uMinus_var_u32_LC
-	.quad	_L_1+735
-	.quad	_Minus__Minus_param_u32_u64
-	.quad	_L_1+753
-	.quad	_Minus__uMinus_param_u32_u64
-	.quad	_L_1+773
-	.quad	_Minus__Minus_var_u32_u64
-	.quad	_L_1+794
-	.quad	_Minus__uMinus_var_u32_u64
-	.quad	_L_1+812
-	.quad	_Minus__Minus_param_u32_u16
-	.quad	_L_1+831
-	.quad	_Minus__uMinus_param_u32_u16
-	.quad	_L_1+851
-	.quad	_Minus__Minus_var_u32_u16
-	.quad	_L_1+872
-	.quad	_Minus__uMinus_var_u32_u16
-	.quad	_L_1+890
-	.quad	_Minus__Minus_param_L_u32
-	.quad	_L_1+909
-	.quad	_Minus__uMinus_param_L_u32
-	.quad	_L_1+927
-	.quad	_Minus__Minus_var_L_u32
-	.quad	_L_1+946
-	.quad	_Minus__uMinus_var_L_u32
-	.quad	_L_1+962
-	.quad	_Minus__Minus_param_L_L
-	.quad	_L_1+979
-	.quad	_Minus__uMinus_param_L_L
-	.quad	_L_1+995
-	.quad	_Minus__Minus_var_L_L
-	.quad	_L_1+1012
-	.quad	_Minus__uMinus_var_L_L
-	.quad	_L_1+1026
-	.quad	_Minus__Minus_param_L_i8
-	.quad	_L_1+1041
-	.quad	_Minus__uMinus_param_L_i8
-	.quad	_L_1+1058
-	.quad	_Minus__Minus_var_L_i8
-	.quad	_L_1+1076
-	.quad	_Minus__uMinus_var_L_i8
-	.quad	_L_1+1091
-	.quad	_Minus__Minus_param_L_u8
-	.quad	_L_1+1107
-	.quad	_Minus__uMinus_param_L_u8
-	.quad	_L_1+1124
-	.quad	_Minus__Minus_var_L_u8
-	.quad	_L_1+1142
-	.quad	_Minus__uMinus_var_L_u8
-	.quad	_L_1+1157
-	.quad	_Minus__Minus_param_L_C
-	.quad	_L_1+1173
-	.quad	_Minus__uMinus_param_L_C
-	.quad	_L_1+1189
-	.quad	_Minus__Minus_var_L_C
-	.quad	_L_1+1206
-	.quad	_Minus__uMinus_var_L_C
-	.quad	_L_1+1220
-	.quad	_Minus__Minus_param_L_i64
-	.quad	_L_1+1235
-	.quad	_Minus__uMinus_param_L_i64
-	.quad	_L_1+1253
-	.quad	_Minus__Minus_var_L_i64
-	.quad	_L_1+1272
-	.quad	_Minus__uMinus_var_L_i64
-	.quad	_L_1+1288
-	.quad	_Minus__Minus_param_L_I
-	.quad	_L_1+1305
-	.quad	_Minus__uMinus_param_L_I
-	.quad	_L_1+1321
-	.quad	_Minus__Minus_var_L_I
-	.quad	_L_1+1338
-	.quad	_Minus__uMinus_var_L_I
-	.quad	_L_1+1352
-	.quad	_Minus__Minus_param_L_i32
-	.quad	_L_1+1367
-	.quad	_Minus__uMinus_param_L_i32
-	.quad	_L_1+1385
-	.quad	_Minus__Minus_var_L_i32
-	.quad	_L_1+1404
-	.quad	_Minus__uMinus_var_L_i32
-	.quad	_L_1+1420
-	.quad	_Minus__Minus_param_L_i16
-	.quad	_L_1+1437
-	.quad	_Minus__uMinus_param_L_i16
-	.quad	_L_1+1455
-	.quad	_Minus__Minus_var_L_i16
-	.quad	_L_1+1474
-	.quad	_Minus__uMinus_var_L_i16
-	.quad	_L_1+1490
-	.quad	_Minus__Minus_param_L_LC
-	.quad	_L_1+1507
-	.quad	_Minus__uMinus_param_L_LC
-	.quad	_L_1+1524
-	.quad	_Minus__Minus_var_L_LC
-	.quad	_L_1+1542
-	.quad	_Minus__uMinus_var_L_LC
-	.quad	_L_1+1557
-	.quad	_Minus__Minus_param_L_u64
-	.quad	_L_1+1573
-	.quad	_Minus__uMinus_param_L_u64
-	.quad	_L_1+1591
-	.quad	_Minus__Minus_var_L_u64
-	.quad	_L_1+1610
-	.quad	_Minus__uMinus_var_L_u64
-	.quad	_L_1+1626
-	.quad	_Minus__Minus_param_L_u16
-	.quad	_L_1+1643
-	.quad	_Minus__uMinus_param_L_u16
-	.quad	_L_1+1661
-	.quad	_Minus__Minus_var_L_u16
-	.quad	_L_1+1680
-	.quad	_Minus__uMinus_var_L_u16
-	.quad	_L_1+1696
-	.quad	_Minus__Minus_param_i8_u32
-	.quad	_L_1+1713
-	.quad	_Minus__uMinus_param_i8_u32
-	.quad	_L_1+1732
-	.quad	_Minus__Minus_var_i8_u32
-	.quad	_L_1+1752
-	.quad	_Minus__uMinus_var_i8_u32
-	.quad	_L_1+1769
-	.quad	_Minus__Minus_param_i8_L
-	.quad	_L_1+1787
-	.quad	_Minus__uMinus_param_i8_L
-	.quad	_L_1+1804
-	.quad	_Minus__Minus_var_i8_L
-	.quad	_L_1+1822
-	.quad	_Minus__uMinus_var_i8_L
-	.quad	_L_1+1837
-	.quad	_Minus__Minus_param_i8_i8
-	.quad	_L_1+1853
-	.quad	_Minus__uMinus_param_i8_i8
-	.quad	_L_1+1871
-	.quad	_Minus__Minus_var_i8_i8
-	.quad	_L_1+1890
-	.quad	_Minus__uMinus_var_i8_i8
-	.quad	_L_1+1906
-	.quad	_Minus__Minus_param_i8_u8
-	.quad	_L_1+1923
-	.quad	_Minus__uMinus_param_i8_u8
-	.quad	_L_1+1941
-	.quad	_Minus__Minus_var_i8_u8
-	.quad	_L_1+1960
-	.quad	_Minus__uMinus_var_i8_u8
-	.quad	_L_1+1976
-	.quad	_Minus__Minus_param_i8_C
-	.quad	_L_1+1993
-	.quad	_Minus__uMinus_param_i8_C
-	.quad	_L_1+2010
-	.quad	_Minus__Minus_var_i8_C
-	.quad	_L_1+2028
-	.quad	_Minus__uMinus_var_i8_C
-	.quad	_L_1+2043
-	.quad	_Minus__Minus_param_i8_i64
-	.quad	_L_1+2059
-	.quad	_Minus__uMinus_param_i8_i64
-	.quad	_L_1+2078
-	.quad	_Minus__Minus_var_i8_i64
-	.quad	_L_1+2098
-	.quad	_Minus__uMinus_var_i8_i64
-	.quad	_L_1+2115
-	.quad	_Minus__Minus_param_i8_I
-	.quad	_L_1+2133
-	.quad	_Minus__uMinus_param_i8_I
-	.quad	_L_1+2150
-	.quad	_Minus__Minus_var_i8_I
-	.quad	_L_1+2168
-	.quad	_Minus__uMinus_var_i8_I
-	.quad	_L_1+2183
-	.quad	_Minus__Minus_param_i8_i32
-	.quad	_L_1+2199
-	.quad	_Minus__uMinus_param_i8_i32
-	.quad	_L_1+2218
-	.quad	_Minus__Minus_var_i8_i32
-	.quad	_L_1+2238
-	.quad	_Minus__uMinus_var_i8_i32
-	.quad	_L_1+2255
-	.quad	_Minus__Minus_param_i8_i16
-	.quad	_L_1+2273
-	.quad	_Minus__uMinus_param_i8_i16
-	.quad	_L_1+2292
-	.quad	_Minus__Minus_var_i8_i16
-	.quad	_L_1+2312
-	.quad	_Minus__uMinus_var_i8_i16
-	.quad	_L_1+2329
-	.quad	_Minus__Minus_param_i8_LC
-	.quad	_L_1+2347
-	.quad	_Minus__uMinus_param_i8_LC
-	.quad	_L_1+2365
-	.quad	_Minus__Minus_var_i8_LC
-	.quad	_L_1+2384
-	.quad	_Minus__uMinus_var_i8_LC
-	.quad	_L_1+2400
-	.quad	_Minus__Minus_param_i8_u64
-	.quad	_L_1+2417
-	.quad	_Minus__uMinus_param_i8_u64
-	.quad	_L_1+2436
-	.quad	_Minus__Minus_var_i8_u64
-	.quad	_L_1+2456
-	.quad	_Minus__uMinus_var_i8_u64
-	.quad	_L_1+2473
-	.quad	_Minus__Minus_param_i8_u16
-	.quad	_L_1+2491
-	.quad	_Minus__uMinus_param_i8_u16
-	.quad	_L_1+2510
-	.quad	_Minus__Minus_var_i8_u16
-	.quad	_L_1+2530
-	.quad	_Minus__uMinus_var_i8_u16
-	.quad	_L_1+2547
-	.quad	_Minus__Minus_param_u8_u32
-	.quad	_L_1+2565
-	.quad	_Minus__uMinus_param_u8_u32
-	.quad	_L_1+2584
-	.quad	_Minus__Minus_var_u8_u32
-	.quad	_L_1+2604
-	.quad	_Minus__uMinus_var_u8_u32
-	.quad	_L_1+2621
-	.quad	_Minus__Minus_param_u8_L
-	.quad	_L_1+2639
-	.quad	_Minus__uMinus_param_u8_L
-	.quad	_L_1+2656
-	.quad	_Minus__Minus_var_u8_L
-	.quad	_L_1+2674
-	.quad	_Minus__uMinus_var_u8_L
-	.quad	_L_1+2689
-	.quad	_Minus__Minus_param_u8_i8
-	.quad	_L_1+2705
-	.quad	_Minus__uMinus_param_u8_i8
-	.quad	_L_1+2723
-	.quad	_Minus__Minus_var_u8_i8
-	.quad	_L_1+2742
-	.quad	_Minus__uMinus_var_u8_i8
-	.quad	_L_1+2758
-	.quad	_Minus__Minus_param_u8_u8
-	.quad	_L_1+2775
-	.quad	_Minus__uMinus_param_u8_u8
-	.quad	_L_1+2793
-	.quad	_Minus__Minus_var_u8_u8
-	.quad	_L_1+2812
-	.quad	_Minus__uMinus_var_u8_u8
-	.quad	_L_1+2828
-	.quad	_Minus__Minus_param_u8_C
-	.quad	_L_1+2845
-	.quad	_Minus__uMinus_param_u8_C
-	.quad	_L_1+2862
-	.quad	_Minus__Minus_var_u8_C
-	.quad	_L_1+2880
-	.quad	_Minus__uMinus_var_u8_C
-	.quad	_L_1+2895
-	.quad	_Minus__Minus_param_u8_i64
-	.quad	_L_1+2911
-	.quad	_Minus__uMinus_param_u8_i64
-	.quad	_L_1+2930
-	.quad	_Minus__Minus_var_u8_i64
-	.quad	_L_1+2950
-	.quad	_Minus__uMinus_var_u8_i64
-	.quad	_L_1+2967
-	.quad	_Minus__Minus_param_u8_I
-	.quad	_L_1+2985
-	.quad	_Minus__uMinus_param_u8_I
-	.quad	_L_1+3002
-	.quad	_Minus__Minus_var_u8_I
-	.quad	_L_1+3020
-	.quad	_Minus__uMinus_var_u8_I
-	.quad	_L_1+3035
-	.quad	_Minus__Minus_param_u8_i32
-	.quad	_L_1+3051
-	.quad	_Minus__uMinus_param_u8_i32
-	.quad	_L_1+3070
-	.quad	_Minus__Minus_var_u8_i32
-	.quad	_L_1+3090
-	.quad	_Minus__uMinus_var_u8_i32
-	.quad	_L_1+3107
-	.quad	_Minus__Minus_param_u8_i16
-	.quad	_L_1+3125
-	.quad	_Minus__uMinus_param_u8_i16
-	.quad	_L_1+3144
-	.quad	_Minus__Minus_var_u8_i16
-	.quad	_L_1+3164
-	.quad	_Minus__uMinus_var_u8_i16
-	.quad	_L_1+3181
-	.quad	_Minus__Minus_param_u8_LC
-	.quad	_L_1+3199
-	.quad	_Minus__uMinus_param_u8_LC
-	.quad	_L_1+3217
-	.quad	_Minus__Minus_var_u8_LC
-	.quad	_L_1+3236
-	.quad	_Minus__uMinus_var_u8_LC
-	.quad	_L_1+3252
-	.quad	_Minus__Minus_param_u8_u64
-	.quad	_L_1+3269
-	.quad	_Minus__uMinus_param_u8_u64
-	.quad	_L_1+3288
-	.quad	_Minus__Minus_var_u8_u64
-	.quad	_L_1+3308
-	.quad	_Minus__uMinus_var_u8_u64
-	.quad	_L_1+3325
-	.quad	_Minus__Minus_param_u8_u16
-	.quad	_L_1+3343
-	.quad	_Minus__uMinus_param_u8_u16
-	.quad	_L_1+3362
-	.quad	_Minus__Minus_var_u8_u16
-	.quad	_L_1+3382
-	.quad	_Minus__uMinus_var_u8_u16
-	.quad	_L_1+3399
-	.quad	_Minus__Minus_param_f32_f32
-	.quad	_L_1+3417
-	.quad	_Minus__Minus_var_f32_f32
-	.quad	_L_1+3437
-	.quad	_Minus__Minus_param_C_u32
-	.quad	_L_1+3455
-	.quad	_Minus__uMinus_param_C_u32
-	.quad	_L_1+3473
-	.quad	_Minus__Minus_var_C_u32
-	.quad	_L_1+3492
-	.quad	_Minus__uMinus_var_C_u32
-	.quad	_L_1+3508
-	.quad	_Minus__Minus_param_C_L
-	.quad	_L_1+3525
-	.quad	_Minus__uMinus_param_C_L
-	.quad	_L_1+3541
-	.quad	_Minus__Minus_var_C_L
-	.quad	_L_1+3558
-	.quad	_Minus__uMinus_var_C_L
-	.quad	_L_1+3572
-	.quad	_Minus__Minus_param_C_i8
-	.quad	_L_1+3587
-	.quad	_Minus__uMinus_param_C_i8
-	.quad	_L_1+3604
-	.quad	_Minus__Minus_var_C_i8
-	.quad	_L_1+3622
-	.quad	_Minus__uMinus_var_C_i8
-	.quad	_L_1+3637
-	.quad	_Minus__Minus_param_C_u8
-	.quad	_L_1+3653
-	.quad	_Minus__uMinus_param_C_u8
-	.quad	_L_1+3670
-	.quad	_Minus__Minus_var_C_u8
-	.quad	_L_1+3688
-	.quad	_Minus__uMinus_var_C_u8
-	.quad	_L_1+3703
-	.quad	_Minus__Minus_param_C_C
-	.quad	_L_1+3719
-	.quad	_Minus__uMinus_param_C_C
-	.quad	_L_1+3735
-	.quad	_Minus__Minus_var_C_C
-	.quad	_L_1+3752
-	.quad	_Minus__uMinus_var_C_C
-	.quad	_L_1+3766
-	.quad	_Minus__Minus_param_C_i64
-	.quad	_L_1+3781
-	.quad	_Minus__uMinus_param_C_i64
-	.quad	_L_1+3799
-	.quad	_Minus__Minus_var_C_i64
-	.quad	_L_1+3818
-	.quad	_Minus__uMinus_var_C_i64
-	.quad	_L_1+3834
-	.quad	_Minus__Minus_param_C_I
-	.quad	_L_1+3851
-	.quad	_Minus__uMinus_param_C_I
-	.quad	_L_1+3867
-	.quad	_Minus__Minus_var_C_I
-	.quad	_L_1+3884
-	.quad	_Minus__uMinus_var_C_I
-	.quad	_L_1+3898
-	.quad	_Minus__Minus_param_C_i32
-	.quad	_L_1+3913
-	.quad	_Minus__uMinus_param_C_i32
-	.quad	_L_1+3931
-	.quad	_Minus__Minus_var_C_i32
-	.quad	_L_1+3950
-	.quad	_Minus__uMinus_var_C_i32
-	.quad	_L_1+3966
-	.quad	_Minus__Minus_param_C_i16
-	.quad	_L_1+3983
-	.quad	_Minus__uMinus_param_C_i16
-	.quad	_L_1+4001
-	.quad	_Minus__Minus_var_C_i16
-	.quad	_L_1+4020
-	.quad	_Minus__uMinus_var_C_i16
-	.quad	_L_1+4036
-	.quad	_Minus__Minus_param_C_LC
-	.quad	_L_1+4053
-	.quad	_Minus__uMinus_param_C_LC
-	.quad	_L_1+4070
-	.quad	_Minus__Minus_var_C_LC
-	.quad	_L_1+4088
-	.quad	_Minus__uMinus_var_C_LC
-	.quad	_L_1+4103
-	.quad	_Minus__Minus_param_C_u64
-	.quad	_L_1+4119
-	.quad	_Minus__uMinus_param_C_u64
-	.quad	_L_1+4137
-	.quad	_Minus__Minus_var_C_u64
-	.quad	_L_1+4156
-	.quad	_Minus__uMinus_var_C_u64
-	.quad	_L_1+4172
-	.quad	_Minus__Minus_param_C_u16
-	.quad	_L_1+4189
-	.quad	_Minus__uMinus_param_C_u16
-	.quad	_L_1+4207
-	.quad	_Minus__Minus_var_C_u16
-	.quad	_L_1+4226
-	.quad	_Minus__uMinus_var_C_u16
-	.quad	_L_1+4242
-	.quad	_Minus__Minus_param_i64_u32
-	.quad	_L_1+4259
-	.quad	_Minus__uMinus_param_i64_u32
-	.quad	_L_1+4279
-	.quad	_Minus__Minus_var_i64_u32
-	.quad	_L_1+4300
-	.quad	_Minus__uMinus_var_i64_u32
-	.quad	_L_1+4318
-	.quad	_Minus__Minus_param_i64_L
-	.quad	_L_1+4337
-	.quad	_Minus__uMinus_param_i64_L
-	.quad	_L_1+4355
-	.quad	_Minus__Minus_var_i64_L
-	.quad	_L_1+4374
-	.quad	_Minus__uMinus_var_i64_L
-	.quad	_L_1+4390
-	.quad	_Minus__Minus_param_i64_i8
-	.quad	_L_1+4407
-	.quad	_Minus__uMinus_param_i64_i8
-	.quad	_L_1+4426
-	.quad	_Minus__Minus_var_i64_i8
-	.quad	_L_1+4446
-	.quad	_Minus__uMinus_var_i64_i8
-	.quad	_L_1+4463
-	.quad	_Minus__Minus_param_i64_u8
-	.quad	_L_1+4481
-	.quad	_Minus__uMinus_param_i64_u8
-	.quad	_L_1+4500
-	.quad	_Minus__Minus_var_i64_u8
-	.quad	_L_1+4520
-	.quad	_Minus__uMinus_var_i64_u8
-	.quad	_L_1+4537
-	.quad	_Minus__Minus_param_i64_C
-	.quad	_L_1+4555
-	.quad	_Minus__uMinus_param_i64_C
-	.quad	_L_1+4573
-	.quad	_Minus__Minus_var_i64_C
-	.quad	_L_1+4592
-	.quad	_Minus__uMinus_var_i64_C
-	.quad	_L_1+4608
-	.quad	_Minus__Minus_param_i64_i64
-	.quad	_L_1+4625
-	.quad	_Minus__uMinus_param_i64_i64
-	.quad	_L_1+4645
-	.quad	_Minus__Minus_var_i64_i64
-	.quad	_L_1+4666
-	.quad	_Minus__uMinus_var_i64_i64
-	.quad	_L_1+4684
-	.quad	_Minus__Minus_param_i64_I
-	.quad	_L_1+4703
-	.quad	_Minus__uMinus_param_i64_I
-	.quad	_L_1+4721
-	.quad	_Minus__Minus_var_i64_I
-	.quad	_L_1+4740
-	.quad	_Minus__uMinus_var_i64_I
-	.quad	_L_1+4756
-	.quad	_Minus__Minus_param_i64_i32
-	.quad	_L_1+4773
-	.quad	_Minus__uMinus_param_i64_i32
-	.quad	_L_1+4793
-	.quad	_Minus__Minus_var_i64_i32
-	.quad	_L_1+4814
-	.quad	_Minus__uMinus_var_i64_i32
-	.quad	_L_1+4832
-	.quad	_Minus__Minus_param_i64_i16
-	.quad	_L_1+4851
-	.quad	_Minus__uMinus_param_i64_i16
-	.quad	_L_1+4871
-	.quad	_Minus__Minus_var_i64_i16
-	.quad	_L_1+4892
-	.quad	_Minus__uMinus_var_i64_i16
-	.quad	_L_1+4910
-	.quad	_Minus__Minus_param_i64_LC
-	.quad	_L_1+4929
-	.quad	_Minus__uMinus_param_i64_LC
-	.quad	_L_1+4948
-	.quad	_Minus__Minus_var_i64_LC
-	.quad	_L_1+4968
-	.quad	_Minus__uMinus_var_i64_LC
-	.quad	_L_1+4985
-	.quad	_Minus__Minus_param_i64_u64
-	.quad	_L_1+5003
-	.quad	_Minus__uMinus_param_i64_u64
-	.quad	_L_1+5023
-	.quad	_Minus__Minus_var_i64_u64
-	.quad	_L_1+5044
-	.quad	_Minus__uMinus_var_i64_u64
-	.quad	_L_1+5062
-	.quad	_Minus__Minus_param_i64_u16
-	.quad	_L_1+5081
-	.quad	_Minus__uMinus_param_i64_u16
-	.quad	_L_1+5101
-	.quad	_Minus__Minus_var_i64_u16
-	.quad	_L_1+5122
-	.quad	_Minus__uMinus_var_i64_u16
-	.quad	_L_1+5140
-	.quad	_Minus__Minus_param_I_u32
-	.quad	_L_1+5159
-	.quad	_Minus__uMinus_param_I_u32
-	.quad	_L_1+5177
-	.quad	_Minus__Minus_var_I_u32
-	.quad	_L_1+5196
-	.quad	_Minus__uMinus_var_I_u32
-	.quad	_L_1+5212
-	.quad	_Minus__Minus_param_I_L
-	.quad	_L_1+5229
-	.quad	_Minus__uMinus_param_I_L
-	.quad	_L_1+5245
-	.quad	_Minus__Minus_var_I_L
-	.quad	_L_1+5262
-	.quad	_Minus__uMinus_var_I_L
-	.quad	_L_1+5276
-	.quad	_Minus__Minus_param_I_i8
-	.quad	_L_1+5291
-	.quad	_Minus__uMinus_param_I_i8
-	.quad	_L_1+5308
-	.quad	_Minus__Minus_var_I_i8
-	.quad	_L_1+5326
-	.quad	_Minus__uMinus_var_I_i8
-	.quad	_L_1+5341
-	.quad	_Minus__Minus_param_I_u8
-	.quad	_L_1+5357
-	.quad	_Minus__uMinus_param_I_u8
-	.quad	_L_1+5374
-	.quad	_Minus__Minus_var_I_u8
-	.quad	_L_1+5392
-	.quad	_Minus__uMinus_var_I_u8
-	.quad	_L_1+5407
-	.quad	_Minus__Minus_param_I_C
-	.quad	_L_1+5423
-	.quad	_Minus__uMinus_param_I_C
-	.quad	_L_1+5439
-	.quad	_Minus__Minus_var_I_C
-	.quad	_L_1+5456
-	.quad	_Minus__uMinus_var_I_C
-	.quad	_L_1+5470
-	.quad	_Minus__Minus_param_I_i64
-	.quad	_L_1+5485
-	.quad	_Minus__uMinus_param_I_i64
-	.quad	_L_1+5503
-	.quad	_Minus__Minus_var_I_i64
-	.quad	_L_1+5522
-	.quad	_Minus__uMinus_var_I_i64
-	.quad	_L_1+5538
-	.quad	_Minus__Minus_param_I_I
-	.quad	_L_1+5555
-	.quad	_Minus__uMinus_param_I_I
-	.quad	_L_1+5571
-	.quad	_Minus__Minus_var_I_I
-	.quad	_L_1+5588
-	.quad	_Minus__uMinus_var_I_I
-	.quad	_L_1+5602
-	.quad	_Minus__Minus_param_I_i32
-	.quad	_L_1+5617
-	.quad	_Minus__uMinus_param_I_i32
-	.quad	_L_1+5635
-	.quad	_Minus__Minus_var_I_i32
-	.quad	_L_1+5654
-	.quad	_Minus__uMinus_var_I_i32
-	.quad	_L_1+5670
-	.quad	_Minus__Minus_param_I_i16
-	.quad	_L_1+5687
-	.quad	_Minus__uMinus_param_I_i16
-	.quad	_L_1+5705
-	.quad	_Minus__Minus_var_I_i16
-	.quad	_L_1+5724
-	.quad	_Minus__uMinus_var_I_i16
-	.quad	_L_1+5740
-	.quad	_Minus__Minus_param_I_LC
-	.quad	_L_1+5757
-	.quad	_Minus__uMinus_param_I_LC
-	.quad	_L_1+5774
-	.quad	_Minus__Minus_var_I_LC
-	.quad	_L_1+5792
-	.quad	_Minus__uMinus_var_I_LC
-	.quad	_L_1+5807
-	.quad	_Minus__Minus_param_I_u64
-	.quad	_L_1+5823
-	.quad	_Minus__uMinus_param_I_u64
-	.quad	_L_1+5841
-	.quad	_Minus__Minus_var_I_u64
-	.quad	_L_1+5860
-	.quad	_Minus__uMinus_var_I_u64
-	.quad	_L_1+5876
-	.quad	_Minus__Minus_param_I_u16
-	.quad	_L_1+5893
-	.quad	_Minus__uMinus_param_I_u16
-	.quad	_L_1+5911
-	.quad	_Minus__Minus_var_I_u16
-	.quad	_L_1+5930
-	.quad	_Minus__uMinus_var_I_u16
-	.quad	_L_1+5946
-	.quad	_Minus__Minus_param_i32_u32
-	.quad	_L_1+5963
-	.quad	_Minus__uMinus_param_i32_u32
-	.quad	_L_1+5983
-	.quad	_Minus__Minus_var_i32_u32
-	.quad	_L_1+6004
-	.quad	_Minus__uMinus_var_i32_u32
-	.quad	_L_1+6022
-	.quad	_Minus__Minus_param_i32_L
-	.quad	_L_1+6041
-	.quad	_Minus__uMinus_param_i32_L
-	.quad	_L_1+6059
-	.quad	_Minus__Minus_var_i32_L
-	.quad	_L_1+6078
-	.quad	_Minus__uMinus_var_i32_L
-	.quad	_L_1+6094
-	.quad	_Minus__Minus_param_i32_i8
-	.quad	_L_1+6111
-	.quad	_Minus__uMinus_param_i32_i8
-	.quad	_L_1+6130
-	.quad	_Minus__Minus_var_i32_i8
-	.quad	_L_1+6150
-	.quad	_Minus__uMinus_var_i32_i8
-	.quad	_L_1+6167
-	.quad	_Minus__Minus_param_i32_u8
-	.quad	_L_1+6185
-	.quad	_Minus__uMinus_param_i32_u8
-	.quad	_L_1+6204
-	.quad	_Minus__Minus_var_i32_u8
-	.quad	_L_1+6224
-	.quad	_Minus__uMinus_var_i32_u8
-	.quad	_L_1+6241
-	.quad	_Minus__Minus_param_i32_C
-	.quad	_L_1+6259
-	.quad	_Minus__uMinus_param_i32_C
-	.quad	_L_1+6277
-	.quad	_Minus__Minus_var_i32_C
-	.quad	_L_1+6296
-	.quad	_Minus__uMinus_var_i32_C
-	.quad	_L_1+6312
-	.quad	_Minus__Minus_param_i32_i64
-	.quad	_L_1+6329
-	.quad	_Minus__uMinus_param_i32_i64
-	.quad	_L_1+6349
-	.quad	_Minus__Minus_var_i32_i64
-	.quad	_L_1+6370
-	.quad	_Minus__uMinus_var_i32_i64
-	.quad	_L_1+6388
-	.quad	_Minus__Minus_param_i32_I
-	.quad	_L_1+6407
-	.quad	_Minus__uMinus_param_i32_I
-	.quad	_L_1+6425
-	.quad	_Minus__Minus_var_i32_I
-	.quad	_L_1+6444
-	.quad	_Minus__uMinus_var_i32_I
-	.quad	_L_1+6460
 	.quad	_Minus__Minus_param_i32_i32
-	.quad	_L_1+6477
+	.quad	_L_1+9
 	.quad	_Minus__uMinus_param_i32_i32
-	.quad	_L_1+6497
+	.quad	_L_1+29
 	.quad	_Minus__Minus_var_i32_i32
-	.quad	_L_1+6518
+	.quad	_L_1+50
 	.quad	_Minus__uMinus_var_i32_i32
-	.quad	_L_1+6536
+	.quad	_L_1+68
 	.quad	_Minus__Minus_param_i32_i16
-	.quad	_L_1+6555
+	.quad	_L_1+87
 	.quad	_Minus__uMinus_param_i32_i16
-	.quad	_L_1+6575
+	.quad	_L_1+107
 	.quad	_Minus__Minus_var_i32_i16
-	.quad	_L_1+6596
+	.quad	_L_1+128
 	.quad	_Minus__uMinus_var_i32_i16
-	.quad	_L_1+6614
-	.quad	_Minus__Minus_param_i32_LC
-	.quad	_L_1+6633
-	.quad	_Minus__uMinus_param_i32_LC
-	.quad	_L_1+6652
-	.quad	_Minus__Minus_var_i32_LC
-	.quad	_L_1+6672
-	.quad	_Minus__uMinus_var_i32_LC
-	.quad	_L_1+6689
+	.quad	_L_1+146
+	.quad	_Minus__Minus_param_i32_L
+	.quad	_L_1+165
+	.quad	_Minus__uMinus_param_i32_L
+	.quad	_L_1+183
+	.quad	_Minus__Minus_var_i32_L
+	.quad	_L_1+202
+	.quad	_Minus__uMinus_var_i32_L
+	.quad	_L_1+218
 	.quad	_Minus__Minus_param_i32_u64
-	.quad	_L_1+6707
+	.quad	_L_1+235
 	.quad	_Minus__uMinus_param_i32_u64
-	.quad	_L_1+6727
+	.quad	_L_1+255
 	.quad	_Minus__Minus_var_i32_u64
-	.quad	_L_1+6748
+	.quad	_L_1+276
 	.quad	_Minus__uMinus_var_i32_u64
-	.quad	_L_1+6766
+	.quad	_L_1+294
 	.quad	_Minus__Minus_param_i32_u16
-	.quad	_L_1+6785
+	.quad	_L_1+313
 	.quad	_Minus__uMinus_param_i32_u16
-	.quad	_L_1+6805
+	.quad	_L_1+333
 	.quad	_Minus__Minus_var_i32_u16
-	.quad	_L_1+6826
+	.quad	_L_1+354
 	.quad	_Minus__uMinus_var_i32_u16
-	.quad	_L_1+6844
-	.quad	_Minus__Minus_param_i16_u32
-	.quad	_L_1+6863
-	.quad	_Minus__uMinus_param_i16_u32
-	.quad	_L_1+6883
-	.quad	_Minus__Minus_var_i16_u32
-	.quad	_L_1+6904
-	.quad	_Minus__uMinus_var_i16_u32
-	.quad	_L_1+6922
-	.quad	_Minus__Minus_param_i16_L
-	.quad	_L_1+6941
-	.quad	_Minus__uMinus_param_i16_L
-	.quad	_L_1+6959
-	.quad	_Minus__Minus_var_i16_L
-	.quad	_L_1+6978
-	.quad	_Minus__uMinus_var_i16_L
-	.quad	_L_1+6994
-	.quad	_Minus__Minus_param_i16_i8
-	.quad	_L_1+7011
-	.quad	_Minus__uMinus_param_i16_i8
-	.quad	_L_1+7030
-	.quad	_Minus__Minus_var_i16_i8
-	.quad	_L_1+7050
-	.quad	_Minus__uMinus_var_i16_i8
-	.quad	_L_1+7067
-	.quad	_Minus__Minus_param_i16_u8
-	.quad	_L_1+7085
-	.quad	_Minus__uMinus_param_i16_u8
-	.quad	_L_1+7104
-	.quad	_Minus__Minus_var_i16_u8
-	.quad	_L_1+7124
-	.quad	_Minus__uMinus_var_i16_u8
-	.quad	_L_1+7141
-	.quad	_Minus__Minus_param_i16_C
-	.quad	_L_1+7159
-	.quad	_Minus__uMinus_param_i16_C
-	.quad	_L_1+7177
-	.quad	_Minus__Minus_var_i16_C
-	.quad	_L_1+7196
-	.quad	_Minus__uMinus_var_i16_C
-	.quad	_L_1+7212
-	.quad	_Minus__Minus_param_i16_i64
-	.quad	_L_1+7229
-	.quad	_Minus__uMinus_param_i16_i64
-	.quad	_L_1+7249
-	.quad	_Minus__Minus_var_i16_i64
-	.quad	_L_1+7270
-	.quad	_Minus__uMinus_var_i16_i64
-	.quad	_L_1+7288
-	.quad	_Minus__Minus_param_i16_I
-	.quad	_L_1+7307
-	.quad	_Minus__uMinus_param_i16_I
-	.quad	_L_1+7325
-	.quad	_Minus__Minus_var_i16_I
-	.quad	_L_1+7344
-	.quad	_Minus__uMinus_var_i16_I
-	.quad	_L_1+7360
+	.quad	_L_1+372
+	.quad	_Minus__Minus_param_i32_C
+	.quad	_L_1+391
+	.quad	_Minus__uMinus_param_i32_C
+	.quad	_L_1+409
+	.quad	_Minus__Minus_var_i32_C
+	.quad	_L_1+428
+	.quad	_Minus__uMinus_var_i32_C
+	.quad	_L_1+444
+	.quad	_Minus__Minus_param_i32_u32
+	.quad	_L_1+461
+	.quad	_Minus__uMinus_param_i32_u32
+	.quad	_L_1+481
+	.quad	_Minus__Minus_var_i32_u32
+	.quad	_L_1+502
+	.quad	_Minus__uMinus_var_i32_u32
+	.quad	_L_1+520
+	.quad	_Minus__Minus_param_i32_i8
+	.quad	_L_1+539
+	.quad	_Minus__uMinus_param_i32_i8
+	.quad	_L_1+558
+	.quad	_Minus__Minus_var_i32_i8
+	.quad	_L_1+578
+	.quad	_Minus__uMinus_var_i32_i8
+	.quad	_L_1+595
+	.quad	_Minus__Minus_param_i32_I
+	.quad	_L_1+613
+	.quad	_Minus__uMinus_param_i32_I
+	.quad	_L_1+631
+	.quad	_Minus__Minus_var_i32_I
+	.quad	_L_1+650
+	.quad	_Minus__uMinus_var_i32_I
+	.quad	_L_1+666
+	.quad	_Minus__Minus_param_i32_u8
+	.quad	_L_1+683
+	.quad	_Minus__uMinus_param_i32_u8
+	.quad	_L_1+702
+	.quad	_Minus__Minus_var_i32_u8
+	.quad	_L_1+722
+	.quad	_Minus__uMinus_var_i32_u8
+	.quad	_L_1+739
+	.quad	_Minus__Minus_param_i32_LC
+	.quad	_L_1+757
+	.quad	_Minus__uMinus_param_i32_LC
+	.quad	_L_1+776
+	.quad	_Minus__Minus_var_i32_LC
+	.quad	_L_1+796
+	.quad	_Minus__uMinus_var_i32_LC
+	.quad	_L_1+813
+	.quad	_Minus__Minus_param_i32_i64
+	.quad	_L_1+831
+	.quad	_Minus__uMinus_param_i32_i64
+	.quad	_L_1+851
+	.quad	_Minus__Minus_var_i32_i64
+	.quad	_L_1+872
+	.quad	_Minus__uMinus_var_i32_i64
+	.quad	_L_1+890
 	.quad	_Minus__Minus_param_i16_i32
-	.quad	_L_1+7377
+	.quad	_L_1+909
 	.quad	_Minus__uMinus_param_i16_i32
-	.quad	_L_1+7397
+	.quad	_L_1+929
 	.quad	_Minus__Minus_var_i16_i32
-	.quad	_L_1+7418
+	.quad	_L_1+950
 	.quad	_Minus__uMinus_var_i16_i32
-	.quad	_L_1+7436
+	.quad	_L_1+968
 	.quad	_Minus__Minus_param_i16_i16
-	.quad	_L_1+7455
+	.quad	_L_1+987
 	.quad	_Minus__uMinus_param_i16_i16
-	.quad	_L_1+7475
+	.quad	_L_1+1007
 	.quad	_Minus__Minus_var_i16_i16
-	.quad	_L_1+7496
+	.quad	_L_1+1028
 	.quad	_Minus__uMinus_var_i16_i16
-	.quad	_L_1+7514
-	.quad	_Minus__Minus_param_i16_LC
-	.quad	_L_1+7533
-	.quad	_Minus__uMinus_param_i16_LC
-	.quad	_L_1+7552
-	.quad	_Minus__Minus_var_i16_LC
-	.quad	_L_1+7572
-	.quad	_Minus__uMinus_var_i16_LC
-	.quad	_L_1+7589
+	.quad	_L_1+1046
+	.quad	_Minus__Minus_param_i16_L
+	.quad	_L_1+1065
+	.quad	_Minus__uMinus_param_i16_L
+	.quad	_L_1+1083
+	.quad	_Minus__Minus_var_i16_L
+	.quad	_L_1+1102
+	.quad	_Minus__uMinus_var_i16_L
+	.quad	_L_1+1118
 	.quad	_Minus__Minus_param_i16_u64
-	.quad	_L_1+7607
+	.quad	_L_1+1135
 	.quad	_Minus__uMinus_param_i16_u64
-	.quad	_L_1+7627
+	.quad	_L_1+1155
 	.quad	_Minus__Minus_var_i16_u64
-	.quad	_L_1+7648
+	.quad	_L_1+1176
 	.quad	_Minus__uMinus_var_i16_u64
-	.quad	_L_1+7666
+	.quad	_L_1+1194
 	.quad	_Minus__Minus_param_i16_u16
-	.quad	_L_1+7685
+	.quad	_L_1+1213
 	.quad	_Minus__uMinus_param_i16_u16
-	.quad	_L_1+7705
+	.quad	_L_1+1233
 	.quad	_Minus__Minus_var_i16_u16
-	.quad	_L_1+7726
+	.quad	_L_1+1254
 	.quad	_Minus__uMinus_var_i16_u16
-	.quad	_L_1+7744
+	.quad	_L_1+1272
+	.quad	_Minus__Minus_param_i16_C
+	.quad	_L_1+1291
+	.quad	_Minus__uMinus_param_i16_C
+	.quad	_L_1+1309
+	.quad	_Minus__Minus_var_i16_C
+	.quad	_L_1+1328
+	.quad	_Minus__uMinus_var_i16_C
+	.quad	_L_1+1344
+	.quad	_Minus__Minus_param_i16_u32
+	.quad	_L_1+1361
+	.quad	_Minus__uMinus_param_i16_u32
+	.quad	_L_1+1381
+	.quad	_Minus__Minus_var_i16_u32
+	.quad	_L_1+1402
+	.quad	_Minus__uMinus_var_i16_u32
+	.quad	_L_1+1420
+	.quad	_Minus__Minus_param_i16_i8
+	.quad	_L_1+1439
+	.quad	_Minus__uMinus_param_i16_i8
+	.quad	_L_1+1458
+	.quad	_Minus__Minus_var_i16_i8
+	.quad	_L_1+1478
+	.quad	_Minus__uMinus_var_i16_i8
+	.quad	_L_1+1495
+	.quad	_Minus__Minus_param_i16_I
+	.quad	_L_1+1513
+	.quad	_Minus__uMinus_param_i16_I
+	.quad	_L_1+1531
+	.quad	_Minus__Minus_var_i16_I
+	.quad	_L_1+1550
+	.quad	_Minus__uMinus_var_i16_I
+	.quad	_L_1+1566
+	.quad	_Minus__Minus_param_i16_u8
+	.quad	_L_1+1583
+	.quad	_Minus__uMinus_param_i16_u8
+	.quad	_L_1+1602
+	.quad	_Minus__Minus_var_i16_u8
+	.quad	_L_1+1622
+	.quad	_Minus__uMinus_var_i16_u8
+	.quad	_L_1+1639
+	.quad	_Minus__Minus_param_i16_LC
+	.quad	_L_1+1657
+	.quad	_Minus__uMinus_param_i16_LC
+	.quad	_L_1+1676
+	.quad	_Minus__Minus_var_i16_LC
+	.quad	_L_1+1696
+	.quad	_Minus__uMinus_var_i16_LC
+	.quad	_L_1+1713
+	.quad	_Minus__Minus_param_i16_i64
+	.quad	_L_1+1731
+	.quad	_Minus__uMinus_param_i16_i64
+	.quad	_L_1+1751
+	.quad	_Minus__Minus_var_i16_i64
+	.quad	_L_1+1772
+	.quad	_Minus__uMinus_var_i16_i64
+	.quad	_L_1+1790
+	.quad	_Minus__Minus_param_L_i32
+	.quad	_L_1+1809
+	.quad	_Minus__uMinus_param_L_i32
+	.quad	_L_1+1827
+	.quad	_Minus__Minus_var_L_i32
+	.quad	_L_1+1846
+	.quad	_Minus__uMinus_var_L_i32
+	.quad	_L_1+1862
+	.quad	_Minus__Minus_param_L_i16
+	.quad	_L_1+1879
+	.quad	_Minus__uMinus_param_L_i16
+	.quad	_L_1+1897
+	.quad	_Minus__Minus_var_L_i16
+	.quad	_L_1+1916
+	.quad	_Minus__uMinus_var_L_i16
+	.quad	_L_1+1932
+	.quad	_Minus__Minus_param_L_L
+	.quad	_L_1+1949
+	.quad	_Minus__uMinus_param_L_L
+	.quad	_L_1+1965
+	.quad	_Minus__Minus_var_L_L
+	.quad	_L_1+1982
+	.quad	_Minus__uMinus_var_L_L
+	.quad	_L_1+1996
+	.quad	_Minus__Minus_param_L_u64
+	.quad	_L_1+2011
+	.quad	_Minus__uMinus_param_L_u64
+	.quad	_L_1+2029
+	.quad	_Minus__Minus_var_L_u64
+	.quad	_L_1+2048
+	.quad	_Minus__uMinus_var_L_u64
+	.quad	_L_1+2064
+	.quad	_Minus__Minus_param_L_u16
+	.quad	_L_1+2081
+	.quad	_Minus__uMinus_param_L_u16
+	.quad	_L_1+2099
+	.quad	_Minus__Minus_var_L_u16
+	.quad	_L_1+2118
+	.quad	_Minus__uMinus_var_L_u16
+	.quad	_L_1+2134
+	.quad	_Minus__Minus_param_L_C
+	.quad	_L_1+2151
+	.quad	_Minus__uMinus_param_L_C
+	.quad	_L_1+2167
+	.quad	_Minus__Minus_var_L_C
+	.quad	_L_1+2184
+	.quad	_Minus__uMinus_var_L_C
+	.quad	_L_1+2198
+	.quad	_Minus__Minus_param_L_u32
+	.quad	_L_1+2213
+	.quad	_Minus__uMinus_param_L_u32
+	.quad	_L_1+2231
+	.quad	_Minus__Minus_var_L_u32
+	.quad	_L_1+2250
+	.quad	_Minus__uMinus_var_L_u32
+	.quad	_L_1+2266
+	.quad	_Minus__Minus_param_L_i8
+	.quad	_L_1+2283
+	.quad	_Minus__uMinus_param_L_i8
+	.quad	_L_1+2300
+	.quad	_Minus__Minus_var_L_i8
+	.quad	_L_1+2318
+	.quad	_Minus__uMinus_var_L_i8
+	.quad	_L_1+2333
+	.quad	_Minus__Minus_param_L_I
+	.quad	_L_1+2349
+	.quad	_Minus__uMinus_param_L_I
+	.quad	_L_1+2365
+	.quad	_Minus__Minus_var_L_I
+	.quad	_L_1+2382
+	.quad	_Minus__uMinus_var_L_I
+	.quad	_L_1+2396
+	.quad	_Minus__Minus_param_L_u8
+	.quad	_L_1+2411
+	.quad	_Minus__uMinus_param_L_u8
+	.quad	_L_1+2428
+	.quad	_Minus__Minus_var_L_u8
+	.quad	_L_1+2446
+	.quad	_Minus__uMinus_var_L_u8
+	.quad	_L_1+2461
+	.quad	_Minus__Minus_param_L_LC
+	.quad	_L_1+2477
+	.quad	_Minus__uMinus_param_L_LC
+	.quad	_L_1+2494
+	.quad	_Minus__Minus_var_L_LC
+	.quad	_L_1+2512
+	.quad	_Minus__uMinus_var_L_LC
+	.quad	_L_1+2527
+	.quad	_Minus__Minus_param_L_i64
+	.quad	_L_1+2543
+	.quad	_Minus__uMinus_param_L_i64
+	.quad	_L_1+2561
+	.quad	_Minus__Minus_var_L_i64
+	.quad	_L_1+2580
+	.quad	_Minus__uMinus_var_L_i64
+	.quad	_L_1+2596
 	.quad	_Minus__Minus_param_f64_f64
-	.quad	_L_1+7763
+	.quad	_L_1+2613
 	.quad	_Minus__Minus_var_f64_f64
-	.quad	_L_1+7783
-	.quad	_Minus__Minus_param_LC_u32
-	.quad	_L_1+7801
-	.quad	_Minus__uMinus_param_LC_u32
-	.quad	_L_1+7820
-	.quad	_Minus__Minus_var_LC_u32
-	.quad	_L_1+7840
-	.quad	_Minus__uMinus_var_LC_u32
-	.quad	_L_1+7857
-	.quad	_Minus__Minus_param_LC_L
-	.quad	_L_1+7875
-	.quad	_Minus__uMinus_param_LC_L
-	.quad	_L_1+7892
-	.quad	_Minus__Minus_var_LC_L
-	.quad	_L_1+7910
-	.quad	_Minus__uMinus_var_LC_L
-	.quad	_L_1+7925
-	.quad	_Minus__Minus_param_LC_i8
-	.quad	_L_1+7941
-	.quad	_Minus__uMinus_param_LC_i8
-	.quad	_L_1+7959
-	.quad	_Minus__Minus_var_LC_i8
-	.quad	_L_1+7978
-	.quad	_Minus__uMinus_var_LC_i8
-	.quad	_L_1+7994
-	.quad	_Minus__Minus_param_LC_u8
-	.quad	_L_1+8011
-	.quad	_Minus__uMinus_param_LC_u8
-	.quad	_L_1+8029
-	.quad	_Minus__Minus_var_LC_u8
-	.quad	_L_1+8048
-	.quad	_Minus__uMinus_var_LC_u8
-	.quad	_L_1+8064
-	.quad	_Minus__Minus_param_LC_C
-	.quad	_L_1+8081
-	.quad	_Minus__uMinus_param_LC_C
-	.quad	_L_1+8098
-	.quad	_Minus__Minus_var_LC_C
-	.quad	_L_1+8116
-	.quad	_Minus__uMinus_var_LC_C
-	.quad	_L_1+8131
-	.quad	_Minus__Minus_param_LC_i64
-	.quad	_L_1+8147
-	.quad	_Minus__uMinus_param_LC_i64
-	.quad	_L_1+8166
-	.quad	_Minus__Minus_var_LC_i64
-	.quad	_L_1+8186
-	.quad	_Minus__uMinus_var_LC_i64
-	.quad	_L_1+8203
-	.quad	_Minus__Minus_param_LC_I
-	.quad	_L_1+8221
-	.quad	_Minus__uMinus_param_LC_I
-	.quad	_L_1+8238
-	.quad	_Minus__Minus_var_LC_I
-	.quad	_L_1+8256
-	.quad	_Minus__uMinus_var_LC_I
-	.quad	_L_1+8271
-	.quad	_Minus__Minus_param_LC_i32
-	.quad	_L_1+8287
-	.quad	_Minus__uMinus_param_LC_i32
-	.quad	_L_1+8306
-	.quad	_Minus__Minus_var_LC_i32
-	.quad	_L_1+8326
-	.quad	_Minus__uMinus_var_LC_i32
-	.quad	_L_1+8343
-	.quad	_Minus__Minus_param_LC_i16
-	.quad	_L_1+8361
-	.quad	_Minus__uMinus_param_LC_i16
-	.quad	_L_1+8380
-	.quad	_Minus__Minus_var_LC_i16
-	.quad	_L_1+8400
-	.quad	_Minus__uMinus_var_LC_i16
-	.quad	_L_1+8417
-	.quad	_Minus__Minus_param_LC_LC
-	.quad	_L_1+8435
-	.quad	_Minus__uMinus_param_LC_LC
-	.quad	_L_1+8453
-	.quad	_Minus__Minus_var_LC_LC
-	.quad	_L_1+8472
-	.quad	_Minus__uMinus_var_LC_LC
-	.quad	_L_1+8488
-	.quad	_Minus__Minus_param_LC_u64
-	.quad	_L_1+8505
-	.quad	_Minus__uMinus_param_LC_u64
-	.quad	_L_1+8524
-	.quad	_Minus__Minus_var_LC_u64
-	.quad	_L_1+8544
-	.quad	_Minus__uMinus_var_LC_u64
-	.quad	_L_1+8561
-	.quad	_Minus__Minus_param_LC_u16
-	.quad	_L_1+8579
-	.quad	_Minus__uMinus_param_LC_u16
-	.quad	_L_1+8598
-	.quad	_Minus__Minus_var_LC_u16
-	.quad	_L_1+8618
-	.quad	_Minus__uMinus_var_LC_u16
-	.quad	_L_1+8635
-	.quad	_Minus__Minus_param_u64_u32
-	.quad	_L_1+8653
-	.quad	_Minus__uMinus_param_u64_u32
-	.quad	_L_1+8673
-	.quad	_Minus__Minus_var_u64_u32
-	.quad	_L_1+8694
-	.quad	_Minus__uMinus_var_u64_u32
-	.quad	_L_1+8712
-	.quad	_Minus__Minus_param_u64_L
-	.quad	_L_1+8731
-	.quad	_Minus__uMinus_param_u64_L
-	.quad	_L_1+8749
-	.quad	_Minus__Minus_var_u64_L
-	.quad	_L_1+8768
-	.quad	_Minus__uMinus_var_u64_L
-	.quad	_L_1+8784
-	.quad	_Minus__Minus_param_u64_i8
-	.quad	_L_1+8801
-	.quad	_Minus__uMinus_param_u64_i8
-	.quad	_L_1+8820
-	.quad	_Minus__Minus_var_u64_i8
-	.quad	_L_1+8840
-	.quad	_Minus__uMinus_var_u64_i8
-	.quad	_L_1+8857
-	.quad	_Minus__Minus_param_u64_u8
-	.quad	_L_1+8875
-	.quad	_Minus__uMinus_param_u64_u8
-	.quad	_L_1+8894
-	.quad	_Minus__Minus_var_u64_u8
-	.quad	_L_1+8914
-	.quad	_Minus__uMinus_var_u64_u8
-	.quad	_L_1+8931
-	.quad	_Minus__Minus_param_u64_C
-	.quad	_L_1+8949
-	.quad	_Minus__uMinus_param_u64_C
-	.quad	_L_1+8967
-	.quad	_Minus__Minus_var_u64_C
-	.quad	_L_1+8986
-	.quad	_Minus__uMinus_var_u64_C
-	.quad	_L_1+9002
-	.quad	_Minus__Minus_param_u64_i64
-	.quad	_L_1+9019
-	.quad	_Minus__uMinus_param_u64_i64
-	.quad	_L_1+9039
-	.quad	_Minus__Minus_var_u64_i64
-	.quad	_L_1+9060
-	.quad	_Minus__uMinus_var_u64_i64
-	.quad	_L_1+9078
-	.quad	_Minus__Minus_param_u64_I
-	.quad	_L_1+9097
-	.quad	_Minus__uMinus_param_u64_I
-	.quad	_L_1+9115
-	.quad	_Minus__Minus_var_u64_I
-	.quad	_L_1+9134
-	.quad	_Minus__uMinus_var_u64_I
-	.quad	_L_1+9150
+	.quad	_L_1+2633
 	.quad	_Minus__Minus_param_u64_i32
-	.quad	_L_1+9167
+	.quad	_L_1+2651
 	.quad	_Minus__uMinus_param_u64_i32
-	.quad	_L_1+9187
+	.quad	_L_1+2671
 	.quad	_Minus__Minus_var_u64_i32
-	.quad	_L_1+9208
+	.quad	_L_1+2692
 	.quad	_Minus__uMinus_var_u64_i32
-	.quad	_L_1+9226
+	.quad	_L_1+2710
 	.quad	_Minus__Minus_param_u64_i16
-	.quad	_L_1+9245
+	.quad	_L_1+2729
 	.quad	_Minus__uMinus_param_u64_i16
-	.quad	_L_1+9265
+	.quad	_L_1+2749
 	.quad	_Minus__Minus_var_u64_i16
-	.quad	_L_1+9286
+	.quad	_L_1+2770
 	.quad	_Minus__uMinus_var_u64_i16
-	.quad	_L_1+9304
-	.quad	_Minus__Minus_param_u64_LC
-	.quad	_L_1+9323
-	.quad	_Minus__uMinus_param_u64_LC
-	.quad	_L_1+9342
-	.quad	_Minus__Minus_var_u64_LC
-	.quad	_L_1+9362
-	.quad	_Minus__uMinus_var_u64_LC
-	.quad	_L_1+9379
+	.quad	_L_1+2788
+	.quad	_Minus__Minus_param_u64_L
+	.quad	_L_1+2807
+	.quad	_Minus__uMinus_param_u64_L
+	.quad	_L_1+2825
+	.quad	_Minus__Minus_var_u64_L
+	.quad	_L_1+2844
+	.quad	_Minus__uMinus_var_u64_L
+	.quad	_L_1+2860
 	.quad	_Minus__Minus_param_u64_u64
-	.quad	_L_1+9397
+	.quad	_L_1+2877
 	.quad	_Minus__uMinus_param_u64_u64
-	.quad	_L_1+9417
+	.quad	_L_1+2897
 	.quad	_Minus__Minus_var_u64_u64
-	.quad	_L_1+9438
+	.quad	_L_1+2918
 	.quad	_Minus__uMinus_var_u64_u64
-	.quad	_L_1+9456
+	.quad	_L_1+2936
 	.quad	_Minus__Minus_param_u64_u16
-	.quad	_L_1+9475
+	.quad	_L_1+2955
 	.quad	_Minus__uMinus_param_u64_u16
-	.quad	_L_1+9495
+	.quad	_L_1+2975
 	.quad	_Minus__Minus_var_u64_u16
-	.quad	_L_1+9516
+	.quad	_L_1+2996
 	.quad	_Minus__uMinus_var_u64_u16
-	.quad	_L_1+9534
-	.quad	_Minus__Minus_param_u16_u32
-	.quad	_L_1+9553
-	.quad	_Minus__uMinus_param_u16_u32
-	.quad	_L_1+9573
-	.quad	_Minus__Minus_var_u16_u32
-	.quad	_L_1+9594
-	.quad	_Minus__uMinus_var_u16_u32
-	.quad	_L_1+9612
-	.quad	_Minus__Minus_param_u16_L
-	.quad	_L_1+9631
-	.quad	_Minus__uMinus_param_u16_L
-	.quad	_L_1+9649
-	.quad	_Minus__Minus_var_u16_L
-	.quad	_L_1+9668
-	.quad	_Minus__uMinus_var_u16_L
-	.quad	_L_1+9684
-	.quad	_Minus__Minus_param_u16_i8
-	.quad	_L_1+9701
-	.quad	_Minus__uMinus_param_u16_i8
-	.quad	_L_1+9720
-	.quad	_Minus__Minus_var_u16_i8
-	.quad	_L_1+9740
-	.quad	_Minus__uMinus_var_u16_i8
-	.quad	_L_1+9757
-	.quad	_Minus__Minus_param_u16_u8
-	.quad	_L_1+9775
-	.quad	_Minus__uMinus_param_u16_u8
-	.quad	_L_1+9794
-	.quad	_Minus__Minus_var_u16_u8
-	.quad	_L_1+9814
-	.quad	_Minus__uMinus_var_u16_u8
-	.quad	_L_1+9831
-	.quad	_Minus__Minus_param_u16_C
-	.quad	_L_1+9849
-	.quad	_Minus__uMinus_param_u16_C
-	.quad	_L_1+9867
-	.quad	_Minus__Minus_var_u16_C
-	.quad	_L_1+9886
-	.quad	_Minus__uMinus_var_u16_C
-	.quad	_L_1+9902
-	.quad	_Minus__Minus_param_u16_i64
-	.quad	_L_1+9919
-	.quad	_Minus__uMinus_param_u16_i64
-	.quad	_L_1+9939
-	.quad	_Minus__Minus_var_u16_i64
-	.quad	_L_1+9960
-	.quad	_Minus__uMinus_var_u16_i64
-	.quad	_L_1+9978
-	.quad	_Minus__Minus_param_u16_I
-	.quad	_L_1+9997
-	.quad	_Minus__uMinus_param_u16_I
-	.quad	_L_1+10015
-	.quad	_Minus__Minus_var_u16_I
-	.quad	_L_1+10034
-	.quad	_Minus__uMinus_var_u16_I
-	.quad	_L_1+10050
+	.quad	_L_1+3014
+	.quad	_Minus__Minus_param_u64_C
+	.quad	_L_1+3033
+	.quad	_Minus__uMinus_param_u64_C
+	.quad	_L_1+3051
+	.quad	_Minus__Minus_var_u64_C
+	.quad	_L_1+3070
+	.quad	_Minus__uMinus_var_u64_C
+	.quad	_L_1+3086
+	.quad	_Minus__Minus_param_u64_u32
+	.quad	_L_1+3103
+	.quad	_Minus__uMinus_param_u64_u32
+	.quad	_L_1+3123
+	.quad	_Minus__Minus_var_u64_u32
+	.quad	_L_1+3144
+	.quad	_Minus__uMinus_var_u64_u32
+	.quad	_L_1+3162
+	.quad	_Minus__Minus_param_u64_i8
+	.quad	_L_1+3181
+	.quad	_Minus__uMinus_param_u64_i8
+	.quad	_L_1+3200
+	.quad	_Minus__Minus_var_u64_i8
+	.quad	_L_1+3220
+	.quad	_Minus__uMinus_var_u64_i8
+	.quad	_L_1+3237
+	.quad	_Minus__Minus_param_u64_I
+	.quad	_L_1+3255
+	.quad	_Minus__uMinus_param_u64_I
+	.quad	_L_1+3273
+	.quad	_Minus__Minus_var_u64_I
+	.quad	_L_1+3292
+	.quad	_Minus__uMinus_var_u64_I
+	.quad	_L_1+3308
+	.quad	_Minus__Minus_param_u64_u8
+	.quad	_L_1+3325
+	.quad	_Minus__uMinus_param_u64_u8
+	.quad	_L_1+3344
+	.quad	_Minus__Minus_var_u64_u8
+	.quad	_L_1+3364
+	.quad	_Minus__uMinus_var_u64_u8
+	.quad	_L_1+3381
+	.quad	_Minus__Minus_param_u64_LC
+	.quad	_L_1+3399
+	.quad	_Minus__uMinus_param_u64_LC
+	.quad	_L_1+3418
+	.quad	_Minus__Minus_var_u64_LC
+	.quad	_L_1+3438
+	.quad	_Minus__uMinus_var_u64_LC
+	.quad	_L_1+3455
+	.quad	_Minus__Minus_param_u64_i64
+	.quad	_L_1+3473
+	.quad	_Minus__uMinus_param_u64_i64
+	.quad	_L_1+3493
+	.quad	_Minus__Minus_var_u64_i64
+	.quad	_L_1+3514
+	.quad	_Minus__uMinus_var_u64_i64
+	.quad	_L_1+3532
 	.quad	_Minus__Minus_param_u16_i32
-	.quad	_L_1+10067
+	.quad	_L_1+3551
 	.quad	_Minus__uMinus_param_u16_i32
-	.quad	_L_1+10087
+	.quad	_L_1+3571
 	.quad	_Minus__Minus_var_u16_i32
-	.quad	_L_1+10108
+	.quad	_L_1+3592
 	.quad	_Minus__uMinus_var_u16_i32
-	.quad	_L_1+10126
+	.quad	_L_1+3610
 	.quad	_Minus__Minus_param_u16_i16
-	.quad	_L_1+10145
+	.quad	_L_1+3629
 	.quad	_Minus__uMinus_param_u16_i16
-	.quad	_L_1+10165
+	.quad	_L_1+3649
 	.quad	_Minus__Minus_var_u16_i16
-	.quad	_L_1+10186
+	.quad	_L_1+3670
 	.quad	_Minus__uMinus_var_u16_i16
-	.quad	_L_1+10204
-	.quad	_Minus__Minus_param_u16_LC
-	.quad	_L_1+10223
-	.quad	_Minus__uMinus_param_u16_LC
-	.quad	_L_1+10242
-	.quad	_Minus__Minus_var_u16_LC
-	.quad	_L_1+10262
-	.quad	_Minus__uMinus_var_u16_LC
-	.quad	_L_1+10279
+	.quad	_L_1+3688
+	.quad	_Minus__Minus_param_u16_L
+	.quad	_L_1+3707
+	.quad	_Minus__uMinus_param_u16_L
+	.quad	_L_1+3725
+	.quad	_Minus__Minus_var_u16_L
+	.quad	_L_1+3744
+	.quad	_Minus__uMinus_var_u16_L
+	.quad	_L_1+3760
 	.quad	_Minus__Minus_param_u16_u64
-	.quad	_L_1+10297
+	.quad	_L_1+3777
 	.quad	_Minus__uMinus_param_u16_u64
-	.quad	_L_1+10317
+	.quad	_L_1+3797
 	.quad	_Minus__Minus_var_u16_u64
-	.quad	_L_1+10338
+	.quad	_L_1+3818
 	.quad	_Minus__uMinus_var_u16_u64
-	.quad	_L_1+10356
+	.quad	_L_1+3836
 	.quad	_Minus__Minus_param_u16_u16
-	.quad	_L_1+10375
+	.quad	_L_1+3855
 	.quad	_Minus__uMinus_param_u16_u16
-	.quad	_L_1+10395
+	.quad	_L_1+3875
 	.quad	_Minus__Minus_var_u16_u16
-	.quad	_L_1+10416
+	.quad	_L_1+3896
 	.quad	_Minus__uMinus_var_u16_u16
+	.quad	_L_1+3914
+	.quad	_Minus__Minus_param_u16_C
+	.quad	_L_1+3933
+	.quad	_Minus__uMinus_param_u16_C
+	.quad	_L_1+3951
+	.quad	_Minus__Minus_var_u16_C
+	.quad	_L_1+3970
+	.quad	_Minus__uMinus_var_u16_C
+	.quad	_L_1+3986
+	.quad	_Minus__Minus_param_u16_u32
+	.quad	_L_1+4003
+	.quad	_Minus__uMinus_param_u16_u32
+	.quad	_L_1+4023
+	.quad	_Minus__Minus_var_u16_u32
+	.quad	_L_1+4044
+	.quad	_Minus__uMinus_var_u16_u32
+	.quad	_L_1+4062
+	.quad	_Minus__Minus_param_u16_i8
+	.quad	_L_1+4081
+	.quad	_Minus__uMinus_param_u16_i8
+	.quad	_L_1+4100
+	.quad	_Minus__Minus_var_u16_i8
+	.quad	_L_1+4120
+	.quad	_Minus__uMinus_var_u16_i8
+	.quad	_L_1+4137
+	.quad	_Minus__Minus_param_u16_I
+	.quad	_L_1+4155
+	.quad	_Minus__uMinus_param_u16_I
+	.quad	_L_1+4173
+	.quad	_Minus__Minus_var_u16_I
+	.quad	_L_1+4192
+	.quad	_Minus__uMinus_var_u16_I
+	.quad	_L_1+4208
+	.quad	_Minus__Minus_param_u16_u8
+	.quad	_L_1+4225
+	.quad	_Minus__uMinus_param_u16_u8
+	.quad	_L_1+4244
+	.quad	_Minus__Minus_var_u16_u8
+	.quad	_L_1+4264
+	.quad	_Minus__uMinus_var_u16_u8
+	.quad	_L_1+4281
+	.quad	_Minus__Minus_param_u16_LC
+	.quad	_L_1+4299
+	.quad	_Minus__uMinus_param_u16_LC
+	.quad	_L_1+4318
+	.quad	_Minus__Minus_var_u16_LC
+	.quad	_L_1+4338
+	.quad	_Minus__uMinus_var_u16_LC
+	.quad	_L_1+4355
+	.quad	_Minus__Minus_param_u16_i64
+	.quad	_L_1+4373
+	.quad	_Minus__uMinus_param_u16_i64
+	.quad	_L_1+4393
+	.quad	_Minus__Minus_var_u16_i64
+	.quad	_L_1+4414
+	.quad	_Minus__uMinus_var_u16_i64
+	.quad	_L_1+4432
+	.quad	_Minus__Minus_param_C_i32
+	.quad	_L_1+4451
+	.quad	_Minus__uMinus_param_C_i32
+	.quad	_L_1+4469
+	.quad	_Minus__Minus_var_C_i32
+	.quad	_L_1+4488
+	.quad	_Minus__uMinus_var_C_i32
+	.quad	_L_1+4504
+	.quad	_Minus__Minus_param_C_i16
+	.quad	_L_1+4521
+	.quad	_Minus__uMinus_param_C_i16
+	.quad	_L_1+4539
+	.quad	_Minus__Minus_var_C_i16
+	.quad	_L_1+4558
+	.quad	_Minus__uMinus_var_C_i16
+	.quad	_L_1+4574
+	.quad	_Minus__Minus_param_C_L
+	.quad	_L_1+4591
+	.quad	_Minus__uMinus_param_C_L
+	.quad	_L_1+4607
+	.quad	_Minus__Minus_var_C_L
+	.quad	_L_1+4624
+	.quad	_Minus__uMinus_var_C_L
+	.quad	_L_1+4638
+	.quad	_Minus__Minus_param_C_u64
+	.quad	_L_1+4653
+	.quad	_Minus__uMinus_param_C_u64
+	.quad	_L_1+4671
+	.quad	_Minus__Minus_var_C_u64
+	.quad	_L_1+4690
+	.quad	_Minus__uMinus_var_C_u64
+	.quad	_L_1+4706
+	.quad	_Minus__Minus_param_C_u16
+	.quad	_L_1+4723
+	.quad	_Minus__uMinus_param_C_u16
+	.quad	_L_1+4741
+	.quad	_Minus__Minus_var_C_u16
+	.quad	_L_1+4760
+	.quad	_Minus__uMinus_var_C_u16
+	.quad	_L_1+4776
+	.quad	_Minus__Minus_param_C_C
+	.quad	_L_1+4793
+	.quad	_Minus__uMinus_param_C_C
+	.quad	_L_1+4809
+	.quad	_Minus__Minus_var_C_C
+	.quad	_L_1+4826
+	.quad	_Minus__uMinus_var_C_C
+	.quad	_L_1+4840
+	.quad	_Minus__Minus_param_C_u32
+	.quad	_L_1+4855
+	.quad	_Minus__uMinus_param_C_u32
+	.quad	_L_1+4873
+	.quad	_Minus__Minus_var_C_u32
+	.quad	_L_1+4892
+	.quad	_Minus__uMinus_var_C_u32
+	.quad	_L_1+4908
+	.quad	_Minus__Minus_param_C_i8
+	.quad	_L_1+4925
+	.quad	_Minus__uMinus_param_C_i8
+	.quad	_L_1+4942
+	.quad	_Minus__Minus_var_C_i8
+	.quad	_L_1+4960
+	.quad	_Minus__uMinus_var_C_i8
+	.quad	_L_1+4975
+	.quad	_Minus__Minus_param_C_I
+	.quad	_L_1+4991
+	.quad	_Minus__uMinus_param_C_I
+	.quad	_L_1+5007
+	.quad	_Minus__Minus_var_C_I
+	.quad	_L_1+5024
+	.quad	_Minus__uMinus_var_C_I
+	.quad	_L_1+5038
+	.quad	_Minus__Minus_param_C_u8
+	.quad	_L_1+5053
+	.quad	_Minus__uMinus_param_C_u8
+	.quad	_L_1+5070
+	.quad	_Minus__Minus_var_C_u8
+	.quad	_L_1+5088
+	.quad	_Minus__uMinus_var_C_u8
+	.quad	_L_1+5103
+	.quad	_Minus__Minus_param_C_LC
+	.quad	_L_1+5119
+	.quad	_Minus__uMinus_param_C_LC
+	.quad	_L_1+5136
+	.quad	_Minus__Minus_var_C_LC
+	.quad	_L_1+5154
+	.quad	_Minus__uMinus_var_C_LC
+	.quad	_L_1+5169
+	.quad	_Minus__Minus_param_C_i64
+	.quad	_L_1+5185
+	.quad	_Minus__uMinus_param_C_i64
+	.quad	_L_1+5203
+	.quad	_Minus__Minus_var_C_i64
+	.quad	_L_1+5222
+	.quad	_Minus__uMinus_var_C_i64
+	.quad	_L_1+5238
+	.quad	_Minus__Minus_param_u32_i32
+	.quad	_L_1+5255
+	.quad	_Minus__uMinus_param_u32_i32
+	.quad	_L_1+5275
+	.quad	_Minus__Minus_var_u32_i32
+	.quad	_L_1+5296
+	.quad	_Minus__uMinus_var_u32_i32
+	.quad	_L_1+5314
+	.quad	_Minus__Minus_param_u32_i16
+	.quad	_L_1+5333
+	.quad	_Minus__uMinus_param_u32_i16
+	.quad	_L_1+5353
+	.quad	_Minus__Minus_var_u32_i16
+	.quad	_L_1+5374
+	.quad	_Minus__uMinus_var_u32_i16
+	.quad	_L_1+5392
+	.quad	_Minus__Minus_param_u32_L
+	.quad	_L_1+5411
+	.quad	_Minus__uMinus_param_u32_L
+	.quad	_L_1+5429
+	.quad	_Minus__Minus_var_u32_L
+	.quad	_L_1+5448
+	.quad	_Minus__uMinus_var_u32_L
+	.quad	_L_1+5464
+	.quad	_Minus__Minus_param_u32_u64
+	.quad	_L_1+5481
+	.quad	_Minus__uMinus_param_u32_u64
+	.quad	_L_1+5501
+	.quad	_Minus__Minus_var_u32_u64
+	.quad	_L_1+5522
+	.quad	_Minus__uMinus_var_u32_u64
+	.quad	_L_1+5540
+	.quad	_Minus__Minus_param_u32_u16
+	.quad	_L_1+5559
+	.quad	_Minus__uMinus_param_u32_u16
+	.quad	_L_1+5579
+	.quad	_Minus__Minus_var_u32_u16
+	.quad	_L_1+5600
+	.quad	_Minus__uMinus_var_u32_u16
+	.quad	_L_1+5618
+	.quad	_Minus__Minus_param_u32_C
+	.quad	_L_1+5637
+	.quad	_Minus__uMinus_param_u32_C
+	.quad	_L_1+5655
+	.quad	_Minus__Minus_var_u32_C
+	.quad	_L_1+5674
+	.quad	_Minus__uMinus_var_u32_C
+	.quad	_L_1+5690
+	.quad	_Minus__Minus_param_u32_u32
+	.quad	_L_1+5707
+	.quad	_Minus__uMinus_param_u32_u32
+	.quad	_L_1+5727
+	.quad	_Minus__Minus_var_u32_u32
+	.quad	_L_1+5748
+	.quad	_Minus__uMinus_var_u32_u32
+	.quad	_L_1+5766
+	.quad	_Minus__Minus_param_u32_i8
+	.quad	_L_1+5785
+	.quad	_Minus__uMinus_param_u32_i8
+	.quad	_L_1+5804
+	.quad	_Minus__Minus_var_u32_i8
+	.quad	_L_1+5824
+	.quad	_Minus__uMinus_var_u32_i8
+	.quad	_L_1+5841
+	.quad	_Minus__Minus_param_u32_I
+	.quad	_L_1+5859
+	.quad	_Minus__uMinus_param_u32_I
+	.quad	_L_1+5877
+	.quad	_Minus__Minus_var_u32_I
+	.quad	_L_1+5896
+	.quad	_Minus__uMinus_var_u32_I
+	.quad	_L_1+5912
+	.quad	_Minus__Minus_param_u32_u8
+	.quad	_L_1+5929
+	.quad	_Minus__uMinus_param_u32_u8
+	.quad	_L_1+5948
+	.quad	_Minus__Minus_var_u32_u8
+	.quad	_L_1+5968
+	.quad	_Minus__uMinus_var_u32_u8
+	.quad	_L_1+5985
+	.quad	_Minus__Minus_param_u32_LC
+	.quad	_L_1+6003
+	.quad	_Minus__uMinus_param_u32_LC
+	.quad	_L_1+6022
+	.quad	_Minus__Minus_var_u32_LC
+	.quad	_L_1+6042
+	.quad	_Minus__uMinus_var_u32_LC
+	.quad	_L_1+6059
+	.quad	_Minus__Minus_param_u32_i64
+	.quad	_L_1+6077
+	.quad	_Minus__uMinus_param_u32_i64
+	.quad	_L_1+6097
+	.quad	_Minus__Minus_var_u32_i64
+	.quad	_L_1+6118
+	.quad	_Minus__uMinus_var_u32_i64
+	.quad	_L_1+6136
+	.quad	_Minus__Minus_param_i8_i32
+	.quad	_L_1+6155
+	.quad	_Minus__uMinus_param_i8_i32
+	.quad	_L_1+6174
+	.quad	_Minus__Minus_var_i8_i32
+	.quad	_L_1+6194
+	.quad	_Minus__uMinus_var_i8_i32
+	.quad	_L_1+6211
+	.quad	_Minus__Minus_param_i8_i16
+	.quad	_L_1+6229
+	.quad	_Minus__uMinus_param_i8_i16
+	.quad	_L_1+6248
+	.quad	_Minus__Minus_var_i8_i16
+	.quad	_L_1+6268
+	.quad	_Minus__uMinus_var_i8_i16
+	.quad	_L_1+6285
+	.quad	_Minus__Minus_param_i8_L
+	.quad	_L_1+6303
+	.quad	_Minus__uMinus_param_i8_L
+	.quad	_L_1+6320
+	.quad	_Minus__Minus_var_i8_L
+	.quad	_L_1+6338
+	.quad	_Minus__uMinus_var_i8_L
+	.quad	_L_1+6353
+	.quad	_Minus__Minus_param_i8_u64
+	.quad	_L_1+6369
+	.quad	_Minus__uMinus_param_i8_u64
+	.quad	_L_1+6388
+	.quad	_Minus__Minus_var_i8_u64
+	.quad	_L_1+6408
+	.quad	_Minus__uMinus_var_i8_u64
+	.quad	_L_1+6425
+	.quad	_Minus__Minus_param_i8_u16
+	.quad	_L_1+6443
+	.quad	_Minus__uMinus_param_i8_u16
+	.quad	_L_1+6462
+	.quad	_Minus__Minus_var_i8_u16
+	.quad	_L_1+6482
+	.quad	_Minus__uMinus_var_i8_u16
+	.quad	_L_1+6499
+	.quad	_Minus__Minus_param_i8_C
+	.quad	_L_1+6517
+	.quad	_Minus__uMinus_param_i8_C
+	.quad	_L_1+6534
+	.quad	_Minus__Minus_var_i8_C
+	.quad	_L_1+6552
+	.quad	_Minus__uMinus_var_i8_C
+	.quad	_L_1+6567
+	.quad	_Minus__Minus_param_i8_u32
+	.quad	_L_1+6583
+	.quad	_Minus__uMinus_param_i8_u32
+	.quad	_L_1+6602
+	.quad	_Minus__Minus_var_i8_u32
+	.quad	_L_1+6622
+	.quad	_Minus__uMinus_var_i8_u32
+	.quad	_L_1+6639
+	.quad	_Minus__Minus_param_i8_i8
+	.quad	_L_1+6657
+	.quad	_Minus__uMinus_param_i8_i8
+	.quad	_L_1+6675
+	.quad	_Minus__Minus_var_i8_i8
+	.quad	_L_1+6694
+	.quad	_Minus__uMinus_var_i8_i8
+	.quad	_L_1+6710
+	.quad	_Minus__Minus_param_i8_I
+	.quad	_L_1+6727
+	.quad	_Minus__uMinus_param_i8_I
+	.quad	_L_1+6744
+	.quad	_Minus__Minus_var_i8_I
+	.quad	_L_1+6762
+	.quad	_Minus__uMinus_var_i8_I
+	.quad	_L_1+6777
+	.quad	_Minus__Minus_param_i8_u8
+	.quad	_L_1+6793
+	.quad	_Minus__uMinus_param_i8_u8
+	.quad	_L_1+6811
+	.quad	_Minus__Minus_var_i8_u8
+	.quad	_L_1+6830
+	.quad	_Minus__uMinus_var_i8_u8
+	.quad	_L_1+6846
+	.quad	_Minus__Minus_param_i8_LC
+	.quad	_L_1+6863
+	.quad	_Minus__uMinus_param_i8_LC
+	.quad	_L_1+6881
+	.quad	_Minus__Minus_var_i8_LC
+	.quad	_L_1+6900
+	.quad	_Minus__uMinus_var_i8_LC
+	.quad	_L_1+6916
+	.quad	_Minus__Minus_param_i8_i64
+	.quad	_L_1+6933
+	.quad	_Minus__uMinus_param_i8_i64
+	.quad	_L_1+6952
+	.quad	_Minus__Minus_var_i8_i64
+	.quad	_L_1+6972
+	.quad	_Minus__uMinus_var_i8_i64
+	.quad	_L_1+6989
+	.quad	_Minus__Minus_param_I_i32
+	.quad	_L_1+7007
+	.quad	_Minus__uMinus_param_I_i32
+	.quad	_L_1+7025
+	.quad	_Minus__Minus_var_I_i32
+	.quad	_L_1+7044
+	.quad	_Minus__uMinus_var_I_i32
+	.quad	_L_1+7060
+	.quad	_Minus__Minus_param_I_i16
+	.quad	_L_1+7077
+	.quad	_Minus__uMinus_param_I_i16
+	.quad	_L_1+7095
+	.quad	_Minus__Minus_var_I_i16
+	.quad	_L_1+7114
+	.quad	_Minus__uMinus_var_I_i16
+	.quad	_L_1+7130
+	.quad	_Minus__Minus_param_I_L
+	.quad	_L_1+7147
+	.quad	_Minus__uMinus_param_I_L
+	.quad	_L_1+7163
+	.quad	_Minus__Minus_var_I_L
+	.quad	_L_1+7180
+	.quad	_Minus__uMinus_var_I_L
+	.quad	_L_1+7194
+	.quad	_Minus__Minus_param_I_u64
+	.quad	_L_1+7209
+	.quad	_Minus__uMinus_param_I_u64
+	.quad	_L_1+7227
+	.quad	_Minus__Minus_var_I_u64
+	.quad	_L_1+7246
+	.quad	_Minus__uMinus_var_I_u64
+	.quad	_L_1+7262
+	.quad	_Minus__Minus_param_I_u16
+	.quad	_L_1+7279
+	.quad	_Minus__uMinus_param_I_u16
+	.quad	_L_1+7297
+	.quad	_Minus__Minus_var_I_u16
+	.quad	_L_1+7316
+	.quad	_Minus__uMinus_var_I_u16
+	.quad	_L_1+7332
+	.quad	_Minus__Minus_param_I_C
+	.quad	_L_1+7349
+	.quad	_Minus__uMinus_param_I_C
+	.quad	_L_1+7365
+	.quad	_Minus__Minus_var_I_C
+	.quad	_L_1+7382
+	.quad	_Minus__uMinus_var_I_C
+	.quad	_L_1+7396
+	.quad	_Minus__Minus_param_I_u32
+	.quad	_L_1+7411
+	.quad	_Minus__uMinus_param_I_u32
+	.quad	_L_1+7429
+	.quad	_Minus__Minus_var_I_u32
+	.quad	_L_1+7448
+	.quad	_Minus__uMinus_var_I_u32
+	.quad	_L_1+7464
+	.quad	_Minus__Minus_param_I_i8
+	.quad	_L_1+7481
+	.quad	_Minus__uMinus_param_I_i8
+	.quad	_L_1+7498
+	.quad	_Minus__Minus_var_I_i8
+	.quad	_L_1+7516
+	.quad	_Minus__uMinus_var_I_i8
+	.quad	_L_1+7531
+	.quad	_Minus__Minus_param_I_I
+	.quad	_L_1+7547
+	.quad	_Minus__uMinus_param_I_I
+	.quad	_L_1+7563
+	.quad	_Minus__Minus_var_I_I
+	.quad	_L_1+7580
+	.quad	_Minus__uMinus_var_I_I
+	.quad	_L_1+7594
+	.quad	_Minus__Minus_param_I_u8
+	.quad	_L_1+7609
+	.quad	_Minus__uMinus_param_I_u8
+	.quad	_L_1+7626
+	.quad	_Minus__Minus_var_I_u8
+	.quad	_L_1+7644
+	.quad	_Minus__uMinus_var_I_u8
+	.quad	_L_1+7659
+	.quad	_Minus__Minus_param_I_LC
+	.quad	_L_1+7675
+	.quad	_Minus__uMinus_param_I_LC
+	.quad	_L_1+7692
+	.quad	_Minus__Minus_var_I_LC
+	.quad	_L_1+7710
+	.quad	_Minus__uMinus_var_I_LC
+	.quad	_L_1+7725
+	.quad	_Minus__Minus_param_I_i64
+	.quad	_L_1+7741
+	.quad	_Minus__uMinus_param_I_i64
+	.quad	_L_1+7759
+	.quad	_Minus__Minus_var_I_i64
+	.quad	_L_1+7778
+	.quad	_Minus__uMinus_var_I_i64
+	.quad	_L_1+7794
+	.quad	_Minus__Minus_param_u8_i32
+	.quad	_L_1+7811
+	.quad	_Minus__uMinus_param_u8_i32
+	.quad	_L_1+7830
+	.quad	_Minus__Minus_var_u8_i32
+	.quad	_L_1+7850
+	.quad	_Minus__uMinus_var_u8_i32
+	.quad	_L_1+7867
+	.quad	_Minus__Minus_param_u8_i16
+	.quad	_L_1+7885
+	.quad	_Minus__uMinus_param_u8_i16
+	.quad	_L_1+7904
+	.quad	_Minus__Minus_var_u8_i16
+	.quad	_L_1+7924
+	.quad	_Minus__uMinus_var_u8_i16
+	.quad	_L_1+7941
+	.quad	_Minus__Minus_param_u8_L
+	.quad	_L_1+7959
+	.quad	_Minus__uMinus_param_u8_L
+	.quad	_L_1+7976
+	.quad	_Minus__Minus_var_u8_L
+	.quad	_L_1+7994
+	.quad	_Minus__uMinus_var_u8_L
+	.quad	_L_1+8009
+	.quad	_Minus__Minus_param_u8_u64
+	.quad	_L_1+8025
+	.quad	_Minus__uMinus_param_u8_u64
+	.quad	_L_1+8044
+	.quad	_Minus__Minus_var_u8_u64
+	.quad	_L_1+8064
+	.quad	_Minus__uMinus_var_u8_u64
+	.quad	_L_1+8081
+	.quad	_Minus__Minus_param_u8_u16
+	.quad	_L_1+8099
+	.quad	_Minus__uMinus_param_u8_u16
+	.quad	_L_1+8118
+	.quad	_Minus__Minus_var_u8_u16
+	.quad	_L_1+8138
+	.quad	_Minus__uMinus_var_u8_u16
+	.quad	_L_1+8155
+	.quad	_Minus__Minus_param_u8_C
+	.quad	_L_1+8173
+	.quad	_Minus__uMinus_param_u8_C
+	.quad	_L_1+8190
+	.quad	_Minus__Minus_var_u8_C
+	.quad	_L_1+8208
+	.quad	_Minus__uMinus_var_u8_C
+	.quad	_L_1+8223
+	.quad	_Minus__Minus_param_u8_u32
+	.quad	_L_1+8239
+	.quad	_Minus__uMinus_param_u8_u32
+	.quad	_L_1+8258
+	.quad	_Minus__Minus_var_u8_u32
+	.quad	_L_1+8278
+	.quad	_Minus__uMinus_var_u8_u32
+	.quad	_L_1+8295
+	.quad	_Minus__Minus_param_u8_i8
+	.quad	_L_1+8313
+	.quad	_Minus__uMinus_param_u8_i8
+	.quad	_L_1+8331
+	.quad	_Minus__Minus_var_u8_i8
+	.quad	_L_1+8350
+	.quad	_Minus__uMinus_var_u8_i8
+	.quad	_L_1+8366
+	.quad	_Minus__Minus_param_u8_I
+	.quad	_L_1+8383
+	.quad	_Minus__uMinus_param_u8_I
+	.quad	_L_1+8400
+	.quad	_Minus__Minus_var_u8_I
+	.quad	_L_1+8418
+	.quad	_Minus__uMinus_var_u8_I
+	.quad	_L_1+8433
+	.quad	_Minus__Minus_param_u8_u8
+	.quad	_L_1+8449
+	.quad	_Minus__uMinus_param_u8_u8
+	.quad	_L_1+8467
+	.quad	_Minus__Minus_var_u8_u8
+	.quad	_L_1+8486
+	.quad	_Minus__uMinus_var_u8_u8
+	.quad	_L_1+8502
+	.quad	_Minus__Minus_param_u8_LC
+	.quad	_L_1+8519
+	.quad	_Minus__uMinus_param_u8_LC
+	.quad	_L_1+8537
+	.quad	_Minus__Minus_var_u8_LC
+	.quad	_L_1+8556
+	.quad	_Minus__uMinus_var_u8_LC
+	.quad	_L_1+8572
+	.quad	_Minus__Minus_param_u8_i64
+	.quad	_L_1+8589
+	.quad	_Minus__uMinus_param_u8_i64
+	.quad	_L_1+8608
+	.quad	_Minus__Minus_var_u8_i64
+	.quad	_L_1+8628
+	.quad	_Minus__uMinus_var_u8_i64
+	.quad	_L_1+8645
+	.quad	_Minus__Minus_param_f32_f32
+	.quad	_L_1+8663
+	.quad	_Minus__Minus_var_f32_f32
+	.quad	_L_1+8683
+	.quad	_Minus__Minus_param_LC_i32
+	.quad	_L_1+8701
+	.quad	_Minus__uMinus_param_LC_i32
+	.quad	_L_1+8720
+	.quad	_Minus__Minus_var_LC_i32
+	.quad	_L_1+8740
+	.quad	_Minus__uMinus_var_LC_i32
+	.quad	_L_1+8757
+	.quad	_Minus__Minus_param_LC_i16
+	.quad	_L_1+8775
+	.quad	_Minus__uMinus_param_LC_i16
+	.quad	_L_1+8794
+	.quad	_Minus__Minus_var_LC_i16
+	.quad	_L_1+8814
+	.quad	_Minus__uMinus_var_LC_i16
+	.quad	_L_1+8831
+	.quad	_Minus__Minus_param_LC_L
+	.quad	_L_1+8849
+	.quad	_Minus__uMinus_param_LC_L
+	.quad	_L_1+8866
+	.quad	_Minus__Minus_var_LC_L
+	.quad	_L_1+8884
+	.quad	_Minus__uMinus_var_LC_L
+	.quad	_L_1+8899
+	.quad	_Minus__Minus_param_LC_u64
+	.quad	_L_1+8915
+	.quad	_Minus__uMinus_param_LC_u64
+	.quad	_L_1+8934
+	.quad	_Minus__Minus_var_LC_u64
+	.quad	_L_1+8954
+	.quad	_Minus__uMinus_var_LC_u64
+	.quad	_L_1+8971
+	.quad	_Minus__Minus_param_LC_u16
+	.quad	_L_1+8989
+	.quad	_Minus__uMinus_param_LC_u16
+	.quad	_L_1+9008
+	.quad	_Minus__Minus_var_LC_u16
+	.quad	_L_1+9028
+	.quad	_Minus__uMinus_var_LC_u16
+	.quad	_L_1+9045
+	.quad	_Minus__Minus_param_LC_C
+	.quad	_L_1+9063
+	.quad	_Minus__uMinus_param_LC_C
+	.quad	_L_1+9080
+	.quad	_Minus__Minus_var_LC_C
+	.quad	_L_1+9098
+	.quad	_Minus__uMinus_var_LC_C
+	.quad	_L_1+9113
+	.quad	_Minus__Minus_param_LC_u32
+	.quad	_L_1+9129
+	.quad	_Minus__uMinus_param_LC_u32
+	.quad	_L_1+9148
+	.quad	_Minus__Minus_var_LC_u32
+	.quad	_L_1+9168
+	.quad	_Minus__uMinus_var_LC_u32
+	.quad	_L_1+9185
+	.quad	_Minus__Minus_param_LC_i8
+	.quad	_L_1+9203
+	.quad	_Minus__uMinus_param_LC_i8
+	.quad	_L_1+9221
+	.quad	_Minus__Minus_var_LC_i8
+	.quad	_L_1+9240
+	.quad	_Minus__uMinus_var_LC_i8
+	.quad	_L_1+9256
+	.quad	_Minus__Minus_param_LC_I
+	.quad	_L_1+9273
+	.quad	_Minus__uMinus_param_LC_I
+	.quad	_L_1+9290
+	.quad	_Minus__Minus_var_LC_I
+	.quad	_L_1+9308
+	.quad	_Minus__uMinus_var_LC_I
+	.quad	_L_1+9323
+	.quad	_Minus__Minus_param_LC_u8
+	.quad	_L_1+9339
+	.quad	_Minus__uMinus_param_LC_u8
+	.quad	_L_1+9357
+	.quad	_Minus__Minus_var_LC_u8
+	.quad	_L_1+9376
+	.quad	_Minus__uMinus_var_LC_u8
+	.quad	_L_1+9392
+	.quad	_Minus__Minus_param_LC_LC
+	.quad	_L_1+9409
+	.quad	_Minus__uMinus_param_LC_LC
+	.quad	_L_1+9427
+	.quad	_Minus__Minus_var_LC_LC
+	.quad	_L_1+9446
+	.quad	_Minus__uMinus_var_LC_LC
+	.quad	_L_1+9462
+	.quad	_Minus__Minus_param_LC_i64
+	.quad	_L_1+9479
+	.quad	_Minus__uMinus_param_LC_i64
+	.quad	_L_1+9498
+	.quad	_Minus__Minus_var_LC_i64
+	.quad	_L_1+9518
+	.quad	_Minus__uMinus_var_LC_i64
+	.quad	_L_1+9535
+	.quad	_Minus__Minus_param_i64_i32
+	.quad	_L_1+9553
+	.quad	_Minus__uMinus_param_i64_i32
+	.quad	_L_1+9573
+	.quad	_Minus__Minus_var_i64_i32
+	.quad	_L_1+9594
+	.quad	_Minus__uMinus_var_i64_i32
+	.quad	_L_1+9612
+	.quad	_Minus__Minus_param_i64_i16
+	.quad	_L_1+9631
+	.quad	_Minus__uMinus_param_i64_i16
+	.quad	_L_1+9651
+	.quad	_Minus__Minus_var_i64_i16
+	.quad	_L_1+9672
+	.quad	_Minus__uMinus_var_i64_i16
+	.quad	_L_1+9690
+	.quad	_Minus__Minus_param_i64_L
+	.quad	_L_1+9709
+	.quad	_Minus__uMinus_param_i64_L
+	.quad	_L_1+9727
+	.quad	_Minus__Minus_var_i64_L
+	.quad	_L_1+9746
+	.quad	_Minus__uMinus_var_i64_L
+	.quad	_L_1+9762
+	.quad	_Minus__Minus_param_i64_u64
+	.quad	_L_1+9779
+	.quad	_Minus__uMinus_param_i64_u64
+	.quad	_L_1+9799
+	.quad	_Minus__Minus_var_i64_u64
+	.quad	_L_1+9820
+	.quad	_Minus__uMinus_var_i64_u64
+	.quad	_L_1+9838
+	.quad	_Minus__Minus_param_i64_u16
+	.quad	_L_1+9857
+	.quad	_Minus__uMinus_param_i64_u16
+	.quad	_L_1+9877
+	.quad	_Minus__Minus_var_i64_u16
+	.quad	_L_1+9898
+	.quad	_Minus__uMinus_var_i64_u16
+	.quad	_L_1+9916
+	.quad	_Minus__Minus_param_i64_C
+	.quad	_L_1+9935
+	.quad	_Minus__uMinus_param_i64_C
+	.quad	_L_1+9953
+	.quad	_Minus__Minus_var_i64_C
+	.quad	_L_1+9972
+	.quad	_Minus__uMinus_var_i64_C
+	.quad	_L_1+9988
+	.quad	_Minus__Minus_param_i64_u32
+	.quad	_L_1+10005
+	.quad	_Minus__uMinus_param_i64_u32
+	.quad	_L_1+10025
+	.quad	_Minus__Minus_var_i64_u32
+	.quad	_L_1+10046
+	.quad	_Minus__uMinus_var_i64_u32
+	.quad	_L_1+10064
+	.quad	_Minus__Minus_param_i64_i8
+	.quad	_L_1+10083
+	.quad	_Minus__uMinus_param_i64_i8
+	.quad	_L_1+10102
+	.quad	_Minus__Minus_var_i64_i8
+	.quad	_L_1+10122
+	.quad	_Minus__uMinus_var_i64_i8
+	.quad	_L_1+10139
+	.quad	_Minus__Minus_param_i64_I
+	.quad	_L_1+10157
+	.quad	_Minus__uMinus_param_i64_I
+	.quad	_L_1+10175
+	.quad	_Minus__Minus_var_i64_I
+	.quad	_L_1+10194
+	.quad	_Minus__uMinus_var_i64_I
+	.quad	_L_1+10210
+	.quad	_Minus__Minus_param_i64_u8
+	.quad	_L_1+10227
+	.quad	_Minus__uMinus_param_i64_u8
+	.quad	_L_1+10246
+	.quad	_Minus__Minus_var_i64_u8
+	.quad	_L_1+10266
+	.quad	_Minus__uMinus_var_i64_u8
+	.quad	_L_1+10283
+	.quad	_Minus__Minus_param_i64_LC
+	.quad	_L_1+10301
+	.quad	_Minus__uMinus_param_i64_LC
+	.quad	_L_1+10320
+	.quad	_Minus__Minus_var_i64_LC
+	.quad	_L_1+10340
+	.quad	_Minus__uMinus_var_i64_LC
+	.quad	_L_1+10357
+	.quad	_Minus__Minus_param_i64_i64
+	.quad	_L_1+10375
+	.quad	_Minus__uMinus_param_i64_i64
+	.quad	_L_1+10395
+	.quad	_Minus__Minus_var_i64_i64
+	.quad	_L_1+10416
+	.quad	_Minus__uMinus_var_i64_i64
 	.quad	_L_1+10434
 	.space 8
 	.ascii "../AMD64_DARWIN/Minus.m3"
@@ -10861,25 +10861,26 @@ _MM_Minus:
 	.space 8
 	.quad	_Minus_M3
 	.quad	3
-	.word	209
-	.space 6
+	.quad	209
 	.quad	210
-	.quad	211
-	.long	3848290697
-	.long	1080723152
-	.word	214
-	.space 2
-	.long	215
-	.quad	216
+	.long	1129526854
+	.byte	-43
+	.space 3
+	.quad	214
+	.byte	-41
+	.space 3
+	.long	216
 	.quad	217
-	.quad	218
-	.long	1130051666
-	.byte	-35
-	.byte	-34
+	.word	218
+	.space 6
+	.quad	219
+	.long	1855425872
+	.long	1080788754
+	.quad	222
+	.word	223
 	.space 2
-	.quad	223
 	.long	224
-	.space 28
+	.space 24
 	.quad	_Minus_I3
 	.quad	_MM_Minus+232
 	.space 8

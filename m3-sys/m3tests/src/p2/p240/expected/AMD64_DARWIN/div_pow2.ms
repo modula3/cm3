@@ -8160,25 +8160,26 @@ _MM_div_pow2:
 	.space 8
 	.quad	_div_pow2_M3
 	.quad	3
-	.word	913
-	.space 6
+	.quad	913
 	.quad	914
-	.quad	915
-	.long	68719477
-	.long	1082959702
-	.word	918
-	.space 2
-	.long	919
-	.quad	920
+	.long	1147468448
+	.byte	-107
+	.space 3
+	.quad	918
+	.byte	-105
+	.space 3
+	.long	920
 	.quad	921
-	.quad	922
-	.long	1147599651
-	.byte	-99
-	.byte	-98
+	.word	922
+	.space 6
+	.quad	923
+	.long	1717986918
+	.long	1082976102
+	.quad	926
+	.word	927
 	.space 2
-	.quad	927
 	.long	928
-	.space 28
+	.space 24
 	.quad	_div_pow2_I3
 	.quad	_MM_div_pow2+232
 	.space 8

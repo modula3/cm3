@@ -6942,25 +6942,26 @@ _MM_insert_constant_offset:
 	.space 8
 	.quad	_insert_constant_offset_M3
 	.quad	3
-	.word	977
-	.space 6
+	.quad	977
 	.quad	978
-	.quad	979
-	.long	377957122
-	.long	1083090905
-	.word	982
-	.space 2
-	.long	983
-	.quad	984
+	.long	1148518072
+	.byte	-43
+	.space 3
+	.quad	982
+	.byte	-41
+	.space 3
+	.long	984
 	.quad	985
-	.quad	986
-	.long	1148649275
-	.byte	-35
-	.byte	-34
+	.word	986
+	.space 6
+	.quad	987
+	.long	2027224564
+	.long	1083107305
+	.quad	990
+	.word	991
 	.space 2
-	.quad	991
 	.long	992
-	.space 28
+	.space 24
 	.quad	_insert_constant_offset_I3
 	.quad	_MM_insert_constant_offset+232
 	.space 8

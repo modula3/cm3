@@ -4114,25 +4114,26 @@ _MM_insert_constant_count:
 	.space 8
 	.quad	_insert_constant_count_M3
 	.quad	3
-	.word	1009
-	.space 6
+	.quad	1009
 	.quad	1010
-	.quad	1011
-	.long	1985992878
-	.long	1083154639
-	.word	1014
-	.space 2
-	.long	1015
-	.quad	1016
+	.long	1149027962
+	.byte	-11
+	.space 3
+	.quad	1014
+	.byte	-9
+	.space 3
+	.long	1016
 	.quad	1017
-	.quad	1018
-	.long	1149159047
-	.byte	-3
-	.byte	-2
+	.word	1018
+	.space 6
+	.quad	1019
+	.long	432932703
+	.long	1083171025
+	.quad	1022
+	.word	1023
 	.space 2
-	.quad	1023
 	.long	1024
-	.space 28
+	.space 24
 	.quad	_insert_constant_count_I3
 	.quad	_MM_insert_constant_count+232
 	.space 8

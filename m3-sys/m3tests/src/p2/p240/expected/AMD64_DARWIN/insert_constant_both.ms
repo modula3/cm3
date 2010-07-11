@@ -84752,25 +84752,26 @@ _MM_insert_constant_both:
 	.space 8
 	.quad	_insert_constant_both_M3
 	.quad	3
-	.word	1041
-	.space 6
+	.quad	1041
 	.quad	1042
-	.quad	1043
-	.long	34359738
-	.long	1083199595
-	.word	1046
-	.space 2
-	.long	1047
-	.quad	1048
+	.long	1149395799
+	.byte	21
+	.space 3
+	.quad	1046
+	.byte	23
+	.space 3
+	.long	1048
 	.quad	1049
-	.quad	1050
-	.long	1149461342
-	.byte	29
-	.byte	30
+	.word	1050
+	.space 6
+	.quad	1051
+	.long	3552796947
+	.long	1083207787
+	.quad	1054
+	.word	1055
 	.space 2
-	.quad	1055
 	.long	1056
-	.space 28
+	.space 24
 	.quad	_insert_constant_both_I3
 	.quad	_MM_insert_constant_both+232
 	.space 8

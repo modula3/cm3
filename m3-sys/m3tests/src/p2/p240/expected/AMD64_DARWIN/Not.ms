@@ -1,346 +1,10 @@
 	.text
-.globl _Not__uNot_var_u16_u16
-	.private_extern _Not__uNot_var_u16_u16
-_Not__uNot_var_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Not(%rip), %eax
-	movswq	%ax,%rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_var_u16_u16
-	.private_extern _Not__Not_var_u16_u16
-_Not__Not_var_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	104+_MM_Not(%rip), %eax
-	movswq	%ax,%rax
-	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L4
-	cmpq	$32767, -16(%rbp)
-	jle	L5
-L4:
-	movl	$1761, %edi
-	call	__m3_fault
-L5:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Not__uNot_param_u16_u16
-	.private_extern _Not__uNot_param_u16_u16
-_Not__uNot_param_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_param_u16_u16
-	.private_extern _Not__Not_param_u16_u16
-_Not__Not_param_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-20(%rbp),%rax
-	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L10
-	cmpq	$32767, -16(%rbp)
-	jle	L11
-L10:
-	movl	$1825, %edi
-	call	__m3_fault
-L11:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Not__uNot_var_u64_u64
-	.private_extern _Not__uNot_var_u64_u64
-_Not__uNot_var_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Not(%rip), %rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_var_u64_u64
-	.private_extern _Not__Not_var_u64_u64
-_Not__Not_var_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Not(%rip), %rax
-	negq	%rax
-	leave
-	ret
-.globl _Not__uNot_param_u64_u64
-	.private_extern _Not__uNot_param_u64_u64
-_Not__uNot_param_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_param_u64_u64
-	.private_extern _Not__Not_param_u64_u64
-_Not__Not_param_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	negq	%rax
-	leave
-	ret
-.globl _Not__uNot_var_LC_LC
-	.private_extern _Not__uNot_var_LC_LC
-_Not__uNot_var_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Not(%rip), %rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_var_LC_LC
-	.private_extern _Not__Not_var_LC_LC
-_Not__Not_var_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Not(%rip), %rax
-	negq	%rax
-	leave
-	ret
-.globl _Not__uNot_param_LC_LC
-	.private_extern _Not__uNot_param_LC_LC
-_Not__uNot_param_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_param_LC_LC
-	.private_extern _Not__Not_param_LC_LC
-_Not__Not_param_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	negq	%rax
-	leave
-	ret
-.globl _Not__Not_var_f64_f64
-	.private_extern _Not__Not_var_f64_f64
-_Not__Not_var_f64_f64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movsd	128+_MM_Not(%rip), %xmm1
-	movsd	LC0(%rip), %xmm0
-	xorpd	%xmm1, %xmm0
-	leave
-	ret
-.globl _Not__Not_param_f64_f64
-	.private_extern _Not__Not_param_f64_f64
-_Not__Not_param_f64_f64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movsd	%xmm0, -24(%rbp)
-	movsd	%xmm1, -32(%rbp)
-	movsd	-32(%rbp), %xmm1
-	movsd	LC0(%rip), %xmm0
-	xorpd	%xmm1, %xmm0
-	leave
-	ret
-.globl _Not__uNot_var_i16_i16
-	.private_extern _Not__uNot_var_i16_i16
-_Not__uNot_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Not(%rip), %eax
-	movzwl	%ax, %eax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_var_i16_i16
-	.private_extern _Not__Not_var_i16_i16
-_Not__Not_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movzwl	136+_MM_Not(%rip), %eax
-	movzwl	%ax, %eax
-	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L36
-	cmpq	$65535, -16(%rbp)
-	jle	L37
-L36:
-	movl	$2209, %edi
-	call	__m3_fault
-L37:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Not__uNot_param_i16_i16
-	.private_extern _Not__uNot_param_i16_i16
-_Not__uNot_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_param_i16_i16
-	.private_extern _Not__Not_param_i16_i16
-_Not__Not_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-20(%rbp), %eax
-	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L42
-	cmpq	$65535, -16(%rbp)
-	jle	L43
-L42:
-	movl	$2273, %edi
-	call	__m3_fault
-L43:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Not__uNot_var_i32_i32
-	.private_extern _Not__uNot_var_i32_i32
-_Not__uNot_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Not(%rip), %eax
-	mov	%eax, %eax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_var_i32_i32
-	.private_extern _Not__Not_var_i32_i32
-_Not__Not_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movl	140+_MM_Not(%rip), %eax
-	mov	%eax, %eax
-	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L48
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L49
-L48:
-	movl	$2337, %edi
-	call	__m3_fault
-L49:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Not__uNot_param_i32_i32
-	.private_extern _Not__uNot_param_i32_i32
-_Not__uNot_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %eax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_param_i32_i32
-	.private_extern _Not__Not_param_i32_i32
-_Not__Not_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-24(%rbp), %eax
-	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L54
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L55
-L54:
-	movl	$2401, %edi
-	call	__m3_fault
-L55:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Not__uNot_var_I_I
-	.private_extern _Not__uNot_var_I_I
-_Not__uNot_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Not(%rip), %rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_var_I_I
-	.private_extern _Not__Not_var_I_I
-_Not__Not_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Not(%rip), %rax
-	negq	%rax
-	leave
-	ret
-.globl _Not__uNot_param_I_I
-	.private_extern _Not__uNot_param_I_I
-_Not__uNot_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	notq	%rax
-	leave
-	ret
-.globl _Not__Not_param_I_I
-	.private_extern _Not__Not_param_I_I
-_Not__Not_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	negq	%rax
-	leave
-	ret
 .globl _Not__uNot_var_i64_i64
 	.private_extern _Not__uNot_var_i64_i64
 _Not__uNot_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Not(%rip), %rax
+	movq	104+_MM_Not(%rip), %rax
 	notq	%rax
 	leave
 	ret
@@ -349,7 +13,7 @@ _Not__uNot_var_i64_i64:
 _Not__Not_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Not(%rip), %rax
+	movq	104+_MM_Not(%rip), %rax
 	negq	%rax
 	leave
 	ret
@@ -375,35 +39,27 @@ _Not__Not_param_i64_i64:
 	negq	%rax
 	leave
 	ret
-.globl _Not__uNot_var_C_C
-	.private_extern _Not__uNot_var_C_C
-_Not__uNot_var_C_C:
+.globl _Not__uNot_var_LC_LC
+	.private_extern _Not__uNot_var_LC_LC
+_Not__uNot_var_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Not(%rip), %rax
+	movq	112+_MM_Not(%rip), %rax
 	notq	%rax
 	leave
 	ret
-.globl _Not__Not_var_C_C
-	.private_extern _Not__Not_var_C_C
-_Not__Not_var_C_C:
+.globl _Not__Not_var_LC_LC
+	.private_extern _Not__Not_var_LC_LC
+_Not__Not_var_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	160+_MM_Not(%rip), %rax
+	movq	112+_MM_Not(%rip), %rax
 	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L76
-	movl	$2721, %edi
-	call	__m3_fault
-L76:
-	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Not__uNot_param_C_C
-	.private_extern _Not__uNot_param_C_C
-_Not__uNot_param_C_C:
+.globl _Not__uNot_param_LC_LC
+	.private_extern _Not__uNot_param_LC_LC
+_Not__uNot_param_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -412,23 +68,15 @@ _Not__uNot_param_C_C:
 	notq	%rax
 	leave
 	ret
-.globl _Not__Not_param_C_C
-	.private_extern _Not__Not_param_C_C
-_Not__Not_param_C_C:
+.globl _Not__Not_param_LC_LC
+	.private_extern _Not__Not_param_LC_LC
+_Not__Not_param_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rax
 	negq	%rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L81
-	movl	$2785, %edi
-	call	__m3_fault
-L81:
-	movq	-16(%rbp), %rax
 	leave
 	ret
 .globl _Not__Not_var_f32_f32
@@ -436,8 +84,8 @@ L81:
 _Not__Not_var_f32_f32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movss	168+_MM_Not(%rip), %xmm1
-	movss	LC1(%rip), %xmm0
+	movss	120+_MM_Not(%rip), %xmm1
+	movss	LC0(%rip), %xmm0
 	xorps	%xmm1, %xmm0
 	leave
 	ret
@@ -449,7 +97,7 @@ _Not__Not_param_f32_f32:
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
 	movss	-24(%rbp), %xmm1
-	movss	LC1(%rip), %xmm0
+	movss	LC0(%rip), %xmm0
 	xorps	%xmm1, %xmm0
 	leave
 	ret
@@ -458,7 +106,7 @@ _Not__Not_param_f32_f32:
 _Not__uNot_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Not(%rip), %eax
+	movzbl	124+_MM_Not(%rip), %eax
 	movsbq	%al,%rax
 	notq	%rax
 	leave
@@ -469,18 +117,18 @@ _Not__Not_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzbl	172+_MM_Not(%rip), %eax
+	movzbl	124+_MM_Not(%rip), %eax
 	movsbq	%al,%rax
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L90
+	jl	L24
 	cmpq	$127, -16(%rbp)
-	jle	L91
-L90:
-	movl	$2913, %edi
+	jle	L25
+L24:
+	movl	$2081, %edi
 	call	__m3_fault
-L91:
+L25:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -507,14 +155,54 @@ _Not__Not_param_u8_u8:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L96
+	jl	L30
 	cmpq	$127, -16(%rbp)
-	jle	L97
-L96:
-	movl	$2977, %edi
+	jle	L31
+L30:
+	movl	$2145, %edi
 	call	__m3_fault
-L97:
+L31:
 	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_var_I_I
+	.private_extern _Not__uNot_var_I_I
+_Not__uNot_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Not(%rip), %rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_var_I_I
+	.private_extern _Not__Not_var_I_I
+_Not__Not_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Not(%rip), %rax
+	negq	%rax
+	leave
+	ret
+.globl _Not__uNot_param_I_I
+	.private_extern _Not__uNot_param_I_I
+_Not__uNot_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_param_I_I
+	.private_extern _Not__Not_param_I_I
+_Not__Not_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	negq	%rax
 	leave
 	ret
 .globl _Not__uNot_var_i8_i8
@@ -522,7 +210,7 @@ L97:
 _Not__uNot_var_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Not(%rip), %eax
+	movzbl	136+_MM_Not(%rip), %eax
 	movzbl	%al, %eax
 	notq	%rax
 	leave
@@ -533,18 +221,18 @@ _Not__Not_var_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movzbl	173+_MM_Not(%rip), %eax
+	movzbl	136+_MM_Not(%rip), %eax
 	movzbl	%al, %eax
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L102
+	js	L44
 	cmpq	$255, -16(%rbp)
-	jle	L103
-L102:
-	movl	$3041, %edi
+	jle	L45
+L44:
+	movl	$2337, %edi
 	call	__m3_fault
-L103:
+L45:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -571,14 +259,262 @@ _Not__Not_param_i8_i8:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L108
+	js	L50
 	cmpq	$255, -16(%rbp)
-	jle	L109
-L108:
-	movl	$3105, %edi
+	jle	L51
+L50:
+	movl	$2401, %edi
 	call	__m3_fault
-L109:
+L51:
 	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_var_u32_u32
+	.private_extern _Not__uNot_var_u32_u32
+_Not__uNot_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Not(%rip), %eax
+	cltq
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_var_u32_u32
+	.private_extern _Not__Not_var_u32_u32
+_Not__Not_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	140+_MM_Not(%rip), %eax
+	cltq
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L56
+	cmpq	$2147483647, -16(%rbp)
+	jle	L57
+L56:
+	movl	$2465, %edi
+	call	__m3_fault
+L57:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_param_u32_u32
+	.private_extern _Not__uNot_param_u32_u32
+_Not__uNot_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_param_u32_u32
+	.private_extern _Not__Not_param_u32_u32
+_Not__Not_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-24(%rbp), %eax
+	cltq
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L62
+	cmpq	$2147483647, -16(%rbp)
+	jle	L63
+L62:
+	movl	$2529, %edi
+	call	__m3_fault
+L63:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_var_C_C
+	.private_extern _Not__uNot_var_C_C
+_Not__uNot_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Not(%rip), %rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_var_C_C
+	.private_extern _Not__Not_var_C_C
+_Not__Not_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movq	144+_MM_Not(%rip), %rax
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L68
+	movl	$2593, %edi
+	call	__m3_fault
+L68:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_param_C_C
+	.private_extern _Not__uNot_param_C_C
+_Not__uNot_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_param_C_C
+	.private_extern _Not__Not_param_C_C
+_Not__Not_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L73
+	movl	$2657, %edi
+	call	__m3_fault
+L73:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_var_u16_u16
+	.private_extern _Not__uNot_var_u16_u16
+_Not__uNot_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Not(%rip), %eax
+	movswq	%ax,%rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_var_u16_u16
+	.private_extern _Not__Not_var_u16_u16
+_Not__Not_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movzwl	152+_MM_Not(%rip), %eax
+	movswq	%ax,%rax
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L78
+	cmpq	$32767, -16(%rbp)
+	jle	L79
+L78:
+	movl	$2721, %edi
+	call	__m3_fault
+L79:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_param_u16_u16
+	.private_extern _Not__uNot_param_u16_u16
+_Not__uNot_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_param_u16_u16
+	.private_extern _Not__Not_param_u16_u16
+_Not__Not_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-20(%rbp),%rax
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L84
+	cmpq	$32767, -16(%rbp)
+	jle	L85
+L84:
+	movl	$2785, %edi
+	call	__m3_fault
+L85:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_var_u64_u64
+	.private_extern _Not__uNot_var_u64_u64
+_Not__uNot_var_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Not(%rip), %rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_var_u64_u64
+	.private_extern _Not__Not_var_u64_u64
+_Not__Not_var_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Not(%rip), %rax
+	negq	%rax
+	leave
+	ret
+.globl _Not__uNot_param_u64_u64
+	.private_extern _Not__uNot_param_u64_u64
+_Not__uNot_param_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_param_u64_u64
+	.private_extern _Not__Not_param_u64_u64
+_Not__Not_param_u64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	negq	%rax
+	leave
+	ret
+.globl _Not__Not_var_f64_f64
+	.private_extern _Not__Not_var_f64_f64
+_Not__Not_var_f64_f64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movsd	168+_MM_Not(%rip), %xmm1
+	movsd	LC1(%rip), %xmm0
+	xorpd	%xmm1, %xmm0
+	leave
+	ret
+.globl _Not__Not_param_f64_f64
+	.private_extern _Not__Not_param_f64_f64
+_Not__Not_param_f64_f64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movsd	%xmm0, -24(%rbp)
+	movsd	%xmm1, -32(%rbp)
+	movsd	-32(%rbp), %xmm1
+	movsd	LC1(%rip), %xmm0
+	xorpd	%xmm1, %xmm0
 	leave
 	ret
 .globl _Not__uNot_var_L_L
@@ -621,29 +557,94 @@ _Not__Not_param_L_L:
 	negq	%rax
 	leave
 	ret
-.globl _Not__uNot_var_u32_u32
-	.private_extern _Not__uNot_var_u32_u32
-_Not__uNot_var_u32_u32:
+.globl _Not__uNot_var_i16_i16
+	.private_extern _Not__uNot_var_i16_i16
+_Not__uNot_var_i16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Not(%rip), %eax
-	cltq
+	movzwl	184+_MM_Not(%rip), %eax
+	movzwl	%ax, %eax
 	notq	%rax
 	leave
 	ret
-.globl _Not__Not_var_u32_u32
-	.private_extern _Not__Not_var_u32_u32
-_Not__Not_var_u32_u32:
+.globl _Not__Not_var_i16_i16
+	.private_extern _Not__Not_var_i16_i16
+_Not__Not_var_i16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$16, %rsp
-	movl	184+_MM_Not(%rip), %eax
-	cltq
+	movzwl	184+_MM_Not(%rip), %eax
+	movzwl	%ax, %eax
 	negq	%rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L122
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L110
+	cmpq	$65535, -16(%rbp)
+	jle	L111
+L110:
+	movl	$3169, %edi
+	call	__m3_fault
+L111:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_param_i16_i16
+	.private_extern _Not__uNot_param_i16_i16
+_Not__uNot_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_param_i16_i16
+	.private_extern _Not__Not_param_i16_i16
+_Not__Not_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-20(%rbp), %eax
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L116
+	cmpq	$65535, -16(%rbp)
+	jle	L117
+L116:
+	movl	$3233, %edi
+	call	__m3_fault
+L117:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Not__uNot_var_i32_i32
+	.private_extern _Not__uNot_var_i32_i32
+_Not__uNot_var_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Not(%rip), %eax
+	mov	%eax, %eax
+	notq	%rax
+	leave
+	ret
+.globl _Not__Not_var_i32_i32
+	.private_extern _Not__Not_var_i32_i32
+_Not__Not_var_i32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$16, %rsp
+	movl	188+_MM_Not(%rip), %eax
+	mov	%eax, %eax
+	negq	%rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L122
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L123
 L122:
 	movl	$3297, %edi
@@ -652,33 +653,32 @@ L123:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Not__uNot_param_u32_u32
-	.private_extern _Not__uNot_param_u32_u32
-_Not__uNot_param_u32_u32:
+.globl _Not__uNot_param_i32_i32
+	.private_extern _Not__uNot_param_i32_i32
+_Not__uNot_param_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	notq	%rax
 	leave
 	ret
-.globl _Not__Not_param_u32_u32
-	.private_extern _Not__Not_param_u32_u32
-_Not__Not_param_u32_u32:
+.globl _Not__Not_param_i32_i32
+	.private_extern _Not__Not_param_i32_i32
+_Not__Not_param_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
+	mov	-24(%rbp), %eax
 	negq	%rax
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L128
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L128
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L129
 L128:
 	movl	$3361, %edi
@@ -710,66 +710,6 @@ __m3_fault:
 _L_1:
 	.ascii "Not_M3"
 	.space 1
-	.ascii "Not_param_u32_u32"
-	.space 1
-	.ascii "uNot_param_u32_u32"
-	.space 1
-	.ascii "Not_var_u32_u32"
-	.space 1
-	.ascii "uNot_var_u32_u32"
-	.space 1
-	.ascii "Not_param_L_L"
-	.space 1
-	.ascii "uNot_param_L_L"
-	.space 1
-	.ascii "Not_var_L_L"
-	.space 1
-	.ascii "uNot_var_L_L"
-	.space 1
-	.ascii "Not_param_i8_i8"
-	.space 1
-	.ascii "uNot_param_i8_i8"
-	.space 1
-	.ascii "Not_var_i8_i8"
-	.space 1
-	.ascii "uNot_var_i8_i8"
-	.space 1
-	.ascii "Not_param_u8_u8"
-	.space 1
-	.ascii "uNot_param_u8_u8"
-	.space 1
-	.ascii "Not_var_u8_u8"
-	.space 1
-	.ascii "uNot_var_u8_u8"
-	.space 1
-	.ascii "Not_param_f32_f32"
-	.space 1
-	.ascii "Not_var_f32_f32"
-	.space 1
-	.ascii "Not_param_C_C"
-	.space 1
-	.ascii "uNot_param_C_C"
-	.space 1
-	.ascii "Not_var_C_C"
-	.space 1
-	.ascii "uNot_var_C_C"
-	.space 1
-	.ascii "Not_param_i64_i64"
-	.space 1
-	.ascii "uNot_param_i64_i64"
-	.space 1
-	.ascii "Not_var_i64_i64"
-	.space 1
-	.ascii "uNot_var_i64_i64"
-	.space 1
-	.ascii "Not_param_I_I"
-	.space 1
-	.ascii "uNot_param_I_I"
-	.space 1
-	.ascii "Not_var_I_I"
-	.space 1
-	.ascii "uNot_var_I_I"
-	.space 1
 	.ascii "Not_param_i32_i32"
 	.space 1
 	.ascii "uNot_param_i32_i32"
@@ -786,17 +726,17 @@ _L_1:
 	.space 1
 	.ascii "uNot_var_i16_i16"
 	.space 1
+	.ascii "Not_param_L_L"
+	.space 1
+	.ascii "uNot_param_L_L"
+	.space 1
+	.ascii "Not_var_L_L"
+	.space 1
+	.ascii "uNot_var_L_L"
+	.space 1
 	.ascii "Not_param_f64_f64"
 	.space 1
 	.ascii "Not_var_f64_f64"
-	.space 1
-	.ascii "Not_param_LC_LC"
-	.space 1
-	.ascii "uNot_param_LC_LC"
-	.space 1
-	.ascii "Not_var_LC_LC"
-	.space 1
-	.ascii "uNot_var_LC_LC"
 	.space 1
 	.ascii "Not_param_u64_u64"
 	.space 1
@@ -813,112 +753,172 @@ _L_1:
 	.ascii "Not_var_u16_u16"
 	.space 1
 	.ascii "uNot_var_u16_u16"
+	.space 1
+	.ascii "Not_param_C_C"
+	.space 1
+	.ascii "uNot_param_C_C"
+	.space 1
+	.ascii "Not_var_C_C"
+	.space 1
+	.ascii "uNot_var_C_C"
+	.space 1
+	.ascii "Not_param_u32_u32"
+	.space 1
+	.ascii "uNot_param_u32_u32"
+	.space 1
+	.ascii "Not_var_u32_u32"
+	.space 1
+	.ascii "uNot_var_u32_u32"
+	.space 1
+	.ascii "Not_param_i8_i8"
+	.space 1
+	.ascii "uNot_param_i8_i8"
+	.space 1
+	.ascii "Not_var_i8_i8"
+	.space 1
+	.ascii "uNot_var_i8_i8"
+	.space 1
+	.ascii "Not_param_I_I"
+	.space 1
+	.ascii "uNot_param_I_I"
+	.space 1
+	.ascii "Not_var_I_I"
+	.space 1
+	.ascii "uNot_var_I_I"
+	.space 1
+	.ascii "Not_param_u8_u8"
+	.space 1
+	.ascii "uNot_param_u8_u8"
+	.space 1
+	.ascii "Not_var_u8_u8"
+	.space 1
+	.ascii "uNot_var_u8_u8"
+	.space 1
+	.ascii "Not_param_f32_f32"
+	.space 1
+	.ascii "Not_var_f32_f32"
+	.space 1
+	.ascii "Not_param_LC_LC"
+	.space 1
+	.ascii "uNot_param_LC_LC"
+	.space 1
+	.ascii "Not_var_LC_LC"
+	.space 1
+	.ascii "uNot_var_LC_LC"
+	.space 1
+	.ascii "Not_param_i64_i64"
+	.space 1
+	.ascii "uNot_param_i64_i64"
+	.space 1
+	.ascii "Not_var_i64_i64"
+	.space 1
+	.ascii "uNot_var_i64_i64"
 	.space 6
 	.quad	_Not_M3
 	.quad	_L_1
-	.quad	_Not__Not_param_u32_u32
-	.quad	_L_1+7
-	.quad	_Not__uNot_param_u32_u32
-	.quad	_L_1+25
-	.quad	_Not__Not_var_u32_u32
-	.quad	_L_1+44
-	.quad	_Not__uNot_var_u32_u32
-	.quad	_L_1+60
-	.quad	_Not__Not_param_L_L
-	.quad	_L_1+77
-	.quad	_Not__uNot_param_L_L
-	.quad	_L_1+91
-	.quad	_Not__Not_var_L_L
-	.quad	_L_1+106
-	.quad	_Not__uNot_var_L_L
-	.quad	_L_1+118
-	.quad	_Not__Not_param_i8_i8
-	.quad	_L_1+131
-	.quad	_Not__uNot_param_i8_i8
-	.quad	_L_1+147
-	.quad	_Not__Not_var_i8_i8
-	.quad	_L_1+164
-	.quad	_Not__uNot_var_i8_i8
-	.quad	_L_1+178
-	.quad	_Not__Not_param_u8_u8
-	.quad	_L_1+193
-	.quad	_Not__uNot_param_u8_u8
-	.quad	_L_1+209
-	.quad	_Not__Not_var_u8_u8
-	.quad	_L_1+226
-	.quad	_Not__uNot_var_u8_u8
-	.quad	_L_1+240
-	.quad	_Not__Not_param_f32_f32
-	.quad	_L_1+255
-	.quad	_Not__Not_var_f32_f32
-	.quad	_L_1+273
-	.quad	_Not__Not_param_C_C
-	.quad	_L_1+289
-	.quad	_Not__uNot_param_C_C
-	.quad	_L_1+303
-	.quad	_Not__Not_var_C_C
-	.quad	_L_1+318
-	.quad	_Not__uNot_var_C_C
-	.quad	_L_1+330
-	.quad	_Not__Not_param_i64_i64
-	.quad	_L_1+343
-	.quad	_Not__uNot_param_i64_i64
-	.quad	_L_1+361
-	.quad	_Not__Not_var_i64_i64
-	.quad	_L_1+380
-	.quad	_Not__uNot_var_i64_i64
-	.quad	_L_1+396
-	.quad	_Not__Not_param_I_I
-	.quad	_L_1+413
-	.quad	_Not__uNot_param_I_I
-	.quad	_L_1+427
-	.quad	_Not__Not_var_I_I
-	.quad	_L_1+442
-	.quad	_Not__uNot_var_I_I
-	.quad	_L_1+454
 	.quad	_Not__Not_param_i32_i32
-	.quad	_L_1+467
+	.quad	_L_1+7
 	.quad	_Not__uNot_param_i32_i32
-	.quad	_L_1+485
+	.quad	_L_1+25
 	.quad	_Not__Not_var_i32_i32
-	.quad	_L_1+504
+	.quad	_L_1+44
 	.quad	_Not__uNot_var_i32_i32
-	.quad	_L_1+520
+	.quad	_L_1+60
 	.quad	_Not__Not_param_i16_i16
-	.quad	_L_1+537
+	.quad	_L_1+77
 	.quad	_Not__uNot_param_i16_i16
-	.quad	_L_1+555
+	.quad	_L_1+95
 	.quad	_Not__Not_var_i16_i16
-	.quad	_L_1+574
+	.quad	_L_1+114
 	.quad	_Not__uNot_var_i16_i16
-	.quad	_L_1+590
+	.quad	_L_1+130
+	.quad	_Not__Not_param_L_L
+	.quad	_L_1+147
+	.quad	_Not__uNot_param_L_L
+	.quad	_L_1+161
+	.quad	_Not__Not_var_L_L
+	.quad	_L_1+176
+	.quad	_Not__uNot_var_L_L
+	.quad	_L_1+188
 	.quad	_Not__Not_param_f64_f64
-	.quad	_L_1+607
+	.quad	_L_1+201
 	.quad	_Not__Not_var_f64_f64
-	.quad	_L_1+625
-	.quad	_Not__Not_param_LC_LC
-	.quad	_L_1+641
-	.quad	_Not__uNot_param_LC_LC
-	.quad	_L_1+657
-	.quad	_Not__Not_var_LC_LC
-	.quad	_L_1+674
-	.quad	_Not__uNot_var_LC_LC
-	.quad	_L_1+688
+	.quad	_L_1+219
 	.quad	_Not__Not_param_u64_u64
-	.quad	_L_1+703
+	.quad	_L_1+235
 	.quad	_Not__uNot_param_u64_u64
-	.quad	_L_1+721
+	.quad	_L_1+253
 	.quad	_Not__Not_var_u64_u64
-	.quad	_L_1+740
+	.quad	_L_1+272
 	.quad	_Not__uNot_var_u64_u64
-	.quad	_L_1+756
+	.quad	_L_1+288
 	.quad	_Not__Not_param_u16_u16
-	.quad	_L_1+773
+	.quad	_L_1+305
 	.quad	_Not__uNot_param_u16_u16
-	.quad	_L_1+791
+	.quad	_L_1+323
 	.quad	_Not__Not_var_u16_u16
-	.quad	_L_1+810
+	.quad	_L_1+342
 	.quad	_Not__uNot_var_u16_u16
+	.quad	_L_1+358
+	.quad	_Not__Not_param_C_C
+	.quad	_L_1+375
+	.quad	_Not__uNot_param_C_C
+	.quad	_L_1+389
+	.quad	_Not__Not_var_C_C
+	.quad	_L_1+404
+	.quad	_Not__uNot_var_C_C
+	.quad	_L_1+416
+	.quad	_Not__Not_param_u32_u32
+	.quad	_L_1+429
+	.quad	_Not__uNot_param_u32_u32
+	.quad	_L_1+447
+	.quad	_Not__Not_var_u32_u32
+	.quad	_L_1+466
+	.quad	_Not__uNot_var_u32_u32
+	.quad	_L_1+482
+	.quad	_Not__Not_param_i8_i8
+	.quad	_L_1+499
+	.quad	_Not__uNot_param_i8_i8
+	.quad	_L_1+515
+	.quad	_Not__Not_var_i8_i8
+	.quad	_L_1+532
+	.quad	_Not__uNot_var_i8_i8
+	.quad	_L_1+546
+	.quad	_Not__Not_param_I_I
+	.quad	_L_1+561
+	.quad	_Not__uNot_param_I_I
+	.quad	_L_1+575
+	.quad	_Not__Not_var_I_I
+	.quad	_L_1+590
+	.quad	_Not__uNot_var_I_I
+	.quad	_L_1+602
+	.quad	_Not__Not_param_u8_u8
+	.quad	_L_1+615
+	.quad	_Not__uNot_param_u8_u8
+	.quad	_L_1+631
+	.quad	_Not__Not_var_u8_u8
+	.quad	_L_1+648
+	.quad	_Not__uNot_var_u8_u8
+	.quad	_L_1+662
+	.quad	_Not__Not_param_f32_f32
+	.quad	_L_1+677
+	.quad	_Not__Not_var_f32_f32
+	.quad	_L_1+695
+	.quad	_Not__Not_param_LC_LC
+	.quad	_L_1+711
+	.quad	_Not__uNot_param_LC_LC
+	.quad	_L_1+727
+	.quad	_Not__Not_var_LC_LC
+	.quad	_L_1+744
+	.quad	_Not__uNot_var_LC_LC
+	.quad	_L_1+758
+	.quad	_Not__Not_param_i64_i64
+	.quad	_L_1+773
+	.quad	_Not__uNot_param_i64_i64
+	.quad	_L_1+791
+	.quad	_Not__Not_var_i64_i64
+	.quad	_L_1+810
+	.quad	_Not__uNot_var_i64_i64
 	.quad	_L_1+826
 	.space 8
 	.ascii "../AMD64_DARWIN/Not.m3"
@@ -934,25 +934,26 @@ _MM_Not:
 	.space 8
 	.quad	_Not_M3
 	.quad	3
-	.word	593
-	.space 6
+	.quad	593
 	.quad	594
-	.quad	595
-	.long	2817498546
-	.long	1082303686
-	.word	598
-	.space 2
-	.long	599
-	.quad	600
+	.long	1142220325
+	.byte	85
+	.space 3
+	.quad	598
+	.byte	87
+	.space 3
+	.long	600
 	.quad	601
-	.quad	602
-	.long	1142351528
-	.byte	93
-	.byte	94
+	.word	602
+	.space 6
+	.quad	603
+	.long	171798692
+	.long	1082320087
+	.quad	606
+	.word	607
 	.space 2
-	.quad	607
 	.long	608
-	.space 28
+	.space 24
 	.quad	_Not_I3
 	.quad	_MM_Not+232
 	.space 8
@@ -970,14 +971,14 @@ _MM_Not:
 	.literal16
 	.align 4
 LC0:
+	.long	2147483648
 	.long	0
-	.long	-2147483648
 	.long	0
 	.long	0
 	.align 4
 LC1:
-	.long	2147483648
 	.long	0
+	.long	-2147483648
 	.long	0
 	.long	0
 	.subsections_via_symbols

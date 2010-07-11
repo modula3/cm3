@@ -105394,25 +105394,26 @@ _MM_bitfield:
 	.space 8
 	.quad	_bitfield_M3
 	.quad	3
-	.word	881
-	.space 6
+	.quad	881
 	.quad	882
-	.quad	883
-	.long	2061584302
-	.long	1082894100
-	.word	886
-	.space 2
-	.long	887
-	.quad	888
+	.long	1146943635
+	.byte	117
+	.space 3
+	.quad	886
+	.byte	119
+	.space 3
+	.long	888
 	.quad	889
-	.quad	890
-	.long	1147074839
-	.byte	125
-	.byte	126
+	.word	890
+	.space 6
+	.quad	891
+	.long	3710851744
+	.long	1082910500
+	.quad	894
+	.word	895
 	.space 2
-	.quad	895
 	.long	896
-	.space 28
+	.space 24
 	.quad	_bitfield_I3
 	.quad	_MM_bitfield+232
 	.space 8

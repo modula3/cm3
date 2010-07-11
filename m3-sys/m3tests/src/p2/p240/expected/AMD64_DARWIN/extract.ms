@@ -1,7 +1,7 @@
 	.text
-.globl _extract__uExtract_var_u16_u16
-	.private_extern _extract__uExtract_var_u16_u16
-_extract__uExtract_var_u16_u16:
+.globl _extract__uExtract_var_i64_i64
+	.private_extern _extract__uExtract_var_i64_i64
+_extract__uExtract_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -18,8 +18,8 @@ L2:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L3
-	movzwl	104+_MM_extract(%rip), %eax
-	movswq	%ax,%rsi
+	movq	104+_MM_extract(%rip), %rax
+	movq	%rax, %rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -45,18 +45,18 @@ L4:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_u16_u16
-	.private_extern _extract__uExtract_param_u16_u16
-_extract__uExtract_param_u16_u16:
+.globl _extract__uExtract_param_i64_i64
+	.private_extern _extract__uExtract_param_i64_i64
+_extract__uExtract_param_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movq	%rdx, -32(%rbp)
-	movq	%rcx, -40(%rbp)
-	movq	-32(%rbp), %rax
-	movq	-40(%rbp), %rdx
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	%rdx, -40(%rbp)
+	movq	%rcx, -48(%rbp)
+	movq	-40(%rbp), %rax
+	movq	-48(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -64,35 +64,35 @@ _extract__uExtract_param_u16_u16:
 	movl	$1761, %edi
 	call	__m3_fault
 L7:
-	cmpq	$0, -40(%rbp)
+	cmpq	$0, -48(%rbp)
 	je	L8
-	movswq	-18(%rbp),%rsi
-	movq	-40(%rbp), %rdx
+	movq	-24(%rbp), %rsi
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	salq	%cl, %rsi
-	movq	-40(%rbp), %rdx
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movq	%rax, -56(%rbp)
 	jmp	L9
 L8:
-	movq	$0, -48(%rbp)
+	movq	$0, -56(%rbp)
 L9:
-	movq	-48(%rbp), %rax
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_u64_u64
-	.private_extern _extract__uExtract_var_u64_u64
-_extract__uExtract_var_u64_u64:
+.globl _extract__uExtract_var_LC_LC
+	.private_extern _extract__uExtract_var_LC_LC
+_extract__uExtract_var_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -109,8 +109,7 @@ L12:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L13
-	movq	112+_MM_extract(%rip), %rax
-	movq	%rax, %rsi
+	movq	112+_MM_extract(%rip), %rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -136,9 +135,9 @@ L14:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_u64_u64
-	.private_extern _extract__uExtract_param_u64_u64
-_extract__uExtract_param_u64_u64:
+.globl _extract__uExtract_param_LC_LC
+	.private_extern _extract__uExtract_param_LC_LC
+_extract__uExtract_param_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
@@ -157,7 +156,6 @@ _extract__uExtract_param_u64_u64:
 L17:
 	cmpq	$0, -48(%rbp)
 	je	L18
-	movq	-24(%rbp), %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
@@ -166,6 +164,8 @@ L17:
 	movq	-40(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
+	movq	-24(%rbp), %rax
+	movq	%rax, %rsi
 	salq	%cl, %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
@@ -181,9 +181,9 @@ L19:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_LC_LC
-	.private_extern _extract__uExtract_var_LC_LC
-_extract__uExtract_var_LC_LC:
+.globl _extract__uExtract_var_u8_u8
+	.private_extern _extract__uExtract_var_u8_u8
+_extract__uExtract_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -200,7 +200,8 @@ L22:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L23
-	movq	120+_MM_extract(%rip), %rsi
+	movzbl	124+_MM_extract(%rip), %eax
+	movsbq	%al,%rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -226,18 +227,18 @@ L24:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_LC_LC
-	.private_extern _extract__uExtract_param_LC_LC
-_extract__uExtract_param_LC_LC:
+.globl _extract__uExtract_param_u8_u8
+	.private_extern _extract__uExtract_param_u8_u8
+_extract__uExtract_param_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	%rdx, -40(%rbp)
-	movq	%rcx, -48(%rbp)
-	movq	-40(%rbp), %rax
-	movq	-48(%rbp), %rdx
+	subq	$48, %rsp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movq	%rdx, -32(%rbp)
+	movq	%rcx, -40(%rbp)
+	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -245,36 +246,35 @@ _extract__uExtract_param_LC_LC:
 	movl	$1889, %edi
 	call	__m3_fault
 L27:
-	cmpq	$0, -48(%rbp)
+	cmpq	$0, -40(%rbp)
 	je	L28
-	movq	-48(%rbp), %rdx
+	movsbq	-17(%rbp),%rsi
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-40(%rbp), %rax
+	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
-	movq	-24(%rbp), %rax
-	movq	%rax, %rsi
 	salq	%cl, %rsi
-	movq	-48(%rbp), %rdx
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	%rax, -48(%rbp)
 	jmp	L29
 L28:
-	movq	$0, -56(%rbp)
+	movq	$0, -48(%rbp)
 L29:
-	movq	-56(%rbp), %rax
+	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_i16_i16
-	.private_extern _extract__uExtract_var_i16_i16
-_extract__uExtract_var_i16_i16:
+.globl _extract__uExtract_var_I_I
+	.private_extern _extract__uExtract_var_I_I
+_extract__uExtract_var_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -291,8 +291,8 @@ L32:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L33
-	movzwl	136+_MM_extract(%rip), %eax
-	movzwl	%ax, %esi
+	movq	128+_MM_extract(%rip), %rax
+	movq	%rax, %rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -318,18 +318,18 @@ L34:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_i16_i16
-	.private_extern _extract__uExtract_param_i16_i16
-_extract__uExtract_param_i16_i16:
+.globl _extract__uExtract_param_I_I
+	.private_extern _extract__uExtract_param_I_I
+_extract__uExtract_param_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movq	%rdx, -32(%rbp)
-	movq	%rcx, -40(%rbp)
-	movq	-32(%rbp), %rax
-	movq	-40(%rbp), %rdx
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	%rdx, -40(%rbp)
+	movq	%rcx, -48(%rbp)
+	movq	-40(%rbp), %rax
+	movq	-48(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -337,35 +337,35 @@ _extract__uExtract_param_i16_i16:
 	movl	$1953, %edi
 	call	__m3_fault
 L37:
-	cmpq	$0, -40(%rbp)
+	cmpq	$0, -48(%rbp)
 	je	L38
-	movzwl	-18(%rbp), %esi
-	movq	-40(%rbp), %rdx
+	movq	-24(%rbp), %rsi
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	salq	%cl, %rsi
-	movq	-40(%rbp), %rdx
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movq	%rax, -56(%rbp)
 	jmp	L39
 L38:
-	movq	$0, -48(%rbp)
+	movq	$0, -56(%rbp)
 L39:
-	movq	-48(%rbp), %rax
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_i32_i32
-	.private_extern _extract__uExtract_var_i32_i32
-_extract__uExtract_var_i32_i32:
+.globl _extract__uExtract_var_i8_i8
+	.private_extern _extract__uExtract_var_i8_i8
+_extract__uExtract_var_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -382,8 +382,8 @@ L42:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L43
-	movl	140+_MM_extract(%rip), %eax
-	mov	%eax, %esi
+	movzbl	136+_MM_extract(%rip), %eax
+	movzbl	%al, %esi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -409,14 +409,14 @@ L44:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_i32_i32
-	.private_extern _extract__uExtract_param_i32_i32
-_extract__uExtract_param_i32_i32:
+.globl _extract__uExtract_param_i8_i8
+	.private_extern _extract__uExtract_param_i8_i8
+_extract__uExtract_param_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
 	movq	%rdx, -32(%rbp)
 	movq	%rcx, -40(%rbp)
 	movq	-32(%rbp), %rax
@@ -430,7 +430,7 @@ _extract__uExtract_param_i32_i32:
 L47:
 	cmpq	$0, -40(%rbp)
 	je	L48
-	mov	-20(%rbp), %esi
+	movzbl	-17(%rbp), %esi
 	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
@@ -454,9 +454,9 @@ L49:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_I_I
-	.private_extern _extract__uExtract_var_I_I
-_extract__uExtract_var_I_I:
+.globl _extract__uExtract_var_u32_u32
+	.private_extern _extract__uExtract_var_u32_u32
+_extract__uExtract_var_u32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -473,8 +473,8 @@ L52:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L53
-	movq	144+_MM_extract(%rip), %rax
-	movq	%rax, %rsi
+	movl	140+_MM_extract(%rip), %eax
+	movslq	%eax,%rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -500,18 +500,18 @@ L54:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_I_I
-	.private_extern _extract__uExtract_param_I_I
-_extract__uExtract_param_I_I:
+.globl _extract__uExtract_param_u32_u32
+	.private_extern _extract__uExtract_param_u32_u32
+_extract__uExtract_param_u32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	%rdx, -40(%rbp)
-	movq	%rcx, -48(%rbp)
-	movq	-40(%rbp), %rax
-	movq	-48(%rbp), %rdx
+	subq	$48, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movq	%rdx, -32(%rbp)
+	movq	%rcx, -40(%rbp)
+	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -519,35 +519,36 @@ _extract__uExtract_param_I_I:
 	movl	$2081, %edi
 	call	__m3_fault
 L57:
-	cmpq	$0, -48(%rbp)
+	cmpq	$0, -40(%rbp)
 	je	L58
-	movq	-24(%rbp), %rsi
-	movq	-48(%rbp), %rdx
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rsi
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-40(%rbp), %rax
+	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	salq	%cl, %rsi
-	movq	-48(%rbp), %rdx
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	%rax, -48(%rbp)
 	jmp	L59
 L58:
-	movq	$0, -56(%rbp)
+	movq	$0, -48(%rbp)
 L59:
-	movq	-56(%rbp), %rax
+	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_i64_i64
-	.private_extern _extract__uExtract_var_i64_i64
-_extract__uExtract_var_i64_i64:
+.globl _extract__uExtract_var_C_C
+	.private_extern _extract__uExtract_var_C_C
+_extract__uExtract_var_C_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -564,8 +565,7 @@ L62:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L63
-	movq	152+_MM_extract(%rip), %rax
-	movq	%rax, %rsi
+	movq	144+_MM_extract(%rip), %rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -591,9 +591,9 @@ L64:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_i64_i64
-	.private_extern _extract__uExtract_param_i64_i64
-_extract__uExtract_param_i64_i64:
+.globl _extract__uExtract_param_C_C
+	.private_extern _extract__uExtract_param_C_C
+_extract__uExtract_param_C_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
@@ -612,7 +612,6 @@ _extract__uExtract_param_i64_i64:
 L67:
 	cmpq	$0, -48(%rbp)
 	je	L68
-	movq	-24(%rbp), %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
@@ -621,6 +620,8 @@ L67:
 	movq	-40(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
+	movq	-24(%rbp), %rax
+	movq	%rax, %rsi
 	salq	%cl, %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
@@ -636,9 +637,9 @@ L69:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_C_C
-	.private_extern _extract__uExtract_var_C_C
-_extract__uExtract_var_C_C:
+.globl _extract__uExtract_var_u16_u16
+	.private_extern _extract__uExtract_var_u16_u16
+_extract__uExtract_var_u16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -655,7 +656,8 @@ L72:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L73
-	movq	160+_MM_extract(%rip), %rsi
+	movzwl	152+_MM_extract(%rip), %eax
+	movswq	%ax,%rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -681,18 +683,18 @@ L74:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_C_C
-	.private_extern _extract__uExtract_param_C_C
-_extract__uExtract_param_C_C:
+.globl _extract__uExtract_param_u16_u16
+	.private_extern _extract__uExtract_param_u16_u16
+_extract__uExtract_param_u16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	%rdx, -40(%rbp)
-	movq	%rcx, -48(%rbp)
-	movq	-40(%rbp), %rax
-	movq	-48(%rbp), %rdx
+	subq	$48, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movq	%rdx, -32(%rbp)
+	movq	%rcx, -40(%rbp)
+	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -700,36 +702,35 @@ _extract__uExtract_param_C_C:
 	movl	$2209, %edi
 	call	__m3_fault
 L77:
-	cmpq	$0, -48(%rbp)
+	cmpq	$0, -40(%rbp)
 	je	L78
-	movq	-48(%rbp), %rdx
+	movswq	-18(%rbp),%rsi
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-40(%rbp), %rax
+	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
-	movq	-24(%rbp), %rax
-	movq	%rax, %rsi
 	salq	%cl, %rsi
-	movq	-48(%rbp), %rdx
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	%rax, -48(%rbp)
 	jmp	L79
 L78:
-	movq	$0, -56(%rbp)
+	movq	$0, -48(%rbp)
 L79:
-	movq	-56(%rbp), %rax
+	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_u8_u8
-	.private_extern _extract__uExtract_var_u8_u8
-_extract__uExtract_var_u8_u8:
+.globl _extract__uExtract_var_u64_u64
+	.private_extern _extract__uExtract_var_u64_u64
+_extract__uExtract_var_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -746,8 +747,8 @@ L82:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L83
-	movzbl	172+_MM_extract(%rip), %eax
-	movsbq	%al,%rsi
+	movq	160+_MM_extract(%rip), %rax
+	movq	%rax, %rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -773,18 +774,18 @@ L84:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_u8_u8
-	.private_extern _extract__uExtract_param_u8_u8
-_extract__uExtract_param_u8_u8:
+.globl _extract__uExtract_param_u64_u64
+	.private_extern _extract__uExtract_param_u64_u64
+_extract__uExtract_param_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movq	%rdx, -32(%rbp)
-	movq	%rcx, -40(%rbp)
-	movq	-32(%rbp), %rax
-	movq	-40(%rbp), %rdx
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	%rdx, -40(%rbp)
+	movq	%rcx, -48(%rbp)
+	movq	-40(%rbp), %rax
+	movq	-48(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -792,35 +793,35 @@ _extract__uExtract_param_u8_u8:
 	movl	$2273, %edi
 	call	__m3_fault
 L87:
-	cmpq	$0, -40(%rbp)
+	cmpq	$0, -48(%rbp)
 	je	L88
-	movsbq	-17(%rbp),%rsi
-	movq	-40(%rbp), %rdx
+	movq	-24(%rbp), %rsi
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	salq	%cl, %rsi
-	movq	-40(%rbp), %rdx
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movq	%rax, -56(%rbp)
 	jmp	L89
 L88:
-	movq	$0, -48(%rbp)
+	movq	$0, -56(%rbp)
 L89:
-	movq	-48(%rbp), %rax
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_i8_i8
-	.private_extern _extract__uExtract_var_i8_i8
-_extract__uExtract_var_i8_i8:
+.globl _extract__uExtract_var_L_L
+	.private_extern _extract__uExtract_var_L_L
+_extract__uExtract_var_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -837,8 +838,8 @@ L92:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L93
-	movzbl	173+_MM_extract(%rip), %eax
-	movzbl	%al, %esi
+	movq	176+_MM_extract(%rip), %rax
+	movq	%rax, %rsi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -864,18 +865,18 @@ L94:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_i8_i8
-	.private_extern _extract__uExtract_param_i8_i8
-_extract__uExtract_param_i8_i8:
+.globl _extract__uExtract_param_L_L
+	.private_extern _extract__uExtract_param_L_L
+_extract__uExtract_param_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movq	%rdx, -32(%rbp)
-	movq	%rcx, -40(%rbp)
-	movq	-32(%rbp), %rax
-	movq	-40(%rbp), %rdx
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	%rdx, -40(%rbp)
+	movq	%rcx, -48(%rbp)
+	movq	-40(%rbp), %rax
+	movq	-48(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -883,35 +884,35 @@ _extract__uExtract_param_i8_i8:
 	movl	$2337, %edi
 	call	__m3_fault
 L97:
-	cmpq	$0, -40(%rbp)
+	cmpq	$0, -48(%rbp)
 	je	L98
-	movzbl	-17(%rbp), %esi
-	movq	-40(%rbp), %rdx
+	movq	-24(%rbp), %rsi
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	salq	%cl, %rsi
-	movq	-40(%rbp), %rdx
+	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movq	%rax, -56(%rbp)
 	jmp	L99
 L98:
-	movq	$0, -48(%rbp)
+	movq	$0, -56(%rbp)
 L99:
-	movq	-48(%rbp), %rax
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_L_L
-	.private_extern _extract__uExtract_var_L_L
-_extract__uExtract_var_L_L:
+.globl _extract__uExtract_var_i16_i16
+	.private_extern _extract__uExtract_var_i16_i16
+_extract__uExtract_var_i16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -928,8 +929,8 @@ L102:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L103
-	movq	176+_MM_extract(%rip), %rax
-	movq	%rax, %rsi
+	movzwl	184+_MM_extract(%rip), %eax
+	movzwl	%ax, %esi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -955,18 +956,18 @@ L104:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_L_L
-	.private_extern _extract__uExtract_param_L_L
-_extract__uExtract_param_L_L:
+.globl _extract__uExtract_param_i16_i16
+	.private_extern _extract__uExtract_param_i16_i16
+_extract__uExtract_param_i16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	%rdx, -40(%rbp)
-	movq	%rcx, -48(%rbp)
-	movq	-40(%rbp), %rax
-	movq	-48(%rbp), %rdx
+	subq	$48, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movq	%rdx, -32(%rbp)
+	movq	%rcx, -40(%rbp)
+	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rdx
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
@@ -974,35 +975,35 @@ _extract__uExtract_param_L_L:
 	movl	$2401, %edi
 	call	__m3_fault
 L107:
-	cmpq	$0, -48(%rbp)
+	cmpq	$0, -40(%rbp)
 	je	L108
-	movq	-24(%rbp), %rsi
-	movq	-48(%rbp), %rdx
+	movzwl	-18(%rbp), %esi
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	movq	-40(%rbp), %rax
+	movq	-32(%rbp), %rax
 	movq	%rdx, %rcx
 	subq	%rax, %rcx
 	salq	%cl, %rsi
-	movq	-48(%rbp), %rdx
+	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
 	subq	%rdx, %rcx
 	movq	%rsi, %rax
 	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	%rax, -48(%rbp)
 	jmp	L109
 L108:
-	movq	$0, -56(%rbp)
+	movq	$0, -48(%rbp)
 L109:
-	movq	-56(%rbp), %rax
+	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_var_u32_u32
-	.private_extern _extract__uExtract_var_u32_u32
-_extract__uExtract_var_u32_u32:
+.globl _extract__uExtract_var_i32_i32
+	.private_extern _extract__uExtract_var_i32_i32
+_extract__uExtract_var_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
@@ -1019,8 +1020,8 @@ L112:
 	movq	200+_MM_extract(%rip), %rax
 	testq	%rax, %rax
 	je	L113
-	movl	184+_MM_extract(%rip), %eax
-	movslq	%eax,%rsi
+	movl	188+_MM_extract(%rip), %eax
+	mov	%eax, %esi
 	movq	200+_MM_extract(%rip), %rax
 	movq	%rax, %rdx
 	movl	$64, %eax
@@ -1046,9 +1047,9 @@ L114:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _extract__uExtract_param_u32_u32
-	.private_extern _extract__uExtract_param_u32_u32
-_extract__uExtract_param_u32_u32:
+.globl _extract__uExtract_param_i32_i32
+	.private_extern _extract__uExtract_param_i32_i32
+_extract__uExtract_param_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
@@ -1067,8 +1068,7 @@ _extract__uExtract_param_u32_u32:
 L117:
 	cmpq	$0, -40(%rbp)
 	je	L118
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
+	mov	-20(%rbp), %esi
 	movq	-40(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
@@ -1115,34 +1115,6 @@ __m3_fault:
 _L_1:
 	.ascii "extract_M3"
 	.space 1
-	.ascii "uExtract_param_u32_u32"
-	.space 1
-	.ascii "uExtract_var_u32_u32"
-	.space 1
-	.ascii "uExtract_param_L_L"
-	.space 1
-	.ascii "uExtract_var_L_L"
-	.space 1
-	.ascii "uExtract_param_i8_i8"
-	.space 1
-	.ascii "uExtract_var_i8_i8"
-	.space 1
-	.ascii "uExtract_param_u8_u8"
-	.space 1
-	.ascii "uExtract_var_u8_u8"
-	.space 1
-	.ascii "uExtract_param_C_C"
-	.space 1
-	.ascii "uExtract_var_C_C"
-	.space 1
-	.ascii "uExtract_param_i64_i64"
-	.space 1
-	.ascii "uExtract_var_i64_i64"
-	.space 1
-	.ascii "uExtract_param_I_I"
-	.space 1
-	.ascii "uExtract_var_I_I"
-	.space 1
 	.ascii "uExtract_param_i32_i32"
 	.space 1
 	.ascii "uExtract_var_i32_i32"
@@ -1151,9 +1123,9 @@ _L_1:
 	.space 1
 	.ascii "uExtract_var_i16_i16"
 	.space 1
-	.ascii "uExtract_param_LC_LC"
+	.ascii "uExtract_param_L_L"
 	.space 1
-	.ascii "uExtract_var_LC_LC"
+	.ascii "uExtract_var_L_L"
 	.space 1
 	.ascii "uExtract_param_u64_u64"
 	.space 1
@@ -1162,56 +1134,84 @@ _L_1:
 	.ascii "uExtract_param_u16_u16"
 	.space 1
 	.ascii "uExtract_var_u16_u16"
+	.space 1
+	.ascii "uExtract_param_C_C"
+	.space 1
+	.ascii "uExtract_var_C_C"
+	.space 1
+	.ascii "uExtract_param_u32_u32"
+	.space 1
+	.ascii "uExtract_var_u32_u32"
+	.space 1
+	.ascii "uExtract_param_i8_i8"
+	.space 1
+	.ascii "uExtract_var_i8_i8"
+	.space 1
+	.ascii "uExtract_param_I_I"
+	.space 1
+	.ascii "uExtract_var_I_I"
+	.space 1
+	.ascii "uExtract_param_u8_u8"
+	.space 1
+	.ascii "uExtract_var_u8_u8"
+	.space 1
+	.ascii "uExtract_param_LC_LC"
+	.space 1
+	.ascii "uExtract_var_LC_LC"
+	.space 1
+	.ascii "uExtract_param_i64_i64"
+	.space 1
+	.ascii "uExtract_var_i64_i64"
 	.space 2
 	.quad	_extract_M3
 	.quad	_L_1
-	.quad	_extract__uExtract_param_u32_u32
-	.quad	_L_1+11
-	.quad	_extract__uExtract_var_u32_u32
-	.quad	_L_1+34
-	.quad	_extract__uExtract_param_L_L
-	.quad	_L_1+55
-	.quad	_extract__uExtract_var_L_L
-	.quad	_L_1+74
-	.quad	_extract__uExtract_param_i8_i8
-	.quad	_L_1+91
-	.quad	_extract__uExtract_var_i8_i8
-	.quad	_L_1+112
-	.quad	_extract__uExtract_param_u8_u8
-	.quad	_L_1+131
-	.quad	_extract__uExtract_var_u8_u8
-	.quad	_L_1+152
-	.quad	_extract__uExtract_param_C_C
-	.quad	_L_1+171
-	.quad	_extract__uExtract_var_C_C
-	.quad	_L_1+190
-	.quad	_extract__uExtract_param_i64_i64
-	.quad	_L_1+207
-	.quad	_extract__uExtract_var_i64_i64
-	.quad	_L_1+230
-	.quad	_extract__uExtract_param_I_I
-	.quad	_L_1+251
-	.quad	_extract__uExtract_var_I_I
-	.quad	_L_1+270
 	.quad	_extract__uExtract_param_i32_i32
-	.quad	_L_1+287
+	.quad	_L_1+11
 	.quad	_extract__uExtract_var_i32_i32
-	.quad	_L_1+310
+	.quad	_L_1+34
 	.quad	_extract__uExtract_param_i16_i16
-	.quad	_L_1+331
+	.quad	_L_1+55
 	.quad	_extract__uExtract_var_i16_i16
-	.quad	_L_1+354
-	.quad	_extract__uExtract_param_LC_LC
-	.quad	_L_1+375
-	.quad	_extract__uExtract_var_LC_LC
-	.quad	_L_1+396
+	.quad	_L_1+78
+	.quad	_extract__uExtract_param_L_L
+	.quad	_L_1+99
+	.quad	_extract__uExtract_var_L_L
+	.quad	_L_1+118
 	.quad	_extract__uExtract_param_u64_u64
-	.quad	_L_1+415
+	.quad	_L_1+135
 	.quad	_extract__uExtract_var_u64_u64
-	.quad	_L_1+438
+	.quad	_L_1+158
 	.quad	_extract__uExtract_param_u16_u16
-	.quad	_L_1+459
+	.quad	_L_1+179
 	.quad	_extract__uExtract_var_u16_u16
+	.quad	_L_1+202
+	.quad	_extract__uExtract_param_C_C
+	.quad	_L_1+223
+	.quad	_extract__uExtract_var_C_C
+	.quad	_L_1+242
+	.quad	_extract__uExtract_param_u32_u32
+	.quad	_L_1+259
+	.quad	_extract__uExtract_var_u32_u32
+	.quad	_L_1+282
+	.quad	_extract__uExtract_param_i8_i8
+	.quad	_L_1+303
+	.quad	_extract__uExtract_var_i8_i8
+	.quad	_L_1+324
+	.quad	_extract__uExtract_param_I_I
+	.quad	_L_1+343
+	.quad	_extract__uExtract_var_I_I
+	.quad	_L_1+362
+	.quad	_extract__uExtract_param_u8_u8
+	.quad	_L_1+379
+	.quad	_extract__uExtract_var_u8_u8
+	.quad	_L_1+400
+	.quad	_extract__uExtract_param_LC_LC
+	.quad	_L_1+419
+	.quad	_extract__uExtract_var_LC_LC
+	.quad	_L_1+440
+	.quad	_extract__uExtract_param_i64_i64
+	.quad	_L_1+459
+	.quad	_extract__uExtract_var_i64_i64
 	.quad	_L_1+482
 	.space 8
 	.ascii "../AMD64_DARWIN/extract.m3"
@@ -1227,25 +1227,26 @@ _MM_extract:
 	.space 8
 	.quad	_extract_M3
 	.quad	3
-	.word	849
-	.space 6
+	.quad	849
 	.quad	850
-	.quad	851
-	.long	4054449127
-	.long	1082828498
-	.word	854
-	.space 2
-	.long	855
-	.quad	856
+	.long	1146418823
+	.byte	85
+	.space 3
+	.quad	854
+	.byte	87
+	.space 3
+	.long	856
 	.quad	857
-	.quad	858
-	.long	1146550026
-	.byte	93
-	.byte	94
+	.word	858
+	.space 6
+	.quad	859
+	.long	1408749273
+	.long	1082844899
+	.quad	862
+	.word	863
 	.space 2
-	.quad	863
 	.long	864
-	.space 28
+	.space 24
 	.quad	_extract_I3
 	.quad	_MM_extract+232
 	.space 8

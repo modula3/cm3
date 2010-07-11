@@ -1,11 +1,11 @@
 	.text
-.globl _RightShift__uRightShift_var_u16_I
-	.private_extern _RightShift__uRightShift_var_u16_I
-_RightShift__uRightShift_var_u16_I:
+.globl _RightShift__uRightShift_var_i64_I
+	.private_extern _RightShift__uRightShift_var_i64_I
+_RightShift__uRightShift_var_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L2
@@ -17,8 +17,7 @@ L2:
 L3:
 	cmpq	$63, -16(%rbp)
 	jg	L4
-	movzwl	104+_MM_RightShift(%rip), %eax
-	movswq	%ax,%rax
+	movq	104+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -29,13 +28,13 @@ L5:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u16_I
-	.private_extern _RightShift__uRightShift_param_u16_I
-_RightShift__uRightShift_param_u16_I:
+.globl _RightShift__uRightShift_param_i64_I
+	.private_extern _RightShift__uRightShift_param_i64_I
+_RightShift__uRightShift_param_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movw	%di, -18(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
@@ -49,7 +48,7 @@ L8:
 L9:
 	cmpq	$63, -16(%rbp)
 	jg	L10
-	movswq	-18(%rbp),%rax
+	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -60,13 +59,13 @@ L11:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_u16_C
-	.private_extern _RightShift__uRightShift_var_u16_C
-_RightShift__uRightShift_var_u16_C:
+.globl _RightShift__uRightShift_var_i64_C
+	.private_extern _RightShift__uRightShift_var_i64_C
+_RightShift__uRightShift_var_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
 	jle	L14
@@ -75,8 +74,7 @@ _RightShift__uRightShift_var_u16_C:
 L14:
 	cmpq	$63, -16(%rbp)
 	jg	L15
-	movzwl	104+_MM_RightShift(%rip), %eax
-	movswq	%ax,%rax
+	movq	104+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -87,13 +85,13 @@ L16:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u16_C
-	.private_extern _RightShift__uRightShift_param_u16_C
-_RightShift__uRightShift_param_u16_C:
+.globl _RightShift__uRightShift_param_i64_C
+	.private_extern _RightShift__uRightShift_param_i64_C
+_RightShift__uRightShift_param_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movw	%di, -18(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
@@ -104,7 +102,7 @@ _RightShift__uRightShift_param_u16_C:
 L19:
 	cmpq	$63, -16(%rbp)
 	jg	L20
-	movswq	-18(%rbp),%rax
+	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -115,13 +113,13 @@ L21:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_u64_I
-	.private_extern _RightShift__uRightShift_var_u64_I
-_RightShift__uRightShift_var_u64_I:
+.globl _RightShift__uRightShift_var_LC_I
+	.private_extern _RightShift__uRightShift_var_LC_I
+_RightShift__uRightShift_var_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L24
@@ -144,9 +142,9 @@ L27:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u64_I
-	.private_extern _RightShift__uRightShift_param_u64_I
-_RightShift__uRightShift_param_u64_I:
+.globl _RightShift__uRightShift_param_LC_I
+	.private_extern _RightShift__uRightShift_param_LC_I
+_RightShift__uRightShift_param_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
@@ -164,8 +162,8 @@ L30:
 L31:
 	cmpq	$63, -16(%rbp)
 	jg	L32
-	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
+	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
 	jmp	L33
@@ -175,13 +173,13 @@ L33:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_u64_C
-	.private_extern _RightShift__uRightShift_var_u64_C
-_RightShift__uRightShift_var_u64_C:
+.globl _RightShift__uRightShift_var_LC_C
+	.private_extern _RightShift__uRightShift_var_LC_C
+_RightShift__uRightShift_var_LC_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
 	jle	L36
@@ -201,9 +199,9 @@ L38:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u64_C
-	.private_extern _RightShift__uRightShift_param_u64_C
-_RightShift__uRightShift_param_u64_C:
+.globl _RightShift__uRightShift_param_LC_C
+	.private_extern _RightShift__uRightShift_param_LC_C
+_RightShift__uRightShift_param_LC_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
@@ -218,8 +216,8 @@ _RightShift__uRightShift_param_u64_C:
 L41:
 	cmpq	$63, -16(%rbp)
 	jg	L42
-	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
+	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
 	jmp	L43
@@ -229,13 +227,13 @@ L43:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_LC_I
-	.private_extern _RightShift__uRightShift_var_LC_I
-_RightShift__uRightShift_var_LC_I:
+.globl _RightShift__uRightShift_var_u8_I
+	.private_extern _RightShift__uRightShift_var_u8_I
+_RightShift__uRightShift_var_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L46
@@ -247,7 +245,8 @@ L46:
 L47:
 	cmpq	$63, -16(%rbp)
 	jg	L48
-	movq	120+_MM_RightShift(%rip), %rax
+	movzbl	124+_MM_RightShift(%rip), %eax
+	movsbq	%al,%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -258,13 +257,13 @@ L49:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_LC_I
-	.private_extern _RightShift__uRightShift_param_LC_I
-_RightShift__uRightShift_param_LC_I:
+.globl _RightShift__uRightShift_param_u8_I
+	.private_extern _RightShift__uRightShift_param_u8_I
+_RightShift__uRightShift_param_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movq	%rdi, -24(%rbp)
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
@@ -278,8 +277,8 @@ L52:
 L53:
 	cmpq	$63, -16(%rbp)
 	jg	L54
+	movsbq	-17(%rbp),%rax
 	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
 	jmp	L55
@@ -289,13 +288,13 @@ L55:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_LC_C
-	.private_extern _RightShift__uRightShift_var_LC_C
-_RightShift__uRightShift_var_LC_C:
+.globl _RightShift__uRightShift_var_u8_C
+	.private_extern _RightShift__uRightShift_var_u8_C
+_RightShift__uRightShift_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
 	jle	L58
@@ -304,7 +303,8 @@ _RightShift__uRightShift_var_LC_C:
 L58:
 	cmpq	$63, -16(%rbp)
 	jg	L59
-	movq	120+_MM_RightShift(%rip), %rax
+	movzbl	124+_MM_RightShift(%rip), %eax
+	movsbq	%al,%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -315,13 +315,13 @@ L60:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_LC_C
-	.private_extern _RightShift__uRightShift_param_LC_C
-_RightShift__uRightShift_param_LC_C:
+.globl _RightShift__uRightShift_param_u8_C
+	.private_extern _RightShift__uRightShift_param_u8_C
+_RightShift__uRightShift_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movq	%rdi, -24(%rbp)
+	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
@@ -332,8 +332,8 @@ _RightShift__uRightShift_param_LC_C:
 L63:
 	cmpq	$63, -16(%rbp)
 	jg	L64
+	movsbq	-17(%rbp),%rax
 	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
 	jmp	L65
@@ -343,13 +343,13 @@ L65:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_i16_I
-	.private_extern _RightShift__uRightShift_var_i16_I
-_RightShift__uRightShift_var_i16_I:
+.globl _RightShift__uRightShift_var_I_I
+	.private_extern _RightShift__uRightShift_var_I_I
+_RightShift__uRightShift_var_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L68
@@ -361,8 +361,7 @@ L68:
 L69:
 	cmpq	$63, -16(%rbp)
 	jg	L70
-	movzwl	136+_MM_RightShift(%rip), %eax
-	movzwl	%ax, %eax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -370,237 +369,6 @@ L69:
 L70:
 	movq	$0, -24(%rbp)
 L71:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_i16_I
-	.private_extern _RightShift__uRightShift_param_i16_I
-_RightShift__uRightShift_param_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L74
-	cmpq	$63, -16(%rbp)
-	jle	L75
-L74:
-	movl	$2145, %edi
-	call	__m3_fault
-L75:
-	cmpq	$63, -16(%rbp)
-	jg	L76
-	movzwl	-18(%rbp), %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L77
-L76:
-	movq	$0, -40(%rbp)
-L77:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_i16_C
-	.private_extern _RightShift__uRightShift_var_i16_C
-_RightShift__uRightShift_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L80
-	movl	$2177, %edi
-	call	__m3_fault
-L80:
-	cmpq	$63, -16(%rbp)
-	jg	L81
-	movzwl	136+_MM_RightShift(%rip), %eax
-	movzwl	%ax, %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L82
-L81:
-	movq	$0, -24(%rbp)
-L82:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_i16_C
-	.private_extern _RightShift__uRightShift_param_i16_C
-_RightShift__uRightShift_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L85
-	movl	$2209, %edi
-	call	__m3_fault
-L85:
-	cmpq	$63, -16(%rbp)
-	jg	L86
-	movzwl	-18(%rbp), %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L87
-L86:
-	movq	$0, -40(%rbp)
-L87:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_i32_I
-	.private_extern _RightShift__uRightShift_var_i32_I
-_RightShift__uRightShift_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L90
-	cmpq	$63, -16(%rbp)
-	jle	L91
-L90:
-	movl	$2241, %edi
-	call	__m3_fault
-L91:
-	cmpq	$63, -16(%rbp)
-	jg	L92
-	movl	140+_MM_RightShift(%rip), %eax
-	mov	%eax, %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L93
-L92:
-	movq	$0, -24(%rbp)
-L93:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_i32_I
-	.private_extern _RightShift__uRightShift_param_i32_I
-_RightShift__uRightShift_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L96
-	cmpq	$63, -16(%rbp)
-	jle	L97
-L96:
-	movl	$2273, %edi
-	call	__m3_fault
-L97:
-	cmpq	$63, -16(%rbp)
-	jg	L98
-	mov	-20(%rbp), %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L99
-L98:
-	movq	$0, -40(%rbp)
-L99:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_i32_C
-	.private_extern _RightShift__uRightShift_var_i32_C
-_RightShift__uRightShift_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L102
-	movl	$2305, %edi
-	call	__m3_fault
-L102:
-	cmpq	$63, -16(%rbp)
-	jg	L103
-	movl	140+_MM_RightShift(%rip), %eax
-	mov	%eax, %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L104
-L103:
-	movq	$0, -24(%rbp)
-L104:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_i32_C
-	.private_extern _RightShift__uRightShift_param_i32_C
-_RightShift__uRightShift_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L107
-	movl	$2337, %edi
-	call	__m3_fault
-L107:
-	cmpq	$63, -16(%rbp)
-	jg	L108
-	mov	-20(%rbp), %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L109
-L108:
-	movq	$0, -40(%rbp)
-L109:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_I_I
-	.private_extern _RightShift__uRightShift_var_I_I
-_RightShift__uRightShift_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L112
-	cmpq	$63, -16(%rbp)
-	jle	L113
-L112:
-	movl	$2369, %edi
-	call	__m3_fault
-L113:
-	cmpq	$63, -16(%rbp)
-	jg	L114
-	movq	144+_MM_RightShift(%rip), %rax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L115
-L114:
-	movq	$0, -24(%rbp)
-L115:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -615,23 +383,23 @@ _RightShift__uRightShift_param_I_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L118
+	js	L74
 	cmpq	$63, -16(%rbp)
-	jle	L119
-L118:
-	movl	$2401, %edi
+	jle	L75
+L74:
+	movl	$2145, %edi
 	call	__m3_fault
-L119:
+L75:
 	cmpq	$63, -16(%rbp)
-	jg	L120
+	jg	L76
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L121
-L120:
+	jmp	L77
+L76:
 	movq	$0, -40(%rbp)
-L121:
+L77:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -641,23 +409,23 @@ _RightShift__uRightShift_var_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L124
-	movl	$2433, %edi
+	jle	L80
+	movl	$2177, %edi
 	call	__m3_fault
-L124:
+L80:
 	cmpq	$63, -16(%rbp)
-	jg	L125
-	movq	144+_MM_RightShift(%rip), %rax
+	jg	L81
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L126
-L125:
+	jmp	L82
+L81:
 	movq	$0, -24(%rbp)
-L126:
+L82:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -672,13 +440,247 @@ _RightShift__uRightShift_param_I_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
+	jle	L85
+	movl	$2209, %edi
+	call	__m3_fault
+L85:
+	cmpq	$63, -16(%rbp)
+	jg	L86
+	movq	-24(%rbp), %rax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L87
+L86:
+	movq	$0, -40(%rbp)
+L87:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_i8_I
+	.private_extern _RightShift__uRightShift_var_i8_I
+_RightShift__uRightShift_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	128+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L90
+	cmpq	$63, -16(%rbp)
+	jle	L91
+L90:
+	movl	$2241, %edi
+	call	__m3_fault
+L91:
+	cmpq	$63, -16(%rbp)
+	jg	L92
+	movzbl	136+_MM_RightShift(%rip), %eax
+	movzbl	%al, %eax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L93
+L92:
+	movq	$0, -24(%rbp)
+L93:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_i8_I
+	.private_extern _RightShift__uRightShift_param_i8_I
+_RightShift__uRightShift_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L96
+	cmpq	$63, -16(%rbp)
+	jle	L97
+L96:
+	movl	$2273, %edi
+	call	__m3_fault
+L97:
+	cmpq	$63, -16(%rbp)
+	jg	L98
+	movzbl	-17(%rbp), %eax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L99
+L98:
+	movq	$0, -40(%rbp)
+L99:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_i8_C
+	.private_extern _RightShift__uRightShift_var_i8_C
+_RightShift__uRightShift_var_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	144+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
+	jle	L102
+	movl	$2305, %edi
+	call	__m3_fault
+L102:
+	cmpq	$63, -16(%rbp)
+	jg	L103
+	movzbl	136+_MM_RightShift(%rip), %eax
+	movzbl	%al, %eax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L104
+L103:
+	movq	$0, -24(%rbp)
+L104:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_i8_C
+	.private_extern _RightShift__uRightShift_param_i8_C
+_RightShift__uRightShift_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
+	jle	L107
+	movl	$2337, %edi
+	call	__m3_fault
+L107:
+	cmpq	$63, -16(%rbp)
+	jg	L108
+	movzbl	-17(%rbp), %eax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L109
+L108:
+	movq	$0, -40(%rbp)
+L109:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_u32_I
+	.private_extern _RightShift__uRightShift_var_u32_I
+_RightShift__uRightShift_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	128+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L112
+	cmpq	$63, -16(%rbp)
+	jle	L113
+L112:
+	movl	$2369, %edi
+	call	__m3_fault
+L113:
+	cmpq	$63, -16(%rbp)
+	jg	L114
+	movl	140+_MM_RightShift(%rip), %eax
+	cltq
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L115
+L114:
+	movq	$0, -24(%rbp)
+L115:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_u32_I
+	.private_extern _RightShift__uRightShift_param_u32_I
+_RightShift__uRightShift_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L118
+	cmpq	$63, -16(%rbp)
+	jle	L119
+L118:
+	movl	$2401, %edi
+	call	__m3_fault
+L119:
+	cmpq	$63, -16(%rbp)
+	jg	L120
+	movl	-20(%rbp), %eax
+	cltq
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L121
+L120:
+	movq	$0, -40(%rbp)
+L121:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_u32_C
+	.private_extern _RightShift__uRightShift_var_u32_C
+_RightShift__uRightShift_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	144+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
+	jle	L124
+	movl	$2433, %edi
+	call	__m3_fault
+L124:
+	cmpq	$63, -16(%rbp)
+	jg	L125
+	movl	140+_MM_RightShift(%rip), %eax
+	cltq
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L126
+L125:
+	movq	$0, -24(%rbp)
+L126:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_u32_C
+	.private_extern _RightShift__uRightShift_param_u32_C
+_RightShift__uRightShift_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
 	jle	L129
 	movl	$2465, %edi
 	call	__m3_fault
 L129:
 	cmpq	$63, -16(%rbp)
 	jg	L130
-	movq	-24(%rbp), %rax
+	movl	-20(%rbp), %eax
+	cltq
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -689,13 +691,13 @@ L131:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_i64_I
-	.private_extern _RightShift__uRightShift_var_i64_I
-_RightShift__uRightShift_var_i64_I:
+.globl _RightShift__uRightShift_var_C_I
+	.private_extern _RightShift__uRightShift_var_C_I
+_RightShift__uRightShift_var_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L134
@@ -707,7 +709,7 @@ L134:
 L135:
 	cmpq	$63, -16(%rbp)
 	jg	L136
-	movq	152+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -718,9 +720,9 @@ L137:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_i64_I
-	.private_extern _RightShift__uRightShift_param_i64_I
-_RightShift__uRightShift_param_i64_I:
+.globl _RightShift__uRightShift_param_C_I
+	.private_extern _RightShift__uRightShift_param_C_I
+_RightShift__uRightShift_param_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
@@ -738,8 +740,8 @@ L140:
 L141:
 	cmpq	$63, -16(%rbp)
 	jg	L142
-	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
+	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
 	jmp	L143
@@ -749,13 +751,13 @@ L143:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_i64_C
-	.private_extern _RightShift__uRightShift_var_i64_C
-_RightShift__uRightShift_var_i64_C:
+.globl _RightShift__uRightShift_var_C_C
+	.private_extern _RightShift__uRightShift_var_C_C
+_RightShift__uRightShift_var_C_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
 	jle	L146
@@ -764,7 +766,7 @@ _RightShift__uRightShift_var_i64_C:
 L146:
 	cmpq	$63, -16(%rbp)
 	jg	L147
-	movq	152+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -772,120 +774,6 @@ L146:
 L147:
 	movq	$0, -24(%rbp)
 L148:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_i64_C
-	.private_extern _RightShift__uRightShift_param_i64_C
-_RightShift__uRightShift_param_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L151
-	movl	$2593, %edi
-	call	__m3_fault
-L151:
-	cmpq	$63, -16(%rbp)
-	jg	L152
-	movq	-24(%rbp), %rax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L153
-L152:
-	movq	$0, -40(%rbp)
-L153:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_C_I
-	.private_extern _RightShift__uRightShift_var_C_I
-_RightShift__uRightShift_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L156
-	cmpq	$63, -16(%rbp)
-	jle	L157
-L156:
-	movl	$2625, %edi
-	call	__m3_fault
-L157:
-	cmpq	$63, -16(%rbp)
-	jg	L158
-	movq	160+_MM_RightShift(%rip), %rax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L159
-L158:
-	movq	$0, -24(%rbp)
-L159:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_C_I
-	.private_extern _RightShift__uRightShift_param_C_I
-_RightShift__uRightShift_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L162
-	cmpq	$63, -16(%rbp)
-	jle	L163
-L162:
-	movl	$2657, %edi
-	call	__m3_fault
-L163:
-	cmpq	$63, -16(%rbp)
-	jg	L164
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L165
-L164:
-	movq	$0, -40(%rbp)
-L165:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_C_C
-	.private_extern _RightShift__uRightShift_var_C_C
-_RightShift__uRightShift_var_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L168
-	movl	$2689, %edi
-	call	__m3_fault
-L168:
-	cmpq	$63, -16(%rbp)
-	jg	L169
-	movq	160+_MM_RightShift(%rip), %rax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L170
-L169:
-	movq	$0, -24(%rbp)
-L170:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -900,14 +788,130 @@ _RightShift__uRightShift_param_C_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
+	jle	L151
+	movl	$2593, %edi
+	call	__m3_fault
+L151:
+	cmpq	$63, -16(%rbp)
+	jg	L152
+	movq	-16(%rbp), %rcx
+	movq	-24(%rbp), %rax
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L153
+L152:
+	movq	$0, -40(%rbp)
+L153:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_u16_I
+	.private_extern _RightShift__uRightShift_var_u16_I
+_RightShift__uRightShift_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	128+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L156
+	cmpq	$63, -16(%rbp)
+	jle	L157
+L156:
+	movl	$2625, %edi
+	call	__m3_fault
+L157:
+	cmpq	$63, -16(%rbp)
+	jg	L158
+	movzwl	152+_MM_RightShift(%rip), %eax
+	movswq	%ax,%rax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L159
+L158:
+	movq	$0, -24(%rbp)
+L159:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_u16_I
+	.private_extern _RightShift__uRightShift_param_u16_I
+_RightShift__uRightShift_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L162
+	cmpq	$63, -16(%rbp)
+	jle	L163
+L162:
+	movl	$2657, %edi
+	call	__m3_fault
+L163:
+	cmpq	$63, -16(%rbp)
+	jg	L164
+	movswq	-18(%rbp),%rax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L165
+L164:
+	movq	$0, -40(%rbp)
+L165:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_u16_C
+	.private_extern _RightShift__uRightShift_var_u16_C
+_RightShift__uRightShift_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	144+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
+	jle	L168
+	movl	$2689, %edi
+	call	__m3_fault
+L168:
+	cmpq	$63, -16(%rbp)
+	jg	L169
+	movzwl	152+_MM_RightShift(%rip), %eax
+	movswq	%ax,%rax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L170
+L169:
+	movq	$0, -24(%rbp)
+L170:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_u16_C
+	.private_extern _RightShift__uRightShift_param_u16_C
+_RightShift__uRightShift_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
 	jle	L173
 	movl	$2721, %edi
 	call	__m3_fault
 L173:
 	cmpq	$63, -16(%rbp)
 	jg	L174
+	movswq	-18(%rbp),%rax
 	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
 	jmp	L175
@@ -917,13 +921,13 @@ L175:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_u8_I
-	.private_extern _RightShift__uRightShift_var_u8_I
-_RightShift__uRightShift_var_u8_I:
+.globl _RightShift__uRightShift_var_u64_I
+	.private_extern _RightShift__uRightShift_var_u64_I
+_RightShift__uRightShift_var_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L178
@@ -935,8 +939,7 @@ L178:
 L179:
 	cmpq	$63, -16(%rbp)
 	jg	L180
-	movzbl	172+_MM_RightShift(%rip), %eax
-	movsbq	%al,%rax
+	movq	160+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -947,13 +950,13 @@ L181:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u8_I
-	.private_extern _RightShift__uRightShift_param_u8_I
-_RightShift__uRightShift_param_u8_I:
+.globl _RightShift__uRightShift_param_u64_I
+	.private_extern _RightShift__uRightShift_param_u64_I
+_RightShift__uRightShift_param_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movb	%dil, -17(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
@@ -967,7 +970,7 @@ L184:
 L185:
 	cmpq	$63, -16(%rbp)
 	jg	L186
-	movsbq	-17(%rbp),%rax
+	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -978,13 +981,13 @@ L187:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_u8_C
-	.private_extern _RightShift__uRightShift_var_u8_C
-_RightShift__uRightShift_var_u8_C:
+.globl _RightShift__uRightShift_var_u64_C
+	.private_extern _RightShift__uRightShift_var_u64_C
+_RightShift__uRightShift_var_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
 	jle	L190
@@ -993,8 +996,7 @@ _RightShift__uRightShift_var_u8_C:
 L190:
 	cmpq	$63, -16(%rbp)
 	jg	L191
-	movzbl	172+_MM_RightShift(%rip), %eax
-	movsbq	%al,%rax
+	movq	160+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -1005,13 +1007,13 @@ L192:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u8_C
-	.private_extern _RightShift__uRightShift_param_u8_C
-_RightShift__uRightShift_param_u8_C:
+.globl _RightShift__uRightShift_param_u64_C
+	.private_extern _RightShift__uRightShift_param_u64_C
+_RightShift__uRightShift_param_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movb	%dil, -17(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
@@ -1022,7 +1024,7 @@ _RightShift__uRightShift_param_u8_C:
 L195:
 	cmpq	$63, -16(%rbp)
 	jg	L196
-	movsbq	-17(%rbp),%rax
+	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -1033,13 +1035,13 @@ L197:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_i8_I
-	.private_extern _RightShift__uRightShift_var_i8_I
-_RightShift__uRightShift_var_i8_I:
+.globl _RightShift__uRightShift_var_L_I
+	.private_extern _RightShift__uRightShift_var_L_I
+_RightShift__uRightShift_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L200
@@ -1051,8 +1053,7 @@ L200:
 L201:
 	cmpq	$63, -16(%rbp)
 	jg	L202
-	movzbl	173+_MM_RightShift(%rip), %eax
-	movzbl	%al, %eax
+	movq	176+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -1060,121 +1061,6 @@ L201:
 L202:
 	movq	$0, -24(%rbp)
 L203:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_i8_I
-	.private_extern _RightShift__uRightShift_param_i8_I
-_RightShift__uRightShift_param_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L206
-	cmpq	$63, -16(%rbp)
-	jle	L207
-L206:
-	movl	$2913, %edi
-	call	__m3_fault
-L207:
-	cmpq	$63, -16(%rbp)
-	jg	L208
-	movzbl	-17(%rbp), %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L209
-L208:
-	movq	$0, -40(%rbp)
-L209:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_i8_C
-	.private_extern _RightShift__uRightShift_var_i8_C
-_RightShift__uRightShift_var_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L212
-	movl	$2945, %edi
-	call	__m3_fault
-L212:
-	cmpq	$63, -16(%rbp)
-	jg	L213
-	movzbl	173+_MM_RightShift(%rip), %eax
-	movzbl	%al, %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L214
-L213:
-	movq	$0, -24(%rbp)
-L214:
-	movq	-24(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_param_i8_C
-	.private_extern _RightShift__uRightShift_param_i8_C
-_RightShift__uRightShift_param_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$63, -16(%rbp)
-	jle	L217
-	movl	$2977, %edi
-	call	__m3_fault
-L217:
-	cmpq	$63, -16(%rbp)
-	jg	L218
-	movzbl	-17(%rbp), %eax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L219
-L218:
-	movq	$0, -40(%rbp)
-L219:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _RightShift__uRightShift_var_L_I
-	.private_extern _RightShift__uRightShift_var_L_I
-_RightShift__uRightShift_var_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L222
-	cmpq	$63, -16(%rbp)
-	jle	L223
-L222:
-	movl	$3009, %edi
-	call	__m3_fault
-L223:
-	cmpq	$63, -16(%rbp)
-	jg	L224
-	movq	176+_MM_RightShift(%rip), %rax
-	movq	-16(%rbp), %rcx
-	shrq	%cl, %rax
-	movq	%rax, -24(%rbp)
-	jmp	L225
-L224:
-	movq	$0, -24(%rbp)
-L225:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -1189,23 +1075,23 @@ _RightShift__uRightShift_param_L_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L228
+	js	L206
 	cmpq	$63, -16(%rbp)
-	jle	L229
-L228:
-	movl	$3041, %edi
+	jle	L207
+L206:
+	movl	$2913, %edi
 	call	__m3_fault
-L229:
+L207:
 	cmpq	$63, -16(%rbp)
-	jg	L230
+	jg	L208
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L231
-L230:
+	jmp	L209
+L208:
 	movq	$0, -40(%rbp)
-L231:
+L209:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -1215,23 +1101,23 @@ _RightShift__uRightShift_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L234
-	movl	$3073, %edi
+	jle	L212
+	movl	$2945, %edi
 	call	__m3_fault
-L234:
+L212:
 	cmpq	$63, -16(%rbp)
-	jg	L235
+	jg	L213
 	movq	176+_MM_RightShift(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L236
-L235:
+	jmp	L214
+L213:
 	movq	$0, -24(%rbp)
-L236:
+L214:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -1246,13 +1132,129 @@ _RightShift__uRightShift_param_L_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
+	jle	L217
+	movl	$2977, %edi
+	call	__m3_fault
+L217:
+	cmpq	$63, -16(%rbp)
+	jg	L218
+	movq	-24(%rbp), %rax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L219
+L218:
+	movq	$0, -40(%rbp)
+L219:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_i16_I
+	.private_extern _RightShift__uRightShift_var_i16_I
+_RightShift__uRightShift_var_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	128+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L222
+	cmpq	$63, -16(%rbp)
+	jle	L223
+L222:
+	movl	$3009, %edi
+	call	__m3_fault
+L223:
+	cmpq	$63, -16(%rbp)
+	jg	L224
+	movzwl	184+_MM_RightShift(%rip), %eax
+	movzwl	%ax, %eax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L225
+L224:
+	movq	$0, -24(%rbp)
+L225:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_i16_I
+	.private_extern _RightShift__uRightShift_param_i16_I
+_RightShift__uRightShift_param_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L228
+	cmpq	$63, -16(%rbp)
+	jle	L229
+L228:
+	movl	$3041, %edi
+	call	__m3_fault
+L229:
+	cmpq	$63, -16(%rbp)
+	jg	L230
+	movzwl	-18(%rbp), %eax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -40(%rbp)
+	jmp	L231
+L230:
+	movq	$0, -40(%rbp)
+L231:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_var_i16_C
+	.private_extern _RightShift__uRightShift_var_i16_C
+_RightShift__uRightShift_var_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$32, %rsp
+	movq	144+_MM_RightShift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
+	jle	L234
+	movl	$3073, %edi
+	call	__m3_fault
+L234:
+	cmpq	$63, -16(%rbp)
+	jg	L235
+	movzwl	184+_MM_RightShift(%rip), %eax
+	movzwl	%ax, %eax
+	movq	-16(%rbp), %rcx
+	shrq	%cl, %rax
+	movq	%rax, -24(%rbp)
+	jmp	L236
+L235:
+	movq	$0, -24(%rbp)
+L236:
+	movq	-24(%rbp), %rax
+	leave
+	ret
+.globl _RightShift__uRightShift_param_i16_C
+	.private_extern _RightShift__uRightShift_param_i16_C
+_RightShift__uRightShift_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -16(%rbp)
+	cmpq	$63, -16(%rbp)
 	jle	L239
 	movl	$3105, %edi
 	call	__m3_fault
 L239:
 	cmpq	$63, -16(%rbp)
 	jg	L240
-	movq	-24(%rbp), %rax
+	movzwl	-18(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -1263,13 +1265,13 @@ L241:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_u32_I
-	.private_extern _RightShift__uRightShift_var_u32_I
-_RightShift__uRightShift_var_u32_I:
+.globl _RightShift__uRightShift_var_i32_I
+	.private_extern _RightShift__uRightShift_var_i32_I
+_RightShift__uRightShift_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	144+_MM_RightShift(%rip), %rax
+	movq	128+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L244
@@ -1281,8 +1283,8 @@ L244:
 L245:
 	cmpq	$63, -16(%rbp)
 	jg	L246
-	movl	184+_MM_RightShift(%rip), %eax
-	cltq
+	movl	188+_MM_RightShift(%rip), %eax
+	mov	%eax, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -1293,9 +1295,9 @@ L247:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u32_I
-	.private_extern _RightShift__uRightShift_param_u32_I
-_RightShift__uRightShift_param_u32_I:
+.globl _RightShift__uRightShift_param_i32_I
+	.private_extern _RightShift__uRightShift_param_i32_I
+_RightShift__uRightShift_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
@@ -1313,8 +1315,7 @@ L250:
 L251:
 	cmpq	$63, -16(%rbp)
 	jg	L252
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -1325,13 +1326,13 @@ L253:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_var_u32_C
-	.private_extern _RightShift__uRightShift_var_u32_C
-_RightShift__uRightShift_var_u32_C:
+.globl _RightShift__uRightShift_var_i32_C
+	.private_extern _RightShift__uRightShift_var_i32_C
+_RightShift__uRightShift_var_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
-	movq	160+_MM_RightShift(%rip), %rax
+	movq	144+_MM_RightShift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
 	jle	L256
@@ -1340,8 +1341,8 @@ _RightShift__uRightShift_var_u32_C:
 L256:
 	cmpq	$63, -16(%rbp)
 	jg	L257
-	movl	184+_MM_RightShift(%rip), %eax
-	cltq
+	movl	188+_MM_RightShift(%rip), %eax
+	mov	%eax, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
@@ -1352,9 +1353,9 @@ L258:
 	movq	-24(%rbp), %rax
 	leave
 	ret
-.globl _RightShift__uRightShift_param_u32_C
-	.private_extern _RightShift__uRightShift_param_u32_C
-_RightShift__uRightShift_param_u32_C:
+.globl _RightShift__uRightShift_param_i32_C
+	.private_extern _RightShift__uRightShift_param_i32_C
+_RightShift__uRightShift_param_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
@@ -1369,8 +1370,7 @@ _RightShift__uRightShift_param_u32_C:
 L261:
 	cmpq	$63, -16(%rbp)
 	jg	L262
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
@@ -1404,62 +1404,6 @@ __m3_fault:
 _L_1:
 	.ascii "RightShift_M3"
 	.space 1
-	.ascii "uRightShift_param_u32_C"
-	.space 1
-	.ascii "uRightShift_var_u32_C"
-	.space 1
-	.ascii "uRightShift_param_u32_I"
-	.space 1
-	.ascii "uRightShift_var_u32_I"
-	.space 1
-	.ascii "uRightShift_param_L_C"
-	.space 1
-	.ascii "uRightShift_var_L_C"
-	.space 1
-	.ascii "uRightShift_param_L_I"
-	.space 1
-	.ascii "uRightShift_var_L_I"
-	.space 1
-	.ascii "uRightShift_param_i8_C"
-	.space 1
-	.ascii "uRightShift_var_i8_C"
-	.space 1
-	.ascii "uRightShift_param_i8_I"
-	.space 1
-	.ascii "uRightShift_var_i8_I"
-	.space 1
-	.ascii "uRightShift_param_u8_C"
-	.space 1
-	.ascii "uRightShift_var_u8_C"
-	.space 1
-	.ascii "uRightShift_param_u8_I"
-	.space 1
-	.ascii "uRightShift_var_u8_I"
-	.space 1
-	.ascii "uRightShift_param_C_C"
-	.space 1
-	.ascii "uRightShift_var_C_C"
-	.space 1
-	.ascii "uRightShift_param_C_I"
-	.space 1
-	.ascii "uRightShift_var_C_I"
-	.space 1
-	.ascii "uRightShift_param_i64_C"
-	.space 1
-	.ascii "uRightShift_var_i64_C"
-	.space 1
-	.ascii "uRightShift_param_i64_I"
-	.space 1
-	.ascii "uRightShift_var_i64_I"
-	.space 1
-	.ascii "uRightShift_param_I_C"
-	.space 1
-	.ascii "uRightShift_var_I_C"
-	.space 1
-	.ascii "uRightShift_param_I_I"
-	.space 1
-	.ascii "uRightShift_var_I_I"
-	.space 1
 	.ascii "uRightShift_param_i32_C"
 	.space 1
 	.ascii "uRightShift_var_i32_C"
@@ -1476,13 +1420,13 @@ _L_1:
 	.space 1
 	.ascii "uRightShift_var_i16_I"
 	.space 1
-	.ascii "uRightShift_param_LC_C"
+	.ascii "uRightShift_param_L_C"
 	.space 1
-	.ascii "uRightShift_var_LC_C"
+	.ascii "uRightShift_var_L_C"
 	.space 1
-	.ascii "uRightShift_param_LC_I"
+	.ascii "uRightShift_param_L_I"
 	.space 1
-	.ascii "uRightShift_var_LC_I"
+	.ascii "uRightShift_var_L_I"
 	.space 1
 	.ascii "uRightShift_param_u64_C"
 	.space 1
@@ -1499,104 +1443,160 @@ _L_1:
 	.ascii "uRightShift_param_u16_I"
 	.space 1
 	.ascii "uRightShift_var_u16_I"
+	.space 1
+	.ascii "uRightShift_param_C_C"
+	.space 1
+	.ascii "uRightShift_var_C_C"
+	.space 1
+	.ascii "uRightShift_param_C_I"
+	.space 1
+	.ascii "uRightShift_var_C_I"
+	.space 1
+	.ascii "uRightShift_param_u32_C"
+	.space 1
+	.ascii "uRightShift_var_u32_C"
+	.space 1
+	.ascii "uRightShift_param_u32_I"
+	.space 1
+	.ascii "uRightShift_var_u32_I"
+	.space 1
+	.ascii "uRightShift_param_i8_C"
+	.space 1
+	.ascii "uRightShift_var_i8_C"
+	.space 1
+	.ascii "uRightShift_param_i8_I"
+	.space 1
+	.ascii "uRightShift_var_i8_I"
+	.space 1
+	.ascii "uRightShift_param_I_C"
+	.space 1
+	.ascii "uRightShift_var_I_C"
+	.space 1
+	.ascii "uRightShift_param_I_I"
+	.space 1
+	.ascii "uRightShift_var_I_I"
+	.space 1
+	.ascii "uRightShift_param_u8_C"
+	.space 1
+	.ascii "uRightShift_var_u8_C"
+	.space 1
+	.ascii "uRightShift_param_u8_I"
+	.space 1
+	.ascii "uRightShift_var_u8_I"
+	.space 1
+	.ascii "uRightShift_param_LC_C"
+	.space 1
+	.ascii "uRightShift_var_LC_C"
+	.space 1
+	.ascii "uRightShift_param_LC_I"
+	.space 1
+	.ascii "uRightShift_var_LC_I"
+	.space 1
+	.ascii "uRightShift_param_i64_C"
+	.space 1
+	.ascii "uRightShift_var_i64_C"
+	.space 1
+	.ascii "uRightShift_param_i64_I"
+	.space 1
+	.ascii "uRightShift_var_i64_I"
 	.space 7
 	.quad	_RightShift_M3
 	.quad	_L_1
-	.quad	_RightShift__uRightShift_param_u32_C
-	.quad	_L_1+14
-	.quad	_RightShift__uRightShift_var_u32_C
-	.quad	_L_1+38
-	.quad	_RightShift__uRightShift_param_u32_I
-	.quad	_L_1+60
-	.quad	_RightShift__uRightShift_var_u32_I
-	.quad	_L_1+84
-	.quad	_RightShift__uRightShift_param_L_C
-	.quad	_L_1+106
-	.quad	_RightShift__uRightShift_var_L_C
-	.quad	_L_1+128
-	.quad	_RightShift__uRightShift_param_L_I
-	.quad	_L_1+148
-	.quad	_RightShift__uRightShift_var_L_I
-	.quad	_L_1+170
-	.quad	_RightShift__uRightShift_param_i8_C
-	.quad	_L_1+190
-	.quad	_RightShift__uRightShift_var_i8_C
-	.quad	_L_1+213
-	.quad	_RightShift__uRightShift_param_i8_I
-	.quad	_L_1+234
-	.quad	_RightShift__uRightShift_var_i8_I
-	.quad	_L_1+257
-	.quad	_RightShift__uRightShift_param_u8_C
-	.quad	_L_1+278
-	.quad	_RightShift__uRightShift_var_u8_C
-	.quad	_L_1+301
-	.quad	_RightShift__uRightShift_param_u8_I
-	.quad	_L_1+322
-	.quad	_RightShift__uRightShift_var_u8_I
-	.quad	_L_1+345
-	.quad	_RightShift__uRightShift_param_C_C
-	.quad	_L_1+366
-	.quad	_RightShift__uRightShift_var_C_C
-	.quad	_L_1+388
-	.quad	_RightShift__uRightShift_param_C_I
-	.quad	_L_1+408
-	.quad	_RightShift__uRightShift_var_C_I
-	.quad	_L_1+430
-	.quad	_RightShift__uRightShift_param_i64_C
-	.quad	_L_1+450
-	.quad	_RightShift__uRightShift_var_i64_C
-	.quad	_L_1+474
-	.quad	_RightShift__uRightShift_param_i64_I
-	.quad	_L_1+496
-	.quad	_RightShift__uRightShift_var_i64_I
-	.quad	_L_1+520
-	.quad	_RightShift__uRightShift_param_I_C
-	.quad	_L_1+542
-	.quad	_RightShift__uRightShift_var_I_C
-	.quad	_L_1+564
-	.quad	_RightShift__uRightShift_param_I_I
-	.quad	_L_1+584
-	.quad	_RightShift__uRightShift_var_I_I
-	.quad	_L_1+606
 	.quad	_RightShift__uRightShift_param_i32_C
-	.quad	_L_1+626
+	.quad	_L_1+14
 	.quad	_RightShift__uRightShift_var_i32_C
-	.quad	_L_1+650
+	.quad	_L_1+38
 	.quad	_RightShift__uRightShift_param_i32_I
-	.quad	_L_1+672
+	.quad	_L_1+60
 	.quad	_RightShift__uRightShift_var_i32_I
-	.quad	_L_1+696
+	.quad	_L_1+84
 	.quad	_RightShift__uRightShift_param_i16_C
-	.quad	_L_1+718
+	.quad	_L_1+106
 	.quad	_RightShift__uRightShift_var_i16_C
-	.quad	_L_1+742
+	.quad	_L_1+130
 	.quad	_RightShift__uRightShift_param_i16_I
-	.quad	_L_1+764
+	.quad	_L_1+152
 	.quad	_RightShift__uRightShift_var_i16_I
-	.quad	_L_1+788
-	.quad	_RightShift__uRightShift_param_LC_C
-	.quad	_L_1+810
-	.quad	_RightShift__uRightShift_var_LC_C
-	.quad	_L_1+833
-	.quad	_RightShift__uRightShift_param_LC_I
-	.quad	_L_1+854
-	.quad	_RightShift__uRightShift_var_LC_I
-	.quad	_L_1+877
+	.quad	_L_1+176
+	.quad	_RightShift__uRightShift_param_L_C
+	.quad	_L_1+198
+	.quad	_RightShift__uRightShift_var_L_C
+	.quad	_L_1+220
+	.quad	_RightShift__uRightShift_param_L_I
+	.quad	_L_1+240
+	.quad	_RightShift__uRightShift_var_L_I
+	.quad	_L_1+262
 	.quad	_RightShift__uRightShift_param_u64_C
-	.quad	_L_1+898
+	.quad	_L_1+282
 	.quad	_RightShift__uRightShift_var_u64_C
-	.quad	_L_1+922
+	.quad	_L_1+306
 	.quad	_RightShift__uRightShift_param_u64_I
-	.quad	_L_1+944
+	.quad	_L_1+328
 	.quad	_RightShift__uRightShift_var_u64_I
-	.quad	_L_1+968
+	.quad	_L_1+352
 	.quad	_RightShift__uRightShift_param_u16_C
-	.quad	_L_1+990
+	.quad	_L_1+374
 	.quad	_RightShift__uRightShift_var_u16_C
-	.quad	_L_1+1014
+	.quad	_L_1+398
 	.quad	_RightShift__uRightShift_param_u16_I
-	.quad	_L_1+1036
+	.quad	_L_1+420
 	.quad	_RightShift__uRightShift_var_u16_I
+	.quad	_L_1+444
+	.quad	_RightShift__uRightShift_param_C_C
+	.quad	_L_1+466
+	.quad	_RightShift__uRightShift_var_C_C
+	.quad	_L_1+488
+	.quad	_RightShift__uRightShift_param_C_I
+	.quad	_L_1+508
+	.quad	_RightShift__uRightShift_var_C_I
+	.quad	_L_1+530
+	.quad	_RightShift__uRightShift_param_u32_C
+	.quad	_L_1+550
+	.quad	_RightShift__uRightShift_var_u32_C
+	.quad	_L_1+574
+	.quad	_RightShift__uRightShift_param_u32_I
+	.quad	_L_1+596
+	.quad	_RightShift__uRightShift_var_u32_I
+	.quad	_L_1+620
+	.quad	_RightShift__uRightShift_param_i8_C
+	.quad	_L_1+642
+	.quad	_RightShift__uRightShift_var_i8_C
+	.quad	_L_1+665
+	.quad	_RightShift__uRightShift_param_i8_I
+	.quad	_L_1+686
+	.quad	_RightShift__uRightShift_var_i8_I
+	.quad	_L_1+709
+	.quad	_RightShift__uRightShift_param_I_C
+	.quad	_L_1+730
+	.quad	_RightShift__uRightShift_var_I_C
+	.quad	_L_1+752
+	.quad	_RightShift__uRightShift_param_I_I
+	.quad	_L_1+772
+	.quad	_RightShift__uRightShift_var_I_I
+	.quad	_L_1+794
+	.quad	_RightShift__uRightShift_param_u8_C
+	.quad	_L_1+814
+	.quad	_RightShift__uRightShift_var_u8_C
+	.quad	_L_1+837
+	.quad	_RightShift__uRightShift_param_u8_I
+	.quad	_L_1+858
+	.quad	_RightShift__uRightShift_var_u8_I
+	.quad	_L_1+881
+	.quad	_RightShift__uRightShift_param_LC_C
+	.quad	_L_1+902
+	.quad	_RightShift__uRightShift_var_LC_C
+	.quad	_L_1+925
+	.quad	_RightShift__uRightShift_param_LC_I
+	.quad	_L_1+946
+	.quad	_RightShift__uRightShift_var_LC_I
+	.quad	_L_1+969
+	.quad	_RightShift__uRightShift_param_i64_C
+	.quad	_L_1+990
+	.quad	_RightShift__uRightShift_var_i64_C
+	.quad	_L_1+1014
+	.quad	_RightShift__uRightShift_param_i64_I
+	.quad	_L_1+1036
+	.quad	_RightShift__uRightShift_var_i64_I
 	.quad	_L_1+1060
 	.space 8
 	.ascii "../AMD64_DARWIN/RightShift.m3"
@@ -1612,25 +1612,26 @@ _MM_RightShift:
 	.space 8
 	.quad	_RightShift_M3
 	.quad	3
-	.word	657
-	.space 6
+	.quad	657
 	.quad	658
-	.quad	659
-	.long	3126736191
-	.long	1082434889
-	.word	662
-	.space 2
-	.long	663
-	.quad	664
+	.long	1143269949
+	.byte	-107
+	.space 3
+	.quad	662
+	.byte	-105
+	.space 3
+	.long	664
 	.quad	665
-	.quad	666
-	.long	1143401153
-	.byte	-99
-	.byte	-98
+	.word	666
+	.space 6
+	.quad	667
+	.long	481036337
+	.long	1082451290
+	.quad	670
+	.word	671
 	.space 2
-	.quad	671
 	.long	672
-	.space 28
+	.space 24
 	.quad	_RightShift_I3
 	.quad	_MM_RightShift+232
 	.space 8
