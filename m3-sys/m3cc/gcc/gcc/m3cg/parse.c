@@ -2204,7 +2204,8 @@ m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
-      v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+      if (o)
+        v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
       v = m3_build1 (INDIRECT_REF, src_t,
                      m3_cast (m3_build_pointer_type (src_t), v));
     }
@@ -2250,7 +2251,8 @@ m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
-      v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+      if (o)
+        v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
       v = m3_build1 (INDIRECT_REF, dst_t,
                      m3_cast (m3_build_pointer_type (dst_t), v));
     }
