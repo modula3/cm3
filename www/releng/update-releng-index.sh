@@ -11,7 +11,7 @@ fi
 
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/releng}
 TARGETS=`ls *RC*.tgz | egrep cm3-bin- | 
-         sed -e 's/cm3-bin-.*-\([^\-]*\)-[^\-]*-RC[0-9]*.tgz/\1/' |
+         sed -e 's/cm3-bin-.*-\([^\-]*\)-[^\-]*-(RC[0-9]*|REL).tgz/\1/' |
          sort -u`
 echo $TARGETS
 
