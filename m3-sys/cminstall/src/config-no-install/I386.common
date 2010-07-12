@@ -1,6 +1,6 @@
 readonly TARGET_ARCH = "I386"
 readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
 readonly WORD_SIZE    = "32BITS"    % { "32BITS" or "64BITS" }
-m3back_flags = "-march=i586 -mpreferred-stack-boundary=2 -mno-align-double"
+m3back_flags = "-march=i586 -mno-align-double"
 % We should be able to remove -mno-align-double with modern Target.m3
 % that aligns doubles, but these config files are compatible with older builds.
