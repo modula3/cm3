@@ -1955,7 +1955,12 @@ static void add_stmt (tree t)
 {
   enum tree_code code = TREE_CODE (t);
 
+#if GCC42
   if (EXPR_P (t) && code != LABEL_EXPR)
+    {
+#else /* GCC43, GCC45 */
+  if (CAN_HAVE_LOCATION_P (t) && code != LABEL_EXPR)
+#endif
     {
       if (!EXPR_HAS_LOCATION (t))
         SET_EXPR_LOCATION (t, input_location);
