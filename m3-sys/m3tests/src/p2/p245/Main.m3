@@ -5,19 +5,19 @@
 MODULE Main;
 IMPORT Text;
 
-PROCEDURE xExplodedItemSize(READONLY sep: SET OF CHAR) =
+PROCEDURE F1(READONLY sep: SET OF CHAR) =
   BEGIN
-    FOR i := 0 TO 1 DO
-      IF Text.GetChar("ABC", 0) IN sep THEN
+    LOOP
+      IF Text.GetChar("A", 0) IN sep THEN
         RETURN;
       END;
     END;
-  END xExplodedItemSize;
+  END F1;
 
-<*NOWARN*>PROCEDURE xExplodedSize(READONLY sep: SET OF CHAR) =
+<*NOWARN*>PROCEDURE F2(READONLY sep: SET OF CHAR) =
   BEGIN
-    xExplodedItemSize(sep);
-  END xExplodedSize;
+    F1(sep);
+  END F2;
 
 BEGIN
 END Main.
