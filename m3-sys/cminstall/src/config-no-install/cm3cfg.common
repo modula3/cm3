@@ -397,10 +397,10 @@ if not defined ("M3_BACKEND_MODE")
     %  "3"  -- call m3_backend, it produces assembly code
 end
 
+% --- internal configuration options passed directly to the Modula-3 front-end
 if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
         or equal(M3_BACKEND_MODE, "IntegratedObject") or equal(M3_BACKEND_MODE, "IntegratedAssembly")
     M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs"]
-% --- internal configuration options passed directly to the Modula-3 front-end
 else
     M3_FRONT_FLAGS = [ ]
 end
