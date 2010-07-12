@@ -14,7 +14,7 @@ readonly NAMING_CONVENTIONS = "2"
 
 %------------------------------------------------ external system libraries ---
 
-SYSTEM_LIBS = { "LIBC":[] }
+SYSTEM_LIBS = { "LIBC":[ ] }
 SYSTEM_LIBORDER = ["LIBC"]
 
 %--------------------------------------------------------- Modula-3 backend ---
