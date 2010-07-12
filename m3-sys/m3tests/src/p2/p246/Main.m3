@@ -1,4 +1,5 @@
 (*
+also for I386_DARWIN, probably all 32bit targets?
 m3-sys/m3cc/AMD64_DARWIN-SOLgnu/gcc/m3cgc1 -munaligned-doubles -mcpu=v9 \
         -quiet -fno-reorder-blocks -funwind-tables -fPIC -m32 -O3 \
         -Wuninitialized -gstabs+ Poly.mc -o Poly.ms
