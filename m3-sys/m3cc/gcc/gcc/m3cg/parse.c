@@ -5729,22 +5729,23 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   */
   flag_tree_pre = 0;
 
-  if (GCC45)
-  {
-    /* m3-libs/sysutils/System.m3 is a good test of optimization */
-
-    flag_tree_fre = 0; /* crashes compiler; see test p244 */
-
-    if (optimize >= 3)
-    {
-      flag_predictive_commoning = 0;
-      flag_inline_functions = optimize_size;
 #if GCC45
-      flag_ipa_cp_clone = 0;
-#endif
-    }
-  }
-#if GCC45
+  /* m3-libs/sysutils/System.m3 is a good test of optimization */
+
+  flag_tree_fre = 0; /* crashes compiler; see test p244 */
+  flag_predictive_commoning = 0;
+  flag_ipa_cp_clone = 0;
+  
+  /* inlining:
+      m3-sys/m3cc/AMD64_DARWIN-SOLgnu/cm3cg -quiet -O3 m3core/SOLgnu/Poly.mc
+      fingerprint/Poly.m3: In function 'Poly__FromBytes':
+      fingerprint/Poly.m3:379:0: internal compiler error:
+        in referenced_var_lookup, at tree-dfa.c:519
+  */
+  flag_inline_functions = 0;
+  flag_inline_small_functions = 0;
+  flag_indirect_inlining = 0;
+
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
