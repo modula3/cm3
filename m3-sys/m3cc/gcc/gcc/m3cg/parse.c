@@ -188,6 +188,7 @@ static GTY (()) tree t_word_16;
 static GTY (()) tree t_word_32;
 static GTY (()) tree t_word_64;
 static GTY (()) tree t_void;
+static GTY (()) tree t_set;
 
 /* Values. */
 static GTY (()) tree v_zero;
@@ -1028,6 +1029,7 @@ m3_init_decl_processing (void)
   v_zero = build_int_cst (t_int, 0);
   v_one = build_int_cst (t_int, 1);
   v_null = null_pointer_node;
+  t_set = m3_build_pointer_type(t_word);
 
   build_common_builtin_nodes ();
 
@@ -4366,7 +4368,7 @@ m3cg_set_member_ref(tree* out_bit_in_word)
   UNUSED_BYTESIZE (n);
   MTYPE    (type);
   tree bit         = m3_cast(t_word, EXPR_REF (-1));
-  tree set         = m3_cast(t_addr, EXPR_REF (-2));
+  tree set         = m3_cast(t_set, EXPR_REF (-2));
 
   /* div and mod work as well as shifting, even when not optimizing. */
 
@@ -4375,7 +4377,7 @@ m3cg_set_member_ref(tree* out_bit_in_word)
   tree word        = m3_build2(TRUNC_DIV_EXPR, t_word, bit, bits_per_integer);
   tree bit_in_word = m3_build2(TRUNC_MOD_EXPR, t_word, bit, bits_per_integer);
   tree byte        = m3_build2(MULT_EXPR, t_word, word, bytes_per_integer);
-  tree word_ref    = m3_build2(POINTER_PLUS_EXPR, t_addr, set, byte);
+  tree word_ref    = m3_build2(POINTER_PLUS_EXPR, t_set, set, byte);
   tree one         = m3_cast(t_word, v_one);
 
   word_ref         = m3_build1(INDIRECT_REF, t_word, word_ref);
