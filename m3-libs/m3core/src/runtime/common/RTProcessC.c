@@ -18,7 +18,9 @@ RTProcess__RegisterForkHandlers(
     ForkHandler parent,
     ForkHandler child)
 {
-#if defined(_WIN32) || defined(__vms) || (defined(__FreeBSD__) && __FreeBSD__ <= 4)
+#if defined(_WIN32) \
+        || defined(__vms) \
+        || (defined(__FreeBSD__) && (__FreeBSD__ <= 4))
     return 0;
 #else
     while (1)
