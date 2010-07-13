@@ -2147,10 +2147,6 @@ case "${target}" in
     ;;
   *-*-freebsd*)
     noconfigdirs="$noconfigdirs target-newlib target-libgloss"
-    if test "x$with_gmp" = x && test "x$with_gmp_dir" = x \
-	&& test -f /usr/local/include/gmp.h; then
-      with_gmp=/usr/local
-    fi
 
     # Skip some stuff that's unsupported on some FreeBSD configurations.
     case "${target}" in
