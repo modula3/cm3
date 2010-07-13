@@ -20,7 +20,7 @@ RTProcess__RegisterForkHandlers(
 {
 #if defined(_WIN32) \
         || defined(__vms) \
-        || (defined(__FreeBSD__) && (__FreeBSD__ <= 5))
+        || (defined(__FreeBSD__) && (__FreeBSD__ < 6))
     return 0;
 #else
     while (1)
