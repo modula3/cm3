@@ -19,7 +19,9 @@
 #define _XPG4_2
 #define _DARWIN_C_SOURCE
 
-#if (defined(__APPLE__) && defined(__x86_64__)) || defined(__OpenBSD__)
+#if (defined(__APPLE__) && defined(__x86_64__)) \
+    || defined(__OpenBSD__) \
+    || (defined(__FreeBSD__) && (__FreeBSD__ <= 4))
 /* http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
  * http://www.engelschall.com/pw/usenix/2000/pmt-html/
  * Sigaltstack is more portable -- OpenBSD and Darwin/AMD64 do not
