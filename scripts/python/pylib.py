@@ -83,6 +83,9 @@ def RemoveTrailingSlash(a):
 def StringContains(a, b):
     return a.find(b) != -1
 
+def StringContainsI(a, b):
+    return a.lower().find(b.lower()) != -1
+
 def StringTagged(a, b):
     return a.startswith(b + "_") or a.endswith("_" + b) or StringContains(a, "_" + b + "_")
 
@@ -1188,16 +1191,25 @@ def Boot():
     Link = "$(CC) $(CFLAGS) *.mo *.io *.o "
 
     # link flags
+    
+    # TBD: add more and retest, e.g. Irix, AIX, HPUX, Android
 
     if StringTagged(Target, "DARWIN"):
         pass
+    elif StringTagged(Target, "MINGW"):
+        pass
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
-        Link = Link  +  " -lrt -lm -lnsl -lsocket -lpthread "
+        Link = Link  +  " -lrt -lm -lnsl -lsocket "
     elif StringTagged(Target, "HPUX"):
-        Link = Link + " -lrt -lm "
+        Link = Link + " -lrt -lm -lpthread "
     elif StringTagged(Target, "INTERIX"):
-        Link = Link + " -lm "
-    elif StringTagged(Target, "FREEBSD") or Target.startswith("FreeBSD"):
+        Link = Link + " -lm " # -pthread?
+    # not all of these tested esp. Cygwin, NetBSD
+    elif StringContainsI(Target, "FreeBSD") \
+         or StringContainsI(Target, "NetBSD") \
+         or StringContainsI(Target, "OpenBSD") \
+         or StringContainsI(Target, "Cygwin") \
+         or StringContainsI(Target, "Linux"):
         Link = Link  +  " -lm -pthread "
     else:
         Link = Link + " -lm -lpthread "
