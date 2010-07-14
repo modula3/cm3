@@ -19,18 +19,5 @@ SYSTEM_LD = SYSTEM_CC
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
-SYSTEM_LIBS =
-{
-    "LIBC"       : [ "-lm", "-pthread" ],
-    "LEX-YACC"   : [ "-lfl" ],
-    "FLEX-BISON" : [ "-lfl" ],
-    "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
-    "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
-    "ODBC"       : [ "-lodbc" ],
-    "MOTIF"      : [ "-lXm" ],
-    "TCP"        : [ ],
-    "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
-}
-
 include("Unix.common")
 include("gnuld.common")
