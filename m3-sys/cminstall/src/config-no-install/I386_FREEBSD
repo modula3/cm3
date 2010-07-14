@@ -21,9 +21,10 @@ proc configure_c_compiler() is
   % cc1: Invalid option `32'
   %
   
-  SYSTEM_CC = "gcc -gstabs+ -fPIC"
+  SYSTEM_CC = "gcc -gstabs+ -fPIC"  
   local SYSTEM_CC_m32 = SYSTEM_CC & " -m32"
-  if not equal(try_exec("@echo | " & SYSTEM_CC_m32 & " -x c - 2>&1 | fgrep \"cc1: Invalid option \\\`32'\" >/dev/null"), 0)
+  %if not equal(try_exec("@echo | " & SYSTEM_CC_m32 & " -x c - 2>&1 | fgrep \"cc1: Invalid option \\\`32'\" >/dev/null"), 0)
+  if not IsTargetFreeBSD4()
     SYSTEM_CC = SYSTEM_CC_m32
   end
 end
@@ -34,18 +35,20 @@ proc configure_linker() is
   end
   
   configure_c_compiler()
+
+  SYSTEM_LD = SYSTEM_CC & FREEBSD_LD_APPEND & GNU_LD_APPEND
   
-  > "_m3_freebsd_lc.c" in
-    write("#include <stdio.h>\nvoid* a = (void*)&printf;\n")
-  end
+  % > "_m3_freebsd_lc.c" in
+  %  write("#include <stdio.h>\nvoid* a = (void*)&printf;\n")
+  % end
 
   %
   % -Bsymbolic inhibits -lc on older systems.
   % Safe to just add it?
   %
 
-  SYSTEM_LD = SYSTEM_CC & FREEBSD_LD_APPEND & GNU_LD_APPEND
-  if equal(try_exec("@" & SYSTEM_LD & " _m3_freebsd_lc.c -shared 2>&1 | fgrep \"undefined reference to \\\`printf'\" >/dev/null"), 0)
+  %if equal(try_exec("@" & SYSTEM_LD & " _m3_freebsd_lc.c -shared 2>&1 | fgrep \"undefined reference to \\\`printf'\" >/dev/null"), 0)
+  if IsTargetFreeBSD4()
     SYSTEM_LD = SYSTEM_LD & " -lc"
   end
 end

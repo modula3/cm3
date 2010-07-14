@@ -140,6 +140,30 @@ proc IsNetBSD()  is return IsTargetNetBSD() end
 proc IsOpenBSD() is return IsTargetOpenBSD() end
 proc IsSolaris() is return IsTargetSolaris() end
 
+proc IsNativeBuild() is
+  if defined("HOST") and defined("TARGET")
+    return equal(HOST, TARGET)
+  end
+  return FALSE
+end
+
+proc IsHostFreeBSD4() is
+  if defined("HOST")
+    if not (equal(HOST, "I386_FREEBSD") or equal(HOST, "FreeBSD4"))
+      return FALSE
+    end
+  end
+  if not defined("xIsHostFreeBSD4")
+    xIsHostFreeBSD4 = equal(try_exec("@uname | fgrep FreeBSD > /dev/null"), 0) and equal(try_exec("@uname -r | grep ^4 > /dev/null"), 0)
+  end
+  return xIsHostFreeBSD4
+end
+
+proc IsTargetFreeBSD4() is
+  % approx
+  return IsTargetFreeBSD() and IsNativeBuild() and IsHostFreeBSD4()
+end
+
 if not defined("HasTrestle")
 
 proc HasTrestle() is
