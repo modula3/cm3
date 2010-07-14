@@ -4,9 +4,13 @@ if defined("M3_USE_OVERRIDES")
   else
     M3_SHARED_LIB_ARG = ""
     if equal($M3_PORTABLE_RUN_PATH, "")
+      GNU_LD_APPEND = " -Wl,-rpath," & INSTALL_ROOT & "/lib " % non-portable
+      %
       % This assumes SYSTEM_LD is actually gcc, driving GNU ld.
-      SYSTEM_LD = SYSTEM_LD
-        & " -Wl,-rpath," & INSTALL_ROOT & "/lib" % non-portable
+      %
+      if defined("SYSTEM_LD")
+        SYSTEM_LD = SYSTEM_LD & GNU_LD_APPEND
+      end
     end
   end
 else
