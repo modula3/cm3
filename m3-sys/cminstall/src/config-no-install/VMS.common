@@ -28,6 +28,7 @@ end
 %--------------------------------------------------------------- C compiler ---
 
 proc compile_c(source, object, options, optimize, debug) is
+    % "/THREADS_ENABLE"
     return 0
 end
 

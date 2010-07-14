@@ -18,6 +18,5 @@ LINK_STATIC = "-static"
 include("Unix.common")
 include("gnuld.common")
 
-SYSTEM_LIBS{"LIBC"} = [ "-lm", "-pthread" ]
 SYSTEM_LIBS{"ODBC"} = ["-Wl,-rpath,/usr/local/lib -L/usr/local/lib -liodbc" ]
 SYSTEM_LIBS{"POSTGRES95"} = ["-Wl,-rpath -L/usr/local/lib -lpq"]
