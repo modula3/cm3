@@ -201,13 +201,13 @@ xMakeContext(
 
 void *
 __cdecl
-MakeContext (void (*p)(void), WORD_T words)
+MakeContext (void (*p)(void), INTEGER words)
 {
   Context *c = (Context *)calloc (1, sizeof(*c));
-  WORD_T size = sizeof(void *) * words;
-  WORD_T pagesize = getpagesize();
+  INTEGER size = sizeof(void *) * words;
+  INTEGER pagesize = getpagesize();
   char *sp = { 0 };
-  WORD_T pages = { 0 };
+  INTEGER pages = { 0 };
   int er = { 0 };
 
   if (c == NULL || size <= 0 || words <= 0)
