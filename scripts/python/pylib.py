@@ -1197,6 +1197,8 @@ def Boot():
         Link = Link + " -lrt -lm "
     elif StringTagged(Target, "INTERIX"):
         Link = Link + " -lm "
+    elif StringTagged(Target, "FREEBSD") or Target.startswith("FreeBSD"):
+        Link = Link  +  " -lm -pthread "
     else:
         Link = Link + " -lm -lpthread "
     
