@@ -51,4 +51,11 @@ proc configure_linker() is
   if IsTargetFreeBSD4()
     SYSTEM_LD = SYSTEM_LD & " -lc"
   end
+  
+  %
+  % We always use userthreads on FreeBSD4, and -pthread causes errors.
+  %
+
+  SYSTEM_LIBS{"LIBC"} = [ "-lm" ] % instead of -lm -pthread
+
 end

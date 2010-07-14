@@ -42,4 +42,13 @@ if equal (OS_TYPE, "POSIX") and equal (TARGET, "NT386")
     PosixKernelThreads = TRUE
 end
 
+% Always use user threads on FreeBSD 4.
+
+if defined("IsTargetFreeBSD4")
+  if IsTargetFreeBSD4()
+    PosixKernelThreads = FALSE
+    KernelThreads = FALSE
+  end
+end
+
 %------------------------------------------------------------------------------
