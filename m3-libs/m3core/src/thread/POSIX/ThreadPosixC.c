@@ -210,7 +210,7 @@ MakeContext (void (*p)(void), INTEGER words)
   INTEGER pages = { 0 };
   int er = { 0 };
 
-  if (c == NULL || size <= 0 || words <= 0)
+  if (c == NULL || size <= 0 || words <= 0 || size <= words)
     goto Error;
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
 
