@@ -1,8 +1,2 @@
 readonly TARGET = "FreeBSD4"
-readonly GNU_PLATFORM = "i686-freebsd7" % "cpu-os" string for GNU
-
-SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
-readonly SYSTEM_ASM = "as -32"
-
-include("I386.common")
-include("FreeBSD.common")
+include("I386_FREEBSD")
