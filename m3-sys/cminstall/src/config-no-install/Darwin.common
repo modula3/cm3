@@ -59,11 +59,15 @@ end
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
+OPENGL_FRAMEWORK = "/System/Library/Frameworks/OpenGL.framework"
+LIBGL_DYLIB = OPENGL_FRAMEWORK & "/Versions/A/Libraries/libGL.dylib"
+
 SYSTEM_LIBS = {
   "LIBC"       : [ ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
-  "OPENGL"     : [ "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
+  "OPENGL"     : [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
+                   "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
   "TCP"        : [ ]
 % below: X11, ODBC, POSTGRES95, MOTIF
 }
