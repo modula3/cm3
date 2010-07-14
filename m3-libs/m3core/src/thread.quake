@@ -48,6 +48,7 @@ if defined("IsTargetFreeBSD4")
   if IsTargetFreeBSD4()
     PosixKernelThreads = FALSE
     KernelThreads = FALSE
+    USE_PTHREADS{TARGET} = FALSE
   end
 end
 
