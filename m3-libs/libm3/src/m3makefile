@@ -28,7 +28,7 @@ include_dir ("rw")
 include_dir ("fmtlex")
 include_dir ("list")
 include_dir ("sx")
-%include_dir ("types") % this folder is missing
+include_dir ("types")
 include_dir ("arith")
 include_dir ("geometry")
 include_dir ("statistics")
