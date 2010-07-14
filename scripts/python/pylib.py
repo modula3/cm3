@@ -1193,6 +1193,7 @@ def Boot():
     # link flags
     
     # TBD: add more and retest, e.g. Irix, AIX, HPUX, Android
+    # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
 
     if StringTagged(Target, "DARWIN"):
         pass
