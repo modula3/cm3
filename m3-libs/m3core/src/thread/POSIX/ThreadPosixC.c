@@ -21,11 +21,11 @@
 
 #if (defined(__APPLE__) && defined(__x86_64__)) \
     || defined(__OpenBSD__) \
-    || (defined(__FreeBSD__) && (__FreeBSD__ <= 4))
+    || (defined(__FreeBSD__) && (__FreeBSD__ < 5))
 /* http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
  * http://www.engelschall.com/pw/usenix/2000/pmt-html/
  * Sigaltstack is more portable -- OpenBSD and Darwin/AMD64 do not
- * implement get/set/make/swapcontext.
+ * implement get/set/make/swapcontext. Ditto FreeBSD < 5.
  */
 #define M3_USE_SIGALTSTACK
 #endif
@@ -204,15 +204,14 @@ __cdecl
 MakeContext (void (*p)(void), int words)
 {
   Context *c = (Context *)calloc (1, sizeof(*c));
-  WORD_T size = words * sizeof(void *);
-  int pagesize = getpagesize();
-  char *sp = NULL;
-  int pages;
-  int er;
+  WORD_T size = sizeof(void *) * (WORD_T)words;
+  WORD_T pagesize = getpagesize();
+  char *sp = { 0 };
+  WORD_T pages = { 0 };
+  int er = { 0 };
 
-  if (c == NULL)
+  if (c == NULL || size <= 0 || words <= 0)
     goto Error;
-  if (size <= 0) return c;
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
 
   /* Round up to a whole number of pages, and
@@ -243,8 +242,8 @@ MakeContext (void (*p)(void), int words)
   return c;
 Error:
   er = errno;
-  if (c != NULL) free(c);
-  if (sp != NULL) munmap(sp, size);
+  if (c) free(c);
+  if (sp) munmap(sp, size);
   errno = er;
   return NULL;
 }
