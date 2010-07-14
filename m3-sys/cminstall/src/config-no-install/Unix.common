@@ -336,6 +336,7 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     if not shared and defined("LINK_STATIC")
         args += LINK_STATIC
     end
+    configure_linker()
     return try_exec("@" & SYSTEM_LD, args)
 end
 
