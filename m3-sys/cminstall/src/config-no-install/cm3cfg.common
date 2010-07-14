@@ -113,6 +113,24 @@ end
 
 %------------------------------------------------------------------------------
 
+proc InternalPlatformEquivalent(a, b) is
+  if equal(a, b)
+    return TRUE
+  end
+  foreach c in [{"SPARC32_SOLARIS", "SOLgnu", "SOLsun"},
+                {"I386_FREEBSD", "FreeBSD4"},
+                {"I386_NT", "NT386"},
+                {"I386_CYGWIN", "NT386GNU"},
+                {"I386_MINGW", "NT386MINGNU"},
+                {"I386_LINUX", "LINUXLIBC6"},
+                {"I386_NETBSD", "NetBSD2_i386"}]
+    if (c contains a) and (c contains b)
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
 proc InternalCheckTargetOS(x) is
   if defined("TARGET_OS")
     if equal(TARGET_OS, x)
@@ -142,7 +160,7 @@ proc IsSolaris() is return IsTargetSolaris() end
 
 proc IsNativeBuild() is
   if defined("HOST") and defined("TARGET")
-    return equal(HOST, TARGET)
+    return InternalPlatformEquivalent(HOST, TARGET)
   end
   return FALSE
 end
