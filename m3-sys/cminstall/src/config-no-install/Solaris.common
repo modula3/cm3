@@ -70,7 +70,6 @@ end
 
 SYSTEM_LIBS = {
     "LIBC"      : [ "-lsocket", "-lnsl",
-                    "-lpthread",
                     "-lrt", % semaphores
                     "-lm", "-lc" ],
     "LEX-YACC"   : [ "-ll" ],

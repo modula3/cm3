@@ -26,9 +26,12 @@ readonly NAMING_CONVENTIONS = "0"
 
 if not defined ("SYSTEM_LIBS")
 
+% This is for Linux and partly for FreeBSD, OpenBSD, NetBSD.
+% Other systems replace it entirely: Solaris, Interix, Cygwin, Darwin.
+
 SYSTEM_LIBS =
 {
-    "LIBC"       : [ "-lm", "-lpthread" ],
+    "LIBC"       : [ "-lm", "-pthread" ],
     "LEX-YACC"   : [ "-ll" ],
     "FLEX-BISON" : [ "-lfl" ],
     "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
@@ -36,7 +39,7 @@ SYSTEM_LIBS =
     "ODBC"       : [ "-lodbc" ],
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
-    "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+    "X11"        : [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
 end
