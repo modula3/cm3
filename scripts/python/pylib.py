@@ -1194,6 +1194,7 @@ def Boot():
     
     # TBD: add more and retest, e.g. Irix, AIX, HPUX, Android
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
+    # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
 
     if StringTagged(Target, "DARWIN"):
         pass
