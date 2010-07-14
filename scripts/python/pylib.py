@@ -1201,7 +1201,7 @@ def Boot():
     elif StringTagged(Target, "MINGW"):
         pass
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
-        Link = Link  +  " -lrt -lm -lnsl -lsocket "
+        Link = Link  +  " -lrt -lm -lnsl -lsocket -lpthread "
     elif StringTagged(Target, "HPUX"):
         Link = Link + " -lrt -lm -lpthread "
     elif StringTagged(Target, "INTERIX"):
