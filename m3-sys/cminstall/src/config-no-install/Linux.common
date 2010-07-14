@@ -21,7 +21,7 @@ readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 SYSTEM_LIBS =
 {
-    "LIBC"       : [ "-lm", "-lpthread" ],
+    "LIBC"       : [ "-lm", "-pthread" ],
     "LEX-YACC"   : [ "-lfl" ],
     "FLEX-BISON" : [ "-lfl" ],
     "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
