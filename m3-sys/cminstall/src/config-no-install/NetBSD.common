@@ -15,6 +15,7 @@ include("Unix.common")
 % update lib locations
 %
 
+SYSTEM_LIBS{"LIBC"} = [ "-lm", "-pthread" ]
 SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/pkg/lib", "-L/usr/pkg/lib", "-lodbc" ]
 SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/pkg/lib", "-L/usr/pkg/lib", "-lpq" ]
 SYSTEM_LIBS{"X11"} = [ "-Wl,-R/usr/X11R6/lib", SYSTEM_LIBS{"X11"} ]
