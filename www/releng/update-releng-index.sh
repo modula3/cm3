@@ -10,7 +10,7 @@ elif [ -r ${HOME}/cm3/cm3/scripts/regression/defs.sh ]; then
 fi
 
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/releng}
-TARGETS=`ls *RC*.tgz | egrep cm3-bin- | 
+TARGETS=`ls *R[CE][5L]*.tgz | egrep cm3-bin- | 
          sed -e 's/cm3-bin-.*-\([^\-]*\)-[^\-]*-[RE][CE][0-9L]*.tgz/\1/' |
          sort -u`
 echo $TARGETS
@@ -104,6 +104,12 @@ for rc in REL RC5 RC6 RC7 RC8 RC9; do
       d5*);;
       *)
         echo "<h3>Target Platform ${t}</h3>"
+        if [ -r ${t}.uname ]; then
+          echo "<p>"
+          echo "built on "
+          cat ${t}.uname
+          echo "</p>"
+        fi
         echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
         for f in ${all}; do
           case $f in
