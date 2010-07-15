@@ -7,14 +7,17 @@ include("Unix.common")
 SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lodbc" ]
 SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lpq" ]
 
-FREEBSD_LD_APPEND =
-    " -z now"
-  & " -z origin"
-  & " -Wl,-Bsymbolic"
-  & " -Wl,--fatal-warnings"
+FREEBSD4_LD_APPEND =
+    " -z origin"
   & " -Wl,--warn-common"
   & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib "
+
+FREEBSD_LD_APPEND =
+  FREEBSD4_LD_APPEND
+  & " -Wl,--fatal-warnings"
+  & " -z now"
+  & " -Bsymbolic"
 
 if defined("SYSTEM_CC")
   SYSTEM_CC = SYSTEM_CC & FREEBSD_LD_APPEND
