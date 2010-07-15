@@ -205,6 +205,8 @@ if [ "x$CM3_TARGET" = "x" ] ; then
   case "`uname`" in
     Windows*|WinNT*|Cygwin*|CYGWIN*) CM3_TARGET=NT386;;
                                      #CM3_TARGET=I386_NT;;
+    OSF1)
+      CM3_TARGET=ALPHA_OSF;;
 
     FreeBSD*)
       case "`uname -p`" in
