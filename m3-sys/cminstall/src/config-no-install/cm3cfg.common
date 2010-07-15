@@ -131,6 +131,65 @@ proc InternalPlatformEquivalent(a, b) is
   return FALSE
 end
 
+proc Is64BitNTHost() is
+  return equal($OS, "Windows_NT") and
+        (equal($PROCESSOR_ARCHITECTURE, "AMD64")
+      or equal($PROCESSOR_ARCHITECTURE, "IA64")
+      or equal($PROCESSOR_ARCHITEW6432, "AMD64")
+      or equal($PROCESSOR_ARCHITEW6432, "IA64"))
+end
+
+proc InternalTargetCanRunOnHost(target, host) is
+  if InternalPlatformEquivalent(target, host)
+    return TRUE
+  end
+
+  % any ntx86_host can run ntx86_native
+
+  local ntx86_native = {"I386_NT", "NT386", "I386_MINGW", "NT386MINGNU"}
+  local ntx86_host = {"I386_NT", "NT386", "I386_CYGWIN", "NT386GNU", "I386_MINGW", "NT386MINGNU", "I386_INTERIX"}
+  if (nt_native contains target) and ((nt_host contains host) or (equal($OS, "Windows_NT")))
+    return TRUE
+  end
+
+  % various 64bit can run corresponding 32bit, usually
+
+  if Is64BitNTHost()
+    if ntx86_native contains target
+      return TRUE
+    end
+    % probably hypothetical 64bit cygwin accompanies 32bit cygwin
+    local cygwin = {"AMD64_CYGWIN", "I386_CYGWIN", "NT386GNU"}
+    if (cygwin contains host) and (cygwin contains target)
+      return TRUE
+    end
+  end
+  if equal(target, "I386_DARWIN") and equal(host, "AMD64_DARWIN")
+    return TRUE
+  end
+  % PPC_DARWIN can be emulated
+  local ppc_darwin_host = {"AMD64_DARWIN", "I386_DARWIN", "PPC64_DARWIN"}
+  if equal(target, "PPC_DARWIN") and (ppc_darwin_host contains host)
+    return TRUE
+  end
+  if equal(target, "PPC_LINUX") and equal(host, "PPC64_LINUX")
+    return TRUE
+  end
+  foreach c in [{"ALPHA64_VMS", "ALPHA32_VMS"}, % just one ALPHA_VMS system
+                % Sparc these days always has a 64bit kernel that can run 32bit or 64bit
+                {"SPARC64_SOLARIS", "SPARC32_SOLARIS", "SOLgnu", "SOLsun"},
+                {"SPARC64_LINUX", "SPARC32_LINUX"},
+                % likewise actual PA32 is unusual
+                {"PA64_HPUX", "PA32_HPUX"},
+                {"PA64_LINUX", "PA32_LINUX"}]
+    if (c contains host) and (c contains target)
+      return TRUE
+    end
+  end
+  % CONSIDER: more 32bit/64bit mixes
+  return FALSE
+end
+
 proc InternalCheckTargetOS(x) is
   if defined("TARGET_OS")
     if equal(TARGET_OS, x)
@@ -165,14 +224,26 @@ proc IsNativeBuild() is
   return FALSE
 end
 
+proc IsHostOSF1v4() is
+  if defined("HOST")
+    if not InternalPlatformEquivalent(HOST, "ALPHA_OSF")
+      return FALSE
+    end
+  end
+  if not defined("xIsHostOSF1v4")
+    xIsHostOSF1v4 = equal(try_exec("@uname -sr | fgrep \"OSF1 V4.\" > /dev/null"), 0)
+  end
+  return xIsHostOSF1v4
+end
+
 proc IsHostFreeBSD4() is
   if defined("HOST")
-    if not (equal(HOST, "I386_FREEBSD") or equal(HOST, "FreeBSD4"))
+    if not InternalPlatformEquivalent(HOST, "I386_FREEBSD")
       return FALSE
     end
   end
   if not defined("xIsHostFreeBSD4")
-    xIsHostFreeBSD4 = equal(try_exec("@uname | fgrep FreeBSD > /dev/null"), 0) and equal(try_exec("@uname -r | grep ^4 > /dev/null"), 0)
+    xIsHostFreeBSD4 = equal(try_exec("@uname -sr | fgrep \"FreeBSD 4.\" > /dev/null"), 0)
   end
   return xIsHostFreeBSD4
 end
