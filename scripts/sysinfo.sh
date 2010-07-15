@@ -208,7 +208,7 @@ if [ "x$CM3_TARGET" = "x" ] ; then
     OSF1)
       CM3_TARGET=ALPHA_OSF;;
 
-    FreeBSD*)
+    FreeBSD)
       case "`uname -p`" in
         amd64)  CM3_TARGET=AMD64_FREEBSD;;
         i*86)   CM3_TARGET=FreeBSD4;;
@@ -242,7 +242,7 @@ if [ "x$CM3_TARGET" = "x" ] ; then
             esac;;
       esac;;
 
-    Interix*) CM3_TARGET=I386_INTERIX;;
+    Interix) CM3_TARGET=I386_INTERIX;;
 
     Linux)
       case "`uname -m`" in
@@ -253,7 +253,7 @@ if [ "x$CM3_TARGET" = "x" ] ; then
                  #CM3_TARGET=I386_LINUX;;
       esac;;
   
-    NetBSD*)
+    NetBSD)
         case "`uname -m`" in
             x86_64) CM3_TARGET=AMD64_NETBSD;;
             i386) CM3_TARGET=NetBSD2_i386;;
