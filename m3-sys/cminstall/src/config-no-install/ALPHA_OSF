@@ -40,7 +40,7 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 
 %---------------------------------------------------------- system programs ---
 
-SYSTEM_CC = "/usr/bin/cc -std -O3 -g3 -pthread -readonly_strings"
+SYSTEM_CC = "/usr/bin/cc -O3 -g3 -pthread -readonly_strings"
           & " -ieee_with_no_inexact -error_unresolved -B symbolic"
 if IsTargetOSF1v4()
   SYSTEM_CC = SYSTEM_CC & " -DM3_OSF1_V4"
