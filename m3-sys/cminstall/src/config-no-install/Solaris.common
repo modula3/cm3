@@ -36,7 +36,7 @@ if equal (C_COMPILER, "SUN")
     if equal(WORD_SIZE, "32BITS") and not equal(TARGET, "I386_SOLARIS")
       new = new & " -xarch=sparc"
     end
-    if equal(try_exec("@" & cc & old & " 2>&1 | grep \" " & new & " \" > /dev/null"), 0)
+    if equal(try_exec("@" & cc & old & " 2>&1 | fgrep \" " & new & " \" > /dev/null"), 0)
       cc = cc & new
     else
       cc = cc & old
