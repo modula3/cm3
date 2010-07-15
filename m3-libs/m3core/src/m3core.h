@@ -9,11 +9,13 @@
 #ifndef _OSF_SOURCE
 #define _OSF_SOURCE
 #endif
+#ifndef M3_OSF1_V4
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 500
 #endif
 #ifndef _TIME64_T
 #define _TIME64_T
+#endif
 #endif
 #endif
 
