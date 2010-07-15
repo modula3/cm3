@@ -248,6 +248,11 @@ proc IsHostFreeBSD4() is
   return xIsHostFreeBSD4
 end
 
+proc IsTargetOSF1v4() is
+  % approx
+  return InternalPlatformEquivalent(TARGET, "ALPHA_OSF") and IsNativeBuild() and IsHostFreeOSF1v4()
+end
+
 proc IsTargetFreeBSD4() is
   % approx
   return IsTargetFreeBSD() and IsNativeBuild() and IsHostFreeBSD4()
