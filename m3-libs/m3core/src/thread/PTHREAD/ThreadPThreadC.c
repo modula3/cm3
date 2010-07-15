@@ -149,11 +149,23 @@ void
 __cdecl
 ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
 {
-  sigjmp_buf jb;
+/*
+cc: Warning: ThreadPThreadC.c, line 170: In this statement, & before array "jb" is ignored. (addrarray)
+    p(&jb, ((char *)&jb) + sizeof(jb));
+------^
+cc: Warning: ThreadPThreadC.c, line 170: In this statement, & before array "jb" is ignored. (addrarray)
+    p(&jb, ((char *)&jb) + sizeof(jb));
+--------------------^
 
-  if (sigsetjmp(jb, 0) == 0) /* save registers to stack */
+jb may or may not be an array, & is necessary, wrap it in struct.
+*/
+  struct {
+    sigjmp_buf jb;
+  } s;
+
+  if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
-    siglongjmp(jb, 1); /* flush register windows */
+    siglongjmp(s.jb, 1); /* flush register windows */
   else
 #endif
   {
@@ -167,7 +179,7 @@ ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
       assert(bottom < top);
       p(bottom, top);
     }
-    p(&jb, ((char *)&jb) + sizeof(jb));
+    p(&s, sizeof(s) + (char *)&s);
   }
 }
 
