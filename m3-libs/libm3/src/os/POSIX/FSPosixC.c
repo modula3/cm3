@@ -32,7 +32,7 @@ int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER acc
 #else
     struct timeval t[2];
 
-    ZeroMemory(&t, sizeof(t));
+    ZeroMemory(t, sizeof(t));
     t[0].tv_sec = accessed;
     t[0].tv_usec = 0;
     t[1].tv_sec = updated;
