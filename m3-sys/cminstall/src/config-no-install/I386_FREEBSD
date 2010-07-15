@@ -36,36 +36,12 @@ proc configure_linker() is
   
   configure_c_compiler()
 
-  SYSTEM_LD = SYSTEM_CC & FREEBSD_LD_APPEND & GNU_LD_APPEND
-  
-  % > "_m3_freebsd_lc.c" in
-  %  write("#include <stdio.h>\nvoid* a = (void*)&printf;\n")
-  % end
-
-  %
-  % -Bsymbolic inhibits -lc on older systems.
-  % Safe to just add it?
-  %
-
-  %if equal(try_exec("@" & SYSTEM_LD & " _m3_freebsd_lc.c -shared 2>&1 | fgrep \"undefined reference to \\\`printf'\" >/dev/null"), 0)
   if IsTargetFreeBSD4()
-    SYSTEM_LD = SYSTEM_LD & " -lc"
-    %
-    % We always use userthreads on FreeBSD4, and -pthread causes errors.
-    % But this is too late to change SYSTEM_LIBS, so
-    % we omit it up front and add in to SYSTEM_LD instead.
-    %
-    SYSTEM_LIBS{"LIBC"} = [ "-lm" ] % instead of -lm -pthread
+    SYSTEM_LD = SYSTEM_CC & FREEBSD4_LD_APPEND & GNU_LD_APPEND
   else
-    SYSTEM_LD = SYSTEM_LD & " -pthread"
+    % It is too late to modify SYSTEM_LIBS{"LIBC"}.
+    SYSTEM_LD = SYSTEM_CC & FREEBSD_LD_APPEND & GNU_LD_APPEND & " -pthread"
   end
 end
 
-%
-% SYSTEM_LIBCS{"LIBC"} is read fairly early, so we have
-% to set it to the FreeBSD4-safe version, and then
-% add -pthread to SYSTEM_LD instead of SYSTEM_LIBS{"LIBC"}
-%
-
-SYSTEM_LIBS{"LIBC"} = [ "-lm" ] % instead of -lm -pthread
-
+SYSTEM_LIBS{"LIBC"} = ["-lm"] % no -pthread
