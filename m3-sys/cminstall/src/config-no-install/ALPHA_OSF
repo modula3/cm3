@@ -40,7 +40,7 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "/usr/bin/cc -O3 -g3 -pthread -readonly_strings"
+readonly SYSTEM_CC  = "/usr/bin/cc -std -O3 -g3 -pthread -readonly_strings"
                     & " -ieee_with_no_inexact -error_unresolved -B symbolic"
 %readonly SYSTEM_LD  = SYSTEM_CC
 readonly SYSTEM_AR  = "/usr/bin/ar"
