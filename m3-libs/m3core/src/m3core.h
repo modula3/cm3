@@ -6,13 +6,31 @@
 #define INCLUDED_M3CORE_H
 
 #ifdef __osf__
+/* What for?
+ * Would be good to autoconf this?
+ */
 #ifndef _OSF_SOURCE
 #define _OSF_SOURCE
 #endif
-#ifndef M3_OSF1_V4
+#ifdef M3_OSF1_V4
+/* For socklen_t.
+ * Would be good to autoconf this.
+ */
+#ifndef _POSIX_PII_SOCKET
+#define _POSIX_PII_SOCKET
+#endif
+#else
+/* For socklen_t?
+ * Breaks pthread.h on v4.
+ * Would be good to autoconf this.
+ */
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 500
 #endif
+/* For 64bit time_t.
+ * Not available on v4.
+ * Would be good to autoconf this.
+ */
 #ifndef _TIME64_T
 #define _TIME64_T
 #endif
@@ -35,6 +53,8 @@
 #define M3_DLL_LOCAL
 #endif
 
+/* Autoconf: AC_SYS_LARGEFILE
+ */
 #define _FILE_OFFSET_BITS 64
 
 /* const is extern const in C, but static const in C++,
@@ -54,6 +74,8 @@
 #endif
 
 #ifdef __INTERIX
+/* Autoconf: AC_USE_SYSTEM_EXTENSIONS
+ */
 #ifndef _ALL_SOURCE
 #define _ALL_SOURCE
 #endif
@@ -64,7 +86,9 @@
 #endif
 
 #ifdef __vms
-/* Enable support for files larger than 2GB. */
+/* Enable support for files larger than 2GB.
+ * Autoconf: AC_SYS_LARGEFILE?
+ */
 #ifndef _LARGEFILE
 #define _LARGEFILE
 #endif
