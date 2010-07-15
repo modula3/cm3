@@ -1158,6 +1158,7 @@ def Boot():
         CCompilerFlags = "-g -mt -xldscope=symbolic "
     elif Config == "ALPHA_OSF":
         CCompiler = "/usr/bin/cc"
+        # add -DM3_OSF1_V4 for OSF1v4 or older
         CCompilerFlags = "-g -pthread"
     else:
         # gcc platforms
