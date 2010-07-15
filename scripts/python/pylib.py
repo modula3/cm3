@@ -1158,7 +1158,7 @@ def Boot():
         CCompilerFlags = "-g -mt -xldscope=symbolic "
     elif Config == "ALPHA_OSF":
         CCompiler = "/usr/bin/cc"
-        CCompilerFlags = "-g "
+        CCompilerFlags = "-g -pthread"
     else:
         # gcc platforms
         CCompiler = {
@@ -1204,6 +1204,8 @@ def Boot():
         Link = Link  +  " -lrt -lm -lnsl -lsocket -lpthread "
     elif StringTagged(Target, "HPUX"):
         Link = Link + " -lrt -lm -lpthread "
+    elif Config == "ALPHA_OSF":
+        Link = Link + " -lrt -lm "
     elif StringTagged(Target, "INTERIX"):
         Link = Link + " -lm " # -pthread?
     # not all of these tested esp. Cygwin, NetBSD
