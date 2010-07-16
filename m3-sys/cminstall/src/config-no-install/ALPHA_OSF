@@ -65,6 +65,7 @@ m3back_mieee = "-mieee"
 % "compile_c" is called to compile C source files.
 
 proc compile_c (source, object, options, optimize, debug) is
+  configure_c_compiler()
   return try_exec ("@" & SYSTEM_CC, options, "-c", source)
 end
 
@@ -94,6 +95,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % then, build the shared library
+    configure_c_compiler()
     ret_code = try_exec ("@" & SYSTEM_CC, "-shared -o",
                          lib_so, "-all", lib_a, "-none", imported_libs)
     if not equal (ret_code, 0) return ret_code end
@@ -129,6 +131,7 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
+  configure_c_compiler()
   local linker = [ "@" & SYSTEM_CC ]
   local args = [ "-o", prog, options, objects, imported_libs ]
   if shared
@@ -162,4 +165,3 @@ readonly m3fixup = "@" & BIN_USE & "/mips-tfile"
 % The default assembler isn't smart enough to include debugging
 % information from the assembler source file, so we run mips-tfile
 % after assembly to reinsert the debugging info in the object file.
-
