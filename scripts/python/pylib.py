@@ -2472,7 +2472,7 @@ def FormInstallRoot(PackageSetName):
         b = re.sub("Linux 2.6\..+$", "", b)
         b = re.sub("-.+$", "", b)
         b = re.sub("SunOS", "Solaris", b)
-        b = re.sub(" ", "", b)
+        b = re.sub("[ \r\n]", "", b)
         a = a + "-" + b
     a = a + "-" + time.strftime("%Y%m%d")
     return a
