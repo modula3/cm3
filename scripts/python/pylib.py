@@ -2094,6 +2094,8 @@ def GetVisualCPlusPlusVersion():
         return "80"
     if a.find("15.00") != -1:
         return "90"
+    if a.find("16.00") != -1:
+        return "100"
     FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%?")
 
 
