@@ -73,7 +73,7 @@ cd "${ROOT}" || exit 1
 #  esac
 #fi
 
-# keep short runpaths
+# no hardcoded paths in runpath, just $ORIGIN
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
