@@ -2466,6 +2466,12 @@ def FormInstallRoot(PackageSetName):
     a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
     if Config == "NT386" or Config == "I386_NT":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
+    else:
+        b = os.popen("uname -sr").read()
+        b = re.sub("(Linux 2.[0-9])\..+$", "\\1", b)
+        b = re.sub("-+$", "", b)
+        b = re.sub(" ", "", b)
+        a = a + "-" + b
     a = a + "-" + time.strftime("%Y%m%d")
     return a
 
