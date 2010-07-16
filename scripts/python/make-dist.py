@@ -10,6 +10,8 @@ from pylib import *
 def contains(s, t):
     return s.find(t) != -1
 
+# no hardcoded paths in runpath, just $ORIGIN
+os.environ["M3_PORTABLE_RUN_PATH"] = 1
 target      = Target.lower()
 currentVC   = ["80", "90"]
 nativeNT    = contains(target, "nt386") or target.endswith("_nt")
