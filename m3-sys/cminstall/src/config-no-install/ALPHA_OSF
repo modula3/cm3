@@ -136,7 +136,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   configure_c_compiler()
   local linker = [ "@" & SYSTEM_CC ]
   local args = [ "-o", prog, options, objects, imported_libs ]  
-  if not equal($M3_PORTABLE_RUN_PATH, "")
+  if equal($M3_PORTABLE_RUN_PATH, "")
     args += [ "-rpath", LIB_USE ]
   end
   return try_exec (linker, args)
