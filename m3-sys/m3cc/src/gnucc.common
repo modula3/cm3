@@ -129,7 +129,12 @@ if not defined("GNU_CFLAGS")
   if defined("O0")
     GNU_CFLAGS = "-g"
   else
-    GNU_CFLAGS = "-g -O2"
+    if IsHostOSF1v4()
+      % Omit debug information to shrink files so memory isn't exhausted.
+      GNU_CFLAGS = "-O2"
+    else
+      GNU_CFLAGS = "-g -O2"
+    end
   end
 end
 
