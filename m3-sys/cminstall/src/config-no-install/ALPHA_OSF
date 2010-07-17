@@ -45,9 +45,11 @@ proc configure_c_compiler() is
     return
   end
   SYSTEM_CC = "/usr/bin/cc -O3 -g3 -pthread -readonly_strings"
-            & " -ieee_with_no_inexact -error_unresolved -B symbolic"
+            & " -ieee_with_no_inexact -error_unresolved "
   if IsTargetOSF1v4()
-    SYSTEM_CC = SYSTEM_CC & " -DM3_OSF1_V4"
+    SYSTEM_CC = SYSTEM_CC & "-Wl,-B,symbolic -DM3_OSF1_V4"
+  else
+    SYSTEM_CC = SYSTEM_CC & "-B symbolic"
   end
 end
 readonly SYSTEM_AR  = "/usr/bin/ar"
