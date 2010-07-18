@@ -1,4 +1,5 @@
-# include "stdio.h"
+#include <stdio.h>
+
 #ifdef __cplusplus
    extern "C" {
      extern int yyreject();

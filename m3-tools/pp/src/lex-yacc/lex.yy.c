@@ -9,7 +9,9 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
-
+#include <stddef.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
 #ifdef c_plusplus
@@ -20,9 +22,6 @@
 
 
 #ifdef __cplusplus
-
-#include <stdlib.h>
-#include <unistd.h>
 
 /* Use prototypes in function declarations. */
 #define YY_USE_PROTOS
@@ -44,7 +43,6 @@
  #pragma warn -rch
  #pragma warn -use
 #include <io.h>
-#include <stdlib.h>
 #define YY_USE_CONST
 #define YY_USE_PROTOS
 #endif
@@ -581,17 +579,6 @@ static int yy_top_state YY_PROTO(( void ));
 
 #ifdef YY_MALLOC_DECL
 YY_MALLOC_DECL
-#else
-#if __STDC__
-#ifndef __cplusplus
-#include <stdlib.h>
-#endif
-#else
-/* Just try to get by without declaring the routines.  This will fail
- * miserably on non-ANSI systems for which sizeof(size_t) != sizeof(int)
- * or sizeof(void*) != sizeof(int).
- */
-#endif
 #endif
 
 /* Amount of stuff to slurp up with each read. */

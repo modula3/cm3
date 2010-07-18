@@ -33,6 +33,10 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
+#include <stddef.h>
+#include <stdlib.h>
+#define YYSIZE_T size_t
+
 /* Identify Bison output.  */
 #define YYBISON 1
 
@@ -333,8 +337,6 @@
 #line 92 "../Parse.yacc"
 
 
-#define NULL (0L)
-
 #define lexbufsize 500
 char lexbuf[2 * lexbufsize];
 int lexptr = 0;
@@ -464,10 +466,6 @@ typedef int YYSTYPE;
    /* Pacify GCC's `empty if-body' warning. */
 #  define YYSTACK_FREE(Ptr) do { /* empty */; } while (0)
 # else
-#  if defined (__STDC__) || defined (__cplusplus)
-#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-#   define YYSIZE_T size_t
-#  endif
 #  define YYSTACK_ALLOC YYMALLOC
 #  define YYSTACK_FREE YYFREE
 # endif
@@ -504,7 +502,7 @@ union yyalloc
 #   define YYCOPY(To, From, Count)		\
       do					\
 	{					\
-	  register YYSIZE_T yyi;		\
+	  register size_t yyi;		\
 	  for (yyi = 0; yyi < (Count); yyi++)	\
 	    (To)[yyi] = (From)[yyi];		\
 	}					\
@@ -520,7 +518,7 @@ union yyalloc
 # define YYSTACK_RELOCATE(Stack)					\
     do									\
       {									\
-	YYSIZE_T yynewbytes;						\
+	size_t yynewbytes;						\
 	YYCOPY (&yyptr->Stack, Stack, yysize);				\
 	Stack = &yyptr->Stack;						\
 	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
@@ -3476,22 +3474,6 @@ static const unsigned short int yystos[] =
      655,   655,   655,   655,   655,   655
 };
 
-#if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
-# define YYSIZE_T __SIZE_TYPE__
-#endif
-#if ! defined (YYSIZE_T) && defined (size_t)
-# define YYSIZE_T size_t
-#endif
-#if ! defined (YYSIZE_T)
-# if defined (__STDC__) || defined (__cplusplus)
-#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
-#  define YYSIZE_T size_t
-# endif
-#endif
-#if ! defined (YYSIZE_T)
-# define YYSIZE_T unsigned int
-#endif
-
 #define yyerrok		(yyerrstatus = 0)
 #define yyclearin	(yychar = YYEMPTY)
 #define YYEMPTY		(-2)
@@ -3700,7 +3682,7 @@ int yydebug;
 #   define yystrlen strlen
 #  else
 /* Return the length of YYSTR.  */
-static YYSIZE_T
+static size_t
 #   if defined (__STDC__) || defined (__cplusplus)
 yystrlen (const char *yystr)
 #   else
@@ -3899,7 +3881,7 @@ yyparse ()
 
 #define YYPOPSTACK   (yyvsp--, yyssp--)
 
-  YYSIZE_T yystacksize = YYINITDEPTH;
+  size_t yystacksize = YYINITDEPTH;
 
   /* The variables used to return semantic value and location from the
      action routines.  */
@@ -3945,7 +3927,7 @@ yyparse ()
   if (yyss + yystacksize - 1 <= yyssp)
     {
       /* Get the current used size of the three stacks, in elements.  */
-      YYSIZE_T yysize = yyssp - yyss + 1;
+      size_t yysize = yyssp - yyss + 1;
 
 #ifdef yyoverflow
       {
@@ -4996,7 +4978,7 @@ yyerrlab:
 
       if (YYPACT_NINF < yyn && yyn < YYLAST)
 	{
-	  YYSIZE_T yysize = 0;
+	  size_t yysize = 0;
 	  int yytype = YYTRANSLATE (yychar);
 	  const char* yyprefix;
 	  char *yymsg;
