@@ -1948,54 +1948,31 @@ include(path() & SL & \"config\" & SL & TARGET" + ")")
 
 def _CopyCompiler(From, To):
 
+    any_exist = False
+    froms = [ ]
+    for a in ["cm3", "mklib", "cm3cg", "mips-tfile"]:
+        for b in [".exe", ""]:
+            c = a + b
+            froms += [c]
+            if not any_exist:
+                any_exist = FileExists(os.path.join(From, c))
+
+    if not any_exist:
+        FatalError("none of " + ", ".join(froms) + " exist")
+
     CreateDirectory(To)
 
-    from_cm3 = os.path.join(From, "cm3")
-    from_cm3exe = os.path.join(From, "cm3.exe")
-    from_cm3cg = os.path.join(From, "cm3cg")
-    from_cm3cgexe = os.path.join(From, "cm3cg.exe")
-
-    if (        not FileExists(from_cm3)
-            and not FileExists(from_cm3exe)
-            and not FileExists(from_cm3cg)
-            and not FileExists(from_cm3cgexe)):
-        FatalError("none of " + from_cm3 + ", " + from_cm3exe + ", " + from_cm3cg + ", " + from_cm3cgexe + " exist")
-
-    #
-    # check .exe first to avoid being fooled by Cygwin
-    #
-    if FileExists(from_cm3exe):
-        from_cm3 = from_cm3exe
-    elif FileExists(from_cm3):
-        pass
-    else:
-        from_cm3 = None
-        from_cm3exe = None
-
-    if from_cm3:
-        #
-        # delete .exe first to avoid being fooled by Cygwin
-        #
-        DeleteFile(os.path.join(To, "cm3.exe"))
-        DeleteFile(os.path.join(To, "cm3"))
-        CopyFile(from_cm3, To) or FatalError("3")
-        CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
-
-    if Config != "NT386" and not Target.endswith("_NT"):
-        if FileExists(from_cm3cgexe):
-            from_cm3cg = from_cm3cgexe
-        elif FileExists(from_cm3cg):
-            pass
-        else:
-            from_cm3cg = None
-            from_cm3cgexe = None
-        if from_cm3cg:
-            #
-            # delete .exe first to avoid being fooled by Cygwin
-            #
-            DeleteFile(os.path.join(To, "cm3cg.exe"))
-            DeleteFile(os.path.join(To, "cm3cg"))
-            CopyFile(from_cm3cg, To) or FatalError("4")
+    for a in ["cm3", "cm3cg", "mips-tfile"]:
+        # .exe should come first due to Cygwin wierdness
+        f = os.path.join(From, a)
+        fexe = f + ".exe"
+        fpdb = f + ".pdb"
+        if FileExists(fexe):
+          f = fexe
+        if FileExists(f):
+          CopyFile(f, To) or FatalError("3")
+          if FileExists(fpdb):
+            CopyFile(fpdb, To) or FatalError("5")
 
     return True
 
@@ -2018,41 +1995,11 @@ def ShipCompiler():
 
 #-----------------------------------------------------------------------------
 
-def CopyMklib(From, To):
-    #
-    # Copy mklib from one InstallRoot to another, possibly having cleaned out the intermediate directories.
-    #
-    From = os.path.join(From, "bin")
-    To = os.path.join(To, "bin")
-    CreateDirectory(To)
-
-    mklib = os.path.join(From, "mklib")
-    mklibexe = os.path.join(From, "mklib.exe")
-    if FileExists(mklibexe):
-        mklib = mklibexe
-    elif FileExists(mklib):
-        pass
-    else:
-        FatalError("neither " + mklib + " nor " + mklibexe + " exist")
-
-    # important to delete mklib.exe ahead of mklib for Cygwin
-    DeleteFile(os.path.join(To, "mklib.exe"))
-    DeleteFile(os.path.join(To, "mklib"))
-
-    CopyFile(mklib, To) or FatalError("6")
-
-    CopyFileIfExist(os.path.join(From, "mklib.pdb"), To) or FatalError("8")
-    return True
-
-#-----------------------------------------------------------------------------
-
 def CopyCompiler(From, To):
     #
-    # Copy the compiler from one InstallRoot to another, possibly having cleaned out the intermediate directories.
-    # The config file always comes right out of the source tree.
+    # copy cm3, cm3cg, mklib, mips-tfile from one installroot/bin to another
     #
     _CopyCompiler(os.path.join(From, "bin"), os.path.join(To, "bin"))
-    CopyMklib(From, To) or FatalError("9")
     return True
 
 #-----------------------------------------------------------------------------
