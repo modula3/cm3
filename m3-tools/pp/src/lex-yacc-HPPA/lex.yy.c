@@ -672,7 +672,6 @@ unsigned char yyextra[] = {
 0,0,0,0,0,0,0,0,
 0,1,0,0,0,0,0,0,
 0};
-/* @(#) $Revision$      */
 int yylineno =1;
 # define YYU(x) x
 # define NLSTATE yyprevious=YYNEWLINE
