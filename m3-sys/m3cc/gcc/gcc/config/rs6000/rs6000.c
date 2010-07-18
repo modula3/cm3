@@ -2545,7 +2545,7 @@ num_insns_constant (rtx op, enum machine_mode mode)
    corresponding element of the vector, but for V4SFmode and V2SFmode,
    the corresponding "float" is interpreted as an SImode integer.  */
 
-static HOST_WIDE_INT
+HOST_WIDE_INT
 const_vector_elt_as_int (rtx op, unsigned int elt)
 {
   rtx tmp = CONST_VECTOR_ELT (op, elt);
@@ -6786,7 +6786,8 @@ rs6000_gimplify_va_arg (tree valist, tree type, tree *pre_p, tree *post_p)
       else if (reg == fpr && TYPE_MODE (type) == TDmode)
 	{
 	  regalign = 1;
-	  t = build2 (BIT_IOR_EXPR, TREE_TYPE (reg), reg, size_int (1));
+	  t = build2 (BIT_IOR_EXPR, TREE_TYPE (reg), reg,
+		      build_int_cst (TREE_TYPE (reg), 1));
 	  u = build2 (MODIFY_EXPR, void_type_node, reg, t);
 	}
 
@@ -6808,7 +6809,9 @@ rs6000_gimplify_va_arg (tree valist, tree type, tree *pre_p, tree *post_p)
 
       /* _Decimal32 varargs are located in the second word of the 64-bit
 	 FP register for 32-bit binaries.  */
-      if (!TARGET_POWERPC64 && TYPE_MODE (type) == SDmode)
+      if (!TARGET_POWERPC64
+	  && TARGET_HARD_FLOAT && TARGET_FPRS
+	  && TYPE_MODE (type) == SDmode)
 	t = build2 (POINTER_PLUS_EXPR, TREE_TYPE (t), t, size_int (size));
 
       t = build2 (GIMPLE_MODIFY_STMT, void_type_node, addr, t);
@@ -6824,7 +6827,8 @@ rs6000_gimplify_va_arg (tree valist, tree type, tree *pre_p, tree *post_p)
 	{
 	  /* Ensure that we don't find any more args in regs.
 	     Alignment has taken care of for special cases.  */
-	  t = build2 (GIMPLE_MODIFY_STMT, TREE_TYPE (reg), reg, size_int (8));
+	  t = build_gimple_modify_stmt (reg,
+					build_int_cst (TREE_TYPE (reg), 8));
 	  gimplify_and_add (t, pre_p);
 	}
     }
@@ -9040,6 +9044,7 @@ build_opaque_vector_type (tree node, int nunits)
 {
   node = copy_node (node);
   TYPE_MAIN_VARIANT (node) = node;
+  TYPE_CANONICAL (node) = node;
   return build_vector_type (node, nunits);
 }
 
@@ -11185,6 +11190,10 @@ rs6000_check_sdmode (tree *tp, int *walk_subtrees, void *data ATTRIBUTE_UNUSED)
     case FIELD_DECL:
     case RESULT_DECL:
     case REAL_CST:
+    case INDIRECT_REF:
+    case ALIGN_INDIRECT_REF:
+    case MISALIGNED_INDIRECT_REF:
+    case VIEW_CONVERT_EXPR:
       if (TYPE_MODE (TREE_TYPE (*tp)) == SDmode)
 	return *tp;
       break;
@@ -12291,6 +12300,10 @@ print_operand_address (FILE *file, rtx x)
 	      XSTR (symref, 0) = newname;
 	    }
 	  output_addr_const (file, XEXP (x, 1));
+	  if (GET_CODE (XEXP (minus, 1)) == CONST
+	      && (GET_CODE (XEXP (XEXP (minus, 1), 0)) == PLUS))
+	    fprintf (file, "+"HOST_WIDE_INT_PRINT_DEC,
+		     -INTVAL (XEXP (XEXP (XEXP (minus, 1), 0), 1)));
 	  if (TARGET_ELF)
 	    XSTR (symref, 0) = name;
 	  XEXP (contains_minus, 0) = minus;
@@ -13485,7 +13498,7 @@ rs6000_emit_sync (enum rtx_code code, enum machine_mode mode,
   rtx shift = NULL_RTX;
 
   if (sync_p)
-    emit_insn (gen_memory_barrier ());
+    emit_insn (gen_lwsync ());
 
   if (GET_CODE (m) == NOT)
     used_m = XEXP (m, 0);
@@ -13725,7 +13738,7 @@ rs6000_split_atomic_op (enum rtx_code code, rtx mem, rtx val,
   enum machine_mode mode = GET_MODE (mem);
   rtx label, x, cond = gen_rtx_REG (CCmode, CR0_REGNO);
 
-  emit_insn (gen_memory_barrier ());
+  emit_insn (gen_lwsync ());
 
   label = gen_label_rtx ();
   emit_label (label);
@@ -13765,7 +13778,7 @@ rs6000_split_compare_and_swap (rtx retval, rtx mem, rtx oldval, rtx newval,
   enum machine_mode mode = GET_MODE (mem);
   rtx label1, label2, x, cond = gen_rtx_REG (CCmode, CR0_REGNO);
 
-  emit_insn (gen_memory_barrier ());
+  emit_insn (gen_lwsync ());
 
   label1 = gen_rtx_LABEL_REF (VOIDmode, gen_label_rtx ());
   label2 = gen_rtx_LABEL_REF (VOIDmode, gen_label_rtx ());
@@ -13798,8 +13811,6 @@ rs6000_split_lock_test_and_set (rtx retval, rtx mem, rtx val, rtx scratch)
   enum machine_mode mode = GET_MODE (mem);
   rtx label, x, cond = gen_rtx_REG (CCmode, CR0_REGNO);
 
-  emit_insn (gen_memory_barrier ());
-
   label = gen_rtx_LABEL_REF (VOIDmode, gen_label_rtx ());
   emit_label (XEXP (label, 0));
 
@@ -13822,7 +13833,8 @@ rs6000_expand_compare_and_swapqhi (rtx dst, rtx mem, rtx oldval, rtx newval)
   HOST_WIDE_INT imask = GET_MODE_MASK (mode);
 
   /* Shift amount for subword relative to aligned word.  */
-  addrSI = force_reg (SImode, gen_lowpart_common (SImode, XEXP (mem, 0)));
+  addrSI = force_reg (GET_MODE (XEXP (mem, 0)), XEXP (mem, 0));
+  addrSI = force_reg (SImode, gen_lowpart_common (SImode, addrSI));
   shift = gen_reg_rtx (SImode);
   emit_insn (gen_rlwinm (shift, addrSI, GEN_INT (3),
 			 GEN_INT (shift_mask)));
@@ -13858,6 +13870,9 @@ rs6000_expand_compare_and_swapqhi (rtx dst, rtx mem, rtx oldval, rtx newval)
   emit_insn (gen_sync_compare_and_swapqhi_internal (wdst, mask,
 						    oldval, newval, mem));
 
+  /* Shift the result back.  */
+  emit_insn (gen_lshrsi3 (wdst, wdst, shift));
+
   emit_move_insn (dst, gen_lowpart (mode, wdst));
 }
 
@@ -13868,7 +13883,7 @@ rs6000_split_compare_and_swapqhi (rtx dest, rtx mask,
 {
   rtx label1, label2, x, cond = gen_rtx_REG (CCmode, CR0_REGNO);
 
-  emit_insn (gen_memory_barrier ());
+  emit_insn (gen_lwsync ());
   label1 = gen_rtx_LABEL_REF (VOIDmode, gen_label_rtx ());
   label2 = gen_rtx_LABEL_REF (VOIDmode, gen_label_rtx ());
   emit_label (XEXP (label1, 0));
@@ -16208,6 +16223,8 @@ rs6000_output_function_prologue (FILE *file,
 
   if (! HAVE_prologue)
     {
+      rtx prologue;
+
       start_sequence ();
 
       /* A NOTE_INSN_DELETED is supposed to be at the start and end of
@@ -16227,10 +16244,14 @@ rs6000_output_function_prologue (FILE *file,
 	  }
       }
 
-      if (TARGET_DEBUG_STACK)
-	debug_rtx_list (get_insns (), 100);
-      final (get_insns (), file, FALSE);
+      prologue = get_insns ();
       end_sequence ();
+
+      if (TARGET_DEBUG_STACK)
+	debug_rtx_list (prologue, 100);
+
+      emit_insn_before_noloc (prologue, BB_HEAD (ENTRY_BLOCK_PTR->next_bb),
+			      ENTRY_BLOCK_PTR);
     }
 
   rs6000_pic_labelno++;
@@ -16378,8 +16399,108 @@ rs6000_emit_epilogue (int sibcall)
   if (info->push_p)
     sp_offset = info->total_size;
 
-  /* Restore AltiVec registers if needed.  */
-  if (TARGET_ALTIVEC_ABI && info->altivec_size != 0)
+  /* Restore AltiVec registers if we must do so before adjusting the
+     stack.  */
+  if (TARGET_ALTIVEC_ABI
+      && info->altivec_size != 0
+      && DEFAULT_ABI != ABI_V4
+      && info->altivec_save_offset < (TARGET_32BIT ? -220 : -288))
+    {
+      int i;
+
+      if (use_backchain_to_restore_sp)
+	{
+	  frame_reg_rtx = gen_rtx_REG (Pmode, 11);
+	  emit_move_insn (frame_reg_rtx,
+			  gen_rtx_MEM (Pmode, sp_reg_rtx));
+	  sp_offset = 0;
+	}
+
+      for (i = info->first_altivec_reg_save; i <= LAST_ALTIVEC_REGNO; ++i)
+	if (info->vrsave_mask & ALTIVEC_REG_BIT (i))
+	  {
+	    rtx addr, areg, mem;
+
+	    areg = gen_rtx_REG (Pmode, 0);
+	    emit_move_insn
+	      (areg, GEN_INT (info->altivec_save_offset
+			      + sp_offset
+			      + 16 * (i - info->first_altivec_reg_save)));
+
+	    /* AltiVec addressing mode is [reg+reg].  */
+	    addr = gen_rtx_PLUS (Pmode, frame_reg_rtx, areg);
+	    mem = gen_frame_mem (V4SImode, addr);
+
+	    emit_move_insn (gen_rtx_REG (V4SImode, i), mem);
+	  }
+    }
+
+  /* Restore VRSAVE if we must do so before adjusting the stack.  */
+  if (TARGET_ALTIVEC
+      && TARGET_ALTIVEC_VRSAVE
+      && info->vrsave_mask != 0
+      && DEFAULT_ABI != ABI_V4
+      && info->vrsave_save_offset < (TARGET_32BIT ? -220 : -288))
+    {
+      rtx addr, mem, reg;
+
+      if (use_backchain_to_restore_sp
+	  && frame_reg_rtx == sp_reg_rtx)
+	{
+	  frame_reg_rtx = gen_rtx_REG (Pmode, 11);
+	  emit_move_insn (frame_reg_rtx,
+			  gen_rtx_MEM (Pmode, sp_reg_rtx));
+	  sp_offset = 0;
+	}
+
+      addr = gen_rtx_PLUS (Pmode, frame_reg_rtx,
+			   GEN_INT (info->vrsave_save_offset + sp_offset));
+      mem = gen_frame_mem (SImode, addr);
+      reg = gen_rtx_REG (SImode, 12);
+      emit_move_insn (reg, mem);
+
+      emit_insn (generate_set_vrsave (reg, info, 1));
+    }
+
+  /* If we have a frame pointer, a call to alloca,  or a large stack
+     frame, restore the old stack pointer using the backchain.  Otherwise,
+     we know what size to update it with.  */
+  if (use_backchain_to_restore_sp)
+    {
+      if (frame_reg_rtx != sp_reg_rtx)
+	{
+	  emit_move_insn (sp_reg_rtx, frame_reg_rtx);
+	  frame_reg_rtx = sp_reg_rtx;
+	}
+      else
+	{
+	  /* Under V.4, don't reset the stack pointer until after we're done
+	     loading the saved registers.  */
+	  if (DEFAULT_ABI == ABI_V4)
+	    frame_reg_rtx = gen_rtx_REG (Pmode, 11);
+
+	  emit_move_insn (frame_reg_rtx,
+			  gen_rtx_MEM (Pmode, sp_reg_rtx));
+	  sp_offset = 0;
+	}
+    }
+  else if (info->push_p
+	   && DEFAULT_ABI != ABI_V4
+	   && !current_function_calls_eh_return)
+    {
+      emit_insn (TARGET_32BIT
+		 ? gen_addsi3 (sp_reg_rtx, sp_reg_rtx,
+			       GEN_INT (info->total_size))
+		 : gen_adddi3 (sp_reg_rtx, sp_reg_rtx,
+			       GEN_INT (info->total_size)));
+      sp_offset = 0;
+    }
+
+  /* Restore AltiVec registers if we have not done so already.  */
+  if (TARGET_ALTIVEC_ABI
+      && info->altivec_size != 0
+      && (DEFAULT_ABI == ABI_V4
+	  || info->altivec_save_offset >= (TARGET_32BIT ? -220 : -288)))
     {
       int i;
 
@@ -16402,35 +16523,12 @@ rs6000_emit_epilogue (int sibcall)
 	  }
     }
 
-  /* If we have a frame pointer, a call to alloca,  or a large stack
-     frame, restore the old stack pointer using the backchain.  Otherwise,
-     we know what size to update it with.  */
-  if (use_backchain_to_restore_sp)
-    {
-      /* Under V.4, don't reset the stack pointer until after we're done
-	 loading the saved registers.  */
-      if (DEFAULT_ABI == ABI_V4)
-	frame_reg_rtx = gen_rtx_REG (Pmode, 11);
-
-      emit_move_insn (frame_reg_rtx,
-		      gen_rtx_MEM (Pmode, sp_reg_rtx));
-      sp_offset = 0;
-    }
-  else if (info->push_p
-	   && DEFAULT_ABI != ABI_V4
-	   && !current_function_calls_eh_return)
-    {
-      emit_insn (TARGET_32BIT
-		 ? gen_addsi3 (sp_reg_rtx, sp_reg_rtx,
-			       GEN_INT (info->total_size))
-		 : gen_adddi3 (sp_reg_rtx, sp_reg_rtx,
-			       GEN_INT (info->total_size)));
-      sp_offset = 0;
-    }
-
-  /* Restore VRSAVE if needed.  */
-  if (TARGET_ALTIVEC && TARGET_ALTIVEC_VRSAVE
-      && info->vrsave_mask != 0)
+  /* Restore VRSAVE if we have not done so already.  */
+  if (TARGET_ALTIVEC
+      && TARGET_ALTIVEC_VRSAVE
+      && info->vrsave_mask != 0
+      && (DEFAULT_ABI == ABI_V4
+	  || info->vrsave_save_offset >= (TARGET_32BIT ? -220 : -288)))
     {
       rtx addr, mem, reg;
 
@@ -19744,13 +19842,15 @@ rs6000_handle_altivec_attribute (tree *node,
     default: break;
     }
 
-  if (result && result != type && TYPE_READONLY (type))
-    result = build_qualified_type (result, TYPE_QUAL_CONST);
+  /* Propagate qualifiers attached to the element type
+     onto the vector type.  */
+  if (result && result != type && TYPE_QUALS (type))
+    result = build_qualified_type (result, TYPE_QUALS (type));
 
   *no_add_attrs = true;  /* No need to hang on to the attribute.  */
 
   if (result)
-    *node = reconstruct_complex_type (*node, result);
+    *node = lang_hooks.types.reconstruct_complex_type (*node, result);
 
   return NULL_TREE;
 }

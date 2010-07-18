@@ -776,10 +776,9 @@ replace_inc_dec (rtx *r, void *d)
       {
 	rtx r1 = XEXP (x, 0);
 	rtx c = gen_int_mode (Pmode, data->size);
-	add_insn_before (data->insn, 
-			 gen_rtx_SET (Pmode, r1, 
-				      gen_rtx_PLUS (Pmode, r1, c)),
-			 NULL);
+	emit_insn_before (gen_rtx_SET (Pmode, r1, 
+				       gen_rtx_PLUS (Pmode, r1, c)),
+			  data->insn);
 	return -1;
       }
 		 
@@ -788,10 +787,9 @@ replace_inc_dec (rtx *r, void *d)
       {
 	rtx r1 = XEXP (x, 0);
 	rtx c = gen_int_mode (Pmode, -data->size);
-	add_insn_before (data->insn, 
-			 gen_rtx_SET (Pmode, r1, 
-				      gen_rtx_PLUS (Pmode, r1, c)),
-			 NULL);
+	emit_insn_before (gen_rtx_SET (Pmode, r1, 
+				       gen_rtx_PLUS (Pmode, r1, c)),
+			  data->insn);
 	return -1;
       }
 	
@@ -802,8 +800,7 @@ replace_inc_dec (rtx *r, void *d)
 	   insn that contained it.  */
 	rtx add = XEXP (x, 0);
 	rtx r1 = XEXP (add, 0);
-	add_insn_before (data->insn, 
-			 gen_rtx_SET (Pmode, r1, add), NULL);
+	emit_insn_before (gen_rtx_SET (Pmode, r1, add), data->insn);
 	return -1;
       }
 
@@ -820,12 +817,12 @@ static int
 replace_inc_dec_mem (rtx *r, void *d)
 {
   rtx x = *r;
-  if (GET_CODE (x) == MEM)
+  if (x != NULL_RTX && MEM_P (x))
     {
       struct insn_size data;
 
       data.size = GET_MODE_SIZE (GET_MODE (x));
-      data.insn = (rtx)d;
+      data.insn = (rtx) d;
 
       for_each_rtx (&XEXP (x, 0), replace_inc_dec, &data);
 	
@@ -967,9 +964,6 @@ const_or_frame_p (rtx x)
 {
   switch (GET_CODE (x))
     {
-    case MEM:
-      return MEM_READONLY_P (x);
-
     case CONST:
     case CONST_INT:
     case CONST_DOUBLE:
@@ -3163,42 +3157,29 @@ dse_step6 (bool global_done)
   group_info_t group;
   basic_block bb;
   
-  if (global_done)
+  for (i = 0; VEC_iterate (group_info_t, rtx_group_vec, i, group); i++)
     {
-      for (i = 0; VEC_iterate (group_info_t, rtx_group_vec, i, group); i++)
-	{
-	  free (group->offset_map_n);
-	  free (group->offset_map_p);
-	  BITMAP_FREE (group->store1_n);
-	  BITMAP_FREE (group->store1_p);
-	  BITMAP_FREE (group->store2_n);
-	  BITMAP_FREE (group->store2_p);
-	  BITMAP_FREE (group->group_kill);
-	}
+      free (group->offset_map_n);
+      free (group->offset_map_p);
+      BITMAP_FREE (group->store1_n);
+      BITMAP_FREE (group->store1_p);
+      BITMAP_FREE (group->store2_n);
+      BITMAP_FREE (group->store2_p);
+      BITMAP_FREE (group->group_kill);
+    }
 
-      FOR_ALL_BB (bb)
-	{
-	  bb_info_t bb_info = bb_table[bb->index];
-	  BITMAP_FREE (bb_info->gen);
-	  if (bb_info->kill)
-	    BITMAP_FREE (bb_info->kill);
-	  if (bb_info->in)
-	    BITMAP_FREE (bb_info->in);
-	  if (bb_info->out)
-	    BITMAP_FREE (bb_info->out);
-	}
-    }
-  else
-    {
-      for (i = 0; VEC_iterate (group_info_t, rtx_group_vec, i, group); i++)
-	{
-	  BITMAP_FREE (group->store1_n);
-	  BITMAP_FREE (group->store1_p);
-	  BITMAP_FREE (group->store2_n);
-	  BITMAP_FREE (group->store2_p);
-	  BITMAP_FREE (group->group_kill);
-	}
-    }
+  if (global_done)
+    FOR_ALL_BB (bb)
+      {
+	bb_info_t bb_info = bb_table[bb->index];
+	BITMAP_FREE (bb_info->gen);
+	if (bb_info->kill)
+	  BITMAP_FREE (bb_info->kill);
+	if (bb_info->in)
+	  BITMAP_FREE (bb_info->in);
+	if (bb_info->out)
+	  BITMAP_FREE (bb_info->out);
+      }
 
   if (clear_alias_sets)
     {
@@ -3222,7 +3203,6 @@ dse_step6 (bool global_done)
   free_alloc_pool (rtx_group_info_pool);
   free_alloc_pool (deferred_change_pool);
 }
-
 
 
 /* -------------------------------------------------------------------------

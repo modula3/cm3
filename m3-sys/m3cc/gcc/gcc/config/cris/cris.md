@@ -458,38 +458,21 @@
 (define_insn "*btst"
   [(set (cc0)
 	(zero_extract
-	 (match_operand:SI 0 "nonmemory_operand" "r,r,r,r,r,r,n")
-	 (match_operand:SI 1 "const_int_operand" "K,n,K,n,K,n,n")
-	 (match_operand:SI 2 "nonmemory_operand" "M,M,K,n,r,r,r")))]
+	 (match_operand:SI 0 "nonmemory_operand" "r,r,r,r,r,r")
+	 (match_operand:SI 1 "const_int_operand" "K,n,K,n,K,n")
+	 (match_operand:SI 2 "nonmemory_operand" "M,M,K,n,r,r")))]
   ;; Either it is a single bit, or consecutive ones starting at 0.
   ;; The btst ones depend on stuff in NOTICE_UPDATE_CC.
   "CONST_INT_P (operands[1])
    && (operands[1] == const1_rtx || operands[2] == const0_rtx)
-   && (REG_S_P (operands[0])
-       || (operands[1] == const1_rtx
-	   && REG_S_P (operands[2])
-	   && CONST_INT_P (operands[0])
-	   && exact_log2 (INTVAL (operands[0])) >= 0))
    && !TARGET_CCINIT"
-
-;; The next-to-last "&&" condition above should be caught by some kind of
-;; canonicalization in gcc, but we can easily help with it here.
-;;  It results from expressions of the type
-;; "power_of_2_value & (1 << y)".
-;;
-;; Since there may be codes with tests in on bits (in constant position)
-;; beyond the size of a word, handle that by assuming those bits are 0.
-;; GCC should handle that, but it's a matter of easily-added belts while
-;; having suspenders.
-
   "@
    btstq (%1-1),%0
    cmpq 0,%0
    btstq %2,%0
    clearf nz
    btst %2,%0
-   clearf nz
-   cmpq %p0,%2"
+   clearf nz"
  [(set_attr "slottable" "yes")
   (set_attr "cc" "noov32")])
 
@@ -1870,7 +1853,7 @@
    add%u2 %2,%0
    addo.%Z2 %2,%1,%0"
   [(set_attr "slottable" "yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no")
-   (set_attr "cc" "*,none,*,none,*,*,none,*,*,*,*,*,none")])
+   (set_attr "cc" "*,none,*,none,*,*,none,*,none,*,*,*,none")])
 
 (define_insn "*addhi3_non_v32"
   [(set (match_operand:HI 0 "register_operand"		"=r,r, r,r,r,r")
@@ -4920,7 +4903,7 @@
 ;; It should be:
 ;;   movu.b some_byte,reg_32
 ;;   and.b const,reg_32
-;; but is turns into:
+;; but it turns into:
 ;;   move.b some_byte,reg_32
 ;;   and.d const,reg_32
 ;; Fix it here.
@@ -4937,7 +4920,9 @@
   "REGNO (operands[2]) == REGNO (operands[0])
    && INTVAL (operands[3]) <= 65535 && INTVAL (operands[3]) >= 0
    && !CONST_OK_FOR_LETTER_P (INTVAL (operands[3]), 'I')
-   && !side_effects_p (operands[1])"
+   && !side_effects_p (operands[1])
+   && (!REG_P (operands[1])
+       || REGNO (operands[1]) <= CRIS_LAST_GENERAL_REGISTER)"
   ;; FIXME: CC0 valid except for M (i.e. CC_NOT_NEGATIVE).
   [(set (match_dup 0) (match_dup 4))
    (set (match_dup 5) (match_dup 6))]

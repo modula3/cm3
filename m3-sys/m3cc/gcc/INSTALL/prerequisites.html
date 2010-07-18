@@ -3,7 +3,7 @@
 <title>Prerequisites for GCC</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name="description" content="Prerequisites for GCC">
-<meta name="generator" content="makeinfo 4.11">
+<meta name="generator" content="makeinfo 4.12">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
@@ -79,6 +79,11 @@ environment to your &ldquo;good&rdquo; shell prior to running
 
      <p><samp><span class="command">zsh</span></samp> is not a fully compliant POSIX shell and will not
 work when configuring GCC.
+
+     <br><dt>A POSIX or SVR4 awk<dd>
+Necessary for creating some of the generated source files for GCC. 
+If in doubt, use a recent GNU awk version, as some of the older ones
+are broken.  GNU awk version 3.1.5 is known to work.
 
      <br><dt>GNU binutils<dd>
 Necessary in some circumstances, optional in others.  See the

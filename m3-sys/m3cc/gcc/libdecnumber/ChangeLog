@@ -1,3 +1,62 @@
+2010-05-22  Release Manager
+
+	* GCC 4.3.5 released.
+
+2009-08-13  Janis Johnson  <janis187@us.ibm.com>
+
+	PR c/41046
+	* decCommon.c ( decFloatShow): Define function only for DECCHECK
+	or DECTRACE.
+
+2009-08-04  Release Manager
+
+	* GCC 4.3.4 released.
+
+2009-01-24  Release Manager
+
+	* GCC 4.3.3 released.
+
+2008-10-27  Janis Johnson  <janis187@us.ibm.com>
+
+	PR other/37897
+	* decDouble.h (decDouble): Replace struct with union accessible
+	by more types.
+	* decSingle.h (decSingle): Ditto.
+	* decQuad.h (decQuad): Ditto.
+	* decNumberLocal.h (DFWORD, DFBYTE, DFWWORD): access decFloat via
+	new members.
+	* decBasic.c (decFloatCompareTotal): Avoid type-pun violation.
+	(decNumberCompare): Ditto.
+
+2008-08-27  Release Manager
+
+	* GCC 4.3.2 released.
+
+2008-06-17  Joseph Myers  <joseph@codesourcery.com>
+
+	* dconfig.h: New.
+	* decContext.c, decExcept.c, decExcept.h, decLibrary.c,
+	decNumber.c, decNumberLocal.h, decRound.c, dpd/decimal128.c,
+	dpd/decimal32.c, dpd/decimal64.c: Include dconfig.h not config.h.
+	* dpd/decimal128Local.h (decimal128SetSign, decimal128ClearSign,
+	decimal128FlipSign): Use WORDS_BIGENDIAN not
+	FLOAT_WORDS_BIG_ENDIAN.
+	* bid/host-ieee128.c: Include dconfig.h.
+	(__host_to_ieee_128, __ieee_to_host_128): Swap 64-bit halves of
+	value if WORDS_BIGENDIAN.
+
+2008-06-16  Ben Elliston  <bje@au.ibm.com>
+
+	boostrap/27367
+	Backport from mainline:
+
+	2008-04-18  Ben Elliston  <bje@au.ibm.com>
+	* Makefile.in (distclean): Add gstdint.h.
+
+2008-06-06  Release Manager
+
+	* GCC 4.3.1 released.
+
 2008-03-05  Release Manager
 
 	* GCC 4.3.0 released.

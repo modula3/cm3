@@ -204,6 +204,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "tree-pass.h"
 #include "tree-ssa-propagate.h"
+#include "value-prof.h"
 #include "langhooks.h"
 #include "target.h"
 #include "toplev.h"
@@ -567,6 +568,34 @@ likely_value (tree stmt)
       if (val->lattice_val == CONSTANT)
 	has_constant_operand = true;
     }
+
+  if (TREE_CODE (stmt) == GIMPLE_MODIFY_STMT)
+    {
+      tree rhs = GIMPLE_STMT_OPERAND (stmt, 1);
+      if (REFERENCE_CLASS_P (rhs))
+	{
+	  if (is_gimple_min_invariant (TREE_OPERAND (rhs, 0)))
+	    has_constant_operand = true;
+	}
+      else if (EXPR_P (rhs))
+	{
+	  unsigned i;
+	  for (i = 0; i < TREE_CODE_LENGTH (TREE_CODE (rhs)); ++i)
+	    if (TREE_OPERAND (rhs, i)
+		&& is_gimple_min_invariant (TREE_OPERAND (rhs, i)))
+	      has_constant_operand = true;
+	}
+    }
+  else if (TREE_CODE (stmt) == CALL_EXPR)
+    {
+      int i;
+      for (i = 0; i < call_expr_nargs (stmt); ++i)
+	if (is_gimple_min_invariant (CALL_EXPR_ARG (stmt, i)))
+	  has_constant_operand = true;
+    }
+
+  if (has_constant_operand)
+    all_undefined_operands = false;
 
   /* If the operation combines operands like COMPLEX_EXPR make sure to
      not mark the result UNDEFINED if only one part of the result is
@@ -937,7 +966,7 @@ ccp_fold (tree stmt)
       if ((code == NOP_EXPR || code == CONVERT_EXPR)
 	  && useless_type_conversion_p (TREE_TYPE (rhs), TREE_TYPE (op0)))
 	return op0;
-      return fold_unary (code, TREE_TYPE (rhs), op0);
+      return fold_unary_ignore_overflow (code, TREE_TYPE (rhs), op0);
     }
 
   /* Binary and comparison operators.  We know one or both of the
@@ -1584,7 +1613,8 @@ widen_bitfield (tree val, tree field, tree var)
    is the desired result type.  */
 
 static tree
-maybe_fold_offset_to_array_ref (tree base, tree offset, tree orig_type)
+maybe_fold_offset_to_array_ref (tree base, tree offset, tree orig_type,
+				bool allow_negative_idx)
 {
   tree min_idx, idx, idx_type, elt_offset = integer_zero_node;
   tree array_type, elt_type, elt_size;
@@ -1684,11 +1714,15 @@ maybe_fold_offset_to_array_ref (tree base, tree offset, tree orig_type)
   idx = fold_convert (idx_type, idx);
 
   /* We don't want to construct access past array bounds. For example
-     char *(c[4]);
-
-     c[3][2]; should not be simplified into (*c)[14] or tree-vrp will give false
-     warning.  */
-  if (domain_type && TYPE_MAX_VALUE (domain_type) 
+       char *(c[4]);
+       c[3][2];
+     should not be simplified into (*c)[14] or tree-vrp will
+     give false warnings.  The same is true for
+       struct A { long x; char d[0]; } *a;
+       (char *)a - 4;
+     which should be not folded to &a->d[-8].  */
+  if (domain_type
+      && TYPE_MAX_VALUE (domain_type) 
       && TREE_CODE (TYPE_MAX_VALUE (domain_type)) == INTEGER_CST)
     {
       tree up_bound = TYPE_MAX_VALUE (domain_type);
@@ -1700,6 +1734,17 @@ maybe_fold_offset_to_array_ref (tree base, tree offset, tree orig_type)
 	  && compare_tree_int (up_bound, 1) > 0)
 	return NULL_TREE;
     }
+  if (domain_type
+      && TYPE_MIN_VALUE (domain_type))
+    {
+      if (!allow_negative_idx
+	  && TREE_CODE (TYPE_MIN_VALUE (domain_type)) == INTEGER_CST
+	  && tree_int_cst_lt (idx, TYPE_MIN_VALUE (domain_type)))
+	return NULL_TREE;
+    }
+  else if (!allow_negative_idx
+	   && compare_tree_int (idx, 0) < 0)
+    return NULL_TREE;
 
   return build4 (ARRAY_REF, elt_type, base, idx, NULL_TREE, NULL_TREE);
 }
@@ -1796,7 +1841,8 @@ maybe_fold_offset_to_component_ref (tree record_type, tree base, tree offset,
       new_base = build3 (COMPONENT_REF, field_type, new_base, f, NULL_TREE);
 
       /* Recurse to possibly find the match.  */
-      ret = maybe_fold_offset_to_array_ref (new_base, t, orig_type);
+      ret = maybe_fold_offset_to_array_ref (new_base, t, orig_type,
+					    f == TYPE_FIELDS (record_type));
       if (ret)
 	return ret;
       ret = maybe_fold_offset_to_component_ref (field_type, new_base, t,
@@ -1818,7 +1864,8 @@ maybe_fold_offset_to_component_ref (tree record_type, tree base, tree offset,
     base = build1 (INDIRECT_REF, record_type, base);
   base = build3 (COMPONENT_REF, field_type, base, f, NULL_TREE);
 
-  t = maybe_fold_offset_to_array_ref (base, offset, orig_type);
+  t = maybe_fold_offset_to_array_ref (base, offset, orig_type,
+				      f == TYPE_FIELDS (record_type));
   if (t)
     return t;
   return maybe_fold_offset_to_component_ref (field_type, base, offset,
@@ -1884,7 +1931,7 @@ maybe_fold_offset_to_reference (tree base, tree offset, tree orig_type)
     {
       if (base_is_ptr)
 	base = build1 (INDIRECT_REF, type, base);
-      ret = maybe_fold_offset_to_array_ref (base, offset, orig_type);
+      ret = maybe_fold_offset_to_array_ref (base, offset, orig_type, true);
     }
   return ret;
 }
@@ -2061,7 +2108,7 @@ maybe_fold_stmt_addition (tree expr)
   ptd_type = TREE_TYPE (ptr_type);
 
   /* At which point we can try some of the same things as for indirects.  */
-  t = maybe_fold_offset_to_array_ref (op0, op1, ptd_type);
+  t = maybe_fold_offset_to_array_ref (op0, op1, ptd_type, true);
   if (!t)
     t = maybe_fold_offset_to_component_ref (TREE_TYPE (op0), op0, op1,
 					    ptd_type, false);
@@ -2431,7 +2478,7 @@ ccp_fold_builtin (tree stmt, tree fn)
   switch (DECL_FUNCTION_CODE (callee))
     {
     case BUILT_IN_STRLEN:
-      if (val[0])
+      if (val[0] && nargs == 1)
 	{
 	  tree new_val = fold_convert (TREE_TYPE (fn), val[0]);
 
@@ -2462,24 +2509,26 @@ ccp_fold_builtin (tree stmt, tree fn)
       break;
 
     case BUILT_IN_FPUTS:
-      result = fold_builtin_fputs (CALL_EXPR_ARG (fn, 0),
-				   CALL_EXPR_ARG (fn, 1),
-				   TREE_CODE (stmt) != GIMPLE_MODIFY_STMT, 0,
-				   val[0]);
+      if (nargs == 2)
+	result = fold_builtin_fputs (CALL_EXPR_ARG (fn, 0),
+				     CALL_EXPR_ARG (fn, 1),
+				     TREE_CODE (stmt) != GIMPLE_MODIFY_STMT, 0,
+				     val[0]);
       break;
 
     case BUILT_IN_FPUTS_UNLOCKED:
-      result = fold_builtin_fputs (CALL_EXPR_ARG (fn, 0),
-				   CALL_EXPR_ARG (fn, 1),
-				   TREE_CODE (stmt) != GIMPLE_MODIFY_STMT, 1,
-				   val[0]);
+      if (nargs == 2)
+	result = fold_builtin_fputs (CALL_EXPR_ARG (fn, 0),
+				     CALL_EXPR_ARG (fn, 1),
+				     TREE_CODE (stmt) != GIMPLE_MODIFY_STMT, 1,
+				     val[0]);
       break;
 
     case BUILT_IN_MEMCPY_CHK:
     case BUILT_IN_MEMPCPY_CHK:
     case BUILT_IN_MEMMOVE_CHK:
     case BUILT_IN_MEMSET_CHK:
-      if (val[2] && is_gimple_val (val[2]))
+      if (val[2] && is_gimple_val (val[2]) && nargs == 4)
 	result = fold_builtin_memory_chk (callee,
 					  CALL_EXPR_ARG (fn, 0),
 					  CALL_EXPR_ARG (fn, 1),
@@ -2491,7 +2540,7 @@ ccp_fold_builtin (tree stmt, tree fn)
 
     case BUILT_IN_STRCPY_CHK:
     case BUILT_IN_STPCPY_CHK:
-      if (val[1] && is_gimple_val (val[1]))
+      if (val[1] && is_gimple_val (val[1]) && nargs == 3)
 	result = fold_builtin_stxcpy_chk (callee,
 					  CALL_EXPR_ARG (fn, 0),
 					  CALL_EXPR_ARG (fn, 1),
@@ -2501,7 +2550,7 @@ ccp_fold_builtin (tree stmt, tree fn)
       break;
 
     case BUILT_IN_STRNCPY_CHK:
-      if (val[2] && is_gimple_val (val[2]))
+      if (val[2] && is_gimple_val (val[2]) && nargs == 4)
 	result = fold_builtin_strncpy_chk (CALL_EXPR_ARG (fn, 0),
 					   CALL_EXPR_ARG (fn, 1),
 					   CALL_EXPR_ARG (fn, 2),
@@ -2687,7 +2736,10 @@ optimize_stack_restore (basic_block bb, tree call, block_stmt_iterator i)
 	continue;
 
       callee = get_callee_fndecl (call);
-      if (!callee || DECL_BUILT_IN_CLASS (callee) != BUILT_IN_NORMAL)
+      if (!callee
+	  || DECL_BUILT_IN_CLASS (callee) != BUILT_IN_NORMAL
+	  /* All regular builtins are ok, just obviously not alloca.  */
+	  || DECL_FUNCTION_CODE (callee) == BUILT_IN_ALLOCA)
 	return NULL_TREE;
 
       if (DECL_FUNCTION_CODE (callee) == BUILT_IN_STACK_RESTORE)
@@ -2874,6 +2926,10 @@ execute_fold_all_builtins (void)
 	  fcode = DECL_FUNCTION_CODE (callee);
 
 	  result = ccp_fold_builtin (*stmtp, call);
+
+	  if (result)
+	    gimple_remove_stmt_histograms (cfun, *stmtp);
+
 	  if (!result)
 	    switch (DECL_FUNCTION_CODE (callee))
 	      {

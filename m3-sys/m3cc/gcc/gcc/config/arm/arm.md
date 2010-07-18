@@ -383,9 +383,9 @@
   if (TARGET_THUMB1)
     {
       if (GET_CODE (operands[1]) != REG)
-        operands[1] = force_reg (SImode, operands[1]);
+        operands[1] = force_reg (DImode, operands[1]);
       if (GET_CODE (operands[2]) != REG)
-        operands[2] = force_reg (SImode, operands[2]);
+        operands[2] = force_reg (DImode, operands[2]);
      }
   "
 )
@@ -8005,7 +8005,7 @@
 
 (define_insn "cstoresi_nltu_thumb1"
   [(set (match_operand:SI 0 "s_register_operand" "=l,l")
-        (neg:SI (gtu:SI (match_operand:SI 1 "s_register_operand" "l,*h")
+        (neg:SI (ltu:SI (match_operand:SI 1 "s_register_operand" "l,*h")
 			(match_operand:SI 2 "thumb1_cmp_operand" "lI*h,*r"))))]
   "TARGET_THUMB1"
   "cmp\\t%1, %2\;sbc\\t%0, %0, %0"
@@ -8051,7 +8051,7 @@
 	(if_then_else:SF (match_operand 1 "arm_comparison_operator" "")
 			 (match_operand:SF 2 "s_register_operand" "")
 			 (match_operand:SF 3 "nonmemory_operand" "")))]
-  "TARGET_32BIT"
+  "TARGET_32BIT && TARGET_HARD_FLOAT"
   "
   {
     enum rtx_code code = GET_CODE (operands[1]);

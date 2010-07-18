@@ -1,8 +1,8 @@
 ;; -*- Mode: Scheme -*-
 ;;   Machine description for GNU compiler,
 ;;   for ATMEL AVR micro controllers.
-;;   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007, 2008
-;;   Free Software Foundation, Inc.
+;;   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007, 2008,
+;;   2009 Free Software Foundation, Inc.
 ;;   Contributed by Denis Chertykov (denisc@overta.ru)
 
 ;; This file is part of GCC.
@@ -306,10 +306,11 @@
 
 
 
-(define_peephole2
+(define_peephole2 ; movsi_lreg_const
   [(match_scratch:QI 2 "d")
    (set (match_operand:SI 0 "l_register_operand" "")
-        (match_operand:SI 1 "immediate_operand" ""))]
+        (match_operand:SI 1 "immediate_operand" ""))
+   (match_dup 2)]
   "(operands[1] != const0_rtx
     && operands[1] != constm1_rtx)"
   [(parallel [(set (match_dup 0) (match_dup 1))
@@ -584,18 +585,6 @@
   "add %A0,%2
 	adc %B0,__zero_reg__"
   [(set_attr "length" "2")
-   (set_attr "cc" "set_n")])
-
-(define_insn "*addhi3_zero_extend2"
-  [(set (match_operand:HI 0 "register_operand" "=r")
-	(plus:HI
-	 (zero_extend:HI (match_operand:QI 1 "register_operand" "%0"))
-	 (zero_extend:HI (match_operand:QI 2 "register_operand" "r"))))]
-  ""
-  "add %0,%2
-	mov %B0,__zero_reg__
-	adc %B0,__zero_reg__"
-  [(set_attr "length" "3")
    (set_attr "cc" "set_n")])
 
 (define_insn "*addhi3_sp_R_pc2"
@@ -1191,7 +1180,7 @@
   return \"bug\";
 }"
   [(set_attr "length" "4,4")
-   (set_attr "cc" "set_n,set_n")])
+   (set_attr "cc" "set_n,clobber")])
 
 ;;|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ;; ior

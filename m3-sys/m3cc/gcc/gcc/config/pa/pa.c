@@ -103,7 +103,7 @@ static void store_reg_modify (int, int, HOST_WIDE_INT);
 static void load_reg (int, HOST_WIDE_INT, int);
 static void set_reg_plus_d (int, int, HOST_WIDE_INT, int);
 static void pa_output_function_prologue (FILE *, HOST_WIDE_INT);
-static void update_total_code_bytes (int);
+static void update_total_code_bytes (unsigned int);
 static void pa_output_function_epilogue (FILE *, HOST_WIDE_INT);
 static int pa_adjust_cost (rtx, rtx, rtx, int);
 static int pa_adjust_priority (rtx, int);
@@ -191,7 +191,7 @@ unsigned long total_code_bytes;
 /* The last address of the previous function plus the number of bytes in
    associated thunks that have been output.  This is used to determine if
    a thunk can use an IA-relative branch to reach its target function.  */
-static int last_address;
+static unsigned int last_address;
 
 /* Variables to handle plabels that we discover are necessary at assembly
    output time.  They are output after the current function.  */
@@ -715,8 +715,8 @@ legitimize_pic_address (rtx orig, enum machine_mode mode, rtx reg)
 
       if (function_label_operand (orig, mode))
 	{
-	  /* Force function label into memory.  */
-	  orig = XEXP (force_const_mem (mode, orig), 0);
+	  /* Force function label into memory in word mode.  */
+	  orig = XEXP (force_const_mem (word_mode, orig), 0);
 	  /* Load plabel address from DLT.  */
 	  emit_move_insn (tmp_reg,
 			  gen_rtx_PLUS (word_mode, pic_offset_table_rtx,
@@ -1618,7 +1618,7 @@ emit_move_sequence (rtx *operands, enum machine_mode mode, rtx scratch_reg)
       /* D might not fit in 14 bits either; for such cases load D into
 	 scratch reg.  */
       if (GET_CODE (operand1) == MEM
-	  && !memory_address_p (Pmode, XEXP (operand1, 0)))
+	  && !memory_address_p (GET_MODE (operand0), XEXP (operand1, 0)))
 	{
 	  /* We are reloading the address into the scratch register, so we
 	     want to make sure the scratch register is a full register.  */
@@ -2217,9 +2217,9 @@ compute_zdepwi_operands (unsigned HOST_WIDE_INT imm, unsigned *op)
   else
     {
       /* Find the width of the bitstring in IMM.  */
-      for (len = 5; len < 32; len++)
+      for (len = 5; len < 32 - lsb; len++)
 	{
-	  if ((imm & (1 << len)) == 0)
+	  if ((imm & ((unsigned HOST_WIDE_INT) 1 << len)) == 0)
 	    break;
 	}
 
@@ -2238,10 +2238,12 @@ compute_zdepwi_operands (unsigned HOST_WIDE_INT imm, unsigned *op)
 void
 compute_zdepdi_operands (unsigned HOST_WIDE_INT imm, unsigned *op)
 {
-  HOST_WIDE_INT lsb, len;
+  int lsb, len, maxlen;
+
+  maxlen = MIN (HOST_BITS_PER_WIDE_INT, 64);
 
   /* Find the least significant set bit in IMM.  */
-  for (lsb = 0; lsb < HOST_BITS_PER_WIDE_INT; lsb++)
+  for (lsb = 0; lsb < maxlen; lsb++)
     {
       if ((imm & 1) != 0)
         break;
@@ -2250,16 +2252,19 @@ compute_zdepdi_operands (unsigned HOST_WIDE_INT imm, unsigned *op)
 
   /* Choose variants based on *sign* of the 5-bit field.  */
   if ((imm & 0x10) == 0)
-    len = ((lsb <= HOST_BITS_PER_WIDE_INT - 4)
-	   ? 4 : HOST_BITS_PER_WIDE_INT - lsb);
+    len = (lsb <= maxlen - 4) ? 4 : maxlen - lsb;
   else
     {
       /* Find the width of the bitstring in IMM.  */
-      for (len = 5; len < HOST_BITS_PER_WIDE_INT; len++)
+      for (len = 5; len < maxlen - lsb; len++)
 	{
 	  if ((imm & ((unsigned HOST_WIDE_INT) 1 << len)) == 0)
 	    break;
 	}
+
+      /* Extend length if host is narrow and IMM is negative.  */
+      if (HOST_BITS_PER_WIDE_INT == 32 && len == maxlen - lsb)
+	len += 32;
 
       /* Sign extend IMM as a 5-bit value.  */
       imm = (imm & 0xf) - 0x10;
@@ -3987,23 +3992,18 @@ load_reg (int reg, HOST_WIDE_INT disp, int base)
 /* Update the total code bytes output to the text section.  */
 
 static void
-update_total_code_bytes (int nbytes)
+update_total_code_bytes (unsigned int nbytes)
 {
   if ((TARGET_PORTABLE_RUNTIME || !TARGET_GAS || !TARGET_SOM)
       && !IN_NAMED_SECTION_P (cfun->decl))
     {
-      if (INSN_ADDRESSES_SET_P ())
-	{
-	  unsigned long old_total = total_code_bytes;
+      unsigned int old_total = total_code_bytes;
 
-	  total_code_bytes += nbytes;
+      total_code_bytes += nbytes;
 
-	  /* Be prepared to handle overflows.  */
-	  if (old_total > total_code_bytes)
-	    total_code_bytes = -1;
-	}
-      else
-	total_code_bytes = -1;
+      /* Be prepared to handle overflows.  */
+      if (old_total > total_code_bytes)
+        total_code_bytes = UINT_MAX;
     }
 }
 
@@ -4067,6 +4067,8 @@ pa_output_function_epilogue (FILE *file, HOST_WIDE_INT size ATTRIBUTE_UNUSED)
       last_address = ((last_address + FUNCTION_BOUNDARY / BITS_PER_UNIT - 1)
 		      & ~(FUNCTION_BOUNDARY / BITS_PER_UNIT - 1));
     }
+  else
+    last_address = UINT_MAX;
 
   /* Finally, update the total number of code bytes output so far.  */
   update_total_code_bytes (last_address);
@@ -7537,7 +7539,9 @@ output_call (rtx insn, rtx call_dest, int sibcall)
 	  if (seq_length != 0
 	      && GET_CODE (NEXT_INSN (insn)) != JUMP_INSN
 	      && !sibcall
-	      && (!TARGET_PA_20 || indirect_call))
+	      && (!TARGET_PA_20
+		  || indirect_call
+		  || ((TARGET_LONG_ABS_CALL || local_call) && !flag_pic)))
 	    {
 	      /* A non-jump insn in the delay slot.  By definition we can
 		 emit this insn before the call (and in fact before argument
@@ -7933,7 +7937,7 @@ pa_asm_output_mi_thunk (FILE *file, tree thunk_fndecl, HOST_WIDE_INT delta,
 {
   static unsigned int current_thunk_number;
   int val_14 = VAL_14_BITS_P (delta);
-  int nbytes = 0;
+  unsigned int old_last_address = last_address, nbytes = 0;
   char label[16];
   rtx xoperands[4];
 
@@ -7972,6 +7976,10 @@ pa_asm_output_mi_thunk (FILE *file, tree thunk_fndecl, HOST_WIDE_INT delta,
 		   || ((DECL_SECTION_NAME (thunk_fndecl)
 			== DECL_SECTION_NAME (function))
 		       && last_address < 262132)))
+	      || (targetm.have_named_sections
+		  && DECL_SECTION_NAME (thunk_fndecl) == NULL
+		  && DECL_SECTION_NAME (function) == NULL
+		  && last_address < 262132)
 	      || (!targetm.have_named_sections && last_address < 262132))))
     {
       if (!val_14)
@@ -8166,6 +8174,8 @@ pa_asm_output_mi_thunk (FILE *file, tree thunk_fndecl, HOST_WIDE_INT delta,
   nbytes = ((nbytes + FUNCTION_BOUNDARY / BITS_PER_UNIT - 1)
 	    & ~(FUNCTION_BOUNDARY / BITS_PER_UNIT - 1));
   last_address += nbytes;
+  if (old_last_address > last_address)
+    last_address = UINT_MAX;
   update_total_code_bytes (nbytes);
 }
 

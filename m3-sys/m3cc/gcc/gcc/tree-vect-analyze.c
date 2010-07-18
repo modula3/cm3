@@ -173,6 +173,15 @@ vect_determine_vectorization_factor (loop_vec_info loop_vinfo)
 	      print_generic_expr (vect_dump, stmt, TDF_SLIM);
 	    }
 
+          if (stmt_ann (stmt)->has_volatile_ops)
+            {
+              if (vect_print_dump_info (REPORT_UNVECTORIZED_LOOPS))
+                fprintf (vect_dump, "not vectorized: stmt has volatile"
+                                    " operands");
+
+              return false;
+            }
+
 	  gcc_assert (stmt_info);
 
 	  /* skip stmts which do not need to be vectorized.  */
@@ -1081,7 +1090,9 @@ vect_check_interleaving (struct data_reference *dra,
   type_size_b = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (TREE_TYPE (DR_REF (drb))));
 
   if (type_size_a != type_size_b
-      || tree_int_cst_compare (DR_STEP (dra), DR_STEP (drb)))
+      || tree_int_cst_compare (DR_STEP (dra), DR_STEP (drb))
+      || !types_compatible_p (TREE_TYPE (DR_REF (dra)), 
+                              TREE_TYPE (DR_REF (drb))))
     return;
 
   init_a = TREE_INT_CST_LOW (DR_INIT (dra));
@@ -2247,11 +2258,22 @@ vect_analyze_group_access (struct data_reference *dr)
 
       /* Check that the size of the interleaving is equal to STEP for stores,
          i.e., that there are no gaps.  */
-      if (!DR_IS_READ (dr) && dr_step != count_in_bytes)
+      if (dr_step != count_in_bytes)
         {
-          if (vect_print_dump_info (REPORT_DETAILS))
-            fprintf (vect_dump, "interleaved store with gaps");
-          return false;
+          if (DR_IS_READ (dr))
+            {
+              slp_impossible = true;
+              /* There is a gap after the last load in the group. This gap is a
+                 difference between the stride and the number of elements. When 
+                 there is no gap, this difference should be 0.  */ 
+              DR_GROUP_GAP (vinfo_for_stmt (stmt)) = stride - count; 
+            }
+          else
+            {
+              if (vect_print_dump_info (REPORT_DETAILS))
+                fprintf (vect_dump, "interleaved store with gaps");
+              return false;
+            }
         }
 
       /* Check that STEP is a multiple of type size.  */
@@ -2659,7 +2681,7 @@ vect_build_slp_tree (loop_vec_info loop_vinfo, slp_tree *node,
   enum machine_mode vec_mode;
   tree first_stmt_const_oprnd = NULL_TREE;
   struct data_reference *first_dr;
- 
+
   /* For every stmt in NODE find its def stmt/s.  */
   for (i = 0; VEC_iterate (tree, stmts, i, stmt); i++)
     {
@@ -2791,15 +2813,17 @@ vect_build_slp_tree (loop_vec_info loop_vinfo, slp_tree *node,
 		if (i == 0)
 		  {
 		    /* First stmt of the SLP group should be the first load of 
-		       the interleaving loop if data permutation is not 
-		       allowed.  */
-		    if  (DR_GROUP_FIRST_DR (vinfo_for_stmt (stmt)) != stmt) 
+		       the interleaving loop if data permutation is not allowed.
+		       Check that there is no gap between the loads.  */
+		    if (DR_GROUP_FIRST_DR (vinfo_for_stmt (stmt)) != stmt
+                        || DR_GROUP_GAP (vinfo_for_stmt (stmt)) != 0) 
 		      {
-			/* FORNOW: data permutations are not supported.  */
+			/* FORNOW: data permutations and gaps in loads are not 
+                           supported.  */
 			if (vect_print_dump_info (REPORT_SLP)) 
 			  {
 			    fprintf (vect_dump, "Build SLP failed: strided "
-				     " loads need permutation ");
+				     " loads need permutation or have gaps ");
 			    print_generic_expr (vect_dump, stmt, TDF_SLIM);
 			  }
 
@@ -2826,13 +2850,17 @@ vect_build_slp_tree (loop_vec_info loop_vinfo, slp_tree *node,
 		  }
 		else
 		  {
-		    if (DR_GROUP_NEXT_DR (vinfo_for_stmt (prev_stmt)) != stmt)
+                    /* Check that we have consecutive loads from interleaving
+                       chain and that there is no gap between the loads.  */
+		    if (DR_GROUP_NEXT_DR (vinfo_for_stmt (prev_stmt)) != stmt
+                        || DR_GROUP_GAP (vinfo_for_stmt (stmt)) != 1)
 		      {
-			/* FORNOW: data permutations are not supported.  */
+			/* FORNOW: data permutations and gaps in loads are not
+                           supported.  */
 			if (vect_print_dump_info (REPORT_SLP)) 
 			  {
 			    fprintf (vect_dump, "Build SLP failed: strided "
-				     " loads need permutation ");
+				     " loads need permutation or have gaps ");
 			    print_generic_expr (vect_dump, stmt, TDF_SLIM);
 			  }
 			return false;
@@ -3295,8 +3323,8 @@ vect_analyze_data_refs (loop_vec_info loop_vinfo)
 
 	  if (vect_print_dump_info (REPORT_DETAILS))
 	    {
-	      fprintf (dump_file, "analyze in outer-loop: ");
-	      print_generic_expr (dump_file, inner_base, TDF_SLIM);
+	      fprintf (vect_dump, "analyze in outer-loop: ");
+	      print_generic_expr (vect_dump, inner_base, TDF_SLIM);
 	    }
 
 	  outer_base = get_inner_reference (inner_base, &pbitsize, &pbitpos, 
@@ -3306,7 +3334,7 @@ vect_analyze_data_refs (loop_vec_info loop_vinfo)
 	  if (pbitpos % BITS_PER_UNIT != 0)
 	    {
 	      if (vect_print_dump_info (REPORT_DETAILS))
-		fprintf (dump_file, "failed: bit offset alignment.\n");
+		fprintf (vect_dump, "failed: bit offset alignment.\n");
 	      return false;
 	    }
 
@@ -3314,7 +3342,7 @@ vect_analyze_data_refs (loop_vec_info loop_vinfo)
 	  if (!simple_iv (loop, stmt, outer_base, &base_iv, false))
 	    {
 	      if (vect_print_dump_info (REPORT_DETAILS))
-		fprintf (dump_file, "failed: evolution of base is not affine.\n");
+		fprintf (vect_dump, "failed: evolution of base is not affine.\n");
 	      return false;
 	    }
 
@@ -3334,7 +3362,7 @@ vect_analyze_data_refs (loop_vec_info loop_vinfo)
 	  else if (!simple_iv (loop, stmt, poffset, &offset_iv, false))
 	    {
 	      if (vect_print_dump_info (REPORT_DETAILS))
-	        fprintf (dump_file, "evolution of offset is not affine.\n");
+	        fprintf (vect_dump, "evolution of offset is not affine.\n");
 	      return false;
 	    }
 
@@ -3357,18 +3385,18 @@ vect_analyze_data_refs (loop_vec_info loop_vinfo)
 	  STMT_VINFO_DR_ALIGNED_TO (stmt_info) = 
 				size_int (highest_pow2_factor (offset_iv.base));
 
-	  if (dump_file && (dump_flags & TDF_DETAILS))
+	  if (vect_print_dump_info (REPORT_DETAILS))
 	    {
-	      fprintf (dump_file, "\touter base_address: ");
-	      print_generic_expr (dump_file, STMT_VINFO_DR_BASE_ADDRESS (stmt_info), TDF_SLIM);
-	      fprintf (dump_file, "\n\touter offset from base address: ");
-	      print_generic_expr (dump_file, STMT_VINFO_DR_OFFSET (stmt_info), TDF_SLIM);
-	      fprintf (dump_file, "\n\touter constant offset from base address: ");
-	      print_generic_expr (dump_file, STMT_VINFO_DR_INIT (stmt_info), TDF_SLIM);
-	      fprintf (dump_file, "\n\touter step: ");
-	      print_generic_expr (dump_file, STMT_VINFO_DR_STEP (stmt_info), TDF_SLIM);
-	      fprintf (dump_file, "\n\touter aligned to: ");
-	      print_generic_expr (dump_file, STMT_VINFO_DR_ALIGNED_TO (stmt_info), TDF_SLIM);
+	      fprintf (vect_dump, "\touter base_address: ");
+	      print_generic_expr (vect_dump, STMT_VINFO_DR_BASE_ADDRESS (stmt_info), TDF_SLIM);
+	      fprintf (vect_dump, "\n\touter offset from base address: ");
+	      print_generic_expr (vect_dump, STMT_VINFO_DR_OFFSET (stmt_info), TDF_SLIM);
+	      fprintf (vect_dump, "\n\touter constant offset from base address: ");
+	      print_generic_expr (vect_dump, STMT_VINFO_DR_INIT (stmt_info), TDF_SLIM);
+	      fprintf (vect_dump, "\n\touter step: ");
+	      print_generic_expr (vect_dump, STMT_VINFO_DR_STEP (stmt_info), TDF_SLIM);
+	      fprintf (vect_dump, "\n\touter aligned to: ");
+	      print_generic_expr (vect_dump, STMT_VINFO_DR_ALIGNED_TO (stmt_info), TDF_SLIM);
 	    }
 	}
 

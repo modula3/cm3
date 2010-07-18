@@ -2036,9 +2036,18 @@ Any MMX register.
 @item x
 Any SSE register.
 
+@item Yz
+First SSE register (@code{%xmm0}).
+
 @ifset INTERNALS
-@item Y
-Any SSE2 register.
+@item Y2
+Any SSE register, when SSE2 is enabled.
+
+@item Yi
+Any SSE register, when SSE2 and inter-unit moves are enabled.
+
+@item Ym
+Any MMX register, when inter-unit moves are enabled.
 @end ifset
 
 @item I
@@ -2507,6 +2516,10 @@ The @code{hi} and @code{lo} registers.
 A register suitable for use in an indirect jump.  This will always be
 @code{$25} for @option{-mabicalls}.
 
+@item v
+Register @code{$3}.  Do not use this constraint in new code;
+it is retained only for compatibility with glibc.
+
 @item y
 Equivalent to @code{r}; retained for backwards compatibility.
 
@@ -2717,6 +2730,9 @@ when the Visual Instruction Set is available.
 
 @item h
 64-bit global or out register for the SPARC-V8+ architecture.
+
+@item D
+A vector constant
 
 @item I
 Signed 13-bit constant

@@ -138,6 +138,8 @@ extern GTY(()) section *progmem_section;
 /* No data type wants to be aligned rounder than this.  */
 #define BIGGEST_ALIGNMENT 8
 
+#define MAX_OFILE_ALIGNMENT (32768 * 8)
+
 #define TARGET_VTABLE_ENTRY_ALIGN 8
 
 #define STRICT_ALIGNMENT 0
@@ -349,7 +351,9 @@ enum reg_class {
 #define RETURN_ADDR_RTX(count, x) \
   gen_rtx_MEM (Pmode, memory_address (Pmode, plus_constant (tem, 1)))
 
-#define PUSH_ROUNDING(NPUSHED) (NPUSHED)
+/* Don't use Push rounding. expr.c: emit_single_push_insn is broken 
+   for POST_DEC targets (PR27386).  */
+/*#define PUSH_ROUNDING(NPUSHED) (NPUSHED)*/
 
 #define RETURN_POPS_ARGS(FUNDECL, FUNTYPE, STACK_SIZE) 0
 
@@ -424,6 +428,11 @@ extern int avr_reg_order[];
 }
 
 #define XEXP_(X,Y) (X)
+
+/* LEGITIMIZE_RELOAD_ADDRESS will allow register R26/27 to be used, where it
+   is no worse than normal base pointers R28/29 and R30/31. For example:
+   If base offset is greater than 63 bytes or for R++ or --R addressing.  */
+   
 #define LEGITIMIZE_RELOAD_ADDRESS(X, MODE, OPNUM, TYPE, IND_LEVELS, WIN)    \
 do {									    \
   if (1&&(GET_CODE (X) == POST_INC || GET_CODE (X) == PRE_DEC))	    \
@@ -435,6 +444,7 @@ do {									    \
     }									    \
   if (GET_CODE (X) == PLUS						    \
       && REG_P (XEXP (X, 0))						    \
+      && reg_equiv_constant[REGNO (XEXP (X, 0))] == 0			    \
       && GET_CODE (XEXP (X, 1)) == CONST_INT				    \
       && INTVAL (XEXP (X, 1)) >= 1)					    \
     {									    \
@@ -1009,10 +1019,19 @@ mmcu=*:-mmcu=%*}"
 
 #define OBJECT_FORMAT_ELF
 
+/* Interrupt functions can only use registers that have already been
+   saved by the prologue, even if they would normally be
+   call-clobbered.  */
+#define HARD_REGNO_RENAME_OK(OLD_REG, NEW_REG)		\
+   avr_hard_regno_rename_ok (OLD_REG, NEW_REG)
+
 /* A C structure for machine-specific, per-function data.
    This is added to the cfun structure.  */
 struct machine_function GTY(())
 {
+  /* 'true' - if the current function is a leaf function.  */
+  int is_leaf;
+
   /* 'true' - if current function is a naked function.  */
   int is_naked;
 

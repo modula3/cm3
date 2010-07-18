@@ -659,7 +659,15 @@ noce_emit_store_flag (struct noce_if_info *if_info, rtx x, int reversep,
      build the store_flag insn directly.  */
 
   if (cond_complex)
-    cond = XEXP (SET_SRC (pc_set (if_info->jump)), 0);
+    {
+      rtx set = pc_set (if_info->jump);
+      cond = XEXP (SET_SRC (set), 0);
+      if (GET_CODE (XEXP (SET_SRC (set), 2)) == LABEL_REF
+	  && XEXP (XEXP (SET_SRC (set), 2), 0) == JUMP_LABEL (if_info->jump))
+	reversep = !reversep;
+      if (if_info->then_else_reversed)
+	reversep = !reversep;
+    }
 
   if (reversep)
     code = reversed_comparison_code (cond, if_info->jump);
@@ -1737,6 +1745,10 @@ noce_try_abs (struct noce_if_info *if_info)
   rtx cond, earliest, target, seq, a, b, c;
   int negate;
 
+  /* Reject modes with signed zeros.  */
+  if (HONOR_SIGNED_ZEROS (GET_MODE (if_info->x)))
+    return FALSE;
+
   /* Recognize A and B as constituting an ABS or NABS.  The canonical
      form is a branch around the negation, taken when the object is the
      first operand of a comparison against 0 that evaluates to true.  */
@@ -2602,7 +2614,11 @@ cond_move_process_if_block (struct noce_if_info *if_info)
   /* Make sure the blocks are suitable.  */
   if (!check_cond_move_block (then_bb, then_vals, then_regs, cond)
       || (else_bb && !check_cond_move_block (else_bb, else_vals, else_regs, cond)))
-    return FALSE;
+    {
+      VEC_free (int, heap, then_regs);
+      VEC_free (int, heap, else_regs);
+      return FALSE;
+    }
 
   /* Make sure the blocks can be used together.  If the same register
      is set in both blocks, and is not set to a constant in both
@@ -2623,7 +2639,11 @@ cond_move_process_if_block (struct noce_if_info *if_info)
 	  if (!CONSTANT_P (then_vals[reg])
 	      && !CONSTANT_P (else_vals[reg])
 	      && !rtx_equal_p (then_vals[reg], else_vals[reg]))
-	    return FALSE;
+	    {
+	      VEC_free (int, heap, then_regs);
+	      VEC_free (int, heap, else_regs);
+	      return FALSE;
+	    }
 	}
     }
 
@@ -2637,7 +2657,11 @@ cond_move_process_if_block (struct noce_if_info *if_info)
      branches, since if we convert we are going to always execute
      them.  */
   if (c > MAX_CONDITIONAL_EXECUTE)
-    return FALSE;
+    {
+      VEC_free (int, heap, then_regs);
+      VEC_free (int, heap, else_regs);
+      return FALSE;
+    }
 
   /* Try to emit the conditional moves.  First do the then block,
      then do anything left in the else blocks.  */
@@ -2649,11 +2673,17 @@ cond_move_process_if_block (struct noce_if_info *if_info)
 					  then_vals, else_vals, true)))
     {
       end_sequence ();
+      VEC_free (int, heap, then_regs);
+      VEC_free (int, heap, else_regs);
       return FALSE;
     }
   seq = end_ifcvt_sequence (if_info);
   if (!seq)
-    return FALSE;
+    {
+      VEC_free (int, heap, then_regs);
+      VEC_free (int, heap, else_regs);
+      return FALSE;
+    }
 
   loc_insn = first_active_insn (then_bb);
   if (!loc_insn)
@@ -2686,7 +2716,6 @@ cond_move_process_if_block (struct noce_if_info *if_info)
 
   VEC_free (int, heap, then_regs);
   VEC_free (int, heap, else_regs);
-
   return TRUE;
 }
 
@@ -3985,7 +4014,8 @@ dead_or_predicable (basic_block test_bb, basic_block merge_bb,
 	  if (! note)
 	    continue;
 	  set = single_set (insn);
-	  if (!set || !function_invariant_p (SET_SRC (set)))
+	  if (!set || !function_invariant_p (SET_SRC (set))
+	      || !function_invariant_p (XEXP (note, 0)))
 	    remove_note (insn, note);
 	} while (insn != end && (insn = NEXT_INSN (insn)));
 
@@ -4063,7 +4093,12 @@ if_convert (void)
 
 #ifdef IFCVT_MULTIPLE_DUMPS
       if (dump_file && cond_exec_changed_p)
-	print_rtl_with_bb (dump_file, get_insns ());
+	{
+	  if (dump_flags & TDF_SLIM)
+	    print_rtl_slim_with_bb (dump_file, get_insns (), dump_flags);
+	  else
+	    print_rtl_with_bb (dump_file, get_insns ());
+	}
 #endif
     }
   while (cond_exec_changed_p);

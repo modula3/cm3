@@ -1930,6 +1930,33 @@ remove_useless_stmts_1 (tree *tp, struct rus_data *data)
       data->last_goto = NULL;
       break;
 
+    case OMP_PARALLEL:
+      /* Make sure the outermost BIND_EXPR in OMP_BODY isn't removed
+	 as useless.  */
+      remove_useless_stmts_1 (&BIND_EXPR_BODY (OMP_BODY (*tp)), data);
+      data->last_goto = NULL;
+      break;
+
+    case OMP_SECTIONS:
+    case OMP_SINGLE:
+    case OMP_SECTION:
+    case OMP_MASTER :
+    case OMP_ORDERED:
+    case OMP_CRITICAL:
+      remove_useless_stmts_1 (&OMP_BODY (*tp), data);
+      data->last_goto = NULL;
+      break;
+
+    case OMP_FOR:
+      remove_useless_stmts_1 (&OMP_FOR_BODY (*tp), data);
+      data->last_goto = NULL;
+      if (OMP_FOR_PRE_BODY (*tp))
+	{
+	  remove_useless_stmts_1 (&OMP_FOR_PRE_BODY (*tp), data);
+	  data->last_goto = NULL;
+	}
+      break;
+
     default:
       data->last_goto = NULL;
       break;
@@ -5027,8 +5054,12 @@ tree_move_block_after (basic_block bb, basic_block after)
 /* Return true if basic_block can be duplicated.  */
 
 static bool
-tree_can_duplicate_bb_p (const_basic_block bb ATTRIBUTE_UNUSED)
+tree_can_duplicate_bb_p (const_basic_block bb)
 {
+  tree_stmt_iterator tsi = tsi_last (bb_stmt_list (bb));
+  /* We cannot duplicate RESX_EXPRs due to expander limitations.  */
+  if (!tsi_end_p (tsi) && TREE_CODE (tsi_stmt (tsi)) == RESX_EXPR)
+    return false;
   return true;
 }
 
@@ -5899,6 +5930,8 @@ new_label_mapper (tree decl, void *data)
   m->base.from = decl;
   m->to = create_artificial_label ();
   LABEL_DECL_UID (m->to) = LABEL_DECL_UID (decl);
+  if (LABEL_DECL_UID (m->to) >= cfun->last_label_uid)
+    cfun->last_label_uid = LABEL_DECL_UID (m->to) + 1;
 
   slot = htab_find_slot_with_hash (hash, m, m->hash, INSERT);
   gcc_assert (*slot == NULL);

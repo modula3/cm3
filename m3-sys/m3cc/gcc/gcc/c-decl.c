@@ -779,14 +779,17 @@ pop_scope (void)
 	      error ("nested function %q+D declared but never defined", p);
 	      undef_nested_function = true;
 	    }
-	  /* C99 6.7.4p6: "a function with external linkage... declared
-	     with an inline function specifier ... shall also be defined in the
-	     same translation unit."  */
 	  else if (DECL_DECLARED_INLINE_P (p)
 		   && TREE_PUBLIC (p)
-		   && !DECL_INITIAL (p)
-		   && !flag_gnu89_inline)
-	    pedwarn ("inline function %q+D declared but never defined", p);
+		   && !DECL_INITIAL (p))
+	    {
+	      /* C99 6.7.4p6: "a function with external linkage... declared
+		 with an inline function specifier ... shall also be defined
+		 in the same translation unit."  */
+	      if (!flag_gnu89_inline)
+		pedwarn ("inline function %q+D declared but never defined", p);
+	      DECL_EXTERNAL (p) = 1;
+	    }
 
 	  goto common_symbol;
 
@@ -1773,7 +1776,8 @@ merge_decls (tree newdecl, tree olddecl, tree newtype, tree oldtype)
 	  || !DECL_DECLARED_INLINE_P (olddecl)
 	  || !DECL_EXTERNAL (olddecl))
       && DECL_EXTERNAL (newdecl)
-      && !lookup_attribute ("gnu_inline", DECL_ATTRIBUTES (newdecl)))
+      && !lookup_attribute ("gnu_inline", DECL_ATTRIBUTES (newdecl))
+      && !current_function_decl)
     DECL_EXTERNAL (newdecl) = 0;
 
   if (DECL_EXTERNAL (newdecl))
@@ -3279,7 +3283,8 @@ start_decl (struct c_declarator *declarator, struct c_declspecs *declspecs,
   if (declspecs->inline_p
       && !flag_gnu89_inline
       && TREE_CODE (decl) == FUNCTION_DECL
-      && lookup_attribute ("gnu_inline", DECL_ATTRIBUTES (decl)))
+      && (lookup_attribute ("gnu_inline", DECL_ATTRIBUTES (decl))
+	  || current_function_decl))
     {
       if (declspecs->storage_class == csc_auto && current_scope != file_scope)
 	;
@@ -3496,7 +3501,10 @@ finish_decl (tree decl, tree init, tree asmspec_tree)
 	  if (TREE_CODE (DECL_SIZE (decl)) == INTEGER_CST)
 	    constant_expression_warning (DECL_SIZE (decl));
 	  else
-	    error ("storage size of %q+D isn%'t constant", decl);
+	    {
+	      error ("storage size of %q+D isn%'t constant", decl);
+	      TREE_TYPE (decl) = error_mark_node;
+	    }
 	}
 
       if (TREE_USED (type))
@@ -4381,12 +4389,20 @@ grokdeclarator (const struct c_declarator *declarator,
 	      }
 	    else if (decl_context == FIELD)
 	      {
-		if (pedantic && !flag_isoc99 && !in_system_header)
+		bool flexible_array_member = false;
+		const struct c_declarator *t = declarator;
+		while (t->kind == cdk_attrs)
+		  t = t->declarator;
+		flexible_array_member = (t->kind == cdk_id);
+		if (flexible_array_member
+		    && pedantic && !flag_isoc99 && !in_system_header)
 		  pedwarn ("ISO C90 does not support flexible array members");
 
 		/* ISO C99 Flexible array members are effectively
 		   identical to GCC's zero-length array extension.  */
-		itype = build_range_type (sizetype, size_zero_node, NULL_TREE);
+		if (flexible_array_member || array_parm_vla_unspec_p)
+		  itype = build_range_type (sizetype, size_zero_node,
+					    NULL_TREE);
 	      }
 	    else if (decl_context == PARM)
 	      {
@@ -5357,6 +5373,8 @@ start_struct (enum tree_code code, tree name)
 	    error ("redefinition of %<union %E%>", name);
 	  else
 	    error ("redefinition of %<struct %E%>", name);
+	  /* Don't create structures using a name already in use.  */
+	  ref = NULL_TREE;
 	}
       else if (C_TYPE_BEING_DEFINED (ref))
 	{
@@ -6111,7 +6129,8 @@ start_function (struct c_declspecs *declspecs, struct c_declarator *declarator,
   if (declspecs->inline_p
       && !flag_gnu89_inline
       && TREE_CODE (decl1) == FUNCTION_DECL
-      && lookup_attribute ("gnu_inline", DECL_ATTRIBUTES (decl1)))
+      && (lookup_attribute ("gnu_inline", DECL_ATTRIBUTES (decl1))
+	  || current_function_decl))
     {
       if (declspecs->storage_class != csc_static)
 	DECL_EXTERNAL (decl1) = !DECL_EXTERNAL (decl1);

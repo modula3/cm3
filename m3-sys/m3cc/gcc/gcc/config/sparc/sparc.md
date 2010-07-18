@@ -2531,7 +2531,7 @@
 ;; We have available v9 double floats but not 64-bit integer registers.
 (define_insn "*movdf_insn_sp32_v9"
   [(set (match_operand:V64 0 "nonimmediate_operand" "=b,e,e,T,W,U,T,f,*r,o")
-        (match_operand:V64 1 "input_operand" "GY,e,W#F,GY,e,T,U,o#F,*roGYF,*rGYf"))]
+        (match_operand:V64 1 "input_operand" "GY,e,W#F,GY,e,T,U,o#F,*roGYDF,*rGYf"))]
   "TARGET_FPU
    && TARGET_V9
    && ! TARGET_ARCH64
@@ -2572,7 +2572,7 @@
 ;; We have available both v9 double floats and 64-bit integer registers.
 (define_insn "*movdf_insn_sp64"
   [(set (match_operand:V64 0 "nonimmediate_operand" "=b,e,e,W,*r,*r,m,*r")
-        (match_operand:V64 1 "input_operand"    "GY,e,W#F,e,*rGY,m,*rGY,F"))]
+        (match_operand:V64 1 "input_operand"    "GY,e,W#F,e,*rGY,m,*rGY,DF"))]
   "TARGET_FPU
    && TARGET_ARCH64
    && (register_operand (operands[0], <V64:MODE>mode)
@@ -2603,22 +2603,17 @@
   stx\t%r1, %0"
   [(set_attr "type" "*,load,store")])
 
-;; This pattern build DFmode constants in integer registers.
+;; This pattern builds V64mode constants in integer registers.
 (define_split
-  [(set (match_operand:DF 0 "register_operand" "")
-        (match_operand:DF 1 "const_double_operand" ""))]
+  [(set (match_operand:V64 0 "register_operand" "")
+        (match_operand:V64 1 "const_double_or_vector_operand" ""))]
   "TARGET_FPU
    && (GET_CODE (operands[0]) == REG
        && REGNO (operands[0]) < 32)
-   && ! const_zero_operand(operands[1], DFmode)
+   && ! const_zero_operand (operands[1], GET_MODE (operands[0]))
    && reload_completed"
   [(clobber (const_int 0))]
 {
-  REAL_VALUE_TYPE r;
-  long l[2];
-
-  REAL_VALUE_FROM_CONST_DOUBLE (r, operands[1]);
-  REAL_VALUE_TO_TARGET_DOUBLE (r, l);
   operands[0] = gen_rtx_raw_REG (DImode, REGNO (operands[0]));
 
   if (TARGET_ARCH64)
@@ -2626,31 +2621,34 @@
 #if HOST_BITS_PER_WIDE_INT == 32
       gcc_unreachable ();
 #else
-      HOST_WIDE_INT val;
-
-      val = ((HOST_WIDE_INT)(unsigned long)l[1] |
-             ((HOST_WIDE_INT)(unsigned long)l[0] << 32));
-      emit_insn (gen_movdi (operands[0], gen_int_mode (val, DImode)));
+      enum machine_mode mode = GET_MODE (operands[1]);
+      rtx tem = simplify_subreg (DImode, operands[1], mode, 0);
+      emit_insn (gen_movdi (operands[0], tem));
 #endif
     }
   else
     {
-      emit_insn (gen_movsi (gen_highpart (SImode, operands[0]),
-			    gen_int_mode (l[0], SImode)));
+      enum machine_mode mode = GET_MODE (operands[1]);
+      rtx hi = simplify_subreg (SImode, operands[1], mode, 0);
+      rtx lo = simplify_subreg (SImode, operands[1], mode, 4);
+
+      gcc_assert (GET_CODE (hi) == CONST_INT);
+      gcc_assert (GET_CODE (lo) == CONST_INT);
+
+      emit_insn (gen_movsi (gen_highpart (SImode, operands[0]), hi));
 
       /* Slick... but this trick loses if this subreg constant part
          can be done in one insn.  */
-      if (l[1] == l[0]
-	  && ! SPARC_SETHI32_P (l[0])
-	  && ! SPARC_SIMM13_P (l[0]))
+      if (lo == hi
+	  && ! SPARC_SETHI32_P (INTVAL (hi))
+	  && ! SPARC_SIMM13_P (INTVAL (hi)))
         {
           emit_insn (gen_movsi (gen_lowpart (SImode, operands[0]),
 			        gen_highpart (SImode, operands[0])));
         }
       else
         {
-          emit_insn (gen_movsi (gen_lowpart (SImode, operands[0]),
-			        gen_int_mode (l[1], SImode)));
+          emit_insn (gen_movsi (gen_lowpart (SImode, operands[0]), lo));
         }
     }
   DONE;
@@ -5088,14 +5086,11 @@
   [(set_attr "type" "multi")
    (set_attr "length" "2")])
 
-;; The V8 architecture specifies that there must be 3 instructions between
-;; a Y register write and a use of it for correct results.
-
 (define_expand "divsi3"
-  [(parallel [(set (match_operand:SI 0 "register_operand" "=r,r")
-		   (div:SI (match_operand:SI 1 "register_operand" "r,r")
-			   (match_operand:SI 2 "input_operand" "rI,m")))
-	      (clobber (match_scratch:SI 3 "=&r,&r"))])]
+  [(parallel [(set (match_operand:SI 0 "register_operand" "")
+		   (div:SI (match_operand:SI 1 "register_operand" "")
+			   (match_operand:SI 2 "input_operand" "")))
+	      (clobber (match_scratch:SI 3 ""))])]
   "TARGET_V8 || TARGET_DEPRECATED_V8_INSNS"
 {
   if (TARGET_ARCH64)
@@ -5108,24 +5103,40 @@
     }
 })
 
+;; The V8 architecture specifies that there must be at least 3 instructions
+;; between a write to the Y register and a use of it for correct results.
+;; We try to fill one of them with a simple constant or a memory load.
+
 (define_insn "divsi3_sp32"
-  [(set (match_operand:SI 0 "register_operand" "=r,r")
-	(div:SI (match_operand:SI 1 "register_operand" "r,r")
-		(match_operand:SI 2 "input_operand" "rI,m")))
-   (clobber (match_scratch:SI 3 "=&r,&r"))]
-  "(TARGET_V8 || TARGET_DEPRECATED_V8_INSNS)
-   && TARGET_ARCH32"
+  [(set (match_operand:SI 0 "register_operand" "=r,r,r")
+	(div:SI (match_operand:SI 1 "register_operand" "r,r,r")
+		(match_operand:SI 2 "input_operand" "rI,K,m")))
+   (clobber (match_scratch:SI 3 "=&r,&r,&r"))]
+  "(TARGET_V8 || TARGET_DEPRECATED_V8_INSNS) && TARGET_ARCH32"
 {
-  if (which_alternative == 0)
-    if (TARGET_V9)
-      return "sra\t%1, 31, %3\n\twr\t%3, 0, %%y\n\tsdiv\t%1, %2, %0";
-    else
-      return "sra\t%1, 31, %3\n\twr\t%3, 0, %%y\n\tnop\n\tnop\n\tnop\n\tsdiv\t%1, %2, %0";
-  else
-    if (TARGET_V9)
-      return "sra\t%1, 31, %3\n\twr\t%3, 0, %%y\n\tld\t%2, %3\n\tsdiv\t%1, %3, %0";
-    else
-      return "sra\t%1, 31, %3\n\twr\t%3, 0, %%y\n\tld\t%2, %3\n\tnop\n\tnop\n\tsdiv\t%1, %3, %0";
+  output_asm_insn ("sra\t%1, 31, %3", operands);
+  output_asm_insn ("wr\t%3, 0, %%y", operands);
+
+  switch (which_alternative)
+    {
+    case 0:
+      if (TARGET_V9)
+	return "sdiv\t%1, %2, %0";
+      else
+	return "nop\n\tnop\n\tnop\n\tsdiv\t%1, %2, %0";
+    case 1:
+      if (TARGET_V9)
+	return "sethi\t%%hi(%a2), %3\n\tsdiv\t%1, %3, %0";
+      else
+	return "sethi\t%%hi(%a2), %3\n\tnop\n\tnop\n\tsdiv\t%1, %3, %0";
+    case 2:
+      if (TARGET_V9)
+	return "ld\t%2, %3\n\tsdiv\t%1, %3, %0";
+      else
+	return "ld\t%2, %3\n\tnop\n\tnop\n\tsdiv\t%1, %3, %0";
+    default:
+      gcc_unreachable ();
+    }
 }
   [(set_attr "type" "multi")
    (set (attr "length")
@@ -5160,10 +5171,13 @@
    (clobber (match_scratch:SI 3 "=&r"))]
   "TARGET_V8 || TARGET_DEPRECATED_V8_INSNS"
 {
+  output_asm_insn ("sra\t%1, 31, %3", operands);
+  output_asm_insn ("wr\t%3, 0, %%y", operands);
+
   if (TARGET_V9)
-    return "sra\t%1, 31, %3\n\twr\t%3, 0, %%y\n\tsdivcc\t%1, %2, %0";
+    return "sdivcc\t%1, %2, %0";
   else
-    return "sra\t%1, 31, %3\n\twr\t%3, 0, %%y\n\tnop\n\tnop\n\tnop\n\tsdivcc\t%1, %2, %0";
+    return "nop\n\tnop\n\tnop\n\tsdivcc\t%1, %2, %0";
 }
   [(set_attr "type" "multi")
    (set (attr "length")
@@ -5178,29 +5192,48 @@
   "TARGET_V8 || TARGET_DEPRECATED_V8_INSNS"
   "")
 
-;; The V8 architecture specifies that there must be 3 instructions between
-;; a Y register write and a use of it for correct results.
+;; The V8 architecture specifies that there must be at least 3 instructions
+;; between a write to the Y register and a use of it for correct results.
+;; We try to fill one of them with a simple constant or a memory load.
 
 (define_insn "udivsi3_sp32"
-  [(set (match_operand:SI 0 "register_operand" "=r,&r,&r")
-	(udiv:SI (match_operand:SI 1 "nonimmediate_operand" "r,r,m")
-		 (match_operand:SI 2 "input_operand" "rI,m,r")))]
-  "(TARGET_V8 || TARGET_DEPRECATED_V8_INSNS)
-   && TARGET_ARCH32"
+  [(set (match_operand:SI 0 "register_operand" "=r,&r,&r,&r")
+	(udiv:SI (match_operand:SI 1 "nonimmediate_operand" "r,r,r,m")
+		 (match_operand:SI 2 "input_operand" "rI,K,m,r")))]
+  "(TARGET_V8 || TARGET_DEPRECATED_V8_INSNS) && TARGET_ARCH32"
 {
-  output_asm_insn ("wr\t%%g0, %%g0, %%y", operands);
+  output_asm_insn ("wr\t%%g0, 0, %%y", operands);
+
   switch (which_alternative)
     {
-    default:
-      return "nop\n\tnop\n\tnop\n\tudiv\t%1, %2, %0";
+    case 0:
+      if (TARGET_V9)
+	return "udiv\t%1, %2, %0";
+      else
+	return "nop\n\tnop\n\tnop\n\tudiv\t%1, %2, %0";
     case 1:
-      return "ld\t%2, %0\n\tnop\n\tnop\n\tudiv\t%1, %0, %0";
+      if (TARGET_V9)
+	return "sethi\t%%hi(%a2), %0\n\tudiv\t%1, %0, %0";
+      else
+	return "sethi\t%%hi(%a2), %0\n\tnop\n\tnop\n\tudiv\t%1, %0, %0";
     case 2:
-      return "ld\t%1, %0\n\tnop\n\tnop\n\tudiv\t%0, %2, %0";
+      if (TARGET_V9)
+	return "ld\t%2, %0\n\tudiv\t%1, %0, %0";
+      else
+	return "ld\t%2, %0\n\tnop\n\tnop\n\tudiv\t%1, %0, %0";
+    case 3:
+      if (TARGET_V9)
+	return "ld\t%1, %0\n\tudiv\t%0, %2, %0";
+      else
+	return "ld\t%1, %0\n\tnop\n\tnop\n\tudiv\t%0, %2, %0";
+    default:
+      gcc_unreachable ();
     }
 }
   [(set_attr "type" "multi")
-   (set_attr "length" "5")])
+   (set (attr "length")
+	(if_then_else (eq_attr "isa" "v9")
+		      (const_int 3) (const_int 5)))])
 
 (define_insn "udivsi3_sp64"
   [(set (match_operand:SI 0 "register_operand" "=r")
@@ -5226,13 +5259,14 @@
 		    (const_int 0)))
    (set (match_operand:SI 0 "register_operand" "=r")
 	(udiv:SI (match_dup 1) (match_dup 2)))]
-  "TARGET_V8
-   || TARGET_DEPRECATED_V8_INSNS"
+  "TARGET_V8 || TARGET_DEPRECATED_V8_INSNS"
 {
+  output_asm_insn ("wr\t%%g0, 0, %%y", operands);
+
   if (TARGET_V9)
-    return "wr\t%%g0, %%g0, %%y\n\tudivcc\t%1, %2, %0";
+    return "udivcc\t%1, %2, %0";
   else
-    return "wr\t%%g0, %%g0, %%y\n\tnop\n\tnop\n\tnop\n\tudivcc\t%1, %2, %0";
+    return "nop\n\tnop\n\tnop\n\tudivcc\t%1, %2, %0";
 }
   [(set_attr "type" "multi")
    (set (attr "length")

@@ -1,6 +1,7 @@
 /* Subroutines used for code generation on the DEC Alpha.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-   2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+   Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
 This file is part of GCC.
@@ -390,7 +391,7 @@ override_options (void)
 	    break;
 	  }
       if (! cpu_table [i].name)
-	error ("bad value %qs for -mcpu switch", alpha_tune_string);
+	error ("bad value %qs for -mtune switch", alpha_tune_string);
     }
 
   /* Do some sanity checks on the above options.  */
@@ -863,9 +864,11 @@ alpha_legitimate_address_p (enum machine_mode mode, rtx x, int strict)
 	}
     }
 
-  /* If we're managing explicit relocations, LO_SUM is valid, as
-     are small data symbols.  */
-  else if (TARGET_EXPLICIT_RELOCS)
+  /* If we're managing explicit relocations, LO_SUM is valid, as are small
+     data symbols.  Avoid explicit relocations in modes larger than word
+     mode since i.e. $LC0+8($1) can fold around +/- 32k offset.  */
+  else if (TARGET_EXPLICIT_RELOCS
+	   && GET_MODE_SIZE (mode) <= UNITS_PER_WORD)
     {
       if (small_symbolic_operand (x, Pmode))
 	return true;
@@ -915,8 +918,7 @@ get_tls_get_addr (void)
    to be legitimate.  If we find one, return the new, valid address.  */
 
 rtx
-alpha_legitimize_address (rtx x, rtx scratch,
-			  enum machine_mode mode ATTRIBUTE_UNUSED)
+alpha_legitimize_address (rtx x, rtx scratch, enum machine_mode mode)
 {
   HOST_WIDE_INT addend;
 
@@ -964,8 +966,12 @@ alpha_legitimize_address (rtx x, rtx scratch,
       goto split_addend;
     }
 
-  /* If this is a local symbol, split the address into HIGH/LO_SUM parts.  */
-  if (TARGET_EXPLICIT_RELOCS && symbolic_operand (x, Pmode))
+  /* If this is a local symbol, split the address into HIGH/LO_SUM parts.
+     Avoid modes larger than word mode since i.e. $LC0+8($1) can fold
+     around +/- 32k offset.  */
+  if (TARGET_EXPLICIT_RELOCS
+      && GET_MODE_SIZE (mode) <= UNITS_PER_WORD
+      && symbolic_operand (x, Pmode))
     {
       rtx r0, r16, eqv, tga, tp, insn, dest, seq;
 
@@ -1450,6 +1456,10 @@ get_aligned_mem (rtx ref, rtx *paligned_mem, rtx *pbitnum)
   else
     offset = disp & 3;
 
+  /* The location should not cross aligned word boundary.  */
+  gcc_assert (offset + GET_MODE_SIZE (GET_MODE (ref))
+	      <= GET_MODE_SIZE (SImode));
+
   /* Access the entire aligned word.  */
   *paligned_mem = widen_memory_access (ref, SImode, -offset);
 
@@ -1602,18 +1612,17 @@ alpha_set_memflags_1 (rtx *xp, void *data)
   return -1;
 }
 
-/* Given INSN, which is an INSN list or the PATTERN of a single insn
-   generated to perform a memory operation, look for any MEMs in either
+/* Given SEQ, which is an INSN list, look for any MEMs in either
    a SET_DEST or a SET_SRC and copy the in-struct, unchanging, and
    volatile flags from REF into each of the MEMs found.  If REF is not
    a MEM, don't do anything.  */
 
 void
-alpha_set_memflags (rtx insn, rtx ref)
+alpha_set_memflags (rtx seq, rtx ref)
 {
-  rtx *base_ptr;
+  rtx insn;
 
-  if (GET_CODE (ref) != MEM)
+  if (!MEM_P (ref))
     return;
 
   /* This is only called from alpha.md, after having had something
@@ -1626,11 +1635,11 @@ alpha_set_memflags (rtx insn, rtx ref)
       && !MEM_READONLY_P (ref))
     return;
 
-  if (INSN_P (insn))
-    base_ptr = &PATTERN (insn);
-  else
-    base_ptr = &insn;
-  for_each_rtx (base_ptr, alpha_set_memflags_1, (void *) ref);
+  for (insn = seq; insn; insn = NEXT_INSN (insn))
+    if (INSN_P (insn))
+      for_each_rtx (&PATTERN (insn), alpha_set_memflags_1, (void *) ref);
+    else
+      gcc_unreachable ();
 }
 
 static rtx alpha_emit_set_const (rtx, enum machine_mode, HOST_WIDE_INT,
@@ -2046,10 +2055,21 @@ alpha_legitimate_constant_p (rtx x)
 
   switch (GET_CODE (x))
     {
-    case CONST:
     case LABEL_REF:
     case HIGH:
       return true;
+
+    case CONST:
+      if (GET_CODE (XEXP (x, 0)) == PLUS
+	  && GET_CODE (XEXP (XEXP (x, 0), 1)) == CONST_INT)
+	x = XEXP (XEXP (x, 0), 0);
+      else
+	return true;
+
+      if (GET_CODE (x) != SYMBOL_REF)
+	return true;
+
+      /* FALLTHRU */
 
     case SYMBOL_REF:
       /* TLS symbols are never valid.  */
@@ -2118,6 +2138,8 @@ alpha_split_const_mov (enum machine_mode mode, rtx *operands)
 bool
 alpha_expand_mov (enum machine_mode mode, rtx *operands)
 {
+  rtx tmp;
+
   /* If the output is not a register, the input must be.  */
   if (GET_CODE (operands[0]) == MEM
       && ! reg_or_0_operand (operands[1], mode))
@@ -2126,8 +2148,6 @@ alpha_expand_mov (enum machine_mode mode, rtx *operands)
   /* Allow legitimize_address to perform some simplifications.  */
   if (mode == Pmode && symbolic_operand (operands[1], mode))
     {
-      rtx tmp;
-
       tmp = alpha_legitimize_address (operands[1], operands[0], mode);
       if (tmp)
 	{
@@ -2152,14 +2172,18 @@ alpha_expand_mov (enum machine_mode mode, rtx *operands)
     }
 
   /* Otherwise we've nothing left but to drop the thing to memory.  */
-  operands[1] = force_const_mem (mode, operands[1]);
+  tmp = force_const_mem (mode, operands[1]);
+
+  if (tmp == NULL_RTX)
+    return false;
+
   if (reload_in_progress)
     {
-      emit_move_insn (operands[0], XEXP (operands[1], 0));
-      operands[1] = replace_equiv_address (operands[1], operands[0]);
+      emit_move_insn (operands[0], XEXP (tmp, 0));
+      operands[1] = replace_equiv_address (tmp, operands[0]);
     }
   else
-    operands[1] = validize_mem (operands[1]);
+    operands[1] = validize_mem (tmp);
   return false;
 }
 
@@ -2452,7 +2476,7 @@ alpha_emit_conditional_branch (enum rtx_code code)
   if (alpha_compare.fp_p)
     {
       cmp_mode = DFmode;
-      if (flag_unsafe_math_optimizations)
+      if (flag_unsafe_math_optimizations && cmp_code != UNORDERED)
 	{
 	  /* When we are not as concerned about non-finite values, and we
 	     are comparing against zero, we can branch directly.  */
@@ -3532,7 +3556,7 @@ alpha_expand_unaligned_store (rtx dst, rtx src,
 	      emit_insn (gen_insll_le (insl, gen_lowpart (SImode, src), addr));
 	      break;
 	    case 8:
-	      emit_insn (gen_insql_le (insl, src, addr));
+	      emit_insn (gen_insql_le (insl, gen_lowpart (DImode, src), addr));
 	      break;
 	    }
 	}
@@ -4599,8 +4623,6 @@ alpha_split_lock_test_and_set (rtx retval, rtx mem, rtx val, rtx scratch)
   enum machine_mode mode = GET_MODE (mem);
   rtx label, x, cond = gen_lowpart (DImode, scratch);
 
-  emit_insn (gen_memory_barrier ());
-
   label = gen_rtx_LABEL_REF (DImode, gen_label_rtx ());
   emit_label (XEXP (label, 0));
 
@@ -4610,6 +4632,8 @@ alpha_split_lock_test_and_set (rtx retval, rtx mem, rtx val, rtx scratch)
 
   x = gen_rtx_EQ (DImode, cond, const0_rtx);
   emit_unlikely_jump (x, label);
+
+  emit_insn (gen_memory_barrier ());
 }
 
 void
@@ -4648,7 +4672,6 @@ alpha_split_lock_test_and_set_12 (enum machine_mode mode, rtx dest, rtx addr,
   mem = gen_rtx_MEM (DImode, align);
   MEM_VOLATILE_P (mem) = 1;
 
-  emit_insn (gen_memory_barrier ());
   label = gen_rtx_LABEL_REF (DImode, gen_label_rtx ());
   emit_label (XEXP (label, 0));
 
@@ -4672,6 +4695,8 @@ alpha_split_lock_test_and_set_12 (enum machine_mode mode, rtx dest, rtx addr,
 
   x = gen_rtx_EQ (DImode, scratch, const0_rtx);
   emit_unlikely_jump (x, label);
+
+  emit_insn (gen_memory_barrier ());
 }
 
 /* Adjust the cost of a scheduling dependency.  Return the new cost of
@@ -6793,7 +6818,7 @@ alpha_fold_vector_minmax (enum tree_code code, tree op[], tree vtype)
   tree op0 = fold_convert (vtype, op[0]);
   tree op1 = fold_convert (vtype, op[1]);
   tree val = fold_build2 (code, vtype, op0, op1);
-  return fold_convert (long_integer_type_node, val);
+  return fold_build1 (VIEW_CONVERT_EXPR, long_integer_type_node, val);
 }
 
 static tree
@@ -8238,8 +8263,13 @@ alpha_end_function (FILE *file, const char *fnname, tree decl ATTRIBUTE_UNUSED)
   insn = get_last_insn ();
   if (!INSN_P (insn))
     insn = prev_active_insn (insn);
-  if (GET_CODE (insn) == CALL_INSN)
+  if (insn && GET_CODE (insn) == CALL_INSN)
     output_asm_insn (get_insn_template (CODE_FOR_nop, NULL), NULL);
+
+#if TARGET_ABI_OSF
+  if (current_function_is_thunk)
+    free_after_compilation (cfun);
+#endif
 
 #if TARGET_ABI_OPEN_VMS
   alpha_write_linkage (file, fnname, decl);
@@ -8279,6 +8309,8 @@ alpha_output_mi_thunk_osf (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
 {
   HOST_WIDE_INT hi, lo;
   rtx this, insn, funexp;
+
+  gcc_assert (current_function_is_thunk);
 
   /* We always require a valid GP.  */
   emit_insn (gen_prologue_ldgp ());
@@ -9267,12 +9299,68 @@ alpha_align_insns (unsigned int max_align,
       i = next;
     }
 }
+
+/* Insert an unop between a noreturn function call and GP load.  */
+
+static void
+alpha_pad_noreturn (void)
+{
+  rtx insn, next;
+
+  for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
+    {
+      rtx pat;
+
+      if (!CALL_P (insn)
+	  || !find_reg_note (insn, REG_NORETURN, NULL_RTX))
+        continue;
+
+      next = next_active_insn (insn);
+
+      if (next)
+	{
+	  pat = PATTERN (next);
+
+	  if (GET_CODE (pat) == SET
+	      && GET_CODE (SET_SRC (pat)) == UNSPEC_VOLATILE
+	      && XINT (SET_SRC (pat), 1) == UNSPECV_LDGP1)
+	    emit_insn_after (gen_unop (), insn);
+	}
+    }
+}
 
 /* Machine dependent reorg pass.  */
 
 static void
 alpha_reorg (void)
 {
+  /* Workaround for a linker error that triggers when an
+     exception handler immediatelly follows a noreturn function.
+
+     The instruction stream from an object file:
+
+  54:   00 40 5b 6b     jsr     ra,(t12),58 <__func+0x58>
+  58:   00 00 ba 27     ldah    gp,0(ra)
+  5c:   00 00 bd 23     lda     gp,0(gp)
+  60:   00 00 7d a7     ldq     t12,0(gp)
+  64:   00 40 5b 6b     jsr     ra,(t12),68 <__func+0x68>
+
+     was converted in the final link pass to:
+
+   fdb24:       a0 03 40 d3     bsr     ra,fe9a8 <_called_func+0x8>
+   fdb28:       00 00 fe 2f     unop
+   fdb2c:       00 00 fe 2f     unop
+   fdb30:       30 82 7d a7     ldq     t12,-32208(gp)
+   fdb34:       00 40 5b 6b     jsr     ra,(t12),fdb38 <__func+0x68>
+
+     GP load instructions were wrongly cleared by the linker relaxation
+     pass.  This workaround prevents removal of GP loads by inserting
+     an unop instruction between a noreturn function call and
+     exception handler prologue.  */
+
+  if (current_function_has_exception_handlers ())
+    alpha_pad_noreturn ();
+
   if (alpha_tp != ALPHA_TP_PROG || flag_exceptions)
     alpha_handle_trap_shadows ();
 
