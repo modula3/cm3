@@ -8,7 +8,24 @@ Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
 
+%
+% copied from cm3cfg.common
+% Would prefer to update config files at start of build,
+% and maintain compatibility there, not here.
+%
+proc InternalCheckTargetOS(x) is
+  if defined("TARGET_OS")
+    return equal(TARGET_OS, x)
+  end
+  error("config file (or cm3 executable) must define TARGET_OS")
+  return FALSE
+end
+
+proc IsTargetCygwin()  is return InternalCheckTargetOS("CYGWIN") end
+proc IsTargetNT()      is return InternalCheckTargetOS("NT") end
+
 if IsTargetNT() or IsTargetCygwin()
+
 c_source   ("WinNTc")
 
 Interface  ("WinError")
