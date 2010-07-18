@@ -70,11 +70,10 @@ end
 
 SYSTEM_LIBS = {
     "LIBC"      : [ "-lsocket", "-lnsl",
-                    "-lpthread",
                     "-lrt", % semaphores
                     "-lm", "-lc" ],
     "LEX-YACC"   : [ "-ll" ],
-    "FLEX-BISON" : [ ],
+    % "FLEX-BISON" : [ "-L/usr/sfw/lib", "-lfl" ],
     % "POSTGRES95" : [ ],
     % "OPENGL" below
     % "ODBC"     : [ ],
