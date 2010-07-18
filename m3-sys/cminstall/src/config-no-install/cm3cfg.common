@@ -192,10 +192,9 @@ end
 
 proc InternalCheckTargetOS(x) is
   if defined("TARGET_OS")
-    if equal(TARGET_OS, x)
-      return TRUE
-    end
+    return equal(TARGET_OS, x)
   end
+  error("config file (or cm3 executable) must define TARGET_OS")
   return FALSE
 end
 
