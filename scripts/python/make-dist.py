@@ -213,7 +213,7 @@ Packages = [ "import-libs",
              "mklib" ]
 
 def CopyRecursive(From, To):
-    CopyCommand = "xcopy /fiverdh "
+    CopyCommand = "xcopy /fiverdyh "
     ToParent = os.path.dirname(To)
     if (os.name != "nt"):
         CopyCommand = "cp --preserve  --recursive "
@@ -245,11 +245,6 @@ if Config != "NT386":
 
 for a in glob.glob(os.path.join(InstallRoot, "lib", "*.obj")):
     CopyFile(a, NewLib) or FatalError()
-
-#
-# cm3 is run out of %path%, but mklib is not, so we have to copy it.
-#
-CopyMklib(InstallRoot, InstallRoot_CompilerWithPrevious) or FatalError()
 
 def Setup(ExistingCompilerRoot, NewRoot):
     global InstallRoot
