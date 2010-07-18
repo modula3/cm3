@@ -1,4 +1,5 @@
-# include "stdio.h"
+#include <stdio.h>
+
 #ifdef __cplusplus
    extern "C" {
      extern int yyreject();
@@ -671,7 +672,7 @@ unsigned char yyextra[] = {
 0,0,0,0,0,0,0,0,
 0,1,0,0,0,0,0,0,
 0};
-/* @(#) $Revision: 1.1.1.1 $      */
+/* @(#) $Revision: 1.2 $      */
 int yylineno =1;
 # define YYU(x) x
 # define NLSTATE yyprevious=YYNEWLINE
