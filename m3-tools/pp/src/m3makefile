@@ -26,7 +26,7 @@ configure_system_libs()
 
 if SYSTEM_LIBS contains "FLEX-BISON"
   include_dir ("flex-bison")
-elif SYSTEM_LIBS contains "LEX-YACC"
+else if SYSTEM_LIBS contains "LEX-YACC"
   if equal (TARGET, "HPPA")
     include_dir ("lex-yacc-HPPA")
   else
