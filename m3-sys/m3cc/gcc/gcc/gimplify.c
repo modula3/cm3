@@ -391,6 +391,13 @@ find_single_pointer_decl_1 (tree *tp, int *walk_subtrees ATTRIBUTE_UNUSED,
 {
   tree *pdecl = (tree *) data;
 
+  /* We are only looking for pointers at the same level as the
+     original tree; we must not look through any indirections.
+     Returning anything other than NULL_TREE will cause the caller to
+     not find a base.  */
+  if (REFERENCE_CLASS_P (*tp))
+    return *tp;
+
   if (DECL_P (*tp) && POINTER_TYPE_P (TREE_TYPE (*tp)))
     {
       if (*pdecl)
@@ -406,8 +413,9 @@ find_single_pointer_decl_1 (tree *tp, int *walk_subtrees ATTRIBUTE_UNUSED,
   return NULL_TREE;
 }
 
-/* Find the single DECL of pointer type in the tree T and return it.
-   If there are zero or more than one such DECLs, return NULL.  */
+/* Find the single DECL of pointer type in the tree T, used directly
+   rather than via an indirection, and return it.  If there are zero
+   or more than one such DECLs, return NULL.  */
 
 static tree
 find_single_pointer_decl (tree t)
@@ -418,7 +426,8 @@ find_single_pointer_decl (tree t)
     {
       /* find_single_pointer_decl_1 returns a nonzero value, causing
 	 walk_tree to return a nonzero value, to indicate that it
-	 found more than one pointer DECL.  */
+	 found more than one pointer DECL or that it found an
+	 indirection.  */
       return NULL_TREE;
     }
 
@@ -3035,6 +3044,8 @@ zero_sized_type (const_tree type)
   return false;
 }
 
+static void tree_to_gimple_tuple (tree *);
+
 /* A subroutine of gimplify_init_constructor.  Generate individual
    MODIFY_EXPRs for a CONSTRUCTOR.  OBJECT is the LHS against which the
    assignments should happen.  ELTS is the CONSTRUCTOR_ELTS of the
@@ -3195,7 +3206,8 @@ gimplify_init_constructor (tree *expr_p, tree *pre_p,
 	if (valid_const_initializer
 	    && num_nonzero_elements > 1
 	    && TREE_READONLY (object)
-	    && TREE_CODE (object) == VAR_DECL)
+	    && TREE_CODE (object) == VAR_DECL
+	    && (flag_merge_constants >= 2 || !TREE_ADDRESSABLE (object)))
 	  {
 	    if (notify_temp_creation)
 	      return GS_ERROR;
@@ -3302,6 +3314,21 @@ gimplify_init_constructor (tree *expr_p, tree *pre_p,
 	      }
 	  }
 
+	/* If the target is volatile and we have non-zero elements
+	   initialize the target from a temporary.  */
+	if (TREE_THIS_VOLATILE (object)
+	    && !TREE_ADDRESSABLE (type)
+	    && num_nonzero_elements > 0)
+	  {
+	    tree temp = create_tmp_var (TYPE_MAIN_VARIANT (type), NULL);
+	    TREE_OPERAND (*expr_p, 0) = temp;
+	    *expr_p = build2 (COMPOUND_EXPR, TREE_TYPE (*expr_p),
+			      *expr_p,
+			      build2 (MODIFY_EXPR, void_type_node,
+				      object, temp));
+	    return GS_OK;
+	  }
+
 	if (notify_temp_creation)
 	  return GS_OK;
 
@@ -3405,7 +3432,8 @@ gimplify_init_constructor (tree *expr_p, tree *pre_p,
 
 	    if (constant_p)
 	      {
-		TREE_OPERAND (*expr_p, 1) = build_vector_from_ctor (type, elts);
+		GENERIC_TREE_OPERAND (*expr_p, 1)
+		  = build_vector_from_ctor (type, elts);
 		break;
 	      }
 
@@ -3443,6 +3471,9 @@ gimplify_init_constructor (tree *expr_p, tree *pre_p,
     return GS_ERROR;
   else if (want_value)
     {
+      if (*expr_p)
+	tree_to_gimple_tuple (expr_p);
+
       append_to_statement_list (*expr_p, pre_p);
       *expr_p = object;
       return GS_OK;
@@ -3535,11 +3566,14 @@ gimplify_modify_expr_rhs (tree *expr_p, tree *from_p, tree *to_p, tree *pre_p,
     switch (TREE_CODE (*from_p))
       {
       case VAR_DECL:
-	/* If we're assigning from a constant constructor, move the
-	   constructor expression to the RHS of the MODIFY_EXPR.  */
+	/* If we're assigning from a read-only variable initialized with
+	   a constructor, do the direct assignment from the constructor,
+	   but only if neither source nor target are volatile since this
+	   latter assignment might end up being done on a per-field basis.  */
 	if (DECL_INITIAL (*from_p)
-	    && TYPE_READONLY (TREE_TYPE (*from_p))
+	    && TREE_READONLY (*from_p)
 	    && !TREE_THIS_VOLATILE (*from_p)
+	    && !TREE_THIS_VOLATILE (*to_p)
 	    && TREE_CODE (DECL_INITIAL (*from_p)) == CONSTRUCTOR)
 	  {
 	    tree old_from = *from_p;
@@ -3880,7 +3914,7 @@ gimplify_modify_expr (tree *expr_p, tree *pre_p, tree *post_p, bool want_value)
      side as statements and throw away the assignment.  Do this after
      gimplify_modify_expr_rhs so we handle TARGET_EXPRs of addressable
      types properly.  */
-  if (zero_sized_type (TREE_TYPE (*from_p)))
+  if (zero_sized_type (TREE_TYPE (*from_p)) && !want_value)
     {
       gimplify_stmt (from_p);
       gimplify_stmt (to_p);
@@ -5464,7 +5498,11 @@ goa_lhs_expr_p (tree expr, tree addr)
 	  expr = TREE_OPERAND (expr, 0);
 	  addr = TREE_OPERAND (addr, 0);
 	}
-      return expr == addr;
+      if (expr == addr)
+	return true;
+      return (TREE_CODE (addr) == ADDR_EXPR
+	      && TREE_CODE (expr) == ADDR_EXPR
+	      && TREE_OPERAND (addr, 0) == TREE_OPERAND (expr, 0));
     }
   if (TREE_CODE (addr) == ADDR_EXPR && expr == TREE_OPERAND (addr, 0))
     return true;
@@ -5706,7 +5744,7 @@ gimplify_expr (tree *expr_p, tree *pre_p, tree *post_p,
 	  ret = gimplify_modify_expr (expr_p, pre_p, post_p,
 				      fallback != fb_none);
 
-	  if (*expr_p)
+	  if (*expr_p && ret != GS_ERROR)
 	    {
 	      /* The distinction between MODIFY_EXPR and INIT_EXPR is no longer
 		 useful.  */
@@ -5726,8 +5764,14 @@ gimplify_expr (tree *expr_p, tree *pre_p, tree *post_p,
 	  break;
 
 	case TRUTH_NOT_EXPR:
-	  TREE_OPERAND (*expr_p, 0)
-	    = gimple_boolify (TREE_OPERAND (*expr_p, 0));
+	  if (TREE_CODE (TREE_TYPE (*expr_p)) != BOOLEAN_TYPE)
+	    {
+	      tree type = TREE_TYPE (*expr_p);
+	      *expr_p = fold_convert (type, gimple_boolify (*expr_p));
+	      ret = GS_OK;
+	      break;
+	    }
+
 	  ret = gimplify_expr (&TREE_OPERAND (*expr_p, 0), pre_p, post_p,
 			       is_gimple_val, fb_rvalue);
 	  recalculate_side_effects (*expr_p);
@@ -6023,10 +6067,16 @@ gimplify_expr (tree *expr_p, tree *pre_p, tree *post_p,
 
 	case OMP_RETURN:
 	case OMP_CONTINUE:
-        case OMP_ATOMIC_LOAD:
-        case OMP_ATOMIC_STORE:
-
+	case OMP_ATOMIC_STORE:
 	  ret = GS_ALL_DONE;
+	  break;
+
+	case OMP_ATOMIC_LOAD:
+	  if (gimplify_expr (&TREE_OPERAND (*expr_p, 1), pre_p, NULL,
+	      is_gimple_val, fb_rvalue) != GS_ALL_DONE)
+	    ret = GS_ERROR;
+	  else
+	    ret = GS_ALL_DONE;
 	  break;
 
 	case POINTER_PLUS_EXPR:

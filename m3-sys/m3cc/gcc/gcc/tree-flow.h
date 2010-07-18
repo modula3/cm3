@@ -188,10 +188,6 @@ struct gimple_df GTY(())
 
   struct ssa_operands ssa_operands;
 
-  /* Hashtable of variables annotations.  Used for static variables only;
-     local variables have direct pointer in the tree node.  */
-  htab_t GTY((param_is (struct static_var_ann_d))) var_anns;
-
   /* Memory reference statistics collected during alias analysis.
      This information is used to drive the memory partitioning
      heuristics in compute_memory_partitions.  */
@@ -993,6 +989,7 @@ void tree_ssa_iv_optimize (void);
 unsigned tree_predictive_commoning (void);
 bool parallelize_loops (void);
 
+bool loop_only_exit_p (const struct loop *, const_edge);
 bool number_of_iterations_exit (struct loop *, edge,
 				struct tree_niter_desc *niter, bool);
 tree find_loop_niter (struct loop *, edge *);

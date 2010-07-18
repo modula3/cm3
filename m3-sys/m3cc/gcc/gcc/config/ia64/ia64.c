@@ -781,6 +781,8 @@ ia64_legitimate_constant_p (rtx x)
 static bool
 ia64_cannot_force_const_mem (rtx x)
 {
+  if (GET_MODE (x) == RFmode)
+    return true;
   return tls_symbolic_operand_type (x) != 0;
 }
 
@@ -1591,25 +1593,18 @@ ia64_expand_vecint_compare (enum rtx_code code, enum machine_mode mode,
 	  {
 	    rtx t1, t2, mask;
 
-	    /* Perform a parallel modulo subtraction.  */
-	    t1 = gen_reg_rtx (V2SImode);
-	    emit_insn (gen_subv2si3 (t1, op0, op1));
-
-	    /* Extract the original sign bit of op0.  */
-	    mask = GEN_INT (-0x80000000);
+	    /* Subtract (-(INT MAX) - 1) from both operands to make
+	       them signed.  */
+	    mask = GEN_INT (0x80000000);
 	    mask = gen_rtx_CONST_VECTOR (V2SImode, gen_rtvec (2, mask, mask));
-	    mask = force_reg (V2SImode, mask);
-	    t2 = gen_reg_rtx (V2SImode);
-	    emit_insn (gen_andv2si3 (t2, op0, mask));
-
-	    /* XOR it back into the result of the subtraction.  This results
-	       in the sign bit set iff we saw unsigned underflow.  */
-	    x = gen_reg_rtx (V2SImode);
-	    emit_insn (gen_xorv2si3 (x, t1, t2));
-
+	    mask = force_reg (mode, mask);
+	    t1 = gen_reg_rtx (mode);
+	    emit_insn (gen_subv2si3 (t1, op0, mask));
+	    t2 = gen_reg_rtx (mode);
+	    emit_insn (gen_subv2si3 (t2, op1, mask));
+	    op0 = t1;
+	    op1 = t2;
 	    code = GT;
-	    op0 = x;
-	    op1 = CONST0_RTX (mode);
 	  }
 	  break;
 
@@ -4326,8 +4321,9 @@ ia64_function_ok_for_sibcall (tree decl, tree exp ATTRIBUTE_UNUSED)
     return false;
 
   /* We must always return with our current GP.  This means we can
-     only sibcall to functions defined in the current module.  */
-  return decl && (*targetm.binds_local_p) (decl);
+     only sibcall to functions defined in the current module unless
+     TARGET_CONST_GP is set to true.  */
+  return (decl && (*targetm.binds_local_p) (decl)) || TARGET_CONST_GP;
 }
 
 
@@ -5898,6 +5894,7 @@ rtx_needs_barrier (rtx x, struct reg_flags flags, int pred)
 	case UNSPEC_FR_RECIP_APPROX:
 	case UNSPEC_SHRP:
 	case UNSPEC_COPYSIGN:
+	case UNSPEC_FR_RECIP_APPROX_RES:
 	  need_barrier = rtx_needs_barrier (XVECEXP (x, 0, 0), flags, pred);
 	  need_barrier |= rtx_needs_barrier (XVECEXP (x, 0, 1), flags, pred);
 	  break;

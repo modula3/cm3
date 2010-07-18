@@ -1543,7 +1543,8 @@ tree_floor_log2 (const_tree expr)
 	  : floor_log2 (low));
 }
 
-/* Return 1 if EXPR is the real constant zero.  */
+/* Return 1 if EXPR is the real constant zero.  Trailing zeroes matter for
+   decimal float constants, so don't return 1 for them.  */
 
 int
 real_zerop (const_tree expr)
@@ -1551,13 +1552,16 @@ real_zerop (const_tree expr)
   STRIP_NOPS (expr);
 
   return ((TREE_CODE (expr) == REAL_CST
-	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconst0))
+	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconst0)
+	   && !(DECIMAL_FLOAT_MODE_P (TYPE_MODE (TREE_TYPE (expr)))))
 	  || (TREE_CODE (expr) == COMPLEX_CST
 	      && real_zerop (TREE_REALPART (expr))
 	      && real_zerop (TREE_IMAGPART (expr))));
 }
 
-/* Return 1 if EXPR is the real constant one in real or complex form.  */
+/* Return 1 if EXPR is the real constant one in real or complex form.
+   Trailing zeroes matter for decimal float constants, so don't return
+   1 for them.  */
 
 int
 real_onep (const_tree expr)
@@ -1565,13 +1569,15 @@ real_onep (const_tree expr)
   STRIP_NOPS (expr);
 
   return ((TREE_CODE (expr) == REAL_CST
-	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconst1))
+	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconst1)
+	   && !(DECIMAL_FLOAT_MODE_P (TYPE_MODE (TREE_TYPE (expr)))))
 	  || (TREE_CODE (expr) == COMPLEX_CST
 	      && real_onep (TREE_REALPART (expr))
 	      && real_zerop (TREE_IMAGPART (expr))));
 }
 
-/* Return 1 if EXPR is the real constant two.  */
+/* Return 1 if EXPR is the real constant two.  Trailing zeroes matter
+   for decimal float constants, so don't return 1 for them.  */
 
 int
 real_twop (const_tree expr)
@@ -1579,13 +1585,15 @@ real_twop (const_tree expr)
   STRIP_NOPS (expr);
 
   return ((TREE_CODE (expr) == REAL_CST
-	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconst2))
+	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconst2)
+	   && !(DECIMAL_FLOAT_MODE_P (TYPE_MODE (TREE_TYPE (expr)))))
 	  || (TREE_CODE (expr) == COMPLEX_CST
 	      && real_twop (TREE_REALPART (expr))
 	      && real_zerop (TREE_IMAGPART (expr))));
 }
 
-/* Return 1 if EXPR is the real constant minus one.  */
+/* Return 1 if EXPR is the real constant minus one.  Trailing zeroes
+   matter for decimal float constants, so don't return 1 for them.  */
 
 int
 real_minus_onep (const_tree expr)
@@ -1593,7 +1601,8 @@ real_minus_onep (const_tree expr)
   STRIP_NOPS (expr);
 
   return ((TREE_CODE (expr) == REAL_CST
-	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconstm1))
+	   && REAL_VALUES_EQUAL (TREE_REAL_CST (expr), dconstm1)
+	   && !(DECIMAL_FLOAT_MODE_P (TYPE_MODE (TREE_TYPE (expr)))))
 	  || (TREE_CODE (expr) == COMPLEX_CST
 	      && real_minus_onep (TREE_REALPART (expr))
 	      && real_zerop (TREE_IMAGPART (expr))));
@@ -2423,8 +2432,7 @@ substitute_in_expr (tree exp, tree f, tree r)
 {
   enum tree_code code = TREE_CODE (exp);
   tree op0, op1, op2, op3;
-  tree new;
-  tree inner;
+  tree new, inner;
 
   /* We handle TREE_LIST and COMPONENT_REF separately.  */
   if (code == TREE_LIST)
@@ -2534,13 +2542,15 @@ substitute_in_expr (tree exp, tree f, tree r)
 	  for (i = 1; i < TREE_OPERAND_LENGTH (exp); i++)
 	    {
 	      tree op = TREE_OPERAND (exp, i);
-	      tree newop = SUBSTITUTE_IN_EXPR (op, f, r);
-	      if (newop != op)
+	      tree new_op = SUBSTITUTE_IN_EXPR (op, f, r);
+	      if (new_op != op)
 		{
-		  copy = copy_node (exp);
-		  TREE_OPERAND (copy, i) = newop;
+		  if (!copy)
+		    copy = copy_node (exp);
+		  TREE_OPERAND (copy, i) = new_op;
 		}
 	    }
+
 	  if (copy)
 	    new = fold (copy);
 	  else
@@ -4067,6 +4077,16 @@ handle_dll_attribute (tree * pnode, tree name, tree args, int flags,
       return NULL_TREE;
     }
 
+  if (TREE_CODE (node) == TYPE_DECL
+      && TREE_CODE (TREE_TYPE (node)) != RECORD_TYPE
+      && TREE_CODE (TREE_TYPE (node)) != UNION_TYPE)
+    {
+      *no_add_attrs = true;
+      warning (OPT_Wattributes, "%qs attribute ignored",
+	       IDENTIFIER_POINTER (name));
+      return NULL_TREE;
+    }
+
   /* Report error on dllimport ambiguities seen now before they cause
      any damage.  */
   else if (is_attribute_p ("dllimport", name))
@@ -5408,6 +5428,11 @@ build_pointer_type_for_mode (tree to_type, enum machine_mode mode,
   if (to_type == error_mark_node)
     return error_mark_node;
 
+  /* If the pointed-to type has the may_alias attribute set, force
+     a TYPE_REF_CAN_ALIAS_ALL pointer to be generated.  */
+  if (lookup_attribute ("may_alias", TYPE_ATTRIBUTES (to_type)))
+    can_alias_all = true;
+
   /* In some cases, languages will have things that aren't a POINTER_TYPE
      (such as a RECORD_TYPE for fat pointers in Ada) as TYPE_POINTER_TO.
      In that case, return that type without regard to the rest of our
@@ -5463,6 +5488,14 @@ build_reference_type_for_mode (tree to_type, enum machine_mode mode,
 			       bool can_alias_all)
 {
   tree t;
+
+  if (to_type == error_mark_node)
+    return error_mark_node;
+
+  /* If the pointed-to type has the may_alias attribute set, force
+     a TYPE_REF_CAN_ALIAS_ALL pointer to be generated.  */
+  if (lookup_attribute ("may_alias", TYPE_ATTRIBUTES (to_type)))
+    can_alias_all = true;
 
   /* In some cases, languages will have things that aren't a REFERENCE_TYPE
      (such as a RECORD_TYPE for fat pointers in Ada) as TYPE_REFERENCE_TO.
@@ -6272,6 +6305,21 @@ int_fits_type_p (const_tree c, const_tree type)
      for "unknown if constant fits", 0 for "constant known *not* to fit" and 1
      for "constant known to fit".  */
 
+  if (TREE_TYPE (c) == sizetype
+      && TYPE_UNSIGNED (TREE_TYPE (c))
+      && TREE_INT_CST_HIGH (c) == -1
+      && !TREE_OVERFLOW (c))
+      /* So c is an unsigned integer which type is sizetype.
+         sizetype'd integers are sign extended even though they are
+	 unsigned. If the integer value fits in the lower end word of c,
+	 and if the higher end word has all its bits set to 1, that
+	 means the higher end bits are set to 1 only for sign extension.
+	 So let's convert c into an equivalent zero extended unsigned
+	 integer.  */
+      c = force_fit_type_double (size_type_node,
+				 TREE_INT_CST_LOW (c),
+				 TREE_INT_CST_HIGH (c),
+				 false, false);
   /* Check if C >= type_low_bound.  */
   if (type_low_bound && TREE_CODE (type_low_bound) == INTEGER_CST)
     {
@@ -8803,7 +8851,9 @@ block_nonartificial_location (tree block)
     {
       tree ao = BLOCK_ABSTRACT_ORIGIN (block);
 
-      while (TREE_CODE (ao) == BLOCK && BLOCK_ABSTRACT_ORIGIN (ao))
+      while (TREE_CODE (ao) == BLOCK
+	     && BLOCK_ABSTRACT_ORIGIN (ao)
+	     && BLOCK_ABSTRACT_ORIGIN (ao) != ao)
 	ao = BLOCK_ABSTRACT_ORIGIN (ao);
 
       if (TREE_CODE (ao) == FUNCTION_DECL)

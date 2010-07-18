@@ -324,13 +324,13 @@
 (define_predicate "local_symbolic_operand"
   (match_code "label_ref,const,symbol_ref")
 {
-  if (GET_CODE (op) == LABEL_REF)
-    return 1;
-
   if (GET_CODE (op) == CONST
       && GET_CODE (XEXP (op, 0)) == PLUS
       && GET_CODE (XEXP (XEXP (op, 0), 1)) == CONST_INT)
     op = XEXP (XEXP (op, 0), 0);
+
+  if (GET_CODE (op) == LABEL_REF)
+    return 1;
 
   if (GET_CODE (op) != SYMBOL_REF)
     return 0;
@@ -390,7 +390,8 @@
   (ior (match_code "symbol_ref,label_ref")
        (and (match_code "const")
 	    (match_test "GET_CODE (XEXP (op,0)) == PLUS
-			 && GET_CODE (XEXP (XEXP (op,0), 0)) == SYMBOL_REF
+			 && (GET_CODE (XEXP (XEXP (op,0), 0)) == SYMBOL_REF
+			     || GET_CODE (XEXP (XEXP (op,0), 0)) == LABEL_REF)
 			 && GET_CODE (XEXP (XEXP (op,0), 1)) == CONST_INT"))))
 
 ;; Return true if OP is valid for 16-bit DTP relative relocations.
@@ -438,9 +439,11 @@
        (match_code "mem"))
 {
   rtx base;
+  int offset;
 
   if (MEM_ALIGN (op) >= 32)
     return 1;
+
   op = XEXP (op, 0);
 
   /* LEGITIMIZE_RELOAD_ADDRESS creates (plus (plus reg const_hi) const_lo)
@@ -448,13 +451,28 @@
   if (reload_in_progress
       && GET_CODE (op) == PLUS
       && GET_CODE (XEXP (op, 0)) == PLUS)
-    base = XEXP (XEXP (op, 0), 0);
+    {
+      base = XEXP (XEXP (op, 0), 0);
+      offset = INTVAL (XEXP (op, 1));
+    }
   else
     {
       if (! memory_address_p (mode, op))
 	return 0;
-      base = (GET_CODE (op) == PLUS ? XEXP (op, 0) : op);
+      if (GET_CODE (op) == PLUS)
+	{
+	  base = XEXP (op, 0);
+	  offset = INTVAL (XEXP (op, 1));
+	}
+      else
+	{
+	  base = op;
+	  offset = 0;
+	}
     }
+
+  if (offset % GET_MODE_SIZE (mode))
+    return 0;
 
   return (GET_CODE (base) == REG && REGNO_POINTER_ALIGN (REGNO (base)) >= 32);
 })
@@ -466,9 +484,11 @@
        (match_code "mem"))
 {
   rtx base;
+  int offset;
 
   if (MEM_ALIGN (op) >= 32)
     return 0;
+
   op = XEXP (op, 0);
 
   /* LEGITIMIZE_RELOAD_ADDRESS creates (plus (plus reg const_hi) const_lo)
@@ -476,13 +496,28 @@
   if (reload_in_progress
       && GET_CODE (op) == PLUS
       && GET_CODE (XEXP (op, 0)) == PLUS)
-    base = XEXP (XEXP (op, 0), 0);
+    {
+      base = XEXP (XEXP (op, 0), 0);
+      offset = INTVAL (XEXP (op, 1));
+    }
   else
     {
       if (! memory_address_p (mode, op))
 	return 0;
-      base = (GET_CODE (op) == PLUS ? XEXP (op, 0) : op);
+      if (GET_CODE (op) == PLUS)
+	{
+	  base = XEXP (op, 0);
+	  offset = INTVAL (XEXP (op, 1));
+	}
+      else
+	{
+	  base = op;
+	  offset = 0;
+	}
     }
+
+  if (offset % GET_MODE_SIZE (mode))
+    return 1;
 
   return (GET_CODE (base) == REG && REGNO_POINTER_ALIGN (REGNO (base)) < 32);
 })

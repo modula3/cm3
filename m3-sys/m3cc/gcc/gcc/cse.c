@@ -1363,17 +1363,6 @@ lookup_as_function (rtx x, enum rtx_code code)
   struct table_elt *p
     = lookup (x, SAFE_HASH (x, VOIDmode), GET_MODE (x));
 
-  /* If we are looking for a CONST_INT, the mode doesn't really matter, as
-     long as we are narrowing.  So if we looked in vain for a mode narrower
-     than word_mode before, look for word_mode now.  */
-  if (p == 0 && code == CONST_INT
-      && GET_MODE_SIZE (GET_MODE (x)) < GET_MODE_SIZE (word_mode))
-    {
-      x = copy_rtx (x);
-      PUT_MODE (x, word_mode);
-      p = lookup (x, SAFE_HASH (x, VOIDmode), word_mode);
-    }
-
   if (p == 0)
     return 0;
 
@@ -3182,17 +3171,24 @@ fold_rtx (rtx x, rtx insn)
       if (const_arg0 == 0 || const_arg1 == 0)
 	{
 	  struct table_elt *p0, *p1;
-	  rtx true_rtx = const_true_rtx, false_rtx = const0_rtx;
+	  rtx true_rtx, false_rtx;
 	  enum machine_mode mode_arg1;
 
-#ifdef FLOAT_STORE_FLAG_VALUE
 	  if (SCALAR_FLOAT_MODE_P (mode))
 	    {
+#ifdef FLOAT_STORE_FLAG_VALUE
 	      true_rtx = (CONST_DOUBLE_FROM_REAL_VALUE
 			  (FLOAT_STORE_FLAG_VALUE (mode), mode));
+#else
+	      true_rtx = NULL_RTX;
+#endif
 	      false_rtx = CONST0_RTX (mode);
 	    }
-#endif
+	  else
+	    {
+	      true_rtx = const_true_rtx;
+	      false_rtx = const0_rtx;
+	    }
 
 	  code = find_comparison_args (code, &folded_arg0, &folded_arg1,
 				       &mode_arg0, &mode_arg1);
@@ -3300,8 +3296,17 @@ fold_rtx (rtx x, rtx insn)
 						  const_arg1))
 			      || (REG_P (folded_arg1)
 				  && (REG_QTY (REGNO (folded_arg1)) == ent->comparison_qty))))
-			return (comparison_dominates_p (ent->comparison_code, code)
-				? true_rtx : false_rtx);
+			{
+			  if (comparison_dominates_p (ent->comparison_code, code))
+			    {
+			      if (true_rtx)
+				return true_rtx;
+			      else
+				break;
+			    }
+			  else
+			    return false_rtx;
+			}
 		    }
 		}
 	    }
@@ -3489,6 +3494,11 @@ fold_rtx (rtx x, rtx insn)
 			  && exact_log2 (- INTVAL (const_arg1)) >= 0)))
 		break;
 
+	      /* ??? Vector mode shifts by scalar
+		 shift operand are not supported yet.  */
+	      if (is_shift && VECTOR_MODE_P (mode))
+                break;
+
 	      if (is_shift
 		  && (INTVAL (inner_const) >= GET_MODE_BITSIZE (mode)
 		      || INTVAL (inner_const) < 0))
@@ -3605,6 +3615,8 @@ equiv_constant (rtx x)
 
   if (GET_CODE (x) == SUBREG)
     {
+      enum machine_mode mode = GET_MODE (x);
+      enum machine_mode imode = GET_MODE (SUBREG_REG (x));
       rtx new;
 
       /* See if we previously assigned a constant value to this SUBREG.  */
@@ -3613,10 +3625,25 @@ equiv_constant (rtx x)
           || (new = lookup_as_function (x, CONST_FIXED)) != 0)
         return new;
 
+      /* If we didn't and if doing so makes sense, see if we previously
+	 assigned a constant value to the enclosing word mode SUBREG.  */
+      if (GET_MODE_SIZE (mode) < GET_MODE_SIZE (word_mode)
+	  && GET_MODE_SIZE (word_mode) < GET_MODE_SIZE (imode))
+	{
+	  int byte = SUBREG_BYTE (x) - subreg_lowpart_offset (mode, word_mode);
+	  if (byte >= 0 && (byte % UNITS_PER_WORD) == 0)
+	    {
+	      rtx y = gen_rtx_SUBREG (word_mode, SUBREG_REG (x), byte);
+	      new = lookup_as_function (y, CONST_INT);
+	      if (new)
+		return gen_lowpart (mode, new);
+	    }
+	}
+
+      /* Otherwise see if we already have a constant for the inner REG.  */
       if (REG_P (SUBREG_REG (x))
 	  && (new = equiv_constant (SUBREG_REG (x))) != 0)
-        return simplify_subreg (GET_MODE (x), SUBREG_REG (x),
-				GET_MODE (SUBREG_REG (x)), SUBREG_BYTE (x));
+        return simplify_subreg (mode, new, imode, SUBREG_BYTE (x));
 
       return 0;
     }
@@ -4751,6 +4778,23 @@ cse_insn (rtx insn, rtx libcall_insn)
 	      trial = elt->exp;
 	      elt = elt->next_same_value;
 	      src_elt_cost = MAX_COST;
+	    }
+
+	  /* Avoid creation of overlapping memory moves.  */
+	  if (MEM_P (trial) && MEM_P (SET_DEST (sets[i].rtl)))
+	    {
+	      rtx src, dest;
+
+	      /* BLKmode moves are not handled by cse anyway.  */
+	      if (GET_MODE (trial) == BLKmode)
+		break;
+
+	      src = canon_rtx (trial);
+	      dest = canon_rtx (SET_DEST (sets[i].rtl));
+
+	      if (!MEM_P (src) || !MEM_P (dest)
+		  || !nonoverlapping_memrefs_p (src, dest))
+		break;
 	    }
 
 	  /* We don't normally have an insn matching (set (pc) (pc)), so
@@ -5975,6 +6019,21 @@ cse_extended_basic_block (struct cse_basic_block_data *ebb_data)
       int no_conflict = 0;
 
       bb = ebb_data->path[path_entry].bb;
+
+      /* Invalidate recorded information for eh regs if there is an EH
+	 edge pointing to that bb.  */
+      if (bb_has_eh_pred (bb))
+	{
+	  struct df_ref **def_rec;
+
+	  for (def_rec = df_get_artificial_defs (bb->index); *def_rec; def_rec++)
+	    {
+	      struct df_ref *def = *def_rec;
+	      if (DF_REF_FLAGS (def) & DF_REF_AT_TOP)
+		invalidate (DF_REF_REG (def), GET_MODE (DF_REF_REG (def)));
+	    }
+	}
+
       FOR_BB_INSNS (bb, insn)
 	{
 	  /* If we have processed 1,000 insns, flush the hash table to

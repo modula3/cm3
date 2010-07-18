@@ -792,24 +792,6 @@ uid_decl_map_hash (const void *item)
   return ((const_tree)item)->decl_minimal.uid;
 }
 
-/* Return true if the uid in both int tree maps are equal.  */
-
-static int
-var_ann_eq (const void *va, const void *vb)
-{
-  const struct static_var_ann_d *a = (const struct static_var_ann_d *) va;
-  const_tree const b = (const_tree) vb;
-  return (a->uid == DECL_UID (b));
-}
-
-/* Hash a UID in a int_tree_map.  */
-
-static unsigned int
-var_ann_hash (const void *item)
-{
-  return ((const struct static_var_ann_d *)item)->uid;
-}
-
 /* Return true if the DECL_UID in both trees are equal.  */
 
 static int
@@ -839,8 +821,6 @@ init_tree_ssa (void)
 				     		      uid_decl_map_eq, NULL);
   cfun->gimple_df->default_defs = htab_create_ggc (20, uid_ssaname_map_hash, 
 				                   uid_ssaname_map_eq, NULL);
-  cfun->gimple_df->var_anns = htab_create_ggc (20, var_ann_hash, 
-					       var_ann_eq, NULL);
   cfun->gimple_df->call_clobbered_vars = BITMAP_GGC_ALLOC ();
   cfun->gimple_df->addressable_vars = BITMAP_GGC_ALLOC ();
   init_ssanames ();
@@ -886,9 +866,17 @@ delete_tree_ssa (void)
       set_phi_nodes (bb, NULL);
     }
 
-  /* Remove annotations from every referenced variable.  */
+  /* Remove annotations from every referenced local variable.  */
   FOR_EACH_REFERENCED_VAR (var, rvi)
     {
+      if (!MTAG_P (var)
+	  && (TREE_STATIC (var) || DECL_EXTERNAL (var)))
+	{
+	  var_ann (var)->mpt = NULL_TREE;
+	  var_ann (var)->symbol_mem_tag = NULL_TREE;
+	  var_ann (var)->subvars = NULL;
+	  continue;
+	}
       if (var->base.ann)
         ggc_free (var->base.ann);
       var->base.ann = NULL;
@@ -906,8 +894,6 @@ delete_tree_ssa (void)
   
   htab_delete (cfun->gimple_df->default_defs);
   cfun->gimple_df->default_defs = NULL;
-  htab_delete (cfun->gimple_df->var_anns);
-  cfun->gimple_df->var_anns = NULL;
   cfun->gimple_df->call_clobbered_vars = NULL;
   cfun->gimple_df->addressable_vars = NULL;
   cfun->gimple_df->modified_noreturn_calls = NULL;
@@ -1038,12 +1024,18 @@ useless_type_conversion_p_1 (tree outer_type, tree inner_type)
       if (TREE_CODE (inner_type) != TREE_CODE (outer_type))
 	return false;
 
-      /* ???  Add structural equivalence check.  */
+      /* ???  This seems to be necessary even for aggregates that don't
+	 have TYPE_STRUCTURAL_EQUALITY_P set.  */
 
       /* ???  This should eventually just return false.  */
       return lang_hooks.types_compatible_p (inner_type, outer_type);
     }
-
+  /* Also for functions and possibly other types with
+     TYPE_STRUCTURAL_EQUALITY_P set.  */
+  else if (TYPE_STRUCTURAL_EQUALITY_P (inner_type)
+	   && TYPE_STRUCTURAL_EQUALITY_P (outer_type))
+    return lang_hooks.types_compatible_p (inner_type, outer_type);
+  
   return false;
 }
 
@@ -1294,13 +1286,19 @@ warn_uninit (tree t, const char *gmsgid, void *data)
 
   TREE_NO_WARNING (var) = 1;
 }
-   
+
+struct walk_data {
+  tree stmt;
+  bool always_executed;
+};
+
 /* Called via walk_tree, look for SSA_NAMEs that have empty definitions
    and warn about them.  */
 
 static tree
-warn_uninitialized_var (tree *tp, int *walk_subtrees, void *data)
+warn_uninitialized_var (tree *tp, int *walk_subtrees, void *data_)
 {
+  struct walk_data *data = (struct walk_data *)data_;
   tree t = *tp;
 
   switch (TREE_CODE (t))
@@ -1308,7 +1306,12 @@ warn_uninitialized_var (tree *tp, int *walk_subtrees, void *data)
     case SSA_NAME:
       /* We only do data flow with SSA_NAMEs, so that's all we
 	 can warn about.  */
-      warn_uninit (t, "%H%qD is used uninitialized in this function", data);
+      if (data->always_executed)
+        warn_uninit (t, "%H%qD is used uninitialized in this function",
+		     data->stmt);
+      else
+        warn_uninit (t, "%H%qD may be used uninitialized in this function",
+		     data->stmt);
       *walk_subtrees = 0;
       break;
 
@@ -1356,14 +1359,21 @@ execute_early_warn_uninitialized (void)
 {
   block_stmt_iterator bsi;
   basic_block bb;
+  struct walk_data data;
+
+  calculate_dominance_info (CDI_POST_DOMINATORS);
 
   FOR_EACH_BB (bb)
-    for (bsi = bsi_start (bb); !bsi_end_p (bsi); bsi_next (&bsi))
-      {
-	tree context = bsi_stmt (bsi);
-	walk_tree (bsi_stmt_ptr (bsi), warn_uninitialized_var,
-		   context, NULL);
-      }
+    {
+      data.always_executed = dominated_by_p (CDI_POST_DOMINATORS,
+					     single_succ (ENTRY_BLOCK_PTR), bb);
+      for (bsi = bsi_start (bb); !bsi_end_p (bsi); bsi_next (&bsi))
+        {
+	  data.stmt = bsi_stmt (bsi);
+	  walk_tree (bsi_stmt_ptr (bsi), warn_uninitialized_var,
+		     &data, NULL);
+        }
+    }
   return 0;
 }
 

@@ -540,6 +540,10 @@ set_initial_properties (struct alias_info *ai)
   tree var;
   tree ptr;
   bitmap queued;
+  bool any_pt_anything = false;
+  enum escape_type pt_anything_mask = 0;
+  bitmap_iterator bi;
+  unsigned int j;
 
   /* Temporary bitmap to avoid quadratic behavior in marking
      call clobbers.  */
@@ -568,7 +572,7 @@ set_initial_properties (struct alias_info *ai)
     {
       struct ptr_info_def *pi = SSA_NAME_PTR_INFO (ptr);
       tree tag = symbol_mem_tag (SSA_NAME_VAR (ptr));
-      
+
       if (pi->value_escapes_p)
 	{
 	  /* If PTR escapes then its associated memory tags and
@@ -581,8 +585,6 @@ set_initial_properties (struct alias_info *ai)
 
 	  if (pi->pt_vars)
 	    {
-	      bitmap_iterator bi;
-	      unsigned int j;	      
 	      EXECUTE_IF_SET_IN_BITMAP (pi->pt_vars, 0, j, bi)
 		{
 		  tree alias = referenced_var (j);
@@ -593,25 +595,22 @@ set_initial_properties (struct alias_info *ai)
 		     in order to allow C/C++ tricks that involve
 		     pointer arithmetic to work.  */
 		  if (TREE_CODE (alias) == STRUCT_FIELD_TAG)
-		    bitmap_set_bit (queued, DECL_UID (SFT_PARENT_VAR (alias)));
+		    {
+		      alias = SFT_PARENT_VAR (alias);
+		      if (!unmodifiable_var_p (alias))
+			{
+			  bitmap_set_bit (queued, DECL_UID (alias));
+			  var_ann (alias)->escape_mask |= pi->escape_mask;
+			}
+		    }
 		  else if (!unmodifiable_var_p (alias))
 		    mark_call_clobbered (alias, pi->escape_mask);
 		}
-	      /* Process variables we need to clobber all parts of.  */
-	      if (!bitmap_empty_p (queued))
-		{
-		  EXECUTE_IF_SET_IN_BITMAP (queued, 0, j, bi)
-		    {
-		      subvar_t svars = get_subvars_for_var (referenced_var (j));
-		      unsigned int i;
-		      tree subvar;
-
-		      for (i = 0; VEC_iterate (tree, svars, i, subvar); ++i)
-			if (!unmodifiable_var_p (subvar))
-			  mark_call_clobbered (subvar, pi->escape_mask);
-		    }
-		  bitmap_clear (queued);
-		}
+	    }
+	  else if (pi->pt_anything)
+	    {
+	      any_pt_anything = true;
+	      pt_anything_mask |= pi->escape_mask;
 	    }
 	}
 
@@ -644,6 +643,41 @@ set_initial_properties (struct alias_info *ai)
 	  mark_call_clobbered (tag, ESCAPE_IS_GLOBAL);
 	  MTAG_GLOBAL (tag) = true;
 	}
+    }
+
+  /* If a pointer to anything escaped we need to mark all addressable
+     variables call clobbered.  */
+  if (any_pt_anything)
+    {
+      EXECUTE_IF_SET_IN_BITMAP (gimple_addressable_vars (cfun),
+				0, j, bi)
+	{
+	  tree var = referenced_var (j);
+	  if (TREE_CODE (var) == STRUCT_FIELD_TAG)
+	    {
+	      var = SFT_PARENT_VAR (var);
+	      if (!unmodifiable_var_p (var))
+		{
+		  bitmap_set_bit (queued, DECL_UID (var));
+		  var_ann (var)->escape_mask |= pt_anything_mask;
+		}
+	    }
+	  else if (!unmodifiable_var_p (var))
+	    mark_call_clobbered (var, pt_anything_mask);
+	}
+    }
+
+  /* Process variables we need to clobber all parts of.  */
+  EXECUTE_IF_SET_IN_BITMAP (queued, 0, j, bi)
+    {
+      tree var = referenced_var (j);
+      subvar_t svars = get_subvars_for_var (var);
+      unsigned int i;
+      tree subvar;
+      enum escape_type mask = var_ann (var)->escape_mask;
+
+      for (i = 0; VEC_iterate (tree, svars, i, subvar); ++i)
+	mark_call_clobbered (subvar, mask);
     }
 
   BITMAP_FREE (queued);
@@ -832,7 +866,8 @@ mem_sym_score (mem_sym_stats_t mp)
      the list.  They are not stored in partitions, but they are used
      for computing overall statistics.  */
   if (TREE_CODE (mp->var) == STRUCT_FIELD_TAG
-      && SFT_UNPARTITIONABLE_P (mp->var))
+      && SFT_UNPARTITIONABLE_P (mp->var)
+      && !is_call_clobbered (mp->var))
     return LONG_MAX;
 
   return mp->frequency_writes * 64 + mp->frequency_reads * 32
@@ -1539,6 +1574,9 @@ compute_memory_partitions (void)
   VEC(tree,heap) *tags;
   struct mem_ref_stats_d *mem_ref_stats;
   int prev_max_aliased_vops;
+#ifdef ENABLE_CHECKING
+  referenced_var_iterator rvi;
+#endif
 
   mem_ref_stats = gimple_mem_ref_stats (cfun);
   gcc_assert (mem_ref_stats->num_vuses == 0 && mem_ref_stats->num_vdefs == 0);
@@ -1605,11 +1643,67 @@ compute_memory_partitions (void)
 	 fields.  See add_vars_for_offset for details.  */
       if (TREE_CODE (mp_p->var) == STRUCT_FIELD_TAG
 	  && SFT_UNPARTITIONABLE_P (mp_p->var))
-	continue;
+	{
+	  subvar_t subvars;
+	  unsigned i;
+	  tree subvar;
 
-      mpt = find_partition_for (mp_p);
+	  /* For call clobbered we can partition them because we
+	     are sure all subvars end up in the same partition.  */
+	  if (!is_call_clobbered (mp_p->var))
+	    continue;
+
+	  mpt = find_partition_for (mp_p);
+	  estimate_vop_reduction (mem_ref_stats, mp_p, mpt);
+
+	  /* If we encounter a call-clobbered but unpartitionable SFT
+	     partition all SFTs of its parent variable.  */
+	  subvars = get_subvars_for_var (SFT_PARENT_VAR (mp_p->var));
+	  for (i = 0; VEC_iterate (tree, subvars, i, subvar); ++i)
+	    {
+	      if (!var_ann (subvar)->mpt)
+		{
+		  set_memory_partition (subvar, mpt);
+		  mark_sym_for_renaming (subvar);
+		}
+	      else
+		gcc_assert (var_ann (subvar)->mpt == mpt);
+	    }
+
+	  /* ???  We possibly underestimate the VOP reduction if
+	     we do not encounter all subvars before we are below
+	     the threshold.  We could fix this by sorting in a way
+	     that all subvars of a var appear before all
+	     unpartitionable vars of it.  */
+	  continue;
+	}
+
+      /* We might encounter an already partitioned symbol due to
+         the SFT handling above.  Deal with that.  */
+      if (var_ann (mp_p->var)->mpt)
+	mpt = var_ann (mp_p->var)->mpt;
+      else
+	mpt = find_partition_for (mp_p);
       estimate_vop_reduction (mem_ref_stats, mp_p, mpt);
     }
+
+#ifdef ENABLE_CHECKING
+  /* For all partitioned unpartitionable subvars make sure all
+     subvars of its parent var are partitioned into the same partition.  */
+  FOR_EACH_REFERENCED_VAR (tag, rvi)
+    if (TREE_CODE (tag) == STRUCT_FIELD_TAG
+	&& SFT_UNPARTITIONABLE_P (tag)
+	&& var_ann (tag)->mpt != NULL_TREE)
+      {
+	subvar_t subvars;
+	unsigned i;
+	tree subvar;
+
+	subvars = get_subvars_for_var (SFT_PARENT_VAR (tag));
+	for (i = 0; VEC_iterate (tree, subvars, i, subvar); ++i)
+	  gcc_assert (var_ann (subvar)->mpt == var_ann (tag)->mpt);
+      }
+#endif
 
   /* After partitions have been created, rewrite alias sets to use
      them instead of the original symbols.  This way, if the alias set
@@ -2410,6 +2504,8 @@ have_common_aliases_p (bitmap tag1aliases, bitmap tag2aliases)
 static void
 compute_flow_insensitive_aliasing (struct alias_info *ai)
 {
+  referenced_var_iterator rvi;
+  tree var;
   size_t i;
 
   timevar_push (TV_FLOW_INSENSITIVE);
@@ -2521,6 +2617,24 @@ compute_flow_insensitive_aliasing (struct alias_info *ai)
 	}
 
     }
+
+  /* We have to add all HEAP variables to all SMTs aliases bitmaps.
+     As we don't know which effective type the HEAP will have we cannot
+     do better here and we need the conflicts with obfuscated pointers
+     (a simple (*(int[n] *)ptr)[i] will do, with ptr from a VLA array
+     allocation).  */
+  for (i = 0; i < ai->num_pointers; i++)
+    {
+      struct alias_map_d *p_map = ai->pointers[i];
+      tree tag = symbol_mem_tag (p_map->var);
+
+      FOR_EACH_REFERENCED_VAR (var, rvi)
+	{
+	  if (var_ann (var)->is_heapvar)
+	    add_may_alias (tag, var);
+	}
+    }
+
   timevar_pop (TV_FLOW_INSENSITIVE);
 }
 
@@ -2847,16 +2961,6 @@ may_alias_p (tree ptr, alias_set_type mem_alias_set,
      not point to global variables.  */
   if (flag_argument_noalias > 1 && is_global_var (var)
       && TREE_CODE (ptr) == PARM_DECL)
-    {
-      alias_stats.alias_noalias++;
-      alias_stats.simple_resolved++;
-      return false;
-    }
-
-  /* If either MEM or VAR is a read-only global and the other one
-     isn't, then PTR cannot point to VAR.  */
-  if ((unmodifiable_var_p (mem) && !unmodifiable_var_p (var))
-      || (unmodifiable_var_p (var) && !unmodifiable_var_p (mem)))
     {
       alias_stats.alias_noalias++;
       alias_stats.simple_resolved++;
@@ -3200,8 +3304,11 @@ get_smt_for (tree ptr, struct alias_info *ai)
   TREE_THIS_VOLATILE (tag) |= TREE_THIS_VOLATILE (tag_type);
 
   /* Make sure that the symbol tag has the same alias set as the
-     pointed-to type.  */
-  gcc_assert (tag_set == get_alias_set (tag));
+     pointed-to type or at least accesses through the pointer will
+     alias that set.  The latter can happen after the vectorizer
+     created pointers of vector type.  */
+  gcc_assert (tag_set == get_alias_set (tag)
+	      || alias_set_subset_of (tag_set, get_alias_set (tag)));
 
   return tag;
 }
@@ -3673,7 +3780,6 @@ new_type_alias (tree ptr, tree var, tree expr)
     }
 
   set_symbol_mem_tag (ptr, ali);
-  TREE_READONLY (tag) = TREE_READONLY (var);
   MTAG_GLOBAL (tag) = is_global_var (var);
 }
 

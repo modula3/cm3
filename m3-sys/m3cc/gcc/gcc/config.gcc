@@ -195,8 +195,7 @@ md_file=
 
 # Obsolete configurations.
 case ${target} in
-   crx-*		\
- | mt-*			\
+   mt-*			\
  | strongarm*-*		\
  | ep9312*-*		\
  | xscale*-*		\
@@ -393,8 +392,16 @@ then
 fi
 
 case ${target} in
+i[34567]86-*-*)
+	if test "x$enable_cld" = xyes; then
+		tm_defines="${tm_defines} USE_IX86_CLD=1"
+	fi
+	;;
 x86_64-*-*)
 	tm_file="i386/biarch64.h ${tm_file}"
+	if test "x$enable_cld" = xyes; then
+		tm_defines="${tm_defines} USE_IX86_CLD=1"
+	fi
 	;;
 esac
 
@@ -1163,14 +1170,14 @@ i[34567]86-*-linux* | i[34567]86-*-kfreebsd*-gnu | i[34567]86-*-knetbsd*-gnu)
 			# FIXME: -m64 for i[34567]86-*-* should be allowed just
 			# like -m32 for x86_64-*-*.
 			case X"${with_cpu}" in
-			Xgeneric|Xcore2|Xnocona|Xx86-64|Xamdfam10|Xbarcelona|Xk8|Xopteron|Xathlon64|Xathlon-fx)
+			Xgeneric|Xcore2|Xnocona|Xx86-64|Xamdfam10|Xbarcelona|Xk8|Xopteron|Xathlon64|Xathlon-fx|Xathlon64-sse3|Xk8-sse3|Xopteron-sse3)
 				;;
 			X)
 				with_cpu=generic
 				;;
 			*)
 				echo "Unsupported CPU used in --with-cpu=$with_cpu, supported values:" 1>&2
-				echo "generic core2 nocona x86-64 amdfam10 barcelona k8 opteron athlon64 athlon-fx" 1>&2
+				echo "generic core2 nocona x86-64 amdfam10 barcelona k8 opteron athlon64 athlon-fx athlon64-sse3 k8-sse3 opteron-sse3" 1>&2
 				exit 1
 				;;
 			esac
@@ -1264,7 +1271,7 @@ i[34567]86-*-solaris2*)
 		;;
 	esac
 	tm_file="${tm_file} i386/sol2.h"
-	tmake_file="t-sol2 i386/t-sol2 t-svr4"
+	tmake_file="t-sol2 t-svr4"
 	c_target_objs="sol2-c.o"
 	cxx_target_objs="sol2-c.o"
 	extra_objs="sol2.o"
@@ -1287,28 +1294,25 @@ i[34567]86-*-solaris2*)
 	*-*-solaris2.1[0-9]*)
 		tm_file="${tm_file} i386/x86-64.h i386/sol2-10.h"
 		tm_defines="${tm_defines} TARGET_BI_ARCH=1"
-		tmake_file="$tmake_file i386/t-crtstuff i386/t-sol2-10"
+		tmake_file="$tmake_file i386/t-sol2-10"
+		# i386/t-crtstuff only affects libgcc.  Its inclusion
+		# depends on a runtime test and is thus performed in
+		# libgcc/configure.ac instead.
 		need_64bit_hwint=yes
 		# FIXME: -m64 for i[34567]86-*-* should be allowed just
 		# like -m32 for x86_64-*-*.
 		case X"${with_cpu}" in
-		Xgeneric|Xcore2|Xnocona|Xx86-64|Xamdfam10|Xbarcelona|Xk8|Xopteron|Xathlon64|Xathlon-fx)
+		Xgeneric|Xcore2|Xnocona|Xx86-64|Xamdfam10|Xbarcelona|Xk8|Xopteron|Xathlon64|Xathlon-fx|Xathlon64-sse3|Xk8-sse3|Xopteron-sse3)
 			;;
 		X)
 			with_cpu=generic
 			;;
 		*)
 			echo "Unsupported CPU used in --with-cpu=$with_cpu, supported values:" 1>&2
-			echo "generic core2 nocona x86-64 amdfam10 barcelona k8 opteron athlon64 athlon-fx" 1>&2
+			echo "generic core2 nocona x86-64 amdfam10 barcelona k8 opteron athlon64 athlon-fx athlon64-sse3 k8-sse3 opteron-sse3" 1>&2
 			exit 1
 			;;
 		esac
-		# Solaris 2.10 provides crt1.o, crti.o, crtn.o, and gcrt1.o as
-		# part of the base system.
-		extra_parts="gmon.o crtbegin.o crtend.o"
-		;;
-	*)
-		extra_parts="crt1.o crti.o crtn.o gcrt1.o gmon.o crtbegin.o crtend.o"
 		;;
 	esac
 	case ${enable_threads}:${have_pthread_h}:${have_thread_h} in
@@ -1971,7 +1975,7 @@ powerpc-*-linux*paired*)
 powerpc-*-linux*)
 	tm_file="${tm_file} dbxelf.h elfos.h svr4.h freebsd-spec.h rs6000/sysv4.h"
 	extra_options="${extra_options} rs6000/sysv4.opt"
-	tmake_file="t-dfprules rs6000/t-fprules rs6000/t-fprules-softfp soft-fp/t-softfp rs6000/t-ppcos ${tmake_file} rs6000/t-ppccomm"
+	tmake_file="t-dfprules rs6000/t-fprules rs6000/t-ppcos ${tmake_file} rs6000/t-ppccomm"
 	case ${enable_targets}:${cpu_is_64bit} in
 	    *powerpc64* | all:* | *:yes)
 		if test x$cpu_is_64bit = xyes; then
@@ -1985,6 +1989,7 @@ powerpc-*-linux*)
 		tm_file="${tm_file} rs6000/linux.h"
 		;;
 	esac
+	tmake_file="${tmake_file} rs6000/t-fprules-softfp soft-fp/t-softfp"
 	if test x${enable_secureplt} = xyes; then
 		tm_file="rs6000/secureplt.h ${tm_file}"
 	fi
@@ -2343,7 +2348,7 @@ sparc-*-elf*)
 	use_fixproto=yes
 	;;
 sparc-*-linux*)		# SPARC's running GNU/Linux, libc6
-	tm_file="${tm_file} dbxelf.h elfos.h svr4.h sparc/sysv4.h sparc/linux.h"
+	tm_file="${tm_file} dbxelf.h elfos.h svr4.h sparc/sysv4.h sparc/gas.h sparc/linux.h"
 	extra_options="${extra_options} sparc/long-double-switch.opt"
 	tmake_file="${tmake_file} sparc/t-linux sparc/t-crtfm"
 	;;
@@ -2477,7 +2482,7 @@ sparc64-*-freebsd*|ultrasparc-*-freebsd*)
 	need_64bit_hwint=yes
 	;;
 sparc64-*-linux*)		# 64-bit SPARC's running GNU/Linux
-	tm_file="sparc/biarch64.h ${tm_file} dbxelf.h elfos.h svr4.h sparc/sysv4.h sparc/linux64.h"
+	tm_file="sparc/biarch64.h ${tm_file} dbxelf.h elfos.h svr4.h sparc/sysv4.h sparc/gas.h sparc/linux64.h"
 	extra_options="${extra_options} sparc/long-double-switch.opt"
 	tmake_file="${tmake_file} sparc/t-linux sparc/t-linux64 sparc/t-crtfm"
 	;;
@@ -2709,7 +2714,10 @@ if test x$with_cpu = x ; then
         amdfam10-*|barcelona-*)
           with_cpu=amdfam10
           ;;
-        k8-*|opteron-*|athlon_64-*)
+        k8_sse3-*|opteron_sse3-*|athlon64_sse3-*)
+          with_cpu=k8-sse3
+          ;;
+        k8-*|opteron-*|athlon64-*|athlon_fx-*)
           with_cpu=k8
           ;;
         athlon_xp-*|athlon_mp-*|athlon_4-*)
@@ -2755,7 +2763,10 @@ if test x$with_cpu = x ; then
         amdfam10-*|barcelona-*)
           with_cpu=amdfam10
           ;;
-        k8-*|opteron-*|athlon_64-*)
+        k8_sse3-*|opteron_sse3-*|athlon64_sse3-*)
+          with_cpu=k8-sse3
+          ;;
+        k8-*|opteron-*|athlon64-*|athlon_fx-*)
           with_cpu=k8
           ;;
         nocona-*)
@@ -3037,7 +3048,7 @@ case "${target}" in
 				esac
 				# OK
 				;;
-			"" | amdfam10 | barcelona | k8 | opteron | athlon64 | athlon-fx | nocona | core2 | generic)
+			"" | amdfam10 | barcelona | k8-sse3 | opteron-sse3 | athlon64-sse3 | k8 | opteron | athlon64 | athlon-fx | nocona | core2 | generic)
 				# OK
 				;;
 			*)

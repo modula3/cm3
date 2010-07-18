@@ -7378,7 +7378,7 @@ label:
 (define_insn "jump_compact"
   [(set (pc)
 	(label_ref (match_operand 0 "" "")))]
-  "TARGET_SH1"
+  "TARGET_SH1 && !find_reg_note (insn, REG_CROSSING_JUMP, NULL_RTX)"
   "*
 {
   /* The length is 16 if the delay slot is unfilled.  */
@@ -8743,9 +8743,6 @@ label:
   MEM_NOTRAP_P (mem) = 1;
   /* ??? Should we have a special alias set for the GOT?  */
   insn = emit_move_insn (operands[0], mem);
-
-  set_unique_reg_note (insn, REG_EQUAL,
-		       XVECEXP (XEXP (operands[1], 0), 0, 0));
 
   DONE;
 }")

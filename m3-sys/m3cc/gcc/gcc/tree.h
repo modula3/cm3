@@ -4753,6 +4753,7 @@ extern tree native_interpret_expr (tree, const unsigned char *, int);
 
 extern tree fold (tree);
 extern tree fold_unary (enum tree_code, tree, tree);
+extern tree fold_unary_ignore_overflow (enum tree_code, tree, tree);
 extern tree fold_binary (enum tree_code, tree, tree, tree);
 extern tree fold_ternary (enum tree_code, tree, tree, tree, tree);
 extern tree fold_build1_stat (enum tree_code, tree, tree MEM_STAT_DECL);
@@ -5263,6 +5264,9 @@ extern unsigned HOST_WIDE_INT highest_pow2_factor (const_tree);
 /* In tree-inline.c.  */
 
 void init_inline_once (void);
+
+/* In ipa-reference.c.  Used for parsing attributes of asm code.  */
+extern GTY(()) tree memory_identifier_string;
 
 /* Compute the number of operands in an expression node NODE.  For 
    tcc_vl_exp nodes like CALL_EXPRs, this is stored in the node itself,

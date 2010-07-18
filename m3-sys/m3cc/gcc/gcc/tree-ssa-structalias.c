@@ -227,11 +227,6 @@ struct variable_info
   /* A link to the variable for the next field in this structure.  */
   struct variable_info *next;
 
-  /* True if the variable is directly the target of a dereference.
-     This is used to track which variables are *actually* dereferenced
-     so we can prune their points to listed. */
-  unsigned int directly_dereferenced:1;
-
   /* True if this is a variable created by the constraint analysis, such as
      heap variables and constraints we had to break up.  */
   unsigned int is_artificial_var:1;
@@ -245,6 +240,9 @@ struct variable_info
 
   /* True for variables that have unions somewhere in them.  */
   unsigned int has_union:1;
+
+  /* True for (sub-)fields that represent a whole variable.  */
+  unsigned int is_full_var : 1;
 
   /* True if this is a heap variable.  */
   unsigned int is_heap_var:1;
@@ -364,11 +362,11 @@ new_var_info (tree t, unsigned int id, const char *name)
   ret->id = id;
   ret->name = name;
   ret->decl = t;
-  ret->directly_dereferenced = false;
   ret->is_artificial_var = false;
   ret->is_heap_var = false;
   ret->is_special_var = false;
   ret->is_unknown_size_var = false;
+  ret->is_full_var = false;
   ret->has_union = false;
   var = t;
   if (TREE_CODE (var) == SSA_NAME)
@@ -748,23 +746,33 @@ solution_set_add (bitmap set, unsigned HOST_WIDE_INT offset)
 
   EXECUTE_IF_SET_IN_BITMAP (set, 0, i, bi)
     {
-      /* If this is a properly sized variable, only add offset if it's
-	 less than end.  Otherwise, it is globbed to a single
-	 variable.  */
+      varinfo_t vi = get_varinfo (i);
 
-      if ((get_varinfo (i)->offset + offset) < get_varinfo (i)->fullsize)
+      /* If this is a variable with just one field just set its bit
+	 in the result.  */
+      if (vi->is_artificial_var
+	  || vi->is_unknown_size_var
+	  || vi->has_union
+	  || vi->is_full_var)
+	bitmap_set_bit (result, i);
+      else
 	{
-	  unsigned HOST_WIDE_INT fieldoffset = get_varinfo (i)->offset + offset;
-	  varinfo_t v = first_vi_for_offset (get_varinfo (i), fieldoffset);
+	  unsigned HOST_WIDE_INT fieldoffset = vi->offset + offset;
+	  varinfo_t v = first_vi_for_offset (vi, fieldoffset);
+	  /* If the result is outside of the variable use the last field.  */
 	  if (!v)
-	    continue;
+	    {
+	      v = vi;
+	      while (v->next != NULL)
+		v = v->next;
+	    }
 	  bitmap_set_bit (result, v->id);
-	}
-      else if (get_varinfo (i)->is_artificial_var
-	       || get_varinfo (i)->has_union
-	       || get_varinfo (i)->is_unknown_size_var)
-	{
-	  bitmap_set_bit (result, i);
+	  /* If the result is not exactly at fieldoffset include the next
+	     field as well.  See get_constraint_for_ptr_offset for more
+	     rationale.  */
+	  if (v->offset != fieldoffset
+	      && v->next != NULL)
+	    bitmap_set_bit (result, v->next->id);
 	}
     }
 
@@ -1377,7 +1385,8 @@ type_safe (unsigned int n, unsigned HOST_WIDE_INT *offset)
      0.  */
   if (ninfo->is_special_var
       || ninfo->is_artificial_var
-      || ninfo->is_unknown_size_var)
+      || ninfo->is_unknown_size_var
+      || ninfo->is_full_var)
     {
       *offset = 0;
       return true;
@@ -1417,6 +1426,7 @@ do_sd_constraint (constraint_graph_t graph, constraint_t c,
 	  unsigned int t;
 
 	  v = first_vi_for_offset (get_varinfo (j), fieldoffset);
+	  /* If the access is outside of the variable we can ignore it.  */
 	  if (!v)
 	    continue;
 	  t = find (v->id);
@@ -1466,9 +1476,14 @@ do_ds_constraint (constraint_t c, bitmap delta)
 	 unsigned HOST_WIDE_INT fieldoffset = jvi->offset + loff;
 	 varinfo_t v;
 
-	 v = first_vi_for_offset (get_varinfo (j), fieldoffset);
-	 if (!v)
-	   continue;
+	 v = get_varinfo (j);
+	 if (!v->is_full_var)
+	   {
+	     v = first_vi_for_offset (v, fieldoffset);
+	     /* If the access is outside of the variable we can ignore it.  */
+	     if (!v)
+	       continue;
+	   }
 	 t = find (v->id);
 
 	 if (!bitmap_bit_p (get_varinfo (t)->solution, anything_id))
@@ -1494,23 +1509,23 @@ do_ds_constraint (constraint_t c, bitmap delta)
 	  varinfo_t v;
 	  unsigned int t;
 	  unsigned HOST_WIDE_INT fieldoffset = get_varinfo (j)->offset + loff;
-	  bitmap tmp;
 
 	  v = first_vi_for_offset (get_varinfo (j), fieldoffset);
+	  /* If the access is outside of the variable we can ignore it.  */
 	  if (!v)
 	    continue;
 	  t = find (v->id);
-	  tmp = get_varinfo (t)->solution;
-
-	  if (set_union_with_increment (tmp, sol, 0))
+	  if (add_graph_edge (graph, t, rhs))
 	    {
-	      get_varinfo (t)->solution = tmp;
-	      if (t == rhs)
-		sol = get_varinfo (rhs)->solution;
-	      if (!TEST_BIT (changed, t))
+	      if (bitmap_ior_into (get_varinfo (t)->solution, sol))
 		{
-		  SET_BIT (changed, t);
-		  changed_count++;
+		  if (t == rhs)
+		    sol = get_varinfo (rhs)->solution;
+		  if (!TEST_BIT (changed, t))
+		    {
+		      SET_BIT (changed, t);
+		      changed_count++;
+		    }
 		}
 	    }
 	}
@@ -2525,20 +2540,6 @@ process_constraint_1 (constraint_t t, bool from_call)
   gcc_assert (rhs.var < VEC_length (varinfo_t, varmap));
   gcc_assert (lhs.var < VEC_length (varinfo_t, varmap));
 
-  if (!from_call)
-    {
-      if (lhs.type == DEREF)
-	get_varinfo (lhs.var)->directly_dereferenced = true;
-      if (rhs.type == DEREF)
-	get_varinfo (rhs.var)->directly_dereferenced = true;
-    }
-
-  if (!use_field_sensitive)
-    {
-      t->rhs.offset = 0;
-      t->lhs.offset = 0;
-    }
-
   /* ANYTHING == ANYTHING is pointless.  */
   if (lhs.var == anything_id && rhs.var == anything_id)
     return;
@@ -2607,8 +2608,7 @@ could_have_pointers (tree t)
   tree type = TREE_TYPE (t);
 
   if (POINTER_TYPE_P (type)
-      || AGGREGATE_TYPE_P (type)
-      || TREE_CODE (type) == COMPLEX_TYPE)
+      || AGGREGATE_TYPE_P (type))
     return true;
 
   return false;
@@ -2648,6 +2648,122 @@ offset_overlaps_with_access (const unsigned HOST_WIDE_INT fieldpos,
 
   return false;
 }
+
+
+/* Get constraint expressions for offsetting PTR by OFFSET.  Stores the
+   resulting constraint expressions in *RESULTS.  */
+
+static void
+get_constraint_for_ptr_offset (tree ptr, tree offset,
+			       VEC (ce_s, heap) **results)
+{
+  struct constraint_expr c;
+  unsigned int j, n;
+  unsigned HOST_WIDE_INT rhsunitoffset, rhsoffset;
+
+  /* If we do not do field-sensitive PTA adding offsets to pointers
+     does not change the points-to solution.  */
+  if (!use_field_sensitive)
+    {
+      get_constraint_for (ptr, results);
+      return;
+    }
+
+  /* If the offset is not a non-negative integer constant that fits
+     in a HOST_WIDE_INT, we have to fall back to a conservative
+     solution which includes all sub-fields of all pointed-to
+     variables of ptr.
+     ???  As we do not have the ability to express this, fall back
+     to anything.  */
+  if (!host_integerp (offset, 1))
+    {
+      struct constraint_expr temp;
+      temp.var = anything_id;
+      temp.type = SCALAR;
+      temp.offset = 0;
+      VEC_safe_push (ce_s, heap, *results, &temp);
+      return;
+    }
+
+  /* Make sure the bit-offset also fits.  */
+  rhsunitoffset = TREE_INT_CST_LOW (offset);
+  rhsoffset = rhsunitoffset * BITS_PER_UNIT;
+  if (rhsunitoffset != rhsoffset / BITS_PER_UNIT)
+    {
+      struct constraint_expr temp;
+      temp.var = anything_id;
+      temp.type = SCALAR;
+      temp.offset = 0;
+      VEC_safe_push (ce_s, heap, *results, &temp);
+      return;
+    }
+
+  get_constraint_for (ptr, results);
+  if (rhsoffset == 0)
+    return;
+
+  /* As we are eventually appending to the solution do not use
+     VEC_iterate here.  */
+  n = VEC_length (ce_s, *results);
+  for (j = 0; j < n; j++)
+    {
+      varinfo_t curr;
+      c = *VEC_index (ce_s, *results, j);
+      curr = get_varinfo (c.var);
+
+      if (c.type == ADDRESSOF
+	  && !curr->is_full_var)
+	{
+	  varinfo_t temp, curr = get_varinfo (c.var);
+
+	  /* Search the sub-field which overlaps with the
+	     pointed-to offset.  As we deal with positive offsets
+	     only, we can start the search from the current variable.  */
+	  temp = first_vi_for_offset (curr, curr->offset + rhsoffset);
+
+	  /* If the result is outside of the variable we have to provide
+	     a conservative result, as the variable is still reachable
+	     from the resulting pointer (even though it technically
+	     cannot point to anything).  The last sub-field is such
+	     a conservative result.
+	     ???  If we always had a sub-field for &object + 1 then
+	     we could represent this in a more precise way.  */
+	  if (temp == NULL)
+	    {
+	      temp = curr;
+	      while (temp->next != NULL)
+		temp = temp->next;
+	      continue;
+	    }
+
+	  /* If the found variable is not exactly at the pointed to
+	     result, we have to include the next variable in the
+	     solution as well.  Otherwise two increments by offset / 2
+	     do not result in the same or a conservative superset
+	     solution.  */
+	  if (temp->offset != curr->offset + rhsoffset
+	      && temp->next != NULL)
+	    {
+	      struct constraint_expr c2;
+	      c2.var = temp->next->id;
+	      c2.type = ADDRESSOF;
+	      c2.offset = 0;
+	      VEC_safe_push (ce_s, heap, *results, &c2);
+	    }
+	  c.var = temp->id;
+	  c.offset = 0;
+	}
+      else if (c.type == ADDRESSOF
+	       /* If this varinfo represents a full variable just use it.  */
+	       && curr->is_full_var)
+	c.offset = 0;
+      else
+	c.offset = rhsoffset;
+
+      VEC_replace (ce_s, *results, j, &c);
+    }
+}
+
 
 /* Given a COMPONENT_REF T, return the constraint_expr for it.  */
 
@@ -2696,7 +2812,11 @@ get_constraint_for_component_ref (tree t, VEC(ce_s, heap) **results)
   if (TREE_CODE (t) != ADDR_EXPR && result->type == ADDRESSOF)
     result->type = SCALAR;
 
-  if (result->type == SCALAR)
+  if (result->type == SCALAR
+      && get_varinfo (result->var)->is_full_var)
+    /* For single-field vars do not bother about the offset.  */
+    result->offset = 0;
+  else if (result->type == SCALAR)
     {
       /* In languages like C, you can access one past the end of an
 	 array.  You aren't allowed to dereference it, so we can
@@ -2815,32 +2935,8 @@ get_constraint_for (tree t, VEC (ce_s, heap) **results)
 	      struct constraint_expr *c;
 	      unsigned int i;
 	      tree exp = TREE_OPERAND (t, 0);
-	      tree pttype = TREE_TYPE (TREE_TYPE (t));
 
 	      get_constraint_for (exp, results);
-
-
-	      /* Complex types are special. Taking the address of one
-		 allows you to access either part of it through that
-		 pointer.  */
-	      if (VEC_length (ce_s, *results) == 1 &&
-		  TREE_CODE (pttype) == COMPLEX_TYPE)
-		{
-		  struct constraint_expr *origrhs;
-		  varinfo_t origvar;
-		  struct constraint_expr tmp;
-
-		  gcc_assert (VEC_length (ce_s, *results) == 1);
-		  origrhs = VEC_last (ce_s, *results);
-		  tmp = *origrhs;
-		  VEC_pop (ce_s, *results);
-		  origvar = get_varinfo (origrhs->var);
-		  for (; origvar; origvar = origvar->next)
-		    {
-		      tmp.var = origvar->id;
-		      VEC_safe_push (ce_s, heap, *results, &tmp);
-		    }
-		}
 
 	      for (i = 0; VEC_iterate (ce_s, *results, i, c); i++)
 		{
@@ -2956,6 +3052,16 @@ get_constraint_for (tree t, VEC (ce_s, heap) **results)
 	      return;
 	    }
 	  }
+      }
+    case tcc_binary:
+      {
+	if (TREE_CODE (t) == POINTER_PLUS_EXPR)
+	  {
+	    get_constraint_for_ptr_offset (TREE_OPERAND (t, 0),
+					   TREE_OPERAND (t, 1), results);
+	    return;
+	  }
+	break;
       }
     case tcc_exceptional:
       {
@@ -3481,6 +3587,29 @@ update_alias_info (tree stmt, struct alias_info *ai)
 
       mem_ref_stats->num_mem_stmts++;
 
+      /* Add all decls written to to the list of written variables.  */
+      if (TREE_CODE (stmt) == GIMPLE_MODIFY_STMT
+	  && TREE_CODE (GIMPLE_STMT_OPERAND (stmt, 0)) != SSA_NAME)
+	{
+	  tree lhs = GIMPLE_STMT_OPERAND (stmt, 0);
+	  while (handled_component_p (lhs))
+	    lhs = TREE_OPERAND (lhs, 0);
+	  if (DECL_P (lhs))
+	    {
+	      subvar_t svars;
+	      if (var_can_have_subvars (lhs)
+		  && (svars = get_subvars_for_var (lhs)))
+		{
+		  unsigned int i;
+		  tree subvar;
+		  for (i = 0; VEC_iterate (tree, svars, i, subvar); ++i)
+		    pointer_set_insert (ai->written_vars, subvar);
+		}
+	      else
+		pointer_set_insert (ai->written_vars, lhs);
+	    }
+	}
+
       /* Notice that we only update memory reference stats for symbols
 	 loaded and stored by the statement if the statement does not
 	 contain pointer dereferences and it is not a call/asm site.
@@ -3503,121 +3632,22 @@ update_alias_info (tree stmt, struct alias_info *ai)
 	 dereferences (e.g., MEMORY_VAR = *PTR) or if a call site has
 	 memory symbols in its argument list, but these cases do not
 	 occur so frequently as to constitute a serious problem.  */
-      if (STORED_SYMS (stmt))
-	EXECUTE_IF_SET_IN_BITMAP (STORED_SYMS (stmt), 0, i, bi)
-	  {
-	    tree sym = referenced_var (i);
-	    pointer_set_insert (ai->written_vars, sym);
-	    if (!stmt_dereferences_ptr_p
-		&& stmt_escape_type != ESCAPE_TO_CALL
-		&& stmt_escape_type != ESCAPE_TO_PURE_CONST
-		&& stmt_escape_type != ESCAPE_TO_ASM)
-	      update_mem_sym_stats_from_stmt (sym, stmt, 0, 1);
-	  }
-
       if (!stmt_dereferences_ptr_p
-	  && LOADED_SYMS (stmt)
 	  && stmt_escape_type != ESCAPE_TO_CALL
 	  && stmt_escape_type != ESCAPE_TO_PURE_CONST
 	  && stmt_escape_type != ESCAPE_TO_ASM)
-	EXECUTE_IF_SET_IN_BITMAP (LOADED_SYMS (stmt), 0, i, bi)
-	  update_mem_sym_stats_from_stmt (referenced_var (i), stmt, 1, 0);
+	{
+	  if (STORED_SYMS (stmt))
+	    EXECUTE_IF_SET_IN_BITMAP (STORED_SYMS (stmt), 0, i, bi)
+	      update_mem_sym_stats_from_stmt (referenced_var (i), stmt, 0, 1);
+
+	  if (LOADED_SYMS (stmt))
+	    EXECUTE_IF_SET_IN_BITMAP (LOADED_SYMS (stmt), 0, i, bi)
+	      update_mem_sym_stats_from_stmt (referenced_var (i), stmt, 1, 0);
+	}
     }
 }
 
-
-/* Handle pointer arithmetic EXPR when creating aliasing constraints.
-   Expressions of the type PTR + CST can be handled in two ways:
-
-   1- If the constraint for PTR is ADDRESSOF for a non-structure
-      variable, then we can use it directly because adding or
-      subtracting a constant may not alter the original ADDRESSOF
-      constraint (i.e., pointer arithmetic may not legally go outside
-      an object's boundaries).
-
-   2- If the constraint for PTR is ADDRESSOF for a structure variable,
-      then if CST is a compile-time constant that can be used as an
-      offset, we can determine which sub-variable will be pointed-to
-      by the expression.
-
-   Return true if the expression is handled.  For any other kind of
-   expression, return false so that each operand can be added as a
-   separate constraint by the caller.  */
-
-static bool
-handle_ptr_arith (VEC (ce_s, heap) *lhsc, tree expr)
-{
-  tree op0, op1;
-  struct constraint_expr *c, *c2;
-  unsigned int i = 0;
-  unsigned int j = 0;
-  VEC (ce_s, heap) *temp = NULL;
-  unsigned int rhsoffset = 0;
-  bool unknown_addend = false;
-
-  if (TREE_CODE (expr) != POINTER_PLUS_EXPR)
-    return false;
-
-  op0 = TREE_OPERAND (expr, 0);
-  op1 = TREE_OPERAND (expr, 1);
-  gcc_assert (POINTER_TYPE_P (TREE_TYPE (op0)));
-
-  get_constraint_for (op0, &temp);
-
-  /* Handle non-constants by making constraints from integer.  */
-  if (TREE_CODE (op1) == INTEGER_CST)
-    rhsoffset = TREE_INT_CST_LOW (op1) * BITS_PER_UNIT;
-  else
-    unknown_addend = true;
-
-  for (i = 0; VEC_iterate (ce_s, lhsc, i, c); i++)
-    for (j = 0; VEC_iterate (ce_s, temp, j, c2); j++)
-      {
-	if (c2->type == ADDRESSOF && rhsoffset != 0)
-	  {
-	    varinfo_t temp = get_varinfo (c2->var);
-
-	    /* An access one after the end of an array is valid,
-	       so simply punt on accesses we cannot resolve.  */
-	    temp = first_vi_for_offset (temp, rhsoffset);
-	    if (temp == NULL)
-	      continue;
-	    c2->var = temp->id;
-	    c2->offset = 0;
-	  }
-	else if (unknown_addend)
-	  {
-	    /* Can't handle *a + integer where integer is unknown.  */
-	    if (c2->type != SCALAR)
-	      {
-		struct constraint_expr intc;
-		intc.var = integer_id;
-		intc.offset = 0;
-		intc.type = SCALAR;
-		process_constraint (new_constraint (*c, intc));
-	      }
-	    else
-	      {
-		/* We known it lives somewhere within c2->var.  */
-		varinfo_t tmp = get_varinfo (c2->var);
-		for (; tmp; tmp = tmp->next)
-		  {
-		    struct constraint_expr tmpc = *c2;
-		    c2->var = tmp->id;
-		    c2->offset = 0;
-		    process_constraint (new_constraint (*c, tmpc));
-		  }
-	      }
-	  }
-	else
-	  c2->offset = rhsoffset;
-	process_constraint (new_constraint (*c, *c2));
-      }
-
-  VEC_free (ce_s, heap, temp);
-
-  return true;
-}
 
 /* For non-IPA mode, generate constraints necessary for a call on the
    RHS.  */
@@ -3849,10 +3879,8 @@ find_func_aliases (tree origt)
       tree rhsop = GIMPLE_STMT_OPERAND (t, 1);
       int i;
 
-      if ((AGGREGATE_TYPE_P (TREE_TYPE (lhsop))
-	   || TREE_CODE (TREE_TYPE (lhsop)) == COMPLEX_TYPE)
-	  && (AGGREGATE_TYPE_P (TREE_TYPE (rhsop))
-	      || TREE_CODE (TREE_TYPE (lhsop)) == COMPLEX_TYPE))
+      if (AGGREGATE_TYPE_P (TREE_TYPE (lhsop))
+	  && AGGREGATE_TYPE_P (TREE_TYPE (rhsop)))
 	{
 	  do_structure_copy (lhsop, rhsop);
 	}
@@ -3876,6 +3904,7 @@ find_func_aliases (tree origt)
 		  case tcc_expression:
 		  case tcc_vl_exp:
 		  case tcc_unary:
+		  case tcc_binary:
 		      {
 			unsigned int j;
 
@@ -3888,20 +3917,8 @@ find_func_aliases (tree origt)
 			    for (k = 0; VEC_iterate (ce_s, rhsc, k, c2); k++)
 			      process_constraint (new_constraint (*c, *c2));
 			  }
-
 		      }
 		    break;
-
-		  case tcc_binary:
-		      {
-			/* For pointer arithmetic of the form
-			   PTR + CST, we can simply use PTR's
-			   constraint because pointer arithmetic is
-			   not allowed to go out of bounds.  */
-			if (handle_ptr_arith (lhsc, rhsop))
-			  break;
-		      }
-		    /* FALLTHRU  */
 
 		  /* Otherwise, walk each operand.  Notice that we
 		     can't use the operand interface because we need
@@ -4021,14 +4038,20 @@ fieldoff_compare (const void *pa, const void *pb)
 {
   const fieldoff_s *foa = (const fieldoff_s *)pa;
   const fieldoff_s *fob = (const fieldoff_s *)pb;
-  HOST_WIDE_INT foasize, fobsize;
+  unsigned HOST_WIDE_INT foasize, fobsize;
 
-  if (foa->offset != fob->offset)
-    return foa->offset - fob->offset;
+  if (foa->offset < fob->offset)
+    return -1;
+  else if (foa->offset > fob->offset)
+    return 1;
 
   foasize = TREE_INT_CST_LOW (foa->size);
   fobsize = TREE_INT_CST_LOW (fob->size);
-  return foasize - fobsize;
+  if (foasize < fobsize)
+    return - 1;
+  else if (foasize > fobsize)
+    return 1;
+  return 0;
 }
 
 /* Sort a fieldstack according to the field offset and sizes.  */
@@ -4180,11 +4203,15 @@ push_fields_onto_fieldstack (tree type, VEC(fieldoff_s,heap) **fieldstack,
 		        (DECL_NONADDRESSABLE_P (field)
 		         ? addressable_type
 		         : TREE_TYPE (field))))
-		     && DECL_SIZE (field)
-		     && !integer_zerop (DECL_SIZE (field)))
-	      /* Empty structures may have actual size, like in C++. So
+		     && ((DECL_SIZE (field)
+			  && !integer_zerop (DECL_SIZE (field)))
+			 || (!DECL_SIZE (field)
+			     && TREE_CODE (TREE_TYPE (field)) == ARRAY_TYPE)))
+	      /* Empty structures may have actual size, like in C++.  So
 	         see if we didn't push any subfields and the size is
-	         nonzero, push the field onto the stack */
+	         nonzero, push the field onto the stack.  Trailing flexible
+		 array members also need a representative to be able to
+		 treat taking their address in PTA.  */
 	      push = true;
 
 	    if (push)
@@ -4281,8 +4308,7 @@ create_function_info_for (tree decl, const char *name)
   stats.total_vars++;
 
   /* If it's varargs, we don't know how many arguments it has, so we
-     can't do much.
-  */
+     can't do much.  */
   if (is_varargs)
     {
       vi->fullsize = ~0;
@@ -4316,6 +4342,7 @@ create_function_info_for (tree decl, const char *name)
       VEC_safe_push (varinfo_t, heap, varmap, argvi);
       argvi->offset = i;
       argvi->size = 1;
+      argvi->is_full_var = true;
       argvi->fullsize = vi->fullsize;
       argvi->has_union = false;
       insert_into_field_list_sorted (vi, argvi);
@@ -4353,6 +4380,7 @@ create_function_info_for (tree decl, const char *name)
       resultvi->offset = i;
       resultvi->size = 1;
       resultvi->fullsize = vi->fullsize;
+      resultvi->is_full_var = true;
       resultvi->has_union = false;
       insert_into_field_list_sorted (vi, resultvi);
       stats.total_vars ++;
@@ -4488,6 +4516,7 @@ create_variable_info_for (tree decl, const char *name)
 	  vi->is_unknown_size_var = 1;
 	  vi->fullsize = ~0;
 	  vi->size = ~0;
+	  vi->is_full_var = true;
 	  VEC_free (fieldoff_s, heap, fieldstack);
 	  return index;
 	}
@@ -4526,6 +4555,8 @@ create_variable_info_for (tree decl, const char *name)
 	  stats.total_vars++;
 	}
     }
+  else
+    vi->is_full_var = true;
 
   VEC_free (fieldoff_s, heap, fieldstack);
 
@@ -4611,6 +4642,7 @@ intra_create_variable_infos (void)
 	      heapvar_insert (t, heapvar);
 
 	      ann = get_var_ann (heapvar);
+	      ann->is_heapvar = 1;
 	      if (flag_argument_noalias == 1)
 		ann->noalias_state = NO_ALIAS;
 	      else if (flag_argument_noalias == 2)
@@ -4724,20 +4756,16 @@ shared_bitmap_add (bitmap pt_vars)
    the from set.  */
 
 static void
-set_uids_in_ptset (tree ptr, bitmap into, bitmap from, bool is_derefed,
-		   bool no_tbaa_pruning)
+set_uids_in_ptset (tree ptr, bitmap into, bitmap from)
 {
   unsigned int i;
   bitmap_iterator bi;
-  alias_set_type ptr_alias_set;
 
   gcc_assert (POINTER_TYPE_P (TREE_TYPE (ptr)));
-  ptr_alias_set = get_alias_set (TREE_TYPE (TREE_TYPE (ptr)));
 
   EXECUTE_IF_SET_IN_BITMAP (from, 0, i, bi)
     {
       varinfo_t vi = get_varinfo (i);
-      alias_set_type var_alias_set;
 
       /* The only artificial variables that are allowed in a may-alias
 	 set are heap variables.  */
@@ -4753,7 +4781,19 @@ set_uids_in_ptset (tree ptr, bitmap into, bitmap from, bool is_derefed,
 	  /* Variables containing unions may need to be converted to
 	     their SFT's, because SFT's can have unions and we cannot.  */
 	  for (i = 0; VEC_iterate (tree, sv, i, subvar); ++i)
-	    bitmap_set_bit (into, DECL_UID (subvar));
+	    {
+	      /* Pointed-to SFTs are needed by the operand scanner
+		 to adjust offsets when adding operands to memory
+		 expressions that dereference PTR.  This means
+		 that memory partitioning may not partition
+		 this SFT because the operand scanner will not
+		 be able to find the other SFTs next to this
+		 one.  But we only need to do this if the pointed
+		 to type is aggregate.  */
+	      if (SFT_BASE_FOR_COMPONENTS_P (subvar))
+		SFT_UNPARTITIONABLE_P (subvar) = true;
+	      bitmap_set_bit (into, DECL_UID (subvar));
+	    }
 	}
       else if (TREE_CODE (vi->decl) == VAR_DECL
 	       || TREE_CODE (vi->decl) == PARM_DECL
@@ -4764,54 +4804,39 @@ set_uids_in_ptset (tree ptr, bitmap into, bitmap from, bool is_derefed,
 	      && (sv = get_subvars_for_var (vi->decl)))
 	    {
 	      /* If VI->DECL is an aggregate for which we created
-		 SFTs, add the SFT corresponding to VI->OFFSET.
+		 SFTs, add the SFT corresponding to VI->OFFSET (the
+		 pointed-to location) and the access size.
 		 If we didn't do field-sensitive PTA we need to to
 		 add all overlapping SFTs.  */
 	      unsigned int j;
-	      tree sft = get_first_overlapping_subvar (sv, vi->offset,
-						       vi->size, &j);
-	      gcc_assert (sft);
+	      unsigned HOST_WIDE_INT size = -1;
+	      tree sft, tsize = TYPE_SIZE (TREE_TYPE (TREE_TYPE (ptr)));
+	      if (tsize
+		  && host_integerp (tsize, 1))
+		size = TREE_INT_CST_LOW (tsize);
+	      get_first_overlapping_subvar (sv, vi->offset, size, &j);
 	      for (; VEC_iterate (tree, sv, j, sft); ++j)
 		{
 		  if (SFT_OFFSET (sft) > vi->offset
-		      && vi->size <= SFT_OFFSET (sft) - vi->offset)
+		      && size <= SFT_OFFSET (sft) - vi->offset)
 		    break;
 
-		  var_alias_set = get_alias_set (sft);
-		  if (no_tbaa_pruning
-		      || (!is_derefed && !vi->directly_dereferenced)
-		      || alias_sets_conflict_p (ptr_alias_set, var_alias_set))
-		    {
-		      bitmap_set_bit (into, DECL_UID (sft));
-		      
-		      /* Pointed-to SFTs are needed by the operand scanner
-			 to adjust offsets when adding operands to memory
-			 expressions that dereference PTR.  This means
-			 that memory partitioning may not partition
-			 this SFT because the operand scanner will not
-			 be able to find the other SFTs next to this
-			 one.  But we only need to do this if the pointed
-			 to type is aggregate.  */
-		      if (SFT_BASE_FOR_COMPONENTS_P (sft))
-			SFT_UNPARTITIONABLE_P (sft) = true;
-		    }
+		  bitmap_set_bit (into, DECL_UID (sft));
+
+		  /* Pointed-to SFTs are needed by the operand scanner
+		     to adjust offsets when adding operands to memory
+		     expressions that dereference PTR.  This means
+		     that memory partitioning may not partition
+		     this SFT because the operand scanner will not
+		     be able to find the other SFTs next to this
+		     one.  But we only need to do this if the pointed
+		     to type is aggregate.  */
+		  if (SFT_BASE_FOR_COMPONENTS_P (sft))
+		    SFT_UNPARTITIONABLE_P (sft) = true;
 		}
 	    }
 	  else
-	    {
-	      /* Otherwise, just add VI->DECL to the alias set.
-		 Don't type prune artificial vars.  */
-	      if (vi->is_artificial_var)
-		bitmap_set_bit (into, DECL_UID (vi->decl));
-	      else
-		{
-		  var_alias_set = get_alias_set (vi->decl);
-		  if (no_tbaa_pruning
-		      || (!is_derefed && !vi->directly_dereferenced)
-		      || alias_sets_conflict_p (ptr_alias_set, var_alias_set))
-		    bitmap_set_bit (into, DECL_UID (vi->decl));
-		}
-	    }
+	    bitmap_set_bit (into, DECL_UID (vi->decl));
 	}
     }
 }
@@ -5018,9 +5043,7 @@ find_what_p_points_to (tree p)
 	      pi->pt_global_mem = 1;
 	    }
 
-	  set_uids_in_ptset (p, finished_solution, vi->solution,
-			     vi->directly_dereferenced,
-			     vi->no_tbaa_pruning);
+	  set_uids_in_ptset (p, finished_solution, vi->solution);
 	  result = shared_bitmap_lookup (finished_solution);
 
 	  if (!result)
@@ -5192,6 +5215,8 @@ init_base_vars (void)
 static void
 init_alias_vars (void)
 {
+  use_field_sensitive = (MAX_FIELDS_FOR_FIELD_SENSITIVE > 1);
+
   bitmap_obstack_initialize (&pta_obstack);
   bitmap_obstack_initialize (&oldpta_obstack);
   bitmap_obstack_initialize (&predbitmap_obstack);

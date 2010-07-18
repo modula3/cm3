@@ -1,5 +1,5 @@
-This is doc/gccinstall.info, produced by makeinfo version 4.11 from
-/usr/src/gcc-4.3.0/gcc-4.3.0/gcc-4.3.0/gcc/doc/install.texi.
+This is doc/gccinstall.info, produced by makeinfo version 4.12 from
+/abuild/rguenther/tmp/gcc-4.3.5/gcc-4.3.5/gcc/doc/install.texi.
 
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -150,6 +150,11 @@ A "working" POSIX compatible shell, or GNU bash
 
      `zsh' is not a fully compliant POSIX shell and will not work when
      configuring GCC.
+
+A POSIX or SVR4 awk
+     Necessary for creating some of the generated source files for GCC.
+     If in doubt, use a recent GNU awk version, as some of the older
+     ones are broken.  GNU awk version 3.1.5 is known to work.
 
 GNU binutils
      Necessary in some circumstances, optional in others.  See the
@@ -1017,6 +1022,10 @@ option.
      This option enables `-msecure-plt' by default for powerpc-linux.
      *Note RS/6000 and PowerPC Options: (gcc)RS/6000 and PowerPC
      Options,
+
+`--enable-cld'
+     This option enables `-mcld' by default for 32-bit x86 targets.
+     *Note i386 and x86-64 Options: (gcc)i386 and x86-64 Options,
 
 `--enable-win32-registry'
 `--enable-win32-registry=KEY'
@@ -2129,14 +2138,6 @@ the system header file `/usr/include/stamp.h'.  If you install a new
 version of DEC Unix, you should rebuild GCC to pick up the new version
 stamp.
 
-   Note that since the Alpha is a 64-bit architecture, cross-compilers
-from 32-bit machines will not generate code as efficient as that
-generated when the compiler is running on a 64-bit machine because many
-optimizations that depend on being able to represent a word on the
-target in an integral value on the host cannot be performed.  Building
-cross-compilers on the Alpha for 32-bit machines has only been tested in
-a few cases and may not work properly.
-
    `make compare' may fail on old versions of DEC Unix unless you add
 `-save-temps' to `CFLAGS'.  On these systems, the name of the assembler
 input file is stored in the object file, and that makes comparison fail
@@ -2230,8 +2231,6 @@ Options: (gcc)AVR Options, for the list of supported MCU types.
 tools can also be obtained from:
 
    * http://www.nongnu.org/avr/
-
-   * http://home.overta.ru/users/denisc/
 
    * http://www.amelek.gda.pl/avr/
 
@@ -4179,89 +4178,89 @@ Concept Index
 
 
 Tag Table:
-Node: Top1955
-Node: Installing GCC2513
-Node: Prerequisites4028
-Node: Downloading the source11646
-Node: Configuration13280
-Ref: with-gnu-as26699
-Ref: with-as27929
-Ref: with-gnu-ld29342
-Node: Building61695
-Node: Testing73764
-Node: Final install81544
-Node: Binaries86774
-Node: Specific88638
-Ref: alpha-x-x89144
-Ref: alpha-dec-osf89633
-Ref: alphaev5-cray-unicosmk93210
-Ref: arc-x-elf94130
-Ref: arm-x-elf94230
-Ref: xscale-x-x94251
-Ref: arm-x-coff94487
-Ref: arm-x-aout94689
-Ref: avr94811
-Ref: bfin95495
-Ref: cris95737
-Ref: crx96719
-Ref: dos97382
-Ref: x-x-freebsd97705
-Ref: h8300-hms100088
-Ref: hppa-hp-hpux100440
-Ref: hppa-hp-hpux10102928
-Ref: hppa-hp-hpux11103985
-Ref: x-x-linux-gnu110853
-Ref: ix86-x-linuxaout111046
-Ref: ix86-x-linux111205
-Ref: ix86-x-sco32v5111518
-Ref: ix86-x-solaris210113687
-Ref: ix86-x-udk114073
-Ref: ia64-x-linux115426
-Ref: ia64-x-hpux116196
-Ref: x-ibm-aix116751
-Ref: iq2000-x-elf122734
-Ref: m32c-x-elf122874
-Ref: m32r-x-elf122976
-Ref: m6811-elf123078
-Ref: m6812-elf123228
-Ref: m68k-x-x123378
-Ref: m68k-hp-hpux124340
-Ref: m68k-x-uclinux126079
-Ref: mips-x-x126442
-Ref: mips-sgi-irix5129119
-Ref: mips-sgi-irix6130067
-Ref: powerpc-x-x132874
-Ref: powerpc-x-darwin133019
-Ref: powerpc-x-elf133566
-Ref: powerpc-x-linux-gnu133685
-Ref: powerpc-x-netbsd133787
-Ref: powerpc-x-eabisim133983
-Ref: powerpc-x-eabi134109
-Ref: powerpcle-x-elf134185
-Ref: powerpcle-x-eabisim134315
-Ref: powerpcle-x-eabi134448
-Ref: s390-x-linux134531
-Ref: s390x-x-linux134603
-Ref: s390x-ibm-tpf134690
-Ref: x-x-solaris2134821
-Ref: sparc-sun-solaris2138849
-Ref: sparc-sun-solaris27142013
-Ref: sparc-x-linux144477
-Ref: sparc64-x-solaris2144702
-Ref: sparcv9-x-solaris2145347
-Ref: x-x-sysv145432
-Ref: vax-dec-ultrix146393
-Ref: x-x-vxworks146545
-Ref: x86-64-x-x148067
-Ref: xtensa-x-elf148395
-Ref: xtensa-x-linux149064
-Ref: windows149402
-Ref: os2149872
-Ref: older150063
-Ref: elf152180
-Node: Old152438
-Node: Configurations155575
-Node: GNU Free Documentation License159557
-Node: Concept Index181973
+Node: Top1958
+Node: Installing GCC2516
+Node: Prerequisites4031
+Node: Downloading the source11874
+Node: Configuration13508
+Ref: with-gnu-as26927
+Ref: with-as28157
+Ref: with-gnu-ld29570
+Node: Building62073
+Node: Testing74142
+Node: Final install81922
+Node: Binaries87152
+Node: Specific89016
+Ref: alpha-x-x89522
+Ref: alpha-dec-osf90011
+Ref: alphaev5-cray-unicosmk93129
+Ref: arc-x-elf94049
+Ref: arm-x-elf94149
+Ref: xscale-x-x94170
+Ref: arm-x-coff94406
+Ref: arm-x-aout94608
+Ref: avr94730
+Ref: bfin95372
+Ref: cris95614
+Ref: crx96596
+Ref: dos97259
+Ref: x-x-freebsd97582
+Ref: h8300-hms99965
+Ref: hppa-hp-hpux100317
+Ref: hppa-hp-hpux10102805
+Ref: hppa-hp-hpux11103862
+Ref: x-x-linux-gnu110730
+Ref: ix86-x-linuxaout110923
+Ref: ix86-x-linux111082
+Ref: ix86-x-sco32v5111395
+Ref: ix86-x-solaris210113564
+Ref: ix86-x-udk113950
+Ref: ia64-x-linux115303
+Ref: ia64-x-hpux116073
+Ref: x-ibm-aix116628
+Ref: iq2000-x-elf122611
+Ref: m32c-x-elf122751
+Ref: m32r-x-elf122853
+Ref: m6811-elf122955
+Ref: m6812-elf123105
+Ref: m68k-x-x123255
+Ref: m68k-hp-hpux124217
+Ref: m68k-x-uclinux125956
+Ref: mips-x-x126319
+Ref: mips-sgi-irix5128996
+Ref: mips-sgi-irix6129944
+Ref: powerpc-x-x132751
+Ref: powerpc-x-darwin132896
+Ref: powerpc-x-elf133443
+Ref: powerpc-x-linux-gnu133562
+Ref: powerpc-x-netbsd133664
+Ref: powerpc-x-eabisim133860
+Ref: powerpc-x-eabi133986
+Ref: powerpcle-x-elf134062
+Ref: powerpcle-x-eabisim134192
+Ref: powerpcle-x-eabi134325
+Ref: s390-x-linux134408
+Ref: s390x-x-linux134480
+Ref: s390x-ibm-tpf134567
+Ref: x-x-solaris2134698
+Ref: sparc-sun-solaris2138726
+Ref: sparc-sun-solaris27141890
+Ref: sparc-x-linux144354
+Ref: sparc64-x-solaris2144579
+Ref: sparcv9-x-solaris2145224
+Ref: x-x-sysv145309
+Ref: vax-dec-ultrix146270
+Ref: x-x-vxworks146422
+Ref: x86-64-x-x147944
+Ref: xtensa-x-elf148272
+Ref: xtensa-x-linux148941
+Ref: windows149279
+Ref: os2149749
+Ref: older149940
+Ref: elf152057
+Node: Old152315
+Node: Configurations155452
+Node: GNU Free Documentation License159434
+Node: Concept Index181850
 
 End Tag Table

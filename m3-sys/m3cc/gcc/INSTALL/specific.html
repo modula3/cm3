@@ -3,7 +3,7 @@
 <title>Host/Target specific installation notes for GCC</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name="description" content="Host/Target specific installation notes for GCC">
-<meta name="generator" content="makeinfo 4.11">
+<meta name="generator" content="makeinfo 4.12">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
@@ -177,14 +177,6 @@ the system header file <samp><span class="file">/usr/include/stamp.h</span></sam
 new version of DEC Unix, you should rebuild GCC to pick up the new version
 stamp.
 
-   <p>Note that since the Alpha is a 64-bit architecture, cross-compilers from
-32-bit machines will not generate code as efficient as that generated
-when the compiler is running on a 64-bit machine because many
-optimizations that depend on being able to represent a word on the
-target in an integral value on the host cannot be performed.  Building
-cross-compilers on the Alpha for 32-bit machines has only been tested in
-a few cases and may not work properly.
-
    <p>&lsquo;<samp><span class="samp">make compare</span></samp>&rsquo; may fail on old versions of DEC Unix unless you add
 <samp><span class="option">-save-temps</span></samp> to <code>CFLAGS</code>.  On these systems, the name of the
 assembler input file is stored in the object file, and that makes
@@ -286,7 +278,6 @@ can also be obtained from:
 
      <ul>
 <li><a href="http://www.nongnu.org/avr/">http://www.nongnu.org/avr/</a>
-<li><a href="http://home.overta.ru/users/denisc/">http://home.overta.ru/users/denisc/</a>
 <li><a href="http://www.amelek.gda.pl/avr/">http://www.amelek.gda.pl/avr/</a>
 </ul>
 
@@ -988,7 +979,7 @@ HP, as described in the following note:
 This is the patched assembler, to patch SR#1653-010439, where the
 assembler aborts on floating point constants.
 
-        <p>The bug is not really in the assembler, but in the shared library
+   <p>The bug is not really in the assembler, but in the shared library
 version of the function &ldquo;cvtnum(3c)&rdquo;.  The bug on &ldquo;cvtnum(3c)&rdquo; is
 SR#4701-078451.  Anyway, the attached assembler uses the archive
 library version of &ldquo;cvtnum(3c)&rdquo; and thus does not exhibit the bug. 

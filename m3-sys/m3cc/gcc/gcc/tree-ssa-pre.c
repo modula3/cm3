@@ -2016,8 +2016,10 @@ compute_antic (void)
 						      block->index));
 	    }
 	}
+#ifdef ENABLE_CHECKING
       /* Theoretically possible, but *highly* unlikely.  */
-      gcc_assert (num_iterations < 50);
+      gcc_assert (num_iterations < 500);
+#endif
     }
 
   if (dump_file && (dump_flags & TDF_STATS))
@@ -2047,8 +2049,10 @@ compute_antic (void)
 							    block->index));
 		}
 	    }
+#ifdef ENABLE_CHECKING
 	  /* Theoretically possible, but *highly* unlikely.  */
-	  gcc_assert (num_iterations < 50);
+	  gcc_assert (num_iterations < 500);
+#endif
 	}
       if (dump_file && (dump_flags & TDF_STATS))
 	fprintf (dump_file, "compute_partial_antic required %d iterations\n",
@@ -2181,15 +2185,18 @@ create_component_ref_by_pieces (basic_block block, tree expr, tree stmts)
     case COMPONENT_REF:
       {
 	tree op0;
-	tree op1;
+	tree op1, op2;
 	op0 = create_component_ref_by_pieces (block,
 					      TREE_OPERAND (genop, 0),
 					      stmts);
 	/* op1 should be a FIELD_DECL, which are represented by
 	   themselves.  */
 	op1 = TREE_OPERAND (genop, 1);
+	op2 = TREE_OPERAND (genop, 2);
+	if (op2 && TREE_CODE (op2) == VALUE_HANDLE)
+	  op2 = find_or_generate_expression (block, op2, stmts);
 	folded = fold_build3 (COMPONENT_REF, TREE_TYPE (genop), op0, op1,
-			      NULL_TREE);
+			      op2);
 	return folded;
       }
       break;
