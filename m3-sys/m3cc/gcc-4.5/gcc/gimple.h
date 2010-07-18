@@ -1,3 +1,6 @@
+/* July 2010 derived from:
+ */
+
 /* Gimple IR definitions.
 
    Copyright 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -1713,6 +1716,9 @@ gimple_assign_set_lhs (gimple gs, tree lhs)
   GIMPLE_CHECK (gs, GIMPLE_ASSIGN);
   gimple_set_op (gs, 0, lhs);
 
+  /* Modula-3 July 2010 Jay Krell jay.krell@cornell.edu */
+  gcc_assert ((!lhs) || !VOID_TYPE_P ( TREE_TYPE (lhs)));
+
   if (lhs && TREE_CODE (lhs) == SSA_NAME)
     SSA_NAME_DEF_STMT (lhs) = gs;
 }
@@ -1744,6 +1750,9 @@ static inline void
 gimple_assign_set_rhs1 (gimple gs, tree rhs)
 {
   GIMPLE_CHECK (gs, GIMPLE_ASSIGN);
+
+  /* Modula-3 July 2010 jay.krell@cornell.edu */
+  gcc_assert ((!rhs) || !VOID_TYPE_P ( TREE_TYPE (rhs)));
 
   gimple_set_op (gs, 1, rhs);
 }
@@ -1781,6 +1790,9 @@ static inline void
 gimple_assign_set_rhs2 (gimple gs, tree rhs)
 {
   GIMPLE_CHECK (gs, GIMPLE_ASSIGN);
+
+  /* Modula-3 July 2010 jay.krell@cornell.edu */
+  gcc_assert ((!rhs) || !VOID_TYPE_P ( TREE_TYPE (rhs)));
 
   gimple_set_op (gs, 2, rhs);
 }
