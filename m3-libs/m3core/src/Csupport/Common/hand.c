@@ -164,6 +164,16 @@ m3_mod64(INT64 b, INT64 a)
 
 #define SET_GRAIN (sizeof (WORD_T) * 8)
 
+WORD_T
+__stdcall
+set_member(WORD_T elt, WORD_T* set)
+/* never used by current backend */
+{
+  register WORD_T word = elt / SET_GRAIN;
+  register WORD_T bit  = elt % SET_GRAIN;
+  return (set[word] & (1UL << bit)) != 0;
+}
+
 void
 __stdcall
 set_union(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
@@ -202,6 +212,22 @@ set_sym_difference(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
   register WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] ^ c[i];
+}
+
+WORD_T
+__stdcall
+set_eq(WORD_T n_bits, WORD_T* b, WORD_T* a)
+/* never used by current backend */
+{
+  return (memcmp(a, b, n_bits / 8) == 0);
+}
+
+WORD_T
+__stdcall
+set_ne(WORD_T n_bits, WORD_T* b, WORD_T* a)
+/* never used by current backend */
+{
+  return (memcmp(a, b, n_bits / 8) != 0);
 }
 
 WORD_T
@@ -269,6 +295,16 @@ set_range(WORD_T b, WORD_T a, WORD_T* s)
       s [b_word] |= low_bits;
     }
   }
+}
+
+void
+__stdcall
+set_singleton(WORD_T a, WORD_T* s)
+/* never used by current backend */
+{
+  WORD_T a_word = a / SET_GRAIN;
+  WORD_T a_bit  = a % SET_GRAIN;
+  s[a_word] |= (((WORD_T)1) << a_bit);
 }
 
 #ifdef _WIN32
