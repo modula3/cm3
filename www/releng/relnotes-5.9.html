@@ -38,7 +38,21 @@
       <li> volatile no longer applied to every load and store,
            leading to much better optimization </li>
       <li> ALPHA_OSF target restored (4.0g, 5.1) </li>
+      <li> I386_FREEBSD 4.11 target restored, with user threads </li>
       <li> new targets: SPARC64_SOLARIS, I386_SOLARIS, AMD64_SOLARIS (2.9?) </li>
+      <li> front end accepts and ignores Win32 calling conventions
+           on all targets, so that cloned headers might be shared
+           and cloned less (3000+ lines deleted) </li>
+      <li> further removal of target-specific code </li>
+      <li> replace 'select' with 'poll' </li>
+      <li> improve several code sequences in NT386 backend </li>
+      <li> hand.c: eliminate data tables, have backends inline
+           set_member, set_singleton, set_ne, set_eq, div, mod
+           (still need to flip NT386 member/singleton to fix
+           the size/speed tradeoff, since it is currently
+           excellent size but bad speed; still need to consider
+           size vs. speed for other cases too) </li>
+      <li> unfinished work: new targets: ARMEL_LINUX, PPC64_DARWIN, ALPHA32_VMS, ALPHA64_VMS </li>
     </ul>
     <p>
       Please find the installation instructions and the archives for
