@@ -2,6 +2,9 @@
 /*  A Bison parser, made from ../Parse.yacc with Bison version GNU Bison version 1.22
   */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define YYBISON 1  /* Identify Bison output.  */
 
 #define	ENDOFFILE	258
@@ -202,7 +205,6 @@ typedef
 #ifndef YYSTYPE
 #define YYSTYPE int
 #endif
-#include <stdio.h>
 
 #ifndef __cplusplus
 #ifndef __STDC__

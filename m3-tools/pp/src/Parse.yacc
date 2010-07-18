@@ -91,7 +91,7 @@
 
 %{
 
-#define NULL (0L)
+#include <stddef.h>
 
 #define lexbufsize 500
 char lexbuf[2 * lexbufsize];
