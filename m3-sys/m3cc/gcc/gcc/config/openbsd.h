@@ -72,6 +72,37 @@ along with GCC; see the file COPYING3.  If not see
 
 /* Controlling the compilation driver.  */
 /* TARGET_OS_CPP_BUILTINS() common to all OpenBSD targets.  */
+#define OPENBSD_OS_CPP_BUILTINS_COMMON()	\
+  do						\
+    {						\
+      builtin_define ("__OpenBSD__");		\
+      builtin_define ("__unix__");		\
+      builtin_define ("__ANSI_COMPAT");		\
+      builtin_assert ("system=unix");		\
+      builtin_assert ("system=bsd");		\
+      builtin_assert ("system=OpenBSD");	\
+    }						\
+  while (0)
+
+/* TARGET_OS_CPP_BUILTINS() common to all OpenBSD ELF targets.  */
+#define OPENBSD_OS_CPP_BUILTINS_ELF()		\
+  do						\
+    {						\
+      OPENBSD_OS_CPP_BUILTINS_COMMON();		\
+      builtin_define ("__ELF__");		\
+    }						\
+  while (0)
+
+/* TARGET_OS_CPP_BUILTINS() common to all LP64 OpenBSD targets.  */
+#define OPENBSD_OS_CPP_BUILTINS_LP64()		\
+  do						\
+    {						\
+      builtin_define ("_LP64");			\
+      builtin_define ("__LP64__");		\
+    }						\
+  while (0)
+
+/* XXX old stuff TARGET_OS_CPP_BUILTINS() common to all OpenBSD targets.  */
 #define OPENBSD_OS_CPP_BUILTINS()		\
   do						\
     {						\
@@ -95,15 +126,8 @@ along with GCC; see the file COPYING3.  If not see
 #define OBSD_CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_POSIX_THREADS}"
 #endif
 
-/* LIB_SPEC appropriate for OpenBSD.  */
-#ifdef HAS_LIBC_R
-/*   -lc(_r)?(_p)?, select _r for threads, and _p for p or pg.  */
-# define OBSD_LIB_SPEC "%{!shared:-lc%{pthread:_r}%{p:_p}%{!p:%{pg:_p}}}"
-#else
-/* Include -lpthread if -pthread is specified on the command line. */
-# define OBSD_LIB_SPEC "%{!shared:%{pthread:-lpthread%{p:_p}%{!p:%{pg:_p}}}} %{!shared:-lc%{p:_p}%{!p:%{pg:_p}}}"
-#endif
-
+#undef LIB_SPEC
+#define LIB_SPEC OBSD_LIB_SPEC
 
 #ifndef OBSD_HAS_CORRECT_SPECS
 

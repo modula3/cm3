@@ -49,6 +49,7 @@ proc FileExists (a) is
 end
 
 readonly proc ApplyPatches (Platform) is
+  return
   if GCC45 or not Platform_IsOpenBSD (Platform)
     return
   end
