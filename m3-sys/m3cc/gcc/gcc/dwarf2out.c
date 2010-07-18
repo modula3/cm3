@@ -1106,6 +1106,168 @@ stack_adjust_offset (const_rtx pattern)
   return offset;
 }
 
+/* Precomputed args_size for CODE_LABELs and BARRIERs preceeding them,
+   indexed by INSN_UID.  */
+
+static HOST_WIDE_INT *barrier_args_size;
+
+/* Helper function for compute_barrier_args_size.  Handle one insn.  */
+
+static HOST_WIDE_INT
+compute_barrier_args_size_1 (rtx insn, HOST_WIDE_INT cur_args_size,
+			     VEC (rtx, heap) **next)
+{
+  HOST_WIDE_INT offset = 0;
+  int i;
+
+  if (! RTX_FRAME_RELATED_P (insn))
+    {
+      if (prologue_epilogue_contains (insn)
+	  || sibcall_epilogue_contains (insn))
+	/* Nothing */;
+      else if (GET_CODE (PATTERN (insn)) == SET)
+	offset = stack_adjust_offset (PATTERN (insn));
+      else if (GET_CODE (PATTERN (insn)) == PARALLEL
+	       || GET_CODE (PATTERN (insn)) == SEQUENCE)
+	{
+	  /* There may be stack adjustments inside compound insns.  Search
+	     for them.  */
+	  for (i = XVECLEN (PATTERN (insn), 0) - 1; i >= 0; i--)
+	    if (GET_CODE (XVECEXP (PATTERN (insn), 0, i)) == SET)
+	      offset += stack_adjust_offset (XVECEXP (PATTERN (insn), 0, i));
+	}
+    }
+  else
+    {
+      rtx expr = find_reg_note (insn, REG_FRAME_RELATED_EXPR, NULL_RTX);
+
+      if (expr)
+	{
+	  expr = XEXP (expr, 0);
+	  if (GET_CODE (expr) == PARALLEL
+	      || GET_CODE (expr) == SEQUENCE)
+	    for (i = 1; i < XVECLEN (expr, 0); i++)
+	      {
+		rtx elem = XVECEXP (expr, 0, i);
+
+		if (GET_CODE (elem) == SET && !RTX_FRAME_RELATED_P (elem))
+		  offset += stack_adjust_offset (elem);
+	      }
+	}
+    }
+
+#ifndef STACK_GROWS_DOWNWARD
+  offset = -offset;
+#endif
+
+  cur_args_size += offset;
+  if (cur_args_size < 0)
+    cur_args_size = 0;
+
+  if (JUMP_P (insn))
+    {
+      rtx dest = JUMP_LABEL (insn);
+
+      if (dest)
+	{
+	  if (barrier_args_size [INSN_UID (dest)] < 0)
+	    {
+	      barrier_args_size [INSN_UID (dest)] = cur_args_size;
+	      VEC_safe_push (rtx, heap, *next, dest);
+	    }
+	}
+    }
+
+  return cur_args_size;
+}
+
+/* Walk the whole function and compute args_size on BARRIERs.  */
+
+static void
+compute_barrier_args_size (void)
+{
+  int max_uid = get_max_uid (), i;
+  rtx insn;
+  VEC (rtx, heap) *worklist, *next, *tmp;
+
+  barrier_args_size = XNEWVEC (HOST_WIDE_INT, max_uid);
+  for (i = 0; i < max_uid; i++)
+    barrier_args_size[i] = -1;
+
+  worklist = VEC_alloc (rtx, heap, 20);
+  next = VEC_alloc (rtx, heap, 20);
+  insn = get_insns ();
+  barrier_args_size[INSN_UID (insn)] = 0;
+  VEC_quick_push (rtx, worklist, insn);
+  for (;;)
+    {
+      while (!VEC_empty (rtx, worklist))
+	{
+	  rtx prev, body, first_insn;
+	  HOST_WIDE_INT cur_args_size;
+
+	  first_insn = insn = VEC_pop (rtx, worklist);
+	  cur_args_size = barrier_args_size[INSN_UID (insn)];
+	  prev = prev_nonnote_insn (insn);
+	  if (prev && BARRIER_P (prev))
+	    barrier_args_size[INSN_UID (prev)] = cur_args_size;
+
+	  for (; insn; insn = NEXT_INSN (insn))
+	    {
+	      if (INSN_DELETED_P (insn) || NOTE_P (insn))
+		continue;
+	      if (BARRIER_P (insn))
+		break;
+
+	      if (LABEL_P (insn))
+		{
+		  if (insn == first_insn)
+		    continue;
+		  else if (barrier_args_size[INSN_UID (insn)] < 0)
+		    {
+		      barrier_args_size[INSN_UID (insn)] = cur_args_size;
+		      continue;
+		    }
+		  else
+		    {
+		      /* The insns starting with this label have been
+			 already scanned or are in the worklist.  */
+		      break;
+		    }
+		}
+
+	      body = PATTERN (insn);
+	      if (GET_CODE (body) == SEQUENCE)
+		{
+		  for (i = 1; i < XVECLEN (body, 0); i++)
+		    cur_args_size
+		      = compute_barrier_args_size_1 (XVECEXP (body, 0, i),
+						     cur_args_size, &next);
+		  cur_args_size
+		    = compute_barrier_args_size_1 (XVECEXP (body, 0, 0),
+						   cur_args_size, &next);
+		}
+	      else
+		cur_args_size
+		  = compute_barrier_args_size_1 (insn, cur_args_size, &next);
+	    }
+	}
+
+      if (VEC_empty (rtx, next))
+	break;
+
+      /* Swap WORKLIST with NEXT and truncate NEXT for next iteration.  */
+      tmp = next;
+      next = worklist;
+      worklist = tmp;
+      VEC_truncate (rtx, next, 0);
+    }
+
+  VEC_free (rtx, heap, worklist);
+  VEC_free (rtx, heap, next);
+}
+
+
 /* Check INSN to see if it looks like a push or a stack adjustment, and
    make a note of it if it does.  EH uses this information to find out how
    much extra space it needs to pop off the stack.  */
@@ -1150,13 +1312,22 @@ dwarf2out_stack_adjust (rtx insn, bool after_p)
     }
   else if (BARRIER_P (insn))
     {
-      /* When we see a BARRIER, we know to reset args_size to 0.  Usually
-	 the compiler will have already emitted a stack adjustment, but
-	 doesn't bother for calls to noreturn functions.  */
-#ifdef STACK_GROWS_DOWNWARD
-      offset = -args_size;
-#else
-      offset = args_size;
+      /* Don't call compute_barrier_args_size () if the only
+	 BARRIER is at the end of function.  */
+      if (barrier_args_size == NULL && next_nonnote_insn (insn))
+	compute_barrier_args_size ();
+      if (barrier_args_size == NULL)
+	offset = 0;
+      else
+	{
+	  offset = barrier_args_size[INSN_UID (insn)];
+	  if (offset < 0)
+	    offset = 0;
+	}
+
+      offset -= args_size;
+#ifndef STACK_GROWS_DOWNWARD
+      offset = -offset;
 #endif
     }
   else if (GET_CODE (PATTERN (insn)) == SET)
@@ -1570,6 +1741,32 @@ dwarf2out_frame_debug_expr (rtx expr, const char *label)
 	      && (!MEM_P (SET_DEST (elem)) || GET_CODE (expr) == SEQUENCE)
 	      && (RTX_FRAME_RELATED_P (elem) || par_index == 0))
 	    dwarf2out_frame_debug_expr (elem, label);
+	  else if (GET_CODE (elem) == SET
+		   && par_index != 0
+		   && !RTX_FRAME_RELATED_P (elem))
+	    {
+	      /* Stack adjustment combining might combine some post-prologue
+		 stack adjustment into a prologue stack adjustment.  */
+	      HOST_WIDE_INT offset = stack_adjust_offset (elem);
+
+	      if (offset != 0)
+		{
+		  if (cfa.reg == STACK_POINTER_REGNUM)
+		    cfa.offset += offset;
+
+#ifndef STACK_GROWS_DOWNWARD
+		  offset = -offset;
+#endif
+
+		  args_size += offset;
+		  if (args_size < 0)
+		    args_size = 0;
+
+		  def_cfa_1 (label, &cfa);
+		  if (flag_asynchronous_unwind_tables)
+		    dwarf2out_args_size (label, args_size);
+		}
+	    }
 	}
       return;
     }
@@ -1928,6 +2125,12 @@ dwarf2out_frame_debug (rtx insn, bool after_p)
 	  regs_saved_in_regs[i].saved_in_reg = NULL_RTX;
 	}
       num_regs_saved_in_regs = 0;
+
+      if (barrier_args_size)
+	{
+	  XDELETEVEC (barrier_args_size);
+	  barrier_args_size = NULL;
+	}
       return;
     }
 
@@ -3811,7 +4014,7 @@ DEF_VEC_ALLOC_O(dw_attr_node,gc);
    The children of each node form a circular list linked by
    die_sib.  die_child points to the node *before* the "first" child node.  */
 
-typedef struct die_struct GTY(())
+typedef struct die_struct GTY((chain_circular ("%h.die_sib")))
 {
   enum dwarf_tag die_tag;
   char *die_symbol;
@@ -11113,13 +11316,19 @@ add_subscript_info (dw_die_ref type_die, tree type)
      const enum type.  E.g. const enum machine_mode insn_operand_mode[2][10].
      We work around this by disabling this feature.  See also
      gen_array_type_die.  */
+
 #ifndef MIPS_DEBUGGING_INFO
-  for (dimension_number = 0;
+  for (dimension_number = 0; 
        TREE_CODE (type) == ARRAY_TYPE;
        type = TREE_TYPE (type), dimension_number++)
 #endif
     {
       tree domain = TYPE_DOMAIN (type);
+
+#ifndef MIPS_DEBUGGING_INFO
+      if (TYPE_STRING_FLAG (type) && is_fortran () && dimension_number > 0)
+	break;
+#endif
 
       /* Arrays come in three flavors: Unspecified bounds, fixed bounds,
 	 and (in GNU C only) variable bounds.  Handle all three forms
@@ -11643,6 +11852,39 @@ gen_array_type_die (tree type, dw_die_ref context_die)
   dw_die_ref array_die;
   tree element_type;
 
+  /* Emit DW_TAG_string_type for Fortran character types (with kind 1 only, as
+     DW_TAG_string_type doesn't have DW_AT_type attribute).  */
+  if (TYPE_STRING_FLAG (type)
+      && TREE_CODE (type) == ARRAY_TYPE
+      && is_fortran ()
+      && TYPE_MODE (TREE_TYPE (type)) == TYPE_MODE (char_type_node))
+    {
+      HOST_WIDE_INT size;
+
+      array_die = new_die (DW_TAG_string_type, scope_die, type);
+      add_name_attribute (array_die, type_tag (type));
+      equate_type_number_to_die (type, array_die);
+      size = int_size_in_bytes (type);
+      if (size >= 0)
+	add_AT_unsigned (array_die, DW_AT_byte_size, size);
+      else if (TYPE_DOMAIN (type) != NULL_TREE
+	       && TYPE_MAX_VALUE (TYPE_DOMAIN (type)) != NULL_TREE
+	       && DECL_P (TYPE_MAX_VALUE (TYPE_DOMAIN (type))))
+	{
+	  tree szdecl = TYPE_MAX_VALUE (TYPE_DOMAIN (type));
+	  dw_loc_descr_ref loc = loc_descriptor_from_tree (szdecl);
+
+	  size = int_size_in_bytes (TREE_TYPE (szdecl));
+	  if (loc && size > 0)
+	    {
+	      add_AT_loc (array_die, DW_AT_string_length, loc);
+	      if (size != DWARF2_ADDR_SIZE)
+		add_AT_unsigned (array_die, DW_AT_byte_size, size);
+	    }
+	}
+      return;
+    }
+
   /* ??? The SGI dwarf reader fails for array of array of enum types unless
      the inner array type comes before the outer array type.  Thus we must
      call gen_type_die before we call new_die.  See below also.  */
@@ -11665,7 +11907,8 @@ gen_array_type_die (tree type, dw_die_ref context_die)
   /* For Fortran multidimensional arrays use DW_ORD_col_major ordering.  */
   if (is_fortran ()
       && TREE_CODE (type) == ARRAY_TYPE
-      && TREE_CODE (TREE_TYPE (type)) == ARRAY_TYPE)
+      && TREE_CODE (TREE_TYPE (type)) == ARRAY_TYPE
+      && !TYPE_STRING_FLAG (TREE_TYPE (type)))
     add_AT_unsigned (array_die, DW_AT_ordering, DW_ORD_col_major);
 
 #if 0
@@ -13284,6 +13527,12 @@ gen_type_die_with_usage (tree type, dw_die_ref context_die,
       /* Prevent broken recursion; we can't hand off to the same type.  */
       gcc_assert (DECL_ORIGINAL_TYPE (TYPE_NAME (type)) != type);
 
+      /* Use the DIE of the containing namespace as the parent DIE of
+         the type description DIE we want to generate.  */
+      if (DECL_CONTEXT (TYPE_NAME (type))
+	  && TREE_CODE (DECL_CONTEXT (TYPE_NAME (type))) == NAMESPACE_DECL)
+	context_die = lookup_decl_die (DECL_CONTEXT (TYPE_NAME (type)));
+
       TREE_ASM_WRITTEN (type) = 1;
       gen_decl_die (TYPE_NAME (type), context_die);
       return;
@@ -13648,6 +13897,22 @@ is_redundant_typedef (const_tree decl)
   return 0;
 }
 
+/* Returns the DIE for a context.  */
+
+static inline dw_die_ref
+get_context_die (tree context)
+{
+  if (context)
+    {
+      /* Find die that represents this context.  */
+      if (TYPE_P (context))
+	return force_type_die (context);
+      else
+	return force_decl_die (context);
+    }
+  return comp_unit_die;
+}
+
 /* Returns the DIE for decl.  A DIE will always be returned.  */
 
 static dw_die_ref
@@ -13659,18 +13924,7 @@ force_decl_die (tree decl)
   decl_die = lookup_decl_die (decl);
   if (!decl_die)
     {
-      dw_die_ref context_die;
-      tree decl_context = DECL_CONTEXT (decl);
-      if (decl_context)
-	{
-	  /* Find die that represents this context.  */
-	  if (TYPE_P (decl_context))
-	    context_die = force_type_die (decl_context);
-	  else
-	    context_die = force_decl_die (decl_context);
-	}
-      else
-	context_die = comp_unit_die;
+      dw_die_ref context_die = get_context_die (DECL_CONTEXT (decl));
 
       decl_die = lookup_decl_die (decl);
       if (decl_die)
@@ -13725,16 +13979,7 @@ force_type_die (tree type)
   type_die = lookup_type_die (type);
   if (!type_die)
     {
-      dw_die_ref context_die;
-      if (TYPE_CONTEXT (type))
-	{
-	  if (TYPE_P (TYPE_CONTEXT (type)))
-	    context_die = force_type_die (TYPE_CONTEXT (type));
-	  else
-	    context_die = force_decl_die (TYPE_CONTEXT (type));
-	}
-      else
-	context_die = comp_unit_die;
+      dw_die_ref context_die = get_context_die (TYPE_CONTEXT (type));
 
       type_die = modified_type_die (type, TYPE_READONLY (type),
 				    TYPE_VOLATILE (type), context_die);
@@ -14038,16 +14283,11 @@ dwarf2out_imported_module_or_decl (tree decl, tree context)
 
   /* Get the scope die for decl context. Use comp_unit_die for global module
      or decl. If die is not found for non globals, force new die.  */
-  if (!context)
-    scope_die = comp_unit_die;
-  else if (TYPE_P (context))
-    {
-      if (!should_emit_struct_debug (context, DINFO_USAGE_DIR_USE))
-	return;
-    scope_die = force_type_die (context);
-    }
-  else
-    scope_die = force_decl_die (context);
+  if (context
+      && TYPE_P (context)
+      && !should_emit_struct_debug (context, DINFO_USAGE_DIR_USE))
+    return;
+  scope_die = get_context_die (context);
 
   /* For TYPE_DECL or CONST_DECL, lookup TREE_TYPE.  */
   if (TREE_CODE (decl) == TYPE_DECL || TREE_CODE (decl) == CONST_DECL)
@@ -14056,6 +14296,16 @@ dwarf2out_imported_module_or_decl (tree decl, tree context)
 	at_import_die = base_type_die (TREE_TYPE (decl));
       else
 	at_import_die = force_type_die (TREE_TYPE (decl));
+      /* For namespace N { typedef void T; } using N::T; base_type_die
+	 returns NULL, but DW_TAG_imported_declaration requires
+	 the DW_AT_import tag.  Force creation of DW_TAG_typedef.  */
+      if (!at_import_die)
+	{
+	  gcc_assert (TREE_CODE (decl) == TYPE_DECL);
+	  gen_typedef_die (decl, get_context_die (DECL_CONTEXT (decl)));
+	  at_import_die = lookup_type_die (TREE_TYPE (decl));
+	  gcc_assert (at_import_die);
+	}
     }
   else
     {
@@ -14067,21 +14317,14 @@ dwarf2out_imported_module_or_decl (tree decl, tree context)
 	  if (TREE_CODE (decl) == FIELD_DECL)
 	    {
 	      tree type = DECL_CONTEXT (decl);
-	      dw_die_ref type_context_die;
 
-	      if (TYPE_CONTEXT (type))
-		if (TYPE_P (TYPE_CONTEXT (type)))
-		  {
-		    if (!should_emit_struct_debug (TYPE_CONTEXT (type),
-						   DINFO_USAGE_DIR_USE))
-		      return;
-		  type_context_die = force_type_die (TYPE_CONTEXT (type));
-		  }
-	      else
-		type_context_die = force_decl_die (TYPE_CONTEXT (type));
-	      else
-		type_context_die = comp_unit_die;
-	      gen_type_die_for_member (type, decl, type_context_die);
+	      if (TYPE_CONTEXT (type)
+		  && TYPE_P (TYPE_CONTEXT (type))
+		  && !should_emit_struct_debug (TYPE_CONTEXT (type),
+						DINFO_USAGE_DIR_USE))
+		return;
+	      gen_type_die_for_member (type, decl,
+				       get_context_die (TYPE_CONTEXT (type)));
 	    }
 	  at_import_die = force_decl_die (decl);
 	}

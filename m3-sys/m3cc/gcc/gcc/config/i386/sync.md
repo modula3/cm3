@@ -31,6 +31,29 @@
 (define_mode_attr doublemodesuffix [(DI "8") (TI "16")])
 (define_mode_attr DCASHMODE [(DI "SI") (TI "DI")])
 
+(define_expand "memory_barrier"
+  [(set (match_dup 0)
+	(unspec:BLK [(match_dup 0)] UNSPEC_MFENCE))]
+  ""
+{
+  operands[0] = gen_rtx_MEM (BLKmode, gen_rtx_SCRATCH (Pmode));
+  MEM_VOLATILE_P (operands[0]) = 1;
+
+  if (!(TARGET_64BIT || TARGET_SSE2))
+    {
+      emit_insn (gen_memory_barrier_nosse (operands[0]));
+      DONE;
+    }
+})
+
+(define_insn "memory_barrier_nosse"
+  [(set (match_operand:BLK 0 "" "")
+	(unspec:BLK [(match_dup 0)] UNSPEC_MFENCE))
+   (clobber (reg:CC FLAGS_REG))]
+  "!(TARGET_64BIT || TARGET_SSE2)"
+  "lock{%;}or{l}\t{$0, (%%esp)|DWORD PTR [esp], 0}"
+  [(set_attr "memory" "unknown")])
+
 ;; ??? It would be possible to use cmpxchg8b on pentium for DImode
 ;; changes.  It's complicated because the insn uses ecx:ebx as the
 ;; new value; note that the registers are reversed from the order

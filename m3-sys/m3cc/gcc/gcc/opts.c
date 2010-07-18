@@ -846,6 +846,9 @@ decode_options (unsigned int argc, const char **argv)
 
       /* Allow more virtual operators to increase alias precision.  */
       set_param_value ("max-aliased-vops", 500);
+
+      /* Track fields in field-sensitive alias analysis.  */
+      set_param_value ("max-fields-for-field-sensitive", 100);
     }
 
   if (optimize >= 3)
@@ -1865,6 +1868,8 @@ set_Wstrict_aliasing (int onoff)
   gcc_assert (onoff == 0 || onoff == 1);
   if (onoff != 0)
     warn_strict_aliasing = 3;
+  else
+    warn_strict_aliasing = 0;
 }
 
 /* The following routines are useful in setting all the flags that

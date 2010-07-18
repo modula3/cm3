@@ -327,7 +327,7 @@ Objective-C and Objective-C++ Dialects}.
 -ffunction-sections -fgcse -fgcse-after-reload -fgcse-las -fgcse-lm @gol
 -fgcse-sm -fif-conversion -fif-conversion2 -finline-functions @gol
 -finline-functions-called-once -finline-limit=@var{n} @gol
--finline-small-functions -fipa-cp -fipa-marix-reorg -fipa-pta @gol 
+-finline-small-functions -fipa-cp -fipa-matrix-reorg -fipa-pta @gol 
 -fipa-pure-const -fipa-reference -fipa-struct-reorg @gol
 -fipa-type-escape -fivopts -fkeep-inline-functions -fkeep-static-consts @gol
 -fmerge-all-constants -fmerge-constants -fmodulo-sched @gol
@@ -549,7 +549,7 @@ Objective-C and Objective-C++ Dialects}.
 -masm=@var{dialect}  -mno-fancy-math-387 @gol
 -mno-fp-ret-in-387  -msoft-float @gol
 -mno-wide-multiply  -mrtd  -malign-double @gol
--mpreferred-stack-boundary=@var{num} -mcx16 -msahf -mrecip @gol
+-mpreferred-stack-boundary=@var{num} -mcld -mcx16 -msahf -mrecip @gol
 -mmmx  -msse  -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -msse4 @gol
 -msse4a -m3dnow -mpopcnt -mabm -msse5 @gol
 -mthreads  -mno-align-stringops  -minline-all-stringops @gol
@@ -718,7 +718,8 @@ See RS/6000 and PowerPC Options.
 
 @emph{S/390 and zSeries Options}
 @gccoptlist{-mtune=@var{cpu-type}  -march=@var{cpu-type} @gol
--mhard-float  -msoft-float -mlong-double-64 -mlong-double-128 @gol
+-mhard-float  -msoft-float  -mhard-dfp -mno-hard-dfp @gol
+-mlong-double-64 -mlong-double-128 @gol
 -mbackchain  -mno-backchain -mpacked-stack  -mno-packed-stack @gol
 -msmall-exec  -mno-small-exec  -mmvcle -mno-mvcle @gol
 -m64  -m31  -mdebug  -mno-debug  -mesa  -mzarch @gol
@@ -5208,8 +5209,9 @@ invoking @option{-O2} on programs that use computed gotos.
 @opindex O3
 Optimize yet more.  @option{-O3} turns on all optimizations specified by
 @option{-O2} and also turns on the @option{-finline-functions},
-@option{-funswitch-loops}, @option{-fpredictive-commoning} and
-@option{-fgcse-after-reload} options.
+@option{-funswitch-loops}, @option{-fpredictive-commoning},
+@option{-fgcse-after-reload} and @option{-ftree-vectorize}
+options.
 
 @item -O0
 @opindex O0
@@ -5404,8 +5406,9 @@ Attempt to merge identical constants and identical variables.
 This option implies @option{-fmerge-constants}.  In addition to
 @option{-fmerge-constants} this considers e.g.@: even constant initialized
 arrays or initialized constant variables with integral or floating point
-types.  Languages like C or C++ require each non-automatic variable to
-have distinct location, so using this option will result in non-conforming
+types.  Languages like C or C++ require each variable, including multiple
+instances of the same variable in recursive calls, to have distinct locations,
+so using this option will result in non-conforming
 behavior.
 
 @item -fmodulo-sched
@@ -5973,7 +5976,8 @@ enabled by default at @option{-O} and higher.
 
 @item -ftree-vectorize
 @opindex ftree-vectorize
-Perform loop vectorization on trees.
+Perform loop vectorization on trees. This flag is enabled by default at
+@option{-O3}.
 
 @item -ftree-vect-loop-version
 @opindex ftree-vect-loop-version
@@ -6127,7 +6131,7 @@ example, an @code{unsigned int} can alias an @code{int}, but not a
 @code{void*} or a @code{double}.  A character type may alias any other
 type.
 
-Pay special attention to code like this:
+@anchor{Type-punning}Pay special attention to code like this:
 @smallexample
 union a_union @{
   int i;
@@ -6144,7 +6148,8 @@ The practice of reading from a different union member than the one most
 recently written to (called ``type-punning'') is common.  Even with
 @option{-fstrict-aliasing}, type-punning is allowed, provided the memory
 is accessed through the union type.  So, the code above will work as
-expected.  However, this code might not:
+expected.  @xref{Structures unions enumerations and bit-fields
+implementation}.  However, this code might not:
 @smallexample
 int f() @{
   a_union t;
@@ -6155,7 +6160,18 @@ int f() @{
 @}
 @end smallexample
 
-Enabled at levels @option{-O2}, @option{-O3}, @option{-Os}.
+Similarly, access by taking the address, casting the resulting pointer
+and dereferencing the result has undefined behavior, even if the cast
+uses a union type, e.g.:
+@smallexample
+int f() @{
+  double d = 3.0;
+  return ((union a_union *) &d)->i;
+@}
+@end smallexample
+
+The @option{-fstrict-aliasing} option is enabled at levels
+@option{-O2}, @option{-O3}, @option{-Os}.
 
 @item -fstrict-overflow
 @opindex fstrict-overflow
@@ -6171,13 +6187,22 @@ using twos complement arithmetic.  When this option is in effect any
 attempt to determine whether an operation on signed numbers will
 overflow must be written carefully to not actually involve overflow.
 
+This option also allows the compiler to assume strict pointer
+semantics: given a pointer to an object, if adding an offset to that
+pointer does not produce a pointer to the same object, the addition is
+undefined.  This permits the compiler to conclude that @code{p + u >
+p} is always true for a pointer @code{p} and unsigned integer
+@code{u}.  This assumption is only valid because pointer wraparound is
+undefined, as the expression is false if @code{p + u} overflows using
+twos complement arithmetic.
+
 See also the @option{-fwrapv} option.  Using @option{-fwrapv} means
-that signed overflow is fully defined: it wraps.  When
+that integer signed overflow is fully defined: it wraps.  When
 @option{-fwrapv} is used, there is no difference between
-@option{-fstrict-overflow} and @option{-fno-strict-overflow}.  With
-@option{-fwrapv} certain types of overflow are permitted.  For
-example, if the compiler gets an overflow when doing arithmetic on
-constants, the overflowed value can still be used with
+@option{-fstrict-overflow} and @option{-fno-strict-overflow} for
+integers.  With @option{-fwrapv} certain types of overflow are
+permitted.  For example, if the compiler gets an overflow when doing
+arithmetic on constants, the overflowed value can still be used with
 @option{-fwrapv}, but not otherwise.
 
 The @option{-fstrict-overflow} option is enabled at levels
@@ -7259,7 +7284,8 @@ duplicated when threading jumps.
 
 @item max-fields-for-field-sensitive
 Maximum number of fields in a structure we will treat in
-a field sensitive manner during pointer analysis.
+a field sensitive manner during pointer analysis.  The default is zero
+for -O0, and -O1 and 100 for -Os, -O2, and -O3.
 
 @item prefetch-latency
 Estimate on average number of instructions that are executed before
@@ -10740,6 +10766,20 @@ supported architecture, using the appropriate flags.  In particular,
 the file containing the CPU detection code should be compiled without
 these options.
 
+@item -mcld
+@opindex mcld
+This option instructs GCC to emit a @code{cld} instruction in the prologue
+of functions that use string instructions.  String instructions depend on
+the DF flag to select between autoincrement or autodecrement mode.  While the
+ABI specifies the DF flag to be cleared on function entry, some operating
+systems violate this specification by not clearing the DF flag in their
+exception dispatchers.  The exception handler can be invoked with the DF flag
+set which leads to wrong direction mode, when string instructions are used.
+This option can be enabled by default on 32-bit x86 targets by configuring
+GCC with the @option{--enable-cld} configure option.  Generation of @code{cld}
+instructions can be suppressed with the @option{-mno-cld} compiler option
+in this case.
+
 @item -mcx16
 @opindex mcx16
 This option will enable GCC to use CMPXCHG16B instruction in generated code.
@@ -13574,6 +13614,17 @@ functions in @file{libgcc.a} will be used to perform floating-point
 operations.  When @option{-mhard-float} is specified, the compiler
 generates IEEE floating-point instructions.  This is the default.
 
+@item -mhard-dfp
+@itemx -mno-hard-dfp
+@opindex mhard-dfp
+@opindex mno-hard-dfp
+Use (do not use) the hardware decimal-floating-point instructions for
+decimal-floating-point operations.  When @option{-mno-hard-dfp} is
+specified, functions in @file{libgcc.a} will be used to perform
+decimal-floating-point operations.  When @option{-mhard-dfp} is
+specified, the compiler generates decimal-floating-point hardware
+instructions.  This is the default for @option{-march=z9-ec} or higher.
+
 @item -mlong-double-64
 @itemx -mlong-double-128
 @opindex mlong-double-64
@@ -13684,7 +13735,8 @@ The default is to not print debug information.
 @opindex march
 Generate code that will run on @var{cpu-type}, which is the name of a system
 representing a certain processor type.  Possible values for
-@var{cpu-type} are @samp{g5}, @samp{g6}, @samp{z900}, and @samp{z990}.
+@var{cpu-type} are @samp{g5}, @samp{g6}, @samp{z900}, @samp{z990},
+@samp{z9-109} and @samp{z9-ec}.
 When generating code using the instructions available on z/Architecture,
 the default is @option{-march=z900}.  Otherwise, the default is
 @option{-march=g5}.
@@ -14390,6 +14442,33 @@ A fixed register is one that the register allocator can not use.  This is
 useful when compiling kernel code.  A register range is specified as
 two registers separated by a dash.  Multiple register ranges can be
 specified separated by a comma.
+
+@item -mdual-nops
+@itemx -mdual-nops=@var{n}
+@opindex mdual-nops
+By default, GCC will insert nops to increase dual issue when it expects
+it to increase performance.  @var{n} can be a value from 0 to 10.  A
+smaller @var{n} will insert fewer nops.  10 is the default, 0 is the
+same as @option{-mno-dual-nops}.  Disabled with @option{-Os}.
+
+@item -mhint-max-nops=@var{n}
+@opindex mhint-max-nops
+Maximum number of nops to insert for a branch hint.  A branch hint must
+be at least 8 instructions away from the branch it is effecting.  GCC
+will insert up to @var{n} nops to enforce this, otherwise it will not
+generate the branch hint.
+
+@item -mhint-max-distance=@var{n}
+@opindex mhint-max-distance
+The encoding of the branch hint instruction limits the hint to be within
+256 instructions of the branch it is effecting.  By default, GCC makes
+sure it is within 125. 
+
+@item -msafe-hints
+@opindex msafe-hints
+Work around a hardware bug which causes the SPU to stall indefinitely.
+By default, GCC will insert the @code{hbrp} instruction to make sure
+this stall won't happen.
 
 @end table
 

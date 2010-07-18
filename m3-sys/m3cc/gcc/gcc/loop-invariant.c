@@ -825,7 +825,7 @@ find_invariant_insn (rtx insn, bool always_reached, bool always_executed)
     return;
 
   /* We cannot make trapping insn executed, unless it was executed before.  */
-  if (may_trap_after_code_motion_p (PATTERN (insn)) && !always_reached)
+  if (may_trap_or_fault_p (PATTERN (insn)) && !always_reached)
     return;
 
   depends_on = BITMAP_ALLOC (NULL);
@@ -1193,7 +1193,7 @@ move_invariant_reg (struct loop *loop, unsigned invno)
 	 need to create a temporary register.  */
       set = single_set (inv->insn);
       dest = SET_DEST (set);
-      reg = gen_reg_rtx (GET_MODE (dest));
+      reg = gen_reg_rtx_and_attrs (dest);
 
       /* Try replacing the destination by a new pseudoregister.  */
       if (!validate_change (inv->insn, &SET_DEST (set), reg, false))
@@ -1203,14 +1203,16 @@ move_invariant_reg (struct loop *loop, unsigned invno)
       emit_insn_after (gen_move_insn (dest, reg), inv->insn);
       reorder_insns (inv->insn, inv->insn, BB_END (preheader));
 
-      /* If there is a REG_EQUAL note on the insn we just moved, and
-	 insn is in a basic block that is not always executed, the note
-	 may no longer be valid after we move the insn.
-	 Note that uses in REG_EQUAL notes are taken into account in
-	 the computation of invariants.  Hence it is safe to retain the
-	 note even if the note contains register references.  */
-      if (! inv->always_executed
-	  && (note = find_reg_note (inv->insn, REG_EQUAL, NULL_RTX)))
+      /* If there is a REG_EQUAL note on the insn we just moved, and the
+	 insn is in a basic block that is not always executed or the note
+	 contains something for which we don't know the invariant status,
+	 the note may no longer be valid after we move the insn.  Note that
+	 uses in REG_EQUAL notes are taken into account in the computation
+	 of invariants, so it is safe to retain the note even if it contains
+	 register references for which we know the invariant status.  */
+      if ((note = find_reg_note (inv->insn, REG_EQUAL, NULL_RTX))
+	  && (!inv->always_executed
+	      || !check_maybe_invariant (XEXP (note, 0))))
 	remove_note (inv->insn, note);
     }
   else

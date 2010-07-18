@@ -2919,12 +2919,23 @@ bitfield_overlaps_p (tree blen, tree bpos, struct sra_elt *fld,
     }
   else if (TREE_CODE (fld->element) == INTEGER_CST)
     {
+      tree domain_type = TYPE_DOMAIN (TREE_TYPE (fld->parent->element));
       flen = fold_convert (bitsizetype, TYPE_SIZE (fld->type));
       fpos = fold_convert (bitsizetype, fld->element);
+      if (domain_type && TYPE_MIN_VALUE (domain_type))
+	fpos = size_binop (MINUS_EXPR, fpos,
+			   fold_convert (bitsizetype,
+			   		 TYPE_MIN_VALUE (domain_type)));
       fpos = size_binop (MULT_EXPR, flen, fpos);
     }
   else
     gcc_unreachable ();
+
+  if (CONTAINS_PLACEHOLDER_P (flen))
+    flen = size_binop (MULT_EXPR,
+		       fold_convert (bitsizetype,
+				     lang_hooks.types.max_size (fld->type)),
+		       bitsize_unit_node);
 
   gcc_assert (host_integerp (blen, 1)
 	      && host_integerp (bpos, 1)
@@ -3221,12 +3232,20 @@ scalarize_use (struct sra_elt *elt, tree *expr_p, block_stmt_iterator *bsi,
       if (!elt->use_block_copy)
 	{
 	  tree type = TREE_TYPE (bfexpr);
-	  tree var, vpos;
+	  tree var = make_rename_temp (type, "SR"), tmp, st = NULL, vpos;
+
+	  GIMPLE_STMT_OPERAND (stmt, 1) = var;
+	  update = true;
 
 	  if (!TYPE_UNSIGNED (type))
-	    type = unsigned_type_for (type);
-
-	  var = make_rename_temp (type, "SR");
+	    {
+	      type = unsigned_type_for (type);
+	      tmp = make_rename_temp (type, "SR");
+	      st = build_gimple_modify_stmt (var,
+					     fold_convert (TREE_TYPE (var),
+							   tmp));
+	      var = tmp;
+	    }
 
 	  append_to_statement_list (build_gimple_modify_stmt
 				    (var, build_int_cst_wide (type, 0, 0)),
@@ -3243,8 +3262,8 @@ scalarize_use (struct sra_elt *elt, tree *expr_p, block_stmt_iterator *bsi,
 	  sra_explode_bitfield_assignment
 	    (var, vpos, true, &list, blen, bpos, elt);
 
-	  GIMPLE_STMT_OPERAND (stmt, 1) = var;
-	  update = true;
+	  if (st)
+	    append_to_statement_list (st, &list);
 	}
       else
 	sra_sync_for_bitfield_assignment

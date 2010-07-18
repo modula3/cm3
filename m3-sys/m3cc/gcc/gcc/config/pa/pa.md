@@ -3181,6 +3181,40 @@
     DONE;
 }")
 
+;; Handle HImode input reloads requiring a general register as a
+;; scratch register.
+(define_expand "reload_inhi"
+  [(set (match_operand:HI 0 "register_operand" "=Z")
+	(match_operand:HI 1 "non_hard_reg_operand" ""))
+   (clobber (match_operand:HI 2 "register_operand" "=&r"))]
+  ""
+  "
+{
+  if (emit_move_sequence (operands, HImode, operands[2]))
+    DONE;
+
+  /* We don't want the clobber emitted, so handle this ourselves.  */
+  emit_insn (gen_rtx_SET (VOIDmode, operands[0], operands[1]));
+  DONE;
+}")
+
+;; Handle HImode output reloads requiring a general register as a
+;; scratch register.
+(define_expand "reload_outhi"
+  [(set (match_operand:HI 0 "non_hard_reg_operand" "")
+	(match_operand:HI 1  "register_operand" "Z"))
+   (clobber (match_operand:HI 2 "register_operand" "=&r"))]
+  ""
+  "
+{
+  if (emit_move_sequence (operands, HImode, operands[2]))
+    DONE;
+
+  /* We don't want the clobber emitted, so handle this ourselves.  */
+  emit_insn (gen_rtx_SET (VOIDmode, operands[0], operands[1]));
+  DONE;
+}")
+
 (define_insn ""
   [(set (match_operand:HI 0 "move_dest_operand"
 	 		  "=r,r,r,r,r,Q,!*q,!r")
@@ -3303,6 +3337,40 @@
 {
   if (emit_move_sequence (operands, QImode, 0))
     DONE;
+}")
+
+;; Handle QImode input reloads requiring a general register as a
+;; scratch register.
+(define_expand "reload_inqi"
+  [(set (match_operand:QI 0 "register_operand" "=Z")
+	(match_operand:QI 1 "non_hard_reg_operand" ""))
+   (clobber (match_operand:QI 2 "register_operand" "=&r"))]
+  ""
+  "
+{
+  if (emit_move_sequence (operands, QImode, operands[2]))
+    DONE;
+
+  /* We don't want the clobber emitted, so handle this ourselves.  */
+  emit_insn (gen_rtx_SET (VOIDmode, operands[0], operands[1]));
+  DONE;
+}")
+
+;; Handle QImode output reloads requiring a general register as a
+;; scratch register.
+(define_expand "reload_outqi"
+  [(set (match_operand:QI 0 "non_hard_reg_operand" "")
+	(match_operand:QI 1  "register_operand" "Z"))
+   (clobber (match_operand:QI 2 "register_operand" "=&r"))]
+  ""
+  "
+{
+  if (emit_move_sequence (operands, QImode, operands[2]))
+    DONE;
+
+  /* We don't want the clobber emitted, so handle this ourselves.  */
+  emit_insn (gen_rtx_SET (VOIDmode, operands[0], operands[1]));
+  DONE;
 }")
 
 (define_insn ""
@@ -3470,7 +3538,7 @@
 
   size = INTVAL (operands[2]);
   align = INTVAL (operands[3]);
-  align = align > 4 ? 4 : align;
+  align = align > 4 ? 4 : (align ? align : 1);
 
   /* If size/alignment is large, then use the library routines.  */
   if (size / align > 16)
@@ -3658,7 +3726,7 @@
 
   size = INTVAL (operands[2]);
   align = INTVAL (operands[3]);
-  align = align > 8 ? 8 : align;
+  align = align > 8 ? 8 : (align ? align : 1);
 
   /* If size/alignment is large, then use the library routines.  */
   if (size / align > 16)
@@ -7497,17 +7565,6 @@
       operands[0] = index;
     }
 
-  /* In 64bit mode we must make sure to wipe the upper bits of the register
-     just in case the addition overflowed or we had random bits in the
-     high part of the register.  */
-  if (TARGET_64BIT)
-    {
-      rtx index = gen_reg_rtx (DImode);
-
-      emit_insn (gen_extendsidi2 (index, operands[0]));
-      operands[0] = gen_rtx_SUBREG (SImode, index, 4);
-    }
-
   if (!INT_5_BITS (operands[2]))
     operands[2] = force_reg (SImode, operands[2]);
 
@@ -7523,6 +7580,17 @@
      the effort.  */
   emit_insn (gen_cmpsi (operands[0], operands[2]));
   emit_jump_insn (gen_bgtu (operands[4]));
+
+  /* In 64bit mode we must make sure to wipe the upper bits of the register
+     just in case the addition overflowed or we had random bits in the
+     high part of the register.  */
+  if (TARGET_64BIT)
+    {
+      rtx index = gen_reg_rtx (DImode);
+
+      emit_insn (gen_extendsidi2 (index, operands[0]));
+      operands[0] = index;
+    }
 
   if (TARGET_BIG_SWITCH)
     {
@@ -7584,8 +7652,7 @@
 ;;; 64-bit code, 32-bit relative branch table.
 (define_insn "casesi64p"
   [(set (pc) (mem:DI (plus:DI
-		       (mult:DI (sign_extend:DI
-				  (match_operand:SI 0 "register_operand" "r"))
+		       (mult:DI (match_operand:DI 0 "register_operand" "r")
 				(const_int 8))
 		       (label_ref (match_operand 1 "" "")))))
    (clobber (match_scratch:DI 2 "=&r"))

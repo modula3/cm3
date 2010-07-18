@@ -1401,13 +1401,36 @@ push_reload (rtx in, rtx out, rtx *inloc, rtx *outloc,
 	      else
 		remove_address_replacements (rld[i].in);
 	    }
-	  rld[i].in = in;
-	  rld[i].in_reg = in_reg;
+	  /* When emitting reloads we don't necessarily look at the in-
+	     and outmode, but also directly at the operands (in and out).
+	     So we can't simply overwrite them with whatever we have found
+	     for this (to-be-merged) reload, we have to "merge" that too.
+	     Reusing another reload already verified that we deal with the
+	     same operands, just possibly in different modes.  So we
+	     overwrite the operands only when the new mode is larger.
+	     See also PR33613.  */
+	  if (!rld[i].in
+	      || GET_MODE_SIZE (GET_MODE (in))
+	           > GET_MODE_SIZE (GET_MODE (rld[i].in)))
+	    rld[i].in = in;
+	  if (!rld[i].in_reg
+	      || (in_reg
+		  && GET_MODE_SIZE (GET_MODE (in_reg))
+	             > GET_MODE_SIZE (GET_MODE (rld[i].in_reg))))
+	    rld[i].in_reg = in_reg;
 	}
       if (out != 0)
 	{
-	  rld[i].out = out;
-	  rld[i].out_reg = outloc ? *outloc : 0;
+	  if (!rld[i].out
+	      || (out
+		  && GET_MODE_SIZE (GET_MODE (out))
+	             > GET_MODE_SIZE (GET_MODE (rld[i].out))))
+	    rld[i].out = out;
+	  if (outloc
+	      && (!rld[i].out_reg
+		  || GET_MODE_SIZE (GET_MODE (*outloc))
+		     > GET_MODE_SIZE (GET_MODE (rld[i].out_reg))))
+	    rld[i].out_reg = *outloc;
 	}
       if (reg_class_subset_p (class, rld[i].class))
 	rld[i].class = class;
@@ -3828,49 +3851,61 @@ find_reloads (rtx insn, int replace, int ind_levels, int live_known,
   /* Any constants that aren't allowed and can't be reloaded
      into registers are here changed into memory references.  */
   for (i = 0; i < noperands; i++)
-    if (! goal_alternative_win[i]
-	&& CONST_POOL_OK_P (recog_data.operand[i])
-	&& ((PREFERRED_RELOAD_CLASS (recog_data.operand[i],
-				     (enum reg_class) goal_alternative[i])
-	     == NO_REGS)
-	    || no_input_reloads)
-	&& operand_mode[i] != VOIDmode)
+    if (! goal_alternative_win[i])
       {
-	int this_address_reloaded;
+	rtx op = recog_data.operand[i];
+	rtx subreg = NULL_RTX;
+	rtx plus = NULL_RTX;
+	enum machine_mode mode = operand_mode[i];
 
-	this_address_reloaded = 0;
-	substed_operand[i] = recog_data.operand[i]
-	  = find_reloads_toplev (force_const_mem (operand_mode[i],
-						  recog_data.operand[i]),
-				 i, address_type[i], ind_levels, 0, insn,
-				 &this_address_reloaded);
-	if (alternative_allows_const_pool_ref (this_address_reloaded == 0
-					       ? substed_operand[i]
-					       : NULL,
-					       recog_data.constraints[i],
-					       goal_alternative_number))
-	  goal_alternative_win[i] = 1;
-      }
+	/* Reloads of SUBREGs of CONSTANT RTXs are handled later in
+	   push_reload so we have to let them pass here.  */
+	if (GET_CODE (op) == SUBREG)
+	  {
+	    subreg = op;
+	    op = SUBREG_REG (op);
+	    mode = GET_MODE (op);
+	  }
 
-  /* Likewise any invalid constants appearing as operand of a PLUS
-     that is to be reloaded.  */
-  for (i = 0; i < noperands; i++)
-    if (! goal_alternative_win[i]
-	&& GET_CODE (recog_data.operand[i]) == PLUS
-	&& CONST_POOL_OK_P (XEXP (recog_data.operand[i], 1))
-	&& (PREFERRED_RELOAD_CLASS (XEXP (recog_data.operand[i], 1),
-				    (enum reg_class) goal_alternative[i])
-	     == NO_REGS)
-	&& operand_mode[i] != VOIDmode)
-      {
-	rtx tem = force_const_mem (operand_mode[i],
-				   XEXP (recog_data.operand[i], 1));
-	tem = gen_rtx_PLUS (operand_mode[i],
-			    XEXP (recog_data.operand[i], 0), tem);
+	if (GET_CODE (op) == PLUS)
+	  {
+	    plus = op;
+	    op = XEXP (op, 1);
+	  }
 
-	substed_operand[i] = recog_data.operand[i]
-	  = find_reloads_toplev (tem, i, address_type[i],
-				 ind_levels, 0, insn, NULL);
+	if (CONST_POOL_OK_P (op)
+	    && ((PREFERRED_RELOAD_CLASS (op,
+					 (enum reg_class) goal_alternative[i])
+		 == NO_REGS)
+		|| no_input_reloads)
+	    && mode != VOIDmode)
+	  {
+	    int this_address_reloaded;
+	    rtx tem = force_const_mem (mode, op);
+
+	    /* If we stripped a SUBREG or a PLUS above add it back.  */
+	    if (plus != NULL_RTX)
+	      tem = gen_rtx_PLUS (mode, XEXP (plus, 0), tem);
+
+	    if (subreg != NULL_RTX)
+	      tem = gen_rtx_SUBREG (operand_mode[i], tem, SUBREG_BYTE (subreg));
+
+	    this_address_reloaded = 0;
+	    substed_operand[i] = recog_data.operand[i]
+	      = find_reloads_toplev (tem, i, address_type[i], ind_levels,
+				     0, insn, &this_address_reloaded);
+
+	    /* If the alternative accepts constant pool refs directly
+	       there will be no reload needed at all.  */
+	    if (plus == NULL_RTX
+		&& subreg == NULL_RTX
+		&& alternative_allows_const_pool_ref (this_address_reloaded == 0
+						      ? substed_operand[i]
+						      : NULL,
+						      recog_data.constraints[i],
+						      goal_alternative_number))
+	      goal_alternative_win[i] = 1;
+	  }
       }
 
   /* Record the values of the earlyclobber operands for the caller.  */
@@ -6036,7 +6071,6 @@ find_reloads_subreg_address (rtx x, int force_replace, int opnum,
 	      unsigned inner_size = GET_MODE_SIZE (GET_MODE (SUBREG_REG (x)));
 	      int offset;
 	      rtx orig = tem;
-	      enum machine_mode orig_mode = GET_MODE (orig);
 	      int reloaded;
 
 	      /* For big-endian paradoxical subregs, SUBREG_BYTE does not
@@ -6082,15 +6116,16 @@ find_reloads_subreg_address (rtx x, int force_replace, int opnum,
 	      /* For some processors an address may be valid in the
 		 original mode but not in a smaller mode.  For
 		 example, ARM accepts a scaled index register in
-		 SImode but not in HImode.  find_reloads_address
+		 SImode but not in HImode.  Similarly, the address may
+		 have been valid before the subreg offset was added,
+		 but not afterwards.  find_reloads_address
 		 assumes that we pass it a valid address, and doesn't
 		 force a reload.  This will probably be fine if
 		 find_reloads_address finds some reloads.  But if it
 		 doesn't find any, then we may have just converted a
 		 valid address into an invalid one.  Check for that
 		 here.  */
-	      if (reloaded != 1
-		  && strict_memory_address_p (orig_mode, XEXP (tem, 0))
+	      if (reloaded == 0
 		  && !strict_memory_address_p (GET_MODE (tem),
 					       XEXP (tem, 0)))
 		push_reload (XEXP (tem, 0), NULL_RTX, &XEXP (tem, 0), (rtx*) 0,

@@ -91,14 +91,6 @@ gimple_nonlocal_all (const struct function *fun)
   return fun->gimple_df->nonlocal_all;
 }
 
-/* Hashtable of variables annotations.  Used for static variables only;
-   local variables have direct pointer in the tree node.  */
-static inline htab_t
-gimple_var_anns (const struct function *fun)
-{
-  return fun->gimple_df->var_anns;
-}
-
 /* Initialize the hashtable iterator HTI to point to hashtable TABLE */
 
 static inline void *
@@ -192,22 +184,9 @@ var_ann (const_tree t)
 {
   var_ann_t ann;
 
-  if (!MTAG_P (t)
-      && (TREE_STATIC (t) || DECL_EXTERNAL (t)))
-    {
-      struct static_var_ann_d *sann
-        = ((struct static_var_ann_d *)
-	   htab_find_with_hash (gimple_var_anns (cfun), t, DECL_UID (t)));
-      if (!sann)
-	return NULL;
-      ann = &sann->ann;
-    }
-  else
-    {
-      if (!t->base.ann)
-	return NULL;
-      ann = (var_ann_t) t->base.ann;
-    }
+  if (!t->base.ann)
+    return NULL;
+  ann = (var_ann_t) t->base.ann;
 
   gcc_assert (ann->common.type == VAR_ANN);
 
@@ -1545,7 +1524,7 @@ unmodifiable_var_p (const_tree var)
     var = SSA_NAME_VAR (var);
 
   if (MTAG_P (var))
-    return TREE_READONLY (var) && (TREE_STATIC (var) || MTAG_GLOBAL (var));
+    return false;
 
   return TREE_READONLY (var) && (TREE_STATIC (var) || DECL_EXTERNAL (var));
 }
@@ -1710,6 +1689,11 @@ var_can_have_subvars (const_tree v)
 
   /* Non decls or memory tags can never have subvars.  */
   if (!DECL_P (v) || MTAG_P (v))
+    return false;
+
+  /* Unions cannot have subvars.  */
+  if (TREE_CODE (TREE_TYPE (v)) == UNION_TYPE
+      || TREE_CODE (TREE_TYPE (v)) == QUAL_UNION_TYPE)
     return false;
 
   /* Aggregates can have subvars.  */

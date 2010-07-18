@@ -468,7 +468,9 @@ avr_regs_to_save (HARD_REG_SET *set)
   int reg, count;
   int int_or_sig_p = (interrupt_function_p (current_function_decl)
 		      || signal_function_p (current_function_decl));
-  int leaf_func_p = leaf_function_p ();
+
+  if (!reload_completed)
+    cfun->machine->is_leaf = leaf_function_p ();
 
   if (set)
     CLEAR_HARD_REG_SET (*set);
@@ -487,7 +489,7 @@ avr_regs_to_save (HARD_REG_SET *set)
       if (fixed_regs[reg])
 	continue;
 
-      if ((int_or_sig_p && !leaf_func_p && call_used_regs[reg])
+      if ((int_or_sig_p && !cfun->machine->is_leaf && call_used_regs[reg])
 	  || (df_regs_ever_live_p (reg)
 	      && (int_or_sig_p || !call_used_regs[reg])
 	      && !(frame_pointer_needed
@@ -5840,6 +5842,23 @@ avr_peep2_scratch_safe (rtx scratch)
 	    return 0;
 	}
     }
+  return 1;
+}
+
+/* Return nonzero if register OLD_REG can be renamed to register NEW_REG.  */
+
+int
+avr_hard_regno_rename_ok (unsigned int old_reg ATTRIBUTE_UNUSED,
+			    unsigned int new_reg)
+{
+  /* Interrupt functions can only use registers that have already been
+     saved by the prologue, even if they would normally be
+     call-clobbered.  */
+
+  if ((cfun->machine->is_interrupt || cfun->machine->is_signal)
+      && !df_regs_ever_live_p (new_reg))
+    return 0;
+
   return 1;
 }
 

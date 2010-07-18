@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for SPARC running System V.4
-   Copyright (C) 1991, 1992, 1995, 1996, 1997, 1998, 2000, 2002, 2007
+   Copyright (C) 1991, 1992, 1995, 1996, 1997, 1998, 2000, 2002, 2007, 2010
    Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
@@ -92,22 +92,6 @@ do { ASM_OUTPUT_ALIGN ((FILE), Pmode == SImode ? 2 : 3);		\
 	assemble_name (FILE, LABEL2);					\
 	fprintf (FILE, "\n");						\
   } while (0)
-
-/* Define how the SPARC registers should be numbered for Dwarf output.
-   The numbering provided here should be compatible with the native
-   svr4 SDB debugger in the SPARC/svr4 reference port.  The numbering
-   is as follows:
-
-   Assembly name	gcc internal regno	Dwarf regno
-   ----------------------------------------------------------
-   g0-g7		0-7			0-7
-   o0-o7		8-15			8-15
-   l0-l7		16-23			16-23
-   i0-i7		24-31			24-31
-   f0-f31		32-63			40-71
-*/
-
-#define DBX_REGISTER_NUMBER(REGNO) ((REGNO) < 32 ? (REGNO) : (REGNO) + 8)
 
 /* A set of symbol definitions for assembly pseudo-ops which will
    get us switched to various sections of interest.  These are used

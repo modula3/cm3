@@ -49,7 +49,7 @@ along with GCC; see the file COPYING3.  If not see
 static bool vect_transform_stmt (tree, block_stmt_iterator *, bool *, slp_tree);
 static tree vect_create_destination_var (tree, tree);
 static tree vect_create_data_ref_ptr 
-  (tree, struct loop*, tree, tree *, tree *, bool, tree, bool *); 
+  (tree, struct loop*, tree, tree *, tree *, bool, bool *); 
 static tree vect_create_addr_base_for_vector_ref 
   (tree, tree *, tree, struct loop *);
 static tree vect_get_new_vect_var (tree, enum vect_var_kind, const char *);
@@ -120,7 +120,6 @@ vect_estimate_min_profitable_iters (loop_vec_info loop_vinfo)
   int vec_outside_cost = 0;
   int scalar_single_iter_cost = 0;
   int scalar_outside_cost = 0;
-  bool runtime_test = false;
   int vf = LOOP_VINFO_VECT_FACTOR (loop_vinfo);
   struct loop *loop = LOOP_VINFO_LOOP (loop_vinfo);
   basic_block *bbs = LOOP_VINFO_BBS (loop_vinfo);
@@ -139,15 +138,7 @@ vect_estimate_min_profitable_iters (loop_vec_info loop_vinfo)
       return 0;
     }
 
-  /* If the number of iterations is unknown, or the
-     peeling-for-misalignment amount is unknown, we will have to generate
-     a runtime test to test the loop count against the threshold.    */
-  if (!LOOP_VINFO_NITERS_KNOWN_P (loop_vinfo)
-      || (byte_misalign < 0))
-    runtime_test = true;
-
   /* Requires loop versioning tests to handle misalignment.  */
-
   if (VEC_length (tree, LOOP_VINFO_MAY_MISALIGN_STMTS (loop_vinfo)))
     {
       /*  FIXME: Make cost depend on complexity of individual check.  */
@@ -335,7 +326,12 @@ vect_estimate_min_profitable_iters (loop_vec_info loop_vinfo)
      conditions/branch directions.  Change the stimates below to
      something more reasonable.  */
 
-  if (runtime_test)
+  /* If the number of iterations is known and we do not do versioning, we can
+     decide whether to vectorize at compile time. Hence the scalar version
+     do not carry cost model guard costs.  */
+  if (!LOOP_VINFO_NITERS_KNOWN_P (loop_vinfo)
+      || VEC_length (tree, LOOP_VINFO_MAY_MISALIGN_STMTS (loop_vinfo))
+      || VEC_length (ddr_p, LOOP_VINFO_MAY_ALIAS_DDRS (loop_vinfo)))
     {
       /* Cost model check occurs at versioning.  */
       if (VEC_length (tree, LOOP_VINFO_MAY_MISALIGN_STMTS (loop_vinfo))
@@ -343,8 +339,8 @@ vect_estimate_min_profitable_iters (loop_vec_info loop_vinfo)
 	scalar_outside_cost += TARG_COND_NOT_TAKEN_BRANCH_COST;
       else
 	{
-	  /* Cost model occurs at prologue generation.  */
-	  if (LOOP_VINFO_NITERS_KNOWN_P (loop_vinfo))
+	  /* Cost model check occurs at prologue generation.  */
+	  if (LOOP_PEELING_FOR_ALIGNMENT (loop_vinfo) < 0)
 	    scalar_outside_cost += 2 * TARG_COND_TAKEN_BRANCH_COST
 	      + TARG_COND_NOT_TAKEN_BRANCH_COST;
 	  /* Cost model check occurs at epilogue generation.  */
@@ -951,7 +947,6 @@ vect_create_addr_base_for_vector_ref (tree stmt,
         by the data-ref in STMT.
    4. ONLY_INIT: indicate if vp is to be updated in the loop, or remain
         pointing to the initial address.
-   5. TYPE: if not NULL indicates the required type of the data-ref
 
    Output:
    1. Declare a new ptr to vector_type, and have it point to the base of the
@@ -981,7 +976,7 @@ vect_create_addr_base_for_vector_ref (tree stmt,
 static tree
 vect_create_data_ref_ptr (tree stmt, struct loop *at_loop,
 			  tree offset, tree *initial_address, tree *ptr_incr,
-			  bool only_init, tree type, bool *inv_p)
+			  bool only_init, bool *inv_p)
 {
   tree base_name;
   stmt_vec_info stmt_info = vinfo_for_stmt (stmt);
@@ -1040,10 +1035,8 @@ vect_create_data_ref_ptr (tree stmt, struct loop *at_loop,
     }
 
   /** (1) Create the new vector-pointer variable:  **/
-  if (type)  
-    vect_ptr_type = build_pointer_type (type);
-  else
-    vect_ptr_type = build_pointer_type (vectype);
+  vect_ptr_type = build_pointer_type (vectype);
+
   vect_ptr = vect_get_new_vect_var (vect_ptr_type, vect_pointer_var,
                                     get_name (base_name));
   add_referenced_var (vect_ptr);
@@ -1102,8 +1095,12 @@ vect_create_data_ref_ptr (tree stmt, struct loop *at_loop,
   new_temp = vect_create_addr_base_for_vector_ref (stmt, &new_stmt_list,
                                                    offset, loop);
   pe = loop_preheader_edge (loop);
-  new_bb = bsi_insert_on_edge_immediate (pe, new_stmt_list);
-  gcc_assert (!new_bb);
+  if (new_stmt_list)
+    {
+      new_bb = bsi_insert_on_edge_immediate (pe, new_stmt_list);
+      gcc_assert (!new_bb);
+    }
+
   *initial_address = new_temp;
 
   /* Create: p = (vectype *) initial_base  */
@@ -3668,6 +3665,11 @@ vectorizable_assignment (tree stmt, block_stmt_iterator *bsi, tree *vec_stmt,
   VEC(tree,heap) *vec_oprnds = NULL;
   tree vop;
 
+  /* FORNOW: SLP with multiple types is not supported. The SLP analysis verifies
+     this, so we can safely override NCOPIES with 1 here.  */ 
+  if (slp_node)
+    ncopies = 1;
+
   gcc_assert (ncopies >= 1);
   if (ncopies > 1)
     return false; /* FORNOW */
@@ -4731,6 +4733,24 @@ vectorizable_store (tree stmt, block_stmt_iterator *bsi, tree *vec_stmt,
       return false;
     }
 
+  /* If accesses through a pointer to vectype do not alias the original
+     memory reference we have a problem.  */
+  if (get_alias_set (vectype) != get_alias_set (TREE_TYPE (scalar_dest))
+      && !alias_set_subset_of (get_alias_set (vectype), 
+                               get_alias_set (TREE_TYPE (scalar_dest))))
+    {
+      if (vect_print_dump_info (REPORT_DETAILS))
+        fprintf (vect_dump, "vector type does not alias scalar type");
+      return false;
+    }
+
+  if (!useless_type_conversion_p (TREE_TYPE (op), TREE_TYPE (scalar_dest)))
+    {      
+      if (vect_print_dump_info (REPORT_DETAILS))
+        fprintf (vect_dump, "operands of different types");
+      return false;
+    }
+
   vec_mode = TYPE_MODE (vectype);
   /* FORNOW. In some cases can vectorize even if data-type not supported
      (e.g. - array initialization with 0).  */
@@ -4905,9 +4925,10 @@ vectorizable_store (tree stmt, block_stmt_iterator *bsi, tree *vec_stmt,
 		  next_stmt = DR_GROUP_NEXT_DR (vinfo_for_stmt (next_stmt));
 		}
 	    }
+
 	  dataref_ptr = vect_create_data_ref_ptr (first_stmt, NULL, NULL_TREE, 
-						  &dummy, &ptr_incr, false,
-						  TREE_TYPE (vec_oprnd), &inv_p);
+						  &dummy, &ptr_incr, false, 
+						  &inv_p);
 	  gcc_assert (!inv_p);
 	}
       else 
@@ -5140,7 +5161,7 @@ vect_setup_realignment (tree stmt, block_stmt_iterator *bsi,
       pe = loop_preheader_edge (loop_for_initial_load);
       vec_dest = vect_create_destination_var (scalar_dest, vectype);
       ptr = vect_create_data_ref_ptr (stmt, loop_for_initial_load, NULL_TREE,
-				&init_addr, &inc, true, NULL_TREE, &inv_p);
+				      &init_addr, &inc, true, &inv_p);
       data_ref = build1 (ALIGN_INDIRECT_REF, vectype, ptr);
       new_stmt = build_gimple_modify_stmt (vec_dest, data_ref);
       new_temp = make_ssa_name (vec_dest, new_stmt);
@@ -5441,12 +5462,14 @@ vect_transform_strided_load (tree stmt, VEC(tree,heap) *dr_chain, int size,
 	break;
 
       /* Skip the gaps. Loads created for the gaps will be removed by dead
-       code elimination pass later.
+       code elimination pass later. No need to check for the first stmt in
+       the group, since it always exists.
        DR_GROUP_GAP is the number of steps in elements from the previous
        access (if there is no gap DR_GROUP_GAP is 1). We skip loads that
        correspond to the gaps.
       */
-      if (gap_count < DR_GROUP_GAP (vinfo_for_stmt (next_stmt)))
+      if (next_stmt != first_stmt
+          && gap_count < DR_GROUP_GAP (vinfo_for_stmt (next_stmt)))
       {
         gap_count++;
         continue;
@@ -5462,15 +5485,21 @@ vect_transform_strided_load (tree stmt, VEC(tree,heap) *dr_chain, int size,
 	    STMT_VINFO_VEC_STMT (vinfo_for_stmt (next_stmt)) = new_stmt;
 	  else
             {
-	      tree prev_stmt = STMT_VINFO_VEC_STMT (vinfo_for_stmt (next_stmt));
-	      tree rel_stmt = STMT_VINFO_RELATED_STMT (
-						       vinfo_for_stmt (prev_stmt));
-	      while (rel_stmt)
-		{
-		  prev_stmt = rel_stmt;
-		  rel_stmt = STMT_VINFO_RELATED_STMT (vinfo_for_stmt (rel_stmt));
-		}
-	      STMT_VINFO_RELATED_STMT (vinfo_for_stmt (prev_stmt)) = new_stmt;
+              if (!DR_GROUP_SAME_DR_STMT (vinfo_for_stmt (next_stmt)))
+                {
+ 	          tree prev_stmt = 
+                    STMT_VINFO_VEC_STMT (vinfo_for_stmt (next_stmt));
+ 	          tree rel_stmt = STMT_VINFO_RELATED_STMT (
+					       vinfo_for_stmt (prev_stmt));
+ 	          while (rel_stmt)
+		    {
+		      prev_stmt = rel_stmt;
+		      rel_stmt = STMT_VINFO_RELATED_STMT (
+                                               vinfo_for_stmt (rel_stmt));
+		    }
+	          STMT_VINFO_RELATED_STMT (vinfo_for_stmt (prev_stmt)) = 
+                    new_stmt;
+                }
             }
 	  next_stmt = DR_GROUP_NEXT_DR (vinfo_for_stmt (next_stmt));
 	  gap_count = 1;
@@ -5580,6 +5609,17 @@ vectorizable_load (tree stmt, block_stmt_iterator *bsi, tree *vec_stmt,
     {
       if (vect_print_dump_info (REPORT_DETAILS))
 	fprintf (vect_dump, "Aligned load, but unsupported type.");
+      return false;
+    }
+
+  /* If accesses through a pointer to vectype do not alias the original
+     memory reference we have a problem.  */
+  if (get_alias_set (vectype) != get_alias_set (scalar_type)
+      && !alias_set_subset_of (get_alias_set (vectype),
+                               get_alias_set (scalar_type)))
+    {
+      if (vect_print_dump_info (REPORT_DETAILS))
+        fprintf (vect_dump, "vector type does not alias scalar type");
       return false;
     }
 
@@ -5774,7 +5814,7 @@ vectorizable_load (tree stmt, block_stmt_iterator *bsi, tree *vec_stmt,
         dataref_ptr = vect_create_data_ref_ptr (first_stmt,
 					        at_loop, offset, 
 						&dummy, &ptr_incr, false, 
-						NULL_TREE, &inv_p);
+						&inv_p);
       else
         dataref_ptr = 
 		bump_vector_ptr (dataref_ptr, ptr_incr, bsi, stmt, NULL_TREE);
@@ -6188,6 +6228,8 @@ vect_transform_stmt (tree stmt, block_stmt_iterator *bsi, bool *strided_store,
   stmt_vec_info stmt_info = vinfo_for_stmt (stmt);
   tree orig_stmt_in_pattern;
   bool done;
+  loop_vec_info loop_vinfo = STMT_VINFO_LOOP_VINFO (stmt_info);
+  struct loop *loop = LOOP_VINFO_LOOP (loop_vinfo);
 
   switch (STMT_VINFO_TYPE (stmt_info))
     {
@@ -6272,6 +6314,43 @@ vect_transform_stmt (tree stmt, block_stmt_iterator *bsi, bool *strided_store,
 	}
     }
 
+  /* Handle inner-loop stmts whose DEF is used in the loop-nest that
+     is being vectorized, but outside the immediately enclosing loop.  */
+  if (vec_stmt
+      && nested_in_vect_loop_p (loop, stmt)
+      && STMT_VINFO_TYPE (stmt_info) != reduc_vec_info_type
+      && (STMT_VINFO_RELEVANT (stmt_info) == vect_used_in_outer 
+          || STMT_VINFO_RELEVANT (stmt_info) == vect_used_in_outer_by_reduction))
+    {
+      struct loop *innerloop = loop->inner;
+      imm_use_iterator imm_iter;
+      use_operand_p use_p;
+      tree scalar_dest;
+      tree exit_phi;
+
+      if (vect_print_dump_info (REPORT_DETAILS))
+	fprintf (vect_dump, "Record the vdef for outer-loop vectorization.");
+
+      /* Find the relevant loop-exit phi-node, and reord the vec_stmt there
+        (to be used when vectorizing outer-loop stmts that use the DEF of
+        STMT).  */
+      if (TREE_CODE (stmt) == PHI_NODE)
+	scalar_dest = PHI_RESULT (stmt);
+      else
+	scalar_dest = GIMPLE_STMT_OPERAND (stmt, 0);
+
+      FOR_EACH_IMM_USE_FAST (use_p, imm_iter, scalar_dest)
+	{
+	  if (!flow_bb_inside_loop_p (innerloop, bb_for_stmt (USE_STMT (use_p))))
+	    {
+              exit_phi = USE_STMT (use_p);
+              STMT_VINFO_VEC_STMT (vinfo_for_stmt (exit_phi)) = vec_stmt;
+            }
+	}
+    }
+
+  /* Handle stmts whose DEF is used outside the loop-nest that is 
+     being vectorized.  */
   if (STMT_VINFO_LIVE_P (stmt_info)
       && STMT_VINFO_TYPE (stmt_info) != reduc_vec_info_type)
     {
@@ -6491,6 +6570,7 @@ vect_update_ivs_after_vectorizer (loop_vec_info loop_vinfo, tree niters,
 
       access_fn = analyze_scalar_evolution (loop, PHI_RESULT (phi)); 
       gcc_assert (access_fn);
+      STRIP_NOPS (access_fn);
       evolution_part =
 	 unshare_expr (evolution_part_in_loop_num (access_fn, loop->num));
       gcc_assert (evolution_part != NULL_TREE);
@@ -6659,16 +6739,14 @@ vect_do_peeling_for_loop_bound (loop_vec_info loop_vinfo, tree *ratio)
    Else, compute address misalignment in bytes:
      addr_mis = addr & (vectype_size - 1)
 
-   prolog_niters = min ( LOOP_NITERS , (VF - addr_mis/elem_size)&(VF-1) )
-   
-   (elem_size = element type size; an element is the scalar element 
-	whose type is the inner type of the vectype)  
+   prolog_niters = min (LOOP_NITERS, ((VF - addr_mis/elem_size)&(VF-1))/step)
 
-   For interleaving,
+   (elem_size = element type size; an element is the scalar element whose type
+   is the inner type of the vectype)
 
-   prolog_niters = min ( LOOP_NITERS , 
-                        (VF/group_size - addr_mis/elem_size)&(VF/group_size-1) )
-	 where group_size is the size of the interleaved group.
+   When the step of the data-ref in the loop is not 1 (as in interleaved data
+   and SLP), the number of iterations of the prolog must be divided by the step
+   (which is equal to the size of interleaved group).
 
    The above formulas assume that VF == number of elements in the vector. This
    may not hold when there are multiple-types in the loop.
@@ -6690,18 +6768,12 @@ vect_gen_niters_for_prolog_loop (loop_vec_info loop_vinfo, tree loop_niters)
   tree vectype = STMT_VINFO_VECTYPE (stmt_info);
   int vectype_align = TYPE_ALIGN (vectype) / BITS_PER_UNIT;
   tree niters_type = TREE_TYPE (loop_niters);
-  int group_size = 1;
+  int step = 1;
   int element_size = GET_MODE_SIZE (TYPE_MODE (TREE_TYPE (DR_REF (dr))));
   int nelements = TYPE_VECTOR_SUBPARTS (vectype);
 
   if (STMT_VINFO_STRIDED_ACCESS (stmt_info))
-    {
-      /* For interleaved access element size must be multiplied by the size of
-	 the interleaved group.  */
-      group_size = DR_GROUP_SIZE (vinfo_for_stmt (
-					       DR_GROUP_FIRST_DR (stmt_info)));
-      element_size *= group_size;
-    }
+    step = DR_GROUP_SIZE (vinfo_for_stmt (DR_GROUP_FIRST_DR (stmt_info)));
 
   pe = loop_preheader_edge (loop); 
 
@@ -6712,8 +6784,9 @@ vect_gen_niters_for_prolog_loop (loop_vec_info loop_vinfo, tree loop_niters)
 
       if (vect_print_dump_info (REPORT_DETAILS))
         fprintf (vect_dump, "known alignment = %d.", byte_misalign);
-      iters = build_int_cst (niters_type, 
-			     (nelements - elem_misalign)&(nelements/group_size-1));
+
+      iters = build_int_cst (niters_type,
+                     (((nelements - elem_misalign) & (nelements - 1)) / step));
     }
   else
     {
