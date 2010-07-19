@@ -363,27 +363,9 @@ end
 done0 = build_dir & "/.configure-done" % old version
 done = build_dir & "/Makefile"
 
-if defined ("FORCE")
-  %
-  % Note: this block is hard to maintain correctly and I personally
-  % just rmdir /q/s <target> or rm -rf <target>.
-  %
-  % Why not just rm -rf build_dir/*?
-  % Scared of getting it wrong?
-  %
-  if FileExists (build_dir & "/Makefile")
-    exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
-  end
-  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg",
-                ".M3SHIP", done0, done, Log, "_m3sh0.sh"]
-    delete_file(build_dir & "/" & a)
-  end
-  %
-  % Now delete directories.
-  %
-  foreach a in ["gcc", "gmp", "libcpp", "libdecnumber", "mpfr", "libiberty"]
-    fs_rmrec(build_dir & "/" & a)
-  end
+if stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined ("FORCE")
+  m3cc_Run(["rm -rf " & build_dir & "/*"])
+  cp_if("../src/clean_marker.txt", build_dir & "/clean_marker.txt") 
 end
 
 % OpenBSD provides no forward or backward compatibility for
