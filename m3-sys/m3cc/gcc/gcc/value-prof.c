@@ -828,7 +828,7 @@ tree_mod_subtract (tree stmt, tree operation, tree op1, tree op2,
   tree label_decl3 = create_artificial_label ();
   tree label1, label2, label3;
   tree bb1end, bb2end = NULL_TREE, bb3end;
-  basic_block bb, bb2, bb3, bb4;
+  basic_block bb, bb2, bb3 = { 0 }, bb4;
   tree optype = TREE_TYPE (operation);
   edge e12, e23 = 0, e24, e34, e14;
   block_stmt_iterator bsi;
