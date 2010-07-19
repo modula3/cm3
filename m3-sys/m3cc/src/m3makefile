@@ -364,8 +364,15 @@ done0 = build_dir & "/.configure-done" % old version
 done = build_dir & "/Makefile"
 
 if stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined ("FORCE")
-  m3cc_Run(["rm -rf " & build_dir & "/*"])
-  cp_if("../src/clean_marker.txt", build_dir & "/clean_marker.txt") 
+  foreach a in fs_lsfiles (build_dir, FALSE)
+    write("rm ", a, CR)
+    delete_file(a)
+  end
+  foreach a in fs_lsdirs (build_dir, FALSE)
+    write("rm -rf ", a, CR)
+    fs_rmrec(a)
+  end
+  cp_if("../src/clean_marker.txt", build_dir & "/clean_marker.txt")
 end
 
 % OpenBSD provides no forward or backward compatibility for
