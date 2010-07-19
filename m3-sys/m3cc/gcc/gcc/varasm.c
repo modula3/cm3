@@ -3384,7 +3384,7 @@ const_rtx_hash_1 (rtx *xp, void *data)
 	h ^= (hashval_t) hwi;
 	for (i = 1; i < n; ++i)
 	  {
-	    hwi >>= shift;
+	    hwi = ((hwi >> (shift - 1)) >> 1);
 	    h ^= (hashval_t) hwi;
 	  }
       }
