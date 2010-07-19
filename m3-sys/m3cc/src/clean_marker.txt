@@ -1,0 +1,11 @@
+Edit this file to make subsequent builds clean.
+
+The contents of the file do not matter.
+
+ - force rebuild
+   - merge from 4.3.0 to 4.3.5
+   - configure switches changed
+   - remove -disable-dependency-tracking, for more correct
+     incrementality (i.e. header changes)
+
+ECB7F54A-FB17-415D-ACDD-2E0FA2C8D069
