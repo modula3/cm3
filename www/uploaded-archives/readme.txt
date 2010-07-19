@@ -45,3 +45,9 @@ This text should probably be a link to save user's confusion.
   cp cm3 somewhere/bin
   add somewhere/bin to $PATH
   Continue, e.g. with scripts/python/boot2.sh.
+
+ NOTE: "boot" has a potential major problem.
+   The resulting compiler is tied to a particular cm3cg/m3core,
+   however those are not provided by it. Providing m3core is easy.
+   Providing cm3cg, not so much.
+
