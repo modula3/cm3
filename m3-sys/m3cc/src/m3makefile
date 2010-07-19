@@ -9,7 +9,7 @@
 %
 
 % omit unnecessary builds during regression testing
-NOACTION = ""
+NOACTION = FALSE
 WS = $WORKSPACE
 PREBUILT_CM3CG = $PREBUILT_CM3CG
 if WS and PREBUILT_CM3CG
@@ -30,7 +30,7 @@ if WS and PREBUILT_CM3CG
     write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
     cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
   end
-  NOACTION = "T"
+  NOACTION = TRUE
 end
 
 include("platforms.quake")
