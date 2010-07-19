@@ -386,38 +386,12 @@ if defined ("FORCE")
   end
 end
 
-Configure = " "
-
 % OpenBSD provides no forward or backward compatibility for
 % executabes that use shared libraries, as libc.so changes name.
 
 if Platform_IsOpenBSD(M3CC_HOST)
   M3CC_CFLAGS = M3CC_CFLAGS & " -static"
 end
-
-if Native
-  %
-  % Try to support PPC_DARWIN on {I386,AMD64}_DARWIN hosts via the emulator.
-  %
-  if equal (M3CC_BUILD, "PPC_DARWIN") and FileExists("/usr/libexec/oah/translate")
-    M3CC_CFLAGS = M3CC_CFLAGS & " -arch ppc"
-  end
-
-  %
-  % Create a native Darwin/AMD64 compiler (i.e. not 32bit x86)
-  %
-  if equal (M3CC_BUILD, "AMD64_DARWIN")
-    M3CC_CFLAGS = M3CC_CFLAGS & " -arch x86_64"
-  end
-end
-
-%
-% Always specify build/host/target.
-% This should provide more consistency.
-%
-Configure = Configure & " -build=" & GNU_platform (M3CC_BUILD)
-Configure = Configure & " -host=" & GNU_platform (M3CC_HOST)
-Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
 
 %
 % Configure does not ferry environment variables from itself to make,
@@ -453,58 +427,101 @@ if not NOACTION
   ApplyPatches (M3CC_TARGET)
 end
 
+% configure the sources
 % check for non-default flags
 
+Configure = " "
+
+%
+% Workaround Canadian fixincludes not understanding sysroot of the cross compiler used to build it.
+% http://gcc.gnu.org/bugzilla/show_bug.cgi?id=37036
+% This does not affect m3cg.
+%
+if equal (M3CC_HOST, M3CC_TARGET) and not equal (M3CC_HOST, M3CC_BUILD)
+  Configure = Configure & " -with-sysroot=/"
+  local Prefix = "/usr/local"
+  local DefaultSysroot = Prefix & "/" & GNU_platform (M3CC_TARGET) & "/sys-root"
+  Configure = Configure & " -with-build-sysroot=" & DefaultSysroot
+  Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+else
+  if not equal (M3CC_HOST, M3CC_TARGET)
+    Configure = Configure & " -with-sysroot"
+    
+    %
+    % This is the essential cross build step.
+    %
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+  end
+end
+
+if Native % host == target == build
+
+  %
+  % Try to support PPC_DARWIN on {I386,AMD64}_DARWIN hosts via the emulator.
+  %
+  if equal (M3CC_BUILD, "PPC_DARWIN") and FileExists("/usr/libexec/oah/translate")
+    M3CC_CFLAGS = M3CC_CFLAGS & " -arch ppc"
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+  end
+
+  %
+  % Create a native Darwin/AMD64 compiler (i.e. not 32bit x86)
+  %
+  if equal (M3CC_BUILD, "AMD64_DARWIN")
+    Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+  end
+
+  %
+  % Config.guess on SPARC32_LINUX yields sparc64 and m3cg
+  % then just always fails with internal errors, so be explicit.
+  % This is reasonable in all builds, but let's not upset that apple cart.
+  % We still let host and build be guessed, leading to a typically
+  % sparc64 hosted cm3cg. Actual sparc32 systems (vs. sparc64) are rare
+  % (Linux kernel no longer supports such hardware) so this should be ok.
+  % If we really wanted sparc32 cm3 to produce a sparc32 hosted cm3cg,
+  % we could be explicit about host and/or build.
+  %
+  if equal (M3CC_BUILD, "SPARC32_LINUX")
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+    %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+  end
+end
+
+Configure = Configure & " -srcdir=" & SourceDir
+Configure = Configure & " -disable-bootstrap"
+Configure = Configure & " -disable-intl"
+Configure = Configure & " -disable-libgomp"
+Configure = Configure & " -disable-libmudflap"
+Configure = Configure & " -disable-libssp"
+Configure = Configure & " -disable-nls"
+Configure = Configure & " -enable-languages=m3cg"
+Configure = Configure & " -enable-targets=all"
+%Configure = Configure & " -enable-checking=all"
+
+% Save some libtool wrapping layers to speed up esp. on NT?
+%Configure = Configure & " -disable-dependency-tracking"
+
+% These are compatible with just building m3cg, but user might
+% build gcc/cc1/libgcc here.
+Configure = Configure & " -disable-fixincludes"
+Configure = Configure & " -disable-libgcc"
+Configure = Configure & " -disable-decimal-float"
+Configure = Configure & " -disable-fixed-point"
+
+%
+% host=NT386GNU target=SPARC64_OPENBSD works.
+% Native SPARC64_OPENBSD does not. -disable-tls reduces noise in comparing
+% them, and we never use TLS anyway, so just disable it across the board.
+%
+Configure = Configure & " -disable-tls"
+
 if not defined ("no_config") and not NOACTION
-  % configure the sources
   if not FileExists (done)
-
-    %
-    % Workaround Canadian fixincludes not understanding sysroot of the cross compiler used to build it.
-    % http://gcc.gnu.org/bugzilla/show_bug.cgi?id=37036
-    % This does not affect m3cg.
-    %
-    if equal (M3CC_HOST, M3CC_TARGET) and not equal (M3CC_HOST, M3CC_BUILD)
-        Configure = Configure & " -with-sysroot=/"
-        local Prefix = "/usr/local"
-        local DefaultSysroot = Prefix & "/" & GNU_platform (M3CC_TARGET) & "/sys-root"
-        Configure = Configure & " -with-build-sysroot=" & DefaultSysroot
-    else
-        if not equal (M3CC_HOST, M3CC_TARGET)
-          Configure = Configure & " -with-sysroot"
-        end
-    end
-
-    Configure = Configure & " -srcdir=" & SourceDir
-    Configure = Configure & " -disable-bootstrap"
-    Configure = Configure & " -disable-intl"
-    Configure = Configure & " -disable-libgomp"
-    Configure = Configure & " -disable-libmudflap"
-    Configure = Configure & " -disable-libssp"
-    Configure = Configure & " -disable-nls"
-    Configure = Configure & " -enable-languages=m3cg"
-    Configure = Configure & " -enable-targets=all"
-    %Configure = Configure & " -enable-checking=all"
-
-    % Save some libtool wrapping layers to speed up esp. on NT?
-    Configure = Configure & " -disable-dependency-tracking"
-
-    % These are compatible with just building m3cg, but user might
-    % build gcc/cc1/libgcc here.
-    Configure = Configure & " -disable-fixincludes"
-    Configure = Configure & " -disable-libgcc"
-    Configure = Configure & " -disable-decimal-float"
-    Configure = Configure & " -disable-fixed-point"
-
-    %
-    % host=NT386GNU target=SPARC64_OPENBSD works.
-    % Native SPARC64_OPENBSD does not.
-    % -disable-tls reduces noise in comparing
-    % them, and we never use TLS anyway, so just
-    % disable it across the board.
-    %
-    Configure = Configure & " -disable-tls"
-
     m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure, " | tee -a " & Log])
   end
 end

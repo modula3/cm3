@@ -993,6 +993,4 @@ extern void darwin_default_min_version (int * argc, char *** argv);
   darwin_default_min_version (&argc, &argv)
 #endif /* CROSS_DIRECTORY_STRUCTURE */
 
-#define HAVE_GAS_HIDDEN
-
 #endif /* CONFIG_DARWIN_H */
