@@ -1158,7 +1158,6 @@ def Boot():
         CCompilerFlags = "-g -mt -xldscope=symbolic "
     elif Config == "ALPHA_OSF":
         CCompiler = "/usr/bin/cc"
-        # add -DM3_OSF1_V4 for OSF1v4 or older
         CCompilerFlags = "-g -pthread"
     else:
         # gcc platforms
@@ -1329,6 +1328,8 @@ def Boot():
                 + "set -x\n\n")
 
     for a in [Makefile]:
+        if Config == "ALPHA_OSF":
+            a.wrte("# add -DM3_OSF1_V4 for OSF1v4 or older\n")
         a.write("# edit up here\n\n"
                 + "CC=" + CCompiler + "\n"
                 + "CFLAGS=" + CCompilerFlags + "\n"
