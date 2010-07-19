@@ -6,7 +6,7 @@
  On some systems, e.g. FreeBSD prior to 8.0, OSF/1, you
    need to set LD_LIBRARY_PATH or similar to contain somewhere/lib.
 
- Try building some Modula-3 code with "cm3.
+ Try building some Modula-3 code with "cm3".
 
 
 "min" is compiler, m3core, libm3
