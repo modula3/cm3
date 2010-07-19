@@ -37,10 +37,10 @@ This text should probably be a link to save user's confusion.
   "boot" requires more expertise. You might have to edit
   the Makefile!
   "boot" gives you cm3.
-    If not, back and investigate.
+    If not, back up and investigate.
   Run it.
   It should say "unable to find cm3.cfg".
-    If not, back and investigate.
+    If not, back up and investigate.
   mkdir -p somewhere/bin
   cp cm3 somewhere/bin
   add somewhere/bin to $PATH
