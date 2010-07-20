@@ -19,7 +19,7 @@ def _CleanupEnvironment():
             del(os.environ[a])
 
 SetupEnvironment()
-CopyConfigForDevelopment() or sys.exit(1)
+#CopyConfigForDevelopment() or sys.exit(1)
 
 #
 # clean everything
