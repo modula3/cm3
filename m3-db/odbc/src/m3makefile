@@ -1,7 +1,9 @@
 % Copyright 1996-2000, Critical Mass, Inc.  All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end
 
 if SYSTEM_LIBS contains "ODBC"
     import("libm3")
