@@ -23,3 +23,4 @@ include("gnuld.common")
 SYSTEM_LIBS{"LIBC"} = ["-lm"]
 SYSTEM_LIBS{"ODBC"} = ["-Wl,-rpath,/usr/local/lib -L/usr/local/lib -liodbc" ]
 SYSTEM_LIBS{"POSTGRES95"} = ["-Wl,-rpath -L/usr/local/lib -lpq"]
+SYSTEM_LIBS{"X11"} += ["-lXau", "-lXdmcp"]
