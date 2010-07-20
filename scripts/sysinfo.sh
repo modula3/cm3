@@ -275,10 +275,10 @@ if [ "x$CM3_TARGET" = "x" ] ; then
     exit 1
 fi
 
-case "x$CM3_TARGET" in
+case "$CM3_TARGET" in
   *DARWIN) CM3_GDB=no;;
-    
-  NT386 | I386_NT)
+
+  NT386|I386_NT)
     CM3_OSTYPE=WIN32
     CM3_INSTALL="c:/cm3"
     CM3_GCC_BACKEND=no
