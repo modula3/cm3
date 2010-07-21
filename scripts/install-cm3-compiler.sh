@@ -165,6 +165,8 @@ cp_version()
   if [ "${GCC_BACKEND}" = yes ] ; then
     cp_if "${BACKEND}-${CM3VERSION}" "${BACKEND}"
   fi
+  mkdir -p "${CONFIG}"
+  mkdir -p "${CONFIG}-${CM3VERSION}"
   cp "${CONFIG}-${CM3VERSION}/*" "${CONFIG}"
 }
 
