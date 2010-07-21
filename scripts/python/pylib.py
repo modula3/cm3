@@ -1329,7 +1329,7 @@ def Boot():
 
     for a in [Makefile]:
         if Config == "ALPHA_OSF":
-            a.wrte("# add -DM3_OSF1_V4 for OSF1v4 or older\n")
+            a.write("# add -DM3_OSF1_V4 for OSF1v4 or older\n")
         a.write("# edit up here\n\n"
                 + "CC=" + CCompiler + "\n"
                 + "CFLAGS=" + CCompilerFlags + "\n"
