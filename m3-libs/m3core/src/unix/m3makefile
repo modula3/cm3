@@ -3,61 +3,46 @@
 % See the file COPYRIGHT for a full description.
 
 readonly _UnixPieces = {
-  "ALPHA32_VMS"     : [ "uin-common" ], % both are available, depending on #if
-  "ALPHA64_VMS"     : [ "uin-common" ], % both are available, depending on #if
-  "ALPHA_OSF"       : [ "uin-len",      % both are available, depending on #if
-                        "osf-1.ALPHA_OSF" ],
-  "AMD64_CYGWIN"    : [ "uin-common" ],
-  "AMD64_LINUX"     : [ "uin-common" ],
-  "AMD64_MINGW"     : [ "uin-common" ],
-  "AMD64_NT"        : [ "uin-common" ],
-  "AMD64_SOLARIS"   : [ "uin-common" ],
-  "ARMEL_LINUX"     : [ "uin-common" ],
-  "I386_CYGWIN"     : [ "uin-common" ],
-  "I386_INTERIX"    : [ "uin-common" ],
-  "I386_MINGW"      : [ "uin-common" ],
-  "I386_NT"         : [ "uin-common" ],
-  "I386_LINUX"      : [ "uin-common" ],
-  "I386_SOLARIS"    : [ "uin-common" ],
-  "LINUXLIBC6"      : [ "uin-common" ],
-  "NT386"           : [ "uin-common" ],
-  "NT386GNU"        : [ "uin-common" ],
-  "PA32_HPUX"       : [ "uin-common" ],
-  "PA64_HPUX"       : [ "uin-common" ],
-  "PPC_LINUX"       : [ "uin-common" ],
-  "SOLgnu"          : [ "solaris-2-x", "uin-common" ],
-  "SOLsun"          : [ "solaris-2-x", "uin-common" ],
-  "SPARC32_LINUX"   : [ "uin-common" ],
-  "SPARC64_LINUX"   : [ "uin-common" ],
-  "SPARC64_SOLARIS" : [ "uin-common" ],
+  % AIX?
+  "CYGWIN"  : [ "uin-common" ],
+  "HPUX"    : [ "uin-common" ],
+  "INTERIX" : [ "uin-common" ],
+  % IRIX?
+  "LINUX"   : [ "uin-common" ],
+  "MINGW"   : [ "uin-common" ],
+  "NT"      : [ "uin-common" ],
+  "SOLgnu"  : [ "solaris-2-x", "uin-common" ],
+  "SOLsun"  : [ "solaris-2-x", "uin-common" ],
+  "SOLARIS" : [ "uin-common" ],
+  "VMS"     : [ "uin-common" ], % both are available, depending on #if
+
+  % both are available, depending on #if
+  % We use a define for a more important purpose (socklen_t),
+  % and it gives us this too.
+  "ALPHA_OSF" : [ "uin-len",
+                "osf-1.ALPHA_OSF" ],
 
   % BSD/Darwin have an 8 bit family and an 8 bit length field added
-
-  "AMD64_DARWIN"    : [ "uin-len" ],
-  "ARM_DARWIN"      : [ "uin-len" ],
-  "I386_DARWIN"     : [ "uin-len" ],
-  "PPC_DARWIN"      : [ "uin-len" ],
-  "PPC64_DARWIN"    : [ "uin-len" ],
-
-  "NetBSD2_i386"    : [ "uin-len" ],
-  "FreeBSD4"        : [ "uin-len" ],
-  "AMD64_FREEBSD"   : [ "uin-len" ],
-  "I386_FREEBSD"    : [ "uin-len" ],
-  "I386_NETBSD"     : [ "uin-len" ],
-  "AMD64_NETBSD"    : [ "uin-len" ],
-  "AMD64_OPENBSD"   : [ "uin-len" ],
-  "I386_OPENBSD"    : [ "uin-len" ],
-  "PPC32_OPENBSD"   : [ "uin-len" ],
-  "SPARC64_OPENBSD" : [ "uin-len" ],
-  "MIPS64_OPENBSD"  : [ "uin-len" ],
-
+  "DARWIN"  : [ "uin-len" ],
+  "NETBSD"  : [ "uin-len" ],
+  "FREEBSD" : [ "uin-len" ],
+  "OPENBSD" : [ "uin-len" ],
 }
 
 include_dir ("Common")
 
 if _UnixPieces contains TARGET
   local pieces = _UnixPieces {TARGET}
-  foreach f in pieces  include_dir (f)  end
+  foreach f in pieces
+    include_dir (f)
+  end
 else
-  error (format ("unix: unsupported platform: \"%s\"%s", TARGET, CR))
+  if _UnixPieces contains TARGET_OS
+    local pieces = _UnixPieces {TARGET_OS}
+    foreach f in pieces
+      include_dir (f)
+    end
+  else
+    error (format ("unix: unsupported platform: \"%s\"%s", TARGET, CR))
+  end
 end
