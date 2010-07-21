@@ -522,7 +522,7 @@ readonly proc AppendExeExtension (a) is
   return a
 end
 
-DoMipsTfile = (equal (M3CC_TARGET, "DS3100") or equal (M3CC_TARGET, "ALPHA_OSF"))
+DoMipsTfile = Native and (equal (M3CC_TARGET, "DS3100") or equal (M3CC_TARGET, "ALPHA_OSF"))
 
 readonly proc postcp() is
   pSrc  = build_dir & "/gcc/m3cgc1"
