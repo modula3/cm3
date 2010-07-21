@@ -3,10 +3,9 @@
 % See the file COPYRIGHT for a full description.
 
 readonly _UnixPieces = {
-  "ALPHA32_VMS"     : [ "uin-common" ], % both are actually available
-  "ALPHA64_VMS"     : [ "uin-common" ], % both are actually available
-  "ALPHA_OSF"       : [ "uin-common",   % both are actually available?
-                        "osf-1.ALPHA_OSF" ],
+  "ALPHA32_VMS"     : [ "uin-common" ], % both are available, depending on #if
+  "ALPHA64_VMS"     : [ "uin-common" ], % both are available, depending on #if
+  "ALPHA_OSF"       : [ "uin-len"    ], % both are available, depending on #if
   "AMD64_CYGWIN"    : [ "uin-common" ],
   "AMD64_LINUX"     : [ "uin-common" ],
   "AMD64_MINGW"     : [ "uin-common" ],

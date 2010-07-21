@@ -23,6 +23,25 @@ extern "C" {
 #define Local 0
 #define UTC 1
 
+#ifdef __osf__
+/* This works whether or not _OSF_SOURCE is defined. The headers say:
+ifdef _OSF_SOURCE
+	long	tm_gmtoff;
+	char	*tm_zone;
+define __tm_gmtoff tm_gmtoff
+define __tm_zone   tm_zone
+else
+     	long	__tm_gmtoff;
+	char	*__tm_zone;
+#endif
+*/
+#define m3_tm_gmtoff __tm_gmtoff
+#define m3_tm_zone   __tm_zone
+#else
+#define m3_tm_gmtoff tm_gmtoff
+#define m3_tm_zone   tm_zone
+#endif
+
 #ifdef _TIME64_T
 static time64_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 #else
@@ -66,8 +85,8 @@ DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown
      * the "date.offset" field is seconds *west* of GMT, so a
      * negation is necessary.
      */
-    date->offset = -tm->tm_gmtoff;
-    date->zone = M3toC__CopyStoT(tm->tm_zone);
+    date->offset = -tm->m3_tm_gmtoff;
+    date->zone = M3toC__CopyStoT(tm->m3_tm_zone);
 #else
     if (zone == Local)
     {
@@ -146,11 +165,11 @@ DatePosix__ToTime(const Date_t* date)
     assert(local_now != NULL);
     if (local_now->tm_isdst > 0)
       /* decrement the local time zone by one hour if DST is in effect */
-      local_now->tm_gmtoff -= SecsPerHour;
+      local_now->m3_tm_gmtoff -= SecsPerHour;
 
     /* As above, we must negate "date->offset" to account for the
        opposite sense of that field compared to Unix. */
-    t -= ((-date->offset) - local_now->tm_gmtoff);
+    t -= ((-date->offset) - local_now->m3_tm_gmtoff);
 Exit:
 #endif
     return t;

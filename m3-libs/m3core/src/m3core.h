@@ -6,36 +6,27 @@
 #define INCLUDED_M3CORE_H
 
 #ifdef __osf__
-/* What for?
- * Would be good to autoconf this?
- */
+/* To get struct tm.tm_gmtoff, tm_zone. Would be good to autoconf this? */
 #ifndef _OSF_SOURCE
 #define _OSF_SOURCE
 #endif
-#ifdef M3_OSF1_V4
-/* For socklen_t.
- * Would be good to autoconf this.
+/* For socklen_t. Would be good to autoconf this.
+ * This also gives us "uin-len".
  */
 #ifndef _POSIX_PII_SOCKET
 #define _POSIX_PII_SOCKET
 #endif
-#else
-/* For socklen_t?
- * Breaks pthread.h on v4.
- * Would be good to autoconf this.
- */
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 500
+/* More clearly get "uin-len". */
+#ifndef _SOCKADDR_LEN
+#define _SOCKADDR_LEN
 #endif
-/* For 64bit time_t.
- * Not available on v4.
- * Would be good to autoconf this.
+/* Request 64bit time_t. Not available on v4. Would be good to autoconf this.
+ * We later check for TIMEVAL64TO32/TIMEVAL32TO64 to see if this works.
  */
 #ifndef _TIME64_T
 #define _TIME64_T
 #endif
-#endif
-#endif
+#endif /* osf */
 
 /* http://gcc.gnu.org/wiki/Visibility */
 /* Helpers for shared library support */
@@ -191,6 +182,10 @@ typedef ptrdiff_t ssize_t;
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+/* Check if this system really supports _TIME64_T. */
+#if defined(_TIME64_T) && !defined(TIMEVAL64TO32) && !defined(TIMEVAL32TO64)
+#undef _TIME64_T
+#endif
 #include <sys/wait.h>
 #include <dirent.h>
 #include <grp.h>
