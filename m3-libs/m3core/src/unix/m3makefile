@@ -5,7 +5,8 @@
 readonly _UnixPieces = {
   "ALPHA32_VMS"     : [ "uin-common" ], % both are available, depending on #if
   "ALPHA64_VMS"     : [ "uin-common" ], % both are available, depending on #if
-  "ALPHA_OSF"       : [ "uin-len"    ], % both are available, depending on #if
+  "ALPHA_OSF"       : [ "uin-len",      % both are available, depending on #if
+                        "osf-1.ALPHA_OSF" ],
   "AMD64_CYGWIN"    : [ "uin-common" ],
   "AMD64_LINUX"     : [ "uin-common" ],
   "AMD64_MINGW"     : [ "uin-common" ],
