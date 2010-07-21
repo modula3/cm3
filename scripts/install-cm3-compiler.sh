@@ -19,10 +19,12 @@ fi
 . "$sysinfo"
 
 
+CONFIG="${INSTALLROOT}/bin/config"
 FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
 FRONTEND_SRC="${ROOT}/m3-sys/cm3/${TARGET}/cm3"
 BACKEND_SRC="${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg"
+CONFIG_SRC="${ROOT}/m3-sys/cminstall/src/config-no-install"
 
 usage()
 {
@@ -35,18 +37,21 @@ usage()
   echo "    version number as suffix, e.g."
   echo "    ${FRONTEND} --> ${FRONTEND}-x.y.z"
   echo "    ${BACKEND} --> ${BACKEND}-x.y.z"
+  echo "    ${CONFIG} --> ${CONFIG}-x.y.z"
   echo ""
   echo "  restore <version_number>"
   echo "    will restore copies with suffixed version number as current"
   echo "    version, e.g."
   echo "    ${FRONTEND}-x.y.z --> ${FRONTEND}"
   echo "    ${BACKEND}-x.y.z --> ${BACKEND}"
+  echo "    ${CONFIG}-x.y.z --> ${CONFIG}"
   echo ""
   echo "  newversion"
   echo "    will install the version from the current workspace with"
   echo "    version number suffixes, e.g."
   echo "    ${FRONTEND_SRC} --> ${FRONTEND}-x.y.z"
   echo "    ${BACKEND_SRC} --> ${BACKEND}-x.y.z"
+  echo "    ${CONFIG} --> ${CONFIG}-x.y.z"
   echo ""
   echo "  upgrade"
   echo "    will backup the existing version, install new executables"
@@ -122,14 +127,12 @@ getversion()
 install_local_as_version()
 {
   CM3VERSION=`getversion "${FRONTEND_SRC}"`
-  FRONTEND_CM3VERSION="${FRONTEND}-${CM3VERSION}"
-  BACKEND_CM3VERSION="${BACKEND}-${CM3VERSION}"
-  FRONTEND_DEST="${FRONTEND_CM3VERSION}"
-  BACKEND_DEST="${BACKEND_CM3VERSION}"
-  cp_if "${FRONTEND_SRC}" "${FRONTEND_DEST}"
+  cp_if "${FRONTEND_SRC}" "${FRONTEND}-${CM3VERSION}"
   if [ "${GCC_BACKEND}" = yes ] ; then
-    cp_if "${BACKEND_SRC}" "${BACKEND_DEST}"
+    cp_if "${BACKEND_SRC}" "${BACKEND}-${CM3VERSION}"
   fi
+  mkdir -p "${CONFIG}-${CM3VERSION}"
+  cp "${CONFIG_SRC}/*" "${CONFIG}-${CM3VERSION}"
 }
 
 backup_old()
@@ -139,6 +142,9 @@ backup_old()
   if [ "${GCC_BACKEND}" = yes ] ; then
     cp_if "${BACKEND}" "${BACKEND}-${OLDCM3VERSION}"
   fi
+  mkdir -p "${CONFIG}"
+  mkdir -p "${CONFIG}-${OLDCM3VERSION}"
+  cp "${CONFIG}/*" "${CONFIG}-${OLDCM3VERSION}"
 }
 
 rm_curent()
@@ -148,17 +154,18 @@ rm_curent()
     if [ "${GCC_BACKEND}" = yes ] ; then
       rm -f "${BACKEND}${ext}"
     fi
+    rm -rf "${CONFIG}"
+    mkdir -p "${CONFIG}"
   fi
 }
 
 cp_version()
 {
-  FRONTEND_CM3VERSION="${FRONTEND}-${CM3VERSION}"
-  BACKEND_CM3VERSION="${BACKEND}-${CM3VERSION}"
-  cp_if "${FRONTEND_CM3VERSION}" "${FRONTEND}"
+  cp_if "${FRONTEND}-${CM3VERSION}" "${FRONTEND}"
   if [ "${GCC_BACKEND}" = yes ] ; then
-    cp_if "${BACKEND_CM3VERSION}" "${BACKEND}"
+    cp_if "${BACKEND}-${CM3VERSION}" "${BACKEND}"
   fi
+  cp "${CONFIG}-${CM3VERSION}/*" "${CONFIG}"
 }
 
 upgrade()
@@ -182,8 +189,6 @@ elif [ "x${1}" = "xrestore" ] ; then
     exit 1
   fi
   CM3VERSION="$2"
-  FRONTEND_CM3VERSION="${FRONTEND}-${CM3VERSION}"
-  BACKEND_CM3VERSION="${BACKEND}-${CM3VERSION}"
   cp_version
 elif [ "x${1}" = "xnewversion" ] ; then
   install_local_as_version
