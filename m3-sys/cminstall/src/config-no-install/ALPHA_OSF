@@ -7,7 +7,8 @@
 %-------------------------------------------------- compilation environment ---
 
 readonly TARGET       = "ALPHA_OSF"
-readonly TARGET_ARCH = "ALPHA64"
+readonly TARGET_ARCH  = "ALPHA64"
+readonly TARGET_OS    = "OSF"
 readonly WORD_SIZE    = "64BITS"
 readonly GNU_PLATFORM = "alpha-dec-osf5.1"
 
