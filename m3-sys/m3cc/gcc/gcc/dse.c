@@ -2763,7 +2763,7 @@ dse_step3 (bool for_spills)
   sbitmap unreachable_blocks = sbitmap_alloc (last_basic_block);
   sbitmap_iterator sbi;
   bitmap all_ones = NULL;
-  unsigned int i;
+  unsigned i = { 0 };
   
   sbitmap_ones (unreachable_blocks);
 
