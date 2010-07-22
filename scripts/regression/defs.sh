@@ -298,9 +298,9 @@ cm3config() {
     exit 1
   fi
   # Repair missing config files.
-  mkdir -p "$1/bin/config"
   if [ ! -f "$1/bin/config/cm3cfg.common" ] ; then
-    rm -f "$1/bin/config"/*
+    rm -rf "$1/bin/config"
+    mkdir -p "$1/bin/config"
     cp "./m3-sys/cminstall/src/config-no-install"/* "$1/bin/config"
   fi
 }
