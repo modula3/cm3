@@ -132,7 +132,7 @@ install_local_as_version()
     cp_if "${BACKEND_SRC}" "${BACKEND}-${CM3VERSION}"
   fi
   mkdir -p "${CONFIG}-${CM3VERSION}"
-  cp "${CONFIG_SRC}/*" "${CONFIG}-${CM3VERSION}"
+  cp "${CONFIG_SRC}"/* "${CONFIG}-${CM3VERSION}"
 }
 
 backup_old()
@@ -144,7 +144,7 @@ backup_old()
   fi
   mkdir -p "${CONFIG}"
   mkdir -p "${CONFIG}-${OLDCM3VERSION}"
-  cp "${CONFIG}/*" "${CONFIG}-${OLDCM3VERSION}"
+  cp "${CONFIG}"/* "${CONFIG}-${OLDCM3VERSION}"
 }
 
 rm_curent()
@@ -167,7 +167,7 @@ cp_version()
   fi
   mkdir -p "${CONFIG}"
   mkdir -p "${CONFIG}-${CM3VERSION}"
-  cp "${CONFIG}-${CM3VERSION}/*" "${CONFIG}"
+  cp "${CONFIG}-${CM3VERSION}"/* "${CONFIG}"
 }
 
 upgrade()
