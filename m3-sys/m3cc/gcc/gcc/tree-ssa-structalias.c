@@ -4808,7 +4808,7 @@ set_uids_in_ptset (tree ptr, bitmap into, bitmap from)
 		 pointed-to location) and the access size.
 		 If we didn't do field-sensitive PTA we need to to
 		 add all overlapping SFTs.  */
-	      unsigned int j;
+	      unsigned j = { 0 };
 	      unsigned HOST_WIDE_INT size = -1;
 	      tree sft, tsize = TYPE_SIZE (TREE_TYPE (TREE_TYPE (ptr)));
 	      if (tsize
