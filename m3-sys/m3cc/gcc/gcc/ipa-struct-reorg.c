@@ -3537,7 +3537,7 @@ collect_alloc_sites (void)
 		if (call && (decl = get_callee_fndecl (call)) 
 		    && TREE_CODE (stmt) == GIMPLE_MODIFY_STMT)
 		  {
-		    unsigned i;
+		    unsigned i = { 0 };
 
 		    if (is_alloc_of_struct (stmt, &i))
 		      {
