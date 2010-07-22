@@ -86,7 +86,7 @@ int
 ebitmap_last_set_bit (ebitmap map)
 {
   unsigned int i = 0;
-  ebitmap_iterator ebi;
+  ebitmap_iterator ebi = { 0 };
   bool foundbit = false;
   
   /* This is not the fastest way to do this, we could simply look for
@@ -417,7 +417,7 @@ void
 ebitmap_and_into (ebitmap dst, ebitmap src)
 {
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned i = { 0 };
   unsigned int neweltindex = 0;
   unsigned int dsteltindex = 0;
   unsigned int srceltindex = 0;
@@ -471,7 +471,7 @@ void
 ebitmap_and (ebitmap dst, ebitmap src1, ebitmap src2)
 {
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned i = { 0 };
   unsigned int neweltindex = 0;
   unsigned int src1eltindex = 0;
   unsigned int src2eltindex = 0;
@@ -546,7 +546,7 @@ ebitmap_ior_into (ebitmap dst, ebitmap src)
   unsigned int dstsize = dst->wordmask->n_bits;
   unsigned int srcsize = src->wordmask->n_bits;
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned i = { 0 };
   sbitmap tempmask;
   unsigned int neweltindex = 0;
   unsigned int dsteltindex = 0;
@@ -670,7 +670,7 @@ ebitmap_ior (ebitmap dst, ebitmap src1, ebitmap src2)
   unsigned int src1size = src1->wordmask->n_bits;
   unsigned int src2size = src2->wordmask->n_bits;
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned i = { 0 };
   sbitmap tempmask;
   unsigned int neweltindex = 0;
   unsigned int src1eltindex = 0;
@@ -788,7 +788,7 @@ bool
 ebitmap_and_compl_into (ebitmap dst, ebitmap src)
 {
   bool changed = false;
-  unsigned int i;
+  unsigned i = { 0 };
   unsigned int neweltindex = 0;
   unsigned int dsteltindex = 0;
   sbitmap_iterator sbi;
