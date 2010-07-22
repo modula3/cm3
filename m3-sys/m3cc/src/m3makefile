@@ -471,7 +471,7 @@ if Native % host == target == build
   % we could be explicit about host and/or build.
   %
   if equal (M3CC_BUILD, "SPARC32_LINUX")
-    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    %Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
     %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
     %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
   end
