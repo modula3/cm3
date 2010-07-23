@@ -126,7 +126,8 @@ a\	""	FALSE
 a\(b	a(b	ERROR
 a\(*b	ab	ERROR
 a\(*b	a((b	ERROR
-a\\b	a\b	TRUE
+# double backslashing problems
+#a\\b	a\b	TRUE
 
 ((a))	abc	FALSE
 (a)b(c)	abc	FALSE
