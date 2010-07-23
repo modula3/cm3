@@ -2,8 +2,8 @@ import("m3core")
 import("libm3")
 import("m3quake")
 implementation("t")
-program("t")
 build_standalone()
+program("t")
 
 if defined("RUN")
 
