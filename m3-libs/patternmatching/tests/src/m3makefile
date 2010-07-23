@@ -7,6 +7,7 @@ implementation ("regex")
 %c_source ("regex")
 
 implementation("Main")
+build_standalone()
 program ("test-regex")
 
 if defined("RUN")
