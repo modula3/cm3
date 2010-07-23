@@ -334,8 +334,8 @@ write_pkg_report() {
   (
     if [ "${tbgt}" != "bgyellow" ]; then
       echo "<testcase name=\"${pname} tests\" time=\"$6\">"
-      echo "  Test Result Details for $1"
-      quote_xml "$3"
+      # echo "  Test Result Details for $1" #
+      # quote_xml "$3" # FIXME: leave out stdout test output for now
       if [ -n "$4" ]; then
         echo "    <failure type=\"package tests failed\">"
         quote_xml "$4"
