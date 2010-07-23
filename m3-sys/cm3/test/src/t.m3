@@ -1,5 +1,5 @@
 MODULE t EXPORTS Main;
-IMPORT IO, Text, M3Path, Wr;
+IMPORT IO, Text, M3Path, Wr, TextUtils;
 
 PROCEDURE T(text: TEXT) =
 VAR length := Text.Length(text);
@@ -8,6 +8,11 @@ VAR length := Text.Length(text);
 BEGIN
   Text.SetChars(buf^, text);
   t2 := M3Path.FixPath(buf^);
+  (* Backward slashes confuse the test harness,
+   * so print them as tildes instead.
+   *)
+  text := TextUtils.SubstChar(text, '\\', '~');
+  t2 := TextUtils.SubstChar(t2, '\\', '~');
   IO.Put(text & " => " & t2 & Wr.EOL);
 END T;
 
