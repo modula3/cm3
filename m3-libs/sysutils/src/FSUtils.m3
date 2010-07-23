@@ -29,6 +29,7 @@ IMPORT Pathname, File, RegularFile, Process, OSError, Rd, FileRd,
        Wr, FileWr, Thread, Text, TextSeq;
 IMPORT SMsg AS Msg, PathRepr;
 IMPORT (* FSFixed AS *) FS;
+FROM System IMPORT AtomListToText;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Exists(fn : Pathname.T) : BOOLEAN =
@@ -95,7 +96,9 @@ PROCEDURE MakeDir(path : Pathname.T) =
           TRY
             FS.CreateDirectory(ipath);
           EXCEPT
-            OSError.E => Process.Crash("cannot create directory " & ipath);
+            OSError.E(l) => 
+            Process.Crash("cannot create directory " & ipath & 
+              ": " & AtomListToText(l));
           END;
         END;
       END;
@@ -127,7 +130,8 @@ PROCEDURE SubDirs(path : Pathname.T; relative := FALSE) : TextSeq.T
         iter.close();
       END;
     EXCEPT
-      OSError.E => RAISE E("error traversing directory " & path);
+      OSError.E(l) => RAISE E("error traversing directory " & path & 
+        ": " & AtomListToText(l));
     END;
     RETURN res;
   END SubDirs;
@@ -157,7 +161,8 @@ PROCEDURE SubFiles(path : Pathname.T; relative := FALSE) : TextSeq.T
         iter.close();
       END;
     EXCEPT
-      OSError.E => RAISE E("error traversing directory " & path);
+      OSError.E(l) => RAISE E("error traversing directory " & path & 
+        ": " & AtomListToText(l));
     END;
     RETURN res;
   END SubFiles;
@@ -170,7 +175,8 @@ PROCEDURE RemoveFile(fn : Pathname.T) =
       TRY
         FS.DeleteFile(PathRepr.Native(fn));
       EXCEPT
-        OSError.E => Process.Crash("cannot remove file " & fn);
+        OSError.E(l) => Process.Crash("cannot remove file " & fn & 
+          ": " & AtomListToText(l));
       END;
     ELSE
       Msg.Fatal("internal error: cannot remove non-regular file " & fn);
@@ -185,7 +191,8 @@ PROCEDURE RemoveDir(fn : Pathname.T) =
       TRY
         FS.DeleteDirectory(PathRepr.Native(fn));
       EXCEPT
-        OSError.E => Process.Crash("cannot remove directory " & fn);
+        OSError.E(l) => Process.Crash("cannot remove directory " & fn & 
+          ": " & AtomListToText(l));
       END;
     ELSE
       Msg.Fatal("internal error: " & fn & " is no directory");
@@ -201,7 +208,8 @@ PROCEDURE TouchFile(fn : Pathname.T) =
                        create := FS.CreateOption.Ok);
       f.close();
     EXCEPT
-      OSError.E => Process.Crash("cannot touch file " & fn);
+      OSError.E(l) => Process.Crash("cannot touch file " & fn & 
+        ": " & AtomListToText(l));
     END;
   END TouchFile;
 
@@ -234,7 +242,8 @@ PROCEDURE Mkdir(path : Pathname.T) RAISES {E} =
           TRY
             FS.CreateDirectory(ipath);
           EXCEPT
-            OSError.E => RAISE E("cannot create directory " & ipath);
+            OSError.E(l) => RAISE E("cannot create directory " & ipath & 
+              ": " & AtomListToText(l));
           END;
         END;
       END;
@@ -249,7 +258,8 @@ PROCEDURE Rm(fn : Pathname.T) RAISES {E} =
       TRY
         FS.DeleteFile(PathRepr.Native(fn));
       EXCEPT
-        OSError.E => RAISE E("cannot remove file " & fn);
+        OSError.E(l) => RAISE E("cannot remove file " & fn & 
+          ": " & AtomListToText(l));
       END;
     ELSE
       RAISE E("internal error: cannot remove non-regular file " & fn);
@@ -264,7 +274,8 @@ PROCEDURE Rmdir(fn : Pathname.T) RAISES {E} =
       TRY
         FS.DeleteDirectory(PathRepr.Native(fn));
       EXCEPT
-        OSError.E => RAISE E("cannot remove directory " & fn);
+        OSError.E(l) => RAISE E("cannot remove directory " & fn & 
+          ": " & AtomListToText(l));
       END;
     ELSE
       RAISE E("internal error: " & fn & " is no directory");
@@ -299,7 +310,8 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
           iter.close();
         END;
       EXCEPT
-        OSError.E => RAISE E("error traversing directory " & fn);
+        OSError.E(l) => RAISE E("error traversing directory " & fn & 
+          ": " & AtomListToText(l));
       END;
       Rmdir(fn);
     ELSE
@@ -316,7 +328,8 @@ PROCEDURE Touch(fn : Pathname.T) RAISES {E} =
                        create := FS.CreateOption.Ok);
       f.close();
     EXCEPT
-      OSError.E => RAISE E("cannot touch file " & fn);
+      OSError.E(l) => RAISE E("cannot touch file " & fn & 
+        ": " & AtomListToText(l));
     END;
   END Touch;
 
@@ -370,7 +383,8 @@ PROCEDURE CanonicalPathname(fn : Pathname.T) : Pathname.T RAISES {E} =
         TRY
           wd := Process.GetWorkingDirectory();
         EXCEPT
-          OSError.E => RAISE E("cannot get working directory");
+          OSError.E(l) => RAISE E("cannot get working directory" & 
+            ": " & AtomListToText(l));
         END;
         IF Text.Empty(fn) THEN
           res := wd;
@@ -407,13 +421,15 @@ PROCEDURE Cp(src, dest : Pathname.T) RAISES {E} =
     TRY
       rd := FS.OpenFileReadonly(PathRepr.Native(src));
     EXCEPT
-      OSError.E => RAISE E("cannot open file " & src);
+      OSError.E(l) => RAISE E("cannot open file " & src & 
+        ": " & AtomListToText(l));
     END;
     TRY
       TRY
         wr := FS.OpenFile(PathRepr.Native(dest));
       EXCEPT
-        OSError.E => RAISE E("cannot open file " & dest);
+        OSError.E(l) => RAISE E("cannot open file " & dest & 
+          ": " & AtomListToText(l));
       END;
       TRY
         TRY
@@ -423,13 +439,15 @@ PROCEDURE Cp(src, dest : Pathname.T) RAISES {E} =
             n := rd.read(buf);
           END;
         EXCEPT
-          OSError.E => RAISE E("error copying file " & src);
+          OSError.E(l) => RAISE E("error copying file " & src & 
+            ": " & AtomListToText(l));
         END;
       FINALLY
         TRY
           wr.close();
         EXCEPT
-          OSError.E => RAISE E("cannot close file " & dest);
+          OSError.E(l) => RAISE E("cannot close file " & dest & 
+            ": " & AtomListToText(l));
         END;
       END;
     FINALLY
@@ -446,7 +464,8 @@ PROCEDURE FileContents(fn : Pathname.T) : TEXT RAISES {E} =
     TRY
       rd := FileRd.Open(fn);
     EXCEPT
-      OSError.E => RAISE E("cannot open file " & fn);
+      OSError.E(l) => RAISE E("cannot open file " & fn & 
+        ": " & AtomListToText(l));
     END;
     TRY
       TRY
@@ -474,7 +493,8 @@ PROCEDURE PutFile(fn : Pathname.T; data : TEXT) RAISES {E} =
     TRY
       wr := FileWr.Open(fn);
     EXCEPT
-      OSError.E => RAISE E("cannot open file " & fn & " for writing");
+      OSError.E(l) => RAISE E("cannot open file " & fn & " for writing" & 
+        ": " & AtomListToText(l));
     END;
     TRY
       TRY
