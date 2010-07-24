@@ -1,6 +1,5 @@
 readonly TARGET_OS = "OPENBSD"
 
-
 SYSTEM_LD = SYSTEM_CC
   & " -Wl,-z,now"
   & " -Wl,-z,origin"
@@ -18,9 +17,6 @@ LINK_STATIC = "-static"
 include("Unix.common")
 include("gnuld.common")
 
-% LIBC: No pthreads, to avoid its sigsuspend that hangs.
-% See also RTProcess__RegisterForkHandlers in RTProcessC.c.
-SYSTEM_LIBS{"LIBC"} = ["-lm"]
 SYSTEM_LIBS{"ODBC"} = ["-Wl,-rpath,/usr/local/lib -L/usr/local/lib -liodbc" ]
 SYSTEM_LIBS{"POSTGRES95"} = ["-Wl,-rpath -L/usr/local/lib -lpq"]
 SYSTEM_LIBS{"X11"} += ["-lXau", "-lXdmcp"]

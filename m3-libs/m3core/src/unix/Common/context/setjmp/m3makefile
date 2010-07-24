@@ -1,0 +1,4 @@
+if equal (TARGET, "I386_OPENBSD")
+    h_source("context")
+    c_source("context")
+end
