@@ -359,7 +359,7 @@ forward_propagate_into_cond (tree cond_expr, tree stmt)
   do {
     tree tmp = NULL_TREE;
     tree cond = COND_EXPR_COND (cond_expr);
-    tree name, def_stmt, rhs0 = NULL_TREE, rhs1 = NULL_TREE;
+    tree name = { 0 }, def_stmt, rhs0 = NULL_TREE, rhs1 = NULL_TREE;
     bool single_use0_p = false, single_use1_p = false;
 
     /* We can do tree combining on SSA_NAME and comparison expressions.  */
