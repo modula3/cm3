@@ -101,7 +101,11 @@ static void RestoreOneHandler(WORD_T i);
 static WORD_T GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */
 {
+#ifdef __OpenBSD__
+    openbsd_ucontext_t* context = (openbsd_ucontext_t*)xcontext;
+#else
     ucontext_t* context = (ucontext_t*)xcontext;
+#endif
 
     if (context == NULL)
         return 0;
