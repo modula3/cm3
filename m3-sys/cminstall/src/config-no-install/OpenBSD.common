@@ -12,7 +12,8 @@ SYSTEM_LD = SYSTEM_CC
 
 GNU_MAKE = "gmake"
 
-LINK_STATIC = "-static"
+% -static with -lX11 breaks pthreads
+% LINK_STATIC = "-static"
 
 include("Unix.common")
 include("gnuld.common")
