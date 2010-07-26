@@ -58,9 +58,9 @@ extern "C"
 #define CONTEXT_STACK   2
 #define STACK_ADJUST    40
 #elif defined(OpenBSD_powerpc)
-#define CONTEXT_PC      20
-#define CONTEXT_STACK   1
-#define STACK_ADJUST    4
+#define CONTEXT_PC      4
+#define CONTEXT_STACK   3
+#define STACK_ADJUST    8
 #elif defined(Apple_ppc)
 #define CONTEXT_PC      21
 #define CONTEXT_STACK   0
@@ -79,7 +79,7 @@ extern "C"
 #endif
 
 /* This must be a macro and is even needed on x86, else -O3 break us.
- * We don't actually need the longjmp.
+ * We don't actually need the longjmp?
  */
 #define FlushRegistersAndOrDeoptimize() do { sigjmp_buf jb; if (sigsetjmp(jb, 0) == 0) siglongjmp(jb, 1); } while(0)
 
