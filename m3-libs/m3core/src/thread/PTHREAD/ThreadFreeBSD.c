@@ -52,6 +52,11 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   char *stackaddr;
   WORD_T stacksize;
 
+  /*
+     NOTE: This will scan the entire allocated stack,
+     not just the currently in use part.
+   */
+
   /* process the stacks */
   if (pthread_attr_init(&attr) != 0) abort();
   if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
