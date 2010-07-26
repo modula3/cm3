@@ -48,6 +48,8 @@ void config2(sigjmp_buf* jb1)
     diff(*(JB*)jb1, *(JB*)jb2);
 }
 
+void (*pconfig2)(sigjmp_buf* jb1) = config2;
+
 void config(volatile size_t a)
 {
     sigjmp_buf jb1;
@@ -80,6 +82,7 @@ void config(volatile size_t a)
     diff(*(JB*)&jb1, *(JB*)&jb2);
 
     config2(&jb1);
+    pconfig2(&jb1);
 }
 
 void stack_grow(char* a)
