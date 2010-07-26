@@ -24,13 +24,17 @@ SYSTEM_LIBS =
 %   "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
+proc AdjustShared(shared) is % disable shared
+  return FALSE
+end
+
 include("Unix.common")
-M3_SHARED_LIB_ARG = ""
-M3_SPLIT_LIBNAMES = FALSE
+M3_SHARED_LIB_ARG = ""    % disable shared
+M3_SPLIT_LIBNAMES = FALSE % disable shared
 
 SYSTEM_LD = SYSTEM_CC
   & " -Bsymbolic"
-  & " -Wl,-rpath,\\$ORIGIN"
-  & " -Wl,-rpath,\\$ORIGIN/../lib"
+  % & " -Wl,-rpath,\\$ORIGIN"
+  % & " -Wl,-rpath,\\$ORIGIN/../lib"
 
 include("gnuld.common")
