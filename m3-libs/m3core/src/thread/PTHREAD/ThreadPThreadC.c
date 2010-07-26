@@ -9,7 +9,7 @@
 #include <sys/ucontext.h>
 #endif
 
-#if defined(__OPENBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 /* See ThreadApple.c, ThreadFreeBSD.c, ThreadOpenBSD.c. */
 #define M3_DIRECT_SUSPEND
 #endif
@@ -34,8 +34,8 @@
 
 #ifdef M3_DIRECT_SUSPEND
 #define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
-    assert(0 && "MacOS X, FreeBSD should not get here.");       \
-    fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
+    assert(0 && "MacOS X, FreeBSD, OpenBSD should not get here."); \
+    fprintf(stderr, "MacOS X, FreeBSD, OpenBSD should not get here.\n"); \
     abort();                                                    \
   } while(0);
 #endif
