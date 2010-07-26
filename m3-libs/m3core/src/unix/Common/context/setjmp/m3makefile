@@ -1,4 +1,4 @@
-if equal (TARGET, "I386_OPENBSD")
+if equal(TARGET_OS, "OPENBSD")
     h_source("context")
     c_source("context")
 end
