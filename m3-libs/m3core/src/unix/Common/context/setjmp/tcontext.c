@@ -7,6 +7,7 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #include <time.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <signal.h>
 #ifdef __CYGWIN__
 #include <windows.h>
 #endif
@@ -192,10 +193,15 @@ void StartSwitching(void)
     allow_sigvtalrm();
 }
 
+#define FlushRegistersAndOrDeoptimize() do { sigjmp_buf jb; \
+if (sigsetjmp(jb, 0) == 0) siglongjmp(jb, 1); } while(0)
+
 int main(void)
 {
     static char st[3][256 * 1024];
     unsigned i;
+
+    FlushRegistersAndOrDeoptimize();
 
     print_threadid("main");
 
