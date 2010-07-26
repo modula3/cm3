@@ -1,4 +1,7 @@
 if equal(TARGET_OS, "OPENBSD")
     h_source("context")
     c_source("context")
+    if equal(TARGET_ARCH, "MIPS64")
+      s_source("context_mips64")
+    end
 end

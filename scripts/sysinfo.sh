@@ -261,10 +261,11 @@ if [ "x$CM3_TARGET" = "x" ] ; then
         esac;;
 
     OpenBSD)
-      case "`uname -m`" in
-        macppc)   CM3_TARGET=PPC32_OPENBSD;;
+      case "`arch -s`" in
+        powerpc)   CM3_TARGET=PPC32_OPENBSD;;
         sparc64)  CM3_TARGET=SPARC64_OPENBSD;;
         mips64)   CM3_TARGET=MIPS64_OPENBSD;;
+        mips64el) CM3_TARGET=MIPS64EL_OPENBSD;;
         i386)     CM3_TARGET=I386_OPENBSD;;
       esac;;
   esac
