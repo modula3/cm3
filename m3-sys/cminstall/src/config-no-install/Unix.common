@@ -149,6 +149,8 @@ end
 
 %------------------------------------------------------------------------------
 
+if not defined("AdjustShared")
+
 proc AdjustShared(shared) is
 
   return shared
@@ -160,10 +162,7 @@ proc AdjustShared(shared) is
     % so this is ok.
 
     and defined("install_symbolic_link")
-
-    % for now at least, no shared on Interix
-
-    and (not IsInterix())
+end
 
 end
 
