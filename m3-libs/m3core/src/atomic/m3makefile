@@ -4,14 +4,17 @@ Generic_module("Atomic")
 template("atomic")
 
 Atomic("Address")
-Atomic("Boolean")
-Atomic("Char")
 Atomic("Integer")
-if not (equal(TARGET, "PPC_LINUX") or equal(TARGET, "PPC_DARWIN")
-    or equal(TARGET, "PPC32_OPENBSD"))
+Atomic("Refany")
+
+if not ({"PPC_LINUX", "PPC_DARWIN", "PPC32_OPENBSD"} contains TARGET)
   Atomic("Longint")
 end
-Atomic("Refany")
-Atomic("WideChar")
+
+if not ({"MIPS64_OPENBSD", "MIPS64EL_OPENBSD"} contains TARGET)
+  Atomic("Boolean")
+  Atomic("Char")
+  Atomic("WideChar")
+end
 
 end
