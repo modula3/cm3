@@ -1,3 +1,10 @@
+/*
+   This code demonstrates "direct suspend" for Interix threads.
+   However we don't use this code. The signal/semaphore
+   technique works, with the added requirement, proven by
+   experimentation, that the signal context is on the stack,
+   even if it isn't passed as a parameter to the signal handler.
+ */
 
 #include "m3core.h"
 #include <sys/procfs.h>
