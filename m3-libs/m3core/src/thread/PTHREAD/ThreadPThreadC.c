@@ -3,15 +3,19 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #include "m3core.h"
+#ifdef __OpenBSD__
+#define ucontext_t openbsd_ucontext_t
+#else
 #include <sys/ucontext.h>
+#endif
 
-#if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
-/* See ThreadApple.c and ThreadFreeBSD.c. */
+#if defined(__OPENBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
+/* See ThreadApple.c, ThreadFreeBSD.c, ThreadOpenBSD.c. */
 #define M3_DIRECT_SUSPEND
 #endif
 
 #ifdef __OpenBSD__
-#error OpenBSD pthreads do not work.
+#error OpenBSD pthreads do not work (remove this and try, debug, please)
 #endif
 
 #ifndef M3_DIRECT_SUSPEND
@@ -434,8 +438,10 @@ InitC(int *bottom)
   int r;
 
   stack_grows_down = (bottom > &r);
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__INTERIX)
-  assert(stack_grows_down); /* See ThreadApple.c, ThreadFreeBSD.c, ThreadInterix.c */
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__INTERIX) \
+   || defined(__OpenBSD__)
+  assert(stack_grows_down); /* See ThreadApple.c, ThreadFreeBSD.c,
+                             * ThreadOpenBSD.c */
 #endif
   M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
 
