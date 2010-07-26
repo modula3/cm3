@@ -46,7 +46,8 @@ TYPE
     I386_OPENBSD,
     I386_SOLARIS,
     LINUXLIBC6,
-    MIPS64_OPENBSD,
+    MIPS64_OPENBSD, (* e.g. SGI *)
+    MIPS64EL_OPENBSD, (* e.g. Loongson *)
     NT386,
     NT386GNU,
     NetBSD2_i386,
@@ -92,6 +93,7 @@ CONST
     "I386_SOLARIS",
     "LINUXLIBC6",
     "MIPS64_OPENBSD",
+    "MIPS64EL_OPENBSD",
     "NT386",
     "NT386GNU",
     "NetBSD2_i386",

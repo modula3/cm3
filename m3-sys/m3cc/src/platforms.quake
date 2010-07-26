@@ -45,6 +45,7 @@ readonly Platform_info = {
   "MIPS64_IRIX" : "mips64-irix",
   "MIPS64_LINUX" : "mips64-linux",
   "MIPS64_OPENBSD" : "mips64-openbsd",
+  "MIPS64EL_OPENBSD" : "mips64el-openbsd",
   "NT386"     : "i586-pc-mingw32",
   "NT386GNU"  : "i586-pc-cygwin",
   "NT386MINGNU"     : "i586-pc-mingw32",

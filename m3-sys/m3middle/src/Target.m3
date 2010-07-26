@@ -229,7 +229,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* 64bit *)
 
     IF TextUtils.StartsWith(system, "ALPHA_")
-        OR TextUtils.Contains(system, "64_") THEN
+        OR TextUtils.Contains(system, "64_")
+        OR TextUtils.Contains(system, "64EL_") THEN
       Init64();
     END;
 
@@ -238,14 +239,17 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     IF TextUtils.StartsWith(system, "SPARC64_")
       OR TextUtils.StartsWith(system, "ARMEL")
       OR TextUtils.StartsWith(system, "PA")
-      OR TextUtils.StartsWith(system, "MIPS64_") THEN
+      OR TextUtils.StartsWith(system, "MIPS64") THEN
       Aligned_procedures := FALSE;
     END;
 
     (* big endian *)
 
     IF TextUtils.StartsWith(system, "PA")
-      OR TextUtils.StartsWith(system, "MIPS") (* ambiguous *)
+      OR (TextUtils.StartsWith(system, "MIPS")
+        AND NOT TextUtils.StartsWith(system, "MIPSEL")
+        AND NOT TextUtils.StartsWith(system, "MIPS32EL")
+        AND NOT TextUtils.StartsWith(system, "MIPS64EL"))
       OR TextUtils.StartsWith(system, "PPC")  (* ambiguous *)
       OR TextUtils.StartsWith(system, "SPARC")
       OR TextUtils.StartsWith(system, "SOL") THEN
@@ -295,7 +299,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 80 * Address.size;
                  Jumpbuf_align             := 128;
 
-    |  Systems.MIPS64_OPENBSD =>
+    |  Systems.MIPS64_OPENBSD,
+       Systems.MIPS64EL_OPENBSD =>
                  Jumpbuf_size              := 16_53 * Address.size;
 
     | Systems.I386_INTERIX =>

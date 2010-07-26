@@ -344,8 +344,8 @@ def _GetAllTargets():
     # systematic naming
 
     for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "IA64", "I386", "PPC", "PPC32",
-                 "PPC64", "SPARC", "SPARC32", "SPARC64", "MIPS32", "MIPS64", "PA32", "PA64", "SH"]:
-        for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX" "INTERIX", "IRIX",
+                 "PPC64", "SPARC", "SPARC32", "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64", "SH"]:
+        for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX", "INTERIX", "IRIX",
                    "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF", "SOLARIS", "VMS"]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
             Targets += [proc + "_" + os]
@@ -606,6 +606,10 @@ elif UName == "openbsd":
         Host = "PPC32_OPENBSD"
     elif arch == "i386\n":
         Host = "I386_OPENBSD"
+    elif arch == "mips64\n":
+        Host = "MIPS64_OPENBSD"
+    elif arch == "mips64el\n":
+        Host = "MIPS64EL_OPENBSD"
     else:
         FatalError("unknown OpenBSD platform")
 
