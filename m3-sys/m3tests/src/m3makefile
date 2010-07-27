@@ -501,6 +501,7 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     html (["</pre></td></tr>", CR])
 
     if not keep
+      exec ("ls -al", dir & "/" & BUILD_DIR)
       fs_rmrec (dir & "/" & BUILD_DIR)
     end
   end
