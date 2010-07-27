@@ -1,8 +1,3 @@
-#define _XOPEN_SOURCE 500
-#define _BSD_SOURCE
-#define _XPG4_2
-#define _DARWIN_C_SOURCE
-
 #include <assert.h>
 #include <errno.h>
 #include <setjmp.h>
@@ -15,48 +10,9 @@
 #include <sys/mman.h>
 #include <sys/signal.h>
 
-typedef ptrdiff_t INTEGER;
 #define ZERO_MEMORY(a) (memset(&(a), 0, sizeof(a)))
 
-typedef void (*SignalHandler1)(int signo);
-
-sigset_t ThreadSwitchSignal;
-
-#define SIG_TIMESLICE SIGVTALRM
-
-void
-setup_sigvtalrm(SignalHandler1 handler)
-{
-  struct sigaction act;
-
-  ZERO_MEMORY(act);
-  sigemptyset(&ThreadSwitchSignal);
-  sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
-
-  act.sa_handler = handler;
-  act.sa_flags = SA_RESTART;
-  sigemptyset(&(act.sa_mask));
-  if (sigaction (SIG_TIMESLICE, &act, NULL)) abort();
-}
-
-void
-allow_sigvtalrm(void)
-{
-    int i = sigprocmask(SIG_UNBLOCK, &ThreadSwitchSignal, NULL);
-    assert(i == 0);
-}
-
-void
-disallow_sigvtalrm(void)
-{
-    int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
-    assert(i == 0);
-}
-
 typedef struct {
-  void *stackaddr;
-  size_t stacksize;
-  void *sp;
   sigjmp_buf jb;
 } Context;
 
@@ -156,13 +112,13 @@ xMakeContext(
 }
 
 void *
-MakeContext (void (*p)(void), INTEGER words)
+MakeContext (void (*p)(void), size_t  words)
 {
   Context *c = (Context *)calloc (1, sizeof(*c));
-  INTEGER size = sizeof(void *) * words;
-  INTEGER pagesize = getpagesize();
+  size_t size = sizeof(void *) * words;
+  size_t pagesize = getpagesize();
   char *sp = { 0 };
-  INTEGER pages = { 0 };
+  size_t pages = { 0 };
   int er = { 0 };
 
   if (c == NULL)
@@ -180,8 +136,6 @@ MakeContext (void (*p)(void), INTEGER words)
   sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
   if (sp == NULL)
     goto Error;
-  c->stackaddr = sp;
-  c->stacksize = size;
   if (mprotect(sp, pagesize, PROT_NONE)) abort();
   if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
 
@@ -194,27 +148,6 @@ Error:
   if (sp) munmap(sp, size);
   errno = er;
   return NULL;
-}
-
-void
-SwapContext (Context *from, Context *to)
-{
-  SWAP_CONTEXT(from, to);
-}
-
-int
-ThreadPosix__SetVirtualTimer(void)
-{
-    struct timeval selected_interval;
-    struct itimerval it;
-
-    ZERO_MEMORY(selected_interval);
-    ZERO_MEMORY(it);
-    selected_interval.tv_sec = 0;
-    selected_interval.tv_usec = 100 * 1000;
-    it.it_interval = selected_interval;
-    it.it_value    = selected_interval;
-    return setitimer(ITIMER_VIRTUAL, &it, NULL);
 }
 
 void F1(void)
