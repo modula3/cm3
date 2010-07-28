@@ -30,6 +30,9 @@ IMPORT Pathname, File, RegularFile, Process, OSError, Rd, FileRd,
 IMPORT SMsg AS Msg, PathRepr;
 IMPORT (* FSFixed AS *) FS;
 FROM System IMPORT AtomListToText;
+IMPORT RTIO;
+
+CONST DEBUG = TRUE;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Exists(fn : Pathname.T) : BOOLEAN =
@@ -299,10 +302,22 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
           WHILE iter.nextWithStatus(name, stat) DO
             WITH fnext = Pathname.Join(fn, name, NIL) DO
               IF stat.type = FS.DirectoryFileType THEN
+                IF DEBUG THEN
+                  RTIO.PutText("rmrec => rmrec " & fnext & "\n");
+                  RTIO.Flush();
+                END;
                 RmRec(fnext);
               ELSIF stat.type = RegularFile.FileType THEN
+                IF DEBUG THEN
+                  RTIO.PutText("rmrec => rm " & fnext & "\n");
+                  RTIO.Flush();
+                END;
                 Rm(fnext);
               ELSE
+                IF DEBUG THEN
+                  RTIO.PutText("rmrec => ? " & fnext & "\n");
+                  RTIO.Flush();
+                END;
               END;
             END;
           END;
