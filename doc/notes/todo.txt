@@ -70,6 +70,7 @@ In particular:
   MS-DOS/djgpp
   android
   iphone (was basically working long ago)
+  AIX: ppc32, ppc64
 
 See also: write a C generating backend
 -----------------------------------------------------------------------------
