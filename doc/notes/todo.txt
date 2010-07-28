@@ -82,8 +82,16 @@ Generate position independent code in m3back.
   Perhaps even for NT.
 -----------------------------------------------------------------------------
 remove more/all remaining uses of volatile in gcc backend
+  volatiles all removed now
 allow all optimizations in gcc backend
-  esp. unit_at_once.
+  esp. flag_unit_at_a_time (flag_unit_at_a_time done)
+remaining ones are:
+  flag_tree_pre
+  gcc 4.5: flag_tree_fre
+  gcc 4.5: flag_predictive_commoning
+  gcc 4.5: flag_inline_functions
+  gcc 4.5: flag_inline_small_functions
+  gcc 4.5: flag_ipa_cp_clone
 -----------------------------------------------------------------------------
 relink in ship
   to address $ORIGIN missing on OSF/1 and NetBSD 4.0 and allow
