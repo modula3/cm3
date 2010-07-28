@@ -58,11 +58,13 @@ end
 % scanned by the linker.
 
 if not defined ("SYSTEM_LIBORDER")
-  SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP" ]
   if HasOdbc()
-    SYSTEM_LIBORDER += [ "ODBC" ]
+    SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
+      "ODBC", "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+  else
+    SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
+      "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
   end
-  SYSTEM_LIBORDER += [ "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
