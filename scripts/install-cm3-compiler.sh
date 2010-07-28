@@ -130,8 +130,10 @@ install_local_as_version()
   if [ "${GCC_BACKEND}" = yes ] ; then
     cp_if "${BACKEND_SRC}" "${BACKEND}-${CM3VERSION}"
   fi
-  mkdir -p "${CONFIG}-${CM3VERSION}"
-  cp "${CONFIG_SRC}"/* "${CONFIG}-${CM3VERSION}"
+  echo mkdir -p "${CONFIG}-${CM3VERSION}"
+       mkdir -p "${CONFIG}-${CM3VERSION}"
+  echo cp "${CONFIG_SRC}"/* "${CONFIG}-${CM3VERSION}"
+       cp "${CONFIG_SRC}"/* "${CONFIG}-${CM3VERSION}"
 }
 
 backup_old()
@@ -141,9 +143,12 @@ backup_old()
   if [ "${GCC_BACKEND}" = yes ] ; then
     cp_if "${BACKEND}" "${BACKEND}-${OLDCM3VERSION}"
   fi
-  mkdir -p "${CONFIG}"
-  mkdir -p "${CONFIG}-${OLDCM3VERSION}"
-  cp "${CONFIG}"/* "${CONFIG}-${OLDCM3VERSION}"
+  echo mkdir -p "${CONFIG}"
+       mkdir -p "${CONFIG}"
+  echo mkdir -p "${CONFIG}-${OLDCM3VERSION}"
+       mkdir -p "${CONFIG}-${OLDCM3VERSION}"
+  echo cp "${CONFIG}"/* "${CONFIG}-${OLDCM3VERSION}"
+       cp "${CONFIG}"/* "${CONFIG}-${OLDCM3VERSION}"
 }
 
 rm_curent()
@@ -153,8 +158,10 @@ rm_curent()
     if [ "${GCC_BACKEND}" = yes ] ; then
       rm -f "${BACKEND}${ext}"
     fi
-    rm -rf "${CONFIG}"
-    mkdir -p "${CONFIG}"
+    echo rm -rf "${CONFIG}"
+         rm -rf "${CONFIG}"
+    echo mkdir -p "${CONFIG}"
+         mkdir -p "${CONFIG}"
   fi
 }
 
@@ -164,9 +171,12 @@ cp_version()
   if [ "${GCC_BACKEND}" = yes ] ; then
     cp_if "${BACKEND}-${CM3VERSION}" "${BACKEND}"
   fi
-  mkdir -p "${CONFIG}"
-  mkdir -p "${CONFIG}-${CM3VERSION}"
-  cp "${CONFIG}-${CM3VERSION}"/* "${CONFIG}"
+  echo mkdir -p "${CONFIG}"
+       mkdir -p "${CONFIG}"
+  echo mkdir -p "${CONFIG}-${CM3VERSION}"
+       mkdir -p "${CONFIG}-${CM3VERSION}"
+  echo cp "${CONFIG}-${CM3VERSION}"/* "${CONFIG}"
+       cp "${CONFIG}-${CM3VERSION}"/* "${CONFIG}"
 }
 
 upgrade()
@@ -183,8 +193,6 @@ if [ "x${1}" = "x-n" ] ; then
 fi
 
 if [ "x${1}" = "xupgrade" ] ; then
-  set -e
-  set -x
   upgrade
 elif [ "x${1}" = "xrestore" ] ; then
   if [ -z "$2" ] ; then
@@ -192,16 +200,10 @@ elif [ "x${1}" = "xrestore" ] ; then
     exit 1
   fi
   CM3VERSION="$2"
-  set -e
-  set -x
   cp_version
 elif [ "x${1}" = "xnewversion" ] ; then
-  set -e
-  set -x
   install_local_as_version
 elif [ "x${1}" = "xbackup" ] ; then
-  set -e
-  set -x
   backup_old
 elif [ "x${1}" = "x" ] ; then
   usage
