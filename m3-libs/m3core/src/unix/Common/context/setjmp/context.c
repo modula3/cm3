@@ -19,11 +19,6 @@ extern "C"
 {
 #endif
 
-#define MARKER_R10      ((void*)(size_t)((unsigned long)'R' | 0x12345600))
-#define MARKER_UC_LINK  ((void*)(size_t)((unsigned long)'U' | 0x81234500))
-#define MARKER_FUNCTION ((void*)(size_t)((unsigned long)'F' | 0x78123400))
-#define MARKER_ARGC     ((void*)(size_t)((unsigned long)'A' | 0x67812300))
-
 #ifdef __OpenBSD__
 #ifdef __i386__
 #define OpenBSD_i386
@@ -133,10 +128,8 @@ OpenBSD/powerpc also does not preserve a bunch of registers in the
   setjmp code, but the prolog/epilog appears to handle them.
 */
 
-void internal_setcontext_mips64();
-
-void internal_setcontext(
-    /* burn up parameters that would go in registers */
+static void internal_setcontext(
+    /* Burn up parameters that would go in registers. */
     void* r3,
     void* r4,
     void* r5,
@@ -145,41 +138,34 @@ void internal_setcontext(
     void* r8,
     void* r9,
     void* r10,
-    void* markerR10,
     ucontext_t* uc_link,
-    void* markerUcLink,
     void (*function)(),
-    void* markerFunction,
     void* argc,
-    void* markerArgc,
+    void (*Setcontext)(ucontext_t*),
+    void (*Exit)(int),
     ...)
+    /* Must not access any globals, due to MIPS ABI.
+     * We can only use parameters.
+     * We have neither the correct global pointer (GP)
+     * nor T9/$25 set to the function called (from which GP is computed for
+     * non-static functions.)
+     *
+     * This means we can't use assert, though we could if we wanted use
+     * fprintf, stderr, abort, by pushing them onto the stack in makecontext.
+     * However, we also can't use string constants, unless they too are passed.
+     */
 {
-#define CHECK_MARKER(a,A) do { if (a != A) fprintf(stderr, #a " is %lx instead of %lx\n", a, A); assert(a == A); } while(0)
-    FlushRegistersAndOrDeoptimize();
-    CHECK_MARKER(markerR10,      MARKER_R10);
-    CHECK_MARKER(markerUcLink,   MARKER_UC_LINK);
-    CHECK_MARKER(markerFunction, MARKER_FUNCTION);
-    CHECK_MARKER(markerArgc,     MARKER_ARGC);
-    {
-        va_list args;
-        size_t i;
+    va_list args;
+    size_t i;
 
-        va_start(args, markerArgc);
-        for (i = 0; i < 8 && i < (size_t)argc; ++i)
-            (&r3)[i] = va_arg(args, void*);
-        va_end(args);
+    va_start(args, Exit);
+    for (i = 0; i < 8 && i < (size_t)argc; ++i)
+        (&r3)[i] = va_arg(args, void*);
+    va_end(args);
 
-#if 0 /* fishing mode */
-        printf("markerR10 at %p\n", &markerR10);
-        printf("markerUcLink at %p\n", &markerUcLink);
-        printf("markerFunction is at %p\n", &markerFunction);
-        printf("markerArgc is at %p\n", &markerArgc);
-        /*exit(1);*/
-#endif
-        function(r3, r4, r5, r6, r7, r8, r9, r10);
-        setcontext(uc_link);        
-        exit(0); /* exit thread? */
-    }
+    function(r3, r4, r5, r6, r7, r8, r9, r10);
+    Setcontext(uc_link);        
+    Exit(0); /* exit thread? abort? */
 }
 
 void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
@@ -194,13 +180,11 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
     stack -= argc;
     for (i = 0; i < argc; ++i)
         stack[i] = va_arg(args, void*);
-    *--stack = MARKER_ARGC;
+    *--stack = exit;
+    *--stack = setcontext;
     *--stack = (void*)(size_t)argc;
-    *--stack = MARKER_FUNCTION;
     *--stack = (void*)function;
-    *--stack = MARKER_UC_LINK;
     *--stack = context->uc_link;
-    *--stack = MARKER_R10;
     context->uc_mcontext.a[CONTEXT_STACK] = ((size_t)stack) - STACK_ADJUST;
 #if 0 /* fish around for the stack layout */
     printf("markers at %p\n", stack);
@@ -209,13 +193,9 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
         *--stack = (void*)(size_t)((i << 16) | ((i + 1) << 8) | (i + 2));
     }
 #endif
-#ifdef OpenBSD_mips64
-    context->uc_mcontext.a[CONTEXT_PC] = (size_t)&internal_setcontext_mips64;
-#else
     context->uc_mcontext.a[CONTEXT_PC] = (size_t)&internal_setcontext;
 #ifdef OpenBSD_sparc64
     context->uc_mcontext.a[CONTEXT_PC + 1] = 4 + (size_t)&internal_setcontext;
-#endif
 #endif
     va_end(args);
 }
