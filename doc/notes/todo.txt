@@ -1,8 +1,11 @@
 -----------------------------------------------------------------------------
 move to gcc 4.5.x as backend
   main known obstacle is closure support
-  
+    closure support seems to work
+  failures on many targets though e.g. I386_DARWIN
+
 and/or upgrade gcc 4.3.0 to gcc 4.3.x
+  done
 -----------------------------------------------------------------------------
 upgrade m3gdb to newer version
 and/or produce enough type information in backend
@@ -21,7 +24,7 @@ A C generating backend could mean a successful end to nearly all porting
 work. The remainder would just be the #ifdefs in C, possibly autoconfed.
 -----------------------------------------------------------------------------
 Enable the entire tree to cross build, including 32<=>64bit.
-Mainy known problem is some array size issues, declaring
+Main known problem is some array size issues, declaring
 an array with over 2 billion elements targeting 64bit from 32bit host
 
 Enable the entire tree to cross build, including the various
@@ -41,10 +44,12 @@ Specifically, import_sys_lib or such in .M3SHIP should be preceded
 by if defined("configure_system_libs") configure_system_libs() end
 
 See Solaris.common.
+Also affects PPC64_DARWIN
 
 In particular, Solaris/x86 pre-2.10 lacks OpenGL.
 -----------------------------------------------------------------------------
 Encode OS version in archive names, at least for Solaris/x86
+  done?
 -----------------------------------------------------------------------------
 Support more platforms.
 In particular:
@@ -55,6 +60,7 @@ In particular:
   IRIX: mip32, mips64
   VMS: alpha32, alpha64, ia64
   OpenBSD: ia64, alpha, mips, etc.
+    MIPS64EL_OPENBSD done
   NetBSD: ia64, alpha, mips, etc.
   FreeBSD: ia64, alpha, mips, ppc, etc.
   DragonflyBSD
@@ -85,7 +91,7 @@ relink in ship
 -----------------------------------------------------------------------------
 dynamically link cm3, but use $ORIGIN
 -----------------------------------------------------------------------------
-Consider using Win32 conditionv variables introduced in Vista.
+Consider using Win32 condition variables introduced in Vista.
 But probably not. We have a pretty good implementation now, the
 giant lock is gone.
 -----------------------------------------------------------------------------
@@ -107,4 +113,6 @@ Maybe Solaris can be reduced via C.
 -----------------------------------------------------------------------------
 Reduce/eliminate other header cloning or dependency on it?
 X.i3? WinBase.i3?
+-----------------------------------------------------------------------------
+make extended/long double larger than longreal/double
 -----------------------------------------------------------------------------
