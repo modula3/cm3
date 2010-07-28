@@ -292,8 +292,18 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
     name : TEXT;
     stat : File.Status;
   BEGIN
-    IF NOT Exists(fn) THEN RETURN END;
+    IF NOT Exists(fn) THEN
+      IF DEBUG THEN
+        RTIO.PutText("1 rmrec => ? " & fn & "\n");
+        RTIO.Flush();
+      END;
+      RETURN
+    END;
     IF IsFile(fn) THEN
+      IF DEBUG THEN
+        RTIO.PutText("2 rmrec => rm " & fn & "\n");
+        RTIO.Flush();
+      END;
       Rm(fn);
     ELSIF IsDir(fn) THEN
       TRY
@@ -303,19 +313,19 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
             WITH fnext = Pathname.Join(fn, name, NIL) DO
               IF stat.type = FS.DirectoryFileType THEN
                 IF DEBUG THEN
-                  RTIO.PutText("rmrec => rmrec " & fnext & "\n");
+                  RTIO.PutText("3 rmrec => rmrec " & fnext & "\n");
                   RTIO.Flush();
                 END;
                 RmRec(fnext);
               ELSIF stat.type = RegularFile.FileType THEN
                 IF DEBUG THEN
-                  RTIO.PutText("rmrec => rm " & fnext & "\n");
+                  RTIO.PutText("4 rmrec => rm " & fnext & "\n");
                   RTIO.Flush();
                 END;
                 Rm(fnext);
               ELSE
                 IF DEBUG THEN
-                  RTIO.PutText("rmrec => ? " & fnext & "\n");
+                  RTIO.PutText("5 rmrec => ? " & fnext & "\n");
                   RTIO.Flush();
                 END;
               END;
