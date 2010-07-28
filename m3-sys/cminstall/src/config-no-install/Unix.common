@@ -24,6 +24,12 @@ readonly NAMING_CONVENTIONS = "0"
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
+if not defined("HasOdbc")
+  proc HasOdbc() is
+    return TRUE
+  end
+end
+
 if not defined ("SYSTEM_LIBS")
 
 % This is for Linux and partly for FreeBSD, OpenBSD, NetBSD.
@@ -42,16 +48,21 @@ SYSTEM_LIBS =
     "X11"        : [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
+if HasOdbc()
+  SYSTEM_LIBS{"ODBC"} = [ "-lodbc" ]
+end
+
 end
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
 if not defined ("SYSTEM_LIBORDER")
-
-SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
-    "ODBC", "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
-
+  SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP" ]
+  if HasOdbc()
+    SYSTEM_LIBORDER += [ "ODBC" ]
+  end
+  SYSTEM_LIBORDER += [ "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
