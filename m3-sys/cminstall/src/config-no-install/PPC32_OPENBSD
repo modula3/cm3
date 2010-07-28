@@ -4,15 +4,7 @@ readonly GNU_PLATFORM = "powerpc-openbsd" % "cpu-os" string for GNU
 SYSTEM_CC = "gcc -gstabs+ -fPIC"
 readonly SYSTEM_ASM = "as"
 
-m3back_pic = "" % does not work
-
-proc AdjustShared(shared) is % disable shared
-  return FALSE
-end
+m3back_pic = "-fpic" % -fPIC does not work, though it ought to
 
 include("PPC.common")
 include("OpenBSD.common")
-
-M3_SHARED_LIB_ARG = ""    % disable shared
-M3_SPLIT_LIBNAMES = FALSE % disable shared
-
