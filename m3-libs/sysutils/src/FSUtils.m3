@@ -338,6 +338,10 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
         OSError.E(l) => RAISE E("error traversing directory " & fn & 
           ": " & AtomListToText(l));
       END;
+      IF DEBUG THEN
+        RTIO.PutText("6 rmrec => rmdir " & fn & "\n");
+        RTIO.Flush();
+      END;
       Rmdir(fn);
     ELSE
       RAISE E("error: " & fn & " is no directory or ordinary file");
