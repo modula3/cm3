@@ -68,7 +68,9 @@ In particular:
   BeOS: via C generating backend?
   OS/2: via C generating backend?
   MS-DOS/djgpp
-  
+  android
+  iphone (was basically working long ago)
+
 See also: write a C generating backend
 -----------------------------------------------------------------------------
 Write a linker in Modula-3.
