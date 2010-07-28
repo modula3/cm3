@@ -636,11 +636,13 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
   BEGIN
     IF t.build_pkg = pkg THEN
       IF t.already_warned THEN RETURN; END;
+      (*
       IF M3Options.major_mode = MM.Depend THEN
         Msg.Verbose ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
       ELSE
         Msg.Info ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
       END;
+      *)
       t.already_warned := TRUE;
     ELSIF t.pkg_overrides.get (pkg, ref) THEN
       IF NOT OverrideEqual (dir, ref) THEN
