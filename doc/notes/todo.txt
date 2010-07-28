@@ -1,4 +1,9 @@
 -----------------------------------------------------------------------------
+reliable stack dumps for assertion failures
+-----------------------------------------------------------------------------
+fix tree to build new_adr
+and then enable new_adr
+-----------------------------------------------------------------------------
 move to gcc 4.5.x as backend
   main known obstacle is closure support
     closure support seems to work
