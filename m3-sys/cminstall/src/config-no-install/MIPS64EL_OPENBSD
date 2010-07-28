@@ -8,4 +8,9 @@ m3back_debug = "" % doesn't work
 m3back_unwind_table = "" % doesn't work
 SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
 readonly SYSTEM_ASM = "as"
+
+proc HasOdbc() is
+  return FALSE
+end
+
 include("OpenBSD.common")
