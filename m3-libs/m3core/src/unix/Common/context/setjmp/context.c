@@ -106,9 +106,6 @@ static void print_context(const char* name, const ucontext_t* context)
 int getcontext(ucontext_t* xcontext)
 {
     ucontext_t* volatile context = xcontext;
-#ifdef OpenBSD_powerpc
-    volatile char a[65]; /* This does make a positive difference, but breaks others. */
-#endif
     FlushRegistersAndOrDeoptimize();
     if (sigsetjmp(context->uc_mcontext.jb, 1) == 0)
         context->uc_stack.ss_sp = (void*)context->uc_mcontext.a[CONTEXT_STACK];
