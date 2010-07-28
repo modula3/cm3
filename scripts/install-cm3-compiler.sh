@@ -18,7 +18,6 @@ fi
 
 . "$sysinfo"
 
-
 CONFIG="${INSTALLROOT}/bin/config"
 FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
@@ -184,6 +183,8 @@ if [ "x${1}" = "x-n" ] ; then
 fi
 
 if [ "x${1}" = "xupgrade" ] ; then
+  set -e
+  set -x
   upgrade
 elif [ "x${1}" = "xrestore" ] ; then
   if [ -z "$2" ] ; then
@@ -191,10 +192,16 @@ elif [ "x${1}" = "xrestore" ] ; then
     exit 1
   fi
   CM3VERSION="$2"
+  set -e
+  set -x
   cp_version
 elif [ "x${1}" = "xnewversion" ] ; then
+  set -e
+  set -x
   install_local_as_version
 elif [ "x${1}" = "xbackup" ] ; then
+  set -e
+  set -x
   backup_old
 elif [ "x${1}" = "x" ] ; then
   usage
