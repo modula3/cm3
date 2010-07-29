@@ -2,12 +2,12 @@ readonly TARGET_OS = "OPENBSD"
 
 SYSTEM_LD = SYSTEM_CC
   & " -Wl,-z,now"
-  & " -Wl,-z,origin"
+% & " -Wl,-z,origin"               % no $ORIGIN support up to/including 4.7
   & " -Bsymbolic"
 % too many warnings e.g. about strcpy, sprintf, common, in X libraries
 % & " -Wl,--fatal-warnings"
-  & " -Wl,-rpath,\\$ORIGIN"
-  & " -Wl,-rpath,\\$ORIGIN/../lib"
+% & " -Wl,-rpath,\\$ORIGIN"        % no $ORIGIN support up to/including 4.7
+% & " -Wl,-rpath,\\$ORIGIN/../lib" % no $ORIGIN support up to/including 4.7
   & " -Wl,--warn-common"
 
 GNU_MAKE = "gmake"
