@@ -24,6 +24,9 @@ M3_KEEP_FILES = TRUE
 include("Math.quake")
 
 proc BeginInterface(a) is
+  if equal(M3_MODE, "clean")
+    return "/dev/null"
+  end
   local b = a & ".i3.temp"
   > b in
     write("INTERFACE ", a, ";", CR)
@@ -32,6 +35,9 @@ proc BeginInterface(a) is
 end
 
 proc EndX(a, ext) is
+  if equal(M3_MODE, "clean")
+    return
+  end
   local b = a & ext & ".temp"
   >> b in
     write("END ", a, ".", CR)
@@ -44,6 +50,9 @@ proc EndInterface(a) is
 end
 
 proc EndModule(a) is
+  if equal(M3_MODE, "clean")
+    return
+  end
   >> a & ".m3.temp" in
     write("BEGIN", CR)
   end
@@ -152,11 +161,16 @@ IntSize{"Word"} = IntSize{"INTEGER"}
 IntSize{"Long"} = IntSize{"LONGINT"}
 
 local proc comment(a) is
+  if equal(M3_MODE, "clean")
+    return
+  end
   write(CR, "(* ", a, " *)", CR, CR)
 end
 
 proc BeginModule(a) is
-
+  if equal(M3_MODE, "clean")
+    return "/dev/null"
+  end
   >> BeginInterface(a) in
   end
   EndInterface(a)
