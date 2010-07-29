@@ -136,6 +136,11 @@ if not defined("GNU_CFLAGS")
         GNU_CFLAGS = "-O2"
       end
     end
+    if defined("HOST")
+      if equal(HOST, "SPARC32_LINUX")
+        GNU_CFLAGS = "-O1" % save diskspace
+      end
+    end
   end
 end
 
