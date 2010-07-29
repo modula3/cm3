@@ -32,6 +32,8 @@ local proc Increment() is
 end
 
 proc InitMath() is
+  if equal(M3_MODE, "clean")
+  end
   if Sub1 contains "9999"
     return
   end
