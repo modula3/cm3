@@ -1,4 +1,20 @@
 -----------------------------------------------------------------------------
+new distribution format, kind of like 3.6:
+  cm3-min-version-target.tar.gz
+  cm3-all-version-target.tar.gz
+    contains assembly
+    C
+    Makefile (maybe using automake + libtool)
+    maybe configure script
+    Users will configure, make, make install.
+    Runtime paths will be hard coded. And flattend.
+  cm3-src-version.tar.gz
+    Modula-3 source to entire system.
+  cm3-m3cc-version.tar.gz
+    m3cc source
+  cm3-m3gdb-version.tar.gz
+    m3gdb source
+-----------------------------------------------------------------------------
 reliable stack dumps for assertion failures
 -----------------------------------------------------------------------------
 fix tree to build new_adr
