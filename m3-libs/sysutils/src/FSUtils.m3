@@ -30,9 +30,6 @@ IMPORT Pathname, File, RegularFile, Process, OSError, Rd, FileRd,
 IMPORT SMsg AS Msg, PathRepr;
 IMPORT (* FSFixed AS *) FS;
 FROM System IMPORT AtomListToText;
-IMPORT RTIO;
-
-CONST DEBUG = TRUE;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Exists(fn : Pathname.T) : BOOLEAN =
@@ -286,24 +283,16 @@ PROCEDURE Rmdir(fn : Pathname.T) RAISES {E} =
   END Rmdir;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
+PROCEDURE OldRmRec(fn : Pathname.T) RAISES {E} =
   VAR
     iter : FS.Iterator;
     name : TEXT;
     stat : File.Status;
   BEGIN
     IF NOT Exists(fn) THEN
-      IF DEBUG THEN
-        RTIO.PutText("1 rmrec => ? " & fn & "\n");
-        RTIO.Flush();
-      END;
       RETURN
     END;
     IF IsFile(fn) THEN
-      IF DEBUG THEN
-        RTIO.PutText("2 rmrec => rm " & fn & "\n");
-        RTIO.Flush();
-      END;
       Rm(fn);
     ELSIF IsDir(fn) THEN
       TRY
@@ -312,22 +301,9 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
           WHILE iter.nextWithStatus(name, stat) DO
             WITH fnext = Pathname.Join(fn, name, NIL) DO
               IF stat.type = FS.DirectoryFileType THEN
-                IF DEBUG THEN
-                  RTIO.PutText("3 rmrec => rmrec " & fnext & "\n");
-                  RTIO.Flush();
-                END;
-                RmRec(fnext);
+                OldRmRec(fnext);
               ELSIF stat.type = RegularFile.FileType THEN
-                IF DEBUG THEN
-                  RTIO.PutText("4 rmrec => rm " & fnext & "\n");
-                  RTIO.Flush();
-                END;
                 Rm(fnext);
-              ELSE
-                IF DEBUG THEN
-                  RTIO.PutText("5 rmrec => ? " & fnext & "\n");
-                  RTIO.Flush();
-                END;
               END;
             END;
           END;
@@ -338,11 +314,36 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
         OSError.E(l) => RAISE E("error traversing directory " & fn & 
           ": " & AtomListToText(l));
       END;
-      IF DEBUG THEN
-        RTIO.PutText("6 rmrec => rmdir " & fn & "\n");
-        RTIO.Flush();
-      END;
       Rmdir(fn);
+    ELSE
+      RAISE E("error: " & fn & " is no directory or ordinary file");
+    END;
+  END OldRmRec;
+
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE xRmRec(fn : Pathname.T) RAISES {E} =
+  VAR sub := SubFiles(fn);
+  BEGIN
+    FOR i := 0 TO sub.size() - 1 DO
+      Rm(sub.get(i));
+    END;
+    sub := SubDirs(fn);
+    FOR i := 0 TO sub.size() - 1 DO
+      xRmRec(sub.get(i));
+    END;
+    Rmdir(fn);
+  END xRmRec;
+
+PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
+  BEGIN
+    IF NOT Exists(fn) THEN
+      RETURN
+    END;
+    IF IsFile(fn) THEN
+      Rm(fn);
+    ELSIF IsDir(fn) THEN
+      xRmRec(fn);
     ELSE
       RAISE E("error: " & fn & " is no directory or ordinary file");
     END;
