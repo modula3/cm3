@@ -1,0 +1,56 @@
+%
+% This tests fs_rmrec.
+%
+
+M3_BOOTSTRAP = TRUE
+M3_KEEP_FILES = TRUE
+
+two = [0,1]
+ten = [0,1,2,3,4,5,6,7,8,9]
+twenty = [ ]
+hundred = [ ]
+two_hundred = [ ]
+foreach a in ten
+  foreach b in ten
+    hundred += [a & b]
+  end
+end
+
+foreach a in ten
+  foreach b in two
+    twenty += [a & b]
+  end
+end
+
+foreach a in hundred
+  foreach b in two
+    two_hundred += [a & b]
+  end
+end
+
+fs_mkdir("t")
+
+foreach a in two_hundred
+  > "t/" & a in
+    write("foo")
+  end
+end
+
+foreach a in twenty
+  fs_mkdir("t/" & a)
+  foreach b in twenty
+    > "t/" & a & "/" & b in
+      write("foo")
+    end
+    fs_mkdir("t/" & a & "/" & b & "dir")
+  end
+end
+
+fs_rmrec("t")
+if FileExists("t")
+  error("t still exists")
+end
+
+implementation("Main")
+build_standalone()
+include ("../../Test.common")
