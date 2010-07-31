@@ -59,7 +59,7 @@ REVEAL
     (* cache of package name -> directory *)
     pkg_cache         : IntRefTbl.T; (* pkg name -> current path to package *)
     pkg_overrides     : IntRefTbl.T; (* pkg name -> override path *)
-    (* already_warned    : BOOLEAN;   * warned about overriding build pkg? *)
+    already_warned    : BOOLEAN;     (* warned about overriding build pkg? *)
 
     (* cache for PathOf() and PkgSubdir() *)
     path_of_path      : TEXT; (* records result of last path() call in PathOf *)
@@ -202,7 +202,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
 
     t.pkg_cache       := NewMap ();
     t.pkg_overrides   := NewMap ();
-    (*t.already_warned  := FALSE;*)
+    t.already_warned  := FALSE;
     EVAL t.pkg_cache.put (t.build_pkg, to_pkg);
 
     t.path_of_path    := "";
@@ -635,8 +635,6 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
   VAR  ref: REFANY;  pkg_txt := M3ID.ToText (pkg);
   BEGIN
     IF t.build_pkg = pkg THEN
-      RETURN;
-      (*
       IF t.already_warned THEN RETURN; END;
       IF M3Options.major_mode = MM.Depend THEN
         Msg.Verbose ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
@@ -644,7 +642,6 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
         Msg.Info ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
       END;
       t.already_warned := TRUE;
-      *)
     ELSIF t.pkg_overrides.get (pkg, ref) THEN
       IF NOT OverrideEqual (dir, ref) THEN
         IF M3Options.major_mode = MM.Depend THEN
