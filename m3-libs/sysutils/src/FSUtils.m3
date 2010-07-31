@@ -32,39 +32,44 @@ IMPORT (* FSFixed AS *) FS;
 FROM System IMPORT AtomListToText;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE Exists(fn : Pathname.T) : BOOLEAN =
+PROCEDURE Stat(fn : Pathname.T; VAR exists, isFile, isDir: BOOLEAN) =
   VAR s : File.Status;
   BEGIN
     TRY
       s := FS.Status(PathRepr.Native(fn));
+      exists := TRUE;
+      isFile := (s.type = RegularFile.FileType);
+      isDir := (s.type = FS.DirectoryFileType);
     EXCEPT ELSE
-      RETURN FALSE;
+      (* NOTE: This ignores too many errors, e.g. out of memory. *)
+      exists := FALSE;
+      isFile := FALSE;
+      isDir := FALSE;
     END;
-    RETURN TRUE;
+  END Stat;
+
+(*--------------------------------------------------------------------------*)
+PROCEDURE Exists(fn : Pathname.T) : BOOLEAN =
+  VAR exists, isFile, isDir: BOOLEAN;
+  BEGIN
+    Stat(fn, exists, isFile, isDir);
+    RETURN exists;
   END Exists;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE IsDir(fn : Pathname.T) : BOOLEAN =
-  VAR s : File.Status;
+  VAR exists, isFile, isDir: BOOLEAN;
   BEGIN
-    TRY
-      s := FS.Status(PathRepr.Native(fn));
-    EXCEPT ELSE
-      RETURN FALSE;
-    END;
-    RETURN s.type = FS.DirectoryFileType;
+    Stat(fn, exists, isFile, isDir);
+    RETURN isDir;
   END IsDir;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE IsFile(fn : Pathname.T) : BOOLEAN =
-  VAR s : File.Status;
+  VAR exists, isFile, isDir: BOOLEAN;
   BEGIN
-    TRY
-      s := FS.Status(PathRepr.Native(fn));
-    EXCEPT ELSE
-      RETURN FALSE;
-    END;
-    RETURN s.type = RegularFile.FileType;
+    Stat(fn, exists, isFile, isDir);
+    RETURN isFile;
   END IsFile;
 
 (*--------------------------------------------------------------------------*)
@@ -169,9 +174,11 @@ PROCEDURE SubFiles(path : Pathname.T; relative := FALSE) : TextSeq.T
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE RemoveFile(fn : Pathname.T) =
+  VAR exists, isFile, isDir: BOOLEAN;
   BEGIN
-    IF NOT Exists(fn) THEN RETURN END;
-    IF IsFile(fn) THEN
+    Stat(fn, exists, isFile, isDir);
+    IF NOT exists THEN RETURN END;
+    IF isFile THEN
       TRY
         FS.DeleteFile(PathRepr.Native(fn));
       EXCEPT
@@ -185,9 +192,12 @@ PROCEDURE RemoveFile(fn : Pathname.T) =
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE RemoveDir(fn : Pathname.T) =
+(* Same as Rmdir but Process.Crash instead of RAISE. *)
+  VAR exists, isFile, isDir: BOOLEAN;
   BEGIN
-    IF NOT Exists(fn) THEN RETURN END;
-    IF IsDir(fn) THEN
+    Stat(fn, exists, isFile, isDir);
+    IF NOT exists THEN RETURN END;
+    IF isDir THEN
       TRY
         FS.DeleteDirectory(PathRepr.Native(fn));
       EXCEPT
@@ -251,32 +261,50 @@ PROCEDURE Mkdir(path : Pathname.T) RAISES {E} =
   END Mkdir;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE Rm(fn : Pathname.T) RAISES {E} =
+
+PROCEDURE xRm(fn : Pathname.T) RAISES {E} =
+(* fn is presumed to exist and be a file *)
   BEGIN
-    IF NOT Exists(fn) THEN RETURN END;
-    IF IsFile(fn) THEN
-      TRY
-        FS.DeleteFile(PathRepr.Native(fn));
-      EXCEPT
-        OSError.E(l) => RAISE E("cannot remove file " & fn & 
-          ": " & AtomListToText(l));
-      END;
+    TRY
+      FS.DeleteFile(PathRepr.Native(fn));
+    EXCEPT
+      OSError.E(l) => RAISE E("cannot remove file " & fn & 
+        ": " & AtomListToText(l));
+    END;
+  END xRm;
+
+PROCEDURE Rm(fn : Pathname.T) RAISES {E} =
+  VAR exists, isFile, isDir: BOOLEAN;
+  BEGIN
+    Stat(fn, exists, isFile, isDir);
+    IF NOT exists THEN RETURN END;
+    IF isFile THEN
+      xRm(fn);
     ELSE
       RAISE E("internal error: cannot remove non-regular file " & fn);
     END;
   END Rm;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE Rmdir(fn : Pathname.T) RAISES {E} =
+PROCEDURE xRmdir(fn : Pathname.T) RAISES {E} =
+(* fn is assumed to exist and be a directory *)
   BEGIN
-    IF NOT Exists(fn) THEN RETURN END;
-    IF IsDir(fn) THEN
-      TRY
-        FS.DeleteDirectory(PathRepr.Native(fn));
-      EXCEPT
-        OSError.E(l) => RAISE E("cannot remove directory " & fn & 
-          ": " & AtomListToText(l));
-      END;
+    TRY
+      FS.DeleteDirectory(PathRepr.Native(fn));
+    EXCEPT
+      OSError.E(l) => RAISE E("cannot remove directory " & fn & 
+        ": " & AtomListToText(l));
+    END;
+  END xRmdir;
+
+PROCEDURE Rmdir(fn : Pathname.T) RAISES {E} =
+(* Same as RemoveDir but RAISE instead of Process.Crash. *)
+  VAR exists, isFile, isDir: BOOLEAN;
+  BEGIN
+    Stat(fn, exists, isFile, isDir);
+    IF NOT exists THEN RETURN END;
+    IF isDir THEN
+      xRmdir(fn);
     ELSE
       RAISE E("internal error: " & fn & " is no directory");
     END;
@@ -323,10 +351,11 @@ PROCEDURE OldRmRec(fn : Pathname.T) RAISES {E} =
 (*--------------------------------------------------------------------------*)
 
 PROCEDURE xRmRec(fn : Pathname.T) RAISES {E} =
+(* fn is assumed to exist and be a directory *)
   VAR sub := SubFiles(fn);
   BEGIN
     FOR i := 0 TO sub.size() - 1 DO
-      Rm(sub.get(i));
+      xRm(sub.get(i));
     END;
     sub := SubDirs(fn);
     FOR i := 0 TO sub.size() - 1 DO
@@ -336,13 +365,15 @@ PROCEDURE xRmRec(fn : Pathname.T) RAISES {E} =
   END xRmRec;
 
 PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
+  VAR exists, isFile, isDir: BOOLEAN;
   BEGIN
-    IF NOT Exists(fn) THEN
+    Stat(fn, exists, isFile, isDir);
+    IF NOT exists THEN
       RETURN
     END;
-    IF IsFile(fn) THEN
-      Rm(fn);
-    ELSIF IsDir(fn) THEN
+    IF isFile THEN
+      xRm(fn);
+    ELSIF isDir THEN
       xRmRec(fn);
     ELSE
       RAISE E("error: " & fn & " is no directory or ordinary file");
