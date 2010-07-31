@@ -174,6 +174,7 @@ PROCEDURE SubFiles(path : Pathname.T; relative := FALSE) : TextSeq.T
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE RemoveFile(fn : Pathname.T) =
+(* NOTE: Same as Rm but Process.Crash instead of RAISE. *)
   VAR exists, isFile, isDir: BOOLEAN;
   BEGIN
     Stat(fn, exists, isFile, isDir);
@@ -274,6 +275,7 @@ PROCEDURE xRm(fn : Pathname.T) RAISES {E} =
   END xRm;
 
 PROCEDURE Rm(fn : Pathname.T) RAISES {E} =
+(* NOTE: Same as RemoveFile but RAISE instead of Process.Crash. *)
   VAR exists, isFile, isDir: BOOLEAN;
   BEGIN
     Stat(fn, exists, isFile, isDir);
