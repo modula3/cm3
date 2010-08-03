@@ -28,7 +28,7 @@ MODULE FSUtils;
 IMPORT Pathname, File, RegularFile, Process, OSError, Rd, FileRd,
        Wr, FileWr, Thread, Text, TextSeq;
 IMPORT SMsg AS Msg, PathRepr;
-IMPORT (* FSFixed AS *) FS;
+IMPORT FS;
 FROM System IMPORT AtomListToText;
 
 (*--------------------------------------------------------------------------*)
