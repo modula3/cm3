@@ -46,8 +46,6 @@ PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
         END;
       ELSIF (type = Ustat.S_IFIFO) OR (type = Ustat.S_IFSOCK) THEN
         RETURN Pipe.FileType;
-      ELSIF type = Ustat.S_IFREG THEN
-        RETURN RegularFile.FileType
       ELSIF type = Ustat.S_IFDIR THEN
         RETURN FS.DirectoryFileType
       ELSE
