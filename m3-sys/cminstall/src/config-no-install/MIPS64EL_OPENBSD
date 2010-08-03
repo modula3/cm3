@@ -10,7 +10,10 @@ SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
 readonly SYSTEM_ASM = "as"
 
 proc HasOdbc() is
-  return FALSE
+  %return FALSE
+  % This can be provided by removing the
+  % dependency of gtkv2 on cups.
+  return TRUE
 end
 
 include("OpenBSD.common")
