@@ -313,44 +313,6 @@ PROCEDURE Rmdir(fn : Pathname.T) RAISES {E} =
   END Rmdir;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE OldRmRec(fn : Pathname.T) RAISES {E} =
-  VAR
-    iter : FS.Iterator;
-    name : TEXT;
-    stat : File.Status;
-  BEGIN
-    IF NOT Exists(fn) THEN
-      RETURN
-    END;
-    IF IsFile(fn) THEN
-      Rm(fn);
-    ELSIF IsDir(fn) THEN
-      TRY
-        iter := FS.Iterate(fn);
-        TRY
-          WHILE iter.nextWithStatus(name, stat) DO
-            WITH fnext = Pathname.Join(fn, name, NIL) DO
-              IF stat.type = FS.DirectoryFileType THEN
-                OldRmRec(fnext);
-              ELSIF stat.type = RegularFile.FileType THEN
-                Rm(fnext);
-              END;
-            END;
-          END;
-        FINALLY
-          iter.close();
-        END;
-      EXCEPT
-        OSError.E(l) => RAISE E("error traversing directory " & fn & 
-          ": " & AtomListToText(l));
-      END;
-      Rmdir(fn);
-    ELSE
-      RAISE E("error: " & fn & " is no directory or ordinary file");
-    END;
-  END OldRmRec;
-
-(*--------------------------------------------------------------------------*)
 
 PROCEDURE xRmRec(fn : Pathname.T) RAISES {E} =
 (* fn is assumed to exist and be a directory *)
