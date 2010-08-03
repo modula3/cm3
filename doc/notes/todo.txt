@@ -56,6 +56,8 @@ test Win32 LONGINT
 -----------------------------------------------------------------------------
 test Win32 atomics
 -----------------------------------------------------------------------------
+make Win32 set_member, set_singleton not be interlocked
+-----------------------------------------------------------------------------
 Optimize Win32 atomics.
   In particular, they don't all have to be interlocked compare exchange loops
 -----------------------------------------------------------------------------
