@@ -2475,8 +2475,6 @@ PROCEDURE DoFSRmRec (t: T;  n_args: INTEGER) RAISES {Error} =
       FSUtils.RmRec (fn);
     EXCEPT
       FSUtils.E(m) =>
-        EVAL System.ExecuteList ("find .");
-        EVAL System.ExecuteList ("ls -lR");
         Err (t, "cannot remove recursively " & fn & ": " & m);
     END;
   END DoFSRmRec;
