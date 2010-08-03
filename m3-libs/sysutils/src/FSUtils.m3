@@ -325,7 +325,7 @@ PROCEDURE xRmRec(fn : Pathname.T) RAISES {E} =
     FOR i := 0 TO sub.size() - 1 DO
       xRmRec(sub.get(i));
     END;
-    Rmdir(fn);
+    xRmdir(fn);
   END xRmRec;
 
 PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
