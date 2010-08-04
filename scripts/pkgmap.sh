@@ -532,4 +532,4 @@ if [ -n "${REPORT}" ]; then
   fi
 fi
 
-[ -n "${OK}" ] || exit `printf "{$REDPKGS}" | wc | awk '{print $1}'`
+[ -n "${OK}" ] || exit `printf "${REDPKGS}" | wc | awk '{print $1}'`
