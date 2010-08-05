@@ -733,7 +733,7 @@ test_m3tests()
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
-  if type cm3 > /dev/null; then
+  if type cm3; then
     true
   else
     echo "cm3 not found" 1>&2
