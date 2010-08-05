@@ -189,11 +189,11 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
 
   %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if not FileExists (OutputPath)
-    return ""
+    return FALSE
   end
 
   if not FileExists (ExpectedPath)
-    return ""
+    return FALSE
   end
 
   local ComparisonLogData = [ ]
@@ -217,10 +217,10 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
     %write ("OutputContents(1):\n" & OutputContents)
     OutputContents = ""
     foreach line in ocLines
-      local found = ""
+      local found = FALSE
       foreach ign in ignoreLinesWith
         if tcontains (line, ign)
-          found = "T"
+          found = TRUE
         end
       end
       if not found
@@ -232,10 +232,10 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
     %write ("ExpectedContents(1):\n" & ExpectedContents)
     ExpectedContents = ""
     foreach line in ecLines
-      local found = ""
+      local found = FALSE
       foreach ign in ignoreLinesWith
         if tcontains (line, ign)
-          found = "T"
+          found = TRUE
         end
       end
       if not found
@@ -270,7 +270,7 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
         write (ComparisonLogData)
       end
     end
-    return "T"
+    return TRUE
   end
   if defined ("LOG_CMPS")
     ComparisonLogData += "--> FALSE\n"
@@ -278,7 +278,7 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
       write (ComparisonLogData)
     end
   end
-  return ""
+  return FALSE
 end
 
 %NOW = "-" & datetime()
@@ -433,8 +433,8 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
 
     local ok1 = cmp_file (dir, "stdout.build", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
                 cmp_file (dir, "stderr.build", ignoreLines, ignoreTexts, probeForTargetSpecificFiles)
-    local ok2 = "T"
-    local ok3 = "T"
+    local ok2 = TRUE
+    local ok3 = TRUE
 
     if should_run
       ok2 = cmp_file (dir, "stdout.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
