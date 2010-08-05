@@ -556,7 +556,7 @@ p_test ("p2", "p245", "gcc 4.5 assertion failure inlining in TextConv.m3")
 p_test ("p2", "p246", "gcc 4.5 assertion failure inlining in Poly.m3 for I386_DARWIN, SOLgnu, all 32bit?")
 
 mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
-p_test ("p2", "p226", "atomics")
+% p_test ("p2", "p226", "atomics")
 p_test ("p2", "p228", "sign/zero extend return values of functions returning types smaller than 32bits")
 p_test ("p2", "p229", "minimal 64bit divide test")
 
