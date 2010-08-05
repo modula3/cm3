@@ -37,7 +37,7 @@ proc configure_c_compiler() is
   %
   % older compiler doesn't like -m32 or -arch
   %
-  % echo | gcc -m32 -x c -
+  % gcc -c -m32 -x c /dev/null
   % cc1: error: invalid option ‘m32’
   %
   % fPIC is not usually needed here.
@@ -48,10 +48,10 @@ proc configure_c_compiler() is
   SYSTEM_CC = "gcc -gstabs+ -fPIC"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
-  if not equal(try_exec("@echo | " & SYSTEM_CC & m & " -c -x c - 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
+  if not equal(try_exec("@" & SYSTEM_CC & m & " -c -x c /dev/null 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
     SYSTEM_CC = SYSTEM_CC & m
   end
-  if not equal(try_exec("@echo | " & SYSTEM_CC & arch & " -c -x c - 2>&1 | fgrep \"cc1: error: unrecognized command line option \\\\\"-arch\\\\\"\" >/dev/null"), 0)
+  if not equal(try_exec("@" & SYSTEM_CC & arch & " -c -x c /dev/null 2>&1 | fgrep \"cc1: error: unrecognized command line option \\\\\"-arch\\\\\"\" >/dev/null"), 0)
     SYSTEM_CC = SYSTEM_CC & arch
   end
   %write("SYSTEM_CC is " & SYSTEM_CC)
