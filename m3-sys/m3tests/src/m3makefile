@@ -193,7 +193,8 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
   end
 
   if not FileExists (ExpectedPath)
-    return FALSE
+    % missing file compares equal to zero length file, ok
+    return equal(GetFileSize(OutputPath), 0)
   end
 
   local ComparisonLogData = [ ]
