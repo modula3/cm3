@@ -28,25 +28,35 @@ end
 
 IsX86 = equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
 
-if not defined("SYSTEM_CC")
-    if equal(WORD_SIZE, "32BITS")
-        SYSTEM_CC = "32"
-    else
-        SYSTEM_CC = "64"
-    end
-%
-% fPIC is not usually needed here.
-% It is the default for Apple gcc and left
-% here in case user is using a self-built FSF gcc.
-%
-    SYSTEM_CC = "gcc -fPIC -m" & SYSTEM_CC
-    local a = SYSTEM_CC & " -arch " & DarwinArch
-    local b = try_exec("@" & a & " -v 2>/dev/null")
-    if equal(b, 0)
-        SYSTEM_CC = a
-    end
-    %write("SYSTEM_CC is " & SYSTEM_CC & "\n")
+proc configure_c_compiler() is
+
+  if defined("SYSTEM_CC")
+    return
+  end
+
+  %
+  % older compiler doesn't like -m32 or -arch
+  %
+  % echo | gcc -m32 -x c -
+  % cc1: error: invalid option ‘m32’
+  %
+  % fPIC is not usually needed here.
+  % It is the default for Apple gcc and left
+  % here in case user is using a self-built FSF gcc.
+  %
+
+  SYSTEM_CC = "gcc -gstabs+ -fPIC"
+  local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
+  local arch = " -arch " & DarwinArch
+  if not equal(try_exec("@echo | " & SYSTEM_CC & m & " -c -x c - 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
+    SYSTEM_CC = SYSTEM_CC & m
+  end
+  if not equal(try_exec("@echo | " & SYSTEM_CC & arch & " -c -x c - 2>&1 | fgrep \"cc1: error: unrecognized command line option \\\\\"-arch\\\\\"\" >/dev/null"), 0)
+    SYSTEM_CC = SYSTEM_CC & arch
+  end
+  %write("SYSTEM_CC is " & SYSTEM_CC)
 end
+
 if not defined("SYSTEM_LIBTOOL")
     readonly SYSTEM_LIBTOOL = "libtool"
 end
