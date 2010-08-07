@@ -1,0 +1,6 @@
+
+import("libm3")
+import("sysutils")
+
+Module("SimpleValueEnv")
+Library("langutils")

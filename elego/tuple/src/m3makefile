@@ -1,0 +1,11 @@
+import ("libm3")
+
+Generic_module ("Tuple")
+Generic_module ("HeteroTuple")
+
+implementation("TextTuple")
+Interface("TextTuple")
+Sequence("TextTuple","TextTuple")
+Sequence("TextTupleSeq","TextTupleSeq")
+
+Library ("tuple")

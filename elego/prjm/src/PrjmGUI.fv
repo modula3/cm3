@@ -1,0 +1,282 @@
+(Shape (Width 800 + 800 - 400)(Height 620 + 500 - 300)
+  (BgColor "VerySlightlyPaleCornflowerBlue")
+  (LabelFont (Family "Helvetica") (PointSize 120) (WeightName "medium")
+	(Width "normal")(Registry "iso8859"))
+  (Font (Family "Fixed")(PointSize 120)(WeightName "medium")
+	(Width "normal")(Registry "iso8859"))
+  (Macro TLA BOA (x) `(Text LeftAlign ,x))
+  (Macro TRA BOA (x) `(Text RightAlign ,x))
+  (Macro SEP () '(VBox (Glue 5) Ridge (Glue 5)))
+  (Macro BOX (pens child)
+    (IF (= pens '())
+      child
+      `(Border
+         (Pen ,(Nth pens 0))
+         (Rim (Pen ,(Nth pens 1))
+           (BOX (pens ,(NthTail pens 2)) (child ,child))))))
+  (Macro COMMAND BOA (name label k1 k2 k3 k4 (type (MButton)))
+    `(,@type
+       ,name
+       (HBox
+         (TLA ,label)
+         Fill
+         (TSplit
+           %,(Intern (Cat "Model_" (SymbolName (Nth name 1))))
+           (TRA ,k1)
+           (TRA ,k2)
+           (TRA ,k3)
+           (TRA ,k4)))))
+           
+  (Macro FILEDIALOG (Name Title bgColor fbName OKName OKLabel
+                     cancelName (cancelLabel "Cancel") helperName (ReadOnly FALSE)
+                     (other ()))
+    `(ZChassis %,Name
+       (BgColor ,bgColor)
+       (Title ,Title)
+       (Shape (Width 400 - 100 + Inf) (ShadowSize 2)
+         (Rim
+           (Pen 10)
+           (VBox
+             (HBox
+               (Shape (Width 160 + Inf) (Height 200 + Inf - 20)
+                 (VBox (LabelFont "fixed")
+                   (DirMenu (For ,fbName))
+                   (Glue 6)
+                   (Frame Lowered
+                     (FileBrowser %,fbName ))))
+               Fill
+               (Shape (Width 100)
+                 (VBox
+                   Fill
+                   (Button %,OKName ,OKLabel)
+                   (Glue 10)
+                   (Filter (CloseButton %,cancelName ,cancelLabel)))))
+             (Glue 6)
+             (HBox
+               (Shape (Width 30) "File:")
+               (Frame Lowered
+                 (Helper %,helperName FirstFocus (For ,fbName))))
+             ,@other)))))
+
+  (Macro CONFIRM (Name question yesName noName cancelName cancelLabel)
+    `(ZChild %,Name 
+       (BgColor "VeryPaleBlue")
+       (LightShadow "White")
+       (DarkShadow "VeryDarkBlue")
+       (Shape (Width 300)
+         (BOX (pens (2 2 1 26))
+           (child
+             (VBox
+               ,question
+               (Glue 20)
+               (HBox
+                 Fill
+                 (VBox
+                   (Button %,yesName (BgColor "Green")
+                     (Shape (Width 80) "Yes"))
+                   (Glue 10)
+                   (Button %,noName (BgColor "Red")
+                     (Shape (Width 80) "No")))
+                 (Glue 20)
+                 (VBox
+                   Fill
+                   (Filter %,cancelName
+                     (CloseButton (Shape (Width 80) ,cancelLabel))))
+                 Fill)))))))
+
+  (Macro FINDER (name title first next prev typein close)
+    `(ZChassis
+       %,name
+       (Title ,title)
+       (VBox
+         Ridge
+         (Glue 2)
+         (HBox
+           (Shape (Width + 50) "Find:")
+           (Shape (Width 150 + 3000)
+             (Frame Lowered
+               (TypeIn %,typein FirstFocus (BgColor "VeryVeryPaleBlue"))))
+           (Glue 5)
+           (Shape (Width 60 + 1000)
+             (Rim (Pen 1) (Button %,first "First")))
+           (Shape (Width 60 + 1000) (ShadowSize 2.5)
+             (Button %,next "Next"))
+           (Shape (Width 60 + 1000)
+             (Rim (Pen 1) (Button %,prev "Prev.")))
+           (Glue 10)
+           (Shape (Width 60 + 1000)
+             (Rim (Pen 1) (CloseButton %,close "Close"))))
+         (Glue 2))))
+
+  (ZSplit
+    (ZBackground
+      (Rim (Pen 5)
+	(Border (Pen 1)
+	  (LabelFont (Family "Helvetica") (PointSize 120))
+	  (VBox
+	    (HBox
+	      (Shape (Width 60)
+         	(Menu %M_FileMenu "File" 
+		  (VBox 
+		    (MButton %B_NewProjectDialog (TLA "New Project..."))
+		    (MButton %B_OpenProjectDialog (TLA "Open Project..."))
+		    (PopMButton (For SaveAsDialog) (TLA "Save Project As..."))
+		    (MButton %B_Save (TLA "Save Project"))
+		    Bar
+                    (PopMButton (For ErrorPopup) (TLA "Last Error"))
+		    Bar
+		    (MButton %B_Quit (TLA "Quit"))
+	      ) ) )
+              (Glue 2)
+;	      (Shape (Width 60)
+;         	(Menu %M_EditMenu "Edit" 
+;		  (VBox 
+;		    (MButton %B_Cut (TLA "Cut"))
+;		    (MButton %B_Copy (TLA "Copy"))
+;		    (MButton %B_Paste (TLA "Paste"))
+;		    (MButton %B_Clear (TLA "Clear"))
+;                    Bar
+;		    (MButton %B_SelectAll (TLA "Select All"))
+;                    Bar
+;		    (MButton %B_Undo (TLA "Undo"))
+;		    (MButton %B_Redo (TLA "Redo"))
+;                    Bar
+;		    (PopMButton (For FindDialog) (TLA "Find..."))
+;	      ) ) )
+	      Fill
+	      (Glue 2)
+	      (Shape (Width 60) 
+		  (Button %B_Exit (Text "Exit"))
+	      )
+	    )
+	    Bar
+	    (Glue 10)
+	    (Rim (Pen 5)
+ 	      (VBox 
+	        (HTile ; left and right subwindows
+		  (VTile ; left subwindow
+		   (Shape (Height 30 - 10 + 50)
+		    (VBox ; top left subwindow
+		     (Glue 5)
+		     (HBox 
+		      (Shape (Width 70)(Text LeftAlign "Project:"))
+		      (Glue 10) 
+		      (Frame Lowered 
+			     (Filter Passive %F_NetName 
+				     (TypeIn ReadOnly %D_ProjectName =""))))
+		     (Glue 5)
+                    ))
+		    (VBox ; middle left subwindow
+		     (Glue 5)
+		     (Shape (Height 12 + 10) (Width 380 - 50 + 300)
+		      (HBox
+		       (Glue 10)
+		       (Shape (Width 80) (TLA "Package"))
+		       (Shape (Width 60) (TLA "Status"))
+		       (Shape (Width 120) (TLA "Location"))
+		       (Shape (Width 120) (TLA "Tag"))
+		       Fill
+		       ))
+		     (Glue 5)
+		     (Frame Lowered
+			    (MultiBrowser %D_PackageList))
+		     (Glue 5)
+		     )
+		    (VBox ; bottom left subwindow
+		     (Glue 5)
+		     (Shape (Height 12 + 10)
+		      (HBox 
+		       (Glue 10)
+		       (Shape (Width 80) (TLA "File Browser"))
+		       Fill
+		     ))
+		     (Glue 5)
+		     (Frame Lowered
+			    (FileBrowser %D_FileBrowser)
+		     ))
+                  )
+		  (Rim (Pen 10) ; right subwindow
+		       (Frame Lowered
+			      (TextEdit %D_ResultLog)
+		  ))
+		)
+	      )
+	    )
+	  )
+    ) ) )
+	
+    (ZChild %ErrorPopup (BgColor "VeryVerySlightlyPaleRed")
+      (Rim (Pen 4)
+        (VBox
+          (Shape (Height 100)
+            (Frame Raised (BgColor "VeryVerySlightlyPaleRed")
+              (Text %T_ErrorMsg (Margin 50) 
+                (LabelFont (Family "Helvetica")(PointSize 180)) 
+                "No error has occured up to now")))
+            (Glue 2)
+            (CloseButton (Text "Quit"))
+    ) ) ) 
+
+    (FILEDIALOG %InsertDialog
+      (Title "Insert an existing file")
+      (bgColor "PaleSkyBlue")
+      (fbName FB_InsertFile)
+      (ReadOnly TRUE)
+      (OKName B_Insert)
+      (OKLabel "Insert")
+      (cancelName B_CancelInsert)
+      (helperName fbh)
+      (other
+	((Glue 6)
+	  (HBox
+	    (Radio =C_ReuseWindow
+	      (VBox
+		(Choice %C_ReuseWindow (TLA "Use this window"))
+		(Choice %C_NewWindow (TLA "Insert a new window"))))
+	    Fill
+	    (Radio =C_NotNetOnly
+	      (VBox
+		(Choice %C_NetOnly (TLA "*.net only"))
+		(Choice %C_NotNetOnly (TLA "Any file"))))))))
+  
+    (FILEDIALOG %SaveAsDialog
+      (Title "Save As...")
+      (bgColor "VeryPaleNavyBlue")
+      (fbName FB_SaveAsFile)
+      (OKName B_SaveAs)
+      (OKLabel "Save")
+      (cancelName B_CancelSaveAs)
+      (helperName safbh)
+    )
+
+    (CONFIRM %QuitConfirmation
+      (question "Save changes before quitting?")
+      (yesName B_SaveAndQuit)
+      (noName B_QuitAnyway)
+      (cancelName B_DontQuit)
+      (cancelLabel "Don't quit"))
+      
+    (CONFIRM %SwitchConfirmation
+      (question "Save changes before switching?")
+      (yesName B_SaveAndSwitch)
+      (noName B_SwitchAnyway)
+      (cancelName B_CancelSwitch)
+      (cancelLabel "Don't switch"))
+
+    (CONFIRM %NewConfirmation
+      (question "Save changes before switching?")
+      (yesName B_SaveAndNew)
+      (noName B_NewAnyway)
+      (cancelName B_CancelNew)
+      (cancelLabel "Don't create new"))
+
+    (FINDER 
+      (name FindDialog)
+      (title "Text Search")
+      (first B_FindFirst)
+      (next B_FindNext)
+      (prev B_FindPrev)
+      (typein D_SearchText)
+      (close B_FindDialogClose)
+    )
+) )

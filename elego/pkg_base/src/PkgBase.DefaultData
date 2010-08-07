@@ -1,0 +1,504 @@
+# ----------------------------------------------------------------------------
+# DEC SRC Modula-3 packages
+# ----------------------------------------------------------------------------
+pkgkind DEC_SRC_M3_UNIX
+  ostype "bsd|unix|linux|sunos|solaris" has file "src/m3makefile" and dir "src"
+  inherit actions BASIC_VC_UNIX_OVERRIDES
+  inherit actions BASIC_VC
+  action build 			"m3build {?OPT} {?M3BUILDOPT} 2> .errors && m3err .errors"
+  action buildlocal		"m3build {?OPT} {?M3BUILDOPT} {?optVerbose} {?optQuiet} -O  2> .errors && m3err .errors"
+  action builtok 		"test -f .errors && m3err .errors"
+  action shipglobal		"m3ship {?OPT} {?M3SHIPOPT} {?optVerbose} {?optQuiet} 2> .errors && m3err .errors"
+  action shipproject		"m3ship {?OPT} {?M3SHIPOPT} {?optVerbose} {?optQuiet} 2> .errors && m3err .errors"
+  action shiplocal		"echo no shipping needed"
+  action clean			"m3build {?OPT} {?M3BUILDOPT} {?optVerbose} {?optQuiet} clean 2> .errors && m3err .errors"
+  action realclean		"rm {?OPT} {?RMOPT} -f PkgDep PkgCDT PkgCRT .errors ; m3build clean"
+  action mkdep			"m3dep {?OPT} > PkgDep ; m3ovr -v {:LOCATIONS} > src/m3overrides 2> /dev/null"
+
+# ----------------------------------------------------------------------------
+# DEC SRC Modula-3 packages on NT
+# ----------------------------------------------------------------------------
+pkgkind DEC_SRC_M3_WIN32
+  ostype "winnt|windows|win32|nt|cygwin" has file "src/m3makefile" and dir "src"
+  #action externalshell		"cmd.exe /c "
+  inherit actions BASIC_VC
+  action build 			"m3build {?OPT} {?M3BUILDOPT} 2> PkgErr && m3err PkgErr"
+  action buildlocal		"m3build {?OPT} {?M3BUILDOPT} -O  2> PkgErr && m3err PkgErr"
+  action builtok 		"test -f .errors && m3err .errors"
+  action shipglobal		"m3ship {?OPT} {?M3SHIPOPT} 2> PkgErr && m3err PkgErr"
+  action shipproject		"m3ship {?OPT} {?M3SHIPOPT} 2> PkgErr && m3err PkgErr"
+  action shiplocal		"echo no shipping needed"
+  action clean			"m3build {?OPT} {?M3BUILDOPT} clean 2> PkgErr && m3err PkgErr"
+  action realclean		"m3msh rm {?OPT} {?RMOPT}  PkgDep PkgCDT PkgCRT PkgErr ; m3build clean"
+  #action mkdep			"m3dep {?OPT} {?M3DEPOPT} > PkgDep"
+  action mkdep			"m3dep {?OPT} {?M3DEPOPT} > PkgDep &&  m3ovr -v {!LOCATIONS} > src/m3overrides 2> PkgErr"
+
+# ----------------------------------------------------------------------------
+# Critical Mass Reactor Modula-3 packages
+# ----------------------------------------------------------------------------
+pkgkind CRITICAL_MASS_M3_UNIX
+  ostype "bsd|unix|linux|sunos|solaris" has file "src/m3makefile" and dir "src"
+  inherit actions BASIC_VC_UNIX_OVERRIDES
+  inherit actions BASIC_VC
+  action build 			"cm3 {?OPT} {?CM3OPT} -build 2> .errors && m3err .errors"
+  action buildlocal		"cm3 {?OPT} {?CM3OPT} -build -override  2> .errors && m3err .errors"
+  action builtok 		"test -f .errors && m3err .errors"
+  action shipglobal		"cm3 {?OPT} {?CM3OPT} -ship 2> .errors && m3err .errors"
+  action shipproject		"cm3 {?OPT} {?CM3OPT} -ship 2> .errors && m3err .errors"
+  action shiplocal		"echo no shipping needed"
+  action clean			"cm3 {?OPT} {?CM3OPT} -clean 2> .errors && m3err .errors"
+  action realclean		"rm {?OPT} {?RMOPT} -f PkgDep PkgCDT PkgCRT .errors ; cm3 {?OPT} {?CM3OPT} -clean"
+  action mkdep			"m3dep {?OPT} {?M3DEPOPT} > PkgDep ; m3ovr -v {!LOCATIONS} > src/m3overrides 2> /dev/null"
+
+# ----------------------------------------------------------------------------
+# Critical Mass Reactor Modula-3 packages
+# ----------------------------------------------------------------------------
+pkgkind CRITICAL_MASS_M3_WIN32
+  ostype "winnt|windows|win32|nt|cygwin" has file "src/m3makefile" and dir "src"
+  #action externalshell		"cmd.exe /c "
+  inherit actions BASIC_VC
+  action build 			"cm3 {?OPT} {?CM3OPT} -build 2> PkgErr && m3err PkgErr"
+  action buildlocal		"cm3 {?OPT} {?CM3OPT} -build -override  2> PkgErr && m3err PkgErr"
+  action builtok 		"test -f .errors && m3err .errors"
+  action shipglobal		"cm3 {?OPT} {?CM3OPT} -ship 2> PkgErr && m3err PkgErr"
+  action shipproject		"cm3 {?OPT} {?CM3OPT} -ship 2> PkgErr && m3err PkgErr"
+  action shiplocal		"echo no shipping needed"
+  action clean			"cm3 {?OPT} {?CM3OPT} -clean 2> PkgErr && m3err PkgErr"
+  action realclean		"m3msh rm {?OPT} {?RMOPT}  PkgDep PkgCDT PkgCRT PkgErr ; cm3 {?OPT} {?CM3OPT} -clean"
+  #action mkdep			"m3dep {?OPT} {?M3DEPOPT} > PkgDep"
+  action mkdep			"m3dep {?OPT} {?M3DEPOPT} > PkgDep &&  m3ovr -v {!LOCATIONS} > src/m3overrides 2> PkgErr"
+
+# ----------------------------------------------------------------------------
+# CM3 5.1 System Packages on UNIX
+# ----------------------------------------------------------------------------
+pkgkind CRITICAL_MASS_M3_SYS_UNIX
+  ostype "bsd|unix|linux|sunos|solaris" has file "src/m3makefile" and dir "src"
+  inherit actions BASIC_VC_UNIX_OVERRIDES
+  inherit actions BASIC_VC
+  inherit actions CRITICAL_MASS_M3_SYS
+
+# ----------------------------------------------------------------------------
+# CM3 5.1 System Packages on Win32
+# ----------------------------------------------------------------------------
+pkgkind CRITICAL_MASS_M3_SYS_WIN32
+  ostype "winnt|windows|win32|nt|cygwin" has file "src/m3makefile" and dir "src"
+  inherit actions CRITICAL_MASS_M3_SYS
+
+# ----------------------------------------------------------------------------
+# CM3 5.1 System Packages
+# ----------------------------------------------------------------------------
+pkgkind CRITICAL_MASS_M3_SYS
+  has file "src/m3makefile" and dir "src"
+  inherit actions BASIC_VC
+  action build 			"m3msh -- rm .bok && cm3 {?OPT} {?CM3OPT} -DROOT={?ROOT} -build 2> PkgErr && m3msh -- touch .bok"
+  action buildlocal		"m3msh -- rm .bok && cm3 {?OPT} {?CM3OPT} -DROOT={?ROOT} -build -override && m3msh -- touch .bok"
+  action builtok 		"test -f .bok"
+  action shipglobal		"cm3 -DROOT={?ROOT} {?OPT} {?CM3OPT} -ship 2> PkgErr && m3err PkgErr"
+  action shipproject		"cm3 -DROOT={?ROOT} {?OPT} {?CM3OPT} -ship 2> PkgErr && m3err PkgErr"
+  action shiplocal		"echo no shipping needed"
+  action clean			"cm3 -DROOT={?ROOT} {?OPT} {?CM3OPT} -clean 2> PkgErr && m3err PkgErr"
+  action realclean		"m3msh rm {?OPT} {?RMOPT}  PkgDep PkgCDT PkgCRT PkgErr ; cm3 -DROOT={?ROOT} {?OPT} {?CM3OPT} -clean"
+  action mkdep			"m3dep {?OPT} {?M3DEPOPT} > PkgDep && test -f src/m3overrides || m3ovr -v {!LOCATIONS} > src/m3overrides 2> PkgErr"
+
+# ----------------------------------------------------------------------------
+# COMPACT C and C++ packages
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_CC_UNIX
+  ostype "bsd|unix|linux|sunos|solaris" has dir "src" and dir "inc" and 
+  dir "doc" and file "PkgDesc"
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_VC
+  inherit actions COMPACT_BUILD
+
+# ----------------------------------------------------------------------------
+# COMPACT C and C++ packages
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_CC_WIN32
+  ostype "winnt|windows|win32|nt|cygwin" has dir "src" and dir "inc" and 
+  dir "doc" and file "PkgDesc"
+  inherit actions COMPACT_VC
+  inherit actions COMPACT_BUILD
+
+# ----------------------------------------------------------------------------
+# COMPACT JAVA packages
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_JAVA_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_JAVA
+  inherit actions COMPACT_JAVA
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+
+pkgkind COMPACT_JAVA_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_JAVA
+  inherit actions COMPACT_JAVA
+
+pkgkind COMPACT_JAVA
+  has dir "java" and dir "html" and file "PkgDesc" and nomatch ".*\\.java"
+  inherit actions COMPACT_VC
+  inherit actions COMPACT_BUILD
+
+# ----------------------------------------------------------------------------
+# SIMPLE COMPACT JAVA packages
+# ----------------------------------------------------------------------------
+pkgkind SIMPLE_COMPACT_JAVA_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates SIMPLE_COMPACT_JAVA
+  inherit actions SIMPLE_COMPACT_JAVA
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+
+pkgkind SIMPLE_COMPACT_JAVA_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates SIMPLE_COMPACT_JAVA
+  inherit actions SIMPLE_COMPACT_JAVA
+
+pkgkind SIMPLE_COMPACT_JAVA
+  has file "PkgDesc" and match ".*\.java" and nodir "java"
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_VC
+  inherit actions COMPACT_BUILD
+
+# ----------------------------------------------------------------------------
+# COMPACT SIMPLE packages
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_SIMPLE_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_SIMPLE
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_SIMPLE
+
+pkgkind COMPACT_SIMPLE_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_SIMPLE
+  inherit actions COMPACT_SIMPLE
+
+pkgkind COMPACT_SIMPLE
+  inherit predicates COMPACT_PKG
+  inherit actions COMPACT_VC
+  action build			"-"
+  action buildlocal		"-"
+  action builtok 		"-"
+  action shipglobal		"-"
+  action shipproject		"-"
+  action shiplocal		"-"
+  action clean			"-"
+  action realclean		"m3msh rm {?OPT} {?RMOPT} PkgDep PkgCDT PkgCRT .errors ; pkgm -X {?PKGMOPT} -F -realclean"
+  action mkdep			"echo '' >> PkgDep"
+
+# ----------------------------------------------------------------------------
+# SIMPLE VC packages
+# ----------------------------------------------------------------------------
+# These are packages that offer only the basic version control operations but 
+# may actually be reocgnized, as they contain a PkgTags file. BASIC_VC 
+# packages are just an abstraction and cannot be actually detected, as they
+# have no defining structure or content.
+pkgkind SIMPLE_VC_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates SIMPLE_VC
+  inherit actions BASIC_VC_UNIX_OVERRIDES
+  inherit actions SIMPLE_VC
+
+pkgkind SIMPLE_VC_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates SIMPLE_VC
+  inherit actions SIMPLE_VC
+
+pkgkind SIMPLE_VC
+  has file "PkgTags"
+  inherit actions BASIC_VC
+  action build			"-"
+  action buildlocal		"-"
+  action builtok 		"-"
+  action shipglobal		"-"
+  action shipproject		"-"
+  action shiplocal		"-"
+  action clean			"-"
+  action realclean		"m3msh rm {?OPT} {?RMOPT} PkgDep PkgCDT PkgCRT .errors"
+  action mkdep			"echo '' >> PkgDep"
+
+# ----------------------------------------------------------------------------
+# COMPACT project management packages
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_PRJM_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_PRJM
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_PRJM
+
+pkgkind COMPACT_PRJM_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_PRJM
+  inherit actions COMPACT_PRJM
+
+pkgkind COMPACT_PRJM
+  inherit predicates COMPACT_PRJ
+  inherit actions COMPACT_VC
+  action build			"prjm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -buildglobal"
+  action buildlocal		"prjm {?OPT} {?PRJMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -buildlocal"
+  action builtok		"prjm {?OPT} {?PRJMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -builtok"
+  action shipglobal		"echo 'shipping of sub-projects disabled'"
+  action shipproject		"echo 'shipping of sub-projects disabled'"
+  action shiplocal		"echo 'shipping of sub-projects disabled'"
+  action clean			"prjm {?OPT} {?PRJMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -clean"
+  action realclean		"prjm {?OPT} {?PRJMOPT} {?optForce}  -realclean"
+  action mkdep			"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -deps"
+
+# ----------------------------------------------------------------------------
+# probably BROKEN packages with only a PkgTags, PkgDep, PkgCRT, or PkgCDT
+# file left
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_PKG_TAGS_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_PKG_TAGS
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_PKG_TAGS
+
+pkgkind COMPACT_PKG_TAGS_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_PKG_TAGS
+  inherit actions COMPACT_PKG_TAGS
+
+pkgkind COMPACT_PKG_DEPS_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_PKG_DEPS
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_PKG_DEPS
+
+pkgkind COMPACT_PKG_DEPS_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_PKG_DEPS
+  inherit actions COMPACT_PKG_DEPS
+
+pkgkind COMPACT_PKG_CRT_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_PKG_CRT
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_PKG_CRT
+
+pkgkind COMPACT_PKG_CRT_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_PKG_CRT
+  inherit actions COMPACT_PKG_CRT
+
+pkgkind COMPACT_PKG_CDT_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_PKG_CDT
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_PKG_CDT
+
+pkgkind COMPACT_PKG_CDT_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_PKG_CDT
+  inherit actions COMPACT_PKG_CDT
+
+pkgkind M3_OVR_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates M3_OVR
+  inherit actions BASIC_VC_UNIX_OVERRIDES
+  inherit actions M3_OVR
+
+pkgkind M3_OVR_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates M3_OVR
+  inherit actions M3_OVR
+
+pkgkind COMPACT_PRJ_SNAPS_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates COMPACT_PRJ_SNAPS
+  inherit actions COMPACT_VC_UNIX_OVERRIDES
+  inherit actions COMPACT_PRJ_SNAPS
+
+pkgkind COMPACT_PRJ_SNAPS_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates COMPACT_PRJ_SNAPS
+  inherit actions COMPACT_PRJ_SNAPS
+
+pkgkind M3_OVR
+  has file src/m3overrides
+  inherit actions BASIC_VC
+
+# ----------------------------------------------------------------------------
+# COMPACT_PKG packages
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_PKG
+  has file "PkgDesc"
+  inherit actions COMPACT_VC
+
+pkgkind COMPACT_PKG_TAGS
+  has file "PkgTags"
+  inherit actions COMPACT_VC
+
+pkgkind COMPACT_PKG_DEPS
+  has file "PkgDep"
+  inherit actions COMPACT_VC
+
+pkgkind COMPACT_PKG_CRT
+  has file "PkgCRT"
+  inherit actions COMPACT_VC
+
+pkgkind COMPACT_PKG_CDT
+  has file "PkgCDT"
+  inherit actions COMPACT_VC
+
+# ----------------------------------------------------------------------------
+# COMPACT_PRJ packages
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_PRJ
+  has file "PrjDesc"
+  inherit actions COMPACT_VC
+
+pkgkind COMPACT_PRJ_SNAPS
+  has dir "snaps"
+  inherit actions COMPACT_VC
+
+# ----------------------------------------------------------------------------
+# BASIC_VC_MAKE
+# ----------------------------------------------------------------------------
+pkgkind BASIC_VC_MAKE_UNIX
+  ostype "bsd|unix|linux|sunos|solaris"
+  inherit predicates BASIC_VC_MAKE
+  inherit actions BASIC_VC_UNIX_OVERRIDES
+  inherit actions BASIC_VC_MAKE
+
+pkgkind BASIC_VC_MAKE_WIN32
+  ostype "winnt|windows|win32|nt|cygwin"
+  inherit predicates BASIC_VC_MAKE
+  inherit actions BASIC_VC_MAKE
+
+pkgkind BASIC_VC_MAKE
+  has file "Makefile"
+  inherit actions BASIC_VC
+  inherit actions MAKE_BUILD
+
+# ----------------------------------------------------------------------------
+# MAKE_BUILD actions
+# ----------------------------------------------------------------------------
+pkgkind MAKE_BUILD
+  ostype none
+  action build			"make {?OPT} {?MAKEOPT} all install"
+  action buildlocal		"make {?OPT} {?MAKEOPT}"
+  action builtok		"make {?OPT} {?MAKEOPT} builtok"
+  action shipglobal		"make {?OPT} {?MAKEOPT} shipglobal"
+  action shipproject		"make {?OPT} {?MAKEOPT} shipproject"
+  action shiplocal		"make {?OPT} {?MAKEOPT} shiplocal"
+  action clean			"make {?OPT} {?MAKEOPT} clean"
+  action realclean		"make {?OPT} {?MAKEOPT} realclean"
+  action mkdep			"make {?OPT} {?MAKEOPT} depend"
+
+# ----------------------------------------------------------------------------
+# COMPACT_BUILD actions
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_BUILD
+  ostype none
+  action build			"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -build"
+  action buildlocal		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -build"
+  action builtok		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -builtok"
+  action shipglobal		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -ship global"
+  action shipproject		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -ship project"
+  action shiplocal		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -ship local"
+  action clean			"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -clean"
+  action realclean		"m3msh rm {?OPT} {?RMOPT} PkgDep PkgCDT PkgCRT .errors PkgTmp ; pkgm -X {?PKGMOPT} -F -realclean"
+  action mkdep			"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -deps"
+
+# ----------------------------------------------------------------------------
+# COMPACT_VC actions
+# ----------------------------------------------------------------------------
+pkgkind COMPACT_VC_UNIX_OVERRIDES
+  ostype none
+  action isrelease		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -isrelease > /dev/null"
+  action conflicts		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -conflicts > /dev/null"
+  action uptodate		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -uptodate > /dev/null"
+  action modified		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -modified > /dev/null"
+
+pkgkind COMPACT_VC
+  ostype none
+  action isrelease		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -isrelease > PkgTmp"
+  action conflicts		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -conflicts > PkgTmp"
+  action uptodate		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -uptodate > PkgTmp"
+  action modified		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -modified > PkgTmp"
+  action checkrelease		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -isrelease"
+  action checkconflicts		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -conflicts"
+  action checkuptodate		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -uptodate"
+  action checkmodified		"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -modified"
+  action currentdeveltag	"pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -cdt > PkgCDT"
+  action currentreleasetag      "pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -crt > PkgCRT"
+  action currenttag             "pkgm -X {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -ct > PkgCT"
+  action commitdevelmajor	"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -commit major"
+  action commitdevelminor	"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -commit minor"
+  action commitdevelpatch	"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -commit patch"
+  action commitreleasemajor	"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -release major"
+  action commitreleaseminor	"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -release minor"
+  action commitreleasepatch	"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -release patch"
+  action update			"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -update {!TAG}"
+  action checkout		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -c {!LOCATION} -checkout {!TAG} {!PKG}"
+  action getlabel		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -getlabel {:TAG} > .label"
+  action currentlabel		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -getlabel > .label"
+  action setlabel		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -setlabel {!TAG} {!LABEL}"
+  action listlabels		"pkgm {?OPT} {?PKGMOPT} {?optForce} {?optVerbose} {?optDebug} {?optQuiet} -listlabels > .labels"
+  action diff                   "pkgm -q {?OPT} {?PKGMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff {?selectedFiles}"
+  action diff1                  "pkgm -q {?OPT} {?PKGMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff -t {!TAG1} {?selectedFiles}"
+  action diff2                  "pkgm -q {?OPT} {?PKGMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff -t {!TAG1} -t {!TAG2} {?selectedFiles}"
+  action merge                  "pkgm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -merge {!TAG1}"
+  action merge2                 "pkgm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -merge {!TAG1} {!TAG2}"
+
+# ----------------------------------------------------------------------------
+# BASIC_VC actions
+# ----------------------------------------------------------------------------
+pkgkind BASIC_VC_UNIX_OVERRIDES
+  ostype none
+  action isrelease		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -isrelease > /dev/null"
+  action conflicts		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -conflicts > /dev/null"
+  action uptodate		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -uptodate > /dev/null"
+  action modified		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -modified > /dev/null"
+
+pkgkind BASIC_VC
+  ostype none
+  action isrelease		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -isrelease > PkgTmp"
+  action conflicts		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -conflicts > PkgTmp"
+  action uptodate		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -uptodate > PkgTmp"
+  action modified		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -modified > PkgTmp"
+  action checkrelease		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -isrelease"
+  action checkconflicts		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -conflicts"
+  action checkuptodate		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -uptodate"
+  action checkmodified		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -modified"
+  action currentdeveltag	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -cdt > PkgCDT"
+  action currentreleasetag      "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -crt > PkgCRT"
+  action currenttag             "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -ct > PkgCT"
+  action commitdevelmajor	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -commit major"
+  action commitdevelminor	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -commit minor"
+  action commitdevelpatch	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -commit patch"
+  action commitreleasemajor	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -release major"
+  action commitreleaseminor	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -release minor"
+  action commitreleasepatch	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -release patch"
+  action update			"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -update {!TAG}"
+  action checkout		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -c {!LOCATION} -checkout {!TAG} {!PKG}"
+  action getlabel		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -getlabel {:TAG} > .label"
+  action currentlabel		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -getlabel > .label"
+  action setlabel		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -setlabel {!TAG} {!LABEL}"
+  action listlabels		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -listlabels > .labels"
+  action diff                   "pkgvm -q {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff {?selectedFiles}"
+  action diff1                  "pkgvm -q {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff -t {!TAG1} {?selectedFiles}"
+  action diff2                  "pkgvm -q {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff -t {!TAG1} -t {!TAG2} {?selectedFiles}"
+  action merge                  "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -merge {!TAG1}"
+  action merge2                 "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -merge {!TAG1} {!TAG2}"
+
+# ----------------------------------------------------------------------------
+# DEFAULT package descriptions for fall-back definitions
+# ----------------------------------------------------------------------------
+pkgkind DEFAULT
+  # The next predicate should be FALSE every time
+  has dir "yXyXyx" and file "rQp7654RfVq99"
+  action update			"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -update {!TAG}"
+  action checkout		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -c {!LOCATION} -checkout {!TAG} {!PKG}"
+  action getlabel		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -getlabel {:TAG} > .label"
+  action currentlabel		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -getlabel > .label"
+  action setlabel		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -setlabel {!TAG} {!LABEL}"
+  action listlabels		"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -listlabels > .labels"
+  action currentdeveltag	"pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -cdt > PkgCDT"
+  action currentreleasetag      "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -crt > PkgCRT"
+  action currenttag             "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -ct > PkgCT"
+  action diff                   "pkgvm -q {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff {?selectedFiles}"
+  action diff1                  "pkgvm -q {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff -t {!TAG1} {?selectedFiles}"
+  action diff2                  "pkgvm -q {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -{?diffPrefix}diff -t {!TAG1} -t {!TAG2} {?selectedFiles}"
+  action merge                  "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -merge {!TAG1}"
+  action merge2                 "pkgvm {?OPT} {?PKGVMOPT} {?optVerbose} {?optDebug} {?optQuiet} -merge {!TAG1} {!TAG2}"

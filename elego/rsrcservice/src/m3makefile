@@ -1,0 +1,13 @@
+
+import("libm3")
+import("netobj")
+import("vbtkit")
+
+import("sysutils")
+
+Interface("RsrcService")
+Module("ConfigRsrcService")
+
+Netobj("RsrcService", "T")
+
+Library("rsrcservice")

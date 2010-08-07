@@ -1,0 +1,17 @@
+
+pkgkind DEC_SRC_M3
+  has file "src/m3makefile" and dir "src"
+
+pkgkind ComPact_STD
+  has dir "inc" and dir "src" and dir "doc" and file "PkgDesc"
+
+pkgkind Any_C
+  has dir "src" and match "^.*\.c$"
+
+pkgkind Any_CC
+  has dir "src" and match "^.*\.cc$"
+
+pkgkind Real_DUMMY
+  has dir "dummy-a" and dir "dummy-b/duh" and dir "dummy-b" and
+  file "dummy-a/hugo" and file "dummy-a/susi" and file "bla" and
+  match ".*dummy.*"

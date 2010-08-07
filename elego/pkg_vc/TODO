@@ -1,0 +1,38 @@
+STATUS
+======
+ This package should be quite stable.
+
+TODO
+====
+ () Change the interface to use exceptions
+ () Fix the check for sticky tags in IsRelease() and IsSticky()
+ () Implement Merging in PkgVC
+ () Review the new abstract interface and add the obviously missing 
+    features
+ () Rewrite everything to use the new abstract interface
+ () Implement a RCS backend
+ () Implement a P4 backend
+ () Implement a SourceSave backend
+ () Implement a file system backend
+
+LATER
+=====
+
+
+NEVER
+=====
+
+
+DONE
+====
+ (ow) implemented most of the functionality needed for software package
+      managemend
+ (ow) bugfix: call editor if no commit message is specified
+ (ow) 15.05.1997 added error parsing for all CVS output on stderr
+ (ow) ??.09.1997 implemented package checkout
+ (ow) 29.09.1997 made the state functions IsRelease() and IsSticky()
+                 less probable to succeed by adding more checks.
+                 One major check is still missing, though.
+ (ow)  4.10.1997 added `heedErrors := TRUE' parameter to CVS.LogFile()
+                 and used it to work around unwanted fatal errors in
+                 CVS.Tags() and CVS.TaggedRevisions()

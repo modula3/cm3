@@ -1,0 +1,10 @@
+
+import("libm3")
+import("netobj")
+
+import("sysutils")
+import("rsrcservice")
+
+Module("CompactClient")
+
+Library("compact-client")

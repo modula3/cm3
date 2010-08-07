@@ -1,0 +1,107 @@
+NAME
+
+  m3msh -- the Modula-3 Mini Shell (part of Elego ComPact (tm))
+
+SYNTAX
+
+  m3msh ( -help | -h | -man | -desc | -cr)
+  m3msh [-v] [-d] [-q] [-qc char] [-npc|-nopathnameconversion] 
+        [-noic | -nointernalcmds] [--] <cmdlist>
+
+  <cmdlist> ::= <cmd>
+             |  <cmd> && <cmd>
+             |  <cmd> || <cmd>
+             |  <cmd> ;  <cmd>
+
+OPTIONS
+  -v         be verbose
+  -d         produce debug output
+  -q         run more quietly
+  -qc char   change the no-globbing quote character    
+  -npc       do not convert pathnames on the command line to the native
+             syntax of the current operating system (win32 or posix)
+  -noic      do not use internal implementations for commands touch,
+             mkdir, rmfile, rmdir, rmrec
+  --         stop processing of arguments
+
+SEMANTICS
+
+  The Modula-3 Mini Shell is a very simple shell that is used to
+  execute commands in a system (and system shell) independent manner.
+  It is not intended to be a real useful interactive shell substitute,
+  though, but implemented to be called by programs of Elego ComPact
+  to execute lists of external commands.
+
+  The shell either executes the commands passed to it when invoked,
+  or reads commands from stdin until EOF is encountered.
+
+  Every command may contain simple input and output redirections. 
+  If a token inside a command is any of
+
+    `>', `1>', `<', `2>', `&>', `>>', `1>>', `2>>', `&>>', 
+ 
+  then the next token is treated as the corresponding filename that is
+  to be used as source or sink of bytes. The redirections have the
+  following meaning: 
+
+     < fn   : read stdin from file fn
+     > fn   : write stdout into file fn
+     1> fn  : write stdout into file fn
+     2> fn  : write stderr into file fn
+     &> fn  : write stdout and stderr into file fn
+     >> fn  : append stdout to file fn
+     1>> fn : append stdout to file fn
+     2>> fn : append stderr to file fn
+     &>> fn : append stdout and stderr to file fn
+
+  Tokens are always separated by whitespace, so "ls >foo" won't work,
+  while "ls > foo" does.
+
+  Wildcard Expansion
+  ------------------
+
+  If a parameter to a command contains the characters `*' or `?',
+  it is considered to be a shell globbing pattern. A `*' expands
+  to an arbitrary sequence of any length, while a `?' must be
+  matched by exactly one character. Leading periods are not
+  matched by `*'. If globbing is not desired, the argument must
+  be quoted using the special quote character, which defaults to
+  backquote (`). The quote character must immediately precede the
+  argument; ending quotes are not necessary and will be treated as 
+  a literal.
+
+  Internal Commands
+  -----------------
+  
+  The following commands are internally implemented and are preferred
+  to any external programs of the same name. Except for `echo' this
+  may be disabled by the option `-noic'.
+
+    touch   <pn>+        
+      -- create one or more empty files
+    mkdir   <pn>+
+      -- create one or more directory hierarchies
+    rm [-r] <pn>+
+      -- remove [recursively] one or more files or directories
+    rmdir   <pn>+
+      -- remove one or more directories
+    echo    <arg>*
+      -- echo all arguments to stdout
+    list [-r] [-l] [-in] [-post] <pn>*
+      -- list the names of one or more files [-r: recursively]
+         [-l: include file type] [-in: inorder traversal]
+         [-post: postorder traversal]
+
+  (Internal echo cannot be disabled.)
+
+VERSION
+
+ This is the third version of m3msh.
+
+BUGS
+
+ o Pipes are not yet implemented :-(
+
+FILES AND RESOURCES
+
+  MiniShellBundle  -- m3msh documentation bundle

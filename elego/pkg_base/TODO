@@ -1,0 +1,26 @@
+STATUS
+======
+  This package contains modules extracted from pkg_parse, that really
+  didn't belong there. It is quite usable, but needs some work to make 
+  it more autonomous. This cannot be done without major changes to
+  pkg_parse and pkg_build, so we have to postpone it.
+
+TODO
+====
+ () Remove all dependencies on pkg_config. Move the concerned functionality
+    back to pkg_parse.
+ () Make the basic type really abstract, i.e. hide all implementation
+    details.
+
+LATER
+=====
+
+
+
+NEVER
+=====
+
+
+
+DONE
+====
