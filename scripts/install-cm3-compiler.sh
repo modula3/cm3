@@ -116,7 +116,12 @@ cp_if()
 getversion()
 {
   if [ -x "$1${ext}" ] ; then
-    "$1" -version | grep version | awk '{print $5}'
+    if "$1" -version > /dev/null; then
+      "$1" -version | grep version | awk '{print $5}'
+    else
+      echo "$1 is broken" 1>&2
+      exit 2
+    fi
   else
     echo "$1 is not executable" 1>&2
     exit 1
@@ -167,9 +172,11 @@ rm_curent()
 
 cp_version()
 {
-  cp_if "${FRONTEND}-${CM3VERSION}" "${FRONTEND}"
+  FE="${FRONTEND}-${CM3VERSION}"
+  cp_if "${FE}" "${FRONTEND}"
   if [ "${GCC_BACKEND}" = yes ] ; then
-    cp_if "${BACKEND}-${CM3VERSION}" "${BACKEND}"
+    BE="${BACKEND}-${CM3VERSION}"
+    cp_if "${BE}" "${BACKEND}"
   fi
   echo mkdir -p "${CONFIG}"
        mkdir -p "${CONFIG}"
@@ -183,6 +190,22 @@ upgrade()
 {
   backup_old
   install_local_as_version
+  FE="${FRONTEND}-${CM3VERSION}"
+  if "${FE}" -version > /dev/null; then
+    true
+  else
+    echo "${FE} is broken" 1>&2
+    exit 2
+  fi
+  if [ "${GCC_BACKEND}" = yes ] ; then
+    BE="${BACKEND}-${CM3VERSION}"
+    if "${BE}" --version > /dev/null; then
+      true
+    else
+      echo "${BE} is broken" 1>&2
+      exit 2
+    fi
+  fi
   rm_curent
   cp_version
 }
