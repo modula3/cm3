@@ -216,9 +216,13 @@ else
   exit 1
 fi
 
-echo "testing ssh ${CM3CVSSERVER}.."
-if ssh ${CM3CVSSERVER} true; then
-  echo "ssh ${CM3CVSSERVER} ok"
+SSH="ssh"; export SSH
+if [ "$HOSTNAME" = "current10s" -o "$HOSTNAME" = "current9s" ]; then
+  SSH="ssh login.opencsw.org hudson@ssh birch.elegosoft.com"
+fi
+echo "testing ${SSH} ${CM3CVSSERVER}.."
+if ${SSH} ${CM3CVSSERVER} true; then
+  echo "${SSH} ${CM3CVSSERVER} ok"
   true
 else
   echo "no ssh connection to ${CM3CVSSERVER}" 1>&2
