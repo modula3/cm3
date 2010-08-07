@@ -11,9 +11,9 @@ fi
 
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/snaps}
 CM3_OSTYPE=${CM3_OSTYPE:-POSIX}
-FNPAT1=${FNPAT1:-"cm3-min-${CM3_OSTYPE}-"}
-FNPAT2=${FNPAT2:-"cm3-bin-*-${CM3_OSTYPE}-"}
-FNPAT2s=${FNPAT2s:-"cm3-bin-[^-]*-${CM3_OSTYPE}-"}
+FNPAT1=${FNPAT1:-"cm3-min-"}
+FNPAT2=${FNPAT2:-"cm3-bin-*-"}
+FNPAT2s=${FNPAT2s:-"cm3-bin-[^-]*-"}
 FNPATSUF=${FNPATSUF:-.tgz}
 FNPATLS=${FNPATLS:-${FNPAT1}'*-*'${FNPATSUF}}
 FNPATLS2=${FNPATLS2:-${FNPAT2}'*-*'${FNPATSUF}}
@@ -58,6 +58,7 @@ EOF
 tablerow() {
   f="$1"
   echo "<tr>"
+  LANG=en_US.ISO-8859-15; export LANG
   ls -hl "$f" | awk ' {
     printf "<td width=\"15%%\" align=\"right\">\n"
     printf "%s", $6
