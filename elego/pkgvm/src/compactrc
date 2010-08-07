@@ -1,0 +1,6 @@
+
+# default settings for pkgvm (ComPact Version Manager)
+
+cvspath		"cvs"
+repository	"/usr/cvs"
+editor		"emacsclient"

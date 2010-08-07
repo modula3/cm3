@@ -1,0 +1,35 @@
+
+collection /home/wagner/work/m3libs
+collection /home/wagner/work/m3progs
+
+package pkg_base
+package prjbase
+package pkg_vc
+package pkg_parse
+package pkg_build
+
+snapshot one
+  pkg_base  tag0
+  prjbase   tag1
+  pkg_vc    tag2
+  pkg_parse tag3
+  pkg_build tag4
+end
+
+snapshot two
+  pkg_base  tag5
+  prjbase   tag6
+  pkg_vc    tag7
+  pkg_parse tag8
+  pkg_build tag9
+end
+
+release release_0_0
+  pkg_base  rtag0
+  prjbase   rtag1
+  pkg_vc    rtag2
+  pkg_parse rtag3
+  pkg_build rtag4
+end
+
+

@@ -1,0 +1,2 @@
+override("sysutils", ROOT & SL & "m3-libs")
+override("rsrcservice", ROOT & SL & "elego")

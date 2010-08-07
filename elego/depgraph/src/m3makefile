@@ -1,0 +1,14 @@
+
+import("libm3")
+import("digraph")
+import("sysutils")
+
+Module("StdDepGraphEdge")
+Module("StdDepGraphNode")
+Module("StdDepGraph")
+Sequence("StdDepGraphNode", "StdDepGraphNode")
+table("StdNameNode", "Text", "StdDepGraphNode")
+
+Module("DependencyGraph")
+
+Library("depgraph")

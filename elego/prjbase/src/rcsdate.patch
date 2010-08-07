@@ -1,0 +1,106 @@
+? prjbase/PkgDep
+? prjbase/.errors
+? prjbase/.label
+? prjbase/snaps
+? prjbase/PkgCT
+? prjbase/.labels
+? prjbase/PkgOverrides
+? prjbase/src/m3browser.html
+? prjbase/src/m3overrides
+? prjbase/src/a
+? prjbase/src/rcsdate.patch
+? prjbase/test/PkgDep
+? prjbase/test/src/PrjDesc.tmp
+Index: prjbase/src/RCS_Date.m3
+===================================================================
+RCS file: /usr/cvs/m3libs/prjbase/src/RCS_Date.m3,v
+retrieving revision 1.1
+diff -u -r1.1 RCS_Date.m3
+--- prjbase/src/RCS_Date.m3	2000/05/08 11:03:28	1.1
++++ prjbase/src/RCS_Date.m3	2000/11/03 12:52:18
+@@ -33,6 +33,9 @@
+ IMPORT
+   Date, FloatMode, Fmt, Lex, Scan, Text, Time, TextSeq, TextUtils;
+ 
++IMPORT
++  M3Config;
++
+ TYPE 
+   TokScan = OBJECT
+     t : TextSeq.T;
+@@ -110,7 +113,52 @@
+   END FromTime;
+ 
+ PROCEDURE ToTime(d: T): Time.T
+-(* "Date.ToTime" is badly broken. *)
++  RAISES {Error} =
++  BEGIN
++    IF Text.Equal(M3Config.OS_TYPE, "WIN32") THEN
++      RETURN ToTimeWin32(d);
++    ELSE
++      RETURN ToTimePOSIX(d);
++    END;
++  END ToTime;
++
++PROCEDURE ToTimeWin32(d: T): Time.T
++  RAISES {Error} =
++  CONST
++    Epoch = 1970;
++    EndOfTime = 2100;
++  VAR
++    ts: TokScan;
++    year, month, day, hour, minute, second: CARDINAL;
++  BEGIN
++    ts := TokScanNew(d);
++    year := ts.getInt("year");
++    month := ts.getInt("month");
++    day := ts.getInt("day");
++    hour := ts.getInt("hour");
++    minute := ts.getInt("minute");
++    second := ts.getInt("second");
++    ts.getEnd();
++
++    IF year < 100 THEN INC(year, 1900) END;
++
++    (* Be feature-compatible with POSIX. *)
++    IF NOT (Epoch <= year AND year < EndOfTime) THEN
++      RAISE Error("Year " & Fmt.Int(year) & " out of range");
++    END;
++
++    TRY
++      RETURN Date.ToTime(
++               Date.T {year, VAL(month - 1, Date.Month), day, 
++                       hour, minute, second,
++                       0, "UTC", Date.WeekDay.Sun});
++    EXCEPT
++      Date.Error => RAISE Error("Bad date: " & d)
++    END;
++  END ToTimeWin32;
++
++PROCEDURE ToTimePOSIX(d: T): Time.T
++(* "Date.ToTime" is badly broken on POSIX. *)
+   RAISES {Error} =
+   CONST
+     DaysNormal = ARRAY [1..12] OF CARDINAL{  (* To beginning of month. *)
+@@ -121,10 +169,10 @@
+     };
+     Epoch = 1970;
+     EndOfTime = 2100;
+-    FirstLeap = (Epoch + 3) DIV 4 * 4;
+   VAR
+     ts: TokScan;
+     year, month, day, hour, minute, second: CARDINAL;
++    FirstLeap := (Epoch + 3) DIV 4 * 4;
+     numLeap: CARDINAL;	(* Leap years to beginning of specified year. *)
+     t: CARDINAL;
+   BEGIN
+@@ -154,7 +202,7 @@
+     INC(t, day - 1);
+     t := ((t*24 + hour)*60 + minute)*60 + second;
+     RETURN FLOAT(t, Time.T);
+-   END ToTime;
++  END ToTimePOSIX;
+ 
+ PROCEDURE Valid(d: T): BOOLEAN =
+   CONST
+

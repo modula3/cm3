@@ -1,0 +1,14 @@
+#!/bin/sh
+L_PATH=~/work/swdoc/compact
+L_EN=$L_PATH/compact-copyrights.txt
+
+if [ ! -r $L_EN ] ; then
+  echo "$L_EN does not exist, trying to build it"
+  HERE=`pwd`
+  cd $L_PATH
+  make -f Makefile.bsd FORMATS=txt DOC=compact-copyrights some
+  cd $HERE
+fi
+
+cp $L_EN .
+

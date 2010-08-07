@@ -1,0 +1,14 @@
+
+collection /home/wagner/work/m3libs/prjbase
+collection /home/wagner/work/m3libs
+collection /home/wagner/work/m3progs
+
+package  pkg_base
+package  prjbase
+package  miscutils
+package  depgraph
+package  m3tkutils
+package  test
+package  fileinfo
+package  pkg_config
+

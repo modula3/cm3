@@ -1,0 +1,143 @@
+
+# ---------------------------------------------------------------------------
+# build system configuration and caches (pools)
+# ---------------------------------------------------------------------------
+# first set some path
+#poolprefix		{?COMPACTROOT}/pools
+localpool		{?HOME}/pools/local
+projectpool		{?COMPACTROOT}/pools/project
+globalpool		{?COMPACTROOT}/pools/global
+localbindir		{?HOME}/bin
+projectbindir		{?COMPACTROOT}/pools/project/bin
+globalbindir		{?COMPACTROOT}/pools/global/bin
+
+# the default package kind is concatenated with the following suffix
+platform-suffix-mapping	.*-freebsd[0-9\.]*  => _UNIX
+platform-suffix-mapping	.*-linux[0-9\.]*    => _UNIX
+platform-suffix-mapping	.*-solaris[0-9\.]*  => _UNIX
+platform-suffix-mapping	.*-sunos[0-9\.]*    => _UNIX
+platform-suffix-mapping	.*-winnt[0-9\.]*    => _WIN32
+platform-suffix-mapping	.*-windows[0-9\.]*  => _WIN32
+platform-suffix-mapping	.*-windows_nt[0-9\.]*  => _WIN32
+
+# define the preferred package kind
+pkgkind			COMPACT_CC{?platform-suffix}
+
+# here are some possible compiler settings
+tpc-compiler-c		gcc
+#tpc-compiler-c		cl      # Microsoft Visual C++
+tpc-compiler-java       javac
+#tpc-compiler-java      jikes
+tpc-options-java       "-dir:bytecode/DEFAULT"
+tpc-options-java-debug "-debug,dir:bytecode/DEFAULT"
+tpc-options-js-debug   "-debug,dir:./."
+tpc-options-js         "-dir:./."
+
+# here are some possible variants for object formats
+tpc-variant-aout	aout
+tpc-variant-win32	win32
+tpc-variant-elf		elf
+tpc-variant-coff	coff
+tpc-variant-std 	std
+tpc-variant-jdk 	jdk
+tpc-variant-jsim        jsim
+tpc-variant-jbuilder 	jbuilder
+tpc-variant-jvcafe 	jvcafe
+
+# ---------------------------------------------------------------------------
+# let's set some start values based on guesses by ComPact,
+# environment variables (TPC_xxx), or command line overrides (-tpc-xxx)
+# The resulting values may still be empty.
+# ---------------------------------------------------------------------------
+tpc-hosttype-start	{?tpc-hosttype?tpc-hosttype-default}
+tpc-ostype-start	{?tpc-ostype?tpc-ostype-default}
+tpc-variant-start	{?tpc-variant?tpc-variant-default}
+tpc-compiler-start	{?tpc-compiler?tpc-compiler-default}
+
+# ---------------------------------------------------------------------------
+# now for the computation of the actual TPC
+# ---------------------------------------------------------------------------
+# COMPACT_CC packages
+pkgkind-tpc-mapping	^[Cc][Oo][Mm][Pp][Aa][Cc][Tt]_CC => {!tpc-hosttype-start:unknown}-{!tpc-ostype-start:unknown}-{!tpc-variant-start?tpc-variant-elf:none}-{!tpc-compiler?tpc-compiler-c}{?tpc-options}
+
+# ---------------------------------------------------------------------------
+# COMPACT_JAVA packages
+pkgkind-tpc-mapping	^[Cc][Oo][Mm][Pp][Aa][Cc][Tt]_JAVA => {!tpc-hosttype-start:unknown}-{!tpc-ostype-start:unknown}-{!tpc-variant?tpc-variant-jdk:none}-{!tpc-compiler?tpc-compiler-java}{!tpc-options?tpc-options-java}
+
+# ---------------------------------------------------------------------------
+# SIMPLE_COMPACT_JAVA packages
+pkgkind-tpc-mapping	^SIMPLE_[Cc][Oo][Mm][Pp][Aa][Cc][Tt]_JAVA => {!tpc-hosttype-start:unknown}-{!tpc-ostype-start:unknown}-{!tpc-variant?tpc-variant-jsim:none}-{!tpc-compiler?tpc-compiler-java}{!tpc-options-js},{?tpc-opts}
+
+# ---------------------------------------------------------------------------
+# COMPACT_SIMPLE packages
+pkgkind-tpc-mapping	^[Cc][Oo][Mm][Pp][Aa][Cc][Tt]_SIMPLE => {!tpc-hosttype-start:unknown}-{!tpc-ostype-start:unknown}-{!tpc-variant-start:none}-{!tpc-compiler:none}{?tpc-options}
+
+# ---------------------------------------------------------------------------
+# the following is just a fallback value if none of the above matches
+configuration		{!tpc-hosttype-default:i386}-{!tpc-ostype-default:linuxgnu}-{!tpc-variant-default:elf}-{!tpc-compiler-default:gcc}{!tpc-options:-debug}
+
+# ---------------------------------------------------------------------------
+# general configuration options
+# ---------------------------------------------------------------------------
+configpath		{?HOME}/compact;{?COMPACTROOT}/config;{?COMPACTROOT};/usr/contrib/lib/compact;/usr/local/lib/compact;/opt/compact
+packageprefix		compact/pkgs
+
+# some editor definitions. Keep in mind that the editor should be able to start
+# up in a window of its own, since the calling programs may have redirected
+# input and ouput.
+editor			gnuclient
+#editor			"/usr/X11R6/bin/xterm -e vi"
+
+# ---------------------------------------------------------------------------
+# configuration of the graphical user interface (ComPactHTTPd)
+# ---------------------------------------------------------------------------
+browser			netscape
+httpd-home-page         home.htm
+
+httpd-verbose		0
+httpd-trace		1
+httpd-debug		0
+httpd-terminate-default-session		yes
+httpd-terminate-without-sessions	no
+httpd-colored-projects	yes
+httpd-colored-packages	yes
+httpd-colored-files	yes
+
+httpd-resources		{?COMPACTROOT}/config;{?COMPACTROOT}/doc/gui-help;{?COMPACTROOT}/doc/html;${COMPACTROOT}/doc
+httpd-port		7777
+httpd-gc-background	no
+httpd-stacksize		6000
+httpd-default-stacksize	5000
+
+optVerbose		""
+optDebug		""
+#optForce		"-F"
+optQuiet		""
+
+# ---------------------------------------------------------------------------
+# version control configuration
+# ---------------------------------------------------------------------------
+repository		:local:{?COMPACTROOT}/demo/master
+dcvs-repository		:ext:/var/dcvs
+cvspath			{?COMPACTROOT}/bin/cvs
+dcvspath		/usr/local/dcvs/bin/cvs
+vc-options		create,noprune
+
+# ---------------------------------------------------------------------------
+# workspace configuration
+# ---------------------------------------------------------------------------
+
+# collectionroot is the location of the local workspace(s) where all
+# checked-out package collections reside
+collectionroot          {?HOME}/work
+package-collection	{?collectionroot}/gnu
+package-collection-path	{?collectionroot}/gnu;{?collectionroot}/java;{?HOME}/pkg;{?HOME}/work/gnu;{?HOME}/work/java
+#project-collection	{?collectionroot}/prjm
+project-collection	{?collectionroot}/gnu/prj
+project-collection-path	{?collectionroot}/gnu/prj;{?HOME}/prj;{?HOME}/work/prj
+
+# ---------------------------------------------------------------------------
+# miscellaneous configuration options
+# ---------------------------------------------------------------------------
+
+linebreakcol		72

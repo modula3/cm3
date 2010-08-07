@@ -1,0 +1,28 @@
+
+import("libm3")
+import("m3quake")
+import("sysutils")
+
+import("filepool")
+import("pkg_base")
+import("pkg_vc")
+import("depgraph")
+
+Table("TextTextText", "Text", "TextTextTbl")
+Table("TextPkgVC", "Text", "PkgVC")
+Module("Checkpoint")
+Module("PoolSet")
+Module("PrjDesc")
+Module("Snapshots")
+Module("ChangeSet")
+Module("RCS_Date")
+Table("TextPrjDesc", "Text", "PrjDesc")
+Sorted_table("TextPrjDesc", "Text", "PrjDesc")
+Table("TimePrjDesc", "LongrealType", "PrjDesc")
+Sorted_table("TimePrjDesc", "LongrealType", "PrjDesc")
+Table("TextChangeSet", "Text", "ChangeSet")
+Sorted_table("TextChangeSet", "Text", "ChangeSet")
+Table("TimeChangeSet", "LongrealType", "ChangeSet")
+Sorted_table("TimeChangeSet", "LongrealType", "ChangeSet")
+
+Library("prjbase")

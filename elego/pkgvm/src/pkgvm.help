@@ -1,0 +1,72 @@
+NAME
+
+  pkgvm  --  The Elego ComPact Version Manager
+
+SHORT DESCRIPTION
+
+  Pkgvm is the standalone package version manager of Elego ComPact,
+  which implements most of the functions of pkgm concerned with
+  version control of single packages, but without the overhead of the
+  complex ComPact build system.
+
+USE
+
+  pkgvm -update (head | other-symbolic-revision-name)
+    gets the named version from the repository to the local workspace
+
+  pkgvm -commit  (major | minor | patch)
+  pkgvm -release (major | minor | patch)
+    to commit changes as a new development version or as a release
+
+  pkgvm ([-TRL|-TR|-TL|-RL|-T|-R|-L] -log | -cvslog) <file>*
+    to view the change history of the package (or some file(s))
+
+  pkgvm (-modified | -uptodate | -conflicts)
+    to list modified, up-to-date, or conflicting files
+  pkgvm (-status | -stat | -shortstatus | -sstat)
+    to display a comprehensive / short version status of the package
+  pkgvm (-diff | -cdiff | -udiff) [-t <tag1> -t <tag2>] <file>+
+    to view differences between versions of particular/all files
+
+  pkgvm (-annotate | -ann) <file>+
+    to get an annotated listing of one or more files
+
+  pkgvm ( -newcollection | -newcol | -newc ) <pathname>
+    to create a new collection of packages
+  pkgvm ( -newpackage    | -newpkg | -newp ) <package-name>+
+    to create one or more new packages
+  pkgvm [ -c <collection> ] ( -checkout | -co ) <tag> <pkgname>*
+    to checkout a package from the repository for the first time
+
+  pkgvm [-r][-i] (-add | -rm) <file>+
+    to add / remove files to / from the package (recursively)(interactively)
+  pkgvm -vclist
+    to list all files under version control
+
+  pkgvm [-r] (-edit | -lock) <file|dir>*
+    to lock objects subject to strict locking for editing
+
+  pkgvm [-r] (-unedit | -revert) <file|dir>*
+    to unlock objects subject to strict locking and abandon all changes
+
+  pkgvm [-r] -editors  <file|dir>*
+    to list all editors of objects subject to strict locking
+
+  pkgvm [-r] (-strictlocking | -nostrictlocking) <file|dir>*
+    to explicitly enable or disable strict locking
+
+  pkgvm (-man | -desc) 
+    to get a thorough description of all commands and options
+
+  pkgvm -copyright
+    to display the pkgvm copyright
+
+  pkgvm -version
+    to display the pkgvm release version and license number
+
+FILES AND RESOURCES
+
+  ~/.compactrc, ~/compact/compactrc  -- global configuration
+  PkgDesc                            -- package description file
+  pkgconf.cbcl                       -- ComPact backend configuration
+  PkgBase.DefaultData                -- package kind/structure definition

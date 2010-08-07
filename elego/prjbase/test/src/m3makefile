@@ -1,0 +1,12 @@
+
+override("prjbase", "../../..")
+
+import("libm3")
+import("miscutils")
+import("pkg_base")
+import("prjbase")
+
+implementation("Main")
+
+build_standalone()
+program("t_prjm") 

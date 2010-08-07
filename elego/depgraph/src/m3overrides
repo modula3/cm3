@@ -1,0 +1,3 @@
+override("libm3",             ROOT & SL & "m3-libs")
+override("digraph",           ROOT & SL & "m3-libs")
+override("sysutils",          ROOT & SL & "m3-libs")
