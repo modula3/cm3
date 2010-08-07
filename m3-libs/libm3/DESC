@@ -1,4 +1,0 @@
-<p>
-The standard M3 library containing all required interfaces (together with
-m3core). This library needs to be imported by almost any program.
-</p>

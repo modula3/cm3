@@ -1,7 +1,0 @@
-% Makefile for standard input output library SIO.
-
-import ("libm3")
-Interface("SIO")
-include_dir(OS_TYPE)
-Library ("libsio")
-

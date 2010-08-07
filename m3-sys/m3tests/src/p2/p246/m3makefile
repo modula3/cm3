@@ -1,4 +1,0 @@
-m3back_optimize = "-O3"
-implementation("Main")
-build_standalone()
-include ("../../Test.common")

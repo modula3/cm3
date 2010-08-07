@@ -1,7 +1,0 @@
-(* Copyright (C) 1992, Digital Equipment Corporation                         *)
-(* All rights reserved.                                                      *)
-(* See the file COPYRIGHT for a full description.                            *)
-
-
-OUTPUT Init (N,k: INTEGER[Fmt.Int]);
-OUTPUT Set  (x,y,val: INTEGER[Fmt.Int]);

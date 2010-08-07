@@ -1,6 +1,0 @@
-
-import ("libm3")
-interface ("Clib")
-
-implementation ("Unsafe")
-program ("unsafe")

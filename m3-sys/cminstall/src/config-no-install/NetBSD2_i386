@@ -1,9 +1,0 @@
-readonly TARGET = "NetBSD2_i386"
-readonly GNU_PLATFORM = "i686-netbsd" % "cpu-os" string for GNU
-
-SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
-SYSTEM_LD = SYSTEM_CC & " -Wl,-z,now"
-readonly SYSTEM_ASM = "as -32"
-
-include("I386.common")
-include("NetBSD.common")

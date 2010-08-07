@@ -1,2 +1,0 @@
-readonly TARGET_ARCH = "ALPHA64"
-readonly WORD_SIZE = "64BITS"

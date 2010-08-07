@@ -1,3 +1,0 @@
-Branch = "$Name$"
-Branch = subst(Branch, "$Name: ", "", 1)
-Branch = subst(Branch, " $", "", 1)
