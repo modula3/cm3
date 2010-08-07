@@ -218,7 +218,7 @@ fi
 
 SSH="ssh"; export SSH
 if [ "$HOSTNAME" = "current10s" -o "$HOSTNAME" = "current9s" ]; then
-  SSH="ssh login.opencsw.org hudson@ssh birch.elegosoft.com"
+  SSH="ssh login.opencsw.org ssh hudson@birch.elegosoft.com"
 fi
 echo "testing ${SSH} ${CM3CVSSERVER}.."
 if ${SSH} ${CM3CVSSERVER} true; then
