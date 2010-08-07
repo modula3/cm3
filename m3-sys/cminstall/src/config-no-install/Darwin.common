@@ -91,6 +91,7 @@ proc internal_configure_system_lib(name, known, args) is
     SYSTEM_LIBS{name} = args
     return
   end
+  configure_c_compiler()
   if equal(try_exec("echo 'main(){}' | " & SYSTEM_CC & " -x c - -o /dev/null 2>/dev/null", args), 0)
     SYSTEM_LIBS{name} = args
   end
@@ -159,6 +160,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if not equal (ret_code, 0) return ret_code end
 
   if shared
+    configure_c_compiler()
     % build the shared library
     ret_code = try_exec (
         "@" & SYSTEM_CC, "-dynamiclib",
