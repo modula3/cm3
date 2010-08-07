@@ -19,10 +19,10 @@ cd ${WS}/cm3/scripts/regression || {
 
 case "${WS}" in
   *workspace)
-    CM3CG=${WS}/../../cm3-m3cc-${TARGET}/workspace/cm3/m3-sys/m3cc/${TARGET}/cm3cg
+    CM3CG=${WS}/../../cm3-current-m3cc-${TARGET}/workspace/cm3/m3-sys/m3cc/${TARGET}/cm3cg
   ;;
   *)
-    CM3CG=${WS}/../cm3-m3cc-${TARGET}/cm3/m3-sys/m3cc/${TARGET}/cm3cg
+    CM3CG=${WS}/../cm3-current-m3cc-${TARGET}/cm3/m3-sys/m3cc/${TARGET}/cm3cg
   ;;
 esac
 if [ "$CLEAN" = "false" ]; then
