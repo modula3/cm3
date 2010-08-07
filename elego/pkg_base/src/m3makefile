@@ -1,0 +1,16 @@
+
+import("libm3")
+import("sysutils")
+import("patternmatching")
+
+import("fileinfo")
+
+resource("PkgBase.DefaultData")
+bundle("PkgBaseBundle")
+
+Interface("PkgError")
+Module("PkgKindData")
+Table("PkgKindData", "Text", "PkgKindData")
+Module("PkgBase")
+
+Library("pkgbase")

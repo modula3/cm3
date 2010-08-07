@@ -1,0 +1,4 @@
+override("libm3",             ROOT & SL & "m3-libs")
+override("parseparams",       ROOT & SL & "m3-libs")
+override("sysutils",          ROOT & SL & "m3-libs")
+override("m3makefile",        ROOT & SL & "elego")

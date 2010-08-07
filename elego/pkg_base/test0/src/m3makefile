@@ -1,0 +1,12 @@
+
+override("pkg_base", "../../..")
+
+import("libm3")
+import("pkg_base")
+import("parseparams")
+
+build_standalone()
+
+implementation("Main")
+Program("t_base")
+

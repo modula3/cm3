@@ -1,0 +1,8 @@
+
+import("libm3")
+import("m3quake")
+import("sysutils")
+
+Module("M3makefile")
+
+Library("m3makefile")

@@ -1,0 +1,420 @@
+
+SYNTAX
+
+  pkgvm [gopt] ( -help | -h | -man | -desc)
+        [gopt] -version
+        [gopt] ( -copyright | -cr )
+        [gopt] ( -newcollection | -newcol | -newc ) <pathname>
+        [gopt] ( -newpackage    | -newpkg | -newp ) <package-name>
+        [gopt] [ -c <collection> ] ( -checkout | -co ) <tag> <pkgname>*
+        [gopt] ( -update | -up ) <tag>
+        [gopt] -merge <tag1> [<tag2>]
+        [gopt] [-TRL|-TR|-TL|-RL|-T|-R|-L] -log <file>*
+        [gopt] -cvslog <file>*
+        [gopt] -diff  [-t <tag1> -t <tag2>] <file>+
+        [gopt] -cdiff [-t <tag1> -t <tag2>] <file>+
+        [gopt] -udiff [-t <tag1> -t <tag2>] <file>+
+        [gopt] -annotate <file>+
+        [gopt] [copt] ( -commit  | -ci )  ( major | minor | patch )
+        [gopt] [copt] ( -release | -rel ) ( major | minor | patch )
+        [gopt] [ropt] [iopt] [bopt] ( -addfile | -add ) <file>+
+        [gopt] [ropt] [iopt] ( -remove  | -rm ) <file>+
+        [gopt] [ -branch | -b ] -tag <tag>
+        [gopt] ( -vclist            | -vcl )
+        [gopt] ( -uptodate          | -utd )
+        [gopt] ( -modified          | -mod )
+        [gopt] ( -conflicts         | -con )
+        [gopt] ( -showtags          | -tags ) [ tag-prefix ]
+        [gopt] ( -isrelease         | -isrel )
+        [gopt] ( -isreleasebranch   | -isrelb | -irb )
+        [gopy] ( -currenttag        | -ct )
+        [gopt] ( -lastreleasetag    | -lrt    | -lastreleasebranch | -lrb )
+        [gopt] ( -currentstickytags | -cst )
+        [gopt] ( -currentreleasetag | -crt )
+        [gopt] ( -lastdeveltag      | -ldt    | -currentdeveltag   | -cdt )
+        [gopt] ( -nextreleasetag    | -nrt ) ( major | minor | patch )
+        [gopt] ( -nextdeveltag      | -ndt ) ( major | minor | patch )
+        [gopt] ( -status      | -stat )
+        [gopt] ( -shortstatus | -sstat )
+        [gopt] ( -listlabels  | -labels )
+        [gopt] ( -listlabel   | -getlabel ) [ <tag> ]
+        [gopt] ( -label       | -setlabel ) <tag> <label>
+        [gopt] [ropt] ( -edit            | -lock ) <file|dir>*
+        [gopt] [ropt] ( -unedit          | -revert ) <file|dir>*
+        [gopt] [ropt] ( -showeditors     | -editors ) <file|dir>*
+        [gopt] [ropt] ( -strictlocking   | -strict ) <file|dir>*
+        [gopt] [ropt] ( -nostrictlocking | -nostrict ) <file|dir>*
+
+  gopt ::= -v | -q | -n | -l  ; verbose | quite | no action | long list
+        |  -usegui | -nostdin ; don't use stdin for confirmations
+
+  copt ::= ( -message | -msg | -m )  "log message"
+        |  ( -file    | -f )         file-containing-log-message
+
+  ropt ::= -recursive | -r
+
+  iopt ::= -interactive | -i
+
+  bopt ::= -binary | -bin
+
+SEMANTICS
+
+  Pkgvm is the standalone version manager of Elego ComPact for
+  C/C++/Modula-3 and other software packages. It implements all the
+  procedures needed for the development and maintenance of software
+  packages by a group of developers.
+  
+  Pkgvm automatically detects the root directory of a software package and
+  its name (by trying to locate an m3makefile or PkgDesc file). It then
+  applies version control actions to the whole package as one entity.
+  Conceptually, pkgvm is independent of the underlying version control
+  system (if certain requirements are fulfilled). Currently, only CVS
+  is supported (more version control systems will be supported in 
+  future releases).
+
+  --- DEVELOPMENT MODEL ---
+
+  Pkgvm uses `tags' to label all revisions of all elements of a package
+  that together form releases or development snapshots. Theses tags are
+  of the form
+
+    devel_<pkgname>_<major>_<minor>_<patchlevel>
+    release_<pkgname>_<major>_<minor>_<patchlevel>
+    release_<pkgname>_<major>_<minor>_stable
+
+  The tag `head' always refers to the head of the main development
+  trunk. There are some more special tag names:
+    top,
+    topoftrunk,
+    headoftrunk,
+    top-of-trunk,
+    head-of-trunk         = top of development trunk (= head)
+
+    tip,
+    tipofbranch,
+    tip-of-branch,
+    headofbranch,
+    head-of-branch        = tip of the current release branch 
+                            (if the package is checkd out on one)
+    lasttip,
+    last-tip,
+    latesttip,
+    latest-tip,
+    lastreleasebranch,
+    last-release-branch,
+    latestreleasebranch,
+    latest-release-branch = tip of the latest release branch
+ 
+  Additionally, the following tags are reserved for future version
+  control purposes:
+
+    alpha_<pkgname>_<major>_<minor>_<patchlevel>
+    beta_<pkgname>_<major>_<minor>_<patchlevel>
+    gamma_<pkgname>_<major>_<minor>_<patchlevel>
+    alpha_<pkgname>
+    beta_<pkgname>
+    gamma_<pkgname>
+
+  Several threads of tags form the ordinary development history.
+  Development tags are used to label important development phases,
+  release tags and stable release branches are used to label ongoing
+  work on releases:
+
+    devel_pkg_0_0_0
+           |
+           V
+    devel_pkg_0_0_1
+           |
+           V
+    devel_pkg_0_0_2
+           |
+           V
+    devel_pkg_0_1_0
+           |
+           V
+    devel_pkg_0_1_1
+           |
+           V
+    devel_pkg_0_2_0
+           |
+           V
+    devel_pkg_0_2_1 = release_pkg_0_1_0 
+           |            -> release_pkg_0_1_1 
+           |               -> release_pkg_0_1_2
+           |                  = release_pkg_0_1_stable (tip)
+           V
+    devel_pkg_0_3_0
+           |
+           V
+    devel_pkg_0_3_1
+           |
+           V
+    devel_pkg_0_3_2
+           |
+           V
+    devel_pkg_0_3_3 = release_pkg_1_0_0 
+           |            -> release_pkg_1_0_1
+           |               = release_pkg_1_0_stable = lasttip (tip)
+           V
+          head
+
+  --- LOCKING ---
+
+  Elego ComPact basically features free concurrent development for all
+  mergeable files, which means that files are not locked while
+  somebody is working on them in her/his workspace. Experience shows
+  that serious conflicts arise very rarely, and most conflicts can be
+  easily solved. As this is not true for binary and other non-mergable
+  files, Elego ComPact now defaults to strict locking for all files
+  that have been checked-in as `binary'. Additionally, any other files
+  or directories can be subjected to strict locking explicitly telling
+  ComPact to do so.
+
+  All files which are subject to strict locking are checked-out
+  without write permissions, and may only be changed after the `edit'
+  or `lock' command. The `commit' and `release' commands will clear
+  the lock and again set the file readonly. Changes can also be
+  abandoned by using `revert' or `unedit'.
+
+  The locking behaviour can be controlled by the configuration
+  variable `vc-locking' in the compactrc file, which may be set to
+  one of the following values: none|lazy, binary|default, all|strict.
+
+  --- COMMANDS ---
+
+  The following commands may be used to manage the versioning of
+  software packages:
+
+   -newcollection
+     create a new (empty) `collection' of packages, that is a new 
+     directory to contain packages under version control
+
+   -newpackage     
+     create a new empty package inside an existing collection.
+     This package has the following structure:
+      <package-name>/src             sub-directory for sources
+                    /PkgTags         empty tags file
+
+     To create other kinds of packages you must use the
+     comprehensive package manager pkgm.
+
+   -checkout 
+     checkout one ore more packages from the CVS repository. 
+     The package names on the command line are relative to the
+     environment variable PRJ_ROOT if no collection is specified
+     on the command line. <tag> may have the special value `head'.
+     If only a tag and a collection are specified on the command line
+     but no package, the whole collection is checked out.
+
+   -update <tag>
+     All changes made to the repository on the currently checked-out branch
+     since the last update are merged into the local workspace for the
+     package. <tag> may have the special value `head'.
+
+   -merge <tag1> [<tag2>]
+     (1) Merge in all new changes from the release branch identified by tag
+         <tag1>. Tag the new merge point with a merge tag for the next
+         merge from this branch.
+     (2) Merge the differences between versions identified by <tag1>
+         and <tag2> into the current workspace.
+
+   -log <file>*
+     Show the package log, i.e. all commit and release messages
+     of the package. Additional log options: any combination of
+     T (tags, header), R (revisions), L (log message)
+
+   -cvslog <file>*
+     Show the original CVS log.
+
+   -diff  [<tag1> <tag2>]
+   -cdiff [<tag1> <tag2>]
+   -udiff [<tag1> <tag2>]
+     Produce a diff-listing either between the checked-out version and
+     the local workspace or between versions identified by <tag1> and
+     <tag2>. Cdiff produces a context diff, udiff a unified context diff.
+
+   -annotate <file>+
+     Produce an annotated listing of one or more files, which
+     states the origin of every line of the file(s).
+
+   -commit ( major | minor | patch )
+     If the whole package is up-to-date, then all local additions, changes,
+     removals are committed to the repository. After a successful commit,
+     a development tag is put onto the whole package.
+
+   -release ( major | minor | patch )
+     If the whole package is up-to-date, then all local additions, changes,
+     removals are committed to the repository. After a successful commit,
+     a release tag is put onto the whole package.
+     If the commit is a new major or minor release, a new stable release
+     branch is created. If it is a patch to an existing release, this
+     patch will be committed to a stable release branch.
+
+   -add <file>+
+     Add the given files or directories to the CVS repository. Objects
+     named `CVS' are always ignored. If -r is specified, all directories
+     will be inspected recursively for elements to add. If -i is
+     specified, the user will be asked for confirmation before each 
+     addition takes place.
+
+   -remove <file>+
+     Remove the given files or directories from the CVS repository and from 
+     the local workspace. Objects named `CVS' are always ignored. Directories
+     are not actually removed, since this cannot be done using CVS.
+     If -r is specified, all directories will be inspected recursively for 
+     elements to be removed. If -i is specified, the user will be asked 
+     for confirmation before each removal takes place.
+
+   -tag <tag>
+     Put the given `tag' on all elements of the package. `Tag' must be
+     of an approved form and it must not exist on any element of the
+     package.
+
+   -edit <file|dir>*
+   -lock <file|dir>*
+     Lock a file subject to strict locking and make it writable for
+     editing. If no file is given, all files in the package are locked.
+     If any file or directory is given, only the specified objects are
+     concerned and recursion must be explicitly requested with the -r
+     option. The lock will be removed by the -commit, -release, and
+     -revert commands. -edit also tries to call an appropriate editor
+     based on the settings of the httpd-editor-EXT, httpd-editor, 
+     editor variables in compactrc and the filename-editor-mapping.
+
+   -unedit <file|dir>*
+   -revert <file|dir>*
+     Unlock a file subject to strict locking, revert all local
+     modifications, and make it readonly again.
+     If no file is given, all files in the package are reverted.
+     If any file or directory is given, only the specified objects are
+     concerned and recursion must be explicitly requested with the -r
+     option. 
+
+   -editors <file|dir>*
+     Show a list of all users who have locked the specified object(s)
+     for editing. If only one object is concerned and noone has
+     bypassed the Elego ComPact locking mechanism, the result will be
+     no or exactly one user.
+     The same files as explained for the -edit and -revert commands
+     are concerned.
+
+   -strictlocking <file|dir>*
+     Make the specified files and directories subject to strict
+     locking, i.e. they will be checked out readonly until explicitly
+     locked for editing. 
+     The same files as explained for the -edit and -revert commands
+     are concerned.
+
+   -nostrictlocking <file|dir>*
+     Make the specified files and directories subject to lazy
+     locking, i.e. they will always be writable by anyone.
+     The same files as explained for the -edit and -revert commands
+     are concerned.
+
+  The following commands produce information about the current state
+  of the software package:
+
+   -vclist
+     List all files known to be under version control.
+
+   -modified
+     Exits TRUE (0) if no elements of the local workspace are modified
+     compared to the repository, FALSE else.
+     List all modified, added, removed, conflicting, and unknown elements
+     on stdout.
+
+   -uptodate
+     Exits TRUE (0) if all elements of the local workspace are up-to-date
+     compared to the repository, FALSE else.
+     List all modified, added, removed, conflicting, and unknown elements
+     on stdout.
+
+   -conflicts
+     Exits TRUE (0) if any elements of the local workspace are in conflict
+     with the repository, FALSE else.
+     List all modified, added, removed, conflicting, and unknown elements
+     on stdout.
+
+   -isrelease
+     Exits TRUE (0) if the local package is checked out as a release.
+     The appropriate tag is written to stdout.
+
+   -isreleasebranch
+     Exits TRUE (0) if the local package is checked out on a release
+     branch. The appropriate tag is written to stdout.
+
+   -lastreleasetag, -lastreleasebranch
+     Write the tag of the last release branch to stdout.
+
+   -nextreleasetag ( major | minor | patch )
+     Write the corresponding next release tag to stdout.
+
+   -nextdeveltag ( major | minor | patch )
+     Write the corresponding next development tag to stdout.
+
+   -tags [ <prefix> ]
+     List all tags of the current package that begin with `prefix', if
+     given, all tags by default.
+
+   -currentstickytags
+     List the sticky tags the package is checked out with.
+
+   -currentreleasetag
+     Show the release tag the package is checked out with.
+
+   -lastdeveltag, -currentdeveltag
+     Show the last used (current) development tag.
+
+   -currenttag
+     Write the current tag of the package, which is either
+      (a) a release branch tag (b) a sticky release tag
+      (c) any other sticky tag, like an old development tag or
+      (d) the current development tag.
+
+   -stat
+     Show a summary of all of the above.
+
+  Finally, the following commands display some information about
+  the pkgvm program:
+
+   -version
+     Display the pkgvm release version and license number.
+
+   -copyright
+     Display copyright information.
+
+  --- VERSION CONTROL CONFIGURATION SETTINGS ---
+
+  The following variables from the compactrc file are evaluated by the
+  version control backend:
+
+  editor          "path to your preferred editor"
+  repository      "[:method:][user@]hostname:/path/to/repository"
+  cvspath         "/path/to/cvs"
+  user            "username override"
+  vc-ignore       "*~ *.bak *.obj *.o *.a"
+  vc-options      "prune|noprune|create|nocreate"
+  vc-locking      "none|lazy|binary|default|all|strict"
+
+  --- INITIALIZATION AND RESOURCES ---
+
+  The version manager reads the same global `compactrc' configuration
+  resources as the package manager `pkgm'. To learn more about the
+  process of locating and evaluating these resources, type `pkgm
+  -man'. 
+
+BUGS
+
+ o Creating new packages is implemented in a very simple way in pkgvm.
+   You must use pkgm to create packages of different kinds.
+
+ o Probably many more.
+
+VERSION
+
+ This manual describes the pkgvm tool as provided in Elego ComPact
+ Release 1.2.
+
+ To obtain the release version and license number of the pkgvm
+ program, please run the command "pkgvm -version".
+

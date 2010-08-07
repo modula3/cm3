@@ -1,0 +1,15 @@
+
+include(".." & SL & ".." & SL & "quake.elego")
+
+import("libm3")
+import("parseparams")
+
+%import("m3fix")
+import("sysutils")
+import("m3makefile")
+
+implementation("Main")
+creation_date_module("Creation")
+
+Program("m3ovr")
+

@@ -1,0 +1,23 @@
+
+collectionroot ${PRJ_ROOT}
+collection libs at m3libs
+collection progs at m3progs
+
+package  pkg_base	        in libs
+package  pkgversions    	in libs
+package  prjbase	        in libs
+package  miscutils      	in libs
+package  depgraph	        in libs
+package  m3tkutils      	in libs
+package  fileinfo       	in libs
+package  pkgconf	        in libs
+package  regex	        	in libs
+package  tuple		        in libs
+package  compactrc	        in libs
+package  compact-copyright	in libs
+package  m3fix		        in libs
+package  filepool	        in libs
+package  pkg_vc		        in libs
+package  prjm		        in progs
+
+

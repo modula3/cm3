@@ -1,0 +1,13 @@
+
+import("libm3")
+import("sysutils")
+
+Module("Version")
+Sequence("Version", "Version")
+
+Module("Tag")
+Sequence("Tag", "Tag")
+
+Module("TagSort")
+
+Library("pkgversions")

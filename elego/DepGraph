@@ -1,0 +1,133 @@
+phony rsrcservice
+rsrcservice: sysutils vbtkit netobj libm3
+	no_action
+
+phony compactrc
+compactrc: compact-client langutils sysutils tuple patternmatching vbtkit m3quake libm3
+	no_action
+
+phony compact-copyright
+compact-copyright: pkgversions sysutils libm3
+	no_action
+
+phony pkg_base
+pkg_base: fileinfo patternmatching sysutils libm3
+	no_action
+
+phony pkgvm
+pkgvm: compact-copyright compactrc pkg_vc pkgversions fileinfo graphicutils sysutils vbtkit parseparams libm3
+	no_action
+
+node sysutils
+sysutils:
+	no_action
+
+phony prjbase
+prjbase: depgraph pkg_vc pkg_base filepool sysutils m3quake libm3
+	no_action
+
+node netobj
+netobj:
+	no_action
+
+phony pkgversions
+pkgversions: sysutils libm3
+	no_action
+
+phony prjm
+prjm: compact-copyright prjbase compactrc pkg_base graphicutils miniscan sysutils vbtkit digraph parseparams libm3
+	no_action
+
+phony m3msh
+m3msh: compact-copyright graphicutils sysutils patternmatching vbtkit parseparams libm3
+	no_action
+
+phony fileinfo
+fileinfo: fsfind sysutils m3quake libm3
+	no_action
+
+phony tuple
+tuple: libm3
+	no_action
+
+phony graphicutils
+graphicutils: sysutils vbtkit libm3
+	no_action
+
+node set
+set:
+	no_action
+
+node vbtkit
+vbtkit:
+	no_action
+
+phony m3dir
+m3dir: sysutils parseparams libm3
+	no_action
+
+phony m3ovr
+m3ovr: m3makefile sysutils parseparams libm3
+	no_action
+
+phony fsfind
+fsfind: miniscan sysutils patternmatching libm3
+	no_action
+
+phony m3makefile
+m3makefile: sysutils m3quake libm3
+	no_action
+
+node libm3
+libm3:
+	no_action
+
+phony filepool
+filepool: patternmatching sysutils libm3
+	no_action
+
+node patternmatching
+patternmatching:
+	no_action
+
+node parseparams
+parseparams:
+	no_action
+
+phony compact-client
+compact-client: rsrcservice sysutils netobj libm3
+	no_action
+
+phony pkg_vc
+pkg_vc: compactrc pkgversions sysutils fileinfo m3quake libm3
+	no_action
+
+phony m3err
+m3err: sysutils libm3
+	no_action
+
+phony miniscan
+miniscan: sysutils set libm3
+	no_action
+
+phony langutils
+langutils: sysutils libm3
+	no_action
+
+phony depgraph
+depgraph: sysutils digraph libm3
+	no_action
+
+node m3quake
+m3quake:
+	no_action
+
+phony m3dep
+m3dep: m3makefile sysutils libm3
+	no_action
+
+node digraph
+digraph:
+	no_action
+
+eof

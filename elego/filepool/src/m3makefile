@@ -1,0 +1,8 @@
+
+import("libm3")
+import("sysutils")
+import("patternmatching")
+
+Module("FilePool")
+
+Library("filepool")

@@ -1,0 +1,6 @@
+import ("libm3")
+import ("fileinfo")
+
+implementation ("Main")
+build_standalone()
+program ("FileInfoTest")

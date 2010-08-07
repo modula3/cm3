@@ -1,0 +1,14 @@
+import("libm3")
+
+import("patternmatching")
+import("sysutils")
+import("miniscan")
+
+Interface("FSFindError")
+Module("FindExpr")
+Module("FindExecRec")
+Module("FSFind")
+Module("FileClassification")
+Sequence("FindExpr", "FindExpr")
+
+Library("fsfind")

@@ -1,0 +1,29 @@
+Some Useful Things to Know
+==========================
+
+The situation concerning the various compactrc files is very
+ugly.
+
+The compactrc in this directory is the one that is used for
+configuration purposes by the compact-install program. It ends
+up with all SUBSTITUTES! replaced with default values in
+$COMPACTROOT/config/compactrc, and should be the site-default,
+but can be overridden by the user's ~/.compactrc or 
+~/compact/compactrc file.
+
+The file compactrc.default in this directory is usually moved 
+into the config-unix and config-win32 example configuration
+directories in the staging area. It is never read by any ComPact
+program. Why it is there at all is not clear to me currently.
+
+The real compactrc file read if none other is found is the one
+that is bundled with the ComPact programs, and comes from
+m3libs/pkg_global/src/compactrc. As the contents of the latter
+file where somewhat minimalistic and very out-of-date, I have
+copied the current compact.default over it, in order to provide
+some reasonable defaults (using the COMPACTROOT variable).
+
+If the current structure persists, this will have to be done
+for every configuration change or extension of ComPact.
+
+SNAFU
