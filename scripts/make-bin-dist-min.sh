@@ -24,11 +24,12 @@ fi
 STAGE="${STAGE:-${TMPDIR}}"
 [ -d "${STAGE}" ] || mkdir "${STAGE}" || mkdir -p "${STAGE}" || exit 1
 INSTALLROOT="${STAGE}/cm3"
-DIST="${DIST:-std}" # may be min, core, std, all
+DIST="${DIST:-core}" # may be min, core, std, all
 header "building CM3 installation in ${INSTALLROOT}"
 NOCLEAN=${NOCLEAN:-""}
 
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
+BF=`build_platform`
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
@@ -124,7 +125,7 @@ echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal
 #-----------------------------------------------------------------------------
 # build binary distribution archives
 ARCHIVE1="system.tgz"
-ARCHIVE2="cm3-bin-${DIST}-${TARGET}-${CM3VERSION}-${DS}.tgz"
+ARCHIVE2="cm3-bin-${DIST}-${TARGET}-${CM3VERSION}-${BF}-${DS}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
 ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
 DUSK="du-sk"

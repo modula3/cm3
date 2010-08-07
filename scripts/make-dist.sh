@@ -50,6 +50,7 @@ fi
 
 #DS=${DS:-"RC4"}; export DS
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}; export DS
+BF=`build_platform`
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
@@ -360,7 +361,7 @@ EOF
     echo "</body></html>"
   ) > collection-${c}.html
   echo "collection-${c}.html"
-  ARCHIVE="${STAGE}/cm3-bin-ws-${c}-${TARGET}-${CM3VERSION}-${DS}.tgz"
+  ARCHIVE="${STAGE}/cm3-bin-ws-${c}-${TARGET}-${CM3VERSION}-${BF}-${DS}.tgz"
   if [ -z "${NOARCHIVE}" -a "${c}" != "min" ]; then
     "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
@@ -379,10 +380,10 @@ rm -rf $STAGE/usr/local/cm3
 if type python; then
   if [ "x$TARGET" = "xNT386" ]; then
     python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
-    mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-$DS.msi"
+    mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-${BF}-${DS}.msi"
   else
     python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
-    mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
+    mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-${BF}-${DS}.deb"
   fi
 else
   echo "python not available, skipping .msi and .deb creation"
@@ -392,12 +393,12 @@ echo "hostname=`hostname`"
 echo "SHIPRC=$SHIPRC"
 
 if [ `hostname` = 'birch' ]; then
-  ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
+  ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${BF}-${DS}.tgz"
   "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
     -czf "${ARCHIVE}" scripts
   ls -l "${ARCHIVE}"
 
-  ARCHIVE="${STAGE}/cm3-doc-${CM3VERSION}-${DS}.tgz"
+  ARCHIVE="${STAGE}/cm3-doc-${CM3VERSION}-${BF}-${DS}.tgz"
   "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
     -czf "${ARCHIVE}" doc www
   ls -l "${ARCHIVE}"
@@ -411,12 +412,12 @@ if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
     fi
   fi
   false; while [ $? != 0 ]; do
-    $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    $RSYNC ${STAGE}/cm3-*-${BF}-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   done
   for ext in msi deb; do
-    if [ -r "$STAGE/cm3-$TARGET-$DS.$ext" ]; then
+    if [ -r "$STAGE/cm3-$TARGET-${BF}-${DS}.$ext" ]; then
       false; while [ $? != 0 ]; do
-        $RSYNC "$STAGE/cm3-$TARGET-$DS.$ext" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+        $RSYNC "$STAGE/cm3-$TARGET-${BF}-${DS}.$ext" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
       done
     fi
   done

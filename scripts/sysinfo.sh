@@ -109,6 +109,19 @@ find_in_list() {
 }
 
 #-----------------------------------------------------------------------------
+build_platform() {
+  if [ -z "${BUILD_PLATFORM}" ]; then
+    if [ -x ${ROOT}/m3-sys/m3cc/gcc/config.guess ]; then
+      BUILD_PLATFORM=`${ROOT}/m3-sys/m3cc/gcc/config.guess`
+    else
+      BUILD_PLATFORM="`uname -p`-unknown-`uname -s``uname -r`"
+    fi
+  fi
+  export BUILD_PLATFORM
+  echo "${BUILD_PLATFORM}"
+}
+
+#-----------------------------------------------------------------------------
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
