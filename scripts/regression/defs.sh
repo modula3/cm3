@@ -217,10 +217,10 @@ else
 fi
 
 SSH="ssh"; export SSH
-if [ "$HOSTNAME" = "current10s" -o "$HOSTNAME" = "current9s" ]; then
+if [ "$TESTHOSTNAME" = "current10s" -o "$TESTHOSTNAME" = "current9s" ]; then
   SSH="ssh login.opencsw.org ssh -l hudson"
 fi
-echo "testing ${SSH} ${CM3CVSSERVER}.."
+echo "testing ${SSH} ${CM3CVSSERVER}..."
 if ${SSH} ${CM3CVSSERVER} true; then
   echo "${SSH} ${CM3CVSSERVER} ok"
   true
