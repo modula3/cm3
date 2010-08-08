@@ -61,10 +61,14 @@ test_build_system || {
 }
 
 if [ "$BUILD_SNAPSHOT" = "true" ]; then
-  DIST=core test_make_bin_dist
+  cd ${WS}/cm3/scripts/ || exit 1
+  . ./sysinfo.sh
+  STAGE=${HOME}/${TESTHOSTNAME}/stage
+  DIST=core
+  export STAGE DIST
+  mkdir -p ${STAGE}
+  test_make_bin_dist
 else
   true
 fi
-
-
 
