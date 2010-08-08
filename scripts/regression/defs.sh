@@ -571,6 +571,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
 
 test_build_system()
 {
+set -x
   cm3config ${INSTROOT_CUR}
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
@@ -578,7 +579,6 @@ test_build_system()
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
-set -x
   if type cm3; then
     cm3 -version
   else
