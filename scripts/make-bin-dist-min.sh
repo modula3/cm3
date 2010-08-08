@@ -153,7 +153,11 @@ if [ -n "${DOSHIP}" ]; then
   fi
   WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
-  scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
+  if type ship_www; then
+    ship_www "${ABSARCH2}" cm3/snaps
+  else
+    scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
+  fi
 fi
 if [ -z "${NOCLEAN}" ]; then
   echo "cleaning up"
