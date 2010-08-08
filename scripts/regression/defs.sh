@@ -578,6 +578,7 @@ test_build_system()
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
+set -x
   if type cm3; then
     cm3 -version
   else
@@ -589,7 +590,7 @@ test_build_system()
   if cd "${WS}/cm3"; then
     true
   else
-    echo "cannot cd to ${WS}/cm3" 1>2
+    echo "cannot cd to ${WS}/cm3" 1>&2
     exit 1
   fi
 
