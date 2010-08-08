@@ -60,3 +60,11 @@ test_build_system || {
   exit 1
 }
 
+if [ "$BUILD_SNAPSHOT" = "true" ]; then
+  DIST=core test_make_bin_dist
+else
+  true
+fi
+
+
+
