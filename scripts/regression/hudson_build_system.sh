@@ -55,6 +55,8 @@ if [ ! -d "${INSTROOT_CUR}" ]; then
 fi
 
 export TMPDIR=${WS}
+type test_build_system
+
 test_build_system || {
   echo "test_build_system failed" 1>&2
   exit 1
