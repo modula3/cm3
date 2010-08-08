@@ -61,8 +61,11 @@ test_build_system || {
 }
 
 if [ "$BUILD_SNAPSHOT" = "true" ]; then
+  # debug
+  type cygpath
+  type header
+  set -x
   cd ${WS}/cm3/scripts/ || exit 1
-  . ./sysinfo.sh
   STAGE=${HOME}/${TESTHOSTNAME}/stage
   DIST=core
   export STAGE DIST
