@@ -261,7 +261,7 @@ if [ ! -d "${HTMP}" ]; then
   if mkdir -p "${HTMP}"; then
     true
   else
-    echo "cannot mkdir -p ${HTMP}" 1>2
+    echo "cannot mkdir -p ${HTMP}" 1>&2
     exit 1
   fi
 fi
@@ -322,11 +322,11 @@ cm3config() {
     if perl -p -i -e 's;^INSTALL_ROOT[ \t]*=.*$;INSTALL_ROOT = "'${R}${SL}'";' "$f";
       then true
     else
-      echo "INSTALL_ROOT substitution failed for ${f}" 1>2
+      echo "INSTALL_ROOT substitution failed for ${f}" 1>&2
       exit 1
     fi
   else
-    echo "no cm3 installation in $1" 1>2
+    echo "no cm3 installation in $1" 1>&2
     exit 1
   fi
   # Repair missing config files.
@@ -493,7 +493,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   if cd "${WS}/cm3"; then
     true
   else
-    echo "cannot cd to ${WS}/cm3" 1>2
+    echo "cannot cd to ${WS}/cm3" 1>&2
     exit 1
   fi
 
@@ -571,7 +571,6 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
 
 test_build_system()
 {
-set -x
   cm3config ${INSTROOT_CUR}
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
@@ -724,7 +723,7 @@ test_make_bin_dist()
   if cd "${WS}/cm3"; then
     true
   else
-    echo "cannot cd to ${WS}/cm3" 1>2
+    echo "cannot cd to ${WS}/cm3" 1>&2
     exit 1
   fi
 
@@ -742,7 +741,7 @@ make_src_dist_snapshots()
   if cd "${WS}/cm3"; then
     true
   else
-    echo "cannot cd to ${WS}/cm3" 1>2
+    echo "cannot cd to ${WS}/cm3" 1>&2
     exit 1
   fi
 
@@ -780,7 +779,7 @@ test_m3tests()
   if cd "${WS}/cm3"; then
     true
   else
-    echo "cannot cd to ${WS}/cm3" 1>2
+    echo "cannot cd to ${WS}/cm3" 1>&2
     exit 1
   fi
 
@@ -840,7 +839,7 @@ test_m3_all_pkgs()
   if cd "${WS}/cm3"; then
     true
   else
-    echo "cannot cd to ${WS}/cm3" 1>2
+    echo "cannot cd to ${WS}/cm3" 1>&2
     exit 1
   fi
 
@@ -881,7 +880,7 @@ test_m3tohtml()
   if cd "${WS}/cm3/m3-tools/m3tohtml"; then
     true
   else
-    echo "cannot cd to ${WS}/cm3/m3-tools/m3tohtml" 1>2
+    echo "cannot cd to ${WS}/cm3/m3-tools/m3tohtml" 1>&2
     exit 1
   fi
 
