@@ -143,6 +143,7 @@ strip_exe "${STAGE}/cminstall${EXE}"
 cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
 echo "creating distribution archive ${ABSARCH2}"
 ${TAR} -C "${STAGE}" -czf ${ABSARCH2} ${INSTDATA} || exit 1
+chmod 664 "${ABSARCH2}"
 ls -l "${ABSARCH2}"
 
 if [ -n "${DOSHIP}" ]; then
@@ -154,6 +155,7 @@ if [ -n "${DOSHIP}" ]; then
   WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
   if type ship_www; then
+    echo "ship_www ${ABSARCH2} cm3/snaps"
     ship_www "${ABSARCH2}" cm3/snaps
   else
     scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
