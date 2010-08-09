@@ -55,7 +55,6 @@ if [ ! -d "${INSTROOT_CUR}" ]; then
 fi
 
 export TMPDIR=${WS}
-type test_build_system
 
 test_build_system || {
   echo "test_build_system failed" 1>&2
@@ -64,13 +63,12 @@ test_build_system || {
 
 if [ "$BUILD_SNAPSHOT" = "true" ]; then
   # debug
-  type cygpath
-  type header
   set -x
   cd ${WS}/cm3/scripts/ || exit 1
   STAGE=${HOME}/${TESTHOSTNAME}/stage
   DIST=core
-  export STAGE DIST
+  NOCLEAN=
+  export STAGE DIST NOCLEAN
   mkdir -p ${STAGE}
   test_make_bin_dist
 else

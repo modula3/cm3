@@ -231,7 +231,7 @@ if [ "$TESTHOSTNAME" = "current10s" -o "$TESTHOSTNAME" = "current9s" -o \
       echo "$1 not readable" 1>&2
       return 1
     fi
-    ssh login.opencsw.org scp "$1" "${WWWDEST}" < /dev/null
+    ssh login.opencsw.org scp "$1" "hudson@${WWWDEST}" < /dev/null
   }
 else
   ship_www() {
