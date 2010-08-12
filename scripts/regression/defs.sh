@@ -49,7 +49,7 @@ DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 WS=${WS:-${HOME}/work/cm3-ws/${TESTHOSTNAME}-${DS}}
 
 # version to check out from repository (usually the main trunk's head)
-COVERSION=${COVERSION:-"-d -A -P"} # version to checkout, default current
+COVERSION=${COVERSION:-"-AP"} # version to checkout, default current
 
 # CMINSTALL: set this to override the installer binary (full path)
 # NOCLEAN: set to avoid cleaning for re-starts
