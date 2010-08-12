@@ -22,6 +22,7 @@ end
 
 diff = "@-diff -u -b"
 diff_slash = "/"
+rmrec = "@rm -rf"
 head = "| head -30"
 
 Solaris = FALSE
@@ -36,6 +37,7 @@ if equal ($OS, "Windows_NT")
     head = ""
   end
   BcOk = FALSE
+  rmrec = "@delete /r" % not sure about this, may need to be changed
 else
   Solaris = equal(q_exec_get("uname")[1], "SunOS\n")
   BcOk = not Solaris
@@ -378,7 +380,8 @@ cm3opts = ""
 runopts = ""
 
 readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is  local dir = "../src/" & group & "/" & uid
-  fs_rmrec (dir & "/" & BUILD_DIR)
+  %fs_rmrec (dir & "/" & BUILD_DIR) % currently broken
+  exec (rmrec & " " & dir & diff_slash & BUILD_DIR)
   if DATE
     tstart = compress (q_exec_get (DATE & " '+%s'")[1]) % second resolution only
     %write (tstart, CR)
@@ -503,7 +506,8 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
 
     if not keep
       %exec ("ls -al", dir & "/" & BUILD_DIR)
-      fs_rmrec (dir & "/" & BUILD_DIR)
+      % fs_rmrec (dir & "/" & BUILD_DIR) % currently broken
+      exec (rmrec & " " & dir & diff_slash & BUILD_DIR)
     end
   end
 end
