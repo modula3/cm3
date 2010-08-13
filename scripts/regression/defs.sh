@@ -894,7 +894,7 @@ test_m3tohtml()
   res=$?
   
   if [ 0 = "${res}" ]; then
-    if [ "${TESTHOSTNAME}" = "birch.elegosoft.com" ]; then
+    if [ "${TESTHOSTNAME}" = "birch.elegosoft.com" -a `who -m | cut -d ' ' -f1` = "m3" ]; then
       if [ `who -m | cut -d ' ' -f1` = "m3" ]; then
         DOCDEST=/var/www/modula3.elegosoft.com/cm3/doc/help/gen_html
         if [ -d "${DOCDEST}" ]; then
