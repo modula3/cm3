@@ -37,7 +37,7 @@ if equal ($OS, "Windows_NT")
     head = ""
   end
   BcOk = FALSE
-  rmrec = "@delete /r" % not sure about this, may need to be changed
+  rmrec = "@rmdir /r/s" % not sure about this, may need to be changed
 else
   Solaris = equal(q_exec_get("uname")[1], "SunOS\n")
   BcOk = not Solaris
@@ -381,7 +381,7 @@ runopts = ""
 
 readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is  local dir = "../src/" & group & "/" & uid
   %fs_rmrec (dir & "/" & BUILD_DIR) % currently broken
-  exec (rmrec & " " & dir & diff_slash & BUILD_DIR)
+  exec (rmrec & " " & subst_chars (dir, "/", diff_slash) & diff_slash & BUILD_DIR)
   if DATE
     tstart = compress (q_exec_get (DATE & " '+%s'")[1]) % second resolution only
     %write (tstart, CR)
@@ -507,7 +507,7 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     if not keep
       %exec ("ls -al", dir & "/" & BUILD_DIR)
       % fs_rmrec (dir & "/" & BUILD_DIR) % currently broken
-      exec (rmrec & " " & dir & diff_slash & BUILD_DIR)
+      exec (rmrec & " " & subst_chars (dir, "/", diff_slash) & diff_slash & BUILD_DIR)
     end
   end
 end
@@ -791,7 +791,7 @@ build_flags_test ("p2", "p220", ".M3SHIP library", "-no-m3ship-resolution")
 build_flags_test ("p2", "p221", ".M3SHIP Library", "-no-m3ship-resolution")
 build_flags_test ("p2", "p222", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
 % The following test won't run until FSUtils.RmRec() is fixed
-%build_flags_test ("p2", "p223", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
+build_flags_test ("p2", "p223", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
 
 p_test ("p2", "p224", "mutex checker (approx. 4 to 5 minutes)")
 p_test ("p2", "p225", "__try/__finally")
