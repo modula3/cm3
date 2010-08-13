@@ -37,7 +37,7 @@ if equal ($OS, "Windows_NT")
     head = ""
   end
   BcOk = FALSE
-  rmrec = "@rmdir /r/s" % not sure about this, may need to be changed
+  rmrec = "@rmdir /q/s" % not sure about this, may need to be changed
 else
   Solaris = equal(q_exec_get("uname")[1], "SunOS\n")
   BcOk = not Solaris
