@@ -32,8 +32,10 @@ enum machine_mode;
 #include "system.h"
 #include "coretypes.h"
 #include "tm.h"
-#include "tm_p.h"
+#include "flags.h"
 #include "tree.h"
+#include "real.h"
+#include "tm_p.h"
 #include "tree-dump.h"
 #include "tree-iterator.h"
 #ifndef MTAG_P
@@ -44,7 +46,6 @@ enum machine_mode;
 #include "tree-gimple.h"
 #endif
 #include "function.h"
-#include "flags.h"
 #include "output.h"
 #include "ggc.h"
 #include "hashtab.h"
@@ -59,7 +60,6 @@ enum machine_mode;
 #include "cgraph.h"
 
 #include "expr.h"
-#include "real.h"
 #include "diagnostic.h"
 
 #include "m3cg.h"
