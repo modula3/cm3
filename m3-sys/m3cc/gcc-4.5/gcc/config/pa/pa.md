@@ -5976,27 +5976,41 @@
 ;; Processors prior to PA 2.0 don't have a fneg instruction.  Fast
 ;; negation can be done by subtracting from plus zero.  However, this
 ;; violates the IEEE standard when negating plus and minus zero.
+;; The slow path toggles the sign bit in the general registers.
 (define_expand "negdf2"
-  [(parallel [(set (match_operand:DF 0 "register_operand" "")
-		   (neg:DF (match_operand:DF 1 "register_operand" "")))
-	      (use (match_dup 2))])]
-  "! TARGET_SOFT_FLOAT"
+  [(set (match_operand:DF 0 "register_operand" "")
+	(neg:DF (match_operand:DF 1 "register_operand" "")))]
+  "!TARGET_SOFT_FLOAT"
 {
   if (TARGET_PA_20 || flag_unsafe_math_optimizations)
     emit_insn (gen_negdf2_fast (operands[0], operands[1]));
   else
-    {
-      operands[2] = force_reg (DFmode,
-	CONST_DOUBLE_FROM_REAL_VALUE (dconstm1, DFmode));
-      emit_insn (gen_muldf3 (operands[0], operands[1], operands[2]));
-    }
+    emit_insn (gen_negdf2_slow (operands[0], operands[1]));
   DONE;
 })
+
+(define_insn "negdf2_slow"
+  [(set (match_operand:DF 0 "register_operand" "=r")
+	(neg:DF (match_operand:DF 1 "register_operand" "r")))]
+  "!TARGET_SOFT_FLOAT && !TARGET_PA_20"
+  "*
+{
+  if (rtx_equal_p (operands[0], operands[1]))
+    return \"and,< %1,%1,%0\;depi,tr 1,0,1,%0\;depi 0,0,1,%0\";
+  else
+    return \"and,< %1,%1,%0\;depi,tr 1,0,1,%0\;depi 0,0,1,%0\;copy %R1,%R0\";
+}"
+  [(set_attr "type" "multi")
+   (set (attr "length")
+	(if_then_else (ne (symbol_ref "rtx_equal_p (operands[0], operands[1])")
+			  (const_int 0))
+	    (const_int 12)
+	    (const_int 16)))])
 
 (define_insn "negdf2_fast"
   [(set (match_operand:DF 0 "register_operand" "=f")
 	(neg:DF (match_operand:DF 1 "register_operand" "f")))]
-  "! TARGET_SOFT_FLOAT && (TARGET_PA_20 || flag_unsafe_math_optimizations)"
+  "!TARGET_SOFT_FLOAT"
   "*
 {
   if (TARGET_PA_20)
@@ -6008,26 +6022,29 @@
    (set_attr "length" "4")])
 
 (define_expand "negsf2"
-  [(parallel [(set (match_operand:SF 0 "register_operand" "")
-		   (neg:SF (match_operand:SF 1 "register_operand" "")))
-	      (use (match_dup 2))])]
-  "! TARGET_SOFT_FLOAT"
+  [(set (match_operand:SF 0 "register_operand" "")
+	(neg:SF (match_operand:SF 1 "register_operand" "")))]
+  "!TARGET_SOFT_FLOAT"
 {
   if (TARGET_PA_20 || flag_unsafe_math_optimizations)
     emit_insn (gen_negsf2_fast (operands[0], operands[1]));
   else
-    {
-      operands[2] = force_reg (SFmode,
-	CONST_DOUBLE_FROM_REAL_VALUE (dconstm1, SFmode));
-      emit_insn (gen_mulsf3 (operands[0], operands[1], operands[2]));
-    }
+    emit_insn (gen_negsf2_slow (operands[0], operands[1]));
   DONE;
 })
+
+(define_insn "negsf2_slow"
+  [(set (match_operand:SF 0 "register_operand" "=r")
+	(neg:SF (match_operand:SF 1 "register_operand" "r")))]
+  "!TARGET_SOFT_FLOAT && !TARGET_PA_20"
+  "and,< %1,%1,%0\;depi,tr 1,0,1,%0\;depi 0,0,1,%0"
+  [(set_attr "type" "multi")
+   (set_attr "length" "12")])
 
 (define_insn "negsf2_fast"
   [(set (match_operand:SF 0 "register_operand" "=f")
 	(neg:SF (match_operand:SF 1 "register_operand" "f")))]
-  "! TARGET_SOFT_FLOAT && (TARGET_PA_20 || flag_unsafe_math_optimizations)"
+  "!TARGET_SOFT_FLOAT"
   "*
 {
   if (TARGET_PA_20)
@@ -9530,89 +9547,38 @@ add,l %2,%3,%3\;bv,n %%r0(%3)"
    (match_operand 2 "const_int_operand" "")]
   "TARGET_PA_20"
 {
-  int locality = INTVAL (operands[2]);
-
-  gcc_assert (locality >= 0 && locality <= 3);
-
-  /* Change operand[0] to a MEM as we don't have the infrastructure
-     to output all the supported address modes for ldw/ldd when we use
-     the address directly.  However, we do have it for MEMs.  */
-  operands[0] = gen_rtx_MEM (QImode, operands[0]);
-
-  /* If the address isn't valid for the prefetch, replace it.  */
-  if (locality)
-    {
-      if (!prefetch_nocc_operand (operands[0], QImode))
-	operands[0]
-	  = replace_equiv_address (operands[0],
-				   copy_to_mode_reg (Pmode,
-						     XEXP (operands[0], 0)));
-      emit_insn (gen_prefetch_nocc (operands[0], operands[1], operands[2]));
-    }
-  else
-    {
-      if (!prefetch_cc_operand (operands[0], QImode))
-	operands[0]
-	  = replace_equiv_address (operands[0],
-				   copy_to_mode_reg (Pmode,
-						     XEXP (operands[0], 0)));
-      emit_insn (gen_prefetch_cc (operands[0], operands[1], operands[2]));
-    }
+  operands[0] = copy_addr_to_reg (operands[0]);
+  emit_insn (gen_prefetch_20 (operands[0], operands[1], operands[2]));
   DONE;
 })
 
-(define_insn "prefetch_cc"
-  [(prefetch (match_operand:QI 0 "prefetch_cc_operand" "RW")
+(define_insn "prefetch_20"
+  [(prefetch (match_operand 0 "pmode_register_operand" "r")
 	     (match_operand:SI 1 "const_int_operand" "n")
 	     (match_operand:SI 2 "const_int_operand" "n"))]
-  "TARGET_PA_20 && operands[2] == const0_rtx"
+  "TARGET_PA_20"
 {
-  /* The SL cache-control completor indicates good spatial locality but
+  /* The SL cache-control completer indicates good spatial locality but
      poor temporal locality.  The ldw instruction with a target of general
      register 0 prefetches a cache line for a read.  The ldd instruction
      prefetches a cache line for a write.  */
-  static const char * const instr[2] = {
-    "ldw%M0,sl %0,%%r0",
-    "ldd%M0,sl %0,%%r0"
-  };
-  int read_or_write = INTVAL (operands[1]);
-
-  gcc_assert (read_or_write >= 0 && read_or_write <= 1);
-
-  return instr [read_or_write];
-}
-  [(set_attr "type" "load")
-   (set_attr "length" "4")])
-
-(define_insn "prefetch_nocc"
-  [(prefetch (match_operand:QI 0 "prefetch_nocc_operand" "A,RQ")
-	     (match_operand:SI 1 "const_int_operand" "n,n")
-	     (match_operand:SI 2 "const_int_operand" "n,n"))]
-  "TARGET_PA_20 && operands[2] != const0_rtx"
-{
-  /* The ldw instruction with a target of general register 0 prefetches
-     a cache line for a read.  The ldd instruction prefetches a cache line
-     for a write.  */
   static const char * const instr[2][2] = {
     {
-      "ldw RT'%A0,%%r0",
-      "ldd RT'%A0,%%r0",
+      "ldw,sl 0(%0),%%r0",
+      "ldd,sl 0(%0),%%r0"
     },
     {
-      "ldw%M0 %0,%%r0",
-      "ldd%M0 %0,%%r0",
+      "ldw 0(%0),%%r0",
+      "ldd 0(%0),%%r0"
     }
   };
-  int read_or_write = INTVAL (operands[1]);
+  int read_or_write = INTVAL (operands[1]) == 0 ? 0 : 1;
+  int locality = INTVAL (operands[2]) == 0 ? 0 : 1;
 
-  gcc_assert (which_alternative == 0 || which_alternative == 1);
-  gcc_assert (read_or_write >= 0 && read_or_write <= 1);
-
-  return instr [which_alternative][read_or_write];
+  return instr [locality][read_or_write];
 }
   [(set_attr "type" "load")
    (set_attr "length" "4")])
-
 
 ;; TLS Support
 (define_insn "tgd_load"

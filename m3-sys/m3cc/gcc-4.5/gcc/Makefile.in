@@ -325,6 +325,10 @@ LIBELFINC = @LIBELFINC@
 # Set to 'yes' if the LTO front end is enabled.
 enable_lto = @enable_lto@
 
+# Set according to LTO object file format.
+LTO_BINARY_READER = @LTO_BINARY_READER@
+LTO_USE_LIBELF = @LTO_USE_LIBELF@
+
 # Compiler needed for plugin support
 PLUGINCC = @CC@
 
@@ -2696,7 +2700,7 @@ opts.o : opts.c opts.h options.h $(TOPLEV_H) $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h $(TREE_H) $(TM_H) langhooks.h $(GGC_H) $(EXPR_H) $(RTL_H) \
    output.h $(DIAGNOSTIC_H) $(TM_P_H) $(INSN_ATTR_H) intl.h $(TARGET_H) \
    $(FLAGS_H) $(PARAMS_H) $(TREE_PASS_H) $(DBGCNT_H) debug.h varray.h \
-   $(PLUGIN_H) $(EXCEPT_H)
+   $(PLUGIN_H) $(EXCEPT_H) $(LTO_STREAMER_H)
 opts-common.o : opts-common.c opts.h $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h intl.h
 targhooks.o : targhooks.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TREE_H) \
@@ -2996,7 +3000,7 @@ tree-ssa-ccp.o : tree-ssa-ccp.c $(TREE_FLOW_H) $(CONFIG_H) \
 tree-sra.o : tree-sra.c $(CONFIG_H) $(SYSTEM_H) coretypes.h alloc-pool.h \
    $(TM_H) $(TREE_H) $(GIMPLE_H) $(CGRAPH_H) $(TREE_FLOW_H) $(IPA_PROP_H) \
    $(DIAGNOSTIC_H) statistics.h $(TREE_DUMP_H) $(TIMEVAR_H) $(PARAMS_H) \
-   $(TARGET_H) $(FLAGS_H) $(EXPR_H)
+   $(TARGET_H) $(FLAGS_H) $(EXPR_H) $(TREE_INLINE_H)
 tree-switch-conversion.o : tree-switch-conversion.c $(CONFIG_H) $(SYSTEM_H) \
     $(TREE_H) $(TM_P_H) $(TREE_FLOW_H) $(DIAGNOSTIC_H) $(TREE_INLINE_H) \
     $(TIMEVAR_H) $(TM_H) coretypes.h $(TREE_DUMP_H) $(GIMPLE_H) \
