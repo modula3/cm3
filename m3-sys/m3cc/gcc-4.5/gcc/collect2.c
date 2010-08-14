@@ -35,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 #  define SIGCHLD SIGCLD
 #endif
 
+/* TARGET_64BIT may be defined to use driver specific functionality. */
+#undef TARGET_64BIT
+#define TARGET_64BIT TARGET_64BIT_DEFAULT
+
 #ifndef LIBRARY_PATH_ENV
 #define LIBRARY_PATH_ENV "LIBRARY_PATH"
 #endif
@@ -1798,7 +1802,7 @@ main (int argc, char **argv)
 	if (export_file != 0 && export_file[0])
 	  maybe_unlink (export_file);
 #endif
-	if (lto_mode)
+	if (lto_mode != LTO_MODE_NONE)
 	  maybe_run_lto_and_relink (ld1_argv, object_lst, object, false);
 
 	maybe_unlink (c_file);
@@ -2544,23 +2548,39 @@ write_aix_file (FILE *stream, struct id *list)
 
 #ifdef OBJECT_FORMAT_NONE
 
-/* Check to make sure the file is an ELF file.  LTO objects must
-   be in ELF format.  */
+/* Check to make sure the file is an LTO object file.  */
 
 static bool
-is_elf (const char *prog_name)
+maybe_lto_object_file (const char *prog_name)
 {
   FILE *f;
-  char buf[4];
-  static char magic[4] = { 0x7f, 'E', 'L', 'F' };
+  unsigned char buf[4];
+  int i;
 
-  f = fopen (prog_name, "r");
+  static unsigned char elfmagic[4] = { 0x7f, 'E', 'L', 'F' };
+  static unsigned char coffmagic[2] = { 0x4c, 0x01 };
+  static unsigned char machomagic[4][4] = {
+    { 0xcf, 0xfa, 0xed, 0xfe },
+    { 0xce, 0xfa, 0xed, 0xfe },
+    { 0xfe, 0xed, 0xfa, 0xcf },
+    { 0xfe, 0xed, 0xfa, 0xce }
+  };
+
+  f = fopen (prog_name, "rb");
   if (f == NULL)
     return false;
   if (fread (buf, sizeof (buf), 1, f) != 1)
     buf[0] = 0;
   fclose (f);
-  return memcmp (buf, magic, sizeof (magic)) == 0;
+
+  if (memcmp (buf, elfmagic, sizeof (elfmagic)) == 0
+      || memcmp (buf, coffmagic, sizeof (coffmagic)) == 0)
+    return true;
+  for (i = 0; i < 4; i++)
+    if (memcmp (buf, machomagic[i], sizeof (machomagic[i])) == 0)
+      return true;
+
+  return false;
 }
 
 /* Generic version to scan the name list of the loaded program for
@@ -2587,10 +2607,10 @@ scan_prog_file (const char *prog_name, scanpass which_pass,
   if (which_pass == PASS_SECOND)
     return;
 
-  /* LTO objects must be in ELF format.  This check prevents
+  /* LTO objects must be in a known format.  This check prevents
      us from accepting an archive containing LTO objects, which
      gcc cannnot currently handle.  */
-  if (which_pass == PASS_LTOINFO && !is_elf (prog_name))
+  if (which_pass == PASS_LTOINFO && !maybe_lto_object_file (prog_name))
     return;
 
   /* If we do not have an `nm', complain.  */
@@ -2670,9 +2690,9 @@ scan_prog_file (const char *prog_name, scanpass which_pass,
           /* Look for the LTO info marker symbol, and add filename to
              the LTO objects list if found.  */
           for (p = buf; (ch = *p) != '\0' && ch != '\n'; p++)
-            if (ch == ' '
-		&& (strncmp (p + 1, "__gnu_lto_v1", 12) == 0)
-		&& ISSPACE (p[13]))
+            if (ch == ' '  && p[1] == '_' && p[2] == '_'
+		&& (strncmp (p + (p[3] == '_' ? 2 : 1), "__gnu_lto_v1", 12) == 0)
+		&& ISSPACE (p[p[3] == '_' ? 14 : 13]))
               {
                 add_lto_object (&lto_objects, prog_name);
 
