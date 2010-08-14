@@ -1,5 +1,5 @@
 This is doc/gccint.info, produced by makeinfo version 4.12 from
-/space/rguenther/gcc-4.5.0/gcc-4.5.0/gcc/doc/gccint.texi.
+/space/rguenther/gcc-4.5.1/gcc-4.5.1/gcc/doc/gccint.texi.
 
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 Free
@@ -61,7 +61,7 @@ Introduction
 This manual documents the internals of the GNU compilers, including how
 to port them to new targets and some information about how to write
 front ends for new languages.  It corresponds to the compilers
-(GCC) version 4.5.0.  The use of the GNU compilers is documented in a
+(GCC) version 4.5.1.  The use of the GNU compilers is documented in a
 separate manual.  *Note Introduction: (gcc)Top.
 
  This manual is mainly a reference manual rather than a tutorial.  It
@@ -4401,12 +4401,14 @@ following in order:
 
           /* { dg-skip-if "" { *-*-* }  { "-O2 -g" "-O3 -g" } { "-fpic" } } */
 
-`{ dg-require-effective-target KEYWORD }'
+`{ dg-require-effective-target KEYWORD [{ SELECTOR }] }'
      Skip the test if the test target, including current multilib flags,
-     is not covered by the effective-target keyword.  This directive
-     must appear after any `dg-do' directive in the test and before any
-     `dg-additional-sources' directive.  *Note Effective-Target
-     Keywords::.
+     is not covered by the effective-target keyword.  If the directive
+     includes the optional `{ SELECTOR }' then the effective-target
+     test is only performed if the target system matches the SELECTOR.
+     This directive must appear after any `dg-do' directive in the test
+     and before any `dg-additional-sources' directive.  *Note
+     Effective-Target Keywords::.
 
 `{ dg-require-SUPPORT args }'
      Skip the test if the target does not provide the required support.
@@ -4895,6 +4897,18 @@ specified for the particular test in an earlier `dg-options' or
 `hard_float'
      Target supports FPU instructions.
 
+`sse'
+     Target supports compiling `sse' instructions.
+
+`sse_runtime'
+     Target supports the execution of `sse' instructions.
+
+`sse2'
+     Target supports compiling `sse2' instructions.
+
+`sse2_runtime'
+     Target supports the execution of `sse2' instructions.
+
 `sync_char_short'
      Target supports atomic operations on `char' and `short'.
 
@@ -5021,6 +5035,9 @@ specified for the particular test in an earlier `dg-options' or
 `fstack_protector'
      Target supports `-fstack-protector'.
 
+`gas'
+     Target uses GNU `as'.
+
 `gc_sections'
      Target supports `--gc-sections'.
 
@@ -5093,6 +5110,9 @@ specified for the particular test in an earlier `dg-options' or
 7.2.3.12 Local to tests in `gcc.target/i386'
 ............................................
 
+`3dnow'
+     Target supports compiling `3dnow' instructions.
+
 `aes'
      Target supports compiling `aes' instructions.
 
@@ -5104,6 +5124,9 @@ specified for the particular test in an earlier `dg-options' or
 
 `pclmul'
      Target supports compiling `pclmul' instructions.
+
+`sse3'
+     Target supports compiling `sse3' instructions.
 
 `sse4'
      Target supports compiling `sse4' instructions.
@@ -7008,6 +7031,7 @@ internal form.
 * Side Effects::      Expressions for storing in registers, etc.
 * Incdec::            Embedded side-effects for autoincrement addressing.
 * Assembler::         Representing `asm' with operands.
+* Debug Information:: Expressions representing debugging information.
 * Insns::             Expression types for entire insns.
 * Calls::             RTL representation of function call insns.
 * Sharing::           Some expressions are unique; others *must* be copied.
@@ -9633,7 +9657,7 @@ additional parallel stores would require doubling the number of entries
 in the machine description.
 
 
-File: gccint.info,  Node: Assembler,  Next: Insns,  Prev: Incdec,  Up: RTL
+File: gccint.info,  Node: Assembler,  Next: Debug Information,  Prev: Incdec,  Up: RTL
 
 10.17 Assembler Instructions as Expressions
 ===========================================
@@ -9668,9 +9692,37 @@ operand.  They are also distinguished by the output-operand index
 number, which is 0, 1, ... for successive output operands.
 
 
-File: gccint.info,  Node: Insns,  Next: Calls,  Prev: Assembler,  Up: RTL
+File: gccint.info,  Node: Debug Information,  Next: Insns,  Prev: Assembler,  Up: RTL
 
-10.18 Insns
+10.18 Variable Location Debug Information in RTL
+================================================
+
+Variable tracking relies on `MEM_EXPR' and `REG_EXPR' annotations to
+determine what user variables memory and register references refer to.
+
+ Variable tracking at assignments uses these notes only when they refer
+to variables that live at fixed locations (e.g., addressable variables,
+global non-automatic variables).  For variables whose location may
+vary, it relies on the following types of notes.
+
+`(var_location:MODE VAR EXP STAT)'
+     Binds variable `var', a tree, to value EXP, an RTL expression.  It
+     appears only in `NOTE_INSN_VAR_LOCATION' and `DEBUG_INSN's, with
+     slightly different meanings.  MODE, if present, represents the
+     mode of EXP, which is useful if it is a modeless expression.  STAT
+     is only meaningful in notes, indicating whether the variable is
+     known to be initialized or uninitialized.
+
+`(debug_expr:MODE DECL)'
+     Stands for the value bound to the `DEBUG_EXPR_DECL' DECL, that
+     points back to it, within value expressions in `VAR_LOCATION'
+     nodes.
+
+
+
+File: gccint.info,  Node: Insns,  Next: Calls,  Prev: Debug Information,  Up: RTL
+
+10.19 Insns
 ===========
 
 The RTL representation of the code for a function is a doubly-linked
@@ -9728,7 +9780,7 @@ the `sequence' expression, as is the value of `PREV_INSN (NEXT_INSN
 (INSN))' if INSN is the last insn in the `sequence' expression.  You
 can use these expressions to find the containing `sequence' expression.
 
- Every insn has one of the following six expression codes:
+ Every insn has one of the following expression codes:
 
 `insn'
      The expression code `insn' is used for instructions that do not
@@ -9894,9 +9946,50 @@ can use these expressions to find the containing `sequence' expression.
           Appears at the start of the function body, after the function
           prologue.
 
+    `NOTE_INSN_VAR_LOCATION'
+          This note is used to generate variable location debugging
+          information.  It indicates that the user variable in its
+          `VAR_LOCATION' operand is at the location given in the RTL
+          expression, or holds a value that can be computed by
+          evaluating the RTL expression from that static point in the
+          program up to the next such note for the same user variable.
+
 
      These codes are printed symbolically when they appear in debugging
      dumps.
+
+`debug_insn'
+     The expression code `debug_insn' is used for pseudo-instructions
+     that hold debugging information for variable tracking at
+     assignments (see `-fvar-tracking-assignments' option).  They are
+     the RTL representation of `GIMPLE_DEBUG' statements (*note
+     `GIMPLE_DEBUG'::), with a `VAR_LOCATION' operand that binds a user
+     variable tree to an RTL representation of the `value' in the
+     corresponding statement.  A `DEBUG_EXPR' in it stands for the
+     value bound to the corresponding `DEBUG_EXPR_DECL'.
+
+     Throughout optimization passes, binding information is kept in
+     pseudo-instruction form, so that, unlike notes, it gets the same
+     treatment and adjustments that regular instructions would.  It is
+     the variable tracking pass that turns these pseudo-instructions
+     into var location notes, analyzing control flow, value
+     equivalences and changes to registers and memory referenced in
+     value expressions, propagating the values of debug temporaries and
+     determining expressions that can be used to compute the value of
+     each user variable at as many points (ranges, actually) in the
+     program as possible.
+
+     Unlike `NOTE_INSN_VAR_LOCATION', the value expression in an
+     `INSN_VAR_LOCATION' denotes a value at that specific point in the
+     program, rather than an expression that can be evaluated at any
+     later point before an overriding `VAR_LOCATION' is encountered.
+     E.g., if a user variable is bound to a `REG' and then a subsequent
+     insn modifies the `REG', the note location would keep mapping the
+     user variable to the register across the insn, whereas the insn
+     location would keep the variable bound to the value, so that the
+     variable tracking pass would emit another location note for the
+     variable at the point in which the register is modified.
+
 
  The machine mode of an insn is normally `VOIDmode', but some phases
 use the mode for various purposes.
@@ -10180,7 +10273,7 @@ an expression.
 
 File: gccint.info,  Node: Calls,  Next: Sharing,  Prev: Insns,  Up: RTL
 
-10.19 RTL Representation of Function-Call Insns
+10.20 RTL Representation of Function-Call Insns
 ===============================================
 
 Insns that call subroutines have the RTL expression code `call_insn'.
@@ -10239,7 +10332,7 @@ indicate which registers.
 
 File: gccint.info,  Node: Sharing,  Next: Reading RTL,  Prev: Calls,  Up: RTL
 
-10.20 Structure Sharing Assumptions
+10.21 Structure Sharing Assumptions
 ===================================
 
 The compiler assumes that certain kinds of RTL expressions are unique;
@@ -10308,7 +10401,7 @@ are common to two functions.
 
 File: gccint.info,  Node: Reading RTL,  Prev: Sharing,  Up: RTL
 
-10.21 Reading RTL
+10.22 Reading RTL
 =================
 
 To read an RTL object from a file, call `read_rtx'.  It takes one
@@ -10930,6 +11023,11 @@ Some macros can be used with any kind of declaration.  These include:
      be a wider type than the `TREE_TYPE' of the parameter; for
      example, the ordinary type might be `short' while the
      `DECL_ARG_TYPE' is `int'.
+
+`DEBUG_EXPR_DECL'
+     Used to represent an anonymous debug-information temporary created
+     to hold an expression as it is optimized away, so that its value
+     can be referenced in debug bind statements.
 
 `FIELD_DECL'
      These nodes represent non-static data members.  The `DECL_SIZE' and
@@ -13515,6 +13613,7 @@ Instruction                    High GIMPLE   Low GIMPLE
 `GIMPLE_CALL'                  x             x
 `GIMPLE_CATCH'                 x             
 `GIMPLE_COND'                  x             x
+`GIMPLE_DEBUG'                 x             x
 `GIMPLE_EH_FILTER'             x             
 `GIMPLE_GOTO'                  x             x
 `GIMPLE_LABEL'                 x             x
@@ -14025,6 +14124,7 @@ File: gccint.info,  Node: Tuple specific accessors,  Next: GIMPLE sequences,  Pr
 * `GIMPLE_CALL'::
 * `GIMPLE_CATCH'::
 * `GIMPLE_COND'::
+* `GIMPLE_DEBUG'::
 * `GIMPLE_EH_FILTER'::
 * `GIMPLE_LABEL'::
 * `GIMPLE_NOP'::
@@ -14383,7 +14483,7 @@ File: gccint.info,  Node: `GIMPLE_CATCH',  Next: `GIMPLE_COND',  Prev: `GIMPLE_C
      Set `HANDLER' to be the body of `GIMPLE_CATCH' `G'.
 
 
-File: gccint.info,  Node: `GIMPLE_COND',  Next: `GIMPLE_EH_FILTER',  Prev: `GIMPLE_CATCH',  Up: Tuple specific accessors
+File: gccint.info,  Node: `GIMPLE_COND',  Next: `GIMPLE_DEBUG',  Prev: `GIMPLE_CATCH',  Up: Tuple specific accessors
 
 12.7.6 `GIMPLE_COND'
 --------------------
@@ -14452,9 +14552,81 @@ File: gccint.info,  Node: `GIMPLE_COND',  Next: `GIMPLE_EH_FILTER',  Prev: `GIMP
      Set the conditional `COND_STMT' to be of the form 'if (1 == 1)'.
 
 
-File: gccint.info,  Node: `GIMPLE_EH_FILTER',  Next: `GIMPLE_LABEL',  Prev: `GIMPLE_COND',  Up: Tuple specific accessors
+File: gccint.info,  Node: `GIMPLE_DEBUG',  Next: `GIMPLE_EH_FILTER',  Prev: `GIMPLE_COND',  Up: Tuple specific accessors
 
-12.7.7 `GIMPLE_EH_FILTER'
+12.7.7 `GIMPLE_DEBUG'
+---------------------
+
+ -- GIMPLE function: gimple gimple_build_debug_bind (tree var, tree
+          value, gimple stmt)
+     Build a `GIMPLE_DEBUG' statement with `GIMPLE_DEBUG_BIND' of
+     `subcode'.  The effect of this statement is to tell debug
+     information generation machinery that the value of user variable
+     `var' is given by `value' at that point, and to remain with that
+     value until `var' runs out of scope, a dynamically-subsequent
+     debug bind statement overrides the binding, or conflicting values
+     reach a control flow merge point.  Even if components of the
+     `value' expression change afterwards, the variable is supposed to
+     retain the same value, though not necessarily the same location.
+
+     It is expected that `var' be most often a tree for automatic user
+     variables (`VAR_DECL' or `PARM_DECL') that satisfy the
+     requirements for gimple registers, but it may also be a tree for a
+     scalarized component of a user variable (`ARRAY_REF',
+     `COMPONENT_REF'), or a debug temporary (`DEBUG_EXPR_DECL').
+
+     As for `value', it can be an arbitrary tree expression, but it is
+     recommended that it be in a suitable form for a gimple assignment
+     `RHS'.  It is not expected that user variables that could appear
+     as `var' ever appear in `value', because in the latter we'd have
+     their `SSA_NAME's instead, but even if they were not in SSA form,
+     user variables appearing in `value' are to be regarded as part of
+     the executable code space, whereas those in `var' are to be
+     regarded as part of the source code space.  There is no way to
+     refer to the value bound to a user variable within a `value'
+     expression.
+
+     If `value' is `GIMPLE_DEBUG_BIND_NOVALUE', debug information
+     generation machinery is informed that the variable `var' is
+     unbound, i.e., that its value is indeterminate, which sometimes
+     means it is really unavailable, and other times that the compiler
+     could not keep track of it.
+
+     Block and location information for the newly-created stmt are
+     taken from `stmt', if given.
+
+ -- GIMPLE function: tree gimple_debug_bind_get_var (gimple stmt)
+     Return the user variable VAR that is bound at `stmt'.
+
+ -- GIMPLE function: tree gimple_debug_bind_get_value (gimple stmt)
+     Return the value expression that is bound to a user variable at
+     `stmt'.
+
+ -- GIMPLE function: tree *gimple_debug_bind_get_value_ptr (gimple stmt)
+     Return a pointer to the value expression that is bound to a user
+     variable at `stmt'.
+
+ -- GIMPLE function: void gimple_debug_bind_set_var (gimple stmt, tree
+          var)
+     Modify the user variable bound at `stmt' to VAR.
+
+ -- GIMPLE function: void gimple_debug_bind_set_value (gimple stmt,
+          tree var)
+     Modify the value bound to the user variable bound at `stmt' to
+     VALUE.
+
+ -- GIMPLE function: void gimple_debug_bind_reset_value (gimple stmt)
+     Modify the value bound to the user variable bound at `stmt' so
+     that the variable becomes unbound.
+
+ -- GIMPLE function: bool gimple_debug_bind_has_value_p (gimple stmt)
+     Return `TRUE' if `stmt' binds a user variable to a value, and
+     `FALSE' if it unbinds the variable.
+
+
+File: gccint.info,  Node: `GIMPLE_EH_FILTER',  Next: `GIMPLE_LABEL',  Prev: `GIMPLE_DEBUG',  Up: Tuple specific accessors
+
+12.7.8 `GIMPLE_EH_FILTER'
 -------------------------
 
  -- GIMPLE function: gimple gimple_build_eh_filter (tree types,
@@ -14493,7 +14665,7 @@ File: gccint.info,  Node: `GIMPLE_EH_FILTER',  Next: `GIMPLE_LABEL',  Prev: `GIM
 
 File: gccint.info,  Node: `GIMPLE_LABEL',  Next: `GIMPLE_NOP',  Prev: `GIMPLE_EH_FILTER',  Up: Tuple specific accessors
 
-12.7.8 `GIMPLE_LABEL'
+12.7.9 `GIMPLE_LABEL'
 ---------------------
 
  -- GIMPLE function: gimple gimple_build_label (tree label)
@@ -14519,8 +14691,8 @@ File: gccint.info,  Node: `GIMPLE_LABEL',  Next: `GIMPLE_NOP',  Prev: `GIMPLE_EH
 
 File: gccint.info,  Node: `GIMPLE_NOP',  Next: `GIMPLE_OMP_ATOMIC_LOAD',  Prev: `GIMPLE_LABEL',  Up: Tuple specific accessors
 
-12.7.9 `GIMPLE_NOP'
--------------------
+12.7.10 `GIMPLE_NOP'
+--------------------
 
  -- GIMPLE function: gimple gimple_build_nop (void)
      Build a `GIMPLE_NOP' statement.
@@ -14531,7 +14703,7 @@ File: gccint.info,  Node: `GIMPLE_NOP',  Next: `GIMPLE_OMP_ATOMIC_LOAD',  Prev: 
 
 File: gccint.info,  Node: `GIMPLE_OMP_ATOMIC_LOAD',  Next: `GIMPLE_OMP_ATOMIC_STORE',  Prev: `GIMPLE_NOP',  Up: Tuple specific accessors
 
-12.7.10 `GIMPLE_OMP_ATOMIC_LOAD'
+12.7.11 `GIMPLE_OMP_ATOMIC_LOAD'
 --------------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_atomic_load (tree lhs,
@@ -14557,7 +14729,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_ATOMIC_LOAD',  Next: `GIMPLE_OMP_ATOMIC_ST
 
 File: gccint.info,  Node: `GIMPLE_OMP_ATOMIC_STORE',  Next: `GIMPLE_OMP_CONTINUE',  Prev: `GIMPLE_OMP_ATOMIC_LOAD',  Up: Tuple specific accessors
 
-12.7.11 `GIMPLE_OMP_ATOMIC_STORE'
+12.7.12 `GIMPLE_OMP_ATOMIC_STORE'
 ---------------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_atomic_store (tree val)
@@ -14574,7 +14746,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_ATOMIC_STORE',  Next: `GIMPLE_OMP_CONTINUE
 
 File: gccint.info,  Node: `GIMPLE_OMP_CONTINUE',  Next: `GIMPLE_OMP_CRITICAL',  Prev: `GIMPLE_OMP_ATOMIC_STORE',  Up: Tuple specific accessors
 
-12.7.12 `GIMPLE_OMP_CONTINUE'
+12.7.13 `GIMPLE_OMP_CONTINUE'
 -----------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_continue (tree
@@ -14608,7 +14780,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_CONTINUE',  Next: `GIMPLE_OMP_CRITICAL',  
 
 File: gccint.info,  Node: `GIMPLE_OMP_CRITICAL',  Next: `GIMPLE_OMP_FOR',  Prev: `GIMPLE_OMP_CONTINUE',  Up: Tuple specific accessors
 
-12.7.13 `GIMPLE_OMP_CRITICAL'
+12.7.14 `GIMPLE_OMP_CRITICAL'
 -----------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_critical (gimple_seq body,
@@ -14632,7 +14804,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_CRITICAL',  Next: `GIMPLE_OMP_FOR',  Prev:
 
 File: gccint.info,  Node: `GIMPLE_OMP_FOR',  Next: `GIMPLE_OMP_MASTER',  Prev: `GIMPLE_OMP_CRITICAL',  Up: Tuple specific accessors
 
-12.7.14 `GIMPLE_OMP_FOR'
+12.7.15 `GIMPLE_OMP_FOR'
 ------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_for (gimple_seq body, tree
@@ -14717,7 +14889,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_FOR',  Next: `GIMPLE_OMP_MASTER',  Prev: `
 
 File: gccint.info,  Node: `GIMPLE_OMP_MASTER',  Next: `GIMPLE_OMP_ORDERED',  Prev: `GIMPLE_OMP_FOR',  Up: Tuple specific accessors
 
-12.7.15 `GIMPLE_OMP_MASTER'
+12.7.16 `GIMPLE_OMP_MASTER'
 ---------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_master (gimple_seq body)
@@ -14727,7 +14899,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_MASTER',  Next: `GIMPLE_OMP_ORDERED',  Pre
 
 File: gccint.info,  Node: `GIMPLE_OMP_ORDERED',  Next: `GIMPLE_OMP_PARALLEL',  Prev: `GIMPLE_OMP_MASTER',  Up: Tuple specific accessors
 
-12.7.16 `GIMPLE_OMP_ORDERED'
+12.7.17 `GIMPLE_OMP_ORDERED'
 ----------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_ordered (gimple_seq body)
@@ -14739,7 +14911,7 @@ in sequence.
 
 File: gccint.info,  Node: `GIMPLE_OMP_PARALLEL',  Next: `GIMPLE_OMP_RETURN',  Prev: `GIMPLE_OMP_ORDERED',  Up: Tuple specific accessors
 
-12.7.17 `GIMPLE_OMP_PARALLEL'
+12.7.18 `GIMPLE_OMP_PARALLEL'
 -----------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_parallel (gimple_seq body,
@@ -14807,7 +14979,7 @@ are the shared data argument(s).
 
 File: gccint.info,  Node: `GIMPLE_OMP_RETURN',  Next: `GIMPLE_OMP_SECTION',  Prev: `GIMPLE_OMP_PARALLEL',  Up: Tuple specific accessors
 
-12.7.18 `GIMPLE_OMP_RETURN'
+12.7.19 `GIMPLE_OMP_RETURN'
 ---------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_return (bool wait_p)
@@ -14824,7 +14996,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_RETURN',  Next: `GIMPLE_OMP_SECTION',  Pre
 
 File: gccint.info,  Node: `GIMPLE_OMP_SECTION',  Next: `GIMPLE_OMP_SECTIONS',  Prev: `GIMPLE_OMP_RETURN',  Up: Tuple specific accessors
 
-12.7.19 `GIMPLE_OMP_SECTION'
+12.7.20 `GIMPLE_OMP_SECTION'
 ----------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_section (gimple_seq body)
@@ -14842,7 +15014,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_SECTION',  Next: `GIMPLE_OMP_SECTIONS',  P
 
 File: gccint.info,  Node: `GIMPLE_OMP_SECTIONS',  Next: `GIMPLE_OMP_SINGLE',  Prev: `GIMPLE_OMP_SECTION',  Up: Tuple specific accessors
 
-12.7.20 `GIMPLE_OMP_SECTIONS'
+12.7.21 `GIMPLE_OMP_SECTIONS'
 -----------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_sections (gimple_seq body,
@@ -14882,7 +15054,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_SECTIONS',  Next: `GIMPLE_OMP_SINGLE',  Pr
 
 File: gccint.info,  Node: `GIMPLE_OMP_SINGLE',  Next: `GIMPLE_PHI',  Prev: `GIMPLE_OMP_SECTIONS',  Up: Tuple specific accessors
 
-12.7.21 `GIMPLE_OMP_SINGLE'
+12.7.22 `GIMPLE_OMP_SINGLE'
 ---------------------------
 
  -- GIMPLE function: gimple gimple_build_omp_single (gimple_seq body,
@@ -14905,7 +15077,7 @@ File: gccint.info,  Node: `GIMPLE_OMP_SINGLE',  Next: `GIMPLE_PHI',  Prev: `GIMP
 
 File: gccint.info,  Node: `GIMPLE_PHI',  Next: `GIMPLE_RESX',  Prev: `GIMPLE_OMP_SINGLE',  Up: Tuple specific accessors
 
-12.7.22 `GIMPLE_PHI'
+12.7.23 `GIMPLE_PHI'
 --------------------
 
  -- GIMPLE function: gimple make_phi_node (tree var, int len)
@@ -14941,7 +15113,7 @@ File: gccint.info,  Node: `GIMPLE_PHI',  Next: `GIMPLE_RESX',  Prev: `GIMPLE_OMP
 
 File: gccint.info,  Node: `GIMPLE_RESX',  Next: `GIMPLE_RETURN',  Prev: `GIMPLE_PHI',  Up: Tuple specific accessors
 
-12.7.23 `GIMPLE_RESX'
+12.7.24 `GIMPLE_RESX'
 ---------------------
 
  -- GIMPLE function: gimple gimple_build_resx (int region)
@@ -14959,7 +15131,7 @@ File: gccint.info,  Node: `GIMPLE_RESX',  Next: `GIMPLE_RETURN',  Prev: `GIMPLE_
 
 File: gccint.info,  Node: `GIMPLE_RETURN',  Next: `GIMPLE_SWITCH',  Prev: `GIMPLE_RESX',  Up: Tuple specific accessors
 
-12.7.24 `GIMPLE_RETURN'
+12.7.25 `GIMPLE_RETURN'
 -----------------------
 
  -- GIMPLE function: gimple gimple_build_return (tree retval)
@@ -14975,7 +15147,7 @@ File: gccint.info,  Node: `GIMPLE_RETURN',  Next: `GIMPLE_SWITCH',  Prev: `GIMPL
 
 File: gccint.info,  Node: `GIMPLE_SWITCH',  Next: `GIMPLE_TRY',  Prev: `GIMPLE_RETURN',  Up: Tuple specific accessors
 
-12.7.25 `GIMPLE_SWITCH'
+12.7.26 `GIMPLE_SWITCH'
 -----------------------
 
  -- GIMPLE function: gimple gimple_build_switch ( nlabels, tree index,
@@ -15027,7 +15199,7 @@ File: gccint.info,  Node: `GIMPLE_SWITCH',  Next: `GIMPLE_TRY',  Prev: `GIMPLE_R
 
 File: gccint.info,  Node: `GIMPLE_TRY',  Next: `GIMPLE_WITH_CLEANUP_EXPR',  Prev: `GIMPLE_SWITCH',  Up: Tuple specific accessors
 
-12.7.26 `GIMPLE_TRY'
+12.7.27 `GIMPLE_TRY'
 --------------------
 
  -- GIMPLE function: gimple gimple_build_try (gimple_seq eval,
@@ -15071,7 +15243,7 @@ File: gccint.info,  Node: `GIMPLE_TRY',  Next: `GIMPLE_WITH_CLEANUP_EXPR',  Prev
 
 File: gccint.info,  Node: `GIMPLE_WITH_CLEANUP_EXPR',  Prev: `GIMPLE_TRY',  Up: Tuple specific accessors
 
-12.7.27 `GIMPLE_WITH_CLEANUP_EXPR'
+12.7.28 `GIMPLE_WITH_CLEANUP_EXPR'
 ----------------------------------
 
  -- GIMPLE function: gimple gimple_build_wce (gimple_seq cleanup)
@@ -31457,6 +31629,16 @@ This describes the overall framework of an assembly file.
      function.  If you need to do other things in that hook, have your
      hook function call this function.
 
+ -- Target Hook: void TARGET_ASM_LTO_START (void)
+     Output to `asm_out_file' any text which the assembler expects to
+     find at the start of an LTO section.  The default is to output
+     nothing.
+
+ -- Target Hook: void TARGET_ASM_LTO_END (void)
+     Output to `asm_out_file' any text which the assembler expects to
+     find at the end of an LTO section.  The default is to output
+     nothing.
+
  -- Target Hook: void TARGET_ASM_CODE_END (void)
      Output to `asm_out_file' any text which is needed before emitting
      unwind info and debug info at the end of a file.  Some targets emit
@@ -38875,6 +39057,7 @@ Concept Index
 * *gimple_call_arg_ptr:                  GIMPLE_CALL.        (line   71)
 * *gimple_call_lhs_ptr:                  GIMPLE_CALL.        (line   32)
 * *gimple_catch_types_ptr:               GIMPLE_CATCH.       (line   16)
+* *gimple_debug_bind_get_value_ptr:      GIMPLE_DEBUG.       (line   52)
 * *gimple_eh_filter_types_ptr:           GIMPLE_EH_FILTER.   (line   15)
 * *gimple_omp_critical_name_ptr:         GIMPLE_OMP_CRITICAL.
                                                              (line   16)
@@ -42259,9 +42442,9 @@ Concept Index
 * ashiftrt and attributes:               Expressions.        (line   64)
 * ashlM3 instruction pattern:            Standard Names.     (line  431)
 * ashrM3 instruction pattern:            Standard Names.     (line  441)
-* ASM_APP_OFF:                           File Framework.     (line   68)
-* ASM_APP_ON:                            File Framework.     (line   61)
-* ASM_COMMENT_START:                     File Framework.     (line   56)
+* ASM_APP_OFF:                           File Framework.     (line   78)
+* ASM_APP_ON:                            File Framework.     (line   71)
+* ASM_COMMENT_START:                     File Framework.     (line   66)
 * ASM_DECLARE_CLASS_REFERENCE:           Label Output.       (line  437)
 * ASM_DECLARE_CONSTANT_NAME:             Label Output.       (line  128)
 * ASM_DECLARE_FUNCTION_NAME:             Label Output.       (line   87)
@@ -42279,7 +42462,7 @@ Concept Index
 * asm_input and /v:                      Flags.              (line   94)
 * ASM_MAYBE_OUTPUT_ENCODED_ADDR_RTX:     Exception Handling. (line   82)
 * ASM_NO_SKIP_IN_TEXT:                   Alignment Output.   (line   72)
-* asm_noperands:                         Insns.              (line  266)
+* asm_noperands:                         Insns.              (line  307)
 * asm_operands and /v:                   Flags.              (line   94)
 * asm_operands, RTL sharing:             Sharing.            (line   45)
 * asm_operands, usage:                   Assembler.          (line    6)
@@ -42306,7 +42489,7 @@ Concept Index
 * ASM_OUTPUT_DWARF_TABLE_REF:            SDB and DWARF.      (line   57)
 * ASM_OUTPUT_EXTERNAL:                   Label Output.       (line  264)
 * ASM_OUTPUT_FDESC:                      Data Output.        (line   59)
-* ASM_OUTPUT_IDENT:                      File Framework.     (line   90)
+* ASM_OUTPUT_IDENT:                      File Framework.     (line  100)
 * ASM_OUTPUT_INTERNAL_LABEL:             Label Output.       (line   17)
 * ASM_OUTPUT_LABEL:                      Label Output.       (line    9)
 * ASM_OUTPUT_LABEL_REF:                  Label Output.       (line  300)
@@ -42321,7 +42504,7 @@ Concept Index
 * ASM_OUTPUT_REG_PUSH:                   Instruction Output. (line  186)
 * ASM_OUTPUT_SIZE_DIRECTIVE:             Label Output.       (line   35)
 * ASM_OUTPUT_SKIP:                       Alignment Output.   (line   66)
-* ASM_OUTPUT_SOURCE_FILENAME:            File Framework.     (line   75)
+* ASM_OUTPUT_SOURCE_FILENAME:            File Framework.     (line   85)
 * ASM_OUTPUT_SPECIAL_POOL_ENTRY:         Data Output.        (line   84)
 * ASM_OUTPUT_SYMBOL_REF:                 Label Output.       (line  293)
 * ASM_OUTPUT_TYPE_DIRECTIVE:             Label Output.       (line   77)
@@ -42785,6 +42968,9 @@ Concept Index
 * De Morgan's law:                       Insn Canonicalizations.
                                                              (line   52)
 * dead_or_set_p:                         define_peephole.    (line   65)
+* debug_expr:                            Debug Information.  (line   22)
+* DEBUG_EXPR_DECL:                       Declarations.       (line    6)
+* debug_insn:                            Insns.              (line  239)
 * DEBUG_SYMS_TEXT:                       DBX Options.        (line   25)
 * DEBUGGER_ARG_OFFSET:                   All Debuggers.      (line   37)
 * DEBUGGER_AUTO_OFFSET:                  All Debuggers.      (line   28)
@@ -43048,7 +43234,7 @@ Concept Index
                                                              (line   14)
 * EXPR_LINENO:                           Working with declarations.
                                                              (line   20)
-* expr_list:                             Insns.              (line  504)
+* expr_list:                             Insns.              (line  545)
 * EXPR_STMT:                             Statements for C++. (line    6)
 * EXPR_STMT_EXPR:                        Statements for C++. (line    6)
 * expression:                            Expression trees.   (line    6)
@@ -43306,6 +43492,7 @@ Concept Index
 * gimple_build_catch:                    GIMPLE_CATCH.       (line    8)
 * gimple_build_cond:                     GIMPLE_COND.        (line    8)
 * gimple_build_cond_from_tree:           GIMPLE_COND.        (line   16)
+* gimple_build_debug_bind:               GIMPLE_DEBUG.       (line    8)
 * gimple_build_eh_filter:                GIMPLE_EH_FILTER.   (line    8)
 * gimple_build_goto:                     GIMPLE_LABEL.       (line   18)
 * gimple_build_label:                    GIMPLE_LABEL.       (line    7)
@@ -43376,6 +43563,14 @@ Concept Index
 * gimple_cond_true_label:                GIMPLE_COND.        (line   46)
 * gimple_copy:                           Manipulating GIMPLE statements.
                                                              (line  147)
+* GIMPLE_DEBUG:                          GIMPLE_DEBUG.       (line    6)
+* GIMPLE_DEBUG_BIND:                     GIMPLE_DEBUG.       (line    6)
+* gimple_debug_bind_get_value:           GIMPLE_DEBUG.       (line   48)
+* gimple_debug_bind_get_var:             GIMPLE_DEBUG.       (line   45)
+* gimple_debug_bind_has_value_p:         GIMPLE_DEBUG.       (line   69)
+* gimple_debug_bind_reset_value:         GIMPLE_DEBUG.       (line   65)
+* gimple_debug_bind_set_value:           GIMPLE_DEBUG.       (line   61)
+* gimple_debug_bind_set_var:             GIMPLE_DEBUG.       (line   57)
 * GIMPLE_EH_FILTER:                      GIMPLE_EH_FILTER.   (line    6)
 * gimple_eh_filter_failure:              GIMPLE_EH_FILTER.   (line   19)
 * gimple_eh_filter_must_not_throw:       GIMPLE_EH_FILTER.   (line   33)
@@ -43683,7 +43878,7 @@ Concept Index
 * HFmode:                                Machine Modes.      (line   58)
 * high:                                  Constants.          (line  109)
 * HImode:                                Machine Modes.      (line   29)
-* HImode, in insn:                       Insns.              (line  231)
+* HImode, in insn:                       Insns.              (line  272)
 * host configuration:                    Host Config.        (line    6)
 * host functions:                        Host Common.        (line    6)
 * host hooks:                            Host Common.        (line    6)
@@ -43782,13 +43977,14 @@ Concept Index
 * insn-attr.h:                           Defining Attributes.
                                                              (line   24)
 * INSN_ANNULLED_BRANCH_P:                Flags.              (line   39)
-* INSN_CODE:                             Insns.              (line  257)
+* INSN_CODE:                             Insns.              (line  298)
 * INSN_DELETED_P:                        Flags.              (line   44)
 * INSN_FROM_TARGET_P:                    Flags.              (line   49)
-* insn_list:                             Insns.              (line  504)
+* insn_list:                             Insns.              (line  545)
 * INSN_REFERENCES_ARE_DELAYED:           Misc.               (line  520)
 * INSN_SETS_ARE_DELAYED:                 Misc.               (line  509)
 * INSN_UID:                              Insns.              (line   23)
+* INSN_VAR_LOCATION:                     Insns.              (line  239)
 * insns:                                 Insns.              (line    6)
 * insns, generating:                     RTL Template.       (line    6)
 * insns, recognizing:                    RTL Template.       (line    6)
@@ -43942,7 +44138,7 @@ Concept Index
 * LOCAL_INCLUDE_DIR:                     Driver.             (line  376)
 * LOCAL_LABEL_PREFIX:                    Instruction Output. (line  138)
 * LOCAL_REGNO:                           Register Basics.    (line  105)
-* LOG_LINKS:                             Insns.              (line  276)
+* LOG_LINKS:                             Insns.              (line  317)
 * Logical Operators:                     Logical Operators.  (line    6)
 * logical-and, bitwise:                  Arithmetic.         (line  153)
 * logM2 instruction pattern:             Standard Names.     (line  505)
@@ -44235,8 +44431,10 @@ Concept Index
 * NOTE_INSN_LOOP_CONT:                   Insns.              (line  213)
 * NOTE_INSN_LOOP_END:                    Insns.              (line  207)
 * NOTE_INSN_LOOP_VTOP:                   Insns.              (line  217)
+* NOTE_INSN_VAR_LOCATION:                Insns.              (line  227)
 * NOTE_LINE_NUMBER:                      Insns.              (line  168)
 * NOTE_SOURCE_FILE:                      Insns.              (line  168)
+* NOTE_VAR_LOCATION:                     Insns.              (line  227)
 * NOTICE_UPDATE_CC:                      CC0 Condition Codes.
                                                              (line   31)
 * NUM_MACHINE_MODES:                     Machine Modes.      (line  286)
@@ -44299,7 +44497,7 @@ Concept Index
 * output templates:                      Output Template.    (line    6)
 * OUTPUT_ADDR_CONST_EXTRA:               Data Output.        (line   39)
 * output_asm_insn:                       Output Statement.   (line   53)
-* OUTPUT_QUOTED_STRING:                  File Framework.     (line   83)
+* OUTPUT_QUOTED_STRING:                  File Framework.     (line   93)
 * OVERLOAD:                              Functions for C++.  (line    6)
 * OVERRIDE_ABI_FORMAT:                   Register Arguments. (line  140)
 * OVERRIDE_OPTIONS:                      Run-time Target.    (line  105)
@@ -44322,7 +44520,7 @@ Concept Index
 * passes and files of the compiler:      Passes.             (line    6)
 * passing arguments:                     Interface.          (line   36)
 * PATH_SEPARATOR:                        Filesystem.         (line   31)
-* PATTERN:                               Insns.              (line  247)
+* PATTERN:                               Insns.              (line  288)
 * pattern conditions:                    Patterns.           (line   43)
 * pattern names:                         Standard Names.     (line    6)
 * Pattern Ordering:                      Pattern Ordering.   (line    6)
@@ -44450,12 +44648,12 @@ Concept Index
 * pushM1 instruction pattern:            Standard Names.     (line  209)
 * PUT_CODE:                              RTL Objects.        (line   47)
 * PUT_MODE:                              Machine Modes.      (line  283)
-* PUT_REG_NOTE_KIND:                     Insns.              (line  309)
+* PUT_REG_NOTE_KIND:                     Insns.              (line  350)
 * PUT_SDB_:                              SDB and DWARF.      (line   69)
 * QCmode:                                Machine Modes.      (line  197)
 * QFmode:                                Machine Modes.      (line   54)
 * QImode:                                Machine Modes.      (line   25)
-* QImode, in insn:                       Insns.              (line  231)
+* QImode, in insn:                       Insns.              (line  272)
 * QQmode:                                Machine Modes.      (line  103)
 * qualified type <1>:                    Types for C++.      (line    6)
 * qualified type:                        Types.              (line    6)
@@ -44520,49 +44718,49 @@ Concept Index
 * reg and /v:                            Flags.              (line  116)
 * reg, RTL sharing:                      Sharing.            (line   17)
 * REG_ALLOC_ORDER:                       Allocation Order.   (line    9)
-* REG_BR_PRED:                           Insns.              (line  490)
-* REG_BR_PROB:                           Insns.              (line  484)
+* REG_BR_PRED:                           Insns.              (line  531)
+* REG_BR_PROB:                           Insns.              (line  525)
 * REG_BR_PROB_BASE, BB_FREQ_BASE, count: Profile information.
                                                              (line   82)
 * REG_BR_PROB_BASE, EDGE_FREQUENCY:      Profile information.
                                                              (line   52)
-* REG_CC_SETTER:                         Insns.              (line  455)
-* REG_CC_USER:                           Insns.              (line  455)
+* REG_CC_SETTER:                         Insns.              (line  496)
+* REG_CC_USER:                           Insns.              (line  496)
 * REG_CLASS_CONTENTS:                    Register Classes.   (line   86)
 * reg_class_contents:                    Register Basics.    (line   59)
 * REG_CLASS_FROM_CONSTRAINT:             Old Constraints.    (line   35)
 * REG_CLASS_FROM_LETTER:                 Old Constraints.    (line   27)
 * REG_CLASS_NAMES:                       Register Classes.   (line   81)
-* REG_CROSSING_JUMP:                     Insns.              (line  368)
-* REG_DEAD:                              Insns.              (line  320)
+* REG_CROSSING_JUMP:                     Insns.              (line  409)
+* REG_DEAD:                              Insns.              (line  361)
 * REG_DEAD, REG_UNUSED:                  Liveness information.
                                                              (line   32)
-* REG_DEP_ANTI:                          Insns.              (line  477)
-* REG_DEP_OUTPUT:                        Insns.              (line  473)
-* REG_DEP_TRUE:                          Insns.              (line  470)
+* REG_DEP_ANTI:                          Insns.              (line  518)
+* REG_DEP_OUTPUT:                        Insns.              (line  514)
+* REG_DEP_TRUE:                          Insns.              (line  511)
 * REG_EH_REGION, EDGE_ABNORMAL_CALL:     Edges.              (line  110)
-* REG_EQUAL:                             Insns.              (line  383)
-* REG_EQUIV:                             Insns.              (line  383)
+* REG_EQUAL:                             Insns.              (line  424)
+* REG_EQUIV:                             Insns.              (line  424)
 * REG_EXPR:                              Special Accessors.  (line   50)
-* REG_FRAME_RELATED_EXPR:                Insns.              (line  496)
+* REG_FRAME_RELATED_EXPR:                Insns.              (line  537)
 * REG_FUNCTION_VALUE_P:                  Flags.              (line  107)
-* REG_INC:                               Insns.              (line  336)
+* REG_INC:                               Insns.              (line  377)
 * reg_label and /v:                      Flags.              (line   65)
-* REG_LABEL_OPERAND:                     Insns.              (line  350)
-* REG_LABEL_TARGET:                      Insns.              (line  359)
+* REG_LABEL_OPERAND:                     Insns.              (line  391)
+* REG_LABEL_TARGET:                      Insns.              (line  400)
 * reg_names <1>:                         Instruction Output. (line   93)
 * reg_names:                             Register Basics.    (line   59)
-* REG_NONNEG:                            Insns.              (line  342)
-* REG_NOTE_KIND:                         Insns.              (line  309)
-* REG_NOTES:                             Insns.              (line  283)
+* REG_NONNEG:                            Insns.              (line  383)
+* REG_NOTE_KIND:                         Insns.              (line  350)
+* REG_NOTES:                             Insns.              (line  324)
 * REG_OFFSET:                            Special Accessors.  (line   54)
 * REG_OK_STRICT:                         Register Classes.   (line  148)
 * REG_PARM_STACK_SPACE:                  Stack Arguments.    (line   56)
 * REG_PARM_STACK_SPACE, and FUNCTION_ARG: Register Arguments.
                                                              (line   52)
 * REG_POINTER:                           Flags.              (line  112)
-* REG_SETJMP:                            Insns.              (line  377)
-* REG_UNUSED:                            Insns.              (line  329)
+* REG_SETJMP:                            Insns.              (line  418)
+* REG_UNUSED:                            Insns.              (line  370)
 * REG_USERVAR_P:                         Flags.              (line  116)
 * regclass_for_constraint:               C Constraint Interface.
                                                              (line   60)
@@ -45028,7 +45226,7 @@ Concept Index
 * TARGET_ASM_BYTE_OP:                    Data Output.        (line    7)
 * TARGET_ASM_CAN_OUTPUT_MI_THUNK:        Function Entry.     (line  237)
 * TARGET_ASM_CLOSE_PAREN:                Data Output.        (line  130)
-* TARGET_ASM_CODE_END:                   File Framework.     (line   49)
+* TARGET_ASM_CODE_END:                   File Framework.     (line   59)
 * TARGET_ASM_CONSTRUCTOR:                Macros for Initialization.
                                                              (line   69)
 * TARGET_ASM_DESTRUCTOR:                 Macros for Initialization.
@@ -45051,14 +45249,16 @@ Concept Index
 * TARGET_ASM_INIT_SECTIONS:              Sections.           (line  161)
 * TARGET_ASM_INTEGER:                    Data Output.        (line   27)
 * TARGET_ASM_INTERNAL_LABEL:             Label Output.       (line  310)
+* TARGET_ASM_LTO_END:                    File Framework.     (line   54)
+* TARGET_ASM_LTO_START:                  File Framework.     (line   49)
 * TARGET_ASM_MARK_DECL_PRESERVED:        Label Output.       (line  281)
-* TARGET_ASM_NAMED_SECTION:              File Framework.     (line   96)
+* TARGET_ASM_NAMED_SECTION:              File Framework.     (line  106)
 * TARGET_ASM_OPEN_PAREN:                 Data Output.        (line  129)
 * TARGET_ASM_OUTPUT_ANCHOR:              Anchored Addresses. (line   44)
 * TARGET_ASM_OUTPUT_DWARF_DTPREL:        SDB and DWARF.      (line   64)
 * TARGET_ASM_OUTPUT_MI_THUNK:            Function Entry.     (line  195)
-* TARGET_ASM_RECORD_GCC_SWITCHES:        File Framework.     (line  126)
-* TARGET_ASM_RECORD_GCC_SWITCHES_SECTION: File Framework.    (line  170)
+* TARGET_ASM_RECORD_GCC_SWITCHES:        File Framework.     (line  136)
+* TARGET_ASM_RECORD_GCC_SWITCHES_SECTION: File Framework.    (line  180)
 * TARGET_ASM_RELOC_RW_MASK:              Sections.           (line  170)
 * TARGET_ASM_SELECT_RTX_SECTION:         Sections.           (line  224)
 * TARGET_ASM_SELECT_SECTION:             Sections.           (line  182)
@@ -45168,9 +45368,9 @@ Concept Index
 * TARGET_HAVE_CONDITIONAL_EXECUTION:     Misc.               (line  839)
 * TARGET_HAVE_CTORS_DTORS:               Macros for Initialization.
                                                              (line   64)
-* TARGET_HAVE_NAMED_SECTIONS:            File Framework.     (line  103)
+* TARGET_HAVE_NAMED_SECTIONS:            File Framework.     (line  113)
 * TARGET_HAVE_SRODATA_SECTION:           Sections.           (line  290)
-* TARGET_HAVE_SWITCHABLE_BSS_SECTIONS:   File Framework.     (line  107)
+* TARGET_HAVE_SWITCHABLE_BSS_SECTIONS:   File Framework.     (line  117)
 * TARGET_HAVE_TLS:                       Sections.           (line  303)
 * TARGET_HELP:                           Run-time Target.    (line  154)
 * TARGET_IN_SMALL_DATA_P:                Sections.           (line  286)
@@ -45278,7 +45478,7 @@ Concept Index
 * TARGET_SCHED_SPECULATE_INSN:           Scheduling.         (line  266)
 * TARGET_SCHED_VARIABLE_ISSUE:           Scheduling.         (line   24)
 * TARGET_SECONDARY_RELOAD:               Register Classes.   (line  272)
-* TARGET_SECTION_TYPE_FLAGS:             File Framework.     (line  113)
+* TARGET_SECTION_TYPE_FLAGS:             File Framework.     (line  123)
 * TARGET_SET_CURRENT_FUNCTION:           Misc.               (line  754)
 * TARGET_SET_DEFAULT_TYPE_ATTRIBUTES:    Target Attributes.  (line   26)
 * TARGET_SETUP_INCOMING_VARARGS:         Varargs.            (line  101)
@@ -45348,7 +45548,7 @@ Concept Index
 * THUNK_DECL:                            Declarations.       (line    6)
 * THUNK_DELTA:                           Declarations.       (line    6)
 * TImode:                                Machine Modes.      (line   48)
-* TImode, in insn:                       Insns.              (line  231)
+* TImode, in insn:                       Insns.              (line  272)
 * TLS_COMMON_ASM_OP:                     Sections.           (line   82)
 * TLS_SECTION_ASM_FLAG:                  Sections.           (line   87)
 * tm.h macros:                           Target Macros.      (line    6)
@@ -45631,8 +45831,11 @@ Concept Index
                                                              (line    6)
 * values, returned by functions:         Scalar Return.      (line    6)
 * VAR_DECL:                              Declarations.       (line    6)
+* var_location:                          Debug Information.  (line   14)
 * varargs implementation:                Varargs.            (line    6)
 * variable:                              Declarations.       (line    6)
+* Variable Location Debug Information in RTL: Debug Information.
+                                                             (line    6)
 * vashlM3 instruction pattern:           Standard Names.     (line  445)
 * vashrM3 instruction pattern:           Standard Names.     (line  445)
 * vec_concat:                            Vector Operations.  (line   28)
@@ -45805,301 +46008,303 @@ Node: Testsuites197408
 Node: Test Idioms198339
 Node: Test Directives201736
 Node: Directives202263
-Node: Selectors212160
-Node: Effective-Target Keywords213302
-Node: Add Options229168
-Node: Require Support229887
-Node: Final Actions232299
-Node: Ada Tests236362
-Node: C Tests237704
-Node: libgcj Tests242127
-Node: LTO Testing243254
-Node: gcov Testing244859
-Node: profopt Testing247846
-Node: compat Testing249561
-Node: Torture Tests253801
-Node: Options255418
-Node: Option file format255858
-Node: Option properties258607
-Node: Passes265082
-Node: Parsing pass265826
-Node: Gimplification pass269354
-Node: Pass manager271181
-Node: Tree SSA passes272975
-Node: RTL passes295505
-Node: RTL307848
-Node: RTL Objects309966
-Node: RTL Classes313840
-Node: Accessors318792
-Node: Special Accessors321186
-Node: Flags326552
-Node: Machine Modes342727
-Node: Constants355043
-Node: Regs and Memory361072
-Node: Arithmetic378973
-Node: Comparisons388605
-Node: Bit-Fields392897
-Node: Vector Operations394449
-Node: Conversions396284
-Node: RTL Declarations400782
-Node: Side Effects401603
-Node: Incdec417925
-Node: Assembler421260
-Node: Insns422793
-Node: Calls446677
-Node: Sharing449270
-Node: Reading RTL452380
-Node: GENERIC453372
-Node: Deficiencies455245
-Node: Tree overview455486
-Node: Macros and Functions459613
-Node: Identifiers460438
-Node: Containers462049
-Node: Types463206
-Node: Declarations475302
-Node: Working with declarations475797
-Node: Internal structure481193
-Node: Current structure hierarchy481577
-Node: Adding new DECL node types483671
-Node: Attributes487744
-Node: Expression trees488989
-Node: Constant expressions490742
-Node: Storage References494961
-Node: Unary and Binary Expressions498135
-Node: Vectors517553
-Node: Statements522482
-Node: Basic Statements523002
-Node: Blocks527509
-Node: Statement Sequences528913
-Node: Empty Statements529246
-Node: Jumps529820
-Node: Cleanups530473
-Node: OpenMP532241
-Node: Functions537988
-Node: Function Basics538459
-Node: Function Properties542144
-Node: Language-dependent trees545273
-Node: C and C++ Trees546159
-Node: Types for C++549063
-Node: Namespaces554033
-Node: Classes557140
-Node: Functions for C++562218
-Node: Statements for C++568471
-Node: C++ Expressions576519
-Node: Java Trees578020
-Node: GIMPLE578133
-Node: Tuple representation581754
-Node: GIMPLE instruction set590409
-Node: GIMPLE Exception Handling592030
-Node: Temporaries593944
-Ref: Temporaries-Footnote-1595263
-Node: Operands595326
-Node: Compound Expressions596100
-Node: Compound Lvalues596334
-Node: Conditional Expressions597100
-Node: Logical Operators597770
-Node: Manipulating GIMPLE statements604561
-Node: Tuple specific accessors610489
-Node: `GIMPLE_ASM'611289
-Node: `GIMPLE_ASSIGN'613894
-Node: `GIMPLE_BIND'617839
-Node: `GIMPLE_CALL'619646
-Node: `GIMPLE_CATCH'623905
-Node: `GIMPLE_COND'625048
-Node: `GIMPLE_EH_FILTER'627840
-Node: `GIMPLE_LABEL'629326
-Node: `GIMPLE_NOP'630301
-Node: `GIMPLE_OMP_ATOMIC_LOAD'630668
-Node: `GIMPLE_OMP_ATOMIC_STORE'631578
-Node: `GIMPLE_OMP_CONTINUE'632217
-Node: `GIMPLE_OMP_CRITICAL'633567
-Node: `GIMPLE_OMP_FOR'634503
-Node: `GIMPLE_OMP_MASTER'638013
-Node: `GIMPLE_OMP_ORDERED'638396
-Node: `GIMPLE_OMP_PARALLEL'638796
-Node: `GIMPLE_OMP_RETURN'641565
-Node: `GIMPLE_OMP_SECTION'642215
-Node: `GIMPLE_OMP_SECTIONS'642881
-Node: `GIMPLE_OMP_SINGLE'644485
-Node: `GIMPLE_PHI'645421
-Node: `GIMPLE_RESX'646834
-Node: `GIMPLE_RETURN'647553
-Node: `GIMPLE_SWITCH'648121
-Node: `GIMPLE_TRY'650251
-Node: `GIMPLE_WITH_CLEANUP_EXPR'652041
-Node: GIMPLE sequences652924
-Node: Sequence iterators656130
-Node: Adding a new GIMPLE statement code664585
-Node: Statement and operand traversals665865
-Node: Tree SSA668475
-Node: Annotations670261
-Node: SSA Operands670787
-Node: SSA685318
-Node: Alias analysis697609
-Node: Memory model701389
-Node: Loop Analysis and Representation702752
-Node: Loop representation703933
-Node: Loop querying710853
-Node: Loop manipulation713686
-Node: LCSSA716054
-Node: Scalar evolutions718126
-Node: loop-iv721370
-Node: Number of iterations723296
-Node: Dependency analysis726105
-Node: Lambda732473
-Node: Omega734144
-Node: Control Flow735709
-Node: Basic Blocks736704
-Node: Edges741272
-Node: Profile information749834
-Node: Maintaining the CFG754520
-Node: Liveness information761401
-Node: Machine Desc763527
-Node: Overview765995
-Node: Patterns768036
-Node: Example771474
-Node: RTL Template772909
-Node: Output Template783564
-Node: Output Statement787529
-Node: Predicates791491
-Node: Machine-Independent Predicates794409
-Node: Defining Predicates799354
-Node: Constraints805319
-Node: Simple Constraints806567
-Node: Multi-Alternative818773
-Node: Class Preferences821614
-Node: Modifiers822506
-Node: Machine Constraints826638
-Node: Disable Insn Alternatives863501
-Node: Define Constraints866394
-Node: C Constraint Interface873175
-Node: Standard Names876816
-Ref: shift patterns895744
-Ref: prologue instruction pattern935463
-Ref: epilogue instruction pattern935956
-Node: Pattern Ordering945672
-Node: Dependent Patterns946908
-Node: Jump Patterns948528
-Ref: Jump Patterns-Footnote-1950672
-Node: Looping Patterns950718
-Node: Insn Canonicalizations955446
-Node: Expander Definitions959397
-Node: Insn Splitting967515
-Node: Including Patterns977117
-Node: Peephole Definitions978897
-Node: define_peephole980150
-Node: define_peephole2986481
-Node: Insn Attributes989548
-Node: Defining Attributes990654
-Node: Expressions993174
-Node: Tagging Insns999776
-Node: Attr Example1004129
-Node: Insn Lengths1006503
-Node: Constant Attributes1009562
-Node: Delay Slots1010731
-Node: Processor pipeline description1013955
-Ref: Processor pipeline description-Footnote-11031573
-Node: Conditional Execution1031895
-Node: Constant Definitions1034748
-Node: Iterators1036343
-Node: Mode Iterators1036790
-Node: Defining Mode Iterators1037768
-Node: Substitutions1039262
-Node: Examples1041503
-Node: Code Iterators1042951
-Node: Target Macros1045208
-Node: Target Structure1048296
-Node: Driver1049565
-Node: Run-time Target1073246
-Node: Per-Function Data1081118
-Node: Storage Layout1083881
-Node: Type Layout1109467
-Node: Registers1123967
-Node: Register Basics1124941
-Node: Allocation Order1130508
-Node: Values in Registers1132529
-Node: Leaf Functions1140018
-Node: Stack Registers1142876
-Node: Register Classes1144148
-Node: Old Constraints1171773
-Node: Stack and Calling1178925
-Node: Frame Layout1179459
-Node: Exception Handling1190339
-Node: Stack Checking1196717
-Node: Frame Registers1201530
-Node: Elimination1208423
-Node: Stack Arguments1212652
-Node: Register Arguments1219461
-Node: Scalar Return1234939
-Node: Aggregate Return1241031
-Node: Caller Saves1244712
-Node: Function Entry1245890
-Node: Profiling1258518
-Node: Tail Calls1260217
-Node: Stack Smashing Protection1261583
-Node: Varargs1262695
-Node: Trampolines1270690
-Node: Library Calls1277337
-Node: Addressing Modes1282187
-Node: Anchored Addresses1299596
-Node: Condition Code1302245
-Node: CC0 Condition Codes1304374
-Node: MODE_CC Condition Codes1307620
-Node: Cond. Exec. Macros1313849
-Node: Costs1314828
-Node: Scheduling1328289
-Node: Sections1345556
-Node: PIC1360624
-Node: Assembler Format1362628
-Node: File Framework1363766
-Ref: TARGET_HAVE_SWITCHABLE_BSS_SECTIONS1368839
-Node: Data Output1372104
-Node: Uninitialized Data1379863
-Node: Label Output1385427
-Node: Initialization1407117
-Node: Macros for Initialization1413079
-Node: Instruction Output1419531
-Node: Dispatch Tables1429202
-Node: Exception Region Output1433017
-Node: Alignment Output1438759
-Node: Debugging Info1442922
-Node: All Debuggers1443592
-Node: DBX Options1446447
-Node: DBX Hooks1451896
-Node: File Names and DBX1453822
-Node: SDB and DWARF1455934
-Node: VMS Debug1460235
-Node: Floating Point1460805
-Node: Mode Switching1465628
-Node: Target Attributes1469554
-Node: Emulated TLS1476390
-Node: MIPS Coprocessors1479780
-Node: PCH Target1481349
-Node: C++ ABI1482891
-Node: Named Address Spaces1487540
-Node: Misc1492642
-Ref: TARGET_SHIFT_TRUNCATION_MASK1500070
-Node: Host Config1544581
-Node: Host Common1545649
-Node: Filesystem1548028
-Node: Host Misc1552143
-Node: Fragments1554592
-Node: Target Fragment1555787
-Node: Host Fragment1561677
-Node: Collect21561917
-Node: Header Dirs1564553
-Node: Type Information1565976
-Node: GTY Options1568267
-Node: GGC Roots1578942
-Node: Files1579662
-Node: Invoking the garbage collector1582408
-Node: Plugins1583461
-Node: Funding1599283
-Node: GNU Project1601770
-Node: Copying1602419
-Node: GNU Free Documentation License1639950
-Node: Contributors1662359
-Node: Option Index1699046
-Node: Concept Index1699631
+Node: Selectors212331
+Node: Effective-Target Keywords213473
+Node: Add Options229761
+Node: Require Support230480
+Node: Final Actions232892
+Node: Ada Tests236955
+Node: C Tests238297
+Node: libgcj Tests242720
+Node: LTO Testing243847
+Node: gcov Testing245452
+Node: profopt Testing248439
+Node: compat Testing250154
+Node: Torture Tests254394
+Node: Options256011
+Node: Option file format256451
+Node: Option properties259200
+Node: Passes265675
+Node: Parsing pass266419
+Node: Gimplification pass269947
+Node: Pass manager271774
+Node: Tree SSA passes273568
+Node: RTL passes296098
+Node: RTL308441
+Node: RTL Objects310629
+Node: RTL Classes314503
+Node: Accessors319455
+Node: Special Accessors321849
+Node: Flags327215
+Node: Machine Modes343390
+Node: Constants355706
+Node: Regs and Memory361735
+Node: Arithmetic379636
+Node: Comparisons389268
+Node: Bit-Fields393560
+Node: Vector Operations395112
+Node: Conversions396947
+Node: RTL Declarations401445
+Node: Side Effects402266
+Node: Incdec418588
+Node: Assembler421923
+Node: Debug Information423468
+Node: Insns424666
+Node: Calls450866
+Node: Sharing453459
+Node: Reading RTL456569
+Node: GENERIC457561
+Node: Deficiencies459434
+Node: Tree overview459675
+Node: Macros and Functions463802
+Node: Identifiers464627
+Node: Containers466238
+Node: Types467395
+Node: Declarations479491
+Node: Working with declarations479986
+Node: Internal structure485592
+Node: Current structure hierarchy485976
+Node: Adding new DECL node types488070
+Node: Attributes492143
+Node: Expression trees493388
+Node: Constant expressions495141
+Node: Storage References499360
+Node: Unary and Binary Expressions502534
+Node: Vectors521952
+Node: Statements526881
+Node: Basic Statements527401
+Node: Blocks531908
+Node: Statement Sequences533312
+Node: Empty Statements533645
+Node: Jumps534219
+Node: Cleanups534872
+Node: OpenMP536640
+Node: Functions542387
+Node: Function Basics542858
+Node: Function Properties546543
+Node: Language-dependent trees549672
+Node: C and C++ Trees550558
+Node: Types for C++553462
+Node: Namespaces558432
+Node: Classes561539
+Node: Functions for C++566617
+Node: Statements for C++572870
+Node: C++ Expressions580918
+Node: Java Trees582419
+Node: GIMPLE582532
+Node: Tuple representation586153
+Node: GIMPLE instruction set594808
+Node: GIMPLE Exception Handling596476
+Node: Temporaries598390
+Ref: Temporaries-Footnote-1599709
+Node: Operands599772
+Node: Compound Expressions600546
+Node: Compound Lvalues600780
+Node: Conditional Expressions601546
+Node: Logical Operators602216
+Node: Manipulating GIMPLE statements609007
+Node: Tuple specific accessors614935
+Node: `GIMPLE_ASM'615754
+Node: `GIMPLE_ASSIGN'618359
+Node: `GIMPLE_BIND'622304
+Node: `GIMPLE_CALL'624111
+Node: `GIMPLE_CATCH'628370
+Node: `GIMPLE_COND'629513
+Node: `GIMPLE_DEBUG'632301
+Node: `GIMPLE_EH_FILTER'635673
+Node: `GIMPLE_LABEL'637160
+Node: `GIMPLE_NOP'638135
+Node: `GIMPLE_OMP_ATOMIC_LOAD'638504
+Node: `GIMPLE_OMP_ATOMIC_STORE'639414
+Node: `GIMPLE_OMP_CONTINUE'640053
+Node: `GIMPLE_OMP_CRITICAL'641403
+Node: `GIMPLE_OMP_FOR'642339
+Node: `GIMPLE_OMP_MASTER'645849
+Node: `GIMPLE_OMP_ORDERED'646232
+Node: `GIMPLE_OMP_PARALLEL'646632
+Node: `GIMPLE_OMP_RETURN'649401
+Node: `GIMPLE_OMP_SECTION'650051
+Node: `GIMPLE_OMP_SECTIONS'650717
+Node: `GIMPLE_OMP_SINGLE'652321
+Node: `GIMPLE_PHI'653257
+Node: `GIMPLE_RESX'654670
+Node: `GIMPLE_RETURN'655389
+Node: `GIMPLE_SWITCH'655957
+Node: `GIMPLE_TRY'658087
+Node: `GIMPLE_WITH_CLEANUP_EXPR'659877
+Node: GIMPLE sequences660760
+Node: Sequence iterators663966
+Node: Adding a new GIMPLE statement code672421
+Node: Statement and operand traversals673701
+Node: Tree SSA676311
+Node: Annotations678097
+Node: SSA Operands678623
+Node: SSA693154
+Node: Alias analysis705445
+Node: Memory model709225
+Node: Loop Analysis and Representation710588
+Node: Loop representation711769
+Node: Loop querying718689
+Node: Loop manipulation721522
+Node: LCSSA723890
+Node: Scalar evolutions725962
+Node: loop-iv729206
+Node: Number of iterations731132
+Node: Dependency analysis733941
+Node: Lambda740309
+Node: Omega741980
+Node: Control Flow743545
+Node: Basic Blocks744540
+Node: Edges749108
+Node: Profile information757670
+Node: Maintaining the CFG762356
+Node: Liveness information769237
+Node: Machine Desc771363
+Node: Overview773831
+Node: Patterns775872
+Node: Example779310
+Node: RTL Template780745
+Node: Output Template791400
+Node: Output Statement795365
+Node: Predicates799327
+Node: Machine-Independent Predicates802245
+Node: Defining Predicates807190
+Node: Constraints813155
+Node: Simple Constraints814403
+Node: Multi-Alternative826609
+Node: Class Preferences829450
+Node: Modifiers830342
+Node: Machine Constraints834474
+Node: Disable Insn Alternatives871337
+Node: Define Constraints874230
+Node: C Constraint Interface881011
+Node: Standard Names884652
+Ref: shift patterns903580
+Ref: prologue instruction pattern943299
+Ref: epilogue instruction pattern943792
+Node: Pattern Ordering953508
+Node: Dependent Patterns954744
+Node: Jump Patterns956364
+Ref: Jump Patterns-Footnote-1958508
+Node: Looping Patterns958554
+Node: Insn Canonicalizations963282
+Node: Expander Definitions967233
+Node: Insn Splitting975351
+Node: Including Patterns984953
+Node: Peephole Definitions986733
+Node: define_peephole987986
+Node: define_peephole2994317
+Node: Insn Attributes997384
+Node: Defining Attributes998490
+Node: Expressions1001010
+Node: Tagging Insns1007612
+Node: Attr Example1011965
+Node: Insn Lengths1014339
+Node: Constant Attributes1017398
+Node: Delay Slots1018567
+Node: Processor pipeline description1021791
+Ref: Processor pipeline description-Footnote-11039409
+Node: Conditional Execution1039731
+Node: Constant Definitions1042584
+Node: Iterators1044179
+Node: Mode Iterators1044626
+Node: Defining Mode Iterators1045604
+Node: Substitutions1047098
+Node: Examples1049339
+Node: Code Iterators1050787
+Node: Target Macros1053044
+Node: Target Structure1056132
+Node: Driver1057401
+Node: Run-time Target1081082
+Node: Per-Function Data1088954
+Node: Storage Layout1091717
+Node: Type Layout1117303
+Node: Registers1131803
+Node: Register Basics1132777
+Node: Allocation Order1138344
+Node: Values in Registers1140365
+Node: Leaf Functions1147854
+Node: Stack Registers1150712
+Node: Register Classes1151984
+Node: Old Constraints1179609
+Node: Stack and Calling1186761
+Node: Frame Layout1187295
+Node: Exception Handling1198175
+Node: Stack Checking1204553
+Node: Frame Registers1209366
+Node: Elimination1216259
+Node: Stack Arguments1220488
+Node: Register Arguments1227297
+Node: Scalar Return1242775
+Node: Aggregate Return1248867
+Node: Caller Saves1252548
+Node: Function Entry1253726
+Node: Profiling1266354
+Node: Tail Calls1268053
+Node: Stack Smashing Protection1269419
+Node: Varargs1270531
+Node: Trampolines1278526
+Node: Library Calls1285173
+Node: Addressing Modes1290023
+Node: Anchored Addresses1307432
+Node: Condition Code1310081
+Node: CC0 Condition Codes1312210
+Node: MODE_CC Condition Codes1315456
+Node: Cond. Exec. Macros1321685
+Node: Costs1322664
+Node: Scheduling1336125
+Node: Sections1353392
+Node: PIC1368460
+Node: Assembler Format1370464
+Node: File Framework1371602
+Ref: TARGET_HAVE_SWITCHABLE_BSS_SECTIONS1377077
+Node: Data Output1380342
+Node: Uninitialized Data1388101
+Node: Label Output1393665
+Node: Initialization1415355
+Node: Macros for Initialization1421317
+Node: Instruction Output1427769
+Node: Dispatch Tables1437440
+Node: Exception Region Output1441255
+Node: Alignment Output1446997
+Node: Debugging Info1451160
+Node: All Debuggers1451830
+Node: DBX Options1454685
+Node: DBX Hooks1460134
+Node: File Names and DBX1462060
+Node: SDB and DWARF1464172
+Node: VMS Debug1468473
+Node: Floating Point1469043
+Node: Mode Switching1473866
+Node: Target Attributes1477792
+Node: Emulated TLS1484628
+Node: MIPS Coprocessors1488018
+Node: PCH Target1489587
+Node: C++ ABI1491129
+Node: Named Address Spaces1495778
+Node: Misc1500880
+Ref: TARGET_SHIFT_TRUNCATION_MASK1508308
+Node: Host Config1552819
+Node: Host Common1553887
+Node: Filesystem1556266
+Node: Host Misc1560381
+Node: Fragments1562830
+Node: Target Fragment1564025
+Node: Host Fragment1569915
+Node: Collect21570155
+Node: Header Dirs1572791
+Node: Type Information1574214
+Node: GTY Options1576505
+Node: GGC Roots1587180
+Node: Files1587900
+Node: Invoking the garbage collector1590646
+Node: Plugins1591699
+Node: Funding1607521
+Node: GNU Project1610008
+Node: Copying1610657
+Node: GNU Free Documentation License1648188
+Node: Contributors1670597
+Node: Option Index1707284
+Node: Concept Index1707869
 
 End Tag Table

@@ -105,6 +105,7 @@ enum gf_mask {
     GF_CALL_RETURN_SLOT_OPT	= 1 << 2,
     GF_CALL_TAILCALL		= 1 << 3,
     GF_CALL_VA_ARG_PACK		= 1 << 4,
+    GF_CALL_NOTHROW		= 1 << 5,
     GF_OMP_PARALLEL_COMBINED	= 1 << 0,
 
     /* True on an GIMPLE_OMP_RETURN statement if the return does not require
@@ -219,6 +220,13 @@ gimple_seq_empty_p (const_gimple_seq s)
 
 
 void gimple_seq_add_stmt (gimple_seq *, gimple);
+
+/* Link gimple statement GS to the end of the sequence *SEQ_P.  If
+   *SEQ_P is NULL, a new sequence is allocated.  This function is
+   similar to gimple_seq_add_stmt, but does not scan the operands.
+   During gimplification, we need to manipulate statement sequences
+   before the def/use vectors have been constructed.  */
+void gimplify_seq_add_stmt (gimple_seq *, gimple);
 
 /* Allocate a new sequence and initialize its first element with STMT.  */
 
@@ -2178,6 +2186,19 @@ gimple_call_noreturn_p (gimple s)
   return (gimple_call_flags (s) & ECF_NORETURN) != 0;
 }
 
+
+/* If NOTHROW_P is true, GIMPLE_CALL S is a call that is known to not throw
+   even if the called function can throw in other cases.  */
+
+static inline void
+gimple_call_set_nothrow (gimple s, bool nothrow_p)
+{
+  GIMPLE_CHECK (s, GIMPLE_CALL);
+  if (nothrow_p)
+    s->gsbase.subcode |= GF_CALL_NOTHROW;
+  else
+    s->gsbase.subcode &= ~GF_CALL_NOTHROW;
+}
 
 /* Return true if S is a nothrow call.  */
 

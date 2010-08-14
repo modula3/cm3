@@ -728,7 +728,7 @@ ccp_finalize (void)
 
   do_dbg_cnt ();
   /* Perform substitutions based on the known constant values.  */
-  something_changed = substitute_and_fold (const_val, ccp_fold_stmt);
+  something_changed = substitute_and_fold (const_val, ccp_fold_stmt, true);
 
   free (const_val);
   const_val = NULL;
@@ -2292,6 +2292,18 @@ maybe_fold_stmt_addition (location_t loc, tree res_type, tree op0, tree op1)
 	{
 	  gimple offset_def = SSA_NAME_DEF_STMT (op1);
 	  if (!is_gimple_assign (offset_def))
+	    return NULL_TREE;
+
+	  /* As we will end up creating a variable index array access
+	     in the outermost array dimension make sure there isn't
+	     a more inner array that the index could overflow to.  */
+	  if (TREE_CODE (TREE_OPERAND (op0, 0)) == ARRAY_REF)
+	    return NULL_TREE;
+
+	  /* Do not build array references of something that we can't
+	     see the true number of array dimensions for.  */
+	  if (!DECL_P (TREE_OPERAND (op0, 0))
+	      && !handled_component_p (TREE_OPERAND (op0, 0)))
 	    return NULL_TREE;
 
 	  if (gimple_assign_rhs_code (offset_def) == MULT_EXPR

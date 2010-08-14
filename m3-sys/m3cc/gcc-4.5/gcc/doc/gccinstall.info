@@ -1,5 +1,5 @@
 This is doc/gccinstall.info, produced by makeinfo version 4.12 from
-/space/rguenther/gcc-4.5.0/gcc-4.5.0/gcc/doc/install.texi.
+/space/rguenther/gcc-4.5.1/gcc-4.5.1/gcc/doc/install.texi.
 
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -225,8 +225,8 @@ libelf version 0.8.12 (or later)
      downloaded from
      `http://www.mr511.de/software/libelf-0.8.12.tar.gz', though it is
      commonly available in several systems.  The versions in IRIX 5 and
-     6 don't work since they lack `gelf.h'.  The version in recent
-     releases of Solaris 11 does work, previous ones don't yet.
+     6 don't work since they lack `gelf.h'.  The version in Solaris 2
+     does work.
 
      The `--with-libelf' configure option should be used if libelf is
      not installed in your default library search patch.
@@ -1026,6 +1026,10 @@ option.
 `--with-cpp-install-dir=DIRNAME'
      Specify that the user visible `cpp' program should be installed in
      `PREFIX/DIRNAME/cpp', in addition to BINDIR.
+
+`--enable-comdat'
+     Enable COMDAT group support.  This is primarily used to override
+     the automatically detected value.
 
 `--enable-initfini-array'
      Force the use of sections `.init_array' and `.fini_array' (instead
@@ -2851,6 +2855,24 @@ See bug 10877 for more information.
 is possible you have a hardware problem.  Further information on this
 can be found on www.bitwizard.nl.
 
+i?86-*-solaris2.[89]
+====================
+
+The Sun assembler in Solaris 8 and 9 has several bugs and limitations.
+While GCC works around them, several features are missing, so it is
+recommended to use the GNU assembler instead.  There is no bundled
+version, but the current version, from GNU binutils 2.20.1, is known to
+work.
+
+   Solaris~2/x86 doesn't support the execution of SSE/SSE2 instructions
+before Solaris~9 4/04, even if the CPU supports them.  Programs will
+receive `SIGILL' if they try.  The fix is available both in Solaris~9
+Update~6 and kernel patch 112234-12 or newer.  There is no
+corresponding patch for Solaris 8.  To avoid this problem, `-march'
+defaults to `pentiumpro' on Solaris 8 and 9.  If you have the patch
+installed, you can configure GCC with an appropriate `--with-arch'
+option, but need GNU `as' for SSE2 support.
+
 i?86-*-solaris2.10
 ==================
 
@@ -4436,84 +4458,85 @@ Tag Table:
 Node: Top1953
 Node: Installing GCC2511
 Node: Prerequisites4026
-Node: Downloading the source13733
-Node: Configuration15670
-Ref: with-gnu-as29812
-Ref: with-as30710
-Ref: with-gnu-ld32123
-Node: Building75470
-Node: Testing90781
-Node: Final install98561
-Node: Binaries103791
-Node: Specific105384
-Ref: alpha-x-x105890
-Ref: alpha-dec-osf106379
-Ref: arc-x-elf108680
-Ref: arm-x-elf108780
-Ref: avr109000
-Ref: bfin109642
-Ref: cris109884
-Ref: crx110700
-Ref: dos111363
-Ref: x-x-freebsd111686
-Ref: h8300-hms113499
-Ref: hppa-hp-hpux113851
-Ref: hppa-hp-hpux10116222
-Ref: hppa-hp-hpux11116855
-Ref: x-x-linux-gnu122514
-Ref: ix86-x-linux122707
-Ref: ix86-x-solaris210123020
-Ref: ia64-x-linux124250
-Ref: ia64-x-hpux125020
-Ref: x-ibm-aix125575
-Ref: iq2000-x-elf131834
-Ref: lm32-x-elf131974
-Ref: lm32-x-uclinux132078
-Ref: m32c-x-elf132206
-Ref: m32r-x-elf132308
-Ref: m6811-elf132410
-Ref: m6812-elf132560
-Ref: m68k-x-x132710
-Ref: m68k-x-uclinux133682
-Ref: mep-x-elf134045
-Ref: mips-x-x134155
-Ref: mips-sgi-irix5136832
-Ref: mips-sgi-irix6138098
-Ref: moxie-x-elf141429
-Ref: powerpc-x-x141549
-Ref: powerpc-x-darwin141754
-Ref: powerpc-x-elf142301
-Ref: powerpc-x-linux-gnu142386
-Ref: powerpc-x-netbsd142481
-Ref: powerpc-x-eabisim142569
-Ref: powerpc-x-eabi142695
-Ref: powerpcle-x-elf142771
-Ref: powerpcle-x-eabisim142863
-Ref: powerpcle-x-eabi142996
-Ref: rx-x-elf143079
-Ref: s390-x-linux143278
-Ref: s390x-x-linux143350
-Ref: s390x-ibm-tpf143437
-Ref: x-x-solaris2143568
-Ref: sparc-sun-solaris2147380
-Ref: sparc-sun-solaris27150106
-Ref: sparc-sun-solaris210152664
-Ref: sparc-x-linux153040
-Ref: sparc64-x-solaris2153265
-Ref: sparcv9-x-solaris2153907
-Ref: x-x-vxworks153994
-Ref: x86-64-x-x155516
-Ref: xtensa-x-elf155844
-Ref: xtensa-x-linux156515
-Ref: windows156856
-Ref: x-x-cygwin158813
-Ref: x-x-interix159366
-Ref: x-x-mingw32159732
-Ref: older159958
-Ref: elf162075
-Node: Old162333
-Node: Configurations165470
-Node: GNU Free Documentation License169452
-Node: Concept Index191868
+Node: Downloading the source13688
+Node: Configuration15625
+Ref: with-gnu-as29767
+Ref: with-as30665
+Ref: with-gnu-ld32078
+Node: Building75553
+Node: Testing90864
+Node: Final install98644
+Node: Binaries103874
+Node: Specific105467
+Ref: alpha-x-x105973
+Ref: alpha-dec-osf106462
+Ref: arc-x-elf108763
+Ref: arm-x-elf108863
+Ref: avr109083
+Ref: bfin109725
+Ref: cris109967
+Ref: crx110783
+Ref: dos111446
+Ref: x-x-freebsd111769
+Ref: h8300-hms113582
+Ref: hppa-hp-hpux113934
+Ref: hppa-hp-hpux10116305
+Ref: hppa-hp-hpux11116938
+Ref: x-x-linux-gnu122597
+Ref: ix86-x-linux122790
+Ref: ix86-x-solaris289123103
+Ref: ix86-x-solaris210123949
+Ref: ia64-x-linux125179
+Ref: ia64-x-hpux125949
+Ref: x-ibm-aix126504
+Ref: iq2000-x-elf132763
+Ref: lm32-x-elf132903
+Ref: lm32-x-uclinux133007
+Ref: m32c-x-elf133135
+Ref: m32r-x-elf133237
+Ref: m6811-elf133339
+Ref: m6812-elf133489
+Ref: m68k-x-x133639
+Ref: m68k-x-uclinux134611
+Ref: mep-x-elf134974
+Ref: mips-x-x135084
+Ref: mips-sgi-irix5137761
+Ref: mips-sgi-irix6139027
+Ref: moxie-x-elf142358
+Ref: powerpc-x-x142478
+Ref: powerpc-x-darwin142683
+Ref: powerpc-x-elf143230
+Ref: powerpc-x-linux-gnu143315
+Ref: powerpc-x-netbsd143410
+Ref: powerpc-x-eabisim143498
+Ref: powerpc-x-eabi143624
+Ref: powerpcle-x-elf143700
+Ref: powerpcle-x-eabisim143792
+Ref: powerpcle-x-eabi143925
+Ref: rx-x-elf144008
+Ref: s390-x-linux144207
+Ref: s390x-x-linux144279
+Ref: s390x-ibm-tpf144366
+Ref: x-x-solaris2144497
+Ref: sparc-sun-solaris2148309
+Ref: sparc-sun-solaris27151035
+Ref: sparc-sun-solaris210153593
+Ref: sparc-x-linux153969
+Ref: sparc64-x-solaris2154194
+Ref: sparcv9-x-solaris2154836
+Ref: x-x-vxworks154923
+Ref: x86-64-x-x156445
+Ref: xtensa-x-elf156773
+Ref: xtensa-x-linux157444
+Ref: windows157785
+Ref: x-x-cygwin159742
+Ref: x-x-interix160295
+Ref: x-x-mingw32160661
+Ref: older160887
+Ref: elf163004
+Node: Old163262
+Node: Configurations166399
+Node: GNU Free Documentation License170381
+Node: Concept Index192797
 
 End Tag Table

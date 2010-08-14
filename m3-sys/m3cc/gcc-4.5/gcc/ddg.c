@@ -390,7 +390,7 @@ build_intra_loop_deps (ddg_ptr g)
 {
   int i;
   /* Hold the dependency analysis state during dependency calculations.  */
-  struct deps tmp_deps;
+  struct deps_desc tmp_deps;
   rtx head, tail;
 
   /* Build the dependence information, using the sched_analyze function.  */
@@ -487,7 +487,7 @@ create_ddg (basic_block bb, int closing_branch_deps)
     }
 
   /* There is nothing to do for this BB.  */
-  if (num_nodes <= 1)
+  if ((num_nodes - g->num_debug) <= 1)
     {
       free (g);
       return NULL;
