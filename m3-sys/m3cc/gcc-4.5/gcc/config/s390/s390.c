@@ -1636,12 +1636,19 @@ override_options (void)
     target_flags |= MASK_LONG_DOUBLE_128;
 #endif
 
-  if (s390_tune == PROCESSOR_2097_Z10
-      && !PARAM_SET_P (PARAM_MAX_UNROLLED_INSNS))
-    set_param_value ("max-unrolled-insns", 100);
+  if (s390_tune == PROCESSOR_2097_Z10)
+    {
+      if (!PARAM_SET_P (PARAM_MAX_UNROLLED_INSNS))
+	set_param_value ("max-unrolled-insns", 100);
+      if (!PARAM_SET_P (PARAM_MAX_UNROLL_TIMES))
+	set_param_value ("max-unroll-times", 32);
+      if (!PARAM_SET_P (PARAM_MAX_COMPLETELY_PEELED_INSNS))
+	set_param_value ("max-completely-peeled-insns", 2000);
+      if (!PARAM_SET_P (PARAM_MAX_COMPLETELY_PEEL_TIMES))
+	set_param_value ("max-completely-peel-times", 64);
+    }
 
   set_param_value ("max-pending-list-length", 256);
-
 }
 
 /* Map for smallest class containing reg regno.  */
@@ -2771,11 +2778,6 @@ legitimate_reload_constant_p (rtx op)
   /* Accept larl operands.  */
   if (TARGET_CPU_ZARCH
       && larl_operand (op, VOIDmode))
-    return true;
-
-  /* Accept lzXX operands.  */
-  if (GET_CODE (op) == CONST_DOUBLE
-      && CONST_DOUBLE_OK_FOR_CONSTRAINT_P (op, 'G', "G"))
     return true;
 
   /* Accept double-word operands that can be split.  */
@@ -9426,11 +9428,25 @@ s390_emit_call (rtx addr_location, rtx tls_call, rtx result_reg,
          replace the symbol itself with the PLT stub.  */
       if (flag_pic && !SYMBOL_REF_LOCAL_P (addr_location))
         {
-	  addr_location = gen_rtx_UNSPEC (Pmode,
-					  gen_rtvec (1, addr_location),
-					  UNSPEC_PLT);
-	  addr_location = gen_rtx_CONST (Pmode, addr_location);
-	  plt_call = true;
+	  if (retaddr_reg != NULL_RTX)
+	    {
+	      addr_location = gen_rtx_UNSPEC (Pmode,
+					      gen_rtvec (1, addr_location),
+					      UNSPEC_PLT);
+	      addr_location = gen_rtx_CONST (Pmode, addr_location);
+	      plt_call = true;
+	    }
+	  else
+	    /* For -fpic code the PLT entries might use r12 which is
+	       call-saved.  Therefore we cannot do a sibcall when
+	       calling directly using a symbol ref.  When reaching
+	       this point we decided (in s390_function_ok_for_sibcall)
+	       to do a sibcall for a function pointer but one of the
+	       optimizers was able to get rid of the function pointer
+	       by propagating the symbol ref into the call.  This
+	       optimization is illegal for S/390 so we turn the direct
+	       call into a indirect call again.  */
+	    addr_location = force_reg (Pmode, addr_location);
         }
 
       /* Unless we can use the bras(l) insn, force the

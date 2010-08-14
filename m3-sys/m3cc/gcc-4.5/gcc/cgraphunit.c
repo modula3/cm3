@@ -714,6 +714,32 @@ verify_cgraph_node (struct cgraph_node *node)
       error ("double linked list of clones corrupted");
       error_found = true;
     }
+  if (node->same_comdat_group)
+    {
+      struct cgraph_node *n = node->same_comdat_group;
+
+      if (!DECL_ONE_ONLY (node->decl))
+	{
+	  error ("non-DECL_ONE_ONLY node in a same_comdat_group list");
+	  error_found = true;
+	}
+      if (n == node)
+	{
+	  error ("node is alone in a comdat group");
+	  error_found = true;
+	}
+      do
+	{
+	  if (!n->same_comdat_group)
+	    {
+	      error ("same_comdat_group is not a circular list");
+	      error_found = true;
+	      break;
+	    }
+	  n = n->same_comdat_group;
+	}
+      while (n != node);
+    }
 
   if (node->analyzed && gimple_has_body_p (node->decl)
       && !TREE_ASM_WRITTEN (node->decl)
@@ -1787,10 +1813,18 @@ ipa_passes (void)
       execute_ipa_summary_passes
 	((struct ipa_opt_pass_d *) all_regular_ipa_passes);
     }
+
+  /* Some targets need to handle LTO assembler output specially.  */
+  if (flag_generate_lto)
+    targetm.asm_out.lto_start ();
+
   execute_ipa_summary_passes ((struct ipa_opt_pass_d *) all_lto_gen_passes);
 
   if (!in_lto_p)
     ipa_write_summaries ();
+
+  if (flag_generate_lto)
+    targetm.asm_out.lto_end ();
 
   if (!flag_ltrans)
     execute_ipa_pass_list (all_regular_ipa_passes);
@@ -2101,6 +2135,11 @@ cgraph_function_versioning (struct cgraph_node *old_version_node,
   else
     new_decl = build_function_decl_skip_args (old_decl, args_to_skip);
 
+  /* Generate a new name for the new version. */
+  DECL_NAME (new_decl) = clone_function_name (old_decl);
+  SET_DECL_ASSEMBLER_NAME (new_decl, DECL_NAME (new_decl));
+  SET_DECL_RTL (new_decl, NULL);
+
   /* Create the new version's call-graph node.
      and update the edges of the new node. */
   new_version_node =
@@ -2233,7 +2272,6 @@ cgraph_redirect_edge_call_stmt_to_callee (struct cgraph_edge *e)
 {
   tree decl = gimple_call_fndecl (e->call_stmt);
   gimple new_stmt;
-  gimple_stmt_iterator gsi;
 
   if (!decl || decl == e->callee->decl
       /* Don't update call from same body alias to the real function.  */
@@ -2249,20 +2287,24 @@ cgraph_redirect_edge_call_stmt_to_callee (struct cgraph_edge *e)
     }
 
   if (e->callee->clone.combined_args_to_skip)
-    new_stmt = gimple_call_copy_skip_args (e->call_stmt,
-				       e->callee->clone.combined_args_to_skip);
+    {
+      gimple_stmt_iterator gsi;
+
+      new_stmt
+	= gimple_call_copy_skip_args (e->call_stmt,
+				      e->callee->clone.combined_args_to_skip);
+
+      if (gimple_vdef (new_stmt)
+	  && TREE_CODE (gimple_vdef (new_stmt)) == SSA_NAME)
+	SSA_NAME_DEF_STMT (gimple_vdef (new_stmt)) = new_stmt;
+
+      gsi = gsi_for_stmt (e->call_stmt);
+      gsi_replace (&gsi, new_stmt, true);
+    }
   else
     new_stmt = e->call_stmt;
-  if (gimple_vdef (new_stmt)
-      && TREE_CODE (gimple_vdef (new_stmt)) == SSA_NAME)
-    SSA_NAME_DEF_STMT (gimple_vdef (new_stmt)) = new_stmt;
+
   gimple_call_set_fndecl (new_stmt, e->callee->decl);
-
-  gsi = gsi_for_stmt (e->call_stmt);
-  gsi_replace (&gsi, new_stmt, true);
-
-  /* Update EH information too, just in case.  */
-  maybe_clean_or_replace_eh_stmt (e->call_stmt, new_stmt);
 
   cgraph_set_call_stmt_including_clones (e->caller, e->call_stmt, new_stmt);
 

@@ -94,9 +94,10 @@ lto_symtab_entry_marked_p (const void *p)
   const struct lto_symtab_entry_def *base =
      (const struct lto_symtab_entry_def *) p;
 
-  /* Keep this only if the decl or the chain is marked.  */
-  return (ggc_marked_p (base->decl)
-	  || (base->next && ggc_marked_p (base->next)));
+  /* Keep this only if the common IDENTIFIER_NODE of the symtab chain
+     is marked which it will be if at least one of the DECLs in the
+     chain is marked.  */
+  return ggc_marked_p (base->id);
 }
 
 /* Lazily initialize resolution hash tables.  */
@@ -406,6 +407,13 @@ lto_symtab_resolve_symbols (void **slot)
     {
       if (TREE_CODE (e->decl) == FUNCTION_DECL)
 	e->node = cgraph_get_node (e->decl);
+      else if (TREE_CODE (e->decl) == VAR_DECL)
+	{
+	  /* The LTO plugin for gold doesn't handle common symbols
+	     properly.  Let us choose manually.  */
+	  if (DECL_COMMON (e->decl))
+	    e->resolution = LDPR_UNKNOWN;
+	}
     }
 
   e = (lto_symtab_entry_t) *slot;

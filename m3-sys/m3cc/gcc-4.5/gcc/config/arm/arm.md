@@ -10826,7 +10826,7 @@
 (define_insn "*push_multi"
   [(match_parallel 2 "multi_register_push"
     [(set (match_operand:BLK 0 "memory_operand" "=m")
-	  (unspec:BLK [(match_operand:SI 1 "s_register_operand" "r")]
+	  (unspec:BLK [(match_operand:SI 1 "s_register_operand" "")]
 		      UNSPEC_PUSH_MULT))])]
   "TARGET_32BIT"
   "*
@@ -10879,7 +10879,7 @@
 (define_insn "*push_fp_multi"
   [(match_parallel 2 "multi_register_push"
     [(set (match_operand:BLK 0 "memory_operand" "=m")
-	  (unspec:BLK [(match_operand:XF 1 "f_register_operand" "f")]
+	  (unspec:BLK [(match_operand:XF 1 "f_register_operand" "")]
 		      UNSPEC_PUSH_MULT))])]
   "TARGET_32BIT && TARGET_HARD_FLOAT && TARGET_FPA"
   "*
@@ -11197,15 +11197,21 @@
    (set_attr "length" "4")]
 )
 
-(define_insn "arm_rev"
+(define_insn "*arm_rev"
   [(set (match_operand:SI 0 "s_register_operand" "=r")
 	(bswap:SI (match_operand:SI 1 "s_register_operand" "r")))]
-  "TARGET_EITHER && arm_arch6"
-  "rev\t%0, %1"
-  [(set (attr "length")
-        (if_then_else (eq_attr "is_thumb" "yes")
-		      (const_int 2)
-		      (const_int 4)))]
+  "TARGET_32BIT && arm_arch6"
+  "rev%?\t%0, %1"
+  [(set_attr "predicable" "yes")
+   (set_attr "length" "4")]
+)
+
+(define_insn "*thumb1_rev"
+  [(set (match_operand:SI 0 "s_register_operand" "=l")
+	(bswap:SI (match_operand:SI 1 "s_register_operand" "l")))]
+  "TARGET_THUMB1 && arm_arch6"
+   "rev\t%0, %1"
+  [(set_attr "length" "2")]
 )
 
 (define_expand "arm_legacy_rev"
