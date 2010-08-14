@@ -62,7 +62,7 @@ else
 fi
 
 # last release for installation
-LASTREL=${LASTREL:-5.4.0}
+LASTREL=${LASTREL:-5.8.6}
 
 # CM3 installation directories
 INSTBASE=${INSTBASE:-${HOME}/work/cm3-inst/${TESTHOSTNAME}}
@@ -187,7 +187,7 @@ HTML_REPORT="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${CM3_TARGET}-${DS}.html}"
 BINDISTMIN_NAME=${BINDISTMIN_NAME:-"cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTREL}.tgz"}
 BINDISTMIN_LOC=${BINDISTMIN_LOC-"${HOME}/work"}
 BINDISTMIN=${BINDISTMIN:-"${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"}
-BINDISTMIN_URL=${BINDISTMIN_URL:-"http://modula3.elegosoft.com/cm3"}
+BINDISTMIN_URL=${BINDISTMIN_URL:-"http://modula3.elegosoft.com/cm3/releng"}
 
 # display some important settings
 echo "TESTHOSTNAME=${TESTHOSTNAME}"
@@ -924,6 +924,20 @@ testall()
   # checkout into new workspace
   if [ -z "${NOCO}" ]; then
     checkout
+  fi
+  # install last release if needed
+  if [ ! -d "${INSTROOT_REL}" ]; then
+    if [ ! -r "${BINDISTMIN}" ]; then
+      if ( download_bin_dist ) ; then
+        ( install_bin_dist ) || {
+          echo "installation ${BINDISTMIN} of into ${INSTROOT_REL} failed" 1>&2
+          echo "continuing nonetheless..."
+        }
+      else
+        echo "downloading ${BINDISTMIN_URL} failed" 1>&2
+        echo "continuing nonetheless..."
+      fi
+    fi
   fi
   # build everything with the last-ok version
   if ( test_build_core_lastok ); then
