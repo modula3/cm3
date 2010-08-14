@@ -413,7 +413,7 @@ m3_build_type (m3_type t, int s, int a)
         case 16: return t_word_16;
         case 32: return t_word_32;
         case 64: return t_word_64;
-        default: if (s == BITS_PER_INTEGER) return t_word;
+        default: if (s == (int)BITS_PER_INTEGER) return t_word;
         }
       break;
 
@@ -426,7 +426,7 @@ m3_build_type (m3_type t, int s, int a)
         case 16: return t_int_16;
         case 32: return t_int_32;
         case 64: return t_int_64;
-        default: if (s == BITS_PER_INTEGER) return t_int;
+        default: if (s == (int)BITS_PER_INTEGER) return t_int;
         }
       break;
 
