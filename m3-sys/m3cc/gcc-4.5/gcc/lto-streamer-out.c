@@ -388,6 +388,7 @@ pack_ts_fixed_cst_value_fields (struct bitpack_d *bp, tree expr)
   struct fixed_value fv = TREE_FIXED_CST (expr);
   bp_pack_value (bp, fv.data.low, HOST_BITS_PER_WIDE_INT);
   bp_pack_value (bp, fv.data.high, HOST_BITS_PER_WIDE_INT);
+  bp_pack_value (bp, fv.mode, HOST_BITS_PER_INT);
 }
 
 
@@ -513,12 +514,12 @@ pack_ts_function_decl_value_fields (struct bitpack_d *bp, tree expr)
 static void
 pack_ts_type_value_fields (struct bitpack_d *bp, tree expr)
 {
-  bp_pack_value (bp, TYPE_PRECISION (expr), 9);
-  bp_pack_value (bp, TYPE_MODE (expr), 7);
+  bp_pack_value (bp, TYPE_PRECISION (expr), 10);
+  bp_pack_value (bp, TYPE_MODE (expr), 8);
   bp_pack_value (bp, TYPE_STRING_FLAG (expr), 1);
   bp_pack_value (bp, TYPE_NO_FORCE_BLK (expr), 1);
-  bp_pack_value (bp, TYPE_NEEDS_CONSTRUCTING(expr), 1);
-  if (TREE_CODE (expr) == UNION_TYPE || TREE_CODE (expr) == RECORD_TYPE)
+  bp_pack_value (bp, TYPE_NEEDS_CONSTRUCTING (expr), 1);
+  if (RECORD_OR_UNION_TYPE_P (expr))
     bp_pack_value (bp, TYPE_TRANSPARENT_AGGR (expr), 1);
   bp_pack_value (bp, TYPE_PACKED (expr), 1);
   bp_pack_value (bp, TYPE_RESTRICT (expr), 1);
@@ -946,9 +947,10 @@ lto_output_ts_type_tree_pointers (struct output_block *ob, tree expr,
     lto_output_tree_or_ref (ob, TYPE_VALUES (expr), ref_p);
   else if (TREE_CODE (expr) == ARRAY_TYPE)
     lto_output_tree_or_ref (ob, TYPE_DOMAIN (expr), ref_p);
-  else if (TREE_CODE (expr) == RECORD_TYPE || TREE_CODE (expr) == UNION_TYPE)
+  else if (RECORD_OR_UNION_TYPE_P (expr))
     lto_output_tree_or_ref (ob, TYPE_FIELDS (expr), ref_p);
-  else if (TREE_CODE (expr) == FUNCTION_TYPE || TREE_CODE (expr) == METHOD_TYPE)
+  else if (TREE_CODE (expr) == FUNCTION_TYPE
+	   || TREE_CODE (expr) == METHOD_TYPE)
     lto_output_tree_or_ref (ob, TYPE_ARG_TYPES (expr), ref_p);
   else if (TREE_CODE (expr) == VECTOR_TYPE)
     lto_output_tree_or_ref (ob, TYPE_DEBUG_REPRESENTATION_TYPE (expr), ref_p);
@@ -965,7 +967,7 @@ lto_output_ts_type_tree_pointers (struct output_block *ob, tree expr,
   lto_output_tree_or_ref (ob, TYPE_MAIN_VARIANT (expr), ref_p);
   /* Do not stream TYPE_NEXT_VARIANT, we reconstruct the variant lists
      during fixup.  */
-  if (TREE_CODE (expr) == RECORD_TYPE || TREE_CODE (expr) == UNION_TYPE)
+  if (RECORD_OR_UNION_TYPE_P (expr))
     lto_output_tree_or_ref (ob, TYPE_BINFO (expr), ref_p);
   lto_output_tree_or_ref (ob, TYPE_CONTEXT (expr), ref_p);
   lto_output_tree_or_ref (ob, TYPE_CANONICAL (expr), ref_p);
@@ -1685,6 +1687,7 @@ output_gimple_stmt (struct output_block *ob, gimple stmt)
       lto_output_uleb128_stream (ob->main_stream, gimple_asm_ninputs (stmt));
       lto_output_uleb128_stream (ob->main_stream, gimple_asm_noutputs (stmt));
       lto_output_uleb128_stream (ob->main_stream, gimple_asm_nclobbers (stmt));
+      lto_output_uleb128_stream (ob->main_stream, gimple_asm_nlabels (stmt));
       output_string (ob, ob->main_stream, gimple_asm_string (stmt));
       /* Fallthru  */
 

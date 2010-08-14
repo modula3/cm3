@@ -651,6 +651,7 @@ static void
 copy_bind_expr (tree *tp, int *walk_subtrees, copy_body_data *id)
 {
   tree block = BIND_EXPR_BLOCK (*tp);
+  tree t;
   /* Copy (and replace) the statement.  */
   copy_tree_r (tp, walk_subtrees, NULL);
   if (block)
@@ -660,9 +661,21 @@ copy_bind_expr (tree *tp, int *walk_subtrees, copy_body_data *id)
     }
 
   if (BIND_EXPR_VARS (*tp))
-    /* This will remap a lot of the same decls again, but this should be
-       harmless.  */
-    BIND_EXPR_VARS (*tp) = remap_decls (BIND_EXPR_VARS (*tp), NULL, id);
+    {
+      /* This will remap a lot of the same decls again, but this should be
+	 harmless.  */
+      BIND_EXPR_VARS (*tp) = remap_decls (BIND_EXPR_VARS (*tp), NULL, id);
+ 
+      /* Also copy value-expressions.  */
+      for (t = BIND_EXPR_VARS (*tp); t; t = TREE_CHAIN (t))
+	if (TREE_CODE (t) == VAR_DECL
+	    && DECL_HAS_VALUE_EXPR_P (t))
+	  {
+	    tree tem = DECL_VALUE_EXPR (t);
+	    walk_tree (&tem, copy_tree_body_r, id, NULL);
+	    SET_DECL_VALUE_EXPR (t, tem);
+	  }
+    }
 }
 
 
@@ -1573,7 +1586,6 @@ copy_bb (copy_body_data *id, basic_block bb, int frequency_scale,
 	      gimple_call_set_lhs (new_call, gimple_call_lhs (stmt));
 
 	      gsi_replace (&copy_gsi, new_call, false);
-	      gimple_set_bb (stmt, NULL);
 	      stmt = new_call;
 	    }
 	  else if (is_gimple_call (stmt)
@@ -1809,9 +1821,10 @@ update_ssa_across_abnormal_edges (basic_block bb, basic_block ret_bb,
 
 /* Copy edges from BB into its copy constructed earlier, scale profile
    accordingly.  Edges will be taken care of later.  Assume aux
-   pointers to point to the copies of each BB.  */
+   pointers to point to the copies of each BB.  Return true if any
+   debug stmts are left after a statement that must end the basic block.  */
 
-static void
+static bool
 copy_edges_for_bb (basic_block bb, gcov_type count_scale, basic_block ret_bb)
 {
   basic_block new_bb = (basic_block) bb->aux;
@@ -1819,6 +1832,7 @@ copy_edges_for_bb (basic_block bb, gcov_type count_scale, basic_block ret_bb)
   edge old_edge;
   gimple_stmt_iterator si;
   int flags;
+  bool need_debug_cleanup = false;
 
   /* Use the indices from the original blocks to create edges for the
      new ones.  */
@@ -1839,7 +1853,7 @@ copy_edges_for_bb (basic_block bb, gcov_type count_scale, basic_block ret_bb)
       }
 
   if (bb->index == ENTRY_BLOCK || bb->index == EXIT_BLOCK)
-    return;
+    return false;
 
   for (si = gsi_start_bb (new_bb); !gsi_end_p (si);)
     {
@@ -1874,6 +1888,13 @@ copy_edges_for_bb (basic_block bb, gcov_type count_scale, basic_block ret_bb)
       if (can_throw || nonlocal_goto)
 	{
 	  if (!gsi_end_p (si))
+	    {
+	      while (!gsi_end_p (si) && is_gimple_debug (gsi_stmt (si)))
+		gsi_next (&si);
+	      if (gsi_end_p (si))
+		need_debug_cleanup = true;
+	    }
+	  if (!gsi_end_p (si))
 	    /* Note that bb's predecessor edges aren't necessarily
 	       right at this point; split_block doesn't care.  */
 	    {
@@ -1898,6 +1919,7 @@ copy_edges_for_bb (basic_block bb, gcov_type count_scale, basic_block ret_bb)
 	update_ssa_across_abnormal_edges (gimple_bb (copy_stmt), ret_bb,
 					  can_throw, nonlocal_goto);
     }
+  return need_debug_cleanup;
 }
 
 /* Copy the PHIs.  All blocks and edges are copied, some blocks
@@ -2033,6 +2055,63 @@ initialize_cfun (tree new_fndecl, tree callee_fndecl, gcov_type count)
   pop_cfun ();
 }
 
+/* Helper function for copy_cfg_body.  Move debug stmts from the end
+   of NEW_BB to the beginning of successor basic blocks when needed.  If the
+   successor has multiple predecessors, reset them, otherwise keep
+   their value.  */
+
+static void
+maybe_move_debug_stmts_to_successors (copy_body_data *id, basic_block new_bb)
+{
+  edge e;
+  edge_iterator ei;
+  gimple_stmt_iterator si = gsi_last_nondebug_bb (new_bb);
+
+  if (gsi_end_p (si)
+      || gsi_one_before_end_p (si)
+      || !(stmt_can_throw_internal (gsi_stmt (si))
+	   || stmt_can_make_abnormal_goto (gsi_stmt (si))))
+    return;
+
+  FOR_EACH_EDGE (e, ei, new_bb->succs)
+    {
+      gimple_stmt_iterator ssi = gsi_last_bb (new_bb);
+      gimple_stmt_iterator dsi = gsi_after_labels (e->dest);
+      while (is_gimple_debug (gsi_stmt (ssi)))
+	{
+	  gimple stmt = gsi_stmt (ssi), new_stmt;
+	  tree var;
+	  tree value;
+
+	  /* For the last edge move the debug stmts instead of copying
+	     them.  */
+	  if (ei_one_before_end_p (ei))
+	    {
+	      si = ssi;
+	      gsi_prev (&ssi);
+	      if (!single_pred_p (e->dest))
+		gimple_debug_bind_reset_value (stmt);
+	      gsi_remove (&si, false);
+	      gsi_insert_before (&dsi, stmt, GSI_SAME_STMT);
+	      continue;
+	    }
+
+	  var = gimple_debug_bind_get_var (stmt);
+	  if (single_pred_p (e->dest))
+	    {
+	      value = gimple_debug_bind_get_value (stmt);
+	      value = unshare_expr (value);
+	    }
+	  else
+	    value = NULL_TREE;
+	  new_stmt = gimple_build_debug_bind (var, value, stmt);
+	  gsi_insert_before (&dsi, new_stmt, GSI_SAME_STMT);
+	  VEC_safe_push (gimple, heap, id->debug_stmts, new_stmt);
+	  gsi_prev (&ssi);
+	}
+    }
+}
+
 /* Make a copy of the body of FN so that it can be inserted inline in
    another function.  Walks FN via CFG, returns new fndecl.  */
 
@@ -2046,6 +2125,7 @@ copy_cfg_body (copy_body_data * id, gcov_type count, int frequency_scale,
   struct function *cfun_to_copy;
   basic_block bb;
   tree new_fndecl = NULL;
+  bool need_debug_cleanup = false;
   gcov_type count_scale;
   int last;
 
@@ -2086,7 +2166,7 @@ copy_cfg_body (copy_body_data * id, gcov_type count, int frequency_scale,
 
   /* Now that we've duplicated the blocks, duplicate their edges.  */
   FOR_ALL_BB_FN (bb, cfun_to_copy)
-    copy_edges_for_bb (bb, count_scale, exit_block_map);
+    need_debug_cleanup |= copy_edges_for_bb (bb, count_scale, exit_block_map);
 
   if (gimple_in_ssa_p (cfun))
     FOR_ALL_BB_FN (bb, cfun_to_copy)
@@ -2094,6 +2174,10 @@ copy_cfg_body (copy_body_data * id, gcov_type count, int frequency_scale,
 
   FOR_ALL_BB_FN (bb, cfun_to_copy)
     {
+      if (need_debug_cleanup
+	  && bb->index != ENTRY_BLOCK
+	  && bb->index != EXIT_BLOCK)
+	maybe_move_debug_stmts_to_successors (id, (basic_block) bb->aux);
       ((basic_block)bb->aux)->aux = NULL;
       bb->aux = NULL;
     }
@@ -2101,7 +2185,11 @@ copy_cfg_body (copy_body_data * id, gcov_type count, int frequency_scale,
   /* Zero out AUX fields of newly created block during EH edge
      insertion. */
   for (; last < last_basic_block; last++)
-    BASIC_BLOCK (last)->aux = NULL;
+    {
+      if (need_debug_cleanup)
+	maybe_move_debug_stmts_to_successors (id, BASIC_BLOCK (last));
+      BASIC_BLOCK (last)->aux = NULL;
+    }
   entry_block_map->aux = NULL;
   exit_block_map->aux = NULL;
 
@@ -5066,7 +5154,7 @@ tree_can_inline_p (struct cgraph_edge *e)
 	return false;
     }
 #endif
-  tree caller, callee;
+  tree caller, callee, lhs;
 
   caller = e->caller->decl;
   callee = e->callee->decl;
@@ -5092,8 +5180,16 @@ tree_can_inline_p (struct cgraph_edge *e)
       return false;
     }
 
+  /* Do not inline calls where we cannot triviall work around mismatches
+     in argument or return types.  */
   if (e->call_stmt
-      && !gimple_check_call_args (e->call_stmt))
+      && ((DECL_RESULT (callee)
+	   && !DECL_BY_REFERENCE (DECL_RESULT (callee))
+	   && (lhs = gimple_call_lhs (e->call_stmt)) != NULL_TREE
+	   && !useless_type_conversion_p (TREE_TYPE (DECL_RESULT (callee)),
+					  TREE_TYPE (lhs))
+	   && !fold_convertible_p (TREE_TYPE (DECL_RESULT (callee)), lhs))
+	  || !gimple_check_call_args (e->call_stmt)))
     {
       e->inline_failed = CIF_MISMATCHED_ARGUMENTS;
       gimple_call_set_cannot_inline (e->call_stmt, true);

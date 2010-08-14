@@ -1040,7 +1040,7 @@ def_cfa_1 (const char *label, dw_cfa_location *loc_p)
 
   cfi = new_cfi ();
 
-  if (loc.reg == old_cfa.reg && !loc.indirect)
+  if (loc.reg == old_cfa.reg && !loc.indirect && !old_cfa.indirect)
     {
       /* Construct a "DW_CFA_def_cfa_offset <offset>" instruction, indicating
 	 the CFA register did not change but the offset did.  The data
@@ -1056,7 +1056,8 @@ def_cfa_1 (const char *label, dw_cfa_location *loc_p)
 #ifndef MIPS_DEBUGGING_INFO  /* SGI dbx thinks this means no offset.  */
   else if (loc.offset == old_cfa.offset
 	   && old_cfa.reg != INVALID_REGNUM
-	   && !loc.indirect)
+	   && !loc.indirect
+	   && !old_cfa.indirect)
     {
       /* Construct a "DW_CFA_def_cfa_register <register>" instruction,
 	 indicating the CFA register has changed to <register> but the
@@ -12014,10 +12015,6 @@ base_type_die (tree type)
 
   base_type_result = new_die (DW_TAG_base_type, comp_unit_die, type);
 
-  /* This probably indicates a bug.  */
-  if (! TYPE_NAME (type))
-    add_name_attribute (base_type_result, "__unknown__");
-
   add_AT_unsigned (base_type_result, DW_AT_byte_size,
 		   int_size_in_bytes (type));
   add_AT_unsigned (base_type_result, DW_AT_encoding, encoding);
@@ -12135,6 +12132,21 @@ modified_type_die (tree type, int is_const_type, int is_volatile_type,
 			  ((is_const_type ? TYPE_QUAL_CONST : 0)
 			   | (is_volatile_type ? TYPE_QUAL_VOLATILE : 0)));
 
+  if (qualified_type == sizetype
+      && TYPE_NAME (qualified_type)
+      && TREE_CODE (TYPE_NAME (qualified_type)) == TYPE_DECL)
+    {
+#ifdef ENABLE_CHECKING
+      gcc_assert (TREE_CODE (TREE_TYPE (TYPE_NAME (qualified_type)))
+		  == INTEGER_TYPE
+		  && TYPE_PRECISION (TREE_TYPE (TYPE_NAME (qualified_type)))
+		     == TYPE_PRECISION (qualified_type)
+		  && TYPE_UNSIGNED (TREE_TYPE (TYPE_NAME (qualified_type)))
+		     == TYPE_UNSIGNED (qualified_type));
+#endif
+      qualified_type = TREE_TYPE (TYPE_NAME (qualified_type));
+    }
+
   /* If we do, then we can just use its DIE, if it exists.  */
   if (qualified_type)
     {
@@ -12246,6 +12258,9 @@ modified_type_die (tree type, int is_const_type, int is_volatile_type,
 	name = DECL_NAME (name);
       add_name_attribute (mod_type_die, IDENTIFIER_POINTER (name));
     }
+  /* This probably indicates a bug.  */
+  else if (mod_type_die && mod_type_die->die_tag == DW_TAG_base_type)
+    add_name_attribute (mod_type_die, "__unknown__");
 
   if (qualified_type)
     equate_type_number_to_die (qualified_type, mod_type_die);
@@ -12507,6 +12522,26 @@ reg_loc_descriptor (rtx rtl, enum var_init_status initialized)
 
   if (REGNO (rtl) >= FIRST_PSEUDO_REGISTER)
     return 0;
+
+  /* We only use "frame base" when we're sure we're talking about the
+     post-prologue local stack frame.  We do this by *not* running
+     register elimination until this point, and recognizing the special
+     argument pointer and soft frame pointer rtx's.
+     Use DW_OP_fbreg offset DW_OP_stack_value in this case.  */
+  if ((rtl == arg_pointer_rtx || rtl == frame_pointer_rtx)
+      && eliminate_regs (rtl, VOIDmode, NULL_RTX) != rtl)
+    {
+      dw_loc_descr_ref result = NULL;
+
+      if (dwarf_version >= 4 || !dwarf_strict)
+	{
+	  result = mem_loc_descriptor (rtl, VOIDmode, initialized);
+	  if (result)
+	    add_loc_descr (&result,
+			   new_loc_descr (DW_OP_stack_value, 0, 0));
+	}
+      return result;
+    }
 
   regs = targetm.dwarf_register_span (rtl);
 
@@ -19747,10 +19782,7 @@ dwarf2out_imported_module_or_decl_1 (tree decl,
 
   if (TREE_CODE (decl) == TYPE_DECL || TREE_CODE (decl) == CONST_DECL)
     {
-      if (is_base_type (TREE_TYPE (decl)))
-	at_import_die = base_type_die (TREE_TYPE (decl));
-      else
-	at_import_die = force_type_die (TREE_TYPE (decl));
+      at_import_die = force_type_die (TREE_TYPE (decl));
       /* For namespace N { typedef void T; } using N::T; base_type_die
 	 returns NULL, but DW_TAG_imported_declaration requires
 	 the DW_AT_import tag.  Force creation of DW_TAG_typedef.  */

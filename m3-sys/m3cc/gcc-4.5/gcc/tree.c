@@ -4265,7 +4265,12 @@ free_lang_data_in_type (tree type)
       TYPE_LANG_SLOT_1 (type) = NULL_TREE;
     }
 
-  TYPE_CONTEXT (type) = NULL_TREE;
+  if (debug_info_level < DINFO_LEVEL_TERSE
+      || (TYPE_CONTEXT (type)
+	  && TREE_CODE (TYPE_CONTEXT (type)) != FUNCTION_DECL
+	  && TREE_CODE (TYPE_CONTEXT (type)) != NAMESPACE_DECL))
+    TYPE_CONTEXT (type) = NULL_TREE;
+
   if (debug_info_level < DINFO_LEVEL_TERSE)
     TYPE_STUB_DECL (type) = NULL_TREE;
 }
@@ -4368,7 +4373,8 @@ free_lang_data_in_decl (tree decl)
 
   /* Ignore any intervening types, because we are going to clear their
      TYPE_CONTEXT fields.  */
-  if (TREE_CODE (decl) != FIELD_DECL)
+  if (TREE_CODE (decl) != FIELD_DECL
+      && TREE_CODE (decl) != FUNCTION_DECL)
     DECL_CONTEXT (decl) = decl_function_context (decl);
 
   if (DECL_CONTEXT (decl)
@@ -4670,6 +4676,15 @@ find_decls_types_r (tree *tp, int *ws, void *data)
 
       fld_worklist_push (TREE_CHAIN (t), fld);
       *ws = 0;
+    }
+  else if (TREE_CODE (t) == BLOCK)
+    {
+      tree tem;
+      for (tem = BLOCK_VARS (t); tem; tem = TREE_CHAIN (tem))
+	fld_worklist_push (tem, fld);
+      for (tem = BLOCK_SUBBLOCKS (t); tem; tem = BLOCK_CHAIN (tem))
+	fld_worklist_push (tem, fld);
+      fld_worklist_push (BLOCK_ABSTRACT_ORIGIN (t), fld);
     }
 
   fld_worklist_push (TREE_TYPE (t), fld);
@@ -7201,7 +7216,7 @@ build_function_type_skip_args (tree orig_type, bitmap args_to_skip)
   if (TREE_CODE (orig_type) != METHOD_TYPE
       || !bitmap_bit_p (args_to_skip, 0))
     {
-      new_type = copy_node (orig_type);
+      new_type = build_distinct_type_copy (orig_type);
       TYPE_ARG_TYPES (new_type) = new_reversed;
     }
   else
@@ -7250,6 +7265,13 @@ build_function_decl_skip_args (tree orig_decl, bitmap args_to_skip)
      we expect first argument to be THIS pointer.   */
   if (bitmap_bit_p (args_to_skip, 0))
     DECL_VINDEX (new_decl) = NULL_TREE;
+
+  /* When signature changes, we need to clear builtin info.  */
+  if (DECL_BUILT_IN (new_decl) && !bitmap_empty_p (args_to_skip))
+    {
+      DECL_BUILT_IN_CLASS (new_decl) = NOT_BUILT_IN;
+      DECL_FUNCTION_CODE (new_decl) = (enum built_in_function) 0;
+    }
   return new_decl;
 }
 
@@ -7919,7 +7941,8 @@ bool
 auto_var_in_fn_p (const_tree var, const_tree fn)
 {
   return (DECL_P (var) && DECL_CONTEXT (var) == fn
-	  && (((TREE_CODE (var) == VAR_DECL || TREE_CODE (var) == PARM_DECL)
+	  && ((((TREE_CODE (var) == VAR_DECL && ! DECL_EXTERNAL (var))
+		|| TREE_CODE (var) == PARM_DECL)
 	       && ! TREE_STATIC (var))
 	      || TREE_CODE (var) == LABEL_DECL
 	      || TREE_CODE (var) == RESULT_DECL));
