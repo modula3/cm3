@@ -83,9 +83,9 @@ tablerow() {
 }
 
 for t in ${TARGETS}; do
-  all=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF}`
-  last=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF} | tail -1`
-  last10=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF}| tail -10`
+  all=`ls -1rt ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF}`
+  last=`ls -1rt ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF} | tail -1`
+  last10=`ls -1rt ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF}| tail -10`
   ln -sf "${last}" "${FNPAT1}${t}${FNPATSUF}"
   echo "<h4>Target Platform ${t}</h4>"
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
