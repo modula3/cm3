@@ -30,6 +30,9 @@ IMPORT Pathname, File, RegularFile, Process, OSError, Rd, FileRd,
 IMPORT SMsg AS Msg, PathRepr;
 IMPORT FS;
 FROM System IMPORT AtomListToText;
+IMPORT RTIO;
+
+CONST DEBUG = TRUE;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Stat(fn : Pathname.T; VAR exists, isFile, isDir: BOOLEAN) =
@@ -318,11 +321,23 @@ PROCEDURE xRmRec(fn : Pathname.T) RAISES {E} =
 (* fn is assumed to exist and be a directory *)
   VAR sub := SubFiles(fn);
   BEGIN
+    IF DEBUG THEN
+      RTIO.PutText("5 rmrec " & fn & "\n");
+      RTIO.Flush();
+    END;
     FOR i := 0 TO sub.size() - 1 DO
+      IF DEBUG THEN
+        RTIO.PutText("6 rmrec(" & fn & ") => rm " & sub.get(i) & "\n");
+        RTIO.Flush();
+      END;
       xRm(sub.get(i));
     END;
     sub := SubDirs(fn);
     FOR i := 0 TO sub.size() - 1 DO
+      IF DEBUG THEN
+        RTIO.PutText("7 rmrec(" & fn & ") => rmrec " & sub.get(i) & "\n");
+        RTIO.Flush();
+      END;
       xRmRec(sub.get(i));
     END;
     xRmdir(fn);
@@ -333,13 +348,29 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
   BEGIN
     Stat(fn, exists, isFile, isDir);
     IF NOT exists THEN
+      IF DEBUG THEN
+        RTIO.PutText("1 rmrec => not exists " & fn & "\n");
+        RTIO.Flush();
+      END;
       RETURN
     END;
     IF isFile THEN
+      IF DEBUG THEN
+        RTIO.PutText("2 rmrec => rm file " & fn & "\n");
+        RTIO.Flush();
+      END;
       xRm(fn);
     ELSIF isDir THEN
+      IF DEBUG THEN
+        RTIO.PutText("3 rmrec => rmrec dir " & fn & "\n");
+        RTIO.Flush();
+      END;
       xRmRec(fn);
     ELSE
+      IF DEBUG THEN
+        RTIO.PutText("4 rmrec => ? " & fn & "\n");
+        RTIO.Flush();
+      END;
       RAISE E("error: " & fn & " is no directory or ordinary file");
     END;
   END RmRec;
