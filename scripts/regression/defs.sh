@@ -70,6 +70,7 @@ INSTROOT_REL=${INSTROOT_REL:-${INSTBASE}/rel-${LASTREL}}
 INSTROOT_LOK=${INSTROOT_LOK:-${INSTBASE}/last-ok}
 INSTROOT_POK=${INSTROOT_POK:-${INSTBASE}/prev-ok}
 INSTROOT_CUR=${INSTROOT_CUR:-${INSTBASE}/current}
+export INSTBASE INSTROOT_CUR INSTROOT_REL INSTROOT_POK INSTROOT_LOK
 
 # repository definitions
 if test "x${CM3CVSUSER}" != "x"; then
@@ -82,6 +83,7 @@ CM3CVSROOT=${CM3CVSROOT:-${CM3CVSSERVER}:/usr/cvs}
 
 # WWW server site
 WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
+export WWWSERVER CM3CVSUSER CM3CVSSERVER CM3CVSROOT
 
 # the whole test log
 RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
@@ -95,6 +97,7 @@ TMPDIR=${TMPDIR:-${TMP}}
 if [ ! -d "${TMPDIR}" ]; then
   TMPDIR="${HTMP}"
 fi
+export TMPDIR
 
 CM3_OSTYPE=POSIX
 
@@ -173,10 +176,12 @@ case "`uname`" in
     esac
   ;;
 esac
+export CM3_OSTYPE CM3_TARGET
 
 # files for result aggregation of m3-sys/m3tests
 M3TOUT=${M3TOUT:-${HTMP}/m3tests-${DS}.stdout}
 M3TERR=${M3TERR:-${HTMP}/m3tests-${DS}.stderr}
+export M3TOUT M3TERR
 
 # the next three are just for documentation and cleanup
 CM3_VERSION=${CM3_VERSION:-"*"}
@@ -188,6 +193,7 @@ BINDISTMIN_NAME=${BINDISTMIN_NAME:-"cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTRE
 BINDISTMIN_LOC=${BINDISTMIN_LOC-"${HOME}/work"}
 BINDISTMIN=${BINDISTMIN:-"${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"}
 BINDISTMIN_URL=${BINDISTMIN_URL:-"http://modula3.elegosoft.com/cm3/releng"}
+export BINDISTMIN_NAME BINDISTMIN_LOC BINDISTMIN_URL BINDISTMIN
 
 # display some important settings
 echo "TESTHOSTNAME=${TESTHOSTNAME}"
@@ -918,26 +924,32 @@ test_m3tohtml()
 
 #----------------------------------------------------------------------------
 # testall -- checkout and perform all tests
+install_latest_release() {
+  if [ ! -r "${BINDISTMIN}" ]; then
+    ( download_bin_dist ) || {
+      echo "downloading ${BINDISTMIN_URL} failed" 1>&2
+      echo "continuing nonetheless..."
+    }
+  fi
+  ( install_bin_dist ) || {
+    echo "installation ${BINDISTMIN} of into ${INSTROOT_REL} failed" 1>&2
+    echo "continuing nonetheless..."
+  }
+}
+
+# install last release if needed
+if [ ! -d "${INSTROOT_REL}" ]; then
+  install_latest_release
+fi
+
+#----------------------------------------------------------------------------
+# testall -- checkout and perform all tests
 
 testall()
 {
   # checkout into new workspace
   if [ -z "${NOCO}" ]; then
     checkout
-  fi
-  # install last release if needed
-  if [ ! -d "${INSTROOT_REL}" ]; then
-    if [ ! -r "${BINDISTMIN}" ]; then
-      if ( download_bin_dist ) ; then
-        ( install_bin_dist ) || {
-          echo "installation ${BINDISTMIN} of into ${INSTROOT_REL} failed" 1>&2
-          echo "continuing nonetheless..."
-        }
-      else
-        echo "downloading ${BINDISTMIN_URL} failed" 1>&2
-        echo "continuing nonetheless..."
-      fi
-    fi
   fi
   # build everything with the last-ok version
   if ( test_build_core_lastok ); then
