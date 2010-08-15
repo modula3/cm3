@@ -1,8 +1,2 @@
 readonly TARGET = "I386_LINUX" % code generation target
-readonly GNU_PLATFORM = "i686-linux" % "cpu-os" string for GNU
-
-SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC -mno-align-double" % C compiler
-readonly SYSTEM_ASM = "@as --32" % Assembler
-
-include("I386.common")
-include("Linux.common")
+include("I386_LINUX.common")

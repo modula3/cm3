@@ -4,4 +4,5 @@
 % Standard configuration file for SOLsun (Solaris 2.x w/Sun C)
 
 readonly TARGET = "SOLsun"
-include("SPARC32_SOLARIS")
+readonly C_COMPILER = "SUN" % or GNU (SOLgnu configuration)
+include("SPARC32_SOLARIS.common")

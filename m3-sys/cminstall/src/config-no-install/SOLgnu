@@ -4,5 +4,5 @@
 % Standard configuration file for SOLgnu (Solaris 2.x w/gcc)
 
 readonly TARGET = "SOLgnu"
-readonly C_COMPILER = "GNU" % or SUN (SOLsun configuration)
-include("SPARC32_SOLARIS")
+readonly C_COMPILER = "GNU" % or SUN (SOLsun/SPARC32_SOLARIS configurations)
+include("SPARC32_SOLARIS.common")
