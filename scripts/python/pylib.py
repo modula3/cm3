@@ -1411,8 +1411,9 @@ def Boot():
 
     for a in [Make, Makefile]:
         a.write("$(Link) -o cm3\n")
-
-    for a in [
+        
+    if False:
+        for a in [
             #
             # Add to this list as needed.
             # Adding more than necessary is ok -- assume the target system has no changes,
@@ -1480,21 +1481,21 @@ def Boot():
             "m3-libs/m3core/src/C/Common/Cstring.i3",
             "m3-libs/m3core/src/C/Common/m3makefile",
             ]:
-        source = os.path.join(Root, a)
-        if FileExists(source):
-            name = GetLastPathElement(a)
-            reldir = RemoveLastPathElement(a)
-            destdir = os.path.join(BootDir, reldir)
-            dest = os.path.join(destdir, name)
-            try:
-                os.makedirs(destdir)
-            except:
-                pass
-            CopyFile(source, dest)
+            source = os.path.join(Root, a)
+            if FileExists(source):
+                name = GetLastPathElement(a)
+                reldir = RemoveLastPathElement(a)
+                destdir = os.path.join(BootDir, reldir)
+                dest = os.path.join(destdir, name)
+                try:
+                    os.makedirs(destdir)
+                except:
+                    pass
+                CopyFile(source, dest)
 
-            for b in [UpdateSource, Make]:
-                b.write("mkdir -p /dev2/cm3/" + reldir + "\n")
-                b.write("cp " + a + " /dev2/cm3/" + a + "\n")
+                for b in [UpdateSource, Make]:
+                    b.write("mkdir -p /dev2/cm3/" + reldir + "\n")
+                    b.write("cp " + a + " /dev2/cm3/" + a + "\n")
 
     for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
         a.close()
