@@ -769,7 +769,7 @@ def SetEnvironmentVariable(Name, Value):
     if not os.environ.get(Name) or (os.environ[Name] != Value):
         os.environ[Name] = Value
         if os.name == "posix":
-            print("Name + "=" + Value + ";export " + Name)
+            print(Name + "=" + Value + ";export " + Name)
         else:
             print("set " + Name + "=" + Value)
 
