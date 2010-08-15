@@ -939,7 +939,9 @@ install_latest_release() {
 
 # install last release if needed
 if [ ! -d "${INSTROOT_REL}" ]; then
-  install_latest_release
+  if [ -z "$HUDSON_HOME" ]; then
+    install_latest_release
+  fi
 fi
 
 #----------------------------------------------------------------------------
