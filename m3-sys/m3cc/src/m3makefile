@@ -271,13 +271,14 @@ SourceDir = "../gcc"
 GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone
 % Current default for most platforms is gcc43.
 GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
-        {"AMD64_DARWIN", "AMD64_LINUX",                 
-         "I386_SOLARIS", "I386_DARWIN", "I386_LINUX", "LINUXLIBC6",
+        {"I386_SOLARIS", "I386_DARWIN", "I386_LINUX", "LINUXLIBC6",
+         "AMD64_DARWIN", "AMD64_LINUX",                 
+         "PPC_DARWIN",
          % untested or have problems
          %"I386_OPENBSD", "I386_FREEBSD", "I386_NETBSD", "FreeBSD4",
          %"AMD64_SOLARIS", "AMD64_FREEBSD", "AMD64_OPENBSD", "AMD64_NETBSD",
          %"MIPS64_OPENBSD",
-         %"PPC_DARWIN", "PPC_LINUX", "PPC32_OPENBSD",
+         %"PPC_LINUX", "PPC32_OPENBSD",
          %"PPC64_DARWIN",
          %"SPARC32_SOLARIS", "SPARC64_SOLARIS",
          %"SOLgnu", "SOLsun",
@@ -378,6 +379,7 @@ if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined
   
   % temporary workaround fs_rmrec not wokring
   foreach a in ["build-x86_64-unknown-freebsd8.0",
+                "build-i386-pc-solaris2.10",
                 "gmp",
                 "mpfr",
                 "libcpp",
@@ -398,38 +400,6 @@ end
 if Platform_IsOpenBSD(M3CC_HOST)
   M3CC_CFLAGS = M3CC_CFLAGS & " -static"
 end
-
-%
-% Configure does not ferry environment variables from itself to make,
-% so these must be specified on both the configure command and the make command.
-%
-env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
-if not Native
-  env = env & " " & get_env(M3CC_TARGET)
-end
-
-ConfigureGNUMake()
-write("GNU_MAKE is " & GNU_MAKE & CR)
-
-env = env & " MAKE=" & GNU_MAKE & " "
-
-%
-% Problems building gmp/mpfr:
-%   Documentation is built into the source tree, leading cvs diff
-%   to slowly output a LOT of extra content, not good, avoid that.
-%   Automake and autoconf are causing problems building on NT, even when they are installed.
-%   We don't need their results usually. Libtool is also a problem, possibly a cascade.
-%
-% env = env & " CC='gcc -g'"
-% env = env & " CFLAGS="
-env = env & " AUTOCONF=:"
-env = env & " AUTOMAKE=:"
-env = env & " LEX='touch lex.yy.c'"
-env = env & " MAKEINFO=:"
-% so depcomp can detect Sun cc -xM as working
-% seems dangerous? so we set am_cv_CC_dependencies_compiler_type instead
-% env = env & " MAKE=" & M3CC_MAKE
-M3CC_MAKE = M3CC_MAKE & " " & env
 
 if not NOACTION
   ApplyPatches (M3CC_TARGET)
@@ -527,6 +497,41 @@ Configure = Configure & " -disable-fixed-point"
 % them, and we never use TLS anyway, so just disable it across the board.
 %
 Configure = Configure & " -disable-tls"
+
+%
+% Configure does not ferry environment variables from itself to make,
+% so these must be specified on both the configure command and the make command.
+%
+env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
+if not Native
+  env = env & " " & get_env(M3CC_TARGET)
+end
+
+
+ConfigureGNUMake()
+write("GNU_MAKE is " & GNU_MAKE & CR)
+
+
+env = env & " MAKE=" & GNU_MAKE & " "
+
+%
+% Problems building gmp/mpfr:
+%   Documentation is built into the source tree, leading cvs diff
+%   to slowly output a LOT of extra content, not good, avoid that.
+%   Automake and autoconf are causing problems building on NT, even when they are installed.
+%   We don't need their results usually. Libtool is also a problem, possibly a cascade.
+%
+% env = env & " CC='gcc -g'"
+% env = env & " CFLAGS="
+env = env & " AUTOCONF=:"
+env = env & " AUTOMAKE=:"
+env = env & " LEX='touch lex.yy.c'"
+env = env & " MAKEINFO=:"
+% so depcomp can detect Sun cc -xM as working
+% seems dangerous? so we set am_cv_CC_dependencies_compiler_type instead
+% env = env & " MAKE=" & M3CC_MAKE
+M3CC_MAKE = M3CC_MAKE & " " & env
+
 
 if not defined ("no_config") and not NOACTION
   if not FileExists (done)
