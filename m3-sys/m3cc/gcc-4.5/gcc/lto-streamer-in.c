@@ -1047,6 +1047,7 @@ input_gimple_stmt (struct lto_input_block *ib, struct data_in *data_in,
 	stmt->gimple_asm.ni = lto_input_uleb128 (ib);
 	stmt->gimple_asm.no = lto_input_uleb128 (ib);
 	stmt->gimple_asm.nc = lto_input_uleb128 (ib);
+	stmt->gimple_asm.nl = lto_input_uleb128 (ib);
 	str = input_string_cst (data_in, ib);
 	stmt->gimple_asm.string = TREE_STRING_POINTER (str);
       }
@@ -1074,7 +1075,7 @@ input_gimple_stmt (struct lto_input_block *ib, struct data_in *data_in,
 	  if (TREE_CODE (op) == ADDR_EXPR
 	      && TREE_CODE (TREE_OPERAND (op, 0)) == VAR_DECL
 	      && !useless_type_conversion_p (TREE_TYPE (TREE_TYPE (op)),
-					     TREE_TYPE (op)))
+					     TREE_TYPE (TREE_OPERAND (op, 0))))
 	    {
 	      TREE_OPERAND (op, 0)
 		= build1 (VIEW_CONVERT_EXPR, TREE_TYPE (TREE_TYPE (op)),
@@ -1632,6 +1633,7 @@ unpack_ts_fixed_cst_value_fields (struct bitpack_d *bp, tree expr)
   memset(&fv, 0, sizeof (fv));
   fv.data.low = (HOST_WIDE_INT) bp_unpack_value (bp, HOST_BITS_PER_WIDE_INT);
   fv.data.high = (HOST_WIDE_INT) bp_unpack_value (bp, HOST_BITS_PER_WIDE_INT);
+  fv.mode = (enum machine_mode) bp_unpack_value (bp, HOST_BITS_PER_INT);
   TREE_FIXED_CST (expr) = fv;
 }
 
@@ -1764,13 +1766,13 @@ unpack_ts_type_value_fields (struct bitpack_d *bp, tree expr)
 {
   enum machine_mode mode;
 
-  TYPE_PRECISION (expr) = (unsigned) bp_unpack_value (bp, 9);
-  mode = (enum machine_mode) bp_unpack_value (bp, 7);
+  TYPE_PRECISION (expr) = (unsigned) bp_unpack_value (bp, 10);
+  mode = (enum machine_mode) bp_unpack_value (bp, 8);
   SET_TYPE_MODE (expr, mode);
   TYPE_STRING_FLAG (expr) = (unsigned) bp_unpack_value (bp, 1);
   TYPE_NO_FORCE_BLK (expr) = (unsigned) bp_unpack_value (bp, 1);
-  TYPE_NEEDS_CONSTRUCTING(expr) = (unsigned) bp_unpack_value (bp, 1);
-  if (TREE_CODE (expr) == UNION_TYPE || TREE_CODE (expr) == RECORD_TYPE)
+  TYPE_NEEDS_CONSTRUCTING (expr) = (unsigned) bp_unpack_value (bp, 1);
+  if (RECORD_OR_UNION_TYPE_P (expr))
     TYPE_TRANSPARENT_AGGR (expr) = (unsigned) bp_unpack_value (bp, 1);
   TYPE_PACKED (expr) = (unsigned) bp_unpack_value (bp, 1);
   TYPE_RESTRICT (expr) = (unsigned) bp_unpack_value (bp, 1);
@@ -2162,9 +2164,10 @@ lto_input_ts_type_tree_pointers (struct lto_input_block *ib,
     TYPE_VALUES (expr) = lto_input_tree (ib, data_in);
   else if (TREE_CODE (expr) == ARRAY_TYPE)
     TYPE_DOMAIN (expr) = lto_input_tree (ib, data_in);
-  else if (TREE_CODE (expr) == RECORD_TYPE || TREE_CODE (expr) == UNION_TYPE)
+  else if (RECORD_OR_UNION_TYPE_P (expr))
     TYPE_FIELDS (expr) = lto_input_tree (ib, data_in);
-  else if (TREE_CODE (expr) == FUNCTION_TYPE || TREE_CODE (expr) == METHOD_TYPE)
+  else if (TREE_CODE (expr) == FUNCTION_TYPE
+	   || TREE_CODE (expr) == METHOD_TYPE)
     TYPE_ARG_TYPES (expr) = lto_input_tree (ib, data_in);
   else if (TREE_CODE (expr) == VECTOR_TYPE)
     TYPE_DEBUG_REPRESENTATION_TYPE (expr) = lto_input_tree (ib, data_in);

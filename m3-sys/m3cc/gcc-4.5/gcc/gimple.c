@@ -281,6 +281,7 @@ gimple_build_call_from_tree (tree t)
   gimple_call_set_return_slot_opt (call, CALL_EXPR_RETURN_SLOT_OPT (t));
   gimple_call_set_from_thunk (call, CALL_FROM_THUNK_P (t));
   gimple_call_set_va_arg_pack (call, CALL_EXPR_VA_ARG_PACK (t));
+  gimple_call_set_nothrow (call, TREE_NOTHROW (t));
   gimple_set_no_warning (call, TREE_NO_WARNING (t));
 
   return call;
@@ -620,7 +621,7 @@ gimple_build_eh_filter (tree types, gimple_seq failure)
 gimple
 gimple_build_eh_must_not_throw (tree decl)
 {
-  gimple p = gimple_alloc (GIMPLE_EH_MUST_NOT_THROW, 1);
+  gimple p = gimple_alloc (GIMPLE_EH_MUST_NOT_THROW, 0);
 
   gcc_assert (TREE_CODE (decl) == FUNCTION_DECL);
   gcc_assert (flags_from_decl_or_type (decl) & ECF_NORETURN);
@@ -1732,6 +1733,9 @@ gimple_call_flags (const_gimple stmt)
       else
 	flags = 0;
     }
+
+  if (stmt->gsbase.subcode & GF_CALL_NOTHROW)
+    flags |= ECF_NOTHROW;
 
   return flags;
 }
@@ -2987,14 +2991,8 @@ gimple_call_copy_skip_args (gimple stmt, bitmap args_to_skip)
   gimple_set_block (new_stmt, gimple_block (stmt));
   if (gimple_has_location (stmt))
     gimple_set_location (new_stmt, gimple_location (stmt));
-
-  /* Carry all the flags to the new GIMPLE_CALL.  */
+  gimple_call_copy_flags (new_stmt, stmt);
   gimple_call_set_chain (new_stmt, gimple_call_chain (stmt));
-  gimple_call_set_tail (new_stmt, gimple_call_tail_p (stmt));
-  gimple_call_set_cannot_inline (new_stmt, gimple_call_cannot_inline_p (stmt));
-  gimple_call_set_return_slot_opt (new_stmt, gimple_call_return_slot_opt_p (stmt));
-  gimple_call_set_from_thunk (new_stmt, gimple_call_from_thunk_p (stmt));
-  gimple_call_set_va_arg_pack (new_stmt, gimple_call_va_arg_pack_p (stmt));
 
   gimple_set_modified (new_stmt, true);
 
@@ -3359,11 +3357,20 @@ gimple_types_compatible_p (tree t1, tree t2)
 	    && RECORD_OR_UNION_TYPE_P (TREE_TYPE (t1))
 	    && (!COMPLETE_TYPE_P (TREE_TYPE (t1))
 		|| !COMPLETE_TYPE_P (TREE_TYPE (t2)))
+	    && TYPE_QUALS (TREE_TYPE (t1)) == TYPE_QUALS (TREE_TYPE (t2))
 	    && compare_type_names_p (TYPE_MAIN_VARIANT (TREE_TYPE (t1)),
 				     TYPE_MAIN_VARIANT (TREE_TYPE (t2)), true))
 	  {
 	    /* Replace the pointed-to incomplete type with the
-	       complete one.  */
+	       complete one.
+	       ???  This simple name-based merging causes at least some
+	       of the ICEs in canonicalizing FIELD_DECLs during stmt
+	       read.  For example in GCC we have two different struct deps
+	       and we mismatch the use in struct cpp_reader in sched-int.h
+	       vs. mkdeps.c.  Of course the whole exercise is for TBAA
+	       with structs which contain pointers to incomplete types
+	       in one unit and to complete ones in another.  So we
+	       probably should merge these types only with more context.  */
 	    if (COMPLETE_TYPE_P (TREE_TYPE (t2)))
 	      TREE_TYPE (t1) = TREE_TYPE (t2);
 	    else
@@ -4560,7 +4567,8 @@ gimple_ior_addresses_taken (bitmap addresses_taken, gimple stmt)
 const char *
 gimple_decl_printable_name (tree decl, int verbosity)
 {
-  gcc_assert (decl && DECL_NAME (decl));
+  if (!DECL_NAME (decl))
+    return NULL;
 
   if (DECL_ASSEMBLER_NAME_SET_P (decl))
     {
