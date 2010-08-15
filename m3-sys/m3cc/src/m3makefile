@@ -271,7 +271,17 @@ SourceDir = "../gcc"
 GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone
 % Current default for most platforms is gcc43.
 GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
-        {"xI386_DARWIN", "xAMD64_DARWIN", "xLINUXLIBC6", "xI386_LINUX"} contains M3CC_TARGET)
+        {"AMD64_DARWIN", "AMD64_LINUX",                 
+         "I386_SOLARIS", "I386_DARWIN", "I386_LINUX", "LINUXLIBC6",
+         % untested or have problems
+         %"I386_OPENBSD", "I386_FREEBSD", "I386_NETBSD", "FreeBSD4",
+         %"AMD64_SOLARIS", "AMD64_FREEBSD", "AMD64_OPENBSD", "AMD64_NETBSD",
+         %"MIPS64_OPENBSD",
+         %"PPC_DARWIN", "PPC_LINUX", "PPC32_OPENBSD",
+         %"PPC64_DARWIN",
+         %"SPARC32_SOLARIS", "SPARC64_SOLARIS",
+         %"SOLgnu", "SOLsun",
+        } contains M3CC_TARGET)
 GCC43 = not (GCC42 or GCC45)
 build_dir_tail = ""
 if (not NOACTION) % and (GCC42 or GCC43 or GCC45)
