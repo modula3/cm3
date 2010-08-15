@@ -1,5 +1,9 @@
 if not defined("TARGET")
   readonly TARGET = "I386_FREEBSD"
+else
+  if not equal(TARGET, "FreeBSD4")
+    readonly TARGET = "I386_FREEBSD"
+  end
 end
 
 readonly GNU_PLATFORM = "i686-freebsd7" % "cpu-os" string for GNU
