@@ -273,7 +273,7 @@ GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone
 GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
         {"I386_SOLARIS", "I386_DARWIN", "I386_LINUX", "LINUXLIBC6",
          "AMD64_DARWIN", "AMD64_LINUX",                 
-         "PPC_DARWIN",
+         %"PPC_DARWIN",
          % untested or have problems
          %"I386_OPENBSD", "I386_FREEBSD", "I386_NETBSD", "FreeBSD4",
          %"AMD64_SOLARIS", "AMD64_FREEBSD", "AMD64_OPENBSD", "AMD64_NETBSD",
