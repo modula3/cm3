@@ -3,6 +3,10 @@
 
 if not defined("TARGET")
   readonly TARGET = "SPARC32_SOLARIS"
+else
+  if not (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun"))
+    readonly TARGET = "SPARC32_SOLARIS"
+  end
 end
 readonly GNU_PLATFORM = "sparc-sun-solaris2.10" % "cpu-os" string for GNU
 readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -K PIC -xarch=v8plus"
