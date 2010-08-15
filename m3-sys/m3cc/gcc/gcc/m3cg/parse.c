@@ -22,7 +22,6 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-enum machine_mode;
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
