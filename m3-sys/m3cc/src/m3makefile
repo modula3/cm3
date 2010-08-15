@@ -304,7 +304,7 @@ if (not NOACTION) % and (GCC42 or GCC43 or GCC45)
     foreach a in ["gmp", "mpfr", "mpc"]
       link_file("../gcc/" & a, SourceDir & "/" & a)
     end
-    M3CC_CFLAGS = "-g"
+    %M3CC_CFLAGS = "-g"
   end
   if GCC42 or GCC45
     fs_mkdir(SourceDir & "/gcc/m3cg")
