@@ -48,7 +48,7 @@ ThreadPThread__SuspendThread (m3_pthread_t mt)
   mach_port_t mach_thread = pthread_mach_thread_np(t);
   if (thread_suspend(mach_thread) != KERN_SUCCESS) return 0;
   if (thread_abort_safely(mach_thread) != KERN_SUCCESS) {
-    if (thread_resume(mach_thread != KERN_SUCCESS)) abort();
+    if (thread_resume(mach_thread) != KERN_SUCCESS) abort();
     return 0;
   }
   return 1;
