@@ -189,7 +189,7 @@ CM3_SNAPSHOT=${CM3_SNAPSHOT:-"${HTMP}/cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${CM3_
 HTML_REPORT="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${CM3_TARGET}-${DS}.html}"
 
 # the binary installation archive to install from
-BINDISTMIN_NAME=${BINDISTMIN_NAME:-"cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTREL}.tgz"}
+BINDISTMIN_NAME=${BINDISTMIN_NAME:-"cm3-bin-min-${CM3_TARGET}-${LASTREL}.tgz"}
 BINDISTMIN_LOC=${BINDISTMIN_LOC-"${HOME}/work"}
 BINDISTMIN=${BINDISTMIN:-"${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"}
 BINDISTMIN_URL=${BINDISTMIN_URL:-"http://modula3.elegosoft.com/cm3/releng"}
