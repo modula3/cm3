@@ -435,15 +435,6 @@ end
 if Native % host == target == build
 
   %
-  % Create a native Darwin/AMD64 compiler (i.e. not 32bit x86)
-  %
-  if equal (M3CC_BUILD, "AMD64_DARWIN")
-    Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
-    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
-    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
-  end
-
-  %
   % Config.guess on SPARC32_LINUX yields sparc64 and m3cg
   % then just always fails with internal errors, so be explicit.
   % This is reasonable in all builds, but let's not upset that apple cart.
