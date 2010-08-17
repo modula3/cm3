@@ -48,27 +48,6 @@ proc FileExists (a) is
     return not stale (a, a)
 end
 
-readonly proc ApplyPatches (Platform) is
-  return
-  if GCC45 or not Platform_IsOpenBSD (Platform)
-    return
-  end
-  pushd ("../gcc")
-  foreach a in fs_lsfiles ("../src/patches/openbsd", FALSE)
-    if not tcontains(a, ".done")
-      if not FileExists (a & ".done")
-        if not tcontains(a, "readme.txt")
-          exec("patch -z .orig -p0 < " & a)
-          > a & ".done" in
-            write("")
-          end
-        end
-      end
-    end
-  end
-  popd ()
-end
-
 readonly proc HostIsNT () is
   return equal ($OS, "Windows_NT")
 end
@@ -397,10 +376,6 @@ end
 
 if Platform_IsOpenBSD(M3CC_HOST)
   M3CC_CFLAGS = M3CC_CFLAGS & " -static"
-end
-
-if not NOACTION
-  ApplyPatches (M3CC_TARGET)
 end
 
 % configure the sources
