@@ -82,7 +82,7 @@ TimePosix__ComputeGrain(void)
 #error no CLOCK_HIGHRES or CLOCK_REALTIME
 #endif
     assert(i == 0);
-    return TimePosix__FromNanotime(&res));
+    return TimePosix__FromNanotime(&res);
 }
 
 #else
