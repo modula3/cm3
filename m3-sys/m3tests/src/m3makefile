@@ -556,7 +556,7 @@ end
 %p_test ("p2", "p209", "open array initializers compile failure")
 %p_test ("p2", "p210", "open array initializers runtime failure")
 
-p_test ("p2", "p240", "exact codegen")
+%p_test ("p2", "p240", "exact codegen")
 p_test ("p2", "p241", "Formatter crashes gcc backend if 'ter' optimimization enabled")
 p_test ("p2", "p242", "m3totex crashes gcc backend if 'pre' optimimization enabled")
 p_test ("p2", "p243", "nested functions removed by gcc backend 'unit at a time'")
