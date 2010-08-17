@@ -548,17 +548,9 @@ readonly proc postcp() is
 end
 
 if Native
-  % This is related to build_dir_tail which is disabled above.
-  if FALSE % GCC45
-    >> ".M3SHIP" in
-      write("make_dir(BIN_INSTALL)", CR)
-      write("install_file(\"" & build_dir & "/cm3cg\", BIN_INSTALL, \"0775\")", CR)
-    end
-  else
-    BindExport (AppendExeExtension ("cm3cg"))
-    if DoMipsTfile
-      BindExport ("mips-tfile")
-    end
+  BindExport (AppendExeExtension ("cm3cg"))
+  if DoMipsTfile
+    BindExport ("mips-tfile")
   end
 end
 
