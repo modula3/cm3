@@ -284,7 +284,6 @@ GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
          %"SOLgnu", "SOLsun",
         } contains M3CC_TARGET)
 GCC43 = not (GCC42 or GCC45)
-build_dir_tail = ""
 if (not NOACTION) % and (GCC42 or GCC43 or GCC45)
   local Defines = ""
   local m3gty = "m3gty43.h"
@@ -293,11 +292,7 @@ if (not NOACTION) % and (GCC42 or GCC43 or GCC45)
     Defines = "#define GCC_APPLE 1\n#define GCC42 1\n"
     m3gty = "m3gty43.h"
   end
-  if GCC43
-    % build_dir_tail = "-4.3"
-  end
   if GCC45
-    % build_dir_tail = "-4.5"
     Defines = "#define GCC45 1\n"
     SourceDir = "../gcc-4.5"
     m3gty = "m3gty45.h"
@@ -325,8 +320,8 @@ end
 build_dir = "."  % let m3build set the build directory
 
 Log = ""
-if (not Native) or (not equal(build_dir_tail, ""))
-  build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET & build_dir_tail
+if not Native
+  build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET
   Log = path() & "/" & build_dir & "/_m3.log"
 else
   Log = path() & "/../" & BUILD_DIR & "/_m3.log"
@@ -553,7 +548,8 @@ readonly proc postcp() is
 end
 
 if Native
-  if GCC45
+  % This is related to build_dir_tail which is disabled above.
+  if FALSE % GCC45
     >> ".M3SHIP" in
       write("make_dir(BIN_INSTALL)", CR)
       write("install_file(\"" & build_dir & "/cm3cg\", BIN_INSTALL, \"0775\")", CR)
