@@ -252,9 +252,13 @@ proc IsTargetOSF1v4() is
   return InternalPlatformEquivalent(TARGET, "ALPHA_OSF") and IsNativeBuild() and IsHostOSF1v4()
 end
 
+if not defined("IsTargetFreeBSD4")
+
 proc IsTargetFreeBSD4() is
   % approx (doesn't work for cross builds)
   return IsTargetFreeBSD() and IsNativeBuild() and IsHostFreeBSD4()
+end
+
 end
 
 if not defined("HasTrestle")

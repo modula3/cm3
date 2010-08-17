@@ -6,6 +6,8 @@
 
 include_dir ("Common")
 
+if not defined("IsTargetFreeBSD4")
+
 proc InternalPlatformEquivalent(a, b) is
   if equal(a, b)
     return TRUE
@@ -61,6 +63,8 @@ proc IsTargetFreeBSD4() is
 % remove this once cm3cfg.common is up to date
   % approx (doesn't work for cross builds)
   return IsTargetFreeBSD() and IsNativeBuild() and IsHostFreeBSD4()
+end
+
 end
 
 if equal (OS_TYPE, "WIN32") or equal(TARGET, "NT386")
