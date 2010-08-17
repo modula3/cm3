@@ -1,2 +1,3 @@
+readonly TARGET_ENDIAN = "LITTLE" % { "BIG" OR "LITTLE" }
 readonly TARGET_ARCH = "ALPHA32"
 readonly WORD_SIZE = "32BITS"
