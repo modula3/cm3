@@ -40,11 +40,18 @@ extern "C" {
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
-  pthread_t t = PTHREAD_FROM_M3(mt);
-  mach_port_t mach_thread = pthread_mach_thread_np(t);
-  if (thread_suspend(mach_thread) != KERN_SUCCESS) return 0;
-  if (thread_abort_safely(mach_thread) != KERN_SUCCESS) {
-    if (thread_resume(mach_thread) != KERN_SUCCESS) abort();
+  mach_port_t mach_thread = pthread_mach_thread_np(PTHREAD_FROM_M3(mt));
+  if (thread_suspend(mach_thread) != KERN_SUCCESS)
+    return 0;
+  if (thread_abort_safely(mach_thread) != KERN_SUCCESS)
+  {
+    kern_return_t status = thread_resume(mach_thread);
+    if (status != KERN_SUCCESS)
+    {
+      fprintf(stderr, "thread_resume returned %d instead of %d\n",
+              (int)status, (int)KERN_SUCCESS);
+      abort();
+    }
     return 0;
   }
   return 1;
