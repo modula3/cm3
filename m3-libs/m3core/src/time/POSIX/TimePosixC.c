@@ -87,7 +87,7 @@ TimePosix__ComputeGrain(void)
 
 #else
 
-#define TimePosix__FromNanotime(x) ((LONGREAL)0.0)
+#define TimePosix__FromNanotime(x) ((LONGREAL)0)
 
 LONGREAL/*Time.T*/
 __cdecl
