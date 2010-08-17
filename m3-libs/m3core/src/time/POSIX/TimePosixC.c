@@ -31,15 +31,6 @@ static LONGREAL/*Time.T*/ __cdecl TimePosix__FromMicrotime(const m3_timeval_t* t
     return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_usec) / (LONGREAL)MILLION;
 }
 
-#if 0 /* For test code below. */
-
-static LONGREAL/*Time.T*/ __cdecl TimePosix__FromNanotime(const struct timespec* tv)
-{
-    return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_nsec) / (LONGREAL)BILLION;
-}
-
-#endif
-
 LONGREAL/*Time.T*/
 __cdecl
 TimePosix__Now(void)
@@ -70,6 +61,34 @@ ComputeGrainOnce(void)
     }
 }
 
+#if defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME)
+
+static LONGREAL/*Time.T*/ __cdecl TimePosix__FromNanotime(const struct timespec* tv)
+{
+    return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_nsec) / (LONGREAL)BILLION;
+}
+
+LONGREAL/*Time.T*/
+__cdecl
+TimePosix__ComputeGrain(void)
+{
+    struct timespec res = { 0 };
+    int i = -1;
+#if defined(CLOCK_HIGHRES)
+    i = clock_getres(CLOCK_HIGHRES, &res);
+#elif defined(CLOCK_REALTIME)
+    i = clock_getres(CLOCK_REALTIME, &res);
+#else
+#error no CLOCK_HIGHRES or CLOCK_REALTIME
+#endif
+    assert(i == 0);
+    return TimePosix__FromNanotime(&res));
+}
+
+#else
+
+#define TimePosix__FromNanotime(x) ((LONGREAL)0.0)
+
 LONGREAL/*Time.T*/
 __cdecl
 TimePosix__ComputeGrain(void)
@@ -83,6 +102,8 @@ TimePosix__ComputeGrain(void)
     return a;
 }
 
+#endif
+
 #ifdef __cplusplus
 } /* extern C */
 #endif
@@ -91,7 +112,7 @@ TimePosix__ComputeGrain(void)
 
 int main()
 {
-    LONGREAL grain = TimePosix__ComputeGrain();
+    LONGREAL grain = ComputeGrainOnce();
     struct timespec res = { 0 };
     int i = -1;
 #if defined(CLOCK_HIGHRES)
