@@ -435,16 +435,6 @@ end
 if Native % host == target == build
 
   %
-  % Try to support PPC_DARWIN on {I386,AMD64}_DARWIN hosts via the emulator.
-  %
-  if equal (M3CC_BUILD, "PPC_DARWIN") and FileExists("/usr/libexec/oah/translate")
-    M3CC_CFLAGS = M3CC_CFLAGS & " -arch ppc"
-    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
-    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
-    Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
-  end
-
-  %
   % Create a native Darwin/AMD64 compiler (i.e. not 32bit x86)
   %
   if equal (M3CC_BUILD, "AMD64_DARWIN")
