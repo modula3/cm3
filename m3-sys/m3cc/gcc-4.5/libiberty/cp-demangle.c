@@ -4774,7 +4774,7 @@ d_demangle_callback (const char *mangled, int options,
     }
   type;
   struct d_info di;
-  struct demangle_component *dc;
+  struct demangle_component *dc = { 0 };
   int status;
 
   if (mangled[0] == '_' && mangled[1] == 'Z')
