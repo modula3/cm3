@@ -18,6 +18,7 @@ extern "C" {
 #define BILLION (THOUSAND * MILLION)
 
 #ifdef _TIME64_T
+/* OSF/1 5.1 in particular */
 typedef struct timeval64 m3_timeval_t;
 #define m3_gettimeofday gettimeofday64
 #else
