@@ -93,7 +93,7 @@ __cdecl
 ComputeGrainViaClockGetRes(void)
 {
     struct timespec res = { 0 };
-#if defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME)
+#if defined(__osf__) /* defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME) */
     int i = -1;
 #if defined(CLOCK_HIGHRES)
     i = clock_getres(CLOCK_HIGHRES, &res);
