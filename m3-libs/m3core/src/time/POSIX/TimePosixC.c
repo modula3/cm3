@@ -25,10 +25,21 @@ typedef struct timeval m3_timeval_t;
 #define m3_gettimeofday gettimeofday
 #endif
 
-static LONGREAL/*Time.T*/ __cdecl TimePosix__FromMicrotime(const m3_timeval_t* tv)
+static
+LONGREAL/*Time.T*/
+__cdecl
+TimePosix__FromMicrotime(const m3_timeval_t* tv)
 /* see also TimePosix__ToUtime */
 {
     return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_usec) / (LONGREAL)MILLION;
+}
+
+static
+LONGREAL/*Time.T*/
+__cdecl
+TimePosix__FromNanotime(const struct timespec* tv)
+{
+    return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_nsec) / (LONGREAL)BILLION;
 }
 
 LONGREAL/*Time.T*/
@@ -46,7 +57,7 @@ TimePosix__Now(void)
 
 static
 LONGREAL/*Time.T*/
-ComputeGrainOnce(void)
+ComputeGrainViaSamplingOnce(void)
 {
     /* Determine value of "Grain" experimentally.  Note that
      * this will fail if this thread is descheduled for a tick during the
@@ -61,18 +72,27 @@ ComputeGrainOnce(void)
     }
 }
 
-#if defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME)
-
-static LONGREAL/*Time.T*/ __cdecl TimePosix__FromNanotime(const struct timespec* tv)
-{
-    return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_nsec) / (LONGREAL)BILLION;
-}
-
+static
 LONGREAL/*Time.T*/
 __cdecl
-TimePosix__ComputeGrain(void)
+ComputeGrainViaSampling(void)
+{
+    /* Compute a few and then takes the smallest value. */
+    LONGREAL a = ComputeGrainViaSamplingOnce();
+    LONGREAL b = ComputeGrainViaSamplingOnce();
+    LONGREAL c = ComputeGrainViaSamplingOnce();
+    a = (b < a ? b : a);
+    a = (c < a ? c : a);
+    return a;
+}
+
+static
+LONGREAL/*Time.T*/
+__cdecl
+ComputeGrainViaClockGetRes(void)
 {
     struct timespec res = { 0 };
+#if defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME)
     int i = -1;
 #if defined(CLOCK_HIGHRES)
     i = clock_getres(CLOCK_HIGHRES, &res);
@@ -82,46 +102,21 @@ TimePosix__ComputeGrain(void)
 #error no CLOCK_HIGHRES or CLOCK_REALTIME
 #endif
     assert(i == 0);
+#endif
     return TimePosix__FromNanotime(&res);
 }
-
-#else
-
-#define TimePosix__FromNanotime(x) ((LONGREAL)0)
 
 LONGREAL/*Time.T*/
 __cdecl
 TimePosix__ComputeGrain(void)
 {
-    /* Compute a few and then takes the smallest value. */
-    LONGREAL a = ComputeGrainOnce();
-    LONGREAL b = ComputeGrainOnce();
-    LONGREAL c = ComputeGrainOnce();
-    a = (b < a ? b : a);
-    a = (c < a ? c : a);
-    return a;
-}
-
+#if defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME)
+  return ComputeGrainViaClockGetRes();
+#else
+  return ComputeGrainViaSampling();
 #endif
+}
 
 #ifdef __cplusplus
 } /* extern C */
-#endif
-
-#if 0
-
-int main()
-{
-    LONGREAL grain = ComputeGrainOnce();
-    struct timespec res = { 0 };
-    int i = -1;
-#if defined(CLOCK_HIGHRES)
-    i = clock_getres(CLOCK_HIGHRES, &res);
-#elif defined(CLOCK_REALTIME)
-    i = clock_getres(CLOCK_REALTIME, &res);
-#endif
-    printf("%d %e %e\n", i, grain, TimePosix__FromNanotime(&res));
-    return 0;
-}
-
 #endif
