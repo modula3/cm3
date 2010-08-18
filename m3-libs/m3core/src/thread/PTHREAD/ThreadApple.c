@@ -2,11 +2,11 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
+#ifndef __APPLE__
+
 #if __GNUC__ >= 4
 #pragma GCC visibility push(hidden)
 #endif
-
-#ifndef __APPLE__
 
 /* avoid empty file */
 
@@ -31,6 +31,10 @@ void ThreadApple__Dummy(void)
 #include <mach/thread_act.h>
 #if defined(__ppc__) || defined(__ppc64__)
 #include <architecture/ppc/cframe.h>
+#endif
+
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
 #endif
 
 #ifdef __cplusplus
@@ -60,8 +64,7 @@ ThreadPThread__SuspendThread (m3_pthread_t mt)
 int
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
-  pthread_t t = PTHREAD_FROM_M3(mt);
-  mach_port_t mach_thread = pthread_mach_thread_np(t);
+  mach_port_t mach_thread = pthread_mach_thread_np(PTHREAD_FROM_M3(mt));
   return thread_resume(mach_thread) == KERN_SUCCESS;
 }
 
