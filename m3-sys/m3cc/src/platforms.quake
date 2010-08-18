@@ -67,7 +67,7 @@ readonly Platform_info = {
   "SPARC32_SOLARIS" : "sparc-sun-solaris2.10",
   "SPARC64_LINUX" : "sparc64-linux",
   "SPARC64_OPENBSD" : "sparc64-openbsd",
-  "SPARC64_SOLARIS" : "sparc-sun-solaris2.10",
+  "SPARC64_SOLARIS" : "sparc64-sun-solaris",
   "SPARC_SOLARIS" : "sparc-sun-solaris2.10",
   "Tru64v5"   : "alpha-dec-osf5.1",
 }

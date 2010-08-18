@@ -36,8 +36,8 @@ end
 include("platforms.quake")
 
 readonly proc Platform_IsOpenBSD (Platform) is
-  return {"I386_OPENBSD":1,"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,
-    "MIPS64_OPENBSD":1,"AMD64_OPENBSD":1} contains Platform
+  return {"I386_OPENBSD","PPC32_OPENBSD","SPARC64_OPENBSD",
+    "MIPS64_OPENBSD","AMD64_OPENBSD"} contains Platform
 end
 
 %
@@ -256,6 +256,7 @@ GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
          "PPC_DARWIN", "PPC_LINUX",
          "ALPHA_OSF",
          "SPARC32_LINUX",
+         "SPARC64_SOLARIS",
          % untested or have problems
          %"I386_OPENBSD", "I386_NETBSD",
          %"AMD64_SOLARIS", "AMD64_FREEBSD", "AMD64_OPENBSD", "AMD64_NETBSD",
@@ -417,7 +418,8 @@ if Native % host == target == build
   % If we really wanted sparc32 cm3 to produce a sparc32 hosted cm3cg,
   % we could be explicit about host and/or build.
   %
-  if equal (M3CC_BUILD, "SPARC32_LINUX")
+ 
+  if {"SPARC32_LINUX","SPARC64_SOLARIS"} contains M3CC_BUILD
     Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
     %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
     %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
