@@ -5,9 +5,16 @@ readonly WORD_SIZE = "64BITS"       % { "32BITS" or "64BITS" }
 % - gcc doesn't always generate the required .register operands
 % - http://gcc.gnu.org/onlinedocs/gcc/SPARC-Options.html
 %   says to use this for libraries anyway
-% - we can remove gcc_cv_as_sparc_register_op in m3cc/src/m3makefile
+% - we can remove gcc_cv_as_sparc_register_op in m3cc/src/m3makefile?
 m3back_flags = " -mno-app-regs "
 
-m3back_pic = ""          % experimental
-m3back_debug = ""        % experimental
-m3back_unwind_table = "" % experimental
+%m3back_pic = ""          % experimental
+%m3back_debug = ""        % experimental
+%m3back_unwind_table = "" % experimental
+
+%proc AdjustShared(shared) is
+%  return FALSE
+%end
+
+M3_MAIN_IN_C = TRUE
+

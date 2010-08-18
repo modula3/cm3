@@ -6,3 +6,5 @@ m3back_flags = "-m32 -munaligned-doubles -mcpu=v9 -funwind-tables"
 % -mcpu=v9 for atomics
 % -gstabs+ omitted just to save diskspace
 % -funwind-tables in anticipation of using libunwind
+
+M3_MAIN_IN_C = TRUE
