@@ -1,4 +1,20 @@
 -----------------------------------------------------------------------------
+go through test p240 exact codegen diffs 4.3.5 to 4.5.1
+  esp. the missing .hidden on Darwin
+-----------------------------------------------------------------------------
+figure out the problem with SPARC32_LINUX PIC
+-----------------------------------------------------------------------------
+restore optimization on Alpha/OSF (with gcc 4.5.x)
+-----------------------------------------------------------------------------
+reduce volatile in backend (SPARC32_SOLARIS)
+-----------------------------------------------------------------------------
+allow all backend optimizations
+-----------------------------------------------------------------------------
+fill in atomic more:
+  ARMEL_LINUX: everything
+  PPC_LINUX, PPC_DARWIN, PPC32_OPENBSD, SPARC32_LINUX: Longint
+  MIPS64_OPENBSD, MIPS64EL_OPENBSD: Boolean, Char, WideChar
+-----------------------------------------------------------------------------
 new distribution format, kind of like 3.6:
   cm3-min-version-target.tar.gz
   cm3-all-version-target.tar.gz
@@ -24,6 +40,7 @@ move to gcc 4.5.x as backend
   main known obstacle is closure support
     closure support seems to work
   failures on many targets though e.g. I386_DARWIN
+  in progress and partly done, several targets moved
 
 and/or upgrade gcc 4.3.0 to gcc 4.3.x
   done
