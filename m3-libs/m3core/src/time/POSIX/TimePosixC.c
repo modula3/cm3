@@ -110,7 +110,11 @@ LONGREAL/*Time.T*/
 __cdecl
 TimePosix__ComputeGrain(void)
 {
-#if defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME)
+/* ComputeGrainViaSampling has a strong propensity to hang on OSF/1.
+   I don't know why. On other platforms, ComputeGrainViaClockGetRes and
+   ComputeGrainViaSampling vary by a lot.
+*/
+#if defined(__osf__) /* defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME) */
   return ComputeGrainViaClockGetRes();
 #else
   return ComputeGrainViaSampling();
