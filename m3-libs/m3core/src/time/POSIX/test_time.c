@@ -5,6 +5,7 @@ int main()
     LONGREAL sample = ComputeGrainViaSampling();
     struct timespec real = { 0 };
     struct timespec high = { 0 };
+    int i = { 0 };
 #ifdef CLOCK_HIGHRES
     i = clock_getres(CLOCK_HIGHRES, &high);
     assert(i == 0);
