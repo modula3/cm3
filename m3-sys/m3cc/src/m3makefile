@@ -255,8 +255,7 @@ GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
          "AMD64_DARWIN", "AMD64_LINUX",                 
          "PPC_DARWIN", "PPC_LINUX",
          "ALPHA_OSF",
-         "SPARC32_LINUX",
-         "SPARC64_SOLARIS",
+         "SPARC32_LINUX", "SPARC64_SOLARIS",
          % untested or have problems
          %"I386_OPENBSD", "I386_NETBSD",
          %"AMD64_SOLARIS", "AMD64_FREEBSD", "AMD64_OPENBSD", "AMD64_NETBSD",
@@ -356,9 +355,7 @@ if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined
   end
   
   % temporary workaround fs_rmrec not wokring
-  foreach a in ["build-x86_64-unknown-freebsd8.0",
-                "build-i386-pc-solaris2.10",
-                "gmp",
+  foreach a in ["gmp",
                 "mpfr",
                 "libcpp",
                 "libdecnumber",
