@@ -1,0 +1,47 @@
+#! /usr/bin/env python
+
+#
+# This stub can be used to fool Hudson into using
+# the 1.7 JDK package on OpenBSD 4.5.
+#
+# Hudson normally doesn't like the output of java -version
+# from this version of java.
+#
+# Put it at /usr/local/bin/java.
+# Make sure it is executable.
+# Test it out:
+#  java -version should print 1.6 something.
+#  java should print usage.
+#
+
+import sys
+import os
+
+
+jdk = "/usr/local/jdk-1.7.0/bin"
+base = os.path.basename(sys.argv[0]);
+
+
+if base == "java" and len(sys.argv) > 1 and sys.argv[1] == "-version":
+
+# This text taken from java -version on birch.
+
+    print("""
+java version "1.6.0_07"
+Java(TM) SE Runtime Environment (build 1.6.0_07-b06)
+Java HotSpot(TM) 64-Bit Server VM (build 10.0-b23, mixed mode)
+""");
+    sys.exit(0)
+
+
+full = os.path.join(jdk, base)
+
+
+if os.path.isfile(full):
+    os.environ["PATH"] = jdk + ":" + os.environ["PATH"]
+    sys.argv[0] = full
+    os.execv(full, sys.argv)
+
+
+print("unknown " + str(sys.argv))
+sys.exit(1)
