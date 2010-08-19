@@ -1,0 +1,8 @@
+m3back_debug = ""
+m3back_optimize = ""
+m3back_pic = ""
+m3back_unwind_table = "-fno-asynchronous-unwind-tables"
+
+implementation("Main")
+build_standalone()
+include ("../../Test.common")
