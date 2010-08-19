@@ -10,8 +10,7 @@ MODULE Main;
 
 TYPE ColorT = RECORD a,b,c: REAL; END;
 
-PROCEDURE SetDepthcueing (a,b,c,d,e,f:INTEGER;
-                          g:ColorT) =
+<*NOWARN*> PROCEDURE SetDepthcueing (a,b,c,d,e,f:INTEGER; g:ColorT) =
 BEGIN
 END SetDepthcueing;
 
