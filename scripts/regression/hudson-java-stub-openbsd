@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 
 #
-# This stub can be used to fool Hudson into using
-# the 1.7 JDK package on OpenBSD 4.5.
+# This stub lets Hudson use the 1.7 JDK package on OpenBSD.
 #
 # Hudson normally doesn't like the output of java -version
 # from this version of java.
