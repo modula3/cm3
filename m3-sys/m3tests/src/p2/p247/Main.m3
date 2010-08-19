@@ -6,6 +6,7 @@ SPARC64_SOLARIS
 Please submit a full bug report,
 with preprocessed source if appropriate.
 *)
+MODULE Main;
 
 TYPE ColorT = RECORD a,b,c: REAL; END;
 
