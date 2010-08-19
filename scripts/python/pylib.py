@@ -655,8 +655,10 @@ elif UName == "linux":
         Host = "I386_LINUX"
 
 elif UName == "netbsd":
-
-    Host = "I386_NETBSD" # only arch/version combination supported yet
+    if UNameArchM == "amd64":
+	Host = "AMD64_NETBSD"
+    elif UNameArchM == "i386":
+	Host = "I386_NETBSD"
 
 elif UName == "irix":
 
