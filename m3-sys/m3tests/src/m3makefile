@@ -563,6 +563,7 @@ p_test ("p2", "p243", "nested functions removed by gcc backend 'unit at a time'"
 p_test ("p2", "p244", "gcc 4.5 backend crash with 'fre' optimization")
 p_test ("p2", "p245", "gcc 4.5 assertion failure inlining in TextConv.m3")
 p_test ("p2", "p246", "gcc 4.5 assertion failure inlining in Poly.m3 for I386_DARWIN, SOLgnu, all 32bit?")
+p_test ("p2", "p247", "gcc 4.5.1 assertion failure for SPARC64_SOLARIS")
 
 mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
 % p_test ("p2", "p226", "atomics")
