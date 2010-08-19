@@ -269,8 +269,9 @@ if [ "x$CM3_TARGET" = "x" ] ; then
     NetBSD)
         case "`uname -m`" in
             x86_64) CM3_TARGET=AMD64_NETBSD;;
-            i386) CM3_TARGET=NetBSD2_i386;;
-                 #CM3_TARGET=I386_NETBSD;;
+            amd64) CM3_TARGET=AMD64_NETBSD;;
+            i386) #CM3_TARGET=NetBSD2_i386;;
+                   CM3_TARGET=I386_NETBSD;;
         esac;;
 
     OpenBSD)
