@@ -1,7 +1,9 @@
 #/bin/sh
 
 WS=${WORKSPACE}
-uname -a
+for a in a m s p r; do
+    echo uname -$a: `uname -$a`
+done
 date
 cd ${WS}/cm3/scripts || {
   echo "cannot cd to ${WS}/cm3/scripts" 1>&2 
@@ -74,4 +76,3 @@ if [ "$BUILD_SNAPSHOT" = "true" ]; then
 else
   true
 fi
-
