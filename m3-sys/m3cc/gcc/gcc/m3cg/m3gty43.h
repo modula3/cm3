@@ -62,3 +62,9 @@ struct language_function GTY(())
 {
     bool volatil; /* does function call setjmp/fork/vfork */
 };
+
+typedef struct id_tree_pair_t GTY(())
+{
+  unsigned long id;
+  tree t;
+} id_tree_pair_t;
