@@ -558,8 +558,8 @@ LIBINTL = @LIBINTL@
 LIBINTL_DEP = @LIBINTL_DEP@
 
 # Character encoding conversion library.
-LIBICONV = @LIBICONV@
-LIBICONV_DEP = @LIBICONV_DEP@
+LIBICONV =
+LIBICONV_DEP =
 
 # The GC method to be used on this system.
 GGC=@GGC@.o
@@ -885,7 +885,7 @@ LIBIBERTY = ../libiberty/libiberty.a
 BUILD_LIBIBERTY = $(build_libobjdir)/libiberty/libiberty.a
 
 # Dependencies on the intl and portability libraries.
-LIBDEPS= $(CPPLIB) $(LIBIBERTY) $(LIBINTL_DEP) $(LIBICONV_DEP) $(LIBDECNUMBER)
+LIBDEPS= $(CPPLIB) $(LIBIBERTY) $(LIBINTL_DEP) $(LIBDECNUMBER)
 
 # Likewise, for use in the tools that must run on this machine
 # even if we are cross-building GCC.
@@ -893,7 +893,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 
 # How to link with both our special library facilities
 # and the system's installed libraries.
-LIBS = @LIBS@ $(CPPLIB) $(LIBINTL) $(LIBICONV) $(LIBIBERTY) $(LIBDECNUMBER)
+LIBS = @LIBS@ $(CPPLIB) $(LIBINTL) $(LIBIBERTY) $(LIBDECNUMBER)
 
 # Any system libraries needed just for GNAT.
 SYSLIBS = @GNAT_LIBEXC@
@@ -4531,7 +4531,7 @@ TAGS: lang.tags
 XGETTEXT = @XGETTEXT@
 GMSGFMT = @GMSGFMT@
 MSGMERGE = msgmerge
-CATALOGS = $(patsubst %,po/%,@CATALOGS@)
+CATALOGS =
 
 .PHONY: build- install- build-po install-po update-po
 

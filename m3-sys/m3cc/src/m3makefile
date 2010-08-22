@@ -257,9 +257,6 @@ GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
          "ALPHA_OSF",
          "SPARC32_LINUX",
          
-         % see m3-sys/m3tests/src/p2/p247
-         %"SPARC64_SOLARIS",
-         
          % untested or have problems
          %"I386_OPENBSD",
          %"AMD64_SOLARIS", "AMD64_FREEBSD", "AMD64_OPENBSD",
@@ -559,38 +556,15 @@ foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
         if FileExists(file)
 
             %
-            % Remove unnecessary patsubst use for compatibility
-            % with older make.
-            %
-
-            if equal(leaf, "Makefile")
-                Sed(file, "^CATALOGS = .*$", "CATALOGS =")
-            end
-
-            %
             % Remove libiconv dependency
             % It isn't needed, and stock Solaris install lacks it.
             %
 
-            if equal(leaf, "Makefile")
-                Sed(file, "^LIBICONV = .*$", "LIBICONV =")
-                Sed(file, "^LIBICONV_DEP = .*$", "LIBICONV_DEP =")
-            end
             if not equal(leaf, "Makefile")
                 Sed(file, "^#define HAVE_ICONV 1$", "")
                 Sed(file, "^#define HAVE_ICONV_H 1$", "")
             end
 
-            %
-            % gcc 4.2 seems to have some optional dependency on gmp/mpfr, and
-            % doesn't have the support in the makefile to build the source if
-            % it is there. When Apple moves to 4.3 or newer, we'll symlink the
-            % gmp/mpfr directories from mainline to Apple.
-            %
-            if GCC42 and equal(leaf, "Makefile")
-                Sed(file, "^GMPLIBS =.*$", "GMPLIBS =")
-                Sed(file, "^GMPINC =.*$", "GMPINC =")
-            end
             %
             % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
             %
