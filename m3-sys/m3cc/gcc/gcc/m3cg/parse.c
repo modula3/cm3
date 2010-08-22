@@ -121,6 +121,40 @@ int arm_float_words_big_endian (void);
 
 #define COUNT_OF(a) (sizeof(a)/sizeof((a)[0]))
 
+/*------------------------------------------------------------- type uids ---*/
+/* Modula-3 type uids are unsiged 32-bit values.  They are passed as signed
+   decimal integers in the intermediate code, but converted to 6-byte, base 62
+   strings of characters from here to the debugger.  To avoid surprises downstream,
+   these generated strings are legal C identifiers.  */
+
+#define UID_SIZE 6
+
+#define NO_UID (0xFFFFFFFFUL)
+
+#define TYPEID(x)    unsigned long x = (0xFFFFFFFFUL & (unsigned long) get_int ())
+#define UNUSED_TYPEID(x)    long x ATTRIBUTE_UNUSED = get_int ()
+
+static void
+fmt_uid (unsigned long x, char *buf)
+{
+  unsigned digit;
+  int i;
+
+  buf[UID_SIZE] = 0;
+  if (x == NO_UID) { strcpy (buf, "zzzzzz");  return; }
+
+  for (i = UID_SIZE-1; i >= 0; i--) {
+    digit = (x % 62);
+    x = (x / 62);
+    if      (digit < 26) { buf[i] = 'A' + digit; }
+    else if (digit < 52) { buf[i] = 'a' + (digit - 26); }
+    else                 { buf[i] = '0' + (digit - 52); }
+  }
+
+  if ((x != 0) || (buf[0] < 'A') || ('Z' < buf[0])) {
+    fatal_error (" *** bad uid -> identifier conversion!!"); }
+}
+
 /*================================================================= TREES ===*/
 
 typedef enum
@@ -1554,40 +1588,6 @@ scan_target_int (void)
 #define BITOFFSET(x) INTEGER(x)
 #define BYTEOFFSET(x) long x = BITS_PER_UNIT * get_int()
 
-/*------------------------------------------------------------- type uids ---*/
-/* Modula-3 type uids are unsiged 32-bit values.  They are passed as signed
-   decimal integers in the intermediate code, but converted to 6-byte, base 62
-   strings of characters from here to the debugger.  To avoid surprises downstream,
-   these generated strings are legal C identifiers.  */
-
-#define UID_SIZE 6
-
-#define NO_UID (0xFFFFFFFFUL)
-
-#define TYPEID(x)    unsigned long x = (0xFFFFFFFFUL & (unsigned long) get_int ())
-#define UNUSED_TYPEID(x)    long x ATTRIBUTE_UNUSED = get_int ()
-
-static void
-fmt_uid (unsigned long x, char *buf)
-{
-  unsigned digit;
-  int i;
-
-  buf[UID_SIZE] = 0;
-  if (x == NO_UID) { strcpy (buf, "zzzzzz");  return; }
-
-  for (i = UID_SIZE-1; i >= 0; i--) {
-    digit = (x % 62);
-    x = (x / 62);
-    if      (digit < 26) { buf[i] = 'A' + digit; }
-    else if (digit < 52) { buf[i] = 'a' + (digit - 26); }
-    else                 { buf[i] = '0' + (digit - 52); }
-  }
-
-  if ((x != 0) || (buf[0] < 'A') || ('Z' < buf[0])) {
-    fatal_error (" *** bad uid -> identifier conversion!!"); }
-}
-
 /*----------------------------------------------------------------- float ---*/
 
 static int IsHostBigEndian(void)
@@ -1796,7 +1796,7 @@ scan_label (void)
 }
 
 
-/*================================================= debugging information ===*/
+/*======================================== debugging and type information ===*/
 
 static char current_dbg_type_tag [100];
 static int current_dbg_type_count1;
