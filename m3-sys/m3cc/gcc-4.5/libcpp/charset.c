@@ -646,12 +646,6 @@ cpp_init_iconv (cpp_reader *pfile)
   pfile->wide_cset_desc.width = CPP_OPTION (pfile, wchar_precision);
 }
 
-/* Destroy iconv(3) descriptors set up by cpp_init_iconv, if necessary.  */
-void
-_cpp_destroy_iconv (cpp_reader *pfile)
-{
-}
-
 /* Utility routine for use by a full compiler.  C is a character taken
    from the *basic* source character set, encoded in the host's
    execution encoding.  Convert it to (the target's) execution
