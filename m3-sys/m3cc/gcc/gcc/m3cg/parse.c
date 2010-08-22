@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <setjmp.h>
-
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -55,17 +54,14 @@
 #include "input.h"
 #include "target.h"
 #include "version.h"
-
 #include "cgraph.h"
-
 #include "expr.h"
 #include "diagnostic.h"
-
 #include "m3cg.h"
 #include "opts.h"
 #include "options.h"
-
 #include "debug.h"
+#include "m3gty43.h"
 
 #ifndef TARGET_SOLARIS
 #define TARGET_SOLARIS 0
@@ -127,10 +123,68 @@ int arm_float_words_big_endian (void);
    strings of characters from here to the debugger.  To avoid surprises downstream,
    these generated strings are legal C identifiers.  */
 
+/* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
+
+DEF_VEC_O(id_tree_pair_t);
+DEF_VEC_ALLOC_O(id_tree_pair_t, gc);
+
+static VEC(id_tree_pair_t, gc)* id_tree_table;
+static bool id_tree_table_dirty;
+
+static int
+compare_typeid_tree_pair(const void* a, const void *b)
+{
+  unsigned long x = ((const id_tree_pair_t*)a)->id;
+  unsigned long y = ((const id_tree_pair_t*)b)->id;
+  return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+}
+
+static tree
+get_typeid_to_tree(unsigned long id)
+{
+  id_tree_pair_t* found;
+  id_tree_pair_t to_find;
+  if (!id_tree_table)
+    return 0;
+  if (id_tree_table_dirty)
+  {
+     qsort(VEC_address(id_tree_pair_t, id_tree_table),
+          VEC_length(id_tree_pair_t, id_tree_table),
+          sizeof(id_tree_pair_t),
+          compare_typeid_tree_pair);
+    id_tree_table_dirty = false;
+  }
+  to_find.id = id;
+  found = (id_tree_pair_t*)bsearch(&to_find,
+                                   VEC_address(id_tree_pair_t, id_tree_table),
+                                   VEC_length(id_tree_pair_t, id_tree_table),
+                                   sizeof(id_tree_pair_t),
+                                   compare_typeid_tree_pair);
+  return found ? found->t : 0;
+}
+
+static void
+set_typeid_to_tree(unsigned long id, tree t)
+{
+  tree u = get_typeid_to_tree(id);
+  id_tree_pair_t to_add;
+
+  if (u)
+  {
+    fprintf(stderr, "warning: id 0x%lx already mapped to %p, ignoring %p\n",
+            id, u, t);
+    return;
+  }
+  to_add.id = id;
+  to_add.t = t;
+  if (!id_tree_table)
+    id_tree_table = VEC_alloc(id_tree_pair_t, gc, 100);
+  VEC_safe_push(id_tree_pair_t, gc, id_tree_table, &to_add);
+  id_tree_table_dirty = true;
+}
+
 #define UID_SIZE 6
-
 #define NO_UID (0xFFFFFFFFUL)
-
 #define TYPEID(x)    unsigned long x = (0xFFFFFFFFUL & (unsigned long) get_int ())
 #define UNUSED_TYPEID(x)    long x ATTRIBUTE_UNUSED = get_int ()
 
@@ -265,8 +319,6 @@ static GTY (()) tree pending_blocks;
 static GTY (()) tree current_stmts;
 static GTY (()) tree pending_stmts;
 static GTY (()) tree pending_inits;
-
-#include "m3gty43.h"
 
 #if !GCC45
 static bool m3_mark_addressable (tree exp);
