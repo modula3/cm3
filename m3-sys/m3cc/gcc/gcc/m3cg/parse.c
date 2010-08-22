@@ -4357,6 +4357,15 @@ m3cg_bytes_per_integer(void)
     return (t = (t ? t : build_int_cst(t_word, BITS_PER_INTEGER / BITS_PER_UNIT)));
 }
 
+#define m3cg_assert_int(t) \
+ do {                \
+   if ((t) != t_int) \
+   {                 \
+     fprintf(stderr, "word size/target/configure confusion?\n"); \
+     gcc_assert((t) == t_int); \
+   } \
+ } while(0)
+
 static tree
 m3cg_set_member_ref(tree* out_bit_in_word)
 {
@@ -4386,7 +4395,7 @@ m3cg_set_member_ref(tree* out_bit_in_word)
 
   word_ref         = m3_build1(INDIRECT_REF, t_word, word_ref);
   *out_bit_in_word = m3_build2(LSHIFT_EXPR, t_word, one, bit_in_word);
-  gcc_assert (type == t_int);
+  m3cg_assert_int(type);
   EXPR_POP ();
   EXPR_POP ();
   return stabilize_reference(word_ref); /* stabilize: avoid recomputing */
@@ -4415,7 +4424,7 @@ m3cg_set_compare (tree proc)
   BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  m3cg_assert_int(t);
   setop (proc, n, 2);
 }
 static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); }
@@ -4428,7 +4437,7 @@ static void m3cg_set_eq (void)
   BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  m3cg_assert_int(t);
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
@@ -4443,7 +4452,7 @@ static void m3cg_set_ne (void)
   BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  m3cg_assert_int(t);
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
@@ -4459,7 +4468,7 @@ m3cg_set_range (void)
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  m3cg_assert_int(t);
   setop2 (set_range_proc, 3);
 }
 
@@ -4813,7 +4822,7 @@ m3cg_copy_n (void)
   MTYPE (mem_t);
   BOOLEAN (overlap);
 
-  gcc_assert (cnt_t == t_int);
+  m3cg_assert_int(cnt_t);
   m3_start_call ();
 
   /* rearrange the parameters */
@@ -4875,7 +4884,7 @@ m3cg_zero_n (void)
   MTYPE (cnt_t);
   MTYPE (mem_t);
 
-  gcc_assert (cnt_t == t_int);
+  m3cg_assert_int(cnt_t);
   EXPR_REF(-1) = m3_build2(MULT_EXPR, t_int, EXPR_REF(-1),
                            TYPE_SIZE_UNIT(mem_t));
 
