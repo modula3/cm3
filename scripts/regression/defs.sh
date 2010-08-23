@@ -540,12 +540,10 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   echo " >>> OK build_${1}_${BSET} ${DS} ${WS}"
 
   echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
-  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
-  if [ -d ${INSTROOT_LOK}.$$ ]; then
-    cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
-  else
-    mv ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
-  fi
+  [ -d ${INSTROOT_LOK}.$$ ] && rm -rf ${INSTROOT_LOK}.$$
+  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK} ${INSTROOT_LOK}.$$
+  mkdir -p ${INSTROOT_LOK}.$$
+  [ -d ${INSTROOT_CUR} ] && cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
 
   if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
     echo " === remove previous ok version at ${INSTROOT_POK}"
@@ -560,7 +558,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
     echo " === no installation in ${INSTROOT_LOK}"
   fi
 
-  echo " === update last ok from ${INSTROOT_CUR}"
+  echo " === move intermediate lastok ${INSTROOT_LOK}.$$ to ${INSTROOT_LOK}"
   mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
     sleep 30
     echo "update of ${INSTROOT_LOK} failed... trying to restore..."
@@ -627,12 +625,10 @@ test_build_system()
   fi
 
   echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
-  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
-  if [ -d ${INSTROOT_LOK}.$$ ]; then
-    cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
-  else
-    mv ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
-  fi
+  [ -d ${INSTROOT_LOK}.$$ ] && rm -rf ${INSTROOT_LOK}.$$
+  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK} ${INSTROOT_LOK}.$$
+  mkdir -p ${INSTROOT_LOK}.$$
+  [ -d ${INSTROOT_CUR} ] && cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
 
   if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
     echo " === remove previous ok version at ${INSTROOT_POK}"
@@ -647,7 +643,7 @@ test_build_system()
     echo " === no installation in ${INSTROOT_LOK}"
   fi
 
-  echo " === update last ok from ${INSTROOT_CUR}"
+  echo " === move intermediate lastok ${INSTROOT_LOK}.$$ to ${INSTROOT_LOK}"
   mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
     sleep 30
     echo "update of ${INSTROOT_LOK} failed... trying to restore..."
