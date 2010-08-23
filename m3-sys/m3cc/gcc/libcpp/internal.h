@@ -1,3 +1,5 @@
+/* Modula-3 change: iconv/locale support removed */
+
 /* Part of CPP library.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
@@ -26,28 +28,17 @@ Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
 #include "symtab.h"
 #include "cpp-id-data.h"
 
-#ifndef HAVE_ICONV_H
-#undef HAVE_ICONV
-#endif
-
-#if HAVE_ICONV
-#include <iconv.h>
-#else
-#define HAVE_ICONV 0
-typedef int iconv_t;  /* dummy */
-#endif
-
 struct directive;		/* Deliberately incomplete.  */
 struct pending_option;
 struct op;
 struct _cpp_strbuf;
 
-typedef bool (*convert_f) (iconv_t, const unsigned char *, size_t,
+typedef bool (*convert_f) (int, const unsigned char *, size_t,
 			   struct _cpp_strbuf *);
 struct cset_converter
 {
   convert_f func;
-  iconv_t cd;
+  int cd;
 };
 
 #define BITS_PER_CPPCHAR_T (CHAR_BIT * sizeof (cppchar_t))
