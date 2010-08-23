@@ -325,11 +325,15 @@ cm3config() {
     SL=/
   fi
   if [ -d "$1" -a -f "${f}" ]; then
-    if perl -p -i -e 's;^INSTALL_ROOT[ \t]*=.*$;INSTALL_ROOT = "'${R}${SL}'";' "$f";
-      then true
+    ( echo "INSTALL_ROOT = path() & \"/..\""
+      echo "include(path() & \"/config/${CM3_TARGET}\")"
+    ) > ${f}.new
+    if cmp ${f} ${f}.new; then
+      rm ${f}.new
     else
-      echo "INSTALL_ROOT substitution failed for ${f}" 1>&2
-      exit 1
+      NOW=`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`
+      cp -p ${f} ${f}--${NOW}
+      mv ${f}.new ${f}
     fi
   else
     echo "no cm3 installation in $1" 1>&2
