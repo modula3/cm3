@@ -1,3 +1,5 @@
+/* Modula-3 change: iconv/locale support removed */
+
 /* CPP Library - charsets
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004
    Free Software Foundation, Inc.
@@ -23,60 +25,7 @@ Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
 #include "cpplib.h"
 #include "internal.h"
 
-/* Character set handling for C-family languages.
-
-   Terminological note: In what follows, "charset" or "character set"
-   will be taken to mean both an abstract set of characters and an
-   encoding for that set.
-
-   The C99 standard discusses two character sets: source and execution.
-   The source character set is used for internal processing in translation
-   phases 1 through 4; the execution character set is used thereafter.
-   Both are required by 5.2.1.2p1 to be multibyte encodings, not wide
-   character encodings (see 3.7.2, 3.7.3 for the standardese meanings
-   of these terms).  Furthermore, the "basic character set" (listed in
-   5.2.1p3) is to be encoded in each with values one byte wide, and is
-   to appear in the initial shift state.
-
-   It is not explicitly mentioned, but there is also a "wide execution
-   character set" used to encode wide character constants and wide
-   string literals; this is supposed to be the result of applying the
-   standard library function mbstowcs() to an equivalent narrow string
-   (6.4.5p5).  However, the behavior of hexadecimal and octal
-   \-escapes is at odds with this; they are supposed to be translated
-   directly to wchar_t values (6.4.4.4p5,6).
-
-   The source character set is not necessarily the character set used
-   to encode physical source files on disk; translation phase 1 converts
-   from whatever that encoding is to the source character set.
-
-   The presence of universal character names in C99 (6.4.3 et seq.)
-   forces the source character set to be isomorphic to ISO 10646,
-   that is, Unicode.  There is no such constraint on the execution
-   character set; note also that the conversion from source to
-   execution character set does not occur for identifiers (5.1.1.2p1#5).
-
-   For convenience of implementation, the source character set's
-   encoding of the basic character set should be identical to the
-   execution character set OF THE HOST SYSTEM's encoding of the basic
-   character set, and it should not be a state-dependent encoding.
-
-   cpplib uses UTF-8 or UTF-EBCDIC for the source character set,
-   depending on whether the host is based on ASCII or EBCDIC (see
-   respectively Unicode section 2.3/ISO10646 Amendment 2, and Unicode
-   Technical Report #16).  With limited exceptions, it relies on the
-   system library's iconv() primitive to do charset conversion
-   (specified in SUSv2).  */
-
-#if !HAVE_ICONV
-/* Make certain that the uses of iconv(), iconv_open(), iconv_close()
-   below, which are guarded only by if statements with compile-time
-   constant conditions, do not cause link errors.  */
-#define iconv_open(x, y) (errno = EINVAL, (iconv_t)-1)
-#define iconv(a,b,c,d,e) (errno = EINVAL, (size_t)-1)
-#define iconv_close(x)   (void)0
-#define ICONV_CONST
-#endif
+/* Modula-3 change: iconv/locale support removed */
 
 #if HOST_CHARSET == HOST_CHARSET_ASCII
 #define SOURCE_CHARSET "UTF-8"
@@ -261,10 +210,10 @@ one_cppchar_to_utf8 (cppchar_t c, uchar **outbufp, size_t *outbytesleftp)
 
 /* The following four functions transform one character between the two
    encodings named in the function name.  All have the signature
-   int (*)(iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+   int (*)(int bigend, const uchar **inbufp, size_t *inbytesleftp,
            uchar **outbufp, size_t *outbytesleftp)
 
-   BIGEND must have the value 0 or 1, coerced to (iconv_t); it is
+   BIGEND must have the value 0 or 1; it is
    interpreted as a boolean indicating whether big-endian or
    little-endian encoding is to be used for the member of the pair
    that is not UTF-8.
@@ -277,7 +226,7 @@ one_cppchar_to_utf8 (cppchar_t c, uchar **outbufp, size_t *outbytesleftp)
    input sequence), ir EINVAL (incomplete input sequence).  */
 
 static inline int
-one_utf8_to_utf32 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf8_to_utf32 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   uchar *outbuf;
@@ -304,7 +253,7 @@ one_utf8_to_utf32 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
 }
 
 static inline int
-one_utf32_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf32_to_utf8 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   cppchar_t s;
@@ -334,7 +283,7 @@ one_utf32_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
 }
 
 static inline int
-one_utf8_to_utf16 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf8_to_utf16 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   int rval;
@@ -397,7 +346,7 @@ one_utf8_to_utf16 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
 }
 
 static inline int
-one_utf16_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf16_to_utf8 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   cppchar_t s;
@@ -452,9 +401,9 @@ one_utf16_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
    pointed to, which lets the inliner see through it.  */
 
 static inline bool
-conversion_loop (int (*const one_conversion)(iconv_t, const uchar **, size_t *,
+conversion_loop (int (*const one_conversion)(int, const uchar **, size_t *,
 					     uchar **, size_t *),
-		 iconv_t cd, const uchar *from, size_t flen, struct _cpp_strbuf *to)
+		 int cd, const uchar *from, size_t flen, struct _cpp_strbuf *to)
 {
   const uchar *inbuf;
   uchar *outbuf;
@@ -495,7 +444,7 @@ conversion_loop (int (*const one_conversion)(iconv_t, const uchar **, size_t *,
 /* These functions convert entire strings between character sets.
    They all have the signature
 
-   bool (*)(iconv_t cd, const uchar *from, size_t flen, struct _cpp_strbuf *to);
+   bool (*)(int cd, const uchar *from, size_t flen, struct _cpp_strbuf *to);
 
    The input string FROM is converted as specified by the function
    name plus the iconv descriptor CD (which may be fake), and the
@@ -503,28 +452,28 @@ conversion_loop (int (*const one_conversion)(iconv_t, const uchar **, size_t *,
 
 /* These four use the custom conversion code above.  */
 static bool
-convert_utf8_utf16 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf8_utf16 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf8_to_utf16, cd, from, flen, to);
 }
 
 static bool
-convert_utf8_utf32 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf8_utf32 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf8_to_utf32, cd, from, flen, to);
 }
 
 static bool
-convert_utf16_utf8 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf16_utf8 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf16_to_utf8, cd, from, flen, to);
 }
 
 static bool
-convert_utf32_utf8 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf32_utf8 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf32_to_utf8, cd, from, flen, to);
@@ -532,7 +481,7 @@ convert_utf32_utf8 (iconv_t cd, const uchar *from, size_t flen,
 
 /* Identity conversion, used when we have no alternative.  */
 static bool
-convert_no_conversion (iconv_t cd ATTRIBUTE_UNUSED,
+convert_no_conversion (int cd ATTRIBUTE_UNUSED,
 		       const uchar *from, size_t flen, struct _cpp_strbuf *to)
 {
   if (to->len + flen > to->asize)
@@ -545,46 +494,7 @@ convert_no_conversion (iconv_t cd ATTRIBUTE_UNUSED,
   return true;
 }
 
-/* And this one uses the system iconv primitive.  It's a little
-   different, since iconv's interface is a little different.  */
-#if HAVE_ICONV
-static bool
-convert_using_iconv (iconv_t cd, const uchar *from, size_t flen,
-		     struct _cpp_strbuf *to)
-{
-  ICONV_CONST char *inbuf;
-  char *outbuf;
-  size_t inbytesleft, outbytesleft;
-
-  /* Reset conversion descriptor and check that it is valid.  */
-  if (iconv (cd, 0, 0, 0, 0) == (size_t)-1)
-    return false;
-
-  inbuf = (ICONV_CONST char *)from;
-  inbytesleft = flen;
-  outbuf = (char *)to->text + to->len;
-  outbytesleft = to->asize - to->len;
-
-  for (;;)
-    {
-      iconv (cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-      if (__builtin_expect (inbytesleft == 0, 1))
-	{
-	  to->len = to->asize - outbytesleft;
-	  return true;
-	}
-      if (errno != E2BIG)
-	return false;
-
-      outbytesleft += OUTBUF_BLOCK_SIZE;
-      to->asize += OUTBUF_BLOCK_SIZE;
-      to->text = XRESIZEVEC (uchar, to->text, to->asize);
-      outbuf = (char *)to->text + to->asize - outbytesleft;
-    }
-}
-#else
-#define convert_using_iconv 0 /* prevent undefined symbol error below */
-#endif
+/* Modula-3 change: iconv/locale support removed */
 
 /* Arrange for the above custom conversion logic to be used automatically
    when conversion between a suitable pair of character sets is requested.  */
@@ -596,17 +506,17 @@ struct conversion
 {
   const char *pair;
   convert_f func;
-  iconv_t fake_cd;
+  int fake_cd;
 };
 static const struct conversion conversion_tab[] = {
-  { "UTF-8/UTF-32LE", convert_utf8_utf32, (iconv_t)0 },
-  { "UTF-8/UTF-32BE", convert_utf8_utf32, (iconv_t)1 },
-  { "UTF-8/UTF-16LE", convert_utf8_utf16, (iconv_t)0 },
-  { "UTF-8/UTF-16BE", convert_utf8_utf16, (iconv_t)1 },
-  { "UTF-32LE/UTF-8", convert_utf32_utf8, (iconv_t)0 },
-  { "UTF-32BE/UTF-8", convert_utf32_utf8, (iconv_t)1 },
-  { "UTF-16LE/UTF-8", convert_utf16_utf8, (iconv_t)0 },
-  { "UTF-16BE/UTF-8", convert_utf16_utf8, (iconv_t)1 },
+  { "UTF-8/UTF-32LE", convert_utf8_utf32, 0 },
+  { "UTF-8/UTF-32BE", convert_utf8_utf32, 1 },
+  { "UTF-8/UTF-16LE", convert_utf8_utf16, 0 },
+  { "UTF-8/UTF-16BE", convert_utf8_utf16, 1 },
+  { "UTF-32LE/UTF-8", convert_utf32_utf8, 0 },
+  { "UTF-32BE/UTF-8", convert_utf32_utf8, 1 },
+  { "UTF-16LE/UTF-8", convert_utf16_utf8, 0 },
+  { "UTF-16BE/UTF-8", convert_utf16_utf8, 1 },
 };
 
 /* Subroutine of cpp_init_iconv: initialize and return a
@@ -624,7 +534,7 @@ init_iconv_desc (cpp_reader *pfile, const char *to, const char *from)
   if (!strcasecmp (to, from))
     {
       ret.func = convert_no_conversion;
-      ret.cd = (iconv_t) -1;
+      ret.cd = -1;
       return ret;
     }
 
@@ -641,32 +551,14 @@ init_iconv_desc (cpp_reader *pfile, const char *to, const char *from)
 	return ret;
       }
 
-  /* No custom converter - try iconv.  */
-  if (HAVE_ICONV)
-    {
-      ret.func = convert_using_iconv;
-      ret.cd = iconv_open (to, from);
+  /* Modula-3 change: iconv/locale support removed */
 
-      if (ret.cd == (iconv_t) -1)
-	{
-	  if (errno == EINVAL)
-	    cpp_error (pfile, CPP_DL_ERROR, /* FIXME should be DL_SORRY */
-		       "conversion from %s to %s not supported by iconv",
-		       from, to);
-	  else
-	    cpp_errno (pfile, CPP_DL_ERROR, "iconv_open");
-
-	  ret.func = convert_no_conversion;
-	}
-    }
-  else
-    {
       cpp_error (pfile, CPP_DL_ERROR, /* FIXME: should be DL_SORRY */
 		 "no iconv implementation, cannot convert from %s to %s",
 		 from, to);
       ret.func = convert_no_conversion;
-      ret.cd = (iconv_t) -1;
-    }
+      ret.cd = -1;
+
   return ret;
 }
 
@@ -702,18 +594,7 @@ cpp_init_iconv (cpp_reader *pfile)
   pfile->wide_cset_desc = init_iconv_desc (pfile, wcset, SOURCE_CHARSET);
 }
 
-/* Destroy iconv(3) descriptors set up by cpp_init_iconv, if necessary.  */
-void
-_cpp_destroy_iconv (cpp_reader *pfile)
-{
-  if (HAVE_ICONV)
-    {
-      if (pfile->narrow_cset_desc.func == convert_using_iconv)
-	iconv_close (pfile->narrow_cset_desc.cd);
-      if (pfile->wide_cset_desc.func == convert_using_iconv)
-	iconv_close (pfile->wide_cset_desc.cd);
-    }
-}
+/* Modula-3 change: iconv/locale support removed */
 
 /* Utility routine for use by a full compiler.  C is a character taken
    from the *basic* source character set, encoded in the host's
@@ -1408,7 +1289,7 @@ cpp_interpret_string_notranslate (cpp_reader *pfile, const cpp_string *from,
   bool retval;
 
   pfile->narrow_cset_desc.func = convert_no_conversion;
-  pfile->narrow_cset_desc.cd = (iconv_t) -1;
+  pfile->narrow_cset_desc.cd = -1;
 
   /* APPLE LOCAL pascal strings */
   retval = cpp_interpret_string (pfile, from, count, to, wide, pascal_p);
@@ -1679,9 +1560,7 @@ _cpp_convert_input (cpp_reader *pfile, const char *input_charset,
       free (input);
     }
 
-  /* Clean up the mess.  */
-  if (input_cset.func == convert_using_iconv)
-    iconv_close (input_cset.cd);
+  /* Modula-3 change: iconv/locale support removed */
 
   /* Resize buffer if we allocated substantially too much, or if we
      haven't enough space for the \n-terminator.  */
@@ -1705,35 +1584,9 @@ _cpp_convert_input (cpp_reader *pfile, const char *input_charset,
 const char *
 _cpp_default_encoding (void)
 {
-  const char *current_encoding = NULL;
-
-  /* We disable this because the default codeset is 7-bit ASCII on
-     most platforms, and this causes conversion failures on every
-     file in GCC that happens to have one of the upper 128 characters
-     in it -- most likely, as part of the name of a contributor.
-     We should definitely recognize in-band markers of file encoding,
-     like:
-     - the appropriate Unicode byte-order mark (FE FF) to recognize
-       UTF16 and UCS4 (in both big-endian and little-endian flavors)
-       and UTF8
-     - a "#i", "#d", "/ *", "//", " #p" or "#p" (for #pragma) to
-       distinguish ASCII and EBCDIC.
-     - now we can parse something like "#pragma GCC encoding <xyz>
-       on the first line, or even Emacs/VIM's mode line tags (there's
-       a problem here in that VIM uses the last line, and Emacs has
-       its more elaborate "local variables" convention).
-     - investigate whether Java has another common convention, which
-       would be friendly to support.
-     (Zack Weinberg and Paolo Bonzini, May 20th 2004)  */
-#if defined (HAVE_LOCALE_H) && defined (HAVE_LANGINFO_CODESET) && 0
-  setlocale (LC_CTYPE, "");
-  current_encoding = nl_langinfo (CODESET);
-#endif
-  if (current_encoding == NULL || *current_encoding == '\0')
-    current_encoding = SOURCE_CHARSET;
-
-  return current_encoding;
+  return SOURCE_CHARSET;
 }
+
 /* APPLE LOCAL begin radar 2996215 */
 /* This routine is used to convert  utf-8 to utf-16 character format. FROM, FLEN
    are the input character buffer and its length. Upon success, utf-16 characters are
@@ -1748,7 +1601,7 @@ cpp_utf8_utf16 (cpp_reader *pfile, const uchar *from, size_t flen,
   struct cset_converter cvt;
   struct _cpp_strbuf tbuf;
  
-  cvt.cd = CPP_OPTION (pfile, bytes_big_endian) ? (iconv_t)1 : (iconv_t)0;
+  cvt.cd = CPP_OPTION (pfile, bytes_big_endian) ? 1 : 0;
   cvt.func = convert_utf8_utf16;
   tbuf.asize = OUTBUF_BLOCK_SIZE;
   tbuf.text = xmalloc (tbuf.asize);
