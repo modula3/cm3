@@ -556,7 +556,7 @@ init_iconv_desc (cpp_reader *pfile, const char *to, const char *from)
 		 "no iconv implementation, cannot convert from %s to %s",
 		 from, to);
       ret.func = convert_no_conversion;
-      ret.cd = (iconv_t) -1;
+      ret.cd = -1;
 
   return ret;
 }
@@ -1244,7 +1244,7 @@ cpp_interpret_string_notranslate (cpp_reader *pfile, const cpp_string *from,
   bool retval;
 
   pfile->narrow_cset_desc.func = convert_no_conversion;
-  pfile->narrow_cset_desc.cd = (iconv_t) -1;
+  pfile->narrow_cset_desc.cd = -1;
 
   retval = cpp_interpret_string (pfile, from, count, to, wide);
 
