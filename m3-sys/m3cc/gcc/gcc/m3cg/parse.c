@@ -1856,19 +1856,17 @@ static int current_dbg_type_count2;
 static int current_dbg_type_count3;
 
 static void
-debug_tag (char kind, unsigned long id, ...)
+debug_tag (char kind, unsigned long id, const char* fmt, ...)
 {
   va_list args;
-  char *fmt;
 
-  va_start (args, id);
+  va_start (args, fmt);
 
   current_dbg_type_tag [0] = 'M';
   current_dbg_type_tag [1] = kind;
   current_dbg_type_tag [2] = '_';
   fmt_uid (id, current_dbg_type_tag + 3);
 
-  fmt = va_arg (args, char *);
   current_dbg_type_tag[sizeof(current_dbg_type_tag) - 2] = 0;
   vsnprintf (current_dbg_type_tag + UID_SIZE + 3,
              sizeof(current_dbg_type_tag) - (UID_SIZE + 3), fmt, args);
@@ -1903,16 +1901,14 @@ debug_field_id (unsigned long id)
 }
 
 static void
-debug_field_fmt (unsigned long id, ...)
+debug_field_fmt (unsigned long id, const char* fmt, ...)
 {
   va_list args;
   char name [100];
-  char *fmt;
 
-  va_start (args, id);
+  va_start (args, fmt);
 
   fmt_uid (id, name);
-  fmt = va_arg (args, char *);
   name[sizeof(name) - 2] = 0;
   vsnprintf (name + UID_SIZE, sizeof(name) - UID_SIZE, fmt, args);
   va_end (args);
