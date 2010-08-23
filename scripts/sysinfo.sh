@@ -231,13 +231,13 @@ if [ "x$CM3_TARGET" = "x" ] ; then
     Darwin)
       case "`uname -p`" in
         powerpc)
-          CM3_TARGET=PPC_DARWIN;;
+          CM3_TARGET=PPC_DARWIN
           rm -rf ./m3ppc64
           echo "int main() { return 0; }" | gcc -arch ppc64 -x c - -o ./m3ppc64
           if ./m3ppc64 2/dev/null; then
-            #CM3_TARGET=PPC64_DARWIN;;
-          fi;;
-          rm -rf ./m3ppc64
+            #CM3_TARGET=PPC64_DARWIN
+          fi
+          rm -rf ./m3ppc64;;
         i386)
           if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
             CM3_TARGET=AMD64_DARWIN
