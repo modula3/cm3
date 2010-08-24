@@ -32,8 +32,7 @@ PROCEDURE IsX86(): BOOLEAN =
       RETURN TRUE;
     END;
     CASE System OF
-    | Systems.FreeBSD4, Systems.NT386, Systems.NT386GNU,
-      Systems.LINUXLIBC6 => RETURN TRUE;
+    | Systems.FreeBSD4, Systems.NT386, Systems.LINUXLIBC6 => RETURN TRUE;
     ELSE RETURN FALSE;
     END;
   END IsX86;
@@ -310,8 +309,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                 Jumpbuf_size := 18 * Address.size;
                 calling_conventions := TRUE;
 
-    | Systems.NT386, Systems.NT386GNU,
-      Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
+    | Systems.NT386, Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
 
                  (* Cygwin: 13, Visual C++: 16, Interix: 18.
                     Use 18 for interop.
