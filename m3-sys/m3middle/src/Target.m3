@@ -389,7 +389,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 100 * Address.size;
                  Jumpbuf_align             := Word64.align;
 
-    | Systems.I386_NETBSD, Systems.NetBSD2_i386 =>
+    | Systems.I386_NETBSD =>
                  Jumpbuf_size              := 14 * Address.size; (* 13? *)
                  
     | Systems.ALPHA32_VMS,
