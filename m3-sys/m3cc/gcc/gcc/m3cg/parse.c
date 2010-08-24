@@ -514,7 +514,7 @@ m3_build_pointer_type (tree a)
 }
 
 static tree
-m3_build_type_id(m3_type t, int s, int a, unsigned long id)
+m3_build_type_id (m3_type t, int s, int a, unsigned long id)
 {
   switch (t)
     {
@@ -585,7 +585,7 @@ m3_build_type_id(m3_type t, int s, int a, unsigned long id)
 static tree
 m3_build_type (m3_type t, int s, int a)
 {
-  return m3_build_type_id(t, s, a, NO_UID);
+  return m3_build_type_id (t, s, a, NO_UID);
 }
 
 /*========================================== insert, shift, rotate and co ===*/
@@ -3153,7 +3153,7 @@ m3cg_import_global (void)
 
   DECL_EXTERNAL (v) = 1;
   TREE_PUBLIC   (v) = 1;
-  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
+  TREE_TYPE (v) = m3_build_type (t, s, a);
   layout_decl (v, a);
 
   TREE_CHAIN (v) = global_decls;
@@ -3180,7 +3180,7 @@ m3cg_declare_segment (void)
      gcc doesn't think it fits in a register, so that loads out of it do get
      their offsets applied. */
   TREE_TYPE (v)
-    = m3_build_type_id(T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, id);
+    = m3_build_type (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT);
   layout_decl (v, BIGGEST_ALIGNMENT);
   TYPE_UNSIGNED (TREE_TYPE (v)) = 1;
   TREE_STATIC (v) = 1;
@@ -3240,7 +3240,7 @@ m3cg_declare_global (void)
     fprintf(stderr, "  global var %s type:%s size:0x%lx alignment:0x%lx\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
 
-  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
+  TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
@@ -3263,7 +3263,7 @@ m3cg_declare_constant (void)
   RETURN_VAR (v, VAR_DECL);
 
   DECL_NAME (v) = fix_name (n, id);
-  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
+  TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
@@ -3293,7 +3293,7 @@ m3cg_declare_local (void)
     fprintf(stderr, "  local var %s type:%s size:0x%lx alignment:0x%lx\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
 
-  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
+  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl;
@@ -3354,7 +3354,7 @@ m3cg_declare_param (void)
     fprintf(stderr, "  param %s type:%s typeid:0x%lx bytesize:0x%lx alignment:0x%lx in_memory:0x%x up_level:0x%x\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), id, s, a, in_memory, up_level);
 
-  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
+  TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
@@ -5837,24 +5837,18 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   
   flag_exceptions = 1; /* ? */
 
-  /* sound possibly dangerous, bloating, and insignificant? */
+  /* sound possibly dangerous, bloating, insignificant? */
 
   align_functions = 0;
   align_labels = 0;
   align_jumps = 0;
   align_loops = 0;
-  
-#if 0
-  /* sounds like it might have caused the infinite recursion in cm3cg */
-
-  flag_split_wide_types = 0;
-#endif
 
   /* sound complicated?
-   * break caltech-parser?
-   * Something in here does, needs reduction.
+   * break caltech-parser? Something in here does, needs reduction.
    */
 
+  flag_split_wide_types = 0; /* caused infinite recursion in cm3cg? */
   flag_expensive_optimizations = 0;
   flag_ipa_pure_const = 0;
   flag_ipa_reference = 0;
