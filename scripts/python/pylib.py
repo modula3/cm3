@@ -46,7 +46,7 @@ if env_OS == "Windows_NT" and not IsInterix():
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
     #
     # cmd can run extensionless executables if this code is enabled.
-    # This can be useful for example with NT386GNU following more Posix-ish
+    # This can be useful for example with I386_CYGWIN following more Posix-ish
     # naming styles than even Cygwin usually does.
     #
     #pathext = getenv("PATHEXT")
@@ -318,8 +318,6 @@ def _MapTarget(a):
     return {
         "LINUXLIBC6"    : "I386_LINUX",
         "NT386"         : "I386_NT",
-        "NT386GNU"      : "I386_CYGWIN",
-        "NT386MINGNU"   : "I386_MINGW",
         "PPC32_DARWIN"  : "PPC_DARWIN",
         "PPC32_LINUX"   : "PPC_LINUX",
         "FreeBSD4"      : "I386_FREEBSD",
@@ -338,7 +336,7 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]
+    Targets = [ "NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]
 
     # systematic naming
 
@@ -718,7 +716,7 @@ HAVE_SERIAL = False
 
 if Target.startswith("NT386"):
 
-    if Target == "NT386MINGNU" or Target == "NT386":
+    if Target == "NT386":
         TargetOS = "WIN32"
         HAVE_SERIAL = True
 
@@ -1564,7 +1562,6 @@ def _FilterPackage(Package):
                     {"FreeBSD4": True,
                     "LINUXLIBC6" : True,
                     "SOLgnu" : True,
-                    "NT386GNU" : True,
                     "I386_CYGWIN" : True,
                     "I386_FREEBSD" : True,
                     "I386_NETBSD" : True,
@@ -2051,10 +2048,10 @@ def GetVisualCPlusPlusVersion():
 
 
 def IsCygwinHostTarget(): # confused
-    return Host == "NT386GNU" or Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
+    return Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
 
 def IsMinGWHostTarget():
-    return Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32") or Target.endswith("_MINGW")
+    return (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32") or Target.endswith("_MINGW")
 
 _HostIsNT = (os.environ.get("OS") == "Windows_NT")
 
@@ -2606,8 +2603,6 @@ DebianArchitecture = {
   "LINUXLIBC6" : "i386",
   "FreeBSD4" : "i386",
   "NT386" : "i386",
-  "NT386GNU" : "i386",
-  "NT386MINGNU" : "i386",
   "I386" : "i386",
   "IA64" : "ia64",
   "ALPHA" : "alpha",
