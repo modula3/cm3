@@ -77,6 +77,8 @@
    Why does the stack walker matter?
  */
 #define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
+/*#undef M3_ALL_VOLATILE
+#define M3_ALL_VOLATILE 1*/
 
 #if GCC45
 
@@ -123,6 +125,9 @@ int arm_float_words_big_endian (void);
    strings of characters from here to the debugger.  To avoid surprises downstream,
    these generated strings are legal C identifiers.  */
 
+#define UID_SIZE 6
+#define NO_UID (0xFFFFFFFFUL)
+
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
 DEF_VEC_O(id_tree_pair_t);
@@ -136,22 +141,26 @@ compare_typeid_tree_pair(const void* a, const void *b)
 {
   unsigned long x = ((const id_tree_pair_t*)a)->id;
   unsigned long y = ((const id_tree_pair_t*)b)->id;
+  /* Do not use subtraction here. It does not work. Not just
+   * because sizeof(int) < sizeof(long) but also because
+   * these are unsigned numbers.
+   */
   return ((x < y) ? -1 : ((x > y) ? 1 : 0));
 }
 
-static tree
-get_typeid_to_tree(unsigned long id)
+static id_tree_pair_t*
+get_typeid_to_tree_pointer(unsigned long id)
 {
-  id_tree_pair_t* found;
+  id_tree_pair_t* found = { 0 };
   id_tree_pair_t to_find;
-  if (!id_tree_table)
+  if (!id_tree_table || id == NO_UID)
     return 0;
   if (id_tree_table_dirty)
   {
      qsort(VEC_address(id_tree_pair_t, id_tree_table),
-          VEC_length(id_tree_pair_t, id_tree_table),
-          sizeof(id_tree_pair_t),
-          compare_typeid_tree_pair);
+           VEC_length(id_tree_pair_t, id_tree_table),
+           sizeof(id_tree_pair_t),
+           compare_typeid_tree_pair);
     id_tree_table_dirty = false;
   }
   to_find.id = id;
@@ -160,19 +169,40 @@ get_typeid_to_tree(unsigned long id)
                                    VEC_length(id_tree_pair_t, id_tree_table),
                                    sizeof(id_tree_pair_t),
                                    compare_typeid_tree_pair);
+  return found;
+}
+
+static tree
+get_typeid_to_tree(unsigned long id)
+{
+/* Additional type information can give optimizer liberty to
+   further transform, and break, the code. Beware.
+*/
+#if 1
+  id_tree_pair_t* found = get_typeid_to_tree_pointer(id);
   return found ? found->t : 0;
+#else
+  return 0;
+#endif
 }
 
 static void
 set_typeid_to_tree(unsigned long id, tree t)
 {
-  tree u = get_typeid_to_tree(id);
+/* Additional type information can give optimizer liberty to
+   further transform, and break, the code. Beware.
+*/
+#if 1
+  id_tree_pair_t* found;
   id_tree_pair_t to_add;
 
-  if (u)
+  if (id == NO_UID)
+    return;
+    
+  found = get_typeid_to_tree_pointer(id);
+  if (found)
   {
-    fprintf(stderr, "warning: id 0x%lx already mapped to %p, ignoring %p\n",
-            id, u, t);
+    /*found->t = t;*/
     return;
   }
   to_add.id = id;
@@ -181,10 +211,9 @@ set_typeid_to_tree(unsigned long id, tree t)
     id_tree_table = VEC_alloc(id_tree_pair_t, gc, 100);
   VEC_safe_push(id_tree_pair_t, gc, id_tree_table, &to_add);
   id_tree_table_dirty = true;
+#endif
 }
 
-#define UID_SIZE 6
-#define NO_UID (0xFFFFFFFFUL)
 #define TYPEID(x)    unsigned long x = (0xFFFFFFFFUL & (unsigned long) get_int ())
 #define UNUSED_TYPEID(x)    long x ATTRIBUTE_UNUSED = get_int ()
 
@@ -485,7 +514,7 @@ m3_build_pointer_type (tree a)
 }
 
 static tree
-m3_build_type (m3_type t, int s, int a)
+m3_build_type_id(m3_type t, int s, int a, unsigned long id)
 {
   switch (t)
     {
@@ -531,13 +560,18 @@ m3_build_type (m3_type t, int s, int a)
 
     case T_struct:
       {
-        tree ts = make_node (RECORD_TYPE);
-        TYPE_NAME (ts) = NULL_TREE;
-        TYPE_FIELDS (ts) = NULL_TREE;
+        tree ts = { 0 };
+        if (id != NO_UID)
+          ts = get_typeid_to_tree(id);
+        if (!ts)
+        {
+          ts = make_node (RECORD_TYPE);
+          TYPE_NAME (ts) = NULL_TREE;
+          TYPE_FIELDS (ts) = NULL_TREE;
+        }
         TYPE_SIZE (ts) = bitsize_int (s);
         TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
         TYPE_ALIGN (ts) = a;
-
         compute_record_mode (ts);
         return ts;
       }
@@ -546,6 +580,12 @@ m3_build_type (m3_type t, int s, int a)
     } /*switch*/
 
   gcc_unreachable ();
+}
+
+static tree
+m3_build_type (m3_type t, int s, int a)
+{
+  return m3_build_type_id(t, s, a, NO_UID);
 }
 
 /*========================================== insert, shift, rotate and co ===*/
@@ -1525,6 +1565,7 @@ scan_string (void)
                 || t == t_word_16 || t == t_word_64 || t == t_word)
 
 #define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
+#define IS_REAL_TYPE_TREE(t) (t == t_reel || t == t_lreel || t == t_xreel)
 
 #define TYPE(x) m3_type x = scan_type ()
 #define UNUSED_TYPE(x) m3_type x ATTRIBUTE_UNUSED = scan_type ()
@@ -1851,6 +1892,7 @@ scan_label (void)
 /*======================================== debugging and type information ===*/
 
 static char current_dbg_type_tag [100];
+static unsigned long current_dbg_type_id;
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
@@ -1862,6 +1904,7 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
 
   va_start (args, fmt);
 
+  current_dbg_type_id = id;
   current_dbg_type_tag [0] = 'M';
   current_dbg_type_tag [1] = kind;
   current_dbg_type_tag [2] = '_';
@@ -1881,6 +1924,8 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
 static void
 debug_field (const char *name)
 {
+  /* t_int on following line is not generally correct and
+   * needs to be a parmeter to this function. */
   tree f = build_decl (FIELD_DECL, get_identifier (name), t_int);
 
   DECL_FIELD_OFFSET (f) = size_zero_node;
@@ -1942,6 +1987,7 @@ debug_struct (void)
   global_decls = d;
   debug_hooks -> type_decl
     ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
+  set_typeid_to_tree(current_dbg_type_id, t);
 }
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
@@ -2262,7 +2308,7 @@ m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
 {
   if (o != 0 || TREE_TYPE (v) != src_t)
   {
-    if (GCC42)
+    if (flag_split_wide_types || GCC42 || IS_REAL_TYPE(src_T) || IS_REAL_TYPE(dst_T))
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
@@ -2309,7 +2355,7 @@ m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
   tree val;
   if (o != 0 || TREE_TYPE (v) != dst_t)
   {
-    if (GCC42)
+    if (flag_split_wide_types || GCC42 || IS_REAL_TYPE(src_T) || IS_REAL_TYPE(dst_T))
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
@@ -3107,7 +3153,7 @@ m3cg_import_global (void)
 
   DECL_EXTERNAL (v) = 1;
   TREE_PUBLIC   (v) = 1;
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
   layout_decl (v, a);
 
   TREE_CHAIN (v) = global_decls;
@@ -3134,7 +3180,7 @@ m3cg_declare_segment (void)
      gcc doesn't think it fits in a register, so that loads out of it do get
      their offsets applied. */
   TREE_TYPE (v)
-    = m3_build_type (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT);
+    = m3_build_type_id(T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, id);
   layout_decl (v, BIGGEST_ALIGNMENT);
   TYPE_UNSIGNED (TREE_TYPE (v)) = 1;
   TREE_STATIC (v) = 1;
@@ -3194,7 +3240,7 @@ m3cg_declare_global (void)
     fprintf(stderr, "  global var %s type:%s size:0x%lx alignment:0x%lx\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
 
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
@@ -3217,7 +3263,7 @@ m3cg_declare_constant (void)
   RETURN_VAR (v, VAR_DECL);
 
   DECL_NAME (v) = fix_name (n, id);
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
@@ -3247,7 +3293,7 @@ m3cg_declare_local (void)
     fprintf(stderr, "  local var %s type:%s size:0x%lx alignment:0x%lx\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
 
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl;
@@ -3308,7 +3354,7 @@ m3cg_declare_param (void)
     fprintf(stderr, "  param %s type:%s typeid:0x%lx bytesize:0x%lx alignment:0x%lx in_memory:0x%x up_level:0x%x\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), id, s, a, in_memory, up_level);
 
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id(t, s, a, id);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
@@ -5782,6 +5828,93 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   /* These optimizations break our exception handling? */
   flag_reorder_blocks = 0;
   flag_reorder_blocks_and_partition = 0;
+
+  /* sound somewhat dangerous? */
+
+  flag_strict_aliasing = 0;
+  flag_strict_overflow = 0;
+  flag_reorder_functions = 0;
+  
+  flag_exceptions = 1; /* ? */
+
+  /* sound possibly dangerous, bloating, and insignificant? */
+
+  align_functions = 0;
+  align_labels = 0;
+  align_jumps = 0;
+  align_loops = 0;
+  
+#if 0
+  /* sounds like it might have caused the infinite recursion in cm3cg */
+
+  flag_split_wide_types = 0;
+#endif
+
+  /* sound complicated?
+   * break caltech-parser?
+   * Something in here does, needs reduction.
+   */
+
+  flag_expensive_optimizations = 0;
+  flag_ipa_pure_const = 0;
+  flag_ipa_reference = 0;
+  flag_ipa_cp = 0;
+  flag_tree_ccp = 0;
+  flag_tree_dce = 0;
+  flag_tree_dom = 0;
+  flag_tree_dse = 0;
+  flag_tree_ter = 0;
+  flag_tree_sra = 0;
+  flag_tree_copyrename = 0;
+  flag_tree_fre = 0;
+  flag_tree_copy_prop = 0;
+  flag_tree_sink = 0;
+  flag_tree_ch = 0;
+  flag_tree_vectorize = 0;
+
+  /* sound simple/safe? */
+
+#if 0
+  flag_var_tracking = 0;
+  flag_tree_cselim = 0;
+  flag_regmove = 0;
+  flag_delete_null_pointer_checks = 0;
+  flag_tree_vrp = 0;
+  flag_inline_small_functions = 0;
+  flag_thread_jumps = 0;
+  flag_crossjumping = 0;
+  flag_optimize_sibling_calls = 0;
+  flag_forward_propagate = 0;
+  flag_cse_follow_jumps = 0;
+  flag_gcse = 0;
+  flag_rerun_cse_after_loop = 0;
+  flag_caller_saves = 0;
+  flag_peephole2 = 0;
+#ifdef INSN_SCHEDULING
+  flag_schedule_insns = 0;
+  flag_schedule_insns_after_reload = 0;
+#endif
+  flag_defer_pop = 0;
+#ifdef DELAY_SLOTS
+  flag_delayed_branch = 0;
+#endif
+#ifdef CAN_DEBUG_WITHOUT_FP
+  flag_omit_frame_pointer = 0;
+#endif
+  flag_guess_branch_prob = 0;
+  flag_cprop_registers = 0;
+  flag_if_conversion = 0;
+  flag_if_conversion2 = 0;
+  flag_rerun_cse_after_loop = 0;
+  flag_merge_constants = 0;
+  flag_guess_branch_prob = 0;
+  flag_unswitch_loops = 0;
+#endif
+
+#if !GCC45
+  flag_tree_store_ccp = 0;
+  flag_tree_salias = 0;
+#endif
 
   /* causes backend crashes in
      m3totex
