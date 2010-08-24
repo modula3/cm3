@@ -3540,7 +3540,7 @@ collect_alloc_sites (void)
 		    && (decl = gimple_call_fndecl (stmt))
 		    && gimple_call_lhs (stmt))
 		  {
-		    unsigned i;
+		    unsigned i = { 0 };
 
 		    if (is_alloc_of_struct (stmt, &i))
 		      {
