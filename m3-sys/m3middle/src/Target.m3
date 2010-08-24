@@ -33,7 +33,7 @@ PROCEDURE IsX86(): BOOLEAN =
     END;
     CASE System OF
     | Systems.FreeBSD4, Systems.NT386, Systems.NT386GNU,
-      Systems.LINUXLIBC6, Systems.NetBSD2_i386 => RETURN TRUE;
+      Systems.LINUXLIBC6 => RETURN TRUE;
     ELSE RETURN FALSE;
     END;
   END IsX86;
