@@ -4,7 +4,8 @@ readonly GNU_PLATFORM = "sparc-linux" % "cpu-os" string for GNU
 SYSTEM_CC = "gcc -m32 -fPIC" % C compiler
 SYSTEM_ASM = "as -Qy -s -Av9a -32 -relax" % Assembler
 
-m3back_pic = ""
+%m3back_pic = ""
+m3back_debug = "" % save diskspace
 
 include("SPARC.common")
 include("Linux.common")
