@@ -5844,13 +5844,11 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   align_jumps = 0;
   align_loops = 0;
 
-  /* sound complicated?
-   * break caltech-parser? Something in here does, needs reduction.
-   */
+  /* sound complicated? */
 
+#if 0
   flag_split_wide_types = 0; /* caused infinite recursion in cm3cg? */
   flag_expensive_optimizations = 0;
-#if 0
   flag_ipa_pure_const = 0;
   flag_ipa_reference = 0;
   flag_ipa_cp = 0;
