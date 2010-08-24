@@ -62,7 +62,9 @@ usage()
   echo ""
 }
 
-if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
+if [ "${TARGET}" = "NT386" \
+        -o "${TARGET}" = "I386_CYGWIN" \
+        -o "${TARGET}" = "I386_MINGW" ]; then
   ext=".exe"
 else
   ext=""
