@@ -9,6 +9,7 @@ IMPORT M3CG, M3CG_Ops, TInt, TargetMap;
 
 CONST (* name-mangling done by the compiler & back-end *)
   BinderSuffix = ARRAY BOOLEAN OF TEXT { "_M3", "_I3" };
+  EOL = "\n";
 
 TYPE
   State = RECORD
@@ -64,7 +65,6 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
     s.errors    := Stdio.stdout;
     s.gui       := windowsGUI;
     s.genC      := (s.wr # NIL);
-    s.eol       := Wr.EOL;
     s.lazyInit  := lazy;
 
     IF verbose THEN
@@ -137,7 +137,7 @@ PROCEDURE ImportMain (VAR s: State) =
     END;
 
     IF s.main_units = NIL THEN
-      Err (s, "No module implements \"Main\".", s.eol);
+      Err (s, "No module implements \"Main\".", EOL);
     END;
   END ImportMain;
 
@@ -245,7 +245,7 @@ PROCEDURE ImportTopUnits (VAR s: State) =
       ui := ui.next;
     END;
     IF s.main_units = NIL THEN
-      Err (s, "No module implements \"Main\".", s.eol);
+      Err (s, "No module implements \"Main\".", EOL);
     END;
   END ImportTopUnits;
 
@@ -254,7 +254,7 @@ PROCEDURE ImportUnit (VAR s: State;  ui: UnitInfo) =
   BEGIN
     ui.binder := UnitName (u);
     IF s.genC THEN
-      Out (s, "extern void* ", ui.binder, "();", s.eol);
+      Out (s, "extern void* ", ui.binder, "();", EOL);
     ELSE
       ui.cg_proc := s.cg.import_procedure (M3ID.Add (ui.binder), 1,
                                           Target.CGType.Addr,
@@ -293,7 +293,7 @@ PROCEDURE GenerateCEntry (VAR s: State) =
   PROCEDURE GenAddUnits(ui: UnitInfo) =
     BEGIN
       WHILE (ui # NIL) DO
-        Out (s, "  RTLinker__AddUnit (", ui.binder, ");", s.eol);
+        Out (s, "  RTLinker__AddUnit (", ui.binder, ");", EOL);
         ui := ui.next;
       END;
     END GenAddUnits;
@@ -302,45 +302,45 @@ PROCEDURE GenerateCEntry (VAR s: State) =
     BEGIN
       IF s.lazyInit THEN RETURN END;
       WHILE (ui # NIL) DO
-        Out (s, "  RTLinker__AddUnitImports (", ui.binder, ");", s.eol);
+        Out (s, "  RTLinker__AddUnitImports (", ui.binder, ");", EOL);
         ui := ui.next;
       END;
     END GenAddUnitImports;
 
   BEGIN
-    Out (s, "#include <stddef.h>", s.eol);
-    Out (s, "#if __INITIAL_POINTER_SIZE == 64", s.eol);
-    Out (s, "typedef __int64 INTEGER;", s.eol);
-    Out (s, "#else", s.eol);
-    Out (s, "typedef ptrdiff_t INTEGER;", s.eol);
-    Out (s, "#endif", s.eol);
-    Out (s, "void RTLinker__InitRuntime(INTEGER, char**, char**, void*);", s.eol);
-    Out (s, "void RTProcess__Exit(INTEGER);", s.eol);
-    Out (s, "void* Main_M3(void); /* ? */", s.eol);
-    Out (s, "void RTLinker__AddUnitImports(); /* ? */", s.eol);
-    Out (s, "void RTLinker__AddUnit(void* (*)(void)); /* ? */", s.eol);
+    Out (s, "#include <stddef.h>", EOL);
+    Out (s, "#if __INITIAL_POINTER_SIZE == 64", EOL);
+    Out (s, "typedef __int64 INTEGER;", EOL);
+    Out (s, "#else", EOL);
+    Out (s, "typedef ptrdiff_t INTEGER;", EOL);
+    Out (s, "#endif", EOL);
+    Out (s, "void RTLinker__InitRuntime(INTEGER, char**, char**, void*);", EOL);
+    Out (s, "void RTProcess__Exit(INTEGER);", EOL);
+    Out (s, "void* Main_M3(void); /* ? */", EOL);
+    Out (s, "void RTLinker__AddUnitImports(); /* ? */", EOL);
+    Out (s, "void RTLinker__AddUnit(void* (*)(void)); /* ? */", EOL);
 
     IF (s.gui) THEN
-      Out (s, "#include <windows.h>", s.eol);
+      Out (s, "#include <windows.h>", EOL);
       Out (s, "int WINAPI ");
-      Out (s, "WinMain (HINSTANCE self, HINSTANCE prev,", s.eol);
-      Out (s, "                    LPSTR args, int mode)", s.eol);
-      Out (s, "{", s.eol);
+      Out (s, "WinMain (HINSTANCE self, HINSTANCE prev,", EOL);
+      Out (s, "                    LPSTR args, int mode)", EOL);
+      Out (s, "{", EOL);
       Out (s, "  RTLinker__InitRuntime (-1, args, ");
-      Out (s,                        "GetEnvironmentStringsA(), self);", s.eol);
+      Out (s,                        "GetEnvironmentStringsA(), self);", EOL);
     ELSE
-      Out (s, "int main (int argc, char** argv, char** envp)", s.eol);
-      Out (s, "{", s.eol);
-      Out (s, "  RTLinker__InitRuntime (argc, argv, envp, (void*)0);", s.eol);
+      Out (s, "int main (int argc, char** argv, char** envp)", EOL);
+      Out (s, "{", EOL);
+      Out (s, "  RTLinker__InitRuntime (argc, argv, envp, (void*)0);", EOL);
     END;
 
     GenAddUnitImports(s.main_units);
     GenAddUnits(s.top_units);
     GenAddUnits(s.main_units);
 
-    Out (s, "  RTProcess__Exit (0);", s.eol);
-    Out (s, "  return 0;", s.eol);
-    Out (s, "}", s.eol, s.eol);
+    Out (s, "  RTProcess__Exit (0);", EOL);
+    Out (s, "  return 0;", EOL);
+    Out (s, "}", EOL, EOL);
   END GenerateCEntry;
 
 (*------------------------------------------------------------------------*)
@@ -559,7 +559,7 @@ PROCEDURE Msg (a, b, c, d: TEXT := NIL) =
       IF (b # NIL) THEN Wr.PutText (wr, b) END;
       IF (c # NIL) THEN Wr.PutText (wr, c) END;
       IF (d # NIL) THEN Wr.PutText (wr, d) END;
-      Wr.PutText(wr, Wr.EOL);
+      Wr.PutText(wr, EOL);
     END;
   END Msg;
 
