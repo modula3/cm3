@@ -49,7 +49,6 @@ TYPE
     MIPS64_OPENBSD, (* e.g. SGI *)
     MIPS64EL_OPENBSD, (* e.g. Loongson *)
     NT386,
-    NT386GNU,
     PA32_HPUX,
     PA64_HPUX,
     PPC32_OPENBSD,
@@ -94,7 +93,6 @@ CONST
     "MIPS64_OPENBSD",
     "MIPS64EL_OPENBSD",
     "NT386",
-    "NT386GNU",
     "PA32_HPUX",
     "PA64_HPUX",
     "PPC32_OPENBSD",
