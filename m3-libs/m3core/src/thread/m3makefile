@@ -17,8 +17,7 @@ proc InternalPlatformEquivalent(a, b) is
                 {"I386_NT", "NT386"},
                 {"I386_CYGWIN", "NT386GNU"},
                 {"I386_MINGW", "NT386MINGNU"},
-                {"I386_LINUX", "LINUXLIBC6"},
-                {"I386_NETBSD", "NetBSD2_i386"}]
+                {"I386_LINUX", "LINUXLIBC6"}]
     if (c contains a) and (c contains b)
       return TRUE
     end
