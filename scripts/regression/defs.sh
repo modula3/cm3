@@ -73,10 +73,10 @@ INSTROOT_CUR=${INSTROOT_CUR:-${INSTBASE}/current}
 export INSTBASE INSTROOT_CUR INSTROOT_REL INSTROOT_POK INSTROOT_LOK
 
 # repository definitions
-if test "x${CM3CVSUSER}" != "x"; then
-  CM3CVSUSER_AT="${CM3CVSUSER}@"
-else
+if test "x${CM3CVSUSER}" = "x"; then
   CM3CVSUSER_AT=""
+else
+  CM3CVSUSER_AT="${CM3CVSUSER}@"
 fi
 CM3CVSSERVER=${CM3CVSSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
 CM3CVSROOT=${CM3CVSROOT:-${CM3CVSSERVER}:/usr/cvs}
@@ -99,83 +99,109 @@ if [ ! -d "${TMPDIR}" ]; then
 fi
 export TMPDIR
 
+# default TARGET and CM3_TARGET to each other
+TARGET=${TARGET:-$CM3_TARGET}
+CM3_TARGET=${CM3_TARGET:-$TARGET}
+
+if [ "x$CM3_TARGET" = "x$TARGET" ] ; then :; else
+  echo "if TARGET and CM3_TARGET are both set, they must be equal ($TARGET, $CM3_TARGET)"
+  exit 1
+fi
+
+if [ "x$CM3_TARGET" = "x" ] ; then
+  case "`uname`" in
+
+    Windows*|WinNT*|Cygwin*|CYGWIN*) CM3_TARGET=NT386;;
+                                     #CM3_TARGET=I386_NT;;
+
+    OSF1) CM3_TARGET=ALPHA_OSF;;
+
+    FreeBSD)
+      case "`uname -p`" in
+        amd64)  CM3_TARGET=AMD64_FREEBSD;;
+        i386)   CM3_TARGET=FreeBSD4;;
+                #CM3_TARGET=I386_FREEBSD;;
+      esac;;
+
+    Darwin)
+      case "`uname -p`" in
+        powerpc)
+          CM3_TARGET=PPC_DARWIN
+          rm -rf ./m3ppc64
+          echo "int main() { return 0; }" | gcc -arch ppc64 -x c - -o ./m3ppc64
+          if ./m3ppc64 2/dev/null; then
+            true
+            #CM3_TARGET=PPC64_DARWIN
+          fi
+          rm -rf ./m3ppc64;;
+        i386)
+          if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+            CM3_TARGET=AMD64_DARWIN
+          else
+            CM3_TARGET=I386_DARWIN
+          fi;;
+      esac;;
+
+    SunOS)
+      case "`uname -p`" in
+          i86pc)
+            case "`isainfo`" in
+              *amd64*) CM3_TARGET=AMD64_SOLARIS;;
+              *) CM3_TARGET=I386_SOLARIS;;
+            esac;;
+          sparc)
+            case "`isainfo`" in
+              #*sparcv9*) CM3_TARGET=SPARC64_SOLARIS;;
+              *) CM3_TARGET=SOLgnu;;
+                 #CM3_TARGET=SOLsun;;
+                 #CM3_TARGET=SPARC32_SOLARIS;;
+            esac;;
+      esac;;
+
+    Interix) CM3_TARGET=I386_INTERIX;;
+
+    Linux)
+      case "`uname -m`" in
+        ppc)     CM3_TARGET=PPC_LINUX;;
+        ppc64)   CM3_TARGET=PPC_LINUX;; # ?
+        x86_64)  CM3_TARGET=AMD64_LINUX;;
+        sparc64) CM3_TARGET=SPARC32_LINUX;;
+        i*86)    CM3_TARGET=LINUXLIBC6;;
+                 #CM3_TARGET=I386_LINUX;;
+      esac;;
+
+    NetBSD)
+        case "`uname -m`" in
+          x86_64) CM3_TARGET=AMD64_NETBSD;;
+          amd64) CM3_TARGET=AMD64_NETBSD;;
+          i386) CM3_TARGET=I386_NETBSD;;
+        esac;;
+
+    OpenBSD)
+      case "`arch -s`" in
+        powerpc)   CM3_TARGET=PPC32_OPENBSD;;
+        x86_64)   CM3_TARGET=AMD64_OPENBSD;;
+        amd64)    CM3_TARGET=AMD64_OPENBSD;;
+        sparc64)  CM3_TARGET=SPARC64_OPENBSD;;
+        mips64)   CM3_TARGET=MIPS64_OPENBSD;;
+        mips64el) CM3_TARGET=MIPS64EL_OPENBSD;;
+        i386)     CM3_TARGET=I386_OPENBSD;;
+      esac;;
+  esac
+fi
+
+if [ "x$CM3_TARGET" = "x" ] ; then
+  echo "$0 does not know about `uname -a`"
+  exit 1
+fi
+
 CM3_OSTYPE=POSIX
 
-case "`uname`" in
-
-  Windows*|WinNT*|Cygwin*|CYGWIN*)
-    if [ x$TARGET = xNT386GNU ] ; then
-      CM3_TARGET=NT386GNU
-    else
-      CM3_OSTYPE=WIN32
-      CM3_TARGET=NT386
-    fi
-  ;;
-
-  NT386GNU*)
-    CM3_TARGET=NT386GNU
-  ;;
-
-  FreeBSD*)
-    case "`uname -p`" in
-      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
-      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
-      *)        echo "$0 does not know about `uname -a`"
-                exit 1;;
-    esac
-  ;;
-
-  Darwin*)
-    case "`uname -p`" in
-      powerpc*)
-        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
-      i[3456]86*)
-        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
-          CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
-        else
-          CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
-        fi
-        ;;
-      *) echo "$0 does not know about `uname -a`"
-         exit 1;;
-    esac
-  ;;
-
-  SunOS*)
-    CM3_TARGET=${CM3_TARGET:-SOLgnu}
-    #CM3_TARGET=${CM3_TARGET:-SOLsun}
-  ;;
-
-  Interix*)
-    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
-  ;;
-
-  Linux*)
-    case "`uname -m`" in
-      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
-      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
-      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
-      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
-      *)       echo "$0 does not know about `uname -a`"
-               exit 1;;
-    esac
-  ;;
-
-  NetBSD*)
-    CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
-  ;;
-
-  OpenBSD*)
-    case "`arch -s`" in
-      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
-      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
-      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
-      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
-      *)        echo "$0 does not know about `uname -a`"
-                exit 1;;
-    esac
-  ;;
+case "$CM3_TARGET" in
+  *DARWIN) CM3_GDB=no;;
+  NT386|I386_NT) CM3_OSTYPE=WIN32;;
 esac
+
 export CM3_OSTYPE CM3_TARGET
 
 # files for result aggregation of m3-sys/m3tests
