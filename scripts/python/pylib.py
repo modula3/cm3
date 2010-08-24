@@ -323,7 +323,6 @@ def _MapTarget(a):
         "PPC32_DARWIN"  : "PPC_DARWIN",
         "PPC32_LINUX"   : "PPC_LINUX",
         "FreeBSD4"      : "I386_FREEBSD",
-        "NetBSD2_i386"  : "I386_NETBSD",
 
         # both options sensible, double HP a bit redundant in the HPUX names
 
@@ -339,7 +338,7 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4", "NetBSD2_i386" ]
+    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]
 
     # systematic naming
 
@@ -1565,7 +1564,6 @@ def _FilterPackage(Package):
                     {"FreeBSD4": True,
                     "LINUXLIBC6" : True,
                     "SOLgnu" : True,
-                    "NetBSD2_i386" : True,
                     "NT386GNU" : True,
                     "I386_CYGWIN" : True,
                     "I386_FREEBSD" : True,
@@ -2607,7 +2605,6 @@ def RestoreSkel(prefix):
 DebianArchitecture = {
   "LINUXLIBC6" : "i386",
   "FreeBSD4" : "i386",
-  "NetBSD2_i386" : "i386",
   "NT386" : "i386",
   "NT386GNU" : "i386",
   "NT386MINGNU" : "i386",
