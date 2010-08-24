@@ -251,7 +251,7 @@ GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone
 % Current default for most platforms is gcc43.
 GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
         {"I386_SOLARIS", "I386_DARWIN", "I386_LINUX", "LINUXLIBC6",
-         "I386_OPENBSD", "I386_NETBSD", "I386_FREEBSD", "FreeBSD4",
+         "I386_NETBSD", "I386_FREEBSD", "FreeBSD4",
          "AMD64_NETBSD", "AMD64_DARWIN", "AMD64_LINUX",
          "PPC_DARWIN", "PPC_LINUX",
          "ALPHA_OSF",
@@ -259,11 +259,9 @@ GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
          
          % untested or have problems
          %"AMD64_SOLARIS", "AMD64_FREEBSD", "AMD64_OPENBSD",
-         %"MIPS64_OPENBSD", "MIPS64EL_OPENBSD",
-         %"PPC32_OPENBSD",
-         %"PPC64_DARWIN",
-         %"SPARC32_SOLARIS",
-         %"SOLgnu", "SOLsun",
+         %"I386_OPENBSD", "MIPS64_OPENBSD", "MIPS64EL_OPENBSD",
+         %"PPC32_OPENBSD", "PPC64_DARWIN",
+         %"SPARC32_SOLARIS", "SOLgnu", "SOLsun",
         } contains M3CC_TARGET)
 GCC43 = not (GCC42 or GCC45)
 if (not NOACTION) % and (GCC42 or GCC43 or GCC45)
