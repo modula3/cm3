@@ -308,10 +308,17 @@ PROCEDURE GenerateCEntry (VAR s: State) =
     END GenAddUnitImports;
 
   BEGIN
-    Out (s, "extern void RTLinker__InitRuntime ();", s.eol);
-    Out (s, "extern void RTLinker__AddUnit ();", s.eol);
-    Out (s, "extern void RTLinker__AddUnitImports ();", s.eol);
-    Out (s, "extern void RTProcess__Exit ();", s.eol, s.eol);
+    Out (s, "#include <stddef.h>", s.eol);
+    Out (s, "#if __INITIAL_POINTER_SIZE == 64", s.eol);
+    Out (s, "typedef __int64 INTEGER;", s.eol);
+    Out (s, "#else", s.eol);
+    Out (s, "typedef ptrdiff_t INTEGER;", s.eol);
+    Out (s, "#endif", s.eol);
+    Out (s, "void RTLinker__InitRuntime(INTEGER, char**, char**, void*);", s.eol);
+    Out (s, "void RTProcess__Exit(INTEGER);", s.eol);
+    Out (s, "void* Main_M3(void); /* ? */", s.eol);
+    Out (s, "void RTLinker__AddUnitImports(); /* ? */", s.eol);
+    Out (s, "void RTLinker__AddUnit(void* (*)(void)); /* ? */", s.eol);
 
     IF (s.gui) THEN
       Out (s, "#include <windows.h>", s.eol);
@@ -322,12 +329,9 @@ PROCEDURE GenerateCEntry (VAR s: State) =
       Out (s, "  RTLinker__InitRuntime (-1, args, ");
       Out (s,                        "GetEnvironmentStringsA(), self);", s.eol);
     ELSE
-      Out (s, "int main (argc, argv, envp)", s.eol);
-      Out (s, "int argc;", s.eol);
-      Out (s, "char **argv;", s.eol);
-      Out (s, "char **envp;", s.eol);
+      Out (s, "int main (int argc, char** argv, char** envp)", s.eol);
       Out (s, "{", s.eol);
-      Out (s, "  RTLinker__InitRuntime (argc, argv, envp, 0);", s.eol);
+      Out (s, "  RTLinker__InitRuntime (argc, argv, envp, (void*)0);", s.eol);
     END;
 
     GenAddUnitImports(s.main_units);
