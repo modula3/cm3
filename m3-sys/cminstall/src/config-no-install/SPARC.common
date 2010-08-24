@@ -1,7 +1,7 @@
 readonly TARGET_ARCH = "SPARC"
 readonly TARGET_ENDIAN = "BIG"      % { "BIG" OR "LITTLE" }
 readonly WORD_SIZE    = "32BITS"    % { "32BITS" or "64BITS" }
-m3back_flags = "-m32 -munaligned-doubles -mcpu=v9 -funwind-tables"
+m3back_flags = "-m32 -mcpu=v9 -funwind-tables"
 % -munaligned-doubles? Is this needed?
 % -mcpu=v9 for atomics
 % -gstabs+ omitted just to save diskspace
