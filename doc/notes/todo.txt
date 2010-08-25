@@ -1,9 +1,15 @@
 -----------------------------------------------------------------------------
+64bit time support
+-----------------------------------------------------------------------------
 test p247 hits assertion failure for SPARC64_SOLARIS
   see if can reproduce with similar C
+  This should be fixed by better type information,
+  in particular record parameters need to be such
+  should get their fields right too
 -----------------------------------------------------------------------------
 switch all targets to MAIN_IN_C
   This fixes some things and no real downside?
+  done in the config files
 -----------------------------------------------------------------------------
 look into the token pasting of M3WRAP
   see if it can work without expanding the NetBSD defines
@@ -12,6 +18,8 @@ go through test p240 exact codegen diffs 4.3.5 to 4.5.1
   esp. the missing .hidden on Darwin
 -----------------------------------------------------------------------------
 figure out the problem with SPARC32_LINUX PIC
+ also SOLgnu, SOLsun
+ try 4.3.0?
 -----------------------------------------------------------------------------
 restore optimization on Alpha/OSF (with gcc 4.5.x)
 -----------------------------------------------------------------------------
