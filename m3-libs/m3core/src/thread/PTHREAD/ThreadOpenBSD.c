@@ -2,23 +2,11 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifndef __OpenBSD__
-
-#if __GNUC__ >= 4
-#pragma GCC visibility push(hidden)
-#endif
-
-/* avoid empty file */
-
-void ThreadOpenBSD__Dummy(void)
-{
-}
-
-#else
-
+#ifdef __OpenBSD__
 #include "m3core.h"
 #include <sys/signal.h>
 #include <pthread_np.h>
+#endif
 
 #if __GNUC__ >= 4
 #pragma GCC visibility push(hidden)
@@ -27,6 +15,16 @@ void ThreadOpenBSD__Dummy(void)
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef __OpenBSD__
+
+/* avoid empty file */
+
+void ThreadOpenBSD__Dummy(void)
+{
+}
+
+#else /* OpenBSD */
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -81,8 +79,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   p(0, 0);
 }
 
+#endif /* OpenBSD */
+
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
-
 #endif
