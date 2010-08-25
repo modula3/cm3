@@ -1891,11 +1891,33 @@ scan_label (void)
 
 /*======================================== debugging and type information ===*/
 
-static char current_dbg_type_tag [100];
+typedef struct _m3buf_t {
+  char buf[100];
+} m3buf_t;
+static m3buf_t current_dbg_type_tag_buf;
+static char* current_dbg_type_tag = current_dbg_type_tag_buf.buf;
 static unsigned long current_dbg_type_id;
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
+
+static void
+format_tag_v (m3buf_t* buf, char kind, unsigned long id, const char* fmt,
+             va_list args)
+{
+  buf->buf [0] = 'M';
+  buf->buf [1] = kind;
+  buf->buf [2] = '_';
+  fmt_uid (id, &buf->buf[3]);
+
+  buf->buf [sizeof(buf->buf) - 2] = 0;
+  vsnprintf (&buf->buf[UID_SIZE + 3], sizeof(buf->buf) - UID_SIZE - 3, fmt, args);
+  if (buf->buf[sizeof(buf->buf) - 2])
+  {
+    buf->buf[sizeof(buf->buf) - 1] = 0;
+    fatal_error("identifier too long (in debug_tag, %s)", buf->buf);
+  }
+}
 
 static void
 debug_tag (char kind, unsigned long id, const char* fmt, ...)
@@ -1903,21 +1925,8 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
   va_list args;
 
   va_start (args, fmt);
-
   current_dbg_type_id = id;
-  current_dbg_type_tag [0] = 'M';
-  current_dbg_type_tag [1] = kind;
-  current_dbg_type_tag [2] = '_';
-  fmt_uid (id, current_dbg_type_tag + 3);
-
-  current_dbg_type_tag[sizeof(current_dbg_type_tag) - 2] = 0;
-  vsnprintf (current_dbg_type_tag + UID_SIZE + 3,
-             sizeof(current_dbg_type_tag) - (UID_SIZE + 3), fmt, args);
-  if (current_dbg_type_tag[sizeof(current_dbg_type_tag) - 2])
-  {
-    current_dbg_type_tag[sizeof(current_dbg_type_tag) - 1] = 0;
-    fatal_error("identifier too long (in debug_tag, %s)", current_dbg_type_tag);
-  }
+  format_tag_v (&current_dbg_type_tag_buf, kind, id, fmt, args);
   va_end (args);
 }
 
