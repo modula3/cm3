@@ -2,21 +2,9 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifndef __FreeBSD__
-
-#if __GNUC__ >= 4
-#pragma GCC visibility push(hidden)
-#endif
-
-/* avoid empty file */
-
-void ThreadFreeBSD__Dummy(void)
-{
-}
-
-#else
-
+#ifdef __FreeBSD__
 #include "m3core.h"
+#endif
 
 #if __GNUC__ >= 4
 #pragma GCC visibility push(hidden)
@@ -25,6 +13,12 @@ void ThreadFreeBSD__Dummy(void)
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef __FreeBSD__
+
+void ThreadFreeBSD__Dummy(void) { } /* avoid empty file */
+
+#else /* FreeBSD */
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -74,8 +68,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   p(0, 0);
 }
 
+#endif /* FreeBSD */
+
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
-
 #endif

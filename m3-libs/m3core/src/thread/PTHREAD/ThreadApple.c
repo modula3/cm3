@@ -2,23 +2,11 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifndef __APPLE__
-
-#if __GNUC__ >= 4
-#pragma GCC visibility push(hidden)
-#endif
-
-/* avoid empty file */
-
-void ThreadApple__Dummy(void)
-{
-}
-
-#else
+#ifdef __APPLE__
 
 /* Older and newer headers default __DARWIN_UNIX03 to 1,
  * but only newer headers rename the symbols we use
- * under it, so we have to change to to 0.
+ * under it, so we have to define it to 0.
  */
 #ifndef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 0
@@ -33,6 +21,8 @@ void ThreadApple__Dummy(void)
 #include <architecture/ppc/cframe.h>
 #endif
 
+#endif /* Apple */
+
 #if __GNUC__ >= 4
 #pragma GCC visibility push(hidden)
 #endif
@@ -40,6 +30,12 @@ void ThreadApple__Dummy(void)
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef __APPLE__
+
+void ThreadApple__Dummy(void) { } /* avoid empty file */
+
+#else /* Apple */
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -154,8 +150,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   p(&state, &state + 1);
 }
 
+#endif /* Apple */
+
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
-
 #endif
