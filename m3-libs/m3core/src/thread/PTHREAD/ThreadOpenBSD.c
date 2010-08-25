@@ -18,11 +18,7 @@ extern "C" {
 
 #ifndef __OpenBSD__
 
-/* avoid empty file */
-
-void ThreadOpenBSD__Dummy(void)
-{
-}
+void ThreadOpenBSD__Dummy(void) { } /* avoid empty file */
 
 #else /* OpenBSD */
 
