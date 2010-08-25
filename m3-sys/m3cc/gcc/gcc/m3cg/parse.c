@@ -1959,23 +1959,28 @@ debug_field_id (unsigned long id)
 }
 
 static void
-debug_field_fmt (unsigned long id, const char* fmt, ...)
+debug_field_fmt_v (unsigned long id, const char* fmt, va_list args)
 {
-  va_list args;
   char name [100];
-
-  va_start (args, fmt);
 
   fmt_uid (id, name);
   name[sizeof(name) - 2] = 0;
   vsnprintf (name + UID_SIZE, sizeof(name) - UID_SIZE, fmt, args);
-  va_end (args);
   if (name[sizeof(name) - 2])
   {
     name[sizeof(name) - 1] = 0;
     fatal_error("identifier too long (in debug_field_fmt, %s)", name);
   }
   debug_field (name);
+}
+
+static void
+debug_field_fmt (unsigned long id, const char* fmt, ...)
+{
+  va_list args;
+  va_start (args, fmt);
+  debug_field_fmt_v (id, fmt, args);
+  va_end (args);
 }
 
 static void
