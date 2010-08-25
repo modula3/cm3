@@ -1933,8 +1933,6 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
 static void
 debug_field_type (const char *name, tree type)
 {
-  /* t_int on following line is not generally correct and
-   * needs to be a parmeter to this function. */
   tree f = build_decl (FIELD_DECL, get_identifier (name), type);
 
   DECL_FIELD_OFFSET (f) = size_zero_node;
