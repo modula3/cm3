@@ -513,6 +513,16 @@ EndModule("extract_constant_count")
 end
 EndModule("extract_constant_both")
 
+>> BeginModule("records") in
+  comment("records")
+  foreach i in InclusiveRange(1, 100)
+    write("TYPE RECORD", i, " = RECORD a:ARRAY[0..", Sub(i, 1), "] OF CHAR; END;", CR)
+    write("<*NOWARN*> PROCEDURE A", i, "(a:RECORD", i, "):CHAR=BEGIN RETURN a.a[", Div(i, 2), "]; END A", i, ";", CR)
+    write("<*NOWARN*> PROCEDURE B", i, "(a:RECORD", i, "):RECORD", i, "=BEGIN RETURN a; END B", i, ";", CR)
+  end
+end
+EndModule("records")
+
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
