@@ -522,9 +522,13 @@ EndModule("extract_constant_both")
     end
     foreach i in InclusiveRange(1, hi)
       local p = "R" & t & i
-      write("TYPE ",p," = RECORD a:ARRAY[0..", Sub(i, 1), "] OF ", t,"; END;", CR)
-      write("<*NOWARN*> PROCEDURE A", p, "(a:", p, "):",t,"=BEGIN RETURN a.a[", Div(i, 2), "]; END A", p, ";", CR)
+      write("TYPE ", p, " = RECORD a:ARRAY[0..", Sub(i, 1), "] OF ", t, "; END;", CR)
+      write("<*NOWARN*> PROCEDURE A", p, "(a:", p, "):", t, "=BEGIN RETURN a.a[", Div(i, 2), "]; END A", p, ";", CR)
       write("<*NOWARN*> PROCEDURE B", p, "(a:", p, "):", p, "=BEGIN RETURN a; END B", p, ";", CR)
+      write("<*NOWARN*> PROCEDURE C", p, "(b:INTEGER;a:", p, "):", t, "=BEGIN RETURN a.a[", Div(i, 2), "]; END C", p, ";", CR)
+      write("<*NOWARN*> PROCEDURE D", p, "(b:INTEGER;a:", p, "):", p, "=BEGIN RETURN a; END D", p, ";", CR)
+      write("<*NOWARN*> PROCEDURE E", p, "(a:", p, ";b:INTEGER):", t, "=BEGIN RETURN a.a[", Div(i, 2), "]; END E", p, ";", CR)
+      write("<*NOWARN*> PROCEDURE F", p, "(a:", p, ";b:INTEGER):", p, "=BEGIN RETURN a; END F", p, ";", CR)
     end
   end
 end
