@@ -534,6 +534,8 @@ EndModule("extract_constant_both")
 end
 EndModule("records")
 
+module("RegExpParse")
+module("RegExpTok")
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
