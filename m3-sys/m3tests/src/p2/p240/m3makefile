@@ -515,10 +515,17 @@ EndModule("extract_constant_both")
 
 >> BeginModule("records") in
   comment("records")
-  foreach i in InclusiveRange(1, 100)
-    write("TYPE RECORD", i, " = RECORD a:ARRAY[0..", Sub(i, 1), "] OF CHAR; END;", CR)
-    write("<*NOWARN*> PROCEDURE A", i, "(a:RECORD", i, "):CHAR=BEGIN RETURN a.a[", Div(i, 2), "]; END A", i, ";", CR)
-    write("<*NOWARN*> PROCEDURE B", i, "(a:RECORD", i, "):RECORD", i, "=BEGIN RETURN a; END B", i, ";", CR)
+  foreach t in ["CHAR", "BOOLEAN", "WIDECHAR", "INT32", "UINT32", "INT64", "UINT64", "INTEGER", "CARDINAL", "LONGINT", "LONGCARD", "FLOAT32", "FLOAT64"]
+    local hi = 10
+    if equal(t, "CHAR")
+      hi = 100
+    end
+    foreach i in InclusiveRange(1, hi)
+      local p = "R" & t & i
+      write("TYPE ",p," = RECORD a:ARRAY[0..", Sub(i, 1), "] OF ", t,"; END;", CR)
+      write("<*NOWARN*> PROCEDURE A", p, "(a:", p, "):",t,"=BEGIN RETURN a.a[", Div(i, 2), "]; END A", p, ";", CR)
+      write("<*NOWARN*> PROCEDURE B", p, "(a:", p, "):", p, "=BEGIN RETURN a; END B", p, ";", CR)
+    end
   end
 end
 EndModule("records")
