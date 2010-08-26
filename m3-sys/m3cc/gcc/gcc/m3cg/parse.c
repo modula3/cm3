@@ -137,7 +137,7 @@ static VEC(id_tree_pair_t, gc)* id_tree_table;
 static bool id_tree_table_dirty;
 
 static int
-compare_typeid_tree_pair(const void* a, const void *b)
+compare_typeid_tree_pair (const void* a, const void *b)
 {
   unsigned long x = ((const id_tree_pair_t*)a)->id;
   unsigned long y = ((const id_tree_pair_t*)b)->id;
@@ -149,7 +149,7 @@ compare_typeid_tree_pair(const void* a, const void *b)
 }
 
 static id_tree_pair_t*
-get_typeid_to_tree_pointer(unsigned long id)
+get_typeid_to_tree_pointer (unsigned long id)
 {
   id_tree_pair_t* found = { 0 };
   id_tree_pair_t to_find;
@@ -173,7 +173,7 @@ get_typeid_to_tree_pointer(unsigned long id)
 }
 
 static tree
-get_typeid_to_tree(unsigned long id)
+get_typeid_to_tree (unsigned long id)
 {
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
@@ -1150,6 +1150,18 @@ m3_init_decl_processing (void)
 #endif
   m3_push_type_decl (get_identifier ("xreel"), t_xreel);
 
+  /* see RTBuiltin.mx */
+  set_typeid_to_tree(0x195C2A74, t_int);
+  set_typeid_to_tree(0x05562176, t_longint);
+  set_typeid_to_tree(0x08402063, t_addr);
+  set_typeid_to_tree(0x97E237E2, t_word);
+  set_typeid_to_tree(0x9CED36E7, t_longword);
+  set_typeid_to_tree(0x48E16572, t_reel);
+  set_typeid_to_tree(0x94FE32F6, t_lreel);
+  set_typeid_to_tree(0x9EE024E3, t_xreel);
+  /* BOOLEAN T1e59237d ? */
+  /* CHAR T56e16863 ? */
+
   t_void = void_type_node;
   v_zero = build_int_cst (t_int, 0);
   v_one = build_int_cst (t_int, 1);
@@ -1931,9 +1943,9 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
 }
 
 static void
-debug_field_type (const char *name, tree type)
+debug_field_name_type (const char *name, tree type)
 {
-  tree f = build_decl (FIELD_DECL, get_identifier (name), type);
+  tree f = build_decl (FIELD_DECL, get_identifier (name), type ? type : t_int);
 
   DECL_FIELD_OFFSET (f) = size_zero_node;
   DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
@@ -1945,9 +1957,9 @@ debug_field_type (const char *name, tree type)
 }
 
 static void
-debug_field (const char *name)
+debug_field_name (const char *name)
 {
-  debug_field_type (name, t_int);
+  debug_field_name_type (name, t_int);
 }
 
 static void
@@ -1955,11 +1967,12 @@ debug_field_id (unsigned long id)
 {
   char buf [UID_SIZE+1];
   fmt_uid (id, buf);
-  debug_field (buf);
+  debug_field_name (buf);
 }
 
 static void
-debug_field_fmt_v (unsigned long id, const char* fmt, va_list args)
+debug_field_type_fmt_v (unsigned long id, tree type, const char* fmt,
+                        va_list args)
 {
   char name [100];
 
@@ -1971,7 +1984,16 @@ debug_field_fmt_v (unsigned long id, const char* fmt, va_list args)
     name[sizeof(name) - 1] = 0;
     fatal_error("identifier too long (in debug_field_fmt, %s)", name);
   }
-  debug_field (name);
+  debug_field_name_type (name, type);
+}
+
+static void
+debug_field_type_fmt (unsigned long id, tree type, const char* fmt, ...)
+{
+  va_list args;
+  va_start (args, fmt);
+  debug_field_type_fmt_v (id, type, fmt, args);
+  va_end (args);
 }
 
 static void
@@ -1979,7 +2001,7 @@ debug_field_fmt (unsigned long id, const char* fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
-  debug_field_fmt_v (id, fmt, args);
+  debug_field_type_fmt_v (id, t_int, fmt, args);
   va_end (args);
 }
 
@@ -2635,7 +2657,7 @@ m3cg_end_unit (void)
   gcc_assert (current_block == NULL_TREE);
   debug_tag ('i', NO_UID, "_%s", current_unit_name);
   for (j = 0; j < exported_interfaces; j++)
-    debug_field (exported_interfaces_names [j]);
+    debug_field_name (exported_interfaces_names [j]);
   debug_struct ();
   if (fault_proc != NULL_TREE) emit_fault_proc ();
 }
@@ -2717,7 +2739,7 @@ m3cg_declare_typename (void)
   memcpy(&fullname[unit_len + 1], name, name_len + 1);
 
   debug_tag ('N', my_id, "");
-  debug_field (fullname);
+  debug_field_name (fullname);
   debug_struct ();
 
   debug_tag ('n', NO_UID, "_%s", fullname);
@@ -2785,7 +2807,7 @@ m3cg_declare_enum_elt (void)
   if (option_types_trace)
     fprintf(stderr, "  enum elem %s\n", n);
 
-  debug_field (n);
+  debug_field_name (n);
   if (--current_dbg_type_count1 == 0) { debug_struct (); }
 }
 
@@ -2827,6 +2849,8 @@ m3cg_declare_record (void)
 static void
 m3cg_declare_field (void)
 {
+  tree type;
+
   NAME      (name);
   BITOFFSET (offset);
   BITSIZE   (size);
@@ -2835,8 +2859,18 @@ m3cg_declare_field (void)
   if (option_types_trace)
     fprintf(stderr, "  field %s, id 0x%lx, size 0x%lx, offset 0x%lx\n",
             name, my_id, size, offset);
+            
+  type = get_typeid_to_tree (my_id);
+#if 0 /* This is frequently NULL. Why? */
+  if (type == 0)
+  {
+    fprintf(stderr, "id 0x%lx to type is null for field %s\n",
+           (unsigned long)my_id, name);
+    gcc_assert(type);
+  }
+#endif
 
-  debug_field_fmt (my_id, "_%ld_%ld_%s", offset, size, name);
+  debug_field_type_fmt (my_id, type, "_%ld_%ld_%s", offset, size, name);
   current_dbg_type_count1--;
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
     debug_struct ();
@@ -3039,7 +3073,7 @@ m3cg_declare_raises (void)
   if (option_types_trace)
     fprintf(stderr, "  exception %s\n", n);
 
-  debug_field (n);
+  debug_field_name (n);
   current_dbg_type_count2--;
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
     debug_struct ();
@@ -3171,7 +3205,7 @@ m3cg_import_global (void)
 
   DECL_EXTERNAL (v) = 1;
   TREE_PUBLIC   (v) = 1;
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
   layout_decl (v, a);
 
   TREE_CHAIN (v) = global_decls;
@@ -3198,7 +3232,7 @@ m3cg_declare_segment (void)
      gcc doesn't think it fits in a register, so that loads out of it do get
      their offsets applied. */
   TREE_TYPE (v)
-    = m3_build_type (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT);
+    = m3_build_type_id (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, id);
   layout_decl (v, BIGGEST_ALIGNMENT);
   TYPE_UNSIGNED (TREE_TYPE (v)) = 1;
   TREE_STATIC (v) = 1;
@@ -3258,7 +3292,7 @@ m3cg_declare_global (void)
     fprintf(stderr, "  global var %s type:%s size:0x%lx alignment:0x%lx\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
 
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
@@ -3281,7 +3315,7 @@ m3cg_declare_constant (void)
   RETURN_VAR (v, VAR_DECL);
 
   DECL_NAME (v) = fix_name (n, id);
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
@@ -3372,7 +3406,18 @@ m3cg_declare_param (void)
     fprintf(stderr, "  param %s type:%s typeid:0x%lx bytesize:0x%lx alignment:0x%lx in_memory:0x%x up_level:0x%x\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), id, s, a, in_memory, up_level);
 
+#if 0
+/* Using m3_build_type_id causes problems. This needs further attention.
+  These are the files to look into:
+  caltech-parser/parserlib/klexlib/AMD64_DARWIN/RegExpParse.ms
+  m3-libs/libm3/AMD64_DARWIN/Pickle2.ms
+  m3-tools/showheap/AMD64_DARWIN/ShowHeap.ms
+  m3-ui/vbtkit/AMD64_DARWIN/VTReal.ms
+*/
+  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
+#else
   TREE_TYPE (v) = m3_build_type (t, s, a);
+#endif
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
