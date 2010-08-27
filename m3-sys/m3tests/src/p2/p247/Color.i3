@@ -1,0 +1,5 @@
+INTERFACE Color;
+
+TYPE T = RECORD a,b,c:REAL; END;
+
+END Color.
