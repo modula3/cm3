@@ -4,6 +4,7 @@
 %m3back_unwind_table = "-fno-asynchronous-unwind-tables"
 
 interface("Color")
+module("Main2")
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
