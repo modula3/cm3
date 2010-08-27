@@ -312,13 +312,10 @@ Log = subst_chars(Log, "\\", "/")
 
 fs_mkdir (build_dir)
 
-m3cc_ResponseFileCounter0 = "0"
-m3cc_ResponseFileCounter1 = "0"
-m3cc_ResponseFileCounter2 = "0"
+m3cc_ResponseFileCounter = 0
+include("Math.quake")
 
 readonly proc m3cc_Run (x) is
-    local ShLeaf = "_m3" & m3cc_ResponseFileCounter0 & m3cc_ResponseFileCounter1 & m3cc_ResponseFileCounter2 & ".sh"
-    local Sh = build_dir & "/" & ShLeaf
     if not FileExists(Log) > Log in write("") end end
     >> Log in write(x & "\n") end
     if not HostIsNT()
@@ -326,21 +323,16 @@ readonly proc m3cc_Run (x) is
         exec(x)
         return
     end
+    InitMath()
+    m3cc_ResponseFileCounter = Add(m3cc_ResponseFileCounter, 1)
+    local ShLeaf = "_m3" & m3cc_ResponseFileCounter & ".sh"
+    local Sh = build_dir & "/" & ShLeaf
     write(ShLeaf & ":" & x & "\n")
     > Sh in
         write(x & "\n")
     end
     local a = try_exec("@chmod +x " & Sh)
     exec("@sh -exc " & Sh)
-    local Inc = { "0":"1","1":"2","2":"3","3":"4","4":"5",
-                  "5":"6","6":"7","7":"8","8":"9","9":"0" }
-    m3cc_ResponseFileCounter2 = Inc{m3cc_ResponseFileCounter2}
-    if equal(m3cc_ResponseFileCounter2, "0")
-        m3cc_ResponseFileCounter1 = Inc{m3cc_ResponseFileCounter1}
-        if equal(m3cc_ResponseFileCounter1, "0")
-            m3cc_ResponseFileCounter0 = Inc{m3cc_ResponseFileCounter0}
-        end
-    end
 end
 
 done0 = build_dir & "/.configure-done" % old version
