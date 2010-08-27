@@ -3401,18 +3401,7 @@ m3cg_declare_param (void)
     fprintf(stderr, "  param %s type:%s typeid:0x%lx bytesize:0x%lx alignment:0x%lx in_memory:0x%x up_level:0x%x\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), id, s, a, in_memory, up_level);
 
-#if 0
-/* Using m3_build_type_id causes problems. This needs further attention.
-  These are the files to look into:
-  caltech-parser/parserlib/klexlib/AMD64_DARWIN/RegExpParse.ms
-  m3-libs/libm3/AMD64_DARWIN/Pickle2.ms
-  m3-tools/showheap/AMD64_DARWIN/ShowHeap.ms
-  m3-ui/vbtkit/AMD64_DARWIN/VTReal.ms
-*/
   TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
-#else
-  TREE_TYPE (v) = m3_build_type (t, s, a);
-#endif
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
@@ -5320,10 +5309,11 @@ m3cg_pop_param (void)
 static void
 m3cg_pop_struct (void)
 {
+  TYPEID (my_id);
   BYTESIZE  (s);
   ALIGNMENT (a);
 
-  tree t = m3_build_type (T_struct, s, a);
+  tree t = m3_build_type_id (T_struct, s, a, my_id);
 
   if (option_vars_trace)
     fprintf(stderr, "  pop struct size:0x%lx alignment:0x%lx\n", s, a);

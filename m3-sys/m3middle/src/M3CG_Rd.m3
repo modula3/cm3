@@ -1709,10 +1709,11 @@ PROCEDURE pop_param (VAR s: State) =
   END pop_param;
 
 PROCEDURE pop_struct (VAR s: State) =
-  VAR size  := Scan_int (s);
+  VAR type  := Scan_tipe (s);
+      size  := Scan_int (s);
       align := Scan_int (s);
   BEGIN
-    s.cg.pop_struct (size, align);
+    s.cg.pop_struct (type, size, align);
   END pop_struct;
 
 PROCEDURE pop_static_link (VAR s: State) =

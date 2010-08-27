@@ -2536,10 +2536,10 @@ PROCEDURE Pop_param (t: Type) =
     SEmpty ("Pop_param");
   END Pop_param;
 
-PROCEDURE Pop_struct (s: Size;  a: Alignment) =
+PROCEDURE Pop_struct (t: TypeUID;  s: Size;  a: Alignment) =
   BEGIN
     Force ();
-    cg.pop_struct (ToBytes (s), FixAlign (a));
+    cg.pop_struct (t, ToBytes (s), FixAlign (a));
     SPop (1, "Pop_struct");
     SEmpty ("Pop_struct");
   END Pop_struct;
