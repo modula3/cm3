@@ -14,7 +14,7 @@ FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT ByteSize, Alignment, Frequency, RuntimeError;
 FROM M3CG IMPORT Var, Proc, Label, Sign, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
-FROM M3CG IMPORT MemoryOrder;
+FROM M3CG IMPORT MemoryOrder, TypeUID;
 
 TYPE (* stack data types *)
   ST = { Addr, Int32, Int64, Reel, LReel, XReel, Void,
@@ -1254,13 +1254,13 @@ PROCEDURE pop_param (self: U;  t: MType) =
     self.child.pop_param (t);
   END pop_param;
 
-PROCEDURE pop_struct (self: U;  s: ByteSize;  a: Alignment) =
+PROCEDURE pop_struct (self: U;  t: TypeUID;  s: ByteSize;  a: Alignment) =
   (* pop s0 and make it the "next" parameter in the current call *)
   BEGIN
     IF (self.call_count <= 0) THEN PutErr (self, "missing start_call") END;
     self.s_pop (ST.Addr);
     IF (self.clean_stores) THEN self.s_empty () END;
-    self.child.pop_struct (s, a);
+    self.child.pop_struct (t, s, a);
   END pop_struct;
 
 PROCEDURE pop_static_link (self: U) =

@@ -1547,10 +1547,11 @@ PROCEDURE pop_param (u: U;  t: MType) =
     TName (u, t);
   END pop_param;
 
-PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
+PROCEDURE pop_struct (u: U;  t: TypeUID;  s: ByteSize;  a: Alignment) =
   (* pop s0 and make it the "next" paramter in the current call *)
   BEGIN
     Cmd   (u, Bop.pop_struct);
+    Tipe  (u, t);
     Int   (u, s);
     Int   (u, a);
   END pop_struct;
