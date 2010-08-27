@@ -152,7 +152,7 @@ static id_tree_pair_t*
 get_typeid_to_tree_pointer (unsigned long id)
 {
   id_tree_pair_t* found = { 0 };
-  id_tree_pair_t to_find;
+  id_tree_pair_t to_find = { 0 };
   if (!id_tree_table || id == NO_UID)
     return 0;
   if (id_tree_table_dirty)
@@ -193,8 +193,8 @@ set_typeid_to_tree (unsigned long id, tree t)
    further transform, and break, the code. Beware.
 */
 #if 1
-  id_tree_pair_t* found;
-  id_tree_pair_t to_add;
+  id_tree_pair_t* found = { 0 };
+  id_tree_pair_t to_add = { 0 };
 
   if (id == NO_UID)
     return;
@@ -220,8 +220,8 @@ set_typeid_to_tree (unsigned long id, tree t)
 static void
 fmt_uid (unsigned long x, char *buf)
 {
-  unsigned digit;
-  int i;
+  unsigned digit = { 0 };
+  int i = { 0 };
 
   buf[UID_SIZE] = 0;
   if (x == NO_UID) { strcpy (buf, "zzzzzz");  return; }
