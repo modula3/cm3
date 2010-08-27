@@ -152,7 +152,7 @@ static id_tree_pair_t*
 get_typeid_to_tree_pointer (unsigned long id)
 {
   id_tree_pair_t* found = { 0 };
-  id_tree_pair_t to_find = { 0 };
+  id_tree_pair_t to_find = { 0, 0 };
   if (!id_tree_table || id == NO_UID)
     return 0;
   if (id_tree_table_dirty)
@@ -194,9 +194,9 @@ set_typeid_to_tree (unsigned long id, tree t)
 */
 #if 1
   id_tree_pair_t* found = { 0 };
-  id_tree_pair_t to_add = { 0 };
+  id_tree_pair_t to_add = { 0, 0 };
 
-  if (id == NO_UID)
+  if (id == NO_UID || !t)
     return;
     
   found = get_typeid_to_tree_pointer (id);
@@ -511,8 +511,17 @@ m3_build_pointer_type (tree a)
 }
 
 static tree
-m3_build_type_id (m3_type t, int s, int a, unsigned long id)
+m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
+                  unsigned long id)
 {
+  typedef unsigned U;
+  tree ts = { 0 };
+  U s = (U)signed_size;
+  U a = (U)signed_alignment;
+  
+  gcc_assert(signed_size >= 0);
+  gcc_assert(signed_alignment >= 0);
+
   switch (t)
     {
     case T_word:
@@ -524,7 +533,7 @@ m3_build_type_id (m3_type t, int s, int a, unsigned long id)
         case 16: return t_word_16;
         case 32: return t_word_32;
         case 64: return t_word_64;
-        default: if (s == (int)BITS_PER_INTEGER) return t_word;
+        default: if (s == BITS_PER_INTEGER) return t_word;
         }
       break;
 
@@ -537,11 +546,10 @@ m3_build_type_id (m3_type t, int s, int a, unsigned long id)
         case 16: return t_int_16;
         case 32: return t_int_32;
         case 64: return t_int_64;
-        default: if (s == (int)BITS_PER_INTEGER) return t_int;
+        default: if (s == BITS_PER_INTEGER) return t_int;
         }
       break;
 
-    case T_addr:    return t_addr;
     case T_reel:    return t_reel;
     case T_lreel:   return t_lreel;
     case T_xreel:   return t_xreel;
@@ -555,23 +563,26 @@ m3_build_type_id (m3_type t, int s, int a, unsigned long id)
     case T_word_64: return t_word_64;
     case T_void:    return t_void;
 
+    case T_addr:
+      if (id != NO_UID)
+        ts = get_typeid_to_tree (id);
+      return ts ? m3_build_pointer_type (ts) : t_addr;
+
     case T_struct:
+      if (id != NO_UID)
+        ts = get_typeid_to_tree (id);
+      if (!ts)
       {
-        tree ts = { 0 };
-        if (id != NO_UID)
-          ts = get_typeid_to_tree (id);
-        if (!ts)
-        {
-          ts = make_node (RECORD_TYPE);
-          TYPE_NAME (ts) = NULL_TREE;
-          TYPE_FIELDS (ts) = NULL_TREE;
-        }
-        TYPE_SIZE (ts) = bitsize_int (s);
-        TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
-        TYPE_ALIGN (ts) = a;
-        compute_record_mode (ts);
-        return ts;
+        ts = make_node (RECORD_TYPE);
+        TYPE_NAME (ts) = NULL_TREE;
+        TYPE_FIELDS (ts) = NULL_TREE;
       }
+      TYPE_SIZE (ts) = bitsize_int (s);
+      TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
+      TYPE_ALIGN (ts) = a;
+      compute_record_mode (ts);
+      return ts;
+
     default:
       break;
     } /*switch*/
@@ -1163,7 +1174,7 @@ m3_init_decl_processing (void)
   v_zero = build_int_cst (t_int, 0);
   v_one = build_int_cst (t_int, 1);
   v_null = null_pointer_node;
-  t_set = m3_build_pointer_type(t_word);
+  t_set = m3_build_pointer_type (t_word);
 
   build_common_builtin_nodes ();
 
@@ -1903,7 +1914,8 @@ typedef struct _m3buf_t {
 } m3buf_t;
 static m3buf_t current_dbg_type_tag_buf;
 static char* current_dbg_type_tag = current_dbg_type_tag_buf.buf;
-static unsigned long current_dbg_type_id;
+static unsigned long current_record_type_id = NO_UID; /* or current object */
+static unsigned long current_proc_type_id = NO_UID; /* not right yet */
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
@@ -1932,7 +1944,6 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
   va_list args;
 
   va_start (args, fmt);
-  current_dbg_type_id = id;
   format_tag_v (&current_dbg_type_tag_buf, kind, id, fmt, args);
   va_end (args);
 }
@@ -2001,7 +2012,7 @@ debug_field_fmt (unsigned long id, const char* fmt, ...)
 }
 
 static void
-debug_struct (void)
+debug_struct (unsigned long id)
 {
   tree d;
   tree t = make_node (RECORD_TYPE);
@@ -2022,7 +2033,7 @@ debug_struct (void)
   global_decls = d;
   debug_hooks -> type_decl
     ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
-  set_typeid_to_tree (current_dbg_type_id, t);
+  set_typeid_to_tree (id, t);
 }
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
@@ -2653,7 +2664,7 @@ m3cg_end_unit (void)
   debug_tag ('i', NO_UID, "_%s", current_unit_name);
   for (j = 0; j < exported_interfaces; j++)
     debug_field_name (exported_interfaces_names [j]);
-  debug_struct ();
+  debug_struct (NO_UID);
   if (fault_proc != NULL_TREE) emit_fault_proc ();
 }
 
@@ -2735,11 +2746,11 @@ m3cg_declare_typename (void)
 
   debug_tag ('N', my_id, "");
   debug_field_name (fullname);
-  debug_struct ();
+  debug_struct (NO_UID);
 
   debug_tag ('n', NO_UID, "_%s", fullname);
   debug_field_id (my_id);
-  debug_struct ();
+  debug_struct (NO_UID);
 }
 
 static void
@@ -2758,7 +2769,7 @@ m3cg_declare_array (void)
   debug_tag ('A', my_id, "_%ld", size);
   debug_field_id (index_id);
   debug_field_id (elts_id);
-  debug_struct ();
+  debug_struct (NO_UID);
 }
 
 static void
@@ -2775,7 +2786,7 @@ m3cg_declare_open_array (void)
 
   debug_tag ('B', my_id, "_%ld", size);
   debug_field_id (elts_id);
-  debug_struct ();
+  debug_struct (NO_UID);
 }
 
 static void
@@ -2803,7 +2814,8 @@ m3cg_declare_enum_elt (void)
     fprintf(stderr, "  enum elem %s\n", n);
 
   debug_field_name (n);
-  if (--current_dbg_type_count1 == 0) { debug_struct (); }
+  if (--current_dbg_type_count1 == 0)
+    debug_struct (NO_UID);
 }
 
 static void
@@ -2820,7 +2832,7 @@ m3cg_declare_packed (void)
 
   debug_field_id (target_id);
   debug_tag ('D', my_id, "_%ld", size);
-  debug_struct ();
+  debug_struct (NO_UID);
 }
 
 static void
@@ -2838,7 +2850,11 @@ m3cg_declare_record (void)
   debug_tag ('R', my_id, "_%ld", size);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = 0;
-  if (current_dbg_type_count1 == 0) { debug_struct (); }
+  gcc_assert (current_record_type_id == NO_UID);
+  if (current_dbg_type_count1 == 0)
+    debug_struct (my_id);
+  else
+    current_record_type_id = my_id;
 }
 
 static void
@@ -2867,8 +2883,10 @@ m3cg_declare_field (void)
 
   debug_field_type_fmt (my_id, type, "_%ld_%ld_%s", offset, size, name);
   current_dbg_type_count1--;
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
-    debug_struct ();
+  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
+  {
+    debug_struct (current_record_type_id);
+    current_record_type_id = NO_UID;
   }
 }
 
@@ -2881,7 +2899,7 @@ m3cg_declare_set (void)
 
   debug_tag ('S', my_id, "_%ld", size);
   debug_field_id (domain_id);
-  debug_struct ();
+  debug_struct (NO_UID);
 }
 
 /* m3cg_append_char, m3cg_fill_word_in_hex, and m3cg_fill_hex_value help
@@ -2981,7 +2999,7 @@ m3cg_declare_subrange (void)
   debug_tag('Z', my_id, buff, size); 
 
   debug_field_id (domain_id);
-  debug_struct ();
+  debug_struct (NO_UID);
 }
 
 static void
@@ -3003,7 +3021,12 @@ m3cg_declare_pointer (void)
   debug_tag ('Y', my_id, "_%d_%d_%d_%s", GET_MODE_BITSIZE (Pmode),
              traced, (brand ? 1 : 0), (brand ? brand : "" ));
   debug_field_id (target_id);
-  debug_struct ();
+  debug_struct (NO_UID);
+  {
+    tree t = get_typeid_to_tree (target_id);
+    if (t)
+      set_typeid_to_tree (my_id, m3_build_pointer_type (t));
+  }
 }
 
 static void
@@ -3017,7 +3040,12 @@ m3cg_declare_indirect (void)
 
   debug_tag ('X', my_id, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (target_id);
-  debug_struct ();
+  debug_struct (NO_UID);
+  {
+    tree t = get_typeid_to_tree (target_id);
+    if (t)
+      set_typeid_to_tree (my_id, m3_build_pointer_type (t));
+  }
 }
 
 static void
@@ -3039,9 +3067,11 @@ m3cg_declare_proctype (void)
   current_dbg_type_count1 = n_formals;
   current_dbg_type_count2 = MAX (0, n_raises);
   debug_field_id (result_id);
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
-    debug_struct ();
-  }
+  gcc_assert (current_proc_type_id == NO_UID);
+  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
+    debug_struct (NO_UID /* my_id not right yet */);
+  else
+    current_proc_type_id = my_id;
 }
 
 static void
@@ -3055,8 +3085,11 @@ m3cg_declare_formal (void)
 
   debug_field_fmt (my_id, "_%s", n);
   current_dbg_type_count1--;
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
-    debug_struct ();
+  gcc_assert (current_proc_type_id != NO_UID);
+  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
+  {
+    debug_struct (NO_UID /* current_proc_type_id not right yet */);
+    current_proc_type_id = NO_UID;
   }
 }
 
@@ -3070,8 +3103,11 @@ m3cg_declare_raises (void)
 
   debug_field_name (n);
   current_dbg_type_count2--;
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
-    debug_struct ();
+  gcc_assert (current_proc_type_id != NO_UID);
+  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
+  {
+    debug_struct (NO_UID /* current_proc_type_id not right yet */);
+    current_proc_type_id = NO_UID;
   }
 }
 
@@ -3100,9 +3136,11 @@ m3cg_declare_object (void)
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = n_methods;
   current_dbg_type_count3 = 0;
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
-    debug_struct ();
-  }
+  gcc_assert (current_record_type_id == NO_UID);
+  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
+    debug_struct (my_id);
+  else
+    current_record_type_id = my_id;
 }
 
 static void
@@ -3115,11 +3153,14 @@ m3cg_declare_method (void)
     fprintf(stderr, "  method %s typeid 0x%lx\n", name, my_id);
 
   debug_field_fmt (my_id, "_%d_%d_%s",
-                   current_dbg_type_count3++  * GET_MODE_BITSIZE (Pmode),
+                   current_dbg_type_count3++ * GET_MODE_BITSIZE (Pmode),
                    GET_MODE_BITSIZE (Pmode), name);
   current_dbg_type_count2--;
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
-    debug_struct ();
+  gcc_assert (current_record_type_id != NO_UID);
+  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
+  {
+    debug_struct (current_record_type_id);
+    current_record_type_id = NO_UID;
   }
 }
 
@@ -3142,7 +3183,7 @@ m3cg_reveal_opaque (void)
 
   debug_tag ('Q', lhs, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (rhs);
-  debug_struct ();
+  set_typeid_to_tree (lhs, get_typeid_to_tree (rhs));
 }
 
 static void
