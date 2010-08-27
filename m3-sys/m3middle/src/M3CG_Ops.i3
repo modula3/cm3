@@ -589,7 +589,7 @@ call_indirect (t: Type;  cc: CallingConvention);
 pop_param (t: MType);
 (* pop s0.t and make it the "next" parameter in the current call. *)
 
-pop_struct (s: ByteSize;  a: Alignment);
+pop_struct (t: TypeUID;  s: ByteSize;  a: Alignment);
 (* pop s0.A, it's a pointer to a structure occupying 's' bytes that's
   'a' byte aligned; pass the structure by value as the "next" parameter
   in the current call. *)

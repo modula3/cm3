@@ -874,9 +874,9 @@ PROCEDURE pop_param (xx: T;  t: MType) =
     xx.child.pop_param (t);
   END pop_param;
 
-PROCEDURE pop_struct (xx: T;  s: ByteSize;  a: Alignment) =
+PROCEDURE pop_struct (xx: T;  t: TypeUID;  s: ByteSize;  a: Alignment) =
   BEGIN
-    xx.child.pop_struct (s, a);
+    xx.child.pop_struct (t, s, a);
   END pop_struct;
 
 PROCEDURE pop_static_link (xx: T) =

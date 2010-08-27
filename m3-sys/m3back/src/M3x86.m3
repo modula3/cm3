@@ -3847,7 +3847,7 @@ PROCEDURE load_stack_param (u: U; type: MType; depth: INTEGER) =
 
   END load_stack_param;
 
-PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
+PROCEDURE pop_struct (u: U;  type: TypeUID;  s: ByteSize;  a: Alignment) =
   (* pop s0 and make it the "next" parameter in the current call
    * NOTE that we implement call by value, the struct is
    * copied to temporary space on the machine stack
@@ -3856,6 +3856,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("pop_struct");
+      u.wr.Tipe  (type);
       u.wr.Int   (s);
       u.wr.Int   (a);
       u.wr.NL    ();
