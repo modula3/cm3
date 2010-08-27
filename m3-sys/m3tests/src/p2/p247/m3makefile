@@ -5,6 +5,7 @@
 
 interface("Color")
 module("Main2")
+module("Main3")
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
