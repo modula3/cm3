@@ -633,7 +633,7 @@ PROCEDURE Gen_Call_indirect (t: Type;  cc: CallingConvention);
 PROCEDURE Pop_param (t: Type);
 (* pop s0.t and make it the "next" parameter in the current call *)
 
-PROCEDURE Pop_struct (s: Size;  a: Alignment);
+PROCEDURE Pop_struct (t: TypeUID;  s: Size;  a: Alignment);
 (* pop s0.A, it's a pointer to a structure occupying 's' bits that's
   'a' bit aligned; pass it by value as the "next" parameter in the current
   call. *)
