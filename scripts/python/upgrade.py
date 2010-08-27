@@ -29,7 +29,7 @@ if clean:
     DoPackage(
         argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
                           "m3linker", "m3back", "m3front", "sysutils",
-                          "cm3", "mklib", "m3cc", "m3core", "libm3",
+                          "cm3", "mklib", "m3core", "libm3",
         ]) or sys.exit(1)
 if cleangcc:
     DoPackage(argv_RealClean, [ "m3cc" ]) or sys.exit(1)
