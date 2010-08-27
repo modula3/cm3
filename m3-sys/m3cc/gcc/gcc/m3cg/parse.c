@@ -130,10 +130,10 @@ int arm_float_words_big_endian (void);
 
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
-DEF_VEC_O(id_tree_pair_t);
-DEF_VEC_ALLOC_O(id_tree_pair_t, gc);
+DEF_VEC_O (id_tree_pair_t);
+DEF_VEC_ALLOC_O (id_tree_pair_t, gc);
 
-static VEC(id_tree_pair_t, gc)* id_tree_table;
+static VEC (id_tree_pair_t, gc)* id_tree_table;
 static bool id_tree_table_dirty;
 
 static int
@@ -157,18 +157,18 @@ get_typeid_to_tree_pointer (unsigned long id)
     return 0;
   if (id_tree_table_dirty)
   {
-     qsort(VEC_address(id_tree_pair_t, id_tree_table),
-           VEC_length(id_tree_pair_t, id_tree_table),
-           sizeof(id_tree_pair_t),
-           compare_typeid_tree_pair);
+     qsort (VEC_address (id_tree_pair_t, id_tree_table),
+            VEC_length (id_tree_pair_t, id_tree_table),
+            sizeof(id_tree_pair_t),
+            compare_typeid_tree_pair);
     id_tree_table_dirty = false;
   }
   to_find.id = id;
-  found = (id_tree_pair_t*)bsearch(&to_find,
-                                   VEC_address(id_tree_pair_t, id_tree_table),
-                                   VEC_length(id_tree_pair_t, id_tree_table),
-                                   sizeof(id_tree_pair_t),
-                                   compare_typeid_tree_pair);
+  found = (id_tree_pair_t*)bsearch (&to_find,
+                                    VEC_address (id_tree_pair_t, id_tree_table),
+                                    VEC_length (id_tree_pair_t, id_tree_table),
+                                    sizeof(id_tree_pair_t),
+                                    compare_typeid_tree_pair);
   return found;
 }
 
@@ -179,7 +179,7 @@ get_typeid_to_tree (unsigned long id)
    further transform, and break, the code. Beware.
 */
 #if 1
-  id_tree_pair_t* found = get_typeid_to_tree_pointer(id);
+  id_tree_pair_t* found = get_typeid_to_tree_pointer (id);
   return found ? found->t : 0;
 #else
   return 0;
@@ -187,7 +187,7 @@ get_typeid_to_tree (unsigned long id)
 }
 
 static void
-set_typeid_to_tree(unsigned long id, tree t)
+set_typeid_to_tree (unsigned long id, tree t)
 {
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
@@ -199,7 +199,7 @@ set_typeid_to_tree(unsigned long id, tree t)
   if (id == NO_UID)
     return;
     
-  found = get_typeid_to_tree_pointer(id);
+  found = get_typeid_to_tree_pointer (id);
   if (found)
   {
     /*found->t = t;*/
@@ -562,7 +562,7 @@ m3_build_type_id (m3_type t, int s, int a, unsigned long id)
       {
         tree ts = { 0 };
         if (id != NO_UID)
-          ts = get_typeid_to_tree(id);
+          ts = get_typeid_to_tree (id);
         if (!ts)
         {
           ts = make_node (RECORD_TYPE);
@@ -1151,14 +1151,14 @@ m3_init_decl_processing (void)
   m3_push_type_decl (get_identifier ("xreel"), t_xreel);
 
   /* see RTBuiltin.mx */
-  set_typeid_to_tree(0x195C2A74, t_int);
-  set_typeid_to_tree(0x05562176, t_longint);
-  set_typeid_to_tree(0x08402063, t_addr);
-  set_typeid_to_tree(0x97E237E2, t_word);
-  set_typeid_to_tree(0x9CED36E7, t_longword);
-  set_typeid_to_tree(0x48E16572, t_reel);
-  set_typeid_to_tree(0x94FE32F6, t_lreel);
-  set_typeid_to_tree(0x9EE024E3, t_xreel);
+  set_typeid_to_tree (0x195C2A74, t_int);
+  set_typeid_to_tree (0x05562176, t_longint);
+  set_typeid_to_tree (0x08402063, t_addr);
+  set_typeid_to_tree (0x97E237E2, t_word);
+  set_typeid_to_tree (0x9CED36E7, t_longword);
+  set_typeid_to_tree (0x48E16572, t_reel);
+  set_typeid_to_tree (0x94FE32F6, t_lreel);
+  set_typeid_to_tree (0x9EE024E3, t_xreel);
   /* BOOLEAN T1e59237d ? */
   /* CHAR T56e16863 ? */
 
@@ -2027,7 +2027,7 @@ debug_struct (void)
   global_decls = d;
   debug_hooks -> type_decl
     ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
-  set_typeid_to_tree(current_dbg_type_id, t);
+  set_typeid_to_tree (current_dbg_type_id, t);
 }
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
