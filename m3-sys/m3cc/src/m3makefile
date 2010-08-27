@@ -539,29 +539,17 @@ end
 
 if not NOACTION
 
-foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
-    foreach leaf in ["Makefile", "auto-host.h", "config.h"]
-        local file = build_dir & "/" & dir & "/" & leaf
-        if FileExists(file)
+%
+% Configure is for some reason unable to find Cygwin /usr/bin/libtool?
+%
 
-            %
-            % Remove libiconv dependency
-            % It isn't needed, and stock Solaris install lacks it.
-            %
-
-            if not equal(leaf, "Makefile")
-                Sed(file, "^#define HAVE_ICONV 1$", "")
-                Sed(file, "^#define HAVE_ICONV_H 1$", "")
-            end
-
-            %
-            % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
-            %
-            if HostIsNT() and equal(leaf, "Makefile")
-                Sed(file, "@LIBTOOL@", "libtool")
-            end
-        end
+if HostIsNT()
+  foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
+    local file = build_dir & "/" & dir & "/Makefile"
+    if FileExists(file)
+      Sed(file, "@LIBTOOL@", "libtool")
     end
+  end
 end
 
 %
