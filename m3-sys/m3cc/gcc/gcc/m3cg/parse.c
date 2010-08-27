@@ -1376,8 +1376,6 @@ m3_init_decl_processing (void)
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #endif
 
-#define STREQ(a, b) (((a)[0] == (b)[0]) ? (strcmp ((a), (b)) == 0) : 0)
-
 /* Variable arrays of trees. */
 
 static GTY (()) varray_type all_vars;
@@ -3168,7 +3166,7 @@ m3cg_set_runtime_proc (void)
   NAME (s);
   PROC (p);
 
-  if (STREQ (s, "ReportFault")) {
+  if (memcmp (s, "ReportFault", sizeof("ReportFault")) == 0) {
     fault_handler = p;
   }
 }
@@ -3181,7 +3179,7 @@ m3cg_set_runtime_hook (void)
   BYTEOFFSET (o);
 
   TREE_USED (v) = 1;
-  if (STREQ (s, "ReportFault")) {
+  if (memcmp (s, "ReportFault", sizeof("ReportFault")) == 0) {
     fault_intf = v;
     fault_offs = o;
   }
