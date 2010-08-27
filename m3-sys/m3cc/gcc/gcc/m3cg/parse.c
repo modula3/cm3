@@ -201,15 +201,12 @@ set_typeid_to_tree (unsigned long id, tree t)
     
   found = get_typeid_to_tree_pointer (id);
   if (found)
-  {
-    /*found->t = t;*/
     return;
-  }
   to_add.id = id;
   to_add.t = t;
   if (!id_tree_table)
-    id_tree_table = VEC_alloc(id_tree_pair_t, gc, 100);
-  VEC_safe_push(id_tree_pair_t, gc, id_tree_table, &to_add);
+    id_tree_table = VEC_alloc (id_tree_pair_t, gc, 100);
+  VEC_safe_push (id_tree_pair_t, gc, id_tree_table, &to_add);
   id_tree_table_dirty = true;
 #endif
 }
