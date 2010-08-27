@@ -83,6 +83,8 @@ PROCEDURE Clone (ref: REFANY): REFANY
     INC(thread.inCritical);
     res := AllocTraced(dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RAISE OutOfMemory; END;
+    LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
+        Header{typecode := def.typecode, dirty := TRUE};
     RTMisc.Copy(LOOPHOLE(ref, ADDRESS), res, dataSize);
     IF def.kind = ORD (TK.Array) THEN
       (* open array: update the internal pointer *)
