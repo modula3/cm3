@@ -3175,9 +3175,8 @@ m3cg_declare_opaque (void)
     fprintf (stderr, "  declare_opaque id:0x%lx superid:0x%lx\n", my_id,
              super_id);
 
-  /* opaque types are always pointers
-     It would be great if we could provide more type information here.
-  */
+  /* Opaque types are always pointers.
+     It would be great if we could provide more type information here. */
 
    set_typeid_to_tree(my_id, t_addr);
 
