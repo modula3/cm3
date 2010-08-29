@@ -5525,7 +5525,7 @@ m3cg_exchange (void)
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
   return;
 
- incompatible:
+incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 
@@ -5565,7 +5565,7 @@ m3cg_compare_exchange (void)
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], r);
   return;
 
- incompatible:
+incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 
@@ -5601,7 +5601,7 @@ m3cg_fetch_and_op (enum built_in_function fncode)
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
   return;
 
- incompatible:
+incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 
@@ -5639,7 +5639,7 @@ m3cg_lock_test_and_set (void)
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
   return;
 
- incompatible:
+incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 
@@ -5662,7 +5662,7 @@ m3cg_lock_release (void)
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t_void);
   return;
 
- incompatible:
+incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 #endif
