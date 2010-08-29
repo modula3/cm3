@@ -3175,6 +3175,12 @@ m3cg_declare_opaque (void)
     fprintf (stderr, "  declare_opaque id:0x%lx superid:0x%lx\n", my_id,
              super_id);
 
+  /* opaque types are always pointers
+     It would be great if we could provide more type information here.
+  */
+
+   set_typeid_to_tree(my_id, t_addr);
+
   /* we don't pass this info to the debugger, only the revelation is interesting */
 }
 
@@ -3189,6 +3195,7 @@ m3cg_reveal_opaque (void)
 
   debug_tag ('Q', lhs, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (rhs);
+  
   set_typeid_to_tree (lhs, get_typeid_to_tree (rhs));
 }
 
