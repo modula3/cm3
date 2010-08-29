@@ -317,10 +317,15 @@ PROCEDURE NoteOpaques (VAR s: State;  u: Mx.Unit) =
     WHILE (o # NIL) DO
       z := MxMap.Get (s.opaques, o.type);
       IF (z # NIL) THEN
-        Err (s, "opaque type defined twice: ", TName (s, z.type.type));
-        ErrNL (s);
-        Err (s, "  defined in  ", MxRep.UnitName (z.t_unit));  ErrNL (s);
-        Err (s, "  and also    ", MxRep.UnitName (u));         ErrNL (s);
+        IF z.type.super_type # o.super_type THEN
+          Err (s, "opaque type defined with different super-types: ",
+               TName (s, z.type.type));
+          ErrNL (s);
+          Err (s, "  defined in  ", MxRep.UnitName (z.t_unit));  ErrNL (s);
+          Err (s, "    with super-type: ", TName(s, z.type.super_type));
+          Err (s, "  and also    ", MxRep.UnitName (u));         ErrNL (s);
+          Err (s, "    with super-type: ", TName(s, o.super_type));
+        END;
       ELSE
         z := NEW (OpaqueInfo, type := o, t_unit := u, next:= s.all_opaques);
         s.all_opaques := z;
