@@ -1522,10 +1522,10 @@ get_int (void)
 static char *
 scan_quoted_string (long *length)
 {
-  long x, len;
-  char *result;
+  long x = { 0 };
+  char *result = { 0 };
 
-  len = get_int ();
+  long len = get_int ();
   if (length) *length = len;
   if (len <= 0) return 0;
 
@@ -2970,13 +2970,14 @@ m3cg_declare_subrange (void)
   TARGET_INTEGER (max);
   BITSIZE        (size);
 
-  HOST_WIDE_INT  a0, a1, b0, b1;
-  char *p; 
-  char *p_limit; 
   char buff [80]; /* Liberal. */ 
+  char *p = buff; 
+  char *p_limit = p + sizeof(buff); 
 
-  a1 = TREE_INT_CST_HIGH (min);  a0 = TREE_INT_CST_LOW (min);
-  b1 = TREE_INT_CST_HIGH (max);  b0 = TREE_INT_CST_LOW (max);
+  HOST_WIDE_INT a1 = TREE_INT_CST_HIGH (min);
+  HOST_WIDE_INT a0 = TREE_INT_CST_LOW (min);
+  HOST_WIDE_INT b1 = TREE_INT_CST_HIGH (max);
+  HOST_WIDE_INT b0 = TREE_INT_CST_LOW (max);
 
   if (option_types_trace)
     fprintf (stderr,
@@ -2988,8 +2989,6 @@ m3cg_declare_subrange (void)
              ", size 0x%lx\n",
              my_id, a0, a1, b0, b1, size);
 
-  p = buff; 
-  p_limit = p + sizeof(buff); 
   m3cg_append_char ('_', &p, p_limit); 
   m3cg_append_char ('%', &p, p_limit); 
   m3cg_append_char ('d', &p, p_limit); 
@@ -3445,7 +3444,7 @@ m3cg_declare_param (void)
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, PARM_DECL);
 
-  tree p;
+  tree p = current_function_decl;
 
   if (option_trace_all)
     fprintf (stderr, "  declare_param name:%s size:0x%lx align:0x%lx"
@@ -3453,7 +3452,6 @@ m3cg_declare_param (void)
             m3cg_typestr (t), id, m3cg_boolstr (in_memory),
             m3cg_boolstr (up_level));
 
-  p = current_function_decl;
   if (current_param_count > 0) {
     /* declare_procedure... */
     current_param_count -= 1;
@@ -3591,7 +3589,9 @@ m3cg_init_int (void)
   TARGET_INTEGER (val);
   MTYPE          (t);
 
-  tree f, v;
+  tree f = { 0 };
+  tree v = { 0 };
+
   one_field (o, t, &f, &v);
   val = convert (t, val);
   TREE_VALUE (v) = val;
@@ -3603,7 +3603,9 @@ m3cg_init_proc (void)
   BYTEOFFSET (o);
   PROC       (p);
 
-  tree f, v;
+  tree f = { 0 };
+  tree v = { 0 };
+
   tree expr = proc_addr (p);
   one_field (o, TREE_TYPE (expr), &f, &v);
   TREE_VALUE (v) = expr;
@@ -3615,7 +3617,8 @@ m3cg_init_label (void)
   BYTEOFFSET (o);
   LABEL      (l);
 
-  tree f, v;
+  tree f = { 0 };
+  tree v = { 0 };
 
   one_field (o, t_addr, &f, &v);
   TREE_USED (l) = 1;
@@ -3629,7 +3632,8 @@ m3cg_init_var (void)
   VAR        (var);
   BYTEOFFSET (b);
 
-  tree f, v;
+  tree f = { 0 };
+  tree v = { 0 };
 
   TREE_USED (var) = 1;
 
@@ -3645,7 +3649,9 @@ m3cg_init_offset (void)
   BYTEOFFSET (o);
   VAR        (var);
 
-  tree f, v;
+  tree f = { 0 };
+  tree v = { 0 };
+
   TREE_USED (var) = 1;
   /* M3 hack to preserve TREE_ADDRESSABLE: see tree-ssa.c, tree-ssa-alias.c */
   TREE_THIS_VOLATILE (var) = 1;
@@ -3660,10 +3666,11 @@ m3cg_init_chars (void)
   BYTEOFFSET    (o);
   QUOTED_STRING (s, l);
 
-  tree f, v, tipe;
+  tree f = { 0 };
+  tree v = { 0 };
 
-  tipe = build_array_type (char_type_node,
-                           build_index_type (size_int (l - 1)));
+  tree tipe = build_array_type (char_type_node,
+                                build_index_type (size_int (l - 1)));
   one_field (o, tipe, &f, &v);
   TREE_VALUE (v) = build_string (l, s);
   TREE_TYPE (TREE_VALUE (v)) = TREE_TYPE (f);
@@ -3675,7 +3682,9 @@ m3cg_init_float (void)
   BYTEOFFSET (o);
   FLOAT      (val, fkind);
 
-  tree f, v, t = { 0 };
+  tree f = { 0 };
+  tree v = { 0 };
+  tree t = { 0 };
 
   switch (fkind) {
   case 0: t = t_reel;   break;
@@ -3748,7 +3757,7 @@ m3cg_declare_procedure (void)
   PROC    (parent);
   PROC    (p);
 
-  tree resultdecl;
+  tree resultdecl = { 0 };
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
 
@@ -3844,7 +3853,7 @@ static void
 m3cg_begin_procedure (void)
 {
   PROC (p);
-  tree local;
+  tree local = { 0 };
 
   if (option_procs_trace)
     fprintf (stderr, "  procedure %s\n", IDENTIFIER_POINTER (DECL_NAME (p)));
@@ -4077,8 +4086,8 @@ m3cg_case_jump (void)
   INTEGER (n);
 
   tree index_expr = EXPR_REF (-1);
-  int i;
-  tree body;
+  int i = { 0 };
+  tree body = { 0 };
 
   pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
   current_stmts = alloc_stmt_list ();
@@ -4162,7 +4171,7 @@ m3cg_load_indirect (void)
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
-  tree v;
+  tree v = { 0 };
 
   if (option_vars_trace)
     fprintf (stderr, "  load address offset:0x%lx src_t:%s dst_t:%s\n",
@@ -4206,7 +4215,7 @@ m3cg_store_indirect (void)
   MTYPE2 (src_t, src_T);
   MTYPE2 (dst_t, dst_T);
 
-  tree v;
+  tree v = { 0 };
 
   if (option_vars_trace)
     fprintf (stderr, "  store indirect offset:0x%lx src_t:%s dst_t:%s\n",
@@ -4371,13 +4380,12 @@ m3cg_round (void)
   MTYPE (src_t);
   MTYPE (dst_t);
 
-  tree arg;
-  tree cond;
-  tree neg;
-  tree pos;
+  tree cond = { 0 };
+  tree neg = { 0 };
+  tree pos = { 0 };
   REAL_VALUE_TYPE r;
 
-  arg = declare_temp (src_t);
+  tree arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
                        m3_cast (src_t, EXPR_REF (-1))));
 
@@ -4412,11 +4420,10 @@ m3cg_floor (void)
   MTYPE (src_t);
   MTYPE (dst_t);
 
-  tree arg;
-  tree cond;
-  tree intval;
+  tree cond = { 0 };
+  tree intval = { 0 };
 
-  arg = declare_temp (src_t);
+  tree arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
                        m3_cast (src_t, EXPR_REF (-1))));
 
@@ -4438,11 +4445,10 @@ m3cg_ceiling (void)
   MTYPE (src_t);
   MTYPE (dst_t);
 
-  tree arg;
-  tree cond;
-  tree intval;
+  tree cond = { 0 };
+  tree intval = { 0 };
 
-  arg = declare_temp (src_t);
+  tree arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
                        m3_cast (src_t, EXPR_REF (-1))));
 
@@ -5074,7 +5080,7 @@ m3cg_copy (void)
   MTYPE (t);
   UNUSED_BOOLEAN (overlap);
 
-  tree pts;
+  tree pts = { 0 };
   tree ts = make_node (LANG_TYPE);
   int s = n * TREE_INT_CST_LOW (TYPE_SIZE (t));
 
@@ -5453,7 +5459,7 @@ m3cg_store_ordered (void)
   MTYPE2 (dst_t, dst_T);
   INTEGER (order);
 
-  tree v;
+  tree v = { 0 };
 
   if (order != Relaxed)
     warning (0, "only Relaxed memory order for stores is supported");
@@ -5475,7 +5481,7 @@ m3cg_load_ordered (void)
   MTYPE2     (dst_t, dst_T);
   INTEGER    (order);
 
-  tree v;
+  tree v = { 0 };
 
   if (order != Relaxed)
     warning (0, "only Relaxed memory order for loads is supported");
@@ -5496,7 +5502,7 @@ m3cg_exchange (void)
   MTYPE2     (u, U);
   INTEGER    (order);
 
-  int size;
+  int size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
   /* SYNCH_LOCK_TEST_AND_SET is an acquire barrier */
 
@@ -5532,8 +5538,8 @@ m3cg_compare_exchange (void)
   UNUSED_INTEGER (success);
   UNUSED_INTEGER (failure);
 
-  tree v;
-  int size;
+  tree v = { 0 };
+  int size = { 0 };
   enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
@@ -5579,7 +5585,7 @@ m3cg_fetch_and_op (enum built_in_function fncode)
   MTYPE2         (u, U);
   UNUSED_INTEGER (order);
 
-  int size;
+  int size = { 0 };
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
@@ -5616,7 +5622,7 @@ m3cg_lock_test_and_set (void)
 {
   MTYPE2     (t, T);
 
-  int size;
+  int size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
@@ -5642,7 +5648,7 @@ m3cg_lock_release (void)
 {
   MTYPE2     (t, T);
 
-  int size;
+  int size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_RELEASE_N;
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
@@ -5834,7 +5840,8 @@ static const OpProc ops[] = {
 static void
 m3_parse_file (int xx ATTRIBUTE_UNUSED)
 {
-  int op, i;
+  int op = { 0 };
+  int i = { 0 };
 
   /* first, verify the handler table is complete and consistent. */
   for (i = 0;  ops[i].proc != 0;  i++ ) {
