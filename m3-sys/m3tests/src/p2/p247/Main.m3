@@ -8,6 +8,7 @@ with preprocessed source if appropriate.
 *)
 MODULE Main;
 IMPORT Color;
+<*NOWARN*>IMPORT RegExpParse, RegExpTok;
 TYPE ColorT = RECORD a,b,c: REAL; END;
 
 <*NOWARN*> PROCEDURE F1 (a,b,c,d,e,f:INTEGER; g:ColorT) =
