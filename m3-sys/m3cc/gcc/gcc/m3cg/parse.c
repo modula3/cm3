@@ -2539,7 +2539,6 @@ declare_fault_proc (void)
   if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
-
     fprintf (stderr, "  declare_fault_proc: type is 0x%x (%s)\n", (unsigned) mode, mode_to_string (mode));
   }
 
@@ -3769,16 +3768,11 @@ m3cg_declare_procedure (void)
 
   if (option_trace_all)
     fprintf (stderr, "  declare_procedure name:%s n_params:0x%lx lev:0x%lx"
-            "exported:%s\n", n, n_params, lev, m3cg_boolstr (exported));
+            " exported:%s\n", n, n_params, lev, m3cg_boolstr (exported));
 
   /* Level must be positive and nested functions are never exported. */
   gcc_assert (lev >= 0);
   gcc_assert (lev == 0 || !exported);
-
-  if (option_procs_trace)
-    fprintf (stderr,
-             "  procedure:%s nparams:0x%lx rettype:%s lev:%u exported:%u\n",
-             n, n_params, m3cg_typestr (ret_type), (unsigned)lev, (unsigned)exported);
 
 #if M3CG_ADAPT_RETURN_TYPE
   /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
@@ -4877,7 +4871,7 @@ m3cg_extract (void)
   BOOLEAN (sign_extend);
 
   if (option_trace_all)
-    fprintf (stderr, " extract sign_extend:%u\n", (unsigned)sign_extend);
+    fprintf (stderr, " extract sign_extend:%s\n", m3cg_boolstr (sign_extend));
 
   gcc_assert (INTEGRAL_TYPE_P (t));
 
@@ -4894,14 +4888,14 @@ m3cg_extract_n (void)
   BOOLEAN (sign_extend);
   INTEGER (n);
 
+  if (option_trace_all)
+    fprintf (stderr, " extract_n count:0x%lx sign_extend:%s\n",
+             n, m3cg_boolstr (sign_extend));
+
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (n >= 0);
   gcc_assert (n <= 64);
   gcc_assert (n <= TYPE_PRECISION (t));
-
-  if (option_trace_all)
-    fprintf (stderr, " extract_n count:%u sign_extend:%u\n",
-             (unsigned)n, (unsigned)sign_extend);
 
   if (n == 0)
     EXPR_REF (-2) = m3_cast (t, v_zero);
@@ -4954,8 +4948,8 @@ m3cg_extract_mn (void)
   INTEGER (n);
 
   if (option_trace_all)
-    fprintf (stderr, " extract_mn offset:%u count:%u sign_extend:%u\n",
-             (unsigned)m, (unsigned)n, (unsigned)sign_extend);
+    fprintf (stderr, " extract_mn offset:0x%lx count:0x%lx sign_extend:%s\n",
+             m, n, m3cg_boolstr (sign_extend));
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
@@ -4997,7 +4991,7 @@ m3cg_insert_n (void)
   INTEGER (n);
 
   if (option_trace_all)
-    fprintf (stderr, " insert_n count:%u\n", (unsigned)n);
+    fprintf (stderr, " insert_n count:0x%lx\n", n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (n >= 0);
@@ -5016,8 +5010,7 @@ m3cg_insert_mn (void)
   INTEGER (n);
 
   if (option_trace_all)
-    fprintf (stderr, " insert_mn offset:%u count:%u\n", (unsigned)m,
-             (unsigned)n);
+    fprintf (stderr, " insert_mn offset:0x%lx count:0x%lx\n", m, n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
