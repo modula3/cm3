@@ -163,6 +163,7 @@ static id_tree_pair_t*
 get_typeid_to_tree_pointer (unsigned long id)
 {
   id_tree_pair_t* found = { 0 };
+#if 0
   id_tree_pair_t to_find = { 0, 0 };
   if (!id_tree_table || id == NO_UID)
     return 0;
@@ -180,6 +181,7 @@ get_typeid_to_tree_pointer (unsigned long id)
                                     VEC_length (id_tree_pair_t, id_tree_table),
                                     sizeof(id_tree_pair_t),
                                     compare_typeid_tree_pair);
+#endif
   return found;
 }
 
@@ -189,7 +191,7 @@ get_typeid_to_tree (unsigned long id)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 1
+#if 0
   id_tree_pair_t* found = get_typeid_to_tree_pointer (id);
   tree t = found ? found->t : 0;
   if (id != NO_UID && option_trace_all)
@@ -206,15 +208,15 @@ set_typeid_to_tree (unsigned long id, tree t)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 1
+#if 0
   id_tree_pair_t* found = { 0 };
   id_tree_pair_t to_add = { 0, 0 };
 
-  if (option_trace_all)
-    fprintf (stderr, "  set_typeid_to_tree(0x%lX, %p)\n", id, t);
-
   if (id == NO_UID || !t)
     return;
+
+  if (option_trace_all)
+    fprintf (stderr, "  set_typeid_to_tree(0x%lX, %p)\n", id, t);
     
   found = get_typeid_to_tree_pointer (id);
   if (found)
@@ -540,6 +542,8 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
   
   gcc_assert (signed_size >= 0);
   gcc_assert (signed_alignment >= 0);
+  
+  id = NO_UID; /* temporary disable */
 
   switch (t)
     {
@@ -2990,14 +2994,15 @@ m3cg_declare_subrange (void)
 
   if (option_types_trace)
     fprintf (stderr,
-             "  subrange id 0x%lX"
+             "  my_id:0x%lX domain_id:0x%lX"
              ", a0 " HOST_WIDE_INT_PRINT_DEC
              ", a1 " HOST_WIDE_INT_PRINT_DEC
              ", b0 " HOST_WIDE_INT_PRINT_DEC
              ", b1 " HOST_WIDE_INT_PRINT_DEC
              ", size 0x%lX\n",
-             my_id, a0, a1, b0, b1, size);
+             my_id, domain_id, a0, a1, b0, b1, size);
 
+  set_typeid_to_tree (my_id, get_typeid_to_tree (domain_id));
   m3cg_append_char ('_', &p, p_limit); 
   m3cg_append_char ('%', &p, p_limit); 
   m3cg_append_char ('d', &p, p_limit); 
@@ -3435,7 +3440,7 @@ m3cg_declare_local (void)
 
   if (option_vars_trace)
     fprintf (stderr, "  declare_local name:%s size:0x%lX align:0x%lX"
-            "type:%s typeid:0x%lX in_mem:%s uplev:%s\n",
+            " type:%s typeid:0x%lX in_mem:%s uplev:%s\n",
             IDENTIFIER_POINTER (DECL_NAME (v)), s, a, m3cg_typestr (t), id,
             m3cg_boolstr (in_memory), m3cg_boolstr (up_level));
 
@@ -3552,7 +3557,7 @@ m3cg_declare_temp (void)
   RETURN_VAR (v, VAR_DECL);
 
   if (option_vars_trace)
-    fprintf (stderr, "  declare_temp size:0x%lX align:0x%lX type:%s in_mem:%s",
+    fprintf (stderr, "  declare_temp size:0x%lX align:0x%lX type:%s in_mem:%s\n",
              s, a, m3cg_typestr (t), m3cg_boolstr (in_memory));
  
   gcc_assert (s >= 0);
@@ -5445,7 +5450,7 @@ m3cg_pop_struct (void)
   tree t = m3_build_type_id (T_struct, s, a, my_id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  pop struct size:0x%lX align:0x%lX id:0x%lX t:%p\n", s,
+    fprintf (stderr, "  pop_struct size:0x%lX align:0x%lX id:0x%lX t:%p\n", s,
              a, my_id, t);
 
   gcc_assert (s >= 0);
