@@ -9,6 +9,8 @@ INTERFACE Field;
 
 IMPORT M3ID, Type, Value, Expr;
 
+TYPE T <: Value.T;
+
 TYPE
   Info = RECORD
     name   : M3ID.T;
@@ -26,6 +28,9 @@ PROCEDURE Is (v: Value.T): BOOLEAN;
 (* Returns TRUE iff 'v' is a field *)
 
 PROCEDURE Split (field: Value.T;  VAR info: Info);
+
+PROCEDURE Compile (field: T);
+(* compile, i.e. declare, the underlying type *)
 
 PROCEDURE EmitDeclaration (field: Value.T);
 (* emit the C struct member or bit-field for 'field' *)

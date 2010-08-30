@@ -11,7 +11,7 @@ MODULE Field;
 IMPORT M3, CG, Value, ValueRep, Type, Expr, Error;
 IMPORT AssignStmt, M3Buf;
 
-TYPE
+REVEAL
   T = Value.T BRANDED OBJECT
         index   : INTEGER;
         offset  : INTEGER;
