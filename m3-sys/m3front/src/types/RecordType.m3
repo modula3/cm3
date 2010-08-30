@@ -315,9 +315,12 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
 PROCEDURE Compiler (p: P) =
   VAR fields := Scope.ToList (p.fields);  o: Value.T;  n: INTEGER;
   BEGIN
-    Scope.InitValues (p.fields);
     o := fields;  n := 0;
-    WHILE (o # NIL) DO  INC (n);  o := o.next;  END;
+    WHILE (o # NIL) DO
+      Field.Compile (NARROW (o, Field.T));
+      o := o.next;
+      INC (n);
+    END;
     CG.Declare_record (Type.GlobalUID (p), p.recSize, n);
     o := fields;
     WHILE (o # NIL) DO  Field.EmitDeclaration (o);  o := o.next;  END;
