@@ -3893,10 +3893,10 @@ m3cg_end_procedure (void)
 {
   PROC (p);
 
-  gcc_assert (current_function_decl == p);
-
   if (option_procs_trace)
     fprintf (stderr, "  procedure %s\n", IDENTIFIER_POINTER (DECL_NAME (p)));
+
+  gcc_assert (current_function_decl == p);
 
   /* Attach block to the function */
   gcc_assert (current_block == BLOCK_SUBBLOCKS (DECL_INITIAL (p)));
@@ -4953,6 +4953,10 @@ m3cg_extract_mn (void)
   INTEGER (m);
   INTEGER (n);
 
+  if (option_trace_all)
+    fprintf (stderr, " extract_mn offset:%u count:%u sign_extend:%u\n",
+             (unsigned)m, (unsigned)n, (unsigned)sign_extend);
+
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
   gcc_assert (n >= 0);
@@ -4962,10 +4966,6 @@ m3cg_extract_mn (void)
   gcc_assert (m <= TYPE_PRECISION (t));
   gcc_assert (n <= TYPE_PRECISION (t));
   gcc_assert ((m + n) <= TYPE_PRECISION (t));
-
-  if (option_trace_all)
-    fprintf (stderr, " extract_mn offset:%u count:%u sign_extend:%u\n",
-             (unsigned)m, (unsigned)n, (unsigned)sign_extend);
 
   if (n == 0)
     EXPR_REF (-1) = m3_cast (t, v_zero);
@@ -4996,11 +4996,11 @@ m3cg_insert_n (void)
   MTYPE   (t);
   INTEGER (n);
 
-  gcc_assert (INTEGRAL_TYPE_P (t));
-  gcc_assert (n >= 0);
-
   if (option_trace_all)
     fprintf (stderr, " insert_n count:%u\n", (unsigned)n);
+
+  gcc_assert (INTEGRAL_TYPE_P (t));
+  gcc_assert (n >= 0);
 
   EXPR_REF (-3) = m3_do_insert (EXPR_REF (-3), EXPR_REF (-2),
                                 EXPR_REF (-1), build_int_cst (t_int, n), t);
@@ -5015,6 +5015,10 @@ m3cg_insert_mn (void)
   INTEGER (m);
   INTEGER (n);
 
+  if (option_trace_all)
+    fprintf (stderr, " insert_mn offset:%u count:%u\n", (unsigned)m,
+             (unsigned)n);
+
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
   gcc_assert (n >= 0);
@@ -5023,10 +5027,6 @@ m3cg_insert_mn (void)
    * insert_mn on uninitialized variables.
    */
   m3_next_store_volatile = true;
-
-  if (option_trace_all)
-    fprintf (stderr, " insert_mn offset:%u count:%u\n", (unsigned)m,
-             (unsigned)n);
 
   EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), m, n, t);
   EXPR_POP ();
