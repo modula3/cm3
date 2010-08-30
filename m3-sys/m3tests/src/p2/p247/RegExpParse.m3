@@ -1,8 +1,7 @@
 (* from caltech-parser *)
 
 (* Depending on the amount of type information
-   provided to the backend, this crashes
-   (doesn't even fail the assertion)
+   provided to the backend, this fails
  *)
 
 MODULE RegExpParse;
