@@ -609,17 +609,15 @@ PROCEDURE Compile (t: T) =
   BEGIN
     IF (NOT compile_started) THEN InitCompilation () END;
     IF (TypeTbl.Put (compiled, u, u) # NIL) THEN RETURN END;
+    save := Scanner.offset;
+    Scanner.offset := t.origin;
+    t.compile ();
+    Scanner.offset := save;
     IF (TypeTbl.Get (visible_types, u) # NIL) THEN
       (* it's visible in one of our imports *)
       Host.env.note_type (GlobalUID (u), imported := TRUE);
-    ELSE
-      save := Scanner.offset;
-      Scanner.offset := t.origin;
-      t.compile ();
-      Scanner.offset := save;
-      IF Module.IsInterface () THEN
-        Host.env.note_type (GlobalUID (t), imported := FALSE);
-      END;
+    ELSIF Module.IsInterface () THEN
+      Host.env.note_type (GlobalUID (t), imported := FALSE);
     END;
   END Compile;
 
