@@ -166,7 +166,7 @@ static m3type_t*
 m3type_get (unsigned long id)
 {
   m3type_t* found = { 0 };
-#if 1
+#if 0
   m3type_t to_find;
   
   if (option_trace_all)
@@ -198,7 +198,7 @@ get_typeid_to_tree (unsigned long id)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 1
+#if 0
   m3type_t* found = m3type_get (id);
   tree t = found ? found->t : 0;
   if (id != NO_UID && option_trace_all)
@@ -258,7 +258,7 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 1
+#if 0
   m3type_t* found = { 0 };
   m3type_t to_add = { 0, 0 };
 
@@ -657,7 +657,9 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
       if (!ts)
       {
         ts = make_node (RECORD_TYPE);
-        /* TREE_ADDRESSABLE (ts) = true; */
+        /* all records in memory, not passed in registers
+        TREE_ADDRESSABLE (ts) = true;
+        */
         TYPE_NAME (ts) = NULL_TREE;
         TYPE_FIELDS (ts) = NULL_TREE;
       }
@@ -2093,7 +2095,9 @@ debug_struct (void)
   tree t = make_node (RECORD_TYPE);
   if (option_trace_all)
     fprintf (stderr, "  debug_struct(%s):%p\n", current_dbg_type_tag, t);
-  /* TREE_ADDRESSABLE (t) = true; */
+  /* all records in memory, not passed in registers
+  TREE_ADDRESSABLE (t) = true;
+  */
   TYPE_NAME (t) =
     build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
   TYPE_FIELDS (t) = nreverse (debug_fields);
@@ -5560,6 +5564,9 @@ m3cg_pop_struct (void)
 
   EXPR_REF (-1) = m3_build1 (INDIRECT_REF, t,
                              m3_cast (m3_build_pointer_type (t), EXPR_REF (-1)));
+  /* all records in memory, not passed in registers
+  TREE_ADDRESSABLE (EXPR_REF (-1)) = true;
+  */
   m3_pop_param (t);
 }
 
