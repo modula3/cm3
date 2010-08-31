@@ -445,11 +445,6 @@ static void m3_finish (void);
 static void m3_volatilize_decl (tree decl);
 static struct language_function* m3_language_function (void);
 #define m3_volatize (m3_language_function ()->volatil)
-typedef struct _m3buf_t {
-  char buf[100];
-} m3buf_t;
-static void
-format_tag (m3buf_t* buf, char kind, unsigned long id, const char* fmt, ...);
 
 static bool m3_next_store_volatile;
 
@@ -608,7 +603,7 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
   gcc_assert (signed_size >= 0);
   gcc_assert (signed_alignment >= 0);
   
-  /*id = NO_UID;*/
+  id = NO_UID; /* disable */
 
   switch (t)
     {
@@ -662,14 +657,8 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
       if (!ts)
       {
         ts = make_node (RECORD_TYPE);
-        TREE_ADDRESSABLE (ts) = true;
+        /* TREE_ADDRESSABLE (ts) = true; */
         TYPE_NAME (ts) = NULL_TREE;
-        if (id != NO_UID)
-        {
-          m3buf_t buf;
-          format_tag (&buf, 'R', id, "");
-          TYPE_NAME (ts) = get_identifier (buf.buf);
-        }
         TYPE_FIELDS (ts) = NULL_TREE;
       }
       TYPE_SIZE (ts) = bitsize_int (s);
@@ -1993,6 +1982,10 @@ scan_label (void)
 
 /*======================================== debugging and type information ===*/
 
+typedef struct _m3buf_t {
+  char buf[100];
+} m3buf_t;
+
 static m3buf_t current_dbg_type_tag_buf;
 static char* current_dbg_type_tag = current_dbg_type_tag_buf.buf;
 static unsigned long current_record_type_id = NO_UID;
@@ -2004,7 +1997,7 @@ static int current_dbg_type_count3;
 
 static void
 format_tag_v (m3buf_t* buf, char kind, unsigned long id, const char* fmt,
-             va_list args)
+              va_list args)
 {
   buf->buf [0] = 'M';
   buf->buf [1] = kind;
@@ -2018,16 +2011,6 @@ format_tag_v (m3buf_t* buf, char kind, unsigned long id, const char* fmt,
     buf->buf[sizeof(buf->buf) - 1] = 0;
     fatal_error ("identifier too long (in debug_tag, %s)", buf->buf);
   }
-}
-
-static void
-format_tag (m3buf_t* buf, char kind, unsigned long id, const char* fmt, ...)
-{
-  va_list args;
-
-  va_start (args, fmt);
-  format_tag_v (buf, kind, id, fmt, args);
-  va_end (args);
 }
 
 static void
@@ -2110,7 +2093,7 @@ debug_struct (void)
   tree t = make_node (RECORD_TYPE);
   if (option_trace_all)
     fprintf (stderr, "  debug_struct(%s):%p\n", current_dbg_type_tag, t);
-  TREE_ADDRESSABLE (t) = true;
+  /* TREE_ADDRESSABLE (t) = true; */
   TYPE_NAME (t) =
     build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
   TYPE_FIELDS (t) = nreverse (debug_fields);
