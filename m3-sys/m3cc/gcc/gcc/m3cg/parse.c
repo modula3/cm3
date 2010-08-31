@@ -2095,9 +2095,6 @@ debug_struct (void)
   tree t = make_node (RECORD_TYPE);
   if (option_trace_all)
     fprintf (stderr, "  debug_struct(%s):%p\n", current_dbg_type_tag, t);
-  /* all records in memory, not passed in registers
-  TREE_ADDRESSABLE (t) = true;
-  */
   TYPE_NAME (t) =
     build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
   TYPE_FIELDS (t) = nreverse (debug_fields);
@@ -2945,7 +2942,13 @@ m3cg_declare_record (void)
   current_dbg_type_count2 = 0;
   gcc_assert (current_record_type_id == NO_UID);
   if (current_dbg_type_count1 == 0)
-    set_typeid_to_tree (my_id, debug_struct ());
+  {
+    tree t = debug_struct ();
+    /* all records in memory, not passed in registers
+    TREE_ADDRESSABLE (t) = true;
+    */
+    set_typeid_to_tree (my_id, t);
+  }
   else
     current_record_type_id = my_id;
 }
@@ -2982,6 +2985,9 @@ m3cg_declare_field (void)
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
     tree t = debug_struct ();
+    /* all records in memory, not passed in registers
+    TREE_ADDRESSABLE (t) = true;
+    */
     if (current_record_type_id != NO_UID)
       set_typeid_to_tree (current_record_type_id, t);
     else
@@ -3242,7 +3248,13 @@ m3cg_declare_object (void)
   current_dbg_type_count3 = 0;
   gcc_assert (current_record_type_id == NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
-    set_typeid_to_tree (my_id, m3_build_pointer_type (debug_struct ()));
+  {
+    tree t = debug_struct ();
+    /* all records in memory, not passed in registers
+    TREE_ADDRESSABLE (t) = true;
+    */
+    set_typeid_to_tree (my_id, m3_build_pointer_type (t));
+  }
   else
     current_object_type_id = my_id;
 }
@@ -3264,7 +3276,11 @@ m3cg_declare_method (void)
   gcc_assert (current_object_type_id != NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
-    set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (debug_struct ()));
+    tree t = debug_struct ();
+    /* all records in memory, not passed in registers
+    TREE_ADDRESSABLE (t) = true;
+    */
+    set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
     current_object_type_id = NO_UID;
   }
 }
