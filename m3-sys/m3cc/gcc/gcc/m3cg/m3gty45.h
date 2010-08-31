@@ -63,8 +63,25 @@ struct GTY(()) language_function
     bool volatil; /* does function call setjmp/fork/vfork */
 };
 
-typedef struct GTY(()) id_tree_pair_t
+typedef struct GTY(()) m3type_t
 {
   unsigned long id;
   tree t;
-} id_tree_pair_t;
+#if 0
+  unsigned is_packed : 1;
+  unsigned is_record : 1;
+  union
+  {
+    struct
+    {
+      unsigned long size;
+      unsigned long target_id;
+    } packed;
+    struct
+    {
+      unsigned long size;
+      unsigned long n_fields;
+    } record;
+  } u;
+#endif
+} m3type_t;
