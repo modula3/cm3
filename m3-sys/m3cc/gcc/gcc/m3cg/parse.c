@@ -141,17 +141,20 @@ static int option_types_trace;
 
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
-DEF_VEC_O (id_tree_pair_t);
-DEF_VEC_ALLOC_O (id_tree_pair_t, gc);
+DEF_VEC_O (m3type_t);
+DEF_VEC_ALLOC_O (m3type_t, gc);
 
-static VEC (id_tree_pair_t, gc)* id_tree_table;
-static bool id_tree_table_dirty;
+static VEC (m3type_t, gc)* m3type_table;
+static bool m3type_table_dirty;
+
+#define ZeroMemory(a, b) (memset((a), 0, (b)))
+#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
 
 static int
-compare_typeid_tree_pair (const void* a, const void *b)
+m3type_compare (const void* a, const void *b)
 {
-  unsigned long x = ((const id_tree_pair_t*)a)->id;
-  unsigned long y = ((const id_tree_pair_t*)b)->id;
+  unsigned long x = ((const m3type_t*)a)->id;
+  unsigned long y = ((const m3type_t*)b)->id;
   /* Do not use subtraction here. It does not work. Not just
    * because sizeof(int) < sizeof(long) but also because
    * these are unsigned numbers.
@@ -159,28 +162,32 @@ compare_typeid_tree_pair (const void* a, const void *b)
   return ((x < y) ? -1 : ((x > y) ? 1 : 0));
 }
 
-static id_tree_pair_t*
-get_typeid_to_tree_pointer (unsigned long id)
+static m3type_t*
+m3type_get (unsigned long id)
 {
-  id_tree_pair_t* found = { 0 };
-#if 0
-  id_tree_pair_t to_find = { 0, 0 };
-  if (!id_tree_table || id == NO_UID)
+  m3type_t* found = { 0 };
+#if 1
+  m3type_t to_find;
+  
+  if (option_trace_all)
+    fprintf (stderr, "  m3type_get(0x%lX)\n", id);
+  
+  if (!m3type_table || id == NO_UID)
     return 0;
-  if (id_tree_table_dirty)
+  if (m3type_table_dirty)
   {
-     qsort (VEC_address (id_tree_pair_t, id_tree_table),
-            VEC_length (id_tree_pair_t, id_tree_table),
-            sizeof(id_tree_pair_t),
-            compare_typeid_tree_pair);
-    id_tree_table_dirty = false;
+     qsort (VEC_address (m3type_t, m3type_table),
+            VEC_length (m3type_t, m3type_table),
+            sizeof(m3type_t),
+            m3type_compare);
+    m3type_table_dirty = false;
   }
   to_find.id = id;
-  found = (id_tree_pair_t*)bsearch (&to_find,
-                                    VEC_address (id_tree_pair_t, id_tree_table),
-                                    VEC_length (id_tree_pair_t, id_tree_table),
-                                    sizeof(id_tree_pair_t),
-                                    compare_typeid_tree_pair);
+  found = (m3type_t*)bsearch (&to_find,
+                              VEC_address (m3type_t, m3type_table),
+                              VEC_length (m3type_t, m3type_table),
+                              sizeof(m3type_t),
+                              m3type_compare);
 #endif
   return found;
 }
@@ -191,8 +198,8 @@ get_typeid_to_tree (unsigned long id)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 0
-  id_tree_pair_t* found = get_typeid_to_tree_pointer (id);
+#if 1
+  m3type_t* found = m3type_get (id);
   tree t = found ? found->t : 0;
   if (id != NO_UID && option_trace_all)
     fprintf (stderr, "  get_typeid_to_tree(0x%lX):%p\n", id, t);
@@ -202,32 +209,85 @@ get_typeid_to_tree (unsigned long id)
 #endif
 }
 
+#if 0
+
+static m3type_t*
+m3type_new (unsigned long id)
+{
+  m3type_t to_add;
+
+  if (option_trace_all)
+    fprintf (stderr, "  m3type_new(0x%lX)\n", id);
+
+  ZERO_MEMORY(to_add);
+  gcc_assert (id != NO_UID);
+  gcc_assert (m3type_get (id) == 0);
+  to_add.id = id;
+  if (!m3type_table)
+    m3type_table = VEC_alloc (m3type_t, gc, 100);
+  m3type_table_dirty = true;
+  return VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
+}
+
+static m3type_t*
+m3type_get_or_new (unsigned long id)
+{
+  m3type_t to_add;
+  m3type_t* found = { 0 };
+
+  if (option_trace_all)
+    fprintf (stderr, "  m3type_get_or_new(0x%lX)\n", id);
+
+  gcc_assert (id != NO_UID);
+  ZERO_MEMORY(to_add);
+  found = m3type_get (id);
+  if (found)
+    return found;
+  to_add.id = id;
+  if (!m3type_table)
+    m3type_table = VEC_alloc (m3type_t, gc, 100);
+  m3type_table_dirty = true;
+  return VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
+}
+
+#endif
+
 static void
-set_typeid_to_tree (unsigned long id, tree t)
+set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 {
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 0
-  id_tree_pair_t* found = { 0 };
-  id_tree_pair_t to_add = { 0, 0 };
+#if 1
+  m3type_t* found = { 0 };
+  m3type_t to_add = { 0, 0 };
+
+  if (option_trace_all)
+    fprintf (stderr, "  set_typeid_to_tree(0x%lX, %p)\n", id, t);
 
   if (id == NO_UID || !t)
     return;
 
-  if (option_trace_all)
-    fprintf (stderr, "  set_typeid_to_tree(0x%lX, %p)\n", id, t);
-    
-  found = get_typeid_to_tree_pointer (id);
+  found = m3type_get (id);
   if (found)
+  {
+    if (replace)
+      found->t = t;
     return;
+  }
   to_add.id = id;
   to_add.t = t;
-  if (!id_tree_table)
-    id_tree_table = VEC_alloc (id_tree_pair_t, gc, 100);
-  VEC_safe_push (id_tree_pair_t, gc, id_tree_table, &to_add);
-  id_tree_table_dirty = true;
+  if (!m3type_table)
+    m3type_table = VEC_alloc (m3type_t, gc, 100);
+  VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
+  m3type_table_dirty = true;
 #endif
+}
+
+static void
+set_typeid_to_tree (unsigned long id, tree t)
+{
+  set_typeid_to_tree_replace (id, t, false);
 }
 
 #define TYPEID(x)    unsigned long x = (0xFFFFFFFFUL & (unsigned long) get_int ())
@@ -385,6 +445,11 @@ static void m3_finish (void);
 static void m3_volatilize_decl (tree decl);
 static struct language_function* m3_language_function (void);
 #define m3_volatize (m3_language_function ()->volatil)
+typedef struct _m3buf_t {
+  char buf[100];
+} m3buf_t;
+static void
+format_tag (m3buf_t* buf, char kind, unsigned long id, const char* fmt, ...);
 
 static bool m3_next_store_volatile;
 
@@ -543,7 +608,7 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
   gcc_assert (signed_size >= 0);
   gcc_assert (signed_alignment >= 0);
   
-  id = NO_UID; /* temporary disable */
+  /*id = NO_UID;*/
 
   switch (t)
     {
@@ -597,7 +662,14 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
       if (!ts)
       {
         ts = make_node (RECORD_TYPE);
+        TREE_ADDRESSABLE (ts) = true;
         TYPE_NAME (ts) = NULL_TREE;
+        if (id != NO_UID)
+        {
+          m3buf_t buf;
+          format_tag (&buf, 'R', id, "");
+          TYPE_NAME (ts) = get_identifier (buf.buf);
+        }
         TYPE_FIELDS (ts) = NULL_TREE;
       }
       TYPE_SIZE (ts) = bitsize_int (s);
@@ -1921,12 +1993,10 @@ scan_label (void)
 
 /*======================================== debugging and type information ===*/
 
-typedef struct _m3buf_t {
-  char buf[100];
-} m3buf_t;
 static m3buf_t current_dbg_type_tag_buf;
 static char* current_dbg_type_tag = current_dbg_type_tag_buf.buf;
-static unsigned long current_record_type_id = NO_UID; /* or current object */
+static unsigned long current_record_type_id = NO_UID;
+static unsigned long current_object_type_id = NO_UID;
 static unsigned long current_proc_type_id = NO_UID; /* not right yet */
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
@@ -1948,6 +2018,16 @@ format_tag_v (m3buf_t* buf, char kind, unsigned long id, const char* fmt,
     buf->buf[sizeof(buf->buf) - 1] = 0;
     fatal_error ("identifier too long (in debug_tag, %s)", buf->buf);
   }
+}
+
+static void
+format_tag (m3buf_t* buf, char kind, unsigned long id, const char* fmt, ...)
+{
+  va_list args;
+
+  va_start (args, fmt);
+  format_tag_v (buf, kind, id, fmt, args);
+  va_end (args);
 }
 
 static void
@@ -2023,11 +2103,14 @@ debug_field_fmt (unsigned long id, const char* fmt, ...)
   va_end (args);
 }
 
-static void
-debug_struct (unsigned long id)
+static tree
+debug_struct (void)
 {
-  tree d;
+  tree d = { 0 };
   tree t = make_node (RECORD_TYPE);
+  if (option_trace_all)
+    fprintf (stderr, "  debug_struct(%s):%p\n", current_dbg_type_tag, t);
+  TREE_ADDRESSABLE (t) = true;
   TYPE_NAME (t) =
     build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
   TYPE_FIELDS (t) = nreverse (debug_fields);
@@ -2045,7 +2128,7 @@ debug_struct (unsigned long id)
   global_decls = d;
   debug_hooks -> type_decl
     ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
-  set_typeid_to_tree (id, t);
+  return t;
 }
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
@@ -2675,7 +2758,7 @@ m3cg_end_unit (void)
   debug_tag ('i', NO_UID, "_%s", current_unit_name);
   for (j = 0; j < exported_interfaces; j++)
     debug_field_name (exported_interfaces_names [j]);
-  debug_struct (NO_UID);
+  debug_struct ();
   if (fault_proc != NULL_TREE) emit_fault_proc ();
 }
 
@@ -2757,11 +2840,11 @@ m3cg_declare_typename (void)
 
   debug_tag ('N', my_id, "");
   debug_field_name (fullname);
-  debug_struct (NO_UID);
+  debug_struct ();
 
   debug_tag ('n', NO_UID, "_%s", fullname);
   debug_field_id (my_id);
-  debug_struct (NO_UID);
+  debug_struct ();
 }
 
 static void
@@ -2780,7 +2863,7 @@ m3cg_declare_array (void)
   debug_tag ('A', my_id, "_%ld", size);
   debug_field_id (index_id);
   debug_field_id (elts_id);
-  debug_struct (NO_UID);
+  debug_struct ();
 }
 
 static void
@@ -2797,7 +2880,7 @@ m3cg_declare_open_array (void)
 
   debug_tag ('B', my_id, "_%ld", size);
   debug_field_id (elts_id);
-  debug_struct (NO_UID);
+  debug_struct ();
 }
 
 static void
@@ -2826,7 +2909,7 @@ m3cg_declare_enum_elt (void)
 
   debug_field_name (n);
   if (--current_dbg_type_count1 == 0)
-    debug_struct (NO_UID);
+    debug_struct ();
 }
 
 static void
@@ -2843,7 +2926,18 @@ m3cg_declare_packed (void)
 
   debug_field_id (target_id);
   debug_tag ('D', my_id, "_%ld", size);
-  debug_struct (NO_UID);
+  debug_struct ();
+  
+#if 0
+  {
+    m3type_t* type = m3type_new (my_id);
+    type->is_packed = true;
+    type->packed.size = size;
+    type->packed.target_id = target_id;
+  }
+#else
+  set_typeid_to_tree (my_id, get_typeid_to_tree (target_id));
+#endif
 }
 
 static void
@@ -2864,7 +2958,7 @@ m3cg_declare_record (void)
   current_dbg_type_count2 = 0;
   gcc_assert (current_record_type_id == NO_UID);
   if (current_dbg_type_count1 == 0)
-    debug_struct (my_id);
+    set_typeid_to_tree (my_id, debug_struct ());
   else
     current_record_type_id = my_id;
 }
@@ -2900,8 +2994,13 @@ m3cg_declare_field (void)
   current_dbg_type_count1--;
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
-    debug_struct (current_record_type_id);
+    tree t = debug_struct ();
+    if (current_record_type_id != NO_UID)
+      set_typeid_to_tree (current_record_type_id, t);
+    else
+      set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
     current_record_type_id = NO_UID;
+    current_object_type_id = NO_UID;
   }
 }
 
@@ -2915,7 +3014,7 @@ m3cg_declare_set (void)
   gcc_assert (size >= 0);
   debug_tag ('S', my_id, "_%ld", size);
   debug_field_id (domain_id);
-  debug_struct (NO_UID);
+  debug_struct ();
 }
 
 /* m3cg_append_char, m3cg_fill_word_in_hex, and m3cg_fill_hex_value help
@@ -3014,7 +3113,7 @@ m3cg_declare_subrange (void)
   debug_tag ('Z', my_id, buff, size); 
 
   debug_field_id (domain_id);
-  debug_struct (NO_UID);
+  debug_struct ();
 }
 
 static void
@@ -3035,7 +3134,7 @@ m3cg_declare_pointer (void)
   debug_tag ('Y', my_id, "_%d_%d_%d_%s", GET_MODE_BITSIZE (Pmode),
              traced, (brand ? 1 : 0), (brand ? brand : "" ));
   debug_field_id (target_id);
-  debug_struct (NO_UID);
+  debug_struct ();
   {
     tree t = get_typeid_to_tree (target_id);
     if (t)
@@ -3054,7 +3153,7 @@ m3cg_declare_indirect (void)
 
   debug_tag ('X', my_id, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (target_id);
-  debug_struct (NO_UID);
+  debug_struct ();
   {
     tree t = get_typeid_to_tree (target_id);
     if (t)
@@ -3083,7 +3182,7 @@ m3cg_declare_proctype (void)
   debug_field_id (result_id);
   gcc_assert (current_proc_type_id == NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
-    debug_struct (NO_UID /* my_id not right yet */);
+    debug_struct ();
   else
     current_proc_type_id = my_id;
 }
@@ -3102,7 +3201,7 @@ m3cg_declare_formal (void)
   gcc_assert (current_proc_type_id != NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
-    debug_struct (NO_UID /* current_proc_type_id not right yet */);
+    debug_struct ();
     current_proc_type_id = NO_UID;
   }
 }
@@ -3120,7 +3219,7 @@ m3cg_declare_raises (void)
   gcc_assert (current_proc_type_id != NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
-    debug_struct (NO_UID /* current_proc_type_id not right yet */);
+    debug_struct ();
     current_proc_type_id = NO_UID;
   }
 }
@@ -3156,9 +3255,9 @@ m3cg_declare_object (void)
   current_dbg_type_count3 = 0;
   gcc_assert (current_record_type_id == NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
-    debug_struct (my_id);
+    set_typeid_to_tree (my_id, m3_build_pointer_type (debug_struct ()));
   else
-    current_record_type_id = my_id;
+    current_object_type_id = my_id;
 }
 
 static void
@@ -3174,11 +3273,12 @@ m3cg_declare_method (void)
                    current_dbg_type_count3++ * GET_MODE_BITSIZE (Pmode),
                    GET_MODE_BITSIZE (Pmode), name);
   current_dbg_type_count2--;
-  gcc_assert (current_record_type_id != NO_UID);
+  gcc_assert (current_record_type_id == NO_UID);
+  gcc_assert (current_object_type_id != NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
-    debug_struct (current_record_type_id);
-    current_record_type_id = NO_UID;
+    set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (debug_struct ()));
+    current_object_type_id = NO_UID;
   }
 }
 
@@ -3187,7 +3287,7 @@ m3cg_declare_opaque (void)
 {
   TYPEID (my_id);
   TYPEID (super_id);
-  
+
   if (option_trace_all)
     fprintf (stderr, "  declare_opaque id:0x%lX superid:0x%lX\n", my_id,
              super_id);
@@ -3195,7 +3295,18 @@ m3cg_declare_opaque (void)
   /* Opaque types are always pointers.
      It would be great if we could provide more type information here. */
 
-   set_typeid_to_tree(my_id, t_addr);
+#if 0
+  {
+    tree t = get_typeid_to_tree (my_id);
+    tree tsuper = get_typeid_to_tree (super_id);
+    if (tsuper)
+      set_typeid_to_tree_replace (my_id, tsuper, true);
+    else if (!t)
+      set_typeid_to_tree (my_id, t_addr);
+  }
+#else
+  set_typeid_to_tree(my_id, t_addr);
+#endif
 
   /* we don't pass this info to the debugger, only the revelation is interesting */
 }
@@ -3206,13 +3317,19 @@ m3cg_reveal_opaque (void)
   TYPEID (lhs);
   TYPEID (rhs);
 
+  tree tl = get_typeid_to_tree (lhs);
+  tree tr = get_typeid_to_tree (rhs);
+
   if (option_procs_trace)
     fprintf (stderr, "  typeid 0x%lX = typeid 0x%lX\n", lhs, rhs);
 
   debug_tag ('Q', lhs, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (rhs);
-  
-  set_typeid_to_tree (lhs, get_typeid_to_tree (rhs));
+
+  if (tr)
+    set_typeid_to_tree_replace (lhs, tr, true);
+  else if (!tl)
+    set_typeid_to_tree (lhs, t_addr);
 }
 
 static void
@@ -3222,11 +3339,13 @@ m3cg_declare_exception (void)
   TYPEID  (t);
   BOOLEAN (raise_proc);
   UNUSED_VAR     (base);
-  UNUSED_INTEGER (offset);
+  INTEGER (offset);
   
   if (option_trace_all)
     fprintf (stderr, "  declare_exception name:%s typeid:0x%lX raise_proc:%s\n",
              n, t, m3cg_boolstr (raise_proc));
+
+  gcc_assert (offset >= 0);
 
   /* nothing yet */
 }
@@ -3505,7 +3624,7 @@ m3cg_declare_param (void)
 
   if (option_procs_trace)
     fprintf (stderr, "  declare_param name:%s size:0x%lX align:0x%lX"
-            "type:%s typeid:0x%lX in_mem:%s uplev:%s v:%s\n", n, s, a,
+            " type:%s typeid:0x%lX in_mem:%s uplev:%s v:%s\n", n, s, a,
             m3cg_typestr (t), id, m3cg_boolstr (in_memory),
             m3cg_boolstr (up_level), IDENTIFIER_POINTER (DECL_NAME (v)));
 
