@@ -302,7 +302,7 @@ fmt_uid (unsigned long x, char *buf)
   buf[UID_SIZE] = 0;
   if (x == NO_UID) { strcpy (buf, "zzzzzz");  return; }
 
-  for (i = UID_SIZE-1; i >= 0; i--) {
+  for (i = UID_SIZE - 1; i >= 0; i--) {
     digit = (x % 62);
     x = (x / 62);
     if      (digit < 26) { buf[i] = 'A' + digit; }
@@ -416,7 +416,6 @@ static GTY (()) tree fault_handler;
 
 /* Miscellaneous. */
 static GTY (()) tree global_decls;
-static GTY (()) tree record_fields;
 static GTY (()) tree debug_fields;
 static GTY (()) tree current_block;
 static GTY (()) tree current_record_type;
@@ -669,7 +668,7 @@ m3_build_type_id (m3_type t, unsigned long s, unsigned long a,
 }
 
 static tree
-m3_build_type (m3_type t, int s, int a)
+m3_build_type (m3_type t, long s, long a)
 {
   return m3_build_type_id (t, s, a, NO_UID);
 }
@@ -1507,10 +1506,10 @@ static GTY (()) varray_type call_stack;
 #define BUFFER_SIZE 0x10000
 
 static unsigned char input_buffer[BUFFER_SIZE];
-static int  input_len;
-static int  input_cursor;
-static int  input_eof;
-static int  m3cg_lineno;
+static int input_len;
+static int input_cursor;
+static int input_eof;
+static int m3cg_lineno;
 
 /* Stream for reading from the input file.  */
 FILE *finput;
@@ -2018,44 +2017,32 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
   va_end (args);
 }
 
-static tree
+static void
 debug_field_name_type (const char *name, tree type)
 {
-  tree f = { 0 };
-  unsigned i = { 0 };
-  static tree* const fields[] = { &debug_fields, &record_fields };
-  tree name_node = get_identifier (name);
-  type = type ? type : t_int;  
-  for (i = 0; i < 2; ++i)
-  {
-    f = build_decl (FIELD_DECL, name_node, type);
-    if (i == 0)
-    {
-      DECL_FIELD_OFFSET (f) = size_zero_node;
-      DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
-    }
-    layout_decl (f, 1);
-    TREE_CHAIN (f) = *fields[i];
-    *fields[i] = f;
-  }
-  return f;
+  tree f = build_decl (FIELD_DECL, get_identifier (name), type = type ? type : t_int);
+  DECL_FIELD_OFFSET (f) = size_zero_node;
+  DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
+  layout_decl (f, 1);
+  TREE_CHAIN (f) = debug_fields;
+  debug_fields = f;
 }
 
-static tree
+static void
 debug_field_name (const char *name)
 {
-  return debug_field_name_type (name, t_int);
+  debug_field_name_type (name, t_int);
 }
 
-static tree
+static void
 debug_field_id (unsigned long id)
 {
   char buf [UID_SIZE+1];
   fmt_uid (id, buf);
-  return debug_field_name (buf);
+  debug_field_name (buf);
 }
 
-static tree
+static void
 debug_field_type_fmt_v (unsigned long id, tree type, const char* fmt,
                         va_list args)
 {
@@ -2069,71 +2056,48 @@ debug_field_type_fmt_v (unsigned long id, tree type, const char* fmt,
     name[sizeof(name) - 1] = 0;
     fatal_error ("identifier too long (in debug_field_fmt, %s)", name);
   }
-  return debug_field_name_type (name, type);
+  debug_field_name_type (name, type);
 }
 
-static tree
+static void
 debug_field_type_fmt (unsigned long id, tree type, const char* fmt, ...)
 {
   va_list args;
-  tree f = { 0 };
   va_start (args, fmt);
-  f = debug_field_type_fmt_v (id, type, fmt, args);
+  debug_field_type_fmt_v (id, type, fmt, args);
   va_end (args);
-  return f;
 }
 
-static tree
+static void
 debug_field_fmt (unsigned long id, const char* fmt, ...)
 {
   va_list args;
-  tree f = { 0 };
   va_start (args, fmt);
-  f = debug_field_type_fmt_v (id, t_int, fmt, args);
+  debug_field_type_fmt_v (id, t_int, fmt, args);
   va_end (args);
-  return f;
 }
 
-static tree
+static void
 debug_struct (void)
 {
   tree d = { 0 };
-  tree t = { 0 };
-  unsigned i = { 0 };
-  tree name = get_identifier (current_dbg_type_tag);
-  static tree* const fields[] = { &debug_fields, &record_fields };
+  tree t = make_node (RECORD_TYPE);
+  TYPE_FIELDS (t) = nreverse (debug_fields);
+  debug_fields = 0;
+  TYPE_NAME (t) = build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
+  TYPE_SIZE (t) = bitsize_one_node;
+  TYPE_SIZE_UNIT (t) = convert (sizetype,
+                                size_binop (FLOOR_DIV_EXPR,
+                                            TYPE_SIZE (t),
+                                            bitsize_int (BITS_PER_UNIT)));
+  TYPE_ALIGN (t) = BITS_PER_UNIT;
+  SET_TYPE_MODE (t, QImode);
 
-  for (i = 0; i < 2; ++i)
-  {
-    t = make_node (RECORD_TYPE);
-    if (option_trace_all && i)
-      fprintf (stderr, "  debug_struct(%s):%p\n", current_dbg_type_tag, t);
-    TYPE_FIELDS (t) = nreverse (*fields[i]);
-    *fields[i] = 0;
-    if (i == 0)
-    {
-      TYPE_NAME (t) = build_decl (TYPE_DECL, name, t);
-      TYPE_SIZE (t) = bitsize_one_node;
-      TYPE_SIZE_UNIT (t) = convert (sizetype,
-                                    size_binop (FLOOR_DIV_EXPR,
-                                                TYPE_SIZE (t),
-                                                bitsize_int (BITS_PER_UNIT)));
-      TYPE_ALIGN (t) = BITS_PER_UNIT;
-      SET_TYPE_MODE (t, QImode);
-
-      d = build_decl (TYPE_DECL, NULL_TREE, t);
-      TREE_CHAIN (d) = global_decls;
-      global_decls = d;
-      debug_hooks -> type_decl
-        ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
-    }
-    else
-    {
-      TYPE_NAME (t) = get_identifier (current_dbg_type_tag);
-      layout_type (t);
-    }
-  }
-  return t;
+  d = build_decl (TYPE_DECL, NULL_TREE, t);
+  TREE_CHAIN (d) = global_decls;
+  global_decls = d;
+  debug_hooks -> type_decl
+    ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
 }
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
@@ -2146,15 +2110,15 @@ static char *exported_interfaces_names [100];
 
 /*================================= SUPPORT FOR INITIALIZED DATA CREATION ===*/
 
-static int current_record_offset;
+static long current_record_offset;
 
-static void one_gap (int offset);
+static void one_gap (long offset);
 
 static void
-one_field (int offset, tree tipe, tree *f, tree *v)
+one_field (long offset, tree tipe, tree *f, tree *v)
 {
   if (option_vars_trace)
-      fprintf (stderr, "  one_field: offset:0x%x\n", offset);
+      fprintf (stderr, "  one_field: offset:0x%lx\n", offset);
 
   if (offset > current_record_offset)
       one_gap (offset);
@@ -2172,13 +2136,27 @@ one_field (int offset, tree tipe, tree *f, tree *v)
 }
 
 static void
-one_gap (int offset)
+m3_field (const char* name, tree tipe, long offset, long size)
+{
+#if 0
+  tree f = { 0 };
+  tree v = { 0 };
+  one_field (offset, tipe, &f, &v);
+  DECL_NAME (f) = get_identifier (name);
+  /* DECL_PACKED (f) = true; */
+  /* DECL_SIZE (f) = size; */
+  relayout_decl (f);
+#endif
+}
+
+static void
+one_gap (long offset)
 {
   tree f, v, tipe;
-  int gap = offset - current_record_offset;
+  long gap = offset - current_record_offset;
 
   if (option_vars_trace)
-      fprintf (stderr, "  one_gap: offset:0x%x, gap:0x%x\n", offset, gap);
+      fprintf (stderr, "  one_gap: offset:0x%lx gap:0x%lx\n", offset, gap);
 
   tipe = make_node (LANG_TYPE);
   TYPE_SIZE (tipe) = bitsize_int (gap);
@@ -2449,7 +2427,7 @@ m3_swap (void)
 }
 
 static void
-m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
            bool volatil)
 {
   if (o != 0 || TREE_TYPE (v) != src_t)
@@ -2480,14 +2458,14 @@ m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
 }
 
 static void
-m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_load (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   bool volatil = false;
   m3_load_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
 }
 
 static void ATTRIBUTE_UNUSED
-m3_load_volatile (tree v, int o, tree src_t, m3_type src_T,
+m3_load_volatile (tree v, long o, tree src_t, m3_type src_T,
                   tree dst_t, m3_type dst_T)
 {
   bool volatil = true;
@@ -2495,7 +2473,7 @@ m3_load_volatile (tree v, int o, tree src_t, m3_type src_T,
 }
 
 static void
-m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
             bool volatil)
 {
   tree val;
@@ -2530,14 +2508,14 @@ m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
 }
 
 static void
-m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_store (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   bool volatil = false;
   m3_store_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
 }
 
 static void
-m3_store_volatile (tree v, int o, tree src_t, m3_type src_T, tree dst_t,
+m3_store_volatile (tree v, long o, tree src_t, m3_type src_T, tree dst_t,
                    m3_type dst_T)
 {
   bool volatil = true;
@@ -2545,7 +2523,7 @@ m3_store_volatile (tree v, int o, tree src_t, m3_type src_T, tree dst_t,
 }
 
 static void
-setop (tree p, int n, int q)
+setop (tree p, long n, int q)
 {
   m3_start_call ();
   EXPR_PUSH (size_int (n));
@@ -2594,7 +2572,7 @@ static const char* mode_to_string (enum machine_mode mode)
 
 /*---------------------------------------------------------------- faults ---*/
 
-static int  fault_offs;                /*   + offset                */
+static int fault_offs;                /*   + offset                */
 
 static void
 declare_fault_proc (void)
@@ -2955,13 +2933,15 @@ m3cg_declare_packed (void)
 }
 
 static void
-m3cg_declare_record_common (void)
+m3_declare_record_common (void)
 {
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
-    tree t = debug_struct ();
-     if (current_object_type_id == NO_UID && current_record_type_id == NO_UID)
-        return;
+    tree t = current_record_type;
+    debug_struct ();
+    TYPE_FIELDS (t) = nreverse (TYPE_FIELDS (t));
+    layout_type (t);
+
     if (current_record_type_id != NO_UID)
     {
       unsigned long a = TREE_INT_CST_LOW (TYPE_SIZE (t));
@@ -2969,17 +2949,17 @@ m3cg_declare_record_common (void)
       set_typeid_to_tree (current_record_type_id, t);
       if (a != b)
       {
-        /* fprintf (stderr, "m3cg_declare_record_common backend:0x%lX vs. frontend:0x%lX\n", a, b); */
+        /* fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n", a, b); */
         /* gcc_assert (a == b); */
       }
     }
-    else
+    else if (current_object_type_id != NO_UID)
     {
       set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
     }
     current_record_type_id = NO_UID;
     current_object_type_id = NO_UID;
-    current_record_size = ~0;
+    current_record_size = 0;
   }
 }
 
@@ -2998,17 +2978,22 @@ m3cg_declare_record (void)
   debug_tag ('R', my_id, "_%ld", size);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = 0;
+
+  gcc_assert (current_record_type_id == NO_UID);
+  gcc_assert (current_object_type_id == NO_UID);
   current_record_size = size;
   current_record_type_id = my_id;
-  gcc_assert (current_object_type_id == NO_UID);
-  m3cg_declare_record_common ();
+  current_record_offset = 0;
+  current_record_vals = NULL_TREE;
+  current_record_type = make_node (RECORD_TYPE);
+
+  m3_declare_record_common ();
 }
 
 static void
 m3cg_declare_field (void)
 {
-  tree type;
-
+  tree t = { 0 };
   NAME      (name);
   BITOFFSET (offset);
   BITSIZE   (size);
@@ -3021,20 +3006,23 @@ m3cg_declare_field (void)
   gcc_assert (offset >= 0);
   gcc_assert (size >= 0);
 
-  type = get_typeid_to_tree (my_id);
+  t = get_typeid_to_tree (my_id);
 #if 0 /* This is frequently NULL. Why? */
-  if (type == 0)
+  if (t == 0)
   {
     fprintf (stderr, "id 0x%lX to type is null for field %s\n",
              my_id, name);
-    type = t_addr;
-    gcc_assert (type);
+    gcc_assert (t);
   }
+#else
+  t = t ? t : m3_build_type_id (T_struct, size, size, NO_UID);
 #endif
-
-  debug_field_type_fmt (my_id, type, "_%ld_%ld_%s", offset, size, name);
+  debug_field_type_fmt (my_id, t, "_%ld_%ld_%s", offset, size, name);
   current_dbg_type_count1--;
-  m3cg_declare_record_common ();
+
+  m3_field (name, t, offset, size);
+
+  m3_declare_record_common ();
 }
 
 static void
@@ -3300,11 +3288,17 @@ m3cg_declare_object (void)
   debug_field_id (super_id);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = n_methods;
-  current_record_size = field_size;
   current_dbg_type_count3 = 0;
+
   gcc_assert (current_record_type_id == NO_UID);
+  gcc_assert (current_object_type_id == NO_UID);
+  current_record_size = field_size;
   current_object_type_id = my_id;
-  m3cg_declare_record_common ();
+  current_record_offset = 0;
+  current_record_vals = NULL_TREE;
+  current_record_type = make_node (RECORD_TYPE);
+
+  m3_declare_record_common ();
 }
 
 static void
@@ -3320,9 +3314,11 @@ m3cg_declare_method (void)
                    current_dbg_type_count3++ * GET_MODE_BITSIZE (Pmode),
                    GET_MODE_BITSIZE (Pmode), name);
   current_dbg_type_count2--;
+
   gcc_assert (current_record_type_id == NO_UID);
   gcc_assert (current_object_type_id != NO_UID);
-  m3cg_declare_record_common ();
+
+  m3_declare_record_common ();
 }
 
 static void
@@ -5291,7 +5287,7 @@ m3cg_copy (void)
 
   tree pts = { 0 };
   tree ts = make_node (LANG_TYPE);
-  int s = n * TREE_INT_CST_LOW (TYPE_SIZE (t));
+  long s = n * TREE_INT_CST_LOW (TYPE_SIZE (t));
 
   gcc_assert (n >= 0);
   TYPE_SIZE (ts) = size_int (s);
@@ -5717,7 +5713,7 @@ m3cg_exchange (void)
   MTYPE2     (u, U);
   INTEGER    (order);
 
-  int size = { 0 };
+  long size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
   /* SYNCH_LOCK_TEST_AND_SET is an acquire barrier */
 
@@ -5754,7 +5750,7 @@ m3cg_compare_exchange (void)
   UNUSED_INTEGER (failure);
 
   tree v = { 0 };
-  int size = { 0 };
+  long size = { 0 };
   enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
@@ -5800,7 +5796,7 @@ m3cg_fetch_and_op (enum built_in_function fncode)
   MTYPE2         (u, U);
   UNUSED_INTEGER (order);
 
-  int size = { 0 };
+  long size = { 0 };
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
@@ -5837,7 +5833,7 @@ m3cg_lock_test_and_set (void)
 {
   MTYPE2     (t, T);
 
-  int size = { 0 };
+  long size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
@@ -5863,7 +5859,7 @@ m3cg_lock_release (void)
 {
   MTYPE2     (t, T);
 
-  int size = { 0 };
+  long size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_RELEASE_N;
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
