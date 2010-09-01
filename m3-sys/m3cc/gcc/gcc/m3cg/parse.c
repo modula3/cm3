@@ -2837,9 +2837,8 @@ m3cg_declare_array (void)
   BITSIZE (size);
 
   if (option_types_trace)
-    fprintf (stderr,
-             "  array id:0x%lX index_id:0x%lX elements_id:0x%lX size:0x%lX\n",
-             my_id, index_id, elts_id, size);
+    fprintf (stderr, "  declare_array id:0x%lX index_id:0x%lX elements_id:0x%lX"
+             " size:0x%lX\n", my_id, index_id, elts_id, size);
 
   debug_tag ('A', my_id, "_%ld", size);
   debug_field_id (index_id);
@@ -2855,9 +2854,8 @@ m3cg_declare_open_array (void)
   BITSIZE (size);
 
   if (option_types_trace)
-    fprintf (stderr,
-             "  open array id:0x%lX elements_id:0x%lX size:0x%lX\n",
-             my_id, elts_id, size);
+    fprintf (stderr, "  declare_open_array id:0x%lX elements_id:0x%lX"
+            " size:0x%lX\n", my_id, elts_id, size);
 
   debug_tag ('B', my_id, "_%ld", size);
   debug_field_id (elts_id);
@@ -2872,8 +2870,7 @@ m3cg_declare_enum (void)
   BITSIZE (size);
 
   if (option_types_trace)
-    fprintf (stderr,
-             "  enum id:0x%lX elements:0x%lX size:0x%lX\n",
+    fprintf (stderr, "  declare_enum id:0x%lX elements:0x%lX size:0x%lX\n",
              my_id, n_elts, size);
 
   debug_tag ('C', my_id, "_%ld", size);
@@ -2886,7 +2883,7 @@ m3cg_declare_enum_elt (void)
   NAME (n);
 
   if (option_types_trace)
-    fprintf (stderr, "  enum elem %s\n", n);
+    fprintf (stderr, "  declare_enum_elt elem %s\n", n);
 
   debug_field_name (n);
   if (--current_dbg_type_count1 == 0)
@@ -2901,8 +2898,7 @@ m3cg_declare_packed (void)
   TYPEID  (target_id);
 
   if (option_types_trace)
-    fprintf (stderr,
-             "  packed id:0x%lX target_id:0x%lX size:0x%lX\n",
+    fprintf (stderr, "  declare_packed id:0x%lX target_id:0x%lX size:0x%lX\n",
              my_id, target_id, size);
 
   debug_field_id (target_id);
@@ -2929,8 +2925,7 @@ m3cg_declare_record (void)
   INTEGER (n_fields);
 
   if (option_types_trace)
-    fprintf (stderr,
-             "  record id:0x%lX fields:0x%lX size:0x%lX\n",
+    fprintf (stderr, "  declare_record id:0x%lX fields:0x%lX size:0x%lX\n",
              my_id, n_fields, size);
 
   gcc_assert (n_fields >= 0);
@@ -2958,8 +2953,8 @@ m3cg_declare_field (void)
   TYPEID    (my_id);
 
   if (option_types_trace)
-    fprintf (stderr, "  field %s, id 0x%lX, size 0x%lX, offset 0x%lX\n",
-             name, my_id, size, offset);
+    fprintf (stderr, "  declare_field:%s size:0x%lX offset:0x%lX id:0x%lX\n",
+             name, size, offset, my_id);
 
   gcc_assert (offset >= 0);
   gcc_assert (size >= 0);
@@ -2994,6 +2989,10 @@ m3cg_declare_set (void)
   TYPEID  (my_id);
   TYPEID  (domain_id);
   BITSIZE (size);
+
+  if (option_trace_all)
+    fprintf (stderr, "  declare_set my_id:0x%lX domain_id:0x%lX size:0x%lX\n",
+             my_id, domain_id, size);
 
   gcc_assert (size >= 0);
   debug_tag ('S', my_id, "_%ld", size);
@@ -3105,14 +3104,13 @@ m3cg_declare_pointer (void)
 {
   TYPEID        (my_id);
   TYPEID        (target_id);
-  QUOTED_STRING (brand, brand_len);
+  QUOTED_STRING (brand, brand_length);
   BOOLEAN       (traced);
 
   if (option_types_trace) {
     const char * sbrand = brand ? brand : "null";
-    fprintf (stderr,
-             "  pointer id 0x%lX, target id 0x%lX, brand %s, traced 0x%x\n",
-             my_id, target_id, sbrand, traced);
+    fprintf (stderr, "  declare_pointer id:0x%lX targetid:0x%lX brand:%s"
+             " traced:%s\n", my_id, target_id, sbrand, boolstr (traced));
   }
 
   debug_tag ('Y', my_id, "_%d_%d_%d_%s", GET_MODE_BITSIZE (Pmode),
@@ -3133,7 +3131,7 @@ m3cg_declare_indirect (void)
   TYPEID (target_id);
 
   if (option_types_trace)
-    fprintf (stderr, "  indirect id 0x%lX, target_id 0x%lX\n", my_id, target_id);
+    fprintf (stderr, "  declare_indirect id:0x%lX target_id:0x%lX\n", my_id, target_id);
 
   debug_tag ('X', my_id, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (target_id);
@@ -3155,9 +3153,8 @@ m3cg_declare_proctype (void)
   UNUSED_CC (cc);
 
   if (option_types_trace)
-    fprintf (stderr,
-             "  proctype id 0x%lX, result id 0x%lX, formals 0x%lX, raises 0x%lX\n",
-             my_id, result_id, n_formals, n_raises);
+    fprintf (stderr, "  declare_proctype id:0x%lX n_formals:0x%lX result_id:0x%lX"
+             " n_raises:0x%lX\n", my_id, n_formals, result_id, n_raises);
 
   debug_tag ('P', my_id, "_%d_%c%ld", GET_MODE_BITSIZE (Pmode),
              n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
@@ -3178,7 +3175,7 @@ m3cg_declare_formal (void)
   TYPEID (my_id);
 
   if (option_types_trace)
-    fprintf (stderr, "  formal %s id 0x%lX\n", n, my_id);
+    fprintf (stderr, "  declare_formal name:%s id:0x%lX\n", n, my_id);
 
   debug_field_fmt (my_id, "_%s", n);
   current_dbg_type_count1--;
@@ -3196,7 +3193,7 @@ m3cg_declare_raises (void)
   NAME (n);
 
   if (option_types_trace)
-    fprintf (stderr, "  exception %s\n", n);
+    fprintf (stderr, "  declare_raises name:%s\n", n);
 
   debug_field_name (n);
   current_dbg_type_count2--;
@@ -3221,9 +3218,10 @@ m3cg_declare_object (void)
 
   if (option_types_trace) {
     const char * sbrand = brand ? brand : "null";
-    fprintf (stderr,
-             "  object id 0x%lX, super id 0x%lX, brand %s, traced 0x%x, fields 0x%lX, methods 0x%lX\n",
-             my_id, super_id, sbrand, traced, n_fields, n_methods);
+    fprintf (stderr, "  declare_object id:0x%lX superid:0x%lX brand:%s"
+             " brand_length:0x%lX traced:%s n_fields:0x%lX n_methods:0x%lX"
+             " field_size:0x%lX\n", my_id, super_id, sbrand, brand_length,
+             boolstr (traced), n_fields, n_methods, field_size);
   }
 
   gcc_assert (n_methods >= 0);
@@ -3254,7 +3252,7 @@ m3cg_declare_method (void)
   TYPEID (my_id);
 
   if (option_procs_trace)
-    fprintf (stderr, "  method %s typeid 0x%lX\n", name, my_id);
+    fprintf (stderr, "  declare_method name:%s typeid:0x%lX\n", name, my_id);
 
   debug_field_fmt (my_id, "_%d_%d_%s",
                    current_dbg_type_count3++ * GET_MODE_BITSIZE (Pmode),
@@ -3309,7 +3307,7 @@ m3cg_reveal_opaque (void)
   tree tr = get_typeid_to_tree (rhs);
 
   if (option_procs_trace)
-    fprintf (stderr, "  typeid 0x%lX = typeid 0x%lX\n", lhs, rhs);
+    fprintf (stderr, "  reveal_opaque left:0x%lX = right:0x%lX\n", lhs, rhs);
 
   debug_tag ('Q', lhs, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (rhs);
@@ -3384,8 +3382,9 @@ m3cg_import_global (void)
   DECL_NAME (v) = fix_name (n, id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  import var %s type:%s size:0x%lX align:0x%lX\n",
-             IDENTIFIER_POINTER (DECL_NAME (v)), typestr (t), s, a);
+    fprintf (stderr, "  import_global name:%s size:0x%lX align:0x%lX type:%s"
+             "typeid:0x%lx var:%s\n", n, s, a, typestr (t), id,
+             IDENTIFIER_POINTER (DECL_NAME (v)));
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3410,8 +3409,9 @@ m3cg_declare_segment (void)
   DECL_NAME (v) = fix_name (n, id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  segment %s typeid 0x%lX\n",
-             IDENTIFIER_POINTER (DECL_NAME (v)), id);
+    fprintf (stderr, "  declare_segment name:%s typeid:0x%lX is_const:%s"
+             " var:%s\n", n, id, boolstr (is_const),
+             IDENTIFIER_POINTER (DECL_NAME (v)));
 
   /* we really don't have an idea of what the type of this var is; let's try
      to put something that will be good enough for all the uses of this var we
@@ -3448,8 +3448,9 @@ m3cg_bind_segment (void)
   BOOLEAN   (initialized);
 
   if (option_vars_trace)
-    fprintf (stderr, "  bind segment %s type:%s size:0x%lX align:0x%lX\n",
-             IDENTIFIER_POINTER (DECL_NAME (v)), typestr (t), s, a);
+    fprintf (stderr, "  bind_segment var:%s size:0x%lX align:0x%lX type:%s"
+             "exported:%s initialized:%s\n", IDENTIFIER_POINTER (DECL_NAME (v)),
+             s, a, typestr (t), boolstr (exported), boolstr (initialized));
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3512,8 +3513,7 @@ m3cg_declare_constant (void)
   if (option_trace_all)
     fprintf (stderr, "  declare_constant name:%s size:0x%lX align:0x%lX"
             " type:%s typeid:0x%lX exported:%s initialized:%s\n", n, s, a,
-            typestr (t), id, boolstr (exported),
-            boolstr (initialized));
+            typestr (t), id, boolstr (exported), boolstr (initialized));
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
