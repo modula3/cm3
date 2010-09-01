@@ -166,7 +166,7 @@ static m3type_t*
 m3type_get (unsigned long id)
 {
   m3type_t* found = { 0 };
-#if 0
+#if 1
   m3type_t to_find;
   
   if (option_trace_all)
@@ -198,7 +198,7 @@ get_typeid_to_tree (unsigned long id)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 0
+#if 1
   m3type_t* found = m3type_get (id);
   tree t = found ? found->t : 0;
   if (id != NO_UID && option_trace_all)
@@ -258,7 +258,7 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 0
+#if 1
   m3type_t* found = { 0 };
   m3type_t to_add = { 0, 0 };
 
@@ -603,7 +603,7 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
   gcc_assert (signed_size >= 0);
   gcc_assert (signed_alignment >= 0);
   
-  id = NO_UID; /* disable */
+  /*id = NO_UID; */ /* disable */
 
   switch (t)
     {
@@ -1990,6 +1990,7 @@ static char* current_dbg_type_tag = current_dbg_type_tag_buf.buf;
 static unsigned long current_record_type_id = NO_UID;
 static unsigned long current_object_type_id = NO_UID;
 static unsigned long current_proc_type_id = NO_UID; /* not right yet */
+static unsigned long current_record_size;
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
@@ -2918,6 +2919,35 @@ m3cg_declare_packed (void)
 }
 
 static void
+m3cg_declare_record_common (void)
+{
+  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
+  {
+    tree t = debug_struct ();
+     if (current_object_type_id == NO_UID && current_record_type_id == NO_UID)
+        return;
+    /* replace the bogus values from debug_struct */
+    TYPE_SIZE (t) = NULL_TREE;
+    TYPE_SIZE_UNIT (t) = NULL_TREE;
+    TYPE_ALIGN (t) = 0;
+    TYPE_NAME (t) = get_identifier (current_dbg_type_tag);
+    layout_type (t);
+    if (current_record_type_id != NO_UID)
+    {
+      set_typeid_to_tree (current_record_type_id, t);
+      gcc_assert (TREE_INT_CST_LOW ( TYPE_SIZE (t)) == current_record_size);
+    }
+    else
+    {
+      set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
+    }
+    current_record_type_id = NO_UID;
+    current_object_type_id = NO_UID;
+    current_record_size = ~0;
+  }
+}
+
+static void
 m3cg_declare_record (void)
 {
   TYPEID  (my_id);
@@ -2932,14 +2962,10 @@ m3cg_declare_record (void)
   debug_tag ('R', my_id, "_%ld", size);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = 0;
-  gcc_assert (current_record_type_id == NO_UID);
-  if (current_dbg_type_count1 == 0)
-  {
-    tree t = debug_struct ();
-    set_typeid_to_tree (my_id, t);
-  }
-  else
-    current_record_type_id = my_id;
+  current_record_size = size;
+  current_record_type_id = my_id;
+  gcc_assert (current_object_type_id == NO_UID);
+  m3cg_declare_record_common ();
 }
 
 static void
@@ -2971,16 +2997,7 @@ m3cg_declare_field (void)
 
   debug_field_type_fmt (my_id, type, "_%ld_%ld_%s", offset, size, name);
   current_dbg_type_count1--;
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
-  {
-    tree t = debug_struct ();
-    if (current_record_type_id != NO_UID)
-      set_typeid_to_tree (current_record_type_id, t);
-    else
-      set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
-    current_record_type_id = NO_UID;
-    current_object_type_id = NO_UID;
-  }
+  m3cg_declare_record_common ();
 }
 
 static void
@@ -3234,15 +3251,11 @@ m3cg_declare_object (void)
   debug_field_id (super_id);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = n_methods;
+  current_record_size = field_size;
   current_dbg_type_count3 = 0;
   gcc_assert (current_record_type_id == NO_UID);
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
-  {
-    tree t = debug_struct ();
-    set_typeid_to_tree (my_id, m3_build_pointer_type (t));
-  }
-  else
-    current_object_type_id = my_id;
+  current_object_type_id = my_id;
+  m3cg_declare_record_common ();
 }
 
 static void
@@ -3260,12 +3273,7 @@ m3cg_declare_method (void)
   current_dbg_type_count2--;
   gcc_assert (current_record_type_id == NO_UID);
   gcc_assert (current_object_type_id != NO_UID);
-  if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
-  {
-    tree t = debug_struct ();
-    set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
-    current_object_type_id = NO_UID;
-  }
+  m3cg_declare_record_common ();
 }
 
 static void
