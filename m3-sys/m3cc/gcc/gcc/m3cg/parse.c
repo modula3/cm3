@@ -166,7 +166,7 @@ static m3type_t*
 m3type_get (unsigned long id)
 {
   m3type_t* found = { 0 };
-#if 1
+#if 0
   m3type_t to_find;
   
   if (option_trace_all)
@@ -198,7 +198,7 @@ get_typeid_to_tree (unsigned long id)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 1
+#if 0
   m3type_t* found = m3type_get (id);
   tree t = found ? found->t : 0;
   if (id != NO_UID && option_trace_all)
@@ -258,7 +258,7 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 1
+#if 0
   m3type_t* found = { 0 };
   m3type_t to_add = { 0, 0 };
 
@@ -416,6 +416,7 @@ static GTY (()) tree fault_handler;
 
 /* Miscellaneous. */
 static GTY (()) tree global_decls;
+static GTY (()) tree record_fields;
 static GTY (()) tree debug_fields;
 static GTY (()) tree current_block;
 static GTY (()) tree current_record_type;
@@ -592,18 +593,12 @@ m3_build_pointer_type (tree a)
 }
 
 static tree
-m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
+m3_build_type_id (m3_type t, unsigned long s, unsigned long a,
                   unsigned long id)
 {
-  typedef unsigned U;
   tree ts = { 0 };
-  U s = (U)signed_size;
-  U a = (U)signed_alignment;
   
-  gcc_assert (signed_size >= 0);
-  gcc_assert (signed_alignment >= 0);
-  
-  /*id = NO_UID; */ /* disable */
+  id = NO_UID; /* disable */
 
   switch (t)
     {
@@ -2023,35 +2018,44 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
   va_end (args);
 }
 
-static void
+static tree
 debug_field_name_type (const char *name, tree type)
 {
-  tree f = build_decl (FIELD_DECL, get_identifier (name), type ? type : t_int);
-
-  DECL_FIELD_OFFSET (f) = size_zero_node;
-  DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
-
-  layout_decl (f, 1);
-
-  TREE_CHAIN (f) = debug_fields;
-  debug_fields = f;
+  tree f = { 0 };
+  unsigned i = { 0 };
+  static tree* const fields[] = { &debug_fields, &record_fields };
+  tree name_node = get_identifier (name);
+  type = type ? type : t_int;  
+  for (i = 0; i < 2; ++i)
+  {
+    f = build_decl (FIELD_DECL, name_node, type);
+    if (i == 0)
+    {
+      DECL_FIELD_OFFSET (f) = size_zero_node;
+      DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
+    }
+    layout_decl (f, 1);
+    TREE_CHAIN (f) = *fields[i];
+    *fields[i] = f;
+  }
+  return f;
 }
 
-static void
+static tree
 debug_field_name (const char *name)
 {
-  debug_field_name_type (name, t_int);
+  return debug_field_name_type (name, t_int);
 }
 
-static void
+static tree
 debug_field_id (unsigned long id)
 {
   char buf [UID_SIZE+1];
   fmt_uid (id, buf);
-  debug_field_name (buf);
+  return debug_field_name (buf);
 }
 
-static void
+static tree
 debug_field_type_fmt_v (unsigned long id, tree type, const char* fmt,
                         va_list args)
 {
@@ -2065,51 +2069,70 @@ debug_field_type_fmt_v (unsigned long id, tree type, const char* fmt,
     name[sizeof(name) - 1] = 0;
     fatal_error ("identifier too long (in debug_field_fmt, %s)", name);
   }
-  debug_field_name_type (name, type);
+  return debug_field_name_type (name, type);
 }
 
-static void
+static tree
 debug_field_type_fmt (unsigned long id, tree type, const char* fmt, ...)
 {
   va_list args;
+  tree f = { 0 };
   va_start (args, fmt);
-  debug_field_type_fmt_v (id, type, fmt, args);
+  f = debug_field_type_fmt_v (id, type, fmt, args);
   va_end (args);
+  return f;
 }
 
-static void
+static tree
 debug_field_fmt (unsigned long id, const char* fmt, ...)
 {
   va_list args;
+  tree f = { 0 };
   va_start (args, fmt);
-  debug_field_type_fmt_v (id, t_int, fmt, args);
+  f = debug_field_type_fmt_v (id, t_int, fmt, args);
   va_end (args);
+  return f;
 }
 
 static tree
 debug_struct (void)
 {
   tree d = { 0 };
-  tree t = make_node (RECORD_TYPE);
-  if (option_trace_all)
-    fprintf (stderr, "  debug_struct(%s):%p\n", current_dbg_type_tag, t);
-  TYPE_NAME (t) =
-    build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
-  TYPE_FIELDS (t) = nreverse (debug_fields);
-  debug_fields = 0;
-  TYPE_SIZE (t) = bitsize_one_node;
-  TYPE_SIZE_UNIT (t) = convert (sizetype,
-                                size_binop (FLOOR_DIV_EXPR,
-                                            TYPE_SIZE (t),
-                                            bitsize_int (BITS_PER_UNIT)));
-  TYPE_ALIGN (t) = BITS_PER_UNIT;
-  SET_TYPE_MODE (t, QImode);
+  tree t = { 0 };
+  unsigned i = { 0 };
+  tree name = get_identifier (current_dbg_type_tag);
+  static tree* const fields[] = { &debug_fields, &record_fields };
 
-  d = build_decl (TYPE_DECL, NULL_TREE, t);
-  TREE_CHAIN (d) = global_decls;
-  global_decls = d;
-  debug_hooks -> type_decl
-    ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
+  for (i = 0; i < 2; ++i)
+  {
+    t = make_node (RECORD_TYPE);
+    if (option_trace_all && i)
+      fprintf (stderr, "  debug_struct(%s):%p\n", current_dbg_type_tag, t);
+    TYPE_FIELDS (t) = nreverse (*fields[i]);
+    *fields[i] = 0;
+    if (i == 0)
+    {
+      TYPE_NAME (t) = build_decl (TYPE_DECL, name, t);
+      TYPE_SIZE (t) = bitsize_one_node;
+      TYPE_SIZE_UNIT (t) = convert (sizetype,
+                                    size_binop (FLOOR_DIV_EXPR,
+                                                TYPE_SIZE (t),
+                                                bitsize_int (BITS_PER_UNIT)));
+      TYPE_ALIGN (t) = BITS_PER_UNIT;
+      SET_TYPE_MODE (t, QImode);
+
+      d = build_decl (TYPE_DECL, NULL_TREE, t);
+      TREE_CHAIN (d) = global_decls;
+      global_decls = d;
+      debug_hooks -> type_decl
+        ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ );
+    }
+    else
+    {
+      TYPE_NAME (t) = get_identifier (current_dbg_type_tag);
+      layout_type (t);
+    }
+  }
   return t;
 }
 
@@ -2845,6 +2868,10 @@ m3cg_declare_array (void)
   debug_field_id (index_id);
   debug_field_id (elts_id);
   debug_struct ();
+  
+  /* gcc_assert (get_typeid_to_tree (index_id)); */
+  /* gcc_assert (get_typeid_to_tree (elts_id)); */
+  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 0, NO_UID));
 }
 
 static void
@@ -2861,6 +2888,9 @@ m3cg_declare_open_array (void)
   debug_tag ('B', my_id, "_%ld", size);
   debug_field_id (elts_id);
   debug_struct ();
+
+  /* gcc_assert (get_typeid_to_tree (elts_id)); */
+  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 0, NO_UID));
 }
 
 static void
@@ -2876,6 +2906,12 @@ m3cg_declare_enum (void)
 
   debug_tag ('C', my_id, "_%ld", size);
   current_dbg_type_count1 = n_elts;
+
+  {
+    tree t = m3_build_type_id (T_int, size, size, NO_UID);
+    gcc_assert (t);
+    set_typeid_to_tree (my_id, t);
+  }
 }
 
 static void
@@ -2926,16 +2962,16 @@ m3cg_declare_record_common (void)
     tree t = debug_struct ();
      if (current_object_type_id == NO_UID && current_record_type_id == NO_UID)
         return;
-    /* replace the bogus values from debug_struct */
-    TYPE_SIZE (t) = NULL_TREE;
-    TYPE_SIZE_UNIT (t) = NULL_TREE;
-    TYPE_ALIGN (t) = 0;
-    TYPE_NAME (t) = get_identifier (current_dbg_type_tag);
-    layout_type (t);
     if (current_record_type_id != NO_UID)
     {
+      unsigned long a = TREE_INT_CST_LOW (TYPE_SIZE (t));
+      unsigned long b = current_record_size;
       set_typeid_to_tree (current_record_type_id, t);
-      /* gcc_assert (TREE_INT_CST_LOW ( TYPE_SIZE (t)) == current_record_size); */
+      if (a != b)
+      {
+        /* fprintf (stderr, "m3cg_declare_record_common backend:0x%lX vs. frontend:0x%lX\n", a, b); */
+        /* gcc_assert (a == b); */
+      }
     }
     else
     {
@@ -2991,6 +3027,7 @@ m3cg_declare_field (void)
   {
     fprintf (stderr, "id 0x%lX to type is null for field %s\n",
              my_id, name);
+    type = t_addr;
     gcc_assert (type);
   }
 #endif
@@ -3034,7 +3071,7 @@ static void
 m3cg_fill_word_in_hex 
 ( HOST_WIDE_INT i, char **var_p, char *p_limit, int *var_leading)
 { 
-  int digit; 
+  int digit = { 0 }; 
   int shift_ct = HOST_BITS_PER_WIDE_INT - 4; 
 
   while (shift_ct >= 0) 
@@ -3101,7 +3138,6 @@ m3cg_declare_subrange (void)
              ", size 0x%lX\n",
              my_id, domain_id, a0, a1, b0, b1, size);
 
-  set_typeid_to_tree (my_id, get_typeid_to_tree (domain_id));
   m3cg_append_char ('_', &p, p_limit); 
   m3cg_append_char ('%', &p, p_limit); 
   m3cg_append_char ('d', &p, p_limit); 
@@ -3114,6 +3150,16 @@ m3cg_declare_subrange (void)
 
   debug_field_id (domain_id);
   debug_struct ();
+
+  {
+    /*
+      signed or unsigned?
+      tree t = m3_build_type_id (T_int, size, size, NO_UID);
+    */
+    tree t = get_typeid_to_tree (domain_id);
+    /* gcc_assert (t); */
+    set_typeid_to_tree (my_id, t);
+  }
 }
 
 static void
@@ -3138,6 +3184,8 @@ m3cg_declare_pointer (void)
     tree t = get_typeid_to_tree (target_id);
     if (t)
       set_typeid_to_tree (my_id, m3_build_pointer_type (t));
+    else
+      set_typeid_to_tree (my_id, t_addr);
   }
 }
 
@@ -3173,6 +3221,7 @@ m3cg_declare_proctype (void)
     fprintf (stderr, "  declare_proctype id:0x%lX n_formals:0x%lX result_id:0x%lX"
              " n_raises:0x%lX\n", my_id, n_formals, result_id, n_raises);
 
+  set_typeid_to_tree (my_id, t_addr);
   debug_tag ('P', my_id, "_%d_%c%ld", GET_MODE_BITSIZE (Pmode),
              n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
   current_dbg_type_count1 = n_formals;
