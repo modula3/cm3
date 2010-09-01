@@ -22,7 +22,7 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-static const int M3_TYPES = 1;
+static const int M3_TYPES = 0;
 static const int M3_TYPES_STRICT = 0;
 
 #include <stdlib.h>
@@ -2961,7 +2961,8 @@ m3_declare_record_common (void)
       if (M3_TYPES_STRICT && a != b)
       {
         fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n", a, b);
-        gcc_assert (a == b);
+        if (M3_TYPES_STRICT > 1)
+          gcc_assert (a == b);
       }
     }
     else if (current_object_type_id != NO_UID)
@@ -3022,6 +3023,8 @@ m3cg_declare_field (void)
   {
     fprintf (stderr, "id 0x%lX to type is null for field %s\n",
              my_id, name);
+    if (M3_TYPES_STRICT == 1)
+      t = t_addr;
     gcc_assert (t);
   }
   else
