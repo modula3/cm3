@@ -657,9 +657,6 @@ m3_build_type_id (m3_type t, int signed_size, int signed_alignment,
       if (!ts)
       {
         ts = make_node (RECORD_TYPE);
-        /* all records in memory, not passed in registers
-        TREE_ADDRESSABLE (ts) = true;
-        */
         TYPE_NAME (ts) = NULL_TREE;
         TYPE_FIELDS (ts) = NULL_TREE;
       }
@@ -2944,9 +2941,6 @@ m3cg_declare_record (void)
   if (current_dbg_type_count1 == 0)
   {
     tree t = debug_struct ();
-    /* all records in memory, not passed in registers
-    TREE_ADDRESSABLE (t) = true;
-    */
     set_typeid_to_tree (my_id, t);
   }
   else
@@ -2985,9 +2979,6 @@ m3cg_declare_field (void)
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
     tree t = debug_struct ();
-    /* all records in memory, not passed in registers
-    TREE_ADDRESSABLE (t) = true;
-    */
     if (current_record_type_id != NO_UID)
       set_typeid_to_tree (current_record_type_id, t);
     else
@@ -3250,9 +3241,6 @@ m3cg_declare_object (void)
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
     tree t = debug_struct ();
-    /* all records in memory, not passed in registers
-    TREE_ADDRESSABLE (t) = true;
-    */
     set_typeid_to_tree (my_id, m3_build_pointer_type (t));
   }
   else
@@ -3277,9 +3265,6 @@ m3cg_declare_method (void)
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
   {
     tree t = debug_struct ();
-    /* all records in memory, not passed in registers
-    TREE_ADDRESSABLE (t) = true;
-    */
     set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
     current_object_type_id = NO_UID;
   }
@@ -5580,9 +5565,6 @@ m3cg_pop_struct (void)
 
   EXPR_REF (-1) = m3_build1 (INDIRECT_REF, t,
                              m3_cast (m3_build_pointer_type (t), EXPR_REF (-1)));
-  /* all records in memory, not passed in registers
-  TREE_ADDRESSABLE (EXPR_REF (-1)) = true;
-  */
   m3_pop_param (t);
 }
 
