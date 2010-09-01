@@ -22,7 +22,8 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-int M3_TYPES = 0;
+static const int M3_TYPES = 1;
+static const int M3_TYPES_STRICT = 0;
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -2948,6 +2949,7 @@ m3_declare_record_common (void)
   {
     tree t = current_record_type;
     debug_struct ();
+
     TYPE_FIELDS (t) = nreverse (TYPE_FIELDS (t));
     layout_type (t);
 
@@ -2956,10 +2958,10 @@ m3_declare_record_common (void)
       unsigned long a = TREE_INT_CST_LOW (TYPE_SIZE (t));
       unsigned long b = current_record_size;
       set_typeid_to_tree (current_record_type_id, t);
-      if (a != b)
+      if (M3_TYPES_STRICT && a != b)
       {
-        /* fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n", a, b); */
-        /* gcc_assert (a == b); */
+        fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n", a, b);
+        gcc_assert (a == b);
       }
     }
     else if (current_object_type_id != NO_UID)
@@ -3016,16 +3018,16 @@ m3cg_declare_field (void)
   gcc_assert (size >= 0);
 
   t = get_typeid_to_tree (my_id);
-#if 0 /* This is frequently NULL. Why? */
-  if (t == 0)
+  if (M3_TYPES_STRICT && t == 0) /* This is frequently NULL. Why? */
   {
     fprintf (stderr, "id 0x%lX to type is null for field %s\n",
              my_id, name);
     gcc_assert (t);
   }
-#else
-  t = t ? t : m3_build_type_id (T_struct, size, size, NO_UID);
-#endif
+  else
+  {
+    t = t ? t : m3_build_type_id (T_struct, size, size, NO_UID);
+  }
   debug_field_type_fmt (my_id, t, "_%ld_%ld_%s", offset, size, name);
   current_dbg_type_count1--;
 
