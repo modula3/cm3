@@ -22,6 +22,8 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
+int M3_TYPES = 0;
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -166,29 +168,30 @@ static m3type_t*
 m3type_get (unsigned long id)
 {
   m3type_t* found = { 0 };
-#if 0
-  m3type_t to_find;
-  
-  if (option_trace_all)
-    fprintf (stderr, "  m3type_get(0x%lX)\n", id);
-  
-  if (!m3type_table || id == NO_UID)
-    return 0;
-  if (m3type_table_dirty)
+  if (M3_TYPES)
   {
-     qsort (VEC_address (m3type_t, m3type_table),
-            VEC_length (m3type_t, m3type_table),
-            sizeof(m3type_t),
-            m3type_compare);
-    m3type_table_dirty = false;
+    m3type_t to_find;
+  
+    if (option_trace_all)
+      fprintf (stderr, "  m3type_get(0x%lX)\n", id);
+  
+    if (!m3type_table || id == NO_UID)
+      return 0;
+    if (m3type_table_dirty)
+    {
+       qsort (VEC_address (m3type_t, m3type_table),
+              VEC_length (m3type_t, m3type_table),
+              sizeof(m3type_t),
+              m3type_compare);
+      m3type_table_dirty = false;
+    }
+    to_find.id = id;
+    found = (m3type_t*)bsearch (&to_find,
+                                VEC_address (m3type_t, m3type_table),
+                                VEC_length (m3type_t, m3type_table),
+                                sizeof(m3type_t),
+                                m3type_compare);
   }
-  to_find.id = id;
-  found = (m3type_t*)bsearch (&to_find,
-                              VEC_address (m3type_t, m3type_table),
-                              VEC_length (m3type_t, m3type_table),
-                              sizeof(m3type_t),
-                              m3type_compare);
-#endif
   return found;
 }
 
@@ -198,15 +201,15 @@ get_typeid_to_tree (unsigned long id)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 0
-  m3type_t* found = m3type_get (id);
-  tree t = found ? found->t : 0;
-  if (id != NO_UID && option_trace_all)
-    fprintf (stderr, "  get_typeid_to_tree(0x%lX):%p\n", id, t);
-  return t;
-#else
+  if (M3_TYPES)
+  {
+    m3type_t* found = m3type_get (id);
+    tree t = found ? found->t : 0;
+    if (id != NO_UID && option_trace_all)
+      fprintf (stderr, "  get_typeid_to_tree(0x%lX):%p\n", id, t);
+    return t;
+  }
   return 0;
-#endif
 }
 
 #if 0
@@ -258,30 +261,31 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
 */
-#if 0
-  m3type_t* found = { 0 };
-  m3type_t to_add = { 0, 0 };
-
-  if (option_trace_all)
-    fprintf (stderr, "  set_typeid_to_tree(0x%lX, %p)\n", id, t);
-
-  if (id == NO_UID || !t)
-    return;
-
-  found = m3type_get (id);
-  if (found)
+  if (M3_TYPES)
   {
-    if (replace)
-      found->t = t;
-    return;
+    m3type_t* found = { 0 };
+    m3type_t to_add = { 0, 0 };
+
+    if (option_trace_all)
+      fprintf (stderr, "  set_typeid_to_tree(0x%lX, %p)\n", id, t);
+
+    if (id == NO_UID || !t)
+      return;
+
+    found = m3type_get (id);
+    if (found)
+    {
+      if (replace)
+        found->t = t;
+      return;
+    }
+    to_add.id = id;
+    to_add.t = t;
+    if (!m3type_table)
+      m3type_table = VEC_alloc (m3type_t, gc, 100);
+    VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
+    m3type_table_dirty = true;
   }
-  to_add.id = id;
-  to_add.t = t;
-  if (!m3type_table)
-    m3type_table = VEC_alloc (m3type_t, gc, 100);
-  VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
-  m3type_table_dirty = true;
-#endif
 }
 
 static void
@@ -597,7 +601,8 @@ m3_build_type_id (m3_type t, unsigned long s, unsigned long a,
 {
   tree ts = { 0 };
   
-  id = NO_UID; /* disable */
+  if (!M3_TYPES)
+    id = NO_UID; /* disable */
 
   switch (t)
     {
@@ -2138,21 +2143,25 @@ one_field (long offset, tree tipe, tree *f, tree *v)
 static void
 m3_field (const char* name, tree tipe, long offset, long size)
 {
-#if 0
-  tree f = { 0 };
-  tree v = { 0 };
-  one_field (offset, tipe, &f, &v);
-  DECL_NAME (f) = get_identifier (name);
-  /* DECL_PACKED (f) = true; */
-  /* DECL_SIZE (f) = size; */
-  relayout_decl (f);
-#endif
+  if (M3_TYPES)
+  {
+    tree f = { 0 };
+    tree v = { 0 };
+    one_field (offset, tipe, &f, &v);
+    DECL_NAME (f) = get_identifier (name);
+    /* DECL_PACKED (f) = true; */
+    DECL_SIZE (f) = bitsize_int (size);
+    DECL_SIZE_UNIT (f) = size_int (size / BITS_PER_UNIT);
+    relayout_decl (f);
+  }
 }
 
 static void
 one_gap (long offset)
 {
-  tree f, v, tipe;
+  tree f = { 0 };
+  tree v = { 0 };
+  tree tipe = { 0 };
   long gap = offset - current_record_offset;
 
   if (option_vars_trace)
@@ -2293,7 +2302,7 @@ m3_call_indirect (tree t, tree cc ATTRIBUTE_UNUSED)
   tree argtypes = chainon (CALL_TOP_TYPE (),
                            tree_cons (NULL_TREE, t_void, NULL_TREE));
   tree fntype = m3_build_pointer_type (build_function_type (t, argtypes));
-  tree call;
+  tree call = { 0 };
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
 
@@ -2399,7 +2408,7 @@ m3_call_indirect (tree t, tree cc)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (), void_list_node);
   tree fntype = m3_build_pointer_type (build_function_type (t, argtypes));
-  tree call;
+  tree call = { 0 };
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
 
@@ -2624,7 +2633,7 @@ declare_fault_proc (void)
 static void
 m3_gimplify_function (tree fndecl)
 {
-  struct cgraph_node *cgn;
+  struct cgraph_node *cgn = { 0 };
 
   dump_function (TDI_original, fndecl);
   gimplify_function_tree (fndecl);
