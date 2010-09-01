@@ -340,18 +340,18 @@ typedef enum
 }
 m3_type;
 
-#define m3cg_boolstr(a) ((a) ? "true" : "false")
+#define boolstr(a) ((a) ? "true" : "false")
 
-static const char* m3cg_typestr (unsigned a)
+static const char* typestr (unsigned a)
 {
-    static const char m3cg_typestrs[][9] =
+    static const char typestrs[][9] =
     { "word8",      "int8",     "word16",   "int16",
       "word32",     "int32",    "word64",   "int64",
       "real",       "lreal",    "xreal",    "addr",
       "struct",     "void",     "word",     "int",
       "longword",   "longint"
     };
-    return (a < COUNT_OF (m3cg_typestrs) ? m3cg_typestrs[a] : "invalid");
+    return (a < COUNT_OF (typestrs) ? typestrs[a] : "invalid");
 }
 
 /* In gcc, "word" means roughly "register".
@@ -1671,7 +1671,7 @@ scan_type (void)
     fatal_error (" *** illegal type: 0x%lX, at m3cg_lineno %d", i, m3cg_lineno);
 
   if (option_trace_all)
-    fprintf (stderr, "  type:%s\n", m3cg_typestr (i));
+    fprintf (stderr, "  type:%s\n", typestr (i));
 
   return (m3_type) i;
 }
@@ -3346,7 +3346,7 @@ m3cg_declare_exception (void)
   
   if (option_trace_all)
     fprintf (stderr, "  declare_exception name:%s typeid:0x%lX raise_proc:%s\n",
-             n, t, m3cg_boolstr (raise_proc));
+             n, t, boolstr (raise_proc));
 
   gcc_assert (offset >= 0);
 
@@ -3400,7 +3400,7 @@ m3cg_import_global (void)
 
   if (option_vars_trace)
     fprintf (stderr, "  import var %s type:%s size:0x%lX align:0x%lX\n",
-             IDENTIFIER_POINTER (DECL_NAME (v)), m3cg_typestr (t), s, a);
+             IDENTIFIER_POINTER (DECL_NAME (v)), typestr (t), s, a);
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3464,7 +3464,7 @@ m3cg_bind_segment (void)
 
   if (option_vars_trace)
     fprintf (stderr, "  bind segment %s type:%s size:0x%lX align:0x%lX\n",
-             IDENTIFIER_POINTER (DECL_NAME (v)), m3cg_typestr (t), s, a);
+             IDENTIFIER_POINTER (DECL_NAME (v)), typestr (t), s, a);
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3496,8 +3496,8 @@ m3cg_declare_global (void)
   if (option_vars_trace)
     fprintf (stderr, "  declare_global name:%s size:0x%lX align:0x%lX type:%s"
              " typeid:0x%lX exported:%s initialized:%s\n",
-             IDENTIFIER_POINTER (DECL_NAME (v)), s, a, m3cg_typestr (t), id,
-             m3cg_boolstr (exported), m3cg_boolstr (initialized));
+             IDENTIFIER_POINTER (DECL_NAME (v)), s, a, typestr (t), id,
+             boolstr (exported), boolstr (initialized));
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3527,8 +3527,8 @@ m3cg_declare_constant (void)
   if (option_trace_all)
     fprintf (stderr, "  declare_constant name:%s size:0x%lX align:0x%lX"
             " type:%s typeid:0x%lX exported:%s initialized:%s\n", n, s, a,
-            m3cg_typestr (t), id, m3cg_boolstr (exported),
-            m3cg_boolstr (initialized));
+            typestr (t), id, boolstr (exported),
+            boolstr (initialized));
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3563,8 +3563,8 @@ m3cg_declare_local (void)
   if (option_vars_trace)
     fprintf (stderr, "  declare_local name:%s size:0x%lX align:0x%lX"
             " type:%s typeid:0x%lX in_mem:%s uplev:%s\n",
-            IDENTIFIER_POINTER (DECL_NAME (v)), s, a, m3cg_typestr (t), id,
-            m3cg_boolstr (in_memory), m3cg_boolstr (up_level));
+            IDENTIFIER_POINTER (DECL_NAME (v)), s, a, typestr (t), id,
+            boolstr (in_memory), boolstr (up_level));
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3628,8 +3628,8 @@ m3cg_declare_param (void)
   if (option_procs_trace)
     fprintf (stderr, "  declare_param name:%s size:0x%lX align:0x%lX"
             " type:%s typeid:0x%lX in_mem:%s uplev:%s v:%s\n", n, s, a,
-            m3cg_typestr (t), id, m3cg_boolstr (in_memory),
-            m3cg_boolstr (up_level), IDENTIFIER_POINTER (DECL_NAME (v)));
+            typestr (t), id, boolstr (in_memory),
+            boolstr (up_level), IDENTIFIER_POINTER (DECL_NAME (v)));
 
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3680,7 +3680,7 @@ m3cg_declare_temp (void)
 
   if (option_vars_trace)
     fprintf (stderr, "  declare_temp size:0x%lX align:0x%lX type:%s in_mem:%s\n",
-             s, a, m3cg_typestr (t), m3cg_boolstr (in_memory));
+             s, a, typestr (t), boolstr (in_memory));
  
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
@@ -3875,7 +3875,7 @@ m3cg_import_procedure (void)
 
   if (option_procs_trace)
     fprintf (stderr, "  procedure:%s nparams:0x%lX rettype:%s\n", n, n_params,
-             m3cg_typestr (ret_type));
+             typestr (ret_type));
 
 #if M3CG_ADAPT_RETURN_TYPE
   /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
@@ -3928,7 +3928,7 @@ m3cg_declare_procedure (void)
 
   if (option_trace_all)
     fprintf (stderr, "  declare_procedure name:%s n_params:0x%lX lev:0x%lX"
-            " exported:%s\n", n, n_params, lev, m3cg_boolstr (exported));
+            " exported:%s\n", n, n_params, lev, boolstr (exported));
 
   /* Level must be positive and nested functions are never exported. */
   gcc_assert (lev >= 0);
@@ -4301,7 +4301,7 @@ m3cg_load (void)
       name = IDENTIFIER_POINTER (DECL_NAME (v));
     }
     fprintf (stderr, "  m3cg_load (%s): offset 0x%lX, convert %s -> %s\n", name,
-             o, m3cg_typestr (src_T), m3cg_typestr (dst_T));
+             o, typestr (src_T), typestr (dst_T));
   }
   m3_load (v, o, src_t, src_T, dst_t, dst_T);
 }
@@ -4338,7 +4338,7 @@ m3cg_load_indirect (void)
 
   if (option_vars_trace)
     fprintf (stderr, "  load address offset:0x%lX src_t:%s dst_t:%s\n",
-             o, m3cg_typestr (src_T), m3cg_typestr (dst_T));
+             o, typestr (src_T), typestr (dst_T));
 
   v = EXPR_REF (-1);
   if (o != 0) {
@@ -4366,7 +4366,7 @@ m3cg_store (void)
       name = IDENTIFIER_POINTER (DECL_NAME (v));
     }
     fprintf (stderr, "  store (%s) offset:0x%lX src_t:%s dst_t:%s\n",
-             name, o, m3cg_typestr (src_T), m3cg_typestr (dst_T));
+             name, o, typestr (src_T), typestr (dst_T));
   }
   m3_store (v, o, src_t, src_T, dst_t, dst_T);
 }
@@ -4382,7 +4382,7 @@ m3cg_store_indirect (void)
 
   if (option_vars_trace)
     fprintf (stderr, "  store indirect offset:0x%lX src_t:%s dst_t:%s\n",
-             o, m3cg_typestr (src_T), m3cg_typestr (dst_T));
+             o, typestr (src_T), typestr (dst_T));
 
   v = EXPR_REF (-2);
   if (o != 0) {
@@ -5039,7 +5039,7 @@ m3cg_extract (void)
   BOOLEAN (sign_extend);
 
   if (option_trace_all)
-    fprintf (stderr, " extract sign_extend:%s\n", m3cg_boolstr (sign_extend));
+    fprintf (stderr, " extract sign_extend:%s\n", boolstr (sign_extend));
 
   gcc_assert (INTEGRAL_TYPE_P (t));
 
@@ -5058,7 +5058,7 @@ m3cg_extract_n (void)
 
   if (option_trace_all)
     fprintf (stderr, " extract_n count:0x%lX sign_extend:%s\n", n,
-             m3cg_boolstr (sign_extend));
+             boolstr (sign_extend));
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (n >= 0);
@@ -5117,7 +5117,7 @@ m3cg_extract_mn (void)
 
   if (option_trace_all)
     fprintf (stderr, " extract_mn offset:0x%lX count:0x%lX sign_extend:%s\n",
-             m, n, m3cg_boolstr (sign_extend));
+             m, n, boolstr (sign_extend));
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
@@ -5359,7 +5359,7 @@ m3cg_check_lo (void)
   a = convert (t, a);
 
   if (option_exprs_trace)
-    fprintf (stderr, "  check low type:%s code:0x%lX\n", m3cg_typestr (T), code);
+    fprintf (stderr, "  check low type:%s code:0x%lX\n", typestr (T), code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5384,7 +5384,7 @@ m3cg_check_hi (void)
   a = convert (t, a);
 
   if (option_exprs_trace)
-    fprintf (stderr, "  check high type:%s code:0x%lX\n", m3cg_typestr (T), code);
+    fprintf (stderr, "  check high type:%s code:0x%lX\n", typestr (T), code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5411,7 +5411,7 @@ m3cg_check_range (void)
   b = convert (t, b);
 
   if (option_exprs_trace)
-    fprintf (stderr, "  check range type:%s code:0x%lX\n", m3cg_typestr (T), code);
+    fprintf (stderr, "  check range type:%s code:0x%lX\n", typestr (T), code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5487,7 +5487,7 @@ m3cg_index_address (void)
 
   if (option_vars_trace)
     fprintf (stderr, "  index address n_bytes:0x%lX type:%s\n",
-             bytes, m3cg_typestr (T));
+             bytes, typestr (T));
 
   signd = IS_INTEGER_TYPE_TREE (t);
   gcc_assert (signd || IS_WORD_TYPE_TREE (t));
@@ -5509,7 +5509,7 @@ m3cg_start_call_direct (void)
 
   if (option_procs_trace)
     fprintf (stderr, "  start call procedure:%s, level:0x%lX, type:%s\n",
-             IDENTIFIER_POINTER (DECL_NAME (p)), level, m3cg_typestr (m3t));
+             IDENTIFIER_POINTER (DECL_NAME (p)), level, typestr (m3t));
 
   m3_start_call ();
 }
@@ -5522,7 +5522,7 @@ m3cg_call_direct (void)
 
   if (option_procs_trace)
     fprintf (stderr, "  call procedure:%s type:%s\n",
-             IDENTIFIER_POINTER (DECL_NAME (p)), m3cg_typestr (m3t));
+             IDENTIFIER_POINTER (DECL_NAME (p)), typestr (m3t));
 
   m3_call_direct (p, t);
 }
@@ -5534,7 +5534,7 @@ m3cg_start_call_indirect (void)
   UNUSED_CC (cc);
 
   if (option_procs_trace)
-    fprintf (stderr, "  start call procedure indirect type:%s\n", m3cg_typestr (m3t));
+    fprintf (stderr, "  start call procedure indirect type:%s\n", typestr (m3t));
 
   m3_start_call ();
 }
@@ -5546,7 +5546,7 @@ m3cg_call_indirect (void)
   CC (cc);
 
   if (option_procs_trace)
-    fprintf (stderr, "  call procedure indirect type:%s\n", m3cg_typestr (m3t));
+    fprintf (stderr, "  call procedure indirect type:%s\n", typestr (m3t));
 
   m3_call_indirect (t, cc);
 }
@@ -5557,7 +5557,7 @@ m3cg_pop_param (void)
   MTYPE2 (t, m3t);
 
   if (option_vars_trace)
-    fprintf (stderr, "  pop param type:%s\n", m3cg_typestr (m3t));
+    fprintf (stderr, "  pop param type:%s\n", typestr (m3t));
 
   m3_pop_param (t);
 }
