@@ -22,8 +22,9 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-static const int M3_TYPES = 0;
-static const int M3_TYPES_STRICT = 0;
+static const char M3_TYPES = 1;
+static const char M3_TYPES_CHECK_RECORD_SIZE = 1;
+static const char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1242,16 +1243,32 @@ m3_init_decl_processing (void)
   m3_push_type_decl (get_identifier ("xreel"), t_xreel);
 
   /* see RTBuiltin.mx */
-  set_typeid_to_tree (0x195C2A74, t_int);
-  set_typeid_to_tree (0x05562176, t_longint);
-  set_typeid_to_tree (0x08402063, t_addr);
-  set_typeid_to_tree (0x97E237E2, t_word);
-  set_typeid_to_tree (0x9CED36E7, t_longword);
-  set_typeid_to_tree (0x48E16572, t_reel);
-  set_typeid_to_tree (0x94FE32F6, t_lreel);
-  set_typeid_to_tree (0x9EE024E3, t_xreel);
-  set_typeid_to_tree (0x1E59237D, t_word_8); /* boolean [0..1] */
-  set_typeid_to_tree (0x56E16863, t_word_8); /* char [0..255] */
+  set_typeid_to_tree (0x195C2A74, t_int); /* INTEGER */
+  set_typeid_to_tree (0x05562176, t_longint); /* LONGINT */
+  set_typeid_to_tree (0x97E237E2, t_word); /* CARDINAL */
+  set_typeid_to_tree (0x9CED36E7, t_longword); /* LONGCARD */
+  set_typeid_to_tree (0x48E16572, t_reel); /* REAL */
+  set_typeid_to_tree (0x94FE32F6, t_lreel); /* LONGREAL */
+  set_typeid_to_tree (0X9EE024E3, t_xreel); /* EXTENDED */
+  set_typeid_to_tree (0X1E59237D, t_word_8); /* BOOLEAN [0..1] */
+  set_typeid_to_tree (0X56E16863, t_word_8); /* CHAR [0..255] */
+  set_typeid_to_tree (0X1541F475, t_addr); /* MUTEX */
+  set_typeid_to_tree (0X50F86574, t_addr); /* TEXT */
+  set_typeid_to_tree (0X898EA789, t_addr); /* UNTRACED ROOT */
+  set_typeid_to_tree (0X9D8FB489, t_addr); /* ROOT */
+  set_typeid_to_tree (0X1C1C45E6, t_addr); /* REFANY */
+  set_typeid_to_tree (0X08402063, t_addr); /* ADDRESS */
+  set_typeid_to_tree (0X2DA6581D, t_word_8); /* [0..31] */
+  set_typeid_to_tree (0X2FA3581D, t_word_8); /* [0..63] */
+  set_typeid_to_tree (0X9C9DE465, t_addr); /* PROCEDURE (x, y: INTEGER): INTEGER */
+  set_typeid_to_tree (0X20AD399F, t_addr); /* PROCEDURE (x, y: INTEGER): BOOLEAN */
+  set_typeid_to_tree (0X3CE4D13B, t_addr); /* PROCEDURE (x: INTEGER): INTEGER */
+  set_typeid_to_tree (0xFA03E372, t_addr); /* PROCEDURE (x, n: INTEGER): INTEGER */
+  set_typeid_to_tree (0x509E4C68, t_addr); /* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER */
+  set_typeid_to_tree (0xDC1B3625, t_addr); /* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER */
+  set_typeid_to_tree (0xEE17DF2C, t_addr); /* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER */
+  set_typeid_to_tree (0xB740EFD0, t_addr); /* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER */
+  /* set_typeid_to_tree (0x48EC756E, ?); */ /* NULL */
 
   t_void = void_type_node;
   v_zero = build_int_cst (t_int, 0);
@@ -2142,22 +2159,6 @@ one_field (long offset, tree tipe, tree *f, tree *v)
 }
 
 static void
-m3_field (const char* name, tree tipe, long offset, long size)
-{
-  if (M3_TYPES)
-  {
-    tree f = { 0 };
-    tree v = { 0 };
-    one_field (offset, tipe, &f, &v);
-    DECL_NAME (f) = get_identifier (name);
-    /* DECL_PACKED (f) = true; */
-    DECL_SIZE (f) = bitsize_int (size);
-    DECL_SIZE_UNIT (f) = size_int (size / BITS_PER_UNIT);
-    relayout_decl (f);
-  }
-}
-
-static void
 one_gap (long offset)
 {
   tree f = { 0 };
@@ -2174,6 +2175,70 @@ one_gap (long offset)
   TYPE_ALIGN (tipe) = BITS_PER_UNIT;
   one_field (current_record_offset, tipe, &f, &v);
   TREE_VALUE (v) = build_constructor (TREE_TYPE (f), 0);
+}
+
+static void
+m3_field (const char* name, tree tipe, long offset, long size, tree*, tree*);
+
+static void
+m3_gap (long offset)
+{
+  tree f = { 0 };
+  tree v = { 0 };
+  tree tipe = { 0 };
+  long gap = offset - current_record_offset;
+  char name[256];
+  
+  if (gap <= 0)
+    return;
+
+  sprintf(name, "_m3gap_%ld_%ld", current_record_offset, gap);
+
+  if (option_vars_trace)
+      fprintf (stderr, "  m3_gap: offset:0x%lx gap:0x%lx\n", offset, gap);
+
+  tipe = make_node (RECORD_TYPE);
+  TYPE_SIZE (tipe) = bitsize_int (gap);
+  TYPE_SIZE_UNIT (tipe) = size_int (gap / BITS_PER_UNIT);
+  TYPE_ALIGN (tipe) = 1;
+  m3_field (name, tipe, current_record_offset, gap, &f, &v);
+  DECL_PACKED (f) = true;
+  DECL_BIT_FIELD (f) = true;
+  TREE_VALUE (v) = build_constructor (TREE_TYPE (f), 0);
+}
+
+static void
+m3_field (const char* name, tree tipe, long offset, long size, tree* f, tree* v)
+{
+  if (M3_TYPES)
+  {
+    if (option_vars_trace)
+      fprintf (stderr, "  m3_field: offset:0x%lx\n", offset);
+      
+    gcc_assert (offset >= current_record_offset);
+    m3_gap (offset);
+    
+    *f = build_decl (FIELD_DECL, 0, tipe);
+    DECL_FIELD_OFFSET (*f) = size_int (offset / BITS_PER_UNIT);
+    DECL_FIELD_BIT_OFFSET (*f) = bitsize_int (offset % BITS_PER_UNIT);
+    DECL_CONTEXT (*f) = current_record_type;
+    TREE_CHAIN (*f) = TYPE_FIELDS (current_record_type);
+    TYPE_FIELDS (current_record_type) = *f;
+        
+    *v = current_record_vals = tree_cons (*f, NULL_TREE, current_record_vals);
+    current_record_offset += size;
+    DECL_NAME (*f) = get_identifier (name);
+
+    if (/*(IS_INTEGER_TYPE_TREE (tipe) || IS_WORD_TYPE_TREE (tipe))
+        &&*/ ((offset % BITS_PER_UNIT) || (size % BITS_PER_UNIT)))
+    {
+      /*DECL_PACKED (*f) = true;*/
+      DECL_BIT_FIELD (*f) = true;
+    }
+    DECL_SIZE_UNIT (*f) = size_int (size / BITS_PER_UNIT);
+    DECL_SIZE (*f) = bitsize_int (size);
+    layout_decl (*f, 1);
+  }
 }
 
 /*========================================= SUPPORT FUNCTIONS FOR YYPARSE ===*/
@@ -2930,13 +2995,9 @@ m3cg_declare_packed (void)
   debug_tag ('D', my_id, "_%ld", size);
   debug_struct ();
   
-#if 0
-  {
-    m3type_t* type = m3type_new (my_id);
-    type->is_packed = true;
-    type->packed.size = size;
-    type->packed.target_id = target_id;
-  }
+#if 1
+  /* Could be better. */
+  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
 #else
   set_typeid_to_tree (my_id, get_typeid_to_tree (target_id));
 #endif
@@ -2950,19 +3011,18 @@ m3_declare_record_common (void)
     tree t = current_record_type;
     debug_struct ();
 
+    m3_gap (current_record_size);
     TYPE_FIELDS (t) = nreverse (TYPE_FIELDS (t));
     layout_type (t);
-
     if (current_record_type_id != NO_UID)
     {
       unsigned long a = TREE_INT_CST_LOW (TYPE_SIZE (t));
       unsigned long b = current_record_size;
       set_typeid_to_tree (current_record_type_id, t);
-      if (M3_TYPES_STRICT && a != b)
+      if (M3_TYPES_CHECK_RECORD_SIZE && a != b)
       {
         fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n", a, b);
-        if (M3_TYPES_STRICT > 1)
-          gcc_assert (a == b);
+        gcc_assert (a == b);
       }
     }
     else if (current_object_type_id != NO_UID)
@@ -3006,6 +3066,8 @@ static void
 m3cg_declare_field (void)
 {
   tree t = { 0 };
+  tree f = { 0 };
+  tree v = { 0 };
   NAME      (name);
   BITOFFSET (offset);
   BITSIZE   (size);
@@ -3019,11 +3081,11 @@ m3cg_declare_field (void)
   gcc_assert (size >= 0);
 
   t = get_typeid_to_tree (my_id);
-  if (M3_TYPES_STRICT && t == 0) /* This is frequently NULL. Why? */
+  if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES && t == 0) /* This is frequently NULL. Why? */
   {
-    fprintf (stderr, "id 0x%lX to type is null for field %s\n",
+    fprintf (stderr, "declare_field: id 0x%lX to type is null for field %s\n",
              my_id, name);
-    if (M3_TYPES_STRICT == 1)
+    if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES == 1)
       t = t_addr;
     gcc_assert (t);
   }
@@ -3034,7 +3096,7 @@ m3cg_declare_field (void)
   debug_field_type_fmt (my_id, t, "_%ld_%ld_%s", offset, size, name);
   current_dbg_type_count1--;
 
-  m3_field (name, t, offset, size);
+  m3_field (name, t, offset, size, &f, &v);
 
   m3_declare_record_common ();
 }
@@ -3054,6 +3116,9 @@ m3cg_declare_set (void)
   debug_tag ('S', my_id, "_%ld", size);
   debug_field_id (domain_id);
   debug_struct ();
+
+  /* Could be better. */
+  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
 }
 
 /* m3cg_append_char, m3cg_fill_word_in_hex, and m3cg_fill_hex_value help
@@ -3154,12 +3219,8 @@ m3cg_declare_subrange (void)
   debug_struct ();
 
   {
-    /*
-      signed or unsigned?
-      tree t = m3_build_type_id (T_int, size, size, NO_UID);
-    */
-    tree t = get_typeid_to_tree (domain_id);
-    /* gcc_assert (t); */
+    tree t = m3_type_for_size (size, tree_int_cst_lt(min, integer_zero_node));
+    gcc_assert (t);
     set_typeid_to_tree (my_id, t);
   }
 }
