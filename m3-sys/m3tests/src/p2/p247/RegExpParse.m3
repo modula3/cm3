@@ -5,20 +5,20 @@
  *)
 
 MODULE RegExpParse;
-IMPORT RegExpTok;
 
 TYPE
   TypedSymbol = RECORD
-    code: INTEGER;
-    value: RegExpTok.ParseType;
+    code  := 2;
+    value := 2;
   END;
 
 PROCEDURE ActionLookup(symbol: TypedSymbol;
-                       symbol_value: RegExpTok.ParseType) =
+                       symbol_value: INTEGER) =
   BEGIN
+    <* ASSERT symbol.code = symbol_value *>
     <* ASSERT symbol.value = symbol_value *>
   END ActionLookup;
 
 BEGIN
-  ActionLookup(TypedSymbol{2, NIL}, NIL);
+  ActionLookup(TypedSymbol{}, 2);
 END RegExpParse.
