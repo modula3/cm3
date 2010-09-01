@@ -1245,8 +1245,8 @@ m3_init_decl_processing (void)
   set_typeid_to_tree (0x48E16572, t_reel);
   set_typeid_to_tree (0x94FE32F6, t_lreel);
   set_typeid_to_tree (0x9EE024E3, t_xreel);
-  /* BOOLEAN T1e59237d ? */
-  /* CHAR T56e16863 ? */
+  set_typeid_to_tree (0x1E59237D, t_word_8); /* boolean [0..1] */
+  set_typeid_to_tree (0x56E16863, t_word_8); /* char [0..255] */
 
   t_void = void_type_node;
   v_zero = build_int_cst (t_int, 0);
