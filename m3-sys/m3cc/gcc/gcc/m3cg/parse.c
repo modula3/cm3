@@ -2935,7 +2935,7 @@ m3cg_declare_record_common (void)
     if (current_record_type_id != NO_UID)
     {
       set_typeid_to_tree (current_record_type_id, t);
-      gcc_assert (TREE_INT_CST_LOW ( TYPE_SIZE (t)) == current_record_size);
+      /* gcc_assert (TREE_INT_CST_LOW ( TYPE_SIZE (t)) == current_record_size); */
     }
     else
     {
