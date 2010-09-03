@@ -1682,7 +1682,7 @@ scan_type (void)
   long i = get_int ();
 
   if ((i < 0) || (T_LAST <= i))
-    fatal_error (" *** illegal type: 0x%lX, at m3cg_lineno %d", i, m3cg_lineno);
+    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %d", i, m3cg_lineno);
 
   if (option_trace_all)
     fprintf (stderr, "  type:%s\n", typestr (i));
@@ -1717,7 +1717,7 @@ scan_sign (void)
   case 1:  return 'N';  /* negative */
   case 2:  return 'U';  /* unknown */
   default:
-    fatal_error (" *** bad sign: 0x%lX, at m3cg_lineno %d", x, m3cg_lineno);
+    fatal_error (" *** bad sign: 0x%lx, at m3cg_lineno %d", x, m3cg_lineno);
   }
   return '0';
 }
