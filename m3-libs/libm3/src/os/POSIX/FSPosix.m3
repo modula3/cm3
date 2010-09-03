@@ -333,7 +333,11 @@ PROCEDURE Status(pn: Pathname.T): File.Status RAISES {OSError.E} =
 PROCEDURE CStatus(s: Ctypes.char_star; VAR status: File.Status): INTEGER =
   VAR statBuf: Ustat.struct_stat;
   BEGIN
-    IF Ustat.lstat(s, ADR(statBuf)) < 0 THEN RETURN -1 END;
+    IF Ustat.stat(s, ADR(statBuf)) < 0 THEN
+      IF Ustat.lstat(s, ADR(statBuf)) < 0 THEN
+        RETURN -1;
+      END;
+    END;
     status.type := FilePosix.FileTypeFromStatbuf(statBuf);
     (* Could make following assignments conditional on type: *)
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
