@@ -949,7 +949,7 @@ PROCEDURE FreeDeadStacks () =
   END FreeDeadStacks;
 
 PROCEDURE WaitProcess (pid: int; VAR status: int): int =
-(* ThreadPThread.m3 and ThreadPosix.m3 are the same here except ThreadPosix.m3 calls Pause(). *)
+  (* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
   CONST Delay = 0.1D0;
   BEGIN
     LOOP
