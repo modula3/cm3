@@ -1,4 +1,13 @@
 -----------------------------------------------------------------------------
+fix O1/O2/O3
+ at least for I386_LINUX
+ test others
+-----------------------------------------------------------------------------
+setup AMD64_OPENBSD / AMD64_NETBSD Hudson nodes
+-----------------------------------------------------------------------------
+look into the token pasting of M3WRAP
+  see if it can work without expanding the NetBSD defines
+-----------------------------------------------------------------------------
 64bit time support
 -----------------------------------------------------------------------------
 test p247 hits assertion failure for SPARC64_SOLARIS
@@ -6,13 +15,11 @@ test p247 hits assertion failure for SPARC64_SOLARIS
   This should be fixed by better type information,
   in particular record parameters need to be such
   should get their fields right too
+Fixed
 -----------------------------------------------------------------------------
 switch all targets to MAIN_IN_C
   This fixes some things and no real downside?
-  done in the config files
------------------------------------------------------------------------------
-look into the token pasting of M3WRAP
-  see if it can work without expanding the NetBSD defines
+done in the config files
 -----------------------------------------------------------------------------
 go through test p240 exact codegen diffs 4.3.5 to 4.5.1
   esp. the missing .hidden on Darwin
