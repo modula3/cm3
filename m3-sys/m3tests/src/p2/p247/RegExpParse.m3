@@ -15,7 +15,6 @@ TYPE
 PROCEDURE ActionLookup(symbol: TypedSymbol;
                        symbol_value: INTEGER) =
   BEGIN
-    <* ASSERT symbol.code = symbol_value *>
     <* ASSERT symbol.value = symbol_value *>
   END ActionLookup;
 
