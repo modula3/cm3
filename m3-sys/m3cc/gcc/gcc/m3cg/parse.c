@@ -6266,35 +6266,26 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   align_jumps = 0;
   align_loops = 0;
 
-  /* sound complicated? */
+  /* flag_tree_ccp of m3core breaks cm3 on I386_DARWIN */
+  flag_tree_ccp = 0;
 
 #if 0
-  flag_split_wide_types = 0; /* caused infinite recursion in cm3cg? */
+  flag_split_wide_types = 0;
   flag_expensive_optimizations = 0;
   flag_ipa_pure_const = 0;
   flag_ipa_reference = 0;
   flag_ipa_cp = 0;
-#endif
-#if 0
-  flag_tree_ccp = 0;
   flag_tree_dce = 0;
   flag_tree_dom = 0;
   flag_tree_dse = 0;
   flag_tree_ter = 0;
   flag_tree_sra = 0;
-#endif
-#if 0
   flag_tree_copyrename = 0;
   flag_tree_fre = 0;
   flag_tree_copy_prop = 0;
   flag_tree_sink = 0;
   flag_tree_ch = 0;
   flag_tree_vectorize = 0;
-#endif
-
-  /* sound simple/safe? */
-
-#if 0
   flag_var_tracking = 0;
   flag_tree_cselim = 0;
   flag_regmove = 0;
