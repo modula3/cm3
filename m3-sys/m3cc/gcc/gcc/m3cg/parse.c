@@ -2507,7 +2507,7 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
 {
   if (o != 0 || TREE_TYPE (v) != src_t)
   {
-    if (flag_split_wide_types || GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
+    if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
@@ -2554,7 +2554,7 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
   tree val;
   if (o != 0 || TREE_TYPE (v) != dst_t)
   {
-    if (flag_split_wide_types || GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
+    if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
