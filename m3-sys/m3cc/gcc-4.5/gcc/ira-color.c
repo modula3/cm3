@@ -2278,7 +2278,7 @@ void
 ira_reassign_conflict_allocnos (int start_regno)
 {
   int i = { 0 }, allocnos_to_color_num;
-  ira_allocno_t a = { 0 }, conflict_a;
+  ira_allocno_t a = { 0 }, conflict_a = { 0 };
   ira_allocno_conflict_iterator aci;
   enum reg_class cover_class;
   bitmap allocnos_to_color;
