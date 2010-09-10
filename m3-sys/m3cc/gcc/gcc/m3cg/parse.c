@@ -214,49 +214,6 @@ get_typeid_to_tree (unsigned long id)
   return 0;
 }
 
-#if 0
-
-static m3type_t*
-m3type_new (unsigned long id)
-{
-  m3type_t to_add;
-
-  if (option_trace_all)
-    fprintf (stderr, "  m3type_new(0x%lX)\n", id);
-
-  ZERO_MEMORY(to_add);
-  gcc_assert (id != NO_UID);
-  gcc_assert (m3type_get (id) == 0);
-  to_add.id = id;
-  if (!m3type_table)
-    m3type_table = VEC_alloc (m3type_t, gc, 100);
-  m3type_table_dirty = true;
-  return VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
-}
-
-static m3type_t*
-m3type_get_or_new (unsigned long id)
-{
-  m3type_t to_add;
-  m3type_t* found = { 0 };
-
-  if (option_trace_all)
-    fprintf (stderr, "  m3type_get_or_new(0x%lX)\n", id);
-
-  gcc_assert (id != NO_UID);
-  ZERO_MEMORY(to_add);
-  found = m3type_get (id);
-  if (found)
-    return found;
-  to_add.id = id;
-  if (!m3type_table)
-    m3type_table = VEC_alloc (m3type_t, gc, 100);
-  m3type_table_dirty = true;
-  return VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
-}
-
-#endif
-
 static void
 set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 {
@@ -400,14 +357,6 @@ static GTY (()) tree memcpy_proc;
 static GTY (()) tree memmove_proc;
 static GTY (()) tree memset_proc;
 static GTY (()) tree memcmp_proc;
-#if 0
-/* commented out due to garbage collector
-static GTY (()) tree div_proc;
-static GTY (()) tree mod_proc;
-static GTY (()) tree divL_proc;
-static GTY (()) tree modL_proc;
-*/
-#endif
 static GTY (()) tree set_union_proc;
 static GTY (()) tree set_diff_proc;
 static GTY (()) tree set_inter_proc;
@@ -1412,32 +1361,10 @@ m3_init_decl_processing (void)
                 build_function_type_list (t, t_addr, NULL_TREE),
                 "__sync_lock_release_8");
 
-#if 0
-  t = build_function_type_list (t_addr, t_addr, t_addr, t_int, NULL_TREE);
-  memcpy_proc = builtin_function ("memcpy", t, BUILT_IN_MEMCPY,
-                                  BUILT_IN_NORMAL, NULL, NULL_TREE);
-  memmove_proc = builtin_function ("memmove", t, BUILT_IN_MEMMOVE,
-                                   BUILT_IN_NORMAL, NULL, NULL_TREE);
-
-  t = build_function_type_list (t_addr, t_addr, t_int, t_int, NULL_TREE);
-  memset_proc = builtin_function ("memset", t, BUILT_IN_MEMSET,
-                                  BUILT_IN_NORMAL, NULL, NULL_TREE);
-#else
   memcpy_proc = built_in_decls[BUILT_IN_MEMCPY];
   memmove_proc = built_in_decls[BUILT_IN_MEMMOVE];
   memset_proc = built_in_decls[BUILT_IN_MEMSET];
   memcmp_proc = built_in_decls[BUILT_IN_MEMCMP];
-#endif
-
-#if 0
-  t = build_function_type_list (t_int, t_int, t_int, NULL_TREE);
-  div_proc = builtin_function ("m3_div", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  mod_proc = builtin_function ("m3_mod", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-
-  t = build_function_type_list (t_int_64, t_int_64, t_int_64, NULL_TREE);
-  divL_proc = builtin_function ("m3_divL", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  modL_proc = builtin_function ("m3_modL", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-#endif
 
   t = build_function_type_list (t_void, NULL_TREE);
   set_union_proc  = builtin_function ("set_union",
@@ -2180,53 +2107,6 @@ one_gap (HOST_WIDE_INT offset)
 
 static void
 m3_field (const char* name, tree tipe, HOST_WIDE_INT offset, HOST_WIDE_INT size, tree*, tree*);
-
-#if 0
-
-static void
-m3_str_reverse(char* a, unsigned n)
-{
-  unsigned m = { 0 };
-  unsigned char* b = (unsigned char*)a;
-  n -= 1;
-  while (m < n)
-  {
-     unsigned char t = b[m];
-     b[m] = b[n];
-     b[n] = t;
-     m += 1;
-     n -= 1;
-  }
-}
-
-static int
-m3_uwide_to_decstr(unsigned HOST_WIDE_INT i, char *buf)
-{
-  char* a = buf;
-  do
-  {
-    *a++ = "0123456789"[i % 10];
-    i /= 10;
-  } while (i);
-  a[0] = 0;
-  m3_str_reverse(buf, a - buf);
-  return a - buf;
-}
-
-static int
-m3_wide_to_decstr(HOST_WIDE_INT i, char* buf)
-{
-  int adjust = { 0 };
-  if (i < 0)
-  {
-    *buf++ = '-';
-    i = -i;
-    adjust = 1;
-  }
-  return adjust + m3_uwide_to_decstr(i, buf);
-}
-
-#endif
 
 static void
 m3_gap (HOST_WIDE_INT offset)
@@ -4823,62 +4703,24 @@ static void
 m3cg_div (void)
 {
   MTYPE2 (t, T);
-#if 0
-  SIGN   (a);
-  SIGN   (b);
-  if ((b == 'P' && a == 'P') || IS_WORD_TYPE (T)) {
-    EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, t,
-                               m3_cast (t, EXPR_REF (-2)),
-                               m3_cast (t, EXPR_REF (-1)));
-    EXPR_POP ();
-  } else {
-    m3_start_call ();
-    m3_pop_param (t);
-    m3_pop_param (t);
-    if (TYPE_SIZE (t) == TYPE_SIZE (long_long_integer_type_node))
-      m3_call_direct (divL_proc, TREE_TYPE (TREE_TYPE (divL_proc)));
-    else
-      m3_call_direct (div_proc, TREE_TYPE (TREE_TYPE (div_proc)));
-  }
-#else
   UNUSED_SIGN (a);
   UNUSED_SIGN (b);
   EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
                              m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
-#endif
 }
 
 static void
 m3cg_mod (void)
 {
   MTYPE2 (t, T);
-#if 0
-  SIGN   (a);
-  SIGN   (b);
-  if ((b == 'P' && a == 'P') || IS_WORD_TYPE (T)) {
-    EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
-                               m3_cast (t, EXPR_REF (-2)),
-                               m3_cast (t, EXPR_REF (-1)));
-    EXPR_POP ();
-  } else {
-    m3_start_call ();
-    m3_pop_param (t);
-    m3_pop_param (t);
-    if (TYPE_SIZE (t) == TYPE_SIZE (long_long_integer_type_node))
-      m3_call_direct (modL_proc, TREE_TYPE (TREE_TYPE (modL_proc)));
-    else
-      m3_call_direct (mod_proc, TREE_TYPE (TREE_TYPE (mod_proc)));
-  }
-#else
   UNUSED_SIGN (a);
   UNUSED_SIGN (b);
   EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
                              m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
-#endif
 }
 
 static void
