@@ -1532,22 +1532,21 @@ get_int (void)
 
 /*-------------------------------------------------------- quoted strings ---*/
 
-#define QUOTED_STRING(x,l) long l; char *x = scan_quoted_string (&l)
-#define UNUSED_QUOTED_STRING(x,l) long l; char *x ATTRIBUTE_UNUSED = scan_quoted_string (&l)
+#define xQUOTED_STRING(len) (len = get_int(), (len > 0) ? alloca(len + 1) : 0)
+#define QUOTED_STRING(x, l) long l; char *x = scan_quoted_string (xQUOTED_STRING(l), l)
 static char *
-scan_quoted_string (long *length)
+scan_quoted_string (char *result, long len)
 {
   long x = { 0 };
-  char *result = { 0 };
 
-  long len = get_int ();
-  if (length) *length = len;
-  if (len <= 0) return 0;
-
-  result = (char*) xmalloc (len + 1);
-  for (x = 0; x < len; x++) {
-    result[x] = (char) get_byte ();
+  if (len <= 0)
+  {
+    gcc_assert(!result);
+    return 0;
   }
+  gcc_assert(result);
+  for (x = 0; x < len; ++x)
+    result[x] = (char) get_byte ();
   result[len] = 0;
 
   if (option_trace_all)
@@ -1576,14 +1575,7 @@ scan_cc (void)
 
 /*----------------------------------------------------------------- names ---*/
 
-#define NAME(x) char *x = scan_string ()
-#define UNUSED_NAME(x) char *x ATTRIBUTE_UNUSED = scan_string ()
-static char *
-scan_string (void)
-{
-  long len;
-  return scan_quoted_string (&len);
-}
+#define NAME(x, n) QUOTED_STRING(x, n)
 
 /*----------------------------------------------------------------- types ---*/
 
@@ -2053,7 +2045,8 @@ debug_struct (void)
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
 
-static const char *current_unit_name;
+static const char *current_unit_name
+static size_t current_unit_name_length;
 
 /* the exported interfaces */
 static int exported_interfaces;
@@ -2200,10 +2193,9 @@ static void add_stmt (tree t)
 }
 
 static tree
-fix_name (const char *name, unsigned long id)
+fix_name (const char *name, size_t len, unsigned long id)
 {
   char buf[100];
-  size_t len;
 
   if (name == 0 || name[0] == '*') {
     static int anonymous_counter = 1;
@@ -2211,7 +2203,6 @@ fix_name (const char *name, unsigned long id)
   } else if (id == 0) {
     return get_identifier (name);
   } else if (id == NO_UID) {
-    len = strlen (name);
     if (len >= (sizeof(buf) - 1))
       fatal_error ("identifier too long (in fix_name, 1st case, %s)", name);
     buf[0] = 'M';
@@ -2220,7 +2211,6 @@ fix_name (const char *name, unsigned long id)
     buf[0] = 'M';  buf[1] = '3';  buf[2] = '_';
     fmt_uid (id, buf + 3);
     buf[3 + UID_SIZE] = '_';
-    len = strlen(name);
     if (len >= (sizeof(buf) - 4 - UID_SIZE))
       fatal_error ("identifier too long (in fix_name, 2nd case, %s)", name);
     memcpy (&buf[4 + UID_SIZE], name, len + 1);
@@ -2613,7 +2603,7 @@ declare_fault_proc (void)
   TREE_PUBLIC (proc) = 0;
   DECL_CONTEXT (proc) = 0;
 
-  parm = build_decl (PARM_DECL, fix_name ("arg", 0x195c2a74), t_word);
+  parm = build_decl (PARM_DECL, fix_name ("arg", 3, 0x195c2a74), t_word);
   if (DECL_MODE (parm) == VOIDmode)
   {
       if (option_trace_all)
@@ -2766,14 +2756,18 @@ m3cg_end_unit (void)
 static void
 m3cg_import_unit (void)
 {
-  UNUSED_NAME (n);
+  NAME (n, n_len);
+
+  if (option_trace_all)
+    fprintf (stderr, "  import_unit %s\n", n);
+
   /* ignore */
 }
 
 static void
 m3cg_export_unit (void)
 {
-  NAME (n);
+  NAME (n, n_len);
   if (exported_interfaces == COUNT_OF (exported_interfaces_names))
     fatal_error ("internal limit exporting more than 100 interfaces");
   /* remember the set of exported interfaces */
@@ -2783,7 +2777,7 @@ m3cg_export_unit (void)
 static void
 m3cg_set_source_file (void)
 {
-  NAME (s);
+  NAME (s, s_len);
 
 #ifdef M3_USE_MAPPED_LOCATION
   linemap_add (line_table, LC_RENAME, false, s, 1);
@@ -2820,11 +2814,10 @@ static void
 m3cg_declare_typename (void)
 {
   TYPEID (my_id);
-  NAME   (name);
+  NAME   (name, name_len);
 
   char fullname [100];
-  size_t unit_len = strlen (current_unit_name);
-  size_t name_len = strlen (name);
+  size_t unit_len = current_unit_name_length;
   size_t full_len;
 
   if (option_types_trace)
@@ -2913,7 +2906,7 @@ m3cg_declare_enum (void)
 static void
 m3cg_declare_enum_elt (void)
 {
-  NAME (n);
+  NAME (n, n_len);
 
   if (option_types_trace)
     fprintf (stderr, "  declare_enum_elt elem %s\n", n);
@@ -3012,7 +3005,7 @@ m3cg_declare_field (void)
   tree t = { 0 };
   tree f = { 0 };
   tree v = { 0 };
-  NAME      (name);
+  NAME      (name, name_len);
   BITOFFSET (offset);
   BITSIZE   (size);
   TYPEID    (my_id);
@@ -3244,7 +3237,7 @@ m3cg_declare_proctype (void)
 static void
 m3cg_declare_formal (void)
 {
-  NAME   (n);
+  NAME   (n, n_len);
   TYPEID (my_id);
 
   if (option_types_trace)
@@ -3263,7 +3256,7 @@ m3cg_declare_formal (void)
 static void
 m3cg_declare_raises (void)
 {
-  NAME (n);
+  NAME (n, n_len);
 
   if (option_types_trace)
     fprintf (stderr, "  declare_raises name:%s\n", n);
@@ -3323,7 +3316,7 @@ m3cg_declare_object (void)
 static void
 m3cg_declare_method (void)
 {
-  NAME   (name);
+  NAME   (name, name_len);
   TYPEID (my_id);
 
   if (option_procs_trace)
@@ -3393,7 +3386,7 @@ m3cg_reveal_opaque (void)
 static void
 m3cg_declare_exception (void)
 {
-  NAME    (n);
+  NAME    (n, n_len);
   TYPEID  (t);
   BOOLEAN (raise_proc);
   UNUSED_VAR     (base);
@@ -3411,7 +3404,7 @@ m3cg_declare_exception (void)
 static void
 m3cg_set_runtime_proc (void)
 {
-  NAME (s);
+  NAME (s, s_len);
   PROC (p);
 
   if (option_trace_all)
@@ -3425,7 +3418,7 @@ m3cg_set_runtime_proc (void)
 static void
 m3cg_set_runtime_hook (void)
 {
-  NAME       (s);
+  NAME       (s, s_len);
   VAR        (v);
   BYTEOFFSET (o);
 
@@ -3444,14 +3437,14 @@ m3cg_set_runtime_hook (void)
 static void
 m3cg_import_global (void)
 {
-  NAME       (n);
+  NAME       (n, n_len);
   BYTESIZE   (s);
   ALIGNMENT  (a);
   TYPE       (t);
   TYPEID     (id);
   RETURN_VAR (v, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (n, id);
+  DECL_NAME (v) = fix_name (n, n_len, id);
 
   if (option_vars_trace)
     fprintf (stderr, "  import_global name:%s size:0x%lX align:0x%lX type:%s"
@@ -3473,12 +3466,12 @@ m3cg_import_global (void)
 static void
 m3cg_declare_segment (void)
 {
-  NAME       (n);
+  NAME       (n, n_len);
   TYPEID     (id);
   BOOLEAN    (is_const);
   RETURN_VAR (v, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (n, id);
+  DECL_NAME (v) = fix_name (n, n_len, id);
 
   if (option_vars_trace)
     fprintf (stderr, "  declare_segment name:%s typeid:0x%lX is_const:%s"
@@ -3507,6 +3500,7 @@ m3cg_declare_segment (void)
   /* do not use "n", it is going to go away at the next instruction;
      skip the 'MI_' or 'MM_' prefix. */
   current_unit_name = IDENTIFIER_POINTER (DECL_NAME (v)) + 3;
+  current_unit_name_length = strlen(current_unit_name);
 }
 
 static void
@@ -3540,7 +3534,7 @@ m3cg_bind_segment (void)
 static void
 m3cg_declare_global (void)
 {
-  NAME       (n);
+  NAME       (n, n_len);
   BYTESIZE   (s);
   ALIGNMENT  (a);
   TYPE       (t);
@@ -3549,7 +3543,7 @@ m3cg_declare_global (void)
   BOOLEAN    (initialized);
   RETURN_VAR (v, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (n, id);
+  DECL_NAME (v) = fix_name (n, n_len, id);
 
   if (option_vars_trace)
     fprintf (stderr, "  declare_global name:%s size:0x%lX align:0x%lX type:%s"
@@ -3573,7 +3567,7 @@ m3cg_declare_global (void)
 static void
 m3cg_declare_constant (void)
 {
-  NAME       (n);
+  NAME       (n, n_len);
   BYTESIZE   (s);
   ALIGNMENT  (a);
   TYPE       (t);
@@ -3590,7 +3584,7 @@ m3cg_declare_constant (void)
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
 
-  DECL_NAME (v) = fix_name (n, id);
+  DECL_NAME (v) = fix_name (n, n_len, id);
   TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
@@ -3605,7 +3599,7 @@ m3cg_declare_constant (void)
 static void
 m3cg_declare_local (void)
 {
-  NAME       (n);
+  NAME       (n, n_len);
   BYTESIZE   (s);
   ALIGNMENT  (a);
   TYPE       (t);
@@ -3615,7 +3609,7 @@ m3cg_declare_local (void)
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (n, id);
+  DECL_NAME (v) = fix_name (n, n_len, id);
 
   if (option_vars_trace)
     fprintf (stderr, "  declare_local name:%s size:0x%lX align:0x%lX"
@@ -3653,7 +3647,7 @@ static int current_param_count; /* <0 => import_procedure, >0 => declare_procedu
 static void
 m3cg_declare_param (void)
 {
-  NAME       (n);
+  NAME       (n, n_len);
   BYTESIZE   (s);
   ALIGNMENT  (a);
   TYPE       (t);
@@ -3680,7 +3674,7 @@ m3cg_declare_param (void)
     gcc_unreachable ();
   }
 
-  DECL_NAME (v) = fix_name (n, id);
+  DECL_NAME (v) = fix_name (n, n_len, id);
 
   if (option_procs_trace)
     fprintf (stderr, "  declare_param name:%s size:0x%lX align:0x%lX"
@@ -3926,7 +3920,7 @@ m3cg_init_float (void)
 static void
 m3cg_import_procedure (void)
 {
-  NAME    (n);
+  NAME    (n, n_len);
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
   CC      (cc);
@@ -3972,7 +3966,7 @@ m3cg_import_procedure (void)
 static void
 m3cg_declare_procedure (void)
 {
-  NAME    (n);
+  NAME    (n, n_len);
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
   LEVEL   (lev);
@@ -5638,7 +5632,7 @@ m3cg_load_static_link (void)
 static void
 m3cg_comment (void)
 {
-  UNUSED_QUOTED_STRING (comment, len);
+  QUOTED_STRING (comment, len);
 
   if (option_misc_trace)
     fprintf (stderr, "  comment: `%s'\n", comment);
