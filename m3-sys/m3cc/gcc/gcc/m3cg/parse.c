@@ -3840,7 +3840,7 @@ m3cg_end_init (void)
   VAR (v);
 
   if (DECL_SIZE (v)) {
-    int v_size = TREE_INT_CST_LOW (DECL_SIZE (v));
+    long v_size = TREE_INT_CST_LOW (DECL_SIZE (v));
     if (current_record_offset < v_size) { one_gap (v_size); }
   }
 
