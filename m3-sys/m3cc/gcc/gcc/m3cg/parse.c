@@ -2404,7 +2404,8 @@ m3_volatilize_decl (tree decl)
 {
   if (!TYPE_VOLATILE (TREE_TYPE (decl)) && !TREE_STATIC (decl)
       && (TREE_CODE (decl) == VAR_DECL
-          || TREE_CODE (decl) == PARM_DECL)) {
+          || TREE_CODE (decl) == PARM_DECL))
+  {
     TREE_TYPE (decl) = build_qualified_type (TREE_TYPE (decl), TYPE_QUAL_VOLATILE);
     TREE_THIS_VOLATILE (decl) = 1;
     TREE_SIDE_EFFECTS (decl) = 1;
@@ -2427,8 +2428,10 @@ m3_volatilize_current_function (void)
 
   for (block = current_block;
        block != current_function_decl;
-       block = BLOCK_SUPERCONTEXT (block)) {
-    for (decl = BLOCK_VARS (block); decl; decl = TREE_CHAIN (decl)) {
+       block = BLOCK_SUPERCONTEXT (block))
+  {
+    for (decl = BLOCK_VARS (block); decl; decl = TREE_CHAIN (decl))
+    {
       m3_volatilize_decl (decl);
     }
   }
@@ -2436,7 +2439,8 @@ m3_volatilize_current_function (void)
   /* make arguments volatile  */
 
   for (decl = DECL_ARGUMENTS (current_function_decl);
-       decl; decl = TREE_CHAIN (decl)) {
+       decl; decl = TREE_CHAIN (decl))
+  {
     m3_volatilize_decl (decl);
   }
 }
@@ -2455,15 +2459,19 @@ m3_call_direct (tree p, tree t)
   }
   call = build_call_list (t, proc_addr (p), CALL_TOP_ARG ());
   CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
-  if (VOID_TYPE_P (t)) {
+  if (VOID_TYPE_P (t))
+  {
     add_stmt (call);
-  } else {
+  }
+  else
+  {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
   }
   CALL_POP ();
   flags = call_expr_flags (call);
-  if (flags & ECF_RETURNS_TWICE) {
+  if (flags & ECF_RETURNS_TWICE)
+  {
     /* call to setjmp: make locals, etc. volatile */
     m3_volatilize_current_function ();
   }
@@ -2526,9 +2534,8 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
     TREE_THIS_VOLATILE (v) = 1; /* force this to avoid aliasing problems */
   if (M3_ALL_VOLATILE)
     TREE_THIS_VOLATILE (v) = TREE_SIDE_EFFECTS (v) = 1; /* force this to avoid aliasing problems */
-  if (src_T != dst_T) {
+  if (src_T != dst_T)
     v = m3_convert (dst_t, v);
-  }
   EXPR_PUSH (v);
 }
 
@@ -3839,9 +3846,11 @@ m3cg_end_init (void)
 {
   VAR (v);
 
-  if (DECL_SIZE (v)) {
+  if (DECL_SIZE (v))
+  {
     long v_size = TREE_INT_CST_LOW (DECL_SIZE (v));
-    if (current_record_offset < v_size) { one_gap (v_size); }
+    if (current_record_offset < v_size)
+      one_gap (v_size);
   }
 
   TYPE_FIELDS (current_record_type) =
@@ -5775,9 +5784,9 @@ m3cg_load_ordered (void)
   v = EXPR_REF (-1);
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
-  if (src_T != dst_T) {
+  if (src_T != dst_T)
     v = m3_convert (dst_t, v);
-  }
+
   EXPR_REF (-1) = v;
 }
 
@@ -5798,7 +5807,8 @@ m3cg_exchange (void)
   if (size != 1 && size != 2 && size != 4 && size != 8)
     goto incompatible;
 
-  if (order == Sequential || order == AcquireRelease) {
+  if (order == Sequential || order == AcquireRelease)
+  {
     /* is this enough to make it Sequential or just AcquireRelease */
     m3_start_call ();
     m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
@@ -5837,9 +5847,9 @@ m3cg_compare_exchange (void)
   v = EXPR_REF (-2);
   v = m3_cast (m3_build_pointer_type (t), v);
   v = m3_build1 (INDIRECT_REF, t, v);
-  if (t != u) {
+  if (t != u)
     v = m3_convert (u, v);
-  }
+
   EXPR_REF (-2) = v;
 
   m3_start_call ();
@@ -6130,7 +6140,8 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
   int i = { 0 };
 
   /* first, verify the handler table is complete and consistent. */
-  for (i = 0;  ops[i].proc != 0;  i++ ) {
+  for (i = 0;  ops[i].proc != 0;  i++ )
+  {
     gcc_assert (i == (int)ops[i].op);
   }
   gcc_assert (i == (int)LAST_OPCODE);
@@ -6138,13 +6149,15 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
 
   /* check the version stamp */
   i = get_int ();
-  if (i != M3CG_Version) {
+  if (i != M3CG_Version)
+  {
     fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
                  i, M3CG_Version);
   }
 
   op = (int)LAST_OPCODE;
-  while (op != (int)M3CG_END_UNIT) {
+  while (op != (int)M3CG_END_UNIT)
+  {
     op = get_int ();
     if (op < 0 || (int)LAST_OPCODE <= op)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %d", op, m3cg_lineno);
