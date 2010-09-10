@@ -2100,9 +2100,8 @@ convert_gimple_call_op (tree *tp, int *walk_subtrees, void *data)
 static void
 convert_all_function_calls (struct nesting_info *root)
 {
+  unsigned int chain_count = 0, old_chain_count, iter_count;
   struct nesting_info *n;
-  int iter_count;
-  bool any_changed;
 
   /* First, optimistically clear static_chain for all decls that haven't
      used the static chain already for variable access.  */
@@ -2118,6 +2117,7 @@ convert_all_function_calls (struct nesting_info *root)
 	}
       else
 	DECL_STATIC_CHAIN (decl) = 1;
+      chain_count += DECL_STATIC_CHAIN (decl);
     }
 
   /* Walk the functions and perform transformations.  Note that these
@@ -2130,7 +2130,8 @@ convert_all_function_calls (struct nesting_info *root)
   iter_count = 0;
   do
     {
-      any_changed = false;
+      old_chain_count = chain_count;
+      chain_count = 0;
       iter_count++;
 
       if (dump_file && (dump_flags & TDF_DETAILS))
@@ -2139,22 +2140,18 @@ convert_all_function_calls (struct nesting_info *root)
       FOR_EACH_NEST_INFO (n, root)
 	{
 	  tree decl = n->context;
-	  bool old_static_chain = DECL_STATIC_CHAIN (decl);
 
 	  walk_function (convert_tramp_reference_stmt,
 			 convert_tramp_reference_op, n);
 	  walk_function (convert_gimple_call, convert_gimple_call_op, n);
 
-	  /* If a call to another function created the use of a chain
-	     within this function, we'll have to continue iteration.  */
-	  if (!old_static_chain && DECL_STATIC_CHAIN (decl))
-	    any_changed = true;
+          chain_count += DECL_STATIC_CHAIN (decl);
 	}
     }
-  while (any_changed);
+  while (chain_count != old_chain_count);
 
   if (dump_file && (dump_flags & TDF_DETAILS))
-    fprintf (dump_file, "convert_all_function_calls iterations: %d\n\n",
+    fprintf (dump_file, "convert_all_function_calls iterations: %u\n\n",
 	     iter_count);
 }
 
