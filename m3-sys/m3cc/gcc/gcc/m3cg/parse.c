@@ -2045,7 +2045,7 @@ debug_struct (void)
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
 
-static const char *current_unit_name
+static const char *current_unit_name;
 static size_t current_unit_name_length;
 
 /* the exported interfaces */
