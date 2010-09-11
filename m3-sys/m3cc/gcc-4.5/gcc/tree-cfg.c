@@ -2785,10 +2785,11 @@ verify_types_in_gimple_min_lval (tree expr)
   if (!useless_type_conversion_p (TREE_TYPE (expr),
 				  TREE_TYPE (TREE_TYPE (op))))
     {
+      /* Modula-3: temporary, warning_at should be error */
       warning_at (UNKNOWN_LOCATION, 0, "type mismatch in indirect reference");
       debug_generic_stmt (TREE_TYPE (expr));
       debug_generic_stmt (TREE_TYPE (TREE_TYPE (op)));
-      return true;
+      return false; /* Modula-3: temporary, should be true */
     }
 
   return false;
@@ -2969,18 +2970,20 @@ verify_gimple_call (gimple stmt)
       && !(POINTER_TYPE_P (TREE_TYPE (gimple_call_lhs (stmt)))
 	   && POINTER_TYPE_P (TREE_TYPE (fntype))))
     {
+      /* Modula-3: temporary, warning_at should be error */
       warning_at (UNKNOWN_LOCATION, 0, "invalid conversion in gimple call");
       debug_generic_stmt (TREE_TYPE (gimple_call_lhs (stmt)));
       debug_generic_stmt (TREE_TYPE (fntype));
-      return true;
+      return false; /* Modula-3: temporary, should be true */
     }
 
   if (gimple_call_chain (stmt)
       && !is_gimple_val (gimple_call_chain (stmt)))
     {
+      /* Modula-3: temporary, warning_at should be error */
       warning_at (UNKNOWN_LOCATION, 0, "invalid static chain in gimple call");
       debug_generic_stmt (gimple_call_chain (stmt));
-      return true;
+      return false; /* Modula-3: temporary, should be true */
     }
 
   /* If there is a static chain argument, this should not be an indirect
@@ -3049,11 +3052,12 @@ verify_gimple_comparison (tree type, tree op0, tree op1)
 	   || TYPE_MODE (op0_type) != TYPE_MODE (op1_type)))
       || !INTEGRAL_TYPE_P (type))
     {
+      /* Modula-3: temporary, warning_at should be error */
       warning_at (UNKNOWN_LOCATION, 0, "type mismatch in comparison expression");
       debug_generic_expr (type);
       debug_generic_expr (op0_type);
       debug_generic_expr (op1_type);
-      return true;
+      return false; /* Modula-3: temporary, should be true */
     }
 
   return false;
@@ -3206,10 +3210,11 @@ verify_gimple_assign_unary (gimple stmt)
   /* For the remaining codes assert there is no conversion involved.  */
   if (!useless_type_conversion_p (lhs_type, rhs1_type))
     {
+      /* Modula-3: temporary, warning_at should be error */
       warning_at (UNKNOWN_LOCATION, 0, "non-trivial conversion in unary operation");
       debug_generic_expr (lhs_type);
       debug_generic_expr (rhs1_type);
-      return true;
+      return false; /* Modula-3: temporary, should be true */
     }
 
   return false;
@@ -3284,11 +3289,12 @@ verify_gimple_assign_binary (gimple stmt)
 		     && INTEGRAL_TYPE_P (TREE_TYPE (rhs2_type))))
 	    || !useless_type_conversion_p (lhs_type, rhs1_type))
 	  {
-            warning_at (UNKNOWN_LOCATION, 0, "type mismatch in shift expression");
+	    /* Modula-3: temporary, warning_at should be error */
+	    warning_at (UNKNOWN_LOCATION, 0, "type mismatch in shift expression");
 	    debug_generic_expr (lhs_type);
 	    debug_generic_expr (rhs1_type);
 	    debug_generic_expr (rhs2_type);
-	    return true;
+	    return false; /* Modula-3: temporary, should be true */
 	  }
 
 	return false;
@@ -3467,11 +3473,12 @@ do_pointer_plus_expr_check:
   if (!useless_type_conversion_p (lhs_type, rhs1_type)
       || !useless_type_conversion_p (lhs_type, rhs2_type))
     {
+      /* Modula-3: temporary, warning_at should be error */
       warning_at (UNKNOWN_LOCATION, 0, "type mismatch in binary expression");
       debug_generic_stmt (lhs_type);
       debug_generic_stmt (rhs1_type);
       debug_generic_stmt (rhs2_type);
-      return true;
+      return false; /* Modula-3: temporary, should be true */
     }
 
   return false;
@@ -3492,10 +3499,11 @@ verify_gimple_assign_single (gimple stmt)
 
   if (!useless_type_conversion_p (lhs_type, rhs1_type))
     {
+      /* Modula-3: temporary, warning_at should be error */
       warning_at (UNKNOWN_LOCATION, 0, "non-trivial conversion at assignment");
       debug_generic_expr (lhs_type);
       debug_generic_expr (rhs1_type);
-      return true;
+      return false; /* Modula-3: temporary, should be true */
     }
 
   if (handled_component_p (lhs))
@@ -3517,10 +3525,11 @@ verify_gimple_assign_single (gimple stmt)
 	    && !one_pointer_to_useless_type_conversion_p (TREE_TYPE (rhs1),
 							  TREE_TYPE (op)))
 	  {
-	    error ("type mismatch in address expression");
+	    /* Modula-3: temporary, warning_at should be error */
+	    warning_at (UNKNOWN_LOCATION, 0, "type mismatch in address expression");
 	    debug_generic_stmt (TREE_TYPE (rhs1));
 	    debug_generic_stmt (TREE_TYPE (op));
-	    return true;
+	    return false; /* Modula-3: temporary, should be true */
 	  }
 
 	return verify_types_in_gimple_reference (op, true);
@@ -3875,6 +3884,7 @@ verify_types_in_gimple_seq (gimple_seq stmts)
 {
   if (verify_types_in_gimple_seq_2 (stmts))
     warning_at (UNKNOWN_LOCATION, 0, "verify_gimple failed");
+    /* Modula-3: temporary, warning_at should be error */
 }
 
 
