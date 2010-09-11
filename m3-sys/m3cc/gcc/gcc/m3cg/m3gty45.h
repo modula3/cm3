@@ -66,22 +66,5 @@ struct GTY(()) language_function
 typedef struct GTY(()) m3type_t
 {
   unsigned long id;
-  tree t;
-#if 0
-  unsigned is_packed : 1;
-  unsigned is_record : 1;
-  union
-  {
-    struct
-    {
-      unsigned long size;
-      unsigned long target_id;
-    } packed;
-    struct
-    {
-      unsigned long size;
-      unsigned long n_fields;
-    } record;
-  } u;
-#endif
+  tree GTY (()) t;
 } m3type_t;

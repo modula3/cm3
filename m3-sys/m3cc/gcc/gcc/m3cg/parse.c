@@ -145,14 +145,14 @@ static int option_types_trace;
 
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
-DEF_VEC_O (m3type_t);
-DEF_VEC_ALLOC_O (m3type_t, gc);
+/* This should use VEC but I had trouble interacting
+ * with the garbage collector.
+ */
 
-static VEC (m3type_t, gc)* m3type_table;
+static m3type_t* GTY ((length ("m3type_table_size_used"))) m3type_table;
 static bool m3type_table_dirty;
-
-#define ZeroMemory(a, b) (memset((a), 0, (b)))
-#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
+static unsigned long m3type_table_size_used;
+static unsigned long m3type_table_size_allocated;
 
 static int
 m3type_compare (const void* a, const void *b)
@@ -181,16 +181,16 @@ m3type_get (unsigned long id)
       return 0;
     if (m3type_table_dirty)
     {
-       qsort (VEC_address (m3type_t, m3type_table),
-              VEC_length (m3type_t, m3type_table),
+       qsort (m3type_table,
+              m3type_table_size_used,
               sizeof(m3type_t),
               m3type_compare);
       m3type_table_dirty = false;
     }
     to_find.id = id;
     found = (m3type_t*)bsearch (&to_find,
-                                VEC_address (m3type_t, m3type_table),
-                                VEC_length (m3type_t, m3type_table),
+                                m3type_table,
+                                m3type_table_size_used,
                                 sizeof(m3type_t),
                                 m3type_compare);
   }
@@ -240,9 +240,16 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
     }
     to_add.id = id;
     to_add.t = t;
-    if (!m3type_table)
-      m3type_table = VEC_alloc (m3type_t, gc, 100);
-    VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
+    gcc_assert (m3type_table_size_used <= m3type_table_size_allocated);
+    if (m3type_table_size_used == m3type_table_size_allocated)
+    {
+      if (m3type_table_size_allocated)
+        m3type_table_size_allocated *= 2;
+      else
+        m3type_table_size_allocated = 64;
+    }
+    m3type_table = XRESIZEVEC (m3type_t, m3type_table, m3type_table_size_allocated);
+    m3type_table[m3type_table_size_used++] = to_add;
     m3type_table_dirty = true;
   }
 }
@@ -2441,6 +2448,7 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
 {
   if (o != 0 || TREE_TYPE (v) != src_t)
   {
+    /* bitfields break configure -enable-checking */
     if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
@@ -2487,6 +2495,7 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
   tree val;
   if (o != 0 || TREE_TYPE (v) != dst_t)
   {
+    /* bitfields break configure -enable-checking */
     if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
