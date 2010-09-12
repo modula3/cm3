@@ -234,6 +234,31 @@ get_typeid_to_tree (unsigned long id)
   return 0;
 }
 
+static int m3_indent;
+
+static const char* m3_indentstr(void)
+{
+  static char str[100];
+  if (m3_indent >= (int)COUNT_OF(str) || m3_indent < 0)
+    return "";
+  if (!str[0])
+    memset(str, ' ', sizeof(str) - 1);
+  return str + sizeof(str) - 1 - m3_indent;
+}
+
+static void m3_outdent(void)
+{
+  m3_indent -= (m3_indent > 0 ? 4 : 0);
+}
+
+static size_t m3_add (size_t a, size_t b)
+{
+  size_t c = a + b;
+  if (c < a)
+    fatal_error ("integer overflow");
+  return c;
+}
+
 static void
 set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 {
@@ -262,10 +287,13 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
     to_add.t = t;
 #if M3_TYPE_TABLE_GROWABLE || M3_TYPE_TABLE_FIXED_SIZE
     gcc_assert (m3type_table_size_used <= m3type_table_size_allocated);
-    if (m3type_table_size_used == m3type_table_size_allocated)
+    if (m3type_table_size_used >= m3type_table_size_allocated)
     {
 #if M3_TYPE_TABLE_GROWABLE
-      m3type_table_size_allocated = ((m3type_table_size_allocated * 3 / 2) | 64);
+      if (m3type_table_size_allocated)
+        m3type_table_size_allocated = m3_add (m3type_table_size_allocated, m3type_table_size_allocated);
+      else
+        m3type_table_size_allocated = 64;
       m3type_table_address = XRESIZEVEC (m3type_t, m3type_table_address, m3type_table_size_allocated);
 #else
       fatal_error ("m3type_table out of room\n");
@@ -293,29 +321,26 @@ set_typeid_to_tree (unsigned long id, tree t)
 static void
 fmt_uid (unsigned long x, char *buf)
 {
-  unsigned digit = { 0 };
-  int i = { 0 };
+  unsigned i = UID_SIZE;
+  static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  buf[UID_SIZE] = 0;
+  gcc_assert (sizeof(alphabet) == 63);
+
   if (x == NO_UID)
   {
-    strcpy (buf, "zzzzzz");
+    static const char zzzzzz[] = "zzzzzz";
+    memcpy (buf, zzzzzz, sizeof(zzzzzz));
     return;
   }
 
-  for (i = UID_SIZE - 1; i >= 0; i--)
+  buf[i] = 0;
+  while (i)
   {
-    digit = (x % 62);
-    x = (x / 62);
-    if  (digit < 26)
-      buf[i] = 'A' + digit;
-    else if (digit < 52)
-      buf[i] = 'a' + (digit - 26);
-    else
-      buf[i] = '0' + (digit - 52);
+    buf[--i] = alphabet[x % 62];
+    x /= 62;
   }
 
-  if ((x != 0) || (buf[0] < 'A') || ('Z' < buf[0]))
+  if (x || buf[0] < 'A' || buf[0] > 'Z')
     fatal_error (" *** bad uid -> identifier conversion!!");
 }
 
@@ -1510,7 +1535,7 @@ static GTY (()) varray_type call_stack;
 static unsigned char input_buffer[BUFFER_SIZE];
 static int input_len;
 static int input_cursor;
-static int input_eof;
+static bool input_eof;
 static int m3cg_lineno;
 
 /* Stream for reading from the input file.  */
@@ -1550,7 +1575,8 @@ get_byte (void)
   if (input_cursor >= input_len)
   {
     reload_buffer ();
-    if (input_eof) return 0;
+    if (input_eof)
+      return 0;
   }
   return (long)(input_buffer[input_cursor++] & 0xff);
 }
@@ -2076,6 +2102,7 @@ debug_struct (void)
 {
   tree d = { 0 };
   tree t = make_node (RECORD_TYPE);
+  m3_outdent ();
   TYPE_FIELDS (t) = nreverse (debug_fields);
   debug_fields = 0;
   TYPE_NAME (t) = build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
@@ -2164,15 +2191,7 @@ m3_gap (HOST_WIDE_INT offset)
   if (gap <= 0 || !M3_TYPES)
     return;
 
-#if 1
   sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, gap);
-#else
-  char* pname = name;
-  memcpy(name, "_m3gap_", sizeof("_m3gap_") - 1);
-  pname = &name[sizeof("_m3gap_") - 1];
-  pname += m3_wide_to_decstr(pname, current_record_offset);
-  m3_wide_to_decstr(pname, gap);
-#endif
 
   if (option_vars_trace)
       fprintf (stderr, "  m3_gap: offset:0x%lx gap:0x%lx", (long)offset, (long)gap);
@@ -2502,7 +2521,7 @@ static void
 m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
            bool volatil)
 {
-  if (o != 0 || TREE_TYPE (v) != src_t)
+  if (o || TREE_TYPE (v) != src_t)
   {
     /* bitfields break configure -enable-checking */
     if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
@@ -2549,7 +2568,7 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
             bool volatil)
 {
   tree val;
-  if (o != 0 || TREE_TYPE (v) != dst_t)
+  if (o || TREE_TYPE (v) != dst_t)
   {
     /* bitfields break configure -enable-checking */
     if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
@@ -2574,9 +2593,7 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
   m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
-  {
     val = m3_convert (dst_t, val);
-  }
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
   EXPR_POP ();
 }
@@ -2603,9 +2620,7 @@ setop (tree p, long n, int q)
   EXPR_PUSH (size_int (n));
   m3_pop_param (t_int);
   while (q--)
-  {
     m3_pop_param (t_addr);
-  }
   m3_call_direct (p, TREE_TYPE (TREE_TYPE (p)));
 }
 
@@ -2616,9 +2631,7 @@ setop2 (tree p, int q)
 
   m3_start_call ();
   while (q--)
-  {
     m3_pop_param (t_addr);
-  }
   t = TREE_TYPE (TREE_TYPE (p));
   m3_call_direct (p, t);
 }
@@ -2875,14 +2888,6 @@ m3cg_set_source_line (void)
 #else
   input_line = i;
 #endif
-}
-
-static size_t m3_add (size_t a, size_t b)
-{
-  size_t c = a + b;
-  if (c < a)
-    fatal_error ("integer overflow");
-  return c;
 }
 
 static void
@@ -3224,10 +3229,10 @@ static void m3cg_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
    buf[i] = 0;
 }
 
-static void 
-m3cg_fill_hex_value (HOST_WIDE_INT hi, HOST_WIDE_INT lo, char** p, char* limit) 
+static void
+m3cg_fill_hex_value (HOST_WIDE_INT hi, HOST_WIDE_INT lo, char** p, char* limit)
 {
-  m3cg_append_char('0', p, limit); 
+  m3cg_append_char('0', p, limit);
   m3cg_append_char('x', p, limit);
   if (hi == -1 && lo < 0)
   {
@@ -3246,7 +3251,7 @@ m3cg_fill_hex_value (HOST_WIDE_INT hi, HOST_WIDE_INT lo, char** p, char* limit)
   }
   *p += strlen (*p);
   gcc_assert (*p < limit);
-} 
+}
 
 static void
 m3cg_declare_subrange (void)
@@ -3778,7 +3783,7 @@ m3cg_declare_local (void)
     }
 }
 
-static long current_param_count; /* <0 => import_procedure, >0 => declare_procedure */
+static int current_param_count; /* <0 => import_procedure, >0 => declare_procedure */
 
 static void
 m3cg_declare_param (void)
@@ -3861,6 +3866,7 @@ m3cg_declare_param (void)
     decl_attributes (&args, TYPE_ATTRIBUTES (TREE_TYPE (p)), 0);
     TREE_TYPE (p) = args;
     DECL_ARGUMENTS (p) = nreverse (DECL_ARGUMENTS (p));
+    m3_outdent ();
   }
 }
 
@@ -4110,6 +4116,10 @@ m3cg_import_procedure (void)
     /* stack current_function_decl while we get the params */
     DECL_CONTEXT (p) = current_function_decl;
     current_function_decl = p;
+  }
+  else
+  {
+    m3_outdent ();
   }
 }
 
@@ -4520,7 +4530,7 @@ m3cg_load (void)
   if (option_vars_trace)
   {
     const char *name = "noname";
-    if (v != 0 && DECL_NAME (v) != 0)
+    if (v && DECL_NAME (v))
       name = IDENTIFIER_POINTER (DECL_NAME (v));
     fprintf (stderr, "  m3cg_load (%s): offset 0x%lX, convert %s -> %s", name,
              (long)o, typestr (src_T), typestr (dst_T));
@@ -4537,7 +4547,7 @@ m3cg_load_address (void)
   if (option_vars_trace)
   {
     const char *name = "noname";
-    if (v != 0 && DECL_NAME (v) != 0)
+    if (v && DECL_NAME (v))
       name = IDENTIFIER_POINTER (DECL_NAME (v));
     fprintf (stderr, "  load address (%s) offset 0x%lX", name, (long)o);
   }
@@ -4582,7 +4592,7 @@ m3cg_store (void)
   if (option_vars_trace)
   {
     const char *name = "noname";
-    if (v != 0 && DECL_NAME (v) != 0)
+    if (v && DECL_NAME (v))
       name = IDENTIFIER_POINTER (DECL_NAME (v));
     fprintf (stderr, "  store (%s) offset:0x%lX src_t:%s dst_t:%s",
              name, (long)o, typestr (src_T), typestr (dst_T));
@@ -6029,10 +6039,6 @@ typedef void (*OP_HANDLER) (void);
 typedef struct {
   M3CG_opcode op;
   OP_HANDLER proc;
-  /* would do it this way, but for gcc's annoying warning
-     about missing initializers
-  const char* trace_before;
-  const char* trace_after; */
 } OpProc;
 
 static const OpProc ops[] = {
@@ -6200,8 +6206,7 @@ static const OpProc ops[] = {
   { LAST_OPCODE,                 0                           }
   };
 
-static const char* m3cg_trace_before[COUNT_OF(ops)];
-static const char* m3cg_trace_after[COUNT_OF(ops)];
+static short m3_indent_op[COUNT_OF(ops)];
 
 static volatile int m3_break_lineno; /* set in debugger */
 static void m3_breakpoint(void) /* set breakpoint in debugger */
@@ -6215,32 +6220,28 @@ static void
 m3_parse_file (int xx ATTRIBUTE_UNUSED)
 {
   int op = { 0 };
-  int previous_op = { 0 };
   int i = { 0 };
+  int previous_indent = { 0 };
+  int previous_indent_diff = { 0 };
 
   /* first, verify the handler table is complete and consistent. */
   for (i = 0; ops[i].proc; ++i)
-  {
     gcc_assert (i == (int)ops[i].op);
-    m3cg_trace_before[i] = "";
-    m3cg_trace_after[i] = "";
-  }
+
   gcc_assert (i == (int)LAST_OPCODE);
 
-  /* Insert a few newlines for improved readability.
-     Might be better to use indentation though.
-   */
+  /* Setup indentation. */
 
-  m3cg_trace_before[M3CG_DECLARE_PROCTYPE] = "\n";
-  m3cg_trace_before[M3CG_BEGIN_PROCEDURE] = "\n";
-  m3cg_trace_before[M3CG_DECLARE_PROCEDURE] = "\n";
-  m3cg_trace_after[M3CG_END_PROCEDURE] = "\n";
-
-  m3cg_trace_before[M3CG_START_CALL_INDIRECT] = "\n";
-  m3cg_trace_before[M3CG_START_CALL_DIRECT] = "\n";
-  m3cg_trace_before[M3CG_START_CALL_DIRECT] = "\n";
-  m3cg_trace_after[M3CG_CALL_INDIRECT] = "\n";
-  m3cg_trace_after[M3CG_CALL_DIRECT] = "\n";
+  m3_indent_op[M3CG_IMPORT_PROCEDURE] = 4;
+  m3_indent_op[M3CG_DECLARE_PROCTYPE] = 4;
+  m3_indent_op[M3CG_DECLARE_PROCEDURE] = 4;
+  m3_indent_op[M3CG_BEGIN_PROCEDURE] = 4;
+  m3_indent_op[M3CG_END_PROCEDURE] = -4;
+  m3_indent_op[M3CG_START_CALL_INDIRECT] = 4;
+  m3_indent_op[M3CG_START_CALL_DIRECT] = 4;
+  m3_indent_op[M3CG_CALL_INDIRECT] = -4;
+  m3_indent_op[M3CG_CALL_DIRECT] = -4;
+  m3_indent_op[M3CG_DECLARE_RECORD] = 4;
 
   /* check the version stamp */
   i = get_int ();
@@ -6255,19 +6256,24 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
   {
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
-    previous_op = op;
     op = get_int ();
     if (op < 0 || (int)LAST_OPCODE <= op)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %d", op, m3cg_lineno);
 
     if (option_opcodes_trace)
     {
-      fprintf (stderr, "%s%s%s(%d) %s",
+      short indent = m3_indent_op[op];
+      m3_indent += (indent < 0 ? indent : 0);
+      m3_indent = (m3_indent < 0 ? 0 : m3_indent);
+      fprintf (stderr, "%s%s(%d)%s %s",
+               (indent > 0 || previous_indent_diff < 0 || (!indent && previous_indent != m3_indent)) ? "\n" : "",
                (m3cg_lineno >= 2) ? "\n" : "",
-               m3cg_trace_after[previous_op],
-               m3cg_trace_before[op],
                m3cg_lineno,
+               m3_indentstr (),
                M3CG_opnames[op]);
+      m3_indent += (indent > 0 ? indent : 0);
+      previous_indent_diff = indent;
+      previous_indent = m3_indent;
     }
 
     ops[op].proc ();
@@ -6545,7 +6551,7 @@ tree pushdecl_top_level (tree x ATTRIBUTE_UNUSED) { gcc_unreachable (); return N
 
 #endif
 
-/* New garbage collection regime see gty.texi.  */
+/* garbage collection support, see gty.texi */
 #include "debug.h"
 #include "gtype-m3cg.h"
 #include "gt-m3cg-parse.h"
