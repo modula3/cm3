@@ -145,14 +145,33 @@ static int option_types_trace;
 
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
-/* This should use VEC but I had trouble interacting
- * with the garbage collector.
- */
+#define M3_TYPE_TABLE_FIXED_SIZE 0
+#define M3_TYPE_TABLE_GROWABLE 1
+#define M3_TYPE_TABLE_VEC 0
 
-static m3type_t* GTY ((length ("m3type_table_size_used"))) m3type_table;
 static bool m3type_table_dirty;
+
+#if M3_TYPE_TABLE_FIXED_SIZE
+#define m3type_table_size_allocated 1000000
+static unsigned long m3type_table_size_used;
+/* must comment out, #if is not sufficient */
+/*static GTY (()) m3type_t m3type_table_address[m3type_table_size_allocated];*/
+#endif
+
+#if M3_TYPE_TABLE_GROWABLE
 static unsigned long m3type_table_size_used;
 static unsigned long m3type_table_size_allocated;
+static GTY ((length ("m3type_table_size_used"))) m3type_t* m3type_table_address;
+#endif
+
+#if M3_TYPE_TABLE_VEC
+DEF_VEC_O (m3type_t);
+DEF_VEC_ALLOC_O (m3type_t, gc);
+/* must comment out, #if is not sufficient */
+/*static GTY(()) VEC(m3type_t,gc) *m3type_table; * see alias.c for a GTY+VEC example */
+#define m3type_table_address VEC_address (m3type_t, m3type_table)
+#define m3type_table_size_used VEC_length (m3type_t, m3type_table)
+#endif
 
 static int
 m3type_compare (const void* a, const void *b)
@@ -177,11 +196,11 @@ m3type_get (unsigned long id)
     if (option_trace_all >= 2)
       fprintf (stderr, "\n  m3type_get(0x%lX) ", id);
   
-    if (!m3type_table || id == NO_UID)
+    if (!m3type_table_size_used || id == NO_UID)
       return 0;
     if (m3type_table_dirty)
     {
-       qsort (m3type_table,
+       qsort (m3type_table_address,
               m3type_table_size_used,
               sizeof(m3type_t),
               m3type_compare);
@@ -189,7 +208,7 @@ m3type_get (unsigned long id)
     }
     to_find.id = id;
     found = (m3type_t*)bsearch (&to_find,
-                                m3type_table,
+                                m3type_table_address,
                                 m3type_table_size_used,
                                 sizeof(m3type_t),
                                 m3type_compare);
@@ -240,16 +259,23 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
     }
     to_add.id = id;
     to_add.t = t;
+#if M3_TYPE_TABLE_GROWABLE || M3_TYPE_TABLE_FIXED_SIZE
     gcc_assert (m3type_table_size_used <= m3type_table_size_allocated);
     if (m3type_table_size_used == m3type_table_size_allocated)
     {
-      if (m3type_table_size_allocated)
-        m3type_table_size_allocated *= 2;
-      else
-        m3type_table_size_allocated = 64;
+#if M3_TYPE_TABLE_GROWABLE
+      m3type_table_size_allocated = ((m3type_table_size_allocated * 3 / 2) | 64);
+      m3type_table_address = XRESIZEVEC (m3type_t, m3type_table_address, m3type_table_size_allocated);
+#else
+      fatal_error ("m3type_table out of room\n");
+#endif
     }
-    m3type_table = XRESIZEVEC (m3type_t, m3type_table, m3type_table_size_allocated);
-    m3type_table[m3type_table_size_used++] = to_add;
+    m3type_table_address[m3type_table_size_used++] = to_add;
+#else
+    if (!m3type_table)
+      m3type_table = VEC_alloc (m3type_t, gc, 100);
+    VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
+#endif
     m3type_table_dirty = true;
   }
 }
@@ -606,7 +632,11 @@ m3_build_type_id (m3_type t, unsigned HOST_WIDE_INT s, unsigned HOST_WIDE_INT a,
     case T_addr:
       if (id != NO_UID)
         ts = get_typeid_to_tree (id);
+#if 1
       return ts ? m3_build_pointer_type (ts) : t_addr;
+#else
+      return ts ? ts : t_addr;
+#endif
 
     case T_struct:
       if (id != NO_UID)
@@ -1968,20 +1998,14 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
 }
 
 static void
-debug_field_name_type (const char *name, tree type)
+debug_field_name (const char *name)
 {
-  tree f = build_decl (FIELD_DECL, get_identifier (name), type = type ? type : t_int);
+  tree f = build_decl (FIELD_DECL, get_identifier (name), t_int);
   DECL_FIELD_OFFSET (f) = size_zero_node;
   DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
   layout_decl (f, 1);
   TREE_CHAIN (f) = debug_fields;
   debug_fields = f;
-}
-
-static void
-debug_field_name (const char *name)
-{
-  debug_field_name_type (name, t_int);
 }
 
 static void
@@ -1993,8 +2017,7 @@ debug_field_id (unsigned long id)
 }
 
 static void
-debug_field_type_fmt_v (unsigned long id, tree type, const char* fmt,
-                        va_list args)
+debug_field_fmt_v (unsigned long id, const char* fmt, va_list args)
 {
   char name [100];
 
@@ -2006,16 +2029,7 @@ debug_field_type_fmt_v (unsigned long id, tree type, const char* fmt,
     name[sizeof(name) - 1] = 0;
     fatal_error ("identifier too long (in debug_field_fmt, %s)", name);
   }
-  debug_field_name_type (name, type);
-}
-
-static void
-debug_field_type_fmt (unsigned long id, tree type, const char* fmt, ...)
-{
-  va_list args;
-  va_start (args, fmt);
-  debug_field_type_fmt_v (id, type, fmt, args);
-  va_end (args);
+  debug_field_name (name);
 }
 
 static void
@@ -2023,7 +2037,7 @@ debug_field_fmt (unsigned long id, const char* fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
-  debug_field_type_fmt_v (id, t_int, fmt, args);
+  debug_field_fmt_v (id, fmt, args);
   va_end (args);
 }
 
@@ -2117,7 +2131,7 @@ m3_gap (HOST_WIDE_INT offset)
   HOST_WIDE_INT gap = offset - current_record_offset;
   char name[256];
   
-  if (gap <= 0)
+  if (gap <= 0 || !M3_TYPES)
     return;
     
 #if 1
@@ -2164,13 +2178,9 @@ m3_field (const char* name, tree tipe, HOST_WIDE_INT offset, HOST_WIDE_INT size,
     *v = current_record_vals = tree_cons (*f, NULL_TREE, current_record_vals);
     current_record_offset += size;
     DECL_NAME (*f) = get_identifier (name);
-
-    if (/*(IS_INTEGER_TYPE_TREE (tipe) || IS_WORD_TYPE_TREE (tipe))
-        &&*/ ((offset % BITS_PER_UNIT) || (size % BITS_PER_UNIT)))
-    {
-      /*DECL_PACKED (*f) = true;*/
+    
+    if ((offset % BITS_PER_UNIT) || (size % BITS_PER_UNIT))
       DECL_BIT_FIELD (*f) = true;
-    }
     DECL_SIZE_UNIT (*f) = size_int (size / BITS_PER_UNIT);
     DECL_SIZE (*f) = bitsize_int (size);
     layout_decl (*f, 1);
@@ -2449,7 +2459,7 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
   if (o != 0 || TREE_TYPE (v) != src_t)
   {
     /* bitfields break configure -enable-checking */
-    if (1 || GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
+    if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
@@ -2496,7 +2506,7 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
   if (o != 0 || TREE_TYPE (v) != dst_t)
   {
     /* bitfields break configure -enable-checking */
-    if (1 || GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
+    if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
@@ -2961,7 +2971,8 @@ m3_declare_record_common (void)
     debug_struct ();
 
     m3_gap (current_record_size);
-    TYPE_FIELDS (t) = nreverse (TYPE_FIELDS (t));
+    if (TYPE_FIELDS (t))
+      TYPE_FIELDS (t) = nreverse (TYPE_FIELDS (t));
     layout_type (t);
     if (current_record_type_id != NO_UID)
     {
@@ -3043,7 +3054,7 @@ m3cg_declare_field (void)
   {
     t = t ? t : m3_build_type_id (T_struct, size, size, NO_UID);
   }
-  debug_field_type_fmt (my_id, t, "_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC"_%s", offset, size, name);
+  debug_field_fmt (my_id, "_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC"_%s", offset, size, name);
   current_dbg_type_count1--;
 
   m3_field (name, t, offset, size, &f, &v);
@@ -4351,7 +4362,17 @@ m3cg_exit_proc (void)
 
   if (t != t_void) {
     res = DECL_RESULT (current_function_decl);
+#if 1
     m3_store (res, 0, t, T, t, T);
+#else
+    if (m3_next_store_volatile)
+      TREE_THIS_VOLATILE (res) = 1; /* force this to avoid aliasing problems */
+    if (M3_ALL_VOLATILE)
+      TREE_THIS_VOLATILE (res) = TREE_SIDE_EFFECTS (res) = 1; /* force this to avoid aliasing problems */
+    m3_next_store_volatile = false;
+    res = build2 (MODIFY_EXPR, TREE_TYPE (res), res, m3_cast (TREE_TYPE (res), EXPR_REF (-1)));
+    EXPR_POP ();
+#endif
   }
   add_stmt (build1 (RETURN_EXPR, t_void, res));
 }
@@ -5875,7 +5896,14 @@ incompatible:
 /*----------------------------------------------------------- M3CG parser ---*/
 
 typedef void (*OP_HANDLER) (void);
-typedef struct { M3CG_opcode op;  OP_HANDLER proc; } OpProc;
+typedef struct {
+  M3CG_opcode op;
+  OP_HANDLER proc;
+  /* would do it this way, but for gcc's annoying warning
+     about missing initializers
+  const char* trace_before;
+  const char* trace_after; */
+} OpProc;
 
 static const OpProc ops[] = {
   { M3CG_BEGIN_UNIT,             m3cg_begin_unit             },
@@ -6042,19 +6070,47 @@ static const OpProc ops[] = {
   { LAST_OPCODE,                 0                           }
   };
 
+static const char* m3cg_trace_before[COUNT_OF(ops)];
+static const char* m3cg_trace_after[COUNT_OF(ops)];
+
+static volatile int m3_break_lineno; /* set in debugger */
+static void m3_breakpoint(void) /* set breakpoint in debugger */
+{
+#ifdef __GNUC__
+  asm(""); /* do not inline */
+#endif
+}
+
 static void
 m3_parse_file (int xx ATTRIBUTE_UNUSED)
 {
   int op = { 0 };
+  int previous_op = { 0 };
   int i = { 0 };
 
   /* first, verify the handler table is complete and consistent. */
   for (i = 0;  ops[i].proc != 0;  i++ )
   {
     gcc_assert (i == (int)ops[i].op);
+    m3cg_trace_before[i] = "";
+    m3cg_trace_after[i] = "";
   }
   gcc_assert (i == (int)LAST_OPCODE);
+  
+  /* Insert a few newlines for improved readability.
+     Might be better to use indentation though.
+   */
 
+  m3cg_trace_before[M3CG_DECLARE_PROCTYPE] = "\n";
+  m3cg_trace_before[M3CG_BEGIN_PROCEDURE] = "\n";
+  m3cg_trace_before[M3CG_DECLARE_PROCEDURE] = "\n";
+  m3cg_trace_after[M3CG_END_PROCEDURE] = "\n";
+
+  m3cg_trace_before[M3CG_START_CALL_INDIRECT] = "\n";
+  m3cg_trace_before[M3CG_START_CALL_DIRECT] = "\n";
+  m3cg_trace_before[M3CG_START_CALL_DIRECT] = "\n";
+  m3cg_trace_after[M3CG_CALL_INDIRECT] = "\n";
+  m3cg_trace_after[M3CG_CALL_DIRECT] = "\n";
 
   /* check the version stamp */
   i = get_int ();
@@ -6067,12 +6123,22 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
   op = (int)LAST_OPCODE;
   while (op != (int)M3CG_END_UNIT)
   {
+    if (m3cg_lineno == m3_break_lineno)
+      m3_breakpoint ();
+    previous_op = op;
     op = get_int ();
     if (op < 0 || (int)LAST_OPCODE <= op)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %d", op, m3cg_lineno);
 
     if (option_opcodes_trace)
-      fprintf (stderr, &"\n(%d) %s"[m3cg_lineno  < 2], m3cg_lineno, M3CG_opnames[op]);
+    {
+      fprintf (stderr, "%s%s%s(%d) %s",
+               (m3cg_lineno >= 2) ? "\n" : "",
+               m3cg_trace_after[previous_op],
+               m3cg_trace_before[op],
+               m3cg_lineno,
+               M3CG_opnames[op]);
+    }
 
     ops[op].proc ();
     m3cg_lineno ++;
@@ -6192,11 +6258,13 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_tree_ccp = 0;
 
 #if 0
+  flag_tree_ccp = 0;
   flag_split_wide_types = 0;
   flag_expensive_optimizations = 0;
   flag_ipa_pure_const = 0;
   flag_ipa_reference = 0;
   flag_ipa_cp = 0;
+  flag_ipa_cp_clone = 0;
   flag_tree_dce = 0;
   flag_tree_dom = 0;
   flag_tree_dse = 0;
@@ -6213,7 +6281,9 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_regmove = 0;
   flag_delete_null_pointer_checks = 0;
   flag_tree_vrp = 0;
+  flag_inline_functions = 0;
   flag_inline_small_functions = 0;
+  flag_indirect_inlining = 0;
   flag_thread_jumps = 0;
   flag_crossjumping = 0;
   flag_optimize_sibling_calls = 0;
@@ -6244,7 +6314,7 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_unswitch_loops = 0;
 #endif
 
-#if !GCC45
+#if !GCC45 /* needs retesting */
   flag_tree_store_ccp = 0;
   flag_tree_salias = 0;
 #endif
@@ -6271,6 +6341,7 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
       fingerprint/Poly.m3: In function 'Poly__FromBytes':
       fingerprint/Poly.m3:379:0: internal compiler error:
         in referenced_var_lookup, at tree-dfa.c:519
+     leads to crashing cm3, still, alas
   */
   flag_inline_functions = 0;
   flag_inline_small_functions = 0;
