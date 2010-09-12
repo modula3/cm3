@@ -63,8 +63,8 @@ struct GTY(()) language_function
     bool volatil; /* does function call setjmp/fork/vfork */
 };
 
-typedef struct GTY(()) m3type_t
+typedef struct GTY(()) m3type
 {
   unsigned long id;
-  tree GTY (()) t;
+  tree GTY(()) t;
 } m3type_t;
