@@ -192,10 +192,10 @@ m3type_get (unsigned long id)
   if (M3_TYPES)
   {
     m3type_t to_find;
-  
+
     if (option_trace_all >= 2)
       fprintf (stderr, "\n  m3type_get(0x%lX) ", id);
-  
+
     if (!m3type_table_size_used || id == NO_UID)
       return 0;
     if (m3type_table_dirty)
@@ -584,7 +584,7 @@ m3_build_type_id (m3_type t, unsigned HOST_WIDE_INT s, unsigned HOST_WIDE_INT a,
                   unsigned long id)
 {
   tree ts = { 0 };
-  
+
   if (!M3_TYPES)
     id = NO_UID; /* disable */
 
@@ -790,7 +790,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
       else
         {                       /* n >= sizeof(int)*8 */
           tree mask;
-          
+
           gcc_assert (false);
 
           mask = m3_build2 (LSHIFT_EXPR, t, build_int_cst (t, ~0),
@@ -938,7 +938,7 @@ m3_type_for_mode (enum machine_mode mode, int unsignedp)
   if (mode == TYPE_MODE (t_lreel))   return t_lreel;
   if (mode == TYPE_MODE (t_xreel))   return t_xreel;
   if (mode == TYPE_MODE (t_int))     return unsignedp ? t_word     : t_int;
-  
+
   /* TImode is needed to do 64bit mod for ARM. */
   if (mode ==  TImode) return unsignedp ? unsigned_intTI_type_node : intDI_type_node;
 
@@ -1664,7 +1664,7 @@ scan_mtype (m3_type *T)
 
 #define SIGN(x) char x = scan_sign ()
 #define UNUSED_SIGN(x) char x ATTRIBUTE_UNUSED = scan_sign ()
- 
+
 static char
 scan_sign (void)
 {
@@ -1795,7 +1795,7 @@ scan_float (unsigned *out_Kind)
     }
   *out_Kind = Kind;
   Size = Map[Kind].Size;
-  
+
   gcc_assert ((Size == 4) || (Size == 8));
 
   /* read the value's bytes; each long holds 32 bits, even if long is larger
@@ -2130,10 +2130,10 @@ m3_gap (HOST_WIDE_INT offset)
   tree tipe = { 0 };
   HOST_WIDE_INT gap = offset - current_record_offset;
   char name[256];
-  
+
   if (gap <= 0 || !M3_TYPES)
     return;
-    
+
 #if 1
   sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, gap);
 #else
@@ -2164,21 +2164,21 @@ m3_field (const char* name, tree tipe, HOST_WIDE_INT offset, HOST_WIDE_INT size,
   {
     if (option_vars_trace)
       fprintf (stderr, "  m3_field: offset:0x%lx", (long)offset);
-      
+
     gcc_assert (offset >= current_record_offset);
     m3_gap (offset);
-    
+
     *f = build_decl (FIELD_DECL, 0, tipe);
     DECL_FIELD_OFFSET (*f) = size_int (offset / BITS_PER_UNIT);
     DECL_FIELD_BIT_OFFSET (*f) = bitsize_int (offset % BITS_PER_UNIT);
     DECL_CONTEXT (*f) = current_record_type;
     TREE_CHAIN (*f) = TYPE_FIELDS (current_record_type);
     TYPE_FIELDS (current_record_type) = *f;
-        
+
     *v = current_record_vals = tree_cons (*f, NULL_TREE, current_record_vals);
     current_record_offset += size;
     DECL_NAME (*f) = get_identifier (name);
-    
+
     if ((offset % BITS_PER_UNIT) || (size % BITS_PER_UNIT))
       DECL_BIT_FIELD (*f) = true;
     DECL_SIZE_UNIT (*f) = size_int (size / BITS_PER_UNIT);
@@ -2799,7 +2799,7 @@ m3cg_export_unit (void)
 static void
 m3cg_set_source_file (void)
 {
-  NAME (s, s_len);  
+  NAME (s, s_len);
   s = xstrdup(s);
 
 #ifdef M3_USE_MAPPED_LOCATION
@@ -2847,10 +2847,10 @@ m3cg_declare_typename (void)
     fprintf (stderr, "  typename:%s id:0x%lX", name, my_id);
 
   full_len = m3_add (unit_len, m3_add (name_len, 1));
-    
+
   if (full_len >= sizeof(fullname))
     fatal_error ("identifier too long (in m3cg_declare_typename, %s.%s)", current_unit_name, name);
-    
+
   memcpy (&fullname[0], current_unit_name, unit_len);
   fullname[unit_len] = '.';
   memcpy (&fullname[unit_len + 1], name, name_len + 1);
@@ -2880,7 +2880,7 @@ m3cg_declare_array (void)
   debug_field_id (index_id);
   debug_field_id (elts_id);
   debug_struct ();
-  
+
   /* gcc_assert (get_typeid_to_tree (index_id)); */
   /* gcc_assert (get_typeid_to_tree (elts_id)); */
   set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 0, NO_UID));
@@ -2953,7 +2953,7 @@ m3cg_declare_packed (void)
   debug_field_id (target_id);
   debug_tag ('D', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   debug_struct ();
-  
+
 #if 1
   /* Could be better. */
   set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
@@ -3084,59 +3084,59 @@ m3cg_declare_set (void)
 
 /* m3cg_append_char, m3cg_fill_word_in_hex, and m3cg_fill_hex_value help
    m3cg_declare_subrange to write hex values of lower and upper bounds.
-   They omit some redundant high bits, either positive or negative.  
+   They omit some redundant high bits, either positive or negative.
    However, the leftmost bit explicitly specified by the output is
-   always a sign bit and can be sign-extended.  For example, 
+   always a sign bit and can be sign-extended.  For example,
    0x7F and 0x0FF are positive, while 0xF7F and 0xFF are negative. */
- 
+
 static void
-m3cg_append_char (char c, char ** var_p, char * p_limit) 
+m3cg_append_char (char c, char ** var_p, char * p_limit)
 {
-  if (*var_p < p_limit) { **var_p = c; (*var_p)++; } 
-} 
+  if (*var_p < p_limit) { **var_p = c; (*var_p)++; }
+}
 
 static void
-m3cg_fill_word_in_hex 
+m3cg_fill_word_in_hex
 ( HOST_WIDE_INT i, char **var_p, char *p_limit, int *var_leading)
-{ 
-  int digit = { 0 }; 
-  int shift_ct = HOST_BITS_PER_WIDE_INT - 4; 
+{
+  int digit = { 0 };
+  int shift_ct = HOST_BITS_PER_WIDE_INT - 4;
 
-  while (shift_ct >= 0) 
-    { digit = (i >> shift_ct) & 0xF; 
-      if (digit != *var_leading) 
-        { if (*var_leading == 0 && digit > 7) 
-            { /* A leading zero sign-bit is needed. */  
-              m3cg_append_char ('0', var_p, p_limit); 
+  while (shift_ct >= 0)
+    { digit = (i >> shift_ct) & 0xF;
+      if (digit != *var_leading)
+        { if (*var_leading == 0 && digit > 7)
+            { /* A leading zero sign-bit is needed. */
+              m3cg_append_char ('0', var_p, p_limit);
             }
-          else if (*var_leading == 0xF && digit <= 7) 
-            { /* A leading one sign-bit is needed. */  
-              m3cg_append_char ('F', var_p, p_limit); 
+          else if (*var_leading == 0xF && digit <= 7)
+            { /* A leading one sign-bit is needed. */
+              m3cg_append_char ('F', var_p, p_limit);
             }
-          if (digit < 10) { m3cg_append_char (digit + '0', var_p , p_limit); }  
-          else { m3cg_append_char (digit - 10 + 'A', var_p , p_limit); }  
-          *var_leading = 0x10; 
-        } 
-      shift_ct -= 4; 
-    } 
-} 
+          if (digit < 10) { m3cg_append_char (digit + '0', var_p , p_limit); }
+          else { m3cg_append_char (digit - 10 + 'A', var_p , p_limit); }
+          *var_leading = 0x10;
+        }
+      shift_ct -= 4;
+    }
+}
 
-static void 
-m3cg_fill_hex_value 
-  (HOST_WIDE_INT a1, HOST_WIDE_INT a0, char **var_p, char *p_limit) 
-{ int leading; /*     0: skipping leading zero hex digits. 
+static void
+m3cg_fill_hex_value
+  (HOST_WIDE_INT a1, HOST_WIDE_INT a0, char **var_p, char *p_limit)
+{ int leading; /*     0: skipping leading zero hex digits.
                     0xF: skipping leading 'F' hex digits.
-                  > 0xF: write all digits. */ 
+                  > 0xF: write all digits. */
 
   if (a1 >= 0) {leading = 0; }
-  else {leading = 0XF; }   
-  m3cg_append_char ('0', var_p, p_limit); 
+  else {leading = 0XF; }
+  m3cg_append_char ('0', var_p, p_limit);
   m3cg_append_char ('x', var_p, p_limit);
-  m3cg_fill_word_in_hex (a1, var_p , p_limit, &leading); 
-  m3cg_fill_word_in_hex (a0, var_p , p_limit, &leading); 
-  if (leading == 0) { m3cg_append_char ('0', var_p, p_limit); } 
-  else if (leading == 0xF) { m3cg_append_char ('F', var_p, p_limit); } 
-} 
+  m3cg_fill_word_in_hex (a1, var_p , p_limit, &leading);
+  m3cg_fill_word_in_hex (a0, var_p , p_limit, &leading);
+  if (leading == 0) { m3cg_append_char ('0', var_p, p_limit); }
+  else if (leading == 0xF) { m3cg_append_char ('F', var_p, p_limit); }
+}
 
 static void
 m3cg_declare_subrange (void)
@@ -3147,9 +3147,9 @@ m3cg_declare_subrange (void)
   TARGET_INTEGER (max);
   BITSIZE        (size);
 
-  char buff [80]; /* Liberal. */ 
-  char *p = buff; 
-  char *p_limit = p + sizeof(buff); 
+  char buff [80]; /* Liberal. */
+  char *p = buff;
+  char *p_limit = p + sizeof(buff);
 
   HOST_WIDE_INT a1 = TREE_INT_CST_HIGH (min);
   HOST_WIDE_INT a0 = TREE_INT_CST_LOW (min);
@@ -3166,15 +3166,15 @@ m3cg_declare_subrange (void)
              ", size 0x%lX",
              my_id, domain_id, a0, a1, b0, b1, (long)size);
 
-  m3cg_append_char ('_', &p, p_limit); 
-  m3cg_append_char ('%', &p, p_limit); 
-  m3cg_append_char ('d', &p, p_limit); 
-  m3cg_append_char ('_', &p, p_limit); 
-  m3cg_fill_hex_value (a1, a0, &p, p_limit); 
-  m3cg_append_char ('_', &p, p_limit); 
-  m3cg_fill_hex_value (b1, b0, &p, p_limit); 
-  m3cg_append_char ('\0', &p, p_limit); 
-  debug_tag ('Z', my_id, buff, size); 
+  m3cg_append_char ('_', &p, p_limit);
+  m3cg_append_char ('%', &p, p_limit);
+  m3cg_append_char ('d', &p, p_limit);
+  m3cg_append_char ('_', &p, p_limit);
+  m3cg_fill_hex_value (a1, a0, &p, p_limit);
+  m3cg_append_char ('_', &p, p_limit);
+  m3cg_fill_hex_value (b1, b0, &p, p_limit);
+  m3cg_append_char ('\0', &p, p_limit);
+  debug_tag ('Z', my_id, buff, size);
 
   debug_field_id (domain_id);
   debug_struct ();
@@ -3415,7 +3415,7 @@ m3cg_declare_exception (void)
   BOOLEAN (raise_proc);
   UNUSED_VAR     (base);
   INTEGER (offset);
-  
+
   if (option_trace_all)
     fprintf (stderr, "  declare_exception name:%s typeid:0x%lX raise_proc:%s",
              n, t, boolstr (raise_proc));
@@ -3756,7 +3756,7 @@ m3cg_declare_temp (void)
   if (option_vars_trace)
     fprintf (stderr, "  declare_temp size:0x%lX align:0x%lX type:%s in_mem:%s",
              (long)s, (long)a, typestr (t), boolstr (in_memory));
- 
+
   gcc_assert (s >= 0);
   gcc_assert (a >= 0);
 
@@ -4221,10 +4221,10 @@ m3cg_set_label (void)
           e.g. in RTAllocator__AllocTraced,
           such that PushEFrame overwrites the local "thread"
           in its caller and the assert thread.something access violates.
-          
+
           We need to find another way to achieve this?
           "this": getting the label onto nonlocal_goto_handler_labels list.
-          
+
           cm3 built with gcc-4.5 gets further now.
           My mistake here, trying to replace a 4.3 construct
           with a 4.5 construct. Either I haven't found the correct 4.5
@@ -5235,7 +5235,7 @@ m3cg_insert_mn (void)
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
   gcc_assert (n >= 0);
-  
+
   /* workaround the fact that we use
    * insert_mn on uninitialized variables.
    */
@@ -5534,7 +5534,7 @@ m3cg_index_address (void)
 
   MTYPE2   (t, T);
   BYTESIZE (bits);
-  
+
   bytes = (bits / BITS_PER_UNIT);
 
   if (option_vars_trace)
@@ -6096,7 +6096,7 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
     m3cg_trace_after[i] = "";
   }
   gcc_assert (i == (int)LAST_OPCODE);
-  
+
   /* Insert a few newlines for improved readability.
      Might be better to use indentation though.
    */
@@ -6244,7 +6244,7 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_strict_aliasing = 0;
   flag_strict_overflow = 0;
   flag_reorder_functions = 0;
-  
+
   flag_exceptions = 1; /* ? */
 
   /* sound possibly dangerous, bloating, insignificant? */
@@ -6334,7 +6334,7 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_tree_fre = 0; /* crashes compiler; see test p244 */
   flag_predictive_commoning = 0;
   flag_ipa_cp_clone = 0;
-  
+
 #if 1
   /* inlining:
       m3-sys/m3cc/AMD64_DARWIN-SOLgnu/cm3cg -quiet -O3 m3core/SOLgnu/Poly.mc
