@@ -3420,15 +3420,6 @@ m3cg_declare_object (void)
   INTEGER       (n_methods);
   BITSIZE       (field_size);
 
-  if (option_types_trace)
-  {
-    const char * sbrand = brand ? brand : "null";
-    fprintf (stderr, " declare_object id:0x%lX superid:0x%lX brand:%s"
-             " brand_length:0x%lX traced:%s n_fields:0x%lX n_methods:0x%lX"
-             " field_size:0x%lX", my_id, super_id, sbrand, (long)brand_length,
-             boolstr (traced), (long)n_fields, (long)n_methods, (long)field_size);
-  }
-
   gcc_assert (n_methods >= 0);
   gcc_assert (n_fields >= 0);
   gcc_assert (field_size >= 0);
@@ -3457,9 +3448,6 @@ m3cg_declare_method (void)
 {
   NAME   (name, name_len);
   TYPEID (my_id);
-
-  if (option_procs_trace)
-    fprintf (stderr, " declare_method name:%s typeid:0x%lX", name, my_id);
 
   debug_field_fmt (my_id, "_%d_%d_%s",
                    current_dbg_type_count3++ * GET_MODE_BITSIZE (Pmode),
