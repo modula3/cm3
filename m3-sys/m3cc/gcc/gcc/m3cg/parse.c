@@ -217,7 +217,7 @@ static const struct { unsigned long id; tree* t; } builtin_uids[] = {
   { UID_PROC5, &t_addr },
   { UID_PROC6, &t_addr },
   { UID_PROC7, &t_addr },
-  { UID_PROC9, &t_addr }
+  { UID_PROC8, &t_addr }
   /* UID_NULL */
 };
 
@@ -1626,7 +1626,6 @@ get_byte (void)
   return (long)(input_buffer[input_cursor++] & 0xff);
 }
 
-
 #define INTEGER(x) HOST_WIDE_INT x = get_int (#x)
 #define UNUSED_INTEGER(x) HOST_WIDE_INT x ATTRIBUTE_UNUSED = get_int (#x)
 static HOST_WIDE_INT
@@ -1695,8 +1694,9 @@ get_typeid (const char* name)
 
 /*--------------------------------------------------------------- strings ---*/
 
-#define xSTRING(len) (len = get_int(0), (len > 0) ? alloca(len + 1) : 0)
-#define STRING(x, l) long l; char *x = scan_string (#x, xSTRING(l), l)
+#define STRING(x, l) \
+  long l = get_int(0); \
+  char *x = scan_string (#x, ((l > 0) ? (char*)alloca(l + 1) : 0), l)
 static char *
 scan_string (const char* name, char *result, long len)
 {
@@ -1733,7 +1733,7 @@ scan_cc (void)
   case 1: return build_tree_list (get_identifier ("stdcall"), NULL);
   default:
     fatal_error (" *** invalid calling convention: 0x%x, at m3cg_lineno %d",
-                 id, m3cg_lineno);
+                 (int)id, m3cg_lineno);
   }
 }
 
@@ -2040,7 +2040,7 @@ scan_var (enum tree_code code)
       if (VARRAY_TREE (all_vars, i) == NULL)
         {
           fatal_error ("*** variable should already exist, v.0x%x, line %d",
-                       i, m3cg_lineno);
+                       (int)i, (int)m3cg_lineno);
         }
     }
   else
@@ -2048,7 +2048,7 @@ scan_var (enum tree_code code)
       if (VARRAY_TREE (all_vars, i) != NULL)
         {
           fatal_error ("*** variable should not already exist, v.0x%x, line %d",
-                       i, m3cg_lineno);
+                       (int)i, (int)m3cg_lineno);
         }
       VARRAY_TREE (all_vars, i) = make_node (code);
       DECL_NAME (VARRAY_TREE (all_vars, i)) = NULL_TREE;
