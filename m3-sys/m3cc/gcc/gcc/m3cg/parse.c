@@ -239,6 +239,7 @@ static int m3_indent;
 static const char* m3_indentstr(void)
 {
   static char str[100];
+  m3_indent = ((m3_indent < 0) ? 0 : m3_indent);
   if (m3_indent >= (int)COUNT_OF(str) || m3_indent < 0)
     return "";
   if (!str[0])
@@ -315,8 +316,8 @@ set_typeid_to_tree (unsigned long id, tree t)
   set_typeid_to_tree_replace (id, t, false);
 }
 
-#define TYPEID(x)    unsigned long x = (0xFFFFFFFFUL & (unsigned long) get_int ())
-#define UNUSED_TYPEID(x)    HOST_WIDE_INT x ATTRIBUTE_UNUSED = get_int ()
+#define TYPEID(x) unsigned long x = get_typeid (#x)
+#define UNUSED_TYPEID(x) unsigned long x ATTRIBUTE_UNUSED = get_typeid (#x)
 
 static void
 fmt_uid (unsigned long x, char *buf)
@@ -1582,42 +1583,63 @@ get_byte (void)
 }
 
 
-#define INTEGER(x) HOST_WIDE_INT x = get_int ()
-#define UNUSED_INTEGER(x) HOST_WIDE_INT x ATTRIBUTE_UNUSED = get_int ()
+#define INTEGER(x) HOST_WIDE_INT x = get_int (#x)
+#define UNUSED_INTEGER(x) HOST_WIDE_INT x ATTRIBUTE_UNUSED = get_int (#x)
 static HOST_WIDE_INT
-get_int (void)
+get_int (const char* name)
 {
-  long i = { 0 };
   int n_bytes = { 0 };
   int sign = { 0 };
   unsigned shift = { 0 };
-  HOST_WIDE_INT val = { 0 };
+  HOST_WIDE_INT val = get_byte ();
 
-  i = (long) get_byte ();
-  switch (i)
+  switch (val)
   {
-  case M3CG_Int1:   return (long) get_byte ();
-  case M3CG_NInt1:  return - (long) get_byte ();
+  case M3CG_Int1:
+    val = (long) get_byte ();
+    goto L1;
+
+  case M3CG_NInt1:
+    val = - (long) get_byte ();
+    goto L1;
+
+  default:
+    goto L1;
+    
   case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
   case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
   case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
   case M3CG_NInt4:  n_bytes = 4;  sign = -1;  break;
   case M3CG_Int8:   n_bytes = 8;  sign =  1;  break;
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
-  default:          return i;
   }
 
   for (val = 0, shift = 0; n_bytes > 0;  n_bytes--, shift += 8)
     val = val | (((long) get_byte ()) << shift);
-  return sign * val;
+
+  val *= sign;
+L1:
+  if (name && option_trace_all)
+    fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", name, val, val);
+
+  return val;
 }
 
-/*-------------------------------------------------------- quoted strings ---*/
+static unsigned long
+get_typeid (const char* name)
+{
+  unsigned long val = (0xFFFFFFFFUL & (unsigned long) get_int (0));
+  if (name && option_trace_all)
+    fprintf (stderr, " %s:0x%lX", name, val);
+  return val;
+}
 
-#define xQUOTED_STRING(len) (len = get_int(), (len > 0) ? alloca(len + 1) : 0)
-#define QUOTED_STRING(x, l) long l; char *x = scan_quoted_string (xQUOTED_STRING(l), l)
+/*--------------------------------------------------------------- strings ---*/
+
+#define xSTRING(len) (len = get_int(0), (len > 0) ? alloca(len + 1) : 0)
+#define STRING(x, l) long l; char *x = scan_string (#x, xSTRING(l), l)
 static char *
-scan_quoted_string (char *result, long len)
+scan_string (const char* name, char *result, long len)
 {
   long x = { 0 };
 
@@ -1631,8 +1653,8 @@ scan_quoted_string (char *result, long len)
     result[x] = (char) get_byte ();
   result[len] = 0;
 
-  if (option_trace_all)
-    fprintf (stderr, "  quoted_string:%s", result);
+  if (name && option_trace_all)
+    fprintf (stderr, " %s:%s", name, result);
 
   return result;
 }
@@ -1644,7 +1666,7 @@ scan_quoted_string (char *result, long len)
 static tree
 scan_cc (void)
 {
-  HOST_WIDE_INT id = get_int ();
+  HOST_WIDE_INT id = get_int (0);
 
   switch (id)
   {
@@ -1658,7 +1680,7 @@ scan_cc (void)
 
 /*----------------------------------------------------------------- names ---*/
 
-#define NAME(x, n) QUOTED_STRING(x, n)
+#define NAME(x, n) STRING(x, n)
 
 /*----------------------------------------------------------------- types ---*/
 
@@ -1682,13 +1704,13 @@ scan_cc (void)
 static m3_type
 scan_type (void)
 {
-  long i = get_int ();
+  long i = get_int (0);
 
   if ((i < 0) || (T_LAST <= i))
     fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %d", i, m3cg_lineno);
 
   if (option_trace_all)
-    fprintf (stderr, "  type:%s", typestr (i));
+    fprintf (stderr, " type:%s", typestr (i));
 
   return (m3_type) i;
 }
@@ -1715,7 +1737,7 @@ scan_mtype (m3_type *T)
 static char
 scan_sign (void)
 {
-  HOST_WIDE_INT x = get_int ();
+  HOST_WIDE_INT x = get_int (0);
   switch (x)
   {
   case 0:  return 'P';  /* positive */
@@ -1729,18 +1751,18 @@ scan_sign (void)
 
 /*-------------------------------------------------------------- integers ---*/
 
-#define TARGET_INTEGER(x) tree x = scan_target_int ()
+#define TARGET_INTEGER(x) tree x = scan_target_int (#x)
 
 static tree
-scan_target_int (void)
+scan_target_int (const char* name)
 {
   unsigned HOST_WIDE_INT low = { 0 };
   HOST_WIDE_INT hi = { 0 };
   long i = { 0 };
-  long n_bytes = { 0 };
-  long original_n_bytes = { 0 };
-  long sign = { 0 };
-  long shift = { 0 };
+  unsigned n_bytes = { 0 };
+  unsigned original_n_bytes = { 0 };
+  int sign = { 0 };
+  int shift = { 0 };
   tree res = { 0 };
   tree t = long_long_integer_type_node;
 
@@ -1757,8 +1779,8 @@ scan_target_int (void)
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
   default:
 
-    if (option_trace_all)
-      fprintf (stderr,"  integer:0x%lX", i);
+    if (name && option_trace_all)
+      fprintf (stderr," %s:0x%lX", name, i);
 
     return build_int_cst (t, i);
   }
@@ -1778,9 +1800,13 @@ scan_target_int (void)
   if (sign < 0)
     res = m3_build1 (NEGATE_EXPR, t, res);
 
-  if (option_trace_all)
-    fprintf (stderr,"  integer i:0x%lX n_bytes:0x%lX " HOST_WIDE_INT_PRINT_DOUBLE_HEX " sign %ld",
-             i, original_n_bytes, hi, low, sign);
+  if (name && option_trace_all)
+  {
+    if (hi)
+      fprintf (stderr," %s:"HOST_WIDE_INT_PRINT_DOUBLE_HEX" sign:%d", name, hi, low, sign);
+    else
+      fprintf (stderr," %s:"HOST_WIDE_INT_PRINT_HEX" sign:%d", name, low, sign);
+  }
 
   return res;
 }
@@ -1790,14 +1816,14 @@ scan_target_int (void)
 #define UNUSED_LEVEL(x)     UNUSED_INTEGER (x)
 #define BITSIZE(x)   INTEGER (x)
 #define UNUSED_BITSIZE(x)   UNUSED_INTEGER (x)
-#define BYTESIZE(x)  HOST_WIDE_INT x = BITS_PER_UNIT * get_int ()
-#define UNUSED_BYTESIZE(x)  HOST_WIDE_INT x ATTRIBUTE_UNUSED = BITS_PER_UNIT * get_int ()
-#define ALIGNMENT(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int ()
+#define BYTESIZE(x)  HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
+#define UNUSED_BYTESIZE(x)  HOST_WIDE_INT x ATTRIBUTE_UNUSED = BITS_PER_UNIT * get_int (#x)
+#define ALIGNMENT(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
 #define FREQUENCY(x) INTEGER (x)
 #define UNUSED_FREQUENCY(x) UNUSED_INTEGER (x)
 #define BIAS(x)      INTEGER (x)
 #define BITOFFSET(x) INTEGER (x)
-#define BYTEOFFSET(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int ()
+#define BYTEOFFSET(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
 
 /*----------------------------------------------------------------- float ---*/
 
@@ -1841,7 +1867,7 @@ scan_float (unsigned *out_Kind)
   gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
   gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
 
-  Kind = (unsigned) get_int ();
+  Kind = (unsigned) get_int (0);
   if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
       fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %d",
@@ -1857,7 +1883,7 @@ scan_float (unsigned *out_Kind)
      endianness */
   for (i = 0;  i < Size;  i++)
     {
-      Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int ());
+      Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int (0));
     }
 
   /* When crossing and host/target different endian, swap the longs. */
@@ -1906,13 +1932,16 @@ scan_float (unsigned *out_Kind)
 
 /*-------------------------------------------------------------- booleans ---*/
 
-#define BOOLEAN(x) int x = scan_boolean ()
-#define UNUSED_BOOLEAN(x) int x ATTRIBUTE_UNUSED = scan_boolean ()
+#define BOOLEAN(x) bool x = scan_boolean (#x)
+#define UNUSED_BOOLEAN(x) bool x ATTRIBUTE_UNUSED = scan_boolean (#x)
 
-static int
-scan_boolean (void)
+static bool
+scan_boolean (const char* name)
 {
-  return (get_int () != 0);
+  bool val = (get_int (0) != 0);
+  if (name && option_trace_all)
+    fprintf (stderr, " %s:%s", name, boolstr (val));
+  return val;
 }
 
 /*------------------------------------------------------------- variables ---*/
@@ -1944,7 +1973,7 @@ varray_extend (varray_type va, size_t n)
 static tree
 scan_var (enum tree_code code)
 {
-  long i = get_int ();
+  long i = get_int (0);
 
   VARRAY_EXTEND (all_vars, i + 1);
   if (code == ERROR_MARK)
@@ -1977,14 +2006,24 @@ scan_var (enum tree_code code)
 static tree
 scan_proc (void)
 {
-  long i = get_int ();
+  long i = get_int (0);
+  tree p = { 0 };
 
   if (i <= 0)
     return 0;
   VARRAY_EXTEND (all_procs, i + 1);
   if (VARRAY_TREE (all_procs, i) == NULL)
-    VARRAY_TREE (all_procs, i) = make_node (FUNCTION_DECL);
-  return VARRAY_TREE (all_procs, i);
+  {
+    p = make_node (FUNCTION_DECL);
+    VARRAY_TREE (all_procs, i) = p;
+  }
+  else
+  {
+    p = VARRAY_TREE (all_procs, i);
+    if (option_procs_trace && p && DECL_NAME (p) && IDENTIFIER_POINTER (DECL_NAME (p)))
+      fprintf (stderr, " procedure:%s", IDENTIFIER_POINTER (DECL_NAME (p)));
+  }
+  return p;
 }
 
 
@@ -1995,10 +2034,10 @@ scan_proc (void)
 static tree
 scan_label (void)
 {
-  long i = get_int ();
+  long i = get_int (0);
 
   if (option_trace_all)
-    fprintf (stderr, "  label:%ld", i);
+    fprintf (stderr, " label:%ld", i);
 
   if (i < 0)
     return 0;
@@ -2140,7 +2179,7 @@ static void
 one_field (HOST_WIDE_INT offset, tree tipe, tree *f, tree *v)
 {
   if (option_vars_trace)
-      fprintf (stderr, "  one_field: offset:0x%lx", (long)offset);
+      fprintf (stderr, " one_field: offset:0x%lx", (long)offset);
 
   if (offset > current_record_offset)
       one_gap (offset);
@@ -2166,7 +2205,7 @@ one_gap (HOST_WIDE_INT offset)
   HOST_WIDE_INT gap = offset - current_record_offset;
 
   if (option_vars_trace)
-      fprintf (stderr, "  one_gap: offset:0x%lx gap:0x%lx", (long)offset, (long)gap);
+      fprintf (stderr, " one_gap: offset:0x%lx gap:0x%lx", (long)offset, (long)gap);
 
   tipe = make_node (LANG_TYPE);
   TYPE_SIZE (tipe) = bitsize_int (gap);
@@ -2194,7 +2233,7 @@ m3_gap (HOST_WIDE_INT offset)
   sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, gap);
 
   if (option_vars_trace)
-      fprintf (stderr, "  m3_gap: offset:0x%lx gap:0x%lx", (long)offset, (long)gap);
+      fprintf (stderr, " m3_gap: offset:0x%lx gap:0x%lx", (long)offset, (long)gap);
 
   tipe = make_node (RECORD_TYPE);
   TYPE_SIZE (tipe) = bitsize_int (gap);
@@ -2212,7 +2251,7 @@ m3_field (const char* name, tree tipe, HOST_WIDE_INT offset, HOST_WIDE_INT size,
   if (M3_TYPES)
   {
     if (option_vars_trace)
-      fprintf (stderr, "  m3_field: offset:0x%lx", (long)offset);
+      fprintf (stderr, " m3_field: offset:0x%lx", (long)offset);
 
     gcc_assert (offset >= current_record_offset);
     m3_gap (offset);
@@ -2690,7 +2729,7 @@ declare_fault_proc (void)
   if (DECL_MODE (parm) == VOIDmode)
   {
       if (option_trace_all)
-        fprintf (stderr, "  declare_fault_proc: converting parameter from VOIDmode to Pmode\n");
+        fprintf (stderr, " declare_fault_proc: converting parameter from VOIDmode to Pmode\n");
       DECL_MODE (parm) = Pmode;
   }
   DECL_ARG_TYPE (parm) = t_word;
@@ -2706,7 +2745,7 @@ declare_fault_proc (void)
   if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
-    fprintf (stderr, "  declare_fault_proc: type is 0x%x (%s)", (unsigned) mode, mode_to_string (mode));
+    fprintf (stderr, " declare_fault_proc: type is 0x%x (%s)", (unsigned) mode, mode_to_string (mode));
   }
 
   fault_proc = proc;
@@ -2843,9 +2882,7 @@ static void
 m3cg_import_unit (void)
 {
   NAME (n, n_len);
-
-  if (option_trace_all)
-    fprintf (stderr, "  import_unit %s", n);
+  n = n;
 
   /* ignore */
 }
@@ -2864,14 +2901,14 @@ m3cg_export_unit (void)
 static void
 m3cg_set_source_file (void)
 {
-  NAME (s, s_len);
-  s = xstrdup(s);
+  NAME (name, length);
+  name = xstrdup(name);
 
 #ifdef M3_USE_MAPPED_LOCATION
-  linemap_add (line_table, LC_RENAME, false, s, 1);
+  linemap_add (line_table, LC_RENAME, false, name, 1);
   input_location = linemap_line_start (line_table, 1, 80);
 #else
-  input_filename = s;
+  input_filename = name;
 #endif
 }
 
@@ -2879,9 +2916,6 @@ static void
 m3cg_set_source_line (void)
 {
   INTEGER (i);
-
-  if (option_source_line_trace)
-    fprintf (stderr, "  source line %4ld", (long)i);
 
 #ifdef M3_USE_MAPPED_LOCATION
   input_location = linemap_line_start (line_table, i, 80);
@@ -2901,7 +2935,7 @@ m3cg_declare_typename (void)
   size_t full_len;
 
   if (option_types_trace)
-    fprintf (stderr, "  typename:%s id:0x%lX", name, my_id);
+    fprintf (stderr, " id:0x%lX", my_id);
 
   full_len = m3_add (unit_len, m3_add (name_len, 1));
 
@@ -2929,10 +2963,6 @@ m3cg_declare_array (void)
   TYPEID  (elts_id);
   BITSIZE (size);
 
-  if (option_types_trace)
-    fprintf (stderr, "  declare_array id:0x%lX index_id:0x%lX elements_id:0x%lX"
-             " size:0x%lX", my_id, index_id, elts_id, (long)size);
-
   debug_tag ('A', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   debug_field_id (index_id);
   debug_field_id (elts_id);
@@ -2950,10 +2980,6 @@ m3cg_declare_open_array (void)
   TYPEID  (elts_id);
   BITSIZE (size);
 
-  if (option_types_trace)
-    fprintf (stderr, "  declare_open_array id:0x%lX elements_id:0x%lX"
-            " size:0x%lX", my_id, elts_id, (long)size);
-
   debug_tag ('B', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   debug_field_id (elts_id);
   debug_struct ();
@@ -2970,7 +2996,7 @@ m3cg_declare_enum (void)
   BITSIZE (size);
 
   if (option_types_trace)
-    fprintf (stderr, "  declare_enum id:0x%lX elements:0x%lX size:0x%lX",
+    fprintf (stderr, " declare_enum id:0x%lX elements:0x%lX size:0x%lX",
              my_id, (long)n_elts, (long)size);
 
   debug_tag ('C', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
@@ -2989,7 +3015,7 @@ m3cg_declare_enum_elt (void)
   NAME (n, n_len);
 
   if (option_types_trace)
-    fprintf (stderr, "  declare_enum_elt elem %s", n);
+    fprintf (stderr, " declare_enum_elt elem %s", n);
 
   debug_field_name (n);
   if (--current_dbg_type_count1 == 0)
@@ -3004,7 +3030,7 @@ m3cg_declare_packed (void)
   TYPEID  (target_id);
 
   if (option_types_trace)
-    fprintf (stderr, "  declare_packed id:0x%lX target_id:0x%lX size:0x%lX",
+    fprintf (stderr, " declare_packed id:0x%lX target_id:0x%lX size:0x%lX",
              my_id, target_id, (long)size);
 
   debug_field_id (target_id);
@@ -3060,10 +3086,6 @@ m3cg_declare_record (void)
   BITSIZE (size);
   INTEGER (n_fields);
 
-  if (option_types_trace)
-    fprintf (stderr, "  declare_record id:0x%lX fields:0x%lX size:0x%lX",
-             my_id, (long)n_fields, (long)size);
-
   gcc_assert (n_fields >= 0);
   debug_tag ('R', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   current_dbg_type_count1 = n_fields;
@@ -3090,10 +3112,6 @@ m3cg_declare_field (void)
   BITOFFSET (offset);
   BITSIZE   (size);
   TYPEID    (my_id);
-
-  if (option_types_trace)
-    fprintf (stderr, "  declare_field:%s size:0x%lX offset:0x%lX id:0x%lX",
-             name, (long)size, (long)offset, my_id);
 
   gcc_assert (offset >= 0);
   gcc_assert (size >= 0);
@@ -3127,7 +3145,7 @@ m3cg_declare_set (void)
   BITSIZE (size);
 
   if (option_trace_all)
-    fprintf (stderr, "  declare_set my_id:0x%lX domain_id:0x%lX size:0x%lX",
+    fprintf (stderr, " declare_set my_id:0x%lX domain_id:0x%lX size:0x%lX",
              my_id, domain_id, (long)size);
 
   gcc_assert (size >= 0);
@@ -3266,28 +3284,18 @@ m3cg_declare_subrange (void)
   char *p = buff;
   char *p_limit = p + sizeof(buff);
 
-  HOST_WIDE_INT a1 = TREE_INT_CST_HIGH (min);
-  HOST_WIDE_INT a0 = TREE_INT_CST_LOW (min);
-  HOST_WIDE_INT b1 = TREE_INT_CST_HIGH (max);
-  HOST_WIDE_INT b0 = TREE_INT_CST_LOW (max);
-
-  if (option_types_trace)
-    fprintf (stderr,
-             "  my_id:0x%lX domain_id:0x%lX"
-             ", a0 " HOST_WIDE_INT_PRINT_DEC
-             ", a1 " HOST_WIDE_INT_PRINT_DEC
-             ", b0 " HOST_WIDE_INT_PRINT_DEC
-             ", b1 " HOST_WIDE_INT_PRINT_DEC
-             ", size 0x%lX",
-             my_id, domain_id, a0, a1, b0, b1, (long)size);
+  HOST_WIDE_INT min_hi = TREE_INT_CST_HIGH (min);
+  HOST_WIDE_INT min_lo = TREE_INT_CST_LOW (min);
+  HOST_WIDE_INT max_hi = TREE_INT_CST_HIGH (max);
+  HOST_WIDE_INT max_lo = TREE_INT_CST_LOW (max);
 
   m3cg_append_char ('_', &p, p_limit);
   m3cg_append_char ('%', &p, p_limit);
   m3cg_append_char ('d', &p, p_limit);
   m3cg_append_char ('_', &p, p_limit);
-  m3cg_fill_hex_value (a1, a0, &p, p_limit);
+  m3cg_fill_hex_value (min_hi, min_lo, &p, p_limit);
   m3cg_append_char ('_', &p, p_limit);
-  m3cg_fill_hex_value (b1, b0, &p, p_limit);
+  m3cg_fill_hex_value (max_hi, max_lo, &p, p_limit);
   m3cg_append_char ('\0', &p, p_limit);
   debug_tag ('Z', my_id, buff, size);
 
@@ -3306,13 +3314,13 @@ m3cg_declare_pointer (void)
 {
   TYPEID        (my_id);
   TYPEID        (target_id);
-  QUOTED_STRING (brand, brand_length);
+  STRING        (brand, brand_length);
   BOOLEAN       (traced);
 
   if (option_types_trace)
   {
     const char * sbrand = brand ? brand : "null";
-    fprintf (stderr, "  declare_pointer id:0x%lX targetid:0x%lX brand:%s"
+    fprintf (stderr, " declare_pointer id:0x%lX targetid:0x%lX brand:%s"
              " traced:%s", my_id, target_id, sbrand, boolstr (traced));
   }
 
@@ -3335,9 +3343,6 @@ m3cg_declare_indirect (void)
   TYPEID (my_id);
   TYPEID (target_id);
 
-  if (option_types_trace)
-    fprintf (stderr, "  declare_indirect id:0x%lX target_id:0x%lX", my_id, target_id);
-
   debug_tag ('X', my_id, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (target_id);
   debug_struct ();
@@ -3357,10 +3362,6 @@ m3cg_declare_proctype (void)
   INTEGER (n_raises);
   UNUSED_CC (cc);
 
-  if (option_types_trace)
-    fprintf (stderr, "  declare_proctype id:0x%lX n_formals:0x%lX result_id:0x%lX"
-             " n_raises:0x%lX", my_id, (long)n_formals, result_id, (long)n_raises);
-
   set_typeid_to_tree (my_id, t_addr);
   debug_tag ('P', my_id, "_%d_%c"HOST_WIDE_INT_PRINT_DEC, GET_MODE_BITSIZE (Pmode),
              n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
@@ -3377,13 +3378,10 @@ m3cg_declare_proctype (void)
 static void
 m3cg_declare_formal (void)
 {
-  NAME   (n, n_len);
+  NAME   (name, len);
   TYPEID (my_id);
 
-  if (option_types_trace)
-    fprintf (stderr, "  declare_formal name:%s id:0x%lX", n, my_id);
-
-  debug_field_fmt (my_id, "_%s", n);
+  debug_field_fmt (my_id, "_%s", name);
   current_dbg_type_count1--;
   gcc_assert (current_proc_type_id != NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
@@ -3399,7 +3397,7 @@ m3cg_declare_raises (void)
   NAME (n, n_len);
 
   if (option_types_trace)
-    fprintf (stderr, "  declare_raises name:%s", n);
+    fprintf (stderr, " declare_raises name:%s", n);
 
   debug_field_name (n);
   current_dbg_type_count2--;
@@ -3416,7 +3414,7 @@ m3cg_declare_object (void)
 {
   TYPEID        (my_id);
   TYPEID        (super_id);
-  QUOTED_STRING (brand, brand_length);
+  STRING        (brand, brand_length);
   BOOLEAN       (traced);
   INTEGER       (n_fields);
   INTEGER       (n_methods);
@@ -3425,7 +3423,7 @@ m3cg_declare_object (void)
   if (option_types_trace)
   {
     const char * sbrand = brand ? brand : "null";
-    fprintf (stderr, "  declare_object id:0x%lX superid:0x%lX brand:%s"
+    fprintf (stderr, " declare_object id:0x%lX superid:0x%lX brand:%s"
              " brand_length:0x%lX traced:%s n_fields:0x%lX n_methods:0x%lX"
              " field_size:0x%lX", my_id, super_id, sbrand, (long)brand_length,
              boolstr (traced), (long)n_fields, (long)n_methods, (long)field_size);
@@ -3461,7 +3459,7 @@ m3cg_declare_method (void)
   TYPEID (my_id);
 
   if (option_procs_trace)
-    fprintf (stderr, "  declare_method name:%s typeid:0x%lX", name, my_id);
+    fprintf (stderr, " declare_method name:%s typeid:0x%lX", name, my_id);
 
   debug_field_fmt (my_id, "_%d_%d_%s",
                    current_dbg_type_count3++ * GET_MODE_BITSIZE (Pmode),
@@ -3481,7 +3479,7 @@ m3cg_declare_opaque (void)
   TYPEID (super_id);
 
   if (option_trace_all)
-    fprintf (stderr, "  declare_opaque id:0x%lX superid:0x%lX", my_id,
+    fprintf (stderr, " declare_opaque id:0x%lX superid:0x%lX", my_id,
              super_id);
 
   /* Opaque types are always pointers.
@@ -3513,7 +3511,7 @@ m3cg_reveal_opaque (void)
   tree tr = get_typeid_to_tree (rhs);
 
   if (option_procs_trace)
-    fprintf (stderr, "  reveal_opaque left:0x%lX = right:0x%lX", lhs, rhs);
+    fprintf (stderr, " reveal_opaque left:0x%lX = right:0x%lX", lhs, rhs);
 
   debug_tag ('Q', lhs, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (rhs);
@@ -3534,7 +3532,7 @@ m3cg_declare_exception (void)
   INTEGER (offset);
 
   if (option_trace_all)
-    fprintf (stderr, "  declare_exception name:%s typeid:0x%lX raise_proc:%s",
+    fprintf (stderr, " declare_exception name:%s typeid:0x%lX raise_proc:%s",
              n, t, boolstr (raise_proc));
 
   gcc_assert (offset >= 0);
@@ -3542,33 +3540,35 @@ m3cg_declare_exception (void)
   /* nothing yet */
 }
 
+static const char ReportFault[] = "ReportFault";
+
 static void
 m3cg_set_runtime_proc (void)
 {
-  NAME (s, s_len);
+  NAME (name, length);
   PROC (p);
 
   if (option_trace_all)
-    fprintf (stderr, "  set_runtime_proc name:%s", s);
+    fprintf (stderr, " set_runtime_proc name:%s", name);
 
-  if (memcmp (s, "ReportFault", sizeof("ReportFault")) == 0)
+  if (length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
     fault_handler = p;
 }
 
 static void
 m3cg_set_runtime_hook (void)
 {
-  NAME       (s, s_len);
+  NAME       (name, length);
   VAR        (v);
   BYTEOFFSET (o);
 
   if (option_trace_all)
-    fprintf (stderr, "  set_runtime_hook name:%s", s);
+    fprintf (stderr, " set_runtime_hook name:%s", name);
 
   gcc_assert (o >= 0);
 
   TREE_USED (v) = 1;
-  if (memcmp (s, "ReportFault", sizeof("ReportFault")) == 0)
+  if (length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
   {
     fault_intf = v;
     fault_offs = o;
@@ -3578,27 +3578,27 @@ m3cg_set_runtime_hook (void)
 static void
 m3cg_import_global (void)
 {
-  NAME       (n, n_len);
-  BYTESIZE   (s);
-  ALIGNMENT  (a);
+  NAME       (name, len);
+  BYTESIZE   (size);
+  ALIGNMENT  (align);
   TYPE       (t);
   TYPEID     (id);
   RETURN_VAR (v, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (n, n_len, id);
+  DECL_NAME (v) = fix_name (name, len, id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  import_global name:%s size:0x%lX align:0x%lX type:%s"
-             "typeid:0x%lx var:%s", n, (long)s, (long)a, typestr (t), id,
+    fprintf (stderr, " import_global name:%s size:0x%lX align:0x%lX type:%s"
+             "typeid:0x%lx var:%s", name, (long)size, (long)align, typestr (t), id,
              IDENTIFIER_POINTER (DECL_NAME (v)));
 
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
   DECL_EXTERNAL (v) = 1;
   TREE_PUBLIC   (v) = 1;
-  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
-  layout_decl (v, a);
+  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
+  layout_decl (v, align);
 
   TREE_CHAIN (v) = global_decls;
   global_decls = v;
@@ -3615,7 +3615,7 @@ m3cg_declare_segment (void)
   DECL_NAME (v) = fix_name (n, n_len, id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  declare_segment name:%s typeid:0x%lX is_const:%s"
+    fprintf (stderr, " declare_segment name:%s typeid:0x%lX is_const:%s"
              " var:%s", n, id, boolstr (is_const),
              IDENTIFIER_POINTER (DECL_NAME (v)));
 
@@ -3648,22 +3648,22 @@ static void
 m3cg_bind_segment (void)
 {
   VAR       (v);
-  BYTESIZE  (s);
-  ALIGNMENT (a);
+  BYTESIZE  (size);
+  ALIGNMENT (align);
   TYPE      (t);
   BOOLEAN   (exported);
   BOOLEAN   (initialized);
 
   if (option_vars_trace)
-    fprintf (stderr, "  bind_segment var:%s size:0x%lX align:0x%lX type:%s"
+    fprintf (stderr, " bind_segment var:%s size:0x%lX align:0x%lX type:%s"
              "exported:%s initialized:%s", IDENTIFIER_POINTER (DECL_NAME (v)),
-             (long)s, (long)a, typestr (t), boolstr (exported), boolstr (initialized));
+             (long)size, (long)align, typestr (t), boolstr (exported), boolstr (initialized));
 
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
   current_segment = v;
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type (t, size, align);
   relayout_decl (v);
 
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
@@ -3676,8 +3676,8 @@ static void
 m3cg_declare_global (void)
 {
   NAME       (n, n_len);
-  BYTESIZE   (s);
-  ALIGNMENT  (a);
+  BYTESIZE   (size);
+  ALIGNMENT  (align);
   TYPE       (t);
   TYPEID     (id);
   BOOLEAN    (exported);
@@ -3687,19 +3687,19 @@ m3cg_declare_global (void)
   DECL_NAME (v) = fix_name (n, n_len, id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  declare_global name:%s size:0x%lX align:0x%lX type:%s"
+    fprintf (stderr, " declare_global name:%s size:0x%lX align:0x%lX type:%s"
              " typeid:0x%lX exported:%s initialized:%s",
-             IDENTIFIER_POINTER (DECL_NAME (v)), (long)s, (long)a, typestr (t), id,
+             IDENTIFIER_POINTER (DECL_NAME (v)), (long)size, (long)align, typestr (t), id,
              boolstr (exported), boolstr (initialized));
 
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
-  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
+  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
-  layout_decl (v, a);
+  layout_decl (v, align);
 
   TREE_CHAIN (v) = global_decls;
   global_decls = v;
@@ -3709,8 +3709,8 @@ static void
 m3cg_declare_constant (void)
 {
   NAME       (n, n_len);
-  BYTESIZE   (s);
-  ALIGNMENT  (a);
+  BYTESIZE   (size);
+  ALIGNMENT  (align);
   TYPE       (t);
   TYPEID     (id);
   BOOLEAN    (exported);
@@ -3718,20 +3718,20 @@ m3cg_declare_constant (void)
   RETURN_VAR (v, VAR_DECL);
 
   if (option_trace_all)
-    fprintf (stderr, "  declare_constant name:%s size:0x%lX align:0x%lX"
-            " type:%s typeid:0x%lX exported:%s initialized:%s", n, (long)s, (long)a,
+    fprintf (stderr, " declare_constant name:%s size:0x%lX align:0x%lX"
+            " type:%s typeid:0x%lX exported:%s initialized:%s", n, (long)size, (long)align,
             typestr (t), id, boolstr (exported), boolstr (initialized));
 
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
   DECL_NAME (v) = fix_name (n, n_len, id);
-  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
+  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
   TREE_READONLY (v) = 1;
-  layout_decl (v, a);
+  layout_decl (v, align);
 
   TREE_CHAIN (v) = global_decls;
   global_decls = v;
@@ -3740,9 +3740,9 @@ m3cg_declare_constant (void)
 static void
 m3cg_declare_local (void)
 {
-  NAME       (n, n_len);
-  BYTESIZE   (s);
-  ALIGNMENT  (a);
+  NAME       (name, length);
+  BYTESIZE   (size);
+  ALIGNMENT  (align);
   TYPE       (t);
   TYPEID     (id);
   BOOLEAN    (in_memory);
@@ -3750,22 +3750,20 @@ m3cg_declare_local (void)
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (n, n_len, id);
+  DECL_NAME (v) = fix_name (name, length, id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  declare_local name:%s size:0x%lX align:0x%lX"
-            " type:%s typeid:0x%lX in_mem:%s uplev:%s",
-            IDENTIFIER_POINTER (DECL_NAME (v)), (long)s, (long)a, typestr (t), id,
-            boolstr (in_memory), boolstr (up_level));
+    fprintf (stderr, " m3name:%s",
+            IDENTIFIER_POINTER (DECL_NAME (v)));
 
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
-  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
+  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl;
-  layout_decl (v, a);
+  layout_decl (v, align);
 
   if (current_block)
     {
@@ -3788,14 +3786,14 @@ static int current_param_count; /* <0 => import_procedure, >0 => declare_procedu
 static void
 m3cg_declare_param (void)
 {
-  NAME       (n, n_len);
-  BYTESIZE   (s);
-  ALIGNMENT  (a);
+  NAME       (name, len);
+  BYTESIZE   (size);
+  ALIGNMENT  (align);
   TYPE       (t);
   TYPEID     (id);
   BOOLEAN    (in_memory);
   BOOLEAN    (up_level);
-  UNUSED_FREQUENCY  (f);
+  UNUSED_FREQUENCY  (frequency);
   RETURN_VAR (v, PARM_DECL);
 
   tree p = current_function_decl;
@@ -3821,28 +3819,25 @@ m3cg_declare_param (void)
     gcc_unreachable ();
   }
 
-  DECL_NAME (v) = fix_name (n, n_len, id);
+  DECL_NAME (v) = fix_name (name, len, id);
 
   if (option_procs_trace)
-    fprintf (stderr, "  declare_param name:%s size:0x%lX align:0x%lX"
-            " type:%s typeid:0x%lX in_mem:%s uplev:%s v:%s", n, (long)s, (long)a,
-            typestr (t), id, boolstr (in_memory),
-            boolstr (up_level), IDENTIFIER_POINTER (DECL_NAME (v)));
+    fprintf (stderr, " m3name:%s", IDENTIFIER_POINTER (DECL_NAME (v)));
 
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
-  TREE_TYPE (v) = m3_build_type_id (t, s, a, id);
+  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
   DECL_CONTEXT (v) = p;
-  layout_decl (v, a);
+  layout_decl (v, align);
 
   if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (v));
-    fprintf (stderr, "  mode 0x%x (%s)", (unsigned) mode, mode_to_string (mode));
+    fprintf (stderr, " mode 0x%x (%s)", (unsigned) mode, mode_to_string (mode));
   }
 
   if (DECL_MODE (v) == VOIDmode)
@@ -3873,23 +3868,19 @@ m3cg_declare_param (void)
 static void
 m3cg_declare_temp (void)
 {
-  BYTESIZE   (s);
-  ALIGNMENT  (a);
+  BYTESIZE   (size);
+  ALIGNMENT  (align);
   TYPE       (t);
   BOOLEAN    (in_memory);
   RETURN_VAR (v, VAR_DECL);
 
-  if (option_vars_trace)
-    fprintf (stderr, "  declare_temp size:0x%lX align:0x%lX type:%s in_mem:%s",
-             (long)s, (long)a, typestr (t), boolstr (in_memory));
-
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
   if (t == T_void)
     t = T_struct;
 
-  TREE_TYPE (v) = m3_build_type (t, s, a);
+  TREE_TYPE (v) = m3_build_type (t, size, align);
   layout_decl (v, 0);
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
   TREE_ADDRESSABLE (v) = in_memory;
@@ -4032,7 +4023,7 @@ static void
 m3cg_init_chars (void)
 {
   BYTEOFFSET    (o);
-  QUOTED_STRING (s, l);
+  STRING        (s, l);
 
   tree f = { 0 };
   tree v = { 0 };
@@ -4076,10 +4067,6 @@ m3cg_import_procedure (void)
   MTYPE2  (return_type, ret_type);
   CC      (cc);
   PROC    (p);
-
-  if (option_procs_trace)
-    fprintf (stderr, "  procedure:%s nparams:0x%lX rettype:%s", n, (long)n_params,
-             typestr (ret_type));
 
 #if M3CG_ADAPT_RETURN_TYPE
   /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
@@ -4138,10 +4125,6 @@ m3cg_declare_procedure (void)
   tree resultdecl = { 0 };
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
-
-  if (option_trace_all)
-    fprintf (stderr, "  declare_procedure name:%s n_params:0x%lX lev:0x%lX"
-            " exported:%s", n, (long)n_params, (long)lev, boolstr (exported));
 
   /* Level must be positive and nested functions are never exported. */
   gcc_assert (lev >= 0);
@@ -4233,9 +4216,6 @@ m3cg_begin_procedure (void)
   PROC (p);
   tree local = { 0 };
 
-  if (option_procs_trace)
-    fprintf (stderr, "  procedure %s", IDENTIFIER_POINTER (DECL_NAME (p)));
-
   DECL_SOURCE_LOCATION (p) = input_location;
 
   announce_function (p);
@@ -4255,18 +4235,13 @@ m3cg_begin_procedure (void)
 
   /* compile the locals we have already seen */
   for (local = BLOCK_VARS (current_block); local; local = TREE_CHAIN (local))
-    {
-      add_stmt (build1 (DECL_EXPR, t_void, local));
-    }
+    add_stmt (build1 (DECL_EXPR, t_void, local));
 }
 
 static void
 m3cg_end_procedure (void)
 {
   PROC (p);
-
-  if (option_procs_trace)
-    fprintf (stderr, "  procedure %s", IDENTIFIER_POINTER (DECL_NAME (p)));
 
   gcc_assert (current_function_decl == p);
 
@@ -4498,9 +4473,6 @@ m3cg_exit_proc (void)
   MTYPE2 (t, T);
   tree res = NULL_TREE;
 
-  if (option_trace_all)
-    fprintf (stderr, "  exit_proc type:%s", typestr (T));
-
   if (t != t_void)
   {
     res = DECL_RESULT (current_function_decl);
@@ -4532,7 +4504,7 @@ m3cg_load (void)
     const char *name = "noname";
     if (v && DECL_NAME (v))
       name = IDENTIFIER_POINTER (DECL_NAME (v));
-    fprintf (stderr, "  m3cg_load (%s): offset 0x%lX, convert %s -> %s", name,
+    fprintf (stderr, " m3cg_load (%s): offset 0x%lX, convert %s -> %s", name,
              (long)o, typestr (src_T), typestr (dst_T));
   }
   m3_load (v, o, src_t, src_T, dst_t, dst_T);
@@ -4549,7 +4521,7 @@ m3cg_load_address (void)
     const char *name = "noname";
     if (v && DECL_NAME (v))
       name = IDENTIFIER_POINTER (DECL_NAME (v));
-    fprintf (stderr, "  load address (%s) offset 0x%lX", name, (long)o);
+    fprintf (stderr, " load address (%s) offset 0x%lX", name, (long)o);
   }
   TREE_USED (v) = 1;
   v = m3_build1 (ADDR_EXPR, t_addr, v);
@@ -4568,7 +4540,7 @@ m3cg_load_indirect (void)
   tree v = { 0 };
 
   if (option_vars_trace)
-    fprintf (stderr, "  load address offset:0x%lX src_t:%s dst_t:%s",
+    fprintf (stderr, " load address offset:0x%lX src_t:%s dst_t:%s",
              (long)o, typestr (src_T), typestr (dst_T));
 
   v = EXPR_REF (-1);
@@ -4594,7 +4566,7 @@ m3cg_store (void)
     const char *name = "noname";
     if (v && DECL_NAME (v))
       name = IDENTIFIER_POINTER (DECL_NAME (v));
-    fprintf (stderr, "  store (%s) offset:0x%lX src_t:%s dst_t:%s",
+    fprintf (stderr, " store (%s) offset:0x%lX src_t:%s dst_t:%s",
              name, (long)o, typestr (src_T), typestr (dst_T));
   }
   m3_store (v, o, src_t, src_T, dst_t, dst_T);
@@ -4610,7 +4582,7 @@ m3cg_store_indirect (void)
   tree v = { 0 };
 
   if (option_vars_trace)
-    fprintf (stderr, "  store indirect offset:0x%lX src_t:%s dst_t:%s",
+    fprintf (stderr, " store indirect offset:0x%lX src_t:%s dst_t:%s",
              (long)o, typestr (src_T), typestr (dst_T));
 
   v = EXPR_REF (-2);
@@ -5551,7 +5523,7 @@ m3cg_check_lo (void)
   a = convert (t, a);
 
   if (option_exprs_trace)
-    fprintf (stderr, "  check low type:%s code:0x%lX", typestr (T), (long)code);
+    fprintf (stderr, " check low type:%s code:0x%lX", typestr (T), (long)code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5576,7 +5548,7 @@ m3cg_check_hi (void)
   a = convert (t, a);
 
   if (option_exprs_trace)
-    fprintf (stderr, "  check high type:%s code:0x%lX", typestr (T), (long)code);
+    fprintf (stderr, " check high type:%s code:0x%lX", typestr (T), (long)code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5603,7 +5575,7 @@ m3cg_check_range (void)
   b = convert (t, b);
 
   if (option_exprs_trace)
-    fprintf (stderr, "  check range type:%s code:0x%lX", typestr (T), (long)code);
+    fprintf (stderr, " check range type:%s code:0x%lX", typestr (T), (long)code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5659,7 +5631,7 @@ m3cg_add_offset (void)
   BYTESIZE (n);
 
   if (option_vars_trace)
-    fprintf (stderr, "  add offset 0x%lX", (long)n);
+    fprintf (stderr, " add offset 0x%lX", (long)n);
 
   EXPR_REF (-1) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                              EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
@@ -5678,7 +5650,7 @@ m3cg_index_address (void)
   bytes = (bits / BITS_PER_UNIT);
 
   if (option_vars_trace)
-    fprintf (stderr, "  index address n_bytes:0x%lX type:%s",
+    fprintf (stderr, " index address n_bytes:0x%lX type:%s",
              (long)bytes, typestr (T));
 
   signd = IS_INTEGER_TYPE_TREE (t);
@@ -5695,13 +5667,9 @@ m3cg_index_address (void)
 static void
 m3cg_start_call_direct (void)
 {
-  PROC    (p);
-  INTEGER (level);
+  UNUSED_PROC    (p);
+  UNUSED_INTEGER (level);
   UNUSED_MTYPE2  (t, m3t);
-
-  if (option_procs_trace)
-    fprintf (stderr, "  start call procedure:%s, level:0x%lX, type:%s",
-             IDENTIFIER_POINTER (DECL_NAME (p)), (long)level, typestr (m3t));
 
   m3_start_call ();
 }
@@ -5712,10 +5680,6 @@ m3cg_call_direct (void)
   PROC  (p);
   MTYPE2  (t, m3t);
 
-  if (option_procs_trace)
-    fprintf (stderr, "  call procedure:%s type:%s",
-             IDENTIFIER_POINTER (DECL_NAME (p)), typestr (m3t));
-
   m3_call_direct (p, t);
 }
 
@@ -5724,9 +5688,6 @@ m3cg_start_call_indirect (void)
 {
   UNUSED_MTYPE2 (t, m3t);
   UNUSED_CC (cc);
-
-  if (option_procs_trace)
-    fprintf (stderr, "  start call procedure indirect type:%s", typestr (m3t));
 
   m3_start_call ();
 }
@@ -5737,9 +5698,6 @@ m3cg_call_indirect (void)
   MTYPE2 (t, m3t);
   CC (cc);
 
-  if (option_procs_trace)
-    fprintf (stderr, "  call procedure indirect type:%s", typestr (m3t));
-
   m3_call_indirect (t, cc);
 }
 
@@ -5748,9 +5706,6 @@ m3cg_pop_param (void)
 {
   MTYPE2 (t, m3t);
 
-  if (option_vars_trace)
-    fprintf (stderr, "  pop param type:%s", typestr (m3t));
-
   m3_pop_param (t);
 }
 
@@ -5758,17 +5713,17 @@ static void
 m3cg_pop_struct (void)
 {
   TYPEID (my_id);
-  BYTESIZE  (s);
-  ALIGNMENT (a);
+  BYTESIZE  (size);
+  ALIGNMENT (align);
 
-  tree t = m3_build_type_id (T_struct, s, a, my_id);
+  tree t = m3_build_type_id (T_struct, size, align, my_id);
 
   if (option_vars_trace)
-    fprintf (stderr, "  pop_struct size:0x%lX align:0x%lX id:0x%lX t:%p",
-             (long)s, (long)a, my_id, t);
+    fprintf (stderr, " pop_struct size:0x%lX align:0x%lX id:0x%lX t:%p",
+             (long)size, (long)align, my_id, t);
 
-  gcc_assert (s >= 0);
-  gcc_assert (a >= 0);
+  gcc_assert (size >= 0);
+  gcc_assert (align >= 0);
 
   EXPR_REF (-1) = m3_build1 (INDIRECT_REF, t,
                              m3_cast (m3_build_pointer_type (t), EXPR_REF (-1)));
@@ -5790,7 +5745,7 @@ m3cg_load_procedure (void)
   PROC (p);
 
   if (option_procs_trace)
-    fprintf (stderr, "  load procedure %s", IDENTIFIER_POINTER (DECL_NAME (p)));
+    fprintf (stderr, " load procedure %s", IDENTIFIER_POINTER (DECL_NAME (p)));
 
   EXPR_PUSH (proc_addr (p));
 }
@@ -5801,7 +5756,7 @@ m3cg_load_static_link (void)
   PROC (p);
 
   if (option_procs_trace)
-    fprintf (stderr, "  load link %s", IDENTIFIER_POINTER (DECL_NAME (p)));
+    fprintf (stderr, " load link %s", IDENTIFIER_POINTER (DECL_NAME (p)));
 
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
 }
@@ -5809,10 +5764,10 @@ m3cg_load_static_link (void)
 static void
 m3cg_comment (void)
 {
-  QUOTED_STRING (comment, len);
+  STRING (comment, len);
 
   if (option_misc_trace)
-    fprintf (stderr, "  comment: `%s'", comment);
+    fprintf (stderr, " comment: `%s'", comment);
 }
 
 typedef enum { Relaxed, Release, Acquire, AcquireRelease, Sequential } Order;
@@ -6221,8 +6176,6 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
 {
   int op = { 0 };
   int i = { 0 };
-  int previous_indent = { 0 };
-  int previous_indent_diff = { 0 };
 
   /* first, verify the handler table is complete and consistent. */
   for (i = 0; ops[i].proc; ++i)
@@ -6244,7 +6197,7 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
   m3_indent_op[M3CG_DECLARE_RECORD] = 4;
 
   /* check the version stamp */
-  i = get_int ();
+  i = get_int (0);
   if (i != M3CG_Version)
   {
     fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
@@ -6256,7 +6209,7 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
   {
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
-    op = get_int ();
+    op = get_int (0);
     if (op < 0 || (int)LAST_OPCODE <= op)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %d", op, m3cg_lineno);
 
@@ -6264,16 +6217,13 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
     {
       short indent = m3_indent_op[op];
       m3_indent += (indent < 0 ? indent : 0);
-      m3_indent = (m3_indent < 0 ? 0 : m3_indent);
       fprintf (stderr, "%s%s(%d)%s %s",
-               (indent > 0 || previous_indent_diff < 0 || (!indent && previous_indent != m3_indent)) ? "\n" : "",
+               (indent > 0 ? "\n" : ""),
                (m3cg_lineno >= 2) ? "\n" : "",
                m3cg_lineno,
                m3_indentstr (),
                M3CG_opnames[op]);
       m3_indent += (indent > 0 ? indent : 0);
-      previous_indent_diff = indent;
-      previous_indent = m3_indent;
     }
 
     ops[op].proc ();
