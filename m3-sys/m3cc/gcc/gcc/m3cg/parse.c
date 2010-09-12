@@ -136,7 +136,7 @@ static bool option_trace_all;
 #define option_types_trace option_trace_all
 
 /*------------------------------------------------------------- type uids ---*/
-/* Modula-3 type uids are unsiged 32-bit values.  They are passed as signed
+/* Modula-3 type uids are unsigned 32-bit values.  They are passed as signed
    decimal integers in the intermediate code, but converted to 6-byte, base 62
    strings of characters from here to the debugger.  To avoid surprises downstream,
    these generated strings are legal C identifiers.  */
@@ -144,11 +144,88 @@ static bool option_trace_all;
 #define UID_SIZE 6
 #define NO_UID (0xFFFFFFFFUL)
 
+/* see RTBuiltin.mx */
+#define UID_INTEGER 0x195C2A74 /* INTEGER */
+#define UID_LONGINT 0x05562176 /* LONGINT */
+#define UID_WORD 0x97E237E2 /* CARDINAL */
+#define UID_LONGWORD 0x9CED36E7 /* LONGCARD */
+#define UID_REEL 0x48E16572 /* REAL */
+#define UID_LREEL 0x94FE32F6 /* LONGREAL */
+#define UID_XREEL 0x9EE024E3 /* EXTENDED */
+#define UID_BOOLEAN 0x1E59237D /* BOOLEAN [0..1] */
+#define UID_CHAR 0x56E16863 /* CHAR [0..255] */
+#define UID_MUTEX 0x1541F475 /* MUTEX */
+#define UID_TEXT 0x50F86574 /* TEXT */
+#define UID_UNTRACED_ROOT 0x898EA789 /* UNTRACED ROOT */
+#define UID_ROOT 0x9D8FB489 /* ROOT */
+#define UID_REFANY 0x1C1C45E6 /* REFANY */
+#define UID_ADDR 0x08402063 /* ADDRESS */
+#define UID_RANGE_0_31 0x2DA6581D /* [0..31] */
+#define UID_RANGE_0_63 0x2FA3581D /* [0..63] */
+#define UID_PROC1 0x9C9DE465 /* PROCEDURE (x, y: INTEGER): INTEGER */
+#define UID_PROC2 0x20AD399F /* PROCEDURE (x, y: INTEGER): BOOLEAN */
+#define UID_PROC3 0x3CE4D13B /* PROCEDURE (x: INTEGER): INTEGER */
+#define UID_PROC4 0xFA03E372 /* PROCEDURE (x, n: INTEGER): INTEGER */
+#define UID_PROC5 0x509E4C68 /* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER */
+#define UID_PROC6 0xDC1B3625 /* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER */
+#define UID_PROC7 0xEE17DF2C /* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER */
+#define UID_PROC8 0xB740EFD0 /* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER */
+#define UID_NULL 0x48EC756E /* NULL */
+
+/* type trees */
+static GTY (()) tree t_addr;
+static GTY (()) tree t_word;
+static GTY (()) tree t_int;
+static GTY (()) tree t_longword;
+static GTY (()) tree t_longint;
+static GTY (()) tree t_reel;
+static GTY (()) tree t_lreel;
+static GTY (()) tree t_xreel;
+static GTY (()) tree t_int_8;
+static GTY (()) tree t_int_16;
+static GTY (()) tree t_int_32;
+static GTY (()) tree t_int_64;
+static GTY (()) tree t_word_8;
+static GTY (()) tree t_word_16;
+static GTY (()) tree t_word_32;
+static GTY (()) tree t_word_64;
+static GTY (()) tree t_void;
+static GTY (()) tree t_set;
+
+static const struct { unsigned long id; tree* t; } builtin_uids[] = {
+  { UID_INTEGER, &t_int },
+  { UID_LONGINT, &t_longint },
+  { UID_WORD, &t_word },
+  { UID_LONGWORD, &t_longword },
+  { UID_REEL, &t_reel },
+  { UID_LREEL, &t_lreel },
+  { UID_XREEL, &t_xreel },
+  { UID_BOOLEAN, &t_word_8 },
+  { UID_CHAR, &t_word_8 },
+  { UID_MUTEX, &t_addr },
+  { UID_TEXT, &t_addr },
+  { UID_UNTRACED_ROOT, &t_addr },
+  { UID_ROOT, &t_addr },
+  { UID_REFANY, &t_addr },
+  { UID_ADDR, &t_addr },
+  { UID_RANGE_0_31, &t_word_8 },
+  { UID_RANGE_0_63, &t_word_8 },
+  { UID_PROC1, &t_addr },
+  { UID_PROC2, &t_addr },
+  { UID_PROC3, &t_addr },
+  { UID_PROC4, &t_addr },
+  { UID_PROC5, &t_addr },
+  { UID_PROC6, &t_addr },
+  { UID_PROC7, &t_addr },
+  { UID_PROC9, &t_addr }
+  /* UID_NULL */
+};
+
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
-#define M3_TYPE_TABLE_FIXED_SIZE 1
+#define M3_TYPE_TABLE_FIXED_SIZE 0
 #define M3_TYPE_TABLE_GROWABLE 0
-#define M3_TYPE_TABLE_VEC 0
+#define M3_TYPE_TABLE_VEC 1
 
 static bool m3type_table_dirty;
 
@@ -156,7 +233,7 @@ static bool m3type_table_dirty;
 #define m3type_table_size_allocated 1000000
 static unsigned long m3type_table_size_used;
 /* must comment out, #if is not sufficient */
-static GTY (()) m3type_t m3type_table_address[m3type_table_size_allocated];
+/*static GTY (()) m3type_t m3type_table_address[m3type_table_size_allocated];*/
 #endif
 
 #if M3_TYPE_TABLE_GROWABLE
@@ -170,7 +247,7 @@ static unsigned long m3type_table_size_allocated;
 DEF_VEC_O (m3type_t);
 DEF_VEC_ALLOC_O (m3type_t, gc);
 /* must comment out, #if is not sufficient */
-/*static GTY(()) VEC(m3type_t,gc) *m3type_table; * see alias.c for a GTY+VEC example */
+static GTY(()) VEC(m3type_t,gc) *m3type_table; /* see alias.c for a GTY+VEC example */
 #define m3type_table_address VEC_address (m3type_t, m3type_table)
 #define m3type_table_size_used VEC_length (m3type_t, m3type_table)
 #endif
@@ -200,6 +277,7 @@ m3type_get (unsigned long id)
 
     if (!m3type_table_size_used || id == NO_UID)
       return 0;
+
     if (m3type_table_dirty)
     {
        qsort (m3type_table_address,
@@ -226,11 +304,19 @@ get_typeid_to_tree (unsigned long id)
 */
   if (M3_TYPES)
   {
-    m3type_t* found = m3type_get (id);
-    tree t = found ? found->t : 0;
-    if (id != NO_UID && option_trace_all >= 2)
-      fprintf (stderr, "\n  get_typeid_to_tree(0x%lX):%p  ", id, t);
-    return t;
+    /* optimize some common ones (even skip tracing) */
+    switch (id)
+    {
+    case UID_INTEGER: return t_int;
+    case UID_ADDR: return t_addr;
+    }
+    {
+      m3type_t* found = m3type_get (id);
+      tree t = found ? found->t : 0;
+      if (id != NO_UID && option_trace_all >= 2)
+        fprintf (stderr, "\n  get_typeid_to_tree(0x%lX):%p  ", id, t);
+      return t;
+    }
   }
   return 0;
 }
@@ -395,26 +481,6 @@ static const char* typestr (unsigned a)
  * and call it BITS_PER_INTEGER.
  */
 #define BITS_PER_INTEGER POINTER_SIZE
-
-/* Types. */
-static GTY (()) tree t_addr;
-static GTY (()) tree t_word;
-static GTY (()) tree t_int;
-static GTY (()) tree t_longword;
-static GTY (()) tree t_longint;
-static GTY (()) tree t_reel;
-static GTY (()) tree t_lreel;
-static GTY (()) tree t_xreel;
-static GTY (()) tree t_int_8;
-static GTY (()) tree t_int_16;
-static GTY (()) tree t_int_32;
-static GTY (()) tree t_int_64;
-static GTY (()) tree t_word_8;
-static GTY (()) tree t_word_16;
-static GTY (()) tree t_word_32;
-static GTY (()) tree t_word_64;
-static GTY (()) tree t_void;
-static GTY (()) tree t_set;
 
 /* Values. */
 static GTY (()) tree v_zero;
@@ -1200,8 +1266,9 @@ sync_builtin (enum built_in_function fncode, tree type, const char *name)
 static void
 m3_init_decl_processing (void)
 {
-  tree t;
+  tree t = { 0 };
   enum built_in_function ezero = (enum built_in_function)0;
+  unsigned i = { 0 };
 
   current_function_decl = NULL;
 
@@ -1269,33 +1336,10 @@ m3_init_decl_processing (void)
 #endif
   m3_push_type_decl (get_identifier ("xreel"), t_xreel);
 
-  /* see RTBuiltin.mx */
-  set_typeid_to_tree (0x195C2A74, t_int); /* INTEGER */
-  set_typeid_to_tree (0x05562176, t_longint); /* LONGINT */
-  set_typeid_to_tree (0x97E237E2, t_word); /* CARDINAL */
-  set_typeid_to_tree (0x9CED36E7, t_longword); /* LONGCARD */
-  set_typeid_to_tree (0x48E16572, t_reel); /* REAL */
-  set_typeid_to_tree (0x94FE32F6, t_lreel); /* LONGREAL */
-  set_typeid_to_tree (0X9EE024E3, t_xreel); /* EXTENDED */
-  set_typeid_to_tree (0X1E59237D, t_word_8); /* BOOLEAN [0..1] */
-  set_typeid_to_tree (0X56E16863, t_word_8); /* CHAR [0..255] */
-  set_typeid_to_tree (0X1541F475, t_addr); /* MUTEX */
-  set_typeid_to_tree (0X50F86574, t_addr); /* TEXT */
-  set_typeid_to_tree (0X898EA789, t_addr); /* UNTRACED ROOT */
-  set_typeid_to_tree (0X9D8FB489, t_addr); /* ROOT */
-  set_typeid_to_tree (0X1C1C45E6, t_addr); /* REFANY */
-  set_typeid_to_tree (0X08402063, t_addr); /* ADDRESS */
-  set_typeid_to_tree (0X2DA6581D, t_word_8); /* [0..31] */
-  set_typeid_to_tree (0X2FA3581D, t_word_8); /* [0..63] */
-  set_typeid_to_tree (0X9C9DE465, t_addr); /* PROCEDURE (x, y: INTEGER): INTEGER */
-  set_typeid_to_tree (0X20AD399F, t_addr); /* PROCEDURE (x, y: INTEGER): BOOLEAN */
-  set_typeid_to_tree (0X3CE4D13B, t_addr); /* PROCEDURE (x: INTEGER): INTEGER */
-  set_typeid_to_tree (0xFA03E372, t_addr); /* PROCEDURE (x, n: INTEGER): INTEGER */
-  set_typeid_to_tree (0x509E4C68, t_addr); /* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER */
-  set_typeid_to_tree (0xDC1B3625, t_addr); /* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER */
-  set_typeid_to_tree (0xEE17DF2C, t_addr); /* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER */
-  set_typeid_to_tree (0xB740EFD0, t_addr); /* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER */
-  /* set_typeid_to_tree (0x48EC756E, ?); */ /* NULL */
+  /* add builtin uids */
+
+  for (i = 0; i < COUNT_OF (builtin_uids); ++i)
+    set_typeid_to_tree (builtin_uids[i].id, *builtin_uids[i].t);
 
   t_void = void_type_node;
   v_zero = build_int_cst (t_int, 0);
