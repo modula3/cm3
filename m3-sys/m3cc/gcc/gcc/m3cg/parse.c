@@ -146,8 +146,8 @@ static bool option_trace_all;
 
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
-#define M3_TYPE_TABLE_FIXED_SIZE 0
-#define M3_TYPE_TABLE_GROWABLE 1
+#define M3_TYPE_TABLE_FIXED_SIZE 1
+#define M3_TYPE_TABLE_GROWABLE 0
 #define M3_TYPE_TABLE_VEC 0
 
 static bool m3type_table_dirty;
@@ -156,13 +156,14 @@ static bool m3type_table_dirty;
 #define m3type_table_size_allocated 1000000
 static unsigned long m3type_table_size_used;
 /* must comment out, #if is not sufficient */
-/*static GTY (()) m3type_t m3type_table_address[m3type_table_size_allocated];*/
+static GTY (()) m3type_t m3type_table_address[m3type_table_size_allocated];
 #endif
 
 #if M3_TYPE_TABLE_GROWABLE
 static unsigned long m3type_table_size_used;
 static unsigned long m3type_table_size_allocated;
-static GTY ((length ("m3type_table_size_used"))) m3type_t* m3type_table_address;
+/* must comment out, #if is not sufficient */
+/*static GTY ((length ("m3type_table_size_used"))) m3type_t* m3type_table_address;*/
 #endif
 
 #if M3_TYPE_TABLE_VEC
@@ -1055,7 +1056,6 @@ pushdecl (tree decl)
   global_decls = decl;
   return decl;
 }
-
 
 static void
 m3_push_type_decl (tree id, tree type_node)
@@ -1620,7 +1620,22 @@ get_int (const char* name)
   val *= sign;
 L1:
   if (name && option_trace_all)
-    fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", name, val, val);
+  {
+    if (!name[0] || !name[1]) /* don't print single character names */
+    {
+      if (val > 9 && val < -9)
+        fprintf (stderr, " "HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", val, val);
+      else
+        fprintf (stderr, " "HOST_WIDE_INT_PRINT_DEC, val);
+    }
+    else
+    {
+      if (val > 9 && val < -9)
+        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", name, val, val);
+      else
+        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_DEC, name, val);
+    }
+  }
 
   return val;
 }
@@ -3498,9 +3513,6 @@ m3cg_reveal_opaque (void)
   tree tl = get_typeid_to_tree (lhs);
   tree tr = get_typeid_to_tree (rhs);
 
-  if (option_procs_trace)
-    fprintf (stderr, " reveal_opaque left:0x%lX = right:0x%lX", lhs, rhs);
-
   debug_tag ('Q', lhs, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (rhs);
 
@@ -4196,6 +4208,9 @@ m3cg_declare_procedure (void)
 
   current_function_decl = p;
   current_param_count = n_params;
+  
+  if (n_params < 1)
+    m3_outdent ();
 }
 
 static void
@@ -4464,14 +4479,9 @@ m3cg_exit_proc (void)
   if (t != t_void)
   {
     res = DECL_RESULT (current_function_decl);
-#if 1
+#if 0
     m3_store (res, 0, t, T, t, T);
 #else
-    if (m3_next_store_volatile)
-      TREE_THIS_VOLATILE (res) = 1; /* force this to avoid aliasing problems */
-    if (M3_ALL_VOLATILE)
-      TREE_THIS_VOLATILE (res) = TREE_SIDE_EFFECTS (res) = 1; /* force this to avoid aliasing problems */
-    m3_next_store_volatile = false;
     res = build2 (MODIFY_EXPR, TREE_TYPE (res), res, m3_cast (TREE_TYPE (res), EXPR_REF (-1)));
     EXPR_POP ();
 #endif
@@ -5188,9 +5198,6 @@ m3cg_extract (void)
   MTYPE   (t);
   BOOLEAN (sign_extend);
 
-  if (option_trace_all)
-    fprintf (stderr, " extract sign_extend:%s", boolstr (sign_extend));
-
   gcc_assert (INTEGRAL_TYPE_P (t));
 
   t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
@@ -5204,24 +5211,20 @@ m3cg_extract_n (void)
 {
   MTYPE   (t);
   BOOLEAN (sign_extend);
-  INTEGER (n);
-
-  if (option_trace_all)
-    fprintf (stderr, " extract_n count:0x%lX sign_extend:%s", (long)n,
-             boolstr (sign_extend));
+  INTEGER (count);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
-  gcc_assert (n >= 0);
-  gcc_assert (n <= 64);
-  gcc_assert (n <= TYPE_PRECISION (t));
+  gcc_assert (count >= 0);
+  gcc_assert (count <= 64);
+  gcc_assert (count <= TYPE_PRECISION (t));
 
-  if (n == 0)
+  if (count == 0)
     EXPR_REF (-2) = m3_cast (t, v_zero);
   else
   {
     t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
     EXPR_REF (-2) = m3_do_extract (EXPR_REF (-2), EXPR_REF (-1),
-                                   build_int_cst (t_int, n), t);
+                                   build_int_cst (t_int, count), t);
   }
   EXPR_POP ();
 }
@@ -5262,29 +5265,25 @@ m3cg_extract_mn (void)
 {
   MTYPE   (t);
   BOOLEAN (sign_extend);
-  INTEGER (m);
-  INTEGER (n);
-
-  if (option_trace_all)
-    fprintf (stderr, " extract_mn offset:0x%lX count:0x%lX sign_extend:%s",
-             (long)m, (long)n, boolstr (sign_extend));
+  INTEGER (offset);
+  INTEGER (count);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
-  gcc_assert (m >= 0);
-  gcc_assert (n >= 0);
-  gcc_assert (m <= 64);
-  gcc_assert (n <= 64);
-  gcc_assert ((m + n) <= 64);
-  gcc_assert (m <= TYPE_PRECISION (t));
-  gcc_assert (n <= TYPE_PRECISION (t));
-  gcc_assert ((m + n) <= TYPE_PRECISION (t));
+  gcc_assert (offset >= 0);
+  gcc_assert (count >= 0);
+  gcc_assert (offset <= 64);
+  gcc_assert (count <= 64);
+  gcc_assert ((offset + count) <= 64);
+  gcc_assert (offset <= TYPE_PRECISION (t));
+  gcc_assert (count <= TYPE_PRECISION (t));
+  gcc_assert ((offset + count) <= TYPE_PRECISION (t));
 
-  if (n == 0)
+  if (count == 0)
     EXPR_REF (-1) = m3_cast (t, v_zero);
   else
   {
     t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
-    EXPR_REF (-1) = m3_do_fixed_extract (EXPR_REF (-1), m, n, t);
+    EXPR_REF (-1) = m3_do_fixed_extract (EXPR_REF (-1), offset, count, t);
   }
 }
 
@@ -5306,16 +5305,13 @@ static void
 m3cg_insert_n (void)
 {
   MTYPE   (t);
-  INTEGER (n);
-
-  if (option_trace_all)
-    fprintf (stderr, " insert_n count:0x%lX", (long)n);
+  INTEGER (count);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
-  gcc_assert (n >= 0);
+  gcc_assert (count >= 0);
 
   EXPR_REF (-3) = m3_do_insert (EXPR_REF (-3), EXPR_REF (-2),
-                                EXPR_REF (-1), build_int_cst (t_int, n), t);
+                                EXPR_REF (-1), build_int_cst (t_int, count), t);
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -5324,22 +5320,19 @@ static void
 m3cg_insert_mn (void)
 {
   MTYPE   (t);
-  INTEGER (m);
-  INTEGER (n);
-
-  if (option_trace_all)
-    fprintf (stderr, " insert_mn offset:0x%lX count:0x%lX", (long)m, (long)n);
+  INTEGER (offset);
+  INTEGER (count);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
-  gcc_assert (m >= 0);
-  gcc_assert (n >= 0);
+  gcc_assert (offset >= 0);
+  gcc_assert (count >= 0);
 
   /* workaround the fact that we use
    * insert_mn on uninitialized variables.
    */
   m3_next_store_volatile = true;
 
-  EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), m, n, t);
+  EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), offset, count, t);
   EXPR_POP ();
 }
 
@@ -6183,6 +6176,7 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
   m3_indent_op[M3CG_CALL_INDIRECT] = -4;
   m3_indent_op[M3CG_CALL_DIRECT] = -4;
   m3_indent_op[M3CG_DECLARE_RECORD] = 4;
+  m3_indent_op[M3CG_DECLARE_ENUM] = 4;
 
   /* check the version stamp */
   i = get_int (0);
@@ -6409,7 +6403,7 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_predictive_commoning = 0;
   flag_ipa_cp_clone = 0;
 
-#if 1
+#if 0
   /* inlining:
       m3-sys/m3cc/AMD64_DARWIN-SOLgnu/cm3cg -quiet -O3 m3core/SOLgnu/Poly.mc
       fingerprint/Poly.m3: In function 'Poly__FromBytes':
