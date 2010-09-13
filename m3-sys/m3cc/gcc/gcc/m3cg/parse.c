@@ -3647,7 +3647,7 @@ static void
 m3cg_set_runtime_hook (void)
 {
   NAME       (name, name_length);
-  VAR        (v);
+  VAR        (var);
   BYTEOFFSET (o);
 
   if (option_trace_all)
@@ -3655,10 +3655,10 @@ m3cg_set_runtime_hook (void)
 
   gcc_assert (o >= 0);
 
-  TREE_USED (v) = 1;
+  TREE_USED (var) = 1;
   if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
   {
-    fault_intf = v;
+    fault_intf = var;
     fault_offs = o;
   }
 }
@@ -3671,25 +3671,25 @@ m3cg_import_global (void)
   ALIGNMENT  (align);
   TYPE       (t);
   TYPEID     (id);
-  RETURN_VAR (v, VAR_DECL);
+  RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (name, name_length, id);
+  DECL_NAME (var) = fix_name (name, name_length, id);
 
   if (option_trace_all)
     fprintf (stderr, " import_global name:%s size:0x%lX align:0x%lX type:%s"
              "typeid:0x%lx var:%s", name, (long)size, (long)align, typestr (t), id,
-             IDENTIFIER_POINTER (DECL_NAME (v)));
+             IDENTIFIER_POINTER (DECL_NAME (var)));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
 
-  DECL_EXTERNAL (v) = 1;
-  TREE_PUBLIC   (v) = 1;
-  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
-  layout_decl (v, align);
+  DECL_EXTERNAL (var) = 1;
+  TREE_PUBLIC   (var) = 1;
+  TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
+  layout_decl (var, align);
 
-  TREE_CHAIN (v) = global_decls;
-  global_decls = v;
+  TREE_CHAIN (var) = global_decls;
+  global_decls = var;
 }
 
 static void
@@ -3698,44 +3698,44 @@ m3cg_declare_segment (void)
   NAME       (name, name_length);
   TYPEID     (id);
   BOOLEAN    (is_const);
-  RETURN_VAR (v, VAR_DECL);
+  RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (name, name_length, id);
+  DECL_NAME (var) = fix_name (name, name_length, id);
 
   if (option_trace_all)
     fprintf (stderr, " declare_segment name:%s typeid:0x%lX is_const:%s"
              " var:%s", name, id, boolstr (is_const),
-             IDENTIFIER_POINTER (DECL_NAME (v)));
+             IDENTIFIER_POINTER (DECL_NAME (var)));
 
   /* we really don't have an idea of what the type of this var is; let's try
      to put something that will be good enough for all the uses of this var we
      are going to see before we have a bind_segment. Use a large size so that
      gcc doesn't think it fits in a register, so that loads out of it do get
      their offsets applied. */
-  TREE_TYPE (v)
+  TREE_TYPE (var)
     = m3_build_type_id (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, id);
-  layout_decl (v, BIGGEST_ALIGNMENT);
-  TYPE_UNSIGNED (TREE_TYPE (v)) = 1;
-  TREE_STATIC (v) = 1;
-  TREE_PUBLIC (v) = 1;
-  TREE_READONLY (v) = is_const;
-  TREE_ADDRESSABLE (v) = 1;
-  DECL_DEFER_OUTPUT (v) = 1;
-  current_segment = v;
+  layout_decl (var, BIGGEST_ALIGNMENT);
+  TYPE_UNSIGNED (TREE_TYPE (var)) = 1;
+  TREE_STATIC (var) = 1;
+  TREE_PUBLIC (var) = 1;
+  TREE_READONLY (var) = is_const;
+  TREE_ADDRESSABLE (var) = 1;
+  DECL_DEFER_OUTPUT (var) = 1;
+  current_segment = var;
 
-  TREE_CHAIN (v) = global_decls;
-  global_decls = v;
+  TREE_CHAIN (var) = global_decls;
+  global_decls = var;
 
   /* do not use "n", it is going to go away at the next instruction;
      skip the 'MI_' or 'MM_' prefix. */
-  current_unit_name = IDENTIFIER_POINTER (DECL_NAME (v)) + 3;
+  current_unit_name = IDENTIFIER_POINTER (DECL_NAME (var)) + 3;
   current_unit_name_length = strlen (current_unit_name);
 }
 
 static void
 m3cg_bind_segment (void)
 {
-  VAR       (v);
+  VAR       (var);
   BYTESIZE  (size);
   ALIGNMENT (align);
   TYPE      (t);
@@ -3744,19 +3744,19 @@ m3cg_bind_segment (void)
 
   if (option_trace_all)
     fprintf (stderr, " bind_segment var:%s size:0x%lX align:0x%lX type:%s"
-             "exported:%s initialized:%s", IDENTIFIER_POINTER (DECL_NAME (v)),
+             "exported:%s initialized:%s", IDENTIFIER_POINTER (DECL_NAME (var)),
              (long)size, (long)align, typestr (t), boolstr (exported), boolstr (initialized));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
 
-  current_segment = v;
-  TREE_TYPE (v) = m3_build_type (t, size, align);
-  relayout_decl (v);
-  DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
-  DECL_COMMON (v) = (initialized == 0);
-  TREE_PUBLIC (v) = exported;
-  TREE_STATIC (v) = 1;
+  current_segment = var;
+  TREE_TYPE (var) = m3_build_type (t, size, align);
+  relayout_decl (var);
+  DECL_UNSIGNED (var) = TYPE_UNSIGNED (TREE_TYPE (var));
+  DECL_COMMON (var) = (initialized == 0);
+  TREE_PUBLIC (var) = exported;
+  TREE_STATIC (var) = 1;
 }
 
 static void
@@ -3769,27 +3769,27 @@ m3cg_declare_global (void)
   TYPEID     (id);
   BOOLEAN    (exported);
   BOOLEAN    (initialized);
-  RETURN_VAR (v, VAR_DECL);
+  RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (name, name_length, id);
+  DECL_NAME (var) = fix_name (name, name_length, id);
 
   if (option_trace_all)
     fprintf (stderr, " declare_global name:%s size:0x%lX align:0x%lX type:%s"
              " typeid:0x%lX exported:%s initialized:%s",
-             IDENTIFIER_POINTER (DECL_NAME (v)), (long)size, (long)align,
+             IDENTIFIER_POINTER (DECL_NAME (var)), (long)size, (long)align,
              typestr (t), id, boolstr (exported), boolstr (initialized));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
 
-  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
-  DECL_COMMON (v) = (initialized == 0);
-  TREE_PUBLIC (v) = exported;
-  TREE_STATIC (v) = 1;
-  layout_decl (v, align);
+  TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
+  DECL_COMMON (var) = (initialized == 0);
+  TREE_PUBLIC (var) = exported;
+  TREE_STATIC (var) = 1;
+  layout_decl (var, align);
 
-  TREE_CHAIN (v) = global_decls;
-  global_decls = v;
+  TREE_CHAIN (var) = global_decls;
+  global_decls = var;
 }
 
 static void
@@ -3802,7 +3802,7 @@ m3cg_declare_constant (void)
   TYPEID     (id);
   BOOLEAN    (exported);
   BOOLEAN    (initialized);
-  RETURN_VAR (v, VAR_DECL);
+  RETURN_VAR (var, VAR_DECL);
 
   if (option_trace_all)
     fprintf (stderr, " declare_constant name:%s size:0x%lX align:0x%lX"
@@ -3812,16 +3812,16 @@ m3cg_declare_constant (void)
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
 
-  DECL_NAME (v) = fix_name (name, name_length, id);
-  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
-  DECL_COMMON (v) = (initialized == 0);
-  TREE_PUBLIC (v) = exported;
-  TREE_STATIC (v) = 1;
-  TREE_READONLY (v) = 1;
-  layout_decl (v, align);
+  DECL_NAME (var) = fix_name (name, name_length, id);
+  TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
+  DECL_COMMON (var) = (initialized == 0);
+  TREE_PUBLIC (var) = exported;
+  TREE_STATIC (var) = 1;
+  TREE_READONLY (var) = 1;
+  layout_decl (var, align);
 
-  TREE_CHAIN (v) = global_decls;
-  global_decls = v;
+  TREE_CHAIN (var) = global_decls;
+  global_decls = var;
 }
 
 static void
@@ -3835,35 +3835,35 @@ m3cg_declare_local (void)
   BOOLEAN    (in_memory);
   BOOLEAN    (up_level);
   FREQUENCY  (f);
-  RETURN_VAR (v, VAR_DECL);
+  RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (v) = fix_name (name, name_length, id);
+  DECL_NAME (var) = fix_name (name, name_length, id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", IDENTIFIER_POINTER (DECL_NAME (v)));
+    fprintf (stderr, " m3name:%s", IDENTIFIER_POINTER (DECL_NAME (var)));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
 
-  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
-  DECL_NONLOCAL (v) = up_level || in_memory;
-  TREE_ADDRESSABLE (v) = in_memory;
-  DECL_CONTEXT (v) = current_function_decl;
-  layout_decl (v, align);
+  TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
+  DECL_NONLOCAL (var) = up_level || in_memory;
+  TREE_ADDRESSABLE (var) = in_memory;
+  DECL_CONTEXT (var) = current_function_decl;
+  layout_decl (var, align);
 
   if (current_block)
     {
       if (m3_volatize)
-        m3_volatilize_decl (v);
-      add_stmt (build1 (DECL_EXPR, t_void, v));
-      TREE_CHAIN (v) = BLOCK_VARS (current_block);
-      BLOCK_VARS (current_block) = v;
+        m3_volatilize_decl (var);
+      add_stmt (build1 (DECL_EXPR, t_void, var));
+      TREE_CHAIN (var) = BLOCK_VARS (current_block);
+      BLOCK_VARS (current_block) = var;
     }
   else
     {
       tree subblocks = BLOCK_SUBBLOCKS (DECL_INITIAL (current_function_decl));
-      TREE_CHAIN (v) = BLOCK_VARS (subblocks);
-      BLOCK_VARS (subblocks) = v;
+      TREE_CHAIN (var) = BLOCK_VARS (subblocks);
+      BLOCK_VARS (subblocks) = var;
     }
 }
 
@@ -3880,7 +3880,7 @@ m3cg_declare_param (void)
   BOOLEAN    (in_memory);
   BOOLEAN    (up_level);
   FREQUENCY  (frequency);
-  RETURN_VAR (v, PARM_DECL);
+  RETURN_VAR (var, PARM_DECL);
 
   tree p = current_function_decl;
 
@@ -3905,36 +3905,36 @@ m3cg_declare_param (void)
     gcc_unreachable ();
   }
 
-  DECL_NAME (v) = fix_name (name, name_length, id);
+  DECL_NAME (var) = fix_name (name, name_length, id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", IDENTIFIER_POINTER (DECL_NAME (v)));
+    fprintf (stderr, " m3name:%s", IDENTIFIER_POINTER (DECL_NAME (var)));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
 
-  TREE_TYPE (v) = m3_build_type_id (t, size, align, id);
-  DECL_NONLOCAL (v) = up_level || in_memory;
-  TREE_ADDRESSABLE (v) = in_memory;
-  DECL_ARG_TYPE (v) = TREE_TYPE (v);
-  DECL_CONTEXT (v) = p;
-  layout_decl (v, align);
+  TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
+  DECL_NONLOCAL (var) = up_level || in_memory;
+  TREE_ADDRESSABLE (var) = in_memory;
+  DECL_ARG_TYPE (var) = TREE_TYPE (var);
+  DECL_CONTEXT (var) = p;
+  layout_decl (var, align);
 
   if (option_trace_all)
   {
-    enum machine_mode mode = TYPE_MODE (TREE_TYPE (v));
+    enum machine_mode mode = TYPE_MODE (TREE_TYPE (var));
     fprintf (stderr, " mode 0x%x (%s)", (unsigned) mode, mode_to_string (mode));
   }
 
-  if (DECL_MODE (v) == VOIDmode)
+  if (DECL_MODE (var) == VOIDmode)
   {
       if (option_trace_all)
         fprintf (stderr, "\n  converting from VOIDmode to Pmode\n  ");
-      DECL_MODE (v) = Pmode;
+      DECL_MODE (var) = Pmode;
   }
 
-  TREE_CHAIN (v) = DECL_ARGUMENTS (p);
-  DECL_ARGUMENTS (p) = v;
+  TREE_CHAIN (var) = DECL_ARGUMENTS (p);
+  DECL_ARGUMENTS (p) = var;
 
   if (current_param_count == 0)
   {
@@ -3958,7 +3958,7 @@ m3cg_declare_temp (void)
   ALIGNMENT  (align);
   TYPE       (t);
   BOOLEAN    (in_memory);
-  RETURN_VAR (v, VAR_DECL);
+  RETURN_VAR (var, VAR_DECL);
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
@@ -3966,32 +3966,32 @@ m3cg_declare_temp (void)
   if (t == T_void)
     t = T_struct;
 
-  TREE_TYPE (v) = m3_build_type (t, size, align);
-  layout_decl (v, 0);
-  DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
-  TREE_ADDRESSABLE (v) = in_memory;
-  DECL_CONTEXT (v) = current_function_decl;
+  TREE_TYPE (var) = m3_build_type (t, size, align);
+  layout_decl (var, 0);
+  DECL_UNSIGNED (var) = TYPE_UNSIGNED (TREE_TYPE (var));
+  TREE_ADDRESSABLE (var) = in_memory;
+  DECL_CONTEXT (var) = current_function_decl;
   if (m3_volatize)
-    m3_volatilize_decl (v);
+    m3_volatilize_decl (var);
 
-  TREE_CHAIN (v) = BLOCK_VARS (BLOCK_SUBBLOCKS
-                               (DECL_INITIAL (current_function_decl)));
-  BLOCK_VARS (BLOCK_SUBBLOCKS (DECL_INITIAL (current_function_decl))) = v;
+  TREE_CHAIN (var) = BLOCK_VARS (BLOCK_SUBBLOCKS
+                                 (DECL_INITIAL (current_function_decl)));
+  BLOCK_VARS (BLOCK_SUBBLOCKS (DECL_INITIAL (current_function_decl))) = var;
 
-  add_stmt (build1 (DECL_EXPR, t_void, v));
+  add_stmt (build1 (DECL_EXPR, t_void, var));
 }
 
 static void
 m3cg_free_temp (void)
 {
-  VAR (v);
+  VAR (var);
   /* nothing to do */
 }
 
 static void
 m3cg_begin_init (void)
 {
-  VAR (v);
+  VAR (var);
 
   current_record_offset = 0;
   current_record_vals = NULL_TREE;
@@ -4002,10 +4002,10 @@ m3cg_begin_init (void)
 static void
 m3cg_end_init (void)
 {
-  VAR (v);
+  VAR (var);
 
-  if (DECL_SIZE (v))
-    one_gap (TREE_INT_CST_LOW (DECL_SIZE (v)));
+  if (DECL_SIZE (var))
+    one_gap (TREE_INT_CST_LOW (DECL_SIZE (var)));
 
   TYPE_FIELDS (current_record_type) =
     nreverse (TYPE_FIELDS (current_record_type));
@@ -4017,7 +4017,7 @@ m3cg_end_init (void)
                  build_constructor_from_list (current_record_type,
                                               nreverse (current_record_vals)),
                  pending_inits);
-  DECL_INITIAL (v) = TREE_VALUE (pending_inits);
+  DECL_INITIAL (var) = TREE_VALUE (pending_inits);
 }
 
 static void
@@ -4575,7 +4575,7 @@ m3cg_exit_proc (void)
 static void
 m3cg_load (void)
 {
-  VAR        (v);
+  VAR        (var);
   BYTEOFFSET (o);
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
@@ -4583,32 +4583,32 @@ m3cg_load (void)
   if (option_trace_all)
   {
     const char *name = "noname";
-    if (v && DECL_NAME (v))
-      name = IDENTIFIER_POINTER (DECL_NAME (v));
+    if (var && DECL_NAME (var))
+      name = IDENTIFIER_POINTER (DECL_NAME (var));
     fprintf (stderr, " m3cg_load (%s): offset 0x%lX, convert %s -> %s", name,
              (long)o, typestr (src_T), typestr (dst_T));
   }
-  m3_load (v, o, src_t, src_T, dst_t, dst_T);
+  m3_load (var, o, src_t, src_T, dst_t, dst_T);
 }
 
 static void
 m3cg_load_address (void)
 {
-  VAR        (v);
+  VAR        (var);
   BYTEOFFSET (o);
 
   if (option_trace_all)
   {
     const char *name = "noname";
-    if (v && DECL_NAME (v))
-      name = IDENTIFIER_POINTER (DECL_NAME (v));
+    if (var && DECL_NAME (var))
+      name = IDENTIFIER_POINTER (DECL_NAME (var));
     fprintf (stderr, " load address (%s) offset 0x%lX", name, (long)o);
   }
-  TREE_USED (v) = 1;
-  v = m3_build1 (ADDR_EXPR, t_addr, v);
+  TREE_USED (var) = 1;
+  var = m3_build1 (ADDR_EXPR, t_addr, var);
   if (o)
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-  EXPR_PUSH (v);
+    var = m3_build2 (POINTER_PLUS_EXPR, t_addr, var, size_int (o / BITS_PER_UNIT));
+  EXPR_PUSH (var);
 }
 
 static void
@@ -4638,7 +4638,7 @@ m3cg_load_indirect (void)
 static void
 m3cg_store (void)
 {
-  VAR        (v);
+  VAR        (var);
   BYTEOFFSET (o);
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
@@ -4646,12 +4646,12 @@ m3cg_store (void)
   if (option_trace_all)
   {
     const char *name = "noname";
-    if (v && DECL_NAME (v))
-      name = IDENTIFIER_POINTER (DECL_NAME (v));
+    if (var && DECL_NAME (var))
+      name = IDENTIFIER_POINTER (DECL_NAME (var));
     fprintf (stderr, " store (%s) offset:0x%lX src_t:%s dst_t:%s",
              name, (long)o, typestr (src_T), typestr (dst_T));
   }
-  m3_store (v, o, src_t, src_T, dst_t, dst_T);
+  m3_store (var, o, src_t, src_T, dst_t, dst_T);
 }
 
 static void
@@ -6363,6 +6363,9 @@ m3_post_options (const char **pfilename)
   flag_reorder_blocks = 0;
   flag_reorder_blocks_and_partition = 0;
 
+  flag_strict_aliasing = 0;
+  flag_strict_overflow = 0;
+   
   flag_exceptions = 1; /* ? */
 
   flag_tree_ccp = 0; /* flag_tree_ccp of m3core breaks cm3 on I386_DARWIN */
