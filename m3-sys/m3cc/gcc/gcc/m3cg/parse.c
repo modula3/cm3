@@ -3648,18 +3648,18 @@ m3cg_set_runtime_hook (void)
 {
   NAME       (name, name_length);
   VAR        (var);
-  BYTEOFFSET (o);
+  BYTEOFFSET (offset);
 
   if (option_trace_all)
     fprintf (stderr, " set_runtime_hook name:%s", name);
 
-  gcc_assert (o >= 0);
+  gcc_assert (offset >= 0);
 
   TREE_USED (var) = 1;
   if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
   {
     fault_intf = var;
-    fault_offs = o;
+    fault_offs = offset;
   }
 }
 
@@ -4576,7 +4576,7 @@ static void
 m3cg_load (void)
 {
   VAR        (var);
-  BYTEOFFSET (o);
+  BYTEOFFSET (offset);
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
@@ -4586,35 +4586,35 @@ m3cg_load (void)
     if (var && DECL_NAME (var))
       name = IDENTIFIER_POINTER (DECL_NAME (var));
     fprintf (stderr, " m3cg_load (%s): offset 0x%lX, convert %s -> %s", name,
-             (long)o, typestr (src_T), typestr (dst_T));
+             (long)offset, typestr (src_T), typestr (dst_T));
   }
-  m3_load (var, o, src_t, src_T, dst_t, dst_T);
+  m3_load (var, offset, src_t, src_T, dst_t, dst_T);
 }
 
 static void
 m3cg_load_address (void)
 {
   VAR        (var);
-  BYTEOFFSET (o);
+  BYTEOFFSET (offset);
 
   if (option_trace_all)
   {
     const char *name = "noname";
     if (var && DECL_NAME (var))
       name = IDENTIFIER_POINTER (DECL_NAME (var));
-    fprintf (stderr, " load address (%s) offset 0x%lX", name, (long)o);
+    fprintf (stderr, " load address (%s) offset 0x%lX", name, (long)offset);
   }
   TREE_USED (var) = 1;
   var = m3_build1 (ADDR_EXPR, t_addr, var);
-  if (o)
-    var = m3_build2 (POINTER_PLUS_EXPR, t_addr, var, size_int (o / BITS_PER_UNIT));
+  if (offset)
+    var = m3_build2 (POINTER_PLUS_EXPR, t_addr, var, size_int (offset / BITS_PER_UNIT));
   EXPR_PUSH (var);
 }
 
 static void
 m3cg_load_indirect (void)
 {
-  BYTEOFFSET (o);
+  BYTEOFFSET (offset);
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
@@ -4622,12 +4622,12 @@ m3cg_load_indirect (void)
 
   if (option_trace_all)
     fprintf (stderr, " load address offset:0x%lX src_t:%s dst_t:%s",
-             (long)o, typestr (src_T), typestr (dst_T));
+             (long)offset, typestr (src_T), typestr (dst_T));
 
   v = EXPR_REF (-1);
   /* mark_address_taken (v); */
-  if (o)
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+  if (offset)
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset / BITS_PER_UNIT));
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
   if (src_T != dst_T)
@@ -4639,7 +4639,7 @@ static void
 m3cg_store (void)
 {
   VAR        (var);
-  BYTEOFFSET (o);
+  BYTEOFFSET (offset);
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
@@ -4649,15 +4649,15 @@ m3cg_store (void)
     if (var && DECL_NAME (var))
       name = IDENTIFIER_POINTER (DECL_NAME (var));
     fprintf (stderr, " store (%s) offset:0x%lX src_t:%s dst_t:%s",
-             name, (long)o, typestr (src_T), typestr (dst_T));
+             name, (long)offset, typestr (src_T), typestr (dst_T));
   }
-  m3_store (var, o, src_t, src_T, dst_t, dst_T);
+  m3_store (var, offset, src_t, src_T, dst_t, dst_T);
 }
 
 static void
 m3cg_store_indirect (void)
 {
-  BYTEOFFSET (o);
+  BYTEOFFSET (offset);
   MTYPE2 (src_t, src_T);
   MTYPE2 (dst_t, dst_T);
 
@@ -4665,11 +4665,11 @@ m3cg_store_indirect (void)
 
   if (option_trace_all)
     fprintf (stderr, " store indirect offset:0x%lX src_t:%s dst_t:%s",
-             (long)o, typestr (src_T), typestr (dst_T));
+             (long)offset, typestr (src_T), typestr (dst_T));
 
   v = EXPR_REF (-2);
-  if (o)
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+  if (offset)
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset / BITS_PER_UNIT));
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
