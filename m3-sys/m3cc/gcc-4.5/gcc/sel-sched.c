@@ -2495,7 +2495,7 @@ moveup_expr_cached (expr_t expr, insn_t insn, bool inside_insn_group)
   enum MOVEUP_EXPR_CODE res = { 0 };
   bool got_answer = false;
 
-  if (sched_verbose >= 6)
+  if (((int)sched_verbose) >= 6)
     {
       sel_print ("Moving ");
       dump_expr (expr);
