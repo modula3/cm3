@@ -478,7 +478,9 @@ M3CC_MAKE = M3CC_MAKE & " " & env
 
 if not defined ("no_config") and not NOACTION
   if not FileExists (done)
-    m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure, " | tee -a " & Log])
+    m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure
+    % , " | tee -a " & Log
+    ])
   end
 end
 
@@ -526,7 +528,9 @@ end
 %
 
 if not NOACTION
-  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a " & Log])
+  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host"
+  % & " | tee -a " & Log
+  ])
 end
 
 proc Sed (file0, find, replace) is
@@ -558,30 +562,37 @@ end
 %
 if GCC45
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
-              & " all-libiberty all-libdecnumber all-mpc all-zlib | tee -a "
-              & Log])
+              & " all-libiberty all-libdecnumber all-mpc all-zlib"
+              % & " | tee -a " & Log
+              ])
 else
 if GCC42
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
-              & " all-libiberty all-libdecnumber | tee -a " & Log])
+              & " all-libiberty all-libdecnumber"
+              % & " | tee -a " & Log
+              ])
 else
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr"
-              & " all-build-libiberty all-libiberty all-libdecnumber | tee -a "
-              & Log])
+              & " all-build-libiberty all-libiberty all-libdecnumber"
+              % & " | tee -a " & Log
+              ])
 end
 end
 
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %
-m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a |"
-          & "  tee -a " & Log])
-m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes "
-          & "insn-config.h m3cg | tee -a " & Log])
+m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a"
+          % & " | tee -a " & Log
+          ])
+m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg"
+          % & " | tee -a " & Log
+          ])
 
 if DoMipsTfile
   m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " mips-tfile"
-          & " | tee -a " & Log])
+            % & " | tee -a " & Log
+            ])
 end
 
 postcp ()
