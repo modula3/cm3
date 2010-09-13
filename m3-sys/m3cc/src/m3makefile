@@ -293,7 +293,7 @@ build_dir = "."  % let m3build set the build directory
 
 Log = ""
 if not Native
-  build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET
+  build_dir = "../" & HOST & "-" & M3CC_TARGET
   Log = path() & "/" & build_dir & "/_m3.log"
 else
   Log = path() & "/../" & BUILD_DIR & "/_m3.log"
@@ -356,26 +356,13 @@ end
 
 Configure = " "
 
-%
-% Workaround Canadian fixincludes not understanding sysroot of the cross compiler used to build it.
-% http://gcc.gnu.org/bugzilla/show_bug.cgi?id=37036
-% This does not affect m3cg.
-%
-if equal (M3CC_HOST, M3CC_TARGET) and not equal (M3CC_HOST, M3CC_BUILD)
-  Configure = Configure & " -with-sysroot=/"
-  local Prefix = "/usr/local"
-  local DefaultSysroot = Prefix & "/" & GNU_platform (M3CC_TARGET) & "/sys-root"
-  Configure = Configure & " -with-build-sysroot=" & DefaultSysroot
-  Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
-else
-  if not equal (M3CC_HOST, M3CC_TARGET)
-    Configure = Configure & " -with-sysroot"
+if not equal (HOST, M3CC_TARGET)
+  Configure = Configure & " -with-sysroot" % shouldn't matter
     
-    %
-    % This is the essential cross build step.
-    %
-    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
-  end
+  %
+  % This is the essential cross build step.
+  %
+  Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
 end
 
 if Native % host == target == build
@@ -391,7 +378,7 @@ if Native % host == target == build
   % we could be explicit about host and/or build.
   %
  
-  if {"SPARC32_LINUX","SPARC64_SOLARIS"} contains M3CC_BUILD
+  if {"SPARC32_LINUX","SPARC64_SOLARIS"} contains HOST
     Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
     %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
     %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
