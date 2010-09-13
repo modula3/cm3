@@ -332,6 +332,14 @@ static void m3_outdent(void)
   m3_indent -= (m3_indent > 0 ? 4 : 0);
 }
 
+/* Used to quash unused warnings without relying on compiler extensions,
+   and without introducing parallel macros. It is really too bad
+   we can't just #pragma away all warnings for the entire file.
+*/
+static const void* m3_unused;
+#define M3_UNUSED(var, expr) \
+ ((m3_unused = &(var)), (expr))
+
 static size_t m3_add (size_t a, size_t b)
 {
   size_t c = a + b;
@@ -396,8 +404,7 @@ set_typeid_to_tree (unsigned long id, tree t)
   set_typeid_to_tree_replace (id, t, false);
 }
 
-#define TYPEID(x) unsigned long x = get_typeid (#x)
-#define UNUSED_TYPEID(x) unsigned long x ATTRIBUTE_UNUSED = get_typeid (#x)
+#define TYPEID(x) unsigned long x = M3_UNUSED (x, get_typeid (#x))
 
 static void
 fmt_uid (unsigned long x, char *buf)
@@ -941,8 +948,9 @@ m3_do_shift (enum tree_code code, tree orig_t, tree val, tree count)
 }
 
 alias_set_type
-m3_get_alias_set (tree ARG_UNUSED (t))
+m3_get_alias_set (tree t)
 {
+  m3_unused = t;
   return 0;
 }
 
@@ -1152,10 +1160,12 @@ builtin_function (const char *name,
                   enum built_in_function function_code,
                   enum built_in_class clas,
                   const char *library_name,
-                  tree attrs ATTRIBUTE_UNUSED)
+                  tree attrs)
 {
   tree id = get_identifier (name);
   tree decl = build_decl (FUNCTION_DECL, id, type);
+  
+  m3_unused = attrs;
   TREE_PUBLIC (decl) = 1;
   DECL_EXTERNAL (decl) = 1;
   DECL_BUILT_IN_CLASS (decl) = clas;
@@ -1609,8 +1619,8 @@ get_byte (void)
   return (long)(input_buffer[input_cursor++] & 0xff);
 }
 
-#define INTEGER(x) HOST_WIDE_INT x = get_int (#x)
-#define UNUSED_INTEGER(x) HOST_WIDE_INT x ATTRIBUTE_UNUSED = get_int (#x)
+#define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, get_int (#x))
+
 static HOST_WIDE_INT
 get_int (const char* name)
 {
@@ -1677,9 +1687,10 @@ get_typeid (const char* name)
 
 /*--------------------------------------------------------------- strings ---*/
 
-#define STRING(x, l) \
-  long l = get_int(0); \
-  char *x = scan_string (#x, ((l > 0) ? (char*)alloca(l + 1) : 0), l)
+#define STRING(x, length) \
+  long length = get_int (0); \
+  char *x = M3_UNUSED (x, scan_string (#x, ((length > 0) ? (char*)alloca (length + 1) : 0), length))
+
 static char *
 scan_string (const char* name, char *result, long len)
 {
@@ -1703,10 +1714,10 @@ scan_string (const char* name, char *result, long len)
 
 /*---------------------------------------------------- calling convention ---*/
 
-#define CC(x) tree x = scan_cc ()
-#define UNUSED_CC(x) tree x ATTRIBUTE_UNUSED = scan_cc ()
+#define CALLING_CONVENTION(x) tree x = M3_UNUSED (x, scan_calling_convention ())
+
 static tree
-scan_cc (void)
+scan_calling_convention (void)
 {
   HOST_WIDE_INT id = get_int (0);
 
@@ -1741,8 +1752,8 @@ scan_cc (void)
 #define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
 #define IS_REAL_TYPE_TREE(t) (t == t_reel || t == t_lreel || t == t_xreel)
 
-#define TYPE(x) m3_type x = scan_type ()
-#define UNUSED_TYPE(x) m3_type x ATTRIBUTE_UNUSED = scan_type ()
+#define TYPE(x) m3_type x = M3_UNUSED (x, scan_type ())
+
 static m3_type
 scan_type (void)
 {
@@ -1757,10 +1768,8 @@ scan_type (void)
   return (m3_type) i;
 }
 
-#define MTYPE(x) tree x = scan_mtype (0)
-#define UNUSED_MTYPE(x) tree x ATTRIBUTE_UNUSED = scan_mtype (0)
-#define MTYPE2(x, y) m3_type y; tree x = scan_mtype (&y)
-#define UNUSED_MTYPE2(x, y) m3_type y; tree x ATTRIBUTE_UNUSED = scan_mtype (&y)
+#define MTYPE(x) tree x = M3_UNUSED (x, scan_mtype (0))
+#define MTYPE2(x, y) m3_type y; tree x = M3_UNUSED (x, scan_mtype (&y))
 
 static tree
 scan_mtype (m3_type *T)
@@ -1773,8 +1782,7 @@ scan_mtype (m3_type *T)
 
 /*----------------------------------------------------------------- signs ---*/
 
-#define SIGN(x) char x = scan_sign ()
-#define UNUSED_SIGN(x) char x ATTRIBUTE_UNUSED = scan_sign ()
+#define SIGN(x) char x = M3_UNUSED (x, scan_sign ())
 
 static char
 scan_sign (void)
@@ -1855,14 +1863,10 @@ scan_target_int (const char* name)
 
 
 #define LEVEL(x)     INTEGER (x)
-#define UNUSED_LEVEL(x)     UNUSED_INTEGER (x)
 #define BITSIZE(x)   INTEGER (x)
-#define UNUSED_BITSIZE(x)   UNUSED_INTEGER (x)
-#define BYTESIZE(x)  HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
-#define UNUSED_BYTESIZE(x)  HOST_WIDE_INT x ATTRIBUTE_UNUSED = BITS_PER_UNIT * get_int (#x)
+#define BYTESIZE(x)  HOST_WIDE_INT x = M3_UNUSED (x, BITS_PER_UNIT * get_int (#x))
 #define ALIGNMENT(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
 #define FREQUENCY(x) INTEGER (x)
-#define UNUSED_FREQUENCY(x) UNUSED_INTEGER (x)
 #define BIAS(x)      INTEGER (x)
 #define BITOFFSET(x) INTEGER (x)
 #define BYTEOFFSET(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
@@ -1974,8 +1978,7 @@ scan_float (unsigned *out_Kind)
 
 /*-------------------------------------------------------------- booleans ---*/
 
-#define BOOLEAN(x) bool x = scan_boolean (#x)
-#define UNUSED_BOOLEAN(x) bool x ATTRIBUTE_UNUSED = scan_boolean (#x)
+#define BOOLEAN(x) bool x = M3_UNUSED (x, scan_boolean (#x))
 
 static bool
 scan_boolean (const char* name)
@@ -1988,8 +1991,7 @@ scan_boolean (const char* name)
 
 /*------------------------------------------------------------- variables ---*/
 
-#define VAR(x) tree x = scan_var (ERROR_MARK)
-#define UNUSED_VAR(x) tree x ATTRIBUTE_UNUSED = scan_var (ERROR_MARK)
+#define VAR(x) tree x = M3_UNUSED (x, scan_var (ERROR_MARK))
 #define RETURN_VAR(x, code) tree x = scan_var (code)
 
 #define VARRAY_EXTEND(va, n) ((va) = varray_extend (va, n))
@@ -2042,8 +2044,7 @@ scan_var (enum tree_code code)
 
 /*------------------------------------------------------------ procedures ---*/
 
-#define PROC(x) tree x = scan_proc ()
-#define UNUSED_PROC(x) tree x ATTRIBUTE_UNUSED = scan_proc ()
+#define PROC(x) tree x = M3_UNUSED (x, scan_proc ())
 
 static tree
 scan_proc (void)
@@ -2068,10 +2069,9 @@ scan_proc (void)
   return p;
 }
 
-
 /*---------------------------------------------------------------- labels ---*/
 
-#define LABEL(l) tree  l = scan_label ()
+#define LABEL(l) tree l = scan_label ()
 
 static tree
 scan_label (void)
@@ -2457,13 +2457,15 @@ m3_call_direct (tree p, tree t)
 }
 
 static void
-m3_call_indirect (tree t, tree cc ATTRIBUTE_UNUSED)
+m3_call_indirect (tree t, tree cc)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (),
                            tree_cons (NULL_TREE, t_void, NULL_TREE));
   tree fntype = m3_build_pointer_type (build_function_type (t, argtypes));
   tree call = { 0 };
   tree fnaddr = EXPR_REF (-1);
+
+  m3_unused = cc;
   EXPR_POP ();
 
   call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
@@ -2697,13 +2699,15 @@ m3_load (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
   m3_load_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
 }
 
-static void ATTRIBUTE_UNUSED
+#if 0
+static void
 m3_load_volatile (tree v, long o, tree src_t, m3_type src_T,
                   tree dst_t, m3_type dst_T)
 {
   bool volatil = true;
   m3_load_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
 }
+#endif
 
 static void
 m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
@@ -2966,7 +2970,7 @@ generate_fault (int code)
 static void
 m3cg_begin_unit (void)
 {
-  UNUSED_INTEGER (n);
+  INTEGER (n);
   exported_interfaces = 0;
 }
 
@@ -3459,7 +3463,7 @@ m3cg_declare_proctype (void)
   INTEGER (n_formals);
   TYPEID  (result_id);
   INTEGER (n_raises);
-  UNUSED_CC (cc);
+  CALLING_CONVENTION (cc);
 
   set_typeid_to_tree (my_id, t_addr);
   debug_tag ('P', my_id, "_%d_%c"HOST_WIDE_INT_PRINT_DEC, GET_MODE_BITSIZE (Pmode),
@@ -3612,7 +3616,7 @@ m3cg_declare_exception (void)
   NAME    (name, name_length);
   TYPEID  (t);
   BOOLEAN (raise_proc);
-  UNUSED_VAR (base);
+  VAR     (base);
   INTEGER (offset);
 
   if (option_trace_all)
@@ -3802,7 +3806,7 @@ m3cg_declare_constant (void)
 
   if (option_trace_all)
     fprintf (stderr, " declare_constant name:%s size:0x%lX align:0x%lX"
-            " type:%s typeid:0x%lX exported:%s initialized:%s", n, (long)size,
+            " type:%s typeid:0x%lX exported:%s initialized:%s", name, (long)size,
             (long)align, typestr (t), id, boolstr (exported), boolstr (initialized));
 
   gcc_assert (size >= 0);
@@ -3830,7 +3834,7 @@ m3cg_declare_local (void)
   TYPEID     (id);
   BOOLEAN    (in_memory);
   BOOLEAN    (up_level);
-  UNUSED_FREQUENCY  (f);
+  FREQUENCY  (f);
   RETURN_VAR (v, VAR_DECL);
 
   DECL_NAME (v) = fix_name (name, name_length, id);
@@ -3875,7 +3879,7 @@ m3cg_declare_param (void)
   TYPEID     (id);
   BOOLEAN    (in_memory);
   BOOLEAN    (up_level);
-  UNUSED_FREQUENCY  (frequency);
+  FREQUENCY  (frequency);
   RETURN_VAR (v, PARM_DECL);
 
   tree p = current_function_decl;
@@ -3980,14 +3984,14 @@ m3cg_declare_temp (void)
 static void
 m3cg_free_temp (void)
 {
-  UNUSED_VAR (v);
+  VAR (v);
   /* nothing to do */
 }
 
 static void
 m3cg_begin_init (void)
 {
-  UNUSED_VAR (v);
+  VAR (v);
 
   current_record_offset = 0;
   current_record_vals = NULL_TREE;
@@ -4144,7 +4148,7 @@ m3cg_import_procedure (void)
   NAME    (name, name_length);
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
-  CC      (cc);
+  CALLING_CONVENTION (cc);
   PROC    (p);
 
 #if M3CG_ADAPT_RETURN_TYPE
@@ -4196,7 +4200,7 @@ m3cg_declare_procedure (void)
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
   LEVEL   (lev);
-  CC      (cc);
+  CALLING_CONVENTION (cc);
   BOOLEAN (exported);
   PROC    (parent);
   PROC    (p);
@@ -4227,7 +4231,7 @@ m3cg_declare_procedure (void)
   }
 #endif
 
-  DECL_NAME (p) = get_identifier (name, name_length);
+  DECL_NAME (p) = get_identifier (name);
   TREE_STATIC (p) = 1;
 
   /* TREE_PUBLIC (p) should be 'exported', but that fails to keep any
@@ -4386,7 +4390,7 @@ m3cg_end_block (void)
 static void
 m3cg_note_procedure_origin (void)
 {
-  UNUSED_PROC (p);
+  PROC (p);
 
   fatal_error ("note_procedure_origin psuedo-op encountered.");
 }
@@ -4465,9 +4469,9 @@ m3cg_jump (void)
 static void
 m3cg_if_true (void)
 {
-  UNUSED_TYPE      (t);
+  TYPE      (t);
   LABEL     (l);
-  UNUSED_FREQUENCY (f);
+  FREQUENCY (f);
 
   tree cond = m3_cast (boolean_type_node, EXPR_REF (-1));
   EXPR_POP ();
@@ -4480,9 +4484,9 @@ m3cg_if_true (void)
 static void
 m3cg_if_false (void)
 {
-  UNUSED_TYPE      (t);
+  TYPE      (t);
   LABEL     (l);
-  UNUSED_FREQUENCY (f);
+  FREQUENCY (f);
 
   tree cond = m3_cast (boolean_type_node, EXPR_REF (-1));
   EXPR_POP ();
@@ -4496,7 +4500,7 @@ m3cg_if_compare (enum tree_code o)
 {
   MTYPE     (t);
   LABEL     (l);
-  UNUSED_FREQUENCY (f);
+  FREQUENCY (f);
 
   tree t1 = m3_cast (t, EXPR_REF (-1));
   tree t2 = m3_cast (t, EXPR_REF (-2));
@@ -4694,7 +4698,7 @@ m3cg_load_integer (void)
 static void
 m3cg_load_float (void)
 {
-  UNUSED_MTYPE (t);
+  MTYPE (t);
   FLOAT (f, fkind);
 
   if (TREE_TYPE (f) != t)
@@ -4922,8 +4926,8 @@ static void
 m3cg_div (void)
 {
   MTYPE2 (t, T);
-  UNUSED_SIGN (a);
-  UNUSED_SIGN (b);
+  SIGN (a);
+  SIGN (b);
   EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
                              m3_cast (t, EXPR_REF (-1)));
@@ -4934,8 +4938,8 @@ static void
 m3cg_mod (void)
 {
   MTYPE2 (t, T);
-  UNUSED_SIGN (a);
-  UNUSED_SIGN (b);
+  SIGN (a);
+  SIGN (b);
   EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
                              m3_cast (t, EXPR_REF (-1)));
@@ -5419,8 +5423,8 @@ m3cg_insert_mn (void)
 static void
 m3cg_swap (void)
 {
-  UNUSED_MTYPE (t);
-  UNUSED_MTYPE (u);
+  MTYPE (t);
+  MTYPE (u);
 
   m3_swap ();
 }
@@ -5428,7 +5432,7 @@ m3cg_swap (void)
 static void
 m3cg_pop (void)
 {
-  UNUSED_MTYPE (t);
+  MTYPE (t);
 
   EXPR_POP ();
 }
@@ -5436,11 +5440,11 @@ m3cg_pop (void)
 static void
 m3cg_copy_n (void)
 {
-  MTYPE (count_t);
-  MTYPE (mem_t);
+  MTYPE (count_type);
+  MTYPE (mem_type);
   BOOLEAN (overlap);
 
-  m3cg_assert_int (count_t);
+  m3cg_assert_int (count_type);
   m3_start_call ();
 
   /* rearrange the parameters */
@@ -5458,8 +5462,8 @@ m3cg_copy_n (void)
   EXPR_REF (-1) =
     m3_build2 (MULT_EXPR, t_int,
                EXPR_REF (-1),
-               TYPE_SIZE_UNIT (mem_t));
-  m3_pop_param (count_t);
+               TYPE_SIZE_UNIT (mem_type));
+  m3_pop_param (count_type);
   m3_call_direct (overlap ? memmove_proc : memcpy_proc, t_void);
 }
 
@@ -5468,7 +5472,7 @@ m3cg_copy (void)
 {
   INTEGER (n);
   MTYPE (t);
-  UNUSED_BOOLEAN (overlap);
+  BOOLEAN (overlap);
 
   tree pts = { 0 };
   tree ts = make_node (LANG_TYPE);
@@ -5499,12 +5503,12 @@ m3cg_copy (void)
 static void
 m3cg_zero_n (void)
 {
-  MTYPE (count_t);
-  MTYPE (mem_t);
+  MTYPE (count_type);
+  MTYPE (mem_type);
 
-  m3cg_assert_int (count_t);
+  m3cg_assert_int (count_type);
   EXPR_REF (-1) = m3_build2 (MULT_EXPR, t_int, EXPR_REF (-1),
-                             TYPE_SIZE_UNIT (mem_t));
+                             TYPE_SIZE_UNIT (mem_type));
 
   m3_start_call ();
   m3_swap ();
@@ -5519,14 +5523,14 @@ static void
 m3cg_zero (void)
 {
   INTEGER (n);
-  MTYPE   (mem_t);
+  MTYPE   (mem_type);
 
   gcc_assert (n >= 0);
   m3_start_call ();
   m3_pop_param (t_addr);
   EXPR_PUSH (v_zero);
   m3_pop_param (t_int);
-  EXPR_PUSH (m3_build2 (MULT_EXPR, t_int, size_int (n), TYPE_SIZE_UNIT (mem_t)));
+  EXPR_PUSH (m3_build2 (MULT_EXPR, t_int, size_int (n), TYPE_SIZE_UNIT (mem_type)));
   m3_pop_param (t_int);
   m3_call_direct (memset_proc, t_void);
 }
@@ -5728,9 +5732,9 @@ m3cg_index_address (void)
 static void
 m3cg_start_call_direct (void)
 {
-  UNUSED_PROC    (p);
-  UNUSED_INTEGER (level);
-  UNUSED_MTYPE2  (t, m3t);
+  PROC    (p);
+  INTEGER (level);
+  MTYPE2  (t, m3t);
 
   m3_start_call ();
 }
@@ -5747,8 +5751,8 @@ m3cg_call_direct (void)
 static void
 m3cg_start_call_indirect (void)
 {
-  UNUSED_MTYPE2 (t, m3t);
-  UNUSED_CC (cc);
+  MTYPE2 (t, m3t);
+  CALLING_CONVENTION (cc);
 
   m3_start_call ();
 }
@@ -5757,7 +5761,7 @@ static void
 m3cg_call_indirect (void)
 {
   MTYPE2 (t, m3t);
-  CC (cc);
+  CALLING_CONVENTION (cc);
 
   m3_call_indirect (t, cc);
 }
@@ -5816,19 +5820,13 @@ m3cg_load_static_link (void)
 {
   PROC (p);
 
-  if (option_trace_all)
-    fprintf (stderr, " load link %s", IDENTIFIER_POINTER (DECL_NAME (p)));
-
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
 }
 
 static void
 m3cg_comment (void)
 {
-  STRING (comment, len);
-
-  if (option_trace_all)
-    fprintf (stderr, " comment: `%s'", comment);
+  STRING (comment, comment_length);
 }
 
 typedef enum { Relaxed, Release, Acquire, AcquireRelease, Sequential } Order;
@@ -5917,8 +5915,8 @@ m3cg_compare_exchange (void)
   MTYPE2         (t, T);
   MTYPE2         (u, U);
   MTYPE2         (r, R);
-  UNUSED_INTEGER (success);
-  UNUSED_INTEGER (failure);
+  INTEGER        (success);
+  INTEGER        (failure);
 
   tree v = { 0 };
   long size = { 0 };
@@ -5954,7 +5952,7 @@ incompatible:
 static void
 m3cg_fence (void)
 {
-  UNUSED_INTEGER (order);
+  INTEGER (order);
 
   m3_start_call ();
   m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
@@ -5965,7 +5963,7 @@ m3cg_fetch_and_op (enum built_in_function fncode)
 {
   MTYPE2         (t, T);
   MTYPE2         (u, U);
-  UNUSED_INTEGER (order);
+  INTEGER        (order);
 
   long size = { 0 };
 
@@ -6233,10 +6231,12 @@ static void m3_breakpoint(void) /* set breakpoint in debugger */
 }
 
 static void
-m3_parse_file (int xx ATTRIBUTE_UNUSED)
+m3_parse_file (int xx)
 {
   int op = { 0 };
   int i = { 0 };
+  
+  m3_unused = &xx;
 
   /* first, verify the handler table is complete and consistent. */
   for (i = 0; ops[i].proc; ++i)
@@ -6307,9 +6307,11 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
 
 /* Prepare to handle switches.  */
 static unsigned int
-m3_init_options (unsigned int argc ATTRIBUTE_UNUSED,
-                 const char **argv ATTRIBUTE_UNUSED)
+m3_init_options (unsigned int argc,
+                 const char **argv)
 {
+  m3_unused = &argc;
+  m3_unused = argv;
   return CL_m3cg;
 }
 
@@ -6317,19 +6319,21 @@ static int version_done;
 
 /* Process a switch - called by opts.c.  */
 static int
-m3_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED, int value)
+m3_handle_option (size_t code, const char *arg,
+                  int value)
 {
-  enum opt_code code = (enum opt_code) scode;
-
-  switch (code)
+  m3_unused = arg;
+  m3_unused = &value;
+  switch ((enum opt_code)code)
     {
     default:
       return 1;
+
     case OPT_v:
       if (!version_done)
         {
           char const * const ver = version_string; /* type check */
-          printf ("M3CG - Modula-3 Compiler back end %s\n", lang, ver);
+          printf ("M3CG - Modula-3 Compiler back end %s\n", ver);
           version_done = 1;
         }
       break;
@@ -6351,19 +6355,16 @@ m3_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED, int value)
 
 /* Post-switch processing. */
 bool
-m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
+m3_post_options (const char **pfilename)
 {
+   m3_unused = pfilename;
+
   /* These optimizations break our exception handling? */
   flag_reorder_blocks = 0;
   flag_reorder_blocks_and_partition = 0;
 
-  /* sound somewhat dangerous? */
-
-  flag_strict_aliasing = 0;
-  flag_strict_overflow = 0;
-  flag_reorder_functions = 0;
-
   flag_exceptions = 1; /* ? */
+
   flag_tree_ccp = 0; /* flag_tree_ccp of m3core breaks cm3 on I386_DARWIN */
 
 #if !GCC45 /* needs retesting */
@@ -6386,9 +6387,7 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_tree_fre = 0; /* crashes compiler; see test p244 */
   flag_predictive_commoning = 0;
   flag_ipa_cp_clone = 0;
-#endif
 
-#if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
@@ -6452,7 +6451,12 @@ struct cpp_reader* parse_in;
 c_language_kind c_language;
 
 /* This is used by cfstring code; providing it here makes us not have to #if 0 out a few bits. */
-tree pushdecl_top_level (tree x ATTRIBUTE_UNUSED) { gcc_unreachable (); return NULL_TREE; }
+tree pushdecl_top_level (tree x)
+{
+  m3_unused = x;
+  gcc_unreachable ();
+  return 0;
+}
 
 #endif
 
