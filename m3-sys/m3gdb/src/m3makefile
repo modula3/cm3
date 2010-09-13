@@ -6,16 +6,8 @@
 % Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
 %
 
-%
-% user can say cm3 -DM3GDB_HOST=FreeBSD4, for example.
-%
-
 if not (equal(TARGET, "AMD64_DARWIN") or equal(TARGET, "ARM_DARWIN") or equal(TARGET, "I386_DARWIN")
  or equal(TARGET, "PPC_DARWIN") or equal(TARGET, "PPC64_DARWIN") or equal(OS_TYPE, "WIN32"))
-
-% Define quick to avoid doing a configure.  It should only need to be done
-%  once on a given platform. 
-%quick = 1
 
 include("platforms.quake")
 
@@ -85,16 +77,12 @@ M3GDB_MAKE = M3GDB_MAKE & " " & env
 % configure the sources
 
 if not FileExists ("Makefile")
-  if equal (M3GDB_HOST, M3GDB_TARGET)
-    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure"])
-  else
-    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure", GNU_platform (M3GDB_HOST)])
-  end
+  m3gdb_Run([M3GDB_CONFIG, "../gdb/configure"])
 end
 
 m3gdb_Run([M3GDB_MAKE])
 
-EXE = Platform_ExeExtension (M3GDB_HOST)
+EXE = Platform_ExeExtension (HOST)
 
 % build the exportable link and man page and export them
 cp_if ("gdb/gdb" & EXE, "m3gdb" & EXE)

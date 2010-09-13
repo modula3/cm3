@@ -40,21 +40,11 @@ end
 % invocation of cm3
 %
 
-if defined ("M3GDB_HOST")
-    M3CC_HOST = M3GDB_HOST
-else if defined ("M3CC_HOST")
-    M3GDB_HOST = M3CC_HOST
-else
-    M3GDB_HOST = HOST
+if not defined ("M3CC_HOST")
     M3CC_HOST = HOST
-end end
+end
 
-if defined ("M3GDB_TARGET")
-    M3CC_TARGET = M3GDB_TARGET
-else if defined ("M3CC_TARGET")
-    M3GDB_TARGET = M3CC_TARGET
-else
-    M3GDB_TARGET = TARGET
+if not defined ("M3CC_TARGET")
     M3CC_TARGET = TARGET
 end end
 
