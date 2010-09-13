@@ -35,11 +35,6 @@ end
 
 include("platforms.quake")
 
-readonly proc Platform_IsOpenBSD (Platform) is
-  return {"I386_OPENBSD","PPC32_OPENBSD","SPARC64_OPENBSD",
-    "MIPS64_OPENBSD","AMD64_OPENBSD"} contains Platform
-end
-
 %
 % fs_exists is deliberately not used here, in order to build
 % starting with versions of cm3 that do not have it.
@@ -357,13 +352,6 @@ if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined
     fs_rmrec(a)
   end
   cp_if("../src/clean_marker.txt", build_dir & "/clean_marker.txt")
-end
-
-% OpenBSD provides no forward or backward compatibility for
-% executabes that use shared libraries, as libc.so changes name.
-
-if Platform_IsOpenBSD(M3CC_HOST)
-  M3CC_CFLAGS = M3CC_CFLAGS & " -static"
 end
 
 % configure the sources
