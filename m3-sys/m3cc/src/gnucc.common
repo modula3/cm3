@@ -40,30 +40,33 @@ end
 % invocation of cm3
 %
 
-if not defined ("M3CC_HOST")
-    M3CC_HOST = HOST
-end
+M3CC_HOST = HOST
 
 if not defined ("M3CC_TARGET")
     M3CC_TARGET = TARGET
-end end
-
-if not defined ("M3CC_BUILD")
-  M3CC_BUILD = HOST
 end
 
+M3CC_BUILD = HOST
+
 proc NormalizePlatform(a) is
-  if equal(a, "SOLgnu") or equal(a, "SOLsun")
-    a = "SPARC32_SOLARIS"
+  local b = { "SOLgnu"      : "SPARC32_SOLARIS",
+              "SOLsun"      : "SPARC32_SOLARIS",
+              "LINUXLIB6"   : "I386_LINUX",
+              "FreeBSD4"    : "I386_FREEBSD",
+              "NT386"       : "I386_NT",
+              "NT386GNU"    : "I386_CYGWIN",
+              "NT386MINGNU" : "I386_MINGW"
+            }
+  if b contains a
+    a = b{a}
   end
   return a
 end
 
-nHOST = NormalizePlatform(M3CC_HOST)
+nHOST = NormalizePlatform(HOST)
 nTARGET = NormalizePlatform(M3CC_TARGET)
-nBUILD = NormalizePlatform(M3CC_BUILD)
 
-Native = equal(nHOST, nTARGET) and equal(nHOST, nBUILD)
+Native = equal(nHOST, nTARGET)
 
 proc FileExists (a) is
     return not stale (a, a)
