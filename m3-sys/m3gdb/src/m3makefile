@@ -11,21 +11,11 @@ if {"AMD64_DARWIN", "ARM_DARWIN", "I386_DARWIN", "PPC_DARWIN",
 
 include("platforms.quake")
 
-readonly proc GNU_platform (x) is
-  if Platform_info contains x
-    return Platform_info{x}
-  else
-    error ("GNU platform is not known for \"" & x & "\"")
-    return "unknown-unknown-unknown"
-  end
-end
-
 readonly proc Platform_ExeExtension (Platform) is
-  if {"NT386":1,"NT386GNU":1,"AMD64_NT":1,"IA64_NT":1,"ARM_CE":1} contains Platform
+  if {"NT386","NT386GNU","AMD64_NT","IA64_NT","ARM_CE"} contains Platform
     return ".exe"
-  else
-    return ""
   end
+  return ""
 end
 
 readonly proc HostIsNT () is
