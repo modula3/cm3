@@ -1619,27 +1619,50 @@ get_byte (void)
   return (long)(input_buffer[input_cursor++] & 0xff);
 }
 
-#define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, trace_int (#x, get_int ()))
+#define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, get_int ()))
+
+static const char*
+m3_trace_name (const char** inout_name)
+/* if name is single character, change to empty and return
+   empty string delineate it; else return colon to delineate */
+{
+  const char* name = *inout_name;
+  if (!name[0] || !name[1]) /* don't print single character names */
+  {
+    *inout_name = "";
+    return "";
+  }
+  return ":";
+}
+
+static char*
+m3_trace_upper_hex (char* format)
+{
+  char* a = format;
+  if (a[0] == 'x')
+  {
+    a[0] = ' ';
+    while ((a = strchr(a, 'x')))
+    {
+      if (a[-1] != '0')
+        *a = 'X';
+      a += 1;
+    }
+  }
+  return format;
+}
 
 static HOST_WIDE_INT
-trace_int (const char* name, HOST_WIDE_INT val)
+m3_trace_int (const char* name, HOST_WIDE_INT val)
 {
   if (name && option_trace_all)
   {
-    if (!name[0] || !name[1]) /* don't print single character names */
-    {
-      if (val >= -9 && val <= 9)
-        fprintf (stderr, " "HOST_WIDE_INT_PRINT_DEC, val);
-      else
-        fprintf (stderr, " "HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", val, val);
-    }
+    const char* colon = m3_trace_name (&name);
+    static char hex[] = "x%s%s"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
+    if (val >= -9 && val <= 9)
+      fprintf (stderr, " %s%s"HOST_WIDE_INT_PRINT_DEC, name, colon, val);
     else
-    {
-      if (val >= -9 && val <= 9)
-        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_DEC, name, val);
-      else
-        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", name, val, val);
-    }
+      fprintf (stderr, m3_trace_upper_hex (hex), name, colon, val, val);
   }
   return val;
 }
@@ -1650,9 +1673,10 @@ get_int (void)
   int n_bytes = { 0 };
   int sign = { 0 };
   unsigned shift = { 0 };
-  HOST_WIDE_INT val = get_byte ();
+  HOST_WIDE_INT val = { 0 };
+  long i = get_byte ();
 
-  switch (val)
+  switch (i)
   {
   case M3CG_Int1:   return (long) get_byte ();
   case M3CG_NInt1:  return - (long) get_byte ();    
@@ -1662,10 +1686,10 @@ get_int (void)
   case M3CG_NInt4:  n_bytes = 4;  sign = -1;  break;
   case M3CG_Int8:   n_bytes = 8;  sign =  1;  break;
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
-  default:          return val;
+  default:          return i;
   }
 
-  for (val = 0, shift = 0; n_bytes > 0;  n_bytes--, shift += 8)
+  for (; n_bytes > 0;  n_bytes--, shift += 8)
     val = val | (((long) get_byte ()) << shift);
 
   return sign * val;
@@ -1689,21 +1713,23 @@ get_typeid (const char* name)
 static char *
 scan_string (const char* name, char *result, long len)
 {
-  long x = { 0 };
-
   if (len <= 0)
   {
     gcc_assert(!result);
-    return 0;
   }
-  gcc_assert(result);
-  for (x = 0; x < len; ++x)
-    result[x] = (char) get_byte ();
-  result[len] = 0;
-
+  else
+  {
+    long x = { 0 };
+    gcc_assert(result);
+    for (x = 0; x < len; ++x)
+      result[x] = (char) get_byte ();
+    result[len] = 0;
+  }
   if (name && option_trace_all)
-    fprintf (stderr, " %s:%s", name, result);
-
+  {
+    const char* colon = m3_trace_name (&name);
+    fprintf (stderr, " %s%s%s", name, colon, result ? result : "null");
+  }
   return result;
 }
 
@@ -1825,8 +1851,10 @@ scan_target_int (const char* name)
   default:
 
     if (name && option_trace_all)
-      fprintf (stderr," %s:0x%lX", name, i);
-
+    {
+      const char* colon = m3_trace_name (&name);
+      fprintf (stderr, " %s%s0x%lX", name, colon, i);
+    }
     return build_int_cst (t, i);
   }
 
@@ -1847,10 +1875,14 @@ scan_target_int (const char* name)
 
   if (name && option_trace_all)
   {
+    const char* colon = m3_trace_name (&name);
+    char sign_char = "-+"[sign > 0];
+    static char double_hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_DOUBLE_HEX;
+    static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX;
     if (hi)
-      fprintf (stderr," %s:"HOST_WIDE_INT_PRINT_DOUBLE_HEX" sign:%d", name, hi, low, sign);
+      fprintf (stderr, m3_trace_upper_hex (double_hex), name, colon, sign_char, hi, low);
     else
-      fprintf (stderr," %s:"HOST_WIDE_INT_PRINT_HEX" sign:%d", name, low, sign);
+      fprintf (stderr, m3_trace_upper_hex (hex), name, colon, sign_char, low);
   }
 
   return res;
@@ -1863,7 +1895,7 @@ scan_target_int (const char* name)
 #define BIAS(x)      INTEGER (x)
 #define BITOFFSET(x) INTEGER (x)
 
-#define BYTESIZE(x)  HOST_WIDE_INT x = M3_UNUSED (x, trace_int (#x, BITS_PER_UNIT * get_int ()))
+#define BYTESIZE(x)  HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, BITS_PER_UNIT * get_int ()))
 #define ALIGNMENT(x) BYTESIZE(x)
 #define BYTEOFFSET(x) BYTESIZE(x)
 
@@ -2144,7 +2176,7 @@ debug_field_name (const char *name)
 static void
 debug_field_id (unsigned long id)
 {
-  char buf [UID_SIZE+1];
+  char buf [UID_SIZE + 1];
   fmt_uid (id, buf);
   debug_field_name (buf);
 }
@@ -3039,12 +3071,7 @@ m3cg_declare_typename (void)
 
   char fullname [100];
   size_t unit_len = current_unit_name_length;
-  size_t full_len;
-
-  if (option_trace_all)
-    fprintf (stderr, " id:0x%lX", my_id);
-
-  full_len = m3_add (unit_len, m3_add (name_len, 1));
+  size_t full_len = m3_add (unit_len, m3_add (name_len, 1));
 
   if (full_len >= sizeof(fullname))
     fatal_error ("identifier too long (in m3cg_declare_typename, %s.%s)", current_unit_name, name);
@@ -3102,10 +3129,6 @@ m3cg_declare_enum (void)
   INTEGER (n_elts);
   BITSIZE (size);
 
-  if (option_trace_all)
-    fprintf (stderr, " declare_enum id:0x%lX elements:0x%lX size:0x%lX",
-             my_id, (long)n_elts, (long)size);
-
   debug_tag ('C', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   current_dbg_type_count1 = n_elts;
 
@@ -3121,9 +3144,6 @@ m3cg_declare_enum_elt (void)
 {
   NAME (n, n_len);
 
-  if (option_trace_all)
-    fprintf (stderr, " declare_enum_elt elem %s", n);
-
   debug_field_name (n);
   if (--current_dbg_type_count1 == 0)
     debug_struct ();
@@ -3135,10 +3155,6 @@ m3cg_declare_packed (void)
   TYPEID  (my_id);
   BITSIZE (size);
   TYPEID  (target_id);
-
-  if (option_trace_all)
-    fprintf (stderr, " declare_packed id:0x%lX target_id:0x%lX size:0x%lX",
-             my_id, target_id, (long)size);
 
   debug_field_id (target_id);
   debug_tag ('D', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
@@ -3420,13 +3436,6 @@ m3cg_declare_pointer (void)
   STRING        (brand, brand_length);
   BOOLEAN       (traced);
 
-  if (option_trace_all)
-  {
-    const char * sbrand = brand ? brand : "null";
-    fprintf (stderr, " declare_pointer id:0x%lX targetid:0x%lX brand:%s"
-             " traced:%s", my_id, target_id, sbrand, boolstr (traced));
-  }
-
   debug_tag ('Y', my_id, "_%d_%d_%d_%s", GET_MODE_BITSIZE (Pmode),
              traced, (brand ? 1 : 0), (brand ? brand : "" ));
   debug_field_id (target_id);
@@ -3565,10 +3574,6 @@ m3cg_declare_opaque (void)
 {
   TYPEID (my_id);
   TYPEID (super_id);
-
-  if (option_trace_all)
-    fprintf (stderr, " declare_opaque id:0x%lX superid:0x%lX", my_id,
-             super_id);
 
   /* Opaque types are always pointers.
      It would be great if we could provide more type information here. */
@@ -5560,9 +5565,6 @@ m3cg_check_lo (void)
 
   a = convert (t, a);
 
-  if (option_trace_all)
-    fprintf (stderr, " check low type:%s code:0x%lX", typestr (T), (long)code);
-
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
 
@@ -5584,9 +5586,6 @@ m3cg_check_hi (void)
   tree temp1 = declare_temp (t);
 
   a = convert (t, a);
-
-  if (option_trace_all)
-    fprintf (stderr, " check high type:%s code:0x%lX", typestr (T), (long)code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5611,9 +5610,6 @@ m3cg_check_range (void)
 
   a = convert (t, a);
   b = convert (t, b);
-
-  if (option_trace_all)
-    fprintf (stderr, " check range type:%s code:0x%lX", typestr (T), (long)code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
@@ -5771,9 +5767,6 @@ static void
 m3cg_load_procedure (void)
 {
   PROC (p);
-
-  if (option_trace_all)
-    fprintf (stderr, " load procedure %s", IDENTIFIER_POINTER (DECL_NAME (p)));
 
   EXPR_PUSH (proc_addr (p));
 }
