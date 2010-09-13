@@ -40,31 +40,26 @@ readonly proc HostIsNT () is
   return equal ($OS, "Windows_NT")
 end
 
-m3gdb_ResponseFileCounter = "0"
+m3gdb_ResponseFileCounter = 0
+
+include ("../../m3cc/src/Math.quake")
 
 readonly proc m3gdb_Run (x) is
-    >> "_m3.log" in
-      write(x & CR)
-    end
-    if HostIsNT ()
-        local readonly Temp = "_m3sh" & m3gdb_ResponseFileCounter & ".sh"
-        > Temp in
-            write(x)
-        end
-        %
-        % Quake can't do math, or generate uniquely named temp files.
-        % Uniqueness is not critical here, it is merely useful
-        % while debugging to go back and see the temp files.
-        %
-        m3gdb_ResponseFileCounter =
-            { "0":"1","1":"2","2":"3","3":"4","4":"5",
-              "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3gdb_ResponseFileCounter}
-
-        write("sh ./" & Temp & " (" & x & ")" & CR)
-        exec("sh ./" & Temp)
-    else
+    if not HostIsNT()
+        write(x & "\n")
         exec(x)
+        return
     end
+    InitMath()
+    m3gdb_ResponseFileCounter = Add(m3gdb_ResponseFileCounter, 1)
+    local ShLeaf = "_m3" & m3gdb_ResponseFileCounter & ".sh"
+    local Sh = ShLeaf
+    write(ShLeaf & ":" & x & "\n")
+    > Sh in
+        write(x & "\n")
+    end
+    local a = try_exec("@chmod +x " & Sh)
+    exec("@sh -exc " & Sh)
 end
 
 local env = ""
