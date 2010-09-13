@@ -6,10 +6,8 @@
 % Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
 %
 
-if {"AMD64_DARWIN", "ARM_DARWIN", "I386_DARWIN", "PPC_DARWIN",
-    "PPC64_DARWIN"} contains TARGET or equal(OS_TYPE, "WIN32")
-
-include("platforms.quake")
+if not ({"AMD64_DARWIN", "ARM_DARWIN", "I386_DARWIN", "PPC_DARWIN",
+         "PPC64_DARWIN"} contains TARGET or equal(OS_TYPE, "WIN32"))
 
 readonly proc Platform_ExeExtension (Platform) is
   if {"NT386","NT386GNU","AMD64_NT","IA64_NT","ARM_CE"} contains Platform
@@ -61,7 +59,7 @@ if not defined ("M3GDB_MAKE")    M3GDB_MAKE   = GNU_MAKE   end
 % check for non-default flags
 env = env & " MAKEINFO=:"
 
-M3GDB_CONFIG = M3GDB_CONFIG & " " & env
+M3GDB_CONFIG = env
 M3GDB_MAKE = M3GDB_MAKE & " " & env
 
 % configure the sources
