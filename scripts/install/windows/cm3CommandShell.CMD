@@ -14,6 +14,7 @@ rem VERSION HISTORY:
 rem ---------------
 rem v1.00, 10/26/2009, R.Coleburn, Initial Release.  This version is an "improved" replacement for my prior "cm3SetupCmdEnv.CMD" script.  It also adds support for Windows Vista.
 rem v1.10, 03/11/2010, R.Coleburn, check location of the running script, and also the PATH environment variable, as a potential locations for "bin/cm3.exe" when looking for the root of the cm3 installation.
+rem v1.20, 09/12/2010, R.Coleburn, Make Visual Studio 2010 Express the default. Adjust to deal with Vista and Windows7 OS identification.
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -41,14 +42,15 @@ REM !!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!
 
 :DEFAULTS
 :--------
-set _cm3_VCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
+set _cm3_VCSetup="C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
 set _cm3_SDKSetup=
 REM ---------------------------------------------------------------------------
 REM EXPLANATION (_cm3_VCSetup)
 REM    Set to absolute path of BAT/CMD that sets up Microsoft Visual Studio/C/C++
 REM    Set to empty to disable calling this auto setup routine.
 REM    Examples:
-REM       set _cm3_VCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
+REM       set _cm3_VCSetup="C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+REM       set _cm3_VCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
 REM       set _cm3_VCSetup="C:\Program Files\Microsoft Visual Studio 8\VC\bin\VCVars32.bat"
 REM       set _cm3_VCSetup="C:\Program Files\Microsoft Visual C++ Toolkit 2003\VCVars32.bat"
 REM       set _cm3_VCSetup="C:\Program Files\Microsoft Visual Studio\VC98\Bin\VCVars32.bat"
@@ -66,11 +68,11 @@ REM !!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!
 :-------
 set _cm3_ExitCode=0
 echo.
-echo +--------------------------------------------------+
-echo ^|               cm3CommandShell.CMD                ^|
-echo ^|               -------------------                ^|
-echo ^| v1.10, March 11, 2010, written by Randy Coleburn ^|
-echo +--------------------------------------------------+
+echo +------------------------------------------------------+
+echo ^|                 cm3CommandShell.CMD                  ^|
+echo ^|                 -------------------                  ^|
+echo ^| v1.20, September 12, 2010, written by Randy Coleburn ^|
+echo +------------------------------------------------------+
 echo.
 
 
@@ -84,15 +86,15 @@ set _cm3_ThisOS=
 ver | (find /I "Windows 2000" >>NUL:) && set _cm3_ThisOS=2000
 ver | (find /I "Windows XP" >>NUL:) && set _cm3_ThisOS=XP
 ver | (find /I "Windows Version 5.2" >>NUL:) && set _cm3_ThisOS=XP_64bit
-ver | (find /I "Version 6." >>NUL:) && set _cm3_ThisOS=Vista
-rem ver | (find /I "Version 7." >>NUL:) && set _cm3_ThisOS=Windows7
+ver | (find /I "Version 6.0.6" >>NUL:) && set _cm3_ThisOS=Vista
+ver | (find /I "Version 6.1.7" >>NUL:) && set _cm3_ThisOS=Windows7
 if not "%_cm3_ThisOS%"=="" goto Init
 
 :UnsupportedOS
 echo.
 echo %0
 echo.
-echo ERROR:  Currently, this script supports only Windows 2000, XP, and Vista.
+echo ERROR:  Currently, this script supports only Windows 2000, XP, Vista, and Windows 7.
 echo         This computer is operating:  
 ver
 set _cm3_ExitCode=1
@@ -266,9 +268,9 @@ if not exist "%ProgramFiles%" goto BadEnviron
 if "%UserProfile%"=="" goto BadEnviron
 if not exist "%UserProfile%" goto BadEnviron
 
-if /I not "%_cm3_ThisOS%"=="Vista" goto PreVistaEnviron
+if /I not "%_cm3_ThisOS%"=="Vista" if /I not "%_cm3_ThisOS%"=="Windows7" goto PreVistaEnviron
 
-:VistaEnviron
+:VistaOr7Environ
 if "%Public%"=="" set Public=%SystemDrive%\Users\Public
 if not exist "%Public%" goto BadEnviron
 set _cm3_CommonProfile=%Public%
@@ -431,7 +433,7 @@ rem Next line forces default assignment of IDE HOME folder if user has changed t
 if defined _cm3_HOME if defined _cm3_PriorIDE if not "%_cm3_PriorIDE%"=="%CM3_IDE%" if "%_cm3_PriorHome%"=="%_cm3_HOME%" set _cm3_HOME=
 
 set _cm3_DocsHome=%UserProfile%\Documents
-if /I not "%_cm3_ThisOS%"=="Vista" set _cm3_DocsHome=%UserProfile%\My Documents
+if /I not "%_cm3_ThisOS%"=="Vista" if /I not "%_cm3_ThisOS%"=="Windows7" set _cm3_DocsHome=%UserProfile%\My Documents
 if "%_cm3_HOME%"=="" if /I "%CM3_IDE%"=="cm3IDE" set _cm3_HOME=%_cm3_DocsHome%\CM3_IDE_HOME
 if "%_cm3_HOME%"=="" if /I "%CM3_IDE%"=="Reactor" set _cm3_HOME=%_cm3_DocsHome%\REACTOR_HOME
 if not exist "%_cm3_HOME%" echo ...Creating folder "%_cm3_HOME%" & mkdir "%_cm3_HOME%"
