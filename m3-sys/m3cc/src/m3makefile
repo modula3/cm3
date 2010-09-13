@@ -423,6 +423,7 @@ Configure = Configure & " -disable-nls"
 Configure = Configure & " -enable-languages=m3cg"
 Configure = Configure & " -enable-targets=all"
 %Configure = Configure & " -enable-checking=all"
+%Configure = Configure & " -enable-checking"
 
 % Save some libtool wrapping layers to speed up esp. on NT?
 %Configure = Configure & " -disable-dependency-tracking"
