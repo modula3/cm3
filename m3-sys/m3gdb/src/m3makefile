@@ -28,26 +28,6 @@ readonly proc GNU_platform (x) is
   end
 end
 
-readonly m3gdb_config = {
-  % misc. gdb configuration options  (e.g.  "DS3100" : "--with-stabs")
-} % m3gdb_config
-
-readonly proc get_config (target) is
-  if m3gdb_config contains target
-    return m3gdb_config {target}
-  else
-    return ""
-  end
-end
-
-readonly proc get_overrides (nm, ov) is
-  if equal (ov, "*")
-    return ""
-  else
-    return format ("%s=\"%s\"", nm, ov)
-  end
-end
-
 readonly proc Platform_ExeExtension (Platform) is
   if {"NT386":1,"NT386GNU":1,"AMD64_NT":1,"IA64_NT":1,"ARM_CE":1} contains Platform
     return ".exe"
@@ -100,7 +80,6 @@ M3GDB_CFLAGS="-g"
 
 % check for overrides, otherwise use the defaults from the configuration file
 if not defined ("M3GDB_MAKE")    M3GDB_MAKE   = GNU_MAKE   end
-if not defined ("M3GDB_CONFIG")  M3GDB_CONFIG = get_config (M3GDB_HOST) end
 
 % check for non-default flags
 env = env & " MAKEINFO=:"
