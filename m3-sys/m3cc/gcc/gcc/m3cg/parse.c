@@ -1619,10 +1619,33 @@ get_byte (void)
   return (long)(input_buffer[input_cursor++] & 0xff);
 }
 
-#define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, get_int (#x))
+#define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, trace_int (#x, get_int ()))
 
 static HOST_WIDE_INT
-get_int (const char* name)
+trace_int (const char* name, HOST_WIDE_INT val)
+{
+  if (name && option_trace_all)
+  {
+    if (!name[0] || !name[1]) /* don't print single character names */
+    {
+      if (val >= -9 && val <= 9)
+        fprintf (stderr, " "HOST_WIDE_INT_PRINT_DEC, val);
+      else
+        fprintf (stderr, " "HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", val, val);
+    }
+    else
+    {
+      if (val >= -9 && val <= 9)
+        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_DEC, name, val);
+      else
+        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", name, val, val);
+    }
+  }
+  return val;
+}
+
+static HOST_WIDE_INT
+get_int (void)
 {
   int n_bytes = { 0 };
   int sign = { 0 };
@@ -1631,55 +1654,27 @@ get_int (const char* name)
 
   switch (val)
   {
-  case M3CG_Int1:
-    val = (long) get_byte ();
-    goto L1;
-
-  case M3CG_NInt1:
-    val = - (long) get_byte ();
-    goto L1;
-
-  default:
-    goto L1;
-    
+  case M3CG_Int1:   return (long) get_byte ();
+  case M3CG_NInt1:  return - (long) get_byte ();    
   case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
   case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
   case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
   case M3CG_NInt4:  n_bytes = 4;  sign = -1;  break;
   case M3CG_Int8:   n_bytes = 8;  sign =  1;  break;
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
+  default:          return val;
   }
 
   for (val = 0, shift = 0; n_bytes > 0;  n_bytes--, shift += 8)
     val = val | (((long) get_byte ()) << shift);
 
-  val *= sign;
-L1:
-  if (name && option_trace_all)
-  {
-    if (!name[0] || !name[1]) /* don't print single character names */
-    {
-      if (val > 9 && val < -9)
-        fprintf (stderr, " "HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", val, val);
-      else
-        fprintf (stderr, " "HOST_WIDE_INT_PRINT_DEC, val);
-    }
-    else
-    {
-      if (val > 9 && val < -9)
-        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")", name, val, val);
-      else
-        fprintf (stderr, " %s:"HOST_WIDE_INT_PRINT_DEC, name, val);
-    }
-  }
-
-  return val;
+  return sign * val;
 }
 
 static unsigned long
 get_typeid (const char* name)
 {
-  unsigned long val = (0xFFFFFFFFUL & (unsigned long) get_int (0));
+  unsigned long val = (0xFFFFFFFFUL & (unsigned long) get_int ());
   if (name && option_trace_all)
     fprintf (stderr, " %s:0x%lX", name, val);
   return val;
@@ -1688,7 +1683,7 @@ get_typeid (const char* name)
 /*--------------------------------------------------------------- strings ---*/
 
 #define STRING(x, length) \
-  long length = get_int (0); \
+  long length = get_int (); \
   char *x = M3_UNUSED (x, scan_string (#x, ((length > 0) ? (char*)alloca (length + 1) : 0), length))
 
 static char *
@@ -1719,7 +1714,7 @@ scan_string (const char* name, char *result, long len)
 static tree
 scan_calling_convention (void)
 {
-  HOST_WIDE_INT id = get_int (0);
+  HOST_WIDE_INT id = get_int ();
 
   switch (id)
   {
@@ -1757,7 +1752,7 @@ scan_calling_convention (void)
 static m3_type
 scan_type (void)
 {
-  long i = get_int (0);
+  long i = get_int ();
 
   if ((i < 0) || (T_LAST <= i))
     fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %d", i, m3cg_lineno);
@@ -1787,7 +1782,7 @@ scan_mtype (m3_type *T)
 static char
 scan_sign (void)
 {
-  HOST_WIDE_INT x = get_int (0);
+  HOST_WIDE_INT x = get_int ();
   switch (x)
   {
   case 0:  return 'P';  /* positive */
@@ -1864,12 +1859,13 @@ scan_target_int (const char* name)
 
 #define LEVEL(x)     INTEGER (x)
 #define BITSIZE(x)   INTEGER (x)
-#define BYTESIZE(x)  HOST_WIDE_INT x = M3_UNUSED (x, BITS_PER_UNIT * get_int (#x))
-#define ALIGNMENT(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
 #define FREQUENCY(x) INTEGER (x)
 #define BIAS(x)      INTEGER (x)
 #define BITOFFSET(x) INTEGER (x)
-#define BYTEOFFSET(x) HOST_WIDE_INT x = BITS_PER_UNIT * get_int (#x)
+
+#define BYTESIZE(x)  HOST_WIDE_INT x = M3_UNUSED (x, trace_int (#x, BITS_PER_UNIT * get_int ()))
+#define ALIGNMENT(x) BYTESIZE(x)
+#define BYTEOFFSET(x) BYTESIZE(x)
 
 /*----------------------------------------------------------------- float ---*/
 
@@ -1913,7 +1909,7 @@ scan_float (unsigned *out_Kind)
   gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
   gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
 
-  Kind = (unsigned) get_int (0);
+  Kind = (unsigned) get_int ();
   if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
       fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %d",
@@ -1929,7 +1925,7 @@ scan_float (unsigned *out_Kind)
      endianness */
   for (i = 0;  i < Size;  i++)
     {
-      Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int (0));
+      Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int ());
     }
 
   /* When crossing and host/target different endian, swap the longs. */
@@ -1983,7 +1979,7 @@ scan_float (unsigned *out_Kind)
 static bool
 scan_boolean (const char* name)
 {
-  bool val = (get_int (0) != 0);
+  bool val = (get_int () != 0);
   if (name && option_trace_all)
     fprintf (stderr, " %s:%s", name, boolstr (val));
   return val;
@@ -2017,7 +2013,7 @@ varray_extend (varray_type va, size_t n)
 static tree
 scan_var (enum tree_code code)
 {
-  long i = get_int (0);
+  long i = get_int ();
 
   VARRAY_EXTEND (all_vars, i + 1);
   if (code == ERROR_MARK)
@@ -2049,7 +2045,7 @@ scan_var (enum tree_code code)
 static tree
 scan_proc (void)
 {
-  long i = get_int (0);
+  long i = get_int ();
   tree p = { 0 };
 
   if (i <= 0)
@@ -2076,7 +2072,7 @@ scan_proc (void)
 static tree
 scan_label (void)
 {
-  long i = get_int (0);
+  long i = get_int ();
 
   if (option_trace_all)
     fprintf (stderr, " label:%ld", i);
@@ -2628,6 +2624,7 @@ static void
 m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
            bool volatil)
 {
+  gcc_assert ((o % BITS_PER_UNIT) == 0);
   if (0 && option_trace_all) /* work in progress */
   {
     enum tree_code code = TREE_CODE (v);
@@ -4071,7 +4068,7 @@ m3cg_init_var (void)
 {
   BYTEOFFSET (o);
   VAR        (var);
-  BYTEOFFSET (b);
+  INTEGER    (b);
 
   tree f = { 0 };
   tree v = { 0 };
@@ -4081,7 +4078,7 @@ m3cg_init_var (void)
   one_field (o, t_addr, &f, &v);
   TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                               m3_build1 (ADDR_EXPR, t_addr, var),
-                              size_int (b / BITS_PER_UNIT));
+                              size_int (b));
 }
 
 static void
@@ -4595,7 +4592,7 @@ static void
 m3cg_load_address (void)
 {
   VAR        (var);
-  BYTEOFFSET (offset);
+  INTEGER    (offset);
 
   if (option_trace_all)
   {
@@ -4607,27 +4604,23 @@ m3cg_load_address (void)
   TREE_USED (var) = 1;
   var = m3_build1 (ADDR_EXPR, t_addr, var);
   if (offset)
-    var = m3_build2 (POINTER_PLUS_EXPR, t_addr, var, size_int (offset / BITS_PER_UNIT));
+    var = m3_build2 (POINTER_PLUS_EXPR, t_addr, var, size_int (offset));
   EXPR_PUSH (var);
 }
 
 static void
 m3cg_load_indirect (void)
 {
-  BYTEOFFSET (offset);
+  INTEGER    (offset);
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
   tree v = { 0 };
 
-  if (option_trace_all)
-    fprintf (stderr, " load address offset:0x%lX src_t:%s dst_t:%s",
-             (long)offset, typestr (src_T), typestr (dst_T));
-
   v = EXPR_REF (-1);
   /* mark_address_taken (v); */
   if (offset)
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset / BITS_PER_UNIT));
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
   if (src_T != dst_T)
@@ -4657,19 +4650,15 @@ m3cg_store (void)
 static void
 m3cg_store_indirect (void)
 {
-  BYTEOFFSET (offset);
+  INTEGER (offset);
   MTYPE2 (src_t, src_T);
   MTYPE2 (dst_t, dst_T);
 
   tree v = { 0 };
 
-  if (option_trace_all)
-    fprintf (stderr, " store indirect offset:0x%lX src_t:%s dst_t:%s",
-             (long)offset, typestr (src_T), typestr (dst_T));
-
   v = EXPR_REF (-2);
   if (offset)
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset / BITS_PER_UNIT));
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
@@ -4787,38 +4776,21 @@ m3cg_abs (void)
 }
 
 static void
-m3cg_max (void)
+m3_minmax (int min)
 {
   MTYPE (t);
+  tree x[2];
 
-  tree t1 = declare_temp (t);
-  tree t2 = declare_temp (t);
-
-  add_stmt (m3_build2 (MODIFY_EXPR, t, t1, EXPR_REF (-1)));
-  add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF (-2)));
-
+  x[0] = stabilize_reference (m3_cast (t, EXPR_REF (-1)));
+  x[1] = stabilize_reference (m3_cast (t, EXPR_REF (-2)));
   EXPR_REF (-2) = m3_build3 (COND_EXPR, t,
-                             m3_build2 (LE_EXPR, boolean_type_node, t2, t1),
-                             t1, t2);
+                             m3_build2 (LE_EXPR, boolean_type_node, x[!min], x[min]),
+                             x[0], x[1]);
   EXPR_POP ();
 }
 
-static void
-m3cg_min (void)
-{
-  MTYPE (t);
-
-  tree t1 = declare_temp (t);
-  tree t2 = declare_temp (t);
-
-  add_stmt (m3_build2 (MODIFY_EXPR, t, t1, EXPR_REF (-1)));
-  add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF (-2)));
-
-  EXPR_REF (-2) = m3_build3 (COND_EXPR, t,
-                             m3_build2 (LE_EXPR, boolean_type_node, t1, t2),
-                             t1, t2);
-  EXPR_POP ();
-}
+static void m3cg_min (void) { m3_minmax(1); }
+static void m3cg_max (void) { m3_minmax(0); }
 
 static void
 m3cg_round (void)
@@ -5064,6 +5036,7 @@ m3cg_set_compare (tree proc)
   m3cg_assert_int (t);
   setop (proc, n, 2);
 }
+
 static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); }
 static void m3cg_set_ge (void) { m3cg_set_compare (set_ge_proc); }
 static void m3cg_set_lt (void) { m3cg_set_compare (set_lt_proc); }
@@ -5071,7 +5044,7 @@ static void m3cg_set_le (void) { m3cg_set_compare (set_le_proc); }
 
 static void m3cg_set_eq (void)
 {
-  BYTESIZE (n);
+  INTEGER  (n);
   MTYPE    (t);
 
   gcc_assert (n >= 0);
@@ -5079,7 +5052,7 @@ static void m3cg_set_eq (void)
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
-  EXPR_PUSH (size_int (n / BITS_PER_UNIT));
+  EXPR_PUSH (size_int (n));
   m3_pop_param (t_int);
   m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
   EXPR_REF (-1) = m3_build2 (EQ_EXPR, t_int, EXPR_REF (-1), v_zero);
@@ -5087,7 +5060,7 @@ static void m3cg_set_eq (void)
 
 static void m3cg_set_ne (void)
 {
-  BYTESIZE (n);
+  INTEGER  (n);
   MTYPE    (t);
 
   gcc_assert (n >= 0);
@@ -5095,7 +5068,7 @@ static void m3cg_set_ne (void)
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
-  EXPR_PUSH (size_int (n / BITS_PER_UNIT));
+  EXPR_PUSH (size_int (n));
   m3_pop_param (t_int);
   m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
   EXPR_REF (-1) = m3_build2 (NE_EXPR, t_int, EXPR_REF (-1), v_zero);
@@ -5693,13 +5666,10 @@ m3cg_check_eq (void)
 static void
 m3cg_add_offset (void)
 {
-  BYTESIZE (n);
-
-  if (option_trace_all)
-    fprintf (stderr, " add offset 0x%lX", (long)n);
+  INTEGER (n);
 
   EXPR_REF (-1) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
-                             EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
+                             EXPR_REF (-1), size_int (n));
 }
 
 static void
@@ -5707,16 +5677,9 @@ m3cg_index_address (void)
 {
   tree a = { 0 };
   bool signd = { 0 };
-  HOST_WIDE_INT bytes = { 0 };
 
   MTYPE2   (t, T);
-  BYTESIZE (bits);
-
-  bytes = (bits / BITS_PER_UNIT);
-
-  if (option_trace_all)
-    fprintf (stderr, " index address n_bytes:0x%lX type:%s",
-             (long)bytes, typestr (T));
+  INTEGER (bytes);
 
   signd = IS_INTEGER_TYPE_TREE (t);
   gcc_assert (signd || IS_WORD_TYPE_TREE (t));
@@ -6259,7 +6222,7 @@ m3_parse_file (int xx)
   m3_indent_op[M3CG_DECLARE_ENUM] = 4;
 
   /* check the version stamp */
-  i = get_int (0);
+  i = get_int ();
   if (i != M3CG_Version)
   {
     fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
@@ -6271,7 +6234,7 @@ m3_parse_file (int xx)
   {
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
-    op = get_int (0);
+    op = get_int ();
     if (op < 0 || (int)LAST_OPCODE <= op)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %d", op, m3cg_lineno);
 
