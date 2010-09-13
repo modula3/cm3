@@ -99,13 +99,10 @@ env = env & " MAKE=" & GNU_MAKE & " "
 M3GDB_CFLAGS="-g"
 
 % check for overrides, otherwise use the defaults from the configuration file
-if not defined ("M3GDB_CC")      M3GDB_CC     = GNU_CC     end
-if not defined ("M3GDB_CFLAGS")  M3GDB_CFLAGS = GNU_CFLAGS end
 if not defined ("M3GDB_MAKE")    M3GDB_MAKE   = GNU_MAKE   end
 if not defined ("M3GDB_CONFIG")  M3GDB_CONFIG = get_config (M3GDB_HOST) end
 
 % check for non-default flags
-env = env & " " & get_overrides ("CC", M3GDB_CC) & " " & get_overrides ("CFLAGS", M3GDB_CFLAGS)
 env = env & " MAKEINFO=:"
 
 M3GDB_CONFIG = M3GDB_CONFIG & " " & env
