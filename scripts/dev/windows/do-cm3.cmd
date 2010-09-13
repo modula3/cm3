@@ -16,6 +16,7 @@ REM v1.10, 10/26/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
 REM v1.11, 10/29/2009, R.Coleburn, various optimizations
 REM v1.12, 01/12/2010, R.Coleburn, repair multiple bugs in "if defined xxx if exist %xxx% del %xxx%" construct
 REM v1.20, 01/13/2010, R.Coleburn, add "-skip" directive.  Force argument keywords to be prefixed by "-".
+REM v1.21, 09/12/2010, R.Coleburn, add Windows7 OS detection.
 REM ===========================================================================
 
 
@@ -44,7 +45,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.20, 01/13/2010, Randy Coleburn
+echo do-cm3, v1.21, 09/12/2010, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -59,15 +60,15 @@ set _z_ThisOS=
 ver | (find /I "Windows 2000" >>NUL:) && set _z_ThisOS=2000
 ver | (find /I "Windows XP" >>NUL:) && set _z_ThisOS=XP
 ver | (find /I "Windows Version 5.2" >>NUL:) && set _z_ThisOS=XP_64bit
-ver | (find /I "Version 6." >>NUL:) && set _z_ThisOS=Vista
-rem ver | (find /I "Version 7." >>NUL:) && set _z_ThisOS=Windows7
+ver | (find /I "Version 6.0.6" >>NUL:) && set  _z_ThisOS=Vista
+ver | (find /I "Version 6.1.7" >>NUL:) && set  _z_ThisOS=Windows7
 if not "%_z_ThisOS%"=="" goto Init
 
 :UnsupportedOS
 echo.
 echo %0
 echo.
-echo ERROR:  Currently, this script supports only Windows 2000, XP, and Vista.
+echo ERROR:  Currently, this script supports only Windows 2000, XP, Vista, and Windows 7.
 echo         This computer is operating:  
 ver
 set _z_ExitCode=1
