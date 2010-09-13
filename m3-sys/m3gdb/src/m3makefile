@@ -6,8 +6,8 @@
 % Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
 %
 
-if not (equal(TARGET, "AMD64_DARWIN") or equal(TARGET, "ARM_DARWIN") or equal(TARGET, "I386_DARWIN")
- or equal(TARGET, "PPC_DARWIN") or equal(TARGET, "PPC64_DARWIN") or equal(OS_TYPE, "WIN32"))
+if {"AMD64_DARWIN", "ARM_DARWIN", "I386_DARWIN", "PPC_DARWIN",
+    "PPC64_DARWIN"} contains TARGET or equal(OS_TYPE, "WIN32")
 
 include("platforms.quake")
 
