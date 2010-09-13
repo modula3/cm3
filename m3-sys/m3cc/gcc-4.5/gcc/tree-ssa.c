@@ -959,8 +959,8 @@ verify_ssa (bool check_modified_stmt)
 #if 0 /* Modula-3: temporary? */
 		  error ("statement makes a memory store, but has no VDEFS");
 		  print_gimple_stmt (stderr, stmt, 0, TDF_VOPS);
-#endif
 		  goto err;
+#endif
 		}
 	    }
 	  else if (gimple_debug_bind_p (stmt)
