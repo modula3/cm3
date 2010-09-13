@@ -7,20 +7,28 @@ include("Unix.common")
 SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lodbc" ]
 SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lpq" ]
 
-FREEBSD4_LD_APPEND =
-    " -z origin"
-  & " -Wl,--warn-common"
-  & " -Wl,-rpath,\\$ORIGIN"
-  & " -Wl,-rpath,\\$ORIGIN/../lib "
+#
+# "Double inheritance" leads to FREEBSD4_CC_APPEND
+# occuring twice in FREEBSD_LD_APPEND, ok?
+#
 
-FREEBSD_LD_APPEND =
-  FREEBSD4_LD_APPEND
-  & " -Wl,--fatal-warnings"
-  & " -z now"
-  & " -Bsymbolic"
+FREEBSD4_CC_APPEND = " -z origin"
+
+FREEBSD4_LD_APPEND = FREEBSD4_CC_APPEND
+                     & " -Wl,--warn-common"
+                     & " -Wl,-rpath,\\$ORIGIN"
+                     & " -Wl,-rpath,\\$ORIGIN/../lib "
+
+FREEBSD_CC_APPEND = FREEBSD4_CC_APPEND
+                    & " -z now"
+                    & " -Bsymbolic"
+
+FREEBSD_LD_APPEND = FREEBSD_CC_APPEND
+                    & FREEBSD4_LD_APPEND
+                    & " -Wl,--fatal-warnings"
 
 if defined("SYSTEM_CC")
-  SYSTEM_CC = SYSTEM_CC & FREEBSD_LD_APPEND
+  SYSTEM_CC = SYSTEM_CC & FREEBSD_CC_APPEND
 end
 
 if defined("SYSTEM_LD")
