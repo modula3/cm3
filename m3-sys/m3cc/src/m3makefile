@@ -236,8 +236,6 @@ include ("../../m3cc/src/gnumake.common")
 include ("../../m3cc/src/gnucc.common")
 
 % check for overrides, otherwise use the defaults from the configuration file
-if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
-if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
@@ -274,7 +272,6 @@ if (not NOACTION) % and (GCC42 or GCC43 or GCC45)
     foreach a in ["gmp", "mpfr", "mpc"]
       link_file("../gcc/" & a, SourceDir & "/" & a)
     end
-    %M3CC_CFLAGS = "-g"
   end
   if GCC42 or GCC45
     fs_mkdir(SourceDir & "/gcc/m3cg")
@@ -434,7 +431,6 @@ Configure = Configure & " -disable-tls"
 % Configure does not ferry environment variables from itself to make,
 % so these must be specified on both the configure command and the make command.
 %
-env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
 if not Native
   env = env & " " & get_env(M3CC_TARGET)
 end
@@ -453,8 +449,6 @@ env = env & " MAKE=" & GNU_MAKE & " "
 %   Automake and autoconf are causing problems building on NT, even when they are installed.
 %   We don't need their results usually. Libtool is also a problem, possibly a cascade.
 %
-% env = env & " CC='gcc -g'"
-% env = env & " CFLAGS="
 env = env & " AUTOCONF=:"
 env = env & " AUTOMAKE=:"
 env = env & " LEX='touch lex.yy.c'"
