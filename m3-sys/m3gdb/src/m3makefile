@@ -87,9 +87,10 @@ env = env & " MAKEINFO=:"
 M3GDB_CONFIG = M3GDB_CONFIG & " " & env
 M3GDB_MAKE = M3GDB_MAKE & " " & env
 
-
-if not defined ("quick")
-  % configure the sources
+% configure the sources
+if equal (M3GDB_HOST, M3GDB_TARGET)
+  m3gdb_Run([M3GDB_CONFIG, "../gdb/configure"])
+else
   m3gdb_Run([M3GDB_CONFIG, "../gdb/configure", GNU_platform (M3GDB_HOST)])
 end
 
