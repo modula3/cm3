@@ -7,7 +7,8 @@
 %
 
 %
-% user can say cm3 -DM3GDB_HOST=FreeBSD4, for example.
+% user can say cm3 -DM3GDB_HOST=amd64-freebsd or
+% cm3 -DM3GDB_HOST=i686-pc-linux-gnu, for example.
 %
 
 if not ({"AMD64_DARWIN", "ARM_DARWIN", "I386_DARWIN", "PPC_DARWIN",
@@ -18,17 +19,6 @@ readonly proc Platform_ExeExtension (Platform) is
     return ".exe"
   end
   return ""
-end
-
-include("platforms.quake")
-
-readonly proc GNU_platform (x) is
-  if Platform_info contains x
-    return Platform_info{x}
-  else
-    error ("GNU platform is not known for \"" & x & "\"")
-    return "unknown-unknown-unknown"
-  end
 end
 
 readonly proc HostIsNT () is
@@ -81,7 +71,7 @@ M3GDB_MAKE = M3GDB_MAKE & " " & env
 
 if not FileExists ("Makefile")
   if defined("M3GDB_HOST")
-    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure", GNU_platform (M3GDB_HOST)])
+    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure", M3GDB_HOST])
   else
     m3gdb_Run([M3GDB_CONFIG, "../gdb/configure"])
   end
