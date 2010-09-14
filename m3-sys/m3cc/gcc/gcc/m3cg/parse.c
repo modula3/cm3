@@ -1622,6 +1622,14 @@ get_byte (void)
 #define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, get_int ()))
 
 static const char*
+m3_get_var_trace_name (tree var)
+{
+  if (var && DECL_NAME (var))
+    return IDENTIFIER_POINTER (DECL_NAME (var));
+  return "noname";
+}
+
+static const char*
 m3_trace_name (const char** inout_name)
 /* if name is single character, change to empty and return
    empty string delineate it; else return colon to delineate */
@@ -1773,10 +1781,10 @@ scan_calling_convention (void)
 #define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
 #define IS_REAL_TYPE_TREE(t) (t == t_reel || t == t_lreel || t == t_xreel)
 
-#define TYPE(x) m3_type x = M3_UNUSED (x, scan_type ())
+#define TYPE(x) m3_type x = M3_UNUSED (x, scan_type (#x))
 
 static m3_type
-scan_type (void)
+scan_type (const char* name)
 {
   long i = get_int ();
 
@@ -1784,18 +1792,21 @@ scan_type (void)
     fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %d", i, m3cg_lineno);
 
   if (option_trace_all)
-    fprintf (stderr, " type:%s", typestr (i));
+  {
+    const char* colon = m3_trace_name (&name);
+    fprintf (stderr, " %s%s%s", name, colon, typestr (i));
+  }
 
   return (m3_type) i;
 }
 
-#define MTYPE(x) tree x = M3_UNUSED (x, scan_mtype (0))
-#define MTYPE2(x, y) m3_type y; tree x = M3_UNUSED (x, scan_mtype (&y))
+#define MTYPE(x) tree x = M3_UNUSED (x, scan_mtype (#x, 0))
+#define MTYPE2(x, y) m3_type y; tree x = M3_UNUSED (x, scan_mtype (#x, &y))
 
 static tree
-scan_mtype (m3_type *T)
+scan_mtype (const char* name, m3_type *T)
 {
-  m3_type TT = scan_type ();
+  m3_type TT = scan_type (name);
   if (T)
     *T = TT;
   return m3_build_type (TT, 0, 0);
@@ -1853,7 +1864,11 @@ scan_target_int (const char* name)
     if (name && option_trace_all)
     {
       const char* colon = m3_trace_name (&name);
-      fprintf (stderr, " %s%s0x%lX", name, colon, i);
+      static char hex[] = "x%s%s"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
+      if (i >= -9 && i <= 9)
+        fprintf (stderr, " %s%s"HOST_WIDE_INT_PRINT_DEC, name, colon, i);
+      else
+        fprintf (stderr, m3_trace_upper_hex (hex), name, colon, i, i);
     }
     return build_int_cst (t, i);
   }
@@ -1881,8 +1896,10 @@ scan_target_int (const char* name)
     static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX;
     if (hi)
       fprintf (stderr, m3_trace_upper_hex (double_hex), name, colon, sign_char, hi, low);
+    else if (low >= 0 && low <= 9)
+      fprintf (stderr, " %s%s%c"HOST_WIDE_INT_PRINT_DEC, name, colon, sign_char, low);
     else
-      fprintf (stderr, m3_trace_upper_hex (hex), name, colon, sign_char, low);
+      fprintf (stderr, m3_trace_upper_hex (hex), name, colon, sign_char, low, low);
   }
 
   return res;
@@ -2279,7 +2296,7 @@ one_gap (HOST_WIDE_INT offset)
     return;
 
   if (option_trace_all)
-      fprintf (stderr, " one_gap: offset:0x%lx gap:0x%lx", (long)offset, (long)gap);
+      fprintf (stderr, "\n one_gap: offset:0x%lx gap:0x%lx\n", (long)offset, (long)gap);
 
   tipe = make_node (LANG_TYPE);
   TYPE_SIZE (tipe) = bitsize_int (gap);
@@ -2304,10 +2321,10 @@ m3_gap (HOST_WIDE_INT offset)
   if (gap <= 0 || !M3_TYPES)
     return;
 
-  sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, gap);
-
   if (option_trace_all)
-      fprintf (stderr, " m3_gap: offset:0x%lx gap:0x%lx", (long)offset, (long)gap);
+    fprintf (stderr, "\n m3_gap: offset:0x%lx size:0x%lx", (long)current_record_offset, (long)gap);
+
+  sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, gap);
 
   tipe = make_node (RECORD_TYPE);
   TYPE_SIZE (tipe) = bitsize_int (gap);
@@ -2328,9 +2345,6 @@ m3_field (const char* name, tree tipe, HOST_WIDE_INT offset,
     tree f = { 0 };
     tree v = { 0 };
     
-    if (option_trace_all)
-      fprintf (stderr, " m3_field: offset:0x%lx", (long)offset);
-
     gcc_assert (offset >= current_record_offset);
     m3_gap (offset);
 
@@ -3842,7 +3856,7 @@ m3cg_declare_local (void)
   DECL_NAME (var) = fix_name (name, name_length, id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", IDENTIFIER_POINTER (DECL_NAME (var)));
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
@@ -3910,7 +3924,7 @@ m3cg_declare_param (void)
   DECL_NAME (var) = fix_name (name, name_length, id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", IDENTIFIER_POINTER (DECL_NAME (var)));
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= 0);
@@ -4583,13 +4597,7 @@ m3cg_load (void)
   MTYPE2     (dst_t, dst_T);
 
   if (option_trace_all)
-  {
-    const char *name = "noname";
-    if (var && DECL_NAME (var))
-      name = IDENTIFIER_POINTER (DECL_NAME (var));
-    fprintf (stderr, " m3cg_load (%s): offset 0x%lX, convert %s -> %s", name,
-             (long)offset, typestr (src_T), typestr (dst_T));
-  }
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   m3_load (var, offset, src_t, src_T, dst_t, dst_T);
 }
 
@@ -4600,12 +4608,7 @@ m3cg_load_address (void)
   INTEGER    (offset);
 
   if (option_trace_all)
-  {
-    const char *name = "noname";
-    if (var && DECL_NAME (var))
-      name = IDENTIFIER_POINTER (DECL_NAME (var));
-    fprintf (stderr, " load address (%s) offset 0x%lX", name, (long)offset);
-  }
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   TREE_USED (var) = 1;
   var = m3_build1 (ADDR_EXPR, t_addr, var);
   if (offset)
@@ -4642,13 +4645,7 @@ m3cg_store (void)
   MTYPE2     (dst_t, dst_T);
 
   if (option_trace_all)
-  {
-    const char *name = "noname";
-    if (var && DECL_NAME (var))
-      name = IDENTIFIER_POINTER (DECL_NAME (var));
-    fprintf (stderr, " store (%s) offset:0x%lX src_t:%s dst_t:%s",
-             name, (long)offset, typestr (src_T), typestr (dst_T));
-  }
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   m3_store (var, offset, src_t, src_T, dst_t, dst_T);
 }
 
@@ -6271,7 +6268,7 @@ m3_init_options (unsigned int argc,
   return CL_m3cg;
 }
 
-static int version_done;
+static bool version_done;
 
 /* Process a switch - called by opts.c.  */
 static int
@@ -6290,7 +6287,7 @@ m3_handle_option (size_t code, const char *arg,
         {
           char const * const ver = version_string; /* type check */
           printf ("M3CG - Modula-3 Compiler back end %s\n", ver);
-          version_done = 1;
+          version_done = true;
         }
       break;
 
