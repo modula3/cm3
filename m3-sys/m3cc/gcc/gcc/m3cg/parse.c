@@ -322,6 +322,8 @@ get_typeid_to_tree (unsigned long id)
 static int m3_indent;
 
 static const char* m3_indentstr(void)
+/* This function returns a string of spaces for the current tracing indent
+   level. */
 {
   static char str[100];
   m3_indent = ((m3_indent < 0) ? 0 : m3_indent);
@@ -333,13 +335,14 @@ static const char* m3_indentstr(void)
 }
 
 static void m3_outdent(void)
+/* This function reduces the tracing indent level. */
 {
   m3_indent -= (m3_indent > 0 ? 4 : 0);
 }
 
-/* Used to quash unused warnings without relying on compiler extensions,
-   and without introducing parallel macros. It is really too bad
-   we can't just #pragma away all warnings for the entire file.
+/* This macro is used to quash warnings about unused variables, without relying
+   on compiler extensions, and without introducing parallel macros. It is
+   really too bad we can't just #pragma away all warnings for the entire file.
 */
 static const void* m3_unused;
 #define M3_UNUSED(var, expr) \
@@ -355,6 +358,9 @@ static size_t m3_add (size_t a, size_t b)
 
 static void
 set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
+/* This function establishes a global mapping of typeid to tree.
+   If a mapping already exists, the 'replace' parameter determines
+   if it is left alone or replaced. */
 {
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
@@ -405,6 +411,8 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
 
 static void
 set_typeid_to_tree (unsigned long id, tree t)
+/* This function establishes a global mapping of typeid to tree.
+   If a mapping from this typeid already exists, it is left unchanged. */
 {
   set_typeid_to_tree_replace (id, t, false);
 }
@@ -1650,6 +1658,10 @@ m3_trace_name (const char** inout_name)
 
 static char*
 m3_trace_upper_hex (char* format)
+/* This function adjusts a format string, changing lowercase 'x' to
+   uppercase 'X'. The first character in the string serves as an indicator
+   as to if the conversion has been done. It is 'x' for not yet done and
+   ' ' for done. */
 {
   char* a = format;
   if (a[0] == 'x')
@@ -1667,6 +1679,10 @@ m3_trace_upper_hex (char* format)
 
 static HOST_WIDE_INT
 m3_trace_int (const char* name, HOST_WIDE_INT val)
+/* This function prints an integer, taking a little pain for readability.
+   Single digit integers are printed only in decimal.
+   Larger integers are printed in hex and decimal, like:
+     0x40(64) */
 {
   if (name && option_trace_all)
   {
@@ -1682,6 +1698,7 @@ m3_trace_int (const char* name, HOST_WIDE_INT val)
 
 static HOST_WIDE_INT
 get_int (void)
+/* This function reads an integer from our specially encoded format. */
 {
   int n_bytes = { 0 };
   int sign = { 0 };
@@ -1710,10 +1727,15 @@ get_int (void)
 
 static unsigned long
 get_typeid (const char* name)
+/* This function reads and tracaes a typeid in specially encoded format.
+   Typeids simply 32bit unsigned integers. */
 {
   unsigned long val = (0xFFFFFFFFUL & (unsigned long) get_int ());
   if (name && option_trace_all)
-    fprintf (stderr, " %s:0x%lX", name, val);
+  {
+    const char* colon = m3_trace_name (&name);
+    fprintf (stderr, " %s%s0x%lX", name, colon, val);
+  }
   return val;
 }
 
