@@ -974,9 +974,8 @@ m3_get_alias_set (tree t)
    This implementation was copied from c-decl.c. */
 
 static bool
-m3_mark_addressable (tree exp)
+m3_mark_addressable (tree x)
 {
-  tree x = exp;
   while (1)
     switch (TREE_CODE (x))
       {
