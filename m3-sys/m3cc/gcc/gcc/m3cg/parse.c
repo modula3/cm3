@@ -1892,7 +1892,7 @@ scan_target_int (const char* name)
     const char* colon = m3_trace_name (&name);
     char sign_char = "-+"[sign > 0];
     static char double_hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_DOUBLE_HEX;
-    static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX;
+    static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
     if (hi)
       fprintf (stderr, m3_trace_upper_hex (double_hex), name, colon, sign_char, hi, low);
     else if (low <= 9)
