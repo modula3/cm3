@@ -3478,7 +3478,7 @@ m3cg_declare_subrange (void)
   debug_struct ();
 
   {
-    tree t = m3_type_for_size (size, tree_int_cst_lt(min, integer_zero_node));
+    tree t = m3_type_for_size (size, tree_int_cst_lt (min, integer_zero_node));
     gcc_assert (t);
     set_typeid_to_tree (my_id, t);
   }
