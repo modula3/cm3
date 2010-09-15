@@ -784,26 +784,24 @@ m3_build_type (m3_type t, HOST_WIDE_INT s, HOST_WIDE_INT a)
 /*========================================== insert, shift, rotate and co ===*/
 
 static tree
-m3_do_insert (tree x, tree y, tree i, tree n, tree t)
+m3_do_insert (tree x, tree y, tree i, tree n, tree orig_t)
 {
-  tree a, b, c, d, e, f, g, h, j, k, l;
-
-  t = m3_unsigned_type (t);
-  a = m3_build1 (BIT_NOT_EXPR, t, v_zero);
-  b = m3_build2 (LSHIFT_EXPR, t, a, n);
-  c = m3_build1 (BIT_NOT_EXPR, t, b);
-  d = m3_build2 (BIT_AND_EXPR, t, y, c);
-  e = m3_build2 (LSHIFT_EXPR, t, d, i);
-  f = m3_build2 (LSHIFT_EXPR, t, c, i);
-  g = m3_build1 (BIT_NOT_EXPR, t, f);
-  h = m3_build2 (BIT_AND_EXPR, t, x, g);
-  j = m3_build2 (BIT_IOR_EXPR, t, h, e);
-  k = m3_build3 (COND_EXPR, t,
-                 m3_build2 (EQ_EXPR, boolean_type_node, n, TYPE_SIZE (t)),
-                 y, j);
-  l = m3_build3 (COND_EXPR, t,
-                 m3_build2 (EQ_EXPR, boolean_type_node, n, v_zero),
-                 x, k);
+  tree t = m3_unsigned_type (orig_t);
+  tree a = m3_build1 (BIT_NOT_EXPR, t, v_zero);
+  tree b = m3_build2 (LSHIFT_EXPR, t, a, n);
+  tree c = m3_build1 (BIT_NOT_EXPR, t, b);
+  tree d = m3_build2 (BIT_AND_EXPR, t, y, c);
+  tree e = m3_build2 (LSHIFT_EXPR, t, d, i);
+  tree f = m3_build2 (LSHIFT_EXPR, t, c, i);
+  tree g = m3_build1 (BIT_NOT_EXPR, t, f);
+  tree h = m3_build2 (BIT_AND_EXPR, t, x, g);
+  tree j = m3_build2 (BIT_IOR_EXPR, t, h, e);
+  tree k = m3_build3 (COND_EXPR, t,
+                      m3_build2 (EQ_EXPR, boolean_type_node, n, TYPE_SIZE (t)),
+                      y, j);
+  tree l = m3_build3 (COND_EXPR, t,
+                      m3_build2 (EQ_EXPR, boolean_type_node, n, v_zero),
+                      x, k);
   return l;
 }
 
