@@ -105,7 +105,7 @@ static bool m3gdb;
 /* error: macro "build_decl" requires 4 arguments, but only 3 given */
 #undef build_decl
 #define build_decl(code, tree, memstat) \
-    build_decl_stat (UNKNOWN_LOCATION, code, tree, memstat MEM_STAT_INFO)
+    build_decl_stat (input_location, code, tree, memstat MEM_STAT_INFO)
 
 #else
 #if defined USE_MAPPED_LOCATION
