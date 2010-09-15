@@ -81,6 +81,13 @@ static const char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 #define TARGET_ARCH32 0
 #endif
 
+/* m3gdb is true if we should generate the debug information
+   that m3gdb specifically uses. That is, if we should embed
+   typeids in various identifiers. This is only useful
+   if the command line includes -gstabs or -gstabs+, and
+   if the target platform supports stabs and m3gdb.
+   m3gdb is not currently supported on MacOSX (aka Mach-O).
+   stabs is not currently supported on PA64_HPUX? That isn't checked here. */
 static bool m3gdb;
 
 /* In particular, Solaris/sparc32 has a stack walker.
@@ -245,7 +252,7 @@ static unsigned long m3type_table_size_allocated;
 DEF_VEC_O (m3type_t);
 DEF_VEC_ALLOC_O (m3type_t, gc);
 /* must comment out, #if is not sufficient */
-static GTY(()) VEC(m3type_t,gc) *m3type_table; /* see alias.c for a GTY+VEC example */
+static GTY(()) VEC(m3type_t, gc) *m3type_table; /* see alias.c for a GTY+VEC example */
 #define m3type_table_address VEC_address (m3type_t, m3type_table)
 #define m3type_table_size_used VEC_length (m3type_t, m3type_table)
 #endif
@@ -1207,7 +1214,7 @@ m3_write_globals (void)
   /* Fix init_offset fields in constructors: VAR_DECL -> offset */
   for (ctors = pending_inits; ctors; ctors = TREE_CHAIN (ctors))
   {
-    VEC (constructor_elt,gc) *elts = CONSTRUCTOR_ELTS (TREE_VALUE (ctors));
+    VEC (constructor_elt, gc) *elts = CONSTRUCTOR_ELTS (TREE_VALUE (ctors));
     unsigned HOST_WIDE_INT idx;
     tree index, value;
 
