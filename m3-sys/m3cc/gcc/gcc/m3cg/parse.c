@@ -68,6 +68,9 @@ static const char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 #include "m3gty43.h"
 #include <limits.h>
 
+#ifndef TARGET_MACHO
+#define TARGET_MACHO 0
+#endif
 #ifndef TARGET_SOLARIS
 #define TARGET_SOLARIS 0
 #endif
@@ -77,6 +80,8 @@ static const char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 #ifndef TARGET_ARCH32
 #define TARGET_ARCH32 0
 #endif
+
+static bool m3gdb;
 
 /* In particular, Solaris/sparc32 has a stack walker.
    Why does the stack walker matter?
@@ -1804,7 +1809,7 @@ scan_type (const char* name)
 #define MTYPE2(x, y) m3_type y; tree x = M3_UNUSED (x, scan_mtype (#x, &y))
 
 static tree
-scan_mtype (const char* name, m3_type *T)
+scan_mtype (const char* name, m3_type* T)
 {
   m3_type TT = scan_type (name);
   if (T)
@@ -1842,7 +1847,6 @@ scan_target_int (const char* name)
   HOST_WIDE_INT hi = { 0 };
   long i = { 0 };
   unsigned n_bytes = { 0 };
-  unsigned original_n_bytes = { 0 };
   int sign = { 0 };
   int shift = { 0 };
   tree res = { 0 };
@@ -1860,21 +1864,16 @@ scan_target_int (const char* name)
   case M3CG_Int8:   n_bytes = 8;  sign =  1;  break;
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
   default:
-
     if (name && option_trace_all)
     {
       const char* colon = m3_trace_name (&name);
-      static char hex[] = "x%s%s"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
       if (i >= -9 && i <= 9)
-        fprintf (stderr, " %s%s"HOST_WIDE_INT_PRINT_DEC, name, colon, i);
+        fprintf (stderr, " %s%s%ld", name, colon, i);
       else
-        fprintf (stderr, m3_trace_upper_hex (hex), name, colon, i, i);
+        fprintf (stderr, " %s%s%lX(%ld)", name, colon, i, i);
     }
     return build_int_cst (t, i);
   }
-
-  if (option_trace_all)
-    original_n_bytes = n_bytes;
 
   for (shift = 0; n_bytes > 0;  n_bytes--, shift += 8)
   {
@@ -2155,6 +2154,8 @@ static void
 format_tag_v (m3buf_t* buf, char kind, unsigned long id, const char* fmt,
               va_list args)
 {
+  if (!m3gdb)
+    return;
   buf->buf [0] = 'M';
   buf->buf [1] = kind;
   buf->buf [2] = '_';
@@ -2173,7 +2174,8 @@ static void
 debug_tag (char kind, unsigned long id, const char* fmt, ...)
 {
   va_list args;
-
+  if (!m3gdb)
+    return;
   va_start (args, fmt);
   format_tag_v (&current_dbg_type_tag_buf, kind, id, fmt, args);
   va_end (args);
@@ -2182,7 +2184,10 @@ debug_tag (char kind, unsigned long id, const char* fmt, ...)
 static void
 debug_field_name (const char *name)
 {
-  tree f = build_decl (FIELD_DECL, get_identifier (name), t_int);
+  tree f = { 0 };
+  if (!m3gdb)
+    return;
+  f = build_decl (FIELD_DECL, get_identifier (name), t_int);
   DECL_FIELD_OFFSET (f) = size_zero_node;
   DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
   layout_decl (f, 1);
@@ -2194,6 +2199,8 @@ static void
 debug_field_id (unsigned long id)
 {
   char buf [UID_SIZE + 1];
+  if (!m3gdb)
+    return;
   fmt_uid (id, buf);
   debug_field_name (buf);
 }
@@ -2203,6 +2210,8 @@ debug_field_fmt_v (unsigned long id, const char* fmt, va_list args)
 {
   char name [100];
 
+  if (!m3gdb)
+    return;
   fmt_uid (id, name);
   name[sizeof(name) - 2] = 0;
   vsnprintf (name + UID_SIZE, sizeof(name) - UID_SIZE, fmt, args);
@@ -2217,6 +2226,8 @@ debug_field_fmt_v (unsigned long id, const char* fmt, va_list args)
 static void
 debug_field_fmt (unsigned long id, const char* fmt, ...)
 {
+  if (!m3gdb)
+    return;
   va_list args;
   va_start (args, fmt);
   debug_field_fmt_v (id, fmt, args);
@@ -2227,8 +2238,13 @@ static void
 debug_struct (void)
 {
   tree d = { 0 };
-  tree t = make_node (RECORD_TYPE);
+  tree t = { 0 };
+
   m3_outdent ();
+  if (!m3gdb)
+    return;
+  
+  t = make_node (RECORD_TYPE);
   TYPE_FIELDS (t) = nreverse (debug_fields);
   debug_fields = 0;
   TYPE_NAME (t) = build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
@@ -2402,7 +2418,7 @@ fix_name (const char *name, size_t len, unsigned long id)
     static unsigned long anonymous_counter;
     snprintf (buf, sizeof(buf), "L_%lu", ++anonymous_counter);
   }
-  else if (id == 0)
+  else if (id == 0 || !m3gdb)
   {
     return get_identifier (name);
   }
@@ -6281,6 +6297,12 @@ m3_handle_option (size_t code, const char *arg,
     {
     default:
       return 1;
+
+    case OPT_gstabs:
+    case OPT_gstabs_:
+      if (!TARGET_MACHO)
+        m3gdb = true;
+      break;
 
     case OPT_v:
       if (!version_done)
