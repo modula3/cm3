@@ -1895,7 +1895,7 @@ scan_target_int (const char* name)
     static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX;
     if (hi)
       fprintf (stderr, m3_trace_upper_hex (double_hex), name, colon, sign_char, hi, low);
-    else if (low >= 0 && low <= 9)
+    else if (low <= 9)
       fprintf (stderr, " %s%s%c"HOST_WIDE_INT_PRINT_DEC, name, colon, sign_char, low);
     else
       fprintf (stderr, m3_trace_upper_hex (hex), name, colon, sign_char, low, low);
