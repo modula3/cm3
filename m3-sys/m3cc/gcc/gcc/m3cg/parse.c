@@ -976,7 +976,7 @@ m3_get_alias_set (tree t)
 static bool
 m3_mark_addressable (tree exp)
 {
-  register tree x = exp;
+  tree x = exp;
   while (1)
     switch (TREE_CODE (x))
       {
