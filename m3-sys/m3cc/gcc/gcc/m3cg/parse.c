@@ -3897,7 +3897,7 @@ m3cg_declare_local (void)
 
   DECL_NAME (var) = fix_name (name, name_length, id);
 
-  if (option_trace_all)
+  if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
@@ -3965,7 +3965,7 @@ m3cg_declare_param (void)
 
   DECL_NAME (var) = fix_name (name, name_length, id);
 
-  if (option_trace_all)
+  if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
@@ -4638,7 +4638,7 @@ m3cg_load (void)
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
-  if (option_trace_all)
+  if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   m3_load (var, offset, src_t, src_T, dst_t, dst_T);
 }
@@ -4649,7 +4649,7 @@ m3cg_load_address (void)
   VAR        (var);
   INTEGER    (offset);
 
-  if (option_trace_all)
+  if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   TREE_USED (var) = 1;
   var = m3_build1 (ADDR_EXPR, t_addr, var);
@@ -4686,7 +4686,7 @@ m3cg_store (void)
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
-  if (option_trace_all)
+  if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   m3_store (var, offset, src_t, src_T, dst_t, dst_T);
 }
