@@ -4,9 +4,10 @@
 UNSAFE MODULE Main;
 IMPORT RTIO;
 
-TYPE Color = {Red,Orange,Green,Blue,Indigo,Violate}; (* enum *)
+TYPE Color = {Red,Orange,Green,Blue,Indigo,Violet}; (* enum *)
+<*NOWARN*>TYPE Color2 =  BITS 4 FOR {Red,Orange,Green,Blue,Indigo,Violate}; (* packed enum *)
 <*NOWARN*>TYPE ColorR1 = BITS 2 FOR [Color.Red..Color.Orange]; (* packed enum subrange *)
-<*NOWARN*>TYPE ColorP1 = BITS 3 FOR Color; (* packed enum *)
+<*NOWARN*>TYPE ColorP1 = BITS 3 FOR Color; (* another packed enum *)
 TYPE R1 = BITS 4 FOR [2..10]; (* packed integer subrange *)
 VAR r1:R1;
 TYPE T1 = RECORD r1,r2,r3:R1 END; (* record with bitfields *)
