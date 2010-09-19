@@ -54,6 +54,7 @@ void RTDebug__DebugBreak(void)
 
   sigaction(SIGTRAP, 0, &sa);
   signal(SIGTRAP, SIG_IGN);
+  raise(SIGTRAP);
   sigaction(SIGTRAP, &sa, 0);
 }
 
