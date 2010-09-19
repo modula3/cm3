@@ -14,5 +14,7 @@ TYPE
                        READONLY msg: ARRAY OF TEXT) RAISES ANY;
 
 PROCEDURE Init();
+<*EXTERNAL RTDebug__IsDebuggerPresent*>PROCEDURE IsDebuggerPresent():BOOLEAN;
+<*EXTERNAL RTDebug__DebugBreak*>PROCEDURE DebugBreak();
 
 END RTDebug.
