@@ -2061,8 +2061,8 @@ scan_boolean (const char* name)
 
 /*------------------------------------------------------------- variables ---*/
 
-#define VAR(x) tree x = M3_UNUSED (x, scan_var (ERROR_MARK))
-#define RETURN_VAR(x, code) tree x = scan_var (code)
+#define VAR(x) tree x = M3_UNUSED (x, scan_var (ERROR_MARK, #x))
+#define RETURN_VAR(x, code) tree x = scan_var (code, #x)
 
 #define VARRAY_EXTEND(va, n) ((va) = varray_extend (va, n))
 static varray_type
@@ -2074,42 +2074,45 @@ varray_extend (varray_type va, size_t n)
     return va;
   num_elements = VARRAY_SIZE (va);
   if (n > num_elements)
-    {
-      do
-        num_elements *= 2;
-      while (n > num_elements);
-      VARRAY_GROW (va, num_elements);
-    }
+  {
+    do
+      num_elements *= 2;
+    while (n > num_elements);
+    VARRAY_GROW (va, num_elements);
+  }
   VARRAY_ACTIVE_SIZE (va) = n;
   return va;
 }
 
 static tree
-scan_var (enum tree_code code)
+scan_var (enum tree_code code, const char* name)
 {
   long i = get_int ();
+  tree var = { 0 };
 
   VARRAY_EXTEND (all_vars, i + 1);
+  var = VARRAY_TREE (all_vars, i);
   if (code == ERROR_MARK)
+  {
+    if (var == NULL)
+      fatal_error ("*** variable should already exist, v.0x%x, line %d",
+                   (int)i, (int)m3cg_lineno);
+    if (name && option_trace_all)
     {
-      if (VARRAY_TREE (all_vars, i) == NULL)
-        {
-          fatal_error ("*** variable should already exist, v.0x%x, line %d",
-                       (int)i, (int)m3cg_lineno);
-        }
+      const char* colon = m3_trace_name (&name);
+      fprintf (stderr, " %s%s%s", name, colon, m3_get_var_trace_name (var));
     }
+  }
   else
-    {
-      if (VARRAY_TREE (all_vars, i) != NULL)
-        {
-          fatal_error ("*** variable should not already exist, v.0x%x, line %d",
-                       (int)i, (int)m3cg_lineno);
-        }
-      VARRAY_TREE (all_vars, i) = make_node (code);
-      DECL_NAME (VARRAY_TREE (all_vars, i)) = NULL_TREE;
-    }
-
-  return VARRAY_TREE (all_vars, i);
+  {
+    if (var != NULL)
+      fatal_error ("*** variable should not already exist, v.0x%x, line %d",
+                   (int)i, (int)m3cg_lineno);
+    var = make_node (code);
+    VARRAY_TREE (all_vars, i) = var;
+    DECL_NAME (var) = NULL_TREE;
+  }
+  return var;
 }
 
 /*------------------------------------------------------------ procedures ---*/
