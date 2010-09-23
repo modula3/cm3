@@ -136,6 +136,130 @@ int arm_float_words_big_endian (void);
 
 #define COUNT_OF(a) (sizeof(a)/sizeof((a)[0]))
 
+/*------------------------------------------------------------- utils -------*/
+
+/*   m3_append_char
+     m3_revstr
+     m3_unsigned_wide_to_hex_full
+     m3_signed_wide_to_hex_shortest
+     m3_fill_hex_value help
+   m3cg_declare_subrange to write hex values of lower and upper bounds.
+   They omit some redundant high bits, either positive or negative.
+   However, the leftmost bit explicitly specified by the output is
+   always a sign bit and can be sign-extended.  For example,
+   0x7F and 0x0FF are positive, while 0xF7F and 0xFF are negative.
+   (0xFF would never be written, but truncated to 0xF for -1.)
+*/
+
+static void
+m3_append_char (char c, char** p, char* limit)
+{
+  char* q = *p;
+  if (q >= limit)
+    fatal_error ("buffer overflow\n");
+  *q = c;
+  *p = (q + 1);
+}
+
+static void m3_revstr (char* a, size_t len)
+{
+  size_t i = { 0 };
+  if (len < 2)
+    return;
+  len -= 1;
+  while (i < len)
+  {
+    char t = a[i];
+    a[i] = a[len];
+    a[len] = t;
+    i += 1;
+    len -= 1;
+  }
+}
+
+static void m3_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
+{
+   unsigned i = { 0 };
+   for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
+      buf[i++] = "0123456789ABCDEF"[a & 0xF];
+   m3_revstr (buf, i);
+   buf[i] = 0;
+}
+
+#if 0 /* for illustration purposes */
+static void m3_unsigned_wide_to_hex_shortest (unsigned HOST_WIDE_INT a, char* buf)
+{
+   unsigned i = { 0 };
+   do /* do/while necessary to handle 0 */
+      buf[i++] = "0123456789ABCDEF"[a & 0xF];
+   while (a >>= 4);
+   m3_revstr (buf, i);
+   buf[i] = 0;
+}
+#endif
+
+#if 0 /* to be used shortly */
+static void m3_unsigned_wide_to_dec_shortest (unsigned HOST_WIDE_INT a, char* buf)
+{
+   unsigned i = { 0 };
+   do /* do/while necessary to handle 0 */
+      buf[i++] = "0123456789"[a % 10];
+   while (a /= 10);
+   m3_revstr (buf, i);
+   buf[i] = 0;
+}
+#endif
+
+static void m3_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
+/* if negative, first character must be >=8
+ * if positive, first character must < 8;
+ * skip leading characters otherwise
+ * insert leading 0 or F if necessary
+ * e.g. 127 => 7F
+ *      255 => 0FF
+ *     -255 => F01
+ *        7 => 7
+ *        8 => 08
+ *       15 => 0F
+ *     -128 => 80
+ *
+ * algorithm: do "full" and then trim digits
+ * Positive numbers can have 0 trimmed as long as next is <= 7.
+ * Negative numbers can have F trimmed as long as next is > 7.
+ * Result must be at least one character.
+ */
+{
+   unsigned i = { 0 };
+   unsigned neg = (a < 0);
+   char trim = (neg ? 'F' : '0');
+   for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
+      buf[i++] = "0123456789ABCDEF"[a & 0xF];
+   while (i >= 2 && (buf[i - 1] == trim) && (neg == (buf[i - 2] > '7')))
+      i -= 1;
+   m3_revstr (buf, i);
+   buf[i] = 0;
+}
+
+static void
+m3_fill_hex_value (HOST_WIDE_INT hi, HOST_WIDE_INT lo, char** p, char* limit)
+{
+  m3_append_char('0', p, limit);
+  m3_append_char('x', p, limit);
+  if ((hi == -1 && lo < 0) || (hi == 0 && lo >= 0))
+  {
+    m3_signed_wide_to_hex_shortest (lo, *p);
+  }
+  else
+  {
+    m3_signed_wide_to_hex_shortest (hi, *p);
+    *p += strlen (*p);
+    gcc_assert (*p < limit);
+    m3_unsigned_wide_to_hex_full (lo, *p);
+  }
+  *p += strlen (*p);
+  gcc_assert (*p < limit);
+}
+
 /*======================================================= OPTION HANDLING ===*/
 
 static int option_trace_all;
@@ -3339,116 +3463,6 @@ m3cg_declare_set (void)
   set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
 }
 
-/*   m3cg_append_char
-     m3cg_revstr
-     m3cg_unsigned_wide_to_hex_full
-     m3cg_signed_wide_to_hex_shortest
-     m3cg_fill_hex_value help
-   m3cg_declare_subrange to write hex values of lower and upper bounds.
-   They omit some redundant high bits, either positive or negative.
-   However, the leftmost bit explicitly specified by the output is
-   always a sign bit and can be sign-extended.  For example,
-   0x7F and 0x0FF are positive, while 0xF7F and 0xFF are negative.
-   (0xFF would never be written, but truncated to 0xF for -1.)
-*/
-
-static void
-m3cg_append_char (char c, char** p, char* limit)
-{
-  char* q = *p;
-  if (q >= limit)
-    fatal_error ("buffer overflow\n");
-  *q = c;
-  *p = (q + 1);
-}
-
-static void m3cg_revstr (char* a, size_t len)
-{
-  size_t i = { 0 };
-  if (len < 2)
-    return;
-  len -= 1;
-  while (i < len)
-  {
-    char t = a[i];
-    a[i] = a[len];
-    a[len] = t;
-    i += 1;
-    len -= 1;
-  }
-}
-
-static void m3cg_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
-{
-   unsigned i = { 0 };
-   for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
-      buf[i++] = "0123456789ABCDEF"[a & 0xF];
-   m3cg_revstr (buf, i);
-   buf[i] = 0;
-}
-
-#if 0 /* for illustration purposes */
-static void m3cg_unsigned_wide_to_hex_shortest (unsigned HOST_WIDE_INT a, char* buf)
-{
-   unsigned i = { 0 };
-   do /* do/while necessary to handle 0 */
-      buf[i++] = "0123456789ABCDEF"[a & 0xF];
-   while (a >>= 4);
-   m3cg_revstr (buf, i);
-   buf[i] = 0;
-}
-#endif
-
-static void m3cg_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
-/* if negative, first character must be >=8
- * if positive, first character must < 8;
- * skip leading characters otherwise
- * insert leading 0 or F if necessary
- * e.g. 127 => 7F
- *      255 => 0FF
- *     -255 => F01
- *        7 => 7
- *        8 => 08
- *       15 => 0F
- *     -128 => 80
- *
- * algorithm: do "full" and then trim digits
- * Positive numbers can have 0 trimmed as long as next is <= 7.
- * Negative numbers can have F trimmed as long as next is > 7.
- * Result must be at least one character.
- */
-{
-   unsigned i = { 0 };
-   unsigned neg = (a < 0);
-   char trim = (neg ? 'F' : '0');
-   for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
-      buf[i++] = "0123456789ABCDEF"[a & 0xF];
-   while (i >= 2 && (buf[i - 1] == trim) && (neg == (buf[i - 2] > '7')))
-      i -= 1;
-   m3cg_revstr (buf, i);
-   buf[i] = 0;
-}
-
-static void
-m3cg_fill_hex_value (HOST_WIDE_INT hi, HOST_WIDE_INT lo, char** p, char* limit)
-{
-  m3cg_append_char('0', p, limit);
-  m3cg_append_char('x', p, limit);
-  if ((hi == -1 && lo < 0) || (hi == 0 && lo >= 0))
-  {
-    m3cg_signed_wide_to_hex_shortest (lo, *p);
-  }
-  else
-  {
-    m3cg_signed_wide_to_hex_shortest (hi, *p);
-    *p += strlen (*p);
-    gcc_assert (*p < limit);
-    m3cg_unsigned_wide_to_hex_full (lo, *p);
-  }
-  *p += strlen (*p);
-  gcc_assert (*p < limit);
-}
-
 static void
 m3cg_declare_subrange (void)
 {
@@ -3467,14 +3481,14 @@ m3cg_declare_subrange (void)
   HOST_WIDE_INT max_hi = TREE_INT_CST_HIGH (max);
   HOST_WIDE_INT max_lo = TREE_INT_CST_LOW (max);
 
-  m3cg_append_char ('_', &p, p_limit);
-  m3cg_append_char ('%', &p, p_limit);
-  m3cg_append_char ('d', &p, p_limit);
-  m3cg_append_char ('_', &p, p_limit);
-  m3cg_fill_hex_value (min_hi, min_lo, &p, p_limit);
-  m3cg_append_char ('_', &p, p_limit);
-  m3cg_fill_hex_value (max_hi, max_lo, &p, p_limit);
-  m3cg_append_char ('\0', &p, p_limit);
+  m3_append_char ('_', &p, p_limit);
+  m3_append_char ('%', &p, p_limit);
+  m3_append_char ('d', &p, p_limit);
+  m3_append_char ('_', &p, p_limit);
+  m3_fill_hex_value (min_hi, min_lo, &p, p_limit);
+  m3_append_char ('_', &p, p_limit);
+  m3_fill_hex_value (max_hi, max_lo, &p, p_limit);
+  m3_append_char ('\0', &p, p_limit);
   debug_tag ('Z', my_id, buff, size);
 
   debug_field_id (domain_id);
