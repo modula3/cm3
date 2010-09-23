@@ -198,7 +198,6 @@ static void m3_unsigned_wide_to_hex_shortest (unsigned HOST_WIDE_INT a, char* bu
 }
 #endif
 
-#if 0 /* to be used shortly */
 static void m3_unsigned_wide_to_dec_shortest (unsigned HOST_WIDE_INT a, char* buf)
 {
    unsigned i = { 0 };
@@ -208,7 +207,6 @@ static void m3_unsigned_wide_to_dec_shortest (unsigned HOST_WIDE_INT a, char* bu
    m3_revstr (buf, i);
    buf[i] = 0;
 }
-#endif
 
 static void m3_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
 /* if negative, first character must be >=8
@@ -302,23 +300,31 @@ static int option_trace_all;
 #define UID_NULL 0x48EC756E /* NULL */
 
 /* type trees */
-static GTY (()) tree t_addr;
+#define t_addr ptr_type_node 
 static GTY (()) tree t_word;
 static GTY (()) tree t_int;
-static GTY (()) tree t_longword;
-static GTY (()) tree t_longint;
-static GTY (()) tree t_reel;
-static GTY (()) tree t_lreel;
-static GTY (()) tree t_xreel;
-static GTY (()) tree t_int_8;
-static GTY (()) tree t_int_16;
-static GTY (()) tree t_int_32;
-static GTY (()) tree t_int_64;
-static GTY (()) tree t_word_8;
-static GTY (()) tree t_word_16;
-static GTY (()) tree t_word_32;
-static GTY (()) tree t_word_64;
-static GTY (()) tree t_void;
+#define t_longword t_word_64
+#define t_longint t_int_64
+#define t_reel float_type_node
+#define t_lreel double_type_node
+#if 0
+  /* XXX The M3 front end (m3middle/src/Target.m3) seems to treat extended
+     reals the same as LONGREAL.  That may be due to limitations in other
+     parts of the front end.  I don't know yet.  For now we likewise treat
+     the xreel type as if it were lreel. */
+#define t_xreel long_double_type_node
+#else
+#define t_xreel double_type_node
+#endif
+#define t_int_8 intQI_type_node
+#define t_int_16 intHI_type_node
+#define t_int_32 intSI_type_node
+#define t_int_64 intDI_type_node
+#define t_word_8 unsigned_intQI_type_node
+#define t_word_16 unsigned_intHI_type_node
+#define t_word_32 unsigned_intSI_type_node
+#define t_word_64 unsigned_intDI_type_node
+#define t_void void_type_node
 static GTY (()) tree t_set;
 
 static const struct { unsigned long id; tree* t; } builtin_uids[] = {
@@ -348,6 +354,22 @@ static const struct { unsigned long id; tree* t; } builtin_uids[] = {
   { UID_PROC7, &t_addr },
   { UID_PROC8, &t_addr }
   /* UID_NULL */
+};
+
+static const struct { tree* t; const char* name; } builtin_types[] = {
+  { &t_int_8, "int_8" },
+  { &t_int_16, "int_16" },
+  { &t_int_32, "int_32" },
+  { &t_int_64, "int_64" },
+  { &t_word_8, "word_8" },
+  { &t_word_16, "word_16" },
+  { &t_word_32, "word_32" },
+  { &t_word_64, "word_64" },
+  { &t_addr, "addr" },
+  { &t_reel, "reel" },
+  { &t_lreel, "lreel" },
+  { &t_xreel, "xreel" },
+  { &t_addr, "addr" }
 };
 
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
@@ -627,9 +649,9 @@ static const char* typestr (unsigned a)
 #define BITS_PER_INTEGER POINTER_SIZE
 
 /* Values. */
-static GTY (()) tree v_zero;
-static GTY (()) tree v_one;
-static GTY (()) tree v_null;
+#define v_zero integer_zero_node
+#define v_one integer_one_node
+#define v_null null_pointer_node
 
 /* Procedures. */
 static GTY (()) tree memcpy_proc;
@@ -698,7 +720,7 @@ static int global_bindings_p (void);
 static void insert_block (tree block);
 #endif
 
-static void m3_push_type_decl (tree, tree);
+static void m3_push_type_decl (tree, const char*);
 static void m3_write_globals (void);
 
 /* The front end language hooks (addresses of code for this front
@@ -1256,10 +1278,11 @@ pushdecl (tree decl)
 }
 
 static void
-m3_push_type_decl (tree id, tree type_node)
+m3_push_type_decl (tree type_node, const char* name)
 {
-  tree decl = build_decl (TYPE_DECL, id, type_node);
-  TYPE_NAME (type_node) = id;
+  tree name_node = get_identifier (name);
+  tree decl = build_decl (TYPE_DECL, name_node, type_node);
+  TYPE_NAME (type_node) = name_node;
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
 }
@@ -1408,23 +1431,6 @@ m3_init_decl_processing (void)
 
   build_common_tree_nodes (0, false);
 
-  t_int_8 = intQI_type_node;
-  m3_push_type_decl (get_identifier ("int_8"), t_int_8);
-  t_word_8 = unsigned_intQI_type_node;
-  m3_push_type_decl (get_identifier ("word_8"), t_word_8);
-  t_int_16 = intHI_type_node;
-  m3_push_type_decl (get_identifier ("int_16"), t_int_16);
-  t_word_16 = unsigned_intHI_type_node;
-  m3_push_type_decl (get_identifier ("word_16"), t_word_16);
-  t_int_32 = intSI_type_node;
-  m3_push_type_decl (get_identifier ("int_32"), t_int_32);
-  t_word_32 = unsigned_intSI_type_node;
-  m3_push_type_decl (get_identifier ("word_32"), t_word_32);
-  t_int_64 = intDI_type_node;
-  m3_push_type_decl (get_identifier ("int_64"), t_int_64);
-  t_word_64 = unsigned_intDI_type_node;
-  m3_push_type_decl (get_identifier ("word_64"), t_word_64);
-
   if (BITS_PER_INTEGER == 32)
     {
       t_int = t_int_32;
@@ -1438,13 +1444,12 @@ m3_init_decl_processing (void)
   else
     {
       t_int = make_signed_type (BITS_PER_INTEGER);
-      m3_push_type_decl (get_identifier ("int"), t_int);
+      m3_push_type_decl (t_int, "int");
       t_word = make_unsigned_type (BITS_PER_INTEGER);
-      m3_push_type_decl (get_identifier ("word"), t_word);
+      m3_push_type_decl (t_word, "word");
     }
 
-  t_longint = t_int_64;
-  t_longword = t_word_64;
+  t_set = m3_build_pointer_type (t_word);
 
   /* Set the type used for sizes and build the remaining common nodes. */
   size_type_node = t_word;
@@ -1452,34 +1457,15 @@ m3_init_decl_processing (void)
   build_common_tree_nodes_2 (0);
   void_list_node = build_tree_list (NULL_TREE, void_type_node);
 
-  /* Build the remaining M3-specific type and value nodes. */
-  t_addr = ptr_type_node;
-  m3_push_type_decl (get_identifier ("addr"), t_addr);
-  t_reel = float_type_node;
-  m3_push_type_decl (get_identifier ("reel"), t_reel);
-  t_lreel = double_type_node;
-  m3_push_type_decl (get_identifier ("lreel"), t_lreel);
-#if 0
-  /* XXX The M3 front end (m3middle/src/Target.m3) seems to treat extended
-     reals the same as LONGREAL.  That may be due to limitations in other
-     parts of the front end.  I don't know yet.  For now we likewise treat
-     the xreel type as if it were lreel. */
-  t_xreel = long_double_type_node;
-#else
-  t_xreel = double_type_node;
-#endif
-  m3_push_type_decl (get_identifier ("xreel"), t_xreel);
-
   /* add builtin uids */
 
   for (i = 0; i < COUNT_OF (builtin_uids); ++i)
     set_typeid_to_tree (builtin_uids[i].id, *builtin_uids[i].t);
+    
+  /* declare/name builtin types */
 
-  t_void = void_type_node;
-  v_zero = build_int_cst (t_int, 0);
-  v_one = build_int_cst (t_int, 1);
-  v_null = null_pointer_node;
-  t_set = m3_build_pointer_type (t_word);
+  for (i = 0; i < COUNT_OF (builtin_types); ++i)
+    m3_push_type_decl (*builtin_types[i].t, builtin_types[i].name);
 
   build_common_builtin_nodes ();
 
@@ -2564,12 +2550,15 @@ static void add_stmt (tree t)
 static tree
 fix_name (const char *name, size_t len, unsigned long id)
 {
-  char buf[100];
+  char* buf;
 
   if (name == 0 || name[0] == '*')
   {
     static unsigned long anonymous_counter;
-    snprintf (buf, sizeof(buf), "L_%lu", ++anonymous_counter);
+    buf = (char*)alloca (256);
+    buf[0] = 'L';
+    buf[1] = '_';
+    m3_unsigned_wide_to_dec_shortest(++anonymous_counter, &buf[2]);
   }
   else if (id == 0 || !m3gdb)
   {
@@ -2577,18 +2566,16 @@ fix_name (const char *name, size_t len, unsigned long id)
   }
   else if (id == NO_UID)
   {
-    if (len >= (sizeof(buf) - 1))
-      fatal_error ("identifier too long (in fix_name, 1st case, %s)", name);
+    buf = (char*)alloca (m3_add(len, 2));
     buf[0] = 'M';
     memcpy (&buf[1], name, len + 1);
   }
   else
   {
+    buf = (char*)alloca (m3_add (len, UID_SIZE + 5));
     buf[0] = 'M';  buf[1] = '3';  buf[2] = '_';
     fmt_uid (id, buf + 3);
     buf[3 + UID_SIZE] = '_';
-    if (len >= (sizeof(buf) - 4 - UID_SIZE))
-      fatal_error ("identifier too long (in fix_name, 2nd case, %s)", name);
     memcpy (&buf[4 + UID_SIZE], name, len + 1);
   }
   return get_identifier (buf);
@@ -3252,16 +3239,11 @@ m3cg_declare_typename (void)
   TYPEID (my_id);
   NAME   (name, name_len);
 
-  char fullname [100];
   size_t unit_len = current_unit_name_length;
-  size_t full_len = m3_add (unit_len, m3_add (name_len, 1));
-
-  if (full_len >= sizeof(fullname))
-    fatal_error ("identifier too long (in m3cg_declare_typename, %s.%s)", current_unit_name, name);
-
-  memcpy (&fullname[0], current_unit_name, unit_len);
+  char* fullname = (char*)alloca (m3_add (unit_len, m3_add (name_len, 2)));
+  memcpy(fullname, current_unit_name, unit_len);
   fullname[unit_len] = '.';
-  memcpy (&fullname[unit_len + 1], name, name_len + 1);
+  memcpy(&fullname[unit_len + 1], name, name_len + 1);
 
   debug_tag ('N', my_id, "");
   debug_field_name (fullname);
