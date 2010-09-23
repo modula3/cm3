@@ -2562,7 +2562,7 @@ fix_name (const char *name, size_t len, unsigned long id)
   }
   else if (id == 0 || !m3gdb)
   {
-    return get_identifier (name);
+    buf = (char*)name;
   }
   else if (id == NO_UID)
   {
