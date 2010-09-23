@@ -2550,7 +2550,7 @@ static void add_stmt (tree t)
 static tree
 fix_name (const char *name, size_t len, unsigned long id)
 {
-  char* buf;
+  char* buf = { 0 };
 
   if (name == 0 || name[0] == '*')
   {
