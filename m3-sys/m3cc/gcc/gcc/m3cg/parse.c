@@ -3027,6 +3027,7 @@ declare_fault_proc (void)
   DECL_ARTIFICIAL (resultdecl) = 1;
   DECL_IGNORED_P (resultdecl) = 1;
   DECL_RESULT (proc) = resultdecl;
+  DECL_SOURCE_LOCATION (proc) = BUILTINS_LOCATION;
 
   /* TREE_THIS_VOLATILE (proc) = 1; / * noreturn */
   TREE_STATIC (proc) = 1;
@@ -3083,11 +3084,10 @@ emit_fault_proc (void)
   tree p = fault_proc;
 
 #ifdef M3_USE_MAPPED_LOCATION
-  input_location = UNKNOWN_LOCATION;
+  input_location = BUILTINS_LOCATION;
 #else
   input_line = 0;
 #endif
-  DECL_SOURCE_LOCATION (p) = input_location;
 
   gcc_assert (current_function_decl == NULL_TREE);
   gcc_assert (current_block == NULL_TREE);
@@ -3155,10 +3155,11 @@ generate_fault (int code)
    */
   gcc_assert (code <= FAULT_MASK);
   /* gcc_assert (LOCATION_LINE (input_location) <= (long)((~0UL) >> LINE_SHIFT)); */
-  if (fault_proc == 0) declare_fault_proc ();
+  if (fault_proc == 0)
+    declare_fault_proc ();
   arg = build_int_cst (t_int, (LOCATION_LINE (input_location) << LINE_SHIFT) + (code & FAULT_MASK));
 #if GCC45
-  return build_function_call_expr (UNKNOWN_LOCATION, fault_proc, build_tree_list (NULL_TREE, arg));
+  return build_function_call_expr (input_location, fault_proc, build_tree_list (NULL_TREE, arg));
 #else
   return build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
 #endif
@@ -4594,7 +4595,7 @@ m3cg_case_jump (void)
     LABEL (target_label);
 
 #if GCC45
-    tree case_label = create_artificial_label (UNKNOWN_LOCATION);
+    tree case_label = create_artificial_label (input_location);
 #else
     tree case_label = create_artificial_label ();
 #endif
