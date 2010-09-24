@@ -532,18 +532,18 @@ end
 %
 if GCC45
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
-              & " all-libiberty all-libdecnumber all-mpc all-zlib"
+              & " all-libiberty all-mpc all-zlib"
               % & " | tee -a " & Log
               ])
 else
 if GCC42
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
-              & " all-libiberty all-libdecnumber"
+              & " all-libiberty"
               % & " | tee -a " & Log
               ])
 else
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr"
-              & " all-build-libiberty all-libiberty all-libdecnumber"
+              & " all-build-libiberty all-libiberty"
               % & " | tee -a " & Log
               ])
 end

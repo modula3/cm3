@@ -348,7 +348,7 @@ enable_decimal_float = @enable_decimal_float@
 DECNUM = $(srcdir)/../libdecnumber
 DECNUMFMT = $(srcdir)/../libdecnumber/$(enable_decimal_float)
 DECNUMINC = -I$(DECNUM) -I$(DECNUMFMT) -I../libdecnumber
-LIBDECNUMBER = ../libdecnumber/libdecnumber.a
+LIBDECNUMBER = 
 
 # Target to use when installing include directory.  Either
 # install-headers-tar, install-headers-cpio or install-headers-cp.
@@ -620,8 +620,8 @@ htmldir = @htmldir@
 USE_NLS = @USE_NLS@
 
 # Internationalization library.
-LIBINTL = @LIBINTL@
-LIBINTL_DEP = @LIBINTL_DEP@
+LIBINTL = 
+LIBINTL_DEP = 
 
 # Character encoding conversion library.
 LIBICONV =
@@ -1001,7 +1001,7 @@ LIBIBERTY = ../libiberty/libiberty.a
 BUILD_LIBIBERTY = $(build_libobjdir)/libiberty/libiberty.a
 
 # Dependencies on the intl and portability libraries.
-LIBDEPS= $(CPPLIB) $(LIBIBERTY) $(LIBINTL_DEP) $(LIBDECNUMBER)
+LIBDEPS= $(CPPLIB) $(LIBIBERTY) 
 
 # Likewise, for use in the tools that must run on this machine
 # even if we are cross-building GCC.
@@ -1009,7 +1009,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 
 # How to link with both our special library facilities
 # and the system's installed libraries.
-LIBS = @LIBS@ $(CPPLIB) $(LIBINTL) $(LIBIBERTY) $(LIBDECNUMBER) \
+LIBS = @LIBS@ $(CPPLIB) $(LIBIBERTY) \
 	$(HOST_LIBS)
 BACKENDLIBS = $(CLOOGLIBS) $(PPLLIBS) $(GMPLIBS) $(PLUGINLIBS) $(HOST_LIBS) \
 	$(ZLIB) $(LIBELFLIBS)
@@ -1447,7 +1447,7 @@ ALL_HOST_OBJS = $(GCC_OBJS) $(C_OBJS) $(OBJS) libbackend.o \
   mips-tfile.o mips-tdump.o \
   $(GCOV_OBJS) $(GCOV_DUMP_OBJS)
 
-BACKEND = main.o @TREEBROWSER@ libbackend.a $(CPPLIB) $(LIBDECNUMBER)
+BACKEND = main.o @TREEBROWSER@ libbackend.a $(CPPLIB)
 
 MOSTLYCLEANFILES = insn-flags.h insn-config.h insn-codes.h \
  insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c \
