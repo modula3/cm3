@@ -1287,6 +1287,25 @@ m3_push_type_decl (tree type_node, const char* name)
   global_decls = decl;
 }
 
+static tree m3_return_type (tree t)
+{
+  /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
+  if (INTEGRAL_TYPE_P (t))
+  {
+    if (TYPE_UNSIGNED (t))
+    {
+      if (TYPE_SIZE (t) <= TYPE_SIZE (t_word))
+        t = t_word;
+    }
+    else
+    {
+      if (TYPE_SIZE (t) <= TYPE_SIZE (t_int))
+        t = t_int;
+    }
+  }
+  return t;
+}
+
 /* Return a definition for a builtin function named NAME and whose data type
    is TYPE.  TYPE should be a function type with argument types.
    FUNCTION_CODE tells later passes how to compile calls to this function.
@@ -2638,10 +2657,9 @@ m3_pop_param (tree t)
 static void
 m3_call_direct (tree p, tree t)
 {
-  tree call;
-
-  call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
-                      CALL_TOP_STATIC_CHAIN ());
+  tree return_type = m3_return_type (t);
+  tree call = fold_build3 (CALL_EXPR, return_type, proc_addr (p), CALL_TOP_ARG (),
+                          CALL_TOP_STATIC_CHAIN ());
   if (t == t_void)
   {
     add_stmt (call);
@@ -2650,6 +2668,8 @@ m3_call_direct (tree p, tree t)
   {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
+    if (t != return_type)
+      EXPR_REF (-1) = convert (t, EXPR_REF (-1));
   }
   CALL_POP ();
 }
@@ -2657,16 +2677,17 @@ m3_call_direct (tree p, tree t)
 static void
 m3_call_indirect (tree t, tree cc)
 {
+  tree return_type = m3_return_type (t);
   tree argtypes = chainon (CALL_TOP_TYPE (),
                            tree_cons (NULL_TREE, t_void, NULL_TREE));
-  tree fntype = m3_build_pointer_type (build_function_type (t, argtypes));
+  tree fntype = m3_build_pointer_type (build_function_type (return_type, argtypes));
   tree call = { 0 };
   tree fnaddr = EXPR_REF (-1);
 
   m3_unused = cc;
   EXPR_POP ();
 
-  call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
+  call = build3 (CALL_EXPR, return_type, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
                  CALL_TOP_STATIC_CHAIN ());
   if (t == t_void)
   {
@@ -2676,6 +2697,8 @@ m3_call_indirect (tree t, tree cc)
   {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
+    if (t != return_type)
+      EXPR_REF (-1) = convert (t, EXPR_REF (-1));
   }
   CALL_POP ();
 }
@@ -2745,9 +2768,10 @@ m3_volatilize_current_function (void)
 static void
 m3_call_direct (tree p, tree t)
 {
-  tree call;
+  tree return_type = m3_return_type (t);
+  tree call = { 0 };
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
-  int flags;
+  int flags = { 0 };
 
   if (slot)
     p = *slot;
@@ -2756,7 +2780,7 @@ m3_call_direct (tree p, tree t)
       TREE_USED (p) = 1;
       assemble_external (p);
   }
-  call = build_call_list (t, proc_addr (p), CALL_TOP_ARG ());
+  call = build_call_list (return_type, proc_addr (p), CALL_TOP_ARG ());
   CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
   if (VOID_TYPE_P (t))
   {
@@ -2766,6 +2790,8 @@ m3_call_direct (tree p, tree t)
   {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
+    if (t != return_type)
+      EXPR_REF (-1) = convert (t, EXPR_REF (-1));
   }
   CALL_POP ();
   flags = call_expr_flags (call);
@@ -2779,15 +2805,16 @@ m3_call_direct (tree p, tree t)
 static void
 m3_call_indirect (tree t, tree cc)
 {
+  tree return_type = m3_return_type (t);
   tree argtypes = chainon (CALL_TOP_TYPE (), void_list_node);
-  tree fntype = m3_build_pointer_type (build_function_type (t, argtypes));
+  tree fntype = m3_build_pointer_type (build_function_type (return_type, argtypes));
   tree call = { 0 };
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
 
   decl_attributes (&fntype, cc, 0);
 
-  call = build_call_list (t, m3_cast (fntype, fnaddr), CALL_TOP_ARG ());
+  call = build_call_list (return_type, m3_cast (fntype, fnaddr), CALL_TOP_ARG ());
   CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
   if (VOID_TYPE_P (t))
   {
@@ -2797,6 +2824,8 @@ m3_call_indirect (tree t, tree cc)
   {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
+    if (t != return_type)
+      EXPR_REF (-1) = convert (t, EXPR_REF (-1));
   }
   CALL_POP ();
 }
@@ -4198,8 +4227,6 @@ m3cg_init_float (void)
   TREE_VALUE (v) = val;
 }
 
-#define M3CG_ADAPT_RETURN_TYPE 1
-
 static void
 m3cg_import_procedure (void)
 {
@@ -4208,24 +4235,8 @@ m3cg_import_procedure (void)
   MTYPE2  (return_type, ret_type);
   CALLING_CONVENTION (cc);
   PROC    (p);
-
-#if M3CG_ADAPT_RETURN_TYPE
-  /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
-  if (INTEGRAL_TYPE_P (return_type))
-  {
-    if (TYPE_UNSIGNED (return_type))
-    {
-      if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_word))
-        return_type = t_word;
-    }
-    else
-    {
-      if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_int))
-        return_type = t_int;
-    }
-  }
-#endif
-
+  
+  return_type = m3_return_type (return_type);
   DECL_NAME (p) = get_identifier (name);
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   TREE_PUBLIC (p) = 1;
@@ -4272,23 +4283,7 @@ m3cg_declare_procedure (void)
   gcc_assert (n_params >= 0);
   gcc_assert (lev == 0 || !exported);
 
-#if M3CG_ADAPT_RETURN_TYPE
-  /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
-  if (INTEGRAL_TYPE_P (return_type))
-  {
-    if (TYPE_UNSIGNED (return_type))
-    {
-      if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_word))
-        return_type = t_word;
-    }
-    else
-    {
-      if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_int))
-        return_type = t_int;
-    }
-  }
-#endif
-
+  return_type = m3_return_type (return_type);
   DECL_NAME (p) = get_identifier (name);
   TREE_STATIC (p) = 1;
 
