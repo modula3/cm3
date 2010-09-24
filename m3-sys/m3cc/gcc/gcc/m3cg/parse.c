@@ -3270,7 +3270,7 @@ m3cg_declare_array (void)
 
   /* gcc_assert (get_typeid_to_tree (index_id)); */
   /* gcc_assert (get_typeid_to_tree (elts_id)); */
-  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 0, NO_UID));
+  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
 }
 
 static void
@@ -3285,7 +3285,7 @@ m3cg_declare_open_array (void)
   debug_struct ();
 
   /* gcc_assert (get_typeid_to_tree (elts_id)); */
-  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 0, NO_UID));
+  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
 }
 
 static void
