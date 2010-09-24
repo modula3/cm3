@@ -309,7 +309,7 @@ CPPINC = -I$(srcdir)/../libcpp/include
 # Where to find decNumber
 DECNUM = $(srcdir)/../libdecnumber
 DECNUMINC = -I$(DECNUM) -I../libdecnumber
-LIBDECNUMBER = ../libdecnumber/libdecnumber.a
+LIBDECNUMBER = 
 
 # Substitution type for target's getgroups 2nd arg.
 TARGET_GETGROUPS_T = @TARGET_GETGROUPS_T@
@@ -854,7 +854,7 @@ LIBIBERTY = ../libiberty/libiberty.a
 BUILD_LIBIBERTY = $(build_libobjdir)/libiberty/libiberty.a
 
 # Dependencies on the intl and portability libraries.
-LIBDEPS= $(CPPLIB) $(LIBIBERTY) $(LIBINTL_DEP) $(LIBDECNUMBER)
+LIBDEPS= $(CPPLIB) $(LIBIBERTY) $(LIBINTL_DEP) 
 
 # Likewise, for use in the tools that must run on this machine
 # even if we are cross-building GCC.
@@ -862,7 +862,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 
 # How to link with both our special library facilities
 # and the system's installed libraries.
-LIBS = @LIBS@ $(CPPLIB) $(LIBINTL) $(LIBIBERTY) $(LIBDECNUMBER)
+LIBS = @LIBS@ $(CPPLIB) $(LIBINTL) $(LIBIBERTY) 
 
 # Any system libraries needed just for GNAT.
 SYSLIBS = @GNAT_LIBEXC@
@@ -1051,7 +1051,7 @@ OBJS = $(OBJS-common) $(out_object_file) $(OBJS-archive)
 
 OBJS-onestep = libbackend.o $(OBJS-archive)
 
-BACKEND = main.o @TREEBROWSER@ libbackend.a $(CPPLIB) $(LIBDECNUMBER)
+BACKEND = main.o @TREEBROWSER@ libbackend.a $(CPPLIB) 
 
 # Files to be copied after each stage in building.
 STAGECOPYSTUFF = insn-flags.h insn-config.h insn-codes.h \
