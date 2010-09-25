@@ -6028,7 +6028,7 @@ m3cg_compare_exchange (void)
   INTEGER        (success);
   INTEGER        (failure);
 
-  tree v = { 0 };
+  tree v = declare_temp (u);
   long size = { 0 };
   enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
 
@@ -6038,12 +6038,11 @@ m3cg_compare_exchange (void)
   if (size != 1 && size != 2 && size != 4 && size != 8)
     goto incompatible;
 
-  v = EXPR_REF (-2);
-  v = m3_cast (m3_build_pointer_type (t), v);
-  v = m3_build1 (INDIRECT_REF, t, v);
-  if (t != u)
-    v = m3_convert (u, v);
-
+  /* capture "expected" value */
+  /* we will return it unchanged, even if success (i.e., we can fail spuriously) */
+  /* we should really return the actual value seen by the exchange comparison */
+  /* unfortunately, the gcc intrinsic doesn't give both a boolean and the actual value */
+  add_stmt (m3_build2 (MODIFY_EXPR, u, v, EXPR_REF (-2)));
   EXPR_REF (-2) = v;
 
   m3_start_call ();
@@ -6053,6 +6052,9 @@ m3cg_compare_exchange (void)
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], r);
+
+  EXPR_PUSH (v);
+  
   return;
 
 incompatible:
