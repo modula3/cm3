@@ -23,6 +23,8 @@
    what you give them.   Help stamp out software-hoarding! */
 
 static const char M3_TYPES = 1;
+static const char M3_TYPES_ENUM = 0;
+static const char M3_TYPES_TYPENAME = 0;
 static const char M3_TYPES_CHECK_RECORD_SIZE = 1;
 static const char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 
@@ -676,12 +678,21 @@ static GTY (()) tree debug_fields;
 static GTY (()) tree current_block;
 static GTY (()) tree current_record_type;
 static GTY (()) tree current_record_vals;
+static GTY (()) tree enumtype;
+static GTY (()) tree enumtype_elementtype;
 static GTY (()) tree current_segment;
 static GTY (()) tree fault_intf;
 static GTY (()) tree pending_blocks;
 static GTY (()) tree current_stmts;
 static GTY (()) tree pending_stmts;
 static GTY (()) tree pending_inits;
+
+static tree m3_current_scope (void)
+{
+  return current_block ? current_block
+         : current_function_decl ? current_function_decl
+         : global_decls;
+}
 
 #if !GCC45
 static bool m3_mark_addressable (tree exp);
@@ -720,7 +731,7 @@ static int global_bindings_p (void);
 static void insert_block (tree block);
 #endif
 
-static void m3_push_type_decl (tree, const char*);
+static tree m3_push_type_decl (tree type, tree name);
 static void m3_write_globals (void);
 
 /* The front end language hooks (addresses of code for this front
@@ -1269,26 +1280,41 @@ insert_block (tree block)
 static tree
 pushdecl (tree decl)
 {
-  gcc_assert (current_block == NULL_TREE);
-  gcc_assert (current_function_decl == NULL_TREE);
-  DECL_CONTEXT (decl) = 0;
+  gcc_assert (current_block == NULL_TREE || M3_TYPES_ENUM);
+  gcc_assert (current_function_decl == NULL_TREE || M3_TYPES_ENUM);
+  DECL_CONTEXT (decl) = M3_TYPES_ENUM ? m3_current_scope () : 0;
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
   return decl;
 }
 
-static void
-m3_push_type_decl (tree type_node, const char* name)
+static tree
+m3_push_type_decl (tree type, tree name)
 {
-  tree name_node = get_identifier (name);
-  tree decl = build_decl (TYPE_DECL, name_node, type_node);
-  TYPE_NAME (type_node) = name_node;
+  tree decl = { 0 };
+  gcc_assert (name || !M3_TYPES_ENUM);
+  gcc_assert (type || !M3_TYPES_ENUM);
+  if (!type)
+    return 0;
+  decl = build_decl (TYPE_DECL, name, type);
+  if (name)
+    TYPE_NAME (type) = name;
+  if (M3_TYPES_ENUM)
+  {
+    DECL_CONTEXT (decl) = m3_current_scope ();
+    if (input_location != UNKNOWN_LOCATION)
+      DECL_SOURCE_LOCATION (decl) = input_location;
+    else
+      DECL_SOURCE_LOCATION (decl) = BUILTINS_LOCATION;
+  }
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
+  return decl;
 }
 
 static tree m3_return_type (tree t)
 {
+#if 0
   /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
   if (INTEGRAL_TYPE_P (t))
   {
@@ -1303,6 +1329,7 @@ static tree m3_return_type (tree t)
         t = t_int;
     }
   }
+#endif
   return t;
 }
 
@@ -1463,9 +1490,9 @@ m3_init_decl_processing (void)
   else
     {
       t_int = make_signed_type (BITS_PER_INTEGER);
-      m3_push_type_decl (t_int, "int");
+      m3_push_type_decl (t_int, get_identifier ("int"));
       t_word = make_unsigned_type (BITS_PER_INTEGER);
-      m3_push_type_decl (t_word, "word");
+      m3_push_type_decl (t_word, get_identifier ("word"));
     }
 
   t_set = m3_build_pointer_type (t_word);
@@ -1484,7 +1511,7 @@ m3_init_decl_processing (void)
   /* declare/name builtin types */
 
   for (i = 0; i < COUNT_OF (builtin_types); ++i)
-    m3_push_type_decl (*builtin_types[i].t, builtin_types[i].name);
+    m3_push_type_decl (*builtin_types[i].t, get_identifier (builtin_types[i].name));
 
   build_common_builtin_nodes ();
 
@@ -2406,6 +2433,7 @@ debug_struct (void)
   TYPE_FIELDS (t) = nreverse (debug_fields);
   debug_fields = 0;
   TYPE_NAME (t) = build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
+  /* TYPE_MAIN_VARIANT (t) = t; */
   TYPE_SIZE (t) = bitsize_one_node;
   TYPE_SIZE_UNIT (t) = convert (sizetype,
                                 size_binop (FLOOR_DIV_EXPR,
@@ -2415,6 +2443,7 @@ debug_struct (void)
   SET_TYPE_MODE (t, QImode);
 
   d = build_decl (TYPE_DECL, NULL_TREE, t);
+  /* TYPE_MAIN_VARIANT (d) = d; */
   TREE_CHAIN (d) = global_decls;
   global_decls = d;
   debug_hooks -> type_decl
@@ -2525,9 +2554,15 @@ m3_field (const char* name, tree tipe, HOST_WIDE_INT offset,
     f = build_decl (FIELD_DECL, 0, tipe);
     *out_f = f;
     if ((offset % BITS_PER_UNIT) == 0 && (size % BITS_PER_UNIT) == 0)
+    {
       TREE_ADDRESSABLE (f) = true;
+      /* DECL_ALIGN (f) = BITS_PER_UNIT; */
+    }
     else
+    {
       DECL_BIT_FIELD (f) = true;
+      /* DECL_ALIGN (f) = 1; */
+    }
     DECL_FIELD_OFFSET (f) = size_int (offset / BITS_PER_UNIT);
     DECL_FIELD_BIT_OFFSET (f) = bitsize_int (offset % BITS_PER_UNIT);
     DECL_CONTEXT (f) = current_record_type;
@@ -3282,6 +3317,9 @@ m3cg_declare_typename (void)
   debug_tag ('n', NO_UID, "_%s", fullname);
   debug_field_id (my_id);
   debug_struct ();
+
+  if (M3_TYPES_TYPENAME)
+    m3_push_type_decl (get_typeid_to_tree (my_id), get_identifier (fullname));
 }
 
 static void
@@ -3319,6 +3357,7 @@ m3cg_declare_open_array (void)
 
 static void
 m3cg_declare_enum (void)
+/* see start_enum, build_enumerator, finish_enum */
 {
   TYPEID  (my_id);
   INTEGER (n_elts);
@@ -3326,22 +3365,81 @@ m3cg_declare_enum (void)
 
   debug_tag ('C', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   current_dbg_type_count1 = n_elts;
+  current_dbg_type_count2 = n_elts;
 
+  if (M3_TYPES_ENUM && n_elts > 0)
   {
-    tree t = m3_build_type_id (T_int, size, size, NO_UID);
-    gcc_assert (t);
-    set_typeid_to_tree (my_id, t);
+    unsigned bits = (n_elts <= (1UL << 8)) ? 8
+                    : (n_elts <= (1UL << 16)) ? 16
+                    : 32;
+    enumtype = make_node (ENUMERAL_TYPE);
+    TYPE_USER_ALIGN (enumtype) = 1;
+    TYPE_UNSIGNED (enumtype) = 1;
+    TYPE_MIN_VALUE (enumtype) = integer_zero_node;
+    enumtype_elementtype = m3_build_type_id (T_word, bits, bits, my_id);
+    TYPE_MAX_VALUE (enumtype) = build_int_cstu (enumtype_elementtype, n_elts - 1);
+    SET_TYPE_MODE (enumtype, TYPE_MODE (enumtype_elementtype));
+    TYPE_SIZE (enumtype) = bitsize_int (bits);
+    TYPE_SIZE_UNIT (enumtype) = size_int (bits / BITS_PER_UNIT);
+    TYPE_PRECISION (enumtype) = bits;
+    TYPE_ALIGN (enumtype) = 1;
+    TYPE_PACKED (enumtype) = 1;
+    /* TYPE_STUB_DECL (enumtype) = m3_push_type_decl (enumtype, 0); */
+    /* TYPE_MAIN_VARIANT (enumtype) = enumtype; */
+    set_typeid_to_tree (my_id, enumtype);
   }
 }
 
 static void
 m3cg_declare_enum_elt (void)
+/* see build_enumerator, finish_enum */
 {
-  NAME (n, n_len);
+  NAME (name, name_length);
 
-  debug_field_name (n);
+  gcc_assert (current_dbg_type_count1 > 0);
+
+  if (M3_TYPES_ENUM)
+  {
+    tree decl = build_decl (CONST_DECL, get_identifier (name), enumtype_elementtype);
+    DECL_SOURCE_LOCATION (decl) = input_location;
+    DECL_CONTEXT (decl) = m3_current_scope ();
+    gcc_assert (current_dbg_type_count2 > 0);
+    gcc_assert (current_dbg_type_count2 >= current_dbg_type_count1);
+    DECL_INITIAL (decl) = convert (enumtype_elementtype, build_int_cstu (t_word, current_dbg_type_count2 - current_dbg_type_count1));
+    TREE_CHAIN (decl) = TYPE_VALUES (enumtype);
+    TYPE_VALUES (enumtype) = TREE_CHAIN (decl);
+  }
+
+  debug_field_name (name);
+
   if (--current_dbg_type_count1 == 0)
-    debug_struct ();
+  {
+    debug_struct (); /* m3gdb */
+
+    if (M3_TYPES_ENUM)
+    {
+      tree pair = { 0 };
+      tree values = { 0 };
+
+      for (pair = TYPE_VALUES (enumtype); pair; pair = TREE_CHAIN (pair))
+      {
+        tree enu = TREE_PURPOSE (pair);
+        tree ini = DECL_INITIAL (enu);
+
+        TREE_TYPE (enu) = enumtype;
+        DECL_INITIAL (enu) = ini;
+        TREE_PURPOSE (pair) = DECL_NAME (enu);
+        TREE_VALUE (pair) = ini;
+      }
+      TYPE_VALUES (enumtype) = values;
+
+      layout_type (enumtype);
+      /* rest_of_type_compilation (enumtype, true); */
+      current_dbg_type_count2 = 0; /* done */
+      enumtype = 0; /* done */
+      enumtype_elementtype = 0; /* done */
+    }
+  }
 }
 
 static void
@@ -3389,8 +3487,12 @@ m3_declare_record_common (void)
     }
     else if (current_object_type_id != NO_UID)
     {
-      set_typeid_to_tree (current_object_type_id, m3_build_pointer_type (t));
+      t = m3_build_pointer_type (t);
+      set_typeid_to_tree (current_object_type_id, t);
     }
+#if 0
+    rest_of_type_compilation (t, true);
+#endif
     current_record_type_id = NO_UID;
     current_object_type_id = NO_UID;
     current_record_size = 0;
@@ -3768,7 +3870,7 @@ m3cg_import_global (void)
              IDENTIFIER_POINTER (DECL_NAME (var)));
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   DECL_EXTERNAL (var) = 1;
   TREE_PUBLIC   (var) = 1;
@@ -3786,6 +3888,7 @@ m3cg_declare_segment (void)
   TYPEID     (id);
   BOOLEAN    (is_const);
   RETURN_VAR (var, VAR_DECL);
+  unsigned inc = { 0 };
 
   DECL_NAME (var) = fix_name (name, name_length, id);
 
@@ -3815,8 +3918,25 @@ m3cg_declare_segment (void)
 
   /* do not use "n", it is going to go away at the next instruction;
      skip the 'MI_' or 'MM_' prefix. */
+#if 0 /* old version */
   current_unit_name = IDENTIFIER_POINTER (DECL_NAME (var)) + 3;
   current_unit_name_length = strlen (current_unit_name);
+#else
+  if (!name)
+  {
+    name = (char*)IDENTIFIER_POINTER (DECL_NAME (var));
+    gcc_assert (name);
+  }
+  /* skip up to and including first underscore, if it isn't too far */
+  if ((name[0] == '_' && name[inc = 1])
+      || (name[0] && name[1] == '_' && name[inc = 2])
+      || (name[0] && name[1] && name[2] == '_' && name[inc = 3] == '_'))
+  {
+    name += inc;
+  }
+  current_unit_name = xstrdup (name);
+  current_unit_name_length = strlen (name);
+#endif
 }
 
 static void
@@ -3835,7 +3955,7 @@ m3cg_bind_segment (void)
              (long)size, (long)align, typestr (t), boolstr (exported), boolstr (initialized));
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   current_segment = var;
   TREE_TYPE (var) = m3_build_type (t, size, align);
@@ -3867,7 +3987,7 @@ m3cg_declare_global (void)
              typestr (t), id, boolstr (exported), boolstr (initialized));
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
   DECL_COMMON (var) = (initialized == 0);
@@ -3897,7 +4017,7 @@ m3cg_declare_constant (void)
             (long)align, typestr (t), id, boolstr (exported), boolstr (initialized));
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   DECL_NAME (var) = fix_name (name, name_length, id);
   TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
@@ -3930,7 +4050,7 @@ m3cg_declare_local (void)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
   DECL_NONLOCAL (var) = up_level || in_memory;
@@ -3998,7 +4118,7 @@ m3cg_declare_param (void)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
   DECL_NONLOCAL (var) = up_level || in_memory;
@@ -4048,13 +4168,13 @@ m3cg_declare_temp (void)
   RETURN_VAR (var, VAR_DECL);
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   if (t == T_void)
     t = T_struct;
 
   TREE_TYPE (var) = m3_build_type (t, size, align);
-  layout_decl (var, 0);
+  layout_decl (var, 1);
   DECL_UNSIGNED (var) = TYPE_UNSIGNED (TREE_TYPE (var));
   TREE_ADDRESSABLE (var) = in_memory;
   DECL_CONTEXT (var) = current_function_decl;
@@ -5781,7 +5901,7 @@ m3cg_pop_struct (void)
              (long)size, (long)align, my_id, t);
 
   gcc_assert (size >= 0);
-  gcc_assert (align >= 0);
+  gcc_assert (align >= !!size);
 
   EXPR_REF (-1) = m3_build1 (INDIRECT_REF, t,
                              m3_cast (m3_build_pointer_type (t), EXPR_REF (-1)));
