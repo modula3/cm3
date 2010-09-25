@@ -3888,7 +3888,6 @@ m3cg_declare_segment (void)
   TYPEID     (id);
   BOOLEAN    (is_const);
   RETURN_VAR (var, VAR_DECL);
-  unsigned inc = { 0 };
 
   DECL_NAME (var) = fix_name (name, name_length, id);
 
@@ -3916,27 +3915,16 @@ m3cg_declare_segment (void)
   TREE_CHAIN (var) = global_decls;
   global_decls = var;
 
-  /* do not use "n", it is going to go away at the next instruction;
-     skip the 'MI_' or 'MM_' prefix. */
-#if 0 /* old version */
-  current_unit_name = IDENTIFIER_POINTER (DECL_NAME (var)) + 3;
-  current_unit_name_length = strlen (current_unit_name);
-#else
-  if (!name)
+  /* do not use "name", it is from alloca; skip the 'I_' or 'M_' prefix. */
+  if (name_length > 2)
   {
-    name = (char*)IDENTIFIER_POINTER (DECL_NAME (var));
     gcc_assert (name);
+    gcc_assert (name[0] == 'I' || name[0] == 'M');
+    gcc_assert (name[1] == '_');
+    gcc_assert (name[2]);
+    current_unit_name = xstrdup (name + 2);
+    current_unit_name_length = name_length - 2;
   }
-  /* skip up to and including first underscore, if it isn't too far */
-  if ((name[0] == '_' && name[inc = 1])
-      || (name[0] && name[1] == '_' && name[inc = 2])
-      || (name[0] && name[1] && name[2] == '_' && name[inc = 3] == '_'))
-  {
-    name += inc;
-  }
-  current_unit_name = xstrdup (name);
-  current_unit_name_length = strlen (name);
-#endif
 }
 
 static void
