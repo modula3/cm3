@@ -626,11 +626,11 @@ exchange (t: MType;  u: ZType;  order: MemoryOrder);
 compare_exchange (t: MType;  u: ZType;  r: IType;
                   success, failure: MemoryOrder);
 (* tmp := Mem[s2.A].t;
-   IF (tmp = Mem[s1.A].t)
-   THEN Mem [s2.A].t := s0.u; s2.r := 1; pop(2);
-   ELSE Mem [s1.A].t := tmp;  s2.r := 0; pop(2);
+   IF (tmp = s1.u)
+   THEN Mem[s2.A].t := s0.u; s2.r := 1; pop(1);
+   ELSE s1.u := tmp;         s2.r := 0; pop(1);
    END;
-   This is permitted to fail spuriously, leaving Mem [s1.A] unchanged.
+   This is permitted to fail spuriously, leaving s1 unchanged.
 *)
 
 fence (o: MemoryOrder);

@@ -1364,9 +1364,10 @@ PROCEDURE compare_exchange (self: U;  t: MType;  u: ZType;  r: IType;
       PutErr (self, "illegal load memory order");
     ELSE (* ok *) END;
     IF failure > success THEN PutErr (self, "failure stronger than success"); END;
-    self.s_pop (T_to_ST [u], ST.Addr, ST.Addr);
+    self.s_pop (T_to_ST [u], T_to_ST [u], ST.Addr);
     IF (self.clean_stores) THEN self.s_empty () END;
     self.s_push (r);
+    self.s_push (u);
     self.child.compare_exchange (t, u, r, success, failure);
   END compare_exchange;
 
