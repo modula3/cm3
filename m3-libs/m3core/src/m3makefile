@@ -42,7 +42,7 @@ include_dir ("main")
 include_dir ("weakref")
 include_dir ("word")
 include_dir ("types")
-include_dir ("atomic")
+% include_dir ("atomic")  DISABLE UNTIL I CHECK IN THE COMPILER FRONT-END FIXES -- Tony
 
 % m3_option ("-times")
 
