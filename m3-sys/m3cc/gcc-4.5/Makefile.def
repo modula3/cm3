@@ -69,12 +69,6 @@ host_modules= { module= gmp; lib_path=.libs; bootstrap=true;
 		// gmp's configure will complain if given anything
 		// different from host for target.
 	        target="none-${host_vendor}-${host_os}"; };
-host_modules= { module= mpfr; lib_path=.libs; bootstrap=true;
-		extra_configure_flags='--disable-shared @extra_mpfr_configure_flags@';
-		no_install= true; };
-host_modules= { module= mpc; lib_path=.libs; bootstrap=true;
-		extra_configure_flags='--disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@';
-		no_install= true; };
 host_modules= { module= ppl; lib_path=src/.libs; bootstrap=true;
 		extra_configure_flags='--disable-shared --with-libgmp-prefix=$$r/$(HOST_SUBDIR)/gmp/ --with-libgmpxx-prefix=$$r/$(HOST_SUBDIR)/gmp/';
 		no_install= true; };
@@ -133,7 +127,6 @@ host_modules= { module= time; };
 host_modules= { module= uudecode; };
 host_modules= { module= wdiff; };
 host_modules= { module= zip; no_check_cross=true; };
-host_modules= { module= zlib; no_install=true; no_check=true; bootstrap=true; };
 host_modules= { module= gdb; extra_make_flags="$(X11_FLAGS_TO_PASS)"; };
 host_modules= { module= expect; extra_make_flags="$(X11_FLAGS_TO_PASS)"; };
 host_modules= { module= guile; extra_make_flags="$(X11_FLAGS_TO_PASS)"; };
@@ -169,7 +162,6 @@ target_modules = { module= gperf; };
 target_modules = { module= examples; no_check=true; no_install=true; };
 target_modules = { module= libffi; };
 target_modules = { module= libjava; raw_cxx=true; };
-target_modules = { module= zlib; };
 target_modules = { module= boehm-gc; };
 target_modules = { module= qthreads; };
 target_modules = { module= rda; };
@@ -326,8 +318,6 @@ dependencies = { module=configure-gcc; on=all-libelf; };
 dependencies = { module=all-gcc; on=all-libiberty; hard=true; };
 dependencies = { module=all-gcc; on=all-gmp; };
 dependencies = { module=all-gcc; on=all-intl; };
-dependencies = { module=all-gcc; on=all-mpfr; };
-dependencies = { module=all-gcc; on=all-mpc; };
 dependencies = { module=all-gcc; on=all-ppl; };
 dependencies = { module=all-gcc; on=all-cloog; };
 dependencies = { module=all-gcc; on=all-build-texinfo; };
@@ -336,7 +326,6 @@ dependencies = { module=all-gcc; on=all-build-byacc; };
 dependencies = { module=all-gcc; on=all-build-flex; };
 dependencies = { module=all-gcc; on=all-build-libiberty; };
 dependencies = { module=all-gcc; on=all-build-fixincludes; };
-dependencies = { module=all-gcc; on=all-zlib; };
 dependencies = { module=all-gcc; on=all-libcpp; hard=true; };
 dependencies = { module=all-gcc; on=all-libdecnumber; hard=true; };
 dependencies = { module=all-gcc; on=all-libiberty; };
@@ -354,10 +343,7 @@ dependencies = { module=all-gnattools; on=all-target-libada; };
 
 dependencies = { module=all-lto-plugin; on=all-gcc; };
 
-dependencies = { module=configure-mpfr; on=all-gmp; };
-dependencies = { module=configure-mpc; on=all-mpfr; };
 dependencies = { module=configure-ppl; on=all-gmp; };
-dependencies = { module=configure-ppl; on=all-mpfr; };
 dependencies = { module=configure-cloog; on=all-ppl; };
 
 // Host modules specific to gdb.

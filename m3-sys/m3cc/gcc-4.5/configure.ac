@@ -167,7 +167,7 @@ build_tools="build-texinfo build-byacc build-flex build-bison build-m4 build-fix
 
 # these libraries are used by various programs built for the host environment
 #
-host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui zlib libcpp libdecnumber gmp mpfr mpc ppl cloog libelf libiconv"
+host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui libcpp libdecnumber gmp ppl cloog libelf libiconv"
 
 # these tools are built for the host environment
 # Note, the powerpc-eabi build depends on sim occurring before gdb in order to
@@ -1236,73 +1236,10 @@ ENABLE_BUILD_WITH_CXX=no)
 # Used for setting $lt_cv_objdir
 _LT_CHECK_OBJDIR
 
-# Check for GMP, MPFR and MPC
-gmplibs="-lmpc -lmpfr -lgmp"
+# Check for GMP
+gmplibs="-lgmp"
 gmpinc=
 have_gmp=no
-
-# Specify a location for mpc
-# check for this first so it ends up on the link line before mpfr.
-AC_ARG_WITH(mpc, [  --with-mpc=PATH        specify prefix directory for installed MPC package.
-                          Equivalent to --with-mpc-include=PATH/include
-                          plus --with-mpc-lib=PATH/lib])
-AC_ARG_WITH(mpc_include, [  --with-mpc-include=PATH
-                          specify directory for installed MPC include files])
-AC_ARG_WITH(mpc_lib, [  --with-mpc-lib=PATH    specify directory for the installed MPC library])
-
-if test "x$with_mpc" != x; then
-  gmplibs="-L$with_mpc/lib $gmplibs"
-  gmpinc="-I$with_mpc/include $gmpinc"
-fi
-if test "x$with_mpc_include" != x; then
-  gmpinc="-I$with_mpc_include $gmpinc"
-fi
-if test "x$with_mpc_lib" != x; then
-  gmplibs="-L$with_mpc_lib $gmplibs"
-fi
-if test "x$with_mpc$with_mpc_include$with_mpc_lib" = x && test -d ${srcdir}/mpc; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/mpc/src/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$s/mpc/src '"$gmpinc"
-  # Do not test the mpc version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
-
-# Specify a location for mpfr
-# check for this first so it ends up on the link line before gmp.
-AC_ARG_WITH(mpfr-dir, [  --with-mpfr-dir=PATH    this option has been REMOVED],
-  AC_MSG_ERROR([The --with-mpfr-dir=PATH option has been removed.
-Use --with-mpfr=PATH or --with-mpfr-include=PATH plus --with-mpfr-lib=PATH]))
-
-AC_ARG_WITH(mpfr, [  --with-mpfr=PATH        specify prefix directory for installed MPFR package.
-                          Equivalent to --with-mpfr-include=PATH/include
-                          plus --with-mpfr-lib=PATH/lib])
-AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=PATH
-                          specify directory for installed MPFR include files])
-AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=PATH    specify directory for the installed MPFR library])
-
-if test "x$with_mpfr" != x; then
-  gmplibs="-L$with_mpfr/lib $gmplibs"
-  gmpinc="-I$with_mpfr/include $gmpinc"
-fi
-if test "x$with_mpfr_include" != x; then
-  gmpinc="-I$with_mpfr_include $gmpinc"
-fi
-if test "x$with_mpfr_lib" != x; then
-  gmplibs="-L$with_mpfr_lib $gmplibs"
-fi
-if test "x$with_mpfr$with_mpfr_include$with_mpfr_lib" = x && test -d ${srcdir}/mpfr; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/mpfr/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$r/$(HOST_SUBDIR)/mpfr -I$$s/mpfr '"$gmpinc"
-  extra_mpc_mpfr_configure_flags='--with-mpfr-include=$$s/mpfr --with-mpfr-lib=$$r/$(HOST_SUBDIR)/mpfr/'"$lt_cv_objdir"
-  # Do not test the mpfr version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
 
 # Specify a location for gmp
 AC_ARG_WITH(gmp-dir, [  --with-gmp-dir=PATH     this option has been REMOVED],
@@ -1329,8 +1266,6 @@ fi
 if test "x$with_gmp$with_gmp_include$with_gmp_lib" = x && test -d ${srcdir}/gmp; then
   gmplibs='-L$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir $gmplibs"
   gmpinc='-I$$r/$(HOST_SUBDIR)/gmp -I$$s/gmp '"$gmpinc"
-  extra_mpfr_configure_flags='--with-gmp-build=$$r/$(HOST_SUBDIR)/gmp'
-  extra_mpc_gmp_configure_flags='--with-gmp-include=$$r/$(HOST_SUBDIR)/gmp --with-gmp-lib=$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir"
   # Do not test the gmp version.  Assume that it is sufficient, since
   # it is in the source tree, and the library has not been built yet
   # but it would be included on the link line in the version check below
@@ -1359,90 +1294,27 @@ if test -d ${srcdir}/gcc && test "x$have_gmp" = xno; then
   ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([buggy but acceptable])])],
    [AC_MSG_RESULT([no]); have_gmp=no])
 
-  # If we have GMP, check the MPFR version.
-  if test x"$have_gmp" = xyes; then
-    # Check for the recommended and required versions of MPFR.
-    AC_MSG_CHECKING([for the correct version of mpfr.h])
-    AC_TRY_COMPILE([#include <gmp.h>
-    #include <mpfr.h>],[
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,3,1)
-    choke me
-    #endif
-    ], [AC_TRY_COMPILE([#include <gmp.h>
-    #include <mpfr.h>],[
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,4,2)
-    choke me
-    #endif
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([buggy but acceptable])])],
-     [AC_MSG_RESULT([no]); have_gmp=no])
-  fi
-
-  # Check for the MPC header version.
-  if test x"$have_gmp" = xyes ; then
-    # Check for the recommended and required versions of MPC.
-    AC_MSG_CHECKING([for the correct version of mpc.h])
-    AC_TRY_COMPILE([#include <mpc.h>],[
-    #if MPC_VERSION < MPC_VERSION_NUM(0,8,0)
-    choke me
-    #endif
-    ], [AC_TRY_COMPILE([#include <mpc.h>],[
-    #if MPC_VERSION < MPC_VERSION_NUM(0,8,1)
-    choke me
-    #endif
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([buggy but acceptable])])],
-     [AC_MSG_RESULT([no]); have_gmp=no])
-  fi
-
-  # Now check the MPFR library.
-  if test x"$have_gmp" = xyes; then
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $gmplibs"
-    AC_MSG_CHECKING([for the correct version of the gmp/mpfr/mpc libraries])
-    AC_TRY_LINK([#include <mpc.h>],[
-    mpfr_t n;
-    mpfr_t x;
-    mpc_t c;
-    int t;
-    mpfr_init (n);
-    mpfr_init (x);
-    mpfr_atan2 (n, n, x, GMP_RNDN);
-    mpfr_erfc (n, x, GMP_RNDN);
-    mpfr_subnormalize (x, t, GMP_RNDN);
-    mpfr_clear(n);
-    mpfr_clear(x);
-    mpc_init2 (c, 53);
-    mpc_set_ui_ui (c, 1, 1, MPC_RNDNN);
-    mpc_cosh (c, c, MPC_RNDNN);
-    mpc_pow (c, c, c, MPC_RNDNN);
-    mpc_acosh (c, c, MPC_RNDNN);
-    mpc_clear (c);
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no]); have_gmp=no])
-    LIBS="$saved_LIBS"
-  fi
 
   CFLAGS="$saved_CFLAGS"
 
 # The library versions listed in the error message below should match
 # the HARD-minimums enforced above.
   if test x$have_gmp != xyes; then
-    AC_MSG_ERROR([Building GCC requires GMP 4.2+, MPFR 2.3.1+ and MPC 0.8.0+.
-Try the --with-gmp, --with-mpfr and/or --with-mpc options to specify
+    AC_MSG_ERROR([Building GCC requires GMP 4.2+.
+Try the --with-gmp option to specify
 their locations.  Source code for these libraries can be found at
 their respective hosting sites as well as at
 ftp://gcc.gnu.org/pub/gcc/infrastructure/.  See also
 http://gcc.gnu.org/install/prerequisites.html for additional info.  If
-you obtained GMP, MPFR and/or MPC from a vendor distribution package,
+you obtained GMP from a vendor distribution package,
 make sure that you have installed both the libraries and the header
 files.  They may be located in separate packages.])
   fi
 fi
 
-# Flags needed for both GMP, MPFR and/or MPC.
+# Flags needed for both GMP.
 AC_SUBST(gmplibs)
 AC_SUBST(gmpinc)
-AC_SUBST(extra_mpfr_configure_flags)
-AC_SUBST(extra_mpc_gmp_configure_flags)
-AC_SUBST(extra_mpc_mpfr_configure_flags)
 
 # Allow host libstdc++ to be specified for static linking with PPL.
 AC_ARG_WITH(host-libstdcxx, [  --with-host-libstdcxx=L Use linker arguments L to link with libstdc++

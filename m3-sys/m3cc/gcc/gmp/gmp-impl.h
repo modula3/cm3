@@ -101,11 +101,7 @@ MA 02110-1301, USA. */
 #if ! __GMP_WITHIN_CONFIGURE
 #include "config.h"
 #include "gmp-mparam.h"
-#include "fib_table.h"
 #include "mp_bases.h"
-#if WANT_FAT_BINARY
-#include "fat.h"
-#endif
 #endif
 
 #if HAVE_INTTYPES_H      /* for uint_least32_t */
@@ -266,14 +262,6 @@ typedef unsigned long       gmp_uint_least32_t;
 #endif
 
 
-/* HAVE_HOST_CPU_alpha_CIX is 1 on an alpha with the CIX instructions
-   (ie. ctlz, ctpop, cttz).  */
-#if HAVE_HOST_CPU_alphaev67 || HAVE_HOST_CPU_alphaev68  \
-  || HAVE_HOST_CPU_alphaev7
-#define HAVE_HOST_CPU_alpha_CIX 1
-#endif
-
-
 #if defined (__cplusplus)
 extern "C" {
 #endif
@@ -350,87 +338,6 @@ void  __gmp_tmp_reentrant_free _PROTO ((struct tmp_reentrant_t *));
 #define TMP_SFREE		TMP_FREE
 #define TMP_FREE		__gmp_tmp_reentrant_free (__tmp_marker)
 #endif
-
-#if WANT_TMP_NOTREENTRANT
-struct tmp_marker
-{
-  struct tmp_stack *which_chunk;
-  void *alloc_point;
-};
-void *__gmp_tmp_alloc _PROTO ((unsigned long)) ATTRIBUTE_MALLOC;
-void __gmp_tmp_mark _PROTO ((struct tmp_marker *));
-void __gmp_tmp_free _PROTO ((struct tmp_marker *));
-#define TMP_SDECL		TMP_DECL
-#define TMP_DECL		struct tmp_marker __tmp_marker
-#define TMP_SMARK		TMP_MARK
-#define TMP_MARK		__gmp_tmp_mark (&__tmp_marker)
-#define TMP_SALLOC(n)		TMP_ALLOC(n)
-#define TMP_BALLOC(n)		TMP_ALLOC(n)
-#define TMP_ALLOC(n)							\
-  __gmp_tmp_alloc (ROUND_UP_MULTIPLE ((unsigned long) (n), __TMP_ALIGN))
-#define TMP_SFREE		TMP_FREE
-#define TMP_FREE		__gmp_tmp_free (&__tmp_marker)
-#endif
-
-#if WANT_TMP_DEBUG
-/* See tal-debug.c for some comments. */
-struct tmp_debug_t {
-  struct tmp_debug_entry_t  *list;
-  const char                *file;
-  int                       line;
-};
-struct tmp_debug_entry_t {
-  struct tmp_debug_entry_t  *next;
-  char                      *block;
-  size_t                    size;
-};
-void  __gmp_tmp_debug_mark  _PROTO ((const char *, int, struct tmp_debug_t **,
-                                     struct tmp_debug_t *,
-                                     const char *, const char *));
-void *__gmp_tmp_debug_alloc _PROTO ((const char *, int, int,
-                                     struct tmp_debug_t **, const char *,
-                                     size_t)) ATTRIBUTE_MALLOC;
-void  __gmp_tmp_debug_free  _PROTO ((const char *, int, int,
-                                     struct tmp_debug_t **,
-                                     const char *, const char *));
-#define TMP_SDECL TMP_DECL_NAME(__tmp_xmarker, "__tmp_marker")
-#define TMP_DECL TMP_DECL_NAME(__tmp_xmarker, "__tmp_marker")
-#define TMP_SMARK TMP_MARK_NAME(__tmp_xmarker, "__tmp_marker")
-#define TMP_MARK TMP_MARK_NAME(__tmp_xmarker, "__tmp_marker")
-#define TMP_SFREE TMP_FREE_NAME(__tmp_xmarker, "__tmp_marker")
-#define TMP_FREE TMP_FREE_NAME(__tmp_xmarker, "__tmp_marker")
-/* The marker variable is designed to provoke an uninitialized varialble
-   warning from the compiler if TMP_FREE is used without a TMP_MARK.
-   __tmp_marker_inscope does the same for TMP_ALLOC.  Runtime tests pick
-   these things up too.  */
-#define TMP_DECL_NAME(marker, marker_name)                      \
-  int marker;                                                   \
-  int __tmp_marker_inscope;                                     \
-  const char *__tmp_marker_name = marker_name;                  \
-  struct tmp_debug_t  __tmp_marker_struct;                      \
-  /* don't demand NULL, just cast a zero */                     \
-  struct tmp_debug_t  *__tmp_marker = (struct tmp_debug_t *) 0
-#define TMP_MARK_NAME(marker, marker_name)                      \
-  do {                                                          \
-    marker = 1;                                                 \
-    __tmp_marker_inscope = 1;                                   \
-    __gmp_tmp_debug_mark  (ASSERT_FILE, ASSERT_LINE,            \
-                           &__tmp_marker, &__tmp_marker_struct, \
-                           __tmp_marker_name, marker_name);     \
-  } while (0)
-#define TMP_SALLOC(n)		TMP_ALLOC(n)
-#define TMP_BALLOC(n)		TMP_ALLOC(n)
-#define TMP_ALLOC(size)                                                 \
-  __gmp_tmp_debug_alloc (ASSERT_FILE, ASSERT_LINE,                      \
-                         __tmp_marker_inscope,                          \
-                         &__tmp_marker, __tmp_marker_name, size)
-#define TMP_FREE_NAME(marker, marker_name)                      \
-  do {                                                          \
-    __gmp_tmp_debug_free  (ASSERT_FILE, ASSERT_LINE,            \
-                           marker, &__tmp_marker,               \
-                           __tmp_marker_name, marker_name);     \
-  } while (0)
-#endif /* WANT_TMP_DEBUG */
 
 
 /* Allocating various types. */
@@ -704,72 +611,12 @@ void __gmp_default_free _PROTO ((void *, size_t));
 #define __builtin_constant_p(x)   0
 #endif
 
-
-/* In gcc 2.96 and up on i386, tail calls are optimized to jumps if the
-   stack usage is compatible.  __attribute__ ((regparm (N))) helps by
-   putting leading parameters in registers, avoiding extra stack.
-
-   regparm cannot be used with calls going through the PLT, because the
-   binding code there may clobber the registers (%eax, %edx, %ecx) used for
-   the regparm parameters.  Calls to local (ie. static) functions could
-   still use this, if we cared to differentiate locals and globals.
-
-   On athlon-unknown-freebsd4.9 with gcc 3.3.3, regparm cannot be used with
-   -p or -pg profiling, since that version of gcc doesn't realize the
-   .mcount calls will clobber the parameter registers.  Other systems are
-   ok, like debian with glibc 2.3.2 (mcount doesn't clobber), but we don't
-   bother to try to detect this.  regparm is only an optimization so we just
-   disable it when profiling (profiling being a slowdown anyway).  */
-
-#if HAVE_HOST_CPU_FAMILY_x86 && __GMP_GNUC_PREREQ (2,96) && ! defined (PIC) \
-  && ! WANT_PROFILING_PROF && ! WANT_PROFILING_GPROF
-#define USE_LEADING_REGPARM 1
-#else
 #define USE_LEADING_REGPARM 0
-#endif
 
 /* Macros for altering parameter order according to regparm usage. */
-#if USE_LEADING_REGPARM
-#define REGPARM_2_1(a,b,x)    x,a,b
-#define REGPARM_3_1(a,b,c,x)  x,a,b,c
-#define REGPARM_ATTR(n) __attribute__ ((regparm (n)))
-#else
 #define REGPARM_2_1(a,b,x)    a,b,x
 #define REGPARM_3_1(a,b,c,x)  a,b,c,x
 #define REGPARM_ATTR(n)
-#endif
-
-
-/* ASM_L gives a local label for a gcc asm block, for use when temporary
-   local labels like "1:" might not be available, which is the case for
-   instance on the x86s (the SCO assembler doesn't support them).
-
-   The label generated is made unique by including "%=" which is a unique
-   number for each insn.  This ensures the same name can be used in multiple
-   asm blocks, perhaps via a macro.  Since jumps between asm blocks are not
-   allowed there's no need for a label to be usable outside a single
-   block.  */
-
-#define ASM_L(name)  LSYM_PREFIX "asm_%=_" #name
-
-
-#if defined (__GNUC__) && HAVE_HOST_CPU_FAMILY_x86
-#if 0
-/* FIXME: Check that these actually improve things.
-   FIXME: Need a cld after each std.
-   FIXME: Can't have inputs in clobbered registers, must describe them as
-   dummy outputs, and add volatile. */
-#define MPN_COPY_INCR(DST, SRC, N)					\
-  __asm__ ("cld\n\trep\n\tmovsl" : :					\
-	   "D" (DST), "S" (SRC), "c" (N) :				\
-	   "cx", "di", "si", "memory")
-#define MPN_COPY_DECR(DST, SRC, N)					\
-  __asm__ ("std\n\trep\n\tmovsl" : :					\
-	   "D" ((DST) + (N) - 1), "S" ((SRC) + (N) - 1), "c" (N) :	\
-	   "cx", "di", "si", "memory")
-#endif
-#endif
-
 
 void __gmpz_aorsmul_1 _PROTO ((REGPARM_3_1 (mpz_ptr w, mpz_srcptr u, mp_limb_t v, mp_size_t sub))) REGPARM_ATTR(1);
 #define mpz_aorsmul_1(w,u,v,sub)  __gmpz_aorsmul_1 (REGPARM_3_1 (w, u, v, sub))
@@ -894,67 +741,6 @@ __GMP_DECLSPEC void mpn_redc_1 __GMP_PROTO ((mp_ptr, mp_ptr, mp_srcptr, mp_size_
 
 #define mpn_redc_2 __MPN(redc_2)
 __GMP_DECLSPEC void mpn_redc_2 __GMP_PROTO ((mp_ptr, mp_ptr, mp_srcptr, mp_size_t, mp_srcptr));
-
-
-typedef __gmp_randstate_struct *gmp_randstate_ptr;
-typedef const __gmp_randstate_struct *gmp_randstate_srcptr;
-
-/* Pseudo-random number generator function pointers structure.  */
-typedef struct {
-  void (*randseed_fn) __GMP_PROTO ((gmp_randstate_t rstate, mpz_srcptr seed));
-  void (*randget_fn) __GMP_PROTO ((gmp_randstate_t rstate, mp_ptr dest, unsigned long int nbits));
-  void (*randclear_fn) __GMP_PROTO ((gmp_randstate_t rstate));
-  void (*randiset_fn) __GMP_PROTO ((gmp_randstate_ptr, gmp_randstate_srcptr));
-} gmp_randfnptr_t;
-
-/* Macro to obtain a void pointer to the function pointers structure.  */
-#define RNG_FNPTR(rstate) ((rstate)->_mp_algdata._mp_lc)
-
-/* Macro to obtain a pointer to the generator's state.
-   When used as a lvalue the rvalue needs to be cast to mp_ptr.  */
-#define RNG_STATE(rstate) ((rstate)->_mp_seed->_mp_d)
-
-/* Write a given number of random bits to rp.  */
-#define _gmp_rand(rp, state, bits)                              \
-  do {                                                          \
-    gmp_randstate_ptr  __rstate = (state);                      \
-    (*((gmp_randfnptr_t *) RNG_FNPTR (__rstate))->randget_fn)   \
-       (__rstate, rp, bits);                                    \
-  } while (0)
-
-__GMP_DECLSPEC void __gmp_randinit_mt_noseed __GMP_PROTO ((gmp_randstate_t));
-
-
-/* __gmp_rands is the global state for the old-style random functions, and
-   is also used in the test programs (hence the __GMP_DECLSPEC).
-
-   There's no seeding here, so mpz_random etc will generate the same
-   sequence every time.  This is not unlike the C library random functions
-   if you don't seed them, so perhaps it's acceptable.  Digging up a seed
-   from /dev/random or the like would work on many systems, but might
-   encourage a false confidence, since it'd be pretty much impossible to do
-   something that would work reliably everywhere.  In any case the new style
-   functions are recommended to applications which care about randomness, so
-   the old functions aren't too important.  */
-
-__GMP_DECLSPEC extern char             __gmp_rands_initialized;
-__GMP_DECLSPEC extern gmp_randstate_t  __gmp_rands;
-
-#define RANDS                                       \
-  ((__gmp_rands_initialized ? 0                     \
-    : (__gmp_rands_initialized = 1,                 \
-       __gmp_randinit_mt_noseed (__gmp_rands), 0)), \
-   __gmp_rands)
-
-/* this is used by the test programs, to free memory */
-#define RANDS_CLEAR()                   \
-  do {                                  \
-    if (__gmp_rands_initialized)        \
-      {                                 \
-        __gmp_rands_initialized = 0;    \
-        gmp_randclear (__gmp_rands);    \
-      }                                 \
-  } while (0)
 
 
 /* kara uses n+1 limbs of temporary space and then recurses with the balance,
@@ -1212,20 +998,6 @@ __GMP_DECLSPEC void mpn_copyd _PROTO ((mp_ptr, mp_srcptr, mp_size_t));
    trouble than it's worth to do the same, though perhaps a call to memset
    would be good when on a GNU system.  */
 
-#if HAVE_HOST_CPU_FAMILY_power || HAVE_HOST_CPU_FAMILY_powerpc
-#define MPN_ZERO(dst, n)			\
-  do {						\
-    ASSERT ((n) >= 0);				\
-    if ((n) != 0)				\
-      {						\
-	mp_ptr __dst = (dst) - 1;		\
-	mp_size_t __n = (n);			\
-	do					\
-	  *++__dst = 0;				\
-	while (--__n);				\
-      }						\
-  } while (0)
-#endif
 
 #ifndef MPN_ZERO
 #define MPN_ZERO(dst, n)			\
@@ -1315,40 +1087,6 @@ __GMP_DECLSPEC void mpn_copyd _PROTO ((mp_ptr, mp_srcptr, mp_size_t));
                           : PTR(z))
 
 #define MPZ_EQUAL_1_P(z)  (SIZ(z)==1 && PTR(z)[0] == 1)
-
-
-/* MPN_FIB2_SIZE(n) is the size in limbs required by mpn_fib2_ui for fp and
-   f1p.
-
-   From Knuth vol 1 section 1.2.8, F[n] = phi^n/sqrt(5) rounded to the
-   nearest integer, where phi=(1+sqrt(5))/2 is the golden ratio.  So the
-   number of bits required is n*log_2((1+sqrt(5))/2) = n*0.6942419.
-
-   The multiplier used is 23/32=0.71875 for efficient calculation on CPUs
-   without good floating point.  There's +2 for rounding up, and a further
-   +2 since at the last step x limbs are doubled into a 2x+1 limb region
-   whereas the actual F[2k] value might be only 2x-1 limbs.
-
-   Note that a division is done first, since on a 32-bit system it's at
-   least conceivable to go right up to n==ULONG_MAX.  (F[2^32-1] would be
-   about 380Mbytes, plus temporary workspace of about 1.2Gbytes here and
-   whatever a multiply of two 190Mbyte numbers takes.)
-
-   Enhancement: When GMP_NUMB_BITS is not a power of 2 the division could be
-   worked into the multiplier.  */
-
-#define MPN_FIB2_SIZE(n) \
-  ((mp_size_t) ((n) / 32 * 23 / GMP_NUMB_BITS) + 4)
-
-
-/* FIB_TABLE(n) returns the Fibonacci number F[n].  Must have n in the range
-   -1 <= n <= FIB_TABLE_LIMIT (that constant in fib_table.h).
-
-   FIB_TABLE_LUCNUM_LIMIT (in fib_table.h) is the largest n for which L[n] =
-   F[n] + 2*F[n-1] fits in a limb.  */
-
-__GMP_DECLSPEC extern const mp_limb_t __gmp_fib_table[];
-#define FIB_TABLE(n)  (__gmp_fib_table[(n)+1])
 
 
 /* For a threshold between algorithms A and B, size>=thresh is where B
@@ -1599,33 +1337,6 @@ __GMP_DECLSPEC void __gmp_assert_fail _PROTO ((const char *filename, int linenum
 #define ASSERT_CODE(expr)
 #endif
 
-
-/* Test that an mpq_t is in fully canonical form.  This can be used as
-   protection on routines like mpq_equal which give wrong results on
-   non-canonical inputs.  */
-#if WANT_ASSERT
-#define ASSERT_MPQ_CANONICAL(q)                         \
-  do {                                                  \
-    ASSERT (q->_mp_den._mp_size > 0);                   \
-    if (q->_mp_num._mp_size == 0)                       \
-      {                                                 \
-        /* zero should be 0/1 */                        \
-        ASSERT (mpz_cmp_ui (mpq_denref(q), 1L) == 0);   \
-      }                                                 \
-    else                                                \
-      {                                                 \
-        /* no common factors */                         \
-        mpz_t  __g;                                     \
-        mpz_init (__g);                                 \
-        mpz_gcd (__g, mpq_numref(q), mpq_denref(q));    \
-        ASSERT (mpz_cmp_ui (__g, 1) == 0);              \
-        mpz_clear (__g);                                \
-      }                                                 \
-  } while (0)
-#else
-#define ASSERT_MPQ_CANONICAL(q)  do {} while (0)
-#endif
-
 /* Check that the nail parts are zero. */
 #define ASSERT_ALWAYS_LIMB(limb)                \
   do {                                          \
@@ -1711,71 +1422,6 @@ void mpn_com_n _PROTO ((mp_ptr, mp_srcptr, mp_size_t));
     while (--__n);                                      \
   } while (0)
 
-#if HAVE_NATIVE_mpn_and_n
-#define mpn_and_n __MPN(and_n)
-void mpn_and_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_and_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = *__s1++ & *__s2++)
-#endif
-
-#if HAVE_NATIVE_mpn_andn_n
-#define mpn_andn_n __MPN(andn_n)
-void mpn_andn_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_andn_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = *__s1++ & ~*__s2++)
-#endif
-
-#if HAVE_NATIVE_mpn_nand_n
-#define mpn_nand_n __MPN(nand_n)
-void mpn_nand_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_nand_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = ~(*__s1++ & *__s2++) & GMP_NUMB_MASK)
-#endif
-
-#if HAVE_NATIVE_mpn_ior_n
-#define mpn_ior_n __MPN(ior_n)
-void mpn_ior_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_ior_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = *__s1++ | *__s2++)
-#endif
-
-#if HAVE_NATIVE_mpn_iorn_n
-#define mpn_iorn_n __MPN(iorn_n)
-void mpn_iorn_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_iorn_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = (*__s1++ | ~*__s2++) & GMP_NUMB_MASK)
-#endif
-
-#if HAVE_NATIVE_mpn_nior_n
-#define mpn_nior_n __MPN(nior_n)
-void mpn_nior_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_nior_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = ~(*__s1++ | *__s2++) & GMP_NUMB_MASK)
-#endif
-
-#if HAVE_NATIVE_mpn_xor_n
-#define mpn_xor_n __MPN(xor_n)
-void mpn_xor_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_xor_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = *__s1++ ^ *__s2++)
-#endif
-
-#if HAVE_NATIVE_mpn_xnor_n
-#define mpn_xnor_n __MPN(xnor_n)
-void mpn_xnor_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
-#else
-#define mpn_xnor_n(d, s1, s2, n) \
-  MPN_LOGOPS_N_INLINE (d, s1, s2, n, *__d++ = ~(*__s1++ ^ *__s2++) & GMP_NUMB_MASK)
-#endif
-
-
 /* ADDC_LIMB sets w=x+y and cout to 0 or 1 for a carry from that addition. */
 #if GMP_NAIL_BITS == 0
 #define ADDC_LIMB(cout, w, x, y)        \
@@ -1834,47 +1480,6 @@ void mpn_xnor_n _PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
    declaring their operand sizes, then remove the former.  This is purely
    for the benefit of assertion checking.  */
 
-#if defined (__GNUC__) && HAVE_HOST_CPU_FAMILY_x86 && GMP_NAIL_BITS == 0      \
-  && BITS_PER_MP_LIMB == 32 && ! defined (NO_ASM) && ! WANT_ASSERT
-/* Better flags handling than the generic C gives on i386, saving a few
-   bytes of code and maybe a cycle or two.  */
-
-#define MPN_IORD_U(ptr, incr, aors)					\
-  do {									\
-    mp_ptr  __ptr_dummy;						\
-    if (__builtin_constant_p (incr) && (incr) == 1)			\
-      {									\
-        __asm__ __volatile__						\
-          ("\n" ASM_L(top) ":\n"					\
-           "\t" aors " $1, (%0)\n"					\
-           "\tleal 4(%0),%0\n"						\
-           "\tjc " ASM_L(top)						\
-           : "=r" (__ptr_dummy)						\
-           : "0"  (ptr)							\
-           : "memory");							\
-      }									\
-    else								\
-      {									\
-        __asm__ __volatile__						\
-          (   aors  " %2,(%0)\n"					\
-           "\tjnc " ASM_L(done) "\n"					\
-           ASM_L(top) ":\n"						\
-           "\t" aors " $1,4(%0)\n"					\
-           "\tleal 4(%0),%0\n"						\
-           "\tjc " ASM_L(top) "\n"					\
-           ASM_L(done) ":\n"						\
-           : "=r" (__ptr_dummy)						\
-           : "0"  (ptr),						\
-             "ri" (incr)						\
-           : "memory");							\
-      }									\
-  } while (0)
-
-#define MPN_INCR_U(ptr, size, incr)  MPN_IORD_U (ptr, incr, "addl")
-#define MPN_DECR_U(ptr, size, incr)  MPN_IORD_U (ptr, incr, "subl")
-#define mpn_incr_u(ptr, incr)  MPN_INCR_U (ptr, 0, incr)
-#define mpn_decr_u(ptr, incr)  MPN_DECR_U (ptr, 0, incr)
-#endif
 
 #if GMP_NAIL_BITS == 0
 #ifndef mpn_incr_u
@@ -2128,13 +1733,6 @@ __GMP_DECLSPEC extern const struct bases mp_bases[257];
 #endif
 
 
-#if HAVE_HOST_CPU_FAMILY_x86
-#define TARGET_REGISTER_STARVED 1
-#else
-#define TARGET_REGISTER_STARVED 0
-#endif
-
-
 /* LIMB_HIGHBIT_TO_MASK(n) examines the high bit of a limb value and turns 1
    or 0 there into a limb 0xFF..FF or 0 respectively.
 
@@ -2182,33 +1780,6 @@ mp_limb_t mpn_invert_limb _PROTO ((mp_limb_t)) ATTRIBUTE_CONST;
    If this would yield overflow, DI should be the largest possible number
    (i.e., only ones).  For correct operation, the most significant bit of D
    has to be set.  Put the quotient in Q and the remainder in R.  */
-#define udiv_qrnnd_preinv1(q, r, nh, nl, d, di)				\
-  do {									\
-    mp_limb_t _q, _ql, _r;						\
-    mp_limb_t _xh, _xl;							\
-    ASSERT ((d) != 0);							\
-    umul_ppmm (_q, _ql, (nh), (di));					\
-    _q += (nh);	/* Compensate, di is 2**GMP_LIMB_BITS too small */	\
-    umul_ppmm (_xh, _xl, _q, (d));					\
-    sub_ddmmss (_xh, _r, (nh), (nl), _xh, _xl);				\
-    if (_xh != 0)							\
-      {									\
-	sub_ddmmss (_xh, _r, _xh, _r, 0, (d));				\
-	_q += 1;							\
-	if (_xh != 0)							\
-	  {								\
-	    _r -= (d);							\
-	    _q += 1;							\
-	  }								\
-      }									\
-    if (_r >= (d))							\
-      {									\
-	_r -= (d);							\
-	_q += 1;							\
-      }									\
-    (r) = _r;								\
-    (q) = _q;								\
-  } while (0)
 
 /* Like udiv_qrnnd_preinv, but branch-free. */
 #define udiv_qrnnd_preinv2(q, r, nh, nl, d, di)				\
@@ -2225,26 +1796,6 @@ mp_limb_t mpn_invert_limb _PROTO ((mp_limb_t)) ATTRIBUTE_CONST;
     umul_ppmm (_xh, _xl, _q1, d);					\
     add_ssaaaa (_xh, _xl, _xh, _xl, nh, nl);				\
     _xh -= (d);					/* xh = 0 or -1 */	\
-    (r) = _xl + ((d) & _xh);						\
-    (q) = _xh - _q1;							\
-  } while (0)
-
-/* Like udiv_qrnnd_preinv2, but for for any value D.  DNORM is D shifted left
-   so that its most significant bit is set.  LGUP is ceil(log2(D)).  */
-#define udiv_qrnnd_preinv2gen(q, r, nh, nl, d, di, dnorm, lgup) \
-  do {									\
-    mp_limb_t _n2, _n10, _nmask, _nadj, _q1;				\
-    mp_limb_t _xh, _xl;							\
-    _n2 = ((nh) << (BITS_PER_MP_LIMB - (lgup))) + ((nl) >> 1 >> (l - 1));\
-    _n10 = (nl) << (BITS_PER_MP_LIMB - (lgup));				\
-    _nmask = LIMB_HIGHBIT_TO_MASK (_n10);				\
-    _nadj = _n10 + (_nmask & (dnorm));					\
-    umul_ppmm (_xh, _xl, di, _n2 - _nmask);				\
-    add_ssaaaa (_xh, _xl, _xh, _xl, _n2, _nadj);			\
-    _q1 = ~_xh;								\
-    umul_ppmm (_xh, _xl, _q1, d);					\
-    add_ssaaaa (_xh, _xl, _xh, _xl, nh, nl);				\
-    _xh -= (d);								\
     (r) = _xl + ((d) & _xh);						\
     (q) = _xh - _q1;							\
   } while (0)
@@ -2324,68 +1875,6 @@ mp_limb_t mpn_modexact_1c_odd _PROTO ((mp_srcptr src, mp_size_t size,
                                        mp_limb_t divisor, mp_limb_t c)) __GMP_ATTRIBUTE_PURE;
 #endif
 
-#if HAVE_NATIVE_mpn_modexact_1_odd
-#define mpn_modexact_1_odd   __MPN(modexact_1_odd)
-mp_limb_t mpn_modexact_1_odd _PROTO ((mp_srcptr src, mp_size_t size,
-                                      mp_limb_t divisor)) __GMP_ATTRIBUTE_PURE;
-#else
-#define mpn_modexact_1_odd(src,size,divisor) \
-  mpn_modexact_1c_odd (src, size, divisor, CNST_LIMB(0))
-#endif
-
-#define MPN_MOD_OR_MODEXACT_1_ODD(src,size,divisor)			\
-  (ABOVE_THRESHOLD (size, MODEXACT_1_ODD_THRESHOLD)			\
-   ? mpn_modexact_1_odd (src, size, divisor)				\
-   : mpn_mod_1 (src, size, divisor))
-
-
-/* modlimb_invert() sets inv to the multiplicative inverse of n modulo
-   2^GMP_NUMB_BITS, ie. satisfying inv*n == 1 mod 2^GMP_NUMB_BITS.
-   n must be odd (otherwise such an inverse doesn't exist).
-
-   This is not to be confused with invert_limb(), which is completely
-   different.
-
-   The table lookup gives an inverse with the low 8 bits valid, and each
-   multiply step doubles the number of bits.  See Jebelean "An algorithm for
-   exact division" end of section 4 (reference in gmp.texi).
-
-   Possible enhancement: Could use UHWtype until the last step, if half-size
-   multiplies are faster (might help under _LONG_LONG_LIMB).
-
-   Alternative: As noted in Granlund and Montgomery "Division by Invariant
-   Integers using Multiplication" (reference in gmp.texi), n itself gives a
-   3-bit inverse immediately, and could be used instead of a table lookup.
-   A 4-bit inverse can be obtained effectively from xoring bits 1 and 2 into
-   bit 3, for instance with (((n + 2) & 4) << 1) ^ n.  */
-
-#define modlimb_invert_table  __gmp_modlimb_invert_table
-__GMP_DECLSPEC extern const unsigned char  modlimb_invert_table[128];
-
-#define modlimb_invert(inv,n)						\
-  do {									\
-    mp_limb_t  __n = (n);						\
-    mp_limb_t  __inv;							\
-    ASSERT ((__n & 1) == 1);						\
-									\
-    __inv = modlimb_invert_table[(__n/2) & 0x7F]; /*  8 */		\
-    if (GMP_NUMB_BITS > 8)   __inv = 2 * __inv - __inv * __inv * __n;	\
-    if (GMP_NUMB_BITS > 16)  __inv = 2 * __inv - __inv * __inv * __n;	\
-    if (GMP_NUMB_BITS > 32)  __inv = 2 * __inv - __inv * __inv * __n;	\
-									\
-    if (GMP_NUMB_BITS > 64)						\
-      {									\
-	int  __invbits = 64;						\
-	do {								\
-	  __inv = 2 * __inv - __inv * __inv * __n;			\
-	  __invbits *= 2;						\
-	} while (__invbits < GMP_NUMB_BITS);				\
-      }									\
-									\
-    ASSERT ((__inv * __n & GMP_NUMB_MASK) == 1);			\
-    (inv) = __inv & GMP_NUMB_MASK;					\
-  } while (0)
-
 /* Multiplicative inverse of 3, modulo 2^GMP_NUMB_BITS.
    Eg. 0xAAAAAAAB for 32 bits, 0xAAAAAAAAAAAAAAAB for 64 bits.
    GMP_NUMB_MAX/3*2+1 is right when GMP_NUMB_BITS is even, but when it's odd
@@ -2436,54 +1925,11 @@ __GMP_DECLSPEC extern const unsigned char  modlimb_invert_table[128];
    to 0 if there's an even number.  "n" should be an unsigned long and "p"
    an int.  */
 
-#if defined (__GNUC__) && ! defined (NO_ASM) && HAVE_HOST_CPU_alpha_CIX
-#define ULONG_PARITY(p, n)						\
-  do {									\
-    int __p;								\
-    __asm__ ("ctpop %1, %0" : "=r" (__p) : "r" (n));			\
-    (p) = __p & 1;							\
-  } while (0)
-#endif
-
 /* Cray intrinsic _popcnt. */
 #ifdef _CRAY
 #define ULONG_PARITY(p, n)      \
   do {                          \
     (p) = _popcnt (n) & 1;      \
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)			\
-    && ! defined (NO_ASM) && defined (__ia64)
-/* unsigned long is either 32 or 64 bits depending on the ABI, zero extend
-   to a 64 bit unsigned long long for popcnt */
-#define ULONG_PARITY(p, n)						\
-  do {									\
-    unsigned long long  __n = (unsigned long) (n);			\
-    int  __p;								\
-    __asm__ ("popcnt %0 = %1" : "=r" (__p) : "r" (__n));		\
-    (p) = __p & 1;							\
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (NO_ASM) && HAVE_HOST_CPU_FAMILY_x86
-#if __GMP_GNUC_PREREQ (3,1)
-#define __GMP_qm "=Qm"
-#define __GMP_q "=Q"
-#else
-#define __GMP_qm "=qm"
-#define __GMP_q "=q"
-#endif
-#define ULONG_PARITY(p, n)						\
-  do {									\
-    char	   __p;							\
-    unsigned long  __n = (n);						\
-    __n ^= (__n >> 16);							\
-    __asm__ ("xorb %h1, %b1\n\t"					\
-	     "setpo %0"							\
-	 : __GMP_qm (__p), __GMP_q (__n)				\
-	 : "1" (__n));							\
-    (p) = __p;								\
   } while (0)
 #endif
 
@@ -2503,68 +1949,6 @@ __GMP_DECLSPEC extern const unsigned char  modlimb_invert_table[128];
   } while (0)
 #endif
 
-
-/* 3 cycles on 604 or 750 since shifts and rlwimi's can pair.  gcc (as of
-   version 3.1 at least) doesn't seem to know how to generate rlwimi for
-   anything other than bit-fields, so use "asm".  */
-#if defined (__GNUC__) && ! defined (NO_ASM)                    \
-  && HAVE_HOST_CPU_FAMILY_powerpc && BITS_PER_MP_LIMB == 32
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    mp_limb_t  __bswapl_src = (src);					\
-    mp_limb_t  __tmp1 = __bswapl_src >> 24;		/* low byte */	\
-    mp_limb_t  __tmp2 = __bswapl_src << 24;		/* high byte */	\
-    __asm__ ("rlwimi %0, %2, 24, 16, 23"		/* 2nd low */	\
-	 : "=r" (__tmp1) : "0" (__tmp1), "r" (__bswapl_src));		\
-    __asm__ ("rlwimi %0, %2,  8,  8, 15"		/* 3nd high */	\
-	 : "=r" (__tmp2) : "0" (__tmp2), "r" (__bswapl_src));		\
-    (dst) = __tmp1 | __tmp2;				/* whole */	\
-  } while (0)
-#endif
-
-/* bswap is available on i486 and up and is fast.  A combination rorw $8 /
-   roll $16 / rorw $8 is used in glibc for plain i386 (and in the linux
-   kernel with xchgb instead of rorw), but this is not done here, because
-   i386 means generic x86 and mixing word and dword operations will cause
-   partial register stalls on P6 chips.  */
-#if defined (__GNUC__) && ! defined (NO_ASM)            \
-  && HAVE_HOST_CPU_FAMILY_x86 && ! HAVE_HOST_CPU_i386   \
-  && BITS_PER_MP_LIMB == 32
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    __asm__ ("bswap %0" : "=r" (dst) : "0" (src));			\
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (NO_ASM)            \
-  && defined (__amd64__) && BITS_PER_MP_LIMB == 64
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    __asm__ ("bswap %q0" : "=r" (dst) : "0" (src));			\
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)			\
-    && ! defined (NO_ASM) && defined (__ia64) && GMP_LIMB_BITS == 64
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    __asm__ ("mux1 %0 = %1, @rev" : "=r" (dst) :  "r" (src));		\
-  } while (0)
-#endif
-
-/* As per glibc. */
-#if defined (__GNUC__) && ! defined (NO_ASM)                    \
-  && HAVE_HOST_CPU_FAMILY_m68k && BITS_PER_MP_LIMB == 32
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    mp_limb_t  __bswapl_src = (src);					\
-    __asm__ ("ror%.w %#8, %0\n\t"					\
-	     "swap   %0\n\t"						\
-	     "ror%.w %#8, %0"						\
-	     : "=d" (dst)						\
-	     : "0" (__bswapl_src));					\
-  } while (0)
-#endif
 
 #if ! defined (BSWAP_LIMB)
 #if BITS_PER_MP_LIMB == 8
@@ -2619,49 +2003,10 @@ __GMP_DECLSPEC extern const unsigned char  modlimb_invert_table[128];
 #endif
 
 
-/* Apparently lwbrx might be slow on some PowerPC chips, so restrict it to
-   those we know are fast.  */
-#if defined (__GNUC__) && ! defined (NO_ASM)                            \
-  && BITS_PER_MP_LIMB == 32 && HAVE_LIMB_BIG_ENDIAN                     \
-  && (HAVE_HOST_CPU_powerpc604                                          \
-      || HAVE_HOST_CPU_powerpc604e                                      \
-      || HAVE_HOST_CPU_powerpc750                                       \
-      || HAVE_HOST_CPU_powerpc7400)
-#define BSWAP_LIMB_FETCH(limb, src)					\
-  do {									\
-    mp_srcptr  __blf_src = (src);					\
-    mp_limb_t  __limb;							\
-    __asm__ ("lwbrx %0, 0, %1"						\
-	     : "=r" (__limb)						\
-	     : "r" (__blf_src),						\
-	       "m" (*__blf_src));					\
-    (limb) = __limb;							\
-  } while (0)
-#endif
-
 #if ! defined (BSWAP_LIMB_FETCH)
 #define BSWAP_LIMB_FETCH(limb, src)  BSWAP_LIMB (limb, *(src))
 #endif
 
-
-/* On the same basis that lwbrx might be slow, restrict stwbrx to those we
-   know are fast.  FIXME: Is this necessary?  */
-#if defined (__GNUC__) && ! defined (NO_ASM)                            \
-  && BITS_PER_MP_LIMB == 32 && HAVE_LIMB_BIG_ENDIAN                     \
-  && (HAVE_HOST_CPU_powerpc604                                          \
-      || HAVE_HOST_CPU_powerpc604e                                      \
-      || HAVE_HOST_CPU_powerpc750                                       \
-      || HAVE_HOST_CPU_powerpc7400)
-#define BSWAP_LIMB_STORE(dst, limb)					\
-  do {									\
-    mp_ptr     __dst = (dst);						\
-    mp_limb_t  __limb = (limb);						\
-    __asm__ ("stwbrx %1, 0, %2"						\
-	     : "=m" (*__dst)						\
-	     : "r" (__limb),						\
-	       "r" (__dst));						\
-  } while (0)
-#endif
 
 #if ! defined (BSWAP_LIMB_STORE)
 #define BSWAP_LIMB_STORE(dst, limb)  BSWAP_LIMB (*(dst), limb)
@@ -2705,38 +2050,11 @@ __GMP_DECLSPEC extern const unsigned char  modlimb_invert_table[128];
   } while (0)
 
 
-/* No processor claiming to be SPARC v9 compliant seems to
-   implement the POPC instruction.  Disable pattern for now.  */
-#if 0
-#if defined __GNUC__ && defined __sparc_v9__ && BITS_PER_MP_LIMB == 64
-#define popc_limb(result, input)					\
-  do {									\
-    DItype __res;							\
-    __asm__ ("popc %1,%0" : "=r" (result) : "rI" (input));		\
-  } while (0)
-#endif
-#endif
-
-#if defined (__GNUC__) && ! defined (NO_ASM) && HAVE_HOST_CPU_alpha_CIX
-#define popc_limb(result, input)					\
-  do {									\
-    __asm__ ("ctpop %1, %0" : "=r" (result) : "r" (input));		\
-  } while (0)
-#endif
-
 /* Cray intrinsic. */
 #ifdef _CRAY
 #define popc_limb(result, input)        \
   do {                                  \
     (result) = _popcnt (input);         \
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)			\
-    && ! defined (NO_ASM) && defined (__ia64) && GMP_LIMB_BITS == 64
-#define popc_limb(result, input)					\
-  do {									\
-    __asm__ ("popcnt %0 = %1" : "=r" (result) : "r" (input));		\
   } while (0)
 #endif
 
@@ -2901,72 +2219,6 @@ int __gmp_extract_double _PROTO ((mp_ptr, double));
 double mpn_get_d __GMP_PROTO ((mp_srcptr, mp_size_t, mp_size_t, long)) __GMP_ATTRIBUTE_PURE;
 
 
-/* DOUBLE_NAN_INF_ACTION executes code a_nan if x is a NaN, or executes
-   a_inf if x is an infinity.  Both are considered unlikely values, for
-   branch prediction.  */
-
-#if _GMP_IEEE_FLOATS
-#define DOUBLE_NAN_INF_ACTION(x, a_nan, a_inf)  \
-  do {                                          \
-    union ieee_double_extract  u;               \
-    u.d = (x);                                  \
-    if (UNLIKELY (u.s.exp == 0x7FF))            \
-      {                                         \
-        if (u.s.manl == 0 && u.s.manh == 0)     \
-          { a_inf; }                            \
-        else                                    \
-          { a_nan; }                            \
-      }                                         \
-  } while (0)
-#endif
-
-#if HAVE_DOUBLE_VAX_D || HAVE_DOUBLE_VAX_G || HAVE_DOUBLE_CRAY_CFP
-/* no nans or infs in these formats */
-#define DOUBLE_NAN_INF_ACTION(x, a_nan, a_inf)  \
-  do { } while (0)
-#endif
-
-#ifndef DOUBLE_NAN_INF_ACTION
-/* Unknown format, try something generic.
-   NaN should be "unordered", so x!=x.
-   Inf should be bigger than DBL_MAX.  */
-#define DOUBLE_NAN_INF_ACTION(x, a_nan, a_inf)                  \
-  do {                                                          \
-    {                                                           \
-      if (UNLIKELY ((x) != (x)))                                \
-        { a_nan; }                                              \
-      else if (UNLIKELY ((x) > DBL_MAX || (x) < -DBL_MAX))      \
-        { a_inf; }                                              \
-    }                                                           \
-  } while (0)
-#endif
-
-/* On m68k, x86 and amd64, gcc (and maybe other compilers) can hold doubles
-   in the coprocessor, which means a bigger exponent range than normal, and
-   depending on the rounding mode, a bigger mantissa than normal.  (See
-   "Disappointments" in the gcc manual.)  FORCE_DOUBLE stores and fetches
-   "d" through memory to force any rounding and overflows to occur.
-
-   On amd64, and on x86s with SSE2, gcc (depending on options) uses the xmm
-   registers, where there's no such extra precision and no need for the
-   FORCE_DOUBLE.  We don't bother to detect this since the present uses for
-   FORCE_DOUBLE are only in test programs and default generic C code.
-
-   Not quite sure that an "automatic volatile" will use memory, but it does
-   in gcc.  An asm("":"=m"(d):"0"(d)) can't be used to trick gcc, since
-   apparently matching operands like "0" are only allowed on a register
-   output.  gcc 3.4 warns about this, though in fact it and past versions
-   seem to put the operand through memory as hoped.  */
-
-#if (HAVE_HOST_CPU_FAMILY_m68k || HAVE_HOST_CPU_FAMILY_x86      \
-     || defined (__amd64__))
-#define FORCE_DOUBLE(d) \
-  do { volatile double __gmp_force = (d); (d) = __gmp_force; } while (0)
-#else
-#define FORCE_DOUBLE(d)  do { } while (0)
-#endif
-
-
 extern int __gmp_junk;
 extern const int __gmp_0;
 void __gmp_exception _PROTO ((int)) ATTRIBUTE_NORETURN;
@@ -3023,184 +2275,6 @@ void __gmp_invalid_operation _PROTO ((void)) ATTRIBUTE_NORETURN;
 #endif
 
 
-
-/* BIT1 means a result value in bit 1 (second least significant bit), with a
-   zero bit representing +1 and a one bit representing -1.  Bits other than
-   bit 1 are garbage.  These are meant to be kept in "int"s, and casts are
-   used to ensure the expressions are "int"s even if a and/or b might be
-   other types.
-
-   JACOBI_TWOS_U_BIT1 and JACOBI_RECIP_UU_BIT1 are used in mpn_jacobi_base
-   and their speed is important.  Expressions are used rather than
-   conditionals to accumulate sign changes, which effectively means XORs
-   instead of conditional JUMPs. */
-
-/* (a/0), with a signed; is 1 if a=+/-1, 0 otherwise */
-#define JACOBI_S0(a)   (((a) == 1) | ((a) == -1))
-
-/* (a/0), with a unsigned; is 1 if a=+/-1, 0 otherwise */
-#define JACOBI_U0(a)   ((a) == 1)
-
-/* (a/0), with a given by low and size;
-   is 1 if a=+/-1, 0 otherwise */
-#define JACOBI_LS0(alow,asize) \
-  (((asize) == 1 || (asize) == -1) && (alow) == 1)
-
-/* (a/0), with a an mpz_t;
-   fetch of low limb always valid, even if size is zero */
-#define JACOBI_Z0(a)   JACOBI_LS0 (PTR(a)[0], SIZ(a))
-
-/* (0/b), with b unsigned; is 1 if b=1, 0 otherwise */
-#define JACOBI_0U(b)   ((b) == 1)
-
-/* (0/b), with b unsigned; is 1 if b=+/-1, 0 otherwise */
-#define JACOBI_0S(b)   ((b) == 1 || (b) == -1)
-
-/* (0/b), with b given by low and size; is 1 if b=+/-1, 0 otherwise */
-#define JACOBI_0LS(blow,bsize) \
-  (((bsize) == 1 || (bsize) == -1) && (blow) == 1)
-
-/* Convert a bit1 to +1 or -1. */
-#define JACOBI_BIT1_TO_PN(result_bit1) \
-  (1 - ((int) (result_bit1) & 2))
-
-/* (2/b), with b unsigned and odd;
-   is (-1)^((b^2-1)/8) which is 1 if b==1,7mod8 or -1 if b==3,5mod8 and
-   hence obtained from (b>>1)^b */
-#define JACOBI_TWO_U_BIT1(b) \
-  ((int) (((b) >> 1) ^ (b)))
-
-/* (2/b)^twos, with b unsigned and odd */
-#define JACOBI_TWOS_U_BIT1(twos, b) \
-  ((int) ((twos) << 1) & JACOBI_TWO_U_BIT1 (b))
-
-/* (2/b)^twos, with b unsigned and odd */
-#define JACOBI_TWOS_U(twos, b) \
-  (JACOBI_BIT1_TO_PN (JACOBI_TWOS_U_BIT1 (twos, b)))
-
-/* (-1/b), with b odd (signed or unsigned);
-   is (-1)^((b-1)/2) */
-#define JACOBI_N1B_BIT1(b) \
-  ((int) (b))
-
-/* (a/b) effect due to sign of a: signed/unsigned, b odd;
-   is (-1/b) if a<0, or +1 if a>=0 */
-#define JACOBI_ASGN_SU_BIT1(a, b) \
-  ((((a) < 0) << 1) & JACOBI_N1B_BIT1(b))
-
-/* (a/b) effect due to sign of b: signed/signed;
-   is -1 if a and b both negative, +1 otherwise */
-#define JACOBI_BSGN_SS_BIT1(a, b) \
-  ((((a)<0) & ((b)<0)) << 1)
-
-/* (a/b) effect due to sign of b: signed/mpz;
-   is -1 if a and b both negative, +1 otherwise */
-#define JACOBI_BSGN_SZ_BIT1(a, b) \
-  JACOBI_BSGN_SS_BIT1 (a, SIZ(b))
-
-/* (a/b) effect due to sign of b: mpz/signed;
-   is -1 if a and b both negative, +1 otherwise */
-#define JACOBI_BSGN_ZS_BIT1(a, b) \
-  JACOBI_BSGN_SZ_BIT1 (b, a)
-
-/* (a/b) reciprocity to switch to (b/a), a,b both unsigned and odd;
-   is (-1)^((a-1)*(b-1)/4), which means +1 if either a,b==1mod4, or -1 if
-   both a,b==3mod4, achieved in bit 1 by a&b.  No ASSERT()s about a,b odd
-   because this is used in a couple of places with only bit 1 of a or b
-   valid. */
-#define JACOBI_RECIP_UU_BIT1(a, b) \
-  ((int) ((a) & (b)))
-
-/* Strip low zero limbs from {b_ptr,b_size} by incrementing b_ptr and
-   decrementing b_size.  b_low should be b_ptr[0] on entry, and will be
-   updated for the new b_ptr.  result_bit1 is updated according to the
-   factors of 2 stripped, as per (a/2).  */
-#define JACOBI_STRIP_LOW_ZEROS(result_bit1, a, b_ptr, b_size, b_low)    \
-  do {                                                                  \
-    ASSERT ((b_size) >= 1);                                             \
-    ASSERT ((b_low) == (b_ptr)[0]);                                     \
-                                                                        \
-    while (UNLIKELY ((b_low) == 0))                                     \
-      {                                                                 \
-        (b_size)--;                                                     \
-        ASSERT ((b_size) >= 1);                                         \
-        (b_ptr)++;                                                      \
-        (b_low) = *(b_ptr);                                             \
-                                                                        \
-        ASSERT (((a) & 1) != 0);                                        \
-        if ((GMP_NUMB_BITS % 2) == 1)                                   \
-          (result_bit1) ^= JACOBI_TWO_U_BIT1(a);                        \
-      }                                                                 \
-  } while (0)
-
-/* Set a_rem to {a_ptr,a_size} reduced modulo b, either using mod_1 or
-   modexact_1_odd, but in either case leaving a_rem<b.  b must be odd and
-   unsigned.  modexact_1_odd effectively calculates -a mod b, and
-   result_bit1 is adjusted for the factor of -1.
-
-   The way mpn_modexact_1_odd sometimes bases its remainder on a_size and
-   sometimes on a_size-1 means if GMP_NUMB_BITS is odd we can't know what
-   factor to introduce into result_bit1, so for that case use mpn_mod_1
-   unconditionally.
-
-   FIXME: mpn_modexact_1_odd is more efficient, so some way to get it used
-   for odd GMP_NUMB_BITS would be good.  Perhaps it could mung its result,
-   or not skip a divide step, or something. */
-
-#define JACOBI_MOD_OR_MODEXACT_1_ODD(result_bit1, a_rem, a_ptr, a_size, b) \
-  do {                                                                     \
-    mp_srcptr  __a_ptr  = (a_ptr);                                         \
-    mp_size_t  __a_size = (a_size);                                        \
-    mp_limb_t  __b      = (b);                                             \
-                                                                           \
-    ASSERT (__a_size >= 1);                                                \
-    ASSERT (__b & 1);                                                      \
-                                                                           \
-    if ((GMP_NUMB_BITS % 2) != 0                                           \
-        || BELOW_THRESHOLD (__a_size, MODEXACT_1_ODD_THRESHOLD))           \
-      {                                                                    \
-        (a_rem) = mpn_mod_1 (__a_ptr, __a_size, __b);                      \
-      }                                                                    \
-    else                                                                   \
-      {                                                                    \
-        (result_bit1) ^= JACOBI_N1B_BIT1 (__b);                            \
-        (a_rem) = mpn_modexact_1_odd (__a_ptr, __a_size, __b);             \
-      }                                                                    \
-  } while (0)
-
-
-/* __GMPF_BITS_TO_PREC applies a minimum 53 bits, rounds upwards to a whole
-   limb and adds an extra limb.  __GMPF_PREC_TO_BITS drops that extra limb,
-   hence giving back the user's size in bits rounded up.  Notice that
-   converting prec->bits->prec gives an unchanged value.  */
-#define __GMPF_BITS_TO_PREC(n)						\
-  ((mp_size_t) ((__GMP_MAX (53, n) + 2 * GMP_NUMB_BITS - 1) / GMP_NUMB_BITS))
-#define __GMPF_PREC_TO_BITS(n) \
-  ((unsigned long) (n) * GMP_NUMB_BITS - GMP_NUMB_BITS)
-
-extern mp_size_t __gmp_default_fp_limb_precision;
-
-
-/* Set n to the number of significant digits an mpf of the given _mp_prec
-   field, in the given base.  This is a rounded up value, designed to ensure
-   there's enough digits to reproduce all the guaranteed part of the value.
-
-   There are prec many limbs, but the high might be only "1" so forget it
-   and just count prec-1 limbs into chars.  +1 rounds that upwards, and a
-   further +1 is because the limbs usually won't fall on digit boundaries.
-
-   FIXME: If base is a power of 2 and the bits per digit divides
-   BITS_PER_MP_LIMB then the +2 is unnecessary.  This happens always for
-   base==2, and in base==16 with the current 32 or 64 bit limb sizes. */
-
-#define MPF_SIGNIFICANT_DIGITS(n, base, prec)                           \
-  do {                                                                  \
-    ASSERT (base >= 2 && base < numberof (mp_bases));                   \
-    (n) = 2 + (size_t) ((((size_t) (prec) - 1) * GMP_NUMB_BITS)         \
-                        * mp_bases[(base)].chars_per_bit_exactly);      \
-  } while (0)
-
-
 /* Decimal point string, from the current C locale.  Needs <langinfo.h> for
    nl_langinfo and constants, preferrably with _GNU_SOURCE defined to get
    DECIMAL_POINT from glibc, and needs <locale.h> for localeconv, each under
@@ -3210,182 +2284,8 @@ extern mp_size_t __gmp_default_fp_limb_precision;
    faster, apparently. */
 
 /* DECIMAL_POINT seems to need _GNU_SOURCE defined to get it from glibc. */
-#if HAVE_NL_LANGINFO && defined (DECIMAL_POINT)
-#define GMP_DECIMAL_POINT  (nl_langinfo (DECIMAL_POINT))
-#endif
-/* RADIXCHAR is deprecated, still in unix98 or some such. */
-#if HAVE_NL_LANGINFO && defined (RADIXCHAR) && ! defined (GMP_DECIMAL_POINT)
-#define GMP_DECIMAL_POINT  (nl_langinfo (RADIXCHAR))
-#endif
-/* localeconv is slower since it returns all locale stuff */
-#if HAVE_LOCALECONV && ! defined (GMP_DECIMAL_POINT)
-#define GMP_DECIMAL_POINT  (localeconv()->decimal_point)
-#endif
 #if ! defined (GMP_DECIMAL_POINT)
 #define GMP_DECIMAL_POINT  (".")
-#endif
-
-
-#define DOPRNT_CONV_FIXED        1
-#define DOPRNT_CONV_SCIENTIFIC   2
-#define DOPRNT_CONV_GENERAL      3
-
-#define DOPRNT_JUSTIFY_NONE      0
-#define DOPRNT_JUSTIFY_LEFT      1
-#define DOPRNT_JUSTIFY_RIGHT     2
-#define DOPRNT_JUSTIFY_INTERNAL  3
-
-#define DOPRNT_SHOWBASE_YES      1
-#define DOPRNT_SHOWBASE_NO       2
-#define DOPRNT_SHOWBASE_NONZERO  3
-
-struct doprnt_params_t {
-  int         base;          /* negative for upper case */
-  int         conv;          /* choices above */
-  const char  *expfmt;       /* exponent format */
-  int         exptimes4;     /* exponent multiply by 4 */
-  char        fill;          /* character */
-  int         justify;       /* choices above */
-  int         prec;          /* prec field, or -1 for all digits */
-  int         showbase;      /* choices above */
-  int         showpoint;     /* if radix point always shown */
-  int         showtrailing;  /* if trailing zeros wanted */
-  char        sign;          /* '+', ' ', or '\0' */
-  int         width;         /* width field */
-};
-
-#if _GMP_H_HAVE_VA_LIST
-
-typedef int (*doprnt_format_t) _PROTO ((void *data, const char *fmt, va_list ap));
-typedef int (*doprnt_memory_t) _PROTO ((void *data, const char *str, size_t len));
-typedef int (*doprnt_reps_t) _PROTO ((void *data, int c, int reps));
-typedef int (*doprnt_final_t) _PROTO ((void *data));
-
-struct doprnt_funs_t {
-  doprnt_format_t  format;
-  doprnt_memory_t  memory;
-  doprnt_reps_t    reps;
-  doprnt_final_t   final;   /* NULL if not required */
-};
-
-extern const struct doprnt_funs_t  __gmp_fprintf_funs;
-extern const struct doprnt_funs_t  __gmp_sprintf_funs;
-extern const struct doprnt_funs_t  __gmp_snprintf_funs;
-extern const struct doprnt_funs_t  __gmp_obstack_printf_funs;
-extern const struct doprnt_funs_t  __gmp_ostream_funs;
-
-/* "buf" is a __gmp_allocate_func block of "alloc" many bytes.  The first
-   "size" of these have been written.  "alloc > size" is maintained, so
-   there's room to store a '\0' at the end.  "result" is where the
-   application wants the final block pointer.  */
-struct gmp_asprintf_t {
-  char    **result;
-  char    *buf;
-  size_t  size;
-  size_t  alloc;
-};
-
-#define GMP_ASPRINTF_T_INIT(d, output)                          \
-  do {                                                          \
-    (d).result = (output);                                      \
-    (d).alloc = 256;                                            \
-    (d).buf = (char *) (*__gmp_allocate_func) ((d).alloc);      \
-    (d).size = 0;                                               \
-  } while (0)
-
-/* If a realloc is necessary, use twice the size actually required, so as to
-   avoid repeated small reallocs.  */
-#define GMP_ASPRINTF_T_NEED(d, n)                                       \
-  do {                                                                  \
-    size_t  alloc, newsize, newalloc;                                   \
-    ASSERT ((d)->alloc >= (d)->size + 1);                               \
-                                                                        \
-    alloc = (d)->alloc;                                                 \
-    newsize = (d)->size + (n);                                          \
-    if (alloc <= newsize)                                               \
-      {                                                                 \
-        newalloc = 2*newsize;                                           \
-        (d)->alloc = newalloc;                                          \
-        (d)->buf = __GMP_REALLOCATE_FUNC_TYPE ((d)->buf,                \
-                                               alloc, newalloc, char);  \
-      }                                                                 \
-  } while (0)
-
-__GMP_DECLSPEC int __gmp_asprintf_memory _PROTO ((struct gmp_asprintf_t *d, const char *str, size_t len));
-__GMP_DECLSPEC int __gmp_asprintf_reps _PROTO ((struct gmp_asprintf_t *d, int c, int reps));
-__GMP_DECLSPEC int __gmp_asprintf_final _PROTO ((struct gmp_asprintf_t *d));
-
-/* buf is where to write the next output, and size is how much space is left
-   there.  If the application passed size==0 then that's what we'll have
-   here, and nothing at all should be written.  */
-struct gmp_snprintf_t {
-  char    *buf;
-  size_t  size;
-};
-
-/* Add the bytes printed by the call to the total retval, or bail out on an
-   error.  */
-#define DOPRNT_ACCUMULATE(call) \
-  do {                          \
-    int  __ret;                 \
-    __ret = call;               \
-    if (__ret == -1)            \
-      goto error;               \
-    retval += __ret;            \
-  } while (0)
-#define DOPRNT_ACCUMULATE_FUN(fun, params)      \
-  do {                                          \
-    ASSERT ((fun) != NULL);                     \
-    DOPRNT_ACCUMULATE ((*(fun)) params);        \
-  } while (0)
-
-#define DOPRNT_FORMAT(fmt, ap)                          \
-  DOPRNT_ACCUMULATE_FUN (funs->format, (data, fmt, ap))
-#define DOPRNT_MEMORY(ptr, len)                                 \
-  DOPRNT_ACCUMULATE_FUN (funs->memory, (data, ptr, len))
-#define DOPRNT_REPS(c, n)                               \
-  DOPRNT_ACCUMULATE_FUN (funs->reps, (data, c, n))
-
-#define DOPRNT_STRING(str)      DOPRNT_MEMORY (str, strlen (str))
-
-#define DOPRNT_REPS_MAYBE(c, n) \
-  do {                          \
-    if ((n) != 0)               \
-      DOPRNT_REPS (c, n);       \
-  } while (0)
-#define DOPRNT_MEMORY_MAYBE(ptr, len)   \
-  do {                                  \
-    if ((len) != 0)                     \
-      DOPRNT_MEMORY (ptr, len);         \
-  } while (0)
-
-__GMP_DECLSPEC int __gmp_doprnt _PROTO ((const struct doprnt_funs_t *, void *, const char *, va_list));
-__GMP_DECLSPEC int __gmp_doprnt_integer _PROTO ((const struct doprnt_funs_t *, void *, const struct doprnt_params_t *, const char *));
-
-#define __gmp_doprnt_mpf __gmp_doprnt_mpf2
-__GMP_DECLSPEC int __gmp_doprnt_mpf _PROTO ((const struct doprnt_funs_t *, void *, const struct doprnt_params_t *, const char *, mpf_srcptr));
-
-int __gmp_replacement_vsnprintf _PROTO ((char *, size_t, const char *, va_list));
-#endif /* _GMP_H_HAVE_VA_LIST */
-
-
-typedef int (*gmp_doscan_scan_t)  _PROTO ((void *, const char *, ...));
-typedef void *(*gmp_doscan_step_t) _PROTO ((void *, int));
-typedef int (*gmp_doscan_get_t)   _PROTO ((void *));
-typedef int (*gmp_doscan_unget_t) _PROTO ((int, void *));
-
-struct gmp_doscan_funs_t {
-  gmp_doscan_scan_t   scan;
-  gmp_doscan_step_t   step;
-  gmp_doscan_get_t    get;
-  gmp_doscan_unget_t  unget;
-};
-extern const struct gmp_doscan_funs_t  __gmp_fscanf_funs;
-extern const struct gmp_doscan_funs_t  __gmp_sscanf_funs;
-
-#if _GMP_H_HAVE_VA_LIST
-int __gmp_doscan _PROTO ((const struct gmp_doscan_funs_t *, void *,
-                          const char *, va_list));
 #endif
 
 
@@ -3395,39 +2295,6 @@ int __gmp_doscan _PROTO ((const struct gmp_doscan_funs_t *, void *,
     ASSERT_ALWAYS (SIZ(z) == 0 || PTR(z)[ABSIZ(z) - 1] != 0);	\
     ASSERT_ALWAYS (ALLOC(z) >= ABSIZ(z));			\
     ASSERT_ALWAYS_MPN (PTR(z), ABSIZ(z));                       \
-  } while (0)
-
-#define MPQ_CHECK_FORMAT(q)                             \
-  do {                                                  \
-    MPZ_CHECK_FORMAT (mpq_numref (q));                  \
-    MPZ_CHECK_FORMAT (mpq_denref (q));                  \
-    ASSERT_ALWAYS (SIZ(mpq_denref(q)) >= 1);            \
-                                                        \
-    if (SIZ(mpq_numref(q)) == 0)                        \
-      {                                                 \
-        /* should have zero as 0/1 */                   \
-        ASSERT_ALWAYS (SIZ(mpq_denref(q)) == 1          \
-                       && PTR(mpq_denref(q))[0] == 1);  \
-      }                                                 \
-    else                                                \
-      {                                                 \
-        /* should have no common factors */             \
-        mpz_t  g;                                       \
-        mpz_init (g);                                   \
-        mpz_gcd (g, mpq_numref(q), mpq_denref(q));      \
-        ASSERT_ALWAYS (mpz_cmp_ui (g, 1) == 0);         \
-        mpz_clear (g);                                  \
-      }                                                 \
-  } while (0)
-
-#define MPF_CHECK_FORMAT(f)                             \
-  do {                                                  \
-    ASSERT_ALWAYS (PREC(f) >= __GMPF_BITS_TO_PREC(53)); \
-    ASSERT_ALWAYS (ABSIZ(f) <= PREC(f)+1);              \
-    if (SIZ(f) == 0)                                    \
-      ASSERT_ALWAYS (EXP(f) == 0);                      \
-    if (SIZ(f) != 0)                                    \
-      ASSERT_ALWAYS (PTR(f)[ABSIZ(f) - 1] != 0);        \
   } while (0)
 
 
@@ -3441,39 +2308,6 @@ int __gmp_doscan _PROTO ((const struct gmp_doscan_funs_t *, void *,
    difference to the gmp code, since hopefully we arrange calls so there's
    no great need for the compiler to move things around.  */
 
-#if WANT_FAT_BINARY && HAVE_HOST_CPU_FAMILY_x86
-/* NOTE: The function pointers in this struct are also in CPUVEC_FUNCS_LIST
-   in mpn/x86/x86-defs.m4.  Be sure to update that when changing here.  */
-struct cpuvec_t {
-  DECL_add_n           ((*add_n));
-  DECL_addmul_1        ((*addmul_1));
-  DECL_copyd           ((*copyd));
-  DECL_copyi           ((*copyi));
-  DECL_divexact_1      ((*divexact_1));
-  DECL_divexact_by3c   ((*divexact_by3c));
-  DECL_divrem_1        ((*divrem_1));
-  DECL_gcd_1           ((*gcd_1));
-  DECL_lshift          ((*lshift));
-  DECL_mod_1           ((*mod_1));
-  DECL_mod_34lsub1     ((*mod_34lsub1));
-  DECL_modexact_1c_odd ((*modexact_1c_odd));
-  DECL_mul_1           ((*mul_1));
-  DECL_mul_basecase    ((*mul_basecase));
-  DECL_preinv_divrem_1 ((*preinv_divrem_1));
-  DECL_preinv_mod_1    ((*preinv_mod_1));
-  DECL_rshift          ((*rshift));
-  DECL_sqr_basecase    ((*sqr_basecase));
-  DECL_sub_n           ((*sub_n));
-  DECL_submul_1        ((*submul_1));
-  int                  initialized;
-  mp_size_t            mul_karatsuba_threshold;
-  mp_size_t            mul_toom3_threshold;
-  mp_size_t            sqr_karatsuba_threshold;
-  mp_size_t            sqr_toom3_threshold;
-};
-__GMP_DECLSPEC extern struct cpuvec_t __gmpn_cpuvec;
-#endif /* x86 fat binary */
-
 void __gmpn_cpuvec_init __GMP_PROTO ((void));
 
 /* Get a threshold "field" from __gmpn_cpuvec, running __gmpn_cpuvec_init()
@@ -3482,161 +2316,6 @@ void __gmpn_cpuvec_init __GMP_PROTO ((void));
   ((LIKELY (__gmpn_cpuvec.initialized) ? 0 : (__gmpn_cpuvec_init (), 0)),     \
    __gmpn_cpuvec.field)
 
-
-
-#if TUNE_PROGRAM_BUILD
-/* Some extras wanted when recompiling some .c files for use by the tune
-   program.  Not part of a normal build.
-
-   It's necessary to keep these thresholds as #defines (just to an
-   identically named variable), since various defaults are established based
-   on #ifdef in the .c files.  For some this is not so (the defaults are
-   instead establshed above), but all are done this way for consistency. */
-
-#undef  MUL_KARATSUBA_THRESHOLD
-#define MUL_KARATSUBA_THRESHOLD      mul_karatsuba_threshold
-extern mp_size_t                     mul_karatsuba_threshold;
-
-#undef  MUL_TOOM3_THRESHOLD
-#define MUL_TOOM3_THRESHOLD          mul_toom3_threshold
-extern mp_size_t                     mul_toom3_threshold;
-
-#undef  MUL_FFT_THRESHOLD
-#define MUL_FFT_THRESHOLD            mul_fft_threshold
-extern mp_size_t                     mul_fft_threshold;
-
-#undef  MUL_FFT_MODF_THRESHOLD
-#define MUL_FFT_MODF_THRESHOLD       mul_fft_modf_threshold
-extern mp_size_t                     mul_fft_modf_threshold;
-
-#undef  MUL_FFT_TABLE
-#define MUL_FFT_TABLE                { 0 }
-
-/* A native mpn_sqr_basecase is not tuned and SQR_BASECASE_THRESHOLD should
-   remain as zero (always use it). */
-#if ! HAVE_NATIVE_mpn_sqr_basecase
-#undef  SQR_BASECASE_THRESHOLD
-#define SQR_BASECASE_THRESHOLD       sqr_basecase_threshold
-extern mp_size_t                     sqr_basecase_threshold;
-#endif
-
-#if TUNE_PROGRAM_BUILD_SQR
-#undef  SQR_KARATSUBA_THRESHOLD
-#define SQR_KARATSUBA_THRESHOLD      SQR_KARATSUBA_MAX_GENERIC
-#else
-#undef  SQR_KARATSUBA_THRESHOLD
-#define SQR_KARATSUBA_THRESHOLD      sqr_karatsuba_threshold
-extern mp_size_t                     sqr_karatsuba_threshold;
-#endif
-
-#undef  SQR_TOOM3_THRESHOLD
-#define SQR_TOOM3_THRESHOLD          sqr_toom3_threshold
-extern mp_size_t                     sqr_toom3_threshold;
-
-#undef SQR_FFT_THRESHOLD
-#define SQR_FFT_THRESHOLD            sqr_fft_threshold
-extern mp_size_t                     sqr_fft_threshold;
-
-#undef SQR_FFT_MODF_THRESHOLD
-#define SQR_FFT_MODF_THRESHOLD       sqr_fft_modf_threshold
-extern mp_size_t                     sqr_fft_modf_threshold;
-
-#undef  SQR_FFT_TABLE
-#define SQR_FFT_TABLE                { 0 }
-
-#undef  MULLOW_BASECASE_THRESHOLD
-#define MULLOW_BASECASE_THRESHOLD    mullow_basecase_threshold
-extern mp_size_t                     mullow_basecase_threshold;
-
-#undef  MULLOW_DC_THRESHOLD
-#define MULLOW_DC_THRESHOLD          mullow_dc_threshold
-extern mp_size_t                     mullow_dc_threshold;
-
-#undef  MULLOW_MUL_N_THRESHOLD
-#define MULLOW_MUL_N_THRESHOLD       mullow_mul_n_threshold
-extern mp_size_t                     mullow_mul_n_threshold;
-
-
-#if ! UDIV_PREINV_ALWAYS
-#undef  DIV_SB_PREINV_THRESHOLD
-#define DIV_SB_PREINV_THRESHOLD      div_sb_preinv_threshold
-extern mp_size_t                     div_sb_preinv_threshold;
-#endif
-
-#undef  DIV_DC_THRESHOLD
-#define DIV_DC_THRESHOLD             div_dc_threshold
-extern mp_size_t                     div_dc_threshold;
-
-#undef  POWM_THRESHOLD
-#define POWM_THRESHOLD               powm_threshold
-extern mp_size_t                     powm_threshold;
-
-#undef  GCD_ACCEL_THRESHOLD
-#define GCD_ACCEL_THRESHOLD          gcd_accel_threshold
-extern mp_size_t                     gcd_accel_threshold;
-
-#undef  GCDEXT_THRESHOLD
-#define GCDEXT_THRESHOLD             gcdext_threshold
-extern mp_size_t                     gcdext_threshold;
-
-#undef DIVREM_1_NORM_THRESHOLD
-#define DIVREM_1_NORM_THRESHOLD      divrem_1_norm_threshold
-extern mp_size_t                     divrem_1_norm_threshold;
-
-#undef DIVREM_1_UNNORM_THRESHOLD
-#define DIVREM_1_UNNORM_THRESHOLD    divrem_1_unnorm_threshold
-extern mp_size_t                     divrem_1_unnorm_threshold;
-
-#undef MOD_1_NORM_THRESHOLD
-#define MOD_1_NORM_THRESHOLD         mod_1_norm_threshold
-extern mp_size_t                     mod_1_norm_threshold;
-
-#undef MOD_1_UNNORM_THRESHOLD
-#define MOD_1_UNNORM_THRESHOLD       mod_1_unnorm_threshold
-extern mp_size_t                     mod_1_unnorm_threshold;
-
-#if ! UDIV_PREINV_ALWAYS
-#undef  DIVREM_2_THRESHOLD
-#define DIVREM_2_THRESHOLD           divrem_2_threshold
-extern mp_size_t                     divrem_2_threshold;
-#endif
-
-#undef  GET_STR_DC_THRESHOLD
-#define GET_STR_DC_THRESHOLD         get_str_dc_threshold
-extern mp_size_t                     get_str_dc_threshold;
-
-#undef GET_STR_PRECOMPUTE_THRESHOLD
-#define GET_STR_PRECOMPUTE_THRESHOLD get_str_precompute_threshold
-extern mp_size_t                     get_str_precompute_threshold;
-
-#undef  SET_STR_THRESHOLD
-#define SET_STR_THRESHOLD            set_str_threshold
-extern mp_size_t                     SET_STR_THRESHOLD;
-
-#undef  FFT_TABLE_ATTRS
-#define FFT_TABLE_ATTRS
-extern mp_size_t  mpn_fft_table[2][MPN_FFT_TABLE_SIZE];
-
-/* Sizes the tune program tests up to, used in a couple of recompilations. */
-#undef MUL_KARATSUBA_THRESHOLD_LIMIT
-#undef MUL_TOOM3_THRESHOLD_LIMIT
-#undef MULLOW_BASECASE_THRESHOLD_LIMIT
-#undef SQR_TOOM3_THRESHOLD_LIMIT
-#define SQR_KARATSUBA_MAX_GENERIC       200
-#define MUL_KARATSUBA_THRESHOLD_LIMIT   700
-#define MUL_TOOM3_THRESHOLD_LIMIT       700
-#define MULLOW_BASECASE_THRESHOLD_LIMIT 200
-#define SQR_TOOM3_THRESHOLD_LIMIT       400
-#define GET_STR_THRESHOLD_LIMIT         150
-
-/* "thresh" will normally be a variable when tuning, so use the cached
-   result.  This helps mpn_sb_divrem_mn for instance.  */
-#undef  CACHED_ABOVE_THRESHOLD
-#define CACHED_ABOVE_THRESHOLD(cache, thresh)  (cache)
-#undef  CACHED_BELOW_THRESHOLD
-#define CACHED_BELOW_THRESHOLD(cache, thresh)  (cache)
-
-#endif /* TUNE_PROGRAM_BUILD */
 
 #if defined (__cplusplus)
 }
@@ -3672,9 +2351,6 @@ class gmp_allocated_string {
 std::istream &__gmpz_operator_in_nowhite (std::istream &, mpz_ptr, char);
 int __gmp_istream_set_base (std::istream &, char &, bool &, bool &);
 void __gmp_istream_set_digits (std::string &, std::istream &, char &, bool &, int);
-void __gmp_doprnt_params_from_ios (struct doprnt_params_t *p, std::ios &o);
-std::ostream& __gmp_doprnt_integer_ostream (std::ostream &o, struct doprnt_params_t *p, char *s);
-extern const struct doprnt_funs_t  __gmp_asprintf_funs_noformat;
 
 #endif /* __cplusplus */
 

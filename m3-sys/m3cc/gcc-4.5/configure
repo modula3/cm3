@@ -688,9 +688,6 @@ poststage1_ldflags
 poststage1_libs
 stage1_libs
 stage1_ldflags
-extra_mpc_mpfr_configure_flags
-extra_mpc_gmp_configure_flags
-extra_mpfr_configure_flags
 gmpinc
 gmplibs
 do_compare
@@ -783,13 +780,6 @@ enable_gold
 enable_libada
 enable_libssp
 enable_build_with_cxx
-with_mpc
-with_mpc_include
-with_mpc_lib
-with_mpfr_dir
-with_mpfr
-with_mpfr_include
-with_mpfr_lib
 with_gmp_dir
 with_gmp
 with_gmp_include
@@ -1509,19 +1499,6 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-build-libsubdir=DIR  Directory where to find libraries for build system
-  --with-mpc=PATH        specify prefix directory for installed MPC package.
-                          Equivalent to --with-mpc-include=PATH/include
-                          plus --with-mpc-lib=PATH/lib
-  --with-mpc-include=PATH
-                          specify directory for installed MPC include files
-  --with-mpc-lib=PATH    specify directory for the installed MPC library
-  --with-mpfr-dir=PATH    this option has been REMOVED
-  --with-mpfr=PATH        specify prefix directory for installed MPFR package.
-                          Equivalent to --with-mpfr-include=PATH/include
-                          plus --with-mpfr-lib=PATH/lib
-  --with-mpfr-include=PATH
-                          specify directory for installed MPFR include files
-  --with-mpfr-lib=PATH    specify directory for the installed MPFR library
   --with-gmp-dir=PATH     this option has been REMOVED
   --with-gmp=PATH         specify prefix directory for the installed GMP package.
                           Equivalent to --with-gmp-include=PATH/include
@@ -1770,52 +1747,6 @@ fi
 
 } # ac_fn_cxx_try_compile
 
-# ac_fn_c_try_link LINENO
-# -----------------------
-# Try to link conftest.$ac_ext, and return whether this succeeded.
-ac_fn_c_try_link ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  rm -f conftest.$ac_objext conftest$ac_exeext
-  if { { ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_link") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    grep -v '^ *+' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-    mv -f conftest.er1 conftest.err
-  fi
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext && {
-	 test "$cross_compiling" = yes ||
-	 $as_test_x conftest$ac_exeext
-       }; then :
-  ac_retval=0
-else
-  $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_retval=1
-fi
-  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
-  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
-  # interfere with the next link command; also delete a directory that is
-  # left behind by Apple's compiler.  We do this before executing the actions.
-  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
-  eval $as_lineno_stack; test "x$as_lineno_stack" = x && { as_lineno=; unset as_lineno;}
-  return $ac_retval
-
-} # ac_fn_c_try_link
-
 # ac_fn_c_try_cpp LINENO
 # ----------------------
 # Try to preprocess conftest.$ac_ext, and return whether this succeeded.
@@ -2012,6 +1943,52 @@ $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; test "x$as_lineno_stack" = x && { as_lineno=; unset as_lineno;}
 
 } # ac_fn_c_check_header_compile
+
+# ac_fn_c_try_link LINENO
+# -----------------------
+# Try to link conftest.$ac_ext, and return whether this succeeded.
+ac_fn_c_try_link ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  rm -f conftest.$ac_objext conftest$ac_exeext
+  if { { ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_link") 2>conftest.err
+  ac_status=$?
+  if test -s conftest.err; then
+    grep -v '^ *+' conftest.err >conftest.er1
+    cat conftest.er1 >&5
+    mv -f conftest.er1 conftest.err
+  fi
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then :
+  ac_retval=0
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_retval=1
+fi
+  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
+  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
+  # interfere with the next link command; also delete a directory that is
+  # left behind by Apple's compiler.  We do this before executing the actions.
+  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
+  eval $as_lineno_stack; test "x$as_lineno_stack" = x && { as_lineno=; unset as_lineno;}
+  return $ac_retval
+
+} # ac_fn_c_try_link
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -2894,7 +2871,7 @@ build_tools="build-texinfo build-byacc build-flex build-bison build-m4 build-fix
 
 # these libraries are used by various programs built for the host environment
 #
-host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui zlib libcpp libdecnumber gmp mpfr mpc ppl cloog libelf libiconv"
+host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui libcpp libdecnumber gmp ppl cloog libelf libiconv"
 
 # these tools are built for the host environment
 # Note, the powerpc-eabi build depends on sim occurring before gdb in order to
@@ -5315,101 +5292,10 @@ _ACEOF
 
 
 
-# Check for GMP, MPFR and MPC
-gmplibs="-lmpc -lmpfr -lgmp"
+# Check for GMP
+gmplibs="-lgmp"
 gmpinc=
 have_gmp=no
-
-# Specify a location for mpc
-# check for this first so it ends up on the link line before mpfr.
-
-# Check whether --with-mpc was given.
-if test "${with_mpc+set}" = set; then :
-  withval=$with_mpc;
-fi
-
-
-# Check whether --with-mpc_include was given.
-if test "${with_mpc_include+set}" = set; then :
-  withval=$with_mpc_include;
-fi
-
-
-# Check whether --with-mpc_lib was given.
-if test "${with_mpc_lib+set}" = set; then :
-  withval=$with_mpc_lib;
-fi
-
-
-if test "x$with_mpc" != x; then
-  gmplibs="-L$with_mpc/lib $gmplibs"
-  gmpinc="-I$with_mpc/include $gmpinc"
-fi
-if test "x$with_mpc_include" != x; then
-  gmpinc="-I$with_mpc_include $gmpinc"
-fi
-if test "x$with_mpc_lib" != x; then
-  gmplibs="-L$with_mpc_lib $gmplibs"
-fi
-if test "x$with_mpc$with_mpc_include$with_mpc_lib" = x && test -d ${srcdir}/mpc; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/mpc/src/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$s/mpc/src '"$gmpinc"
-  # Do not test the mpc version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
-
-# Specify a location for mpfr
-# check for this first so it ends up on the link line before gmp.
-
-# Check whether --with-mpfr-dir was given.
-if test "${with_mpfr_dir+set}" = set; then :
-  withval=$with_mpfr_dir; as_fn_error "The --with-mpfr-dir=PATH option has been removed.
-Use --with-mpfr=PATH or --with-mpfr-include=PATH plus --with-mpfr-lib=PATH" "$LINENO" 5
-fi
-
-
-
-# Check whether --with-mpfr was given.
-if test "${with_mpfr+set}" = set; then :
-  withval=$with_mpfr;
-fi
-
-
-# Check whether --with-mpfr_include was given.
-if test "${with_mpfr_include+set}" = set; then :
-  withval=$with_mpfr_include;
-fi
-
-
-# Check whether --with-mpfr_lib was given.
-if test "${with_mpfr_lib+set}" = set; then :
-  withval=$with_mpfr_lib;
-fi
-
-
-if test "x$with_mpfr" != x; then
-  gmplibs="-L$with_mpfr/lib $gmplibs"
-  gmpinc="-I$with_mpfr/include $gmpinc"
-fi
-if test "x$with_mpfr_include" != x; then
-  gmpinc="-I$with_mpfr_include $gmpinc"
-fi
-if test "x$with_mpfr_lib" != x; then
-  gmplibs="-L$with_mpfr_lib $gmplibs"
-fi
-if test "x$with_mpfr$with_mpfr_include$with_mpfr_lib" = x && test -d ${srcdir}/mpfr; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/mpfr/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$r/$(HOST_SUBDIR)/mpfr -I$$s/mpfr '"$gmpinc"
-  extra_mpc_mpfr_configure_flags='--with-mpfr-include=$$s/mpfr --with-mpfr-lib=$$r/$(HOST_SUBDIR)/mpfr/'"$lt_cv_objdir"
-  # Do not test the mpfr version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
 
 # Specify a location for gmp
 
@@ -5453,8 +5339,6 @@ fi
 if test "x$with_gmp$with_gmp_include$with_gmp_lib" = x && test -d ${srcdir}/gmp; then
   gmplibs='-L$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir $gmplibs"
   gmpinc='-I$$r/$(HOST_SUBDIR)/gmp -I$$s/gmp '"$gmpinc"
-  extra_mpfr_configure_flags='--with-gmp-build=$$r/$(HOST_SUBDIR)/gmp'
-  extra_mpc_gmp_configure_flags='--with-gmp-include=$$r/$(HOST_SUBDIR)/gmp --with-gmp-lib=$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir"
   # Do not test the gmp version.  Assume that it is sufficient, since
   # it is in the source tree, and the library has not been built yet
   # but it would be included on the link line in the version check below
@@ -5519,178 +5403,25 @@ $as_echo "no" >&6; }; have_gmp=no
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
-  # If we have GMP, check the MPFR version.
-  if test x"$have_gmp" = xyes; then
-    # Check for the recommended and required versions of MPFR.
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the correct version of mpfr.h" >&5
-$as_echo_n "checking for the correct version of mpfr.h... " >&6; }
-    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <gmp.h>
-    #include <mpfr.h>
-int
-main ()
-{
-
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,3,1)
-    choke me
-    #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <gmp.h>
-    #include <mpfr.h>
-int
-main ()
-{
-
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,4,2)
-    choke me
-    #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: buggy but acceptable" >&5
-$as_echo "buggy but acceptable" >&6; }
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }; have_gmp=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-  fi
-
-  # Check for the MPC header version.
-  if test x"$have_gmp" = xyes ; then
-    # Check for the recommended and required versions of MPC.
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the correct version of mpc.h" >&5
-$as_echo_n "checking for the correct version of mpc.h... " >&6; }
-    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <mpc.h>
-int
-main ()
-{
-
-    #if MPC_VERSION < MPC_VERSION_NUM(0,8,0)
-    choke me
-    #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <mpc.h>
-int
-main ()
-{
-
-    #if MPC_VERSION < MPC_VERSION_NUM(0,8,1)
-    choke me
-    #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: buggy but acceptable" >&5
-$as_echo "buggy but acceptable" >&6; }
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }; have_gmp=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-  fi
-
-  # Now check the MPFR library.
-  if test x"$have_gmp" = xyes; then
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $gmplibs"
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the correct version of the gmp/mpfr/mpc libraries" >&5
-$as_echo_n "checking for the correct version of the gmp/mpfr/mpc libraries... " >&6; }
-    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <mpc.h>
-int
-main ()
-{
-
-    mpfr_t n;
-    mpfr_t x;
-    mpc_t c;
-    int t;
-    mpfr_init (n);
-    mpfr_init (x);
-    mpfr_atan2 (n, n, x, GMP_RNDN);
-    mpfr_erfc (n, x, GMP_RNDN);
-    mpfr_subnormalize (x, t, GMP_RNDN);
-    mpfr_clear(n);
-    mpfr_clear(x);
-    mpc_init2 (c, 53);
-    mpc_set_ui_ui (c, 1, 1, MPC_RNDNN);
-    mpc_cosh (c, c, MPC_RNDNN);
-    mpc_pow (c, c, c, MPC_RNDNN);
-    mpc_acosh (c, c, MPC_RNDNN);
-    mpc_clear (c);
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }; have_gmp=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-    LIBS="$saved_LIBS"
-  fi
 
   CFLAGS="$saved_CFLAGS"
 
 # The library versions listed in the error message below should match
 # the HARD-minimums enforced above.
   if test x$have_gmp != xyes; then
-    as_fn_error "Building GCC requires GMP 4.2+, MPFR 2.3.1+ and MPC 0.8.0+.
-Try the --with-gmp, --with-mpfr and/or --with-mpc options to specify
+    as_fn_error "Building GCC requires GMP 4.2+.
+Try the --with-gmp option to specify
 their locations.  Source code for these libraries can be found at
 their respective hosting sites as well as at
 ftp://gcc.gnu.org/pub/gcc/infrastructure/.  See also
 http://gcc.gnu.org/install/prerequisites.html for additional info.  If
-you obtained GMP, MPFR and/or MPC from a vendor distribution package,
+you obtained GMP from a vendor distribution package,
 make sure that you have installed both the libraries and the header
 files.  They may be located in separate packages." "$LINENO" 5
   fi
 fi
 
-# Flags needed for both GMP, MPFR and/or MPC.
-
-
-
+# Flags needed for both GMP.
 
 
 
