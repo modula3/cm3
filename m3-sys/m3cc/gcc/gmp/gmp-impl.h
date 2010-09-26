@@ -101,7 +101,6 @@ MA 02110-1301, USA. */
 #if ! __GMP_WITHIN_CONFIGURE
 #include "config.h"
 #include "gmp-mparam.h"
-#include "fib_table.h"
 #include "mp_bases.h"
 #if WANT_FAT_BINARY
 #include "fat.h"
