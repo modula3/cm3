@@ -1971,7 +1971,9 @@ const_binop (enum tree_code code, tree arg1, tree arg2, int notrunc)
 
 	case MULT_EXPR:
 	  if (COMPLEX_FLOAT_TYPE_P (type))
-	    gcc_unreachable ();
+	    return do_mpc_arg2 (arg1, arg2, type,
+				/* do_nonfinite= */ folding_initializer,
+				mpc_mul);
 
 	  real = const_binop (MINUS_EXPR,
 			      const_binop (MULT_EXPR, r1, r2, notrunc),
@@ -1985,8 +1987,9 @@ const_binop (enum tree_code code, tree arg1, tree arg2, int notrunc)
 
 	case RDIV_EXPR:
 	  if (COMPLEX_FLOAT_TYPE_P (type))
-	    gcc_unreachable ();
-
+	    return do_mpc_arg2 (arg1, arg2, type,
+                                /* do_nonfinite= */ folding_initializer,
+				mpc_div);
 	  /* Fallthru ... */
 	case TRUNC_DIV_EXPR:
 	case CEIL_DIV_EXPR:
