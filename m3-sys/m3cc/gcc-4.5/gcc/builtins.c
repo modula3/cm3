@@ -1,3 +1,5 @@
+/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Expand builtin functions.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -58,7 +60,8 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef PAD_VARARGS_DOWN
 #define PAD_VARARGS_DOWN BYTES_BIG_ENDIAN
 #endif
-static tree do_mpc_arg1 (tree, tree, int (*)(mpc_ptr, mpc_srcptr, mpc_rnd_t));
+#define do_mpc_arg1(a, b, c) NULL_TREE
+#define do_mpc_arg2(a, b, c, d, e) NULL_TREE
 
 /* Define the names of the builtin function types and codes.  */
 const char *const built_in_class_names[4]
@@ -212,18 +215,13 @@ static unsigned HOST_WIDE_INT target_s;
 static char target_percent_c[3];
 static char target_percent_s[3];
 static char target_percent_s_newline[4];
-static tree do_mpfr_arg1 (tree, tree, int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t),
-			  const REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *, bool);
-static tree do_mpfr_arg2 (tree, tree, tree,
-			  int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t));
-static tree do_mpfr_arg3 (tree, tree, tree, tree,
-			  int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t));
-static tree do_mpfr_sincos (tree, tree, tree);
-static tree do_mpfr_bessel_n (tree, tree, tree,
-			      int (*)(mpfr_ptr, long, mpfr_srcptr, mp_rnd_t),
-			      const REAL_VALUE_TYPE *, bool);
-static tree do_mpfr_remquo (tree, tree, tree);
-static tree do_mpfr_lgamma_r (tree, tree, tree);
+#define do_mpfr_arg1(a, b, c, d, e, f) NULL_TREE
+#define do_mpfr_arg2(a, b, c, d) NULL_TREE
+#define do_mpfr_arg3(a, b, c, d, e) NULL_TREE
+#define do_mpfr_sincos(a, b, c) NULL_TREE
+#define do_mpfr_bessel_n(a, b, c, d, e, f) NULL_TREE
+#define do_mpfr_remquo(a, b, c) NULL_TREE
+#define do_mpfr_lgamma_r(a, b, c) NULL_TREE
 
 /* Return true if NAME starts with __builtin_ or __sync_.  */
 
@@ -6889,6 +6887,7 @@ fold_fixed_mathfn (location_t loc, tree fndecl, tree arg)
 static tree
 fold_builtin_cabs (location_t loc, tree arg, tree type, tree fndecl)
 {
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   tree res;
 
   if (!validate_arg (arg, COMPLEX_TYPE)
@@ -6957,7 +6956,7 @@ fold_builtin_cabs (location_t loc, tree arg, tree type, tree fndecl)
 	  return build_call_expr_loc (loc, sqrtfn, 1, result);
 	}
     }
-
+#endif
   return NULL_TREE;
 }
 
@@ -6967,7 +6966,7 @@ fold_builtin_cabs (location_t loc, tree arg, tree type, tree fndecl)
 static tree
 fold_builtin_sqrt (location_t loc, tree arg, tree type)
 {
-
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   enum built_in_function fcode;
   tree res;
 
@@ -7031,7 +7030,7 @@ fold_builtin_sqrt (location_t loc, tree arg, tree type)
 			   build_real (type, dconsthalf));
       return build_call_expr_loc (loc, powfn, 2, arg0, narg1);
     }
-
+#endif
   return NULL_TREE;
 }
 
@@ -7041,6 +7040,7 @@ fold_builtin_sqrt (location_t loc, tree arg, tree type)
 static tree
 fold_builtin_cbrt (location_t loc, tree arg, tree type)
 {
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   const enum built_in_function fcode = builtin_mathfn_code (arg);
   tree res;
 
@@ -7123,6 +7123,7 @@ fold_builtin_cbrt (location_t loc, tree arg, tree type)
 	    }
 	}
     }
+#endif
   return NULL_TREE;
 }
 
@@ -7664,6 +7665,12 @@ fold_builtin_bswap (tree fndecl, tree arg)
   return NULL_TREE;
 }
 
+#if 1 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
+#define fold_builtin_logarithm(loc, fn, arg, fun) NULL_TREE
+
+#else
+
 /* A subroutine of fold_builtin to fold the various logarithmic
    functions.  Return NULL_TREE if no simplification can me made.
    FUNC is the corresponding MPFR logarithm function.  */
@@ -7753,9 +7760,10 @@ fold_builtin_logarithm (location_t loc, tree fndecl, tree arg,
 	    }
 	}
     }
-
   return NULL_TREE;
 }
+
+#endif
 
 /* Fold a builtin function call to hypot, hypotf, or hypotl.  Return
    NULL_TREE if no simplification can be made.  */
@@ -7764,6 +7772,7 @@ static tree
 fold_builtin_hypot (location_t loc, tree fndecl,
 		    tree arg0, tree arg1, tree type)
 {
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   tree res, narg0, narg1;
 
   if (!validate_arg (arg0, REAL_TYPE)
@@ -7800,7 +7809,7 @@ fold_builtin_hypot (location_t loc, tree fndecl,
 			  fold_build1_loc (loc, ABS_EXPR, type, arg0),
 			  build_real (type, sqrt2_trunc));
     }
-
+#endif
   return NULL_TREE;
 }
 
@@ -7810,6 +7819,7 @@ fold_builtin_hypot (location_t loc, tree fndecl,
 static tree
 fold_builtin_pow (location_t loc, tree fndecl, tree arg0, tree arg1, tree type)
 {
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   tree res;
 
   if (!validate_arg (arg0, REAL_TYPE)
@@ -7953,7 +7963,7 @@ fold_builtin_pow (location_t loc, tree fndecl, tree arg0, tree arg1, tree type)
 	    }
 	}
     }
-
+#endif
   return NULL_TREE;
 }
 
@@ -8003,6 +8013,12 @@ fold_builtin_powi (location_t loc, tree fndecl ATTRIBUTE_UNUSED,
   return NULL_TREE;
 }
 
+#if 1 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
+#define fold_builtin_exponent(loc, fn, arg, fun) NULL_TREE
+
+#else
+
 /* A subroutine of fold_builtin to fold the various exponent
    functions.  Return NULL_TREE if no simplification can be made.
    FUNC is the corresponding MPFR exponent function.  */
@@ -8040,9 +8056,10 @@ fold_builtin_exponent (location_t loc, tree fndecl, tree arg,
 	    return fold_convert_loc (loc, type, CALL_EXPR_ARG (arg, 0));
 	}
     }
-
   return NULL_TREE;
 }
+
+#endif
 
 /* Return true if VAR is a VAR_DECL or a component thereof.  */
 
@@ -12714,590 +12731,6 @@ init_target_chars (void)
       init = true;
     }
   return true;
-}
-
-/* Helper function for do_mpfr_arg*().  Ensure M is a normal number
-   and no overflow/underflow occurred.  INEXACT is true if M was not
-   exactly calculated.  TYPE is the tree type for the result.  This
-   function assumes that you cleared the MPFR flags and then
-   calculated M to see if anything subsequently set a flag prior to
-   entering this function.  Return NULL_TREE if any checks fail.  */
-
-static tree
-do_mpfr_ckconv (mpfr_srcptr m, tree type, int inexact)
-{
-  /* Proceed iff we get a normal number, i.e. not NaN or Inf and no
-     overflow/underflow occurred.  If -frounding-math, proceed iff the
-     result of calling FUNC was exact.  */
-  if (mpfr_number_p (m) && !mpfr_overflow_p () && !mpfr_underflow_p ()
-      && (!flag_rounding_math || !inexact))
-    {
-      REAL_VALUE_TYPE rr;
-
-      real_from_mpfr (&rr, m, type, GMP_RNDN);
-      /* Proceed iff GCC's REAL_VALUE_TYPE can hold the MPFR value,
-	 check for overflow/underflow.  If the REAL_VALUE_TYPE is zero
-	 but the mpft_t is not, then we underflowed in the
-	 conversion.  */
-      if (real_isfinite (&rr)
-	  && (rr.cl == rvc_zero) == (mpfr_zero_p (m) != 0))
-        {
-	  REAL_VALUE_TYPE rmode;
-
-	  real_convert (&rmode, TYPE_MODE (type), &rr);
-	  /* Proceed iff the specified mode can hold the value.  */
-	  if (real_identical (&rmode, &rr))
-	    return build_real (type, rmode);
-	}
-    }
-  return NULL_TREE;
-}
-
-/* Helper function for do_mpc_arg*().  Ensure M is a normal complex
-   number and no overflow/underflow occurred.  INEXACT is true if M
-   was not exactly calculated.  TYPE is the tree type for the result.
-   This function assumes that you cleared the MPFR flags and then
-   calculated M to see if anything subsequently set a flag prior to
-   entering this function.  Return NULL_TREE if any checks fail, if
-   FORCE_CONVERT is true, then bypass the checks.  */
-
-static tree
-do_mpc_ckconv (mpc_srcptr m, tree type, int inexact, int force_convert)
-{
-  /* Proceed iff we get a normal number, i.e. not NaN or Inf and no
-     overflow/underflow occurred.  If -frounding-math, proceed iff the
-     result of calling FUNC was exact.  */
-  if (force_convert
-      || (mpfr_number_p (mpc_realref (m)) && mpfr_number_p (mpc_imagref (m))
-	  && !mpfr_overflow_p () && !mpfr_underflow_p ()
-	  && (!flag_rounding_math || !inexact)))
-    {
-      REAL_VALUE_TYPE re, im;
-
-      real_from_mpfr (&re, mpc_realref (m), TREE_TYPE (type), GMP_RNDN);
-      real_from_mpfr (&im, mpc_imagref (m), TREE_TYPE (type), GMP_RNDN);
-      /* Proceed iff GCC's REAL_VALUE_TYPE can hold the MPFR values,
-	 check for overflow/underflow.  If the REAL_VALUE_TYPE is zero
-	 but the mpft_t is not, then we underflowed in the
-	 conversion.  */
-      if (force_convert
-	  || (real_isfinite (&re) && real_isfinite (&im)
-	      && (re.cl == rvc_zero) == (mpfr_zero_p (mpc_realref (m)) != 0)
-	      && (im.cl == rvc_zero) == (mpfr_zero_p (mpc_imagref (m)) != 0)))
-        {
-	  REAL_VALUE_TYPE re_mode, im_mode;
-
-	  real_convert (&re_mode, TYPE_MODE (TREE_TYPE (type)), &re);
-	  real_convert (&im_mode, TYPE_MODE (TREE_TYPE (type)), &im);
-	  /* Proceed iff the specified mode can hold the value.  */
-	  if (force_convert
-	      || (real_identical (&re_mode, &re)
-		  && real_identical (&im_mode, &im)))
-	    return build_complex (type, build_real (TREE_TYPE (type), re_mode),
-				  build_real (TREE_TYPE (type), im_mode));
-	}
-    }
-  return NULL_TREE;
-}
-
-/* If argument ARG is a REAL_CST, call the one-argument mpfr function
-   FUNC on it and return the resulting value as a tree with type TYPE.
-   If MIN and/or MAX are not NULL, then the supplied ARG must be
-   within those bounds.  If INCLUSIVE is true, then MIN/MAX are
-   acceptable values, otherwise they are not.  The mpfr precision is
-   set to the precision of TYPE.  We assume that function FUNC returns
-   zero if the result could be calculated exactly within the requested
-   precision.  */
-
-static tree
-do_mpfr_arg1 (tree arg, tree type, int (*func)(mpfr_ptr, mpfr_srcptr, mp_rnd_t),
-	      const REAL_VALUE_TYPE *min, const REAL_VALUE_TYPE *max,
-	      bool inclusive)
-{
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (REAL_MODE_FORMAT (TYPE_MODE (type))->b == 2
-      && TREE_CODE (arg) == REAL_CST && !TREE_OVERFLOW (arg))
-    {
-      const REAL_VALUE_TYPE *const ra = &TREE_REAL_CST (arg);
-
-      if (real_isfinite (ra)
-	  && (!min || real_compare (inclusive ? GE_EXPR: GT_EXPR , ra, min))
-	  && (!max || real_compare (inclusive ? LE_EXPR: LT_EXPR , ra, max)))
-        {
-	  const struct real_format *fmt = REAL_MODE_FORMAT (TYPE_MODE (type));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero? GMP_RNDZ : GMP_RNDN;
-	  int inexact;
-	  mpfr_t m;
-
-	  mpfr_init2 (m, prec);
-	  mpfr_from_real (m, ra, GMP_RNDN);
-	  mpfr_clear_flags ();
-	  inexact = func (m, m, rnd);
-	  result = do_mpfr_ckconv (m, type, inexact);
-	  mpfr_clear (m);
-	}
-    }
-
-  return result;
-}
-
-/* If argument ARG is a REAL_CST, call the two-argument mpfr function
-   FUNC on it and return the resulting value as a tree with type TYPE.
-   The mpfr precision is set to the precision of TYPE.  We assume that
-   function FUNC returns zero if the result could be calculated
-   exactly within the requested precision.  */
-
-static tree
-do_mpfr_arg2 (tree arg1, tree arg2, tree type,
-	      int (*func)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-{
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg1);
-  STRIP_NOPS (arg2);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (REAL_MODE_FORMAT (TYPE_MODE (type))->b == 2
-      && TREE_CODE (arg1) == REAL_CST && !TREE_OVERFLOW (arg1)
-      && TREE_CODE (arg2) == REAL_CST && !TREE_OVERFLOW (arg2))
-    {
-      const REAL_VALUE_TYPE *const ra1 = &TREE_REAL_CST (arg1);
-      const REAL_VALUE_TYPE *const ra2 = &TREE_REAL_CST (arg2);
-
-      if (real_isfinite (ra1) && real_isfinite (ra2))
-        {
-	  const struct real_format *fmt = REAL_MODE_FORMAT (TYPE_MODE (type));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero? GMP_RNDZ : GMP_RNDN;
-	  int inexact;
-	  mpfr_t m1, m2;
-
-	  mpfr_inits2 (prec, m1, m2, NULL);
-	  mpfr_from_real (m1, ra1, GMP_RNDN);
-	  mpfr_from_real (m2, ra2, GMP_RNDN);
-	  mpfr_clear_flags ();
-	  inexact = func (m1, m1, m2, rnd);
-	  result = do_mpfr_ckconv (m1, type, inexact);
-	  mpfr_clears (m1, m2, NULL);
-	}
-    }
-
-  return result;
-}
-
-/* If argument ARG is a REAL_CST, call the three-argument mpfr function
-   FUNC on it and return the resulting value as a tree with type TYPE.
-   The mpfr precision is set to the precision of TYPE.  We assume that
-   function FUNC returns zero if the result could be calculated
-   exactly within the requested precision.  */
-
-static tree
-do_mpfr_arg3 (tree arg1, tree arg2, tree arg3, tree type,
-	      int (*func)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-{
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg1);
-  STRIP_NOPS (arg2);
-  STRIP_NOPS (arg3);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (REAL_MODE_FORMAT (TYPE_MODE (type))->b == 2
-      && TREE_CODE (arg1) == REAL_CST && !TREE_OVERFLOW (arg1)
-      && TREE_CODE (arg2) == REAL_CST && !TREE_OVERFLOW (arg2)
-      && TREE_CODE (arg3) == REAL_CST && !TREE_OVERFLOW (arg3))
-    {
-      const REAL_VALUE_TYPE *const ra1 = &TREE_REAL_CST (arg1);
-      const REAL_VALUE_TYPE *const ra2 = &TREE_REAL_CST (arg2);
-      const REAL_VALUE_TYPE *const ra3 = &TREE_REAL_CST (arg3);
-
-      if (real_isfinite (ra1) && real_isfinite (ra2) && real_isfinite (ra3))
-        {
-	  const struct real_format *fmt = REAL_MODE_FORMAT (TYPE_MODE (type));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero? GMP_RNDZ : GMP_RNDN;
-	  int inexact;
-	  mpfr_t m1, m2, m3;
-
-	  mpfr_inits2 (prec, m1, m2, m3, NULL);
-	  mpfr_from_real (m1, ra1, GMP_RNDN);
-	  mpfr_from_real (m2, ra2, GMP_RNDN);
-	  mpfr_from_real (m3, ra3, GMP_RNDN);
-	  mpfr_clear_flags ();
-	  inexact = func (m1, m1, m2, m3, rnd);
-	  result = do_mpfr_ckconv (m1, type, inexact);
-	  mpfr_clears (m1, m2, m3, NULL);
-	}
-    }
-
-  return result;
-}
-
-/* If argument ARG is a REAL_CST, call mpfr_sin_cos() on it and set
-   the pointers *(ARG_SINP) and *(ARG_COSP) to the resulting values.
-   If ARG_SINP and ARG_COSP are NULL then the result is returned
-   as a complex value.
-   The type is taken from the type of ARG and is used for setting the
-   precision of the calculation and results.  */
-
-static tree
-do_mpfr_sincos (tree arg, tree arg_sinp, tree arg_cosp)
-{
-  tree const type = TREE_TYPE (arg);
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (REAL_MODE_FORMAT (TYPE_MODE (type))->b == 2
-      && TREE_CODE (arg) == REAL_CST
-      && !TREE_OVERFLOW (arg))
-    {
-      const REAL_VALUE_TYPE *const ra = &TREE_REAL_CST (arg);
-
-      if (real_isfinite (ra))
-        {
-	  const struct real_format *fmt = REAL_MODE_FORMAT (TYPE_MODE (type));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero? GMP_RNDZ : GMP_RNDN;
-	  tree result_s, result_c;
-	  int inexact;
-	  mpfr_t m, ms, mc;
-
-	  mpfr_inits2 (prec, m, ms, mc, NULL);
-	  mpfr_from_real (m, ra, GMP_RNDN);
-	  mpfr_clear_flags ();
-	  inexact = mpfr_sin_cos (ms, mc, m, rnd);
-	  result_s = do_mpfr_ckconv (ms, type, inexact);
-	  result_c = do_mpfr_ckconv (mc, type, inexact);
-	  mpfr_clears (m, ms, mc, NULL);
-	  if (result_s && result_c)
-	    {
-	      /* If we are to return in a complex value do so.  */
-	      if (!arg_sinp && !arg_cosp)
-		return build_complex (build_complex_type (type),
-				      result_c, result_s);
-
-	      /* Dereference the sin/cos pointer arguments.  */
-	      arg_sinp = build_fold_indirect_ref (arg_sinp);
-	      arg_cosp = build_fold_indirect_ref (arg_cosp);
-	      /* Proceed if valid pointer type were passed in.  */
-	      if (TYPE_MAIN_VARIANT (TREE_TYPE (arg_sinp)) == TYPE_MAIN_VARIANT (type)
-		  && TYPE_MAIN_VARIANT (TREE_TYPE (arg_cosp)) == TYPE_MAIN_VARIANT (type))
-	        {
-		  /* Set the values. */
-		  result_s = fold_build2 (MODIFY_EXPR, type, arg_sinp,
-		      			  result_s);
-		  TREE_SIDE_EFFECTS (result_s) = 1;
-		  result_c = fold_build2 (MODIFY_EXPR, type, arg_cosp,
-		      			  result_c);
-		  TREE_SIDE_EFFECTS (result_c) = 1;
-		  /* Combine the assignments into a compound expr.  */
-		  result = non_lvalue (fold_build2 (COMPOUND_EXPR, type,
-						    result_s, result_c));
-		}
-	    }
-	}
-    }
-  return result;
-}
-
-/* If argument ARG1 is an INTEGER_CST and ARG2 is a REAL_CST, call the
-   two-argument mpfr order N Bessel function FUNC on them and return
-   the resulting value as a tree with type TYPE.  The mpfr precision
-   is set to the precision of TYPE.  We assume that function FUNC
-   returns zero if the result could be calculated exactly within the
-   requested precision.  */
-static tree
-do_mpfr_bessel_n (tree arg1, tree arg2, tree type,
-		  int (*func)(mpfr_ptr, long, mpfr_srcptr, mp_rnd_t),
-		  const REAL_VALUE_TYPE *min, bool inclusive)
-{
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg1);
-  STRIP_NOPS (arg2);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (REAL_MODE_FORMAT (TYPE_MODE (type))->b == 2
-      && host_integerp (arg1, 0)
-      && TREE_CODE (arg2) == REAL_CST && !TREE_OVERFLOW (arg2))
-    {
-      const HOST_WIDE_INT n = tree_low_cst(arg1, 0);
-      const REAL_VALUE_TYPE *const ra = &TREE_REAL_CST (arg2);
-
-      if (n == (long)n
-	  && real_isfinite (ra)
-	  && (!min || real_compare (inclusive ? GE_EXPR: GT_EXPR , ra, min)))
-        {
-	  const struct real_format *fmt = REAL_MODE_FORMAT (TYPE_MODE (type));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero? GMP_RNDZ : GMP_RNDN;
-	  int inexact;
-	  mpfr_t m;
-
-	  mpfr_init2 (m, prec);
-	  mpfr_from_real (m, ra, GMP_RNDN);
-	  mpfr_clear_flags ();
-	  inexact = func (m, n, m, rnd);
-	  result = do_mpfr_ckconv (m, type, inexact);
-	  mpfr_clear (m);
-	}
-    }
-
-  return result;
-}
-
-/* If arguments ARG0 and ARG1 are REAL_CSTs, call mpfr_remquo() to set
-   the pointer *(ARG_QUO) and return the result.  The type is taken
-   from the type of ARG0 and is used for setting the precision of the
-   calculation and results.  */
-
-static tree
-do_mpfr_remquo (tree arg0, tree arg1, tree arg_quo)
-{
-  tree const type = TREE_TYPE (arg0);
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg0);
-  STRIP_NOPS (arg1);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (REAL_MODE_FORMAT (TYPE_MODE (type))->b == 2
-      && TREE_CODE (arg0) == REAL_CST && !TREE_OVERFLOW (arg0)
-      && TREE_CODE (arg1) == REAL_CST && !TREE_OVERFLOW (arg1))
-    {
-      const REAL_VALUE_TYPE *const ra0 = TREE_REAL_CST_PTR (arg0);
-      const REAL_VALUE_TYPE *const ra1 = TREE_REAL_CST_PTR (arg1);
-
-      if (real_isfinite (ra0) && real_isfinite (ra1))
-        {
-	  const struct real_format *fmt = REAL_MODE_FORMAT (TYPE_MODE (type));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero? GMP_RNDZ : GMP_RNDN;
-	  tree result_rem;
-	  long integer_quo;
-	  mpfr_t m0, m1;
-
-	  mpfr_inits2 (prec, m0, m1, NULL);
-	  mpfr_from_real (m0, ra0, GMP_RNDN);
-	  mpfr_from_real (m1, ra1, GMP_RNDN);
-	  mpfr_clear_flags ();
-	  mpfr_remquo (m0, &integer_quo, m0, m1, rnd);
-	  /* Remquo is independent of the rounding mode, so pass
-	     inexact=0 to do_mpfr_ckconv().  */
-	  result_rem = do_mpfr_ckconv (m0, type, /*inexact=*/ 0);
-	  mpfr_clears (m0, m1, NULL);
-	  if (result_rem)
-	    {
-	      /* MPFR calculates quo in the host's long so it may
-		 return more bits in quo than the target int can hold
-		 if sizeof(host long) > sizeof(target int).  This can
-		 happen even for native compilers in LP64 mode.  In
-		 these cases, modulo the quo value with the largest
-		 number that the target int can hold while leaving one
-		 bit for the sign.  */
-	      if (sizeof (integer_quo) * CHAR_BIT > INT_TYPE_SIZE)
-		integer_quo %= (long)(1UL << (INT_TYPE_SIZE - 1));
-
-	      /* Dereference the quo pointer argument.  */
-	      arg_quo = build_fold_indirect_ref (arg_quo);
-	      /* Proceed iff a valid pointer type was passed in.  */
-	      if (TYPE_MAIN_VARIANT (TREE_TYPE (arg_quo)) == integer_type_node)
-	        {
-		  /* Set the value. */
-		  tree result_quo = fold_build2 (MODIFY_EXPR,
-						 TREE_TYPE (arg_quo), arg_quo,
-						 build_int_cst (NULL, integer_quo));
-		  TREE_SIDE_EFFECTS (result_quo) = 1;
-		  /* Combine the quo assignment with the rem.  */
-		  result = non_lvalue (fold_build2 (COMPOUND_EXPR, type,
-						    result_quo, result_rem));
-		}
-	    }
-	}
-    }
-  return result;
-}
-
-/* If ARG is a REAL_CST, call mpfr_lgamma() on it and return the
-   resulting value as a tree with type TYPE.  The mpfr precision is
-   set to the precision of TYPE.  We assume that this mpfr function
-   returns zero if the result could be calculated exactly within the
-   requested precision.  In addition, the integer pointer represented
-   by ARG_SG will be dereferenced and set to the appropriate signgam
-   (-1,1) value.  */
-
-static tree
-do_mpfr_lgamma_r (tree arg, tree arg_sg, tree type)
-{
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  Also
-     verify ARG is a constant and that ARG_SG is an int pointer.  */
-  if (REAL_MODE_FORMAT (TYPE_MODE (type))->b == 2
-      && TREE_CODE (arg) == REAL_CST && !TREE_OVERFLOW (arg)
-      && TREE_CODE (TREE_TYPE (arg_sg)) == POINTER_TYPE
-      && TYPE_MAIN_VARIANT (TREE_TYPE (TREE_TYPE (arg_sg))) == integer_type_node)
-    {
-      const REAL_VALUE_TYPE *const ra = TREE_REAL_CST_PTR (arg);
-
-      /* In addition to NaN and Inf, the argument cannot be zero or a
-	 negative integer.  */
-      if (real_isfinite (ra)
-	  && ra->cl != rvc_zero
-	  && !(real_isneg(ra) && real_isinteger(ra, TYPE_MODE (type))))
-        {
-	  const struct real_format *fmt = REAL_MODE_FORMAT (TYPE_MODE (type));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero? GMP_RNDZ : GMP_RNDN;
-	  int inexact, sg;
-	  mpfr_t m;
-	  tree result_lg;
-
-	  mpfr_init2 (m, prec);
-	  mpfr_from_real (m, ra, GMP_RNDN);
-	  mpfr_clear_flags ();
-	  inexact = mpfr_lgamma (m, &sg, m, rnd);
-	  result_lg = do_mpfr_ckconv (m, type, inexact);
-	  mpfr_clear (m);
-	  if (result_lg)
-	    {
-	      tree result_sg;
-
-	      /* Dereference the arg_sg pointer argument.  */
-	      arg_sg = build_fold_indirect_ref (arg_sg);
-	      /* Assign the signgam value into *arg_sg. */
-	      result_sg = fold_build2 (MODIFY_EXPR,
-				       TREE_TYPE (arg_sg), arg_sg,
-				       build_int_cst (NULL, sg));
-	      TREE_SIDE_EFFECTS (result_sg) = 1;
-	      /* Combine the signgam assignment with the lgamma result.  */
-	      result = non_lvalue (fold_build2 (COMPOUND_EXPR, type,
-						result_sg, result_lg));
-	    }
-	}
-    }
-
-  return result;
-}
-
-/* If argument ARG is a COMPLEX_CST, call the one-argument mpc
-   function FUNC on it and return the resulting value as a tree with
-   type TYPE.  The mpfr precision is set to the precision of TYPE.  We
-   assume that function FUNC returns zero if the result could be
-   calculated exactly within the requested precision.  */
-
-static tree
-do_mpc_arg1 (tree arg, tree type, int (*func)(mpc_ptr, mpc_srcptr, mpc_rnd_t))
-{
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (TREE_CODE (arg) == COMPLEX_CST && !TREE_OVERFLOW (arg)
-      && TREE_CODE (TREE_TYPE (TREE_TYPE (arg))) == REAL_TYPE
-      && REAL_MODE_FORMAT (TYPE_MODE (TREE_TYPE (TREE_TYPE (arg))))->b == 2)
-    {
-      const REAL_VALUE_TYPE *const re = TREE_REAL_CST_PTR (TREE_REALPART (arg));
-      const REAL_VALUE_TYPE *const im = TREE_REAL_CST_PTR (TREE_IMAGPART (arg));
-
-      if (real_isfinite (re) && real_isfinite (im))
-        {
-	  const struct real_format *const fmt =
-	    REAL_MODE_FORMAT (TYPE_MODE (TREE_TYPE (type)));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero ? GMP_RNDZ : GMP_RNDN;
-	  const mpc_rnd_t crnd = fmt->round_towards_zero ? MPC_RNDZZ : MPC_RNDNN;
-	  int inexact;
-	  mpc_t m;
-
-	  mpc_init2 (m, prec);
-	  mpfr_from_real (mpc_realref(m), re, rnd);
-	  mpfr_from_real (mpc_imagref(m), im, rnd);
-	  mpfr_clear_flags ();
-	  inexact = func (m, m, crnd);
-	  result = do_mpc_ckconv (m, type, inexact, /*force_convert=*/ 0);
-	  mpc_clear (m);
-	}
-    }
-
-  return result;
-}
-
-/* If arguments ARG0 and ARG1 are a COMPLEX_CST, call the two-argument
-   mpc function FUNC on it and return the resulting value as a tree
-   with type TYPE.  The mpfr precision is set to the precision of
-   TYPE.  We assume that function FUNC returns zero if the result
-   could be calculated exactly within the requested precision.  If
-   DO_NONFINITE is true, then fold expressions containing Inf or NaN
-   in the arguments and/or results.  */
-
-tree
-do_mpc_arg2 (tree arg0, tree arg1, tree type, int do_nonfinite,
-	     int (*func)(mpc_ptr, mpc_srcptr, mpc_srcptr, mpc_rnd_t))
-{
-  tree result = NULL_TREE;
-
-  STRIP_NOPS (arg0);
-  STRIP_NOPS (arg1);
-
-  /* To proceed, MPFR must exactly represent the target floating point
-     format, which only happens when the target base equals two.  */
-  if (TREE_CODE (arg0) == COMPLEX_CST && !TREE_OVERFLOW (arg0)
-      && TREE_CODE (TREE_TYPE (TREE_TYPE (arg0))) == REAL_TYPE
-      && TREE_CODE (arg1) == COMPLEX_CST && !TREE_OVERFLOW (arg1)
-      && TREE_CODE (TREE_TYPE (TREE_TYPE (arg1))) == REAL_TYPE
-      && REAL_MODE_FORMAT (TYPE_MODE (TREE_TYPE (TREE_TYPE (arg0))))->b == 2)
-    {
-      const REAL_VALUE_TYPE *const re0 = TREE_REAL_CST_PTR (TREE_REALPART (arg0));
-      const REAL_VALUE_TYPE *const im0 = TREE_REAL_CST_PTR (TREE_IMAGPART (arg0));
-      const REAL_VALUE_TYPE *const re1 = TREE_REAL_CST_PTR (TREE_REALPART (arg1));
-      const REAL_VALUE_TYPE *const im1 = TREE_REAL_CST_PTR (TREE_IMAGPART (arg1));
-
-      if (do_nonfinite
-	  || (real_isfinite (re0) && real_isfinite (im0)
-	      && real_isfinite (re1) && real_isfinite (im1)))
-        {
-	  const struct real_format *const fmt =
-	    REAL_MODE_FORMAT (TYPE_MODE (TREE_TYPE (type)));
-	  const int prec = fmt->p;
-	  const mp_rnd_t rnd = fmt->round_towards_zero ? GMP_RNDZ : GMP_RNDN;
-	  const mpc_rnd_t crnd = fmt->round_towards_zero ? MPC_RNDZZ : MPC_RNDNN;
-	  int inexact;
-	  mpc_t m0, m1;
-
-	  mpc_init2 (m0, prec);
-	  mpc_init2 (m1, prec);
-	  mpfr_from_real (mpc_realref(m0), re0, rnd);
-	  mpfr_from_real (mpc_imagref(m0), im0, rnd);
-	  mpfr_from_real (mpc_realref(m1), re1, rnd);
-	  mpfr_from_real (mpc_imagref(m1), im1, rnd);
-	  mpfr_clear_flags ();
-	  inexact = func (m0, m0, m1, crnd);
-	  result = do_mpc_ckconv (m0, type, inexact, do_nonfinite);
-	  mpc_clear (m0);
-	  mpc_clear (m1);
-	}
-    }
-
-  return result;
 }
 
 /* FIXME tuples.
