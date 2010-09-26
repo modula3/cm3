@@ -1,3 +1,5 @@
+/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* real.c - software floating point emulation.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2002, 2003, 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
@@ -4719,6 +4721,8 @@ real_copysign (REAL_VALUE_TYPE *r, const REAL_VALUE_TYPE *x)
   r->sign = x->sign;
 }
 
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Convert from REAL_VALUE_TYPE to MPFR.  The caller is responsible
    for initializing and clearing the MPFR parameter.  */
 
@@ -4794,6 +4798,8 @@ real_from_mpfr (REAL_VALUE_TYPE *r, mpfr_srcptr m, tree type, mp_rnd_t rndmode)
   
   real_from_string (r, buf);
 }
+
+#endif /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 
 /* Check whether the real constant value given is an integer.  */
 

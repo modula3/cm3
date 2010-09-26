@@ -1,3 +1,5 @@
+/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Definitions of floating-point access for GNU compiler.
    Copyright (C) 1989, 1991, 1994, 1996, 1997, 1998, 1999,
    2000, 2002, 2003, 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
@@ -23,7 +25,9 @@
 
 #ifndef GENERATOR_FILE
 #include <gmp.h>
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 #include <mpfr.h>
+#endif
 #endif
 #include "machmode.h"
 
@@ -442,6 +446,7 @@ extern void real_round (REAL_VALUE_TYPE *, enum machine_mode,
 /* Set the sign of R to the sign of X.  */
 extern void real_copysign (REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *);
 
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 #ifndef GENERATOR_FILE
 /* Convert between MPFR and REAL_VALUE_TYPE.  The caller is
    responsible for initializing and clearing the MPFR parameter.  */
@@ -449,6 +454,7 @@ extern void real_copysign (REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *);
 extern void real_from_mpfr (REAL_VALUE_TYPE *, mpfr_srcptr, tree, mp_rnd_t);
 extern void mpfr_from_real (mpfr_ptr, const REAL_VALUE_TYPE *, mp_rnd_t);
 #endif
+#endif /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 
 /* Check whether the real constant value given is an integer.  */
 extern bool real_isinteger (const REAL_VALUE_TYPE *c, enum machine_mode mode);

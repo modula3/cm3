@@ -1,3 +1,5 @@
+/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Top level of GCC compilers (cc1, cc1plus, etc.)
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
@@ -1182,8 +1184,12 @@ print_version (FILE *file, const char *indent)
     N_("%s%s%s %sversion %s (%s) compiled by CC, ")
 #endif
     ;
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   static const char fmt2[] =
     N_("GMP version %s, MPFR version %s.\n");
+#else
+  static const char fmt2[] = "GMP version %s\n";
+#endif
   static const char fmt3[] =
     N_("%s%swarning: %s header version %s differs from library version %s.\n");
   static const char fmt4[] =
@@ -1213,20 +1219,26 @@ print_version (FILE *file, const char *indent)
   GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR) "." \
   GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_PATCHLEVEL)
 #endif
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   fprintf (file,
 	   file == stderr ? _(fmt2) : fmt2,
 	   GCC_GMP_STRINGIFY_VERSION, MPFR_VERSION_STRING);
+#else
+  fprintf (file, fmt2, GCC_GMP_STRINGIFY_VERSION);
+#endif
   if (strcmp (GCC_GMP_STRINGIFY_VERSION, gmp_version))
     fprintf (file,
 	     file == stderr ? _(fmt3) : fmt3,
 	     indent, *indent != 0 ? " " : "",
 	     "GMP", GCC_GMP_STRINGIFY_VERSION, gmp_version);
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
   if (strcmp (MPFR_VERSION_STRING, mpfr_get_version ()))
     fprintf (file,
 	     file == stderr ? _(fmt3) : fmt3,
 	     indent, *indent != 0 ? " " : "",
 	     "MPFR", MPFR_VERSION_STRING, mpfr_get_version ());
-  fprintf (file,
+#endif
+    fprintf (file,
 	   file == stderr ? _(fmt4) : fmt4,
 	   indent, *indent != 0 ? " " : "",
 	   PARAM_VALUE (GGC_MIN_EXPAND), PARAM_VALUE (GGC_MIN_HEAPSIZE));
