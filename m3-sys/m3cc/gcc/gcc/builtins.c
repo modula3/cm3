@@ -1,3 +1,5 @@
+/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Expand builtin functions.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
@@ -223,6 +225,15 @@ static unsigned HOST_WIDE_INT target_s;
 static char target_percent_c[3];
 static char target_percent_s[3];
 static char target_percent_s_newline[4];
+#if 1 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+#define do_mpfr_arg1(a, b, c, d, e, f) NULL_TREE
+#define do_mpfr_arg2(a, b, c, d) NULL_TREE
+#define do_mpfr_arg3(a, b, c, d, e) NULL_TREE
+#define do_mpfr_sincos(a, b, c) NULL_TREE
+#define do_mpfr_bessel_n(a, b, c, d, e, f) NULL_TREE
+#define do_mpfr_remquo(a, b, c) NULL_TREE
+#define do_mpfr_lgamma_r(a, b, c) NULL_TREE
+#else
 static tree do_mpfr_arg1 (tree, tree, int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t),
 			  const REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *, bool);
 static tree do_mpfr_arg2 (tree, tree, tree,
@@ -237,6 +248,7 @@ static tree do_mpfr_bessel_n (tree, tree, tree,
 static tree do_mpfr_remquo (tree, tree, tree);
 static tree do_mpfr_lgamma_r (tree, tree, tree);
 #endif
+#endif /* Modula-3 */
 
 /* Return true if NODE should be considered for inline expansion regardless
    of the optimization level.  This means whenever a function is invoked with
@@ -8187,6 +8199,9 @@ real_dconstp (tree expr, const REAL_VALUE_TYPE *value)
    functions.  Return NULL_TREE if no simplification can me made.
    FUNC is the corresponding MPFR logarithm function.  */
 
+#if 1 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */ 
+#define fold_builtin_logarithm(a, b, c) NULL_TREE
+#else
 static tree
 fold_builtin_logarithm (tree fndecl, tree arg,
 			int (*func)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
@@ -8282,6 +8297,8 @@ fold_builtin_logarithm (tree fndecl, tree arg,
 
   return NULL_TREE;
 }
+
+#endif
 
 /* Fold a builtin function call to hypot, hypotf, or hypotl.  Return
    NULL_TREE if no simplification can be made.  */
@@ -8528,6 +8545,10 @@ fold_builtin_powi (tree fndecl ATTRIBUTE_UNUSED,
    functions.  Return NULL_TREE if no simplification can be made.
    FUNC is the corresponding MPFR exponent function.  */
 
+
+#if 1 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+#define fold_builtin_exponent(a, b, c) NULL_TREE
+#else
 static tree
 fold_builtin_exponent (tree fndecl, tree arg,
 		       int (*func)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
@@ -8564,6 +8585,7 @@ fold_builtin_exponent (tree fndecl, tree arg,
 
   return NULL_TREE;
 }
+#endif /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 
 /* Return true if VAR is a VAR_DECL or a component thereof.  */
 
@@ -9971,7 +9993,7 @@ fold_builtin_1 (tree fndecl, tree arg0, bool ignore)
 			     &dconstm1, NULL, false);
     break;
 
-#if MPFR_VERSION >= MPFR_VERSION_NUM(2,3,0)
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */ /* MPFR_VERSION >= MPFR_VERSION_NUM(2,3,0) */
     CASE_FLT_FN (BUILT_IN_J0):
       if (validate_arg (arg0, REAL_TYPE))
 	return do_mpfr_arg1 (arg0, type, mpfr_j0,
@@ -10117,6 +10139,7 @@ fold_builtin_2 (tree fndecl, tree arg0, tree arg1, bool ignore)
 
   switch (fcode)
     {
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 #if MPFR_VERSION >= MPFR_VERSION_NUM(2,3,0)
     CASE_FLT_FN (BUILT_IN_JN):
       if (validate_arg (arg0, INTEGER_TYPE)
@@ -10145,6 +10168,7 @@ fold_builtin_2 (tree fndecl, tree arg0, tree arg1, bool ignore)
 	return do_mpfr_lgamma_r (arg0, arg1, type);
     break;
 #endif
+#endif /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 
     CASE_FLT_FN (BUILT_IN_ATAN2):
       if (validate_arg (arg0, REAL_TYPE)
@@ -10301,6 +10325,7 @@ fold_builtin_3 (tree fndecl, tree arg0, tree arg1, tree arg2, bool ignore)
 	return do_mpfr_arg3 (arg0, arg1, arg2, type, mpfr_fma);
     break;
 
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 #if MPFR_VERSION >= MPFR_VERSION_NUM(2,3,0)
     CASE_FLT_FN (BUILT_IN_REMQUO):
       if (validate_arg (arg0, REAL_TYPE)
@@ -10309,6 +10334,7 @@ fold_builtin_3 (tree fndecl, tree arg0, tree arg1, tree arg2, bool ignore)
 	return do_mpfr_remquo (arg0, arg1, arg2);
     break;
 #endif
+#endif /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 
     case BUILT_IN_MEMSET:
       return fold_builtin_memset (arg0, arg1, arg2, type, ignore);
@@ -12626,6 +12652,8 @@ init_target_chars (void)
   return true;
 }
 
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Helper function for do_mpfr_arg*().  Ensure M is a normal number
    and no overflow/underflow occurred.  INEXACT is true if M was not
    exactly calculated.  TYPE is the tree type for the result.  This
@@ -12875,6 +12903,7 @@ do_mpfr_sincos (tree arg, tree arg_sinp, tree arg_cosp)
 }
 
 #if MPFR_VERSION >= MPFR_VERSION_NUM(2,3,0)
+
 /* If argument ARG1 is an INTEGER_CST and ARG2 is a REAL_CST, call the
    two-argument mpfr order N Bessel function FUNC on them and return
    the resulting value as a tree with type TYPE.  The mpfr precision
@@ -13060,3 +13089,4 @@ do_mpfr_lgamma_r (tree arg, tree arg_sg, tree type)
   return result;
 }
 #endif
+#endif /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
