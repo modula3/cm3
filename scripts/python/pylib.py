@@ -1293,9 +1293,9 @@ def Boot():
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
-    P = [ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
+    P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
-          "m3front", "cm3" ]
+          "m3front", "cm3" ])
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
@@ -1356,12 +1356,14 @@ def Boot():
             ext_s = a.endswith(".s")
             ext_ms = a.endswith(".ms")
             ext_is = a.endswith(".is")
-            if not (ext_c or ext_h or ext_s or ext_ms or ext_is):
+            ext_io = a.endswith(".io")
+            ext_mo = a.endswith(".mo")
+            if not (ext_c or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             fullpath = os.path.join(Root, dir, Config, a)
-            if ext_h or ext_c or not vms or AssembleOnTarget:
+            if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
                 CopyFile(fullpath, BootDir)
-            if ext_h:
+            if ext_h or ext_io or ext_mo:
                 continue
             Object = GetObjectName(a)
             if Objects.get(Object):
