@@ -8,5 +8,6 @@ The contents of the file do not matter.
    - remove -disable-dependency-tracking, for more correct
      incrementality (i.e. header changes)
    - upgrade from 4.3.5 to 4.5.1
+   - removal of mpc, mpfr, and trimming of gmp
 
-D4-1700-451B-8C15-E91870F151C7
+4-1700-451B-8C15-E91870F151C7
