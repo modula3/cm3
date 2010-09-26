@@ -155,7 +155,7 @@ build_tools="build-texinfo build-byacc build-flex build-bison build-m4 build-fix
 
 # these libraries are used by various programs built for the host environment
 #
-host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui zlib libcpp libdecnumber gmp mpfr"
+host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui zlib libcpp libdecnumber gmp"
 
 # these tools are built for the host environment
 # Note, the powerpc-eabi build depends on sim occurring before gdb in order to
@@ -1135,42 +1135,9 @@ ACX_PROG_GNAT
 ACX_PROG_CMP_IGNORE_INITIAL
 
 # Check for GMP and MPFR
-gmplibs="-lmpfr -lgmp"
+gmplibs="-lgmp"
 gmpinc=
 have_gmp=no
-
-# Specify a location for mpfr
-# check for this first so it ends up on the link line before gmp.
-AC_ARG_WITH(mpfr-dir, [  --with-mpfr-dir=PATH    this option has been REMOVED],
-  AC_MSG_ERROR([The --with-mpfr-dir=PATH option has been removed.
-Use --with-mpfr=PATH or --with-mpfr-include=PATH plus --with-mpfr-lib=PATH]))
-
-AC_ARG_WITH(mpfr, [  --with-mpfr=PATH        specify prefix directory for installed MPFR package.
-                          Equivalent to --with-mpfr-include=PATH/include
-                          plus --with-mpfr-lib=PATH/lib])
-AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=PATH
-                          specify directory for installed MPFR include files])
-AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=PATH    specify directory for the installed MPFR library])
-
-if test "x$with_mpfr" != x; then
-  gmplibs="-L$with_mpfr/lib $gmplibs"
-  gmpinc="-I$with_mpfr/include"
-fi
-if test "x$with_mpfr_include" != x; then
-  gmpinc="-I$with_mpfr_include"
-fi
-if test "x$with_mpfr_lib" != x; then
-  gmplibs="-L$with_mpfr_lib $gmplibs"
-fi
-if test "x$with_mpfr$with_mpfr_include$with_mpfr_lib" = x && test -d ${srcdir}/mpfr; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/mpfr/.libs -L$$r/$(HOST_SUBDIR)/mpfr/_libs '"$gmplibs"
-  gmpinc='-I$$r/$(HOST_SUBDIR)/mpfr -I$$s/mpfr '"$gmpinc"
-  # Do not test the mpfr version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
 
 # Specify a location for gmp
 AC_ARG_WITH(gmp-dir, [  --with-gmp-dir=PATH     this option has been REMOVED],
@@ -1197,7 +1164,6 @@ fi
 if test "x$with_gmp$with_gmp_include$with_gmp_lib" = x && test -d ${srcdir}/gmp; then
   gmplibs='-L$$r/$(HOST_SUBDIR)/gmp/.libs -L$$r/$(HOST_SUBDIR)/gmp/_libs '"$gmplibs"
   gmpinc='-I$$r/$(HOST_SUBDIR)/gmp -I$$s/gmp '"$gmpinc"
-  extra_mpfr_configure_flags='--with-gmp-build=$$r/$(HOST_SUBDIR)/gmp'
   # Do not test the gmp version.  Assume that it is sufficient, since
   # it is in the source tree, and the library has not been built yet
   # but it would be included on the link line in the version check below
@@ -1217,52 +1183,21 @@ if test -d ${srcdir}/gcc && test "x$have_gmp" = xno; then
   #endif
   ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no]); have_gmp=no])
 
-  if test x"$have_gmp" = xyes; then
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $gmplibs"
-    dnl MPFR 2.2.1 is acceptable, but MPFR 2.3.0 is better.
-    AC_MSG_CHECKING([for correct version of mpfr.h])
-    AC_TRY_LINK([#include <gmp.h>
-    #include <mpfr.h>],[
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,2,1)
-    choke me
-    #endif
-    mpfr_t n;
-    mpfr_t x;
-    int t;
-    mpfr_init (n);
-    mpfr_init (x);
-    mpfr_atan2 (n, n, x, GMP_RNDN);
-    mpfr_erfc (n, x, GMP_RNDN);
-    mpfr_subnormalize (x, t, GMP_RNDN);
-    ], [AC_TRY_LINK([#include <gmp.h>
-    #include <mpfr.h>],[
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,3,0)
-    choke me
-    #endif
-    mpfr_t n; mpfr_init(n);
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([buggy but acceptable])])],
-     [AC_MSG_RESULT([no]); have_gmp=no])
-      LIBS="$saved_LIBS"
-  fi
-  CFLAGS="$saved_CFLAGS"
-
   if test x$have_gmp != xyes; then
-    AC_MSG_ERROR([Building GCC requires GMP 4.1+ and MPFR 2.3.0+.
-Try the --with-gmp and/or --with-mpfr options to specify their locations.
-Copies of these libraries' source code can be found at their respective
-hosting sites as well as at ftp://gcc.gnu.org/pub/gcc/infrastructure/.
+    AC_MSG_ERROR([Building GCC requires GMP 4.1+.
+Try the --with-gmp option to specify its locations.
+Copy of this library's source code can be found at its respective
+hosting site as well as at ftp://gcc.gnu.org/pub/gcc/infrastructure/.
 See also http://gcc.gnu.org/install/prerequisites.html for additional info.
-If you obtained GMP and/or MPFR from a vendor distribution package, make
+If you obtained GMP from a vendor distribution package, make
 sure that you have installed both the libraries and the header files.
 They may be located in separate packages.])
   fi
 fi
 
-# Flags needed for both GMP and/or MPFR
+# Flags needed for both GMP
 AC_SUBST(gmplibs)
 AC_SUBST(gmpinc)
-AC_SUBST(extra_mpfr_configure_flags)
 
 # By default, C is the only stage 1 language.
 stage1_languages=,c,
