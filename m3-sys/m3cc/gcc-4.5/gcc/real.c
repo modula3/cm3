@@ -1,3 +1,5 @@
+/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* real.c - software floating point emulation.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002,
    2003, 2004, 2005, 2007, 2008, 2009 Free Software Foundation, Inc.
@@ -2325,6 +2327,8 @@ times_pten (REAL_VALUE_TYPE *r, int exp)
     do_divide (r, r, &pten);
 }
 
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Returns the special REAL_VALUE_TYPE corresponding to 'e'.  */
 
 const REAL_VALUE_TYPE *
@@ -2347,6 +2351,10 @@ dconst_e_ptr (void)
   return &value;
 }
 
+#endif
+
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Returns the special REAL_VALUE_TYPE corresponding to 1/3.  */
 
 const REAL_VALUE_TYPE *
@@ -2362,6 +2370,10 @@ dconst_third_ptr (void)
     }
   return &value;
 }
+
+#endif
+
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 
 /* Returns the special REAL_VALUE_TYPE corresponding to sqrt(2).  */
 
@@ -2382,6 +2394,8 @@ dconst_sqrt2_ptr (void)
     }
   return &value;
 }
+
+#endif
 
 /* Fills R with +Inf.  */
 
@@ -4982,6 +4996,8 @@ real_copysign (REAL_VALUE_TYPE *r, const REAL_VALUE_TYPE *x)
   r->sign = x->sign;
 }
 
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+
 /* Convert from REAL_VALUE_TYPE to MPFR.  The caller is responsible
    for initializing and clearing the MPFR parameter.  */
 
@@ -5011,6 +5027,10 @@ mpfr_from_real (mpfr_ptr m, const REAL_VALUE_TYPE *r, mp_rnd_t rndmode)
   ret = mpfr_set_str (m, buf, 16, rndmode);
   gcc_assert (ret == 0);
 }
+
+#endif
+
+#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
 
 /* Convert from MPFR to REAL_VALUE_TYPE, for a given type TYPE and rounding
    mode RNDMODE.  TYPE is only relevant if M is a NaN.  */
@@ -5057,6 +5077,8 @@ real_from_mpfr (REAL_VALUE_TYPE *r, mpfr_srcptr m, tree type, mp_rnd_t rndmode)
 
   real_from_string (r, buf);
 }
+
+#endif
 
 /* Check whether the real constant value given is an integer.  */
 

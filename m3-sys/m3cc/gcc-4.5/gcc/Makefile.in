@@ -303,7 +303,6 @@ OUTPUT_OPTION = @OUTPUT_OPTION@
 # This is where we get zlib from.  zlibdir is -L../zlib and zlibinc is
 # -I../zlib, unless we were configured with --with-system-zlib, in which
 # case both are empty.
-ZLIB = @zlibdir@ -lz
 ZLIBINC = @zlibinc@
 
 # How to find GMP
@@ -1012,7 +1011,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 LIBS = @LIBS@ $(CPPLIB) $(LIBIBERTY) \
 	$(HOST_LIBS)
 BACKENDLIBS = $(CLOOGLIBS) $(PPLLIBS) $(GMPLIBS) $(PLUGINLIBS) $(HOST_LIBS) \
-	$(ZLIB) $(LIBELFLIBS)
+	 $(LIBELFLIBS)
 # Any system libraries needed just for GNAT.
 SYSLIBS = @GNAT_LIBEXC@
 

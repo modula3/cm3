@@ -582,7 +582,7 @@ TARGET_LIB_PATH_libgomp = $$r/$(TARGET_SUBDIR)/libgomp/.libs:
 
 # This is the list of directories that may be needed in RPATH_ENVVAR
 # so that programs built for the host machine work.
-HOST_LIB_PATH = $(HOST_LIB_PATH_bfd)$(HOST_LIB_PATH_opcodes)$(HOST_LIB_PATH_gmp)$(HOST_LIB_PATH_mpfr)$(HOST_LIB_PATH_mpc)$(HOST_LIB_PATH_ppl)$(HOST_LIB_PATH_cloog)$(HOST_LIB_PATH_libelf)
+HOST_LIB_PATH = $(HOST_LIB_PATH_bfd)$(HOST_LIB_PATH_opcodes)$(HOST_LIB_PATH_gmp)$(HOST_LIB_PATH_ppl)$(HOST_LIB_PATH_cloog)$(HOST_LIB_PATH_libelf)
 
 # Define HOST_LIB_PATH_gcc here, for the sake of TARGET_LIB_PATH, ouch
 @if gcc
@@ -604,16 +604,6 @@ HOST_LIB_PATH_opcodes = \
 HOST_LIB_PATH_gmp = \
   $$r/$(HOST_SUBDIR)/gmp/.libs:$$r/$(HOST_SUBDIR)/prev-gmp/.libs:
 @endif gmp
-
-@if mpfr
-HOST_LIB_PATH_mpfr = \
-  $$r/$(HOST_SUBDIR)/mpfr/.libs:$$r/$(HOST_SUBDIR)/prev-mpfr/.libs:
-@endif mpfr
-
-@if mpc
-HOST_LIB_PATH_mpc = \
-  $$r/$(HOST_SUBDIR)/mpc/.libs:$$r/$(HOST_SUBDIR)/prev-mpc/.libs:
-@endif mpc
 
 @if ppl
 HOST_LIB_PATH_ppl = \
@@ -866,8 +856,6 @@ configure-host:  \
     maybe-configure-gawk \
     maybe-configure-gettext \
     maybe-configure-gmp \
-    maybe-configure-mpfr \
-    maybe-configure-mpc \
     maybe-configure-ppl \
     maybe-configure-cloog \
     maybe-configure-libelf \
@@ -909,7 +897,6 @@ configure-host:  \
     maybe-configure-uudecode \
     maybe-configure-wdiff \
     maybe-configure-zip \
-    maybe-configure-zlib \
     maybe-configure-gdb \
     maybe-configure-expect \
     maybe-configure-guile \
@@ -935,7 +922,6 @@ configure-target:  \
     maybe-configure-target-examples \
     maybe-configure-target-libffi \
     maybe-configure-target-libjava \
-    maybe-configure-target-zlib \
     maybe-configure-target-boehm-gc \
     maybe-configure-target-qthreads \
     maybe-configure-target-rda \
@@ -1017,12 +1003,6 @@ all-host: maybe-all-gettext
 @if gmp-no-bootstrap
 all-host: maybe-all-gmp
 @endif gmp-no-bootstrap
-@if mpfr-no-bootstrap
-all-host: maybe-all-mpfr
-@endif mpfr-no-bootstrap
-@if mpc-no-bootstrap
-all-host: maybe-all-mpc
-@endif mpc-no-bootstrap
 @if ppl-no-bootstrap
 all-host: maybe-all-ppl
 @endif ppl-no-bootstrap
@@ -1082,9 +1062,6 @@ all-host: maybe-all-time
 all-host: maybe-all-uudecode
 all-host: maybe-all-wdiff
 all-host: maybe-all-zip
-@if zlib-no-bootstrap
-all-host: maybe-all-zlib
-@endif zlib-no-bootstrap
 all-host: maybe-all-gdb
 all-host: maybe-all-expect
 all-host: maybe-all-guile
@@ -1117,7 +1094,6 @@ all-target: maybe-all-target-gperf
 all-target: maybe-all-target-examples
 all-target: maybe-all-target-libffi
 all-target: maybe-all-target-libjava
-all-target: maybe-all-target-zlib
 all-target: maybe-all-target-boehm-gc
 all-target: maybe-all-target-qthreads
 all-target: maybe-all-target-rda
@@ -1168,8 +1144,6 @@ info-host: maybe-info-gcc
 info-host: maybe-info-gawk
 info-host: maybe-info-gettext
 info-host: maybe-info-gmp
-info-host: maybe-info-mpfr
-info-host: maybe-info-mpc
 info-host: maybe-info-ppl
 info-host: maybe-info-cloog
 info-host: maybe-info-libelf
@@ -1211,7 +1185,6 @@ info-host: maybe-info-time
 info-host: maybe-info-uudecode
 info-host: maybe-info-wdiff
 info-host: maybe-info-zip
-info-host: maybe-info-zlib
 info-host: maybe-info-gdb
 info-host: maybe-info-expect
 info-host: maybe-info-guile
@@ -1238,7 +1211,6 @@ info-target: maybe-info-target-gperf
 info-target: maybe-info-target-examples
 info-target: maybe-info-target-libffi
 info-target: maybe-info-target-libjava
-info-target: maybe-info-target-zlib
 info-target: maybe-info-target-boehm-gc
 info-target: maybe-info-target-qthreads
 info-target: maybe-info-target-rda
@@ -1282,8 +1254,6 @@ dvi-host: maybe-dvi-gcc
 dvi-host: maybe-dvi-gawk
 dvi-host: maybe-dvi-gettext
 dvi-host: maybe-dvi-gmp
-dvi-host: maybe-dvi-mpfr
-dvi-host: maybe-dvi-mpc
 dvi-host: maybe-dvi-ppl
 dvi-host: maybe-dvi-cloog
 dvi-host: maybe-dvi-libelf
@@ -1325,7 +1295,6 @@ dvi-host: maybe-dvi-time
 dvi-host: maybe-dvi-uudecode
 dvi-host: maybe-dvi-wdiff
 dvi-host: maybe-dvi-zip
-dvi-host: maybe-dvi-zlib
 dvi-host: maybe-dvi-gdb
 dvi-host: maybe-dvi-expect
 dvi-host: maybe-dvi-guile
@@ -1352,7 +1321,6 @@ dvi-target: maybe-dvi-target-gperf
 dvi-target: maybe-dvi-target-examples
 dvi-target: maybe-dvi-target-libffi
 dvi-target: maybe-dvi-target-libjava
-dvi-target: maybe-dvi-target-zlib
 dvi-target: maybe-dvi-target-boehm-gc
 dvi-target: maybe-dvi-target-qthreads
 dvi-target: maybe-dvi-target-rda
@@ -1396,8 +1364,6 @@ pdf-host: maybe-pdf-gcc
 pdf-host: maybe-pdf-gawk
 pdf-host: maybe-pdf-gettext
 pdf-host: maybe-pdf-gmp
-pdf-host: maybe-pdf-mpfr
-pdf-host: maybe-pdf-mpc
 pdf-host: maybe-pdf-ppl
 pdf-host: maybe-pdf-cloog
 pdf-host: maybe-pdf-libelf
@@ -1439,7 +1405,6 @@ pdf-host: maybe-pdf-time
 pdf-host: maybe-pdf-uudecode
 pdf-host: maybe-pdf-wdiff
 pdf-host: maybe-pdf-zip
-pdf-host: maybe-pdf-zlib
 pdf-host: maybe-pdf-gdb
 pdf-host: maybe-pdf-expect
 pdf-host: maybe-pdf-guile
@@ -1466,7 +1431,6 @@ pdf-target: maybe-pdf-target-gperf
 pdf-target: maybe-pdf-target-examples
 pdf-target: maybe-pdf-target-libffi
 pdf-target: maybe-pdf-target-libjava
-pdf-target: maybe-pdf-target-zlib
 pdf-target: maybe-pdf-target-boehm-gc
 pdf-target: maybe-pdf-target-qthreads
 pdf-target: maybe-pdf-target-rda
@@ -1510,8 +1474,6 @@ html-host: maybe-html-gcc
 html-host: maybe-html-gawk
 html-host: maybe-html-gettext
 html-host: maybe-html-gmp
-html-host: maybe-html-mpfr
-html-host: maybe-html-mpc
 html-host: maybe-html-ppl
 html-host: maybe-html-cloog
 html-host: maybe-html-libelf
@@ -1553,7 +1515,6 @@ html-host: maybe-html-time
 html-host: maybe-html-uudecode
 html-host: maybe-html-wdiff
 html-host: maybe-html-zip
-html-host: maybe-html-zlib
 html-host: maybe-html-gdb
 html-host: maybe-html-expect
 html-host: maybe-html-guile
@@ -1580,7 +1541,6 @@ html-target: maybe-html-target-gperf
 html-target: maybe-html-target-examples
 html-target: maybe-html-target-libffi
 html-target: maybe-html-target-libjava
-html-target: maybe-html-target-zlib
 html-target: maybe-html-target-boehm-gc
 html-target: maybe-html-target-qthreads
 html-target: maybe-html-target-rda
@@ -1624,8 +1584,6 @@ TAGS-host: maybe-TAGS-gcc
 TAGS-host: maybe-TAGS-gawk
 TAGS-host: maybe-TAGS-gettext
 TAGS-host: maybe-TAGS-gmp
-TAGS-host: maybe-TAGS-mpfr
-TAGS-host: maybe-TAGS-mpc
 TAGS-host: maybe-TAGS-ppl
 TAGS-host: maybe-TAGS-cloog
 TAGS-host: maybe-TAGS-libelf
@@ -1667,7 +1625,6 @@ TAGS-host: maybe-TAGS-time
 TAGS-host: maybe-TAGS-uudecode
 TAGS-host: maybe-TAGS-wdiff
 TAGS-host: maybe-TAGS-zip
-TAGS-host: maybe-TAGS-zlib
 TAGS-host: maybe-TAGS-gdb
 TAGS-host: maybe-TAGS-expect
 TAGS-host: maybe-TAGS-guile
@@ -1694,7 +1651,6 @@ TAGS-target: maybe-TAGS-target-gperf
 TAGS-target: maybe-TAGS-target-examples
 TAGS-target: maybe-TAGS-target-libffi
 TAGS-target: maybe-TAGS-target-libjava
-TAGS-target: maybe-TAGS-target-zlib
 TAGS-target: maybe-TAGS-target-boehm-gc
 TAGS-target: maybe-TAGS-target-qthreads
 TAGS-target: maybe-TAGS-target-rda
@@ -1738,8 +1694,6 @@ install-info-host: maybe-install-info-gcc
 install-info-host: maybe-install-info-gawk
 install-info-host: maybe-install-info-gettext
 install-info-host: maybe-install-info-gmp
-install-info-host: maybe-install-info-mpfr
-install-info-host: maybe-install-info-mpc
 install-info-host: maybe-install-info-ppl
 install-info-host: maybe-install-info-cloog
 install-info-host: maybe-install-info-libelf
@@ -1781,7 +1735,6 @@ install-info-host: maybe-install-info-time
 install-info-host: maybe-install-info-uudecode
 install-info-host: maybe-install-info-wdiff
 install-info-host: maybe-install-info-zip
-install-info-host: maybe-install-info-zlib
 install-info-host: maybe-install-info-gdb
 install-info-host: maybe-install-info-expect
 install-info-host: maybe-install-info-guile
@@ -1808,7 +1761,6 @@ install-info-target: maybe-install-info-target-gperf
 install-info-target: maybe-install-info-target-examples
 install-info-target: maybe-install-info-target-libffi
 install-info-target: maybe-install-info-target-libjava
-install-info-target: maybe-install-info-target-zlib
 install-info-target: maybe-install-info-target-boehm-gc
 install-info-target: maybe-install-info-target-qthreads
 install-info-target: maybe-install-info-target-rda
@@ -1852,8 +1804,6 @@ install-pdf-host: maybe-install-pdf-gcc
 install-pdf-host: maybe-install-pdf-gawk
 install-pdf-host: maybe-install-pdf-gettext
 install-pdf-host: maybe-install-pdf-gmp
-install-pdf-host: maybe-install-pdf-mpfr
-install-pdf-host: maybe-install-pdf-mpc
 install-pdf-host: maybe-install-pdf-ppl
 install-pdf-host: maybe-install-pdf-cloog
 install-pdf-host: maybe-install-pdf-libelf
@@ -1895,7 +1845,6 @@ install-pdf-host: maybe-install-pdf-time
 install-pdf-host: maybe-install-pdf-uudecode
 install-pdf-host: maybe-install-pdf-wdiff
 install-pdf-host: maybe-install-pdf-zip
-install-pdf-host: maybe-install-pdf-zlib
 install-pdf-host: maybe-install-pdf-gdb
 install-pdf-host: maybe-install-pdf-expect
 install-pdf-host: maybe-install-pdf-guile
@@ -1922,7 +1871,6 @@ install-pdf-target: maybe-install-pdf-target-gperf
 install-pdf-target: maybe-install-pdf-target-examples
 install-pdf-target: maybe-install-pdf-target-libffi
 install-pdf-target: maybe-install-pdf-target-libjava
-install-pdf-target: maybe-install-pdf-target-zlib
 install-pdf-target: maybe-install-pdf-target-boehm-gc
 install-pdf-target: maybe-install-pdf-target-qthreads
 install-pdf-target: maybe-install-pdf-target-rda
@@ -1966,8 +1914,6 @@ install-html-host: maybe-install-html-gcc
 install-html-host: maybe-install-html-gawk
 install-html-host: maybe-install-html-gettext
 install-html-host: maybe-install-html-gmp
-install-html-host: maybe-install-html-mpfr
-install-html-host: maybe-install-html-mpc
 install-html-host: maybe-install-html-ppl
 install-html-host: maybe-install-html-cloog
 install-html-host: maybe-install-html-libelf
@@ -2009,7 +1955,6 @@ install-html-host: maybe-install-html-time
 install-html-host: maybe-install-html-uudecode
 install-html-host: maybe-install-html-wdiff
 install-html-host: maybe-install-html-zip
-install-html-host: maybe-install-html-zlib
 install-html-host: maybe-install-html-gdb
 install-html-host: maybe-install-html-expect
 install-html-host: maybe-install-html-guile
@@ -2036,7 +1981,6 @@ install-html-target: maybe-install-html-target-gperf
 install-html-target: maybe-install-html-target-examples
 install-html-target: maybe-install-html-target-libffi
 install-html-target: maybe-install-html-target-libjava
-install-html-target: maybe-install-html-target-zlib
 install-html-target: maybe-install-html-target-boehm-gc
 install-html-target: maybe-install-html-target-qthreads
 install-html-target: maybe-install-html-target-rda
@@ -2080,8 +2024,6 @@ installcheck-host: maybe-installcheck-gcc
 installcheck-host: maybe-installcheck-gawk
 installcheck-host: maybe-installcheck-gettext
 installcheck-host: maybe-installcheck-gmp
-installcheck-host: maybe-installcheck-mpfr
-installcheck-host: maybe-installcheck-mpc
 installcheck-host: maybe-installcheck-ppl
 installcheck-host: maybe-installcheck-cloog
 installcheck-host: maybe-installcheck-libelf
@@ -2123,7 +2065,6 @@ installcheck-host: maybe-installcheck-time
 installcheck-host: maybe-installcheck-uudecode
 installcheck-host: maybe-installcheck-wdiff
 installcheck-host: maybe-installcheck-zip
-installcheck-host: maybe-installcheck-zlib
 installcheck-host: maybe-installcheck-gdb
 installcheck-host: maybe-installcheck-expect
 installcheck-host: maybe-installcheck-guile
@@ -2150,7 +2091,6 @@ installcheck-target: maybe-installcheck-target-gperf
 installcheck-target: maybe-installcheck-target-examples
 installcheck-target: maybe-installcheck-target-libffi
 installcheck-target: maybe-installcheck-target-libjava
-installcheck-target: maybe-installcheck-target-zlib
 installcheck-target: maybe-installcheck-target-boehm-gc
 installcheck-target: maybe-installcheck-target-qthreads
 installcheck-target: maybe-installcheck-target-rda
@@ -2194,8 +2134,6 @@ mostlyclean-host: maybe-mostlyclean-gcc
 mostlyclean-host: maybe-mostlyclean-gawk
 mostlyclean-host: maybe-mostlyclean-gettext
 mostlyclean-host: maybe-mostlyclean-gmp
-mostlyclean-host: maybe-mostlyclean-mpfr
-mostlyclean-host: maybe-mostlyclean-mpc
 mostlyclean-host: maybe-mostlyclean-ppl
 mostlyclean-host: maybe-mostlyclean-cloog
 mostlyclean-host: maybe-mostlyclean-libelf
@@ -2237,7 +2175,6 @@ mostlyclean-host: maybe-mostlyclean-time
 mostlyclean-host: maybe-mostlyclean-uudecode
 mostlyclean-host: maybe-mostlyclean-wdiff
 mostlyclean-host: maybe-mostlyclean-zip
-mostlyclean-host: maybe-mostlyclean-zlib
 mostlyclean-host: maybe-mostlyclean-gdb
 mostlyclean-host: maybe-mostlyclean-expect
 mostlyclean-host: maybe-mostlyclean-guile
@@ -2264,7 +2201,6 @@ mostlyclean-target: maybe-mostlyclean-target-gperf
 mostlyclean-target: maybe-mostlyclean-target-examples
 mostlyclean-target: maybe-mostlyclean-target-libffi
 mostlyclean-target: maybe-mostlyclean-target-libjava
-mostlyclean-target: maybe-mostlyclean-target-zlib
 mostlyclean-target: maybe-mostlyclean-target-boehm-gc
 mostlyclean-target: maybe-mostlyclean-target-qthreads
 mostlyclean-target: maybe-mostlyclean-target-rda
@@ -2308,8 +2244,6 @@ clean-host: maybe-clean-gcc
 clean-host: maybe-clean-gawk
 clean-host: maybe-clean-gettext
 clean-host: maybe-clean-gmp
-clean-host: maybe-clean-mpfr
-clean-host: maybe-clean-mpc
 clean-host: maybe-clean-ppl
 clean-host: maybe-clean-cloog
 clean-host: maybe-clean-libelf
@@ -2351,7 +2285,6 @@ clean-host: maybe-clean-time
 clean-host: maybe-clean-uudecode
 clean-host: maybe-clean-wdiff
 clean-host: maybe-clean-zip
-clean-host: maybe-clean-zlib
 clean-host: maybe-clean-gdb
 clean-host: maybe-clean-expect
 clean-host: maybe-clean-guile
@@ -2378,7 +2311,6 @@ clean-target: maybe-clean-target-gperf
 clean-target: maybe-clean-target-examples
 clean-target: maybe-clean-target-libffi
 clean-target: maybe-clean-target-libjava
-clean-target: maybe-clean-target-zlib
 clean-target: maybe-clean-target-boehm-gc
 clean-target: maybe-clean-target-qthreads
 clean-target: maybe-clean-target-rda
@@ -2422,8 +2354,6 @@ distclean-host: maybe-distclean-gcc
 distclean-host: maybe-distclean-gawk
 distclean-host: maybe-distclean-gettext
 distclean-host: maybe-distclean-gmp
-distclean-host: maybe-distclean-mpfr
-distclean-host: maybe-distclean-mpc
 distclean-host: maybe-distclean-ppl
 distclean-host: maybe-distclean-cloog
 distclean-host: maybe-distclean-libelf
@@ -2465,7 +2395,6 @@ distclean-host: maybe-distclean-time
 distclean-host: maybe-distclean-uudecode
 distclean-host: maybe-distclean-wdiff
 distclean-host: maybe-distclean-zip
-distclean-host: maybe-distclean-zlib
 distclean-host: maybe-distclean-gdb
 distclean-host: maybe-distclean-expect
 distclean-host: maybe-distclean-guile
@@ -2492,7 +2421,6 @@ distclean-target: maybe-distclean-target-gperf
 distclean-target: maybe-distclean-target-examples
 distclean-target: maybe-distclean-target-libffi
 distclean-target: maybe-distclean-target-libjava
-distclean-target: maybe-distclean-target-zlib
 distclean-target: maybe-distclean-target-boehm-gc
 distclean-target: maybe-distclean-target-qthreads
 distclean-target: maybe-distclean-target-rda
@@ -2536,8 +2464,6 @@ maintainer-clean-host: maybe-maintainer-clean-gcc
 maintainer-clean-host: maybe-maintainer-clean-gawk
 maintainer-clean-host: maybe-maintainer-clean-gettext
 maintainer-clean-host: maybe-maintainer-clean-gmp
-maintainer-clean-host: maybe-maintainer-clean-mpfr
-maintainer-clean-host: maybe-maintainer-clean-mpc
 maintainer-clean-host: maybe-maintainer-clean-ppl
 maintainer-clean-host: maybe-maintainer-clean-cloog
 maintainer-clean-host: maybe-maintainer-clean-libelf
@@ -2579,7 +2505,6 @@ maintainer-clean-host: maybe-maintainer-clean-time
 maintainer-clean-host: maybe-maintainer-clean-uudecode
 maintainer-clean-host: maybe-maintainer-clean-wdiff
 maintainer-clean-host: maybe-maintainer-clean-zip
-maintainer-clean-host: maybe-maintainer-clean-zlib
 maintainer-clean-host: maybe-maintainer-clean-gdb
 maintainer-clean-host: maybe-maintainer-clean-expect
 maintainer-clean-host: maybe-maintainer-clean-guile
@@ -2606,7 +2531,6 @@ maintainer-clean-target: maybe-maintainer-clean-target-gperf
 maintainer-clean-target: maybe-maintainer-clean-target-examples
 maintainer-clean-target: maybe-maintainer-clean-target-libffi
 maintainer-clean-target: maybe-maintainer-clean-target-libjava
-maintainer-clean-target: maybe-maintainer-clean-target-zlib
 maintainer-clean-target: maybe-maintainer-clean-target-boehm-gc
 maintainer-clean-target: maybe-maintainer-clean-target-qthreads
 maintainer-clean-target: maybe-maintainer-clean-target-rda
@@ -2705,8 +2629,6 @@ check-host:  \
     maybe-check-gawk \
     maybe-check-gettext \
     maybe-check-gmp \
-    maybe-check-mpfr \
-    maybe-check-mpc \
     maybe-check-ppl \
     maybe-check-cloog \
     maybe-check-libelf \
@@ -2748,7 +2670,6 @@ check-host:  \
     maybe-check-uudecode \
     maybe-check-wdiff \
     maybe-check-zip \
-    maybe-check-zlib \
     maybe-check-gdb \
     maybe-check-expect \
     maybe-check-guile \
@@ -2775,7 +2696,6 @@ check-target:  \
     maybe-check-target-examples \
     maybe-check-target-libffi \
     maybe-check-target-libjava \
-    maybe-check-target-zlib \
     maybe-check-target-boehm-gc \
     maybe-check-target-qthreads \
     maybe-check-target-rda \
@@ -2845,8 +2765,6 @@ install-host-nogcc:  \
     maybe-install-gawk \
     maybe-install-gettext \
     maybe-install-gmp \
-    maybe-install-mpfr \
-    maybe-install-mpc \
     maybe-install-ppl \
     maybe-install-cloog \
     maybe-install-libelf \
@@ -2888,7 +2806,6 @@ install-host-nogcc:  \
     maybe-install-uudecode \
     maybe-install-wdiff \
     maybe-install-zip \
-    maybe-install-zlib \
     maybe-install-gdb \
     maybe-install-expect \
     maybe-install-guile \
@@ -2926,8 +2843,6 @@ install-host:  \
     maybe-install-gawk \
     maybe-install-gettext \
     maybe-install-gmp \
-    maybe-install-mpfr \
-    maybe-install-mpc \
     maybe-install-ppl \
     maybe-install-cloog \
     maybe-install-libelf \
@@ -2969,7 +2884,6 @@ install-host:  \
     maybe-install-uudecode \
     maybe-install-wdiff \
     maybe-install-zip \
-    maybe-install-zlib \
     maybe-install-gdb \
     maybe-install-expect \
     maybe-install-guile \
@@ -2996,7 +2910,6 @@ install-target:  \
     maybe-install-target-examples \
     maybe-install-target-libffi \
     maybe-install-target-libjava \
-    maybe-install-target-zlib \
     maybe-install-target-boehm-gc \
     maybe-install-target-qthreads \
     maybe-install-target-rda \
@@ -17147,1738 +17060,6 @@ maintainer-clean-gmp:
 	  || exit 1
 
 @endif gmp
-
-
-
-.PHONY: configure-mpfr maybe-configure-mpfr
-maybe-configure-mpfr:
-@if gcc-bootstrap
-configure-mpfr: stage_current
-@endif gcc-bootstrap
-@if mpfr
-maybe-configure-mpfr: configure-mpfr
-configure-mpfr: 
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	test ! -f $(HOST_SUBDIR)/mpfr/Makefile || exit 0; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr ; \
-	$(HOST_EXPORTS)  \
-	echo Configuring in $(HOST_SUBDIR)/mpfr; \
-	cd "$(HOST_SUBDIR)/mpfr" || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpfr/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpfr"; \
-	libsrcdir="$$s/mpfr"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} --disable-shared @extra_mpfr_configure_flags@ \
-	  || exit 1
-@endif mpfr
-
-
-
-.PHONY: configure-stage1-mpfr maybe-configure-stage1-mpfr
-maybe-configure-stage1-mpfr:
-@if mpfr-bootstrap
-maybe-configure-stage1-mpfr: configure-stage1-mpfr
-configure-stage1-mpfr:
-	@[ $(current_stage) = stage1 ] || $(MAKE) stage1-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE1_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpfr/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	CFLAGS="$(STAGE1_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE1_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(LIBCFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 1 in $(HOST_SUBDIR)/mpfr ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr ; \
-	cd $(HOST_SUBDIR)/mpfr || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpfr/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpfr"; \
-	libsrcdir="$$s/mpfr"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  $(STAGE1_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpfr_configure_flags@
-@endif mpfr-bootstrap
-
-.PHONY: configure-stage2-mpfr maybe-configure-stage2-mpfr
-maybe-configure-stage2-mpfr:
-@if mpfr-bootstrap
-maybe-configure-stage2-mpfr: configure-stage2-mpfr
-configure-stage2-mpfr:
-	@[ $(current_stage) = stage2 ] || $(MAKE) stage2-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE2_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpfr/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE2_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE2_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE2_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 2 in $(HOST_SUBDIR)/mpfr ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr ; \
-	cd $(HOST_SUBDIR)/mpfr || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpfr/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpfr"; \
-	libsrcdir="$$s/mpfr"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE2_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpfr_configure_flags@
-@endif mpfr-bootstrap
-
-.PHONY: configure-stage3-mpfr maybe-configure-stage3-mpfr
-maybe-configure-stage3-mpfr:
-@if mpfr-bootstrap
-maybe-configure-stage3-mpfr: configure-stage3-mpfr
-configure-stage3-mpfr:
-	@[ $(current_stage) = stage3 ] || $(MAKE) stage3-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE3_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpfr/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE3_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE3_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE3_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 3 in $(HOST_SUBDIR)/mpfr ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr ; \
-	cd $(HOST_SUBDIR)/mpfr || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpfr/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpfr"; \
-	libsrcdir="$$s/mpfr"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE3_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpfr_configure_flags@
-@endif mpfr-bootstrap
-
-.PHONY: configure-stage4-mpfr maybe-configure-stage4-mpfr
-maybe-configure-stage4-mpfr:
-@if mpfr-bootstrap
-maybe-configure-stage4-mpfr: configure-stage4-mpfr
-configure-stage4-mpfr:
-	@[ $(current_stage) = stage4 ] || $(MAKE) stage4-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE4_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpfr/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE4_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE4_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE4_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 4 in $(HOST_SUBDIR)/mpfr ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr ; \
-	cd $(HOST_SUBDIR)/mpfr || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpfr/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpfr"; \
-	libsrcdir="$$s/mpfr"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE4_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpfr_configure_flags@
-@endif mpfr-bootstrap
-
-.PHONY: configure-stageprofile-mpfr maybe-configure-stageprofile-mpfr
-maybe-configure-stageprofile-mpfr:
-@if mpfr-bootstrap
-maybe-configure-stageprofile-mpfr: configure-stageprofile-mpfr
-configure-stageprofile-mpfr:
-	@[ $(current_stage) = stageprofile ] || $(MAKE) stageprofile-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEprofile_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpfr/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGEprofile_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGEprofile_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEprofile_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage profile in $(HOST_SUBDIR)/mpfr ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr ; \
-	cd $(HOST_SUBDIR)/mpfr || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpfr/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpfr"; \
-	libsrcdir="$$s/mpfr"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGEprofile_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpfr_configure_flags@
-@endif mpfr-bootstrap
-
-.PHONY: configure-stagefeedback-mpfr maybe-configure-stagefeedback-mpfr
-maybe-configure-stagefeedback-mpfr:
-@if mpfr-bootstrap
-maybe-configure-stagefeedback-mpfr: configure-stagefeedback-mpfr
-configure-stagefeedback-mpfr:
-	@[ $(current_stage) = stagefeedback ] || $(MAKE) stagefeedback-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEfeedback_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpfr/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGEfeedback_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGEfeedback_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEfeedback_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage feedback in $(HOST_SUBDIR)/mpfr ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpfr ; \
-	cd $(HOST_SUBDIR)/mpfr || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpfr/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpfr"; \
-	libsrcdir="$$s/mpfr"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGEfeedback_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpfr_configure_flags@
-@endif mpfr-bootstrap
-
-
-
-
-
-.PHONY: all-mpfr maybe-all-mpfr
-maybe-all-mpfr:
-@if gcc-bootstrap
-all-mpfr: stage_current
-@endif gcc-bootstrap
-@if mpfr
-TARGET-mpfr=all
-maybe-all-mpfr: all-mpfr
-all-mpfr: configure-mpfr
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS)  \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) $(EXTRA_HOST_FLAGS)  \
-		$(TARGET-mpfr))
-@endif mpfr
-
-
-
-.PHONY: all-stage1-mpfr maybe-all-stage1-mpfr
-.PHONY: clean-stage1-mpfr maybe-clean-stage1-mpfr
-maybe-all-stage1-mpfr:
-maybe-clean-stage1-mpfr:
-@if mpfr-bootstrap
-maybe-all-stage1-mpfr: all-stage1-mpfr
-all-stage1: all-stage1-mpfr
-TARGET-stage1-mpfr = $(TARGET-mpfr)
-all-stage1-mpfr: configure-stage1-mpfr
-	@[ $(current_stage) = stage1 ] || $(MAKE) stage1-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE1_TFLAGS)"; \
-	$(HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE1_CFLAGS)" \
-		CXXFLAGS="$(STAGE1_CXXFLAGS)" \
-		LIBCFLAGS="$(LIBCFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS)   \
-		TFLAGS="$(STAGE1_TFLAGS)" \
-		$(TARGET-stage1-mpfr)
-
-maybe-clean-stage1-mpfr: clean-stage1-mpfr
-clean-stage1: clean-stage1-mpfr
-clean-stage1-mpfr:
-	@if [ $(current_stage) = stage1 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpfr/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage1-mpfr/Makefile ] || exit 0; \
-	  $(MAKE) stage1-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		 clean
-@endif mpfr-bootstrap
-
-
-.PHONY: all-stage2-mpfr maybe-all-stage2-mpfr
-.PHONY: clean-stage2-mpfr maybe-clean-stage2-mpfr
-maybe-all-stage2-mpfr:
-maybe-clean-stage2-mpfr:
-@if mpfr-bootstrap
-maybe-all-stage2-mpfr: all-stage2-mpfr
-all-stage2: all-stage2-mpfr
-TARGET-stage2-mpfr = $(TARGET-mpfr)
-all-stage2-mpfr: configure-stage2-mpfr
-	@[ $(current_stage) = stage2 ] || $(MAKE) stage2-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE2_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE2_CFLAGS)" \
-		CXXFLAGS="$(STAGE2_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE2_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE2_TFLAGS)" \
-		$(TARGET-stage2-mpfr)
-
-maybe-clean-stage2-mpfr: clean-stage2-mpfr
-clean-stage2: clean-stage2-mpfr
-clean-stage2-mpfr:
-	@if [ $(current_stage) = stage2 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpfr/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage2-mpfr/Makefile ] || exit 0; \
-	  $(MAKE) stage2-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpfr-bootstrap
-
-
-.PHONY: all-stage3-mpfr maybe-all-stage3-mpfr
-.PHONY: clean-stage3-mpfr maybe-clean-stage3-mpfr
-maybe-all-stage3-mpfr:
-maybe-clean-stage3-mpfr:
-@if mpfr-bootstrap
-maybe-all-stage3-mpfr: all-stage3-mpfr
-all-stage3: all-stage3-mpfr
-TARGET-stage3-mpfr = $(TARGET-mpfr)
-all-stage3-mpfr: configure-stage3-mpfr
-	@[ $(current_stage) = stage3 ] || $(MAKE) stage3-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE3_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE3_CFLAGS)" \
-		CXXFLAGS="$(STAGE3_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE3_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE3_TFLAGS)" \
-		$(TARGET-stage3-mpfr)
-
-maybe-clean-stage3-mpfr: clean-stage3-mpfr
-clean-stage3: clean-stage3-mpfr
-clean-stage3-mpfr:
-	@if [ $(current_stage) = stage3 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpfr/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage3-mpfr/Makefile ] || exit 0; \
-	  $(MAKE) stage3-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpfr-bootstrap
-
-
-.PHONY: all-stage4-mpfr maybe-all-stage4-mpfr
-.PHONY: clean-stage4-mpfr maybe-clean-stage4-mpfr
-maybe-all-stage4-mpfr:
-maybe-clean-stage4-mpfr:
-@if mpfr-bootstrap
-maybe-all-stage4-mpfr: all-stage4-mpfr
-all-stage4: all-stage4-mpfr
-TARGET-stage4-mpfr = $(TARGET-mpfr)
-all-stage4-mpfr: configure-stage4-mpfr
-	@[ $(current_stage) = stage4 ] || $(MAKE) stage4-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE4_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE4_CFLAGS)" \
-		CXXFLAGS="$(STAGE4_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE4_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE4_TFLAGS)" \
-		$(TARGET-stage4-mpfr)
-
-maybe-clean-stage4-mpfr: clean-stage4-mpfr
-clean-stage4: clean-stage4-mpfr
-clean-stage4-mpfr:
-	@if [ $(current_stage) = stage4 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpfr/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage4-mpfr/Makefile ] || exit 0; \
-	  $(MAKE) stage4-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpfr-bootstrap
-
-
-.PHONY: all-stageprofile-mpfr maybe-all-stageprofile-mpfr
-.PHONY: clean-stageprofile-mpfr maybe-clean-stageprofile-mpfr
-maybe-all-stageprofile-mpfr:
-maybe-clean-stageprofile-mpfr:
-@if mpfr-bootstrap
-maybe-all-stageprofile-mpfr: all-stageprofile-mpfr
-all-stageprofile: all-stageprofile-mpfr
-TARGET-stageprofile-mpfr = $(TARGET-mpfr)
-all-stageprofile-mpfr: configure-stageprofile-mpfr
-	@[ $(current_stage) = stageprofile ] || $(MAKE) stageprofile-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEprofile_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGEprofile_CFLAGS)" \
-		CXXFLAGS="$(STAGEprofile_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGEprofile_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGEprofile_TFLAGS)" \
-		$(TARGET-stageprofile-mpfr)
-
-maybe-clean-stageprofile-mpfr: clean-stageprofile-mpfr
-clean-stageprofile: clean-stageprofile-mpfr
-clean-stageprofile-mpfr:
-	@if [ $(current_stage) = stageprofile ]; then \
-	  [ -f $(HOST_SUBDIR)/mpfr/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stageprofile-mpfr/Makefile ] || exit 0; \
-	  $(MAKE) stageprofile-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpfr-bootstrap
-
-
-.PHONY: all-stagefeedback-mpfr maybe-all-stagefeedback-mpfr
-.PHONY: clean-stagefeedback-mpfr maybe-clean-stagefeedback-mpfr
-maybe-all-stagefeedback-mpfr:
-maybe-clean-stagefeedback-mpfr:
-@if mpfr-bootstrap
-maybe-all-stagefeedback-mpfr: all-stagefeedback-mpfr
-all-stagefeedback: all-stagefeedback-mpfr
-TARGET-stagefeedback-mpfr = $(TARGET-mpfr)
-all-stagefeedback-mpfr: configure-stagefeedback-mpfr
-	@[ $(current_stage) = stagefeedback ] || $(MAKE) stagefeedback-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEfeedback_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGEfeedback_CFLAGS)" \
-		CXXFLAGS="$(STAGEfeedback_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGEfeedback_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGEfeedback_TFLAGS)" \
-		$(TARGET-stagefeedback-mpfr)
-
-maybe-clean-stagefeedback-mpfr: clean-stagefeedback-mpfr
-clean-stagefeedback: clean-stagefeedback-mpfr
-clean-stagefeedback-mpfr:
-	@if [ $(current_stage) = stagefeedback ]; then \
-	  [ -f $(HOST_SUBDIR)/mpfr/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stagefeedback-mpfr/Makefile ] || exit 0; \
-	  $(MAKE) stagefeedback-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpfr && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpfr-bootstrap
-
-
-
-
-
-.PHONY: check-mpfr maybe-check-mpfr
-maybe-check-mpfr:
-@if mpfr
-maybe-check-mpfr: check-mpfr
-
-check-mpfr:
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(FLAGS_TO_PASS)  check)
-
-@endif mpfr
-
-.PHONY: install-mpfr maybe-install-mpfr
-maybe-install-mpfr:
-@if mpfr
-maybe-install-mpfr: install-mpfr
-
-install-mpfr:
-
-@endif mpfr
-
-# Other targets (info, dvi, pdf, etc.)
-
-.PHONY: maybe-info-mpfr info-mpfr
-maybe-info-mpfr:
-@if mpfr
-maybe-info-mpfr: info-mpfr
-
-info-mpfr: \
-    configure-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing info in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          info) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-dvi-mpfr dvi-mpfr
-maybe-dvi-mpfr:
-@if mpfr
-maybe-dvi-mpfr: dvi-mpfr
-
-dvi-mpfr: \
-    configure-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing dvi in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          dvi) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-pdf-mpfr pdf-mpfr
-maybe-pdf-mpfr:
-@if mpfr
-maybe-pdf-mpfr: pdf-mpfr
-
-pdf-mpfr: \
-    configure-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing pdf in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          pdf) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-html-mpfr html-mpfr
-maybe-html-mpfr:
-@if mpfr
-maybe-html-mpfr: html-mpfr
-
-html-mpfr: \
-    configure-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing html in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          html) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-TAGS-mpfr TAGS-mpfr
-maybe-TAGS-mpfr:
-@if mpfr
-maybe-TAGS-mpfr: TAGS-mpfr
-
-TAGS-mpfr: \
-    configure-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing TAGS in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          TAGS) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-install-info-mpfr install-info-mpfr
-maybe-install-info-mpfr:
-@if mpfr
-maybe-install-info-mpfr: install-info-mpfr
-
-install-info-mpfr: \
-    configure-mpfr \
-    info-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-info in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-info) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-install-pdf-mpfr install-pdf-mpfr
-maybe-install-pdf-mpfr:
-@if mpfr
-maybe-install-pdf-mpfr: install-pdf-mpfr
-
-install-pdf-mpfr: \
-    configure-mpfr \
-    pdf-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-pdf in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-pdf) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-install-html-mpfr install-html-mpfr
-maybe-install-html-mpfr:
-@if mpfr
-maybe-install-html-mpfr: install-html-mpfr
-
-install-html-mpfr: \
-    configure-mpfr \
-    html-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-html in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-html) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-installcheck-mpfr installcheck-mpfr
-maybe-installcheck-mpfr:
-@if mpfr
-maybe-installcheck-mpfr: installcheck-mpfr
-
-installcheck-mpfr: \
-    configure-mpfr 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing installcheck in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          installcheck) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-mostlyclean-mpfr mostlyclean-mpfr
-maybe-mostlyclean-mpfr:
-@if mpfr
-maybe-mostlyclean-mpfr: mostlyclean-mpfr
-
-mostlyclean-mpfr: 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing mostlyclean in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          mostlyclean) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-clean-mpfr clean-mpfr
-maybe-clean-mpfr:
-@if mpfr
-maybe-clean-mpfr: clean-mpfr
-
-clean-mpfr: 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing clean in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          clean) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-distclean-mpfr distclean-mpfr
-maybe-distclean-mpfr:
-@if mpfr
-maybe-distclean-mpfr: distclean-mpfr
-
-distclean-mpfr: 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing distclean in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          distclean) \
-	  || exit 1
-
-@endif mpfr
-
-.PHONY: maybe-maintainer-clean-mpfr maintainer-clean-mpfr
-maybe-maintainer-clean-mpfr:
-@if mpfr
-maybe-maintainer-clean-mpfr: maintainer-clean-mpfr
-
-maintainer-clean-mpfr: 
-	@[ -f ./mpfr/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing maintainer-clean in mpfr" ; \
-	(cd $(HOST_SUBDIR)/mpfr && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          maintainer-clean) \
-	  || exit 1
-
-@endif mpfr
-
-
-
-.PHONY: configure-mpc maybe-configure-mpc
-maybe-configure-mpc:
-@if gcc-bootstrap
-configure-mpc: stage_current
-@endif gcc-bootstrap
-@if mpc
-maybe-configure-mpc: configure-mpc
-configure-mpc: 
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	test ! -f $(HOST_SUBDIR)/mpc/Makefile || exit 0; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc ; \
-	$(HOST_EXPORTS)  \
-	echo Configuring in $(HOST_SUBDIR)/mpc; \
-	cd "$(HOST_SUBDIR)/mpc" || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpc/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpc"; \
-	libsrcdir="$$s/mpc"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} --disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@ \
-	  || exit 1
-@endif mpc
-
-
-
-.PHONY: configure-stage1-mpc maybe-configure-stage1-mpc
-maybe-configure-stage1-mpc:
-@if mpc-bootstrap
-maybe-configure-stage1-mpc: configure-stage1-mpc
-configure-stage1-mpc:
-	@[ $(current_stage) = stage1 ] || $(MAKE) stage1-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE1_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpc/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	CFLAGS="$(STAGE1_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE1_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(LIBCFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 1 in $(HOST_SUBDIR)/mpc ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc ; \
-	cd $(HOST_SUBDIR)/mpc || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpc/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpc"; \
-	libsrcdir="$$s/mpc"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  $(STAGE1_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@
-@endif mpc-bootstrap
-
-.PHONY: configure-stage2-mpc maybe-configure-stage2-mpc
-maybe-configure-stage2-mpc:
-@if mpc-bootstrap
-maybe-configure-stage2-mpc: configure-stage2-mpc
-configure-stage2-mpc:
-	@[ $(current_stage) = stage2 ] || $(MAKE) stage2-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE2_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpc/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE2_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE2_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE2_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 2 in $(HOST_SUBDIR)/mpc ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc ; \
-	cd $(HOST_SUBDIR)/mpc || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpc/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpc"; \
-	libsrcdir="$$s/mpc"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE2_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@
-@endif mpc-bootstrap
-
-.PHONY: configure-stage3-mpc maybe-configure-stage3-mpc
-maybe-configure-stage3-mpc:
-@if mpc-bootstrap
-maybe-configure-stage3-mpc: configure-stage3-mpc
-configure-stage3-mpc:
-	@[ $(current_stage) = stage3 ] || $(MAKE) stage3-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE3_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpc/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE3_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE3_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE3_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 3 in $(HOST_SUBDIR)/mpc ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc ; \
-	cd $(HOST_SUBDIR)/mpc || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpc/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpc"; \
-	libsrcdir="$$s/mpc"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE3_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@
-@endif mpc-bootstrap
-
-.PHONY: configure-stage4-mpc maybe-configure-stage4-mpc
-maybe-configure-stage4-mpc:
-@if mpc-bootstrap
-maybe-configure-stage4-mpc: configure-stage4-mpc
-configure-stage4-mpc:
-	@[ $(current_stage) = stage4 ] || $(MAKE) stage4-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE4_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpc/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE4_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE4_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE4_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 4 in $(HOST_SUBDIR)/mpc ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc ; \
-	cd $(HOST_SUBDIR)/mpc || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpc/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpc"; \
-	libsrcdir="$$s/mpc"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE4_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@
-@endif mpc-bootstrap
-
-.PHONY: configure-stageprofile-mpc maybe-configure-stageprofile-mpc
-maybe-configure-stageprofile-mpc:
-@if mpc-bootstrap
-maybe-configure-stageprofile-mpc: configure-stageprofile-mpc
-configure-stageprofile-mpc:
-	@[ $(current_stage) = stageprofile ] || $(MAKE) stageprofile-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEprofile_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpc/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGEprofile_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGEprofile_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEprofile_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage profile in $(HOST_SUBDIR)/mpc ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc ; \
-	cd $(HOST_SUBDIR)/mpc || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpc/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpc"; \
-	libsrcdir="$$s/mpc"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGEprofile_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@
-@endif mpc-bootstrap
-
-.PHONY: configure-stagefeedback-mpc maybe-configure-stagefeedback-mpc
-maybe-configure-stagefeedback-mpc:
-@if mpc-bootstrap
-maybe-configure-stagefeedback-mpc: configure-stagefeedback-mpc
-configure-stagefeedback-mpc:
-	@[ $(current_stage) = stagefeedback ] || $(MAKE) stagefeedback-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEfeedback_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/mpc/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGEfeedback_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGEfeedback_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEfeedback_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage feedback in $(HOST_SUBDIR)/mpc ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/mpc ; \
-	cd $(HOST_SUBDIR)/mpc || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/mpc/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/mpc"; \
-	libsrcdir="$$s/mpc"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGEfeedback_CONFIGURE_FLAGS) \
-	  --disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@
-@endif mpc-bootstrap
-
-
-
-
-
-.PHONY: all-mpc maybe-all-mpc
-maybe-all-mpc:
-@if gcc-bootstrap
-all-mpc: stage_current
-@endif gcc-bootstrap
-@if mpc
-TARGET-mpc=all
-maybe-all-mpc: all-mpc
-all-mpc: configure-mpc
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS)  \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) $(EXTRA_HOST_FLAGS)  \
-		$(TARGET-mpc))
-@endif mpc
-
-
-
-.PHONY: all-stage1-mpc maybe-all-stage1-mpc
-.PHONY: clean-stage1-mpc maybe-clean-stage1-mpc
-maybe-all-stage1-mpc:
-maybe-clean-stage1-mpc:
-@if mpc-bootstrap
-maybe-all-stage1-mpc: all-stage1-mpc
-all-stage1: all-stage1-mpc
-TARGET-stage1-mpc = $(TARGET-mpc)
-all-stage1-mpc: configure-stage1-mpc
-	@[ $(current_stage) = stage1 ] || $(MAKE) stage1-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE1_TFLAGS)"; \
-	$(HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE1_CFLAGS)" \
-		CXXFLAGS="$(STAGE1_CXXFLAGS)" \
-		LIBCFLAGS="$(LIBCFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS)   \
-		TFLAGS="$(STAGE1_TFLAGS)" \
-		$(TARGET-stage1-mpc)
-
-maybe-clean-stage1-mpc: clean-stage1-mpc
-clean-stage1: clean-stage1-mpc
-clean-stage1-mpc:
-	@if [ $(current_stage) = stage1 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpc/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage1-mpc/Makefile ] || exit 0; \
-	  $(MAKE) stage1-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		 clean
-@endif mpc-bootstrap
-
-
-.PHONY: all-stage2-mpc maybe-all-stage2-mpc
-.PHONY: clean-stage2-mpc maybe-clean-stage2-mpc
-maybe-all-stage2-mpc:
-maybe-clean-stage2-mpc:
-@if mpc-bootstrap
-maybe-all-stage2-mpc: all-stage2-mpc
-all-stage2: all-stage2-mpc
-TARGET-stage2-mpc = $(TARGET-mpc)
-all-stage2-mpc: configure-stage2-mpc
-	@[ $(current_stage) = stage2 ] || $(MAKE) stage2-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE2_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE2_CFLAGS)" \
-		CXXFLAGS="$(STAGE2_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE2_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE2_TFLAGS)" \
-		$(TARGET-stage2-mpc)
-
-maybe-clean-stage2-mpc: clean-stage2-mpc
-clean-stage2: clean-stage2-mpc
-clean-stage2-mpc:
-	@if [ $(current_stage) = stage2 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpc/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage2-mpc/Makefile ] || exit 0; \
-	  $(MAKE) stage2-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpc-bootstrap
-
-
-.PHONY: all-stage3-mpc maybe-all-stage3-mpc
-.PHONY: clean-stage3-mpc maybe-clean-stage3-mpc
-maybe-all-stage3-mpc:
-maybe-clean-stage3-mpc:
-@if mpc-bootstrap
-maybe-all-stage3-mpc: all-stage3-mpc
-all-stage3: all-stage3-mpc
-TARGET-stage3-mpc = $(TARGET-mpc)
-all-stage3-mpc: configure-stage3-mpc
-	@[ $(current_stage) = stage3 ] || $(MAKE) stage3-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE3_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE3_CFLAGS)" \
-		CXXFLAGS="$(STAGE3_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE3_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE3_TFLAGS)" \
-		$(TARGET-stage3-mpc)
-
-maybe-clean-stage3-mpc: clean-stage3-mpc
-clean-stage3: clean-stage3-mpc
-clean-stage3-mpc:
-	@if [ $(current_stage) = stage3 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpc/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage3-mpc/Makefile ] || exit 0; \
-	  $(MAKE) stage3-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpc-bootstrap
-
-
-.PHONY: all-stage4-mpc maybe-all-stage4-mpc
-.PHONY: clean-stage4-mpc maybe-clean-stage4-mpc
-maybe-all-stage4-mpc:
-maybe-clean-stage4-mpc:
-@if mpc-bootstrap
-maybe-all-stage4-mpc: all-stage4-mpc
-all-stage4: all-stage4-mpc
-TARGET-stage4-mpc = $(TARGET-mpc)
-all-stage4-mpc: configure-stage4-mpc
-	@[ $(current_stage) = stage4 ] || $(MAKE) stage4-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE4_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE4_CFLAGS)" \
-		CXXFLAGS="$(STAGE4_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE4_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE4_TFLAGS)" \
-		$(TARGET-stage4-mpc)
-
-maybe-clean-stage4-mpc: clean-stage4-mpc
-clean-stage4: clean-stage4-mpc
-clean-stage4-mpc:
-	@if [ $(current_stage) = stage4 ]; then \
-	  [ -f $(HOST_SUBDIR)/mpc/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage4-mpc/Makefile ] || exit 0; \
-	  $(MAKE) stage4-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpc-bootstrap
-
-
-.PHONY: all-stageprofile-mpc maybe-all-stageprofile-mpc
-.PHONY: clean-stageprofile-mpc maybe-clean-stageprofile-mpc
-maybe-all-stageprofile-mpc:
-maybe-clean-stageprofile-mpc:
-@if mpc-bootstrap
-maybe-all-stageprofile-mpc: all-stageprofile-mpc
-all-stageprofile: all-stageprofile-mpc
-TARGET-stageprofile-mpc = $(TARGET-mpc)
-all-stageprofile-mpc: configure-stageprofile-mpc
-	@[ $(current_stage) = stageprofile ] || $(MAKE) stageprofile-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEprofile_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGEprofile_CFLAGS)" \
-		CXXFLAGS="$(STAGEprofile_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGEprofile_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGEprofile_TFLAGS)" \
-		$(TARGET-stageprofile-mpc)
-
-maybe-clean-stageprofile-mpc: clean-stageprofile-mpc
-clean-stageprofile: clean-stageprofile-mpc
-clean-stageprofile-mpc:
-	@if [ $(current_stage) = stageprofile ]; then \
-	  [ -f $(HOST_SUBDIR)/mpc/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stageprofile-mpc/Makefile ] || exit 0; \
-	  $(MAKE) stageprofile-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpc-bootstrap
-
-
-.PHONY: all-stagefeedback-mpc maybe-all-stagefeedback-mpc
-.PHONY: clean-stagefeedback-mpc maybe-clean-stagefeedback-mpc
-maybe-all-stagefeedback-mpc:
-maybe-clean-stagefeedback-mpc:
-@if mpc-bootstrap
-maybe-all-stagefeedback-mpc: all-stagefeedback-mpc
-all-stagefeedback: all-stagefeedback-mpc
-TARGET-stagefeedback-mpc = $(TARGET-mpc)
-all-stagefeedback-mpc: configure-stagefeedback-mpc
-	@[ $(current_stage) = stagefeedback ] || $(MAKE) stagefeedback-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEfeedback_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGEfeedback_CFLAGS)" \
-		CXXFLAGS="$(STAGEfeedback_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGEfeedback_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGEfeedback_TFLAGS)" \
-		$(TARGET-stagefeedback-mpc)
-
-maybe-clean-stagefeedback-mpc: clean-stagefeedback-mpc
-clean-stagefeedback: clean-stagefeedback-mpc
-clean-stagefeedback-mpc:
-	@if [ $(current_stage) = stagefeedback ]; then \
-	  [ -f $(HOST_SUBDIR)/mpc/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stagefeedback-mpc/Makefile ] || exit 0; \
-	  $(MAKE) stagefeedback-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/mpc && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif mpc-bootstrap
-
-
-
-
-
-.PHONY: check-mpc maybe-check-mpc
-maybe-check-mpc:
-@if mpc
-maybe-check-mpc: check-mpc
-
-check-mpc:
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(FLAGS_TO_PASS)  check)
-
-@endif mpc
-
-.PHONY: install-mpc maybe-install-mpc
-maybe-install-mpc:
-@if mpc
-maybe-install-mpc: install-mpc
-
-install-mpc:
-
-@endif mpc
-
-# Other targets (info, dvi, pdf, etc.)
-
-.PHONY: maybe-info-mpc info-mpc
-maybe-info-mpc:
-@if mpc
-maybe-info-mpc: info-mpc
-
-info-mpc: \
-    configure-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing info in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          info) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-dvi-mpc dvi-mpc
-maybe-dvi-mpc:
-@if mpc
-maybe-dvi-mpc: dvi-mpc
-
-dvi-mpc: \
-    configure-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing dvi in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          dvi) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-pdf-mpc pdf-mpc
-maybe-pdf-mpc:
-@if mpc
-maybe-pdf-mpc: pdf-mpc
-
-pdf-mpc: \
-    configure-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing pdf in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          pdf) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-html-mpc html-mpc
-maybe-html-mpc:
-@if mpc
-maybe-html-mpc: html-mpc
-
-html-mpc: \
-    configure-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing html in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          html) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-TAGS-mpc TAGS-mpc
-maybe-TAGS-mpc:
-@if mpc
-maybe-TAGS-mpc: TAGS-mpc
-
-TAGS-mpc: \
-    configure-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing TAGS in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          TAGS) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-install-info-mpc install-info-mpc
-maybe-install-info-mpc:
-@if mpc
-maybe-install-info-mpc: install-info-mpc
-
-install-info-mpc: \
-    configure-mpc \
-    info-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-info in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-info) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-install-pdf-mpc install-pdf-mpc
-maybe-install-pdf-mpc:
-@if mpc
-maybe-install-pdf-mpc: install-pdf-mpc
-
-install-pdf-mpc: \
-    configure-mpc \
-    pdf-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-pdf in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-pdf) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-install-html-mpc install-html-mpc
-maybe-install-html-mpc:
-@if mpc
-maybe-install-html-mpc: install-html-mpc
-
-install-html-mpc: \
-    configure-mpc \
-    html-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-html in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-html) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-installcheck-mpc installcheck-mpc
-maybe-installcheck-mpc:
-@if mpc
-maybe-installcheck-mpc: installcheck-mpc
-
-installcheck-mpc: \
-    configure-mpc 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing installcheck in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          installcheck) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-mostlyclean-mpc mostlyclean-mpc
-maybe-mostlyclean-mpc:
-@if mpc
-maybe-mostlyclean-mpc: mostlyclean-mpc
-
-mostlyclean-mpc: 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing mostlyclean in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          mostlyclean) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-clean-mpc clean-mpc
-maybe-clean-mpc:
-@if mpc
-maybe-clean-mpc: clean-mpc
-
-clean-mpc: 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing clean in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          clean) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-distclean-mpc distclean-mpc
-maybe-distclean-mpc:
-@if mpc
-maybe-distclean-mpc: distclean-mpc
-
-distclean-mpc: 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing distclean in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          distclean) \
-	  || exit 1
-
-@endif mpc
-
-.PHONY: maybe-maintainer-clean-mpc maintainer-clean-mpc
-maybe-maintainer-clean-mpc:
-@if mpc
-maybe-maintainer-clean-mpc: maintainer-clean-mpc
-
-maintainer-clean-mpc: 
-	@[ -f ./mpc/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing maintainer-clean in mpc" ; \
-	(cd $(HOST_SUBDIR)/mpc && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          maintainer-clean) \
-	  || exit 1
-
-@endif mpc
 
 
 
@@ -40189,860 +38370,6 @@ maintainer-clean-zip:
 
 
 
-.PHONY: configure-zlib maybe-configure-zlib
-maybe-configure-zlib:
-@if gcc-bootstrap
-configure-zlib: stage_current
-@endif gcc-bootstrap
-@if zlib
-maybe-configure-zlib: configure-zlib
-configure-zlib: 
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	test ! -f $(HOST_SUBDIR)/zlib/Makefile || exit 0; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib ; \
-	$(HOST_EXPORTS)  \
-	echo Configuring in $(HOST_SUBDIR)/zlib; \
-	cd "$(HOST_SUBDIR)/zlib" || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption}  \
-	  || exit 1
-@endif zlib
-
-
-
-.PHONY: configure-stage1-zlib maybe-configure-stage1-zlib
-maybe-configure-stage1-zlib:
-@if zlib-bootstrap
-maybe-configure-stage1-zlib: configure-stage1-zlib
-configure-stage1-zlib:
-	@[ $(current_stage) = stage1 ] || $(MAKE) stage1-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE1_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/zlib/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	CFLAGS="$(STAGE1_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE1_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(LIBCFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 1 in $(HOST_SUBDIR)/zlib ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib ; \
-	cd $(HOST_SUBDIR)/zlib || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  $(STAGE1_CONFIGURE_FLAGS)
-@endif zlib-bootstrap
-
-.PHONY: configure-stage2-zlib maybe-configure-stage2-zlib
-maybe-configure-stage2-zlib:
-@if zlib-bootstrap
-maybe-configure-stage2-zlib: configure-stage2-zlib
-configure-stage2-zlib:
-	@[ $(current_stage) = stage2 ] || $(MAKE) stage2-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE2_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/zlib/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE2_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE2_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE2_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 2 in $(HOST_SUBDIR)/zlib ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib ; \
-	cd $(HOST_SUBDIR)/zlib || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE2_CONFIGURE_FLAGS)
-@endif zlib-bootstrap
-
-.PHONY: configure-stage3-zlib maybe-configure-stage3-zlib
-maybe-configure-stage3-zlib:
-@if zlib-bootstrap
-maybe-configure-stage3-zlib: configure-stage3-zlib
-configure-stage3-zlib:
-	@[ $(current_stage) = stage3 ] || $(MAKE) stage3-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE3_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/zlib/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE3_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE3_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE3_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 3 in $(HOST_SUBDIR)/zlib ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib ; \
-	cd $(HOST_SUBDIR)/zlib || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE3_CONFIGURE_FLAGS)
-@endif zlib-bootstrap
-
-.PHONY: configure-stage4-zlib maybe-configure-stage4-zlib
-maybe-configure-stage4-zlib:
-@if zlib-bootstrap
-maybe-configure-stage4-zlib: configure-stage4-zlib
-configure-stage4-zlib:
-	@[ $(current_stage) = stage4 ] || $(MAKE) stage4-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE4_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/zlib/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGE4_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGE4_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE4_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage 4 in $(HOST_SUBDIR)/zlib ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib ; \
-	cd $(HOST_SUBDIR)/zlib || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGE4_CONFIGURE_FLAGS)
-@endif zlib-bootstrap
-
-.PHONY: configure-stageprofile-zlib maybe-configure-stageprofile-zlib
-maybe-configure-stageprofile-zlib:
-@if zlib-bootstrap
-maybe-configure-stageprofile-zlib: configure-stageprofile-zlib
-configure-stageprofile-zlib:
-	@[ $(current_stage) = stageprofile ] || $(MAKE) stageprofile-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEprofile_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/zlib/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGEprofile_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGEprofile_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEprofile_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage profile in $(HOST_SUBDIR)/zlib ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib ; \
-	cd $(HOST_SUBDIR)/zlib || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGEprofile_CONFIGURE_FLAGS)
-@endif zlib-bootstrap
-
-.PHONY: configure-stagefeedback-zlib maybe-configure-stagefeedback-zlib
-maybe-configure-stagefeedback-zlib:
-@if zlib-bootstrap
-maybe-configure-stagefeedback-zlib: configure-stagefeedback-zlib
-configure-stagefeedback-zlib:
-	@[ $(current_stage) = stagefeedback ] || $(MAKE) stagefeedback-start
-	@$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEfeedback_TFLAGS)"; \
-	test ! -f $(HOST_SUBDIR)/zlib/Makefile || exit 0; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS) \
-	CFLAGS="$(STAGEfeedback_CFLAGS)"; export CFLAGS; \
-	CXXFLAGS="$(STAGEfeedback_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEfeedback_CFLAGS)"; export LIBCFLAGS;  \
-	echo Configuring stage feedback in $(HOST_SUBDIR)/zlib ; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/zlib ; \
-	cd $(HOST_SUBDIR)/zlib || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(HOST_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	$(SHELL) $${libsrcdir}/configure \
-	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} $${srcdiroption} \
-	  --with-build-libsubdir=$(HOST_SUBDIR) \
-	  $(STAGEfeedback_CONFIGURE_FLAGS)
-@endif zlib-bootstrap
-
-
-
-
-
-.PHONY: all-zlib maybe-all-zlib
-maybe-all-zlib:
-@if gcc-bootstrap
-all-zlib: stage_current
-@endif gcc-bootstrap
-@if zlib
-TARGET-zlib=all
-maybe-all-zlib: all-zlib
-all-zlib: configure-zlib
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS)  \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) $(EXTRA_HOST_FLAGS)  \
-		$(TARGET-zlib))
-@endif zlib
-
-
-
-.PHONY: all-stage1-zlib maybe-all-stage1-zlib
-.PHONY: clean-stage1-zlib maybe-clean-stage1-zlib
-maybe-all-stage1-zlib:
-maybe-clean-stage1-zlib:
-@if zlib-bootstrap
-maybe-all-stage1-zlib: all-stage1-zlib
-all-stage1: all-stage1-zlib
-TARGET-stage1-zlib = $(TARGET-zlib)
-all-stage1-zlib: configure-stage1-zlib
-	@[ $(current_stage) = stage1 ] || $(MAKE) stage1-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE1_TFLAGS)"; \
-	$(HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE1_CFLAGS)" \
-		CXXFLAGS="$(STAGE1_CXXFLAGS)" \
-		LIBCFLAGS="$(LIBCFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS)   \
-		TFLAGS="$(STAGE1_TFLAGS)" \
-		$(TARGET-stage1-zlib)
-
-maybe-clean-stage1-zlib: clean-stage1-zlib
-clean-stage1: clean-stage1-zlib
-clean-stage1-zlib:
-	@if [ $(current_stage) = stage1 ]; then \
-	  [ -f $(HOST_SUBDIR)/zlib/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage1-zlib/Makefile ] || exit 0; \
-	  $(MAKE) stage1-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		 clean
-@endif zlib-bootstrap
-
-
-.PHONY: all-stage2-zlib maybe-all-stage2-zlib
-.PHONY: clean-stage2-zlib maybe-clean-stage2-zlib
-maybe-all-stage2-zlib:
-maybe-clean-stage2-zlib:
-@if zlib-bootstrap
-maybe-all-stage2-zlib: all-stage2-zlib
-all-stage2: all-stage2-zlib
-TARGET-stage2-zlib = $(TARGET-zlib)
-all-stage2-zlib: configure-stage2-zlib
-	@[ $(current_stage) = stage2 ] || $(MAKE) stage2-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE2_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE2_CFLAGS)" \
-		CXXFLAGS="$(STAGE2_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE2_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE2_TFLAGS)" \
-		$(TARGET-stage2-zlib)
-
-maybe-clean-stage2-zlib: clean-stage2-zlib
-clean-stage2: clean-stage2-zlib
-clean-stage2-zlib:
-	@if [ $(current_stage) = stage2 ]; then \
-	  [ -f $(HOST_SUBDIR)/zlib/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage2-zlib/Makefile ] || exit 0; \
-	  $(MAKE) stage2-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif zlib-bootstrap
-
-
-.PHONY: all-stage3-zlib maybe-all-stage3-zlib
-.PHONY: clean-stage3-zlib maybe-clean-stage3-zlib
-maybe-all-stage3-zlib:
-maybe-clean-stage3-zlib:
-@if zlib-bootstrap
-maybe-all-stage3-zlib: all-stage3-zlib
-all-stage3: all-stage3-zlib
-TARGET-stage3-zlib = $(TARGET-zlib)
-all-stage3-zlib: configure-stage3-zlib
-	@[ $(current_stage) = stage3 ] || $(MAKE) stage3-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE3_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE3_CFLAGS)" \
-		CXXFLAGS="$(STAGE3_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE3_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE3_TFLAGS)" \
-		$(TARGET-stage3-zlib)
-
-maybe-clean-stage3-zlib: clean-stage3-zlib
-clean-stage3: clean-stage3-zlib
-clean-stage3-zlib:
-	@if [ $(current_stage) = stage3 ]; then \
-	  [ -f $(HOST_SUBDIR)/zlib/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage3-zlib/Makefile ] || exit 0; \
-	  $(MAKE) stage3-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif zlib-bootstrap
-
-
-.PHONY: all-stage4-zlib maybe-all-stage4-zlib
-.PHONY: clean-stage4-zlib maybe-clean-stage4-zlib
-maybe-all-stage4-zlib:
-maybe-clean-stage4-zlib:
-@if zlib-bootstrap
-maybe-all-stage4-zlib: all-stage4-zlib
-all-stage4: all-stage4-zlib
-TARGET-stage4-zlib = $(TARGET-zlib)
-all-stage4-zlib: configure-stage4-zlib
-	@[ $(current_stage) = stage4 ] || $(MAKE) stage4-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGE4_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGE4_CFLAGS)" \
-		CXXFLAGS="$(STAGE4_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGE4_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGE4_TFLAGS)" \
-		$(TARGET-stage4-zlib)
-
-maybe-clean-stage4-zlib: clean-stage4-zlib
-clean-stage4: clean-stage4-zlib
-clean-stage4-zlib:
-	@if [ $(current_stage) = stage4 ]; then \
-	  [ -f $(HOST_SUBDIR)/zlib/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stage4-zlib/Makefile ] || exit 0; \
-	  $(MAKE) stage4-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif zlib-bootstrap
-
-
-.PHONY: all-stageprofile-zlib maybe-all-stageprofile-zlib
-.PHONY: clean-stageprofile-zlib maybe-clean-stageprofile-zlib
-maybe-all-stageprofile-zlib:
-maybe-clean-stageprofile-zlib:
-@if zlib-bootstrap
-maybe-all-stageprofile-zlib: all-stageprofile-zlib
-all-stageprofile: all-stageprofile-zlib
-TARGET-stageprofile-zlib = $(TARGET-zlib)
-all-stageprofile-zlib: configure-stageprofile-zlib
-	@[ $(current_stage) = stageprofile ] || $(MAKE) stageprofile-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEprofile_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGEprofile_CFLAGS)" \
-		CXXFLAGS="$(STAGEprofile_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGEprofile_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGEprofile_TFLAGS)" \
-		$(TARGET-stageprofile-zlib)
-
-maybe-clean-stageprofile-zlib: clean-stageprofile-zlib
-clean-stageprofile: clean-stageprofile-zlib
-clean-stageprofile-zlib:
-	@if [ $(current_stage) = stageprofile ]; then \
-	  [ -f $(HOST_SUBDIR)/zlib/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stageprofile-zlib/Makefile ] || exit 0; \
-	  $(MAKE) stageprofile-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif zlib-bootstrap
-
-
-.PHONY: all-stagefeedback-zlib maybe-all-stagefeedback-zlib
-.PHONY: clean-stagefeedback-zlib maybe-clean-stagefeedback-zlib
-maybe-all-stagefeedback-zlib:
-maybe-clean-stagefeedback-zlib:
-@if zlib-bootstrap
-maybe-all-stagefeedback-zlib: all-stagefeedback-zlib
-all-stagefeedback: all-stagefeedback-zlib
-TARGET-stagefeedback-zlib = $(TARGET-zlib)
-all-stagefeedback-zlib: configure-stagefeedback-zlib
-	@[ $(current_stage) = stagefeedback ] || $(MAKE) stagefeedback-start
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	TFLAGS="$(STAGEfeedback_TFLAGS)"; \
-	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(BASE_FLAGS_TO_PASS) \
-		CFLAGS="$(STAGEfeedback_CFLAGS)" \
-		CXXFLAGS="$(STAGEfeedback_CXXFLAGS)" \
-		LIBCFLAGS="$(STAGEfeedback_CFLAGS)" \
-		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
-		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
-		TFLAGS="$(STAGEfeedback_TFLAGS)" \
-		$(TARGET-stagefeedback-zlib)
-
-maybe-clean-stagefeedback-zlib: clean-stagefeedback-zlib
-clean-stagefeedback: clean-stagefeedback-zlib
-clean-stagefeedback-zlib:
-	@if [ $(current_stage) = stagefeedback ]; then \
-	  [ -f $(HOST_SUBDIR)/zlib/Makefile ] || exit 0; \
-	else \
-	  [ -f $(HOST_SUBDIR)/stagefeedback-zlib/Makefile ] || exit 0; \
-	  $(MAKE) stagefeedback-start; \
-	fi; \
-	cd $(HOST_SUBDIR)/zlib && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
-		$(POSTSTAGE1_FLAGS_TO_PASS)  \
-		 clean
-@endif zlib-bootstrap
-
-
-
-
-
-.PHONY: check-zlib maybe-check-zlib
-maybe-check-zlib:
-@if zlib
-maybe-check-zlib: check-zlib
-
-check-zlib:
-
-@endif zlib
-
-.PHONY: install-zlib maybe-install-zlib
-maybe-install-zlib:
-@if zlib
-maybe-install-zlib: install-zlib
-
-install-zlib:
-
-@endif zlib
-
-# Other targets (info, dvi, pdf, etc.)
-
-.PHONY: maybe-info-zlib info-zlib
-maybe-info-zlib:
-@if zlib
-maybe-info-zlib: info-zlib
-
-info-zlib: \
-    configure-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing info in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          info) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-dvi-zlib dvi-zlib
-maybe-dvi-zlib:
-@if zlib
-maybe-dvi-zlib: dvi-zlib
-
-dvi-zlib: \
-    configure-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing dvi in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          dvi) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-pdf-zlib pdf-zlib
-maybe-pdf-zlib:
-@if zlib
-maybe-pdf-zlib: pdf-zlib
-
-pdf-zlib: \
-    configure-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing pdf in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          pdf) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-html-zlib html-zlib
-maybe-html-zlib:
-@if zlib
-maybe-html-zlib: html-zlib
-
-html-zlib: \
-    configure-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing html in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          html) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-TAGS-zlib TAGS-zlib
-maybe-TAGS-zlib:
-@if zlib
-maybe-TAGS-zlib: TAGS-zlib
-
-TAGS-zlib: \
-    configure-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing TAGS in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          TAGS) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-install-info-zlib install-info-zlib
-maybe-install-info-zlib:
-@if zlib
-maybe-install-info-zlib: install-info-zlib
-
-install-info-zlib: \
-    configure-zlib \
-    info-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-info in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-info) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-install-pdf-zlib install-pdf-zlib
-maybe-install-pdf-zlib:
-@if zlib
-maybe-install-pdf-zlib: install-pdf-zlib
-
-install-pdf-zlib: \
-    configure-zlib \
-    pdf-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-pdf in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-pdf) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-install-html-zlib install-html-zlib
-maybe-install-html-zlib:
-@if zlib
-maybe-install-html-zlib: install-html-zlib
-
-install-html-zlib: \
-    configure-zlib \
-    html-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing install-html in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          install-html) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-installcheck-zlib installcheck-zlib
-maybe-installcheck-zlib:
-@if zlib
-maybe-installcheck-zlib: installcheck-zlib
-
-installcheck-zlib: \
-    configure-zlib 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing installcheck in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          installcheck) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-mostlyclean-zlib mostlyclean-zlib
-maybe-mostlyclean-zlib:
-@if zlib
-maybe-mostlyclean-zlib: mostlyclean-zlib
-
-mostlyclean-zlib: 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing mostlyclean in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          mostlyclean) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-clean-zlib clean-zlib
-maybe-clean-zlib:
-@if zlib
-maybe-clean-zlib: clean-zlib
-
-clean-zlib: 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing clean in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          clean) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-distclean-zlib distclean-zlib
-maybe-distclean-zlib:
-@if zlib
-maybe-distclean-zlib: distclean-zlib
-
-distclean-zlib: 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing distclean in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          distclean) \
-	  || exit 1
-
-@endif zlib
-
-.PHONY: maybe-maintainer-clean-zlib maintainer-clean-zlib
-maybe-maintainer-clean-zlib:
-@if zlib
-maybe-maintainer-clean-zlib: maintainer-clean-zlib
-
-maintainer-clean-zlib: 
-	@[ -f ./zlib/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) ; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing maintainer-clean in zlib" ; \
-	(cd $(HOST_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          maintainer-clean) \
-	  || exit 1
-
-@endif zlib
-
-
-
 .PHONY: configure-gdb maybe-configure-gdb
 maybe-configure-gdb:
 @if gcc-bootstrap
@@ -52416,448 +49743,6 @@ maintainer-clean-target-libjava:
 
 
 
-.PHONY: configure-target-zlib maybe-configure-target-zlib
-maybe-configure-target-zlib:
-@if gcc-bootstrap
-configure-target-zlib: stage_current
-@endif gcc-bootstrap
-@if target-zlib
-maybe-configure-target-zlib: configure-target-zlib
-configure-target-zlib: 
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	echo "Checking multilib configuration for zlib..."; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(TARGET_SUBDIR)/zlib ; \
-	$(CC_FOR_TARGET) --print-multi-lib > $(TARGET_SUBDIR)/zlib/multilib.tmp 2> /dev/null ; \
-	if test -r $(TARGET_SUBDIR)/zlib/multilib.out; then \
-	  if cmp -s $(TARGET_SUBDIR)/zlib/multilib.tmp $(TARGET_SUBDIR)/zlib/multilib.out; then \
-	    rm -f $(TARGET_SUBDIR)/zlib/multilib.tmp; \
-	  else \
-	    rm -f $(TARGET_SUBDIR)/zlib/Makefile; \
-	    mv $(TARGET_SUBDIR)/zlib/multilib.tmp $(TARGET_SUBDIR)/zlib/multilib.out; \
-	  fi; \
-	else \
-	  mv $(TARGET_SUBDIR)/zlib/multilib.tmp $(TARGET_SUBDIR)/zlib/multilib.out; \
-	fi; \
-	test ! -f $(TARGET_SUBDIR)/zlib/Makefile || exit 0; \
-	$(SHELL) $(srcdir)/mkinstalldirs $(TARGET_SUBDIR)/zlib ; \
-	$(NORMAL_TARGET_EXPORTS)  \
-	echo Configuring in $(TARGET_SUBDIR)/zlib; \
-	cd "$(TARGET_SUBDIR)/zlib" || exit 1; \
-	case $(srcdir) in \
-	  /* | [A-Za-z]:[\\/]*) topdir=$(srcdir) ;; \
-	  *) topdir=`echo $(TARGET_SUBDIR)/zlib/ | \
-		sed -e 's,\./,,g' -e 's,[^/]*/,../,g' `$(srcdir) ;; \
-	esac; \
-	srcdiroption="--srcdir=$${topdir}/zlib"; \
-	libsrcdir="$$s/zlib"; \
-	rm -f no-such-file || : ; \
-	CONFIG_SITE=no-such-file $(SHELL) $${libsrcdir}/configure \
-	  $(TARGET_CONFIGARGS) --build=${build_alias} --host=${target_alias} \
-	  --target=${target_alias} $${srcdiroption}  \
-	  || exit 1
-@endif target-zlib
-
-
-
-
-
-.PHONY: all-target-zlib maybe-all-target-zlib
-maybe-all-target-zlib:
-@if gcc-bootstrap
-all-target-zlib: stage_current
-@endif gcc-bootstrap
-@if target-zlib
-TARGET-target-zlib=all
-maybe-all-target-zlib: all-target-zlib
-all-target-zlib: configure-target-zlib
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS)  \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) $(EXTRA_TARGET_FLAGS)  \
-		$(TARGET-target-zlib))
-@endif target-zlib
-
-
-
-
-
-.PHONY: check-target-zlib maybe-check-target-zlib
-maybe-check-target-zlib:
-@if target-zlib
-maybe-check-target-zlib: check-target-zlib
-
-check-target-zlib:
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(TARGET_FLAGS_TO_PASS)   check)
-
-@endif target-zlib
-
-.PHONY: install-target-zlib maybe-install-target-zlib
-maybe-install-target-zlib:
-@if target-zlib
-maybe-install-target-zlib: install-target-zlib
-
-install-target-zlib: installdirs
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(TARGET_FLAGS_TO_PASS)  install)
-
-@endif target-zlib
-
-# Other targets (info, dvi, pdf, etc.)
-
-.PHONY: maybe-info-target-zlib info-target-zlib
-maybe-info-target-zlib:
-@if target-zlib
-maybe-info-target-zlib: info-target-zlib
-
-info-target-zlib: \
-    configure-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing info in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           info) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-dvi-target-zlib dvi-target-zlib
-maybe-dvi-target-zlib:
-@if target-zlib
-maybe-dvi-target-zlib: dvi-target-zlib
-
-dvi-target-zlib: \
-    configure-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing dvi in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           dvi) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-pdf-target-zlib pdf-target-zlib
-maybe-pdf-target-zlib:
-@if target-zlib
-maybe-pdf-target-zlib: pdf-target-zlib
-
-pdf-target-zlib: \
-    configure-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing pdf in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           pdf) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-html-target-zlib html-target-zlib
-maybe-html-target-zlib:
-@if target-zlib
-maybe-html-target-zlib: html-target-zlib
-
-html-target-zlib: \
-    configure-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing html in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           html) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-TAGS-target-zlib TAGS-target-zlib
-maybe-TAGS-target-zlib:
-@if target-zlib
-maybe-TAGS-target-zlib: TAGS-target-zlib
-
-TAGS-target-zlib: \
-    configure-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing TAGS in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           TAGS) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-install-info-target-zlib install-info-target-zlib
-maybe-install-info-target-zlib:
-@if target-zlib
-maybe-install-info-target-zlib: install-info-target-zlib
-
-install-info-target-zlib: \
-    configure-target-zlib \
-    info-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing install-info in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           install-info) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-install-pdf-target-zlib install-pdf-target-zlib
-maybe-install-pdf-target-zlib:
-@if target-zlib
-maybe-install-pdf-target-zlib: install-pdf-target-zlib
-
-install-pdf-target-zlib: \
-    configure-target-zlib \
-    pdf-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing install-pdf in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           install-pdf) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-install-html-target-zlib install-html-target-zlib
-maybe-install-html-target-zlib:
-@if target-zlib
-maybe-install-html-target-zlib: install-html-target-zlib
-
-install-html-target-zlib: \
-    configure-target-zlib \
-    html-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing install-html in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           install-html) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-installcheck-target-zlib installcheck-target-zlib
-maybe-installcheck-target-zlib:
-@if target-zlib
-maybe-installcheck-target-zlib: installcheck-target-zlib
-
-installcheck-target-zlib: \
-    configure-target-zlib 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing installcheck in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           installcheck) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-mostlyclean-target-zlib mostlyclean-target-zlib
-maybe-mostlyclean-target-zlib:
-@if target-zlib
-maybe-mostlyclean-target-zlib: mostlyclean-target-zlib
-
-mostlyclean-target-zlib: 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing mostlyclean in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           mostlyclean) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-clean-target-zlib clean-target-zlib
-maybe-clean-target-zlib:
-@if target-zlib
-maybe-clean-target-zlib: clean-target-zlib
-
-clean-target-zlib: 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing clean in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           clean) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-distclean-target-zlib distclean-target-zlib
-maybe-distclean-target-zlib:
-@if target-zlib
-maybe-distclean-target-zlib: distclean-target-zlib
-
-distclean-target-zlib: 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing distclean in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           distclean) \
-	  || exit 1
-
-@endif target-zlib
-
-.PHONY: maybe-maintainer-clean-target-zlib maintainer-clean-target-zlib
-maybe-maintainer-clean-target-zlib:
-@if target-zlib
-maybe-maintainer-clean-target-zlib: maintainer-clean-target-zlib
-
-maintainer-clean-target-zlib: 
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/zlib/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(NORMAL_TARGET_EXPORTS) \
-	echo "Doing maintainer-clean in $(TARGET_SUBDIR)/zlib" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/zlib && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	           maintainer-clean) \
-	  || exit 1
-
-@endif target-zlib
-
-
-
-
-
 .PHONY: configure-target-boehm-gc maybe-configure-target-boehm-gc
 maybe-configure-target-boehm-gc:
 @if gcc-bootstrap
@@ -55779,16 +52664,6 @@ stage1-start::
 	  mkdir stage1-gmp; \
 	mv stage1-gmp gmp 
 @endif gmp
-@if mpfr
-	@cd $(HOST_SUBDIR); [ -d stage1-mpfr ] || \
-	  mkdir stage1-mpfr; \
-	mv stage1-mpfr mpfr 
-@endif mpfr
-@if mpc
-	@cd $(HOST_SUBDIR); [ -d stage1-mpc ] || \
-	  mkdir stage1-mpc; \
-	mv stage1-mpc mpc 
-@endif mpc
 @if ppl
 	@cd $(HOST_SUBDIR); [ -d stage1-ppl ] || \
 	  mkdir stage1-ppl; \
@@ -55834,11 +52709,6 @@ stage1-start::
 	  mkdir stage1-libiberty; \
 	mv stage1-libiberty libiberty 
 @endif libiberty
-@if zlib
-	@cd $(HOST_SUBDIR); [ -d stage1-zlib ] || \
-	  mkdir stage1-zlib; \
-	mv stage1-zlib zlib 
-@endif zlib
 @if lto-plugin
 	@cd $(HOST_SUBDIR); [ -d stage1-lto-plugin ] || \
 	  mkdir stage1-lto-plugin; \
@@ -55879,16 +52749,6 @@ stage1-end::
 	  cd $(HOST_SUBDIR); mv gmp stage1-gmp  ; \
 	fi
 @endif gmp
-@if mpfr
-	@if test -d $(HOST_SUBDIR)/mpfr ; then \
-	  cd $(HOST_SUBDIR); mv mpfr stage1-mpfr  ; \
-	fi
-@endif mpfr
-@if mpc
-	@if test -d $(HOST_SUBDIR)/mpc ; then \
-	  cd $(HOST_SUBDIR); mv mpc stage1-mpc  ; \
-	fi
-@endif mpc
 @if ppl
 	@if test -d $(HOST_SUBDIR)/ppl ; then \
 	  cd $(HOST_SUBDIR); mv ppl stage1-ppl  ; \
@@ -55934,11 +52794,6 @@ stage1-end::
 	  cd $(HOST_SUBDIR); mv libiberty stage1-libiberty  ; \
 	fi
 @endif libiberty
-@if zlib
-	@if test -d $(HOST_SUBDIR)/zlib ; then \
-	  cd $(HOST_SUBDIR); mv zlib stage1-zlib  ; \
-	fi
-@endif zlib
 @if lto-plugin
 	@if test -d $(HOST_SUBDIR)/lto-plugin ; then \
 	  cd $(HOST_SUBDIR); mv lto-plugin stage1-lto-plugin  ; \
@@ -56028,18 +52883,6 @@ stage2-start::
 	mv stage2-gmp gmp  ; \
 	mv stage1-gmp prev-gmp || test -f stage1-lean 
 @endif gmp
-@if mpfr
-	@cd $(HOST_SUBDIR); [ -d stage2-mpfr ] || \
-	  mkdir stage2-mpfr; \
-	mv stage2-mpfr mpfr  ; \
-	mv stage1-mpfr prev-mpfr || test -f stage1-lean 
-@endif mpfr
-@if mpc
-	@cd $(HOST_SUBDIR); [ -d stage2-mpc ] || \
-	  mkdir stage2-mpc; \
-	mv stage2-mpc mpc  ; \
-	mv stage1-mpc prev-mpc || test -f stage1-lean 
-@endif mpc
 @if ppl
 	@cd $(HOST_SUBDIR); [ -d stage2-ppl ] || \
 	  mkdir stage2-ppl; \
@@ -56094,12 +52937,6 @@ stage2-start::
 	mv stage2-libiberty libiberty  ; \
 	mv stage1-libiberty prev-libiberty || test -f stage1-lean 
 @endif libiberty
-@if zlib
-	@cd $(HOST_SUBDIR); [ -d stage2-zlib ] || \
-	  mkdir stage2-zlib; \
-	mv stage2-zlib zlib  ; \
-	mv stage1-zlib prev-zlib || test -f stage1-lean 
-@endif zlib
 @if lto-plugin
 	@cd $(HOST_SUBDIR); [ -d stage2-lto-plugin ] || \
 	  mkdir stage2-lto-plugin; \
@@ -56148,18 +52985,6 @@ stage2-end::
 	  mv prev-gmp stage1-gmp ; :  ; \
 	fi
 @endif gmp
-@if mpfr
-	@if test -d $(HOST_SUBDIR)/mpfr ; then \
-	  cd $(HOST_SUBDIR); mv mpfr stage2-mpfr ; \
-	  mv prev-mpfr stage1-mpfr ; :  ; \
-	fi
-@endif mpfr
-@if mpc
-	@if test -d $(HOST_SUBDIR)/mpc ; then \
-	  cd $(HOST_SUBDIR); mv mpc stage2-mpc ; \
-	  mv prev-mpc stage1-mpc ; :  ; \
-	fi
-@endif mpc
 @if ppl
 	@if test -d $(HOST_SUBDIR)/ppl ; then \
 	  cd $(HOST_SUBDIR); mv ppl stage2-ppl ; \
@@ -56214,12 +53039,6 @@ stage2-end::
 	  mv prev-libiberty stage1-libiberty ; :  ; \
 	fi
 @endif libiberty
-@if zlib
-	@if test -d $(HOST_SUBDIR)/zlib ; then \
-	  cd $(HOST_SUBDIR); mv zlib stage2-zlib ; \
-	  mv prev-zlib stage1-zlib ; :  ; \
-	fi
-@endif zlib
 @if lto-plugin
 	@if test -d $(HOST_SUBDIR)/lto-plugin ; then \
 	  cd $(HOST_SUBDIR); mv lto-plugin stage2-lto-plugin ; \
@@ -56334,18 +53153,6 @@ stage3-start::
 	mv stage3-gmp gmp  ; \
 	mv stage2-gmp prev-gmp || test -f stage2-lean 
 @endif gmp
-@if mpfr
-	@cd $(HOST_SUBDIR); [ -d stage3-mpfr ] || \
-	  mkdir stage3-mpfr; \
-	mv stage3-mpfr mpfr  ; \
-	mv stage2-mpfr prev-mpfr || test -f stage2-lean 
-@endif mpfr
-@if mpc
-	@cd $(HOST_SUBDIR); [ -d stage3-mpc ] || \
-	  mkdir stage3-mpc; \
-	mv stage3-mpc mpc  ; \
-	mv stage2-mpc prev-mpc || test -f stage2-lean 
-@endif mpc
 @if ppl
 	@cd $(HOST_SUBDIR); [ -d stage3-ppl ] || \
 	  mkdir stage3-ppl; \
@@ -56400,12 +53207,6 @@ stage3-start::
 	mv stage3-libiberty libiberty  ; \
 	mv stage2-libiberty prev-libiberty || test -f stage2-lean 
 @endif libiberty
-@if zlib
-	@cd $(HOST_SUBDIR); [ -d stage3-zlib ] || \
-	  mkdir stage3-zlib; \
-	mv stage3-zlib zlib  ; \
-	mv stage2-zlib prev-zlib || test -f stage2-lean 
-@endif zlib
 @if lto-plugin
 	@cd $(HOST_SUBDIR); [ -d stage3-lto-plugin ] || \
 	  mkdir stage3-lto-plugin; \
@@ -56454,18 +53255,6 @@ stage3-end::
 	  mv prev-gmp stage2-gmp ; :  ; \
 	fi
 @endif gmp
-@if mpfr
-	@if test -d $(HOST_SUBDIR)/mpfr ; then \
-	  cd $(HOST_SUBDIR); mv mpfr stage3-mpfr ; \
-	  mv prev-mpfr stage2-mpfr ; :  ; \
-	fi
-@endif mpfr
-@if mpc
-	@if test -d $(HOST_SUBDIR)/mpc ; then \
-	  cd $(HOST_SUBDIR); mv mpc stage3-mpc ; \
-	  mv prev-mpc stage2-mpc ; :  ; \
-	fi
-@endif mpc
 @if ppl
 	@if test -d $(HOST_SUBDIR)/ppl ; then \
 	  cd $(HOST_SUBDIR); mv ppl stage3-ppl ; \
@@ -56520,12 +53309,6 @@ stage3-end::
 	  mv prev-libiberty stage2-libiberty ; :  ; \
 	fi
 @endif libiberty
-@if zlib
-	@if test -d $(HOST_SUBDIR)/zlib ; then \
-	  cd $(HOST_SUBDIR); mv zlib stage3-zlib ; \
-	  mv prev-zlib stage2-zlib ; :  ; \
-	fi
-@endif zlib
 @if lto-plugin
 	@if test -d $(HOST_SUBDIR)/lto-plugin ; then \
 	  cd $(HOST_SUBDIR); mv lto-plugin stage3-lto-plugin ; \
@@ -56696,18 +53479,6 @@ stage4-start::
 	mv stage4-gmp gmp  ; \
 	mv stage3-gmp prev-gmp || test -f stage3-lean 
 @endif gmp
-@if mpfr
-	@cd $(HOST_SUBDIR); [ -d stage4-mpfr ] || \
-	  mkdir stage4-mpfr; \
-	mv stage4-mpfr mpfr  ; \
-	mv stage3-mpfr prev-mpfr || test -f stage3-lean 
-@endif mpfr
-@if mpc
-	@cd $(HOST_SUBDIR); [ -d stage4-mpc ] || \
-	  mkdir stage4-mpc; \
-	mv stage4-mpc mpc  ; \
-	mv stage3-mpc prev-mpc || test -f stage3-lean 
-@endif mpc
 @if ppl
 	@cd $(HOST_SUBDIR); [ -d stage4-ppl ] || \
 	  mkdir stage4-ppl; \
@@ -56762,12 +53533,6 @@ stage4-start::
 	mv stage4-libiberty libiberty  ; \
 	mv stage3-libiberty prev-libiberty || test -f stage3-lean 
 @endif libiberty
-@if zlib
-	@cd $(HOST_SUBDIR); [ -d stage4-zlib ] || \
-	  mkdir stage4-zlib; \
-	mv stage4-zlib zlib  ; \
-	mv stage3-zlib prev-zlib || test -f stage3-lean 
-@endif zlib
 @if lto-plugin
 	@cd $(HOST_SUBDIR); [ -d stage4-lto-plugin ] || \
 	  mkdir stage4-lto-plugin; \
@@ -56816,18 +53581,6 @@ stage4-end::
 	  mv prev-gmp stage3-gmp ; :  ; \
 	fi
 @endif gmp
-@if mpfr
-	@if test -d $(HOST_SUBDIR)/mpfr ; then \
-	  cd $(HOST_SUBDIR); mv mpfr stage4-mpfr ; \
-	  mv prev-mpfr stage3-mpfr ; :  ; \
-	fi
-@endif mpfr
-@if mpc
-	@if test -d $(HOST_SUBDIR)/mpc ; then \
-	  cd $(HOST_SUBDIR); mv mpc stage4-mpc ; \
-	  mv prev-mpc stage3-mpc ; :  ; \
-	fi
-@endif mpc
 @if ppl
 	@if test -d $(HOST_SUBDIR)/ppl ; then \
 	  cd $(HOST_SUBDIR); mv ppl stage4-ppl ; \
@@ -56882,12 +53635,6 @@ stage4-end::
 	  mv prev-libiberty stage3-libiberty ; :  ; \
 	fi
 @endif libiberty
-@if zlib
-	@if test -d $(HOST_SUBDIR)/zlib ; then \
-	  cd $(HOST_SUBDIR); mv zlib stage4-zlib ; \
-	  mv prev-zlib stage3-zlib ; :  ; \
-	fi
-@endif zlib
 @if lto-plugin
 	@if test -d $(HOST_SUBDIR)/lto-plugin ; then \
 	  cd $(HOST_SUBDIR); mv lto-plugin stage4-lto-plugin ; \
@@ -57046,18 +53793,6 @@ stageprofile-start::
 	mv stageprofile-gmp gmp  ; \
 	mv stage1-gmp prev-gmp || test -f stage1-lean 
 @endif gmp
-@if mpfr
-	@cd $(HOST_SUBDIR); [ -d stageprofile-mpfr ] || \
-	  mkdir stageprofile-mpfr; \
-	mv stageprofile-mpfr mpfr  ; \
-	mv stage1-mpfr prev-mpfr || test -f stage1-lean 
-@endif mpfr
-@if mpc
-	@cd $(HOST_SUBDIR); [ -d stageprofile-mpc ] || \
-	  mkdir stageprofile-mpc; \
-	mv stageprofile-mpc mpc  ; \
-	mv stage1-mpc prev-mpc || test -f stage1-lean 
-@endif mpc
 @if ppl
 	@cd $(HOST_SUBDIR); [ -d stageprofile-ppl ] || \
 	  mkdir stageprofile-ppl; \
@@ -57112,12 +53847,6 @@ stageprofile-start::
 	mv stageprofile-libiberty libiberty  ; \
 	mv stage1-libiberty prev-libiberty || test -f stage1-lean 
 @endif libiberty
-@if zlib
-	@cd $(HOST_SUBDIR); [ -d stageprofile-zlib ] || \
-	  mkdir stageprofile-zlib; \
-	mv stageprofile-zlib zlib  ; \
-	mv stage1-zlib prev-zlib || test -f stage1-lean 
-@endif zlib
 @if lto-plugin
 	@cd $(HOST_SUBDIR); [ -d stageprofile-lto-plugin ] || \
 	  mkdir stageprofile-lto-plugin; \
@@ -57166,18 +53895,6 @@ stageprofile-end::
 	  mv prev-gmp stage1-gmp ; :  ; \
 	fi
 @endif gmp
-@if mpfr
-	@if test -d $(HOST_SUBDIR)/mpfr ; then \
-	  cd $(HOST_SUBDIR); mv mpfr stageprofile-mpfr ; \
-	  mv prev-mpfr stage1-mpfr ; :  ; \
-	fi
-@endif mpfr
-@if mpc
-	@if test -d $(HOST_SUBDIR)/mpc ; then \
-	  cd $(HOST_SUBDIR); mv mpc stageprofile-mpc ; \
-	  mv prev-mpc stage1-mpc ; :  ; \
-	fi
-@endif mpc
 @if ppl
 	@if test -d $(HOST_SUBDIR)/ppl ; then \
 	  cd $(HOST_SUBDIR); mv ppl stageprofile-ppl ; \
@@ -57232,12 +53949,6 @@ stageprofile-end::
 	  mv prev-libiberty stage1-libiberty ; :  ; \
 	fi
 @endif libiberty
-@if zlib
-	@if test -d $(HOST_SUBDIR)/zlib ; then \
-	  cd $(HOST_SUBDIR); mv zlib stageprofile-zlib ; \
-	  mv prev-zlib stage1-zlib ; :  ; \
-	fi
-@endif zlib
 @if lto-plugin
 	@if test -d $(HOST_SUBDIR)/lto-plugin ; then \
 	  cd $(HOST_SUBDIR); mv lto-plugin stageprofile-lto-plugin ; \
@@ -57329,18 +54040,6 @@ stagefeedback-start::
 	mv stagefeedback-gmp gmp  ; \
 	mv stageprofile-gmp prev-gmp || test -f stageprofile-lean 
 @endif gmp
-@if mpfr
-	@cd $(HOST_SUBDIR); [ -d stagefeedback-mpfr ] || \
-	  mkdir stagefeedback-mpfr; \
-	mv stagefeedback-mpfr mpfr  ; \
-	mv stageprofile-mpfr prev-mpfr || test -f stageprofile-lean 
-@endif mpfr
-@if mpc
-	@cd $(HOST_SUBDIR); [ -d stagefeedback-mpc ] || \
-	  mkdir stagefeedback-mpc; \
-	mv stagefeedback-mpc mpc  ; \
-	mv stageprofile-mpc prev-mpc || test -f stageprofile-lean 
-@endif mpc
 @if ppl
 	@cd $(HOST_SUBDIR); [ -d stagefeedback-ppl ] || \
 	  mkdir stagefeedback-ppl; \
@@ -57395,12 +54094,6 @@ stagefeedback-start::
 	mv stagefeedback-libiberty libiberty  ; \
 	mv stageprofile-libiberty prev-libiberty || test -f stageprofile-lean 
 @endif libiberty
-@if zlib
-	@cd $(HOST_SUBDIR); [ -d stagefeedback-zlib ] || \
-	  mkdir stagefeedback-zlib; \
-	mv stagefeedback-zlib zlib  ; \
-	mv stageprofile-zlib prev-zlib || test -f stageprofile-lean 
-@endif zlib
 @if lto-plugin
 	@cd $(HOST_SUBDIR); [ -d stagefeedback-lto-plugin ] || \
 	  mkdir stagefeedback-lto-plugin; \
@@ -57449,18 +54142,6 @@ stagefeedback-end::
 	  mv prev-gmp stageprofile-gmp ; :  ; \
 	fi
 @endif gmp
-@if mpfr
-	@if test -d $(HOST_SUBDIR)/mpfr ; then \
-	  cd $(HOST_SUBDIR); mv mpfr stagefeedback-mpfr ; \
-	  mv prev-mpfr stageprofile-mpfr ; :  ; \
-	fi
-@endif mpfr
-@if mpc
-	@if test -d $(HOST_SUBDIR)/mpc ; then \
-	  cd $(HOST_SUBDIR); mv mpc stagefeedback-mpc ; \
-	  mv prev-mpc stageprofile-mpc ; :  ; \
-	fi
-@endif mpc
 @if ppl
 	@if test -d $(HOST_SUBDIR)/ppl ; then \
 	  cd $(HOST_SUBDIR); mv ppl stagefeedback-ppl ; \
@@ -57515,12 +54196,6 @@ stagefeedback-end::
 	  mv prev-libiberty stageprofile-libiberty ; :  ; \
 	fi
 @endif libiberty
-@if zlib
-	@if test -d $(HOST_SUBDIR)/zlib ; then \
-	  cd $(HOST_SUBDIR); mv zlib stagefeedback-zlib ; \
-	  mv prev-zlib stageprofile-zlib ; :  ; \
-	fi
-@endif zlib
 @if lto-plugin
 	@if test -d $(HOST_SUBDIR)/lto-plugin ; then \
 	  cd $(HOST_SUBDIR); mv lto-plugin stagefeedback-lto-plugin ; \
@@ -57659,7 +54334,6 @@ configure-target-gperf: stage_last
 configure-target-examples: stage_last
 configure-target-libffi: stage_last
 configure-target-libjava: stage_last
-configure-target-zlib: stage_last
 configure-target-boehm-gc: stage_last
 configure-target-qthreads: stage_last
 configure-target-rda: stage_last
@@ -57688,7 +54362,6 @@ configure-target-gperf: maybe-all-gcc
 configure-target-examples: maybe-all-gcc
 configure-target-libffi: maybe-all-gcc
 configure-target-libjava: maybe-all-gcc
-configure-target-zlib: maybe-all-gcc
 configure-target-boehm-gc: maybe-all-gcc
 configure-target-qthreads: maybe-all-gcc
 configure-target-rda: maybe-all-gcc
@@ -57795,22 +54468,6 @@ all-stage3-gcc: maybe-all-stage3-intl
 all-stage4-gcc: maybe-all-stage4-intl
 all-stageprofile-gcc: maybe-all-stageprofile-intl
 all-stagefeedback-gcc: maybe-all-stagefeedback-intl
-all-gcc: maybe-all-mpfr
-
-all-stage1-gcc: maybe-all-stage1-mpfr
-all-stage2-gcc: maybe-all-stage2-mpfr
-all-stage3-gcc: maybe-all-stage3-mpfr
-all-stage4-gcc: maybe-all-stage4-mpfr
-all-stageprofile-gcc: maybe-all-stageprofile-mpfr
-all-stagefeedback-gcc: maybe-all-stagefeedback-mpfr
-all-gcc: maybe-all-mpc
-
-all-stage1-gcc: maybe-all-stage1-mpc
-all-stage2-gcc: maybe-all-stage2-mpc
-all-stage3-gcc: maybe-all-stage3-mpc
-all-stage4-gcc: maybe-all-stage4-mpc
-all-stageprofile-gcc: maybe-all-stageprofile-mpc
-all-stagefeedback-gcc: maybe-all-stagefeedback-mpc
 all-gcc: maybe-all-ppl
 
 all-stage1-gcc: maybe-all-stage1-ppl
@@ -57875,14 +54532,6 @@ all-stage3-gcc: maybe-all-build-fixincludes
 all-stage4-gcc: maybe-all-build-fixincludes
 all-stageprofile-gcc: maybe-all-build-fixincludes
 all-stagefeedback-gcc: maybe-all-build-fixincludes
-all-gcc: maybe-all-zlib
-
-all-stage1-gcc: maybe-all-stage1-zlib
-all-stage2-gcc: maybe-all-stage2-zlib
-all-stage3-gcc: maybe-all-stage3-zlib
-all-stage4-gcc: maybe-all-stage4-zlib
-all-stageprofile-gcc: maybe-all-stageprofile-zlib
-all-stagefeedback-gcc: maybe-all-stagefeedback-zlib
 all-gcc: all-libcpp
 
 all-stage1-gcc: all-stage1-libcpp
@@ -57951,22 +54600,6 @@ all-stage3-lto-plugin: maybe-all-stage3-gcc
 all-stage4-lto-plugin: maybe-all-stage4-gcc
 all-stageprofile-lto-plugin: maybe-all-stageprofile-gcc
 all-stagefeedback-lto-plugin: maybe-all-stagefeedback-gcc
-configure-mpfr: maybe-all-gmp
-
-configure-stage1-mpfr: maybe-all-stage1-gmp
-configure-stage2-mpfr: maybe-all-stage2-gmp
-configure-stage3-mpfr: maybe-all-stage3-gmp
-configure-stage4-mpfr: maybe-all-stage4-gmp
-configure-stageprofile-mpfr: maybe-all-stageprofile-gmp
-configure-stagefeedback-mpfr: maybe-all-stagefeedback-gmp
-configure-mpc: maybe-all-mpfr
-
-configure-stage1-mpc: maybe-all-stage1-mpfr
-configure-stage2-mpc: maybe-all-stage2-mpfr
-configure-stage3-mpc: maybe-all-stage3-mpfr
-configure-stage4-mpc: maybe-all-stage4-mpfr
-configure-stageprofile-mpc: maybe-all-stageprofile-mpfr
-configure-stagefeedback-mpc: maybe-all-stagefeedback-mpfr
 configure-ppl: maybe-all-gmp
 
 configure-stage1-ppl: maybe-all-stage1-gmp
@@ -57975,14 +54608,6 @@ configure-stage3-ppl: maybe-all-stage3-gmp
 configure-stage4-ppl: maybe-all-stage4-gmp
 configure-stageprofile-ppl: maybe-all-stageprofile-gmp
 configure-stagefeedback-ppl: maybe-all-stagefeedback-gmp
-configure-ppl: maybe-all-mpfr
-
-configure-stage1-ppl: maybe-all-stage1-mpfr
-configure-stage2-ppl: maybe-all-stage2-mpfr
-configure-stage3-ppl: maybe-all-stage3-mpfr
-configure-stage4-ppl: maybe-all-stage4-mpfr
-configure-stageprofile-ppl: maybe-all-stageprofile-mpfr
-configure-stagefeedback-ppl: maybe-all-stagefeedback-mpfr
 configure-cloog: maybe-all-ppl
 
 configure-stage1-cloog: maybe-all-stage1-ppl
@@ -58469,7 +55094,6 @@ configure-target-gperf: maybe-all-target-libgcc
 configure-target-examples: maybe-all-target-libgcc
 configure-target-libffi: maybe-all-target-libgcc
 configure-target-libjava: maybe-all-target-libgcc
-configure-target-zlib: maybe-all-target-libgcc
 configure-target-boehm-gc: maybe-all-target-libgcc
 configure-target-qthreads: maybe-all-target-libgcc
 configure-target-rda: maybe-all-target-libgcc
@@ -58505,8 +55129,6 @@ configure-target-libffi: maybe-all-target-newlib maybe-all-target-libgloss
 
 configure-target-libjava: maybe-all-target-newlib maybe-all-target-libgloss
 configure-target-libjava: maybe-all-target-libstdc++-v3
-
-configure-target-zlib: maybe-all-target-newlib maybe-all-target-libgloss
 
 configure-target-boehm-gc: maybe-all-target-newlib maybe-all-target-libgloss
 
