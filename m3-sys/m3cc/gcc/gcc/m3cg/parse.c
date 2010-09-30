@@ -23,6 +23,7 @@
    what you give them.   Help stamp out software-hoarding! */
 
 static const char M3_TYPES = 1;
+static const char M3_TYPES_INT = 0;
 static const char M3_TYPES_ENUM = 0;
 static const char M3_TYPES_TYPENAME = 0;
 static const char M3_TYPES_CHECK_RECORD_SIZE = 1;
@@ -626,6 +627,21 @@ typedef enum
 }
 m3_type;
 
+#define IS_WORD_TYPE(t) (t == T_word_32 || t == T_word_8 || t == T_word_16 || \
+                         t == T_word_64 || t == T_word)
+
+#define IS_INTEGER_TYPE(t) (t == T_int_32 || t == T_int_8 || t == T_int_16 || \
+                            t == T_int_64 || t == T_int)
+
+#define IS_INTEGER_TYPE_TREE(t) (t == t_int_32 || t == t_int_8 \
+                || t == t_int_16 || t == t_int_64 || t == t_int)
+
+#define IS_WORD_TYPE_TREE(t) (t == t_word_32 || t == t_word_8 \
+                || t == t_word_16 || t == t_word_64 || t == t_word)
+
+#define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
+#define IS_REAL_TYPE_TREE(t) (t == t_reel || t == t_lreel || t == t_xreel)
+
 #define boolstr(a) ((a) ? "true" : "false")
 
 static const char* typestr (unsigned a)
@@ -689,8 +705,8 @@ static GTY (()) tree pending_inits;
 
 static tree m3_current_scope (void)
 {
-  return current_block ? current_block
-         : current_function_decl ? current_function_decl
+  return /*current_block ? current_block
+         : */current_function_decl ? current_function_decl
          : global_decls;
 }
 
@@ -860,6 +876,12 @@ m3_build_type_id (m3_type t, unsigned HOST_WIDE_INT s, unsigned HOST_WIDE_INT a,
 
   if (!M3_TYPES)
     id = NO_UID; /* disable */
+
+  if (M3_TYPES_INT
+        && (id != NO_UID)
+        && (IS_INTEGER_TYPE(t) || IS_WORD_TYPE(t))
+        && ((ts = get_typeid_to_tree (id))))
+    return ts;
 
   switch (t)
     {
@@ -1286,8 +1308,8 @@ static tree
 m3_push_type_decl (tree type, tree name)
 {
   tree decl = { 0 };
-  gcc_assert (name || !M3_TYPES_ENUM);
-  gcc_assert (type || !M3_TYPES_ENUM);
+  gcc_assert (name || M3_TYPES_ENUM);
+  gcc_assert (type || M3_TYPES_ENUM);
   if (!type)
     return 0;
   decl = build_decl (TYPE_DECL, name, type);
@@ -1941,21 +1963,6 @@ scan_calling_convention (void)
 #define NAME(x, n) STRING(x, n)
 
 /*----------------------------------------------------------------- types ---*/
-
-#define IS_WORD_TYPE(t) (t == T_word_32 || t == T_word_8 || t == T_word_16 || \
-                         t == T_word_64 || t == T_word)
-
-#define IS_INTEGER_TYPE(t) (t == T_int_32 || t == T_int_8 || t == T_int_16 || \
-                            t == T_int_64 || t == T_int)
-
-#define IS_INTEGER_TYPE_TREE(t) (t == t_int_32 || t == t_int_8 \
-                || t == t_int_16 || t == t_int_64 || t == t_int)
-
-#define IS_WORD_TYPE_TREE(t) (t == t_word_32 || t == t_word_8 \
-                || t == t_word_16 || t == t_word_64 || t == t_word)
-
-#define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
-#define IS_REAL_TYPE_TREE(t) (t == t_reel || t == t_lreel || t == t_xreel)
 
 #define TYPE(x) m3_type x = M3_UNUSED (x, scan_type (#x))
 
@@ -3362,7 +3369,7 @@ m3cg_declare_enum (void)
                     : (n_elts <= (1UL << 16)) ? 16
                     : 32;
     enumtype = make_node (ENUMERAL_TYPE);
-    TYPE_USER_ALIGN (enumtype) = 1;
+    /* TYPE_USER_ALIGN (enumtype) = bits; */
     TYPE_UNSIGNED (enumtype) = 1;
     TYPE_MIN_VALUE (enumtype) = integer_zero_node;
     enumtype_elementtype = m3_build_type_id (T_word, bits, bits, my_id);
@@ -3371,10 +3378,10 @@ m3cg_declare_enum (void)
     TYPE_SIZE (enumtype) = bitsize_int (bits);
     TYPE_SIZE_UNIT (enumtype) = size_int (bits / BITS_PER_UNIT);
     TYPE_PRECISION (enumtype) = bits;
-    TYPE_ALIGN (enumtype) = 1;
+    /* TYPE_ALIGN (enumtype) = bits; */
     TYPE_PACKED (enumtype) = 1;
-    /* TYPE_STUB_DECL (enumtype) = m3_push_type_decl (enumtype, 0); */
-    /* TYPE_MAIN_VARIANT (enumtype) = enumtype; */
+    TYPE_STUB_DECL (enumtype) = m3_push_type_decl (enumtype, 0);
+    TYPE_MAIN_VARIANT (enumtype) = enumtype;
     set_typeid_to_tree (my_id, enumtype);
   }
 }
@@ -3390,13 +3397,16 @@ m3cg_declare_enum_elt (void)
   if (M3_TYPES_ENUM)
   {
     tree decl = build_decl (CONST_DECL, get_identifier (name), enumtype_elementtype);
+    tree value = build_int_cstu (t_word, current_dbg_type_count2 - current_dbg_type_count1);
     DECL_SOURCE_LOCATION (decl) = input_location;
     DECL_CONTEXT (decl) = m3_current_scope ();
     gcc_assert (current_dbg_type_count2 > 0);
     gcc_assert (current_dbg_type_count2 >= current_dbg_type_count1);
-    DECL_INITIAL (decl) = convert (enumtype_elementtype, build_int_cstu (t_word, current_dbg_type_count2 - current_dbg_type_count1));
+    DECL_INITIAL (decl) = convert (enumtype_elementtype, value);
+    pushdecl (decl);
+    decl = tree_cons (decl, value, NULL_TREE);
     TREE_CHAIN (decl) = TYPE_VALUES (enumtype);
-    TYPE_VALUES (enumtype) = TREE_CHAIN (decl);
+    TYPE_VALUES (enumtype) = decl;
   }
 
   debug_field_name (name);
@@ -3408,7 +3418,6 @@ m3cg_declare_enum_elt (void)
     if (M3_TYPES_ENUM)
     {
       tree pair = { 0 };
-      tree values = { 0 };
 
       for (pair = TYPE_VALUES (enumtype); pair; pair = TREE_CHAIN (pair))
       {
@@ -3420,8 +3429,7 @@ m3cg_declare_enum_elt (void)
         TREE_PURPOSE (pair) = DECL_NAME (enu);
         TREE_VALUE (pair) = ini;
       }
-      TYPE_VALUES (enumtype) = values;
-
+      TYPE_VALUES (enumtype) = nreverse (TYPE_VALUES (enumtype));
       layout_type (enumtype);
       /* rest_of_type_compilation (enumtype, true); */
       current_dbg_type_count2 = 0; /* done */
