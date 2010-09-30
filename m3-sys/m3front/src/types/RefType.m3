@@ -269,7 +269,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
 
     CG.Gen_location (p.origin);
     name := Type.LinkName (p, "_INIT");
-    CG.Comment (-1, FALSE, name);
+    CG.Comment (-1, FALSE, name & " (RefType)");
     Scanner.offset := p.origin;
     CG.Gen_location (p.origin);
     proc := CG.Declare_procedure (M3ID.Add (name), 1, CG.Type.Void,
