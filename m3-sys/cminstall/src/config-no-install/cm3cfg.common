@@ -332,121 +332,25 @@ end
 end
 
 proc GetM3Back() is
-
   if defined("m3back")
     % write("using " & m3back & "\n")
     return m3back
   end
 
-  local proc GetSparcSolarisAlternate(x) is
-    if equal (x, "SOLsun")
-      return "SOLgnu"
-    end
-    if equal (x, "SOLgnu")
-      return "SOLsun"
-    end
-    return x
-  end
-
-  % probe all of these?
-  % rationale:
-  %  probe the built one ahead of the installed one
-  %  probe host/target ahead of just target
-  %  probe slash ahead of dash
-  %  I favor slash; gcc precedent is dash.
-  %  (because dash fits in less modified $PATH, slash not?)
-  %  Dash is also goodness in the directory name for how m3cc builds,
-  %  but again, I prefer slash.
-  % ROOT/m3-sys/m3cc/HOST/TARGET/gcc/m3cgc1.exe
-  % ROOT/m3-sys/m3cc/HOST/TARGET/gcc/m3cgc1
-  % ROOT/m3-sys/m3cc/HOST-TARGET/gcc/m3cgc1.exe
-  % ROOT/m3-sys/m3cc/HOST-TARGET/gcc/m3cgc1
-  % INSTALL_ROOT/bin/HOST/TARGET/cm3cg.exe
-  % INSTALL_ROOT/bin/HOST/TARGET/cm3cg
-  % INSTALL_ROOT/bin/HOST/TARGET-cm3cg.exe
-  % INSTALL_ROOT/bin/HOST/TARGET-cm3cg
-  % ROOT/m3-sys/m3cc/TARGET/gcc/m3cgc1.exe
-  % ROOT/m3-sys/m3cc/TARGET/gcc/m3cgc1
-  % ROOT/m3-sys/m3cc/TARGET/cm3cg.exe
-  % ROOT/m3-sys/m3cc/TARGET/cm3cg
-  % INSTALL_ROOT/bin/TARGET/cm3cg.exe
-  % INSTALL_ROOT/bin/TARGET/cm3cg
-  % INSTALL_ROOT/bin/TARGET-cm3cg.exe
-  % INSTALL_ROOT/bin/TARGET-cm3cg
-  % INSTALL_ROOT/bin/cm3cg.exe
-  % INSTALL_ROOT/bin/cm3cg
-
-  local bin = INSTALL_ROOT & SL & "bin" & SL
-  local m3cc = ""
-  if defined("ROOT")
-    m3cc = ROOT & SL & "m3-sys" & SL & "m3cc" & SL
-  end
-  local Cache = { }
-
-  %
-  % Not all these combinations are meant to be used,
-  % and the order isn't always right.
-  %
-  % We do not intend to look at, for example:
-  %   /home/jay/dev2/cm3/m3-sys/m3cc/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
-  % Target- is only a prefix on file names, not directories.
-  %
-  %   /cm3/bin/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
-  % The installed file is always renamed to cm3cg.
-  %
-  % Work on this more later.
-  %
   if not defined("HOST")
     HOST = TARGET
   end
-  local ALTHOST = HOST
-  if equal (HOST, "NT386")
-    ALTHOST = "NT386GNU"
-  end
-  ALTHOST = GetSparcSolarisAlternate(ALTHOST)
-  local ALTTARGET = GetSparcSolarisAlternate(TARGET)
-  %
-  % NOTE that if you share one file system across multiple hosts, then
-  % host and target can get confused, if one is empty. For that reason,
-  % we should probe all variants where both are non-empty before we probe
-  % any where either is empty, but we don't.
-  %
-  foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
-    if not equal (host, "-")
-      foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
-        if not equal (target, "-")
-          if not equal (target, "") or equal (HOST, TARGET)
-            if not equal (host, "") or equal (HOST, TARGET)
-              foreach root in [ m3cc, bin ]
-                if root
-                  foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
-                    foreach exe in [".exe", ""]
-                      if not defined("m3back")
-                        local a = root & host & target & gcc & exe
-                        if not Cache contains a
-                          % write("probing " & a & "\n")
-                          if FileExists(a)
-                            % write("using " & a & "\n")
-                            m3back = "@" & a & " " & GetM3BackFlags()
-                          else
-                            Cache{a} = 1
-                          end
-                        end
-                      end
-                    end
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-  end
-  if not defined("m3back")
-    % write("using cm3cg in PATH (if there is one)\n")
-    m3back = "@cm3cg " & GetM3BackFlags()
-  end
+
+  % for cross builds:
+  if defined("ROOT") and not equal(HOST, TARGET)
+    m3back = ROOT & "/m3-sys/m3cc/" & HOST & "-" & TARGET & "/"
+  
+  % for native builds:
+  else if equal(HOST, TARGET)
+    m3back = INSTALL_ROOT & "/bin/"
+  end end
+  
+  m3back = "@" & m3back & "cm3cg " & GetM3BackFlags()
   return m3back
 end
 
