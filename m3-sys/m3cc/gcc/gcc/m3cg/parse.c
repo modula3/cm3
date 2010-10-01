@@ -180,7 +180,6 @@ static void m3_revstr (char* a, size_t len)
   }
 }
 
-#if 0 /* for illustrative purposes */
 static void m3_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
 {
    unsigned i = { 0 };
@@ -189,9 +188,8 @@ static void m3_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
    m3_revstr (buf, i);
    buf[i] = 0;
 }
-#endif
 
-#if 0 /* for illustrative purposes */
+#if 0 /* for illustration purposes */
 static void m3_unsigned_wide_to_hex_shortest (unsigned HOST_WIDE_INT a, char* buf)
 {
    unsigned i = { 0 };
@@ -244,11 +242,21 @@ static void m3_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
 }
 
 static void
-m3_fill_hex_value (HOST_WIDE_INT value, char** p, char* limit)
+m3_fill_hex_value (HOST_WIDE_INT hi, HOST_WIDE_INT lo, char** p, char* limit)
 {
   m3_append_char('0', p, limit);
   m3_append_char('x', p, limit);
-  m3_signed_wide_to_hex_shortest (value, *p);
+  if ((hi == -1 && lo < 0) || (hi == 0 && lo >= 0))
+  {
+    m3_signed_wide_to_hex_shortest (lo, *p);
+  }
+  else
+  {
+    m3_signed_wide_to_hex_shortest (hi, *p);
+    *p += strlen (*p);
+    gcc_assert (*p < limit);
+    m3_unsigned_wide_to_hex_full (lo, *p);
+  }
   *p += strlen (*p);
   gcc_assert (*p < limit);
 }
@@ -2008,6 +2016,73 @@ scan_sign (void)
 
 /*-------------------------------------------------------------- integers ---*/
 
+#define TARGET_INTEGER(x) tree x = scan_target_int (#x)
+
+static tree
+scan_target_int (const char* name)
+{
+  unsigned HOST_WIDE_INT low = { 0 };
+  HOST_WIDE_INT hi = { 0 };
+  long i = { 0 };
+  unsigned n_bytes = { 0 };
+  int sign = { 0 };
+  int shift = { 0 };
+  tree res = { 0 };
+  tree t = long_long_integer_type_node;
+
+  i = (long) get_byte ();
+  switch (i)
+  {
+  case M3CG_Int1:   n_bytes = 1;  sign =  1;  break;
+  case M3CG_NInt1:  n_bytes = 1;  sign = -1;  break;
+  case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
+  case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
+  case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
+  case M3CG_NInt4:  n_bytes = 4;  sign = -1;  break;
+  case M3CG_Int8:   n_bytes = 8;  sign =  1;  break;
+  case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
+  default:
+    if (name && option_trace_all)
+    {
+      const char* colon = m3_trace_name (&name);
+      if (i >= -9 && i <= 9)
+        fprintf (stderr, " %s%s%ld", name, colon, i);
+      else
+        fprintf (stderr, " %s%s%lX(%ld)", name, colon, i, i);
+    }
+    return build_int_cst (t, i);
+  }
+
+  for (shift = 0; n_bytes > 0;  n_bytes--, shift += 8)
+  {
+    if (shift < HOST_BITS_PER_WIDE_INT)
+      low = low | (((unsigned HOST_WIDE_INT) get_byte ()) << shift);
+    else
+      hi = hi | (((HOST_WIDE_INT) get_byte ()) << (shift - HOST_BITS_PER_WIDE_INT));
+  }
+
+  res = build_int_cst_wide (t, low, hi);
+  if (sign < 0)
+    res = m3_build1 (NEGATE_EXPR, t, res);
+
+  if (name && option_trace_all)
+  {
+    const char* colon = m3_trace_name (&name);
+    char sign_char = "-+"[sign > 0];
+    static char double_hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_DOUBLE_HEX;
+    static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
+    if (hi)
+      fprintf (stderr, m3_trace_upper_hex (double_hex), name, colon, sign_char, hi, low);
+    else if (low <= 9)
+      fprintf (stderr, " %s%s%c"HOST_WIDE_INT_PRINT_DEC, name, colon, sign_char, low);
+    else
+      fprintf (stderr, m3_trace_upper_hex (hex), name, colon, sign_char, low, low);
+  }
+
+  return res;
+}
+
+
 #define LEVEL(x)     INTEGER (x)
 #define BITSIZE(x)   INTEGER (x)
 #define FREQUENCY(x) INTEGER (x)
@@ -3502,23 +3577,28 @@ m3cg_declare_set (void)
 static void
 m3cg_declare_subrange (void)
 {
-  TYPEID  (my_id);
-  TYPEID  (domain_id);
-  INTEGER (min);
-  INTEGER (max);
-  BITSIZE (size);
+  TYPEID         (my_id);
+  TYPEID         (domain_id);
+  TARGET_INTEGER (min);
+  TARGET_INTEGER (max);
+  BITSIZE        (size);
 
   char buff [256]; /* Liberal. */
   char *p = buff;
   char *p_limit = p + sizeof(buff);
 
+  HOST_WIDE_INT min_hi = TREE_INT_CST_HIGH (min);
+  HOST_WIDE_INT min_lo = TREE_INT_CST_LOW (min);
+  HOST_WIDE_INT max_hi = TREE_INT_CST_HIGH (max);
+  HOST_WIDE_INT max_lo = TREE_INT_CST_LOW (max);
+
   m3_append_char ('_', &p, p_limit);
   m3_append_char ('%', &p, p_limit);
   m3_append_char ('d', &p, p_limit);
   m3_append_char ('_', &p, p_limit);
-  m3_fill_hex_value (min, &p, p_limit);
+  m3_fill_hex_value (min_hi, min_lo, &p, p_limit);
   m3_append_char ('_', &p, p_limit);
-  m3_fill_hex_value (max, &p, p_limit);
+  m3_fill_hex_value (max_hi, max_lo, &p, p_limit);
   m3_append_char ('\0', &p, p_limit);
   debug_tag ('Z', my_id, buff, size);
 
@@ -3526,7 +3606,7 @@ m3cg_declare_subrange (void)
   debug_struct ();
 
   {
-    tree t = m3_type_for_size (size, min < 0);
+    tree t = m3_type_for_size (size, tree_int_cst_lt (min, integer_zero_node));
     gcc_assert (t);
     set_typeid_to_tree (my_id, t);
   }
@@ -4135,16 +4215,17 @@ m3cg_end_init (void)
 static void
 m3cg_init_int (void)
 {
-  BYTEOFFSET (offset);
-  INTEGER    (value);
-  MTYPE      (type);
+  BYTEOFFSET     (offset);
+  TARGET_INTEGER (value);
+  MTYPE          (type);
 
   tree f = { 0 };
   tree v = { 0 };
 
   gcc_assert (offset >= 0);
   one_field (offset, type, &f, &v);
-  TREE_VALUE (v) = build_int_cst (type, value);
+  value = convert (type, value);
+  TREE_VALUE (v) = value;
 }
 
 static void
@@ -4740,10 +4821,11 @@ m3cg_load_nil (void)
 static void
 m3cg_load_integer (void)
 {
-  MTYPE   (t);
-  INTEGER (n);
+  MTYPE          (t);
+  TARGET_INTEGER (n);
 
-  EXPR_PUSH (build_int_cst (t, n));
+  n = convert (t, n);
+  EXPR_PUSH (n);
 }
 
 static void
@@ -5614,13 +5696,13 @@ m3cg_check_nil (void)
 static void
 m3cg_check_lo (void)
 {
-  MTYPE2  (t, T);
-  INTEGER (b);
-  INTEGER (code);
+  MTYPE2         (t, T);
+  TARGET_INTEGER (a);
+  INTEGER        (code);
 
   tree temp1 = declare_temp (t);
 
-  tree a = build_int_cst (t, b);
+  a = convert (t, a);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -5636,13 +5718,13 @@ m3cg_check_lo (void)
 static void
 m3cg_check_hi (void)
 {
-  MTYPE2  (t, T);
-  INTEGER (b);
-  INTEGER (code);
+  MTYPE2         (t, T);
+  TARGET_INTEGER (a);
+  INTEGER        (code);
 
   tree temp1 = declare_temp (t);
 
-  tree a = build_int_cst (t, b);
+  a = convert (t, a);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -5658,14 +5740,15 @@ m3cg_check_hi (void)
 static void
 m3cg_check_range (void)
 {
-  MTYPE2  (t, T);
-  INTEGER (x);
-  INTEGER (y);
-  INTEGER (code);
+  MTYPE2         (t, T);
+  TARGET_INTEGER (a);
+  TARGET_INTEGER (b);
+  INTEGER        (code);
 
   tree temp1 = declare_temp (t);
-  tree a = build_int_cst (t, x);
-  tree b = build_int_cst (t, y);
+
+  a = convert (t, a);
+  b = convert (t, b);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = convert (t, EXPR_REF (-1));
