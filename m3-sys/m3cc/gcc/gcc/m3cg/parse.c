@@ -939,9 +939,9 @@ m3_build_type_id (m3_type type,
 }
 
 static tree
-m3_build_type (m3_type type, HOST_WIDE_INT size, HOST_WIDE_INT a)
+m3_build_type (m3_type type, HOST_WIDE_INT size, HOST_WIDE_INT align)
 {
-  return m3_build_type_id (type, size, a, NO_UID);
+  return m3_build_type_id (type, size, align, NO_UID);
 }
 
 /*========================================== insert, shift, rotate and co ===*/
