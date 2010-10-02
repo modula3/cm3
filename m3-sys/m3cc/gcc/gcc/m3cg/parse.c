@@ -143,7 +143,6 @@ int arm_float_words_big_endian (void);
 
 /*   m3_append_char
      m3_revstr
-     m3_unsigned_wide_to_hex_full
      m3_signed_wide_to_hex_shortest
      m3_fill_hex_value help
    m3cg_declare_subrange to write hex values of lower and upper bounds.
@@ -180,6 +179,7 @@ static void m3_revstr (char* a, size_t len)
   }
 }
 
+#if 0 /* for illustrative purposes */
 static void m3_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
 {
    unsigned i = { 0 };
@@ -188,8 +188,9 @@ static void m3_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
    m3_revstr (buf, i);
    buf[i] = 0;
 }
+#endif
 
-#if 0 /* for illustration purposes */
+#if 0 /* for illustrative purposes */
 static void m3_unsigned_wide_to_hex_shortest (unsigned HOST_WIDE_INT a, char* buf)
 {
    unsigned i = { 0 };
@@ -832,24 +833,11 @@ m3_cast (tree type, tree op0)
   return fold_build1 (NOP_EXPR, type, op0);
 }
 
-static tree
-m3_build1 (enum tree_code code, tree type, tree op0)
-{
-  return fold_build1 (code, type, op0);
-}
+#define m3_build1 fold_build1
+#define m3_build2 fold_build2
+#define m3_build3 fold_build3
 
-static tree
-m3_build2 (enum tree_code code, tree type, tree op0, tree op1)
-{
-  return fold_build2 (code, type, op0, op1);
-}
-
-static tree
-m3_build3 (enum tree_code code, tree type, tree op0, tree op1, tree op2)
-{
-  return fold_build3 (code, type, op0, op1, op2);
-}
-
+#if 0
 static tree
 m3_build_pointer_type (tree a)
 {
@@ -857,9 +845,14 @@ m3_build_pointer_type (tree a)
   /*DECL_NO_TBAA_P (a) = true;*/
   return a;
 }
+#else
+#define m3_build_pointer_type build_pointer_type
+#endif
 
 static tree
-m3_build_type_id (m3_type t, unsigned HOST_WIDE_INT s, unsigned HOST_WIDE_INT a,
+m3_build_type_id (m3_type type,
+                  unsigned HOST_WIDE_INT size,
+                  unsigned HOST_WIDE_INT align,
                   unsigned long id)
 {
   tree ts = { 0 };
@@ -869,35 +862,35 @@ m3_build_type_id (m3_type t, unsigned HOST_WIDE_INT s, unsigned HOST_WIDE_INT a,
 
   if (M3_TYPES_INT
         && (id != NO_UID)
-        && (IS_INTEGER_TYPE(t) || IS_WORD_TYPE(t))
+        && (IS_INTEGER_TYPE(type) || IS_WORD_TYPE(type))
         && ((ts = get_typeid_to_tree (id))))
     return ts;
 
-  switch (t)
+  switch (type)
     {
     case T_word:
     case T_longword:
-      switch (s)
+      switch (size)
         {
-        case 0:  return ((t == T_word) ? t_word : t_longword);
+        case 0:  return ((type == T_word) ? t_word : t_longword);
         case 8:  return t_word_8;
         case 16: return t_word_16;
         case 32: return t_word_32;
         case 64: return t_word_64;
-        default: if (s == BITS_PER_INTEGER) return t_word;
+        default: if (size == BITS_PER_INTEGER) return t_word;
         }
       break;
 
     case T_int:
     case T_longint:
-      switch (s)
+      switch (size)
         {
-        case 0:  return ((t == T_int) ? t_int : t_longint);
+        case 0:  return ((type == T_int) ? t_int : t_longint);
         case 8:  return t_int_8;
         case 16: return t_int_16;
         case 32: return t_int_32;
         case 64: return t_int_64;
-        default: if (s == BITS_PER_INTEGER) return t_int;
+        default: if (size == BITS_PER_INTEGER) return t_int;
         }
       break;
 
@@ -932,9 +925,9 @@ m3_build_type_id (m3_type t, unsigned HOST_WIDE_INT s, unsigned HOST_WIDE_INT a,
         TYPE_NAME (ts) = NULL_TREE;
         TYPE_FIELDS (ts) = NULL_TREE;
       }
-      TYPE_SIZE (ts) = bitsize_int (s);
-      TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
-      TYPE_ALIGN (ts) = a;
+      TYPE_SIZE (ts) = bitsize_int (size);
+      TYPE_SIZE_UNIT (ts) = size_int (size / BITS_PER_UNIT);
+      TYPE_ALIGN (ts) = align;
       compute_record_mode (ts);
       return ts;
 
@@ -946,9 +939,9 @@ m3_build_type_id (m3_type t, unsigned HOST_WIDE_INT s, unsigned HOST_WIDE_INT a,
 }
 
 static tree
-m3_build_type (m3_type t, HOST_WIDE_INT s, HOST_WIDE_INT a)
+m3_build_type (m3_type type, HOST_WIDE_INT size, HOST_WIDE_INT a)
 {
-  return m3_build_type_id (t, s, a, NO_UID);
+  return m3_build_type_id (type, size, a, NO_UID);
 }
 
 /*========================================== insert, shift, rotate and co ===*/
