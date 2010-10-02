@@ -202,9 +202,8 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #define ___int_size_t_h
 #define _GCC_SIZE_T
 #define _SIZET_
-#if defined (__FreeBSD__) && (__FreeBSD__ >= 5)
-/* __size_t is a typedef on FreeBSD 5!, must not trash it. */
-#else
+#if !(__FreeBSD__ >= 5 || __vms)
+/* __size_t is a typedef sometimes, do not trash it. */
 #define __size_t
 #endif
 #ifndef __SIZE_TYPE__
