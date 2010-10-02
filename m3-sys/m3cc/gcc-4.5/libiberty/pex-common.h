@@ -31,6 +31,9 @@ Boston, MA 02110-1301, USA.  */
 #if !defined(pid_t) && defined(HAVE_SYS_TYPES_H)
 #include <sys/types.h>
 #endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #define install_error_msg "installation problem, cannot exec `%s'"
 
