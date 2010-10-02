@@ -1,3 +1,6 @@
+/* some changes in Modula-3 fork
+   e.g. fix ffs for VMS */
+
 /* Subroutines shared by all languages that are variants of C.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -50,6 +53,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "cgraph.h"
 #include "target-def.h"
 #include "fixed-value.h"
+#ifndef TARGET_ABI_OPEN_VMS
+#define TARGET_ABI_OPEN_VMS 0
+#endif
 
 cpp_reader *parse_in;		/* Declared in c-pragma.h.  */
 
@@ -4038,6 +4044,7 @@ def_builtin_1 (enum built_in_function fncode,
 {
   tree decl;
   const char *libname;
+  const char *libname2;
 
   if (fntype == error_mark_node)
     return;
@@ -4047,11 +4054,16 @@ def_builtin_1 (enum built_in_function fncode,
 			   strlen ("__builtin_")));
 
   libname = name + strlen ("__builtin_");
+  libname2 = libname;
+  if (TARGET_ABI_OPEN_VMS && strcmp(libname, "ffs") == 0)
+    libname = "decc$ffs";
+
   decl = add_builtin_function (name, fntype, fncode, fnclass,
 			       (fallback_p ? libname : NULL),
 			       fnattrs);
   if (both_p
       && !flag_no_builtin && !builtin_function_disabled_p (libname)
+      && !builtin_function_disabled_p (libname2)
       && !(nonansi_p && flag_no_nonansi_builtin))
     add_builtin_function (libname, libtype, fncode, fnclass,
 			  NULL, fnattrs);
