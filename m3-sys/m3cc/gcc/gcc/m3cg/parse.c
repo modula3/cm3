@@ -962,10 +962,10 @@ m3_do_insert (tree x, tree y, tree i, tree n, tree orig_t)
   tree k = m3_build3 (COND_EXPR, t,
                       m3_build2 (EQ_EXPR, boolean_type_node, n, TYPE_SIZE (t)),
                       y, j);
-  tree l = m3_build3 (COND_EXPR, t,
+  tree m = m3_build3 (COND_EXPR, t,
                       m3_build2 (EQ_EXPR, boolean_type_node, n, v_zero),
                       x, k);
-  return l;
+  return m;
 }
 
 static tree
@@ -2222,7 +2222,7 @@ scan_proc (void)
 
 /*---------------------------------------------------------------- labels ---*/
 
-#define LABEL(l) tree l = scan_label ()
+#define LABEL(x) tree x = scan_label ()
 
 static tree
 scan_label (void)
@@ -4219,15 +4219,15 @@ static void
 m3cg_init_chars (void)
 {
   BYTEOFFSET    (offset);
-  STRING        (s, l);
+  STRING        (s, length);
 
   tree f = { 0 };
   tree v = { 0 };
 
   tree type = build_array_type (char_type_node,
-                                build_index_type (size_int (l - 1)));
+                                build_index_type (size_int (length - 1)));
   one_field (offset, type, &f, &v);
-  TREE_VALUE (v) = build_string (l, s);
+  TREE_VALUE (v) = build_string (length, s);
   TREE_TYPE (TREE_VALUE (v)) = TREE_TYPE (f);
 }
 
@@ -4478,19 +4478,19 @@ m3cg_note_procedure_origin (void)
 static void
 m3cg_set_label (void)
 {
-  LABEL   (l);
+  LABEL   (label);
   BOOLEAN (barrier);
 
-  DECL_CONTEXT (l) = current_function_decl;
-  DECL_MODE (l) = VOIDmode;
-  DECL_SOURCE_LOCATION (l) = input_location;
+  DECL_CONTEXT (label) = current_function_decl;
+  DECL_MODE (label) = VOIDmode;
+  DECL_SOURCE_LOCATION (label) = input_location;
 
   if (barrier)
     {
       unsigned i = { 0 };
-      rtx r = label_rtx (l);
+      rtx r = label_rtx (label);
       LABEL_PRESERVE_P (r) = 1;
-      FORCED_LABEL (l) = 1;
+      FORCED_LABEL (label) = 1;
       DECL_UNINLINABLE (current_function_decl) = 1;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
 #if GCC45
@@ -4511,7 +4511,7 @@ m3cg_set_label (void)
           with a 4.5 construct. Either I haven't found the correct 4.5
           construct or there is something wrong with 4.5.
           The instruction that altered rbp was, uh, surprising.
-      DECL_NONLOCAL (l) = true;
+      DECL_NONLOCAL (label) = true;
       LABEL_REF_NONLOCAL_P (r) = 1;
       */
 #else
@@ -4531,33 +4531,33 @@ m3cg_set_label (void)
         add_stmt (bar);
 
         if (i == 0)
-          add_stmt (build1 (LABEL_EXPR, t_void, l));
+          add_stmt (build1 (LABEL_EXPR, t_void, label));
       }
     }
   else
-    add_stmt (build1 (LABEL_EXPR, t_void, l));
+    add_stmt (build1 (LABEL_EXPR, t_void, label));
 }
 
 static void
 m3cg_jump (void)
 {
-  LABEL (l);
+  LABEL (label);
 
-  add_stmt (build1 (GOTO_EXPR, t_void, l));
+  add_stmt (build1 (GOTO_EXPR, t_void, label));
 }
 
 static void
 m3cg_if_true (void)
 {
   TYPE      (t);
-  LABEL     (l);
+  LABEL     (label);
   FREQUENCY (f);
 
   tree cond = m3_cast (boolean_type_node, EXPR_REF (-1));
   EXPR_POP ();
 
   add_stmt (build3 (COND_EXPR, t_void, cond,
-                    build1 (GOTO_EXPR, t_void, l),
+                    build1 (GOTO_EXPR, t_void, label),
                     NULL_TREE));
 }
 
@@ -4565,27 +4565,27 @@ static void
 m3cg_if_false (void)
 {
   TYPE      (t);
-  LABEL     (l);
+  LABEL     (label);
   FREQUENCY (f);
 
   tree cond = m3_cast (boolean_type_node, EXPR_REF (-1));
   EXPR_POP ();
   add_stmt (build3 (COND_EXPR, t_void, cond,
                     NULL_TREE,
-                    build1 (GOTO_EXPR, t_void, l)));
+                    build1 (GOTO_EXPR, t_void, label)));
 }
 
 static void
 m3cg_if_compare (enum tree_code o)
 {
   MTYPE     (t);
-  LABEL     (l);
+  LABEL     (label);
   FREQUENCY (f);
 
   tree t1 = m3_cast (t, EXPR_REF (-1));
   tree t2 = m3_cast (t, EXPR_REF (-2));
   add_stmt (build3 (COND_EXPR, t_void, build2 (o, boolean_type_node, t2, t1),
-                    build1 (GOTO_EXPR, t_void, l),
+                    build1 (GOTO_EXPR, t_void, label),
                     NULL_TREE));
   EXPR_POP ();
   EXPR_POP ();
