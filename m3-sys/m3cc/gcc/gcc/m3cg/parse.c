@@ -827,27 +827,27 @@ const char *const tree_code_name[] = {
 #endif
 
 static tree
-m3_cast (tree tipe, tree op0)
+m3_cast (tree type, tree op0)
 {
-  return fold_build1 (NOP_EXPR, tipe, op0);
+  return fold_build1 (NOP_EXPR, type, op0);
 }
 
 static tree
-m3_build1 (enum tree_code code, tree tipe, tree op0)
+m3_build1 (enum tree_code code, tree type, tree op0)
 {
-  return fold_build1 (code, tipe, op0);
+  return fold_build1 (code, type, op0);
 }
 
 static tree
-m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1)
+m3_build2 (enum tree_code code, tree type, tree op0, tree op1)
 {
-  return fold_build2 (code, tipe, op0, op1);
+  return fold_build2 (code, type, op0, op1);
 }
 
 static tree
-m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
+m3_build3 (enum tree_code code, tree type, tree op0, tree op1, tree op2)
 {
-  return fold_build3 (code, tipe, op0, op1, op2);
+  return fold_build3 (code, type, op0, op1, op2);
 }
 
 static tree
@@ -2000,7 +2000,7 @@ scan_mtype (const char* name, m3_type* T)
 
 #define UNUSED_SIGN(x) (scan_sign ())
 
-static char
+static void
 scan_sign (void)
 {
   HOST_WIDE_INT x = get_int ();
@@ -2395,7 +2395,7 @@ static HOST_WIDE_INT current_record_offset;
 static void one_gap (HOST_WIDE_INT offset);
 
 static void
-one_field (HOST_WIDE_INT offset, tree tipe, tree *out_f, tree *out_v)
+one_field (HOST_WIDE_INT offset, tree type, tree *out_f, tree *out_v)
 {
   tree f = { 0 };
 
@@ -2403,7 +2403,7 @@ one_field (HOST_WIDE_INT offset, tree tipe, tree *out_f, tree *out_v)
       fprintf (stderr, " one_field: offset:0x%lx", (long)offset);
 
   one_gap (offset);
-  f = build_decl (FIELD_DECL, 0, tipe);
+  f = build_decl (FIELD_DECL, 0, type);
   *out_f = f;
   layout_decl (f, 1);
   DECL_FIELD_OFFSET (f) = size_int (offset / BITS_PER_UNIT);
@@ -2413,7 +2413,7 @@ one_field (HOST_WIDE_INT offset, tree tipe, tree *out_f, tree *out_v)
   TYPE_FIELDS (current_record_type) = f;
 
   *out_v = current_record_vals = tree_cons (f, NULL_TREE, current_record_vals);
-  current_record_offset = offset + TREE_INT_CST_LOW (TYPE_SIZE (tipe));
+  current_record_offset = offset + TREE_INT_CST_LOW (TYPE_SIZE (type));
 }
 
 static void
@@ -2421,7 +2421,7 @@ one_gap (HOST_WIDE_INT offset)
 {
   tree f = { 0 };
   tree v = { 0 };
-  tree tipe = { 0 };
+  tree type = { 0 };
   HOST_WIDE_INT gap = offset - current_record_offset;
 
   if (gap <= 0)
@@ -2430,23 +2430,23 @@ one_gap (HOST_WIDE_INT offset)
   if (option_trace_all)
       fprintf (stderr, "\n one_gap: offset:0x%lx gap:0x%lx\n", (long)offset, (long)gap);
 
-  tipe = make_node (LANG_TYPE);
-  TYPE_SIZE (tipe) = bitsize_int (gap);
-  TYPE_SIZE_UNIT (tipe) = size_int (gap / BITS_PER_UNIT);
-  TYPE_ALIGN (tipe) = BITS_PER_UNIT;
-  one_field (current_record_offset, tipe, &f, &v);
+  type = make_node (LANG_TYPE);
+  TYPE_SIZE (type) = bitsize_int (gap);
+  TYPE_SIZE_UNIT (type) = size_int (gap / BITS_PER_UNIT);
+  TYPE_ALIGN (type) = BITS_PER_UNIT;
+  one_field (current_record_offset, type, &f, &v);
   TREE_VALUE (v) = build_constructor (TREE_TYPE (f), 0);
 }
 
 static void
-m3_field (const char* name, tree tipe, HOST_WIDE_INT offset, HOST_WIDE_INT size, tree*, tree*);
+m3_field (const char* name, tree type, HOST_WIDE_INT offset, HOST_WIDE_INT size, tree*, tree*);
 
 static void
 m3_gap (HOST_WIDE_INT offset)
 {
   tree f = { 0 };
   tree v = { 0 };
-  tree tipe = { 0 };
+  tree type = { 0 };
   HOST_WIDE_INT gap = offset - current_record_offset;
   char name[256];
 
@@ -2458,18 +2458,18 @@ m3_gap (HOST_WIDE_INT offset)
 
   sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, gap);
 
-  tipe = make_node (RECORD_TYPE);
-  TYPE_SIZE (tipe) = bitsize_int (gap);
-  TYPE_SIZE_UNIT (tipe) = size_int (gap / BITS_PER_UNIT);
-  TYPE_ALIGN (tipe) = 1;
-  m3_field (name, tipe, current_record_offset, gap, &f, &v);
+  type = make_node (RECORD_TYPE);
+  TYPE_SIZE (type) = bitsize_int (gap);
+  TYPE_SIZE_UNIT (type) = size_int (gap / BITS_PER_UNIT);
+  TYPE_ALIGN (type) = 1;
+  m3_field (name, type, current_record_offset, gap, &f, &v);
   DECL_PACKED (f) = true;
   DECL_BIT_FIELD (f) = true;
   TREE_VALUE (v) = build_constructor (TREE_TYPE (f), 0);
 }
 
 static void
-m3_field (const char* name, tree tipe, HOST_WIDE_INT offset,
+m3_field (const char* name, tree type, HOST_WIDE_INT offset,
           HOST_WIDE_INT size, tree* out_f, tree* out_v)
 {
   if (M3_TYPES)
@@ -2480,7 +2480,7 @@ m3_field (const char* name, tree tipe, HOST_WIDE_INT offset,
     gcc_assert (offset >= current_record_offset);
     m3_gap (offset);
 
-    f = build_decl (FIELD_DECL, 0, tipe);
+    f = build_decl (FIELD_DECL, 0, type);
     *out_f = f;
     if ((offset % BITS_PER_UNIT) == 0 && (size % BITS_PER_UNIT) == 0)
     {
@@ -4231,9 +4231,9 @@ m3cg_init_chars (void)
   tree f = { 0 };
   tree v = { 0 };
 
-  tree tipe = build_array_type (char_type_node,
+  tree type = build_array_type (char_type_node,
                                 build_index_type (size_int (l - 1)));
-  one_field (offset, tipe, &f, &v);
+  one_field (offset, type, &f, &v);
   TREE_VALUE (v) = build_string (l, s);
   TREE_TYPE (TREE_VALUE (v)) = TREE_TYPE (f);
 }
