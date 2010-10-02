@@ -1791,7 +1791,7 @@ m3_init_lex (void)
   m3cg_lineno = 1;
 }
 
-static long
+static unsigned char
 get_byte (void)
 {
   if (input_cursor >= input_len)
@@ -1800,7 +1800,7 @@ get_byte (void)
     if (input_eof)
       return 0;
   }
-  return (long)(input_buffer[input_cursor++] & 0xff);
+  return input_buffer[input_cursor++];
 }
 
 #define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, get_int ()))
@@ -1875,12 +1875,12 @@ get_int (void)
   int sign = { 0 };
   unsigned shift = { 0 };
   HOST_WIDE_INT val = { 0 };
-  long i = get_byte ();
+  unsigned char i = get_byte ();
 
   switch (i)
   {
-  case M3CG_Int1:   return (long) get_byte ();
-  case M3CG_NInt1:  return - (long) get_byte ();    
+  case M3CG_Int1:   return (unsigned HOST_WIDE_INT) get_byte ();
+  case M3CG_NInt1:  return - (unsigned HOST_WIDE_INT) get_byte ();    
   case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
   case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
   case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
@@ -1891,7 +1891,7 @@ get_int (void)
   }
 
   for (; n_bytes > 0;  n_bytes--, shift += 8)
-    val = val | (((long) get_byte ()) << shift);
+    val |= (((long) get_byte ()) << shift);
 
   return sign * val;
 }
@@ -2022,15 +2022,15 @@ static tree
 scan_target_int (const char* name)
 {
   unsigned HOST_WIDE_INT low = { 0 };
-  HOST_WIDE_INT hi = { 0 };
-  long i = { 0 };
   unsigned n_bytes = { 0 };
   int sign = { 0 };
   int shift = { 0 };
   tree res = { 0 };
   tree t = long_long_integer_type_node;
+  unsigned char i = get_byte ();
 
-  i = (long) get_byte ();
+  gcc_assert (HOST_BITS_PER_WIDE_INT >= 64);
+
   switch (i)
   {
   case M3CG_Int1:   n_bytes = 1;  sign =  1;  break;
@@ -2054,14 +2054,9 @@ scan_target_int (const char* name)
   }
 
   for (shift = 0; n_bytes > 0;  n_bytes--, shift += 8)
-  {
-    if (shift < HOST_BITS_PER_WIDE_INT)
-      low = low | (((unsigned HOST_WIDE_INT) get_byte ()) << shift);
-    else
-      hi = hi | (((HOST_WIDE_INT) get_byte ()) << (shift - HOST_BITS_PER_WIDE_INT));
-  }
+    low |= (((unsigned HOST_WIDE_INT) get_byte ()) << shift);
 
-  res = build_int_cst_wide (t, low, hi);
+  res = build_int_cst_wide (t, low, 0);
   if (sign < 0)
     res = m3_build1 (NEGATE_EXPR, t, res);
 
@@ -2069,11 +2064,8 @@ scan_target_int (const char* name)
   {
     const char* colon = m3_trace_name (&name);
     char sign_char = "-+"[sign > 0];
-    static char double_hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_DOUBLE_HEX;
     static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
-    if (hi)
-      fprintf (stderr, m3_trace_upper_hex (double_hex), name, colon, sign_char, hi, low);
-    else if (low <= 9)
+    if (low <= 9)
       fprintf (stderr, " %s%s%c"HOST_WIDE_INT_PRINT_DEC, name, colon, sign_char, low);
     else
       fprintf (stderr, m3_trace_upper_hex (hex), name, colon, sign_char, low, low);

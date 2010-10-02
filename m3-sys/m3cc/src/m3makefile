@@ -395,6 +395,7 @@ Configure = Configure & " -disable-libssp"
 Configure = Configure & " -disable-nls"
 Configure = Configure & " -enable-languages=m3cg"
 Configure = Configure & " -enable-targets=all"
+%Configure = Configure & " -enable-checking=yes"
 %Configure = Configure & " -enable-checking=all"
 %Configure = Configure & " -enable-checking"
 
