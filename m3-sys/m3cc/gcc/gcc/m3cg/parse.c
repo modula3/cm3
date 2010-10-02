@@ -242,21 +242,11 @@ static void m3_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
 }
 
 static void
-m3_fill_hex_value (HOST_WIDE_INT hi, HOST_WIDE_INT lo, char** p, char* limit)
+m3_fill_hex_value (HOST_WIDE_INT value, char** p, char* limit)
 {
   m3_append_char('0', p, limit);
   m3_append_char('x', p, limit);
-  if ((hi == -1 && lo < 0) || (hi == 0 && lo >= 0))
-  {
-    m3_signed_wide_to_hex_shortest (lo, *p);
-  }
-  else
-  {
-    m3_signed_wide_to_hex_shortest (hi, *p);
-    *p += strlen (*p);
-    gcc_assert (*p < limit);
-    m3_unsigned_wide_to_hex_full (lo, *p);
-  }
+  m3_signed_wide_to_hex_shortest (value, *p);
   *p += strlen (*p);
   gcc_assert (*p < limit);
 }
@@ -1871,11 +1861,10 @@ static HOST_WIDE_INT
 get_int (void)
 /* This function reads an integer from our specially encoded format. */
 {
-  int n_bytes = { 0 };
+  unsigned n_bytes = { 0 };
   int sign = { 0 };
   unsigned shift = { 0 };
-  HOST_WIDE_INT val = { 0 };
-  unsigned char i = get_byte ();
+  unsigned i = get_byte ();
 
   switch (i)
   {
@@ -1890,15 +1879,27 @@ get_int (void)
   default:          return i;
   }
 
-  for (; n_bytes > 0;  n_bytes--, shift += 8)
-    val |= (((long) get_byte ()) << shift);
-
-  return sign * val;
+  gcc_assert (n_bytes <= sizeof(unsigned HOST_WIDE_INT));
+  
+  if (n_bytes <= sizeof(long))
+  {
+    long val = { 0 };
+    for (i = 0; i < n_bytes;  (++i), (shift += 8))
+      val |= (((unsigned long)get_byte ()) << shift);
+    return sign * val;
+  }
+  else
+  {
+    HOST_WIDE_INT val = { 0 };
+    for (i = 0; i < n_bytes;  (++i), (shift += 8))
+      val |= (((unsigned HOST_WIDE_INT)get_byte ()) << shift);
+    return sign * val;
+  }
 }
 
 static unsigned long
 get_typeid (const char* name)
-/* This function reads and tracaes a typeid in specially encoded format.
+/* This function reads and traces a typeid in specially encoded format.
    Typeids simply 32bit unsigned integers. */
 {
   unsigned long val = (0xFFFFFFFFUL & (unsigned long) get_int ());
@@ -1997,7 +1998,7 @@ scan_mtype (const char* name, m3_type* T)
 
 /*----------------------------------------------------------------- signs ---*/
 
-#define SIGN(x) char x = M3_UNUSED (x, scan_sign ())
+#define UNUSED_SIGN(x) (scan_sign ())
 
 static char
 scan_sign (void)
@@ -2005,75 +2006,15 @@ scan_sign (void)
   HOST_WIDE_INT x = get_int ();
   switch (x)
   {
-  case 0:  return 'P';  /* positive */
-  case 1:  return 'N';  /* negative */
-  case 2:  return 'U';  /* unknown */
+  case 0: break; /* positive */
+  case 1: break; /* negative */
+  case 2: break; /* unknown */
   default:
     fatal_error (" *** bad sign: 0x%lx, at m3cg_lineno %d", (long)x, m3cg_lineno);
   }
-  return '0';
 }
 
 /*-------------------------------------------------------------- integers ---*/
-
-#define TARGET_INTEGER(x) tree x = scan_target_int (#x)
-
-static tree
-scan_target_int (const char* name)
-{
-  unsigned HOST_WIDE_INT low = { 0 };
-  unsigned n_bytes = { 0 };
-  int sign = { 0 };
-  int shift = { 0 };
-  tree res = { 0 };
-  tree t = long_long_integer_type_node;
-  unsigned char i = get_byte ();
-
-  gcc_assert (HOST_BITS_PER_WIDE_INT >= 64);
-
-  switch (i)
-  {
-  case M3CG_Int1:   n_bytes = 1;  sign =  1;  break;
-  case M3CG_NInt1:  n_bytes = 1;  sign = -1;  break;
-  case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
-  case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
-  case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
-  case M3CG_NInt4:  n_bytes = 4;  sign = -1;  break;
-  case M3CG_Int8:   n_bytes = 8;  sign =  1;  break;
-  case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
-  default:
-    if (name && option_trace_all)
-    {
-      const char* colon = m3_trace_name (&name);
-      if (i >= -9 && i <= 9)
-        fprintf (stderr, " %s%s%ld", name, colon, i);
-      else
-        fprintf (stderr, " %s%s%lX(%ld)", name, colon, i, i);
-    }
-    return build_int_cst (t, i);
-  }
-
-  for (shift = 0; n_bytes > 0;  n_bytes--, shift += 8)
-    low |= (((unsigned HOST_WIDE_INT) get_byte ()) << shift);
-
-  res = build_int_cst_wide (t, low, 0);
-  if (sign < 0)
-    res = m3_build1 (NEGATE_EXPR, t, res);
-
-  if (name && option_trace_all)
-  {
-    const char* colon = m3_trace_name (&name);
-    char sign_char = "-+"[sign > 0];
-    static char hex[] = "x%s%s%c"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
-    if (low <= 9)
-      fprintf (stderr, " %s%s%c"HOST_WIDE_INT_PRINT_DEC, name, colon, sign_char, low);
-    else
-      fprintf (stderr, m3_trace_upper_hex (hex), name, colon, sign_char, low, low);
-  }
-
-  return res;
-}
-
 
 #define LEVEL(x)     INTEGER (x)
 #define BITSIZE(x)   INTEGER (x)
@@ -3569,28 +3510,25 @@ m3cg_declare_set (void)
 static void
 m3cg_declare_subrange (void)
 {
-  TYPEID         (my_id);
-  TYPEID         (domain_id);
-  TARGET_INTEGER (min);
-  TARGET_INTEGER (max);
-  BITSIZE        (size);
+  TYPEID  (my_id);
+  TYPEID  (domain_id);
+  INTEGER (min);
+  INTEGER (max);
+  BITSIZE (size);
 
-  char buff [256]; /* Liberal. */
+  char buff [256]; /* plenty */
   char *p = buff;
   char *p_limit = p + sizeof(buff);
-
-  HOST_WIDE_INT min_hi = TREE_INT_CST_HIGH (min);
-  HOST_WIDE_INT min_lo = TREE_INT_CST_LOW (min);
-  HOST_WIDE_INT max_hi = TREE_INT_CST_HIGH (max);
-  HOST_WIDE_INT max_lo = TREE_INT_CST_LOW (max);
+  
+  gcc_assert (min <= max);
 
   m3_append_char ('_', &p, p_limit);
   m3_append_char ('%', &p, p_limit);
   m3_append_char ('d', &p, p_limit);
   m3_append_char ('_', &p, p_limit);
-  m3_fill_hex_value (min_hi, min_lo, &p, p_limit);
+  m3_fill_hex_value (min, &p, p_limit);
   m3_append_char ('_', &p, p_limit);
-  m3_fill_hex_value (max_hi, max_lo, &p, p_limit);
+  m3_fill_hex_value (max, &p, p_limit);
   m3_append_char ('\0', &p, p_limit);
   debug_tag ('Z', my_id, buff, size);
 
@@ -3598,7 +3536,7 @@ m3cg_declare_subrange (void)
   debug_struct ();
 
   {
-    tree t = m3_type_for_size (size, tree_int_cst_lt (min, integer_zero_node));
+    tree t = m3_type_for_size (size, min < 0);
     gcc_assert (t);
     set_typeid_to_tree (my_id, t);
   }
@@ -4207,17 +4145,16 @@ m3cg_end_init (void)
 static void
 m3cg_init_int (void)
 {
-  BYTEOFFSET     (offset);
-  TARGET_INTEGER (value);
-  MTYPE          (type);
+  BYTEOFFSET (offset);
+  INTEGER    (value);
+  MTYPE      (type);
 
   tree f = { 0 };
   tree v = { 0 };
 
   gcc_assert (offset >= 0);
   one_field (offset, type, &f, &v);
-  value = convert (type, value);
-  TREE_VALUE (v) = value;
+  TREE_VALUE (v) = build_int_cst (type, value);
 }
 
 static void
@@ -4813,11 +4750,10 @@ m3cg_load_nil (void)
 static void
 m3cg_load_integer (void)
 {
-  MTYPE          (t);
-  TARGET_INTEGER (n);
+  MTYPE   (t);
+  INTEGER (n);
 
-  n = convert (t, n);
-  EXPR_PUSH (n);
+  EXPR_PUSH (build_int_cst (t, n));
 }
 
 static void
@@ -5034,8 +4970,8 @@ static void
 m3cg_div (void)
 {
   MTYPE2 (t, T);
-  SIGN (a);
-  SIGN (b);
+  UNUSED_SIGN (a);
+  UNUSED_SIGN (b);
   EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
                              m3_cast (t, EXPR_REF (-1)));
@@ -5046,8 +4982,8 @@ static void
 m3cg_mod (void)
 {
   MTYPE2 (t, T);
-  SIGN (a);
-  SIGN (b);
+  UNUSED_SIGN (a);
+  UNUSED_SIGN (b);
   EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
                              m3_cast (t, EXPR_REF (-1)));
@@ -5688,13 +5624,11 @@ m3cg_check_nil (void)
 static void
 m3cg_check_lo (void)
 {
-  MTYPE2         (t, T);
-  TARGET_INTEGER (a);
-  INTEGER        (code);
+  MTYPE2  (t, T);
+  INTEGER (a);
+  INTEGER (code);
 
   tree temp1 = declare_temp (t);
-
-  a = convert (t, a);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -5702,7 +5636,10 @@ m3cg_check_lo (void)
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
-                    m3_build2 (LT_EXPR, boolean_type_node, temp1, a),
+                    m3_build2 (LT_EXPR,
+                               boolean_type_node,
+                               temp1,
+                               build_int_cst (t, a)),
                     generate_fault (code),
                     NULL_TREE));
 }
@@ -5710,13 +5647,11 @@ m3cg_check_lo (void)
 static void
 m3cg_check_hi (void)
 {
-  MTYPE2         (t, T);
-  TARGET_INTEGER (a);
-  INTEGER        (code);
+  MTYPE2  (t, T);
+  INTEGER (a);
+  INTEGER (code);
 
   tree temp1 = declare_temp (t);
-
-  a = convert (t, a);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -5724,7 +5659,10 @@ m3cg_check_hi (void)
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
-                    m3_build2 (GT_EXPR, boolean_type_node, temp1, a),
+                    m3_build2 (GT_EXPR,
+                               boolean_type_node,
+                               temp1,
+                               build_int_cst (t, a)),
                     generate_fault (code),
                     NULL_TREE));
 }
@@ -5732,15 +5670,12 @@ m3cg_check_hi (void)
 static void
 m3cg_check_range (void)
 {
-  MTYPE2         (t, T);
-  TARGET_INTEGER (a);
-  TARGET_INTEGER (b);
-  INTEGER        (code);
+  MTYPE2  (t, T);
+  INTEGER (a);
+  INTEGER (b);
+  INTEGER (code);
 
   tree temp1 = declare_temp (t);
-
-  a = convert (t, a);
-  b = convert (t, b);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -5750,9 +5685,13 @@ m3cg_check_range (void)
   add_stmt (build3 (COND_EXPR, t_void,
                     m3_build2 (TRUTH_ORIF_EXPR, boolean_type_node,
                                m3_build2 (LT_EXPR,
-                                          boolean_type_node, temp1, a),
+                                          boolean_type_node,
+                                          temp1,
+                                          build_int_cst (t, a)),
                                m3_build2 (GT_EXPR,
-                                          boolean_type_node, temp1, b)),
+                                          boolean_type_node,
+                                          temp1,
+                                          build_int_cst (t, b))),
                     generate_fault (code),
                     NULL_TREE));
 }
