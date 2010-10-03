@@ -1858,6 +1858,9 @@ get_int (void)
   int sign = { 0 };
   unsigned shift = { 0 };
   unsigned i = get_byte ();
+  HOST_WIDE_INT val = { 0 };
+
+  gcc_assert (sizeof(unsigned HOST_WIDE_INT) >= 8);
 
   switch (i)
   {
@@ -1872,22 +1875,9 @@ get_int (void)
   default:          return i;
   }
 
-  gcc_assert (n_bytes <= sizeof(unsigned HOST_WIDE_INT));
-  
-  if (n_bytes <= sizeof(long))
-  {
-    long val = { 0 };
-    for (i = 0; i < n_bytes;  (++i), (shift += 8))
-      val |= (((unsigned long)get_byte ()) << shift);
-    return sign * val;
-  }
-  else
-  {
-    HOST_WIDE_INT val = { 0 };
-    for (i = 0; i < n_bytes;  (++i), (shift += 8))
-      val |= (((unsigned HOST_WIDE_INT)get_byte ()) << shift);
-    return sign * val;
-  }
+  for (i = 0; i < n_bytes;  (++i), (shift += 8))
+    val |= (((unsigned HOST_WIDE_INT)get_byte ()) << shift);
+  return sign * val;
 }
 
 static unsigned long
