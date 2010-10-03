@@ -1942,10 +1942,6 @@ scan_calling_convention (void)
   }
 }
 
-/*----------------------------------------------------------------- names ---*/
-
-#define NAME(x, n) STRING(x, n)
-
 /*----------------------------------------------------------------- types ---*/
 
 #define TYPE(x) m3_type x = M3_UNUSED (x, scan_type (#x))
@@ -3167,7 +3163,7 @@ m3cg_end_unit (void)
 static void
 m3cg_import_unit (void)
 {
-  NAME (n, n_len);
+  STRING (n, n_len);
   n = n;
 
   /* ignore */
@@ -3176,7 +3172,7 @@ m3cg_import_unit (void)
 static void
 m3cg_export_unit (void)
 {
-  NAME (n, n_len);
+  STRING (n, n_len);
   n = xstrdup (n);
   if (exported_interfaces == COUNT_OF (exported_interfaces_names))
     fatal_error ("internal limit exporting more than 100 interfaces");
@@ -3187,7 +3183,7 @@ m3cg_export_unit (void)
 static void
 m3cg_set_source_file (void)
 {
-  NAME (name, name_length);
+  STRING (name, name_length);
   name = xstrdup (name);
 
 #ifdef M3_USE_MAPPED_LOCATION
@@ -3214,7 +3210,7 @@ static void
 m3cg_declare_typename (void)
 {
   TYPEID (my_id);
-  NAME   (name, name_len);
+  STRING (name, name_len);
 
   size_t unit_len = current_unit_name_length;
   char* fullname = (char*)alloca (m3_add (unit_len, m3_add (name_len, 2)));
@@ -3306,7 +3302,7 @@ static void
 m3cg_declare_enum_elt (void)
 /* see build_enumerator, finish_enum */
 {
-  NAME (name, name_length);
+  STRING (name, name_length);
 
   gcc_assert (current_dbg_type_count1 > 0);
 
@@ -3441,7 +3437,7 @@ m3cg_declare_field (void)
   tree t = { 0 };
   tree f = { 0 };
   tree v = { 0 };
-  NAME      (name, name_len);
+  STRING    (name, name_len);
   BITOFFSET (offset);
   BITSIZE   (size);
   TYPEID    (my_id);
@@ -3584,7 +3580,7 @@ m3cg_declare_proctype (void)
 static void
 m3cg_declare_formal (void)
 {
-  NAME   (name, len);
+  STRING (name, len);
   TYPEID (my_id);
 
   debug_field_fmt (my_id, "_%s", name);
@@ -3600,7 +3596,7 @@ m3cg_declare_formal (void)
 static void
 m3cg_declare_raises (void)
 {
-  NAME (name, name_length);
+  STRING (name, name_length);
 
   if (option_trace_all)
     fprintf (stderr, " declare_raises name:%s", name);
@@ -3652,7 +3648,7 @@ m3cg_declare_object (void)
 static void
 m3cg_declare_method (void)
 {
-  NAME   (name, name_length);
+  STRING (name, name_length);
   TYPEID (my_id);
 
   debug_field_fmt (my_id, "_%d_%d_%s",
@@ -3712,7 +3708,7 @@ m3cg_reveal_opaque (void)
 static void
 m3cg_declare_exception (void)
 {
-  NAME    (name, name_length);
+  STRING  (name, name_length);
   TYPEID  (t);
   BOOLEAN (raise_proc);
   VAR     (base);
@@ -3732,7 +3728,7 @@ static const char ReportFault[] = "ReportFault";
 static void
 m3cg_set_runtime_proc (void)
 {
-  NAME (name, name_length);
+  STRING (name, name_length);
   PROC (p);
 
   if (option_trace_all)
@@ -3745,7 +3741,7 @@ m3cg_set_runtime_proc (void)
 static void
 m3cg_set_runtime_hook (void)
 {
-  NAME       (name, name_length);
+  STRING     (name, name_length);
   VAR        (var);
   BYTEOFFSET (offset);
 
@@ -3765,7 +3761,7 @@ m3cg_set_runtime_hook (void)
 static void
 m3cg_import_global (void)
 {
-  NAME       (name, name_length);
+  STRING     (name, name_length);
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (t);
@@ -3794,7 +3790,7 @@ m3cg_import_global (void)
 static void
 m3cg_declare_segment (void)
 {
-  NAME       (name, name_length);
+  STRING     (name, name_length);
   TYPEID     (id);
   BOOLEAN    (is_const);
   RETURN_VAR (var, VAR_DECL);
@@ -3867,7 +3863,7 @@ m3cg_bind_segment (void)
 static void
 m3cg_declare_global (void)
 {
-  NAME       (name, name_length);
+  STRING     (name, name_length);
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (t);
@@ -3900,7 +3896,7 @@ m3cg_declare_global (void)
 static void
 m3cg_declare_constant (void)
 {
-  NAME       (name, name_length);
+  STRING     (name, name_length);
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (t);
@@ -3932,7 +3928,7 @@ m3cg_declare_constant (void)
 static void
 m3cg_declare_local (void)
 {
-  NAME       (name, name_length);
+  STRING     (name, name_length);
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (t);
@@ -3977,7 +3973,7 @@ static int current_param_count; /* <0 => import_procedure, >0 => declare_procedu
 static void
 m3cg_declare_param (void)
 {
-  NAME       (name, name_length);
+  STRING     (name, name_length);
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (t);
@@ -4247,7 +4243,7 @@ m3cg_init_float (void)
 static void
 m3cg_import_procedure (void)
 {
-  NAME    (name, name_length);
+  STRING  (name, name_length);
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
   CALLING_CONVENTION (cc);
@@ -4282,7 +4278,7 @@ m3cg_import_procedure (void)
 static void
 m3cg_declare_procedure (void)
 {
-  NAME    (name, name_length);
+  STRING  (name, name_length);
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
   LEVEL   (lev);
