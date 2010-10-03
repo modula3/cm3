@@ -370,34 +370,14 @@ static const struct { tree* t; char name[8]; } builtin_types[] = {
 
 /* Maintain a qsorted/bsearchable array of id/tree pairs to map id to tree. */
 
-#define M3_TYPE_TABLE_FIXED_SIZE 0
-#define M3_TYPE_TABLE_GROWABLE 0
-#define M3_TYPE_TABLE_VEC 1
-
 static bool m3type_table_dirty;
 
-#if M3_TYPE_TABLE_FIXED_SIZE
-#define m3type_table_size_allocated 1000000
-static unsigned long m3type_table_size_used;
-/* must comment out, #if is not sufficient */
-/*static GTY (()) m3type_t m3type_table_address[m3type_table_size_allocated];*/
-#endif
-
-#if M3_TYPE_TABLE_GROWABLE
-static unsigned long m3type_table_size_used;
-static unsigned long m3type_table_size_allocated;
-/* must comment out, #if is not sufficient */
-/*static GTY ((length ("m3type_table_size_used"))) m3type_t* m3type_table_address;*/
-#endif
-
-#if M3_TYPE_TABLE_VEC
 DEF_VEC_O (m3type_t);
 DEF_VEC_ALLOC_O (m3type_t, gc);
 /* must comment out, #if is not sufficient */
 static GTY(()) VEC(m3type_t, gc) *m3type_table; /* see alias.c for a GTY+VEC example */
 #define m3type_table_address VEC_address (m3type_t, m3type_table)
 #define m3type_table_size_used VEC_length (m3type_t, m3type_table)
-#endif
 
 static int
 m3type_compare (const void* a, const void *b)
@@ -534,26 +514,9 @@ set_typeid_to_tree_replace (unsigned long id, tree t, bool replace)
     }
     to_add.id = id;
     to_add.t = t;
-#if M3_TYPE_TABLE_GROWABLE || M3_TYPE_TABLE_FIXED_SIZE
-    gcc_assert (m3type_table_size_used <= m3type_table_size_allocated);
-    if (m3type_table_size_used >= m3type_table_size_allocated)
-    {
-#if M3_TYPE_TABLE_GROWABLE
-      if (m3type_table_size_allocated)
-        m3type_table_size_allocated = m3_add (m3type_table_size_allocated, m3type_table_size_allocated);
-      else
-        m3type_table_size_allocated = 64;
-      m3type_table_address = XRESIZEVEC (m3type_t, m3type_table_address, m3type_table_size_allocated);
-#else
-      fatal_error ("m3type_table out of room\n");
-#endif
-    }
-    m3type_table_address[m3type_table_size_used++] = to_add;
-#else
     if (!m3type_table)
       m3type_table = VEC_alloc (m3type_t, gc, 100);
     VEC_safe_push (m3type_t, gc, m3type_table, &to_add);
-#endif
     m3type_table_dirty = true;
   }
 }
