@@ -12,6 +12,8 @@ if not defined("SL") SL = "/" end
 
 readonly TARGET_OS = "DARWIN"
 
+m3back_debug = "-g " % no m3gdb support
+
 proc FileExists(x) is
     return not stale(x, x)
 end
