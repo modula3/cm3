@@ -797,14 +797,34 @@ const char *const tree_code_name[] = {
 #endif
 
 static tree
-m3_cast (tree type, tree op0)
+m3_build1 (enum tree_code code, tree tipe, tree op0)
 {
-  return fold_build1 (NOP_EXPR, type, op0);
+  return stabilize_reference (fold_build1 (code, tipe, op0));
 }
 
-#define m3_build1 fold_build1
-#define m3_build2 fold_build2
-#define m3_build3 fold_build3
+static tree
+m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1)
+{
+  return stabilize_reference (fold_build2 (code, tipe, op0, op1));
+}
+
+static tree
+m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
+{
+  return stabilize_reference (fold_build3 (code, tipe, op0, op1, op2));
+}
+
+static tree
+m3_cast (tree type, tree op0)
+{
+  return m3_build1 (NOP_EXPR, type, op0);
+}
+
+static tree
+m3_convert (tree type, tree op0)
+{
+  return stabilize_reference (convert (type, op0));
+}
 
 #if 0
 static tree
@@ -1063,7 +1083,7 @@ m3_do_extract (tree x, tree i, tree n, tree type)
 {
   tree a = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE (type), n);
   tree b = m3_build2 (MINUS_EXPR, t_int, a, i);
-  tree c = convert (m3_unsigned_type (type), x);
+  tree c = m3_convert (m3_unsigned_type (type), x);
   tree d = m3_build2 (LSHIFT_EXPR, m3_unsigned_type (type), c, b);
   tree e = m3_build2 (RSHIFT_EXPR, type, d, a);
   tree f = m3_build3 (COND_EXPR, type,
@@ -1081,7 +1101,7 @@ m3_do_rotate (enum tree_code code, tree orig_type, tree val, tree cnt)
   tree a = build_int_cst (t_int, TYPE_PRECISION (type) - 1);
   tree b = m3_build2 (BIT_AND_EXPR, t_int, cnt, a);
   tree c = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE (type), b);
-  tree d = convert (type, val);
+  tree d = m3_convert (type, val);
   tree e = m3_build2 (LSHIFT_EXPR, type, d, (code == LROTATE_EXPR) ? b : c);
   tree f = m3_build2 (RSHIFT_EXPR, type, d, (code == RROTATE_EXPR) ? b : c);
   tree g = m3_build2 (BIT_IOR_EXPR, type, e, f);
@@ -1094,7 +1114,7 @@ m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count)
   tree c, d;
 
   tree type = m3_unsigned_type (orig_type);
-  tree a = convert (type, val);
+  tree a = m3_convert (type, val);
   tree b = m3_build2 (code, type, a, count);
   if (host_integerp (count, 1) && (TREE_INT_CST_LOW (count) < TYPE_PRECISION (type)))
     return b;
@@ -2375,10 +2395,10 @@ debug_struct (void)
   TYPE_NAME (t) = build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
   /* TYPE_MAIN_VARIANT (t) = t; */
   TYPE_SIZE (t) = bitsize_one_node;
-  TYPE_SIZE_UNIT (t) = convert (sizetype,
-                                size_binop (FLOOR_DIV_EXPR,
-                                            TYPE_SIZE (t),
-                                            bitsize_int (BITS_PER_UNIT)));
+  TYPE_SIZE_UNIT (t) = m3_convert (sizetype,
+                                   size_binop (FLOOR_DIV_EXPR,
+                                               TYPE_SIZE (t),
+                                               bitsize_int (BITS_PER_UNIT)));
   TYPE_ALIGN (t) = BITS_PER_UNIT;
   SET_TYPE_MODE (t, QImode);
 
@@ -2650,8 +2670,8 @@ m3_pop_param (tree t)
 static void
 m3_call_direct (tree p, tree return_type)
 {
-  tree call = fold_build3 (CALL_EXPR, return_type, proc_addr (p), CALL_TOP_ARG (),
-                          CALL_TOP_STATIC_CHAIN ());
+  tree call = m3_build3 (CALL_EXPR, return_type, proc_addr (p), CALL_TOP_ARG (),
+                         CALL_TOP_STATIC_CHAIN ());
   if (type == t_void)
   {
     add_stmt (call);
@@ -2885,7 +2905,6 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
         v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
       v = m3_build1 (INDIRECT_REF, src_t,
                      m3_cast (m3_build_pointer_type (src_t), v));
-      v = /*stabilize_reference*/ (v);
     }
     else
     {
@@ -2898,7 +2917,7 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
   if (M3_ALL_VOLATILE)
     TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
   if (src_T != dst_T)
-    v = convert (dst_t, v);
+    v = m3_convert (dst_t, v);
   EXPR_PUSH (v);
 }
 
@@ -2937,7 +2956,6 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
         v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
       v = m3_build1 (INDIRECT_REF, dst_t,
                      m3_cast (m3_build_pointer_type (dst_t), v));
-      v = /*stabilize_reference*/ (v);
     }
     else
     {
@@ -2952,7 +2970,7 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
   m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
-    val = convert (dst_t, val);
+    val = m3_convert (dst_t, val);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
   EXPR_POP ();
 }
@@ -3383,7 +3401,7 @@ m3cg_declare_enum_elt (void)
     DECL_CONTEXT (decl) = m3_current_scope ();
     gcc_assert (current_dbg_type_count2 > 0);
     gcc_assert (current_dbg_type_count2 >= current_dbg_type_count1);
-    DECL_INITIAL (decl) = convert (enumtype_elementtype, value);
+    DECL_INITIAL (decl) = m3_convert (enumtype_elementtype, value);
     pushdecl (decl);
     decl = tree_cons (decl, value, NULL_TREE);
     TREE_CHAIN (decl) = TYPE_VALUES (enumtype);
@@ -4751,9 +4769,8 @@ m3cg_load_indirect (void)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
-  v = /*stabilize_reference*/ (v);
   if (src_T != dst_T)
-    v = convert (dst_t, v);
+    v = m3_convert (dst_t, v);
   EXPR_REF (-1) = v;
 }
 
@@ -4784,10 +4801,9 @@ m3cg_store_indirect (void)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
-  v = /*stabilize_reference*/ (v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
-                    convert (dst_t,
-                             m3_cast (src_t, EXPR_REF (-1)))));
+                    m3_convert (dst_t,
+                                m3_cast (src_t, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -4814,7 +4830,7 @@ m3cg_load_float (void)
   FLOAT (f, fkind);
 
   if (TREE_TYPE (f) != type)
-    f = convert (type, f);
+    f = m3_convert (type, f);
   EXPR_PUSH (f);
 }
 
@@ -4904,8 +4920,8 @@ m3_minmax (int min)
   MTYPE (type);
   tree x[2];
 
-  x[0] = stabilize_reference (m3_cast (type, EXPR_REF (-1)));
-  x[1] = stabilize_reference (m3_cast (type, EXPR_REF (-2)));
+  x[0] = m3_cast (type, EXPR_REF (-1));
+  x[1] = m3_cast (type, EXPR_REF (-2));
   EXPR_REF (-2) = m3_build3 (COND_EXPR, type,
                              m3_build2 (LE_EXPR, boolean_type_node, x[!min], x[min]),
                              x[0], x[1]);
@@ -4936,8 +4952,8 @@ m3cg_round (void)
   real_from_string (&r, "-0.5");
   neg = build_real (src_t, r);
 
-  cond = fold_build2 (GT_EXPR, boolean_type_node, arg,
-                      build_real_from_int_cst (src_t, v_zero));
+  cond = m3_build2 (GT_EXPR, boolean_type_node, arg,
+                    build_real_from_int_cst (src_t, v_zero));
 
   EXPR_REF (-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t,
                              m3_build2 (PLUS_EXPR, src_t, arg,
@@ -5012,7 +5028,7 @@ m3cg_cvt_float (void)
   MTYPE (dst_t);
 
   if (FLOAT_TYPE_P (src_t))
-    EXPR_REF (-1) = convert (dst_t, EXPR_REF (-1));
+    EXPR_REF (-1) = m3_convert (dst_t, EXPR_REF (-1));
   else
     EXPR_REF (-1) = m3_build1 (FLOAT_EXPR, dst_t, EXPR_REF (-1));
 }
@@ -5129,7 +5145,7 @@ m3cg_set_member_ref (tree* out_bit_in_word)
   m3cg_assert_int (type);
   EXPR_POP ();
   EXPR_POP ();
-  return stabilize_reference (word_ref); /* stabilize: avoid recomputing */
+  return word_ref;
 }
 
 static void
@@ -5271,8 +5287,8 @@ m3cg_shift (void)
 {
   MTYPE (type);
 
-  tree n = stabilize_reference (convert (t_int, EXPR_REF (-1)));
-  tree x = stabilize_reference (convert (type, EXPR_REF (-2)));
+  tree n = m3_convert (t_int, EXPR_REF (-1));
+  tree x = m3_convert (type, EXPR_REF (-2));
 
   gcc_assert (INTEGRAL_TYPE_P (type));
 
@@ -5311,8 +5327,8 @@ m3cg_rotate (void)
 {
   MTYPE (type);
 
-  tree n = stabilize_reference (convert (t_int, EXPR_REF (-1)));
-  tree x = stabilize_reference (convert (type, EXPR_REF (-2)));
+  tree n = m3_convert (t_int, EXPR_REF (-1));
+  tree x = m3_convert (type, EXPR_REF (-2));
 
   gcc_assert (INTEGRAL_TYPE_P (type));
 
@@ -5354,16 +5370,16 @@ m3cg_widen (void)
   tree dst_t = (sign ? t_int_64 : t_word_64);
   tree src_t  = (sign ? t_int_32 : t_word_32);
 
-  EXPR_REF (-1) = convert (dst_t,
-                           m3_cast (src_t, EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_convert (dst_t,
+                              m3_cast (src_t, EXPR_REF (-1)));
 }
 
 static void
 m3cg_chop (void)
 {
-  EXPR_REF (-1) = convert (t_int_32,
-                           m3_build2 (BIT_AND_EXPR, t_int_64, EXPR_REF (-1),
-                                      build_int_cst (t_int, 0xffffffff)));
+  EXPR_REF (-1) = m3_convert (t_int_32,
+                              m3_build2 (BIT_AND_EXPR, t_int_64, EXPR_REF (-1),
+                                         build_int_cst (t_int, 0xffffffff)));
 }
 
 static void
@@ -5428,7 +5444,7 @@ m3_do_fixed_extract (tree x, int m, int n, tree type)
                             type);
     }
 
-  x = convert (type, x);
+  x = m3_convert (type, x);
   x = (b ? m3_build2 (LSHIFT_EXPR, type, x, build_int_cst (t_int, b)) : x);
   x = (a ? m3_build2 (RSHIFT_EXPR, type, x, build_int_cst (t_int, a)) : x);
   return x;
@@ -5656,7 +5672,7 @@ m3cg_check_nil (void)
 {
   INTEGER (code);
 
-  EXPR_REF (-1) = stabilize_reference (convert (t_addr, EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_convert (t_addr, EXPR_REF (-1));
   add_stmt (build3 (COND_EXPR, t_void,
 		    m3_build2 (EQ_EXPR, boolean_type_node, EXPR_REF (-1), v_null),
 		    generate_fault (code),
@@ -5670,7 +5686,7 @@ m3cg_check_lo (void)
   INTEGER (a);
   INTEGER (code);
 
-  EXPR_REF (-1) = stabilize_reference (convert (type, EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_convert (type, EXPR_REF (-1));
   add_stmt (build3 (COND_EXPR, t_void,
                     m3_build2 (LT_EXPR,
                                boolean_type_node,
@@ -5687,7 +5703,7 @@ m3cg_check_hi (void)
   INTEGER (a);
   INTEGER (code);
 
-  EXPR_REF (-1) = stabilize_reference (convert (type, EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_convert (type, EXPR_REF (-1));
   add_stmt (build3 (COND_EXPR, t_void,
                     m3_build2 (GT_EXPR,
                                boolean_type_node,
@@ -5705,7 +5721,7 @@ m3cg_check_range (void)
   INTEGER (b);
   INTEGER (code);
 
-  EXPR_REF (-1) = stabilize_reference (convert (type, EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_convert (type, EXPR_REF (-1));
   add_stmt (build3 (COND_EXPR, t_void,
                     m3_build2 (TRUTH_ORIF_EXPR, boolean_type_node,
                                m3_build2 (LT_EXPR,
@@ -5729,8 +5745,8 @@ m3cg_check_index (void)
   type = m3_unsigned_type (type);
   add_stmt (build3 (COND_EXPR, t_void,
                     m3_build2 (GE_EXPR, boolean_type_node,
-                               convert (type, EXPR_REF (-2)),
-                               convert (type, EXPR_REF (-1))),
+                               m3_convert (type, EXPR_REF (-2)),
+                               m3_convert (type, EXPR_REF (-1))),
                     generate_fault (code),
                     NULL_TREE));
   EXPR_POP ();
@@ -5742,8 +5758,8 @@ m3cg_check_eq (void)
   MTYPE   (type);
   INTEGER (code);
 
-  tree temp1 = convert (type, EXPR_REF (-1));
-  tree temp2 = convert (type, EXPR_REF (-2));
+  tree temp1 = m3_convert (type, EXPR_REF (-1));
+  tree temp2 = m3_convert (type, EXPR_REF (-2));
   add_stmt (build3 (COND_EXPR, t_void,
 		    m3_build2 (NE_EXPR, boolean_type_node, temp1, temp2),
                     generate_fault (code),
@@ -5843,7 +5859,6 @@ m3cg_pop_struct (void)
 
   EXPR_REF (-1) = m3_build1 (INDIRECT_REF, type,
                              m3_cast (m3_build_pointer_type (type), EXPR_REF (-1)));
-  EXPR_REF (-1) = /*stabilize_reference*/ (EXPR_REF (-1));
   m3_pop_param (type);
 }
 
@@ -5895,10 +5910,9 @@ m3cg_store_ordered (void)
   v = EXPR_REF (-2);
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
-  v = /*stabilize_reference*/ (v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
-                    convert (dst_t,
-                             m3_cast (src_t, EXPR_REF (-1)))));
+                    m3_convert (dst_t,
+                                m3_cast (src_t, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -5918,9 +5932,8 @@ m3cg_load_ordered (void)
   v = EXPR_REF (-1);
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
-  v = /*stabilize_reference*/ (v);
   if (src_T != dst_T)
-    v = convert (dst_t, v);
+    v = m3_convert (dst_t, v);
 
   EXPR_REF (-1) = v;
 }
