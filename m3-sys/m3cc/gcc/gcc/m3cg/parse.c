@@ -22,13 +22,12 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-static const unsigned char M3_TYPES = 1;
-static const unsigned char M3_TYPES_INT = 1;
-static const unsigned char M3_TYPES_ENUM = 1;
-static const unsigned char M3_TYPES_TYPENAME = 1;
-static const unsigned char M3_TYPES_SUBRANGE = 0;
+static const unsigned char M3_TYPES = 0;
+static const unsigned char M3_TYPES_INT = 0;
+static const unsigned char M3_TYPES_ENUM = 0;
+static const unsigned char M3_TYPES_TYPENAME = 0;
 static const unsigned char M3_TYPES_SEGMENT = 0;
-static const unsigned char M3_TYPES_CHECK_RECORD_SIZE = 1;
+static const unsigned char M3_TYPES_CHECK_RECORD_SIZE = 0;
 static const unsigned char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 
 #include <stdlib.h>
@@ -99,8 +98,8 @@ static bool m3gdb;
    Why does the stack walker matter?
  */
 #define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
-/*#undef M3_ALL_VOLATILE
-#define M3_ALL_VOLATILE 1*/
+#undef M3_ALL_VOLATILE
+#define M3_ALL_VOLATILE 1
 
 #if GCC45
 
@@ -173,9 +172,9 @@ static void m3_revstr (char* a, size_t len)
   len -= 1;
   while (i < len)
   {
-    char t = a[i];
+    char temp = a[i];
     a[i] = a[len];
-    a[len] = t;
+    a[len] = temp;
     i += 1;
     len -= 1;
   }
@@ -277,6 +276,7 @@ static int option_trace_all;
 #define UID_XREEL 0x9EE024E3 /* EXTENDED */
 #define UID_BOOLEAN 0x1E59237D /* BOOLEAN [0..1] */
 #define UID_CHAR 0x56E16863 /* CHAR [0..255] */
+#define UID_WIDECHAR 0x88F439FC
 #define UID_MUTEX 0x1541F475 /* MUTEX */
 #define UID_TEXT 0x50F86574 /* TEXT */
 #define UID_UNTRACED_ROOT 0x898EA789 /* UNTRACED ROOT */
@@ -333,6 +333,7 @@ static const struct { unsigned long typeid; tree* t; } builtin_uids[] = {
   { UID_XREEL, &t_xreel },
   { UID_BOOLEAN, &t_word_8 },
   { UID_CHAR, &t_word_8 },
+  { UID_WIDECHAR, &t_word_16 },
   { UID_MUTEX, &t_addr },
   { UID_TEXT, &t_addr },
   { UID_UNTRACED_ROOT, &t_addr },
@@ -348,8 +349,8 @@ static const struct { unsigned long typeid; tree* t; } builtin_uids[] = {
   { UID_PROC5, &t_addr },
   { UID_PROC6, &t_addr },
   { UID_PROC7, &t_addr },
-  { UID_PROC8, &t_addr }
-  /* UID_NULL */
+  { UID_PROC8, &t_addr },
+  { UID_NULL, &t_void }
 };
 
 static const struct { tree* t; char name[8]; } builtin_types[] = {
@@ -583,20 +584,24 @@ typedef enum
 }
 m3_type;
 
-#define IS_WORD_TYPE(t) (t == T_word_32 || t == T_word_8 || t == T_word_16 || \
-                         t == T_word_64 || t == T_word)
+#define IS_UNSIGNED_INTEGER_TYPE(t) ((t) == T_word_32 || (t) == T_word_8 \
+                                     || (t) == T_word_16 \
+                                     || (t) == T_word_64 || (t) == T_word)
 
-#define IS_INTEGER_TYPE(t) (t == T_int_32 || t == T_int_8 || t == T_int_16 || \
-                            t == T_int_64 || t == T_int)
+#define IS_SIGNED_INTEGER_TYPE(t) ((t) == T_int_32 || (t) == T_int_8 \
+                                   || (t) == T_int_16 || (t) == T_int_64 \
+                                   || (t) == T_int)
 
-#define IS_INTEGER_TYPE_TREE(t) (t == t_int_32 || t == t_int_8 \
-                || t == t_int_16 || t == t_int_64 || t == t_int)
+#define IS_SIGNED_INTEGER_TYPE_TREE(t) ((t) == t_int_32 || (t) == t_int_8 \
+                                        || (t) == t_int_16 || (t) == t_int_64 \
+                                        || (t) == t_int)
 
-#define IS_WORD_TYPE_TREE(t) (t == t_word_32 || t == t_word_8 \
-                || t == t_word_16 || t == t_word_64 || t == t_word)
+#define IS_UNSIGNED_INTEGER_TYPE_TREE(t) ((t) == t_word_32 || (t) == t_word_8 \
+                                          || (t) == t_word_16 || (t) == t_word_64 \
+                                          || (t) == t_word)
 
-#define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
-#define IS_REAL_TYPE_TREE(t) (t == t_reel || t == t_lreel || t == t_xreel)
+#define IS_REAL_TYPE(t) ((t) == T_reel || (t) == T_lreel || (t) == T_xreel)
+#define unused_IS_REAL_TYPE_TREE(t) ((t) == t_reel || (t) == t_lreel || (t) == t_xreel)
 
 #define boolstr(a) ((a) ? "true" : "false")
 
@@ -679,7 +684,6 @@ static bool m3_post_options (const char **);
 static bool m3_init (void);
 static void m3_parse_file (int);
 static alias_set_type m3_get_alias_set (tree);
-static void m3_finish (void);
 static void m3_volatilize_decl (tree decl);
 static struct language_function* m3_language_function (void);
 #define m3_volatize (m3_language_function ()->volatil)
@@ -748,8 +752,6 @@ m3_expand_function (tree fndecl)
 #define LANG_HOOKS_INIT m3_init
 #undef LANG_HOOKS_NAME
 #define LANG_HOOKS_NAME "Modula-3 backend"
-#undef LANG_HOOKS_FINISH
-#define LANG_HOOKS_FINISH m3_finish
 #undef LANG_HOOKS_INIT_OPTIONS
 #define LANG_HOOKS_INIT_OPTIONS  m3_init_options
 #undef LANG_HOOKS_HANDLE_OPTION
@@ -824,16 +826,17 @@ m3_build_type_id (m3_type type,
   if (!M3_TYPES)
     typeid = NO_UID; /* disable */
 
-  /* Convert integer to enum, or possibly typename/subrange. */
+  /* Convert integer to enum, or possibly typename/subrange.
+     Be careful, if typeid is a packed type e.g. BITS 20 for typecode,
+     but frontend asked for something bigger, e.g. word32, then give
+     it word32. */
 
   if (M3_TYPES_INT
         && (typeid != NO_UID)
-        && (IS_INTEGER_TYPE(type) || IS_WORD_TYPE(type))
+        && (IS_SIGNED_INTEGER_TYPE(type) || IS_UNSIGNED_INTEGER_TYPE(type))
         && ((ts = get_typeid_to_tree (typeid)))
         && TREE_INT_CST_LOW (TYPE_SIZE (ts)) == size
-        && TYPE_ALIGN (ts) == align
-        && size == align
-        )
+        && TYPE_ALIGN (ts) == align)
   {
     return ts;
   }
@@ -891,16 +894,19 @@ m3_build_type_id (m3_type type,
     case T_struct:
       if (typeid != NO_UID)
         ts = get_typeid_to_tree (typeid);
-      if (!ts)
+      if (!ts
+          || TYPE_SIZE (ts) != bitsize_int (size)
+          || TYPE_SIZE_UNIT (ts) != size_int (size / BITS_PER_UNIT)
+          || TYPE_ALIGN (ts) != align)
       {
         ts = make_node (RECORD_TYPE);
         TYPE_NAME (ts) = NULL_TREE;
         TYPE_FIELDS (ts) = NULL_TREE;
+        TYPE_SIZE (ts) = bitsize_int (size);
+        TYPE_SIZE_UNIT (ts) = size_int (size / BITS_PER_UNIT);
+        TYPE_ALIGN (ts) = align;
+        compute_record_mode (ts);
       }
-      TYPE_SIZE (ts) = bitsize_int (size);
-      TYPE_SIZE_UNIT (ts) = size_int (size / BITS_PER_UNIT);
-      TYPE_ALIGN (ts) = align;
-      compute_record_mode (ts);
       return ts;
 
     default:
@@ -1281,27 +1287,6 @@ m3_push_type_decl (tree type, tree name)
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
   return decl;
-}
-
-static tree m3_return_type (tree type)
-{
-#if 0
-  /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
-  if (INTEGRAL_TYPE_P (type))
-  {
-    if (TYPE_UNSIGNED (type))
-    {
-      if (TYPE_SIZE (type) <= TYPE_SIZE (t_word))
-        type = t_word;
-    }
-    else
-    {
-      if (TYPE_SIZE (type) <= TYPE_SIZE (t_int))
-        type = t_int;
-    }
-  }
-#endif
-  return type;
 }
 
 /* Return a definition for a builtin function named NAME and whose data type
@@ -1755,16 +1740,21 @@ static GTY (()) varray_type call_stack;
 
 /*=============================================================== PARSING ===*/
 
-#define BUFFER_SIZE 0x10000
-
-static unsigned char input_buffer[BUFFER_SIZE];
-static int input_len;
-static int input_cursor;
+static unsigned char* input_buffer;
+static unsigned char* m3_replay_buffer;
+static size_t input_len;
+static size_t input_cursor;
+static size_t m3_preceding_cursor;
+static size_t m3_replay_cursor;
+static unsigned m3_replay_pass;
 static bool input_eof;
-static int m3cg_lineno;
+static unsigned m3cg_lineno = 1;
 
-/* Stream for reading from the input file.  */
-FILE *finput;
+/* Opcode functions should set m3_replay if, due to circular types,
+ * they wish to be replayed again later, after finishing
+ * the current pass; this is to aid in describing circular types.
+ */
+static bool m3_replay;
 
 /*-------------------------------------------------------- buffer loading ---*/
 
@@ -1778,20 +1768,38 @@ m3_init_parse (void)
   VARRAY_TREE_INIT (call_stack, 100 * 2, "call_stack");
 }
 
-static void
-reload_buffer (void)
+static void m3_read_entire_file (FILE* file, unsigned char** out_buffer,
+                                 size_t* out_size)
 {
-  gcc_assert (finput);
-  input_len = fread (input_buffer, 1, BUFFER_SIZE, finput);
-  input_cursor = 0;
-  input_eof = (input_len <= 0);
+  size_t buffer_size = { 0 };
+  unsigned char* buffer = { 0 };
+  size_t bytes_read = { 0 };
+  size_t total_bytes_read = { 0 };
+  size_t bytes_to_read = { 0 };
+
+  while (bytes_read == bytes_to_read)
+  {
+    buffer_size += buffer_size ? buffer_size : 0x10000;
+    buffer = (unsigned char*)xrealloc (buffer, buffer_size);
+    bytes_to_read = (buffer_size - total_bytes_read);
+    bytes_read = fread (buffer + total_bytes_read,
+                        1,
+                        buffer_size - total_bytes_read,
+                        file);
+    total_bytes_read += bytes_read;
+  }
+  /* shrink it down (or up by 1) and add terminal nul */
+  buffer = (unsigned char*)xrealloc (buffer, total_bytes_read + 1);
+  buffer[total_bytes_read] = 0;
+  *out_buffer = buffer;
+  *out_size = total_bytes_read;
 }
 
 static void
 m3_init_lex (void)
 {
-  reload_buffer ();
-  m3cg_lineno = 1;
+  input_cursor = 0;
+  input_eof = (input_len <= 0);
 }
 
 static unsigned char
@@ -1799,9 +1807,8 @@ get_byte (void)
 {
   if (input_cursor >= input_len)
   {
-    reload_buffer ();
-    if (input_eof)
-      return 0;
+    input_eof = true;
+    return 0;
   }
   return input_buffer[input_cursor++];
 }
@@ -1958,7 +1965,7 @@ scan_calling_convention (void)
   case 0: return NULL_TREE;
   case 1: return build_tree_list (get_identifier ("stdcall"), NULL);
   default:
-    fatal_error (" *** invalid calling convention: 0x%x, at m3cg_lineno %d",
+    fatal_error (" *** invalid calling convention: 0x%x, at m3cg_lineno %u",
                  (int)id, m3cg_lineno);
   }
 }
@@ -1973,7 +1980,7 @@ scan_type (const char* name)
   unsigned HOST_WIDE_INT i = get_int ();
 
   if (i >= T_LAST)
-    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %d", (unsigned long)i, m3cg_lineno);
+    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %u", (unsigned long)i, m3cg_lineno);
 
   if (option_trace_all)
   {
@@ -2010,7 +2017,7 @@ scan_sign (void)
   case 1: break; /* negative */
   case 2: break; /* unknown */
   default:
-    fatal_error (" *** bad sign: 0x%lx, at m3cg_lineno %d", (long)x, m3cg_lineno);
+    fatal_error (" *** bad sign: 0x%lx, at m3cg_lineno %u", (long)x, m3cg_lineno);
   }
 }
 
@@ -2071,7 +2078,7 @@ scan_float (unsigned *out_Kind)
   Kind = (unsigned) get_int ();
   if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
-      fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %d",
+      fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %u",
                    Kind, m3cg_lineno);
     }
   *out_Kind = Kind;
@@ -2180,8 +2187,8 @@ scan_var (enum tree_code code, const char* name)
   if (code == ERROR_MARK)
   {
     if (var == NULL)
-      fatal_error ("*** variable should already exist, v.0x%x, line %d",
-                   (int)i, (int)m3cg_lineno);
+      fatal_error ("*** variable should already exist, v.0x%x, line %u",
+                   (int)i, m3cg_lineno);
     if (name && option_trace_all)
     {
       const char* colon = m3_trace_name (&name);
@@ -2191,8 +2198,8 @@ scan_var (enum tree_code code, const char* name)
   else
   {
     if (var != NULL)
-      fatal_error ("*** variable should not already exist, v.0x%x, line %d",
-                   (int)i, (int)m3cg_lineno);
+      fatal_error ("*** variable should not already exist, v.0x%x, line %u",
+                   (int)i, m3cg_lineno);
     var = make_node (code);
     VARRAY_TREE (all_vars, i) = var;
     DECL_NAME (var) = NULL_TREE;
@@ -2637,9 +2644,8 @@ m3_pop_param (tree t)
 #if GCC42
 
 static void
-m3_call_direct (tree p, tree type)
+m3_call_direct (tree p, tree return_type)
 {
-  tree return_type = m3_return_type (type);
   tree call = fold_build3 (CALL_EXPR, return_type, proc_addr (p), CALL_TOP_ARG (),
                           CALL_TOP_STATIC_CHAIN ());
   if (type == t_void)
@@ -2650,16 +2656,13 @@ m3_call_direct (tree p, tree type)
   {
     TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
-    if (type != return_type)
-      EXPR_REF (-1) = convert (type, EXPR_REF (-1));
   }
   CALL_POP ();
 }
 
 static void
-m3_call_indirect (tree type, tree cc)
+m3_call_indirect (tree return_type, tree cc)
 {
-  tree return_type = m3_return_type (type);
   tree argtypes = chainon (CALL_TOP_TYPE (),
                            tree_cons (NULL_TREE, t_void, NULL_TREE));
   tree fntype = m3_build_pointer_type (build_function_type (return_type, argtypes));
@@ -2671,7 +2674,7 @@ m3_call_indirect (tree type, tree cc)
 
   call = build3 (CALL_EXPR, return_type, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
                  CALL_TOP_STATIC_CHAIN ());
-  if (type == t_void)
+  if (VOID_TYPE_P (return_type))
   {
     add_stmt (call);
   }
@@ -2679,8 +2682,6 @@ m3_call_indirect (tree type, tree cc)
   {
     TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
-    if (type != return_type)
-      EXPR_REF (-1) = convert (type, EXPR_REF (-1));
   }
   CALL_POP ();
 }
@@ -2748,9 +2749,8 @@ m3_volatilize_current_function (void)
 }
 
 static void
-m3_call_direct (tree p, tree type)
+m3_call_direct (tree p, tree return_type)
 {
-  tree return_type = m3_return_type (type);
   tree call = { 0 };
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
   int flags = { 0 };
@@ -2764,7 +2764,7 @@ m3_call_direct (tree p, tree type)
   }
   call = build_call_list (return_type, proc_addr (p), CALL_TOP_ARG ());
   CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
-  if (VOID_TYPE_P (type))
+  if (VOID_TYPE_P (return_type))
   {
     add_stmt (call);
   }
@@ -2772,8 +2772,6 @@ m3_call_direct (tree p, tree type)
   {
     TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
-    if (type != return_type)
-      EXPR_REF (-1) = convert (type, EXPR_REF (-1));
   }
   CALL_POP ();
   flags = call_expr_flags (call);
@@ -2785,9 +2783,8 @@ m3_call_direct (tree p, tree type)
 }
 
 static void
-m3_call_indirect (tree type, tree cc)
+m3_call_indirect (tree return_type, tree cc)
 {
-  tree return_type = m3_return_type (type);
   tree argtypes = chainon (CALL_TOP_TYPE (), void_list_node);
   tree fntype = m3_build_pointer_type (build_function_type (return_type, argtypes));
   tree call = { 0 };
@@ -2798,7 +2795,7 @@ m3_call_indirect (tree type, tree cc)
 
   call = build_call_list (return_type, m3_cast (fntype, fnaddr), CALL_TOP_ARG ());
   CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
-  if (VOID_TYPE_P (type))
+  if (VOID_TYPE_P (return_type))
   {
     add_stmt (call);
   }
@@ -2806,8 +2803,6 @@ m3_call_indirect (tree type, tree cc)
   {
     TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
-    if (type != return_type)
-      EXPR_REF (-1) = convert (type, EXPR_REF (-1));
   }
   CALL_POP ();
 }
@@ -3188,7 +3183,7 @@ m3cg_begin_unit (void)
 static void
 m3cg_end_unit (void)
 {
-  long j;
+  long j = { 0 };
 
   gcc_assert (current_block == NULL_TREE);
   debug_tag ('i', NO_UID, "_%s", current_unit_name);
@@ -3264,7 +3259,11 @@ m3cg_declare_typename (void)
   debug_struct ();
 
   if (M3_TYPES_TYPENAME)
-    m3_push_type_decl (get_typeid_to_tree (my_id), get_identifier (fullname));
+  {
+    tree t = get_typeid_to_tree (my_id);
+    gcc_assert (t);
+    m3_push_type_decl (t, get_identifier (fullname));
+  }
 }
 
 static void
@@ -3280,9 +3279,13 @@ m3cg_declare_array (void)
   debug_field_id (elts_id);
   debug_struct ();
 
-  /* gcc_assert (get_typeid_to_tree (index_id)); */
-  /* gcc_assert (get_typeid_to_tree (elts_id)); */
-  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
+  if (M3_TYPES)
+  {
+    gcc_assert (get_typeid_to_tree (index_id));
+    gcc_assert (get_typeid_to_tree (elts_id));
+    /* This is wrong and could be much better. */
+    set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
+  }
 }
 
 static void
@@ -3291,13 +3294,35 @@ m3cg_declare_open_array (void)
   TYPEID  (my_id);
   TYPEID  (elts_id);
   BITSIZE (size);
+  
+  if (M3_TYPES)
+  {
+    if (get_typeid_to_tree (elts_id) == NULL)
+    {
+      if (1 || option_trace_all)
+        fprintf (stderr, "\n declare_open_array: missing type 0x%lx\n", elts_id);
+      /*m3_replay = true;*/
+      /* This is wrong and could be much better.
+       * TODO: use a useful stub here, i.e. one that
+       * will recieve further fixup
+       */ 
+      set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
+      if (m3_replay)
+        return;
+    }
+  }
 
   debug_tag ('B', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   debug_field_id (elts_id);
   debug_struct ();
 
-  /* gcc_assert (get_typeid_to_tree (elts_id)); */
-  set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
+  if (M3_TYPES)
+  {
+    /*tree a = get_typeid_to_tree (elts_id);
+    gcc_assert (a);*/
+    /* This is wrong and could be much better. */
+    set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
+  }
 }
 
 static void
@@ -3430,7 +3455,7 @@ m3_declare_record_common (void)
       set_typeid_to_tree (current_record_type_id, type);
       if (M3_TYPES_CHECK_RECORD_SIZE && a != b)
       {
-        fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX",
+        fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n",
                  (long)a, (long)b);
         gcc_assert (a == b);
       }
@@ -3540,6 +3565,21 @@ m3cg_declare_subrange (void)
   
   gcc_assert (min <= max);
 
+  if (M3_TYPES)
+  {
+    tree t = get_typeid_to_tree (domain_id);
+    if (!t)
+    {
+      if (1 || option_trace_all)
+        fprintf (stderr, "\nm3cg_declare_subrange: missing type 0x%lx\n", domain_id);
+      t = m3_type_for_size (size, min < 0); /* fallback for now */
+      /*m3_replay = true;*/
+    }
+    set_typeid_to_tree (my_id, t);
+    if (m3_replay)
+      return;
+  }
+
   m3_append_char ('_', &p, p_limit);
   m3_append_char ('%', &p, p_limit);
   m3_append_char ('d', &p, p_limit);
@@ -3552,12 +3592,6 @@ m3cg_declare_subrange (void)
 
   debug_field_id (domain_id);
   debug_struct ();
-
-  {
-    tree t = m3_type_for_size (size, min < 0);
-    gcc_assert (t);
-    set_typeid_to_tree (my_id, t);
-  }
 }
 
 static void
@@ -3572,6 +3606,7 @@ m3cg_declare_pointer (void)
              traced, (brand ? 1 : 0), (brand ? brand : "" ));
   debug_field_id (target_id);
   debug_struct ();
+  if (M3_TYPES)
   {
     tree t = get_typeid_to_tree (target_id);
     set_typeid_to_tree (my_id, t ? m3_build_pointer_type (t) : t_addr);
@@ -3584,14 +3619,28 @@ m3cg_declare_indirect (void)
   TYPEID (my_id);
   TYPEID (target_id);
 
+  if (M3_TYPES)
+  {
+    tree t = get_typeid_to_tree (target_id);
+    if (!t)
+    {
+      if (1 || option_trace_all)
+        fprintf (stderr, "\nm3cg_declare_indirect: missing type 0x%lx\n", target_id);
+      t = t_addr; /* fallback for now */
+      /*m3_replay = true;*/
+    }
+    else
+    {
+      t = m3_build_pointer_type (t);
+    }
+    set_typeid_to_tree (my_id, t);
+    if (m3_replay)
+      return;
+  }
+
   debug_tag ('X', my_id, "_%d", GET_MODE_BITSIZE (Pmode));
   debug_field_id (target_id);
   debug_struct ();
-  {
-    tree t = get_typeid_to_tree (target_id);
-    if (t)
-      set_typeid_to_tree (my_id, m3_build_pointer_type (t));
-  }
 }
 
 static void
@@ -3998,6 +4047,11 @@ m3cg_declare_param (void)
 
   tree p = current_function_decl;
 
+  DECL_NAME (var) = fix_name (name, name_length, typeid);
+
+  if (option_trace_all && m3gdb)
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+
   if (current_param_count > 0)
   {
     /* declare_procedure... */
@@ -4018,11 +4072,6 @@ m3cg_declare_param (void)
   {
     gcc_unreachable ();
   }
-
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
-
-  if (option_trace_all && m3gdb)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
@@ -4268,7 +4317,6 @@ m3cg_import_procedure (void)
   CALLING_CONVENTION (cc);
   PROC    (p);
   
-  return_type = m3_return_type (return_type);
   DECL_NAME (p) = get_identifier (name);
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   TREE_PUBLIC (p) = true;
@@ -4315,7 +4363,6 @@ m3cg_declare_procedure (void)
   gcc_assert (n_params >= 0);
   gcc_assert (lev == 0 || !exported);
 
-  return_type = m3_return_type (return_type);
   DECL_NAME (p) = get_identifier (name);
   TREE_STATIC (p) = true;
 
@@ -5231,7 +5278,7 @@ m3cg_shift (void)
                              m3_do_shift (LSHIFT_EXPR, type, x, n),
                              m3_do_shift (RSHIFT_EXPR, type, x,
                                           m3_build1 (NEGATE_EXPR, t_int, n)));
-  EXPR_POP ();
+  EXPR_POP();
 }
 
 static void
@@ -5274,7 +5321,7 @@ m3cg_rotate (void)
                              m3_do_rotate (LROTATE_EXPR, type, x, n),
                              m3_do_rotate (RROTATE_EXPR, type, x,
                                            m3_build1 (NEGATE_EXPR, t_int, n)));
-  EXPR_POP ();
+  EXPR_POP();
 }
 
 static void
@@ -5466,8 +5513,8 @@ m3cg_insert_mn (void)
 static void
 m3cg_swap (void)
 {
-  MTYPE (t);
-  MTYPE (u);
+  MTYPE (type1);
+  MTYPE (type2);
 
   m3_swap ();
 }
@@ -5581,18 +5628,18 @@ m3cg_zero (void)
 static void
 m3cg_loophole (void)
 {
-  MTYPE2 (t, T);
-  MTYPE2 (u, U);
+  MTYPE2 (type1, Type1);
+  MTYPE2 (type2, Type2);
 
-  if (FLOAT_TYPE_P (t) != FLOAT_TYPE_P (u))
+  if (FLOAT_TYPE_P (type1) != FLOAT_TYPE_P (type2))
   {
-    tree v = declare_temp (t);
-    m3_store (v, 0, t, T, t, T);
-    m3_load (v, 0, u, U, u, U);
+    tree v = declare_temp (type1);
+    m3_store (v, 0, type1, Type1, type1, Type1);
+    m3_load (v, 0, type2, Type2, type2, Type2);
   }
   else
   {
-    EXPR_REF (-1) = m3_cast (u, EXPR_REF (-1));
+    EXPR_REF (-1) = m3_cast (type2, EXPR_REF (-1));
   }
 }
 
@@ -5614,9 +5661,9 @@ m3cg_check_nil (void)
   m3_store (temp1, 0, t_addr, T_addr, t_addr, T_addr);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
-                    m3_build2 (EQ_EXPR, boolean_type_node, temp1, v_null),
-                    generate_fault (code),
-                    NULL_TREE));
+		    m3_build2 (EQ_EXPR, boolean_type_node, temp1, v_null),
+		    generate_fault (code),
+		    NULL_TREE));
 }
 
 static void
@@ -5628,9 +5675,7 @@ m3cg_check_lo (void)
 
   tree temp1 = declare_temp (type);
 
-  if (TREE_TYPE (EXPR_REF (-1)) != type)
-    EXPR_REF (-1) = convert (type, EXPR_REF (-1));
-
+  EXPR_REF (-1) = convert (type, EXPR_REF (-1));
   m3_store (temp1, 0, type, T, type, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
@@ -5651,9 +5696,7 @@ m3cg_check_hi (void)
 
   tree temp1 = declare_temp (type);
 
-  if (TREE_TYPE (EXPR_REF (-1)) != type)
-    EXPR_REF (-1) = convert (type, EXPR_REF (-1));
-
+  EXPR_REF (-1) = convert (type, EXPR_REF (-1));
   m3_store (temp1, 0, type, T, type, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
@@ -5675,9 +5718,7 @@ m3cg_check_range (void)
 
   tree temp1 = declare_temp (type);
 
-  if (TREE_TYPE (EXPR_REF (-1)) != type)
-    EXPR_REF (-1) = convert (type, EXPR_REF (-1));
-
+  EXPR_REF (-1) = convert (type, EXPR_REF (-1));
   m3_store (temp1, 0, type, T, type, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
@@ -5745,11 +5786,11 @@ m3cg_index_address (void)
   MTYPE   (type);
   INTEGER (bytes);
 
-  signd = IS_INTEGER_TYPE_TREE (type);
-  gcc_assert (signd || IS_WORD_TYPE_TREE (type));
+  signd = IS_SIGNED_INTEGER_TYPE_TREE (type);
+  gcc_assert (signd || IS_UNSIGNED_INTEGER_TYPE_TREE (type));
   a = (signd ? ssize_int (bytes) : size_int (bytes));
   a = m3_build2 (MULT_EXPR, type, EXPR_REF (-1), a);
-  if (IS_INTEGER_TYPE_TREE (type))
+  if (IS_SIGNED_INTEGER_TYPE_TREE (type))
     a = m3_cast (ssizetype, a);
   a = m3_cast (sizetype, a);
   EXPR_REF (-2) = m3_build2 (POINTER_PLUS_EXPR, t_addr, m3_cast (t_addr, EXPR_REF (-2)), a);
@@ -5900,17 +5941,17 @@ m3cg_load_ordered (void)
 static void
 m3cg_exchange (void)
 {
-  MTYPE   (t);
-  MTYPE   (u);
+  MTYPE   (type1);
+  MTYPE   (type2);
   INTEGER (order);
 
   long size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
   /* SYNCH_LOCK_TEST_AND_SET is an acquire barrier */
 
-  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
     goto incompatible;
-  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  size = tree_low_cst (TYPE_SIZE_UNIT (type1), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
     goto incompatible;
 
@@ -5921,11 +5962,11 @@ m3cg_exchange (void)
     m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
   }
   m3_start_call ();
-  m3_pop_param (u);
+  m3_pop_param (type2);
   m3_pop_param (t_addr);
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], type2);
   return;
 
 incompatible:
@@ -5935,19 +5976,19 @@ incompatible:
 static void
 m3cg_compare_exchange (void)
 {
-  MTYPE   (t);
-  MTYPE   (u);
-  MTYPE   (r);
+  MTYPE   (type1);
+  MTYPE   (type2);
+  MTYPE   (return_type);
   INTEGER (success);
   INTEGER (failure);
 
-  tree v = declare_temp (u);
+  tree v = declare_temp (type2);
   long size = { 0 };
   enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
 
-  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
     goto incompatible;
-  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  size = tree_low_cst (TYPE_SIZE_UNIT (type1), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
     goto incompatible;
 
@@ -5955,16 +5996,16 @@ m3cg_compare_exchange (void)
   /* we will return it unchanged, even if success (i.e., we can fail spuriously) */
   /* we should really return the actual value seen by the exchange comparison */
   /* unfortunately, the gcc intrinsic doesn't give both a boolean and the actual value */
-  add_stmt (m3_build2 (MODIFY_EXPR, u, v, EXPR_REF (-2)));
+  add_stmt (m3_build2 (MODIFY_EXPR, type2, v, EXPR_REF (-2)));
   EXPR_REF (-2) = v;
 
   m3_start_call ();
-  m3_pop_param (u);
-  m3_pop_param (u);
+  m3_pop_param (type2);
+  m3_pop_param (type2);
   m3_pop_param (t_addr);
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], r);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], return_type);
 
   EXPR_PUSH (v);
   
@@ -5986,24 +6027,24 @@ m3cg_fence (void)
 static void
 m3cg_fetch_and_op (enum built_in_function fncode)
 {
-  MTYPE   (t);
-  MTYPE   (u);
+  MTYPE   (type1);
+  MTYPE   (type2);
   INTEGER (order);
 
   long size = { 0 };
 
-  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
     goto incompatible;
-  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  size = tree_low_cst (TYPE_SIZE_UNIT (type1), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
     goto incompatible;
 
   m3_start_call ();
-  m3_pop_param (t);
+  m3_pop_param (type1);
   m3_pop_param (t_addr);
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], type2);
   return;
 
 incompatible:
@@ -6247,7 +6288,7 @@ static const OpProc ops[] = {
 
 static short m3_indent_op[COUNT_OF(ops)];
 
-static volatile int m3_break_lineno; /* set in debugger */
+static volatile unsigned m3_break_lineno; /* set in debugger */
 static void m3_breakpoint(void) /* set breakpoint in debugger */
 {
 #ifdef __GNUC__
@@ -6290,31 +6331,67 @@ m3_parse_file (int xx)
     fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
                  i, M3CG_Version);
   }
-
-  op = (int)LAST_OPCODE;
-  while (op != (int)M3CG_END_UNIT)
+  
+  while (1)
   {
-    if (m3cg_lineno == m3_break_lineno)
-      m3_breakpoint ();
-    op = get_int ();
-    if (op < 0 || (int)LAST_OPCODE <= op)
-      fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %d", op, m3cg_lineno);
-
-    if (option_trace_all)
+    op = (int)LAST_OPCODE;
+    while (op != (int)M3CG_END_UNIT)
     {
-      short indent = m3_indent_op[op];
-      m3_indent += (indent < 0 ? indent : 0);
-      fprintf (stderr, "%s%s(%d)%s %s",
-               (indent > 0 ? "\n" : ""),
-               (m3cg_lineno >= 2) ? "\n" : "",
-               m3cg_lineno,
-               m3_indentstr (),
-               M3CG_opnames[op]);
-      m3_indent += (indent > 0 ? indent : 0);
-    }
+      gcc_assert (input_cursor <= input_len);
+      m3_preceding_cursor = input_cursor;
+      m3_replay = false;
 
-    ops[op].proc ();
-    m3cg_lineno ++;
+      if (m3cg_lineno == m3_break_lineno)
+        m3_breakpoint ();
+      op = get_int ();
+      if (op < 0 || (int)LAST_OPCODE <= op)
+        fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %u", op, m3cg_lineno);
+
+      if (option_trace_all)
+      {
+        short indent = m3_indent_op[op];
+        m3_indent += (indent < 0 ? indent : 0);
+        fprintf (stderr, "%s%s(%u)%s %s",
+                 (indent > 0 ? "\n" : ""),
+                 (m3cg_lineno >= 2) ? "\n" : "",
+                 m3cg_lineno,
+                 m3_indentstr (),
+                 M3CG_opnames[op]);
+        m3_indent += (indent > 0 ? indent : 0);
+      }
+
+      ops[op].proc ();
+      gcc_assert (input_cursor <= input_len);
+      m3cg_lineno += 1;
+    
+      if (m3_replay)
+      {
+        unsigned long replay_count = (input_cursor - m3_preceding_cursor);
+        gcc_assert (replay_count > 0);
+        memcpy (m3_replay_buffer + m3_replay_cursor,
+                input_buffer + m3_preceding_cursor,
+                replay_count);
+        m3_replay_cursor += replay_count;
+        m3_replay = false;
+      }
+      if (m3_replay_pass && input_cursor == input_len)
+        break;
+    }
+    if (m3_replay_cursor == 0)
+      break;
+    m3_replay_pass += 1;
+    if (1 || option_trace_all)
+      fprintf (stderr, "\n replaying to resolve circular types (pass %u)\n", m3_replay_pass);
+    {
+      unsigned char* temp = m3_replay_buffer;
+      m3_replay_buffer[m3_replay_cursor] = 0;
+      m3_replay_buffer = input_buffer;
+      input_buffer = temp;
+      input_len = m3_replay_cursor;
+      m3_replay_cursor = 0;
+      input_cursor = 0;
+      input_eof = false;
+    }
   }
 
   if (GCC45)
@@ -6434,6 +6511,7 @@ m3_post_options (const char **pfilename)
 static bool
 m3_init (void)
 {
+  FILE *finput = { 0 }; /* Stream for reading from the input file.  */
 #ifdef M3_USE_MAPPED_LOCATION
   #undef input_filename /* global input_filename is not an lvalue. */
   const char* input_filename = { 0 };
@@ -6452,27 +6530,22 @@ m3_init (void)
     }
   else
     finput = fopen (input_filename, "rb");
+
   if (finput == NULL)
     {
       fprintf (stderr, "Unable to open input file %s\n", input_filename);
       exit (1);
     }
+
+  /* Read the entire file */  
+  m3_read_entire_file (finput, &input_buffer, &input_len);
+  m3_replay_buffer = (unsigned char*)xmalloc (input_len);
+  fclose (finput);
+
   m3_init_lex ();
   m3_init_parse ();
   m3_init_decl_processing ();
   return true;
-}
-
-/* Language dependent wrapup.  */
-
-static void
-m3_finish (void)
-{
-  if (finput != NULL)
-    {
-      fclose (finput);
-      finput = NULL;
-    }
 }
 
 #if GCC_APPLE
