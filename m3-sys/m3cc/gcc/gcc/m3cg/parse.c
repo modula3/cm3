@@ -3323,7 +3323,7 @@ m3cg_declare_open_array (void)
   {
     if (M3_TYPES_REPLAY && get_typeid_to_tree (elts_id) == NULL)
     {
-      if (1 || option_trace_all)
+      if (option_trace_all)
         fprintf (stderr, "\n declare_open_array: missing type 0x%lX\n", elts_id);
       m3_replay = M3_TYPES_REPLAY;
       /* This is wrong and could be much better.
@@ -3619,7 +3619,7 @@ m3_declare_pointer_common (const char* caller, unsigned long my_id,
     tree t = get_typeid_to_tree (target_id);    
     if (!t)
     {
-      if (1 || option_trace_all)
+      if (option_trace_all)
         fprintf (stderr, "\n %s: missing type 0x%lX\n", caller, target_id);
       t = t_addr; /* fallback for now */
       m3_replay = M3_TYPES_REPLAY;
@@ -6380,7 +6380,7 @@ m3_parse_file (int xx)
     if (m3_replay_cursor == 0)
       break;
     m3_replay_pass += 1;
-    if (1 || option_trace_all)
+    if (option_trace_all)
       fprintf (stderr, "\n replaying to resolve circular types (pass %u)\n", m3_replay_pass);
     {
       unsigned char* temp = m3_replay_buffer;
