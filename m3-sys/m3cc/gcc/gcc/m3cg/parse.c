@@ -3637,9 +3637,6 @@ m3cg_declare_raises (void)
 {
   STRING (name, name_length);
 
-  if (option_trace_all)
-    fprintf (stderr, " declare_raises name:%s", name);
-
   debug_field_name (name);
   current_dbg_type_count2--;
   gcc_assert (current_proc_type_id != NO_UID);
@@ -3748,14 +3745,10 @@ static void
 m3cg_declare_exception (void)
 {
   STRING  (name, name_length);
-  TYPEID  (t);
+  TYPEID  (typeid);
   BOOLEAN (raise_proc);
   VAR     (base);
   INTEGER (offset);
-
-  if (option_trace_all)
-    fprintf (stderr, " declare_exception name:%s typeid:0x%lX raise_proc:%s",
-             name, t, boolstr (raise_proc));
 
   gcc_assert (offset >= 0);
 
@@ -3770,9 +3763,6 @@ m3cg_set_runtime_proc (void)
   STRING (name, name_length);
   PROC (p);
 
-  if (option_trace_all)
-    fprintf (stderr, " set_runtime_proc name:%s", name);
-
   if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
     fault_handler = p;
 }
@@ -3783,9 +3773,6 @@ m3cg_set_runtime_hook (void)
   STRING     (name, name_length);
   VAR        (var);
   BYTEOFFSET (offset);
-
-  if (option_trace_all)
-    fprintf (stderr, " set_runtime_hook name:%s", name);
 
   gcc_assert (offset >= 0);
 
@@ -3809,10 +3796,8 @@ m3cg_import_global (void)
 
   DECL_NAME (var) = fix_name (name, name_length, typeid);
 
-  if (option_trace_all)
-    fprintf (stderr, " import_global name:%s size:0x%lX align:0x%lX type:%s"
-             "typeid:0x%lx var:%s", name, (long)size, (long)align, typestr (type), typeid,
-             IDENTIFIER_POINTER (DECL_NAME (var)));
+  if (option_trace_all && m3gdb)
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
@@ -3836,10 +3821,8 @@ m3cg_declare_segment (void)
 
   DECL_NAME (var) = fix_name (name, name_length, typeid);
 
-  if (option_trace_all)
-    fprintf (stderr, " declare_segment name:%s typeid:0x%lX is_const:%s"
-             " var:%s", name, typeid, boolstr (is_const),
-             IDENTIFIER_POINTER (DECL_NAME (var)));
+  if (option_trace_all && m3gdb)
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   /* we really don't have an idea of what the type of this var is; let's try
      to put something that will be good enough for all the uses of this var we
@@ -3908,11 +3891,8 @@ m3cg_declare_global (void)
 
   DECL_NAME (var) = fix_name (name, name_length, typeid);
 
-  if (option_trace_all)
-    fprintf (stderr, " declare_global name:%s size:0x%lX align:0x%lX type:%s"
-             " typeid:0x%lX exported:%s initialized:%s",
-             IDENTIFIER_POINTER (DECL_NAME (var)), (long)size, (long)align,
-             typestr (type), typeid, boolstr (exported), boolstr (initialized));
+  if (option_trace_all && m3gdb)
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
@@ -3939,15 +3919,14 @@ m3cg_declare_constant (void)
   BOOLEAN    (initialized);
   RETURN_VAR (var, VAR_DECL);
 
-  if (option_trace_all)
-    fprintf (stderr, " declare_constant name:%s size:0x%lX align:0x%lX"
-            " type:%s typeid:0x%lX exported:%s initialized:%s", name, (long)size,
-            (long)align, typestr (type), typeid, boolstr (exported), boolstr (initialized));
+  DECL_NAME (var) = fix_name (name, name_length, typeid);
+
+  if (option_trace_all && m3gdb)
+    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
 
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
   TREE_TYPE (var) = m3_build_type_id (type, size, align, typeid);
   DECL_COMMON (var) = (initialized == false);
   TREE_PUBLIC (var) = exported;
@@ -5832,8 +5811,7 @@ m3cg_pop_struct (void)
   tree type = m3_build_type_id (T_struct, size, align, my_id);
 
   if (option_trace_all)
-    fprintf (stderr, " pop_struct size:0x%lX align:0x%lX typeid:0x%lX type:%p",
-             (long)size, (long)align, my_id, type);
+    fprintf (stderr, " type:%p", type);
 
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
