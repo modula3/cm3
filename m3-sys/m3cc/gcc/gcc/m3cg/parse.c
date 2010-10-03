@@ -23,9 +23,11 @@
    what you give them.   Help stamp out software-hoarding! */
 
 static const unsigned char M3_TYPES = 1;
-static const unsigned char M3_TYPES_INT = 0;
-static const unsigned char M3_TYPES_ENUM = 0;
-static const unsigned char M3_TYPES_TYPENAME = 0;
+static const unsigned char M3_TYPES_INT = 1;
+static const unsigned char M3_TYPES_ENUM = 1;
+static const unsigned char M3_TYPES_TYPENAME = 1;
+static const unsigned char M3_TYPES_SUBRANGE = 0;
+static const unsigned char M3_TYPES_SEGMENT = 0;
 static const unsigned char M3_TYPES_CHECK_RECORD_SIZE = 1;
 static const unsigned char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 
@@ -350,7 +352,7 @@ static const struct { unsigned long id; tree* t; } builtin_uids[] = {
   /* UID_NULL */
 };
 
-static const struct { tree* t; const char* name; } builtin_types[] = {
+static const struct { tree* t; char name[8]; } builtin_types[] = {
   { &t_int_8, "int_8" },
   { &t_int_16, "int_16" },
   { &t_int_32, "int_32" },
@@ -421,7 +423,7 @@ m3type_get (unsigned long id)
       fprintf (stderr, "\n  m3type_get(0x%lX) ", id);
 
     if (!m3type_table_size_used || id == NO_UID)
-      return 0;
+      return NULL;
 
     if (m3type_table_dirty)
     {
@@ -463,7 +465,7 @@ get_typeid_to_tree (unsigned long id)
       return t;
     }
   }
-  return 0;
+  return NULL;
 }
 
 static int m3_indent;
@@ -696,8 +698,7 @@ static GTY (()) tree pending_inits;
 
 static tree m3_current_scope (void)
 {
-  return /*current_block ? current_block
-         : */current_function_decl ? current_function_decl
+  return current_function_decl ? current_function_decl
          : global_decls;
 }
 
@@ -860,11 +861,19 @@ m3_build_type_id (m3_type type,
   if (!M3_TYPES)
     id = NO_UID; /* disable */
 
+  /* Convert integer to enum, or possibly typename/subrange. */
+
   if (M3_TYPES_INT
         && (id != NO_UID)
         && (IS_INTEGER_TYPE(type) || IS_WORD_TYPE(type))
-        && ((ts = get_typeid_to_tree (id))))
+        && ((ts = get_typeid_to_tree (id)))
+        && TREE_INT_CST_LOW (TYPE_SIZE (ts)) == size
+        && TYPE_ALIGN (ts) == align
+        && size == align
+        )
+  {
     return ts;
+  }
 
   switch (type)
     {
@@ -1186,7 +1195,7 @@ m3_type_for_size (unsigned bits, int unsignedp)
   if (bits <= TYPE_PRECISION (t_int))
     return unsignedp ? t_word : t_int;
 
-  return 0;
+  return NULL;
 }
 
 /* Return a data type that has machine mode MODE.  UNSIGNEDP selects
@@ -1206,9 +1215,9 @@ m3_type_for_mode (enum machine_mode mode, int unsignedp)
   if (mode == TYPE_MODE (t_int))     return unsignedp ? t_word     : t_int;
 
   /* TImode is needed to do 64bit mod for ARM. */
-  if (mode ==  TImode) return unsignedp ? unsigned_intTI_type_node : intDI_type_node;
+  if (mode ==  TImode) return unsignedp ? unsigned_intTI_type_node : intTI_type_node;
 
-  return 0;
+  return NULL;
 }
 
 /* Return the unsigned version of a TYPE_NODE, a scalar type.  */
@@ -1244,7 +1253,7 @@ m3_signed_or_unsigned_type (int unsignedp, tree type)
 static int
 global_bindings_p (void)
 {
-  return current_block == 0;
+  return current_block == NULL;
 }
 
 /* Return the list of declarations in the current level. Note that this list
@@ -1294,7 +1303,7 @@ m3_push_type_decl (tree type, tree name)
   gcc_assert (name || M3_TYPES_ENUM);
   gcc_assert (type || M3_TYPES_ENUM);
   if (!type)
-    return 0;
+    return NULL;
   decl = build_decl (TYPE_DECL, name, type);
   if (name)
     TYPE_NAME (type) = name;
@@ -1401,7 +1410,7 @@ builtin_function (const char *name,
 static void
 m3_write_globals (void)
 {
-  tree ctors;
+  tree ctors = { 0 };
 
   /* Fix init_offset fields in constructors: VAR_DECL -> offset */
   for (ctors = pending_inits; ctors; ctors = TREE_CHAIN (ctors))
@@ -1459,6 +1468,54 @@ sync_builtin (enum built_in_function fncode, tree type, const char *name)
   TREE_NOTHROW (decl) = true;
   built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
+
+#if 0 /* future */
+
+static tree
+m3_make_integer_type (unsigned size, unsigned align, unsigned signd)
+{
+  tree t = { 0 };
+
+  gcc_assert (size >= 1 && size <= 64);
+  gcc_assert (align <= 64);
+  gcc_assert (signd <= 1);
+  if (size == align)
+  {
+    if (size == BITS_PER_INTEGER)
+      return signd ? t_int : t_word;
+    switch (size)
+    {
+     case  8: return signd ? t_int_8 : t_word_8;
+     case 16: return signd ? t_int_16 : t_word_16;
+     case 32: return signd ? t_int_32 : t_word_32;
+     case 64: return signd ? t_int_64 : t_word_64;
+    }
+  }
+  gcc_assert (align < 2);
+  t = make_node (INTEGER_TYPE);
+  
+  if (size <= 8)
+    SET_TYPE_MODE (t, QImode);
+  else if (size <= 16)
+    SET_TYPE_MODE (t, HImode);
+  else if (size <= 32)
+    SET_TYPE_MODE (t, SImode);
+  else if (size <= 64)
+    SET_TYPE_MODE (t, DImode);
+  else
+    gcc_unreachable ();
+
+  TYPE_ALIGN (t) = align;
+  TYPE_USER_ALIGN (t) = true;
+  TYPE_UNSIGNED (t) = !signd;
+  TYPE_SIZE (t) = build_int_cst (t, i);
+  TYPE_SIZE_UNIT (t) = build_int_cst (t, (i + BITS_PER_UNIT - 1) / BITS_PER_UNIT);
+  TYPE_PRECISION (t) = i;
+  TYPE_PACKED (t) = true;
+  return t;
+}
+
+#endif
 
 /* Create the predefined scalar types of M3CG,
    and some nodes representing standard constants (0, 1, (void *) 0).
@@ -1857,15 +1914,15 @@ get_int (void)
   unsigned n_bytes = { 0 };
   int sign = { 0 };
   unsigned shift = { 0 };
-  unsigned i = get_byte ();
   HOST_WIDE_INT val = { 0 };
+  unsigned i = get_byte ();
 
-  gcc_assert (sizeof(unsigned HOST_WIDE_INT) >= 8);
+  gcc_assert (sizeof(HOST_WIDE_INT) >= 8);
 
   switch (i)
   {
-  case M3CG_Int1:   return (unsigned HOST_WIDE_INT) get_byte ();
-  case M3CG_NInt1:  return - (unsigned HOST_WIDE_INT) get_byte ();    
+  case M3CG_Int1:   return (HOST_WIDE_INT) get_byte ();
+  case M3CG_NInt1:  return - (HOST_WIDE_INT) get_byte ();    
   case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
   case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
   case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
@@ -1876,7 +1933,7 @@ get_int (void)
   }
 
   for (i = 0; i < n_bytes;  (++i), (shift += 8))
-    val |= (((unsigned HOST_WIDE_INT)get_byte ()) << shift);
+    val |= (((HOST_WIDE_INT)get_byte ()) << shift);
   return sign * val;
 }
 
@@ -1901,19 +1958,20 @@ get_typeid (const char* name)
   char *x = M3_UNUSED (x, scan_string (#x, ((length > 0) ? (char*)alloca (length + 1) : 0), length))
 
 static char *
-scan_string (const char* name, char *result, long len)
+scan_string (const char* name, char *result, long signed_length)
 {
-  if (len <= 0)
+  if (signed_length <= 0)
   {
     gcc_assert (!result);
   }
   else
   {
-    long x = { 0 };
+    unsigned long length = (unsigned long)signed_length;
+    unsigned long i = { 0 };
     gcc_assert (result);
-    for (x = 0; x < len; ++x)
-      result[x] = (char) get_byte ();
-    result[len] = 0;
+    for (i = 0; i < length; ++i)
+      result[i] = (char) get_byte ();
+    result[i] = 0;
   }
   if (name && option_trace_all)
   {
@@ -1930,7 +1988,7 @@ scan_string (const char* name, char *result, long len)
 static tree
 scan_calling_convention (void)
 {
-  HOST_WIDE_INT id = get_int ();
+  unsigned HOST_WIDE_INT id = get_int ();
 
   switch (id)
   {
@@ -1949,10 +2007,10 @@ scan_calling_convention (void)
 static m3_type
 scan_type (const char* name)
 {
-  long i = get_int ();
+  unsigned HOST_WIDE_INT i = get_int ();
 
-  if ((i < 0) || (T_LAST <= i))
-    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %d", i, m3cg_lineno);
+  if (i >= T_LAST)
+    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %d", (unsigned long)i, m3cg_lineno);
 
   if (option_trace_all)
   {
@@ -1960,7 +2018,7 @@ scan_type (const char* name)
     fprintf (stderr, " %s%s%s", name, colon, typestr (i));
   }
 
-  return (m3_type) i;
+  return (m3_type)i;
 }
 
 #define MTYPE(x) tree x = M3_UNUSED (x, scan_mtype (#x, 0))
@@ -1982,7 +2040,7 @@ scan_mtype (const char* name, m3_type* T)
 static void
 scan_sign (void)
 {
-  HOST_WIDE_INT x = get_int ();
+  unsigned HOST_WIDE_INT x = get_int ();
   switch (x)
   {
   case 0: break; /* positive */
@@ -2190,7 +2248,7 @@ scan_proc (void)
   tree p = { 0 };
 
   if (i <= 0)
-    return 0;
+    return NULL;
   VARRAY_EXTEND (all_procs, i + 1);
   if (VARRAY_TREE (all_procs, i) == NULL)
   {
@@ -2219,7 +2277,7 @@ scan_label (void)
     fprintf (stderr, " label:%ld", i);
 
   if (i < 0)
-    return 0;
+    return NULL;
   VARRAY_EXTEND (all_labels, i + 1);
   if (VARRAY_TREE (all_labels, i) == NULL)
     VARRAY_TREE (all_labels, i) = build_decl (LABEL_DECL, NULL_TREE, t_void);
@@ -2374,46 +2432,64 @@ static HOST_WIDE_INT current_record_offset;
 static void one_gap (HOST_WIDE_INT offset);
 
 static void
-one_field (HOST_WIDE_INT offset, tree type, tree *out_f, tree *out_v)
+one_field (HOST_WIDE_INT offset,
+           HOST_WIDE_INT size,
+           tree type,
+           tree *out_f,
+           tree *out_v)
 {
   tree f = { 0 };
 
   if (option_trace_all)
-      fprintf (stderr, " one_field: offset:0x%lx", (long)offset);
+      fprintf (stderr, " one_field: offset:0x%lx size:0x%lx", (long)offset, (long)size);
 
   one_gap (offset);
   f = build_decl (FIELD_DECL, 0, type);
   *out_f = f;
-  layout_decl (f, 1);
+  if ((offset % BITS_PER_UNIT) == 0 && (size % BITS_PER_UNIT) == 0)
+  {
+    TREE_ADDRESSABLE (f) = true;
+    DECL_ALIGN (f) = BITS_PER_UNIT;
+  }
+  else
+  {
+    DECL_BIT_FIELD (f) = true;
+    DECL_ALIGN (f) = 1;
+  }
   DECL_FIELD_OFFSET (f) = size_int (offset / BITS_PER_UNIT);
   DECL_FIELD_BIT_OFFSET (f) = bitsize_int (offset % BITS_PER_UNIT);
   DECL_CONTEXT (f) = current_record_type;
   TREE_CHAIN (f) = TYPE_FIELDS (current_record_type);
   TYPE_FIELDS (current_record_type) = f;
+  layout_decl (f, DECL_ALIGN (f));
 
   *out_v = current_record_vals = tree_cons (f, NULL_TREE, current_record_vals);
+#if 1
   current_record_offset = offset + TREE_INT_CST_LOW (TYPE_SIZE (type));
+#else
+  current_record_offset = offset + size;
+#endif
 }
 
 static void
-one_gap (HOST_WIDE_INT offset)
+one_gap (HOST_WIDE_INT next_offset)
 {
   tree f = { 0 };
   tree v = { 0 };
   tree type = { 0 };
-  HOST_WIDE_INT gap = offset - current_record_offset;
+  HOST_WIDE_INT size = next_offset - current_record_offset;
 
-  if (gap <= 0)
+  if (size <= 0)
     return;
 
   if (option_trace_all)
-      fprintf (stderr, "\n one_gap: offset:0x%lx gap:0x%lx\n", (long)offset, (long)gap);
+      fprintf (stderr, "\n one_gap: offset:0x%lx size:0x%lx\n", (long)current_record_offset, (long)size);
 
   type = make_node (LANG_TYPE);
-  TYPE_SIZE (type) = bitsize_int (gap);
-  TYPE_SIZE_UNIT (type) = size_int (gap / BITS_PER_UNIT);
+  TYPE_SIZE (type) = bitsize_int (size);
+  TYPE_SIZE_UNIT (type) = size_int (size / BITS_PER_UNIT);
   TYPE_ALIGN (type) = BITS_PER_UNIT;
-  one_field (current_record_offset, type, &f, &v);
+  one_field (current_record_offset, size, type, &f, &v);
   TREE_VALUE (v) = build_constructor (TREE_TYPE (f), 0);
 }
 
@@ -2421,27 +2497,27 @@ static void
 m3_field (const char* name, tree type, HOST_WIDE_INT offset, HOST_WIDE_INT size, tree*, tree*);
 
 static void
-m3_gap (HOST_WIDE_INT offset)
+m3_gap (HOST_WIDE_INT next_offset)
 {
   tree f = { 0 };
   tree v = { 0 };
   tree type = { 0 };
-  HOST_WIDE_INT gap = offset - current_record_offset;
+  HOST_WIDE_INT size = next_offset - current_record_offset;
   char name[256];
 
-  if (gap <= 0 || !M3_TYPES)
+  if (size <= 0 || !M3_TYPES)
     return;
 
   if (option_trace_all)
-    fprintf (stderr, "\n m3_gap: offset:0x%lx size:0x%lx", (long)current_record_offset, (long)gap);
+    fprintf (stderr, "\n m3_gap: offset:0x%lx size:0x%lx", (long)current_record_offset, (long)size);
 
-  sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, gap);
+  sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, size);
 
   type = make_node (RECORD_TYPE);
-  TYPE_SIZE (type) = bitsize_int (gap);
-  TYPE_SIZE_UNIT (type) = size_int (gap / BITS_PER_UNIT);
+  TYPE_SIZE (type) = bitsize_int (size);
+  TYPE_SIZE_UNIT (type) = size_int (size / BITS_PER_UNIT);
   TYPE_ALIGN (type) = 1;
-  m3_field (name, type, current_record_offset, gap, &f, &v);
+  m3_field (name, type, current_record_offset, size, &f, &v);
   DECL_PACKED (f) = true;
   DECL_BIT_FIELD (f) = true;
   TREE_VALUE (v) = build_constructor (TREE_TYPE (f), 0);
@@ -2451,40 +2527,40 @@ static void
 m3_field (const char* name, tree type, HOST_WIDE_INT offset,
           HOST_WIDE_INT size, tree* out_f, tree* out_v)
 {
-  if (M3_TYPES)
-  {
-    tree f = { 0 };
-    tree v = { 0 };
+  tree f = { 0 };
+  tree v = { 0 };
+
+  if (!M3_TYPES)
+    return;
     
-    gcc_assert (offset >= current_record_offset);
-    m3_gap (offset);
+  gcc_assert (offset >= current_record_offset);
+  m3_gap (offset);
 
-    f = build_decl (FIELD_DECL, 0, type);
-    *out_f = f;
-    if ((offset % BITS_PER_UNIT) == 0 && (size % BITS_PER_UNIT) == 0)
-    {
-      TREE_ADDRESSABLE (f) = true;
-      /* DECL_ALIGN (f) = BITS_PER_UNIT; */
-    }
-    else
-    {
-      DECL_BIT_FIELD (f) = true;
-      /* DECL_ALIGN (f) = 1; */
-    }
-    DECL_FIELD_OFFSET (f) = size_int (offset / BITS_PER_UNIT);
-    DECL_FIELD_BIT_OFFSET (f) = bitsize_int (offset % BITS_PER_UNIT);
-    DECL_CONTEXT (f) = current_record_type;
-    TREE_CHAIN (f) = TYPE_FIELDS (current_record_type);
-    TYPE_FIELDS (current_record_type) = f;
-
-    v = current_record_vals = tree_cons (f, NULL_TREE, current_record_vals);
-    *out_v = v;
-    current_record_offset += size;
-    DECL_NAME (f) = get_identifier (name);
-    DECL_SIZE_UNIT (f) = size_int (size / BITS_PER_UNIT);
-    DECL_SIZE (f) = bitsize_int (size);
-    layout_decl (f, 1);
+  f = build_decl (FIELD_DECL, 0, type);
+  *out_f = f;
+  if ((offset % BITS_PER_UNIT) == 0 && (size % BITS_PER_UNIT) == 0)
+  {
+    TREE_ADDRESSABLE (f) = true;
+    DECL_ALIGN (f) = BITS_PER_UNIT;
   }
+  else
+  {
+    DECL_BIT_FIELD (f) = true;
+    DECL_ALIGN (f) = 1;
+  }
+  DECL_FIELD_OFFSET (f) = size_int (offset / BITS_PER_UNIT);
+  DECL_FIELD_BIT_OFFSET (f) = bitsize_int (offset % BITS_PER_UNIT);
+  DECL_CONTEXT (f) = current_record_type;
+  TREE_CHAIN (f) = TYPE_FIELDS (current_record_type);
+  TYPE_FIELDS (current_record_type) = f;
+
+  v = current_record_vals = tree_cons (f, NULL_TREE, current_record_vals);
+  *out_v = v;
+  current_record_offset += size;
+  DECL_NAME (f) = get_identifier (name);
+  DECL_SIZE_UNIT (f) = size_int (size / BITS_PER_UNIT);
+  DECL_SIZE (f) = bitsize_int (size);
+  layout_decl (f, DECL_ALIGN (f));
 }
 
 /*========================================= SUPPORT FUNCTIONS FOR YYPARSE ===*/
@@ -2854,10 +2930,10 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
                      bitsize_int (o));
     }
   }
-  if (volatil)
+  if (volatil || M3_ALL_VOLATILE)
     TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
   if (M3_ALL_VOLATILE)
-    TREE_THIS_VOLATILE (v) = TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
+    TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
   if (src_T != dst_T)
     v = convert (dst_t, v);
   EXPR_PUSH (v);
@@ -2905,10 +2981,10 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
                      bitsize_int (o));
     }
   }
-  if (volatil || m3_next_store_volatile)
+  if (volatil || m3_next_store_volatile || M3_ALL_VOLATILE)
     TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
   if (M3_ALL_VOLATILE)
-    TREE_THIS_VOLATILE (v) = TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
+    TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
   m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
@@ -3164,7 +3240,6 @@ static void
 m3cg_import_unit (void)
 {
   STRING (n, n_len);
-  n = n;
 
   /* ignore */
 }
@@ -3173,11 +3248,10 @@ static void
 m3cg_export_unit (void)
 {
   STRING (n, n_len);
-  n = xstrdup (n);
   if (exported_interfaces == COUNT_OF (exported_interfaces_names))
     fatal_error ("internal limit exporting more than 100 interfaces");
   /* remember the set of exported interfaces */
-  exported_interfaces_names [exported_interfaces++] = n;
+  exported_interfaces_names [exported_interfaces++] = xstrdup (n);
 }
 
 static void
@@ -3268,8 +3342,11 @@ m3cg_declare_enum (void)
 /* see start_enum, build_enumerator, finish_enum */
 {
   TYPEID  (my_id);
-  INTEGER (n_elts);
+  INTEGER (signed_elts);
   BITSIZE (size);
+  unsigned HOST_WIDE_INT n_elts = (unsigned HOST_WIDE_INT)signed_elts;
+
+  gcc_assert (signed_elts >= 0);
 
   debug_tag ('C', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
   current_dbg_type_count1 = n_elts;
@@ -3277,11 +3354,12 @@ m3cg_declare_enum (void)
 
   if (M3_TYPES_ENUM && n_elts > 0)
   {
-    unsigned bits = (n_elts <= (1UL << 8)) ? 8
-                    : (n_elts <= (1UL << 16)) ? 16
-                    : 32;
+    unsigned bits =   (n_elts <= (((unsigned HOST_WIDE_INT)1) << 8)) ? 8
+                    : (n_elts <= (((unsigned HOST_WIDE_INT)1) << 16)) ? 16
+                    : (n_elts <= (((unsigned HOST_WIDE_INT)1) << 32)) ? 32
+                    : 64;
     enumtype = make_node (ENUMERAL_TYPE);
-    /* TYPE_USER_ALIGN (enumtype) = bits; */
+    TYPE_USER_ALIGN (enumtype) = true;
     TYPE_UNSIGNED (enumtype) = true;
     TYPE_MIN_VALUE (enumtype) = integer_zero_node;
     enumtype_elementtype = m3_build_type_id (T_word, bits, bits, my_id);
@@ -3290,7 +3368,7 @@ m3cg_declare_enum (void)
     TYPE_SIZE (enumtype) = bitsize_int (bits);
     TYPE_SIZE_UNIT (enumtype) = size_int (bits / BITS_PER_UNIT);
     TYPE_PRECISION (enumtype) = bits;
-    /* TYPE_ALIGN (enumtype) = bits; */
+    TYPE_ALIGN (enumtype) = bits;
     TYPE_PACKED (enumtype) = true;
     TYPE_STUB_DECL (enumtype) = m3_push_type_decl (enumtype, 0);
     TYPE_MAIN_VARIANT (enumtype) = enumtype;
@@ -3399,9 +3477,7 @@ m3_declare_record_common (void)
       t = m3_build_pointer_type (t);
       set_typeid_to_tree (current_object_type_id, t);
     }
-#if 0
-    rest_of_type_compilation (t, true);
-#endif
+    /* rest_of_type_compilation (t, true); */
     current_record_type_id = NO_UID;
     current_object_type_id = NO_UID;
     current_record_size = 0;
@@ -3843,11 +3919,6 @@ m3cg_bind_segment (void)
   BOOLEAN   (exported);
   BOOLEAN   (initialized);
 
-  if (option_trace_all)
-    fprintf (stderr, " bind_segment var:%s size:0x%lX align:0x%lX type:%s"
-             "exported:%s initialized:%s", IDENTIFIER_POINTER (DECL_NAME (var)),
-             (long)size, (long)align, typestr (t), boolstr (exported), boolstr (initialized));
-
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
 
@@ -4119,6 +4190,12 @@ m3cg_end_init (void)
                                               nreverse (current_record_vals)),
                  pending_inits);
   DECL_INITIAL (var) = TREE_VALUE (pending_inits);
+
+  if (M3_TYPES_SEGMENT)
+  {
+    TREE_TYPE (var) = current_record_type;
+    relayout_decl (var);
+  }
 }
 
 static void
@@ -4132,7 +4209,7 @@ m3cg_init_int (void)
   tree v = { 0 };
 
   gcc_assert (offset >= 0);
-  one_field (offset, type, &f, &v);
+  one_field (offset, BITS_PER_INTEGER, type, &f, &v);
   TREE_VALUE (v) = build_int_cst (type, value);
 }
 
@@ -4147,7 +4224,7 @@ m3cg_init_proc (void)
 
   tree expr = proc_addr (proc);
   gcc_assert (offset >= 0);
-  one_field (offset, TREE_TYPE (expr), &f, &v);
+  one_field (offset, POINTER_SIZE, TREE_TYPE (expr), &f, &v);
   TREE_VALUE (v) = expr;
 }
 
@@ -4161,7 +4238,7 @@ m3cg_init_label (void)
   tree v = { 0 };
 
   gcc_assert (offset >= 0);
-  one_field (offset, t_addr, &f, &v);
+  one_field (offset, POINTER_SIZE, t_addr, &f, &v);
   TREE_USED (label) = true;
   TREE_VALUE (v) = build1 (ADDR_EXPR, t_addr, label);
 }
@@ -4178,7 +4255,7 @@ m3cg_init_var (void)
 
   TREE_USED (var) = true;
 
-  one_field (o, t_addr, &f, &v);
+  one_field (o, POINTER_SIZE, t_addr, &f, &v);
   TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                               m3_build1 (ADDR_EXPR, t_addr, var),
                               size_int (b));
@@ -4196,7 +4273,7 @@ m3cg_init_offset (void)
   TREE_USED (var) = true;
   /* M3 hack to preserve TREE_ADDRESSABLE: see tree-ssa.c, tree-ssa-alias.c */
   TREE_THIS_VOLATILE (var) = true;
-  one_field (offset, t_int, &f, &v);
+  one_field (offset, POINTER_SIZE, t_int, &f, &v);
   DECL_LANG_SPECIFIC (f) = (lang_decl_t*)var; /* we will fix the offset later once we have rtl */
   TREE_VALUE (v) = v_zero;
 }
@@ -4212,7 +4289,7 @@ m3cg_init_chars (void)
 
   tree type = build_array_type (char_type_node,
                                 build_index_type (size_int (length - 1)));
-  one_field (offset, type, &f, &v);
+  one_field (offset, length * 8, type, &f, &v);
   TREE_VALUE (v) = build_string (length, s);
   TREE_TYPE (TREE_VALUE (v)) = TREE_TYPE (f);
 }
@@ -4235,7 +4312,7 @@ m3cg_init_float (void)
   default: fatal_error ("unknown float kind");
   }
 
-  one_field (offset, t, &f, &v);
+  one_field (offset, 32 * (fkind ? 2 : 1), t, &f, &v);
   TREE_TYPE (f) = t;
   TREE_VALUE (v) = val;
 }
@@ -6471,7 +6548,7 @@ tree pushdecl_top_level (tree x)
 {
   m3_unused = x;
   gcc_unreachable ();
-  return 0;
+  return NULL;
 }
 
 #endif
