@@ -6380,6 +6380,8 @@ m3_parse_file (int xx)
     if (m3_replay_cursor == 0)
       break;
     m3_replay_pass += 1;
+    if (m3_replay_pass > 100)
+      fatal_error ("taking too many passes to resolve forward type references\n");
     if (option_trace_all)
       fprintf (stderr, "\n replaying to resolve circular types (pass %u)\n", m3_replay_pass);
     {
