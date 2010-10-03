@@ -1905,12 +1905,12 @@ scan_string (const char* name, char *result, long len)
 {
   if (len <= 0)
   {
-    gcc_assert(!result);
+    gcc_assert (!result);
   }
   else
   {
     long x = { 0 };
-    gcc_assert(result);
+    gcc_assert (result);
     for (x = 0; x < len; ++x)
       result[x] = (char) get_byte ();
     result[len] = 0;
