@@ -22,12 +22,12 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-static const char M3_TYPES = 1;
-static const char M3_TYPES_INT = 0;
-static const char M3_TYPES_ENUM = 0;
-static const char M3_TYPES_TYPENAME = 0;
-static const char M3_TYPES_CHECK_RECORD_SIZE = 1;
-static const char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
+static const unsigned char M3_TYPES = 1;
+static const unsigned char M3_TYPES_INT = 0;
+static const unsigned char M3_TYPES_ENUM = 0;
+static const unsigned char M3_TYPES_TYPENAME = 0;
+static const unsigned char M3_TYPES_CHECK_RECORD_SIZE = 1;
+static const unsigned char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1154,7 +1154,7 @@ m3_mark_addressable (tree x)
       case PARM_DECL:
       case RESULT_DECL:
       case FUNCTION_DECL:
-        TREE_ADDRESSABLE (x) = 1;
+        TREE_ADDRESSABLE (x) = true;
         return true;
 
       default:
@@ -1265,7 +1265,7 @@ getdecls (void)
 static void
 insert_block (tree block)
 {
-  TREE_USED (block) = 1;
+  TREE_USED (block) = true;
   BLOCK_SUBBLOCKS (current_block)
     = chainon (BLOCK_SUBBLOCKS (current_block), block);
   BLOCK_SUPERCONTEXT (block) = current_block;
@@ -1375,8 +1375,8 @@ builtin_function (const char *name,
   tree decl = build_decl (FUNCTION_DECL, id, type);
   
   m3_unused = attrs;
-  TREE_PUBLIC (decl) = 1;
-  DECL_EXTERNAL (decl) = 1;
+  TREE_PUBLIC (decl) = true;
+  DECL_EXTERNAL (decl) = true;
   DECL_BUILT_IN_CLASS (decl) = clas;
   DECL_FUNCTION_CODE (decl) = function_code;
   if (library_name)
@@ -1456,7 +1456,7 @@ sync_builtin (enum built_in_function fncode, tree type, const char *name)
 {
   tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL, NULL,
                                 NULL_TREE);
-  TREE_NOTHROW (decl) = 1;
+  TREE_NOTHROW (decl) = true;
   built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
 
@@ -2353,7 +2353,7 @@ debug_struct (void)
   
   t = make_node (RECORD_TYPE);
   TYPE_FIELDS (t) = nreverse (debug_fields);
-  debug_fields = 0;
+  debug_fields = NULL;
   TYPE_NAME (t) = build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
   /* TYPE_MAIN_VARIANT (t) = t; */
   TYPE_SIZE (t) = bitsize_one_node;
@@ -2518,8 +2518,8 @@ static void add_stmt (tree t)
         SET_EXPR_LOCATION (t, input_location);
     }
 
-  TREE_USED (t) = 1;
-  TREE_SIDE_EFFECTS (t) = 1;
+  TREE_USED (t) = true;
+  TREE_SIDE_EFFECTS (t) = true;
   append_to_statement_list (t, &current_stmts);
 }
 
@@ -2583,10 +2583,10 @@ proc_addr (tree p)
 {
   tree expr = build1 (ADDR_EXPR, m3_build_pointer_type (TREE_TYPE (p)), p);
 #if GCC45
-  TREE_NO_TRAMPOLINE (expr) = 1;
+  TREE_NO_TRAMPOLINE (expr) = true;
 #else
-  TREE_STATIC (expr) = 1; /* see check for TREE_STATIC on ADDR_EXPR
-                             in tree-nested.c */
+  TREE_STATIC (expr) = true; /* see check for TREE_STATIC on ADDR_EXPR
+                                in tree-nested.c */
 #endif
   return expr;
 }
@@ -2623,7 +2623,7 @@ m3_call_direct (tree p, tree t)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = 1;
+    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
     if (t != return_type)
       EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -2652,7 +2652,7 @@ m3_call_indirect (tree t, tree cc)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = 1;
+    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
     if (t != return_type)
       EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -2670,7 +2670,7 @@ m3_language_function (void)
     if (!f)
     {
         f = GGC_NEW (struct language_function);
-        f->volatil = 0;
+        f->volatil = false;
         DECL_STRUCT_FUNCTION (current_function_decl)->language = f;
     }
     return f;
@@ -2684,9 +2684,9 @@ m3_volatilize_decl (tree decl)
           || TREE_CODE (decl) == PARM_DECL))
   {
     TREE_TYPE (decl) = build_qualified_type (TREE_TYPE (decl), TYPE_QUAL_VOLATILE);
-    TREE_THIS_VOLATILE (decl) = 1;
-    TREE_SIDE_EFFECTS (decl) = 1;
-    DECL_REGISTER (decl) = 0;
+    TREE_THIS_VOLATILE (decl) = true;
+    TREE_SIDE_EFFECTS (decl) = true;
+    DECL_REGISTER (decl) = false;
   }
 }
 
@@ -2734,7 +2734,7 @@ m3_call_direct (tree p, tree t)
     p = *slot;
   if (TREE_USED (p) == 0)
   {
-      TREE_USED (p) = 1;
+      TREE_USED (p) = true;
       assemble_external (p);
   }
   call = build_call_list (return_type, proc_addr (p), CALL_TOP_ARG ());
@@ -2745,7 +2745,7 @@ m3_call_direct (tree p, tree t)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = 1;
+    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
     if (t != return_type)
       EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -2779,7 +2779,7 @@ m3_call_indirect (tree t, tree cc)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = 1;
+    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
     if (t != return_type)
       EXPR_REF (-1) = convert (t, EXPR_REF (-1));
@@ -2804,7 +2804,7 @@ mark_address_taken (tree ref)
 {
   tree var = get_base_address (ref);
   if (var && DECL_P (var))
-    TREE_ADDRESSABLE (var) = 1;
+    TREE_ADDRESSABLE (var) = true;
 }
 #endif
 
@@ -2869,9 +2869,9 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
     }
   }
   if (volatil)
-    TREE_THIS_VOLATILE (v) = 1; /* force this to avoid aliasing problems */
+    TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
   if (M3_ALL_VOLATILE)
-    TREE_THIS_VOLATILE (v) = TREE_SIDE_EFFECTS (v) = 1; /* force this to avoid aliasing problems */
+    TREE_THIS_VOLATILE (v) = TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
   if (src_T != dst_T)
     v = convert (dst_t, v);
   EXPR_PUSH (v);
@@ -2920,9 +2920,9 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
     }
   }
   if (volatil || m3_next_store_volatile)
-    TREE_THIS_VOLATILE (v) = 1; /* force this to avoid aliasing problems */
+    TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
   if (M3_ALL_VOLATILE)
-    TREE_THIS_VOLATILE (v) = TREE_SIDE_EFFECTS (v) = 1; /* force this to avoid aliasing problems */
+    TREE_THIS_VOLATILE (v) = TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
   m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
@@ -3010,15 +3010,15 @@ declare_fault_proc (void)
 
   resultdecl = build_decl (RESULT_DECL, NULL_TREE, t_void);
   DECL_CONTEXT (resultdecl) = proc;
-  DECL_ARTIFICIAL (resultdecl) = 1;
-  DECL_IGNORED_P (resultdecl) = 1;
+  DECL_ARTIFICIAL (resultdecl) = true;
+  DECL_IGNORED_P (resultdecl) = true;
   DECL_RESULT (proc) = resultdecl;
   DECL_SOURCE_LOCATION (proc) = BUILTINS_LOCATION;
 
-  /* TREE_THIS_VOLATILE (proc) = 1; / * noreturn */
-  TREE_STATIC (proc) = 1;
-  TREE_PUBLIC (proc) = 0;
-  DECL_CONTEXT (proc) = 0;
+  /* TREE_THIS_VOLATILE (proc) = true; / * noreturn */
+  TREE_STATIC (proc) = true;
+  TREE_PUBLIC (proc) = false;
+  DECL_CONTEXT (proc) = NULL;
 
   parm = build_decl (PARM_DECL, fix_name ("arg", 3, UID_INTEGER), t_word);
   if (DECL_MODE (parm) == VOIDmode)
@@ -3082,9 +3082,9 @@ emit_fault_proc (void)
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
-  TREE_USED (current_block) = 1;
+  TREE_USED (current_block) = true;
   current_block = BLOCK_SUBBLOCKS (current_block); /* top_block */
-  TREE_USED (current_block) = 1;
+  TREE_USED (current_block) = true;
 
   pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
   current_stmts = alloc_stmt_list ();
@@ -3141,7 +3141,7 @@ generate_fault (int code)
    */
   gcc_assert (code <= FAULT_MASK);
   /* gcc_assert (LOCATION_LINE (input_location) <= (long)((~0UL) >> LINE_SHIFT)); */
-  if (fault_proc == 0)
+  if (fault_proc == NULL)
     declare_fault_proc ();
   arg = build_int_cst (t_int, (LOCATION_LINE (input_location) << LINE_SHIFT) + (code & FAULT_MASK));
 #if GCC45
@@ -3296,7 +3296,7 @@ m3cg_declare_enum (void)
                     : 32;
     enumtype = make_node (ENUMERAL_TYPE);
     /* TYPE_USER_ALIGN (enumtype) = bits; */
-    TYPE_UNSIGNED (enumtype) = 1;
+    TYPE_UNSIGNED (enumtype) = true;
     TYPE_MIN_VALUE (enumtype) = integer_zero_node;
     enumtype_elementtype = m3_build_type_id (T_word, bits, bits, my_id);
     TYPE_MAX_VALUE (enumtype) = build_int_cstu (enumtype_elementtype, n_elts - 1);
@@ -3305,7 +3305,7 @@ m3cg_declare_enum (void)
     TYPE_SIZE_UNIT (enumtype) = size_int (bits / BITS_PER_UNIT);
     TYPE_PRECISION (enumtype) = bits;
     /* TYPE_ALIGN (enumtype) = bits; */
-    TYPE_PACKED (enumtype) = 1;
+    TYPE_PACKED (enumtype) = true;
     TYPE_STUB_DECL (enumtype) = m3_push_type_decl (enumtype, 0);
     TYPE_MAIN_VARIANT (enumtype) = enumtype;
     set_typeid_to_tree (my_id, enumtype);
@@ -3460,7 +3460,7 @@ m3cg_declare_field (void)
   gcc_assert (size >= 0);
 
   t = get_typeid_to_tree (my_id);
-  if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES && t == 0) /* This is frequently NULL. Why? */
+  if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES && t == NULL) /* This is frequently NULL. Why? */
   {
     fprintf (stderr, "\ndeclare_field: id 0x%lX to type is null for field %s\n",
              my_id, name);
@@ -3764,7 +3764,7 @@ m3cg_set_runtime_hook (void)
 
   gcc_assert (offset >= 0);
 
-  TREE_USED (var) = 1;
+  TREE_USED (var) = true;
   if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
   {
     fault_intf = var;
@@ -3792,8 +3792,8 @@ m3cg_import_global (void)
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
 
-  DECL_EXTERNAL (var) = 1;
-  TREE_PUBLIC   (var) = 1;
+  DECL_EXTERNAL (var) = true;
+  TREE_PUBLIC   (var) = true;
   TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
   layout_decl (var, align);
 
@@ -3824,12 +3824,12 @@ m3cg_declare_segment (void)
   TREE_TYPE (var)
     = m3_build_type_id (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, id);
   layout_decl (var, BIGGEST_ALIGNMENT);
-  TYPE_UNSIGNED (TREE_TYPE (var)) = 1;
-  TREE_STATIC (var) = 1;
-  TREE_PUBLIC (var) = 1;
+  TYPE_UNSIGNED (TREE_TYPE (var)) = true;
+  TREE_STATIC (var) = true;
+  TREE_PUBLIC (var) = true;
   TREE_READONLY (var) = is_const;
-  TREE_ADDRESSABLE (var) = 1;
-  DECL_DEFER_OUTPUT (var) = 1;
+  TREE_ADDRESSABLE (var) = true;
+  DECL_DEFER_OUTPUT (var) = true;
   current_segment = var;
 
   TREE_CHAIN (var) = global_decls;
@@ -3869,9 +3869,9 @@ m3cg_bind_segment (void)
   TREE_TYPE (var) = m3_build_type (t, size, align);
   relayout_decl (var);
   DECL_UNSIGNED (var) = TYPE_UNSIGNED (TREE_TYPE (var));
-  DECL_COMMON (var) = (initialized == 0);
+  DECL_COMMON (var) = (initialized == false);
   TREE_PUBLIC (var) = exported;
-  TREE_STATIC (var) = 1;
+  TREE_STATIC (var) = true;
 }
 
 static void
@@ -3898,9 +3898,9 @@ m3cg_declare_global (void)
   gcc_assert (align >= !!size);
 
   TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
-  DECL_COMMON (var) = (initialized == 0);
+  DECL_COMMON (var) = (initialized == false);
   TREE_PUBLIC (var) = exported;
-  TREE_STATIC (var) = 1;
+  TREE_STATIC (var) = true;
   layout_decl (var, align);
 
   TREE_CHAIN (var) = global_decls;
@@ -3929,10 +3929,10 @@ m3cg_declare_constant (void)
 
   DECL_NAME (var) = fix_name (name, name_length, id);
   TREE_TYPE (var) = m3_build_type_id (t, size, align, id);
-  DECL_COMMON (var) = (initialized == 0);
+  DECL_COMMON (var) = (initialized == false);
   TREE_PUBLIC (var) = exported;
-  TREE_STATIC (var) = 1;
-  TREE_READONLY (var) = 1;
+  TREE_STATIC (var) = true;
+  TREE_READONLY (var) = true;
   layout_decl (var, align);
 
   TREE_CHAIN (var) = global_decls;
@@ -4111,7 +4111,7 @@ m3cg_begin_init (void)
   current_record_offset = 0;
   current_record_vals = NULL_TREE;
   current_record_type = make_node (RECORD_TYPE);
-  TREE_ASM_WRITTEN (current_record_type) = 1;
+  TREE_ASM_WRITTEN (current_record_type) = true;
 }
 
 static void
@@ -4176,7 +4176,7 @@ m3cg_init_label (void)
 
   gcc_assert (offset >= 0);
   one_field (offset, t_addr, &f, &v);
-  TREE_USED (label) = 1;
+  TREE_USED (label) = true;
   TREE_VALUE (v) = build1 (ADDR_EXPR, t_addr, label);
 }
 
@@ -4190,7 +4190,7 @@ m3cg_init_var (void)
   tree f = { 0 };
   tree v = { 0 };
 
-  TREE_USED (var) = 1;
+  TREE_USED (var) = true;
 
   one_field (o, t_addr, &f, &v);
   TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
@@ -4207,9 +4207,9 @@ m3cg_init_offset (void)
   tree f = { 0 };
   tree v = { 0 };
 
-  TREE_USED (var) = 1;
+  TREE_USED (var) = true;
   /* M3 hack to preserve TREE_ADDRESSABLE: see tree-ssa.c, tree-ssa-alias.c */
-  TREE_THIS_VOLATILE (var) = 1;
+  TREE_THIS_VOLATILE (var) = true;
   one_field (offset, t_int, &f, &v);
   DECL_LANG_SPECIFIC (f) = (lang_decl_t*)var; /* we will fix the offset later once we have rtl */
   TREE_VALUE (v) = v_zero;
@@ -4266,8 +4266,8 @@ m3cg_import_procedure (void)
   return_type = m3_return_type (return_type);
   DECL_NAME (p) = get_identifier (name);
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
-  TREE_PUBLIC (p) = 1;
-  DECL_EXTERNAL (p) = 1;
+  TREE_PUBLIC (p) = true;
+  DECL_EXTERNAL (p) = true;
   DECL_CONTEXT (p) = NULL_TREE;
   DECL_MODE (p) = FUNCTION_MODE;
 
@@ -4312,7 +4312,7 @@ m3cg_declare_procedure (void)
 
   return_type = m3_return_type (return_type);
   DECL_NAME (p) = get_identifier (name);
-  TREE_STATIC (p) = 1;
+  TREE_STATIC (p) = true;
 
   /* TREE_PUBLIC (p) should be 'exported', but that fails to keep any
    * implementation of nonexported functions or, when optimizing,
@@ -4343,18 +4343,18 @@ m3cg_declare_procedure (void)
     DECL_VISIBILITY (p) = VISIBILITY_HIDDEN;
 #endif
   }
-  gcc_assert ((parent == 0) == (lev == 0));
+  gcc_assert ((parent == NULL) == (lev == 0));
 #if GCC45
   if (parent)
-    DECL_STATIC_CHAIN (parent) = 1;
+    DECL_STATIC_CHAIN (parent) = true;
 #endif
   DECL_CONTEXT (p) = parent;
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   DECL_MODE (p) = FUNCTION_MODE;
   resultdecl = build_decl (RESULT_DECL, NULL_TREE, return_type);
   DECL_CONTEXT (resultdecl) = p;
-  DECL_ARTIFICIAL (resultdecl) = 1;
-  DECL_IGNORED_P (resultdecl) = 1;
+  DECL_ARTIFICIAL (resultdecl) = true;
+  DECL_IGNORED_P (resultdecl) = true;
   DECL_RESULT (p) = resultdecl;
 
   decl_attributes (&TREE_TYPE (p), cc, 0);
@@ -4392,9 +4392,9 @@ m3cg_begin_procedure (void)
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
-  TREE_USED (current_block) = 1;
+  TREE_USED (current_block) = true;
   current_block = BLOCK_SUBBLOCKS (current_block); /* top_block */
-  TREE_USED (current_block) = 1;
+  TREE_USED (current_block) = true;
 
   pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
   current_stmts = alloc_stmt_list ();
@@ -4447,7 +4447,7 @@ m3cg_begin_block (void)
   BLOCK_SUBBLOCKS (current_block)
     = chainon (BLOCK_SUBBLOCKS (current_block), b);
   BLOCK_SUPERCONTEXT (b) = current_block;
-  TREE_USED (b) = 1;
+  TREE_USED (b) = true;
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = b;
   pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
@@ -4489,10 +4489,10 @@ m3cg_set_label (void)
     {
       unsigned i = { 0 };
       rtx r = label_rtx (label);
-      LABEL_PRESERVE_P (r) = 1;
-      FORCED_LABEL (label) = 1;
-      DECL_UNINLINABLE (current_function_decl) = 1;
-      DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
+      LABEL_PRESERVE_P (r) = true;
+      FORCED_LABEL (label) = true;
+      DECL_UNINLINABLE (current_function_decl) = true;
+      DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = true;
 #if GCC45
       /* ?
       DECL_NONLOCAL seems very similar, but causes bad codegen:
@@ -4512,7 +4512,7 @@ m3cg_set_label (void)
           construct or there is something wrong with 4.5.
           The instruction that altered rbp was, uh, surprising.
       DECL_NONLOCAL (label) = true;
-      LABEL_REF_NONLOCAL_P (r) = 1;
+      LABEL_REF_NONLOCAL_P (r) = true;
       */
 #else
       {
@@ -4527,7 +4527,7 @@ m3cg_set_label (void)
         tree bar = make_node (ASM_EXPR);
         TREE_TYPE (bar) = t_void;
         ASM_STRING (bar) = build_string (0, "");
-        ASM_VOLATILE_P (bar) = 1;
+        ASM_VOLATILE_P (bar) = true;
         add_stmt (bar);
 
         if (i == 0)
@@ -4673,7 +4673,7 @@ m3cg_load_address (void)
 
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
-  TREE_USED (var) = 1;
+  TREE_USED (var) = true;
   var = m3_build1 (ADDR_EXPR, t_addr, var);
   if (offset)
     var = m3_build2 (POINTER_PLUS_EXPR, t_addr, var, size_int (offset));
@@ -6387,19 +6387,19 @@ m3_post_options (const char **pfilename)
    m3_unused = pfilename;
 
   /* These optimizations break our exception handling? */
-  flag_reorder_blocks = 0;
-  flag_reorder_blocks_and_partition = 0;
+  flag_reorder_blocks = false;
+  flag_reorder_blocks_and_partition = false;
 
-  flag_strict_aliasing = 0;
-  flag_strict_overflow = 0;
+  flag_strict_aliasing = false;
+  flag_strict_overflow = false;
    
-  flag_exceptions = 1; /* ? */
+  flag_exceptions = true; /* ? */
 
-  flag_tree_ccp = 0; /* flag_tree_ccp of m3core breaks cm3 on I386_DARWIN */
+  flag_tree_ccp = false; /* flag_tree_ccp of m3core breaks cm3 on I386_DARWIN */
 
 #if !GCC45 /* needs retesting */
-  flag_tree_store_ccp = 0;
-  flag_tree_salias = 0;
+  flag_tree_store_ccp = false;
+  flag_tree_salias = false;
 #endif
 
   /* causes backend crashes in
@@ -6409,14 +6409,14 @@ m3_post_options (const char **pfilename)
      m3tests/p242
      m3front gcc 4.5
   */
-  flag_tree_pre = 0;
+  flag_tree_pre = false;
 
 #if GCC45
   /* m3-libs/sysutils/System.m3 is a good test of optimization */
 
-  flag_tree_fre = 0; /* crashes compiler; see test p244 */
-  flag_predictive_commoning = 0;
-  flag_ipa_cp_clone = 0;
+  flag_tree_fre = false; /* crashes compiler; see test p244 */
+  flag_predictive_commoning = false;
+  flag_ipa_cp_clone = false;
 
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
@@ -6438,7 +6438,7 @@ m3_init (void)
   input_filename = main_input_filename;
 
   /* Open input file.  */
-  if (input_filename == 0 || !strcmp (input_filename, "-"))
+  if (input_filename == NULL || !strcmp (input_filename, "-"))
     {
       finput = stdin;
 #ifdef M3_USE_MAPPED_LOCATION
@@ -6448,7 +6448,7 @@ m3_init (void)
     }
   else
     finput = fopen (input_filename, "rb");
-  if (finput == 0)
+  if (finput == NULL)
     {
       fprintf (stderr, "Unable to open input file %s\n", input_filename);
       exit (1);
