@@ -354,20 +354,22 @@ static const struct { unsigned long typeid; tree* t; } builtin_uids[] = {
   { UID_NULL, &t_void }
 };
 
-static const struct { tree* t; char name[8]; } builtin_types[] = {
-  { &t_int_8, "int_8" },
-  { &t_int_16, "int_16" },
-  { &t_int_32, "int_32" },
-  { &t_int_64, "int_64" },
-  { &t_word_8, "word_8" },
-  { &t_word_16, "word_16" },
-  { &t_word_32, "word_32" },
-  { &t_word_64, "word_64" },
-  { &t_addr, "addr" },
-  { &t_reel, "reel" },
-  { &t_lreel, "lreel" },
-  { &t_xreel, "xreel" },
-  { &t_addr, "addr" }
+#define STRING_AND_LENGTH(a) (a), sizeof(a) - 1
+
+static const struct { tree* t; char name[8]; unsigned char length; } builtin_types[] = {
+  { &t_int_8, STRING_AND_LENGTH ("int_8") },
+  { &t_int_16, STRING_AND_LENGTH ("int_16") },
+  { &t_int_32, STRING_AND_LENGTH ("int_32") },
+  { &t_int_64, STRING_AND_LENGTH ("int_64") },
+  { &t_word_8, STRING_AND_LENGTH ("word_8") },
+  { &t_word_16, STRING_AND_LENGTH ("word_16") },
+  { &t_word_32, STRING_AND_LENGTH ("word_32") },
+  { &t_word_64, STRING_AND_LENGTH ("word_64") },
+  { &t_addr, STRING_AND_LENGTH ("addr") },
+  { &t_reel, STRING_AND_LENGTH ("reel") },
+  { &t_lreel, STRING_AND_LENGTH ("lreel") },
+  { &t_xreel, STRING_AND_LENGTH ("xreel") },
+  { &t_addr, STRING_AND_LENGTH ("addr") }
 };
 
 /* Maintain a qsorted/bsearchable array of typeid/tree pairs to map typeid to tree. */
@@ -479,12 +481,33 @@ static const void* m3_unused;
 #define M3_UNUSED(var, expr) \
  ((m3_unused = &(var)), (expr))
 
-static size_t m3_add (size_t a, size_t b)
+static size_t sizet_add (size_t a, size_t b)
 {
   size_t c = a + b;
   if (c < a)
-    fatal_error ("integer overflow");
+    fatal_error ("sizet_add: integer overflow");
   return c;
+}
+
+static int sizet_to_int (size_t a)
+{
+  if (a > INT_MAX)
+    fatal_error ("sizet_to_int: integer overflow");
+  return (int)a;
+}
+
+static int long_to_printf_length (long a)
+{
+  if (a > INT_MAX)
+    fatal_error ("long_to_printf_length: integer overflow");
+  return ((a < 0) ? 0 : (int)a);
+}
+
+static size_t long_to_sizet (long a)
+{
+  if (a < 0)
+    fatal_error ("long_to_sizet: integer overflow");
+  return (size_t)a;
 }
 
 static void
@@ -700,9 +723,7 @@ static tree pushdecl (tree decl);
 static tree builtin_function (const char *name,
                               tree type,
                               enum built_in_function function_code,
-                              enum built_in_class clas,
-                              const char *library_name,
-                              tree attrs);
+                              enum built_in_class clas);
 static tree getdecls (void);
 static int global_bindings_p (void);
 #if !GCC45
@@ -1348,20 +1369,15 @@ static tree
 builtin_function (const char *name,
                   tree type,
                   enum built_in_function function_code,
-                  enum built_in_class clas,
-                  const char *library_name,
-                  tree attrs)
+                  enum built_in_class clas)
 {
   tree identifier = get_identifier (name);
   tree decl = build_decl (FUNCTION_DECL, identifier, type);
   
-  m3_unused = attrs;
   TREE_PUBLIC (decl) = true;
   DECL_EXTERNAL (decl) = true;
   DECL_BUILT_IN_CLASS (decl) = clas;
   DECL_FUNCTION_CODE (decl) = function_code;
-  if (library_name)
-    SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
 
   {
     tree *slot;
@@ -1435,8 +1451,7 @@ m3_write_globals (void)
 static void
 sync_builtin (enum built_in_function fncode, tree type, const char *name)
 {
-  tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL, NULL,
-                                NULL_TREE);
+  tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL);
   TREE_NOTHROW (decl) = true;
   built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
@@ -1518,9 +1533,9 @@ m3_init_decl_processing (void)
   else
     {
       t_int = make_signed_type (BITS_PER_INTEGER);
-      m3_push_type_decl (t_int, get_identifier ("int"));
+      m3_push_type_decl (t_int, get_identifier_with_length (STRING_AND_LENGTH ("int")));
       t_word = make_unsigned_type (BITS_PER_INTEGER);
-      m3_push_type_decl (t_word, get_identifier ("word"));
+      m3_push_type_decl (t_word, get_identifier_with_length (STRING_AND_LENGTH ("word")));
     }
 
   t_set = m3_build_pointer_type (t_word);
@@ -1539,7 +1554,9 @@ m3_init_decl_processing (void)
   /* declare/name builtin types */
 
   for (i = 0; i < COUNT_OF (builtin_types); ++i)
-    m3_push_type_decl (*builtin_types[i].t, get_identifier (builtin_types[i].name));
+    m3_push_type_decl (*builtin_types[i].t,
+                       get_identifier_with_length (builtin_types[i].name,
+                                                   builtin_types[i].length));
 
   build_common_builtin_nodes ();
 
@@ -1678,26 +1695,17 @@ m3_init_decl_processing (void)
                 "__sync_lock_release_8");
 
   t = build_function_type_list (t_void, NULL_TREE);
-  set_union_proc  = builtin_function ("set_union",
-                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_diff_proc   = builtin_function ("set_difference",
-                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_inter_proc  = builtin_function ("set_intersection",
-                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_sdiff_proc  = builtin_function ("set_sym_difference",
-                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_range_proc  = builtin_function ("set_range",
-                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_union_proc  = builtin_function ("set_union", t, ezero, NOT_BUILT_IN);
+  set_diff_proc   = builtin_function ("set_difference", t, ezero, NOT_BUILT_IN);
+  set_inter_proc  = builtin_function ("set_intersection", t, ezero, NOT_BUILT_IN);
+  set_sdiff_proc  = builtin_function ("set_sym_difference", t, ezero, NOT_BUILT_IN);
+  set_range_proc  = builtin_function ("set_range", t, ezero, NOT_BUILT_IN);
 
   t = build_function_type_list (t_int, NULL_TREE);
-  set_gt_proc
-    = builtin_function ("set_gt", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_ge_proc
-    = builtin_function ("set_ge", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_lt_proc
-    = builtin_function ("set_lt", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_le_proc
-    = builtin_function ("set_le", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_gt_proc = builtin_function ("set_gt", t, ezero, NOT_BUILT_IN);
+  set_ge_proc = builtin_function ("set_ge", t, ezero, NOT_BUILT_IN);
+  set_lt_proc = builtin_function ("set_lt", t, ezero, NOT_BUILT_IN);
+  set_le_proc = builtin_function ("set_le", t, ezero, NOT_BUILT_IN);
 }
 
 /*========================================================== DECLARATIONS ===*/
@@ -1837,6 +1845,35 @@ get_byte (void)
   return input_buffer[input_cursor++];
 }
 
+static unsigned char*
+get_bytes_direct (size_t count)
+{
+#if 0 /* hack */
+  unsigned char* result = (unsigned char*)xmalloc(count + 1);
+  if ((input_cursor + count) > input_len)
+  {
+    fatal_error ("read past buffer input_cursor:%lu count:%lu input_len:%lu\n",
+                 (unsigned long)input_cursor,
+                 (unsigned long)count,
+                 (unsigned long)input_len);
+  }
+  result[count] = 0;
+  memcpy(result, &input_buffer[input_cursor], count);
+  input_cursor += count;
+  return result;
+#else
+  if ((input_cursor + count) > input_len)
+  {
+    fatal_error ("read past buffer input_cursor:%lu count:%lu input_len:%lu\n",
+                 (unsigned long)input_cursor,
+                 (unsigned long)count,
+                 (unsigned long)input_len);
+  }
+  input_cursor += count;
+  return &input_buffer[input_cursor - count];
+#endif
+}
+
 #define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, get_int ()))
 
 static const char*
@@ -1949,28 +1986,21 @@ get_typeid (const char* name)
 
 #define STRING(x, length) \
   long length = get_int (); \
-  char *x = M3_UNUSED (x, scan_string (#x, ((length > 0) ? (char*)alloca (length + 1) : 0), length))
+  const char *x = M3_UNUSED (x, scan_string (#x, length))
 
-static char *
-scan_string (const char* name, char *result, long signed_length)
+static const char *
+scan_string (const char* name, long length)
+/* NOTE: these are not null terminated */
 {
-  if (signed_length <= 0)
-  {
-    gcc_assert (!result);
-  }
-  else
-  {
-    unsigned long length = (unsigned long)signed_length;
-    unsigned long i = { 0 };
-    gcc_assert (result);
-    for (i = 0; i < length; ++i)
-      result[i] = (char) get_byte ();
-    result[i] = 0;
-  }
+  const char* result = { 0 };
+  if (length > 0)
+    result = (const char*)get_bytes_direct (long_to_sizet (length));
   if (name && option_trace_all)
   {
     const char* colon = m3_trace_name (&name);
-    fprintf (stderr, " %s%s%s", name, colon, result ? result : "null");
+    fprintf (stderr, " %s%s%.*s", name, colon,
+             result ? long_to_printf_length (length) : 4,
+             result ? result : "null");
   }
   return result;
 }
@@ -1983,11 +2013,14 @@ static tree
 scan_calling_convention (void)
 {
   unsigned HOST_WIDE_INT id = get_int ();
+  static tree stdcall;
 
   switch (id)
   {
   case 0: return NULL_TREE;
-  case 1: return build_tree_list (get_identifier ("stdcall"), NULL);
+  case 1:
+    stdcall = stdcall ? : get_identifier_with_length (STRING_AND_LENGTH ("stdcall"));
+    return build_tree_list (stdcall, NULL);
   default:
     fatal_error (" *** invalid calling convention: 0x%x, at m3cg_lineno %u",
                  (int)id, m3cg_lineno);
@@ -2327,17 +2360,23 @@ debug_tag (char kind, unsigned long typeid, const char* fmt, ...)
 }
 
 static void
-debug_field_name (const char *name)
+debug_field_name_length (const char* name, size_t length)
 {
   tree f = { 0 };
   if (!m3gdb)
     return;
-  f = build_decl (FIELD_DECL, get_identifier (name), t_int);
+  f = build_decl (FIELD_DECL, get_identifier_with_length (name, length), t_int);
   DECL_FIELD_OFFSET (f) = size_zero_node;
   DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
   layout_decl (f, 1);
   TREE_CHAIN (f) = debug_fields;
   debug_fields = f;
+}
+
+static void
+debug_field_name (const char* name)
+{
+  debug_field_name_length (name, strlen(name));
 }
 
 static void
@@ -2412,7 +2451,7 @@ debug_struct (void)
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
 
-static const char *current_unit_name;
+static const char* current_unit_name; /* not nul terminated */
 static size_t current_unit_name_length;
 
 /* the exported interfaces */
@@ -2488,7 +2527,8 @@ one_gap (HOST_WIDE_INT next_offset)
 }
 
 static void
-m3_field (const char* name, tree type, HOST_WIDE_INT offset, HOST_WIDE_INT size, tree*, tree*);
+m3_field (const char* name, size_t name_length, tree type, HOST_WIDE_INT offset,
+          HOST_WIDE_INT size, tree*, tree*);
 
 static void
 m3_gap (HOST_WIDE_INT next_offset)
@@ -2511,14 +2551,14 @@ m3_gap (HOST_WIDE_INT next_offset)
   TYPE_SIZE (type) = bitsize_int (size);
   TYPE_SIZE_UNIT (type) = size_int (size / BITS_PER_UNIT);
   TYPE_ALIGN (type) = 1;
-  m3_field (name, type, current_record_offset, size, &f, &v);
+  m3_field (name, strlen (name), type, current_record_offset, size, &f, &v);
   DECL_PACKED (f) = true;
   DECL_BIT_FIELD (f) = true;
   TREE_VALUE (v) = build_constructor (TREE_TYPE (f), 0);
 }
 
 static void
-m3_field (const char* name, tree type, HOST_WIDE_INT offset,
+m3_field (const char* name, size_t name_length, tree type, HOST_WIDE_INT offset,
           HOST_WIDE_INT size, tree* out_f, tree* out_v)
 {
   tree f = { 0 };
@@ -2551,7 +2591,7 @@ m3_field (const char* name, tree type, HOST_WIDE_INT offset,
   v = current_record_vals = tree_cons (f, NULL_TREE, current_record_vals);
   *out_v = v;
   current_record_offset += size;
-  DECL_NAME (f) = get_identifier (name);
+  DECL_NAME (f) = get_identifier_with_length (name, name_length);
   DECL_SIZE_UNIT (f) = size_int (size / BITS_PER_UNIT);
   DECL_SIZE (f) = bitsize_int (size);
   layout_decl (f, DECL_ALIGN (f));
@@ -2580,7 +2620,7 @@ static void add_stmt (tree t)
 }
 
 static tree
-fix_name (const char *name, size_t len, unsigned long typeid)
+fix_name (const char *name, size_t length, unsigned long typeid)
 {
   char* buf = { 0 };
 
@@ -2591,6 +2631,8 @@ fix_name (const char *name, size_t len, unsigned long typeid)
     buf[0] = 'L';
     buf[1] = '_';
     m3_unsigned_wide_to_dec_shortest(++anonymous_counter, &buf[2]);
+    length = strlen (buf);
+    gcc_assert (length < 256);
   }
   else if (typeid == 0 || !m3gdb)
   {
@@ -2598,19 +2640,21 @@ fix_name (const char *name, size_t len, unsigned long typeid)
   }
   else if (typeid == NO_UID)
   {
-    buf = (char*)alloca (m3_add(len, 2));
+    buf = (char*)alloca (sizet_add(length, 1));
     buf[0] = 'M';
-    memcpy (&buf[1], name, len + 1);
+    memcpy (&buf[1], name, length);
+    length += 1;
   }
   else
   {
-    buf = (char*)alloca (m3_add (len, UID_SIZE + 5));
+    buf = (char*)alloca (sizet_add (length, UID_SIZE + 4));
     buf[0] = 'M';  buf[1] = '3';  buf[2] = '_';
     fmt_uid (typeid, buf + 3);
     buf[3 + UID_SIZE] = '_';
-    memcpy (&buf[4 + UID_SIZE], name, len + 1);
+    memcpy (&buf[4 + UID_SIZE], name, length);
+    length += UID_SIZE + 4;
   }
-  return get_identifier (buf);
+  return get_identifier_with_length (buf, length);
 }
 
 static tree
@@ -3049,7 +3093,8 @@ declare_fault_proc (void)
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
 
-  proc = build_decl (FUNCTION_DECL, get_identifier ("_m3_fault"),
+  proc = build_decl (FUNCTION_DECL,
+                     get_identifier_with_length (STRING_AND_LENGTH ("_m3_fault")),
                      build_function_type_list (t_void, t_word, NULL_TREE));
 
   resultdecl = build_decl (RESULT_DECL, NULL_TREE, t_void);
@@ -3210,7 +3255,7 @@ m3cg_end_unit (void)
   long j = { 0 };
 
   gcc_assert (current_block == NULL_TREE);
-  debug_tag ('i', NO_UID, "_%s", current_unit_name);
+  debug_tag ('i', NO_UID, "_%.*s", sizet_to_int (current_unit_name_length), current_unit_name);
   for (j = 0; j < exported_interfaces; ++j)
     debug_field_name (exported_interfaces_names [j]);
   debug_struct ();
@@ -3221,7 +3266,7 @@ m3cg_end_unit (void)
 static void
 m3cg_import_unit (void)
 {
-  STRING (n, n_len);
+  STRING (name, name_length);
 
   /* ignore */
 }
@@ -3229,11 +3274,14 @@ m3cg_import_unit (void)
 static void
 m3cg_export_unit (void)
 {
-  STRING (n, n_len);
+  STRING (name, name_length);
+  char* s = (char*)xmalloc (name_length + 1);
+  s[name_length] = 0;
+  memcpy (s, name, name_length);
   if (exported_interfaces == COUNT_OF (exported_interfaces_names))
     fatal_error ("internal limit exporting more than 100 interfaces");
   /* remember the set of exported interfaces */
-  exported_interfaces_names [exported_interfaces++] = xstrdup (n);
+  exported_interfaces_names [exported_interfaces++] = s;
 }
 
 static void
@@ -3266,19 +3314,21 @@ static void
 m3cg_declare_typename (void)
 {
   TYPEID (my_id);
-  STRING (name, name_len);
+  STRING (name, name_length);
 
-  size_t unit_len = current_unit_name_length;
-  char* fullname = (char*)alloca (m3_add (unit_len, m3_add (name_len, 2)));
-  memcpy(fullname, current_unit_name, unit_len);
-  fullname[unit_len] = '.';
-  memcpy(&fullname[unit_len + 1], name, name_len + 1);
+  size_t fullname_length =
+    sizet_add (current_unit_name_length, sizet_add (long_to_sizet (name_length), 1));
+  char* fullname = (char*)alloca (fullname_length);
+  gcc_assert (name_length > 0);
+  memcpy(fullname, current_unit_name, current_unit_name_length);
+  fullname[current_unit_name_length] = '.';
+  memcpy(&fullname[current_unit_name_length + 1], name, name_length);
 
   debug_tag ('N', my_id, "");
-  debug_field_name (fullname);
+  debug_field_name_length (fullname, fullname_length);
   debug_struct ();
 
-  debug_tag ('n', NO_UID, "_%s", fullname);
+  debug_tag ('n', NO_UID, "_%.*s", sizet_to_int (fullname_length), fullname);
   debug_field_id (my_id);
   debug_struct ();
 
@@ -3286,7 +3336,7 @@ m3cg_declare_typename (void)
   {
     tree t = get_typeid_to_tree (my_id);
     gcc_assert (t);
-    m3_push_type_decl (t, get_identifier (fullname));
+    m3_push_type_decl (t, get_identifier_with_length (fullname, fullname_length));
   }
 }
 
@@ -3395,7 +3445,7 @@ m3cg_declare_enum_elt (void)
 
   if (M3_TYPES_ENUM)
   {
-    tree decl = build_decl (CONST_DECL, get_identifier (name), enumtype_elementtype);
+    tree decl = build_decl (CONST_DECL, get_identifier_with_length (name, name_length), enumtype_elementtype);
     tree value = build_int_cstu (t_word, current_dbg_type_count2 - current_dbg_type_count1);
     DECL_SOURCE_LOCATION (decl) = input_location;
     DECL_CONTEXT (decl) = m3_current_scope ();
@@ -3408,7 +3458,7 @@ m3cg_declare_enum_elt (void)
     TYPE_VALUES (enumtype) = decl;
   }
 
-  debug_field_name (name);
+  debug_field_name_length (name, name_length);
 
   if (--current_dbg_type_count1 == 0)
   {
@@ -3522,7 +3572,7 @@ m3cg_declare_field (void)
   tree t = { 0 };
   tree f = { 0 };
   tree v = { 0 };
-  STRING    (name, name_len);
+  STRING    (name, name_length);
   BITOFFSET (offset);
   BITSIZE   (size);
   TYPEID    (my_id);
@@ -3533,8 +3583,8 @@ m3cg_declare_field (void)
   t = get_typeid_to_tree (my_id);
   if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES && t == NULL) /* This is frequently NULL. Why? */
   {
-    fprintf (stderr, "\ndeclare_field: typeid 0x%lX to type is null for field %s\n",
-             my_id, name);
+    fprintf (stderr, "\ndeclare_field: typeid 0x%lX to type is null for field %.*s\n",
+             my_id, long_to_printf_length (name_length), name);
     if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES == 1)
       t = t_addr;
     gcc_assert (t);
@@ -3543,10 +3593,15 @@ m3cg_declare_field (void)
   {
     t = t ? t : m3_build_type_id (T_struct, size, size, NO_UID);
   }
-  debug_field_fmt (my_id, "_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC"_%s", offset, size, name);
+  debug_field_fmt (my_id,
+                   "_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC"_%.*s",
+                   offset,
+                   size,
+                   long_to_printf_length (name_length),
+                   name);
   current_dbg_type_count1--;
 
-  m3_field (name, t, offset, size, &f, &v);
+  m3_field (name, name_length, t, offset, size, &f, &v);
 
   m3_declare_record_common ();
 }
@@ -3644,8 +3699,9 @@ m3cg_declare_pointer (void)
   if (m3_replay)
     return;
 
-  debug_tag ('Y', my_id, "_%d_%d_%d_%s", GET_MODE_BITSIZE (Pmode),
-             traced, (brand ? 1 : 0), (brand ? brand : "" ));
+  debug_tag ('Y', my_id, "_%d_%d_%d_%.*s", GET_MODE_BITSIZE (Pmode),
+             traced, (brand ? 1 : 0), (brand ? brand_length : 0),
+             (brand ? brand : ""));
   debug_field_id (target_id);
   debug_struct ();
 }
@@ -3690,10 +3746,10 @@ m3cg_declare_proctype (void)
 static void
 m3cg_declare_formal (void)
 {
-  STRING (name, len);
+  STRING (name, name_length);
   TYPEID (my_id);
 
-  debug_field_fmt (my_id, "_%s", name);
+  debug_field_fmt (my_id, "_%.*s", long_to_printf_length (name_length), name);
   current_dbg_type_count1--;
   gcc_assert (current_proc_type_id != NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
@@ -3708,7 +3764,7 @@ m3cg_declare_raises (void)
 {
   STRING (name, name_length);
 
-  debug_field_name (name);
+  debug_field_name_length (name, name_length);
   current_dbg_type_count2--;
   gcc_assert (current_proc_type_id != NO_UID);
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0)
@@ -3734,8 +3790,9 @@ m3cg_declare_object (void)
   gcc_assert (field_size >= 0);
   gcc_assert (brand_length >= -1);
 
-  debug_tag ('O', my_id, "_%d_"HOST_WIDE_INT_PRINT_DEC"_%d_%d_%s",
-             POINTER_SIZE, n_fields, traced, (brand ? 1:0), (brand ? brand : ""));
+  debug_tag ('O', my_id, "_%d_"HOST_WIDE_INT_PRINT_DEC"_%d_%d_%.*s",
+             POINTER_SIZE, n_fields, traced, (brand ? 1:0),
+             (brand ? brand_length : 0), (brand ? brand : ""));
   debug_field_id (super_id);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = n_methods;
@@ -3758,9 +3815,11 @@ m3cg_declare_method (void)
   STRING (name, name_length);
   TYPEID (my_id);
 
-  debug_field_fmt (my_id, "_%d_%d_%s",
+  debug_field_fmt (my_id, "_%d_%d_%.*s",
                    current_dbg_type_count3++ * GET_MODE_BITSIZE (Pmode),
-                   GET_MODE_BITSIZE (Pmode), name);
+                   GET_MODE_BITSIZE (Pmode),
+                   long_to_printf_length (name_length),
+                   name);
   current_dbg_type_count2--;
 
   gcc_assert (current_record_type_id == NO_UID);
@@ -3834,7 +3893,7 @@ m3cg_set_runtime_proc (void)
   STRING (name, name_length);
   PROC (p);
 
-  if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
+  if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault) - 1) == 0)
     fault_handler = p;
 }
 
@@ -3848,7 +3907,7 @@ m3cg_set_runtime_hook (void)
   gcc_assert (offset >= 0);
 
   TREE_USED (var) = true;
-  if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault)) == 0)
+  if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault) - 1) == 0)
   {
     fault_intf = var;
     fault_offs = offset;
@@ -3914,15 +3973,13 @@ m3cg_declare_segment (void)
   TREE_CHAIN (var) = global_decls;
   global_decls = var;
 
-  /* do not use "name", it is from alloca; skip the 'I_' or 'M_' prefix. */
   if (name_length > 2)
   {
     gcc_assert (name);
     gcc_assert (name[0] == 'I' || name[0] == 'M');
     gcc_assert (name[1] == '_');
-    gcc_assert (name[2]);
-    current_unit_name = xstrdup (name + 2);
     current_unit_name_length = name_length - 2;
+    current_unit_name = name + 2;
   }
 }
 
@@ -4339,7 +4396,7 @@ m3cg_import_procedure (void)
   CALLING_CONVENTION (cc);
   PROC    (p);
   
-  DECL_NAME (p) = get_identifier (name);
+  DECL_NAME (p) = get_identifier_with_length (name, name_length);
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   TREE_PUBLIC (p) = true;
   DECL_EXTERNAL (p) = true;
@@ -4385,7 +4442,7 @@ m3cg_declare_procedure (void)
   gcc_assert (n_params >= 0);
   gcc_assert (lev == 0 || !exported);
 
-  DECL_NAME (p) = get_identifier (name);
+  DECL_NAME (p) = get_identifier_with_length (name, name_length);
   TREE_STATIC (p) = true;
 
   /* TREE_PUBLIC (p) should be 'exported', but that fails to keep any
