@@ -2314,7 +2314,7 @@ scan_label (void)
 /*======================================== debugging and type information ===*/
 
 typedef struct _m3buf_t {
-  char buf[100];
+  char buf[256];
 } m3buf_t;
 
 static m3buf_t current_dbg_type_tag_buf;
@@ -2391,7 +2391,7 @@ debug_field_id (unsigned long typeid)
 static void
 debug_field_fmt_v (unsigned long typeid, const char* fmt, va_list args)
 {
-  char name [100];
+  char name [256];
 
   if (!m3gdb)
     return;
