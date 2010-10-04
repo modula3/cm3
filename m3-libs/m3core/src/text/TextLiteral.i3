@@ -12,10 +12,7 @@ UNSAFE INTERFACE TextLiteral;
 IMPORT RTHooks, TextClass;
 
 CONST
- (* BUG: The front end should do target arithmetic so this is legal,
- but declaring that a text cannot be larger than 4G isn't terrible. *)
- (* MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 32; *)
- MaxBytes = 16_0FFFFFF0;
+ MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64);
 
 TYPE
   T = RTHooks.TextLiteral;
