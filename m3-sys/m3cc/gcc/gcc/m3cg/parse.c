@@ -2456,7 +2456,7 @@ static size_t current_unit_name_length;
 
 /* the exported interfaces */
 static long exported_interfaces;
-static char *exported_interfaces_names [100];
+static const char* exported_interfaces_names [100];
 
 /*================================= SUPPORT FOR INITIALIZED DATA CREATION ===*/
 
@@ -3275,20 +3275,18 @@ static void
 m3cg_export_unit (void)
 {
   STRING (name, name_length);
-  char* s = (char*)xmalloc (name_length + 1);
-  s[name_length] = 0;
-  memcpy (s, name, name_length);
+  name = IDENTIFIER_POINTER (get_identifier_with_length (name, name_length));
   if (exported_interfaces == COUNT_OF (exported_interfaces_names))
     fatal_error ("internal limit exporting more than 100 interfaces");
   /* remember the set of exported interfaces */
-  exported_interfaces_names [exported_interfaces++] = s;
+  exported_interfaces_names [exported_interfaces++] = name;
 }
 
 static void
 m3cg_set_source_file (void)
 {
   STRING (name, name_length);
-  name = xstrdup (name);
+  name = IDENTIFIER_POINTER (get_identifier_with_length (name, name_length));
 
 #ifdef M3_USE_MAPPED_LOCATION
   linemap_add (line_table, LC_RENAME, false, name, 1);
