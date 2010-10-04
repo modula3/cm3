@@ -567,11 +567,10 @@ fmt_uid (unsigned long x, char *buf)
   if (x == NO_UID)
   {
     static const char zzzzzz[] = "zzzzzz";
-    memcpy (buf, zzzzzz, sizeof(zzzzzz));
+    memcpy (buf, zzzzzz, sizeof(zzzzzz) - 1);
     return;
   }
 
-  buf[i] = 0;
   while (i)
   {
     buf[--i] = alphabet[x % 62];
@@ -2376,17 +2375,17 @@ debug_field_name_length (const char* name, size_t length)
 static void
 debug_field_name (const char* name)
 {
-  debug_field_name_length (name, strlen(name));
+  debug_field_name_length (name, strlen (name));
 }
 
 static void
 debug_field_id (unsigned long typeid)
 {
-  char buf [UID_SIZE + 1];
+  char buf [UID_SIZE];
   if (!m3gdb)
     return;
   fmt_uid (typeid, buf);
-  debug_field_name (buf);
+  debug_field_name_length (buf, sizeof(buf));
 }
 
 static void
