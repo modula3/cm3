@@ -6589,7 +6589,7 @@ m3_init (void)
     M3_TYPES_INT = false;
     M3_TYPES_ENUM = false;
     M3_TYPES_TYPENAME = false;
-    M_TYPES_SEGMENT = false;
+    M3_TYPES_SEGMENT = false;
     M3_TYPES_REPLAY = false;
     M3_TYPES_CHECK_RECORD_SIZE = false;
     M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
