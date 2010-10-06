@@ -17,4 +17,4 @@ include("Unix.common")
 
 SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/pkg/lib", "-L/usr/pkg/lib", "-lodbc" ]
 SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/pkg/lib", "-L/usr/pkg/lib", "-lpq" ]
-SYSTEM_LIBS{"X11"} = [ "-Wl,-R/usr/X117/lib,-R/usr/X11R6/lib", "-L/usr/X11R7/lib", SYSTEM_LIBS{"X11"} ]
+SYSTEM_LIBS{"X11"} = [ "-Wl,-R/usr/X11R7/lib,-R/usr/X11R6/lib", "-L/usr/X11R7/lib", SYSTEM_LIBS{"X11"} ]
