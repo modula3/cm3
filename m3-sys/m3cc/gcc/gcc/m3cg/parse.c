@@ -6558,12 +6558,36 @@ m3_post_options (const char **pfilename)
   /* m3-libs/sysutils/System.m3 is a good test of optimization */
 
   flag_tree_fre = false; /* crashes compiler; see test p244 */
-  flag_predictive_commoning = false;
   flag_ipa_cp_clone = false;
 
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
+
+  flag_predictive_commoning = false;
+
+  if (M3_ALL_VOLATILE)
+  {
+    /* This stuff causes problems on SPARC32_SOLARIS?
+     * I don't have the time/patience to debug it. */
+    M3_TYPES = false;
+    M3_TYPES_INT = false;
+    M3_TYPES_ENUM = false;
+    M3_TYPES_TYPENAME = false;
+    M3_TYPES_SEGMENT = false;
+    M3_TYPES_REPLAY = false;
+    M3_TYPES_CHECK_RECORD_SIZE = false;
+    M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
+
+    if (optimize > 2)
+    {
+      optimize = 2;
+      flag_inline_functions = false;
+      flag_unswitch_loops = false;
+      flag_gcse_after_reload = false;
+      flag_tree_vectorize = false;
+    }
+  }
 
   return false;
 }
@@ -6580,20 +6604,6 @@ m3_init (void)
   linemap_add (line_table, LC_ENTER, false, main_input_filename, 1);
 #endif
   input_filename = main_input_filename;
-
-  if (M3_ALL_VOLATILE)
-  {
-    /* This stuff causes problems on SPARC32_SOLARIS?
-     * I don't have the time/patience to debug it. */
-    M3_TYPES = false;
-    M3_TYPES_INT = false;
-    M3_TYPES_ENUM = false;
-    M3_TYPES_TYPENAME = false;
-    M3_TYPES_SEGMENT = false;
-    M3_TYPES_REPLAY = false;
-    M3_TYPES_CHECK_RECORD_SIZE = false;
-    M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
-  }
 
   /* Open input file.  */
   if (input_filename == NULL || !strcmp (input_filename, "-"))
