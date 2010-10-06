@@ -856,7 +856,6 @@ m3_convert (tree type, tree op0)
   return m3_stabilize_reference (convert (type, op0));
 }
 
-#if 0
 static tree
 m3_build_pointer_type (tree a)
 {
@@ -864,9 +863,6 @@ m3_build_pointer_type (tree a)
   /*DECL_NO_TBAA_P (a) = true;*/
   return a;
 }
-#else
-#define m3_build_pointer_type build_pointer_type
-#endif
 
 static tree
 m3_build_type_id (m3_type type,
