@@ -819,6 +819,8 @@ const char *const tree_code_name[] = {
 static tree
 m3_stabilize_reference (tree t)
 {
+  /* This stuff causes problems on SPARC32_SOLARIS?
+   * I don't have the time/patience to debug it. */
   if (!M3_ALL_VOLATILE)
     t = stabilize_reference (t);
   return t;
@@ -6583,14 +6585,19 @@ m3_init (void)
 #endif
   input_filename = main_input_filename;
 
-  M3_TYPES &= !M3_ALL_VOLATILE;
-  M3_TYPES_INT &= !M3_ALL_VOLATILE;
-  M3_TYPES_ENUM &= !M3_ALL_VOLATILE;
-  M3_TYPES_TYPENAME &= !M3_ALL_VOLATILE;
-  M3_TYPES_SEGMENT &= !M3_ALL_VOLATILE;
-  M3_TYPES_REPLAY &= !M3_ALL_VOLATILE;
-  M3_TYPES_CHECK_RECORD_SIZE &= !M3_ALL_VOLATILE;
-  M3_TYPES_REQUIRE_ALL_FIELD_TYPES &= !M3_ALL_VOLATILE;
+  if (M3_ALL_VOLATILE)
+  {
+    /* This stuff causes problems on SPARC32_SOLARIS?
+     * I don't have the time/patience to debug it. */
+    M3_TYPES = false;
+    M3_TYPES_INT = false;
+    M3_TYPES_ENUM = false;
+    M3_TYPES_TYPENAME = false;
+    M_TYPES_SEGMENT = false;
+    M3_TYPES_REPLAY = false;
+    M3_TYPES_CHECK_RECORD_SIZE = false;
+    M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
+  }
 
   /* Open input file.  */
   if (input_filename == NULL || !strcmp (input_filename, "-"))
