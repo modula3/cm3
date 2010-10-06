@@ -22,15 +22,6 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-static const unsigned char M3_TYPES = 1;
-static const unsigned char M3_TYPES_INT = 1;
-static const unsigned char M3_TYPES_ENUM = 1;
-static const unsigned char M3_TYPES_TYPENAME = 1;
-static const unsigned char M3_TYPES_SEGMENT = 0;
-static const unsigned char M3_TYPES_REPLAY = 1;
-static const unsigned char M3_TYPES_CHECK_RECORD_SIZE = 1;
-static const unsigned char M3_TYPES_REQUIRE_ALL_FIELD_TYPES = 0;
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -101,6 +92,15 @@ static bool m3gdb;
 #define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
 /*#undef M3_ALL_VOLATILE
 #define M3_ALL_VOLATILE 1*/
+
+static bool M3_TYPES = true;
+static bool M3_TYPES_INT = true;
+static bool M3_TYPES_ENUM = true;
+static bool M3_TYPES_TYPENAME = true;
+static bool M3_TYPES_SEGMENT = false;
+static bool M3_TYPES_REPLAY = true;
+static bool M3_TYPES_CHECK_RECORD_SIZE = true;
+static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
 
 #if GCC45
 
@@ -817,21 +817,29 @@ const char *const tree_code_name[] = {
 #endif
 
 static tree
+m3_stabilize_reference (tree t)
+{
+  if (!M3_ALL_VOLATILE)
+    t = stabilize_reference (t);
+  return t;
+}
+
+static tree
 m3_build1 (enum tree_code code, tree tipe, tree op0)
 {
-  return stabilize_reference (fold_build1 (code, tipe, op0));
+  return m3_stabilize_reference (fold_build1 (code, tipe, op0));
 }
 
 static tree
 m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1)
 {
-  return stabilize_reference (fold_build2 (code, tipe, op0, op1));
+  return m3_stabilize_reference (fold_build2 (code, tipe, op0, op1));
 }
 
 static tree
 m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
 {
-  return stabilize_reference (fold_build3 (code, tipe, op0, op1, op2));
+  return m3_stabilize_reference (fold_build3 (code, tipe, op0, op1, op2));
 }
 
 static tree
@@ -843,7 +851,7 @@ m3_cast (tree type, tree op0)
 static tree
 m3_convert (tree type, tree op0)
 {
-  return stabilize_reference (convert (type, op0));
+  return m3_stabilize_reference (convert (type, op0));
 }
 
 #if 0
@@ -6574,6 +6582,15 @@ m3_init (void)
   linemap_add (line_table, LC_ENTER, false, main_input_filename, 1);
 #endif
   input_filename = main_input_filename;
+
+  M3_TYPES &= !M3_ALL_VOLATILE;
+  M3_TYPES_INT &= !M3_ALL_VOLATILE;
+  M3_TYPES_ENUM &= !M3_ALL_VOLATILE;
+  M3_TYPES_TYPENAME &= !M3_ALL_VOLATILE;
+  M3_TYPES_SEGMENT &= !M3_ALL_VOLATILE;
+  M3_TYPES_REPLAY &= !M3_ALL_VOLATILE;
+  M3_TYPES_CHECK_RECORD_SIZE &= !M3_ALL_VOLATILE;
+  M3_TYPES_REQUIRE_ALL_FIELD_TYPES &= !M3_ALL_VOLATILE;
 
   /* Open input file.  */
   if (input_filename == NULL || !strcmp (input_filename, "-"))
