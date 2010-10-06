@@ -1,1 +1,1 @@
-include_dir(".." & SL & "SOLsun")
+include_dir("../SOLsun")
