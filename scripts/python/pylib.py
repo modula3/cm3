@@ -1174,21 +1174,21 @@ def Boot():
             }.get(Config) or "-g -fPIC "
 
     CCompilerFlags = CCompilerFlags + ({
-        "AMD64_LINUX"     : " -m64 -mno-align-double ",
+        "AMD64_LINUX"     : " -m64 ",
         "AMD64_DARWIN"    : " -arch x86_64 ",
         "PPC64_DARWIN"    : " -arch ppc64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
-        "LINUXLIBC6"      : " -m32 -mno-align-double ",
-        "I386_LINUX"      : " -m32 -mno-align-double ",
+        "LINUXLIBC6"      : " -m32 ",
+        "I386_LINUX"      : " -m32 ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
-        "SOLgnu"          : " -m32 -mcpu=v9 ",
         "I386_SOLARIS"    : " -xarch=pentium_pro -Kpic ",
         "AMD64_SOLARIS"   : " -xarch=amd64       -Kpic ",
         "SOLsun"          : " -xarch=v8plus -xcode=pic32 ",
         "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic32 ",
         "SPARC64_SOLARIS" : " -xarch=v9     -xcode=pic32 ",
-        "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
-        "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
+        "SOLgnu"          : " -m32 -mcpu=v9 -mno-app-regs",
+        "SPARC32_LINUX"   : " -m32 -mcpu=v9 -mno-app-regs ",
+        "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
 
     Link = "$(CC) $(CFLAGS) *.mo *.io *.o "
@@ -1263,12 +1263,12 @@ def Boot():
         "ARM_DARWIN"        : " -arch armv6 ",
         "I386_SOLARIS"      : " -Qy -s",
         "AMD64_SOLARIS"     : " -Qy -s        -xarch=generic64 ",
-        "SOLgnu"            : " -Qy -s -K PIC -xarch=v8plus ",
+        "SOLgnu"            : " -Qy -s -K PIC -xarch=v8plus ", # Sun assembler
         "SOLsun"            : " -Qy -s -K PIC -xarch=v8plus ",
         "SPARC32_SOLARIS"   : " -Qy -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -Qy -s -K PIC -xarch=v9 ",
-        "SPARC32_LINUX"     : " -Qy -s -Av9a -32 -relax ",
-        "SPARC64_LINUX"     : " -Qy -s -Av9a -64 -no-undeclared-regs -relax ",
+        "SPARC32_LINUX"     : " -Qy -s -KPIC -Av9a -32 -relax ",
+        "SPARC64_LINUX"     : " -Qy -s -KPIC -Av9a -64 -no-undeclared-regs -relax ",
         }.get(Target) or ""))
 
     GnuPlatformPrefix = {
