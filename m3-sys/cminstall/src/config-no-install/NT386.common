@@ -248,17 +248,6 @@ m3back_flags = ["-march=i586"]
 m3back_flags += "-gstabs+"
 
 %
-% -mno-align-double is VERY IMPORTANT
-% because the Modula-3 compiler has already computed various
-% offsets and the backend should not, must not change them.
-%
-% If you remove this, the floating point number in RTHeapInfo.m3
-% gets aligned and the runtime linking information is then
-% not at the expected offset and you crash in startup.
-%
-m3back_flags += "-mno-align-double"
-
-%
 % Don't depend on cygwin1.dll.
 %
 if equal(OS_TYPE, "WIN32")
