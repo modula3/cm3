@@ -1,10 +1,8 @@
 readonly TARGET = "SPARC32_LINUX" % code generation target
 readonly GNU_PLATFORM = "sparc-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -m32 -fPIC" % C compiler
-SYSTEM_ASM = "as -Qy -s K PIC -Av9a -32 -relax" % Assembler
-
-m3back_flags = " -mno-app-regs "  
+SYSTEM_CC = "gcc -m32 -mcpu=v9 -fPIC -mno-app-regs -gstabs+" % C compiler
+SYSTEM_ASM = "as -Qy -s -KPIC -Av9a -32 -relax" % Assembler
 
 include("SPARC.common")
 include("Linux.common")
