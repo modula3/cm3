@@ -1,3 +1,5 @@
+/* Modula-3: changes to workaround our poor trees */
+
 /* Basic IPA optimizations and utilities.
    Copyright (C) 2003, 2004, 2005, 2007 Free Software Foundation, Inc.  
 
@@ -97,9 +99,10 @@ cgraph_postorder (struct cgraph_node **order)
 bool
 cgraph_remove_unreachable_nodes (bool before_inlining_p, FILE *file)
 {
+  bool changed = false;
+#if 0 /* Modula-3: changes to workaround our poor trees */
   struct cgraph_node *first = (struct cgraph_node *) (void *) 1;
   struct cgraph_node *node, *next;
-  bool changed = false;
   int insns = 0;
 
 #ifdef ENABLE_CHECKING
@@ -209,6 +212,7 @@ cgraph_remove_unreachable_nodes (bool before_inlining_p, FILE *file)
 #ifdef ENABLE_CHECKING
   verify_cgraph ();
 #endif
+#endif /* Modula-3 */
   return changed;
 }
 
