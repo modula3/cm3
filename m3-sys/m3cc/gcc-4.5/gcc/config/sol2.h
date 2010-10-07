@@ -303,3 +303,5 @@ extern GTY(()) tree solaris_pending_finis;
 
 /* Allow macro expansion in #pragma pack.  */
 #define HANDLE_PRAGMA_PACK_WITH_EXPANSION
+
+#define TARGET_SOLARIS 1
