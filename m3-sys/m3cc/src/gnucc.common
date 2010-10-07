@@ -86,11 +86,16 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
     end
 
     if equal($CC, "") and not equal(try_exec("type gcc > /dev/null"), 0)
-        if FileExists("/usr/sfw/bin/gcc")
+        % gcc 3.4.3 can't compile gcc 4.5.1 targeting AMD64_SOLARIS
+        % see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=45929
+        % It would be nice to split up the files for portability.
+        if equal(TARGET, "AMD64_SOLARIS") and FileExists("/opt/csw/gcc4/bin/gcc")
+            gcc = "/opt/csw/gcc4/bin:"
+        else if FileExists("/usr/sfw/bin/gcc")
             gcc = "/usr/sfw/bin:"
         else if FileExists("/opt/csw/gcc4/bin/gcc")
             gcc = "/opt/csw/gcc4/bin:"
-        end end
+        end end end
     end
 
     if ccs or gcc
