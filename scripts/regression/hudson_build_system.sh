@@ -58,10 +58,28 @@ fi
 
 export TMPDIR=${WS}
 
+  if [ `hostname` = "plin" ]; then
+    echo ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+         ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+    echo ls -l /home/hudson/workspace
+         ls -l /home/hudson/workspace
+    echo ls -l /home/hudson
+         ls -l /home/hudson
+  end
+
 test_build_system || {
   echo "test_build_system failed" 1>&2
   exit 1
 }
+
+  if [ `hostname` = "plin" ]; then
+    echo ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+         ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+    echo ls -l /home/hudson/workspace
+         ls -l /home/hudson/workspace
+    echo ls -l /home/hudson
+         ls -l /home/hudson
+  end
 
 if [ "$BUILD_SNAPSHOT" = "true" ]; then
   # debug
@@ -76,3 +94,12 @@ if [ "$BUILD_SNAPSHOT" = "true" ]; then
 else
   true
 fi
+
+  if [ `hostname` = "plin" ]; then
+    echo ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+         ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+    echo ls -l /home/hudson/workspace
+         ls -l /home/hudson/workspace
+    echo ls -l /home/hudson
+         ls -l /home/hudson
+  end
