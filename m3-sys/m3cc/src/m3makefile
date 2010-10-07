@@ -203,7 +203,8 @@ readonly m3cc_env = {
   "SOLgnu"          : solaris_assembler_config,
   "SPARC32_SOLARIS" : solaris_assembler_config,
   "I386_SOLARIS"    : solaris_assembler_config,
-  "AMD64_SOLARIS"   : solaris_assembler_config,
+  % workaround http://gcc.gnu.org/bugzilla/show_bug.cgi?id=45927
+  "AMD64_SOLARIS"   : solaris_assembler_config & " gcc_cv_as_ix86_quad=yes",
 } % m3cc_env
 
 readonly proc get_config (target) is
@@ -250,9 +251,9 @@ GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
          "ALPHA_OSF",
          "SPARC32_LINUX",
          "MIPS64_OPENBSD", "MIPS64EL_OPENBSD",
+         "AMD64_SOLARIS",
          
          % untested or have problems
-         %"AMD64_SOLARIS",
          %"PPC32_OPENBSD", "PPC64_DARWIN",
          %"SPARC32_SOLARIS", "SOLgnu", "SOLsun",
         } contains M3CC_TARGET)
