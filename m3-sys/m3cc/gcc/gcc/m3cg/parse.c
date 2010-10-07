@@ -89,7 +89,8 @@ static bool m3gdb;
 /* In particular, Solaris/sparc32 has a stack walker.
    Why does the stack walker matter?
  */
-#define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
+#define M3_SPARC32_SOLARIS (TARGET_SPARC && TARGET_ARCH32 && TARGET_SOLARIS)
+#define M3_ALL_VOLATILE    M3_SPARC32_SOLARIS
 /*#undef M3_ALL_VOLATILE
 #define M3_ALL_VOLATILE 1*/
 
@@ -709,9 +710,26 @@ static bool m3_post_options (const char **);
 static bool m3_init (void);
 static void m3_parse_file (int);
 static alias_set_type m3_get_alias_set (tree);
-static void m3_volatilize_decl (tree decl);
+static tree m3_volatilize_ref (tree t);
+static tree m3_volatilize_decl (tree decl);
 static struct language_function* m3_language_function (void);
-#define m3_volatize (m3_language_function ()->volatil)
+
+static bool m3_get_volatize (void)
+{
+  struct language_function* f;
+  return (M3_ALL_VOLATILE
+          || (current_function_decl
+              && DECL_STRUCT_FUNCTION (current_function_decl)
+              && (f = DECL_STRUCT_FUNCTION (current_function_decl)->language)
+              && f->volatil));
+}
+
+static void m3_set_volatize (void)
+{
+  if (M3_ALL_VOLATILE || !current_function_decl || !DECL_STRUCT_FUNCTION (current_function_decl))
+    return; 
+  m3_language_function ()->volatil = true;
+}
 
 static bool m3_next_store_volatile;
 
@@ -862,6 +880,18 @@ m3_build_pointer_type (tree a)
   a = build_pointer_type (a);
   /*DECL_NO_TBAA_P (a) = true;*/
   return a;
+}
+
+static tree
+m3_indirect_ref (tree type, tree value)
+{
+  return m3_volatilize_ref (m3_build1 (INDIRECT_REF, type, value));
+}
+
+static tree
+m3_bitfield_ref (tree type, tree value, tree size, tree offset)
+{
+  return m3_volatilize_ref (m3_build3 (BIT_FIELD_REF, type, value, size, offset));
 }
 
 static tree
@@ -2262,7 +2292,7 @@ scan_var (enum tree_code code, const char* name)
     if (var != NULL)
       fatal_error ("*** variable should not already exist, v.0x%x, line %u",
                    (int)i, m3cg_lineno);
-    var = make_node (code);
+    var = m3_volatilize_decl (make_node (code));
     VARRAY_TREE (all_vars, i) = var;
     DECL_NAME (var) = NULL_TREE;
   }
@@ -2670,8 +2700,7 @@ declare_temp (tree type)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (type);
   DECL_CONTEXT (v) = current_function_decl;
 
-  if (m3_volatize)
-    m3_volatilize_decl (v);
+  m3_volatilize_decl (v);
 
   add_stmt (build1 (DECL_EXPR, t_void, v));
   TREE_CHAIN (v) = BLOCK_VARS (current_block);
@@ -2775,18 +2804,32 @@ m3_language_function (void)
     return f;
 }
 
-static void
-m3_volatilize_decl (tree decl)
+static tree
+m3_volatilize_decl (tree t)
 {
-  if (!TYPE_VOLATILE (TREE_TYPE (decl)) && !TREE_STATIC (decl)
-      && (TREE_CODE (decl) == VAR_DECL
-          || TREE_CODE (decl) == PARM_DECL))
+  if (m3_get_volatize ())
   {
-    TREE_TYPE (decl) = build_qualified_type (TREE_TYPE (decl), TYPE_QUAL_VOLATILE);
-    TREE_THIS_VOLATILE (decl) = true;
-    TREE_SIDE_EFFECTS (decl) = true;
-    DECL_REGISTER (decl) = false;
+    TREE_THIS_VOLATILE (t) = true;
+    TREE_SIDE_EFFECTS (t) = true;
+    if (TREE_CODE (t) == VAR_DECL || TREE_CODE (t) == PARM_DECL)
+    {
+      DECL_REGISTER (t) = false;
+      if (TREE_TYPE (t) && !TYPE_VOLATILE (TREE_TYPE (t)))
+        TREE_TYPE (t) = build_qualified_type (TREE_TYPE (t), TYPE_QUAL_VOLATILE);
+    }
   }
+  return t;
+}
+
+static tree
+m3_volatilize_ref (tree t)
+{
+  if (M3_ALL_VOLATILE)
+  {
+    TREE_THIS_VOLATILE (t) = true;
+    TREE_SIDE_EFFECTS (t) = true;
+  }
+  return t;
 }
 
 static void
@@ -2798,7 +2841,7 @@ m3_volatilize_current_function (void)
    * are also made volatile
    */
 
-  m3_volatize = true;
+  m3_set_volatize ();
 
   /* make locals volatile */
 
@@ -2952,19 +2995,15 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
       v = m3_build1 (ADDR_EXPR, t_addr, v);
       if (o)
         v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-      v = m3_build1 (INDIRECT_REF, src_t,
-                     m3_cast (m3_build_pointer_type (src_t), v));
+      v = m3_indirect_ref (src_t, m3_cast (m3_build_pointer_type (src_t), v));
     }
     else
     {
-      v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
-                     bitsize_int (o));
+      v = m3_bitfield_ref (src_t, v, TYPE_SIZE (src_t), bitsize_int (o));
     }
   }
-  if (volatil || M3_ALL_VOLATILE)
-    TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
-  if (M3_ALL_VOLATILE)
-    TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
+  if (volatil)
+    TREE_THIS_VOLATILE (v) = true;
   if (src_T != dst_T)
     v = m3_convert (dst_t, v);
   EXPR_PUSH (v);
@@ -3003,19 +3042,15 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
       v = m3_build1 (ADDR_EXPR, t_addr, v);
       if (o)
         v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-      v = m3_build1 (INDIRECT_REF, dst_t,
-                     m3_cast (m3_build_pointer_type (dst_t), v));
+      v = m3_indirect_ref (dst_t, m3_cast (m3_build_pointer_type (dst_t), v));
     }
     else
     {
-      v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
-                     bitsize_int (o));
+      v = m3_bitfield_ref (dst_t, v, TYPE_SIZE (dst_t), bitsize_int (o));
     }
   }
-  if (volatil || m3_next_store_volatile || M3_ALL_VOLATILE)
-    TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
-  if (M3_ALL_VOLATILE)
-    TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
+  if (volatil || m3_next_store_volatile)
+    TREE_THIS_VOLATILE (v) = true;
   m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
@@ -3115,6 +3150,7 @@ declare_fault_proc (void)
   DECL_CONTEXT (proc) = NULL;
 
   parm = build_decl (PARM_DECL, fix_name ("arg", 3, UID_INTEGER), t_word);
+  m3_volatilize_decl (parm);
   if (DECL_MODE (parm) == VOIDmode)
   {
       if (option_trace_all)
@@ -4098,8 +4134,7 @@ m3cg_declare_local (void)
 
   if (current_block)
     {
-      if (m3_volatize)
-        m3_volatilize_decl (var);
+      m3_volatilize_decl (var);
       add_stmt (build1 (DECL_EXPR, t_void, var));
       TREE_CHAIN (var) = BLOCK_VARS (current_block);
       BLOCK_VARS (current_block) = var;
@@ -4159,6 +4194,7 @@ m3cg_declare_param (void)
   gcc_assert (align >= !!size);
 
   TREE_TYPE (var) = m3_build_type_id (type, size, align, typeid);
+  m3_volatilize_decl (var);
   DECL_NONLOCAL (var) = up_level || in_memory;
   TREE_ADDRESSABLE (var) = in_memory;
   DECL_ARG_TYPE (var) = TREE_TYPE (var);
@@ -4216,8 +4252,7 @@ m3cg_declare_temp (void)
   DECL_UNSIGNED (var) = TYPE_UNSIGNED (TREE_TYPE (var));
   TREE_ADDRESSABLE (var) = in_memory;
   DECL_CONTEXT (var) = current_function_decl;
-  if (m3_volatize)
-    m3_volatilize_decl (var);
+  m3_volatilize_decl (var);
 
   TREE_CHAIN (var) = BLOCK_VARS (BLOCK_SUBBLOCKS
                                  (DECL_INITIAL (current_function_decl)));
@@ -4621,15 +4656,16 @@ m3cg_set_label (void)
 
   if (barrier)
     {
-      unsigned i = { 0 };
+      size_t i = { 0 };
       rtx r = label_rtx (label);
       LABEL_PRESERVE_P (r) = true;
       FORCED_LABEL (label) = true;
       DECL_UNINLINABLE (current_function_decl) = true;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = true;
+      {
 #if GCC45
-      /* ?
-      DECL_NONLOCAL seems very similar, but causes bad codegen:
+        /* ?
+        DECL_NONLOCAL seems very similar, but causes bad codegen:
 
           DECL_NONLOCAL on label before PushEFrame
           causes $rbp to be altered incorrectly.
@@ -4645,16 +4681,18 @@ m3cg_set_label (void)
           with a 4.5 construct. Either I haven't found the correct 4.5
           construct or there is something wrong with 4.5.
           The instruction that altered rbp was, uh, surprising.
-      DECL_NONLOCAL (label) = true;
-      LABEL_REF_NONLOCAL_P (r) = true;
-      */
-#else
-      {
+        DECL_NONLOCAL (label) = true;
+        LABEL_REF_NONLOCAL_P (r) = true;
+        */
+        /* Generate a label name to help avoid optimization? */
+        /* LABEL_NAME (r) = IDENTIFIER_POINTER (fix_name (0, 0, 0)); */
+        TREE_ADDRESSABLE (label) = true;
+#else /* GCC45 */
         rtx list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
         DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
           = gen_rtx_EXPR_LIST (VOIDmode, r, list);
+#endif /* GCC45 */
       }
-#endif
       /* put asm("") before and after the label */
       for (i = 0; i < 2; ++i)
       {
@@ -4828,7 +4866,7 @@ m3cg_load_indirect (void)
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (src_t), v);
-  v = m3_build1 (INDIRECT_REF, src_t, v);
+  v = m3_indirect_ref (src_t, v);
   if (src_T != dst_T)
     v = m3_convert (dst_t, v);
   EXPR_REF (-1) = v;
@@ -4860,7 +4898,7 @@ m3cg_store_indirect (void)
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (dst_t), v);
-  v = m3_build1 (INDIRECT_REF, dst_t, v);
+  v = m3_indirect_ref (dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
                     m3_convert (dst_t,
                                 m3_cast (src_t, EXPR_REF (-1)))));
@@ -5199,7 +5237,7 @@ m3cg_set_member_ref (tree* out_bit_in_word)
   tree word_ref    = m3_build2 (POINTER_PLUS_EXPR, t_set, set, byte);
   tree one         = m3_cast (t_word, v_one);
 
-  word_ref         = m3_build1 (INDIRECT_REF, t_word, word_ref);
+  word_ref         = m3_indirect_ref (t_word, word_ref);
   *out_bit_in_word = m3_build2 (LSHIFT_EXPR, t_word, one, bit_in_word);
   gcc_assert (n >= 0);
   m3cg_assert_int (type);
@@ -5658,10 +5696,8 @@ m3cg_copy (void)
   pts = m3_build_pointer_type (ts);
 
   add_stmt (build2 (MODIFY_EXPR, type,
-                    m3_build1 (INDIRECT_REF, ts,
-                               m3_cast (pts, EXPR_REF (-2))),
-                    m3_build1 (INDIRECT_REF, ts,
-                               m3_cast (pts, EXPR_REF (-1)))));
+                    m3_indirect_ref (ts, m3_cast (pts, EXPR_REF (-2))),
+                    m3_indirect_ref (ts, m3_cast (pts, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -5917,8 +5953,9 @@ m3cg_pop_struct (void)
   gcc_assert (size >= 0);
   gcc_assert (align >= !!size);
 
-  EXPR_REF (-1) = m3_build1 (INDIRECT_REF, type,
-                             m3_cast (m3_build_pointer_type (type), EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_indirect_ref (type,
+                                   m3_cast (m3_build_pointer_type (type),
+                                            EXPR_REF (-1)));
   m3_pop_param (type);
 }
 
@@ -5969,7 +6006,7 @@ m3cg_store_ordered (void)
 
   v = EXPR_REF (-2);
   v = m3_cast (m3_build_pointer_type (dst_t), v);
-  v = m3_build1 (INDIRECT_REF, dst_t, v);
+  v = m3_indirect_ref (dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
                     m3_convert (dst_t,
                                 m3_cast (src_t, EXPR_REF (-1)))));
@@ -5991,7 +6028,7 @@ m3cg_load_ordered (void)
 
   v = EXPR_REF (-1);
   v = m3_cast (m3_build_pointer_type (src_t), v);
-  v = m3_build1 (INDIRECT_REF, src_t, v);
+  v = m3_indirect_ref (src_t, v);
   if (src_T != dst_T)
     v = m3_convert (dst_t, v);
 
@@ -6566,7 +6603,7 @@ m3_post_options (const char **pfilename)
 
   flag_predictive_commoning = false;
 
-  if (M3_ALL_VOLATILE)
+  if (M3_SPARC32_SOLARIS)
   {
     /* This stuff causes problems on SPARC32_SOLARIS?
      * I don't have the time/patience to debug it. */
