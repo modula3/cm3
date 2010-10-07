@@ -381,6 +381,14 @@ M3GDB=yes
 OK=yes
 
 for PKG in ${PKGS}; do
+  if [ `hostname` = "plin" ]; then
+    echo ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+         ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
+    echo ls -l /home/hudson/workspace
+         ls -l /home/hudson/workspace
+    echo ls -l /home/hudson
+         ls -l /home/hudson
+  end
   echo "=== package ${PKG} ==="
   tres="not supported on ${TARGET}"
   terr=""
