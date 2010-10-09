@@ -8,30 +8,7 @@
 % user can say cm3 -DM3CC_TARGET=FreeBSD4, for example.
 %
 
-% omit unnecessary builds during regression testing
-NOACTION = FALSE
-WS = $WORKSPACE
-PREBUILT_CM3CG = $PREBUILT_CM3CG
-if WS and PREBUILT_CM3CG
-  CM3CG = "cm3cg"
-  if equal(M3_MODE, "build")
-    write( "using pre-built backend from", PREBUILT_CM3CG, CR )
-    cp_if( PREBUILT_CM3CG, CM3CG )
-    >> ".M3SHIP" in
-      write( "make_dir(BIN_INSTALL & \"\")", CR )
-      write( "install_file(\"" & CM3CG & "\", BIN_INSTALL, \"0775\")", CR )
-    end
-  end
-  if equal(M3_MODE, "clean")
-    write( "removing ", CM3CG, CR )
-    delete_file( CM3CG )
-  end
-  if equal(M3_MODE, "ship")
-    write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
-    cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
-  end
-  NOACTION = TRUE
-end
+proc M3CCBuild() is
 
 include("platforms.quake")
 
@@ -252,41 +229,39 @@ GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
          "SPARC32_LINUX",
          "MIPS64_OPENBSD", "MIPS64EL_OPENBSD",
          "AMD64_SOLARIS",
-         
+
          % untested or have problems
          %"PPC32_OPENBSD", "PPC64_DARWIN",
          %"SPARC32_SOLARIS", "SOLgnu", "SOLsun",
         } contains M3CC_TARGET)
 GCC43 = not (GCC42 or GCC45)
-if (not NOACTION) % and (GCC42 or GCC43 or GCC45)
-  local Defines = ""
-  local m3gty = "m3gty43.h"
-  if GCC42
-    SourceDir = "../gcc-apple"
-    Defines = "#define GCC_APPLE 1\n#define GCC42 1\n"
-    m3gty = "m3gty43.h"
+local Defines = ""
+local m3gty = "m3gty43.h"
+if GCC42
+  SourceDir = "../gcc-apple"
+  Defines = "#define GCC_APPLE 1\n#define GCC42 1\n"
+  m3gty = "m3gty43.h"
+end
+if GCC45
+  Defines = "#define GCC45 1\n"
+  SourceDir = "../gcc-4.5"
+  m3gty = "m3gty45.h"
+  foreach a in ["gmp"]
+    link_file("../gcc/" & a, SourceDir & "/" & a)
   end
-  if GCC45
-    Defines = "#define GCC45 1\n"
-    SourceDir = "../gcc-4.5"
-    m3gty = "m3gty45.h"
-    foreach a in ["gmp"]
-      link_file("../gcc/" & a, SourceDir & "/" & a)
-    end
+end
+if GCC42 or GCC45
+  fs_mkdir(SourceDir & "/gcc/m3cg")
+  foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
+    cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
   end
-  if GCC42 or GCC45
-    fs_mkdir(SourceDir & "/gcc/m3cg")
-    foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
-      cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
-    end
-    cp_if("../gcc/gcc/m3cg/" & m3gty, SourceDir & "/gcc/m3cg/m3gty43.h")
-    local a = Defines & fs_contents("../gcc/gcc/m3cg/parse.c")
-    local b = SourceDir & "/gcc/m3cg/parse.c"
-    > b & ".temp" in
-      write(a)
-    end
-    cp_if(b & ".temp", b)
+  cp_if("../gcc/gcc/m3cg/" & m3gty, SourceDir & "/gcc/m3cg/m3gty43.h")
+  local a = Defines & fs_contents("../gcc/gcc/m3cg/parse.c")
+  local b = SourceDir & "/gcc/m3cg/parse.c"
+  > b & ".temp" in
+    write(a)
   end
+  cp_if(b & ".temp", b)
 end
 
 % figure out where we're going to build gcc
@@ -304,6 +279,31 @@ end
 Log = subst_chars(Log, "\\", "/")
 
 fs_mkdir (build_dir)
+
+% Omit unnecessary builds during regression testing.
+
+PREBUILT_CM3CG = $PREBUILT_CM3CG
+if ($WORKSPACE or equal($USER, "jay")) and PREBUILT_CM3CG
+  CM3CG = build_dir & "/cm3cg"
+  if equal(M3_MODE, "build")
+    write( "using pre-built backend from ", PREBUILT_CM3CG, CR )
+    cp_if( PREBUILT_CM3CG, CM3CG )
+    >> ".M3SHIP" in
+      write( "make_dir(BIN_INSTALL & \"\")", CR )
+      write( "install_file(\"" & CM3CG & "\", BIN_INSTALL, \"0775\")", CR )
+    end
+  end
+  if equal(M3_MODE, "clean")
+    write( "removing ", CM3CG, CR )
+    delete_file( CM3CG )
+  end
+  if equal(M3_MODE, "ship")
+    write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
+    cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
+  end
+  return
+end
+
 
 m3cc_ResponseFileCounter = 0
 include("Math.quake")
@@ -331,7 +331,7 @@ end
 done0 = build_dir & "/.configure-done" % old version
 done = build_dir & "/Makefile"
 
-if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined ("FORCE")) and not NOACTION
+if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined ("FORCE"))
   foreach a in fs_lsfiles (build_dir, FALSE)
     write("rm ", a, CR)
     delete_file(a)
@@ -449,7 +449,7 @@ env = env & " MAKEINFO=:"
 M3CC_MAKE = M3CC_MAKE & " " & env
 
 
-if not defined ("no_config") and not NOACTION
+if not defined ("no_config")
   if not FileExists (done)
     m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure
     % , " | tee -a " & Log
@@ -500,11 +500,9 @@ end
 % configure
 %
 
-if not NOACTION
-  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host"
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host"
   % & " | tee -a " & Log
   ])
-end
 
 proc Sed (file0, find, replace) is
   if FileExists (file0)
@@ -513,8 +511,6 @@ proc Sed (file0, find, replace) is
     m3cc_Run (["../gcc/move-if-change", file1, file0])
   end
 end
-
-if not NOACTION
 
 %
 % Configure is for some reason unable to find Cygwin /usr/bin/libtool?
@@ -570,4 +566,6 @@ end
 
 postcp ()
 
-end % NOACTION
+end % M3CCBuild
+
+M3CCBuild()
