@@ -388,7 +388,7 @@ for PKG in ${PKGS}; do
          ls -l /home/hudson/workspace
     echo ls -l /home/hudson
          ls -l /home/hudson
-  end
+  fi
   echo "=== package ${PKG} ==="
   tres="not supported on ${TARGET}"
   terr=""

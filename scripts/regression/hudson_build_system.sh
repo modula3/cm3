@@ -79,7 +79,7 @@ test_build_system || {
          ls -l /home/hudson/workspace
     echo ls -l /home/hudson
          ls -l /home/hudson
-  end
+  fi
 
 if [ "$BUILD_SNAPSHOT" = "true" ]; then
   # debug
@@ -102,4 +102,4 @@ fi
          ls -l /home/hudson/workspace
     echo ls -l /home/hudson
          ls -l /home/hudson
-  end
+  fi
