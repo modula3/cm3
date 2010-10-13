@@ -1,3 +1,4 @@
+/* Modula-3: modified */
 /* Expands front end tree to back end RTL for GCC.
    Copyright (C) 1987, 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
@@ -3765,8 +3766,8 @@ setjmp_vars_warning (bitmap setjmp_crosses, tree block)
 	  && DECL_RTL_SET_P (decl)
 	  && REG_P (DECL_RTL (decl))
 	  && regno_clobbered_at_setjmp (setjmp_crosses, REGNO (DECL_RTL (decl))))
-	warning (OPT_Wclobbered, "variable %q+D might be clobbered by"
-                 " %<longjmp%> or %<vfork%>", decl);
+        error ("variable %q+D might be clobbered by"
+               " %<longjmp%> or %<vfork%>", decl);
     }
 
   for (sub = BLOCK_SUBBLOCKS (block); sub; sub = BLOCK_CHAIN (sub))

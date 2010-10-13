@@ -7,9 +7,9 @@
 
 readonly HAS_STACK_WALKER = {
 % "ALPHA_OSF"  : TRUE,
-  "DS3100"     : TRUE,
-  "SOLgnu"     : TRUE,
-  "SOLsun"     : TRUE,
+% "DS3100"     : TRUE,
+% "SOLgnu"     : TRUE,
+% "SOLsun"     : TRUE,
 }
 
 include_dir ("common")

@@ -67,15 +67,6 @@
 #ifndef TARGET_MACHO
 #define TARGET_MACHO 0
 #endif
-#ifndef TARGET_SOLARIS
-#define TARGET_SOLARIS 0
-#endif
-#ifndef TARGET_SPARC
-#define TARGET_SPARC 0
-#endif
-#ifndef TARGET_ARCH32
-#define TARGET_ARCH32 0
-#endif
 
 /* m3gdb is true if we should generate the debug information
    that m3gdb specifically uses. That is, if we should embed
@@ -85,13 +76,6 @@
    m3gdb is not currently supported on MacOSX (aka Mach-O).
    stabs is not currently supported on PA64_HPUX? That isn't checked here. */
 static bool m3gdb;
-
-/* In particular, Solaris/sparc32 has a stack walker.
-   Why does the stack walker matter?
- */
-#define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
-/*#undef M3_ALL_VOLATILE
-#define M3_ALL_VOLATILE 1*/
 
 static bool M3_TYPES = true;
 static bool M3_TYPES_INT = true;
@@ -691,8 +675,7 @@ static GTY (()) tree pending_inits;
 
 static tree m3_current_scope (void)
 {
-  return current_function_decl ? current_function_decl
-         : global_decls;
+  return current_function_decl ? current_function_decl : global_decls;
 }
 
 #if !GCC45
@@ -817,31 +800,21 @@ const char *const tree_code_name[] = {
 #endif
 
 static tree
-m3_stabilize_reference (tree t)
-{
-  /* This stuff causes problems on SPARC32_SOLARIS?
-   * I don't have the time/patience to debug it. */
-  if (!M3_ALL_VOLATILE)
-    t = stabilize_reference (t);
-  return t;
-}
-
-static tree
 m3_build1 (enum tree_code code, tree tipe, tree op0)
 {
-  return m3_stabilize_reference (fold_build1 (code, tipe, op0));
+  return stabilize_reference (fold_build1 (code, tipe, op0));
 }
 
 static tree
 m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1)
 {
-  return m3_stabilize_reference (fold_build2 (code, tipe, op0, op1));
+  return stabilize_reference (fold_build2 (code, tipe, op0, op1));
 }
 
 static tree
 m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
 {
-  return m3_stabilize_reference (fold_build3 (code, tipe, op0, op1, op2));
+  return stabilize_reference (fold_build3 (code, tipe, op0, op1, op2));
 }
 
 static tree
@@ -853,7 +826,7 @@ m3_cast (tree type, tree op0)
 static tree
 m3_convert (tree type, tree op0)
 {
-  return m3_stabilize_reference (convert (type, op0));
+  return stabilize_reference (convert (type, op0));
 }
 
 static tree
@@ -2765,6 +2738,8 @@ static struct language_function*
 m3_language_function (void)
 {
     struct language_function* f;
+    if (!current_function_decl || !DECL_STRUCT_FUNCTION (current_function_decl))
+      return 0;
     f = DECL_STRUCT_FUNCTION (current_function_decl)->language;
     if (!f)
     {
@@ -2778,10 +2753,13 @@ m3_language_function (void)
 static void
 m3_volatilize_decl (tree decl)
 {
-  if (!TYPE_VOLATILE (TREE_TYPE (decl)) && !TREE_STATIC (decl)
-      && (TREE_CODE (decl) == VAR_DECL
-          || TREE_CODE (decl) == PARM_DECL))
+  enum tree_code code = TREE_CODE (decl);
+  if ((code == VAR_DECL || code == PARM_DECL)
+      && !TYPE_VOLATILE (TREE_TYPE (decl))
+      && !TREE_STATIC (decl))
   {
+    if (option_trace_all && DECL_NAME (decl) && IDENTIFIER_POINTER (DECL_NAME (decl)))
+      fprintf(stderr, "volatile:%s\n", IDENTIFIER_POINTER (DECL_NAME (decl)));
     TREE_TYPE (decl) = build_qualified_type (TREE_TYPE (decl), TYPE_QUAL_VOLATILE);
     TREE_THIS_VOLATILE (decl) = true;
     TREE_SIDE_EFFECTS (decl) = true;
@@ -2807,18 +2785,17 @@ m3_volatilize_current_function (void)
        block = BLOCK_SUPERCONTEXT (block))
   {
     for (decl = BLOCK_VARS (block); decl; decl = TREE_CHAIN (decl))
-    {
       m3_volatilize_decl (decl);
-    }
   }
+
+  for (decl = BLOCK_VARS (block); decl; decl = TREE_CHAIN (decl))
+    m3_volatilize_decl (decl);
 
   /* make arguments volatile  */
 
   for (decl = DECL_ARGUMENTS (current_function_decl);
        decl; decl = TREE_CHAIN (decl))
-  {
     m3_volatilize_decl (decl);
-  }
 }
 
 static void
@@ -2961,10 +2938,8 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
                      bitsize_int (o));
     }
   }
-  if (volatil || M3_ALL_VOLATILE)
+  if (volatil)
     TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
-  if (M3_ALL_VOLATILE)
-    TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
   if (src_T != dst_T)
     v = m3_convert (dst_t, v);
   EXPR_PUSH (v);
@@ -3012,10 +2987,8 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
                      bitsize_int (o));
     }
   }
-  if (volatil || m3_next_store_volatile || M3_ALL_VOLATILE)
+  if (volatil || m3_next_store_volatile)
     TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
-  if (M3_ALL_VOLATILE)
-    TREE_SIDE_EFFECTS (v) = true; /* force this to avoid aliasing problems */
   m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
@@ -4100,6 +4073,7 @@ m3cg_declare_local (void)
     {
       if (m3_volatize)
         m3_volatilize_decl (var);
+
       add_stmt (build1 (DECL_EXPR, t_void, var));
       TREE_CHAIN (var) = BLOCK_VARS (current_block);
       BLOCK_VARS (current_block) = var;
@@ -4627,7 +4601,7 @@ m3cg_set_label (void)
       FORCED_LABEL (label) = true;
       DECL_UNINLINABLE (current_function_decl) = true;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = true;
-#if GCC45
+#if !GCC45
       /* ?
       DECL_NONLOCAL seems very similar, but causes bad codegen:
 
@@ -4645,10 +4619,7 @@ m3cg_set_label (void)
           with a 4.5 construct. Either I haven't found the correct 4.5
           construct or there is something wrong with 4.5.
           The instruction that altered rbp was, uh, surprising.
-      DECL_NONLOCAL (label) = true;
-      LABEL_REF_NONLOCAL_P (r) = true;
       */
-#else
       {
         rtx list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
         DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
@@ -6565,29 +6536,6 @@ m3_post_options (const char **pfilename)
 #endif
 
   flag_predictive_commoning = false;
-
-  if (M3_ALL_VOLATILE)
-  {
-    /* This stuff causes problems on SPARC32_SOLARIS?
-     * I don't have the time/patience to debug it. */
-    M3_TYPES = false;
-    M3_TYPES_INT = false;
-    M3_TYPES_ENUM = false;
-    M3_TYPES_TYPENAME = false;
-    M3_TYPES_SEGMENT = false;
-    M3_TYPES_REPLAY = false;
-    M3_TYPES_CHECK_RECORD_SIZE = false;
-    M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
-
-    if (optimize > 2)
-    {
-      optimize = 2;
-      flag_inline_functions = false;
-      flag_unswitch_loops = false;
-      flag_gcse_after_reload = false;
-      flag_tree_vectorize = false;
-    }
-  }
 
   return false;
 }
