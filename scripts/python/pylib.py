@@ -810,7 +810,7 @@ if _Program != "make-msi.py":
 # workaround some of it
     SetEnvironmentVariable("CM3_TARGET", Target)
     SetEnvironmentVariable("CM3_INSTALL", ConvertPathForCM3(InstallRoot))
-    SetEnvironmentVariable("M3CONFIG", ConvertPathForCM3(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
+    #SetEnvironmentVariable("M3CONFIG", ConvertPathForCM3(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
     #SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "\\\\"))
     SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "/"))
 
