@@ -65,7 +65,7 @@ export TMPDIR=${WS}
          ls -l /home/hudson/workspace
     echo ls -l /home/hudson
          ls -l /home/hudson
-  end
+  fi
 
 test_build_system || {
   echo "test_build_system failed" 1>&2
