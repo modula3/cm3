@@ -6,6 +6,6 @@ readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -K PIC -xarch=v8plus"
 SunXArch = "v8plus"
 %M3_USE_STACK_WALKER = TRUE
 %m3back_debug = "-g"
-m3back_optimize = "-O1"
+m3back_optimize = "-O2"
 include("SPARC.common")
 include("Solaris.common")
