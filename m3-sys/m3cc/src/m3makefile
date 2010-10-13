@@ -219,21 +219,8 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 SourceDir = "../gcc"
 GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone
-% Current default for most platforms is gcc43.
-GCC45 = (not GCC42) and (not defined("GCC43")) and (defined("GCC45") or
-        {"I386_SOLARIS", "I386_DARWIN", "I386_LINUX", "LINUXLIBC6",
-         "I386_OPENBSD", "I386_NETBSD", "I386_FREEBSD", "FreeBSD4",
-         "AMD64_OPENBSD", "AMD64_FREEBSD", "AMD64_NETBSD", "AMD64_DARWIN", "AMD64_LINUX",
-         "PPC_DARWIN", "PPC_LINUX",
-         "ALPHA_OSF",
-         "SPARC32_LINUX",
-         "MIPS64_OPENBSD", "MIPS64EL_OPENBSD",
-         "AMD64_SOLARIS",
-
-         % untested or have problems
-         %"PPC32_OPENBSD", "PPC64_DARWIN",
-         %"SPARC32_SOLARIS", "SOLgnu", "SOLsun",
-        } contains M3CC_TARGET)
+% default is gcc 4.5
+GCC45 = (not GCC42)
 GCC43 = not (GCC42 or GCC45)
 local Defines = ""
 local m3gty = "m3gty43.h"
@@ -286,7 +273,7 @@ PREBUILT_CM3CG = $PREBUILT_CM3CG
 if ($WORKSPACE or equal($USER, "jay")) and PREBUILT_CM3CG
   CM3CG = build_dir & "/cm3cg"
   if equal(M3_MODE, "build")
-    write( "using pre-built backend from ", PREBUILT_CM3CG, CR )
+    write( "copying pre-built backend ", PREBUILT_CM3CG, " => ", CM3CG, CR )
     cp_if( PREBUILT_CM3CG, CM3CG )
     >> ".M3SHIP" in
       write( "make_dir(BIN_INSTALL & \"\")", CR )

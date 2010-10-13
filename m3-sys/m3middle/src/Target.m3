@@ -327,7 +327,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  (* 48 bytes with 4 byte alignment *)
                  Jumpbuf_size     := 12 * Address.size;
                  Jumpbuf_align    := Address.size;
-                 Has_stack_walker := TRUE;
 
     | Systems.SPARC32_LINUX =>
                  Jumpbuf_size              := 16_90 * Char.size;

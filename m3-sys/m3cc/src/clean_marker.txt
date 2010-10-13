@@ -11,4 +11,4 @@ The contents of the file do not matter.
    - removal of mpc, mpfr, and trimming of gmp
    - forcing HOST_WIDE_INT to always be at least 64bits
 
-4-1700-451B-8C15-E91870F151C
+1700-451B-8C15-E91870F151C
