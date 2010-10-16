@@ -28,11 +28,11 @@ void Entry(void)
 
     StartInfo.cb = sizeof(StartInfo);
 	
-	GetEnvironmentVariableW(L"CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
-	if (ssh[0] == 0 || wcscmp(ssh, L"ssh") == 0)
-	{
+    GetEnvironmentVariableW(L"CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
+    if (ssh[0] == 0 || (ssh[0] == 's' && ssh[1] == 's' && ssh[2] == 'h' && ssh[3] == 0))
+    {
         SetEnvironmentVariableW(L"CVS_RSH", L"/bin/ssh");
-	}
+    }
 
     GetEnvironmentVariableW(L"SystemDrive", SystemDrive, 3);
     if (SystemDrive[0])
