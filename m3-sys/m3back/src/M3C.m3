@@ -11,21 +11,15 @@ IMPORT Wr, Text, Fmt, IntRefTbl, Word;
 IMPORT M3CG, M3ID, M3CG_Ops, Target, TFloat;
 IMPORT TIntN, TWordN;
 IMPORT M3ObjFile, TargetMap;
-
 FROM TargetMap IMPORT CG_Bytes;
-
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, No_label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
-
 FROM M3CG_Ops IMPORT ErrorHandler;
-
 FROM M3ObjFile IMPORT Seg;
-
 IMPORT Wrx86, Stackx86, Codex86;
-
 FROM Stackx86 IMPORT MaxMin, ShiftType;
 FROM Codex86 IMPORT Cond, Op, FOp, unscond, revcond, FloatBytes;
 
@@ -281,7 +275,6 @@ PROCEDURE next_label (u: U;  n: INTEGER := 1): Label =
 
 PROCEDURE set_error_handler (u: U; p: ErrorHandler) =
   BEGIN
-    u.Err := p;
   END set_error_handler;
 
 (*----------------------------------------------------- compilation units ---*)
@@ -294,22 +287,16 @@ PROCEDURE begin_unit (u: U;  optimize : INTEGER) =
       u.wr.Int (optimize);
       u.wr.NL  ();
     END;
-
   END begin_unit;
 
 PROCEDURE end_unit   (u: U) =
   (* called after all other methods to finalize the unit and write the
      resulting object *)
   BEGIN
-    IF u.usedfault THEN
-      makereportproc(u);
-    END;
-
     IF u.debug THEN
       u.wr.Cmd ("end_unit");
       u.wr.NL  ();
     END;
-
   END end_unit;
 
 PROCEDURE import_unit (u: U;  n: Name) =
@@ -600,19 +587,11 @@ PROCEDURE declare_exception (u: U;  n: Name;  arg_type: TypeUID;
 (*--------------------------------------------------------- runtime hooks ---*)
 
 PROCEDURE GetRuntimeHook (u: U;  n: Name): RuntimeHook =
-  VAR ref: REFANY;  e: RuntimeHook;
   BEGIN
-    IF u.runtime.get (n, ref) THEN
-      e := ref;
-    ELSE
-      e := NEW (RuntimeHook, name := n, proc := NIL, var := NIL, offset := 0);
-      EVAL u.runtime.put (n, e);
-    END;
-    RETURN e;
+    RETURN NIL;
   END GetRuntimeHook;
 
 PROCEDURE set_runtime_proc (u: U;  n: Name;  p: Proc) =
-  VAR e := GetRuntimeHook (u, n);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_runtime_proc");
@@ -620,12 +599,9 @@ PROCEDURE set_runtime_proc (u: U;  n: Name;  p: Proc) =
       u.wr.PName (p);
       u.wr.NL    ();
     END;
-
-    e.proc := p;
   END set_runtime_proc;
 
 PROCEDURE set_runtime_hook (u: U;  n: Name;  v: Var;  o: ByteOffset) =
-  VAR e := GetRuntimeHook (u, n);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_runtime_hook");
@@ -634,46 +610,18 @@ PROCEDURE set_runtime_hook (u: U;  n: Name;  v: Var;  o: ByteOffset) =
       u.wr.Int   (o);
       u.wr.NL    ();
     END;
-
-    e.var := v;
-    e.offset := o;
   END set_runtime_hook;
 
 PROCEDURE get_runtime_hook (u: U;  n: Name;
                             VAR p: Proc; VAR v: Var; VAR o: ByteOffset) =
-  VAR e := GetRuntimeHook (u, n);
   BEGIN
-    p := e.proc;
-    v := e.var;
-    o := e.offset;
   END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE NewVar (u: U; type: Type; uid: TypeUID; s: ByteSize; a: Alignment;
-                  name: Name := M3ID.NoID): x86Var =
-  VAR v := NEW (x86Var, tag := u.next_var, var_type := type, var_size := s,
-                var_align := a, seg := Seg.Data);
-  BEGIN
-    IF name = M3ID.NoID THEN
-      v.name := M3ID.Add("T$" & Fmt.Int(v.tag));
-    ELSIF uid = -1 THEN
-      v.name := M3ID.Add("_M" & M3ID.ToText(name));
-    ELSE
-      v.name := M3ID.Add("_" & M3ID.ToText(name));
-    END;
-
-    INC (u.next_var);
-    RETURN v;
-  END NewVar;
-
 PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID): Var =
-  VAR v := NewVar(u, type, m3t, s, a, n);
   BEGIN
-    v.offset := 0;
-    v.loc := VLoc.global;
-
     IF u.debug THEN
       u.wr.Cmd   ("import_global");
       u.wr.ZName (n);
@@ -684,22 +632,11 @@ PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
       u.wr.VName (v);
       u.wr.NL    ();
     END;
-
-    RETURN v;
+    RETURN NIL;
   END import_global;
 
 PROCEDURE declare_segment (u: U;  n: Name;  m3t: TypeUID;  is_const: BOOLEAN): Var =
-  CONST SegMap = ARRAY BOOLEAN(*is_const*) OF Seg { Seg.Data, Seg.Text };
-  VAR v := NewVar(u, Type.Void, m3t, 0, 4, n);
   BEGIN
-    IF (u.global_var = NIL) AND (NOT is_const) THEN
-      u.global_var := v;
-    END;
-
-    v.seg    := SegMap [is_const];
-    v.offset := 0;
-    v.loc    := VLoc.global;
-
     IF u.debug THEN
       u.wr.Cmd   ("declare_segment");
       u.wr.ZName (n);
@@ -708,20 +645,12 @@ PROCEDURE declare_segment (u: U;  n: Name;  m3t: TypeUID;  is_const: BOOLEAN): V
       u.wr.VName (v);
       u.wr.NL    ();
     END;
-
-    RETURN v;
+    RETURN NIL;
   END declare_segment;
 
 PROCEDURE bind_segment (u: U;  v: Var;  s: ByteSize;  a: Alignment;
                         type: Type;  exported, inited: BOOLEAN) =
-  VAR realvar := NARROW(v, x86Var);
   BEGIN
-    <* ASSERT inited *>
-
-    realvar.var_type := type;
-    realvar.var_size := s;
-    realvar.var_align := a;
-
     IF u.debug THEN
       u.wr.Cmd   ("bind_segment");
       u.wr.VName (v);
@@ -749,12 +678,8 @@ PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 PROCEDURE DeclareGlobal (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;
                          exported, inited, is_const: BOOLEAN): Var =
-  CONST SegMap  = ARRAY BOOLEAN OF Seg  { Seg.Data, Seg.Text };
   CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
-  VAR v := NewVar(u, type, m3t, s, a, n);
   BEGIN
-    v.loc := VLoc.global;
-    v.seg := SegMap [is_const];
     IF u.debug THEN
       u.wr.Cmd   (DeclTag [is_const]);
       u.wr.ZName (n);
@@ -767,20 +692,13 @@ PROCEDURE DeclareGlobal (u: U;  n: Name;  s: ByteSize;  a: Alignment;
       u.wr.VName (v);
       u.wr.NL    ();
     END;
-    RETURN v;
+    RETURN NIL;
   END DeclareGlobal;
 
 PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                          f: Frequency): Var =
-  VAR v: x86Var;
   BEGIN
-    IF u.in_proc THEN
-      v := get_temp_var (u, type, s, a, n);
-    ELSE
-      v := create_temp_var (u, type, s, a, n);
-    END;
-
     IF u.debug THEN
       u.wr.Cmd   ("declare_local");
       u.wr.ZName (n);
@@ -795,59 +713,13 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
       u.wr.Int   (v.offset);
       u.wr.NL    ();
     END;
-
-    RETURN v;
+    RETURN NIL;
   END declare_local;
-
-PROCEDURE mangle_procname (base: M3ID.T; arg_size: INTEGER;
-                           std_call: BOOLEAN): M3ID.T =
-  VAR buf: ARRAY [0..3] OF CHAR;
-      txt := M3ID.ToText(base);
-      len := Text.Length(txt);
-  BEGIN
-    (* return the 64bit functions unchanged *)
-
-    IF len > NUMBER(buf) THEN
-      Text.SetChars(SUBARRAY(buf, 0, NUMBER(buf)), txt);
-      IF buf = ARRAY OF CHAR{'_', 'm', '3', '_'} THEN
-        RETURN base
-      END;
-    END;
-
-    IF std_call THEN
-      RETURN M3ID.Add(Fmt.F ("_%s@%s", txt, Fmt.Int (arg_size)));
-    ELSE
-      RETURN M3ID.Add(Fmt.F ("_%s",    txt));
-    END;
-  END mangle_procname;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                          f: Frequency): Var =
-  VAR v := NewVar(u, type, m3t, s, 4, n);
   BEGIN
-    (* Assume a = 4 and ESP is dword aligned... *)
-
-    s := (s + 3) DIV 4 * 4;
-
-    v.offset := u.param_proc.paramsize;
-    v.loc := VLoc.temp;
-
-    v.parent := u.param_proc;
-
-    INC(u.param_proc.paramsize, s);
-
-    <* ASSERT u.n_params > 0 *>
-    DEC(u.n_params);
-
-    IF u.n_params = 0 AND u.param_proc.stdcall THEN
-      (* callee cleans & mangled name *)
-      u.param_proc.name := mangle_procname(u.param_proc.name,
-                                           u.param_proc.paramsize - 8,
-                                           std_call := TRUE);
-
-    END;
-
     IF u.debug THEN
       u.wr.Cmd   ("declare_param");
       u.wr.ZName (n);
@@ -863,16 +735,11 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
       u.wr.NL    ();
     END;
 
-    RETURN v;
+    RETURN NIL;
   END declare_param;
 
 PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; type: Type; in_memory:BOOLEAN): Var =
-  VAR v: x86Var;
   BEGIN
-    <* ASSERT u.in_proc *>
-
-    v := get_temp_var(u, type, s, a);
-
     IF u.debug THEN
       u.wr.Cmd   ("declare_temp");
       u.wr.Int   (s);
@@ -883,108 +750,8 @@ PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; type: Type; in_memory:B
       u.wr.Int   (v.offset);
       u.wr.NL    ();
     END;
-
-    RETURN v;
+    RETURN NIL;
   END declare_temp;
-
-PROCEDURE get_temp_var (u: U; type: Type; s: ByteSize; a: Alignment;
-                        n: Name := M3ID.NoID): x86Var =
-  BEGIN
-
-    (* round size and alignment up to 4 *)
-
-    IF s < 4 THEN
-      s := 4;
-    END;
-
-    IF a < 4 THEN
-      a := 4;
-    END;
-
-    (* reuse an existing temporary variable if possible *)
-
-    FOR i := 0 TO u.current_proc.tempsize - 1 DO
-      WITH temp = u.current_proc.temparr[i] DO
-        IF temp.free AND temp.var.var_size = s AND temp.var.var_align >= a THEN
-
-          (* reinitialize existing temporary variable *)
-
-          temp.free := FALSE;
-          temp.var.var_type := type;
-          temp.var.stack_temp := FALSE;
-          temp.var.scope := u.next_scope - 1;
-          RETURN temp.var;
-        END
-      END
-    END;
-
-    (* grow temporary variable array if necessary *)
-
-    IF u.current_proc.tempsize = u.current_proc.templimit THEN
-      expand_temp(u);
-    END;
-
-    (* initialize new temporary variable *)
-
-    WITH temp = u.current_proc.temparr[u.current_proc.tempsize] DO
-      temp.var := create_temp_var(u, type, s, a, n);
-      <* ASSERT temp.var.var_type = type *>
-      temp.free := FALSE;
-      temp.var.scope := u.next_scope - 1;
-    END;
-
-    INC(u.current_proc.tempsize);
-
-    RETURN u.current_proc.temparr[u.current_proc.tempsize - 1].var;
-  END get_temp_var;
-
-PROCEDURE expand_temp (u: U) =
-  VAR newarr := NEW(REF ARRAY OF Temp, u.current_proc.templimit * 2);
-  BEGIN
-    FOR i := 0 TO (u.current_proc.templimit - 1) DO
-      newarr[i] := u.current_proc.temparr[i];
-    END;
-
-    u.current_proc.templimit := u.current_proc.templimit * 2;
-    u.current_proc.temparr := newarr;
-  END expand_temp;
-
-PROCEDURE create_temp_var (u: U; type: Type; s: ByteSize; a: Alignment;
-                           n: Name): x86Var =
-  VAR v := NewVar(u, type, 0, s, a, n);
-  BEGIN
-    v.loc := VLoc.temp;
-    v.parent := u.current_proc;
-
-    u.current_proc.framesize := Word.And(u.current_proc.framesize + a - 1,
-                                         Alignmask[a]);
-
-    INC(u.current_proc.framesize, s);
-
-    v.offset := -u.current_proc.framesize;
-
-    RETURN v;
-  END create_temp_var;
-
-PROCEDURE free_temp (u: U;  v: Var) =
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("free_temp");
-      u.wr.VName (v);
-      u.wr.NL    ();
-    END;
-
-    FOR i := 0 TO u.current_proc.tempsize - 1 DO
-      IF (NOT u.current_proc.temparr[i].free) AND
-         u.current_proc.temparr[i].var = v THEN
-        u.current_proc.temparr[i].free := TRUE;
-        RETURN;
-      END
-    END;
-
-    Err(u, "Couldn't find var to free in 'free_temp'");
-    <* ASSERT FALSE *>
-  END free_temp;
 
 (*---------------------------------------- static variable initialization ---*)
 
@@ -1212,60 +979,21 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
   END declare_procedure;
 
 PROCEDURE begin_procedure (u: U;  p: Proc) =
-  VAR realproc := NARROW(p, x86Proc);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("begin_procedure");
       u.wr.PName (p);
       u.wr.NL    ();
     END;
-
-    <* ASSERT NOT u.in_proc *>
-    u.in_proc := TRUE;
-
-    u.current_proc := p;
-    u.last_exitbranch := -1;
-    u.exit_proclabel := -1;
-
-    (* Mark non-volatiles as not used, until known otherwise. *)
-
-    u.proc_reguse[EBX] := FALSE;
-    u.proc_reguse[ESI] := FALSE;
-    u.proc_reguse[EDI] := FALSE;
-
-    realproc.bound := TRUE;
-
-    WHILE realproc.usage # NIL DO
-      realproc.usage := realproc.usage.link;
-    END;
-
-    u.current_proc.tempsize := 0;
-
-    <* ASSERT u.next_scope = 1 *>
-
-    begin_block(u);
   END begin_procedure;
 
 PROCEDURE end_procedure (u: U;  p: Proc) =
-  VAR realproc := NARROW(p, x86Proc);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("end_procedure");
       u.wr.PName (p);
       u.wr.NL    ();
     END;
-
-    procedure_epilogue(u);
-
-    <* ASSERT u.in_proc *>
-    <* ASSERT u.current_proc = p *>
-
-    u.current_proc.framesize := Word.And(u.current_proc.framesize + 3,
-                                         16_FFFFFFFC);
-
-    u.in_proc := FALSE;
-
-    end_block(u);
   END end_procedure;
 
 PROCEDURE begin_block (u: U) =
@@ -1275,8 +1003,6 @@ PROCEDURE begin_block (u: U) =
       u.wr.Cmd   ("begin_block");
       u.wr.NL    ();
     END;
-
-    INC(u.next_scope);
   END begin_block;
 
 PROCEDURE end_block (u: U) =
@@ -1286,21 +1012,10 @@ PROCEDURE end_block (u: U) =
       u.wr.Cmd   ("end_block");
       u.wr.NL    ();
     END;
-
-    <* ASSERT u.next_scope > 1 *>
-    DEC(u.next_scope);
-
-    free_locals(u, u.next_scope);
   END end_block;
 
 PROCEDURE free_locals (u: U; scope: INTEGER) =
   BEGIN
-    FOR i := 0 TO u.current_proc.tempsize - 1 DO
-      IF (NOT u.current_proc.temparr[i].free) AND
-         u.current_proc.temparr[i].var.scope = scope THEN
-        u.current_proc.temparr[i].free := TRUE;
-      END
-    END
   END free_locals;
 
 PROCEDURE note_procedure_origin (u: U;  p: Proc) =
@@ -1371,7 +1086,6 @@ PROCEDURE if_false (u: U;   type: IType;  label: Label; <*UNUSED*> f: Frequency)
 PROCEDURE if_compare (u: U;  type: ZType;  op: CompareOp;  label: Label;
                       <*UNUSED*> f: Frequency) =
   (* IF (s1.type  op  s0.type) GOTO label ; pop(2) *)
-  VAR cond := CompareOpCond [op];
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_compare");
@@ -1543,212 +1257,6 @@ PROCEDURE load_float    (u: U;  type: RType;  READONLY f: Target.Float) =
 
 PROCEDURE compare (u: U;  type: ZType; result_type: IType;  op: CompareOp) =
   (* s1.result_type := (s1.type  op  s0.type)  ; pop *)
-
-  (*
-    Comparison often needs to convert part of EFLAGS to a register-sized boolean.
-      Or if one is lucky, just do a conditional branch based on EFLAGS
-      and never materialize a register-sized boolean.
-
-    Historically Modula-3 m3back did comparisons like this.
-      cmp
-      setCcOp to memory temporary on stack; setcc only sets one byte
-      xor result_reg, result_reg ; result_reg := 0
-      mov result_reg_low, memory ; now have a register-sized boolean
-
-    We can do much better.
-
-    setCcOp is a family of instructions that materialize
-    a computation of EFLAGS as an 8 bit boolean.
-    There is sete, setne, setg, setl, seta, setb, etc.
-    Anything you might conditionally branch on jcc, also has setcc.
-    A "catch" however is it only gives you an 8 bit boolean, and
-    code often wants a register sized boolean.
-
-    Let's take the following C code as representative of our tasks,
-    and observe how the C compiler optimizes it, and match it.
-    That is a general technique I often follow, look
-    at the optimized C output and match it.
-    
-        signed
-
-        int signed_LT(int a, int b) { return a < b; }
-            xor eax, eax
-            cmp
-            setl al
-
-        int signed_LE(int a, int b) { return a <= b; }
-            xor eax, eax
-            cmp
-            setle al
-
-        EQ and NE are the same for signed vs. unsigned
-
-        int EQ(int a, int b) { return a == b; }
-            xor eax, eax
-            cmp
-            sete al
-
-        int NE(int a, int b) { return a != b; }
-            xor eax, eax
-            cmp
-            setne al
-
-        GE and GT are the same as LT and LE but with either operands reversed
-            or the setcc condition altered.
-
-        int signed_GE(int a, int b) { return a >= b; }
-            xor eax, eax
-            cmp
-            setge al
-
-        int signed_GT(int a, int b) { return a > b; }
-            xor eax, eax
-            cmp
-            setg al
-
-        unsigned
-
-        int unsigned_LT(unsigned a, unsigned b) { return a < b; }
-            cmp
-            sbb eax, eax
-            neg eax
-            
-        Let's understand this.
-            sbb is subtract with carry/borrow.
-            subtract from self is zero, and then carry/borrow
-            is one more -- either 0 or -1.
-            And then neg to turn -1 to 1.
-            So sbb, neg materialize carry as a register-sized boolean. 
-
-        int unsigned_LE(unsigned a, unsigned b) { return a <= b; }
-            cmp
-            sbb eax, eax
-            inc eax
-
-        Let's understand this.
-            sbb is subtract with carry/borrow.
-            subtract from self is zero, and then carry/borrow
-            is one more -- either 0 or -1.
-            And then inc turns -1 to 0, 0 to 1.
-            So sbb, inc materialize carry as a register-sized boolean, inverted. 
-
-        int unsigned_GE(unsigned a, unsigned b) { return a >= b; }
-            cmp parameters reversed vs. LT
-            sbb eax, eax ; see unsigned_LE for explanation
-            inc eax      ; see unsigned_LE for explanation
-
-        int unsigned_GT(unsigned a, unsigned b) { return a > b; }
-            cmp
-            sbb eax, eax ; see unsigned_LT for explanation
-            neg eax      ; see unsigned_LE for explanation
-
-        int unsigned_EQ(unsigned a, unsigned b) { return a == b; }
-            same as signed:
-            xor eax, eax
-            cmp
-            sete al
-
-        int unsigned_NE(unsigned a, unsigned b) { return a != b; }
-            same as signed:
-            xor eax, eax
-            cmp
-            setne al
-
-        Fill these in if they prove interesting.
-        Actually they are.
-        Signed comparison to zero of a value in a register is
-        sometimes done with test reg, reg.
-        Sometimes the zero for the return value in progress
-        doubles as the zero for the comparison.
-        Also unsigned compare to zero is special. For example,
-            unsigned values are always GE zero, never LT zero.
-
-        int signed_GE0(int a) { return a >= 0; }
-            xor eax, eax
-            if a is in memory
-                cmp a to eax
-            else if a is in register (__fastcall to simulate)
-                test a, a
-            setge al
-
-        int signed_GT0(int a) { return a > 0; }
-            xor eax, eax
-            if a is in memory
-                cmp a to eax
-            else if a is in register (__fastcall to simulate)
-                test a, a
-            setg al
-
-        int signed_LT0(int a) { return a < 0; }
-            xor eax, eax
-            if a is in memory
-                cmp a to eax
-            else if a is in register (__fastcall to simulate)
-                test a, a
-            setl al
-
-        int signed_LE0(int a) { return a <= 0; }
-            xor eax, eax
-            cmp to eax
-            setle al
-
-        int signed_EQ0(int a) { return a == 0; }
-            xor eax, eax
-            cmp to eax
-            sete al
-
-        int signed_NE0(int a, int b) { return a != 0; }
-            xor eax, eax
-            cmp to eax
-            setne al
-
-        int unsigned_GE0(unsigned a) { return a >= 0; }
-            This is always true.
-            xor eax, eax
-            inc eax
-
-        int unsigned_GT0(unsigned a) { return a > 0; }
-            xor eax, eax
-            cmp to eax (reversed?)
-            sbb eax, eax ; see unsigned_LT for explanation
-            neg eax      ; see unsigned_LT for explanation
-
-        int unsigned_LT0(unsigned a) { return a < 0; }
-            This is always false.
-            xor eax, eax
-
-        int unsigned_LE0(unsigned a) { return a <= 0; }
-            Same as EQ0.
-
-        int unsigned_EQ0(unsigned a) { return a == 0; }
-            input is in memory
-            xor eax, eax
-            cmp to eax
-            sete al
-            
-        int __fastcall unsigned_EQ0(unsigned a) { return a == 0; }
-            input is in a register
-            xor eax, eax
-            test reg, reg
-            sete al
-
-        int unsigned_NE0(unsigned a) { return a != 0; }
-            same as EQ0 but setne instead of set
-
-    From the code for these functions, we observe that
-    there are multiple approaches, depending on what in EFLAGS is needed.
-
-    There is:
-        xor reg,reg
-        cmp
-        setcc reg_low_byte
-
-    and
-        cmp
-        some math involving EFLAGS, such as sbb.
-
-    The xor presumably has to precede the cmp in order to not lose the EFLAGS.
-
   *)
   VAR r: Regno := -1;
       reversed := FALSE;
@@ -1779,6 +1287,7 @@ PROCEDURE add (u: U;  type: AType) =
 
 PROCEDURE subtract (u: U;  type: AType) =
   (* s1.type := s1.type - s0.type ; pop *)
+  
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("subtract");
@@ -1796,7 +1305,10 @@ PROCEDURE multiply (u: U;  type: AType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-
+    (*
+      stack[1] := m3_div & "type(" ((type)stack[1]) & "/" & (type)stack[0] & ")"
+      pop();
+    *)
   END multiply;
 
 PROCEDURE divide (u: U;  type: RType) =
