@@ -1027,7 +1027,7 @@ PROCEDURE if_compare (u: U;  type: ZType;  op: CompareOp;  label: Label;
       u.wr.Lab   (label);
       u.wr.NL    ();
     END;
-    print(u, "/* if_compare */\n");
+    print(u, "\n/* if_compare */\n");
     print(u, "if ((" & s1 & ")" & "op" & "(" & s0 & ")) goto L" & label & ";\n\m");
   END if_compare;
 
@@ -1041,7 +1041,7 @@ PROCEDURE case_jump (u: U;  type: IType;  READONLY labels: ARRAY OF Label) =
       FOR i := FIRST (labels) TO LAST (labels) DO  u.wr.Lab (labels [i]);  END;
       u.wr.NL    ();
     END;
-    print(u, "/* case_jump */\n\n");
+    print(u, "\n/* case_jump */\n");
   END case_jump;
 
 PROCEDURE exit_proc (u: U; type: Type) =
@@ -1052,14 +1052,14 @@ PROCEDURE exit_proc (u: U; type: Type) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* exit_proc */\n\n");
+    print(u, "\n/* exit_proc */\n");
     print(u, "goto LExit;\n");
   END exit_proc;
 
 PROCEDURE procedure_epilogue (u: U) =
   BEGIN
-    print(u, "/* procedure_epilogue */\n");
-    print(u, "LExit: return;\n\n");
+    print(u, "\n/* procedure_epilogue */\n");
+    print(u, "LExit: return;\n");
   END procedure_epilogue;
 
 (*------------------------------------------------------------ load/store ---*)
@@ -1078,7 +1078,7 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  type_multiple_of_
       u.wr.TName (type_multiple_of_32);
       u.wr.NL    ();
     END;
-    print(u, "/* load */\n\n");
+    print(u, "/* load */\n");
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
   END load;
 
@@ -1093,7 +1093,7 @@ PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  type_multiple_of_32: ZType;  ty
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* store */\n\n");
+    print(u, "\n/* store */\n");
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
   END store;
 
@@ -1106,7 +1106,7 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
       u.wr.Int   (o);
       u.wr.NL    ();
     END;
-    print(u, "/* load_address */\n\n");
+    print(u, "\n/* load_address */\n");
   END load_address;
 
 PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_multiple_of_32: ZType) =
@@ -1119,7 +1119,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_multiple_of_3
       u.wr.TName (type_multiple_of_32);
       u.wr.NL    ();
     END;
-    print(u, "/* load_indirect */\n\n");
+    print(u, "\n/* load_indirect */\n");
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
   END load_indirect;
 
@@ -1133,7 +1133,7 @@ PROCEDURE store_indirect (u: U;  o: ByteOffset;  type_multiple_of_32: ZType;  ty
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* store_indirect */\n\n");
+    print(u, "\n/* store_indirect */\n");
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
   END store_indirect;
 
@@ -1146,7 +1146,7 @@ PROCEDURE load_nil (u: U) =
       u.wr.Cmd   ("load_nil");
       u.wr.NL    ();
     END;
-    print(u, "/* load_nil */\n\n");
+    print(u, "\n/* load_nil */\n");
   END load_nil;
 
 PROCEDURE load_integer  (u: U;  type: IType;  READONLY j: Target.Int) =
@@ -1158,7 +1158,7 @@ PROCEDURE load_integer  (u: U;  type: IType;  READONLY j: Target.Int) =
       u.wr.TInt  (i);
       u.wr.NL    ();
     END;
-    print(u, "/* load_integer */\n\n");
+    print(u, "\n/* load_integer */\n");
   END load_integer;
 
 PROCEDURE load_float    (u: U;  type: RType;  READONLY f: Target.Float) =
@@ -1170,7 +1170,7 @@ PROCEDURE load_float    (u: U;  type: RType;  READONLY f: Target.Float) =
       u.wr.Flt   (f);
       u.wr.NL    ();
     END;
-    print(u, "/* load_float */\n\n");
+    print(u, "\n/* load_float */\n");
   END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
@@ -1186,7 +1186,7 @@ PROCEDURE compare (u: U;  type: ZType; result_type: IType;  op: CompareOp) =
       u.wr.OutT  (CompareOpName [op]);
       u.wr.NL    ();
     END;
-    print(u, "/* compare */\n\n");
+    print(u, "\n/* compare */\n");
     <* ASSERT cond # Cond.Z AND cond # Cond.NZ *>
   END compare;
 
@@ -1198,7 +1198,7 @@ PROCEDURE add (u: U;  type: AType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* add */\n\n");
+    print(u, "\n/* add */\n");
   END add;
 
 PROCEDURE subtract (u: U;  type: AType) =
@@ -1209,7 +1209,7 @@ PROCEDURE subtract (u: U;  type: AType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* subtract */\n\n");
+    print(u, "\n/* subtract */\n");
   END subtract;
 
 PROCEDURE multiply (u: U;  type: AType) =
@@ -1220,7 +1220,7 @@ PROCEDURE multiply (u: U;  type: AType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* multiply */\n\n");
+    print(u, "\n/* multiply */\n");
     (*
       stack[1] := m3_div & "type(" ((type)stack[1]) & "/" & (type)stack[0] & ")"
       pop();
@@ -1235,7 +1235,7 @@ PROCEDURE divide (u: U;  type: RType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;    
-    print(u, "/* divide */\n\n");
+    print(u, "\n/* divide */\n");
     (*
       stack[1] := ((type)stack[1]) & "/" & (type)stack[0]
       pop();
@@ -1255,7 +1255,7 @@ PROCEDURE div (u: U;  type: IType;  a, b: Sign) =
       u.wr.OutT  (SignName [b]);
       u.wr.NL    ();
     END;
-    print(u, "/* div */\n\n");
+    print(u, "\n/* div */\n");
     (*
       stack[1] := m3_div & "type(" ((type)stack[1]) & "/" & (type)stack[0] & ")"
       pop();
@@ -1273,7 +1273,7 @@ PROCEDURE mod (u: U;  type: IType;  a, b: Sign) =
       u.wr.OutT  (SignName [b]);
       u.wr.NL    ();
     END;
-    print(u, "/* mod */\n\n");
+    print(u, "\n/* mod */\n");
     (*
       stack[1] := m3_div & "type(" ((type)stack[1]) % "/" & (type)stack[0] & ")"
       pop();
@@ -1288,7 +1288,7 @@ PROCEDURE negate (u: U;  type: AType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* negate */\n\n");
+    print(u, "\n/* negate */\n");
     (*
       stack[0] := - "(type)" & stack[0]
     *)
@@ -1302,7 +1302,7 @@ PROCEDURE abs (u: U;  type: AType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* abs */\n\n");
+    print(u, "\n/* abs */\n");
     (*
       stack[0] := "m3_abs&type(" & stack[0] & ")"
     *)
@@ -1316,7 +1316,7 @@ PROCEDURE max (u: U;  type: ZType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* max */\n\n");
+    print(u, "\n/* max */\n");
     (*
       stack[1] := "m3_max&type(" & stack[0] & "," stack[1] & ")"
       pop();
@@ -1331,7 +1331,7 @@ PROCEDURE min (u: U;  type: ZType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* min */\n\n");
+    print(u, "\n/* min */\n");
     (*
       stack[1] := "m3_min&type(" & stack[0] & "," stack[1] & ")"
       pop();
@@ -1348,7 +1348,7 @@ PROCEDURE cvt_int (u: U;  type: RType;  x: IType;  op: ConvertOp) =
       u.wr.OutT  (ConvertOpName [op]);
       u.wr.NL    ();
     END;
-    print(u, "/* cvt_int */\n\n");
+    print(u, "\n/* cvt_int */\n");
     (*
       stack[0] := "((long)(" & stack[0] & ")"
     *)
@@ -1363,7 +1363,7 @@ PROCEDURE cvt_float (u: U;  type: AType;  x: RType) =
       u.wr.TName (x);
       u.wr.NL    ();
     END;
-    print(u, "/* cvt_float */\n\n");
+    print(u, "\n/* cvt_float */\n");
     (*
       stack[0] := "((double)(" & stack[0] & ")"
     *)
@@ -1379,7 +1379,7 @@ PROCEDURE set_op3(u: U;  s: ByteSize; op: TEXT) =
       u.wr.Int   (s);
       u.wr.NL    ();
     END;    
-    print(u, "/* " & op & " */\n\n");
+    print(u, "\n/* " & op & " */\n");
     (*
       stack[2] := "m3_" & op & "(" & stack[0] & stack[1] & stack[2] & ")"
       pop();
@@ -1420,7 +1420,7 @@ PROCEDURE set_member (u: U;  s: ByteSize;  type: IType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* set_member */\n\n");
+    print(u, "\n/* set_member */\n");
   END set_member;
 
 PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  type: IType) =
@@ -1433,7 +1433,7 @@ PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  type: IType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* set_compare */\n\n");
+    print(u, "\n/* set_compare */\n");
   END set_compare;
 
 PROCEDURE set_range (u: U;  s: ByteSize;  type: IType) =
@@ -1570,7 +1570,7 @@ PROCEDURE rotate (u: U;  type: IType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* rotate */\n");
+    print(u, "\n/* rotate */\n");
   END rotate;
 
 PROCEDURE rotate_left  (u: U;  type: IType) =
@@ -1581,7 +1581,7 @@ PROCEDURE rotate_left  (u: U;  type: IType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* rotate_left */\n");
+    print(u, "\n/* rotate_left */\n");
   END rotate_left;
 
 PROCEDURE rotate_right (u: U;  type: IType) =
@@ -1592,7 +1592,7 @@ PROCEDURE rotate_right (u: U;  type: IType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* rotate_right */\n");
+    print(u, "\n/* rotate_right */\n");
   END rotate_right;
 
 PROCEDURE widen (u: U;  sign_extend: BOOLEAN) =
@@ -1626,7 +1626,7 @@ PROCEDURE extract (u: U;  type: IType;  sign_extend: BOOLEAN) =
       u.wr.Bool  (sign_extend);
       u.wr.NL    ();
     END;
-    print(u, "/* extract */\n");
+    print(u, "\n/* extract */\n");
   END extract;
 
 PROCEDURE extract_n (u: U;  type: IType;  sign_extend: BOOLEAN;  n: CARDINAL) =
@@ -1640,7 +1640,7 @@ PROCEDURE extract_n (u: U;  type: IType;  sign_extend: BOOLEAN;  n: CARDINAL) =
       u.wr.Int   (n);
       u.wr.NL    ();
     END;
-    print(u, "/* extract_m */\n");
+    print(u, "\n/* extract_m */\n");
   END extract_n;
 
 PROCEDURE extract_mn (u: U;  type: IType;  sign_extend: BOOLEAN;  m, n: CARDINAL) =
@@ -1655,7 +1655,7 @@ PROCEDURE extract_mn (u: U;  type: IType;  sign_extend: BOOLEAN;  m, n: CARDINAL
       u.wr.Int   (n);
       u.wr.NL    ();
     END;
-    print(u, "/* extract_mn */\n");
+    print(u, "\n/* extract_mn */\n");
   END extract_mn;
 
 PROCEDURE insert  (u: U;  type: IType) =
@@ -1666,7 +1666,7 @@ PROCEDURE insert  (u: U;  type: IType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* insert */\n");
+    print(u, "\n/* insert */\n");
   END insert;
 
 PROCEDURE insert_n  (u: U;  type: IType;  n: CARDINAL) =
@@ -1678,7 +1678,7 @@ PROCEDURE insert_n  (u: U;  type: IType;  n: CARDINAL) =
       u.wr.Int   (n);
       u.wr.NL    ();
     END;
-    print(u, "/* insert_n */\n");
+    print(u, "\n/* insert_n */\n");
   END insert_n;
 
 PROCEDURE insert_mn  (u: U;  type: IType;  m, n: CARDINAL) =
@@ -1691,7 +1691,7 @@ PROCEDURE insert_mn  (u: U;  type: IType;  m, n: CARDINAL) =
       u.wr.Int   (n);
       u.wr.NL    ();
     END;
-    print(u, "/* insert_mn */\n");
+    print(u, "\n/* insert_mn */\n");
   END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
@@ -1718,7 +1718,7 @@ PROCEDURE cg_pop (u: U;  type: Type) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* pop */\n");
+    print(u, "\n/* pop */\n");
     pop(u);
   END cg_pop;
 
@@ -1735,7 +1735,7 @@ PROCEDURE copy_n (u: U;  type_multiple_of_32: IType;  type: MType;  overlap: BOO
       u.wr.Bool  (overlap);
       u.wr.NL    ();
     END;
-    print(u, "/* copy_n */\n");
+    print(u, "\n/* copy_n */\n");
   END copy_n;
 
 PROCEDURE copy (u: U;  n: INTEGER;  type: MType;  overlap: BOOLEAN) =
@@ -1748,7 +1748,7 @@ PROCEDURE copy (u: U;  n: INTEGER;  type: MType;  overlap: BOOLEAN) =
       u.wr.Bool  (overlap);
       u.wr.NL    ();
     END;
-    print(u, "/* copy */\n");
+    print(u, "\n/* copy */\n");
   END copy;
 
 PROCEDURE zero_n (u: U;  type_multiple_of_32: IType;  type: MType) =
@@ -1777,7 +1777,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  type: MType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* zero */\n");
+    print(u, "\n/* zero */\n");
   END zero;
 
 (*----------------------------------------------------------- conversions ---*)
@@ -1791,7 +1791,7 @@ PROCEDURE loophole (u: U;  from, to: ZType) =
       u.wr.TName (to);
       u.wr.NL    ();
     END;
-    print(u, "/* loophole */\n");
+    print(u, "\n/* loophole */\n");
     (* If type is already a pointer, then we should not add pointer here.
      * As well, if type does not contain a pointer, then we should store the
      * value in a non-stack-packed temporary and use its address.
@@ -1810,8 +1810,8 @@ PROCEDURE abort (u: U;  code: RuntimeError) =
       u.wr.Int   (ORD (code));
       u.wr.NL    ();
     END;
-    print(u, "/* abort */\n");
-    print(u, "{ m3_abort(" & Fmt.Int(ORD(code)) & ");}\n\n");
+    print(u, "\n/* abort */\n");
+    print(u, "{ m3_abort(" & Fmt.Int(ORD(code)) & ");}\n");
   END abort;
 
 PROCEDURE check_nil (u: U;  code: RuntimeError) =
@@ -1822,9 +1822,9 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
       u.wr.Int   (ORD (code));
       u.wr.NL    ();
     END;
-    print(u, "/* check_nil */\n");
+    print(u, "\n/* check_nil */\n");
     print(u, "{ const PVOID _s0 = " & get(u, 0) & ";\n");
-    print(u, "  if (_s0 == NULL) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n\n");
+    print(u, "  if (_s0 == NULL) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n");
   END check_nil;
 
 PROCEDURE check_lo (u: U;  type: IType;  READONLY j: Target.Int;  code: RuntimeError) =
@@ -1839,10 +1839,10 @@ PROCEDURE check_lo (u: U;  type: IType;  READONLY j: Target.Int;  code: RuntimeE
       u.wr.Int   (ORD (code));
       u.wr.NL    ();
     END;
-    print(u, "/* check_lo */\n");
+    print(u, "\n/* check_lo */\n");
     print(u, "{ const " & typename & " _i = " & TIntN.ToText(i) & ";\n");
     print(u, "  const " & typename & " _s0 = " & get(u, 0) & ";\n");
-    print(u, "  if (_s0 < _i) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n\n");
+    print(u, "  if (_s0 < _i) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n");
   END check_lo;
 
 PROCEDURE check_hi (u: U;  type: IType;  READONLY j: Target.Int;  code: RuntimeError) =
@@ -1857,10 +1857,10 @@ PROCEDURE check_hi (u: U;  type: IType;  READONLY j: Target.Int;  code: RuntimeE
       u.wr.Int   (ORD (code));
       u.wr.NL    ();
     END;
-    print(u, "/* check_hi */\n");
+    print(u, "\n/* check_hi */\n");
     print(u, "{ const " & typename & " _i = " & TIntN.ToText(i) & ";\n");
     print(u, "  const " & typename & " _s0 = " & get(u, 0) & ";\n");
-    print(u, "  if (_i < _s0) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n\n");
+    print(u, "  if (_i < _s0) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n");
   END check_hi;
 
 PROCEDURE check_range (u: U;  type: IType;  READONLY xa, xb: Target.Int;  code: RuntimeError) =
@@ -1876,11 +1876,11 @@ PROCEDURE check_range (u: U;  type: IType;  READONLY xa, xb: Target.Int;  code: 
       u.wr.Int   (ORD (code));
       u.wr.NL    ();
     END;
-    print(u, "/* check_range */\n");
+    print(u, "\n/* check_range */\n");
     print(u, "{ const " & typename & " _a = " & TIntN.ToText(a) & ";\n");
     print(u, "  const " & typename & " _b = " & TIntN.ToText(b) & ";\n");
     print(u, "  const " & typename & " _s0 = " & get(u, 0) & ";\n");
-    print(u, "  if ((_s0 < _a) || (_b < _s0)) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n\n");
+    print(u, "  if ((_s0 < _a) || (_b < _s0)) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n");
   END check_range;
 
 PROCEDURE check_index (u: U;  type: IType;  code: RuntimeError) =
@@ -1898,10 +1898,10 @@ PROCEDURE check_index (u: U;  type: IType;  code: RuntimeError) =
       u.wr.Int   (ORD (code));
       u.wr.NL    ();
     END;
-    print(u, "/* check_index */\n");
+    print(u, "\n/* check_index */\n");
     print(u, "{ const " & typename & " _array_size = " & pop(u) & ";\n");
     print(u, "  const " & typename & " _index = " & get(u, 0) & ";\n");
-    print(u, "  if (_array_size <= _index) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n\n");
+    print(u, "  if (_array_size <= _index) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n");
   END check_index;
 
 PROCEDURE check_eq (u: U;  type: IType;  code: RuntimeError) =
@@ -1915,7 +1915,7 @@ PROCEDURE check_eq (u: U;  type: IType;  code: RuntimeError) =
       u.wr.Int   (ORD (code));
       u.wr.NL    ();
     END;
-    print(u, "/* check_eq */\n");
+    print(u, "\n/* check_eq */\n");
     print(u, "{ const " & typename & " _s0 = " & pop(u) & ";\n");
     print(u, "  const " & typename & " _s1 = " & pop(u) & ";\n");
     print(u, "  if (_s0 != s_1) m3_abort(" & Fmt.Int(ORD(code)) & ");}\n");
