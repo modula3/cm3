@@ -94,8 +94,8 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         popOp := popOp;
         incOp := incOp;
         decOp := decOp;
-        bitTestAndSetOp := bitTestAndSetOp;
-        bitTestOp := bitTestOp;
+        interlockedBitTestAndSetOp := interlockedBitTestAndSetOp;
+        interlockedBitTestOp := interlockedBitTestOp;
         unOp := unOp;
         mulOp := mulOp;
         imulOp := imulOp;
@@ -1132,14 +1132,14 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
     END;
   END popOp;
 
-TYPE BitOp = RECORD
+TYPE InterlockedBitOp = RECORD
   name: TEXT;
   bitIndexInImm8Opcode1: [16_80..16_FF];
   bitIndexInImm8Opcode2: [0..7];
   bitIndexInRegOpcode:   [16_80..16_FF];
 END;
 
-PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
+PROCEDURE interlockedBitOp (t: T; READONLY bits, index: Operand; op: InterlockedBitOp) =
   VAR ins: Instruction;
   BEGIN
     Mn(t, op.name);
@@ -1158,15 +1158,15 @@ PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
 
     IF index.loc = OLoc.imm THEN
       IF NOT TIntN.ToHostInteger(index.imm, ins.imm) THEN
-        Err(t, "bitOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(index.imm));
+        Err(t, "interlockedBitOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(index.imm));
       END;
       ins.opcode := op.bitIndexInImm8Opcode1;
       build_modrm(t, bits, t.opcode[op.bitIndexInImm8Opcode2], ins);
-      Err(t, "bitOp: untested, non-working code reached #1");
+      Err(t, "interlockedBitOp: untested, non-working code reached #1");
     ELSE
       ins.opcode := op.bitIndexInRegOpcode;
       IF bits.loc = OLoc.mem THEN
-        Err(t, "bitOp: untested, non-working code reached #2");
+        Err(t, "interlockedBitOp: untested, non-working code reached #2");
         <*NOWARN*>build_modrm(t, bits, index, ins);
       ELSE
         load_like_helper(t, index.reg[0], bits, 0, ins);
@@ -1176,17 +1176,17 @@ PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
     IF bits.loc = OLoc.mem THEN
       log_global_var(t, bits.mvar, -4);
     END;
-  END bitOp;
+  END interlockedBitOp;
 
-PROCEDURE bitTestAndSetOp (t: T; READONLY bits, index: Operand) =
+PROCEDURE interlockedBitTestAndSetOp (t: T; READONLY bits, index: Operand) =
   BEGIN
-    bitOp(t, bits, index, BitOp{"BTS", 16_BA, 5, 16_AB});
-  END bitTestAndSetOp;
+    interlockedBitOp(t, bits, index, InterlockedBitOp{"BTS", 16_BA, 5, 16_AB});
+  END interlockedBitTestAndSetOp;
 
-PROCEDURE bitTestOp (t: T; READONLY bits, index: Operand) =
+PROCEDURE interlockedBitTestOp (t: T; READONLY bits, index: Operand) =
   BEGIN
-    bitOp(t, bits, index, BitOp{"BT", 16_BA, 4, 16_A3});
-  END bitTestOp;
+    interlockedBitOp(t, bits, index, InterlockedBitOp{"BT", 16_BA, 4, 16_A3});
+  END interlockedBitTestOp;
 
 PROCEDURE incDecOp (t: T; READONLY op: Operand; isDec: [0..1]) =
   VAR ins: Instruction;
