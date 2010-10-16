@@ -8,10 +8,6 @@
    walking. */
 
 #ifdef _MSC_VER
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
 #pragma warning(disable:4514) /* unused inline function */
 #pragma warning(disable:4100) /* unused parameter */
 #pragma warning(disable:4255) /* () converted to (void) */

@@ -10,10 +10,6 @@
 #pragma warning(disable:4255) /* () changed to (void) */
 #pragma warning(disable:4505) /* unused static function removed */
 #pragma warning(disable:4711) /* automatic inlining */
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
 #endif
 
 #include "m3core.h"

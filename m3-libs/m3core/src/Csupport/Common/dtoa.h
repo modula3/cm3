@@ -1,8 +1,4 @@
 #ifdef _MSC_VER
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
 #pragma warning(disable:4514) /* unused inline function removed */
 #pragma warning(disable:4242) /* possible loss of data */
 #pragma warning(disable:4244) /* possible loss of data */

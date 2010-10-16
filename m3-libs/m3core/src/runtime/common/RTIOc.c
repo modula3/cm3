@@ -1,7 +1,3 @@
-#ifdef _MSC_VER
-#undef _DLL
-#endif
-
 #include "m3core.h"
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
