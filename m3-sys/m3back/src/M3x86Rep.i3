@@ -149,6 +149,7 @@ PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
 
 CONST TZero = TIntN.Zero;
+CONST TOne = TIntN.One;
 
 CONST UnsignedType = ARRAY IType OF IType { Type.Word32, Type.Word32,
                                             Type.Word64, Type.Word64 };
