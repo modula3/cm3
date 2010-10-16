@@ -4,13 +4,6 @@
 copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releases 
  */
 
-#ifdef _MSC_VER
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
-#endif
-
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
 #endif

@@ -1,10 +1,3 @@
-#ifdef _MSC_VER
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
-#endif
-
 #include "m3core.h"
 #ifndef _WIN32
 /* Posix says include <arpa/inet.h>, but FreeBSD 4 inet.h

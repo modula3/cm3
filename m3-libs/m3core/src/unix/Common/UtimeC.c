@@ -1,11 +1,3 @@
-/* ABI compatibility with both libcmt.lib and msvcr.tlib. */
-#ifdef _MSC_VER
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
-#endif
-
 #include "m3core.h"
 
 #ifdef __cplusplus

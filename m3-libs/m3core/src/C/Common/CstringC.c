@@ -2,10 +2,6 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
-#ifdef _MSC_VER
-#undef _DLL
-#endif
-
 #include "m3core.h"
 
 #define M3MODULE Cstring

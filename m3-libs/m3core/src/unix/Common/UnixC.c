@@ -27,13 +27,6 @@ However that is not portable.
 So use these wrappers instead.
 */
 
-#ifdef _MSC_VER
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
-#endif
-
 #include "m3core.h"
 #ifdef _WIN32
 #include <windows.h>

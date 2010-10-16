@@ -5,10 +5,6 @@ such as on Windows going directly to HeapAlloc(GetProcessHeap()) and
 reducing C runtime dependency.
 */
 
-#ifdef _MSC_VER
-#undef _DLL
-#endif
-
 #include "m3core.h"
 
 #ifdef _MSC_VER
