@@ -1042,6 +1042,13 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
     ELSE
+      (* Several cases can be size-optimized.
+       * 0: xor: 2 bytes
+       * 1: xor/inc: 3 bytes
+       * -1: or with -1: 3 bytes
+       * -128 to 127: push/pop: 3 bytes
+       * For everything else: use a 5 byte move.
+       *)
       opsize := GetOperandSize(dest);
       zero := TIntN.EQ(imm, TZero);
       one := (NOT zero) AND (opsize = 1) AND TIntN.EQ(imm, TOne);
