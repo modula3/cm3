@@ -17,9 +17,10 @@ FROM M3CG IMPORT ByteOffset, ByteSize, No_label;
 FROM M3CG IMPORT Type, MType, Label;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
-FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, TypeIs64, SplitImm, OperandPart, GetTypeSize, TZero;
-FROM M3x86Rep IMPORT EAX, EDX, ESP, EBP, ECX;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs;
+FROM M3x86Rep IMPORT OperandSize, GetOperandSize, RegistersForByteOperations;
+FROM M3x86Rep IMPORT RegName, SplitOperand, TypeIs64, SplitImm, OperandPart;
+FROM M3x86Rep IMPORT GetTypeSize, TZero, TOne, EAX, EDX, ESP, EBP, ECX;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -1038,8 +1039,11 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
       ins.imsize := CG_Bytes[dest.mvar.mvar_type];
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
-    ELSIF TIntN.EQ(imm, TZero) THEN
+    ELSIF TIntN.EQ(imm, TZero) OR TIntN.EQ(imm, TOne) THEN
       binOp(t, Op.oXOR, dest, dest);
+      IF TIntN.EQ(imm, TOne) THEN
+        incOp(t, dest);
+      END;
     ELSIF TWordN.EQ(imm, TIntN.T{n := 4 * GetOperandSize(dest), x := TInt.MOne}) THEN
       immOp(t, Op.oOR, dest, imm);
     ELSE
