@@ -1059,7 +1059,7 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
         END;
       ELSIF TWordN.EQ(imm, TIntN.T{n := 4 * GetOperandSize(dest), x := TInt.MOne}) THEN
         immOp(t, Op.oOR, dest, imm);
-      ELSIF (opsize = 1) AND dest.reg[0] # ESP AND TIntN.GE(imm, TIntN.Min8) AND TIntN.LE(imm, TIntN.Max8) THEN
+      ELSIF (opsize = 1) AND (dest.reg[0] # ESP) AND TIntN.GE(imm, TIntN.Min8) AND TIntN.LE(imm, TIntN.Max8) THEN
         pushOp(t, Operand {loc := OLoc.imm, imm := imm, optype := dest.optype});
         popOp(t, dest);
       ELSE
