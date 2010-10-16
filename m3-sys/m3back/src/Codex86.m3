@@ -1027,6 +1027,7 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
 PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
   VAR ins: Instruction;
       zero, one: BOOLEAN;
+      opsize: INTEGER;
   BEGIN
     IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
       Err(t, "movImmT: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
@@ -1041,13 +1042,17 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
     ELSE
+      opsize := GetOperandSize(dest);
       zero := TIntN.EQ(imm, TZero);
-      one := (NOT zero) AND TIntN.EQ(imm, TOne);
+      one := (NOT zero) AND (opsize = 1) AND TIntN.EQ(imm, TOne);
       IF zero OR one THEN
         binOp(t, Op.oXOR, dest, dest);
         IF one THEN
           incOp(t, dest);
         END;
+      ELSIF (opsize = 1) AND TIntN.GE(imm, TIntN.Min8) AND TIntN.LE(imm, TIntN.Max8) THEN
+        pushOp(t, Operand {loc := OLoc.imm, imm := imm, optype := dest.optype});
+        popOp(t, dest);
       ELSIF TWordN.EQ(imm, TIntN.T{n := 4 * GetOperandSize(dest), x := TInt.MOne}) THEN
         immOp(t, Op.oOR, dest, imm);
       ELSE
@@ -1074,11 +1079,16 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
     Mn(t, "PUSH");  MnOp(t, src);
     CASE src.loc OF
     | OLoc.imm =>
-        ins.opcode := 16_68;
         IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
           Err(t, "pushOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
         END;
-        ins.imsize := 4;
+        IF TIntN.GE(src.imm, TIntN.Min8) AND TIntN.LE(src.imm, TIntN.Max8) THEN
+          ins.opcode := 16_6A;
+          ins.imsize := 1;
+        ELSE
+          ins.opcode := 16_68;
+          ins.imsize := 4;
+        END;
         writecode(t, ins);
     | OLoc.register =>
         ins.opcode := 16_50 + src.reg[0];
