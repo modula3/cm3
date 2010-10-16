@@ -127,7 +127,6 @@ m3_mod64(INT64 b, INT64 a)
 WORD_T
 __stdcall
 set_member(WORD_T elt, WORD_T* set)
-/* never used by current backend */
 {
   register WORD_T word = elt / SET_GRAIN;
   register WORD_T bit  = elt % SET_GRAIN;
@@ -260,7 +259,6 @@ set_range(WORD_T b, WORD_T a, WORD_T* s)
 void
 __stdcall
 set_singleton(WORD_T a, WORD_T* s)
-/* never used by current backend */
 {
   WORD_T a_word = a / SET_GRAIN;
   WORD_T a_bit  = a % SET_GRAIN;
