@@ -1026,6 +1026,7 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
 
 PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
   VAR ins: Instruction;
+      zero, one: BOOLEAN;
   BEGIN
     IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
       Err(t, "movImmT: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
@@ -1039,18 +1040,22 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
       ins.imsize := CG_Bytes[dest.mvar.mvar_type];
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
-    ELSIF TIntN.EQ(imm, TZero) OR TIntN.EQ(imm, TOne) THEN
-      binOp(t, Op.oXOR, dest, dest);
-      IF TIntN.EQ(imm, TOne) THEN
-        incOp(t, dest);
-      END;
-    ELSIF TWordN.EQ(imm, TIntN.T{n := 4 * GetOperandSize(dest), x := TInt.MOne}) THEN
-      immOp(t, Op.oOR, dest, imm);
     ELSE
-      ins.opcode := 16_B8 + dest.reg[0];
-      ins.imsize := 4;
-      Mn(t, "MOV");  MnOp(t, dest);  MnImmTInt(t, imm);
-      writecode(t, ins);
+      zero := TIntN.EQ(imm, TZero);
+      one := (NOT zero) AND TIntN.EQ(imm, TOne);
+      IF zero OR one THEN
+        binOp(t, Op.oXOR, dest, dest);
+        IF one THEN
+          incOp(t, dest);
+        END;
+      ELSIF TWordN.EQ(imm, TIntN.T{n := 4 * GetOperandSize(dest), x := TInt.MOne}) THEN
+        immOp(t, Op.oOR, dest, imm);
+      ELSE
+        ins.opcode := 16_B8 + dest.reg[0];
+        ins.imsize := 4;
+        Mn(t, "MOV");  MnOp(t, dest);  MnImmTInt(t, imm);
+        writecode(t, ins);
+      END;
     END;
   END movImmT;
 
