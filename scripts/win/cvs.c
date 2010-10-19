@@ -25,7 +25,7 @@ CHAR ssh[MAX_PATH];
 void Entry(void)
 {
     DWORD ExitCode;
-	
+
     GetEnvironmentVariable("CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
     if (ssh[0] == 0 || (ssh[0] == 's' && ssh[1] == 's' && ssh[2] == 'h' && ssh[3] == 0))
     {
