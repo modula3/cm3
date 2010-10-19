@@ -9,36 +9,34 @@ As well, CVS_RSH changed to /bin/ssh. Plain "ssh" as all other Hudson jobs use w
 probably work if in this wrapper we prepended c:\cygwin\bin to %PATH%.
 
 Build it with:
-    cl -Zl cvs.c -link -entry:Entry -subsystem:console kernel32.lib
+    cl -Ox cvs.c -link -entry:Entry -subsystem:console kernel32.lib -merge:.rdata=.text -opt:ref
 */
 
 #include <windows.h>
 
 /* These are globals just to sleazily avoid -GS and memset dependencies. */
 
-WCHAR Executable[] = L"C:\\cygwin\\bin\\cvs.exe";
-WCHAR SystemDrive[3];
-STARTUPINFOW StartInfo;
+CHAR Executable[] = "C:\\cygwin\\bin\\cvs.exe";
+CHAR SystemDrive[3];
+STARTUPINFO StartInfo = {sizeof(StartInfo)};
 PROCESS_INFORMATION ProcessInfo;
-WCHAR ssh[MAX_PATH];
+CHAR ssh[MAX_PATH];
 
 void Entry(void)
 {
     DWORD ExitCode;
-
-    StartInfo.cb = sizeof(StartInfo);
 	
-    GetEnvironmentVariableW(L"CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
+    GetEnvironmentVariable("CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
     if (ssh[0] == 0 || (ssh[0] == 's' && ssh[1] == 's' && ssh[2] == 'h' && ssh[3] == 0))
     {
-        SetEnvironmentVariableW(L"CVS_RSH", L"/bin/ssh");
+        SetEnvironmentVariable("CVS_RSH", "/bin/ssh");
     }
 
-    GetEnvironmentVariableW(L"SystemDrive", SystemDrive, 3);
+    GetEnvironmentVariable("SystemDrive", SystemDrive, 3);
     if (SystemDrive[0])
         Executable[0] = SystemDrive[0];
 
-    ExitCode = CreateProcessW(Executable, GetCommandLineW(), NULL, NULL, FALSE, 0, NULL, NULL, &StartInfo, &ProcessInfo);
+    ExitCode = CreateProcess(Executable, GetCommandLine(), NULL, NULL, FALSE, 0, NULL, NULL, &StartInfo, &ProcessInfo);
     if (ExitCode == FALSE)
     {
         ExitCode = GetLastError();
