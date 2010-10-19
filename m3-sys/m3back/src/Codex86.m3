@@ -91,6 +91,7 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         CBWOp := CBWOp;
         lock_exchange := lock_exchange;
         lock_compare_exchange := lock_compare_exchange;
+        write_lock_prefix := write_lock_prefix;
         pushOp := pushOp;
         popOp := popOp;
         incOp := incOp;
@@ -853,6 +854,11 @@ PROCEDURE CBWOp (t: T) =
     writecode(t, CBW);
   END CBWOp;
 
+PROCEDURE write_lock_prefix (t: T) =
+  BEGIN
+    t.obj.append(Seg.Text, 16_F0, 1); (* lock prefix *)
+  END write_lock_prefix;
+
 PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand; type: Type) =
   VAR opcode := 16_B1;
       src_reg := src.reg[0];
@@ -863,7 +869,7 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand; type: Type) 
     <* ASSERT dest.loc = OLoc.register *> (* mem would be correct, but we have a bug *)
     (* ASSERT src.loc = OLoc.register *)
 
-    t.obj.append(Seg.Text, 16_F0, 1); (* lock prefix *)
+    t.write_lock_prefix();
 
     CASE type OF
       | Type.Int8, Type.Word8 => DEC(opcode);        

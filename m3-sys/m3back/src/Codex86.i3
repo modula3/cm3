@@ -59,6 +59,7 @@ TYPE Public = OBJECT
         CBWOp ();
         lock_exchange (READONLY dest, src: Operand; type: Type);
         lock_compare_exchange (READONLY dest, src: Operand; type: Type);
+        write_lock_prefix ();
         pushOp (READONLY src: Operand);
         popOp (READONLY dest: Operand);
         incOp (READONLY op: Operand);
@@ -217,7 +218,7 @@ TYPE
     name: TEXT;
     (* rmr means dest is in register or memory, source is in register
      * rrm means dest is in register, source is in register or memory
-     *  "op r/m,r" or "op r,r/m", given Intel syntax wher dest
+     *  "op r/m,r" or "op r,r/m", given Intel syntax where dest
      * is on the left. The values undergo varous increments
      * depending on operand size and such; confusing.
      * immop is the "reg" value or second operand byte in like 12/3, the 3.
@@ -230,7 +231,7 @@ TYPE Op = { oAND,   oXOR,   oOR,    oMOV,   oADD,  oADC,  oSUB,   oSBB,
             oCMP,   oNEG,   oNOT,   oLEA,   oSHL,  oSAR,  oSHR,   oSHLD,
             oSHRD,  oROL,   oROR,   oSAHF,  oWAIT, oCLD,  oSTD,   oREP,
             oMOVSB, oMOVSD, oSTOSB, oSTOSD, oCWDE, oCDQ,  oLEAVE, oRET,
-            oNOP, oXCHG };
+            oNOP, oXCHG, oXADD };
 
 CONST opcode = ARRAY Op OF OpCode
   { OpCode { "AND",  16_25, 16_83, 16_81, 4, 16_20, 16_22 },
@@ -266,7 +267,8 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "LEAVE",-1,    -1,    16_C9, 0, -1,    -1    },
     OpCode { "RET"  ,-1,    -1,    16_C3, 0, -1,    -1    },
     OpCode { "NOP",  -1,    -1,    -1,    0, -1,    -1    },
-    OpCode { "XCHG", 16_86, 16_86, 16_86, 16_86, 16_86, 16_86 } (* hack; cleanup *)
+    OpCode { "XCHG", 16_86, 16_86, 16_86, 16_86, 16_86, 16_86 }, (* hack; cleanup *)
+    OpCode { "XADD", -1,    -1,    -1,   -1, 16_C1, -1    }
     };
 
 PROCEDURE New (parent: M3x86Rep.U; wr: Wrx86.T): T;
