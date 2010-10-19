@@ -17,7 +17,7 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, TypeIsDoubleInt, OperandPart, RegName, OperandSize, TZero, AllRegisters;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, TypeIs64, OperandPart, RegName, OperandSize, TZero, AllRegisters;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
 FROM M3x86Rep IMPORT TypeIsSigned, TypeIsUnsigned, EAX, ECX, EDX, EBX, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
 
@@ -1480,7 +1480,7 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
 
-      <* ASSERT TypeIsDoubleInt(type) = TypeIsDoubleInt(stop1.optype) *>
+      <* ASSERT TypeIs64(type) = TypeIs64(stop1.optype) *>
 
       IF stop0.loc = OLoc.imm AND TWordN.LT(stop0.imm, TIntN.SixtyFour) THEN
         IF stop1.loc = OLoc.imm THEN
@@ -1596,7 +1596,7 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
 PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
   VAR leftlab, endlab: Label;
       rotateCount: INTEGER;
-      is64 := TypeIsDoubleInt(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
