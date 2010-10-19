@@ -1599,7 +1599,7 @@ PROCEDURE exit_proc (u: U; type: Type) =
       WITH stack0 = u.vstack.pos(0, "exit_proc") DO
         IF Target.FloatType[type] THEN
           u.cg.f_exitproc();
-        ELSIF TypeIs64(type) THEN
+        ELSIF TypeIsDoubleInt(type) THEN
           u.vstack.find(stack0, Force.regset, RegSet { EAX, EDX });
         ELSE
           u.vstack.find(stack0, Force.regset, RegSet { EAX });
@@ -2158,7 +2158,7 @@ PROCEDURE multiply (u: U;  type: AType) =
       u.wr.NL    ();
     END;
 
-    IF TypeIs64(type) THEN
+    IF TypeIsDoubleInt(type) THEN
       start_int_proc (u, Builtin.mul64);
       pop_param(u, Type.Word64);
       pop_param(u, Type.Word64);
@@ -2201,7 +2201,7 @@ PROCEDURE div (u: U;  type: IType;  a, b: Sign) =
       u.wr.NL    ();
     END;
 
-    IF TypeIs64(type) THEN
+    IF TypeIsDoubleInt(type) THEN
       CASE type OF Type.Int64  => builtin := Builtin.div64;
               | Type.Word64 => builtin := Builtin.udiv64;
               ELSE <* ASSERT FALSE *>
@@ -2234,7 +2234,7 @@ PROCEDURE mod (u: U;  type: IType;  a, b: Sign) =
       u.wr.NL    ();
     END;
 
-    IF TypeIs64(type) THEN
+    IF TypeIsDoubleInt(type) THEN
       CASE type OF Type.Int64  => builtin := Builtin.mod64;
               | Type.Word64 => builtin := Builtin.umod64;
               ELSE <* ASSERT FALSE *>
@@ -2693,7 +2693,7 @@ PROCEDURE rotate_left  (u: U;  type: IType) =
         ELSE
           TWordN.And(u.vstack.op(stack0).imm, MaximumShift[type], and);
           u.vstack.set_imm(stack0, and);
-          IF TypeIs64(type) THEN
+          IF TypeIsDoubleInt(type) THEN
             do_rotate_or_shift_64(u, Builtin.rotate_left64);
             RETURN;
           END;
@@ -2702,7 +2702,7 @@ PROCEDURE rotate_left  (u: U;  type: IType) =
           u.vstack.newdest(u.vstack.op(stack1));
         END
       ELSE
-        IF TypeIs64(type) THEN
+        IF TypeIsDoubleInt(type) THEN
           do_rotate_or_shift_64(u, Builtin.rotate_left64);
           RETURN;
         END;
@@ -2746,7 +2746,7 @@ PROCEDURE rotate_right (u: U;  type: IType) =
         ELSE
           TWordN.And(u.vstack.op(stack0).imm, MaximumShift[type], and);
           u.vstack.set_imm(stack0, and);
-          IF TypeIs64(type) THEN
+          IF TypeIsDoubleInt(type) THEN
             do_rotate_or_shift_64(u, Builtin.rotate_right64);
             RETURN;
           END;
@@ -2755,7 +2755,7 @@ PROCEDURE rotate_right (u: U;  type: IType) =
           u.vstack.newdest(u.vstack.op(stack1));
         END
       ELSE
-        IF TypeIs64(type) THEN
+        IF TypeIsDoubleInt(type) THEN
           do_rotate_or_shift_64(u, Builtin.rotate_right64);
           RETURN;
         END;
@@ -3933,10 +3933,10 @@ PROCEDURE pop_static_link (u: U) =
                        mvar_offset := 0, mvar_type := Type.Addr} );
   END pop_static_link;
 
-PROCEDURE TypeIs64 (type: Type): BOOLEAN =
+PROCEDURE TypeIsDoubleInt (type: Type): BOOLEAN =
   BEGIN
     RETURN type IN (SET OF Type{Type.Int64, Type.Word64});
-  END TypeIs64;
+  END TypeIsDoubleInt;
 
 PROCEDURE TypeIsUnsigned (type: Type): BOOLEAN =
   BEGIN
@@ -3952,7 +3952,7 @@ PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): 
   VAR type := mvar.mvar_type;
   BEGIN
     mvarA[0] := mvar;
-    IF NOT TypeIs64(type) THEN
+    IF NOT TypeIsDoubleInt(type) THEN
       RETURN 1;
     END;
     mvarA[1] := mvar;
@@ -3981,7 +3981,7 @@ PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPar
 PROCEDURE GetTypeSize(type: Type): OperandSize =
 (* In "words" or "registers": 1 or 2 *)
   BEGIN
-    RETURN 1 + ORD(TypeIs64(type));
+    RETURN 1 + ORD(TypeIsDoubleInt(type));
   END GetTypeSize;
 
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize =
@@ -4077,7 +4077,7 @@ PROCEDURE call_direct (u: U; p: Proc;  type: Type) =
       IF Target.FloatType [type] THEN
         u.vstack.pushnew(type, Force.any);
         u.cg.f_pushnew();
-      ELSIF TypeIs64(type) THEN
+      ELSIF TypeIsDoubleInt(type) THEN
         u.vstack.pushnew(type, Force.regset, RegSet { EAX, EDX });
       ELSE
         u.vstack.pushnew(FixReturnValue(u, type), Force.regset, RegSet { EAX });
@@ -4137,7 +4137,7 @@ PROCEDURE call_indirect (u: U; type: Type;  cc: CallingConvention) =
       IF Target.FloatType [type] THEN
         u.vstack.pushnew(type, Force.any);
         u.cg.f_pushnew();
-      ELSIF TypeIs64(type) THEN
+      ELSIF TypeIsDoubleInt(type) THEN
         u.vstack.pushnew(type, Force.regset, RegSet { EAX, EDX });
       ELSE
         u.vstack.pushnew(FixReturnValue(u, type), Force.regset, RegSet { EAX });
@@ -4333,7 +4333,7 @@ PROCEDURE store_ordered (x: U; type_multiple_of_32: ZType; type: MType; <*UNUSED
 
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
-    IF TypeIs64(type) THEN
+    IF TypeIsDoubleInt(type) THEN
       (* see:
        * http://niallryan.com/node/137
        * see fetch_and_op
@@ -4388,7 +4388,7 @@ PROCEDURE load_ordered (x: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*
 
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
-    IF TypeIs64(type) THEN
+    IF TypeIsDoubleInt(type) THEN
 
       (* see:
        * http://niallryan.com/node/137
@@ -4424,7 +4424,7 @@ PROCEDURE exchange (u: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>ord
 
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
-    IF TypeIs64(type) THEN
+    IF TypeIsDoubleInt(type) THEN
       (* Push arbitrary value for the first compare. *)
       u.vstack.pushimmT(TZero, Type.Word64);
       u.vstack.swap();
@@ -4456,7 +4456,7 @@ PROCEDURE compare_exchange_helper (x: U; type: Type) =
          compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
          atomicVariable                  = x.vstack.pos(2, "compare_exchange") DO
 
-      IF TypeIs64(type) THEN
+      IF TypeIsDoubleInt(type) THEN
         (*
          * 64 bit form has very particular register allocation requirements.
          *)
@@ -4556,7 +4556,7 @@ Generally we use interlocked compare exchange loop.
 Some operations can be done better though.
 *)
   VAR retry: Label;
-      is64 := TypeIs64(type);
+      doubleInt := TypeIsDoubleInt(type);
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("fetch_and_op");
@@ -4569,7 +4569,7 @@ Some operations can be done better though.
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     x.vstack.unlock();
-    IF is64 THEN
+    IF doubleInt THEN
       x.vstack.pushnew(type, Force.regset, RegSet{EDX, EAX});
       x.vstack.pushnew(type, Force.regset, RegSet{ECX, EBX});
       x.proc_reguse[EBX] := TRUE;
@@ -4600,7 +4600,7 @@ retry:
       (* x.vstack.find(atomicVariable, Force.any); bug *)
       x.vstack.find(atomicVariable, Force.anyreg);
       x.cg.load_ind(EAX, x.vstack.op(atomicVariable), 0, type);
-      IF is64 THEN
+      IF doubleInt THEN
         x.cg.load_ind(EDX, x.vstack.op(atomicVariable), 4, type);
       END;
       retry := x.next_label();

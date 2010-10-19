@@ -19,7 +19,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs;
 FROM M3x86Rep IMPORT OperandSize, GetOperandSize, RegistersForByteOperations;
-FROM M3x86Rep IMPORT RegName, SplitOperand, TypeIs64, SplitImm, OperandPart;
+FROM M3x86Rep IMPORT RegName, SplitOperand, TypeIsDoubleInt, SplitImm, OperandPart;
 FROM M3x86Rep IMPORT GetTypeSize, TZero, TOne, EAX, EDX, ESP, EBP, ECX;
 
 FROM M3ObjFile IMPORT Seg;
@@ -519,8 +519,8 @@ PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand
   VAR ins: Instruction;
   BEGIN
 
-    <* ASSERT NOT TypeIs64(src.optype) *>
-    <* ASSERT NOT TypeIs64(dest.optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(src.optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(dest.optype) *>
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
     ins.escape := TRUE;
@@ -620,8 +620,8 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
   BEGIN
 
     <* ASSERT immSize = destSize *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[destSize - 1].optype) *>
 
     IF (immSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHL, Op.oSHR, Op.oSAR}) THEN
       CASE op OF
@@ -648,8 +648,8 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand) =
   VAR ins: Instruction;
   BEGIN
 
-    <* ASSERT NOT TypeIs64(src.optype) *>
-    <* ASSERT NOT TypeIs64(dest.optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(src.optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(dest.optype) *>
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
     IF src.loc = OLoc.imm THEN
@@ -688,10 +688,10 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
       destSize := SplitOperand(dest, destA);
   BEGIN
 
-    <* ASSERT NOT TypeIs64(srcA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(srcA[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[destSize - 1].optype) *>
 
     IF srcSize # destSize THEN
       Err(t, "binOp: size mismatch: destSize:" & Fmt.Int(destSize)
@@ -816,10 +816,10 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
         & " dest.optype:" & Target.TypeNames[dest.optype]);
     END;
 
-    <* ASSERT NOT TypeIs64(srcA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(srcA[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       swapOp1(t, destA[i], srcA[i]);
@@ -998,10 +998,10 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
         & " dest.optype:" & Target.TypeNames[dest.optype]);
     END;
 
-    <* ASSERT NOT TypeIs64(srcA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(srcA[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       movOp1(t, destA[i], srcA[i]);
@@ -1116,8 +1116,8 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
       size := SplitOperand(src, a);
   BEGIN
 
-    <* ASSERT NOT TypeIs64(a[0].optype) *>
-    <* ASSERT NOT TypeIs64(a[size - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(a[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(a[size - 1].optype) *>
 
     FOR i := size - 1 TO 0 BY -1 DO
       pushOp1(t, a[i]);
@@ -1150,8 +1150,8 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
       size := SplitOperand(dest, a);
   BEGIN
 
-    <* ASSERT NOT TypeIs64(a[0].optype) *>
-    <* ASSERT NOT TypeIs64(a[size - 1].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(a[0].optype) *>
+    <* ASSERT NOT TypeIsDoubleInt(a[size - 1].optype) *>
 
     FOR i := 0 TO size - 1 DO
       popOp1(t, a[i]);
@@ -1278,8 +1278,8 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
           <* ASSERT FALSE *>
       END
     ELSE
-      <* ASSERT NOT TypeIs64(destA[0].optype) *>
-      <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+      <* ASSERT NOT TypeIsDoubleInt(destA[0].optype) *>
+      <* ASSERT NOT TypeIsDoubleInt(destA[destSize - 1].optype) *>
       <* ASSERT destSize = 1 *>
 
       unOp1(t, op, destA[0]);
