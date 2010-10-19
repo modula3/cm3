@@ -57,7 +57,7 @@ TYPE Public = OBJECT
         doimul ();
         dodiv (a, b: Sign);
         domod (a, b: Sign);
-        doneg ();
+        doneg (stack_position := 0);
         doabs ();
         domaxmin (type: ZType; maxmin: MaxMin);
         fltoint (mode: FlToInt; type: Type);

@@ -1408,11 +1408,11 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: TIntN.T; overwritesdest: BOOLEAN) =
     END
   END doimm;
 
-PROCEDURE doneg (t: T) =
+PROCEDURE doneg (t: T; stack_position := 0) =
   VAR neg: TIntN.T;
   BEGIN
     unlock(t);
-    WITH stack0 = pos(t, 0, "doneg"),
+    WITH stack0 = pos(t, stack_position, "doneg"),
          stop0 = t.vstack[stack0] DO
       IF stop0.loc = OLoc.imm THEN
         IF NOT TIntN.Negate(stop0.imm, neg) THEN
