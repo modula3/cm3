@@ -9,18 +9,17 @@ As well, CVS_RSH changed to /bin/ssh. Plain "ssh" as all other Hudson jobs use w
 probably work if in this wrapper we prepended c:\cygwin\bin to %PATH%.
 
 Build it with:
-    cl -Zl cvs.c -link -entry:Entry -subsystem:console kernel32.lib
+    cl -Zl dos2unix.c -link -entry:Entry -subsystem:console kernel32.lib
 */
 
 #include <windows.h>
 
 /* These are globals just to sleazily avoid -GS and memset dependencies. */
 
-WCHAR Executable[] = L"C:\\cygwin\\bin\\cvs.exe";
+WCHAR Executable[] = L"C:\\cygwin\\bin\\dos2unix.exe";
 WCHAR SystemDrive[3];
 STARTUPINFOW StartInfo;
 PROCESS_INFORMATION ProcessInfo;
-WCHAR ssh[MAX_PATH];
 
 void Entry(void)
 {
@@ -28,12 +27,6 @@ void Entry(void)
 
     StartInfo.cb = sizeof(StartInfo);
 	
-    GetEnvironmentVariableW(L"CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
-    if (ssh[0] == 0 || (ssh[0] == 's' && ssh[1] == 's' && ssh[2] == 'h' && ssh[3] == 0))
-    {
-        SetEnvironmentVariableW(L"CVS_RSH", L"/bin/ssh");
-    }
-
     GetEnvironmentVariableW(L"SystemDrive", SystemDrive, 3);
     if (SystemDrive[0])
         Executable[0] = SystemDrive[0];
