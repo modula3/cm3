@@ -4537,8 +4537,10 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
     u.vstack.discard(1);
   END fence;
 
-CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
+CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oXADD, Op.oXADD, Op.oOR, Op.oAND, Op.oXOR };
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
+CONST AtomicAddSub = SET OF AtomicOp { AtomicOp.Add, AtomicOp.Sub };
+CONST AtomicAddSubXor = SET OF AtomicOp { AtomicOp.Add, AtomicOp.Sub, AtomicOp.Xor };
 
 PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_multiple_of_32: ZType;
                         <*UNUSED*>order: MemoryOrder) =
@@ -4553,7 +4555,8 @@ Generally we use interlocked compare exchange loop.
 Some operations can be done better though.
 *)
   VAR retry: Label;
-      doubleInt := TypeIs64(type);
+      is64 := TypeIs64(type);
+      withoutCompareExchangeLoop := (NOT is64) AND atomic_op IN AtomicAddSubXor;
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("fetch_and_op");
@@ -4566,7 +4569,11 @@ Some operations can be done better though.
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     x.vstack.unlock();
-    IF doubleInt THEN
+
+    IF withoutCompareExchangeLoop THEN
+      x.vstack.pushnew(type, Force.anyreg); (* any? *)
+      x.vstack.pushnew(type, Force.anyreg); (* any? *)
+    ELSIF is64 THEN
       x.vstack.pushnew(type, Force.regset, RegSet{EDX, EAX});
       x.vstack.pushnew(type, Force.regset, RegSet{ECX, EBX});
       x.proc_reguse[EBX] := TRUE;
@@ -4574,13 +4581,13 @@ Some operations can be done better though.
       x.vstack.pushnew(type, Force.regset, RegSet{EAX});
       x.vstack.pushnew(type, Force.anyreg);
     END;
-
+    
 (*
     mov oldValue, mem-or-reg; oldValue is EAX or EDX:EAX
 retry:
     mov newValue, oldValue; oldValue is EAX or EDX:EAX
     op  newValue, secondOperand; newValue is whatever register allocator decides, or ECX:EBX
-    lock cmpxchg[8b] DWORD PTR [atomicVariable], newValue
+    lock cmpxchg[8b] BYTE OR WORD or DWORD or QWORD PTR [atomicVariable], newValue
     ; original value is in EAX or EDX:EAX, eq or ne.
     jne retry
     ; EAX or EDX:EAX contains old value
@@ -4596,16 +4603,29 @@ retry:
       END;
       (* x.vstack.find(atomicVariable, Force.any); bug *)
       x.vstack.find(atomicVariable, Force.anyreg);
-      x.cg.load_ind(EAX, x.vstack.op(atomicVariable), 0, type);
-      IF doubleInt THEN
-        x.cg.load_ind(EDX, x.vstack.op(atomicVariable), 4, type);
+      
+      IF withoutCompareExchangeLoop THEN
+        IF atomic_op = AtomicOp.Sub THEN
+          x.vstack.doneg(operand);
+        END;
+        x.cg.write_lock_prefix();
+        x.cg.binOp(AtomicOpToOp[atomic_op], x.vstack.op(newValue), x.vstack.op(operand));
+        IF atomic_op IN AtomicAddSub THEN
+          x.vstack.doneg(operand);
+        END;
+        x.cg.binOp(AtomicOpToOp[atomic_op], x.vstack.op(oldValue), x.vstack.op(operand));
+      ELSE
+        x.cg.load_ind(EAX, x.vstack.op(atomicVariable), 0, type);
+        IF is64 THEN
+          x.cg.load_ind(EDX, x.vstack.op(atomicVariable), 4, type);
+        END;
+        retry := x.next_label();
+        x.cg.set_label(retry);
+        x.cg.movOp(x.vstack.op(newValue), x.vstack.op(oldValue));
+        x.cg.binOp(AtomicOpToOp[atomic_op], x.vstack.op(newValue), x.vstack.op(operand));
+        x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue), type);
+        x.cg.brOp(Cond.NE, retry);
       END;
-      retry := x.next_label();
-      x.cg.set_label(retry);
-      x.cg.movOp(x.vstack.op(newValue), x.vstack.op(oldValue));
-      x.cg.binOp(AtomicOpToOp[atomic_op], x.vstack.op(newValue), x.vstack.op(operand));
-      x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue), type);
-      x.cg.brOp(Cond.NE, retry);
       x.vstack.newdest(x.vstack.op(atomicVariable)); (* Is this needed? Probably. *)
       x.vstack.newdest(x.vstack.op(operand));        (* Is this needed? *)
       x.vstack.newdest(x.vstack.op(newValue));       (* Is this needed? *)
