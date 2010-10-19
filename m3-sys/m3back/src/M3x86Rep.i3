@@ -141,7 +141,7 @@ CONST RegistersForByteOperations = RegSet{EAX, EBX, ECX, EDX};
 
 PROCEDURE TypeIsUnsigned (t: Type): BOOLEAN;
 PROCEDURE TypeIsSigned (t: Type): BOOLEAN;
-PROCEDURE TypeIsDoubleInt (t: Type): BOOLEAN;
+PROCEDURE TypeIs64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
 PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPart OF TIntN.T): OperandSize;
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize;
