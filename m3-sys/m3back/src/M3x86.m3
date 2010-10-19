@@ -4334,8 +4334,7 @@ PROCEDURE store_ordered (x: U; type_multiple_of_32: ZType; type: MType; <*UNUSED
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     IF TypeIsDoubleInt(type) THEN
-      (* see:
-       * http://niallryan.com/node/137
+      (* see: http://niallryan.com/node/137
        * see fetch_and_op
        *)
 
@@ -4390,9 +4389,7 @@ PROCEDURE load_ordered (x: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*
 
     IF TypeIsDoubleInt(type) THEN
 
-      (* see:
-       * http://niallryan.com/node/137
-       *)
+      (* see: http://niallryan.com/node/137 *)
 
       x.vstack.pushimmT(TZero, Type.Word64);
       x.vstack.pushimmT(TZero, Type.Word64);
