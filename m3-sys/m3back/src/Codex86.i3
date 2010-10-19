@@ -63,8 +63,8 @@ TYPE Public = OBJECT
         popOp (READONLY dest: Operand);
         incOp (READONLY op: Operand);
         decOp (READONLY op: Operand);
-        interlockedBitTestAndSetOp (READONLY bits, index: Operand); (* we don't care about test -- set_singleton *)
-        interlockedBitTestOp (READONLY bits, index: Operand); (* set_member *)
+        bitTestAndSetOp (READONLY bits, index: Operand); (* we don't care about test -- set_singleton *)
+        bitTestOp (READONLY bits, index: Operand); (* set_member *)
         unOp (op: Op; READONLY dest: Operand);
         mulOp (READONLY src: Operand);
         imulOp (READONLY dest, src: Operand);
