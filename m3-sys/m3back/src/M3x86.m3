@@ -4540,7 +4540,6 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oXADD, Op.oXADD, Op.oOR, Op.oAND, Op.oXOR };
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 CONST AtomicAddSub = SET OF AtomicOp { AtomicOp.Add, AtomicOp.Sub };
-CONST AtomicAddSubXor = SET OF AtomicOp { AtomicOp.Add, AtomicOp.Sub, AtomicOp.Xor };
 
 PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_multiple_of_32: ZType;
                         <*UNUSED*>order: MemoryOrder) =
@@ -4556,7 +4555,7 @@ Some operations can be done better though.
 *)
   VAR retry: Label;
       is64 := TypeIs64(type);
-      withoutCompareExchangeLoop := (NOT is64) AND atomic_op IN AtomicAddSubXor;
+      addSub := (NOT is64) AND atomic_op IN AtomicAddSub;
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("fetch_and_op");
@@ -4570,7 +4569,7 @@ Some operations can be done better though.
 
     x.vstack.unlock();
 
-    IF withoutCompareExchangeLoop THEN
+    IF addSub THEN
       x.vstack.pushnew(type, Force.anyreg); (* any? *)
       x.vstack.pushnew(type, Force.anyreg); (* any? *)
     ELSIF is64 THEN
@@ -4604,15 +4603,13 @@ retry:
       (* x.vstack.find(atomicVariable, Force.any); bug *)
       x.vstack.find(atomicVariable, Force.anyreg);
       
-      IF withoutCompareExchangeLoop THEN
+      IF addSub THEN
         IF atomic_op = AtomicOp.Sub THEN
           x.vstack.doneg(operand);
         END;
         x.cg.write_lock_prefix();
         x.cg.binOp(AtomicOpToOp[atomic_op], x.vstack.op(newValue), x.vstack.op(operand));
-        IF atomic_op IN AtomicAddSub THEN
-          x.vstack.doneg(operand);
-        END;
+        x.vstack.doneg(operand);
         x.cg.binOp(AtomicOpToOp[atomic_op], x.vstack.op(oldValue), x.vstack.op(operand));
       ELSE
         x.cg.load_ind(EAX, x.vstack.op(atomicVariable), 0, type);
