@@ -64,6 +64,16 @@
 #include "m3gty43.h"
 #include <limits.h>
 
+typedef char* PSTR;
+typedef const char* PCSTR;
+typedef unsigned char UCHAR;
+typedef unsigned int UINT;
+typedef unsigned long ULONG;
+typedef unsigned HOST_WIDE_INT UWIDE;
+typedef HOST_WIDE_INT WIDE;
+#define WIDE_PRINT_HEX HOST_WIDE_INT_PRINT_HEX
+#define WIDE_PRINT_DEC HOST_WIDE_INT_PRINT_DEC
+
 #ifndef TARGET_MACHO
 #define TARGET_MACHO 0
 #endif
@@ -85,12 +95,6 @@ static bool M3_TYPES_SEGMENT = false;
 static bool M3_TYPES_REPLAY = true;
 static bool M3_TYPES_CHECK_RECORD_SIZE = true;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
-
-typedef const char* PCSTR;
-typedef unsigned char UCHAR;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef unsigned HOST_WIDE_INT UWIDE;
 
 #if GCC45
 
@@ -146,16 +150,16 @@ int arm_float_words_big_endian (void);
 */
 
 static void
-m3_append_char (char c, char** p, char* limit)
+m3_append_char (char c, PSTR* p, PSTR limit)
 {
-  char* q = *p;
+  PSTR q = *p;
   if (q >= limit)
     fatal_error ("buffer overflow\n");
   *q = c;
   *p = (q + 1);
 }
 
-static void m3_revstr (char* a, size_t len)
+static void m3_revstr (PSTR a, size_t len)
 {
   size_t i = { 0 };
   if (len < 2)
@@ -172,7 +176,7 @@ static void m3_revstr (char* a, size_t len)
 }
 
 #if 0 /* for illustrative purposes */
-static void m3_unsigned_wide_to_hex_full (UWIDE a, char* buf)
+static void m3_unsigned_wide_to_hex_full (UWIDE a, PSTR buf)
 {
    UINT i = { 0 };
    for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
@@ -183,7 +187,7 @@ static void m3_unsigned_wide_to_hex_full (UWIDE a, char* buf)
 #endif
 
 #if 0 /* for illustrative purposes */
-static void m3_unsigned_wide_to_hex_shortest (UWIDE a, char* buf)
+static void m3_unsigned_wide_to_hex_shortest (UWIDE a, PSTR buf)
 {
    UINT i = { 0 };
    do /* do/while necessary to handle 0 */
@@ -194,7 +198,7 @@ static void m3_unsigned_wide_to_hex_shortest (UWIDE a, char* buf)
 }
 #endif
 
-static void m3_unsigned_wide_to_dec_shortest (UWIDE a, char* buf)
+static void m3_unsigned_wide_to_dec_shortest (UWIDE a, PSTR buf)
 {
    UINT i = { 0 };
    do /* do/while necessary to handle 0 */
@@ -204,7 +208,7 @@ static void m3_unsigned_wide_to_dec_shortest (UWIDE a, char* buf)
    buf[i] = 0;
 }
 
-static void m3_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
+static void m3_signed_wide_to_hex_shortest (WIDE a, PSTR buf)
 /* if negative, first character must be >=8
  * if positive, first character must < 8;
  * skip leading characters otherwise
@@ -235,7 +239,7 @@ static void m3_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
 }
 
 static void
-m3_fill_hex_value (HOST_WIDE_INT value, char** p, char* limit)
+m3_fill_hex_value (WIDE value, PSTR* p, PSTR limit)
 {
   m3_append_char('0', p, limit);
   m3_append_char('x', p, limit);
@@ -547,7 +551,7 @@ set_typeid_to_tree (ULONG typeid, tree t)
 #define TYPEID(x) ULONG x = M3_UNUSED (x, get_typeid (#x))
 
 static void
-fmt_uid (ULONG x, char *buf)
+fmt_uid (ULONG x, PSTR buf)
 {
   UINT i = UID_SIZE;
   static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -946,7 +950,7 @@ m3_build_type_id (m3_type type,
 }
 
 static tree
-m3_build_type (m3_type type, HOST_WIDE_INT size, HOST_WIDE_INT align)
+m3_build_type (m3_type type, WIDE size, WIDE align)
 {
   return m3_build_type_id (type, size, align, NO_UID);
 }
@@ -1012,7 +1016,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree type)
 
   if ((n == 1) && (i < HOST_BITS_PER_WIDE_INT))
     {
-      tree bit = build_int_cstu (type, (((HOST_WIDE_INT)1) << i));
+      tree bit = build_int_cstu (type, (((WIDE)1) << i));
       tree nbit = m3_build1 (BIT_NOT_EXPR, type, bit);
       if (host_integerp (y, 0))
         {
@@ -1037,7 +1041,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree type)
       tree saved_bits, new_bits;
       if (i + n < HOST_BITS_PER_WIDE_INT)
         {
-          HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
+          WIDE mask = ((WIDE)1 << n) - 1;
           saved_bits = m3_build1 (BIT_NOT_EXPR, type,
                                   build_int_cstu (type, mask << i));
           if (host_integerp (y, 0))
@@ -1053,7 +1057,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree type)
         }
       else if (n < HOST_BITS_PER_WIDE_INT)
         {
-          HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
+          WIDE mask = ((WIDE)1 << n) - 1;
           tree a = build_int_cstu (type, mask);
           if (host_integerp (y, 0))
             {
@@ -1858,7 +1862,7 @@ get_bytes_direct (size_t count)
 #endif
 }
 
-#define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, get_int ()))
+#define INTEGER(x) WIDE x = M3_UNUSED (x, m3_trace_int (#x, get_int ()))
 
 static PCSTR
 m3_get_var_trace_name (tree var)
@@ -1882,14 +1886,14 @@ m3_trace_name (PCSTR* inout_name)
   return ":";
 }
 
-static char*
-m3_trace_upper_hex (char* format)
+static PSTR
+m3_trace_upper_hex (PSTR format)
 /* This function adjusts a format string, changing lowercase 'x' to
    uppercase 'X'. The first character in the string serves as an indicator
    as to if the conversion has been done. It is 'x' for not yet done and
    ' ' for done. */
 {
-  char* a = format;
+  PSTR a = format;
   if (a[0] == 'x')
   {
     a[0] = ' ';
@@ -1903,8 +1907,8 @@ m3_trace_upper_hex (char* format)
   return format;
 }
 
-static HOST_WIDE_INT
-m3_trace_int (PCSTR name, HOST_WIDE_INT val)
+static WIDE
+m3_trace_int (PCSTR name, WIDE val)
 /* This function prints an integer, taking a little pain for readability.
    Single digit integers are printed only in decimal.
    Larger integers are printed in hex and decimal, like:
@@ -1913,31 +1917,31 @@ m3_trace_int (PCSTR name, HOST_WIDE_INT val)
   if (name && option_trace_all)
   {
     PCSTR colon = m3_trace_name (&name);
-    static char hex[] = "x%s%s"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
+    static char hex[] = "x%s%s"WIDE_PRINT_HEX"("WIDE_PRINT_DEC")";
     if (val >= -9 && val <= 9)
-      fprintf (stderr, " %s%s"HOST_WIDE_INT_PRINT_DEC, name, colon, val);
+      fprintf (stderr, " %s%s"WIDE_PRINT_DEC, name, colon, val);
     else
       fprintf (stderr, m3_trace_upper_hex (hex), name, colon, val, val);
   }
   return val;
 }
 
-static HOST_WIDE_INT
+static WIDE
 get_int (void)
 /* This function reads an integer from our specially encoded format. */
 {
   UINT n_bytes = { 0 };
   int sign = { 0 };
   UINT shift = { 0 };
-  HOST_WIDE_INT val = { 0 };
+  WIDE val = { 0 };
   UINT i = get_byte ();
 
-  gcc_assert (sizeof(HOST_WIDE_INT) >= 8);
+  gcc_assert (sizeof(WIDE) >= 8);
 
   switch (i)
   {
-  case M3CG_Int1:   return (HOST_WIDE_INT) get_byte ();
-  case M3CG_NInt1:  return - (HOST_WIDE_INT) get_byte ();    
+  case M3CG_Int1:   return (WIDE) get_byte ();
+  case M3CG_NInt1:  return - (WIDE) get_byte ();    
   case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
   case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
   case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
@@ -1948,7 +1952,7 @@ get_int (void)
   }
 
   for (i = 0; i < n_bytes;  (++i), (shift += 8))
-    val |= (((HOST_WIDE_INT)get_byte ()) << shift);
+    val |= (((WIDE)get_byte ()) << shift);
   return sign * val;
 }
 
@@ -2070,7 +2074,7 @@ scan_sign (void)
 #define BIAS(x)      INTEGER (x)
 #define BITOFFSET(x) INTEGER (x)
 
-#define BYTESIZE(x)  HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, BITS_PER_UNIT * get_int ()))
+#define BYTESIZE(x)  WIDE x = M3_UNUSED (x, m3_trace_int (#x, BITS_PER_UNIT * get_int ()))
 #define ALIGNMENT(x) BYTESIZE(x)
 #define BYTEOFFSET(x) BYTESIZE(x)
 
@@ -2303,7 +2307,7 @@ typedef struct _m3buf_t {
 } m3buf_t;
 
 static m3buf_t current_dbg_type_tag_buf;
-static char* current_dbg_type_tag = current_dbg_type_tag_buf.buf;
+static PSTR current_dbg_type_tag = current_dbg_type_tag_buf.buf;
 static ULONG current_record_type_id = NO_UID;
 static ULONG current_object_type_id = NO_UID;
 static ULONG current_proc_type_id = NO_UID; /* not right yet */
@@ -2443,13 +2447,13 @@ static PCSTR exported_interfaces_names [100];
 
 /*================================= SUPPORT FOR INITIALIZED DATA CREATION ===*/
 
-static HOST_WIDE_INT current_record_offset;
+static WIDE current_record_offset;
 
-static void one_gap (HOST_WIDE_INT offset);
+static void one_gap (WIDE offset);
 
 static void
-one_field (HOST_WIDE_INT offset,
-           HOST_WIDE_INT size,
+one_field (WIDE offset,
+           WIDE size,
            tree type,
            tree *out_f,
            tree *out_v)
@@ -2488,12 +2492,12 @@ one_field (HOST_WIDE_INT offset,
 }
 
 static void
-one_gap (HOST_WIDE_INT next_offset)
+one_gap (WIDE next_offset)
 {
   tree f = { 0 };
   tree v = { 0 };
   tree type = { 0 };
-  HOST_WIDE_INT size = next_offset - current_record_offset;
+  WIDE size = next_offset - current_record_offset;
 
   if (size <= 0)
     return;
@@ -2510,16 +2514,16 @@ one_gap (HOST_WIDE_INT next_offset)
 }
 
 static void
-m3_field (PCSTR name, size_t name_length, tree type, HOST_WIDE_INT offset,
-          HOST_WIDE_INT size, tree*, tree*);
+m3_field (PCSTR name, size_t name_length, tree type, WIDE offset,
+          WIDE size, tree*, tree*);
 
 static void
-m3_gap (HOST_WIDE_INT next_offset)
+m3_gap (WIDE next_offset)
 {
   tree f = { 0 };
   tree v = { 0 };
   tree type = { 0 };
-  HOST_WIDE_INT size = next_offset - current_record_offset;
+  WIDE size = next_offset - current_record_offset;
   char name[256];
 
   if (size <= 0 || !M3_TYPES)
@@ -2528,7 +2532,7 @@ m3_gap (HOST_WIDE_INT next_offset)
   if (option_trace_all)
     fprintf (stderr, "\n m3_gap: offset:0x%lx size:0x%lx\n", (long)current_record_offset, (long)size);
 
-  sprintf(name, "_m3gap_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC, current_record_offset, size);
+  sprintf(name, "_m3gap_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC, current_record_offset, size);
 
   type = make_node (RECORD_TYPE);
   TYPE_SIZE (type) = bitsize_int (size);
@@ -2541,8 +2545,8 @@ m3_gap (HOST_WIDE_INT next_offset)
 }
 
 static void
-m3_field (PCSTR name, size_t name_length, tree type, HOST_WIDE_INT offset,
-          HOST_WIDE_INT size, tree* out_f, tree* out_v)
+m3_field (PCSTR name, size_t name_length, tree type, WIDE offset,
+          WIDE size, tree* out_f, tree* out_v)
 {
   tree f = { 0 };
   tree v = { 0 };
@@ -2605,12 +2609,12 @@ static void add_stmt (tree t)
 static tree
 fix_name (PCSTR name, size_t length, ULONG typeid)
 {
-  char* buf = { 0 };
+  PSTR buf = { 0 };
 
   if (name == 0 || name[0] == '*')
   {
     static ULONG anonymous_counter;
-    buf = (char*)alloca (256);
+    buf = (PSTR)alloca (256);
     buf[0] = 'L';
     buf[1] = '_';
     m3_unsigned_wide_to_dec_shortest(++anonymous_counter, &buf[2]);
@@ -2619,18 +2623,18 @@ fix_name (PCSTR name, size_t length, ULONG typeid)
   }
   else if (typeid == 0 || !m3gdb)
   {
-    buf = (char*)name;
+    buf = (PSTR)name;
   }
   else if (typeid == NO_UID)
   {
-    buf = (char*)alloca (sizet_add(length, 1));
+    buf = (PSTR)alloca (sizet_add(length, 1));
     buf[0] = 'M';
     memcpy (&buf[1], name, length);
     length += 1;
   }
   else
   {
-    buf = (char*)alloca (sizet_add (length, UID_SIZE + 4));
+    buf = (PSTR)alloca (sizet_add (length, UID_SIZE + 4));
     buf[0] = 'M';  buf[1] = '3';  buf[2] = '_';
     fmt_uid (typeid, buf + 3);
     buf[3 + UID_SIZE] = '_';
@@ -3299,7 +3303,7 @@ m3cg_declare_typename (void)
 
   size_t fullname_length =
     sizet_add (current_unit_name_length, sizet_add (long_to_sizet (name_length), 1));
-  char* fullname = (char*)alloca (fullname_length);
+  PSTR fullname = (PSTR)alloca (fullname_length);
   gcc_assert (name_length > 0);
   memcpy(fullname, current_unit_name, current_unit_name_length);
   fullname[current_unit_name_length] = '.';
@@ -3329,7 +3333,7 @@ m3cg_declare_array (void)
   TYPEID  (elts_id);
   BITSIZE (size);
 
-  debug_tag ('A', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
+  debug_tag ('A', my_id, "_"WIDE_PRINT_DEC, size);
   debug_field_id (index_id);
   debug_field_id (elts_id);
   debug_struct ();
@@ -3372,7 +3376,7 @@ m3cg_declare_open_array (void)
     }
   }
 
-  debug_tag ('B', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
+  debug_tag ('B', my_id, "_"WIDE_PRINT_DEC, size);
   debug_field_id (elts_id);
   debug_struct ();
 }
@@ -3388,7 +3392,7 @@ m3cg_declare_enum (void)
 
   gcc_assert (signed_elts >= 0);
 
-  debug_tag ('C', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
+  debug_tag ('C', my_id, "_"WIDE_PRINT_DEC, size);
   current_dbg_type_count1 = n_elts;
   current_dbg_type_count2 = n_elts;
 
@@ -3477,7 +3481,7 @@ m3cg_declare_packed (void)
   TYPEID  (target_id);
 
   debug_field_id (target_id);
-  debug_tag ('D', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
+  debug_tag ('D', my_id, "_"WIDE_PRINT_DEC, size);
   debug_struct ();
 
 #if 1
@@ -3532,7 +3536,7 @@ m3cg_declare_record (void)
   INTEGER (n_fields);
 
   gcc_assert (n_fields >= 0);
-  debug_tag ('R', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
+  debug_tag ('R', my_id, "_"WIDE_PRINT_DEC, size);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = 0;
 
@@ -3575,7 +3579,7 @@ m3cg_declare_field (void)
     t = t ? t : m3_build_type_id (T_struct, size, size, NO_UID);
   }
   debug_field_fmt (my_id,
-                   "_"HOST_WIDE_INT_PRINT_DEC"_"HOST_WIDE_INT_PRINT_DEC"_%.*s",
+                   "_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC"_%.*s",
                    offset,
                    size,
                    long_to_printf_length (name_length),
@@ -3599,7 +3603,7 @@ m3cg_declare_set (void)
              my_id, domain_id, (long)size);
 
   gcc_assert (size >= 0);
-  debug_tag ('S', my_id, "_"HOST_WIDE_INT_PRINT_DEC, size);
+  debug_tag ('S', my_id, "_"WIDE_PRINT_DEC, size);
   debug_field_id (domain_id);
   debug_struct ();
 
@@ -3617,8 +3621,8 @@ m3cg_declare_subrange (void)
   BITSIZE (size);
 
   char buff [256]; /* plenty */
-  char *p = buff;
-  char *p_limit = p + sizeof(buff);
+  PSTR p = buff;
+  PSTR p_limit = p + sizeof(buff);
   
   /* You might think so, but no.
   see cm3/m3-ui/X11R4/src/Common/X.i3
@@ -3711,7 +3715,7 @@ m3cg_declare_proctype (void)
   CALLING_CONVENTION (cc);
 
   set_typeid_to_tree (my_id, t_addr);
-  debug_tag ('P', my_id, "_%d_%c"HOST_WIDE_INT_PRINT_DEC, GET_MODE_BITSIZE (Pmode),
+  debug_tag ('P', my_id, "_%d_%c"WIDE_PRINT_DEC, GET_MODE_BITSIZE (Pmode),
              n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
   current_dbg_type_count1 = n_formals;
   current_dbg_type_count2 = MAX (0, n_raises);
@@ -3770,7 +3774,7 @@ m3cg_declare_object (void)
   gcc_assert (field_size >= 0);
   gcc_assert (brand_length >= -1);
 
-  debug_tag ('O', my_id, "_%d_"HOST_WIDE_INT_PRINT_DEC"_%d_%d_%.*s",
+  debug_tag ('O', my_id, "_%d_"WIDE_PRINT_DEC"_%d_%d_%.*s",
              POINTER_SIZE, n_fields, traced, (brand ? 1:0),
              (brand ? brand_length : 0), (brand ? brand : ""));
   debug_field_id (super_id);
