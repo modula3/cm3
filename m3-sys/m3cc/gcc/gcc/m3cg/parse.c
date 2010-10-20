@@ -86,6 +86,12 @@ static bool M3_TYPES_REPLAY = true;
 static bool M3_TYPES_CHECK_RECORD_SIZE = true;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
 
+typedef const char* PCSTR;
+typedef unsigned char UCHAR;
+typedef unsigned int UINT;
+typedef unsigned long ULONG;
+typedef unsigned HOST_WIDE_INT UWIDE;
+
 #if GCC45
 
 /* error: attempt to use poisoned "USE_MAPPED_LOCATION" */
@@ -166,9 +172,9 @@ static void m3_revstr (char* a, size_t len)
 }
 
 #if 0 /* for illustrative purposes */
-static void m3_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
+static void m3_unsigned_wide_to_hex_full (UWIDE a, char* buf)
 {
-   unsigned i = { 0 };
+   UINT i = { 0 };
    for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
       buf[i++] = "0123456789ABCDEF"[a & 0xF];
    m3_revstr (buf, i);
@@ -177,9 +183,9 @@ static void m3_unsigned_wide_to_hex_full (unsigned HOST_WIDE_INT a, char* buf)
 #endif
 
 #if 0 /* for illustrative purposes */
-static void m3_unsigned_wide_to_hex_shortest (unsigned HOST_WIDE_INT a, char* buf)
+static void m3_unsigned_wide_to_hex_shortest (UWIDE a, char* buf)
 {
-   unsigned i = { 0 };
+   UINT i = { 0 };
    do /* do/while necessary to handle 0 */
       buf[i++] = "0123456789ABCDEF"[a & 0xF];
    while (a >>= 4);
@@ -188,9 +194,9 @@ static void m3_unsigned_wide_to_hex_shortest (unsigned HOST_WIDE_INT a, char* bu
 }
 #endif
 
-static void m3_unsigned_wide_to_dec_shortest (unsigned HOST_WIDE_INT a, char* buf)
+static void m3_unsigned_wide_to_dec_shortest (UWIDE a, char* buf)
 {
-   unsigned i = { 0 };
+   UINT i = { 0 };
    do /* do/while necessary to handle 0 */
       buf[i++] = "0123456789"[a % 10];
    while (a /= 10);
@@ -217,8 +223,8 @@ static void m3_signed_wide_to_hex_shortest (HOST_WIDE_INT a, char* buf)
  * Result must be at least one character.
  */
 {
-   unsigned i = { 0 };
-   unsigned neg = (a < 0);
+   UINT i = { 0 };
+   UINT neg = (a < 0);
    char trim = (neg ? 'F' : '0');
    for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
       buf[i++] = "0123456789ABCDEF"[a & 0xF];
@@ -308,7 +314,7 @@ static GTY (()) tree t_int;
 #define t_void void_type_node
 static GTY (()) tree t_set;
 
-static const struct { unsigned long typeid; tree* t; } builtin_uids[] = {
+static const struct { ULONG typeid; tree* t; } builtin_uids[] = {
   { UID_INTEGER, &t_int },
   { UID_LONGINT, &t_longint },
   { UID_WORD, &t_word },
@@ -340,7 +346,7 @@ static const struct { unsigned long typeid; tree* t; } builtin_uids[] = {
 
 #define STRING_AND_LENGTH(a) (a), sizeof(a) - 1
 
-static const struct { tree* t; char name[8]; unsigned char length; } builtin_types[] = {
+static const struct { tree* t; char name[8]; UCHAR length; } builtin_types[] = {
   { &t_int_8, STRING_AND_LENGTH ("int_8") },
   { &t_int_16, STRING_AND_LENGTH ("int_16") },
   { &t_int_32, STRING_AND_LENGTH ("int_32") },
@@ -370,8 +376,8 @@ static GTY(()) VEC(m3type_t, gc) *m3type_table; /* see alias.c for a GTY+VEC exa
 static int
 m3type_compare (const void* a, const void *b)
 {
-  unsigned long x = ((const m3type_t*)a)->typeid;
-  unsigned long y = ((const m3type_t*)b)->typeid;
+  ULONG x = ((const m3type_t*)a)->typeid;
+  ULONG y = ((const m3type_t*)b)->typeid;
   /* Do not use subtraction here. It does not work. Not just
    * because sizeof(int) < sizeof(long) but also because
    * these are unsigned numbers.
@@ -380,7 +386,7 @@ m3type_compare (const void* a, const void *b)
 }
 
 static m3type_t*
-m3type_get (unsigned long typeid)
+m3type_get (ULONG typeid)
 {
   m3type_t* found = { 0 };
   if (M3_TYPES)
@@ -412,7 +418,7 @@ m3type_get (unsigned long typeid)
 }
 
 static tree
-get_typeid_to_tree (unsigned long typeid)
+get_typeid_to_tree (ULONG typeid)
 {
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
@@ -438,7 +444,7 @@ get_typeid_to_tree (unsigned long typeid)
 
 static int m3_indent;
 
-static const char* m3_indentstr(void)
+static PCSTR m3_indentstr(void)
 /* This function returns a string of spaces for the current tracing indent
    level. */
 {
@@ -495,7 +501,7 @@ static size_t long_to_sizet (long a)
 }
 
 static void
-set_typeid_to_tree_replace (unsigned long typeid, tree t, bool replace)
+set_typeid_to_tree_replace (ULONG typeid, tree t, bool replace)
 /* This function establishes a global mapping of typeid to tree.
    If a mapping already exists, the 'replace' parameter determines
    if it is left alone or replaced. */
@@ -531,19 +537,19 @@ set_typeid_to_tree_replace (unsigned long typeid, tree t, bool replace)
 }
 
 static void
-set_typeid_to_tree (unsigned long typeid, tree t)
+set_typeid_to_tree (ULONG typeid, tree t)
 /* This function establishes a global mapping of typeid to tree.
    If a mapping from this typeid already exists, it is left unchanged. */
 {
   set_typeid_to_tree_replace (typeid, t, false);
 }
 
-#define TYPEID(x) unsigned long x = M3_UNUSED (x, get_typeid (#x))
+#define TYPEID(x) ULONG x = M3_UNUSED (x, get_typeid (#x))
 
 static void
-fmt_uid (unsigned long x, char *buf)
+fmt_uid (ULONG x, char *buf)
 {
-  unsigned i = UID_SIZE;
+  UINT i = UID_SIZE;
   static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
   gcc_assert (sizeof(alphabet) == 63);
@@ -614,7 +620,7 @@ m3_type;
 
 #define boolstr(a) ((a) ? "true" : "false")
 
-static const char* typestr (unsigned a)
+static PCSTR typestr (UINT a)
 {
     static const char typestrs[][9] =
     { "word8",      "int8",     "word16",   "int16",
@@ -681,14 +687,14 @@ static tree m3_current_scope (void)
 #if !GCC45
 static bool m3_mark_addressable (tree exp);
 #endif
-static tree m3_type_for_size (unsigned precision, int unsignedp);
+static tree m3_type_for_size (UINT precision, int unsignedp);
 static tree m3_type_for_mode (enum machine_mode, int unsignedp);
 static tree m3_unsigned_type (tree type_node);
 static tree m3_signed_type (tree type_node);
 static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
-static unsigned int m3_init_options (unsigned int argc, const char **argv);
-static int m3_handle_option (size_t scode, const char *arg, int value);
-static bool m3_post_options (const char **);
+static UINT m3_init_options (UINT argc, PCSTR* argv);
+static int m3_handle_option (size_t scode, PCSTR arg, int value);
+static bool m3_post_options (PCSTR*);
 static bool m3_init (void);
 static void m3_parse_file (int);
 static alias_set_type m3_get_alias_set (tree);
@@ -702,7 +708,7 @@ static bool m3_next_store_volatile;
 static tree pushdecl (tree decl);
 
 /* Langhooks.  */
-static tree builtin_function (const char *name,
+static tree builtin_function (PCSTR name,
                               tree type,
                               enum built_in_function function_code,
                               enum built_in_class clas);
@@ -783,7 +789,7 @@ const enum tree_code_class tree_code_type[] = {
 
 #define DEFTREECODE(SYM, NAME, TYPE, LENGTH) LENGTH,
 
-const unsigned char tree_code_length[] = {
+const UCHAR tree_code_length[] = {
 #include "tree.def"
   0
 };
@@ -791,7 +797,7 @@ const unsigned char tree_code_length[] = {
 
 #define DEFTREECODE(SYM, NAME, TYPE, LEN) NAME,
 
-const char *const tree_code_name[] = {
+PCSTR const tree_code_name[] = {
 #include "tree.def"
   "@@dummy"
 };
@@ -839,9 +845,9 @@ m3_build_pointer_type (tree a)
 
 static tree
 m3_build_type_id (m3_type type,
-                  unsigned HOST_WIDE_INT size,
-                  unsigned HOST_WIDE_INT align,
-                  unsigned long typeid)
+                  UWIDE size,
+                  UWIDE align,
+                  ULONG typeid)
 {
   tree ts = { 0 };
 
@@ -1170,7 +1176,7 @@ m3_mark_addressable (tree x)
    it is a signed type.  */
 
 static tree
-m3_type_for_size (unsigned bits, int unsignedp)
+m3_type_for_size (UINT bits, int unsignedp)
 {
   if (bits <= TYPE_PRECISION (t_int_8))
     return unsignedp ? t_word_8  : t_int_8;
@@ -1344,7 +1350,7 @@ htab_eq_builtin (const PTR p1, const PTR p2)
 }
 
 static tree
-builtin_function (const char *name,
+builtin_function (PCSTR name,
                   tree type,
                   enum built_in_function function_code,
                   enum built_in_class clas)
@@ -1382,7 +1388,7 @@ m3_write_globals (void)
   for (ctors = pending_inits; ctors; ctors = TREE_CHAIN (ctors))
   {
     VEC (constructor_elt, gc) *elts = CONSTRUCTOR_ELTS (TREE_VALUE (ctors));
-    unsigned HOST_WIDE_INT idx;
+    UWIDE idx;
     tree index, value;
 
     FOR_EACH_CONSTRUCTOR_ELT (elts, idx, index, value)
@@ -1427,7 +1433,7 @@ m3_write_globals (void)
 }
 
 static void
-sync_builtin (enum built_in_function fncode, tree type, const char *name)
+sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
 {
   tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL);
   TREE_NOTHROW (decl) = true;
@@ -1437,7 +1443,7 @@ sync_builtin (enum built_in_function fncode, tree type, const char *name)
 #if 0 /* future */
 
 static tree
-m3_make_integer_type (unsigned size, unsigned align, unsigned signd)
+m3_make_integer_type (UINT size, UINT align, UINT signd)
 {
   tree type = { 0 };
 
@@ -1492,7 +1498,7 @@ m3_init_decl_processing (void)
 {
   tree t = { 0 };
   enum built_in_function ezero = (enum built_in_function)0;
-  unsigned i = { 0 };
+  UINT i = { 0 };
 
   current_function_decl = NULL;
 
@@ -1750,15 +1756,15 @@ static GTY (()) varray_type call_stack;
 
 /*=============================================================== PARSING ===*/
 
-static unsigned char* input_buffer;
-static unsigned char* m3_replay_buffer;
+static UCHAR* input_buffer;
+static UCHAR* m3_replay_buffer;
 static size_t input_len;
 static size_t input_cursor;
 static size_t m3_preceding_cursor;
 static size_t m3_replay_cursor;
-static unsigned m3_replay_pass;
+static UINT m3_replay_pass;
 static bool input_eof;
-static unsigned m3cg_lineno = 1;
+static UINT m3cg_lineno = 1;
 
 /* Opcode functions should set m3_replay if, due to circular types,
  * they wish to be replayed again later, after finishing
@@ -1778,11 +1784,11 @@ m3_init_parse (void)
   VARRAY_TREE_INIT (call_stack, 100 * 2, "call_stack");
 }
 
-static void m3_read_entire_file (FILE* file, unsigned char** out_buffer,
+static void m3_read_entire_file (FILE* file, UCHAR** out_buffer,
                                  size_t* out_size)
 {
   size_t buffer_size = { 0 };
-  unsigned char* buffer = { 0 };
+  UCHAR* buffer = { 0 };
   size_t bytes_read = { 0 };
   size_t total_bytes_read = { 0 };
   size_t bytes_to_read = { 0 };
@@ -1790,7 +1796,7 @@ static void m3_read_entire_file (FILE* file, unsigned char** out_buffer,
   while (bytes_read == bytes_to_read)
   {
     buffer_size += buffer_size ? buffer_size : 0x10000;
-    buffer = (unsigned char*)xrealloc (buffer, buffer_size);
+    buffer = (UCHAR*)xrealloc (buffer, buffer_size);
     bytes_to_read = (buffer_size - total_bytes_read);
     bytes_read = fread (buffer + total_bytes_read,
                         1,
@@ -1799,7 +1805,7 @@ static void m3_read_entire_file (FILE* file, unsigned char** out_buffer,
     total_bytes_read += bytes_read;
   }
   /* shrink it down (or up by 1) and add terminal nul */
-  buffer = (unsigned char*)xrealloc (buffer, total_bytes_read + 1);
+  buffer = (UCHAR*)xrealloc (buffer, total_bytes_read + 1);
   buffer[total_bytes_read] = 0;
   *out_buffer = buffer;
   *out_size = total_bytes_read;
@@ -1812,7 +1818,7 @@ m3_init_lex (void)
   input_eof = (input_len <= 0);
 }
 
-static unsigned char
+static UCHAR
 get_byte (void)
 {
   if (input_cursor >= input_len)
@@ -1823,17 +1829,17 @@ get_byte (void)
   return input_buffer[input_cursor++];
 }
 
-static unsigned char*
+static UCHAR*
 get_bytes_direct (size_t count)
 {
 #if 0 /* hack */
-  unsigned char* result = (unsigned char*)xmalloc(count + 1);
+  UCHAR* result = (UCHAR*)xmalloc(count + 1);
   if ((input_cursor + count) > input_len)
   {
     fatal_error ("read past buffer input_cursor:%lu count:%lu input_len:%lu\n",
-                 (unsigned long)input_cursor,
-                 (unsigned long)count,
-                 (unsigned long)input_len);
+                 (ULONG)input_cursor,
+                 (ULONG)count,
+                 (ULONG)input_len);
   }
   result[count] = 0;
   memcpy(result, &input_buffer[input_cursor], count);
@@ -1843,9 +1849,9 @@ get_bytes_direct (size_t count)
   if ((input_cursor + count) > input_len)
   {
     fatal_error ("read past buffer input_cursor:%lu count:%lu input_len:%lu\n",
-                 (unsigned long)input_cursor,
-                 (unsigned long)count,
-                 (unsigned long)input_len);
+                 (ULONG)input_cursor,
+                 (ULONG)count,
+                 (ULONG)input_len);
   }
   input_cursor += count;
   return &input_buffer[input_cursor - count];
@@ -1854,7 +1860,7 @@ get_bytes_direct (size_t count)
 
 #define INTEGER(x) HOST_WIDE_INT x = M3_UNUSED (x, m3_trace_int (#x, get_int ()))
 
-static const char*
+static PCSTR
 m3_get_var_trace_name (tree var)
 {
   if (var && DECL_NAME (var))
@@ -1862,12 +1868,12 @@ m3_get_var_trace_name (tree var)
   return "noname";
 }
 
-static const char*
-m3_trace_name (const char** inout_name)
+static PCSTR
+m3_trace_name (PCSTR* inout_name)
 /* if name is single character, change to empty and return
    empty string delineate it; else return colon to delineate */
 {
-  const char* name = *inout_name;
+  PCSTR name = *inout_name;
   if (!name[0] || !name[1]) /* don't print single character names */
   {
     *inout_name = "";
@@ -1898,7 +1904,7 @@ m3_trace_upper_hex (char* format)
 }
 
 static HOST_WIDE_INT
-m3_trace_int (const char* name, HOST_WIDE_INT val)
+m3_trace_int (PCSTR name, HOST_WIDE_INT val)
 /* This function prints an integer, taking a little pain for readability.
    Single digit integers are printed only in decimal.
    Larger integers are printed in hex and decimal, like:
@@ -1906,7 +1912,7 @@ m3_trace_int (const char* name, HOST_WIDE_INT val)
 {
   if (name && option_trace_all)
   {
-    const char* colon = m3_trace_name (&name);
+    PCSTR colon = m3_trace_name (&name);
     static char hex[] = "x%s%s"HOST_WIDE_INT_PRINT_HEX"("HOST_WIDE_INT_PRINT_DEC")";
     if (val >= -9 && val <= 9)
       fprintf (stderr, " %s%s"HOST_WIDE_INT_PRINT_DEC, name, colon, val);
@@ -1920,11 +1926,11 @@ static HOST_WIDE_INT
 get_int (void)
 /* This function reads an integer from our specially encoded format. */
 {
-  unsigned n_bytes = { 0 };
+  UINT n_bytes = { 0 };
   int sign = { 0 };
-  unsigned shift = { 0 };
+  UINT shift = { 0 };
   HOST_WIDE_INT val = { 0 };
-  unsigned i = get_byte ();
+  UINT i = get_byte ();
 
   gcc_assert (sizeof(HOST_WIDE_INT) >= 8);
 
@@ -1946,15 +1952,15 @@ get_int (void)
   return sign * val;
 }
 
-static unsigned long
-get_typeid (const char* name)
+static ULONG
+get_typeid (PCSTR name)
 /* This function reads and traces a typeid in specially encoded format.
    Typeids simply 32bit unsigned integers. */
 {
-  unsigned long val = (0xFFFFFFFFUL & (unsigned long) get_int ());
+  ULONG val = (0xFFFFFFFFUL & (ULONG) get_int ());
   if (name && option_trace_all)
   {
-    const char* colon = m3_trace_name (&name);
+    PCSTR colon = m3_trace_name (&name);
     fprintf (stderr, " %s%s0x%lX", name, colon, val);
   }
   return val;
@@ -1964,18 +1970,18 @@ get_typeid (const char* name)
 
 #define STRING(x, length) \
   long length = get_int (); \
-  const char *x = M3_UNUSED (x, scan_string (#x, length))
+  PCSTR x = M3_UNUSED (x, scan_string (#x, length))
 
-static const char *
-scan_string (const char* name, long length)
+static PCSTR
+scan_string (PCSTR name, long length)
 /* NOTE: these are not null terminated */
 {
-  const char* result = { 0 };
+  PCSTR result = { 0 };
   if (length > 0)
-    result = (const char*)get_bytes_direct (long_to_sizet (length));
+    result = (PCSTR)get_bytes_direct (long_to_sizet (length));
   if (name && option_trace_all)
   {
-    const char* colon = m3_trace_name (&name);
+    PCSTR colon = m3_trace_name (&name);
     fprintf (stderr, " %s%s%.*s", name, colon,
              result ? long_to_printf_length (length) : 4,
              result ? result : "null");
@@ -1990,7 +1996,7 @@ scan_string (const char* name, long length)
 static tree
 scan_calling_convention (void)
 {
-  unsigned HOST_WIDE_INT id = get_int ();
+  UWIDE id = get_int ();
   static tree stdcall;
 
   switch (id)
@@ -2010,16 +2016,16 @@ scan_calling_convention (void)
 #define TYPE(x) m3_type x = M3_UNUSED (x, scan_type (#x))
 
 static m3_type
-scan_type (const char* name)
+scan_type (PCSTR name)
 {
-  unsigned HOST_WIDE_INT i = get_int ();
+  UWIDE i = get_int ();
 
   if (i >= T_LAST)
-    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %u", (unsigned long)i, m3cg_lineno);
+    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %u", (ULONG)i, m3cg_lineno);
 
   if (option_trace_all)
   {
-    const char* colon = m3_trace_name (&name);
+    PCSTR colon = m3_trace_name (&name);
     fprintf (stderr, " %s%s%s", name, colon, typestr (i));
   }
 
@@ -2030,7 +2036,7 @@ scan_type (const char* name)
 #define MTYPE2(x, y) m3_type y; tree x = M3_UNUSED (x, scan_mtype (#x, &y))
 
 static tree
-scan_mtype (const char* name, m3_type* T)
+scan_mtype (PCSTR name, m3_type* T)
 {
   m3_type TT = scan_type (name);
   if (T)
@@ -2045,7 +2051,7 @@ scan_mtype (const char* name, m3_type* T)
 static void
 scan_sign (void)
 {
-  unsigned HOST_WIDE_INT x = get_int ();
+  UWIDE x = get_int ();
   switch (x)
   {
   case 0: break; /* positive */
@@ -2081,26 +2087,26 @@ static int IsHostBigEndian (void)
     return (u.c[0] == 0);
 }
 
-#define FLOAT(x, fkind)  unsigned fkind;  tree x = scan_float (&fkind)
+#define FLOAT(x, fkind)  UINT fkind;  tree x = scan_float (&fkind)
 
 static tree
-scan_float (unsigned *out_Kind)
+scan_float (UINT *out_Kind)
 {
   /* real_from_target_fmt wants floats stored in an array of longs, 32 bits
      per long, even if long can hold more.  So for example a 64 bit double on
      a system with 64 bit long will have 32 bits of zeros in the middle. */
   long Longs[2] = { 0, 0 };
-  unsigned char * const Bytes = (unsigned char*) &Longs;
-  unsigned i = { 0 };
-  unsigned Kind = { 0 };
+  UCHAR * const Bytes = (UCHAR*) &Longs;
+  UINT i = { 0 };
+  UINT Kind = { 0 };
   static const struct {
     tree* Tree;
-    unsigned Size;
+    UINT Size;
     const struct real_format* format;
   } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8), &ieee_single_format },
               { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
               { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
-  unsigned Size = { 0 };
+  UINT Size = { 0 };
   REAL_VALUE_TYPE val;
 
   gcc_assert (sizeof(float) == 4);
@@ -2110,7 +2116,7 @@ scan_float (unsigned *out_Kind)
   gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
   gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
 
-  Kind = (unsigned) get_int ();
+  Kind = (UINT)get_int ();
   if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
       fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %u",
@@ -2126,7 +2132,7 @@ scan_float (unsigned *out_Kind)
      endianness */
   for (i = 0;  i < Size;  i++)
     {
-      Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int ());
+      Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR) (0xFF & get_int ());
     }
 
   /* When crossing and host/target different endian, swap the longs. */
@@ -2142,7 +2148,7 @@ scan_float (unsigned *out_Kind)
     {
       union
       {
-        unsigned char Bytes[sizeof(long double)]; /* currently double suffices */
+        UCHAR Bytes[sizeof(long double)]; /* currently double suffices */
         float Float;
         double Double;
         long double LongDouble; /* not currently used */
@@ -2178,7 +2184,7 @@ scan_float (unsigned *out_Kind)
 #define BOOLEAN(x) bool x = M3_UNUSED (x, scan_boolean (#x))
 
 static bool
-scan_boolean (const char* name)
+scan_boolean (PCSTR name)
 {
   bool val = (get_int () != 0);
   if (name && option_trace_all)
@@ -2212,7 +2218,7 @@ varray_extend (varray_type va, size_t n)
 }
 
 static tree
-scan_var (enum tree_code code, const char* name)
+scan_var (enum tree_code code, PCSTR name)
 {
   long i = get_int ();
   tree var = { 0 };
@@ -2226,7 +2232,7 @@ scan_var (enum tree_code code, const char* name)
                    (int)i, m3cg_lineno);
     if (name && option_trace_all)
     {
-      const char* colon = m3_trace_name (&name);
+      PCSTR colon = m3_trace_name (&name);
       fprintf (stderr, " %s%s%s", name, colon, m3_get_var_trace_name (var));
     }
   }
@@ -2298,17 +2304,16 @@ typedef struct _m3buf_t {
 
 static m3buf_t current_dbg_type_tag_buf;
 static char* current_dbg_type_tag = current_dbg_type_tag_buf.buf;
-static unsigned long current_record_type_id = NO_UID;
-static unsigned long current_object_type_id = NO_UID;
-static unsigned long current_proc_type_id = NO_UID; /* not right yet */
-static unsigned long current_record_size;
+static ULONG current_record_type_id = NO_UID;
+static ULONG current_object_type_id = NO_UID;
+static ULONG current_proc_type_id = NO_UID; /* not right yet */
+static ULONG current_record_size;
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
 
 static void
-format_tag_v (m3buf_t* buf, char kind, unsigned long typeid, const char* fmt,
-              va_list args)
+format_tag_v (m3buf_t* buf, char kind, ULONG typeid, PCSTR fmt, va_list args)
 {
   if (!m3gdb)
     return;
@@ -2327,7 +2332,7 @@ format_tag_v (m3buf_t* buf, char kind, unsigned long typeid, const char* fmt,
 }
 
 static void
-debug_tag (char kind, unsigned long typeid, const char* fmt, ...)
+debug_tag (char kind, ULONG typeid, PCSTR fmt, ...)
 {
   va_list args;
   if (!m3gdb)
@@ -2338,7 +2343,7 @@ debug_tag (char kind, unsigned long typeid, const char* fmt, ...)
 }
 
 static void
-debug_field_name_length (const char* name, size_t length)
+debug_field_name_length (PCSTR name, size_t length)
 {
   tree f = { 0 };
   if (!m3gdb)
@@ -2352,13 +2357,13 @@ debug_field_name_length (const char* name, size_t length)
 }
 
 static void
-debug_field_name (const char* name)
+debug_field_name (PCSTR name)
 {
   debug_field_name_length (name, strlen (name));
 }
 
 static void
-debug_field_id (unsigned long typeid)
+debug_field_id (ULONG typeid)
 {
   char buf [UID_SIZE];
   if (!m3gdb)
@@ -2368,7 +2373,7 @@ debug_field_id (unsigned long typeid)
 }
 
 static void
-debug_field_fmt_v (unsigned long typeid, const char* fmt, va_list args)
+debug_field_fmt_v (ULONG typeid, PCSTR fmt, va_list args)
 {
   char name [256];
 
@@ -2386,7 +2391,7 @@ debug_field_fmt_v (unsigned long typeid, const char* fmt, va_list args)
 }
 
 static void
-debug_field_fmt (unsigned long typeid, const char* fmt, ...)
+debug_field_fmt (ULONG typeid, PCSTR fmt, ...)
 {
   if (!m3gdb)
     return;
@@ -2429,12 +2434,12 @@ debug_struct (void)
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
 
-static const char* current_unit_name; /* not nul terminated */
+static PCSTR current_unit_name; /* not nul terminated */
 static size_t current_unit_name_length;
 
 /* the exported interfaces */
 static long exported_interfaces;
-static const char* exported_interfaces_names [100];
+static PCSTR exported_interfaces_names [100];
 
 /*================================= SUPPORT FOR INITIALIZED DATA CREATION ===*/
 
@@ -2505,7 +2510,7 @@ one_gap (HOST_WIDE_INT next_offset)
 }
 
 static void
-m3_field (const char* name, size_t name_length, tree type, HOST_WIDE_INT offset,
+m3_field (PCSTR name, size_t name_length, tree type, HOST_WIDE_INT offset,
           HOST_WIDE_INT size, tree*, tree*);
 
 static void
@@ -2536,7 +2541,7 @@ m3_gap (HOST_WIDE_INT next_offset)
 }
 
 static void
-m3_field (const char* name, size_t name_length, tree type, HOST_WIDE_INT offset,
+m3_field (PCSTR name, size_t name_length, tree type, HOST_WIDE_INT offset,
           HOST_WIDE_INT size, tree* out_f, tree* out_v)
 {
   tree f = { 0 };
@@ -2598,13 +2603,13 @@ static void add_stmt (tree t)
 }
 
 static tree
-fix_name (const char *name, size_t length, unsigned long typeid)
+fix_name (PCSTR name, size_t length, ULONG typeid)
 {
   char* buf = { 0 };
 
   if (name == 0 || name[0] == '*')
   {
-    static unsigned long anonymous_counter;
+    static ULONG anonymous_counter;
     buf = (char*)alloca (256);
     buf[0] = 'L';
     buf[1] = '_';
@@ -3037,9 +3042,9 @@ setop2 (tree p, int q)
 
 /*----------------------------------------------------------------------------*/
 
-static const char* mode_to_string (enum machine_mode mode)
+static PCSTR mode_to_string (enum machine_mode mode)
 {
-  const char* modestring = "";
+  PCSTR modestring = "";
 
   switch (mode)
   {
@@ -3107,7 +3112,7 @@ declare_fault_proc (void)
   if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
-    fprintf (stderr, " declare_fault_proc: type is 0x%x (%s)", (unsigned) mode, mode_to_string (mode));
+    fprintf (stderr, " declare_fault_proc: type is 0x%x (%s)", (UINT)mode, mode_to_string (mode));
   }
 
   fault_proc = proc;
@@ -3379,7 +3384,7 @@ m3cg_declare_enum (void)
   TYPEID  (my_id);
   INTEGER (signed_elts);
   BITSIZE (size);
-  unsigned HOST_WIDE_INT n_elts = (unsigned HOST_WIDE_INT)signed_elts;
+  UWIDE n_elts = (UWIDE)signed_elts;
 
   gcc_assert (signed_elts >= 0);
 
@@ -3389,10 +3394,10 @@ m3cg_declare_enum (void)
 
   if (M3_TYPES_ENUM && n_elts > 0)
   {
-    unsigned bits =   (n_elts <= (((unsigned HOST_WIDE_INT)1) << 8)) ? 8
-                    : (n_elts <= (((unsigned HOST_WIDE_INT)1) << 16)) ? 16
-                    : (n_elts <= (((unsigned HOST_WIDE_INT)1) << 32)) ? 32
-                    : 64;
+    UINT bits = (n_elts <= (((UWIDE)1) << 8)) ? 8
+              : (n_elts <= (((UWIDE)1) << 16)) ? 16
+              : (n_elts <= (((UWIDE)1) << 32)) ? 32
+              : 64;
     enumtype = make_node (ENUMERAL_TYPE);
     TYPE_USER_ALIGN (enumtype) = true;
     TYPE_UNSIGNED (enumtype) = true;
@@ -3497,8 +3502,8 @@ m3_declare_record_common (void)
     layout_type (type);
     if (current_record_type_id != NO_UID)
     {
-      unsigned HOST_WIDE_INT a = TREE_INT_CST_LOW (TYPE_SIZE (type));
-      unsigned HOST_WIDE_INT b = current_record_size;
+      UWIDE a = TREE_INT_CST_LOW (TYPE_SIZE (type));
+      UWIDE b = current_record_size;
       set_typeid_to_tree (current_record_type_id, type);
       if (M3_TYPES_CHECK_RECORD_SIZE && a != b)
       {
@@ -3642,8 +3647,7 @@ m3cg_declare_subrange (void)
 }
 
 static void
-m3_declare_pointer_common (const char* caller, unsigned long my_id,
-                           unsigned long target_id)
+m3_declare_pointer_common (PCSTR caller, ULONG my_id, ULONG target_id)
 {
   if (M3_TYPES)
   {
@@ -4142,7 +4146,7 @@ m3cg_declare_param (void)
   if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (var));
-    fprintf (stderr, " mode 0x%x (%s)", (unsigned) mode, mode_to_string (mode));
+    fprintf (stderr, " mode 0x%x (%s)", (UINT)mode, mode_to_string (mode));
   }
 
   if (DECL_MODE (var) == VOIDmode)
@@ -4595,7 +4599,7 @@ m3cg_set_label (void)
 
   if (barrier)
     {
-      unsigned i = { 0 };
+      UINT i = { 0 };
       rtx r = label_rtx (label);
       LABEL_PRESERVE_P (r) = true;
       FORCED_LABEL (label) = true;
@@ -6319,7 +6323,7 @@ static const OpProc ops[] = {
 
 static short m3_indent_op[COUNT_OF(ops)];
 
-static volatile unsigned m3_break_lineno; /* set in debugger */
+static volatile UINT m3_break_lineno; /* set in debugger */
 static void m3_breakpoint(void) /* set breakpoint in debugger */
 {
 #ifdef __GNUC__
@@ -6397,7 +6401,7 @@ m3_parse_file (int xx)
     
       if (m3_replay)
       {
-        unsigned long replay_count = (input_cursor - m3_preceding_cursor);
+        ULONG replay_count = (input_cursor - m3_preceding_cursor);
         gcc_assert (replay_count > 0);
         memcpy (m3_replay_buffer + m3_replay_cursor,
                 input_buffer + m3_preceding_cursor,
@@ -6416,7 +6420,7 @@ m3_parse_file (int xx)
     if (option_trace_all)
       fprintf (stderr, "\n replaying to resolve circular types (pass %u)\n", m3_replay_pass);
     {
-      unsigned char* temp = m3_replay_buffer;
+      UCHAR* temp = m3_replay_buffer;
       m3_replay_buffer[m3_replay_cursor] = 0;
       m3_replay_buffer = input_buffer;
       input_buffer = temp;
@@ -6441,9 +6445,8 @@ m3_parse_file (int xx)
 /*===================================================== RUNTIME FUNCTIONS ===*/
 
 /* Prepare to handle switches.  */
-static unsigned int
-m3_init_options (unsigned int argc,
-                 const char **argv)
+static UINT
+m3_init_options (UINT argc, PCSTR* argv)
 {
   m3_unused = &argc;
   m3_unused = argv;
@@ -6454,8 +6457,7 @@ static bool version_done;
 
 /* Process a switch - called by opts.c.  */
 static int
-m3_handle_option (size_t code, const char *arg,
-                  int value)
+m3_handle_option (size_t code, PCSTR arg, int value)
 {
   m3_unused = arg;
   m3_unused = &value;
@@ -6473,7 +6475,7 @@ m3_handle_option (size_t code, const char *arg,
     case OPT_v:
       if (!version_done)
         {
-          char const * const ver = version_string; /* type check */
+          PCSTR const ver = version_string; /* type check */
           printf ("M3CG - Modula-3 Compiler back end %s\n", ver);
           version_done = true;
         }
@@ -6496,7 +6498,7 @@ m3_handle_option (size_t code, const char *arg,
 
 /* Post-switch processing. */
 bool
-m3_post_options (const char **pfilename)
+m3_post_options (PCSTR* pfilename)
 {
    m3_unused = pfilename;
 
@@ -6548,7 +6550,7 @@ m3_init (void)
   FILE *finput = { 0 }; /* Stream for reading from the input file.  */
 #ifdef M3_USE_MAPPED_LOCATION
   #undef input_filename /* global input_filename is not an lvalue. */
-  const char* input_filename = { 0 };
+  PCSTR input_filename = { 0 };
   linemap_add (line_table, LC_ENTER, false, main_input_filename, 1);
 #endif
   input_filename = main_input_filename;
@@ -6573,7 +6575,7 @@ m3_init (void)
 
   /* Read the entire file */  
   m3_read_entire_file (finput, &input_buffer, &input_len);
-  m3_replay_buffer = (unsigned char*)xmalloc (input_len);
+  m3_replay_buffer = (UCHAR*)xmalloc (input_len);
   fclose (finput);
 
   m3_init_lex ();
