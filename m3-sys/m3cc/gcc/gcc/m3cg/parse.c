@@ -291,7 +291,7 @@ static int option_trace_all;
 #define UID_NULL 0x48EC756E /* NULL */
 
 /* type trees */
-#define t_addr ptr_type_node 
+#define t_addr ptr_type_node
 static GTY (()) tree t_word;
 static GTY (()) tree t_int;
 #define t_longword t_word_64
@@ -1361,7 +1361,7 @@ builtin_function (PCSTR name,
 {
   tree identifier = get_identifier (name);
   tree decl = build_decl (FUNCTION_DECL, identifier, type);
-  
+
   TREE_PUBLIC (decl) = true;
   DECL_EXTERNAL (decl) = true;
   DECL_BUILT_IN_CLASS (decl) = clas;
@@ -1468,7 +1468,7 @@ m3_make_integer_type (UINT size, UINT align, UINT signd)
   }
   gcc_assert (align < 2);
   type = make_node (INTEGER_TYPE);
-  
+
   if (size <= 8)
     SET_TYPE_MODE (type, QImode);
   else if (size <= 16)
@@ -1538,7 +1538,7 @@ m3_init_decl_processing (void)
 
   for (i = 0; i < COUNT_OF (builtin_uids); ++i)
     set_typeid_to_tree (builtin_uids[i].typeid, *builtin_uids[i].t);
-    
+
   /* declare/name builtin types */
 
   for (i = 0; i < COUNT_OF (builtin_types); ++i)
@@ -1941,7 +1941,7 @@ get_int (void)
   switch (i)
   {
   case M3CG_Int1:   return (WIDE) get_byte ();
-  case M3CG_NInt1:  return - (WIDE) get_byte ();    
+  case M3CG_NInt1:  return - (WIDE) get_byte ();
   case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
   case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
   case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
@@ -2414,7 +2414,7 @@ debug_struct (void)
   m3_outdent ();
   if (!m3gdb)
     return;
-  
+
   t = make_node (RECORD_TYPE);
   TYPE_FIELDS (t) = nreverse (debug_fields);
   debug_fields = NULL;
@@ -2556,7 +2556,7 @@ m3_field (PCSTR name, size_t name_length, tree type, WIDE offset,
 
   if (!M3_TYPES)
     return;
-    
+
   gcc_assert (offset >= current_record_offset);
   m3_gap (offset);
 
@@ -3356,7 +3356,7 @@ m3cg_declare_open_array (void)
   TYPEID  (my_id);
   TYPEID  (elts_id);
   BITSIZE (size);
-  
+
   if (M3_TYPES)
   {
     if (M3_TYPES_REPLAY && get_typeid_to_tree (elts_id) == NULL)
@@ -3367,7 +3367,7 @@ m3cg_declare_open_array (void)
       /* This is wrong and could be much better.
        * TODO: use a useful stub here, i.e. one that
        * will recieve further fixup
-       */ 
+       */
       set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
       if (m3_replay)
         return;
@@ -3627,7 +3627,7 @@ m3cg_declare_subrange (void)
   char buff [256]; /* plenty */
   PSTR p = buff;
   PSTR p_limit = p + sizeof(buff);
-  
+
   /* You might think so, but no.
   see cm3/m3-ui/X11R4/src/Common/X.i3
   gcc_assert (min <= max);
@@ -3659,7 +3659,7 @@ m3_declare_pointer_common (PCSTR caller, ULONG my_id, ULONG target_id)
 {
   if (M3_TYPES)
   {
-    tree t = get_typeid_to_tree (target_id);    
+    tree t = get_typeid_to_tree (target_id);
     if (!t)
     {
       if (option_trace_all)
@@ -3682,7 +3682,7 @@ m3cg_declare_pointer (void)
   TYPEID        (target_id);
   STRING        (brand, brand_length);
   BOOLEAN       (traced);
-  
+
   m3_declare_pointer_common ("declare_pointer", my_id, target_id);
   if (m3_replay)
     return;
@@ -4384,7 +4384,7 @@ m3cg_import_procedure (void)
   MTYPE   (return_type);
   CALLING_CONVENTION (cc);
   PROC    (p);
-  
+
   DECL_NAME (p) = get_identifier_with_length (name, name_length);
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   TREE_PUBLIC (p) = true;
@@ -4491,7 +4491,7 @@ m3cg_declare_procedure (void)
 
   current_function_decl = p;
   current_param_count = n_params;
-  
+
   if (n_params < 1)
     m3_outdent ();
 }
@@ -6051,7 +6051,7 @@ m3cg_compare_exchange (void)
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], return_type);
 
   EXPR_PUSH (v);
-  
+
   return;
 
 incompatible:
@@ -6344,7 +6344,7 @@ m3_parse_file (int xx)
 {
   int op = { 0 };
   int i = { 0 };
-  
+
   m3_unused = &xx;
 
   /* first, verify the handler table is complete and consistent. */
@@ -6374,7 +6374,7 @@ m3_parse_file (int xx)
     fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
                  i, M3CG_Version);
   }
-  
+
   while (1)
   {
     op = (int)LAST_OPCODE;
@@ -6406,7 +6406,7 @@ m3_parse_file (int xx)
       ops[op].proc ();
       gcc_assert (input_cursor <= input_len);
       m3cg_lineno += 1;
-    
+
       if (m3_replay)
       {
         ULONG replay_count = (input_cursor - m3_preceding_cursor);
@@ -6516,7 +6516,7 @@ m3_post_options (PCSTR* pfilename)
 
   flag_strict_aliasing = false;
   flag_strict_overflow = false;
-   
+
   flag_exceptions = true; /* ? */
 
   flag_tree_ccp = false; /* flag_tree_ccp of m3core breaks cm3 on I386_DARWIN */
@@ -6581,7 +6581,7 @@ m3_init (void)
       exit (1);
     }
 
-  /* Read the entire file */  
+  /* Read the entire file */
   m3_read_entire_file (finput, &input_buffer, &input_len);
   m3_replay_buffer = (UCHAR*)xmalloc (input_len);
   fclose (finput);
