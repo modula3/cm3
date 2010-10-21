@@ -1961,7 +1961,7 @@ get_typeid (PCSTR name)
 /* This function reads and traces a typeid in specially encoded format.
    Typeids simply 32bit unsigned integers. */
 {
-  ULONG val = (0xFFFFFFFFUL & (ULONG) get_int ());
+  ULONG val = (0xFFFFFFFFUL & (ULONG)get_int ());
   if (name && option_trace_all)
   {
     PCSTR colon = m3_trace_name (&name);
@@ -2062,7 +2062,7 @@ scan_sign (void)
   case 1: break; /* negative */
   case 2: break; /* unknown */
   default:
-    fatal_error (" *** bad sign: 0x%lx, at m3cg_lineno %u", (long)x, m3cg_lineno);
+    fatal_error (" *** bad sign: 0x%lx, at m3cg_lineno %u", (ULONG)x, m3cg_lineno);
   }
 }
 
@@ -2461,7 +2461,8 @@ one_field (WIDE offset,
   tree f = { 0 };
 
   if (option_trace_all)
-      fprintf (stderr, " one_field: offset:0x%lx size:0x%lx", (long)offset, (long)size);
+      fprintf (stderr, " one_field: offset:0x%lX size:0x%lX", (ULONG)offset,
+               (ULONG)size);
 
   one_gap (offset);
   f = build_decl (FIELD_DECL, 0, type);
@@ -2503,7 +2504,8 @@ one_gap (WIDE next_offset)
     return;
 
   if (option_trace_all)
-      fprintf (stderr, "\n one_gap: offset:0x%lx size:0x%lx\n", (long)current_record_offset, (long)size);
+      fprintf (stderr, "\n one_gap: offset:0x%lX size:0x%lX\n",
+               (ULONG)current_record_offset, (ULONG)size);
 
   type = make_node (LANG_TYPE);
   TYPE_SIZE (type) = bitsize_int (size);
@@ -2530,7 +2532,8 @@ m3_gap (WIDE next_offset)
     return;
 
   if (option_trace_all)
-    fprintf (stderr, "\n m3_gap: offset:0x%lx size:0x%lx\n", (long)current_record_offset, (long)size);
+    fprintf (stderr, "\n m3_gap: offset:0x%lX size:0x%lX\n",
+             (ULONG)current_record_offset, (ULONG)size);
 
   sprintf(name, "_m3gap_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC, current_record_offset, size);
 
@@ -3512,7 +3515,7 @@ m3_declare_record_common (void)
       if (M3_TYPES_CHECK_RECORD_SIZE && a != b)
       {
         fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n",
-                 (long)a, (long)b);
+                 (ULONG)a, (ULONG)b);
         gcc_assert (a == b);
       }
     }
@@ -3568,8 +3571,9 @@ m3cg_declare_field (void)
   t = get_typeid_to_tree (my_id);
   if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES && t == NULL) /* This is frequently NULL. Why? */
   {
-    fprintf (stderr, "\ndeclare_field: typeid 0x%lX to type is null for field %.*s\n",
-             my_id, long_to_printf_length (name_length), name);
+    fprintf (stderr,
+             "\ndeclare_field: typeid 0x%lX to type is null for field %.*s\n",
+             (ULONG)my_id, long_to_printf_length (name_length), name);
     if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES == 1)
       t = t_addr;
     gcc_assert (t);
@@ -3600,7 +3604,7 @@ m3cg_declare_set (void)
 
   if (option_trace_all)
     fprintf (stderr, " declare_set my_id:0x%lX domain_id:0x%lX size:0x%lX",
-             my_id, domain_id, (long)size);
+             (ULONG)my_id, (ULONG)domain_id, (ULONG)size);
 
   gcc_assert (size >= 0);
   debug_tag ('S', my_id, "_"WIDE_PRINT_DEC, size);
