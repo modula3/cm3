@@ -87,6 +87,9 @@ typedef HOST_WIDE_INT WIDE;
    stabs is not currently supported on PA64_HPUX? That isn't checked here. */
 static bool m3gdb;
 
+static ULONG bits_per_unit = BITS_PER_UNIT; /* for debugging */
+static ULONG pointer_size; /* for debugging */
+
 static bool M3_TYPES = true;
 static bool M3_TYPES_INT = true;
 static bool M3_TYPES_ENUM = true;
@@ -1505,6 +1508,7 @@ m3_init_decl_processing (void)
   UINT i = { 0 };
 
   current_function_decl = NULL;
+  pointer_size = POINTER_SIZE; /* for debugging */
 
   build_common_tree_nodes (0, false);
 
