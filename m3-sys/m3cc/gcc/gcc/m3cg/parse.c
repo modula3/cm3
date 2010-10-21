@@ -4808,9 +4808,7 @@ m3cg_load_indirect (void)
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
-  tree v = { 0 };
-
-  v = EXPR_REF (-1);
+  tree v = EXPR_REF (-1);
   /* mark_address_taken (v); */
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
@@ -4841,9 +4839,7 @@ m3cg_store_indirect (void)
   MTYPE2 (src_t, src_T);
   MTYPE2 (dst_t, dst_T);
 
-  tree v = { 0 };
-
-  v = EXPR_REF (-2);
+  tree v = EXPR_REF (-2);
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (dst_t), v);
@@ -5949,12 +5945,11 @@ m3cg_store_ordered (void)
   MTYPE2 (dst_t, dst_T);
   INTEGER (order);
 
-  tree v = { 0 };
+  tree v = EXPR_REF (-2);
 
   if (order != Relaxed)
     warning (0, "only Relaxed memory order for stores is supported");
 
-  v = EXPR_REF (-2);
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
@@ -5971,12 +5966,11 @@ m3cg_load_ordered (void)
   MTYPE2     (dst_t, dst_T);
   INTEGER    (order);
 
-  tree v = { 0 };
+  tree v = EXPR_REF (-1);
 
   if (order != Relaxed)
     warning (0, "only Relaxed memory order for loads is supported");
 
-  v = EXPR_REF (-1);
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
   if (src_T != dst_T)
