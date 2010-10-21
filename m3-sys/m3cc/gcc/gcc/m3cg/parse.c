@@ -2891,7 +2891,7 @@ mark_address_taken (tree ref)
 #endif
 
 static void
-m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+m3_load_1 (tree v, WIDE o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
            bool volatil)
 {
   gcc_assert ((o % BITS_PER_UNIT) == 0);
@@ -2958,7 +2958,7 @@ m3_load_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
 }
 
 static void
-m3_load (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_load (tree v, WIDE o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   bool volatil = false;
   m3_load_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
@@ -2966,7 +2966,7 @@ m3_load (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 
 #if 0
 static void
-m3_load_volatile (tree v, long o, tree src_t, m3_type src_T,
+m3_load_volatile (tree v, WIDE o, tree src_t, m3_type src_T,
                   tree dst_t, m3_type dst_T)
 {
   bool volatil = true;
@@ -2975,7 +2975,7 @@ m3_load_volatile (tree v, long o, tree src_t, m3_type src_T,
 #endif
 
 static void
-m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+m3_store_1 (tree v, WIDE o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
             bool volatil)
 {
   tree val;
@@ -3010,14 +3010,14 @@ m3_store_1 (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T
 }
 
 static void
-m3_store (tree v, long o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_store (tree v, WIDE o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   bool volatil = false;
   m3_store_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
 }
 
 static void
-m3_store_volatile (tree v, long o, tree src_t, m3_type src_T, tree dst_t,
+m3_store_volatile (tree v, WIDE o, tree src_t, m3_type src_T, tree dst_t,
                    m3_type dst_T)
 {
   bool volatil = true;
@@ -3025,7 +3025,7 @@ m3_store_volatile (tree v, long o, tree src_t, m3_type src_T, tree dst_t,
 }
 
 static void
-setop (tree p, long n, int q)
+setop (tree p, WIDE n, int q)
 {
   m3_start_call ();
   EXPR_PUSH (size_int (n));
@@ -5625,7 +5625,7 @@ m3cg_copy (void)
 
   tree pts = { 0 };
   tree ts = make_node (LANG_TYPE);
-  long s = n * TREE_INT_CST_LOW (TYPE_SIZE (type));
+  WIDE s = n * TREE_INT_CST_LOW (TYPE_SIZE (type));
 
   gcc_assert (n >= 0);
   TYPE_SIZE (ts) = size_int (s);
