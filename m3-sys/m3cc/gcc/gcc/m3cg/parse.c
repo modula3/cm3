@@ -64,6 +64,10 @@
 #include "m3gty43.h"
 #include <limits.h>
 
+#ifndef TARGET_MACHO
+#define TARGET_MACHO 0
+#endif
+
 typedef char* PSTR;
 typedef const char* PCSTR;
 typedef unsigned char UCHAR;
@@ -73,10 +77,6 @@ typedef unsigned HOST_WIDE_INT UWIDE;
 typedef HOST_WIDE_INT WIDE;
 #define WIDE_PRINT_HEX HOST_WIDE_INT_PRINT_HEX
 #define WIDE_PRINT_DEC HOST_WIDE_INT_PRINT_DEC
-
-#ifndef TARGET_MACHO
-#define TARGET_MACHO 0
-#endif
 
 /* m3gdb is true if we should generate the debug information
    that m3gdb specifically uses. That is, if we should embed
@@ -921,7 +921,7 @@ m3_build_type_id (m3_type type,
     case T_addr:
       if (typeid != NO_UID)
         ts = get_typeid_to_tree (typeid);
-#if 1
+#if 0
       return ts ? m3_build_pointer_type (ts) : t_addr;
 #else
       return ts ? ts : t_addr;
@@ -1508,6 +1508,7 @@ m3_init_decl_processing (void)
   UINT i = { 0 };
 
   current_function_decl = NULL;
+  bits_per_unit = BITS_PER_UNIT; /* for debugging */
   pointer_size = POINTER_SIZE; /* for debugging */
 
   build_common_tree_nodes (0, false);
@@ -2115,7 +2116,7 @@ scan_float (UINT *out_Kind)
               { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
               { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
   UINT Size = { 0 };
-  REAL_VALUE_TYPE val;
+  REAL_VALUE_TYPE val = { 0 };
 
   gcc_assert (sizeof(float) == 4);
   gcc_assert (sizeof(double) == 8);
@@ -2315,7 +2316,7 @@ static PSTR current_dbg_type_tag = current_dbg_type_tag_buf.buf;
 static ULONG current_record_type_id = NO_UID;
 static ULONG current_object_type_id = NO_UID;
 static ULONG current_proc_type_id = NO_UID; /* not right yet */
-static ULONG current_record_size;
+static UWIDE current_record_size;
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
@@ -2348,6 +2349,53 @@ debug_tag (char kind, ULONG typeid, PCSTR fmt, ...)
   va_start (args, fmt);
   format_tag_v (&current_dbg_type_tag_buf, kind, typeid, fmt, args);
   va_end (args);
+}
+
+#if 0
+
+static PCSTR
+safe_identifier_pointer_decl_name (tree t)
+/* safe form of IDENTIFIER_POINTER (DECL_NAME (t)) */
+{
+  if (t && DECL_NAME (t) && IDENTIFIER_POINTER (DECL_NAME (t)))
+    return IDENTIFIER_POINTER (DECL_NAME (t));
+  return "(null)";
+}
+
+static long
+safe_decl_field_offset (tree t)
+/* safe form of TREE_INT_CST_LOW (DECL_FIELD_OFFSET (t)) */
+{
+  if (t && DECL_FIELD_OFFSET (t))
+    return TREE_INT_CST_LOW (DECL_FIELD_OFFSET (t));
+  return -1;
+}
+
+#endif
+
+static void
+dump_record_type (tree record_type)
+{
+  tree field = { 0 };
+  ULONG typeid = { 0 };
+  
+  if (!option_trace_all)
+    return;
+
+  if (current_record_type_id != NO_UID)
+    typeid = current_record_type_id;
+  else if (current_object_type_id != NO_UID)
+    typeid = current_object_type_id;
+  fprintf (stderr, "\ndump_record_type typeid=0x%lX, size=0x%lX:\n",
+           typeid, (ULONG)current_record_size);
+  for (field = TYPE_FIELDS (record_type); field; field = TREE_CHAIN (field))
+  {
+    fprintf (stderr, "  %s offset=0x%lX\n",
+             IDENTIFIER_POINTER (DECL_NAME (field)),
+             (ULONG)(TREE_INT_CST_LOW (DECL_FIELD_OFFSET (field))
+             + TREE_INT_CST_LOW (DECL_FIELD_BIT_OFFSET (field))));
+  }
+  fprintf (stderr, "\n");
 }
 
 static void
@@ -2894,48 +2942,69 @@ mark_address_taken (tree ref)
 }
 #endif
 
+static tree
+m3_deduce_field_reference (PCSTR caller, tree value, WIDE offset,
+                           tree field_treetype, m3_type field_m3type)
+{
+  tree record_type = { 0 };
+  tree tree_type = TREE_TYPE (value);
+  enum tree_code code = TREE_CODE (value);
+  tree field = { 0 };
+
+  return 0;
+
+  m3_unused = &field_treetype;
+  m3_unused = &field_m3type;
+
+  if ((code == VAR_DECL || code == CONST_DECL || code == RESULT_DECL || code == PARM_DECL)
+    && tree_type
+    && TREE_CODE (tree_type) == POINTER_TYPE
+    && ((record_type = TREE_TYPE (tree_type)))
+    && TREE_CODE (record_type) == RECORD_TYPE)
+  {
+     /* linear search! */
+     for (field = TYPE_FIELDS (record_type); field; field = TREE_CHAIN (field))
+     {
+       if (offset == (TREE_INT_CST_LOW (DECL_FIELD_OFFSET (field))
+                      + TREE_INT_CST_LOW (DECL_FIELD_BIT_OFFSET (field))))
+         break;
+     }
+     if (option_trace_all)
+     {
+       fprintf (stderr, "deduce_field_reference %s offset:0x%lX => %s\n",
+                caller, (ULONG)offset,
+                field ? IDENTIFIER_POINTER (DECL_NAME (field)) : "?unknown");
+     }
+   }
+   return field;
+}
+
+static bool
+m3_type_match (tree t1, tree t2)
+{
+  if (t1 == t2)
+    return true;
+  if (t1 == NULL || t2 == NULL)
+    return false;
+  if (POINTER_TYPE_P (t1) && POINTER_TYPE_P (t2))
+    return true;
+  return false;
+}
+
+static bool
+m3_type_mismatch (tree t1, tree t2)
+{
+  return !m3_type_match (t1, t2);
+}
+
 static void
 m3_load_1 (tree v, WIDE o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
            bool volatil)
 {
   gcc_assert ((o % BITS_PER_UNIT) == 0);
-  if (0 && option_trace_all) /* work in progress */
-  {
-    enum tree_code code = TREE_CODE (v);
-    if (src_T != T_struct
-      && src_T == dst_T
-      && src_t == dst_t
-      && (code == VAR_DECL || code == CONST_DECL)
-      && (TREE_CODE (TREE_TYPE (src_t)) == RECORD_TYPE))
-    {
-       tree field = { 0 };
-       tree byte_offset = size_int (o / BITS_PER_UNIT);
-       tree bit_offset = bitsize_int (o % BITS_PER_UNIT);
-       /* linear search */
-       for (field = TYPE_FIELDS (TREE_TYPE (src_t)); field; field = TREE_CHAIN (field))
-       {
-         if (DECL_FIELD_OFFSET (field) == byte_offset && DECL_FIELD_BIT_OFFSET (field) == bit_offset)
-           break;
-       }
-       if (field)
-       {
-         fprintf (stderr,
-                  "\nseems to be loading field %s.%s\n",
-                  IDENTIFIER_POINTER (DECL_NAME (v)),
-                  IDENTIFIER_POINTER (DECL_NAME (field)));
-       }
-       else
-       {
-         fprintf (stderr,
-                  "\nunable to deduce field reference %s.?\n",
-                  IDENTIFIER_POINTER (DECL_NAME (v)));
-       }
-    }
-  }
-
+  m3_deduce_field_reference ("m3_load_1", v, o, src_t, src_T);
   /* mark_address_taken (v); */
-
-  if (o || TREE_TYPE (v) != src_t)
+  if (o || m3_type_mismatch (TREE_TYPE (v),  src_t))
   {
     /* bitfields break configure -enable-checking
        non-bitfields generate incorrect code sometimes */
@@ -2982,9 +3051,11 @@ static void
 m3_store_1 (tree v, WIDE o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
             bool volatil)
 {
-  tree val;
+  tree val = { 0 };
+
+  m3_deduce_field_reference ("m3_store_1", v, o, dst_t, dst_T);
   /* mark_address_taken (v); */
-  if (o || TREE_TYPE (v) != dst_t)
+  if (o || m3_type_mismatch (TREE_TYPE (v),  dst_t))
   {
     /* bitfields break configure -enable-checking
        non-bitfields generate incorrect code sometimes */
@@ -3366,7 +3437,8 @@ m3cg_declare_open_array (void)
     if (M3_TYPES_REPLAY && get_typeid_to_tree (elts_id) == NULL)
     {
       if (option_trace_all)
-        fprintf (stderr, "\n declare_open_array: missing type 0x%lX\n", elts_id);
+        fprintf (stderr, "\n declare_open_array: missing type 0x%lX\n",
+                 (ULONG)elts_id);
       m3_replay = M3_TYPES_REPLAY;
       /* This is wrong and could be much better.
        * TODO: use a useful stub here, i.e. one that
@@ -3398,17 +3470,27 @@ m3cg_declare_enum (void)
   UWIDE n_elts = (UWIDE)signed_elts;
 
   gcc_assert (signed_elts >= 0);
+  gcc_assert (size == 8 || size == 16 || size == 32 || size == 64);
+  gcc_assert (size <= BITS_PER_INTEGER || n_elts == 0);
 
   debug_tag ('C', my_id, "_"WIDE_PRINT_DEC, size);
   current_dbg_type_count1 = n_elts;
   current_dbg_type_count2 = n_elts;
 
-  if (M3_TYPES_ENUM && n_elts > 0)
+  if (M3_TYPES_ENUM)
   {
-    UINT bits = (n_elts <= (((UWIDE)1) << 8)) ? 8
+    UINT bits = (n_elts == 0) ? 64
+              : (n_elts <= (((UWIDE)1) << 8)) ? 8
               : (n_elts <= (((UWIDE)1) << 16)) ? 16
               : (n_elts <= (((UWIDE)1) << 32)) ? 32
               : 64;
+    if (size != bits)
+    {
+      fprintf(stderr, "BITS_PER_INTEGER: 0x%lX\n", (ULONG)BITS_PER_INTEGER);
+      fprintf(stderr, "m3cg_declare_enum: size 0x%lX vs. bits 0x%X vs. elts 0x%lX\n",
+              (ULONG)size, bits, (ULONG)n_elts);
+    }
+    gcc_assert (size == bits);
     enumtype = make_node (ENUMERAL_TYPE);
     TYPE_USER_ALIGN (enumtype) = true;
     TYPE_UNSIGNED (enumtype) = true;
@@ -3511,6 +3593,8 @@ m3_declare_record_common (void)
     if (TYPE_FIELDS (type))
       TYPE_FIELDS (type) = nreverse (TYPE_FIELDS (type));
     layout_type (type);
+    /* rest_of_type_compilation (type, true); */
+    dump_record_type (type);
     if (current_record_type_id != NO_UID)
     {
       UWIDE a = TREE_INT_CST_LOW (TYPE_SIZE (type));
@@ -3528,7 +3612,6 @@ m3_declare_record_common (void)
       type = m3_build_pointer_type (type);
       set_typeid_to_tree (current_object_type_id, type);
     }
-    /* rest_of_type_compilation (type, true); */
     current_record_type_id = NO_UID;
     current_object_type_id = NO_UID;
     current_record_size = 0;
@@ -4807,9 +4890,10 @@ m3cg_load_indirect (void)
   INTEGER    (offset);
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
-
   tree v = EXPR_REF (-1);
+
   /* mark_address_taken (v); */
+  m3_deduce_field_reference ("m3cg_load_indirect", v, offset * BITS_PER_UNIT, src_t, src_T);
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (src_t), v);
@@ -4838,8 +4922,10 @@ m3cg_store_indirect (void)
   INTEGER (offset);
   MTYPE2 (src_t, src_T);
   MTYPE2 (dst_t, dst_T);
-
   tree v = EXPR_REF (-2);
+
+  /* mark_address_taken (v); */
+  m3_deduce_field_reference ("m3cg_store_indirect", v, offset * BITS_PER_UNIT, src_t, src_T);
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (dst_t), v);
