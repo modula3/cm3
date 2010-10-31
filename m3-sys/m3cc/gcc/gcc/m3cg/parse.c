@@ -70,6 +70,14 @@
 #define WIDE_PRINT_HEX HOST_WIDE_INT_PRINT_HEX
 #define WIDE_PRINT_DEC HOST_WIDE_INT_PRINT_DEC
 
+typedef char* PSTR;
+typedef const char* PCSTR;
+typedef unsigned char UCHAR;
+typedef unsigned int UINT;
+typedef unsigned long ULONG;
+typedef unsigned HOST_WIDE_INT UWIDE;
+typedef HOST_WIDE_INT WIDE;
+
 #include "m3gty43.h"
 
 /* m3gdb is true if we should generate the debug information
