@@ -94,7 +94,7 @@ static bool M3_TYPES_SEGMENT = false;
 static bool M3_TYPES_REPLAY = true;
 static bool M3_TYPES_CHECK_RECORD_SIZE = true;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
-static bool M3_NEW_LOOPHOLE = false;
+static bool M3_LOOPHOLE_VIEW_CONVERT = true;
 
 #if GCC45
 
@@ -5748,17 +5748,23 @@ m3cg_zero (void)
 static void
 m3cg_loophole (void)
 {
-  if (M3_NEW_LOOPHOLE)
+  MTYPE2 (type1, Type1);
+  MTYPE2 (type2, Type2);
+
+  if (M3_LOOPHOLE_VIEW_CONVERT)
   {
-    MTYPE (type1);
-    MTYPE (type2);
-    EXPR_REF (-1) = m3_build1 (VIEW_CONVERT_EXPR, type2, EXPR_REF (-1));
+    if (IS_INTEGER_TYPE (Type1) && IS_INTEGER_TYPE (Type2))
+    {
+      EXPR_REF (-1) = m3_cast (type2, EXPR_REF (-1));
+    }
+    else
+    {
+      gcc_assert (TYPE_PRECISION (type1) == TYPE_PRECISION (type2));
+      EXPR_REF (-1) = m3_build1 (VIEW_CONVERT_EXPR, type2, EXPR_REF (-1));
+    }
   }
   else
   {
-    MTYPE2 (type1, Type1);
-    MTYPE2 (type2, Type2);
-
     if (FLOAT_TYPE_P (type1) != FLOAT_TYPE_P (type2))
     {
       tree v = declare_temp (type1);
