@@ -103,6 +103,7 @@ static bool M3_TYPES_REPLAY = true;
 static bool M3_TYPES_CHECK_RECORD_SIZE = true;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
 static bool M3_LOOPHOLE_VIEW_CONVERT = true;
+static bool M3_LOADSTORE_VIEW_CONVERT = false;
 
 #if GCC45
 
@@ -2896,7 +2897,7 @@ m3_call_direct (tree p, tree return_type)
 
   if (slot)
     p = *slot;
-  if (TREE_USED (p) == 0)
+  if (TREE_USED (p) == false)
   {
       TREE_USED (p) = true;
       assemble_external (p);
@@ -3029,6 +3030,12 @@ m3_load_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type 
   gcc_assert ((offset % BITS_PER_UNIT) == 0);
   m3_deduce_field_reference ("m3_load_1", v, offset, src_t, src_T);
   /* mark_address_taken (v); */
+  if (offset == 0
+        && M3_LOADSTORE_VIEW_CONVERT
+        && m3_type_mismatch (TREE_TYPE (v), src_t))
+  {
+      v = m3_build1 (VIEW_CONVERT_EXPR, src_t, v);
+  }
   if (offset || m3_type_mismatch (TREE_TYPE (v),  src_t))
   {
     /* bitfields break configure -enable-checking
@@ -3080,7 +3087,13 @@ m3_store_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type
 
   m3_deduce_field_reference ("m3_store_1", v, offset, dst_t, dst_T);
   /* mark_address_taken (v); */
-  if (offset || m3_type_mismatch (TREE_TYPE (v),  dst_t))
+  if (offset == 0
+        && M3_LOADSTORE_VIEW_CONVERT
+        && m3_type_mismatch (TREE_TYPE (v), dst_t))
+  {
+      v = m3_build1 (VIEW_CONVERT_EXPR, dst_t, v);
+  }
+  else if (offset || m3_type_mismatch (TREE_TYPE (v),  dst_t))
   {
     /* bitfields break configure -enable-checking
        non-bitfields generate incorrect code sometimes */
@@ -6618,9 +6631,7 @@ m3_post_options (PCSTR* pfilename)
   */
   flag_tree_pre = false;
 
-  flag_tree_dce = false;
-  flag_tree_dom = false;
-  flag_tree_dse = false;
+  flag_tree_dse = false; /* dead store elimination! */
 
 #if GCC45
   /* m3-libs/sysutils/System.m3 is a good test of optimization */
