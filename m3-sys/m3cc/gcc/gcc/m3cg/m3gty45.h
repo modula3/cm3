@@ -60,6 +60,7 @@ typedef enum {
   lang_type_object,
   lang_type_open_array,
   lang_type_record,
+  lang_type_set,
   lang_type_subrange,
   lang_type_proctype
 } enum_lang_type;
@@ -99,45 +100,45 @@ struct GTY(()) lang_type
 {
   ULONG my_id;
   enum_lang_type type;
-  struct /*union*/ {
+  union GTY ((desc ("%1.type"))) {
     struct {
       UWIDE size;
       ULONG index_id;
       ULONG elts_id;
-    } array;
+    } GTY ((tag ("lang_type_array"))) array;
     struct {
       UWIDE n_elts;
       UWIDE size;
-    } xenum;
+    } GTY ((tag ("lang_type_enum"))) xenum;
     struct {
       UWIDE size;
       ULONG elts_id;
-    } open_array;
+    } GTY ((tag ("lang_type_open_array"))) open_array;
     struct {
       UWIDE n_fields;
-      struct lang_field* fields;
-    } record;
+      struct lang_field* GTY(()) fields;
+    } GTY ((tag ("lang_type_record"))) record;
     struct {
       PCSTR brand; /* can be NULL */
       UWIDE n_fields;
       UWIDE n_methods;
       UWIDE field_size;
-      struct lang_field* fields;
-      struct lang_method* methods;
+      struct lang_field* GTY(()) fields;
+      struct lang_method* GTY(()) methods;
       ULONG my_id;
       ULONG super_id;
       bool traced;
-    } object;
+    } GTY ((tag ("lang_type_object"))) object;
     struct {
       UWIDE size;
       ULONG domain_id;
-    } set;
+    } GTY ((tag ("lang_type_set"))) set;
     struct {
       WIDE min;
       WIDE max;
       UWIDE size;
       ULONG domain_id;
-    } subrange;
+    } GTY ((tag ("lang_type_subrange"))) subrange;
   } u;
 };
 
