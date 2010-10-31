@@ -6618,7 +6618,6 @@ m3_post_options (PCSTR* pfilename)
   */
   flag_tree_pre = false;
 
-  flag_cprop_registers = false;
   flag_ipa_reference = false;
   flag_merge_constants = false;
   flag_split_wide_types = false;
@@ -6626,13 +6625,6 @@ m3_post_options (PCSTR* pfilename)
   flag_tree_dce = false;
   flag_tree_dom = false;
   flag_tree_dse = false;
-  flag_tree_ter = false;
-  flag_tree_sra = false;
-  flag_tree_copyrename = false;
-  flag_tree_copy_prop = false;
-  flag_tree_sink = false;
-  flag_tree_ch = false;
-  flag_gcse = false;
   flag_expensive_optimizations = false;
 
 #if GCC45
