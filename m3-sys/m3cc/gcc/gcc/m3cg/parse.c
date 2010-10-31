@@ -2132,8 +2132,9 @@ scan_float (UINT *out_Kind)
               { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
               { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
   UINT Size = { 0 };
-  REAL_VALUE_TYPE val = { 0 };
+  REAL_VALUE_TYPE val;
 
+  memset (&val, 0, sizeof(val));
   gcc_assert (sizeof(float) == 4);
   gcc_assert (sizeof(double) == 8);
   gcc_assert (FLOAT_TYPE_SIZE == 32);
@@ -5083,6 +5084,7 @@ m3cg_round (void)
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
                        m3_cast (src_t, EXPR_REF (-1))));
 
+  memset (&r, 0, sizeof(r));
   real_from_string (&r, "0.5");
   pos = build_real (src_t, r);
 
