@@ -6618,14 +6618,9 @@ m3_post_options (PCSTR* pfilename)
   */
   flag_tree_pre = false;
 
-  flag_ipa_reference = false;
-  flag_merge_constants = false;
-  flag_split_wide_types = false;
-  flag_tree_ccp = false;
   flag_tree_dce = false;
   flag_tree_dom = false;
   flag_tree_dse = false;
-  flag_expensive_optimizations = false;
 
 #if GCC45
   /* m3-libs/sysutils/System.m3 is a good test of optimization */
