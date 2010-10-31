@@ -46,100 +46,9 @@ union GTY((desc("TREE_CODE(&%h.generic) == IDENTIFIER_NODE"))) lang_tree_node
 
 /* Language-specific type information.  */
 
-typedef char* PSTR;
-typedef const char* PCSTR;
-typedef unsigned char UCHAR;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef unsigned HOST_WIDE_INT UWIDE;
-typedef HOST_WIDE_INT WIDE;
-
-typedef enum {
-  lang_type_array,
-  lang_type_enum,
-  lang_type_object,
-  lang_type_open_array,
-  lang_type_record,
-  lang_type_set,
-  lang_type_subrange,
-  lang_type_proctype
-} enum_lang_type;
-
-struct GTY(()) lang_field
-{
-  PCSTR name;
-  UWIDE offset;
-  UWIDE size;
-  ULONG my_id;
-};
-
-struct GTY(()) lang_formal
-{
-  PCSTR name;
-  ULONG my_id;
-};
-
-struct GTY(()) lang_proctype
-{
-  ULONG my_id;
-  ULONG result_id;
-  UWIDE n_formals;
-  UWIDE n_raises;
-  UCHAR cc;
-  struct lang_formal* formals;
-  PCSTR* raises;
-};
-
-struct GTY(()) lang_method
-{
-  PCSTR name;
-  ULONG my_id; /* of a proctype */
-};
-
 struct GTY(()) lang_type
 {
-  ULONG my_id;
-  enum_lang_type type;
-  union GTY ((desc ("%1.type"))) {
-    struct {
-      UWIDE size;
-      ULONG index_id;
-      ULONG elts_id;
-    } GTY ((tag ("lang_type_array"))) array;
-    struct {
-      UWIDE n_elts;
-      UWIDE size;
-    } GTY ((tag ("lang_type_enum"))) xenum;
-    struct {
-      UWIDE size;
-      ULONG elts_id;
-    } GTY ((tag ("lang_type_open_array"))) open_array;
-    struct {
-      UWIDE n_fields;
-      struct lang_field* GTY(()) fields;
-    } GTY ((tag ("lang_type_record"))) record;
-    struct {
-      PCSTR brand; /* can be NULL */
-      UWIDE n_fields;
-      UWIDE n_methods;
-      UWIDE field_size;
-      struct lang_field* GTY(()) fields;
-      struct lang_method* GTY(()) methods;
-      ULONG my_id;
-      ULONG super_id;
-      bool traced;
-    } GTY ((tag ("lang_type_object"))) object;
-    struct {
-      UWIDE size;
-      ULONG domain_id;
-    } GTY ((tag ("lang_type_set"))) set;
-    struct {
-      WIDE min;
-      WIDE max;
-      UWIDE size;
-      ULONG domain_id;
-    } GTY ((tag ("lang_type_subrange"))) subrange;
-  } u;
+  char junk; /* dummy field to ensure struct is not empty */
 };
 
 /* Language-specific declaration information.  */
@@ -156,6 +65,6 @@ struct GTY(()) language_function
 
 typedef struct GTY(()) m3type
 {
-  ULONG typeid;
+  unsigned long typeid;
   tree GTY(()) t;
 } m3type_t;
