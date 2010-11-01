@@ -4008,12 +4008,6 @@ m3cg_set_runtime_proc (void)
 }
 
 static void
-unused_m3cg_set_runtime_hook (void)
-{
-  gcc_assert (false);
-}
-
-static void
 m3cg_import_global (void)
 {
   STRING     (name, name_length);
@@ -6264,7 +6258,6 @@ static const OpProc ops[] = {
   { M3CG_REVEAL_OPAQUE,          m3cg_reveal_opaque          },
   { M3CG_DECLARE_EXCEPTION,      m3cg_declare_exception      },
   { M3CG_SET_RUNTIME_PROC,       m3cg_set_runtime_proc       },
-  { M3CG_SET_RUNTIME_HOOK,       unused_m3cg_set_runtime_hook },
   { M3CG_IMPORT_GLOBAL,          m3cg_import_global          },
   { M3CG_DECLARE_SEGMENT,        m3cg_declare_segment        },
   { M3CG_BIND_SEGMENT,           m3cg_bind_segment           },

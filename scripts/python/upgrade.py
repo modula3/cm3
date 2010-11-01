@@ -29,7 +29,7 @@ if clean:
     DoPackage(
         argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
                           "m3linker", "m3back", "m3front", "sysutils",
-                          "cm3", "mklib", "m3core", "libm3",
+                          "cm3", "m3cggen", "mklib", "m3core", "libm3",
         ]) or sys.exit(1)
 if cleangcc:
     DoPackage(argv_RealClean, [ "m3cc" ]) or sys.exit(1)
@@ -41,12 +41,16 @@ if cleangcc:
 #
 DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
                             "m3linker", "m3back", "m3front", "sysutils",
-                            "cm3", "mklib",
+                            "cm3", "m3cggen", "mklib",
     ]) or sys.exit(1)
 
 #
 # ... and continue with the backend, if needed
 #
+
+a = Root + "/m3-sys/m3cggen/" + Target + "/m3cggen > " + Root + "/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h"
+print(a)
+os.system(a)
 FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 
 #
