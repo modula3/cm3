@@ -6631,7 +6631,7 @@ m3_post_options (PCSTR* pfilename)
   */
   flag_tree_pre = false;
 
-  flag_tree_dse = false; /* compiler crashes if this isn't enabled */
+  flag_tree_dse = false; /* compiler crashes if this is enabled */
 
 /* == package m3-demo/fisheye ==
   GraphData.m3: In function 'GraphData__ReadEdge':
