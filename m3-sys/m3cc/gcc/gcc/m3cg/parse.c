@@ -6631,43 +6631,13 @@ m3_post_options (PCSTR* pfilename)
   */
   flag_tree_pre = false;
 
-  flag_caller_saves = false;
-  flag_cprop_registers = false;
-  flag_crossjumping = false;
-  flag_cse_follow_jumps = false;
-  flag_delete_null_pointer_checks = false;
-  flag_expensive_optimizations = false;
-  flag_forward_propagate = false;
-  flag_gcse = false;
-  flag_gcse_after_reload = false;
-  flag_if_conversion = false;
-  flag_if_conversion2 = false;
-  flag_inline_functions = false;
-  flag_inline_small_functions = false;
-  flag_ipa_pure_const = false;
-  flag_ipa_reference = false;
-  flag_optimize_sibling_calls = false;
-  flag_peephole2 = false;
-  flag_regmove = false;
-  flag_reorder_blocks = false;
-  flag_reorder_functions = false;
-  flag_rerun_cse_after_loop = false;
-  flag_split_wide_types = false;
-  flag_strict_aliasing = false;
-  flag_strict_overflow = false;
-  flag_thread_jumps = false;
-  flag_tree_ch = false;
-  flag_tree_copy_prop = false;
-  flag_tree_copyrename = false;
-  flag_tree_dce = false;
-  flag_tree_dom = false;
-  flag_tree_dse = false;
-  flag_tree_sink = false;
+  flag_tree_dse = false; /* compiler crashes if this isn't enabled */
+
+/* == package m3-demo/fisheye ==
+  GraphData.m3: In function 'GraphData__ReadEdge':
+  GraphData.m3:308:0: internal compiler error: in create_tmp_var, at gimplify.c:505
+*/
   flag_tree_sra = false;
-  flag_tree_ter = false;
-  flag_tree_vectorize = false;
-  flag_tree_vrp = false;
-  flag_unswitch_loops = false;
 
 #if GCC45
   /* m3-libs/sysutils/System.m3 is a good test of optimization */
