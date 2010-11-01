@@ -15,7 +15,7 @@ TYPE
     declare_subrange, declare_pointer, declare_indirect,
     declare_proctype, declare_formal, declare_raises, declare_object,
     declare_method, declare_opaque, reveal_opaque, declare_exception,
-    set_runtime_proc, set_runtime_hook, import_global,
+    set_runtime_proc, unused_set_runtime_hook, import_global,
     declare_segment, bind_segment, declare_global, declare_constant,
     declare_local, declare_param, declare_temp, free_temp, begin_init,
     end_init, init_int, init_proc, init_label, init_var, init_offset,
