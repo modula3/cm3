@@ -2683,7 +2683,6 @@ static void add_stmt (tree t)
     }
 
   TREE_USED (t) = true;
-  TREE_SIDE_EFFECTS (t) = true;
   append_to_statement_list (t, &current_stmts);
 }
 
@@ -2790,7 +2789,6 @@ m3_call_direct (tree p, tree return_type)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -2816,7 +2814,6 @@ m3_call_indirect (tree return_type, tree cc)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -2910,7 +2907,6 @@ m3_call_direct (tree p, tree return_type)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -2941,7 +2937,6 @@ m3_call_indirect (tree return_type, tree cc)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true;
     EXPR_PUSH (call);
   }
   CALL_POP ();
