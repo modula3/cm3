@@ -40,8 +40,6 @@ REVEAL
     reveal_opaque := reveal_opaque;
     declare_exception := declare_exception;
     set_runtime_proc := set_runtime_proc;
-    set_runtime_hook := set_runtime_hook;
-    get_runtime_hook := get_runtime_hook;
     import_global := import_global;
     declare_segment := declare_segment;
     bind_segment := bind_segment;
@@ -327,16 +325,6 @@ PROCEDURE set_runtime_proc (xx: T;  n: Name;  p: Proc) =
   BEGIN
     xx.child.set_runtime_proc (n, p);
   END set_runtime_proc;
-
-PROCEDURE set_runtime_hook (xx: T;  n: Name;  v: Var;  o: ByteOffset) =
-  BEGIN
-    xx.child.set_runtime_hook (n, v, o);
-  END set_runtime_hook;
-
-PROCEDURE get_runtime_hook (xx: T;  n: Name; VAR p: Proc;  VAR v: Var; VAR o: ByteOffset) =
-  BEGIN
-    xx.child.get_runtime_hook (n, p, v, o);
-  END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 

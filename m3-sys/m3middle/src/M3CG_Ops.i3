@@ -136,12 +136,6 @@ declare_exception (n: Name;  arg_type: TypeUID;  raise_proc: BOOLEAN;
 set_runtime_proc (n: Name;  p: Proc);
 (* declares 'n' as a runtime procedure 'p'.  *)
 
-set_runtime_hook (n: Name;  v: Var;  o: ByteOffset);
-(* declares 'n' as a runtime procedure available at location 'ADR(v)+o' *)
-
-get_runtime_hook (n: Name;  VAR p: Proc;  VAR v: Var; VAR o: ByteOffset);
-(* returns the location of the runtime symbol 'n' *)
-
 (*------------------------------------------------- variable declarations ---*)
 
 (* Clients must declare a variable before generating any statements or

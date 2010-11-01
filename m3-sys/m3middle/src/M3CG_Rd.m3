@@ -39,7 +39,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY [0..161] OF Cmd {
+  CmdMap = ARRAY [0..159] OF Cmd {
     Cmd {"begin_unit", begin_unit},
     Cmd {"end_unit", end_unit},
     Cmd {"import_unit", import_unit},
@@ -67,8 +67,6 @@ CONST
     Cmd {"reveal_opaque", reveal_opaque},
     Cmd {"declare_exception", declare_exception},
     Cmd {"set_runtime_proc", set_runtime_proc},
-    Cmd {"set_runtime_hook", set_runtime_hook},
-    Cmd {"get_runtime_hook", get_runtime_hook},
     Cmd {"import_global", import_global},
     Cmd {"declare_segment", declare_segment},
     Cmd {"bind_segment", bind_segment},
@@ -804,19 +802,6 @@ PROCEDURE set_runtime_proc (VAR s: State) =
   BEGIN
     s.cg.set_runtime_proc (name, proc);
   END set_runtime_proc;
-
-PROCEDURE set_runtime_hook (VAR s: State) =
-  VAR name   := Scan_name (s);
-      var    := Scan_var (s);
-      offset := Scan_int (s);
-  BEGIN
-    s.cg.set_runtime_hook (name, var, offset);
-  END set_runtime_hook;
-
-PROCEDURE get_runtime_hook (VAR s: State) =
-  BEGIN
-    Error (s, "unexpected get_runtime_hook");
-  END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 

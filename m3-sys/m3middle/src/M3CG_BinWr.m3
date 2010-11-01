@@ -65,8 +65,6 @@ TYPE
         declare_opaque := declare_opaque;
         reveal_opaque := reveal_opaque;
         set_runtime_proc := set_runtime_proc;
-        set_runtime_hook := set_runtime_hook;
-        get_runtime_hook := get_runtime_hook;
         import_global  := import_global;
         declare_segment := declare_segment;
         bind_segment := bind_segment;
@@ -656,27 +654,6 @@ PROCEDURE set_runtime_proc (u: U;  n: Name;  p: Proc) =
     ZName (u, n);
     PName (u, p);
   END set_runtime_proc;
-
-PROCEDURE set_runtime_hook (u: U;  n: Name;  v: Var;  o: ByteOffset) =
-  VAR e := GetRuntimeHook (u, n);
-  BEGIN
-    e.var := v;
-    e.offset := o;
-    Cmd   (u, Bop.set_runtime_hook);
-    ZName (u, n);
-    VName (u, v);
-    Int   (u, o);
-  END set_runtime_hook;
-
-PROCEDURE get_runtime_hook (u: U;  n: Name; VAR p: Proc;
-                            VAR v: Var; VAR o: ByteOffset) =
-  VAR e := GetRuntimeHook (u, n);
-  BEGIN
-    (* no output is generated ... *)
-    p := e.proc;
-    v := e.var;
-    o := e.offset;
-  END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 

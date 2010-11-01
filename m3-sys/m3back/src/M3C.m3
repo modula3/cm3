@@ -56,8 +56,6 @@ REVEAL
         declare_opaque := declare_opaque;
         reveal_opaque := reveal_opaque;
         set_runtime_proc := set_runtime_proc;
-        set_runtime_hook := set_runtime_hook;
-        get_runtime_hook := get_runtime_hook;
         import_global  := import_global;
         declare_segment := declare_segment;
         bind_segment := bind_segment;
@@ -623,10 +621,6 @@ PROCEDURE set_runtime_hook (u: U;  n: Name;  v: Var;  o: ByteOffset) =
       u.wr.NL    ();
     END;
   END set_runtime_hook;
-
-<*NOWARN*>PROCEDURE get_runtime_hook (u: U;  n: Name; VAR p: Proc; VAR v: Var; VAR o: ByteOffset) =
-  BEGIN
-  END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 

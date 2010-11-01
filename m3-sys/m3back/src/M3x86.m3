@@ -33,8 +33,6 @@ TYPE
   RuntimeHook = REF RECORD
     name   : Name;
     proc   : Proc;
-    var    : Var;
-    offset : ByteOffset;
   END;
 
 REVEAL
@@ -102,8 +100,6 @@ REVEAL
         declare_opaque := declare_opaque;
         reveal_opaque := reveal_opaque;
         set_runtime_proc := set_runtime_proc;
-        set_runtime_hook := set_runtime_hook;
-        get_runtime_hook := get_runtime_hook;
         import_global  := import_global;
         declare_segment := declare_segment;
         bind_segment := bind_segment;
@@ -642,7 +638,7 @@ PROCEDURE GetRuntimeHook (u: U;  n: Name): RuntimeHook =
     IF u.runtime.get (n, ref) THEN
       e := ref;
     ELSE
-      e := NEW (RuntimeHook, name := n, proc := NIL, var := NIL, offset := 0);
+      e := NEW (RuntimeHook, name := n, proc := NIL);
       EVAL u.runtime.put (n, e);
     END;
     RETURN e;
@@ -661,28 +657,11 @@ PROCEDURE set_runtime_proc (u: U;  n: Name;  p: Proc) =
     e.proc := p;
   END set_runtime_proc;
 
-PROCEDURE set_runtime_hook (u: U;  n: Name;  v: Var;  o: ByteOffset) =
-  VAR e := GetRuntimeHook (u, n);
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("set_runtime_hook");
-      u.wr.ZName (n);
-      u.wr.VName (v);
-      u.wr.Int   (o);
-      u.wr.NL    ();
-    END;
-
-    e.var := v;
-    e.offset := o;
-  END set_runtime_hook;
-
 PROCEDURE get_runtime_hook (u: U;  n: Name;
-                            VAR p: Proc; VAR v: Var; VAR o: ByteOffset) =
+                            VAR p: Proc) =
   VAR e := GetRuntimeHook (u, n);
   BEGIN
     p := e.proc;
-    v := e.var;
-    o := e.offset;
   END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
@@ -3605,12 +3584,10 @@ PROCEDURE reportfault (u: U;  code: RuntimeError) =
 PROCEDURE makereportproc (u: U) =
   VAR
     repproc      : Proc;
-    repfault     : Var;
-    repfoff      : ByteOffset;
     labelname    : TEXT;
     reportsymbol : INTEGER;
   BEGIN
-    get_runtime_hook(u, M3ID.Add ("ReportFault"), repproc, repfault, repfoff);
+    get_runtime_hook(u, M3ID.Add ("ReportFault"), repproc);
 
     u.cg.set_label(u.reportlabel);
 
@@ -3625,14 +3602,7 @@ PROCEDURE makereportproc (u: U) =
 
     u.cg.pushOp(u.cg.reg[EAX]);  (* runtime error code + line number *)
 
-    IF (repfault # NIL) THEN
-      load_address(u, u.global_var, 0);
-      INC(u.in_proc_call);
-      pop_param(u, Type.Addr);
-      DEC(u.in_proc_call);
-      load(u, repfault, repfoff, Type.Addr, Type.Addr);
-      u.cg.rmCall(u.vstack.op(u.vstack.pos(0, "makereportproc")));
-    ELSIF (repproc # NIL) THEN
+    IF (repproc # NIL) THEN
       start_call_direct(u, repproc, 0, Type.Void);
       INC(u.call_param_size[u.in_proc_call - 1], 4); (* remember error code *)
       load_address(u, u.global_var, 0);
