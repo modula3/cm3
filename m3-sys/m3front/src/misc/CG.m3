@@ -389,12 +389,6 @@ PROCEDURE Set_runtime_proc (n: Name;  p: Proc) =
     cg.set_runtime_proc (n, p);
   END Set_runtime_proc;
 
-PROCEDURE Get_runtime_hook (n: Name;  VAR p: Proc;  VAR v: Var;  VAR o: Offset) =
-  BEGIN
-    cg.get_runtime_hook (n, p, v, o);
-    o := o * Target.Byte; (* bytes back to bits... *)
-  END Get_runtime_hook;
-
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE Import_global (n: Name;  s: Size;  a: Alignment;  t: Type;
