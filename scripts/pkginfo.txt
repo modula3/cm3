@@ -8,6 +8,7 @@ patternmatching core std
 sysutils core std front
 unittest core std
 m3middle base core front std
+m3cggen base core front std
 m3objfile core front
 m3linker core front
 m3back core front
@@ -18,7 +19,6 @@ cm3 core front
 m3scanner base core std
 m3tools base core std
 m3cgcat tool std
-m3cggen tool std
 m3gdb std m3gnudevtool m3gdb
 m3bundle base core std
 mklib base core front std
