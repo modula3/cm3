@@ -63,8 +63,6 @@ TYPE
         end_unit   := end_unit;
         set_source_line := set_source_line;
         set_runtime_proc := set_runtime_proc;
-        set_runtime_hook := set_runtime_hook;
-        get_runtime_hook := get_runtime_hook;
         bind_segment := bind_segment;
         declare_temp   := declare_temp;
         free_temp := free_temp;
@@ -383,24 +381,6 @@ PROCEDURE set_runtime_proc (self: U;  n: Name;  p: Proc) =
     END;
     self.child.set_runtime_proc (n, p);
   END set_runtime_proc;
-
-PROCEDURE set_runtime_hook (self: U;  n: Name;  v: Var;  o: ByteOffset) =
-  BEGIN
-    CheckVar (self, v);
-    IF self.runtime.put (n, 0) THEN
-      PutErr (self, "redefined runtime hook: ", M3ID.ToText (n));
-    END;
-    self.child.set_runtime_hook (n, v, o);
-  END set_runtime_hook;
-
-PROCEDURE get_runtime_hook (self: U;  n: Name; VAR p: Proc;  VAR v: Var; VAR o: ByteOffset) =
-  VAR i: INTEGER;
-  BEGIN
-    IF NOT self.runtime.get (n, i) THEN
-      PutErr (self, "undefined runtime hook: ", M3ID.ToText (n));
-    END;
-    self.child.get_runtime_hook (n, p, v, o);
-  END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 

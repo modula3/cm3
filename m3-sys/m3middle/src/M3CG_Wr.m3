@@ -24,8 +24,6 @@ TYPE
   RuntimeHook = REF RECORD
     name   : Name;
     proc   : Proc       := NIL;
-    var    : Var        := NIL;
-    offset : ByteOffset := 0;
   END;
 
 TYPE
@@ -67,8 +65,6 @@ TYPE
         declare_opaque := declare_opaque;
         reveal_opaque := reveal_opaque;
         set_runtime_proc := set_runtime_proc;
-        set_runtime_hook := set_runtime_hook;
-        get_runtime_hook := get_runtime_hook;
         import_global  := import_global;
         declare_segment := declare_segment;
         bind_segment := bind_segment;
@@ -666,7 +662,7 @@ PROCEDURE GetRuntimeHook (u: U;  n: Name): RuntimeHook =
     IF u.runtime.get (n, ref) THEN
       e := ref;
     ELSE
-      e := NEW (RuntimeHook, name := n, proc := NIL, var := NIL, offset := 0);
+      e := NEW (RuntimeHook, name := n, proc := NIL);
       EVAL u.runtime.put (n, e);
     END;
     RETURN e;
@@ -681,27 +677,6 @@ PROCEDURE set_runtime_proc (u: U;  n: Name;  p: Proc) =
     PName (u, p);
     NL    (u);
   END set_runtime_proc;
-
-PROCEDURE set_runtime_hook (u: U;  n: Name;  v: Var;  o: ByteOffset) =
-  VAR e := GetRuntimeHook (u, n);
-  BEGIN
-    e.var := v;
-    e.offset := o;
-    Cmd   (u, "set_runtime_hook");
-    ZName (u, n);
-    VName (u, v);
-    Int   (u, o);
-    NL    (u);
-  END set_runtime_hook;
-
-PROCEDURE get_runtime_hook (u: U;  n: Name; VAR p: Proc;  VAR v: Var; VAR o: ByteOffset) =
-  VAR e := GetRuntimeHook (u, n);
-  BEGIN
-    (* no ASCII output is generated ... *)
-    p := e.proc;
-    v := e.var;
-    o := e.offset;
-  END get_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 

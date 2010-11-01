@@ -65,7 +65,7 @@ CONST
     Cmd {Bop.reveal_opaque, reveal_opaque},
     Cmd {Bop.declare_exception, declare_exception},
     Cmd {Bop.set_runtime_proc, set_runtime_proc},
-    Cmd {Bop.set_runtime_hook, set_runtime_hook},
+    Cmd {Bop.unused_set_runtime_hook, NIL},
     Cmd {Bop.import_global, import_global},
     Cmd {Bop.declare_segment, declare_segment},
     Cmd {Bop.bind_segment, bind_segment},
@@ -690,14 +690,6 @@ PROCEDURE set_runtime_proc (VAR s: State) =
   BEGIN
     s.cg.set_runtime_proc (name, proc);
   END set_runtime_proc;
-
-PROCEDURE set_runtime_hook (VAR s: State) =
-  VAR name   := Scan_name (s);
-      var    := Scan_var (s);
-      offset := Scan_int (s);
-  BEGIN
-    s.cg.set_runtime_hook (name, var, offset);
-  END set_runtime_hook;
 
 (*------------------------------------------------- variable declarations ---*)
 

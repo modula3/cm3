@@ -688,7 +688,6 @@ static GTY (()) tree current_record_vals;
 static GTY (()) tree enumtype;
 static GTY (()) tree enumtype_elementtype;
 static GTY (()) tree current_segment;
-static GTY (()) tree fault_intf;
 static GTY (()) tree pending_blocks;
 static GTY (()) tree current_stmts;
 static GTY (()) tree pending_stmts;
@@ -3180,8 +3179,6 @@ static PCSTR mode_to_string (enum machine_mode mode)
 
 /*---------------------------------------------------------------- faults ---*/
 
-static UWIDE fault_offs;                /*   + offset                */
-
 static void
 declare_fault_proc (void)
 {
@@ -3281,15 +3278,8 @@ emit_fault_proc (void)
   m3_pop_param (t_addr);
   EXPR_PUSH (DECL_ARGUMENTS (p));
   m3_pop_param (t_word);
-  if (fault_handler != NULL_TREE)
-  {
-    m3_call_direct (fault_handler, t_void);
-  }
-  else
-  {
-    m3_load (fault_intf, fault_offs, t_addr, T_addr, t_addr, T_addr);
-    m3_call_indirect (t_void, NULL_TREE);
-  }
+  gcc_assert (fault_handler != NULL_TREE);
+  m3_call_direct (fault_handler, t_void);
   add_stmt (build1 (RETURN_EXPR, t_void, NULL_TREE));
 
   /* Attach block to the function */
@@ -4018,18 +4008,9 @@ m3cg_set_runtime_proc (void)
 }
 
 static void
-m3cg_set_runtime_hook (void)
+unused_m3cg_set_runtime_hook (void)
 {
-  STRING     (name, name_length);
-  VAR        (var);
-  BYTEOFFSET (offset);
-
-  TREE_USED (var) = true;
-  if (name_length == (sizeof(ReportFault) - 1) && memcmp (name, ReportFault, sizeof(ReportFault) - 1) == 0)
-  {
-    fault_intf = var;
-    fault_offs = offset;
-  }
+  gcc_assert (false);
 }
 
 static void
@@ -6283,7 +6264,7 @@ static const OpProc ops[] = {
   { M3CG_REVEAL_OPAQUE,          m3cg_reveal_opaque          },
   { M3CG_DECLARE_EXCEPTION,      m3cg_declare_exception      },
   { M3CG_SET_RUNTIME_PROC,       m3cg_set_runtime_proc       },
-  { M3CG_SET_RUNTIME_HOOK,       m3cg_set_runtime_hook       },
+  { M3CG_SET_RUNTIME_HOOK,       unused_m3cg_set_runtime_hook },
   { M3CG_IMPORT_GLOBAL,          m3cg_import_global          },
   { M3CG_DECLARE_SEGMENT,        m3cg_declare_segment        },
   { M3CG_BIND_SEGMENT,           m3cg_bind_segment           },
