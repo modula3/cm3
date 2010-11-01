@@ -6643,6 +6643,11 @@ m3_post_options (PCSTR* pfilename)
   /* m3-libs/sysutils/System.m3 is a good test of optimization */
 
   flag_tree_fre = false; /* crashes compiler; see test p244 */
+
+/* m3-tools/m3tohtml
+  HTMLDir.m3: In function 'HTMLDir__QuickSort.clone.1':
+  HTMLDir.m3:391:0: internal compiler error: Bus error
+*/
   flag_ipa_cp_clone = false;
 
   /* Excess precision other than "fast" requires front-end support.  */
