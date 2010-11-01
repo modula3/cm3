@@ -44,7 +44,6 @@ CONST
     Desc { "declare_exception", Op.declare_exception },
     
     Desc { "set_runtime_proc", Op.set_runtime_proc }, 
-    Desc { "set_runtime_hook", Op.unused_set_runtime_hook }, 
     Desc { "import_global", Op.import_global },
     
     Desc { "declare_segment", Op.declare_segment }, 

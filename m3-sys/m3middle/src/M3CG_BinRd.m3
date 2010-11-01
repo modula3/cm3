@@ -65,7 +65,6 @@ CONST
     Cmd {Bop.reveal_opaque, reveal_opaque},
     Cmd {Bop.declare_exception, declare_exception},
     Cmd {Bop.set_runtime_proc, set_runtime_proc},
-    Cmd {Bop.unused_set_runtime_hook, NIL},
     Cmd {Bop.import_global, import_global},
     Cmd {Bop.declare_segment, declare_segment},
     Cmd {Bop.bind_segment, bind_segment},
