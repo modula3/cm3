@@ -3243,6 +3243,7 @@ m3_gimplify_function (tree fndecl)
      so that items like VLA sizes are expanded properly in the context of the
      correct function.  */
   cgn = cgraph_node (fndecl);
+  cgn->needed = true; /* keep all functions */
   for (cgn = cgn->nested; cgn; cgn = cgn->next_nested)
     m3_gimplify_function (cgn->decl);
 }
@@ -4521,12 +4522,7 @@ m3cg_declare_procedure (void)
   DECL_NAME (p) = get_identifier_with_length (name, name_length);
   TREE_STATIC (p) = true;
 
-  /* TREE_PUBLIC (p) should be 'exported', but that fails to keep any
-   * implementation of nonexported functions or, when optimizing,
-   * of unused nested functions. We need to preserve all functions because we
-   * always reference all of them from globals. Always, all of them.
-   */
-  TREE_PUBLIC (p) = ((lev == 0) || flag_unit_at_a_time);
+  TREE_PUBLIC (p) = exported;
   if (exported)
   {
    /* We really want to use VISIBILITY_PROTECTED here but we can't for
@@ -4637,7 +4633,8 @@ m3cg_end_procedure (void)
     {
       /* Register this function with cgraph just far enough to get it
          added to our parent's nested function list.  */
-      (void) cgraph_node (p);
+      struct cgraph_node* node = cgraph_node (p);
+      node->needed = true; /* keep all functions */
     }
   else
     /* We are not inside of any scope now. */
