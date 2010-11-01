@@ -389,11 +389,6 @@ PROCEDURE Set_runtime_proc (n: Name;  p: Proc) =
     cg.set_runtime_proc (n, p);
   END Set_runtime_proc;
 
-PROCEDURE Set_runtime_hook (n: Name;  v: Var;  o: Offset) =
-  BEGIN
-   cg.set_runtime_hook (n, v, AsBytes (o));
-  END Set_runtime_hook;
-
 PROCEDURE Get_runtime_hook (n: Name;  VAR p: Proc;  VAR v: Var;  VAR o: Offset) =
   BEGIN
     cg.get_runtime_hook (n, p, v, o);

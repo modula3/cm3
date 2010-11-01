@@ -139,9 +139,6 @@ PROCEDURE Declare_exception (n: Name;  arg_type: TypeUID;  raise_proc: BOOLEAN;
 PROCEDURE Set_runtime_proc (n: Name;  p: Proc);
 (* declares 'n' as a runtime procedure 'p'.  *)
 
-PROCEDURE Set_runtime_hook (n: Name;  v: Var;  o: Offset);
-(* declares 'n' as a runtime procedure 'p' available at location 'ADR(v)+o' *)
-
 PROCEDURE Get_runtime_hook (n: Name;  VAR p: Proc; VAR v: Var; VAR o: Offset);
 (* returns the location of the runtime symbol 'n' *)
 
