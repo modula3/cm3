@@ -97,7 +97,6 @@ static bool M3_TYPES_SUBRANGE_NEW = true;
 /*static bool M3_TYPES_OPEN_ARRAY_NEW = true;*/
 static bool M3_TYPES_INT = true;
 static bool M3_TYPES_ENUM = true;
-static bool M3_TYPES_TYPENAME = true;
 static bool M3_TYPES_SEGMENT = false;
 static bool M3_TYPES_REPLAY = true;
 static bool M3_TYPES_CHECK_RECORD_SIZE = true;
@@ -381,7 +380,6 @@ static bool m3type_table_dirty;
 
 DEF_VEC_O (m3type_t);
 DEF_VEC_ALLOC_O (m3type_t, gc);
-/* must comment out, #if is not sufficient */
 static GTY(()) VEC(m3type_t, gc) *m3type_table; /* see alias.c for a GTY+VEC example */
 #define m3type_table_address VEC_address (m3type_t, m3type_table)
 #define m3type_table_size_used VEC_length (m3type_t, m3type_table)
@@ -2298,6 +2296,7 @@ scan_proc (void)
   if (VARRAY_TREE (all_procs, i) == NULL)
   {
     p = make_node (FUNCTION_DECL);
+    DECL_PRESERVE_P (p) = true;
     VARRAY_TREE (all_procs, i) = p;
   }
   else
@@ -3243,7 +3242,6 @@ m3_gimplify_function (tree fndecl)
      so that items like VLA sizes are expanded properly in the context of the
      correct function.  */
   cgn = cgraph_node (fndecl);
-  cgn->needed = true; /* keep all functions */
   for (cgn = cgn->nested; cgn; cgn = cgn->next_nested)
     m3_gimplify_function (cgn->decl);
 }
@@ -3418,13 +3416,6 @@ m3cg_declare_typename (void)
   debug_tag ('n', NO_UID, "_%.*s", sizet_to_int (fullname_length), fullname);
   debug_field_id (my_id);
   debug_struct ();
-
-  if (M3_TYPES_TYPENAME)
-  {
-    tree t = get_typeid_to_tree (my_id);
-    gcc_assert (t);
-    m3_push_type_decl (t, get_identifier_with_length (fullname, fullname_length));
-  }
 }
 
 static void
@@ -4634,7 +4625,6 @@ m3cg_end_procedure (void)
       /* Register this function with cgraph just far enough to get it
          added to our parent's nested function list.  */
       struct cgraph_node* node = cgraph_node (p);
-      node->needed = true; /* keep all functions */
     }
   else
     /* We are not inside of any scope now. */
