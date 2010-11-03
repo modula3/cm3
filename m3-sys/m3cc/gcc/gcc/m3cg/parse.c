@@ -6199,24 +6199,24 @@ m3_parse_file (int xx)
 #undef LABEL
 #undef TYPEID
 
-#define FLOAT(x, fkind) m3cg->x = scan_float (&m3cg->fkind);
-#define TYPE(x) m3cg->x = scan_type (#x);
-#define TYPEID(x) m3cg->x = get_typeid (#x);
 #define INTEGER(x) m3cg->x = m3_trace_int (#x, get_int ());
 #define UNSIGNED_INTEGER(x) m3cg->x = m3_trace_int (#x, get_uint ());
 #define STRING(x, length) \
   m3cg->length = get_int (); \
   m3cg->x = scan_string (#x, m3cg->length);
 #define CALLING_CONVENTION(x) m3cg->x = scan_calling_convention ();
+#define TYPE(x) m3cg->x = scan_type (#x);
 #define MTYPE(x) m3cg->x = scan_mtype (#x, 0);
 #define MTYPE2(x, y) m3cg->x = scan_mtype (#x, &m3cg->y);
 #define SIGN(x) m3cg->x = scan_sign ();
 #define BYTESIZE(x)  m3cg->x = m3_trace_int (#x, BITS_PER_UNIT * get_uint ());
+#define FLOAT(x, fkind) m3cg->x = scan_float (&m3cg->fkind);
 #define BOOLEAN(x) m3cg->x = scan_boolean (#x);
 #define VAR(x) m3cg->x = scan_var (ERROR_MARK, #x);
 #define RETURN_VAR(x, code) m3cg->x = scan_var (code, #x);
 #define PROC(x) m3cg->x = scan_proc ();
 #define LABEL(x) m3cg->x = scan_label ();
+#define TYPEID(x) m3cg->x = get_typeid (#x);
 
 #define M3CG(sym, fields) \
       case M3CG_##sym: \
