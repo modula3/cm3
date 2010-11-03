@@ -244,7 +244,8 @@ M3CG (IF_LE,
       FREQUENCY (f))
 M3CG (CASE_JUMP,
       MTYPE (type)
-      UNSIGNED_INTEGER (n))
+      UNSIGNED_INTEGER (n)
+      M3CG_EXTRA (tree* labels))
 M3CG (EXIT_PROC, MTYPE2 (type, T))
 M3CG (LOAD,
       VAR (var)
