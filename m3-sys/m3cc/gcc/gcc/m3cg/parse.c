@@ -72,6 +72,7 @@
 
 typedef char* PSTR;
 typedef const char* PCSTR;
+typedef signed char SCHAR;
 typedef unsigned char UCHAR;
 typedef unsigned int UINT;
 typedef unsigned long ULONG;
@@ -208,7 +209,7 @@ typedef union { M3CG_opcode op;
 } m3cg_union_t;
 #undef M3CG
 
-static const unsigned char m3cg_size[] = {
+static const UCHAR m3cg_size[] = {
 #define M3CG(sym, fields) sizeof(m3cg_##sym##_t),
 #include "m3-def.h"
 };
@@ -438,7 +439,7 @@ static const struct { ULONG typeid; tree* t; } builtin_uids[] = {
 
 #define STRING_AND_LENGTH(a) (a), sizeof(a) - 1
 
-static const struct { tree* t; char name[8]; UCHAR length; } builtin_types[] = {
+static const struct { tree* t; char name[8]; size_t length; } builtin_types[] = {
   { &t_int_8, STRING_AND_LENGTH ("int_8") },
   { &t_int_16, STRING_AND_LENGTH ("int_16") },
   { &t_int_32, STRING_AND_LENGTH ("int_32") },
@@ -1852,7 +1853,6 @@ static GTY (()) varray_type call_stack;
 static UCHAR* input_buffer;
 static size_t input_len;
 static size_t input_cursor;
-static size_t m3_preceding_cursor;
 static bool input_eof;
 static UINT m3cg_lineno = 1;
 
@@ -1916,20 +1916,6 @@ get_byte (void)
 static UCHAR*
 get_bytes_direct (size_t count)
 {
-#if 0 /* hack */
-  UCHAR* result = (UCHAR*)xmalloc(count + 1);
-  if ((input_cursor + count) > input_len)
-  {
-    fatal_error ("read past buffer input_cursor:%lu count:%lu input_len:%lu\n",
-                 (ULONG)input_cursor,
-                 (ULONG)count,
-                 (ULONG)input_len);
-  }
-  result[count] = 0;
-  memcpy(result, &input_buffer[input_cursor], count);
-  input_cursor += count;
-  return result;
-#else
   if ((input_cursor + count) > input_len)
   {
     fatal_error ("read past buffer input_cursor:%lu count:%lu input_len:%lu\n",
@@ -1939,7 +1925,6 @@ get_bytes_direct (size_t count)
   }
   input_cursor += count;
   return &input_buffer[input_cursor - count];
-#endif
 }
 
 static PCSTR
@@ -2159,7 +2144,7 @@ scan_float (UINT *out_Kind)
      per long, even if long can hold more.  So for example a 64 bit double on
      a system with 64 bit long will have 32 bits of zeros in the middle. */
   long Longs[2] = { 0, 0 };
-  UCHAR * const Bytes = (UCHAR*) &Longs;
+  UCHAR * const Bytes = (UCHAR*)&Longs;
   UINT i = { 0 };
   UINT Kind = { 0 };
   tree t = { 0 };
@@ -2197,7 +2182,7 @@ scan_float (UINT *out_Kind)
      endianness */
   for (i = 0;  i < Size;  i++)
     {
-      Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR) (0xFF & get_int ());
+      Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR)(0xFF & get_int ());
     }
 
   /* When crossing and host/target different endian, swap the longs. */
@@ -2264,7 +2249,7 @@ scan_boolean (PCSTR name)
 static varray_type
 varray_extend (varray_type va, size_t n)
 {
-  size_t num_elements;
+  size_t num_elements = { 0 };
 
   if (n <= VARRAY_ACTIVE_SIZE (va))
     return va;
@@ -6106,7 +6091,7 @@ incompatible:
 
 /*----------------------------------------------------------- M3CG parser ---*/
 
-static short m3_indent_op[LAST_OPCODE];
+static SCHAR m3_indent_op[LAST_OPCODE];
 
 static volatile UINT m3_break_lineno; /* set in debugger */
 static void m3_breakpoint(void) /* set breakpoint in debugger */
@@ -6120,17 +6105,17 @@ static void
 m3_parse_file (int xx)
 {
   size_t i = { 0 };
-  m3cg_union_t u = { 0 };
-  m3cg_union_t* up = { 0 };
-  unsigned char* all = { 0 };
+  m3cg_union_t* u = { 0 };
+  UCHAR* all = { 0 };
   size_t all_allocated = { 0 };
   size_t all_used = { 0 };
-  unsigned char op_size = { 0 };
+  UCHAR op_size = { 0 };
+  M3CG_opcode op = LAST_OPCODE;
 
   m3_unused = &xx;
   
-  all_allocated = input_len;
-  all = (UCHAR*)xrealloc(all, all_allocated);
+  all = (UCHAR*)xcalloc(1024, sizeof(*u));
+  all_allocated = 1024 * sizeof(*u);
 
   /* Setup indentation. */
 
@@ -6154,33 +6139,41 @@ m3_parse_file (int xx)
                  i, M3CG_Version);
   }
 
-  u.op = LAST_OPCODE;
-  while (u.op != M3CG_END_UNIT)
+  op = LAST_OPCODE;
+  while (op != M3CG_END_UNIT)
   {
     gcc_assert (input_cursor <= input_len);
-    m3_preceding_cursor = input_cursor;
-    /*m3_replay = false;*/
 
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
-    u.op = get_int ();
-    if (u.op >= LAST_OPCODE)
-      fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %u", u.op, m3cg_lineno);
+    op = get_int ();
+    if (op >= LAST_OPCODE)
+      fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %u", op, m3cg_lineno);
+
+    op_size = m3cg_size[op];
+    while ((all_used + op_size) > all_allocated)
+    {
+      all_allocated *= 2;
+      all = (UCHAR*)xrealloc(all, all_allocated);
+    }
+    u = (m3cg_union_t*)(all + all_used);
+    u->op = op;
+    all_used += op_size;
 
     if (option_trace_all)
     {
-      short indent = m3_indent_op[u.op];
+      int indent = m3_indent_op[op];
       m3_indent += (indent < 0 ? indent : 0);
       fprintf (stderr, "%s%s(%u)%s %s",
                (indent > 0 ? "\n" : ""),
                (m3cg_lineno >= 2) ? "\n" : "",
                m3cg_lineno,
                m3_indentstr (),
-               M3CG_opnames[u.op]);
+               M3CG_opnames[op]);
       m3_indent += (indent > 0 ? indent : 0);
     }
 
-    switch ((size_t)u.op)
+    switch ((UCHAR)op) /* cast to avoid warning about unhandled cases */
     {
 #undef INTEGER
 #undef UNSIGNED_INTEGER
@@ -6221,7 +6214,7 @@ m3_parse_file (int xx)
 #define M3CG(sym, fields) \
       case M3CG_##sym: \
         { \
-          m3cg_##sym##_t* m3cg = &u.m3cg_##sym; \
+          m3cg_##sym##_t* m3cg = &u->m3cg_##sym; \
           m3_unused = m3cg; \
           fields; \
         } \
@@ -6230,11 +6223,13 @@ m3_parse_file (int xx)
     }
 #undef M3CG
 
-    switch ((size_t)u.op)
+    /* case_jump is a special case */
+
+    switch ((UCHAR)op) /* cast to avoid warning about unhandled cases */
     {
     case M3CG_CASE_JUMP:
       {
-        m3cg_CASE_JUMP_t* m3cg = &u.m3cg_CASE_JUMP;
+        m3cg_CASE_JUMP_t* m3cg = &u->m3cg_CASE_JUMP;
         size_t i = { 0 };
         size_t n = m3cg->n;
         m3cg->labels = (tree*)xcalloc(sizeof(tree), n);
@@ -6246,35 +6241,26 @@ m3_parse_file (int xx)
       break;
     }
 
-    op_size = m3cg_size[u.op];
-    while ((all_used + op_size) >= all_allocated)
-    {
-      all_allocated *= 2;
-      all = (UCHAR*)xrealloc(all, all_allocated);
-    }
-    memcpy(all + all_used, &u, op_size);
-    all_used += op_size;
-
     gcc_assert (input_cursor <= input_len);
     m3cg_lineno += 1;
   }
 
   i = 0;
   m3cg_lineno = 1;
-  up = (m3cg_union_t*)all;
-  while (up->op != M3CG_END_UNIT)
+  u = (m3cg_union_t*)all;
+  while (u->op != M3CG_END_UNIT)
   {
-    up = (m3cg_union_t*)(all + i);
-    switch ((size_t)up->op)
+    u = (m3cg_union_t*)(all + i);
+    switch ((UCHAR)u->op) /* cast to avoid warning about unhandled cases */
     {
 #define M3CG(sym, fields) \
     case M3CG_##sym: \
-      m3cg_##sym(&up->m3cg_##sym); \
+      m3cg_##sym(&u->m3cg_##sym); \
       break;
 #include "m3-def.h"
 #undef M3CG
     }
-    i += m3cg_size[up->op];
+    i += m3cg_size[u->op];
     m3cg_lineno += 1;
   }
 
@@ -6435,7 +6421,6 @@ m3_init (void)
 
   /* Read the entire file */
   m3_read_entire_file (finput, &input_buffer, &input_len);
-  /*m3_replay_buffer = (UCHAR*)xmalloc (input_len);*/
   fclose (finput);
 
   m3_init_lex ();
