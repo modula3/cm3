@@ -611,17 +611,6 @@ PROCEDURE set_runtime_proc (u: U;  n: Name;  p: Proc) =
     END;
   END set_runtime_proc;
 
-PROCEDURE set_runtime_hook (u: U;  n: Name;  v: Var;  o: ByteOffset) =
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("set_runtime_hook");
-      u.wr.ZName (n);
-      u.wr.VName (v);
-      u.wr.Int   (o);
-      u.wr.NL    ();
-    END;
-  END set_runtime_hook;
-
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment; type: Type;  m3t: TypeUID): Var =
