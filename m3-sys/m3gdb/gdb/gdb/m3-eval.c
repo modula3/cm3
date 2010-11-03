@@ -576,6 +576,9 @@ m3_allocated_type ( struct value * val )
               val_contents = value_as_address ( val );
               if ( val_contents == 0 )
                 { return builtin_type_m3_null; }
+              if ( ( val_contents % 2 ) != 0 )
+                { return builtin_type_m3_integer; }
+              /* ^Treat misaligned pseudo-pointer as integer. */  
               if ( TYPE_M3_POINTER_TRACED ( direct_type ) )
                 { return m3_allocated_type_from_object_addr ( val_contents ); }
               return direct_type;
@@ -591,6 +594,9 @@ m3_allocated_type ( struct value * val )
               val_contents = value_as_address ( val );
               if ( val_contents == 0 )
                 { return builtin_type_m3_null; }
+              if ( ( val_contents % 2 ) != 0 )
+                { return builtin_type_m3_integer; }
+              /* ^Treat misaligned pseudo-pointer as integer. */  
               return m3_allocated_type_from_object_addr ( val_contents );
 
             case TYPE_CODE_M3_NULL:
