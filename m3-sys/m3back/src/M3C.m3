@@ -19,7 +19,7 @@ FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
-IMPORT Wrx86;
+IMPORT Wrx86, M3ID;
 
 REVEAL
   U = Public BRANDED "M3C.U" OBJECT
@@ -27,6 +27,9 @@ REVEAL
         c      : Wr.T := NIL;
         debug  := FALSE;
         stack  : TextSeq.T := NIL;
+        enum_id: TEXT; (* formatted typeid *)
+        enum_type: TEXT; (* UINT8, UINT16, UINT32 *)
+        enum_value: CARDINAL;
       OVERRIDES
         next_label := next_label;
         set_error_handler := set_error_handler;
@@ -375,6 +378,44 @@ PROCEDURE declare_typename (u: U;  type: TypeUID;  n: Name) =
     END
   END declare_typename;
 
+CONST UID_SIZE = 6;
+CONST NO_UID = 16_FFFFFFFF;
+
+PROCEDURE fmt_uid (x: CARDINAL): TEXT =
+  CONST alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  VAR   buf: ARRAY [0 .. UID_SIZE - 1] OF CHAR;
+        i := UID_SIZE;
+  BEGIN
+    <* ASSERT Text.Length (alphabet) = 62 *>
+    IF x = NO_UID THEN
+      RETURN "zzzzzz";
+    END;
+    WHILE i # 0 DO
+      DEC (i);
+      buf[i] := Text.GetChar(alphabet, x MOD 62);
+      x := x DIV 62;
+    END;
+    <* ASSERT buf[0] >= 'A' AND buf[0] <= 'Z' AND x = 0 *>
+    RETURN Text.FromChars (buf);
+  END fmt_uid;
+
+VAR anonymous_counter: INTEGER;
+VAR m3gdb := TRUE;
+
+<*UNUSED*>PROCEDURE fix_name (name: TEXT; typeid: CARDINAL): TEXT =
+  BEGIN
+    IF name = NIL OR Text.GetChar(name, 0) = '*' THEN
+      INC (anonymous_counter);
+      RETURN "L_" & Fmt.Int (anonymous_counter);
+    ELSIF typeid = 0 OR NOT m3gdb THEN
+      RETURN name;
+    ELSIF typeid = NO_UID THEN
+      RETURN "M" & name;
+    ELSE
+      RETURN "M3_" & fmt_uid (typeid) & "_" & name;
+    END;
+  END fix_name;
+
 PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize) =
   BEGIN
     IF u.debug THEN
@@ -384,7 +425,11 @@ PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize) =
       u.wr.Tipe (elt);
       u.wr.BInt (s);
       u.wr.NL   ();
-    END
+    END;
+    (*
+    typedef M3_eltid m3_typeid[s / 8 / sizeof(elt)];
+    *)
+    print(u, "typedef M3_eltid m3_typeid[s / 8 / sizeof(elt)];\n");
   END declare_array;
 
 PROCEDURE declare_open_array (u: U;  type, elt: TypeUID;  s: BitSize) =
@@ -395,6 +440,12 @@ PROCEDURE declare_open_array (u: U;  type, elt: TypeUID;  s: BitSize) =
       u.wr.Tipe (elt);
       u.wr.BInt (s);
       u.wr.NL   ();
+    END;
+    <* ASSERT s MOD Target.Integer.size = 0 *>
+    IF s = Target.Integer.size * 2 THEN
+      print(u, "typedef struct { M3_eltid* _elts; CARDINAL _size; } m3_typeid;\n");
+    ELSE
+      print(u, "typedef struct { M3_eltid* _elts; CARDINAL _sizes[s / Target.Integer.size]; } m3_typeid;\n");
     END
   END declare_open_array;
 
@@ -406,7 +457,12 @@ PROCEDURE declare_enum (u: U;  type: TypeUID;  n_elts: INTEGER;  s: BitSize) =
       u.wr.Int  (n_elts);
       u.wr.BInt (s);
       u.wr.NL   ();
-    END
+    END;
+    <* ASSERT s = 8 OR s = 16 OR s = 32 OR s = 64 *>
+    u.enum_id := fmt_uid (type);
+    u.enum_value := 0;
+    u.enum_type := "UINT" & Fmt.Int(s);
+    print(u, "typedef " & u.enum_type & " " & u.enum_id);
   END declare_enum;
 
 PROCEDURE declare_enum_elt (u: U;  n: Name) =
@@ -415,7 +471,9 @@ PROCEDURE declare_enum_elt (u: U;  n: Name) =
       u.wr.Cmd   ("declare_enum_elt");
       u.wr.ZName (n);
       u.wr.NL    ();
-    END
+    END;
+    print(u, "#define " & u.enum_id & "_" & M3ID.ToText(n) & " ((" & u.enum_type & ")" & Fmt.Int(u.enum_value) & ")\n");
+    INC (u.enum_value);
   END declare_enum_elt;
 
 PROCEDURE declare_packed  (u: U;  type: TypeUID;  s: BitSize;  base: TypeUID) =
