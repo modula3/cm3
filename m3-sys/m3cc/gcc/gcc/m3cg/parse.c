@@ -3232,7 +3232,7 @@ declare_fault_proc (void)
 static void
 m3_gimplify_function (tree fndecl)
 {
-  struct cgraph_node *cgn = { 0 };
+  struct cgraph_node* node = { 0 };
 
   dump_function (TDI_original, fndecl);
   gimplify_function_tree (fndecl);
@@ -3241,9 +3241,10 @@ m3_gimplify_function (tree fndecl)
   /* Convert all nested functions to GIMPLE now.  We do things in this order
      so that items like VLA sizes are expanded properly in the context of the
      correct function.  */
-  cgn = cgraph_node (fndecl);
-  for (cgn = cgn->nested; cgn; cgn = cgn->next_nested)
-    m3_gimplify_function (cgn->decl);
+  node = cgraph_node (fndecl);
+  cgraph_mark_needed_node (node);    /* keep all functions */
+  for (node = node->nested; node; node = node->next_nested)
+    m3_gimplify_function (node->decl);
 }
 
 static void
@@ -4625,6 +4626,7 @@ m3cg_end_procedure (void)
       /* Register this function with cgraph just far enough to get it
          added to our parent's nested function list.  */
       struct cgraph_node* node = cgraph_node (p);
+      cgraph_mark_needed_node (node);    /* keep all functions */
     }
   else
     /* We are not inside of any scope now. */
