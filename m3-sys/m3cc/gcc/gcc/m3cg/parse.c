@@ -850,7 +850,7 @@ m3_convert (tree type, tree op0)
 static tree
 m3_build_pointer_type (tree a)
 {
-  a = build_pointer_type (a);
+  a = build_pointer_type_for_mode (a, ptr_mode, true);
   /*DECL_NO_TBAA_P (a) = true;*/
   return a;
 }
