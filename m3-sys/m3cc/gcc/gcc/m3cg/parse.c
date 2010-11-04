@@ -407,7 +407,7 @@ static GTY (()) tree t_int;
 #define t_void void_type_node
 static GTY (()) tree t_set;
 
-static const struct { ULONG typeid; tree* t; } builtin_uids[] = {
+static const struct { ULONG type_id; tree* t; } builtin_uids[] = {
   { UID_INTEGER, &t_int },
   { UID_LONGINT, &t_longint },
   { UID_WORD, &t_word },
@@ -465,7 +465,7 @@ static void m3_gc_tree (tree a)
   VEC_safe_push (tree, gc, m3trees, a);
 }
 
-/* Maintain a qsorted/bsearchable array of typeid/tree pairs to map typeid to tree. */
+/* Maintain a qsorted/bsearchable array of type_id/tree pairs to map type_id to tree. */
 
 static bool m3type_table_dirty;
 
@@ -478,8 +478,8 @@ static GTY(()) VEC(m3type_t, gc) *m3type_table; /* see alias.c for a GTY+VEC exa
 static int
 m3type_compare (const void* a, const void *b)
 {
-  ULONG x = ((const m3type_t*)a)->typeid;
-  ULONG y = ((const m3type_t*)b)->typeid;
+  ULONG x = ((const m3type_t*)a)->type_id;
+  ULONG y = ((const m3type_t*)b)->type_id;
   /* Do not use subtraction here. It does not work. Not just
    * because sizeof(int) < sizeof(long) but also because
    * these are unsigned numbers.
@@ -488,7 +488,7 @@ m3type_compare (const void* a, const void *b)
 }
 
 static m3type_t*
-m3type_get (ULONG typeid)
+m3type_get (ULONG type_id)
 {
   m3type_t* found = { 0 };
   if (M3_TYPES)
@@ -496,9 +496,9 @@ m3type_get (ULONG typeid)
     m3type_t to_find;
 
     if (option_trace_all >= 2)
-      fprintf (stderr, "\n  m3type_get(0x%lX) ", typeid);
+      fprintf (stderr, "\n  m3type_get(0x%lX) ", type_id);
 
-    if (!m3type_table_size_used || typeid == NO_UID)
+    if (!m3type_table_size_used || type_id == NO_UID)
       return NULL;
 
     if (m3type_table_dirty)
@@ -509,7 +509,7 @@ m3type_get (ULONG typeid)
               m3type_compare);
       m3type_table_dirty = false;
     }
-    to_find.typeid = typeid;
+    to_find.type_id = type_id;
     found = (m3type_t*)bsearch (&to_find,
                                 m3type_table_address,
                                 m3type_table_size_used,
@@ -520,7 +520,7 @@ m3type_get (ULONG typeid)
 }
 
 static tree
-get_typeid_to_tree (ULONG typeid)
+get_typeid_to_tree (ULONG type_id)
 {
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
@@ -528,16 +528,16 @@ get_typeid_to_tree (ULONG typeid)
   if (M3_TYPES)
   {
     /* optimize some common ones (even skip tracing) */
-    switch (typeid)
+    switch (type_id)
     {
     case UID_INTEGER: return t_int;
     case UID_ADDR: return t_addr;
     }
     {
-      m3type_t* found = m3type_get (typeid);
+      m3type_t* found = m3type_get (type_id);
       tree t = found ? found->t : 0;
-      if (typeid != NO_UID && option_trace_all >= 2)
-        fprintf (stderr, "\n  get_typeid_to_tree(0x%lX):%p  ", typeid, t);
+      if (type_id != NO_UID && option_trace_all >= 2)
+        fprintf (stderr, "\n  get_typeid_to_tree(0x%lX):%p  ", type_id, t);
       return t;
     }
   }
@@ -603,8 +603,8 @@ static size_t long_to_sizet (long a)
 }
 
 static void
-set_typeid_to_tree_replace (ULONG typeid, tree t, bool replace)
-/* This function establishes a global mapping of typeid to tree.
+set_typeid_to_tree_replace (ULONG type_id, tree t, bool replace)
+/* This function establishes a global mapping of type_id to tree.
    If a mapping already exists, the 'replace' parameter determines
    if it is left alone or replaced. */
 {
@@ -617,19 +617,19 @@ set_typeid_to_tree_replace (ULONG typeid, tree t, bool replace)
     m3type_t to_add = { 0, 0 };
 
     if (option_trace_all >= 2)
-      fprintf (stderr, "\n  set_typeid_to_tree(0x%lX, %p)  ", typeid, t);
+      fprintf (stderr, "\n  set_typeid_to_tree(0x%lX, %p)  ", type_id, t);
 
-    if (typeid == NO_UID || !t)
+    if (type_id == NO_UID || !t)
       return;
 
-    found = m3type_get (typeid);
+    found = m3type_get (type_id);
     if (found)
     {
       if (replace)
         found->t = t;
       return;
     }
-    to_add.typeid = typeid;
+    to_add.type_id = type_id;
     to_add.t = t;
     if (!m3type_table)
       m3type_table = VEC_alloc (m3type_t, gc, 100);
@@ -639,11 +639,11 @@ set_typeid_to_tree_replace (ULONG typeid, tree t, bool replace)
 }
 
 static void
-set_typeid_to_tree (ULONG typeid, tree t)
-/* This function establishes a global mapping of typeid to tree.
-   If a mapping from this typeid already exists, it is left unchanged. */
+set_typeid_to_tree (ULONG type_id, tree t)
+/* This function establishes a global mapping of type_id to tree.
+   If a mapping from this type_id already exists, it is left unchanged. */
 {
-  set_typeid_to_tree_replace (typeid, t, false);
+  set_typeid_to_tree_replace (type_id, t, false);
 }
 
 static void
@@ -925,22 +925,22 @@ static tree
 m3_build_type_id (m3_type type,
                   UWIDE size,
                   UWIDE align,
-                  ULONG typeid)
+                  ULONG type_id)
 {
   tree ts = { 0 };
 
   if (!M3_TYPES)
-    typeid = NO_UID; /* disable */
+    type_id = NO_UID; /* disable */
 
   /* Convert integer to enum, or possibly typename/subrange.
-     Be careful, if typeid is a packed type e.g. BITS 20 for typecode,
+     Be careful, if type_id is a packed type e.g. BITS 20 for typecode,
      but frontend asked for something bigger, e.g. word32, then give
      it word32. */
 
   if (M3_TYPES_INT
-      && (typeid != NO_UID)
+      && (type_id != NO_UID)
       && IS_INTEGER_TYPE(type)
-      && ((ts = get_typeid_to_tree (typeid))))
+      && ((ts = get_typeid_to_tree (type_id))))
  {
     if (TYPE_SIZE (ts))
     {
@@ -951,7 +951,7 @@ m3_build_type_id (m3_type type,
         return ts;
       } 
     }
-    /*fprintf (stderr, "type missing size 0x%lX\n", typeid);*/
+    /*fprintf (stderr, "type missing size 0x%lX\n", type_id);*/
   }
 
   switch (type)
@@ -996,8 +996,8 @@ m3_build_type_id (m3_type type,
     case T_void:    return t_void;
 
     case T_addr:
-      if (typeid != NO_UID)
-        ts = get_typeid_to_tree (typeid);
+      if (type_id != NO_UID)
+        ts = get_typeid_to_tree (type_id);
 #if 0
       return ts ? m3_build_pointer_type (ts) : t_addr;
 #else
@@ -1005,8 +1005,8 @@ m3_build_type_id (m3_type type,
 #endif
 
     case T_struct:
-      if (typeid != NO_UID)
-        ts = get_typeid_to_tree (typeid);
+      if (type_id != NO_UID)
+        ts = get_typeid_to_tree (type_id);
       if (!ts
           || TYPE_SIZE (ts) != bitsize_int (size)
           || TYPE_SIZE_UNIT (ts) != size_int (size / BITS_PER_UNIT)
@@ -1627,7 +1627,7 @@ m3_init_decl_processing (void)
   /* add builtin uids */
 
   for (i = 0; i < COUNT_OF (builtin_uids); ++i)
-    set_typeid_to_tree (builtin_uids[i].typeid, *builtin_uids[i].t);
+    set_typeid_to_tree (builtin_uids[i].type_id, *builtin_uids[i].t);
 
   /* declare/name builtin types */
 
@@ -2029,7 +2029,7 @@ get_uint (void)
 
 static ULONG
 get_typeid (PCSTR name)
-/* This function reads and traces a typeid in specially encoded format.
+/* This function reads and traces a type_id in specially encoded format.
    Typeids simply 32bit unsigned integers. */
 {
   ULONG val = (0xFFFFFFFFUL & (ULONG)get_int ());
@@ -2358,14 +2358,14 @@ static int current_dbg_type_count2;
 static int current_dbg_type_count3;
 
 static void
-format_tag_v (m3buf_t* buf, char kind, ULONG typeid, PCSTR fmt, va_list args)
+format_tag_v (m3buf_t* buf, char kind, ULONG type_id, PCSTR fmt, va_list args)
 {
   if (!m3gdb)
     return;
   buf->buf [0] = 'M';
   buf->buf [1] = kind;
   buf->buf [2] = '_';
-  fmt_uid (typeid, &buf->buf[3]);
+  fmt_uid (type_id, &buf->buf[3]);
 
   buf->buf [sizeof(buf->buf) - 2] = 0;
   vsnprintf (&buf->buf[UID_SIZE + 3], sizeof(buf->buf) - UID_SIZE - 3, fmt, args);
@@ -2377,13 +2377,13 @@ format_tag_v (m3buf_t* buf, char kind, ULONG typeid, PCSTR fmt, va_list args)
 }
 
 static void
-debug_tag (char kind, ULONG typeid, PCSTR fmt, ...)
+debug_tag (char kind, ULONG type_id, PCSTR fmt, ...)
 {
   va_list args;
   if (!m3gdb)
     return;
   va_start (args, fmt);
-  format_tag_v (&current_dbg_type_tag_buf, kind, typeid, fmt, args);
+  format_tag_v (&current_dbg_type_tag_buf, kind, type_id, fmt, args);
   va_end (args);
 }
 
@@ -2413,17 +2413,17 @@ static void
 dump_record_type (tree record_type)
 {
   tree field = { 0 };
-  ULONG typeid = { 0 };
+  ULONG type_id = { 0 };
   
   if (!option_trace_all)
     return;
 
   if (current_record_type_id != NO_UID)
-    typeid = current_record_type_id;
+    type_id = current_record_type_id;
   else if (current_object_type_id != NO_UID)
-    typeid = current_object_type_id;
-  fprintf (stderr, "\ndump_record_type typeid=0x%lX, size=0x%lX:\n",
-           typeid, (ULONG)current_record_size);
+    type_id = current_object_type_id;
+  fprintf (stderr, "\ndump_record_type type_id=0x%lX, size=0x%lX:\n",
+           type_id, (ULONG)current_record_size);
   for (field = TYPE_FIELDS (record_type); field; field = TREE_CHAIN (field))
   {
     fprintf (stderr, "  %s offset=0x%lX\n",
@@ -2455,23 +2455,23 @@ debug_field_name (PCSTR name)
 }
 
 static void
-debug_field_id (ULONG typeid)
+debug_field_id (ULONG type_id)
 {
   char buf [UID_SIZE];
   if (!m3gdb)
     return;
-  fmt_uid (typeid, buf);
+  fmt_uid (type_id, buf);
   debug_field_name_length (buf, sizeof(buf));
 }
 
 static void
-debug_field_fmt_v (ULONG typeid, PCSTR fmt, va_list args)
+debug_field_fmt_v (ULONG type_id, PCSTR fmt, va_list args)
 {
   char name [256];
 
   if (!m3gdb)
     return;
-  fmt_uid (typeid, name);
+  fmt_uid (type_id, name);
   name[sizeof(name) - 2] = 0;
   vsnprintf (name + UID_SIZE, sizeof(name) - UID_SIZE, fmt, args);
   if (name[sizeof(name) - 2])
@@ -2483,13 +2483,13 @@ debug_field_fmt_v (ULONG typeid, PCSTR fmt, va_list args)
 }
 
 static void
-debug_field_fmt (ULONG typeid, PCSTR fmt, ...)
+debug_field_fmt (ULONG type_id, PCSTR fmt, ...)
 {
   if (!m3gdb)
     return;
   va_list args;
   va_start (args, fmt);
-  debug_field_fmt_v (typeid, fmt, args);
+  debug_field_fmt_v (type_id, fmt, args);
   va_end (args);
 }
 
@@ -2697,7 +2697,7 @@ static void add_stmt (tree t)
 }
 
 static tree
-fix_name (PCSTR name, size_t length, ULONG typeid)
+fix_name (PCSTR name, size_t length, ULONG type_id)
 {
   PSTR buf = { 0 };
 
@@ -2711,11 +2711,11 @@ fix_name (PCSTR name, size_t length, ULONG typeid)
     length = strlen (buf);
     gcc_assert (length < 256);
   }
-  else if (typeid == 0 || !m3gdb)
+  else if (type_id == 0 || !m3gdb)
   {
     buf = (PSTR)name;
   }
-  else if (typeid == NO_UID)
+  else if (type_id == NO_UID)
   {
     buf = (PSTR)alloca (sizet_add(length, 1));
     buf[0] = 'M';
@@ -2726,7 +2726,7 @@ fix_name (PCSTR name, size_t length, ULONG typeid)
   {
     buf = (PSTR)alloca (sizet_add (length, UID_SIZE + 4));
     buf[0] = 'M';  buf[1] = '3';  buf[2] = '_';
-    fmt_uid (typeid, buf + 3);
+    fmt_uid (type_id, buf + 3);
     buf[3 + UID_SIZE] = '_';
     memcpy (&buf[4 + UID_SIZE], name, length);
     length += UID_SIZE + 4;
@@ -3682,7 +3682,7 @@ M3CG_HANDLER (DECLARE_FIELD)
   if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES && t == NULL) /* This is frequently NULL. Why? */
   {
     fprintf (stderr,
-             "\ndeclare_field: typeid 0x%lX to type is null for field %.*s\n",
+             "\ndeclare_field: type_id 0x%lX to type is null for field %.*s\n",
              (ULONG)my_id, long_to_printf_length (name_length), name);
     if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES == 1)
       t = t_addr;
@@ -3969,7 +3969,7 @@ M3CG_HANDLER (REVEAL_OPAQUE)
 M3CG_HANDLER (DECLARE_EXCEPTION)
 {
   STRING  (name, name_length);
-  TYPEID  (typeid);
+  TYPEID  (type_id);
   BOOLEAN (raise_proc);
   VAR     (base);
   UNSIGNED_INTEGER (offset);
@@ -3994,10 +3994,10 @@ M3CG_HANDLER (IMPORT_GLOBAL)
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (type);
-  TYPEID     (typeid);
+  TYPEID     (type_id);
   RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
+  DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
@@ -4006,7 +4006,7 @@ M3CG_HANDLER (IMPORT_GLOBAL)
 
   DECL_EXTERNAL (var) = true;
   TREE_PUBLIC   (var) = true;
-  TREE_TYPE (var) = m3_build_type_id (type, size, align, typeid);
+  TREE_TYPE (var) = m3_build_type_id (type, size, align, type_id);
   layout_decl (var, align);
 
   TREE_CHAIN (var) = global_decls;
@@ -4016,11 +4016,11 @@ M3CG_HANDLER (IMPORT_GLOBAL)
 M3CG_HANDLER (DECLARE_SEGMENT)
 {
   STRING     (name, name_length);
-  TYPEID     (typeid);
+  TYPEID     (type_id);
   BOOLEAN    (is_const);
   RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
+  DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
@@ -4031,7 +4031,7 @@ M3CG_HANDLER (DECLARE_SEGMENT)
      gcc doesn't think it fits in a register, so that loads out of it do get
      their offsets applied. */
   TREE_TYPE (var)
-    = m3_build_type_id (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, typeid);
+    = m3_build_type_id (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, type_id);
   layout_decl (var, BIGGEST_ALIGNMENT);
   TYPE_UNSIGNED (TREE_TYPE (var)) = true;
   TREE_STATIC (var) = true;
@@ -4080,19 +4080,19 @@ M3CG_HANDLER (DECLARE_GLOBAL)
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (type);
-  TYPEID     (typeid);
+  TYPEID     (type_id);
   BOOLEAN    (exported);
   BOOLEAN    (initialized);
   RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
+  DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
 
-  TREE_TYPE (var) = m3_build_type_id (type, size, align, typeid);
+  TREE_TYPE (var) = m3_build_type_id (type, size, align, type_id);
   DECL_COMMON (var) = (initialized == false);
   TREE_PUBLIC (var) = exported;
   TREE_STATIC (var) = true;
@@ -4108,19 +4108,19 @@ M3CG_HANDLER (DECLARE_CONSTANT)
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (type);
-  TYPEID     (typeid);
+  TYPEID     (type_id);
   BOOLEAN    (exported);
   BOOLEAN    (initialized);
   RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
+  DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
 
-  TREE_TYPE (var) = m3_build_type_id (type, size, align, typeid);
+  TREE_TYPE (var) = m3_build_type_id (type, size, align, type_id);
   DECL_COMMON (var) = (initialized == false);
   TREE_PUBLIC (var) = exported;
   TREE_STATIC (var) = true;
@@ -4137,20 +4137,20 @@ M3CG_HANDLER (DECLARE_LOCAL)
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (type);
-  TYPEID     (typeid);
+  TYPEID     (type_id);
   BOOLEAN    (in_memory);
   BOOLEAN    (up_level);
   FREQUENCY  (f);
   RETURN_VAR (var, VAR_DECL);
 
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
+  DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
 
-  TREE_TYPE (var) = m3_build_type_id (type, size, align, typeid);
+  TREE_TYPE (var) = m3_build_type_id (type, size, align, type_id);
   DECL_NONLOCAL (var) = up_level || in_memory;
   TREE_ADDRESSABLE (var) = in_memory;
   DECL_CONTEXT (var) = current_function_decl;
@@ -4181,7 +4181,7 @@ M3CG_HANDLER (DECLARE_PARAM)
   BYTESIZE   (size);
   ALIGNMENT  (align);
   TYPE       (type);
-  TYPEID     (typeid);
+  TYPEID     (type_id);
   BOOLEAN    (in_memory);
   BOOLEAN    (up_level);
   FREQUENCY  (frequency);
@@ -4189,7 +4189,7 @@ M3CG_HANDLER (DECLARE_PARAM)
 
   tree p = current_function_decl;
 
-  DECL_NAME (var) = fix_name (name, name_length, typeid);
+  DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
@@ -4217,7 +4217,7 @@ M3CG_HANDLER (DECLARE_PARAM)
 
   gcc_assert (align >= !!size);
 
-  TREE_TYPE (var) = m3_build_type_id (type, size, align, typeid);
+  TREE_TYPE (var) = m3_build_type_id (type, size, align, type_id);
   DECL_NONLOCAL (var) = up_level || in_memory;
   TREE_ADDRESSABLE (var) = in_memory;
   DECL_ARG_TYPE (var) = TREE_TYPE (var);
