@@ -6114,8 +6114,8 @@ m3_parse_file (int xx)
 
   m3_unused = &xx;
   
-  all = (UCHAR*)xcalloc(1024, sizeof(*u));
-  all_allocated = 1024 * sizeof(*u);
+  all = (UCHAR*)xcalloc (0x10000, sizeof(*u));
+  all_allocated = 0x10000 * sizeof(*u);
 
   /* Setup indentation. */
 
