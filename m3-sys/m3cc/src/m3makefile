@@ -239,7 +239,7 @@ if GCC45
 end
 if GCC42 or GCC45
   fs_mkdir(SourceDir & "/gcc/m3cg")
-  foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
+  foreach a in ["config-lang.in", "m3-def.h", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
     cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
   end
   cp_if("../gcc/gcc/m3cg/" & m3gty, SourceDir & "/gcc/m3cg/m3gty43.h")
