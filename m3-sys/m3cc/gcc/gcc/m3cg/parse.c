@@ -203,7 +203,7 @@ typedef enum
 #include "m3-def.h"
 #undef M3CG
 
-typedef union { M3CG_opcode op;
+typedef union { M3CG_opcode op; UWIDE alignment;
 #define M3CG(sym, fields) m3cg_##sym##_t m3cg_##sym;
 #include "m3-def.h"
 } m3cg_union_t;
