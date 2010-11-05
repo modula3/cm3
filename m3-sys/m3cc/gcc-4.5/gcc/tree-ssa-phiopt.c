@@ -879,7 +879,7 @@ minmax_replacement (basic_block cond_bb, basic_block middle_bb,
 
 static bool
 abs_replacement (basic_block cond_bb, basic_block middle_bb,
-		 edge e0 ATTRIBUTE_UNUSED, edge e1,
+		 edge ARG_UNUSED(e0), edge e1,
 		 gimple phi, tree arg0, tree arg1)
 {
   tree result;
@@ -1104,7 +1104,7 @@ add_or_mark_expr (basic_block bb, tree exp,
 
 /* Called by walk_dominator_tree, when entering the block BB.  */
 static void
-nt_init_block (struct dom_walk_data *data ATTRIBUTE_UNUSED, basic_block bb)
+nt_init_block (struct dom_walk_data *ARG_UNUSED(data), basic_block bb)
 {
   gimple_stmt_iterator gsi;
   /* Mark this BB as being on the path to dominator root.  */
@@ -1128,7 +1128,7 @@ nt_init_block (struct dom_walk_data *data ATTRIBUTE_UNUSED, basic_block bb)
 
 /* Called by walk_dominator_tree, when basic block BB is exited.  */
 static void
-nt_fini_block (struct dom_walk_data *data ATTRIBUTE_UNUSED, basic_block bb)
+nt_fini_block (struct dom_walk_data *ARG_UNUSED(data), basic_block bb)
 {
   /* This BB isn't on the path to dominator root anymore.  */
   bb->aux = NULL;

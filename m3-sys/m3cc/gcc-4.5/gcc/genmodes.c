@@ -203,7 +203,7 @@ eq_mode (const void *p, const void *q)
   for (C = 0; C < MAX_MODE_CLASS; C++)		\
     for (M = modes[C]; M; M = M->next)
 
-static void ATTRIBUTE_UNUSED
+static ARG_UNUSED(void)
 new_adjust (const char *name,
 	    struct mode_adjust **category, const char *catname,
 	    const char *adjustment,
@@ -480,7 +480,7 @@ make_complex_modes (enum mode_class cl,
 /* For all modes in class CL, construct vector modes of width
    WIDTH, having as many components as necessary.  */
 #define VECTOR_MODES(C, W) make_vector_modes(MODE_##C, W, __FILE__, __LINE__)
-static void ATTRIBUTE_UNUSED
+static ARG_UNUSED(void)
 make_vector_modes (enum mode_class cl, unsigned int width,
 		   const char *file, unsigned int line)
 {
@@ -616,7 +616,7 @@ make_decimal_float_mode (const char *name,
 
 #define RESET_FLOAT_FORMAT(N, F) \
   reset_float_format (#N, #F, __FILE__, __LINE__)
-static void ATTRIBUTE_UNUSED
+static ARG_UNUSED(void)
 reset_float_format (const char *name, const char *format,
 		    const char *file, unsigned int line)
 {
@@ -638,7 +638,7 @@ reset_float_format (const char *name, const char *format,
    For now, we do not attempt to narrow down their bit sizes.  */
 #define PARTIAL_INT_MODE(M) \
   make_partial_integer_mode (#M, "P" #M, -1U, __FILE__, __LINE__)
-static void ATTRIBUTE_UNUSED
+static ARG_UNUSED(void)
 make_partial_integer_mode (const char *base, const char *name,
 			   unsigned int precision,
 			   const char *file, unsigned int line)
@@ -665,7 +665,7 @@ make_partial_integer_mode (const char *base, const char *name,
    mode and the number of components.  */
 #define VECTOR_MODE(C, M, N) \
   make_vector_mode (MODE_##C, #M, N, __FILE__, __LINE__);
-static void ATTRIBUTE_UNUSED
+static ARG_UNUSED(void)
 make_vector_mode (enum mode_class bclass,
 		  const char *base,
 		  unsigned int ncomponents,
@@ -1200,7 +1200,7 @@ emit_mode_adjustments (void)
 \nvoid\
 \ninit_adjust_machine_modes (void)\
 \n{\
-\n  size_t s ATTRIBUTE_UNUSED;");
+\n  size_t ARG_UNUSED(s);");
 
   /* Size adjustments must be propagated to all containing modes.
      A size adjustment forces us to recalculate the alignment too.  */

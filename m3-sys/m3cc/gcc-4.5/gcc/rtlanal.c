@@ -3377,7 +3377,7 @@ struct parms_set_data
 
 /* Helper function for noticing stores to parameter registers.  */
 static void
-parms_set (rtx x, const_rtx pat ATTRIBUTE_UNUSED, void *data)
+parms_set (rtx x, const_rtx ARG_UNUSED(pat), void *data)
 {
   struct parms_set_data *const d = (struct parms_set_data *) data;
   if (REG_P (x) && REGNO (x) < FIRST_PSEUDO_REGISTER
@@ -3534,7 +3534,7 @@ label_is_jump_target_p (const_rtx label, const_rtx jump_insn)
    be returned.  */
 
 int
-rtx_cost (rtx x, enum rtx_code outer_code ATTRIBUTE_UNUSED, bool speed)
+rtx_cost (rtx x, enum rtx_code ARG_UNUSED(outer_code), bool speed)
 {
   int i, j;
   enum rtx_code code;

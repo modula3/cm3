@@ -826,8 +826,8 @@ make_cond_expr_edges (basic_block bb)
    element.  */
 
 static bool
-edge_to_cases_cleanup (const void *key ATTRIBUTE_UNUSED, void **value,
-		       void *data ATTRIBUTE_UNUSED)
+edge_to_cases_cleanup (const void *ARG_UNUSED(key), void **value,
+		       void *ARG_UNUSED(data))
 {
   tree t, next;
 
@@ -2487,7 +2487,7 @@ gimple_split_edge (edge edge_in)
    inside a PHI node.  */
 
 static tree
-verify_expr (tree *tp, int *walk_subtrees, void *data ATTRIBUTE_UNUSED)
+verify_expr (tree *tp, int *walk_subtrees, void *ARG_UNUSED(data))
 {
   tree t = *tp, x;
 
@@ -3735,7 +3735,7 @@ verify_gimple_phi (gimple stmt)
    Returns true if anything is wrong.  */
 
 static bool
-verify_gimple_debug (gimple stmt ATTRIBUTE_UNUSED)
+verify_gimple_debug (gimple ARG_UNUSED(stmt))
 {
   /* There isn't much that could be wrong in a gimple debug stmt.  A
      gimple debug bind stmt, for example, maps a tree, that's usually
@@ -4860,7 +4860,7 @@ gimple_move_block_after (basic_block bb, basic_block after)
 /* Return true if basic_block can be duplicated.  */
 
 static bool
-gimple_can_duplicate_bb_p (const_basic_block bb ATTRIBUTE_UNUSED)
+gimple_can_duplicate_bb_p (const_basic_block ARG_UNUSED(bb))
 {
   return true;
 }
@@ -5183,9 +5183,9 @@ gimple_duplicate_sese_region (edge entry, edge exit,
 */
 
 bool
-gimple_duplicate_sese_tail (edge entry ATTRIBUTE_UNUSED, edge exit ATTRIBUTE_UNUSED,
-			  basic_block *region ATTRIBUTE_UNUSED, unsigned n_region ATTRIBUTE_UNUSED,
-			  basic_block *region_copy ATTRIBUTE_UNUSED)
+gimple_duplicate_sese_tail (edge ARG_UNUSED(entry), edge exit ATTRIBUTE_UNUSED,
+			  basic_block *ARG_UNUSED(region), unsigned n_region ATTRIBUTE_UNUSED,
+			  basic_block *ARG_UNUSED(region_copy))
 {
   unsigned i;
   bool free_region_copy = false;
@@ -6893,8 +6893,8 @@ gimple_lv_adjust_loop_header_phi (basic_block first, basic_block second,
    the destination of the ELSE part.  */
 
 static void
-gimple_lv_add_condition_to_bb (basic_block first_head ATTRIBUTE_UNUSED,
-			       basic_block second_head ATTRIBUTE_UNUSED,
+gimple_lv_add_condition_to_bb (basic_block ARG_UNUSED(first_head),
+			       basic_block ARG_UNUSED(second_head),
 			       basic_block cond_bb, void *cond_e)
 {
   gimple_stmt_iterator gsi;

@@ -928,7 +928,7 @@ save_call_clobbered_regs (void)
    been assigned hard regs have had their register number changed already,
    so we can ignore pseudos.  */
 static void
-mark_set_regs (rtx reg, const_rtx setter ATTRIBUTE_UNUSED, void *data)
+mark_set_regs (rtx reg, const_rtx ARG_UNUSED(setter), void *data)
 {
   int regno, endregno, i;
   HARD_REG_SET *this_insn_sets = (HARD_REG_SET *) data;
@@ -1064,10 +1064,10 @@ mark_referenced_regs (rtx *loc, refmarker_fn *mark, void *arg)
    referenced_regs.  */
 
 static void
-mark_reg_as_referenced (rtx *loc ATTRIBUTE_UNUSED,
+mark_reg_as_referenced (rtx *ARG_UNUSED(loc),
 			enum machine_mode mode,
 			int hardregno,
-			void *arg ATTRIBUTE_UNUSED)
+			void *ARG_UNUSED(arg))
 {
   add_to_hard_reg_set (&referenced_regs, mode, hardregno);
 }

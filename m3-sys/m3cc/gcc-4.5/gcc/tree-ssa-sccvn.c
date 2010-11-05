@@ -993,7 +993,7 @@ static tree *last_vuse_ptr;
    with the current VUSE and performs the expression lookup.  */
 
 static void *
-vn_reference_lookup_2 (ao_ref *op ATTRIBUTE_UNUSED, tree vuse, void *vr_)
+vn_reference_lookup_2 (ao_ref *ARG_UNUSED(op), tree vuse, void *vr_)
 {
   vn_reference_t vr = (vn_reference_t)vr_;
   void **slot;
@@ -2760,7 +2760,7 @@ sort_scc (VEC (tree, heap) *scc)
 /* Insert the no longer used nary *ENTRY to the current hash.  */
 
 static int
-copy_nary (void **entry, void *data ATTRIBUTE_UNUSED)
+copy_nary (void **entry, void *ARG_UNUSED(data))
 {
   vn_nary_op_t onary = (vn_nary_op_t) *entry;
   size_t size = (sizeof (struct vn_nary_op_s)
@@ -2779,7 +2779,7 @@ copy_nary (void **entry, void *data ATTRIBUTE_UNUSED)
 /* Insert the no longer used phi *ENTRY to the current hash.  */
 
 static int
-copy_phis (void **entry, void *data ATTRIBUTE_UNUSED)
+copy_phis (void **entry, void *ARG_UNUSED(data))
 {
   vn_phi_t ophi = (vn_phi_t) *entry;
   vn_phi_t phi = (vn_phi_t) pool_alloc (current_info->phis_pool);
@@ -2795,7 +2795,7 @@ copy_phis (void **entry, void *data ATTRIBUTE_UNUSED)
 /* Insert the no longer used reference *ENTRY to the current hash.  */
 
 static int
-copy_references (void **entry, void *data ATTRIBUTE_UNUSED)
+copy_references (void **entry, void *ARG_UNUSED(data))
 {
   vn_reference_t oref = (vn_reference_t) *entry;
   vn_reference_t ref;

@@ -363,7 +363,7 @@ void (*lang_post_pch_load) (void);
 
 void
 c_common_read_pch (cpp_reader *pfile, const char *name,
-		   int fd, const char *orig_name ATTRIBUTE_UNUSED)
+		   int fd, const char *ARG_UNUSED(orig_name))
 {
   FILE *f;
   struct c_pch_header h;

@@ -196,7 +196,7 @@ begin_schedule_ready (rtx insn, rtx last)
    to be formatted so that multiple output lines will line up nicely.  */
 
 static const char *
-ebb_print_insn (const_rtx insn, int aligned ATTRIBUTE_UNUSED)
+ebb_print_insn (const_rtx insn, int ARG_UNUSED(aligned))
 {
   static char tmp[80];
 
@@ -233,8 +233,8 @@ rank (rtx insn1, rtx insn2)
    calculations.  */
 
 static int
-ebb_contributes_to_priority (rtx next ATTRIBUTE_UNUSED,
-                             rtx insn ATTRIBUTE_UNUSED)
+ebb_contributes_to_priority (rtx ARG_UNUSED(next),
+                             rtx ARG_UNUSED(insn))
 {
   return 1;
 }
@@ -631,7 +631,7 @@ schedule_ebbs (void)
 
 /* INSN has been added to/removed from current ebb.  */
 static void
-ebb_add_remove_insn (rtx insn ATTRIBUTE_UNUSED, int remove_p)
+ebb_add_remove_insn (rtx ARG_UNUSED(insn), int remove_p)
 {
   if (!remove_p)
     rgn_n_insns++;
@@ -694,7 +694,7 @@ advance_target_bb (basic_block bb, rtx insn)
    For parameter meaning please refer to
    sched-int.h: struct sched_info: fix_recovery_cfg.  */
 static void
-ebb_fix_recovery_cfg (int bbi ATTRIBUTE_UNUSED, int jump_bbi,
+ebb_fix_recovery_cfg (int ARG_UNUSED(bbi), int jump_bbi,
 		      int jump_bb_nexti)
 {
   gcc_assert (last_bb->index != bbi);

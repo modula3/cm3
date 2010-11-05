@@ -840,7 +840,7 @@ zone_free_marks (void)
    compile error unless exactly one of the HAVE_* is defined.  */
 
 static inline char *
-alloc_anon (char *pref ATTRIBUTE_UNUSED, size_t size, struct alloc_zone *zone)
+alloc_anon (char *ARG_UNUSED(pref), size_t size, struct alloc_zone *zone)
 {
 #ifdef HAVE_MMAP_ANON
   char *page = (char *) mmap (pref, size, PROT_READ | PROT_WRITE,
@@ -2335,7 +2335,7 @@ pch_bucket (void *x, enum gt_types_enum type,
 /* Add the size of object X to the size of the PCH data.  */
 
 void
-ggc_pch_count_object (struct ggc_pch_data *d, void *x ATTRIBUTE_UNUSED,
+ggc_pch_count_object (struct ggc_pch_data *d, void *ARG_UNUSED(x),
 		      size_t size, bool is_string, enum gt_types_enum type)
 {
   /* NOTE: Right now we don't need to align up the size of any objects.
@@ -2433,7 +2433,7 @@ ggc_pch_prepare_write (struct ggc_pch_data *d,
 void
 ggc_pch_write_object (struct ggc_pch_data *d,
 		      FILE *f, void *x, void *newx,
-		      size_t size, bool is_string ATTRIBUTE_UNUSED)
+		      size_t size, bool ARG_UNUSED(is_string))
 {
   if (fseek (f, (size_t) newx - d->orig_base + d->start_offset, SEEK_SET) != 0)
     fatal_error ("can't seek PCH file: %m");

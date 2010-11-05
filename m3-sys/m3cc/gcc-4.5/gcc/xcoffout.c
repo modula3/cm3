@@ -322,8 +322,8 @@ xcoffout_source_file (FILE *file, const char *filename, int inline_p)
 
 void
 xcoffout_source_line (unsigned int line, const char *filename,
-                      int discriminator ATTRIBUTE_UNUSED,
-                      bool is_stmt ATTRIBUTE_UNUSED)
+                      int ARG_UNUSED(discriminator),
+                      bool ARG_UNUSED(is_stmt))
 {
   bool inline_p = (strcmp (xcoff_current_function_file, filename) != 0
 		   || (int) line < xcoff_begin_function_line);
@@ -440,7 +440,7 @@ xcoffout_declare_function (FILE *file, tree decl, const char *name)
 
 void
 xcoffout_begin_prologue (unsigned int line,
-			 const char *file ATTRIBUTE_UNUSED)
+			 const char *ARG_UNUSED(file))
 {
   ASM_OUTPUT_LFB (asm_out_file, line);
   dbxout_parms (DECL_ARGUMENTS (current_function_decl));
@@ -469,8 +469,8 @@ xcoffout_end_function (unsigned int last_linenum)
    Called after the epilogue is output.  */
 
 void
-xcoffout_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
-		       const char *file ATTRIBUTE_UNUSED)
+xcoffout_end_epilogue (unsigned int ARG_UNUSED(line),
+		       const char *ARG_UNUSED(file))
 {
   /* We need to pass the correct function size to .function, otherwise,
      the xas assembler can't figure out the correct size for the function

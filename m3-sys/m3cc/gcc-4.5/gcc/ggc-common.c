@@ -262,7 +262,7 @@ ggc_splay_alloc (int sz, void *nl)
 }
 
 void
-ggc_splay_dont_free (void * x ATTRIBUTE_UNUSED, void *nl)
+ggc_splay_dont_free (void * ARG_UNUSED(x), void *nl)
 {
   gcc_assert (!nl);
 }
@@ -276,7 +276,7 @@ ggc_splay_dont_free (void * x ATTRIBUTE_UNUSED, void *nl)
 #define LABEL(x) ((x) < 1024*10 ? ' ' : ((x) < 1024*1024*10 ? 'k' : 'M'))
 
 void
-ggc_print_common_statistics (FILE *stream ATTRIBUTE_UNUSED,
+ggc_print_common_statistics (FILE *ARG_UNUSED(stream),
 			     ggc_statistics *stats)
 {
   /* Set the pointer so that during collection we will actually gather
@@ -431,7 +431,7 @@ static void
 relocate_ptrs (void *ptr_p, void *state_p)
 {
   void **ptr = (void **)ptr_p;
-  struct traversal_state *state ATTRIBUTE_UNUSED
+  struct traversal_state *ARG_UNUSED(state)
     = (struct traversal_state *)state_p;
   struct ptr_data *result;
 
@@ -659,8 +659,8 @@ gt_pch_restore (FILE *f)
    malloc, presumably.  */
 
 void *
-default_gt_pch_get_address (size_t size ATTRIBUTE_UNUSED,
-			    int fd ATTRIBUTE_UNUSED)
+default_gt_pch_get_address (size_t ARG_UNUSED(size),
+			    int ARG_UNUSED(fd))
 {
   return NULL;
 }
@@ -672,8 +672,8 @@ default_gt_pch_get_address (size_t size ATTRIBUTE_UNUSED,
    of the PCH file would be required.  */
 
 int
-default_gt_pch_use_address (void *base, size_t size, int fd ATTRIBUTE_UNUSED,
-			    size_t offset ATTRIBUTE_UNUSED)
+default_gt_pch_use_address (void *base, size_t size, int ARG_UNUSED(fd),
+			    size_t ARG_UNUSED(offset))
 {
   void *addr = xmalloc (size);
   return (addr == base) - 1;
@@ -947,7 +947,7 @@ ggc_record_overhead (size_t allocated, size_t overhead, void *ptr,
 /* Helper function for prune_overhead_list.  See if SLOT is still marked and
    remove it from hashtable if it is not.  */
 static int
-ggc_prune_ptr (void **slot, void *b ATTRIBUTE_UNUSED)
+ggc_prune_ptr (void **slot, void *ARG_UNUSED(b))
 {
   struct ptr_hash_entry *p = (struct ptr_hash_entry *) *slot;
   if (!ggc_marked_p (p->ptr))
@@ -1026,7 +1026,7 @@ add_statistics (void **slot, void *b)
 /* Dump per-site memory statistics.  */
 #endif
 void
-dump_ggc_loc_statistics (bool final ATTRIBUTE_UNUSED)
+dump_ggc_loc_statistics (bool ARG_UNUSED(final))
 {
 #ifdef GATHER_STATISTICS
   int nentries = 0;

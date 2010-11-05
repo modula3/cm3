@@ -725,8 +725,8 @@ TB_current_chain_node (tree node)
    parent.  This function is used by walk_tree.  */
 
 static tree
-store_child_info (tree *tp, int *walk_subtrees ATTRIBUTE_UNUSED,
-		  void *data ATTRIBUTE_UNUSED)
+store_child_info (tree *tp, int *ARG_UNUSED(walk_subtrees),
+		  void *ARG_UNUSED(data))
 {
   tree node;
   void **slot;
@@ -859,7 +859,7 @@ TB_get_tree_code (char *input)
    walk_tree.  */
 
 static tree
-find_node_with_code (tree *tp, int *walk_subtrees ATTRIBUTE_UNUSED,
+find_node_with_code (tree *tp, int *ARG_UNUSED(walk_subtrees),
 		     void *data)
 {
   enum tree_code *code;

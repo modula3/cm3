@@ -69,9 +69,9 @@ along with GCC; see the file COPYING3.  If not see
 
 
 bool
-default_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
-			      rtx addr ATTRIBUTE_UNUSED,
-			      bool strict ATTRIBUTE_UNUSED)
+default_legitimate_address_p (enum machine_mode ARG_UNUSED(mode),
+			      rtx ARG_UNUSED(addr),
+			      bool ARG_UNUSED(strict))
 {
 #ifdef GO_IF_LEGITIMATE_ADDRESS
   /* Defer to the old implementation using a goto.  */
@@ -85,7 +85,7 @@ default_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
 }
 
 void
-default_external_libcall (rtx fun ATTRIBUTE_UNUSED)
+default_external_libcall (rtx ARG_UNUSED(fun))
 {
 #ifdef ASM_OUTPUT_EXTERNAL_LIBCALL
   ASM_OUTPUT_EXTERNAL_LIBCALL(asm_out_file, fun);
@@ -113,11 +113,11 @@ default_unspec_may_trap_p (const_rtx x, unsigned flags)
 }
 
 enum machine_mode
-default_promote_function_mode (const_tree type ATTRIBUTE_UNUSED,
+default_promote_function_mode (const_tree ARG_UNUSED(type),
 			       enum machine_mode mode,
-			       int *punsignedp ATTRIBUTE_UNUSED,
-			       const_tree funtype ATTRIBUTE_UNUSED,
-			       int for_return ATTRIBUTE_UNUSED)
+			       int *ARG_UNUSED(punsignedp),
+			       const_tree ARG_UNUSED(funtype),
+			       int ARG_UNUSED(for_return))
 {
   if (for_return == 2)
     return promote_mode (type, mode, punsignedp);
@@ -128,8 +128,8 @@ enum machine_mode
 default_promote_function_mode_always_promote (const_tree type,
 					      enum machine_mode mode,
 					      int *punsignedp,
-					      const_tree funtype ATTRIBUTE_UNUSED,
-					      int for_return ATTRIBUTE_UNUSED)
+					      const_tree ARG_UNUSED(funtype),
+					      int ARG_UNUSED(for_return))
 {
   return promote_mode (type, mode, punsignedp);
 }
@@ -145,14 +145,14 @@ default_cc_modes_compatible (enum machine_mode m1, enum machine_mode m2)
 
 bool
 default_return_in_memory (const_tree type,
-			  const_tree fntype ATTRIBUTE_UNUSED)
+			  const_tree ARG_UNUSED(fntype))
 {
   return (TYPE_MODE (type) == BLKmode);
 }
 
 rtx
-default_legitimize_address (rtx x, rtx orig_x ATTRIBUTE_UNUSED,
-			    enum machine_mode mode ATTRIBUTE_UNUSED)
+default_legitimize_address (rtx x, rtx ARG_UNUSED(orig_x),
+			    enum machine_mode ARG_UNUSED(mode))
 {
   return x;
 }
@@ -165,11 +165,11 @@ default_expand_builtin_saveregs (void)
 }
 
 void
-default_setup_incoming_varargs (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
-				enum machine_mode mode ATTRIBUTE_UNUSED,
-				tree type ATTRIBUTE_UNUSED,
-				int *pretend_arg_size ATTRIBUTE_UNUSED,
-				int second_time ATTRIBUTE_UNUSED)
+default_setup_incoming_varargs (CUMULATIVE_ARGS *ARG_UNUSED(ca),
+				enum machine_mode ARG_UNUSED(mode),
+				tree ARG_UNUSED(type),
+				int *ARG_UNUSED(pretend_arg_size),
+				int ARG_UNUSED(second_time))
 {
 }
 
@@ -184,13 +184,13 @@ default_builtin_setjmp_frame_value (void)
 /* Generic hook that takes a CUMULATIVE_ARGS pointer and returns false.  */
 
 bool
-hook_bool_CUMULATIVE_ARGS_false (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED)
+hook_bool_CUMULATIVE_ARGS_false (CUMULATIVE_ARGS *ARG_UNUSED(ca))
 {
   return false;
 }
 
 bool
-default_pretend_outgoing_varargs_named (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED)
+default_pretend_outgoing_varargs_named (CUMULATIVE_ARGS *ARG_UNUSED(ca))
 {
   return (targetm.calls.setup_incoming_varargs
 	  != default_setup_incoming_varargs);
@@ -231,7 +231,7 @@ default_shift_truncation_mask (enum machine_mode mode)
 /* The default implementation of TARGET_MIN_DIVISIONS_FOR_RECIP_MUL.  */
 
 unsigned int
-default_min_divisions_for_recip_mul (enum machine_mode mode ATTRIBUTE_UNUSED)
+default_min_divisions_for_recip_mul (enum machine_mode ARG_UNUSED(mode))
 {
   return have_insn_for (DIV, mode) ? 3 : 2;
 }
@@ -239,8 +239,8 @@ default_min_divisions_for_recip_mul (enum machine_mode mode ATTRIBUTE_UNUSED)
 /* The default implementation of TARGET_MODE_REP_EXTENDED.  */
 
 int
-default_mode_rep_extended (enum machine_mode mode ATTRIBUTE_UNUSED,
-			   enum machine_mode mode_rep ATTRIBUTE_UNUSED)
+default_mode_rep_extended (enum machine_mode ARG_UNUSED(mode),
+			   enum machine_mode ARG_UNUSED(mode_rep))
 {
   return UNKNOWN;
 }
@@ -248,7 +248,7 @@ default_mode_rep_extended (enum machine_mode mode ATTRIBUTE_UNUSED,
 /* Generic hook that takes a CUMULATIVE_ARGS pointer and returns true.  */
 
 bool
-hook_bool_CUMULATIVE_ARGS_true (CUMULATIVE_ARGS * a ATTRIBUTE_UNUSED)
+hook_bool_CUMULATIVE_ARGS_true (CUMULATIVE_ARGS * ARG_UNUSED(a))
 {
   return true;
 }
@@ -256,7 +256,7 @@ hook_bool_CUMULATIVE_ARGS_true (CUMULATIVE_ARGS * a ATTRIBUTE_UNUSED)
 /* Return machine mode for non-standard suffix
    or VOIDmode if non-standard suffixes are unsupported.  */
 enum machine_mode
-default_mode_for_suffix (char suffix ATTRIBUTE_UNUSED)
+default_mode_for_suffix (char ARG_UNUSED(suffix))
 {
   return VOIDmode;
 }
@@ -297,9 +297,9 @@ default_cxx_get_cookie_size (tree type)
    of the TARGET_PASS_BY_REFERENCE hook uses just MUST_PASS_IN_STACK.  */
 
 bool
-hook_pass_by_reference_must_pass_in_stack (CUMULATIVE_ARGS *c ATTRIBUTE_UNUSED,
-	enum machine_mode mode ATTRIBUTE_UNUSED, const_tree type ATTRIBUTE_UNUSED,
-	bool named_arg ATTRIBUTE_UNUSED)
+hook_pass_by_reference_must_pass_in_stack (CUMULATIVE_ARGS *ARG_UNUSED(c),
+	enum machine_mode ARG_UNUSED(mode), const_tree type ATTRIBUTE_UNUSED,
+	bool ARG_UNUSED(named_arg))
 {
   return targetm.calls.must_pass_in_stack (mode, type);
 }
@@ -308,9 +308,9 @@ hook_pass_by_reference_must_pass_in_stack (CUMULATIVE_ARGS *c ATTRIBUTE_UNUSED,
    version of the hook is true for all named arguments.  */
 
 bool
-hook_callee_copies_named (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
-			  enum machine_mode mode ATTRIBUTE_UNUSED,
-			  const_tree type ATTRIBUTE_UNUSED, bool named)
+hook_callee_copies_named (CUMULATIVE_ARGS *ARG_UNUSED(ca),
+			  enum machine_mode ARG_UNUSED(mode),
+			  const_tree ARG_UNUSED(type), bool named)
 {
   return named;
 }
@@ -318,8 +318,8 @@ hook_callee_copies_named (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
 /* Emit any directives required to unwind this instruction.  */
 
 void
-default_unwind_emit (FILE * stream ATTRIBUTE_UNUSED,
-		     rtx insn ATTRIBUTE_UNUSED)
+default_unwind_emit (FILE * ARG_UNUSED(stream),
+		     rtx ARG_UNUSED(insn))
 {
   /* Should never happen.  */
   gcc_unreachable ();
@@ -419,9 +419,9 @@ default_invalid_within_doloop (const_rtx insn)
 /* Mapping of builtin functions to vectorized variants.  */
 
 tree
-default_builtin_vectorized_function (tree fndecl ATTRIBUTE_UNUSED,
-				     tree type_out ATTRIBUTE_UNUSED,
-				     tree type_in ATTRIBUTE_UNUSED)
+default_builtin_vectorized_function (tree ARG_UNUSED(fndecl),
+				     tree ARG_UNUSED(type_out),
+				     tree ARG_UNUSED(type_in))
 {
   return NULL_TREE;
 }
@@ -429,8 +429,8 @@ default_builtin_vectorized_function (tree fndecl ATTRIBUTE_UNUSED,
 /* Vectorized conversion.  */
 
 tree
-default_builtin_vectorized_conversion (unsigned int code ATTRIBUTE_UNUSED,
-				       tree type ATTRIBUTE_UNUSED)
+default_builtin_vectorized_conversion (unsigned int ARG_UNUSED(code),
+				       tree ARG_UNUSED(type))
 {
   return NULL_TREE;
 }
@@ -438,50 +438,50 @@ default_builtin_vectorized_conversion (unsigned int code ATTRIBUTE_UNUSED,
 /* Reciprocal.  */
 
 tree
-default_builtin_reciprocal (unsigned int fn ATTRIBUTE_UNUSED,
-			    bool md_fn ATTRIBUTE_UNUSED,
-			    bool sqrt ATTRIBUTE_UNUSED)
+default_builtin_reciprocal (unsigned int ARG_UNUSED(fn),
+			    bool ARG_UNUSED(md_fn),
+			    bool ARG_UNUSED(sqrt))
 {
   return NULL_TREE;
 }
 
 bool
 hook_bool_CUMULATIVE_ARGS_mode_tree_bool_false (
-	CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
-	enum machine_mode mode ATTRIBUTE_UNUSED,
-	const_tree type ATTRIBUTE_UNUSED, bool named ATTRIBUTE_UNUSED)
+	CUMULATIVE_ARGS *ARG_UNUSED(ca),
+	enum machine_mode ARG_UNUSED(mode),
+	const_tree ARG_UNUSED(type), bool named ATTRIBUTE_UNUSED)
 {
   return false;
 }
 
 bool
 hook_bool_CUMULATIVE_ARGS_mode_tree_bool_true (
-	CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
-	enum machine_mode mode ATTRIBUTE_UNUSED,
-	const_tree type ATTRIBUTE_UNUSED, bool named ATTRIBUTE_UNUSED)
+	CUMULATIVE_ARGS *ARG_UNUSED(ca),
+	enum machine_mode ARG_UNUSED(mode),
+	const_tree ARG_UNUSED(type), bool named ATTRIBUTE_UNUSED)
 {
   return true;
 }
 
 int
 hook_int_CUMULATIVE_ARGS_mode_tree_bool_0 (
-	CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
-	enum machine_mode mode ATTRIBUTE_UNUSED,
-	tree type ATTRIBUTE_UNUSED, bool named ATTRIBUTE_UNUSED)
+	CUMULATIVE_ARGS *ARG_UNUSED(ca),
+	enum machine_mode ARG_UNUSED(mode),
+	tree ARG_UNUSED(type), bool named ATTRIBUTE_UNUSED)
 {
   return 0;
 }
 
 void
-hook_void_bitmap (bitmap regs ATTRIBUTE_UNUSED)
+hook_void_bitmap (bitmap ARG_UNUSED(regs))
 {
 }
 
 const char *
 hook_invalid_arg_for_unprototyped_fn (
-	const_tree typelist ATTRIBUTE_UNUSED,
-	const_tree funcdecl ATTRIBUTE_UNUSED,
-	const_tree val ATTRIBUTE_UNUSED)
+	const_tree ARG_UNUSED(typelist),
+	const_tree ARG_UNUSED(funcdecl),
+	const_tree ARG_UNUSED(val))
 {
   return NULL;
 }
@@ -580,15 +580,15 @@ default_hidden_stack_protect_fail (void)
 
 bool
 hook_bool_const_rtx_commutative_p (const_rtx x,
-				   int outer_code ATTRIBUTE_UNUSED)
+				   int ARG_UNUSED(outer_code))
 {
   return COMMUTATIVE_P (x);
 }
 
 rtx
-default_function_value (const_tree ret_type ATTRIBUTE_UNUSED,
+default_function_value (const_tree ARG_UNUSED(ret_type),
 			const_tree fn_decl_or_type,
-			bool outgoing ATTRIBUTE_UNUSED)
+			bool ARG_UNUSED(outgoing))
 {
   /* The old interface doesn't handle receiving the function type.  */
   if (fn_decl_or_type
@@ -608,8 +608,8 @@ default_function_value (const_tree ret_type ATTRIBUTE_UNUSED,
 }
 
 rtx
-default_libcall_value (enum machine_mode mode ATTRIBUTE_UNUSED,
-		       const_rtx fun ATTRIBUTE_UNUSED)
+default_libcall_value (enum machine_mode ARG_UNUSED(mode),
+		       const_rtx ARG_UNUSED(fun))
 {
 #ifdef LIBCALL_VALUE
   return LIBCALL_VALUE (mode);
@@ -692,9 +692,9 @@ default_ira_cover_classes (void)
 #endif
 
 enum reg_class
-default_secondary_reload (bool in_p ATTRIBUTE_UNUSED, rtx x ATTRIBUTE_UNUSED,
-			  enum reg_class reload_class ATTRIBUTE_UNUSED,
-			  enum machine_mode reload_mode ATTRIBUTE_UNUSED,
+default_secondary_reload (bool ARG_UNUSED(in_p), rtx x ATTRIBUTE_UNUSED,
+			  enum reg_class ARG_UNUSED(reload_class),
+			  enum machine_mode ARG_UNUSED(reload_mode),
 			  secondary_reload_info *sri)
 {
   enum reg_class rclass = NO_REGS;
@@ -780,9 +780,9 @@ default_secondary_reload (bool in_p ATTRIBUTE_UNUSED, rtx x ATTRIBUTE_UNUSED,
 }
 
 bool
-default_handle_c_option (size_t code ATTRIBUTE_UNUSED,
-			 const char *arg ATTRIBUTE_UNUSED,
-			 int value ATTRIBUTE_UNUSED)
+default_handle_c_option (size_t ARG_UNUSED(code),
+			 const char *ARG_UNUSED(arg),
+			 int ARG_UNUSED(value))
 {
   return false;
 }
@@ -797,7 +797,7 @@ default_reloc_rw_mask (void)
 }
 
 /* By default, do no modification. */
-tree default_mangle_decl_assembler_name (tree decl ATTRIBUTE_UNUSED,
+tree default_mangle_decl_assembler_name (tree ARG_UNUSED(decl),
 					 tree id)
 {
    return id;
@@ -848,7 +848,7 @@ default_valid_pointer_mode (enum machine_mode mode)
    for the generic address space only.  */
 
 enum machine_mode
-default_addr_space_pointer_mode (addr_space_t addrspace ATTRIBUTE_UNUSED)
+default_addr_space_pointer_mode (addr_space_t ARG_UNUSED(addrspace))
 {
   gcc_assert (ADDR_SPACE_GENERIC_P (addrspace));
   return ptr_mode;
@@ -858,7 +858,7 @@ default_addr_space_pointer_mode (addr_space_t addrspace ATTRIBUTE_UNUSED)
    for the generic address space only.  */
 
 enum machine_mode
-default_addr_space_address_mode (addr_space_t addrspace ATTRIBUTE_UNUSED)
+default_addr_space_address_mode (addr_space_t ARG_UNUSED(addrspace))
 {
   gcc_assert (ADDR_SPACE_GENERIC_P (addrspace));
   return Pmode;
@@ -930,15 +930,15 @@ default_addr_space_subset_p (addr_space_t subset, addr_space_t superset)
    called for targets with only a generic address space.  */
 
 rtx
-default_addr_space_convert (rtx op ATTRIBUTE_UNUSED,
-			    tree from_type ATTRIBUTE_UNUSED,
-			    tree to_type ATTRIBUTE_UNUSED)
+default_addr_space_convert (rtx ARG_UNUSED(op),
+			    tree ARG_UNUSED(from_type),
+			    tree ARG_UNUSED(to_type))
 {
   gcc_unreachable ();
 }
 
 bool
-default_hard_regno_scratch_ok (unsigned int regno ATTRIBUTE_UNUSED)
+default_hard_regno_scratch_ok (unsigned int ARG_UNUSED(regno))
 {
   return true;
 }

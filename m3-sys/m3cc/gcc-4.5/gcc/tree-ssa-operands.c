@@ -627,7 +627,7 @@ append_vuse (tree var)
 /* Add virtual operands for STMT.  FLAGS is as in get_expr_operands.  */
 
 static void
-add_virtual_operand (gimple stmt ATTRIBUTE_UNUSED, int flags)
+add_virtual_operand (gimple ARG_UNUSED(stmt), int flags)
 {
   /* Add virtual operands to the stmt, unless the caller has specifically
      requested not to do that (used when adding operands inside an

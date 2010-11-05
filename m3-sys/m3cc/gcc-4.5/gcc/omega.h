@@ -242,7 +242,7 @@ omega_free_eqns (eqn eq, int n)
 /* Returns true when E is an inequality with a single variable.  */
 
 static inline bool
-single_var_geq (eqn e, int nv ATTRIBUTE_UNUSED)
+single_var_geq (eqn e, int ARG_UNUSED(nv))
 {
   return (e->key != 0
 	  && -OMEGA_MAX_VARS <= e->key && e->key <= OMEGA_MAX_VARS);

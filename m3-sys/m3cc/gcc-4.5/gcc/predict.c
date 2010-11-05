@@ -1595,8 +1595,8 @@ tree_bb_level_predictions (void)
    empty.  */
 
 static bool
-assert_is_empty (const void *key ATTRIBUTE_UNUSED, void **value,
-		 void *data ATTRIBUTE_UNUSED)
+assert_is_empty (const void *ARG_UNUSED(key), void **value,
+		 void *ARG_UNUSED(data))
 {
   gcc_assert (!*value);
   return false;
