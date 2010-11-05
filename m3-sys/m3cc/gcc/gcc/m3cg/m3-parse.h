@@ -42,17 +42,26 @@ static tree m3_type_for_size (UINT precision, int unsignedp);
 static tree m3_type_for_mode (enum machine_mode, int unsignedp);
 static tree m3_unsigned_type (tree type_node);
 static tree m3_signed_type (tree type_node);
-static tree m3_signed_or_unsigned_type (bool unsignedp, tree type);
+static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
+#if GCC42
+typedef WIDE alias_set_type;
+#endif
 static alias_set_type m3_get_alias_set (tree);
 
 /* Functions to keep track of the current scope */
 static tree pushdecl (tree decl);
 
 /* Langhooks.  */
-static tree builtin_function (PCSTR name,
-                              tree type,
-                              enum built_in_function function_code,
-                              enum built_in_class clas);
+static tree
+builtin_function (PCSTR name, tree type,
+#if GCC42
+                  int function_code,
+#else
+                  built_in_function function_code,
+#endif
+		  enum built_in_class clas, const char *library_name,
+		  tree attrs);
+
 static tree getdecls (void);
 static int global_bindings_p (void);
 #if !GCC45
@@ -66,11 +75,6 @@ m3_expand_function (tree fndecl);
 
 static tree m3_push_type_decl (tree type, tree name);
 static void m3_write_globals (void);
-
-static tree builtin_function (PCSTR name,
-                              tree type,
-                              enum built_in_function function_code,
-                              enum built_in_class clas);
 
 static PCSTR trace_name (PCSTR* inout_name);
 static PSTR trace_upper_hex (PSTR format);
@@ -124,8 +128,13 @@ static tree proc_addr (tree p);
 static void m3_start_call (void);
 static void m3_pop_param (tree t);
 static struct language_function* m3_language_function (void);
+#if !GCC42
 static void m3_volatilize_decl (tree decl);
 static void m3_volatilize_current_function (void);
+#else
+#define m3_volatilize_decl(x) /* nothing */
+#define m3_volatilize_current_function() /* nothing */
+#endif
 static void m3_call_direct (tree p, tree return_type);
 static void m3_call_indirect (tree return_type, tree calling_convention);
 static void m3_swap (void);

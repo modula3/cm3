@@ -114,8 +114,11 @@ static bool M3_LOADSTORE_VIEW_CONVERT = false;
 #else
 #if defined USE_MAPPED_LOCATION
 #define M3_USE_MAPPED_LOCATION
-#define SET_TYPE_MODE(node, mode) (TYPE_MODE (node) = (mode))
 #endif
+#endif
+
+#ifndef SET_TYPE_MODE
+#define SET_TYPE_MODE(node, mode) (TYPE_MODE (node) = (mode))
 #endif
 
 #ifndef GCC42
@@ -127,6 +130,7 @@ static bool M3_LOADSTORE_VIEW_CONVERT = false;
 #endif
 
 #if GCC42
+#define POINTER_PLUS_EXPR PLUS_EXPR
 /*typedef const union tree_node *const_tree;*/
 #define const_tree tree
 #define allocate_struct_function(a, b) allocate_struct_function (a)
@@ -803,7 +807,11 @@ static tree m3_current_scope (void)
   return current_function_decl ? current_function_decl : global_decls;
 }
 
+#if GCC42
+#define m3_volatize 0
+#else
 #define m3_volatize (m3_language_function ()->volatil)
+#endif
 
 static bool m3_next_store_volatile;
 
@@ -815,12 +823,14 @@ static bool m3_next_store_volatile;
 #undef LANG_HOOKS_MARK_ADDRESSABLE
 #define LANG_HOOKS_MARK_ADDRESSABLE m3_mark_addressable
 #endif
+#if GCC42
 #undef LANG_HOOKS_SIGNED_TYPE
 #define LANG_HOOKS_SIGNED_TYPE m3_signed_type
 #undef LANG_HOOKS_UNSIGNED_TYPE
 #define LANG_HOOKS_UNSIGNED_TYPE m3_unsigned_type
 #undef LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE
 #define LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE m3_signed_or_unsigned_type
+#endif
 #undef LANG_HOOKS_TYPE_FOR_MODE
 #define LANG_HOOKS_TYPE_FOR_MODE m3_type_for_mode
 #undef LANG_HOOKS_TYPE_FOR_SIZE
@@ -867,10 +877,12 @@ struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
 #define DEFTREECODE(SYM, NAME, TYPE, LENGTH) TYPE,
 
+#if 0
 const enum tree_code_class tree_code_type[] = {
 #include "tree.def"
   tcc_exceptional
 };
+#endif
 #undef DEFTREECODE
 
 #define DEFTREECODE(SYM, NAME, TYPE, LENGTH) LENGTH,
@@ -1228,15 +1240,13 @@ m3_get_alias_set (tree)
 }
 
 #if !GCC45
-
+static bool
+m3_mark_addressable (tree x)
 /* Mark EXP saying that we need to be able to take the
    address of it; it should not be allocated in a register.
    Value is 1 if successful.
 
    This implementation was copied from c-decl.c. */
-
-static bool
-m3_mark_addressable (tree x)
 {
   while (1)
     switch (TREE_CODE (x))
@@ -1260,15 +1270,13 @@ m3_mark_addressable (tree x)
         return true;
       }
 }
-
 #endif
-
-/* Return an integer type with the number of bits of precision given by
-   PRECISION.  UNSIGNEDP is nonzero if the type is unsigned; otherwise
-   it is a signed type.  */
 
 static tree
 m3_type_for_size (UINT bits, int unsignedp)
+/* Return an integer type with the number of bits of precision given by
+   PRECISION.  UNSIGNEDP is nonzero if the type is unsigned; otherwise
+   it is a signed type.  */
 {
   if (bits <= TYPE_PRECISION (t_int_8))
     return unsignedp ? t_word_8  : t_int_8;
@@ -1288,11 +1296,10 @@ m3_type_for_size (UINT bits, int unsignedp)
   return NULL;
 }
 
-/* Return a data type that has machine mode MODE.  UNSIGNEDP selects
-   an unsigned type; otherwise a signed type is returned.  */
-
 static tree
 m3_type_for_mode (enum machine_mode mode, int unsignedp)
+/* Return a data type that has machine mode MODE.  UNSIGNEDP selects
+   an unsigned type; otherwise a signed type is returned.  */
 {
   if (mode == TYPE_MODE (t_int_8))   return unsignedp ? t_word_8   : t_int_8;
   if (mode == TYPE_MODE (t_int_16))  return unsignedp ? t_word_16  : t_int_16;
@@ -1310,38 +1317,34 @@ m3_type_for_mode (enum machine_mode mode, int unsignedp)
   return NULL;
 }
 
-/* Return the unsigned version of a TYPE_NODE, a scalar type.  */
-
 static tree
 m3_unsigned_type (tree type_node)
+/* Return the unsigned version of a TYPE_NODE, a scalar type.  */
 {
   return m3_signed_or_unsigned_type (true, type_node);
 }
 
-/* Return the signed version of a TYPE_NODE, a scalar type.  */
-
 static tree
 m3_signed_type (tree type_node)
+/* Return the signed version of a TYPE_NODE, a scalar type.  */
 {
   return m3_signed_or_unsigned_type (false, type_node);
 }
 
+static tree
+m3_signed_or_unsigned_type (int unsignedp, tree type)
 /* Return a type the same as TYPE except unsigned or signed according to
    UNSIGNEDP.  */
-
-static tree
-m3_signed_or_unsigned_type (bool unsignedp, tree type)
 {
-  if (! INTEGRAL_TYPE_P (type) || TYPE_UNSIGNED (type) == unsignedp)
+  if (! INTEGRAL_TYPE_P (type) || TYPE_UNSIGNED (type) == !!unsignedp)
     return type;
   else
     return m3_type_for_size (TYPE_PRECISION (type), unsignedp);
 }
 
-/* Return non-zero if we are currently in the global binding level.  */
-
 static int
 global_bindings_p (void)
+/* Return non-zero if we are currently in the global binding level.  */
 {
   return current_block == NULL;
 }
@@ -1399,10 +1402,12 @@ m3_push_type_decl (tree type, tree name)
   if (M3_TYPES_ENUM)
   {
     DECL_CONTEXT (decl) = m3_current_scope ();
-    if (input_location != UNKNOWN_LOCATION)
-      DECL_SOURCE_LOCATION (decl) = input_location;
-    else
+#if !GCC42
+    if (input_location == UNKNOWN_LOCATION)
       DECL_SOURCE_LOCATION (decl) = BUILTINS_LOCATION;
+    else
+#endif
+      DECL_SOURCE_LOCATION (decl) = input_location;
   }
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
@@ -1441,10 +1446,15 @@ htab_eq_builtin (const PTR p1, const PTR p2)
 }
 
 static tree
-builtin_function (PCSTR name,
-                  tree type,
-                  enum built_in_function function_code,
-                  enum built_in_class clas)
+builtin_function (PCSTR name, tree type,
+#if GCC42
+                  int function_code,
+#else
+                  built_in_function function_code,
+#endif
+		  enum built_in_class clas,
+		  const char *library_name,
+		  tree attrs ATTRIBUTE_UNUSED)
 {
   tree identifier = get_identifier (name);
   tree decl = build_decl (FUNCTION_DECL, identifier, type);
@@ -1452,17 +1462,16 @@ builtin_function (PCSTR name,
   TREE_PUBLIC (decl) = true;
   DECL_EXTERNAL (decl) = true;
   DECL_BUILT_IN_CLASS (decl) = clas;
-  DECL_FUNCTION_CODE (decl) = function_code;
+  DECL_FUNCTION_CODE (decl) = (built_in_function)function_code;
 
-  {
-    tree *slot;
-    if (!builtins)
-      builtins = htab_create_ggc (1021, htab_hash_builtin,
-                                  htab_eq_builtin, NULL);
-    slot = (tree *)htab_find_slot (builtins, decl, INSERT);
-    gcc_assert (*slot == NULL);
-    *slot = decl;
-  }
+  gcc_assert (!library_name);
+
+  if (!builtins)
+    builtins = htab_create_ggc (1021, htab_hash_builtin,
+                                htab_eq_builtin, NULL);
+  tree* slot = (tree *)htab_find_slot (builtins, decl, INSERT);
+  gcc_assert (*slot == NULL);
+  *slot = decl;
 
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
@@ -1524,7 +1533,7 @@ m3_write_globals (void)
 static void
 sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
 {
-  tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL);
+  tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL, 0, 0);
   TREE_NOTHROW (decl) = true;
   built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
@@ -1534,8 +1543,6 @@ sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
 static tree
 m3_make_integer_type (UINT size, UINT align, UINT signd)
 {
-  tree type = { 0 };
-
   gcc_assert (size >= 1 && size <= 64);
   gcc_assert (align <= 64);
   gcc_assert (signd <= 1);
@@ -1552,7 +1559,7 @@ m3_make_integer_type (UINT size, UINT align, UINT signd)
     }
   }
   gcc_assert (align < 2);
-  type = make_node (INTEGER_TYPE);
+  tree type = make_node (INTEGER_TYPE);
 
   if (size <= 8)
     SET_TYPE_MODE (type, QImode);
@@ -1780,17 +1787,17 @@ m3_init_decl_processing (void)
                 "__sync_lock_release_8");
 
   t = build_function_type_list (t_void, NULL_TREE);
-  set_union_proc  = builtin_function ("set_union", t, ezero, NOT_BUILT_IN);
-  set_diff_proc   = builtin_function ("set_difference", t, ezero, NOT_BUILT_IN);
-  set_inter_proc  = builtin_function ("set_intersection", t, ezero, NOT_BUILT_IN);
-  set_sdiff_proc  = builtin_function ("set_sym_difference", t, ezero, NOT_BUILT_IN);
-  set_range_proc  = builtin_function ("set_range", t, ezero, NOT_BUILT_IN);
+  set_union_proc  = builtin_function ("set_union", t, ezero, NOT_BUILT_IN, 0, 0);
+  set_diff_proc   = builtin_function ("set_difference", t, ezero, NOT_BUILT_IN, 0, 0);
+  set_inter_proc  = builtin_function ("set_intersection", t, ezero, NOT_BUILT_IN, 0, 0);
+  set_sdiff_proc  = builtin_function ("set_sym_difference", t, ezero, NOT_BUILT_IN, 0, 0);
+  set_range_proc  = builtin_function ("set_range", t, ezero, NOT_BUILT_IN, 0, 0);
 
   t = build_function_type_list (t_int, NULL_TREE);
-  set_gt_proc = builtin_function ("set_gt", t, ezero, NOT_BUILT_IN);
-  set_ge_proc = builtin_function ("set_ge", t, ezero, NOT_BUILT_IN);
-  set_lt_proc = builtin_function ("set_lt", t, ezero, NOT_BUILT_IN);
-  set_le_proc = builtin_function ("set_le", t, ezero, NOT_BUILT_IN);
+  set_gt_proc = builtin_function ("set_gt", t, ezero, NOT_BUILT_IN, 0, 0);
+  set_ge_proc = builtin_function ("set_ge", t, ezero, NOT_BUILT_IN, 0, 0);
+  set_lt_proc = builtin_function ("set_lt", t, ezero, NOT_BUILT_IN, 0, 0);
+  set_le_proc = builtin_function ("set_le", t, ezero, NOT_BUILT_IN, 0, 0);
 }
 
 /*========================================================== DECLARATIONS ===*/
@@ -2180,7 +2187,6 @@ scan_float (UINT *out_Kind)
   } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8), &ieee_single_format },
               { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
               { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
-  UINT Size = { 0 };
   REAL_VALUE_TYPE val;
 
   memset (&val, 0, sizeof(val));
@@ -2198,7 +2204,7 @@ scan_float (UINT *out_Kind)
                    Kind, m3cg_lineno);
     }
   *out_Kind = Kind;
-  Size = Map[Kind].Size;
+  UINT Size = Map[Kind].Size;
 
   gcc_assert (Size == 4 || Size == 8);
 
@@ -2712,7 +2718,6 @@ static void add_stmt (tree t)
 
 #if GCC42
   if (EXPR_P (t) && code != LABEL_EXPR)
-    {
 #else /* GCC43, GCC45 */
   if (CAN_HAVE_LOCATION_P (t) && code != LABEL_EXPR)
 #endif
@@ -2822,7 +2827,7 @@ m3_call_direct (tree p, tree return_type)
 {
   tree call = m3_build3 (CALL_EXPR, return_type, proc_addr (p), CALL_TOP_ARG (),
                          CALL_TOP_STATIC_CHAIN ());
-  if (type == t_void)
+  if (return_type == t_void)
   {
     add_stmt (call);
   }
@@ -2856,15 +2861,21 @@ m3_call_indirect (tree return_type, tree /*calling_convention*/)
   CALL_POP ();
 }
 
+static struct language_function*
+m3_language_function (void)
+{
+    return 0;
+}
+
 #else
 
 static struct language_function*
 m3_language_function (void)
 {
-    struct language_function* f;
     if (!current_function_decl || !DECL_STRUCT_FUNCTION (current_function_decl))
       return 0;
-    f = DECL_STRUCT_FUNCTION (current_function_decl)->language;
+    struct language_function* f;
+      = DECL_STRUCT_FUNCTION (current_function_decl)->language;
     if (!f)
     {
         f = GGC_NEW (struct language_function);
@@ -3108,8 +3119,6 @@ static void
 m3_store_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
             bool volatil)
 {
-  tree val = { 0 };
-
   m3_deduce_field_reference ("m3_store_1", v, offset, dst_t, dst_T);
   /* mark_address_taken (v); */
   if (offset == 0
@@ -3140,7 +3149,7 @@ m3_store_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type
   if (volatil || m3_next_store_volatile)
     TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
   m3_next_store_volatile = false;
-  val = m3_cast (src_t, EXPR_REF (-1));
+  tree val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
     val = m3_convert (dst_t, val);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
@@ -3176,12 +3185,10 @@ setop (tree p, WIDE n, int q)
 static void
 setop2 (tree p, int q)
 {
-  tree type;
-
   m3_start_call ();
   while (q--)
     m3_pop_param (t_addr);
-  type = TREE_TYPE (TREE_TYPE (p));
+  tree type = TREE_TYPE (TREE_TYPE (p));
   m3_call_direct (p, type);
 }
 
@@ -3189,23 +3196,13 @@ setop2 (tree p, int q)
 
 static PCSTR mode_to_string (enum machine_mode mode)
 {
-  PCSTR modestring = "";
-
   switch (mode)
   {
-    default:
-      break;
-    case VOIDmode:
-      modestring = "VOIDmode";
-      break;
-    case DImode:
-      modestring = "DImode";
-      break;
-    case BLKmode:
-      modestring = "BLKmode";
-      break;
+    default:        return "";
+    case VOIDmode:  return "VOIDmode";
+    case DImode:    return "DImode";
+    case BLKmode:   return "BLKmode";
   }
-  return modestring;
 }
 
 /*---------------------------------------------------------------- faults ---*/
@@ -3225,7 +3222,9 @@ declare_fault_proc (void)
   DECL_ARTIFICIAL (resultdecl) = true;
   DECL_IGNORED_P (resultdecl) = true;
   DECL_RESULT (proc) = resultdecl;
+#if !GCC42
   DECL_SOURCE_LOCATION (proc) = BUILTINS_LOCATION;
+#endif
 
   /* TREE_THIS_VOLATILE (proc) = true; / * noreturn */
   TREE_STATIC (proc) = true;
@@ -4360,7 +4359,7 @@ M3CG_HANDLER (BEGIN_PROCEDURE)
 
   current_function_decl = p;
   allocate_struct_function (p, false);
-  m3_language_function ();
+  m3_language_function (); // force allocation
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
@@ -5834,7 +5833,9 @@ m3_post_options (PCSTR* /*pfilename*/)
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
 
+#if !GCC42
   flag_predictive_commoning = false;
+#endif
 
   return false;
 }
@@ -5882,12 +5883,13 @@ m3_init (void)
 
 #if GCC_APPLE
 int flag_iasm_blocks;
-enum iasm_states iasm_state;
+//enum iasm_states;
+//enum iasm_states iasm_state;
 bool iasm_in_operands;
-struct cpp_reader* parse_in;
+//struct cpp_reader* parse_in;
 #define add_stmt c_add_stmt
-#include "../stub-objc.c"
-c_language_kind c_language;
+//#include "../stub-objc.c"
+//c_language_kind c_language;
 
 /* This is used by cfstring code; providing it here makes us not have to #if 0 out a few bits. */
 tree pushdecl_top_level (tree)
