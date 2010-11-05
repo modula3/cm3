@@ -524,8 +524,8 @@ convert_utf32_utf8 (int cd, const uchar *from, size_t flen,
 
 /* Identity conversion, used when we have no alternative.  */
 static bool
-convert_no_conversion (int ARG_UNUSED(cd)
-                       , const uchar *from, size_t flen, struct _cpp_strbuf *to)
+convert_no_conversion (int ARG_UNUSED(cd),
+                       const uchar *from, size_t flen, struct _cpp_strbuf *to)
 {
   if (to->len + flen > to->asize)
     {
