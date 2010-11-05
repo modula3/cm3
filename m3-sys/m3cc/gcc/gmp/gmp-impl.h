@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Include file for internal GNU MP types and definitions.
 
    THE CONTENTS OF THIS FILE ARE FOR INTERNAL USE AND ARE ALMOST CERTAIN TO
@@ -3642,7 +3644,7 @@ extern mp_size_t  mpn_fft_table[2][MPN_FFT_TABLE_SIZE];
 #endif
 
 
-#ifdef __cplusplus
+#ifdef xx__cplusplus
 
 /* A little helper for a null-terminated __gmp_allocate_func string.
    The destructor ensures it's freed even if an exception is thrown.
