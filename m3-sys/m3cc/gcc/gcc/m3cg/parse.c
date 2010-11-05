@@ -198,13 +198,12 @@ typedef enum
 #define TYPEID(x) M3CG_FIELD (ULONG, x)
 #define M3CG_EXTRA(x) x
 
-typedef struct m3cg_op_t
+struct m3cg_op_t
 {
   M3CG_opcode op;
-} m3cg_op_t;
+};
 
-#define M3CG(sym, fields) typedef struct m3cg_##sym##_t : m3cg_opt_t { \
-  void handler(); fields } m3cg_##sym##_t;
+#define M3CG(sym, fields) struct m3cg_##sym##_t : m3cg_op_t { void handler(); fields };
 #include "m3-def.h"
 #undef M3CG
 
@@ -767,7 +766,7 @@ static tree m3_type_for_size (UINT precision, int unsignedp);
 static tree m3_type_for_mode (enum machine_mode, int unsignedp);
 static tree m3_unsigned_type (tree type_node);
 static tree m3_signed_type (tree type_node);
-static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
+static tree m3_signed_or_unsigned_type (bool unsignedp, tree type);
 static UINT m3_init_options (UINT argc, PCSTR* argv);
 static int m3_handle_option (size_t scode, PCSTR arg, int value);
 static bool m3_post_options (PCSTR*);
@@ -1309,7 +1308,7 @@ m3_type_for_mode (enum machine_mode mode, int unsignedp)
 static tree
 m3_unsigned_type (tree type_node)
 {
-  return m3_signed_or_unsigned_type (1, type_node);
+  return m3_signed_or_unsigned_type (true, type_node);
 }
 
 /* Return the signed version of a TYPE_NODE, a scalar type.  */
@@ -1317,14 +1316,14 @@ m3_unsigned_type (tree type_node)
 static tree
 m3_signed_type (tree type_node)
 {
-  return m3_signed_or_unsigned_type (0, type_node);
+  return m3_signed_or_unsigned_type (false, type_node);
 }
 
 /* Return a type the same as TYPE except unsigned or signed according to
    UNSIGNEDP.  */
 
 static tree
-m3_signed_or_unsigned_type (int unsignedp, tree type)
+m3_signed_or_unsigned_type (bool unsignedp, tree type)
 {
   if (! INTEGRAL_TYPE_P (type) || TYPE_UNSIGNED (type) == unsignedp)
     return type;
@@ -4544,7 +4543,7 @@ M3CG_HANDLER (CASE_JUMP)
   current_stmts = alloc_stmt_list ();
   for (i = 0; i < n; ++i)
   {
-    tree target_label = m3cg->labels[i];
+    tree target_label = labels[i];
 
 #if GCC45
     tree case_label = create_artificial_label (input_location);
@@ -4860,7 +4859,7 @@ M3CG_HANDLER (SET_SYM_DIFFERENCE)
  } while(0)
 
 static tree
-m3cg_set_member_ref (UWIDE n, tree type, tree* out_bit_in_word)
+m3cg_set_member_ref (tree type, tree* out_bit_in_word)
 {
   /* Common code for set_member and set_singleton, something like:
     set_member_ref (const size_t* set, size_t bit_index, tree* bit_in_word)
@@ -4900,7 +4899,7 @@ M3CG_HANDLER (SET_MEMBER)
     }
   */
   tree bit_in_word;
-  tree word_ref = m3cg_set_member_ref (n, type, &bit_in_word);
+  tree word_ref = m3cg_set_member_ref (type, &bit_in_word);
   tree t = m3_build2 (BIT_AND_EXPR, t_word, word_ref, bit_in_word);
   t = m3_build2 (NE_EXPR, boolean_type_node, t, m3_cast (t_word, v_zero));
   EXPR_PUSH (t);
@@ -4958,7 +4957,7 @@ M3CG_HANDLER (SET_SINGLETON)
     }
   */
   tree bit_in_word;
-  tree word_ref = m3cg_set_member_ref (this, &bit_in_word);
+  tree word_ref = m3cg_set_member_ref (type, &bit_in_word);
   tree t = m3_build2 (BIT_IOR_EXPR, t_word, word_ref, bit_in_word);
   t = m3_build2 (MODIFY_EXPR, t_word, word_ref, t);
   add_stmt (t);
@@ -5696,7 +5695,7 @@ m3_parse_file (int xx)
 
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
-    op = get_int ();
+    op = (M3CG_opcode)get_int ();
     if (op >= LAST_OPCODE)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %u", op, m3cg_lineno);
 
