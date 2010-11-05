@@ -5272,32 +5272,31 @@ M3CG_HANDLER (ZERO)
 
 M3CG_HANDLER (LOOPHOLE)
 {
-  if (M3_LOOPHOLE_VIEW_CONVERT)
+  if (IS_INTEGER_TYPE (Type1) && IS_INTEGER_TYPE (Type2))
   {
-    if (IS_INTEGER_TYPE (Type1) && IS_INTEGER_TYPE (Type2))
-    {
-      EXPR_REF (-1) = m3_cast (type2, EXPR_REF (-1));
-    }
-    else
-    {
-      gcc_assert (TYPE_SIZE (type1) && TYPE_SIZE (type2)
-        && TREE_INT_CST_LOW (TYPE_SIZE (type1)) == TREE_INT_CST_LOW (TYPE_SIZE (type2)));
-      EXPR_REF (-1) = m3_build1 (VIEW_CONVERT_EXPR, type2, EXPR_REF (-1));
-    }
+    EXPR_REF (-1) = m3_cast (type2, EXPR_REF (-1));
+    return;
   }
-  else
+  if (M3_LOOPHOLE_VIEW_CONVERT
+        && TYPE_SIZE (type1)
+        && TYPE_SIZE (type2)
+        && TREE_INT_CST_LOW (TYPE_SIZE (type1)) == TREE_INT_CST_LOW (TYPE_SIZE (type2)))
+   {
+     EXPR_REF (-1) = m3_build1 (VIEW_CONVERT_EXPR, type2, EXPR_REF (-1));
+     return;
+  }
+  if (option_trace_all)
   {
-    if (FLOAT_TYPE_P (type1) != FLOAT_TYPE_P (type2))
-    {
-      tree v = declare_temp (type1);
-      m3_store (v, 0, type1, Type1, type1, Type1);
-      m3_load (v, 0, type2, Type2, type2, Type2);
-    }
-    else
-    {
-      EXPR_REF (-1) = m3_cast (type2, EXPR_REF (-1));
-    }
+    fprintf (stderr, "loophole falling back to old path\n");
   }
+  if (FLOAT_TYPE_P (type1) != FLOAT_TYPE_P (type2))
+  {
+    tree v = declare_temp (type1);
+    m3_store (v, 0, type1, Type1, type1, Type1);
+    m3_load (v, 0, type2, Type2, type2, Type2);
+    return;
+  }
+  EXPR_REF (-1) = m3_cast (type2, EXPR_REF (-1));
 }
 
 M3CG_HANDLER (ABORT)
