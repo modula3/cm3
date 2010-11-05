@@ -243,8 +243,8 @@ if GCC42 or GCC45
     cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
   end
   cp_if("../gcc/gcc/m3cg/" & m3gty, SourceDir & "/gcc/m3cg/m3gty43.h")
-  local a = Defines & fs_contents("../gcc/gcc/m3cg/parse.c")
-  local b = SourceDir & "/gcc/m3cg/parse.c"
+  local a = Defines & fs_contents("../gcc/gcc/m3cg/parse.cpp")
+  local b = SourceDir & "/gcc/m3cg/parse.cpp"
   > b & ".temp" in
     write(a)
   end
