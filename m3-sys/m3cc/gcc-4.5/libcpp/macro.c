@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Part of CPP library.  (Macro and #define handling.)
    Copyright (C) 1986, 1987, 1989, 1992, 1993, 1994, 1995, 1996, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005,
@@ -75,7 +77,7 @@ static void check_trad_stringification (cpp_reader *, const cpp_macro *,
    has not been used.  */
 int
 _cpp_warn_if_unused_macro (cpp_reader *pfile, cpp_hashnode *node,
-			   void *v ATTRIBUTE_UNUSED)
+			   void *ARG_UNUSED(v))
 {
   if (node->type == NT_MACRO && !(node->flags & NODE_BUILTIN))
     {
