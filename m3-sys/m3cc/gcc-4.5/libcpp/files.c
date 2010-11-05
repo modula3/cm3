@@ -1734,7 +1734,7 @@ _cpp_save_file_entries (cpp_reader *pfile, FILE *fp)
 /* Read the pchf_data structure from F.  */
 
 bool
-_cpp_read_file_entries (cpp_reader *pfile ATTRIBUTE_UNUSED, FILE *f)
+_cpp_read_file_entries (cpp_reader *ARG_UNUSED(pfile), FILE *f)
 {
   struct pchf_data d;
 
@@ -1807,7 +1807,7 @@ pchf_compare (const void *d_p, const void *e_p)
    should not be read.  */
 
 static bool
-check_file_against_entries (cpp_reader *pfile ATTRIBUTE_UNUSED,
+check_file_against_entries (cpp_reader *ARG_UNUSED(pfile),
 			    _cpp_file *f,
 			    bool check_included)
 {

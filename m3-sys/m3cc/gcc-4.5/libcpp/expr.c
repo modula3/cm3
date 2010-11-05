@@ -1348,7 +1348,7 @@ num_greater_eq (cpp_num pa, cpp_num pb, size_t precision)
 
 /* Returns LHS OP RHS, where OP is a bit-wise operation.  */
 static cpp_num
-num_bitwise_op (cpp_reader *pfile ATTRIBUTE_UNUSED,
+num_bitwise_op (cpp_reader *ARG_UNUSED(pfile),
 		cpp_num lhs, cpp_num rhs, enum cpp_ttype op)
 {
   lhs.overflow = false;
@@ -1399,7 +1399,7 @@ num_inequality_op (cpp_reader *pfile, cpp_num lhs, cpp_num rhs,
 
 /* Returns LHS OP RHS, where OP is == or !=.  */
 static cpp_num
-num_equality_op (cpp_reader *pfile ATTRIBUTE_UNUSED,
+num_equality_op (cpp_reader *ARG_UNUSED(pfile),
 		 cpp_num lhs, cpp_num rhs, enum cpp_ttype op)
 {
   /* Work around a 3.0.4 bug; see PR 6950.  */
