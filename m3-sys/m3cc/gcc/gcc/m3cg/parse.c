@@ -5281,7 +5281,7 @@ M3CG_HANDLER (LOOPHOLE)
     else
     {
       gcc_assert (TYPE_SIZE (type1) && TYPE_SIZE (type2)
-        && tree_low_cst (TYPE_SIZE (type1)) == tree_low_cst (TYPE_SIZE (type2)));
+        && TREE_INT_CST_LOW (TYPE_SIZE (type1)) == TREE_INT_CST_LOW (TYPE_SIZE (type2)));
       EXPR_REF (-1) = m3_build1 (VIEW_CONVERT_EXPR, type2, EXPR_REF (-1));
     }
   }
