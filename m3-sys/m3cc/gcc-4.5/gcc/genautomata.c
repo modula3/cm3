@@ -1125,7 +1125,7 @@ copy_node (const void *from, size_t size)
 
 /* The function checks that NAME does not contain quotes (`"').  */
 static const char *
-check_name (const char * name, pos_t ARG_UNUSED(pos))
+check_name (const char * name, pos_t pos ATTRIBUTE_UNUSED)
 {
   const char *str;
 
@@ -2048,7 +2048,7 @@ finish_decl_table (void)
 /* Checking NAMES in an exclusion clause vector and returning formed
    unit_set_el_list.  */
 static unit_set_el_t
-process_excls (char **names, int num, pos_t ARG_UNUSED(excl_pos))
+process_excls (char **names, int num, pos_t excl_pos ATTRIBUTE_UNUSED)
 {
   unit_set_el_t el_list;
   unit_set_el_t last_el;
@@ -2087,7 +2087,7 @@ process_excls (char **names, int num, pos_t ARG_UNUSED(excl_pos))
    excludes itself".  */
 static void
 add_excls (unit_set_el_t dest_list, unit_set_el_t source_list,
-	   pos_t ARG_UNUSED(excl_pos))
+	   pos_t excl_pos ATTRIBUTE_UNUSED)
 {
   unit_set_el_t dst;
   unit_set_el_t src;
@@ -2135,7 +2135,7 @@ add_excls (unit_set_el_t dest_list, unit_set_el_t source_list,
    processing all exclusion sets.  */
 static unit_set_el_t
 process_presence_absence_names (char **names, int num,
-				pos_t ARG_UNUSED(req_pos),
+				pos_t req_pos ATTRIBUTE_UNUSED,
 				int presence_p, int final_p)
 {
   unit_set_el_t el_list;
@@ -2187,7 +2187,7 @@ process_presence_absence_names (char **names, int num,
    only after processing all exclusion sets.  */
 static pattern_set_el_t
 process_presence_absence_patterns (char ***patterns, int num,
-				   pos_t ARG_UNUSED(req_pos),
+				   pos_t req_pos ATTRIBUTE_UNUSED,
 				   int presence_p, int final_p)
 {
   pattern_set_el_t el_list;
@@ -2260,7 +2260,7 @@ process_presence_absence_patterns (char ***patterns, int num,
 static void
 add_presence_absence (unit_set_el_t dest_list,
 		      pattern_set_el_t pattern_list,
-		      pos_t ARG_UNUSED(req_pos),
+		      pos_t req_pos ATTRIBUTE_UNUSED,
 		      int presence_p, int final_p)
 {
   unit_set_el_t dst;
@@ -5307,7 +5307,7 @@ process_seq_for_forming_states (regexp_t regexp, automaton_t automaton,
    inserts alt_state into the table.  */
 static void
 finish_forming_alt_state (alt_state_t alt_state,
-			  automaton_t ARG_UNUSED(automaton))
+			  automaton_t automaton ATTRIBUTE_UNUSED)
 {
   state_t state_in_table;
   state_t corresponding_state;
@@ -7895,7 +7895,7 @@ static void
 output_internal_min_issue_delay_func (void)
 {
   fprintf (output_file,
-	   "static int\n%s (int %s, struct %s *ARG_UNUSED(%s))\n",
+	   "static int\n%s (int %s, struct %s *%s ATTRIBUTE_UNUSED)\n",
 	   INTERNAL_MIN_ISSUE_DELAY_FUNC_NAME, INTERNAL_INSN_CODE_NAME,
 	   CHIP_NAME, CHIP_PARAMETER_NAME);
   fprintf (output_file, "{\n  int %s ATTRIBUTE_UNUSED;\n  int %s = -1;\n",
@@ -8008,7 +8008,7 @@ static void
 output_internal_trans_func (void)
 {
   fprintf (output_file,
-	   "static int\n%s (int %s, struct %s *ARG_UNUSED(%s))\n",
+	   "static int\n%s (int %s, struct %s *%s ATTRIBUTE_UNUSED)\n",
 	   INTERNAL_TRANSITION_FUNC_NAME, INTERNAL_INSN_CODE_NAME,
 	   CHIP_NAME, CHIP_PARAMETER_NAME);
   fprintf (output_file, "{\n  int %s ATTRIBUTE_UNUSED;\n", TEMPORARY_VARIABLE_NAME);
@@ -8266,7 +8266,7 @@ output_internal_insn_latency_func (void)
   decl_t decl;
   struct bypass_decl *bypass;
 
-  fprintf (output_file, "static int\n%s (int ARG_UNUSED(%s),\n\tint ARG_UNUSED(%s),\n\trtx ARG_UNUSED(%s),\n\trtx ARG_UNUSED(%s))\n",
+  fprintf (output_file, "static int\n%s (int %s ATTRIBUTE_UNUSED,\n\tint %s ATTRIBUTE_UNUSED,\n\trtx %s ATTRIBUTE_UNUSED,\n\trtx %s ATTRIBUTE_UNUSED)\n",
 	   INTERNAL_INSN_LATENCY_FUNC_NAME, INTERNAL_INSN_CODE_NAME,
 	   INTERNAL_INSN2_CODE_NAME, INSN_PARAMETER_NAME,
 	   INSN2_PARAMETER_NAME);
@@ -8344,7 +8344,7 @@ output_internal_maximal_insn_latency_func (void)
   int i;
   int max;
 
-  fprintf (output_file, "static int\n%s (int ARG_UNUSED(%s),\n\trtx ARG_UNUSED(%s))\n",
+  fprintf (output_file, "static int\n%s (int %s ATTRIBUTE_UNUSED,\n\trtx %s ATTRIBUTE_UNUSED)\n",
 	   "internal_maximal_insn_latency", INTERNAL_INSN_CODE_NAME,
 	   INSN_PARAMETER_NAME);
   fprintf (output_file, "{\n");
@@ -8420,7 +8420,7 @@ output_print_reservation_func (void)
   int i, j;
 
   fprintf (output_file,
-	   "void\n%s (FILE *%s, rtx ARG_UNUSED(%s))\n{\n",
+	   "void\n%s (FILE *%s, rtx %s ATTRIBUTE_UNUSED)\n{\n",
            PRINT_RESERVATION_FUNC_NAME, FILE_PARAMETER_NAME,
            INSN_PARAMETER_NAME);
 
@@ -8586,7 +8586,7 @@ static void
 output_insn_has_dfa_reservation_p (void)
 {
   fprintf (output_file,
-	   "bool\n%s (rtx ARG_UNUSED(%s))\n{\n",
+	   "bool\n%s (rtx %s ATTRIBUTE_UNUSED)\n{\n",
            INSN_HAS_DFA_RESERVATION_P_FUNC_NAME,
            INSN_PARAMETER_NAME);
 
