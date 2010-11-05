@@ -4516,12 +4516,8 @@ M3CG_HANDLER (IF_FALSE)
 }
 
 static void
-m3cg_if_compare (void* void_m3cg, enum tree_code o)
+m3cg_if_compare (tree type, tree label, enum tree_code o)
 {
-  m3cg_IF_EQ_t* m3cg = (m3cg_IF_EQ_t*)void_m3cg;
-  tree type = m3cg->type;
-  tree label = m3cg->label;
-
   tree t1 = m3_cast (type, EXPR_REF (-1));
   tree t2 = m3_cast (type, EXPR_REF (-2));
   add_stmt (build3 (COND_EXPR, t_void, build2 (o, boolean_type_node, t2, t1),
@@ -4531,12 +4527,12 @@ m3cg_if_compare (void* void_m3cg, enum tree_code o)
   EXPR_POP ();
 }
 
-M3CG_HANDLER (IF_EQ) { m3cg_if_compare (m3cg, EQ_EXPR); }
-M3CG_HANDLER (IF_NE) { m3cg_if_compare (m3cg, NE_EXPR); }
-M3CG_HANDLER (IF_GT) { m3cg_if_compare (m3cg, GT_EXPR); }
-M3CG_HANDLER (IF_GE) { m3cg_if_compare (m3cg, GE_EXPR); }
-M3CG_HANDLER (IF_LT) { m3cg_if_compare (m3cg, LT_EXPR); }
-M3CG_HANDLER (IF_LE) { m3cg_if_compare (m3cg, LE_EXPR); }
+M3CG_HANDLER (IF_EQ) { m3cg_if_compare (type, label, EQ_EXPR); }
+M3CG_HANDLER (IF_NE) { m3cg_if_compare (type, label, NE_EXPR); }
+M3CG_HANDLER (IF_GT) { m3cg_if_compare (type, label, GT_EXPR); }
+M3CG_HANDLER (IF_GE) { m3cg_if_compare (type, label, GE_EXPR); }
+M3CG_HANDLER (IF_LT) { m3cg_if_compare (type, label, LT_EXPR); }
+M3CG_HANDLER (IF_LE) { m3cg_if_compare (type, label, LE_EXPR); }
 
 M3CG_HANDLER (CASE_JUMP)
 {
@@ -4661,12 +4657,8 @@ M3CG_HANDLER (LOAD_FLOAT)
 }
 
 static void
-m3cg_compare (void* void_m3cg, enum tree_code op)
+m3cg_compare (tree src_t, tree dst_t, enum tree_code op)
 {
-  m3cg_EQ_t* m3cg = (m3cg_EQ_t*)void_m3cg;
-  tree src_t = m3cg->src_t;
-  tree dst_t = m3cg->dst_t;
-
   tree t1 = m3_cast (src_t, EXPR_REF (-1));
   tree t2 = m3_cast (src_t, EXPR_REF (-2));
 
@@ -4674,12 +4666,12 @@ m3cg_compare (void* void_m3cg, enum tree_code op)
   EXPR_POP ();
 }
 
-M3CG_HANDLER (EQ) { m3cg_compare (this, EQ_EXPR); }
-M3CG_HANDLER (NE) { m3cg_compare (this, NE_EXPR); }
-M3CG_HANDLER (GT) { m3cg_compare (this, GT_EXPR); }
-M3CG_HANDLER (GE) { m3cg_compare (this, GE_EXPR); }
-M3CG_HANDLER (LT) { m3cg_compare (this, LT_EXPR); }
-M3CG_HANDLER (LE) { m3cg_compare (this, LE_EXPR); }
+M3CG_HANDLER (EQ) { m3cg_compare (src_t, dst_t, EQ_EXPR); }
+M3CG_HANDLER (NE) { m3cg_compare (src_t, dst_t, NE_EXPR); }
+M3CG_HANDLER (GT) { m3cg_compare (src_t, dst_t, GT_EXPR); }
+M3CG_HANDLER (GE) { m3cg_compare (src_t, dst_t, GE_EXPR); }
+M3CG_HANDLER (LT) { m3cg_compare (src_t, dst_t, LT_EXPR); }
+M3CG_HANDLER (LE) { m3cg_compare (src_t, dst_t, LE_EXPR); }
 
 M3CG_HANDLER (ADD)
 {
@@ -4724,10 +4716,8 @@ M3CG_HANDLER (ABS)
 }
 
 static void
-m3_minmax (void* void_m3cg, int min)
+m3_minmax (tree type, int min)
 {
-  m3cg_MIN_t* m3cg = (m3cg_MIN_t*)void_m3cg;
-  tree type = m3cg->type;
   tree x[2] = { 0 };
 
   x[0] = m3_cast (type, EXPR_REF (-1));
@@ -4738,8 +4728,8 @@ m3_minmax (void* void_m3cg, int min)
   EXPR_POP ();
 }
 
-M3CG_HANDLER (MIN) { m3_minmax(this, 1); }
-M3CG_HANDLER (MAX) { m3_minmax(this, 0); }
+M3CG_HANDLER (MIN) { m3_minmax (type, 1); }
+M3CG_HANDLER (MAX) { m3_minmax (type, 0); }
 
 M3CG_HANDLER (ROUND)
 {
@@ -4870,7 +4860,7 @@ M3CG_HANDLER (SET_SYM_DIFFERENCE)
  } while(0)
 
 static tree
-m3cg_set_member_ref (void* void_m3cg, tree* out_bit_in_word)
+m3cg_set_member_ref (UWIDE n, tree type, tree* out_bit_in_word)
 {
   /* Common code for set_member and set_singleton, something like:
     set_member_ref (const size_t* set, size_t bit_index, tree* bit_in_word)
@@ -4881,10 +4871,6 @@ m3cg_set_member_ref (void* void_m3cg, tree* out_bit_in_word)
     }
   */
   
-  m3cg_SET_MEMBER_t* m3cg = (m3cg_SET_MEMBER_t*)void_m3cg;
-
-  UWIDE n = m3cg->n;
-  tree type = m3cg->type;
   tree bit         = m3_cast (t_word, EXPR_REF (-1));
   tree set         = m3_cast (t_set, EXPR_REF (-2));
 
@@ -4914,27 +4900,23 @@ M3CG_HANDLER (SET_MEMBER)
     }
   */
   tree bit_in_word;
-  tree word_ref = m3cg_set_member_ref (this, &bit_in_word);
+  tree word_ref = m3cg_set_member_ref (n, type, &bit_in_word);
   tree t = m3_build2 (BIT_AND_EXPR, t_word, word_ref, bit_in_word);
   t = m3_build2 (NE_EXPR, boolean_type_node, t, m3_cast (t_word, v_zero));
   EXPR_PUSH (t);
 }
 
 static void
-m3cg_set_compare (void* void_m3cg, tree proc)
+m3cg_set_compare (UWIDE n, tree type, tree proc)
 {
-  m3cg_SET_GT_t* m3cg = (m3cg_SET_GT_t*)void_m3cg;
-  UWIDE n = m3cg->n;
-  tree type = m3cg->type;
-
   m3cg_assert_int (type);
   setop (proc, n, 2);
 }
 
-M3CG_HANDLER (SET_GT) { m3cg_set_compare (this, set_gt_proc); }
-M3CG_HANDLER (SET_GE) { m3cg_set_compare (this, set_ge_proc); }
-M3CG_HANDLER (SET_LT) { m3cg_set_compare (this, set_lt_proc); }
-M3CG_HANDLER (SET_LE) { m3cg_set_compare (this, set_le_proc); }
+M3CG_HANDLER (SET_GT) { m3cg_set_compare (n, type, set_gt_proc); }
+M3CG_HANDLER (SET_GE) { m3cg_set_compare (n, type, set_ge_proc); }
+M3CG_HANDLER (SET_LT) { m3cg_set_compare (n, type, set_lt_proc); }
+M3CG_HANDLER (SET_LE) { m3cg_set_compare (n, type, set_le_proc); }
 
 M3CG_HANDLER (SET_EQ)
 {
@@ -5584,13 +5566,8 @@ M3CG_HANDLER (FENCE)
 }
 
 static void
-m3cg_fetch_and_op (void* void_m3cg, enum built_in_function fncode)
+m3cg_fetch_and_op (tree type1, tree type2, enum built_in_function fncode)
 {
-  m3cg_FETCH_AND_ADD_t* m3cg = (m3cg_FETCH_AND_ADD_t*)void_m3cg;
-  tree type1 = m3cg->type;
-  tree type2 = m3cg->type2;
-  UWIDE order = m3cg->order;
-
   long size = { 0 };
 
   if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
@@ -5611,11 +5588,11 @@ incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 
-M3CG_HANDLER (FETCH_AND_ADD) { m3cg_fetch_and_op (this, BUILT_IN_FETCH_AND_ADD_N); }
-M3CG_HANDLER (FETCH_AND_SUB) { m3cg_fetch_and_op (this, BUILT_IN_FETCH_AND_SUB_N); }
-M3CG_HANDLER (FETCH_AND_OR) { m3cg_fetch_and_op (this, BUILT_IN_FETCH_AND_OR_N); }
-M3CG_HANDLER (FETCH_AND_AND) { m3cg_fetch_and_op (this, BUILT_IN_FETCH_AND_AND_N); }
-M3CG_HANDLER (FETCH_AND_XOR) { m3cg_fetch_and_op (this, BUILT_IN_FETCH_AND_XOR_N); }
+M3CG_HANDLER (FETCH_AND_ADD) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_ADD_N); }
+M3CG_HANDLER (FETCH_AND_SUB) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_SUB_N); }
+M3CG_HANDLER (FETCH_AND_OR) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_OR_N); }
+M3CG_HANDLER (FETCH_AND_AND) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_AND_N); }
+M3CG_HANDLER (FETCH_AND_XOR) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_XOR_N); }
 
 #if 0
 M3CG_HANDLER (LOCK_TEST_AND_SET)
