@@ -5749,7 +5749,7 @@ m3_parse_file (int)
       case M3CG_##sym: \
         { \
           m3cg_##sym##_t* m3cg = &u->m3cg_##sym; \
-          m3cg = m3cg; \
+          m3cg = m3cg; /* quash warning in case no fields */ \
           fields; \
         } \
         break;
