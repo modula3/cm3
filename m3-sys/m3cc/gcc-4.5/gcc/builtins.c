@@ -4152,7 +4152,7 @@ static rtx
 expand_builtin_strncmp (tree exp, ATTRIBUTE_UNUSED rtx target,
 			ATTRIBUTE_UNUSED enum machine_mode mode)
 {
-  location_t ARG_UNUSED(loc) = EXPR_LOCATION (exp);
+  location_t loc ATTRIBUTE_UNUSED = EXPR_LOCATION (exp);
 
   if (!validate_arglist (exp,
  			 POINTER_TYPE, POINTER_TYPE, INTEGER_TYPE, VOID_TYPE))
