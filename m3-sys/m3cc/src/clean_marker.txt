@@ -10,5 +10,6 @@ The contents of the file do not matter.
    - upgrade from 4.3.5 to 4.5.1
    - removal of mpc, mpfr, and trimming of gmp
    - forcing HOST_WIDE_INT to always be at least 64bits
+   - switch to configure -enable-build-with-cxx
 
-00-451B-8C15-E91870F151C
+F810639B-2AC4-430C-A382-4D1E8C5E964C
