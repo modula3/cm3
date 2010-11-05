@@ -2409,25 +2409,25 @@ write_subroutine (struct decision_head *head, enum routine_type type)
     {
     case RECOG:
       printf ("%sint\n\
-recog%s (rtx x0 ATTRIBUTE_UNUSED,\n\trtx insn ATTRIBUTE_UNUSED,\n\tint *pnum_clobbers ATTRIBUTE_UNUSED)\n", s_or_e, extension);
+recog%s (rtx ARG_UNUSED(x0),\n\trtx insn ATTRIBUTE_UNUSED,\n\tint *pnum_clobbers ATTRIBUTE_UNUSED)\n", s_or_e, extension);
       break;
     case SPLIT:
       printf ("%srtx\n\
-split%s (rtx x0 ATTRIBUTE_UNUSED, rtx insn ATTRIBUTE_UNUSED)\n",
+split%s (rtx ARG_UNUSED(x0), rtx insn ATTRIBUTE_UNUSED)\n",
 	      s_or_e, extension);
       break;
     case PEEPHOLE2:
       printf ("%srtx\n\
-peephole2%s (rtx x0 ATTRIBUTE_UNUSED,\n\trtx insn ATTRIBUTE_UNUSED,\n\tint *_pmatch_len ATTRIBUTE_UNUSED)\n",
+peephole2%s (rtx ARG_UNUSED(x0),\n\trtx insn ATTRIBUTE_UNUSED,\n\tint *_pmatch_len ATTRIBUTE_UNUSED)\n",
 	      s_or_e, extension);
       break;
     }
 
-  printf ("{\n  rtx * const operands ATTRIBUTE_UNUSED = &recog_data.operand[0];\n");
+  printf ("{\n  rtx * const ARG_UNUSED(operands) = &recog_data.operand[0];\n");
   for (i = 1; i <= max_depth; i++)
-    printf ("  rtx x%d ATTRIBUTE_UNUSED;\n", i);
+    printf ("  rtx x%ARG_UNUSED(d);\n", i);
 
-  printf ("  %s tem ATTRIBUTE_UNUSED;\n", IS_SPLIT (type) ? "rtx" : "int");
+  printf ("  %s ARG_UNUSED(tem);\n", IS_SPLIT (type) ? "rtx" : "int");
 
   if (!subfunction)
     printf ("  recog_data.insn = NULL_RTX;\n");

@@ -533,7 +533,7 @@ lto_symtab_merge_decls_2 (void **slot)
 /* Helper to process the decl chain for the symbol table entry *SLOT.  */
 
 static int
-lto_symtab_merge_decls_1 (void **slot, void *data ATTRIBUTE_UNUSED)
+lto_symtab_merge_decls_1 (void **slot, void *ARG_UNUSED(data))
 {
   lto_symtab_entry_t e, prevailing;
   bool diagnosed_p = false;
@@ -651,7 +651,7 @@ lto_symtab_merge_decls (void)
 /* Helper to process the decl chain for the symbol table entry *SLOT.  */
 
 static int
-lto_symtab_merge_cgraph_nodes_1 (void **slot, void *data ATTRIBUTE_UNUSED)
+lto_symtab_merge_cgraph_nodes_1 (void **slot, void *ARG_UNUSED(data))
 {
   lto_symtab_entry_t e, prevailing = (lto_symtab_entry_t) *slot;
 

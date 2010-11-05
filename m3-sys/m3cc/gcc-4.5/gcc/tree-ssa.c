@@ -155,9 +155,9 @@ redirect_edge_var_map_vector (edge e)
 /* Used by redirect_edge_var_map_destroy to free all memory.  */
 
 static bool
-free_var_map_entry (const void *key ATTRIBUTE_UNUSED,
+free_var_map_entry (const void *ARG_UNUSED(key),
 		    void **value,
-		    void *data ATTRIBUTE_UNUSED)
+		    void *ARG_UNUSED(data))
 {
   edge_var_map_vector head = (edge_var_map_vector) *value;
   VEC_free (edge_var_map, heap, head);

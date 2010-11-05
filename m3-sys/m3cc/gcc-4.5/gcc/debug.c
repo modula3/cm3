@@ -68,78 +68,78 @@ debug_nothing_void (void)
 }
 
 void
-debug_nothing_tree (tree decl ATTRIBUTE_UNUSED)
+debug_nothing_tree (tree ARG_UNUSED(decl))
 {
 }
 
 void
-debug_nothing_tree_tree (tree t1 ATTRIBUTE_UNUSED,
-			 tree t2 ATTRIBUTE_UNUSED)
+debug_nothing_tree_tree (tree ARG_UNUSED(t1),
+			 tree ARG_UNUSED(t2))
 {
 }
 
 void
-debug_nothing_tree_tree_tree_bool (tree t1 ATTRIBUTE_UNUSED,
-				   tree t2 ATTRIBUTE_UNUSED,
-				   tree t3 ATTRIBUTE_UNUSED,
-				   bool b1 ATTRIBUTE_UNUSED)
+debug_nothing_tree_tree_tree_bool (tree ARG_UNUSED(t1),
+				   tree ARG_UNUSED(t2),
+				   tree ARG_UNUSED(t3),
+				   bool ARG_UNUSED(b1))
 {
 }
 
 bool
-debug_true_const_tree (const_tree block ATTRIBUTE_UNUSED)
+debug_true_const_tree (const_tree ARG_UNUSED(block))
 {
   return true;
 }
 
 void
-debug_nothing_rtx (rtx insn ATTRIBUTE_UNUSED)
+debug_nothing_rtx (rtx ARG_UNUSED(insn))
 {
 }
 
 void
-debug_nothing_rtx_rtx (rtx insn ATTRIBUTE_UNUSED,
-		       rtx new_insn ATTRIBUTE_UNUSED)
+debug_nothing_rtx_rtx (rtx ARG_UNUSED(insn),
+		       rtx ARG_UNUSED(new_insn))
 {
 }
 
 void
-debug_nothing_charstar (const char *main_filename ATTRIBUTE_UNUSED)
+debug_nothing_charstar (const char *ARG_UNUSED(main_filename))
 {
 }
 
 void
-debug_nothing_int_charstar (unsigned int line ATTRIBUTE_UNUSED,
-			    const char *text ATTRIBUTE_UNUSED)
+debug_nothing_int_charstar (unsigned int ARG_UNUSED(line),
+			    const char *ARG_UNUSED(text))
 {
 }
 
 void
-debug_nothing_int_charstar_int_bool (unsigned int line ATTRIBUTE_UNUSED,
-			             const char *text ATTRIBUTE_UNUSED,
-			             int discriminator ATTRIBUTE_UNUSED,
-			             bool is_stmt ATTRIBUTE_UNUSED)
+debug_nothing_int_charstar_int_bool (unsigned int ARG_UNUSED(line),
+			             const char *ARG_UNUSED(text),
+			             int ARG_UNUSED(discriminator),
+			             bool ARG_UNUSED(is_stmt))
 {
 }
 
 void
-debug_nothing_int (unsigned int line ATTRIBUTE_UNUSED)
+debug_nothing_int (unsigned int ARG_UNUSED(line))
 {
 }
 
 void
-debug_nothing_int_int (unsigned int line ATTRIBUTE_UNUSED,
-		       unsigned int n ATTRIBUTE_UNUSED)
+debug_nothing_int_int (unsigned int ARG_UNUSED(line),
+		       unsigned int ARG_UNUSED(n))
 {
 }
 
 void
-debug_nothing_tree_int (tree decl ATTRIBUTE_UNUSED,
-			int local ATTRIBUTE_UNUSED)
+debug_nothing_tree_int (tree ARG_UNUSED(decl),
+			int ARG_UNUSED(local))
 {
 }
 
 void
-debug_nothing_uid (int uid ATTRIBUTE_UNUSED)
+debug_nothing_uid (int ARG_UNUSED(uid))
 {
 }

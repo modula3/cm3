@@ -557,7 +557,7 @@ parse_input_constraint (const char **constraint_p, int input_num,
    can be an asm-declared register.  Called via walk_tree.  */
 
 static tree
-decl_overlaps_hard_reg_set_p (tree *declp, int *walk_subtrees ATTRIBUTE_UNUSED,
+decl_overlaps_hard_reg_set_p (tree *declp, int *ARG_UNUSED(walk_subtrees),
 			      void *data)
 {
   tree decl = *declp;

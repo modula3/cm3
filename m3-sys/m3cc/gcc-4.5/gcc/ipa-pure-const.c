@@ -378,7 +378,7 @@ check_call (funct_state local, gimple call, bool ipa)
 /* Wrapper around check_decl for loads.  */
 
 static bool
-check_load (gimple stmt ATTRIBUTE_UNUSED, tree op, void *data)
+check_load (gimple ARG_UNUSED(stmt), tree op, void *data)
 {
   if (DECL_P (op))
     check_decl ((funct_state)data, op, false);
@@ -390,7 +390,7 @@ check_load (gimple stmt ATTRIBUTE_UNUSED, tree op, void *data)
 /* Wrapper around check_decl for stores.  */
 
 static bool
-check_store (gimple stmt ATTRIBUTE_UNUSED, tree op, void *data)
+check_store (gimple ARG_UNUSED(stmt), tree op, void *data)
 {
   if (DECL_P (op))
     check_decl ((funct_state)data, op, true);
@@ -595,7 +595,7 @@ end:
 
 /* Called when new function is inserted to callgraph late.  */
 static void
-add_new_function (struct cgraph_node *node, void *data ATTRIBUTE_UNUSED)
+add_new_function (struct cgraph_node *node, void *ARG_UNUSED(data))
 {
  if (cgraph_function_body_availability (node) < AVAIL_OVERWRITABLE)
    return;
@@ -613,7 +613,7 @@ add_new_function (struct cgraph_node *node, void *data ATTRIBUTE_UNUSED)
 
 static void
 duplicate_node_data (struct cgraph_node *src, struct cgraph_node *dst,
-	 	     void *data ATTRIBUTE_UNUSED)
+	 	     void *ARG_UNUSED(data))
 {
   if (get_function_state (src))
     {
@@ -627,7 +627,7 @@ duplicate_node_data (struct cgraph_node *src, struct cgraph_node *dst,
 /* Called when new clone is inserted to callgraph late.  */
 
 static void
-remove_node_data (struct cgraph_node *node, void *data ATTRIBUTE_UNUSED)
+remove_node_data (struct cgraph_node *node, void *ARG_UNUSED(data))
 {
   if (get_function_state (node))
     {

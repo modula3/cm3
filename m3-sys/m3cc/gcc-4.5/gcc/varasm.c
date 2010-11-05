@@ -235,7 +235,7 @@ get_emutls_object_name (tree name)
 }
 
 tree
-default_emutls_var_fields (tree type, tree *name ATTRIBUTE_UNUSED)
+default_emutls_var_fields (tree type, tree *ARG_UNUSED(name))
 {
   tree word_type_node, field, next_field;
 
@@ -734,7 +734,7 @@ get_named_section (tree decl, const char *name, int reloc)
 /* If required, set DECL_SECTION_NAME to a unique name.  */
 
 void
-resolve_unique_section (tree decl, int reloc ATTRIBUTE_UNUSED,
+resolve_unique_section (tree decl, int ARG_UNUSED(reloc),
 			int flag_function_or_data_sections)
 {
   if (DECL_SECTION_NAME (decl) == NULL_TREE
@@ -754,9 +754,9 @@ resolve_unique_section (tree decl, int reloc ATTRIBUTE_UNUSED,
    support is localized here.  */
 
 static void
-asm_output_bss (FILE *file, tree decl ATTRIBUTE_UNUSED,
+asm_output_bss (FILE *file, tree ARG_UNUSED(decl),
 		const char *name,
-		unsigned HOST_WIDE_INT size ATTRIBUTE_UNUSED,
+		unsigned HOST_WIDE_INT ARG_UNUSED(size),
 		unsigned HOST_WIDE_INT rounded)
 {
   gcc_assert (strcmp (XSTR (XEXP (DECL_RTL (decl), 0), 0), name) == 0);
@@ -782,7 +782,7 @@ asm_output_bss (FILE *file, tree decl ATTRIBUTE_UNUSED,
    support is localized here.  */
 
 static void
-asm_output_aligned_bss (FILE *file, tree decl ATTRIBUTE_UNUSED,
+asm_output_aligned_bss (FILE *file, tree ARG_UNUSED(decl),
 			const char *name, unsigned HOST_WIDE_INT size,
 			int align)
 {
@@ -920,7 +920,7 @@ default_function_rodata_section (tree decl)
    readonly data section.  */
 
 section *
-default_no_function_rodata_section (tree decl ATTRIBUTE_UNUSED)
+default_no_function_rodata_section (tree ARG_UNUSED(decl))
 {
   return readonly_data_section;
 }
@@ -928,9 +928,9 @@ default_no_function_rodata_section (tree decl ATTRIBUTE_UNUSED)
 /* Return the section to use for string merging.  */
 
 static section *
-mergeable_string_section (tree decl ATTRIBUTE_UNUSED,
-			  unsigned HOST_WIDE_INT align ATTRIBUTE_UNUSED,
-			  unsigned int flags ATTRIBUTE_UNUSED)
+mergeable_string_section (tree ARG_UNUSED(decl),
+			  unsigned HOST_WIDE_INT ARG_UNUSED(align),
+			  unsigned int ARG_UNUSED(flags))
 {
   HOST_WIDE_INT len;
 
@@ -984,9 +984,9 @@ mergeable_string_section (tree decl ATTRIBUTE_UNUSED,
 /* Return the section to use for constant merging.  */
 
 section *
-mergeable_constant_section (enum machine_mode mode ATTRIBUTE_UNUSED,
-			    unsigned HOST_WIDE_INT align ATTRIBUTE_UNUSED,
-			    unsigned int flags ATTRIBUTE_UNUSED)
+mergeable_constant_section (enum machine_mode ARG_UNUSED(mode),
+			    unsigned HOST_WIDE_INT ARG_UNUSED(align),
+			    unsigned int ARG_UNUSED(flags))
 {
   unsigned int modesize = GET_MODE_BITSIZE (mode);
 
@@ -1535,8 +1535,8 @@ assemble_asm (tree string)
    between 0 and MAX_INIT_PRIORITY.  */
 
 void
-default_stabs_asm_out_destructor (rtx symbol ATTRIBUTE_UNUSED,
-				  int priority ATTRIBUTE_UNUSED)
+default_stabs_asm_out_destructor (rtx ARG_UNUSED(symbol),
+				  int ARG_UNUSED(priority))
 {
 #if defined DBX_DEBUGGING_INFO || defined XCOFF_DEBUGGING_INFO
   /* Tell GNU LD that this is part of the static destructor set.
@@ -1592,7 +1592,7 @@ default_named_section_asm_out_destructor (rtx symbol, int priority)
 #ifdef DTORS_SECTION_ASM_OP
 void
 default_dtor_section_asm_out_destructor (rtx symbol,
-					 int priority ATTRIBUTE_UNUSED)
+					 int ARG_UNUSED(priority))
 {
   assemble_addr_to_section (symbol, dtors_section);
 }
@@ -1601,8 +1601,8 @@ default_dtor_section_asm_out_destructor (rtx symbol,
 /* Likewise for global constructors.  */
 
 void
-default_stabs_asm_out_constructor (rtx symbol ATTRIBUTE_UNUSED,
-				   int priority ATTRIBUTE_UNUSED)
+default_stabs_asm_out_constructor (rtx ARG_UNUSED(symbol),
+				   int ARG_UNUSED(priority))
 {
 #if defined DBX_DEBUGGING_INFO || defined XCOFF_DEBUGGING_INFO
   /* Tell GNU LD that this is part of the static destructor set.
@@ -1632,7 +1632,7 @@ default_named_section_asm_out_constructor (rtx symbol, int priority)
 #ifdef CTORS_SECTION_ASM_OP
 void
 default_ctor_section_asm_out_constructor (rtx symbol,
-					  int priority ATTRIBUTE_UNUSED)
+					  int ARG_UNUSED(priority))
 {
   assemble_addr_to_section (symbol, ctors_section);
 }
@@ -1835,7 +1835,7 @@ assemble_start_function (tree decl, const char *fnname)
    function.  DECL describes the function.  NAME is the function's name.  */
 
 void
-assemble_end_function (tree decl, const char *fnname ATTRIBUTE_UNUSED)
+assemble_end_function (tree decl, const char *ARG_UNUSED(fnname))
 {
 #ifdef ASM_DECLARE_FUNCTION_SIZE
   /* We could have switched section in the middle of the function.  */
@@ -1928,10 +1928,10 @@ assemble_string (const char *p, int size)
 /* A noswitch_section_callback for lcomm_section.  */
 
 static bool
-emit_local (tree decl ATTRIBUTE_UNUSED,
-	    const char *name ATTRIBUTE_UNUSED,
-	    unsigned HOST_WIDE_INT size ATTRIBUTE_UNUSED,
-	    unsigned HOST_WIDE_INT rounded ATTRIBUTE_UNUSED)
+emit_local (tree ARG_UNUSED(decl),
+	    const char *ARG_UNUSED(name),
+	    unsigned HOST_WIDE_INT ARG_UNUSED(size),
+	    unsigned HOST_WIDE_INT ARG_UNUSED(rounded))
 {
 #if defined ASM_OUTPUT_ALIGNED_DECL_LOCAL
   ASM_OUTPUT_ALIGNED_DECL_LOCAL (asm_out_file, decl, name,
@@ -1950,10 +1950,10 @@ emit_local (tree decl ATTRIBUTE_UNUSED,
 
 #if defined ASM_OUTPUT_ALIGNED_BSS || defined ASM_OUTPUT_BSS
 static bool
-emit_bss (tree decl ATTRIBUTE_UNUSED,
-	  const char *name ATTRIBUTE_UNUSED,
-	  unsigned HOST_WIDE_INT size ATTRIBUTE_UNUSED,
-	  unsigned HOST_WIDE_INT rounded ATTRIBUTE_UNUSED)
+emit_bss (tree ARG_UNUSED(decl),
+	  const char *ARG_UNUSED(name),
+	  unsigned HOST_WIDE_INT ARG_UNUSED(size),
+	  unsigned HOST_WIDE_INT ARG_UNUSED(rounded))
 {
 #if defined ASM_OUTPUT_ALIGNED_BSS
   ASM_OUTPUT_ALIGNED_BSS (asm_out_file, decl, name, size, DECL_ALIGN (decl));
@@ -1968,10 +1968,10 @@ emit_bss (tree decl ATTRIBUTE_UNUSED,
 /* A noswitch_section_callback for comm_section.  */
 
 static bool
-emit_common (tree decl ATTRIBUTE_UNUSED,
-	     const char *name ATTRIBUTE_UNUSED,
-	     unsigned HOST_WIDE_INT size ATTRIBUTE_UNUSED,
-	     unsigned HOST_WIDE_INT rounded ATTRIBUTE_UNUSED)
+emit_common (tree ARG_UNUSED(decl),
+	     const char *ARG_UNUSED(name),
+	     unsigned HOST_WIDE_INT ARG_UNUSED(size),
+	     unsigned HOST_WIDE_INT ARG_UNUSED(rounded))
 {
 #if defined ASM_OUTPUT_ALIGNED_DECL_COMMON
   ASM_OUTPUT_ALIGNED_DECL_COMMON (asm_out_file, decl, name,
@@ -1989,10 +1989,10 @@ emit_common (tree decl ATTRIBUTE_UNUSED,
 /* A noswitch_section_callback for tls_comm_section.  */
 
 static bool
-emit_tls_common (tree decl ATTRIBUTE_UNUSED,
-		 const char *name ATTRIBUTE_UNUSED,
-		 unsigned HOST_WIDE_INT size ATTRIBUTE_UNUSED,
-		 unsigned HOST_WIDE_INT rounded ATTRIBUTE_UNUSED)
+emit_tls_common (tree ARG_UNUSED(decl),
+		 const char *ARG_UNUSED(name),
+		 unsigned HOST_WIDE_INT ARG_UNUSED(size),
+		 unsigned HOST_WIDE_INT ARG_UNUSED(rounded))
 {
 #ifdef ASM_OUTPUT_TLS_COMMON
   ASM_OUTPUT_TLS_COMMON (asm_out_file, decl, name, size);
@@ -2108,8 +2108,8 @@ default_emutls_var_init (tree to, tree decl, tree proxy)
    initial value (that will be done by the caller).  */
 
 void
-assemble_variable (tree decl, int top_level ATTRIBUTE_UNUSED,
-		   int at_end ATTRIBUTE_UNUSED, int dont_output_data)
+assemble_variable (tree decl, int ARG_UNUSED(top_level),
+		   int ARG_UNUSED(at_end), int dont_output_data)
 {
   const char *name;
   rtx decl_rtl, symbol;
@@ -2364,7 +2364,7 @@ static GTY(()) tree weak_decls;
    DECL is not external.  */
 
 void
-assemble_external (tree decl ATTRIBUTE_UNUSED)
+assemble_external (tree ARG_UNUSED(decl))
 {
   /* Because most platforms do not define ASM_OUTPUT_EXTERNAL, the
      main body of this code is only rarely exercised.  To provide some
@@ -2548,7 +2548,7 @@ assemble_static_space (unsigned HOST_WIDE_INT size)
     /* Round size up to multiple of BIGGEST_ALIGNMENT bits
        so that each uninitialized object starts on such a boundary.  */
     /* Variable `rounded' might or might not be used in ASM_OUTPUT_LOCAL.  */
-    unsigned HOST_WIDE_INT rounded ATTRIBUTE_UNUSED
+    unsigned HOST_WIDE_INT ARG_UNUSED(rounded)
       = ((size + (BIGGEST_ALIGNMENT / BITS_PER_UNIT) - 1)
 	 / (BIGGEST_ALIGNMENT / BITS_PER_UNIT)
 	 * (BIGGEST_ALIGNMENT / BITS_PER_UNIT));
@@ -2665,9 +2665,9 @@ assemble_integer_with_op (const char *op, rtx x)
 /* The default implementation of the asm_out.integer target hook.  */
 
 bool
-default_assemble_integer (rtx x ATTRIBUTE_UNUSED,
-			  unsigned int size ATTRIBUTE_UNUSED,
-			  int aligned_p ATTRIBUTE_UNUSED)
+default_assemble_integer (rtx ARG_UNUSED(x),
+			  unsigned int ARG_UNUSED(size),
+			  int ARG_UNUSED(aligned_p))
 {
   const char *op = integer_asm_op (size, aligned_p);
   /* Avoid GAS bugs for large values.  Specifically negative values whose
@@ -3868,7 +3868,7 @@ output_constant_pool_1 (struct constant_descriptor_rtx *desc,
    be used with for_each_rtx to mark all SYMBOL_REFs in an rtx.  */
 
 static int
-mark_constant (rtx *current_rtx, void *data ATTRIBUTE_UNUSED)
+mark_constant (rtx *current_rtx, void *ARG_UNUSED(data))
 {
   rtx x = *current_rtx;
 
@@ -3977,8 +3977,8 @@ output_constant_pool_contents (struct rtx_constant_pool *pool)
    out the function's private constant pool.  */
 
 static void
-output_constant_pool (const char *fnname ATTRIBUTE_UNUSED,
-		      tree fndecl ATTRIBUTE_UNUSED)
+output_constant_pool (const char *ARG_UNUSED(fnname),
+		      tree ARG_UNUSED(fndecl))
 {
   struct rtx_constant_pool *pool = crtl->varasm.pool;
 
@@ -6061,9 +6061,9 @@ have_global_bss_p (void)
    Four variants for common object file formats.  */
 
 void
-default_no_named_section (const char *name ATTRIBUTE_UNUSED,
-			  unsigned int flags ATTRIBUTE_UNUSED,
-			  tree decl ATTRIBUTE_UNUSED)
+default_no_named_section (const char *ARG_UNUSED(name),
+			  unsigned int ARG_UNUSED(flags),
+			  tree ARG_UNUSED(decl))
 {
   /* Some object formats don't support named sections at all.  The
      front-end should already have flagged this as an error.  */
@@ -6076,7 +6076,7 @@ default_no_named_section (const char *name ATTRIBUTE_UNUSED,
 
 void
 default_elf_asm_named_section (const char *name, unsigned int flags,
-			       tree decl ATTRIBUTE_UNUSED)
+			       tree ARG_UNUSED(decl))
 {
   char flagchars[10], *f = flagchars;
 
@@ -6147,7 +6147,7 @@ default_elf_asm_named_section (const char *name, unsigned int flags,
 
 void
 default_coff_asm_named_section (const char *name, unsigned int flags,
-				tree decl ATTRIBUTE_UNUSED)
+				tree ARG_UNUSED(decl))
 {
   char flagchars[8], *f = flagchars;
 
@@ -6180,7 +6180,7 @@ default_pe_asm_named_section (const char *name, unsigned int flags,
 
 section *
 default_select_section (tree decl, int reloc,
-			unsigned HOST_WIDE_INT align ATTRIBUTE_UNUSED)
+			unsigned HOST_WIDE_INT ARG_UNUSED(align))
 {
   if (DECL_P (decl))
     {
@@ -6507,9 +6507,9 @@ compute_reloc_for_rtx (rtx x)
 }
 
 section *
-default_select_rtx_section (enum machine_mode mode ATTRIBUTE_UNUSED,
+default_select_rtx_section (enum machine_mode ARG_UNUSED(mode),
 			    rtx x,
-			    unsigned HOST_WIDE_INT align ATTRIBUTE_UNUSED)
+			    unsigned HOST_WIDE_INT ARG_UNUSED(align))
 {
   if (compute_reloc_for_rtx (x) & targetm.asm_out.reloc_rw_mask ())
     return data_section;
@@ -6539,7 +6539,7 @@ default_elf_select_rtx_section (enum machine_mode mode, rtx x,
 /* Set the generally applicable flags on the SYMBOL_REF for EXP.  */
 
 void
-default_encode_section_info (tree decl, rtx rtl, int first ATTRIBUTE_UNUSED)
+default_encode_section_info (tree decl, rtx rtl, int ARG_UNUSED(first))
 {
   rtx symbol;
   int flags;
@@ -6716,10 +6716,10 @@ default_globalize_decl_name (FILE * stream, tree decl)
    default is to do nothing.  A target that needs nonlocal labels for
    unwind information must provide its own function to do this.  */
 void
-default_emit_unwind_label (FILE * stream ATTRIBUTE_UNUSED,
-			   tree decl ATTRIBUTE_UNUSED,
-			   int for_eh ATTRIBUTE_UNUSED,
-			   int empty ATTRIBUTE_UNUSED)
+default_emit_unwind_label (FILE * ARG_UNUSED(stream),
+			   tree ARG_UNUSED(decl),
+			   int ARG_UNUSED(for_eh),
+			   int ARG_UNUSED(empty))
 {
 }
 
@@ -6727,7 +6727,7 @@ default_emit_unwind_label (FILE * stream ATTRIBUTE_UNUSED,
    The default is to do nothing.  A target that needs/wants to divide
    up the table must provide it's own function to do this.  */
 void
-default_emit_except_table_label (FILE * stream ATTRIBUTE_UNUSED)
+default_emit_except_table_label (FILE * ARG_UNUSED(stream))
 {
 }
 
@@ -7012,7 +7012,7 @@ output_object_block (struct object_block *block)
    each member of object_block_htab.  */
 
 static int
-output_object_block_htab (void **slot, void *data ATTRIBUTE_UNUSED)
+output_object_block_htab (void **slot, void *ARG_UNUSED(data))
 {
   output_object_block ((struct object_block *) (*slot));
   return 1;
@@ -7130,9 +7130,9 @@ elf_record_gcc_switches (print_switch_type type, const char * name)
 /* Emit text to declare externally defined symbols. It is needed to
    properly support non-default visibility.  */
 void
-default_elf_asm_output_external (FILE *file ATTRIBUTE_UNUSED,
+default_elf_asm_output_external (FILE *ARG_UNUSED(file),
 				 tree decl,
-				 const char *name ATTRIBUTE_UNUSED)
+				 const char *ARG_UNUSED(name))
 {
   /* We output the name if and only if TREE_SYMBOL_REFERENCED is
      set in order to avoid putting out names that are never really

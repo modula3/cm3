@@ -379,7 +379,7 @@ set_current_def (tree var, tree def)
    for LIVEIN).  */
 
 void
-compute_global_livein (bitmap livein ATTRIBUTE_UNUSED, bitmap def_blocks ATTRIBUTE_UNUSED)
+compute_global_livein (bitmap ARG_UNUSED(livein), bitmap def_blocks ATTRIBUTE_UNUSED)
 {
   basic_block bb, *worklist, *tos;
   unsigned i;
@@ -1376,7 +1376,7 @@ rewrite_add_phi_arguments (basic_block bb)
    block.  */
 
 static void
-rewrite_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
+rewrite_enter_block (struct dom_walk_data *ARG_UNUSED(walk_data),
 		     basic_block bb)
 {
   gimple phi;
@@ -1421,8 +1421,8 @@ rewrite_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
    of its dominator children.  Restore CURRDEFS to its original value.  */
 
 static void
-rewrite_leave_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
-		     basic_block bb ATTRIBUTE_UNUSED)
+rewrite_leave_block (struct dom_walk_data *ARG_UNUSED(walk_data),
+		     basic_block ARG_UNUSED(bb))
 {
   /* Restore CURRDEFS to its original state.  */
   while (VEC_length (tree, block_defs_stack) > 0)
@@ -2062,7 +2062,7 @@ rewrite_update_phi_arguments (basic_block bb)
    new definitions for every PHI node in the block.  */
 
 static void
-rewrite_update_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
+rewrite_update_enter_block (struct dom_walk_data *ARG_UNUSED(walk_data),
 		            basic_block bb)
 {
   edge e;
@@ -2145,8 +2145,8 @@ rewrite_update_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
    register_new_update_set.  */
 
 static void
-rewrite_update_leave_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
-			    basic_block bb ATTRIBUTE_UNUSED)
+rewrite_update_leave_block (struct dom_walk_data *ARG_UNUSED(walk_data),
+			    basic_block ARG_UNUSED(bb))
 {
   while (VEC_length (tree, block_defs_stack) > 0)
     {
@@ -2933,7 +2933,7 @@ name_mappings_registered_p (void)
 /* Return true if name N has been registered in the replacement table.  */
 
 bool
-name_registered_for_update_p (tree n ATTRIBUTE_UNUSED)
+name_registered_for_update_p (tree ARG_UNUSED(n))
 {
   if (!update_ssa_initialized_fn)
     return false;

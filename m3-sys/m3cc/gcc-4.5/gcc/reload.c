@@ -573,7 +573,7 @@ scratch_reload_class (enum insn_code icode)
    call find_reloads_address on the location being returned.  */
 
 rtx
-get_secondary_mem (rtx x ATTRIBUTE_UNUSED, enum machine_mode mode,
+get_secondary_mem (rtx ARG_UNUSED(x), enum machine_mode mode,
 		   int opnum, enum reload_type type)
 {
   rtx loc;
@@ -658,15 +658,15 @@ clear_secondary_mem (void)
    into REGNO.  Such a class must exist.  */
 
 static enum reg_class
-find_valid_class (enum machine_mode outer ATTRIBUTE_UNUSED,
-		  enum machine_mode inner ATTRIBUTE_UNUSED, int n,
-		  unsigned int dest_regno ATTRIBUTE_UNUSED)
+find_valid_class (enum machine_mode ARG_UNUSED(outer),
+		  enum machine_mode ARG_UNUSED(inner), int n,
+		  unsigned int ARG_UNUSED(dest_regno))
 {
   int best_cost = -1;
   int rclass;
   int regno;
   enum reg_class best_class = NO_REGS;
-  enum reg_class dest_class ATTRIBUTE_UNUSED = REGNO_REG_CLASS (dest_regno);
+  enum reg_class ARG_UNUSED(dest_class) = REGNO_REG_CLASS (dest_regno);
   unsigned int best_size = 0;
   int cost;
 
@@ -2136,7 +2136,7 @@ hard_reg_set_here_p (unsigned int beg_regno, unsigned int end_regno, rtx x)
    proper kind of hard reg.  */
 
 int
-strict_memory_address_addr_space_p (enum machine_mode mode ATTRIBUTE_UNUSED,
+strict_memory_address_addr_space_p (enum machine_mode ARG_UNUSED(mode),
 				    rtx addr, addr_space_t as)
 {
 #ifdef GO_IF_LEGITIMATE_ADDRESS
@@ -4600,7 +4600,7 @@ find_reloads (rtx insn, int replace, int ind_levels, int live_known,
    is null.  */
 
 static bool
-alternative_allows_const_pool_ref (rtx mem ATTRIBUTE_UNUSED,
+alternative_allows_const_pool_ref (rtx ARG_UNUSED(mem),
 				   const char *constraint, int altnum)
 {
   int c;
@@ -5448,8 +5448,8 @@ subst_indexed_address (rtx addr)
    RELOADNUM is the reload number.  */
 
 static void
-update_auto_inc_notes (rtx insn ATTRIBUTE_UNUSED, int regno ATTRIBUTE_UNUSED,
-		       int reloadnum ATTRIBUTE_UNUSED)
+update_auto_inc_notes (rtx ARG_UNUSED(insn), int regno ATTRIBUTE_UNUSED,
+		       int ARG_UNUSED(reloadnum))
 {
 #ifdef AUTO_INC_DEC
   rtx link;
@@ -5988,7 +5988,7 @@ find_reloads_address_1 (enum machine_mode mode, rtx x, int context,
 	     needless copies if SUBREG_REG is multi-word.  */
 	  if (REGNO (SUBREG_REG (x)) < FIRST_PSEUDO_REGISTER)
 	    {
-	      int regno ATTRIBUTE_UNUSED = subreg_regno (x);
+	      int ARG_UNUSED(regno) = subreg_regno (x);
 
 	      if (!REG_OK_FOR_CONTEXT (context, regno, mode, outer_code,
 				       index_code))

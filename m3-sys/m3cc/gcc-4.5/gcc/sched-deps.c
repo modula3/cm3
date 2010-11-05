@@ -1038,9 +1038,9 @@ change_spec_dep_to_hard (sd_iterator_def sd_it)
    data-speculative dependence should be updated.  */
 static enum DEPS_ADJUST_RESULT
 update_dep (dep_t dep, dep_t new_dep,
-	    sd_iterator_def sd_it ATTRIBUTE_UNUSED,
-	    rtx mem1 ATTRIBUTE_UNUSED,
-	    rtx mem2 ATTRIBUTE_UNUSED)
+	    sd_iterator_def ARG_UNUSED(sd_it),
+	    rtx ARG_UNUSED(mem1),
+	    rtx ARG_UNUSED(mem2))
 {
   enum DEPS_ADJUST_RESULT res = DEP_PRESENT;
   enum reg_note old_type = DEP_TYPE (dep);
@@ -1116,7 +1116,7 @@ update_dep (dep_t dep, dep_t new_dep,
    been updated at all.  */
 static enum DEPS_ADJUST_RESULT
 add_or_update_dep_1 (dep_t new_dep, bool resolved_p,
-		     rtx mem1 ATTRIBUTE_UNUSED, rtx mem2 ATTRIBUTE_UNUSED)
+		     rtx ARG_UNUSED(mem1), rtx mem2 ATTRIBUTE_UNUSED)
 {
   bool maybe_present_p = true;
   bool present_p = false;

@@ -3891,8 +3891,8 @@ dwarf2out_do_cfi_startproc (bool second)
    the prologue.  */
 
 void
-dwarf2out_begin_prologue (unsigned int line ATTRIBUTE_UNUSED,
-			  const char *file ATTRIBUTE_UNUSED)
+dwarf2out_begin_prologue (unsigned int ARG_UNUSED(line),
+			  const char *ARG_UNUSED(file))
 {
   char label[MAX_ARTIFICIAL_LABEL_BYTES];
   char * dup_label;
@@ -4014,8 +4014,8 @@ dwarf2out_begin_prologue (unsigned int line ATTRIBUTE_UNUSED,
    been generated.  */
 
 void
-dwarf2out_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
-			const char *file ATTRIBUTE_UNUSED)
+dwarf2out_end_epilogue (unsigned int ARG_UNUSED(line),
+			const char *ARG_UNUSED(file))
 {
   dw_fde_ref fde;
   char label[MAX_ARTIFICIAL_LABEL_BYTES];
@@ -12878,7 +12878,7 @@ expansion_failed (tree expr, rtx rtl, char const *reason)
    or via for_each_rtx.  */
 
 static int
-const_ok_for_output_1 (rtx *rtlp, void *data ATTRIBUTE_UNUSED)
+const_ok_for_output_1 (rtx *rtlp, void *ARG_UNUSED(data))
 {
   rtx rtl = *rtlp;
 
@@ -15505,7 +15505,7 @@ add_const_value_attribute (dw_die_ref die, rtx rtl)
    output).  */
 static tree
 reference_to_unused (tree * tp, int * walk_subtrees,
-		     void * data ATTRIBUTE_UNUSED)
+		     void * ARG_UNUSED(data))
 {
   if (! EXPR_P (*tp) && ! CONSTANT_CLASS_P (*tp))
     *walk_subtrees = 0;
@@ -17749,7 +17749,7 @@ dwarf2out_abstract_function (tree decl)
    marked as unused by prune_unused_types.  */
 
 static int
-premark_used_types_helper (void **slot, void *data ATTRIBUTE_UNUSED)
+premark_used_types_helper (void **slot, void *ARG_UNUSED(data))
 {
   tree type;
   dw_die_ref die;
@@ -17770,7 +17770,7 @@ premark_used_types_helper (void **slot, void *data ATTRIBUTE_UNUSED)
 
 static int
 premark_types_used_by_global_vars_helper (void **slot,
-					  void *data ATTRIBUTE_UNUSED)
+					  void *ARG_UNUSED(data))
 {
   struct types_used_by_vars_entry *entry;
   dw_die_ref die;
@@ -20026,7 +20026,7 @@ dwarf2out_function_decl (tree decl)
    a lexical block.  */
 
 static void
-dwarf2out_begin_block (unsigned int line ATTRIBUTE_UNUSED,
+dwarf2out_begin_block (unsigned int ARG_UNUSED(line),
 		       unsigned int blocknum)
 {
   switch_to_section (current_function_section ());
@@ -20037,7 +20037,7 @@ dwarf2out_begin_block (unsigned int line ATTRIBUTE_UNUSED,
    lexical block.  */
 
 static void
-dwarf2out_end_block (unsigned int line ATTRIBUTE_UNUSED, unsigned int blocknum)
+dwarf2out_end_block (unsigned int ARG_UNUSED(line), unsigned int blocknum)
 {
   switch_to_section (current_function_section ());
   ASM_OUTPUT_DEBUG_LABEL (asm_out_file, BLOCK_END_LABEL, blocknum);
@@ -20556,7 +20556,7 @@ dwarf2out_start_source_file (unsigned int lineno, const char *filename)
 /* Record the end of a source file.  */
 
 static void
-dwarf2out_end_source_file (unsigned int lineno ATTRIBUTE_UNUSED)
+dwarf2out_end_source_file (unsigned int ARG_UNUSED(lineno))
 {
   if (flag_eliminate_dwarf2_dups && dwarf_version < 4)
     /* Record the end of the file for break_out_includes.  */
@@ -20574,8 +20574,8 @@ dwarf2out_end_source_file (unsigned int lineno ATTRIBUTE_UNUSED)
    initial whitespace, #, whitespace, directive-name, whitespace part.  */
 
 static void
-dwarf2out_define (unsigned int lineno ATTRIBUTE_UNUSED,
-		  const char *buffer ATTRIBUTE_UNUSED)
+dwarf2out_define (unsigned int ARG_UNUSED(lineno),
+		  const char *ARG_UNUSED(buffer))
 {
   if (debug_info_level >= DINFO_LEVEL_VERBOSE)
     {
@@ -20591,8 +20591,8 @@ dwarf2out_define (unsigned int lineno ATTRIBUTE_UNUSED,
    initial whitespace, #, whitespace, directive-name, whitespace part.  */
 
 static void
-dwarf2out_undef (unsigned int lineno ATTRIBUTE_UNUSED,
-		 const char *buffer ATTRIBUTE_UNUSED)
+dwarf2out_undef (unsigned int ARG_UNUSED(lineno),
+		 const char *ARG_UNUSED(buffer))
 {
   if (debug_info_level >= DINFO_LEVEL_VERBOSE)
     {
@@ -20606,7 +20606,7 @@ dwarf2out_undef (unsigned int lineno ATTRIBUTE_UNUSED,
 /* Set up for Dwarf output at the start of compilation.  */
 
 static void
-dwarf2out_init (const char *filename ATTRIBUTE_UNUSED)
+dwarf2out_init (const char *ARG_UNUSED(filename))
 {
   /* Allocate the file_table.  */
   file_table = htab_create_ggc (50, file_table_hash,
@@ -20742,7 +20742,7 @@ dwarf2out_assembly_start (void)
    htab_traverse.  Emit one queued .debug_str string.  */
 
 static int
-output_indirect_string (void **h, void *v ATTRIBUTE_UNUSED)
+output_indirect_string (void **h, void *ARG_UNUSED(v))
 {
   struct indirect_string_node *node = (struct indirect_string_node *) *h;
 
@@ -21037,7 +21037,7 @@ prune_unused_types_prune (dw_die_ref die)
    decided to emit.  */
 
 static int
-prune_indirect_string (void **h, void *v ATTRIBUTE_UNUSED)
+prune_indirect_string (void **h, void *ARG_UNUSED(v))
 {
   struct indirect_string_node *node = (struct indirect_string_node *) *h;
 
@@ -21182,7 +21182,7 @@ move_linkage_attr (dw_die_ref die)
    SYMBOL_REFs refer to variables emitted in the current CU.  */
 
 static int
-resolve_one_addr (rtx *addr, void *data ATTRIBUTE_UNUSED)
+resolve_one_addr (rtx *addr, void *ARG_UNUSED(data))
 {
   rtx rtl = *addr;
 

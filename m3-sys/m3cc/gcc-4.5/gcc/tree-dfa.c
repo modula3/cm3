@@ -411,7 +411,7 @@ debug_dfa_stats (void)
    DFA_STATS_P.  */
 
 static void
-collect_dfa_stats (struct dfa_stats_d *dfa_stats_p ATTRIBUTE_UNUSED)
+collect_dfa_stats (struct dfa_stats_d *ARG_UNUSED(dfa_stats_p))
 {
   basic_block bb;
   referenced_var_iterator vi;
@@ -459,7 +459,7 @@ collect_dfa_stats (struct dfa_stats_d *dfa_stats_p ATTRIBUTE_UNUSED)
    the function.  */
 
 static tree
-find_vars_r (tree *tp, int *walk_subtrees, void *data ATTRIBUTE_UNUSED)
+find_vars_r (tree *tp, int *walk_subtrees, void *ARG_UNUSED(data))
 {
   /* If we are reading the lto info back in, we need to rescan the
      referenced vars.  */
@@ -690,7 +690,7 @@ mark_symbols_for_renaming (gimple stmt)
 
 static tree
 find_new_referenced_vars_1 (tree *tp, int *walk_subtrees,
-			    void *data ATTRIBUTE_UNUSED)
+			    void *ARG_UNUSED(data))
 {
   tree t = *tp;
 

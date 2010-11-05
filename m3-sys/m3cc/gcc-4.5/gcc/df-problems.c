@@ -217,7 +217,7 @@ df_rd_set_bb_info (unsigned int index,
 /* Free basic block info.  */
 
 static void
-df_rd_free_bb_info (basic_block bb ATTRIBUTE_UNUSED,
+df_rd_free_bb_info (basic_block ARG_UNUSED(bb),
 		    void *vbb_info)
 {
   struct df_rd_bb_info *bb_info = (struct df_rd_bb_info *) vbb_info;
@@ -322,7 +322,7 @@ df_rd_simulate_artificial_defs_at_top (basic_block bb, bitmap local_rd)
    LOCAL_RD.  */
 
 void
-df_rd_simulate_one_insn (basic_block bb ATTRIBUTE_UNUSED, rtx insn,
+df_rd_simulate_one_insn (basic_block ARG_UNUSED(bb), rtx insn,
 			 bitmap local_rd)
 {
   unsigned uid = INSN_UID (insn);
@@ -751,7 +751,7 @@ df_lr_set_bb_info (unsigned int index,
 /* Free basic block info.  */
 
 static void
-df_lr_free_bb_info (basic_block bb ATTRIBUTE_UNUSED,
+df_lr_free_bb_info (basic_block ARG_UNUSED(bb),
 		    void *vbb_info)
 {
   struct df_lr_bb_info *bb_info = (struct df_lr_bb_info *) vbb_info;
@@ -770,7 +770,7 @@ df_lr_free_bb_info (basic_block bb ATTRIBUTE_UNUSED,
    not touched unless the block is new.  */
 
 static void
-df_lr_alloc (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_lr_alloc (bitmap ARG_UNUSED(all_blocks))
 {
   unsigned int bb_index;
   bitmap_iterator bi;
@@ -919,7 +919,7 @@ df_lr_bb_local_compute (unsigned int bb_index)
 /* Compute local live register info for each basic block within BLOCKS.  */
 
 static void
-df_lr_local_compute (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_lr_local_compute (bitmap ARG_UNUSED(all_blocks))
 {
   unsigned int bb_index;
   bitmap_iterator bi;
@@ -1379,7 +1379,7 @@ df_live_set_bb_info (unsigned int index,
 /* Free basic block info.  */
 
 static void
-df_live_free_bb_info (basic_block bb ATTRIBUTE_UNUSED,
+df_live_free_bb_info (basic_block ARG_UNUSED(bb),
 		    void *vbb_info)
 {
   struct df_live_bb_info *bb_info = (struct df_live_bb_info *) vbb_info;
@@ -1398,7 +1398,7 @@ df_live_free_bb_info (basic_block bb ATTRIBUTE_UNUSED,
    not touched unless the block is new.  */
 
 static void
-df_live_alloc (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_live_alloc (bitmap ARG_UNUSED(all_blocks))
 {
   unsigned int bb_index;
   bitmap_iterator bi;
@@ -1510,7 +1510,7 @@ df_live_bb_local_compute (unsigned int bb_index)
 /* Compute local uninitialized register info.  */
 
 static void
-df_live_local_compute (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_live_local_compute (bitmap ARG_UNUSED(all_blocks))
 {
   unsigned int bb_index;
   bitmap_iterator bi;
@@ -2036,7 +2036,7 @@ df_chain_fully_remove_problem (void)
 /* Create def-use or use-def chains.  */
 
 static void
-df_chain_alloc (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_chain_alloc (bitmap ARG_UNUSED(all_blocks))
 {
   df_chain_remove_problem ();
   df_chain->block_pool = create_alloc_pool ("df_chain_block pool",
@@ -2048,7 +2048,7 @@ df_chain_alloc (bitmap all_blocks ATTRIBUTE_UNUSED)
 /* Reset all of the chains when the set of basic blocks changes.  */
 
 static void
-df_chain_reset (bitmap blocks_to_clear ATTRIBUTE_UNUSED)
+df_chain_reset (bitmap ARG_UNUSED(blocks_to_clear))
 {
   df_chain_remove_problem ();
 }
@@ -2421,7 +2421,7 @@ df_byte_lr_set_bb_info (unsigned int index,
 /* Free basic block info.  */
 
 static void
-df_byte_lr_free_bb_info (basic_block bb ATTRIBUTE_UNUSED,
+df_byte_lr_free_bb_info (basic_block ARG_UNUSED(bb),
 			 void *vbb_info)
 {
   struct df_byte_lr_bb_info *bb_info = (struct df_byte_lr_bb_info *) vbb_info;
@@ -2481,7 +2481,7 @@ df_byte_lr_expand_bitmap (bitmap dest, bitmap src)
    not touched unless the block is new.  */
 
 static void
-df_byte_lr_alloc (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_byte_lr_alloc (bitmap ARG_UNUSED(all_blocks))
 {
   unsigned int bb_index;
   bitmap_iterator bi;
@@ -2722,7 +2722,7 @@ df_byte_lr_bb_local_compute (unsigned int bb_index)
 /* Compute local live register info for each basic block within BLOCKS.  */
 
 static void
-df_byte_lr_local_compute (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_byte_lr_local_compute (bitmap ARG_UNUSED(all_blocks))
 {
   unsigned int bb_index;
   bitmap_iterator bi;
@@ -3066,7 +3066,7 @@ df_byte_lr_simulate_artificial_refs_at_end (basic_block bb, bitmap live)
    ----------------------------------------------------------------------------*/
 
 static void
-df_note_alloc (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_note_alloc (bitmap ARG_UNUSED(all_blocks))
 {
   df_note->optional_p = true;
 }
@@ -3098,7 +3098,7 @@ df_ignore_stack_reg (int regno)
 }
 #else
 static inline bool
-df_ignore_stack_reg (int regno ATTRIBUTE_UNUSED)
+df_ignore_stack_reg (int ARG_UNUSED(regno))
 {
   return false;
 }
@@ -4034,7 +4034,7 @@ df_md_set_bb_info (unsigned int index,
 
 
 static void
-df_md_free_bb_info (basic_block bb ATTRIBUTE_UNUSED,
+df_md_free_bb_info (basic_block ARG_UNUSED(bb),
                     void *vbb_info)
 {
   struct df_md_bb_info *bb_info = (struct df_md_bb_info *) vbb_info;
@@ -4120,7 +4120,7 @@ df_md_simulate_artificial_defs_at_top (basic_block bb, bitmap local_md)
    LOCAL_MD.  */
 
 void
-df_md_simulate_one_insn (basic_block bb ATTRIBUTE_UNUSED, rtx insn,
+df_md_simulate_one_insn (basic_block ARG_UNUSED(bb), rtx insn,
                         bitmap local_md)
 {
   unsigned uid = INSN_UID (insn);

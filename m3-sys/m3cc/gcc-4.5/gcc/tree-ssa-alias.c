@@ -470,7 +470,7 @@ ao_ref_base (ao_ref *ref)
 
 /* Returns the base object alias set of the memory reference *REF.  */
 
-static alias_set_type ATTRIBUTE_UNUSED
+static ARG_UNUSED(alias_set_type)
 ao_ref_base_alias_set (ao_ref *ref)
 {
   if (ref->base_alias_set != -1)
@@ -1400,7 +1400,7 @@ call_may_clobber_ref_p_1 (gimple call, ao_ref *ref)
   return true;
 }
 
-static bool ATTRIBUTE_UNUSED
+static ARG_UNUSED(bool)
 call_may_clobber_ref_p (gimple call, tree ref)
 {
   bool res;

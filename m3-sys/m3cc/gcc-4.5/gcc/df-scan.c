@@ -326,7 +326,7 @@ df_scan_free_bb_info (basic_block bb, void *vbb_info)
    called when the problem is created or when the entire function is to
    be rescanned.  */
 void
-df_scan_alloc (bitmap all_blocks ATTRIBUTE_UNUSED)
+df_scan_alloc (bitmap ARG_UNUSED(all_blocks))
 {
   struct df_scan_problem_data *problem_data;
   unsigned int insn_num = get_max_uid () + 1;
@@ -422,7 +422,7 @@ df_scan_free (void)
 
 /* Dump the preamble for DF_SCAN dump. */
 static void
-df_scan_start_dump (FILE *file ATTRIBUTE_UNUSED)
+df_scan_start_dump (FILE *ARG_UNUSED(file))
 {
   int i;
   int dcount = 0;

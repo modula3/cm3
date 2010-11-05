@@ -903,7 +903,7 @@ rewrite_bittest (gimple_stmt_iterator *bsi)
    Callback for walk_dominator_tree.  */
 
 static void
-determine_invariantness_stmt (struct dom_walk_data *dw_data ATTRIBUTE_UNUSED,
+determine_invariantness_stmt (struct dom_walk_data *ARG_UNUSED(dw_data),
 			      basic_block bb)
 {
   enum move_pos pos;
@@ -1021,7 +1021,7 @@ determine_invariantness (void)
    for walk_dominator_tree.  */
 
 static void
-move_computations_stmt (struct dom_walk_data *dw_data ATTRIBUTE_UNUSED,
+move_computations_stmt (struct dom_walk_data *ARG_UNUSED(dw_data),
 			basic_block bb)
 {
   struct loop *level;
@@ -2132,7 +2132,7 @@ find_refs_for_sm (struct loop *loop, bitmap sm_executed, bitmap refs_to_sm)
    on its exits).  */
 
 static bool
-loop_suitable_for_sm (struct loop *loop ATTRIBUTE_UNUSED,
+loop_suitable_for_sm (struct loop *ARG_UNUSED(loop),
 		      VEC (edge, heap) *exits)
 {
   unsigned i;

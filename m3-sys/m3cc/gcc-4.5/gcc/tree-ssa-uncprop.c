@@ -427,8 +427,8 @@ tree_ssa_uncprop (void)
    the dominator tree.  */
 
 static void
-uncprop_leave_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
-		     basic_block bb ATTRIBUTE_UNUSED)
+uncprop_leave_block (struct dom_walk_data *ARG_UNUSED(walk_data),
+		     basic_block ARG_UNUSED(bb))
 {
   /* Pop the topmost value off the equiv stack.  */
   tree value = VEC_pop (tree, equiv_stack);
@@ -549,7 +549,7 @@ single_incoming_edge_ignoring_loop_edges (basic_block bb)
 }
 
 static void
-uncprop_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
+uncprop_enter_block (struct dom_walk_data *ARG_UNUSED(walk_data),
 		     basic_block bb)
 {
   basic_block parent;

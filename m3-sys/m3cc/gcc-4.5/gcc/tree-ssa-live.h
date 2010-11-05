@@ -192,8 +192,8 @@ num_basevars (var_map map)
    partitions may be filtered out by a view later.  */
 
 static inline void
-register_ssa_partition (var_map map ATTRIBUTE_UNUSED,
-			tree ssa_var ATTRIBUTE_UNUSED)
+register_ssa_partition (var_map ARG_UNUSED(map),
+			tree ARG_UNUSED(ssa_var))
 {
 #if defined ENABLE_CHECKING
   register_ssa_partition_check (ssa_var);

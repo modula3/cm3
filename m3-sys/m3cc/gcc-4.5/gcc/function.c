@@ -295,7 +295,7 @@ get_stack_local_alignment (tree type, enum machine_mode mode)
 rtx
 assign_stack_local_1 (enum machine_mode mode, HOST_WIDE_INT size,
 		      int align,
-		      bool reduce_alignment_ok ATTRIBUTE_UNUSED)
+		      bool ARG_UNUSED(reduce_alignment_ok))
 {
   rtx x, addr;
   int bigend_correction = 0;
@@ -612,7 +612,7 @@ insert_temp_slot_address (rtx address, struct temp_slot *temp_slot)
 /* Remove an address -> temp slot mapping entry if the temp slot is
    not in use anymore.  Callback for remove_unused_temp_slot_addresses.  */
 static int
-remove_unused_temp_slot_addresses_1 (void **slot, void *data ATTRIBUTE_UNUSED)
+remove_unused_temp_slot_addresses_1 (void **slot, void *ARG_UNUSED(data))
 {
   const struct temp_slot_address_entry *t;
   t = (const struct temp_slot_address_entry *) *slot;
@@ -876,7 +876,7 @@ assign_stack_temp (enum machine_mode mode, HOST_WIDE_INT size, int keep)
 
 rtx
 assign_temp (tree type_or_decl, int keep, int memory_required,
-	     int dont_promote ATTRIBUTE_UNUSED)
+	     int ARG_UNUSED(dont_promote))
 {
   tree type, decl;
   enum machine_mode mode;
@@ -1692,7 +1692,7 @@ instantiate_decl_rtl (rtx x)
    in the given DECL_VALUE_EXPR.  */
 
 static tree
-instantiate_expr (tree *tp, int *walk_subtrees, void *data ATTRIBUTE_UNUSED)
+instantiate_expr (tree *tp, int *walk_subtrees, void *ARG_UNUSED(data))
 {
   tree t = *tp;
   if (! EXPR_P (t))
@@ -3492,7 +3492,7 @@ gimplify_parameters (void)
 
 void
 locate_and_pad_parm (enum machine_mode passed_mode, tree type, int in_regs,
-		     int partial, tree fndecl ATTRIBUTE_UNUSED,
+		     int partial, tree ARG_UNUSED(fndecl),
 		     struct args_size *initial_offset_ptr,
 		     struct locate_and_pad_arg_data *locate)
 {
@@ -4581,7 +4581,7 @@ diddle_return_value (void (*doit) (rtx, void *), void *arg)
 }
 
 static void
-do_clobber_return_reg (rtx reg, void *arg ATTRIBUTE_UNUSED)
+do_clobber_return_reg (rtx reg, void *ARG_UNUSED(arg))
 {
   emit_clobber (reg);
 }
@@ -4604,7 +4604,7 @@ clobber_return_register (void)
 }
 
 static void
-do_use_return_reg (rtx reg, void *arg ATTRIBUTE_UNUSED)
+do_use_return_reg (rtx reg, void *ARG_UNUSED(arg))
 {
   emit_use (reg);
 }
