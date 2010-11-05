@@ -5285,7 +5285,7 @@ M3CG_HANDLER (LOOPHOLE)
      EXPR_REF (-1) = m3_build1 (VIEW_CONVERT_EXPR, type2, EXPR_REF (-1));
      return;
   }
-  if (option_trace_all)
+  if (M3_LOOPHOLE_VIEW_CONVERT && option_trace_all)
   {
     fprintf (stderr, "loophole falling back to old path\n");
   }
