@@ -4,6 +4,9 @@ WS=${WORKSPACE}
 for a in a m s p r; do
     echo uname -$a: `uname -$a`
 done
+for a in cc gcc g++; do
+    echo $a -v: `$a -v`
+done
 date
 cd ${WS}/cm3/scripts || {
   echo "cannot cd to ${WS}/cm3/scripts" 1>&2 
