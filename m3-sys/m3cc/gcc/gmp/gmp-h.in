@@ -24,7 +24,7 @@ MA 02110-1301, USA. */
 
 #ifndef __GMP_H__
 
-#if defined (__cplusplus)
+#if defined (xx__cplusplus)
 #include <iosfwd>   /* for std::istream, std::ostream, std::string */
 #endif
 
@@ -50,7 +50,7 @@ MA 02110-1301, USA. */
 #define __GNU_MP__ 4
 
 #define __need_size_t  /* tell gcc stddef.h we only want size_t */
-#if defined (__cplusplus)
+#if defined (xx__cplusplus)
 #include <cstddef>     /* for size_t */
 #else
 #include <stddef.h>    /* for size_t */
@@ -2126,7 +2126,7 @@ mpn_sub_1 (mp_ptr __gmp_dst, mp_srcptr __gmp_src, mp_size_t __gmp_size, mp_limb_
 
 /**************** C++ routines ****************/
 
-#ifdef __cplusplus
+#ifdef xx__cplusplus
 __GMP_DECLSPEC_XX std::ostream& operator<< (std::ostream &, mpz_srcptr);
 __GMP_DECLSPEC_XX std::ostream& operator<< (std::ostream &, mpq_srcptr);
 __GMP_DECLSPEC_XX std::ostream& operator<< (std::ostream &, mpf_srcptr);
