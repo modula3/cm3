@@ -178,7 +178,7 @@ omega_variable_to_str (omega_pb pb, int i)
 /* Do nothing function: used for default initializations.  */
 
 void
-omega_no_procedure (omega_pb pb ATTRIBUTE_UNUSED)
+omega_no_procedure (omega_pb ARG_UNUSED(pb))
 {
 }
 

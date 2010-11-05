@@ -764,7 +764,7 @@ scan_linker_output (const char *fname)
      to provide missing definitions.  Currently ignored.  */
 
 void
-do_tlink (char **ld_argv, char **object_lst ATTRIBUTE_UNUSED)
+do_tlink (char **ld_argv, char **ARG_UNUSED(object_lst))
 {
   int exit = tlink_execute ("ld", ld_argv, ldout, lderrout);
 

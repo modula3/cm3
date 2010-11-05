@@ -1499,7 +1499,7 @@ static struct pointer_map_t *lab_rtx_for_bb;
 /* Returns the label_rtx expression for a label starting basic block BB.  */
 
 static rtx
-label_rtx_for_bb (basic_block bb ATTRIBUTE_UNUSED)
+label_rtx_for_bb (basic_block ARG_UNUSED(bb))
 {
   gimple_stmt_iterator gsi;
   tree lab;
@@ -2142,7 +2142,7 @@ ceil_sdiv_adjust (enum machine_mode mode, rtx mod, rtx op1)
 /* Return the difference between the ceil and the truncated result of
    an unsigned division by OP1 with remainder MOD.  */
 static rtx
-ceil_udiv_adjust (enum machine_mode mode, rtx mod, rtx op1 ATTRIBUTE_UNUSED)
+ceil_udiv_adjust (enum machine_mode mode, rtx mod, rtx ARG_UNUSED(op1))
 {
   /* (mod != 0 ? 1 : 0) */
   return gen_rtx_IF_THEN_ELSE
@@ -3590,7 +3590,7 @@ construct_exit_block (void)
 
 static tree
 discover_nonconstant_array_refs_r (tree * tp, int *walk_subtrees,
-				   void *data ATTRIBUTE_UNUSED)
+				   void *ARG_UNUSED(data))
 {
   tree t = *tp;
 

@@ -535,7 +535,7 @@ resolve_subreg_use (rtx *px, void *data)
    decomposed and decomposed REGs that need copying.  */
 
 static int
-adjust_decomposed_uses (rtx *px, void *data ATTRIBUTE_UNUSED)
+adjust_decomposed_uses (rtx *px, void *ARG_UNUSED(data))
 {
   rtx x = *px;
 

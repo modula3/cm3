@@ -634,7 +634,7 @@ pop_visibility (int kind)
    specified on the command line.  */
 
 static void
-handle_pragma_visibility (cpp_reader *dummy ATTRIBUTE_UNUSED)
+handle_pragma_visibility (cpp_reader *ARG_UNUSED(dummy))
 {
   /* Form is #pragma GCC visibility push(hidden)|pop */
   tree x;

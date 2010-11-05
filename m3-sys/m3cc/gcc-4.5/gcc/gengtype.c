@@ -1228,7 +1228,7 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
    a new type for the field.  */
 
 static type_p
-adjust_field_tree_exp (type_p t, options_p opt ATTRIBUTE_UNUSED)
+adjust_field_tree_exp (type_p t, options_p ARG_UNUSED(opt))
 {
   pair_p flds;
   options_p nodot;
@@ -2919,7 +2919,7 @@ write_local_func_for_structure (type_p orig_s, type_p s, type_p *param)
 	   "\tATTRIBUTE_UNUSED gt_pointer_operator op,\n"
 	   "\tATTRIBUTE_UNUSED void *cookie)\n");
   oprintf (d.of, "{\n");
-  oprintf (d.of, "  %s %s * const x ATTRIBUTE_UNUSED = (%s %s *)x_p;\n",
+  oprintf (d.of, "  %s %s * const ARG_UNUSED(x) = (%s %s *)x_p;\n",
 	   s->kind == TYPE_UNION ? "union" : "struct", s->u.s.tag,
 	   s->kind == TYPE_UNION ? "union" : "struct", s->u.s.tag);
   d.indent = 2;

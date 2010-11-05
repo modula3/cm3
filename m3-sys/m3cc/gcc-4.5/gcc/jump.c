@@ -868,7 +868,7 @@ condjump_label (const_rtx insn)
 /* Return true if INSN is a (possibly conditional) return insn.  */
 
 static int
-returnjump_p_1 (rtx *loc, void *data ATTRIBUTE_UNUSED)
+returnjump_p_1 (rtx *loc, void *ARG_UNUSED(data))
 {
   rtx x = *loc;
 
@@ -902,7 +902,7 @@ returnjump_p (rtx insn)
 /* Return true if INSN is a (possibly conditional) return insn.  */
 
 static int
-eh_returnjump_p_1 (rtx *loc, void *data ATTRIBUTE_UNUSED)
+eh_returnjump_p_1 (rtx *loc, void *ARG_UNUSED(data))
 {
   return *loc && GET_CODE (*loc) == EH_RETURN;
 }

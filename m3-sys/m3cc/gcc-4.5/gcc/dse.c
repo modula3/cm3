@@ -1781,7 +1781,7 @@ find_shift_sequence (int access_size,
    insn.  Data is a bitmap of the hardregs set so far.  */
 
 static void
-look_for_hardregs (rtx x, const_rtx pat ATTRIBUTE_UNUSED, void *data)
+look_for_hardregs (rtx x, const_rtx ARG_UNUSED(pat), void *data)
 {
   bitmap regs_set = (bitmap) data;
 

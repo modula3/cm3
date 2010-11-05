@@ -59,7 +59,7 @@ debug_rename_elt (rename_map_elt elt)
 /* Helper function for debug_rename_map.  */
 
 static int
-debug_rename_map_1 (void **slot, void *s ATTRIBUTE_UNUSED)
+debug_rename_map_1 (void **slot, void *ARG_UNUSED(s))
 {
   struct rename_map_elt_s *entry = (struct rename_map_elt_s *) *slot;
   debug_rename_elt (entry);
@@ -108,7 +108,7 @@ debug_ivtype_elt (ivtype_map_elt elt)
 /* Helper function for debug_ivtype_map.  */
 
 static int
-debug_ivtype_map_1 (void **slot, void *s ATTRIBUTE_UNUSED)
+debug_ivtype_map_1 (void **slot, void *ARG_UNUSED(s))
 {
   struct ivtype_map_elt_s *entry = (struct ivtype_map_elt_s *) *slot;
   debug_ivtype_elt (entry);

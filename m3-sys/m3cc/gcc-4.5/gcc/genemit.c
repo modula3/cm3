@@ -410,9 +410,9 @@ gen_insn (rtx insn, int lineno)
   if (operands)
     for (i = 0; i < operands; i++)
       if (i)
-	printf (",\n\trtx operand%d ATTRIBUTE_UNUSED", i);
+	printf (",\n\trtx operand%ARG_UNUSED(d)", i);
       else
-	printf ("rtx operand%d ATTRIBUTE_UNUSED", i);
+	printf ("rtx operand%ARG_UNUSED(d)", i);
   else
     printf ("void");
   printf (")\n");
@@ -491,7 +491,7 @@ gen_expand (rtx expand)
   for (i = operands; i <= max_dup_opno; i++)
     printf ("  rtx operand%d;\n", i);
   for (; i <= max_scratch_opno; i++)
-    printf ("  rtx operand%d ATTRIBUTE_UNUSED;\n", i);
+    printf ("  rtx operand%ARG_UNUSED(d);\n", i);
   printf ("  rtx _val = 0;\n");
   printf ("  start_sequence ();\n");
 
@@ -615,13 +615,13 @@ gen_split (rtx split)
     {
       printf ("extern rtx gen_%s_%d (rtx, rtx *);\n",
 	      name, insn_code_number);
-      printf ("rtx\ngen_%s_%d (rtx curr_insn ATTRIBUTE_UNUSED, rtx *operands%s)\n",
+      printf ("rtx\ngen_%s_%d (rtx ARG_UNUSED(curr_insn), rtx *operands%s)\n",
 	      name, insn_code_number, unused);
     }
   else
     {
       printf ("extern rtx gen_split_%d (rtx, rtx *);\n", insn_code_number);
-      printf ("rtx\ngen_split_%d (rtx curr_insn ATTRIBUTE_UNUSED, rtx *operands%s)\n",
+      printf ("rtx\ngen_split_%d (rtx ARG_UNUSED(curr_insn), rtx *operands%s)\n",
 	      insn_code_number, unused);
     }
   printf ("{\n");
@@ -709,7 +709,7 @@ output_add_clobbers (void)
   struct clobber_ent *ent;
   int i;
 
-  printf ("\n\nvoid\nadd_clobbers (rtx pattern ATTRIBUTE_UNUSED, int insn_code_number)\n");
+  printf ("\n\nvoid\nadd_clobbers (rtx ARG_UNUSED(pattern), int insn_code_number)\n");
   printf ("{\n");
   printf ("  switch (insn_code_number)\n");
   printf ("    {\n");

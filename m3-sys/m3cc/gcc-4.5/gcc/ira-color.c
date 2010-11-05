@@ -1104,7 +1104,7 @@ allocno_spill_priority_compare (splay_tree_key k1, splay_tree_key k2)
    tree roots or splay tree nodes.  If you change this, please rewrite
    the function.  */
 static void *
-splay_tree_allocate (int size, void *data ATTRIBUTE_UNUSED)
+splay_tree_allocate (int size, void *ARG_UNUSED(data))
 {
   if (size != sizeof (struct splay_tree_node_s))
     return ira_allocate (size);
@@ -1115,7 +1115,7 @@ splay_tree_allocate (int size, void *data ATTRIBUTE_UNUSED)
    tree roots or splay tree nodes.  If you change this, please rewrite
    the function.  */
 static void
-splay_tree_free (void *node, void *data ATTRIBUTE_UNUSED)
+splay_tree_free (void *node, void *ARG_UNUSED(data))
 {
   int i = { 0 };
   enum reg_class cover_class;

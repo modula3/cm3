@@ -2330,7 +2330,7 @@ write_list_with_asm (FILE *stream, const char *prefix, struct id *list)
    object), along with the functions to execute them.  */
 
 static void
-write_c_file_stat (FILE *stream, const char *name ATTRIBUTE_UNUSED)
+write_c_file_stat (FILE *stream, const char *ARG_UNUSED(name))
 {
   const char *p, *q;
   char *prefix, *r;
@@ -2459,7 +2459,7 @@ write_c_file_stat (FILE *stream, const char *name ATTRIBUTE_UNUSED)
 
 #ifndef LD_INIT_SWITCH
 static void
-write_c_file_glob (FILE *stream, const char *name ATTRIBUTE_UNUSED)
+write_c_file_glob (FILE *stream, const char *ARG_UNUSED(name))
 {
   /* Write the tables as C code.  */
 

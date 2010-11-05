@@ -3322,8 +3322,8 @@ const char **outfiles;
    is true if we should look for an object suffix.  */
 
 static const char *
-convert_filename (const char *name, int do_exe ATTRIBUTE_UNUSED,
-		  int do_obj ATTRIBUTE_UNUSED)
+convert_filename (const char *name, int ARG_UNUSED(do_exe),
+		  int ARG_UNUSED(do_obj))
 {
 #if defined(HAVE_TARGET_EXECUTABLE_SUFFIX)
   int i;
@@ -8796,8 +8796,8 @@ include_spec_function (int argc, const char **argv)
    following output is from the assembler.  */
 
 static const char *
-print_asm_header_spec_function (int arg ATTRIBUTE_UNUSED,
-				const char **argv ATTRIBUTE_UNUSED)
+print_asm_header_spec_function (int ARG_UNUSED(arg),
+				const char **ARG_UNUSED(argv))
 {
   printf (_("Assembler options\n=================\n\n"));
   printf (_("Use \"-Wa,OPTION\" to pass \"OPTION\" to the assembler.\n\n"));
@@ -8838,7 +8838,7 @@ get_local_tick (void)
 
 static const char *
 compare_debug_dump_opt_spec_function (int arg,
-				      const char **argv ATTRIBUTE_UNUSED)
+				      const char **ARG_UNUSED(argv))
 {
   const char *ret;
   char *name;
@@ -8910,7 +8910,7 @@ static const char *debug_auxbase_opt;
 
 static const char *
 compare_debug_self_opt_spec_function (int arg,
-				      const char **argv ATTRIBUTE_UNUSED)
+				      const char **ARG_UNUSED(argv))
 {
   if (arg != 0)
     fatal ("too many arguments to %%:compare-debug-self-opt");

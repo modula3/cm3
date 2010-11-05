@@ -93,30 +93,30 @@ gen_lowpart_no_emit_general (enum machine_mode mode, rtx x)
 }
 
 rtx
-reg_num_sign_bit_copies_general (const_rtx x ATTRIBUTE_UNUSED,
-				 enum machine_mode mode ATTRIBUTE_UNUSED,
-                                 const_rtx known_x ATTRIBUTE_UNUSED,
-				 enum machine_mode known_mode ATTRIBUTE_UNUSED,
-                                 unsigned int known_ret ATTRIBUTE_UNUSED,
-                                 unsigned int *result ATTRIBUTE_UNUSED)
+reg_num_sign_bit_copies_general (const_rtx ARG_UNUSED(x),
+				 enum machine_mode ARG_UNUSED(mode),
+                                 const_rtx ARG_UNUSED(known_x),
+				 enum machine_mode ARG_UNUSED(known_mode),
+                                 unsigned int ARG_UNUSED(known_ret),
+                                 unsigned int *ARG_UNUSED(result))
 {
   return NULL;
 }
 
 rtx
-reg_nonzero_bits_general (const_rtx x ATTRIBUTE_UNUSED,
-			  enum machine_mode mode ATTRIBUTE_UNUSED,
-			  const_rtx known_x ATTRIBUTE_UNUSED,
-                          enum machine_mode known_mode ATTRIBUTE_UNUSED,
-                          unsigned HOST_WIDE_INT known_ret ATTRIBUTE_UNUSED,
-                          unsigned HOST_WIDE_INT *nonzero ATTRIBUTE_UNUSED)
+reg_nonzero_bits_general (const_rtx ARG_UNUSED(x),
+			  enum machine_mode ARG_UNUSED(mode),
+			  const_rtx ARG_UNUSED(known_x),
+                          enum machine_mode ARG_UNUSED(known_mode),
+                          unsigned HOST_WIDE_INT ARG_UNUSED(known_ret),
+                          unsigned HOST_WIDE_INT *ARG_UNUSED(nonzero))
 {
   return NULL;
 }
 
 bool
-reg_truncated_to_mode_general (enum machine_mode mode ATTRIBUTE_UNUSED,
-			       const_rtx x ATTRIBUTE_UNUSED)
+reg_truncated_to_mode_general (enum machine_mode ARG_UNUSED(mode),
+			       const_rtx ARG_UNUSED(x))
 {
   return false;
 }

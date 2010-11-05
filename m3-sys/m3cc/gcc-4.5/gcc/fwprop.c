@@ -212,7 +212,7 @@ process_uses (df_ref *use_rec, int top_flag)
 
 
 static void
-single_def_use_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
+single_def_use_enter_block (struct dom_walk_data *ARG_UNUSED(walk_data),
 			    basic_block bb)
 {
   int bb_index = bb->index;
@@ -248,8 +248,8 @@ single_def_use_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
    dominated parts.  */
 
 static void
-single_def_use_leave_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
-			    basic_block bb ATTRIBUTE_UNUSED)
+single_def_use_leave_block (struct dom_walk_data *ARG_UNUSED(walk_data),
+			    basic_block ARG_UNUSED(bb))
 {
   df_ref saved_def;
   while ((saved_def = VEC_pop (df_ref, reg_defs_stack)) != NULL)
@@ -633,7 +633,7 @@ propagate_rtx_1 (rtx *px, rtx old_rtx, rtx new_rtx, int flags)
    a non-constant mem.  */
 
 static int
-varying_mem_p (rtx *body, void *data ATTRIBUTE_UNUSED)
+varying_mem_p (rtx *body, void *ARG_UNUSED(data))
 {
   rtx x = *body;
   return MEM_P (x) && !MEM_READONLY_P (x);

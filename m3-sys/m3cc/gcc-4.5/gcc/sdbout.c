@@ -1477,7 +1477,7 @@ sdbout_global_decl (tree decl)
    definition.  See comment in sdbout_global_decl.  */
 
 static void
-sdbout_finish (const char *main_filename ATTRIBUTE_UNUSED)
+sdbout_finish (const char *ARG_UNUSED(main_filename))
 {
   size_t i;
 
@@ -1529,7 +1529,7 @@ sdbout_begin_block (unsigned int line, unsigned int n)
 /* Describe the end line-number of an internal block within a function.  */
 
 static void
-sdbout_end_block (unsigned int line, unsigned int n ATTRIBUTE_UNUSED)
+sdbout_end_block (unsigned int line, unsigned int ARG_UNUSED(n))
 {
   MAKE_LINE_SAFE (line);
 
@@ -1546,9 +1546,9 @@ sdbout_end_block (unsigned int line, unsigned int n ATTRIBUTE_UNUSED)
    number LINE.  */
 
 static void
-sdbout_source_line (unsigned int line, const char *filename ATTRIBUTE_UNUSED,
-                    int discriminator ATTRIBUTE_UNUSED,
-                    bool is_stmt ATTRIBUTE_UNUSED)
+sdbout_source_line (unsigned int line, const char *ARG_UNUSED(filename),
+                    int ARG_UNUSED(discriminator),
+                    bool ARG_UNUSED(is_stmt))
 {
   /* COFF relative line numbers must be positive.  */
   if ((int) line > sdb_begin_function_line)
@@ -1567,7 +1567,7 @@ sdbout_source_line (unsigned int line, const char *filename ATTRIBUTE_UNUSED,
    Called from assemble_start_function.  */
 
 static void
-sdbout_begin_function (tree decl ATTRIBUTE_UNUSED)
+sdbout_begin_function (tree ARG_UNUSED(decl))
 {
   sdbout_symbol (current_function_decl, 0);
 }
@@ -1580,14 +1580,14 @@ sdbout_begin_function (tree decl ATTRIBUTE_UNUSED)
 
 #ifndef MIPS_DEBUGGING_INFO
 static void
-sdbout_begin_prologue (unsigned int line, const char *file ATTRIBUTE_UNUSED)
+sdbout_begin_prologue (unsigned int line, const char *ARG_UNUSED(file))
 {
   sdbout_end_prologue (line, file);
 }
 #endif
 
 static void
-sdbout_end_prologue (unsigned int line, const char *file ATTRIBUTE_UNUSED)
+sdbout_end_prologue (unsigned int line, const char *ARG_UNUSED(file))
 {
   sdb_begin_function_line = line - 1;
   PUT_SDB_FUNCTION_START (line);
@@ -1616,10 +1616,10 @@ sdbout_end_function (unsigned int line)
    Called after the epilogue is output.  */
 
 static void
-sdbout_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
-		     const char *file ATTRIBUTE_UNUSED)
+sdbout_end_epilogue (unsigned int ARG_UNUSED(line),
+		     const char *ARG_UNUSED(file))
 {
-  const char *const name ATTRIBUTE_UNUSED
+  const char *const ARG_UNUSED(name)
     = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (current_function_decl));
 
 #ifdef PUT_SDB_EPILOGUE_END
@@ -1648,8 +1648,8 @@ sdbout_label (rtx insn)
 /* Change to reading from a new source file.  */
 
 static void
-sdbout_start_source_file (unsigned int line ATTRIBUTE_UNUSED,
-			  const char *filename ATTRIBUTE_UNUSED)
+sdbout_start_source_file (unsigned int ARG_UNUSED(line),
+			  const char *ARG_UNUSED(filename))
 {
 #ifdef MIPS_DEBUGGING_INFO
   struct sdb_file *n = XNEW (struct sdb_file);
@@ -1664,7 +1664,7 @@ sdbout_start_source_file (unsigned int line ATTRIBUTE_UNUSED,
 /* Revert to reading a previous source file.  */
 
 static void
-sdbout_end_source_file (unsigned int line ATTRIBUTE_UNUSED)
+sdbout_end_source_file (unsigned int ARG_UNUSED(line))
 {
 #ifdef MIPS_DEBUGGING_INFO
   struct sdb_file *next;
@@ -1679,7 +1679,7 @@ sdbout_end_source_file (unsigned int line ATTRIBUTE_UNUSED)
 /* Set up for SDB output at the start of compilation.  */
 
 static void
-sdbout_init (const char *input_file_name ATTRIBUTE_UNUSED)
+sdbout_init (const char *ARG_UNUSED(input_file_name))
 {
   tree t;
 

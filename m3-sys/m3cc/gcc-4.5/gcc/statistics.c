@@ -110,7 +110,7 @@ curr_statistics_hash (void)
    since the last dump for the pass dump files.  */
 
 static int
-statistics_fini_pass_1 (void **slot, void *data ATTRIBUTE_UNUSED)
+statistics_fini_pass_1 (void **slot, void *ARG_UNUSED(data))
 {
   statistics_counter_t *counter = (statistics_counter_t *)*slot;
   unsigned HOST_WIDE_INT count = counter->count - counter->prev_dumped_count;
@@ -130,7 +130,7 @@ statistics_fini_pass_1 (void **slot, void *data ATTRIBUTE_UNUSED)
    since the last dump for the statistics dump.  */
 
 static int
-statistics_fini_pass_2 (void **slot, void *data ATTRIBUTE_UNUSED)
+statistics_fini_pass_2 (void **slot, void *ARG_UNUSED(data))
 {
   statistics_counter_t *counter = (statistics_counter_t *)*slot;
   unsigned HOST_WIDE_INT count = counter->count - counter->prev_dumped_count;
@@ -160,7 +160,7 @@ statistics_fini_pass_2 (void **slot, void *data ATTRIBUTE_UNUSED)
 /* Helper for statistics_fini_pass, reset the counters.  */
 
 static int
-statistics_fini_pass_3 (void **slot, void *data ATTRIBUTE_UNUSED)
+statistics_fini_pass_3 (void **slot, void *ARG_UNUSED(data))
 {
   statistics_counter_t *counter = (statistics_counter_t *)*slot;
   counter->prev_dumped_count = counter->count;

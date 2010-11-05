@@ -544,7 +544,7 @@ insert_global_to_varpool (tree new_decl)
    defined by *SLOT->new_vars.  */
 
 static int
-finalize_new_vars_creation (void **slot, void *data ATTRIBUTE_UNUSED)
+finalize_new_vars_creation (void **slot, void *ARG_UNUSED(data))
 {
   new_var n_var = *(new_var *) slot;
   unsigned i;
@@ -1465,7 +1465,7 @@ create_new_accs_for_struct (d_str str, basic_block bb)
    defined by SLOT, into varpool.  */
 
 static int
-update_varpool_with_new_var (void **slot, void *data ATTRIBUTE_UNUSED)
+update_varpool_with_new_var (void **slot, void *ARG_UNUSED(data))
 {
   new_var n_var = *(new_var *) slot;
   tree var;
@@ -1479,7 +1479,7 @@ update_varpool_with_new_var (void **slot, void *data ATTRIBUTE_UNUSED)
 /* This function prints a field access site, defined by SLOT.  */
 
 static int
-dump_field_acc (void **slot, void *data ATTRIBUTE_UNUSED)
+dump_field_acc (void **slot, void *ARG_UNUSED(data))
 {
   struct field_access_site *f_acc =
     *(struct field_access_site **) slot;
@@ -1527,7 +1527,7 @@ malloc_eq (const void *x, const void *y)
    It frees an access represented by SLOT.  */
 
 static int
-free_accs (void **slot, void *data ATTRIBUTE_UNUSED)
+free_accs (void **slot, void *ARG_UNUSED(data))
 {
   struct access_site * acc = *(struct access_site **) slot;
 
@@ -1540,7 +1540,7 @@ free_accs (void **slot, void *data ATTRIBUTE_UNUSED)
    It frees a field access represented by SLOT.  */
 
 static int
-free_field_accs (void **slot, void *data ATTRIBUTE_UNUSED)
+free_field_accs (void **slot, void *ARG_UNUSED(data))
 {
   struct field_access_site *f_acc = *(struct field_access_site **) slot;
 
@@ -1855,7 +1855,7 @@ gen_num_of_structs_in_malloc (gimple stmt, tree str_decl,
    pointed by *SLOT.  */
 
 static int
-dump_new_var (void **slot, void *data ATTRIBUTE_UNUSED)
+dump_new_var (void **slot, void *ARG_UNUSED(data))
 {
   new_var n_var = *(new_var *) slot;
   tree var_type;
@@ -2073,7 +2073,7 @@ field_acc_eq (const void *x, const void *y)
 /* This function prints an access site, defined by SLOT.  */
 
 static int
-dump_acc (void **slot, void *data ATTRIBUTE_UNUSED)
+dump_acc (void **slot, void *ARG_UNUSED(data))
 {
   struct access_site *acc = *(struct access_site **) slot;
   tree var;
@@ -2654,7 +2654,7 @@ free_structures (void)
    for new_var and pointed by *SLOT.  */
 
 static int
-free_new_var (void **slot, void *data ATTRIBUTE_UNUSED)
+free_new_var (void **slot, void *ARG_UNUSED(data))
 {
   new_var n_var = *(new_var *) slot;
 
@@ -3331,7 +3331,7 @@ create_new_type (d_str str, int *str_num)
    This function frees memory pointed by *SLOT.  */
 
 static int
-free_falloc_sites (void **slot, void *data ATTRIBUTE_UNUSED)
+free_falloc_sites (void **slot, void *ARG_UNUSED(data))
 {
   fallocs_t fallocs = *(fallocs_t *) slot;
 

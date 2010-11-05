@@ -2167,7 +2167,7 @@ can_schedule_ready_p (rtx insn)
    can_schedule_ready_p () differs from the one passed to
    begin_schedule_ready ().  */
 static void
-begin_schedule_ready (rtx insn, rtx last ATTRIBUTE_UNUSED)
+begin_schedule_ready (rtx insn, rtx ARG_UNUSED(last))
 {
   /* An interblock motion?  */
   if (INSN_BB (insn) != target_bb)
@@ -2316,10 +2316,10 @@ contributes_to_priority (rtx next, rtx insn)
    registers that must be considered as set in SET.  */
 
 static void
-compute_jump_reg_dependencies (rtx insn ATTRIBUTE_UNUSED,
-			       regset cond_exec ATTRIBUTE_UNUSED,
-			       regset used ATTRIBUTE_UNUSED,
-			       regset set ATTRIBUTE_UNUSED)
+compute_jump_reg_dependencies (rtx ARG_UNUSED(insn),
+			       regset ARG_UNUSED(cond_exec),
+			       regset ARG_UNUSED(used),
+			       regset ARG_UNUSED(set))
 {
   /* Nothing to do here, since we postprocess jumps in
      add_branch_dependences.  */
