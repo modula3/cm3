@@ -1589,13 +1589,13 @@ identity_fn (rtx exp)
 }
 
 static rtx
-zero_fn (rtx ARG_UNUSED(exp))
+zero_fn (rtx exp ATTRIBUTE_UNUSED)
 {
   return make_numeric_value (0);
 }
 
 static rtx
-one_fn (rtx ARG_UNUSED(exp))
+one_fn (rtx exp ATTRIBUTE_UNUSED)
 {
   return make_numeric_value (1);
 }
@@ -3649,9 +3649,9 @@ write_attr_get (struct attr_desc *attr)
   /* If the attribute name starts with a star, the remainder is the name of
      the subroutine to use, instead of `get_attr_...'.  */
   if (attr->name[0] == '*')
-    printf ("%s (rtx ARG_UNUSED(insn))\n", &attr->name[1]);
+    printf ("%s (rtx insn ATTRIBUTE_UNUSED)\n", &attr->name[1]);
   else if (attr->is_const == 0)
-    printf ("get_attr_%s (rtx ARG_UNUSED(insn))\n", attr->name);
+    printf ("get_attr_%s (rtx insn ATTRIBUTE_UNUSED)\n", attr->name);
   else
     {
       printf ("get_attr_%s (void)\n", attr->name);
@@ -4015,7 +4015,7 @@ write_eligible_delay (const char *kind)
   /* Write function prelude.  */
 
   printf ("int\n");
-  printf ("eligible_for_%s (rtx ARG_UNUSED(delay_insn), int slot, rtx candidate_insn, int flags ATTRIBUTE_UNUSED)\n",
+  printf ("eligible_for_%s (rtx delay_insn ATTRIBUTE_UNUSED, int slot, rtx candidate_insn, int flags ATTRIBUTE_UNUSED)\n",
 	  kind);
   printf ("{\n");
   printf ("  rtx insn;\n");

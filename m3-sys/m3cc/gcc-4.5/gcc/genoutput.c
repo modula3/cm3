@@ -668,7 +668,7 @@ process_template (struct data *d, const char *template_code)
       d->output_format = INSN_OUTPUT_FORMAT_FUNCTION;
 
       puts ("\nstatic const char *");
-      printf ("output_%d (rtx *ARG_UNUSED(operands), rtx insn ATTRIBUTE_UNUSED)\n",
+      printf ("output_%d (rtx *operands ATTRIBUTE_UNUSED, rtx insn ATTRIBUTE_UNUSED)\n",
 	      d->code_number);
       puts ("{");
       print_rtx_ptr_loc (template_code);
