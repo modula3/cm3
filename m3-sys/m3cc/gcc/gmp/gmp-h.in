@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for GNU multiple precision functions.   -*- mode: c -*-
 
 Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003,
@@ -512,7 +514,7 @@ typedef __mpq_struct *mpq_ptr;
 
 #if defined (__cplusplus)
 extern "C" {
-using std::FILE;
+/*using std::FILE;*/ /* removed for Modula-3 */
 #endif
 
 #define mp_set_memory_functions __gmp_set_memory_functions
