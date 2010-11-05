@@ -3957,8 +3957,9 @@ M3CG_HANDLER (REVEAL_OPAQUE)
   tree tl = get_typeid_to_tree (lhs);
   tree tr = get_typeid_to_tree (rhs);
 
-  debug_tag ('Q', lhs, "_%d", GET_MODE_BITSIZE (Pmode));
+  debug_tag ('Q', lhs, "_%d", (int)GET_MODE_BITSIZE (Pmode));
   debug_field_id (rhs);
+  debug_struct ();
 
   if (tr)
     set_typeid_to_tree_replace (lhs, tr, true);
