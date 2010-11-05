@@ -410,9 +410,9 @@ gen_insn (rtx insn, int lineno)
   if (operands)
     for (i = 0; i < operands; i++)
       if (i)
-	printf (",\n\trtx operand%ARG_UNUSED(d)", i);
+	printf (",\n\trtx ARG_UNUSED(operand%d)", i);
       else
-	printf ("rtx operand%ARG_UNUSED(d)", i);
+	printf ("rtx ARG_UNUSED(operand%d)", i);
   else
     printf ("void");
   printf (")\n");
