@@ -11,11 +11,13 @@ M3CG (DECLARE_ARRAY,
       TYPEID (my_id)
       TYPEID (index_id)
       TYPEID (elts_id)
-      BITSIZE (size))
+      BITSIZE (size)
+      M3CG_EXTRA (tree t;))
 M3CG (DECLARE_OPEN_ARRAY,
       TYPEID (my_id)
       TYPEID (elts_id)
-      BITSIZE (size))
+      BITSIZE (size)
+      M3CG_EXTRA (tree t;))
 M3CG (DECLARE_ENUM,
       TYPEID (my_id)
       UNSIGNED_INTEGER (n_elts)
@@ -29,7 +31,8 @@ M3CG (DECLARE_PACKED,
 M3CG (DECLARE_RECORD,
       TYPEID (my_id)
       BITSIZE (size)
-      UNSIGNED_INTEGER (n_fields))
+      UNSIGNED_INTEGER (n_fields)
+      M3CG_EXTRA (tree t;))
 M3CG (DECLARE_FIELD,
       STRING (name, name_length)
       BITOFFSET (offset)
@@ -71,7 +74,8 @@ M3CG (DECLARE_OBJECT,
       BOOLEAN (traced)
       UNSIGNED_INTEGER (n_fields)
       UNSIGNED_INTEGER (n_methods)
-      BITSIZE (field_size))
+      BITSIZE (field_size)
+      M3CG_EXTRA (tree t;))
 M3CG (DECLARE_METHOD,
       STRING (name, name_length)
       TYPEID (my_id))
