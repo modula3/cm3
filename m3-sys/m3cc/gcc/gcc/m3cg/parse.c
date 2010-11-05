@@ -98,7 +98,7 @@ static bool M3_TYPES_ENUM = true;
 static bool M3_TYPES_SEGMENT = false;
 static bool M3_TYPES_CHECK_RECORD_SIZE = true;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
-static bool M3_LOOPHOLE_VIEW_CONVERT = false;
+static bool M3_LOOPHOLE_VIEW_CONVERT = true;
 static bool M3_LOADSTORE_VIEW_CONVERT = false;
 
 #if GCC45
