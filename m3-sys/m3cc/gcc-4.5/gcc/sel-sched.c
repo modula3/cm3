@@ -2492,7 +2492,7 @@ update_transformation_cache (expr_t expr, insn_t insn,
 static enum MOVEUP_EXPR_CODE
 moveup_expr_cached (expr_t expr, insn_t insn, bool inside_insn_group)
 {
-  enum MOVEUP_EXPR_CODE res = { 0 };
+  enum MOVEUP_EXPR_CODE res = (MOVEUP_EXPR_CODE)0;
   bool got_answer = false;
 
   if (((int)sched_verbose) >= 6)
