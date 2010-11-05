@@ -32,4 +32,4 @@ compilers="m3cgc1\$(exeext)"
 
 stagestuff="m3cgc1\$(exeext)"
 
-gtfiles="\$(srcdir)/m3cg/m3gty43.h \$(srcdir)/m3cg/parse.cpp"
+gtfiles="\$(srcdir)/m3cg/m3gty43.h \$(srcdir)/m3cg/parse.c"
