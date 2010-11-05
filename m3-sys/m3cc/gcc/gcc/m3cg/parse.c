@@ -305,10 +305,10 @@ m3_append_char (char c, PSTR* p, PSTR limit)
 
 static void m3_revstr (PSTR a, size_t len)
 {
-  size_t i = { 0 };
   if (len < 2)
     return;
   len -= 1;
+  size_t i = { 0 };
   while (i < len)
   {
     char temp = a[i];
