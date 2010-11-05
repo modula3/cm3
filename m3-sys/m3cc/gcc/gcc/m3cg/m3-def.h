@@ -12,12 +12,12 @@ M3CG (DECLARE_ARRAY,
       TYPEID (index_id)
       TYPEID (elts_id)
       BITSIZE (size)
-      M3CG_EXTRA (tree t;))
+      M3CG_EXTRA_FIELDS (tree t;))
 M3CG (DECLARE_OPEN_ARRAY,
       TYPEID (my_id)
       TYPEID (elts_id)
       BITSIZE (size)
-      M3CG_EXTRA (tree t;))
+      M3CG_EXTRA_FIELDS (tree t;))
 M3CG (DECLARE_ENUM,
       TYPEID (my_id)
       UNSIGNED_INTEGER (n_elts)
@@ -32,7 +32,7 @@ M3CG (DECLARE_RECORD,
       TYPEID (my_id)
       BITSIZE (size)
       UNSIGNED_INTEGER (n_fields)
-      M3CG_EXTRA (tree t;))
+      M3CG_EXTRA_FIELDS (tree t;))
 M3CG (DECLARE_FIELD,
       STRING (name, name_length)
       BITOFFSET (offset)
@@ -75,7 +75,7 @@ M3CG (DECLARE_OBJECT,
       UNSIGNED_INTEGER (n_fields)
       UNSIGNED_INTEGER (n_methods)
       BITSIZE (field_size)
-      M3CG_EXTRA (tree t;))
+      M3CG_EXTRA_FIELDS (tree t;))
 M3CG (DECLARE_METHOD,
       STRING (name, name_length)
       TYPEID (my_id))
@@ -249,7 +249,9 @@ M3CG (IF_LE,
 M3CG (CASE_JUMP,
       MTYPE (type)
       UNSIGNED_INTEGER (n)
-      M3CG_EXTRA (tree* labels;))
+      M3CG_EXTRA_FIELDS (
+        std::vector<tree> labels;
+        virtual void read_extended();))
 M3CG (EXIT_PROC, MTYPE2 (type, T))
 M3CG (LOAD,
       VAR (var)

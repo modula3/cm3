@@ -22,6 +22,9 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
+#include <vector>
+using namespace std;
+#define typedef_vector typedef vector /* hack for gengtype */
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -62,6 +65,7 @@
 #include "options.h"
 #include "debug.h"
 #include <limits.h>
+#include "m3-parse.h"
 
 #ifndef TARGET_MACHO
 #define TARGET_MACHO 0
@@ -69,15 +73,6 @@
 
 #define WIDE_PRINT_HEX HOST_WIDE_INT_PRINT_HEX
 #define WIDE_PRINT_DEC HOST_WIDE_INT_PRINT_DEC
-
-typedef char* PSTR;
-typedef const char* PCSTR;
-typedef signed char SCHAR;
-typedef unsigned char UCHAR;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef unsigned HOST_WIDE_INT UWIDE;
-typedef HOST_WIDE_INT WIDE;
 
 #include "m3gty43.h"
 
@@ -147,29 +142,6 @@ int arm_float_words_big_endian (void);
 
 /*---------------------------------------------------------------------------*/
 
-typedef enum
-{
-  /* 00 */ T_word_8,
-  /* 01 */ T_int_8,
-  /* 02 */ T_word_16,
-  /* 03 */ T_int_16,
-  /* 04 */ T_word_32,
-  /* 05 */ T_int_32,
-  /* 06 */ T_word_64,
-  /* 07 */ T_int_64,
-  /* 08 */ T_reel,
-  /* 09 */ T_lreel,
-  /* 0A */ T_xreel,
-  /* 0B */ T_addr,
-  /* 0C */ T_struct,
-  /* 0D */ T_void,
-  /* 0E */ T_word,
-  /* 0F */ T_int,
-  /* 10 */ T_longword,
-  /* 11 */ T_longint,
-  /* 12 */ T_LAST
-} m3_type;
-
 #define LEVEL(x) UNSIGNED_INTEGER (x)
 #define BITSIZE(x) UNSIGNED_INTEGER (x)
 #define FREQUENCY(x) UNSIGNED_INTEGER (x)
@@ -189,38 +161,123 @@ typedef enum
 #define MTYPE2(x, y) M3CG_FIELD (m3_type, y) M3CG_FIELD (tree, x)
 #define SIGN(x) M3CG_FIELD (UINT, x)
 #define BYTESIZE(x) UNSIGNED_INTEGER (x)
-#define FLOAT(x, fkind) M3CG_FIELD (UINT, fkind) M3CG_FIELD (tree, x)
+#define FLOAT(x, fkind) M3CG_FIELD (UINT, fkind) M3CG_FIELD (tree, x) M3CG_FIELD (long, x##Longs[2])
 #define BOOLEAN(x) M3CG_FIELD (bool, x)
 #define VAR(x) M3CG_FIELD (tree, x)
 #define RETURN_VAR(x, code) M3CG_FIELD (tree, x)
 #define PROC(x) M3CG_FIELD (tree, x)
 #define LABEL(x) M3CG_FIELD (tree, x)
 #define TYPEID(x) M3CG_FIELD (ULONG, x)
-#define M3CG_EXTRA(x) x
+#define M3CG_EXTRA_FIELDS(x) x
+
+#define DESTRUCTOR ~ /* hack for gengtype */
 
 struct m3cg_op_t
 {
-  M3CG_opcode op;
+  m3cg_op_t() { }
+  virtual DESTRUCTOR m3cg_op_t() { }
+  virtual void handler() = 0;
+  virtual void trace() = 0;
+  virtual void read() = 0;
+  virtual void read_extended() { }
+  virtual UCHAR get_op() = 0;
+  static m3cg_op_t* create(UCHAR op);
 };
 
-#define M3CG(sym, fields) struct m3cg_##sym##_t : m3cg_op_t { void handler(); fields };
+#define M3CG(sym, fields) struct m3cg_##sym##_t : m3cg_op_t { \
+        virtual void handler(); \
+        virtual void trace(); \
+        virtual void read(); \
+        virtual UCHAR get_op() { return M3CG_##sym; } \
+        fields };
 #include "m3-def.h"
 #undef M3CG
 
-typedef union { M3CG_opcode op; UWIDE alignment;
-#define M3CG(sym, fields) m3cg_##sym##_t m3cg_##sym;
+#undef M3CG_EXTRA_FIELDS
+#define M3CG_EXTRA_FIELDS(x) /* nothing */
+
+#undef INTEGER
+#undef UNSIGNED_INTEGER
+#undef STRING
+#undef CALLING_CONVENTION
+#undef TYPE
+#undef MTYPE
+#undef MTYPE2
+#undef SIGN
+#undef BYTESIZE
+#undef FLOAT
+#undef BOOLEAN
+#undef VAR
+#undef RETURN_VAR
+#undef PROC
+#undef LABEL
+#undef TYPEID
+
+#define INTEGER(x) x = get_int ();
+#define UNSIGNED_INTEGER(x) x = get_uint ();
+#define STRING(x, length) length = get_int (); x = scan_string (length);
+#define CALLING_CONVENTION(x) x = scan_calling_convention ();
+#define TYPE(x) x = scan_type ();
+#define MTYPE(x) x = scan_mtype (0);
+#define MTYPE2(x, y) x = scan_mtype (&y);
+#define SIGN(x) x = scan_sign ();
+#define BYTESIZE(x)  x = BITS_PER_UNIT * get_uint ();
+#define FLOAT(x, fkind) x = scan_float (&fkind, x##Longs);
+#define BOOLEAN(x) x = scan_boolean ();
+#define VAR(x) x = scan_var (ERROR_MARK);
+#define RETURN_VAR(x, code) x = scan_var (code);
+#define PROC(x) x = scan_proc ();
+#define LABEL(x) x = scan_label ();
+#define TYPEID(x) x = get_typeid ();
+
+#define M3CG(sym, fields) void m3cg_##sym##_t::read() { fields; read_extended(); if (option_trace_all) trace(); }
 #include "m3-def.h"
-} m3cg_union_t;
 #undef M3CG
 
-static const UCHAR m3cg_size[] = {
-#define M3CG(sym, fields) sizeof(m3cg_##sym##_t),
+#undef INTEGER
+#undef UNSIGNED_INTEGER
+#undef STRING
+#undef CALLING_CONVENTION
+#undef TYPE
+#undef MTYPE
+#undef MTYPE2
+#undef SIGN
+#undef BYTESIZE
+#undef FLOAT
+#undef BOOLEAN
+#undef VAR
+#undef RETURN_VAR
+#undef PROC
+#undef LABEL
+#undef TYPEID
+
+#define INTEGER(x) trace_int (#x, x);
+#define UNSIGNED_INTEGER(x) trace_int (#x, x);
+#define STRING(x, length) trace_string (#x, x, length);
+#define CALLING_CONVENTION(x) /* nothing */
+#define TYPE(x) trace_type (#x, x);
+#define MTYPE(x) trace_type_tree (#x, x);
+#define MTYPE2(x, y) trace_type (#x, y);
+#define SIGN(x) /* nothing */
+#define BYTESIZE(x) trace_int (#x, x);
+#define FLOAT(x, fkind) trace_float (#x, fkind, x##Longs);
+#define BOOLEAN(x) trace_boolean (#x, x);
+#define VAR(x) trace_var (#x, x);
+#define RETURN_VAR(x, code) trace_var (#x, x);
+#define PROC(x) trace_proc (#x, x);
+#define LABEL(x) /* nothing */
+#define TYPEID(x) trace_typeid (#x, x);
+
+#define M3CG(sym, fields) void m3cg_##sym##_t::trace() { fields }
 #include "m3-def.h"
-};
 #undef M3CG
 
-#undef M3CG_EXTRA
-#define M3CG_EXTRA(x) /* nothing */
+m3cg_op_t* m3cg_op_t::create(UCHAR op) { switch (op) {
+#define M3CG(sym, fields) case M3CG_##sym: return new m3cg_##sym##_t();
+#include "m3-def.h"
+#undef M3CG
+ } return 0; }
+#undef M3CG
 
 /*------------------------------------------------------------- utils -------*/
 
@@ -335,10 +392,6 @@ m3_fill_hex_value (WIDE value, PSTR* p, PSTR limit)
   gcc_assert (*p < limit);
 }
 
-/*======================================================= OPTION HANDLING ===*/
-
-static int option_trace_all;
-
 /*------------------------------------------------------------- type uids ---*/
 /* Modula-3 type uids are unsigned 32-bit values.  They are passed as signed
    decimal integers in the intermediate code, but converted to 6-byte, base 62
@@ -437,20 +490,26 @@ static const struct { ULONG type_id; tree* t; } builtin_uids[] = {
 
 #define STRING_AND_LENGTH(a) (a), sizeof(a) - 1
 
-static const struct { tree* t; char name[8]; size_t length; } builtin_types[] = {
-  { &t_int_8, STRING_AND_LENGTH ("int_8") },
-  { &t_int_16, STRING_AND_LENGTH ("int_16") },
-  { &t_int_32, STRING_AND_LENGTH ("int_32") },
-  { &t_int_64, STRING_AND_LENGTH ("int_64") },
+static const struct { tree* t; char name[9]; size_t length; } builtin_types[T_LAST] = {
+/* This is ordered per m3_type. It is also used by typestr. */
   { &t_word_8, STRING_AND_LENGTH ("word_8") },
+  { &t_int_8, STRING_AND_LENGTH ("int_8") },
   { &t_word_16, STRING_AND_LENGTH ("word_16") },
+  { &t_int_16, STRING_AND_LENGTH ("int_16") },
   { &t_word_32, STRING_AND_LENGTH ("word_32") },
+  { &t_int_32, STRING_AND_LENGTH ("int_32") },
   { &t_word_64, STRING_AND_LENGTH ("word_64") },
-  { &t_addr, STRING_AND_LENGTH ("addr") },
+  { &t_int_64, STRING_AND_LENGTH ("int_64") },
   { &t_reel, STRING_AND_LENGTH ("reel") },
   { &t_lreel, STRING_AND_LENGTH ("lreel") },
   { &t_xreel, STRING_AND_LENGTH ("xreel") },
-  { &t_addr, STRING_AND_LENGTH ("addr") }
+  { &t_addr, STRING_AND_LENGTH ("addr") },
+  { 0, STRING_AND_LENGTH ("struct") },
+  { 0, STRING_AND_LENGTH ("void") },
+  { 0, STRING_AND_LENGTH ("word") },
+  { 0, STRING_AND_LENGTH ("int") },
+  { 0, STRING_AND_LENGTH ("longword") },
+  { 0, STRING_AND_LENGTH ("longint") },
 };
 
 /* store all trees here for garbage collector */
@@ -688,14 +747,7 @@ fmt_uid (ULONG x, PSTR buf)
 
 static PCSTR typestr (UINT a)
 {
-    static const char typestrs[][9] =
-    { "word8",      "int8",     "word16",   "int16",
-      "word32",     "int32",    "word64",   "int64",
-      "real",       "lreal",    "xreal",    "addr",
-      "struct",     "void",     "word",     "int",
-      "longword",   "longint"
-    };
-    return (a < COUNT_OF (typestrs) ? typestrs[a] : "invalid");
+    return (a < COUNT_OF (builtin_types) ? builtin_types[a].name : "invalid");
 }
 
 /* In gcc, "word" means roughly "register".
@@ -751,42 +803,9 @@ static tree m3_current_scope (void)
   return current_function_decl ? current_function_decl : global_decls;
 }
 
-#if !GCC45
-static bool m3_mark_addressable (tree exp);
-#endif
-static tree m3_type_for_size (UINT precision, int unsignedp);
-static tree m3_type_for_mode (enum machine_mode, int unsignedp);
-static tree m3_unsigned_type (tree type_node);
-static tree m3_signed_type (tree type_node);
-static tree m3_signed_or_unsigned_type (bool unsignedp, tree type);
-static UINT m3_init_options (UINT argc, PCSTR* argv);
-static int m3_handle_option (size_t scode, PCSTR arg, int value);
-static bool m3_post_options (PCSTR*);
-static bool m3_init (void);
-static void m3_parse_file (int);
-static alias_set_type m3_get_alias_set (tree);
-static void m3_volatilize_decl (tree decl);
-static struct language_function* m3_language_function (void);
 #define m3_volatize (m3_language_function ()->volatil)
 
 static bool m3_next_store_volatile;
-
-/* Functions to keep track of the current scope */
-static tree pushdecl (tree decl);
-
-/* Langhooks.  */
-static tree builtin_function (PCSTR name,
-                              tree type,
-                              enum built_in_function function_code,
-                              enum built_in_class clas);
-static tree getdecls (void);
-static int global_bindings_p (void);
-#if !GCC45
-static void insert_block (tree block);
-#endif
-
-static tree m3_push_type_decl (tree type, tree name);
-static void m3_write_globals (void);
 
 /* The front end language hooks (addresses of code for this front
    end).  These are not really very language-dependent, i.e.
@@ -1621,9 +1640,14 @@ m3_init_decl_processing (void)
   /* declare/name builtin types */
 
   for (i = 0; i < COUNT_OF (builtin_types); ++i)
-    m3_push_type_decl (*builtin_types[i].t,
-                       get_identifier_with_length (builtin_types[i].name,
-                                                   builtin_types[i].length));
+  {
+    if (builtin_types[i].t)
+    {
+      m3_push_type_decl (*builtin_types[i].t,
+                         get_identifier_with_length (builtin_types[i].name,
+                                                     builtin_types[i].length));
+    }
+  }
 
   build_common_builtin_nodes ();
 
@@ -1857,8 +1881,8 @@ m3_init_parse (void)
   VARRAY_TREE_INIT (call_stack, 100 * 2, "call_stack");
 }
 
-static void m3_read_entire_file (FILE* file, UCHAR** out_buffer,
-                                 size_t* out_size)
+static void
+m3_read_entire_file (FILE* file, UCHAR** out_buffer, size_t* out_size)
 {
   size_t buffer_size = { 0 };
   UCHAR* buffer = { 0 };
@@ -1925,7 +1949,7 @@ m3_get_var_trace_name (tree var)
 }
 
 static PCSTR
-m3_trace_name (PCSTR* inout_name)
+trace_name (PCSTR* inout_name)
 /* if name is single character, change to empty and return
    empty string delineate it; else return colon to delineate */
 {
@@ -1939,7 +1963,7 @@ m3_trace_name (PCSTR* inout_name)
 }
 
 static PSTR
-m3_trace_upper_hex (PSTR format)
+trace_upper_hex (PSTR format)
 /* This function adjusts a format string, changing lowercase 'x' to
    uppercase 'X'. The first character in the string serves as an indicator
    as to if the conversion has been done. It is 'x' for not yet done and
@@ -1959,23 +1983,21 @@ m3_trace_upper_hex (PSTR format)
   return format;
 }
 
-static WIDE
-m3_trace_int (PCSTR name, WIDE val)
+static void
+trace_int (PCSTR name, WIDE val)
 /* This function prints an integer, taking a little pain for readability.
    Single digit integers are printed only in decimal.
    Larger integers are printed in hex and decimal, like:
      0x40(64) */
 {
-  if (name && option_trace_all)
-  {
-    PCSTR colon = m3_trace_name (&name);
-    static char hex[] = "x%s%s"WIDE_PRINT_HEX"("WIDE_PRINT_DEC")";
-    if (val >= -9 && val <= 9)
-      fprintf (stderr, " %s%s"WIDE_PRINT_DEC, name, colon, val);
-    else
-      fprintf (stderr, m3_trace_upper_hex (hex), name, colon, val, val);
-  }
-  return val;
+  if (!name || !option_trace_all)
+    return;
+  PCSTR colon = trace_name (&name);
+  static char hex[] = "x%s%s"WIDE_PRINT_HEX"("WIDE_PRINT_DEC")";
+  if (val >= -9 && val <= 9)
+    fprintf (stderr, " %s%s"WIDE_PRINT_DEC, name, colon, val);
+  else
+    fprintf (stderr, trace_upper_hex (hex), name, colon, val, val);
 }
 
 static WIDE
@@ -2017,36 +2039,43 @@ get_uint (void)
 }
 
 static ULONG
-get_typeid (PCSTR name)
+get_typeid ()
 /* This function reads and traces a type_id in specially encoded format.
    Typeids simply 32bit unsigned integers. */
 {
-  ULONG val = (0xFFFFFFFFUL & (ULONG)get_int ());
-  if (name && option_trace_all)
-  {
-    PCSTR colon = m3_trace_name (&name);
-    fprintf (stderr, " %s%s0x%lX", name, colon, val);
-  }
-  return val;
+  return (0xFFFFFFFFUL & (ULONG)get_int ());
+}
+
+static void
+trace_typeid (PCSTR name, ULONG val)
+{
+  if (!name || !option_trace_all)
+    return;
+  PCSTR colon = trace_name (&name);
+  fprintf (stderr, " %s%s0x%lX", name, colon, val);
 }
 
 /*--------------------------------------------------------------- strings ---*/
 
 static PCSTR
-scan_string (PCSTR name, long length)
+scan_string (long length)
 /* NOTE: these are not null terminated */
 {
   PCSTR result = { 0 };
   if (length > 0)
     result = (PCSTR)get_bytes_direct (long_to_sizet (length));
-  if (name && option_trace_all)
-  {
-    PCSTR colon = m3_trace_name (&name);
-    fprintf (stderr, " %s%s%.*s", name, colon,
-             result ? long_to_printf_length (length) : 4,
-             result ? result : "null");
-  }
   return result;
+}
+
+static void
+trace_string (PCSTR name, PCSTR result, long length)
+{
+  if (!name || !option_trace_all)
+    return;
+  PCSTR colon = trace_name (&name);
+  fprintf (stderr, " %s%s%.*s", name, colon,
+           result ? long_to_printf_length (length) : 4,
+           result ? result : "null");
 }
 
 /*---------------------------------------------------- calling convention ---*/
@@ -2068,32 +2097,48 @@ scan_calling_convention (void)
 /*----------------------------------------------------------------- types ---*/
 
 static m3_type
-scan_type (PCSTR name)
+scan_type (void)
 {
   UWIDE i = get_int ();
-
   if (i >= T_LAST)
     fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %u", (ULONG)i, m3cg_lineno);
-
-  if (option_trace_all)
-  {
-    PCSTR colon = m3_trace_name (&name);
-    fprintf (stderr, " %s%s%s", name, colon, typestr (i));
-  }
-
   return (m3_type)i;
 }
 
-static tree
-scan_mtype (PCSTR name, m3_type* T)
+static void
+trace_type (PCSTR name, m3_type i)
 {
-  m3_type TT = scan_type (name);
+  if (!option_trace_all)
+    return;
+  PCSTR colon = trace_name (&name);
+  fprintf (stderr, " %s%s%s", name, colon, typestr (i));
+}
+
+static tree
+scan_mtype (m3_type* T)
+{
+  m3_type TT = scan_type ();
   tree t = { 0 };
   if (T)
     *T = TT;
   t = m3_build_type (TT, 0, 0);
   /* m3_gc_tree (t); */
   return t;
+}
+
+static void
+trace_type_tree (PCSTR name, tree t)
+{
+  if (!option_trace_all)
+    return;
+  for (size_t i = 0; i < COUNT_OF (builtin_types); ++i)
+  {
+    if (builtin_types [i].t && *builtin_types [i].t == t)
+    {
+      trace_type (name, (m3_type)i);
+      return;
+    }
+  }
 }
 
 /*----------------------------------------------------------------- signs ---*/
@@ -2115,7 +2160,8 @@ scan_sign (void)
 
 /*----------------------------------------------------------------- float ---*/
 
-static int IsHostBigEndian (void)
+static bool
+IsHostBigEndian (void)
 {
     union
     {
@@ -2127,16 +2173,12 @@ static int IsHostBigEndian (void)
 }
 
 static tree
-scan_float (UINT *out_Kind)
+scan_float (UINT *out_Kind, long Longs[2])
 {
   /* real_from_target_fmt wants floats stored in an array of longs, 32 bits
      per long, even if long can hold more.  So for example a 64 bit double on
      a system with 64 bit long will have 32 bits of zeros in the middle. */
-  long Longs[2] = { 0, 0 };
-  UCHAR * const Bytes = (UCHAR*)&Longs;
-  UINT i = { 0 };
-  UINT Kind = { 0 };
-  tree t = { 0 };
+  UCHAR * const Bytes = (UCHAR*)Longs;
   static const struct {
     tree* Tree;
     UINT Size;
@@ -2147,15 +2189,16 @@ scan_float (UINT *out_Kind)
   UINT Size = { 0 };
   REAL_VALUE_TYPE val;
 
+  memset (Longs, 0, sizeof(Longs));
   memset (&val, 0, sizeof(val));
   gcc_assert (sizeof(float) == 4);
   gcc_assert (sizeof(double) == 8);
   gcc_assert (FLOAT_TYPE_SIZE == 32);
   gcc_assert (DOUBLE_TYPE_SIZE == 64);
   gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
-  gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
+  gcc_assert (sizeof(long) == 4 || sizeof(long) == 8);
 
-  Kind = (UINT)get_int ();
+  UINT Kind = (UINT)get_int ();
   if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
       fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %u",
@@ -2164,15 +2207,13 @@ scan_float (UINT *out_Kind)
   *out_Kind = Kind;
   Size = Map[Kind].Size;
 
-  gcc_assert ((Size == 4) || (Size == 8));
+  gcc_assert (Size == 4 || Size == 8);
 
   /* read the value's bytes; each long holds 32 bits, even if long is larger
      than 32 bits always read the bytes in increasing address, independent of
      endianness */
-  for (i = 0;  i < Size;  i++)
-    {
-      Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR)(0xFF & get_int ());
-    }
+  for (UINT i = 0; i < Size; ++i)
+    Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR)(0xFF & get_int ());
 
   /* When crossing and host/target different endian, swap the longs. */
 
@@ -2183,52 +2224,63 @@ scan_float (UINT *out_Kind)
       Longs[1] = t;
   }
 
-  if (option_trace_all)
-    {
-      union
-      {
-        UCHAR Bytes[sizeof(long double)]; /* currently double suffices */
-        float Float;
-        double Double;
-        long double LongDouble; /* not currently used */
-      } u = { { 0 } };
-
-      /* repack the bytes adjacent to each other */
-
-      for (i = 0;  i < Size;  i++)
-        {
-          u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
-        }
-      if (Size == 4)
-        {
-          fprintf (stderr, " float:%f bytes:0x%02x%02x%02x%02x",
-                   u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
-        }
-      else
-        {
-          fprintf (stderr, " double:%f bytes:0x%02x%02x%02x%02x%02x%02x%02x%02x",
-                   u.Double,
-                   u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3],
-                   u.Bytes[4], u.Bytes[5], u.Bytes[6], u.Bytes[7]);
-        }
-    }
-
   /* finally, assemble a floating point value */
   real_from_target_fmt (&val, Longs, Map[Kind].format);
-  t = build_real (*Map[Kind].Tree, val);
+  tree t = build_real (*Map[Kind].Tree, val);
   m3_gc_tree (t);
   return t;
+}
+
+static void
+trace_float (PCSTR /*name*/, UINT kind, long Longs[2])
+{
+  if (!option_trace_all)
+    return;
+
+  UCHAR * const Bytes = (UCHAR*)Longs;
+  static const UINT Sizes[] = { FLOAT_TYPE_SIZE / 8,
+                                DOUBLE_TYPE_SIZE / 8,
+                                LONG_DOUBLE_TYPE_SIZE / 8 };
+  UINT Size = Sizes[kind];
+  union
+  {
+    UCHAR Bytes[sizeof(long double)]; /* currently double suffices */
+    float Float;
+    double Double;
+    long double LongDouble; /* not currently used */
+  } u = { { 0 } };
+
+  /* repack the bytes adjacent to each other */
+
+  for (UINT i = 0; i < Size; ++i)
+    u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
+  if (Size == 4)
+  {
+    fprintf (stderr, " float:%f bytes:0x%02x%02x%02x%02x",
+             u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
+  }
+  else
+  {
+    fprintf (stderr, " double:%f bytes:0x%02x%02x%02x%02x%02x%02x%02x%02x",
+             u.Double,
+             u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3],
+             u.Bytes[4], u.Bytes[5], u.Bytes[6], u.Bytes[7]);
+  }
 }
 
 /*-------------------------------------------------------------- booleans ---*/
 
 static bool
-scan_boolean (PCSTR name)
+scan_boolean ()
 {
-  bool val = (get_int () != 0);
+  return (get_int () != 0);
+}
+
+static void
+trace_boolean (PCSTR name, bool val)
+{
   if (name && option_trace_all)
     fprintf (stderr, " %s:%s", name, boolstr (val));
-  return val;
 }
 
 /*------------------------------------------------------------- variables ---*/
@@ -2255,7 +2307,7 @@ varray_extend (varray_type va, size_t n)
 }
 
 static tree
-scan_var (enum tree_code code, PCSTR name)
+scan_var (enum tree_code code)
 {
   long i = get_int ();
   tree var = { 0 };
@@ -2267,11 +2319,6 @@ scan_var (enum tree_code code, PCSTR name)
     if (var == NULL)
       fatal_error ("*** variable should already exist, v.0x%x, line %u",
                    (int)i, m3cg_lineno);
-    if (name && option_trace_all)
-    {
-      PCSTR colon = m3_trace_name (&name);
-      fprintf (stderr, " %s%s%s", name, colon, m3_get_var_trace_name (var));
-    }
   }
   else
   {
@@ -2285,6 +2332,15 @@ scan_var (enum tree_code code, PCSTR name)
   return var;
 }
 
+static void
+trace_var (PCSTR name, tree var)
+{
+  if (name && option_trace_all)
+  {
+    PCSTR colon = trace_name (&name);
+    fprintf (stderr, " %s%s%s", name, colon, m3_get_var_trace_name (var));
+  }
+}
 /*------------------------------------------------------------ procedures ---*/
 
 static tree
@@ -2305,10 +2361,15 @@ scan_proc (void)
   else
   {
     p = VARRAY_TREE (all_procs, i);
-    if (option_trace_all && p && DECL_NAME (p) && IDENTIFIER_POINTER (DECL_NAME (p)))
-      fprintf (stderr, " procedure:%s", IDENTIFIER_POINTER (DECL_NAME (p)));
   }
   return p;
+}
+
+static void
+trace_proc (PCSTR, tree p)
+{
+  if (option_trace_all && p && DECL_NAME (p) && IDENTIFIER_POINTER (DECL_NAME (p)))
+    fprintf (stderr, " procedure:%s", IDENTIFIER_POINTER (DECL_NAME (p)));
 }
 
 /*---------------------------------------------------------------- labels ---*/
@@ -2318,9 +2379,6 @@ scan_label (void)
 {
   long i = get_int ();
 
-  if (option_trace_all)
-    fprintf (stderr, " label:%ld", i);
-
   if (i < 0)
     return NULL;
   VARRAY_EXTEND (all_labels, i + 1);
@@ -2329,12 +2387,7 @@ scan_label (void)
   return VARRAY_TREE (all_labels, i);
 }
 
-
 /*======================================== debugging and type information ===*/
-
-typedef struct _m3buf_t {
-  char buf[256];
-} m3buf_t;
 
 static m3buf_t current_dbg_type_tag_buf;
 static PSTR current_dbg_type_tag = current_dbg_type_tag_buf.buf;
@@ -4549,6 +4602,16 @@ M3CG_HANDLER (CASE_JUMP)
   EXPR_POP ();
 }
 
+void m3cg_CASE_JUMP_t::read_extended ()
+{
+  /* case_jump is a special case */
+  size_t i = { 0 };
+  size_t j = n;
+  labels.resize(j);
+  for (i = 0; i < j; ++i)
+    labels[i] = scan_label ();
+}
+
 M3CG_HANDLER (EXIT_PROC)
 {
   tree res = NULL_TREE;
@@ -5637,19 +5700,28 @@ static void m3_breakpoint(void) /* set breakpoint in debugger */
 #endif
 }
 
+static void trace_op (UCHAR op)
+{
+  if (option_trace_all)
+  {
+    int indent = m3_indent_op[op];
+    m3_indent += (indent < 0 ? indent : 0);
+    fprintf (stderr, "%s%s(%u)%s %s",
+             (indent > 0 ? "\n" : ""),
+             (m3cg_lineno >= 2) ? "\n" : "",
+             m3cg_lineno,
+             m3_indentstr (),
+             M3CG_opnames[op]);
+    m3_indent += (indent > 0 ? indent : 0);
+  }
+}
+
 static void
 m3_parse_file (int)
 {
-  size_t i = { 0 };
-  m3cg_union_t* u = { 0 };
-  UCHAR* all = { 0 };
-  size_t all_allocated = { 0 };
-  size_t all_used = { 0 };
-  UCHAR op_size = { 0 };
-  M3CG_opcode op = LAST_OPCODE;
-  
-  all = (UCHAR*)xcalloc (0x10000, sizeof(*u));
-  all_allocated = 0x10000 * sizeof(*u);
+  typedef_vector<m3cg_op_t*> ops_t;
+  ops_t ops;
+  ops.reserve (0x10000);
 
   /* Setup indentation. */
 
@@ -5666,14 +5738,14 @@ m3_parse_file (int)
   m3_indent_op[M3CG_DECLARE_ENUM] = 4;
 
   /* check the version stamp */
-  i = get_int ();
+  WIDE i = get_int ();
   if (i != M3CG_Version)
   {
     fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
-                 i, M3CG_Version);
+                 (UINT)i, M3CG_Version);
   }
 
-  op = LAST_OPCODE;
+  M3CG_opcode op = LAST_OPCODE;  
   while (op != M3CG_END_UNIT)
   {
     gcc_assert (input_cursor <= input_len);
@@ -5683,118 +5755,21 @@ m3_parse_file (int)
     op = (M3CG_opcode)get_int ();
     if (op >= LAST_OPCODE)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %u", op, m3cg_lineno);
-
-    op_size = m3cg_size[op];
-    while ((all_used + op_size) > all_allocated)
-    {
-      all_allocated *= 2;
-      all = (UCHAR*)xrealloc(all, all_allocated);
-    }
-    u = (m3cg_union_t*)(all + all_used);
-    u->op = op;
-    all_used += op_size;
-
-    if (option_trace_all)
-    {
-      int indent = m3_indent_op[op];
-      m3_indent += (indent < 0 ? indent : 0);
-      fprintf (stderr, "%s%s(%u)%s %s",
-               (indent > 0 ? "\n" : ""),
-               (m3cg_lineno >= 2) ? "\n" : "",
-               m3cg_lineno,
-               m3_indentstr (),
-               M3CG_opnames[op]);
-      m3_indent += (indent > 0 ? indent : 0);
-    }
-
-    switch ((UCHAR)op) /* cast to avoid warning about unhandled cases */
-    {
-#undef INTEGER
-#undef UNSIGNED_INTEGER
-#undef STRING
-#undef CALLING_CONVENTION
-#undef TYPE
-#undef MTYPE
-#undef MTYPE2
-#undef SIGN
-#undef BYTESIZE
-#undef FLOAT
-#undef BOOLEAN
-#undef VAR
-#undef RETURN_VAR
-#undef PROC
-#undef LABEL
-#undef TYPEID
-
-#define INTEGER(x) m3cg->x = m3_trace_int (#x, get_int ());
-#define UNSIGNED_INTEGER(x) m3cg->x = m3_trace_int (#x, get_uint ());
-#define STRING(x, length) \
-  m3cg->length = get_int (); \
-  m3cg->x = scan_string (#x, m3cg->length);
-#define CALLING_CONVENTION(x) m3cg->x = scan_calling_convention ();
-#define TYPE(x) m3cg->x = scan_type (#x);
-#define MTYPE(x) m3cg->x = scan_mtype (#x, 0);
-#define MTYPE2(x, y) m3cg->x = scan_mtype (#x, &m3cg->y);
-#define SIGN(x) m3cg->x = scan_sign ();
-#define BYTESIZE(x)  m3cg->x = m3_trace_int (#x, BITS_PER_UNIT * get_uint ());
-#define FLOAT(x, fkind) m3cg->x = scan_float (&m3cg->fkind);
-#define BOOLEAN(x) m3cg->x = scan_boolean (#x);
-#define VAR(x) m3cg->x = scan_var (ERROR_MARK, #x);
-#define RETURN_VAR(x, code) m3cg->x = scan_var (code, #x);
-#define PROC(x) m3cg->x = scan_proc ();
-#define LABEL(x) m3cg->x = scan_label ();
-#define TYPEID(x) m3cg->x = get_typeid (#x);
-
-#define M3CG(sym, fields) \
-      case M3CG_##sym: \
-        { \
-          m3cg_##sym##_t* m3cg = &u->m3cg_##sym; \
-          m3cg = m3cg; /* quash warning in case no fields */ \
-          fields; \
-        } \
-        break;
-#include "m3-def.h"
-    }
-#undef M3CG
-
-    /* case_jump is a special case */
-
-    switch ((UCHAR)op) /* cast to avoid warning about unhandled cases */
-    {
-    case M3CG_CASE_JUMP:
-      {
-        m3cg_CASE_JUMP_t* m3cg = &u->m3cg_CASE_JUMP;
-        size_t i = { 0 };
-        size_t n = m3cg->n;
-        m3cg->labels = (tree*)xcalloc(sizeof(tree), n);
-        for (i = 0; i < n; ++i)
-        {
-          LABEL (labels[i]);
-        }
-      }
-      break;
-    }
-
+      
+    trace_op (op);
+    ops.push_back(m3cg_op_t::create(op));
+    ops.back()->read ();
     gcc_assert (input_cursor <= input_len);
     m3cg_lineno += 1;
   }
-
-  i = 0;
+  
+  ops_t::iterator e = ops.end();
+  ops_t::iterator it;
   m3cg_lineno = 1;
-  u = (m3cg_union_t*)all;
-  while (u->op != M3CG_END_UNIT)
+  for (it = ops.begin(); it != e; ++it)
   {
-    u = (m3cg_union_t*)(all + i);
-    switch ((UCHAR)u->op) /* cast to avoid warning about unhandled cases */
-    {
-#define M3CG(sym, fields) \
-    case M3CG_##sym: \
-      u->m3cg_##sym.handler(); \
-      break;
-#include "m3-def.h"
-#undef M3CG
-    }
-    i += m3cg_size[u->op];
+    trace_op (op);
+    (*it)->handler();
     m3cg_lineno += 1;
   }
 
