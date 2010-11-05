@@ -7895,7 +7895,7 @@ static void
 output_internal_min_issue_delay_func (void)
 {
   fprintf (output_file,
-	   "static int\n%s (int %s, struct %s *%s ATTRIBUTE_UNUSED)\n",
+	   "static int\n%s (int %s, struct %s *ARG_UNUSED(%s))\n",
 	   INTERNAL_MIN_ISSUE_DELAY_FUNC_NAME, INTERNAL_INSN_CODE_NAME,
 	   CHIP_NAME, CHIP_PARAMETER_NAME);
   fprintf (output_file, "{\n  int %s ATTRIBUTE_UNUSED;\n  int %s = -1;\n",
@@ -8008,7 +8008,7 @@ static void
 output_internal_trans_func (void)
 {
   fprintf (output_file,
-	   "static int\n%s (int %s, struct %s *%s ATTRIBUTE_UNUSED)\n",
+	   "static int\n%s (int %s, struct %s *ARG_UNUSED(%s))\n",
 	   INTERNAL_TRANSITION_FUNC_NAME, INTERNAL_INSN_CODE_NAME,
 	   CHIP_NAME, CHIP_PARAMETER_NAME);
   fprintf (output_file, "{\n  int %s ATTRIBUTE_UNUSED;\n", TEMPORARY_VARIABLE_NAME);
@@ -8266,7 +8266,7 @@ output_internal_insn_latency_func (void)
   decl_t decl;
   struct bypass_decl *bypass;
 
-  fprintf (output_file, "static int\n%s (int %s ATTRIBUTE_UNUSED,\n\tint %s ATTRIBUTE_UNUSED,\n\trtx %s ATTRIBUTE_UNUSED,\n\trtx %s ATTRIBUTE_UNUSED)\n",
+  fprintf (output_file, "static int\n%s (int ARG_UNUSED(%s),\n\tint ARG_UNUSED(%s),\n\trtx ARG_UNUSED(%s),\n\trtx ARG_UNUSED(%s))\n",
 	   INTERNAL_INSN_LATENCY_FUNC_NAME, INTERNAL_INSN_CODE_NAME,
 	   INTERNAL_INSN2_CODE_NAME, INSN_PARAMETER_NAME,
 	   INSN2_PARAMETER_NAME);
@@ -8344,7 +8344,7 @@ output_internal_maximal_insn_latency_func (void)
   int i;
   int max;
 
-  fprintf (output_file, "static int\n%s (int %s ATTRIBUTE_UNUSED,\n\trtx %s ATTRIBUTE_UNUSED)\n",
+  fprintf (output_file, "static int\n%s (int ARG_UNUSED(%s),\n\trtx ARG_UNUSED(%s))\n",
 	   "internal_maximal_insn_latency", INTERNAL_INSN_CODE_NAME,
 	   INSN_PARAMETER_NAME);
   fprintf (output_file, "{\n");
@@ -8420,7 +8420,7 @@ output_print_reservation_func (void)
   int i, j;
 
   fprintf (output_file,
-	   "void\n%s (FILE *%s, rtx %s ATTRIBUTE_UNUSED)\n{\n",
+	   "void\n%s (FILE *%s, rtx ARG_UNUSED(%s))\n{\n",
            PRINT_RESERVATION_FUNC_NAME, FILE_PARAMETER_NAME,
            INSN_PARAMETER_NAME);
 
@@ -8586,7 +8586,7 @@ static void
 output_insn_has_dfa_reservation_p (void)
 {
   fprintf (output_file,
-	   "bool\n%s (rtx %s ATTRIBUTE_UNUSED)\n{\n",
+	   "bool\n%s (rtx ARG_UNUSED(%s))\n{\n",
            INSN_HAS_DFA_RESERVATION_P_FUNC_NAME,
            INSN_PARAMETER_NAME);
 
