@@ -3271,8 +3271,8 @@ emit_library_call_value_1 (int retval, rtx orgfun, rtx value,
   rtx fun;
   /* Todo, choose the correct decl type of orgfun. Sadly this information
      isn't present here, so we default to native calling abi here.  */
-  tree ARG_UNUSED(fndecl) = NULL_TREE; /* library calls default to host calling abi ? */
-  tree ARG_UNUSED(fntype) = NULL_TREE; /* library calls default to host calling abi ? */
+  tree fndecl ATTRIBUTE_UNUSED = NULL_TREE; /* library calls default to host calling abi ? */
+  tree fntype ATTRIBUTE_UNUSED = NULL_TREE; /* library calls default to host calling abi ? */
   int inc;
   int count;
   rtx argblock = 0;
