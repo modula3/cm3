@@ -563,14 +563,6 @@ static void m3_outdent(void)
   m3_indent -= (m3_indent > 0 ? 4 : 0);
 }
 
-/* This macro is used to quash warnings about unused variables, without relying
-   on compiler extensions, and without introducing parallel macros. It is
-   really too bad we can't just #pragma away all warnings for the entire file.
-*/
-static const void* m3_unused;
-#define M3_UNUSED(var, expr) \
- ((m3_unused = &(var)), (expr))
-
 static size_t sizet_add (size_t a, size_t b)
 {
   size_t c = a + b;
@@ -1214,9 +1206,8 @@ m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count)
 }
 
 alias_set_type
-m3_get_alias_set (tree t)
+m3_get_alias_set (tree)
 {
-  m3_unused = t;
   return 0;
 }
 
@@ -2803,7 +2794,7 @@ m3_call_direct (tree p, tree return_type)
 }
 
 static void
-m3_call_indirect (tree return_type, tree calling_convention)
+m3_call_indirect (tree return_type, tree /*calling_convention*/)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (),
                            tree_cons (NULL_TREE, t_void, NULL_TREE));
@@ -2811,7 +2802,6 @@ m3_call_indirect (tree return_type, tree calling_convention)
   tree call = { 0 };
   tree fnaddr = EXPR_REF (-1);
 
-  m3_unused = calling_convention;
   EXPR_POP ();
 
   call = build3 (CALL_EXPR, return_type, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
@@ -2973,7 +2963,7 @@ mark_address_taken (tree ref)
 
 static tree
 m3_deduce_field_reference (PCSTR caller, tree value, UWIDE offset,
-                           tree field_treetype, m3_type field_m3type)
+                           tree /*field_treetype*/, m3_type /*field_m3type*/)
 {
   tree record_type = { 0 };
   tree tree_type = TREE_TYPE (value);
@@ -2981,9 +2971,6 @@ m3_deduce_field_reference (PCSTR caller, tree value, UWIDE offset,
   tree field = { 0 };
 
   return 0;
-
-  m3_unused = &field_treetype;
-  m3_unused = &field_m3type;
 
   if ((code == VAR_DECL || code == CONST_DECL || code == RESULT_DECL || code == PARM_DECL)
     && tree_type
@@ -5651,7 +5638,7 @@ static void m3_breakpoint(void) /* set breakpoint in debugger */
 }
 
 static void
-m3_parse_file (int xx)
+m3_parse_file (int)
 {
   size_t i = { 0 };
   m3cg_union_t* u = { 0 };
@@ -5660,8 +5647,6 @@ m3_parse_file (int xx)
   size_t all_used = { 0 };
   UCHAR op_size = { 0 };
   M3CG_opcode op = LAST_OPCODE;
-
-  m3_unused = &xx;
   
   all = (UCHAR*)xcalloc (0x10000, sizeof(*u));
   all_allocated = 0x10000 * sizeof(*u);
@@ -5764,7 +5749,7 @@ m3_parse_file (int xx)
       case M3CG_##sym: \
         { \
           m3cg_##sym##_t* m3cg = &u->m3cg_##sym; \
-          m3_unused = m3cg; \
+          m3cg = m3cg; \
           fields; \
         } \
         break;
@@ -5828,10 +5813,8 @@ m3_parse_file (int xx)
 
 /* Prepare to handle switches.  */
 static UINT
-m3_init_options (UINT argc, PCSTR* argv)
+m3_init_options (UINT /*argc*/, PCSTR* /*argv*/)
 {
-  m3_unused = &argc;
-  m3_unused = argv;
   return CL_m3cg;
 }
 
@@ -5839,10 +5822,8 @@ static bool version_done;
 
 /* Process a switch - called by opts.c.  */
 static int
-m3_handle_option (size_t code, PCSTR arg, int value)
+m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
 {
-  m3_unused = arg;
-  m3_unused = &value;
   switch ((enum opt_code)code)
     {
     default:
@@ -5880,10 +5861,8 @@ m3_handle_option (size_t code, PCSTR arg, int value)
 
 /* Post-switch processing. */
 bool
-m3_post_options (PCSTR* pfilename)
+m3_post_options (PCSTR* /*pfilename*/)
 {
-   m3_unused = pfilename;
-
   /* These optimizations break our exception handling? */
   flag_reorder_blocks = false;
   flag_reorder_blocks_and_partition = false;
@@ -5988,9 +5967,8 @@ struct cpp_reader* parse_in;
 c_language_kind c_language;
 
 /* This is used by cfstring code; providing it here makes us not have to #if 0 out a few bits. */
-tree pushdecl_top_level (tree x)
+tree pushdecl_top_level (tree)
 {
-  m3_unused = x;
   gcc_unreachable ();
   return NULL;
 }
