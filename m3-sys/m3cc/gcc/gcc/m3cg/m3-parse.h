@@ -48,8 +48,12 @@ typedef WIDE alias_set_type;
 #endif
 static alias_set_type m3_get_alias_set (tree);
 
+extern "C" {
+
 /* Functions to keep track of the current scope */
 static tree pushdecl (tree decl);
+
+}
 
 /* Langhooks.  */
 static tree
