@@ -1,3 +1,4 @@
+# Modula-3: modified
 
 # Makefile for GNU Compiler Collection
 # Run 'configure' to generate Makefile from Makefile.in
@@ -179,11 +180,11 @@ coverageexts = .{gcda,gcno}
 # stage1, as not all versions of gcc understand -Wno-long-long or
 # -Wno-variadic-macros.
 # CXX_COMPAT_WARN are C++ source compatibility warnings.
-LOOSE_WARN = -W -Wall -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
+LOOSE_WARN = -W -Wall -Wwrite-strings
 STRICT_WARN = @strict1_warn@
 WERROR_FLAGS = @WERROR@
 STRICT2_WARN = -pedantic -Wno-long-long -Wno-variadic-macros \
-  -Wno-overlength-strings -Wold-style-definition -Wmissing-format-attribute \
+  -Wno-overlength-strings -Wmissing-format-attribute \
   $(WERROR_FLAGS)
 CXX_COMPAT_WARN = @cxx_compat_warn@
 
@@ -891,6 +892,9 @@ INCLUDES = -I. -I$(@D) -I$(srcdir) -I$(srcdir)/$(@D) \
 
 .c.o:
 	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $< $(OUTPUT_OPTION)
+
+m3cg/parse.o: m3cg/parse.c
+	$(CXX) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $< $(OUTPUT_OPTION)
 
 #
 # Support for additional languages (other than C).
