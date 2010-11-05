@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* CPP Library. (Directive handling.)
    Copyright (C) 1986, 1987, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005,
@@ -621,8 +623,8 @@ do_undef (cpp_reader *pfile)
 /* Undefine a single macro/assertion/whatever.  */
 
 static int
-undefine_macros (cpp_reader *pfile ATTRIBUTE_UNUSED, cpp_hashnode *h,
-		 void *data_p ATTRIBUTE_UNUSED)
+undefine_macros (cpp_reader *ARG_UNUSED(pfile), cpp_hashnode *h,
+		 void *ARG_UNUSED(data_p))
 {
   /* Body of _cpp_free_definition inlined here for speed.
      Macros and assertions no longer have anything to free.  */
