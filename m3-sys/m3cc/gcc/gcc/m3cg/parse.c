@@ -2874,7 +2874,7 @@ m3_language_function (void)
 {
     if (!current_function_decl || !DECL_STRUCT_FUNCTION (current_function_decl))
       return 0;
-    struct language_function* f;
+    struct language_function* f
       = DECL_STRUCT_FUNCTION (current_function_decl)->language;
     if (!f)
     {
