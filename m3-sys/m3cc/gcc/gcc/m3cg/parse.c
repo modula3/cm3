@@ -29,6 +29,10 @@ using namespace std;
 #include <stdio.h>
 #include <errno.h>
 #include <setjmp.h>
+#include <limits.h>
+#if GCC42
+extern "C" {
+#endif
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -64,7 +68,9 @@ using namespace std;
 #include "opts.h"
 #include "options.h"
 #include "debug.h"
-#include <limits.h>
+#if GCC42
+} /* extern "C" */
+#endif
 #include "m3-parse.h"
 
 #ifndef TARGET_MACHO
@@ -875,19 +881,17 @@ struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
 /* Tree code type/name/code tables.  */
 
-#define DEFTREECODE(SYM, NAME, TYPE, LENGTH) TYPE,
+#define DEFTREECODE(SYM, NAME, TYPE, LENGTH) (tree_code_class)TYPE,
 
-#if 0
-const enum tree_code_class tree_code_type[] = {
+extern const enum tree_code_class tree_code_type[] = {
 #include "tree.def"
   tcc_exceptional
 };
-#endif
 #undef DEFTREECODE
 
 #define DEFTREECODE(SYM, NAME, TYPE, LENGTH) LENGTH,
 
-const UCHAR tree_code_length[] = {
+extern const UCHAR tree_code_length[] = {
 #include "tree.def"
   0
 };
@@ -895,7 +899,7 @@ const UCHAR tree_code_length[] = {
 
 #define DEFTREECODE(SYM, NAME, TYPE, LEN) NAME,
 
-PCSTR const tree_code_name[] = {
+extern const PCSTR tree_code_name[] = {
 #include "tree.def"
   "@@dummy"
 };
@@ -1378,6 +1382,8 @@ insert_block (tree block)
 /* Records a ..._DECL node DECL as belonging to the current lexical scope.
    Returns the ..._DECL node. */
 
+extern "C" {
+
 static tree
 pushdecl (tree decl)
 {
@@ -1387,6 +1393,8 @@ pushdecl (tree decl)
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
   return decl;
+}
+
 }
 
 static tree
@@ -1464,7 +1472,15 @@ builtin_function (PCSTR name, tree type,
   DECL_BUILT_IN_CLASS (decl) = clas;
   DECL_FUNCTION_CODE (decl) = (built_in_function)function_code;
 
-  gcc_assert (!library_name);
+  if (GCC42)
+  {
+    if (library_name)
+      SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
+  }
+  else
+  {
+    gcc_assert (!library_name);
+  }
 
   if (!builtins)
     builtins = htab_create_ggc (1021, htab_hash_builtin,
@@ -5882,14 +5898,14 @@ m3_init (void)
 }
 
 #if GCC_APPLE
+extern "C" {
 int flag_iasm_blocks;
-//enum iasm_states;
-//enum iasm_states iasm_state;
 bool iasm_in_operands;
-//struct cpp_reader* parse_in;
+struct cpp_reader* parse_in;
 #define add_stmt c_add_stmt
-//#include "../stub-objc.c"
-//c_language_kind c_language;
+#include "../stub-objc.c"
+c_language_kind c_language;
+iasm_states iasm_state;
 
 /* This is used by cfstring code; providing it here makes us not have to #if 0 out a few bits. */
 tree pushdecl_top_level (tree)
@@ -5898,6 +5914,7 @@ tree pushdecl_top_level (tree)
   return NULL;
 }
 
+} /* extern "C" */
 #endif
 
 /* garbage collection support, see gty.texi */
