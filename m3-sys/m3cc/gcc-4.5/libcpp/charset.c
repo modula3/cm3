@@ -522,10 +522,7 @@ convert_utf32_utf8 (int cd, const uchar *from, size_t flen,
 
 /* Identity conversion, used when we have no alternative.  */
 static bool
-convert_no_conversion (int
-#ifndef __cplusplus
-                       cd ATTRIBUTE_UNUSED
-#endif
+convert_no_conversion (int ARG_UNUSED(cd)
                        , const uchar *from, size_t flen, struct _cpp_strbuf *to)
 {
   if (to->len + flen > to->asize)
@@ -1346,7 +1343,7 @@ cpp_interpret_string (cpp_reader *pfile, const cpp_string *from, size_t count,
 bool
 cpp_interpret_string_notranslate (cpp_reader *pfile, const cpp_string *from,
 				  size_t count,	cpp_string *to,
-				  enum cpp_ttype type ATTRIBUTE_UNUSED)
+				  enum cpp_ttype ARG_UNUSED(type))
 {
   struct cset_converter save_narrow_cset_desc = pfile->narrow_cset_desc;
   bool retval;
