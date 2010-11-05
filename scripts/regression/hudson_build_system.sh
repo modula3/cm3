@@ -4,8 +4,10 @@ WS=${WORKSPACE}
 for a in a m s p r; do
     echo uname -$a: `uname -$a`
 done
-for a in cc gcc g++; do
-    echo $a -v: `$a -v`
+for a in cc gcc g++ gcc-4.2 g++-4.2; do
+  for b in "" /usr/bin/ /usr/local/bin/; do
+    echo $b$a -v: `$a -v 2>&1`
+  done
 done
 date
 cd ${WS}/cm3/scripts || {
