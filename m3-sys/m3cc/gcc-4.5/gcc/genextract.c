@@ -368,7 +368,7 @@ print_header (void)
 \n\
 /* This variable is used as the \"location\" of any missing operand\n\
    whose numbers are skipped by a given pattern.  */\n\
-static rtx ARG_UNUSED(junk);\n");
+static rtx junk ATTRIBUTE_UNUSED;\n");
 
   puts ("\
 void\n\
@@ -376,7 +376,7 @@ insn_extract (rtx insn)\n{\n\
   rtx *ro = recog_data.operand;\n\
   rtx **ro_loc = recog_data.operand_loc;\n\
   rtx pat = PATTERN (insn);\n\
-  int ARG_UNUSED(i); /* only for peepholes */\n\
+  int i ATTRIBUTE_UNUSED; /* only for peepholes */\n\
 \n\
 #ifdef ENABLE_CHECKING\n\
   memset (ro, 0xab, sizeof (*ro) * MAX_RECOG_OPERANDS);\n\
