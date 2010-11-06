@@ -567,7 +567,7 @@ extern int vsnprintf(char *, size_t, const char *, va_list);
 #elif defined(__cplusplus)
 #define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME
 #else
-#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME
 #endif
 
 #ifndef offsetof
