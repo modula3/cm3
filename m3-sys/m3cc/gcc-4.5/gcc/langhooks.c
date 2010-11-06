@@ -192,9 +192,8 @@ lhd_set_decl_assembler_name (tree decl)
 /* Type promotion for variable arguments.  */
 tree
 lhd_type_promotes_to (tree ARG_UNUSED (type))
-{
-  gcc_unreachable ();
-}
+  { gcc_unreachable ();
+    return 0; }
 
 /* Registration of machine- or os-specific builtin types.  */
 void
@@ -208,7 +207,6 @@ void
 lhd_incomplete_type_error (const_tree ARG_UNUSED (value), const_tree type)
 {
   gcc_assert (TREE_CODE (type) == ERROR_MARK);
-  return;
 }
 
 /* Provide a default routine for alias sets that always returns -1.  This
@@ -285,6 +283,7 @@ size_t
 lhd_tree_size (enum tree_code c ATTRIBUTE_UNUSED)
 {
   gcc_unreachable ();
+  return 0;
 }
 
 /* Return true if decl, which is a function decl, may be called by a
