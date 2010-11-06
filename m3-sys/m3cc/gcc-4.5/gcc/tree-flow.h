@@ -180,7 +180,7 @@ struct GTY(()) var_ann_d {
   /* This field indicates whether or not the variable may need PHI nodes.
      See the enum's definition for more detailed information about the
      states.  */
-  ENUM_BITFIELD (need_phi_state) need_phi_state : 2;
+  ENUM_BITFIELD (need_phi_state, need_phi_state, 2);
 
   /* True for HEAP artificial variables.  These variables represent
      the memory area allocated by a call to malloc.  */
@@ -189,7 +189,7 @@ struct GTY(()) var_ann_d {
   /* This field describes several "no alias" attributes that some
      symbols are known to have.  See the enum's definition for more
      information on each attribute.  */
-  ENUM_BITFIELD (noalias_state) noalias_state : 2;
+  ENUM_BITFIELD (noalias_state, noalias_state, 2);
 
   /* Used by var_map for the base index of ssa base variables.  */
   unsigned base_index;

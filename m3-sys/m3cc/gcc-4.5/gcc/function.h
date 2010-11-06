@@ -540,7 +540,7 @@ struct GTY(()) function {
 
   /* How commonly executed the function is.  Initialized during branch
      probabilities pass.  */
-  ENUM_BITFIELD (function_frequency) function_frequency : 2;
+  ENUM_BITFIELD (function_frequency, function_frequency, 2);
 
   /* Nonzero if function being compiled can call setjmp.  */
   unsigned int calls_setjmp : 1;

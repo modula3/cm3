@@ -530,7 +530,7 @@ __extension__								\
   (void *) __INT_TO_PTR ((h)->temp))
 
 # define obstack_free(h,obj)						\
-( (h)->temp = (char *) (obj) - (char *) (h)->chunk,			\
+( (h)->temp = (char *) ((char*)(obj)) - (char *) (h)->chunk,			\
   (((h)->temp > 0 && (h)->temp < (h)->chunk_limit - (char *) (h)->chunk)\
    ? (int) ((h)->next_free = (h)->object_base				\
 	    = (h)->temp + (char *) (h)->chunk)				\
