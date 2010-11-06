@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    - some macros CODE_FOR_... giving the insn_code_number value
    for each of the defined standard insn names.

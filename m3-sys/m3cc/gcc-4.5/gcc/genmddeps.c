@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* genmddeps.c - creates a makefile dependency fragment for the md file.
    Copyright (C) 2004, 2007 Free Software Foundation, Inc.
 
