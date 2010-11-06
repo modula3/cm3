@@ -277,11 +277,7 @@ So instead we use the macro below and test it against specific values.  */
 #endif
 #endif
 
-#ifdef __cplusplus
-# define ARG_UNUSED(NAME) /* nothing */
-#else
-# define ARG_UNUSED(NAME) NAME ATTRIBUTE_UNUSED
-#endif
+#define ARG_UNUSED(NAME) NAME ATTRIBUTE_UNUSED
 
 #ifndef ATTRIBUTE_NORETURN
 #define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
