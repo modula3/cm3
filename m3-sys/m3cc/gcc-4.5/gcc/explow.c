@@ -319,8 +319,8 @@ break_out_memory_refs (rtx x)
    arithmetic insns can be used.  */
 
 rtx
-convert_memory_address_addr_space (enum machine_mode ARG_UNUSED(to_mode),
-				   rtx x, addr_space_t ARG_UNUSED(as))
+convert_memory_address_addr_space (enum machine_mode ARG_UNUSED (to_mode),
+				   rtx x, addr_space_t ARG_UNUSED (as))
 {
 #ifndef POINTERS_EXTEND_UNSIGNED
   gcc_assert (GET_MODE (x) == to_mode || GET_MODE (x) == VOIDmode);
@@ -784,8 +784,8 @@ promote_function_mode (const_tree type, enum machine_mode mode, int *punsignedp,
    to show what signedness to use on extension operations.  */
 
 enum machine_mode
-promote_mode (const_tree ARG_UNUSED(type), enum machine_mode mode,
-	      int *ARG_UNUSED(punsignedp))
+promote_mode (const_tree ARG_UNUSED (type), enum machine_mode mode,
+	      int *ARG_UNUSED (punsignedp))
 {
   /* FIXME: this is the same logic that was there until GCC 4.4, but we
      probably want to test POINTERS_EXTEND_UNSIGNED even if PROMOTE_MODE
@@ -1678,7 +1678,7 @@ anti_adjust_stack_and_probe (rtx size, bool adjust_back)
 
 rtx
 hard_function_value (const_tree valtype, const_tree func, const_tree fntype,
-		     int ARG_UNUSED(outgoing))
+		     int ARG_UNUSED (outgoing))
 {
   rtx val;
 

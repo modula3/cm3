@@ -36,8 +36,8 @@ along with GCC; see the file COPYING3.  If not see
    Only useful before prologues have been emitted.  */
 
 static void
-notice_stack_pointer_modification_1 (rtx x, const_rtx ARG_UNUSED(pat),
-				     void *ARG_UNUSED(data))
+notice_stack_pointer_modification_1 (rtx x, const_rtx ARG_UNUSED (pat),
+				     void *ARG_UNUSED (data))
 {
   if (x == stack_pointer_rtx
       /* The stack pointer is only modified indirectly as the result

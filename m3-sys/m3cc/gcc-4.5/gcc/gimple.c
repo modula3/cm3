@@ -4536,7 +4536,7 @@ walk_stmt_load_store_ops (gimple stmt, void *data,
 /* Helper for gimple_ior_addresses_taken_1.  */
 
 static bool
-gimple_ior_addresses_taken_1 (gimple ARG_UNUSED(stmt),
+gimple_ior_addresses_taken_1 (gimple ARG_UNUSED (stmt),
 			      tree addr, void *data)
 {
   bitmap addresses_taken = (bitmap)data;

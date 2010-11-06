@@ -194,7 +194,7 @@ ipa_initialize_node_params (struct cgraph_node *node)
    info structure passed in DATA.  */
 
 static bool
-visit_store_addr_for_mod_analysis (gimple ARG_UNUSED(stmt),
+visit_store_addr_for_mod_analysis (gimple ARG_UNUSED (stmt),
 				   tree op, void *data)
 {
   struct ipa_node_params *info = (struct ipa_node_params *) data;
@@ -1237,7 +1237,7 @@ ipa_free_all_node_params (void)
 /* Hook that is called by cgraph.c when an edge is removed.  */
 
 static void
-ipa_edge_removal_hook (struct cgraph_edge *cs, void *ARG_UNUSED(data))
+ipa_edge_removal_hook (struct cgraph_edge *cs, void *ARG_UNUSED (data))
 {
   /* During IPA-CP updating we can be called on not-yet analyze clones.  */
   if (VEC_length (ipa_edge_args_t, ipa_edge_args_vector)
@@ -1249,7 +1249,7 @@ ipa_edge_removal_hook (struct cgraph_edge *cs, void *ARG_UNUSED(data))
 /* Hook that is called by cgraph.c when a node is removed.  */
 
 static void
-ipa_node_removal_hook (struct cgraph_node *node, void *ARG_UNUSED(data))
+ipa_node_removal_hook (struct cgraph_node *node, void *ARG_UNUSED (data))
 {
   ipa_free_node_params_substructures (IPA_NODE_REF (node));
 }

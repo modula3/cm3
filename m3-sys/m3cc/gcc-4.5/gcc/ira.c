@@ -589,7 +589,7 @@ ira_reallocate (void *ptr, size_t len)
 
 /* Free memory ADDR allocated for IRA data.  */
 void
-ira_free (void *ARG_UNUSED(addr))
+ira_free (void *ARG_UNUSED (addr))
 {
 #ifndef IRA_NO_OBSTACK
   /* do nothing */
@@ -608,7 +608,7 @@ ira_allocate_bitmap (void)
 
 /* Free bitmap B allocated for IRA.  */
 void
-ira_free_bitmap (bitmap ARG_UNUSED(b))
+ira_free_bitmap (bitmap ARG_UNUSED (b))
 {
   /* do nothing */
 }
@@ -1368,7 +1368,7 @@ HARD_REG_SET ira_no_alloc_regs;
 
 /* Return TRUE if *LOC contains an asm.  */
 static int
-insn_contains_asm_1 (rtx *loc, void *ARG_UNUSED(data))
+insn_contains_asm_1 (rtx *loc, void *ARG_UNUSED (data))
 {
   if ( !*loc)
     return FALSE;
@@ -1932,8 +1932,8 @@ static int equiv_mem_modified;
 /* If EQUIV_MEM is modified by modifying DEST, indicate that it is modified.
    Called via note_stores.  */
 static void
-validate_equiv_mem_from_store (rtx dest, const_rtx ARG_UNUSED(set),
-			       void *ARG_UNUSED(data))
+validate_equiv_mem_from_store (rtx dest, const_rtx ARG_UNUSED (set),
+			       void *ARG_UNUSED (data))
 {
   if ((REG_P (dest)
        && reg_overlap_mentioned_p (dest, equiv_mem))
@@ -2257,7 +2257,7 @@ memref_used_between_p (rtx memref, rtx start, rtx end)
    assignment - a SET, CLOBBER or REG_INC note.  It is currently not used,
    but needs to be there because this function is called from note_stores.  */
 static void
-no_equiv (rtx reg, const_rtx ARG_UNUSED(store), void *data ATTRIBUTE_UNUSED)
+no_equiv (rtx reg, const_rtx ARG_UNUSED (store), void *data ATTRIBUTE_UNUSED)
 {
   int regno;
   rtx list;
@@ -2286,7 +2286,7 @@ no_equiv (rtx reg, const_rtx ARG_UNUSED(store), void *data ATTRIBUTE_UNUSED)
    equivalent replacement.  */
 
 static rtx
-adjust_cleared_regs (rtx loc, const_rtx ARG_UNUSED(old_rtx), void *data)
+adjust_cleared_regs (rtx loc, const_rtx ARG_UNUSED (old_rtx), void *data)
 {
   if (REG_P (loc))
     {

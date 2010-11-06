@@ -167,7 +167,7 @@ c_tree_printer (pretty_printer *pp, text_info *text, const char *spec,
 
 /* In C and ObjC, all decls have "C" linkage.  */
 bool
-has_c_linkage (const_tree ARG_UNUSED(decl))
+has_c_linkage (const_tree ARG_UNUSED (decl))
 {
   return true;
 }
@@ -194,7 +194,7 @@ c_types_compatible_p (tree x, tree y)
 /* Determine if the type is a vla type for the backend.  */
 
 bool
-c_vla_unspec_p (tree x, tree ARG_UNUSED(fn))
+c_vla_unspec_p (tree x, tree ARG_UNUSED (fn))
 {
   return c_vla_type_p (x);
 }

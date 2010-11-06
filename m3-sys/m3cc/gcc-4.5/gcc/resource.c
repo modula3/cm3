@@ -89,7 +89,7 @@ static rtx find_dead_or_set_registers (rtx, struct resources*,
    It deadens any CLOBBERed registers and livens any SET registers.  */
 
 static void
-update_live_status (rtx dest, const_rtx x, void *ARG_UNUSED(data))
+update_live_status (rtx dest, const_rtx x, void *ARG_UNUSED (data))
 {
   int first_regno, last_regno;
   int i;

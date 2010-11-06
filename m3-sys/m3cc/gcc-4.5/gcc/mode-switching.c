@@ -176,7 +176,7 @@ reg_dies (rtx reg, HARD_REG_SET *live)
    This is called via note_stores.  */
 
 static void
-reg_becomes_live (rtx reg, const_rtx ARG_UNUSED(setter), void *live)
+reg_becomes_live (rtx reg, const_rtx ARG_UNUSED (setter), void *live)
 {
   int regno;
 
@@ -444,7 +444,7 @@ optimize_mode_switching (void)
   int n_entities;
   int max_num_modes = 0;
   bool emited = false;
-  basic_block ARG_UNUSED(post_entry), pre_exit ATTRIBUTE_UNUSED;
+  basic_block ARG_UNUSED (post_entry), pre_exit ATTRIBUTE_UNUSED;
 
   for (e = N_ENTITIES - 1, n_entities = 0; e >= 0; e--)
     if (OPTIMIZE_MODE_SWITCHING (e))

@@ -52,7 +52,7 @@ static const char *const known_suffixes[] =
 /* Filter argc and argv before processing by the gcc driver proper.  */
 void
 lang_specific_driver (int *in_argc, const char *const **in_argv,
-		      int *ARG_UNUSED(in_added_libraries))
+		      int *ARG_UNUSED (in_added_libraries))
 {
   int argc = *in_argc;
   const char *const *argv = *in_argv;

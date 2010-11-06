@@ -90,13 +90,13 @@ along with GCC; see the file COPYING3.  If not see
 */
 
 static void
-gather_interchange_stats (VEC (ddr_p, heap) *ARG_UNUSED(dependence_relations),
-			  VEC (data_reference_p, heap) *ARG_UNUSED(datarefs),
-			  struct loop *ARG_UNUSED(loop),
-			  struct loop *ARG_UNUSED(first_loop),
-			  unsigned int *ARG_UNUSED(dependence_steps),
-			  unsigned int *ARG_UNUSED(nb_deps_not_carried_by_loop),
-			  double_int *ARG_UNUSED(access_strides))
+gather_interchange_stats (VEC (ddr_p, heap) *ARG_UNUSED (dependence_relations),
+			  VEC (data_reference_p, heap) *ARG_UNUSED (datarefs),
+			  struct loop *ARG_UNUSED (loop),
+			  struct loop *ARG_UNUSED (first_loop),
+			  unsigned int *ARG_UNUSED (dependence_steps),
+			  unsigned int *ARG_UNUSED (nb_deps_not_carried_by_loop),
+			  double_int *ARG_UNUSED (access_strides))
 {
   unsigned int i, j;
   struct data_dependence_relation *ddr;

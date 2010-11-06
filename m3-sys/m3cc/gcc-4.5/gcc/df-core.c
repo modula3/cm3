@@ -630,7 +630,7 @@ df_remove_problem (struct dataflow *dflow)
    Also clear all of the changeable_flags.  */
 
 void
-df_finish_pass (bool ARG_UNUSED(verify))
+df_finish_pass (bool ARG_UNUSED (verify))
 {
   int i;
   int removed = 0;

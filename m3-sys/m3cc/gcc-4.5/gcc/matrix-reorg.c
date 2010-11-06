@@ -892,7 +892,7 @@ analyze_matrix_allocation_site (struct matrix_info *mi, gimple stmt,
   hotness of each dimension. The hotness of the dimension implies
   the locality of the elements.*/
 static int
-analyze_transpose (void **slot, void *ARG_UNUSED(data))
+analyze_transpose (void **slot, void *ARG_UNUSED (data))
 {
   struct matrix_info *mi = (struct matrix_info *) *slot;
   int min_escape_l = mi->min_indirect_level_escape;
@@ -1567,7 +1567,7 @@ can_calculate_expr_before_stmt (tree expr, sbitmap visited)
       constants and that those doesn't change over the function.  */
 
 static int
-check_allocation_function (void **slot, void *ARG_UNUSED(data))
+check_allocation_function (void **slot, void *ARG_UNUSED (data))
 {
   int level;
   struct matrix_info *mi = (struct matrix_info *) *slot;
@@ -1807,7 +1807,7 @@ compute_offset (HOST_WIDE_INT orig, HOST_WIDE_INT new_val, tree result)
                                                       */
 
 static int
-transform_access_sites (void **slot, void *ARG_UNUSED(data))
+transform_access_sites (void **slot, void *ARG_UNUSED (data))
 {
   gimple_stmt_iterator gsi;
   struct matrix_info *mi = (struct matrix_info *) *slot;
@@ -2010,7 +2010,7 @@ sort_dim_hot_level (gcov_type * a, int *dim_map, int n)
    and replaced by a new call to free the flattened matrix.  */
 
 static int
-transform_allocation_sites (void **slot, void *ARG_UNUSED(data))
+transform_allocation_sites (void **slot, void *ARG_UNUSED (data))
 {
   int i;
   struct matrix_info *mi;
@@ -2265,7 +2265,7 @@ transform_allocation_sites (void **slot, void *ARG_UNUSED(data))
 
 /* Print out the results of the escape analysis.  */
 static int
-dump_matrix_reorg_analysis (void **slot, void *ARG_UNUSED(data))
+dump_matrix_reorg_analysis (void **slot, void *ARG_UNUSED (data))
 {
   struct matrix_info *mi = (struct matrix_info *) *slot;
 

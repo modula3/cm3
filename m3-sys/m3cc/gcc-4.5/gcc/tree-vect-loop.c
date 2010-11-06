@@ -3993,7 +3993,7 @@ vect_min_worthwhile_factor (enum tree_code code)
    Return FALSE if not a vectorizable STMT, TRUE otherwise.  */
 
 bool
-vectorizable_induction (gimple phi, gimple_stmt_iterator *ARG_UNUSED(gsi),
+vectorizable_induction (gimple phi, gimple_stmt_iterator *ARG_UNUSED (gsi),
 			gimple *vec_stmt)
 {
   stmt_vec_info stmt_info = vinfo_for_stmt (phi);
@@ -4051,8 +4051,8 @@ vectorizable_induction (gimple phi, gimple_stmt_iterator *ARG_UNUSED(gsi),
 
 bool
 vectorizable_live_operation (gimple stmt,
-			     gimple_stmt_iterator *ARG_UNUSED(gsi),
-			     gimple *ARG_UNUSED(vec_stmt))
+			     gimple_stmt_iterator *ARG_UNUSED (gsi),
+			     gimple *ARG_UNUSED (vec_stmt))
 {
   stmt_vec_info stmt_info = vinfo_for_stmt (stmt);
   loop_vec_info loop_vinfo = STMT_VINFO_LOOP_VINFO (stmt_info);

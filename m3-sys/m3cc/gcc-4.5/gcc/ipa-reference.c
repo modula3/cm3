@@ -72,12 +72,12 @@ along with GCC; see the file COPYING3.  If not see
 #include "lto-streamer.h"
 
 static void add_new_function (struct cgraph_node *node,
-			      void *ARG_UNUSED(data));
+			      void *ARG_UNUSED (data));
 static void remove_node_data (struct cgraph_node *node,
-			      void *ARG_UNUSED(data));
+			      void *ARG_UNUSED (data));
 static void duplicate_node_data (struct cgraph_node *src,
 				 struct cgraph_node *dst,
-				 void *ARG_UNUSED(data));
+				 void *ARG_UNUSED (data));
 
 /* The static variables defined within the compilation unit that are
    loaded or stored directly by function that owns this structure.  */
@@ -349,8 +349,8 @@ mark_address_taken (tree x)
 /* Wrapper around mark_address_taken for the stmt walker.  */
 
 static bool
-mark_address (gimple ARG_UNUSED(stmt), tree addr,
-	      void *ARG_UNUSED(data))
+mark_address (gimple ARG_UNUSED (stmt), tree addr,
+	      void *ARG_UNUSED (data))
 {
   while (handled_component_p (addr))
     addr = TREE_OPERAND (addr, 0);
@@ -361,7 +361,7 @@ mark_address (gimple ARG_UNUSED(stmt), tree addr,
 /* Mark load of T.  */
 
 static bool
-mark_load (gimple ARG_UNUSED(stmt), tree t, void *data)
+mark_load (gimple ARG_UNUSED (stmt), tree t, void *data)
 {
   ipa_reference_local_vars_info_t local = (ipa_reference_local_vars_info_t)data;
   if (TREE_CODE (t) == VAR_DECL
@@ -373,7 +373,7 @@ mark_load (gimple ARG_UNUSED(stmt), tree t, void *data)
 /* Mark store of T.  */
 
 static bool
-mark_store (gimple ARG_UNUSED(stmt), tree t, void *data)
+mark_store (gimple ARG_UNUSED (stmt), tree t, void *data)
 {
   ipa_reference_local_vars_info_t local = (ipa_reference_local_vars_info_t)data;
   if (TREE_CODE (t) == VAR_DECL
@@ -471,7 +471,7 @@ scan_stmt_for_static_refs (gimple_stmt_iterator *gsip,
 
 static tree
 scan_initializer_for_static_refs (tree *tp, int *walk_subtrees,
-				  void *ARG_UNUSED(data))
+				  void *ARG_UNUSED (data))
 {
   tree t = *tp;
 
@@ -790,7 +790,7 @@ clean_function (struct cgraph_node *fn)
 
 /* Called when new function is inserted to callgraph late.  */
 static void
-add_new_function (struct cgraph_node *node, void *ARG_UNUSED(data))
+add_new_function (struct cgraph_node *node, void *ARG_UNUSED (data))
 {
   /* There are some shared nodes, in particular the initializers on
      static declarations.  We do not need to scan them more than once
@@ -830,7 +830,7 @@ copy_global_bitmap (bitmap src)
 
 static void
 duplicate_node_data (struct cgraph_node *src, struct cgraph_node *dst,
-	 	     void *ARG_UNUSED(data))
+	 	     void *ARG_UNUSED (data))
 {
   ipa_reference_global_vars_info_t ginfo;
   ipa_reference_local_vars_info_t linfo;
@@ -864,7 +864,7 @@ duplicate_node_data (struct cgraph_node *src, struct cgraph_node *dst,
 /* Called when node is removed.  */
 
 static void
-remove_node_data (struct cgraph_node *node, void *ARG_UNUSED(data))
+remove_node_data (struct cgraph_node *node, void *ARG_UNUSED (data))
 {
   if (get_reference_vars_info (node))
     clean_function (node);
