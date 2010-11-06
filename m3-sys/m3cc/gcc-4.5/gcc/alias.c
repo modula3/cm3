@@ -1117,7 +1117,7 @@ static char *reg_seen;
 static int unique_id;
 
 static void
-record_set (rtx dest, const_rtx set, void *ARG_UNUSED (data))
+record_set (rtx dest, const_rtx set, void *data ATTRIBUTE_UNUSED)
 {
   unsigned regno;
   rtx src;
@@ -2607,7 +2607,7 @@ init_alias_target (void)
    to be memory reference.  */
 static bool memory_modified;
 static void
-memory_modified_1 (rtx x, const_rtx ARG_UNUSED (pat), void *data)
+memory_modified_1 (rtx x, const_rtx pat ATTRIBUTE_UNUSED, void *data)
 {
   if (MEM_P (x))
     {

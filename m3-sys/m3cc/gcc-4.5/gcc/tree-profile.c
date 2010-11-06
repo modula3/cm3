@@ -387,9 +387,9 @@ tree_gen_ic_func_profiler (void)
    section for counters, BASE is offset of the counter position.  */
 
 static void
-tree_gen_const_delta_profiler (histogram_value ARG_UNUSED (value),
-			       unsigned ARG_UNUSED (tag),
-			       unsigned ARG_UNUSED (base))
+tree_gen_const_delta_profiler (histogram_value value ATTRIBUTE_UNUSED,
+			       unsigned tag ATTRIBUTE_UNUSED,
+			       unsigned base ATTRIBUTE_UNUSED)
 {
   /* FIXME implement this.  */
 #ifdef ENABLE_CHECKING

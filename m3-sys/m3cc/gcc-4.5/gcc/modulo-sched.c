@@ -235,7 +235,7 @@ typedef struct node_sched_params
    code in order to use sched_analyze() for computing the dependencies.
    They are used when initializing the sched_info structure.  */
 static const char *
-sms_print_insn (const_rtx insn, int ARG_UNUSED (aligned))
+sms_print_insn (const_rtx insn, int aligned ATTRIBUTE_UNUSED)
 {
   static char tmp[80];
 
@@ -244,10 +244,10 @@ sms_print_insn (const_rtx insn, int ARG_UNUSED (aligned))
 }
 
 static void
-compute_jump_reg_dependencies (rtx ARG_UNUSED (insn),
-			       regset ARG_UNUSED (cond_exec),
-			       regset ARG_UNUSED (used),
-			       regset ARG_UNUSED (set))
+compute_jump_reg_dependencies (rtx insn ATTRIBUTE_UNUSED,
+			       regset cond_exec ATTRIBUTE_UNUSED,
+			       regset used ATTRIBUTE_UNUSED,
+			       regset set ATTRIBUTE_UNUSED)
 {
 }
 
@@ -284,7 +284,7 @@ static struct haifa_sched_info sms_sched_info =
    more than one occurrence in the loop besides the control part or the
    do-loop pattern is not of the form we expect.  */
 static rtx
-doloop_register_get (rtx ARG_UNUSED (head), rtx tail ATTRIBUTE_UNUSED)
+doloop_register_get (rtx head ATTRIBUTE_UNUSED, rtx tail ATTRIBUTE_UNUSED)
 {
 #ifdef HAVE_doloop_end
   rtx reg, condition, insn, first_insn_not_to_check;
@@ -2172,7 +2172,7 @@ order_nodes_of_sccs (ddg_all_sccs_ptr all_sccs, int * node_order)
 
 /* MII is needed if we consider backarcs (that do not close recursive cycles).  */
 static struct node_order_params *
-calculate_order_params (ddg_ptr g, int ARG_UNUSED (mii), int *pmax_asap)
+calculate_order_params (ddg_ptr g, int mii ATTRIBUTE_UNUSED, int *pmax_asap)
 {
   int u;
   int max_asap;

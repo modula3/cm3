@@ -66,7 +66,7 @@ static bool mem_ref_p;
 
 /* Auxiliary function for mem_read_insn_p.  */
 static int
-mark_mem_use (rtx *x, void *ARG_UNUSED (data))
+mark_mem_use (rtx *x, void *data ATTRIBUTE_UNUSED)
 {
   if (MEM_P (*x))
     mem_ref_p = true;
@@ -90,7 +90,7 @@ mem_read_insn_p (rtx insn)
 }
 
 static void
-mark_mem_store (rtx loc, const_rtx ARG_UNUSED (setter), void *data ATTRIBUTE_UNUSED)
+mark_mem_store (rtx loc, const_rtx setter ATTRIBUTE_UNUSED, void *data ATTRIBUTE_UNUSED)
 {
   if (MEM_P (loc))
     mem_ref_p = true;
@@ -693,7 +693,7 @@ create_ddg_edge (ddg_node_ptr src, ddg_node_ptr dest,
 
 /* Add the given edge to the in/out linked lists of the DDG nodes.  */
 static void
-add_edge_to_ddg (ddg_ptr ARG_UNUSED (g), ddg_edge_ptr e)
+add_edge_to_ddg (ddg_ptr g ATTRIBUTE_UNUSED, ddg_edge_ptr e)
 {
   ddg_node_ptr src = e->src;
   ddg_node_ptr dest = e->dest;

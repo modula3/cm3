@@ -272,7 +272,7 @@ default_diagnostic_starter (diagnostic_context *context,
 
 void
 default_diagnostic_finalizer (diagnostic_context *context,
-			      diagnostic_info *ARG_UNUSED (diagnostic))
+			      diagnostic_info *diagnostic ATTRIBUTE_UNUSED)
 {
   pp_destroy_prefix (context->printer);
 }

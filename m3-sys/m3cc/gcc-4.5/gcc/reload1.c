@@ -3633,7 +3633,7 @@ update_eliminable_offsets (void)
    the insns of the function.  */
 
 static void
-mark_not_eliminable (rtx dest, const_rtx x, void *ARG_UNUSED (data))
+mark_not_eliminable (rtx dest, const_rtx x, void *data ATTRIBUTE_UNUSED)
 {
   unsigned int i;
 
@@ -4506,7 +4506,7 @@ reload_as_needed (int live_known)
    to be forgotten later.  */
 
 static void
-forget_old_reloads_1 (rtx x, const_rtx ARG_UNUSED (ignored),
+forget_old_reloads_1 (rtx x, const_rtx ignored ATTRIBUTE_UNUSED,
 		      void *data)
 {
   unsigned int regno;
@@ -5755,7 +5755,7 @@ set_reload_reg (int i, int r)
    we didn't change anything.  */
 
 static int
-allocate_reload_reg (struct insn_chain *ARG_UNUSED (chain), int r,
+allocate_reload_reg (struct insn_chain *chain ATTRIBUTE_UNUSED, int r,
 		     int last_reload)
 {
   int i, pass, count;
@@ -7595,9 +7595,9 @@ do_output_reload (struct insn_chain *chain, struct reload *rl, int j)
    occupy the same number of hard registers.  */
 
 static bool
-inherit_piecemeal_p (int ARG_UNUSED (dest),
-		     int ARG_UNUSED (src),
-		     enum machine_mode ARG_UNUSED (mode))
+inherit_piecemeal_p (int dest ATTRIBUTE_UNUSED,
+		     int src ATTRIBUTE_UNUSED,
+		     enum machine_mode mode ATTRIBUTE_UNUSED)
 {
 #ifdef CANNOT_CHANGE_MODE_CLASS
   return (!REG_CANNOT_CHANGE_MODE_P (dest, mode, reg_raw_mode[dest])

@@ -296,7 +296,7 @@ init_dont_simulate_again (void)
 /* Evaluate statement STMT against the complex lattice defined above.  */
 
 static enum ssa_prop_result
-complex_visit_stmt (gimple stmt, edge *ARG_UNUSED (taken_edge_p),
+complex_visit_stmt (gimple stmt, edge *taken_edge_p ATTRIBUTE_UNUSED,
 		    tree *result_p)
 {
   complex_lattice_t new_l, old_l, op1_l, op2_l;

@@ -568,8 +568,8 @@ mark_aliased_reaching_defs_necessary (gimple stmt, tree ref)
    a non-aliased decl.  */
 
 static bool
-mark_all_reaching_defs_necessary_1 (ao_ref *ARG_UNUSED (ref),
-				    tree vdef, void *ARG_UNUSED (data))
+mark_all_reaching_defs_necessary_1 (ao_ref *ref ATTRIBUTE_UNUSED,
+				    tree vdef, void *data ATTRIBUTE_UNUSED)
 {
   gimple def_stmt = SSA_NAME_DEF_STMT (vdef);
 

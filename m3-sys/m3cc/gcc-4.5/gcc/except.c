@@ -2103,7 +2103,7 @@ expand_builtin_frob_return_addr (tree addr_tree)
    exception handler.  */
 
 void
-expand_builtin_eh_return (tree ARG_UNUSED (stackadj_tree),
+expand_builtin_eh_return (tree stackadj_tree ATTRIBUTE_UNUSED,
 			  tree handler_tree)
 {
   rtx tmp;

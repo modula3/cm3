@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Process source files and output type information.
    Copyright (C) 2006, 2007 Free Software Foundation, Inc.
 

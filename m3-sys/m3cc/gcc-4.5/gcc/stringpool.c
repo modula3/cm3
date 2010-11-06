@@ -68,7 +68,7 @@ init_stringpool (void)
 
 /* Allocate a hash node.  */
 static hashnode
-alloc_node (hash_table *ARG_UNUSED (table))
+alloc_node (hash_table *table ATTRIBUTE_UNUSED)
 {
   return GCC_IDENT_TO_HT_IDENT (make_node (IDENTIFIER_NODE));
 }
@@ -155,8 +155,8 @@ stringpool_statistics (void)
 /* Mark an identifier for GC.  */
 
 static int
-mark_ident (struct cpp_reader *ARG_UNUSED (pfile), hashnode h,
-	    const void *ARG_UNUSED (v))
+mark_ident (struct cpp_reader *pfile ATTRIBUTE_UNUSED, hashnode h,
+	    const void *v ATTRIBUTE_UNUSED)
 {
   gt_ggc_m_9tree_node (HT_IDENT_TO_GCC_IDENT (h));
   return 1;
@@ -165,8 +165,8 @@ mark_ident (struct cpp_reader *ARG_UNUSED (pfile), hashnode h,
 /* Return true if an identifier should be removed from the table.  */
 
 static int
-maybe_delete_ident (struct cpp_reader *ARG_UNUSED (pfile), hashnode h,
-		    const void *ARG_UNUSED (v))
+maybe_delete_ident (struct cpp_reader *pfile ATTRIBUTE_UNUSED, hashnode h,
+		    const void *v ATTRIBUTE_UNUSED)
 {
   return !ggc_marked_p (HT_IDENT_TO_GCC_IDENT (h));
 }
@@ -194,9 +194,9 @@ ggc_purge_stringpool (void)
    strings don't contain pointers).  */
 
 void
-gt_pch_p_S (void *ARG_UNUSED (obj), void *x ATTRIBUTE_UNUSED,
-	    gt_pointer_operator ARG_UNUSED (op),
-	    void *ARG_UNUSED (cookie))
+gt_pch_p_S (void *obj ATTRIBUTE_UNUSED, void *x ATTRIBUTE_UNUSED,
+	    gt_pointer_operator op ATTRIBUTE_UNUSED,
+	    void *cookie ATTRIBUTE_UNUSED)
 {
 }
 

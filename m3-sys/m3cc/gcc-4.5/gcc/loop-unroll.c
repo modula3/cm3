@@ -320,7 +320,7 @@ decide_unrolling_and_peeling (int flags)
 /* Decide whether the LOOP is once rolling and suitable for complete
    peeling.  */
 static void
-decide_peel_once_rolling (struct loop *loop, int ARG_UNUSED (flags))
+decide_peel_once_rolling (struct loop *loop, int flags ATTRIBUTE_UNUSED)
 {
   struct niter_desc *desc;
 
@@ -359,7 +359,7 @@ decide_peel_once_rolling (struct loop *loop, int ARG_UNUSED (flags))
 
 /* Decide whether the LOOP is suitable for complete peeling.  */
 static void
-decide_peel_completely (struct loop *loop, int ARG_UNUSED (flags))
+decide_peel_completely (struct loop *loop, int flags ATTRIBUTE_UNUSED)
 {
   unsigned npeel;
   struct niter_desc *desc;

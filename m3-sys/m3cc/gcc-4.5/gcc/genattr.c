@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Generate attribute information (insn-attr.h) from machine description.
    Copyright (C) 1991, 1994, 1996, 1998, 1999, 2000, 2003, 2004, 2007, 2008
    Free Software Foundation, Inc.

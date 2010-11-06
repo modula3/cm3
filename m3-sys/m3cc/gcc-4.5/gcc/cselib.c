@@ -301,7 +301,7 @@ cselib_clear_table (void)
 /* Remove from hash table all VALUEs except constants.  */
 
 static int
-preserve_only_constants (void **x, void *ARG_UNUSED (info))
+preserve_only_constants (void **x, void *info ATTRIBUTE_UNUSED)
 {
   cselib_val *v = (cselib_val *)*x;
 
@@ -467,7 +467,7 @@ references_value_p (const_rtx x, int only_useless)
    htab_traverse.  */
 
 static int
-discard_useless_locs (void **x, void *ARG_UNUSED (info))
+discard_useless_locs (void **x, void *info ATTRIBUTE_UNUSED)
 {
   cselib_val *v = (cselib_val *)*x;
   struct elt_loc_list **p = &v->locs;
@@ -496,7 +496,7 @@ discard_useless_locs (void **x, void *ARG_UNUSED (info))
 /* If X is a value with no locations, remove it from the hashtable.  */
 
 static int
-discard_useless_values (void **x, void *ARG_UNUSED (info))
+discard_useless_values (void **x, void *info ATTRIBUTE_UNUSED)
 {
   cselib_val *v = (cselib_val *)*x;
 
@@ -1841,7 +1841,7 @@ cselib_invalidate_regno (unsigned int regno, enum machine_mode mode)
    against certain constants or near-constants.  */
 
 static bool
-cselib_rtx_varies_p (const_rtx ARG_UNUSED (x), bool from_alias ATTRIBUTE_UNUSED)
+cselib_rtx_varies_p (const_rtx x ATTRIBUTE_UNUSED, bool from_alias ATTRIBUTE_UNUSED)
 {
   /* We actually don't need to verify very hard.  This is because
      if X has actually changed, we invalidate the memory anyway,
@@ -1960,8 +1960,8 @@ cselib_invalidate_rtx (rtx dest)
 /* A wrapper for cselib_invalidate_rtx to be called via note_stores.  */
 
 static void
-cselib_invalidate_rtx_note_stores (rtx dest, const_rtx ARG_UNUSED (ignore),
-				   void *ARG_UNUSED (data))
+cselib_invalidate_rtx_note_stores (rtx dest, const_rtx ignore ATTRIBUTE_UNUSED,
+				   void *data ATTRIBUTE_UNUSED)
 {
   cselib_invalidate_rtx (dest);
 }

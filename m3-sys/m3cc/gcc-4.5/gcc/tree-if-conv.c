@@ -524,7 +524,7 @@ if_convertible_bb_p (struct loop *loop, basic_block bb, basic_block exit_bb)
    for vector conditions, data dependency checks etc.. (Not implemented yet).  */
 
 static bool
-if_convertible_loop_p (struct loop *loop, bool ARG_UNUSED (for_vectorizer))
+if_convertible_loop_p (struct loop *loop, bool for_vectorizer ATTRIBUTE_UNUSED)
 {
   basic_block bb;
   gimple_stmt_iterator itr;

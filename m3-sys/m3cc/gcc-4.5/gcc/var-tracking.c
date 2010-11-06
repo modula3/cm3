@@ -140,7 +140,7 @@ enum micro_operation_type
 
 };
 
-static const char * ARG_UNUSED (const)
+static const char * const ATTRIBUTE_UNUSED
 micro_operation_type_name[] = {
   "MO_USE",
   "MO_USE_NO_VAR",
@@ -3076,7 +3076,7 @@ remove_cselib_value_chains (decl_or_value dv)
 /* Check the order of entries in one-part variables.   */
 
 static int
-canonicalize_loc_order_check (void **slot, void *ARG_UNUSED (data))
+canonicalize_loc_order_check (void **slot, void *data ATTRIBUTE_UNUSED)
 {
   variable var = (variable) *slot;
   decl_or_value dv = var->dv;
@@ -4987,7 +4987,7 @@ preserve_value (cselib_val *val)
    are discovered.  */
 
 static int
-non_suitable_const (rtx *x, void *ARG_UNUSED (data))
+non_suitable_const (rtx *x, void *data ATTRIBUTE_UNUSED)
 {
   if (*x == NULL_RTX)
     return 0;
@@ -6238,7 +6238,7 @@ dump_attrs_list (attrs list)
 /* Print the information about variable *SLOT to dump file.  */
 
 static int
-dump_var_slot (void **slot, void *ARG_UNUSED (data))
+dump_var_slot (void **slot, void *data ATTRIBUTE_UNUSED)
 {
   variable var = (variable) *slot;
 
@@ -8461,7 +8461,7 @@ delete_debug_insns (void)
    handled as well..  */
 
 static void
-vt_debug_insns_local (bool ARG_UNUSED (skipped))
+vt_debug_insns_local (bool skipped ATTRIBUTE_UNUSED)
 {
   /* ??? Just skip it all for now.  */
   delete_debug_insns ();

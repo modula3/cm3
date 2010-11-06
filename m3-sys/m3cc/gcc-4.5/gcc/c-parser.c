@@ -7412,7 +7412,7 @@ c_parser_omp_clause_lastprivate (c_parser *parser, tree list)
    nowait */
 
 static tree
-c_parser_omp_clause_nowait (c_parser *ARG_UNUSED (parser), tree list)
+c_parser_omp_clause_nowait (c_parser *parser ATTRIBUTE_UNUSED, tree list)
 {
   tree c;
   location_t loc = c_parser_peek_token (parser)->location;
@@ -7664,7 +7664,7 @@ c_parser_omp_clause_shared (c_parser *parser, tree list)
    untied */
 
 static tree
-c_parser_omp_clause_untied (c_parser *ARG_UNUSED (parser), tree list)
+c_parser_omp_clause_untied (c_parser *parser ATTRIBUTE_UNUSED, tree list)
 {
   tree c;
 
