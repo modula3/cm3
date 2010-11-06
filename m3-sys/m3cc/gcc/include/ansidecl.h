@@ -276,7 +276,6 @@ So instead we use the macro below and test it against specific values.  */
 #define ATTRIBUTE_UNUSED /* nothing */
 #endif
 #endif
-
 #define ARG_UNUSED(NAME) NAME ATTRIBUTE_UNUSED
 
 #ifndef ATTRIBUTE_NORETURN
