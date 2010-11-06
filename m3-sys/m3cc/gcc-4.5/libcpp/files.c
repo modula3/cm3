@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Part of CPP library.  File handling.
    Copyright (C) 1986, 1987, 1989, 1992, 1993, 1994, 1995, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -1736,7 +1734,7 @@ _cpp_save_file_entries (cpp_reader *pfile, FILE *fp)
 /* Read the pchf_data structure from F.  */
 
 bool
-_cpp_read_file_entries (cpp_reader *ARG_UNUSED(pfile), FILE *f)
+_cpp_read_file_entries (cpp_reader *pfile ATTRIBUTE_UNUSED, FILE *f)
 {
   struct pchf_data d;
 
@@ -1809,7 +1807,7 @@ pchf_compare (const void *d_p, const void *e_p)
    should not be read.  */
 
 static bool
-check_file_against_entries (cpp_reader *ARG_UNUSED(pfile),
+check_file_against_entries (cpp_reader *pfile ATTRIBUTE_UNUSED,
 			    _cpp_file *f,
 			    bool check_included)
 {

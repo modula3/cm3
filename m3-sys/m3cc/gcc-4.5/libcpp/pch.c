@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Part of CPP library.  (Precompiled header reading/writing.)
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009
    Free Software Foundation, Inc.
@@ -124,7 +122,7 @@ struct cpp_savedstate
    put the definition in 'definedstrs'.  */
 
 static int
-save_idents (cpp_reader *ARG_UNUSED(pfile), cpp_hashnode *hn, void *ss_p)
+save_idents (cpp_reader *pfile ATTRIBUTE_UNUSED, cpp_hashnode *hn, void *ss_p)
 {
   struct cpp_savedstate *const ss = (struct cpp_savedstate *)ss_p;
 
@@ -211,7 +209,7 @@ cpp_save_state (cpp_reader *r, FILE *f)
 /* Calculate the 'hashsize' field of the saved state.  */
 
 static int
-count_defs (cpp_reader *ARG_UNUSED(pfile), cpp_hashnode *hn, void *ss_p)
+count_defs (cpp_reader *pfile ATTRIBUTE_UNUSED, cpp_hashnode *hn, void *ss_p)
 {
   struct cpp_savedstate *const ss = (struct cpp_savedstate *)ss_p;
 
@@ -250,7 +248,7 @@ count_defs (cpp_reader *ARG_UNUSED(pfile), cpp_hashnode *hn, void *ss_p)
 
 /* Collect the identifiers into the state's string table.  */
 static int
-write_defs (cpp_reader *ARG_UNUSED(pfile), cpp_hashnode *hn, void *ss_p)
+write_defs (cpp_reader *pfile ATTRIBUTE_UNUSED, cpp_hashnode *hn, void *ss_p)
 {
   struct cpp_savedstate *const ss = (struct cpp_savedstate *)ss_p;
 
@@ -532,7 +530,7 @@ struct ht_node_list
 /* Callback for collecting identifiers from hash table */
 
 static int
-collect_ht_nodes (cpp_reader *ARG_UNUSED(pfile), cpp_hashnode *hn,
+collect_ht_nodes (cpp_reader *pfile ATTRIBUTE_UNUSED, cpp_hashnode *hn,
 		  void *nl_p)
 {
   struct ht_node_list *const nl = (struct ht_node_list *)nl_p;
