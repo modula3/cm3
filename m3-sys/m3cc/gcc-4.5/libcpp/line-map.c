@@ -96,8 +96,9 @@ linemap_add (struct line_maps *set, enum lc_reason reason,
 
   if (set->used == set->allocated)
     {
-      line_map_realloc reallocator
-	= set->reallocator ? set->reallocator : xrealloc;
+      line_map_realloc reallocator = set->reallocator;
+      if (!reallocator)
+        reallocator = xrealloc;
       set->allocated = 2 * set->allocated + 256;
       set->maps
 	= (struct line_map *) (*reallocator) (set->maps,
