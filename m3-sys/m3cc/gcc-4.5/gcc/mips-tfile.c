@@ -3465,7 +3465,7 @@ parse_file (const char *start)
 /* Make sure the @stabs symbol is emitted.  */
 
 static void
-mark_stabs (const char *ARG_UNUSED(start))
+mark_stabs (const char *ARG_UNUSED (start))
 {
   if (!stabs_seen)
     {

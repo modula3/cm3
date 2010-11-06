@@ -1342,8 +1342,8 @@ rtl_tidy_fallthru_edge (edge e)
 /* Should move basic block BB after basic block AFTER.  NIY.  */
 
 static bool
-rtl_move_block_after (basic_block ARG_UNUSED(bb),
-		      basic_block ARG_UNUSED(after))
+rtl_move_block_after (basic_block ARG_UNUSED (bb),
+		      basic_block ARG_UNUSED (after))
 {
   return false;
 }
@@ -1621,7 +1621,7 @@ commit_edge_insertions (void)
    at start and end).  */
 
 static void
-rtl_dump_bb (basic_block bb, FILE *outf, int indent, int ARG_UNUSED(flags))
+rtl_dump_bb (basic_block bb, FILE *outf, int indent, int ARG_UNUSED (flags))
 {
   rtx insn;
   rtx last;
@@ -2839,7 +2839,7 @@ cfg_layout_split_edge (edge e)
 /* Do postprocessing after making a forwarder block joined by edge FALLTHRU.  */
 
 static void
-rtl_make_forwarder_block (edge ARG_UNUSED(fallthru))
+rtl_make_forwarder_block (edge ARG_UNUSED (fallthru))
 {
 }
 
@@ -3024,7 +3024,7 @@ rtl_flow_call_edges_add (sbitmap blocks)
    in trees, and this should be of the same type since it is a hook.  */
 static void
 rtl_lv_add_condition_to_bb (basic_block first_head ,
-			    basic_block ARG_UNUSED(second_head),
+			    basic_block ARG_UNUSED (second_head),
 			    basic_block cond_bb, void *comp_rtx)
 {
   rtx label, seq, jump;

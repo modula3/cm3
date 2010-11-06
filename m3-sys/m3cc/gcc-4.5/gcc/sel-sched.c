@@ -1102,7 +1102,7 @@ init_hard_regno_rename (int regno)
 /* A wrapper around HARD_REGNO_RENAME_OK that will look into the hard regs
    data first.  */
 static inline bool
-sel_hard_regno_rename_ok (int ARG_UNUSED(from), int to ATTRIBUTE_UNUSED)
+sel_hard_regno_rename_ok (int ARG_UNUSED (from), int to ATTRIBUTE_UNUSED)
 {
 #ifdef HARD_REGNO_RENAME_OK
   /* Check whether this is all calculated.  */
@@ -1205,7 +1205,7 @@ init_hard_regs_data (void)
 
 static void
 mark_unavailable_hard_regs (def_t def, struct reg_rename *reg_rename_p,
-                            regset ARG_UNUSED(used_regs))
+                            regset ARG_UNUSED (used_regs))
 {
   enum machine_mode mode;
   enum reg_class cl = NO_REGS;
@@ -5111,7 +5111,7 @@ find_sequential_best_exprs (bnd_t bnd, expr_t expr_vliw, bool for_moveop)
 
 
 /* Move nop to previous block.  */
-static ARG_UNUSED(void)
+static ARG_UNUSED (void)
 move_nop_to_previous_block (insn_t nop, basic_block prev_bb)
 {
   insn_t prev_insn, next_insn, note;
@@ -5688,8 +5688,8 @@ update_and_record_unavailable_insns (basic_block book_block)
    MOVEOP_DRV_CALL_RES is the result of call code_motion_path_driver on succ,
    LPARAMS and STATIC_PARAMS contain the parameters described above.  */
 static void
-move_op_merge_succs (insn_t ARG_UNUSED(insn),
-                     insn_t ARG_UNUSED(succ),
+move_op_merge_succs (insn_t ARG_UNUSED (insn),
+                     insn_t ARG_UNUSED (succ),
 		     int moveop_drv_call_res,
 		     cmpd_local_params_p lparams, void *static_params)
 {
@@ -5742,9 +5742,9 @@ move_op_merge_succs (insn_t ARG_UNUSED(insn),
      if SUCC is one of SUCCS_BACK or SUCCS_OUT.
    STATIC_PARAMS contain USED_REGS set.  */
 static void
-fur_merge_succs (insn_t ARG_UNUSED(insn), insn_t succ,
+fur_merge_succs (insn_t ARG_UNUSED (insn), insn_t succ,
 		 int moveop_drv_call_res,
-		 cmpd_local_params_p ARG_UNUSED(lparams),
+		 cmpd_local_params_p ARG_UNUSED (lparams),
 		 void *static_params)
 {
   regset succ_live;
@@ -5958,7 +5958,7 @@ remove_insn_from_stream (rtx insn, bool only_disconnect)
    is static parameters of move_op.  */
 static void
 move_op_orig_expr_found (insn_t insn, expr_t expr,
-                         cmpd_local_params_p ARG_UNUSED(lparams),
+                         cmpd_local_params_p ARG_UNUSED (lparams),
                          void *static_params)
 {
   bool only_disconnect, insn_emitted;
@@ -5980,8 +5980,8 @@ move_op_orig_expr_found (insn_t insn, expr_t expr,
    INSN - current insn traversed, EXPR - the corresponding expr found,
    crosses_call and original_insns in STATIC_PARAMS are updated.  */
 static void
-fur_orig_expr_found (insn_t insn, expr_t ARG_UNUSED(expr),
-                     cmpd_local_params_p ARG_UNUSED(lparams),
+fur_orig_expr_found (insn_t insn, expr_t ARG_UNUSED (expr),
+                     cmpd_local_params_p ARG_UNUSED (lparams),
                      void *static_params)
 {
   fur_static_params_p params = (fur_static_params_p) static_params;
@@ -6108,8 +6108,8 @@ move_op_at_first_insn (insn_t insn, cmpd_local_params_p lparams,
    current basic block.  */
 static void
 fur_at_first_insn (insn_t insn,
-                   cmpd_local_params_p ARG_UNUSED(lparams),
-                   void *ARG_UNUSED(static_params))
+                   cmpd_local_params_p ARG_UNUSED (lparams),
+                   void *ARG_UNUSED (static_params))
 {
   gcc_assert (!sel_bb_head_p (insn) || AV_SET_VALID_P (insn)
 	      || AV_LEVEL (insn) == -1);
@@ -6137,7 +6137,7 @@ move_op_ascend (insn_t insn, void *static_params)
    Returns TRUE if this block already have been visited and
    code_motion_path_driver should return 1, FALSE otherwise.  */
 static int
-fur_on_enter (insn_t ARG_UNUSED(insn), cmpd_local_params_p local_params,
+fur_on_enter (insn_t ARG_UNUSED (insn), cmpd_local_params_p local_params,
 	      void *static_params, bool visited_p)
 {
   fur_static_params_p sparams = (fur_static_params_p) static_params;
@@ -6161,9 +6161,9 @@ fur_on_enter (insn_t ARG_UNUSED(insn), cmpd_local_params_p local_params,
 
 /* Same as above but for move_op.   */
 static int
-move_op_on_enter (insn_t ARG_UNUSED(insn),
-                  cmpd_local_params_p ARG_UNUSED(local_params),
-                  void *ARG_UNUSED(static_params), bool visited_p)
+move_op_on_enter (insn_t ARG_UNUSED (insn),
+                  cmpd_local_params_p ARG_UNUSED (local_params),
+                  void *ARG_UNUSED (static_params), bool visited_p)
 {
   if (visited_p)
     return -1;
@@ -6177,7 +6177,7 @@ move_op_on_enter (insn_t ARG_UNUSED(insn),
 			cleanup and return 0 itself;
 		 TRUE, if code_motion_path_driver should continue.  */
 static bool
-move_op_orig_expr_not_found (insn_t insn, av_set_t ARG_UNUSED(orig_ops),
+move_op_orig_expr_not_found (insn_t insn, av_set_t ARG_UNUSED (orig_ops),
 			    void *static_params)
 {
   moveop_static_params_p sparams = (moveop_static_params_p) static_params;

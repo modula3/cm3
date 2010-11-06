@@ -1328,7 +1328,7 @@ verify_interpass_invariants (void)
 /* Clear the last verified flag.  */
 
 static void
-clear_last_verified (void *ARG_UNUSED(data))
+clear_last_verified (void *ARG_UNUSED (data))
 {
   cfun->last_verified = 0;
 }

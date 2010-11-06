@@ -1,4 +1,5 @@
 /* Modula-3: modified */
+
 /* Expands front end tree to back end RTL for GCC.
    Copyright (C) 1987, 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
@@ -295,7 +296,7 @@ get_stack_local_alignment (tree type, enum machine_mode mode)
 rtx
 assign_stack_local_1 (enum machine_mode mode, HOST_WIDE_INT size,
 		      int align,
-		      bool ARG_UNUSED(reduce_alignment_ok))
+		      bool ARG_UNUSED (reduce_alignment_ok))
 {
   rtx x, addr;
   int bigend_correction = 0;
@@ -612,7 +613,7 @@ insert_temp_slot_address (rtx address, struct temp_slot *temp_slot)
 /* Remove an address -> temp slot mapping entry if the temp slot is
    not in use anymore.  Callback for remove_unused_temp_slot_addresses.  */
 static int
-remove_unused_temp_slot_addresses_1 (void **slot, void *ARG_UNUSED(data))
+remove_unused_temp_slot_addresses_1 (void **slot, void *ARG_UNUSED (data))
 {
   const struct temp_slot_address_entry *t;
   t = (const struct temp_slot_address_entry *) *slot;
@@ -876,7 +877,7 @@ assign_stack_temp (enum machine_mode mode, HOST_WIDE_INT size, int keep)
 
 rtx
 assign_temp (tree type_or_decl, int keep, int memory_required,
-	     int ARG_UNUSED(dont_promote))
+	     int ARG_UNUSED (dont_promote))
 {
   tree type, decl;
   enum machine_mode mode;
@@ -1692,7 +1693,7 @@ instantiate_decl_rtl (rtx x)
    in the given DECL_VALUE_EXPR.  */
 
 static tree
-instantiate_expr (tree *tp, int *walk_subtrees, void *ARG_UNUSED(data))
+instantiate_expr (tree *tp, int *walk_subtrees, void *ARG_UNUSED (data))
 {
   tree t = *tp;
   if (! EXPR_P (t))
@@ -3492,7 +3493,7 @@ gimplify_parameters (void)
 
 void
 locate_and_pad_parm (enum machine_mode passed_mode, tree type, int in_regs,
-		     int partial, tree ARG_UNUSED(fndecl),
+		     int partial, tree ARG_UNUSED (fndecl),
 		     struct args_size *initial_offset_ptr,
 		     struct locate_and_pad_arg_data *locate)
 {
@@ -4581,7 +4582,7 @@ diddle_return_value (void (*doit) (rtx, void *), void *arg)
 }
 
 static void
-do_clobber_return_reg (rtx reg, void *ARG_UNUSED(arg))
+do_clobber_return_reg (rtx reg, void *ARG_UNUSED (arg))
 {
   emit_clobber (reg);
 }
@@ -4604,7 +4605,7 @@ clobber_return_register (void)
 }
 
 static void
-do_use_return_reg (rtx reg, void *ARG_UNUSED(arg))
+do_use_return_reg (rtx reg, void *ARG_UNUSED (arg))
 {
   emit_use (reg);
 }

@@ -565,7 +565,7 @@ find_subloop_latch_edge_by_profile (VEC (edge, heap) *latches)
    another edge.  */
 
 static edge
-find_subloop_latch_edge_by_ivs (struct loop *ARG_UNUSED(loop), VEC (edge, heap) *latches)
+find_subloop_latch_edge_by_ivs (struct loop *ARG_UNUSED (loop), VEC (edge, heap) *latches)
 {
   edge e, latch = VEC_index (edge, latches, 0);
   unsigned i;

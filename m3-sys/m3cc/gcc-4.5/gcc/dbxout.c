@@ -853,7 +853,7 @@ static void
 dbxout_finish_complex_stabs (tree sym, stab_code_type code,
 			     rtx addr, const char *label, int number)
 {
-  int ARG_UNUSED(line);
+  int ARG_UNUSED (line);
   char *str;
   size_t len;
 
@@ -912,7 +912,7 @@ dbxout_finish_complex_stabs (tree sym, stab_code_type code,
 #if defined (DBX_DEBUGGING_INFO)
 
 static void
-dbxout_function_end (tree ARG_UNUSED(decl))
+dbxout_function_end (tree ARG_UNUSED (decl))
 {
   char lscope_label_name[100];
 
@@ -960,7 +960,7 @@ dbxout_function_end (tree ARG_UNUSED(decl))
 #endif /* DBX_DEBUGGING_INFO */
 
 /* Get lang description for N_SO stab.  */
-static unsigned ARG_UNUSED(int)
+static unsigned ARG_UNUSED (int)
 get_lang_number (void)
 {
   const char *language_string = lang_hooks.name;
@@ -1170,8 +1170,8 @@ emit_pending_bincls_if_required (void) {}
 /* Change to reading from a new source file.  Generate a N_BINCL stab.  */
 
 static void
-dbxout_start_source_file (unsigned int ARG_UNUSED(line),
-			  const char *ARG_UNUSED(filename))
+dbxout_start_source_file (unsigned int ARG_UNUSED (line),
+			  const char *ARG_UNUSED (filename))
 {
 #ifdef DBX_USE_BINCL
   struct dbx_file *n = XNEW (struct dbx_file);
@@ -1193,7 +1193,7 @@ dbxout_start_source_file (unsigned int ARG_UNUSED(line),
 /* Revert to reading a previous source file.  Generate a N_EINCL stab.  */
 
 static void
-dbxout_end_source_file (unsigned int ARG_UNUSED(line))
+dbxout_end_source_file (unsigned int ARG_UNUSED (line))
 {
 #ifdef DBX_USE_BINCL
   /* Emit EINCL stab only if BINCL is not pending.  */
@@ -1286,8 +1286,8 @@ dbxout_begin_prologue (unsigned int lineno, const char *filename)
 
 static void
 dbxout_source_line (unsigned int lineno, const char *filename,
-                    int ARG_UNUSED(discriminator),
-                    bool ARG_UNUSED(is_stmt))
+                    int ARG_UNUSED (discriminator),
+                    bool ARG_UNUSED (is_stmt))
 {
   dbxout_source_file (filename);
 
@@ -1311,7 +1311,7 @@ dbxout_source_line (unsigned int lineno, const char *filename,
 /* Describe the beginning of an internal block within a function.  */
 
 static void
-dbxout_begin_block (unsigned int ARG_UNUSED(line), unsigned int n)
+dbxout_begin_block (unsigned int ARG_UNUSED (line), unsigned int n)
 {
   emit_pending_bincls_if_required ();
   targetm.asm_out.internal_label (asm_out_file, "LBB", n);
@@ -1320,7 +1320,7 @@ dbxout_begin_block (unsigned int ARG_UNUSED(line), unsigned int n)
 /* Describe the end line-number of an internal block within a function.  */
 
 static void
-dbxout_end_block (unsigned int ARG_UNUSED(line), unsigned int n)
+dbxout_end_block (unsigned int ARG_UNUSED (line), unsigned int n)
 {
   emit_pending_bincls_if_required ();
   targetm.asm_out.internal_label (asm_out_file, "LBE", n);
@@ -1371,7 +1371,7 @@ dbxout_type_decl (tree decl, int local)
    The default is to call debug_free_queue but do nothing else.  */
 
 static void
-dbxout_finish (const char *ARG_UNUSED(filename))
+dbxout_finish (const char *ARG_UNUSED (filename))
 {
 #ifdef DBX_OUTPUT_MAIN_SOURCE_FILE_END
   DBX_OUTPUT_MAIN_SOURCE_FILE_END (asm_out_file, filename);
@@ -2512,7 +2512,7 @@ output_used_types (void)
    Return 1 if a stabs might have been emitted.  */
 
 int
-dbxout_symbol (tree decl, int ARG_UNUSED(local))
+dbxout_symbol (tree decl, int ARG_UNUSED (local))
 {
   tree type = TREE_TYPE (decl);
   tree context = NULL_TREE;
@@ -3575,7 +3575,7 @@ dbxout_args (tree args)
    be required.  */
 static void
 dbx_output_lbrac (const char *label,
-		  const char *ARG_UNUSED(begin_label))
+		  const char *ARG_UNUSED (begin_label))
 {
   dbxout_begin_stabn (N_LBRAC);
   if (DBX_BLOCKS_FUNCTION_RELATIVE)
@@ -3589,7 +3589,7 @@ dbx_output_lbrac (const char *label,
    be required.  */
 static void
 dbx_output_rbrac (const char *label,
-		  const char *ARG_UNUSED(begin_label))
+		  const char *ARG_UNUSED (begin_label))
 {
   dbxout_begin_stabn (N_RBRAC);
   if (DBX_BLOCKS_FUNCTION_RELATIVE)

@@ -1665,8 +1665,8 @@ mark_regno_death (int regno)
 
 /* Mark setting register REG.  */
 static void
-mark_reg_store (rtx reg, const_rtx ARG_UNUSED(setter),
-		void *ARG_UNUSED(data))
+mark_reg_store (rtx reg, const_rtx ARG_UNUSED (setter),
+		void *ARG_UNUSED (data))
 {
   int regno;
 

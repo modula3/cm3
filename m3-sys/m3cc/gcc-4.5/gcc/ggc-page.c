@@ -668,7 +668,7 @@ debug_print_page_list (int order)
    compile error unless exactly one of the HAVE_* is defined.  */
 
 static inline char *
-alloc_anon (char *ARG_UNUSED(pref), size_t size)
+alloc_anon (char *ARG_UNUSED (pref), size_t size)
 {
 #ifdef HAVE_MMAP_ANON
   char *page = (char *) mmap (pref, size, PROT_READ | PROT_WRITE,
@@ -1071,7 +1071,7 @@ static unsigned char size_lookup[NUM_SIZE_LOOKUP] =
 /* Typed allocation function.  Does nothing special in this collector.  */
 
 void *
-ggc_alloc_typed_stat (enum gt_types_enum ARG_UNUSED(type), size_t size
+ggc_alloc_typed_stat (enum gt_types_enum ARG_UNUSED (type), size_t size
 		      MEM_STAT_DECL)
 {
   return ggc_alloc_stat (size PASS_MEM_STAT);
@@ -1608,14 +1608,14 @@ init_ggc (void)
 /* Start a new GGC zone.  */
 
 struct alloc_zone *
-new_ggc_zone (const char *ARG_UNUSED(name))
+new_ggc_zone (const char *ARG_UNUSED (name))
 {
   return NULL;
 }
 
 /* Destroy a GGC zone.  */
 void
-destroy_ggc_zone (struct alloc_zone *ARG_UNUSED(zone))
+destroy_ggc_zone (struct alloc_zone *ARG_UNUSED (zone))
 {
 }
 
@@ -2105,9 +2105,9 @@ init_ggc_pch (void)
 }
 
 void
-ggc_pch_count_object (struct ggc_pch_data *d, void *ARG_UNUSED(x),
-		      size_t size, bool ARG_UNUSED(is_string),
-		      enum gt_types_enum ARG_UNUSED(type))
+ggc_pch_count_object (struct ggc_pch_data *d, void *ARG_UNUSED (x),
+		      size_t size, bool ARG_UNUSED (is_string),
+		      enum gt_types_enum ARG_UNUSED (type))
 {
   unsigned order;
 
@@ -2149,9 +2149,9 @@ ggc_pch_this_base (struct ggc_pch_data *d, void *base)
 
 
 char *
-ggc_pch_alloc_object (struct ggc_pch_data *d, void *ARG_UNUSED(x),
-		      size_t size, bool ARG_UNUSED(is_string),
-		      enum gt_types_enum ARG_UNUSED(type))
+ggc_pch_alloc_object (struct ggc_pch_data *d, void *ARG_UNUSED (x),
+		      size_t size, bool ARG_UNUSED (is_string),
+		      enum gt_types_enum ARG_UNUSED (type))
 {
   unsigned order;
   char *result;
@@ -2171,16 +2171,16 @@ ggc_pch_alloc_object (struct ggc_pch_data *d, void *ARG_UNUSED(x),
 }
 
 void
-ggc_pch_prepare_write (struct ggc_pch_data *ARG_UNUSED(d),
-		       FILE *ARG_UNUSED(f))
+ggc_pch_prepare_write (struct ggc_pch_data *ARG_UNUSED (d),
+		       FILE *ARG_UNUSED (f))
 {
   /* Nothing to do.  */
 }
 
 void
-ggc_pch_write_object (struct ggc_pch_data *ARG_UNUSED(d),
-		      FILE *f, void *x, void *ARG_UNUSED(newx),
-		      size_t size, bool ARG_UNUSED(is_string))
+ggc_pch_write_object (struct ggc_pch_data *ARG_UNUSED (d),
+		      FILE *f, void *x, void *ARG_UNUSED (newx),
+		      size_t size, bool ARG_UNUSED (is_string))
 {
   unsigned order;
   static const char emptyBytes[256] = { 0 };

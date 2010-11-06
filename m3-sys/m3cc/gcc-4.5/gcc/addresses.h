@@ -22,9 +22,9 @@ along with GCC; see the file COPYING3.  If not see
    Arguments as for the MODE_CODE_BASE_REG_CLASS macro.  */
 
 static inline enum reg_class
-base_reg_class (enum machine_mode ARG_UNUSED(mode),
-		enum rtx_code ARG_UNUSED(outer_code),
-		enum rtx_code ARG_UNUSED(index_code))
+base_reg_class (enum machine_mode ARG_UNUSED (mode),
+		enum rtx_code ARG_UNUSED (outer_code),
+		enum rtx_code ARG_UNUSED (index_code))
 {
 #ifdef MODE_CODE_BASE_REG_CLASS
   return MODE_CODE_BASE_REG_CLASS (mode, outer_code, index_code);
@@ -47,9 +47,9 @@ base_reg_class (enum machine_mode ARG_UNUSED(mode),
    Arguments as for the REGNO_MODE_CODE_OK_FOR_BASE_P macro.  */
 
 static inline bool
-ok_for_base_p_1 (unsigned regno, enum machine_mode ARG_UNUSED(mode),
-		 enum rtx_code ARG_UNUSED(outer_code),
-		 enum rtx_code ARG_UNUSED(index_code))
+ok_for_base_p_1 (unsigned regno, enum machine_mode ARG_UNUSED (mode),
+		 enum rtx_code ARG_UNUSED (outer_code),
+		 enum rtx_code ARG_UNUSED (index_code))
 {
 #ifdef REGNO_MODE_CODE_OK_FOR_BASE_P
   return REGNO_MODE_CODE_OK_FOR_BASE_P (regno, mode, outer_code, index_code);

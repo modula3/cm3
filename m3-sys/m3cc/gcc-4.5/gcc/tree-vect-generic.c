@@ -112,7 +112,7 @@ tree_vec_extract (gimple_stmt_iterator *gsi, tree type,
 
 static tree
 do_unop (gimple_stmt_iterator *gsi, tree inner_type, tree a,
-	 tree ARG_UNUSED(b), tree bitpos, tree bitsize,
+	 tree ARG_UNUSED (b), tree bitpos, tree bitsize,
 	 enum tree_code code)
 {
   a = tree_vec_extract (gsi, inner_type, a, bitsize, bitpos);
@@ -143,7 +143,7 @@ do_binop (gimple_stmt_iterator *gsi, tree inner_type, tree a, tree b,
    fit into a word.  */
 static tree
 do_plus_minus (gimple_stmt_iterator *gsi, tree word_type, tree a, tree b,
-	       tree ARG_UNUSED(bitpos), tree bitsize ATTRIBUTE_UNUSED,
+	       tree ARG_UNUSED (bitpos), tree bitsize ATTRIBUTE_UNUSED,
 	       enum tree_code code)
 {
   tree inner_type = TREE_TYPE (TREE_TYPE (a));
@@ -174,9 +174,9 @@ do_plus_minus (gimple_stmt_iterator *gsi, tree word_type, tree a, tree b,
 
 static tree
 do_negate (gimple_stmt_iterator *gsi, tree word_type, tree b,
-	   tree ARG_UNUSED(unused), tree bitpos ATTRIBUTE_UNUSED,
-	   tree ARG_UNUSED(bitsize),
-	   enum tree_code ARG_UNUSED(code))
+	   tree ARG_UNUSED (unused), tree bitpos ATTRIBUTE_UNUSED,
+	   tree ARG_UNUSED (bitsize),
+	   enum tree_code ARG_UNUSED (code))
 {
   tree inner_type = TREE_TYPE (TREE_TYPE (b));
   HOST_WIDE_INT max;
