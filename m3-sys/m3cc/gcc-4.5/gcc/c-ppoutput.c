@@ -405,7 +405,7 @@ cb_line_change (cpp_reader *pfile, const cpp_token *token,
 }
 
 static void
-cb_ident (cpp_reader *ARG_UNUSED(pfile), source_location line,
+cb_ident (cpp_reader *ARG_UNUSED (pfile), source_location line,
 	  const cpp_string *str)
 {
   maybe_print_line (line);
@@ -432,7 +432,7 @@ cb_define (cpp_reader *pfile, source_location line, cpp_hashnode *node)
 }
 
 static void
-cb_undef (cpp_reader *ARG_UNUSED(pfile), source_location line,
+cb_undef (cpp_reader *ARG_UNUSED (pfile), source_location line,
 	  cpp_hashnode *node)
 {
   maybe_print_line (line);
@@ -441,7 +441,7 @@ cb_undef (cpp_reader *ARG_UNUSED(pfile), source_location line,
 }
 
 static void
-cb_used_define (cpp_reader *pfile, source_location ARG_UNUSED(line),
+cb_used_define (cpp_reader *pfile, source_location ARG_UNUSED (line),
 		cpp_hashnode *node)
 {
   macro_queue *q;
@@ -454,8 +454,8 @@ cb_used_define (cpp_reader *pfile, source_location ARG_UNUSED(line),
 }
 
 static void
-cb_used_undef (cpp_reader *ARG_UNUSED(pfile),
-	       source_location ARG_UNUSED(line),
+cb_used_undef (cpp_reader *ARG_UNUSED (pfile),
+	       source_location ARG_UNUSED (line),
 	       cpp_hashnode *node)
 {
   macro_queue *q;
@@ -466,7 +466,7 @@ cb_used_undef (cpp_reader *ARG_UNUSED(pfile),
 }
 
 static void
-dump_queued_macros (cpp_reader *ARG_UNUSED(pfile))
+dump_queued_macros (cpp_reader *ARG_UNUSED (pfile))
 {
   macro_queue *q;
 
@@ -505,7 +505,7 @@ dump_queued_macros (cpp_reader *ARG_UNUSED(pfile))
 }
 
 static void
-cb_include (cpp_reader *ARG_UNUSED(pfile), source_location line,
+cb_include (cpp_reader *ARG_UNUSED (pfile), source_location line,
 	    const unsigned char *dir, const char *header, int angle_brackets,
 	    const cpp_token **comments)
 {
@@ -534,7 +534,7 @@ cb_include (cpp_reader *ARG_UNUSED(pfile), source_location line,
    directory in cpp output file.  */
 
 void
-pp_dir_change (cpp_reader *ARG_UNUSED(pfile), const char *dir)
+pp_dir_change (cpp_reader *ARG_UNUSED (pfile), const char *dir)
 {
   size_t to_file_len = strlen (dir);
   unsigned char *to_file_quoted =
@@ -597,7 +597,7 @@ cb_def_pragma (cpp_reader *pfile, source_location line)
 
 /* Dump out the hash table.  */
 static int
-dump_macro (cpp_reader *pfile, cpp_hashnode *node, void *ARG_UNUSED(v))
+dump_macro (cpp_reader *pfile, cpp_hashnode *node, void *ARG_UNUSED (v))
 {
   if (node->type == NT_MACRO && !(node->flags & NODE_BUILTIN))
     {
@@ -617,7 +617,7 @@ dump_macro (cpp_reader *pfile, cpp_hashnode *node, void *ARG_UNUSED(v))
 
 static void
 cb_read_pch (cpp_reader *pfile, const char *name,
-	     int fd, const char *ARG_UNUSED(orig_name))
+	     int fd, const char *ARG_UNUSED (orig_name))
 {
   c_common_read_pch (pfile, name, fd, orig_name);
 

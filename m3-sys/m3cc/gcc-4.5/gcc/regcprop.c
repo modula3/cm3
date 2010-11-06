@@ -377,7 +377,7 @@ copy_value (rtx dest, rtx src, struct value_data *vd)
 
 static bool
 mode_change_ok (enum machine_mode orig_mode, enum machine_mode new_mode,
-		unsigned int ARG_UNUSED(regno))
+		unsigned int ARG_UNUSED (regno))
 {
   if (GET_MODE_SIZE (orig_mode) < GET_MODE_SIZE (new_mode))
     return false;
@@ -397,7 +397,7 @@ mode_change_ok (enum machine_mode orig_mode, enum machine_mode new_mode,
 static rtx
 maybe_mode_change (enum machine_mode orig_mode, enum machine_mode copy_mode,
 		   enum machine_mode new_mode, unsigned int regno,
-		   unsigned int ARG_UNUSED(copy_regno))
+		   unsigned int ARG_UNUSED (copy_regno))
 {
   if (GET_MODE_SIZE (copy_mode) < GET_MODE_SIZE (orig_mode)
       && GET_MODE_SIZE (copy_mode) < GET_MODE_SIZE (new_mode))

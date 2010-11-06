@@ -421,7 +421,7 @@ typedef struct {
    straightforward definitions.  DATA points to information about the
    current basic block that needs updating.  */
 static void
-note_btr_set (rtx dest, const_rtx ARG_UNUSED(set), void *data)
+note_btr_set (rtx dest, const_rtx ARG_UNUSED (set), void *data)
 {
   defs_uses_info *info = (defs_uses_info *) data;
   int regno, end_regno;

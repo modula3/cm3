@@ -575,8 +575,8 @@ sra_initialize (void)
 /* Hook fed to pointer_map_traverse, deallocate stored vectors.  */
 
 static bool
-delete_base_accesses (const void *ARG_UNUSED(key), void **value,
-		     void *ARG_UNUSED(data))
+delete_base_accesses (const void *ARG_UNUSED (key), void **value,
+		     void *ARG_UNUSED (data))
 {
   VEC (access_p, heap) *access_vec;
   access_vec = (VEC (access_p, heap) *) *value;
@@ -961,8 +961,8 @@ build_access_from_expr_1 (tree *expr_ptr, gimple stmt, bool write)
 
 static bool
 build_access_from_expr (tree *expr_ptr,
-			gimple_stmt_iterator *ARG_UNUSED(gsi), bool write,
-			void *ARG_UNUSED(data))
+			gimple_stmt_iterator *ARG_UNUSED (gsi), bool write,
+			void *ARG_UNUSED (data))
 {
   struct access *access;
 
@@ -1013,8 +1013,8 @@ enum scan_assign_result { SRA_SA_NONE,       /* nothing done for the stmt */
 
 static enum scan_assign_result
 build_accesses_from_assign (gimple *stmt_ptr,
-			    gimple_stmt_iterator *ARG_UNUSED(gsi),
-			    void *ARG_UNUSED(data))
+			    gimple_stmt_iterator *ARG_UNUSED (gsi),
+			    void *ARG_UNUSED (data))
 {
   gimple stmt = *stmt_ptr;
   tree *lhs_ptr, *rhs_ptr;
@@ -1068,8 +1068,8 @@ build_accesses_from_assign (gimple *stmt_ptr,
    GIMPLE_ASM operands with memory constrains which cannot be scalarized.  */
 
 static bool
-asm_visit_addr (gimple ARG_UNUSED(stmt), tree op,
-		void *ARG_UNUSED(data))
+asm_visit_addr (gimple ARG_UNUSED (stmt), tree op,
+		void *ARG_UNUSED (data))
 {
   if (DECL_P (op))
     disqualify_candidate (op, "Non-scalarizable GIMPLE_ASM operand.");
@@ -2322,7 +2322,7 @@ get_access_for_expr (tree expr)
 
 static bool
 sra_modify_expr (tree *expr, gimple_stmt_iterator *gsi, bool write,
-		 void *ARG_UNUSED(data))
+		 void *ARG_UNUSED (data))
 {
   struct access *access;
   tree type, bfr;
@@ -2595,7 +2595,7 @@ replace_uses_with_default_def_ssa_name (tree ssa, struct access *racc)
 
 static enum scan_assign_result
 sra_modify_assign (gimple *stmt, gimple_stmt_iterator *gsi,
-		   void *ARG_UNUSED(data))
+		   void *ARG_UNUSED (data))
 {
   struct access *lacc, *racc;
   tree lhs, rhs;
@@ -3098,7 +3098,7 @@ find_param_candidates (void)
    maybe_modified. */
 
 static bool
-mark_maybe_modified (ao_ref *ARG_UNUSED(ao), tree vdef ATTRIBUTE_UNUSED,
+mark_maybe_modified (ao_ref *ARG_UNUSED (ao), tree vdef ATTRIBUTE_UNUSED,
 		     void *data)
 {
   struct access *repr = (struct access *) data;
@@ -3863,7 +3863,7 @@ replace_removed_params_ssa_names (gimple stmt, void *data)
    a write (LHS) expression.  */
 
 static bool
-sra_ipa_modify_expr (tree *expr, gimple_stmt_iterator *ARG_UNUSED(gsi),
+sra_ipa_modify_expr (tree *expr, gimple_stmt_iterator *ARG_UNUSED (gsi),
 		     bool dont_convert, void *data)
 {
   ipa_parm_adjustment_vec adjustments;

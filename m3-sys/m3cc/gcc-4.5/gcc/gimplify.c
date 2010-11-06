@@ -885,8 +885,8 @@ mostly_copy_tree_r (tree *tp, int *walk_subtrees, void *data)
    gimplification process would create wrong code.  */
 
 static tree
-copy_if_shared_r (tree *tp, int *ARG_UNUSED(walk_subtrees),
-		  void *ARG_UNUSED(data))
+copy_if_shared_r (tree *tp, int *ARG_UNUSED (walk_subtrees),
+		  void *ARG_UNUSED (data))
 {
   tree t = *tp;
   enum tree_code code = TREE_CODE (t);
@@ -921,8 +921,8 @@ copy_if_shared_r (tree *tp, int *ARG_UNUSED(walk_subtrees),
 }
 
 static tree
-unmark_visited_r (tree *tp, int *ARG_UNUSED(walk_subtrees),
-		  void *ARG_UNUSED(data))
+unmark_visited_r (tree *tp, int *ARG_UNUSED (walk_subtrees),
+		  void *ARG_UNUSED (data))
 {
   if (TREE_VISITED (*tp))
     TREE_VISITED (*tp) = 0;
@@ -1621,7 +1621,7 @@ gimplify_exit_expr (tree *expr_p)
    as being forced.  To be called for DECL_INITIAL of static variables.  */
 
 tree
-force_labels_r (tree *tp, int *walk_subtrees, void *ARG_UNUSED(data))
+force_labels_r (tree *tp, int *walk_subtrees, void *ARG_UNUSED (data))
 {
   if (TYPE_P (*tp))
     *walk_subtrees = 0;

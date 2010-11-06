@@ -234,7 +234,7 @@ va_list_counter_bump (struct stdarg_info *si, tree counter, tree rhs,
 /* Called by walk_tree to look for references to va_list variables.  */
 
 static tree
-find_va_list_reference (tree *tp, int *ARG_UNUSED(walk_subtrees),
+find_va_list_reference (tree *tp, int *ARG_UNUSED (walk_subtrees),
 			void *data)
 {
   bitmap va_list_vars = (bitmap) ((struct walk_stmt_info *) data)->info;

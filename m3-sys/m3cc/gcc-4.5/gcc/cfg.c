@@ -102,7 +102,7 @@ init_flow (struct function *the_fun)
    without actually unlinking it from the pred/succ lists.  */
 
 static void
-free_edge (edge ARG_UNUSED(e))
+free_edge (edge ARG_UNUSED (e))
 {
   n_edges--;
   ggc_free (e);

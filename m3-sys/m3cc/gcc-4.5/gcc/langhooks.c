@@ -254,7 +254,7 @@ lhd_types_compatible_p (tree x, tree y)
    second argument.  */
 
 bool
-lhd_tree_dump_dump_tree (void *ARG_UNUSED(di), tree t ATTRIBUTE_UNUSED)
+lhd_tree_dump_dump_tree (void *ARG_UNUSED (di), tree t ATTRIBUTE_UNUSED)
 {
   return false;
 }
@@ -271,9 +271,9 @@ lhd_tree_dump_type_quals (const_tree t)
 /* lang_hooks.gimplify_expr re-writes *EXPR_P into GIMPLE form.  */
 
 int
-lhd_gimplify_expr (tree *ARG_UNUSED(expr_p),
-		   gimple_seq *ARG_UNUSED(pre_p),
-		   gimple_seq *ARG_UNUSED(post_p))
+lhd_gimplify_expr (tree *ARG_UNUSED (expr_p),
+		   gimple_seq *ARG_UNUSED (pre_p),
+		   gimple_seq *ARG_UNUSED (post_p))
 {
   return GS_UNHANDLED;
 }
@@ -282,7 +282,7 @@ lhd_gimplify_expr (tree *ARG_UNUSED(expr_p),
    which is a language-specific tree code in category tcc_constant or
    tcc_exceptional.  The default expects never to be called.  */
 size_t
-lhd_tree_size (enum tree_code ARG_UNUSED(c))
+lhd_tree_size (enum tree_code ARG_UNUSED (c))
 {
   gcc_unreachable ();
 }
@@ -291,7 +291,7 @@ lhd_tree_size (enum tree_code ARG_UNUSED(c))
    sibcall.  */
 
 bool
-lhd_decl_ok_for_sibcall (const_tree ARG_UNUSED(decl))
+lhd_decl_ok_for_sibcall (const_tree ARG_UNUSED (decl))
 {
   return true;
 }
@@ -332,7 +332,7 @@ write_global_declarations (void)
 
 /* Called to perform language-specific initialization of CTX.  */
 void
-lhd_initialize_diagnostics (struct diagnostic_context *ARG_UNUSED(ctx))
+lhd_initialize_diagnostics (struct diagnostic_context *ARG_UNUSED (ctx))
 {
 }
 
@@ -453,8 +453,8 @@ lhd_print_error_function (diagnostic_context *context, const char *file,
 }
 
 tree
-lhd_callgraph_analyze_expr (tree *ARG_UNUSED(tp),
-			    int *ARG_UNUSED(walk_subtrees))
+lhd_callgraph_analyze_expr (tree *ARG_UNUSED (tp),
+			    int *ARG_UNUSED (walk_subtrees))
 {
   return NULL;
 }
@@ -472,7 +472,7 @@ lhd_to_target_charset (HOST_WIDE_INT c)
 }
 
 tree
-lhd_expr_to_decl (tree expr, bool *ARG_UNUSED(tc), bool *se ATTRIBUTE_UNUSED)
+lhd_expr_to_decl (tree expr, bool *ARG_UNUSED (tc), bool *se ATTRIBUTE_UNUSED)
 {
   return expr;
 }
@@ -481,7 +481,7 @@ lhd_expr_to_decl (tree expr, bool *ARG_UNUSED(tc), bool *se ATTRIBUTE_UNUSED)
    predetermined, OMP_CLAUSE_DEFAULT_UNSPECIFIED otherwise.  */
 
 enum omp_clause_default_kind
-lhd_omp_predetermined_sharing (tree ARG_UNUSED(decl))
+lhd_omp_predetermined_sharing (tree ARG_UNUSED (decl))
 {
   if (DECL_ARTIFICIAL (decl))
     return OMP_CLAUSE_DEFAULT_SHARED;
@@ -491,7 +491,7 @@ lhd_omp_predetermined_sharing (tree ARG_UNUSED(decl))
 /* Generate code to copy SRC to DST.  */
 
 tree
-lhd_omp_assignment (tree ARG_UNUSED(clause), tree dst, tree src)
+lhd_omp_assignment (tree ARG_UNUSED (clause), tree dst, tree src)
 {
   return build2 (MODIFY_EXPR, TREE_TYPE (dst), dst, src);
 }
@@ -500,8 +500,8 @@ lhd_omp_assignment (tree ARG_UNUSED(clause), tree dst, tree src)
    firstprivate variables.  */
 
 void
-lhd_omp_firstprivatize_type_sizes (struct gimplify_omp_ctx *ARG_UNUSED(c),
-				   tree ARG_UNUSED(t))
+lhd_omp_firstprivatize_type_sizes (struct gimplify_omp_ctx *ARG_UNUSED (c),
+				   tree ARG_UNUSED (t))
 {
 }
 

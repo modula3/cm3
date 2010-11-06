@@ -73,7 +73,7 @@ static const tag_format_t tag_table[] =
 };
 
 int
-main (int ARG_UNUSED(argc), char **argv)
+main (int ARG_UNUSED (argc), char **argv)
 {
   int opt;
 
@@ -261,8 +261,8 @@ dump_file (const char *filename)
 }
 
 static void
-tag_function (const char *ARG_UNUSED(filename),
-	      unsigned ARG_UNUSED(tag), unsigned length ATTRIBUTE_UNUSED)
+tag_function (const char *ARG_UNUSED (filename),
+	      unsigned ARG_UNUSED (tag), unsigned length ATTRIBUTE_UNUSED)
 {
   unsigned long pos = gcov_position ();
 
@@ -282,8 +282,8 @@ tag_function (const char *ARG_UNUSED(filename),
 }
 
 static void
-tag_blocks (const char *ARG_UNUSED(filename),
-	    unsigned ARG_UNUSED(tag), unsigned length ATTRIBUTE_UNUSED)
+tag_blocks (const char *ARG_UNUSED (filename),
+	    unsigned ARG_UNUSED (tag), unsigned length ATTRIBUTE_UNUSED)
 {
   unsigned n_blocks = GCOV_TAG_BLOCKS_NUM (length);
 
@@ -307,8 +307,8 @@ tag_blocks (const char *ARG_UNUSED(filename),
 }
 
 static void
-tag_arcs (const char *ARG_UNUSED(filename),
-	  unsigned ARG_UNUSED(tag), unsigned length ATTRIBUTE_UNUSED)
+tag_arcs (const char *ARG_UNUSED (filename),
+	  unsigned ARG_UNUSED (tag), unsigned length ATTRIBUTE_UNUSED)
 {
   unsigned n_arcs = GCOV_TAG_ARCS_NUM (length);
 
@@ -336,8 +336,8 @@ tag_arcs (const char *ARG_UNUSED(filename),
 }
 
 static void
-tag_lines (const char *ARG_UNUSED(filename),
-	   unsigned ARG_UNUSED(tag), unsigned length ATTRIBUTE_UNUSED)
+tag_lines (const char *ARG_UNUSED (filename),
+	   unsigned ARG_UNUSED (tag), unsigned length ATTRIBUTE_UNUSED)
 {
   if (flag_dump_contents)
     {
@@ -380,8 +380,8 @@ tag_lines (const char *ARG_UNUSED(filename),
 }
 
 static void
-tag_counters (const char *ARG_UNUSED(filename),
-	      unsigned ARG_UNUSED(tag), unsigned length ATTRIBUTE_UNUSED)
+tag_counters (const char *ARG_UNUSED (filename),
+	      unsigned ARG_UNUSED (tag), unsigned length ATTRIBUTE_UNUSED)
 {
   static const char *const counter_names[] = GCOV_COUNTER_NAMES;
   unsigned n_counts = GCOV_TAG_COUNTER_NUM (length);
@@ -411,8 +411,8 @@ tag_counters (const char *ARG_UNUSED(filename),
 }
 
 static void
-tag_summary (const char *ARG_UNUSED(filename),
-	     unsigned ARG_UNUSED(tag), unsigned length ATTRIBUTE_UNUSED)
+tag_summary (const char *ARG_UNUSED (filename),
+	     unsigned ARG_UNUSED (tag), unsigned length ATTRIBUTE_UNUSED)
 {
   struct gcov_summary summary;
   unsigned ix;

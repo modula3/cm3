@@ -497,7 +497,7 @@ dump_hard_reg_set (const char *prefix, HARD_REG_SET set)
 
 /* Pretty print INSN.  This is used as a hook.  */
 const char *
-sel_print_insn (const_rtx insn, int ARG_UNUSED(aligned))
+sel_print_insn (const_rtx insn, int ARG_UNUSED (aligned))
 {
   static char buf[80];
 

@@ -13691,7 +13691,7 @@ fold_binary_loc (location_t loc,
    of GOTO_EXPR.  */
 
 static tree
-contains_label_1 (tree *tp, int *walk_subtrees, void *ARG_UNUSED(data))
+contains_label_1 (tree *tp, int *walk_subtrees, void *ARG_UNUSED (data))
 {
   switch (TREE_CODE (*tp))
     {
@@ -14228,7 +14228,7 @@ print_fold_checksum (const_tree expr)
 }
 
 static void
-fold_check_failed (const_tree ARG_UNUSED(expr), const_tree ret ATTRIBUTE_UNUSED)
+fold_check_failed (const_tree ARG_UNUSED (expr), const_tree ret ATTRIBUTE_UNUSED)
 {
   internal_error ("fold check: original tree changed by fold");
 }

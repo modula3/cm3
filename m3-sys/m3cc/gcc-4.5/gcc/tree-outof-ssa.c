@@ -803,7 +803,7 @@ eliminate_useless_phis (void)
    variable.  */
 
 static void
-rewrite_trees (var_map ARG_UNUSED(map))
+rewrite_trees (var_map ARG_UNUSED (map))
 {
 #ifdef ENABLE_CHECKING
   basic_block bb;

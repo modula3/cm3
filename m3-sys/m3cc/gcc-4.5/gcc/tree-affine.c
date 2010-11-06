@@ -567,8 +567,8 @@ struct name_expansion
    results.  */
 
 void
-aff_combination_expand (aff_tree *ARG_UNUSED(comb),
-			struct pointer_map_t **ARG_UNUSED(cache))
+aff_combination_expand (aff_tree *ARG_UNUSED (comb),
+			struct pointer_map_t **ARG_UNUSED (cache))
 {
   unsigned i;
   aff_tree to_add, current, curre;
@@ -689,8 +689,8 @@ tree_to_aff_combination_expand (tree expr, tree type, aff_tree *comb,
    pointer_map_traverse.  */
 
 static bool
-free_name_expansion (const void *ARG_UNUSED(key), void **value,
-		     void *ARG_UNUSED(data))
+free_name_expansion (const void *ARG_UNUSED (key), void **value,
+		     void *ARG_UNUSED (data))
 {
   struct name_expansion *const exp = (struct name_expansion *) *value;
 

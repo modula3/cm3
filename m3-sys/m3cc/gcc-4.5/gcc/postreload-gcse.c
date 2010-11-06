@@ -574,7 +574,7 @@ static int mems_conflict_p;
    to a nonzero value.  */
 
 static void
-find_mem_conflicts (rtx dest, const_rtx ARG_UNUSED(setter),
+find_mem_conflicts (rtx dest, const_rtx ARG_UNUSED (setter),
 		    void *data)
 {
   rtx mem_op = (rtx) data;
@@ -686,7 +686,7 @@ record_last_mem_set_info (rtx insn)
    the SET is taking place.  */
 
 static void
-record_last_set_info (rtx dest, const_rtx ARG_UNUSED(setter), void *data)
+record_last_set_info (rtx dest, const_rtx ARG_UNUSED (setter), void *data)
 {
   rtx last_set_insn = (rtx) data;
 
@@ -1229,7 +1229,7 @@ eliminate_partially_redundant_loads (void)
 
 /* This helper is called via htab_traverse.  */
 static int
-delete_redundant_insns_1 (void **slot, void *ARG_UNUSED(data))
+delete_redundant_insns_1 (void **slot, void *ARG_UNUSED (data))
 {
   struct expr *expr = (struct expr *) *slot;
   struct occr *occr;
@@ -1265,7 +1265,7 @@ delete_redundant_insns (void)
    due to spilling.  */
 
 static void
-gcse_after_reload_main (rtx ARG_UNUSED(f))
+gcse_after_reload_main (rtx ARG_UNUSED (f))
 {
 
   memset (&stats, 0, sizeof (stats));

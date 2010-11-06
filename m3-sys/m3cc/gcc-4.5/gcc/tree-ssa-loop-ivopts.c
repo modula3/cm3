@@ -642,7 +642,7 @@ abnormal_ssa_name_p (tree exp)
 
 static bool
 idx_contains_abnormal_ssa_name_p (tree base, tree *index,
-				  void *ARG_UNUSED(data))
+				  void *ARG_UNUSED (data))
 {
   if (TREE_CODE (base) == ARRAY_REF || TREE_CODE (base) == ARRAY_RANGE_REF)
     {
@@ -2071,7 +2071,7 @@ generic_type_for (tree type)
 
 static struct ivopts_data *fd_ivopts_data;
 static tree
-find_depends (tree *expr_p, int *ARG_UNUSED(ws), void *data)
+find_depends (tree *expr_p, int *ARG_UNUSED (ws), void *data)
 {
   bitmap *depends_on = (bitmap *) data;
   struct version_info *info;
@@ -5479,7 +5479,7 @@ rewrite_use_nonlinear_expr (struct ivopts_data *data,
 
 static bool
 idx_remove_ssa_names (tree base, tree *idx,
-		      void *ARG_UNUSED(data))
+		      void *ARG_UNUSED (data))
 {
   tree *op;
 

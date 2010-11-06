@@ -50,13 +50,13 @@ nogo (void)
 }
 
 void
-mudflap_enqueue_decl (tree ARG_UNUSED(obj))
+mudflap_enqueue_decl (tree ARG_UNUSED (obj))
 {
   nogo ();
 }
 
 void
-mudflap_enqueue_constant (tree ARG_UNUSED(obj))
+mudflap_enqueue_constant (tree ARG_UNUSED (obj))
 {
   nogo ();
 }
@@ -68,14 +68,14 @@ mudflap_finish_file (void)
 }
 
 int
-mf_marked_p (tree ARG_UNUSED(t))
+mf_marked_p (tree ARG_UNUSED (t))
 {
   nogo ();
   return 0;
 }
 
 tree
-mf_mark (tree ARG_UNUSED(t))
+mf_mark (tree ARG_UNUSED (t))
 {
   nogo ();
   return NULL;

@@ -31,79 +31,79 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #include "gthr.h"
 
 int
-pthread_once (pthread_once_t *ARG_UNUSED(once),
+pthread_once (pthread_once_t *ARG_UNUSED (once),
 	      void (*func) (void) ATTRIBUTE_UNUSED)
 {
   return -1;
 }
 
 int
-pthread_key_create (pthread_key_t *ARG_UNUSED(key),
+pthread_key_create (pthread_key_t *ARG_UNUSED (key),
 		    void (*dtor) (void *) ATTRIBUTE_UNUSED)
 {
   return -1;
 }
 
 int
-pthread_key_delete (pthread_key_t ARG_UNUSED(key))
+pthread_key_delete (pthread_key_t ARG_UNUSED (key))
 {
   return 0;
 }
 
 void *
-pthread_getspecific (pthread_key_t ARG_UNUSED(key))
+pthread_getspecific (pthread_key_t ARG_UNUSED (key))
 {
   return 0;
 }
 
 int
-pthread_setspecific (pthread_key_t ARG_UNUSED(key),
-		     const void *ARG_UNUSED(ptr))
+pthread_setspecific (pthread_key_t ARG_UNUSED (key),
+		     const void *ARG_UNUSED (ptr))
 {
   return 0;
 }
 
 int
-pthread_create (pthread_t *ARG_UNUSED(thread),
-		const pthread_attr_t *ARG_UNUSED(attr),
+pthread_create (pthread_t *ARG_UNUSED (thread),
+		const pthread_attr_t *ARG_UNUSED (attr),
 		void *(*start_routine) (void *) ATTRIBUTE_UNUSED,
-		void *ARG_UNUSED(arg))
+		void *ARG_UNUSED (arg))
 {
   return 0;
 }
 
 int
-pthread_join (pthread_t ARG_UNUSED(thread),
-	      void **ARG_UNUSED(value_ptr))
+pthread_join (pthread_t ARG_UNUSED (thread),
+	      void **ARG_UNUSED (value_ptr))
 {
   return 0;
 }
 
 void
-pthread_exit (void *ARG_UNUSED(value_ptr))
+pthread_exit (void *ARG_UNUSED (value_ptr))
 {
 }
 
 int
-pthread_detach (pthread_t ARG_UNUSED(thread))
-{
-  return 0;
-}
-
-int
-pthread_cancel (pthread_t ARG_UNUSED(thread))
+pthread_detach (pthread_t ARG_UNUSED (thread))
 {
   return 0;
 }
 
 int
-pthread_mutex_lock (pthread_mutex_t *ARG_UNUSED(mutex))
+pthread_cancel (pthread_t ARG_UNUSED (thread))
 {
   return 0;
 }
 
 int
-pthread_mutex_trylock (pthread_mutex_t *ARG_UNUSED(mutex))
+pthread_mutex_lock (pthread_mutex_t *ARG_UNUSED (mutex))
+{
+  return 0;
+}
+
+int
+pthread_mutex_trylock (pthread_mutex_t *ARG_UNUSED (mutex))
 {
   return 0;
 }
@@ -111,8 +111,8 @@ pthread_mutex_trylock (pthread_mutex_t *ARG_UNUSED(mutex))
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
 int
-pthread_mutex_timedlock (pthread_mutex_t *ARG_UNUSED(mutex),
-			 const struct timespec *ARG_UNUSED(abs_timeout))
+pthread_mutex_timedlock (pthread_mutex_t *ARG_UNUSED (mutex),
+			 const struct timespec *ARG_UNUSED (abs_timeout))
 {
   return 0;
 }
@@ -120,79 +120,79 @@ pthread_mutex_timedlock (pthread_mutex_t *ARG_UNUSED(mutex),
 #endif /* _POSIX_TIMEOUTS */
 
 int
-pthread_mutex_unlock (pthread_mutex_t *ARG_UNUSED(mutex))
+pthread_mutex_unlock (pthread_mutex_t *ARG_UNUSED (mutex))
 {
   return 0;
 }
 
 int
-pthread_mutexattr_init (pthread_mutexattr_t *ARG_UNUSED(attr))
+pthread_mutexattr_init (pthread_mutexattr_t *ARG_UNUSED (attr))
 {
   return 0;
 }
 
 int
-pthread_mutexattr_settype (pthread_mutexattr_t *ARG_UNUSED(attr),
-			   int ARG_UNUSED(type))
+pthread_mutexattr_settype (pthread_mutexattr_t *ARG_UNUSED (attr),
+			   int ARG_UNUSED (type))
 {
   return 0;
 }
 
 int
-pthread_mutexattr_destroy (pthread_mutexattr_t *ARG_UNUSED(attr))
+pthread_mutexattr_destroy (pthread_mutexattr_t *ARG_UNUSED (attr))
 {
   return 0;
 }
 
 int
-pthread_cond_broadcast (pthread_cond_t *ARG_UNUSED(cond))
+pthread_cond_broadcast (pthread_cond_t *ARG_UNUSED (cond))
 {
   return 0;
 }
 
 int
-pthread_cond_destroy (pthread_cond_t *ARG_UNUSED(cond))
+pthread_cond_destroy (pthread_cond_t *ARG_UNUSED (cond))
 {
   return 0;
 }
 
 int
-pthread_cond_init (pthread_cond_t *ARG_UNUSED(cond),
-		   const pthread_condattr_t *ARG_UNUSED(attr))
+pthread_cond_init (pthread_cond_t *ARG_UNUSED (cond),
+		   const pthread_condattr_t *ARG_UNUSED (attr))
 {
   return 0;
 }
 
 int
-pthread_cond_signal (pthread_cond_t *ARG_UNUSED(cond))
+pthread_cond_signal (pthread_cond_t *ARG_UNUSED (cond))
 {
   return 0;
 }
 
 int
-pthread_cond_wait (pthread_cond_t *ARG_UNUSED(cond),
-		   pthread_mutex_t *ARG_UNUSED(mutex))
+pthread_cond_wait (pthread_cond_t *ARG_UNUSED (cond),
+		   pthread_mutex_t *ARG_UNUSED (mutex))
 {
   return 0;
 }
 
 int
-pthread_cond_timedwait (pthread_cond_t *ARG_UNUSED(cond), 
-			pthread_mutex_t *ARG_UNUSED(mutex),
-			const struct timespec *ARG_UNUSED(abstime))
+pthread_cond_timedwait (pthread_cond_t *ARG_UNUSED (cond), 
+			pthread_mutex_t *ARG_UNUSED (mutex),
+			const struct timespec *ARG_UNUSED (abstime))
 {
   return 0;
 }
 
 int
-pthread_mutex_init (pthread_mutex_t *ARG_UNUSED(mutex),
-		    const pthread_mutexattr_t *ARG_UNUSED(attr))
+pthread_mutex_init (pthread_mutex_t *ARG_UNUSED (mutex),
+		    const pthread_mutexattr_t *ARG_UNUSED (attr))
 {
   return 0;
 }
 
 int
-pthread_mutex_destroy (pthread_mutex_t *ARG_UNUSED(mutex))
+pthread_mutex_destroy (pthread_mutex_t *ARG_UNUSED (mutex))
 {
   return 0;
 }
@@ -206,13 +206,13 @@ pthread_self (void)
 #ifdef _POSIX_PRIORITY_SCHEDULING
 #ifdef _POSIX_THREAD_PRIORITY_SCHEDULING
 int
-sched_get_priority_max (int ARG_UNUSED(policy))
+sched_get_priority_max (int ARG_UNUSED (policy))
 {
   return 0;
 }
 
 int
-sched_get_priority_min (int ARG_UNUSED(policy))
+sched_get_priority_min (int ARG_UNUSED (policy))
 {
   return 0;
 }
@@ -226,37 +226,37 @@ sched_yield (void)
 }
 
 int
-pthread_attr_destroy (pthread_attr_t *ARG_UNUSED(attr))
+pthread_attr_destroy (pthread_attr_t *ARG_UNUSED (attr))
 {
   return 0;
 }
 
 int
-pthread_attr_init (pthread_attr_t *ARG_UNUSED(attr))
+pthread_attr_init (pthread_attr_t *ARG_UNUSED (attr))
 {
   return 0;
 }
 
 int
-pthread_attr_setdetachstate (pthread_attr_t *ARG_UNUSED(attr),
-			     int ARG_UNUSED(detachstate))
+pthread_attr_setdetachstate (pthread_attr_t *ARG_UNUSED (attr),
+			     int ARG_UNUSED (detachstate))
 {
   return 0;
 }
 
 #ifdef _POSIX_THREAD_PRIORITY_SCHEDULING
 int
-pthread_getschedparam (pthread_t ARG_UNUSED(thread),
-		       int *ARG_UNUSED(policy),
-		       struct sched_param *ARG_UNUSED(param))
+pthread_getschedparam (pthread_t ARG_UNUSED (thread),
+		       int *ARG_UNUSED (policy),
+		       struct sched_param *ARG_UNUSED (param))
 {
   return 0;
 }
 
 int
-pthread_setschedparam (pthread_t ARG_UNUSED(thread),
-		       int ARG_UNUSED(policy),
-		       const struct sched_param *ARG_UNUSED(param))
+pthread_setschedparam (pthread_t ARG_UNUSED (thread),
+		       int ARG_UNUSED (policy),
+		       const struct sched_param *ARG_UNUSED (param))
 {
   return 0;
 }

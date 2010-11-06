@@ -159,7 +159,7 @@ may_propagate_copy_into_asm (tree dest)
 
 static void
 replace_exp_1 (use_operand_p op_p, tree val,
-    	       bool ARG_UNUSED(for_propagation))
+    	       bool ARG_UNUSED (for_propagation))
 {
 #if defined ENABLE_CHECKING
   tree op = USE_FROM_PTR (op_p);
