@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Process source files and output type information.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -1230,7 +1228,7 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
    a new type for the field.  */
 
 static type_p
-adjust_field_tree_exp (type_p t, options_p ARG_UNUSED (opt))
+adjust_field_tree_exp (type_p t, options_p opt ATTRIBUTE_UNUSED)
 {
   pair_p flds;
   options_p nodot;

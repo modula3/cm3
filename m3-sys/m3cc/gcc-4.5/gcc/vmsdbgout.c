@@ -1560,7 +1560,7 @@ vmsdbgout_start_source_file (unsigned int lineno, const char *filename)
    At present, unimplemented.  */
 
 static void
-vmsdbgout_end_source_file (unsigned int ARG_UNUSED (lineno))
+vmsdbgout_end_source_file (unsigned int lineno ATTRIBUTE_UNUSED)
 {
   if (write_symbols == VMS_AND_DWARF2_DEBUG)
     (*dwarf2_debug_hooks.end_source_file) (lineno);
@@ -1676,7 +1676,7 @@ vmsdbgout_abstract_function (tree decl)
    VMS Debug debugging info.  */
 
 static void
-vmsdbgout_finish (const char *ARG_UNUSED (main_input_filename))
+vmsdbgout_finish (const char *main_input_filename ATTRIBUTE_UNUSED)
 {
   unsigned int i;
   int totsize;
@@ -1770,7 +1770,7 @@ static char vms_filespec [MAXPATH];
 /* Callback function for filespec style conversion.  */
 
 static int
-translate_unix (char *name, int ARG_UNUSED (type))
+translate_unix (char *name, int type ATTRIBUTE_UNUSED)
 {
   strncpy (filename_buff, name, MAXPATH);
   filename_buff [MAXPATH - 1] = (char) 0;

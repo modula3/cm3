@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Generate the machine mode enumeration and associated tables.
    Copyright (C) 2003, 2004, 2005, 2006, 2007
    Free Software Foundation, Inc.

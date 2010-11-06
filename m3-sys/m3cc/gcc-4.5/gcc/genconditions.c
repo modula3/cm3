@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Process machine description and calculate constant conditions.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.

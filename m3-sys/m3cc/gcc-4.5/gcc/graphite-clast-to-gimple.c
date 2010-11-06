@@ -140,7 +140,7 @@ debug_clast_name_index (clast_name_index_p elt)
 /* Helper function for debug_rename_map.  */
 
 static inline int
-debug_clast_name_indexes_1 (void **slot, void *ARG_UNUSED (s))
+debug_clast_name_indexes_1 (void **slot, void *s ATTRIBUTE_UNUSED)
 {
   struct clast_name_index *entry = (struct clast_name_index *) *slot;
   debug_clast_name_index (entry);

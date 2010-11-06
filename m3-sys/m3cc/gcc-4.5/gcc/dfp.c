@@ -41,32 +41,32 @@ decimal_real_from_string (REAL_VALUE_TYPE *r, const char *s)
 { gcc_unreachable (); }
 
 void
-encode_decimal32 (const struct real_format *ARG_UNUSED (fmt),
+encode_decimal32 (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		  long *buf, const REAL_VALUE_TYPE *r)
 { gcc_unreachable (); }
 
 void
-decode_decimal32 (const struct real_format *ARG_UNUSED (fmt),
+decode_decimal32 (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		  REAL_VALUE_TYPE *r, const long *buf)
 { gcc_unreachable (); }
 
 void
-encode_decimal64 (const struct real_format *ARG_UNUSED (fmt),
+encode_decimal64 (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		  long *buf, const REAL_VALUE_TYPE *r)
 { gcc_unreachable (); }
 
 void
-decode_decimal64 (const struct real_format *ARG_UNUSED (fmt),
+decode_decimal64 (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		  REAL_VALUE_TYPE *r, const long *buf)
 { gcc_unreachable (); }
 
 void
-encode_decimal128 (const struct real_format *ARG_UNUSED (fmt),
+encode_decimal128 (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		   long *buf, const REAL_VALUE_TYPE *r)
 { gcc_unreachable (); }
 
 void
-decode_decimal128 (const struct real_format *ARG_UNUSED (fmt),
+decode_decimal128 (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		   REAL_VALUE_TYPE *r, const long *buf)
 { gcc_unreachable (); }
 
@@ -87,8 +87,8 @@ decimal_real_convert (REAL_VALUE_TYPE *r, enum machine_mode mode,
 void
 decimal_real_to_decimal (char *str, const REAL_VALUE_TYPE *r_orig,
 			 size_t buf_size,
-			 size_t ARG_UNUSED (digits),
-			 int ARG_UNUSED (crop_trailing_zeros))
+			 size_t digits ATTRIBUTE_UNUSED,
+			 int crop_trailing_zeros ATTRIBUTE_UNUSED)
 { gcc_unreachable (); }
 
 void

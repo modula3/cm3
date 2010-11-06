@@ -855,7 +855,7 @@ convert_modes (enum machine_mode mode, enum machine_mode oldmode, rtx x, int uns
 
 int
 can_move_by_pieces (unsigned HOST_WIDE_INT len,
-		    unsigned int ARG_UNUSED (align))
+		    unsigned int align ATTRIBUTE_UNUSED)
 {
   return MOVE_BY_PIECES_P (len, align);
 }
@@ -1473,7 +1473,7 @@ emit_block_move_libcall_fn (int for_call)
 
 static void
 emit_block_move_via_loop (rtx x, rtx y, rtx size,
-			  unsigned int ARG_UNUSED (align))
+			  unsigned int align ATTRIBUTE_UNUSED)
 {
   rtx cmp_label, top_label, iter, x_addr, y_addr, tmp;
   enum machine_mode x_addr_mode
@@ -1909,7 +1909,7 @@ emit_group_move_into_temps (rtx src)
    known.  */
 
 void
-emit_group_store (rtx orig_dst, rtx src, tree ARG_UNUSED (type), int ssize)
+emit_group_store (rtx orig_dst, rtx src, tree type ATTRIBUTE_UNUSED, int ssize)
 {
   rtx *tmps, dst;
   int start, finish, i;
@@ -2471,9 +2471,9 @@ clear_by_pieces (rtx to, unsigned HOST_WIDE_INT len, unsigned int align)
    Return const0_rtx unconditionally.  */
 
 static rtx
-clear_by_pieces_1 (void *ARG_UNUSED (data),
-		   HOST_WIDE_INT ARG_UNUSED (offset),
-		   enum machine_mode ARG_UNUSED (mode))
+clear_by_pieces_1 (void *data ATTRIBUTE_UNUSED,
+		   HOST_WIDE_INT offset ATTRIBUTE_UNUSED,
+		   enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   return const0_rtx;
 }
@@ -2483,8 +2483,8 @@ clear_by_pieces_1 (void *ARG_UNUSED (data),
    rtx with BLKmode).  ALIGN is maximum alignment we can assume.  */
 
 static void
-store_by_pieces_1 (struct store_by_pieces_d *ARG_UNUSED (data),
-		   unsigned int ARG_UNUSED (align))
+store_by_pieces_1 (struct store_by_pieces_d *data ATTRIBUTE_UNUSED,
+		   unsigned int align ATTRIBUTE_UNUSED)
 {
   enum machine_mode to_addr_mode
     = targetm.addr_space.address_mode (MEM_ADDR_SPACE (data->to));
@@ -10038,8 +10038,8 @@ do_store_flag (sepops ops, rtx target, enum machine_mode mode)
    0 otherwise (i.e. if there is no casesi instruction).  */
 int
 try_casesi (tree index_type, tree index_expr, tree minval, tree range,
-	    rtx ARG_UNUSED (table_label), rtx default_label,
-	    rtx ARG_UNUSED (fallback_label))
+	    rtx table_label ATTRIBUTE_UNUSED, rtx default_label,
+	    rtx fallback_label ATTRIBUTE_UNUSED)
 {
   enum machine_mode index_mode = SImode;
   int index_bits = GET_MODE_BITSIZE (index_mode);

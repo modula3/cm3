@@ -6066,8 +6066,8 @@ handle_artificial_attribute (tree *node, tree name,
 
 static tree
 handle_flatten_attribute (tree *node, tree name,
-			  tree ARG_UNUSED (args),
-			  int ARG_UNUSED (flags), bool *no_add_attrs)
+			  tree args ATTRIBUTE_UNUSED,
+			  int flags ATTRIBUTE_UNUSED, bool *no_add_attrs)
 {
   if (TREE_CODE (*node) == FUNCTION_DECL)
     /* Do nothing else, just set the attribute.  We'll get at
@@ -8260,7 +8260,7 @@ c_parse_error (const char *gmsgid, enum cpp_ttype token_type,
    otherwise.  */
 
 bool
-c_cpp_error (cpp_reader *ARG_UNUSED (pfile), int level,
+c_cpp_error (cpp_reader *pfile ATTRIBUTE_UNUSED, int level,
 	     location_t location, unsigned int column_override,
 	     const char *msg, va_list *ap)
 {

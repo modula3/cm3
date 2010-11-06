@@ -243,14 +243,14 @@ prepare_call_address (tree fndecl, rtx funexp, rtx static_chain_value,
    denote registers used by the called function.  */
 
 static void
-emit_call_1 (rtx funexp, tree ARG_UNUSED (fntree), tree fndecl ATTRIBUTE_UNUSED,
-	     tree ARG_UNUSED (funtype),
-	     HOST_WIDE_INT ARG_UNUSED (stack_size),
+emit_call_1 (rtx funexp, tree fntree ATTRIBUTE_UNUSED, tree fndecl ATTRIBUTE_UNUSED,
+	     tree funtype ATTRIBUTE_UNUSED,
+	     HOST_WIDE_INT stack_size ATTRIBUTE_UNUSED,
 	     HOST_WIDE_INT rounded_stack_size,
-	     HOST_WIDE_INT ARG_UNUSED (struct_value_size),
-	     rtx ARG_UNUSED (next_arg_reg), rtx valreg,
+	     HOST_WIDE_INT struct_value_size ATTRIBUTE_UNUSED,
+	     rtx next_arg_reg ATTRIBUTE_UNUSED, rtx valreg,
 	     int old_inhibit_defer_pop, rtx call_fusage, int ecf_flags,
-	     CUMULATIVE_ARGS *ARG_UNUSED (args_so_far))
+	     CUMULATIVE_ARGS *args_so_far ATTRIBUTE_UNUSED)
 {
   rtx rounded_stack_size_rtx = GEN_INT (rounded_stack_size);
   rtx call_insn;
@@ -929,10 +929,10 @@ store_unaligned_arguments_into_pseudos (struct arg_data *args, int num_actuals)
    the thunked-to function.  */
 
 static void
-initialize_argument_information (int ARG_UNUSED (num_actuals),
+initialize_argument_information (int num_actuals ATTRIBUTE_UNUSED,
 				 struct arg_data *args,
 				 struct args_size *args_size,
-				 int ARG_UNUSED (n_named_args),
+				 int n_named_args ATTRIBUTE_UNUSED,
 				 tree exp, tree struct_value_addr_value,
 				 tree fndecl, tree fntype,
 				 CUMULATIVE_ARGS *args_so_far,
@@ -1201,9 +1201,9 @@ initialize_argument_information (int ARG_UNUSED (num_actuals),
 static int
 compute_argument_block_size (int reg_parm_stack_space,
 			     struct args_size *args_size,
-			     tree ARG_UNUSED (fndecl),
-			     tree ARG_UNUSED (fntype),
-			     int ARG_UNUSED (preferred_stack_boundary))
+			     tree fndecl ATTRIBUTE_UNUSED,
+			     tree fntype ATTRIBUTE_UNUSED,
+			     int preferred_stack_boundary ATTRIBUTE_UNUSED)
 {
   int unadjusted_args_size = args_size->constant;
 
@@ -3992,7 +3992,7 @@ emit_library_call_value (rtx orgfun, rtx value,
 
 static int
 store_one_arg (struct arg_data *arg, rtx argblock, int flags,
-	       int ARG_UNUSED (variable_size), int reg_parm_stack_space)
+	       int variable_size ATTRIBUTE_UNUSED, int reg_parm_stack_space)
 {
   tree pval = arg->tree_value;
   rtx reg = 0;
@@ -4344,7 +4344,7 @@ store_one_arg (struct arg_data *arg, rtx argblock, int flags,
 /* Nonzero if we do not know how to pass TYPE solely in registers.  */
 
 bool
-must_pass_in_stack_var_size (enum machine_mode ARG_UNUSED (mode),
+must_pass_in_stack_var_size (enum machine_mode mode ATTRIBUTE_UNUSED,
 			     const_tree type)
 {
   if (!type)

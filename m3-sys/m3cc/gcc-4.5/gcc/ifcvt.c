@@ -250,7 +250,7 @@ block_fallthru (basic_block bb)
    insns were processed.  */
 
 static int
-cond_exec_process_insns (ce_if_block_t *ARG_UNUSED (ce_info),
+cond_exec_process_insns (ce_if_block_t *ce_info ATTRIBUTE_UNUSED,
 			 /* if block information */rtx start,
 			 /* first insn to look at */rtx end,
 			 /* last insn to look at */rtx test,
@@ -3795,7 +3795,7 @@ find_if_case_2 (basic_block test_bb, edge then_edge, edge else_edge)
    Return 1 if a memory is found.  */
 
 static int
-find_memory (rtx *px, void *ARG_UNUSED (data))
+find_memory (rtx *px, void *data ATTRIBUTE_UNUSED)
 {
   return MEM_P (*px);
 }

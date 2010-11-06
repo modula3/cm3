@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Generate checksums of executables for PCH validation
    Copyright (C) 2005, 2007, 2009
    Free Software Foundation, Inc.

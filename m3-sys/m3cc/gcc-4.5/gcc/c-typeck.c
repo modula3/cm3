@@ -6188,7 +6188,7 @@ static struct initializer_stack *initializer_stack;
 /* Prepare to parse and output the initializer for variable DECL.  */
 
 void
-start_init (tree decl, tree ARG_UNUSED (asmspec_tree), int top_level)
+start_init (tree decl, tree asmspec_tree ATTRIBUTE_UNUSED, int top_level)
 {
   const char *locus;
   struct initializer_stack *p = XNEW (struct initializer_stack);
@@ -9928,7 +9928,7 @@ c_objc_common_truthvalue_conversion (location_t location, tree expr)
    required.  */
 
 tree
-c_expr_to_decl (tree expr, bool *ARG_UNUSED (tc), bool *se)
+c_expr_to_decl (tree expr, bool *tc ATTRIBUTE_UNUSED, bool *se)
 {
   if (TREE_CODE (expr) == COMPOUND_LITERAL_EXPR)
     {

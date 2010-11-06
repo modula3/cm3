@@ -174,8 +174,8 @@ c_build_bind_expr (location_t loc, tree block, tree body)
    gimplify_expr.  */
 
 int
-c_gimplify_expr (tree *expr_p, gimple_seq *ARG_UNUSED (pre_p),
-		 gimple_seq *ARG_UNUSED (post_p))
+c_gimplify_expr (tree *expr_p, gimple_seq *pre_p ATTRIBUTE_UNUSED,
+		 gimple_seq *post_p ATTRIBUTE_UNUSED)
 {
   enum tree_code code = TREE_CODE (*expr_p);
 

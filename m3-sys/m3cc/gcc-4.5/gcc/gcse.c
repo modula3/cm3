@@ -938,8 +938,8 @@ static const_rtx gcse_mem_operand;
    gcse_mems_conflict_p to a nonzero value.  */
 
 static void
-mems_conflict_for_gcse_p (rtx dest, const_rtx ARG_UNUSED (setter),
-			  void *ARG_UNUSED (data))
+mems_conflict_for_gcse_p (rtx dest, const_rtx setter ATTRIBUTE_UNUSED,
+			  void *data ATTRIBUTE_UNUSED)
 {
   while (GET_CODE (dest) == SUBREG
 	 || GET_CODE (dest) == ZERO_EXTRACT
@@ -1433,15 +1433,15 @@ hash_scan_set (rtx pat, rtx insn, struct hash_table_d *table)
 }
 
 static void
-hash_scan_clobber (rtx ARG_UNUSED (x), rtx insn ATTRIBUTE_UNUSED,
-		   struct hash_table_d *ARG_UNUSED (table))
+hash_scan_clobber (rtx x ATTRIBUTE_UNUSED, rtx insn ATTRIBUTE_UNUSED,
+		   struct hash_table_d *table ATTRIBUTE_UNUSED)
 {
   /* Currently nothing to do.  */
 }
 
 static void
-hash_scan_call (rtx ARG_UNUSED (x), rtx insn ATTRIBUTE_UNUSED,
-		struct hash_table_d *ARG_UNUSED (table))
+hash_scan_call (rtx x ATTRIBUTE_UNUSED, rtx insn ATTRIBUTE_UNUSED,
+		struct hash_table_d *table ATTRIBUTE_UNUSED)
 {
   /* Currently nothing to do.  */
 }
@@ -1556,7 +1556,7 @@ record_last_reg_set_info (rtx insn, int regno)
    taken off pairwise.  */
 
 static void
-canon_list_insert (rtx ARG_UNUSED (dest), const_rtx unused1 ATTRIBUTE_UNUSED,
+canon_list_insert (rtx dest ATTRIBUTE_UNUSED, const_rtx unused1 ATTRIBUTE_UNUSED,
 		   void * v_insn)
 {
   rtx dest_addr, insn;
@@ -1617,7 +1617,7 @@ record_last_mem_set_info (rtx insn)
    the SET is taking place.  */
 
 static void
-record_last_set_info (rtx dest, const_rtx ARG_UNUSED (setter), void *data)
+record_last_set_info (rtx dest, const_rtx setter ATTRIBUTE_UNUSED, void *data)
 {
   rtx last_set_insn = (rtx) data;
 
@@ -2182,7 +2182,7 @@ static int reg_use_count;
    This doesn't hurt anything but it will slow things down.  */
 
 static void
-find_used_regs (rtx *xptr, void *ARG_UNUSED (data))
+find_used_regs (rtx *xptr, void *data ATTRIBUTE_UNUSED)
 {
   int i, j;
   enum rtx_code code;

@@ -161,7 +161,7 @@ dw2_asm_output_delta (int size, const char *lab1, const char *lab2,
 
 void
 dw2_asm_output_offset (int size, const char *label,
-		       section *ARG_UNUSED (base),
+		       section *base ATTRIBUTE_UNUSED,
 		       const char *comment, ...)
 {
   va_list ap;
@@ -190,8 +190,8 @@ dw2_asm_output_offset (int size, const char *label,
    different section or object file.  */
 
 void
-dw2_asm_output_pcrel (int ARG_UNUSED (size),
-		      const char *ARG_UNUSED (label),
+dw2_asm_output_pcrel (int size ATTRIBUTE_UNUSED,
+		      const char *label ATTRIBUTE_UNUSED,
 		      const char *comment, ...)
 {
   va_list ap;
@@ -705,8 +705,8 @@ dw2_asm_output_data_sleb128 (HOST_WIDE_INT value,
 }
 
 void
-dw2_asm_output_delta_uleb128 (const char *ARG_UNUSED (lab1),
-			      const char *ARG_UNUSED (lab2),
+dw2_asm_output_delta_uleb128 (const char *lab1 ATTRIBUTE_UNUSED,
+			      const char *lab2 ATTRIBUTE_UNUSED,
 			      const char *comment, ...)
 {
   va_list ap;
@@ -735,8 +735,8 @@ dw2_asm_output_delta_uleb128 (const char *ARG_UNUSED (lab1),
 #if 0
 
 void
-dw2_asm_output_delta_sleb128 (const char *ARG_UNUSED (lab1),
-			      const char *ARG_UNUSED (lab2),
+dw2_asm_output_delta_sleb128 (const char *lab1 ATTRIBUTE_UNUSED,
+			      const char *lab2 ATTRIBUTE_UNUSED,
 			      const char *comment, ...)
 {
   va_list ap;
@@ -864,7 +864,7 @@ dw2_force_const_mem (rtx x, bool is_public)
 
 static int
 dw2_output_indirect_constant_1 (splay_tree_node node,
-				void *ARG_UNUSED (data))
+				void *data ATTRIBUTE_UNUSED)
 {
   const char *sym;
   rtx sym_ref;

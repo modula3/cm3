@@ -63,7 +63,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef HAVE_ATTR_enabled
 static inline bool
-get_attr_enabled (rtx ARG_UNUSED (insn))
+get_attr_enabled (rtx insn ATTRIBUTE_UNUSED)
 {
   return true;
 }
@@ -1066,7 +1066,7 @@ register_operand (rtx op, enum machine_mode mode)
 /* Return 1 for a register in Pmode; ignore the tested mode.  */
 
 int
-pmode_register_operand (rtx op, enum machine_mode ARG_UNUSED (mode))
+pmode_register_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   return register_operand (op, Pmode);
 }
@@ -1274,7 +1274,7 @@ pop_operand (rtx op, enum machine_mode mode)
    for mode MODE in address space AS.  */
 
 int
-memory_address_addr_space_p (enum machine_mode ARG_UNUSED (mode),
+memory_address_addr_space_p (enum machine_mode mode ATTRIBUTE_UNUSED,
 			     rtx addr, addr_space_t as)
 {
 #ifdef GO_IF_LEGITIMATE_ADDRESS

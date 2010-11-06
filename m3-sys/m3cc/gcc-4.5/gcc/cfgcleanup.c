@@ -945,7 +945,7 @@ merge_memattrs (rtx x, rtx y)
 /* Return true if I1 and I2 are equivalent and thus can be crossjumped.  */
 
 static bool
-old_insns_match_p (int ARG_UNUSED (mode), rtx i1, rtx i2)
+old_insns_match_p (int mode ATTRIBUTE_UNUSED, rtx i1, rtx i2)
 {
   rtx p1, p2;
 
@@ -1025,7 +1025,7 @@ old_insns_match_p (int ARG_UNUSED (mode), rtx i1, rtx i2)
    store the head of the blocks in *F1 and *F2.  */
 
 static int
-flow_find_cross_jump (int ARG_UNUSED (mode), basic_block bb1,
+flow_find_cross_jump (int mode ATTRIBUTE_UNUSED, basic_block bb1,
 		      basic_block bb2, rtx *f1, rtx *f2)
 {
   rtx i1, i2, last1, last2, afterlast1, afterlast2;

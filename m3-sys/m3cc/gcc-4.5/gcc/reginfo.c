@@ -693,7 +693,7 @@ memory_move_secondary_cost (enum machine_mode mode, enum reg_class rclass,
   int partial_cost = 0;
   /* We need a memory reference to feed to SECONDARY... macros.  */
   /* mem may be unused even if the SECONDARY_ macros are defined.  */
-  rtx ARG_UNUSED (mem) = top_of_stack[(int) mode];
+  rtx mem ATTRIBUTE_UNUSED = top_of_stack[(int) mode];
 
   altclass = secondary_reload_class (in ? 1 : 0, rclass, mode, mem);
 
@@ -724,7 +724,7 @@ memory_move_secondary_cost (enum machine_mode mode, enum reg_class rclass,
    enough to save nregs.  If we can't find one, return VOIDmode.
    If CALL_SAVED is true, only consider modes that are call saved.  */
 enum machine_mode
-choose_hard_reg_mode (unsigned int ARG_UNUSED (regno),
+choose_hard_reg_mode (unsigned int regno ATTRIBUTE_UNUSED,
 		      unsigned int nregs, bool call_saved)
 {
   unsigned int /* enum machine_mode */ m;
@@ -1064,7 +1064,7 @@ setup_reg_classes (int regno,
 static void reg_scan_mark_refs (rtx, rtx);
 
 void
-reg_scan (rtx f, unsigned int ARG_UNUSED (nregs))
+reg_scan (rtx f, unsigned int nregs ATTRIBUTE_UNUSED)
 {
   rtx insn;
 
@@ -1353,7 +1353,7 @@ init_subregs_of_mode (void)
    mode.  */
 bool
 invalid_mode_change_p (unsigned int regno,
-		       enum reg_class ARG_UNUSED (rclass),
+		       enum reg_class rclass ATTRIBUTE_UNUSED,
 		       enum machine_mode from)
 {
   struct subregs_of_mode_node dummy, *node;

@@ -125,7 +125,7 @@ record_voperand_set (bitmap global, bitmap *local, unsigned int uid)
 
 static void
 dse_initialize_block_local_data (struct dom_walk_data *walk_data,
-				 basic_block ARG_UNUSED (bb),
+				 basic_block bb ATTRIBUTE_UNUSED,
 				 bool recycled)
 {
   struct dse_block_local_data *bd
@@ -374,7 +374,7 @@ dse_enter_block (struct dom_walk_data *walk_data, basic_block bb)
 
 static void
 dse_leave_block (struct dom_walk_data *walk_data,
-		 basic_block ARG_UNUSED (bb))
+		 basic_block bb ATTRIBUTE_UNUSED)
 {
   struct dse_block_local_data *bd
     = (struct dse_block_local_data *)

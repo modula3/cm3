@@ -1675,7 +1675,7 @@ gen_parallel_loop (struct loop *loop, htab_t reduction_list,
 /* Returns true when LOOP contains vector phi nodes.  */
 
 static bool
-loop_has_vector_phi_nodes (struct loop *ARG_UNUSED (loop))
+loop_has_vector_phi_nodes (struct loop *loop ATTRIBUTE_UNUSED)
 {
   unsigned i;
   basic_block *bbs = get_loop_body_in_dom_order (loop);

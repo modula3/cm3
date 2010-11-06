@@ -432,7 +432,7 @@ gen_raw_REG (enum machine_mode mode, int regno)
    special_rtx in gengenrtl.c as well.  */
 
 rtx
-gen_rtx_CONST_INT (enum machine_mode ARG_UNUSED (mode), HOST_WIDE_INT arg)
+gen_rtx_CONST_INT (enum machine_mode mode ATTRIBUTE_UNUSED, HOST_WIDE_INT arg)
 {
   void **slot;
 

@@ -209,7 +209,7 @@ pdr_subscript_dim (poly_dr_p pdr, graphite_dim_t s)
 /* The dimension in PDR containing the loop iterator ITER.  */
 
 static inline ppl_dimension_type
-pdr_iterator_dim (poly_dr_p ARG_UNUSED (pdr), graphite_dim_t iter)
+pdr_iterator_dim (poly_dr_p pdr ATTRIBUTE_UNUSED, graphite_dim_t iter)
 {
   return iter;
 }
@@ -491,7 +491,7 @@ pbb_nb_local_vars (const struct poly_bb *pbb)
 /* The dimension in the domain of PBB containing the iterator ITER.  */
 
 static inline ppl_dimension_type
-pbb_iterator_dim (poly_bb_p ARG_UNUSED (pbb), graphite_dim_t iter)
+pbb_iterator_dim (poly_bb_p pbb ATTRIBUTE_UNUSED, graphite_dim_t iter)
 {
   return iter;
 }
@@ -509,7 +509,7 @@ pbb_parameter_dim (poly_bb_p pbb, graphite_dim_t param)
    containing the scattering iterator SCATTER.  */
 
 static inline ppl_dimension_type
-psco_scattering_dim (poly_bb_p ARG_UNUSED (pbb), graphite_dim_t scatter)
+psco_scattering_dim (poly_bb_p pbb ATTRIBUTE_UNUSED, graphite_dim_t scatter)
 {
   gcc_assert (scatter < pbb_nb_scattering_orig (pbb));
   return scatter;
@@ -519,7 +519,7 @@ psco_scattering_dim (poly_bb_p ARG_UNUSED (pbb), graphite_dim_t scatter)
    containing the scattering iterator SCATTER.  */
 
 static inline ppl_dimension_type
-psct_scattering_dim (poly_bb_p ARG_UNUSED (pbb), graphite_dim_t scatter)
+psct_scattering_dim (poly_bb_p pbb ATTRIBUTE_UNUSED, graphite_dim_t scatter)
 {
   gcc_assert (scatter <= pbb_nb_scattering_transform (pbb));
   return scatter;

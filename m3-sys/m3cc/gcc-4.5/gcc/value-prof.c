@@ -91,7 +91,7 @@ static bool gimple_ic_transform (gimple);
 /* Allocate histogram value.  */
 
 static histogram_value
-gimple_alloc_histogram_value (struct function *ARG_UNUSED (fun),
+gimple_alloc_histogram_value (struct function *fun ATTRIBUTE_UNUSED,
 			      enum hist_type type, gimple stmt, tree value)
 {
    histogram_value hist = (histogram_value) xcalloc (1, sizeof (*hist));
@@ -424,7 +424,7 @@ verify_histograms (void)
    walk verify that it was reached via statement walk.  */
 
 static int
-free_hist (void **slot, void *ARG_UNUSED (data))
+free_hist (void **slot, void *data ATTRIBUTE_UNUSED)
 {
   histogram_value hist = *(histogram_value *) slot;
   free (hist->hvalue.counters);

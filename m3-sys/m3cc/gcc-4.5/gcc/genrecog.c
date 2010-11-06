@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Generate code from machine description to recognize rtl as insns.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009
@@ -2411,16 +2409,16 @@ write_subroutine (struct decision_head *head, enum routine_type type)
     {
     case RECOG:
       printf ("%sint\n\
-recog%s (rtx ARG_UNUSED (x0),\n\trtx ARG_UNUSED (insn),\n\tint *ARG_UNUSED (pnum_clobbers))\n", s_or_e, extension);
+recog%s (rtx x0 ATTRIBUTE_UNUSED,\n\trtx insn ATTRIBUTE_UNUSED,\n\tint *pnum_clobbers ATTRIBUTE_UNUSED)\n", s_or_e, extension);
       break;
     case SPLIT:
       printf ("%srtx\n\
-split%s (rtx ARG_UNUSED (x0), rtx ARG_UNUSED (insn))\n",
+split%s (rtx x0 ATTRIBUTE_UNUSED, rtx insn ATTRIBUTE_UNUSED)\n",
 	      s_or_e, extension);
       break;
     case PEEPHOLE2:
       printf ("%srtx\n\
-peephole2%s (rtx ARG_UNUSED (x0),\n\trtx ARG_UNUSED (insn),\n\tint *ARG_UNUSED (_pmatch_len))\n",
+peephole2%s (rtx x0 ATTRIBUTE_UNUSED,\n\trtx insn ATTRIBUTE_UNUSED,\n\tint *_pmatch_len ATTRIBUTE_UNUSED)\n",
 	      s_or_e, extension);
       break;
     }

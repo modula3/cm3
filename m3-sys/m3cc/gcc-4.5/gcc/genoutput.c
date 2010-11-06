@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Generate code from to output assembler insns as recognized from rtl.
    Copyright (C) 1987, 1988, 1992, 1994, 1995, 1997, 1998, 1999, 2000, 2002,
    2003, 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
@@ -670,7 +668,7 @@ process_template (struct data *d, const char *template_code)
       d->output_format = INSN_OUTPUT_FORMAT_FUNCTION;
 
       puts ("\nstatic const char *");
-      printf ("output_%d (rtx *ARG_UNUSED (operands), rtx ARG_UNUSED (insn))\n",
+      printf ("output_%d (rtx *operands ATTRIBUTE_UNUSED, rtx insn ATTRIBUTE_UNUSED)\n",
 	      d->code_number);
       puts ("{");
       print_rtx_ptr_loc (template_code);

@@ -1108,7 +1108,7 @@ skip_unspecs_callback (const_rtx *xx, const_rtx *yy, rtx *nx, rtx* ny)
    to support ia64 speculation.  When changes are needed, new rtx X and new mode
    NMODE are written, and the callback returns true.  */
 static int
-hash_with_unspec_callback (const_rtx x, enum machine_mode ARG_UNUSED (mode),
+hash_with_unspec_callback (const_rtx x, enum machine_mode mode ATTRIBUTE_UNUSED,
                            rtx *nx, enum machine_mode* nmode)
 {
   if (GET_CODE (x) == UNSPEC
@@ -2996,7 +2996,7 @@ static struct
 
 /* Start analyzing dependencies of INSN.  */
 static void
-has_dependence_start_insn (insn_t ARG_UNUSED (insn))
+has_dependence_start_insn (insn_t insn ATTRIBUTE_UNUSED)
 {
   gcc_assert (has_dependence_data.where == DEPS_IN_NOWHERE);
 
@@ -3014,7 +3014,7 @@ has_dependence_finish_insn (void)
 
 /* Start analyzing dependencies of LHS.  */
 static void
-has_dependence_start_lhs (rtx ARG_UNUSED (lhs))
+has_dependence_start_lhs (rtx lhs ATTRIBUTE_UNUSED)
 {
   gcc_assert (has_dependence_data.where == DEPS_IN_INSN);
 
@@ -3031,7 +3031,7 @@ has_dependence_finish_lhs (void)
 
 /* Start analyzing dependencies of RHS.  */
 static void
-has_dependence_start_rhs (rtx ARG_UNUSED (rhs))
+has_dependence_start_rhs (rtx rhs ATTRIBUTE_UNUSED)
 {
   gcc_assert (has_dependence_data.where == DEPS_IN_INSN);
 
@@ -3126,10 +3126,10 @@ has_dependence_note_reg_use (int regno)
 
 /* Note a memory dependence.  */
 static void
-has_dependence_note_mem_dep (rtx ARG_UNUSED (mem),
-			     rtx ARG_UNUSED (pending_mem),
-			     insn_t ARG_UNUSED (pending_insn),
-			     ds_t ARG_UNUSED (ds))
+has_dependence_note_mem_dep (rtx mem ATTRIBUTE_UNUSED,
+			     rtx pending_mem ATTRIBUTE_UNUSED,
+			     insn_t pending_insn ATTRIBUTE_UNUSED,
+			     ds_t ds ATTRIBUTE_UNUSED)
 {
   if (!sched_insns_conditions_mutex_p (has_dependence_data.pro,
 				       VINSN_INSN_RTX (has_dependence_data.con)))
@@ -3142,8 +3142,8 @@ has_dependence_note_mem_dep (rtx ARG_UNUSED (mem),
 
 /* Note a dependence.  */
 static void
-has_dependence_note_dep (insn_t ARG_UNUSED (pro),
-			 ds_t ARG_UNUSED (ds))
+has_dependence_note_dep (insn_t pro ATTRIBUTE_UNUSED,
+			 ds_t ds ATTRIBUTE_UNUSED)
 {
   if (!sched_insns_conditions_mutex_p (has_dependence_data.pro,
 				       VINSN_INSN_RTX (has_dependence_data.con)))

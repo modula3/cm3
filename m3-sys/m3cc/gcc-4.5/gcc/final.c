@@ -238,7 +238,7 @@ static int align_fuzz (rtx, rtx, int, unsigned);
 /* Initialize data in final at the beginning of a compilation.  */
 
 void
-init_final (const char *ARG_UNUSED (filename))
+init_final (const char *filename ATTRIBUTE_UNUSED)
 {
   app_on = 0;
   final_sequence = 0;
@@ -253,14 +253,14 @@ init_final (const char *ARG_UNUSED (filename))
    If not overridden for epilogue code, then the function body itself
    contains return instructions wherever needed.  */
 void
-default_function_pro_epilogue (FILE *ARG_UNUSED (file),
-			       HOST_WIDE_INT ARG_UNUSED (size))
+default_function_pro_epilogue (FILE *file ATTRIBUTE_UNUSED,
+			       HOST_WIDE_INT size ATTRIBUTE_UNUSED)
 {
 }
 
 /* Default target hook that outputs nothing to a stream.  */
 void
-no_asm_to_stream (FILE *ARG_UNUSED (file))
+no_asm_to_stream (FILE *file ATTRIBUTE_UNUSED)
 {
 }
 
@@ -376,7 +376,7 @@ init_insn_lengths (void)
    get its actual length.  Otherwise, use FALLBACK_FN to calculate the
    length.  */
 static inline int
-get_attr_length_1 (rtx ARG_UNUSED (insn),
+get_attr_length_1 (rtx insn ATTRIBUTE_UNUSED,
 		   int (*fallback_fn) (rtx) ATTRIBUTE_UNUSED)
 {
 #ifdef HAVE_ATTR_length
@@ -843,7 +843,7 @@ struct rtl_opt_pass pass_compute_alignments =
    slots.  */
 
 void
-shorten_branches (rtx ARG_UNUSED (first))
+shorten_branches (rtx first ATTRIBUTE_UNUSED)
 {
   rtx insn;
   int max_uid;
@@ -1519,8 +1519,8 @@ dwarf2_debug_info_emitted_p (tree decl)
      test and compare insns.  */
 
 void
-final_start_function (rtx ARG_UNUSED (first), FILE *file,
-		      int ARG_UNUSED (optimize))
+final_start_function (rtx first ATTRIBUTE_UNUSED, FILE *file,
+		      int optimize ATTRIBUTE_UNUSED)
 {
   block_depth = 0;
 
@@ -1590,7 +1590,7 @@ final_start_function (rtx ARG_UNUSED (first), FILE *file,
 }
 
 static void
-profile_after_prologue (FILE *ARG_UNUSED (file))
+profile_after_prologue (FILE *file ATTRIBUTE_UNUSED)
 {
 #ifndef PROFILE_BEFORE_PROLOGUE
   if (crtl->profile)
@@ -1599,7 +1599,7 @@ profile_after_prologue (FILE *ARG_UNUSED (file))
 }
 
 static void
-profile_function (FILE *ARG_UNUSED (file))
+profile_function (FILE *file ATTRIBUTE_UNUSED)
 {
 #ifndef NO_PROFILE_COUNTERS
 # define NO_PROFILE_COUNTERS	0
@@ -1814,8 +1814,8 @@ call_from_call_insn (rtx insn)
    first.  */
 
 rtx
-final_scan_insn (rtx insn, FILE *file, int ARG_UNUSED (optimize),
-		 int ARG_UNUSED (nopeepholes), int *seen)
+final_scan_insn (rtx insn, FILE *file, int optimize ATTRIBUTE_UNUSED,
+		 int nopeepholes ATTRIBUTE_UNUSED, int *seen)
 {
 #ifdef HAVE_cc0
   rtx set;
@@ -3443,7 +3443,7 @@ output_asm_label (rtx x)
    assemble_external.  */
 
 static int
-mark_symbol_ref_as_used (rtx *xp, void *ARG_UNUSED (dummy))
+mark_symbol_ref_as_used (rtx *xp, void *dummy ATTRIBUTE_UNUSED)
 {
   rtx x = *xp;
 
@@ -3483,7 +3483,7 @@ mark_symbol_refs_as_used (rtx x)
    by PRINT_OPERAND.  */
 
 static void
-output_operand (rtx x, int ARG_UNUSED (code))
+output_operand (rtx x, int code ATTRIBUTE_UNUSED)
 {
   if (x && GET_CODE (x) == SUBREG)
     x = alter_subreg (&x);

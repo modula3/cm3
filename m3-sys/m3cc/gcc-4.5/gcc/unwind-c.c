@@ -114,7 +114,7 @@ PERSONALITY_FUNCTION (int, _Unwind_Action, _Unwind_Exception_Class,
 _Unwind_Reason_Code
 PERSONALITY_FUNCTION (int version,
 		      _Unwind_Action actions,
-		      _Unwind_Exception_Class ARG_UNUSED (exception_class),
+		      _Unwind_Exception_Class exception_class ATTRIBUTE_UNUSED,
 		      struct _Unwind_Exception *ue_header,
 		      struct _Unwind_Context *context)
 #endif

@@ -753,7 +753,7 @@ expand_builtin_setjmp_setup (rtx buf_addr, rtx receiver_label)
    also called directly by the SJLJ exception handling code.  */
 
 void
-expand_builtin_setjmp_receiver (rtx ARG_UNUSED (receiver_label))
+expand_builtin_setjmp_receiver (rtx receiver_label ATTRIBUTE_UNUSED)
 {
   rtx chain;
 
@@ -3682,7 +3682,7 @@ expand_builtin_strncpy (tree exp, rtx target)
    constant.  */
 
 rtx
-builtin_memset_read_str (void *data, HOST_WIDE_INT ARG_UNUSED (offset),
+builtin_memset_read_str (void *data, HOST_WIDE_INT offset ATTRIBUTE_UNUSED,
 			 enum machine_mode mode)
 {
   const char *c = (const char *) data;
@@ -3699,7 +3699,7 @@ builtin_memset_read_str (void *data, HOST_WIDE_INT ARG_UNUSED (offset),
    4 bytes wide, return the RTL for 0x01010101*data.  */
 
 static rtx
-builtin_memset_gen_str (void *data, HOST_WIDE_INT ARG_UNUSED (offset),
+builtin_memset_gen_str (void *data, HOST_WIDE_INT offset ATTRIBUTE_UNUSED,
 			enum machine_mode mode)
 {
   rtx target, coeff;
@@ -4407,7 +4407,7 @@ std_build_builtin_va_list (void)
 /* The "standard" abi va_list is va_list_type_node.  */
 
 tree
-std_fn_abi_va_list (tree ARG_UNUSED (fndecl))
+std_fn_abi_va_list (tree fndecl ATTRIBUTE_UNUSED)
 {
   return va_list_type_node;
 }
@@ -5033,7 +5033,7 @@ expand_builtin_profile_func (bool exitp)
 /* Expand a call to __builtin___clear_cache.  */
 
 static rtx
-expand_builtin___clear_cache (tree ARG_UNUSED (exp))
+expand_builtin___clear_cache (tree exp ATTRIBUTE_UNUSED)
 {
 #ifndef HAVE_clear_cache
 #ifdef CLEAR_INSN_CACHE
@@ -7970,7 +7970,7 @@ fold_builtin_pow (location_t loc, tree fndecl, tree arg0, tree arg1, tree type)
 /* Fold a builtin function call to powi, powif, or powil with argument ARG.
    Return NULL_TREE if no simplification can be made.  */
 static tree
-fold_builtin_powi (location_t loc, tree ARG_UNUSED (fndecl),
+fold_builtin_powi (location_t loc, tree fndecl ATTRIBUTE_UNUSED,
 		   tree arg0, tree arg1, tree type)
 {
   if (!validate_arg (arg0, REAL_TYPE)
@@ -9647,7 +9647,7 @@ fold_builtin_unordered_cmp (location_t loc, tree fndecl, tree arg0, tree arg1,
    function returns NULL_TREE if no simplification was possible.  */
 
 static tree
-fold_builtin_0 (location_t loc, tree fndecl, bool ARG_UNUSED (ignore))
+fold_builtin_0 (location_t loc, tree fndecl, bool ignore ATTRIBUTE_UNUSED)
 {
   tree type = TREE_TYPE (TREE_TYPE (fndecl));
   enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
@@ -10474,7 +10474,7 @@ fold_builtin_n (location_t loc, tree fndecl, tree *args, int nargs, bool ignore)
 
 static tree
 fold_builtin_varargs (location_t loc, tree fndecl, tree exp,
-		      bool ARG_UNUSED (ignore))
+		      bool ignore ATTRIBUTE_UNUSED)
 {
   enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
   tree ret = NULL_TREE;
@@ -10853,11 +10853,11 @@ validate_arglist (const_tree callexpr, ...)
 /* Default target-specific builtin expander that does nothing.  */
 
 rtx
-default_expand_builtin (tree ARG_UNUSED (exp),
-			rtx ARG_UNUSED (target),
-			rtx ARG_UNUSED (subtarget),
-			enum machine_mode ARG_UNUSED (mode),
-			int ARG_UNUSED (ignore))
+default_expand_builtin (tree exp ATTRIBUTE_UNUSED,
+			rtx target ATTRIBUTE_UNUSED,
+			rtx subtarget ATTRIBUTE_UNUSED,
+			enum machine_mode mode ATTRIBUTE_UNUSED,
+			int ignore ATTRIBUTE_UNUSED)
 {
   return NULL_RTX;
 }
@@ -11159,7 +11159,7 @@ fold_builtin_strpbrk (location_t loc, tree s1, tree s2, tree type)
    form of the builtin function call.  */
 
 static tree
-fold_builtin_strcat (location_t ARG_UNUSED (loc), tree dst, tree src)
+fold_builtin_strcat (location_t loc ATTRIBUTE_UNUSED, tree dst, tree src)
 {
   if (!validate_arg (dst, POINTER_TYPE)
       || !validate_arg (src, POINTER_TYPE))
@@ -12947,7 +12947,7 @@ gimple_fold_builtin_snprintf_chk (gimple stmt, tree maxlen,
 
 static tree
 gimple_fold_builtin_varargs (tree fndecl, gimple stmt,
-			     bool ARG_UNUSED (ignore))
+			     bool ignore ATTRIBUTE_UNUSED)
 {
   enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
   tree ret = NULL_TREE;
