@@ -2808,7 +2808,7 @@ __GMP_DECLSPEC extern const unsigned char  modlimb_invert_table[128];
 
 
 /* Define stuff for longlong.h.  */
-#if HAVE_ATTRIBUTE_MODE
+#if HAVE_ATTRIBUTE_MODE && defined(__GNUC__)
 typedef unsigned int UQItype	__attribute__ ((mode (QI)));
 typedef		 int SItype	__attribute__ ((mode (SI)));
 typedef unsigned int USItype	__attribute__ ((mode (SI)));
