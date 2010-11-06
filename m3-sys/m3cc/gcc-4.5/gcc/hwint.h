@@ -62,14 +62,17 @@ extern char sizeof_long_long_must_be_8[sizeof(long long) == 8 ? 1 : -1];
 #if HOST_BITS_PER_LONG >= 64
 #   define HOST_BITS_PER_WIDE_INT HOST_BITS_PER_LONG
 #   define HOST_WIDE_INT long
+#   define wide_abs labs
 #else
 # if HOST_BITS_PER_LONGLONG >= 64
 #   define HOST_BITS_PER_WIDE_INT HOST_BITS_PER_LONGLONG
 #   define HOST_WIDE_INT long long
+#   define wide_abs llabs
 # else
 #  if HOST_BITS_PER___INT64 >= 64
 #   define HOST_BITS_PER_WIDE_INT HOST_BITS_PER___INT64
 #   define HOST_WIDE_INT __int64
+#   define wide_abs _abs64
 #  else
     #error "Unable to find a suitable type for HOST_WIDE_INT"
 #  endif
