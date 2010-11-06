@@ -3731,7 +3731,12 @@ M3CG_HANDLER (DECLARE_SUBRANGE)
   if (M3_TYPES)
   {
     tree super_type = m3_type_for_size (size, min < 0);
-    gcc_assert (super_type);
+    if (!super_type)
+    {
+      fprintf (stderr, "no type for size:0x%lX min:0x%lX max:0x%lX\n",
+               (ULONG)size, (ULONG)min, (ULONG)max);
+      gcc_assert (super_type);
+    }
     if (M3_TYPES_SUBRANGE_NEW)
     {
       tree type = make_node (INTEGER_TYPE);
@@ -3742,7 +3747,6 @@ M3CG_HANDLER (DECLARE_SUBRANGE)
     }
     else
     {
-      gcc_assert (super_type);
       set_typeid_to_tree (my_id, super_type);
     }
   }
