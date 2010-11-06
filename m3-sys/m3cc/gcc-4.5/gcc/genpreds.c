@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    - prototype declarations for operand predicates (tm-preds.h)
    - function definitions of operand predicates, if defined new-style
@@ -181,7 +183,7 @@ write_predicate_subfunction (struct pred_data *p)
   p->exp = and_exp;
 
   printf ("static inline int\n"
-	  "%s_1 (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)\n",
+	  "%s_1 (rtx op, enum machine_mode ARG_UNUSED (mode))\n",
 	  p->name);
   print_rtx_ptr_loc (p->c_block);
   if (p->c_block[0] == '{')
@@ -643,7 +645,7 @@ write_one_predicate_function (struct pred_data *p)
 
   /* A normal predicate can legitimately not look at enum machine_mode
      if it accepts only CONST_INTs and/or CONST_DOUBLEs.  */
-  printf ("int\n%s (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)\n{\n",
+  printf ("int\n%s (rtx op, enum machine_mode ARG_UNUSED (mode))\n{\n",
 	  p->name);
   write_predicate_stmts (p->exp);
   fputs ("}\n\n", stdout);
@@ -1012,7 +1014,7 @@ write_insn_constraint_len (void)
   unsigned int i;
 
   puts ("static inline size_t\n"
-	"insn_constraint_len (char fc, const char *str ATTRIBUTE_UNUSED)\n"
+	"insn_constraint_len (char fc, const char *ARG_UNUSED (str))\n"
 	"{\n"
 	"  switch (fc)\n"
 	"    {");

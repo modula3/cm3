@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    - some #define configuration flags.
    Copyright (C) 1987, 1991, 1997, 1998, 1999, 2000, 2003, 2004, 2007

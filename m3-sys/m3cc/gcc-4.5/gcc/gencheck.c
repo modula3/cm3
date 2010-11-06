@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate check macros for tree codes.
    Copyright (C) 1998, 1999, 2000, 2002, 2003, 2004, 2007, 2008
    Free Software Foundation, Inc.

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code from machine description to emit insns as rtl.
    Copyright (C) 1987, 1988, 1991, 1994, 1995, 1997, 1998, 1999, 2000, 2001,
    2003, 2004, 2005, 2007, 2008, 2009 Free Software Foundation, Inc.
@@ -410,9 +412,9 @@ gen_insn (rtx insn, int lineno)
   if (operands)
     for (i = 0; i < operands; i++)
       if (i)
-	printf (",\n\trtx operand%d ATTRIBUTE_UNUSED", i);
+	printf (",\n\trtx ARG_UNUSED (operand%d)", i);
       else
-	printf ("rtx operand%d ATTRIBUTE_UNUSED", i);
+	printf ("rtx ARG_UNUSED (operand%d)", i);
   else
     printf ("void");
   printf (")\n");
@@ -593,7 +595,8 @@ gen_split (rtx split)
   int operands;
   const char *const name =
     ((GET_CODE (split) == DEFINE_PEEPHOLE2) ? "peephole2" : "split");
-  const char *unused;
+  const char *unused1 = "";
+  const char *unused2 = "";
   char *used;
 
   if (XVEC (split, 0) == 0)
@@ -607,7 +610,11 @@ gen_split (rtx split)
 
   max_operand_vec (split, 2);
   operands = MAX (max_opno, MAX (max_dup_opno, max_scratch_opno)) + 1;
-  unused = (operands == 0 ? " ATTRIBUTE_UNUSED" : "");
+  if (operands == 0)
+  {
+    unused1 = " ARG_UNUSED (";
+    unused2 = " )";
+  }
   used = XCNEWVEC (char, operands);
 
   /* Output the prototype, function name and argument declarations.  */
@@ -615,14 +622,14 @@ gen_split (rtx split)
     {
       printf ("extern rtx gen_%s_%d (rtx, rtx *);\n",
 	      name, insn_code_number);
-      printf ("rtx\ngen_%s_%d (rtx curr_insn ATTRIBUTE_UNUSED, rtx *operands%s)\n",
-	      name, insn_code_number, unused);
+      printf ("rtx\ngen_%s_%d (rtx ARG_UNUSED (curr_insn), rtx *%soperands%s)\n",
+	      name, insn_code_number, unused1, unused2);
     }
   else
     {
       printf ("extern rtx gen_split_%d (rtx, rtx *);\n", insn_code_number);
-      printf ("rtx\ngen_split_%d (rtx curr_insn ATTRIBUTE_UNUSED, rtx *operands%s)\n",
-	      insn_code_number, unused);
+      printf ("rtx\ngen_split_%d (rtx ARG_UNUSED (curr_insn), rtx *%soperands%s)\n",
+	      insn_code_number, unused1, unused2);
     }
   printf ("{\n");
 
@@ -709,7 +716,7 @@ output_add_clobbers (void)
   struct clobber_ent *ent;
   int i;
 
-  printf ("\n\nvoid\nadd_clobbers (rtx pattern ATTRIBUTE_UNUSED, int insn_code_number)\n");
+  printf ("\n\nvoid\nadd_clobbers (rtx ARG_UNUSED (pattern), int insn_code_number)\n");
   printf ("{\n");
   printf ("  switch (insn_code_number)\n");
   printf ("    {\n");

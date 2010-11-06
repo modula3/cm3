@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    a series of #define statements, one for each constant named in
    a (define_constants ...) pattern.
