@@ -90,12 +90,12 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
     if equal($CC, "") and equal($CXX, "") and not equal(try_exec("type gcc > /dev/null"), 0)
         if ((FileExists("/usr/bin/cc") or equal("type cc > /dev/null", 0))
                 and (FileExists("/usr/bin/CC") or equal("type CC > /dev/null", 0)))
-          if ("type cc > /dev/null", 0)
+          if equal ("type cc > /dev/null", 0)
             env = "CC=cc " & env
           else
             env = "CC=/usr/bin/cc " & env
           end
-          if ("type CC > /dev/null", 0)
+          if equal ("type CC > /dev/null", 0)
             env = "CXX=CC " & env
           else
             env = "CXX=/usr/bin/CC " & env
