@@ -248,7 +248,7 @@ So instead we use the macro below and test it against specific values.  */
    macros freely, and know that they will come into play for the
    version of gcc in which they are supported.  */
 
-#if (__GNUC__ < 4)
+#if (GCC_VERSION < 2007)
 # define __attribute__(x)
 #endif
 
@@ -279,17 +279,23 @@ So instead we use the macro below and test it against specific values.  */
 # endif
 #endif
 
-#ifndef ATTRIBUTE_UNUSED
-#define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
-#endif /* ATTRIBUTE_UNUSED */
-
 /* Before GCC 3.4, the C++ frontend couldn't parse attributes placed after the
-   identifier name.  */
+   identifier name. ATTRIBUTE_UNUSED is frequently used instead of
+   ARG_UNUSED. */
+
+#ifndef ATTRIBUTE_UNUSED
 #if ! defined(__cplusplus) || (GCC_VERSION >= 3004)
+#define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
+#else
+#define ATTRIBUTE_UNUSED /* nothing */
+#endif
+#endif
+
+#ifdef __cplusplus
+# define ARG_UNUSED(NAME) /* nothing */
+#else
 # define ARG_UNUSED(NAME) NAME ATTRIBUTE_UNUSED
-#else /* !__cplusplus || GNUC >= 3.4 */
-# define ARG_UNUSED(NAME) NAME
-#endif /* !__cplusplus || GNUC >= 3.4 */
+#endif
 
 #ifndef ATTRIBUTE_NORETURN
 #define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
