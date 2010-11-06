@@ -83,7 +83,7 @@ struct du_chain
   /* The location inside the insn.  */
   rtx *loc;
   /* The register class required by the insn at this location.  */
-  ENUM_BITFIELD(reg_class) cl : 16;
+  ENUM_BITFIELD(reg_class, cl, 16);
 };
 
 enum scan_actions

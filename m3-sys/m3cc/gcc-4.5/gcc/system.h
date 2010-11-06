@@ -563,9 +563,11 @@ extern int vsnprintf(char *, size_t, const char *, va_list);
    FIXME: provide a complete autoconf test for buggy enum bitfields.  */
 
 #if (GCC_VERSION > 2000)
-#define ENUM_BITFIELD(TYPE) __extension__ enum TYPE
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) __extension__ enum TYPE NAME : SIZE
+#elif defined(__cplusplus)
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME
 #else
-#define ENUM_BITFIELD(TYPE) unsigned int
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int
 #endif
 
 #ifndef offsetof
