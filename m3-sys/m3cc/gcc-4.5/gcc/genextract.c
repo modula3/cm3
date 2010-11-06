@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code from machine description to extract operands from insn as rtl.
    Copyright (C) 1987, 1991, 1992, 1993, 1997, 1998, 1999, 2000, 2003,
    2004, 2005, 2007, 2008
