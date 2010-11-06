@@ -2058,7 +2058,7 @@ analyze_function (struct cgraph_node *node)
 
 /* Called when new function is inserted to callgraph late.  */
 static void
-add_new_function (struct cgraph_node *node, void *ARG_UNUSED (data))
+add_new_function (struct cgraph_node *node, void *data ATTRIBUTE_UNUSED)
 {
   analyze_function (node);
 }

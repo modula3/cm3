@@ -25,9 +25,9 @@ along with GCC; see the file COPYING3.  If not see
 
 /* Filter argc and argv before processing by the gcc driver proper.  */
 void
-lang_specific_driver (int *ARG_UNUSED (in_argc),
-		      const char *const **ARG_UNUSED (in_argv),
-		      int *ARG_UNUSED (in_added_libraries))
+lang_specific_driver (int *in_argc ATTRIBUTE_UNUSED,
+		      const char *const **in_argv ATTRIBUTE_UNUSED,
+		      int *in_added_libraries ATTRIBUTE_UNUSED)
 {
   /* Systems which use the NeXT runtime by default should arrange
      for the shared libgcc to be used when -fgnu-runtime is passed

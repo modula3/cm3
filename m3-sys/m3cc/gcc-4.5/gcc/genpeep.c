@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Generate code from machine description to perform peephole optimizations.
    Copyright (C) 1987, 1989, 1992, 1997, 1998, 1999, 2000, 2003, 2004,
    2007  Free Software Foundation, Inc.
@@ -384,7 +382,7 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"tm-constrs.h\"\n\n");
 
   printf("char quash_apple_ranlib_warning_peephole;\n\n");
-
+  
   printf ("#ifdef HAVE_peephole\n");
   printf ("extern rtx peep_operand[];\n\n");
   printf ("#define operands peep_operand\n\n");

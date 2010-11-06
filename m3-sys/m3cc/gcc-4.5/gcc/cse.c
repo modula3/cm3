@@ -6455,7 +6455,7 @@ cse_extended_basic_block (struct cse_basic_block_data *ebb_data)
    Return 0 otherwise.  */
 
 int
-cse_main (rtx ARG_UNUSED (f), int nregs)
+cse_main (rtx f ATTRIBUTE_UNUSED, int nregs)
 {
   struct cse_basic_block_data ebb_data;
   basic_block bb;
@@ -6711,7 +6711,7 @@ is_dead_reg (rtx *loc, void *data)
 
 /* Return true if set is live.  */
 static bool
-set_live_p (rtx set, rtx ARG_UNUSED (insn), /* Only used with HAVE_cc0.  */
+set_live_p (rtx set, rtx insn ATTRIBUTE_UNUSED, /* Only used with HAVE_cc0.  */
 	    int *counts)
 {
 #ifdef HAVE_cc0

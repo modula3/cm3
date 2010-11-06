@@ -1540,7 +1540,7 @@ set_nonzero_bits_and_sign_copies (rtx x, const_rtx set, void *data)
    will return 1.  */
 
 static int
-can_combine_p (rtx insn, rtx i3, rtx ARG_UNUSED (pred), rtx succ,
+can_combine_p (rtx insn, rtx i3, rtx pred ATTRIBUTE_UNUSED, rtx succ,
 	       rtx *pdest, rtx *psrc)
 {
   int i;
@@ -9001,9 +9001,9 @@ simplify_and_const_int (rtx x, enum machine_mode mode, rtx varop,
 
 static rtx
 reg_nonzero_bits_for_combine (const_rtx x, enum machine_mode mode,
-			      const_rtx ARG_UNUSED (known_x),
-			      enum machine_mode ARG_UNUSED (known_mode),
-			      unsigned HOST_WIDE_INT ARG_UNUSED (known_ret),
+			      const_rtx known_x ATTRIBUTE_UNUSED,
+			      enum machine_mode known_mode ATTRIBUTE_UNUSED,
+			      unsigned HOST_WIDE_INT known_ret ATTRIBUTE_UNUSED,
 			      unsigned HOST_WIDE_INT *nonzero)
 {
   rtx tem;
@@ -9078,10 +9078,10 @@ reg_nonzero_bits_for_combine (const_rtx x, enum machine_mode mode,
 
 static rtx
 reg_num_sign_bit_copies_for_combine (const_rtx x, enum machine_mode mode,
-				     const_rtx ARG_UNUSED (known_x),
+				     const_rtx known_x ATTRIBUTE_UNUSED,
 				     enum machine_mode known_mode
 				     ATTRIBUTE_UNUSED,
-				     unsigned int ARG_UNUSED (known_ret),
+				     unsigned int known_ret ATTRIBUTE_UNUSED,
 				     unsigned int *result)
 {
   rtx tem;
@@ -11979,7 +11979,7 @@ reg_truncated_to_mode (enum machine_mode mode, const_rtx x)
    Return -1 if traversing *P is complete or 0 otherwise.  */
 
 static int
-record_truncated_value (rtx *p, void *ARG_UNUSED (data))
+record_truncated_value (rtx *p, void *data ATTRIBUTE_UNUSED)
 {
   rtx x = *p;
   enum machine_mode truncated_mode;
@@ -12024,7 +12024,7 @@ record_truncated_value (rtx *p, void *ARG_UNUSED (data))
    SUBREGs.  */
 
 static void
-record_truncated_values (rtx *x, void *ARG_UNUSED (data))
+record_truncated_values (rtx *x, void *data ATTRIBUTE_UNUSED)
 {
   for_each_rtx (x, record_truncated_value, NULL);
 }
@@ -12296,7 +12296,7 @@ static int reg_dead_flag;
    reg_dead_flag to 1 if X is a CLOBBER and to -1 it is a SET.  */
 
 static void
-reg_dead_at_p_1 (rtx dest, const_rtx x, void *ARG_UNUSED (data))
+reg_dead_at_p_1 (rtx dest, const_rtx x, void *data ATTRIBUTE_UNUSED)
 {
   unsigned int regno, endregno;
 

@@ -1145,7 +1145,7 @@ mx_register_decls (tree decl, gimple_seq seq, location_t location)
 /* Process every variable mentioned in BIND_EXPRs.  */
 static tree
 mx_xfn_xform_decls (gimple_stmt_iterator *gsi,
-		    bool *ARG_UNUSED (handled_operands_p),
+		    bool *handled_operands_p ATTRIBUTE_UNUSED,
 		    struct walk_stmt_info *wi)
 {
   struct mf_xform_decls_data *d = (struct mf_xform_decls_data *) wi->info;

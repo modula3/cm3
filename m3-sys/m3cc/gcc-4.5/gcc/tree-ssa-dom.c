@@ -872,7 +872,7 @@ restore_vars_to_original_value (void)
    threading code with a simple API for simplifying statements.  */
 static tree
 simplify_stmt_for_jump_threading (gimple stmt,
-				  gimple ARG_UNUSED (within_stmt))
+				  gimple within_stmt ATTRIBUTE_UNUSED)
 {
   return lookup_avail_expr (stmt, false);
 }
@@ -1628,7 +1628,7 @@ record_edge_info (basic_block bb)
 }
 
 static void
-dom_opt_enter_block (struct dom_walk_data *ARG_UNUSED (walk_data),
+dom_opt_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
 		     basic_block bb)
 {
   gimple_stmt_iterator gsi;

@@ -634,7 +634,7 @@ pop_visibility (int kind)
    specified on the command line.  */
 
 static void
-handle_pragma_visibility (cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_visibility (cpp_reader *dummy ATTRIBUTE_UNUSED)
 {
   /* Form is #pragma GCC visibility push(hidden)|pop */
   tree x;
@@ -679,7 +679,7 @@ handle_pragma_visibility (cpp_reader *ARG_UNUSED (dummy))
 #endif
 
 static void
-handle_pragma_diagnostic(cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_diagnostic(cpp_reader *ARG_UNUSED(dummy))
 {
   const char *kind_string, *option_string;
   unsigned int option_index;
@@ -727,7 +727,7 @@ handle_pragma_diagnostic(cpp_reader *ARG_UNUSED (dummy))
 
 /*  Parse #pragma GCC target (xxx) to set target specific options.  */
 static void
-handle_pragma_target(cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_target(cpp_reader *ARG_UNUSED(dummy))
 {
   enum cpp_ttype token;
   tree x;
@@ -795,7 +795,7 @@ handle_pragma_target(cpp_reader *ARG_UNUSED (dummy))
 
 /* Handle #pragma GCC optimize to set optimization options.  */
 static void
-handle_pragma_optimize (cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_optimize (cpp_reader *ARG_UNUSED(dummy))
 {
   enum cpp_ttype token;
   tree x;
@@ -882,7 +882,7 @@ static GTY(()) struct opt_stack * options_stack;
    options.  */
 
 static void
-handle_pragma_push_options (cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_push_options (cpp_reader *ARG_UNUSED(dummy))
 {
   enum cpp_ttype token;
   tree x = 0;
@@ -912,7 +912,7 @@ handle_pragma_push_options (cpp_reader *ARG_UNUSED (dummy))
    optimization options from a previous push_options.  */
 
 static void
-handle_pragma_pop_options (cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_pop_options (cpp_reader *ARG_UNUSED(dummy))
 {
   enum cpp_ttype token;
   tree x = 0;
@@ -959,7 +959,7 @@ handle_pragma_pop_options (cpp_reader *ARG_UNUSED (dummy))
    optimization options to the original options used on the command line.  */
 
 static void
-handle_pragma_reset_options (cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_reset_options (cpp_reader *ARG_UNUSED(dummy))
 {
   enum cpp_ttype token;
   tree x = 0;
@@ -994,7 +994,7 @@ handle_pragma_reset_options (cpp_reader *ARG_UNUSED (dummy))
 /* Print a plain user-specified message.  */
 
 static void
-handle_pragma_message (cpp_reader *ARG_UNUSED (dummy))
+handle_pragma_message (cpp_reader *ARG_UNUSED(dummy))
 {
   enum cpp_ttype token;
   tree x, message = 0;

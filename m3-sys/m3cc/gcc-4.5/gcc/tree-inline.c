@@ -3116,7 +3116,7 @@ estimate_move_cost (tree type)
 
 static int
 estimate_operator_cost (enum tree_code code, eni_weights *weights,
-			tree ARG_UNUSED (op1), tree op2)
+			tree op1 ATTRIBUTE_UNUSED, tree op2)
 {
   switch (code)
     {
@@ -4116,7 +4116,7 @@ optimize_inline_calls (tree fn)
 /* Passed to walk_tree.  Copies the node pointed to, if appropriate.  */
 
 tree
-copy_tree_r (tree *tp, int *walk_subtrees, void *ARG_UNUSED (data))
+copy_tree_r (tree *tp, int *walk_subtrees, void *data ATTRIBUTE_UNUSED)
 {
   enum tree_code code = TREE_CODE (*tp);
   enum tree_code_class cl = TREE_CODE_CLASS (code);
@@ -4223,7 +4223,7 @@ remap_save_expr (tree *tp, void *st_, int *walk_subtrees)
    really an `copy_body_data *').  */
 
 static tree
-mark_local_for_remap_r (tree *tp, int *ARG_UNUSED (walk_subtrees),
+mark_local_for_remap_r (tree *tp, int *walk_subtrees ATTRIBUTE_UNUSED,
 			void *data)
 {
   copy_body_data *id = (copy_body_data *) data;
@@ -4355,7 +4355,7 @@ unsave_expr_now (tree expr)
 
 static tree
 mark_local_labels_stmt (gimple_stmt_iterator *gsip,
-		        bool *ARG_UNUSED (handled_ops_p),
+		        bool *handled_ops_p ATTRIBUTE_UNUSED,
 		        struct walk_stmt_info *wi)
 {
   copy_body_data *id = (copy_body_data *) wi->info;
@@ -4429,7 +4429,7 @@ replace_locals_op (tree *tp, int *walk_subtrees, void *data)
 
 static tree
 replace_locals_stmt (gimple_stmt_iterator *gsip,
-		     bool *ARG_UNUSED (handled_ops_p),
+		     bool *handled_ops_p ATTRIBUTE_UNUSED,
 		     struct walk_stmt_info *wi)
 {
   copy_body_data *id = (copy_body_data *) wi->info;
@@ -4511,7 +4511,7 @@ copy_gimple_seq_and_replace_locals (gimple_seq seq)
 /* Allow someone to determine if SEARCH is a child of TOP from gdb.  */
 
 static tree
-debug_find_tree_1 (tree *tp, int *ARG_UNUSED (walk_subtrees), void *data)
+debug_find_tree_1 (tree *tp, int *walk_subtrees ATTRIBUTE_UNUSED, void *data)
 {
   if (*tp == data)
     return (tree) data;

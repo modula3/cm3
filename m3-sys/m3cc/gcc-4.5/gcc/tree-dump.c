@@ -988,7 +988,7 @@ dump_flag_name (int phase)
    dump_begin.  */
 
 void
-dump_end (int ARG_UNUSED (phase), FILE *stream)
+dump_end (int phase ATTRIBUTE_UNUSED, FILE *stream)
 {
   fclose (stream);
 }

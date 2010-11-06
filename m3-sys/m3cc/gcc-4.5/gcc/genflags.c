@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Generate from machine description:
    - some flags HAVE_... saying which simple standard instructions are
    available for this machine.

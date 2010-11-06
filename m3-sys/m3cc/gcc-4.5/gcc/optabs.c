@@ -5808,7 +5808,7 @@ gen_int_to_fp_conv_libfunc (convert_optab tab,
 
 static void
 gen_ufloat_conv_libfunc (convert_optab tab,
-			 const char *ARG_UNUSED (opname),
+			 const char *opname ATTRIBUTE_UNUSED,
 			 enum machine_mode tmode,
 			 enum machine_mode fmode)
 {
@@ -5947,7 +5947,7 @@ gen_trunc_conv_libfunc (convert_optab tab,
 
 static void
 gen_extend_conv_libfunc (convert_optab tab,
-			 const char *ARG_UNUSED (opname),
+			 const char *opname ATTRIBUTE_UNUSED,
 			 enum machine_mode tmode,
 			 enum machine_mode fmode)
 {

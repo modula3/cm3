@@ -3784,7 +3784,7 @@ encode_ibm_extended (const struct real_format *fmt, long *buf,
 }
 
 static void
-decode_ibm_extended (const struct real_format *ARG_UNUSED (fmt), REAL_VALUE_TYPE *r,
+decode_ibm_extended (const struct real_format *fmt ATTRIBUTE_UNUSED, REAL_VALUE_TYPE *r,
 		     const long *buf)
 {
   REAL_VALUE_TYPE u, v;
@@ -4152,7 +4152,7 @@ static void decode_vax_g (const struct real_format *,
 			  REAL_VALUE_TYPE *, const long *);
 
 static void
-encode_vax_f (const struct real_format *ARG_UNUSED (fmt), long *buf,
+encode_vax_f (const struct real_format *fmt ATTRIBUTE_UNUSED, long *buf,
 	      const REAL_VALUE_TYPE *r)
 {
   unsigned long sign, exp, sig, image;
@@ -4188,7 +4188,7 @@ encode_vax_f (const struct real_format *ARG_UNUSED (fmt), long *buf,
 }
 
 static void
-decode_vax_f (const struct real_format *ARG_UNUSED (fmt),
+decode_vax_f (const struct real_format *fmt ATTRIBUTE_UNUSED,
 	      REAL_VALUE_TYPE *r, const long *buf)
 {
   unsigned long image = buf[0] & 0xffffffff;
@@ -4208,7 +4208,7 @@ decode_vax_f (const struct real_format *ARG_UNUSED (fmt),
 }
 
 static void
-encode_vax_d (const struct real_format *ARG_UNUSED (fmt), long *buf,
+encode_vax_d (const struct real_format *fmt ATTRIBUTE_UNUSED, long *buf,
 	      const REAL_VALUE_TYPE *r)
 {
   unsigned long image0, image1, sign = r->sign << 15;
@@ -4262,7 +4262,7 @@ encode_vax_d (const struct real_format *ARG_UNUSED (fmt), long *buf,
 }
 
 static void
-decode_vax_d (const struct real_format *ARG_UNUSED (fmt),
+decode_vax_d (const struct real_format *fmt ATTRIBUTE_UNUSED,
 	      REAL_VALUE_TYPE *r, const long *buf)
 {
   unsigned long image0, image1;
@@ -4308,7 +4308,7 @@ decode_vax_d (const struct real_format *ARG_UNUSED (fmt),
 }
 
 static void
-encode_vax_g (const struct real_format *ARG_UNUSED (fmt), long *buf,
+encode_vax_g (const struct real_format *fmt ATTRIBUTE_UNUSED, long *buf,
 	      const REAL_VALUE_TYPE *r)
 {
   unsigned long image0, image1, sign = r->sign << 15;
@@ -4362,7 +4362,7 @@ encode_vax_g (const struct real_format *ARG_UNUSED (fmt), long *buf,
 }
 
 static void
-decode_vax_g (const struct real_format *ARG_UNUSED (fmt),
+decode_vax_g (const struct real_format *fmt ATTRIBUTE_UNUSED,
 	      REAL_VALUE_TYPE *r, const long *buf)
 {
   unsigned long image0, image1;
@@ -4472,54 +4472,54 @@ const struct real_format vax_g_format =
 
 /* Encode real R into a single precision DFP value in BUF.  */
 static void
-encode_decimal_single (const struct real_format *ARG_UNUSED (fmt),
-                       long *ARG_UNUSED (buf),
-		       const REAL_VALUE_TYPE *ARG_UNUSED (r))
+encode_decimal_single (const struct real_format *fmt ATTRIBUTE_UNUSED,
+                       long *buf ATTRIBUTE_UNUSED,
+		       const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
 {
   encode_decimal32 (fmt, buf, r);
 }
 
 /* Decode a single precision DFP value in BUF into a real R.  */
 static void
-decode_decimal_single (const struct real_format *ARG_UNUSED (fmt),
-		       REAL_VALUE_TYPE *ARG_UNUSED (r),
-		       const long *ARG_UNUSED (buf))
+decode_decimal_single (const struct real_format *fmt ATTRIBUTE_UNUSED,
+		       REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
+		       const long *buf ATTRIBUTE_UNUSED)
 {
   decode_decimal32 (fmt, r, buf);
 }
 
 /* Encode real R into a double precision DFP value in BUF.  */
 static void
-encode_decimal_double (const struct real_format *ARG_UNUSED (fmt),
-		       long *ARG_UNUSED (buf),
-		       const REAL_VALUE_TYPE *ARG_UNUSED (r))
+encode_decimal_double (const struct real_format *fmt ATTRIBUTE_UNUSED,
+		       long *buf ATTRIBUTE_UNUSED,
+		       const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
 {
   encode_decimal64 (fmt, buf, r);
 }
 
 /* Decode a double precision DFP value in BUF into a real R.  */
 static void
-decode_decimal_double (const struct real_format *ARG_UNUSED (fmt),
-		       REAL_VALUE_TYPE *ARG_UNUSED (r),
-		       const long *ARG_UNUSED (buf))
+decode_decimal_double (const struct real_format *fmt ATTRIBUTE_UNUSED,
+		       REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
+		       const long *buf ATTRIBUTE_UNUSED)
 {
   decode_decimal64 (fmt, r, buf);
 }
 
 /* Encode real R into a quad precision DFP value in BUF.  */
 static void
-encode_decimal_quad (const struct real_format *ARG_UNUSED (fmt),
-		     long *ARG_UNUSED (buf),
-		     const REAL_VALUE_TYPE *ARG_UNUSED (r))
+encode_decimal_quad (const struct real_format *fmt ATTRIBUTE_UNUSED,
+		     long *buf ATTRIBUTE_UNUSED,
+		     const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
 {
   encode_decimal128 (fmt, buf, r);
 }
 
 /* Decode a quad precision DFP value in BUF into a real R.  */
 static void
-decode_decimal_quad (const struct real_format *ARG_UNUSED (fmt),
-		     REAL_VALUE_TYPE *ARG_UNUSED (r),
-		     const long *ARG_UNUSED (buf))
+decode_decimal_quad (const struct real_format *fmt ATTRIBUTE_UNUSED,
+		     REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
+		     const long *buf ATTRIBUTE_UNUSED)
 {
   decode_decimal128 (fmt, r, buf);
 }
@@ -4762,14 +4762,14 @@ static void decode_internal (const struct real_format *,
 			     REAL_VALUE_TYPE *, const long *);
 
 static void
-encode_internal (const struct real_format *ARG_UNUSED (fmt), long *buf,
+encode_internal (const struct real_format *fmt ATTRIBUTE_UNUSED, long *buf,
 		 const REAL_VALUE_TYPE *r)
 {
   memcpy (buf, r, sizeof (*r));
 }
 
 static void
-decode_internal (const struct real_format *ARG_UNUSED (fmt),
+decode_internal (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		 REAL_VALUE_TYPE *r, const long *buf)
 {
   memcpy (r, buf, sizeof (*r));
