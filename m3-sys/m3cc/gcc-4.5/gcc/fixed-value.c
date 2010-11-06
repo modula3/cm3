@@ -46,44 +46,50 @@ fixed_hash (const FIXED_VALUE_TYPE *f)
 }
 
 void
-fixed_from_string (FIXED_VALUE_TYPE *f, const char *str, enum machine_mode mode)
+fixed_from_string (FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED, const char *str ATTRIBUTE_UNUSED, enum machine_mode mode ATTRIBUTE_UNUSED)
   { gcc_unreachable (); }
 
 void
-fixed_to_decimal (char *str, const FIXED_VALUE_TYPE *f_orig,
-		  size_t buf_size)
+fixed_to_decimal (char *str ATTRIBUTE_UNUSED, const FIXED_VALUE_TYPE *f_orig ATTRIBUTE_UNUSED,
+		  size_t buf_size ATTRIBUTE_UNUSED)
   { gcc_unreachable (); }
 
 bool
-fixed_arithmetic (FIXED_VALUE_TYPE *f, int icode, const FIXED_VALUE_TYPE *op0,
-		  const FIXED_VALUE_TYPE *op1, bool sat_p)
-  { gcc_unreachable (); }
+fixed_arithmetic (FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED, int icode ATTRIBUTE_UNUSED, const FIXED_VALUE_TYPE *op0 ATTRIBUTE_UNUSED,
+		  const FIXED_VALUE_TYPE *op1 ATTRIBUTE_UNUSED, bool sat_p ATTRIBUTE_UNUSED)
+  { gcc_unreachable ();
+    return 0; }
 
 bool
-fixed_compare (int icode, const FIXED_VALUE_TYPE *op0,
-	       const FIXED_VALUE_TYPE *op1)
-  { gcc_unreachable (); }
+fixed_compare (int icode ATTRIBUTE_UNUSED, const FIXED_VALUE_TYPE *op0 ATTRIBUTE_UNUSED,
+	       const FIXED_VALUE_TYPE *op1 ATTRIBUTE_UNUSED)
+  { gcc_unreachable ();
+    return 0; }
 
 bool
-fixed_convert (FIXED_VALUE_TYPE *f, enum machine_mode mode,
-               const FIXED_VALUE_TYPE *a, bool sat_p)
-  { gcc_unreachable (); }
+fixed_convert (FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED, enum machine_mode mode ATTRIBUTE_UNUSED,
+               const FIXED_VALUE_TYPE *a ATTRIBUTE_UNUSED, bool sat_p ATTRIBUTE_UNUSED)
+  { gcc_unreachable ();
+    return 0; }
 
 bool
-fixed_convert_from_int (FIXED_VALUE_TYPE *f, enum machine_mode mode,
-			double_int a, bool unsigned_p, bool sat_p)
-  { gcc_unreachable (); }
+fixed_convert_from_int (FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED, enum machine_mode mode ATTRIBUTE_UNUSED,
+			double_int a ATTRIBUTE_UNUSED, bool unsigned_p ATTRIBUTE_UNUSED, bool sat_p ATTRIBUTE_UNUSED)
+  { gcc_unreachable ();
+    return 0; }
 
 bool
-fixed_convert_from_real (FIXED_VALUE_TYPE *f, enum machine_mode mode,
-			 const REAL_VALUE_TYPE *a, bool sat_p)
-  { gcc_unreachable (); }
+fixed_convert_from_real (FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED, enum machine_mode mode ATTRIBUTE_UNUSED,
+			 const REAL_VALUE_TYPE *a ATTRIBUTE_UNUSED, bool sat_p ATTRIBUTE_UNUSED)
+  { gcc_unreachable ();
+    return 0; }
 
 void
-real_convert_from_fixed (REAL_VALUE_TYPE *r, enum machine_mode mode,
-			 const FIXED_VALUE_TYPE *f)
+real_convert_from_fixed (REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED, enum machine_mode mode ATTRIBUTE_UNUSED,
+			 const FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED)
   { gcc_unreachable (); }
 
 bool
-fixed_isneg (const FIXED_VALUE_TYPE *f)
-  { gcc_unreachable (); }
+fixed_isneg (const FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED)
+  { gcc_unreachable ();
+    return 0; }
