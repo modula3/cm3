@@ -3001,7 +3001,7 @@ expand_builtin_pow (tree exp, rtx target, rtx subtarget)
 	    {
 	      op2 = expand_expr (narg0, subtarget, VOIDmode, EXPAND_NORMAL);
 	      op2 = force_reg (mode, op2);
-	      op2 = expand_powi (op2, mode, abs (n / 2));
+	      op2 = expand_powi (op2, mode, wide_abs (n / 2));
 	      op = expand_simple_binop (mode, MULT, op, op2, NULL_RTX,
 					0, OPTAB_LIB_WIDEN);
 	      /* If the original exponent was negative, reciprocate the
@@ -3041,14 +3041,14 @@ expand_builtin_pow (tree exp, rtx target, rtx subtarget)
 	  tree call_expr = build_call_nofold_loc (EXPR_LOCATION (exp), fn, 1,
 						  narg0);
 	  op = expand_builtin (call_expr, NULL_RTX, subtarget, mode, 0);
-	  if (abs (n) % 3 == 2)
+	  if (wide_abs (n) % 3 == 2)
 	    op = expand_simple_binop (mode, MULT, op, op, op,
 				      0, OPTAB_LIB_WIDEN);
 	  if (n != 1)
 	    {
 	      op2 = expand_expr (narg0, subtarget, VOIDmode, EXPAND_NORMAL);
 	      op2 = force_reg (mode, op2);
-	      op2 = expand_powi (op2, mode, abs (n / 3));
+	      op2 = expand_powi (op2, mode, wide_abs (n / 3));
 	      op = expand_simple_binop (mode, MULT, op, op2, NULL_RTX,
 					0, OPTAB_LIB_WIDEN);
 	      /* If the original exponent was negative, reciprocate the
