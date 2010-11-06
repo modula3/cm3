@@ -43,6 +43,7 @@ lto_start_compression (void (*callback) (const char *, unsigned, void *),
 		       void *opaque)
 {
   gcc_unreachable ();
+  return 0;
 }
 
 void
@@ -63,6 +64,7 @@ lto_start_uncompression (void (*callback) (const char *, unsigned, void *),
 			 void *opaque)
 {
   gcc_unreachable ();
+  return 0;
 }
 
 void
