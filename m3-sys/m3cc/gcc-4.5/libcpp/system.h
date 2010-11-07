@@ -353,7 +353,7 @@ extern void abort (void);
 #elif (GCC_VERSION > 2000)
 #define ENUM_BITFIELD(TYPE, NAME, SIZE) __extension__ enum TYPE NAME : SIZE
 #else
-#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME : SIZE
 #endif
 
 #ifndef offsetof
