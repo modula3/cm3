@@ -68,6 +68,7 @@ extern "C" {
 #include "opts.h"
 #include "options.h"
 #include "debug.h"
+#include "convert.h"
 #if GCC42
 } /* extern "C" */
 #endif
@@ -498,7 +499,7 @@ static const struct { ULONG type_id; tree* t; } builtin_uids[] = {
   { UID_NULL, &t_void }
 };
 
-#define STRING_AND_LENGTH(a) (a), sizeof(a) - 1
+#define STRING_AND_LENGTH(a) a, sizeof(a) - 1
 
 static const struct { tree* t; char name[9]; size_t length; } builtin_types[T_LAST] = {
 /* This is ordered per m3_type. It is also used by typestr. */
@@ -2357,6 +2358,7 @@ trace_var (PCSTR name, tree var)
     fprintf (stderr, " %s%s%s", name, colon, m3_get_var_trace_name (var));
   }
 }
+
 /*------------------------------------------------------------ procedures ---*/
 
 static tree
@@ -2393,7 +2395,7 @@ trace_proc (PCSTR, tree p)
 static tree
 scan_label (void)
 {
-  long i = get_int ();
+  ptrdiff_t i = get_int ();
 
   if (i < 0)
     return NULL;
@@ -3451,8 +3453,9 @@ M3CG_HANDLER (DECLARE_ARRAY)
 
   if (M3_TYPES)
   {
-    gcc_assert (get_typeid_to_tree (index_id));
-    gcc_assert (get_typeid_to_tree (elts_id));
+    /* These will fail if we turn off some of the type code, e.g. M3_TYPES_ENUM. */
+    /* gcc_assert (get_typeid_to_tree (index_id)); */
+    /* gcc_assert (get_typeid_to_tree (elts_id)); */
     /* This is wrong and could be much better. */
     set_typeid_to_tree (my_id, m3_build_type_id (T_struct, size, 1, NO_UID));
   }
@@ -4622,10 +4625,10 @@ M3CG_HANDLER (LOAD_ADDRESS)
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   TREE_USED (var) = true;
-  var = m3_build1 (ADDR_EXPR, t_addr, var);
+  tree xvar = m3_build1 (ADDR_EXPR, t_addr, var);
   if (offset)
-    var = m3_build2 (POINTER_PLUS_EXPR, t_addr, var, size_int (offset));
-  EXPR_PUSH (var);
+    xvar = m3_build2 (POINTER_PLUS_EXPR, t_addr, xvar, size_int (offset));
+  EXPR_PUSH (xvar);
 }
 
 M3CG_HANDLER (LOAD_INDIRECT)
@@ -4681,9 +4684,10 @@ M3CG_HANDLER (LOAD_INTEGER)
 
 M3CG_HANDLER (LOAD_FLOAT)
 {
-  if (TREE_TYPE (f) != type)
-    f = m3_convert (type, f);
-  EXPR_PUSH (f);
+  tree a = f;
+  if (TREE_TYPE (a) != type)
+    a = m3_convert (type, a);
+  EXPR_PUSH (a);
 }
 
 static void
@@ -4764,11 +4768,11 @@ M3CG_HANDLER (ROUND)
 {
   REAL_VALUE_TYPE r;
 
+  memset (&r, 0, sizeof(r));
   tree arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
                        m3_cast (src_t, EXPR_REF (-1))));
 
-  memset (&r, 0, sizeof(r));
   real_from_string (&r, "0.5");
   tree pos = build_real (src_t, r);
 
@@ -4890,7 +4894,7 @@ m3cg_set_member_ref (tree type, tree* out_bit_in_word)
       return set[bit_index / grain];
     }
   */
-  
+
   tree bit         = m3_cast (t_word, EXPR_REF (-1));
   tree set         = m3_cast (t_set, EXPR_REF (-2));
 
@@ -5722,20 +5726,24 @@ m3_parse_file (int)
     op = (M3CG_opcode)get_int ();
     if (op >= LAST_OPCODE)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %u", op, m3cg_lineno);
-      
-    trace_op (op);
+    
+    if (option_trace_all)
+      trace_op (op);
     ops.push_back(m3cg_op_t::create(op));
     ops.back()->read ();
     gcc_assert (input_cursor <= input_len);
     m3cg_lineno += 1;
   }
-  
+
   ops_t::iterator e = ops.end();
   ops_t::iterator it;
   m3cg_lineno = 1;
   for (it = ops.begin(); it != e; ++it)
   {
-    trace_op (op);
+    if (m3cg_lineno == m3_break_lineno)
+      m3_breakpoint ();
+    if (option_trace_all)
+      trace_op ((*it)->get_op());
     (*it)->handler();
     m3cg_lineno += 1;
   }
@@ -5899,6 +5907,60 @@ m3_init (void)
   m3_init_parse ();
   m3_init_decl_processing ();
   return true;
+}
+
+tree
+convert (tree type, tree expr)
+/* from c-convert.c */
+/* Create an expression whose value is that of EXPR,
+   converted to type TYPE.  The TREE_TYPE of the value
+   is always TYPE.  This function implements all reasonable
+   conversions; callers should filter out those that are
+   not permitted by the language being compiled.  */
+{
+  enum tree_code code = TREE_CODE (type);
+
+  if (type == TREE_TYPE (expr)
+      || TREE_CODE (expr) == ERROR_MARK
+      || code == ERROR_MARK || TREE_CODE (TREE_TYPE (expr)) == ERROR_MARK)
+    return expr;
+
+  if (TYPE_MAIN_VARIANT (type) == TYPE_MAIN_VARIANT (TREE_TYPE (expr)))
+    return fold_build1 (NOP_EXPR, type, expr);
+  if (TREE_CODE (TREE_TYPE (expr)) == ERROR_MARK)
+    return error_mark_node;
+  if (TREE_CODE (TREE_TYPE (expr)) == VOID_TYPE)
+    {
+      error ("void value not ignored as it ought to be");
+      return error_mark_node;
+    }
+  switch (code)
+  {
+  case VOID_TYPE:
+    return build1 (CONVERT_EXPR, type, expr);
+    
+  case INTEGER_TYPE:
+  case ENUMERAL_TYPE:
+    return fold (convert_to_integer (type, expr));
+      
+  case BOOLEAN_TYPE:
+    /* If it returns a NOP_EXPR, we must fold it here to avoid
+       infinite recursion between fold () and convert ().  */
+    if (TREE_CODE (expr) == NOP_EXPR)
+      return fold_build1 (NOP_EXPR, type, TREE_OPERAND (expr, 0));
+    else
+      return fold_build1 (NOP_EXPR, type, expr);
+	
+  case POINTER_TYPE:
+  case REFERENCE_TYPE:
+    return fold (convert_to_pointer (type, expr));
+    
+  case REAL_TYPE:
+    return fold (convert_to_real (type, expr));
+  }
+
+  error ("conversion to non-scalar type requested");
+  return error_mark_node;
 }
 
 #if GCC_APPLE

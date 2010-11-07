@@ -200,6 +200,8 @@ static tree m3_do_extract (tree x, tree i, tree n, tree type);
 static tree m3_do_rotate (enum tree_code code, tree orig_type, tree val, tree cnt);
 static tree m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count);
 
+tree convert (tree type, tree expr);
+
 /*======================================================= OPTION HANDLING ===*/
 
 static int option_trace_all;
