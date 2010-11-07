@@ -113,7 +113,7 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
     end
 
     if ccs or gcc
-        env = "PATH=\"" & gcc & ccs & "$PATH\""
+        env = "PATH=\"" & gcc & ccs & "$PATH\" " & env
     end
 end
 
