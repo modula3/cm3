@@ -255,7 +255,7 @@ objc_finish_method_definition (tree ARG_UNUSED (fndecl))
 
 tree
 objc_build_keyword_decl (tree ARG_UNUSED (selector),
-			 tree ARG_UNUSED (typename),
+			 tree ARG_UNUSED (type),
 			 /* APPLE LOCAL begin radar 4157812 */
 			 tree ARG_UNUSED (identifier),
 			 tree ARG_UNUSED (attribute))
