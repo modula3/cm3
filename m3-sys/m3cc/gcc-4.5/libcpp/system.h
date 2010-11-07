@@ -348,10 +348,10 @@ extern void abort (void);
 /* Be conservative and only use enum bitfields with GCC.
    FIXME: provide a complete autoconf test for buggy enum bitfields.  */
 
-#if (GCC_VERSION > 2000)
+#ifdef __cplusplus
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME : SIZE
+#elif (GCC_VERSION > 2000)
 #define ENUM_BITFIELD(TYPE, NAME, SIZE) __extension__ enum TYPE NAME : SIZE
-#elif defined(__cplusplus)
-#define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME
 #else
 #define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME
 #endif
