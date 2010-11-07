@@ -30,12 +30,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm_p.h"
 #include "dfp.h"
 
-#include "decimal128.h"
-#include "decimal128Local.h"
-#include "decimal64.h"
-#include "decimal32.h"
-#include "decNumber.h"
-
 void
  decimal_real_from_string (REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED, const char *s ATTRIBUTE_UNUSED)
 { gcc_unreachable (); }
