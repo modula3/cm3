@@ -42,7 +42,7 @@ along with GCC; see the file COPYING3.  If not see
 /* Indexed by rtx code, gives number of operands for an rtx with that code.
    Does NOT include rtx header data (code and links).  */
 
-#define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)   sizeof FORMAT - 1 ,
+#define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)   sizeof (FORMAT) - 1 ,
 
 const unsigned char rtx_length[NUM_RTX_CODE] = {
 #include "rtl.def"
