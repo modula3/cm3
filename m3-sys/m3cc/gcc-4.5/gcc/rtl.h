@@ -2440,7 +2440,7 @@ extern int asm_str_count (const char *templ);
 
 struct rtl_hooks
 {
-  rtx (*gen_lowpart) (enum machine_mode, rtx);
+  rtx (*gen_lowpart_) (enum machine_mode, rtx);
   rtx (*gen_lowpart_no_emit) (enum machine_mode, rtx);
   rtx (*reg_nonzero_bits) (const_rtx, enum machine_mode, const_rtx, enum machine_mode,
 			   unsigned HOST_WIDE_INT, unsigned HOST_WIDE_INT *);
@@ -2458,7 +2458,7 @@ extern struct rtl_hooks rtl_hooks;
 extern const struct rtl_hooks general_rtl_hooks;
 
 /* Keep this for the nonce.  */
-#define gen_lowpart rtl_hooks.gen_lowpart
+#define gen_lowpart rtl_hooks.gen_lowpart_
 
 extern void insn_locators_alloc (void);
 extern void insn_locators_free (void);
