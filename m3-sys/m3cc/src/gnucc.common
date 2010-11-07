@@ -85,7 +85,7 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
 
     end
     
-    % This block needs work.
+    % This block needs work?
 
     if equal($CC, "") and equal($CXX, "")
         if ((FileExists("/usr/bin/cc") or equal("type cc > /dev/null", 0))
