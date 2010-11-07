@@ -100,7 +100,7 @@ proc internal_configure_system_lib(name, known, args) is
 end
 
 proc configure_system_libs() is
-  internal_configure_system_lib("OPENGL", not equal(TARGET, "I386_SOLARIS"), ["-lGLU", "-lGL", "-lXext"])
+  internal_configure_system_lib("OPENGL", FALSE, ["-lGLU", "-lGL", "-lXext"])
 end
 
 configure_system_libs()
