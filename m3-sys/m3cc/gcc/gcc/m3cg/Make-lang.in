@@ -43,7 +43,7 @@ M3CG m3cg: m3cgc1$(exeext)
 .PHONY: M3CG m3cg
 
 # Language-specific object files for the Modula-3 Code Generator.
-M3CG_OBJS = m3cg/parse.o m3cg/m3-convert.o attribs.o
+M3CG_OBJS = m3cg/parse.o attribs.o
 
 m3cgc1$(exeext): $(M3CG_OBJS) $(BACKEND) $(LIBDEPS)
 	$(CXX) $(ALL_CFLAGS) $(LDFLAGS) -o $@ $(M3CG_OBJS) $(BACKEND) $(LIBS) $(GMPLIBS) $(BACKENDLIBS)
