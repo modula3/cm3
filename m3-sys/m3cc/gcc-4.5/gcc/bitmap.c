@@ -311,7 +311,7 @@ bitmap_obstack_initialize (bitmap_obstack *bit_obstack)
       bit_obstack = &bitmap_default_obstack;
     }
 
-#if !defined(__GNUC__) || (__GNUC__ < 2)
+#if !defined(__alignof__) && (!defined(__GNUC__) || (__GNUC__ < 2))
 #define __alignof__(type) 0
 #endif
 
