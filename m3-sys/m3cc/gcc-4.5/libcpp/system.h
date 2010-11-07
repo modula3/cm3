@@ -55,6 +55,8 @@ along with GCC; see the file COPYING3.  If not see
    extensions and need to be prototyped by hand (since we do not
    define _GNU_SOURCE).  */
 
+#if defined HAVE_DECL_PUTC_UNLOCKED && HAVE_DECL_PUTC_UNLOCKED
+
 /* Sun doesn't always declare _flsbuf/__flsbuf/_filbuf/__filbuf:
 opts.c, line 1233: Error: The function "__flsbuf" must have a prototype.
 */
@@ -64,8 +66,6 @@ opts.c, line 1233: Error: The function "__flsbuf" must have a prototype.
 #undef HAVE_GETC_UNLOCKED
 #undef HAVE_GETCHAR_UNLOCKED
 #endif
-
-#if defined HAVE_DECL_PUTC_UNLOCKED && HAVE_DECL_PUTC_UNLOCKED
 
 # ifdef HAVE_PUTC_UNLOCKED
 #  undef putc
