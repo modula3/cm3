@@ -35,8 +35,11 @@ OFILES = @mpn_objects@
 # a particular target.
 #
 nodist_EXTRA_libmpn_la_SOURCES =	    \
+  add.c                 \
+  add_1.c               \
   add_n.c               \
   addmul_1.c            \
+  cmp.c                 \
   dc_divrem_n.c         \
   diveby3.c             \
   divrem_1.c            \
@@ -52,6 +55,8 @@ nodist_EXTRA_libmpn_la_SOURCES =	    \
   rshift.c              \
   sb_divrem_mn.c        \
   sqr_basecase.c        \
+  sub.c                 \
+  sub_1.c               \
   sub_n.c               \
   submul_1.c            \
   tdiv_qr.c
