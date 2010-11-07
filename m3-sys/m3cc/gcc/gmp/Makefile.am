@@ -23,12 +23,12 @@
 # MA 02110-1301, USA.
 
 
-# The following options are the same as AM_INIT_AUTOMAKE in configure.in,
-# except no $(top_builddir) on ansi2knr.  That directory is wanted for the
-# Makefiles in subdirectories, but here we must omit it so automake gives
-# the actual ansi2knr build rule, not "cd $(top_builddir) && make ansi2knr".
-#
-AUTOMAKE_OPTIONS = 1.8 gnu no-dependencies ansi2knr
+## The following options are the same as AM_INIT_AUTOMAKE in configure.in,
+## except no $(top_builddir) on ansi2knr.  That directory is wanted for the
+## Makefiles in subdirectories, but here we must omit it so automake gives
+## the actual ansi2knr build rule, not "cd $(top_builddir) && make ansi2knr".
+##
+AUTOMAKE_OPTIONS = 1.8 gnu no-dependencies
 
 
 # Libtool -version-info for libgmp.la and libmp.la.  See "Versioning" in the
@@ -102,27 +102,27 @@ DISTCLEANFILES = $(BUILT_SOURCES) config.m4 @gmp_srclinks@
 INCLUDES=-D__GMP_WITHIN_GMP
 
 MPZ_OBJECTS =           \
-  mpz/add$U.lo          \
-  mpz/add_ui$U.lo       \
-  mpz/clear$U.lo        \
-  mpz/cmp$U.lo          \
-  mpz/export$U.lo       \
-  mpz/fdiv_q$U.lo       \
-  mpz/import$U.lo       \
-  mpz/init$U.lo         \
-  mpz/iset$U.lo         \
-  mpz/neg$U.lo          \
-  mpz/out_str$U.lo      \
-  mpz/realloc$U.lo      \
-  mpz/set$U.lo          \
-  mpz/set_ui$U.lo       \
-  mpz/sizeinbase$U.lo   \
-  mpz/sub$U.lo          \
-  mpz/sub_ui$U.lo       \
-  mpz/swap$U.lo         \
-  mpz/tdiv_qr$U.lo
+  mpz/add.lo          \
+  mpz/add_ui.lo       \
+  mpz/clear.lo        \
+  mpz/cmp.lo          \
+  mpz/export.lo       \
+  mpz/fdiv_q.lo       \
+  mpz/import.lo       \
+  mpz/init.lo         \
+  mpz/iset.lo         \
+  mpz/neg.lo          \
+  mpz/out_str.lo      \
+  mpz/realloc.lo      \
+  mpz/set.lo          \
+  mpz/set_ui.lo       \
+  mpz/sizeinbase.lo   \
+  mpz/sub.lo          \
+  mpz/sub_ui.lo       \
+  mpz/swap.lo         \
+  mpz/tdiv_qr.lo
 
-MPN_OBJECTS = mpn/mp_bases$U.lo
+MPN_OBJECTS = mpn/mp_bases.lo
 
 # In libtool 1.5 it doesn't work to build libgmp.la from the convenience
 # libraries like mpz/libmpz.la.  Or rather it works, but it ends up putting
@@ -159,24 +159,10 @@ libgmp_la_LDFLAGS = $(GMP_LDFLAGS) $(LIBGMP_LDFLAGS) \
   -version-info $(LIBGMP_LT_CURRENT):$(LIBGMP_LT_REVISION):$(LIBGMP_LT_AGE)
 
 install-data-hook:
-	@echo ''
-	@echo '+-------------------------------------------------------------+'
-	@echo '| CAUTION:                                                    |'
-	@echo '|                                                             |'
-	@echo '| If you have not already run "make check", then we strongly  |'
-	@echo '| recommend you do so.                                        |'
-	@echo '|                                                             |'
-	@echo '| GMP has been carefully tested by its authors, but compilers |'
-	@echo '| are all too often released with serious bugs.  GMP tends to |'
-	@echo '| explore interesting corners in compilers and has hit bugs   |'
-	@echo '| on quite a few occasions.                                   |'
-	@echo '|                                                             |'
-	@echo '+-------------------------------------------------------------+'
-	@echo ''
 
 
-# The ansi2knr setups for the build programs are the same as the normal
-# automake ansi2knr rules, but using $(CC_FOR_BUILD) instead of $(CC).
+## The ansi2knr setups for the build programs are the same as the normal
+## automake ansi2knr rules, but using $(CC_FOR_BUILD) instead of $(CC).
 #
 # The "test -f" support for srcdir!=builddir is similar to the automake .c.o
 # etc rules, but with each foo.c explicitly, since $< is not portable
@@ -204,13 +190,10 @@ mpn/mp_bases.c: gen-bases$(EXEEXT_FOR_BUILD)
 	./gen-bases table $(BITS_PER_MP_LIMB) $(GMP_NAIL_BITS) >mpn/mp_bases.c || (rm -f mpn/mp_bases.c; exit 1)
 BUILT_SOURCES += mpn/mp_bases.c
 
-gen-bases$(EXEEXT_FOR_BUILD): gen-bases$(U_FOR_BUILD).c dumbmp.c
-	$(CC_FOR_BUILD) `test -f 'gen-bases$(U_FOR_BUILD).c' || echo '$(srcdir)/'`gen-bases$(U_FOR_BUILD).c -o gen-bases$(EXEEXT_FOR_BUILD) $(LIBM_FOR_BUILD)
+gen-bases$(EXEEXT_FOR_BUILD): gen-bases.c dumbmp.c
+	$(CC_FOR_BUILD) $(srcdir)/gen-bases.c -o gen-bases$(EXEEXT_FOR_BUILD) $(LIBM_FOR_BUILD)
 DISTCLEANFILES += gen-bases$(EXEEXT_FOR_BUILD)
 EXTRA_DIST += gen-bases.c
-
-gen-bases_.c: gen-bases.c $(ANSI2KNR)
-	$(CPP_FOR_BUILD) `if test -f $(srcdir)/gen-bases.c; then echo $(srcdir)/gen-bases.c; else echo gen-bases.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > gen-bases_.c || rm -f gen-bases_.c
 
 # Avoid: CVS - cvs directories
 #        *~  - emacs backups
