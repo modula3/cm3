@@ -81,6 +81,7 @@ default_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
     return memory_address_p (mode, addr);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
@@ -935,6 +936,7 @@ default_addr_space_convert (rtx op ATTRIBUTE_UNUSED,
 			    tree to_type ATTRIBUTE_UNUSED)
 {
   gcc_unreachable ();
+  return 0;
 }
 
 bool
