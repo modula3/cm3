@@ -5957,6 +5957,9 @@ convert (tree type, tree expr)
     
   case REAL_TYPE:
     return fold (convert_to_real (type, expr));
+
+  default:
+    break;
   }
 
   error ("conversion to non-scalar type requested");
