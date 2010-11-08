@@ -1,4 +1,6 @@
-readonly TARGET_ENDIAN = "LITTLE"
+if not defined("TARGET_ENDIAN")
+  readonly TARGET_ENDIAN = "LITTLE"
+end
 readonly TARGET_OS = "VMS"
 M3_MAIN_IN_C = TRUE
 
