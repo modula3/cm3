@@ -12,7 +12,9 @@ UNSAFE INTERFACE TextLiteral;
 IMPORT RTHooks, TextClass;
 
 CONST
- MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64);
+ (* DIV BITSIZE should not be here! *)
+ (* MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64); *)
+ MaxBytes = 16_7FFFFFFF DIV BITSIZE (Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64);
 
 TYPE
   T = RTHooks.TextLiteral;
