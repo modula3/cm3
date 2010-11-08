@@ -6,7 +6,7 @@ for a in a m s p r; do
 done
 for a in cc gcc g++ gcc-4.2 g++-4.2; do
   for b in "" /usr/bin/ /usr/local/bin/; do
-    which $b$a && echo $b$a -v: `$b$a -v 2>&1`
+    which $b$a && echo $b$a -v: `$b$a -v 2>&1 || true`
   done
 done
 date
