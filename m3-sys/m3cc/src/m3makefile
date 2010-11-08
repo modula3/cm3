@@ -49,7 +49,7 @@ readonly m3cc_config = {
 %  building m3cg, does locate and test an assembler. Building on HP-UX will
 %  fail and say the GNU assembler is required, if it is not the one found.
 %
-
+  "ALPHA_OSF"    : "-enable-obsolete",
   "I386_LINUX"   : "-with-gnu-as -with-gnu-ld",
   "AMD64_LINUX"  : "-with-gnu-as -with-gnu-ld",
   "PPC_LINUX"    : "-with-gnu-as -with-gnu-ld",
