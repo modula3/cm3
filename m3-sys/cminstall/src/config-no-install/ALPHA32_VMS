@@ -9,8 +9,8 @@ readonly GNU_PLATFORM = "alpha-dec-vms"
 % -fPIC
 % -funwind-tables
 % -malpha-as
-m3back_flags = "-g -mgas"
-m3back_debug = "" % we hardcoded -g
+m3back_flags = "-mgas"
+m3back_debug = ""
 m3back_optimize = "" % don't optimize
 SYSTEM_CC = "cc /pointer_size=32"
 SYSTEM_LD = "link"
