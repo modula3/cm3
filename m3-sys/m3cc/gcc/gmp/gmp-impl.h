@@ -2806,25 +2806,15 @@ __GMP_DECLSPEC extern const unsigned char  modlimb_invert_table[128];
   } while (0)
 #endif
 
-
-/* Define stuff for longlong.h.  */
-#if HAVE_ATTRIBUTE_MODE && defined(__GNUC__)
-typedef unsigned int UQItype	__attribute__ ((mode (QI)));
-typedef		 int SItype	__attribute__ ((mode (SI)));
-typedef unsigned int USItype	__attribute__ ((mode (SI)));
-typedef		 int DItype	__attribute__ ((mode (DI)));
-typedef unsigned int UDItype	__attribute__ ((mode (DI)));
+typedef unsigned char UQItype; /* 8 bits */
+typedef int SItype; /* 32 bits */
+typedef unsigned USItype; /* 32 bits */
+#if defined(_MSC_VER) || defined(__DECC)
+typedef __int64 DItype; /* 64 bits */
+typedef unsigned __int64 UDItype; /* 64 bits */
 #else
-typedef unsigned char UQItype;
-typedef		 long SItype;
-typedef unsigned long USItype;
-#if HAVE_LONG_LONG
-typedef	long long int DItype;
-typedef unsigned long long int UDItype;
-#else /* Assume `long' gives us a wide enough type.  Needed for hppa2.0w.  */
-typedef long int DItype;
-typedef unsigned long int UDItype;
-#endif
+typedef long long DItype; /* 64 bits */
+typedef unsigned long long UDItype; /* 64 bits */
 #endif
 
 typedef mp_limb_t UWtype;
