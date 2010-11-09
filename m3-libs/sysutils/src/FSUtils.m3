@@ -32,7 +32,7 @@ IMPORT FS;
 FROM System IMPORT AtomListToText;
 IMPORT RTIO;
 
-CONST DEBUG = TRUE;
+CONST DEBUG = FALSE;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Stat(fn : Pathname.T; VAR exists, isFile, isDir: BOOLEAN) =
