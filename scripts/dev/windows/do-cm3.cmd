@@ -183,8 +183,7 @@ popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in grandparent of current directory
-pushd ..
-cd ..
+pushd ..\..
 if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
 popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
@@ -213,8 +212,7 @@ set _z_PkgTree=
 
 rem --- first try parent of %_z_PkgInfo%
 call :FN_DriveAndPathOnly %_z_PkgInfo% _z_PkgTree
-pushd %_z_PkgTree%
-cd ..
+pushd %_z_PkgTree%\..
 set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
@@ -230,8 +228,7 @@ popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try grandparent of current directory
-pushd ..
-cd ..
+pushd ..\..
 set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
