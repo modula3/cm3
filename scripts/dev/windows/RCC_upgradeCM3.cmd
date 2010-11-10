@@ -89,9 +89,7 @@ echo.
 REM Find root of CM3 installation, copy required files to bin, and Ensure CM3 command line environment has been setup.
 if not "%CM3_ROOT%"=="" if exist "%CM3_ROOT%\bin\cm3.exe" if exist "%CM3_ROOT%\pkg" goto FoundRoot
 if not "%CM3_ROOT%"=="" echo ERROR:  Specified CM3_ROOT (%CM3_ROOT%) is missing a required folder. & goto END
-pushd ..
-cd ..
-cd ..
+pushd ..\..\..
 if exist "bin\cm3.exe" if exist "pkg" set CM3_ROOT=%CD%& popd & goto FoundRoot
 cd ..
 if exist "bin\cm3.exe" if exist "pkg" set CM3_ROOT=%CD%& popd & goto FoundRoot
@@ -144,8 +142,7 @@ popd
 if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in grandparent of current directory
-pushd ..
-cd ..
+pushd ..\..
 if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _cm3_PkgInfo
 popd
 if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" goto FindSourceTree
@@ -174,8 +171,7 @@ set _cm3_PkgTree=
 
 rem --- first try parent of %_cm3_PkgInfo%
 call :FN_DriveAndPathOnly %_cm3_PkgInfo% _cm3_PkgTree
-pushd %_cm3_PkgTree%
-cd ..
+pushd %_cm3_PkgTree%\..
 set _cm3_PkgTree=%CD%\
 popd
 if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
@@ -191,8 +187,7 @@ popd
 if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try grandparent of current directory
-pushd ..
-cd ..
+pushd ..\..
 set _cm3_PkgTree=%CD%\
 popd
 if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
