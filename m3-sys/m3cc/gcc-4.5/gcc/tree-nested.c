@@ -1,3 +1,4 @@
+/* Modula-3: modified */
 /* Nested function decomposition for GIMPLE.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
