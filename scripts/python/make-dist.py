@@ -279,11 +279,10 @@ Echo("build new compiler and new runtime with new compiler (%(InstallRoot_Compil
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 #
-# This time build the entire compiler from m3core and on up, and the
-# occasional build tools m3bundle, mklib, but don't bother building cm3cg again.
+# This time build the entire compiler from m3core and on up.
 #
 
-Packages += ["m3core", "libm3", "m3bundle", "mklib" ]
+Packages += ["m3core", "libm3"]
 if "m3cc" in Packages:
     Packages.remove("m3cc")
 Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
