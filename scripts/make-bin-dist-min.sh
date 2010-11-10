@@ -37,7 +37,8 @@ export M3_PORTABLE_RUN_PATH
 
 #-----------------------------------------------------------------------------
 # create the basic directories
-. "${ROOT}/scripts/create-skel.sh"
+
+mkdir -p "${INSTALLROOT}/bin/config" || exit 1
 
 #-----------------------------------------------------------------------------
 # compile the core system
