@@ -352,16 +352,6 @@ if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined
     write("rm ", a, CR)
     delete_file(a)
   end
-  
-  % temporary workaround fs_rmrec not wokring
-  foreach a in ["gmp",
-                "mpfr",
-                "mpc",
-                "libcpp",
-                "libdecnumber",
-                "libiberty"]
-    exec("-rm -rf ./" & a)
-  end
   foreach a in fs_lsdirs (build_dir, FALSE)
     write("rm -rf ", a, CR)
     fs_rmrec(a)
