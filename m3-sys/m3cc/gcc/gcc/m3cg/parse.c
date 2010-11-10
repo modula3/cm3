@@ -815,9 +815,11 @@ static tree m3_current_scope (void)
 }
 
 #if GCC42
-#define m3_volatize 0
+#define get_volatize() 0
+#define set_volatize(x) /* nothing */
 #else
-#define m3_volatize (m3_language_function ()->volatil)
+#define set_volatize(x) (m3_language_function ()->volatil = x)
+#define get_volatize() (m3_language_function () && m3_language_function ()->volatil)
 #endif
 
 static bool m3_next_store_volatile;
@@ -2794,7 +2796,7 @@ declare_temp (tree type)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (type);
   DECL_CONTEXT (v) = current_function_decl;
 
-  if (m3_volatize)
+  if (get_volatize ())
     m3_volatilize_decl (v);
 
   add_stmt (build1 (DECL_EXPR, t_void, v));
@@ -2929,7 +2931,7 @@ m3_volatilize_current_function (void)
    * are also made volatile
    */
 
-  m3_volatize = true;
+  set_volatize (true);
 
   /* make locals volatile */
 
@@ -4049,7 +4051,7 @@ M3CG_HANDLER (DECLARE_LOCAL)
 
   if (current_block)
     {
-      if (m3_volatize)
+      if (get_volatize ())
         m3_volatilize_decl (var);
 
       add_stmt (build1 (DECL_EXPR, t_void, var));
@@ -4147,7 +4149,7 @@ M3CG_HANDLER (DECLARE_TEMP)
   DECL_UNSIGNED (var) = TYPE_UNSIGNED (TREE_TYPE (var));
   TREE_ADDRESSABLE (var) = in_memory;
   DECL_CONTEXT (var) = current_function_decl;
-  if (m3_volatize)
+  if (get_volatize ())
     m3_volatilize_decl (var);
 
   TREE_CHAIN (var) = BLOCK_VARS (BLOCK_SUBBLOCKS
