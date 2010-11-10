@@ -8,8 +8,6 @@
 % user can say cm3 -DM3CC_TARGET=FreeBSD4, for example.
 %
 
-proc M3CCBuild() is
-
 include("platforms.quake")
 
 %
@@ -263,35 +261,9 @@ else
   Log = path() & "/../" & BUILD_DIR & "/_m3.log"
 end
 
-% only some scenarios need this so ok without
 Log = subst_chars(Log, "\\", "/")
 
 fs_mkdir (build_dir)
-
-% Omit unnecessary builds during regression testing.
-
-PREBUILT_CM3CG = $PREBUILT_CM3CG
-if ($WORKSPACE or equal($USER, "jay")) and PREBUILT_CM3CG
-  CM3CG = build_dir & "/cm3cg"
-  if equal(M3_MODE, "build")
-    write( "copying pre-built backend ", PREBUILT_CM3CG, " => ", CM3CG, CR )
-    cp_if( PREBUILT_CM3CG, CM3CG )
-    >> ".M3SHIP" in
-      write( "make_dir(BIN_INSTALL & \"\")", CR )
-      write( "install_file(\"" & CM3CG & "\", BIN_INSTALL, \"0775\")", CR )
-    end
-  end
-  if equal(M3_MODE, "clean")
-    write( "removing ", CM3CG, CR )
-    delete_file( CM3CG )
-  end
-  if equal(M3_MODE, "ship")
-    write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
-    cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
-  end
-  return
-end
-
 
 m3cc_ResponseFileCounter = 0
 include("Math.quake")
@@ -315,6 +287,62 @@ readonly proc m3cc_Run (x) is
     local a = try_exec("@chmod +x " & Sh)
     exec("@sh -exc " & Sh)
 end
+
+readonly proc ProbeExeExtension (a) is
+  return equal (TARGET, "NT386") or FileExists (a & ".exe")
+end
+
+readonly proc AppendExeExtension (a) is
+  if ProbeExeExtension (a)
+    return a & ".exe"
+  end
+  return a
+end
+
+DoMipsTfile = Native and (equal (M3CC_TARGET, "DS3100") or equal (M3CC_TARGET, "ALPHA_OSF"))
+
+readonly proc postcp() is
+  pSrc  = build_dir & "/gcc/m3cgc1"
+  pDest = build_dir & "/cm3cg"
+  if ProbeExeExtension (pSrc)
+    pSrc = pSrc & ".exe"
+	pDest = pDest & ".exe"
+  end
+  if stale(pDest, pSrc)
+    cp_if(pSrc, pDest)
+  end
+  if DoMipsTfile
+    pSrc = build_dir & "/gcc/mips-tfile"
+    pDest = build_dir & "/mips-tfile"
+    if stale(pDest, pSrc)
+      cp_if(pSrc, pDest)
+    end
+  end
+end
+
+if Native
+  BindExport (AppendExeExtension ("cm3cg"))
+  if DoMipsTfile
+    BindExport ("mips-tfile")
+  end
+end
+
+deriveds("", ["cm3cg", "cm3cg.exe"])
+
+% Omit unnecessary builds during regression testing.
+
+PREBUILT_CM3CG = $PREBUILT_CM3CG
+if ($WORKSPACE or equal($USER, "jay")) and PREBUILT_CM3CG
+  CM3CG = AppendExeExtension (build_dir & "/cm3cg")
+  if equal(M3_MODE, "build")
+    write( "copying pre-built backend ", PREBUILT_CM3CG, " => ", CM3CG, CR )
+    cp_if( PREBUILT_CM3CG, CM3CG )
+  end
+else
+
+%
+% configure
+%
 
 done0 = build_dir & "/.configure-done" % old version
 done = build_dir & "/Makefile"
@@ -436,7 +464,6 @@ env = env & " MAKEINFO=:"
 % env = env & " MAKE=" & M3CC_MAKE
 M3CC_MAKE = M3CC_MAKE & " " & env
 
-
 if not defined ("no_config")
   if not FileExists (done)
     m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure
@@ -444,49 +471,6 @@ if not defined ("no_config")
     ])
   end
 end
-
-readonly proc ProbeExeExtension (a) is
-  return equal (TARGET, "NT386") or FileExists (a & ".exe")
-end
-
-readonly proc AppendExeExtension (a) is
-  if ProbeExeExtension (a)
-    return a & ".exe"
-  end
-  return a
-end
-
-DoMipsTfile = Native and (equal (M3CC_TARGET, "DS3100") or equal (M3CC_TARGET, "ALPHA_OSF"))
-
-readonly proc postcp() is
-  pSrc  = build_dir & "/gcc/m3cgc1"
-  pDest = build_dir & "/cm3cg"
-  if ProbeExeExtension (pSrc)
-    pSrc = pSrc & ".exe"
-	pDest = pDest & ".exe"
-  end
-  if stale(pDest, pSrc)
-    cp_if(pSrc, pDest)
-  end
-  if DoMipsTfile
-    pSrc = build_dir & "/gcc/mips-tfile"
-    pDest = build_dir & "/mips-tfile"
-    if stale(pDest, pSrc)
-      cp_if(pSrc, pDest)
-    end
-  end
-end
-
-if Native
-  BindExport (AppendExeExtension ("cm3cg"))
-  if DoMipsTfile
-    BindExport ("mips-tfile")
-  end
-end
-
-%
-% configure
-%
 
 m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host"
   % & " | tee -a " & Log
@@ -554,6 +538,4 @@ end
 
 postcp ()
 
-end % M3CCBuild
-
-M3CCBuild()
+end % prebuild
