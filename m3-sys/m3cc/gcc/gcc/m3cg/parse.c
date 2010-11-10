@@ -4431,6 +4431,8 @@ M3CG_HANDLER (END_PROCEDURE)
   else
     /* We are not inside of any scope now. */
     {
+      m3_gimplify_function (p);
+#if 0
 /* don't inline nested functions inside volatized functions, to fix:
 elego/m3msh/src/M3MiniShell.m3: In function 'M3MiniShell__ProcessParameters':
 elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' might be clobbered by 'longjmp' or 'vfork'
@@ -4438,10 +4440,11 @@ elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' mi
       if (volatize)
       {
         struct cgraph_node* node = cgraph_node (p);
-        for (node = node->nested; node; node = node->next_nested)
-          DECL_UNINLINABLE (node->decl) = true;
+        if (node)
+          for (node = node->nested; node; node = node->next_nested)
+            DECL_UNINLINABLE (node->decl) = true;
       }
-      m3_gimplify_function (p);
+#endif
       cgraph_finalize_function (p, false);
     }
 }
