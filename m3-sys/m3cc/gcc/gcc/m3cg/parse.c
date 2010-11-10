@@ -97,13 +97,13 @@ static ULONG pointer_size; /* for debugging */
 static GTY (()) tree stdcall;
 static GTY (()) tree stdcall_list;
 
-static bool M3_TYPES = true;
-static bool M3_TYPES_SUBRANGE_NEW = true;
+static bool M3_TYPES = false;
+static bool M3_TYPES_SUBRANGE_NEW = false;
 /*static bool M3_TYPES_OPEN_ARRAY_NEW = true;*/
-static bool M3_TYPES_INT = true;
-static bool M3_TYPES_ENUM = true;
+static bool M3_TYPES_INT = false;
+static bool M3_TYPES_ENUM = false;
 static bool M3_TYPES_SEGMENT = false;
-static bool M3_TYPES_CHECK_RECORD_SIZE = true;
+static bool M3_TYPES_CHECK_RECORD_SIZE = false;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
 static bool M3_LOOPHOLE_VIEW_CONVERT = false;
 static bool M3_LOADSTORE_VIEW_CONVERT = false;
