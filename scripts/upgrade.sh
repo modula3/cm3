@@ -41,12 +41,12 @@ run() {
 
 cp_config_files() {
   CFGD="${INSTALLROOT}/bin/config"
+  rm -rf "${CFGD}"
   mkdir -p "${CFGD}" 2>/dev/null
   CFGS="${root}/m3-sys/cminstall/src/config-no-install"
   for f in ${CFGS}/*; do
     b=`basename ${f}`
     rm -f ${INSTALLROOT}/bin/${b} 2>/dev/null
-    rm -f ${CFGD}/${b} 2>/dev/null
     echo cp ${f} ${CFGD}/${b}
     cp ${f} ${CFGD}/${b}
   done
