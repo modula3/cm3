@@ -475,7 +475,6 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   BSET="core"
   if [ "$1" = "std" ]; then
     BSET="std"
-  else
   fi
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
