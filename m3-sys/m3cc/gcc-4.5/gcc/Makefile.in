@@ -1,3 +1,5 @@
+# some small modifications for Modula-3
+
 # Makefile for GNU Compiler Collection
 # Run 'configure' to generate Makefile from Makefile.in
 
@@ -1430,13 +1432,13 @@ OBJS-onestep = libbackend.o $(OBJS-archive)
 # This lists all host object files, whether they are included in this
 # compilation or not.
 ALL_HOST_OBJS = $(GCC_OBJS) $(C_OBJS) $(OBJS) libbackend.o \
-  @TREEBROWSER@ main.o gccspec.o version.o intl.o prefix.o cppspec.o \
+  tree-browser.o main.o gccspec.o version.o intl.o prefix.o cppspec.o \
   $(foreach v,$(CONFIG_LANGUAGES),$($(v)_OBJS)) \
   $(COLLECT2_OBJS) $(EXTRA_GCC_OBJS) \
   mips-tfile.o mips-tdump.o \
   $(GCOV_OBJS) $(GCOV_DUMP_OBJS)
 
-BACKEND = main.o @TREEBROWSER@ libbackend.a $(CPPLIB)
+BACKEND = main.o tree-browser.o libbackend.a $(CPPLIB)
 
 MOSTLYCLEANFILES = insn-flags.h insn-config.h insn-codes.h \
  insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c \
