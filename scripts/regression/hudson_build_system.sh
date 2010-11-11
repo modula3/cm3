@@ -1,5 +1,8 @@
 #/bin/sh
 
+set -e
+set -x
+
 WS=${WORKSPACE}
 for a in a m s p r; do
     echo uname -$a: `uname -$a`
