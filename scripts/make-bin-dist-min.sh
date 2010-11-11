@@ -87,18 +87,8 @@ cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
 strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 
 #-----------------------------------------------------------------------------
-# configure a temporary config file
-echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
-# delete old config files
-for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
-  rm -f "${INSTALLROOT}/bin/`basename ${f}`" > /dev/null
-done
-# new config files
-cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
-(
-  echo "INSTALL_ROOT = path() & \"/..\""
-  echo "include(path() & \"/config/${TARGET}\")"
-) > "${INSTALLROOT}/bin/cm3.cfg"
+# configure aconfig file
+install_config
 
 #-----------------------------------------------------------------------------
 # clean everything

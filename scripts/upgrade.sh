@@ -53,23 +53,7 @@ install_compiler() {
   if [ "x${GCC_BACKEND}" = xyes ]; then
     cp "${root}/m3-sys/m3cc/${TARGET}/cm3cg${EXE}" "${INSTALLROOT}/bin/cm3cg${EXE}" || exit 1
   fi
-  CFG="${INSTALLROOT}/bin/cm3.cfg"
-  CFGS="${root}/m3-sys/cminstall/src/config-no-install"
-  CFGD="${INSTALLROOT}/bin/config"
-  echo "create config directory ${CFGD}"
-  rm -rf "${CFGD}" || exit 1
-  mkdir -p "${CFGD}" || exit 1
-  for f in ${CFGS}/*; do
-    if [ -f "$f" ]; then
-      b=`basename ${f}`
-      rm -f ${INSTALLROOT}/bin/${b}
-      cp ${f} ${CFGD}/${b}
-    fi
-  done
-  ( echo "INSTALL_ROOT = path() & \"/..\""
-    echo "include(path() & \"/config/${TARGET}\")"
-  ) > ${CFG}
-  echo "new config files copied/generated in ${CFG}, ${CFGD}"
+  install_config || exit 1
 }
 
 # Build the compiler with the installed version of the runtime;
