@@ -691,9 +691,7 @@ test_build_system()
 test_build_core_lastok()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build cm3 core in ${WS} with lastok version"
-  if [ -d "${INSTROOT_CUR}" ]; then
-    rm -rf ${INSTROOT_CUR}
-  fi
+  rm -rf "${INSTROOT_CUR}"
   if [ -d "${INSTROOT_LOK}" ]; then
     cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
     test_build_current "lastok"
@@ -705,9 +703,7 @@ test_build_core_lastok()
 test_build_core_rel()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build cm3 core in ${WS} with last release ${INSTROOT_REL}"
-  if [ -d "${INSTROOT_CUR}" ]; then
-    rm -rf ${INSTROOT_CUR}
-  fi
+  rm -rf "${INSTROOT_CUR}"
   cp -pR ${INSTROOT_REL} ${INSTROOT_CUR}
   test_build_current "rel"
 }
@@ -715,9 +711,7 @@ test_build_core_rel()
 test_build_std_lastok()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build cm3 std in ${WS} with lastok version"
-  if [ -d "${INSTROOT_CUR}" ]; then
-    rm -rf ${INSTROOT_CUR}
-  fi
+  rm -rf "${INSTROOT_CUR}"
   if [ -d "${INSTROOT_LOK}" ]; then
     cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
     test_build_current "std"
@@ -729,9 +723,7 @@ test_build_std_lastok()
 test_make_bin_dist()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build cm3 bindist snapshot in ${WS} with lastok version"
-  if [ -d "${INSTROOT_CUR}" ]; then
-    rm -rf ${INSTROOT_CUR}
-  fi
+  rm -rf "${INSTROOT_CUR}"
   cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
 
   cm3config ${INSTROOT_CUR}
