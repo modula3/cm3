@@ -87,7 +87,7 @@ cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
 strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 
 #-----------------------------------------------------------------------------
-# configure aconfig file
+
 install_config
 
 #-----------------------------------------------------------------------------
