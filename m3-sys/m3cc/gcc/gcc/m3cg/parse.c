@@ -2909,7 +2909,7 @@ m3_language_function (void)
     if (!f)
     {
         f = GGC_NEW (struct language_function);
-        f->volatil = false;
+        memset (f, 0, sizeof(*f));
         DECL_STRUCT_FUNCTION (current_function_decl)->language = f;
     }
     return f;
