@@ -4412,8 +4412,6 @@ M3CG_HANDLER (BEGIN_PROCEDURE)
 
 M3CG_HANDLER (END_PROCEDURE)
 {
-  bool volatize = get_volatize ();
-
   gcc_assert (current_function_decl == p);
 
   /* Attach block to the function */
