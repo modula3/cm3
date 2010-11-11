@@ -20,7 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`fgrep " std" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
+P=`awk "{print \\$1}" $ROOT/scripts/pkginfo.txt | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
