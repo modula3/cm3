@@ -41,11 +41,5 @@ OPTIONS=`extract_options $@`
 ACTION=`map_action $@`
 ADDARGS=`add_action_opts $@`
 
-case "$1" in
-  build*)
-    type m3bundle >/dev/null 2>/dev/null || \
-      (export CM3 && "$ROOT/scripts/do-pkg.sh" buildship m3bundle)
-esac
-
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
