@@ -321,6 +321,7 @@ rem %1=package, %2*=list of groups in this package
 set _z_Package=
 for %%a in (%*) do if /I %%a==%_z_Group% set _z_Package=%1
 if /I "%_z_Group%"=="ALL" set _z_Package=%1
+if /I "%_z_Group%"=="STD" set _z_Package=%1
 if not "%_z_Package%"=="" echo %_z_Package%
 goto :EOF
 
@@ -389,6 +390,7 @@ rem ---first see if this package is tagged with the desired group
 set _z_Package=
 for %%a in (%*) do if /I %%a==%_z_Group% set _z_Package=%1
 if /I "%_z_Group%"=="ALL" set _z_Package=%1
+if /I "%_z_Group%"=="STD" set _z_Package=%1
 if "%_z_Package%"=="" goto :EOF
 
 rem ---sometimes the package has a relative path in unix-style, so convert it to DOS-style
