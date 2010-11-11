@@ -1,139 +1,139 @@
-import-libs base core front min std gui comm caltech-parser
+import-libs base core front min gui comm caltech-parser
 m3cc core front m3gnudevtool
-m3core base core front min std
-libm3 base core front min std
-windowsResources std core
-parseparams base core std
-patternmatching core std
-sysutils core std front
-unittest core std
-m3middle base core front std
-m3cggen base core front std
+m3core base core front min
+libm3 base core front min
+windowsResources core
+parseparams base core
+patternmatching core
+sysutils core front
+unittest core
+m3middle base core front
+m3cggen base core front
 m3objfile core front
 m3linker core front
 m3back core front
 m3staloneback tool
 m3front core front
-m3quake base core front std
+m3quake base core front
 cm3 core front
-m3scanner base core std
-m3tools base core std
-m3cgcat tool std
-m3gdb std m3gnudevtool m3gdb
-m3bundle base core std
-mklib base core front std
-fix_nl tool std
-libdump tool std
-tempfiles base core std
-arithmetic std math
-unittest-numeric std math
-bitvector base core std
-digraph base core std
-realgeometry base core std
-set base core std
-slisp base core std
-sortedtableextras base core std
-table-list base core std
-tcl std
-tcp base core std comm
-cm3ide std core
-udp std comm devlib
-libsio std devlib
-libbuf std devlib
-debug std devlib
-listfuncs std devlib
-embutils std obliq
-m3tk-misc std comm devlib
-http std webdev
-binIO std devlib
-commandrw std devlib
-tapi base std comm devlib
-serial base std comm devlib
-m3tk std comm devlib
-mtex std core
-m3totex std m3devtool
-m3tohtml std m3devtool
-m3scan std devlib
-m3markup std devlib
-m3browser std m3devtool
-cmpdir std tool
-cmpfp std tool
-dirfp std tool
-uniq std tool
-netobj std comm devlib
-netobjd std comm m3devtool
-stubgen std comm m3devtool
-events std devlib
-rdwr std devlib
-sharedobj std obliq
-sharedobjgen std obliq
-odbc std database
-postgres95 std database
-db std database
-smalldb std database
-stablegen std m3devtool
-stable std m3devtool
-X11R4 std gui
-ui std gui
-PEX std 
-vbtkit std gui
-cmvbt std gui
-jvideo std gui
-videovbt std gui
-m3-www/web std webdev
-m3-www/proxy std webdev
-formsvbtpixmaps std gui
-formsvbt std gui
-formsview std gui m3devtool
-formsedit std gui m3devtool
-codeview std anim
-cvsup/suplib std cvsup
-cvsup/client std cvsup
-cvsup/server std cvsup
-cvsup/cvpasswd std cvsup
-mg std anim
-mgkit std anim
-opengl std gui
-anim3D std anim
-zeus std anim
-m3zume std anim
-synloc std obliq
-synex std obliq
-metasyn std obliq
-obliqrt std obliq
-obliqparse std obliq
-obliqprint std obliq
-obliq std obliq
-obliqlibemb std obliq
-obliqlibm3 std obliq
-obliqlibui std obliq
-obliqlibanim std obliq
-obliqsrvstd std obliq
-obliqsrvui std obliq
-obliqbinmin std obliq
-obliqbinstd std obliq
-obliqbinui std obliq
-obliqbinanim std obliq
+m3scanner base core
+m3tools base core
+m3cgcat tool
+m3gdb m3gnudevtool m3gdb
+m3bundle base core
+mklib base core front
+fix_nl tool
+libdump tool
+tempfiles base core
+arithmetic math
+unittest-numeric math
+bitvector base core
+digraph base core
+realgeometry base core
+set base core
+slisp base core
+sortedtableextras base core
+table-list base core
+tcl
+tcp base core comm
+cm3ide core
+udp comm devlib
+libsio devlib
+libbuf devlib
+debug devlib
+listfuncs devlib
+embutils obliq
+m3tk-misc comm devlib
+http webdev
+binIO devlib
+commandrw devlib
+tapi base comm devlib
+serial base comm devlib
+m3tk comm devlib
+mtex core
+m3totex m3devtool
+m3tohtml m3devtool
+m3scan devlib
+m3markup devlib
+m3browser m3devtool
+cmpdir tool
+cmpfp tool
+dirfp tool
+uniq tool
+netobj comm devlib
+netobjd comm m3devtool
+stubgen comm m3devtool
+events devlib
+rdwr devlib
+sharedobj obliq
+sharedobjgen obliq
+odbc database
+postgres95 database
+db database
+smalldb database
+stablegen m3devtool
+stable m3devtool
+X11R4 gui
+ui gui
+PEX 
+vbtkit gui
+cmvbt gui
+jvideo gui
+videovbt gui
+m3-www/web webdev
+m3-www/proxy webdev
+formsvbtpixmaps gui
+formsvbt gui
+formsview gui m3devtool
+formsedit gui m3devtool
+codeview anim
+cvsup/suplib cvsup
+cvsup/client cvsup
+cvsup/server cvsup
+cvsup/cvpasswd cvsup
+mg anim
+mgkit anim
+opengl gui
+anim3D anim
+zeus anim
+m3zume anim
+synloc obliq
+synex obliq
+metasyn obliq
+obliqrt obliq
+obliqparse obliq
+obliqprint obliq
+obliq obliq
+obliqlibemb obliq
+obliqlibm3 obliq
+obliqlibui obliq
+obliqlibanim obliq
+obliqsrvstd obliq
+obliqsrvui obliq
+obliqbinmin obliq
+obliqbinstd obliq
+obliqbinui obliq
+obliqbinanim obliq
 obliqlib3D obliq
-visualobliq std obliq
-vocgi std obliq
-voquery std obliq
-vorun std obliq
-webvbt std webdev
-recordheap std m3devtool
-rehearsecode std anim
-replayheap std m3devtool
-showheap std m3devtool
-shownew std m3devtool
-showthread std m3devtool
-juno-2/juno-app/pkl-fonts std juno
-juno-2/juno-machine std juno
-juno-2/juno-compiler std juno
-juno-2/juno-app std juno
-cube std demo
-calculator std demo
-fisheye std demo
-mentor std anim
+visualobliq obliq
+vocgi obliq
+voquery obliq
+vorun obliq
+webvbt webdev
+recordheap m3devtool
+rehearsecode anim
+replayheap m3devtool
+showheap m3devtool
+shownew m3devtool
+showthread m3devtool
+juno-2/juno-app/pkl-fonts juno
+juno-2/juno-machine juno
+juno-2/juno-compiler juno
+juno-2/juno-app juno
+cube demo
+calculator demo
+fisheye demo
+mentor anim
 cit_common caltech-parser
 m3tmplhack caltech-parser
 cit_util caltech-parser
