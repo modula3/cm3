@@ -814,13 +814,23 @@ static tree m3_current_scope (void)
   return current_function_decl ? current_function_decl : global_decls;
 }
 
+static bool
+get_volatize (void)
+{
 #if GCC42
-#define get_volatize() 0
-#define set_volatize(x) /* nothing */
+  return 0;
 #else
-#define set_volatize(x) (m3_language_function ()->volatil = x)
-#define get_volatize() (m3_language_function () && m3_language_function ()->volatil)
+  return m3_language_function () && m3_language_function ()->volatil;
 #endif
+}
+
+static void
+set_volatize (bool a ATTRIBUTE_UNUSED)
+{
+#if !GCC42
+  m3_language_function ()->volatil = a;
+#endif
+}
 
 static bool m3_next_store_volatile;
 
