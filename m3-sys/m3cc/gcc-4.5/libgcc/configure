@@ -523,7 +523,7 @@ as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
 as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
 
 
-exec 7<&0 </dev/null 6>&1
+exec 6>&1
 
 # Name of the host.
 # hostname on some systems (SVR3.2, Linux) returns a bogus exit status,
