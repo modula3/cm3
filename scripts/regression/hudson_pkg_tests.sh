@@ -64,9 +64,7 @@ fi
 INSTROOT_CUR="${INSTROOT_CUR}--all-pkgs"
 
 # setup lastok version as a start
-if [ -d "${INSTROOT_CUR}" ]; then
-  rm -rf ${INSTROOT_CUR}
-fi
+rm -rf ${INSTROOT_CUR}
 cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
 
 export TMPDIR=${WS}
