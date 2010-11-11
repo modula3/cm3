@@ -2940,7 +2940,6 @@ m3_volatilize_current_function (void)
   /* note it for later so that later temporaries and locals ("WITH")
    * are also made volatile
    */
-
   set_volatize (true);
 
   /* make locals volatile */
@@ -4429,32 +4428,19 @@ M3CG_HANDLER (END_PROCEDURE)
 
   current_function_decl = DECL_CONTEXT (p);
 
+  gcc_assert (!current_block == !current_function_decl);
+
   if (current_block)
-    {
-      /* Register this function with cgraph just far enough to get it
-         added to our parent's nested function list.  */
-      struct cgraph_node* node = cgraph_node (p);
-      cgraph_mark_needed_node (node);    /* keep all functions */
-    }
+  { /* Register this function with cgraph just far enough to get it
+       added to our parent's nested function list.  */
+    struct cgraph_node* node = cgraph_node (p);
+    cgraph_mark_needed_node (node);    /* keep all functions */
+  }
   else
-    /* We are not inside of any scope now. */
-    {
-      m3_gimplify_function (p);
-#if 0
-/* don't inline nested functions inside volatized functions, to fix:
-elego/m3msh/src/M3MiniShell.m3: In function 'M3MiniShell__ProcessParameters':
-elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' might be clobbered by 'longjmp' or 'vfork'
-*/
-      if (volatize)
-      {
-        struct cgraph_node* node = cgraph_node (p);
-        if (node)
-          for (node = node->nested; node; node = node->next_nested)
-            DECL_UNINLINABLE (node->decl) = true;
-      }
-#endif
-      cgraph_finalize_function (p, false);
-    }
+  { /* We are not inside of any scope now. */
+    m3_gimplify_function (p);
+    cgraph_finalize_function (p, false);
+  }
 }
 
 M3CG_HANDLER (BEGIN_BLOCK)
@@ -5889,6 +5875,12 @@ m3_post_options (PCSTR* /*pfilename*/)
 #if !GCC42
   flag_predictive_commoning = false;
 #endif
+
+/* don't inline anything, to fix:
+elego/m3msh/src/M3MiniShell.m3: In function 'M3MiniShell__ProcessParameters':
+elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' might be clobbered by 'longjmp' or 'vfork'
+*/
+  flag_inline_functions = false;
 
   return false;
 }
