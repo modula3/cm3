@@ -341,38 +341,6 @@ checkout()
 #----------------------------------------------------------------------------
 # misc. support functions
 
-cm3config() {
-  f="$1/bin/cm3.cfg"
-  if [ "$CM3_TARGET" = "NT386" ]; then
-    R=`cygpath -w $1 | sed -e 's/\\\\/\\\\\\\\\\\\\\\\/g'`
-    SL='\\\\'
-  else
-    R="$1"
-    SL=/
-  fi
-  if [ -d "$1" -a -f "${f}" ]; then
-    ( echo "INSTALL_ROOT = path() & \"/..\""
-      echo "include(path() & \"/config/${CM3_TARGET}\")"
-    ) > ${f}.new
-    if cmp ${f} ${f}.new; then
-      rm ${f}.new
-    else
-      NOW=`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`
-      cp -p ${f} ${f}--${NOW}
-      mv ${f}.new ${f}
-    fi
-  else
-    echo "no cm3 installation in $1" 1>&2
-    exit 1
-  fi
-  # Repair missing config files.
-  if [ ! -f "$1/bin/config/cm3cfg.common" ] ; then
-    rm -rf "$1/bin/config"
-    mkdir -p "$1/bin/config"
-    cp "./m3-sys/cminstall/src/config-no-install"/* "$1/bin/config"
-  fi
-}
-
 logfilter() {
   egrep ' >>> | === 2'
 }
@@ -504,12 +472,11 @@ download_bin_dist() {
 
 test_build_current() # this in an internal function: $1 = rel | lastok | std
 {
+  BSET="core"
   if [ "$1" = "std" ]; then
     BSET="std"
   else
-    BSET="core"
   fi
-  cm3config ${INSTROOT_CUR}
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
   DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
@@ -533,34 +500,20 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
     exit 1
   fi
 
-  if [ "$1" = "rel" ]; then
-    echo " === clean up before cm3 upgrade "
-    if [ -z "$NOCLEAN" ]; then
-      OMIT_GCC=yes ./scripts/do-cm3-core.sh realclean || exit 1
-      ./scripts/do-pkg.sh realclean cminstall
-    fi
-    echo " === perform cm3 upgrade "
-    UPGRADE_CM3_CFG=yes ./scripts/upgrade.sh || exit 1
-    echo " >>> OK build_${1}_upgrade ${DS} ${WS}"
-  fi
+  BUILDSCRIPT="./scripts/do-cm3-${BSET}.sh"
 
-  echo pwd
-  pwd
-  echo ls
-  ls
-  echo ls ./scripts
-  ls ./scripts
+  echo " === clean up before cm3 upgrade "
+  if [ -z "$NOCLEAN" ]; then
+    OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
+    ./scripts/do-pkg.sh realclean cminstall
+  fi
+  echo " === perform cm3 upgrade "
+  ./scripts/upgrade.sh || exit 1
+  echo " >>> OK build_${1}_upgrade ${DS} ${WS}"
 
   echo " === build ${BSET} system with current compiler"
-  BUILDSCRIPT="./scripts/do-cm3-${BSET}.sh"
-  if [ "$1" = "rel" ]; then
-    if [ -z "$NOCLEAN" ]; then
-      OMIT_GCC=yes ./scripts/do-cm3-core.sh realclean || exit 1
-    fi
-  else
-    if [ -z "$NOCLEAN" ]; then
-      $BUILDSCRIPT realclean || exit 1
-    fi
+  if [ -z "$NOCLEAN" ]; then
+    $BUILDSCRIPT realclean || exit 1
   fi
   $BUILDSCRIPT buildship || exit 1
   echo " >>> OK build_${1}_${BSET} ${DS} ${WS}"
@@ -579,23 +532,22 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   echo " === move last ok version at ${INSTROOT_LOK} to previous ok version"
   if [ -d "${INSTROOT_LOK}" ]; then
     mv ${INSTROOT_LOK} ${INSTROOT_POK}
-    cm3config ${INSTROOT_POK}
   else
     echo " === no installation in ${INSTROOT_LOK}"
   fi
 
   echo " === move intermediate lastok ${INSTROOT_LOK}.$$ to ${INSTROOT_LOK}"
-  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} || {
     sleep 30
     echo "update of ${INSTROOT_LOK} failed... trying to restore..."
     [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
-    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} || {
       echo "restore of ${INSTROOT_LOK} failed!" 1>&2
     }
     # try again later...
     sleep 30
     [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
-    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} || {
       echo "HELP: restore of ${INSTROOT_LOK} failed!" 1>&2
     }
   }
@@ -605,7 +557,6 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
 
 test_build_system()
 {
-  cm3config ${INSTROOT_CUR}
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
   DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
@@ -632,23 +583,10 @@ test_build_system()
   if [ -z "$NOCLEAN" ]; then
     $BUILDSCRIPT realclean || exit 1
   fi
-  if $BUILDSCRIPT build; then
-    echo " >>> OK build_system ${DS} ${WS}; now rebuild and ship"
-    $BUILDSCRIPT buildship
-    echo " === install new compiler"
-    if ./scripts/install-cm3-compiler.sh upgrade; then
-      echo "compiler upgraded successfully"
-      cm3 -version
-    else
-      echo "compiler upgrade failed" 1>&2
-      exit 1
-    fi
-  else
-    echo " === perform cm3 upgrade after cleaning everything"
-    $BUILDSCRIPT realclean || exit 1
-    UPGRADE_CM3_CFG=yes ./scripts/upgrade.sh || exit 1
-    echo " >>> OK build_upgrade ${DS} ${WS}"
-  fi
+  echo " === perform cm3 upgrade after cleaning everything"
+  $BUILDSCRIPT realclean || exit 1
+  ./scripts/upgrade.sh || exit 1
+  echo " >>> OK build_upgrade ${DS} ${WS}"
 
   echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
   [ -d ${INSTROOT_LOK}.$$ ] && rm -rf ${INSTROOT_LOK}.$$
@@ -664,23 +602,22 @@ test_build_system()
   echo " === move last ok version at ${INSTROOT_LOK} to previous ok version"
   if [ -d "${INSTROOT_LOK}" ]; then
     mv ${INSTROOT_LOK} ${INSTROOT_POK}
-    cm3config ${INSTROOT_POK}
   else
     echo " === no installation in ${INSTROOT_LOK}"
   fi
 
   echo " === move intermediate lastok ${INSTROOT_LOK}.$$ to ${INSTROOT_LOK}"
-  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} || {
     sleep 30
     echo "update of ${INSTROOT_LOK} failed... trying to restore..."
     [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
-    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} || {
       echo "restore of ${INSTROOT_LOK} failed!" 1>&2
     }
     # try again later...
     sleep 30
     [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
-    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} || {
       echo "HELP: restore of ${INSTROOT_LOK} failed!" 1>&2
     }
   }
@@ -726,7 +663,6 @@ test_make_bin_dist()
   rm -rf "${INSTROOT_CUR}"
   cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
 
-  cm3config ${INSTROOT_CUR}
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
   DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
