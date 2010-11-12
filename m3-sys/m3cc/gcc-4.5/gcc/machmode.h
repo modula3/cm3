@@ -21,10 +21,6 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef HAVE_MACHINE_MODES
 #define HAVE_MACHINE_MODES
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Make an enum class that gives all the machine modes.  */
 #include "insn-modes.h"
 
@@ -273,9 +269,5 @@ extern enum machine_mode ptr_mode;
 
 /* Target-dependent machine mode initialization - in insn-modes.c.  */
 extern void init_adjust_machine_modes (void);
-
-#ifdef __cplusplus
-} /* extern C */
-#endif
 
 #endif /* not HAVE_MACHINE_MODES */
