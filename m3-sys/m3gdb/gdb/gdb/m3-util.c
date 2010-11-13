@@ -2968,6 +2968,11 @@ m3_evaluate_string ( char * string )
 enum m3_target_typ m3_current_target = TARGET_UNKNOWN;
 
 int m3_target_integer_bit = 32;
+/* DANGER, WILL ROBINSON!!!: You cannot use TARGET_INT_BIT (from existing
+   gdb code) for the size of Modula-3 INTEGER.  TARGET_INT_BIT is the size
+   of a C int, which can be 32, even on a 64-bit machine!!!
+*/ 
+
 int m3_target_longint_bit = 64;
 
 /* After m3_current_target has been set or changed, this sets variables

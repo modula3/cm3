@@ -160,6 +160,14 @@ m3_check_compiler ( char * name )
       { procedures_have_extra_block = TRUE; }
   } /* m3_check_compiler */
 
+/* CHECK: If m3_create_fundamental_type were called before m3_current_target
+   were correctly set and m3_set_derived_target_info subsequently called,
+   m3_target_integer_bit would not be properly initialized, and the
+   bit size of FT_INTEGER, FT_SIGNED_INTEGER, FT_UNSIGNED_INTEGER could 
+   be wrong.  This could be irrelevant.  As of 2010-11-7, this is called
+   only from dwarf2read.c and dwarfread.c (through la_fund_type), and we
+   don't do anything useful with dwarf debug format.
+ */ 
 static struct type *
 m3_create_fundamental_type (objfile, typeid)
      struct objfile *objfile;
@@ -217,17 +225,17 @@ m3_create_fundamental_type (objfile, typeid)
         break;
       case FT_INTEGER:
         type = init_type (TYPE_CODE_INT,
-                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          m3_target_integer_bit / TARGET_CHAR_BIT,
                           0, "int", objfile);
         break;
       case FT_SIGNED_INTEGER:
         type = init_type (TYPE_CODE_INT,
-                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          m3_target_integer_bit / TARGET_CHAR_BIT,
                           0, "int", objfile); /* FIXME -fnf */
         break;
       case FT_UNSIGNED_INTEGER:
         type = init_type (TYPE_CODE_INT,
-                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          m3_target_integer_bit / TARGET_CHAR_BIT,
                           TYPE_FLAG_UNSIGNED, "unsigned int", objfile);
         break;
       case FT_LONG:
@@ -1449,6 +1457,8 @@ dump_blockvector ( struct blockvector * block_vec, int max_syms_per_block )
 { int block_ss;
   struct block * blk;
   struct symbol * sym;
+
+
 
   printf_filtered ( "Dump of blockvector 0x%08x:\n", (int)block_vec );
   for ( block_ss = 0; block_ss < BLOCKVECTOR_NBLOCKS ( block_vec ); block_ss ++)
