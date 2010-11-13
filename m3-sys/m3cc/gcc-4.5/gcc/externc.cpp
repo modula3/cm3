@@ -163,18 +163,38 @@ int main()
            name, (UINT)x_if, (UINT)x_define, (UINT)x_endif, (UINT)x_include);
 
     if (!mod3)
-      fputs("/* Modula-3: modified */\n", outfile);
+      fputs("/* Modula-3: modified */\n\n", outfile);
+      
+    bool skip_newline = false;
     
     for (i = 0; i < lines.size(); ++i)
     {
       const char* format = "%s";
+      const string& line = lines[i].c_str();
+      if (skip_newline && line.length() < 2)
+        continue;
+      skip_newline = false;
       if (h && i == 0 && !seen_if && !seen_include)
-        format = "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n%s";
+      {
+        format = "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n%s";
+        if (line.length() > 1)
+          format = "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n%s";
+      }
       else if ((seen_include && i == x_include) || (seen_define && i == x_define))
-        format = "%s\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n";
+      {
+        format = "%s\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n";
+        if (line.length() > 1)
+          format = "%s\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n";
+        skip_newline = true;
+      }
       else if (seen_endif && i == x_endif)
-        format = "\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n\n%s";
-      fprintf(outfile, format, lines[i].c_str());
+      {
+        format = "\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n%s";
+        if (line.length() > 1)
+          format = "\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n\n%s";
+        format += (i != 0 && lines[i].length() == 1);
+      }
+      fprintf(outfile, format, line.c_str());
     }
     if (!seen_endif && !seen_if && !seen_define)
       fprintf(outfile, "\n\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
