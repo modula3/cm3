@@ -960,7 +960,7 @@ m3_lookup_module_id (
     struct type * global_type;
     char linkage_name [ M3_MAX_SYMBOLLEN * 2 + 3 ];
 /* FIXME: ^Get the space allocation right for this. */
-    struct blockvector *bv;
+    struct blockvector *bv = NULL;
     struct symtab * module_symtab;
     struct symtab * l_symtab;
     BOOL found;
@@ -968,22 +968,21 @@ m3_lookup_module_id (
     /* Look for the module global record. */
     module_rec_sym
       = m3_unit_name_globals_symbol ( 'M', module_name, & module_symtab );
-    if ( module_rec_sym != NULL )
-      { /* Look in the static block of the module, where we will find
+    if ( module_rec_sym != NULL && module_symtab != NULL )
+      { bv = BLOCKVECTOR ( module_symtab );
+        module_static_block = BLOCKVECTOR_BLOCK ( bv, STATIC_BLOCK );
+
+        /* Look in the static block of the module, where we will find
            a type or procedure declared in the module.  This is the same
            for all compilers. */
-        if ( module_symtab != NULL )
-          { bv = BLOCKVECTOR ( module_symtab );
-            module_static_block = BLOCKVECTOR_BLOCK ( bv, STATIC_BLOCK );
-            sym = m3_lookup_type
-                    ( module_name,
-                      ident,
-                      module_static_block,
-                      result_symtab
-                    );
-            if ( sym != NULL ) { return sym; }
-          }
-
+        sym = m3_lookup_type
+                ( module_name,
+                  ident,
+                  module_static_block,
+                  result_symtab
+                );
+        if ( sym != NULL ) { return sym; }
+       
         /* Construct the linkage name "moduleName__ProcName" and look for
            it in the static and global blocks of this module. */
         linkage_name [ 0 ] = '\0';
@@ -994,11 +993,11 @@ m3_lookup_module_id (
                 ( ident, linkage_name, module_static_block,
                   VAR_DOMAIN, & l_symtab
                 );
-        /* We found it in the static block.  This is the procedure we want,
-           regardless of whether it is exported. */
         if ( sym != NULL
              && sym->aclass != LOC_STATIC /* Is this still necessary? */
            )
+          /* We found it in the static block.  This is the procedure we want,
+             regardless of whether it is exported. */
           { if ( result_symtab != NULL) { * result_symtab = l_symtab; }
             return sym;
           }
@@ -1843,20 +1842,20 @@ m3_ordinal_range_check (
     LONGEST value, struct type * range_type, char * purpose )
 
   { ULONGEST uval, ulower, uupper;
-    LONGEST sval, slower, supper;
+    LONGEST slower, supper;
 
     if ( ! m3_is_ordinal_type ( range_type ) )
       { return; }
     m3_ordinal_bounds ( range_type, & slower, & supper );
     if ( m3_type_is_signed ( range_type ) )
-      { if ( ( sval < slower) || ( supper < sval ) )
+      { if ( ( value < slower) || ( supper < value ) )
           { error (_( "Value is out of range for %s.\n" ), purpose );
             /* FIXME: Put value, lower, and Upper into this message: */
             /* NORETURN */
           }
       }
     else
-      { uval = ( ULONGEST ) sval;      /* C defines these conversions as */
+      { uval = ( ULONGEST ) value;      /* C defines these conversions as */
         ulower = ( ULONGEST ) slower;  /* Modulo the variable size. */
         uupper = ( ULONGEST ) supper;
         if ( ( uval < ulower) || ( uupper < uval ) )
@@ -2011,8 +2010,8 @@ m3_ensure_value_is_unpacked ( struct value * packed_val )
     /* FIXME: The following is one byte too restrictive.  See the FIXME at
        m3_unpack_ord. */
     if ( byte_length > sizeof ( value ) )
-      { error ( "Packed field has %d bytes, can only unpack %d.",
-                (int)byte_length,
+      { error ( "Packed field has %u bytes, can only unpack %lu.",
+                byte_length,
                 sizeof ( value )
               );
       }
@@ -2375,8 +2374,8 @@ m3_static_parent_proc_block ( struct block * child_block )
   struct block * parent_proc_block;
 
   child_proc_block = m3_block_proc_block (child_block);
-  if (child_proc_block != NULL)
-    { parent_block = BLOCK_SUPERBLOCK (child_proc_block); }
+  if (child_proc_block == NULL) { return NULL; } 
+  parent_block = BLOCK_SUPERBLOCK (child_proc_block); 
   parent_proc_block = m3_block_proc_block (parent_block);
   return parent_proc_block;
 } /* m3_static_parent_proc_block */
@@ -2947,8 +2946,8 @@ m3_make_canonical ( struct symtabs_and_lines * values, char * * * canonical )
 struct value *
 m3_evaluate_string ( char * string )
 
-  { struct expression * expr;
-    struct value * val;
+  { struct expression * expr = NULL;
+    struct value * val = NULL;
     volatile struct gdb_exception exception1;
     volatile struct gdb_exception exception2;
 

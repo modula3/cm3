@@ -1458,29 +1458,28 @@ dump_blockvector ( struct blockvector * block_vec, int max_syms_per_block )
   struct block * blk;
   struct symbol * sym;
 
-
-
-  printf_filtered ( "Dump of blockvector 0x%08x:\n", (int)block_vec );
+  printf_filtered ( "Dump of blockvector 16_");
+  puts_filtered ( int_string ( block_vec, 16, 0, TARGET_PTR_BIT/4, 0 ) );
+  printf_filtered ( "\n" );
   for ( block_ss = 0; block_ss < BLOCKVECTOR_NBLOCKS ( block_vec ); block_ss ++)
     { blk = BLOCKVECTOR_BLOCK ( block_vec, block_ss );
       sym = BLOCK_FUNCTION ( blk );
-      printf_filtered
-         ( "%3d 0x%08x superblock=0x%08x",
-            block_ss, ( int ) blk, ( int ) BLOCK_SUPERBLOCK( blk)
-         );
-      printf_filtered
-         ( ", bodyblock=0x%08x",
-            ( int ) M3_BLOCK_BODY_BLOCK( blk)
-         );
+      printf_filtered ( "%3d ", block_ss );
+      printf_filtered ( " 16_" );
+      puts_filtered ( int_string ( blk, 16, 0, TARGET_PTR_BIT/4, 0 ) );
+      printf_filtered ( ", superblock=16_" ); 
+      puts_filtered 
+        ( int_string ( BLOCK_SUPERBLOCK(blk), 16, 0, TARGET_PTR_BIT/4, 0 ) );
+      printf_filtered ( ", bodyblock=16_" );
+      puts_filtered 
+        ( int_string ( M3_BLOCK_BODY_BLOCK(blk), 16, 0, TARGET_PTR_BIT/4, 0 ) );
       if ( sym == NULL )
         { printf_filtered ( ", anonymous, contains:\n" );
           list_block_symbols ( blk, max_syms_per_block );
         }
       else
         { printf_filtered
-            ( ", procedure \"%s\", contains:\n",
-              SYMBOL_SEARCH_NAME ( sym )
-            );
+            ( ", procedure \"%s\", contains:\n", SYMBOL_SEARCH_NAME ( sym ) );
           list_block_symbols ( blk, max_syms_per_block );
         }
     }
