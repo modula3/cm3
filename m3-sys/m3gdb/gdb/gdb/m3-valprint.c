@@ -364,12 +364,13 @@ init_m3_TextLiteral_library_types (void)
   { if ( ! TextLiteral_types_initialized )
       { library_type_m3_TextLiteral_buf_char_index
           = init_type
-             ( TYPE_CODE_M3_SUBRANGE, TARGET_INT_BIT/TARGET_CHAR_BIT /* size */,
+             ( TYPE_CODE_M3_SUBRANGE,
+               m3_target_integer_bit/TARGET_CHAR_BIT /* size */,
                0 /*flags*/,  "<TextLiteral.T.buff.index_char>",
                (struct objfile *) NULL
              );
         TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_char_index )
-          = TARGET_INT_BIT;
+          = m3_target_integer_bit;
         TYPE_M3_SUBRANGE_MIN ( library_type_m3_TextLiteral_buf_char_index )
           = 0;
         TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_char_index )
@@ -392,13 +393,14 @@ init_m3_TextLiteral_library_types (void)
 
         library_type_m3_TextLiteral_buf_widechar_index
           = init_type
-             ( TYPE_CODE_M3_SUBRANGE, TARGET_INT_BIT/TARGET_CHAR_BIT /* size */,
+             ( TYPE_CODE_M3_SUBRANGE, 
+               m3_target_integer_bit/TARGET_CHAR_BIT /* size */,
                0 /*flags*/,
                "<TextLiteral.T.buff.index_widechar>",
                (struct objfile *) NULL
              );
         TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar_index )
-          = TARGET_INT_BIT;
+          = m3_target_integer_bit;
         TYPE_M3_SUBRANGE_MIN ( library_type_m3_TextLiteral_buf_widechar_index )
           = 0;
         TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_widechar_index )
@@ -1002,10 +1004,13 @@ m3_print_object (
       fprintf_filtered
         (stream, _("<Can't find Modula-3 TypeCell for object at "));
       m3_print_scalar (valaddr, bitpos, TARGET_PTR_BIT, stream, '&', 0);
-      /* FIXME: valaddr does not point to a place where the negative-displacement
-         GC word is present.
+      /* FIXME: valaddr does not point to a place where the 
+         negative-displacement GC word is present.
       fprintf_filtered
-        (stream, ", with typecode %d>", m3_typecode_from_inf_object_addr ( valaddr ) );
+        ( stream, ", 
+          with typecode %d>", 
+          m3_typecode_from_inf_object_addr ( valaddr ) 
+        );
       */
       return;
     }
@@ -1492,7 +1497,9 @@ m3_val_print2 (
           }
         else
           { m3_print_scalar
-              ( valaddr, bitpos, bitsize, stream, format, TARGET_INT_BIT );
+              ( valaddr, bitpos, bitsize, stream, format, 
+                m3_target_integer_bit 
+              );
           }
         break;
       }
@@ -1523,7 +1530,7 @@ m3_val_print2 (
 
     case TYPE_CODE_M3_INTEGER :
       m3_print_scalar
-        ( valaddr, bitpos, bitsize, stream, format, TARGET_INT_BIT );
+        ( valaddr, bitpos, bitsize, stream, format, m3_target_integer_bit );
       break;
 
     case TYPE_CODE_M3_LONGINT :
