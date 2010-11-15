@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Set up combined include path for the preprocessor.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008
    Free Software Foundation, Inc.
@@ -16,6 +18,10 @@
    along with this program; see the file COPYING3.  If not see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void split_quote_chain (void);
 extern void add_path (char *, int, int, bool);
 extern void register_include_chains (cpp_reader *, const char *,
@@ -32,3 +38,7 @@ struct target_c_incpath_s {
 extern struct target_c_incpath_s target_c_incpath;
 
 enum { QUOTE = 0, BRACKET, SYSTEM, AFTER };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

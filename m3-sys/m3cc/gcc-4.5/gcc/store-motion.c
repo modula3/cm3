@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Store motion via Lazy Code Motion on the reverse CFG.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -45,6 +47,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "df.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass implements downward store motion.
    As of May 1, 2009, the pass is not enabled by default on any target,
@@ -1263,3 +1269,6 @@ struct rtl_opt_pass pass_rtl_store_motion =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

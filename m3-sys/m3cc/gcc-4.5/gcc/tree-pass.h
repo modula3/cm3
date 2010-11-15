@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for describing one tree-ssa optimization pass.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_TREE_PASS_H 1
 
 #include "timevar.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Different tree dump places.  When you add new tree dump places,
    extend the DUMP_FILES array in tree-dump.c.  */
@@ -619,5 +625,9 @@ extern bool first_pass_instance;
 
 /* Declare for plugins.  */
 extern void do_per_function_toporder (void (*) (void *), void *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_TREE_PASS_H */

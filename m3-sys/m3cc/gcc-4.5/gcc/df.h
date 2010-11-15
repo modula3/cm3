@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Form lists of pseudo register references for autoinc optimization
    for GNU compiler.  This is part of flow optimization.
    Copyright (C) 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008,
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "basic-block.h"
 #include "alloc-pool.h"
 #include "timevar.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct dataflow;
 struct df;
@@ -1119,5 +1125,9 @@ extern bool unionfind_union (struct web_entry *, struct web_entry *);
 extern void union_defs (df_ref, struct web_entry *,
 			unsigned int *used, struct web_entry *,
 			bool (*fun) (struct web_entry *, struct web_entry *));
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_DF_H */

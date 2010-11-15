@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Exported functions from emit-rtl.c
    Copyright (C) 2004, 2007, 2008 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_EMIT_RTL_H
 #define GCC_EMIT_RTL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Set the alias set of MEM to SET.  */
 extern void set_mem_alias_set (rtx, alias_set_type);
@@ -50,5 +56,9 @@ extern rtx replace_equiv_address (rtx, rtx);
 
 /* Likewise, but the reference is not required to be valid.  */
 extern rtx replace_equiv_address_nv (rtx, rtx);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_EMIT_RTL_H */

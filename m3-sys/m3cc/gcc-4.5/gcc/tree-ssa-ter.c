@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Routines for performing Temporary Expression Replacement (TER) in SSA trees.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation,
    Inc.
@@ -32,6 +34,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-live.h"
 #include "flags.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Temporary Expression Replacement (TER)
 
@@ -745,4 +750,8 @@ debug_ter (FILE *f, temp_expr_table_p t)
 
   fprintf (f, "\n----------\n");
 }
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

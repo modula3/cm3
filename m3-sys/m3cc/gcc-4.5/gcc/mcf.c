@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Routines to implement minimum-cost maximal flow algorithm used to smooth
    basic block and edge frequency counts.
    Copyright (C) 2008, 2009
@@ -54,6 +56,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gcov-io.h"
 
 #include "profile.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* CAP_INFINITY: Constant to represent infinite capacity.  */
 #define CAP_INFINITY INTTYPE_MAXIMUM (HOST_WIDEST_INT)
@@ -1400,3 +1406,7 @@ mcf_smooth_cfg (void)
   adjust_cfg_counts (&fixup_graph);
   delete_fixup_graph (&fixup_graph);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

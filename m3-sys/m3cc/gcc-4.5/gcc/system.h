@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Get common system includes and various definitions and declarations based
    on autoconf macros.
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
@@ -598,9 +600,17 @@ extern int vsnprintf(char *, size_t, const char *, va_list);
 #define __builtin_expect(a, b) (a)
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Redefine abort to report an internal error w/o coredump, and
    reporting the location of the error in the source file.  */
 extern void fancy_abort (const char *, int, const char *) ATTRIBUTE_NORETURN;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #define abort() fancy_abort (__FILE__, __LINE__, __FUNCTION__)
 

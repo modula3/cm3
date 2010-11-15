@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Array prefetching.
    Copyright (C) 2005, 2007, 2008 Free Software Foundation, Inc.
 
@@ -47,6 +49,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-inline.h"
 #include "tree-data-ref.h"
 #include "optabs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass inserts prefetch instructions to optimize cache usage during
    accesses to arrays in loops.  It processes loops sequentially and:
@@ -1740,3 +1746,7 @@ tree_ssa_prefetch_arrays (void)
   free_original_copy_tables ();
   return todo_flags;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

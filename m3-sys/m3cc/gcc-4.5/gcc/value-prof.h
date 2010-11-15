@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for transformations based on profile information for values.
    Copyright (C) 2003, 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_VALUE_PROF_H
 #define GCC_VALUE_PROF_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Supported histogram types.  */
 enum hist_type
@@ -132,5 +138,8 @@ extern void tree_register_profile_hooks (void);
 /* In tree-profile.c.  */
 extern struct profile_hooks tree_profile_hooks;
 
-#endif	/* GCC_VALUE_PROF_H */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
+#endif	/* GCC_VALUE_PROF_H */

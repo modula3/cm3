@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Command line option handling.
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_OPTS_H
 #define GCC_OPTS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Specifies how a switch's VAR_VALUE relates to its FLAG_VAR.  */
 enum cl_var_type {
@@ -108,4 +114,9 @@ extern void set_option (const struct cl_option *, int, const char *);
 extern void enable_warning_as_error (const char *arg, int value,
 				     unsigned int lang_mask);
 extern void print_ignored_options (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif

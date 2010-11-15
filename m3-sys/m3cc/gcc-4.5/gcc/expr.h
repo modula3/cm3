@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for code generation pass of GNU compiler.
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_EXPR_H
 #define GCC_EXPR_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* For inhibit_defer_pop */
 #include "function.h"
@@ -829,5 +835,9 @@ extern tree build_libfunc_function (const char *);
 rtx get_personality_function (tree);
 
 extern int vector_mode_valid_p (enum machine_mode);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_EXPR_H */

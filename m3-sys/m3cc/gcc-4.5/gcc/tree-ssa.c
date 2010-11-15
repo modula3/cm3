@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Miscellaneous SSA utility functions.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -46,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-dump.h"
 #include "tree-pass.h"
 #include "toplev.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Pointer map of variable mappings, keyed by edge.  */
 static struct pointer_map_t *edge_var_maps;
@@ -2053,3 +2059,7 @@ struct gimple_opt_pass pass_update_address_taken =
   | TODO_dump_func			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

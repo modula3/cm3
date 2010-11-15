@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Lower complex number operations to scalar operations.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -33,6 +35,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-propagate.h"
 #include "diagnostic.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* For each complex ssa name, a lattice value.  We're interested in finding
    out whether a complex number is degenerate in some way, having only real
@@ -1662,3 +1667,7 @@ struct gimple_opt_pass pass_lower_complex_O0 =
     | TODO_verify_stmts	 		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

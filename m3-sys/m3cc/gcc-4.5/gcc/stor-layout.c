@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* C-compiler utilities for types and variables storage layout
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1996, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -41,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-inline.h"
 #include "tree-dump.h"
 #include "gimple.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Data type for the expressions representing sizes of data types.
    It is the first integer type laid out.  */
@@ -2524,3 +2530,7 @@ get_mode_bounds (enum machine_mode mode, int sign,
 }
 
 #include "gt-stor-layout.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

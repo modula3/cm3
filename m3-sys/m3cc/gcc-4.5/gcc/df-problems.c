@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Standard problems for dataflow support routines.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
    2008, 2009 Free Software Foundation, Inc.
@@ -44,6 +46,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "except.h"
 #include "dce.h"
 #include "vecprim.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Note that turning REG_DEAD_DEBUGGING on will cause
    gcc.c-torture/unsorted/dump-noaddr.c to fail because it prints
@@ -4428,5 +4434,6 @@ df_md_add_problem (void)
   df_add_problem (&problem_MD);
 }
 
-
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

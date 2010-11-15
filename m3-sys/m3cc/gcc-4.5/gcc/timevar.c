@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Timing variables for measuring compiler performance.
    Copyright (C) 2000, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Alex Samuel <samuel@codesourcery.com>
@@ -111,6 +113,10 @@ static double clocks_to_msec;
 
 #include "flags.h"
 #include "timevar.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 bool timevar_enable;
 
@@ -504,3 +510,7 @@ print_time (const char *str, long total)
 	   all_time == 0 ? 0
 	   : (long) (((100.0 * (double) total) / (double) all_time) + .5));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

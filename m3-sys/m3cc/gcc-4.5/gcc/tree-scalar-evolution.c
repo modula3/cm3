@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scalar evolution detector.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -275,6 +277,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "flags.h"
 #include "params.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static tree analyze_scalar_evolution_1 (struct loop *, tree, tree);
 
@@ -3362,3 +3368,7 @@ scev_const_prop (void)
 }
 
 #include "gt-tree-scalar-evolution.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

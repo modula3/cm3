@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Linear Loop transforms
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-scalar-evolution.h"
 #include "tree-pass.h"
 #include "lambda.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Linear loop transforms include any composition of interchange,
    scaling, skewing, and reversal.  They are used to change the
@@ -431,3 +437,7 @@ linear_transform_loops (void)
   if (modified)
     rewrite_into_loop_closed_ssa (NULL, TODO_update_ssa_full_phi);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

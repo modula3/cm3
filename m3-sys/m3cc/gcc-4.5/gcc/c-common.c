@@ -1,5 +1,5 @@
 /* some changes in Modula-3 fork
-   e.g. fix ffs for VMS */
+   e.g. fix ffs for VMS, extern "C" */
 
 /* Subroutines shared by all languages that are variants of C.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
@@ -57,6 +57,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "libfuncs.h"
 #ifndef TARGET_ABI_OPEN_VMS
 #define TARGET_ABI_OPEN_VMS 0
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 cpp_reader *parse_in;		/* Declared in c-pragma.h.  */
@@ -9347,3 +9351,7 @@ make_tree_vector_copy (const VEC(tree,gc) *orig)
 }
 
 #include "gt-c-common.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

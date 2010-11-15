@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Combine stack adjustments.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -62,6 +64,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "tree-pass.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Turn STACK_GROWS_DOWNWARD into a boolean.  */
 #ifdef STACK_GROWS_DOWNWARD
@@ -589,3 +594,7 @@ struct rtl_opt_pass pass_stack_adjustments =
   TODO_ggc_collect,                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

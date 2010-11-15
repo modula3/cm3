@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scanning of rtl for dataflow analysis.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
    2008, 2009, 2010 Free Software Foundation, Inc.
@@ -45,6 +47,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "target-def.h"
 #include "df.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 DEF_VEC_P(df_ref);
 DEF_VEC_ALLOC_P_STACK(df_ref);
@@ -4674,3 +4680,7 @@ df_scan_verify (void)
       df_reg_chain_verify_unmarked (DF_REG_EQ_USE_CHAIN (i));
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

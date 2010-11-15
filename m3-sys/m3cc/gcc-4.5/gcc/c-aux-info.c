@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate information regarding function declarations and definitions based
    on information stored in GCC's tree structure.  This code implements the
    -aux-info option.
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "c-tree.h"
 #include "toplev.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum formals_style_enum {
   ansi,
@@ -589,3 +595,7 @@ gen_aux_info_record (tree fndecl, int is_definition, int is_implicit,
       fprintf (aux_info_file, "\n");
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

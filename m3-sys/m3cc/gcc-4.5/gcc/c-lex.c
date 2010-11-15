@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Mainly the interface between cpplib and the C front ends.
    Copyright (C) 1987, 1988, 1989, 1992, 1994, 1995, 1996, 1997
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008
@@ -41,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "splay-tree.h"
 #include "debug.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* We may keep statistics about how long which files took to compile.  */
 static int header_time, body_time;
@@ -1050,3 +1056,7 @@ lex_charconst (const cpp_token *token)
 
   return value;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

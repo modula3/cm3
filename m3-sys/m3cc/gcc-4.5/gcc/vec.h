@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Vector API for GNU compiler.
    Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_VEC_H
 #define GCC_VEC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The macros here implement a set of templated vector types and
    associated interfaces.  These templates are implemented with
@@ -1278,5 +1284,9 @@ static inline VEC(T,stack) *VEC_OP (T,stack,alloc1)			  \
 {									  \
   return (VEC(T,stack) *) vec_stack_p_reserve_exact_1 (alloc_, space);   \
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_VEC_H */

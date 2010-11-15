@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Combining of if-expressions on trees.
    Copyright (C) 2007, 2008 Free Software Foundation, Inc.
    Contributed by Richard Guenther <rguenther@suse.de>
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "tree-pass.h"
 #include "tree-dump.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass combines COND_EXPRs to simplify control flow.  It
    currently recognizes bit tests and comparisons in chains that
@@ -678,3 +684,7 @@ struct gimple_opt_pass pass_tree_ifcombine =
   | TODO_verify_ssa		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

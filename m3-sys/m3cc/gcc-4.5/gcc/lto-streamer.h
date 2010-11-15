@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data structures and declarations used for reading and writing
    GIMPLE to a file stream.
 
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "cgraph.h"
 #include "vec.h"
 #include "vecprim.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Define when debugging the LTO streamer.  This causes the writer
    to output the numeric value for the memory address of the tree node
@@ -1045,5 +1051,9 @@ DEFINE_DECL_STREAM_FUNCS (VAR_DECL, var_decl)
 DEFINE_DECL_STREAM_FUNCS (TYPE_DECL, type_decl)
 DEFINE_DECL_STREAM_FUNCS (NAMESPACE_DECL, namespace_decl)
 DEFINE_DECL_STREAM_FUNCS (LABEL_DECL, label_decl)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_LTO_STREAMER_H  */

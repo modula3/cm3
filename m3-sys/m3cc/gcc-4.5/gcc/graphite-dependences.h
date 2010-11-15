@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Graphite polyhedral representation.
    Copyright (C) 2009 Free Software Foundation, Inc.
    Contributed by Konrad Trifunovic <konrad.trifunovic@gmail.com>
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_GRAPHITE_DEPENDENCES_H
 #define GCC_GRAPHITE_DEPENDENCES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern bool graphite_legal_transform (scop_p);
 extern bool dependency_between_pbbs_p (poly_bb_p, poly_bb_p, int);
@@ -60,5 +66,9 @@ extern void dot_deps (scop_p);
 extern void dot_deps_stmt (scop_p);
 extern void print_pddr (FILE *, poly_ddr_p);
 extern void debug_pddr (poly_ddr_p);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

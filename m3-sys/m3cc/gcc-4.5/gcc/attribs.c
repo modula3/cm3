@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions dealing with attribute handling, used by most front ends.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
    2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "hashtab.h"
 #include "plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void init_attributes (void);
 
@@ -466,3 +472,7 @@ decl_attributes (tree *node, tree attributes, int flags)
 
   return returned_attrs;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

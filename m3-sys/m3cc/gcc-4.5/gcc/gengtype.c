@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process source files and output type information.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@
 #include "gengtype.h"
 #include "errors.h"	/* for fatal */
 #include "double-int.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Data types, macros, etc. used only in this file.  */
 
@@ -3784,3 +3790,7 @@ main (int argc, char **argv)
     return 1;
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

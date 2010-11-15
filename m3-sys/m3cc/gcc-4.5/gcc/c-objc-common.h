@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Language hooks common to C and ObjC front ends.
    Copyright (C) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Ziemowit Laski  <zlaski@apple.com>
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_C_OBJC_COMMON
 #define GCC_C_OBJC_COMMON
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Lang hooks that are shared between C and ObjC are defined here.  Hooks
    specific to C or ObjC go in c-lang.c and objc/objc-lang.c, respectively.  */
@@ -100,5 +106,9 @@ along with GCC; see the file COPYING3.  If not see
 
 #undef LANG_HOOKS_TREE_INLINING_VAR_MOD_TYPE_P
 #define LANG_HOOKS_TREE_INLINING_VAR_MOD_TYPE_P c_vla_unspec_p
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_C_OBJC_COMMON */

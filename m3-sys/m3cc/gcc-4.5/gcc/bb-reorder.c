@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Basic block reordering routines for the GNU compiler.
    Copyright (C) 2000, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -85,6 +87,10 @@
 #include "toplev.h"
 #include "tree-pass.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The number of rounds.  In most cases there will only be 4 rounds, but
    when partitioning hot and cold basic blocks into separate sections of
@@ -2292,3 +2298,7 @@ struct rtl_opt_pass pass_partition_blocks =
   TODO_dump_func | TODO_verify_rtl_sharing/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Pass computing data for optimizing stdarg functions.
    Copyright (C) 2004, 2005, 2007, 2008, 2009 Free Software Foundation, Inc.
    Contributed by Jakub Jelinek <jakub@redhat.com>
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "tree-pass.h"
 #include "tree-stdarg.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A simple pass that attempts to optimize stdarg functions on architectures
    that need to save register arguments to stack on entry to stdarg functions.
@@ -918,3 +924,7 @@ struct gimple_opt_pass pass_stdarg =
   TODO_dump_func			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

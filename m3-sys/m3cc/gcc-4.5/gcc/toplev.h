@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* toplev.h - Various declarations for functions found in toplev.c
    Copyright (C) 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007,
    2008, 2009, 2010
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_TOPLEV_H
 #include "input.h"
 #include "bversion.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* If non-NULL, return one past-the-end of the matching SUBPART of
    the WHOLE string.  */
@@ -222,5 +228,9 @@ extern bool set_src_pwd		       (const char *);
 
 extern const char *get_random_seed (bool);
 extern const char *set_random_seed (const char *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_TOPLEV_H */

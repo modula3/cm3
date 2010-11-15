@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.  This file computes dependencies between
    instructions.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "cselib.h"
 #include "ira.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef INSN_SCHEDULING
 
@@ -4167,5 +4173,9 @@ check_dep (dep_t dep, bool relaxed_p)
     }
 }
 #endif /* ENABLE_CHECKING */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* INSN_SCHEDULING */

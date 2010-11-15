@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree lowering pass.  This pass gimplifies the tree representation built
    by the C-based front ends.  The structure of gimplified, or
    language-independent, trees is dictated by the grammar described in this
@@ -47,6 +49,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "c-pretty-print.h"
 #include "cgraph.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*  The gimplification pass converts the language-dependent trees
     (ld-trees) emitted by the parser into language-independent trees
@@ -192,3 +197,7 @@ c_gimplify_expr (tree *expr_p, gimple_seq *pre_p ATTRIBUTE_UNUSED,
 
   return GS_UNHANDLED;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

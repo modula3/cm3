@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Operations with long integers.
    Copyright (C) 2006, 2007, 2009 Free Software Foundation, Inc.
 
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "tm.h"
 #include "tree.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Returns mask for PREC bits.  */
 
@@ -491,3 +497,7 @@ mpz_get_double_int (const_tree type, mpz_t val, bool wrap)
 
   return res;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

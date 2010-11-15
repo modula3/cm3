@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Decimal floating point support functions for GNU compiler.
    Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_DFP_H
 #define GCC_DFP_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Encode REAL_VALUE_TYPEs into 32/64/128-bit IEEE 754 encoded values.  */
 void encode_decimal32  (const struct real_format *fmt, long *, const REAL_VALUE_TYPE *);
@@ -44,6 +50,10 @@ HOST_WIDE_INT decimal_real_to_integer (const REAL_VALUE_TYPE *);
 #ifdef TREE_CODE
 bool decimal_real_arithmetic (REAL_VALUE_TYPE *, enum tree_code, const REAL_VALUE_TYPE *,
 			      const REAL_VALUE_TYPE *);
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* GCC_DFP_H */

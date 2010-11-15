@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree-dumping functionality for intermediate representation.
    Copyright (C) 1999, 2000, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -33,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-iterator.h"
 #include "real.h"
 #include "fixed-value.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static unsigned int queue (dump_info_p, const_tree, int);
 static void dump_index (dump_info_p, unsigned int);
@@ -1127,3 +1133,7 @@ enable_rtl_dump_file (void)
 {
   return dump_enable_all (TDF_RTL | TDF_DETAILS | TDF_BLOCKS) > 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

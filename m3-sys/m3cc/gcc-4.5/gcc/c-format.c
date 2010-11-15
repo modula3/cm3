@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Check calls to formatted I/O functions (-Wformat).
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "c-format.h"
 #include "alloc-pool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Set format warning options according to a -Wformat=n option.  */
 
 void
@@ -2869,3 +2875,7 @@ handle_format_attribute (tree *node, tree ARG_UNUSED (name), tree args,
 
   return NULL_TREE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

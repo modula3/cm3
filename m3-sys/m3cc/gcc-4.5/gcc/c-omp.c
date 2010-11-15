@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* This file contains routines to construct GNU OpenMP constructs,
    called from parsing in the C and C++ front ends.
 
@@ -33,6 +35,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"
 #include "langhooks.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Complete a #pragma omp master construct.  STMT is the structured-block
    that follows the pragma.  LOC is the l*/
@@ -532,3 +537,7 @@ c_omp_predetermined_sharing (tree decl)
 
   return OMP_CLAUSE_DEFAULT_UNSPECIFIED;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

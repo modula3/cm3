@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of various defaults for tm.h macros.
    Copyright (C) 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
    2005, 2007, 2008, 2009, 2010
@@ -27,6 +29,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifndef GCC_DEFAULTS_H
 #define GCC_DEFAULTS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef GET_ENVIRONMENT
 #define GET_ENVIRONMENT(VALUE, NAME) do { (VALUE) = getenv (NAME); } while (0)
@@ -1163,6 +1169,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
    or integer value is acceptable as a constant address.  */
 #ifndef CONSTANT_ADDRESS_P
 #define CONSTANT_ADDRESS_P(X)   (CONSTANT_P (X) && GET_CODE (X) != CONST_DOUBLE)
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif  /* ! GCC_DEFAULTS_H */

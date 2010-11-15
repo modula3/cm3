@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Exception Handling interface routines.
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2007, 2008, 2009  Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "sbitmap.h"
 #include "vecprim.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct function;
 struct eh_region_d;
@@ -388,3 +394,7 @@ ehr_next (eh_region r, eh_region start)
   for ((R) = (FN)->eh->region_tree; (R) != NULL; (R) = ehr_next (R, NULL))
 
 #define FOR_ALL_EH_REGION(R) FOR_ALL_EH_REGION_FN (R, cfun)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

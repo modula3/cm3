@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scan linker error messages for missing template instantiations and provide
    them.
 
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "demangle.h"
 #include "collect2.h"
 #include "libiberty.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* TARGET_64BIT may be defined to use driver specific functionality. */
 #undef TARGET_64BIT
@@ -806,3 +812,7 @@ do_tlink (char **ld_argv, char **object_lst ATTRIBUTE_UNUSED)
       collect_exit (exit);
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

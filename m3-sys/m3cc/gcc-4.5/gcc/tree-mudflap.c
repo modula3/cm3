@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Mudflap: narrow-pointer bounds-checking by tree rewriting.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -47,6 +49,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "cgraph.h"
 #include "toplev.h"
 #include "gimple.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Internal function decls */
 
@@ -1426,3 +1432,7 @@ struct gimple_opt_pass pass_mudflap_2 =
 };
 
 #include "gt-tree-mudflap.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

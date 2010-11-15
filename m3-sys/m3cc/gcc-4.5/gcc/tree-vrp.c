@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Support routines for Value Range Propagation (VRP).
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -39,6 +41,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-propagate.h"
 #include "tree-chrec.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Set of SSA names found live during the RPO traversal of the function
    for still active basic-blocks.  */
@@ -7490,3 +7495,7 @@ struct gimple_opt_pass pass_vrp =
     | TODO_update_ssa			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

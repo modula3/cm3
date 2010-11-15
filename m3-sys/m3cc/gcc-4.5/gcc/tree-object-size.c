@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* __builtin_object_size (ptr, object_size_type) computation
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "tree-pass.h"
 #include "tree-ssa-propagate.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct object_size_info
 {
@@ -1254,3 +1260,7 @@ struct gimple_opt_pass pass_object_sizes =
   TODO_dump_func | TODO_verify_ssa	/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

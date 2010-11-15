@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Mudflap: narrow-pointer bounds-checking by tree rewriting.
    Copyright (C) 2001, 2002, 2003, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -37,7 +39,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "toplev.h"
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains placeholder functions, to be used only for
    language processors that cannot handle tree-mudflap.c directly.
@@ -135,3 +139,7 @@ We prepare a little dummy struct here.
 EXPORTED_CONST struct ggc_root_tab gt_ggc_r_gt_tree_mudflap_h[] = {
   LAST_GGC_ROOT_TAB
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

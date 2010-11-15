@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Structure for saving state for a nested function.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "hashtab.h"
 #include "vecprim.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Stack of pending (incomplete) sequences saved by `start_sequence'.
    Each element describes one pending sequence.
@@ -703,4 +709,9 @@ extern bool reference_callee_copied (CUMULATIVE_ARGS *, enum machine_mode,
 extern void used_types_insert (tree);
 
 extern int get_next_funcdef_no (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif  /* GCC_FUNCTION_H */

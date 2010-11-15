@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data references and dependences detectors.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "lambda.h"
 #include "omega.h"
 #include "tree-chrec.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
   innermost_loop_behavior describes the evolution of the address of the memory
@@ -602,5 +608,9 @@ DEF_VEC_ALLOC_P (rdgc, heap);
 
 DEF_VEC_P (bitmap);
 DEF_VEC_ALLOC_P (bitmap, heap);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_TREE_DATA_REF_H  */

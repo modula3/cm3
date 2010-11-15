@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Induction variable canonicalization.
    Copyright (C) 2004, 2005, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -55,6 +57,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "tree-inline.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Specifies types of loops that may be unrolled.  */
 
@@ -561,3 +567,7 @@ tree_unroll_loops_completely (bool may_increase_size, bool unroll_outer)
 
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

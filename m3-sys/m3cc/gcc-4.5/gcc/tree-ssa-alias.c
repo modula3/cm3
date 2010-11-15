@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Alias analysis for trees.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -49,6 +51,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "alloc-pool.h"
 #include "tree-ssa-alias.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Broad overview of how alias analysis on gimple works:
 
@@ -1709,3 +1715,6 @@ walk_aliased_vdefs (ao_ref *ref, tree vdef,
   return ret;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

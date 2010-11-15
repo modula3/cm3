@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    - some macros CODE_FOR_... giving the insn_code_number value
    for each of the defined standard insn names.
@@ -28,6 +30,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "errors.h"
 #include "gensupport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void
 gen_insn (rtx insn, int code)
@@ -95,3 +101,7 @@ enum insn_code {");
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

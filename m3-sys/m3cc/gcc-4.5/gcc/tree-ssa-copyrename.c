@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Rename SSA copies.
    Copyright (C) 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Andrew MacLeod <amacleod@redhat.com>
@@ -38,6 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-live.h"
 #include "tree-pass.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The following routines implement the SSA copy renaming phase.
 
@@ -375,3 +381,7 @@ struct gimple_opt_pass pass_rename_ssa_copies =
   TODO_dump_func | TODO_verify_ssa      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

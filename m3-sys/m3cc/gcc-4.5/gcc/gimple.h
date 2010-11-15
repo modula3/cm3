@@ -1,5 +1,4 @@
-/* July 2010 derived from:
- */
+/* Modula-3: modified */
 
 /* Gimple IR definitions.
 
@@ -32,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hard-reg-set.h"
 #include "basic-block.h"
 #include "tree-ssa-operands.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 DEF_VEC_P(gimple);
 DEF_VEC_ALLOC_P(gimple,heap);
@@ -4775,5 +4778,9 @@ gimple_alloc_kind (enum gimple_code code)
 #endif /* GATHER_STATISTICS */
 
 extern void dump_gimple_statistics (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_GIMPLE_H */

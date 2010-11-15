@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Exception handling and frame unwind runtime interface routines.
    Copyright (C) 2001, 2002, 2003, 2004, 2008, 2009 Free Software Foundation, Inc.
 
@@ -28,6 +30,10 @@
 
 #ifndef GCC_UNWIND_PE_H
 #define GCC_UNWIND_PE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* If using C++, references to abort have to be qualified with std::.  */
 #if __cplusplus
@@ -284,6 +290,10 @@ read_encoded_value (struct _Unwind_Context *context, unsigned char encoding,
 		p, val);
 }
 
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* unwind-pe.h */

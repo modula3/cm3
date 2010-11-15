@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for code generation pass of GNU compiler.
    Copyright (C) 2001, 2004, 2007, 2008 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_LIBFUNCS_H
 #define GCC_LIBFUNCS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Enumeration of indexes into libfunc_table.  */
 enum libfunc_index
@@ -70,5 +76,9 @@ extern GTY(()) rtx libfunc_table[LTI_MAX];
 #define synchronize_libfunc	(libfunc_table[LTI_synchronize])
 
 #define gcov_flush_libfunc	(libfunc_table[LTI_gcov_flush])
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_LIBFUNCS_H */

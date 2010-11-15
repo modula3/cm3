@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Routines for discovering and unpropagating edge equivalences.
    Copyright (C) 2005, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -40,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "tree-ssa-propagate.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The basic structure describing an equivalency created by traversing
    an edge.  Traversing the edge effectively means that we can assume
@@ -605,3 +611,6 @@ struct gimple_opt_pass pass_uncprop =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

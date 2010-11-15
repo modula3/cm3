@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Dead code elimination pass for the GNU compiler.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -66,6 +68,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "cfgloop.h"
 #include "tree-scalar-evolution.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static struct stmt_stats
 {
@@ -1473,3 +1479,7 @@ struct gimple_opt_pass pass_cd_dce =
   | TODO_verify_flow			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

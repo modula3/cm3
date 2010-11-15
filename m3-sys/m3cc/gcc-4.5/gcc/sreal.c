@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Simple data type for positive real numbers for the GNU compiler.
    Copyright (C) 2002, 2003, 2004, 2007 Free Software Foundation, Inc.
 
@@ -54,6 +56,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "tm.h"
 #include "sreal.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static inline void copy (sreal *, sreal *);
 static inline void shift_right (sreal *, int);
@@ -541,3 +547,7 @@ sreal_div (sreal *r, sreal *a, sreal *b)
 #endif
   return r;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

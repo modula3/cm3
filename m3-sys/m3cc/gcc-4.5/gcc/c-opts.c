@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* C/ObjC/C++ command line option handling.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -41,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "tm_p.h"
 #include "c-tree.h"		/* For c_cpp_error.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef DOLLARS_IN_IDENTIFIERS
 # define DOLLARS_IN_IDENTIFIERS true
@@ -1684,3 +1690,7 @@ handle_OPT_d (const char *arg)
 	break;
       }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

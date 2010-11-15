@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.  Selective scheduler and pipeliner.
    Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
@@ -48,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "sel-sched-ir.h"
 /* We don't have to use it except for sel_print_insn.  */
 #include "sel-sched-dump.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A vector holding bb info for whole scheduling pass.  */
 VEC(sel_global_bb_info_def, heap) *sel_global_bb_info = NULL;
@@ -6203,4 +6209,9 @@ sel_remove_loop_preheader (void)
     SET_LOOP_PREHEADER_BLOCKS (loop_outer (current_loop_nest),
 			       preheader_blocks);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif

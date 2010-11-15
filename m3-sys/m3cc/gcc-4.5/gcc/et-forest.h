@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Et-forest data structure implementation.
    Copyright (C) 2002, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 

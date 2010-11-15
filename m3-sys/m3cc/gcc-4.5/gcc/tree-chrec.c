@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Chains of recurrences.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -40,7 +42,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "tree-scalar-evolution.h"
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Extended folder for chrecs.  */
 
@@ -1541,3 +1545,6 @@ evolution_function_right_is_integer_cst (const_tree chrec)
     }
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

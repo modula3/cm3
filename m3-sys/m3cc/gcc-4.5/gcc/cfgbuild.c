@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Control flow graph building code for GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "expr.h"
 #include "toplev.h"
 #include "timevar.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void make_edges (basic_block, basic_block, int);
 static void make_label_edge (sbitmap, basic_block, rtx, int);
@@ -620,3 +626,7 @@ find_many_sub_basic_blocks (sbitmap blocks)
   FOR_EACH_BB (bb)
     SET_STATE (bb, 0);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

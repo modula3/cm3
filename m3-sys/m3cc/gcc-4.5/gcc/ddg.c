@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* DDG - Data Dependence Graph implementation.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "expr.h"
 #include "bitmap.h"
 #include "ddg.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef INSN_SCHEDULING
 
@@ -1133,3 +1139,7 @@ longest_simple_path (struct ddg * g, int src, int dest, sbitmap nodes)
 }
 
 #endif /* INSN_SCHEDULING */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

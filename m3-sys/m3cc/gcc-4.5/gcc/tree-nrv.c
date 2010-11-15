@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Language independent return value optimizations
    Copyright (C) 2004, 2005, 2007, 2008, 2009 Free Software Foundation, Inc.
 
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-dump.h"
 #include "tree-pass.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements return value optimizations for functions which
    return aggregate types.
@@ -373,3 +379,7 @@ struct gimple_opt_pass pass_return_slot =
   0					/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

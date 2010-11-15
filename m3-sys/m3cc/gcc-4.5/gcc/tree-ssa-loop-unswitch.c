@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop unswitching.
    Copyright (C) 2004, 2005, 2007, 2008, 2010 Free Software Foundation, Inc.
 
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "tree-pass.h"
 #include "tree-inline.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements the loop unswitching, i.e. transformation of loops like
 
@@ -388,3 +394,7 @@ tree_unswitch_loop (struct loop *loop,
 		       NULL, prob_true, prob_true,
 		       REG_BR_PROB_BASE - prob_true, false);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

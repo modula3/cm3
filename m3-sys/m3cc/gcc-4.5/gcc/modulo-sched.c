@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Swing Modulo Scheduling implementation.
    Copyright (C) 2004, 2005, 2006, 2007, 2008
    Free Software Foundation, Inc.
@@ -48,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "tree-pass.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef INSN_SCHEDULING
 
@@ -2903,3 +2909,6 @@ struct rtl_opt_pass pass_sms =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

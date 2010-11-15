@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output Dwarf2 format symbol table information from GCC.
    Copyright (C) 1992, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -92,6 +94,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "input.h"
 #include "gimple.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef DWARF2_DEBUGGING_INFO
 static void dwarf2out_source_line (unsigned int, const char *, int, bool);
@@ -21672,3 +21678,7 @@ const struct gcc_debug_hooks dwarf2_debug_hooks =
 #endif /* DWARF2_DEBUGGING_INFO */
 
 #include "gt-dwarf2out.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

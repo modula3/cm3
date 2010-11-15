@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Graphite polyhedral representation.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
    Contributed by Sebastian Pop <sebastian.pop@amd.com> and
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_GRAPHITE_POLY_H
 #define GCC_GRAPHITE_POLY_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct poly_dr *poly_dr_p;
 DEF_VEC_P(poly_dr_p);
@@ -1524,5 +1530,9 @@ combine_context_id_scat (ppl_Pointset_Powerset_C_Polyhedron_t *res,
   ppl_delete_Pointset_Powerset_C_Polyhedron (context);
   ppl_delete_Pointset_Powerset_C_Polyhedron (id);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SSA-PRE for trees.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -48,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-scalar-evolution.h"
 #include "params.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* TODO:
 
@@ -4882,3 +4888,7 @@ struct gimple_opt_pass pass_fre =
   TODO_dump_func | TODO_ggc_collect | TODO_verify_ssa /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

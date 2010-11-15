@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scanning of rtl byte level scanning for dataflow analysis.
    Copyright (C) 2008  Free Software Foundation, Inc.
    Contributed by Kenneth Zadeck (zadeck@naturalbridge.com).
@@ -27,6 +29,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "output.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The following suite of functions provides bytewise modeling of REFs
    which are struct df_ref.  START_BYTE and LAST_BYTE are returned.
@@ -338,3 +344,6 @@ df_compute_accessed_bytes (df_ref ref, enum df_mm mm,
   return true;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

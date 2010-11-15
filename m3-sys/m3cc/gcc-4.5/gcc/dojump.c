@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert tree expression to rtl instructions, for GNU compiler.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "basic-block.h"
 #include "output.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static bool prefer_and_bit_test (enum machine_mode, int);
 static void do_jump_by_parts_greater (tree, tree, int, rtx, rtx, int);
@@ -1186,3 +1192,7 @@ do_compare_and_jump (tree treeop0, tree treeop1, enum rtx_code signed_code,
 }
 
 #include "gt-dojump.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

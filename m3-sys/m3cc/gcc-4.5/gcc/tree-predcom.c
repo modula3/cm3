@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Predictive commoning.
    Copyright (C) 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -202,6 +204,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "tree-affine.h"
 #include "tree-inline.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The maximum number of iterations between the considered memory
    references.  */
@@ -2593,3 +2599,7 @@ tree_predictive_commoning (void)
 
   return ret;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
