@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Do-nothing debug hooks for GCC.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@
 #include "coretypes.h"
 #include "tm.h"
 #include "debug.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The do-nothing debug hooks.  */
 const struct gcc_debug_hooks do_nothing_debug_hooks =
@@ -143,3 +149,7 @@ void
 debug_nothing_uid (int uid ATTRIBUTE_UNUSED)
 {
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

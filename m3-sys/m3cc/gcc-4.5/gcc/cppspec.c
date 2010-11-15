@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Specific flags and argument handling of the C preprocessor.
    Copyright (C) 1999, 2007 Free Software Foundation, Inc.
 
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "tm.h"
 #include "gcc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The `cpp' executable installed in $(bindir) and $(cpp_install_dir)
    is a customized version of the gcc driver.  It forces -E; -S and -c
@@ -208,3 +214,7 @@ int lang_specific_pre_link (void)
 
 /* Number of extra output files that lang_specific_pre_link may generate.  */
 int lang_specific_extra_outfiles = 0;  /* Not used for cpp.  */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SSA Jump Threading
    Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
    Contributed by Jeff Law  <law@redhat.com>
@@ -41,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-propagate.h"
 #include "langhooks.h"
 #include "params.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* To avoid code explosion due to jump threading, we limit the
    number of statements we are going to copy.  This variable
@@ -674,3 +680,7 @@ thread_across_edge (gimple dummy_cond,
  fail:
   remove_temporary_equivalences (stack);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

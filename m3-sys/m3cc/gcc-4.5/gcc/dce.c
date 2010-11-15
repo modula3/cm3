@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL dead code elimination.
    Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
@@ -36,6 +38,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "dbgcnt.h"
 #include "tm_p.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* -------------------------------------------------------------------------
    Core mark/delete routines
@@ -1160,3 +1165,7 @@ struct rtl_opt_pass pass_fast_rtl_byte_dce =
   TODO_ggc_collect                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

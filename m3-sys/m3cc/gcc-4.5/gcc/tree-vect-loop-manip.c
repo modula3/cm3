@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Vectorizer Specific Loop Manipulations
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -37,6 +39,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-scalar-evolution.h"
 #include "tree-vectorizer.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*************************************************************************
   Simple Loop Peeling Utilities
@@ -2569,3 +2575,6 @@ vect_loop_versioning (loop_vec_info loop_vinfo, bool do_versioning,
   *cond_expr = NULL_TREE;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop autoparallelization.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "langhooks.h"
 #include "tree-vectorizer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass tries to distribute iterations of loops into several threads.
    The implementation is straightforward -- for each loop we test whether its
@@ -1989,3 +1995,7 @@ parallelize_loops (void)
 }
 
 #include "gt-tree-parloops.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

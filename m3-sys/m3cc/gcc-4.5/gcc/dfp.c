@@ -30,6 +30,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm_p.h"
 #include "dfp.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void
  decimal_real_from_string (REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED, const char *s ATTRIBUTE_UNUSED)
 { gcc_unreachable (); }
@@ -110,3 +114,7 @@ decimal_real_arithmetic (REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED, enum tree_code cod
 void
 decimal_real_maxval (REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED, int sign ATTRIBUTE_UNUSED, enum machine_mode mode ATTRIBUTE_UNUSED)
 { gcc_unreachable (); }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Allocation for dataflow support routines.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
    2008, 2009, 2010 Free Software Foundation, Inc.
@@ -374,7 +376,6 @@ Paradoxical subreg writes do not leave a trace of the old content, so they
 are write-only operations.
 */
 
-
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -396,6 +397,10 @@ are write-only operations.
 #include "df.h"
 #include "tree-pass.h"
 #include "params.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void *df_get_bb_info (struct dataflow *, unsigned int);
 static void df_set_bb_info (struct dataflow *, unsigned int, void *);
@@ -2208,3 +2213,7 @@ debug_df_chain (struct df_link *link)
   df_chain_dump (link, stderr);
   fputc ('\n', stderr);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

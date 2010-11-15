@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Header file for libgcc2.c.  */
 /* Copyright (C) 2000, 2001, 2004, 2005, 2009
    Free Software Foundation, Inc.
@@ -25,6 +27,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifndef GCC_LIBGCC2_H
 #define GCC_LIBGCC2_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef HIDE_EXPORTS
 #pragma GCC visibility push(default)
@@ -438,7 +444,15 @@ extern const UQItype __popcount_tab[256];
    need for a separate table for the __ctz builtins.  */
 extern const UQItype __clz_tab[256];
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #include "longlong.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #undef int
 extern int __clzDI2 (UDWtype);
@@ -457,6 +471,10 @@ extern void __enable_execute_stack (void *);
 
 #ifndef HIDE_EXPORTS
 #pragma GCC visibility pop
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* ! GCC_LIBGCC2_H */

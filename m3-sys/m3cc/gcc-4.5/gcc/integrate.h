@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Function integration definitions for GCC
    Copyright (C) 1990, 1995, 1998, 1999, 2000, 2001, 2003, 2004, 2005,
    2007, 2008  Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "varray.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern rtx get_hard_reg_initial_val (enum machine_mode, unsigned int);
 extern rtx has_hard_reg_initial_val (enum machine_mode, unsigned int);
 /* If a pseudo represents an initial hard reg (or expression), return
@@ -34,3 +40,6 @@ extern void allocate_initial_values (rtx *);
    true otherwise.  */
 extern bool function_attribute_inlinable_p (const_tree);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

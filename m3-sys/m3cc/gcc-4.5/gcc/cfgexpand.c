@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* A pass for lowering trees to RTL.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -44,6 +46,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "ssaexpand.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This variable holds information helping the rewriting of SSA trees
    into RTL.  */
@@ -3989,3 +3994,7 @@ struct rtl_opt_pass pass_expand =
   | TODO_ggc_collect			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

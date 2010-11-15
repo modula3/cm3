@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* intl.h - internationalization
    Copyright 1998, 2001, 2003, 2004, 2007, 2009, 2010
    Free Software Foundation, Inc.
@@ -18,6 +20,10 @@
 
 #ifndef GCC_INTL_H
 #define GCC_INTL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Stubs.  */
 # undef gettext
@@ -40,5 +46,9 @@ extern const char *fake_ngettext(const char *singular,const char *plural,
 #endif
 
 extern char *get_spaces (const char *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* intl.h */

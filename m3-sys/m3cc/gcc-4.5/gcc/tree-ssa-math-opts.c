@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Global, SSA-based optimizations using mathematical identities.
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -102,6 +104,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "expr.h"
 #include "optabs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This structure represents one basic block that either computes a
    division, or is a common dominator for basic block that compute a
@@ -1260,3 +1266,7 @@ struct gimple_opt_pass pass_optimize_bswap =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

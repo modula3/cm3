@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SSA operands management for trees.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -34,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "toplev.h"
 #include "langhooks.h"
 #include "ipa-reference.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains the code required to manage the operands cache of the
    SSA optimizer.  For every stmt, we maintain an operand cache in the stmt
@@ -1350,3 +1356,6 @@ unlink_stmt_vdef (gimple stmt)
     SSA_NAME_OCCURS_IN_ABNORMAL_PHI (gimple_vuse (stmt)) = 1;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Basic error reporting routines.
    Copyright (C) 1999, 2000, 2001, 2003, 2004, 2005, 2007, 2008
    Free Software Foundation, Inc.
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #endif
 #include "system.h"
 #include "errors.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Set this to argv[0] at the beginning of main.  */
 
@@ -132,3 +138,7 @@ fancy_abort (const char *file, int line, const char *func)
 {
   internal_error ("abort in %s, at %s:%d", func, trim_filename (file), line);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

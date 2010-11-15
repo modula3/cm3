@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Handle #pragma, system V.4 style.  Supports #pragma weak and #pragma pack.
    Copyright (C) 1992, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2006, 2007, 2008 Free Software Foundation, Inc.
@@ -38,6 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic.h"
 #include "opts.h"
 #include "plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define GCC_BAD(gmsgid) \
   do { warning (OPT_Wpragmas, gmsgid); return; } while (0)
@@ -1315,3 +1321,7 @@ init_pragma (void)
 }
 
 #include "gt-c-pragma.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

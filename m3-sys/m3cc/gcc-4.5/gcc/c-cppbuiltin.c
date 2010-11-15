@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Define builtin-in macros for the C family front ends.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -34,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "toplev.h"
 #include "tm_p.h"		/* Target prototypes.  */
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef TARGET_OS_CPP_BUILTINS
 # define TARGET_OS_CPP_BUILTINS()
@@ -1090,3 +1096,7 @@ builtin_define_type_minmax (const char *min_macro, const char *max_macro,
       cpp_define (parse_in, buf);
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

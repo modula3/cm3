@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph handling code.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_CGRAPH_H
 #include "tree.h"
 #include "basic-block.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum availability
 {
@@ -730,5 +736,9 @@ cgraph_can_remove_if_no_direct_calls_p (struct cgraph_node *node)
 
 /* Constant pool accessor function.  */
 htab_t constant_pool_htab (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_CGRAPH_H  */

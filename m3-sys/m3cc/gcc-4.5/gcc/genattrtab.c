@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code from machine description to compute values of attributes.
    Copyright (C) 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -112,6 +114,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gensupport.h"
 #include "obstack.h"
 #include "errors.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Flags for make_internal_attr's `special' parameter.  */
 #define ATTR_NONE		0
@@ -4544,6 +4550,7 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"function.h\"\n");
   printf ("\n");
   printf ("#define operands recog_data.operand\n\n");
+  puts ("\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n");
 
   /* Make `insn_alternatives'.  */
   insn_alternatives = oballocvec (int, insn_code_number);
@@ -4610,6 +4617,11 @@ from the machine description file `md'.  */\n\n");
 
   write_length_unit_log ();
 
+  puts("\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

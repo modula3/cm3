@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Hooks for cfg representation specific functions.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_CFGHOOKS_H
 #define GCC_CFGHOOKS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct cfg_hooks
 {
@@ -193,5 +199,9 @@ extern void cfg_layout_rtl_register_cfg_hooks (void);
 extern void gimple_register_cfg_hooks (void);
 extern struct cfg_hooks get_cfg_hooks (void);
 extern void set_cfg_hooks (struct cfg_hooks);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_CFGHOOKS_H */

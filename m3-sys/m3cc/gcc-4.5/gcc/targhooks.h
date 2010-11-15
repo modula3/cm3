@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default target hook functions.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -17,6 +19,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern bool default_legitimate_address_p (enum machine_mode, rtx, bool);
 
@@ -132,3 +138,7 @@ extern bool default_addr_space_subset_p (addr_space_t, addr_space_t);
 extern rtx default_addr_space_convert (rtx, tree, tree);
 extern unsigned int default_case_values_threshold (void);
 extern bool default_have_conditional_execution (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

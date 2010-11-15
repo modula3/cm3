@@ -13,4 +13,4 @@ The contents of the file do not matter.
    - switch to configure -enable-build-with-cxx
    - removal of m3-convert.c (combined with parse.c to fix a problem)
 
-810639B-2AC4-430C-A382-4D1E8C5E964
+810639B-2AC4-430C-A382-4D1E8C5E9

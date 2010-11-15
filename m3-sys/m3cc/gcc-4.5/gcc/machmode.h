@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Machine mode definitions for GCC; included by rtl.h and tree.h.
    Copyright (C) 1991, 1993, 1994, 1996, 1998, 1999, 2000, 2001, 2003,
    2007, 2008, 2009 Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 /* Make an enum class that gives all the machine modes.  */
 #include "insn-modes.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Get the name of mode MODE as a string.  */
 
@@ -269,5 +275,9 @@ extern enum machine_mode ptr_mode;
 
 /* Target-dependent machine mode initialization - in insn-modes.c.  */
 extern void init_adjust_machine_modes (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* not HAVE_MACHINE_MODES */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* String pool for GCC.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008
    Free Software Foundation, Inc.
@@ -34,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "symtab.h"
 #include "cpplib.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The "" allocated string.  */
 const char empty_string[] = "";
@@ -258,3 +264,7 @@ gt_pch_restore_stringpool (void)
 }
 
 #include "gt-stringpool.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

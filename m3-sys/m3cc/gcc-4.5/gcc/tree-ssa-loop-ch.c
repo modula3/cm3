@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop header copying on trees.
    Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-inline.h"
 #include "flags.h"
 #include "tree-inline.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Duplicates headers of loops if they are small enough, so that the statements
    in the loop body are always executed when the loop is entered.  This
@@ -282,3 +288,7 @@ struct gimple_opt_pass pass_ch =
   | TODO_verify_ssa			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Optimization statistics functions.
    Copyright (C) 2008
    Free Software Foundation, Inc.
@@ -28,6 +30,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "tm.h"
 #include "function.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static int statistics_dump_nr;
 static int statistics_dump_flags;
@@ -345,3 +351,7 @@ statistics_histogram_event (struct function *fn, const char *id, int val)
 	   id, val,
 	   fn ? IDENTIFIER_POINTER (DECL_NAME (fn->decl)) : "(nofn)");
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

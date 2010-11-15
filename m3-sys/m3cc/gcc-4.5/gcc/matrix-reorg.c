@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Matrix layout transformations.
    Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
    Contributed by Razya Ladelsky <razya@il.ibm.com>
@@ -141,6 +143,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-chrec.h"
 #include "tree-scalar-evolution.h"
 #include "tree-ssa-sccvn.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* We need to collect a lot of data from the original malloc,
    particularly as the gimplifier has converted:
@@ -2420,3 +2426,7 @@ struct simple_ipa_opt_pass pass_ipa_matrix_reorg =
   TODO_dump_cgraph | TODO_dump_func	/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph construction.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "intl.h"
 #include "gimple.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Walk tree and record all calls and references to functions/variables.
    Called via walk_tree: TP is pointer to tree to be examined.
@@ -312,3 +318,7 @@ struct gimple_opt_pass pass_remove_cgraph_callee_edges =
   0,					/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

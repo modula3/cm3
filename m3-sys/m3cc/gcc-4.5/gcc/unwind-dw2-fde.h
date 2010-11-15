@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines needed for unwinding stack frames for exception handling.  */
 /* Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2004, 2009
    Free Software Foundation, Inc.
@@ -26,6 +28,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifndef GCC_UNWIND_DW2_FDE_H
 #define GCC_UNWIND_DW2_FDE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef HIDE_EXPORTS
 #pragma GCC visibility push(default)
@@ -178,6 +184,10 @@ last_fde (struct object *obj __attribute__ ((__unused__)), const fde *f)
 
 #ifndef HIDE_EXPORTS
 #pragma GCC visibility pop
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* unwind-dw2-fde.h */

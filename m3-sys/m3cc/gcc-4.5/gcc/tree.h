@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Front-end tree definitions for GNU compiler.
    Copyright (C) 1989, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "double-int.h"
 #include "alias.h"
 #include "options.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Codes of tree nodes */
 
@@ -5459,5 +5465,9 @@ is_lang_specific (tree t)
 {
   return TREE_CODE (t) == LANG_TYPE || TREE_CODE (t) >= NUM_TREE_CODES;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_TREE_H  */

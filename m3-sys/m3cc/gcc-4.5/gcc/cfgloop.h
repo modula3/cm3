@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Natural loop functions
    Copyright (C) 1987, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
    2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "vecprim.h"
 #include "double-int.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Structure to hold decision about unrolling/peeling.  */
 enum lpt_dec
@@ -649,5 +655,9 @@ extern void unroll_and_peel_loops (int);
 extern void doloop_optimize_loops (void);
 extern void move_loop_invariants (void);
 extern bool finite_loop_p (struct loop *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_CFGLOOP_H */

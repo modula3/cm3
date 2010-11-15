@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop Vectorization
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -40,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-chrec.h"
 #include "tree-scalar-evolution.h"
 #include "tree-vectorizer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Loop Vectorization Pass.
 
@@ -4364,3 +4370,7 @@ vect_transform_loop (loop_vec_info loop_vinfo)
   if (loop->inner && vect_print_dump_info (REPORT_VECTORIZED_LOCATIONS))
     fprintf (vect_dump, "OUTER LOOP VECTORIZED.");
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

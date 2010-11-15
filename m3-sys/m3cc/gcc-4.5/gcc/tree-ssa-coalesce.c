@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Coalesce SSA_NAMES together for the out-of-ssa pass.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -33,6 +35,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-live.h"
 #include "toplev.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This set of routines implements a coalesce_list.  This is an object which
    is used to track pairs of ssa_names which are desirable to coalesce
@@ -1449,3 +1454,7 @@ coalesce_ssa_name (void)
 
   return map;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

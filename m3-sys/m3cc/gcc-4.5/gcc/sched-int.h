@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.  This file contains definitions used
    internally in the scheduler.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_SCHED_INT_H
 #define GCC_SCHED_INT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef INSN_SCHEDULING
 
@@ -1496,5 +1502,9 @@ extern void sd_debug_lists (rtx, sd_list_types_def);
 extern void print_insn (char *, const_rtx, int);
 extern void print_pattern (char *, const_rtx, int);
 extern void print_value (char *, const_rtx, int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_SCHED_INT_H */

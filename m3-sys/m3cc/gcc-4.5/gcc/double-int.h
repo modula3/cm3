@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Operations with long integers.
    Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
 
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 #include <gmp.h>
 #endif
 #include "coretypes.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A large integer is currently represented as a pair of HOST_WIDE_INTs.
    It therefore represents a number with precision of
@@ -183,6 +189,10 @@ double_int_equal_p (double_int cst1, double_int cst2)
 
 void mpz_set_double_int (mpz_t, double_int, bool);
 double_int mpz_get_double_int (const_tree, mpz_t, bool);
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* DOUBLE_INT_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Precompiled header implementation for the C languages.
    Copyright (C) 2000, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hosthooks.h"
 #include "target.h"
 #include "opts.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This is a list of flag variables that must match exactly, and their
    names for the error message.  The possible values for *flag_var must
@@ -496,3 +502,7 @@ c_common_print_pch_checksum (FILE *f)
     fprintf (f, "%02x", executable_checksum[i]);
   putc ('\n', f);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

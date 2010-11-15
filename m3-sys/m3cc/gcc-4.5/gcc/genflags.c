@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    - some flags HAVE_... saying which simple standard instructions are
    available for this machine.
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "obstack.h"
 #include "errors.h"
 #include "gensupport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Obstack to remember insns with.  */
 static struct obstack obstack;
@@ -268,6 +274,7 @@ main (int argc, char **argv)
   puts ("   from the machine description file `md'.  */\n");
   puts ("#ifndef GCC_INSN_FLAGS_H");
   puts ("#define GCC_INSN_FLAGS_H\n");
+  puts ("\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n");
 
   /* Read the machine description.  */
 
@@ -290,6 +297,7 @@ main (int argc, char **argv)
   for (insn_ptr = insns; *insn_ptr; insn_ptr++)
     gen_proto (*insn_ptr);
 
+  puts("\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
   puts("\n#endif /* GCC_INSN_FLAGS_H */");
 
   if (have_error || ferror (stdout) || fflush (stdout) || fclose (stdout))
@@ -297,3 +305,7 @@ main (int argc, char **argv)
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

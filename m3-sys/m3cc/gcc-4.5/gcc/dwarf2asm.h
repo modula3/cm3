@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Dwarf2 assembler output helper routines.
    Copyright (C) 2001, 2003, 2005, 2007, 2008 Free Software Foundation, Inc.
 
@@ -17,6 +19,9 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern void dw2_assemble_integer (int, rtx);
 
@@ -81,4 +86,8 @@ extern void dw2_asm_output_pcrel (int, const char *, const char *, ...)
 extern void dw2_asm_output_delta_sleb128 (const char *, const char *,
 					  const char *, ...)
      ATTRIBUTE_NULL_PRINTF_3;
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

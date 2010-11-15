@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Timing variables for measuring compiler performance.
    Copyright (C) 2000, 2003, 2004, 2005, 2007, 2009
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@
 
 #ifndef GCC_TIMEVAR_H
 #define GCC_TIMEVAR_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Timing variables are used to measure elapsed time in various
    portions of the compiler.  Each measures elapsed user, system, and
@@ -98,5 +104,9 @@ extern void print_time (const char *, long);
 extern bool timevar_enable;
 
 extern size_t timevar_ggc_mem_total;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_TIMEVAR_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* VEC types for primitive types
    Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
 
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_VECPRIM_H
 #define GCC_VECPRIM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 DEF_VEC_I(char);
 DEF_VEC_ALLOC_I(char,heap);
 
@@ -33,5 +39,9 @@ DEF_VEC_ALLOC_I(int,heap);
 
 DEF_VEC_I(unsigned);
 DEF_VEC_ALLOC_I(unsigned,heap);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_VECPRIM_H */

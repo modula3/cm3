@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Conditional Dead Call Elimination pass for the GNU compiler.
    Copyright (C) 2008
    Free Software Foundation, Inc.
@@ -41,6 +43,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "flags.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Conditional dead call elimination
 
@@ -941,3 +946,7 @@ struct gimple_opt_pass pass_call_cdce =
   TODO_dump_func | TODO_verify_ssa      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

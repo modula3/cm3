@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree-dumping functionality for C-family languages.
    Copyright (C) 2002, 2004, 2005, 2007 Free Software Foundation, Inc.
    Written by Mark Mitchell <mark@codesourcery.com>
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "c-tree.h"
 #include "tree-dump.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Dump information common to statements from STMT.  */
 
@@ -59,3 +65,7 @@ c_dump_tree (void *dump_info, tree t)
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

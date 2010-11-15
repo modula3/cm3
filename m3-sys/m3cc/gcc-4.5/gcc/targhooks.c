@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default target hook functions.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -67,6 +69,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "optabs.h"
 #include "recog.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 bool
 default_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
@@ -1016,3 +1021,7 @@ default_have_conditional_execution (void)
 }
 
 #include "gt-targhooks.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    - prototype declarations for operand predicates (tm-preds.h)
    - function definitions of operand predicates, if defined new-style
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "obstack.h"
 #include "gensupport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Given a predicate expression EXP, from form NAME at line LINENO,
    verify that it does not contain any RTL constructs which are not
@@ -1446,3 +1452,7 @@ main (int argc, char **argv)
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

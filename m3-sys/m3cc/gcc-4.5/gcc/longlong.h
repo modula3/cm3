@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* longlong.h -- definitions for mixed size 32/64 bit arithmetic.
    Copyright (C) 1991, 1992, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -28,6 +30,10 @@
    License along with the GNU C Library; if not, write to the Free
    Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* You have to define the following before including this file:
 
@@ -1544,4 +1550,8 @@ extern UHItype __stormy16_count_leading_zeros (UHItype);
 
 #ifndef UDIV_NEEDS_NORMALIZATION
 #define UDIV_NEEDS_NORMALIZATION 0
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

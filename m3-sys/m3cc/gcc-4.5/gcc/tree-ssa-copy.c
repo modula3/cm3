@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Copy propagation and SSA_NAME replacement support routines.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -39,6 +41,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-propagate.h"
 #include "langhooks.h"
 #include "cfgloop.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements the copy propagation pass and provides a
    handful of interfaces for performing const/copy propagation and
@@ -1008,3 +1014,7 @@ struct gimple_opt_pass pass_copy_prop =
     | TODO_update_ssa			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

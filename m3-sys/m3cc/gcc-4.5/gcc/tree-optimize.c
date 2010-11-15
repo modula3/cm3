@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Top-level control of tree optimizations.
    Copyright 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -51,6 +53,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "except.h"
 #include "plugin.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Gate: execute, or not, all of the non-trivial optimizations.  */
 
@@ -464,3 +469,7 @@ tree_rest_of_compilation (tree fndecl)
   ggc_collect ();
   timevar_pop (TV_EXPAND);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

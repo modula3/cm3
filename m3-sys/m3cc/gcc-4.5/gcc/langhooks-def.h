@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default macros to initialize the lang_hooks data structure.
    Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_LANG_HOOKS_DEF_H
 
 #include "hooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct diagnostic_context;
 struct diagnostic_info;
@@ -302,5 +308,9 @@ extern void lhd_end_section (void);
   LANG_HOOKS_EH_RUNTIME_TYPE, \
   LANG_HOOKS_EH_USE_CXA_END_CLEANUP, \
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_LANG_HOOKS_DEF_H */

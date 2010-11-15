@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Reassociation for trees.
    Copyright (C) 2005, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Daniel Berlin <dan@dberlin.org>
@@ -40,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "cfgloop.h"
 #include "flags.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*  This is a simple global reassociation pass.  It is, in part, based
     on the LLVM pass of the same name (They do some things more/less
@@ -2079,3 +2085,6 @@ struct gimple_opt_pass pass_reassoc =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

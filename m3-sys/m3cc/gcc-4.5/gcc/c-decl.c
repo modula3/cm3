@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process declarations and variables for C compiler.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -65,6 +67,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "gimple.h"
 #include "plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* In grokdeclarator, distinguish syntactic contexts of declarators.  */
 enum decl_context
@@ -9533,3 +9539,7 @@ c_write_global_declarations (void)
 }
 
 #include "gt-c-decl.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

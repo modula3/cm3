@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for c-common.c.
    Copyright (C) 1987, 1993, 1994, 1995, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "splay-tree.h"
 #include "cpplib.h"
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Usage of TREE_LANG_FLAG_?:
    0: TREE_NEGATED_INT (in INTEGER_CST).
@@ -1181,6 +1187,10 @@ extern void record_types_used_by_current_var_decl (tree);
    cp-tree.h overrides this for C++.  */
 #ifndef GCC_DIAG_STYLE
 #define GCC_DIAG_STYLE __gcc_cdiag__
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* ! GCC_C_COMMON_H */

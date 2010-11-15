@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Common subexpression elimination for GNU compiler.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -18,6 +20,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Describe a value.  */
 typedef struct GTY(()) cselib_val_struct {
@@ -102,3 +108,7 @@ extern void cselib_preserve_only_values (void);
 extern void cselib_preserve_cfa_base_value (cselib_val *, unsigned int);
 
 extern void dump_cselib_table (FILE *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

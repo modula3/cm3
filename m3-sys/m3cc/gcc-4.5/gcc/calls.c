@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert function calls to rtl insns, for GNU C compiler.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -44,6 +46,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "except.h"
 #include "dbgcnt.h"
 #include "tree-flow.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Like PREFERRED_STACK_BOUNDARY but in units of bytes, not bits.  */
 #define STACK_BYTES (PREFERRED_STACK_BOUNDARY / BITS_PER_UNIT)
@@ -4391,3 +4397,7 @@ must_pass_in_stack_var_size_or_pad (enum machine_mode mode, const_tree type)
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

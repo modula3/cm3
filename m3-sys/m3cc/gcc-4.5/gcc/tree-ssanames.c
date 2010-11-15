@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generic routines for manipulating SSA_NAME expressions
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -27,6 +29,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "tree-flow.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Rewriting a function into SSA form can create a huge number of SSA_NAMEs,
    many of which may be thrown away shortly after their creation if jumps
@@ -361,3 +367,7 @@ struct gimple_opt_pass pass_release_ssa_names =
   TODO_dump_func 			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

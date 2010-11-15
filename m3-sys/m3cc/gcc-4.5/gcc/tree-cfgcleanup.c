@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* CFG cleanup for trees.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -46,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "tree-ssa-propagate.h"
 #include "tree-scalar-evolution.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The set of blocks in that at least one of the following changes happened:
    -- the statement at the end of the block was changed
@@ -1018,3 +1024,7 @@ struct gimple_opt_pass pass_merge_phi =
   | TODO_verify_ssa
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

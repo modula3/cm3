@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Simple bitmaps.
    Copyright (C) 1999, 2000, 2002, 2003, 2004, 2006, 2007, 2008
    Free Software Foundation, Inc.
@@ -27,6 +29,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hard-reg-set.h"
 #include "obstack.h"
 #include "basic-block.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if GCC_VERSION >= 3400
 #if HOST_BITS_PER_WIDEST_FAST_INT == HOST_BITS_PER_LONG
@@ -1096,3 +1102,6 @@ sbitmap_popcount (const_sbitmap a, unsigned long maxbit)
   return count;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

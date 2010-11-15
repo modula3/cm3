@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Save and restore call-clobbered registers which are live across a call.
    Copyright (C) 1989, 1992, 1994, 1995, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -39,6 +41,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "output.h"
 #include "df.h"
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* True if caller-save has been initialized.  */
 bool caller_save_initialized_p;
@@ -1431,4 +1437,9 @@ insert_one_insn (struct insn_chain *chain, int before_p, int code, rtx pat)
   INSN_CODE (new_chain->insn) = code;
   return new_chain;
 }
+
 #include "gt-caller-save.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

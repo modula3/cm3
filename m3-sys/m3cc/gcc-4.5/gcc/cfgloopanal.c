@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Natural loop analysis code for GNU compiler.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "output.h"
 #include "graphds.h"
 #include "params.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Checks whether BB is executed exactly once in each LOOP iteration.  */
 
@@ -439,3 +445,6 @@ mark_loop_exit_edges (void)
     }
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

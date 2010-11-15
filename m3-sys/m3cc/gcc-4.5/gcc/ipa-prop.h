@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Interprocedural analyses.
    Copyright (C) 2005, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "vec.h"
 #include "cgraph.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The following definitions and interfaces are used by
    interprocedural analyses or parameters.  */
@@ -502,5 +508,9 @@ void lto_ipa_fixup_call_notes (struct cgraph_node *, gimple *);
 
 /* From tree-sra.c:  */
 bool build_ref_for_offset (tree *, tree, HOST_WIDE_INT, tree, bool);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* IPA_PROP_H */

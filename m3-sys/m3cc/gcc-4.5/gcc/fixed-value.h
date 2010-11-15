@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Fixed-point arithmetic support.
    Copyright (C) 2006, 2007, 2009 Free Software Foundation, Inc.
 
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "machmode.h"
 #include "real.h"
 #include "double-int.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct GTY(()) fixed_value
 {
@@ -96,5 +102,9 @@ extern bool fixed_compare (int, const FIXED_VALUE_TYPE *,
 
 /* Determine whether a fixed-point value X is negative.  */
 extern bool fixed_isneg (const FIXED_VALUE_TYPE *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_FIXED_VALUE_H */

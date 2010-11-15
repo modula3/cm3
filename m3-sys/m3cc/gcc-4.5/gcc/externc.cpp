@@ -70,7 +70,7 @@ int main()
       continue;
     bool c = (strcmp(dot, ".c") == 0);
     bool h = (strcmp(dot, ".h") == 0);
-    if (!c && !h)
+    if (!h || name[0] != 'a')
       continue;
     if (h && (strstr(name, "system") || strstr(name, "unwind")))
       continue;

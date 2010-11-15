@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Induction variable optimizations.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -92,6 +94,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "tree-affine.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The infinite cost.  */
 #define INFTY 10000000
@@ -5872,3 +5878,7 @@ tree_ssa_iv_optimize (void)
 
   tree_ssa_iv_optimize_finalize (&data);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

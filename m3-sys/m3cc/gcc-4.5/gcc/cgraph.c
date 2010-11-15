@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph handling code.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -87,6 +89,10 @@ The callgraph:
 #include "except.h"
 #include "diagnostic.h"
 #include "rtl.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void cgraph_node_remove_callers (struct cgraph_node *node);
 static inline void cgraph_edge_remove_caller (struct cgraph_edge *e);
@@ -2299,3 +2305,7 @@ cgraph_set_looping_const_or_pure_flag (struct cgraph_node *node,
 }
 
 #include "gt-cgraph.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

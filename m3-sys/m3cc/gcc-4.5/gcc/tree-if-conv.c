@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* If-conversion for vectorizer.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -100,6 +102,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "target.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* local function prototypes */
 static unsigned int main_tree_if_conversion (void);
@@ -1184,3 +1189,7 @@ struct gimple_opt_pass pass_if_conversion =
                                         /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

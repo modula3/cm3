@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default macros to initialize the lang_hooks data structure.
    Copyright 2003, 2004, 2007 Free Software Foundation, Inc.
 
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_HOST_HOOKS_DEF_H
 
 #include "hooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define HOST_HOOKS_EXTRA_SIGNALS hook_void_void
 #if HAVE_MMAP_FILE
@@ -47,5 +53,9 @@ extern int mmap_gt_pch_use_address (void *, size_t, int, size_t);
   HOST_HOOKS_GT_PCH_USE_ADDRESS,		\
   HOST_HOOKS_GT_PCH_ALLOC_GRANULARITY		\
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_HOST_HOOKS_DEF_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Public header file for plugins to include.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 
@@ -28,6 +30,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "highlev-plugin-common.h"
 #include "hashtab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Event names.  */
 enum plugin_event
@@ -140,5 +146,9 @@ extern void register_callback (const char *plugin_name,
                                void *user_data);
 
 extern int unregister_callback (const char *plugin_name, int event);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_PLUGIN_H */

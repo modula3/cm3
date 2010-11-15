@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Routines for expanding from SSA form to RTL.
    Copyright (C) 2009 Free Software Foundation, Inc.
 
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #define _SSAEXPAND_H 1
 
 #include "tree-ssa-live.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This structure (of which only a singleton SA exists) is used to
    pass around information between the outof-SSA functions, cfgexpand
@@ -75,5 +81,9 @@ get_gimple_for_ssa_name (tree exp)
 void finish_out_of_ssa (struct ssaexpand *sa);
 unsigned int rewrite_out_of_ssa (struct ssaexpand *sa);
 void expand_phi_nodes (struct ssaexpand *sa);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code from machine description to perform peephole optimizations.
    Copyright (C) 1987, 1989, 1992, 1997, 1998, 1999, 2000, 2003, 2004,
    2007  Free Software Foundation, Inc.
@@ -27,6 +29,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "gensupport.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* While tree-walking an instruction pattern, we keep a chain
    of these `struct link's to record how to get down to the
@@ -430,3 +435,7 @@ from the machine description file `md'.  */\n\n");
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

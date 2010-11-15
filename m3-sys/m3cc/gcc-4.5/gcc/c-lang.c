@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Language-specific hook definitions for C front end.
    Copyright (C) 1991, 1995, 1997, 1998,
    1999, 2000, 2001, 2003, 2004, 2005, 2007, 2008
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "c-objc-common.h"
 #include "c-pragma.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum c_language_kind c_language = clk_c;
 
 /* Lang hooks common to C and ObjC are declared in c-objc-common.h;
@@ -56,3 +62,7 @@ finish_file (void)
 }
 
 #include "gtype-c.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

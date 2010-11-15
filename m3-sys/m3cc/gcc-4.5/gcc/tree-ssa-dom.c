@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SSA Dominator optimizations for trees
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-propagate.h"
 #include "langhooks.h"
 #include "params.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements optimizations on the dominator tree.  */
 
@@ -2900,3 +2906,7 @@ struct gimple_opt_pass pass_phi_only_cprop =
     | TODO_update_ssa			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

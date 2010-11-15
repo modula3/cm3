@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Memory address lowering and addressing mode selection.
    Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -44,6 +46,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "tree-affine.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* TODO -- handling of symbols (according to Richard Hendersons
    comments, http://gcc.gnu.org/ml/gcc-patches/2005-04/msg00949.html):
@@ -867,3 +873,7 @@ dump_mem_address (FILE *file, struct mem_address *parts)
 }
 
 #include "gt-tree-ssa-address.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

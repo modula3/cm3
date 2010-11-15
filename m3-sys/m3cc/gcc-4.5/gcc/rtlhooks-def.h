@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default macros to initialize an rtl_hooks data structure.
    Copyright 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_RTL_HOOKS_DEF_H
 
 #include "rtl.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define RTL_HOOKS_GEN_LOWPART gen_lowpart_general
 #define RTL_HOOKS_GEN_LOWPART_NO_EMIT gen_lowpart_no_emit_general
@@ -47,5 +53,9 @@ extern rtx reg_num_sign_bit_copies_general (const_rtx, enum machine_mode, const_
 					    enum machine_mode,
 					    unsigned int, unsigned int *);
 extern bool reg_truncated_to_mode_general (enum machine_mode, const_rtx);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_RTL_HOOKS_DEF_H */

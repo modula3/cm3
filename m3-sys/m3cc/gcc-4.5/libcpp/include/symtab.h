@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Hash tables.
    Copyright (C) 2000, 2001, 2003, 2004, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with this program; see the file COPYING3.  If not see
 #define LIBCPP_SYMTAB_H
 
 #include "obstack.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef GTY
 #define GTY(x) /* nothing */
@@ -99,5 +105,9 @@ extern void ht_load (hash_table *ht, hashnode *entries,
 
 /* Dump allocation statistics to stderr.  */
 extern void ht_dump_statistics (hash_table *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* LIBCPP_SYMTAB_H */
