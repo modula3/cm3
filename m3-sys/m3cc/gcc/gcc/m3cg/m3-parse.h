@@ -89,8 +89,9 @@ static void trace_type (PCSTR name, m3_type type);
 static void trace_type_tree (PCSTR name, tree type);
 //static void trace_float (PCSTR name, UINT kind, long Longs[2]);
 static void trace_boolean (PCSTR name, bool val);
-static void trace_var (PCSTR name, tree var);
-static void trace_proc (PCSTR, tree p);
+static void trace_var (PCSTR name, tree var, size_t a);
+static void trace_proc (PCSTR, tree p, size_t a);
+static void trace_label (PCSTR name, size_t a);
 
 static WIDE get_int (void);
 static UWIDE get_uint (void);
@@ -102,9 +103,9 @@ static tree scan_mtype (m3_type* T);
 static UINT scan_sign (void);
 static tree scan_float (UINT *out_Kind);
 static bool scan_boolean (void);
-static tree scan_var (enum tree_code code);
-static tree scan_proc (void);
-static tree scan_label (void);
+static tree scan_var (enum tree_code code, size_t* a);
+static tree scan_proc (size_t* a);
+static tree scan_label (size_t* a);
 
 static bool IsHostBigEndian (void);
 static varray_type varray_extend (varray_type va, size_t n);
