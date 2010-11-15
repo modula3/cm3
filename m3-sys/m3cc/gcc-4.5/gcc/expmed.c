@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Medium-level subroutines: convert bit-field store and extract
    and shifts, multiplies and divides to rtl instructions.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
@@ -38,6 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "df.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void store_fixed_bit_field (rtx, unsigned HOST_WIDE_INT,
 				   unsigned HOST_WIDE_INT,
@@ -5850,3 +5856,7 @@ do_cmp_and_jump (rtx arg1, rtx arg2, enum rtx_code op, enum machine_mode mode,
   do_compare_rtx_and_jump (arg1, arg2, op, unsignedp, mode,
 			   NULL_RTX, NULL_RTX, label, -1);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

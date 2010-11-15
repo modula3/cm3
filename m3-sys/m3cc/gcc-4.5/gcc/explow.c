@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines for manipulating rtx's in semantically interesting ways.
    Copyright (C) 1987, 1991, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
@@ -40,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "target.h"
 #include "output.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static rtx break_out_memory_refs (rtx);
 static void emit_stack_probe (rtx);
@@ -1758,3 +1764,7 @@ rtx_to_tree_code (enum rtx_code code)
 }
 
 #include "gt-explow.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
