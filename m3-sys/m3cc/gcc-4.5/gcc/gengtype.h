@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process source files and output type information.
    Copyright (C) 2002, 2003, 2004, 2007, 2008 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_GENGTYPE_H
 #define GCC_GENGTYPE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A file position, mostly for error messages.
    The FILE element may be compared using pointer equality.  */
@@ -110,4 +116,9 @@ enum {
      a meaningful value to be printed.  */
   FIRST_TOKEN_WITH_VALUE = PARAM_IS
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data and Control Flow Analysis for Trees.
    Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -32,6 +34,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "ipa-reference.h"
 #include "tree-ssa-alias.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Gimple dataflow datastructure. All publicly available fields shall have
    gimple_ accessor defined in tree-flow-inline.h, all publicly modifiable
@@ -878,5 +883,9 @@ unsigned int execute_fixup_cfg (void);
 void swap_tree_operands (gimple, tree *, tree *);
 
 int least_common_multiple (int, int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _TREE_FLOW_H  */

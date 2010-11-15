@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* CPP Library.
    Copyright (C) 1986, 1987, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2003, 2004, 2006, 2007 Free Software Foundation, Inc.
@@ -21,6 +23,10 @@
 
 #ifndef GCC_CPPDEFAULT_H
 #define GCC_CPPDEFAULT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This is the default list of directories to search for include files.
    It may be overridden by the various -I and -ixxx options.
@@ -66,5 +72,9 @@ extern const char *gcc_exec_prefix;
 
 /* Return true if the toolchain is relocated.  */
 bool cpp_relocated (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_CPPDEFAULT_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* The tracer pass for the GNU compiler.
    Contributed by Jan Hubicka, SuSE Labs.
    Adapted to work on GIMPLE instead of RTL by Robert Kidd, UIUC.
@@ -52,6 +54,10 @@
 #include "tree-pass.h"
 #include "tree-flow.h"
 #include "tree-inline.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static int count_insns (basic_block);
 static bool ignore_bb_p (const_basic_block);
@@ -398,3 +404,7 @@ struct gimple_opt_pass pass_tracer =
     | TODO_verify_ssa                   /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

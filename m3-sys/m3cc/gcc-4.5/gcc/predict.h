@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for branch prediction routines in the GNU compiler.
    Copyright (C) 2001, 2003, 2004, 2007, 2008 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_PREDICT_H
 #define GCC_PREDICT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define DEF_PREDICTOR(ENUM, NAME, HITRATE, FLAGS) ENUM,
 enum br_predictor
@@ -42,5 +48,9 @@ extern const char *predictor_name (enum br_predictor);
 extern tree build_predict_expr (enum br_predictor, enum prediction);
 extern void tree_estimate_probability (void);
 extern void compute_function_frequency (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_PREDICT_H */

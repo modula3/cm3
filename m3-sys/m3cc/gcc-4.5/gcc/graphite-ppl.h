@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Gimple Represented as Polyhedra.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
    Contributed by Sebastian Pop <sebastian.pop@inria.fr>
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "double-int.h"
 #include "tree.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 CloogMatrix *new_Cloog_Matrix_from_ppl_Polyhedron (ppl_const_Polyhedron_t);
 CloogDomain *new_Cloog_Domain_from_ppl_Polyhedron (ppl_const_Polyhedron_t);
@@ -163,5 +169,8 @@ ppl_interchange (ppl_dimension_type *map,
   map[b] = a;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
+#endif

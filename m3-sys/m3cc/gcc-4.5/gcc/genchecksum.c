@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate checksums of executables for PCH validation
    Copyright (C) 2005, 2007, 2009
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "bconfig.h"
 #include "system.h"
 #include "md5.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void
 usage (void)
@@ -76,3 +82,7 @@ main (int argc, char ** argv)
 
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* This file contains subroutine used by the C front-end to construct GENERIC.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008
    Free Software Foundation, Inc.
@@ -44,6 +46,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "tree-iterator.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Create an empty statement tree rooted at T.  */
 
@@ -153,3 +159,7 @@ build_case_label (location_t loc,
 {
   return build_stmt (loc, CASE_LABEL_EXPR, low_value, high_value, label_decl);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

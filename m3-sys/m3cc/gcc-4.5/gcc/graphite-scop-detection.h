@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Detection of Static Control Parts (SCoP) for Graphite.
    Copyright (C) 2009 Free Software Foundation, Inc.
    Contributed by Sebastian Pop <sebastian.pop@amd.com> and
@@ -19,7 +21,14 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern void build_scops (VEC (scop_p, heap) **);
 extern void dot_all_scops (VEC (scop_p, heap) *);
 extern void dot_scop (scop_p);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

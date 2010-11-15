@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Conversion of SESE regions to Polyhedra.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
    Contributed by Sebastian Pop <sebastian.pop@amd.com>.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_GRAPHITE_SESE_TO_POLY_H
 #define GCC_GRAPHITE_SESE_TO_POLY_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct base_alias_pair base_alias_pair;
 struct base_alias_pair
 {
@@ -30,5 +36,9 @@ struct base_alias_pair
 
 void build_poly_scop (scop_p);
 void check_poly_representation (scop_p);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code from machine description to recognize rtl as insns.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009
@@ -57,6 +59,10 @@
 #include "rtl.h"
 #include "errors.h"
 #include "gensupport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define OUTPUT_LABEL(INDENT_STRING, LABEL_NUMBER) \
   printf("%sL%d: ATTRIBUTE_UNUSED_LABEL\n", (INDENT_STRING), (LABEL_NUMBER))
@@ -2913,3 +2919,7 @@ debug_decision_list (struct decision *d)
       d = d->next;
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

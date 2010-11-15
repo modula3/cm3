@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IPA handling of references.
    Copyright (C) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Kenneth Zadeck <zadeck@naturalbridge.com>
@@ -23,11 +25,18 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"
 #include "tree.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* In ipa-reference.c  */
 bitmap ipa_reference_get_read_global (struct cgraph_node *fn);
 bitmap ipa_reference_get_written_global (struct cgraph_node *fn);
 bitmap ipa_reference_get_not_read_global (struct cgraph_node *fn);
 bitmap ipa_reference_get_not_written_global (struct cgraph_node *fn);
 
-#endif  /* GCC_IPA_REFERENCE_H  */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
+#endif  /* GCC_IPA_REFERENCE_H  */

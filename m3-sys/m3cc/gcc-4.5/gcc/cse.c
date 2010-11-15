@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Common subexpression elimination for GNU compiler.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -46,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "df.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The basic idea of common subexpression elimination is to go
    through the code, keeping a record of expressions that would
@@ -7402,3 +7408,7 @@ struct rtl_opt_pass pass_cse_after_global_opts =
   TODO_verify_flow                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Preprocess only, using cpplib.
    Copyright (C) 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2007,
    2008, 2009 Free Software Foundation, Inc.
@@ -26,6 +28,10 @@
 #include "tree.h"
 #include "c-common.h"		/* For flags.  */
 #include "c-pragma.h"		/* For parse_in.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Encapsulates state used to convert a stream of tokens into a text
    file.  */
@@ -624,3 +630,7 @@ cb_read_pch (cpp_reader *pfile, const char *name,
   fprintf (print.outf, "#pragma GCC pch_preprocess \"%s\"\n", name);
   print.src_line++;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

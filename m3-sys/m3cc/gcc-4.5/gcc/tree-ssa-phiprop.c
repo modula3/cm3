@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Backward propagation of indirect loads through PHIs.
    Copyright (C) 2007, 2008 Free Software Foundation, Inc.
    Contributed by Richard Guenther <rguenther@suse.de>
@@ -34,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-dump.h"
 #include "langhooks.h"
 #include "flags.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass propagates indirect loads through the PHI node for its
    address to make the load source possibly non-addressable and to
@@ -409,3 +415,7 @@ struct gimple_opt_pass pass_phiprop =
   | TODO_verify_ssa		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

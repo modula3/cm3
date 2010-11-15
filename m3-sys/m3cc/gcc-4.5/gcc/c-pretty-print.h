@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for the C and C++ pretty-printers.
    Copyright (C) 2002, 2003, 2004, 2007, 2009 Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@integrable-solutions.net>
@@ -25,6 +27,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "c-common.h"
 #include "pretty-print.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum
   {
@@ -208,5 +213,9 @@ void pp_c_identifier (c_pretty_printer *, const char *);
 void pp_c_string_literal (c_pretty_printer *, tree);
 
 void print_c_tree (FILE *file, tree t);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_C_PRETTY_PRINTER */

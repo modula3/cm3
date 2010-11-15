@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data flow functions for trees.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -46,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "convert.h"
 #include "params.h"
 #include "cgraph.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Build and maintain data flow information for trees.  */
 
@@ -941,3 +947,6 @@ stmt_references_abnormal_ssa_name (gimple stmt)
   return false;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

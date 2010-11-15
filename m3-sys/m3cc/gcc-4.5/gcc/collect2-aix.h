@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* AIX cross support for collect2.
    Copyright (C) 2009 Free Software Foundation, Inc.
 
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #if defined(CROSS_DIRECTORY_STRUCTURE) \
     && defined(TARGET_AIX_VERSION) \
     && HAVE_MMAP
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define CROSS_AIX_SUPPORT 1
 
@@ -297,5 +303,9 @@ extern LDFILE *ldopen (char *, LDFILE *);
 extern char *ldgetname (LDFILE *, SYMENT *);
 extern int ldtbread (LDFILE *, long, SYMENT *);
 extern int ldclose (LDFILE *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

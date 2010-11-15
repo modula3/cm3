@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scalar evolution detector.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009 Free Software Foundation, Inc.
    Contributed by Sebastian Pop <s.pop@laposte.net>
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_TREE_SCALAR_EVOLUTION_H
 #define GCC_TREE_SCALAR_EVOLUTION_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern tree number_of_latch_executions (struct loop *);
 extern tree number_of_exit_cond_executions (struct loop *);
@@ -66,5 +72,9 @@ get_chrec_loop (const_tree chrec)
 {
   return get_loop (CHREC_VARIABLE (chrec));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_TREE_SCALAR_EVOLUTION_H  */

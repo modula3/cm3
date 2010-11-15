@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.  Log dumping infrastructure.
    Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
 
@@ -23,6 +25,9 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "sel-sched-ir.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* These values control the dumping of control flow graph to the .dot file.  */
 enum sel_dump_cfg_def
@@ -217,4 +222,9 @@ extern void debug_blist (blist_t);
 extern void debug_insn_vector (rtx_vec_t);
 extern void debug_hard_reg_set (HARD_REG_SET);
 extern rtx debug_mem_addr_value (rtx);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif

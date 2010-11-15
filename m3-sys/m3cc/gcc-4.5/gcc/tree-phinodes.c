@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generic routines for manipulating PHIs
    Copyright (C) 2003, 2005, 2007, 2008 Free Software Foundation, Inc.
 
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "toplev.h"
 #include "gimple.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Rewriting a function into SSA form can create a huge number of PHIs
    many of which may be thrown away shortly after their creation if jumps
@@ -500,3 +506,7 @@ remove_phi_nodes (basic_block bb)
 }
 
 #include "gt-tree-phinodes.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

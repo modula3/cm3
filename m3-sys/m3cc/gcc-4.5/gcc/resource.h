@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for computing resource usage of specific insns.
    Copyright (C) 1999, 2003, 2004, 2006, 2007, 2009
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "hard-reg-set.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Macro to clear all resources.  */
 #define CLEAR_RESOURCE(RES)	\
@@ -55,5 +61,9 @@ extern void incr_ticks_for_insn (rtx);
 extern void mark_end_of_function_resources (rtx, bool);
 extern void init_resource_info (rtx);
 extern void free_resource_info (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_RESOURCE_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Hooks for cfg representation specific functions.
    Copyright (C) 2003, 2004, 2005, 2007, 2008 Free Software Foundation,
    Inc.
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "toplev.h"
 #include "cfgloop.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A pointer to one of the hooks containers.  */
 static struct cfg_hooks *cfg_hooks;
@@ -1094,3 +1100,7 @@ lv_add_condition_to_bb (basic_block first, basic_block second,
   gcc_assert (cfg_hooks->lv_add_condition_to_bb);
   cfg_hooks->lv_add_condition_to_bb (first, second, new_block, cond);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

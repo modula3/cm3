@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Memory and optimization statistics helpers.
    Copyright (C) 2004, 2007, 2008
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@
 
 #ifndef GCC_STATISTICS
 #define GCC_STATISTICS
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef GATHER_STATISTICS
 #define MEM_STAT_DECL , const char * ARG_UNUSED (_loc_name), int ARG_UNUSED (_loc_line), const char * ARG_UNUSED (_loc_function)
@@ -47,5 +53,9 @@ extern void statistics_fini (void);
 extern void statistics_fini_pass (void);
 extern void statistics_counter_event (struct function *, const char *, int);
 extern void statistics_histogram_event (struct function *, const char *, int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generic SSA value propagation engine.
    Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Diego Novillo <dnovillo@redhat.com>
@@ -42,6 +44,10 @@
 #include "vec.h"
 #include "value-prof.h"
 #include "gimple.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements a generic value propagation engine based on
    the same propagation used by the SSA-CCP algorithm [1].
@@ -1127,3 +1133,7 @@ substitute_and_fold (prop_value_t *prop_value, ssa_prop_fold_stmt_fn fold_fn,
 }
 
 #include "gt-tree-ssa-propagate.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

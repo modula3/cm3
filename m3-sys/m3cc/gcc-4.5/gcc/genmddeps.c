@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* genmddeps.c - creates a makefile dependency fragment for the md file.
    Copyright (C) 2004, 2007 Free Software Foundation, Inc.
 
@@ -23,6 +25,9 @@
 #include "gensupport.h"
 #include "errors.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct filedep
 {
@@ -68,3 +73,7 @@ main (int argc, char **argv)
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

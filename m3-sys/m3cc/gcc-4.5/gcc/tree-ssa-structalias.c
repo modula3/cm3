@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree based points-to analysis
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -50,6 +52,10 @@
 #include "cgraph.h"
 #include "alias.h"
 #include "pointer-set.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The idea behind this analyzer is to generate set constraints from the
    program, then solve the resulting constraints in order to generate the
@@ -5792,3 +5798,7 @@ struct simple_ipa_opt_pass pass_ipa_pta =
 
 
 #include "gt-tree-ssa-structalias.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

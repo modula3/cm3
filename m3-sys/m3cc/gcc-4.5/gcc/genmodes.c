@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate the machine mode enumeration and associated tables.
    Copyright (C) 2003, 2004, 2005, 2006, 2007
    Free Software Foundation, Inc.
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "errors.h"
 #include "hashtab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* enum mode_class is normally defined by machmode.h but we can't
    include that header here.  */
@@ -1411,3 +1417,7 @@ main (int argc, char **argv)
     return FATAL_EXIT_CODE;
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

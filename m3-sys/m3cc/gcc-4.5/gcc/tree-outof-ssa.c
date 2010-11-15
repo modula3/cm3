@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert a program in SSA form into Normal form.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -36,6 +38,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "expr.h"
 #include "ssaexpand.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 DEF_VEC_I(source_location);
 DEF_VEC_ALLOC_I(source_location,heap);
@@ -1141,3 +1146,7 @@ rewrite_out_of_ssa (struct ssaexpand *sa)
 
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

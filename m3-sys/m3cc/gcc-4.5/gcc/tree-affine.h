@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Operations with affine combinations of trees.
    Copyright (C) 2005, 2007, 2008 Free Software Foundation, Inc.
 
@@ -16,6 +18,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Affine combination of trees.  We keep track of at most MAX_AFF_ELTS elements
    to make things simpler; this is sufficient in most cases.  */
@@ -80,3 +86,7 @@ void free_affine_expand_cache (struct pointer_map_t **);
 /* Debugging functions.  */
 void print_aff (FILE *, aff_tree *);
 void debug_aff (aff_tree *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

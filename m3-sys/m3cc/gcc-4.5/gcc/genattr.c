@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate attribute information (insn-attr.h) from machine description.
    Copyright (C) 1991, 1994, 1996, 1998, 1999, 2000, 2003, 2004, 2007, 2008
    Free Software Foundation, Inc.
@@ -28,6 +30,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "gensupport.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void write_upcase (const char *);
 static void gen_attr (rtx);
@@ -104,6 +109,7 @@ main (int argc, char **argv)
   puts ("   from the machine description file `md'.  */\n");
   puts ("#ifndef GCC_INSN_ATTR_H");
   puts ("#define GCC_INSN_ATTR_H\n");
+  puts ("\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n");
 
   /* For compatibility, define the attribute `alternative', which is just
      a reference to the variable `which_alternative'.  */
@@ -281,10 +287,15 @@ main (int argc, char **argv)
   printf("#define ATTR_FLAG_unlikely\t0x10\n");
   printf("#define ATTR_FLAG_very_unlikely\t0x20\n");
 
-  puts("\n#endif /* GCC_INSN_ATTR_H */");
+  puts("\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
+  puts("\n#endif /* GCC_INSN_ATTR_H */\n");
 
   if (ferror (stdout) || fflush (stdout) || fclose (stdout))
     return FATAL_EXIT_CODE;
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SLP - Basic Block Vectorization
    Copyright (C) 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -37,6 +39,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "recog.h"
 #include "optabs.h"
 #include "tree-vectorizer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Extract the location of the basic block in the source code.
    Return the basic block location if succeed and NULL if not.  */
@@ -2123,3 +2129,6 @@ vect_slp_transform_bb (basic_block bb)
   destroy_bb_vec_info (bb_vinfo);
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Pretty formatting of GENERIC trees in C syntax.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "fixed-value.h"
 #include "value-prof.h"
 #include "predict.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Local functions, macros and variables.  */
 static const char *op_symbol (const_tree);
@@ -2853,3 +2859,7 @@ newline_and_indent (pretty_printer *buffer, int spc)
   pp_newline (buffer);
   INDENT (spc);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

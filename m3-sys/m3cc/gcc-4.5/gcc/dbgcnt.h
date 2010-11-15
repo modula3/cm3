@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Debug counter for debugging support
    Copyright (C) 2006, 2007 Free Software Foundation, Inc.
 
@@ -22,6 +24,10 @@ See dbgcnt.def for usage information.  */
 #ifndef GCC_DBGCNT_H
 #define GCC_DBGCNT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define DEBUG_COUNTER(a) a,
 
 enum debug_counter {
@@ -35,5 +41,9 @@ extern bool dbg_cnt_is_enabled (enum debug_counter index);
 extern bool dbg_cnt (enum debug_counter index);
 extern void dbg_cnt_process_opt (const char *arg);
 extern void dbg_cnt_list_all_counters (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_DBGCNT_H */

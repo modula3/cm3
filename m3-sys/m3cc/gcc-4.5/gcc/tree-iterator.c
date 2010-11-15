@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Iterator routines for manipulating GENERIC and GIMPLE tree statements.
    Copyright (C) 2003, 2004, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Andrew MacLeod  <amacleod@redhat.com>
@@ -26,6 +28,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-iterator.h"
 #include "ggc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This is a cache of STATEMENT_LIST nodes.  We create and destroy them
    fairly often during gimplification.  */
@@ -281,3 +286,7 @@ expr_last (tree expr)
 }
 
 #include "gt-tree-iterator.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

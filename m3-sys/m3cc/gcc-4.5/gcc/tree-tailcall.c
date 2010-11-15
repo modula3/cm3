@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tail call optimization on trees.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "langhooks.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The file implements the tail recursion elimination.  It is also used to
    analyze the tail calls in general, passing the results to the rtl level
@@ -1092,3 +1098,7 @@ struct gimple_opt_pass pass_tail_calls =
   TODO_dump_func | TODO_verify_ssa	/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

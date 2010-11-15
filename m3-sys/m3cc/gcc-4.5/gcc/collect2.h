@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Header file for collect/tlink routines.
    Copyright (C) 1998, 2003, 2004, 2005, 2007, 2010
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_COLLECT2_H
 #define GCC_COLLECT2_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern void do_tlink (char **, char **);
 
@@ -47,5 +53,9 @@ extern void notice (const char *, ...) ATTRIBUTE_PRINTF_1;
 extern void fatal (const char *, ...) ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
 extern void fatal_perror (const char *, ...)
   ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_COLLECT2_H */

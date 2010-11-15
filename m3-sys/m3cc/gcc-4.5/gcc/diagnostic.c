@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Language-independent diagnostic subroutines for the GNU Compiler Collection
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
    2009, 2010 Free Software Foundation, Inc.
@@ -41,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks-def.h"
 #include "opts.h"
 #include "plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define pedantic_warning_kind() (flag_pedantic_errors ? DK_ERROR : DK_WARNING)
 #define permissive_error_kind() (flag_permissive ? DK_WARNING : DK_ERROR)
@@ -772,3 +778,7 @@ real_abort (void)
 {
   abort ();
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

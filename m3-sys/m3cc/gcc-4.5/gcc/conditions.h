@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for condition code handling in final.c and output routines.
    Copyright (C) 1987, 2007 Free Software Foundation, Inc.
 
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 /* None of the things in the files exist if we don't use CC0.  */
 
 #ifdef HAVE_cc0
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The variable cc_status says how to interpret the condition code.
    It is set by output routines for an instruction that sets the cc's
@@ -113,5 +119,9 @@ extern CC_STATUS cc_status;
 #define CC_STATUS_INIT  \
  (cc_status.flags = 0, cc_status.value1 = 0, cc_status.value2 = 0,  \
   CC_STATUS_MDEP_INIT)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

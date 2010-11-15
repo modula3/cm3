@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Source code for an implementation of the Omega test, an integer
    programming algorithm for dependence analysis, by William Pugh,
    appeared in Supercomputing '91 and CACM Aug 92.
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_OMEGA_H
 #define GCC_OMEGA_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define OMEGA_MAX_VARS PARAM_VALUE (PARAM_OMEGA_MAX_VARS)
 #define OMEGA_MAX_GEQS PARAM_VALUE (PARAM_OMEGA_MAX_GEQS)
@@ -335,5 +341,9 @@ omega_copy_problem (omega_pb p1, omega_pb p2)
   for (i = OMEGA_MAX_VARS; i >= 0; i--)
     p1->forwarding_address[i] = p2->forwarding_address[i];
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_OMEGA_H */

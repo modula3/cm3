@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Communication between the Integrated Register Allocator (IRA) and
    the rest of the compiler.
    Copyright (C) 2006, 2007, 2008, 2009
@@ -19,6 +21,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Number of given class hard registers available for the register
    allocation for given classes.  */
@@ -87,3 +93,6 @@ extern rtx ira_reuse_stack_slot (int, unsigned int, unsigned int);
 extern void ira_mark_new_stack_slot (rtx, int, unsigned int);
 extern bool ira_better_spill_reload_regno_p (int *, int *, rtx, rtx, rtx);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

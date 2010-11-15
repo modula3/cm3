@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for language-independent diagnostics subroutines.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    2010, Free Software Foundation, Inc.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "pretty-print.h"
 #include "options.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Constants used to discriminate diagnostics.  */
 typedef enum
@@ -253,5 +259,9 @@ extern void dump_gimple_stmt (pretty_printer *, gimple, int, int);
 /* In toplev.c  */
 extern bool default_tree_printer (pretty_printer *, text_info *, const char *,
 				  int, bool, bool, bool);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_DIAGNOSTIC_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* The lang_hooks data structure.
    Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_LANG_HOOKS_H
 #define GCC_LANG_HOOKS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file should be #include-d after tree.h.  */
 
@@ -470,5 +476,9 @@ extern tree add_builtin_function_ext_scope (const char *name, tree type,
 					    enum built_in_class cl,
 					    const char *library_name,
 					    tree attrs);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_LANG_HOOKS_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions to determine/estimate number of iterations of a loop.
    Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation,
    Inc.
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "toplev.h"
 #include "tree-inline.h"
 #include "gmp.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define SWAP(X, Y) do { affine_iv *tmp = (X); (X) = (Y); (Y) = tmp; } while (0)
 
@@ -3221,3 +3227,7 @@ substitute_in_loop_info (struct loop *loop, tree name, tree val)
 {
   loop->nb_iterations = simplify_replace_tree (loop->nb_iterations, name, val);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

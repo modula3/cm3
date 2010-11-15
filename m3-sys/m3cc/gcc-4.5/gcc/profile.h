@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Header file for minimum-cost maximal flow routines used to smooth basic
    block and edge frequency counts.
    Copyright (C) 2008
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef PROFILE_H
 #define PROFILE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Additional information about edges. */
 struct edge_info
 {
@@ -43,5 +49,9 @@ struct edge_info
 extern void mcf_smooth_cfg (void);
 
 extern gcov_type sum_edge_counts (VEC (edge, gc) *edges);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* PROFILE_H */

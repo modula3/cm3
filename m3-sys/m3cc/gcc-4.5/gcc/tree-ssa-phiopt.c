@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Optimization of PHI nodes by converting them into straightline code.
    Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation,
    Inc.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "pointer-set.h"
 #include "domwalk.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static unsigned int tree_ssa_phiopt (void);
 static unsigned int tree_ssa_phiopt_worker (bool);
@@ -1327,3 +1333,7 @@ struct gimple_opt_pass pass_cselim =
     | TODO_verify_stmts	 		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

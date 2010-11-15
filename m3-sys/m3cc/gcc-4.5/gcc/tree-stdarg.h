@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Header for a pass computing data for optimizing stdarg functions.
    Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Jakub Jelinek <jakub@redhat.com>
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_TREE_STDARG_H
 #define GCC_TREE_STDARG_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct stdarg_info
 {
   bitmap va_list_vars, va_list_escape_vars;
@@ -32,5 +38,9 @@ struct stdarg_info
   basic_block va_start_bb;
   tree va_start_ap;
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

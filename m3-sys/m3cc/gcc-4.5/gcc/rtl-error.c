@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL specific diagnostic subroutines for GCC
    Copyright (C) 2001, 2002, 2003, 2004, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@codesourcery.com>
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "toplev.h"
 #include "intl.h"
 #include "diagnostic.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static location_t location_for_asm (const_rtx);
 static void diagnostic_for_asm (const_rtx, const char *, va_list *, diagnostic_t) ATTRIBUTE_GCC_DIAG(2,0);
@@ -122,3 +128,7 @@ _fatal_insn_not_found (const_rtx insn, const char *file, int line,
     _fatal_insn ("insn does not satisfy its constraints:",
 		insn, file, line, function);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

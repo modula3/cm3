@@ -1,4 +1,5 @@
 /* Modula-3: modified */
+
 /* Nested function decomposition for GIMPLE.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -38,6 +39,9 @@
 #include "pointer-set.h"
 #include "ggc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The object of this pass is to lower the representation of a set of nested
    functions in order to expose all of the gory details of the various
@@ -2624,3 +2628,7 @@ lower_nested_functions (tree fndecl)
 }
 
 #include "gt-tree-nested.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Define control and data flow tables, and regsets.
    Copyright (C) 1987, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
    2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "predict.h"
 #include "vec.h"
 #include "function.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Head of register set linked list.  */
 typedef bitmap_head regset_head;
@@ -1006,5 +1012,9 @@ extern bool mfb_keep_just (edge);
 extern void rtl_profile_for_bb (basic_block);
 extern void rtl_profile_for_edge (edge);
 extern void default_rtl_profile (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_BASIC_BLOCK_H */

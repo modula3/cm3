@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations for interface to insn recognizer and insn-output.c.
    Copyright (C) 1987, 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004,
    2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
@@ -17,6 +19,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Random number that should be large enough for all purposes.  */
 #define MAX_RECOG_ALTERNATIVES 30
@@ -297,3 +303,7 @@ struct insn_data
 
 extern const struct insn_data insn_data[];
 extern int peep2_current_count;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

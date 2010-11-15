@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scalar Replacement of Aggregates (SRA) converts some structure
    references into scalar references, exposing them to the scalar
    optimizers.
@@ -90,6 +92,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "flags.h"
 #include "tree-inline.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Enumeration of all aggregate reductions we can do.  */
 enum sra_mode { SRA_MODE_EARLY_IPA,   /* early call regularization */
@@ -4281,4 +4287,6 @@ struct gimple_opt_pass pass_early_ipa_sra =
  }
 };
 
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

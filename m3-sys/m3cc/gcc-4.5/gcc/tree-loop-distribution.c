@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop distribution.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -66,6 +68,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "lambda.h"
 #include "langhooks.h"
 #include "tree-vectorizer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* If bit I is not set, it means that this node represents an
    operation that has already been performed, and that should not be
@@ -1248,3 +1254,7 @@ struct gimple_opt_pass pass_loop_distribution =
   TODO_dump_func | TODO_verify_loops            /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

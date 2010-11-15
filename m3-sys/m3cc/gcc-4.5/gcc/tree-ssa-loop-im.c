@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop invariant motion.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -42,6 +44,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-affine.h"
 #include "pointer-set.h"
 #include "tree-ssa-propagate.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* TODO:  Support for predicated code motion.  I.e.
 
@@ -2349,3 +2355,7 @@ tree_ssa_lim (void)
 
   tree_ssa_lim_finalize ();
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

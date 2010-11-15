@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* High-level loop manipulation functions.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -39,6 +41,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "tree-inline.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Creates an induction variable with value BASE + STEP * iteration in LOOP.
    It is expected that neither BASE nor STEP are shared with other expressions
@@ -1241,3 +1247,7 @@ canonicalize_loop_ivs (struct loop *loop, tree *nit, bool bump_in_latch)
 
   return var_before;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

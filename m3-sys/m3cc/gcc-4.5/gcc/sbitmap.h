@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Simple bitmaps.
    Copyright (C) 1999, 2000, 2002, 2003, 2004, 2006, 2007, 2008
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_SBITMAP_H
 #define GCC_SBITMAP_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* It's not clear yet whether using bitmap.[ch] will be a win.
    It should be straightforward to convert so for now we keep things simple
@@ -267,4 +273,9 @@ extern void debug_sbitmap (const_sbitmap);
 extern sbitmap sbitmap_realloc (sbitmap, unsigned int);
 extern unsigned long sbitmap_popcount(const_sbitmap, unsigned long);
 extern void sbitmap_verify_popcount (const_sbitmap);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* ! GCC_SBITMAP_H */

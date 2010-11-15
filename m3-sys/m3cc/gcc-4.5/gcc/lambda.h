@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Lambda matrix and vector interface.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define LAMBDA_H
 
 #include "vec.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* An integer vector.  A vector formally consists of an element of a vector
    space. A vector space is a set that is closed under vector addition
@@ -521,5 +527,9 @@ dependence_level (lambda_vector dist_vect, int length)
 
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* LAMBDA_H  */

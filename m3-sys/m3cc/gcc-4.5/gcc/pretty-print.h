@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for language-independent pretty-print subroutines.
    Copyright (C) 2002, 2003, 2004, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@integrable-solutions.net>
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "obstack.h"
 #include "input.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Maximum number of format string arguments.  */
 #define PP_NL_ARGMAX   30
@@ -345,5 +351,9 @@ pp_set_verbatim_wrapping_ (pretty_printer *pp)
 #define pp_set_verbatim_wrapping(PP) pp_set_verbatim_wrapping_ (pp_base (PP))
 
 extern const char *identifier_to_locale (const char *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_PRETTY_PRINT_H */

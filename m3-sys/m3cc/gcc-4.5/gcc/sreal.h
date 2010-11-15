@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for simple data type for positive real numbers.
    Copyright (C) 2002, 2003, 2007 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_SREAL_H
 #define GCC_SREAL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* SREAL_PART_BITS has to be an even number.  */
 #if (HOST_BITS_PER_WIDE_INT / 2) % 2 == 1
@@ -60,5 +66,9 @@ extern sreal *sreal_add (sreal *, sreal *, sreal *);
 extern sreal *sreal_sub (sreal *, sreal *, sreal *);
 extern sreal *sreal_mul (sreal *, sreal *, sreal *);
 extern sreal *sreal_div (sreal *, sreal *, sreal *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

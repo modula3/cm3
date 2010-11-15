@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SparseSet implementation.
    Copyright (C) 2007, 2008 Free Software Foundation, Inc.
    Contributed by Peter Bergner <bergner@vnet.ibm.com>
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "config.h"
 #include "system.h"
 #include "sparseset.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Allocate and clear a n_elms SparseSet.  */
 
@@ -235,3 +241,6 @@ sparseset_equal_p (sparseset a, sparseset b)
   return true;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

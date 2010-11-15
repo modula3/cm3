@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Language-level data type conversion for GNU C.
    Copyright (C) 1987, 1988, 1991, 1998, 2002, 2003, 2004, 2005, 2007, 2008,
    2009 Free Software Foundation, Inc.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "toplev.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Change of width--truncation and extension of integers or reals--
    is represented with NOP_EXPR.  Proper functioning of many things
@@ -156,3 +162,7 @@ convert (tree type, tree expr)
   error ("conversion to non-scalar type requested");
   return error_mark_node;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

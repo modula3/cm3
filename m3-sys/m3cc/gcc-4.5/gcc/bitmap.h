@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions to support general ended bitmaps.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2006, 2007, 2008, 2009 Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "statistics.h"
 #include "obstack.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Fundamental storage type for bitmap.  */
 
@@ -584,5 +590,9 @@ bmp_iter_and_compl (bitmap_iterator *bi, unsigned *bit_no)
 				&(BITNUM));				\
        bmp_iter_and_compl (&(ITER), &(BITNUM));				\
        bmp_iter_next (&(ITER), &(BITNUM)))
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_BITMAP_H */

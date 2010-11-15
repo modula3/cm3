@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Virtual array support.
    Copyright (C) 1998, 1999, 2000, 2002, 2003, 2004, 2007
    Free Software Foundation, Inc.
@@ -30,6 +32,10 @@
 #include "system.h"
 #include "coretypes.h"
 #include "tm.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Enum indicating what the varray contains.
@@ -319,5 +325,9 @@ extern void varray_underflow (varray_type, const char *, int, const char *)
 #define VARRAY_TOP_BB(VA)		VARRAY_TOP (VA, vdt_bb)
 #define VARRAY_TOP_EDGE(VA)		VARRAY_TOP (VA, vdt_e)
 #define VARRAY_TOP_TREE_PTR(VA)		VARRAY_TOP (VA, vdt_tp)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_VARRAY_H */

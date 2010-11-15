@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Forward propagation of expressions for single use variables.
    Copyright (C) 2004, 2005, 2007, 2008, 2009 Free Software Foundation, Inc.
 
@@ -34,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "flags.h"
 #include "gimple.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass propagates the RHS of assignment statements into use
    sites of the LHS of the assignment.  It's basically a specialized
@@ -1402,3 +1408,6 @@ struct gimple_opt_pass pass_forwprop =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines common to both C and C++ pretty-printers.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "c-tree.h"
 #include "tree-iterator.h"
 #include "diagnostic.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Translate if being used for diagnostics, but not for dump files or
    __PRETTY_FUNCTION.  */
@@ -2257,3 +2263,7 @@ pp_c_tree_decl_identifier (c_pretty_printer *pp, tree t)
 
   pp_c_identifier (pp, name);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

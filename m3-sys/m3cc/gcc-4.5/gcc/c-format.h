@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Check calls to formatted I/O functions (-Wformat).
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2007, 2008 Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_C_FORMAT_H
 #define GCC_C_FORMAT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The meaningfully distinct length modifiers for format checking recognized
    by GCC.  */
@@ -322,5 +328,9 @@ typedef struct
   /* The name of the to be overridden format attribute. */
   const char *named_attr_dst;
 } target_ovr_attr;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_C_FORMAT_H */

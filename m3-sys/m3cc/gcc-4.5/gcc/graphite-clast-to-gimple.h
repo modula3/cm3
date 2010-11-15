@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Translation of CLAST (CLooG AST) to Gimple.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
    Contributed by Sebastian Pop <sebastian.pop@amd.com>.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_GRAPHITE_CLAST_TO_GIMPLE_H
 #define GCC_GRAPHITE_CLAST_TO_GIMPLE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Data structure for CLooG program representation.  */
 
@@ -71,5 +77,9 @@ static inline int get_scattering_level (int depth)
 {
   return 2 * depth - 1;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

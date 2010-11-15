@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree inlining.
    Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -56,6 +58,10 @@ along with GCC; see the file COPYING3.  If not see
 /* I'm not real happy about this, but we need to handle gimple and
    non-gimple trees.  */
 #include "gimple.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Inlining, Cloning, Versioning, Parallelization
 
@@ -5199,3 +5205,7 @@ tree_can_inline_p (struct cgraph_edge *e)
 
   return true;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

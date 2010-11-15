@@ -106,6 +106,10 @@ along with GCC; see the file COPYING3.  If not see
 				   declarations for e.g. AIX 4.x.  */
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static void general_init (const char *);
 static void do_compile (void);
 static void process_options (void);
@@ -2480,3 +2484,7 @@ toplev_main (int argc, char **argv)
 
   return (SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

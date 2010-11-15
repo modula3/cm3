@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Control flow functions for trees.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
    2010  Free Software Foundation, Inc.
@@ -47,6 +49,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "value-prof.h"
 #include "pointer-set.h"
 #include "tree-inline.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains functions for building the Control Flow Graph (CFG)
    for a function tree.  */
@@ -7294,3 +7300,6 @@ struct gimple_opt_pass pass_warn_unused_result =
   }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

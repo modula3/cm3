@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data references and dependences detectors.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -94,6 +96,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-scalar-evolution.h"
 #include "tree-pass.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static struct datadep_stats
 {
@@ -5166,3 +5172,7 @@ access_matrix_get_index_for_parameter (tree parameter,
 
   return -1;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

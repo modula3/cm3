@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* LTO IL compression streams.
 
    Copyright 2009 Free Software Foundation, Inc.
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_LTO_COMPRESS_H
 #define GCC_LTO_COMPRESS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct lto_compression_stream;
 
 /* In lto-compress.c.  */
@@ -38,5 +44,9 @@ extern struct lto_compression_stream
 extern void lto_uncompress_block (struct lto_compression_stream *stream,
 				  const char *base, size_t num_chars);
 extern void lto_end_uncompression (struct lto_compression_stream *stream);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_LTO_COMPRESS_H  */

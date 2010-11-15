@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Control flow graph analysis code for GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "vec.h"
 #include "vecprim.h"
 #include "timevar.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Store the data structures necessary for depth-first search.  */
 struct depth_first_search_dsS {
@@ -1355,4 +1361,6 @@ compute_idf (bitmap def_blocks, bitmap *dfs)
   return phi_insertion_points;
 }
 
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
