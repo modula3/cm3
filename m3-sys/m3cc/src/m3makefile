@@ -306,7 +306,7 @@ readonly proc postcp() is
   pDest = build_dir & "/cm3cg"
   if ProbeExeExtension (pSrc)
     pSrc = pSrc & ".exe"
-	pDest = pDest & ".exe"
+    pDest = pDest & ".exe"
   end
   if stale(pDest, pSrc)
     cp_if(pSrc, pDest)
