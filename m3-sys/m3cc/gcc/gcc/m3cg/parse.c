@@ -174,10 +174,10 @@ int arm_float_words_big_endian (void);
 #define BYTESIZE(x) UNSIGNED_INTEGER (x)
 #define FLOAT(x, fkind) M3CG_FIELD (UINT, fkind) M3CG_FIELD (tree, x)
 #define BOOLEAN(x) M3CG_FIELD (bool, x)
-#define VAR(x) M3CG_FIELD (tree, x)
-#define RETURN_VAR(x, code) M3CG_FIELD (tree, x)
-#define PROC(x) M3CG_FIELD (tree, x)
-#define LABEL(x) M3CG_FIELD (tree, x)
+#define VAR(x) M3CG_FIELD (tree, x) M3CG_FIELD (size_t, x##_integer)
+#define RETURN_VAR(x, code) M3CG_FIELD (tree, x) M3CG_FIELD (size_t, x##_integer)
+#define PROC(x) M3CG_FIELD (tree, x) M3CG_FIELD (size_t, x##_integer)
+#define LABEL(x) M3CG_FIELD (tree, x) M3CG_FIELD (size_t, x##_integer)
 #define TYPEID(x) M3CG_FIELD (ULONG, x)
 #define M3CG_EXTRA_FIELDS(x) x
 
@@ -235,10 +235,10 @@ struct m3cg_op_t
 #define BYTESIZE(x)  x = BITS_PER_UNIT * get_uint ();
 #define FLOAT(x, fkind) x = scan_float (&fkind);
 #define BOOLEAN(x) x = scan_boolean ();
-#define VAR(x) x = scan_var (ERROR_MARK);
-#define RETURN_VAR(x, code) x = scan_var (code);
-#define PROC(x) x = scan_proc ();
-#define LABEL(x) x = scan_label ();
+#define VAR(x) x = scan_var (ERROR_MARK, &x##_integer);
+#define RETURN_VAR(x, code) x = scan_var (code, &x##_integer);
+#define PROC(x) x = scan_proc (&x##_integer);
+#define LABEL(x) x = scan_label (&x##_integer);
 #define TYPEID(x) x = get_typeid ();
 
 #define M3CG(sym, fields) void m3cg_##sym##_t::read() { fields; read_extended(); if (option_trace_all) trace(); }
@@ -273,10 +273,10 @@ struct m3cg_op_t
 #define BYTESIZE(x) trace_int (#x, x);
 #define FLOAT(x, fkind) /* nothing */
 #define BOOLEAN(x) trace_boolean (#x, x);
-#define VAR(x) trace_var (#x, x);
-#define RETURN_VAR(x, code) trace_var (#x, x);
-#define PROC(x) trace_proc (#x, x);
-#define LABEL(x) /* nothing */
+#define VAR(x) trace_var (#x, x, x##_integer);
+#define RETURN_VAR(x, code) trace_var (#x, x, x##_integer);
+#define PROC(x) trace_proc (#x, x, x##_integer);
+#define LABEL(x) trace_label (#x, x##_integer);
 #define TYPEID(x) trace_typeid (#x, x);
 
 #define M3CG(sym, fields) void m3cg_##sym##_t::trace() { fields }
@@ -1973,7 +1973,7 @@ get_bytes_direct (size_t count)
 static PCSTR
 m3_get_var_trace_name (tree var)
 {
-  if (var && DECL_NAME (var))
+  if (option_trace_all && var && DECL_NAME (var) && IDENTIFIER_POINTER (DECL_NAME (var)))
     return IDENTIFIER_POINTER (DECL_NAME (var));
   return "noname";
 }
@@ -2337,9 +2337,11 @@ varray_extend (varray_type va, size_t n)
 }
 
 static tree
-scan_var (enum tree_code code)
+scan_var (enum tree_code code, size_t* p)
 {
-  ULONG i = get_uint ();
+  size_t i = get_uint ();
+  if (p)
+    *p = i;
 
   VARRAY_EXTEND (all_vars, i + 1);
   tree var = VARRAY_TREE (all_vars, i);
@@ -2362,21 +2364,31 @@ scan_var (enum tree_code code)
 }
 
 static void
-trace_var (PCSTR name, tree var)
+trace_var (PCSTR name, tree var, size_t a)
 {
-  if (name && option_trace_all)
+  if (!option_trace_all)
+    return;
+  const char* var_string = "var:";
+  if (strcmp (name, "var") == 0)
+    var_string = "";
+  const char* var_name = m3_get_var_trace_name (var);
+  const char* colon = ":";
+  if (strcmp (var_name, "noname") == 0)
   {
-    PCSTR colon = trace_name (&name);
-    fprintf (stderr, " %s%s%s", name, colon, m3_get_var_trace_name (var));
+    var_name = "";
+    colon = "";
   }
+  fprintf (stderr, " %s%s:0x%lX%s%s", var_string, name, (ULONG)a, colon, var_name);
 }
 
 /*------------------------------------------------------------ procedures ---*/
 
 static tree
-scan_proc (void)
+scan_proc (size_t* pi)
 {
-  long i = get_int ();
+  WIDE i = get_int ();
+  if (pi)
+    *pi = i;
   tree p = { 0 };
 
   if (i <= 0)
@@ -2396,18 +2408,23 @@ scan_proc (void)
 }
 
 static void
-trace_proc (PCSTR, tree p)
+trace_proc (PCSTR, tree p, size_t a)
 {
-  if (option_trace_all && p && DECL_NAME (p) && IDENTIFIER_POINTER (DECL_NAME (p)))
-    fprintf (stderr, " procedure:%s", IDENTIFIER_POINTER (DECL_NAME (p)));
+  if (!option_trace_all)
+    return;
+  fprintf (stderr, " procedure:0x%lX", (ULONG)a);
+  if (p && DECL_NAME (p) && IDENTIFIER_POINTER (DECL_NAME (p)))
+    fprintf (stderr, ":%s", IDENTIFIER_POINTER (DECL_NAME (p)));
 }
 
 /*---------------------------------------------------------------- labels ---*/
 
 static tree
-scan_label (void)
+scan_label (size_t* p)
 {
   ptrdiff_t i = get_int ();
+  if (p)
+    *p = i;
 
   if (i < 0)
     return NULL;
@@ -2415,6 +2432,12 @@ scan_label (void)
   if (VARRAY_TREE (all_labels, i) == NULL)
     VARRAY_TREE (all_labels, i) = build_decl (LABEL_DECL, NULL_TREE, t_void);
   return VARRAY_TREE (all_labels, i);
+}
+
+static void
+trace_label (PCSTR name, size_t a)
+{
+  trace_int (name, a);
 }
 
 /*======================================== debugging and type information ===*/
@@ -4604,7 +4627,7 @@ void m3cg_CASE_JUMP_t::read_extended ()
   size_t j = n;
   labels.resize(j);
   for (size_t i = 0; i < j; ++i)
-    labels[i] = scan_label ();
+    labels[i] = scan_label (0);
 }
 
 M3CG_HANDLER (EXIT_PROC)
