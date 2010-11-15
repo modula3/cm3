@@ -139,7 +139,7 @@ M3CG (DECLARE_LOCAL,
       TYPEID (type_id)
       BOOLEAN (in_memory)
       BOOLEAN (up_level)
-      FREQUENCY (f)
+      FREQUENCY (frequency)
       RETURN_VAR (var, VAR_DECL))
 M3CG (DECLARE_PARAM,
       STRING (name, name_length)
@@ -217,35 +217,35 @@ M3CG (JUMP,
 M3CG (IF_TRUE,
       TYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (IF_FALSE,
       TYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (IF_EQ,
       MTYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (IF_NE,
       MTYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (IF_GT,
       MTYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (IF_GE,
       MTYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (IF_LT,
       MTYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (IF_LE,
       MTYPE (type)
       LABEL (label)
-      FREQUENCY (f))
+      FREQUENCY (frequency))
 M3CG (CASE_JUMP,
       MTYPE (type)
       UNSIGNED_INTEGER (n)
