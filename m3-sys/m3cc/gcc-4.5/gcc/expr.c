@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert tree expression to rtl instructions, for GNU compiler.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -55,6 +57,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "diagnostic.h"
 #include "ssaexpand.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Decide whether a function's arguments should be processed
    from first to last or from last to first.
@@ -10333,3 +10339,7 @@ get_personality_function (tree decl)
 }
 
 #include "gt-expr.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
