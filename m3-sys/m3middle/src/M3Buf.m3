@@ -91,7 +91,7 @@ PROCEDURE PutInt  (t: T;  i: INTEGER) =
   <*FATAL Convert.Failed*>
   VAR len: INTEGER;  buf: ARRAY [0..BITSIZE(INTEGER) + 3] OF CHAR;
   BEGIN
-    IF (0 <= i) THEN
+    IF (i >= 0) THEN
       IF (i < 10) THEN
         PutChar (t, digits[i]);
         RETURN;
