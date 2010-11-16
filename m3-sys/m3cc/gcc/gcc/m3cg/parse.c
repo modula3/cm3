@@ -2113,7 +2113,7 @@ trace_string (PCSTR name, PCSTR result, long length)
 static tree
 scan_calling_convention (void)
 {
-  UWIDE id = get_int ();
+  UWIDE id = get_byte ();
   switch (id)
   {
   case 0: return NULL_TREE;
@@ -2129,7 +2129,7 @@ scan_calling_convention (void)
 static m3_type
 scan_type (void)
 {
-  UWIDE i = get_int ();
+  UWIDE i = get_byte ();
   if (i >= T_LAST)
     fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %u", (ULONG)i, m3cg_lineno);
   return (m3_type)i;
@@ -2226,7 +2226,7 @@ scan_float (UINT *out_Kind)
   gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
   gcc_assert (sizeof(long) == 4 || sizeof(long) == 8);
 
-  UINT Kind = (UINT)get_int ();
+  UINT Kind = (UINT)get_byte ();
   if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
       fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %u",
@@ -2241,7 +2241,7 @@ scan_float (UINT *out_Kind)
      than 32 bits always read the bytes in increasing address, independent of
      endianness */
   for (UINT i = 0; i < Size; ++i)
-    Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR)(0xFF & get_int ());
+    Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR)(0xFF & get_byte ());
 
   /* When crossing and host/target different endian, swap the longs. */
 
@@ -2305,7 +2305,7 @@ trace_float (PCSTR /*name*/, UINT kind, long Longs[2])
 static bool
 scan_boolean ()
 {
-  return (get_int () != 0);
+  return (get_byte () != 0);
 }
 
 static void
@@ -5757,7 +5757,7 @@ m3_parse_file (int)
 
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
-    op = (M3CG_opcode)get_int ();
+    op = (M3CG_opcode)get_byte ();
     if (op >= LAST_OPCODE)
       fatal_error (" *** bad opcode: 0x%x, at m3cg_lineno %u", op, m3cg_lineno);
     
