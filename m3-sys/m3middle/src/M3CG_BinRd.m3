@@ -223,7 +223,7 @@ PROCEDURE Inhale (rd: Rd.T;  cg: M3CG.T) =
     END;
 
     LOOP
-      op := Scan_int (s);
+      op := GetByte (s);
       IF (s.hit_eof) THEN
         EXIT;
       ELSIF (op < 0) OR (ORD (LAST (Bop)) < op) THEN
@@ -278,7 +278,7 @@ PROCEDURE Scan_text (VAR s: State): TEXT =
   END Scan_text;
 
 PROCEDURE Scan_type (VAR s: State): M3CG.Type =
-  VAR x := Scan_int (s);
+  VAR x := GetByte (s);
   BEGIN
     IF (ORD (FIRST (M3CG.Type)) <= x) AND (x <= ORD (LAST (M3CG.Type))) THEN
       RETURN VAL (x, M3CG.Type);
@@ -289,7 +289,7 @@ PROCEDURE Scan_type (VAR s: State): M3CG.Type =
   END Scan_type;
 
 PROCEDURE Scan_bool (VAR s: State): BOOLEAN =
-  VAR x := Scan_int (s);
+  VAR x := GetByte (s);
   BEGIN
     CASE x OF
     | ORD (FALSE) => RETURN FALSE;
@@ -360,7 +360,7 @@ PROCEDURE Scan_sign (VAR s: State): M3CG.Sign =
 
 PROCEDURE Scan_callConv (VAR s: State): Target.CallingConvention =
   VAR
-    id := Scan_int (s);
+    id := GetByte (s);
     cc := Target.ConventionFromID (id);
   BEGIN
     IF (cc = NIL) THEN
@@ -371,7 +371,7 @@ PROCEDURE Scan_callConv (VAR s: State): Target.CallingConvention =
 
 PROCEDURE Scan_float (VAR s: State): Target.Float =
   VAR
-    i       := Scan_int (s);
+    i       := GetByte (s);
     pre     := Target.Precision.Short;
     n_bytes : INTEGER;
     bytes   : ARRAY [0..BYTESIZE(EXTENDED)] OF TFloat.Byte;
@@ -384,7 +384,7 @@ PROCEDURE Scan_float (VAR s: State): Target.Float =
     ELSE Error (s, "bad floating-point precision: ", Fmt.Int (i));
     END;
     n_bytes := TargetMap.Float_types[pre].size DIV BITSIZE (TFloat.Byte);
-    FOR x := 0 TO n_bytes-1 DO bytes[x] := Scan_int (s); END;
+    FOR x := 0 TO n_bytes-1 DO bytes[x] := GetByte (s); END;
     TFloat.FromBytes (SUBARRAY (bytes, 0, n_bytes), pre, result);
     RETURN result;
   END Scan_float;
