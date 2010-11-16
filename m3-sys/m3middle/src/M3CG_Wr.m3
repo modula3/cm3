@@ -339,35 +339,35 @@ PROCEDURE OutC (u: U;  c: CHAR) =
   BEGIN
     M3Buf.PutChar (u.buf, c);
     INC (u.buf_len);
-    IF (u.buf_len >= 16_8000) THEN Flush (u) END;
+    IF (u.buf_len >= 16_F000) THEN Flush (u) END;
   END OutC;
 
 PROCEDURE OutT (u: U;  txt: TEXT) =
   BEGIN
     M3Buf.PutText (u.buf, txt);
     INC (u.buf_len, Text.Length (txt));
-    IF (u.buf_len >= 16_8000) THEN Flush (u) END;
+    IF (u.buf_len >= 16_F000) THEN Flush (u) END;
   END OutT;
 
 PROCEDURE OutN (u: U;  n: Name) =
   BEGIN
     M3ID.Put (u.buf, n);
     INC (u.buf_len, 10); (* we don't really care if it's accurate *)
-    IF (u.buf_len >= 16_8000) THEN Flush (u) END;
+    IF (u.buf_len >= 16_F000) THEN Flush (u) END;
   END OutN;
 
 PROCEDURE OutS (u: U;  READONLY buf: ARRAY OF CHAR) =
   BEGIN
     M3Buf.PutSub (u.buf, buf);
     INC (u.buf_len, NUMBER (buf));
-    IF (u.buf_len >= 16_8000) THEN Flush (u) END;
+    IF (u.buf_len >= 16_F000) THEN Flush (u) END;
   END OutS;
 
 PROCEDURE OutI  (u: U;  i: INTEGER) =
   BEGIN
     M3Buf.PutInt (u.buf, i);
     INC (u.buf_len, 4); (* we don't really care if it's accurate *)
-    IF (u.buf_len >= 16_8000) THEN Flush (u) END;
+    IF (u.buf_len >= 16_F000) THEN Flush (u) END;
   END OutI;
 
 (*---------------------------------------------------------------------------*)
