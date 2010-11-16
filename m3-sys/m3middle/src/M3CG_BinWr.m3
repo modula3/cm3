@@ -6,6 +6,7 @@ MODULE M3CG_BinWr;
 IMPORT Wr, Text, IntRefTbl, Word;
 IMPORT M3Buf, M3ID, M3CG, M3CG_Ops, M3CG_Binary;
 IMPORT Target, TInt AS TargetInt, TFloat, TWord;
+FROM TFloat IMPORT Byte;
 
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -183,7 +184,7 @@ TYPE
 
 PROCEDURE Cmd (u: U; cmd: Bop) =
   BEGIN
-    OutI (u, ORD (cmd));
+    OutB (u, ORD (cmd));
   END Cmd;
 
 PROCEDURE ZName (u: U;  n: Name) =
@@ -214,23 +215,23 @@ PROCEDURE PName (u: U;  p: Proc) =
 
 PROCEDURE TName (u: U;  t: Type) =
   BEGIN
-    OutI (u, ORD (t));
+    OutB (u, ORD (t));
   END TName;
 
 PROCEDURE Flt (u: U;  READONLY f: Target.Float) =
   VAR
-    buf : ARRAY [0..BYTESIZE (EXTENDED)] OF TFloat.Byte;
+    buf : ARRAY [0..BYTESIZE (EXTENDED)] OF Byte;
     len := TFloat.ToBytes (f, buf);
   BEGIN
-    OutI (u, ORD (TFloat.Prec (f)));
+    OutB (u, ORD (TFloat.Prec (f)));
     FOR i := 0 TO len-1 DO
-      OutI (u, buf[i]);
+      OutB (u, buf[i]);
     END;
   END Flt;
 
 PROCEDURE Bool (u: U;  b: BOOLEAN) =
   BEGIN
-    OutI (u, ORD (b));
+    OutB (u, ORD (b));
   END Bool;
 
 PROCEDURE Lab (u: U;  i: Label) =
@@ -284,44 +285,42 @@ PROCEDURE Flush (u: U) =
     u.buf_len := 0;
   END Flush;
 
+PROCEDURE OutB  (u: U;  i: Byte) =
+  BEGIN
+    M3Buf.PutChar (u.buf, VAL (i, CHAR));
+    INC (u.buf_len);
+    IF (u.buf_len >= 16_F000) THEN Flush (u) END;
+  END OutB;
+
 PROCEDURE OutI  (u: U;  i: INTEGER) =
   BEGIN
-    IF (0 <= i) AND (i <= M3CG_Binary.LastRegular) THEN
-      M3Buf.PutChar (u.buf, VAL (i, CHAR));
-      INC (u.buf_len);
-
+    IF (i >= 0) AND (i <= M3CG_Binary.LastRegular) THEN
+      OutB (u, i);
     ELSIF (i < 0) THEN
-      IF (-255 <= i) THEN
+      IF (i >= -255) THEN
         i := -i;
-        M3Buf.PutChar (u.buf, VAL (M3CG_Binary.NInt1, CHAR));
-        M3Buf.PutChar (u.buf, VAL (i, CHAR));
-        INC (u.buf_len, 2);
-      ELSIF (-16_ffff <= i) THEN
+        OutB (u, M3CG_Binary.NInt1);
+        OutB (u, i);
+      ELSIF (i >= -16_FFFF) THEN
         i := -i;
-        M3Buf.PutChar (u.buf, VAL (M3CG_Binary.NInt2, CHAR));
-        M3Buf.PutChar (u.buf, VAL (Word.And (i, 16_ff), CHAR));
-        M3Buf.PutChar (u.buf, VAL (Word.And (Word.RightShift (i, 8), 16_ff), CHAR));
-        INC (u.buf_len, 3);
+        OutB (u, M3CG_Binary.NInt2);
+        OutB (u, Word.And (i, 16_FF));
+        OutB (u, Word.And (Word.RightShift (i, 8), 16_FF));
       ELSE
         AddBigInt (u, i);
       END;
-
     ELSE (* i > 0 *)
       IF (i <= 255) THEN
-        M3Buf.PutChar (u.buf, VAL (M3CG_Binary.Int1, CHAR));
-        M3Buf.PutChar (u.buf, VAL (i, CHAR));
-        INC (u.buf_len, 2);
-      ELSIF (i <= 16_ffff) THEN
-        M3Buf.PutChar (u.buf, VAL (M3CG_Binary.Int2, CHAR));
-        M3Buf.PutChar (u.buf, VAL (Word.And (i, 16_ff), CHAR));
-        M3Buf.PutChar (u.buf, VAL (Word.And (Word.RightShift (i, 8), 16_ff), CHAR));
-        INC (u.buf_len, 3);
+        OutB (u, M3CG_Binary.Int1);
+        OutB (u, i);
+      ELSIF (i <= 16_FFFF) THEN
+        OutB (u, M3CG_Binary.Int2);
+        OutB (u, Word.And (i, 16_FF));
+        OutB (u, Word.And (Word.RightShift (i, 8), 16_FF));
       ELSE
         AddBigInt (u, i);
       END;
     END;
-
-    IF (u.buf_len >= 16_F000) THEN Flush (u) END;
   END OutI;
 
 TYPE
@@ -369,11 +368,10 @@ PROCEDURE DumpInt (u: U;  VAR i: IntDesc) =
     END;
 
     (* finally, dump the bytes *)
-    M3Buf.PutChar (u.buf, VAL (tag, CHAR));
+    OutB (u, tag);
     FOR x := 0 TO cnt-1 DO
-      M3Buf.PutChar (u.buf, VAL (i.bytes[x], CHAR));
+      OutB (u, i.bytes[x]);
     END;
-    INC (u.buf_len, cnt+1);
   END DumpInt;
 
 (*---------------------------------------------------------------------------*)
@@ -568,7 +566,7 @@ PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
     Int  (u, n_formals);
     Tipe (u, result);
     Int  (u, n_raises);
-    Int  (u, cc.m3cg_id);
+    OutB (u, cc.m3cg_id);
   END declare_proctype;
 
 PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID) =
@@ -871,7 +869,7 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
     ZName (u, n);
     Int   (u, n_params);
     TName (u, ret_type);
-    Int   (u, cc.m3cg_id);
+    OutB  (u, cc.m3cg_id);
     PName (u, p);
     RETURN p;
   END import_procedure;
@@ -887,7 +885,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
     Int   (u, n_params);
     TName (u, return_type);
     Int   (u, lev);
-    Int   (u, cc.m3cg_id);
+    OutB  (u, cc.m3cg_id);
     Bool  (u, exported);
     PName (u, parent);
     PName (u, p);
@@ -1514,7 +1512,7 @@ PROCEDURE start_call_indirect (u: U;  t: Type;  cc: CallingConvention) =
   BEGIN
     Cmd   (u, Bop.start_call_indirect);
     TName (u, t);
-    Int   (u, cc.m3cg_id);
+    OutB  (u, cc.m3cg_id);
   END start_call_indirect;
 
 PROCEDURE pop_param (u: U;  t: MType) =
@@ -1553,7 +1551,7 @@ PROCEDURE call_indirect (u: U;  t: Type;  cc: CallingConvention) =
   BEGIN
     Cmd   (u, Bop.call_indirect);
     TName (u, t);
-    Int   (u, cc.m3cg_id);
+    OutB  (u, cc.m3cg_id);
   END call_indirect;
 
 (*------------------------------------------- procedure and closure types ---*)
