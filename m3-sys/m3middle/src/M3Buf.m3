@@ -11,7 +11,7 @@ MODULE M3Buf;
 IMPORT Wr, Convert, Text, Text8, Thread, Target, TInt, M3FP;
 
 CONST
-  ChunkSize = 2 * 1024 - 3 * BYTESIZE (INTEGER);
+  ChunkSize = 16_FF00; (* approx. 64K *)
   (* leave some slop for the 'next' pointer & the allocator overhead *)
 
 TYPE

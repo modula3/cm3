@@ -12,7 +12,7 @@ TYPE
   Bop = M3CG_Binary.Op;
 
 CONST
-  BufSize = 4096;
+  BufSize = 16_10000; (* 64K *)
 
 TYPE
   InputBuffer = REF ARRAY [0..BufSize-1] OF CHAR;
