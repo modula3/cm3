@@ -2241,7 +2241,7 @@ scan_float (UINT *out_Kind)
      than 32 bits always read the bytes in increasing address, independent of
      endianness */
   for (UINT i = 0; i < Size; ++i)
-    Bytes[i / 4 * sizeof(long) + i % 4] = (UCHAR)(0xFF & get_byte ());
+    Bytes[i / 4 * sizeof(long) + i % 4] = get_byte ();
 
   /* When crossing and host/target different endian, swap the longs. */
 
