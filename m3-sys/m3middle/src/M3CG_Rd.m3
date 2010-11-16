@@ -14,7 +14,7 @@ FROM M3CG IMPORT MemoryOrder;
 
 CONST
   EOF = '\000';
-  BufSize = 4096;
+  BufSize = 16_10000; (* 64K *)
 
 TYPE
   InputBuffer = REF ARRAY [0..BufSize-1] OF CHAR;
