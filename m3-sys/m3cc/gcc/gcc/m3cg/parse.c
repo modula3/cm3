@@ -4576,11 +4576,11 @@ M3CG_HANDLER (IF_FALSE)
 }
 
 static void
-m3cg_if_compare (tree type, tree label, enum tree_code o)
+m3cg_if_compare (tree type, tree label, enum tree_code code)
 {
   tree t1 = m3_cast (type, EXPR_REF (-1));
   tree t2 = m3_cast (type, EXPR_REF (-2));
-  add_stmt (build3 (COND_EXPR, t_void, build2 (o, boolean_type_node, t2, t1),
+  add_stmt (build3 (COND_EXPR, t_void, build2 (code, boolean_type_node, t2, t1),
                     build1 (GOTO_EXPR, t_void, label),
                     NULL_TREE));
   EXPR_POP ();
@@ -4725,12 +4725,12 @@ M3CG_HANDLER (LOAD_FLOAT)
 }
 
 static void
-m3cg_compare (tree src_t, tree dst_t, enum tree_code op)
+m3cg_compare (tree src_t, tree dst_t, enum tree_code code)
 {
   tree t1 = m3_cast (src_t, EXPR_REF (-1));
   tree t2 = m3_cast (src_t, EXPR_REF (-2));
 
-  EXPR_REF (-2) = m3_build2 (op, dst_t, t2, t1);
+  EXPR_REF (-2) = m3_build2 (code, dst_t, t2, t1);
   EXPR_POP ();
 }
 
@@ -4976,7 +4976,8 @@ M3CG_HANDLER (SET_GE) { m3cg_set_compare (n, type, set_ge_proc); }
 M3CG_HANDLER (SET_LT) { m3cg_set_compare (n, type, set_lt_proc); }
 M3CG_HANDLER (SET_LE) { m3cg_set_compare (n, type, set_le_proc); }
 
-M3CG_HANDLER (SET_EQ)
+static void
+m3cg_set_compare_eq (UWIDE n, tree type, enum tree_code code)
 {
   m3cg_assert_int (type);
   m3_start_call ();
@@ -4985,19 +4986,17 @@ M3CG_HANDLER (SET_EQ)
   EXPR_PUSH (size_int (n));
   m3_pop_param (t_int);
   m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
-  EXPR_REF (-1) = m3_build2 (EQ_EXPR, t_int, EXPR_REF (-1), v_zero);
+  EXPR_REF (-1) = m3_build2 (code, t_int, EXPR_REF (-1), v_zero);
+}
+
+M3CG_HANDLER (SET_EQ)
+{
+  m3cg_set_compare_eq (n, type, EQ_EXPR);
 }
 
 M3CG_HANDLER (SET_NE)
 {
-  m3cg_assert_int (type);
-  m3_start_call ();
-  m3_pop_param (t_addr);
-  m3_pop_param (t_addr);
-  EXPR_PUSH (size_int (n));
-  m3_pop_param (t_int);
-  m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
-  EXPR_REF (-1) = m3_build2 (NE_EXPR, t_int, EXPR_REF (-1), v_zero);
+  m3cg_set_compare_eq (n, type, NE_EXPR);
 }
 
 M3CG_HANDLER (SET_RANGE)
