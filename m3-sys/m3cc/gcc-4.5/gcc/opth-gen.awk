@@ -68,7 +68,7 @@ print "#ifndef OPTIONS_H"
 print "#define OPTIONS_H"
 print ""
 print "#ifdef __cplusplus"
-print "extern \"C\" {
+print "extern \"C\" {"
 print "#endif"
 print ""
 print "extern int target_flags;"
