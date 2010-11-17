@@ -5256,12 +5256,10 @@ M3CG_HANDLER (COPY_N)
   m3_start_call ();
 
   /* rearrange the parameters */
-  {
-    tree tmp = EXPR_REF (-3);
-    EXPR_REF (-3) = EXPR_REF (-2);
-    EXPR_REF (-2) = EXPR_REF (-1);
-    EXPR_REF (-1) = tmp;
-  }
+  tree tmp = EXPR_REF (-3);
+  EXPR_REF (-3) = EXPR_REF (-2);
+  EXPR_REF (-2) = EXPR_REF (-1);
+  EXPR_REF (-1) = tmp;
 
   m3_pop_param (t_addr);
   m3_swap ();
