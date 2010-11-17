@@ -67,6 +67,10 @@ print ""
 print "#ifndef OPTIONS_H"
 print "#define OPTIONS_H"
 print ""
+print "#ifdef __cplusplus"
+print "extern \"C\" {
+print "#endif"
+print ""
 print "extern int target_flags;"
 print "extern int target_flags_explicit;"
 print ""
@@ -366,6 +370,10 @@ for (i = 0; i < n_opts; i++) {
 
 print "  N_OPTS"
 print "};"
+print ""
+print "#ifdef __cplusplus"
+print "} /* extern \"C\" */"
+print "#endif"
 print ""
 print "#endif /* OPTIONS_H */"
 }
