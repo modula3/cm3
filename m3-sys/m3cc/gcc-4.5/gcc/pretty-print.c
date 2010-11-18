@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for language-independent pretty-print subroutines.
    Copyright (C) 2003, 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@integrable-solutions.net>
@@ -27,6 +29,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pretty-print.h"
 #include "tree.h"
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Opening quotation mark for diagnostics.  */
 static const char open_quote[] = "'";
@@ -864,3 +870,7 @@ identifier_to_locale (const char *ident)
 {
   return ident;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

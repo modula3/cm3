@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Support for GCC plugin mechanism.
    Copyright (C) 2009 Free Software Foundation, Inc.
 
@@ -42,6 +44,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifdef ENABLE_PLUGIN
 #include "plugin-version.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #define GCC_PLUGIN_STRINGIFY0(X) #X
@@ -818,3 +824,7 @@ get_event_last (void)
 {
   return event_last;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

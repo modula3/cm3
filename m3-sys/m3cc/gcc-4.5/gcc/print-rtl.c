@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Print RTL for GCC.
    Copyright (C) 1987, 1988, 1992, 1997, 1998, 1999, 2000, 2002, 2003,
    2004, 2005, 2007, 2008, 2009, 2010
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic.h"
 #include "cselib.h"
 #include "tree-pass.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 static FILE *outfile;
@@ -784,3 +790,7 @@ print_simple_rtl (FILE *outf, const_rtx x)
   print_rtl (outf, x);
   flag_simple = 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

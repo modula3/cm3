@@ -27,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "toplev.h"
 #include "fixed-value.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Compare two fixed objects for bitwise identity.  */
 
 bool
@@ -93,3 +97,7 @@ bool
 fixed_isneg (const FIXED_VALUE_TYPE *f ATTRIBUTE_UNUSED)
   { gcc_unreachable ();
     return 0; }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
