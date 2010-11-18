@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Utility to update paths from internal to external forms.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2007  Free Software Foundation, Inc.
@@ -72,6 +74,10 @@ License along with GCC; see the file COPYING3.  If not see
 #include <windows.h>
 #endif
 #include "prefix.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static const char *std_prefix = PREFIX;
 
@@ -354,3 +360,7 @@ set_std_prefix (const char *prefix, int len)
 {
   std_prefix = save_string (prefix, len);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
