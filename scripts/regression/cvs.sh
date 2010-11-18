@@ -13,11 +13,22 @@ if [ ! -x $CVSEXE ]; then
   exit 1
 fi
 if [ `uname -n` = "current10x" ]; then
-  args=`echo "$@" | sed -e 's/-z3 update/update/'`
+  #args=`echo "$@" | sed -e 's/-z3 update/update/'`
+  args=''
+  for p in "$@"; do
+    if [ "x$p" = x-z3 ]; then
+      if echo "$@" | grep -- "-z3 update" >/dev/null 2>/dev/null; then
+        true
+      else
+        args="$args $p"
+      fi
+    else
+      args="$args $p"
+    fi
+  done
   echo "$CVSEXE $args"
   exec $CVSEXE $args
 else
   echo "$CVSEXE $@"
-  exec $CVSEXE $@
+  exec $CVSEXE "$@"
 fi
-
