@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions for writing LTO sections.
 
    Copyright (C) 2009 Free Software Foundation, Inc.
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "lto-streamer.h"
 #include "lto-compress.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static VEC(lto_out_decl_state_ptr, heap) *decl_state_stack;
 
@@ -650,3 +656,7 @@ lto_record_function_out_decl_state (tree fn_decl,
   VEC_safe_push (lto_out_decl_state_ptr, heap, lto_function_decl_states,
 		 state);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Register to Stack convert for GNU compiler.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
@@ -176,6 +178,10 @@
 #include "target.h"
 #include "df.h"
 #include "vecprim.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef STACK_REGS
 
@@ -3322,3 +3328,7 @@ struct rtl_opt_pass pass_stack_regs_run =
   TODO_ggc_collect                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Procedure integration for GCC.
    Copyright (C) 1988, 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -47,6 +49,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "tree-pass.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Round to the next highest integer that meets the alignment.  */
 #define CEIL_ROUND(VALUE,ALIGN)	(((VALUE) + (ALIGN) - 1) & ~((ALIGN)- 1))
@@ -374,3 +380,7 @@ allocate_initial_values (rtx *reg_equiv_memory_loc)
 }
 
 #include "gt-integrate.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

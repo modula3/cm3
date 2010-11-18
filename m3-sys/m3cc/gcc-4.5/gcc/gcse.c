@@ -171,6 +171,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "dbgcnt.h"
 #include "target.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* We support GCSE via Partial Redundancy Elimination.  PRE optimizations
    are a superset of those done by classic GCSE.
 
@@ -5169,3 +5173,7 @@ struct rtl_opt_pass pass_rtl_hoist =
 };
 
 #include "gt-gcse.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

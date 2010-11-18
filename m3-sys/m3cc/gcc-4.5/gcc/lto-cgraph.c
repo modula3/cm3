@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Write and read the cgraph to the memory mapped representation of a
    .o file.
 
@@ -46,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "lto-streamer.h"
 #include "gcov-io.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Create a new cgraph encoder.  */
 
@@ -844,3 +850,7 @@ input_cgraph (void)
 	node->aux = NULL;
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

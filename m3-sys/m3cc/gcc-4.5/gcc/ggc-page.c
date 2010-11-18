@@ -60,6 +60,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef USING_MMAP
 #define USING_MALLOC_PAGE_GROUPS
 #endif
@@ -2383,3 +2387,7 @@ ggc_pch_read (FILE *f, void *addr)
   /* Update the statistics.  */
   G.allocated = G.allocated_last_gc = offs - (char *)addr;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

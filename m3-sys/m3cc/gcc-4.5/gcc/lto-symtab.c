@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* LTO symbol table.
    Copyright 2009 Free Software Foundation, Inc.
    Contributed by CodeSourcery, Inc.
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "plugin-api.h"
 #include "lto-streamer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Vector to keep track of external variables we've seen so far.  */
 VEC(tree,gc) *lto_global_var_decls;
@@ -725,3 +731,7 @@ lto_symtab_prevailing_decl (tree decl)
 }
 
 #include "gt-lto-symtab.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

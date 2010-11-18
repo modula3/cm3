@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Set up combined include path chain for the preprocessor.
    Copyright (C) 1986, 1987, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
@@ -30,6 +32,10 @@
 #include "intl.h"
 #include "incpath.h"
 #include "cppdefault.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Microsoft Windows does not natively support inodes.
    VMS has non-numeric inodes.  */
@@ -473,3 +479,6 @@ static void hook_void_charptr_charptr_int (const char *sysroot ATTRIBUTE_UNUSED,
 
 struct target_c_incpath_s target_c_incpath = { TARGET_EXTRA_PRE_INCLUDES, TARGET_EXTRA_INCLUDES };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Wrapper to call lto.  Used by collect2 and the linker plugin.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 #include "intl.h"
 #include "libiberty.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int debug;				/* true if -debug */
 
@@ -424,3 +430,7 @@ main (int argc, char *argv[])
 
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

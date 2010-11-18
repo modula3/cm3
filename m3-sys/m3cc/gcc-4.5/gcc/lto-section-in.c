@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Input functions for reading LTO sections.
 
    Copyright 2009 Free Software Foundation, Inc.
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "output.h"
 #include "lto-streamer.h"
 #include "lto-compress.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Section names.  These must correspond to the values of
    enum lto_section_type.  */
@@ -487,3 +493,7 @@ lto_get_function_in_decl_state (struct lto_file_decl_data *file_data,
   slot = htab_find_slot (file_data->function_decl_states, &temp, NO_INSERT);
   return slot? ((struct lto_in_decl_state*) *slot) : NULL;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

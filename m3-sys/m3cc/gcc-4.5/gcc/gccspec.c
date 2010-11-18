@@ -23,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 #include "gcc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Filter argc and argv before processing by the gcc driver proper.  */
 void
 lang_specific_driver (int *in_argc ATTRIBUTE_UNUSED,
@@ -104,3 +108,7 @@ lang_specific_pre_link (void)
 
 /* Number of extra output files that lang_specific_pre_link may generate.  */
 int lang_specific_extra_outfiles = 0;  /* Not used for C.  */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

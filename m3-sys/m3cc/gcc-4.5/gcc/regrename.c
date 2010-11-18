@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Register renaming for the GNU compiler.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
    2010 Free Software Foundation, Inc.
@@ -39,6 +41,10 @@
 #include "timevar.h"
 #include "tree-pass.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if HOST_BITS_PER_WIDE_INT <= MAX_RECOG_OPERANDS
 #error "Use a different bitmap implementation for untracked_operands."
@@ -1382,3 +1388,6 @@ struct rtl_opt_pass pass_regrename =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

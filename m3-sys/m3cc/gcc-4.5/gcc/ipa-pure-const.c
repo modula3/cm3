@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph based analysis of static variables.
    Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -55,6 +57,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "lto-streamer.h"
 #include "cfgloop.h"
 #include "tree-scalar-evolution.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static struct pointer_set_t *visited_nodes;
 
@@ -1224,3 +1230,7 @@ struct gimple_opt_pass pass_local_pure_const =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

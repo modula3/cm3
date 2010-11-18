@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Integrated Register Allocator (IRA) entry point.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -324,6 +326,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "ira-int.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A modified value of flag `-fira-verbose' used internally.  */
 int internal_flag_ira_verbose;
@@ -3409,3 +3414,7 @@ struct rtl_opt_pass pass_ira =
   TODO_ggc_collect                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

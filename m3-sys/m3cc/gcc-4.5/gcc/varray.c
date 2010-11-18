@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Virtual array support.
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008
    Free Software Foundation, Inc.
@@ -27,6 +29,10 @@
 #include "varray.h"
 #include "ggc.h"
 #include "hashtab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define VARRAY_HDR_SIZE (sizeof (struct varray_head_tag) - sizeof (varray_data))
 
@@ -261,3 +267,7 @@ dump_varray_statistics (void)
    }
 #endif
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

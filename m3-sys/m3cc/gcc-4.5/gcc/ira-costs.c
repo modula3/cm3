@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IRA hard register and memory cost calculation for allocnos or pseudos.
    Copyright (C) 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -37,6 +39,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "params.h"
 #include "ira-int.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The flags is set up every time when we calculate pseudo register
    classes through function ira_set_pseudo_classes.  */
@@ -1767,3 +1773,7 @@ ira_tune_allocno_costs_and_cover_classes (void)
 	ALLOCNO_COVER_CLASS_COST (a) = min_cost;
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

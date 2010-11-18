@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL reader for GCC.
    Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
    2003, 2004, 2005, 2007, 2008
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "obstack.h"
 #include "hashtab.h"
 #include "gensupport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static htab_t md_constants;
 
@@ -1752,3 +1758,7 @@ read_rtx_variadic (FILE *infile, struct map_value **mode_maps, rtx form)
 
   return form;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

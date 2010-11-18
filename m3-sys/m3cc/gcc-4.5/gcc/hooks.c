@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* General-purpose hooks.
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -28,6 +30,10 @@
 #include "coretypes.h"
 #include "tm.h"
 #include "hooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Generic hook that does absolutely zappo.  */
 void
@@ -348,3 +354,7 @@ hook_tree_const_tree_null (const_tree t ATTRIBUTE_UNUSED)
 {
   return NULL;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

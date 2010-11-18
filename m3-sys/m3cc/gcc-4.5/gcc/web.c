@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Web construction code for GNU compiler.
    Contributed by Jan Hubicka.
    Copyright (C) 2001, 2002, 2004, 2006, 2007, 2008, 2010
@@ -51,6 +53,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "tree-pass.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Find the root of unionfind tree (the representative of set).  */
 
@@ -401,3 +406,6 @@ struct rtl_opt_pass pass_web =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

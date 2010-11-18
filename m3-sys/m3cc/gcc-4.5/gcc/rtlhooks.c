@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generic hooks for the RTL middle-end.
    Copyright (C) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 
@@ -26,6 +28,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "expr.h"
 #include "recog.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* For speed, we will copy the RTX hooks struct member-by-member
    instead of doing indirect calls.  For these reason, we initialize
@@ -167,3 +172,6 @@ gen_lowpart_if_possible (enum machine_mode mode, rtx x)
     return 0;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

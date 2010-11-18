@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output xcoff-format symbol table information from GNU compiler.
    Copyright (C) 1992, 1994, 1995, 1997, 1998, 1999, 2000, 2002, 2003, 2004,
    2007, 2008  Free Software Foundation, Inc.
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "xcoffout.h"
 #include "dbxout.h"
 #include "gstab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Line number of beginning of current function, minus one.
    Negative means not in a function or not using xcoff.  */
@@ -483,6 +489,11 @@ xcoffout_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
   fprintf (asm_out_file, "FE..");
   ASM_OUTPUT_LABEL (asm_out_file, fname);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* XCOFF_DEBUGGING_INFO */
 
 char quash_apple_ranlib_warning_xcoffout_end_epilogue;
