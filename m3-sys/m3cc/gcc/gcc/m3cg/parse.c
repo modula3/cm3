@@ -1237,6 +1237,8 @@ m3_do_rotate (enum tree_code code, tree orig_type, tree val, tree cnt)
   return g;
 }
 
+#if 0
+
 static tree
 m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count)
 {
@@ -1249,6 +1251,23 @@ m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count)
   tree d = m3_build3 (COND_EXPR, type, c, v_zero, b);
   return d;
 }
+
+#else
+
+static tree
+m3_do_shift (enum tree_code code, tree type, tree val, tree count)
+{
+  tree unsigned_type = m3_unsigned_type (type);
+  tree a = m3_convert (unsigned_type, val); // cast?
+  tree b = m3_cast (type, m3_build2 (code, unsigned_type, a, count));
+  if (host_integerp (count, 1) && (TREE_INT_CST_LOW (count) < TYPE_PRECISION (type)))
+    return b;
+  tree c = m3_build2 (GE_EXPR, boolean_type_node, count, m3_cast (TREE_TYPE (count), TYPE_SIZE (type)));
+  tree d = m3_build3 (COND_EXPR, type, c, m3_cast (type, v_zero), b);
+  return d;
+}
+
+#endif
 
 alias_set_type
 m3_get_alias_set (tree)
@@ -1567,7 +1586,7 @@ sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
   built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
 
-#if 0 /* future */
+#if 0 /* future? */
 
 static tree
 m3_make_integer_type (UINT size, UINT align, UINT signd)
@@ -2259,7 +2278,7 @@ scan_float (UINT *out_Kind)
   return t;
 }
 
-#if 0
+#if 0 /* future? */
 
 static void
 trace_float (PCSTR /*name*/, UINT kind, long Longs[2])
@@ -4007,10 +4026,12 @@ M3CG_HANDLER (DECLARE_SEGMENT)
   if (name_length > 2)
   {
     if (!name || !(name[0] == 'I' || name[0] == 'M') || !(name[1] == '_'))
-      fprintf (stderr, "%s\n", name);
-    gcc_assert (name);
-    gcc_assert (name[0] == 'I' || name[0] == 'M');
-    gcc_assert (name[1] == '_');
+    {
+      fprintf (stderr, "assertion failure: %s should start [MI]_\n", name ? name : "(null)");
+      gcc_assert (name);
+      gcc_assert (name[0] == 'I' || name[0] == 'M');
+      gcc_assert (name[1] == '_');
+    }
     current_unit_name_length = name_length - 2;
     current_unit_name = name + 2;
   }
@@ -4910,14 +4931,15 @@ M3CG_HANDLER (SET_SYM_DIFFERENCE)
   setop (set_sdiff_proc, n, 3);
 }
 
-#define m3cg_assert_int(t) \
- do {                \
-   if ((t) != t_int) \
-   {                 \
-     fprintf (stderr, "word size/target/configure confusion?\n"); \
-     gcc_assert ((t) == t_int); \
-   } \
- } while(0)
+static void
+m3cg_assert_int(tree t)
+{
+  if (t != t_int && t != t_word)
+  {
+    fprintf (stderr, "word size/target/configure confusion? forgot -m32 or -m64?\n");
+    gcc_assert (t == t_int || t == t_word);
+  }
+}
 
 static tree
 m3cg_set_member_ref (tree type, tree* out_bit_in_word)
@@ -4979,26 +5001,26 @@ M3CG_HANDLER (SET_LT) { m3cg_set_compare (n, type, set_lt_proc); }
 M3CG_HANDLER (SET_LE) { m3cg_set_compare (n, type, set_le_proc); }
 
 static void
-m3cg_set_compare_eq (UWIDE n, tree type, enum tree_code code)
+m3cg_set_compare_eq_or_ne (UWIDE n, tree type, enum tree_code code)
 {
   m3cg_assert_int (type);
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
   EXPR_PUSH (size_int (n));
-  m3_pop_param (t_int);
+  m3_pop_param (t_word);
   m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
-  EXPR_REF (-1) = m3_build2 (code, t_int, EXPR_REF (-1), v_zero);
+  EXPR_REF (-1) = m3_build2 (code, boolean_type_node, EXPR_REF (-1), m3_cast (t_int_32, v_zero));
 }
 
 M3CG_HANDLER (SET_EQ)
 {
-  m3cg_set_compare_eq (n, type, EQ_EXPR);
+  m3cg_set_compare_eq_or_ne (n, type, EQ_EXPR);
 }
 
 M3CG_HANDLER (SET_NE)
 {
-  m3cg_set_compare_eq (n, type, NE_EXPR);
+  m3cg_set_compare_eq_or_ne (n, type, NE_EXPR);
 }
 
 M3CG_HANDLER (SET_RANGE)
@@ -5052,6 +5074,8 @@ M3CG_HANDLER (XOR)
   EXPR_POP ();
 }
 
+#if 0
+
 M3CG_HANDLER (SHIFT)
 {
   tree n = m3_convert (t_int, EXPR_REF (-1));
@@ -5066,6 +5090,26 @@ M3CG_HANDLER (SHIFT)
                                           m3_build1 (NEGATE_EXPR, t_int, n)));
   EXPR_POP();
 }
+
+#else
+
+M3CG_HANDLER (SHIFT)
+{
+  tree n = m3_convert (t_int, EXPR_REF (-1));
+  tree x = EXPR_REF (-2);
+  // x = m3_convert (type, x); // redundant with do_shift
+
+  gcc_assert (INTEGRAL_TYPE_P (type));
+
+  EXPR_REF (-2) = m3_build3 (COND_EXPR, type,
+                             m3_build2 (GE_EXPR, boolean_type_node, n, m3_cast (t_int, v_zero)),
+                             m3_do_shift (LSHIFT_EXPR, type, x, n),
+                             m3_do_shift (RSHIFT_EXPR, type, x,
+                                          m3_build1 (NEGATE_EXPR, t_int, n)));
+  EXPR_POP();
+}
+
+#endif
 
 M3CG_HANDLER (SHIFT_LEFT)
 {
@@ -5086,7 +5130,7 @@ M3CG_HANDLER (SHIFT_RIGHT)
 M3CG_HANDLER (ROTATE)
 {
   tree n = m3_convert (t_int, EXPR_REF (-1));
-  tree x = m3_convert (type, EXPR_REF (-2));
+  tree x = m3_convert (type, EXPR_REF (-2)); // cast?
 
   gcc_assert (INTEGRAL_TYPE_P (type));
 
@@ -5251,6 +5295,8 @@ M3CG_HANDLER (POP)
   EXPR_POP ();
 }
 
+#if 0
+
 M3CG_HANDLER (COPY_N)
 {
   m3cg_assert_int (count_type);
@@ -5273,6 +5319,36 @@ M3CG_HANDLER (COPY_N)
   m3_pop_param (count_type);
   m3_call_direct (overlap ? memmove_proc : memcpy_proc, t_void);
 }
+
+#else
+
+M3CG_HANDLER (COPY_N)
+{
+  m3cg_assert_int (count_type);
+  gcc_assert (count_type == t_int || count_type == t_word);
+  m3_start_call ();
+
+  /* rearrange the parameters */
+  tree count = EXPR_REF (-1);
+  tree source = EXPR_REF (-2);
+  tree dest = EXPR_REF (-3);
+  EXPR_REF (-3) = count;
+  EXPR_REF (-2) = source;
+  EXPR_REF (-1) = dest;
+
+  m3_pop_param (t_addr); /* dest */
+  m3_pop_param (t_addr); /* source */
+  
+  EXPR_REF (-1) = m3_cast (t_word, m3_cast (count_type, EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_build2 (MULT_EXPR, t_word, EXPR_REF (-1),
+                             TYPE_SIZE_UNIT (mem_type));
+  m3_pop_param (t_word);
+  m3_call_direct (overlap ? memmove_proc : memcpy_proc, t_void);
+}
+
+#endif
+
+#if 0
 
 M3CG_HANDLER (COPY)
 {
@@ -5300,6 +5376,23 @@ M3CG_HANDLER (COPY)
   EXPR_POP ();
 }
 
+#else
+
+M3CG_HANDLER (COPY)
+{
+  m3_start_call ();
+  m3_swap ();
+  m3_pop_param (t_addr);
+  m3_pop_param (t_addr);
+  EXPR_PUSH (m3_build2 (MULT_EXPR, t_word, size_int (n), TYPE_SIZE_UNIT (type)));
+  m3_pop_param (t_word);
+  m3_call_direct (overlap ? memmove_proc : memcpy_proc, t_void);
+}
+
+#endif
+
+#if 0
+
 M3CG_HANDLER (ZERO_N)
 {
   m3cg_assert_int (count_type);
@@ -5315,6 +5408,28 @@ M3CG_HANDLER (ZERO_N)
   m3_call_direct (memset_proc, t_void);
 }
 
+#else
+
+M3CG_HANDLER (ZERO_N)
+{
+  m3cg_assert_int (count_type);
+  gcc_assert (count_type == t_int || count_type == t_word);
+  EXPR_REF (-1) = m3_cast (t_word, m3_cast (count_type, EXPR_REF (-1)));
+  EXPR_REF (-1) = m3_build2 (MULT_EXPR, t_word, EXPR_REF (-1),
+                             TYPE_SIZE_UNIT (mem_type));
+  m3_start_call ();
+  m3_swap ();
+  m3_pop_param (t_addr);
+  EXPR_PUSH (m3_cast (t_int_32, v_zero));
+  m3_pop_param (t_int_32);
+  m3_pop_param (t_word);
+  m3_call_direct (memset_proc, t_void);
+}
+
+#endif
+
+#if 0
+
 M3CG_HANDLER (ZERO)
 {
   m3_start_call ();
@@ -5325,6 +5440,21 @@ M3CG_HANDLER (ZERO)
   m3_pop_param (t_int);
   m3_call_direct (memset_proc, t_void);
 }
+
+#else
+
+M3CG_HANDLER (ZERO)
+{
+  m3_start_call ();
+  m3_pop_param (t_addr);
+  EXPR_PUSH (m3_cast (t_int_32, v_zero));
+  m3_pop_param (t_int_32);
+  EXPR_PUSH (m3_build2 (MULT_EXPR, t_word, size_int (n), TYPE_SIZE_UNIT (mem_type)));
+  m3_pop_param (t_word);
+  m3_call_direct (memset_proc, t_void);
+}
+
+#endif
 
 M3CG_HANDLER (LOOPHOLE)
 {
