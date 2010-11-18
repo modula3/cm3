@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# scripts to work around broken CVS compression on current10x.opencsw.org
+# in Hudson; can be used to work around other CVS problems, too
+
 CVSEXE=/opt/csw/cvs-feature/bin/cvs
 
 if [ ! -x $CVSEXE ]; then
