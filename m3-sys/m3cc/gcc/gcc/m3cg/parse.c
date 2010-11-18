@@ -2798,16 +2798,16 @@ fix_name (PCSTR name, size_t length, ULONG type_id)
     length = strlen (buf);
     gcc_assert (length < 256);
   }
-  else if (type_id == 0 || !m3gdb)
-  {
-    buf = (PSTR)name;
-  }
   else if (type_id == NO_UID)
   {
     buf = (PSTR)alloca (sizet_add(length, 1));
     buf[0] = 'M';
     memcpy (&buf[1], name, length);
     length += 1;
+  }
+  else if (type_id == 0 || !m3gdb)
+  {
+    buf = (PSTR)name;
   }
   else
   {
