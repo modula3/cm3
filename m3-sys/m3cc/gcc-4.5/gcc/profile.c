@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Calculate branch probabilities, and basic block execution counts.
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009
@@ -70,6 +72,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 
 #include "profile.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Hooks for profiling.  */
 static struct profile_hooks* profile_hooks;
@@ -1377,3 +1383,7 @@ tree_register_profile_hooks (void)
   gcc_assert (current_ir_type () == IR_GIMPLE);
   profile_hooks = &tree_profile_hooks;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
