@@ -22,8 +22,8 @@ if [ `uname -n` = "current10x" ]; then
     fi
   done
   echo "$CVSEXE $args"
-  echo exec $CVSEXE $args
+  exec $CVSEXE $args
 else
   echo "$CVSEXE $@"
-  echo exec $CVSEXE "$@"
+  exec $CVSEXE "$@"
 fi
