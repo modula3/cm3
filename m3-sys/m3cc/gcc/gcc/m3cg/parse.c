@@ -4006,6 +4006,8 @@ M3CG_HANDLER (DECLARE_SEGMENT)
 
   if (name_length > 2)
   {
+    if (!name || !(name[0] == 'I' || name[0] == 'M') || !(name[1] == '_'))
+      fprintf (stderr, "%s\n", name);
     gcc_assert (name);
     gcc_assert (name[0] == 'I' || name[0] == 'M');
     gcc_assert (name[1] == '_');
