@@ -5,8 +5,7 @@
 
 import os, sys
 
-
-for cvs in ["/opt/csw/cvs-feature/bin/cvs"
+for cvs in ["/opt/csw/cvs-feature/bin/cvs",
             "/opt/csw/bin/cvs",
             "/usr/bin/cvs"]:
   if os.access(cvs, os.X_OK):
