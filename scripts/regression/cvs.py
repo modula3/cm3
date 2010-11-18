@@ -1,29 +1,25 @@
-#!/bin/sh
+#! /usr/bin/env python
 
-# scripts to work around broken CVS compression on current10x.opencsw.org
-# in Hudson; can be used to work around other CVS problems, too
+# This stub works around broken CVS compression on current10x.opencsw.org.
+# Put in $HOME/bin/cvs.
 
-CVSEXE=/opt/csw/cvs-feature/bin/cvs
+import os, sys
 
-if [ ! -x $CVSEXE ]; then
-  CVSEXE=/opt/csw/bin/cvs
-fi
-if [ ! -x $CVSEXE ]; then
-  echo "$CVSEXE not executable" 1>&2
-  exit 1
-fi
-if [ `uname -n` = "current10x" ]; then
-  #args=`echo "$@" | sed -e 's/-z3 update/update/'`
-  args=''
-  for p in "$@"; do
-    if [ "x$p" = x-z3 ]; then :
-    else
-      args="$args \"$p\""
-    fi
-  done
-  echo "$CVSEXE $args"
-  exec $CVSEXE $args
-else
-  echo "$CVSEXE $@"
-  exec $CVSEXE "$@"
-fi
+CVSEXE = "/opt/csw/cvs-feature/bin/cvs"
+
+if not os.access(CVSEXE, os.X_OK):
+  CVSEXE = "/opt/csw/bin/cvs"
+
+if not os.access(CVSEXE, os.X_OK):
+  CVSEXE = "/usr/bin/cvs"
+
+if not os.access(CVSEXE, os.X_OK):
+  sys.stderr.write(CVSEXE + " not executable\n")
+  sys.exit(1)
+
+if os.uname()[1] == "current10x" and "-z3" in sys.argv:
+  sys.argv.remove("-z3")
+
+sys.argv[0] = CVSEXE
+print(" ".join(sys.argv)) # won't show quotes, ok
+os.execvp(CVSEXE, sys.argv)
