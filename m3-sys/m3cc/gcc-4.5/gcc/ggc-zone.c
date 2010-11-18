@@ -61,6 +61,10 @@ along with GCC; see the file COPYING3.  If not see
 # define USING_MMAP
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef USING_MMAP
 #error Zone collector requires mmap
 #endif
@@ -2528,3 +2532,7 @@ ggc_pch_read (FILE *f, void *addr)
   for (p = pch_zone.page; p < pch_zone.end; p += GGC_PAGE_SIZE)
     set_page_table_entry (p, pch_page);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

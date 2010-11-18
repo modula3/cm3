@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Transformations based on profile information for values.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software
    Foundation, Inc.
@@ -45,6 +47,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "toplev.h"
 #include "pointer-set.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static struct value_prof_hooks *value_prof_hooks;
 
@@ -1715,3 +1721,6 @@ value_profile_transformations (void)
   return (value_prof_hooks->value_profile_transformations) ();
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

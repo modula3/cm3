@@ -32,6 +32,10 @@
 #include "coretypes.h"
 #include "ggc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void *
 ggc_alloc_typed_stat (enum gt_types_enum ARG_UNUSED (gte), size_t size
 		      MEM_STAT_DECL)
@@ -62,3 +66,7 @@ ggc_free (void *p)
 {
   free (p);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* LTO IL options.
 
    Copyright 2009 Free Software Foundation, Inc.
@@ -33,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "toplev.h"
 #include "lto-streamer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* When a file is initially compiled, the options used when generating
    the IL are not necessarily the same as those used when linking the
@@ -395,3 +401,7 @@ lto_reissue_options (void)
 
   VEC_free (opt_t, heap, opts);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

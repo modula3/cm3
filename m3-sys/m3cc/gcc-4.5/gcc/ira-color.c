@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IRA allocation based on graph coloring.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -39,6 +41,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "splay-tree.h"
 #include "ira-int.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains code for regional graph coloring, spill/restore
    code placement optimization, and code helping the reload pass to do
@@ -3345,3 +3351,7 @@ ira_color (void)
   else
     fast_allocation ();
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

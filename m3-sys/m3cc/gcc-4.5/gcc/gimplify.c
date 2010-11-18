@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree lowering pass.  This pass converts the GENERIC functions-as-trees
    tree representation into the GIMPLE form.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -54,6 +56,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "tree-pass.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum gimplify_omp_var_data
 {
@@ -7981,3 +7986,7 @@ force_gimple_operand_gsi (gimple_stmt_iterator *gsi, tree expr,
 }
 
 #include "gt-gimplify.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

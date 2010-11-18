@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Integrated Register Allocator.  Changing code and generating moves.
    Copyright (C) 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -44,6 +46,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "ira-int.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct move *move_t;
 
@@ -1125,3 +1130,7 @@ ira_emit (bool loops_p)
   ira_free (at_bb_end);
   ira_free (at_bb_start);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

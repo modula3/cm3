@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Read the GIMPLE representation from a file stream.
 
    Copyright 2009, 2010 Free Software Foundation, Inc.
@@ -48,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ipa-utils.h"
 #include "lto-streamer.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Data structure used to hash file names in the source_location field.  */
 struct string_slot
@@ -2798,3 +2804,7 @@ lto_data_in_delete (struct data_in *data_in)
   free (data_in->labels);
   free (data_in);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

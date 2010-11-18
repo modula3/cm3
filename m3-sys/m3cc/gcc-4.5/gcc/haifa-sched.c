@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -150,6 +152,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ira.h"
 
 #ifdef INSN_SCHEDULING
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* issue_rate is the number of insns that can be scheduled in the same
    machine cycle.  It can be defined in the config/mach/mach.h file,
@@ -5560,5 +5566,9 @@ sched_emit_insn (rtx pat)
   haifa_init_insn (insn);
   return insn;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* INSN_SCHEDULING */

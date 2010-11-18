@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL utility routines.
    Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
    2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
@@ -38,7 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 # include "toplev.h"
 #endif
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Indexed by rtx code, gives number of operands for an rtx with that code.
    Does NOT include rtx header data (code and links).  */
 
@@ -723,3 +728,7 @@ rtl_check_failed_flag (const char *name, const_rtx r, const char *file,
      name, GET_RTX_NAME (GET_CODE (r)), func, trim_filename (file), line);
 }
 #endif /* ENABLE_RTL_FLAG_CHECKING */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

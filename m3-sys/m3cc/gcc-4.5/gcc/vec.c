@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Vector API for GNU compiler.
    Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Nathan Sidwell <nathan@codesourcery.com>
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "toplev.h"
 #include "hashtab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct vec_prefix
 {
@@ -601,3 +607,7 @@ dump_vec_loc_statistics (void)
   fprintf (stderr, "-------------------------------------------------------\n");
 #endif
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

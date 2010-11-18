@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Basic IPA optimizations and utilities.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -27,6 +29,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "gimple.h"
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Fill array order with all nodes with output flag set in the reverse
    topological order.  */
@@ -753,3 +759,6 @@ debug_cgraph_node_set (cgraph_node_set set)
   dump_cgraph_node_set (stderr, set);
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

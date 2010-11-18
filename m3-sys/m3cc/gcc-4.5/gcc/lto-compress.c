@@ -36,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "lto-streamer.h"
 #include "lto-compress.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct lto_compression_stream;
 
 struct lto_compression_stream *
@@ -79,3 +83,7 @@ lto_end_uncompression (struct lto_compression_stream *stream)
 {
   gcc_unreachable ();
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
