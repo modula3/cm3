@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Interprocedural constant propagation
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -135,6 +137,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-inline.h"
 #include "fibheap.h"
 #include "params.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Number of functions identified as candidates for cloning. When not cloning
    we can simplify iterate stage not forcing it to go through the decision
@@ -1338,3 +1344,7 @@ struct ipa_opt_pass_d pass_ipa_cp =
  NULL,					/* function_transform */
  NULL,					/* variable_transform */
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

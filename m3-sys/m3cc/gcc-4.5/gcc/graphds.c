@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Graph representation and manipulation functions.
    Copyright (C) 2007
    Free Software Foundation, Inc.
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "vec.h"
 #include "vecprim.h"
 #include "graphds.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Dumps graph G into F.  */
 
@@ -470,3 +476,7 @@ graphds_domtree (struct graph *g, int entry,
 	son[parent[i]] = i;
       }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

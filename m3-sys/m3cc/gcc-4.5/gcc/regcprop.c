@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Copy propagation on hard registers for the GNU compiler.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
    2010  Free Software Foundation, Inc.
@@ -39,6 +41,10 @@
 #include "timevar.h"
 #include "tree-pass.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The following code does forward propagation of hard register copies.
    The object is to eliminate as many dependencies as possible, so that
@@ -1185,3 +1191,7 @@ struct rtl_opt_pass pass_cprop_hardreg =
   | TODO_verify_rtl_sharing		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

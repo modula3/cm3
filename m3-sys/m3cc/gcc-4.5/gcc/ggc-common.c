@@ -45,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 # endif
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef MAP_FAILED
 # define MAP_FAILED ((void *)-1)
 #endif
@@ -1088,3 +1092,7 @@ dump_ggc_loc_statistics (bool final ATTRIBUTE_UNUSED)
   ggc_force_collect = false;
 #endif
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

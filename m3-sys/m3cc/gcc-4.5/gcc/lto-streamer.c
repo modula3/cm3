@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Miscellaneous utilities for GIMPLE streaming.  Things that are used
    in both input and output are here.
 
@@ -33,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"
 #include "vec.h"
 #include "lto-streamer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Statistics gathered during LTO, WPA and LTRANS.  */
 struct lto_stats_d lto_stats;
@@ -913,3 +919,7 @@ lto_check_version (int major, int minor)
 		 major, minor,
 		 LTO_major_version, LTO_minor_version);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

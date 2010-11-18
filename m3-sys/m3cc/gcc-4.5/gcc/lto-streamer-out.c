@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Write the GIMPLE representation to a file stream.
 
    Copyright 2009, 2010 Free Software Foundation, Inc.
@@ -44,6 +46,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "lto-symtab.h"
 #include "lto-streamer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct string_slot
 {
@@ -2574,3 +2579,7 @@ struct ipa_opt_pass_d pass_ipa_lto_finish_out =
  NULL,			                /* function_transform */
  NULL					/* variable_transform */
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

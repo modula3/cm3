@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2007 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "version.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This is the location of the online document giving instructions for
    reporting bugs.  If you distribute a modified version of GCC,
    please configure with --with-bugurl pointing to a document giving
@@ -34,3 +40,7 @@ const char bug_report_url[] = BUGURL;
 
 const char version_string[] = BASEVER DATESTAMP DEVPHASE REVISION;
 const char pkgversion_string[] = PKGVERSION;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

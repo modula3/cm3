@@ -32,6 +32,10 @@
 #include "tm_p.h"
 #include "dfp.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The floating point model used internally is not exactly IEEE 754
    compliant, and close to the description in the ISO C99 standard,
    section 5.2.4.2.2 Characteristics of floating types.
@@ -5122,3 +5126,7 @@ get_max_float (const struct real_format *fmt, char *buf, size_t len)
 
   gcc_assert (strlen (buf) < len);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

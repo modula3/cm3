@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Gimple IR support functions.
 
    Copyright 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "alias.h"
 #include "demangle.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Global type table.  FIXME lto, it should be possible to re-use some
    of the type hashing routines in tree.c (type_hash_canon, type_hash_lookup,
@@ -4633,3 +4639,7 @@ gimple_fold_obj_type_ref (tree ref, tree known_type)
 }
 
 #include "gt-gimple.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

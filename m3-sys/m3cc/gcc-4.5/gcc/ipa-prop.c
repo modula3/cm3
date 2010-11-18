@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Interprocedural analyses.
    Copyright (C) 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "diagnostic.h"
 #include "lto-streamer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Vector where the parameter infos are actually stored. */
 VEC (ipa_node_params_t, heap) *ipa_node_params_vector;
@@ -2241,3 +2247,7 @@ lto_ipa_fixup_call_notes (struct cgraph_node *node, gimple *stmts)
     }
   while (note);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

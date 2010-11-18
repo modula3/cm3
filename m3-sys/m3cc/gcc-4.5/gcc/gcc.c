@@ -93,6 +93,10 @@ compilation is specified by a string called a "spec".  */
 # endif
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef MAP_FAILED
 # define MAP_FAILED ((void *)-1)
 #endif
@@ -8975,3 +8979,7 @@ compare_debug_auxbase_opt_spec_function (int arg,
 
   return name;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Initialization of uninitialized regs.
    Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 
@@ -29,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "basic-block.h"
 #include "flags.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Check all of the uses of pseudo variables.  If any use that is MUST
    uninitialized, add a store of 0 immediately before it.  For
@@ -157,3 +163,7 @@ struct rtl_opt_pass pass_initialize_regs =
   TODO_df_finish                        /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

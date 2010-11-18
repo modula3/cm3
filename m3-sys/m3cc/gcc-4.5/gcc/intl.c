@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Message translation utilities.
    Copyright (C) 2001, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 #include "intl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const char *
 fake_ngettext (const char *singular, const char *plural, unsigned long n)
 {
@@ -46,3 +52,7 @@ get_spaces (const char *str)
    spaces[len] = '\0';
    return spaces;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

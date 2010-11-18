@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph based analysis of static variables.
    Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -70,6 +72,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic.h"
 #include "langhooks.h"
 #include "lto-streamer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void add_new_function (struct cgraph_node *node,
 			      void *data ATTRIBUTE_UNUSED);
@@ -1520,3 +1526,7 @@ struct ipa_opt_pass_d pass_ipa_reference =
 };
 
 #include "gt-ipa-reference.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

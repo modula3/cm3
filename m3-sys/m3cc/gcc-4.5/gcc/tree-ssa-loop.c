@@ -300,11 +300,6 @@ struct gimple_opt_pass pass_linear_transform =
 static unsigned int
 graphite_transforms (void)
 {
-  if (!current_loops)
-    return 0;
-
-  graphite_transform_loops ();
-
   return 0;
 }
 

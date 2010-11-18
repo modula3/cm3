@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* If-conversion support.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -46,6 +48,10 @@
 #include "vec.h"
 #include "vecprim.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef HAVE_conditional_move
 #define HAVE_conditional_move 0
@@ -4331,3 +4337,7 @@ struct rtl_opt_pass pass_if_after_reload =
   TODO_ggc_collect                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

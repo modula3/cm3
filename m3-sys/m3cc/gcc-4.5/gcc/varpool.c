@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph handling code.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "tree-flow.h"
 #include "flags.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*  This file contains basic routines manipulating variable pool.
 
@@ -559,3 +565,7 @@ varpool_extra_name_alias (tree alias, tree decl)
 }
 
 #include "gt-varpool.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

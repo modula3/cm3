@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output routines for graphical representation.
    Copyright (C) 1998, 1999, 2000, 2001, 2003, 2004, 2007, 2008
    Free Software Foundation, Inc.
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "basic-block.h"
 #include "toplev.h"
 #include "graph.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static const char *const graph_ext[] =
 {
@@ -427,3 +433,7 @@ finish_graph_dump_file (const char *base)
       fclose (fp);
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

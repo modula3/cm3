@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scanning of rtl for dataflow analysis.
    Copyright (C) 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -35,6 +37,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "df.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct regstat_n_sets_and_refs_t *regstat_n_sets_and_refs;
 
@@ -526,3 +531,6 @@ regstat_free_calls_crossed (void)
   reg_info_p = NULL;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
