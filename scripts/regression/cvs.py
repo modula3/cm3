@@ -5,21 +5,19 @@
 
 import os, sys
 
-CVSEXE = "/opt/csw/cvs-feature/bin/cvs"
 
-if not os.access(CVSEXE, os.X_OK):
-  CVSEXE = "/opt/csw/bin/cvs"
-
-if not os.access(CVSEXE, os.X_OK):
-  CVSEXE = "/usr/bin/cvs"
-
-if not os.access(CVSEXE, os.X_OK):
-  sys.stderr.write(CVSEXE + " not executable\n")
+for cvs in ["/opt/csw/cvs-feature/bin/cvs"
+            "/opt/csw/bin/cvs",
+            "/usr/bin/cvs"]:
+  if os.access(cvs, os.X_OK):
+    break;
+if not os.access(cvs, os.X_OK):
+  sys.stderr.write(cvs + " not executable\n")
   sys.exit(1)
 
 if os.uname()[1] == "current10x" and "-z3" in sys.argv:
   sys.argv.remove("-z3")
 
-sys.argv[0] = CVSEXE
+sys.argv[0] = cvs
 print(" ".join(sys.argv)) # won't show quotes, ok
-os.execvp(CVSEXE, sys.argv)
+os.execvp(cvs, sys.argv)
