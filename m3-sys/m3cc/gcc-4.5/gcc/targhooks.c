@@ -621,6 +621,7 @@ default_libcall_value (enum machine_mode mode ATTRIBUTE_UNUSED,
   return LIBCALL_VALUE (mode);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
