@@ -610,6 +610,7 @@ default_function_value (const_tree ret_type ATTRIBUTE_UNUSED,
   return FUNCTION_VALUE (ret_type, fn_decl_or_type);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
