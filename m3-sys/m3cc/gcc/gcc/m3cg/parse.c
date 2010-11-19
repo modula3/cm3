@@ -2881,14 +2881,14 @@ m3_start_call (void)
 }
 
 static void
-m3_pop_param (tree t)
+m3_pop_param (tree type)
 {
   CALL_TOP_ARG ()
     = chainon (CALL_TOP_ARG (),
                build_tree_list (NULL_TREE, EXPR_REF (-1)));
   CALL_TOP_TYPE ()
     = chainon (CALL_TOP_TYPE (),
-               build_tree_list (NULL_TREE, t));
+               build_tree_list (NULL_TREE, type));
   EXPR_POP ();
 }
 
@@ -3247,7 +3247,7 @@ setop (tree p, WIDE n, int q)
 {
   m3_start_call ();
   EXPR_PUSH (size_int (n));
-  m3_pop_param (t_int);
+  m3_pop_param (t_word);
   while (q--)
     m3_pop_param (t_addr);
   m3_call_direct (p, TREE_TYPE (TREE_TYPE (p)));
@@ -4764,46 +4764,51 @@ M3CG_HANDLER (GE) { m3cg_compare (src_t, dst_t, GE_EXPR); }
 M3CG_HANDLER (LT) { m3cg_compare (src_t, dst_t, LT_EXPR); }
 M3CG_HANDLER (LE) { m3cg_compare (src_t, dst_t, LE_EXPR); }
 
-M3CG_HANDLER (ADD)
+static void
+binop (tree type, enum tree_code code)
+/* binary operation */
 {
-  EXPR_REF (-2) = m3_build2 (PLUS_EXPR, type,
+  EXPR_REF (-2) = m3_build2 (code, type,
                              m3_cast (type, EXPR_REF (-2)),
                              m3_cast (type, EXPR_REF (-1)));
   EXPR_POP ();
+}
+
+static void
+unop (tree type, enum tree_code code)
+/* unary operation */
+{
+  EXPR_REF (-1) = m3_build1 (code, type, m3_cast (type, EXPR_REF (-1)));
+}
+
+M3CG_HANDLER (ADD)
+{
+  binop (type, PLUS_EXPR);
 }
 
 M3CG_HANDLER (SUBTRACT)
 {
-  EXPR_REF (-2) = m3_build2 (MINUS_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, MINUS_EXPR);
 }
 
 M3CG_HANDLER (MULTIPLY)
 {
-  EXPR_REF (-2) = m3_build2 (MULT_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, MULT_EXPR);
 }
 
 M3CG_HANDLER (DIVIDE)
 {
-  EXPR_REF (-2) = m3_build2 (RDIV_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, RDIV_EXPR);
 }
 
 M3CG_HANDLER (NEGATE)
 {
-  EXPR_REF (-1) = m3_build1 (NEGATE_EXPR, type, m3_cast (type, EXPR_REF (-1)));
+  unop (type, NEGATE_EXPR);
 }
 
 M3CG_HANDLER (ABS)
 {
-  EXPR_REF (-1) = m3_build1 (ABS_EXPR, type, m3_cast (type, EXPR_REF (-1)));
+  unop (type, ABS_EXPR);
 }
 
 static void
@@ -4897,18 +4902,12 @@ M3CG_HANDLER (CVT_FLOAT)
 
 M3CG_HANDLER (DIV)
 {
-  EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, FLOOR_DIV_EXPR);
 }
 
 M3CG_HANDLER (MOD)
 {
-  EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, FLOOR_MOD_EXPR);
 }
 
 M3CG_HANDLER (SET_UNION)
@@ -5047,31 +5046,22 @@ M3CG_HANDLER (SET_SINGLETON)
 
 M3CG_HANDLER (NOT)
 {
-  EXPR_REF (-1) = m3_build1 (BIT_NOT_EXPR, type, m3_cast (type, EXPR_REF (-1)));
+  unop (type, BIT_NOT_EXPR);
 }
 
 M3CG_HANDLER (AND)
 {
-  EXPR_REF (-2) = m3_build2 (BIT_AND_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, BIT_AND_EXPR);
 }
 
 M3CG_HANDLER (OR)
 {
-  EXPR_REF (-2) = m3_build2 (BIT_IOR_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, BIT_IOR_EXPR);
 }
 
 M3CG_HANDLER (XOR)
 {
-  EXPR_REF (-2) = m3_build2 (BIT_XOR_EXPR, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
+  binop (type, BIT_XOR_EXPR);
 }
 
 #if 0
