@@ -761,7 +761,7 @@ fixup_reorder_chain (void)
     insn = NEXT_INSN (insn);
 
   set_last_insn (insn);
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_insn_chain ();
 #endif
 
@@ -833,7 +833,7 @@ fixup_reorder_chain (void)
 				       : label_for_bb (e_fall->dest)), 0))
 		    {
 		      e_fall->flags &= ~EDGE_FALLTHRU;
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
 		      gcc_assert (could_fall_through
 				  (e_taken->src, e_taken->dest));
 #endif
@@ -857,7 +857,7 @@ fixup_reorder_chain (void)
 				     : label_for_bb (e_fall->dest)), 0))
 		{
 		  e_fall->flags &= ~EDGE_FALLTHRU;
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
 		  gcc_assert (could_fall_through
 			      (e_taken->src, e_taken->dest));
 #endif
@@ -1321,7 +1321,7 @@ break_superblocks (void)
 void
 cfg_layout_finalize (void)
 {
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_flow_info ();
 #endif
   force_one_exit_fallthru ();
@@ -1337,7 +1337,7 @@ cfg_layout_finalize (void)
   rebuild_jump_labels (get_insns ());
   delete_dead_jumptables ();
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_insn_chain ();
   verify_flow_info ();
 #endif

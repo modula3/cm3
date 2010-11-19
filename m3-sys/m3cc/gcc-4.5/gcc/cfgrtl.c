@@ -1580,7 +1580,7 @@ commit_edge_insertions (void)
   sbitmap blocks;
   bool changed = false;
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_flow_info ();
 #endif
 
@@ -2704,7 +2704,7 @@ cfg_layout_can_merge_blocks_p (basic_block a, basic_block b)
 static void
 cfg_layout_merge_blocks (basic_block a, basic_block b)
 {
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   gcc_assert (cfg_layout_can_merge_blocks_p (a, b));
 #endif
 
@@ -2992,7 +2992,7 @@ rtl_flow_call_edges_add (sbitmap blocks)
 		 block in CFG already.  Calling make_edge in such case would
 		 cause us to mark that edge as fake and remove it later.  */
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
 	      if (split_at_insn == BB_END (bb))
 		{
 		  e = find_edge (bb, EXIT_BLOCK_PTR);

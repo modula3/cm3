@@ -1714,7 +1714,7 @@ fix_loop_structure (bitmap changed_bbs)
   if (record_exits)
     record_loop_exits ();
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_loop_structure ();
 #endif
 }

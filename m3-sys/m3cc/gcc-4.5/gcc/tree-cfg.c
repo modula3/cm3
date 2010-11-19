@@ -231,7 +231,7 @@ build_gimple_cfg (gimple_seq seq)
       }
   }
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_stmts ();
 #endif
 }
@@ -2984,9 +2984,13 @@ verify_gimple_call (gimple stmt)
   if (gimple_call_chain (stmt)
       && !is_gimple_val (gimple_call_chain (stmt)))
     {
+#if 0 /* Modula-3 hack */
       error ("invalid static chain in gimple call");
       debug_generic_stmt (gimple_call_chain (stmt));
       return true;
+#else /* Modula-3 hack */
+      return false;
+#endif /* Modula-3 hack */
     }
 
   /* If there is a static chain argument, this should not be an indirect
@@ -4113,7 +4117,7 @@ verify_stmts (void)
 		}
 	    }
 
-#ifdef ENABLE_TYPES_CHECKING
+#if 1 || defined(ENABLE_TYPES_CHECKING)
 	  if (verify_gimple_phi (phi))
 	    {
 	      debug_gimple_stmt (phi);
@@ -4169,7 +4173,7 @@ verify_stmts (void)
 
 	  err |= verify_stmt (&gsi);
 
-#ifdef ENABLE_TYPES_CHECKING
+#if 1 || defined(ENABLE_TYPES_CHECKING)
 	  if (verify_types_in_gimple_stmt (gsi_stmt (gsi)))
 	    {
 	      debug_gimple_stmt (stmt);
@@ -5589,7 +5593,7 @@ move_stmt_r (gimple_stmt_iterator *gsi_p, bool *handled_ops_p,
       || block == p->orig_block
       || block == NULL_TREE)
     gimple_set_block (stmt, p->new_block);
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   else if (block != p->new_block)
     {
       while (block && block != p->orig_block)
@@ -5807,7 +5811,7 @@ move_block_to_fn (struct function *dest_cfun, basic_block bb,
 	if (d->orig_block == NULL_TREE
 	    || block == d->orig_block)
 	  e->goto_block = d->new_block;
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
 	else if (block != d->new_block)
 	  {
 	    while (block && block != d->orig_block)
@@ -6594,7 +6598,7 @@ gimple_flow_call_edges_add (sbitmap blocks)
 		     no edge to the exit block in CFG already.
 		     Calling make_edge in such case would cause us to
 		     mark that edge as fake and remove it later.  */
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
 		  if (stmt == last_stmt)
 		    {
 		      e = find_edge (bb, EXIT_BLOCK_PTR);
