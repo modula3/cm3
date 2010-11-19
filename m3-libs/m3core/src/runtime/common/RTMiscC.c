@@ -26,8 +26,6 @@ void __cdecl RTMisc__Zero(void* dest, WORD_T len)
 
 /*------------------------------- rounded arithmetic ------------------------*/
 
-/* Align is equated to Upper via <*EXTERNAL*>; this is here for compatiblity. */
-
 WORD_T __cdecl RTMisc__Upper(WORD_T a, WORD_T y);
 
 void* __cdecl RTMisc__Align(void* a, WORD_T y)
