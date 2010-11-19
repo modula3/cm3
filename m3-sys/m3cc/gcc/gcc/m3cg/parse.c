@@ -4814,9 +4814,8 @@ M3CG_HANDLER (ABS)
 static void
 m3_minmax (tree type, int min)
 {
-  tree x[2] = {
-    m3_cast (type, EXPR_REF (-1)),
-    m3_cast (type, EXPR_REF (-2)) };
+  tree x[2] = { m3_cast (type, EXPR_REF (-1)),
+                m3_cast (type, EXPR_REF (-2)) };
   EXPR_REF (-2) = m3_build3 (COND_EXPR, type,
                              m3_build2 (LE_EXPR, boolean_type_node, x[!min], x[min]),
                              x[0], x[1]);
