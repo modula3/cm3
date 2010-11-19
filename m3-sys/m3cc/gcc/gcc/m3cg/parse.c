@@ -499,28 +499,28 @@ static const struct { ULONG type_id; tree* t; } builtin_uids[] = {
   { UID_NULL, &t_void }
 };
 
-#define STRING_AND_LENGTH(a) a, sizeof(a) - 1
+#define CONSTANT_STRING_AND_LENGTH(a) a, sizeof(a) - 1
 
 static const struct { tree* t; char name[9]; size_t length; } builtin_types[T_LAST] = {
 /* This is ordered per m3_type. It is also used by typestr. */
-  { &t_word_8, STRING_AND_LENGTH ("word_8") },
-  { &t_int_8, STRING_AND_LENGTH ("int_8") },
-  { &t_word_16, STRING_AND_LENGTH ("word_16") },
-  { &t_int_16, STRING_AND_LENGTH ("int_16") },
-  { &t_word_32, STRING_AND_LENGTH ("word_32") },
-  { &t_int_32, STRING_AND_LENGTH ("int_32") },
-  { &t_word_64, STRING_AND_LENGTH ("word_64") },
-  { &t_int_64, STRING_AND_LENGTH ("int_64") },
-  { &t_reel, STRING_AND_LENGTH ("reel") },
-  { &t_lreel, STRING_AND_LENGTH ("lreel") },
-  { &t_xreel, STRING_AND_LENGTH ("xreel") },
-  { &t_addr, STRING_AND_LENGTH ("addr") },
-  { 0, STRING_AND_LENGTH ("struct") },
-  { 0, STRING_AND_LENGTH ("void") },
-  { 0, STRING_AND_LENGTH ("word") },
-  { 0, STRING_AND_LENGTH ("int") },
-  { 0, STRING_AND_LENGTH ("longword") },
-  { 0, STRING_AND_LENGTH ("longint") },
+  { &t_word_8, CONSTANT_STRING_AND_LENGTH ("word_8") },
+  { &t_int_8, CONSTANT_STRING_AND_LENGTH ("int_8") },
+  { &t_word_16, CONSTANT_STRING_AND_LENGTH ("word_16") },
+  { &t_int_16, CONSTANT_STRING_AND_LENGTH ("int_16") },
+  { &t_word_32, CONSTANT_STRING_AND_LENGTH ("word_32") },
+  { &t_int_32, CONSTANT_STRING_AND_LENGTH ("int_32") },
+  { &t_word_64, CONSTANT_STRING_AND_LENGTH ("word_64") },
+  { &t_int_64, CONSTANT_STRING_AND_LENGTH ("int_64") },
+  { &t_reel, CONSTANT_STRING_AND_LENGTH ("reel") },
+  { &t_lreel, CONSTANT_STRING_AND_LENGTH ("lreel") },
+  { &t_xreel, CONSTANT_STRING_AND_LENGTH ("xreel") },
+  { &t_addr, CONSTANT_STRING_AND_LENGTH ("addr") },
+  { 0, CONSTANT_STRING_AND_LENGTH ("struct") },
+  { 0, CONSTANT_STRING_AND_LENGTH ("void") },
+  { 0, CONSTANT_STRING_AND_LENGTH ("word") },
+  { 0, CONSTANT_STRING_AND_LENGTH ("int") },
+  { 0, CONSTANT_STRING_AND_LENGTH ("longword") },
+  { 0, CONSTANT_STRING_AND_LENGTH ("longint") },
 };
 
 /* store all trees here for garbage collector */
@@ -1650,16 +1650,16 @@ m3_init_decl_processing (void)
   else
     {
       t_int = make_signed_type (BITS_PER_INTEGER);
-      m3_push_type_decl (t_int, get_identifier_with_length (STRING_AND_LENGTH ("int")));
+      m3_push_type_decl (t_int, get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("int")));
       t_word = make_unsigned_type (BITS_PER_INTEGER);
-      m3_push_type_decl (t_word, get_identifier_with_length (STRING_AND_LENGTH ("word")));
+      m3_push_type_decl (t_word, get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("word")));
     }
 
   bits_per_unit = BITS_PER_UNIT; /* for debugging */
   pointer_size = POINTER_SIZE; /* for debugging */
   bits_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER);
   bytes_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER / BITS_PER_UNIT);
-  stdcall = get_identifier_with_length (STRING_AND_LENGTH ("stdcall"));
+  stdcall = get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("stdcall"));
   stdcall_list = build_tree_list (stdcall, NULL);
   t_set = m3_build_pointer_type (t_word);
 
@@ -3273,7 +3273,7 @@ declare_fault_proc (void)
   tree top_block  = make_node (BLOCK);
 
   tree proc = build_decl (FUNCTION_DECL,
-                          get_identifier_with_length (STRING_AND_LENGTH ("_m3_fault")),
+                          get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("_m3_fault")),
                           build_function_type_list (t_void, t_word, NULL_TREE));
 
   tree resultdecl = build_decl (RESULT_DECL, NULL_TREE, t_void);
