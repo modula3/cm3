@@ -1118,7 +1118,7 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
   gcc_assert (count <= 64);
   gcc_assert ((offset + count) <= 64);
   gcc_assert (64 <= HOST_BITS_PER_WIDE_INT);
-  gcc_assert (64 <= TYPE_PRECISION (type));
+  gcc_assert (HOST_BITS_PER_WIDE_INT >= TYPE_PRECISION (type));
   
   /*
     y_mask = (~(~0 << count)) << offset
