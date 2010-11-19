@@ -1077,54 +1077,54 @@ m3_build_type (m3_type type, UWIDE size, UWIDE align)
 /*========================================== insert, shift, rotate and co ===*/
 
 static tree
-m3_do_insert (tree x, tree y, tree i, tree n, tree orig_type)
+m3_do_insert (tree x, tree y, tree offset, tree count, tree orig_type)
 {
   tree type = m3_unsigned_type (orig_type);
   tree a = m3_build1 (BIT_NOT_EXPR, type, v_zero);
-  tree b = m3_build2 (LSHIFT_EXPR, type, a, n);
+  tree b = m3_build2 (LSHIFT_EXPR, type, a, count);
   tree c = m3_build1 (BIT_NOT_EXPR, type, b);
   tree d = m3_build2 (BIT_AND_EXPR, type, y, c);
-  tree e = m3_build2 (LSHIFT_EXPR, type, d, i);
-  tree f = m3_build2 (LSHIFT_EXPR, type, c, i);
+  tree e = m3_build2 (LSHIFT_EXPR, type, d, offset);
+  tree f = m3_build2 (LSHIFT_EXPR, type, c, offset);
   tree g = m3_build1 (BIT_NOT_EXPR, type, f);
   tree h = m3_build2 (BIT_AND_EXPR, type, x, g);
   tree j = m3_build2 (BIT_IOR_EXPR, type, h, e);
   tree k = m3_build3 (COND_EXPR, type,
-                      m3_build2 (EQ_EXPR, boolean_type_node, n, TYPE_SIZE (type)),
+                      m3_build2 (EQ_EXPR, boolean_type_node, count, TYPE_SIZE (type)),
                       y, j);
   tree m = m3_build3 (COND_EXPR, type,
-                      m3_build2 (EQ_EXPR, boolean_type_node, n, v_zero),
+                      m3_build2 (EQ_EXPR, boolean_type_node, count, v_zero),
                       x, k);
   return m;
 }
 
 static tree
-left_shift (tree t, int i)
+left_shift (tree t, int offset)
 {
-  if (i)
+  if (offset)
     t = m3_build2 (LSHIFT_EXPR,
                    m3_unsigned_type (TREE_TYPE (t)), t,
-                   build_int_cst (t_int, i));
+                   build_int_cst (t_int, offset));
   return t;
 }
 
 static tree
-m3_do_fixed_insert (tree x, tree y, UWIDE i, UWIDE n, tree type)
+m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
 {
   /* ??? Use BIT_FIELD_REF ??? */
 
-  gcc_assert (i <= 64);
-  gcc_assert (n <= 64);
-  gcc_assert ((i + n) <= 64);
+  gcc_assert (offset <= 64);
+  gcc_assert (count <= 64);
+  gcc_assert ((offset + count) <= 64);
   gcc_assert (64 <= HOST_BITS_PER_WIDE_INT);
   gcc_assert (64 <= TYPE_PRECISION (type));
 
-  if (n == 0)
+  if (count == 0)
     return x;
 
-  if ((n == 1) && (i < HOST_BITS_PER_WIDE_INT))
+  if ((count == 1) && (offset < HOST_BITS_PER_WIDE_INT))
     {
-      tree bit = build_int_cstu (type, (((WIDE)1) << i));
+      tree bit = build_int_cstu (type, (((WIDE)1) << offset));
       tree nbit = m3_build1 (BIT_NOT_EXPR, type, bit);
       if (host_integerp (y, 0))
         {
@@ -1141,32 +1141,32 @@ m3_do_fixed_insert (tree x, tree y, UWIDE i, UWIDE n, tree type)
         {                       /* non-constant, 1-bit value */
           tree a = m3_build2 (BIT_AND_EXPR, type, y, v_one); /* extract bit */
           tree b = m3_build2 (BIT_AND_EXPR, type, x, nbit); /* clear bit */
-          return m3_build2 (BIT_IOR_EXPR, type, b, left_shift (a, i)); /* combine */
+          return m3_build2 (BIT_IOR_EXPR, type, b, left_shift (a, offset)); /* combine */
         }
     }
   else
     {                           /* multi-bit value */
       tree saved_bits = { 0 };
       tree new_bits = { 0 };
-      if ((i + n) < HOST_BITS_PER_WIDE_INT)
+      if ((offset + count) < HOST_BITS_PER_WIDE_INT)
         {
-          WIDE mask = ((WIDE)1 << n) - 1;
+          WIDE mask = ((WIDE)1 << count) - 1;
           saved_bits = m3_build1 (BIT_NOT_EXPR, type,
-                                  build_int_cstu (type, mask << i));
+                                  build_int_cstu (type, mask << offset));
           if (host_integerp (y, 0))
             {
-              new_bits = build_int_cstu (type, (TREE_INT_CST_LOW (y) & mask) << i);
+              new_bits = build_int_cstu (type, (TREE_INT_CST_LOW (y) & mask) << offset);
             }
           else
             {
               new_bits = m3_build2 (BIT_AND_EXPR, type, y,
                                     build_int_cstu (type, mask));
-              new_bits = left_shift (new_bits, i);
+              new_bits = left_shift (new_bits, offset);
             }
         }
-      else if (n < HOST_BITS_PER_WIDE_INT)
+      else if (count < HOST_BITS_PER_WIDE_INT)
         {
-          WIDE mask = ((WIDE)1 << n) - 1;
+          WIDE mask = ((WIDE)1 << count) - 1;
           tree a = build_int_cstu (type, mask);
           if (host_integerp (y, 0))
             {
@@ -1176,20 +1176,20 @@ m3_do_fixed_insert (tree x, tree y, UWIDE i, UWIDE n, tree type)
             {
               new_bits = m3_build2 (BIT_AND_EXPR, type, y, a);
             }
-          new_bits = left_shift (new_bits, i);
-          saved_bits = m3_build1 (BIT_NOT_EXPR, type, left_shift (a, i));
+          new_bits = left_shift (new_bits, offset);
+          saved_bits = m3_build1 (BIT_NOT_EXPR, type, left_shift (a, offset));
         }
       else
-        {                       /* n >= sizeof(int)*8 */
+        {                       /* count >= sizeof(int)*8 */
           tree mask;
 
           gcc_unreachable ();
 
           mask = m3_build2 (LSHIFT_EXPR, type, build_int_cst (type, ~0),
-                            build_int_cst (t_int, n));
+                            build_int_cst (t_int, count));
           mask = m3_build1 (BIT_NOT_EXPR, type, mask);
-          new_bits = left_shift (m3_build2 (BIT_AND_EXPR, type, y, mask), i);
-          saved_bits = m3_build1 (BIT_NOT_EXPR, type, left_shift (mask, i));
+          new_bits = left_shift (m3_build2 (BIT_AND_EXPR, type, y, mask), offset);
+          saved_bits = m3_build1 (BIT_NOT_EXPR, type, left_shift (mask, offset));
         }
       x = m3_build2 (BIT_AND_EXPR, type, x, saved_bits);
       return m3_build2 (BIT_IOR_EXPR, type, x, new_bits);
@@ -1197,15 +1197,15 @@ m3_do_fixed_insert (tree x, tree y, UWIDE i, UWIDE n, tree type)
 }
 
 static tree
-m3_do_extract (tree x, tree i, tree n, tree type)
+m3_do_extract (tree x, tree offset, tree count, tree type)
 {
-  tree a = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE (type), n);
-  tree b = m3_build2 (MINUS_EXPR, t_int, a, i);
+  tree a = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE (type), count);
+  tree b = m3_build2 (MINUS_EXPR, t_int, a, offset);
   tree c = m3_convert (m3_unsigned_type (type), x);
   tree d = m3_build2 (LSHIFT_EXPR, m3_unsigned_type (type), c, b);
   tree e = m3_build2 (RSHIFT_EXPR, type, d, a);
   tree f = m3_build3 (COND_EXPR, type,
-                      m3_build2 (EQ_EXPR, boolean_type_node, n, v_zero),
+                      m3_build2 (EQ_EXPR, boolean_type_node, count, v_zero),
                       v_zero, e);
   return f;
 }
