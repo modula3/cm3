@@ -2075,7 +2075,7 @@ try_optimize_cfg (int mode)
 	      && try_crossjump_bb (mode, EXIT_BLOCK_PTR))
 	    changed = true;
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
 	  if (changed)
 	    verify_flow_info ();
 #endif

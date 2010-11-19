@@ -912,7 +912,7 @@ duplicate_block (basic_block bb, edge e, basic_block after)
   if (bb->count < new_count)
     new_count = bb->count;
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   gcc_assert (can_duplicate_block_p (bb));
 #endif
 
