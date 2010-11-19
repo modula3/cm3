@@ -76,7 +76,7 @@ if not defined("m3back_debug")
 end
 
 if not defined("m3back_optimize")
-  m3back_optimize = "-O2"
+  m3back_optimize = "-O2 -Wuninitialized"
 end
 
 if not defined("m3back_pic")
