@@ -1109,26 +1109,15 @@ left_shift (tree t, int i)
 }
 
 static tree
-m3_do_fixed_insert (tree x, tree y, WIDE i, WIDE n, tree type)
+m3_do_fixed_insert (tree x, tree y, UWIDE i, UWIDE n, tree type)
 {
   /* ??? Use BIT_FIELD_REF ??? */
 
-  gcc_assert (i >= 0);
-  gcc_assert (n >= 0);
   gcc_assert (i <= 64);
   gcc_assert (n <= 64);
   gcc_assert ((i + n) <= 64);
-  gcc_assert (i <= TYPE_PRECISION (type));
-  gcc_assert (n <= TYPE_PRECISION (type));
-  gcc_assert ((i + n) <= TYPE_PRECISION (type));
-
-  if ((i < 0) || (i >= TYPE_PRECISION (type)) ||
-      (n < 0) || (n >= TYPE_PRECISION (type)))
-    {
-      return m3_do_insert (x, y,
-                           build_int_cst (t_int, i),
-                           build_int_cst (t_int, n), type);
-    }
+  gcc_assert (64 <= HOST_BITS_PER_WIDE_INT);
+  gcc_assert (64 <= TYPE_PRECISION (type));
 
   if (n == 0)
     return x;
@@ -1159,7 +1148,7 @@ m3_do_fixed_insert (tree x, tree y, WIDE i, WIDE n, tree type)
     {                           /* multi-bit value */
       tree saved_bits = { 0 };
       tree new_bits = { 0 };
-      if (i + n < HOST_BITS_PER_WIDE_INT)
+      if ((i + n) < HOST_BITS_PER_WIDE_INT)
         {
           WIDE mask = ((WIDE)1 << n) - 1;
           saved_bits = m3_build1 (BIT_NOT_EXPR, type,
@@ -1648,13 +1637,6 @@ m3_init_decl_processing (void)
 
   build_common_tree_nodes (0, false);
 
-  bits_per_unit = BITS_PER_UNIT; /* for debugging */
-  pointer_size = POINTER_SIZE; /* for debugging */
-  bits_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER);
-  bytes_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER / BITS_PER_UNIT);
-  stdcall = get_identifier_with_length (STRING_AND_LENGTH ("stdcall"));
-  stdcall_list = build_tree_list (stdcall, NULL);
-
   if (BITS_PER_INTEGER == 32)
     {
       t_int = t_int_32;
@@ -1673,6 +1655,12 @@ m3_init_decl_processing (void)
       m3_push_type_decl (t_word, get_identifier_with_length (STRING_AND_LENGTH ("word")));
     }
 
+  bits_per_unit = BITS_PER_UNIT; /* for debugging */
+  pointer_size = POINTER_SIZE; /* for debugging */
+  bits_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER);
+  bytes_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER / BITS_PER_UNIT);
+  stdcall = get_identifier_with_length (STRING_AND_LENGTH ("stdcall"));
+  stdcall_list = build_tree_list (stdcall, NULL);
   t_set = m3_build_pointer_type (t_word);
 
   /* Set the type used for sizes and build the remaining common nodes. */
@@ -4934,7 +4922,7 @@ m3cg_assert_int(tree t)
 {
   if (t != t_int && t != t_word)
   {
-    fprintf (stderr, "word size/target/configure confusion? forgot -m32 or -m64?\n");
+    fprintf (stderr, "\nword size/target/configure confusion? forgot -m32 or -m64?\n");
     gcc_assert (t == t_int || t == t_word);
   }
 }
