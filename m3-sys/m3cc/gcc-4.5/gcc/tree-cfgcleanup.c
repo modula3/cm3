@@ -288,7 +288,7 @@ tree_forwarder_block_p (basic_block bb, bool phi_wanted)
       || (single_succ_edge (bb)->flags & EDGE_ABNORMAL))
     return false;
 
-#if ENABLE_CHECKING
+#if 1 || ENABLE_CHECKING
   gcc_assert (bb != ENTRY_BLOCK_PTR);
 #endif
 
@@ -716,7 +716,7 @@ cleanup_tree_cfg_noloop (void)
     }
   else
     {
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
       verify_dominators (CDI_DOMINATORS);
 #endif
       changed = false;
@@ -727,7 +727,7 @@ cleanup_tree_cfg_noloop (void)
   gcc_assert (dom_info_available_p (CDI_DOMINATORS));
   compact_blocks ();
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_flow_info ();
 #endif
 
@@ -755,7 +755,7 @@ repair_loop_structures (void)
 
   BITMAP_FREE (changed_bbs);
 
-#ifdef ENABLE_CHECKING
+#if 1 || defined(ENABLE_CHECKING)
   verify_loop_structure ();
 #endif
   scev_reset ();
