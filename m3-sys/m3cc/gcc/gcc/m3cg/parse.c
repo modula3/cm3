@@ -565,7 +565,7 @@ m3type_get (ULONG type_id)
     m3type_t to_find;
 
     if (option_trace_all >= 2)
-      fprintf (stderr, "\n  m3type_get(0x%lX) ", type_id);
+      fprintf (stderr, "\n  m3type_get(0x%X) ", (UINT)type_id);
 
     if (!m3type_table_size_used || type_id == NO_UID)
       return NULL;
@@ -606,7 +606,7 @@ get_typeid_to_tree (ULONG type_id)
       m3type_t* found = m3type_get (type_id);
       tree t = found ? found->t : 0;
       if (type_id != NO_UID && option_trace_all >= 2)
-        fprintf (stderr, "\n  get_typeid_to_tree(0x%lX):%p  ", type_id, t);
+        fprintf (stderr, "\n  get_typeid_to_tree(0x%X):%p  ", (UINT)type_id, t);
       return t;
     }
   }
@@ -678,7 +678,7 @@ set_typeid_to_tree_replace (ULONG type_id, tree t, bool replace)
     m3type_t to_add = { 0, 0 };
 
     if (option_trace_all >= 2)
-      fprintf (stderr, "\n  set_typeid_to_tree(0x%lX, %p)  ", type_id, t);
+      fprintf (stderr, "\n  set_typeid_to_tree(0x%X, %p)  ", (UINT)type_id, t);
 
     if (type_id == NO_UID || !t)
       return;
@@ -990,7 +990,7 @@ m3_build_type_id (m3_type type,
         return ts;
       } 
     }
-    /*fprintf (stderr, "type missing size 0x%lX\n", type_id);*/
+    /*fprintf (stderr, "type missing size 0x%X\n", (UINT)type_id);*/
   }
 
   switch (type)
@@ -1129,10 +1129,10 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
         && (64 <= HOST_BITS_PER_WIDE_INT)
         && (HOST_BITS_PER_WIDE_INT >= TYPE_PRECISION (type))))
   {
-    fprintf (stderr, "m3_do_fixed_insert: offset:0x%lx count:0x%lx wide:0x%lx type:0x%lx\n",
-             (ULONG)offset, (ULONG)count, (ULONG)HOST_BITS_PER_WIDE_INT, (ULONG)TYPE_PRECISION (type));
-    printf  (        "m3_do_fixed_insert: offset:0x%lx count:0x%lx wide:0x%lx type:0x%lx\n",
-             (ULONG)offset, (ULONG)count, (ULONG)HOST_BITS_PER_WIDE_INT, (ULONG)TYPE_PRECISION (type));
+    fprintf (stderr, "m3_do_fixed_insert: offset:0x%X count:0x%X wide:0x%X type:0x%X\n",
+             (UINT)offset, (UINT)count, (UINT)HOST_BITS_PER_WIDE_INT, (UINT)TYPE_PRECISION (type));
+    printf  (        "m3_do_fixed_insert: offset:0x%X count:0x%X wide:0x%X type:0x%X\n",
+             (UINT)offset, (UINT)count, (UINT)HOST_BITS_PER_WIDE_INT, (UINT)TYPE_PRECISION (type));
   }
 
   if ((offset < 0) || (offset >= TYPE_PRECISION (type)) ||
@@ -2155,7 +2155,7 @@ trace_typeid (PCSTR name, ULONG val)
   if (!name || !option_trace_all)
     return;
   PCSTR colon = trace_name (&name);
-  fprintf (stderr, " %s%s0x%lX", name, colon, val);
+  fprintf (stderr, " %s%s0x%X", name, colon, (UINT)val);
 }
 
 /*--------------------------------------------------------------- strings ---*/
@@ -2204,7 +2204,7 @@ scan_type (void)
 {
   UWIDE i = get_byte ();
   if (i >= T_LAST)
-    fatal_error (" *** illegal type: 0x%lx, at m3cg_lineno %u", (ULONG)i, m3cg_lineno);
+    fatal_error (" *** illegal type: 0x%x, at m3cg_lineno %u", (UINT)i, m3cg_lineno);
   return (m3_type)i;
 }
 
@@ -2255,7 +2255,7 @@ scan_sign (void)
   case 1: break; /* negative */
   case 2: break; /* unknown */
   default:
-    fatal_error (" *** bad sign: 0x%lx, at m3cg_lineno %u", (ULONG)x, m3cg_lineno);
+    fatal_error (" *** bad sign: 0x%x, at m3cg_lineno %u", (UINT)x, m3cg_lineno);
   }
   return x;
 }
@@ -2451,7 +2451,7 @@ trace_var (PCSTR name, tree var, size_t a)
     var_name = "";
     colon = "";
   }
-  fprintf (stderr, " %s%s:0x%lX%s%s", var_string, name, (ULONG)a, colon, var_name);
+  fprintf (stderr, " %s%s:0x%X%s%s", var_string, name, (UINT)a, colon, var_name);
 }
 
 /*------------------------------------------------------------ procedures ---*/
@@ -2485,7 +2485,7 @@ trace_proc (PCSTR, tree p, size_t a)
 {
   if (!option_trace_all)
     return;
-  fprintf (stderr, " procedure:0x%lX", (ULONG)a);
+  fprintf (stderr, " procedure:0x%X", (UINT)a);
   if (p && DECL_NAME (p) && IDENTIFIER_POINTER (DECL_NAME (p)))
     fprintf (stderr, ":%s", IDENTIFIER_POINTER (DECL_NAME (p)));
 }
@@ -2590,13 +2590,13 @@ dump_record_type (tree record_type)
     type_id = current_record_type_id;
   else if (current_object_type_id != NO_UID)
     type_id = current_object_type_id;
-  fprintf (stderr, "\ndump_record_type type_id=0x%lX, size=0x%lX:\n",
-           type_id, (ULONG)current_record_size);
+  fprintf (stderr, "\ndump_record_type type_id=0x%X, size=0x%X:\n",
+           (UINT)type_id, (UINT)current_record_size);
   for (field = TYPE_FIELDS (record_type); field; field = TREE_CHAIN (field))
   {
-    fprintf (stderr, "  %s offset=0x%lX\n",
+    fprintf (stderr, "  %s offset=0x%X\n",
              IDENTIFIER_POINTER (DECL_NAME (field)),
-             (ULONG)(TREE_INT_CST_LOW (DECL_FIELD_OFFSET (field))
+             (UINT)(TREE_INT_CST_LOW (DECL_FIELD_OFFSET (field))
              + TREE_INT_CST_LOW (DECL_FIELD_BIT_OFFSET (field))));
   }
   fprintf (stderr, "\n");
@@ -2712,8 +2712,8 @@ one_field (UWIDE offset,
            tree *out_v)
 {
   if (option_trace_all)
-      fprintf (stderr, " one_field: offset:0x%lX size:0x%lX", (ULONG)offset,
-               (ULONG)size);
+      fprintf (stderr, " one_field: offset:0x%X size:0x%X", (UINT)offset,
+               (UINT)size);
 
   one_gap (offset);
   tree f = build_decl (FIELD_DECL, 0, type);
@@ -2754,8 +2754,8 @@ one_gap (UWIDE next_offset)
     return;
 
   if (option_trace_all)
-      fprintf (stderr, "\n one_gap: offset:0x%lX size:0x%lX\n",
-               (ULONG)current_record_offset, (ULONG)size);
+      fprintf (stderr, "\n one_gap: offset:0x%X size:0x%X\n",
+               (UINT)current_record_offset, (UINT)size);
 
   tree type = make_node (LANG_TYPE);
   TYPE_SIZE (type) = bitsize_int (size);
@@ -2781,8 +2781,8 @@ m3_gap (UWIDE next_offset)
     return;
 
   if (option_trace_all)
-    fprintf (stderr, "\n m3_gap: offset:0x%lX size:0x%lX\n",
-             (ULONG)current_record_offset, (ULONG)size);
+    fprintf (stderr, "\n m3_gap: offset:0x%X size:0x%X\n",
+             (UINT)current_record_offset, (UINT)size);
 
   sprintf(name, "_m3gap_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC, current_record_offset, size);
 
@@ -3158,8 +3158,8 @@ m3_deduce_field_reference (PCSTR caller, tree value, UWIDE offset,
      }
      if (option_trace_all)
      {
-       fprintf (stderr, "\ndeduce_field_reference %s offset:0x%lX => %s\n",
-                caller, (ULONG)offset,
+       fprintf (stderr, "\ndeduce_field_reference %s offset:0x%X => %s\n",
+                caller, (UINT)offset,
                 field ? IDENTIFIER_POINTER (DECL_NAME (field)) : "?unknown");
      }
    }
@@ -3376,7 +3376,7 @@ declare_fault_proc (void)
   if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
-    fprintf (stderr, " declare_fault_proc: type is 0x%x (%s)", (UINT)mode, mode_to_string (mode));
+    fprintf (stderr, " declare_fault_proc: type is 0x%X (%s)", (UINT)mode, mode_to_string (mode));
   }
 
   fault_proc = proc;
@@ -3587,8 +3587,8 @@ M3CG_HANDLER (DECLARE_OPEN_ARRAY)
     if (false/*M3_TYPES_REPLAY*/ && get_typeid_to_tree (elts_id) == NULL)
     {
       if (option_trace_all)
-        fprintf (stderr, "\n declare_open_array: missing type 0x%lX\n",
-                 (ULONG)elts_id);
+        fprintf (stderr, "\n declare_open_array: missing type 0x%X\n",
+                 (UINT)elts_id);
       /*m3_replay = M3_TYPES_REPLAY;*/
       /* This is wrong and could be much better.
        * TODO: use a useful stub here, i.e. one that
@@ -3629,9 +3629,9 @@ M3CG_HANDLER (DECLARE_ENUM)
               : 64;
     if (size != bits)
     {
-      fprintf(stderr, "BITS_PER_INTEGER: 0x%lX\n", (ULONG)BITS_PER_INTEGER);
-      fprintf(stderr, "m3cg_declare_enum: size 0x%lX vs. bits 0x%X vs. elts 0x%lX\n",
-              (ULONG)size, bits, (ULONG)n_elts);
+      fprintf(stderr, "BITS_PER_INTEGER: 0x%X\n", (UINT)BITS_PER_INTEGER);
+      fprintf(stderr, "m3cg_declare_enum: size 0x%X vs. bits 0x%X vs. elts 0x%X\n",
+              (UINT)size, bits, (UINT)n_elts);
     }
     gcc_assert (size == bits);
     enumtype = make_node (ENUMERAL_TYPE);
@@ -3735,8 +3735,8 @@ m3_declare_record_common (void)
       set_typeid_to_tree (current_record_type_id, type);
       if (M3_TYPES_CHECK_RECORD_SIZE && a != b)
       {
-        fprintf (stderr, "m3_declare_record_common backend:0x%lX vs. frontend:0x%lX\n",
-                 (ULONG)a, (ULONG)b);
+        fprintf (stderr, "m3_declare_record_common backend:0x%X vs. frontend:0x%X\n",
+                 (UINT)a, (UINT)b);
         gcc_assert (a == b);
       }
     }
@@ -3777,8 +3777,8 @@ M3CG_HANDLER (DECLARE_FIELD)
   if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES && t == NULL) /* This is frequently NULL. Why? */
   {
     fprintf (stderr,
-             "\ndeclare_field: type_id 0x%lX to type is null for field %.*s\n",
-             (ULONG)my_id, long_to_printf_length (name_length), name);
+             "\ndeclare_field: type_id 0x%X to type is null for field %.*s\n",
+             (UINT)my_id, long_to_printf_length (name_length), name);
     if (M3_TYPES_REQUIRE_ALL_FIELD_TYPES == 1)
       t = t_addr;
     gcc_assert (t);
@@ -3803,8 +3803,8 @@ M3CG_HANDLER (DECLARE_FIELD)
 M3CG_HANDLER (DECLARE_SET)
 {
   if (option_trace_all)
-    fprintf (stderr, " declare_set my_id:0x%lX domain_id:0x%lX size:0x%lX",
-             (ULONG)my_id, (ULONG)domain_id, (ULONG)size);
+    fprintf (stderr, " declare_set my_id:0x%X domain_id:0x%X size:0x%X",
+             (UINT)my_id, (UINT)domain_id, (UINT)size);
 
   debug_tag ('S', my_id, "_"WIDE_PRINT_DEC, size);
   debug_field_id (domain_id);
@@ -3843,8 +3843,8 @@ M3CG_HANDLER (DECLARE_SUBRANGE)
     tree super_type = m3_type_for_size (size, min < 0);
     if (!super_type)
     {
-      fprintf (stderr, "no type for size:0x%lX min:0x%lX max:0x%lX\n",
-               (ULONG)size, (ULONG)min, (ULONG)max);
+      fprintf (stderr, "no type for size:0x%X min:0x%X max:0x%X\n",
+               (UINT)size, (UINT)min, (UINT)max);
       gcc_assert (super_type);
     }
     if (M3_TYPES_SUBRANGE_NEW)
@@ -3871,7 +3871,7 @@ m3_declare_pointer_common (PCSTR caller, ULONG my_id, ULONG target_id)
     if (!t)
     {
       if (option_trace_all)
-        fprintf (stderr, "\n %s: missing type 0x%lX\n", caller, target_id);
+        fprintf (stderr, "\n %s: missing type 0x%X\n", caller, (UINT)target_id);
       t = t_addr; /* fallback for now */
       /*m3_replay = M3_TYPES_REPLAY;*/
     }
@@ -4080,8 +4080,8 @@ M3CG_HANDLER (DECLARE_SEGMENT)
   {
     if (!name || !(name[0] == 'I' || name[0] == 'M') || !(name[1] == '_'))
     {
-      printf  (        "assertion failure: %s should start [MI]_ 0x%lx\n", name ? name : "(null)", (ULONG)type_id);
-      fprintf (stderr, "assertion failure: %s should start [MI]_ 0x%lx\n", name ? name : "(null)", (ULONG)type_id);
+      printf  (        "assertion failure: %s should start [MI]_ 0x%X\n", name ? name : "(null)", (UINT)type_id);
+      fprintf (stderr, "assertion failure: %s should start [MI]_ 0x%X\n", name ? name : "(null)", (UINT)type_id);
       gcc_assert (name);
       gcc_assert (name[0] == 'I' || name[0] == 'M');
       gcc_assert (name[1] == '_');
@@ -4212,7 +4212,7 @@ M3CG_HANDLER (DECLARE_PARAM)
   if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (var));
-    fprintf (stderr, " mode 0x%x (%s)", (UINT)mode, mode_to_string (mode));
+    fprintf (stderr, " mode 0x%X (%s)", (UINT)mode, mode_to_string (mode));
   }
 
   if (DECL_MODE (var) == VOIDmode)
