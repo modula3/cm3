@@ -66,7 +66,7 @@ end
 nHOST = NormalizePlatform(HOST)
 nTARGET = NormalizePlatform(M3CC_TARGET)
 
-Native = equal(nHOST, nTARGET)
+Native = equal(nHOST, nTARGET) or (equal(nHOST, "AMD64_DARWIN") and equal(nTARGET, "I386_DARWIN"))
 
 proc FileExists (a) is
     return not stale (a, a)
