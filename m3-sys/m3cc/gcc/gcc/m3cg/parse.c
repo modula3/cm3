@@ -23,6 +23,7 @@
    what you give them.   Help stamp out software-hoarding! */
 
 #include <vector>
+#include <map>
 using namespace std;
 #define typedef_vector typedef vector /* hack for gengtype */
 #include <stdlib.h>
@@ -94,7 +95,6 @@ static bool m3gdb;
 
 static ULONG bits_per_unit = BITS_PER_UNIT; /* for debugging */
 static ULONG pointer_size; /* for debugging */
-static GTY (()) tree stdcall;
 static GTY (()) tree stdcall_list;
 
 static bool M3_TYPES = false;
@@ -185,21 +185,21 @@ int arm_float_words_big_endian (void);
 
 struct m3cg_op_t
 {
-  m3cg_op_t() { }
+  UCHAR op;
+  m3cg_op_t(UCHAR a) : op(a) { }
   virtual DESTRUCTOR m3cg_op_t() { }
   virtual void handler() = 0;
   virtual void trace() = 0;
   virtual void read() = 0;
   virtual void read_extended() { }
-  virtual UCHAR get_op() = 0;
   static m3cg_op_t* create(UCHAR op);
 };
 
 #define M3CG(sym, fields) struct m3cg_##sym##_t : m3cg_op_t { \
+        m3cg_##sym##_t() : m3cg_op_t(M3CG_##sym) { } \
         virtual void handler(); \
         virtual void trace(); \
         virtual void read(); \
-        virtual UCHAR get_op() { return M3CG_##sym; } \
         fields };
 #include "m3-def.h"
 #undef M3CG
@@ -501,7 +501,8 @@ static const struct { ULONG type_id; tree* t; } builtin_uids[] = {
 
 #define CONSTANT_STRING_AND_LENGTH(a) a, sizeof(a) - 1
 
-static const struct { tree* t; char name[9]; size_t length; } builtin_types[T_LAST] = {
+static const struct { tree* t; char name[9]; size_t length; }
+builtin_types[T_LAST] = {
 /* This is ordered per m3_type. It is also used by typestr. */
   { &t_word_8, CONSTANT_STRING_AND_LENGTH ("word_8") },
   { &t_int_8, CONSTANT_STRING_AND_LENGTH ("int_8") },
@@ -818,7 +819,7 @@ static bool
 get_volatize (void)
 {
 #if GCC42
-  return 0;
+  return false;
 #else
   return m3_language_function () && m3_language_function ()->volatil;
 #endif
@@ -1080,7 +1081,9 @@ static tree
 m3_do_insert (tree x, tree y, tree offset, tree count, tree orig_type)
 {
   tree type = m3_unsigned_type (orig_type);
-  tree a = m3_build1 (BIT_NOT_EXPR, type, v_zero);
+  x = m3_cast (type, m3_cast (orig_type, x));
+  y = m3_cast (type, m3_cast (orig_type, y));
+  tree a = m3_build1 (BIT_NOT_EXPR, type, m3_cast (type, v_zero));
   tree b = m3_build2 (LSHIFT_EXPR, type, a, count);
   tree c = m3_build1 (BIT_NOT_EXPR, type, b);
   tree d = m3_build2 (BIT_AND_EXPR, type, y, c);
@@ -1090,21 +1093,19 @@ m3_do_insert (tree x, tree y, tree offset, tree count, tree orig_type)
   tree h = m3_build2 (BIT_AND_EXPR, type, x, g);
   tree j = m3_build2 (BIT_IOR_EXPR, type, h, e);
   tree k = m3_build3 (COND_EXPR, type,
-                      m3_build2 (EQ_EXPR, boolean_type_node, count, TYPE_SIZE (type)),
+                      m3_build2 (EQ_EXPR, boolean_type_node, count, m3_cast (t_int, TYPE_SIZE (type))),
                       y, j);
   tree m = m3_build3 (COND_EXPR, type,
-                      m3_build2 (EQ_EXPR, boolean_type_node, count, v_zero),
+                      m3_build2 (EQ_EXPR, boolean_type_node, count, m3_cast (t_int, v_zero)),
                       x, k);
-  return m;
+  return m3_cast (orig_type, m);
 }
 
 static tree
-left_shift (tree t, int offset)
+left_shift (tree t, int i)
 {
-  if (offset)
-    t = m3_build2 (LSHIFT_EXPR,
-                   m3_unsigned_type (TREE_TYPE (t)), t,
-                   build_int_cst (t_int, offset));
+  if (i)
+    t = m3_build2 (LSHIFT_EXPR, TREE_TYPE (t), t, build_int_cst (t_int, i));
   return t;
 }
 
@@ -1118,9 +1119,32 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
   gcc_assert ((offset + count) <= 64);
   gcc_assert (64 <= HOST_BITS_PER_WIDE_INT);
   gcc_assert (64 <= TYPE_PRECISION (type));
+  
+  /*
+    y_mask = (~(~0 << count)) << offset
+    x_mask = ~y_mask
+    x = (x & x_mask) | ((y << offset) & y_mask)
+  or equivalent
+    y_mask = ~(~0 << count)
+    x_mask = ~(y_mask << offset)
+    x = (x & x_mask) | ((y & y_mask) << offset)
+    
+  There are then some optimizations.
+  Such as, if count is constant 1 and y is constant then
+    if y & 1:
+      x |= (1 << offset)
+    else
+      x &= ~(1 << offset)
+  if count is constant 1 and y is not constant:
+    x = (x & ~(1 << offset)) | ((y & 1) << offset)
+  */
+
+  x = m3_cast (type, x);
 
   if (count == 0)
     return x;
+
+  //y = m3_cast (type, y);
 
   if ((count == 1) && (offset < HOST_BITS_PER_WIDE_INT))
     {
@@ -1139,7 +1163,7 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
         }
       else
         {                       /* non-constant, 1-bit value */
-          tree a = m3_build2 (BIT_AND_EXPR, type, y, v_one); /* extract bit */
+          tree a = m3_build2 (BIT_AND_EXPR, type, y, m3_cast (type, v_one)); /* extract bit */
           tree b = m3_build2 (BIT_AND_EXPR, type, x, nbit); /* clear bit */
           return m3_build2 (BIT_IOR_EXPR, type, b, left_shift (a, offset)); /* combine */
         }
@@ -1197,17 +1221,32 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
 }
 
 static tree
-m3_do_extract (tree x, tree offset, tree count, tree type)
+m3_do_extract (tree x, tree offset, tree count, tree orig_type)
 {
-  tree a = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE (type), count);
-  tree b = m3_build2 (MINUS_EXPR, t_int, a, offset);
-  tree c = m3_convert (m3_unsigned_type (type), x);
-  tree d = m3_build2 (LSHIFT_EXPR, m3_unsigned_type (type), c, b);
-  tree e = m3_build2 (RSHIFT_EXPR, type, d, a);
-  tree f = m3_build3 (COND_EXPR, type,
-                      m3_build2 (EQ_EXPR, boolean_type_node, count, v_zero),
-                      v_zero, e);
-  return f;
+  tree type = m3_unsigned_type (orig_type);
+  x = m3_cast (type, m3_cast (orig_type, x));
+
+  // i.e. x = ((x << (32 - count - offset)) >> (32 - count));
+  // shifting left will throw out the bits we don't want,
+  // leaving the bits we do want left justified.
+  // Shift those back to the right, right justifying them,
+  // and throwing out bits below them.
+  //
+  // If count is zero, special case that and return the original value.
+  // (Shifting to the right by 32 as the general case would do might
+  // produce that, but it is probably undefined.)
+
+  tree right = m3_build2 (MINUS_EXPR, t_int, m3_cast (t_int, TYPE_SIZE (type)), count);
+  tree left = m3_build2 (MINUS_EXPR, t_int, right, offset);
+  x = m3_build2 (LSHIFT_EXPR, type, x, left);
+  x = m3_build2 (RSHIFT_EXPR, type, x, right);
+  x = m3_build3 (COND_EXPR, type,
+                 m3_build2 (EQ_EXPR,
+                            boolean_type_node,
+                            count,
+                            m3_cast (TREE_TYPE (count), v_zero)),
+                 m3_cast (type, v_zero), x);
+  return m3_cast (orig_type, x);
 }
 
 static tree
@@ -1218,7 +1257,7 @@ m3_do_rotate (enum tree_code code, tree orig_type, tree val, tree cnt)
   tree type = m3_unsigned_type (orig_type);
   tree a = build_int_cst (t_int, TYPE_PRECISION (type) - 1);
   tree b = m3_build2 (BIT_AND_EXPR, t_int, cnt, a);
-  tree c = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE (type), b);
+  tree c = m3_build2 (MINUS_EXPR, t_int, m3_cast (t_int, TYPE_SIZE (type)), b);
   tree d = m3_convert (type, val);
   tree e = m3_build2 (LSHIFT_EXPR, type, d, (code == LROTATE_EXPR) ? b : c);
   tree f = m3_build2 (RSHIFT_EXPR, type, d, (code == RROTATE_EXPR) ? b : c);
@@ -1635,7 +1674,8 @@ m3_init_decl_processing (void)
 
   current_function_decl = NULL;
 
-  build_common_tree_nodes (0, false);
+  build_common_tree_nodes (false /* unsigned char */,
+                           false /* unsigned size_type */);
 
   if (BITS_PER_INTEGER == 32)
     {
@@ -1659,7 +1699,7 @@ m3_init_decl_processing (void)
   pointer_size = POINTER_SIZE; /* for debugging */
   bits_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER);
   bytes_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER / BITS_PER_UNIT);
-  stdcall = get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("stdcall"));
+  tree stdcall = get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("stdcall"));
   stdcall_list = build_tree_list (stdcall, NULL);
   t_set = m3_build_pointer_type (t_word);
 
@@ -1860,6 +1900,7 @@ m3_init_decl_processing (void)
 
 /* Variable arrays of trees. */
 
+static map<size_t, m3cg_BIND_SEGMENT_t*> bind_segments; /* wasteful but ok */
 static GTY (()) varray_type all_vars;
 static GTY (()) varray_type all_procs;
 static GTY (()) varray_type all_labels;
@@ -3992,20 +4033,19 @@ M3CG_HANDLER (DECLARE_SEGMENT)
   if (option_trace_all && m3gdb)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
-  /* we really don't have an idea of what the type of this var is; let's try
-     to put something that will be good enough for all the uses of this var we
-     are going to see before we have a bind_segment. Use a large size so that
-     gcc doesn't think it fits in a register, so that loads out of it do get
-     their offsets applied. */
-  TREE_TYPE (var)
-    = m3_build_type_id (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT, type_id);
+   m3cg_BIND_SEGMENT_t* bind_segment = bind_segments[var_integer];
+
+  TREE_TYPE (var) = m3_build_type_id (T_struct,
+                                      bind_segment->size,
+                                      bind_segment->align,
+                                      type_id);
   layout_decl (var, BIGGEST_ALIGNMENT);
-  TYPE_UNSIGNED (TREE_TYPE (var)) = true;
+  DECL_COMMON (var) = (bind_segment->initialized == false);
+  TREE_PUBLIC (var) = bind_segment->exported;
   TREE_STATIC (var) = true;
-  TREE_PUBLIC (var) = true;
   TREE_READONLY (var) = is_const;
   TREE_ADDRESSABLE (var) = true;
-  DECL_DEFER_OUTPUT (var) = true;
+  //DECL_DEFER_OUTPUT (var) = true;
   current_segment = var;
 
   TREE_CHAIN (var) = global_decls;
@@ -4028,14 +4068,7 @@ M3CG_HANDLER (DECLARE_SEGMENT)
 M3CG_HANDLER (BIND_SEGMENT)
 {
   gcc_assert (align >= !!size);
-
   current_segment = var;
-  TREE_TYPE (var) = m3_build_type (type, size, align);
-  relayout_decl (var);
-  DECL_UNSIGNED (var) = TYPE_UNSIGNED (TREE_TYPE (var));
-  DECL_COMMON (var) = (initialized == false);
-  TREE_PUBLIC (var) = exported;
-  TREE_STATIC (var) = true;
 }
 
 M3CG_HANDLER (DECLARE_GLOBAL)
@@ -5112,7 +5145,7 @@ M3CG_HANDLER (ROTATE)
   gcc_assert (INTEGRAL_TYPE_P (type));
 
   EXPR_REF (-2) = m3_build3 (COND_EXPR, type,
-                             m3_build2 (GE_EXPR, boolean_type_node, n, v_zero),
+                             m3_build2 (GE_EXPR, boolean_type_node, n, m3_cast (t_int, v_zero)),
                              m3_do_rotate (LROTATE_EXPR, type, x, n),
                              m3_do_rotate (RROTATE_EXPR, type, x,
                                            m3_build1 (NEGATE_EXPR, t_int, n)));
@@ -5552,7 +5585,7 @@ M3CG_HANDLER (INDEX_ADDRESS)
   bool signd = IS_SIGNED_INTEGER_TYPE_TREE (type);
   gcc_assert (signd || IS_UNSIGNED_INTEGER_TYPE_TREE (type));
   tree a = (signd ? ssize_int (bytes) : size_int (bytes));
-  a = m3_build2 (MULT_EXPR, type, EXPR_REF (-1), a);
+  a = m3_build2 (MULT_EXPR, type, m3_cast (type, EXPR_REF (-1)), a);
   if (signd)
     a = m3_cast (ssizetype, a);
   a = m3_cast (sizetype, a);
@@ -5877,13 +5910,29 @@ m3_parse_file (int)
 
   ops_t::iterator e = ops.end();
   ops_t::iterator it;
+  
+  /* First go through and set segment sizes,
+     so that declare_segment gets it right upfront.
+     In future we will do more here -- get the fields right early.
+  */
+  for (it = ops.begin(); it != e; ++it)
+  {
+    switch ((*it)->op)
+    {
+      case M3CG_BIND_SEGMENT:
+        m3cg_BIND_SEGMENT_t* bind_segment = (m3cg_BIND_SEGMENT_t*)*it;
+        bind_segments[bind_segment->var_integer] = bind_segment;
+        break;
+    }
+  }
+
   m3cg_lineno = 1;
   for (it = ops.begin(); it != e; ++it)
   {
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
     if (option_trace_all)
-      trace_op ((*it)->get_op());
+      trace_op ((*it)->op);
     (*it)->handler();
     m3cg_lineno += 1;
   }
