@@ -30,7 +30,7 @@ header "building CM3 scripts distribution in ${ARCHIVE}"
 #
 
 cd "${ROOT}" || exit 1
-/bin/ls -1d m3overrides COPYRIGHT-CMASS COPYRIGHT-DEC scripts > .tar-include
+ls -1d m3overrides COPYRIGHT-CMASS COPYRIGHT-DEC scripts > .tar-include
 echo "building exclude list..."
 $FIND scripts \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
