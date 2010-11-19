@@ -1115,9 +1115,9 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
   /* ??? Use BIT_FIELD_REF ??? */
 
   if (!   ((offset <= 64)
-        && (count <= 64);
-        && ((offset + count) <= 64);
-        && (64 <= HOST_BITS_PER_WIDE_INT);
+        && (count <= 64)
+        && ((offset + count) <= 64)
+        && (64 <= HOST_BITS_PER_WIDE_INT)
         && (HOST_BITS_PER_WIDE_INT >= TYPE_PRECISION (type))))
   {
     fprintf (stderr, "offset:0x%lx count:0x%lx wide:0x%lx type:0x%lx\n",
