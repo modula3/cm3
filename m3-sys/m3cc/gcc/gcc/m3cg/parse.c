@@ -4066,7 +4066,8 @@ M3CG_HANDLER (DECLARE_SEGMENT)
   {
     if (!name || !(name[0] == 'I' || name[0] == 'M') || !(name[1] == '_'))
     {
-      fprintf (stderr, "assertion failure: %s should start [MI]_\n", name ? name : "(null)");
+      printf  (        "assertion failure: %s should start [MI]_ 0x%lx\n", name ? name : "(null)", (ULONG)type_id);
+      fprintf (stderr, "assertion failure: %s should start [MI]_ 0x%lx\n", name ? name : "(null)", (ULONG)type_id);
       gcc_assert (name);
       gcc_assert (name[0] == 'I' || name[0] == 'M');
       gcc_assert (name[1] == '_');
