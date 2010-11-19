@@ -1114,11 +1114,17 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
 {
   /* ??? Use BIT_FIELD_REF ??? */
 
-  gcc_assert (offset <= 64);
-  gcc_assert (count <= 64);
-  gcc_assert ((offset + count) <= 64);
-  gcc_assert (64 <= HOST_BITS_PER_WIDE_INT);
-  gcc_assert (HOST_BITS_PER_WIDE_INT >= TYPE_PRECISION (type));
+  if (!   ((offset <= 64)
+        && (count <= 64);
+        && ((offset + count) <= 64);
+        && (64 <= HOST_BITS_PER_WIDE_INT);
+        && (HOST_BITS_PER_WIDE_INT >= TYPE_PRECISION (type))))
+  {
+    fprintf (stderr, "offset:0x%lx count:0x%lx wide:0x%lx type:0x%lx\n",
+             (ULONG)offset, (ULONG)count, (ULONG)HOST_BITS_PER_WIDE_INT,
+             (ULONG)TYPE_PRECISION (type));
+    gcc_unreachable ();
+  }
   
   /*
     y_mask = (~(~0 << count)) << offset
