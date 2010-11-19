@@ -1,5 +1,6 @@
+#line 2 "gengtype-lex.c"
 
-#line 3 "lex.yy.c"
+#line 4 "gengtype-lex.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -1029,7 +1030,7 @@ update_lineno (const char *l, size_t len)
 }
 
 
-#line 1033 "lex.yy.c"
+#line 1034 "gengtype-lex.c"
 
 #define INITIAL 0
 #define in_struct 1
@@ -1197,7 +1198,7 @@ YY_DECL
     }
 
   /* Things we look for in skipping mode: */
-#line 1201 "lex.yy.c"
+#line 1202 "gengtype-lex.c"
 
 	if ( !(yy_init) )
 		{
@@ -1667,7 +1668,7 @@ YY_RULE_SETUP
 #line 198 "gengtype-lex.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 1671 "lex.yy.c"
+#line 1672 "gengtype-lex.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(in_struct):
 case YY_STATE_EOF(in_struct_comment):
