@@ -1114,8 +1114,8 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
 {
   /* ??? Use BIT_FIELD_REF ??? */
 
-  gcc_assert (offset >= 0);
-  gcc_assert (count >= 0);
+  //gcc_assert (offset >= 0);
+  //gcc_assert (count >= 0);
   gcc_assert (offset <= 64);
   gcc_assert (count <= 64);
   gcc_assert ((offset + count) <= 64);
