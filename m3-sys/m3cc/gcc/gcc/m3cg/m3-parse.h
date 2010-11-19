@@ -196,7 +196,7 @@ static tree m3_build_type_id (m3_type type, UWIDE size, UWIDE align, ULONG type_
 static tree m3_build_type (m3_type type, UWIDE size, UWIDE align);
 static tree m3_do_insert (tree x, tree y, tree i, tree n, tree orig_type);
 static tree left_shift (tree t, int i);
-static tree m3_do_fixed_insert (tree x, tree y, WIDE i, WIDE n, tree type);
+static tree m3_do_fixed_insert (tree x, tree y, UWIDE i, UWIDE n, tree type);
 static tree m3_do_extract (tree x, tree i, tree n, tree type);
 static tree m3_do_rotate (enum tree_code code, tree orig_type, tree val, tree cnt);
 static tree m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count);
