@@ -31,15 +31,15 @@ header "building CM3 doc distribution in ${ARCHIVE}"
 if [ "$1" = "-gen" ] ; then
   cd "${ROOT}/doc/help/gen_html" || exit 1
   rm -f html_gen/m3db 
-  m3tohtml -v -root /usr/local/cm3/pkg `cd /usr/local/cm3/pkg && /bin/ls -d *`
+  m3tohtml -v -root /usr/local/cm3/pkg `cd /usr/local/cm3/pkg && ls -d *`
 fi
 
 cd "${ROOT}" || exit 1
-/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC doc > .tar-include
-/bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
-/bin/ls -1d doc/help/reactor >> .tar-exclude
-/bin/ls -1d doc/src_reports/*.ps >> .tar-exclude
-/bin/ls -1d doc/src_reports/*.ps.gz >> .tar-exclude
+ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC doc > .tar-include
+ls -1d m3-*/*/${TARGET} > .tar-exclude
+ls -1d doc/help/reactor >> .tar-exclude
+ls -1d doc/src_reports/*.ps >> .tar-exclude
+ls -1d doc/src_reports/*.ps.gz >> .tar-exclude
 echo "building exclude list..."
 $FIND doc \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
