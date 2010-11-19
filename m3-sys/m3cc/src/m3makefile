@@ -362,6 +362,7 @@ if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined
     write("rm -rf ", a, CR)
     fs_rmrec(a)
   end
+  fs_rmrec("../AMD64_DARWIN-I386_DARWIN")
   cp_if("../src/clean_marker.txt", build_dir & "/clean_marker.txt")
 end
 
