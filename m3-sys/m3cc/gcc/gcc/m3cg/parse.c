@@ -1123,9 +1123,23 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
   gcc_assert (count <= TYPE_PRECISION (type));
   gcc_assert ((offset + count) <= TYPE_PRECISION (type));
 
+  if (!   ((offset <= 64)
+        && (count <= 64)
+        && ((offset + count) <= 64)
+        && (64 <= HOST_BITS_PER_WIDE_INT)
+        && (HOST_BITS_PER_WIDE_INT >= TYPE_PRECISION (type))))
+  {
+    fprintf (stderr, "m3_do_fixed_insert: offset:0x%lx count:0x%lx wide:0x%lx type:0x%lx\n",
+             (ULONG)offset, (ULONG)count, (ULONG)HOST_BITS_PER_WIDE_INT, (ULONG)TYPE_PRECISION (type));
+    printf  (        "m3_do_fixed_insert: offset:0x%lx count:0x%lx wide:0x%lx type:0x%lx\n",
+             (ULONG)offset, (ULONG)count, (ULONG)HOST_BITS_PER_WIDE_INT, (ULONG)TYPE_PRECISION (type));
+  }
+
   if ((offset < 0) || (offset >= TYPE_PRECISION (type)) ||
       (count < 0) || (count >= TYPE_PRECISION (type)))
     {
+      fprintf (stderr, "m3_do_fixed_insert => m3_do_insert\n");
+      printf  (        "m3_do_fixed_insert => m3_do_insert\n");
       return m3_do_insert (x, y,
                            build_int_cst (t_int, offset),
                            build_int_cst (t_int, count), type);
