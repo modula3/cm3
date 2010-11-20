@@ -2873,7 +2873,8 @@ static void add_stmt (tree t)
         SET_EXPR_LOCATION (t, input_location);
     }
 
-  TREE_USED (t) = true;
+  TREE_USED (t) = true; // why?
+  TREE_SIDE_EFFECTS (t) = true; // why?
   append_to_statement_list (t, &current_stmts);
 }
 
@@ -2980,6 +2981,7 @@ m3_call_direct (tree p, tree return_type)
   }
   else
   {
+    TREE_SIDE_EFFECTS (call) = true; // needed?
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3003,6 +3005,7 @@ m3_call_indirect (tree return_type, tree /*calling_convention*/)
   }
   else
   {
+    TREE_SIDE_EFFECTS (call) = true; // needed?
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3099,6 +3102,7 @@ m3_call_direct (tree p, tree return_type)
   }
   else
   {
+    TREE_SIDE_EFFECTS (call) = true; // needed?
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3127,6 +3131,7 @@ m3_call_indirect (tree return_type, tree calling_convention)
   }
   else
   {
+    TREE_SIDE_EFFECTS (call) = true; // needed?
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3238,7 +3243,10 @@ m3_load_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type
     }
   }
   if (volatil)
+  {
     TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
+    TREE_SIDE_EFFECTS (v) = true; // needed?
+  }
   if (src_T != dst_T)
     v = m3_convert (dst_t, v);
   EXPR_PUSH (v);
@@ -3293,7 +3301,10 @@ m3_store_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_typ
     }
   }
   if (volatil || m3_next_store_volatile)
+  {
     TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
+    TREE_SIDE_EFFECTS (v) = true; // needed?
+  }
   m3_next_store_volatile = false;
   tree val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
@@ -3459,6 +3470,7 @@ emit_fault_proc (void)
   DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
                                 BLOCK_VARS (current_block),
                                 current_stmts, current_block);
+  TREE_SIDE_EFFECTS (DECL_SAVED_TREE (p)) = true; // needed?
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -3492,10 +3504,12 @@ generate_fault (int code)
     declare_fault_proc ();
   tree arg = build_int_cst (t_int, (LOCATION_LINE (input_location) << LINE_SHIFT) + (code & FAULT_MASK));
 #if GCC45
-  return build_function_call_expr (input_location, fault_proc, build_tree_list (NULL_TREE, arg));
+  tree t = build_function_call_expr (input_location, fault_proc, build_tree_list (NULL_TREE, arg));
 #else
-  return build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
+  tree t = build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
 #endif
+  TREE_SIDE_EFFECTS (t) = true; // needed?
+  return t;
 }
 
 /*-------------------------------------------------- M3CG opcode handlers ---*/
@@ -4502,9 +4516,20 @@ M3CG_HANDLER (DECLARE_PROCEDURE)
 M3CG_HANDLER (BEGIN_PROCEDURE)
 {
   DECL_SOURCE_LOCATION (p) = input_location;
+  
+  /* don't inline, to fix:
+      elego/m3msh/src/M3MiniShell.m3: In function 'M3MiniShell__ProcessParameters':
+      elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' might be clobbered by 'longjmp' or 'vfork'
+      m3-tools/m3tk/src/astdisplay/StdFormat.m3: In function 'StdFormat__Enumeration_type':
+      m3-tools/m3tk/src/astdisplay/StdFormat.m3:193:0: internal compiler error: Bus error */
+  if (current_function_decl)
+  {
+    //DECL_UNINLINABLE (current_function_decl) = true;
+    //DECL_UNINLINABLE (p) = true;
+    flag_inline_functions = false;
+  }
 
   announce_function (p);
-
   current_function_decl = p;
   allocate_struct_function (p, false);
   m3_language_function (); // force allocation
@@ -4532,6 +4557,7 @@ M3CG_HANDLER (END_PROCEDURE)
   DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
                                 BLOCK_VARS (current_block),
                                 current_stmts, current_block);
+  TREE_SIDE_EFFECTS (DECL_SAVED_TREE (p)) = true; // needed?
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -4575,6 +4601,7 @@ M3CG_HANDLER (END_BLOCK)
   tree bind = build3 (BIND_EXPR, t_void,
                       BLOCK_VARS (current_block),
                       current_stmts, current_block);
+  TREE_SIDE_EFFECTS (bind) = true; // needed?
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -4732,6 +4759,7 @@ M3CG_HANDLER (EXIT_PROC)
     m3_store (res, 0, type, T, type, T);
 #else
     res = build2 (MODIFY_EXPR, TREE_TYPE (res), res, m3_cast (TREE_TYPE (res), EXPR_REF (-1)));
+    TREE_SIDE_EFFECTS (res); // needed?
     EXPR_POP ();
 #endif
   }
@@ -5107,8 +5135,7 @@ M3CG_HANDLER (SET_SINGLETON)
   tree bit_in_word;
   tree word_ref = m3cg_set_member_ref (type, &bit_in_word);
   tree t = m3_build2 (BIT_IOR_EXPR, t_word, word_ref, bit_in_word);
-  t = m3_build2 (MODIFY_EXPR, t_word, word_ref, t);
-  add_stmt (t);
+  add_stmt (m3_build2 (MODIFY_EXPR, t_word, word_ref, t));
 }
 
 M3CG_HANDLER (NOT)
@@ -6070,16 +6097,14 @@ m3_post_options (PCSTR* /*pfilename*/)
      libm3/Formatter.m3
      m3tests/p241
      m3tests/p242
-     m3front gcc 4.5
-  */
+     m3front gcc 4.5 */
   flag_tree_pre = false;
 
   flag_tree_dse = false; /* compiler crashes if this is enabled */
 
 /* == package m3-demo/fisheye ==
   GraphData.m3: In function 'GraphData__ReadEdge':
-  GraphData.m3:308:0: internal compiler error: in create_tmp_var, at gimplify.c:505
-*/
+  GraphData.m3:308:0: internal compiler error: in create_tmp_var, at gimplify.c:505 */
   flag_tree_sra = false;
 
 #if GCC45
@@ -6089,8 +6114,7 @@ m3_post_options (PCSTR* /*pfilename*/)
 
 /* m3-tools/m3tohtml
   HTMLDir.m3: In function 'HTMLDir__QuickSort.clone.1':
-  HTMLDir.m3:391:0: internal compiler error: Bus error
-*/
+  HTMLDir.m3:391:0: internal compiler error: Bus error */
   flag_ipa_cp_clone = false;
 
   /* Excess precision other than "fast" requires front-end support.  */
@@ -6100,12 +6124,6 @@ m3_post_options (PCSTR* /*pfilename*/)
 #if !GCC42
   flag_predictive_commoning = false;
 #endif
-
-/* don't inline anything, to fix:
-elego/m3msh/src/M3MiniShell.m3: In function 'M3MiniShell__ProcessParameters':
-elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' might be clobbered by 'longjmp' or 'vfork'
-*/
-  flag_inline_functions = false;
 
   return false;
 }
