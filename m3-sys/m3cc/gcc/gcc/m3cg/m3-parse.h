@@ -174,16 +174,10 @@ static tree m3_deduce_field_reference (PCSTR caller, tree value, UINT64 offset,
                                        tree field_treetype, m3_type field_m3type);
 static bool m3_type_match (tree t1, tree t2);
 static bool m3_type_mismatch (tree t1, tree t2);
-static void m3_load_1 (tree v, UINT64 offset, tree src_t, m3_type src_T,
-                       tree dst_t, m3_type dst_T, bool volatil);
 static void m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T,
                      tree dst_t, m3_type dst_T);
-static void m3_store_1 (tree v, UINT64 offset, tree src_t, m3_type src_T,
-                        tree dst_t, m3_type dst_T, bool volatil);
 static void m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T,
                       tree dst_t, m3_type dst_T);
-static void m3_store_volatile (tree v, UINT64 offset, tree src_t, m3_type src_T,
-                               tree dst_t, m3_type dst_T);
 static void setop (tree p, INT64 n, int q);
 static void setop2 (tree p, int q);
 
