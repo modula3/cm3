@@ -55,7 +55,7 @@ COVERSION=${COVERSION:-"-AP"} # version to checkout, default current
 # NOCLEAN: set to avoid cleaning for re-starts
 
 if [ "x$CLEAN" = "xtrue" ]; then # Hudson CLEAN support
-  unset NOCLEAN
+  unset NOCLEAN || true
 else
   NOCLEAN=yes
   export NOCLEAN
