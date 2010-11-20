@@ -1098,8 +1098,8 @@ PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
   BEGIN
     Cmd   (u, Bop.div);
     TName (u, t);
-    Int   (u, ORD (a));
-    Int   (u, ORD (b));
+    OutB  (u, ORD (a));
+    OutB  (u, ORD (b));
   END div;
 
 PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
@@ -1107,8 +1107,8 @@ PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
   BEGIN
     Cmd   (u, Bop.mod);
     TName (u, t);
-    Int   (u, ORD (a));
-    Int   (u, ORD (b));
+    OutB  (u, ORD (a));
+    OutB  (u, ORD (b));
   END mod;
 
 PROCEDURE negate (u: U;  t: AType) =
