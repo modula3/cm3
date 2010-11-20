@@ -73,6 +73,7 @@ extern "C" {
 #if GCC42
 } /* extern "C" */
 #endif
+#include "m3gty43.h"
 #include "m3-parse.h"
 
 #ifndef TARGET_MACHO
@@ -81,8 +82,6 @@ extern "C" {
 
 #define WIDE_PRINT_HEX HOST_WIDE_INT_PRINT_HEX
 #define WIDE_PRINT_DEC HOST_WIDE_INT_PRINT_DEC
-
-#include "m3gty43.h"
 
 /* m3gdb is true if we should generate the debug information
    that m3gdb specifically uses. That is, if we should embed
@@ -93,8 +92,8 @@ extern "C" {
    stabs is not currently supported on PA64_HPUX? That isn't checked here. */
 static bool m3gdb;
 
-static ULONG bits_per_unit = BITS_PER_UNIT; /* for debugging */
-static ULONG pointer_size; /* for debugging */
+static UINT8 bits_per_unit = BITS_PER_UNIT; /* for debugging */
+static UINT8 pointer_size; /* for debugging */
 static GTY (()) tree stdcall_list;
 
 static bool M3_TYPES = false;
@@ -163,8 +162,8 @@ int arm_float_words_big_endian (void);
 
 #define M3CG_FIELD(type, name) type name;
 
-#define INTEGER(x) M3CG_FIELD (WIDE, x)
-#define UNSIGNED_INTEGER(x) M3CG_FIELD (UWIDE, x)
+#define INTEGER(x) M3CG_FIELD (INT64, x)
+#define UNSIGNED_INTEGER(x) M3CG_FIELD (UINT64, x)
 #define STRING(x, length) M3CG_FIELD (PCSTR, x) M3CG_FIELD (long, length)
 #define CALLING_CONVENTION(x) M3CG_FIELD (tree, x)
 #define TYPE(x) M3CG_FIELD (m3_type, x)
@@ -178,7 +177,7 @@ int arm_float_words_big_endian (void);
 #define RETURN_VAR(x, code) M3CG_FIELD (tree, x) M3CG_FIELD (size_t, x##_integer)
 #define PROC(x) M3CG_FIELD (tree, x) M3CG_FIELD (size_t, x##_integer)
 #define LABEL(x) M3CG_FIELD (tree, x) M3CG_FIELD (size_t, x##_integer)
-#define TYPEID(x) M3CG_FIELD (ULONG, x)
+#define TYPEID(x) M3CG_FIELD (UINT32, x)
 #define M3CG_EXTRA_FIELDS(x) x
 
 #define DESTRUCTOR ~ /* hack for gengtype */
@@ -294,7 +293,7 @@ m3cg_op_t* m3cg_op_t::create(UCHAR op) { switch (op) {
 
 /*   m3_append_char
      m3_revstr
-     m3_signed_wide_to_hex_shortest
+     m3_int64_to_hex_shortest
      m3_fill_hex_value help
    m3cg_declare_subrange to write hex values of lower and upper bounds.
    They omit some redundant high bits, either positive or negative.
@@ -331,7 +330,7 @@ static void m3_revstr (PSTR a, size_t len)
 }
 
 #if 0 /* for illustrative purposes */
-static void m3_unsigned_wide_to_hex_full (UWIDE a, PSTR buf)
+static void m3_uint64_to_hex_full (UINT64 a, PSTR buf)
 {
    UINT i = { 0 };
    for (i = 0; i < sizeof(a) * CHAR_BIT / 4; a >>= 4)
@@ -342,7 +341,7 @@ static void m3_unsigned_wide_to_hex_full (UWIDE a, PSTR buf)
 #endif
 
 #if 0 /* for illustrative purposes */
-static void m3_unsigned_wide_to_hex_shortest (UWIDE a, PSTR buf)
+static void m3_uint64_to_hex_shortest (UINT64 a, PSTR buf)
 {
    UINT i = { 0 };
    do /* do/while necessary to handle 0 */
@@ -353,7 +352,7 @@ static void m3_unsigned_wide_to_hex_shortest (UWIDE a, PSTR buf)
 }
 #endif
 
-static void m3_unsigned_wide_to_dec_shortest (UWIDE a, PSTR buf)
+static void m3_uint64_to_dec_shortest (UINT64 a, PSTR buf)
 {
    UINT i = { 0 };
    do /* do/while necessary to handle 0 */
@@ -363,7 +362,7 @@ static void m3_unsigned_wide_to_dec_shortest (UWIDE a, PSTR buf)
    buf[i] = 0;
 }
 
-static void m3_signed_wide_to_hex_shortest (WIDE a, PSTR buf)
+static void m3_int64_to_hex_shortest (INT64 a, PSTR buf)
 /* if negative, first character must be >=8
  * if positive, first character must < 8;
  * skip leading characters otherwise
@@ -394,11 +393,11 @@ static void m3_signed_wide_to_hex_shortest (WIDE a, PSTR buf)
 }
 
 static void
-m3_fill_hex_value (WIDE value, PSTR* p, PSTR limit)
+m3_fill_hex_value (INT64 value, PSTR* p, PSTR limit)
 {
   m3_append_char('0', p, limit);
   m3_append_char('x', p, limit);
-  m3_signed_wide_to_hex_shortest (value, *p);
+  m3_int64_to_hex_shortest (value, *p);
   *p += strlen (*p);
   gcc_assert (*p < limit);
 }
@@ -469,7 +468,7 @@ static GTY (()) tree t_int;
 #define t_void void_type_node
 static GTY (()) tree t_set;
 
-static const struct { ULONG type_id; tree* t; } builtin_uids[] = {
+static const struct { UINT32 type_id; tree* t; } builtin_uids[] = {
   { UID_INTEGER, &t_int },
   { UID_LONGINT, &t_longint },
   { UID_WORD, &t_word },
@@ -501,7 +500,7 @@ static const struct { ULONG type_id; tree* t; } builtin_uids[] = {
 
 #define CONSTANT_STRING_AND_LENGTH(a) a, sizeof(a) - 1
 
-static const struct { tree* t; char name[9]; size_t length; }
+static const struct { tree* t; char name[9]; char length; }
 builtin_types[T_LAST] = {
 /* This is ordered per m3_type. It is also used by typestr. */
   { &t_word_8, CONSTANT_STRING_AND_LENGTH ("word_8") },
@@ -547,8 +546,8 @@ static GTY(()) VEC(m3type_t, gc) *m3type_table; /* see alias.c for a GTY+VEC exa
 static int
 m3type_compare (const void* a, const void *b)
 {
-  ULONG x = ((const m3type_t*)a)->type_id;
-  ULONG y = ((const m3type_t*)b)->type_id;
+  UINT32 x = ((const m3type_t*)a)->type_id;
+  UINT32 y = ((const m3type_t*)b)->type_id;
   /* Do not use subtraction here. It does not work. Not just
    * because sizeof(int) < sizeof(long) but also because
    * these are unsigned numbers.
@@ -557,7 +556,7 @@ m3type_compare (const void* a, const void *b)
 }
 
 static m3type_t*
-m3type_get (ULONG type_id)
+m3type_get (UINT32 type_id)
 {
   m3type_t* found = { 0 };
   if (M3_TYPES)
@@ -589,7 +588,7 @@ m3type_get (ULONG type_id)
 }
 
 static tree
-get_typeid_to_tree (ULONG type_id)
+get_typeid_to_tree (UINT32 type_id)
 {
 /* Additional type information can give optimizer liberty to
    further transform, and break, the code. Beware.
@@ -656,6 +655,28 @@ static int long_to_printf_length (long a)
   return ((a < 0) ? 0 : (int)a);
 }
 
+static ptrdiff_t int64_to_ptrdifft (INT64 a)
+{
+#if defined(__LP64__) || defined(_WIN64) || __INITIAL_POINTER_SIZE == 64
+  return a;
+#else
+  if (a > INT_MAX || a < INT_MIN)
+    fatal_error ("int64_to_ptrdifft: integer overflow");
+  return (ptrdiff_t)a;
+#endif
+}
+
+static size_t uint64_to_sizet (UINT64 a)
+{
+#if defined(__LP64__) || defined(_WIN64) || __INITIAL_POINTER_SIZE == 64
+  return a;
+#else
+  if (a > UINT_MAX)
+    fatal_error ("uint64_to_sizet: integer overflow");
+  return (size_t)a;
+#endif
+}
+
 static size_t long_to_sizet (long a)
 {
   if (a < 0)
@@ -664,7 +685,7 @@ static size_t long_to_sizet (long a)
 }
 
 static void
-set_typeid_to_tree_replace (ULONG type_id, tree t, bool replace)
+set_typeid_to_tree_replace (UINT32 type_id, tree t, bool replace)
 /* This function establishes a global mapping of type_id to tree.
    If a mapping already exists, the 'replace' parameter determines
    if it is left alone or replaced. */
@@ -700,7 +721,7 @@ set_typeid_to_tree_replace (ULONG type_id, tree t, bool replace)
 }
 
 static void
-set_typeid_to_tree (ULONG type_id, tree t)
+set_typeid_to_tree (UINT32 type_id, tree t)
 /* This function establishes a global mapping of type_id to tree.
    If a mapping from this type_id already exists, it is left unchanged. */
 {
@@ -708,7 +729,7 @@ set_typeid_to_tree (ULONG type_id, tree t)
 }
 
 static void
-fmt_uid (ULONG x, PSTR buf)
+fmt_uid (UINT32 x, PSTR buf)
 {
   UINT i = UID_SIZE;
   static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -962,9 +983,9 @@ m3_build_pointer_type (tree a)
 
 static tree
 m3_build_type_id (m3_type type,
-                  UWIDE size,
-                  UWIDE align,
-                  ULONG type_id)
+                  UINT64 size,
+                  UINT64 align,
+                  UINT32 type_id)
 {
   tree ts = { 0 };
 
@@ -1070,7 +1091,7 @@ m3_build_type_id (m3_type type,
 }
 
 static tree
-m3_build_type (m3_type type, UWIDE size, UWIDE align)
+m3_build_type (m3_type type, UINT64 size, UINT64 align)
 {
   return m3_build_type_id (type, size, align, NO_UID);
 }
@@ -1110,7 +1131,7 @@ left_shift (tree t, int i)
 }
 
 static tree
-m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
+m3_do_fixed_insert (tree x, tree y, UINT64 offset, UINT64 count, tree type)
 {
   /* ??? Use BIT_FIELD_REF ??? */
 
@@ -1135,8 +1156,7 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
              (UINT)offset, (UINT)count, (UINT)HOST_BITS_PER_WIDE_INT, (UINT)TYPE_PRECISION (type));
   }
 
-  if ((offset < 0) || (offset >= TYPE_PRECISION (type)) ||
-      (count < 0) || (count >= TYPE_PRECISION (type)))
+  if (offset >= TYPE_PRECISION (type) || count >= TYPE_PRECISION (type))
     {
       fprintf (stderr, "m3_do_fixed_insert => m3_do_insert\n");
       printf  (        "m3_do_fixed_insert => m3_do_insert\n");
@@ -1173,7 +1193,7 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
 
   if ((count == 1) && (offset < HOST_BITS_PER_WIDE_INT))
     {
-      tree bit = build_int_cstu (type, (((WIDE)1) << offset));
+      tree bit = build_int_cstu (type, (((INT64)1) << offset));
       tree nbit = m3_build1 (BIT_NOT_EXPR, type, bit);
       if (host_integerp (y, 0))
         {
@@ -1199,7 +1219,7 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
       tree new_bits = { 0 };
       if ((offset + count) < HOST_BITS_PER_WIDE_INT)
         {
-          WIDE mask = ((WIDE)1 << count) - 1;
+          INT64 mask = ((INT64)1 << count) - 1;
           saved_bits = m3_build1 (BIT_NOT_EXPR, type,
                                   build_int_cstu (type, mask << offset));
           if (host_integerp (y, 0))
@@ -1215,7 +1235,7 @@ m3_do_fixed_insert (tree x, tree y, UWIDE offset, UWIDE count, tree type)
         }
       else if (count < HOST_BITS_PER_WIDE_INT)
         {
-          WIDE mask = ((WIDE)1 << count) - 1;
+          INT64 mask = ((INT64)1 << count) - 1;
           tree a = build_int_cstu (type, mask);
           if (host_integerp (y, 0))
             {
@@ -1587,7 +1607,7 @@ m3_write_globals (void)
   for (tree ctors = pending_inits; ctors; ctors = TREE_CHAIN (ctors))
   {
     VEC (constructor_elt, gc) *elts = CONSTRUCTOR_ELTS (TREE_VALUE (ctors));
-    UWIDE idx;
+    UINT64 idx;
     tree index, value;
 
     FOR_EACH_CONSTRUCTOR_ELT (elts, idx, index, value)
@@ -2034,10 +2054,10 @@ get_bytes_direct (size_t count)
 {
   if ((input_cursor + count) > input_len)
   {
-    fatal_error ("read past buffer input_cursor:%lu count:%lu input_len:%lu\n",
-                 (ULONG)input_cursor,
-                 (ULONG)count,
-                 (ULONG)input_len);
+    fatal_error ("read past buffer input_cursor:%u count:%u input_len:%u\n",
+                 (UINT)input_cursor,
+                 (UINT)count,
+                 (UINT)input_len);
   }
   input_cursor += count;
   return &input_buffer[input_cursor - count];
@@ -2087,7 +2107,7 @@ trace_upper_hex (PSTR format)
 }
 
 static void
-trace_int (PCSTR name, WIDE val)
+trace_int (PCSTR name, INT64 val)
 /* This function prints an integer, taking a little pain for readability.
    Single digit integers are printed only in decimal.
    Larger integers are printed in hex and decimal, like:
@@ -2098,27 +2118,27 @@ trace_int (PCSTR name, WIDE val)
   PCSTR colon = trace_name (&name);
   static char hex[] = "x%s%s"WIDE_PRINT_HEX"("WIDE_PRINT_DEC")";
   if (val >= -9 && val <= 9)
-    fprintf (stderr, " %s%s"WIDE_PRINT_DEC, name, colon, val);
+    fprintf (stderr, " %s%s"WIDE_PRINT_DEC, name, colon, (WIDE)val);
   else
-    fprintf (stderr, trace_upper_hex (hex), name, colon, val, val);
+    fprintf (stderr, trace_upper_hex (hex), name, colon, (WIDE)val, (WIDE)val);
 }
 
-static WIDE
+static INT64
 get_int (void)
 /* This function reads an integer from our specially encoded format. */
 {
   UINT n_bytes = { 0 };
   int sign = { 0 };
   UINT shift = { 0 };
-  WIDE val = { 0 };
+  INT64 val = { 0 };
   UINT i = get_byte ();
 
-  gcc_assert (sizeof(WIDE) >= 8);
+  gcc_assert (sizeof(INT64) >= 8);
 
   switch (i)
   {
-  case M3CG_Int1:   return (WIDE) get_byte ();
-  case M3CG_NInt1:  return - (WIDE) get_byte ();
+  case M3CG_Int1:   return (INT64) get_byte ();
+  case M3CG_NInt1:  return - (INT64) get_byte ();
   case M3CG_Int2:   n_bytes = 2;  sign =  1;  break;
   case M3CG_NInt2:  n_bytes = 2;  sign = -1;  break;
   case M3CG_Int4:   n_bytes = 4;  sign =  1;  break;
@@ -2129,28 +2149,28 @@ get_int (void)
   }
 
   for (i = 0; i < n_bytes;  (++i), (shift += 8))
-    val |= (((WIDE)get_byte ()) << shift);
+    val |= (((INT64)get_byte ()) << shift);
   return sign * val;
 }
 
-static UWIDE
+static UINT64
 get_uint (void)
 {
-  WIDE i = get_int ();
+  INT64 i = get_int ();
   gcc_assert (i >= 0);
-  return (UWIDE)i;
+  return (UINT64)i;
 }
 
-static ULONG
+static UINT32
 get_typeid ()
 /* This function reads and traces a type_id in specially encoded format.
    Typeids simply 32bit unsigned integers. */
 {
-  return (0xFFFFFFFFUL & (ULONG)get_int ());
+  return (UINT32)(0xFFFFFFFFUL & (UINT32)get_int ());
 }
 
 static void
-trace_typeid (PCSTR name, ULONG val)
+trace_typeid (PCSTR name, UINT32 val)
 {
   if (!name || !option_trace_all)
     return;
@@ -2186,7 +2206,7 @@ trace_string (PCSTR name, PCSTR result, long length)
 static tree
 scan_calling_convention (void)
 {
-  UWIDE id = get_byte ();
+  UINT8 id = get_byte ();
   switch (id)
   {
   case 0: return NULL_TREE;
@@ -2202,7 +2222,7 @@ scan_calling_convention (void)
 static m3_type
 scan_type (void)
 {
-  UWIDE i = get_byte ();
+  UINT8 i = get_byte ();
   if (i >= T_LAST)
     fatal_error (" *** illegal type: 0x%x, at m3cg_lineno %u", (UINT)i, m3cg_lineno);
   return (m3_type)i;
@@ -2248,7 +2268,7 @@ trace_type_tree (PCSTR name, tree t)
 static UINT
 scan_sign (void)
 {
-  UWIDE x = get_int ();
+  UINT8 x = get_byte ();
   switch (x)
   {
   case 0: break; /* positive */
@@ -2412,7 +2432,7 @@ varray_extend (varray_type va, size_t n)
 static tree
 scan_var (enum tree_code code, size_t* p)
 {
-  size_t i = get_uint ();
+  size_t i = uint64_to_sizet (get_uint ());
   if (p)
     *p = i;
 
@@ -2459,7 +2479,7 @@ trace_var (PCSTR name, tree var, size_t a)
 static tree
 scan_proc (size_t* pi)
 {
-  WIDE i = get_int ();
+  ptrdiff_t i = int64_to_ptrdifft (get_int ());
   if (pi)
     *pi = i;
   tree p = { 0 };
@@ -2495,7 +2515,7 @@ trace_proc (PCSTR, tree p, size_t a)
 static tree
 scan_label (size_t* p)
 {
-  ptrdiff_t i = get_int ();
+  ptrdiff_t i = int64_to_ptrdifft (get_int ());
   if (p)
     *p = i;
 
@@ -2517,16 +2537,16 @@ trace_label (PCSTR name, size_t a)
 
 static m3buf_t current_dbg_type_tag_buf;
 static PSTR current_dbg_type_tag = current_dbg_type_tag_buf.buf;
-static ULONG current_record_type_id = NO_UID;
-static ULONG current_object_type_id = NO_UID;
-static ULONG current_proc_type_id = NO_UID; /* not right yet */
-static UWIDE current_record_size;
+static UINT32 current_record_type_id = NO_UID;
+static UINT32 current_object_type_id = NO_UID;
+static UINT32 current_proc_type_id = NO_UID; /* not right yet */
+static UINT64 current_record_size;
 static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
 
 static void
-format_tag_v (m3buf_t* buf, char kind, ULONG type_id, PCSTR fmt, va_list args)
+format_tag_v (m3buf_t* buf, char kind, UINT32 type_id, PCSTR fmt, va_list args)
 {
   if (!m3gdb)
     return;
@@ -2545,7 +2565,7 @@ format_tag_v (m3buf_t* buf, char kind, ULONG type_id, PCSTR fmt, va_list args)
 }
 
 static void
-debug_tag (char kind, ULONG type_id, PCSTR fmt, ...)
+debug_tag (char kind, UINT32 type_id, PCSTR fmt, ...)
 {
   va_list args;
   if (!m3gdb)
@@ -2581,7 +2601,7 @@ static void
 dump_record_type (tree record_type)
 {
   tree field = { 0 };
-  ULONG type_id = { 0 };
+  UINT32 type_id = { 0 };
   
   if (!option_trace_all)
     return;
@@ -2623,7 +2643,7 @@ debug_field_name (PCSTR name)
 }
 
 static void
-debug_field_id (ULONG type_id)
+debug_field_id (UINT32 type_id)
 {
   char buf [UID_SIZE];
   if (!m3gdb)
@@ -2633,7 +2653,7 @@ debug_field_id (ULONG type_id)
 }
 
 static void
-debug_field_fmt_v (ULONG type_id, PCSTR fmt, va_list args)
+debug_field_fmt_v (UINT32 type_id, PCSTR fmt, va_list args)
 {
   char name [256];
 
@@ -2651,7 +2671,7 @@ debug_field_fmt_v (ULONG type_id, PCSTR fmt, va_list args)
 }
 
 static void
-debug_field_fmt (ULONG type_id, PCSTR fmt, ...)
+debug_field_fmt (UINT32 type_id, PCSTR fmt, ...)
 {
   if (!m3gdb)
     return;
@@ -2700,13 +2720,13 @@ static PCSTR exported_interfaces_names [100];
 
 /*================================= SUPPORT FOR INITIALIZED DATA CREATION ===*/
 
-static UWIDE current_record_offset;
+static UINT64 current_record_offset;
 
-static void one_gap (UWIDE offset);
+static void one_gap (UINT64 offset);
 
 static void
-one_field (UWIDE offset,
-           UWIDE size,
+one_field (UINT64 offset,
+           UINT64 size,
            tree type,
            tree *out_f,
            tree *out_v)
@@ -2744,11 +2764,11 @@ one_field (UWIDE offset,
 }
 
 static void
-one_gap (UWIDE next_offset)
+one_gap (UINT64 next_offset)
 {
   tree f = { 0 };
   tree v = { 0 };
-  UWIDE size = next_offset - current_record_offset;
+  UINT64 size = next_offset - current_record_offset;
 
   if (next_offset <= current_record_offset)
     return;
@@ -2766,15 +2786,15 @@ one_gap (UWIDE next_offset)
 }
 
 static void
-m3_field (PCSTR name, size_t name_length, tree type, UWIDE offset,
-          UWIDE size, tree*, tree*);
+m3_field (PCSTR name, size_t name_length, tree type, UINT64 offset,
+          UINT64 size, tree*, tree*);
 
 static void
-m3_gap (UWIDE next_offset)
+m3_gap (UINT64 next_offset)
 {
   tree f = { 0 };
   tree v = { 0 };
-  UWIDE size = next_offset - current_record_offset;
+  UINT64 size = next_offset - current_record_offset;
   char name[256];
 
   if (next_offset <= current_record_offset || !M3_TYPES)
@@ -2784,7 +2804,8 @@ m3_gap (UWIDE next_offset)
     fprintf (stderr, "\n m3_gap: offset:0x%X size:0x%X\n",
              (UINT)current_record_offset, (UINT)size);
 
-  sprintf(name, "_m3gap_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC, current_record_offset, size);
+  sprintf(name, "_m3gap_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC,
+          (WIDE)current_record_offset, (WIDE)size);
 
   tree type = make_node (RECORD_TYPE);
   TYPE_SIZE (type) = bitsize_int (size);
@@ -2797,8 +2818,8 @@ m3_gap (UWIDE next_offset)
 }
 
 static void
-m3_field (PCSTR name, size_t name_length, tree type, UWIDE offset,
-          UWIDE size, tree* out_f, tree* out_v)
+m3_field (PCSTR name, size_t name_length, tree type, UINT64 offset,
+          UINT64 size, tree* out_f, tree* out_v)
 {
   tree f = { 0 };
   tree v = { 0 };
@@ -2857,19 +2878,19 @@ static void add_stmt (tree t)
 }
 
 static tree
-fix_name (PCSTR name, size_t length, ULONG type_id)
+fix_name (PCSTR name, size_t length, UINT32 type_id)
 {
   PSTR buf = { 0 };
 
   if (name == 0 || name[0] == '*')
   {
-    static ULONG anonymous_counter;
-    buf = (PSTR)alloca (256);
+    static UINT64 anonymous_counter;
+    buf = (PSTR)alloca (23); // "L_-9223372036854775808"
     buf[0] = 'L';
     buf[1] = '_';
-    m3_unsigned_wide_to_dec_shortest(++anonymous_counter, &buf[2]);
+    m3_uint64_to_dec_shortest (++anonymous_counter, &buf[2]);
     length = strlen (buf);
-    gcc_assert (length < 256);
+    gcc_assert (length < 23);
   }
   else if (type_id == NO_UID)
   {
@@ -3133,7 +3154,7 @@ mark_address_taken (tree ref)
 #endif
 
 static tree
-m3_deduce_field_reference (PCSTR caller, tree value, UWIDE offset,
+m3_deduce_field_reference (PCSTR caller, tree value, UINT64 offset,
                            tree /*field_treetype*/, m3_type /*field_m3type*/)
 {
   tree record_type = { 0 };
@@ -3185,7 +3206,7 @@ m3_type_mismatch (tree t1, tree t2)
 }
 
 static void
-m3_load_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+m3_load_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
            bool volatil)
 {
   gcc_assert ((offset % BITS_PER_UNIT) == 0);
@@ -3224,7 +3245,7 @@ m3_load_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type 
 }
 
 static void
-m3_load (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   bool volatil = false;
   m3_load_1 (v, offset, src_t, src_T, dst_t, dst_T, volatil);
@@ -3232,7 +3253,7 @@ m3_load (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type ds
 
 #if 0
 static void
-m3_load_volatile (tree v, UWIDE offset, tree src_t, m3_type src_T,
+m3_load_volatile (tree v, UINT64 offset, tree src_t, m3_type src_T,
                   tree dst_t, m3_type dst_T)
 {
   bool volatil = true;
@@ -3241,7 +3262,7 @@ m3_load_volatile (tree v, UWIDE offset, tree src_t, m3_type src_T,
 #endif
 
 static void
-m3_store_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+m3_store_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
             bool volatil)
 {
   m3_deduce_field_reference ("m3_store_1", v, offset, dst_t, dst_T);
@@ -3282,14 +3303,14 @@ m3_store_1 (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type
 }
 
 static void
-m3_store (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   bool volatil = false;
   m3_store_1 (v, offset, src_t, src_T, dst_t, dst_T, volatil);
 }
 
 static void
-m3_store_volatile (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t,
+m3_store_volatile (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t,
                    m3_type dst_T)
 {
   bool volatil = true;
@@ -3297,7 +3318,7 @@ m3_store_volatile (tree v, UWIDE offset, tree src_t, m3_type src_T, tree dst_t,
 }
 
 static void
-setop (tree p, WIDE n, int q)
+setop (tree p, INT64 n, int q)
 {
   m3_start_call ();
   EXPR_PUSH (size_int (n));
@@ -3553,7 +3574,7 @@ M3CG_HANDLER (DECLARE_TYPENAME)
 
 M3CG_HANDLER (DECLARE_ARRAY)
 {
-  debug_tag ('A', my_id, "_"WIDE_PRINT_DEC, size);
+  debug_tag ('A', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
   debug_field_id (index_id);
   debug_field_id (elts_id);
   debug_struct ();
@@ -3605,7 +3626,7 @@ M3CG_HANDLER (DECLARE_OPEN_ARRAY)
     }
   }
 
-  debug_tag ('B', my_id, "_"WIDE_PRINT_DEC, size);
+  debug_tag ('B', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
   debug_field_id (elts_id);
   debug_struct ();
 }
@@ -3616,16 +3637,16 @@ M3CG_HANDLER (DECLARE_ENUM)
   gcc_assert (size == 8 || size == 16 || size == 32 || size == 64);
   gcc_assert (size <= BITS_PER_INTEGER || n_elts == 0);
 
-  debug_tag ('C', my_id, "_"WIDE_PRINT_DEC, size);
+  debug_tag ('C', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
   current_dbg_type_count1 = n_elts;
   current_dbg_type_count2 = n_elts;
 
   if (M3_TYPES_ENUM)
   {
     UINT bits = (n_elts == 0) ? 64
-              : (n_elts <= (((UWIDE)1) << 8)) ? 8
-              : (n_elts <= (((UWIDE)1) << 16)) ? 16
-              : (n_elts <= (((UWIDE)1) << 32)) ? 32
+              : (n_elts <= (((UINT64)1) << 8)) ? 8
+              : (n_elts <= (((UINT64)1) << 16)) ? 16
+              : (n_elts <= (((UINT64)1) << 32)) ? 32
               : 64;
     if (size != bits)
     {
@@ -3703,7 +3724,7 @@ M3CG_HANDLER (DECLARE_ENUM_ELT)
 M3CG_HANDLER (DECLARE_PACKED)
 {
   debug_field_id (target_id);
-  debug_tag ('D', my_id, "_"WIDE_PRINT_DEC, size);
+  debug_tag ('D', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
   debug_struct ();
 
 #if 1
@@ -3730,8 +3751,8 @@ m3_declare_record_common (void)
     dump_record_type (type);
     if (current_record_type_id != NO_UID)
     {
-      UWIDE a = TREE_INT_CST_LOW (TYPE_SIZE (type));
-      UWIDE b = current_record_size;
+      UINT64 a = TREE_INT_CST_LOW (TYPE_SIZE (type));
+      UINT64 b = current_record_size;
       set_typeid_to_tree (current_record_type_id, type);
       if (M3_TYPES_CHECK_RECORD_SIZE && a != b)
       {
@@ -3753,7 +3774,7 @@ m3_declare_record_common (void)
 
 M3CG_HANDLER (DECLARE_RECORD)
 {
-  debug_tag ('R', my_id, "_"WIDE_PRINT_DEC, size);
+  debug_tag ('R', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = 0;
 
@@ -3789,8 +3810,8 @@ M3CG_HANDLER (DECLARE_FIELD)
   }
   debug_field_fmt (my_id,
                    "_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC"_%.*s",
-                   offset,
-                   size,
+                   (WIDE)offset,
+                   (WIDE)size,
                    long_to_printf_length (name_length),
                    name);
   current_dbg_type_count1--;
@@ -3806,7 +3827,7 @@ M3CG_HANDLER (DECLARE_SET)
     fprintf (stderr, " declare_set my_id:0x%X domain_id:0x%X size:0x%X",
              (UINT)my_id, (UINT)domain_id, (UINT)size);
 
-  debug_tag ('S', my_id, "_"WIDE_PRINT_DEC, size);
+  debug_tag ('S', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
   debug_field_id (domain_id);
   debug_struct ();
 
@@ -3863,7 +3884,7 @@ M3CG_HANDLER (DECLARE_SUBRANGE)
 }
 
 static void
-m3_declare_pointer_common (PCSTR caller, ULONG my_id, ULONG target_id)
+m3_declare_pointer_common (PCSTR caller, UINT32 my_id, UINT32 target_id)
 {
   if (M3_TYPES)
   {
@@ -3911,7 +3932,7 @@ M3CG_HANDLER (DECLARE_PROCTYPE)
 {
   set_typeid_to_tree (my_id, t_addr);
   debug_tag ('P', my_id, "_%d_%c"WIDE_PRINT_DEC, GET_MODE_BITSIZE (Pmode),
-             n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
+             n_raises < 0 ? 'A' : 'L', (WIDE)MAX (n_raises, 0));
   current_dbg_type_count1 = n_formals;
   current_dbg_type_count2 = MAX (0, n_raises);
   debug_field_id (result_id);
@@ -4670,7 +4691,7 @@ M3CG_HANDLER (CASE_JUMP)
 
   pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
   current_stmts = alloc_stmt_list ();
-  for (UWIDE i = 0; i < n; ++i)
+  for (UINT64 i = 0; i < n; ++i)
   {
     tree target_label = labels[i];
 
@@ -4742,7 +4763,7 @@ M3CG_HANDLER (LOAD_INDIRECT)
   /* gcc_assert (offset >= 0); */
   /* mark_address_taken (v); */
   if (offset >= 0)
-    m3_deduce_field_reference ("m3cg_load_indirect", v, (UWIDE)offset * BITS_PER_UNIT, src_t, src_T);
+    m3_deduce_field_reference ("m3cg_load_indirect", v, (UINT64)offset * BITS_PER_UNIT, src_t, src_T);
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
   v = m3_cast (m3_build_pointer_type (src_t), v);
@@ -5034,7 +5055,7 @@ M3CG_HANDLER (SET_MEMBER)
 }
 
 static void
-m3cg_set_compare (UWIDE n, tree type, tree proc)
+m3cg_set_compare (UINT64 n, tree type, tree proc)
 {
   m3cg_assert_int (type);
   setop (proc, n, 2);
@@ -5046,7 +5067,7 @@ M3CG_HANDLER (SET_LT) { m3cg_set_compare (n, type, set_lt_proc); }
 M3CG_HANDLER (SET_LE) { m3cg_set_compare (n, type, set_le_proc); }
 
 static void
-m3cg_set_compare_eq_or_ne (UWIDE n, tree type, enum tree_code code)
+m3cg_set_compare_eq_or_ne (UINT64 n, tree type, enum tree_code code)
 {
   m3cg_assert_int (type);
   m3_start_call ();
@@ -5238,11 +5259,11 @@ M3CG_HANDLER (EXTRACT_N)
 }
 
 static tree
-m3_do_fixed_extract (tree x, WIDE m, WIDE n, tree type)
+m3_do_fixed_extract (tree x, INT64 m, INT64 n, tree type)
 {
   /* ??? Use BIT_FIELD_REF ???  */
-  WIDE a = TYPE_PRECISION (type) - n;
-  WIDE b = TYPE_PRECISION (type) - n - m;
+  INT64 a = TYPE_PRECISION (type) - n;
+  INT64 b = TYPE_PRECISION (type) - n - m;
 
   gcc_assert (m >= 0);
   gcc_assert (n > 0);
@@ -5389,7 +5410,7 @@ M3CG_HANDLER (COPY_N)
 M3CG_HANDLER (COPY)
 {
   tree ts = make_node (LANG_TYPE);
-  UWIDE s = n * TREE_INT_CST_LOW (TYPE_SIZE (type));
+  UINT64 s = n * TREE_INT_CST_LOW (TYPE_SIZE (type));
 
   TYPE_SIZE (ts) = size_int (s);
   TYPE_SIZE_UNIT (ts) = size_binop (FLOOR_DIV_EXPR, TYPE_SIZE (ts),
@@ -5715,7 +5736,7 @@ M3CG_HANDLER (LOAD_ORDERED)
 
 M3CG_HANDLER (EXCHANGE)
 {
-  WIDE size = { 0 };
+  INT64 size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
   /* SYNCH_LOCK_TEST_AND_SET is an acquire barrier */
 
@@ -5746,7 +5767,7 @@ incompatible:
 M3CG_HANDLER (COMPARE_EXCHANGE)
 {
   tree v = declare_temp (type2);
-  WIDE size = { 0 };
+  INT64 size = { 0 };
   enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
 
   if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
@@ -5787,7 +5808,7 @@ M3CG_HANDLER (FENCE)
 static void
 m3cg_fetch_and_op (tree type1, tree type2, enum built_in_function fncode)
 {
-  WIDE size = { 0 };
+  INT64 size = { 0 };
 
   if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
     goto incompatible;
@@ -5816,7 +5837,7 @@ M3CG_HANDLER (FETCH_AND_XOR) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_A
 #if 0
 M3CG_HANDLER (LOCK_TEST_AND_SET)
 {
-  WIDE size = { 0 };
+  INT64 size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
 
   if (!INTEGRAL_TYPE_P (type) && !POINTER_TYPE_P (type))
@@ -5839,7 +5860,7 @@ incompatible:
 
 M3CG_HANDLER (LOCK_RELEASE)
 {
-  WIDE size = { 0 };
+  INT64 size = { 0 };
   enum built_in_function fncode = BUILT_IN_LOCK_RELEASE_N;
 
   if (!INTEGRAL_TYPE_P (type) && !POINTER_TYPE_P (type))
@@ -5908,7 +5929,7 @@ m3_parse_file (int)
   m3_indent_op[M3CG_DECLARE_ENUM] = 4;
 
   /* check the version stamp */
-  WIDE i = get_int ();
+  INT64 i = get_int ();
   if (i != M3CG_Version)
   {
     fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
