@@ -65,6 +65,6 @@ struct GTY(()) language_function
 
 typedef struct GTY(()) m3type
 {
-  unsigned long type_id;
+  unsigned type_id;
   tree GTY(()) t;
 } m3type_t;
