@@ -3057,7 +3057,7 @@ expand_debug_expr (tree exp)
 
     default:
     flag_unsupported:
-#if 1 || defined(ENABLE_CHECKING)
+#ifdef ENABLE_CHECKING
       debug_tree (exp);
       gcc_unreachable ();
 #else
@@ -3925,7 +3925,7 @@ gimple_expand_cfg (void)
 
   expand_stack_alignment ();
 
-#if 1 || defined(ENABLE_CHECKING)
+#ifdef ENABLE_CHECKING
   verify_flow_info ();
 #endif
 
