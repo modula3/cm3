@@ -854,8 +854,6 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
 #endif
 }
 
-static bool m3_next_store_volatile;
-
 /* The front end language hooks (addresses of code for this front
    end).  These are not really very language-dependent, i.e.
    treelang, C, Mercury, etc. can all use almost the same definitions.  */
@@ -3211,8 +3209,7 @@ m3_type_mismatch (tree t1, tree t2)
 }
 
 static void
-m3_load_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
-           bool volatil)
+m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   gcc_assert ((offset % BITS_PER_UNIT) == 0);
   m3_deduce_field_reference ("m3_load_1", v, offset, src_t, src_T);
@@ -3242,36 +3239,13 @@ m3_load_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type
                      bitsize_int (offset));
     }
   }
-  if (volatil)
-  {
-    TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
-    TREE_SIDE_EFFECTS (v) = true; // needed?
-  }
   if (src_T != dst_T)
     v = m3_convert (dst_t, v);
   EXPR_PUSH (v);
 }
 
 static void
-m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
-{
-  bool volatil = false;
-  m3_load_1 (v, offset, src_t, src_T, dst_t, dst_T, volatil);
-}
-
-#if 0
-static void
-m3_load_volatile (tree v, UINT64 offset, tree src_t, m3_type src_T,
-                  tree dst_t, m3_type dst_T)
-{
-  bool volatil = true;
-  m3_load_1 (v, offset, src_t, src_T, dst_t, dst_T, volatil);
-}
-#endif
-
-static void
-m3_store_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
-            bool volatil)
+m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   m3_deduce_field_reference ("m3_store_1", v, offset, dst_t, dst_T);
   /* mark_address_taken (v); */
@@ -3300,32 +3274,11 @@ m3_store_1 (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_typ
                      bitsize_int (offset));
     }
   }
-  if (volatil || m3_next_store_volatile)
-  {
-    TREE_THIS_VOLATILE (v) = true; /* force this to avoid aliasing problems */
-    TREE_SIDE_EFFECTS (v) = true; // needed?
-  }
-  m3_next_store_volatile = false;
   tree val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T)
     val = m3_convert (dst_t, val);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
   EXPR_POP ();
-}
-
-static void
-m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
-{
-  bool volatil = false;
-  m3_store_1 (v, offset, src_t, src_T, dst_t, dst_T, volatil);
-}
-
-static void
-m3_store_volatile (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t,
-                   m3_type dst_T)
-{
-  bool volatil = true;
-  m3_store_1 (v, offset, src_t, src_T, dst_t, dst_T, volatil);
 }
 
 static void
@@ -4516,7 +4469,7 @@ M3CG_HANDLER (DECLARE_PROCEDURE)
 M3CG_HANDLER (BEGIN_PROCEDURE)
 {
   DECL_SOURCE_LOCATION (p) = input_location;
-  
+
   /* don't inline, to fix:
       elego/m3msh/src/M3MiniShell.m3: In function 'M3MiniShell__ProcessParameters':
       elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' might be clobbered by 'longjmp' or 'vfork'
@@ -5360,11 +5313,6 @@ M3CG_HANDLER (INSERT_MN)
 {
   gcc_assert (INTEGRAL_TYPE_P (type));
 
-  /* workaround the fact that we use
-   * insert_mn on uninitialized variables.
-   */
-  m3_next_store_volatile = true;
-
   EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), offset, count, type);
   EXPR_POP ();
 }
@@ -5709,8 +5657,7 @@ M3CG_HANDLER (POP_STRUCT)
 M3CG_HANDLER (POP_STATIC_LINK)
 {
   tree v = declare_temp (t_addr);
-  /* volatile otherwise gcc complains it is not intialized */
-  m3_store_volatile (v, 0, t_addr, T_addr, t_addr, T_addr);
+  m3_store (v, 0, t_addr, T_addr, t_addr, T_addr);
   CALL_TOP_STATIC_CHAIN () = v;
 }
 
