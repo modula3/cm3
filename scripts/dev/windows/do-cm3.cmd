@@ -17,7 +17,6 @@ REM v1.11, 10/29/2009, R.Coleburn, various optimizations
 REM v1.12, 01/12/2010, R.Coleburn, repair multiple bugs in "if defined xxx if exist %xxx% del %xxx%" construct
 REM v1.20, 01/13/2010, R.Coleburn, add "-skip" directive.  Force argument keywords to be prefixed by "-".
 REM v1.21, 09/12/2010, R.Coleburn, add Windows7 OS detection.
-REM v1.22, 10/10/2010, Jay Krell, support all NT operating systems
 REM ===========================================================================
 
 
@@ -46,7 +45,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.22, 10/10/2010, Jay Krell
+echo do-cm3, v1.21, 09/12/2010, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -57,16 +56,24 @@ echo.
 REM Ensure that the underlying operating system is supported by this script.
 REM
 if /I not "%OS%"=="Windows_NT" goto UnsupportedOS
-goto Init
+set _z_ThisOS=
+ver | (find /I "Windows 2000" >>NUL:) && set _z_ThisOS=2000
+ver | (find /I "Windows XP" >>NUL:) && set _z_ThisOS=XP
+ver | (find /I "Windows Version 5.2" >>NUL:) && set _z_ThisOS=XP_64bit
+ver | (find /I "Version 6.0.6" >>NUL:) && set  _z_ThisOS=Vista
+ver | (find /I "Version 6.1.7" >>NUL:) && set  _z_ThisOS=Windows7
+if not "%_z_ThisOS%"=="" goto Init
 
 :UnsupportedOS
 echo.
 echo %0
 echo.
-echo ERROR:  UnsupportedOS:  
+echo ERROR:  Currently, this script supports only Windows 2000, XP, Vista, and Windows 7.
+echo         This computer is operating:  
 ver
 set _z_ExitCode=1
 goto END
+
 
 
 :Init
@@ -183,7 +190,8 @@ popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in grandparent of current directory
-pushd ..\..
+pushd ..
+cd ..
 if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
 popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
@@ -212,7 +220,8 @@ set _z_PkgTree=
 
 rem --- first try parent of %_z_PkgInfo%
 call :FN_DriveAndPathOnly %_z_PkgInfo% _z_PkgTree
-pushd %_z_PkgTree%\..
+pushd %_z_PkgTree%
+cd ..
 set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
@@ -228,7 +237,8 @@ popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try grandparent of current directory
-pushd ..\..
+pushd ..
+cd ..
 set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
@@ -321,7 +331,6 @@ rem %1=package, %2*=list of groups in this package
 set _z_Package=
 for %%a in (%*) do if /I %%a==%_z_Group% set _z_Package=%1
 if /I "%_z_Group%"=="ALL" set _z_Package=%1
-if /I "%_z_Group%"=="STD" set _z_Package=%1
 if not "%_z_Package%"=="" echo %_z_Package%
 goto :EOF
 
@@ -390,7 +399,6 @@ rem ---first see if this package is tagged with the desired group
 set _z_Package=
 for %%a in (%*) do if /I %%a==%_z_Group% set _z_Package=%1
 if /I "%_z_Group%"=="ALL" set _z_Package=%1
-if /I "%_z_Group%"=="STD" set _z_Package=%1
 if "%_z_Package%"=="" goto :EOF
 
 rem ---sometimes the package has a relative path in unix-style, so convert it to DOS-style
