@@ -238,6 +238,57 @@ echo "BINDISTMIN_NAME=${BINDISTMIN_NAME}"
 echo "BINDISTMIN=${BINDISTMIN}"
 echo "CM3CVSUSER=${CM3CVSUSER}"
 
+trace_cm3_installations() {
+  echo "INSTROOT_CUR = ${INSTROOT_CUR}"
+  ls -l "${INSTROOT_CUR}/bin/cm3*"
+  [ -x "${INSTROOT_CUR}/bin/cm3" ] && {
+    "${INSTROOT_CUR}/bin/cm3" -version
+  }
+  [ -x "${INSTROOT_CUR}/bin/cm3cg" ] && {
+    echo "" "${INSTROOT_CUR}/bin/cm3cg" -version 2>&1 | grep -v 'fatal'
+  }
+  echo ""
+  echo "INSTROOT_LOK = ${INSTROOT_LOK}"
+  ls -l "${INSTROOT_LOK}/bin/cm3*"
+  [ -x "${INSTROOT_LOK}/bin/cm3" ] && {
+    "${INSTROOT_LOK}/bin/cm3" -version
+  }
+  [ -x "${INSTROOT_LOK}/bin/cm3cg" ] && {
+    echo "" "${INSTROOT_LOK}/bin/cm3cg" -version 2>&1 | grep -v 'fatal'
+  }
+  echo ""
+  echo "INSTROOT_REL = ${INSTROOT_REL}"
+  ls -l "${INSTROOT_REL}/bin/cm3*"
+  [ -x "${INSTROOT_REL}/bin/cm3" ] && {
+    "${INSTROOT_REL}/bin/cm3" -version
+  }
+  [ -x "${INSTROOT_REL}/bin/cm3cg" ] && {
+    echo "" "${INSTROOT_REL}/bin/cm3cg" -version 2>&1 | grep -v 'fatal'
+  }
+  echo ""
+}
+
+check_cm3_installations() {
+  if type cm3 > /dev/null; then
+    true
+  else
+    echo "cm3 not found" 1>&2
+    trace_cm3_installations
+    exit 1
+  fi
+  cm3 -version || {
+    trace_cm3_installations
+    exit 1
+  }
+  if type cm3cg > /dev/null; then
+    true
+  else
+    echo "cm3cg not found" 1>&2
+    trace_cm3_installations
+    exit 1
+  fi
+}
+
 #----------------------------------------------------------------------------
 # checks
 
@@ -482,14 +533,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
-  if type cm3 > /dev/null; then
-    true
-  else
-    echo "cm3 not found" 1>&2
-    exit 1
-  fi
-
-  cm3 -version
+  check_cm3_installations
 
   # checkout must have been done before
   if cd "${WS}/cm3"; then
@@ -562,12 +606,7 @@ test_build_system()
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
-  if type cm3; then
-    cm3 -version
-  else
-    echo "cm3 not found" 1>&2
-    exit 1
-  fi
+  check_cm3_installations
 
   # checkout must have been done before
   if cd "${WS}/cm3"; then
@@ -669,14 +708,7 @@ test_make_bin_dist()
   STAGE=${STAGE:-${HTMP}}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT STAGE DS
 
-  if type cm3 > /dev/null; then
-    true
-  else
-    echo "cm3 not found" 1>&2
-    exit 1
-  fi
-
-  cm3 -version
+  check_cm3_installations
 
   # checkout must have been done before
   if cd "${WS}/cm3"; then
@@ -725,14 +757,7 @@ test_m3tests()
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
-  if type cm3; then
-    true
-  else
-    echo "cm3 not found" 1>&2
-    exit 1
-  fi
-
-  cm3 -version
+  check_cm3_installations
 
   # checkout must have been done before
   if cd "${WS}/cm3"; then
@@ -785,14 +810,7 @@ test_m3_all_pkgs()
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
-  if type cm3 > /dev/null; then
-    true
-  else
-    echo "cm3 not found" 1>&2
-    exit 1
-  fi
-
-  cm3 -version
+  check_cm3_installations
 
   # checkout must have been done before
   if cd "${WS}/cm3"; then
