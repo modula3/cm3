@@ -62,6 +62,8 @@ fi
 # setup lastok version as a start
 if [ ! -d "${INSTROOT_CUR}" ]; then
   cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
+else
+  cp -pR ${INSTROOT_LOK}/* ${INSTROOT_CUR}
 fi
 
 export TMPDIR=${WS}
