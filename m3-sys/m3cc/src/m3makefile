@@ -409,11 +409,14 @@ Configure = Configure & " -disable-libssp"
 Configure = Configure & " -disable-nls"
 Configure = Configure & " -enable-languages=m3cg"
 Configure = Configure & " -enable-targets=all"
+Configure = Configure & " -enable-checking=assert,fold,misc,rtl,rtlflag,runtime,tree"
+%Configure = Configure & " -enable-checking=assert,df,fold,gc,gcac,misc,rtl,rtlflag,runtime,tree,valgrind"
 %Configure = Configure & " -enable-checking=yes"
-%Configure = Configure & " -enable-checking=all"
+%Configure = Configure & " -enable-checking=all" % very slow
 %Configure = Configure & " -enable-checking"
 
 % Save some libtool wrapping layers to speed up esp. on NT?
+% presumably hurts incrementality much
 %Configure = Configure & " -disable-dependency-tracking"
 
 % These are compatible with just building m3cg, but user might
