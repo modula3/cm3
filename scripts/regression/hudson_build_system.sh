@@ -1,7 +1,7 @@
 #/bin/sh
 
-set -e
-set -x
+#set -e
+#set -x
 
 WS=${WORKSPACE}
 for a in a m s p r; do
@@ -68,32 +68,14 @@ fi
 
 export TMPDIR=${WS}
 
-  if [ `hostname` = "plin" ]; then
-    echo ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
-         ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
-    echo ls -l /home/hudson/workspace
-         ls -l /home/hudson/workspace
-    echo ls -l /home/hudson
-         ls -l /home/hudson
-  fi
-
 test_build_system || {
   echo "test_build_system failed" 1>&2
   exit 1
 }
 
-  if [ `hostname` = "plin" ]; then
-    echo ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
-         ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
-    echo ls -l /home/hudson/workspace
-         ls -l /home/hudson/workspace
-    echo ls -l /home/hudson
-         ls -l /home/hudson
-  fi
-
 if [ "$BUILD_SNAPSHOT" = "true" ]; then
   # debug
-  set -x
+  #set -x
   cd ${WS}/cm3/scripts/ || exit 1
   STAGE=${HOME}/${TESTHOSTNAME}/stage
   DIST=core
@@ -104,12 +86,3 @@ if [ "$BUILD_SNAPSHOT" = "true" ]; then
 else
   true
 fi
-
-  if [ `hostname` = "plin" ]; then
-    echo ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
-         ls -l /home/hudson/workspace/cm3-release-build-PPC_LINUX
-    echo ls -l /home/hudson/workspace
-         ls -l /home/hudson/workspace
-    echo ls -l /home/hudson
-         ls -l /home/hudson
-  fi
