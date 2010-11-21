@@ -50,7 +50,7 @@ DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
 
 a = Root + "/m3-sys/m3cggen/" + Target + "/m3cggen > " + Root + "/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h"
 print(a)
-os.system(a)
+# os.system(a)
 FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 
 #
