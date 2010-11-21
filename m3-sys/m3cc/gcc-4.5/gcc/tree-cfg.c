@@ -3011,8 +3011,12 @@ verify_gimple_call (gimple stmt)
 
       if (!DECL_STATIC_CHAIN (fn))
 	{
+#if 0 /* Modula-3 hack */
 	  error ("static chain with function that doesn't use one");
 	  return true;
+#else
+	  return false;
+#endif
 	}
     }
 
