@@ -1042,7 +1042,7 @@ initialize_argument_information (int num_actuals ATTRIBUTE_UNUSED,
 			     type, argpos < n_named_args))
 	{
 	  bool callee_copies;
-	  tree base;
+	  tree base = { 0 };
 
 	  callee_copies
 	    = reference_callee_copied (args_so_far, TYPE_MODE (type),
