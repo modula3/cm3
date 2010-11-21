@@ -105,7 +105,6 @@ static bool M3_TYPES_SEGMENT = false;
 static bool M3_TYPES_CHECK_RECORD_SIZE = false;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
 static bool M3_LOOPHOLE_VIEW_CONVERT = false;
-static bool M3_LOADSTORE_VIEW_CONVERT = false;
 
 #if GCC45
 
@@ -943,19 +942,19 @@ extern const PCSTR tree_code_name[] = {
 static tree
 m3_build1 (enum tree_code code, tree tipe, tree op0)
 {
-  return stabilize_reference (fold_build1 (code, tipe, op0));
+  return /*stabilize_reference*/ (fold_build1 (code, tipe, op0));
 }
 
 static tree
 m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1)
 {
-  return stabilize_reference (fold_build2 (code, tipe, op0, op1));
+  return /*stabilize_reference*/ (fold_build2 (code, tipe, op0, op1));
 }
 
 static tree
 m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
 {
-  return stabilize_reference (fold_build3 (code, tipe, op0, op1, op2));
+  return /*stabilize_reference*/ (fold_build3 (code, tipe, op0, op1, op2));
 }
 
 static tree
@@ -967,7 +966,7 @@ m3_cast (tree type, tree op0)
 static tree
 m3_convert (tree type, tree op0)
 {
-  return stabilize_reference (convert (type, op0));
+  return /*stabilize_reference*/ (convert (type, op0));
 }
 
 static tree
@@ -1187,7 +1186,7 @@ m3_do_fixed_insert (tree x, tree y, UINT64 offset, UINT64 count, tree type)
   if (count == 0)
     return x;
 
-  //y = m3_cast (type, y);
+  y = m3_cast (type, y);
 
   if ((count == 1) && (offset < HOST_BITS_PER_WIDE_INT))
     {
@@ -3070,9 +3069,6 @@ m3_volatilize_current_function (void)
       m3_volatilize_decl (decl);
   }
 
-  for (decl = BLOCK_VARS (block); decl; decl = TREE_CHAIN (decl))
-    m3_volatilize_decl (decl);
-
   /* make arguments volatile  */
 
   for (decl = DECL_ARGUMENTS (current_function_decl);
@@ -3145,7 +3141,6 @@ m3_swap (void)
   EXPR_REF (-2) = tmp;
 }
 
-#if 0
 static void
 mark_address_taken (tree ref)
 /* from tree-ssa-operands.c */
@@ -3154,7 +3149,6 @@ mark_address_taken (tree ref)
   if (var && DECL_P (var))
     TREE_ADDRESSABLE (var) = true;
 }
-#endif
 
 static tree
 m3_deduce_field_reference (PCSTR caller, tree value, UINT64 offset,
@@ -3193,13 +3187,8 @@ m3_deduce_field_reference (PCSTR caller, tree value, UINT64 offset,
 static bool
 m3_type_match (tree t1, tree t2)
 {
-  if (t1 == t2)
-    return true;
-  if (t1 == NULL || t2 == NULL)
-    return false;
-  if (POINTER_TYPE_P (t1) && POINTER_TYPE_P (t2))
-    return true;
-  return false;
+  gcc_assert (t1 && t2);
+  return (t1 == t2 || (POINTER_TYPE_P (t1) && POINTER_TYPE_P (t2)));
 }
 
 static bool
@@ -3212,18 +3201,9 @@ static void
 m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   gcc_assert ((offset % BITS_PER_UNIT) == 0);
-  m3_deduce_field_reference ("m3_load_1", v, offset, src_t, src_T);
-  /* mark_address_taken (v); */
-  if (offset == 0
-        && M3_LOADSTORE_VIEW_CONVERT
-        && m3_type_mismatch (TREE_TYPE (v), src_t))
-  {
-      v = m3_build1 (VIEW_CONVERT_EXPR, src_t, v);
-  }
+  m3_deduce_field_reference ("m3_load", v, offset, src_t, src_T);
   if (offset || m3_type_mismatch (TREE_TYPE (v),  src_t))
   {
-    /* bitfields break configure -enable-checking
-       non-bitfields generate incorrect code sometimes */
     if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
@@ -3235,6 +3215,7 @@ m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type d
     }
     else
     {
+      mark_address_taken (v);
       v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
                      bitsize_int (offset));
     }
@@ -3247,18 +3228,11 @@ m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type d
 static void
 m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-  m3_deduce_field_reference ("m3_store_1", v, offset, dst_t, dst_T);
-  /* mark_address_taken (v); */
-  if (offset == 0
-        && M3_LOADSTORE_VIEW_CONVERT
-        && m3_type_mismatch (TREE_TYPE (v), dst_t))
+  gcc_assert ((offset % BITS_PER_UNIT) == 0);
+  m3_deduce_field_reference ("m3_store", v, offset, dst_t, dst_T);
+  mark_address_taken (v);
+  if (offset || m3_type_mismatch (TREE_TYPE (v),  dst_t))
   {
-      v = m3_build1 (VIEW_CONVERT_EXPR, dst_t, v);
-  }
-  else if (offset || m3_type_mismatch (TREE_TYPE (v),  dst_t))
-  {
-    /* bitfields break configure -enable-checking
-       non-bitfields generate incorrect code sometimes */
     if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
     {
       /* failsafe, but inefficient */
@@ -3270,6 +3244,7 @@ m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type 
     }
     else
     {
+      mark_address_taken (v);
       v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
                      bitsize_int (offset));
     }
@@ -3380,7 +3355,12 @@ m3_gimplify_function (tree fndecl)
   struct cgraph_node* node = cgraph_node (fndecl);
   cgraph_mark_needed_node (node);    /* keep all functions */
   for (node = node->nested; node; node = node->next_nested)
+  {
+    // don't inline nested functions of unlinable parents; bug?
+    // e.g. if parent has a barrier label (exception handling)
+    DECL_UNINLINABLE (node->decl) |= DECL_UNINLINABLE (fndecl);
     m3_gimplify_function (node->decl);
+  }
 }
 
 static void
@@ -4469,18 +4449,6 @@ M3CG_HANDLER (DECLARE_PROCEDURE)
 M3CG_HANDLER (BEGIN_PROCEDURE)
 {
   DECL_SOURCE_LOCATION (p) = input_location;
-
-  /* don't inline, to fix:
-      elego/m3msh/src/M3MiniShell.m3: In function 'M3MiniShell__ProcessParameters':
-      elego/m3msh/src/M3MiniShell.m3:608:0: error: variable '_nonlocal_var_rec.188' might be clobbered by 'longjmp' or 'vfork'
-      m3-tools/m3tk/src/astdisplay/StdFormat.m3: In function 'StdFormat__Enumeration_type':
-      m3-tools/m3tk/src/astdisplay/StdFormat.m3:193:0: internal compiler error: Bus error */
-  if (current_function_decl)
-  {
-    //DECL_UNINLINABLE (current_function_decl) = true;
-    //DECL_UNINLINABLE (p) = true;
-    flag_inline_functions = false;
-  }
 
   announce_function (p);
   current_function_decl = p;
@@ -5656,6 +5624,7 @@ M3CG_HANDLER (POP_STRUCT)
 
 M3CG_HANDLER (POP_STATIC_LINK)
 {
+  DECL_UNINLINABLE (current_function_decl) = true; // bug
   tree v = declare_temp (t_addr);
   m3_store (v, 0, t_addr, T_addr, t_addr, T_addr);
   CALL_TOP_STATIC_CHAIN () = v;
@@ -5668,6 +5637,7 @@ M3CG_HANDLER (LOAD_PROCEDURE)
 
 M3CG_HANDLER (LOAD_STATIC_LINK)
 {
+  DECL_UNINLINABLE (current_function_decl) = true; // bug
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
 }
 
@@ -6032,45 +6002,17 @@ m3_post_options (PCSTR* /*pfilename*/)
 
   flag_exceptions = true; /* ? */
 
-  flag_tree_ccp = false; /* flag_tree_ccp of m3core breaks cm3 on I386_DARWIN */
-
 #if !GCC45 /* needs retesting */
   flag_tree_store_ccp = false;
   flag_tree_salias = false;
 #endif
 
-  /* causes backend crashes in
-     m3totex
-     libm3/Formatter.m3
-     m3tests/p241
-     m3tests/p242
-     m3front gcc 4.5 */
-  flag_tree_pre = false;
-
-  flag_tree_dse = false; /* compiler crashes if this is enabled */
-
-/* == package m3-demo/fisheye ==
-  GraphData.m3: In function 'GraphData__ReadEdge':
-  GraphData.m3:308:0: internal compiler error: in create_tmp_var, at gimplify.c:505 */
-  flag_tree_sra = false;
-
 #if GCC45
-  /* m3-libs/sysutils/System.m3 is a good test of optimization */
-
-  flag_tree_fre = false; /* crashes compiler; see test p244 */
-
-/* m3-tools/m3tohtml
-  HTMLDir.m3: In function 'HTMLDir__QuickSort.clone.1':
-  HTMLDir.m3:391:0: internal compiler error: Bus error */
-  flag_ipa_cp_clone = false;
-
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
 
-#if !GCC42
-  flag_predictive_commoning = false;
-#endif
+  flag_tree_forwprop = false; // bug
 
   return false;
 }

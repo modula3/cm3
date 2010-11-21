@@ -4,7 +4,7 @@ The contents of the file do not matter.
 
  - force rebuild
    - merge from 4.3.0 to 4.3.5
-   - configure switches changed
+   - configure switches changed (e.g. enable-checking)
    - remove -disable-dependency-tracking, for more correct
      incrementality (i.e. header changes)
    - upgrade from 4.3.5 to 4.5.1
@@ -13,4 +13,4 @@ The contents of the file do not matter.
    - switch to configure -enable-build-with-cxx
    - removal of m3-convert.c (combined with parse.c to fix a problem)
 
-10639B-2AC4-430C-A382-4D1
+B3D2F39-49A3-456F-9AFE-B341D82
