@@ -37,7 +37,7 @@ if [ -z "${CM3CG}" ]; then
     ;;
   esac
 fi
-if [ "$CLEAN" = "false" ]; then
+if [ "$CLEAN" = "false" && "$USE_PREBUILT_CM3CG" = "true" ]; then
   if [ -x "${CM3CG}" ]; then
     echo "checking for working pre-built cm3cg in ${CM3CG}"
     cp -p "${CM3CG}" ${WS}/cm3cg
