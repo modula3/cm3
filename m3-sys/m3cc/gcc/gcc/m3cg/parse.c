@@ -4046,9 +4046,7 @@ M3CG_HANDLER (DECLARE_SEGMENT)
 
   if (name_length > 2)
   {
-    gcc_assert (name);
-    gcc_assert (name[0] != '_');
-    gcc_assert (name[1] == '_' || name[2] == '_');
+    gcc_assert (name && name[0] != '_' && (name[1] == '_' || name[2] == '_'));
     current_unit_name_length = name_length - 2;
     current_unit_name = name + 2;
     while (current_unit_name[0] == '_')
