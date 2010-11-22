@@ -4046,16 +4046,16 @@ M3CG_HANDLER (DECLARE_SEGMENT)
 
   if (name_length > 2)
   {
-    if (!name || !(name[0] == 'I' || name[0] == 'M') || !(name[1] == '_'))
-    {
-      printf  (        "assertion failure: %s should start [MI]_ 0x%X\n", name ? name : "(null)", (UINT)type_id);
-      fprintf (stderr, "assertion failure: %s should start [MI]_ 0x%X\n", name ? name : "(null)", (UINT)type_id);
-      gcc_assert (name);
-      gcc_assert (name[0] == 'I' || name[0] == 'M');
-      gcc_assert (name[1] == '_');
-    }
+    gcc_assert (name);
+    gcc_assert (name[0] != '_');
+    gcc_assert (name[1] == '_' || name[2] == '_');
     current_unit_name_length = name_length - 2;
     current_unit_name = name + 2;
+    while (current_unit_name[0] == '_')
+    {
+      current_unit_name_length -= 1;
+      current_unit_name += 1;
+    }
   }
 }
 
