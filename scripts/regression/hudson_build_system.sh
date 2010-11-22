@@ -39,19 +39,21 @@ if [ -z "${CM3CG}" ]; then
     ;;
   esac
 fi
-if [ "$CLEAN" = "false" && "$USE_PREBUILT_CM3CG" = "true" ]; then
-  if [ -x "${CM3CG}" ]; then
-    echo "checking for working pre-built cm3cg in ${CM3CG}"
-    cp -p "${CM3CG}" ${WS}/cm3cg
-    if ${WS}/cm3cg --version; then
-      echo "using PREBUILT_CM3CG=${WS}/cm3cg"
-      PREBUILT_CM3CG=${WS}/cm3cg
-      export PREBUILT_CM3CG
+if [ "x$CLEAN" = "xfalse" ]; then
+  if [ "x$USE_PREBUILT_CM3CG" = "xtrue" ]; then
+    if [ -x "${CM3CG}" ]; then
+      echo "checking for working pre-built cm3cg in ${CM3CG}"
+      cp -p "${CM3CG}" ${WS}/cm3cg
+      if ${WS}/cm3cg --version; then
+        echo "using PREBUILT_CM3CG=${WS}/cm3cg"
+        PREBUILT_CM3CG=${WS}/cm3cg
+        export PREBUILT_CM3CG
+      else
+        echo "NOT using ${WS}/cm3cg"
+      fi
     else
-      echo "NOT using ${WS}/cm3cg"
+      echo "no executable ${CM3CG}"
     fi
-  else
-    echo "no executable ${CM3CG}"
   fi
 fi
 . ./defs.sh
