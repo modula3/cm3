@@ -1,7 +1,9 @@
 #/bin/sh
 
-#set -e
+set -e
 #set -x
+
+ulimit -d unlimited || true
 
 WS=${WORKSPACE}
 for a in a m s p r; do
