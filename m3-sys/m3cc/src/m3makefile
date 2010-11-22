@@ -408,18 +408,11 @@ Configure = Configure & " -disable-libmudflap"
 Configure = Configure & " -disable-libssp"
 Configure = Configure & " -disable-nls"
 Configure = Configure & " -enable-languages=m3cg"
-Configure = Configure & " -enable-targets=all"
- Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
-%Configure = Configure & " -enable-checking=assert,fold,misc,rtl,rtlflag,runtime,tree" % reasonable
-%Configure = Configure & " -enable-checking=yes" % reasonable
-%Configure = Configure & " -enable-checking=assert,df,fold,gc,gcac,misc,rtl,rtlflag,runtime,tree,valgrind" % very slow
-%Configure = Configure & " -enable-checking=all" % very slow
-%Configure = Configure & " -enable-checking"
-
-% Save some libtool wrapping layers to speed up esp. on NT?
-% presumably hurts incrementality much
-%Configure = Configure & " -disable-dependency-tracking"
-
+if equal (HOST, "FreeBSD4") or equal (HOST, "I386_FREEBSD") % use less memory
+  Configure = Configure & " -enable-checking=yes"
+else
+  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
+end
 % These are compatible with just building m3cg, but user might
 % build gcc/cc1/libgcc here.
 Configure = Configure & " -disable-fixincludes"
