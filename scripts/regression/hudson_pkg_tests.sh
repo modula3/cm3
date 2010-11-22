@@ -1,5 +1,7 @@
 #/bin/sh
 
+ulimit -d unlimited || true
+
 WS=${WORKSPACE}
 for a in a m s p r; do
     echo uname -$a: `uname -$a`
