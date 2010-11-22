@@ -616,7 +616,7 @@ extern void rtvec_check_failed_bounds (const_rtvec, int, const char *, int,
 /* Access an individual rtx flag, with no checking of any kind.  */
 #define RTX_FLAG(RTX, FLAG)	((RTX)->FLAG)
 
-#if defined ENABLE_RTL_FLAG_CHECKING && (GCC_VERSION > 3003)
+#if defined ENABLE_RTL_FLAG_CHECKING && ((!defined(__cplusplus) && GCC_VERSION > 2007) || GCC_VERSION > 3003)
 #define RTL_FLAG_CHECK1(NAME, RTX, C1) __extension__			\
 ({ __typeof (RTX) const _rtx = (RTX);					\
    if (GET_CODE(_rtx) != C1)						\
