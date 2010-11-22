@@ -1005,7 +1005,9 @@ find_base_value (rtx src)
     case PLUS:
     case MINUS:
       {
-	rtx temp, src_0 = XEXP (src, 0), src_1 = XEXP (src, 1);
+	rtx temp = { 0 }, src_0 = { 0 }, src_1 = { 0 };
+	src_0 = XEXP (src, 0);
+	src_1 = XEXP (src, 1);
 
 	/* If either operand is a REG that is a known pointer, then it
 	   is the base.  */
