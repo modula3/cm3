@@ -81,7 +81,7 @@ local ShortName = { }
 local Builtin = { }
 foreach size in [8,16,32,64]
   foreach unsigned in [TRUE, FALSE]
-    local t = {FALSE:"",TRUE:"U","":"","U":"U"}{unsigned} & "INT" & size
+    local t = {FALSE:"",TRUE:"U"}{unsigned} & "INT" & size
     Types{t} = 1
     Builtin{t} = FALSE
     IntSize{t} = size
@@ -189,7 +189,7 @@ proc BeginModule(a) is
 
     foreach t in Types
       if IsInt{t} and not Builtin{t}
-        write("<*NOWARN*>TYPE ", t, " = Cstdint.", {FALSE:"",TRUE:"u","":"","u":"u"}{IsSignedInt{t}}, "int", IntSize{t}, "_t;", CR)
+        write("<*NOWARN*>TYPE ", t, " = Cstdint.", {FALSE:"",TRUE:"u"}{IsUnsignedInt{t}}, "int", IntSize{t}, "_t;", CR)
       end
     end
 
