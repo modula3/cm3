@@ -1,4641 +1,6463 @@
 	.text
-.globl _mod_pow2__mod_pow2_i32_0
-	.private_extern _mod_pow2__mod_pow2_i32_0
+.no_dead_strip _mod_pow2__mod_pow2_i32_0
 _mod_pow2__mod_pow2_i32_0:
+LFB0:
 	pushq	%rbp
+LCFI0:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+LCFI1:
+	movl	%edi, -4(%rbp)
 	movl	$0, %eax
 	leave
+LCFI2:
 	ret
-.globl _mod_pow2__mod_pow2_i32_1
-	.private_extern _mod_pow2__mod_pow2_i32_1
+LFE0:
+.no_dead_strip _mod_pow2__mod_pow2_i32_1
 _mod_pow2__mod_pow2_i32_1:
+LFB1:
 	pushq	%rbp
+LCFI3:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI4:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1, %eax
 	leave
+LCFI5:
 	ret
-.globl _mod_pow2__mod_pow2_i32_2
-	.private_extern _mod_pow2__mod_pow2_i32_2
+LFE1:
+.no_dead_strip _mod_pow2__mod_pow2_i32_2
 _mod_pow2__mod_pow2_i32_2:
+LFB2:
 	pushq	%rbp
+LCFI6:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI7:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$3, %eax
 	leave
+LCFI8:
 	ret
-.globl _mod_pow2__mod_pow2_i32_3
-	.private_extern _mod_pow2__mod_pow2_i32_3
+LFE2:
+.no_dead_strip _mod_pow2__mod_pow2_i32_3
 _mod_pow2__mod_pow2_i32_3:
+LFB3:
 	pushq	%rbp
+LCFI9:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI10:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$7, %eax
 	leave
+LCFI11:
 	ret
-.globl _mod_pow2__mod_pow2_i32_4
-	.private_extern _mod_pow2__mod_pow2_i32_4
+LFE3:
+.no_dead_strip _mod_pow2__mod_pow2_i32_4
 _mod_pow2__mod_pow2_i32_4:
+LFB4:
 	pushq	%rbp
+LCFI12:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI13:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$15, %eax
 	leave
+LCFI14:
 	ret
-.globl _mod_pow2__mod_pow2_i32_5
-	.private_extern _mod_pow2__mod_pow2_i32_5
+LFE4:
+.no_dead_strip _mod_pow2__mod_pow2_i32_5
 _mod_pow2__mod_pow2_i32_5:
+LFB5:
 	pushq	%rbp
+LCFI15:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI16:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$31, %eax
 	leave
+LCFI17:
 	ret
-.globl _mod_pow2__mod_pow2_i32_6
-	.private_extern _mod_pow2__mod_pow2_i32_6
+LFE5:
+.no_dead_strip _mod_pow2__mod_pow2_i32_6
 _mod_pow2__mod_pow2_i32_6:
+LFB6:
 	pushq	%rbp
+LCFI18:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI19:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$63, %eax
 	leave
+LCFI20:
 	ret
-.globl _mod_pow2__mod_pow2_i32_7
-	.private_extern _mod_pow2__mod_pow2_i32_7
+LFE6:
+.no_dead_strip _mod_pow2__mod_pow2_i32_7
 _mod_pow2__mod_pow2_i32_7:
+LFB7:
 	pushq	%rbp
+LCFI21:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI22:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$127, %eax
 	leave
+LCFI23:
 	ret
-.globl _mod_pow2__mod_pow2_i32_8
-	.private_extern _mod_pow2__mod_pow2_i32_8
+LFE7:
+.no_dead_strip _mod_pow2__mod_pow2_i32_8
 _mod_pow2__mod_pow2_i32_8:
+LFB8:
 	pushq	%rbp
+LCFI24:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI25:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$255, %eax
 	leave
+LCFI26:
 	ret
-.globl _mod_pow2__mod_pow2_i32_9
-	.private_extern _mod_pow2__mod_pow2_i32_9
+LFE8:
+.no_dead_strip _mod_pow2__mod_pow2_i32_9
 _mod_pow2__mod_pow2_i32_9:
+LFB9:
 	pushq	%rbp
+LCFI27:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI28:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$511, %eax
 	leave
+LCFI29:
 	ret
-.globl _mod_pow2__mod_pow2_i32_10
-	.private_extern _mod_pow2__mod_pow2_i32_10
+LFE9:
+.no_dead_strip _mod_pow2__mod_pow2_i32_10
 _mod_pow2__mod_pow2_i32_10:
+LFB10:
 	pushq	%rbp
+LCFI30:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI31:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1023, %eax
 	leave
+LCFI32:
 	ret
-.globl _mod_pow2__mod_pow2_i32_11
-	.private_extern _mod_pow2__mod_pow2_i32_11
+LFE10:
+.no_dead_strip _mod_pow2__mod_pow2_i32_11
 _mod_pow2__mod_pow2_i32_11:
+LFB11:
 	pushq	%rbp
+LCFI33:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI34:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$2047, %eax
 	leave
+LCFI35:
 	ret
-.globl _mod_pow2__mod_pow2_i32_12
-	.private_extern _mod_pow2__mod_pow2_i32_12
+LFE11:
+.no_dead_strip _mod_pow2__mod_pow2_i32_12
 _mod_pow2__mod_pow2_i32_12:
+LFB12:
 	pushq	%rbp
+LCFI36:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI37:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$4095, %eax
 	leave
+LCFI38:
 	ret
-.globl _mod_pow2__mod_pow2_i32_13
-	.private_extern _mod_pow2__mod_pow2_i32_13
+LFE12:
+.no_dead_strip _mod_pow2__mod_pow2_i32_13
 _mod_pow2__mod_pow2_i32_13:
+LFB13:
 	pushq	%rbp
+LCFI39:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI40:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$8191, %eax
 	leave
+LCFI41:
 	ret
-.globl _mod_pow2__mod_pow2_i32_14
-	.private_extern _mod_pow2__mod_pow2_i32_14
+LFE13:
+.no_dead_strip _mod_pow2__mod_pow2_i32_14
 _mod_pow2__mod_pow2_i32_14:
+LFB14:
 	pushq	%rbp
+LCFI42:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI43:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$16383, %eax
 	leave
+LCFI44:
 	ret
-.globl _mod_pow2__mod_pow2_i32_15
-	.private_extern _mod_pow2__mod_pow2_i32_15
+LFE14:
+.no_dead_strip _mod_pow2__mod_pow2_i32_15
 _mod_pow2__mod_pow2_i32_15:
+LFB15:
 	pushq	%rbp
+LCFI45:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI46:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$32767, %eax
 	leave
+LCFI47:
 	ret
-.globl _mod_pow2__mod_pow2_i32_16
-	.private_extern _mod_pow2__mod_pow2_i32_16
+LFE15:
+.no_dead_strip _mod_pow2__mod_pow2_i32_16
 _mod_pow2__mod_pow2_i32_16:
+LFB16:
 	pushq	%rbp
+LCFI48:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI49:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$65535, %eax
 	leave
+LCFI50:
 	ret
-.globl _mod_pow2__mod_pow2_i32_17
-	.private_extern _mod_pow2__mod_pow2_i32_17
+LFE16:
+.no_dead_strip _mod_pow2__mod_pow2_i32_17
 _mod_pow2__mod_pow2_i32_17:
+LFB17:
 	pushq	%rbp
+LCFI51:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI52:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$131071, %eax
 	leave
+LCFI53:
 	ret
-.globl _mod_pow2__mod_pow2_i32_18
-	.private_extern _mod_pow2__mod_pow2_i32_18
+LFE17:
+.no_dead_strip _mod_pow2__mod_pow2_i32_18
 _mod_pow2__mod_pow2_i32_18:
+LFB18:
 	pushq	%rbp
+LCFI54:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI55:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$262143, %eax
 	leave
+LCFI56:
 	ret
-.globl _mod_pow2__mod_pow2_i32_19
-	.private_extern _mod_pow2__mod_pow2_i32_19
+LFE18:
+.no_dead_strip _mod_pow2__mod_pow2_i32_19
 _mod_pow2__mod_pow2_i32_19:
+LFB19:
 	pushq	%rbp
+LCFI57:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI58:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$524287, %eax
 	leave
+LCFI59:
 	ret
-.globl _mod_pow2__mod_pow2_i32_20
-	.private_extern _mod_pow2__mod_pow2_i32_20
+LFE19:
+.no_dead_strip _mod_pow2__mod_pow2_i32_20
 _mod_pow2__mod_pow2_i32_20:
+LFB20:
 	pushq	%rbp
+LCFI60:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI61:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1048575, %eax
 	leave
+LCFI62:
 	ret
-.globl _mod_pow2__mod_pow2_i32_21
-	.private_extern _mod_pow2__mod_pow2_i32_21
+LFE20:
+.no_dead_strip _mod_pow2__mod_pow2_i32_21
 _mod_pow2__mod_pow2_i32_21:
+LFB21:
 	pushq	%rbp
+LCFI63:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI64:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$2097151, %eax
 	leave
+LCFI65:
 	ret
-.globl _mod_pow2__mod_pow2_i32_22
-	.private_extern _mod_pow2__mod_pow2_i32_22
+LFE21:
+.no_dead_strip _mod_pow2__mod_pow2_i32_22
 _mod_pow2__mod_pow2_i32_22:
+LFB22:
 	pushq	%rbp
+LCFI66:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI67:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$4194303, %eax
 	leave
+LCFI68:
 	ret
-.globl _mod_pow2__mod_pow2_i32_23
-	.private_extern _mod_pow2__mod_pow2_i32_23
+LFE22:
+.no_dead_strip _mod_pow2__mod_pow2_i32_23
 _mod_pow2__mod_pow2_i32_23:
+LFB23:
 	pushq	%rbp
+LCFI69:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI70:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$8388607, %eax
 	leave
+LCFI71:
 	ret
-.globl _mod_pow2__mod_pow2_i32_24
-	.private_extern _mod_pow2__mod_pow2_i32_24
+LFE23:
+.no_dead_strip _mod_pow2__mod_pow2_i32_24
 _mod_pow2__mod_pow2_i32_24:
+LFB24:
 	pushq	%rbp
+LCFI72:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI73:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$16777215, %eax
 	leave
+LCFI74:
 	ret
-.globl _mod_pow2__mod_pow2_i32_25
-	.private_extern _mod_pow2__mod_pow2_i32_25
+LFE24:
+.no_dead_strip _mod_pow2__mod_pow2_i32_25
 _mod_pow2__mod_pow2_i32_25:
+LFB25:
 	pushq	%rbp
+LCFI75:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI76:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$33554431, %eax
 	leave
+LCFI77:
 	ret
-.globl _mod_pow2__mod_pow2_i32_26
-	.private_extern _mod_pow2__mod_pow2_i32_26
+LFE25:
+.no_dead_strip _mod_pow2__mod_pow2_i32_26
 _mod_pow2__mod_pow2_i32_26:
+LFB26:
 	pushq	%rbp
+LCFI78:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI79:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$67108863, %eax
 	leave
+LCFI80:
 	ret
-.globl _mod_pow2__mod_pow2_i32_27
-	.private_extern _mod_pow2__mod_pow2_i32_27
+LFE26:
+.no_dead_strip _mod_pow2__mod_pow2_i32_27
 _mod_pow2__mod_pow2_i32_27:
+LFB27:
 	pushq	%rbp
+LCFI81:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI82:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$134217727, %eax
 	leave
+LCFI83:
 	ret
-.globl _mod_pow2__mod_pow2_i32_28
-	.private_extern _mod_pow2__mod_pow2_i32_28
+LFE27:
+.no_dead_strip _mod_pow2__mod_pow2_i32_28
 _mod_pow2__mod_pow2_i32_28:
+LFB28:
 	pushq	%rbp
+LCFI84:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI85:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$268435455, %eax
 	leave
+LCFI86:
 	ret
-.globl _mod_pow2__mod_pow2_i32_29
-	.private_extern _mod_pow2__mod_pow2_i32_29
+LFE28:
+.no_dead_strip _mod_pow2__mod_pow2_i32_29
 _mod_pow2__mod_pow2_i32_29:
+LFB29:
 	pushq	%rbp
+LCFI87:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI88:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$536870911, %eax
 	leave
+LCFI89:
 	ret
-.globl _mod_pow2__mod_pow2_i32_30
-	.private_extern _mod_pow2__mod_pow2_i32_30
+LFE29:
+.no_dead_strip _mod_pow2__mod_pow2_i32_30
 _mod_pow2__mod_pow2_i32_30:
+LFB30:
 	pushq	%rbp
+LCFI90:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI91:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1073741823, %eax
 	leave
+LCFI92:
 	ret
-.globl _mod_pow2__mod_pow2_i32_31
-	.private_extern _mod_pow2__mod_pow2_i32_31
+LFE30:
+.no_dead_strip _mod_pow2__mod_pow2_i32_31
 _mod_pow2__mod_pow2_i32_31:
+LFB31:
 	pushq	%rbp
+LCFI93:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	mov	-20(%rbp), %eax
+LCFI94:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$2147483647, %eax
 	leave
+LCFI95:
 	ret
-.globl _mod_pow2__mod_pow2_u32_0
-	.private_extern _mod_pow2__mod_pow2_u32_0
+LFE31:
+.no_dead_strip _mod_pow2__mod_pow2_u32_0
 _mod_pow2__mod_pow2_u32_0:
+LFB32:
 	pushq	%rbp
+LCFI96:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
+LCFI97:
+	movl	%edi, -4(%rbp)
 	movl	$0, %eax
 	leave
+LCFI98:
 	ret
-.globl _mod_pow2__mod_pow2_u32_1
-	.private_extern _mod_pow2__mod_pow2_u32_1
+LFE32:
+.no_dead_strip _mod_pow2__mod_pow2_u32_1
 _mod_pow2__mod_pow2_u32_1:
+LFB33:
 	pushq	%rbp
+LCFI99:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI100:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1, %eax
 	leave
+LCFI101:
 	ret
-.globl _mod_pow2__mod_pow2_u32_2
-	.private_extern _mod_pow2__mod_pow2_u32_2
+LFE33:
+.no_dead_strip _mod_pow2__mod_pow2_u32_2
 _mod_pow2__mod_pow2_u32_2:
+LFB34:
 	pushq	%rbp
+LCFI102:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI103:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$3, %eax
 	leave
+LCFI104:
 	ret
-.globl _mod_pow2__mod_pow2_u32_3
-	.private_extern _mod_pow2__mod_pow2_u32_3
+LFE34:
+.no_dead_strip _mod_pow2__mod_pow2_u32_3
 _mod_pow2__mod_pow2_u32_3:
+LFB35:
 	pushq	%rbp
+LCFI105:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI106:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$7, %eax
 	leave
+LCFI107:
 	ret
-.globl _mod_pow2__mod_pow2_u32_4
-	.private_extern _mod_pow2__mod_pow2_u32_4
+LFE35:
+.no_dead_strip _mod_pow2__mod_pow2_u32_4
 _mod_pow2__mod_pow2_u32_4:
+LFB36:
 	pushq	%rbp
+LCFI108:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI109:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$15, %eax
 	leave
+LCFI110:
 	ret
-.globl _mod_pow2__mod_pow2_u32_5
-	.private_extern _mod_pow2__mod_pow2_u32_5
+LFE36:
+.no_dead_strip _mod_pow2__mod_pow2_u32_5
 _mod_pow2__mod_pow2_u32_5:
+LFB37:
 	pushq	%rbp
+LCFI111:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI112:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$31, %eax
 	leave
+LCFI113:
 	ret
-.globl _mod_pow2__mod_pow2_u32_6
-	.private_extern _mod_pow2__mod_pow2_u32_6
+LFE37:
+.no_dead_strip _mod_pow2__mod_pow2_u32_6
 _mod_pow2__mod_pow2_u32_6:
+LFB38:
 	pushq	%rbp
+LCFI114:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI115:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$63, %eax
 	leave
+LCFI116:
 	ret
-.globl _mod_pow2__mod_pow2_u32_7
-	.private_extern _mod_pow2__mod_pow2_u32_7
+LFE38:
+.no_dead_strip _mod_pow2__mod_pow2_u32_7
 _mod_pow2__mod_pow2_u32_7:
+LFB39:
 	pushq	%rbp
+LCFI117:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI118:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$127, %eax
 	leave
+LCFI119:
 	ret
-.globl _mod_pow2__mod_pow2_u32_8
-	.private_extern _mod_pow2__mod_pow2_u32_8
+LFE39:
+.no_dead_strip _mod_pow2__mod_pow2_u32_8
 _mod_pow2__mod_pow2_u32_8:
+LFB40:
 	pushq	%rbp
+LCFI120:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI121:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$255, %eax
 	leave
+LCFI122:
 	ret
-.globl _mod_pow2__mod_pow2_u32_9
-	.private_extern _mod_pow2__mod_pow2_u32_9
+LFE40:
+.no_dead_strip _mod_pow2__mod_pow2_u32_9
 _mod_pow2__mod_pow2_u32_9:
+LFB41:
 	pushq	%rbp
+LCFI123:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI124:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$511, %eax
 	leave
+LCFI125:
 	ret
-.globl _mod_pow2__mod_pow2_u32_10
-	.private_extern _mod_pow2__mod_pow2_u32_10
+LFE41:
+.no_dead_strip _mod_pow2__mod_pow2_u32_10
 _mod_pow2__mod_pow2_u32_10:
+LFB42:
 	pushq	%rbp
+LCFI126:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI127:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1023, %eax
 	leave
+LCFI128:
 	ret
-.globl _mod_pow2__mod_pow2_u32_11
-	.private_extern _mod_pow2__mod_pow2_u32_11
+LFE42:
+.no_dead_strip _mod_pow2__mod_pow2_u32_11
 _mod_pow2__mod_pow2_u32_11:
+LFB43:
 	pushq	%rbp
+LCFI129:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI130:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$2047, %eax
 	leave
+LCFI131:
 	ret
-.globl _mod_pow2__mod_pow2_u32_12
-	.private_extern _mod_pow2__mod_pow2_u32_12
+LFE43:
+.no_dead_strip _mod_pow2__mod_pow2_u32_12
 _mod_pow2__mod_pow2_u32_12:
+LFB44:
 	pushq	%rbp
+LCFI132:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI133:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$4095, %eax
 	leave
+LCFI134:
 	ret
-.globl _mod_pow2__mod_pow2_u32_13
-	.private_extern _mod_pow2__mod_pow2_u32_13
+LFE44:
+.no_dead_strip _mod_pow2__mod_pow2_u32_13
 _mod_pow2__mod_pow2_u32_13:
+LFB45:
 	pushq	%rbp
+LCFI135:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI136:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$8191, %eax
 	leave
+LCFI137:
 	ret
-.globl _mod_pow2__mod_pow2_u32_14
-	.private_extern _mod_pow2__mod_pow2_u32_14
+LFE45:
+.no_dead_strip _mod_pow2__mod_pow2_u32_14
 _mod_pow2__mod_pow2_u32_14:
+LFB46:
 	pushq	%rbp
+LCFI138:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI139:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$16383, %eax
 	leave
+LCFI140:
 	ret
-.globl _mod_pow2__mod_pow2_u32_15
-	.private_extern _mod_pow2__mod_pow2_u32_15
+LFE46:
+.no_dead_strip _mod_pow2__mod_pow2_u32_15
 _mod_pow2__mod_pow2_u32_15:
+LFB47:
 	pushq	%rbp
+LCFI141:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI142:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$32767, %eax
 	leave
+LCFI143:
 	ret
-.globl _mod_pow2__mod_pow2_u32_16
-	.private_extern _mod_pow2__mod_pow2_u32_16
+LFE47:
+.no_dead_strip _mod_pow2__mod_pow2_u32_16
 _mod_pow2__mod_pow2_u32_16:
+LFB48:
 	pushq	%rbp
+LCFI144:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI145:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$65535, %eax
 	leave
+LCFI146:
 	ret
-.globl _mod_pow2__mod_pow2_u32_17
-	.private_extern _mod_pow2__mod_pow2_u32_17
+LFE48:
+.no_dead_strip _mod_pow2__mod_pow2_u32_17
 _mod_pow2__mod_pow2_u32_17:
+LFB49:
 	pushq	%rbp
+LCFI147:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI148:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$131071, %eax
 	leave
+LCFI149:
 	ret
-.globl _mod_pow2__mod_pow2_u32_18
-	.private_extern _mod_pow2__mod_pow2_u32_18
+LFE49:
+.no_dead_strip _mod_pow2__mod_pow2_u32_18
 _mod_pow2__mod_pow2_u32_18:
+LFB50:
 	pushq	%rbp
+LCFI150:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI151:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$262143, %eax
 	leave
+LCFI152:
 	ret
-.globl _mod_pow2__mod_pow2_u32_19
-	.private_extern _mod_pow2__mod_pow2_u32_19
+LFE50:
+.no_dead_strip _mod_pow2__mod_pow2_u32_19
 _mod_pow2__mod_pow2_u32_19:
+LFB51:
 	pushq	%rbp
+LCFI153:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI154:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$524287, %eax
 	leave
+LCFI155:
 	ret
-.globl _mod_pow2__mod_pow2_u32_20
-	.private_extern _mod_pow2__mod_pow2_u32_20
+LFE51:
+.no_dead_strip _mod_pow2__mod_pow2_u32_20
 _mod_pow2__mod_pow2_u32_20:
+LFB52:
 	pushq	%rbp
+LCFI156:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI157:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1048575, %eax
 	leave
+LCFI158:
 	ret
-.globl _mod_pow2__mod_pow2_u32_21
-	.private_extern _mod_pow2__mod_pow2_u32_21
+LFE52:
+.no_dead_strip _mod_pow2__mod_pow2_u32_21
 _mod_pow2__mod_pow2_u32_21:
+LFB53:
 	pushq	%rbp
+LCFI159:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI160:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$2097151, %eax
 	leave
+LCFI161:
 	ret
-.globl _mod_pow2__mod_pow2_u32_22
-	.private_extern _mod_pow2__mod_pow2_u32_22
+LFE53:
+.no_dead_strip _mod_pow2__mod_pow2_u32_22
 _mod_pow2__mod_pow2_u32_22:
+LFB54:
 	pushq	%rbp
+LCFI162:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI163:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$4194303, %eax
 	leave
+LCFI164:
 	ret
-.globl _mod_pow2__mod_pow2_u32_23
-	.private_extern _mod_pow2__mod_pow2_u32_23
+LFE54:
+.no_dead_strip _mod_pow2__mod_pow2_u32_23
 _mod_pow2__mod_pow2_u32_23:
+LFB55:
 	pushq	%rbp
+LCFI165:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI166:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$8388607, %eax
 	leave
+LCFI167:
 	ret
-.globl _mod_pow2__mod_pow2_u32_24
-	.private_extern _mod_pow2__mod_pow2_u32_24
+LFE55:
+.no_dead_strip _mod_pow2__mod_pow2_u32_24
 _mod_pow2__mod_pow2_u32_24:
+LFB56:
 	pushq	%rbp
+LCFI168:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI169:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$16777215, %eax
 	leave
+LCFI170:
 	ret
-.globl _mod_pow2__mod_pow2_u32_25
-	.private_extern _mod_pow2__mod_pow2_u32_25
+LFE56:
+.no_dead_strip _mod_pow2__mod_pow2_u32_25
 _mod_pow2__mod_pow2_u32_25:
+LFB57:
 	pushq	%rbp
+LCFI171:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI172:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$33554431, %eax
 	leave
+LCFI173:
 	ret
-.globl _mod_pow2__mod_pow2_u32_26
-	.private_extern _mod_pow2__mod_pow2_u32_26
+LFE57:
+.no_dead_strip _mod_pow2__mod_pow2_u32_26
 _mod_pow2__mod_pow2_u32_26:
+LFB58:
 	pushq	%rbp
+LCFI174:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI175:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$67108863, %eax
 	leave
+LCFI176:
 	ret
-.globl _mod_pow2__mod_pow2_u32_27
-	.private_extern _mod_pow2__mod_pow2_u32_27
+LFE58:
+.no_dead_strip _mod_pow2__mod_pow2_u32_27
 _mod_pow2__mod_pow2_u32_27:
+LFB59:
 	pushq	%rbp
+LCFI177:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI178:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$134217727, %eax
 	leave
+LCFI179:
 	ret
-.globl _mod_pow2__mod_pow2_u32_28
-	.private_extern _mod_pow2__mod_pow2_u32_28
+LFE59:
+.no_dead_strip _mod_pow2__mod_pow2_u32_28
 _mod_pow2__mod_pow2_u32_28:
+LFB60:
 	pushq	%rbp
+LCFI180:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI181:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$268435455, %eax
 	leave
+LCFI182:
 	ret
-.globl _mod_pow2__mod_pow2_u32_29
-	.private_extern _mod_pow2__mod_pow2_u32_29
+LFE60:
+.no_dead_strip _mod_pow2__mod_pow2_u32_29
 _mod_pow2__mod_pow2_u32_29:
+LFB61:
 	pushq	%rbp
+LCFI183:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI184:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$536870911, %eax
 	leave
+LCFI185:
 	ret
-.globl _mod_pow2__mod_pow2_u32_30
-	.private_extern _mod_pow2__mod_pow2_u32_30
+LFE61:
+.no_dead_strip _mod_pow2__mod_pow2_u32_30
 _mod_pow2__mod_pow2_u32_30:
+LFB62:
 	pushq	%rbp
+LCFI186:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI187:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$1073741823, %eax
 	leave
+LCFI188:
 	ret
-.globl _mod_pow2__mod_pow2_u32_31
-	.private_extern _mod_pow2__mod_pow2_u32_31
+LFE62:
+.no_dead_strip _mod_pow2__mod_pow2_u32_31
 _mod_pow2__mod_pow2_u32_31:
+LFB63:
 	pushq	%rbp
+LCFI189:
 	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+LCFI190:
+	movl	%edi, -4(%rbp)
+	movl	-4(%rbp), %eax
 	andl	$2147483647, %eax
 	leave
+LCFI191:
 	ret
-.globl _mod_pow2__mod_pow2_i64_0
-	.private_extern _mod_pow2__mod_pow2_i64_0
+LFE63:
+.no_dead_strip _mod_pow2__mod_pow2_i64_0
 _mod_pow2__mod_pow2_i64_0:
+LFB64:
 	pushq	%rbp
+LCFI192:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI193:
+	movq	%rdi, -8(%rbp)
 	movl	$0, %eax
 	leave
+LCFI194:
 	ret
-.globl _mod_pow2__mod_pow2_i64_1
-	.private_extern _mod_pow2__mod_pow2_i64_1
+LFE64:
+.no_dead_strip _mod_pow2__mod_pow2_i64_1
 _mod_pow2__mod_pow2_i64_1:
+LFB65:
 	pushq	%rbp
+LCFI195:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI196:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1, %eax
 	leave
+LCFI197:
 	ret
-.globl _mod_pow2__mod_pow2_i64_2
-	.private_extern _mod_pow2__mod_pow2_i64_2
+LFE65:
+.no_dead_strip _mod_pow2__mod_pow2_i64_2
 _mod_pow2__mod_pow2_i64_2:
+LFB66:
 	pushq	%rbp
+LCFI198:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI199:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$3, %eax
 	leave
+LCFI200:
 	ret
-.globl _mod_pow2__mod_pow2_i64_3
-	.private_extern _mod_pow2__mod_pow2_i64_3
+LFE66:
+.no_dead_strip _mod_pow2__mod_pow2_i64_3
 _mod_pow2__mod_pow2_i64_3:
+LFB67:
 	pushq	%rbp
+LCFI201:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI202:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$7, %eax
 	leave
+LCFI203:
 	ret
-.globl _mod_pow2__mod_pow2_i64_4
-	.private_extern _mod_pow2__mod_pow2_i64_4
+LFE67:
+.no_dead_strip _mod_pow2__mod_pow2_i64_4
 _mod_pow2__mod_pow2_i64_4:
+LFB68:
 	pushq	%rbp
+LCFI204:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI205:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$15, %eax
 	leave
+LCFI206:
 	ret
-.globl _mod_pow2__mod_pow2_i64_5
-	.private_extern _mod_pow2__mod_pow2_i64_5
+LFE68:
+.no_dead_strip _mod_pow2__mod_pow2_i64_5
 _mod_pow2__mod_pow2_i64_5:
+LFB69:
 	pushq	%rbp
+LCFI207:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI208:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$31, %eax
 	leave
+LCFI209:
 	ret
-.globl _mod_pow2__mod_pow2_i64_6
-	.private_extern _mod_pow2__mod_pow2_i64_6
+LFE69:
+.no_dead_strip _mod_pow2__mod_pow2_i64_6
 _mod_pow2__mod_pow2_i64_6:
+LFB70:
 	pushq	%rbp
+LCFI210:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI211:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$63, %eax
 	leave
+LCFI212:
 	ret
-.globl _mod_pow2__mod_pow2_i64_7
-	.private_extern _mod_pow2__mod_pow2_i64_7
+LFE70:
+.no_dead_strip _mod_pow2__mod_pow2_i64_7
 _mod_pow2__mod_pow2_i64_7:
+LFB71:
 	pushq	%rbp
+LCFI213:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI214:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$127, %eax
 	leave
+LCFI215:
 	ret
-.globl _mod_pow2__mod_pow2_i64_8
-	.private_extern _mod_pow2__mod_pow2_i64_8
+LFE71:
+.no_dead_strip _mod_pow2__mod_pow2_i64_8
 _mod_pow2__mod_pow2_i64_8:
+LFB72:
 	pushq	%rbp
+LCFI216:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI217:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$255, %eax
 	leave
+LCFI218:
 	ret
-.globl _mod_pow2__mod_pow2_i64_9
-	.private_extern _mod_pow2__mod_pow2_i64_9
+LFE72:
+.no_dead_strip _mod_pow2__mod_pow2_i64_9
 _mod_pow2__mod_pow2_i64_9:
+LFB73:
 	pushq	%rbp
+LCFI219:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI220:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$511, %eax
 	leave
+LCFI221:
 	ret
-.globl _mod_pow2__mod_pow2_i64_10
-	.private_extern _mod_pow2__mod_pow2_i64_10
+LFE73:
+.no_dead_strip _mod_pow2__mod_pow2_i64_10
 _mod_pow2__mod_pow2_i64_10:
+LFB74:
 	pushq	%rbp
+LCFI222:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI223:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1023, %eax
 	leave
+LCFI224:
 	ret
-.globl _mod_pow2__mod_pow2_i64_11
-	.private_extern _mod_pow2__mod_pow2_i64_11
+LFE74:
+.no_dead_strip _mod_pow2__mod_pow2_i64_11
 _mod_pow2__mod_pow2_i64_11:
+LFB75:
 	pushq	%rbp
+LCFI225:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI226:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2047, %eax
 	leave
+LCFI227:
 	ret
-.globl _mod_pow2__mod_pow2_i64_12
-	.private_extern _mod_pow2__mod_pow2_i64_12
+LFE75:
+.no_dead_strip _mod_pow2__mod_pow2_i64_12
 _mod_pow2__mod_pow2_i64_12:
+LFB76:
 	pushq	%rbp
+LCFI228:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI229:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4095, %eax
 	leave
+LCFI230:
 	ret
-.globl _mod_pow2__mod_pow2_i64_13
-	.private_extern _mod_pow2__mod_pow2_i64_13
+LFE76:
+.no_dead_strip _mod_pow2__mod_pow2_i64_13
 _mod_pow2__mod_pow2_i64_13:
+LFB77:
 	pushq	%rbp
+LCFI231:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI232:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8191, %eax
 	leave
+LCFI233:
 	ret
-.globl _mod_pow2__mod_pow2_i64_14
-	.private_extern _mod_pow2__mod_pow2_i64_14
+LFE77:
+.no_dead_strip _mod_pow2__mod_pow2_i64_14
 _mod_pow2__mod_pow2_i64_14:
+LFB78:
 	pushq	%rbp
+LCFI234:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI235:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16383, %eax
 	leave
+LCFI236:
 	ret
-.globl _mod_pow2__mod_pow2_i64_15
-	.private_extern _mod_pow2__mod_pow2_i64_15
+LFE78:
+.no_dead_strip _mod_pow2__mod_pow2_i64_15
 _mod_pow2__mod_pow2_i64_15:
+LFB79:
 	pushq	%rbp
+LCFI237:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI238:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$32767, %eax
 	leave
+LCFI239:
 	ret
-.globl _mod_pow2__mod_pow2_i64_16
-	.private_extern _mod_pow2__mod_pow2_i64_16
+LFE79:
+.no_dead_strip _mod_pow2__mod_pow2_i64_16
 _mod_pow2__mod_pow2_i64_16:
+LFB80:
 	pushq	%rbp
+LCFI240:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI241:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$65535, %eax
 	leave
+LCFI242:
 	ret
-.globl _mod_pow2__mod_pow2_i64_17
-	.private_extern _mod_pow2__mod_pow2_i64_17
+LFE80:
+.no_dead_strip _mod_pow2__mod_pow2_i64_17
 _mod_pow2__mod_pow2_i64_17:
+LFB81:
 	pushq	%rbp
+LCFI243:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI244:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$131071, %eax
 	leave
+LCFI245:
 	ret
-.globl _mod_pow2__mod_pow2_i64_18
-	.private_extern _mod_pow2__mod_pow2_i64_18
+LFE81:
+.no_dead_strip _mod_pow2__mod_pow2_i64_18
 _mod_pow2__mod_pow2_i64_18:
+LFB82:
 	pushq	%rbp
+LCFI246:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI247:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$262143, %eax
 	leave
+LCFI248:
 	ret
-.globl _mod_pow2__mod_pow2_i64_19
-	.private_extern _mod_pow2__mod_pow2_i64_19
+LFE82:
+.no_dead_strip _mod_pow2__mod_pow2_i64_19
 _mod_pow2__mod_pow2_i64_19:
+LFB83:
 	pushq	%rbp
+LCFI249:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI250:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$524287, %eax
 	leave
+LCFI251:
 	ret
-.globl _mod_pow2__mod_pow2_i64_20
-	.private_extern _mod_pow2__mod_pow2_i64_20
+LFE83:
+.no_dead_strip _mod_pow2__mod_pow2_i64_20
 _mod_pow2__mod_pow2_i64_20:
+LFB84:
 	pushq	%rbp
+LCFI252:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI253:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1048575, %eax
 	leave
+LCFI254:
 	ret
-.globl _mod_pow2__mod_pow2_i64_21
-	.private_extern _mod_pow2__mod_pow2_i64_21
+LFE84:
+.no_dead_strip _mod_pow2__mod_pow2_i64_21
 _mod_pow2__mod_pow2_i64_21:
+LFB85:
 	pushq	%rbp
+LCFI255:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI256:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2097151, %eax
 	leave
+LCFI257:
 	ret
-.globl _mod_pow2__mod_pow2_i64_22
-	.private_extern _mod_pow2__mod_pow2_i64_22
+LFE85:
+.no_dead_strip _mod_pow2__mod_pow2_i64_22
 _mod_pow2__mod_pow2_i64_22:
+LFB86:
 	pushq	%rbp
+LCFI258:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI259:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4194303, %eax
 	leave
+LCFI260:
 	ret
-.globl _mod_pow2__mod_pow2_i64_23
-	.private_extern _mod_pow2__mod_pow2_i64_23
+LFE86:
+.no_dead_strip _mod_pow2__mod_pow2_i64_23
 _mod_pow2__mod_pow2_i64_23:
+LFB87:
 	pushq	%rbp
+LCFI261:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI262:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8388607, %eax
 	leave
+LCFI263:
 	ret
-.globl _mod_pow2__mod_pow2_i64_24
-	.private_extern _mod_pow2__mod_pow2_i64_24
+LFE87:
+.no_dead_strip _mod_pow2__mod_pow2_i64_24
 _mod_pow2__mod_pow2_i64_24:
+LFB88:
 	pushq	%rbp
+LCFI264:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI265:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16777215, %eax
 	leave
+LCFI266:
 	ret
-.globl _mod_pow2__mod_pow2_i64_25
-	.private_extern _mod_pow2__mod_pow2_i64_25
+LFE88:
+.no_dead_strip _mod_pow2__mod_pow2_i64_25
 _mod_pow2__mod_pow2_i64_25:
+LFB89:
 	pushq	%rbp
+LCFI267:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI268:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$33554431, %eax
 	leave
+LCFI269:
 	ret
-.globl _mod_pow2__mod_pow2_i64_26
-	.private_extern _mod_pow2__mod_pow2_i64_26
+LFE89:
+.no_dead_strip _mod_pow2__mod_pow2_i64_26
 _mod_pow2__mod_pow2_i64_26:
+LFB90:
 	pushq	%rbp
+LCFI270:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI271:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$67108863, %eax
 	leave
+LCFI272:
 	ret
-.globl _mod_pow2__mod_pow2_i64_27
-	.private_extern _mod_pow2__mod_pow2_i64_27
+LFE90:
+.no_dead_strip _mod_pow2__mod_pow2_i64_27
 _mod_pow2__mod_pow2_i64_27:
+LFB91:
 	pushq	%rbp
+LCFI273:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI274:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$134217727, %eax
 	leave
+LCFI275:
 	ret
-.globl _mod_pow2__mod_pow2_i64_28
-	.private_extern _mod_pow2__mod_pow2_i64_28
+LFE91:
+.no_dead_strip _mod_pow2__mod_pow2_i64_28
 _mod_pow2__mod_pow2_i64_28:
+LFB92:
 	pushq	%rbp
+LCFI276:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI277:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$268435455, %eax
 	leave
+LCFI278:
 	ret
-.globl _mod_pow2__mod_pow2_i64_29
-	.private_extern _mod_pow2__mod_pow2_i64_29
+LFE92:
+.no_dead_strip _mod_pow2__mod_pow2_i64_29
 _mod_pow2__mod_pow2_i64_29:
+LFB93:
 	pushq	%rbp
+LCFI279:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI280:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$536870911, %eax
 	leave
+LCFI281:
 	ret
-.globl _mod_pow2__mod_pow2_i64_30
-	.private_extern _mod_pow2__mod_pow2_i64_30
+LFE93:
+.no_dead_strip _mod_pow2__mod_pow2_i64_30
 _mod_pow2__mod_pow2_i64_30:
+LFB94:
 	pushq	%rbp
+LCFI282:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI283:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1073741823, %eax
 	leave
+LCFI284:
 	ret
-.globl _mod_pow2__mod_pow2_i64_31
-	.private_extern _mod_pow2__mod_pow2_i64_31
+LFE94:
+.no_dead_strip _mod_pow2__mod_pow2_i64_31
 _mod_pow2__mod_pow2_i64_31:
+LFB95:
 	pushq	%rbp
+LCFI285:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI286:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2147483647, %eax
 	leave
+LCFI287:
 	ret
-.globl _mod_pow2__mod_pow2_i64_32
-	.private_extern _mod_pow2__mod_pow2_i64_32
+LFE95:
+.no_dead_strip _mod_pow2__mod_pow2_i64_32
 _mod_pow2__mod_pow2_i64_32:
+LFB96:
 	pushq	%rbp
+LCFI288:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI289:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4294967295, %eax
 	leave
+LCFI290:
 	ret
-.globl _mod_pow2__mod_pow2_i64_33
-	.private_extern _mod_pow2__mod_pow2_i64_33
+LFE96:
+.no_dead_strip _mod_pow2__mod_pow2_i64_33
 _mod_pow2__mod_pow2_i64_33:
+LFB97:
 	pushq	%rbp
+LCFI291:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI292:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8589934591, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI293:
 	ret
-.globl _mod_pow2__mod_pow2_i64_34
-	.private_extern _mod_pow2__mod_pow2_i64_34
+LFE97:
+.no_dead_strip _mod_pow2__mod_pow2_i64_34
 _mod_pow2__mod_pow2_i64_34:
+LFB98:
 	pushq	%rbp
+LCFI294:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI295:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17179869183, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI296:
 	ret
-.globl _mod_pow2__mod_pow2_i64_35
-	.private_extern _mod_pow2__mod_pow2_i64_35
+LFE98:
+.no_dead_strip _mod_pow2__mod_pow2_i64_35
 _mod_pow2__mod_pow2_i64_35:
+LFB99:
 	pushq	%rbp
+LCFI297:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI298:
+	movq	%rdi, -8(%rbp)
 	movabsq	$34359738367, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI299:
 	ret
-.globl _mod_pow2__mod_pow2_i64_36
-	.private_extern _mod_pow2__mod_pow2_i64_36
+LFE99:
+.no_dead_strip _mod_pow2__mod_pow2_i64_36
 _mod_pow2__mod_pow2_i64_36:
+LFB100:
 	pushq	%rbp
+LCFI300:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI301:
+	movq	%rdi, -8(%rbp)
 	movabsq	$68719476735, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI302:
 	ret
-.globl _mod_pow2__mod_pow2_i64_37
-	.private_extern _mod_pow2__mod_pow2_i64_37
+LFE100:
+.no_dead_strip _mod_pow2__mod_pow2_i64_37
 _mod_pow2__mod_pow2_i64_37:
+LFB101:
 	pushq	%rbp
+LCFI303:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI304:
+	movq	%rdi, -8(%rbp)
 	movabsq	$137438953471, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI305:
 	ret
-.globl _mod_pow2__mod_pow2_i64_38
-	.private_extern _mod_pow2__mod_pow2_i64_38
+LFE101:
+.no_dead_strip _mod_pow2__mod_pow2_i64_38
 _mod_pow2__mod_pow2_i64_38:
+LFB102:
 	pushq	%rbp
+LCFI306:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI307:
+	movq	%rdi, -8(%rbp)
 	movabsq	$274877906943, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI308:
 	ret
-.globl _mod_pow2__mod_pow2_i64_39
-	.private_extern _mod_pow2__mod_pow2_i64_39
+LFE102:
+.no_dead_strip _mod_pow2__mod_pow2_i64_39
 _mod_pow2__mod_pow2_i64_39:
+LFB103:
 	pushq	%rbp
+LCFI309:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI310:
+	movq	%rdi, -8(%rbp)
 	movabsq	$549755813887, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI311:
 	ret
-.globl _mod_pow2__mod_pow2_i64_40
-	.private_extern _mod_pow2__mod_pow2_i64_40
+LFE103:
+.no_dead_strip _mod_pow2__mod_pow2_i64_40
 _mod_pow2__mod_pow2_i64_40:
+LFB104:
 	pushq	%rbp
+LCFI312:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI313:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1099511627775, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI314:
 	ret
-.globl _mod_pow2__mod_pow2_i64_41
-	.private_extern _mod_pow2__mod_pow2_i64_41
+LFE104:
+.no_dead_strip _mod_pow2__mod_pow2_i64_41
 _mod_pow2__mod_pow2_i64_41:
+LFB105:
 	pushq	%rbp
+LCFI315:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI316:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2199023255551, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI317:
 	ret
-.globl _mod_pow2__mod_pow2_i64_42
-	.private_extern _mod_pow2__mod_pow2_i64_42
+LFE105:
+.no_dead_strip _mod_pow2__mod_pow2_i64_42
 _mod_pow2__mod_pow2_i64_42:
+LFB106:
 	pushq	%rbp
+LCFI318:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI319:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4398046511103, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI320:
 	ret
-.globl _mod_pow2__mod_pow2_i64_43
-	.private_extern _mod_pow2__mod_pow2_i64_43
+LFE106:
+.no_dead_strip _mod_pow2__mod_pow2_i64_43
 _mod_pow2__mod_pow2_i64_43:
+LFB107:
 	pushq	%rbp
+LCFI321:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI322:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8796093022207, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI323:
 	ret
-.globl _mod_pow2__mod_pow2_i64_44
-	.private_extern _mod_pow2__mod_pow2_i64_44
+LFE107:
+.no_dead_strip _mod_pow2__mod_pow2_i64_44
 _mod_pow2__mod_pow2_i64_44:
+LFB108:
 	pushq	%rbp
+LCFI324:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI325:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17592186044415, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI326:
 	ret
-.globl _mod_pow2__mod_pow2_i64_45
-	.private_extern _mod_pow2__mod_pow2_i64_45
+LFE108:
+.no_dead_strip _mod_pow2__mod_pow2_i64_45
 _mod_pow2__mod_pow2_i64_45:
+LFB109:
 	pushq	%rbp
+LCFI327:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI328:
+	movq	%rdi, -8(%rbp)
 	movabsq	$35184372088831, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI329:
 	ret
-.globl _mod_pow2__mod_pow2_i64_46
-	.private_extern _mod_pow2__mod_pow2_i64_46
+LFE109:
+.no_dead_strip _mod_pow2__mod_pow2_i64_46
 _mod_pow2__mod_pow2_i64_46:
+LFB110:
 	pushq	%rbp
+LCFI330:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI331:
+	movq	%rdi, -8(%rbp)
 	movabsq	$70368744177663, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI332:
 	ret
-.globl _mod_pow2__mod_pow2_i64_47
-	.private_extern _mod_pow2__mod_pow2_i64_47
+LFE110:
+.no_dead_strip _mod_pow2__mod_pow2_i64_47
 _mod_pow2__mod_pow2_i64_47:
+LFB111:
 	pushq	%rbp
+LCFI333:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI334:
+	movq	%rdi, -8(%rbp)
 	movabsq	$140737488355327, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI335:
 	ret
-.globl _mod_pow2__mod_pow2_i64_48
-	.private_extern _mod_pow2__mod_pow2_i64_48
+LFE111:
+.no_dead_strip _mod_pow2__mod_pow2_i64_48
 _mod_pow2__mod_pow2_i64_48:
+LFB112:
 	pushq	%rbp
+LCFI336:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI337:
+	movq	%rdi, -8(%rbp)
 	movabsq	$281474976710655, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI338:
 	ret
-.globl _mod_pow2__mod_pow2_i64_49
-	.private_extern _mod_pow2__mod_pow2_i64_49
+LFE112:
+.no_dead_strip _mod_pow2__mod_pow2_i64_49
 _mod_pow2__mod_pow2_i64_49:
+LFB113:
 	pushq	%rbp
+LCFI339:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI340:
+	movq	%rdi, -8(%rbp)
 	movabsq	$562949953421311, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI341:
 	ret
-.globl _mod_pow2__mod_pow2_i64_50
-	.private_extern _mod_pow2__mod_pow2_i64_50
+LFE113:
+.no_dead_strip _mod_pow2__mod_pow2_i64_50
 _mod_pow2__mod_pow2_i64_50:
+LFB114:
 	pushq	%rbp
+LCFI342:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI343:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1125899906842623, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI344:
 	ret
-.globl _mod_pow2__mod_pow2_i64_51
-	.private_extern _mod_pow2__mod_pow2_i64_51
+LFE114:
+.no_dead_strip _mod_pow2__mod_pow2_i64_51
 _mod_pow2__mod_pow2_i64_51:
+LFB115:
 	pushq	%rbp
+LCFI345:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI346:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2251799813685247, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI347:
 	ret
-.globl _mod_pow2__mod_pow2_i64_52
-	.private_extern _mod_pow2__mod_pow2_i64_52
+LFE115:
+.no_dead_strip _mod_pow2__mod_pow2_i64_52
 _mod_pow2__mod_pow2_i64_52:
+LFB116:
 	pushq	%rbp
+LCFI348:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI349:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4503599627370495, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI350:
 	ret
-.globl _mod_pow2__mod_pow2_i64_53
-	.private_extern _mod_pow2__mod_pow2_i64_53
+LFE116:
+.no_dead_strip _mod_pow2__mod_pow2_i64_53
 _mod_pow2__mod_pow2_i64_53:
+LFB117:
 	pushq	%rbp
+LCFI351:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI352:
+	movq	%rdi, -8(%rbp)
 	movabsq	$9007199254740991, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI353:
 	ret
-.globl _mod_pow2__mod_pow2_i64_54
-	.private_extern _mod_pow2__mod_pow2_i64_54
+LFE117:
+.no_dead_strip _mod_pow2__mod_pow2_i64_54
 _mod_pow2__mod_pow2_i64_54:
+LFB118:
 	pushq	%rbp
+LCFI354:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI355:
+	movq	%rdi, -8(%rbp)
 	movabsq	$18014398509481983, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI356:
 	ret
-.globl _mod_pow2__mod_pow2_i64_55
-	.private_extern _mod_pow2__mod_pow2_i64_55
+LFE118:
+.no_dead_strip _mod_pow2__mod_pow2_i64_55
 _mod_pow2__mod_pow2_i64_55:
+LFB119:
 	pushq	%rbp
+LCFI357:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI358:
+	movq	%rdi, -8(%rbp)
 	movabsq	$36028797018963967, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI359:
 	ret
-.globl _mod_pow2__mod_pow2_i64_56
-	.private_extern _mod_pow2__mod_pow2_i64_56
+LFE119:
+.no_dead_strip _mod_pow2__mod_pow2_i64_56
 _mod_pow2__mod_pow2_i64_56:
+LFB120:
 	pushq	%rbp
+LCFI360:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI361:
+	movq	%rdi, -8(%rbp)
 	movabsq	$72057594037927935, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI362:
 	ret
-.globl _mod_pow2__mod_pow2_i64_57
-	.private_extern _mod_pow2__mod_pow2_i64_57
+LFE120:
+.no_dead_strip _mod_pow2__mod_pow2_i64_57
 _mod_pow2__mod_pow2_i64_57:
+LFB121:
 	pushq	%rbp
+LCFI363:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI364:
+	movq	%rdi, -8(%rbp)
 	movabsq	$144115188075855871, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI365:
 	ret
-.globl _mod_pow2__mod_pow2_i64_58
-	.private_extern _mod_pow2__mod_pow2_i64_58
+LFE121:
+.no_dead_strip _mod_pow2__mod_pow2_i64_58
 _mod_pow2__mod_pow2_i64_58:
+LFB122:
 	pushq	%rbp
+LCFI366:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI367:
+	movq	%rdi, -8(%rbp)
 	movabsq	$288230376151711743, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI368:
 	ret
-.globl _mod_pow2__mod_pow2_i64_59
-	.private_extern _mod_pow2__mod_pow2_i64_59
+LFE122:
+.no_dead_strip _mod_pow2__mod_pow2_i64_59
 _mod_pow2__mod_pow2_i64_59:
+LFB123:
 	pushq	%rbp
+LCFI369:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI370:
+	movq	%rdi, -8(%rbp)
 	movabsq	$576460752303423487, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI371:
 	ret
-.globl _mod_pow2__mod_pow2_i64_60
-	.private_extern _mod_pow2__mod_pow2_i64_60
+LFE123:
+.no_dead_strip _mod_pow2__mod_pow2_i64_60
 _mod_pow2__mod_pow2_i64_60:
+LFB124:
 	pushq	%rbp
+LCFI372:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI373:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1152921504606846975, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI374:
 	ret
-.globl _mod_pow2__mod_pow2_i64_61
-	.private_extern _mod_pow2__mod_pow2_i64_61
+LFE124:
+.no_dead_strip _mod_pow2__mod_pow2_i64_61
 _mod_pow2__mod_pow2_i64_61:
+LFB125:
 	pushq	%rbp
+LCFI375:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI376:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2305843009213693951, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI377:
 	ret
-.globl _mod_pow2__mod_pow2_i64_62
-	.private_extern _mod_pow2__mod_pow2_i64_62
+LFE125:
+.no_dead_strip _mod_pow2__mod_pow2_i64_62
 _mod_pow2__mod_pow2_i64_62:
+LFB126:
 	pushq	%rbp
+LCFI378:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI379:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4611686018427387903, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI380:
 	ret
-.globl _mod_pow2__mod_pow2_i64_63
-	.private_extern _mod_pow2__mod_pow2_i64_63
+LFE126:
+.no_dead_strip _mod_pow2__mod_pow2_i64_63
 _mod_pow2__mod_pow2_i64_63:
+LFB127:
 	pushq	%rbp
+LCFI381:
 	movq	%rsp, %rbp
+LCFI382:
+	pushq	%rbx
+LCFI383:
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rcx
-	leaq	-1(%rcx), %rdx
-	movq	%rcx, %rax
-	orq	%rdx, %rax
-	movq	%rax, %rsi
-	sarq	$63, %rsi
-	subq	%rsi, %rdx
-	movabsq	$-9223372036854775808, %rax
-	cmpq	%rax, %rdx
-	sete	%al
-	movzbl	%al, %edx
-	movq	%rsi, %rax
-	notq	%rax
-	leaq	(%rdx,%rax), %rax
-	salq	$63, %rax
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	subq	%rax, %rdx
 	movq	%rdx, %rax
+	popq	%rbx
 	leave
+LCFI384:
 	ret
-.globl _mod_pow2__mod_pow2_u64_0
-	.private_extern _mod_pow2__mod_pow2_u64_0
+LFE127:
+.no_dead_strip _mod_pow2__mod_pow2_u64_0
 _mod_pow2__mod_pow2_u64_0:
+LFB128:
 	pushq	%rbp
+LCFI385:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI386:
+	movq	%rdi, -8(%rbp)
 	movl	$0, %eax
 	leave
+LCFI387:
 	ret
-.globl _mod_pow2__mod_pow2_u64_1
-	.private_extern _mod_pow2__mod_pow2_u64_1
+LFE128:
+.no_dead_strip _mod_pow2__mod_pow2_u64_1
 _mod_pow2__mod_pow2_u64_1:
+LFB129:
 	pushq	%rbp
+LCFI388:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI389:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1, %eax
 	leave
+LCFI390:
 	ret
-.globl _mod_pow2__mod_pow2_u64_2
-	.private_extern _mod_pow2__mod_pow2_u64_2
+LFE129:
+.no_dead_strip _mod_pow2__mod_pow2_u64_2
 _mod_pow2__mod_pow2_u64_2:
+LFB130:
 	pushq	%rbp
+LCFI391:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI392:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$3, %eax
 	leave
+LCFI393:
 	ret
-.globl _mod_pow2__mod_pow2_u64_3
-	.private_extern _mod_pow2__mod_pow2_u64_3
+LFE130:
+.no_dead_strip _mod_pow2__mod_pow2_u64_3
 _mod_pow2__mod_pow2_u64_3:
+LFB131:
 	pushq	%rbp
+LCFI394:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI395:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$7, %eax
 	leave
+LCFI396:
 	ret
-.globl _mod_pow2__mod_pow2_u64_4
-	.private_extern _mod_pow2__mod_pow2_u64_4
+LFE131:
+.no_dead_strip _mod_pow2__mod_pow2_u64_4
 _mod_pow2__mod_pow2_u64_4:
+LFB132:
 	pushq	%rbp
+LCFI397:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI398:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$15, %eax
 	leave
+LCFI399:
 	ret
-.globl _mod_pow2__mod_pow2_u64_5
-	.private_extern _mod_pow2__mod_pow2_u64_5
+LFE132:
+.no_dead_strip _mod_pow2__mod_pow2_u64_5
 _mod_pow2__mod_pow2_u64_5:
+LFB133:
 	pushq	%rbp
+LCFI400:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI401:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$31, %eax
 	leave
+LCFI402:
 	ret
-.globl _mod_pow2__mod_pow2_u64_6
-	.private_extern _mod_pow2__mod_pow2_u64_6
+LFE133:
+.no_dead_strip _mod_pow2__mod_pow2_u64_6
 _mod_pow2__mod_pow2_u64_6:
+LFB134:
 	pushq	%rbp
+LCFI403:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI404:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$63, %eax
 	leave
+LCFI405:
 	ret
-.globl _mod_pow2__mod_pow2_u64_7
-	.private_extern _mod_pow2__mod_pow2_u64_7
+LFE134:
+.no_dead_strip _mod_pow2__mod_pow2_u64_7
 _mod_pow2__mod_pow2_u64_7:
+LFB135:
 	pushq	%rbp
+LCFI406:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI407:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$127, %eax
 	leave
+LCFI408:
 	ret
-.globl _mod_pow2__mod_pow2_u64_8
-	.private_extern _mod_pow2__mod_pow2_u64_8
+LFE135:
+.no_dead_strip _mod_pow2__mod_pow2_u64_8
 _mod_pow2__mod_pow2_u64_8:
+LFB136:
 	pushq	%rbp
+LCFI409:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI410:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$255, %eax
 	leave
+LCFI411:
 	ret
-.globl _mod_pow2__mod_pow2_u64_9
-	.private_extern _mod_pow2__mod_pow2_u64_9
+LFE136:
+.no_dead_strip _mod_pow2__mod_pow2_u64_9
 _mod_pow2__mod_pow2_u64_9:
+LFB137:
 	pushq	%rbp
+LCFI412:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI413:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$511, %eax
 	leave
+LCFI414:
 	ret
-.globl _mod_pow2__mod_pow2_u64_10
-	.private_extern _mod_pow2__mod_pow2_u64_10
+LFE137:
+.no_dead_strip _mod_pow2__mod_pow2_u64_10
 _mod_pow2__mod_pow2_u64_10:
+LFB138:
 	pushq	%rbp
+LCFI415:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI416:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1023, %eax
 	leave
+LCFI417:
 	ret
-.globl _mod_pow2__mod_pow2_u64_11
-	.private_extern _mod_pow2__mod_pow2_u64_11
+LFE138:
+.no_dead_strip _mod_pow2__mod_pow2_u64_11
 _mod_pow2__mod_pow2_u64_11:
+LFB139:
 	pushq	%rbp
+LCFI418:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI419:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2047, %eax
 	leave
+LCFI420:
 	ret
-.globl _mod_pow2__mod_pow2_u64_12
-	.private_extern _mod_pow2__mod_pow2_u64_12
+LFE139:
+.no_dead_strip _mod_pow2__mod_pow2_u64_12
 _mod_pow2__mod_pow2_u64_12:
+LFB140:
 	pushq	%rbp
+LCFI421:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI422:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4095, %eax
 	leave
+LCFI423:
 	ret
-.globl _mod_pow2__mod_pow2_u64_13
-	.private_extern _mod_pow2__mod_pow2_u64_13
+LFE140:
+.no_dead_strip _mod_pow2__mod_pow2_u64_13
 _mod_pow2__mod_pow2_u64_13:
+LFB141:
 	pushq	%rbp
+LCFI424:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI425:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8191, %eax
 	leave
+LCFI426:
 	ret
-.globl _mod_pow2__mod_pow2_u64_14
-	.private_extern _mod_pow2__mod_pow2_u64_14
+LFE141:
+.no_dead_strip _mod_pow2__mod_pow2_u64_14
 _mod_pow2__mod_pow2_u64_14:
+LFB142:
 	pushq	%rbp
+LCFI427:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI428:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16383, %eax
 	leave
+LCFI429:
 	ret
-.globl _mod_pow2__mod_pow2_u64_15
-	.private_extern _mod_pow2__mod_pow2_u64_15
+LFE142:
+.no_dead_strip _mod_pow2__mod_pow2_u64_15
 _mod_pow2__mod_pow2_u64_15:
+LFB143:
 	pushq	%rbp
+LCFI430:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI431:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$32767, %eax
 	leave
+LCFI432:
 	ret
-.globl _mod_pow2__mod_pow2_u64_16
-	.private_extern _mod_pow2__mod_pow2_u64_16
+LFE143:
+.no_dead_strip _mod_pow2__mod_pow2_u64_16
 _mod_pow2__mod_pow2_u64_16:
+LFB144:
 	pushq	%rbp
+LCFI433:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI434:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$65535, %eax
 	leave
+LCFI435:
 	ret
-.globl _mod_pow2__mod_pow2_u64_17
-	.private_extern _mod_pow2__mod_pow2_u64_17
+LFE144:
+.no_dead_strip _mod_pow2__mod_pow2_u64_17
 _mod_pow2__mod_pow2_u64_17:
+LFB145:
 	pushq	%rbp
+LCFI436:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI437:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$131071, %eax
 	leave
+LCFI438:
 	ret
-.globl _mod_pow2__mod_pow2_u64_18
-	.private_extern _mod_pow2__mod_pow2_u64_18
+LFE145:
+.no_dead_strip _mod_pow2__mod_pow2_u64_18
 _mod_pow2__mod_pow2_u64_18:
+LFB146:
 	pushq	%rbp
+LCFI439:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI440:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$262143, %eax
 	leave
+LCFI441:
 	ret
-.globl _mod_pow2__mod_pow2_u64_19
-	.private_extern _mod_pow2__mod_pow2_u64_19
+LFE146:
+.no_dead_strip _mod_pow2__mod_pow2_u64_19
 _mod_pow2__mod_pow2_u64_19:
+LFB147:
 	pushq	%rbp
+LCFI442:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI443:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$524287, %eax
 	leave
+LCFI444:
 	ret
-.globl _mod_pow2__mod_pow2_u64_20
-	.private_extern _mod_pow2__mod_pow2_u64_20
+LFE147:
+.no_dead_strip _mod_pow2__mod_pow2_u64_20
 _mod_pow2__mod_pow2_u64_20:
+LFB148:
 	pushq	%rbp
+LCFI445:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI446:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1048575, %eax
 	leave
+LCFI447:
 	ret
-.globl _mod_pow2__mod_pow2_u64_21
-	.private_extern _mod_pow2__mod_pow2_u64_21
+LFE148:
+.no_dead_strip _mod_pow2__mod_pow2_u64_21
 _mod_pow2__mod_pow2_u64_21:
+LFB149:
 	pushq	%rbp
+LCFI448:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI449:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2097151, %eax
 	leave
+LCFI450:
 	ret
-.globl _mod_pow2__mod_pow2_u64_22
-	.private_extern _mod_pow2__mod_pow2_u64_22
+LFE149:
+.no_dead_strip _mod_pow2__mod_pow2_u64_22
 _mod_pow2__mod_pow2_u64_22:
+LFB150:
 	pushq	%rbp
+LCFI451:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI452:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4194303, %eax
 	leave
+LCFI453:
 	ret
-.globl _mod_pow2__mod_pow2_u64_23
-	.private_extern _mod_pow2__mod_pow2_u64_23
+LFE150:
+.no_dead_strip _mod_pow2__mod_pow2_u64_23
 _mod_pow2__mod_pow2_u64_23:
+LFB151:
 	pushq	%rbp
+LCFI454:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI455:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8388607, %eax
 	leave
+LCFI456:
 	ret
-.globl _mod_pow2__mod_pow2_u64_24
-	.private_extern _mod_pow2__mod_pow2_u64_24
+LFE151:
+.no_dead_strip _mod_pow2__mod_pow2_u64_24
 _mod_pow2__mod_pow2_u64_24:
+LFB152:
 	pushq	%rbp
+LCFI457:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI458:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16777215, %eax
 	leave
+LCFI459:
 	ret
-.globl _mod_pow2__mod_pow2_u64_25
-	.private_extern _mod_pow2__mod_pow2_u64_25
+LFE152:
+.no_dead_strip _mod_pow2__mod_pow2_u64_25
 _mod_pow2__mod_pow2_u64_25:
+LFB153:
 	pushq	%rbp
+LCFI460:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI461:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$33554431, %eax
 	leave
+LCFI462:
 	ret
-.globl _mod_pow2__mod_pow2_u64_26
-	.private_extern _mod_pow2__mod_pow2_u64_26
+LFE153:
+.no_dead_strip _mod_pow2__mod_pow2_u64_26
 _mod_pow2__mod_pow2_u64_26:
+LFB154:
 	pushq	%rbp
+LCFI463:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI464:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$67108863, %eax
 	leave
+LCFI465:
 	ret
-.globl _mod_pow2__mod_pow2_u64_27
-	.private_extern _mod_pow2__mod_pow2_u64_27
+LFE154:
+.no_dead_strip _mod_pow2__mod_pow2_u64_27
 _mod_pow2__mod_pow2_u64_27:
+LFB155:
 	pushq	%rbp
+LCFI466:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI467:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$134217727, %eax
 	leave
+LCFI468:
 	ret
-.globl _mod_pow2__mod_pow2_u64_28
-	.private_extern _mod_pow2__mod_pow2_u64_28
+LFE155:
+.no_dead_strip _mod_pow2__mod_pow2_u64_28
 _mod_pow2__mod_pow2_u64_28:
+LFB156:
 	pushq	%rbp
+LCFI469:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI470:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$268435455, %eax
 	leave
+LCFI471:
 	ret
-.globl _mod_pow2__mod_pow2_u64_29
-	.private_extern _mod_pow2__mod_pow2_u64_29
+LFE156:
+.no_dead_strip _mod_pow2__mod_pow2_u64_29
 _mod_pow2__mod_pow2_u64_29:
+LFB157:
 	pushq	%rbp
+LCFI472:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI473:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$536870911, %eax
 	leave
+LCFI474:
 	ret
-.globl _mod_pow2__mod_pow2_u64_30
-	.private_extern _mod_pow2__mod_pow2_u64_30
+LFE157:
+.no_dead_strip _mod_pow2__mod_pow2_u64_30
 _mod_pow2__mod_pow2_u64_30:
+LFB158:
 	pushq	%rbp
+LCFI475:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI476:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1073741823, %eax
 	leave
+LCFI477:
 	ret
-.globl _mod_pow2__mod_pow2_u64_31
-	.private_extern _mod_pow2__mod_pow2_u64_31
+LFE158:
+.no_dead_strip _mod_pow2__mod_pow2_u64_31
 _mod_pow2__mod_pow2_u64_31:
+LFB159:
 	pushq	%rbp
+LCFI478:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI479:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2147483647, %eax
 	leave
+LCFI480:
 	ret
-.globl _mod_pow2__mod_pow2_u64_32
-	.private_extern _mod_pow2__mod_pow2_u64_32
+LFE159:
+.no_dead_strip _mod_pow2__mod_pow2_u64_32
 _mod_pow2__mod_pow2_u64_32:
+LFB160:
 	pushq	%rbp
+LCFI481:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI482:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4294967295, %eax
 	leave
+LCFI483:
 	ret
-.globl _mod_pow2__mod_pow2_u64_33
-	.private_extern _mod_pow2__mod_pow2_u64_33
+LFE160:
+.no_dead_strip _mod_pow2__mod_pow2_u64_33
 _mod_pow2__mod_pow2_u64_33:
+LFB161:
 	pushq	%rbp
+LCFI484:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI485:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8589934591, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI486:
 	ret
-.globl _mod_pow2__mod_pow2_u64_34
-	.private_extern _mod_pow2__mod_pow2_u64_34
+LFE161:
+.no_dead_strip _mod_pow2__mod_pow2_u64_34
 _mod_pow2__mod_pow2_u64_34:
+LFB162:
 	pushq	%rbp
+LCFI487:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI488:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17179869183, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI489:
 	ret
-.globl _mod_pow2__mod_pow2_u64_35
-	.private_extern _mod_pow2__mod_pow2_u64_35
+LFE162:
+.no_dead_strip _mod_pow2__mod_pow2_u64_35
 _mod_pow2__mod_pow2_u64_35:
+LFB163:
 	pushq	%rbp
+LCFI490:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI491:
+	movq	%rdi, -8(%rbp)
 	movabsq	$34359738367, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI492:
 	ret
-.globl _mod_pow2__mod_pow2_u64_36
-	.private_extern _mod_pow2__mod_pow2_u64_36
+LFE163:
+.no_dead_strip _mod_pow2__mod_pow2_u64_36
 _mod_pow2__mod_pow2_u64_36:
+LFB164:
 	pushq	%rbp
+LCFI493:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI494:
+	movq	%rdi, -8(%rbp)
 	movabsq	$68719476735, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI495:
 	ret
-.globl _mod_pow2__mod_pow2_u64_37
-	.private_extern _mod_pow2__mod_pow2_u64_37
+LFE164:
+.no_dead_strip _mod_pow2__mod_pow2_u64_37
 _mod_pow2__mod_pow2_u64_37:
+LFB165:
 	pushq	%rbp
+LCFI496:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI497:
+	movq	%rdi, -8(%rbp)
 	movabsq	$137438953471, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI498:
 	ret
-.globl _mod_pow2__mod_pow2_u64_38
-	.private_extern _mod_pow2__mod_pow2_u64_38
+LFE165:
+.no_dead_strip _mod_pow2__mod_pow2_u64_38
 _mod_pow2__mod_pow2_u64_38:
+LFB166:
 	pushq	%rbp
+LCFI499:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI500:
+	movq	%rdi, -8(%rbp)
 	movabsq	$274877906943, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI501:
 	ret
-.globl _mod_pow2__mod_pow2_u64_39
-	.private_extern _mod_pow2__mod_pow2_u64_39
+LFE166:
+.no_dead_strip _mod_pow2__mod_pow2_u64_39
 _mod_pow2__mod_pow2_u64_39:
+LFB167:
 	pushq	%rbp
+LCFI502:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI503:
+	movq	%rdi, -8(%rbp)
 	movabsq	$549755813887, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI504:
 	ret
-.globl _mod_pow2__mod_pow2_u64_40
-	.private_extern _mod_pow2__mod_pow2_u64_40
+LFE167:
+.no_dead_strip _mod_pow2__mod_pow2_u64_40
 _mod_pow2__mod_pow2_u64_40:
+LFB168:
 	pushq	%rbp
+LCFI505:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI506:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1099511627775, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI507:
 	ret
-.globl _mod_pow2__mod_pow2_u64_41
-	.private_extern _mod_pow2__mod_pow2_u64_41
+LFE168:
+.no_dead_strip _mod_pow2__mod_pow2_u64_41
 _mod_pow2__mod_pow2_u64_41:
+LFB169:
 	pushq	%rbp
+LCFI508:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI509:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2199023255551, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI510:
 	ret
-.globl _mod_pow2__mod_pow2_u64_42
-	.private_extern _mod_pow2__mod_pow2_u64_42
+LFE169:
+.no_dead_strip _mod_pow2__mod_pow2_u64_42
 _mod_pow2__mod_pow2_u64_42:
+LFB170:
 	pushq	%rbp
+LCFI511:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI512:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4398046511103, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI513:
 	ret
-.globl _mod_pow2__mod_pow2_u64_43
-	.private_extern _mod_pow2__mod_pow2_u64_43
+LFE170:
+.no_dead_strip _mod_pow2__mod_pow2_u64_43
 _mod_pow2__mod_pow2_u64_43:
+LFB171:
 	pushq	%rbp
+LCFI514:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI515:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8796093022207, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI516:
 	ret
-.globl _mod_pow2__mod_pow2_u64_44
-	.private_extern _mod_pow2__mod_pow2_u64_44
+LFE171:
+.no_dead_strip _mod_pow2__mod_pow2_u64_44
 _mod_pow2__mod_pow2_u64_44:
+LFB172:
 	pushq	%rbp
+LCFI517:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI518:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17592186044415, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI519:
 	ret
-.globl _mod_pow2__mod_pow2_u64_45
-	.private_extern _mod_pow2__mod_pow2_u64_45
+LFE172:
+.no_dead_strip _mod_pow2__mod_pow2_u64_45
 _mod_pow2__mod_pow2_u64_45:
+LFB173:
 	pushq	%rbp
+LCFI520:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI521:
+	movq	%rdi, -8(%rbp)
 	movabsq	$35184372088831, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI522:
 	ret
-.globl _mod_pow2__mod_pow2_u64_46
-	.private_extern _mod_pow2__mod_pow2_u64_46
+LFE173:
+.no_dead_strip _mod_pow2__mod_pow2_u64_46
 _mod_pow2__mod_pow2_u64_46:
+LFB174:
 	pushq	%rbp
+LCFI523:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI524:
+	movq	%rdi, -8(%rbp)
 	movabsq	$70368744177663, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI525:
 	ret
-.globl _mod_pow2__mod_pow2_u64_47
-	.private_extern _mod_pow2__mod_pow2_u64_47
+LFE174:
+.no_dead_strip _mod_pow2__mod_pow2_u64_47
 _mod_pow2__mod_pow2_u64_47:
+LFB175:
 	pushq	%rbp
+LCFI526:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI527:
+	movq	%rdi, -8(%rbp)
 	movabsq	$140737488355327, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI528:
 	ret
-.globl _mod_pow2__mod_pow2_u64_48
-	.private_extern _mod_pow2__mod_pow2_u64_48
+LFE175:
+.no_dead_strip _mod_pow2__mod_pow2_u64_48
 _mod_pow2__mod_pow2_u64_48:
+LFB176:
 	pushq	%rbp
+LCFI529:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI530:
+	movq	%rdi, -8(%rbp)
 	movabsq	$281474976710655, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI531:
 	ret
-.globl _mod_pow2__mod_pow2_u64_49
-	.private_extern _mod_pow2__mod_pow2_u64_49
+LFE176:
+.no_dead_strip _mod_pow2__mod_pow2_u64_49
 _mod_pow2__mod_pow2_u64_49:
+LFB177:
 	pushq	%rbp
+LCFI532:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI533:
+	movq	%rdi, -8(%rbp)
 	movabsq	$562949953421311, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI534:
 	ret
-.globl _mod_pow2__mod_pow2_u64_50
-	.private_extern _mod_pow2__mod_pow2_u64_50
+LFE177:
+.no_dead_strip _mod_pow2__mod_pow2_u64_50
 _mod_pow2__mod_pow2_u64_50:
+LFB178:
 	pushq	%rbp
+LCFI535:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI536:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1125899906842623, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI537:
 	ret
-.globl _mod_pow2__mod_pow2_u64_51
-	.private_extern _mod_pow2__mod_pow2_u64_51
+LFE178:
+.no_dead_strip _mod_pow2__mod_pow2_u64_51
 _mod_pow2__mod_pow2_u64_51:
+LFB179:
 	pushq	%rbp
+LCFI538:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI539:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2251799813685247, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI540:
 	ret
-.globl _mod_pow2__mod_pow2_u64_52
-	.private_extern _mod_pow2__mod_pow2_u64_52
+LFE179:
+.no_dead_strip _mod_pow2__mod_pow2_u64_52
 _mod_pow2__mod_pow2_u64_52:
+LFB180:
 	pushq	%rbp
+LCFI541:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI542:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4503599627370495, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI543:
 	ret
-.globl _mod_pow2__mod_pow2_u64_53
-	.private_extern _mod_pow2__mod_pow2_u64_53
+LFE180:
+.no_dead_strip _mod_pow2__mod_pow2_u64_53
 _mod_pow2__mod_pow2_u64_53:
+LFB181:
 	pushq	%rbp
+LCFI544:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI545:
+	movq	%rdi, -8(%rbp)
 	movabsq	$9007199254740991, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI546:
 	ret
-.globl _mod_pow2__mod_pow2_u64_54
-	.private_extern _mod_pow2__mod_pow2_u64_54
+LFE181:
+.no_dead_strip _mod_pow2__mod_pow2_u64_54
 _mod_pow2__mod_pow2_u64_54:
+LFB182:
 	pushq	%rbp
+LCFI547:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI548:
+	movq	%rdi, -8(%rbp)
 	movabsq	$18014398509481983, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI549:
 	ret
-.globl _mod_pow2__mod_pow2_u64_55
-	.private_extern _mod_pow2__mod_pow2_u64_55
+LFE182:
+.no_dead_strip _mod_pow2__mod_pow2_u64_55
 _mod_pow2__mod_pow2_u64_55:
+LFB183:
 	pushq	%rbp
+LCFI550:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI551:
+	movq	%rdi, -8(%rbp)
 	movabsq	$36028797018963967, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI552:
 	ret
-.globl _mod_pow2__mod_pow2_u64_56
-	.private_extern _mod_pow2__mod_pow2_u64_56
+LFE183:
+.no_dead_strip _mod_pow2__mod_pow2_u64_56
 _mod_pow2__mod_pow2_u64_56:
+LFB184:
 	pushq	%rbp
+LCFI553:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI554:
+	movq	%rdi, -8(%rbp)
 	movabsq	$72057594037927935, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI555:
 	ret
-.globl _mod_pow2__mod_pow2_u64_57
-	.private_extern _mod_pow2__mod_pow2_u64_57
+LFE184:
+.no_dead_strip _mod_pow2__mod_pow2_u64_57
 _mod_pow2__mod_pow2_u64_57:
+LFB185:
 	pushq	%rbp
+LCFI556:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI557:
+	movq	%rdi, -8(%rbp)
 	movabsq	$144115188075855871, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI558:
 	ret
-.globl _mod_pow2__mod_pow2_u64_58
-	.private_extern _mod_pow2__mod_pow2_u64_58
+LFE185:
+.no_dead_strip _mod_pow2__mod_pow2_u64_58
 _mod_pow2__mod_pow2_u64_58:
+LFB186:
 	pushq	%rbp
+LCFI559:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI560:
+	movq	%rdi, -8(%rbp)
 	movabsq	$288230376151711743, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI561:
 	ret
-.globl _mod_pow2__mod_pow2_u64_59
-	.private_extern _mod_pow2__mod_pow2_u64_59
+LFE186:
+.no_dead_strip _mod_pow2__mod_pow2_u64_59
 _mod_pow2__mod_pow2_u64_59:
+LFB187:
 	pushq	%rbp
+LCFI562:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI563:
+	movq	%rdi, -8(%rbp)
 	movabsq	$576460752303423487, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI564:
 	ret
-.globl _mod_pow2__mod_pow2_u64_60
-	.private_extern _mod_pow2__mod_pow2_u64_60
+LFE187:
+.no_dead_strip _mod_pow2__mod_pow2_u64_60
 _mod_pow2__mod_pow2_u64_60:
+LFB188:
 	pushq	%rbp
+LCFI565:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI566:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1152921504606846975, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI567:
 	ret
-.globl _mod_pow2__mod_pow2_u64_61
-	.private_extern _mod_pow2__mod_pow2_u64_61
+LFE188:
+.no_dead_strip _mod_pow2__mod_pow2_u64_61
 _mod_pow2__mod_pow2_u64_61:
+LFB189:
 	pushq	%rbp
+LCFI568:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI569:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2305843009213693951, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI570:
 	ret
-.globl _mod_pow2__mod_pow2_u64_62
-	.private_extern _mod_pow2__mod_pow2_u64_62
+LFE189:
+.no_dead_strip _mod_pow2__mod_pow2_u64_62
 _mod_pow2__mod_pow2_u64_62:
+LFB190:
 	pushq	%rbp
+LCFI571:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI572:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4611686018427387903, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI573:
 	ret
-.globl _mod_pow2__mod_pow2_u64_63
-	.private_extern _mod_pow2__mod_pow2_u64_63
+LFE190:
+.no_dead_strip _mod_pow2__mod_pow2_u64_63
 _mod_pow2__mod_pow2_u64_63:
+LFB191:
 	pushq	%rbp
+LCFI574:
 	movq	%rsp, %rbp
+LCFI575:
+	pushq	%rbx
+LCFI576:
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rcx
-	leaq	-1(%rcx), %rdx
-	movq	%rcx, %rax
-	orq	%rdx, %rax
-	movq	%rax, %rsi
-	sarq	$63, %rsi
-	subq	%rsi, %rdx
-	movabsq	$-9223372036854775808, %rax
-	cmpq	%rax, %rdx
-	sete	%al
-	movzbl	%al, %edx
-	movq	%rsi, %rax
-	notq	%rax
-	leaq	(%rdx,%rax), %rax
-	salq	$63, %rax
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	subq	%rax, %rdx
 	movq	%rdx, %rax
+	popq	%rbx
 	leave
+LCFI577:
 	ret
-.globl _mod_pow2__mod_pow2_I_0
-	.private_extern _mod_pow2__mod_pow2_I_0
+LFE191:
+.no_dead_strip _mod_pow2__mod_pow2_I_0
 _mod_pow2__mod_pow2_I_0:
+LFB192:
 	pushq	%rbp
+LCFI578:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI579:
+	movq	%rdi, -8(%rbp)
 	movl	$0, %eax
 	leave
+LCFI580:
 	ret
-.globl _mod_pow2__mod_pow2_I_1
-	.private_extern _mod_pow2__mod_pow2_I_1
+LFE192:
+.no_dead_strip _mod_pow2__mod_pow2_I_1
 _mod_pow2__mod_pow2_I_1:
+LFB193:
 	pushq	%rbp
+LCFI581:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI582:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1, %eax
 	leave
+LCFI583:
 	ret
-.globl _mod_pow2__mod_pow2_I_2
-	.private_extern _mod_pow2__mod_pow2_I_2
+LFE193:
+.no_dead_strip _mod_pow2__mod_pow2_I_2
 _mod_pow2__mod_pow2_I_2:
+LFB194:
 	pushq	%rbp
+LCFI584:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI585:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$3, %eax
 	leave
+LCFI586:
 	ret
-.globl _mod_pow2__mod_pow2_I_3
-	.private_extern _mod_pow2__mod_pow2_I_3
+LFE194:
+.no_dead_strip _mod_pow2__mod_pow2_I_3
 _mod_pow2__mod_pow2_I_3:
+LFB195:
 	pushq	%rbp
+LCFI587:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI588:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$7, %eax
 	leave
+LCFI589:
 	ret
-.globl _mod_pow2__mod_pow2_I_4
-	.private_extern _mod_pow2__mod_pow2_I_4
+LFE195:
+.no_dead_strip _mod_pow2__mod_pow2_I_4
 _mod_pow2__mod_pow2_I_4:
+LFB196:
 	pushq	%rbp
+LCFI590:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI591:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$15, %eax
 	leave
+LCFI592:
 	ret
-.globl _mod_pow2__mod_pow2_I_5
-	.private_extern _mod_pow2__mod_pow2_I_5
+LFE196:
+.no_dead_strip _mod_pow2__mod_pow2_I_5
 _mod_pow2__mod_pow2_I_5:
+LFB197:
 	pushq	%rbp
+LCFI593:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI594:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$31, %eax
 	leave
+LCFI595:
 	ret
-.globl _mod_pow2__mod_pow2_I_6
-	.private_extern _mod_pow2__mod_pow2_I_6
+LFE197:
+.no_dead_strip _mod_pow2__mod_pow2_I_6
 _mod_pow2__mod_pow2_I_6:
+LFB198:
 	pushq	%rbp
+LCFI596:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI597:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$63, %eax
 	leave
+LCFI598:
 	ret
-.globl _mod_pow2__mod_pow2_I_7
-	.private_extern _mod_pow2__mod_pow2_I_7
+LFE198:
+.no_dead_strip _mod_pow2__mod_pow2_I_7
 _mod_pow2__mod_pow2_I_7:
+LFB199:
 	pushq	%rbp
+LCFI599:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI600:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$127, %eax
 	leave
+LCFI601:
 	ret
-.globl _mod_pow2__mod_pow2_I_8
-	.private_extern _mod_pow2__mod_pow2_I_8
+LFE199:
+.no_dead_strip _mod_pow2__mod_pow2_I_8
 _mod_pow2__mod_pow2_I_8:
+LFB200:
 	pushq	%rbp
+LCFI602:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI603:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$255, %eax
 	leave
+LCFI604:
 	ret
-.globl _mod_pow2__mod_pow2_I_9
-	.private_extern _mod_pow2__mod_pow2_I_9
+LFE200:
+.no_dead_strip _mod_pow2__mod_pow2_I_9
 _mod_pow2__mod_pow2_I_9:
+LFB201:
 	pushq	%rbp
+LCFI605:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI606:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$511, %eax
 	leave
+LCFI607:
 	ret
-.globl _mod_pow2__mod_pow2_I_10
-	.private_extern _mod_pow2__mod_pow2_I_10
+LFE201:
+.no_dead_strip _mod_pow2__mod_pow2_I_10
 _mod_pow2__mod_pow2_I_10:
+LFB202:
 	pushq	%rbp
+LCFI608:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI609:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1023, %eax
 	leave
+LCFI610:
 	ret
-.globl _mod_pow2__mod_pow2_I_11
-	.private_extern _mod_pow2__mod_pow2_I_11
+LFE202:
+.no_dead_strip _mod_pow2__mod_pow2_I_11
 _mod_pow2__mod_pow2_I_11:
+LFB203:
 	pushq	%rbp
+LCFI611:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI612:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2047, %eax
 	leave
+LCFI613:
 	ret
-.globl _mod_pow2__mod_pow2_I_12
-	.private_extern _mod_pow2__mod_pow2_I_12
+LFE203:
+.no_dead_strip _mod_pow2__mod_pow2_I_12
 _mod_pow2__mod_pow2_I_12:
+LFB204:
 	pushq	%rbp
+LCFI614:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI615:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4095, %eax
 	leave
+LCFI616:
 	ret
-.globl _mod_pow2__mod_pow2_I_13
-	.private_extern _mod_pow2__mod_pow2_I_13
+LFE204:
+.no_dead_strip _mod_pow2__mod_pow2_I_13
 _mod_pow2__mod_pow2_I_13:
+LFB205:
 	pushq	%rbp
+LCFI617:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI618:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8191, %eax
 	leave
+LCFI619:
 	ret
-.globl _mod_pow2__mod_pow2_I_14
-	.private_extern _mod_pow2__mod_pow2_I_14
+LFE205:
+.no_dead_strip _mod_pow2__mod_pow2_I_14
 _mod_pow2__mod_pow2_I_14:
+LFB206:
 	pushq	%rbp
+LCFI620:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI621:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16383, %eax
 	leave
+LCFI622:
 	ret
-.globl _mod_pow2__mod_pow2_I_15
-	.private_extern _mod_pow2__mod_pow2_I_15
+LFE206:
+.no_dead_strip _mod_pow2__mod_pow2_I_15
 _mod_pow2__mod_pow2_I_15:
+LFB207:
 	pushq	%rbp
+LCFI623:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI624:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$32767, %eax
 	leave
+LCFI625:
 	ret
-.globl _mod_pow2__mod_pow2_I_16
-	.private_extern _mod_pow2__mod_pow2_I_16
+LFE207:
+.no_dead_strip _mod_pow2__mod_pow2_I_16
 _mod_pow2__mod_pow2_I_16:
+LFB208:
 	pushq	%rbp
+LCFI626:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI627:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$65535, %eax
 	leave
+LCFI628:
 	ret
-.globl _mod_pow2__mod_pow2_I_17
-	.private_extern _mod_pow2__mod_pow2_I_17
+LFE208:
+.no_dead_strip _mod_pow2__mod_pow2_I_17
 _mod_pow2__mod_pow2_I_17:
+LFB209:
 	pushq	%rbp
+LCFI629:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI630:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$131071, %eax
 	leave
+LCFI631:
 	ret
-.globl _mod_pow2__mod_pow2_I_18
-	.private_extern _mod_pow2__mod_pow2_I_18
+LFE209:
+.no_dead_strip _mod_pow2__mod_pow2_I_18
 _mod_pow2__mod_pow2_I_18:
+LFB210:
 	pushq	%rbp
+LCFI632:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI633:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$262143, %eax
 	leave
+LCFI634:
 	ret
-.globl _mod_pow2__mod_pow2_I_19
-	.private_extern _mod_pow2__mod_pow2_I_19
+LFE210:
+.no_dead_strip _mod_pow2__mod_pow2_I_19
 _mod_pow2__mod_pow2_I_19:
+LFB211:
 	pushq	%rbp
+LCFI635:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI636:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$524287, %eax
 	leave
+LCFI637:
 	ret
-.globl _mod_pow2__mod_pow2_I_20
-	.private_extern _mod_pow2__mod_pow2_I_20
+LFE211:
+.no_dead_strip _mod_pow2__mod_pow2_I_20
 _mod_pow2__mod_pow2_I_20:
+LFB212:
 	pushq	%rbp
+LCFI638:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI639:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1048575, %eax
 	leave
+LCFI640:
 	ret
-.globl _mod_pow2__mod_pow2_I_21
-	.private_extern _mod_pow2__mod_pow2_I_21
+LFE212:
+.no_dead_strip _mod_pow2__mod_pow2_I_21
 _mod_pow2__mod_pow2_I_21:
+LFB213:
 	pushq	%rbp
+LCFI641:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI642:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2097151, %eax
 	leave
+LCFI643:
 	ret
-.globl _mod_pow2__mod_pow2_I_22
-	.private_extern _mod_pow2__mod_pow2_I_22
+LFE213:
+.no_dead_strip _mod_pow2__mod_pow2_I_22
 _mod_pow2__mod_pow2_I_22:
+LFB214:
 	pushq	%rbp
+LCFI644:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI645:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4194303, %eax
 	leave
+LCFI646:
 	ret
-.globl _mod_pow2__mod_pow2_I_23
-	.private_extern _mod_pow2__mod_pow2_I_23
+LFE214:
+.no_dead_strip _mod_pow2__mod_pow2_I_23
 _mod_pow2__mod_pow2_I_23:
+LFB215:
 	pushq	%rbp
+LCFI647:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI648:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8388607, %eax
 	leave
+LCFI649:
 	ret
-.globl _mod_pow2__mod_pow2_I_24
-	.private_extern _mod_pow2__mod_pow2_I_24
+LFE215:
+.no_dead_strip _mod_pow2__mod_pow2_I_24
 _mod_pow2__mod_pow2_I_24:
+LFB216:
 	pushq	%rbp
+LCFI650:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI651:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16777215, %eax
 	leave
+LCFI652:
 	ret
-.globl _mod_pow2__mod_pow2_I_25
-	.private_extern _mod_pow2__mod_pow2_I_25
+LFE216:
+.no_dead_strip _mod_pow2__mod_pow2_I_25
 _mod_pow2__mod_pow2_I_25:
+LFB217:
 	pushq	%rbp
+LCFI653:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI654:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$33554431, %eax
 	leave
+LCFI655:
 	ret
-.globl _mod_pow2__mod_pow2_I_26
-	.private_extern _mod_pow2__mod_pow2_I_26
+LFE217:
+.no_dead_strip _mod_pow2__mod_pow2_I_26
 _mod_pow2__mod_pow2_I_26:
+LFB218:
 	pushq	%rbp
+LCFI656:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI657:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$67108863, %eax
 	leave
+LCFI658:
 	ret
-.globl _mod_pow2__mod_pow2_I_27
-	.private_extern _mod_pow2__mod_pow2_I_27
+LFE218:
+.no_dead_strip _mod_pow2__mod_pow2_I_27
 _mod_pow2__mod_pow2_I_27:
+LFB219:
 	pushq	%rbp
+LCFI659:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI660:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$134217727, %eax
 	leave
+LCFI661:
 	ret
-.globl _mod_pow2__mod_pow2_I_28
-	.private_extern _mod_pow2__mod_pow2_I_28
+LFE219:
+.no_dead_strip _mod_pow2__mod_pow2_I_28
 _mod_pow2__mod_pow2_I_28:
+LFB220:
 	pushq	%rbp
+LCFI662:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI663:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$268435455, %eax
 	leave
+LCFI664:
 	ret
-.globl _mod_pow2__mod_pow2_I_29
-	.private_extern _mod_pow2__mod_pow2_I_29
+LFE220:
+.no_dead_strip _mod_pow2__mod_pow2_I_29
 _mod_pow2__mod_pow2_I_29:
+LFB221:
 	pushq	%rbp
+LCFI665:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI666:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$536870911, %eax
 	leave
+LCFI667:
 	ret
-.globl _mod_pow2__mod_pow2_I_30
-	.private_extern _mod_pow2__mod_pow2_I_30
+LFE221:
+.no_dead_strip _mod_pow2__mod_pow2_I_30
 _mod_pow2__mod_pow2_I_30:
+LFB222:
 	pushq	%rbp
+LCFI668:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI669:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1073741823, %eax
 	leave
+LCFI670:
 	ret
-.globl _mod_pow2__mod_pow2_I_31
-	.private_extern _mod_pow2__mod_pow2_I_31
+LFE222:
+.no_dead_strip _mod_pow2__mod_pow2_I_31
 _mod_pow2__mod_pow2_I_31:
+LFB223:
 	pushq	%rbp
+LCFI671:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI672:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2147483647, %eax
 	leave
+LCFI673:
 	ret
-.globl _mod_pow2__mod_pow2_I_32
-	.private_extern _mod_pow2__mod_pow2_I_32
+LFE223:
+.no_dead_strip _mod_pow2__mod_pow2_I_32
 _mod_pow2__mod_pow2_I_32:
+LFB224:
 	pushq	%rbp
+LCFI674:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI675:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4294967295, %eax
 	leave
+LCFI676:
 	ret
-.globl _mod_pow2__mod_pow2_I_33
-	.private_extern _mod_pow2__mod_pow2_I_33
+LFE224:
+.no_dead_strip _mod_pow2__mod_pow2_I_33
 _mod_pow2__mod_pow2_I_33:
+LFB225:
 	pushq	%rbp
+LCFI677:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI678:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8589934591, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI679:
 	ret
-.globl _mod_pow2__mod_pow2_I_34
-	.private_extern _mod_pow2__mod_pow2_I_34
+LFE225:
+.no_dead_strip _mod_pow2__mod_pow2_I_34
 _mod_pow2__mod_pow2_I_34:
+LFB226:
 	pushq	%rbp
+LCFI680:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI681:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17179869183, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI682:
 	ret
-.globl _mod_pow2__mod_pow2_I_35
-	.private_extern _mod_pow2__mod_pow2_I_35
+LFE226:
+.no_dead_strip _mod_pow2__mod_pow2_I_35
 _mod_pow2__mod_pow2_I_35:
+LFB227:
 	pushq	%rbp
+LCFI683:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI684:
+	movq	%rdi, -8(%rbp)
 	movabsq	$34359738367, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI685:
 	ret
-.globl _mod_pow2__mod_pow2_I_36
-	.private_extern _mod_pow2__mod_pow2_I_36
+LFE227:
+.no_dead_strip _mod_pow2__mod_pow2_I_36
 _mod_pow2__mod_pow2_I_36:
+LFB228:
 	pushq	%rbp
+LCFI686:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI687:
+	movq	%rdi, -8(%rbp)
 	movabsq	$68719476735, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI688:
 	ret
-.globl _mod_pow2__mod_pow2_I_37
-	.private_extern _mod_pow2__mod_pow2_I_37
+LFE228:
+.no_dead_strip _mod_pow2__mod_pow2_I_37
 _mod_pow2__mod_pow2_I_37:
+LFB229:
 	pushq	%rbp
+LCFI689:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI690:
+	movq	%rdi, -8(%rbp)
 	movabsq	$137438953471, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI691:
 	ret
-.globl _mod_pow2__mod_pow2_I_38
-	.private_extern _mod_pow2__mod_pow2_I_38
+LFE229:
+.no_dead_strip _mod_pow2__mod_pow2_I_38
 _mod_pow2__mod_pow2_I_38:
+LFB230:
 	pushq	%rbp
+LCFI692:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI693:
+	movq	%rdi, -8(%rbp)
 	movabsq	$274877906943, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI694:
 	ret
-.globl _mod_pow2__mod_pow2_I_39
-	.private_extern _mod_pow2__mod_pow2_I_39
+LFE230:
+.no_dead_strip _mod_pow2__mod_pow2_I_39
 _mod_pow2__mod_pow2_I_39:
+LFB231:
 	pushq	%rbp
+LCFI695:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI696:
+	movq	%rdi, -8(%rbp)
 	movabsq	$549755813887, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI697:
 	ret
-.globl _mod_pow2__mod_pow2_I_40
-	.private_extern _mod_pow2__mod_pow2_I_40
+LFE231:
+.no_dead_strip _mod_pow2__mod_pow2_I_40
 _mod_pow2__mod_pow2_I_40:
+LFB232:
 	pushq	%rbp
+LCFI698:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI699:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1099511627775, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI700:
 	ret
-.globl _mod_pow2__mod_pow2_I_41
-	.private_extern _mod_pow2__mod_pow2_I_41
+LFE232:
+.no_dead_strip _mod_pow2__mod_pow2_I_41
 _mod_pow2__mod_pow2_I_41:
+LFB233:
 	pushq	%rbp
+LCFI701:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI702:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2199023255551, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI703:
 	ret
-.globl _mod_pow2__mod_pow2_I_42
-	.private_extern _mod_pow2__mod_pow2_I_42
+LFE233:
+.no_dead_strip _mod_pow2__mod_pow2_I_42
 _mod_pow2__mod_pow2_I_42:
+LFB234:
 	pushq	%rbp
+LCFI704:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI705:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4398046511103, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI706:
 	ret
-.globl _mod_pow2__mod_pow2_I_43
-	.private_extern _mod_pow2__mod_pow2_I_43
+LFE234:
+.no_dead_strip _mod_pow2__mod_pow2_I_43
 _mod_pow2__mod_pow2_I_43:
+LFB235:
 	pushq	%rbp
+LCFI707:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI708:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8796093022207, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI709:
 	ret
-.globl _mod_pow2__mod_pow2_I_44
-	.private_extern _mod_pow2__mod_pow2_I_44
+LFE235:
+.no_dead_strip _mod_pow2__mod_pow2_I_44
 _mod_pow2__mod_pow2_I_44:
+LFB236:
 	pushq	%rbp
+LCFI710:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI711:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17592186044415, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI712:
 	ret
-.globl _mod_pow2__mod_pow2_I_45
-	.private_extern _mod_pow2__mod_pow2_I_45
+LFE236:
+.no_dead_strip _mod_pow2__mod_pow2_I_45
 _mod_pow2__mod_pow2_I_45:
+LFB237:
 	pushq	%rbp
+LCFI713:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI714:
+	movq	%rdi, -8(%rbp)
 	movabsq	$35184372088831, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI715:
 	ret
-.globl _mod_pow2__mod_pow2_I_46
-	.private_extern _mod_pow2__mod_pow2_I_46
+LFE237:
+.no_dead_strip _mod_pow2__mod_pow2_I_46
 _mod_pow2__mod_pow2_I_46:
+LFB238:
 	pushq	%rbp
+LCFI716:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI717:
+	movq	%rdi, -8(%rbp)
 	movabsq	$70368744177663, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI718:
 	ret
-.globl _mod_pow2__mod_pow2_I_47
-	.private_extern _mod_pow2__mod_pow2_I_47
+LFE238:
+.no_dead_strip _mod_pow2__mod_pow2_I_47
 _mod_pow2__mod_pow2_I_47:
+LFB239:
 	pushq	%rbp
+LCFI719:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI720:
+	movq	%rdi, -8(%rbp)
 	movabsq	$140737488355327, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI721:
 	ret
-.globl _mod_pow2__mod_pow2_I_48
-	.private_extern _mod_pow2__mod_pow2_I_48
+LFE239:
+.no_dead_strip _mod_pow2__mod_pow2_I_48
 _mod_pow2__mod_pow2_I_48:
+LFB240:
 	pushq	%rbp
+LCFI722:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI723:
+	movq	%rdi, -8(%rbp)
 	movabsq	$281474976710655, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI724:
 	ret
-.globl _mod_pow2__mod_pow2_I_49
-	.private_extern _mod_pow2__mod_pow2_I_49
+LFE240:
+.no_dead_strip _mod_pow2__mod_pow2_I_49
 _mod_pow2__mod_pow2_I_49:
+LFB241:
 	pushq	%rbp
+LCFI725:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI726:
+	movq	%rdi, -8(%rbp)
 	movabsq	$562949953421311, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI727:
 	ret
-.globl _mod_pow2__mod_pow2_I_50
-	.private_extern _mod_pow2__mod_pow2_I_50
+LFE241:
+.no_dead_strip _mod_pow2__mod_pow2_I_50
 _mod_pow2__mod_pow2_I_50:
+LFB242:
 	pushq	%rbp
+LCFI728:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI729:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1125899906842623, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI730:
 	ret
-.globl _mod_pow2__mod_pow2_I_51
-	.private_extern _mod_pow2__mod_pow2_I_51
+LFE242:
+.no_dead_strip _mod_pow2__mod_pow2_I_51
 _mod_pow2__mod_pow2_I_51:
+LFB243:
 	pushq	%rbp
+LCFI731:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI732:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2251799813685247, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI733:
 	ret
-.globl _mod_pow2__mod_pow2_I_52
-	.private_extern _mod_pow2__mod_pow2_I_52
+LFE243:
+.no_dead_strip _mod_pow2__mod_pow2_I_52
 _mod_pow2__mod_pow2_I_52:
+LFB244:
 	pushq	%rbp
+LCFI734:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI735:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4503599627370495, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI736:
 	ret
-.globl _mod_pow2__mod_pow2_I_53
-	.private_extern _mod_pow2__mod_pow2_I_53
+LFE244:
+.no_dead_strip _mod_pow2__mod_pow2_I_53
 _mod_pow2__mod_pow2_I_53:
+LFB245:
 	pushq	%rbp
+LCFI737:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI738:
+	movq	%rdi, -8(%rbp)
 	movabsq	$9007199254740991, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI739:
 	ret
-.globl _mod_pow2__mod_pow2_I_54
-	.private_extern _mod_pow2__mod_pow2_I_54
+LFE245:
+.no_dead_strip _mod_pow2__mod_pow2_I_54
 _mod_pow2__mod_pow2_I_54:
+LFB246:
 	pushq	%rbp
+LCFI740:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI741:
+	movq	%rdi, -8(%rbp)
 	movabsq	$18014398509481983, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI742:
 	ret
-.globl _mod_pow2__mod_pow2_I_55
-	.private_extern _mod_pow2__mod_pow2_I_55
+LFE246:
+.no_dead_strip _mod_pow2__mod_pow2_I_55
 _mod_pow2__mod_pow2_I_55:
+LFB247:
 	pushq	%rbp
+LCFI743:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI744:
+	movq	%rdi, -8(%rbp)
 	movabsq	$36028797018963967, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI745:
 	ret
-.globl _mod_pow2__mod_pow2_I_56
-	.private_extern _mod_pow2__mod_pow2_I_56
+LFE247:
+.no_dead_strip _mod_pow2__mod_pow2_I_56
 _mod_pow2__mod_pow2_I_56:
+LFB248:
 	pushq	%rbp
+LCFI746:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI747:
+	movq	%rdi, -8(%rbp)
 	movabsq	$72057594037927935, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI748:
 	ret
-.globl _mod_pow2__mod_pow2_I_57
-	.private_extern _mod_pow2__mod_pow2_I_57
+LFE248:
+.no_dead_strip _mod_pow2__mod_pow2_I_57
 _mod_pow2__mod_pow2_I_57:
+LFB249:
 	pushq	%rbp
+LCFI749:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI750:
+	movq	%rdi, -8(%rbp)
 	movabsq	$144115188075855871, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI751:
 	ret
-.globl _mod_pow2__mod_pow2_I_58
-	.private_extern _mod_pow2__mod_pow2_I_58
+LFE249:
+.no_dead_strip _mod_pow2__mod_pow2_I_58
 _mod_pow2__mod_pow2_I_58:
+LFB250:
 	pushq	%rbp
+LCFI752:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI753:
+	movq	%rdi, -8(%rbp)
 	movabsq	$288230376151711743, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI754:
 	ret
-.globl _mod_pow2__mod_pow2_I_59
-	.private_extern _mod_pow2__mod_pow2_I_59
+LFE250:
+.no_dead_strip _mod_pow2__mod_pow2_I_59
 _mod_pow2__mod_pow2_I_59:
+LFB251:
 	pushq	%rbp
+LCFI755:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI756:
+	movq	%rdi, -8(%rbp)
 	movabsq	$576460752303423487, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI757:
 	ret
-.globl _mod_pow2__mod_pow2_I_60
-	.private_extern _mod_pow2__mod_pow2_I_60
+LFE251:
+.no_dead_strip _mod_pow2__mod_pow2_I_60
 _mod_pow2__mod_pow2_I_60:
+LFB252:
 	pushq	%rbp
+LCFI758:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI759:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1152921504606846975, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI760:
 	ret
-.globl _mod_pow2__mod_pow2_I_61
-	.private_extern _mod_pow2__mod_pow2_I_61
+LFE252:
+.no_dead_strip _mod_pow2__mod_pow2_I_61
 _mod_pow2__mod_pow2_I_61:
+LFB253:
 	pushq	%rbp
+LCFI761:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI762:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2305843009213693951, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI763:
 	ret
-.globl _mod_pow2__mod_pow2_I_62
-	.private_extern _mod_pow2__mod_pow2_I_62
+LFE253:
+.no_dead_strip _mod_pow2__mod_pow2_I_62
 _mod_pow2__mod_pow2_I_62:
+LFB254:
 	pushq	%rbp
+LCFI764:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI765:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4611686018427387903, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI766:
 	ret
-.globl _mod_pow2__mod_pow2_I_63
-	.private_extern _mod_pow2__mod_pow2_I_63
+LFE254:
+.no_dead_strip _mod_pow2__mod_pow2_I_63
 _mod_pow2__mod_pow2_I_63:
+LFB255:
 	pushq	%rbp
+LCFI767:
 	movq	%rsp, %rbp
+LCFI768:
+	pushq	%rbx
+LCFI769:
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rcx
-	leaq	-1(%rcx), %rdx
-	movq	%rcx, %rax
-	orq	%rdx, %rax
-	movq	%rax, %rsi
-	sarq	$63, %rsi
-	subq	%rsi, %rdx
-	movabsq	$-9223372036854775808, %rax
-	cmpq	%rax, %rdx
-	sete	%al
-	movzbl	%al, %edx
-	movq	%rsi, %rax
-	notq	%rax
-	leaq	(%rdx,%rax), %rax
-	salq	$63, %rax
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	subq	%rax, %rdx
 	movq	%rdx, %rax
+	popq	%rbx
 	leave
+LCFI770:
 	ret
-.globl _mod_pow2__mod_pow2_C_0
-	.private_extern _mod_pow2__mod_pow2_C_0
+LFE255:
+.no_dead_strip _mod_pow2__mod_pow2_C_0
 _mod_pow2__mod_pow2_C_0:
+LFB256:
 	pushq	%rbp
+LCFI771:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI772:
+	movq	%rdi, -8(%rbp)
 	movl	$0, %eax
 	leave
+LCFI773:
 	ret
-.globl _mod_pow2__mod_pow2_C_1
-	.private_extern _mod_pow2__mod_pow2_C_1
+LFE256:
+.no_dead_strip _mod_pow2__mod_pow2_C_1
 _mod_pow2__mod_pow2_C_1:
+LFB257:
 	pushq	%rbp
+LCFI774:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI775:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1, %eax
 	leave
+LCFI776:
 	ret
-.globl _mod_pow2__mod_pow2_C_2
-	.private_extern _mod_pow2__mod_pow2_C_2
+LFE257:
+.no_dead_strip _mod_pow2__mod_pow2_C_2
 _mod_pow2__mod_pow2_C_2:
+LFB258:
 	pushq	%rbp
+LCFI777:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI778:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$3, %eax
 	leave
+LCFI779:
 	ret
-.globl _mod_pow2__mod_pow2_C_3
-	.private_extern _mod_pow2__mod_pow2_C_3
+LFE258:
+.no_dead_strip _mod_pow2__mod_pow2_C_3
 _mod_pow2__mod_pow2_C_3:
+LFB259:
 	pushq	%rbp
+LCFI780:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI781:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$7, %eax
 	leave
+LCFI782:
 	ret
-.globl _mod_pow2__mod_pow2_C_4
-	.private_extern _mod_pow2__mod_pow2_C_4
+LFE259:
+.no_dead_strip _mod_pow2__mod_pow2_C_4
 _mod_pow2__mod_pow2_C_4:
+LFB260:
 	pushq	%rbp
+LCFI783:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI784:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$15, %eax
 	leave
+LCFI785:
 	ret
-.globl _mod_pow2__mod_pow2_C_5
-	.private_extern _mod_pow2__mod_pow2_C_5
+LFE260:
+.no_dead_strip _mod_pow2__mod_pow2_C_5
 _mod_pow2__mod_pow2_C_5:
+LFB261:
 	pushq	%rbp
+LCFI786:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI787:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$31, %eax
 	leave
+LCFI788:
 	ret
-.globl _mod_pow2__mod_pow2_C_6
-	.private_extern _mod_pow2__mod_pow2_C_6
+LFE261:
+.no_dead_strip _mod_pow2__mod_pow2_C_6
 _mod_pow2__mod_pow2_C_6:
+LFB262:
 	pushq	%rbp
+LCFI789:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI790:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$63, %eax
 	leave
+LCFI791:
 	ret
-.globl _mod_pow2__mod_pow2_C_7
-	.private_extern _mod_pow2__mod_pow2_C_7
+LFE262:
+.no_dead_strip _mod_pow2__mod_pow2_C_7
 _mod_pow2__mod_pow2_C_7:
+LFB263:
 	pushq	%rbp
+LCFI792:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI793:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$127, %eax
 	leave
+LCFI794:
 	ret
-.globl _mod_pow2__mod_pow2_C_8
-	.private_extern _mod_pow2__mod_pow2_C_8
+LFE263:
+.no_dead_strip _mod_pow2__mod_pow2_C_8
 _mod_pow2__mod_pow2_C_8:
+LFB264:
 	pushq	%rbp
+LCFI795:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI796:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$255, %eax
 	leave
+LCFI797:
 	ret
-.globl _mod_pow2__mod_pow2_C_9
-	.private_extern _mod_pow2__mod_pow2_C_9
+LFE264:
+.no_dead_strip _mod_pow2__mod_pow2_C_9
 _mod_pow2__mod_pow2_C_9:
+LFB265:
 	pushq	%rbp
+LCFI798:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI799:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$511, %eax
 	leave
+LCFI800:
 	ret
-.globl _mod_pow2__mod_pow2_C_10
-	.private_extern _mod_pow2__mod_pow2_C_10
+LFE265:
+.no_dead_strip _mod_pow2__mod_pow2_C_10
 _mod_pow2__mod_pow2_C_10:
+LFB266:
 	pushq	%rbp
+LCFI801:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI802:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1023, %eax
 	leave
+LCFI803:
 	ret
-.globl _mod_pow2__mod_pow2_C_11
-	.private_extern _mod_pow2__mod_pow2_C_11
+LFE266:
+.no_dead_strip _mod_pow2__mod_pow2_C_11
 _mod_pow2__mod_pow2_C_11:
+LFB267:
 	pushq	%rbp
+LCFI804:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI805:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2047, %eax
 	leave
+LCFI806:
 	ret
-.globl _mod_pow2__mod_pow2_C_12
-	.private_extern _mod_pow2__mod_pow2_C_12
+LFE267:
+.no_dead_strip _mod_pow2__mod_pow2_C_12
 _mod_pow2__mod_pow2_C_12:
+LFB268:
 	pushq	%rbp
+LCFI807:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI808:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4095, %eax
 	leave
+LCFI809:
 	ret
-.globl _mod_pow2__mod_pow2_C_13
-	.private_extern _mod_pow2__mod_pow2_C_13
+LFE268:
+.no_dead_strip _mod_pow2__mod_pow2_C_13
 _mod_pow2__mod_pow2_C_13:
+LFB269:
 	pushq	%rbp
+LCFI810:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI811:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8191, %eax
 	leave
+LCFI812:
 	ret
-.globl _mod_pow2__mod_pow2_C_14
-	.private_extern _mod_pow2__mod_pow2_C_14
+LFE269:
+.no_dead_strip _mod_pow2__mod_pow2_C_14
 _mod_pow2__mod_pow2_C_14:
+LFB270:
 	pushq	%rbp
+LCFI813:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI814:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16383, %eax
 	leave
+LCFI815:
 	ret
-.globl _mod_pow2__mod_pow2_C_15
-	.private_extern _mod_pow2__mod_pow2_C_15
+LFE270:
+.no_dead_strip _mod_pow2__mod_pow2_C_15
 _mod_pow2__mod_pow2_C_15:
+LFB271:
 	pushq	%rbp
+LCFI816:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI817:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$32767, %eax
 	leave
+LCFI818:
 	ret
-.globl _mod_pow2__mod_pow2_C_16
-	.private_extern _mod_pow2__mod_pow2_C_16
+LFE271:
+.no_dead_strip _mod_pow2__mod_pow2_C_16
 _mod_pow2__mod_pow2_C_16:
+LFB272:
 	pushq	%rbp
+LCFI819:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI820:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$65535, %eax
 	leave
+LCFI821:
 	ret
-.globl _mod_pow2__mod_pow2_C_17
-	.private_extern _mod_pow2__mod_pow2_C_17
+LFE272:
+.no_dead_strip _mod_pow2__mod_pow2_C_17
 _mod_pow2__mod_pow2_C_17:
+LFB273:
 	pushq	%rbp
+LCFI822:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI823:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$131071, %eax
 	leave
+LCFI824:
 	ret
-.globl _mod_pow2__mod_pow2_C_18
-	.private_extern _mod_pow2__mod_pow2_C_18
+LFE273:
+.no_dead_strip _mod_pow2__mod_pow2_C_18
 _mod_pow2__mod_pow2_C_18:
+LFB274:
 	pushq	%rbp
+LCFI825:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI826:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$262143, %eax
 	leave
+LCFI827:
 	ret
-.globl _mod_pow2__mod_pow2_C_19
-	.private_extern _mod_pow2__mod_pow2_C_19
+LFE274:
+.no_dead_strip _mod_pow2__mod_pow2_C_19
 _mod_pow2__mod_pow2_C_19:
+LFB275:
 	pushq	%rbp
+LCFI828:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI829:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$524287, %eax
 	leave
+LCFI830:
 	ret
-.globl _mod_pow2__mod_pow2_C_20
-	.private_extern _mod_pow2__mod_pow2_C_20
+LFE275:
+.no_dead_strip _mod_pow2__mod_pow2_C_20
 _mod_pow2__mod_pow2_C_20:
+LFB276:
 	pushq	%rbp
+LCFI831:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI832:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1048575, %eax
 	leave
+LCFI833:
 	ret
-.globl _mod_pow2__mod_pow2_C_21
-	.private_extern _mod_pow2__mod_pow2_C_21
+LFE276:
+.no_dead_strip _mod_pow2__mod_pow2_C_21
 _mod_pow2__mod_pow2_C_21:
+LFB277:
 	pushq	%rbp
+LCFI834:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI835:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2097151, %eax
 	leave
+LCFI836:
 	ret
-.globl _mod_pow2__mod_pow2_C_22
-	.private_extern _mod_pow2__mod_pow2_C_22
+LFE277:
+.no_dead_strip _mod_pow2__mod_pow2_C_22
 _mod_pow2__mod_pow2_C_22:
+LFB278:
 	pushq	%rbp
+LCFI837:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI838:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4194303, %eax
 	leave
+LCFI839:
 	ret
-.globl _mod_pow2__mod_pow2_C_23
-	.private_extern _mod_pow2__mod_pow2_C_23
+LFE278:
+.no_dead_strip _mod_pow2__mod_pow2_C_23
 _mod_pow2__mod_pow2_C_23:
+LFB279:
 	pushq	%rbp
+LCFI840:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI841:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8388607, %eax
 	leave
+LCFI842:
 	ret
-.globl _mod_pow2__mod_pow2_C_24
-	.private_extern _mod_pow2__mod_pow2_C_24
+LFE279:
+.no_dead_strip _mod_pow2__mod_pow2_C_24
 _mod_pow2__mod_pow2_C_24:
+LFB280:
 	pushq	%rbp
+LCFI843:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI844:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16777215, %eax
 	leave
+LCFI845:
 	ret
-.globl _mod_pow2__mod_pow2_C_25
-	.private_extern _mod_pow2__mod_pow2_C_25
+LFE280:
+.no_dead_strip _mod_pow2__mod_pow2_C_25
 _mod_pow2__mod_pow2_C_25:
+LFB281:
 	pushq	%rbp
+LCFI846:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI847:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$33554431, %eax
 	leave
+LCFI848:
 	ret
-.globl _mod_pow2__mod_pow2_C_26
-	.private_extern _mod_pow2__mod_pow2_C_26
+LFE281:
+.no_dead_strip _mod_pow2__mod_pow2_C_26
 _mod_pow2__mod_pow2_C_26:
+LFB282:
 	pushq	%rbp
+LCFI849:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI850:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$67108863, %eax
 	leave
+LCFI851:
 	ret
-.globl _mod_pow2__mod_pow2_C_27
-	.private_extern _mod_pow2__mod_pow2_C_27
+LFE282:
+.no_dead_strip _mod_pow2__mod_pow2_C_27
 _mod_pow2__mod_pow2_C_27:
+LFB283:
 	pushq	%rbp
+LCFI852:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI853:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$134217727, %eax
 	leave
+LCFI854:
 	ret
-.globl _mod_pow2__mod_pow2_C_28
-	.private_extern _mod_pow2__mod_pow2_C_28
+LFE283:
+.no_dead_strip _mod_pow2__mod_pow2_C_28
 _mod_pow2__mod_pow2_C_28:
+LFB284:
 	pushq	%rbp
+LCFI855:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI856:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$268435455, %eax
 	leave
+LCFI857:
 	ret
-.globl _mod_pow2__mod_pow2_C_29
-	.private_extern _mod_pow2__mod_pow2_C_29
+LFE284:
+.no_dead_strip _mod_pow2__mod_pow2_C_29
 _mod_pow2__mod_pow2_C_29:
+LFB285:
 	pushq	%rbp
+LCFI858:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI859:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$536870911, %eax
 	leave
+LCFI860:
 	ret
-.globl _mod_pow2__mod_pow2_C_30
-	.private_extern _mod_pow2__mod_pow2_C_30
+LFE285:
+.no_dead_strip _mod_pow2__mod_pow2_C_30
 _mod_pow2__mod_pow2_C_30:
+LFB286:
 	pushq	%rbp
+LCFI861:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI862:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1073741823, %eax
 	leave
+LCFI863:
 	ret
-.globl _mod_pow2__mod_pow2_C_31
-	.private_extern _mod_pow2__mod_pow2_C_31
+LFE286:
+.no_dead_strip _mod_pow2__mod_pow2_C_31
 _mod_pow2__mod_pow2_C_31:
+LFB287:
 	pushq	%rbp
+LCFI864:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI865:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2147483647, %eax
 	leave
+LCFI866:
 	ret
-.globl _mod_pow2__mod_pow2_C_32
-	.private_extern _mod_pow2__mod_pow2_C_32
+LFE287:
+.no_dead_strip _mod_pow2__mod_pow2_C_32
 _mod_pow2__mod_pow2_C_32:
+LFB288:
 	pushq	%rbp
+LCFI867:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI868:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4294967295, %eax
 	leave
+LCFI869:
 	ret
-.globl _mod_pow2__mod_pow2_C_33
-	.private_extern _mod_pow2__mod_pow2_C_33
+LFE288:
+.no_dead_strip _mod_pow2__mod_pow2_C_33
 _mod_pow2__mod_pow2_C_33:
+LFB289:
 	pushq	%rbp
+LCFI870:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI871:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8589934591, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI872:
 	ret
-.globl _mod_pow2__mod_pow2_C_34
-	.private_extern _mod_pow2__mod_pow2_C_34
+LFE289:
+.no_dead_strip _mod_pow2__mod_pow2_C_34
 _mod_pow2__mod_pow2_C_34:
+LFB290:
 	pushq	%rbp
+LCFI873:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI874:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17179869183, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI875:
 	ret
-.globl _mod_pow2__mod_pow2_C_35
-	.private_extern _mod_pow2__mod_pow2_C_35
+LFE290:
+.no_dead_strip _mod_pow2__mod_pow2_C_35
 _mod_pow2__mod_pow2_C_35:
+LFB291:
 	pushq	%rbp
+LCFI876:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI877:
+	movq	%rdi, -8(%rbp)
 	movabsq	$34359738367, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI878:
 	ret
-.globl _mod_pow2__mod_pow2_C_36
-	.private_extern _mod_pow2__mod_pow2_C_36
+LFE291:
+.no_dead_strip _mod_pow2__mod_pow2_C_36
 _mod_pow2__mod_pow2_C_36:
+LFB292:
 	pushq	%rbp
+LCFI879:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI880:
+	movq	%rdi, -8(%rbp)
 	movabsq	$68719476735, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI881:
 	ret
-.globl _mod_pow2__mod_pow2_C_37
-	.private_extern _mod_pow2__mod_pow2_C_37
+LFE292:
+.no_dead_strip _mod_pow2__mod_pow2_C_37
 _mod_pow2__mod_pow2_C_37:
+LFB293:
 	pushq	%rbp
+LCFI882:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI883:
+	movq	%rdi, -8(%rbp)
 	movabsq	$137438953471, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI884:
 	ret
-.globl _mod_pow2__mod_pow2_C_38
-	.private_extern _mod_pow2__mod_pow2_C_38
+LFE293:
+.no_dead_strip _mod_pow2__mod_pow2_C_38
 _mod_pow2__mod_pow2_C_38:
+LFB294:
 	pushq	%rbp
+LCFI885:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI886:
+	movq	%rdi, -8(%rbp)
 	movabsq	$274877906943, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI887:
 	ret
-.globl _mod_pow2__mod_pow2_C_39
-	.private_extern _mod_pow2__mod_pow2_C_39
+LFE294:
+.no_dead_strip _mod_pow2__mod_pow2_C_39
 _mod_pow2__mod_pow2_C_39:
+LFB295:
 	pushq	%rbp
+LCFI888:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI889:
+	movq	%rdi, -8(%rbp)
 	movabsq	$549755813887, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI890:
 	ret
-.globl _mod_pow2__mod_pow2_C_40
-	.private_extern _mod_pow2__mod_pow2_C_40
+LFE295:
+.no_dead_strip _mod_pow2__mod_pow2_C_40
 _mod_pow2__mod_pow2_C_40:
+LFB296:
 	pushq	%rbp
+LCFI891:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI892:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1099511627775, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI893:
 	ret
-.globl _mod_pow2__mod_pow2_C_41
-	.private_extern _mod_pow2__mod_pow2_C_41
+LFE296:
+.no_dead_strip _mod_pow2__mod_pow2_C_41
 _mod_pow2__mod_pow2_C_41:
+LFB297:
 	pushq	%rbp
+LCFI894:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI895:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2199023255551, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI896:
 	ret
-.globl _mod_pow2__mod_pow2_C_42
-	.private_extern _mod_pow2__mod_pow2_C_42
+LFE297:
+.no_dead_strip _mod_pow2__mod_pow2_C_42
 _mod_pow2__mod_pow2_C_42:
+LFB298:
 	pushq	%rbp
+LCFI897:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI898:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4398046511103, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI899:
 	ret
-.globl _mod_pow2__mod_pow2_C_43
-	.private_extern _mod_pow2__mod_pow2_C_43
+LFE298:
+.no_dead_strip _mod_pow2__mod_pow2_C_43
 _mod_pow2__mod_pow2_C_43:
+LFB299:
 	pushq	%rbp
+LCFI900:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI901:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8796093022207, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI902:
 	ret
-.globl _mod_pow2__mod_pow2_C_44
-	.private_extern _mod_pow2__mod_pow2_C_44
+LFE299:
+.no_dead_strip _mod_pow2__mod_pow2_C_44
 _mod_pow2__mod_pow2_C_44:
+LFB300:
 	pushq	%rbp
+LCFI903:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI904:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17592186044415, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI905:
 	ret
-.globl _mod_pow2__mod_pow2_C_45
-	.private_extern _mod_pow2__mod_pow2_C_45
+LFE300:
+.no_dead_strip _mod_pow2__mod_pow2_C_45
 _mod_pow2__mod_pow2_C_45:
+LFB301:
 	pushq	%rbp
+LCFI906:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI907:
+	movq	%rdi, -8(%rbp)
 	movabsq	$35184372088831, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI908:
 	ret
-.globl _mod_pow2__mod_pow2_C_46
-	.private_extern _mod_pow2__mod_pow2_C_46
+LFE301:
+.no_dead_strip _mod_pow2__mod_pow2_C_46
 _mod_pow2__mod_pow2_C_46:
+LFB302:
 	pushq	%rbp
+LCFI909:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI910:
+	movq	%rdi, -8(%rbp)
 	movabsq	$70368744177663, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI911:
 	ret
-.globl _mod_pow2__mod_pow2_C_47
-	.private_extern _mod_pow2__mod_pow2_C_47
+LFE302:
+.no_dead_strip _mod_pow2__mod_pow2_C_47
 _mod_pow2__mod_pow2_C_47:
+LFB303:
 	pushq	%rbp
+LCFI912:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI913:
+	movq	%rdi, -8(%rbp)
 	movabsq	$140737488355327, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI914:
 	ret
-.globl _mod_pow2__mod_pow2_C_48
-	.private_extern _mod_pow2__mod_pow2_C_48
+LFE303:
+.no_dead_strip _mod_pow2__mod_pow2_C_48
 _mod_pow2__mod_pow2_C_48:
+LFB304:
 	pushq	%rbp
+LCFI915:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI916:
+	movq	%rdi, -8(%rbp)
 	movabsq	$281474976710655, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI917:
 	ret
-.globl _mod_pow2__mod_pow2_C_49
-	.private_extern _mod_pow2__mod_pow2_C_49
+LFE304:
+.no_dead_strip _mod_pow2__mod_pow2_C_49
 _mod_pow2__mod_pow2_C_49:
+LFB305:
 	pushq	%rbp
+LCFI918:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI919:
+	movq	%rdi, -8(%rbp)
 	movabsq	$562949953421311, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI920:
 	ret
-.globl _mod_pow2__mod_pow2_C_50
-	.private_extern _mod_pow2__mod_pow2_C_50
+LFE305:
+.no_dead_strip _mod_pow2__mod_pow2_C_50
 _mod_pow2__mod_pow2_C_50:
+LFB306:
 	pushq	%rbp
+LCFI921:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI922:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1125899906842623, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI923:
 	ret
-.globl _mod_pow2__mod_pow2_C_51
-	.private_extern _mod_pow2__mod_pow2_C_51
+LFE306:
+.no_dead_strip _mod_pow2__mod_pow2_C_51
 _mod_pow2__mod_pow2_C_51:
+LFB307:
 	pushq	%rbp
+LCFI924:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI925:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2251799813685247, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI926:
 	ret
-.globl _mod_pow2__mod_pow2_C_52
-	.private_extern _mod_pow2__mod_pow2_C_52
+LFE307:
+.no_dead_strip _mod_pow2__mod_pow2_C_52
 _mod_pow2__mod_pow2_C_52:
+LFB308:
 	pushq	%rbp
+LCFI927:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI928:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4503599627370495, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI929:
 	ret
-.globl _mod_pow2__mod_pow2_C_53
-	.private_extern _mod_pow2__mod_pow2_C_53
+LFE308:
+.no_dead_strip _mod_pow2__mod_pow2_C_53
 _mod_pow2__mod_pow2_C_53:
+LFB309:
 	pushq	%rbp
+LCFI930:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI931:
+	movq	%rdi, -8(%rbp)
 	movabsq	$9007199254740991, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI932:
 	ret
-.globl _mod_pow2__mod_pow2_C_54
-	.private_extern _mod_pow2__mod_pow2_C_54
+LFE309:
+.no_dead_strip _mod_pow2__mod_pow2_C_54
 _mod_pow2__mod_pow2_C_54:
+LFB310:
 	pushq	%rbp
+LCFI933:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI934:
+	movq	%rdi, -8(%rbp)
 	movabsq	$18014398509481983, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI935:
 	ret
-.globl _mod_pow2__mod_pow2_C_55
-	.private_extern _mod_pow2__mod_pow2_C_55
+LFE310:
+.no_dead_strip _mod_pow2__mod_pow2_C_55
 _mod_pow2__mod_pow2_C_55:
+LFB311:
 	pushq	%rbp
+LCFI936:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI937:
+	movq	%rdi, -8(%rbp)
 	movabsq	$36028797018963967, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI938:
 	ret
-.globl _mod_pow2__mod_pow2_C_56
-	.private_extern _mod_pow2__mod_pow2_C_56
+LFE311:
+.no_dead_strip _mod_pow2__mod_pow2_C_56
 _mod_pow2__mod_pow2_C_56:
+LFB312:
 	pushq	%rbp
+LCFI939:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI940:
+	movq	%rdi, -8(%rbp)
 	movabsq	$72057594037927935, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI941:
 	ret
-.globl _mod_pow2__mod_pow2_C_57
-	.private_extern _mod_pow2__mod_pow2_C_57
+LFE312:
+.no_dead_strip _mod_pow2__mod_pow2_C_57
 _mod_pow2__mod_pow2_C_57:
+LFB313:
 	pushq	%rbp
+LCFI942:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI943:
+	movq	%rdi, -8(%rbp)
 	movabsq	$144115188075855871, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI944:
 	ret
-.globl _mod_pow2__mod_pow2_C_58
-	.private_extern _mod_pow2__mod_pow2_C_58
+LFE313:
+.no_dead_strip _mod_pow2__mod_pow2_C_58
 _mod_pow2__mod_pow2_C_58:
+LFB314:
 	pushq	%rbp
+LCFI945:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI946:
+	movq	%rdi, -8(%rbp)
 	movabsq	$288230376151711743, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI947:
 	ret
-.globl _mod_pow2__mod_pow2_C_59
-	.private_extern _mod_pow2__mod_pow2_C_59
+LFE314:
+.no_dead_strip _mod_pow2__mod_pow2_C_59
 _mod_pow2__mod_pow2_C_59:
+LFB315:
 	pushq	%rbp
+LCFI948:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI949:
+	movq	%rdi, -8(%rbp)
 	movabsq	$576460752303423487, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI950:
 	ret
-.globl _mod_pow2__mod_pow2_C_60
-	.private_extern _mod_pow2__mod_pow2_C_60
+LFE315:
+.no_dead_strip _mod_pow2__mod_pow2_C_60
 _mod_pow2__mod_pow2_C_60:
+LFB316:
 	pushq	%rbp
+LCFI951:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI952:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1152921504606846975, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI953:
 	ret
-.globl _mod_pow2__mod_pow2_C_61
-	.private_extern _mod_pow2__mod_pow2_C_61
+LFE316:
+.no_dead_strip _mod_pow2__mod_pow2_C_61
 _mod_pow2__mod_pow2_C_61:
+LFB317:
 	pushq	%rbp
+LCFI954:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI955:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2305843009213693951, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI956:
 	ret
-.globl _mod_pow2__mod_pow2_C_62
-	.private_extern _mod_pow2__mod_pow2_C_62
+LFE317:
+.no_dead_strip _mod_pow2__mod_pow2_C_62
 _mod_pow2__mod_pow2_C_62:
+LFB318:
 	pushq	%rbp
+LCFI957:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI958:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4611686018427387903, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI959:
 	ret
-.globl _mod_pow2__mod_pow2_C_63
-	.private_extern _mod_pow2__mod_pow2_C_63
+LFE318:
+.no_dead_strip _mod_pow2__mod_pow2_C_63
 _mod_pow2__mod_pow2_C_63:
+LFB319:
 	pushq	%rbp
+LCFI960:
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+LCFI961:
+	pushq	%rbx
+LCFI962:
+	subq	$24, %rsp
+LCFI963:
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rcx
-	leaq	-1(%rcx), %rdx
-	movq	%rcx, %rax
-	orq	%rdx, %rax
-	movq	%rax, %rsi
-	sarq	$63, %rsi
-	subq	%rsi, %rdx
-	movabsq	$-9223372036854775808, %rax
-	cmpq	%rax, %rdx
-	sete	%al
-	movzbl	%al, %edx
-	movq	%rsi, %rax
-	notq	%rax
-	leaq	(%rdx,%rax), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rax
-	salq	$63, %rax
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	subq	%rax, %rdx
-	movq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L640
+	testq	%rdx, %rdx
+	jns	L321
 	movl	$22177, %edi
 	call	__m3_fault
-L640:
-	movq	-16(%rbp), %rax
+L321:
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
+	movq	%rcx, %rdx
+	movq	%rdx, %rax
+	addq	$24, %rsp
+	popq	%rbx
 	leave
+LCFI964:
 	ret
-.globl _mod_pow2__mod_pow2_L_0
-	.private_extern _mod_pow2__mod_pow2_L_0
+LFE319:
+.no_dead_strip _mod_pow2__mod_pow2_L_0
 _mod_pow2__mod_pow2_L_0:
+LFB320:
 	pushq	%rbp
+LCFI965:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI966:
+	movq	%rdi, -8(%rbp)
 	movl	$0, %eax
 	leave
+LCFI967:
 	ret
-.globl _mod_pow2__mod_pow2_L_1
-	.private_extern _mod_pow2__mod_pow2_L_1
+LFE320:
+.no_dead_strip _mod_pow2__mod_pow2_L_1
 _mod_pow2__mod_pow2_L_1:
+LFB321:
 	pushq	%rbp
+LCFI968:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI969:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1, %eax
 	leave
+LCFI970:
 	ret
-.globl _mod_pow2__mod_pow2_L_2
-	.private_extern _mod_pow2__mod_pow2_L_2
+LFE321:
+.no_dead_strip _mod_pow2__mod_pow2_L_2
 _mod_pow2__mod_pow2_L_2:
+LFB322:
 	pushq	%rbp
+LCFI971:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI972:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$3, %eax
 	leave
+LCFI973:
 	ret
-.globl _mod_pow2__mod_pow2_L_3
-	.private_extern _mod_pow2__mod_pow2_L_3
+LFE322:
+.no_dead_strip _mod_pow2__mod_pow2_L_3
 _mod_pow2__mod_pow2_L_3:
+LFB323:
 	pushq	%rbp
+LCFI974:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI975:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$7, %eax
 	leave
+LCFI976:
 	ret
-.globl _mod_pow2__mod_pow2_L_4
-	.private_extern _mod_pow2__mod_pow2_L_4
+LFE323:
+.no_dead_strip _mod_pow2__mod_pow2_L_4
 _mod_pow2__mod_pow2_L_4:
+LFB324:
 	pushq	%rbp
+LCFI977:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI978:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$15, %eax
 	leave
+LCFI979:
 	ret
-.globl _mod_pow2__mod_pow2_L_5
-	.private_extern _mod_pow2__mod_pow2_L_5
+LFE324:
+.no_dead_strip _mod_pow2__mod_pow2_L_5
 _mod_pow2__mod_pow2_L_5:
+LFB325:
 	pushq	%rbp
+LCFI980:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI981:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$31, %eax
 	leave
+LCFI982:
 	ret
-.globl _mod_pow2__mod_pow2_L_6
-	.private_extern _mod_pow2__mod_pow2_L_6
+LFE325:
+.no_dead_strip _mod_pow2__mod_pow2_L_6
 _mod_pow2__mod_pow2_L_6:
+LFB326:
 	pushq	%rbp
+LCFI983:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI984:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$63, %eax
 	leave
+LCFI985:
 	ret
-.globl _mod_pow2__mod_pow2_L_7
-	.private_extern _mod_pow2__mod_pow2_L_7
+LFE326:
+.no_dead_strip _mod_pow2__mod_pow2_L_7
 _mod_pow2__mod_pow2_L_7:
+LFB327:
 	pushq	%rbp
+LCFI986:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI987:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$127, %eax
 	leave
+LCFI988:
 	ret
-.globl _mod_pow2__mod_pow2_L_8
-	.private_extern _mod_pow2__mod_pow2_L_8
+LFE327:
+.no_dead_strip _mod_pow2__mod_pow2_L_8
 _mod_pow2__mod_pow2_L_8:
+LFB328:
 	pushq	%rbp
+LCFI989:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI990:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$255, %eax
 	leave
+LCFI991:
 	ret
-.globl _mod_pow2__mod_pow2_L_9
-	.private_extern _mod_pow2__mod_pow2_L_9
+LFE328:
+.no_dead_strip _mod_pow2__mod_pow2_L_9
 _mod_pow2__mod_pow2_L_9:
+LFB329:
 	pushq	%rbp
+LCFI992:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI993:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$511, %eax
 	leave
+LCFI994:
 	ret
-.globl _mod_pow2__mod_pow2_L_10
-	.private_extern _mod_pow2__mod_pow2_L_10
+LFE329:
+.no_dead_strip _mod_pow2__mod_pow2_L_10
 _mod_pow2__mod_pow2_L_10:
+LFB330:
 	pushq	%rbp
+LCFI995:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI996:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1023, %eax
 	leave
+LCFI997:
 	ret
-.globl _mod_pow2__mod_pow2_L_11
-	.private_extern _mod_pow2__mod_pow2_L_11
+LFE330:
+.no_dead_strip _mod_pow2__mod_pow2_L_11
 _mod_pow2__mod_pow2_L_11:
+LFB331:
 	pushq	%rbp
+LCFI998:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI999:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2047, %eax
 	leave
+LCFI1000:
 	ret
-.globl _mod_pow2__mod_pow2_L_12
-	.private_extern _mod_pow2__mod_pow2_L_12
+LFE331:
+.no_dead_strip _mod_pow2__mod_pow2_L_12
 _mod_pow2__mod_pow2_L_12:
+LFB332:
 	pushq	%rbp
+LCFI1001:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1002:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4095, %eax
 	leave
+LCFI1003:
 	ret
-.globl _mod_pow2__mod_pow2_L_13
-	.private_extern _mod_pow2__mod_pow2_L_13
+LFE332:
+.no_dead_strip _mod_pow2__mod_pow2_L_13
 _mod_pow2__mod_pow2_L_13:
+LFB333:
 	pushq	%rbp
+LCFI1004:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1005:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8191, %eax
 	leave
+LCFI1006:
 	ret
-.globl _mod_pow2__mod_pow2_L_14
-	.private_extern _mod_pow2__mod_pow2_L_14
+LFE333:
+.no_dead_strip _mod_pow2__mod_pow2_L_14
 _mod_pow2__mod_pow2_L_14:
+LFB334:
 	pushq	%rbp
+LCFI1007:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1008:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16383, %eax
 	leave
+LCFI1009:
 	ret
-.globl _mod_pow2__mod_pow2_L_15
-	.private_extern _mod_pow2__mod_pow2_L_15
+LFE334:
+.no_dead_strip _mod_pow2__mod_pow2_L_15
 _mod_pow2__mod_pow2_L_15:
+LFB335:
 	pushq	%rbp
+LCFI1010:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1011:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$32767, %eax
 	leave
+LCFI1012:
 	ret
-.globl _mod_pow2__mod_pow2_L_16
-	.private_extern _mod_pow2__mod_pow2_L_16
+LFE335:
+.no_dead_strip _mod_pow2__mod_pow2_L_16
 _mod_pow2__mod_pow2_L_16:
+LFB336:
 	pushq	%rbp
+LCFI1013:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1014:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$65535, %eax
 	leave
+LCFI1015:
 	ret
-.globl _mod_pow2__mod_pow2_L_17
-	.private_extern _mod_pow2__mod_pow2_L_17
+LFE336:
+.no_dead_strip _mod_pow2__mod_pow2_L_17
 _mod_pow2__mod_pow2_L_17:
+LFB337:
 	pushq	%rbp
+LCFI1016:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1017:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$131071, %eax
 	leave
+LCFI1018:
 	ret
-.globl _mod_pow2__mod_pow2_L_18
-	.private_extern _mod_pow2__mod_pow2_L_18
+LFE337:
+.no_dead_strip _mod_pow2__mod_pow2_L_18
 _mod_pow2__mod_pow2_L_18:
+LFB338:
 	pushq	%rbp
+LCFI1019:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1020:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$262143, %eax
 	leave
+LCFI1021:
 	ret
-.globl _mod_pow2__mod_pow2_L_19
-	.private_extern _mod_pow2__mod_pow2_L_19
+LFE338:
+.no_dead_strip _mod_pow2__mod_pow2_L_19
 _mod_pow2__mod_pow2_L_19:
+LFB339:
 	pushq	%rbp
+LCFI1022:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1023:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$524287, %eax
 	leave
+LCFI1024:
 	ret
-.globl _mod_pow2__mod_pow2_L_20
-	.private_extern _mod_pow2__mod_pow2_L_20
+LFE339:
+.no_dead_strip _mod_pow2__mod_pow2_L_20
 _mod_pow2__mod_pow2_L_20:
+LFB340:
 	pushq	%rbp
+LCFI1025:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1026:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1048575, %eax
 	leave
+LCFI1027:
 	ret
-.globl _mod_pow2__mod_pow2_L_21
-	.private_extern _mod_pow2__mod_pow2_L_21
+LFE340:
+.no_dead_strip _mod_pow2__mod_pow2_L_21
 _mod_pow2__mod_pow2_L_21:
+LFB341:
 	pushq	%rbp
+LCFI1028:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1029:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2097151, %eax
 	leave
+LCFI1030:
 	ret
-.globl _mod_pow2__mod_pow2_L_22
-	.private_extern _mod_pow2__mod_pow2_L_22
+LFE341:
+.no_dead_strip _mod_pow2__mod_pow2_L_22
 _mod_pow2__mod_pow2_L_22:
+LFB342:
 	pushq	%rbp
+LCFI1031:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1032:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4194303, %eax
 	leave
+LCFI1033:
 	ret
-.globl _mod_pow2__mod_pow2_L_23
-	.private_extern _mod_pow2__mod_pow2_L_23
+LFE342:
+.no_dead_strip _mod_pow2__mod_pow2_L_23
 _mod_pow2__mod_pow2_L_23:
+LFB343:
 	pushq	%rbp
+LCFI1034:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1035:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8388607, %eax
 	leave
+LCFI1036:
 	ret
-.globl _mod_pow2__mod_pow2_L_24
-	.private_extern _mod_pow2__mod_pow2_L_24
+LFE343:
+.no_dead_strip _mod_pow2__mod_pow2_L_24
 _mod_pow2__mod_pow2_L_24:
+LFB344:
 	pushq	%rbp
+LCFI1037:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1038:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16777215, %eax
 	leave
+LCFI1039:
 	ret
-.globl _mod_pow2__mod_pow2_L_25
-	.private_extern _mod_pow2__mod_pow2_L_25
+LFE344:
+.no_dead_strip _mod_pow2__mod_pow2_L_25
 _mod_pow2__mod_pow2_L_25:
+LFB345:
 	pushq	%rbp
+LCFI1040:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1041:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$33554431, %eax
 	leave
+LCFI1042:
 	ret
-.globl _mod_pow2__mod_pow2_L_26
-	.private_extern _mod_pow2__mod_pow2_L_26
+LFE345:
+.no_dead_strip _mod_pow2__mod_pow2_L_26
 _mod_pow2__mod_pow2_L_26:
+LFB346:
 	pushq	%rbp
+LCFI1043:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1044:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$67108863, %eax
 	leave
+LCFI1045:
 	ret
-.globl _mod_pow2__mod_pow2_L_27
-	.private_extern _mod_pow2__mod_pow2_L_27
+LFE346:
+.no_dead_strip _mod_pow2__mod_pow2_L_27
 _mod_pow2__mod_pow2_L_27:
+LFB347:
 	pushq	%rbp
+LCFI1046:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1047:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$134217727, %eax
 	leave
+LCFI1048:
 	ret
-.globl _mod_pow2__mod_pow2_L_28
-	.private_extern _mod_pow2__mod_pow2_L_28
+LFE347:
+.no_dead_strip _mod_pow2__mod_pow2_L_28
 _mod_pow2__mod_pow2_L_28:
+LFB348:
 	pushq	%rbp
+LCFI1049:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1050:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$268435455, %eax
 	leave
+LCFI1051:
 	ret
-.globl _mod_pow2__mod_pow2_L_29
-	.private_extern _mod_pow2__mod_pow2_L_29
+LFE348:
+.no_dead_strip _mod_pow2__mod_pow2_L_29
 _mod_pow2__mod_pow2_L_29:
+LFB349:
 	pushq	%rbp
+LCFI1052:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1053:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$536870911, %eax
 	leave
+LCFI1054:
 	ret
-.globl _mod_pow2__mod_pow2_L_30
-	.private_extern _mod_pow2__mod_pow2_L_30
+LFE349:
+.no_dead_strip _mod_pow2__mod_pow2_L_30
 _mod_pow2__mod_pow2_L_30:
+LFB350:
 	pushq	%rbp
+LCFI1055:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1056:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1073741823, %eax
 	leave
+LCFI1057:
 	ret
-.globl _mod_pow2__mod_pow2_L_31
-	.private_extern _mod_pow2__mod_pow2_L_31
+LFE350:
+.no_dead_strip _mod_pow2__mod_pow2_L_31
 _mod_pow2__mod_pow2_L_31:
+LFB351:
 	pushq	%rbp
+LCFI1058:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1059:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2147483647, %eax
 	leave
+LCFI1060:
 	ret
-.globl _mod_pow2__mod_pow2_L_32
-	.private_extern _mod_pow2__mod_pow2_L_32
+LFE351:
+.no_dead_strip _mod_pow2__mod_pow2_L_32
 _mod_pow2__mod_pow2_L_32:
+LFB352:
 	pushq	%rbp
+LCFI1061:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1062:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4294967295, %eax
 	leave
+LCFI1063:
 	ret
-.globl _mod_pow2__mod_pow2_L_33
-	.private_extern _mod_pow2__mod_pow2_L_33
+LFE352:
+.no_dead_strip _mod_pow2__mod_pow2_L_33
 _mod_pow2__mod_pow2_L_33:
+LFB353:
 	pushq	%rbp
+LCFI1064:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1065:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8589934591, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1066:
 	ret
-.globl _mod_pow2__mod_pow2_L_34
-	.private_extern _mod_pow2__mod_pow2_L_34
+LFE353:
+.no_dead_strip _mod_pow2__mod_pow2_L_34
 _mod_pow2__mod_pow2_L_34:
+LFB354:
 	pushq	%rbp
+LCFI1067:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1068:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17179869183, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1069:
 	ret
-.globl _mod_pow2__mod_pow2_L_35
-	.private_extern _mod_pow2__mod_pow2_L_35
+LFE354:
+.no_dead_strip _mod_pow2__mod_pow2_L_35
 _mod_pow2__mod_pow2_L_35:
+LFB355:
 	pushq	%rbp
+LCFI1070:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1071:
+	movq	%rdi, -8(%rbp)
 	movabsq	$34359738367, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1072:
 	ret
-.globl _mod_pow2__mod_pow2_L_36
-	.private_extern _mod_pow2__mod_pow2_L_36
+LFE355:
+.no_dead_strip _mod_pow2__mod_pow2_L_36
 _mod_pow2__mod_pow2_L_36:
+LFB356:
 	pushq	%rbp
+LCFI1073:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1074:
+	movq	%rdi, -8(%rbp)
 	movabsq	$68719476735, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1075:
 	ret
-.globl _mod_pow2__mod_pow2_L_37
-	.private_extern _mod_pow2__mod_pow2_L_37
+LFE356:
+.no_dead_strip _mod_pow2__mod_pow2_L_37
 _mod_pow2__mod_pow2_L_37:
+LFB357:
 	pushq	%rbp
+LCFI1076:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1077:
+	movq	%rdi, -8(%rbp)
 	movabsq	$137438953471, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1078:
 	ret
-.globl _mod_pow2__mod_pow2_L_38
-	.private_extern _mod_pow2__mod_pow2_L_38
+LFE357:
+.no_dead_strip _mod_pow2__mod_pow2_L_38
 _mod_pow2__mod_pow2_L_38:
+LFB358:
 	pushq	%rbp
+LCFI1079:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1080:
+	movq	%rdi, -8(%rbp)
 	movabsq	$274877906943, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1081:
 	ret
-.globl _mod_pow2__mod_pow2_L_39
-	.private_extern _mod_pow2__mod_pow2_L_39
+LFE358:
+.no_dead_strip _mod_pow2__mod_pow2_L_39
 _mod_pow2__mod_pow2_L_39:
+LFB359:
 	pushq	%rbp
+LCFI1082:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1083:
+	movq	%rdi, -8(%rbp)
 	movabsq	$549755813887, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1084:
 	ret
-.globl _mod_pow2__mod_pow2_L_40
-	.private_extern _mod_pow2__mod_pow2_L_40
+LFE359:
+.no_dead_strip _mod_pow2__mod_pow2_L_40
 _mod_pow2__mod_pow2_L_40:
+LFB360:
 	pushq	%rbp
+LCFI1085:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1086:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1099511627775, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1087:
 	ret
-.globl _mod_pow2__mod_pow2_L_41
-	.private_extern _mod_pow2__mod_pow2_L_41
+LFE360:
+.no_dead_strip _mod_pow2__mod_pow2_L_41
 _mod_pow2__mod_pow2_L_41:
+LFB361:
 	pushq	%rbp
+LCFI1088:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1089:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2199023255551, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1090:
 	ret
-.globl _mod_pow2__mod_pow2_L_42
-	.private_extern _mod_pow2__mod_pow2_L_42
+LFE361:
+.no_dead_strip _mod_pow2__mod_pow2_L_42
 _mod_pow2__mod_pow2_L_42:
+LFB362:
 	pushq	%rbp
+LCFI1091:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1092:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4398046511103, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1093:
 	ret
-.globl _mod_pow2__mod_pow2_L_43
-	.private_extern _mod_pow2__mod_pow2_L_43
+LFE362:
+.no_dead_strip _mod_pow2__mod_pow2_L_43
 _mod_pow2__mod_pow2_L_43:
+LFB363:
 	pushq	%rbp
+LCFI1094:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1095:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8796093022207, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1096:
 	ret
-.globl _mod_pow2__mod_pow2_L_44
-	.private_extern _mod_pow2__mod_pow2_L_44
+LFE363:
+.no_dead_strip _mod_pow2__mod_pow2_L_44
 _mod_pow2__mod_pow2_L_44:
+LFB364:
 	pushq	%rbp
+LCFI1097:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1098:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17592186044415, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1099:
 	ret
-.globl _mod_pow2__mod_pow2_L_45
-	.private_extern _mod_pow2__mod_pow2_L_45
+LFE364:
+.no_dead_strip _mod_pow2__mod_pow2_L_45
 _mod_pow2__mod_pow2_L_45:
+LFB365:
 	pushq	%rbp
+LCFI1100:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1101:
+	movq	%rdi, -8(%rbp)
 	movabsq	$35184372088831, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1102:
 	ret
-.globl _mod_pow2__mod_pow2_L_46
-	.private_extern _mod_pow2__mod_pow2_L_46
+LFE365:
+.no_dead_strip _mod_pow2__mod_pow2_L_46
 _mod_pow2__mod_pow2_L_46:
+LFB366:
 	pushq	%rbp
+LCFI1103:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1104:
+	movq	%rdi, -8(%rbp)
 	movabsq	$70368744177663, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1105:
 	ret
-.globl _mod_pow2__mod_pow2_L_47
-	.private_extern _mod_pow2__mod_pow2_L_47
+LFE366:
+.no_dead_strip _mod_pow2__mod_pow2_L_47
 _mod_pow2__mod_pow2_L_47:
+LFB367:
 	pushq	%rbp
+LCFI1106:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1107:
+	movq	%rdi, -8(%rbp)
 	movabsq	$140737488355327, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1108:
 	ret
-.globl _mod_pow2__mod_pow2_L_48
-	.private_extern _mod_pow2__mod_pow2_L_48
+LFE367:
+.no_dead_strip _mod_pow2__mod_pow2_L_48
 _mod_pow2__mod_pow2_L_48:
+LFB368:
 	pushq	%rbp
+LCFI1109:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1110:
+	movq	%rdi, -8(%rbp)
 	movabsq	$281474976710655, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1111:
 	ret
-.globl _mod_pow2__mod_pow2_L_49
-	.private_extern _mod_pow2__mod_pow2_L_49
+LFE368:
+.no_dead_strip _mod_pow2__mod_pow2_L_49
 _mod_pow2__mod_pow2_L_49:
+LFB369:
 	pushq	%rbp
+LCFI1112:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1113:
+	movq	%rdi, -8(%rbp)
 	movabsq	$562949953421311, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1114:
 	ret
-.globl _mod_pow2__mod_pow2_L_50
-	.private_extern _mod_pow2__mod_pow2_L_50
+LFE369:
+.no_dead_strip _mod_pow2__mod_pow2_L_50
 _mod_pow2__mod_pow2_L_50:
+LFB370:
 	pushq	%rbp
+LCFI1115:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1116:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1125899906842623, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1117:
 	ret
-.globl _mod_pow2__mod_pow2_L_51
-	.private_extern _mod_pow2__mod_pow2_L_51
+LFE370:
+.no_dead_strip _mod_pow2__mod_pow2_L_51
 _mod_pow2__mod_pow2_L_51:
+LFB371:
 	pushq	%rbp
+LCFI1118:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1119:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2251799813685247, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1120:
 	ret
-.globl _mod_pow2__mod_pow2_L_52
-	.private_extern _mod_pow2__mod_pow2_L_52
+LFE371:
+.no_dead_strip _mod_pow2__mod_pow2_L_52
 _mod_pow2__mod_pow2_L_52:
+LFB372:
 	pushq	%rbp
+LCFI1121:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1122:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4503599627370495, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1123:
 	ret
-.globl _mod_pow2__mod_pow2_L_53
-	.private_extern _mod_pow2__mod_pow2_L_53
+LFE372:
+.no_dead_strip _mod_pow2__mod_pow2_L_53
 _mod_pow2__mod_pow2_L_53:
+LFB373:
 	pushq	%rbp
+LCFI1124:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1125:
+	movq	%rdi, -8(%rbp)
 	movabsq	$9007199254740991, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1126:
 	ret
-.globl _mod_pow2__mod_pow2_L_54
-	.private_extern _mod_pow2__mod_pow2_L_54
+LFE373:
+.no_dead_strip _mod_pow2__mod_pow2_L_54
 _mod_pow2__mod_pow2_L_54:
+LFB374:
 	pushq	%rbp
+LCFI1127:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1128:
+	movq	%rdi, -8(%rbp)
 	movabsq	$18014398509481983, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1129:
 	ret
-.globl _mod_pow2__mod_pow2_L_55
-	.private_extern _mod_pow2__mod_pow2_L_55
+LFE374:
+.no_dead_strip _mod_pow2__mod_pow2_L_55
 _mod_pow2__mod_pow2_L_55:
+LFB375:
 	pushq	%rbp
+LCFI1130:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1131:
+	movq	%rdi, -8(%rbp)
 	movabsq	$36028797018963967, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1132:
 	ret
-.globl _mod_pow2__mod_pow2_L_56
-	.private_extern _mod_pow2__mod_pow2_L_56
+LFE375:
+.no_dead_strip _mod_pow2__mod_pow2_L_56
 _mod_pow2__mod_pow2_L_56:
+LFB376:
 	pushq	%rbp
+LCFI1133:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1134:
+	movq	%rdi, -8(%rbp)
 	movabsq	$72057594037927935, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1135:
 	ret
-.globl _mod_pow2__mod_pow2_L_57
-	.private_extern _mod_pow2__mod_pow2_L_57
+LFE376:
+.no_dead_strip _mod_pow2__mod_pow2_L_57
 _mod_pow2__mod_pow2_L_57:
+LFB377:
 	pushq	%rbp
+LCFI1136:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1137:
+	movq	%rdi, -8(%rbp)
 	movabsq	$144115188075855871, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1138:
 	ret
-.globl _mod_pow2__mod_pow2_L_58
-	.private_extern _mod_pow2__mod_pow2_L_58
+LFE377:
+.no_dead_strip _mod_pow2__mod_pow2_L_58
 _mod_pow2__mod_pow2_L_58:
+LFB378:
 	pushq	%rbp
+LCFI1139:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1140:
+	movq	%rdi, -8(%rbp)
 	movabsq	$288230376151711743, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1141:
 	ret
-.globl _mod_pow2__mod_pow2_L_59
-	.private_extern _mod_pow2__mod_pow2_L_59
+LFE378:
+.no_dead_strip _mod_pow2__mod_pow2_L_59
 _mod_pow2__mod_pow2_L_59:
+LFB379:
 	pushq	%rbp
+LCFI1142:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1143:
+	movq	%rdi, -8(%rbp)
 	movabsq	$576460752303423487, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1144:
 	ret
-.globl _mod_pow2__mod_pow2_L_60
-	.private_extern _mod_pow2__mod_pow2_L_60
+LFE379:
+.no_dead_strip _mod_pow2__mod_pow2_L_60
 _mod_pow2__mod_pow2_L_60:
+LFB380:
 	pushq	%rbp
+LCFI1145:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1146:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1152921504606846975, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1147:
 	ret
-.globl _mod_pow2__mod_pow2_L_61
-	.private_extern _mod_pow2__mod_pow2_L_61
+LFE380:
+.no_dead_strip _mod_pow2__mod_pow2_L_61
 _mod_pow2__mod_pow2_L_61:
+LFB381:
 	pushq	%rbp
+LCFI1148:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1149:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2305843009213693951, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1150:
 	ret
-.globl _mod_pow2__mod_pow2_L_62
-	.private_extern _mod_pow2__mod_pow2_L_62
+LFE381:
+.no_dead_strip _mod_pow2__mod_pow2_L_62
 _mod_pow2__mod_pow2_L_62:
+LFB382:
 	pushq	%rbp
+LCFI1151:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1152:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4611686018427387903, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1153:
 	ret
-.globl _mod_pow2__mod_pow2_L_63
-	.private_extern _mod_pow2__mod_pow2_L_63
+LFE382:
+.no_dead_strip _mod_pow2__mod_pow2_L_63
 _mod_pow2__mod_pow2_L_63:
+LFB383:
 	pushq	%rbp
+LCFI1154:
 	movq	%rsp, %rbp
+LCFI1155:
+	pushq	%rbx
+LCFI1156:
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rcx
-	leaq	-1(%rcx), %rdx
-	movq	%rcx, %rax
-	orq	%rdx, %rax
-	movq	%rax, %rsi
-	sarq	$63, %rsi
-	subq	%rsi, %rdx
-	movabsq	$-9223372036854775808, %rax
-	cmpq	%rax, %rdx
-	sete	%al
-	movzbl	%al, %edx
-	movq	%rsi, %rax
-	notq	%rax
-	leaq	(%rdx,%rax), %rax
-	salq	$63, %rax
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	subq	%rax, %rdx
 	movq	%rdx, %rax
+	popq	%rbx
 	leave
+LCFI1157:
 	ret
-.globl _mod_pow2__mod_pow2_LC_0
-	.private_extern _mod_pow2__mod_pow2_LC_0
+LFE383:
+.no_dead_strip _mod_pow2__mod_pow2_LC_0
 _mod_pow2__mod_pow2_LC_0:
+LFB384:
 	pushq	%rbp
+LCFI1158:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1159:
+	movq	%rdi, -8(%rbp)
 	movl	$0, %eax
 	leave
+LCFI1160:
 	ret
-.globl _mod_pow2__mod_pow2_LC_1
-	.private_extern _mod_pow2__mod_pow2_LC_1
+LFE384:
+.no_dead_strip _mod_pow2__mod_pow2_LC_1
 _mod_pow2__mod_pow2_LC_1:
+LFB385:
 	pushq	%rbp
+LCFI1161:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1162:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1, %eax
 	leave
+LCFI1163:
 	ret
-.globl _mod_pow2__mod_pow2_LC_2
-	.private_extern _mod_pow2__mod_pow2_LC_2
+LFE385:
+.no_dead_strip _mod_pow2__mod_pow2_LC_2
 _mod_pow2__mod_pow2_LC_2:
+LFB386:
 	pushq	%rbp
+LCFI1164:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1165:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$3, %eax
 	leave
+LCFI1166:
 	ret
-.globl _mod_pow2__mod_pow2_LC_3
-	.private_extern _mod_pow2__mod_pow2_LC_3
+LFE386:
+.no_dead_strip _mod_pow2__mod_pow2_LC_3
 _mod_pow2__mod_pow2_LC_3:
+LFB387:
 	pushq	%rbp
+LCFI1167:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1168:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$7, %eax
 	leave
+LCFI1169:
 	ret
-.globl _mod_pow2__mod_pow2_LC_4
-	.private_extern _mod_pow2__mod_pow2_LC_4
+LFE387:
+.no_dead_strip _mod_pow2__mod_pow2_LC_4
 _mod_pow2__mod_pow2_LC_4:
+LFB388:
 	pushq	%rbp
+LCFI1170:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1171:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$15, %eax
 	leave
+LCFI1172:
 	ret
-.globl _mod_pow2__mod_pow2_LC_5
-	.private_extern _mod_pow2__mod_pow2_LC_5
+LFE388:
+.no_dead_strip _mod_pow2__mod_pow2_LC_5
 _mod_pow2__mod_pow2_LC_5:
+LFB389:
 	pushq	%rbp
+LCFI1173:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1174:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$31, %eax
 	leave
+LCFI1175:
 	ret
-.globl _mod_pow2__mod_pow2_LC_6
-	.private_extern _mod_pow2__mod_pow2_LC_6
+LFE389:
+.no_dead_strip _mod_pow2__mod_pow2_LC_6
 _mod_pow2__mod_pow2_LC_6:
+LFB390:
 	pushq	%rbp
+LCFI1176:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1177:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$63, %eax
 	leave
+LCFI1178:
 	ret
-.globl _mod_pow2__mod_pow2_LC_7
-	.private_extern _mod_pow2__mod_pow2_LC_7
+LFE390:
+.no_dead_strip _mod_pow2__mod_pow2_LC_7
 _mod_pow2__mod_pow2_LC_7:
+LFB391:
 	pushq	%rbp
+LCFI1179:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1180:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$127, %eax
 	leave
+LCFI1181:
 	ret
-.globl _mod_pow2__mod_pow2_LC_8
-	.private_extern _mod_pow2__mod_pow2_LC_8
+LFE391:
+.no_dead_strip _mod_pow2__mod_pow2_LC_8
 _mod_pow2__mod_pow2_LC_8:
+LFB392:
 	pushq	%rbp
+LCFI1182:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1183:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$255, %eax
 	leave
+LCFI1184:
 	ret
-.globl _mod_pow2__mod_pow2_LC_9
-	.private_extern _mod_pow2__mod_pow2_LC_9
+LFE392:
+.no_dead_strip _mod_pow2__mod_pow2_LC_9
 _mod_pow2__mod_pow2_LC_9:
+LFB393:
 	pushq	%rbp
+LCFI1185:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1186:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$511, %eax
 	leave
+LCFI1187:
 	ret
-.globl _mod_pow2__mod_pow2_LC_10
-	.private_extern _mod_pow2__mod_pow2_LC_10
+LFE393:
+.no_dead_strip _mod_pow2__mod_pow2_LC_10
 _mod_pow2__mod_pow2_LC_10:
+LFB394:
 	pushq	%rbp
+LCFI1188:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1189:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1023, %eax
 	leave
+LCFI1190:
 	ret
-.globl _mod_pow2__mod_pow2_LC_11
-	.private_extern _mod_pow2__mod_pow2_LC_11
+LFE394:
+.no_dead_strip _mod_pow2__mod_pow2_LC_11
 _mod_pow2__mod_pow2_LC_11:
+LFB395:
 	pushq	%rbp
+LCFI1191:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1192:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2047, %eax
 	leave
+LCFI1193:
 	ret
-.globl _mod_pow2__mod_pow2_LC_12
-	.private_extern _mod_pow2__mod_pow2_LC_12
+LFE395:
+.no_dead_strip _mod_pow2__mod_pow2_LC_12
 _mod_pow2__mod_pow2_LC_12:
+LFB396:
 	pushq	%rbp
+LCFI1194:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1195:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4095, %eax
 	leave
+LCFI1196:
 	ret
-.globl _mod_pow2__mod_pow2_LC_13
-	.private_extern _mod_pow2__mod_pow2_LC_13
+LFE396:
+.no_dead_strip _mod_pow2__mod_pow2_LC_13
 _mod_pow2__mod_pow2_LC_13:
+LFB397:
 	pushq	%rbp
+LCFI1197:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1198:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8191, %eax
 	leave
+LCFI1199:
 	ret
-.globl _mod_pow2__mod_pow2_LC_14
-	.private_extern _mod_pow2__mod_pow2_LC_14
+LFE397:
+.no_dead_strip _mod_pow2__mod_pow2_LC_14
 _mod_pow2__mod_pow2_LC_14:
+LFB398:
 	pushq	%rbp
+LCFI1200:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1201:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16383, %eax
 	leave
+LCFI1202:
 	ret
-.globl _mod_pow2__mod_pow2_LC_15
-	.private_extern _mod_pow2__mod_pow2_LC_15
+LFE398:
+.no_dead_strip _mod_pow2__mod_pow2_LC_15
 _mod_pow2__mod_pow2_LC_15:
+LFB399:
 	pushq	%rbp
+LCFI1203:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1204:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$32767, %eax
 	leave
+LCFI1205:
 	ret
-.globl _mod_pow2__mod_pow2_LC_16
-	.private_extern _mod_pow2__mod_pow2_LC_16
+LFE399:
+.no_dead_strip _mod_pow2__mod_pow2_LC_16
 _mod_pow2__mod_pow2_LC_16:
+LFB400:
 	pushq	%rbp
+LCFI1206:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1207:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$65535, %eax
 	leave
+LCFI1208:
 	ret
-.globl _mod_pow2__mod_pow2_LC_17
-	.private_extern _mod_pow2__mod_pow2_LC_17
+LFE400:
+.no_dead_strip _mod_pow2__mod_pow2_LC_17
 _mod_pow2__mod_pow2_LC_17:
+LFB401:
 	pushq	%rbp
+LCFI1209:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1210:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$131071, %eax
 	leave
+LCFI1211:
 	ret
-.globl _mod_pow2__mod_pow2_LC_18
-	.private_extern _mod_pow2__mod_pow2_LC_18
+LFE401:
+.no_dead_strip _mod_pow2__mod_pow2_LC_18
 _mod_pow2__mod_pow2_LC_18:
+LFB402:
 	pushq	%rbp
+LCFI1212:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1213:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$262143, %eax
 	leave
+LCFI1214:
 	ret
-.globl _mod_pow2__mod_pow2_LC_19
-	.private_extern _mod_pow2__mod_pow2_LC_19
+LFE402:
+.no_dead_strip _mod_pow2__mod_pow2_LC_19
 _mod_pow2__mod_pow2_LC_19:
+LFB403:
 	pushq	%rbp
+LCFI1215:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1216:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$524287, %eax
 	leave
+LCFI1217:
 	ret
-.globl _mod_pow2__mod_pow2_LC_20
-	.private_extern _mod_pow2__mod_pow2_LC_20
+LFE403:
+.no_dead_strip _mod_pow2__mod_pow2_LC_20
 _mod_pow2__mod_pow2_LC_20:
+LFB404:
 	pushq	%rbp
+LCFI1218:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1219:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1048575, %eax
 	leave
+LCFI1220:
 	ret
-.globl _mod_pow2__mod_pow2_LC_21
-	.private_extern _mod_pow2__mod_pow2_LC_21
+LFE404:
+.no_dead_strip _mod_pow2__mod_pow2_LC_21
 _mod_pow2__mod_pow2_LC_21:
+LFB405:
 	pushq	%rbp
+LCFI1221:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1222:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2097151, %eax
 	leave
+LCFI1223:
 	ret
-.globl _mod_pow2__mod_pow2_LC_22
-	.private_extern _mod_pow2__mod_pow2_LC_22
+LFE405:
+.no_dead_strip _mod_pow2__mod_pow2_LC_22
 _mod_pow2__mod_pow2_LC_22:
+LFB406:
 	pushq	%rbp
+LCFI1224:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1225:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4194303, %eax
 	leave
+LCFI1226:
 	ret
-.globl _mod_pow2__mod_pow2_LC_23
-	.private_extern _mod_pow2__mod_pow2_LC_23
+LFE406:
+.no_dead_strip _mod_pow2__mod_pow2_LC_23
 _mod_pow2__mod_pow2_LC_23:
+LFB407:
 	pushq	%rbp
+LCFI1227:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1228:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$8388607, %eax
 	leave
+LCFI1229:
 	ret
-.globl _mod_pow2__mod_pow2_LC_24
-	.private_extern _mod_pow2__mod_pow2_LC_24
+LFE407:
+.no_dead_strip _mod_pow2__mod_pow2_LC_24
 _mod_pow2__mod_pow2_LC_24:
+LFB408:
 	pushq	%rbp
+LCFI1230:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1231:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$16777215, %eax
 	leave
+LCFI1232:
 	ret
-.globl _mod_pow2__mod_pow2_LC_25
-	.private_extern _mod_pow2__mod_pow2_LC_25
+LFE408:
+.no_dead_strip _mod_pow2__mod_pow2_LC_25
 _mod_pow2__mod_pow2_LC_25:
+LFB409:
 	pushq	%rbp
+LCFI1233:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1234:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$33554431, %eax
 	leave
+LCFI1235:
 	ret
-.globl _mod_pow2__mod_pow2_LC_26
-	.private_extern _mod_pow2__mod_pow2_LC_26
+LFE409:
+.no_dead_strip _mod_pow2__mod_pow2_LC_26
 _mod_pow2__mod_pow2_LC_26:
+LFB410:
 	pushq	%rbp
+LCFI1236:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1237:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$67108863, %eax
 	leave
+LCFI1238:
 	ret
-.globl _mod_pow2__mod_pow2_LC_27
-	.private_extern _mod_pow2__mod_pow2_LC_27
+LFE410:
+.no_dead_strip _mod_pow2__mod_pow2_LC_27
 _mod_pow2__mod_pow2_LC_27:
+LFB411:
 	pushq	%rbp
+LCFI1239:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1240:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$134217727, %eax
 	leave
+LCFI1241:
 	ret
-.globl _mod_pow2__mod_pow2_LC_28
-	.private_extern _mod_pow2__mod_pow2_LC_28
+LFE411:
+.no_dead_strip _mod_pow2__mod_pow2_LC_28
 _mod_pow2__mod_pow2_LC_28:
+LFB412:
 	pushq	%rbp
+LCFI1242:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1243:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$268435455, %eax
 	leave
+LCFI1244:
 	ret
-.globl _mod_pow2__mod_pow2_LC_29
-	.private_extern _mod_pow2__mod_pow2_LC_29
+LFE412:
+.no_dead_strip _mod_pow2__mod_pow2_LC_29
 _mod_pow2__mod_pow2_LC_29:
+LFB413:
 	pushq	%rbp
+LCFI1245:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1246:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$536870911, %eax
 	leave
+LCFI1247:
 	ret
-.globl _mod_pow2__mod_pow2_LC_30
-	.private_extern _mod_pow2__mod_pow2_LC_30
+LFE413:
+.no_dead_strip _mod_pow2__mod_pow2_LC_30
 _mod_pow2__mod_pow2_LC_30:
+LFB414:
 	pushq	%rbp
+LCFI1248:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1249:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$1073741823, %eax
 	leave
+LCFI1250:
 	ret
-.globl _mod_pow2__mod_pow2_LC_31
-	.private_extern _mod_pow2__mod_pow2_LC_31
+LFE414:
+.no_dead_strip _mod_pow2__mod_pow2_LC_31
 _mod_pow2__mod_pow2_LC_31:
+LFB415:
 	pushq	%rbp
+LCFI1251:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1252:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$2147483647, %eax
 	leave
+LCFI1253:
 	ret
-.globl _mod_pow2__mod_pow2_LC_32
-	.private_extern _mod_pow2__mod_pow2_LC_32
+LFE415:
+.no_dead_strip _mod_pow2__mod_pow2_LC_32
 _mod_pow2__mod_pow2_LC_32:
+LFB416:
 	pushq	%rbp
+LCFI1254:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rax
+LCFI1255:
+	movq	%rdi, -8(%rbp)
+	movq	-8(%rbp), %rax
 	andl	$4294967295, %eax
 	leave
+LCFI1256:
 	ret
-.globl _mod_pow2__mod_pow2_LC_33
-	.private_extern _mod_pow2__mod_pow2_LC_33
+LFE416:
+.no_dead_strip _mod_pow2__mod_pow2_LC_33
 _mod_pow2__mod_pow2_LC_33:
+LFB417:
 	pushq	%rbp
+LCFI1257:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1258:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8589934591, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1259:
 	ret
-.globl _mod_pow2__mod_pow2_LC_34
-	.private_extern _mod_pow2__mod_pow2_LC_34
+LFE417:
+.no_dead_strip _mod_pow2__mod_pow2_LC_34
 _mod_pow2__mod_pow2_LC_34:
+LFB418:
 	pushq	%rbp
+LCFI1260:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1261:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17179869183, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1262:
 	ret
-.globl _mod_pow2__mod_pow2_LC_35
-	.private_extern _mod_pow2__mod_pow2_LC_35
+LFE418:
+.no_dead_strip _mod_pow2__mod_pow2_LC_35
 _mod_pow2__mod_pow2_LC_35:
+LFB419:
 	pushq	%rbp
+LCFI1263:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1264:
+	movq	%rdi, -8(%rbp)
 	movabsq	$34359738367, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1265:
 	ret
-.globl _mod_pow2__mod_pow2_LC_36
-	.private_extern _mod_pow2__mod_pow2_LC_36
+LFE419:
+.no_dead_strip _mod_pow2__mod_pow2_LC_36
 _mod_pow2__mod_pow2_LC_36:
+LFB420:
 	pushq	%rbp
+LCFI1266:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1267:
+	movq	%rdi, -8(%rbp)
 	movabsq	$68719476735, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1268:
 	ret
-.globl _mod_pow2__mod_pow2_LC_37
-	.private_extern _mod_pow2__mod_pow2_LC_37
+LFE420:
+.no_dead_strip _mod_pow2__mod_pow2_LC_37
 _mod_pow2__mod_pow2_LC_37:
+LFB421:
 	pushq	%rbp
+LCFI1269:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1270:
+	movq	%rdi, -8(%rbp)
 	movabsq	$137438953471, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1271:
 	ret
-.globl _mod_pow2__mod_pow2_LC_38
-	.private_extern _mod_pow2__mod_pow2_LC_38
+LFE421:
+.no_dead_strip _mod_pow2__mod_pow2_LC_38
 _mod_pow2__mod_pow2_LC_38:
+LFB422:
 	pushq	%rbp
+LCFI1272:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1273:
+	movq	%rdi, -8(%rbp)
 	movabsq	$274877906943, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1274:
 	ret
-.globl _mod_pow2__mod_pow2_LC_39
-	.private_extern _mod_pow2__mod_pow2_LC_39
+LFE422:
+.no_dead_strip _mod_pow2__mod_pow2_LC_39
 _mod_pow2__mod_pow2_LC_39:
+LFB423:
 	pushq	%rbp
+LCFI1275:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1276:
+	movq	%rdi, -8(%rbp)
 	movabsq	$549755813887, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1277:
 	ret
-.globl _mod_pow2__mod_pow2_LC_40
-	.private_extern _mod_pow2__mod_pow2_LC_40
+LFE423:
+.no_dead_strip _mod_pow2__mod_pow2_LC_40
 _mod_pow2__mod_pow2_LC_40:
+LFB424:
 	pushq	%rbp
+LCFI1278:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1279:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1099511627775, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1280:
 	ret
-.globl _mod_pow2__mod_pow2_LC_41
-	.private_extern _mod_pow2__mod_pow2_LC_41
+LFE424:
+.no_dead_strip _mod_pow2__mod_pow2_LC_41
 _mod_pow2__mod_pow2_LC_41:
+LFB425:
 	pushq	%rbp
+LCFI1281:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1282:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2199023255551, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1283:
 	ret
-.globl _mod_pow2__mod_pow2_LC_42
-	.private_extern _mod_pow2__mod_pow2_LC_42
+LFE425:
+.no_dead_strip _mod_pow2__mod_pow2_LC_42
 _mod_pow2__mod_pow2_LC_42:
+LFB426:
 	pushq	%rbp
+LCFI1284:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1285:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4398046511103, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1286:
 	ret
-.globl _mod_pow2__mod_pow2_LC_43
-	.private_extern _mod_pow2__mod_pow2_LC_43
+LFE426:
+.no_dead_strip _mod_pow2__mod_pow2_LC_43
 _mod_pow2__mod_pow2_LC_43:
+LFB427:
 	pushq	%rbp
+LCFI1287:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1288:
+	movq	%rdi, -8(%rbp)
 	movabsq	$8796093022207, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1289:
 	ret
-.globl _mod_pow2__mod_pow2_LC_44
-	.private_extern _mod_pow2__mod_pow2_LC_44
+LFE427:
+.no_dead_strip _mod_pow2__mod_pow2_LC_44
 _mod_pow2__mod_pow2_LC_44:
+LFB428:
 	pushq	%rbp
+LCFI1290:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1291:
+	movq	%rdi, -8(%rbp)
 	movabsq	$17592186044415, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1292:
 	ret
-.globl _mod_pow2__mod_pow2_LC_45
-	.private_extern _mod_pow2__mod_pow2_LC_45
+LFE428:
+.no_dead_strip _mod_pow2__mod_pow2_LC_45
 _mod_pow2__mod_pow2_LC_45:
+LFB429:
 	pushq	%rbp
+LCFI1293:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1294:
+	movq	%rdi, -8(%rbp)
 	movabsq	$35184372088831, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1295:
 	ret
-.globl _mod_pow2__mod_pow2_LC_46
-	.private_extern _mod_pow2__mod_pow2_LC_46
+LFE429:
+.no_dead_strip _mod_pow2__mod_pow2_LC_46
 _mod_pow2__mod_pow2_LC_46:
+LFB430:
 	pushq	%rbp
+LCFI1296:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1297:
+	movq	%rdi, -8(%rbp)
 	movabsq	$70368744177663, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1298:
 	ret
-.globl _mod_pow2__mod_pow2_LC_47
-	.private_extern _mod_pow2__mod_pow2_LC_47
+LFE430:
+.no_dead_strip _mod_pow2__mod_pow2_LC_47
 _mod_pow2__mod_pow2_LC_47:
+LFB431:
 	pushq	%rbp
+LCFI1299:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1300:
+	movq	%rdi, -8(%rbp)
 	movabsq	$140737488355327, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1301:
 	ret
-.globl _mod_pow2__mod_pow2_LC_48
-	.private_extern _mod_pow2__mod_pow2_LC_48
+LFE431:
+.no_dead_strip _mod_pow2__mod_pow2_LC_48
 _mod_pow2__mod_pow2_LC_48:
+LFB432:
 	pushq	%rbp
+LCFI1302:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1303:
+	movq	%rdi, -8(%rbp)
 	movabsq	$281474976710655, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1304:
 	ret
-.globl _mod_pow2__mod_pow2_LC_49
-	.private_extern _mod_pow2__mod_pow2_LC_49
+LFE432:
+.no_dead_strip _mod_pow2__mod_pow2_LC_49
 _mod_pow2__mod_pow2_LC_49:
+LFB433:
 	pushq	%rbp
+LCFI1305:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1306:
+	movq	%rdi, -8(%rbp)
 	movabsq	$562949953421311, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1307:
 	ret
-.globl _mod_pow2__mod_pow2_LC_50
-	.private_extern _mod_pow2__mod_pow2_LC_50
+LFE433:
+.no_dead_strip _mod_pow2__mod_pow2_LC_50
 _mod_pow2__mod_pow2_LC_50:
+LFB434:
 	pushq	%rbp
+LCFI1308:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1309:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1125899906842623, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1310:
 	ret
-.globl _mod_pow2__mod_pow2_LC_51
-	.private_extern _mod_pow2__mod_pow2_LC_51
+LFE434:
+.no_dead_strip _mod_pow2__mod_pow2_LC_51
 _mod_pow2__mod_pow2_LC_51:
+LFB435:
 	pushq	%rbp
+LCFI1311:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1312:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2251799813685247, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1313:
 	ret
-.globl _mod_pow2__mod_pow2_LC_52
-	.private_extern _mod_pow2__mod_pow2_LC_52
+LFE435:
+.no_dead_strip _mod_pow2__mod_pow2_LC_52
 _mod_pow2__mod_pow2_LC_52:
+LFB436:
 	pushq	%rbp
+LCFI1314:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1315:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4503599627370495, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1316:
 	ret
-.globl _mod_pow2__mod_pow2_LC_53
-	.private_extern _mod_pow2__mod_pow2_LC_53
+LFE436:
+.no_dead_strip _mod_pow2__mod_pow2_LC_53
 _mod_pow2__mod_pow2_LC_53:
+LFB437:
 	pushq	%rbp
+LCFI1317:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1318:
+	movq	%rdi, -8(%rbp)
 	movabsq	$9007199254740991, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1319:
 	ret
-.globl _mod_pow2__mod_pow2_LC_54
-	.private_extern _mod_pow2__mod_pow2_LC_54
+LFE437:
+.no_dead_strip _mod_pow2__mod_pow2_LC_54
 _mod_pow2__mod_pow2_LC_54:
+LFB438:
 	pushq	%rbp
+LCFI1320:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1321:
+	movq	%rdi, -8(%rbp)
 	movabsq	$18014398509481983, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1322:
 	ret
-.globl _mod_pow2__mod_pow2_LC_55
-	.private_extern _mod_pow2__mod_pow2_LC_55
+LFE438:
+.no_dead_strip _mod_pow2__mod_pow2_LC_55
 _mod_pow2__mod_pow2_LC_55:
+LFB439:
 	pushq	%rbp
+LCFI1323:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1324:
+	movq	%rdi, -8(%rbp)
 	movabsq	$36028797018963967, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1325:
 	ret
-.globl _mod_pow2__mod_pow2_LC_56
-	.private_extern _mod_pow2__mod_pow2_LC_56
+LFE439:
+.no_dead_strip _mod_pow2__mod_pow2_LC_56
 _mod_pow2__mod_pow2_LC_56:
+LFB440:
 	pushq	%rbp
+LCFI1326:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1327:
+	movq	%rdi, -8(%rbp)
 	movabsq	$72057594037927935, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1328:
 	ret
-.globl _mod_pow2__mod_pow2_LC_57
-	.private_extern _mod_pow2__mod_pow2_LC_57
+LFE440:
+.no_dead_strip _mod_pow2__mod_pow2_LC_57
 _mod_pow2__mod_pow2_LC_57:
+LFB441:
 	pushq	%rbp
+LCFI1329:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1330:
+	movq	%rdi, -8(%rbp)
 	movabsq	$144115188075855871, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1331:
 	ret
-.globl _mod_pow2__mod_pow2_LC_58
-	.private_extern _mod_pow2__mod_pow2_LC_58
+LFE441:
+.no_dead_strip _mod_pow2__mod_pow2_LC_58
 _mod_pow2__mod_pow2_LC_58:
+LFB442:
 	pushq	%rbp
+LCFI1332:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1333:
+	movq	%rdi, -8(%rbp)
 	movabsq	$288230376151711743, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1334:
 	ret
-.globl _mod_pow2__mod_pow2_LC_59
-	.private_extern _mod_pow2__mod_pow2_LC_59
+LFE442:
+.no_dead_strip _mod_pow2__mod_pow2_LC_59
 _mod_pow2__mod_pow2_LC_59:
+LFB443:
 	pushq	%rbp
+LCFI1335:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1336:
+	movq	%rdi, -8(%rbp)
 	movabsq	$576460752303423487, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1337:
 	ret
-.globl _mod_pow2__mod_pow2_LC_60
-	.private_extern _mod_pow2__mod_pow2_LC_60
+LFE443:
+.no_dead_strip _mod_pow2__mod_pow2_LC_60
 _mod_pow2__mod_pow2_LC_60:
+LFB444:
 	pushq	%rbp
+LCFI1338:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1339:
+	movq	%rdi, -8(%rbp)
 	movabsq	$1152921504606846975, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1340:
 	ret
-.globl _mod_pow2__mod_pow2_LC_61
-	.private_extern _mod_pow2__mod_pow2_LC_61
+LFE444:
+.no_dead_strip _mod_pow2__mod_pow2_LC_61
 _mod_pow2__mod_pow2_LC_61:
+LFB445:
 	pushq	%rbp
+LCFI1341:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1342:
+	movq	%rdi, -8(%rbp)
 	movabsq	$2305843009213693951, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1343:
 	ret
-.globl _mod_pow2__mod_pow2_LC_62
-	.private_extern _mod_pow2__mod_pow2_LC_62
+LFE445:
+.no_dead_strip _mod_pow2__mod_pow2_LC_62
 _mod_pow2__mod_pow2_LC_62:
+LFB446:
 	pushq	%rbp
+LCFI1344:
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
+LCFI1345:
+	movq	%rdi, -8(%rbp)
 	movabsq	$4611686018427387903, %rax
-	andq	-24(%rbp), %rax
+	andq	-8(%rbp), %rax
 	leave
+LCFI1346:
 	ret
-.globl _mod_pow2__mod_pow2_LC_63
-	.private_extern _mod_pow2__mod_pow2_LC_63
+LFE446:
+.no_dead_strip _mod_pow2__mod_pow2_LC_63
 _mod_pow2__mod_pow2_LC_63:
+LFB447:
 	pushq	%rbp
+LCFI1347:
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+LCFI1348:
+	pushq	%rbx
+LCFI1349:
+	subq	$24, %rsp
+LCFI1350:
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rcx
-	leaq	-1(%rcx), %rdx
-	movq	%rcx, %rax
-	orq	%rdx, %rax
-	movq	%rax, %rsi
-	sarq	$63, %rsi
-	subq	%rsi, %rdx
-	movabsq	$-9223372036854775808, %rax
-	cmpq	%rax, %rdx
-	sete	%al
-	movzbl	%al, %edx
-	movq	%rsi, %rax
-	notq	%rax
-	leaq	(%rdx,%rax), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rax
-	salq	$63, %rax
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
 	movq	%rcx, %rdx
-	subq	%rax, %rdx
-	movq	%rdx, %rax
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L897
+	testq	%rdx, %rdx
+	jns	L450
 	movl	$30369, %edi
 	call	__m3_fault
-L897:
-	movq	-16(%rbp), %rax
+L450:
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	movq	%rax, %rcx
+	orq	%rdx, %rcx
+	sarq	$63, %rcx
+	movq	%rdx, %rbx
+	subq	%rcx, %rbx
+	movabsq	$-9223372036854775808, %rdx
+	cmpq	%rdx, %rbx
+	sete	%dl
+	movzbl	%dl, %edx
+	notq	%rcx
+	addq	%rcx, %rdx
+	salq	$63, %rdx
+	movq	%rax, %rcx
+	subq	%rdx, %rcx
+	movq	%rcx, %rdx
+	movq	%rdx, %rax
+	addq	$24, %rsp
+	popq	%rbx
 	leave
+LCFI1351:
 	ret
+LFE447:
 .globl _mod_pow2_M3
+.no_dead_strip _mod_pow2_M3
 _mod_pow2_M3:
+LFB448:
 	pushq	%rbp
+LCFI1352:
 	movq	%rsp, %rbp
+LCFI1353:
 	movq	%rdi, -8(%rbp)
 	leaq	_MM_mod_pow2(%rip), %rax
 	leave
+LCFI1354:
 	ret
+LFE448:
 __m3_fault:
+LFB449:
 	pushq	%rbp
+LCFI1355:
 	movq	%rsp, %rbp
+LCFI1356:
 	subq	$16, %rsp
+LCFI1357:
 	movq	%rdi, -8(%rbp)
-	movq	-8(%rbp), %rsi
+	movq	-8(%rbp), %rax
+	movq	%rax, %rsi
 	leaq	_MM_mod_pow2(%rip), %rdi
 	call	_RTHooks__ReportFault
 	leave
+LCFI1358:
 	ret
+LFE449:
 	.const_data
 	.align 5
 _L_1:
@@ -6445,42 +8267,1058 @@ _MM_mod_pow2:
 	.space 32
 	.quad	_L_1+6656
 	.space 24
-	.quad	_MM_mod_pow2+208
+	.quad	_MM_mod_pow2+224
 	.space 8
 	.quad	_mod_pow2_M3
 	.quad	3
-	.quad	945
-	.quad	946
-	.long	1147993260
-	.byte	-75
-	.space 3
-	.quad	950
-	.byte	-73
-	.space 3
-	.long	952
-	.quad	953
-	.word	954
-	.space 6
-	.quad	955
-	.long	4020089389
-	.long	1083041703
-	.quad	958
-	.word	959
+	.word	945
 	.space 2
-	.long	960
-	.space 24
+	.long	946
+	.quad	947
+	.quad	948
+	.word	949
+	.space 6
+	.quad	950
+	.long	-1305670058
+	.long	1083031453
+	.long	953
+	.space 4
+	.quad	954
+	.byte	-69
+	.space 7
+	.quad	956
+	.long	1148157264
+	.space 4
+	.quad	959
+	.byte	-64
+	.space 31
 	.quad	_mod_pow2_I3
-	.quad	_MM_mod_pow2+232
+	.quad	_MM_mod_pow2+248
 	.space 8
 	.quad	_Long_I3
-	.quad	_MM_mod_pow2+256
+	.quad	_MM_mod_pow2+272
 	.space 8
 	.quad	_Word_I3
-	.quad	_MM_mod_pow2+280
+	.quad	_MM_mod_pow2+296
 	.space 8
 	.quad	_Cstdint_I3
-	.quad	_MM_mod_pow2+304
+	.quad	_MM_mod_pow2+320
 	.space 8
 	.quad	_RTHooks_I3
 	.space 8
+_mod_pow2__mod_pow2_i32_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_0.eh
+_mod_pow2__mod_pow2_i32_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_1.eh
+_mod_pow2__mod_pow2_i32_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_2.eh
+_mod_pow2__mod_pow2_i32_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_3.eh
+_mod_pow2__mod_pow2_i32_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_4.eh
+_mod_pow2__mod_pow2_i32_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_5.eh
+_mod_pow2__mod_pow2_i32_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_6.eh
+_mod_pow2__mod_pow2_i32_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_7.eh
+_mod_pow2__mod_pow2_i32_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_8.eh
+_mod_pow2__mod_pow2_i32_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_9.eh
+_mod_pow2__mod_pow2_i32_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_10.eh
+_mod_pow2__mod_pow2_i32_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_11.eh
+_mod_pow2__mod_pow2_i32_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_12.eh
+_mod_pow2__mod_pow2_i32_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_13.eh
+_mod_pow2__mod_pow2_i32_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_14.eh
+_mod_pow2__mod_pow2_i32_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_15.eh
+_mod_pow2__mod_pow2_i32_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_16.eh
+_mod_pow2__mod_pow2_i32_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_17.eh
+_mod_pow2__mod_pow2_i32_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_18.eh
+_mod_pow2__mod_pow2_i32_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_19.eh
+_mod_pow2__mod_pow2_i32_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_20.eh
+_mod_pow2__mod_pow2_i32_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_21.eh
+_mod_pow2__mod_pow2_i32_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_22.eh
+_mod_pow2__mod_pow2_i32_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_23.eh
+_mod_pow2__mod_pow2_i32_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_24.eh
+_mod_pow2__mod_pow2_i32_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_25.eh
+_mod_pow2__mod_pow2_i32_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_26.eh
+_mod_pow2__mod_pow2_i32_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_27.eh
+_mod_pow2__mod_pow2_i32_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_28.eh
+_mod_pow2__mod_pow2_i32_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_29.eh
+_mod_pow2__mod_pow2_i32_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_30.eh
+_mod_pow2__mod_pow2_i32_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i32_31.eh
+_mod_pow2__mod_pow2_u32_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_0.eh
+_mod_pow2__mod_pow2_u32_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_1.eh
+_mod_pow2__mod_pow2_u32_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_2.eh
+_mod_pow2__mod_pow2_u32_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_3.eh
+_mod_pow2__mod_pow2_u32_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_4.eh
+_mod_pow2__mod_pow2_u32_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_5.eh
+_mod_pow2__mod_pow2_u32_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_6.eh
+_mod_pow2__mod_pow2_u32_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_7.eh
+_mod_pow2__mod_pow2_u32_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_8.eh
+_mod_pow2__mod_pow2_u32_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_9.eh
+_mod_pow2__mod_pow2_u32_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_10.eh
+_mod_pow2__mod_pow2_u32_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_11.eh
+_mod_pow2__mod_pow2_u32_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_12.eh
+_mod_pow2__mod_pow2_u32_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_13.eh
+_mod_pow2__mod_pow2_u32_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_14.eh
+_mod_pow2__mod_pow2_u32_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_15.eh
+_mod_pow2__mod_pow2_u32_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_16.eh
+_mod_pow2__mod_pow2_u32_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_17.eh
+_mod_pow2__mod_pow2_u32_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_18.eh
+_mod_pow2__mod_pow2_u32_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_19.eh
+_mod_pow2__mod_pow2_u32_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_20.eh
+_mod_pow2__mod_pow2_u32_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_21.eh
+_mod_pow2__mod_pow2_u32_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_22.eh
+_mod_pow2__mod_pow2_u32_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_23.eh
+_mod_pow2__mod_pow2_u32_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_24.eh
+_mod_pow2__mod_pow2_u32_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_25.eh
+_mod_pow2__mod_pow2_u32_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_26.eh
+_mod_pow2__mod_pow2_u32_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_27.eh
+_mod_pow2__mod_pow2_u32_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_28.eh
+_mod_pow2__mod_pow2_u32_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_29.eh
+_mod_pow2__mod_pow2_u32_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_30.eh
+_mod_pow2__mod_pow2_u32_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u32_31.eh
+_mod_pow2__mod_pow2_i64_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_0.eh
+_mod_pow2__mod_pow2_i64_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_1.eh
+_mod_pow2__mod_pow2_i64_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_2.eh
+_mod_pow2__mod_pow2_i64_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_3.eh
+_mod_pow2__mod_pow2_i64_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_4.eh
+_mod_pow2__mod_pow2_i64_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_5.eh
+_mod_pow2__mod_pow2_i64_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_6.eh
+_mod_pow2__mod_pow2_i64_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_7.eh
+_mod_pow2__mod_pow2_i64_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_8.eh
+_mod_pow2__mod_pow2_i64_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_9.eh
+_mod_pow2__mod_pow2_i64_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_10.eh
+_mod_pow2__mod_pow2_i64_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_11.eh
+_mod_pow2__mod_pow2_i64_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_12.eh
+_mod_pow2__mod_pow2_i64_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_13.eh
+_mod_pow2__mod_pow2_i64_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_14.eh
+_mod_pow2__mod_pow2_i64_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_15.eh
+_mod_pow2__mod_pow2_i64_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_16.eh
+_mod_pow2__mod_pow2_i64_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_17.eh
+_mod_pow2__mod_pow2_i64_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_18.eh
+_mod_pow2__mod_pow2_i64_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_19.eh
+_mod_pow2__mod_pow2_i64_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_20.eh
+_mod_pow2__mod_pow2_i64_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_21.eh
+_mod_pow2__mod_pow2_i64_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_22.eh
+_mod_pow2__mod_pow2_i64_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_23.eh
+_mod_pow2__mod_pow2_i64_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_24.eh
+_mod_pow2__mod_pow2_i64_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_25.eh
+_mod_pow2__mod_pow2_i64_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_26.eh
+_mod_pow2__mod_pow2_i64_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_27.eh
+_mod_pow2__mod_pow2_i64_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_28.eh
+_mod_pow2__mod_pow2_i64_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_29.eh
+_mod_pow2__mod_pow2_i64_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_30.eh
+_mod_pow2__mod_pow2_i64_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_31.eh
+_mod_pow2__mod_pow2_i64_32.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_32.eh
+_mod_pow2__mod_pow2_i64_33.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_33.eh
+_mod_pow2__mod_pow2_i64_34.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_34.eh
+_mod_pow2__mod_pow2_i64_35.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_35.eh
+_mod_pow2__mod_pow2_i64_36.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_36.eh
+_mod_pow2__mod_pow2_i64_37.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_37.eh
+_mod_pow2__mod_pow2_i64_38.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_38.eh
+_mod_pow2__mod_pow2_i64_39.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_39.eh
+_mod_pow2__mod_pow2_i64_40.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_40.eh
+_mod_pow2__mod_pow2_i64_41.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_41.eh
+_mod_pow2__mod_pow2_i64_42.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_42.eh
+_mod_pow2__mod_pow2_i64_43.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_43.eh
+_mod_pow2__mod_pow2_i64_44.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_44.eh
+_mod_pow2__mod_pow2_i64_45.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_45.eh
+_mod_pow2__mod_pow2_i64_46.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_46.eh
+_mod_pow2__mod_pow2_i64_47.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_47.eh
+_mod_pow2__mod_pow2_i64_48.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_48.eh
+_mod_pow2__mod_pow2_i64_49.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_49.eh
+_mod_pow2__mod_pow2_i64_50.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_50.eh
+_mod_pow2__mod_pow2_i64_51.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_51.eh
+_mod_pow2__mod_pow2_i64_52.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_52.eh
+_mod_pow2__mod_pow2_i64_53.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_53.eh
+_mod_pow2__mod_pow2_i64_54.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_54.eh
+_mod_pow2__mod_pow2_i64_55.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_55.eh
+_mod_pow2__mod_pow2_i64_56.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_56.eh
+_mod_pow2__mod_pow2_i64_57.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_57.eh
+_mod_pow2__mod_pow2_i64_58.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_58.eh
+_mod_pow2__mod_pow2_i64_59.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_59.eh
+_mod_pow2__mod_pow2_i64_60.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_60.eh
+_mod_pow2__mod_pow2_i64_61.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_61.eh
+_mod_pow2__mod_pow2_i64_62.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_62.eh
+_mod_pow2__mod_pow2_i64_63.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_i64_63.eh
+_mod_pow2__mod_pow2_u64_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_0.eh
+_mod_pow2__mod_pow2_u64_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_1.eh
+_mod_pow2__mod_pow2_u64_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_2.eh
+_mod_pow2__mod_pow2_u64_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_3.eh
+_mod_pow2__mod_pow2_u64_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_4.eh
+_mod_pow2__mod_pow2_u64_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_5.eh
+_mod_pow2__mod_pow2_u64_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_6.eh
+_mod_pow2__mod_pow2_u64_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_7.eh
+_mod_pow2__mod_pow2_u64_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_8.eh
+_mod_pow2__mod_pow2_u64_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_9.eh
+_mod_pow2__mod_pow2_u64_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_10.eh
+_mod_pow2__mod_pow2_u64_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_11.eh
+_mod_pow2__mod_pow2_u64_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_12.eh
+_mod_pow2__mod_pow2_u64_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_13.eh
+_mod_pow2__mod_pow2_u64_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_14.eh
+_mod_pow2__mod_pow2_u64_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_15.eh
+_mod_pow2__mod_pow2_u64_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_16.eh
+_mod_pow2__mod_pow2_u64_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_17.eh
+_mod_pow2__mod_pow2_u64_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_18.eh
+_mod_pow2__mod_pow2_u64_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_19.eh
+_mod_pow2__mod_pow2_u64_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_20.eh
+_mod_pow2__mod_pow2_u64_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_21.eh
+_mod_pow2__mod_pow2_u64_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_22.eh
+_mod_pow2__mod_pow2_u64_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_23.eh
+_mod_pow2__mod_pow2_u64_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_24.eh
+_mod_pow2__mod_pow2_u64_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_25.eh
+_mod_pow2__mod_pow2_u64_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_26.eh
+_mod_pow2__mod_pow2_u64_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_27.eh
+_mod_pow2__mod_pow2_u64_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_28.eh
+_mod_pow2__mod_pow2_u64_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_29.eh
+_mod_pow2__mod_pow2_u64_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_30.eh
+_mod_pow2__mod_pow2_u64_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_31.eh
+_mod_pow2__mod_pow2_u64_32.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_32.eh
+_mod_pow2__mod_pow2_u64_33.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_33.eh
+_mod_pow2__mod_pow2_u64_34.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_34.eh
+_mod_pow2__mod_pow2_u64_35.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_35.eh
+_mod_pow2__mod_pow2_u64_36.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_36.eh
+_mod_pow2__mod_pow2_u64_37.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_37.eh
+_mod_pow2__mod_pow2_u64_38.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_38.eh
+_mod_pow2__mod_pow2_u64_39.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_39.eh
+_mod_pow2__mod_pow2_u64_40.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_40.eh
+_mod_pow2__mod_pow2_u64_41.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_41.eh
+_mod_pow2__mod_pow2_u64_42.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_42.eh
+_mod_pow2__mod_pow2_u64_43.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_43.eh
+_mod_pow2__mod_pow2_u64_44.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_44.eh
+_mod_pow2__mod_pow2_u64_45.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_45.eh
+_mod_pow2__mod_pow2_u64_46.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_46.eh
+_mod_pow2__mod_pow2_u64_47.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_47.eh
+_mod_pow2__mod_pow2_u64_48.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_48.eh
+_mod_pow2__mod_pow2_u64_49.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_49.eh
+_mod_pow2__mod_pow2_u64_50.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_50.eh
+_mod_pow2__mod_pow2_u64_51.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_51.eh
+_mod_pow2__mod_pow2_u64_52.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_52.eh
+_mod_pow2__mod_pow2_u64_53.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_53.eh
+_mod_pow2__mod_pow2_u64_54.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_54.eh
+_mod_pow2__mod_pow2_u64_55.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_55.eh
+_mod_pow2__mod_pow2_u64_56.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_56.eh
+_mod_pow2__mod_pow2_u64_57.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_57.eh
+_mod_pow2__mod_pow2_u64_58.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_58.eh
+_mod_pow2__mod_pow2_u64_59.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_59.eh
+_mod_pow2__mod_pow2_u64_60.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_60.eh
+_mod_pow2__mod_pow2_u64_61.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_61.eh
+_mod_pow2__mod_pow2_u64_62.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_62.eh
+_mod_pow2__mod_pow2_u64_63.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_u64_63.eh
+_mod_pow2__mod_pow2_I_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_0.eh
+_mod_pow2__mod_pow2_I_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_1.eh
+_mod_pow2__mod_pow2_I_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_2.eh
+_mod_pow2__mod_pow2_I_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_3.eh
+_mod_pow2__mod_pow2_I_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_4.eh
+_mod_pow2__mod_pow2_I_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_5.eh
+_mod_pow2__mod_pow2_I_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_6.eh
+_mod_pow2__mod_pow2_I_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_7.eh
+_mod_pow2__mod_pow2_I_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_8.eh
+_mod_pow2__mod_pow2_I_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_9.eh
+_mod_pow2__mod_pow2_I_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_10.eh
+_mod_pow2__mod_pow2_I_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_11.eh
+_mod_pow2__mod_pow2_I_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_12.eh
+_mod_pow2__mod_pow2_I_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_13.eh
+_mod_pow2__mod_pow2_I_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_14.eh
+_mod_pow2__mod_pow2_I_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_15.eh
+_mod_pow2__mod_pow2_I_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_16.eh
+_mod_pow2__mod_pow2_I_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_17.eh
+_mod_pow2__mod_pow2_I_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_18.eh
+_mod_pow2__mod_pow2_I_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_19.eh
+_mod_pow2__mod_pow2_I_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_20.eh
+_mod_pow2__mod_pow2_I_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_21.eh
+_mod_pow2__mod_pow2_I_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_22.eh
+_mod_pow2__mod_pow2_I_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_23.eh
+_mod_pow2__mod_pow2_I_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_24.eh
+_mod_pow2__mod_pow2_I_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_25.eh
+_mod_pow2__mod_pow2_I_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_26.eh
+_mod_pow2__mod_pow2_I_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_27.eh
+_mod_pow2__mod_pow2_I_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_28.eh
+_mod_pow2__mod_pow2_I_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_29.eh
+_mod_pow2__mod_pow2_I_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_30.eh
+_mod_pow2__mod_pow2_I_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_31.eh
+_mod_pow2__mod_pow2_I_32.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_32.eh
+_mod_pow2__mod_pow2_I_33.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_33.eh
+_mod_pow2__mod_pow2_I_34.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_34.eh
+_mod_pow2__mod_pow2_I_35.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_35.eh
+_mod_pow2__mod_pow2_I_36.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_36.eh
+_mod_pow2__mod_pow2_I_37.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_37.eh
+_mod_pow2__mod_pow2_I_38.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_38.eh
+_mod_pow2__mod_pow2_I_39.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_39.eh
+_mod_pow2__mod_pow2_I_40.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_40.eh
+_mod_pow2__mod_pow2_I_41.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_41.eh
+_mod_pow2__mod_pow2_I_42.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_42.eh
+_mod_pow2__mod_pow2_I_43.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_43.eh
+_mod_pow2__mod_pow2_I_44.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_44.eh
+_mod_pow2__mod_pow2_I_45.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_45.eh
+_mod_pow2__mod_pow2_I_46.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_46.eh
+_mod_pow2__mod_pow2_I_47.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_47.eh
+_mod_pow2__mod_pow2_I_48.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_48.eh
+_mod_pow2__mod_pow2_I_49.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_49.eh
+_mod_pow2__mod_pow2_I_50.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_50.eh
+_mod_pow2__mod_pow2_I_51.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_51.eh
+_mod_pow2__mod_pow2_I_52.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_52.eh
+_mod_pow2__mod_pow2_I_53.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_53.eh
+_mod_pow2__mod_pow2_I_54.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_54.eh
+_mod_pow2__mod_pow2_I_55.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_55.eh
+_mod_pow2__mod_pow2_I_56.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_56.eh
+_mod_pow2__mod_pow2_I_57.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_57.eh
+_mod_pow2__mod_pow2_I_58.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_58.eh
+_mod_pow2__mod_pow2_I_59.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_59.eh
+_mod_pow2__mod_pow2_I_60.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_60.eh
+_mod_pow2__mod_pow2_I_61.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_61.eh
+_mod_pow2__mod_pow2_I_62.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_62.eh
+_mod_pow2__mod_pow2_I_63.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_I_63.eh
+_mod_pow2__mod_pow2_C_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_0.eh
+_mod_pow2__mod_pow2_C_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_1.eh
+_mod_pow2__mod_pow2_C_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_2.eh
+_mod_pow2__mod_pow2_C_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_3.eh
+_mod_pow2__mod_pow2_C_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_4.eh
+_mod_pow2__mod_pow2_C_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_5.eh
+_mod_pow2__mod_pow2_C_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_6.eh
+_mod_pow2__mod_pow2_C_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_7.eh
+_mod_pow2__mod_pow2_C_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_8.eh
+_mod_pow2__mod_pow2_C_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_9.eh
+_mod_pow2__mod_pow2_C_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_10.eh
+_mod_pow2__mod_pow2_C_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_11.eh
+_mod_pow2__mod_pow2_C_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_12.eh
+_mod_pow2__mod_pow2_C_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_13.eh
+_mod_pow2__mod_pow2_C_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_14.eh
+_mod_pow2__mod_pow2_C_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_15.eh
+_mod_pow2__mod_pow2_C_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_16.eh
+_mod_pow2__mod_pow2_C_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_17.eh
+_mod_pow2__mod_pow2_C_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_18.eh
+_mod_pow2__mod_pow2_C_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_19.eh
+_mod_pow2__mod_pow2_C_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_20.eh
+_mod_pow2__mod_pow2_C_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_21.eh
+_mod_pow2__mod_pow2_C_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_22.eh
+_mod_pow2__mod_pow2_C_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_23.eh
+_mod_pow2__mod_pow2_C_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_24.eh
+_mod_pow2__mod_pow2_C_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_25.eh
+_mod_pow2__mod_pow2_C_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_26.eh
+_mod_pow2__mod_pow2_C_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_27.eh
+_mod_pow2__mod_pow2_C_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_28.eh
+_mod_pow2__mod_pow2_C_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_29.eh
+_mod_pow2__mod_pow2_C_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_30.eh
+_mod_pow2__mod_pow2_C_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_31.eh
+_mod_pow2__mod_pow2_C_32.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_32.eh
+_mod_pow2__mod_pow2_C_33.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_33.eh
+_mod_pow2__mod_pow2_C_34.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_34.eh
+_mod_pow2__mod_pow2_C_35.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_35.eh
+_mod_pow2__mod_pow2_C_36.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_36.eh
+_mod_pow2__mod_pow2_C_37.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_37.eh
+_mod_pow2__mod_pow2_C_38.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_38.eh
+_mod_pow2__mod_pow2_C_39.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_39.eh
+_mod_pow2__mod_pow2_C_40.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_40.eh
+_mod_pow2__mod_pow2_C_41.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_41.eh
+_mod_pow2__mod_pow2_C_42.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_42.eh
+_mod_pow2__mod_pow2_C_43.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_43.eh
+_mod_pow2__mod_pow2_C_44.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_44.eh
+_mod_pow2__mod_pow2_C_45.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_45.eh
+_mod_pow2__mod_pow2_C_46.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_46.eh
+_mod_pow2__mod_pow2_C_47.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_47.eh
+_mod_pow2__mod_pow2_C_48.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_48.eh
+_mod_pow2__mod_pow2_C_49.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_49.eh
+_mod_pow2__mod_pow2_C_50.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_50.eh
+_mod_pow2__mod_pow2_C_51.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_51.eh
+_mod_pow2__mod_pow2_C_52.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_52.eh
+_mod_pow2__mod_pow2_C_53.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_53.eh
+_mod_pow2__mod_pow2_C_54.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_54.eh
+_mod_pow2__mod_pow2_C_55.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_55.eh
+_mod_pow2__mod_pow2_C_56.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_56.eh
+_mod_pow2__mod_pow2_C_57.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_57.eh
+_mod_pow2__mod_pow2_C_58.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_58.eh
+_mod_pow2__mod_pow2_C_59.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_59.eh
+_mod_pow2__mod_pow2_C_60.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_60.eh
+_mod_pow2__mod_pow2_C_61.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_61.eh
+_mod_pow2__mod_pow2_C_62.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_C_62.eh
+_mod_pow2__mod_pow2_L_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_0.eh
+_mod_pow2__mod_pow2_L_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_1.eh
+_mod_pow2__mod_pow2_L_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_2.eh
+_mod_pow2__mod_pow2_L_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_3.eh
+_mod_pow2__mod_pow2_L_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_4.eh
+_mod_pow2__mod_pow2_L_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_5.eh
+_mod_pow2__mod_pow2_L_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_6.eh
+_mod_pow2__mod_pow2_L_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_7.eh
+_mod_pow2__mod_pow2_L_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_8.eh
+_mod_pow2__mod_pow2_L_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_9.eh
+_mod_pow2__mod_pow2_L_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_10.eh
+_mod_pow2__mod_pow2_L_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_11.eh
+_mod_pow2__mod_pow2_L_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_12.eh
+_mod_pow2__mod_pow2_L_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_13.eh
+_mod_pow2__mod_pow2_L_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_14.eh
+_mod_pow2__mod_pow2_L_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_15.eh
+_mod_pow2__mod_pow2_L_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_16.eh
+_mod_pow2__mod_pow2_L_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_17.eh
+_mod_pow2__mod_pow2_L_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_18.eh
+_mod_pow2__mod_pow2_L_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_19.eh
+_mod_pow2__mod_pow2_L_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_20.eh
+_mod_pow2__mod_pow2_L_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_21.eh
+_mod_pow2__mod_pow2_L_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_22.eh
+_mod_pow2__mod_pow2_L_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_23.eh
+_mod_pow2__mod_pow2_L_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_24.eh
+_mod_pow2__mod_pow2_L_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_25.eh
+_mod_pow2__mod_pow2_L_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_26.eh
+_mod_pow2__mod_pow2_L_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_27.eh
+_mod_pow2__mod_pow2_L_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_28.eh
+_mod_pow2__mod_pow2_L_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_29.eh
+_mod_pow2__mod_pow2_L_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_30.eh
+_mod_pow2__mod_pow2_L_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_31.eh
+_mod_pow2__mod_pow2_L_32.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_32.eh
+_mod_pow2__mod_pow2_L_33.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_33.eh
+_mod_pow2__mod_pow2_L_34.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_34.eh
+_mod_pow2__mod_pow2_L_35.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_35.eh
+_mod_pow2__mod_pow2_L_36.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_36.eh
+_mod_pow2__mod_pow2_L_37.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_37.eh
+_mod_pow2__mod_pow2_L_38.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_38.eh
+_mod_pow2__mod_pow2_L_39.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_39.eh
+_mod_pow2__mod_pow2_L_40.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_40.eh
+_mod_pow2__mod_pow2_L_41.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_41.eh
+_mod_pow2__mod_pow2_L_42.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_42.eh
+_mod_pow2__mod_pow2_L_43.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_43.eh
+_mod_pow2__mod_pow2_L_44.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_44.eh
+_mod_pow2__mod_pow2_L_45.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_45.eh
+_mod_pow2__mod_pow2_L_46.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_46.eh
+_mod_pow2__mod_pow2_L_47.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_47.eh
+_mod_pow2__mod_pow2_L_48.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_48.eh
+_mod_pow2__mod_pow2_L_49.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_49.eh
+_mod_pow2__mod_pow2_L_50.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_50.eh
+_mod_pow2__mod_pow2_L_51.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_51.eh
+_mod_pow2__mod_pow2_L_52.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_52.eh
+_mod_pow2__mod_pow2_L_53.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_53.eh
+_mod_pow2__mod_pow2_L_54.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_54.eh
+_mod_pow2__mod_pow2_L_55.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_55.eh
+_mod_pow2__mod_pow2_L_56.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_56.eh
+_mod_pow2__mod_pow2_L_57.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_57.eh
+_mod_pow2__mod_pow2_L_58.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_58.eh
+_mod_pow2__mod_pow2_L_59.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_59.eh
+_mod_pow2__mod_pow2_L_60.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_60.eh
+_mod_pow2__mod_pow2_L_61.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_61.eh
+_mod_pow2__mod_pow2_L_62.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_62.eh
+_mod_pow2__mod_pow2_L_63.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_L_63.eh
+_mod_pow2__mod_pow2_LC_0.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_0.eh
+_mod_pow2__mod_pow2_LC_1.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_1.eh
+_mod_pow2__mod_pow2_LC_2.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_2.eh
+_mod_pow2__mod_pow2_LC_3.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_3.eh
+_mod_pow2__mod_pow2_LC_4.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_4.eh
+_mod_pow2__mod_pow2_LC_5.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_5.eh
+_mod_pow2__mod_pow2_LC_6.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_6.eh
+_mod_pow2__mod_pow2_LC_7.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_7.eh
+_mod_pow2__mod_pow2_LC_8.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_8.eh
+_mod_pow2__mod_pow2_LC_9.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_9.eh
+_mod_pow2__mod_pow2_LC_10.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_10.eh
+_mod_pow2__mod_pow2_LC_11.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_11.eh
+_mod_pow2__mod_pow2_LC_12.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_12.eh
+_mod_pow2__mod_pow2_LC_13.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_13.eh
+_mod_pow2__mod_pow2_LC_14.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_14.eh
+_mod_pow2__mod_pow2_LC_15.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_15.eh
+_mod_pow2__mod_pow2_LC_16.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_16.eh
+_mod_pow2__mod_pow2_LC_17.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_17.eh
+_mod_pow2__mod_pow2_LC_18.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_18.eh
+_mod_pow2__mod_pow2_LC_19.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_19.eh
+_mod_pow2__mod_pow2_LC_20.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_20.eh
+_mod_pow2__mod_pow2_LC_21.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_21.eh
+_mod_pow2__mod_pow2_LC_22.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_22.eh
+_mod_pow2__mod_pow2_LC_23.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_23.eh
+_mod_pow2__mod_pow2_LC_24.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_24.eh
+_mod_pow2__mod_pow2_LC_25.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_25.eh
+_mod_pow2__mod_pow2_LC_26.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_26.eh
+_mod_pow2__mod_pow2_LC_27.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_27.eh
+_mod_pow2__mod_pow2_LC_28.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_28.eh
+_mod_pow2__mod_pow2_LC_29.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_29.eh
+_mod_pow2__mod_pow2_LC_30.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_30.eh
+_mod_pow2__mod_pow2_LC_31.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_31.eh
+_mod_pow2__mod_pow2_LC_32.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_32.eh
+_mod_pow2__mod_pow2_LC_33.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_33.eh
+_mod_pow2__mod_pow2_LC_34.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_34.eh
+_mod_pow2__mod_pow2_LC_35.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_35.eh
+_mod_pow2__mod_pow2_LC_36.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_36.eh
+_mod_pow2__mod_pow2_LC_37.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_37.eh
+_mod_pow2__mod_pow2_LC_38.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_38.eh
+_mod_pow2__mod_pow2_LC_39.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_39.eh
+_mod_pow2__mod_pow2_LC_40.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_40.eh
+_mod_pow2__mod_pow2_LC_41.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_41.eh
+_mod_pow2__mod_pow2_LC_42.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_42.eh
+_mod_pow2__mod_pow2_LC_43.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_43.eh
+_mod_pow2__mod_pow2_LC_44.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_44.eh
+_mod_pow2__mod_pow2_LC_45.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_45.eh
+_mod_pow2__mod_pow2_LC_46.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_46.eh
+_mod_pow2__mod_pow2_LC_47.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_47.eh
+_mod_pow2__mod_pow2_LC_48.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_48.eh
+_mod_pow2__mod_pow2_LC_49.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_49.eh
+_mod_pow2__mod_pow2_LC_50.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_50.eh
+_mod_pow2__mod_pow2_LC_51.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_51.eh
+_mod_pow2__mod_pow2_LC_52.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_52.eh
+_mod_pow2__mod_pow2_LC_53.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_53.eh
+_mod_pow2__mod_pow2_LC_54.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_54.eh
+_mod_pow2__mod_pow2_LC_55.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_55.eh
+_mod_pow2__mod_pow2_LC_56.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_56.eh
+_mod_pow2__mod_pow2_LC_57.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_57.eh
+_mod_pow2__mod_pow2_LC_58.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_58.eh
+_mod_pow2__mod_pow2_LC_59.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_59.eh
+_mod_pow2__mod_pow2_LC_60.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_60.eh
+_mod_pow2__mod_pow2_LC_61.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_61.eh
+_mod_pow2__mod_pow2_LC_62.eh = 0
+.no_dead_strip _mod_pow2__mod_pow2_LC_62.eh
+.globl _mod_pow2_M3.eh
+_mod_pow2_M3.eh = 0
+.no_dead_strip _mod_pow2_M3.eh
+	.section __TEXT,__eh_frame,coalesced,no_toc+strip_static_syms+live_support
+EH_frame1:
+	.set L$set$0,LECIE1-LSCIE1
+	.long L$set$0
+LSCIE1:
+	.long	0x0
+	.byte	0x1
+	.ascii "zR\0"
+	.byte	0x1
+	.byte	0x78
+	.byte	0x10
+	.byte	0x1
+	.byte	0x10
+	.byte	0xc
+	.byte	0x7
+	.byte	0x8
+	.byte	0x90
+	.byte	0x1
+	.align 3
+LECIE1:
+_mod_pow2__mod_pow2_C_63.eh:
+LSFDE1:
+	.set L$set$1,LEFDE1-LASFDE1
+	.long L$set$1
+LASFDE1:
+	.long	LASFDE1-EH_frame1
+	.quad	LFB319-.
+	.set L$set$2,LFE319-LFB319
+	.quad L$set$2
+	.byte	0x0
+	.byte	0x4
+	.set L$set$3,LCFI960-LFB319
+	.long L$set$3
+	.byte	0xe
+	.byte	0x10
+	.byte	0x86
+	.byte	0x2
+	.byte	0x4
+	.set L$set$4,LCFI961-LCFI960
+	.long L$set$4
+	.byte	0xd
+	.byte	0x6
+	.byte	0x4
+	.set L$set$5,LCFI963-LCFI961
+	.long L$set$5
+	.byte	0x83
+	.byte	0x3
+	.byte	0x4
+	.set L$set$6,LCFI964-LCFI963
+	.long L$set$6
+	.byte	0xc
+	.byte	0x7
+	.byte	0x8
+	.align 3
+LEFDE1:
+_mod_pow2__mod_pow2_LC_63.eh:
+LSFDE3:
+	.set L$set$7,LEFDE3-LASFDE3
+	.long L$set$7
+LASFDE3:
+	.long	LASFDE3-EH_frame1
+	.quad	LFB447-.
+	.set L$set$8,LFE447-LFB447
+	.quad L$set$8
+	.byte	0x0
+	.byte	0x4
+	.set L$set$9,LCFI1347-LFB447
+	.long L$set$9
+	.byte	0xe
+	.byte	0x10
+	.byte	0x86
+	.byte	0x2
+	.byte	0x4
+	.set L$set$10,LCFI1348-LCFI1347
+	.long L$set$10
+	.byte	0xd
+	.byte	0x6
+	.byte	0x4
+	.set L$set$11,LCFI1350-LCFI1348
+	.long L$set$11
+	.byte	0x83
+	.byte	0x3
+	.byte	0x4
+	.set L$set$12,LCFI1351-LCFI1350
+	.long L$set$12
+	.byte	0xc
+	.byte	0x7
+	.byte	0x8
+	.align 3
+LEFDE3:
+__m3_fault.eh:
+LSFDE5:
+	.set L$set$13,LEFDE5-LASFDE5
+	.long L$set$13
+LASFDE5:
+	.long	LASFDE5-EH_frame1
+	.quad	LFB449-.
+	.set L$set$14,LFE449-LFB449
+	.quad L$set$14
+	.byte	0x0
+	.byte	0x4
+	.set L$set$15,LCFI1355-LFB449
+	.long L$set$15
+	.byte	0xe
+	.byte	0x10
+	.byte	0x86
+	.byte	0x2
+	.byte	0x4
+	.set L$set$16,LCFI1356-LCFI1355
+	.long L$set$16
+	.byte	0xd
+	.byte	0x6
+	.byte	0x4
+	.set L$set$17,LCFI1358-LCFI1356
+	.long L$set$17
+	.byte	0xc
+	.byte	0x7
+	.byte	0x8
+	.align 3
+LEFDE5:
 	.subsections_via_symbols
