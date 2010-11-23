@@ -1155,8 +1155,8 @@ m3_do_fixed_insert (tree x, tree y, UINT64 offset, UINT64 count, tree type)
 
   if (offset >= TYPE_PRECISION (type) || count >= TYPE_PRECISION (type))
     {
-      fprintf (stderr, "m3_do_fixed_insert => m3_do_insert\n");
-      printf  (        "m3_do_fixed_insert => m3_do_insert\n");
+      fprintf (stderr, "m3_do_fixed_insert => m3_do_insert %u %u\n", (UINT)offset, (UINT)count);
+      printf  (        "m3_do_fixed_insert => m3_do_insert %u %u\n", (UINT)offset, (UINT)count);
       return m3_do_insert (x, y,
                            build_int_cst (t_int, offset),
                            build_int_cst (t_int, count), type);
@@ -5921,7 +5921,10 @@ m3_parse_file (int)
     if (m3cg_lineno == m3_break_lineno)
       m3_breakpoint ();
     if (option_trace_all)
+    {
       trace_op ((*it)->op);
+      (*it)->trace ();
+    }
     (*it)->handler();
     m3cg_lineno += 1;
   }
