@@ -407,7 +407,8 @@ Configure = Configure & " -disable-libmudflap"
 Configure = Configure & " -disable-libssp"
 Configure = Configure & " -disable-nls"
 Configure = Configure & " -enable-languages=m3cg"
-if not equal (HOST, "FreeBSD4") and not equal (HOST, "I386_FREEBSD") % use less memory
+% less memory, old compiler
+if not {"FreeBSD4","I386_FREEBSD","PPC_DARWIN"} contains HOST
   Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
 end
 % These are compatible with just building m3cg, but user might
