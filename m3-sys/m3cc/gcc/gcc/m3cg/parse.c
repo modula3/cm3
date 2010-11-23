@@ -1153,15 +1153,6 @@ m3_do_fixed_insert (tree x, tree y, UINT64 offset, UINT64 count, tree type)
              (UINT)offset, (UINT)count, (UINT)HOST_BITS_PER_WIDE_INT, (UINT)TYPE_PRECISION (type));
   }
 
-  if (offset >= TYPE_PRECISION (type) || count >= TYPE_PRECISION (type))
-    {
-      fprintf (stderr, "m3_do_fixed_insert => m3_do_insert %u %u\n", (UINT)offset, (UINT)count);
-      printf  (        "m3_do_fixed_insert => m3_do_insert %u %u\n", (UINT)offset, (UINT)count);
-      return m3_do_insert (x, y,
-                           build_int_cst (t_int, offset),
-                           build_int_cst (t_int, count), type);
-    }
-
   /*
     y_mask = (~(~0 << count)) << offset
     x_mask = ~y_mask
@@ -1187,6 +1178,18 @@ m3_do_fixed_insert (tree x, tree y, UINT64 offset, UINT64 count, tree type)
     return x;
 
   y = m3_cast (type, y);
+    
+  if (offset == 0 && count == TYPE_PRECISION (type))
+    return y;
+
+  if (offset >= TYPE_PRECISION (type) || count >= TYPE_PRECISION (type))
+    {
+      fprintf (stderr, "m3_do_fixed_insert => m3_do_insert %u %u\n", (UINT)offset, (UINT)count);
+      printf  (        "m3_do_fixed_insert => m3_do_insert %u %u\n", (UINT)offset, (UINT)count);
+      return m3_do_insert (x, y,
+                           build_int_cst (t_int, offset),
+                           build_int_cst (t_int, count), type);
+    }
 
   if ((count == 1) && (offset < HOST_BITS_PER_WIDE_INT))
     {
@@ -4783,9 +4786,9 @@ static void
 binop (tree type, enum tree_code code)
 /* binary operation */
 {
-  EXPR_REF (-2) = m3_build2 (code, type,
-                             m3_cast (type, EXPR_REF (-2)),
-                             m3_cast (type, EXPR_REF (-1)));
+  EXPR_REF (-2) = build2 (code, type,
+                          m3_cast (type, EXPR_REF (-2)),
+                          m3_cast (type, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
@@ -5235,6 +5238,8 @@ m3_do_fixed_extract (tree x, INT64 m, INT64 n, tree type)
   return x;
 }
 
+#if 1
+
 M3CG_HANDLER (EXTRACT_MN)
 {
   gcc_assert (INTEGRAL_TYPE_P (type));
@@ -5253,6 +5258,38 @@ M3CG_HANDLER (EXTRACT_MN)
     EXPR_REF (-1) = m3_do_fixed_extract (EXPR_REF (-1), offset, count, type);
   }
 }
+
+#else
+
+M3CG_HANDLER (EXTRACT_MN)
+{
+  gcc_assert (INTEGRAL_TYPE_P (type));
+  gcc_assert (offset <= 64);
+  gcc_assert (count <= 64);
+  gcc_assert ((offset + count) <= 64);
+  gcc_assert (offset <= TYPE_PRECISION (type));
+  gcc_assert (count <= TYPE_PRECISION (type));
+  gcc_assert ((offset + count) <= TYPE_PRECISION (type));
+
+  tree v = m3_cast (type, EXPR_REF (-1));
+
+  if (count == 0)
+  {
+    v = m3_cast (type, v_zero);
+  }
+  else if (offset == 0 && count == TYPE_PRECISION (type))
+  {
+    // nothing further
+  }
+  else
+  {
+    v = m3_build3 (BIT_FIELD_REF, type, v, bitsize_int (count), bitsize_int (offset));
+    BIT_FIELD_REF_UNSIGNED(v) = !sign_extend;
+  }
+  EXPR_REF (-1) = v;
+}
+
+#endif
 
 M3CG_HANDLER (INSERT)
 {
@@ -5275,6 +5312,8 @@ M3CG_HANDLER (INSERT_N)
   EXPR_POP ();
 }
 
+#if 1
+
 M3CG_HANDLER (INSERT_MN)
 {
   gcc_assert (INTEGRAL_TYPE_P (type));
@@ -5282,6 +5321,46 @@ M3CG_HANDLER (INSERT_MN)
   EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), offset, count, type);
   EXPR_POP ();
 }
+
+#else
+
+M3CG_HANDLER (INSERT_MN)
+{
+  gcc_assert (INTEGRAL_TYPE_P (type));
+  gcc_assert (offset <= 64);
+  gcc_assert (count <= 64);
+  gcc_assert ((offset + count) <= 64);
+  gcc_assert (offset <= TYPE_PRECISION (type));
+  gcc_assert (count <= TYPE_PRECISION (type));
+  gcc_assert ((offset + count) <= TYPE_PRECISION (type));
+
+  tree x = m3_cast (type, EXPR_REF (-2));
+  tree y = m3_cast (type, EXPR_REF (-1));
+  tree v = { 0 };
+
+  if (count == 0)
+  {
+    v = x;
+  }
+  else if (offset == 0 && count == TYPE_PRECISION (type))
+  {
+    v = y;
+  }
+  else
+  {
+    EXPR_PUSH (x);
+    x = declare_temp (type);
+    m3_store (temp, 0, type, T, type, T);
+    tree y = m3_cast (type, EXPR_REF (-1));
+    v = m3_build3 (BIT_FIELD_REF, type, x, bitsize_int (count), bitsize_int (offset));
+    BIT_FIELD_REF_UNSIGNED(v) = !sign_extend;
+    v = m3_build2 (MODIFY_EXPR, type, y);
+  }
+  EXPR_REF (-2) = v;
+  EXPR_POP ();
+}
+
+#endif
 
 M3CG_HANDLER (SWAP)
 {
