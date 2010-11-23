@@ -4786,6 +4786,17 @@ static void
 binop (tree type, enum tree_code code)
 /* binary operation */
 {
+  EXPR_REF (-2) = m3_build2 (code, type,
+                          m3_cast (type, EXPR_REF (-2)),
+                          m3_cast (type, EXPR_REF (-1)));
+  EXPR_POP ();
+}
+
+static void
+binop_no_fold (tree type, enum tree_code code)
+/* binary operation, using build instead of fold_build (m3_build)
+   This is to avoid configure -enable-checking error for divide in test p240. */
+{
   EXPR_REF (-2) = build2 (code, type,
                           m3_cast (type, EXPR_REF (-2)),
                           m3_cast (type, EXPR_REF (-1)));
@@ -4919,7 +4930,7 @@ M3CG_HANDLER (CVT_FLOAT)
 
 M3CG_HANDLER (DIV)
 {
-  binop (type, FLOOR_DIV_EXPR);
+  binop_no_fold (type, FLOOR_DIV_EXPR);
 }
 
 M3CG_HANDLER (MOD)
