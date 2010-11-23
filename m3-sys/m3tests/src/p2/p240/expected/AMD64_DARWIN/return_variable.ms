@@ -1,192 +1,256 @@
 	.text
-.globl _return_variable__ret_vi64
-	.private_extern _return_variable__ret_vi64
-_return_variable__ret_vi64:
+.no_dead_strip _return_variable__ret_vu16
+_return_variable__ret_vu16:
+LFB0:
 	pushq	%rbp
+LCFI0:
 	movq	%rsp, %rbp
-	movq	104+_MM_return_variable(%rip), %rax
+LCFI1:
+	movzwl	104+_MM_return_variable(%rip), %eax
 	leave
+LCFI2:
 	ret
-.globl _return_variable__ret_vLC
-	.private_extern _return_variable__ret_vLC
-_return_variable__ret_vLC:
+LFE0:
+.no_dead_strip _return_variable__ret_vu32
+_return_variable__ret_vu32:
+LFB1:
 	pushq	%rbp
+LCFI3:
 	movq	%rsp, %rbp
+LCFI4:
+	movl	108+_MM_return_variable(%rip), %eax
+	leave
+LCFI5:
+	ret
+LFE1:
+.no_dead_strip _return_variable__ret_vLC
+_return_variable__ret_vLC:
+LFB2:
+	pushq	%rbp
+LCFI6:
+	movq	%rsp, %rbp
+LCFI7:
 	movq	112+_MM_return_variable(%rip), %rax
 	leave
+LCFI8:
 	ret
-.globl _return_variable__ret_vf32
-	.private_extern _return_variable__ret_vf32
-_return_variable__ret_vf32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movss	120+_MM_return_variable(%rip), %xmm0
-	leave
-	ret
-.globl _return_variable__ret_vu8
-	.private_extern _return_variable__ret_vu8
-_return_variable__ret_vu8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	124+_MM_return_variable(%rip), %eax
-	movsbq	%al,%rax
-	leave
-	ret
-.globl _return_variable__ret_vI
-	.private_extern _return_variable__ret_vI
+LFE2:
+.no_dead_strip _return_variable__ret_vI
 _return_variable__ret_vI:
+LFB3:
 	pushq	%rbp
+LCFI9:
 	movq	%rsp, %rbp
-	movq	128+_MM_return_variable(%rip), %rax
+LCFI10:
+	movq	120+_MM_return_variable(%rip), %rax
 	leave
+LCFI11:
 	ret
-.globl _return_variable__ret_vi8
-	.private_extern _return_variable__ret_vi8
-_return_variable__ret_vi8:
+LFE3:
+.no_dead_strip _return_variable__ret_vi16
+_return_variable__ret_vi16:
+LFB4:
 	pushq	%rbp
+LCFI12:
 	movq	%rsp, %rbp
-	movzbl	136+_MM_return_variable(%rip), %eax
-	movzbl	%al, %eax
+LCFI13:
+	movzwl	128+_MM_return_variable(%rip), %eax
 	leave
+LCFI14:
 	ret
-.globl _return_variable__ret_vu32
-	.private_extern _return_variable__ret_vu32
-_return_variable__ret_vu32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_return_variable(%rip), %eax
-	cltq
-	leave
-	ret
-.globl _return_variable__ret_vC
-	.private_extern _return_variable__ret_vC
-_return_variable__ret_vC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_return_variable(%rip), %rax
-	leave
-	ret
-.globl _return_variable__ret_vu16
-	.private_extern _return_variable__ret_vu16
-_return_variable__ret_vu16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	152+_MM_return_variable(%rip), %eax
-	movswq	%ax,%rax
-	leave
-	ret
-.globl _return_variable__ret_vu64
-	.private_extern _return_variable__ret_vu64
+LFE4:
+.no_dead_strip _return_variable__ret_vu64
 _return_variable__ret_vu64:
+LFB5:
 	pushq	%rbp
+LCFI15:
 	movq	%rsp, %rbp
+LCFI16:
+	movq	136+_MM_return_variable(%rip), %rax
+	leave
+LCFI17:
+	ret
+LFE5:
+.no_dead_strip _return_variable__ret_vf64
+_return_variable__ret_vf64:
+LFB6:
+	pushq	%rbp
+LCFI18:
+	movq	%rsp, %rbp
+LCFI19:
+	leaq	_MM_return_variable(%rip), %rax
+	addq	$144, %rax
+	movq	(%rax), %rax
+	movq	%rax, -8(%rbp)
+	movsd	-8(%rbp), %xmm0
+	leave
+LCFI20:
+	ret
+LFE6:
+.no_dead_strip _return_variable__ret_vi32
+_return_variable__ret_vi32:
+LFB7:
+	pushq	%rbp
+LCFI21:
+	movq	%rsp, %rbp
+LCFI22:
+	movl	152+_MM_return_variable(%rip), %eax
+	leave
+LCFI23:
+	ret
+LFE7:
+.no_dead_strip _return_variable__ret_vC
+_return_variable__ret_vC:
+LFB8:
+	pushq	%rbp
+LCFI24:
+	movq	%rsp, %rbp
+LCFI25:
 	movq	160+_MM_return_variable(%rip), %rax
 	leave
+LCFI26:
 	ret
-.globl _return_variable__ret_vf64
-	.private_extern _return_variable__ret_vf64
-_return_variable__ret_vf64:
+LFE8:
+.no_dead_strip _return_variable__ret_vu8
+_return_variable__ret_vu8:
+LFB9:
 	pushq	%rbp
+LCFI27:
 	movq	%rsp, %rbp
-	movsd	168+_MM_return_variable(%rip), %xmm0
+LCFI28:
+	movzbl	168+_MM_return_variable(%rip), %eax
 	leave
+LCFI29:
 	ret
-.globl _return_variable__ret_vL
-	.private_extern _return_variable__ret_vL
-_return_variable__ret_vL:
+LFE9:
+.no_dead_strip _return_variable__ret_vi64
+_return_variable__ret_vi64:
+LFB10:
 	pushq	%rbp
+LCFI30:
 	movq	%rsp, %rbp
+LCFI31:
 	movq	176+_MM_return_variable(%rip), %rax
 	leave
+LCFI32:
 	ret
-.globl _return_variable__ret_vi16
-	.private_extern _return_variable__ret_vi16
-_return_variable__ret_vi16:
+LFE10:
+.no_dead_strip _return_variable__ret_vf32
+_return_variable__ret_vf32:
+LFB11:
 	pushq	%rbp
+LCFI33:
 	movq	%rsp, %rbp
-	movzwl	184+_MM_return_variable(%rip), %eax
-	movzwl	%ax, %eax
+LCFI34:
+	leaq	_MM_return_variable(%rip), %rax
+	addq	$184, %rax
+	movl	(%rax), %eax
+	movl	%eax, -4(%rbp)
+	movss	-4(%rbp), %xmm0
 	leave
+LCFI35:
 	ret
-.globl _return_variable__ret_vi32
-	.private_extern _return_variable__ret_vi32
-_return_variable__ret_vi32:
+LFE11:
+.no_dead_strip _return_variable__ret_vL
+_return_variable__ret_vL:
+LFB12:
 	pushq	%rbp
+LCFI36:
 	movq	%rsp, %rbp
-	movl	188+_MM_return_variable(%rip), %eax
-	mov	%eax, %eax
+LCFI37:
+	movq	192+_MM_return_variable(%rip), %rax
 	leave
+LCFI38:
 	ret
+LFE12:
+.no_dead_strip _return_variable__ret_vi8
+_return_variable__ret_vi8:
+LFB13:
+	pushq	%rbp
+LCFI39:
+	movq	%rsp, %rbp
+LCFI40:
+	movzbl	200+_MM_return_variable(%rip), %eax
+	leave
+LCFI41:
+	ret
+LFE13:
 .globl _return_variable_M3
+.no_dead_strip _return_variable_M3
 _return_variable_M3:
+LFB14:
 	pushq	%rbp
+LCFI42:
 	movq	%rsp, %rbp
+LCFI43:
 	movq	%rdi, -8(%rbp)
 	leaq	_MM_return_variable(%rip), %rax
 	leave
+LCFI44:
 	ret
+LFE14:
 	.const_data
 	.align 5
 _L_1:
 	.ascii "return_variable_M3"
 	.space 1
-	.ascii "ret_vi32"
-	.space 1
-	.ascii "ret_vi16"
+	.ascii "ret_vi8"
 	.space 1
 	.ascii "ret_vL"
+	.space 1
+	.ascii "ret_vf32"
+	.space 1
+	.ascii "ret_vi64"
+	.space 1
+	.ascii "ret_vu8"
+	.space 1
+	.ascii "ret_vC"
+	.space 1
+	.ascii "ret_vi32"
 	.space 1
 	.ascii "ret_vf64"
 	.space 1
 	.ascii "ret_vu64"
 	.space 1
-	.ascii "ret_vu16"
-	.space 1
-	.ascii "ret_vC"
-	.space 1
-	.ascii "ret_vu32"
-	.space 1
-	.ascii "ret_vi8"
+	.ascii "ret_vi16"
 	.space 1
 	.ascii "ret_vI"
 	.space 1
-	.ascii "ret_vu8"
-	.space 1
-	.ascii "ret_vf32"
-	.space 1
 	.ascii "ret_vLC"
 	.space 1
-	.ascii "ret_vi64"
+	.ascii "ret_vu32"
+	.space 1
+	.ascii "ret_vu16"
 	.space 1
 	.quad	_return_variable_M3
 	.quad	_L_1
-	.quad	_return_variable__ret_vi32
-	.quad	_L_1+19
-	.quad	_return_variable__ret_vi16
-	.quad	_L_1+28
-	.quad	_return_variable__ret_vL
-	.quad	_L_1+37
-	.quad	_return_variable__ret_vf64
-	.quad	_L_1+44
-	.quad	_return_variable__ret_vu64
-	.quad	_L_1+53
-	.quad	_return_variable__ret_vu16
-	.quad	_L_1+62
-	.quad	_return_variable__ret_vC
-	.quad	_L_1+71
-	.quad	_return_variable__ret_vu32
-	.quad	_L_1+78
 	.quad	_return_variable__ret_vi8
-	.quad	_L_1+87
-	.quad	_return_variable__ret_vI
-	.quad	_L_1+95
-	.quad	_return_variable__ret_vu8
-	.quad	_L_1+102
+	.quad	_L_1+19
+	.quad	_return_variable__ret_vL
+	.quad	_L_1+27
 	.quad	_return_variable__ret_vf32
-	.quad	_L_1+110
-	.quad	_return_variable__ret_vLC
-	.quad	_L_1+119
+	.quad	_L_1+34
 	.quad	_return_variable__ret_vi64
+	.quad	_L_1+43
+	.quad	_return_variable__ret_vu8
+	.quad	_L_1+52
+	.quad	_return_variable__ret_vC
+	.quad	_L_1+60
+	.quad	_return_variable__ret_vi32
+	.quad	_L_1+67
+	.quad	_return_variable__ret_vf64
+	.quad	_L_1+76
+	.quad	_return_variable__ret_vu64
+	.quad	_L_1+85
+	.quad	_return_variable__ret_vi16
+	.quad	_L_1+94
+	.quad	_return_variable__ret_vI
+	.quad	_L_1+103
+	.quad	_return_variable__ret_vLC
+	.quad	_L_1+110
+	.quad	_return_variable__ret_vu32
+	.quad	_L_1+118
+	.quad	_return_variable__ret_vu16
 	.quad	_L_1+127
 	.space 8
 	.ascii "../AMD64_DARWIN/return_variable.m3"
@@ -198,42 +262,74 @@ _MM_return_variable:
 	.space 32
 	.quad	_L_1+136
 	.space 24
-	.quad	_MM_return_variable+208
+	.quad	_MM_return_variable+224
 	.space 8
 	.quad	_return_variable_M3
 	.quad	3
-	.quad	49
-	.quad	50
-	.long	1112413307
-	.byte	53
-	.space 3
-	.quad	54
-	.byte	55
-	.space 3
-	.long	56
-	.quad	57
-	.word	58
-	.space 6
-	.quad	59
-	.long	2061584302
-	.long	1078873620
-	.quad	62
-	.word	63
+	.word	49
 	.space 2
-	.long	64
-	.space 24
+	.long	50
+	.quad	51
+	.quad	52
+	.word	53
+	.space 6
+	.quad	54
+	.long	343597384
+	.long	1078708142
+	.long	57
+	.space 4
+	.quad	58
+	.byte	59
+	.space 7
+	.quad	60
+	.long	1115060961
+	.space 4
+	.quad	63
+	.byte	64
+	.space 31
 	.quad	_return_variable_I3
-	.quad	_MM_return_variable+232
+	.quad	_MM_return_variable+248
 	.space 8
 	.quad	_Long_I3
-	.quad	_MM_return_variable+256
+	.quad	_MM_return_variable+272
 	.space 8
 	.quad	_Word_I3
-	.quad	_MM_return_variable+280
+	.quad	_MM_return_variable+296
 	.space 8
 	.quad	_Cstdint_I3
-	.quad	_MM_return_variable+304
+	.quad	_MM_return_variable+320
 	.space 8
 	.quad	_RTHooks_I3
 	.space 8
+_return_variable__ret_vu16.eh = 0
+.no_dead_strip _return_variable__ret_vu16.eh
+_return_variable__ret_vu32.eh = 0
+.no_dead_strip _return_variable__ret_vu32.eh
+_return_variable__ret_vLC.eh = 0
+.no_dead_strip _return_variable__ret_vLC.eh
+_return_variable__ret_vI.eh = 0
+.no_dead_strip _return_variable__ret_vI.eh
+_return_variable__ret_vi16.eh = 0
+.no_dead_strip _return_variable__ret_vi16.eh
+_return_variable__ret_vu64.eh = 0
+.no_dead_strip _return_variable__ret_vu64.eh
+_return_variable__ret_vf64.eh = 0
+.no_dead_strip _return_variable__ret_vf64.eh
+_return_variable__ret_vi32.eh = 0
+.no_dead_strip _return_variable__ret_vi32.eh
+_return_variable__ret_vC.eh = 0
+.no_dead_strip _return_variable__ret_vC.eh
+_return_variable__ret_vu8.eh = 0
+.no_dead_strip _return_variable__ret_vu8.eh
+_return_variable__ret_vi64.eh = 0
+.no_dead_strip _return_variable__ret_vi64.eh
+_return_variable__ret_vf32.eh = 0
+.no_dead_strip _return_variable__ret_vf32.eh
+_return_variable__ret_vL.eh = 0
+.no_dead_strip _return_variable__ret_vL.eh
+_return_variable__ret_vi8.eh = 0
+.no_dead_strip _return_variable__ret_vi8.eh
+.globl _return_variable_M3.eh
+_return_variable_M3.eh = 0
+.no_dead_strip _return_variable_M3.eh
 	.subsections_via_symbols
