@@ -1,2294 +1,2394 @@
 	.text
-.globl _Shift__uShift_var_i64_I
-	.private_extern _Shift__uShift_var_i64_I
-_Shift__uShift_var_i64_I:
+.no_dead_strip _Shift__uShift_var_u16_I
+_Shift__uShift_var_u16_I:
+LFB0:
 	pushq	%rbp
+LCFI0:
 	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	104+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
+LCFI1:
+	pushq	%rbx
+LCFI2:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
 	js	L2
-	cmpq	$63, -16(%rbp)
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
 	jg	L3
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movzwl	104+_MM_Shift(%rip), %eax
+	movzwl	%ax, %edx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L4
 L3:
-	movq	$0, -48(%rbp)
+	movl	$0, %eax
 L4:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
 	jmp	L5
 L2:
-	movq	-16(%rbp), %rax
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
 	jg	L6
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
+	movzwl	104+_MM_Shift(%rip), %eax
+	movzwl	%ax, %edx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L7
 L6:
-	movq	$0, -40(%rbp)
+	movl	$0, %eax
 L7:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
 L5:
-	movq	-56(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI3:
 	ret
-.globl _Shift__uShift_param_i64_I
-	.private_extern _Shift__uShift_param_i64_I
-_Shift__uShift_param_i64_I:
+LFE0:
+.no_dead_strip _Shift__uShift_param_u16_I
+_Shift__uShift_param_u16_I:
+LFB1:
 	pushq	%rbp
+LCFI4:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L10
-	cmpq	$63, -16(%rbp)
-	jg	L11
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L12
-L11:
-	movq	$0, -64(%rbp)
-L12:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L13
+LCFI5:
+	pushq	%rbx
+LCFI6:
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L9
+	cmpq	$63, -32(%rbp)
+	jg	L10
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L11
 L10:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L11:
+	jmp	L12
+L9:
+	movq	-32(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L14
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L15
-L14:
-	movq	$0, -56(%rbp)
-L15:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jg	L13
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L14
 L13:
-	movq	-72(%rbp), %rax
+	movl	$0, %eax
+L14:
+L12:
+	popq	%rbx
 	leave
+LCFI7:
 	ret
-.globl _Shift__uShift_var_i64_C
-	.private_extern _Shift__uShift_var_i64_C
-_Shift__uShift_var_i64_C:
+LFE1:
+.no_dead_strip _Shift__uShift_var_u16_C
+_Shift__uShift_var_u16_C:
+LFB2:
 	pushq	%rbp
+LCFI8:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	104+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L18
-	cmpq	$63, -16(%rbp)
-	jg	L19
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L20
-L19:
-	movq	$0, -48(%rbp)
-L20:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L21
+LCFI9:
+	pushq	%rbx
+LCFI10:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L16
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L17
+	movzwl	104+_MM_Shift(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L18
+L17:
+	movl	$0, %eax
 L18:
-	movq	-16(%rbp), %rax
+	jmp	L19
+L16:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L22
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L23
-L22:
-	movq	$0, -40(%rbp)
-L23:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jg	L20
+	movzwl	104+_MM_Shift(%rip), %eax
+	movzwl	%ax, %edx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L21
+L20:
+	movl	$0, %eax
 L21:
-	movq	-56(%rbp), %rax
+L19:
+	popq	%rbx
 	leave
+LCFI11:
 	ret
-.globl _Shift__uShift_param_i64_C
-	.private_extern _Shift__uShift_param_i64_C
-_Shift__uShift_param_i64_C:
+LFE2:
+.no_dead_strip _Shift__uShift_param_u16_C
+_Shift__uShift_param_u16_C:
+LFB3:
 	pushq	%rbp
+LCFI12:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L26
-	cmpq	$63, -16(%rbp)
+LCFI13:
+	pushq	%rbx
+LCFI14:
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L23
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L24
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L25
+L24:
+	movl	$0, %eax
+L25:
+	jmp	L26
+L23:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
 	jg	L27
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L28
 L27:
-	movq	$0, -64(%rbp)
+	movl	$0, %eax
 L28:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L29
 L26:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L30
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L31
-L30:
-	movq	$0, -56(%rbp)
-L31:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L29:
-	movq	-72(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI15:
 	ret
-.globl _Shift__uShift_var_LC_I
-	.private_extern _Shift__uShift_var_LC_I
-_Shift__uShift_var_LC_I:
+LFE3:
+.no_dead_strip _Shift__uShift_var_u32_I
+_Shift__uShift_var_u32_I:
+LFB4:
 	pushq	%rbp
+LCFI16:
 	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	112+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L34
-	cmpq	$63, -16(%rbp)
-	jg	L35
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L36
-L35:
-	movq	$0, -48(%rbp)
-L36:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L37
-L34:
-	movq	-16(%rbp), %rax
+LCFI17:
+	pushq	%rbx
+LCFI18:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L30
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L31
+	movl	108+_MM_Shift(%rip), %eax
+	mov	%eax, %edx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L32
+L31:
+	movl	$0, %eax
+L32:
+	jmp	L33
+L30:
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
+	jg	L34
+	movl	108+_MM_Shift(%rip), %eax
+	mov	%eax, %edx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L35
+L34:
+	movl	$0, %eax
+L35:
+L33:
+	popq	%rbx
+	leave
+LCFI19:
+	ret
+LFE4:
+.no_dead_strip _Shift__uShift_param_u32_I
+_Shift__uShift_param_u32_I:
+LFB5:
+	pushq	%rbp
+LCFI20:
+	movq	%rsp, %rbp
+LCFI21:
+	pushq	%rbx
+LCFI22:
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L37
+	cmpq	$63, -32(%rbp)
 	jg	L38
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L39
 L38:
-	movq	$0, -40(%rbp)
+	movl	$0, %eax
 L39:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jmp	L40
 L37:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_LC_I
-	.private_extern _Shift__uShift_param_LC_I
-_Shift__uShift_param_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L42
-	cmpq	$63, -16(%rbp)
-	jg	L43
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L44
-L43:
-	movq	$0, -64(%rbp)
-L44:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L45
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L41
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L42
+L41:
+	movl	$0, %eax
 L42:
-	movq	-16(%rbp), %rax
-	negq	%rax
+L40:
+	popq	%rbx
+	leave
+LCFI23:
+	ret
+LFE5:
+.no_dead_strip _Shift__uShift_var_u32_C
+_Shift__uShift_var_u32_C:
+LFB6:
+	pushq	%rbp
+LCFI24:
+	movq	%rsp, %rbp
+LCFI25:
+	pushq	%rbx
+LCFI26:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L44
+	movq	160+_MM_Shift(%rip), %rax
 	cmpq	$63, %rax
-	jg	L46
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L47
-L46:
-	movq	$0, -56(%rbp)
-L47:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jg	L45
+	movl	108+_MM_Shift(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L46
 L45:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_LC_C
-	.private_extern _Shift__uShift_var_LC_C
-_Shift__uShift_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	112+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L50
-	cmpq	$63, -16(%rbp)
-	jg	L51
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L52
-L51:
-	movq	$0, -48(%rbp)
-L52:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L53
-L50:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L46:
+	jmp	L47
+L44:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L54
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L55
-L54:
-	movq	$0, -40(%rbp)
-L55:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L53:
-	movq	-56(%rbp), %rax
+	jg	L48
+	movl	108+_MM_Shift(%rip), %eax
+	mov	%eax, %edx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L49
+L48:
+	movl	$0, %eax
+L49:
+L47:
+	popq	%rbx
 	leave
+LCFI27:
 	ret
-.globl _Shift__uShift_param_LC_C
-	.private_extern _Shift__uShift_param_LC_C
-_Shift__uShift_param_LC_C:
+LFE6:
+.no_dead_strip _Shift__uShift_param_u32_C
+_Shift__uShift_param_u32_C:
+LFB7:
 	pushq	%rbp
+LCFI28:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
+LCFI29:
+	pushq	%rbx
+LCFI30:
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L51
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L52
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L53
+L52:
+	movl	$0, %eax
+L53:
+	jmp	L54
+L51:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L55
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L56
+L55:
+	movl	$0, %eax
+L56:
+L54:
+	popq	%rbx
+	leave
+LCFI31:
+	ret
+LFE7:
+.no_dead_strip _Shift__uShift_var_LC_I
+_Shift__uShift_var_LC_I:
+LFB8:
+	pushq	%rbp
+LCFI32:
+	movq	%rsp, %rbp
+LCFI33:
+	pushq	%rbx
+LCFI34:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
 	js	L58
-	cmpq	$63, -16(%rbp)
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
 	jg	L59
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
+	movq	112+_MM_Shift(%rip), %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L60
 L59:
-	movq	$0, -64(%rbp)
+	movl	$0, %eax
 L60:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
 	jmp	L61
 L58:
-	movq	-16(%rbp), %rax
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
 	jg	L62
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	112+_MM_Shift(%rip), %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L63
 L62:
-	movq	$0, -56(%rbp)
+	movl	$0, %eax
 L63:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
 L61:
-	movq	-72(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI35:
 	ret
-.globl _Shift__uShift_var_u8_I
-	.private_extern _Shift__uShift_var_u8_I
-_Shift__uShift_var_u8_I:
+LFE8:
+.no_dead_strip _Shift__uShift_param_LC_I
+_Shift__uShift_param_LC_I:
+LFB9:
 	pushq	%rbp
+LCFI36:
 	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzbl	124+_MM_Shift(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L66
-	cmpq	$63, -16(%rbp)
-	jg	L67
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L68
-L67:
-	movq	$0, -48(%rbp)
-L68:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L69
+LCFI37:
+	pushq	%rbx
+LCFI38:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L65
+	cmpq	$63, -32(%rbp)
+	jg	L66
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L67
 L66:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L67:
+	jmp	L68
+L65:
+	movq	-32(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L70
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L71
-L70:
-	movq	$0, -40(%rbp)
-L71:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jg	L69
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L70
 L69:
-	movq	-56(%rbp), %rax
+	movl	$0, %eax
+L70:
+L68:
+	popq	%rbx
 	leave
+LCFI39:
 	ret
-.globl _Shift__uShift_param_u8_I
-	.private_extern _Shift__uShift_param_u8_I
-_Shift__uShift_param_u8_I:
+LFE9:
+.no_dead_strip _Shift__uShift_var_LC_C
+_Shift__uShift_var_LC_C:
+LFB10:
 	pushq	%rbp
+LCFI40:
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movsbq	-33(%rbp),%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L74
-	cmpq	$63, -16(%rbp)
-	jg	L75
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L76
-L75:
-	movq	$0, -64(%rbp)
-L76:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L77
+LCFI41:
+	pushq	%rbx
+LCFI42:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L72
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L73
+	movq	112+_MM_Shift(%rip), %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L74
+L73:
+	movl	$0, %eax
 L74:
-	movq	-16(%rbp), %rax
+	jmp	L75
+L72:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L78
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L79
-L78:
-	movq	$0, -56(%rbp)
-L79:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jg	L76
+	movq	112+_MM_Shift(%rip), %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L77
+L76:
+	movl	$0, %eax
 L77:
-	movq	-72(%rbp), %rax
+L75:
+	popq	%rbx
 	leave
+LCFI43:
 	ret
-.globl _Shift__uShift_var_u8_C
-	.private_extern _Shift__uShift_var_u8_C
-_Shift__uShift_var_u8_C:
+LFE10:
+.no_dead_strip _Shift__uShift_param_LC_C
+_Shift__uShift_param_LC_C:
+LFB11:
 	pushq	%rbp
+LCFI44:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzbl	124+_MM_Shift(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L82
-	cmpq	$63, -16(%rbp)
+LCFI45:
+	pushq	%rbx
+LCFI46:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L79
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L80
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L81
+L80:
+	movl	$0, %eax
+L81:
+	jmp	L82
+L79:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
 	jg	L83
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L84
 L83:
-	movq	$0, -48(%rbp)
+	movl	$0, %eax
 L84:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L85
 L82:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L86
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L87
-L86:
-	movq	$0, -40(%rbp)
-L87:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L85:
-	movq	-56(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI47:
 	ret
-.globl _Shift__uShift_param_u8_C
-	.private_extern _Shift__uShift_param_u8_C
-_Shift__uShift_param_u8_C:
+LFE11:
+.no_dead_strip _Shift__uShift_var_I_I
+_Shift__uShift_var_I_I:
+LFB12:
 	pushq	%rbp
+LCFI48:
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movsbq	-33(%rbp),%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L90
-	cmpq	$63, -16(%rbp)
-	jg	L91
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L92
-L91:
-	movq	$0, -64(%rbp)
-L92:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L93
-L90:
-	movq	-16(%rbp), %rax
+LCFI49:
+	pushq	%rbx
+LCFI50:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L86
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L87
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L88
+L87:
+	movl	$0, %eax
+L88:
+	jmp	L89
+L86:
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
+	jg	L90
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L91
+L90:
+	movl	$0, %eax
+L91:
+L89:
+	popq	%rbx
+	leave
+LCFI51:
+	ret
+LFE12:
+.no_dead_strip _Shift__uShift_param_I_I
+_Shift__uShift_param_I_I:
+LFB13:
+	pushq	%rbp
+LCFI52:
+	movq	%rsp, %rbp
+LCFI53:
+	pushq	%rbx
+LCFI54:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L93
+	cmpq	$63, -32(%rbp)
 	jg	L94
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L95
 L94:
-	movq	$0, -56(%rbp)
+	movl	$0, %eax
 L95:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jmp	L96
 L93:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_I_I
-	.private_extern _Shift__uShift_var_I_I
-_Shift__uShift_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L98
-	cmpq	$63, -16(%rbp)
-	jg	L99
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L100
-L99:
-	movq	$0, -48(%rbp)
-L100:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L101
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L97
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L98
+L97:
+	movl	$0, %eax
 L98:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L102
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L103
-L102:
-	movq	$0, -40(%rbp)
-L103:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L101:
-	movq	-56(%rbp), %rax
+L96:
+	popq	%rbx
 	leave
+LCFI55:
 	ret
-.globl _Shift__uShift_param_I_I
-	.private_extern _Shift__uShift_param_I_I
-_Shift__uShift_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L106
-	cmpq	$63, -16(%rbp)
-	jg	L107
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L108
-L107:
-	movq	$0, -64(%rbp)
-L108:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L109
-L106:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L110
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L111
-L110:
-	movq	$0, -56(%rbp)
-L111:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L109:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_I_C
-	.private_extern _Shift__uShift_var_I_C
+LFE13:
+.no_dead_strip _Shift__uShift_var_I_C
 _Shift__uShift_var_I_C:
+LFB14:
 	pushq	%rbp
+LCFI56:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
+LCFI57:
+	pushq	%rbx
+LCFI58:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L100
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L101
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L102
+L101:
+	movl	$0, %eax
+L102:
+	jmp	L103
+L100:
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L104
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L105
+L104:
+	movl	$0, %eax
+L105:
+L103:
+	popq	%rbx
+	leave
+LCFI59:
+	ret
+LFE14:
+.no_dead_strip _Shift__uShift_param_I_C
+_Shift__uShift_param_I_C:
+LFB15:
+	pushq	%rbp
+LCFI60:
+	movq	%rsp, %rbp
+LCFI61:
+	pushq	%rbx
+LCFI62:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L107
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L108
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L109
+L108:
+	movl	$0, %eax
+L109:
+	jmp	L110
+L107:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L111
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L112
+L111:
+	movl	$0, %eax
+L112:
+L110:
+	popq	%rbx
+	leave
+LCFI63:
+	ret
+LFE15:
+.no_dead_strip _Shift__uShift_var_i16_I
+_Shift__uShift_var_i16_I:
+LFB16:
+	pushq	%rbp
+LCFI64:
+	movq	%rsp, %rbp
+LCFI65:
+	pushq	%rbx
+LCFI66:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
 	js	L114
-	cmpq	$63, -16(%rbp)
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
 	jg	L115
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movzwl	128+_MM_Shift(%rip), %eax
+	movswq	%ax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L116
 L115:
-	movq	$0, -48(%rbp)
+	movl	$0, %eax
 L116:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
 	jmp	L117
 L114:
-	movq	-16(%rbp), %rax
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
 	jg	L118
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
+	movzwl	128+_MM_Shift(%rip), %eax
+	movswq	%ax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L119
 L118:
-	movq	$0, -40(%rbp)
+	movl	$0, %eax
 L119:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
 L117:
-	movq	-56(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI67:
 	ret
-.globl _Shift__uShift_param_I_C
-	.private_extern _Shift__uShift_param_I_C
-_Shift__uShift_param_I_C:
+LFE16:
+.no_dead_strip _Shift__uShift_param_i16_I
+_Shift__uShift_param_i16_I:
+LFB17:
 	pushq	%rbp
+LCFI68:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L122
-	cmpq	$63, -16(%rbp)
-	jg	L123
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L124
-L123:
-	movq	$0, -64(%rbp)
-L124:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L125
+LCFI69:
+	pushq	%rbx
+LCFI70:
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L121
+	cmpq	$63, -32(%rbp)
+	jg	L122
+	movswq	-18(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L123
 L122:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L123:
+	jmp	L124
+L121:
+	movq	-32(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L126
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L127
-L126:
-	movq	$0, -56(%rbp)
-L127:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jg	L125
+	movswq	-18(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L126
 L125:
-	movq	-72(%rbp), %rax
+	movl	$0, %eax
+L126:
+L124:
+	popq	%rbx
 	leave
+LCFI71:
 	ret
-.globl _Shift__uShift_var_i8_I
-	.private_extern _Shift__uShift_var_i8_I
-_Shift__uShift_var_i8_I:
+LFE17:
+.no_dead_strip _Shift__uShift_var_i16_C
+_Shift__uShift_var_i16_C:
+LFB18:
 	pushq	%rbp
+LCFI72:
 	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzbl	136+_MM_Shift(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L130
-	cmpq	$63, -16(%rbp)
-	jg	L131
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L132
-L131:
-	movq	$0, -48(%rbp)
-L132:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L133
+LCFI73:
+	pushq	%rbx
+LCFI74:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L128
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L129
+	movzwl	128+_MM_Shift(%rip), %eax
+	movswq	%ax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L130
+L129:
+	movl	$0, %eax
 L130:
-	movq	-16(%rbp), %rax
+	jmp	L131
+L128:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L134
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L135
-L134:
-	movq	$0, -40(%rbp)
-L135:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jg	L132
+	movzwl	128+_MM_Shift(%rip), %eax
+	movswq	%ax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L133
+L132:
+	movl	$0, %eax
 L133:
-	movq	-56(%rbp), %rax
+L131:
+	popq	%rbx
 	leave
+LCFI75:
 	ret
-.globl _Shift__uShift_param_i8_I
-	.private_extern _Shift__uShift_param_i8_I
-_Shift__uShift_param_i8_I:
+LFE18:
+.no_dead_strip _Shift__uShift_param_i16_C
+_Shift__uShift_param_i16_C:
+LFB19:
 	pushq	%rbp
+LCFI76:
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movzbl	-33(%rbp), %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L138
-	cmpq	$63, -16(%rbp)
+LCFI77:
+	pushq	%rbx
+LCFI78:
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L135
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L136
+	movswq	-18(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L137
+L136:
+	movl	$0, %eax
+L137:
+	jmp	L138
+L135:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
 	jg	L139
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
+	movswq	-18(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L140
 L139:
-	movq	$0, -64(%rbp)
+	movl	$0, %eax
 L140:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L141
 L138:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L142
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L143
-L142:
-	movq	$0, -56(%rbp)
-L143:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L141:
-	movq	-72(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI79:
 	ret
-.globl _Shift__uShift_var_i8_C
-	.private_extern _Shift__uShift_var_i8_C
-_Shift__uShift_var_i8_C:
+LFE19:
+.no_dead_strip _Shift__uShift_var_u64_I
+_Shift__uShift_var_u64_I:
+LFB20:
 	pushq	%rbp
+LCFI80:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzbl	136+_MM_Shift(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L146
-	cmpq	$63, -16(%rbp)
-	jg	L147
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L148
-L147:
-	movq	$0, -48(%rbp)
-L148:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L149
-L146:
-	movq	-16(%rbp), %rax
+LCFI81:
+	pushq	%rbx
+LCFI82:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L142
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L143
+	movq	136+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L144
+L143:
+	movl	$0, %eax
+L144:
+	jmp	L145
+L142:
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
+	jg	L146
+	movq	136+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L147
+L146:
+	movl	$0, %eax
+L147:
+L145:
+	popq	%rbx
+	leave
+LCFI83:
+	ret
+LFE20:
+.no_dead_strip _Shift__uShift_param_u64_I
+_Shift__uShift_param_u64_I:
+LFB21:
+	pushq	%rbp
+LCFI84:
+	movq	%rsp, %rbp
+LCFI85:
+	pushq	%rbx
+LCFI86:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L149
+	cmpq	$63, -32(%rbp)
 	jg	L150
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L151
 L150:
-	movq	$0, -40(%rbp)
+	movl	$0, %eax
 L151:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jmp	L152
 L149:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_i8_C
-	.private_extern _Shift__uShift_param_i8_C
-_Shift__uShift_param_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movzbl	-33(%rbp), %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L154
-	cmpq	$63, -16(%rbp)
-	jg	L155
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L156
-L155:
-	movq	$0, -64(%rbp)
-L156:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L157
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L153
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L154
+L153:
+	movl	$0, %eax
 L154:
-	movq	-16(%rbp), %rax
-	negq	%rax
+L152:
+	popq	%rbx
+	leave
+LCFI87:
+	ret
+LFE21:
+.no_dead_strip _Shift__uShift_var_u64_C
+_Shift__uShift_var_u64_C:
+LFB22:
+	pushq	%rbp
+LCFI88:
+	movq	%rsp, %rbp
+LCFI89:
+	pushq	%rbx
+LCFI90:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L156
+	movq	160+_MM_Shift(%rip), %rax
 	cmpq	$63, %rax
-	jg	L158
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L159
-L158:
-	movq	$0, -56(%rbp)
-L159:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jg	L157
+	movq	136+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L158
 L157:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_u32_I
-	.private_extern _Shift__uShift_var_u32_I
-_Shift__uShift_var_u32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movl	140+_MM_Shift(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L162
-	cmpq	$63, -16(%rbp)
-	jg	L163
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L164
-L163:
-	movq	$0, -48(%rbp)
-L164:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L165
-L162:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L158:
+	jmp	L159
+L156:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L166
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L167
-L166:
-	movq	$0, -40(%rbp)
-L167:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L165:
-	movq	-56(%rbp), %rax
+	jg	L160
+	movq	136+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L161
+L160:
+	movl	$0, %eax
+L161:
+L159:
+	popq	%rbx
 	leave
+LCFI91:
 	ret
-.globl _Shift__uShift_param_u32_I
-	.private_extern _Shift__uShift_param_u32_I
-_Shift__uShift_param_u32_I:
+LFE22:
+.no_dead_strip _Shift__uShift_param_u64_C
+_Shift__uShift_param_u64_C:
+LFB23:
 	pushq	%rbp
+LCFI92:
 	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movl	-36(%rbp), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
+LCFI93:
+	pushq	%rbx
+LCFI94:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L163
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L164
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L165
+L164:
+	movl	$0, %eax
+L165:
+	jmp	L166
+L163:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L167
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L168
+L167:
+	movl	$0, %eax
+L168:
+L166:
+	popq	%rbx
+	leave
+LCFI95:
+	ret
+LFE23:
+.no_dead_strip _Shift__uShift_var_i32_I
+_Shift__uShift_var_i32_I:
+LFB24:
+	pushq	%rbp
+LCFI96:
+	movq	%rsp, %rbp
+LCFI97:
+	pushq	%rbx
+LCFI98:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
 	js	L170
-	cmpq	$63, -16(%rbp)
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
 	jg	L171
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
+	movl	152+_MM_Shift(%rip), %eax
+	movslq	%eax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L172
 L171:
-	movq	$0, -64(%rbp)
+	movl	$0, %eax
 L172:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
 	jmp	L173
 L170:
-	movq	-16(%rbp), %rax
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
 	jg	L174
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movl	152+_MM_Shift(%rip), %eax
+	movslq	%eax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L175
 L174:
-	movq	$0, -56(%rbp)
+	movl	$0, %eax
 L175:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
 L173:
-	movq	-72(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI99:
 	ret
-.globl _Shift__uShift_var_u32_C
-	.private_extern _Shift__uShift_var_u32_C
-_Shift__uShift_var_u32_C:
+LFE24:
+.no_dead_strip _Shift__uShift_param_i32_I
+_Shift__uShift_param_i32_I:
+LFB25:
 	pushq	%rbp
+LCFI100:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movl	140+_MM_Shift(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L178
-	cmpq	$63, -16(%rbp)
-	jg	L179
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L180
-L179:
-	movq	$0, -48(%rbp)
-L180:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L181
+LCFI101:
+	pushq	%rbx
+LCFI102:
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L177
+	cmpq	$63, -32(%rbp)
+	jg	L178
+	movl	-20(%rbp), %eax
+	movslq	%eax, %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L179
 L178:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L179:
+	jmp	L180
+L177:
+	movq	-32(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L182
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L183
-L182:
-	movq	$0, -40(%rbp)
-L183:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jg	L181
+	movl	-20(%rbp), %eax
+	movslq	%eax, %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L182
 L181:
-	movq	-56(%rbp), %rax
+	movl	$0, %eax
+L182:
+L180:
+	popq	%rbx
 	leave
+LCFI103:
 	ret
-.globl _Shift__uShift_param_u32_C
-	.private_extern _Shift__uShift_param_u32_C
-_Shift__uShift_param_u32_C:
+LFE25:
+.no_dead_strip _Shift__uShift_var_i32_C
+_Shift__uShift_var_i32_C:
+LFB26:
 	pushq	%rbp
+LCFI104:
 	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movl	-36(%rbp), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L186
-	cmpq	$63, -16(%rbp)
-	jg	L187
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L188
-L187:
-	movq	$0, -64(%rbp)
-L188:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L189
+LCFI105:
+	pushq	%rbx
+LCFI106:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L184
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L185
+	movl	152+_MM_Shift(%rip), %eax
+	movslq	%eax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L186
+L185:
+	movl	$0, %eax
 L186:
-	movq	-16(%rbp), %rax
+	jmp	L187
+L184:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L190
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L191
-L190:
-	movq	$0, -56(%rbp)
-L191:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jg	L188
+	movl	152+_MM_Shift(%rip), %eax
+	movslq	%eax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L189
+L188:
+	movl	$0, %eax
 L189:
-	movq	-72(%rbp), %rax
+L187:
+	popq	%rbx
 	leave
+LCFI107:
 	ret
-.globl _Shift__uShift_var_C_I
-	.private_extern _Shift__uShift_var_C_I
-_Shift__uShift_var_C_I:
+LFE26:
+.no_dead_strip _Shift__uShift_param_i32_C
+_Shift__uShift_param_i32_C:
+LFB27:
 	pushq	%rbp
+LCFI108:
 	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L194
-	cmpq	$63, -16(%rbp)
+LCFI109:
+	pushq	%rbx
+LCFI110:
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L191
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L192
+	movl	-20(%rbp), %eax
+	movslq	%eax, %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L193
+L192:
+	movl	$0, %eax
+L193:
+	jmp	L194
+L191:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
 	jg	L195
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax, %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L196
 L195:
-	movq	$0, -48(%rbp)
+	movl	$0, %eax
 L196:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L197
 L194:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L198
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L199
-L198:
-	movq	$0, -40(%rbp)
-L199:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L197:
-	movq	-56(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI111:
 	ret
-.globl _Shift__uShift_param_C_I
-	.private_extern _Shift__uShift_param_C_I
-_Shift__uShift_param_C_I:
+LFE27:
+.no_dead_strip _Shift__uShift_var_C_I
+_Shift__uShift_var_C_I:
+LFB28:
 	pushq	%rbp
+LCFI112:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L202
-	cmpq	$63, -16(%rbp)
-	jg	L203
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L204
-L203:
-	movq	$0, -64(%rbp)
-L204:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L205
-L202:
-	movq	-16(%rbp), %rax
+LCFI113:
+	pushq	%rbx
+LCFI114:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L198
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L199
+	movq	160+_MM_Shift(%rip), %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L200
+L199:
+	movl	$0, %eax
+L200:
+	jmp	L201
+L198:
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
+	jg	L202
+	movq	160+_MM_Shift(%rip), %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L203
+L202:
+	movl	$0, %eax
+L203:
+L201:
+	popq	%rbx
+	leave
+LCFI115:
+	ret
+LFE28:
+.no_dead_strip _Shift__uShift_param_C_I
+_Shift__uShift_param_C_I:
+LFB29:
+	pushq	%rbp
+LCFI116:
+	movq	%rsp, %rbp
+LCFI117:
+	pushq	%rbx
+LCFI118:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L205
+	cmpq	$63, -32(%rbp)
 	jg	L206
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L207
 L206:
-	movq	$0, -56(%rbp)
+	movl	$0, %eax
 L207:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jmp	L208
 L205:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_C_C
-	.private_extern _Shift__uShift_var_C_C
-_Shift__uShift_var_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L210
-	cmpq	$63, -16(%rbp)
-	jg	L211
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L212
-L211:
-	movq	$0, -48(%rbp)
-L212:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L213
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L209
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L210
+L209:
+	movl	$0, %eax
 L210:
-	movq	-16(%rbp), %rax
-	negq	%rax
+L208:
+	popq	%rbx
+	leave
+LCFI119:
+	ret
+LFE29:
+.no_dead_strip _Shift__uShift_var_C_C
+_Shift__uShift_var_C_C:
+LFB30:
+	pushq	%rbp
+LCFI120:
+	movq	%rsp, %rbp
+LCFI121:
+	pushq	%rbx
+LCFI122:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L212
+	movq	160+_MM_Shift(%rip), %rax
 	cmpq	$63, %rax
-	jg	L214
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L215
-L214:
-	movq	$0, -40(%rbp)
-L215:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jg	L213
+	movq	160+_MM_Shift(%rip), %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L214
 L213:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_C_C
-	.private_extern _Shift__uShift_param_C_C
-_Shift__uShift_param_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L218
-	cmpq	$63, -16(%rbp)
-	jg	L219
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L220
-L219:
-	movq	$0, -64(%rbp)
-L220:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L221
-L218:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L214:
+	jmp	L215
+L212:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L222
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L223
-L222:
-	movq	$0, -56(%rbp)
-L223:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L221:
-	movq	-72(%rbp), %rax
+	jg	L216
+	movq	160+_MM_Shift(%rip), %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L217
+L216:
+	movl	$0, %eax
+L217:
+L215:
+	popq	%rbx
 	leave
+LCFI123:
 	ret
-.globl _Shift__uShift_var_u16_I
-	.private_extern _Shift__uShift_var_u16_I
-_Shift__uShift_var_u16_I:
+LFE30:
+.no_dead_strip _Shift__uShift_param_C_C
+_Shift__uShift_param_C_C:
+LFB31:
 	pushq	%rbp
+LCFI124:
 	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzwl	152+_MM_Shift(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
+LCFI125:
+	pushq	%rbx
+LCFI126:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L219
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L220
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L221
+L220:
+	movl	$0, %eax
+L221:
+	jmp	L222
+L219:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L223
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	-24(%rbp), %rdx
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L224
+L223:
+	movl	$0, %eax
+L224:
+L222:
+	popq	%rbx
+	leave
+LCFI127:
+	ret
+LFE31:
+.no_dead_strip _Shift__uShift_var_u8_I
+_Shift__uShift_var_u8_I:
+LFB32:
+	pushq	%rbp
+LCFI128:
+	movq	%rsp, %rbp
+LCFI129:
+	pushq	%rbx
+LCFI130:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
 	js	L226
-	cmpq	$63, -16(%rbp)
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
 	jg	L227
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movzbl	168+_MM_Shift(%rip), %eax
+	movzbl	%al, %edx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L228
 L227:
-	movq	$0, -48(%rbp)
+	movl	$0, %eax
 L228:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
 	jmp	L229
 L226:
-	movq	-16(%rbp), %rax
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
 	jg	L230
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
+	movzbl	168+_MM_Shift(%rip), %eax
+	movzbl	%al, %edx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L231
 L230:
-	movq	$0, -40(%rbp)
+	movl	$0, %eax
 L231:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
 L229:
-	movq	-56(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI131:
 	ret
-.globl _Shift__uShift_param_u16_I
-	.private_extern _Shift__uShift_param_u16_I
-_Shift__uShift_param_u16_I:
+LFE32:
+.no_dead_strip _Shift__uShift_param_u8_I
+_Shift__uShift_param_u8_I:
+LFB33:
 	pushq	%rbp
+LCFI132:
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movswq	-34(%rbp),%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L234
-	cmpq	$63, -16(%rbp)
-	jg	L235
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L236
-L235:
-	movq	$0, -64(%rbp)
-L236:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L237
+LCFI133:
+	pushq	%rbx
+LCFI134:
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L233
+	cmpq	$63, -32(%rbp)
+	jg	L234
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L235
 L234:
-	movq	-16(%rbp), %rax
+	movl	$0, %eax
+L235:
+	jmp	L236
+L233:
+	movq	-32(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L238
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L239
-L238:
-	movq	$0, -56(%rbp)
-L239:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jg	L237
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L238
 L237:
-	movq	-72(%rbp), %rax
+	movl	$0, %eax
+L238:
+L236:
+	popq	%rbx
 	leave
+LCFI135:
 	ret
-.globl _Shift__uShift_var_u16_C
-	.private_extern _Shift__uShift_var_u16_C
-_Shift__uShift_var_u16_C:
+LFE33:
+.no_dead_strip _Shift__uShift_var_u8_C
+_Shift__uShift_var_u8_C:
+LFB34:
 	pushq	%rbp
+LCFI136:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzwl	152+_MM_Shift(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L242
-	cmpq	$63, -16(%rbp)
-	jg	L243
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L244
-L243:
-	movq	$0, -48(%rbp)
-L244:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L245
+LCFI137:
+	pushq	%rbx
+LCFI138:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L240
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L241
+	movzbl	168+_MM_Shift(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L242
+L241:
+	movl	$0, %eax
 L242:
-	movq	-16(%rbp), %rax
+	jmp	L243
+L240:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L246
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L247
-L246:
-	movq	$0, -40(%rbp)
-L247:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jg	L244
+	movzbl	168+_MM_Shift(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L245
+L244:
+	movl	$0, %eax
 L245:
-	movq	-56(%rbp), %rax
+L243:
+	popq	%rbx
 	leave
+LCFI139:
 	ret
-.globl _Shift__uShift_param_u16_C
-	.private_extern _Shift__uShift_param_u16_C
-_Shift__uShift_param_u16_C:
+LFE34:
+.no_dead_strip _Shift__uShift_param_u8_C
+_Shift__uShift_param_u8_C:
+LFB35:
 	pushq	%rbp
+LCFI140:
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movswq	-34(%rbp),%rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L250
-	cmpq	$63, -16(%rbp)
+LCFI141:
+	pushq	%rbx
+LCFI142:
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L247
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L248
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L249
+L248:
+	movl	$0, %eax
+L249:
+	jmp	L250
+L247:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
 	jg	L251
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L252
 L251:
-	movq	$0, -64(%rbp)
+	movl	$0, %eax
 L252:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L253
 L250:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L254
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L255
-L254:
-	movq	$0, -56(%rbp)
-L255:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L253:
-	movq	-72(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI143:
 	ret
-.globl _Shift__uShift_var_u64_I
-	.private_extern _Shift__uShift_var_u64_I
-_Shift__uShift_var_u64_I:
+LFE35:
+.no_dead_strip _Shift__uShift_var_i64_I
+_Shift__uShift_var_i64_I:
+LFB36:
 	pushq	%rbp
+LCFI144:
 	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	160+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L258
-	cmpq	$63, -16(%rbp)
-	jg	L259
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L260
-L259:
-	movq	$0, -48(%rbp)
-L260:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L261
-L258:
-	movq	-16(%rbp), %rax
+LCFI145:
+	pushq	%rbx
+LCFI146:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L254
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L255
+	movq	176+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L256
+L255:
+	movl	$0, %eax
+L256:
+	jmp	L257
+L254:
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
+	jg	L258
+	movq	176+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L259
+L258:
+	movl	$0, %eax
+L259:
+L257:
+	popq	%rbx
+	leave
+LCFI147:
+	ret
+LFE36:
+.no_dead_strip _Shift__uShift_param_i64_I
+_Shift__uShift_param_i64_I:
+LFB37:
+	pushq	%rbp
+LCFI148:
+	movq	%rsp, %rbp
+LCFI149:
+	pushq	%rbx
+LCFI150:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L261
+	cmpq	$63, -32(%rbp)
 	jg	L262
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L263
 L262:
-	movq	$0, -40(%rbp)
+	movl	$0, %eax
 L263:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jmp	L264
 L261:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_u64_I
-	.private_extern _Shift__uShift_param_u64_I
-_Shift__uShift_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L266
-	cmpq	$63, -16(%rbp)
-	jg	L267
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L268
-L267:
-	movq	$0, -64(%rbp)
-L268:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L269
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L265
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L266
+L265:
+	movl	$0, %eax
 L266:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L270
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L271
-L270:
-	movq	$0, -56(%rbp)
-L271:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L269:
-	movq	-72(%rbp), %rax
+L264:
+	popq	%rbx
 	leave
+LCFI151:
 	ret
-.globl _Shift__uShift_var_u64_C
-	.private_extern _Shift__uShift_var_u64_C
-_Shift__uShift_var_u64_C:
+LFE37:
+.no_dead_strip _Shift__uShift_var_i64_C
+_Shift__uShift_var_i64_C:
+LFB38:
 	pushq	%rbp
+LCFI152:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
+LCFI153:
+	pushq	%rbx
+LCFI154:
 	movq	160+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L274
-	cmpq	$63, -16(%rbp)
-	jg	L275
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L276
-L275:
-	movq	$0, -48(%rbp)
-L276:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L277
-L274:
-	movq	-16(%rbp), %rax
+	testq	%rax, %rax
+	js	L268
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L269
+	movq	176+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L270
+L269:
+	movl	$0, %eax
+L270:
+	jmp	L271
+L268:
+	movq	160+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L278
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L279
-L278:
-	movq	$0, -40(%rbp)
-L279:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L277:
-	movq	-56(%rbp), %rax
+	jg	L272
+	movq	176+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L273
+L272:
+	movl	$0, %eax
+L273:
+L271:
+	popq	%rbx
 	leave
+LCFI155:
 	ret
-.globl _Shift__uShift_param_u64_C
-	.private_extern _Shift__uShift_param_u64_C
-_Shift__uShift_param_u64_C:
+LFE38:
+.no_dead_strip _Shift__uShift_param_i64_C
+_Shift__uShift_param_i64_C:
+LFB39:
 	pushq	%rbp
+LCFI156:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
+LCFI157:
+	pushq	%rbx
+LCFI158:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L275
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L276
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L277
+L276:
+	movl	$0, %eax
+L277:
+	jmp	L278
+L275:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L279
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L280
+L279:
+	movl	$0, %eax
+L280:
+L278:
+	popq	%rbx
+	leave
+LCFI159:
+	ret
+LFE39:
+.no_dead_strip _Shift__uShift_var_L_I
+_Shift__uShift_var_L_I:
+LFB40:
+	pushq	%rbp
+LCFI160:
+	movq	%rsp, %rbp
+LCFI161:
+	pushq	%rbx
+LCFI162:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
 	js	L282
-	cmpq	$63, -16(%rbp)
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
 	jg	L283
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
+	movq	192+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L284
 L283:
-	movq	$0, -64(%rbp)
+	movl	$0, %eax
 L284:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
 	jmp	L285
 L282:
-	movq	-16(%rbp), %rax
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
 	jg	L286
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movq	192+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L287
 L286:
-	movq	$0, -56(%rbp)
+	movl	$0, %eax
 L287:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
 L285:
-	movq	-72(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI163:
 	ret
-.globl _Shift__uShift_var_L_I
-	.private_extern _Shift__uShift_var_L_I
-_Shift__uShift_var_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	176+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L290
-	cmpq	$63, -16(%rbp)
-	jg	L291
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L292
-L291:
-	movq	$0, -48(%rbp)
-L292:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L293
-L290:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L294
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L295
-L294:
-	movq	$0, -40(%rbp)
-L295:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L293:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_L_I
-	.private_extern _Shift__uShift_param_L_I
+LFE40:
+.no_dead_strip _Shift__uShift_param_L_I
 _Shift__uShift_param_L_I:
+LFB41:
 	pushq	%rbp
+LCFI164:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L298
-	cmpq	$63, -16(%rbp)
-	jg	L299
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L300
-L299:
-	movq	$0, -64(%rbp)
-L300:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L301
-L298:
-	movq	-16(%rbp), %rax
+LCFI165:
+	pushq	%rbx
+LCFI166:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L289
+	cmpq	$63, -32(%rbp)
+	jg	L290
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L291
+L290:
+	movl	$0, %eax
+L291:
+	jmp	L292
+L289:
+	movq	-32(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L302
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L303
-L302:
-	movq	$0, -56(%rbp)
-L303:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L301:
-	movq	-72(%rbp), %rax
+	jg	L293
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L294
+L293:
+	movl	$0, %eax
+L294:
+L292:
+	popq	%rbx
 	leave
+LCFI167:
 	ret
-.globl _Shift__uShift_var_L_C
-	.private_extern _Shift__uShift_var_L_C
+LFE41:
+.no_dead_strip _Shift__uShift_var_L_C
 _Shift__uShift_var_L_C:
+LFB42:
 	pushq	%rbp
+LCFI168:
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movq	176+_MM_Shift(%rip), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L306
-	cmpq	$63, -16(%rbp)
+LCFI169:
+	pushq	%rbx
+LCFI170:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L296
+	movq	160+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L297
+	movq	192+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L298
+L297:
+	movl	$0, %eax
+L298:
+	jmp	L299
+L296:
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L300
+	movq	192+_MM_Shift(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L301
+L300:
+	movl	$0, %eax
+L301:
+L299:
+	popq	%rbx
+	leave
+LCFI171:
+	ret
+LFE42:
+.no_dead_strip _Shift__uShift_param_L_C
+_Shift__uShift_param_L_C:
+LFB43:
+	pushq	%rbp
+LCFI172:
+	movq	%rsp, %rbp
+LCFI173:
+	pushq	%rbx
+LCFI174:
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L303
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L304
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L305
+L304:
+	movl	$0, %eax
+L305:
+	jmp	L306
+L303:
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
 	jg	L307
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L308
 L307:
-	movq	$0, -48(%rbp)
+	movl	$0, %eax
 L308:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L309
 L306:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L310
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L311
-L310:
-	movq	$0, -40(%rbp)
-L311:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L309:
-	movq	-56(%rbp), %rax
+	popq	%rbx
 	leave
+LCFI175:
 	ret
-.globl _Shift__uShift_param_L_C
-	.private_extern _Shift__uShift_param_L_C
-_Shift__uShift_param_L_C:
+LFE43:
+.no_dead_strip _Shift__uShift_var_i8_I
+_Shift__uShift_var_i8_I:
+LFB44:
 	pushq	%rbp
+LCFI176:
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L314
-	cmpq	$63, -16(%rbp)
-	jg	L315
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L316
-L315:
-	movq	$0, -64(%rbp)
-L316:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L317
-L314:
-	movq	-16(%rbp), %rax
+LCFI177:
+	pushq	%rbx
+LCFI178:
+	movq	120+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L310
+	movq	120+_MM_Shift(%rip), %rax
+	cmpq	$63, %rax
+	jg	L311
+	movzbl	200+_MM_Shift(%rip), %eax
+	movsbq	%al, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L312
+L311:
+	movl	$0, %eax
+L312:
+	jmp	L313
+L310:
+	movq	120+_MM_Shift(%rip), %rax
 	negq	%rax
 	cmpq	$63, %rax
+	jg	L314
+	movzbl	200+_MM_Shift(%rip), %eax
+	movsbq	%al, %rdx
+	movq	120+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L315
+L314:
+	movl	$0, %eax
+L315:
+L313:
+	popq	%rbx
+	leave
+LCFI179:
+	ret
+LFE44:
+.no_dead_strip _Shift__uShift_param_i8_I
+_Shift__uShift_param_i8_I:
+LFB45:
+	pushq	%rbp
+LCFI180:
+	movq	%rsp, %rbp
+LCFI181:
+	pushq	%rbx
+LCFI182:
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	cmpq	$0, -32(%rbp)
+	js	L317
+	cmpq	$63, -32(%rbp)
 	jg	L318
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
+	movsbq	-17(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L319
 L318:
-	movq	$0, -56(%rbp)
+	movl	$0, %eax
 L319:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+	jmp	L320
 L317:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_i16_I
-	.private_extern _Shift__uShift_var_i16_I
-_Shift__uShift_var_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzwl	184+_MM_Shift(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L322
-	cmpq	$63, -16(%rbp)
-	jg	L323
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L324
-L323:
-	movq	$0, -48(%rbp)
-L324:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L325
+	movq	-32(%rbp), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L321
+	movsbq	-17(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L322
+L321:
+	movl	$0, %eax
 L322:
-	movq	-16(%rbp), %rax
-	negq	%rax
+L320:
+	popq	%rbx
+	leave
+LCFI183:
+	ret
+LFE45:
+.no_dead_strip _Shift__uShift_var_i8_C
+_Shift__uShift_var_i8_C:
+LFB46:
+	pushq	%rbp
+LCFI184:
+	movq	%rsp, %rbp
+LCFI185:
+	pushq	%rbx
+LCFI186:
+	movq	160+_MM_Shift(%rip), %rax
+	testq	%rax, %rax
+	js	L324
+	movq	160+_MM_Shift(%rip), %rax
 	cmpq	$63, %rax
-	jg	L326
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L327
-L326:
-	movq	$0, -40(%rbp)
-L327:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	jg	L325
+	movzbl	200+_MM_Shift(%rip), %eax
+	movsbq	%al, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L326
 L325:
-	movq	-56(%rbp), %rax
+	movl	$0, %eax
+L326:
+	jmp	L327
+L324:
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	cmpq	$63, %rax
+	jg	L328
+	movzbl	200+_MM_Shift(%rip), %eax
+	movsbq	%al, %rdx
+	movq	160+_MM_Shift(%rip), %rax
+	negq	%rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L329
+L328:
+	movl	$0, %eax
+L329:
+L327:
+	popq	%rbx
 	leave
+LCFI187:
 	ret
-.globl _Shift__uShift_param_i16_I
-	.private_extern _Shift__uShift_param_i16_I
-_Shift__uShift_param_i16_I:
+LFE46:
+.no_dead_strip _Shift__uShift_param_i8_C
+_Shift__uShift_param_i8_C:
+LFB47:
 	pushq	%rbp
+LCFI188:
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movzwl	-34(%rbp), %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L330
-	cmpq	$63, -16(%rbp)
-	jg	L331
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L332
-L331:
-	movq	$0, -64(%rbp)
-L332:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
+LCFI189:
+	pushq	%rbx
+LCFI190:
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	testq	%rax, %rax
+	js	L331
+	movq	-32(%rbp), %rax
+	cmpq	$63, %rax
+	jg	L332
+	movsbq	-17(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	salq	%cl, %rbx
+	movq	%rbx, %rax
 	jmp	L333
-L330:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L334
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L335
-L334:
-	movq	$0, -56(%rbp)
-L335:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
+L332:
+	movl	$0, %eax
 L333:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_i16_C
-	.private_extern _Shift__uShift_var_i16_C
-_Shift__uShift_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movzwl	184+_MM_Shift(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L338
-	cmpq	$63, -16(%rbp)
-	jg	L339
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L340
-L339:
-	movq	$0, -48(%rbp)
-L340:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L341
-L338:
-	movq	-16(%rbp), %rax
+	jmp	L334
+L331:
+	movq	-32(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L342
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L343
-L342:
-	movq	$0, -40(%rbp)
-L343:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L341:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_i16_C
-	.private_extern _Shift__uShift_param_i16_C
-_Shift__uShift_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movzwl	-34(%rbp), %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L346
-	cmpq	$63, -16(%rbp)
-	jg	L347
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L348
-L347:
-	movq	$0, -64(%rbp)
-L348:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L349
-L346:
-	movq	-16(%rbp), %rax
+	jg	L335
+	movsbq	-17(%rbp), %rdx
+	movq	-32(%rbp), %rax
 	negq	%rax
-	cmpq	$63, %rax
-	jg	L350
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L351
-L350:
-	movq	$0, -56(%rbp)
-L351:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L349:
-	movq	-72(%rbp), %rax
+	movq	%rdx, %rbx
+	movl	%eax, %ecx
+	shrq	%cl, %rbx
+	movq	%rbx, %rax
+	jmp	L336
+L335:
+	movl	$0, %eax
+L336:
+L334:
+	popq	%rbx
 	leave
+LCFI191:
 	ret
-.globl _Shift__uShift_var_i32_I
-	.private_extern _Shift__uShift_var_i32_I
-_Shift__uShift_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	128+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movl	188+_MM_Shift(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L354
-	cmpq	$63, -16(%rbp)
-	jg	L355
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L356
-L355:
-	movq	$0, -48(%rbp)
-L356:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L357
-L354:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L358
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L359
-L358:
-	movq	$0, -40(%rbp)
-L359:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L357:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_i32_I
-	.private_extern _Shift__uShift_param_i32_I
-_Shift__uShift_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	mov	-36(%rbp), %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L362
-	cmpq	$63, -16(%rbp)
-	jg	L363
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L364
-L363:
-	movq	$0, -64(%rbp)
-L364:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L365
-L362:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L366
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L367
-L366:
-	movq	$0, -56(%rbp)
-L367:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L365:
-	movq	-72(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_var_i32_C
-	.private_extern _Shift__uShift_var_i32_C
-_Shift__uShift_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
-	movl	188+_MM_Shift(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L370
-	cmpq	$63, -16(%rbp)
-	jg	L371
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -48(%rbp)
-	jmp	L372
-L371:
-	movq	$0, -48(%rbp)
-L372:
-	movq	-48(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	jmp	L373
-L370:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L374
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -40(%rbp)
-	jmp	L375
-L374:
-	movq	$0, -40(%rbp)
-L375:
-	movq	-40(%rbp), %rax
-	movq	%rax, -56(%rbp)
-L373:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Shift__uShift_param_i32_C
-	.private_extern _Shift__uShift_param_i32_C
-_Shift__uShift_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
-	movq	%rsi, -48(%rbp)
-	movq	-48(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	mov	-36(%rbp), %eax
-	movq	%rax, -24(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L378
-	cmpq	$63, -16(%rbp)
-	jg	L379
-	movq	-16(%rbp), %rcx
-	movq	-24(%rbp), %rax
-	salq	%cl, %rax
-	movq	%rax, -64(%rbp)
-	jmp	L380
-L379:
-	movq	$0, -64(%rbp)
-L380:
-	movq	-64(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	jmp	L381
-L378:
-	movq	-16(%rbp), %rax
-	negq	%rax
-	cmpq	$63, %rax
-	jg	L382
-	movq	-16(%rbp), %rax
-	movq	%rax, %rcx
-	negq	%rcx
-	movq	-24(%rbp), %rax
-	shrq	%cl, %rax
-	movq	%rax, -56(%rbp)
-	jmp	L383
-L382:
-	movq	$0, -56(%rbp)
-L383:
-	movq	-56(%rbp), %rax
-	movq	%rax, -72(%rbp)
-L381:
-	movq	-72(%rbp), %rax
-	leave
-	ret
+LFE47:
 .globl _Shift_M3
+.no_dead_strip _Shift_M3
 _Shift_M3:
+LFB48:
 	pushq	%rbp
+LCFI192:
 	movq	%rsp, %rbp
+LCFI193:
 	movq	%rdi, -8(%rbp)
 	leaq	_MM_Shift(%rip), %rax
 	leave
+LCFI194:
 	ret
+LFE48:
 	.const_data
 	.align 5
 _L_1:
 	.ascii "Shift_M3"
-	.space 1
-	.ascii "uShift_param_i32_C"
-	.space 1
-	.ascii "uShift_var_i32_C"
-	.space 1
-	.ascii "uShift_param_i32_I"
-	.space 1
-	.ascii "uShift_var_i32_I"
-	.space 1
-	.ascii "uShift_param_i16_C"
-	.space 1
-	.ascii "uShift_var_i16_C"
-	.space 1
-	.ascii "uShift_param_i16_I"
-	.space 1
-	.ascii "uShift_var_i16_I"
-	.space 1
-	.ascii "uShift_param_L_C"
-	.space 1
-	.ascii "uShift_var_L_C"
-	.space 1
-	.ascii "uShift_param_L_I"
-	.space 1
-	.ascii "uShift_var_L_I"
-	.space 1
-	.ascii "uShift_param_u64_C"
-	.space 1
-	.ascii "uShift_var_u64_C"
-	.space 1
-	.ascii "uShift_param_u64_I"
-	.space 1
-	.ascii "uShift_var_u64_I"
-	.space 1
-	.ascii "uShift_param_u16_C"
-	.space 1
-	.ascii "uShift_var_u16_C"
-	.space 1
-	.ascii "uShift_param_u16_I"
-	.space 1
-	.ascii "uShift_var_u16_I"
-	.space 1
-	.ascii "uShift_param_C_C"
-	.space 1
-	.ascii "uShift_var_C_C"
-	.space 1
-	.ascii "uShift_param_C_I"
-	.space 1
-	.ascii "uShift_var_C_I"
-	.space 1
-	.ascii "uShift_param_u32_C"
-	.space 1
-	.ascii "uShift_var_u32_C"
-	.space 1
-	.ascii "uShift_param_u32_I"
-	.space 1
-	.ascii "uShift_var_u32_I"
 	.space 1
 	.ascii "uShift_param_i8_C"
 	.space 1
@@ -2298,13 +2398,21 @@ _L_1:
 	.space 1
 	.ascii "uShift_var_i8_I"
 	.space 1
-	.ascii "uShift_param_I_C"
+	.ascii "uShift_param_L_C"
 	.space 1
-	.ascii "uShift_var_I_C"
+	.ascii "uShift_var_L_C"
 	.space 1
-	.ascii "uShift_param_I_I"
+	.ascii "uShift_param_L_I"
 	.space 1
-	.ascii "uShift_var_I_I"
+	.ascii "uShift_var_L_I"
+	.space 1
+	.ascii "uShift_param_i64_C"
+	.space 1
+	.ascii "uShift_var_i64_C"
+	.space 1
+	.ascii "uShift_param_i64_I"
+	.space 1
+	.ascii "uShift_var_i64_I"
 	.space 1
 	.ascii "uShift_param_u8_C"
 	.space 1
@@ -2314,6 +2422,46 @@ _L_1:
 	.space 1
 	.ascii "uShift_var_u8_I"
 	.space 1
+	.ascii "uShift_param_C_C"
+	.space 1
+	.ascii "uShift_var_C_C"
+	.space 1
+	.ascii "uShift_param_C_I"
+	.space 1
+	.ascii "uShift_var_C_I"
+	.space 1
+	.ascii "uShift_param_i32_C"
+	.space 1
+	.ascii "uShift_var_i32_C"
+	.space 1
+	.ascii "uShift_param_i32_I"
+	.space 1
+	.ascii "uShift_var_i32_I"
+	.space 1
+	.ascii "uShift_param_u64_C"
+	.space 1
+	.ascii "uShift_var_u64_C"
+	.space 1
+	.ascii "uShift_param_u64_I"
+	.space 1
+	.ascii "uShift_var_u64_I"
+	.space 1
+	.ascii "uShift_param_i16_C"
+	.space 1
+	.ascii "uShift_var_i16_C"
+	.space 1
+	.ascii "uShift_param_i16_I"
+	.space 1
+	.ascii "uShift_var_i16_I"
+	.space 1
+	.ascii "uShift_param_I_C"
+	.space 1
+	.ascii "uShift_var_I_C"
+	.space 1
+	.ascii "uShift_param_I_I"
+	.space 1
+	.ascii "uShift_var_I_I"
+	.space 1
 	.ascii "uShift_param_LC_C"
 	.space 1
 	.ascii "uShift_var_LC_C"
@@ -2322,111 +2470,119 @@ _L_1:
 	.space 1
 	.ascii "uShift_var_LC_I"
 	.space 1
-	.ascii "uShift_param_i64_C"
+	.ascii "uShift_param_u32_C"
 	.space 1
-	.ascii "uShift_var_i64_C"
+	.ascii "uShift_var_u32_C"
 	.space 1
-	.ascii "uShift_param_i64_I"
+	.ascii "uShift_param_u32_I"
 	.space 1
-	.ascii "uShift_var_i64_I"
+	.ascii "uShift_var_u32_I"
+	.space 1
+	.ascii "uShift_param_u16_C"
+	.space 1
+	.ascii "uShift_var_u16_C"
+	.space 1
+	.ascii "uShift_param_u16_I"
+	.space 1
+	.ascii "uShift_var_u16_I"
 	.space 4
 	.quad	_Shift_M3
 	.quad	_L_1
-	.quad	_Shift__uShift_param_i32_C
-	.quad	_L_1+9
-	.quad	_Shift__uShift_var_i32_C
-	.quad	_L_1+28
-	.quad	_Shift__uShift_param_i32_I
-	.quad	_L_1+45
-	.quad	_Shift__uShift_var_i32_I
-	.quad	_L_1+64
-	.quad	_Shift__uShift_param_i16_C
-	.quad	_L_1+81
-	.quad	_Shift__uShift_var_i16_C
-	.quad	_L_1+100
-	.quad	_Shift__uShift_param_i16_I
-	.quad	_L_1+117
-	.quad	_Shift__uShift_var_i16_I
-	.quad	_L_1+136
-	.quad	_Shift__uShift_param_L_C
-	.quad	_L_1+153
-	.quad	_Shift__uShift_var_L_C
-	.quad	_L_1+170
-	.quad	_Shift__uShift_param_L_I
-	.quad	_L_1+185
-	.quad	_Shift__uShift_var_L_I
-	.quad	_L_1+202
-	.quad	_Shift__uShift_param_u64_C
-	.quad	_L_1+217
-	.quad	_Shift__uShift_var_u64_C
-	.quad	_L_1+236
-	.quad	_Shift__uShift_param_u64_I
-	.quad	_L_1+253
-	.quad	_Shift__uShift_var_u64_I
-	.quad	_L_1+272
-	.quad	_Shift__uShift_param_u16_C
-	.quad	_L_1+289
-	.quad	_Shift__uShift_var_u16_C
-	.quad	_L_1+308
-	.quad	_Shift__uShift_param_u16_I
-	.quad	_L_1+325
-	.quad	_Shift__uShift_var_u16_I
-	.quad	_L_1+344
-	.quad	_Shift__uShift_param_C_C
-	.quad	_L_1+361
-	.quad	_Shift__uShift_var_C_C
-	.quad	_L_1+378
-	.quad	_Shift__uShift_param_C_I
-	.quad	_L_1+393
-	.quad	_Shift__uShift_var_C_I
-	.quad	_L_1+410
-	.quad	_Shift__uShift_param_u32_C
-	.quad	_L_1+425
-	.quad	_Shift__uShift_var_u32_C
-	.quad	_L_1+444
-	.quad	_Shift__uShift_param_u32_I
-	.quad	_L_1+461
-	.quad	_Shift__uShift_var_u32_I
-	.quad	_L_1+480
 	.quad	_Shift__uShift_param_i8_C
-	.quad	_L_1+497
+	.quad	_L_1+9
 	.quad	_Shift__uShift_var_i8_C
-	.quad	_L_1+515
+	.quad	_L_1+27
 	.quad	_Shift__uShift_param_i8_I
-	.quad	_L_1+531
+	.quad	_L_1+43
 	.quad	_Shift__uShift_var_i8_I
-	.quad	_L_1+549
-	.quad	_Shift__uShift_param_I_C
-	.quad	_L_1+565
-	.quad	_Shift__uShift_var_I_C
-	.quad	_L_1+582
-	.quad	_Shift__uShift_param_I_I
-	.quad	_L_1+597
-	.quad	_Shift__uShift_var_I_I
-	.quad	_L_1+614
-	.quad	_Shift__uShift_param_u8_C
-	.quad	_L_1+629
-	.quad	_Shift__uShift_var_u8_C
-	.quad	_L_1+647
-	.quad	_Shift__uShift_param_u8_I
-	.quad	_L_1+663
-	.quad	_Shift__uShift_var_u8_I
-	.quad	_L_1+681
-	.quad	_Shift__uShift_param_LC_C
-	.quad	_L_1+697
-	.quad	_Shift__uShift_var_LC_C
-	.quad	_L_1+715
-	.quad	_Shift__uShift_param_LC_I
-	.quad	_L_1+731
-	.quad	_Shift__uShift_var_LC_I
-	.quad	_L_1+749
+	.quad	_L_1+61
+	.quad	_Shift__uShift_param_L_C
+	.quad	_L_1+77
+	.quad	_Shift__uShift_var_L_C
+	.quad	_L_1+94
+	.quad	_Shift__uShift_param_L_I
+	.quad	_L_1+109
+	.quad	_Shift__uShift_var_L_I
+	.quad	_L_1+126
 	.quad	_Shift__uShift_param_i64_C
-	.quad	_L_1+765
+	.quad	_L_1+141
 	.quad	_Shift__uShift_var_i64_C
-	.quad	_L_1+784
+	.quad	_L_1+160
 	.quad	_Shift__uShift_param_i64_I
-	.quad	_L_1+801
+	.quad	_L_1+177
 	.quad	_Shift__uShift_var_i64_I
+	.quad	_L_1+196
+	.quad	_Shift__uShift_param_u8_C
+	.quad	_L_1+213
+	.quad	_Shift__uShift_var_u8_C
+	.quad	_L_1+231
+	.quad	_Shift__uShift_param_u8_I
+	.quad	_L_1+247
+	.quad	_Shift__uShift_var_u8_I
+	.quad	_L_1+265
+	.quad	_Shift__uShift_param_C_C
+	.quad	_L_1+281
+	.quad	_Shift__uShift_var_C_C
+	.quad	_L_1+298
+	.quad	_Shift__uShift_param_C_I
+	.quad	_L_1+313
+	.quad	_Shift__uShift_var_C_I
+	.quad	_L_1+330
+	.quad	_Shift__uShift_param_i32_C
+	.quad	_L_1+345
+	.quad	_Shift__uShift_var_i32_C
+	.quad	_L_1+364
+	.quad	_Shift__uShift_param_i32_I
+	.quad	_L_1+381
+	.quad	_Shift__uShift_var_i32_I
+	.quad	_L_1+400
+	.quad	_Shift__uShift_param_u64_C
+	.quad	_L_1+417
+	.quad	_Shift__uShift_var_u64_C
+	.quad	_L_1+436
+	.quad	_Shift__uShift_param_u64_I
+	.quad	_L_1+453
+	.quad	_Shift__uShift_var_u64_I
+	.quad	_L_1+472
+	.quad	_Shift__uShift_param_i16_C
+	.quad	_L_1+489
+	.quad	_Shift__uShift_var_i16_C
+	.quad	_L_1+508
+	.quad	_Shift__uShift_param_i16_I
+	.quad	_L_1+525
+	.quad	_Shift__uShift_var_i16_I
+	.quad	_L_1+544
+	.quad	_Shift__uShift_param_I_C
+	.quad	_L_1+561
+	.quad	_Shift__uShift_var_I_C
+	.quad	_L_1+578
+	.quad	_Shift__uShift_param_I_I
+	.quad	_L_1+593
+	.quad	_Shift__uShift_var_I_I
+	.quad	_L_1+610
+	.quad	_Shift__uShift_param_LC_C
+	.quad	_L_1+625
+	.quad	_Shift__uShift_var_LC_C
+	.quad	_L_1+643
+	.quad	_Shift__uShift_param_LC_I
+	.quad	_L_1+659
+	.quad	_Shift__uShift_var_LC_I
+	.quad	_L_1+677
+	.quad	_Shift__uShift_param_u32_C
+	.quad	_L_1+693
+	.quad	_Shift__uShift_var_u32_C
+	.quad	_L_1+712
+	.quad	_Shift__uShift_param_u32_I
+	.quad	_L_1+729
+	.quad	_Shift__uShift_var_u32_I
+	.quad	_L_1+748
+	.quad	_Shift__uShift_param_u16_C
+	.quad	_L_1+765
+	.quad	_Shift__uShift_var_u16_C
+	.quad	_L_1+784
+	.quad	_Shift__uShift_param_u16_I
+	.quad	_L_1+801
+	.quad	_Shift__uShift_var_u16_I
 	.quad	_L_1+820
 	.space 8
 	.ascii "../AMD64_DARWIN/Shift.m3"
@@ -2438,42 +2594,142 @@ _MM_Shift:
 	.space 32
 	.quad	_L_1+840
 	.space 24
-	.quad	_MM_Shift+208
+	.quad	_MM_Shift+224
 	.space 8
 	.quad	_Shift_M3
 	.quad	3
-	.quad	689
-	.quad	690
-	.long	1143794762
-	.byte	-75
-	.space 3
-	.quad	694
-	.byte	-73
-	.space 3
-	.long	696
-	.quad	697
-	.word	698
-	.space 6
-	.quad	699
-	.long	2783138808
-	.long	1082516891
-	.quad	702
-	.word	703
+	.word	689
 	.space 2
-	.long	704
-	.space 24
+	.long	690
+	.quad	691
+	.quad	692
+	.word	693
+	.space 6
+	.quad	694
+	.long	1752346657
+	.long	1082506641
+	.long	697
+	.space 4
+	.quad	698
+	.byte	-69
+	.space 7
+	.quad	700
+	.long	1143958766
+	.space 4
+	.quad	703
+	.byte	-64
+	.space 31
 	.quad	_Shift_I3
-	.quad	_MM_Shift+232
+	.quad	_MM_Shift+248
 	.space 8
 	.quad	_Long_I3
-	.quad	_MM_Shift+256
+	.quad	_MM_Shift+272
 	.space 8
 	.quad	_Word_I3
-	.quad	_MM_Shift+280
+	.quad	_MM_Shift+296
 	.space 8
 	.quad	_Cstdint_I3
-	.quad	_MM_Shift+304
+	.quad	_MM_Shift+320
 	.space 8
 	.quad	_RTHooks_I3
 	.space 8
+_Shift__uShift_var_u16_I.eh = 0
+.no_dead_strip _Shift__uShift_var_u16_I.eh
+_Shift__uShift_param_u16_I.eh = 0
+.no_dead_strip _Shift__uShift_param_u16_I.eh
+_Shift__uShift_var_u16_C.eh = 0
+.no_dead_strip _Shift__uShift_var_u16_C.eh
+_Shift__uShift_param_u16_C.eh = 0
+.no_dead_strip _Shift__uShift_param_u16_C.eh
+_Shift__uShift_var_u32_I.eh = 0
+.no_dead_strip _Shift__uShift_var_u32_I.eh
+_Shift__uShift_param_u32_I.eh = 0
+.no_dead_strip _Shift__uShift_param_u32_I.eh
+_Shift__uShift_var_u32_C.eh = 0
+.no_dead_strip _Shift__uShift_var_u32_C.eh
+_Shift__uShift_param_u32_C.eh = 0
+.no_dead_strip _Shift__uShift_param_u32_C.eh
+_Shift__uShift_var_LC_I.eh = 0
+.no_dead_strip _Shift__uShift_var_LC_I.eh
+_Shift__uShift_param_LC_I.eh = 0
+.no_dead_strip _Shift__uShift_param_LC_I.eh
+_Shift__uShift_var_LC_C.eh = 0
+.no_dead_strip _Shift__uShift_var_LC_C.eh
+_Shift__uShift_param_LC_C.eh = 0
+.no_dead_strip _Shift__uShift_param_LC_C.eh
+_Shift__uShift_var_I_I.eh = 0
+.no_dead_strip _Shift__uShift_var_I_I.eh
+_Shift__uShift_param_I_I.eh = 0
+.no_dead_strip _Shift__uShift_param_I_I.eh
+_Shift__uShift_var_I_C.eh = 0
+.no_dead_strip _Shift__uShift_var_I_C.eh
+_Shift__uShift_param_I_C.eh = 0
+.no_dead_strip _Shift__uShift_param_I_C.eh
+_Shift__uShift_var_i16_I.eh = 0
+.no_dead_strip _Shift__uShift_var_i16_I.eh
+_Shift__uShift_param_i16_I.eh = 0
+.no_dead_strip _Shift__uShift_param_i16_I.eh
+_Shift__uShift_var_i16_C.eh = 0
+.no_dead_strip _Shift__uShift_var_i16_C.eh
+_Shift__uShift_param_i16_C.eh = 0
+.no_dead_strip _Shift__uShift_param_i16_C.eh
+_Shift__uShift_var_u64_I.eh = 0
+.no_dead_strip _Shift__uShift_var_u64_I.eh
+_Shift__uShift_param_u64_I.eh = 0
+.no_dead_strip _Shift__uShift_param_u64_I.eh
+_Shift__uShift_var_u64_C.eh = 0
+.no_dead_strip _Shift__uShift_var_u64_C.eh
+_Shift__uShift_param_u64_C.eh = 0
+.no_dead_strip _Shift__uShift_param_u64_C.eh
+_Shift__uShift_var_i32_I.eh = 0
+.no_dead_strip _Shift__uShift_var_i32_I.eh
+_Shift__uShift_param_i32_I.eh = 0
+.no_dead_strip _Shift__uShift_param_i32_I.eh
+_Shift__uShift_var_i32_C.eh = 0
+.no_dead_strip _Shift__uShift_var_i32_C.eh
+_Shift__uShift_param_i32_C.eh = 0
+.no_dead_strip _Shift__uShift_param_i32_C.eh
+_Shift__uShift_var_C_I.eh = 0
+.no_dead_strip _Shift__uShift_var_C_I.eh
+_Shift__uShift_param_C_I.eh = 0
+.no_dead_strip _Shift__uShift_param_C_I.eh
+_Shift__uShift_var_C_C.eh = 0
+.no_dead_strip _Shift__uShift_var_C_C.eh
+_Shift__uShift_param_C_C.eh = 0
+.no_dead_strip _Shift__uShift_param_C_C.eh
+_Shift__uShift_var_u8_I.eh = 0
+.no_dead_strip _Shift__uShift_var_u8_I.eh
+_Shift__uShift_param_u8_I.eh = 0
+.no_dead_strip _Shift__uShift_param_u8_I.eh
+_Shift__uShift_var_u8_C.eh = 0
+.no_dead_strip _Shift__uShift_var_u8_C.eh
+_Shift__uShift_param_u8_C.eh = 0
+.no_dead_strip _Shift__uShift_param_u8_C.eh
+_Shift__uShift_var_i64_I.eh = 0
+.no_dead_strip _Shift__uShift_var_i64_I.eh
+_Shift__uShift_param_i64_I.eh = 0
+.no_dead_strip _Shift__uShift_param_i64_I.eh
+_Shift__uShift_var_i64_C.eh = 0
+.no_dead_strip _Shift__uShift_var_i64_C.eh
+_Shift__uShift_param_i64_C.eh = 0
+.no_dead_strip _Shift__uShift_param_i64_C.eh
+_Shift__uShift_var_L_I.eh = 0
+.no_dead_strip _Shift__uShift_var_L_I.eh
+_Shift__uShift_param_L_I.eh = 0
+.no_dead_strip _Shift__uShift_param_L_I.eh
+_Shift__uShift_var_L_C.eh = 0
+.no_dead_strip _Shift__uShift_var_L_C.eh
+_Shift__uShift_param_L_C.eh = 0
+.no_dead_strip _Shift__uShift_param_L_C.eh
+_Shift__uShift_var_i8_I.eh = 0
+.no_dead_strip _Shift__uShift_var_i8_I.eh
+_Shift__uShift_param_i8_I.eh = 0
+.no_dead_strip _Shift__uShift_param_i8_I.eh
+_Shift__uShift_var_i8_C.eh = 0
+.no_dead_strip _Shift__uShift_var_i8_C.eh
+_Shift__uShift_param_i8_C.eh = 0
+.no_dead_strip _Shift__uShift_param_i8_C.eh
+.globl _Shift_M3.eh
+_Shift_M3.eh = 0
+.no_dead_strip _Shift_M3.eh
 	.subsections_via_symbols
