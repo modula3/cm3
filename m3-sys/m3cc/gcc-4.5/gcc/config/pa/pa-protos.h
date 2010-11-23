@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Prototypes for pa.c functions used in the md file & elsewhere.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007 Free Software Foundation,
    Inc.
@@ -17,6 +19,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef RTX_CODE
 /* Prototype function used in various macros.  */
@@ -174,3 +180,7 @@ extern bool pa_modes_tieable_p (enum machine_mode, enum machine_mode);
 
 extern const int magic_milli[];
 extern int shadd_constant_p (int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
