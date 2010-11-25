@@ -408,9 +408,9 @@ Configure = Configure & " -disable-libssp"
 Configure = Configure & " -disable-nls"
 Configure = Configure & " -enable-languages=m3cg"
 % less memory, old compiler
-if not {"FreeBSD4","I386_FREEBSD","PPC_DARWIN"} contains HOST
-  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
-end
+%if not {"FreeBSD4","I386_FREEBSD","PPC_DARWIN"} contains HOST
+%  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
+%end
 % These are compatible with just building m3cg, but user might
 % build gcc/cc1/libgcc here.
 Configure = Configure & " -disable-fixincludes"
