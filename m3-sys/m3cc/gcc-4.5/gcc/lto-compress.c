@@ -43,43 +43,43 @@ extern "C" {
 struct lto_compression_stream;
 
 struct lto_compression_stream *
-lto_start_compression (void (*callback) (const char *, unsigned, void *),
-		       void *opaque)
+lto_start_compression (void (*) (const char *, unsigned, void *),
+		       void *)
 {
   gcc_unreachable ();
   return 0;
 }
 
 void
-lto_compress_block (struct lto_compression_stream *stream,
-		    const char *base, size_t num_chars)
+lto_compress_block (struct lto_compression_stream *,
+		    const char *, size_t )
 {
   gcc_unreachable ();
 }
 
 void
-lto_end_compression (struct lto_compression_stream *stream)
+lto_end_compression (struct lto_compression_stream *)
 {
   gcc_unreachable ();
 }
 
 struct lto_compression_stream *
-lto_start_uncompression (void (*callback) (const char *, unsigned, void *),
-			 void *opaque)
+lto_start_uncompression (void (*) (const char *, unsigned, void *),
+			 void *)
 {
   gcc_unreachable ();
   return 0;
 }
 
 void
-lto_uncompress_block (struct lto_compression_stream *stream,
-		      const char *base, size_t num_chars)
+lto_uncompress_block (struct lto_compression_stream *,
+		      const char *, size_t )
 {
   gcc_unreachable ();
 }
 
 void
-lto_end_uncompression (struct lto_compression_stream *stream)
+lto_end_uncompression (struct lto_compression_stream *)
 {
   gcc_unreachable ();
 }

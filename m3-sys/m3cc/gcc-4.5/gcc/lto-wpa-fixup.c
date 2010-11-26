@@ -223,40 +223,16 @@ lto_input_wpa_fixup_1 (struct lto_file_decl_data *file_data,
     }
 }
 
-/* Read in WPA fix-up information. */
-
 static void
 lto_input_wpa_fixup (void)
 {
-  struct lto_file_decl_data ** file_data_vec
-    = lto_get_file_decl_data ();
-  struct lto_file_decl_data * file_data;
-  int i = 0;
-
-  /* Fix up information is only used in LTRANS mode.  */
-  if (!flag_ltrans)
-    return;
-
-  while ((file_data = file_data_vec[i++]))
-    {
-      const char *data;
-      size_t len;
-      struct lto_input_block *ib
-	= lto_create_simple_input_block (file_data, LTO_section_wpa_fixup,
-					 &data, &len);
-
-      lto_input_wpa_fixup_1 (file_data, ib);
-      lto_destroy_simple_input_block (file_data, LTO_section_wpa_fixup, ib,
-				      data, len);
-    }
+  gcc_unreachable ();
 }
-
-/* Gate function for all lto streaming passes.  */
 
 static bool
 gate_wpa_fixup (void)
 {
-  return (flag_wpa || flag_ltrans) && gate_lto_out ();
+  return false;
 }
 
 struct ipa_opt_pass_d pass_ipa_lto_wpa_fixup =
