@@ -1824,8 +1824,6 @@ ipa_passes (void)
   if (flag_generate_lto)
     targetm.asm_out.lto_start ();
 
-  execute_ipa_summary_passes ((struct ipa_opt_pass_d *) all_lto_gen_passes);
-
   if (!in_lto_p)
     ipa_write_summaries ();
 

@@ -429,7 +429,6 @@ DWARF2_H    = $(srcdir)/../include/dwarf2.h
 
 # Linker plugin API headers
 LINKER_PLUGIN_API_H = $(srcdir)/../include/plugin-api.h
-LTO_SYMTAB_H = $(srcdir)/../include/lto-symtab.h
 
 # Default native SYSTEM_HEADER_DIR, to be overridden by targets.
 NATIVE_SYSTEM_HEADER_DIR = /usr/include
@@ -1233,16 +1232,6 @@ OBJS-common = \
 	loop-unroll.o \
 	loop-unswitch.o \
 	lower-subreg.o \
-	lto-cgraph.o \
-	lto-streamer-in.o \
-	lto-streamer-out.o \
-	lto-section-in.o \
-	lto-section-out.o \
-	lto-symtab.o \
-	lto-opts.o \
-	lto-streamer.o \
-	lto-wpa-fixup.o \
-	lto-compress.o \
 	mcf.o \
 	mode-switching.o \
 	modulo-sched.o \
@@ -2193,50 +2182,6 @@ convert.o: convert.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
 
 double-int.o: double-int.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H)
 
-# lto-compress.o needs $(ZLIBINC) added to the include flags.
-lto-compress.o: lto-compress.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
-	$(TREE_H) langhooks.h $(LTO_HEADER_H) $(LTO_SECTION_H) \
-	lto-compress.h $(DIAGNOSTIC_H) errors.h
-	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(ZLIBINC) $< $(OUTPUT_OPTION)
-
-lto-cgraph.o: lto-cgraph.c $(CONFIG_H) $(SYSTEM_H) coretypes.h   \
-   $(TM_H) $(TOPLEV_H) $(EXPR_H) $(FLAGS_H) $(PARAMS_H) input.h \
-   $(VARRAY_H) $(HASHTAB_H) langhooks.h $(BASIC_BLOCK_H) \
-   $(TREE_FLOW_H) $(CGRAPH_H) $(FUNCTION_H) $(GGC_H) $(DIAGNOSTIC_H) \
-   except.h $(TIMEVAR_H) output.h pointer-set.h $(LTO_STREAMER_H) $(GCOV_IO_H)
-lto-streamer-in.o: lto-streamer-in.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
-   $(TM_H) $(TOPLEV_H) $(EXPR_H) $(FLAGS_H) $(PARAMS_H) input.h $(VARRAY_H) \
-   $(HASHTAB_H) $(BASIC_BLOCK_H) $(TREE_FLOW_H) $(TREE_PASS_H) $(CGRAPH_H) \
-   $(FUNCTION_H) $(GGC_H) $(DIAGNOSTIC_H) libfuncs.h $(EXCEPT_H) debug.h \
-   $(TIMEVAR_H) output.h $(IPA_UTILS_H) $(LTO_STREAMER_H)
-lto-streamer-out.o : lto-streamer-out.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
-   $(TM_H) $(TOPLEV_H) $(TREE_H) $(EXPR_H) $(FLAGS_H) $(PARAMS_H) input.h \
-   $(VARRAY_H) $(HASHTAB_H) $(BASIC_BLOCK_H) tree-iterator.h \
-   $(TREE_FLOW_H) $(TREE_PASS_H) $(CGRAPH_H) $(FUNCTION_H) $(GGC_H) \
-   $(DIAGNOSTIC_H) except.h $(LTO_STREAMER_H) errors.h
-lto-section-in.o: lto-section-in.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
-   $(TOPLEV_H) $(EXPR_H) $(FLAGS_H) $(PARAMS_H) input.h $(VARRAY_H) \
-   $(HASHTAB_H) $(BASIC_BLOCK_H) $(TREE_FLOW_H) $(CGRAPH_H) $(FUNCTION_H) \
-   $(GGC_H) $(DIAGNOSTIC_H) except.h $(TIMEVAR_H) output.h \
-   $(LTO_STREAMER_H) lto-compress.h
-lto-section-out.o : lto-section-out.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
-   $(TM_H) $(TOPLEV_H) $(TREE_H) $(EXPR_H) $(PARAMS_H) input.h \
-   $(VARRAY_H) $(HASHTAB_H) $(BASIC_BLOCK_H) $(TREE_FLOW_H) $(TREE_PASS_H) \
-   $(CGRAPH_H) $(FUNCTION_H) $(GGC_H) except.h pointer-set.h \
-   $(BITMAP_H) langhooks.h $(LTO_STREAMER_H) lto-compress.h
-lto-symtab.o: lto-symtab.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
-   toplev.h $(TREE_H) $(GIMPLE_H) $(GGC_H) $(LAMBDA_H) $(HASHTAB_H) \
-   $(LTO_STREAMER_H) $(LINKER_PLUGIN_API_H) gt-lto-symtab.h
-lto-opts.o: lto-opts.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TREE_H) \
-   $(HASHTAB_H) $(GGC_H) $(BITMAP_H) $(FLAGS_H) opts.h options.h \
-   $(TARGET_H) $(TOPLEV_H) $(LTO_STREAMER_H)
-lto-streamer.o: lto-streamer.c $(CONFIG_H) $(SYSTEM_H) coretypes.h   \
-   $(TM_H) $(TREE_H) $(GIMPLE_H) $(BITMAP_H) $(LTO_STREAMER_H) $(FLAGS_H) \
-   $(TREE_FLOW_H) $(DIAGNOSTIC_H) $(LTO_SYMTAB_H) $(TOPLEV_H)
-lto-wpa-fixup.o: lto-wpa-fixup.c $(CONFIG_H) $(SYSTEM_H) coretypes.h   \
-   $(TM_H) $(TOPLEV_H) $(TREE_H) $(EXPR_H) $(FLAGS_H) $(CGRAPH_H) \
-   $(FUNCTION_H) $(DIAGNOSTIC_H) $(BITMAP_H) $(TIMEVAR_H) \
-   $(TREE_FLOW_H) $(TREE_PASS_H) $(LTO_STREAMER_H)
 langhooks.o : langhooks.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
    $(TREE_H) $(TOPLEV_H) $(TREE_INLINE_H) $(RTL_H) insn-config.h $(INTEGRATE_H) \
    langhooks.h $(TARGET_H) $(LANGHOOKS_DEF_H) $(FLAGS_H) $(GGC_H) $(DIAGNOSTIC_H) \
@@ -3537,7 +3482,6 @@ GTFILES = $(CPP_ID_DATA_H) $(srcdir)/input.h $(srcdir)/coretypes.h \
   $(srcdir)/tree-phinodes.c \
   $(srcdir)/ipa-reference.c \
   $(srcdir)/tree-ssa-structalias.c \
-  $(srcdir)/lto-symtab.c \
   $(srcdir)/tree-ssa-alias.h \
   $(srcdir)/ipa-prop.h \
   @all_gtfiles@

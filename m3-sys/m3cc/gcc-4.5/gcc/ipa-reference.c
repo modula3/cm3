@@ -71,7 +71,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "diagnostic.h"
 #include "langhooks.h"
-#include "lto-streamer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1044,63 +1043,9 @@ write_node_summary_p (struct cgraph_node *node)
 /* Serialize the ipa info for lto.  */
 
 static void
-ipa_reference_write_summary (cgraph_node_set set)
+ipa_reference_write_summary (cgraph_node_set)
 {
-  struct cgraph_node *node;
-  struct lto_simple_output_block *ob
-    = lto_create_simple_output_block (LTO_section_ipa_reference);
-  unsigned int count = 0;
-  cgraph_node_set_iterator csi;
-
-  for (csi = csi_start (set); !csi_end_p (csi); csi_next (&csi))
-    if (write_node_summary_p (csi_node (csi)))
-	count++;
-
-  lto_output_uleb128_stream (ob->main_stream, count);
-
-  /* Process all of the functions.  */
-  for (csi = csi_start (set); !csi_end_p (csi); csi_next (&csi))
-    {
-      node = csi_node (csi);
-      if (write_node_summary_p (node))
-	{
-	  ipa_reference_local_vars_info_t l
-	    = get_reference_vars_info (node)->local;
-	  unsigned int index;
-	  bitmap_iterator bi;
-	  lto_cgraph_encoder_t encoder;
-	  int node_ref;
-
-	  encoder = ob->decl_state->cgraph_node_encoder;
-	  node_ref = lto_cgraph_encoder_encode (encoder, node);
-	  lto_output_uleb128_stream (ob->main_stream, node_ref);
-
-	  /* Stream out the statics read.  */
-	  if (l->calls_read_all)
-	    lto_output_sleb128_stream (ob->main_stream, -1);
-	  else
-	    {
-	      lto_output_sleb128_stream (ob->main_stream,
-					 bitmap_count_bits (l->statics_read));
-	      EXECUTE_IF_SET_IN_BITMAP (l->statics_read, 0, index, bi)
-		lto_output_var_decl_index(ob->decl_state, ob->main_stream,
-					  get_static_decl (index));
-	    }
-
-	  /* Stream out the statics written.  */
-	  if (l->calls_write_all)
-	    lto_output_sleb128_stream (ob->main_stream, -1);
-	  else
-	    {
-	      lto_output_sleb128_stream (ob->main_stream,
-					 bitmap_count_bits (l->statics_written));
-	      EXECUTE_IF_SET_IN_BITMAP (l->statics_written, 0, index, bi)
-		lto_output_var_decl_index(ob->decl_state, ob->main_stream,
-					  get_static_decl (index));
-	    }
-	}
-    }
-  lto_destroy_simple_output_block (ob);
+  gcc_unreachable ();
 }
 
 
@@ -1109,75 +1054,8 @@ ipa_reference_write_summary (cgraph_node_set set)
 static void
 ipa_reference_read_summary (void)
 {
-  struct lto_file_decl_data ** file_data_vec
-    = lto_get_file_decl_data ();
-  struct lto_file_decl_data * file_data;
-  unsigned int j = 0;
-
-  ipa_init ();
-
-  while ((file_data = file_data_vec[j++]))
-    {
-      const char *data;
-      size_t len;
-      struct lto_input_block *ib
-	= lto_create_simple_input_block (file_data,
-					 LTO_section_ipa_reference,
-					 &data, &len);
-      if (ib)
-	{
-	  unsigned int i;
-	  unsigned int f_count = lto_input_uleb128 (ib);
-
-	  for (i = 0; i < f_count; i++)
-	    {
-	      unsigned int j, index;
-	      struct cgraph_node *node;
-	      ipa_reference_local_vars_info_t l;
-	      int v_count;
-	      lto_cgraph_encoder_t encoder;
-
-	      index = lto_input_uleb128 (ib);
-	      encoder = file_data->cgraph_node_encoder;
-	      node = lto_cgraph_encoder_deref (encoder, index);
-	      l = init_function_info (node);
-
-	      /* Set the statics read.  */
-	      v_count = lto_input_sleb128 (ib);
-	      if (v_count == -1)
-	        l->calls_read_all = true;
-	      else
-		for (j = 0; j < (unsigned int)v_count; j++)
-		  {
-		    unsigned int var_index = lto_input_uleb128 (ib);
-		    tree v_decl = lto_file_decl_data_get_var_decl (file_data,
-								   var_index);
-		    add_static_var (v_decl);
-		    bitmap_set_bit (l->statics_read, DECL_UID (v_decl));
-		  }
-
-	      /* Set the statics written.  */
-	      v_count = lto_input_sleb128 (ib);
-	      if (v_count == -1)
-	        l->calls_write_all = true;
-	      else
-		for (j = 0; j < (unsigned int)v_count; j++)
-		  {
-		    unsigned int var_index = lto_input_uleb128 (ib);
-		    tree v_decl = lto_file_decl_data_get_var_decl (file_data,
-								   var_index);
-		    add_static_var (v_decl);
-		    bitmap_set_bit (l->statics_written, DECL_UID (v_decl));
-		  }
-	    }
-
-	  lto_destroy_simple_input_block (file_data,
-					  LTO_section_ipa_reference,
-					  ib, data, len);
-	}
-    }
+  gcc_unreachable ();
 }
-
 
 
 /* Set READ_ALL/WRITE_ALL based on DECL flags.  */
