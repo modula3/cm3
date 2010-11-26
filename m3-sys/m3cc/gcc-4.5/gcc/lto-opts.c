@@ -49,7 +49,7 @@ lto_register_user_option (size_t , const char *, int, int)
 void
 lto_clear_user_options (void)
 {
-  gcc_unreachable ();
+  // nothing
 }
 
 void
