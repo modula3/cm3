@@ -536,6 +536,7 @@ EndModule("records")
 
 module("RegExpParse")
 module("RegExpTok")
+module("Div")
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
