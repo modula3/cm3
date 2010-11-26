@@ -64,7 +64,7 @@ P="import-libs sysutils m3middle m3objfile m3linker m3back \
 "$root/scripts/do-pkg.sh" "$@" "realclean" ${P} || exit 1
 "$root/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
 
-if [ "${GCC_BACKEND}" = yes ]; then
+if [ "x${GCC_BACKEND}" = xyes ]; then
   # Continue with the backend, if needed. Deliberately don't ship it!
   # "$root/m3-sys/m3cggen/${TARGET}/m3cggen" > "$root/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h"
   "$root/scripts/do-pkg.sh" "$@" "build" m3cc || exit 1
