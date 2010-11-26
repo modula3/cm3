@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of target machine for GNU compiler, for IBM RS/6000.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@
 
 #ifndef GCC_RS6000_PROTOS_H
 #define GCC_RS6000_PROTOS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Declare functions in rs6000.c */
 
@@ -199,3 +205,7 @@ extern bool rs6000_hard_regno_mode_ok_p[][FIRST_PSEUDO_REGISTER];
 extern unsigned char rs6000_class_max_nregs[][LIM_REG_CLASSES];
 extern unsigned char rs6000_hard_regno_nregs[][FIRST_PSEUDO_REGISTER];
 #endif  /* rs6000-protos.h */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
