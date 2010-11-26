@@ -280,12 +280,14 @@ check_cm3_installations() {
     trace_cm3_installations
     exit 1
   }
-  if type cm3cg > /dev/null; then
-    true
-  else
-    echo "cm3cg not found" 1>&2
-    trace_cm3_installations
-    exit 1
+  if [ "$CM3_OSTYPE" != "WIN32" ]; then
+    if type cm3cg > /dev/null; then
+      true
+    else
+      echo "cm3cg not found" 1>&2
+      trace_cm3_installations
+      exit 1
+    fi
   fi
 }
 
