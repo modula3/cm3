@@ -73,6 +73,9 @@ extern "C" {
 #if GCC42
 } /* extern "C" */
 #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "m3gty43.h"
 #include "m3-parse.h"
 
@@ -92,7 +95,6 @@ extern "C" {
    stabs is not currently supported on PA64_HPUX? That isn't checked here. */
 static bool m3gdb;
 
-static UINT8 bits_per_unit = BITS_PER_UNIT; /* for debugging */
 static UINT8 pointer_size; /* for debugging */
 static GTY (()) tree stdcall_list;
 
@@ -181,6 +183,8 @@ int arm_float_words_big_endian (void);
 
 #define DESTRUCTOR ~ /* hack for gengtype */
 
+extern "C++" {
+
 struct m3cg_op_t
 {
   UCHAR op;
@@ -201,6 +205,8 @@ struct m3cg_op_t
         fields };
 #include "m3-def.h"
 #undef M3CG
+
+} /* extern "C++" */
 
 #undef M3CG_EXTRA_FIELDS
 #define M3CG_EXTRA_FIELDS(x) /* nothing */
@@ -277,11 +283,11 @@ struct m3cg_op_t
 #define LABEL(x) trace_label (#x, x##_integer);
 #define TYPEID(x) trace_typeid (#x, x);
 
-#define M3CG(sym, fields) void m3cg_##sym##_t::trace() { fields }
+#define M3CG(sym, fields) extern "C++" { void m3cg_##sym##_t::trace() { fields } }
 #include "m3-def.h"
 #undef M3CG
 
-m3cg_op_t* m3cg_op_t::create(UCHAR op) { switch (op) {
+extern "C++" m3cg_op_t* m3cg_op_t::create(UCHAR op) { switch (op) {
 #define M3CG(sym, fields) case M3CG_##sym: return new m3cg_##sym##_t();
 #include "m3-def.h"
 #undef M3CG
@@ -1740,7 +1746,6 @@ m3_init_decl_processing (void)
       m3_push_type_decl (t_word, get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("word")));
     }
 
-  bits_per_unit = BITS_PER_UNIT; /* for debugging */
   pointer_size = POINTER_SIZE; /* for debugging */
   bits_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER);
   bytes_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER / BITS_PER_UNIT);
@@ -3450,7 +3455,7 @@ generate_fault (int code)
 
 /*-------------------------------------------------- M3CG opcode handlers ---*/
 
-#define M3CG_HANDLER(code) void m3cg_##code##_t::handler ()
+#define M3CG_HANDLER(code) extern "C++" void m3cg_##code##_t::handler ()
 
 M3CG_HANDLER (BEGIN_UNIT)
 {
@@ -6230,3 +6235,7 @@ tree pushdecl_top_level (tree)
 #include "debug.h"
 #include "gtype-m3cg.h"
 #include "gt-m3cg-parse.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
