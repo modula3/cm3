@@ -745,7 +745,9 @@ ipcp_iterate_stage (void)
     fprintf (dump_file, "\nIPA iterate stage:\n\n");
 
   if (in_lto_p)
-    ipa_update_after_lto_read ();
+  {
+    gcc_unreachable ();
+  }
 
   for (node = cgraph_nodes; node; node = node->next)
     {

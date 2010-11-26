@@ -1252,7 +1252,9 @@ cgraph_decide_inlining (void)
 
   cgraph_remove_function_insertion_hook (function_insertion_hook_holder);
   if (in_lto_p && flag_indirect_inlining)
-    ipa_update_after_lto_read ();
+  {
+    gcc_unreachable ();
+  }
 
   max_count = 0;
   max_benefit = 0;

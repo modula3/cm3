@@ -86,7 +86,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-dump.h"
 #include "df.h"
 #include "predict.h"
-#include "lto-streamer.h"
 #include "plugin.h"
 
 #if defined (DWARF2_UNWIND_INFO) || defined (DWARF2_DEBUGGING_INFO)
@@ -341,7 +340,7 @@ struct rtl_opt_pass pass_postreload =
 
 /* The root of the compilation pass tree, once constructed.  */
 struct opt_pass *all_passes, *all_small_ipa_passes, *all_lowering_passes,
-  *all_regular_ipa_passes, *all_lto_gen_passes;
+  *all_regular_ipa_passes;
 
 /* This is used by plugins, and should also be used in register_pass.  */
 #define DEF_PASS_LIST(LIST) &LIST,
@@ -664,8 +663,6 @@ register_pass (struct register_pass_info *pass_info)
   if (!success || all_instances)
     success |= position_pass (pass_info, &all_regular_ipa_passes);
   if (!success || all_instances)
-    success |= position_pass (pass_info, &all_lto_gen_passes);
-  if (!success || all_instances)
     success |= position_pass (pass_info, &all_passes);
   if (!success)
     fatal_error
@@ -816,12 +813,6 @@ init_optimization_passes (void)
   NEXT_PASS (pass_ipa_type_escape);
   NEXT_PASS (pass_ipa_pta);
   NEXT_PASS (pass_ipa_struct_reorg);
-  *p = NULL;
-
-  p = &all_lto_gen_passes;
-  NEXT_PASS (pass_ipa_lto_gimple_out);
-  NEXT_PASS (pass_ipa_lto_wpa_fixup);
-  NEXT_PASS (pass_ipa_lto_finish_out);  /* This must be the last LTO pass.  */
   *p = NULL;
 
   /* These passes are run after IPA passes on every function that is being
@@ -1076,9 +1067,6 @@ init_optimization_passes (void)
 		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
 		       | PROP_cfg);
   register_dump_files (all_regular_ipa_passes,
-		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
-		       | PROP_cfg);
-  register_dump_files (all_lto_gen_passes,
 		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
 		       | PROP_cfg);
   register_dump_files (all_passes,
@@ -1669,72 +1657,15 @@ ipa_write_summaries_2 (struct opt_pass *pass, cgraph_node_set set,
     }
 }
 
-/* Helper function of ipa_write_summaries. Creates and destroys the
-   decl state and calls ipa_write_summaries_2 for all passes that have
-   summaries.  SET is the set of nodes to be written.  */
-
-static void
-ipa_write_summaries_1 (cgraph_node_set set)
-{
-  struct lto_out_decl_state *state = lto_new_out_decl_state ();
-  lto_push_out_decl_state (state);
-
-  if (!flag_wpa)
-    ipa_write_summaries_2 (all_regular_ipa_passes, set, state);
-  ipa_write_summaries_2 (all_lto_gen_passes, set, state);
-
-  gcc_assert (lto_get_out_decl_state () == state);
-  lto_pop_out_decl_state ();
-  lto_delete_out_decl_state (state);
-}
-
 /* Write out summaries for all the nodes in the callgraph.  */
 
 void
 ipa_write_summaries (void)
 {
-  cgraph_node_set set;
-  struct cgraph_node **order;
-  int i, order_pos;
-
   if (!flag_generate_lto || errorcount || sorrycount)
     return;
 
-  lto_new_extern_inline_states ();
-  set = cgraph_node_set_new ();
-
-  /* Create the callgraph set in the same order used in
-     cgraph_expand_all_functions.  This mostly facilitates debugging,
-     since it causes the gimple file to be processed in the same order
-     as the source code.  */
-  order = XCNEWVEC (struct cgraph_node *, cgraph_n_nodes);
-  order_pos = cgraph_postorder (order);
-  gcc_assert (order_pos == cgraph_n_nodes);
-
-  for (i = order_pos - 1; i >= 0; i--)
-    {
-      struct cgraph_node *node = order[i];
-
-      if (node->analyzed)
-	{
-	  /* When streaming out references to statements as part of some IPA
-	     pass summary, the statements need to have uids assigned and the
-	     following does that for all the IPA passes here. Naturally, this
-	     ordering then matches the one IPA-passes get in their stmt_fixup
-	     hooks.  */
-
-	  push_cfun (DECL_STRUCT_FUNCTION (node->decl));
-	  renumber_gimple_stmt_uids ();
-	  pop_cfun ();
-	}
-      cgraph_node_set_add (set, node);
-    }
-
-  ipa_write_summaries_1 (set);
-  lto_delete_extern_inline_states ();
-
-  free (order);
-  ggc_free (set);
+  gcc_unreachable ();
 }
 
 
@@ -1745,7 +1676,9 @@ void
 ipa_write_summaries_of_cgraph_node_set (cgraph_node_set set)
 {
   if (flag_generate_lto && !(errorcount || sorrycount))
-    ipa_write_summaries_1 (set);
+  {
+    gcc_unreachable ();
+  }
 }
 
 /* Same as execute_pass_list but assume that subpasses of IPA passes
@@ -1785,14 +1718,13 @@ ipa_read_summaries_1 (struct opt_pass *pass)
 }
 
 
-/* Read all the summaries for all_regular_ipa_passes and all_lto_gen_passes.  */
+/* Read all the summaries for all_regular_ipa_passes.  */
 
 void
 ipa_read_summaries (void)
 {
   if (!flag_ltrans)
     ipa_read_summaries_1 (all_regular_ipa_passes);
-  ipa_read_summaries_1 (all_lto_gen_passes);
 }
 
 /* Same as execute_pass_list but assume that subpasses of IPA passes

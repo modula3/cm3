@@ -54,7 +54,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic.h"
 #include "langhooks.h"
 #include "target.h"
-#include "lto-streamer.h"
 #include "cfgloop.h"
 #include "tree-scalar-evolution.h"
 
@@ -698,52 +697,7 @@ generate_summary (void)
 static void
 pure_const_write_summary (cgraph_node_set set)
 {
-  struct cgraph_node *node;
-  struct lto_simple_output_block *ob
-    = lto_create_simple_output_block (LTO_section_ipa_pure_const);
-  unsigned int count = 0;
-  cgraph_node_set_iterator csi;
-
-  for (csi = csi_start (set); !csi_end_p (csi); csi_next (&csi))
-    {
-      node = csi_node (csi);
-      if (node->analyzed && get_function_state (node) != NULL)
-	count++;
-    }
-
-  lto_output_uleb128_stream (ob->main_stream, count);
-
-  /* Process all of the functions.  */
-  for (csi = csi_start (set); !csi_end_p (csi); csi_next (&csi))
-    {
-      node = csi_node (csi);
-      if (node->analyzed && get_function_state (node) != NULL)
-	{
-	  struct bitpack_d *bp;
-	  funct_state fs;
-	  int node_ref;
-	  lto_cgraph_encoder_t encoder;
-
-	  fs = get_function_state (node);
-
-	  encoder = ob->decl_state->cgraph_node_encoder;
-	  node_ref = lto_cgraph_encoder_encode (encoder, node);
-	  lto_output_uleb128_stream (ob->main_stream, node_ref);
-
-	  /* Note that flags will need to be read in the opposite
-	     order as we are pushing the bitflags into FLAGS.  */
-	  bp = bitpack_create ();
-	  bp_pack_value (bp, fs->pure_const_state, 2);
-	  bp_pack_value (bp, fs->state_previously_known, 2);
-	  bp_pack_value (bp, fs->looping_previously_known, 1);
-	  bp_pack_value (bp, fs->looping, 1);
-	  bp_pack_value (bp, fs->can_throw, 1);
-	  lto_output_bitpack (ob->main_stream, bp);
-	  bitpack_delete (bp);
-	}
-    }
-
-  lto_destroy_simple_output_block (ob);
+  gcc_unreachable ();
 }
 
 
@@ -752,57 +706,7 @@ pure_const_write_summary (cgraph_node_set set)
 static void
 pure_const_read_summary (void)
 {
-  struct lto_file_decl_data **file_data_vec = lto_get_file_decl_data ();
-  struct lto_file_decl_data *file_data;
-  unsigned int j = 0;
-
-  register_hooks ();
-  while ((file_data = file_data_vec[j++]))
-    {
-      const char *data;
-      size_t len;
-      struct lto_input_block *ib
-	= lto_create_simple_input_block (file_data,
-					 LTO_section_ipa_pure_const,
-					 &data, &len);
-      if (ib)
-	{
-	  unsigned int i;
-	  unsigned int count = lto_input_uleb128 (ib);
-
-	  for (i = 0; i < count; i++)
-	    {
-	      unsigned int index;
-	      struct cgraph_node *node;
-	      struct bitpack_d *bp;
-	      funct_state fs;
-	      lto_cgraph_encoder_t encoder;
-
-	      fs = XCNEW (struct funct_state_d);
-	      index = lto_input_uleb128 (ib);
-	      encoder = file_data->cgraph_node_encoder;
-	      node = lto_cgraph_encoder_deref (encoder, index);
-	      set_function_state (node, fs);
-
-	      /* Note that the flags must be read in the opposite
-		 order in which they were written (the bitflags were
-		 pushed into FLAGS).  */
-	      bp = lto_input_bitpack (ib);
-	      fs->pure_const_state
-			= (enum pure_const_state_e) bp_unpack_value (bp, 2);
-	      fs->state_previously_known
-			= (enum pure_const_state_e) bp_unpack_value (bp, 2);
-	      fs->looping_previously_known = bp_unpack_value (bp, 1);
-	      fs->looping = bp_unpack_value (bp, 1);
-	      fs->can_throw = bp_unpack_value (bp, 1);
-	      bitpack_delete (bp);
-	    }
-
-	  lto_destroy_simple_input_block (file_data,
-					  LTO_section_ipa_pure_const,
-					  ib, data, len);
-	}
-    }
+  gcc_unreachable ();    
 }
 
 
