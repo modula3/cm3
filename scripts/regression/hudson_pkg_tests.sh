@@ -54,8 +54,7 @@ fi
 . ./defs.sh
 
 [ "$CLEAN" = "true" ] && {
-  OMIT_GCC=
-  ${WS}/cm3/scripts/do-cm3-all.sh realclean
+  OMIT_GCC=yes ${WS}/cm3/scripts/do-cm3-all.sh realclean
 }
 [ "${WS}/cm3/scripts/pkginfo.txt" -nt "${WS}/cm3/scripts/PKGS" ] && {
   echo "deleting outdated packages cache ${WS}/cm3/scripts/PKGS"
