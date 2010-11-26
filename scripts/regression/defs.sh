@@ -556,7 +556,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
 
   echo " === build ${BSET} system with current compiler"
   if [ -z "$NOCLEAN" ]; then
-    $BUILDSCRIPT realclean || exit 1
+    OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
   fi
   $BUILDSCRIPT buildship || exit 1
   echo " >>> OK build_${1}_${BSET} ${DS} ${WS}"
@@ -619,10 +619,10 @@ test_build_system()
   echo " === build core system with current compiler"
   BUILDSCRIPT="./scripts/do-cm3-core.sh"
   if [ -z "$NOCLEAN" ]; then
-    $BUILDSCRIPT realclean || exit 1
+    OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
   fi
   echo " === perform cm3 upgrade after cleaning everything"
-  $BUILDSCRIPT realclean || exit 1
+  OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
   ./scripts/upgrade.sh || exit 1
   echo " >>> OK build_upgrade ${DS} ${WS}"
 
