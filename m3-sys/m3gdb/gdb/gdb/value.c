@@ -1562,7 +1562,13 @@ value_from_double (struct type *type, DOUBLEST num)
   enum type_code code = TYPE_CODE (base_type);
   int len = TYPE_LENGTH (base_type);
 
-  if (code == TYPE_CODE_FLT)
+  if (code == TYPE_CODE_FLT
+#ifdef _LANG_m3
+      || code == TYPE_CODE_M3_REAL
+      || code == TYPE_CODE_M3_LONGREAL 
+      || code == TYPE_CODE_M3_EXTENDED
+#endif
+     )
     {
       store_typed_floating (value_contents_raw (val), base_type, num);
     }
