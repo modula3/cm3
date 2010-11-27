@@ -34,6 +34,8 @@
 #include "regcache.h"
 #include "regset.h"
 #include "symfile.h"
+#include "language.h"
+#include "m3-lang.h"
 
 #include "gdb_assert.h"
 
@@ -430,12 +432,50 @@ amd64_classify (struct type *type, enum amd64_reg_class class[2])
      class.  */
   if ((code == TYPE_CODE_INT || code == TYPE_CODE_ENUM
        || code == TYPE_CODE_RANGE
-       || code == TYPE_CODE_PTR || code == TYPE_CODE_REF)
+       || code == TYPE_CODE_PTR || code == TYPE_CODE_REF
+#ifdef _LANG_m3
+       || code == TYPE_CODE_M3_BOOLEAN
+       || code == TYPE_CODE_M3_CHAR
+       || code == TYPE_CODE_M3_WIDECHAR
+       || code == TYPE_CODE_M3_INTEGER
+       || code == TYPE_CODE_M3_CARDINAL
+       || code == TYPE_CODE_M3_LONGINT
+       || code == TYPE_CODE_M3_LONGCARD
+       || code == TYPE_CODE_M3_SET /* Sets of len > 8 will be passed by
+                                       reference, and won't get to here.  */ 
+       || code == TYPE_CODE_M3_ENUM
+       || code == TYPE_CODE_M3_SUBRANGE
+       || code == TYPE_CODE_M3_OPEN_ARRAY
+       || code == TYPE_CODE_M3_OBJECT
+       || code == TYPE_CODE_M3_POINTER
+       || code == TYPE_CODE_M3_INDIRECT
+       || code == TYPE_CODE_M3_PROC
+       || code == TYPE_CODE_M3_METHOD
+       || code == TYPE_CODE_M3_OPAQUE
+       || code == TYPE_CODE_M3_ADDRESS
+       || code == TYPE_CODE_M3_REFANY
+       || code == TYPE_CODE_M3_TRANSIENT_REFANY
+       || code == TYPE_CODE_M3_ROOT
+       || code == TYPE_CODE_M3_TRANSIENT_ROOT
+       || code == TYPE_CODE_M3_UN_ROOT
+       || code == TYPE_CODE_M3_MUTEX
+       || code == TYPE_CODE_M3_TEXT
+       || code == TYPE_CODE_M3_NULL
+#endif
+      )
+
       && (len == 1 || len == 2 || len == 4 || len == 8))
     class[0] = AMD64_INTEGER;
 
   /* Arguments of types float, double and __m64 are in class SSE.  */
-  else if (code == TYPE_CODE_FLT && (len == 4 || len == 8))
+  else if (( code == TYPE_CODE_FLT 
+#ifdef _LANG_m3
+             || code == TYPE_CODE_M3_REAL
+             || code == TYPE_CODE_M3_LONGREAL 
+             || code == TYPE_CODE_M3_EXTENDED
+#endif
+            ) 
+           && (len == 4 || len == 8))
     /* FIXME: __m64 .  */
     class[0] = AMD64_SSE;
 
@@ -447,7 +487,15 @@ amd64_classify (struct type *type, enum amd64_reg_class class[2])
   /* The 64-bit mantissa of arguments of type long double belongs to
      class X87, the 16-bit exponent plus 6 bytes of padding belongs to
      class X87UP.  */
-  else if (code == TYPE_CODE_FLT && len == 16)
+  else if (( code == TYPE_CODE_FLT 
+#ifdef _LANG_m3
+             /* These probably won't ever happen, but it's more robust: */
+             || code == TYPE_CODE_M3_REAL
+             || code == TYPE_CODE_M3_LONGREAL 
+             || code == TYPE_CODE_M3_EXTENDED
+#endif
+           ) 
+          && len == 16)
     /* Class X87 and X87UP.  */
     class[0] = AMD64_X87, class[1] = AMD64_X87UP;
 
