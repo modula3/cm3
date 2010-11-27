@@ -4792,8 +4792,8 @@ binop (tree type, enum tree_code code)
 /* binary operation */
 {
   EXPR_REF (-2) = m3_build2 (code, type,
-                          m3_cast (type, EXPR_REF (-2)),
-                          m3_cast (type, EXPR_REF (-1)));
+                             m3_cast (type, EXPR_REF (-2)),
+                             m3_cast (type, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
