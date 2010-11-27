@@ -1437,13 +1437,14 @@ m3_val_print2 (
     case TYPE_CODE_M3_SET: {
       int n = 0;
       int j;
+      LONGEST one_longest = 1; 
       LONGEST lower, upper;
       struct type *target = TYPE_M3_SET_TARGET (type);
       int nelems = TYPE_NFIELDS (target);
       int en = (TYPE_CODE (target) == TYPE_CODE_M3_ENUM);
       int ch = (TYPE_CODE (target) == TYPE_CODE_M3_CHAR);
       int chs = (TYPE_CODE (target) == TYPE_CODE_M3_SUBRANGE)
-        && (TYPE_CODE (TYPE_M3_SUBRANGE_TARGET (target)) == TYPE_CODE_M3_CHAR);
+        && (TYPE_CODE (TYPE_M3_SET_TARGET (target)) == TYPE_CODE_M3_CHAR);
 
       m3_ordinal_bounds (target, &lower, &upper);
       fputs_filtered ("{", stream);
@@ -1452,7 +1453,7 @@ m3_val_print2 (
         val = m3_extract_ord (valaddr, bitpos, m3_target_integer_bit, FALSE);
         for (j = 0; j < m3_target_integer_bit; j++) {
           LONGEST ord = i * m3_target_integer_bit + j + lower;
-          if ((val & 1 << j) && (ord <= upper)) {
+          if ((val & one_longest << j) && (ord <= upper)) {
             if (n > 0) {
               fputs_filtered (", ", stream); }
             if (en) {
