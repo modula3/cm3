@@ -635,7 +635,7 @@ static PCSTR m3_indentstr(void)
 static void m3_outdent(void)
 /* This function reduces the tracing indent level. */
 {
-  m3_indent -= (m3_indent > 0 ? 4 : 0);
+  m3_indent -= (m3_indent > 0 ? 2 : 0);
 }
 
 static size_t sizet_add (size_t a, size_t b)
@@ -4800,7 +4800,8 @@ binop (tree type, enum tree_code code)
 static void
 binop_no_fold (tree type, enum tree_code code)
 /* binary operation, using build instead of fold_build (m3_build)
-   This is to avoid configure -enable-checking error for divide in test p240. */
+   This is to avoid configure -enable-checking error for divide in test p240.
+   see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46679 */
 {
   EXPR_REF (-2) = build2 (code, type,
                           m3_cast (type, EXPR_REF (-2)),
@@ -4935,6 +4936,8 @@ M3CG_HANDLER (CVT_FLOAT)
 
 M3CG_HANDLER (DIV)
 {
+  // This should be binop, but for:
+  // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46679
   binop_no_fold (type, FLOOR_DIV_EXPR);
 }
 
@@ -5953,17 +5956,17 @@ m3_parse_file (int)
 
   /* Setup indentation. */
 
-  m3_indent_op[M3CG_IMPORT_PROCEDURE] = 4;
-  m3_indent_op[M3CG_DECLARE_PROCTYPE] = 4;
-  m3_indent_op[M3CG_DECLARE_PROCEDURE] = 4;
-  m3_indent_op[M3CG_BEGIN_PROCEDURE] = 4;
-  m3_indent_op[M3CG_END_PROCEDURE] = -4;
-  m3_indent_op[M3CG_START_CALL_INDIRECT] = 4;
-  m3_indent_op[M3CG_START_CALL_DIRECT] = 4;
-  m3_indent_op[M3CG_CALL_INDIRECT] = -4;
-  m3_indent_op[M3CG_CALL_DIRECT] = -4;
-  m3_indent_op[M3CG_DECLARE_RECORD] = 4;
-  m3_indent_op[M3CG_DECLARE_ENUM] = 4;
+  m3_indent_op[M3CG_IMPORT_PROCEDURE] = 2;
+  m3_indent_op[M3CG_DECLARE_PROCTYPE] = 2;
+  m3_indent_op[M3CG_DECLARE_PROCEDURE] = 2;
+  m3_indent_op[M3CG_BEGIN_PROCEDURE] = 2;
+  m3_indent_op[M3CG_END_PROCEDURE] = -2;
+  m3_indent_op[M3CG_START_CALL_INDIRECT] = 2;
+  m3_indent_op[M3CG_START_CALL_DIRECT] = 2;
+  m3_indent_op[M3CG_CALL_INDIRECT] = -2;
+  m3_indent_op[M3CG_CALL_DIRECT] = -2;
+  m3_indent_op[M3CG_DECLARE_RECORD] = 2;
+  m3_indent_op[M3CG_DECLARE_ENUM] = 2;
 
   /* check the version stamp */
   INT64 i = get_int ();
