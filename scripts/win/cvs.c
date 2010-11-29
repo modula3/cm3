@@ -48,3 +48,6 @@ void Entry(void)
     }
     ExitProcess(ExitCode);
 }
+
+int main() { Entry(); }
+
