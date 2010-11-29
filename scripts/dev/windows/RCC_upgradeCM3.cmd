@@ -10,6 +10,7 @@ REM v1.3, 10/29/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
 REM v1.4, 01/13/2010, R.Coleburn, skip m3core, libm3, and mklib in 1st phase; using revised do-cm3.cmd.  Force argument keywords to be prefixed by "-".  Pass thru control args to do-cm3.cmd.  Add -all argument keyword.
 REM v1.5, 01/15/2010, R.Coleburn, add extra checks at end of each stage to ensure new cm3.exe was produced and copied to target bin folder.
 REM v1.6, 03/11/2010, R.Coleburn, add feature to search PATH env var when trying to locate root of cm3 installation
+REM v1.7, 11/28/2010, R.Coleburn, add "-skip m3cc" to all build stages because this package isn't used on Windows
 REM ===========================================================================
 
 :Init
@@ -74,7 +75,7 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.6, 03/11/2010, Randy Coleburn
+echo  RCC_upgradeCM3, v1.7, 11/28/2010, Randy Coleburn
 echo =============== ---------------------------------
 echo.
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
@@ -229,28 +230,28 @@ echo ---------------------------------------------------------------------------
 :SkipCFGlist
 echo.
 echo ========================================================================
-echo STAGE-1:  BUILDING "front", EXCEPT FOR "m3core", "libm3", and "mklib"
+echo STAGE-1:  BUILDING "front", EXCEPT FOR "m3core", "libm3", "m3cc", and "mklib"
 echo ========================================================================
 echo.
-call %_cm3_DO% front -skip m3core -skip libm3 -skip mklib -realclean -clean -build -ship %_z_ctrlArgs%
+call %_cm3_DO% front -skip m3core -skip libm3 -skip mklib -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 call :FN_FinishStage
 if "%_cm3_CM3Failure%"=="TRUE" goto END
 echo.
 echo ========================================================================
-echo STAGE-2:  REPEATING BUILD, but this time ALL of "front"
+echo STAGE-2:  REPEATING BUILD, but this time ALL of "front", except "m3cc"
 echo ========================================================================
 echo.
-call %_cm3_DO% front -realclean -clean -build -ship %_z_ctrlArgs%
+call %_cm3_DO% front -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 call :FN_FinishStage
 if "%_cm3_CM3Failure%"=="TRUE" goto END
 echo.
 echo ========================================================================
-echo STAGE-3:  BUILDING DISTRIBUTION "%_z_Stage3%"
+echo STAGE-3:  BUILDING DISTRIBUTION "%_z_Stage3%", except "m3cc"
 echo ========================================================================
 echo.
-call %_cm3_DO% %_z_Stage3% -realclean -clean -build -ship %_z_ctrlArgs%
+call %_cm3_DO% %_z_Stage3% -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 call :FN_FinishStage
 if "%_cm3_CM3Failure%"=="TRUE" goto END
