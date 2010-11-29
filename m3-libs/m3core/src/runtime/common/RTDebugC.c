@@ -1,6 +1,7 @@
 #ifdef _WIN32
 
 __declspec(dllimport) int __stdcall IsDebuggerPresent(void);
+__declspec(dllimport) void __stdcall DebugBreak(void);
 
 int __cdecl RTDebug__IsDebuggerPresent(void)
 {
