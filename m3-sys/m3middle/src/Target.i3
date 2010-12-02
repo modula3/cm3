@@ -330,9 +330,6 @@ CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
 VAR (*CONST*)
-  Set_grain : CARDINAL; (* allocation unit for large sets *)
-  Set_align : CARDINAL; (* alignment for large sets *)
-
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
 

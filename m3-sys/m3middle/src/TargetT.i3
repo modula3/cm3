@@ -38,8 +38,6 @@ TYPE T = RECORD
   defaultCall: CallingConvention := NIL;
   atomic_lock_free: ARRAY [CGType.Word8 .. CGType.Addr] OF BOOLEAN;
     (* TRUE => platform has lock-free atomic primitives for this type *)
-  set_grain : CARDINAL; (* allocation unit for large sets *)
-  set_align : CARDINAL; (* alignment for large sets *)
   little_endian : BOOLEAN;
     (* TRUE => byte[0] of an integer contains its least-significant bits *)
   PCC_bitfield_type_matters: BOOLEAN;
