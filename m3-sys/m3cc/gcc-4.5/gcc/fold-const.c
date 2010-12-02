@@ -12179,6 +12179,7 @@ fold_binary_loc (location_t loc,
 	 At one time others generated faster code, it's not clear if they do
 	 after the last round to changes to the DIV code in expmed.c.  */
       if ((code == CEIL_DIV_EXPR || code == FLOOR_DIV_EXPR)
+	  && arg0 == op0 && arg1 == op1
 	  && multiple_of_p (type, arg0, arg1))
 	return fold_build2_loc (loc, EXACT_DIV_EXPR, type, arg0, arg1);
 
