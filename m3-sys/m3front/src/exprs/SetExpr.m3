@@ -824,7 +824,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
 
 PROCEDURE Init () =
   BEGIN
-    Grain := MAX (Target.Integer.size, Target.Set_grain);
+    Grain := Target.Integer.size;
     TWord.Not (TInt.Zero, full);
     TWord.And (full, Target.Word.max, full);
     FOR i := 0 TO Grain - 1 DO
