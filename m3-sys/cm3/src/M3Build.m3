@@ -1889,6 +1889,12 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 (*---------------------------------------------- internal export utilities --*)
 
 PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
+(* This should "rewritten" as follows:
+   for each foo => bar substitution:
+     substitute /foo/ => /bar/ anywhere in string
+     substitute /foo => /bar at end of string
+     substitute foo/ => bar/ at start of string
+   This could be deemed TextUtils.SubstituteWithSeparator. *) 
   BEGIN
     res := TextUtils.Substitute(res, "\\", "/");
     res := TextUtils.Substitute(res, t.bin_install_alt, "\" & BIN_INSTALL & \"");
