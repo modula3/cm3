@@ -426,10 +426,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     FixI (Void, max_align);
     FixI (Char, max_align);
 
-    (* sets are always treated as an array of integers *)    
-    Set_grain := Integer.size;
-    Set_align := Integer.align;
-
     (* fix the alignments *)
     FOR i := FIRST (Alignments) TO LAST (Alignments) DO
       <* ASSERT Alignments[i] = MIN (Alignments[i], max_align) *>
