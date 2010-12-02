@@ -411,6 +411,9 @@ Configure = Configure & " -enable-languages=m3cg"
 %if not {"FreeBSD4","I386_FREEBSD","PPC_DARWIN"} contains HOST
 %  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
 %end
+if {"I386_DARWIN","AMD64_DARWIN","AMD64_LINUX","LINUXLIBC6","I386_LINUX","I386_OPENBSD"} contains HOST
+  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree,types"
+end
 % These are compatible with just building m3cg, but user might
 % build gcc/cc1/libgcc here.
 Configure = Configure & " -disable-fixincludes"

@@ -3238,7 +3238,6 @@ m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T, tree dst_t, m3_type 
 {
   gcc_assert ((offset % BITS_PER_UNIT) == 0);
   m3_deduce_field_reference ("m3_store", v, offset, dst_t, dst_T);
-  mark_address_taken (v);
   if (offset || m3_type_mismatch (TREE_TYPE (v),  dst_t))
   {
     if (GCC42 || IS_REAL_TYPE (src_T) || IS_REAL_TYPE (dst_T))
@@ -4716,7 +4715,6 @@ M3CG_HANDLER (LOAD_INDIRECT)
   tree v = EXPR_REF (-1);
 
   /* gcc_assert (offset >= 0); */
-  /* mark_address_taken (v); */
   if (offset >= 0)
     m3_deduce_field_reference ("m3cg_load_indirect", v, (UINT64)offset * BITS_PER_UNIT, src_t, src_T);
   if (offset)
@@ -4739,7 +4737,6 @@ M3CG_HANDLER (STORE_INDIRECT)
 {
   tree v = EXPR_REF (-2);
 
-  /* mark_address_taken (v); */
   m3_deduce_field_reference ("m3cg_store_indirect", v, offset * BITS_PER_UNIT, src_t, src_T);
   if (offset)
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (offset));
@@ -4798,18 +4795,6 @@ binop (tree type, enum tree_code code)
 }
 
 static void
-binop_no_fold (tree type, enum tree_code code)
-/* binary operation, using build instead of fold_build (m3_build)
-   This is to avoid configure -enable-checking error for divide in test p240.
-   see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46679 */
-{
-  EXPR_REF (-2) = build2 (code, type,
-                          m3_cast (type, EXPR_REF (-2)),
-                          m3_cast (type, EXPR_REF (-1)));
-  EXPR_POP ();
-}
-
-static void
 unop (tree type, enum tree_code code)
 /* unary operation */
 {
@@ -4852,8 +4837,8 @@ m3_minmax (tree type, int min)
   tree x[2] = { m3_cast (type, EXPR_REF (-1)),
                 m3_cast (type, EXPR_REF (-2)) };
   EXPR_REF (-2) = m3_build3 (COND_EXPR, type,
-                             m3_build2 (LE_EXPR, boolean_type_node, x[!min], x[min]),
-                             x[0], x[1]);
+                             m3_build2 (LE_EXPR, boolean_type_node, x[!min],
+                             x[min]), x[0], x[1]);
   EXPR_POP ();
 }
 
@@ -4936,9 +4921,7 @@ M3CG_HANDLER (CVT_FLOAT)
 
 M3CG_HANDLER (DIV)
 {
-  // This should be binop, but for:
-  // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46679
-  binop_no_fold (type, FLOOR_DIV_EXPR);
+  binop (type, FLOOR_DIV_EXPR);
 }
 
 M3CG_HANDLER (MOD)
