@@ -1679,23 +1679,7 @@ bool
 estimated_loop_iterations (struct loop *loop, bool conservative,
 			   double_int *nit)
 {
-  estimate_numbers_of_iterations_loop (loop);
-  if (conservative)
-    {
-      if (!loop->any_upper_bound)
-	return false;
-
-      *nit = loop->nb_iterations_upper_bound;
-    }
-  else
-    {
-      if (!loop->any_estimate)
-	return false;
-
-      *nit = loop->nb_iterations_estimate;
-    }
-
-  return true;
+  return false;
 }
 
 /* Similar to estimated_loop_iterations, but returns the estimate only
@@ -1705,17 +1689,7 @@ estimated_loop_iterations (struct loop *loop, bool conservative,
 HOST_WIDE_INT
 estimated_loop_iterations_int (struct loop *loop, bool conservative)
 {
-  double_int nit;
-  HOST_WIDE_INT hwi_nit;
-
-  if (!estimated_loop_iterations (loop, conservative, &nit))
-    return -1;
-
-  if (!double_int_fits_in_shwi_p (nit))
-    return -1;
-  hwi_nit = double_int_to_shwi (nit);
-
-  return hwi_nit < 0 ? -1 : hwi_nit;
+  return -1;
 }
 
 /* Similar to estimated_loop_iterations, but returns the estimate as a tree,
@@ -1726,17 +1700,7 @@ estimated_loop_iterations_int (struct loop *loop, bool conservative)
 static tree
 estimated_loop_iterations_tree (struct loop *loop, bool conservative)
 {
-  double_int nit;
-  tree type;
-
-  if (!estimated_loop_iterations (loop, conservative, &nit))
-    return chrec_dont_know;
-
-  type = lang_hooks.types.type_for_size (INT_TYPE_SIZE, true);
-  if (!double_int_fits_to_tree_p (type, nit))
-    return chrec_dont_know;
-
-  return double_int_to_tree (type, nit);
+  return chrec_dont_know;
 }
 
 /* Analyze a SIV (Single Index Variable) subscript where CHREC_A is a

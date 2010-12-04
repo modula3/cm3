@@ -7900,47 +7900,6 @@ retry:
   return !fit_double_type (dc.low, dc.high, &dc.low, &dc.high, type);
 }
 
-/* Stores bounds of an integer TYPE in MIN and MAX.  If TYPE has non-constant
-   bounds or is a POINTER_TYPE, the maximum and/or minimum values that can be
-   represented (assuming two's-complement arithmetic) within the bit
-   precision of the type are returned instead.  */
-
-void
-get_type_static_bounds (const_tree type, mpz_t min, mpz_t max)
-{
-  if (!POINTER_TYPE_P (type) && TYPE_MIN_VALUE (type)
-      && TREE_CODE (TYPE_MIN_VALUE (type)) == INTEGER_CST)
-    mpz_set_double_int (min, tree_to_double_int (TYPE_MIN_VALUE (type)),
-			TYPE_UNSIGNED (type));
-  else
-    {
-      if (TYPE_UNSIGNED (type))
-	mpz_set_ui (min, 0);
-      else
-	{
-	  double_int mn;
-	  mn = double_int_mask (TYPE_PRECISION (type) - 1);
-	  mn = double_int_sext (double_int_add (mn, double_int_one),
-				TYPE_PRECISION (type));
-	  mpz_set_double_int (min, mn, false);
-	}
-    }
-
-  if (!POINTER_TYPE_P (type) && TYPE_MAX_VALUE (type)
-      && TREE_CODE (TYPE_MAX_VALUE (type)) == INTEGER_CST)
-    mpz_set_double_int (max, tree_to_double_int (TYPE_MAX_VALUE (type)),
-			TYPE_UNSIGNED (type));
-  else
-    {
-      if (TYPE_UNSIGNED (type))
-	mpz_set_double_int (max, double_int_mask (TYPE_PRECISION (type)),
-			    true);
-      else
-	mpz_set_double_int (max, double_int_mask (TYPE_PRECISION (type) - 1),
-			    true);
-    }
-}
-
 /* Return true if VAR is an automatic variable defined in function FN.  */
 
 bool

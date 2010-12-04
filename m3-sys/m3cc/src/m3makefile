@@ -231,9 +231,6 @@ if GCC45
   Defines = "#define GCC45 1\n"
   SourceDir = "../gcc-4.5"
   m3gty = "m3gty45.h"
-  foreach a in ["gmp"]
-    link_file("../gcc/" & a, SourceDir & "/" & a)
-  end
 end
 if GCC42 or GCC45
   fs_mkdir(SourceDir & "/gcc/m3cg")
@@ -498,7 +495,7 @@ end
 %
 if GCC45
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
-              & " all-libiberty all-gmp"
+              & " all-libiberty"
               % & " | tee -a " & Log
               ])
 else
@@ -508,7 +505,7 @@ if GCC42
               % & " | tee -a " & Log
               ])
 else
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp"
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE
               & " all-build-libiberty all-libiberty"
               % & " | tee -a " & Log
               ])

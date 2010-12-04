@@ -149,10 +149,7 @@ struct gimple_opt_pass pass_lim =
 static unsigned int
 tree_ssa_loop_unswitch (void)
 {
-  if (number_of_loops () <= 1)
-    return 0;
-
-  return tree_ssa_unswitch_loops ();
+  return 0;
 }
 
 static bool
@@ -444,7 +441,6 @@ tree_ssa_loop_bounds (void)
   if (number_of_loops () <= 1)
     return 0;
 
-  estimate_numbers_of_iterations ();
   scev_reset ();
   return 0;
 }
