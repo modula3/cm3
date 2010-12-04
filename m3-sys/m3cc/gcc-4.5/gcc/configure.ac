@@ -3229,13 +3229,6 @@ foo:	nop
 	# configure if LTO is enabled but the assembler does not support it.
 	gcc_GAS_CHECK_FEATURE([.section with alignment], gcc_cv_as_section_has_align,
 	  [2,20,1],-fatal-warnings,[.section lto_test,"dr0"])
-	if test x$gcc_cv_as_section_has_align != xyes; then
-	  case ",$enable_languages," in
-	    *,lto,*)
-	      AC_MSG_WARN([LTO for $target requires binutils >= 2.20.1, but version found appears insufficient; LTO will not work until binutils is upgraded.])
-	      ;;
-	  esac
-	fi
 	;;
     esac
 
@@ -4340,25 +4333,6 @@ changequote([,])dnl
 	all_compilers="$all_compilers $compilers"
 	all_outputs="$all_outputs $outputs"
 	all_gtfiles="$all_gtfiles [[$subdir]] $gtfiles"
-        case ",$enable_languages," in
-        	*,lto,*)
-		    AC_DEFINE(ENABLE_LTO, 1, [Define to enable LTO support.])
-		    enable_lto=yes
-		    AC_SUBST(enable_lto)
-		    # LTO needs to speak the platform's object file format, and has a
-		    # number of implementations of the required binary file access APIs.
-		    # ELF is the most common, and default.  We only link libelf if ELF
-		    # is indeed the selected format.
-		    LTO_BINARY_READER=${lto_binary_reader}
-		    LTO_USE_LIBELF=-lelf
-		    if test "x$lto_binary_reader" != "xlto-elf" ; then
-		      LTO_USE_LIBELF=
-		    fi
-		    AC_SUBST(LTO_BINARY_READER)
-		    AC_SUBST(LTO_USE_LIBELF)
-		    ;;
-		*) ;;
-	esac
 done
 
 # Pick up gtfiles for c
@@ -4513,18 +4487,6 @@ else
     echo "Links are now set up to build (on ${build}) a cross-compiler" 1>&2
     echo " from ${host} to ${target}." 1>&2
   fi
-fi
-
-AC_ARG_VAR(GMPLIBS,[How to link GMP])
-AC_ARG_VAR(GMPINC,[How to find GMP include files])
-
-AC_ARG_VAR(PPLLIBS,[How to link PPL])
-AC_ARG_VAR(PPLINC,[How to find PPL include files])
-
-AC_ARG_VAR(CLOOGLIBS,[How to link CLOOG])
-AC_ARG_VAR(CLOOGINC,[How to find CLOOG include files])
-if test "x${CLOOGLIBS}" != "x" ; then 
-   AC_DEFINE(HAVE_cloog, 1, [Define if cloog is in use.])
 fi
 
 AC_ARG_VAR(LIBELFLIBS,[How to link libelf])

@@ -1,5 +1,5 @@
 /* Modula-3: modified
-             remove/reduce gmp/mpfr/mpc dependencies */
+             remove gmp/mpfr/mpc dependencies */
 
 /* Definitions of floating-point access for GNU compiler.
    Copyright (C) 1989, 1991, 1994, 1996, 1997, 1998, 1999,
@@ -26,14 +26,7 @@
 #define GCC_REAL_H
 
 #ifndef GENERATOR_FILE
-#include <gmp.h>
-#if 0 /* Modula-3 gmp/mpfr/mpc reduction */
-#include <mpfr.h>
-#include <mpc.h>
-extern tree do_mpc_arg2 (tree, tree, tree, int, int (*)(mpc_ptr, mpc_srcptr, mpc_srcptr, mpc_rnd_t));
-#else
 #define do_mpc_arg2(a, b, c, d, e) NULL_TREE
-#endif
 #endif
 #include "machmode.h"
 
@@ -506,16 +499,6 @@ extern void real_round (REAL_VALUE_TYPE *, enum machine_mode,
 
 /* Set the sign of R to the sign of X.  */
 extern void real_copysign (REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *);
-
-#ifndef GENERATOR_FILE
-/* Convert between MPFR and REAL_VALUE_TYPE.  The caller is
-   responsible for initializing and clearing the MPFR parameter.  */
-
-#if 0 /* Modula-3 gmp/mpfr/mpc reduction */
-extern void real_from_mpfr (REAL_VALUE_TYPE *, mpfr_srcptr, tree, mp_rnd_t);
-extern void mpfr_from_real (mpfr_ptr, const REAL_VALUE_TYPE *, mp_rnd_t);
-#endif
-#endif
 
 /* Check whether the real constant value given is an integer.  */
 extern bool real_isinteger (const REAL_VALUE_TYPE *c, enum machine_mode mode);

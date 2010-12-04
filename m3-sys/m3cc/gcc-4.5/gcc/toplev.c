@@ -1,4 +1,4 @@
-/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+/* Modula-3: remove gmp/mpfr/mpc dependencies */
 
 /* Top level of GCC compilers (cc1, cc1plus, etc.)
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
@@ -1218,23 +1218,13 @@ const char *const debug_type_names[] =
 void
 print_version (FILE *file, const char *indent)
 {
-  static const char fmt1[] =
 #ifdef __GNUC__
-    N_("%s%s%s %sversion %s (%s)\n%s\tcompiled by GNU C version %s, ")
+  static const char fmt1[] = "%s%s%s %sversion %s (%s)\n%s\tcompiled by GNU C version %s, ";
 #else
-    N_("%s%s%s %sversion %s (%s) compiled by CC, ")
+  static const char fmt1[] = "%s%s%s %sversion %s (%s) compiled by CC, ";
 #endif
-    ;
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-  static const char fmt2[] =
-    N_("GMP version %s, MPFR version %s, MPC version %s\n");
-#else
-  static const char fmt2[] = "GMP version %s, MPFR/MPC dependency removed\n";
-#endif
-  static const char fmt3[] =
-    N_("%s%swarning: %s header version %s differs from library version %s.\n");
-  static const char fmt4[] =
-    N_("%s%sGGC heuristics: --param ggc-min-expand=%d --param ggc-min-heapsize=%d\n");
+  static const char fmt2[] = "GMP/MPFR/MPC dependency removed\n";
+  static const char fmt4[] = "%s%sGGC heuristics: --param ggc-min-expand=%d --param ggc-min-heapsize=%d\n";
 #ifndef __VERSION__
 #define __VERSION__ "[?]"
 #endif
@@ -1244,46 +1234,7 @@ print_version (FILE *file, const char *indent)
 	   lang_hooks.name, pkgversion_string, version_string, TARGET_NAME,
 	   indent, __VERSION__);
 
-  /* We need to stringify the GMP macro values.  Ugh, gmp_version has
-     two string formats, "i.j.k" and "i.j" when k is zero.  As of
-     gmp-4.3.0, GMP always uses the 3 number format.  */
-#define GCC_GMP_STRINGIFY_VERSION3(X) #X
-#define GCC_GMP_STRINGIFY_VERSION2(X) GCC_GMP_STRINGIFY_VERSION3(X)
-#define GCC_GMP_VERSION_NUM(X,Y,Z) (((X) << 16L) | ((Y) << 8) | (Z))
-#define GCC_GMP_VERSION \
-  GCC_GMP_VERSION_NUM(__GNU_MP_VERSION, __GNU_MP_VERSION_MINOR, __GNU_MP_VERSION_PATCHLEVEL)
-#if GCC_GMP_VERSION < GCC_GMP_VERSION_NUM(4,3,0) && __GNU_MP_VERSION_PATCHLEVEL == 0
-#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR)
-#else
-#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_PATCHLEVEL)
-#endif
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-  fprintf (file,
-	   file == stderr ? _(fmt2) : fmt2,
-	   GCC_GMP_STRINGIFY_VERSION, MPFR_VERSION_STRING, MPC_VERSION_STRING);
-#else
-  fprintf (file, fmt2, GCC_GMP_STRINGIFY_VERSION);
-#endif
-  if (strcmp (GCC_GMP_STRINGIFY_VERSION, gmp_version))
-    fprintf (file,
-	     file == stderr ? _(fmt3) : fmt3,
-	     indent, *indent != 0 ? " " : "",
-	     "GMP", GCC_GMP_STRINGIFY_VERSION, gmp_version);
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-  if (strcmp (MPFR_VERSION_STRING, mpfr_get_version ()))
-    fprintf (file,
-	     file == stderr ? _(fmt3) : fmt3,
-	     indent, *indent != 0 ? " " : "",
-	     "MPFR", MPFR_VERSION_STRING, mpfr_get_version ());
-  if (strcmp (MPC_VERSION_STRING, mpc_get_version ()))
-    fprintf (file,
-	     file == stderr ? _(fmt3) : fmt3,
-	     indent, *indent != 0 ? " " : "",
-	     "MPC", MPC_VERSION_STRING, mpc_get_version ());
-#endif
+  fprintf (file, fmt2);
   fprintf (file,
 	   file == stderr ? _(fmt4) : fmt4,
 	   indent, *indent != 0 ? " " : "",
@@ -1855,7 +1806,6 @@ process_options (void)
   else
     aux_base_name = "gccaux";
 
-#ifndef HAVE_cloog
   if (flag_graphite
       || flag_loop_block
       || flag_loop_interchange
@@ -1863,7 +1813,6 @@ process_options (void)
       || flag_graphite_identity
       || flag_loop_parallelize_all)
     sorry ("Graphite loop optimizations cannot be used");
-#endif
 
   /* Unrolling all loops implies that standard loop unrolling must also
      be done.  */
