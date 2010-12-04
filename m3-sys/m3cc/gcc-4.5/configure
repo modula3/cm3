@@ -680,16 +680,10 @@ libelflibs
 EGREP
 GREP
 CPP
-clooginc
-clooglibs
-pplinc
-ppllibs
 poststage1_ldflags
 poststage1_libs
 stage1_libs
 stage1_ldflags
-gmpinc
-gmplibs
 do_compare
 GNATMAKE
 GNATBIND
@@ -780,27 +774,12 @@ enable_gold
 enable_libada
 enable_libssp
 enable_build_with_cxx
-with_gmp_dir
-with_gmp
-with_gmp_include
-with_gmp_lib
 with_host_libstdcxx
 with_stage1_ldflags
 with_stage1_libs
 with_boot_libs
 with_boot_ldflags
-with_ppl
-with_ppl_include
-with_ppl_lib
-enable_ppl_version_check
-with_cloog
-with_cloog_include
-with_cloog_lib
-enable_cloog_version_check
 enable_lto
-with_libelf
-with_libelf_include
-with_libelf_lib
 enable_stage1_languages
 enable_objc_gc
 with_build_sysroot
@@ -1477,9 +1456,6 @@ Optional Features:
   --enable-libada         build libada directory
   --enable-libssp         build libssp directory
   --enable-build-with-cxx build with C++ compiler instead of C compiler
-  --disable-ppl-version-check    disable check for PPL version
-  --disable-cloog-version-check  disable check for CLooG version
-  --enable-lto            enable link time optimization support
   --enable-stage1-languages[=all]   choose additional languages to build during
                           stage1.  Mostly useful for compiler development.
   --enable-objc-gc        enable use of Boehm's garbage collector with the
@@ -1499,33 +1475,12 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-build-libsubdir=DIR  Directory where to find libraries for build system
-  --with-gmp-dir=PATH     this option has been REMOVED
-  --with-gmp=PATH         specify prefix directory for the installed GMP package.
-                          Equivalent to --with-gmp-include=PATH/include
-                          plus --with-gmp-lib=PATH/lib
-  --with-gmp-include=PATH specify directory for installed GMP include files
-  --with-gmp-lib=PATH     specify directory for the installed GMP library
   --with-host-libstdcxx=L Use linker arguments L to link with libstdc++
                           when linking with PPL
   --with-stage1-ldflags=FLAGS Linker flags for stage1
   -with-stage1-libs=LIBS      Libraries for stage1
   --with-boot-libs=LIBS     Libraries for stage2 and later
   --with-boot-ldflags=FLAGS Linker flags for stage2 and later
-  --with-ppl=PATH         Specify prefix directory for the installed PPL package
-                          Equivalent to --with-ppl-include=PATH/include
-                          plus --with-ppl-lib=PATH/lib
-  --with-ppl-include=PATH Specify directory for installed PPL include files
-  --with-ppl-lib=PATH     Specify the directory for the installed PPL library
-  --with-cloog=PATH       Specify prefix directory for the installed CLooG-PPL package
-                          Equivalent to --with-cloog-include=PATH/include
-                          plus --with-cloog-lib=PATH/lib
-  --with-cloog-include=PATH Specify directory for installed CLooG include files
-  --with-cloog-lib=PATH   Specify the directory for the installed CLooG library
-  --with-libelf=PATH       Specify prefix directory for the installed libelf package
-                          Equivalent to --with-libelf-include=PATH/include
-                          plus --with-libelf-lib=PATH/lib
-  --with-libelf-include=PATH Specify directory for installed libelf include files
-  --with-libelf-lib=PATH   Specify the directory for the installed libelf library
   --with-build-sysroot=SYSROOT
                           use sysroot as the system root during the build
   --with-debug-prefix-map='A=B C=D ...'
@@ -2871,7 +2826,7 @@ build_tools="build-texinfo build-byacc build-flex build-bison build-m4 build-fix
 
 # these libraries are used by various programs built for the host environment
 #
-host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui libcpp libdecnumber gmp ppl cloog libelf libiconv"
+host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui libcpp libdecnumber libiconv"
 
 # these tools are built for the host environment
 # Note, the powerpc-eabi build depends on sim occurring before gdb in order to
@@ -5292,139 +5247,6 @@ _ACEOF
 
 
 
-# Check for GMP
-gmplibs="-lgmp"
-gmpinc=
-have_gmp=no
-
-# Specify a location for gmp
-
-# Check whether --with-gmp-dir was given.
-if test "${with_gmp_dir+set}" = set; then :
-  withval=$with_gmp_dir; as_fn_error "The --with-gmp-dir=PATH option has been removed.
-Use --with-gmp=PATH or --with-gmp-include=PATH plus --with-gmp-lib=PATH" "$LINENO" 5
-fi
-
-
-
-# Check whether --with-gmp was given.
-if test "${with_gmp+set}" = set; then :
-  withval=$with_gmp;
-fi
-
-
-# Check whether --with-gmp_include was given.
-if test "${with_gmp_include+set}" = set; then :
-  withval=$with_gmp_include;
-fi
-
-
-# Check whether --with-gmp_lib was given.
-if test "${with_gmp_lib+set}" = set; then :
-  withval=$with_gmp_lib;
-fi
-
-
-
-if test "x$with_gmp" != x; then
-  gmplibs="-L$with_gmp/lib $gmplibs"
-  gmpinc="-I$with_gmp/include $gmpinc"
-fi
-if test "x$with_gmp_include" != x; then
-  gmpinc="-I$with_gmp_include $gmpinc"
-fi
-if test "x$with_gmp_lib" != x; then
-  gmplibs="-L$with_gmp_lib $gmplibs"
-fi
-if test "x$with_gmp$with_gmp_include$with_gmp_lib" = x && test -d ${srcdir}/gmp; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$r/$(HOST_SUBDIR)/gmp -I$$s/gmp '"$gmpinc"
-  # Do not test the gmp version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
-
-if test -d ${srcdir}/gcc && test "x$have_gmp" = xno; then
-  have_gmp=yes
-  saved_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $gmpinc"
-  # Check for the recommended and required versions of GMP.
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the correct version of gmp.h" >&5
-$as_echo_n "checking for the correct version of gmp.h... " >&6; }
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include "gmp.h"
-int
-main ()
-{
-
-  #define GCC_GMP_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
-  #define GCC_GMP_VERSION GCC_GMP_VERSION_NUM(__GNU_MP_VERSION,__GNU_MP_VERSION_MINOR,__GNU_MP_VERSION_PATCHLEVEL)
-  #if GCC_GMP_VERSION < GCC_GMP_VERSION_NUM(4,2,0)
-  choke me
-  #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <gmp.h>
-int
-main ()
-{
-
-  #define GCC_GMP_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
-  #define GCC_GMP_VERSION GCC_GMP_VERSION_NUM(__GNU_MP_VERSION,__GNU_MP_VERSION_MINOR,__GNU_MP_VERSION_PATCHLEVEL)
-  #if GCC_GMP_VERSION < GCC_GMP_VERSION_NUM(4,3,2)
-  choke me
-  #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: buggy but acceptable" >&5
-$as_echo "buggy but acceptable" >&6; }
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }; have_gmp=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-
-  CFLAGS="$saved_CFLAGS"
-
-# The library versions listed in the error message below should match
-# the HARD-minimums enforced above.
-  if test x$have_gmp != xyes; then
-    as_fn_error "Building GCC requires GMP 4.2+.
-Try the --with-gmp option to specify
-their locations.  Source code for these libraries can be found at
-their respective hosting sites as well as at
-ftp://gcc.gnu.org/pub/gcc/infrastructure/.  See also
-http://gcc.gnu.org/install/prerequisites.html for additional info.  If
-you obtained GMP from a vendor distribution package,
-make sure that you have installed both the libraries and the header
-files.  They may be located in separate packages." "$LINENO" 5
-  fi
-fi
-
-# Flags needed for both GMP.
-
-
-
 # Allow host libstdc++ to be specified for static linking with PPL.
 
 # Check whether --with-host-libstdcxx was given.
@@ -5509,209 +5331,9 @@ fi
 # Check for PPL
 ppl_major_version=0
 ppl_minor_version=10
-ppllibs=" -lppl_c -lppl -lgmpxx"
+ppllibs=
 pplinc=
-
-
-# Check whether --with-ppl was given.
-if test "${with_ppl+set}" = set; then :
-  withval=$with_ppl;
-fi
-
-
-# Check whether --with-ppl_include was given.
-if test "${with_ppl_include+set}" = set; then :
-  withval=$with_ppl_include;
-fi
-
-
-# Check whether --with-ppl_lib was given.
-if test "${with_ppl_lib+set}" = set; then :
-  withval=$with_ppl_lib;
-fi
-
-
-case $with_ppl in
-  no)
-    ppllibs=
-    ;;
-  "" | yes)
-    ;;
-  *)
-    ppllibs="-L$with_ppl/lib -lppl_c -lppl -lgmpxx"
-    pplinc="-I$with_ppl/include $pplinc"
-    ;;
-esac
-if test "x$with_ppl_include" != x; then
-  pplinc="-I$with_ppl_include $pplinc"
-fi
-if test "x$with_ppl_lib" != x; then
-  ppllibs="-L$with_ppl_lib -lppl_c -lppl -lgmpxx"
-fi
-if test "x$with_ppl$with_ppl_include$with_ppl_lib" = x && test -d ${srcdir}/ppl; then
-  ppllibs='-L$$r/$(HOST_SUBDIR)/ppl/interfaces/C/'"$lt_cv_objdir"' -L$$r/$(HOST_SUBDIR)/ppl/src/'"$lt_cv_objdir"' -lppl_c -lppl -lgmpxx '
-  pplinc='-I$$r/$(HOST_SUBDIR)/ppl/src -I$$r/$(HOST_SUBDIR)/ppl/interfaces/C '
-  enable_ppl_version_check=no
-fi
-
-# Check whether --enable-ppl-version-check was given.
-if test "${enable_ppl_version_check+set}" = set; then :
-  enableval=$enable_ppl_version_check; ENABLE_PPL_CHECK=$enableval
-else
-  ENABLE_PPL_CHECK=yes
-fi
-
-
-if test "x$with_ppl" != "xno" -a "${ENABLE_PPL_CHECK}" = "yes"; then
-  saved_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $pplinc $gmpinc"
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for version $ppl_major_version.$ppl_minor_version of PPL" >&5
-$as_echo_n "checking for version $ppl_major_version.$ppl_minor_version of PPL... " >&6; }
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include "ppl_c.h"
-int
-main ()
-{
-
-  #if PPL_VERSION_MAJOR != $ppl_major_version || PPL_VERSION_MINOR != $ppl_minor_version
-  choke me
-  #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }; ppllibs= ; pplinc= ; with_ppl=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-  CFLAGS="$saved_CFLAGS"
-fi
-
-# Flags needed for PPL
-
-
-
-
-# Check for CLOOG
-clooglibs=" -lcloog "
-clooginc=" -DCLOOG_PPL_BACKEND "
-
-
-# Check whether --with-cloog was given.
-if test "${with_cloog+set}" = set; then :
-  withval=$with_cloog;
-fi
-
-
-# Check whether --with-cloog_include was given.
-if test "${with_cloog_include+set}" = set; then :
-  withval=$with_cloog_include;
-fi
-
-
-# Check whether --with-cloog_lib was given.
-if test "${with_cloog_lib+set}" = set; then :
-  withval=$with_cloog_lib;
-fi
-
-
-if test "x$with_ppl" = "xno"; then
-  with_cloog=no
-fi
-
-case $with_cloog in
-  no)
-    clooglibs=
-    clooginc=
-    ;;
-  "" | yes)
-    ;;
-  *)
-    clooglibs="-L$with_cloog/lib -lcloog"
-    clooginc="-I$with_cloog/include -DCLOOG_PPL_BACKEND "
-    ;;
-esac
-if test "x$with_cloog_include" != x; then
-  clooginc="-I$with_cloog_include -DCLOOG_PPL_BACKEND "
-fi
-if test "x$with_cloog_lib" != x; then
-  clooglibs="-L$with_cloog_lib -lcloog"
-fi
-if test "x$with_cloog$with_cloog_include$with_cloog_lib" = x && test -d ${srcdir}/cloog; then
-  clooglibs='-L$$r/$(HOST_SUBDIR)/cloog/'"$lt_cv_objdir"' -lcloog '
-  clooginc='-I$$r/$(HOST_SUBDIR)/cloog/include -I$$s/cloog/include -DCLOOG_PPL_BACKEND '
-  enable_cloog_version_check=no
-fi
-
-# Check whether --enable-cloog-version-check was given.
-if test "${enable_cloog_version_check+set}" = set; then :
-  enableval=$enable_cloog_version_check; ENABLE_CLOOG_CHECK=$enableval
-else
-  ENABLE_CLOOG_CHECK=yes
-fi
-
-
-if test "x$with_cloog" != "xno" -a "${ENABLE_CLOOG_CHECK}" = "yes"; then
-  saved_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $clooginc $gmpinc $pplinc"
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for version 0.15.5 (or later revision) of CLooG" >&5
-$as_echo_n "checking for version 0.15.5 (or later revision) of CLooG... " >&6; }
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include "cloog/cloog.h"
-int
-main ()
-{
-
-  #if CLOOG_VERSION_MAJOR != 0 || CLOOG_VERSION_MINOR != 15 || CLOOG_VERSION_REVISION < 5
-  choke me
-  #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include "cloog/cloog.h"
-int
-main ()
-{
-
-  #if CLOOG_VERSION_MAJOR != 0 || CLOOG_VERSION_MINOR != 15 || CLOOG_VERSION_REVISION < 9
-  choke me
-  #endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: buggy but acceptable" >&5
-$as_echo "buggy but acceptable" >&6; }
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }; clooglibs= ; clooginc=
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-  CFLAGS="$saved_CFLAGS"
-fi
-
-# Flags needed for CLOOG
-
-
+enable_ppl_version_check=no
 
 # Check for LTO support.
 # Check whether --enable-lto was given.

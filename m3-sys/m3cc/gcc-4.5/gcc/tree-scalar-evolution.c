@@ -2731,17 +2731,6 @@ number_of_latch_executions (struct loop *loop)
   if (!exit)
     goto end;
 
-  if (!number_of_iterations_exit (loop, exit, &niter_desc, false))
-    goto end;
-
-  type = TREE_TYPE (niter_desc.niter);
-  if (integer_nonzerop (niter_desc.may_be_zero))
-    res = build_int_cst (type, 0);
-  else if (integer_zerop (niter_desc.may_be_zero))
-    res = niter_desc.niter;
-  else
-    res = chrec_dont_know;
-
 end:
   return set_nb_iterations_in_loop (loop, res);
 }

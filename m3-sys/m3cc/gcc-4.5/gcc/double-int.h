@@ -22,9 +22,6 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef DOUBLE_INT_H
 #define DOUBLE_INT_H
 
-#ifndef GENERATOR_FILE
-#include <gmp.h>
-#endif
 #include "coretypes.h"
 
 #ifdef __cplusplus
@@ -183,13 +180,6 @@ double_int_equal_p (double_int cst1, double_int cst2)
 {
   return cst1.low == cst2.low && cst1.high == cst2.high;
 }
-
-#ifndef GENERATOR_FILE
-/* Conversion to and from GMP integer representations.  */
-
-void mpz_set_double_int (mpz_t, double_int, bool);
-double_int mpz_get_double_int (const_tree, mpz_t, bool);
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

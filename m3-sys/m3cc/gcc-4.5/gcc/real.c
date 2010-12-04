@@ -1,4 +1,4 @@
-/* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
+/* Modula-3: remove gmp/mpfr/mpc dependencies */
 
 /* real.c - software floating point emulation.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002,
@@ -2330,76 +2330,6 @@ times_pten (REAL_VALUE_TYPE *r, int exp)
   if (negative)
     do_divide (r, r, &pten);
 }
-
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-
-/* Returns the special REAL_VALUE_TYPE corresponding to 'e'.  */
-
-const REAL_VALUE_TYPE *
-dconst_e_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      mpfr_t m;
-      mpfr_init2 (m, SIGNIFICAND_BITS);
-      mpfr_set_ui (m, 1, GMP_RNDN);
-      mpfr_exp (m, m, GMP_RNDN);
-      real_from_mpfr (&value, m, NULL_TREE, GMP_RNDN);
-      mpfr_clear (m);
-
-    }
-  return &value;
-}
-
-#endif
-
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-
-/* Returns the special REAL_VALUE_TYPE corresponding to 1/3.  */
-
-const REAL_VALUE_TYPE *
-dconst_third_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      real_arithmetic (&value, RDIV_EXPR, &dconst1, real_digit (3));
-    }
-  return &value;
-}
-
-#endif
-
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-
-/* Returns the special REAL_VALUE_TYPE corresponding to sqrt(2).  */
-
-const REAL_VALUE_TYPE *
-dconst_sqrt2_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      mpfr_t m;
-      mpfr_init2 (m, SIGNIFICAND_BITS);
-      mpfr_sqrt_ui (m, 2, GMP_RNDN);
-      real_from_mpfr (&value, m, NULL_TREE, GMP_RNDN);
-      mpfr_clear (m);
-    }
-  return &value;
-}
-
-#endif
 
 /* Fills R with +Inf.  */
 
@@ -4999,90 +4929,6 @@ real_copysign (REAL_VALUE_TYPE *r, const REAL_VALUE_TYPE *x)
 {
   r->sign = x->sign;
 }
-
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-
-/* Convert from REAL_VALUE_TYPE to MPFR.  The caller is responsible
-   for initializing and clearing the MPFR parameter.  */
-
-void
-mpfr_from_real (mpfr_ptr m, const REAL_VALUE_TYPE *r, mp_rnd_t rndmode)
-{
-  /* We use a string as an intermediate type.  */
-  char buf[128];
-  int ret;
-
-  /* Take care of Infinity and NaN.  */
-  if (r->cl == rvc_inf)
-    {
-      mpfr_set_inf (m, r->sign == 1 ? -1 : 1);
-      return;
-    }
-
-  if (r->cl == rvc_nan)
-    {
-      mpfr_set_nan (m);
-      return;
-    }
-
-  real_to_hexadecimal (buf, r, sizeof (buf), 0, 1);
-  /* mpfr_set_str() parses hexadecimal floats from strings in the same
-     format that GCC will output them.  Nothing extra is needed.  */
-  ret = mpfr_set_str (m, buf, 16, rndmode);
-  gcc_assert (ret == 0);
-}
-
-#endif
-
-#if 0 /* Modula-3: remove/reduce gmp/mpfr/mpc dependencies */
-
-/* Convert from MPFR to REAL_VALUE_TYPE, for a given type TYPE and rounding
-   mode RNDMODE.  TYPE is only relevant if M is a NaN.  */
-
-void
-real_from_mpfr (REAL_VALUE_TYPE *r, mpfr_srcptr m, tree type, mp_rnd_t rndmode)
-{
-  /* We use a string as an intermediate type.  */
-  char buf[128], *rstr;
-  mp_exp_t exp;
-
-  /* Take care of Infinity and NaN.  */
-  if (mpfr_inf_p (m))
-    {
-      real_inf (r);
-      if (mpfr_sgn (m) < 0)
-	*r = REAL_VALUE_NEGATE (*r);
-      return;
-    }
-
-  if (mpfr_nan_p (m))
-    {
-      real_nan (r, "", 1, TYPE_MODE (type));
-      return;
-    }
-
-  rstr = mpfr_get_str (NULL, &exp, 16, 0, m, rndmode);
-
-  /* The additional 12 chars add space for the sprintf below.  This
-     leaves 6 digits for the exponent which is supposedly enough.  */
-  gcc_assert (rstr != NULL && strlen (rstr) < sizeof (buf) - 12);
-
-  /* REAL_VALUE_ATOF expects the exponent for mantissa * 2**exp,
-     mpfr_get_str returns the exponent for mantissa * 16**exp, adjust
-     for that.  */
-  exp *= 4;
-
-  if (rstr[0] == '-')
-    sprintf (buf, "-0x.%sp%d", &rstr[1], (int) exp);
-  else
-    sprintf (buf, "0x.%sp%d", rstr, (int) exp);
-
-  mpfr_free_str (rstr);
-
-  real_from_string (r, buf);
-}
-
-#endif
 
 /* Check whether the real constant value given is an integer.  */
 
