@@ -50,7 +50,7 @@ readonly Platform_info = {
   "NT386GNU"  : "i586-pc-cygwin",
   "NT386MINGNU"     : "i586-pc-mingw32",
   "NetBSD2_i386" : "i586-unknown-netbsdelf",
-  "PA32_HPUX"  : "hppa-hpux",
+  "PA32_HPUX"  : "hppa2.0w-hpux11",
   "PA32_LINUX" : "hppa-linux",
   "PA64_HPUX"  : "hppa64-hpux11",
   "PA64_LINUX" : "hppa64-linux",
