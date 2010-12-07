@@ -25,6 +25,7 @@ TYPE
   Systems = {
     ALPHA32_VMS,
     ALPHA64_VMS,
+    ALPHA_LINUX,
     ALPHA_OSF,
     AMD64_DARWIN,
     AMD64_FREEBSD,
@@ -69,6 +70,7 @@ CONST
   SystemNames = ARRAY OF TEXT {
     "ALPHA32_VMS",
     "ALPHA64_VMS",
+    "ALPHA_LINUX",
     "ALPHA_OSF",
     "AMD64_DARWIN",
     "AMD64_FREEBSD",
