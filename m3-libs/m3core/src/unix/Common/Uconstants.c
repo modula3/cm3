@@ -819,7 +819,7 @@ X(TIOCEXCL)
 X(TIOCFLUSH)
 #endif
 
-#ifdef TIOCGETC
+#if defined(TIOCGETC) && !(defined(__linux) && defined(__alpha))
 X(TIOCGETC)
 #endif
 
@@ -827,11 +827,11 @@ X(TIOCGETC)
 X(TIOCGETD)
 #endif
 
-#ifdef TIOCGETP
+#if defined(TIOCGETP) && !(defined(__linux) && defined(__alpha))
 X(TIOCGETP)
 #endif
 
-#ifdef TIOCGLTC
+#if defined(TIOCGLTC) && !(defined(__linux) && defined(__alpha))
 X(TIOCGLTC)
 #endif
 
@@ -1007,7 +1007,7 @@ X(TIOCSBRK)
 X(TIOCSDTR)
 #endif
 
-#ifdef TIOCSETC
+#if defined(TIOCSETC) && !(defined(__linux) && defined(__alpha))
 X(TIOCSETC)
 #endif
 
@@ -1015,11 +1015,11 @@ X(TIOCSETC)
 X(TIOCSETD)
 #endif
 
-#ifdef TIOCSETN
+#if defined(TIOCSETN) && !(defined(__linux) && defined(__alpha))
 X(TIOCSETN)
 #endif
 
-#ifdef TIOCSETP
+#if defined(TIOCSETP) && !(defined(__linux) && defined(__alpha))
 X(TIOCSETP)
 #endif
 
@@ -1027,7 +1027,7 @@ X(TIOCSETP)
 X(TIOCSINUSE)
 #endif
 
-#ifdef TIOCSLTC
+#if defined(TIOCSLTC) && !(defined(__linux) && defined(__alpha))
 X(TIOCSLTC)
 #endif
 
