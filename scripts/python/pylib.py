@@ -1247,7 +1247,7 @@ def Boot():
 
     AssemblerFlags = " "
 
-    if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX" and Target != "ARMEL_LINUX":
+    if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX" and Target != "ARMEL_LINUX" and Target != "ALPHA_LINUX":
         # "Tag" not right for LINUX due to LINUXLIBC6
         # "Tag" not right for BSD or 64 either.
         if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
