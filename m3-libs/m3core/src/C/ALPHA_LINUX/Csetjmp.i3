@@ -5,7 +5,7 @@
 INTERFACE Csetjmp;
 FROM Ctypes IMPORT int;
 
-TYPE jmp_buf = ARRAY [0..83] OF INTEGER;
+TYPE jmp_buf = ARRAY [0..33] OF INTEGER;
 
 <*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
 
