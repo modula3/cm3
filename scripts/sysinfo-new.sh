@@ -345,6 +345,7 @@ if [ "x$CM3_TARGET" = "x" ]; then
 
     Linux)
       case "`uname -m`" in
+        alpha) CM3_TARGET=ALPHA_LINUX;;
         ppc) CM3_TARGET=PPC_LINUX;;
         x86_64) CM3_TARGET=AMD64_LINUX;;
          amd64) CM3_TARGET=AMD64_LINUX;;

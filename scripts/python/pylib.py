@@ -648,6 +648,8 @@ elif UName == "linux":
         Host = "AMD64_LINUX"
     elif UNameArchM == "sparc64":
         Host = "SPARC32_LINUX"
+    elif UNameArchM == "alpha":
+        Host = "ALPHA_LINUX"
     else:
         Host = "I386_LINUX"
 
