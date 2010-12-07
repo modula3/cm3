@@ -270,7 +270,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     CASE System OF
     
-    |  Systems.ALPHA_OSF =>
+    |  Systems.ALPHA_LINUX, Systems.ALPHA_OSF =>
                  Jumpbuf_size              := 84 * Address.size;
                  Aligned_procedures        := FALSE;
 
