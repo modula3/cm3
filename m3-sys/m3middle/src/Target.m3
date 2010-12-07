@@ -228,30 +228,32 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* 64bit *)
 
     IF TextUtils.StartsWith(system, "ALPHA_")
-        OR TextUtils.Contains(system, "64_")
-        OR TextUtils.Contains(system, "64EL_") THEN
+        OR TextUtils.Contains(system, "64") THEN
       Init64();
     END;
 
-    (* SPARC64, HPPA, MIPS64: aligned_procedures *)
+    (* ALPHA, SPARC64, HPPA, MIPS64: aligned_procedures *)
 
-    IF TextUtils.StartsWith(system, "SPARC64_")
-      OR TextUtils.StartsWith(system, "ARMEL")
-      OR TextUtils.StartsWith(system, "PA")
-      OR TextUtils.StartsWith(system, "MIPS64") THEN
+    IF TextUtils.StartsWith(system, "SPARC64")
+        OR TextUtils.StartsWith(system, "ARMEL")
+        OR TextUtils.StartsWith(system, "ALPHA_")
+        OR TextUtils.StartsWith(system, "ALPHA64")
+        OR TextUtils.StartsWith(system, "PA")
+        OR TextUtils.StartsWith(system, "HPPA")
+        OR TextUtils.StartsWith(system, "MIPS64") THEN
       Aligned_procedures := FALSE;
     END;
 
     (* big endian *)
 
     IF TextUtils.StartsWith(system, "PA")
-      OR (TextUtils.StartsWith(system, "MIPS")
-        AND NOT TextUtils.StartsWith(system, "MIPSEL")
-        AND NOT TextUtils.StartsWith(system, "MIPS32EL")
-        AND NOT TextUtils.StartsWith(system, "MIPS64EL"))
-      OR TextUtils.StartsWith(system, "PPC")  (* ambiguous *)
-      OR TextUtils.StartsWith(system, "SPARC")
-      OR TextUtils.StartsWith(system, "SOL") THEN
+        OR (TextUtils.StartsWith(system, "MIPS")
+          AND NOT TextUtils.StartsWith(system, "MIPSEL")
+          AND NOT TextUtils.StartsWith(system, "MIPS32EL")
+          AND NOT TextUtils.StartsWith(system, "MIPS64EL"))
+        OR TextUtils.StartsWith(system, "PPC")  (* ambiguous *)
+        OR TextUtils.StartsWith(system, "SPARC")
+        OR TextUtils.StartsWith(system, "SOL") THEN
       Little_endian := FALSE;
     END;
 
@@ -270,9 +272,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     CASE System OF
     
-    |  Systems.ALPHA_LINUX, Systems.ALPHA_OSF =>
+    |  Systems.ALPHA_LINUX =>
+                 Jumpbuf_size              := 34 * Address.size;
+
+    |  Systems.ALPHA_OSF =>
                  Jumpbuf_size              := 84 * Address.size;
-                 Aligned_procedures        := FALSE;
 
     |  Systems.I386_FREEBSD, Systems.FreeBSD4 =>
                  Jumpbuf_size              := 11 * Address.size;
