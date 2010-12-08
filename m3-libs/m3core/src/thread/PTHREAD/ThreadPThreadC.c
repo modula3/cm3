@@ -90,6 +90,13 @@ static sem_t ackSem;
 
 void SignalHandler(int signo, siginfo_t *info, void *context);
 
+static void SignalHandlerC(int signo, siginfo_t *info, void *context)
+/* wrapper to workaround ALPHA_LINUX:
+   /usr/bin/ld: ThreadPThreadC.o: gp-relative relocation against dynamic symbol ThreadPThread__SignalHandler */
+{
+  SignalHandler(signo, info, context);
+}
+
 int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
 int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
@@ -475,7 +482,7 @@ InitC(int *bottom)
   r = sigdelset(&mask, SIGTERM); assert(r == 0);
 
   act.sa_flags = SA_RESTART | SA_SIGINFO;
-  act.sa_sigaction = SignalHandler;
+  act.sa_sigaction = SignalHandlerC;
   r = sigfillset(&act.sa_mask); assert(r == 0);
   r = sigaction(SIG_SUSPEND, &act, NULL); assert(r == 0);
 #endif
