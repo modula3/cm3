@@ -91,8 +91,9 @@ static sem_t ackSem;
 void SignalHandler(int signo, siginfo_t *info, void *context);
 
 static void SignalHandlerC(int signo, siginfo_t *info, void *context)
-/* wrapper to workaround ALPHA_LINUX:
-   /usr/bin/ld: ThreadPThreadC.o: gp-relative relocation against dynamic symbol ThreadPThread__SignalHandler */
+/* wrapper to workaround on ALPHA_LINUX:
+   /usr/bin/ld: ThreadPThreadC.o: gp-relative relocation against dynamic symbol ThreadPThread__SignalHandler
+   http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46861 */
 {
   SignalHandler(signo, info, context);
 }
