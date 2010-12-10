@@ -324,8 +324,7 @@ else:
 MakeArchives()
 
 if contains(target, "linux"):
-    for name in PackageSets:
-        MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
+    MakeDebianPackage(FormInstallRoot("all"), "/usr/local/cm3")
 
 if supportsMSI and not oldNT:
     for name in PackageSets:
