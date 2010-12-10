@@ -12,5 +12,5 @@ fi
 
 DESTHOST=${DESTHOST:-${CM3CVSUSER_AT}birch.elegosoft.com}
 DEST=${DEST:-/var/www/modula3.elegosoft.com/cm3/uploaded-archives}
-chmod 664 *.tar.gz *.tar.xz *.tgz
-scp *.tar.gz *.tar.xz *.tgz $DESTHOST:$DEST
+chmod 664 *.tar.gz *.tar.xz *.tgz *.deb
+scp *.tar.gz *.tar.xz *.tgz *.deb $DESTHOST:$DEST
