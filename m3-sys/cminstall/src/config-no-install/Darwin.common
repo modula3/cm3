@@ -28,7 +28,7 @@ proc configure_assembler() is
   if not FileExists(SYSTEM_ASM)
     if IsX86
       configure_c_compiler ()
-      SYSTEM_ASM = SYSTEM_CC & " -x assembler"
+      SYSTEM_ASM = SYSTEM_CC & " -c -x assembler"
     else
       SYSTEM_ASM = "as"
     end
