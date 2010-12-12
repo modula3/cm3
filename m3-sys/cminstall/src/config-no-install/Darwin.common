@@ -28,12 +28,12 @@ proc configure_assembler() is
   if not FileExists(SYSTEM_ASM)
     if IsX86
       configure_c_compiler ()
-      SYSTEM_ASM = SYSTEM_CC & " -c -x assembler"
+      SYSTEM_ASM = SYSTEM_CC_ASM & " -c -x assembler"
     else
       SYSTEM_ASM = "as"
     end
   end
-  %SYSTEM_ASM = SYSTEM_CC & " -c -x assembler"
+  %SYSTEM_ASM = SYSTEM_CC_ASM & " -v -c -x assembler"
 end
 
 proc configure_c_compiler() is
@@ -54,13 +54,16 @@ proc configure_c_compiler() is
   %
 
   SYSTEM_CC = "gcc -gstabs+ -fPIC"
+  SYSTEM_CC_ASM = "gcc -fPIC"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
   if not equal(try_exec("@" & SYSTEM_CC & m & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
     SYSTEM_CC = SYSTEM_CC & m
+    SYSTEM_CC_ASM = SYSTEM_CC_ASM & m
   end
   if not equal(try_exec("@" & SYSTEM_CC & arch & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep \"cc1: error: unrecognized command line option \\\\\"-arch\\\\\"\" >/dev/null"), 0)
     SYSTEM_CC = SYSTEM_CC & arch
+    SYSTEM_CC_ASM = SYSTEM_CC_ASM & arch
   end
   %write("SYSTEM_CC is " & SYSTEM_CC)
 end
