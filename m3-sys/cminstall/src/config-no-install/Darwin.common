@@ -18,17 +18,23 @@ proc FileExists(x) is
     return not stale(x, x)
 end
 
+IsX86 = equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
+
 proc configure_assembler() is
   if defined("SYSTEM_ASM")
     return
   end
   SYSTEM_ASM = "/usr/libexec/gcc/darwin/" & DarwinArch & "/as"
   if not FileExists(SYSTEM_ASM)
+    if IsX86
+      configure_c_compiler ()
+      SYSTEM_ASM = SYSTEM_CC & " -x assembler"
+    else
       SYSTEM_ASM = "as"
+    end
   end
+  %SYSTEM_ASM = SYSTEM_CC & " -c -x assembler"
 end
-
-IsX86 = equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
 
 proc configure_c_compiler() is
 
