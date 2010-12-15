@@ -12,7 +12,7 @@ IMPORT TInt;
 
 PROCEDURE FromCardinal (x: CARDINAL;  VAR r: T): BOOLEAN =
   BEGIN
-    RETURN TInt.FromInt (x, r) AND GE (r, Zero);
+    RETURN TInt.FromInt (x, r) AND TInt.GE (r, Zero);
   END FromCardinal;
 
 PROCEDURE Add (READONLY a, b: T;  VAR r: T): BOOLEAN =
