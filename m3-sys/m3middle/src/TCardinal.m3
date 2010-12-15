@@ -66,12 +66,12 @@ PROCEDURE LE (READONLY a, b: T): BOOLEAN =
 
 PROCEDURE GE (READONLY a, b: T): BOOLEAN =
   BEGIN
-    RETURN LE(b, a);
+    RETURN LE (b, a);
   END GE;
 
 PROCEDURE GT (READONLY a, b: T): BOOLEAN =
   BEGIN
-    RETURN LT(b, a);
+    RETURN LT (b, a);
   END GT;
 
 BEGIN
