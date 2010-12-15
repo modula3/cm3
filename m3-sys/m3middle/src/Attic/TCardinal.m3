@@ -2,14 +2,13 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: TWord.m3                                              *)
+(* File: TCardinal.m3                                              *)
 (* Last Modified On Fri Nov 19 09:32:56 PST 1993 By kalsow     *)
 (*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
 
-MODULE TWord;
+MODULE TCardinal;
 
-IMPORT Word, TInt;
-FROM Target IMPORT Int;
+IMPORT TInt;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
@@ -77,4 +76,4 @@ PROCEDURE GT (READONLY a, b: T): BOOLEAN =
   END GT;
 
 BEGIN
-END TWord.
+END TCardinal.

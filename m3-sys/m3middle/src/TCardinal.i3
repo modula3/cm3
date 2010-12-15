@@ -9,7 +9,7 @@
 INTERFACE TCardinal;
 
 IMPORT Target;
-TYPE T = Target.Int;
+TYPE T = Target.Int; (* plus assertions *)
 CONST Size = BITSIZE(T);
 
 CONST
