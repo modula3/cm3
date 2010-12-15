@@ -8,7 +8,6 @@ INTERFACE TCardinal;
 
 IMPORT Target, TInt;
 TYPE T = Target.Int; (* plus assertions *)
-CONST Size = BITSIZE(T);
 
 CONST
   Zero = TInt.Zero;
