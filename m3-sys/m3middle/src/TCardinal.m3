@@ -40,7 +40,7 @@ PROCEDURE Div (READONLY num, den: T;  VAR q: T): BOOLEAN =
   BEGIN
     <* ASSERT GE (num, Zero) *>
     <* ASSERT GE (den, Zero) *>
-    RETURN TInt.Div (num, den, q) AND GE (q, Zero);
+    RETURN TInt.Div (num, den, q) AND TInt.GE (q, Zero);
   END Div;
 
 PROCEDURE Mod (READONLY num, den: T;  VAR r: T): BOOLEAN =
