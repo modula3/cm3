@@ -3,14 +3,17 @@
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
 (* File: TCardinal.m3                                              *)
-(* Last Modified On Fri Nov 19 09:32:56 PST 1993 By kalsow     *)
-(*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
 
 MODULE TCardinal;
 
 IMPORT TInt;
 
 (*------------------------------------------- unsigned integer operations ---*)
+
+PROCEDURE FromCardinal (x: CARDINAL;  VAR r: T): BOOLEAN =
+  BEGIN
+    RETURN TInt.FromInt (x, r) AND GE (r, Zero);
+  END FromCardinal;
 
 PROCEDURE Add (READONLY a, b: T;  VAR r: T): BOOLEAN =
   BEGIN

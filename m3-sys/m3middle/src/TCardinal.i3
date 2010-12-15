@@ -3,8 +3,6 @@
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
 (* File: TCardinal.i3                                          *)
-(* Last Modified On Fri Nov 19 09:32:50 PST 1993 By kalsow     *)
-(*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
 
 INTERFACE TCardinal;
 
@@ -19,10 +17,7 @@ CONST
   Max32 = TInt.Max32;
   Max64 = TInt.Max64;
 
-PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];
-               VAR i: T): BOOLEAN;
-(* converts the string of characters in 'chars' representing a base 'base'
-   number to an integer value in 'i' *)
+PROCEDURE FromCardinal (x: CARDINAL;  VAR r: T): BOOLEAN;
 
 PROCEDURE Inc (VAR i: T): BOOLEAN;
 (* returns 'i + 1' *)
