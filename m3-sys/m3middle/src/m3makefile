@@ -15,6 +15,7 @@ include_dir (OS_TYPE)
 
 Module ("Target")
 Module ("TargetMap")
+Module ("TCardinal")
 Module ("TInt")
 Module ("TWord")
 Module ("TFloat")
