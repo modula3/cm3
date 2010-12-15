@@ -49,6 +49,12 @@ PROCEDURE New (READONLY chars: ARRAY OF CHAR;  VAR i: Int): BOOLEAN;
 PROCEDURE Add (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'a + b' unless there's an overflow *)
 
+PROCEDURE Inc (VAR i: Int): BOOLEAN;
+(* returns 'a + 1' unless there's an overflow *)
+
+PROCEDURE Dec (VAR i: Int): BOOLEAN;
+(* returns 'a - 1' unless there's an overflow *)
+
 PROCEDURE Subtract (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'a - b' unless there's an overflow *)
 

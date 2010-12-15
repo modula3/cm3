@@ -92,6 +92,18 @@ PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
     RETURN (a_sign # b_sign) OR (a_sign = r_sign);
   END Add;
 
+PROCEDURE Inc (VAR a: Int): BOOLEAN =
+  VAR b := a;
+  BEGIN
+    RETURN Add (b, One, a);
+  END Inc;
+
+PROCEDURE Dec (VAR a: Int): BOOLEAN =
+  VAR b := a;
+  BEGIN
+    RETURN Subtract (b, One, a);
+  END Dec;
+
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
   VAR borrow := 0;
