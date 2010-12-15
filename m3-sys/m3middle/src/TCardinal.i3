@@ -8,7 +8,7 @@
 
 INTERFACE TCardinal;
 
-IMPORT Target;
+IMPORT Target, TInt;
 TYPE T = Target.Int; (* plus assertions *)
 CONST Size = BITSIZE(T);
 
@@ -24,19 +24,19 @@ PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];
 (* converts the string of characters in 'chars' representing a base 'base'
    number to an integer value in 'i' *)
 
-PROCEDURE Inc (VAR i: T);
+PROCEDURE Inc (VAR i: T): BOOLEAN;
 (* returns 'i + 1' *)
 
-PROCEDURE Dec (VAR i: T);
+PROCEDURE Dec (VAR i: T): BOOLEAN;
 (* returns 'i - 1' *)
 
-PROCEDURE Add (READONLY a, b: T;  VAR i: T);
+PROCEDURE Add (READONLY a, b: T;  VAR i: T): BOOLEAN;
 (* returns 'a + b' *)
 
-PROCEDURE Subtract (READONLY a, b: T;  VAR i: T);
+PROCEDURE Subtract (READONLY a, b: T;  VAR i: T): BOOLEAN;
 (* returns 'a - b' *)
 
-PROCEDURE Multiply (READONLY a, b: T;  VAR i: T);
+PROCEDURE Multiply (READONLY a, b: T;  VAR i: T): BOOLEAN;
 (* returns 'a * b' *)
 
 PROCEDURE Div (READONLY a, b: T;  VAR i: T): BOOLEAN;
