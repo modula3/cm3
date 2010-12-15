@@ -12,26 +12,21 @@ IMPORT TInt;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  VAR r: T): BOOLEAN =
-  BEGIN
-    RETURN TInt.New (x, base, r) AND GE (r, Zero);
-  END New;
-
-PROCEDURE Add (READONLY a, b: T;  VAR r: T) =
+PROCEDURE Add (READONLY a, b: T;  VAR r: T): BOOLEAN =
   BEGIN
     <* ASSERT GE (a, Zero) *>
     <* ASSERT GE (b, Zero) *>
     RETURN TInt.Add (a, b, r) AND TInt.GE (r, Zero);
   END Add;
 
-PROCEDURE Subtract (READONLY a, b: T;  VAR r: T) =
+PROCEDURE Subtract (READONLY a, b: T;  VAR r: T): BOOLEAN =
   BEGIN
     <* ASSERT GE (a, Zero) *>
     <* ASSERT GE (b, Zero) *>
     RETURN TInt.Subtract (a, b, r) AND TInt.GE (r, Zero);
   END Subtract;
 
-PROCEDURE Multiply (READONLY a, b: T;  VAR r: T) =
+PROCEDURE Multiply (READONLY a, b: T;  VAR r: T): BOOLEAN =
   BEGIN
     <* ASSERT GE (a, Zero) *>
     <* ASSERT GE (b, Zero) *>
@@ -39,16 +34,17 @@ PROCEDURE Multiply (READONLY a, b: T;  VAR r: T) =
   END Multiply;
 
 PROCEDURE Div (READONLY num, den: T;  VAR q: T): BOOLEAN =
-    <* ASSERT GE (a, Zero) *>
-    <* ASSERT GE (b, Zero) *>
-    RETURN TInt.Div (a, b, r) AND TInt.GE (r, Zero);
+  BEGIN
+    <* ASSERT GE (num, Zero) *>
+    <* ASSERT GE (den, Zero) *>
+    RETURN TInt.Div (num, den, q) AND GE (q, Zero);
   END Div;
 
 PROCEDURE Mod (READONLY num, den: T;  VAR r: T): BOOLEAN =
   BEGIN
-    <* ASSERT GE (a, Zero) *>
-    <* ASSERT GE (b, Zero) *>
-    RETURN TInt.Mod (a, b, r) AND TInt.GE (r, Zero);
+    <* ASSERT GE (num, Zero) *>
+    <* ASSERT GE (den, Zero) *>
+    RETURN TInt.Mod (num, den, r) AND TInt.GE (r, Zero);
   END Mod;
 
 PROCEDURE LT (READONLY a, b: T): BOOLEAN =
