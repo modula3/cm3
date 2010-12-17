@@ -421,6 +421,13 @@ check_stmt (gimple_stmt_iterator *gsip, funct_state local, bool ipa)
       print_gimple_stmt (dump_file, stmt, 0, 0);
     }
 
+  if (gimple_has_volatile_ops (stmt))
+    {
+      local->pure_const_state = IPA_NEITHER;
+      if (dump_file)
+	fprintf (dump_file, "    Volatile stmt is not const/pure\n");
+    }
+
   /* Look for loads and stores.  */
   walk_stmt_load_store_ops (stmt, local, check_load, check_store);
 
@@ -458,7 +465,7 @@ check_stmt (gimple_stmt_iterator *gsip, funct_state local, bool ipa)
       for (i = 0; i < gimple_asm_nclobbers (stmt); i++)
 	{
 	  tree op = gimple_asm_clobber_op (stmt, i);
-	  if (simple_cst_equal(TREE_VALUE (op), memory_identifier_string) == 1)
+	  if (strcmp (TREE_STRING_POINTER (TREE_VALUE (op)), "memory") == 0)
 	    {
               if (dump_file)
                 fprintf (dump_file, "    memory asm clobber is not const/pure");

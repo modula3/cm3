@@ -710,7 +710,7 @@ static void
 expand_one_stack_var_at (tree decl, HOST_WIDE_INT offset)
 {
   /* Alignment is unsigned.   */
-  unsigned HOST_WIDE_INT align;
+  unsigned HOST_WIDE_INT align, max_align;
   rtx x;
 
   /* If this fails, we've overflowed the stack frame.  Error nicely?  */
@@ -727,10 +727,9 @@ expand_one_stack_var_at (tree decl, HOST_WIDE_INT offset)
       offset -= frame_phase;
       align = offset & -offset;
       align *= BITS_PER_UNIT;
-      if (align == 0)
-	align = STACK_BOUNDARY;
-      else if (align > MAX_SUPPORTED_STACK_ALIGNMENT)
-	align = MAX_SUPPORTED_STACK_ALIGNMENT;
+      max_align = crtl->max_used_stack_slot_alignment;
+      if (align == 0 || align > max_align)
+	align = max_align;
 
       DECL_ALIGN (decl) = align;
       DECL_USER_ALIGN (decl) = 0;
@@ -1579,7 +1578,14 @@ maybe_cleanup_end_of_block (edge e, rtx last)
 	{
 	  insn = PREV_INSN (insn);
 	  if (JUMP_P (NEXT_INSN (insn)))
-	    delete_insn (NEXT_INSN (insn));
+	    {
+	      if (!any_condjump_p (NEXT_INSN (insn)))
+		{
+		  gcc_assert (BARRIER_P (NEXT_INSN (NEXT_INSN (insn))));
+		  delete_insn (NEXT_INSN (NEXT_INSN (insn)));
+		}
+	      delete_insn (NEXT_INSN (insn));
+	    }
 	}
     }
 }

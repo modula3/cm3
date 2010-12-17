@@ -9,21 +9,24 @@ http://gcc.gnu.org/gcc-4.5/index.html
 
                            GCC 4.5 Release Series
 
-   July 31, 2010
+   Dec 16, 2010
 
    The [1]GNU project and the GCC developers are pleased to announce the
-   release of GCC 4.5.1.
+   release of GCC 4.5.2.
 
    This release is a bug-fix release, containing fixes for regressions in
-   GCC 4.5.0 relative to previous releases of GCC.
+   GCC 4.5.1 relative to previous releases of GCC.
 
 Release History
 
+   GCC 4.5.2
+          Dec 16, 2010 ([2]changes)
+
    GCC 4.5.1
-          Jul 31, 2010 ([2]changes)
+          Jul 31, 2010 ([3]changes)
 
    GCC 4.5.0
-          April 14, 2010 ([3]changes)
+          April 14, 2010 ([4]changes)
 
 References and Acknowledgements
 
@@ -31,56 +34,54 @@ References and Acknowledgements
    supports several other languages aside from C, it now stands for the
    GNU Compiler Collection.
 
-   A list of [4]successful builds is updated as new information becomes
+   A list of [5]successful builds is updated as new information becomes
    available.
 
    The GCC developers would like to thank the numerous people that have
    contributed new features, improvements, bug fixes, and other changes as
-   well as test results to GCC. This [5]amazing group of volunteers is
+   well as test results to GCC. This [6]amazing group of volunteers is
    what makes GCC successful.
 
-   For additional information about GCC please refer to the [6]GCC project
-   web site or contact the [7]GCC development mailing list.
+   For additional information about GCC please refer to the [7]GCC project
+   web site or contact the [8]GCC development mailing list.
 
-   To obtain GCC please use [8]our mirror sites or [9]our SVN server.
+   To obtain GCC please use [9]our mirror sites or [10]our SVN server.
 
-   Please send FSF & GNU inquiries & questions to [10]gnu@gnu.org. There
-   are also [11]other ways to contact the FSF.
+   Please send FSF & GNU inquiries & questions to [11]gnu@gnu.org. There
+   are also [12]other ways to contact the FSF.
 
-   These pages are [12]maintained by the GCC team.
+   These pages are [13]maintained by the GCC team.
 
 
     For questions related to the use of GCC, please consult these web
-    pages and the [13]GCC manuals. If that fails, the
-    [14]gcc-help@gcc.gnu.org mailing list might help.
+    pages and the [14]GCC manuals. If that fails, the
+    [15]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [15]gcc@gnu.org or [16]gcc@gcc.gnu.org.
-    All of our lists have [17]public archives.
+    our developer list at [16]gcc@gcc.gnu.org. All of our lists have
+    [17]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-31 [18]Valid XHTML 1.0
+   Last modified 2010-12-16 [18]Valid XHTML 1.0
 
 References
 
    1. http://www.gnu.org/
    2. http://gcc.gnu.org/gcc-4.5/changes.html
    3. http://gcc.gnu.org/gcc-4.5/changes.html
-   4. http://gcc.gnu.org/gcc-4.5/buildstat.html
-   5. http://gcc.gnu.org/onlinedocs/gcc/Contributors.html
-   6. http://gcc.gnu.org/index.html
-   7. mailto:gcc@gcc.gnu.org
-   8. http://gcc.gnu.org/mirrors.html
-   9. http://gcc.gnu.org/svn.html
-  10. mailto:gnu@gnu.org
-  11. http://www.gnu.org/home.html#ContactInfo
-  12. http://gcc.gnu.org/about.html
-  13. http://gcc.gnu.org/onlinedocs/
-  14. mailto:gcc-help@gcc.gnu.org
-  15. mailto:gcc@gnu.org
+   4. http://gcc.gnu.org/gcc-4.5/changes.html
+   5. http://gcc.gnu.org/gcc-4.5/buildstat.html
+   6. http://gcc.gnu.org/onlinedocs/gcc/Contributors.html
+   7. http://gcc.gnu.org/index.html
+   8. mailto:gcc@gcc.gnu.org
+   9. http://gcc.gnu.org/mirrors.html
+  10. http://gcc.gnu.org/svn.html
+  11. mailto:gnu@gnu.org
+  12. http://www.gnu.org/home.html#ContactInfo
+  13. http://gcc.gnu.org/about.html
+  14. http://gcc.gnu.org/onlinedocs/
+  15. mailto:gcc-help@gcc.gnu.org
   16. mailto:gcc@gcc.gnu.org
   17. http://gcc.gnu.org/lists.html
   18. http://validator.w3.org/check/referer
@@ -688,25 +689,30 @@ GCC 4.5.1
        LTO is not enabled by default for these targets. To enable LTO, you
        should configure with the --enable-lto option.
 
-   Please send FSF & GNU inquiries & questions to [26]gnu@gnu.org. There
-   are also [27]other ways to contact the FSF.
+GCC 4.5.2
 
-   These pages are [28]maintained by the GCC team.
+   This is the [26]list of problem reports (PRs) from GCC's bug tracking
+   system that are known to be fixed in the 4.5.2 release. This list might
+   not be complete (that is, it is possible that some PRs that have been
+   fixed are not listed here).
+
+   Please send FSF & GNU inquiries & questions to [27]gnu@gnu.org. There
+   are also [28]other ways to contact the FSF.
+
+   These pages are [29]maintained by the GCC team.
 
 
     For questions related to the use of GCC, please consult these web
-    pages and the [29]GCC manuals. If that fails, the
-    [30]gcc-help@gcc.gnu.org mailing list might help.
+    pages and the [30]GCC manuals. If that fails, the
+    [31]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [31]gcc@gnu.org or [32]gcc@gcc.gnu.org.
-    All of our lists have [33]public archives.
+    our developer list at [32]gcc@gcc.gnu.org. All of our lists have
+    [33]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-31 [34]Valid XHTML 1.0
+   Last modified 2010-12-16 [34]Valid XHTML 1.0
 
 References
 
@@ -735,12 +741,12 @@ References
   23. http://gcc.gnu.org/wiki/OOP
   24. http://gcc.gnu.org/bugzilla/buglist.cgi?bug_status=RESOLVED&resolution=FIXED&target_milestone=4.5.1
   25. http://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#index-flto-801
-  26. mailto:gnu@gnu.org
-  27. http://www.gnu.org/home.html#ContactInfo
-  28. http://gcc.gnu.org/about.html
-  29. http://gcc.gnu.org/onlinedocs/
-  30. mailto:gcc-help@gcc.gnu.org
-  31. mailto:gcc@gnu.org
+  26. http://gcc.gnu.org/bugzilla/buglist.cgi?bug_status=RESOLVED&resolution=FIXED&target_milestone=4.5.2
+  27. mailto:gnu@gnu.org
+  28. http://www.gnu.org/home.html#ContactInfo
+  29. http://gcc.gnu.org/about.html
+  30. http://gcc.gnu.org/onlinedocs/
+  31. mailto:gcc-help@gcc.gnu.org
   32. mailto:gcc@gcc.gnu.org
   33. http://gcc.gnu.org/lists.html
   34. http://validator.w3.org/check/referer
@@ -752,27 +758,30 @@ http://gcc.gnu.org/gcc-4.4/index.html
    April 29, 2010
 
    The [1]GNU project and the GCC developers are pleased to announce the
-   release of GCC 4.4.4.
+   release of GCC 4.4.5.
 
    This release is a bug-fix release, containing fixes for regressions in
-   GCC 4.4.3 relative to previous releases of GCC.
+   GCC 4.4.4 relative to previous releases of GCC.
 
 Release History
 
+   GCC 4.4.5
+          October 1, 2010 ([2]changes)
+
    GCC 4.4.4
-          April 29, 2010 ([2]changes)
+          April 29, 2010 ([3]changes)
 
    GCC 4.4.3
-          January 21, 2010 ([3]changes)
+          January 21, 2010 ([4]changes)
 
    GCC 4.4.2
-          October 15, 2009 ([4]changes)
+          October 15, 2009 ([5]changes)
 
    GCC 4.4.1
-          July 22, 2009 ([5]changes)
+          July 22, 2009 ([6]changes)
 
    GCC 4.4.0
-          April 21, 2009 ([6]changes)
+          April 21, 2009 ([7]changes)
 
 References and Acknowledgements
 
@@ -780,38 +789,36 @@ References and Acknowledgements
    supports several other languages aside from C, it now stands for the
    GNU Compiler Collection.
 
-   A list of [7]successful builds is updated as new information becomes
+   A list of [8]successful builds is updated as new information becomes
    available.
 
    The GCC developers would like to thank the numerous people that have
    contributed new features, improvements, bug fixes, and other changes as
-   well as test results to GCC. This [8]amazing group of volunteers is
+   well as test results to GCC. This [9]amazing group of volunteers is
    what makes GCC successful.
 
-   For additional information about GCC please refer to the [9]GCC project
-   web site or contact the [10]GCC development mailing list.
+   For additional information about GCC please refer to the [10]GCC
+   project web site or contact the [11]GCC development mailing list.
 
-   To obtain GCC please use [11]our mirror sites or [12]our SVN server.
+   To obtain GCC please use [12]our mirror sites or [13]our SVN server.
 
-   Please send FSF & GNU inquiries & questions to [13]gnu@gnu.org. There
-   are also [14]other ways to contact the FSF.
+   Please send FSF & GNU inquiries & questions to [14]gnu@gnu.org. There
+   are also [15]other ways to contact the FSF.
 
-   These pages are [15]maintained by the GCC team.
+   These pages are [16]maintained by the GCC team.
 
 
     For questions related to the use of GCC, please consult these web
-    pages and the [16]GCC manuals. If that fails, the
-    [17]gcc-help@gcc.gnu.org mailing list might help.
+    pages and the [17]GCC manuals. If that fails, the
+    [18]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [18]gcc@gnu.org or [19]gcc@gcc.gnu.org.
-    All of our lists have [20]public archives.
+    our developer list at [19]gcc@gcc.gnu.org. All of our lists have
+    [20]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [21]Valid XHTML 1.0
+   Last modified 2010-11-06 [21]Valid XHTML 1.0
 
 References
 
@@ -821,18 +828,18 @@ References
    4. http://gcc.gnu.org/gcc-4.4/changes.html
    5. http://gcc.gnu.org/gcc-4.4/changes.html
    6. http://gcc.gnu.org/gcc-4.4/changes.html
-   7. http://gcc.gnu.org/gcc-4.4/buildstat.html
-   8. http://gcc.gnu.org/onlinedocs/gcc/Contributors.html
-   9. http://gcc.gnu.org/index.html
-  10. mailto:gcc@gcc.gnu.org
-  11. http://gcc.gnu.org/mirrors.html
-  12. http://gcc.gnu.org/svn.html
-  13. mailto:gnu@gnu.org
-  14. http://www.gnu.org/home.html#ContactInfo
-  15. http://gcc.gnu.org/about.html
-  16. http://gcc.gnu.org/onlinedocs/
-  17. mailto:gcc-help@gcc.gnu.org
-  18. mailto:gcc@gnu.org
+   7. http://gcc.gnu.org/gcc-4.4/changes.html
+   8. http://gcc.gnu.org/gcc-4.4/buildstat.html
+   9. http://gcc.gnu.org/onlinedocs/gcc/Contributors.html
+  10. http://gcc.gnu.org/index.html
+  11. mailto:gcc@gcc.gnu.org
+  12. http://gcc.gnu.org/mirrors.html
+  13. http://gcc.gnu.org/svn.html
+  14. mailto:gnu@gnu.org
+  15. http://www.gnu.org/home.html#ContactInfo
+  16. http://gcc.gnu.org/about.html
+  17. http://gcc.gnu.org/onlinedocs/
+  18. mailto:gcc-help@gcc.gnu.org
   19. mailto:gcc@gcc.gnu.org
   20. http://gcc.gnu.org/lists.html
   21. http://validator.w3.org/check/referer
@@ -842,7 +849,7 @@ http://gcc.gnu.org/gcc-4.4/changes.html
                            GCC 4.4 Release Series
                       Changes, New Features, and Fixes
 
-   The latest release in the 4.4 release series is [1]GCC 4.4.4.
+   The latest release in the 4.4 release series is [1]GCC 4.4.5.
 
 Caveats
 
@@ -1407,29 +1414,34 @@ GCC 4.4.4
    not be complete (that is, it is possible that some PRs that have been
    fixed are not listed here).
 
-   Please send FSF & GNU inquiries & questions to [17]gnu@gnu.org. There
-   are also [18]other ways to contact the FSF.
+GCC 4.4.5
 
-   These pages are [19]maintained by the GCC team.
+   This is the [17]list of problem reports (PRs) from GCC's bug tracking
+   system that are known to be fixed in the 4.4.5 release. This list might
+   not be complete (that is, it is possible that some PRs that have been
+   fixed are not listed here).
+
+   Please send FSF & GNU inquiries & questions to [18]gnu@gnu.org. There
+   are also [19]other ways to contact the FSF.
+
+   These pages are [20]maintained by the GCC team.
 
 
     For questions related to the use of GCC, please consult these web
-    pages and the [20]GCC manuals. If that fails, the
-    [21]gcc-help@gcc.gnu.org mailing list might help.
+    pages and the [21]GCC manuals. If that fails, the
+    [22]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [22]gcc@gnu.org or [23]gcc@gcc.gnu.org.
-    All of our lists have [24]public archives.
+    our developer list at [23]gcc@gcc.gnu.org. All of our lists have
+    [24]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-10 [25]Valid XHTML 1.0
+   Last modified 2010-11-06 [25]Valid XHTML 1.0
 
 References
 
-   1. http://gcc.gnu.org/gcc-4.4/changes.html#4.4.4
+   1. http://gcc.gnu.org/gcc-4.4/changes.html#4.4.5
    2. http://gcc.gnu.org/gcc-4.3/changes.html#obsoleted
    3. http://gcc.gnu.org/gcc-4.4/porting_to.html
    4. http://gcc.gnu.org/wiki/Graphite
@@ -1445,12 +1457,12 @@ References
   14. http://gcc.gnu.org/bugzilla/buglist.cgi?bug_status=RESOLVED&resolution=FIXED&target_milestone=4.4.2
   15. http://gcc.gnu.org/bugzilla/buglist.cgi?bug_status=RESOLVED&resolution=FIXED&target_milestone=4.4.3
   16. http://gcc.gnu.org/bugzilla/buglist.cgi?bug_status=RESOLVED&resolution=FIXED&target_milestone=4.4.4
-  17. mailto:gnu@gnu.org
-  18. http://www.gnu.org/home.html#ContactInfo
-  19. http://gcc.gnu.org/about.html
-  20. http://gcc.gnu.org/onlinedocs/
-  21. mailto:gcc-help@gcc.gnu.org
-  22. mailto:gcc@gnu.org
+  17. http://gcc.gnu.org/bugzilla/buglist.cgi?bug_status=RESOLVED&resolution=FIXED&target_milestone=4.4.5
+  18. mailto:gnu@gnu.org
+  19. http://www.gnu.org/home.html#ContactInfo
+  20. http://gcc.gnu.org/about.html
+  21. http://gcc.gnu.org/onlinedocs/
+  22. mailto:gcc-help@gcc.gnu.org
   23. mailto:gcc@gcc.gnu.org
   24. http://gcc.gnu.org/lists.html
   25. http://validator.w3.org/check/referer
@@ -1516,15 +1528,13 @@ References and Acknowledgements
     pages and the [17]GCC manuals. If that fails, the
     [18]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [19]gcc@gnu.org or [20]gcc@gcc.gnu.org.
-    All of our lists have [21]public archives.
+    our developer list at [19]gcc@gcc.gnu.org. All of our lists have
+    [20]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [22]Valid XHTML 1.0
+   Last modified 2010-11-06 [21]Valid XHTML 1.0
 
 References
 
@@ -1546,10 +1556,9 @@ References
   16. http://gcc.gnu.org/about.html
   17. http://gcc.gnu.org/onlinedocs/
   18. mailto:gcc-help@gcc.gnu.org
-  19. mailto:gcc@gnu.org
-  20. mailto:gcc@gcc.gnu.org
-  21. http://gcc.gnu.org/lists.html
-  22. http://validator.w3.org/check/referer
+  19. mailto:gcc@gcc.gnu.org
+  20. http://gcc.gnu.org/lists.html
+  21. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-4.3/changes.html
 
@@ -2316,15 +2325,13 @@ GCC 4.3.5
     pages and the [33]GCC manuals. If that fails, the
     [34]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [35]gcc@gnu.org or [36]gcc@gcc.gnu.org.
-    All of our lists have [37]public archives.
+    our developer list at [35]gcc@gcc.gnu.org. All of our lists have
+    [36]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-10 [38]Valid XHTML 1.0
+   Last modified 2010-11-06 [37]Valid XHTML 1.0
 
 References
 
@@ -2362,10 +2369,9 @@ References
   32. http://gcc.gnu.org/about.html
   33. http://gcc.gnu.org/onlinedocs/
   34. mailto:gcc-help@gcc.gnu.org
-  35. mailto:gcc@gnu.org
-  36. mailto:gcc@gcc.gnu.org
-  37. http://gcc.gnu.org/lists.html
-  38. http://validator.w3.org/check/referer
+  35. mailto:gcc@gcc.gnu.org
+  36. http://gcc.gnu.org/lists.html
+  37. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-4.2/index.html
 
@@ -2425,15 +2431,13 @@ References and Acknowledgements
     pages and the [16]GCC manuals. If that fails, the
     [17]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [18]gcc@gnu.org or [19]gcc@gcc.gnu.org.
-    All of our lists have [20]public archives.
+    our developer list at [18]gcc@gcc.gnu.org. All of our lists have
+    [19]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [21]Valid XHTML 1.0
+   Last modified 2010-11-06 [20]Valid XHTML 1.0
 
 References
 
@@ -2454,10 +2458,9 @@ References
   15. http://gcc.gnu.org/about.html
   16. http://gcc.gnu.org/onlinedocs/
   17. mailto:gcc-help@gcc.gnu.org
-  18. mailto:gcc@gnu.org
-  19. mailto:gcc@gcc.gnu.org
-  20. http://gcc.gnu.org/lists.html
-  21. http://validator.w3.org/check/referer
+  18. mailto:gcc@gcc.gnu.org
+  19. http://gcc.gnu.org/lists.html
+  20. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-4.2/changes.html
 
@@ -2762,15 +2765,13 @@ Other significant improvements
     pages and the [10]GCC manuals. If that fails, the
     [11]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [12]gcc@gnu.org or [13]gcc@gcc.gnu.org.
-    All of our lists have [14]public archives.
+    our developer list at [12]gcc@gcc.gnu.org. All of our lists have
+    [13]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-10 [15]Valid XHTML 1.0
+   Last modified 2010-11-06 [14]Valid XHTML 1.0
 
 References
 
@@ -2785,10 +2786,9 @@ References
    9. http://gcc.gnu.org/about.html
   10. http://gcc.gnu.org/onlinedocs/
   11. mailto:gcc-help@gcc.gnu.org
-  12. mailto:gcc@gnu.org
-  13. mailto:gcc@gcc.gnu.org
-  14. http://gcc.gnu.org/lists.html
-  15. http://validator.w3.org/check/referer
+  12. mailto:gcc@gcc.gnu.org
+  13. http://gcc.gnu.org/lists.html
+  14. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-4.1/index.html
 
@@ -2842,15 +2842,13 @@ References and Acknowledgements
     pages and the [14]GCC manuals. If that fails, the
     [15]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [16]gcc@gnu.org or [17]gcc@gcc.gnu.org.
-    All of our lists have [18]public archives.
+    our developer list at [16]gcc@gcc.gnu.org. All of our lists have
+    [17]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [19]Valid XHTML 1.0
+   Last modified 2010-11-06 [18]Valid XHTML 1.0
 
 References
 
@@ -2869,10 +2867,9 @@ References
   13. http://gcc.gnu.org/about.html
   14. http://gcc.gnu.org/onlinedocs/
   15. mailto:gcc-help@gcc.gnu.org
-  16. mailto:gcc@gnu.org
-  17. mailto:gcc@gcc.gnu.org
-  18. http://gcc.gnu.org/lists.html
-  19. http://validator.w3.org/check/referer
+  16. mailto:gcc@gcc.gnu.org
+  17. http://gcc.gnu.org/lists.html
+  18. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-4.1/changes.html
 
@@ -3413,15 +3410,13 @@ GCC 4.1.2
     pages and the [10]GCC manuals. If that fails, the
     [11]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [12]gcc@gnu.org or [13]gcc@gcc.gnu.org.
-    All of our lists have [14]public archives.
+    our developer list at [12]gcc@gcc.gnu.org. All of our lists have
+    [13]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-10 [15]Valid XHTML 1.0
+   Last modified 2010-11-06 [14]Valid XHTML 1.0
 
 References
 
@@ -3436,10 +3431,9 @@ References
    9. http://gcc.gnu.org/about.html
   10. http://gcc.gnu.org/onlinedocs/
   11. mailto:gcc-help@gcc.gnu.org
-  12. mailto:gcc@gnu.org
-  13. mailto:gcc@gcc.gnu.org
-  14. http://gcc.gnu.org/lists.html
-  15. http://validator.w3.org/check/referer
+  12. mailto:gcc@gcc.gnu.org
+  13. http://gcc.gnu.org/lists.html
+  14. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-4.0/index.html
 
@@ -3499,15 +3493,13 @@ References and Acknowledgements
     pages and the [16]GCC manuals. If that fails, the
     [17]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [18]gcc@gnu.org or [19]gcc@gcc.gnu.org.
-    All of our lists have [20]public archives.
+    our developer list at [18]gcc@gcc.gnu.org. All of our lists have
+    [19]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [21]Valid XHTML 1.0
+   Last modified 2010-11-06 [20]Valid XHTML 1.0
 
 References
 
@@ -3528,10 +3520,9 @@ References
   15. http://gcc.gnu.org/about.html
   16. http://gcc.gnu.org/onlinedocs/
   17. mailto:gcc-help@gcc.gnu.org
-  18. mailto:gcc@gnu.org
-  19. mailto:gcc@gcc.gnu.org
-  20. http://gcc.gnu.org/lists.html
-  21. http://validator.w3.org/check/referer
+  18. mailto:gcc@gcc.gnu.org
+  19. http://gcc.gnu.org/lists.html
+  20. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-4.0/changes.html
 
@@ -4033,15 +4024,13 @@ GCC 4.0.4
     pages and the [19]GCC manuals. If that fails, the
     [20]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [21]gcc@gnu.org or [22]gcc@gcc.gnu.org.
-    All of our lists have [23]public archives.
+    our developer list at [21]gcc@gcc.gnu.org. All of our lists have
+    [22]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-10 [24]Valid XHTML 1.0
+   Last modified 2010-11-06 [23]Valid XHTML 1.0
 
 References
 
@@ -4065,10 +4054,9 @@ References
   18. http://gcc.gnu.org/about.html
   19. http://gcc.gnu.org/onlinedocs/
   20. mailto:gcc-help@gcc.gnu.org
-  21. mailto:gcc@gnu.org
-  22. mailto:gcc@gcc.gnu.org
-  23. http://gcc.gnu.org/lists.html
-  24. http://validator.w3.org/check/referer
+  21. mailto:gcc@gcc.gnu.org
+  22. http://gcc.gnu.org/lists.html
+  23. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.4/index.html
 
@@ -4139,15 +4127,13 @@ References and Acknowledgements
     pages and the [20]GCC manuals. If that fails, the
     [21]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [22]gcc@gnu.org or [23]gcc@gcc.gnu.org.
-    All of our lists have [24]public archives.
+    our developer list at [22]gcc@gcc.gnu.org. All of our lists have
+    [23]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [25]Valid XHTML 1.0
+   Last modified 2010-11-06 [24]Valid XHTML 1.0
 
 References
 
@@ -4172,10 +4158,9 @@ References
   19. http://gcc.gnu.org/about.html
   20. http://gcc.gnu.org/onlinedocs/
   21. mailto:gcc-help@gcc.gnu.org
-  22. mailto:gcc@gnu.org
-  23. mailto:gcc@gcc.gnu.org
-  24. http://gcc.gnu.org/lists.html
-  25. http://validator.w3.org/check/referer
+  22. mailto:gcc@gcc.gnu.org
+  23. http://gcc.gnu.org/lists.html
+  24. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.4/changes.html
 
@@ -5092,8 +5077,8 @@ Obsolete Systems
           + NCR 3000 running System V r.4, i?86-ncr-sysv4*
           + FreeBSD with a.out object format, i?86-*-freebsd*aout* and
             i?86-*-freebsd2*
-          + Linux with a.out object format, i?86-linux*aout*
-          + Linux with libc5, a.k.a. glibc1, i?86-linux*libc1*
+          + GNU/Linux with a.out object format, i?86-linux*aout*
+          + GNU/Linux with libc5, a.k.a. glibc1, i?86-linux*libc1*
           + Interix versions before Interix 3, i?86-*-interix
           + Mach microkernel, i?86-mach*
           + SCO UnixWare with UDK, i?86-*-udk*
@@ -5935,15 +5920,13 @@ GCC 3.4.6
     pages and the [415]GCC manuals. If that fails, the
     [416]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [417]gcc@gnu.org or
-    [418]gcc@gcc.gnu.org. All of our lists have [419]public archives.
+    our developer list at [417]gcc@gcc.gnu.org. All of our lists have
+    [418]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-11 [420]Valid XHTML 1.0
+   Last modified 2010-11-07 [419]Valid XHTML 1.0
 
 References
 
@@ -6363,10 +6346,9 @@ References
  414. http://gcc.gnu.org/about.html
  415. http://gcc.gnu.org/onlinedocs/
  416. mailto:gcc-help@gcc.gnu.org
- 417. mailto:gcc@gnu.org
- 418. mailto:gcc@gcc.gnu.org
- 419. http://gcc.gnu.org/lists.html
- 420. http://validator.w3.org/check/referer
+ 417. mailto:gcc@gcc.gnu.org
+ 418. http://gcc.gnu.org/lists.html
+ 419. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.3/index.html
 
@@ -6438,15 +6420,13 @@ References and Acknowledgements
     pages and the [19]GCC manuals. If that fails, the
     [20]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [21]gcc@gnu.org or [22]gcc@gcc.gnu.org.
-    All of our lists have [23]public archives.
+    our developer list at [21]gcc@gcc.gnu.org. All of our lists have
+    [22]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [24]Valid XHTML 1.0
+   Last modified 2010-11-06 [23]Valid XHTML 1.0
 
 References
 
@@ -6470,10 +6450,9 @@ References
   18. http://gcc.gnu.org/about.html
   19. http://gcc.gnu.org/onlinedocs/
   20. mailto:gcc-help@gcc.gnu.org
-  21. mailto:gcc@gnu.org
-  22. mailto:gcc@gcc.gnu.org
-  23. http://gcc.gnu.org/lists.html
-  24. http://validator.w3.org/check/referer
+  21. mailto:gcc@gcc.gnu.org
+  22. http://gcc.gnu.org/lists.html
+  23. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.3/changes.html
 
@@ -7821,15 +7800,13 @@ GCC 3.3.6
     pages and the [556]GCC manuals. If that fails, the
     [557]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [558]gcc@gnu.org or
-    [559]gcc@gcc.gnu.org. All of our lists have [560]public archives.
+    our developer list at [558]gcc@gcc.gnu.org. All of our lists have
+    [559]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-11 [561]Valid XHTML 1.0
+   Last modified 2010-11-06 [560]Valid XHTML 1.0
 
 References
 
@@ -8390,10 +8367,9 @@ References
  555. http://gcc.gnu.org/about.html
  556. http://gcc.gnu.org/onlinedocs/
  557. mailto:gcc-help@gcc.gnu.org
- 558. mailto:gcc@gnu.org
- 559. mailto:gcc@gcc.gnu.org
- 560. http://gcc.gnu.org/lists.html
- 561. http://validator.w3.org/check/referer
+ 558. mailto:gcc@gcc.gnu.org
+ 559. http://gcc.gnu.org/lists.html
+ 560. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.2/index.html
 
@@ -8459,15 +8435,13 @@ References and Acknowledgements
     pages and the [15]GCC manuals. If that fails, the
     [16]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [17]gcc@gnu.org or [18]gcc@gcc.gnu.org.
-    All of our lists have [19]public archives.
+    our developer list at [17]gcc@gcc.gnu.org. All of our lists have
+    [18]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [20]Valid XHTML 1.0
+   Last modified 2010-11-06 [19]Valid XHTML 1.0
 
 References
 
@@ -8487,10 +8461,9 @@ References
   14. http://gcc.gnu.org/about.html
   15. http://gcc.gnu.org/onlinedocs/
   16. mailto:gcc-help@gcc.gnu.org
-  17. mailto:gcc@gnu.org
-  18. mailto:gcc@gcc.gnu.org
-  19. http://gcc.gnu.org/lists.html
-  20. http://validator.w3.org/check/referer
+  17. mailto:gcc@gcc.gnu.org
+  18. http://gcc.gnu.org/lists.html
+  19. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.2/changes.html
 
@@ -8711,7 +8684,7 @@ GCC 3.2.2
    On the following i386-based systems GCC 3.2.1 broke the C ABI wrt.
    functions returning structures: Cygwin, FreeBSD (GCC 3.2.1 as shipped
    with FreeBSD 5.0 does not have this problem), Interix, a.out-based
-   Linux and NetBSD, OpenBSD, and Darwin. GCC 3.2.2 reverts this ABI
+   GNU/Linux and NetBSD, OpenBSD, and Darwin. GCC 3.2.2 reverts this ABI
    change, and thus restores ABI-compatibility with previous releases
    (except GCC 3.2.1) on these platforms.
 
@@ -9090,15 +9063,13 @@ GCC 3.2
     pages and the [249]GCC manuals. If that fails, the
     [250]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [251]gcc@gnu.org or
-    [252]gcc@gcc.gnu.org. All of our lists have [253]public archives.
+    our developer list at [251]gcc@gcc.gnu.org. All of our lists have
+    [252]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [254]Valid XHTML 1.0
+   Last modified 2010-11-27 [253]Valid XHTML 1.0
 
 References
 
@@ -9352,10 +9323,9 @@ References
  248. http://gcc.gnu.org/about.html
  249. http://gcc.gnu.org/onlinedocs/
  250. mailto:gcc-help@gcc.gnu.org
- 251. mailto:gcc@gnu.org
- 252. mailto:gcc@gcc.gnu.org
- 253. http://gcc.gnu.org/lists.html
- 254. http://validator.w3.org/check/referer
+ 251. mailto:gcc@gcc.gnu.org
+ 252. http://gcc.gnu.org/lists.html
+ 253. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.1/index.html
 
@@ -9401,15 +9371,13 @@ http://gcc.gnu.org/gcc-3.1/index.html
     pages and the [12]GCC manuals. If that fails, the
     [13]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [14]gcc@gnu.org or [15]gcc@gcc.gnu.org.
-    All of our lists have [16]public archives.
+    our developer list at [14]gcc@gcc.gnu.org. All of our lists have
+    [15]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [17]Valid XHTML 1.0
+   Last modified 2010-11-06 [16]Valid XHTML 1.0
 
 References
 
@@ -9426,10 +9394,9 @@ References
   11. http://gcc.gnu.org/about.html
   12. http://gcc.gnu.org/onlinedocs/
   13. mailto:gcc-help@gcc.gnu.org
-  14. mailto:gcc@gnu.org
-  15. mailto:gcc@gcc.gnu.org
-  16. http://gcc.gnu.org/lists.html
-  17. http://validator.w3.org/check/referer
+  14. mailto:gcc@gcc.gnu.org
+  15. http://gcc.gnu.org/lists.html
+  16. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.1/changes.html
 
@@ -9712,7 +9679,7 @@ Obsolete Systems
           + FreeBSD 1.x, i?86-*-freebsd1.*
           + IBM AIX, i?86-*-aix*
           + ISC UNIX, i?86-*-isc*
-          + Linux with pre-BFD linker, i?86-*-linux*oldld*
+          + GNU/Linux with pre-BFD linker, i?86-*-linux*oldld*
           + NEXTstep, i?86-next-*
           + OSF UNIX, i?86-*-osf1* and i?86-*-osfrose*
           + RTEMS/coff, i?86-*-rtemscoff*
@@ -9764,15 +9731,13 @@ Documentation improvements
     pages and the [16]GCC manuals. If that fails, the
     [17]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [18]gcc@gnu.org or [19]gcc@gcc.gnu.org.
-    All of our lists have [20]public archives.
+    our developer list at [18]gcc@gcc.gnu.org. All of our lists have
+    [19]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-11 [21]Valid XHTML 1.0
+   Last modified 2010-11-27 [20]Valid XHTML 1.0
 
 References
 
@@ -9793,10 +9758,9 @@ References
   15. http://gcc.gnu.org/about.html
   16. http://gcc.gnu.org/onlinedocs/
   17. mailto:gcc-help@gcc.gnu.org
-  18. mailto:gcc@gnu.org
-  19. mailto:gcc@gcc.gnu.org
-  20. http://gcc.gnu.org/lists.html
-  21. http://validator.w3.org/check/referer
+  18. mailto:gcc@gcc.gnu.org
+  19. http://gcc.gnu.org/lists.html
+  20. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.0/gcc-3.0.html
 
@@ -9849,15 +9813,13 @@ Previous 3.0.x Releases
     pages and the [12]GCC manuals. If that fails, the
     [13]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [14]gcc@gnu.org or [15]gcc@gcc.gnu.org.
-    All of our lists have [16]public archives.
+    our developer list at [14]gcc@gcc.gnu.org. All of our lists have
+    [15]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [17]Valid XHTML 1.0
+   Last modified 2010-11-06 [16]Valid XHTML 1.0
 
 References
 
@@ -9874,10 +9836,9 @@ References
   11. http://gcc.gnu.org/about.html
   12. http://gcc.gnu.org/onlinedocs/
   13. mailto:gcc-help@gcc.gnu.org
-  14. mailto:gcc@gnu.org
-  15. mailto:gcc@gcc.gnu.org
-  16. http://gcc.gnu.org/lists.html
-  17. http://validator.w3.org/check/referer
+  14. mailto:gcc@gcc.gnu.org
+  15. http://gcc.gnu.org/lists.html
+  16. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.0/features.html
 
@@ -10048,15 +10009,13 @@ Other significant improvements
     pages and the [17]GCC manuals. If that fails, the
     [18]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [19]gcc@gnu.org or [20]gcc@gcc.gnu.org.
-    All of our lists have [21]public archives.
+    our developer list at [19]gcc@gcc.gnu.org. All of our lists have
+    [20]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [22]Valid XHTML 1.0
+   Last modified 2010-11-06 [21]Valid XHTML 1.0
 
 References
 
@@ -10078,10 +10037,9 @@ References
   16. http://gcc.gnu.org/about.html
   17. http://gcc.gnu.org/onlinedocs/
   18. mailto:gcc-help@gcc.gnu.org
-  19. mailto:gcc@gnu.org
-  20. mailto:gcc@gcc.gnu.org
-  21. http://gcc.gnu.org/lists.html
-  22. http://validator.w3.org/check/referer
+  19. mailto:gcc@gcc.gnu.org
+  20. http://gcc.gnu.org/lists.html
+  21. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.0/caveats.html
 
@@ -10129,15 +10087,13 @@ http://gcc.gnu.org/gcc-3.0/caveats.html
     pages and the [5]GCC manuals. If that fails, the
     [6]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [7]gcc@gnu.org or [8]gcc@gcc.gnu.org.
-    All of our lists have [9]public archives.
+    our developer list at [7]gcc@gcc.gnu.org. All of our lists have
+    [8]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [10]Valid XHTML 1.0
+   Last modified 2010-11-06 [9]Valid XHTML 1.0
 
 References
 
@@ -10147,10 +10103,9 @@ References
    4. http://gcc.gnu.org/about.html
    5. http://gcc.gnu.org/onlinedocs/
    6. mailto:gcc-help@gcc.gnu.org
-   7. mailto:gcc@gnu.org
-   8. mailto:gcc@gcc.gnu.org
-   9. http://gcc.gnu.org/lists.html
-  10. http://validator.w3.org/check/referer
+   7. mailto:gcc@gcc.gnu.org
+   8. http://gcc.gnu.org/lists.html
+   9. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-2.95/index.html
 
@@ -10217,15 +10172,13 @@ References and Acknowledgements
     pages and the [14]GCC manuals. If that fails, the
     [15]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [16]gcc@gnu.org or [17]gcc@gcc.gnu.org.
-    All of our lists have [18]public archives.
+    our developer list at [16]gcc@gcc.gnu.org. All of our lists have
+    [17]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [19]Valid XHTML 1.0
+   Last modified 2010-11-06 [18]Valid XHTML 1.0
 
 References
 
@@ -10244,10 +10197,9 @@ References
   13. http://gcc.gnu.org/about.html
   14. http://gcc.gnu.org/onlinedocs/
   15. mailto:gcc-help@gcc.gnu.org
-  16. mailto:gcc@gnu.org
-  17. mailto:gcc@gcc.gnu.org
-  18. http://gcc.gnu.org/lists.html
-  19. http://validator.w3.org/check/referer
+  16. mailto:gcc@gcc.gnu.org
+  17. http://gcc.gnu.org/lists.html
+  18. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-2.95/features.html
 
@@ -10491,15 +10443,13 @@ Additional Changes in GCC 2.95.3
     pages and the [20]GCC manuals. If that fails, the
     [21]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [22]gcc@gnu.org or [23]gcc@gcc.gnu.org.
-    All of our lists have [24]public archives.
+    our developer list at [22]gcc@gcc.gnu.org. All of our lists have
+    [23]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [25]Valid XHTML 1.0
+   Last modified 2010-11-06 [24]Valid XHTML 1.0
 
 References
 
@@ -10524,10 +10474,9 @@ References
   19. http://gcc.gnu.org/about.html
   20. http://gcc.gnu.org/onlinedocs/
   21. mailto:gcc-help@gcc.gnu.org
-  22. mailto:gcc@gnu.org
-  23. mailto:gcc@gcc.gnu.org
-  24. http://gcc.gnu.org/lists.html
-  25. http://validator.w3.org/check/referer
+  22. mailto:gcc@gcc.gnu.org
+  23. http://gcc.gnu.org/lists.html
+  24. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-2.95/caveats.html
 
@@ -10583,15 +10532,13 @@ http://gcc.gnu.org/gcc-2.95/caveats.html
     pages and the [5]GCC manuals. If that fails, the
     [6]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [7]gcc@gnu.org or [8]gcc@gcc.gnu.org.
-    All of our lists have [9]public archives.
+    our developer list at [7]gcc@gcc.gnu.org. All of our lists have
+    [8]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [10]Valid XHTML 1.0
+   Last modified 2010-11-06 [9]Valid XHTML 1.0
 
 References
 
@@ -10601,10 +10548,9 @@ References
    4. http://gcc.gnu.org/about.html
    5. http://gcc.gnu.org/onlinedocs/
    6. mailto:gcc-help@gcc.gnu.org
-   7. mailto:gcc@gnu.org
-   8. mailto:gcc@gcc.gnu.org
-   9. http://gcc.gnu.org/lists.html
-  10. http://validator.w3.org/check/referer
+   7. mailto:gcc@gcc.gnu.org
+   8. http://gcc.gnu.org/lists.html
+   9. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/egcs-1.1/index.html
 
@@ -10812,15 +10758,13 @@ http://gcc.gnu.org/egcs-1.1/index.html
     pages and the [14]GCC manuals. If that fails, the
     [15]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [16]gcc@gnu.org or [17]gcc@gcc.gnu.org.
-    All of our lists have [18]public archives.
+    our developer list at [16]gcc@gcc.gnu.org. All of our lists have
+    [17]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [19]Valid XHTML 1.0
+   Last modified 2010-11-06 [18]Valid XHTML 1.0
 
 References
 
@@ -10839,10 +10783,9 @@ References
   13. http://gcc.gnu.org/about.html
   14. http://gcc.gnu.org/onlinedocs/
   15. mailto:gcc-help@gcc.gnu.org
-  16. mailto:gcc@gnu.org
-  17. mailto:gcc@gcc.gnu.org
-  18. http://gcc.gnu.org/lists.html
-  19. http://validator.w3.org/check/referer
+  16. mailto:gcc@gcc.gnu.org
+  17. http://gcc.gnu.org/lists.html
+  18. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/egcs-1.1/features.html
 
@@ -10921,15 +10864,13 @@ http://gcc.gnu.org/egcs-1.1/features.html
     pages and the [8]GCC manuals. If that fails, the
     [9]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [10]gcc@gnu.org or [11]gcc@gcc.gnu.org.
-    All of our lists have [12]public archives.
+    our developer list at [10]gcc@gcc.gnu.org. All of our lists have
+    [11]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [13]Valid XHTML 1.0
+   Last modified 2010-11-06 [12]Valid XHTML 1.0
 
 References
 
@@ -10942,10 +10883,9 @@ References
    7. http://gcc.gnu.org/about.html
    8. http://gcc.gnu.org/onlinedocs/
    9. mailto:gcc-help@gcc.gnu.org
-  10. mailto:gcc@gnu.org
-  11. mailto:gcc@gcc.gnu.org
-  12. http://gcc.gnu.org/lists.html
-  13. http://validator.w3.org/check/referer
+  10. mailto:gcc@gcc.gnu.org
+  11. http://gcc.gnu.org/lists.html
+  12. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/egcs-1.1/caveats.html
 
@@ -10984,15 +10924,13 @@ http://gcc.gnu.org/egcs-1.1/caveats.html
     pages and the [4]GCC manuals. If that fails, the
     [5]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [6]gcc@gnu.org or [7]gcc@gcc.gnu.org.
-    All of our lists have [8]public archives.
+    our developer list at [6]gcc@gcc.gnu.org. All of our lists have
+    [7]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [9]Valid XHTML 1.0
+   Last modified 2010-11-06 [8]Valid XHTML 1.0
 
 References
 
@@ -11001,10 +10939,9 @@ References
    3. http://gcc.gnu.org/about.html
    4. http://gcc.gnu.org/onlinedocs/
    5. mailto:gcc-help@gcc.gnu.org
-   6. mailto:gcc@gnu.org
-   7. mailto:gcc@gcc.gnu.org
-   8. http://gcc.gnu.org/lists.html
-   9. http://validator.w3.org/check/referer
+   6. mailto:gcc@gcc.gnu.org
+   7. http://gcc.gnu.org/lists.html
+   8. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/egcs-1.0/index.html
 
@@ -11189,15 +11126,13 @@ http://gcc.gnu.org/egcs-1.0/index.html
     pages and the [9]GCC manuals. If that fails, the
     [10]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [11]gcc@gnu.org or [12]gcc@gcc.gnu.org.
-    All of our lists have [13]public archives.
+    our developer list at [11]gcc@gcc.gnu.org. All of our lists have
+    [12]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [14]Valid XHTML 1.0
+   Last modified 2010-11-06 [13]Valid XHTML 1.0
 
 References
 
@@ -11211,10 +11146,9 @@ References
    8. http://gcc.gnu.org/about.html
    9. http://gcc.gnu.org/onlinedocs/
   10. mailto:gcc-help@gcc.gnu.org
-  11. mailto:gcc@gnu.org
-  12. mailto:gcc@gcc.gnu.org
-  13. http://gcc.gnu.org/lists.html
-  14. http://validator.w3.org/check/referer
+  11. mailto:gcc@gcc.gnu.org
+  12. http://gcc.gnu.org/lists.html
+  13. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/egcs-1.0/features.html
 
@@ -11265,15 +11199,13 @@ http://gcc.gnu.org/egcs-1.0/features.html
     pages and the [6]GCC manuals. If that fails, the
     [7]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [8]gcc@gnu.org or [9]gcc@gcc.gnu.org.
-    All of our lists have [10]public archives.
+    our developer list at [8]gcc@gcc.gnu.org. All of our lists have
+    [9]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [11]Valid XHTML 1.0
+   Last modified 2010-11-06 [10]Valid XHTML 1.0
 
 References
 
@@ -11284,10 +11216,9 @@ References
    5. http://gcc.gnu.org/about.html
    6. http://gcc.gnu.org/onlinedocs/
    7. mailto:gcc-help@gcc.gnu.org
-   8. mailto:gcc@gnu.org
-   9. mailto:gcc@gcc.gnu.org
-  10. http://gcc.gnu.org/lists.html
-  11. http://validator.w3.org/check/referer
+   8. mailto:gcc@gcc.gnu.org
+   9. http://gcc.gnu.org/lists.html
+  10. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/egcs-1.0/caveats.html
 
@@ -11327,15 +11258,13 @@ http://gcc.gnu.org/egcs-1.0/caveats.html
     pages and the [4]GCC manuals. If that fails, the
     [5]gcc-help@gcc.gnu.org mailing list might help.
     Please send comments on these web pages and the development of GCC to
-    our developer mailing list at [6]gcc@gnu.org or [7]gcc@gcc.gnu.org.
-    All of our lists have [8]public archives.
+    our developer list at [6]gcc@gcc.gnu.org. All of our lists have
+    [7]public archives.
 
-   Copyright (C) Free Software Foundation, Inc., 51 Franklin St, Fifth
-   Floor, Boston, MA 02110, USA.
-
+   Copyright (C) Free Software Foundation, Inc.
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
-   Last modified 2010-07-01 [9]Valid XHTML 1.0
+   Last modified 2010-11-06 [8]Valid XHTML 1.0
 
 References
 
@@ -11344,8 +11273,7 @@ References
    3. http://gcc.gnu.org/about.html
    4. http://gcc.gnu.org/onlinedocs/
    5. mailto:gcc-help@gcc.gnu.org
-   6. mailto:gcc@gnu.org
-   7. mailto:gcc@gcc.gnu.org
-   8. http://gcc.gnu.org/lists.html
-   9. http://validator.w3.org/check/referer
+   6. mailto:gcc@gcc.gnu.org
+   7. http://gcc.gnu.org/lists.html
+   8. http://validator.w3.org/check/referer
 ======================================================================
