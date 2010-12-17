@@ -3429,10 +3429,12 @@ gimplify_parameters (void)
 		  DECL_IGNORED_P (local) = 0;
 		  /* If PARM was addressable, move that flag over
 		     to the local copy, as its address will be taken,
-		     not the PARMs.  Keep the parms address taken
-		     as we'll query that flag during gimplification.  */
+		     not the PARMs.  */
 		  if (TREE_ADDRESSABLE (parm))
-		    TREE_ADDRESSABLE (local) = 1;
+		    {
+		      TREE_ADDRESSABLE (parm) = 0;
+		      TREE_ADDRESSABLE (local) = 1;
+		    }
 		}
 	      else
 		{

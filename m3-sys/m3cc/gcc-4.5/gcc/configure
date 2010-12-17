@@ -22416,6 +22416,18 @@ if test $gcc_cv_as_tls = yes; then
   set_have_as_tls=yes
 fi
 fi
+case "$target" in
+  *-*-irix6*)
+    # IRIX 6.5 rld and libc.so lack TLS support, so even if gas and gld
+    # with TLS support are in use, native TLS cannot work.
+    set_have_as_tls=no
+    ;;
+  *-*-osf*)
+    # Tru64 UNIX loader and libc.so lack TLS support, so even if gas and
+    # gld with TLS support are in use, native TLS cannot work.
+    set_have_as_tls=no
+    ;;
+esac
 if test $set_have_as_tls = yes ; then
 
 $as_echo "#define HAVE_AS_TLS 1" >>confdefs.h
@@ -25390,27 +25402,58 @@ fi
 
 
 pluginlibs=
+
+case "${host}" in
+  *-*-darwin*)
+    if test x$build = x$host; then
+      export_sym_check="nm${exeext} -g"
+    elif test x$host = x$target; then
+      export_sym_check="$gcc_cv_nm -g"
+    else
+      export_sym_check=
+    fi
+  ;;
+  *)
+    if test x$build = x$host; then
+      export_sym_check="objdump${exeext} -T"
+    elif test x$host = x$target; then
+      export_sym_check="$gcc_cv_objdump -T"
+    else
+      export_sym_check=
+    fi
+  ;;
+esac
+
 if test x"$enable_plugin" = x"yes"; then
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for exported symbols" >&5
 $as_echo_n "checking for exported symbols... " >&6; }
-  echo "int main() {return 0;} int foobar() {return 0;}" > conftest.c
-  ${CC} ${CFLAGS} ${LDFLAGS} conftest.c -o conftest > /dev/null 2>&1
-  if $gcc_cv_objdump -T conftest | grep foobar > /dev/null; then
-    : # No need to use a flag
-  else
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for -rdynamic" >&5
-$as_echo_n "checking for -rdynamic... " >&6; }
-    ${CC} ${CFLAGS} ${LDFLAGS} -rdynamic conftest.c -o conftest > /dev/null 2>&1
-    if $gcc_cv_objdump -T conftest | grep foobar > /dev/null; then
-      plugin_rdynamic=yes
-      pluginlibs="-rdynamic"
+  if test "x$export_sym_check" != x; then
+    echo "int main() {return 0;} int foobar() {return 0;}" > conftest.c
+    ${CC} ${CFLAGS} ${LDFLAGS} conftest.c -o conftest > /dev/null 2>&1
+    if $export_sym_check conftest | grep foobar > /dev/null; then
+      : # No need to use a flag
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
     else
-      plugin_rdynamic=no
-      enable_plugin=no
-    fi
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $plugin_rdynamic" >&5
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for -rdynamic" >&5
+$as_echo_n "checking for -rdynamic... " >&6; }
+      ${CC} ${CFLAGS} ${LDFLAGS} -rdynamic conftest.c -o conftest > /dev/null 2>&1
+      if $export_sym_check conftest | grep foobar > /dev/null; then
+        plugin_rdynamic=yes
+        pluginlibs="-rdynamic"
+      else
+        plugin_rdynamic=no
+        enable_plugin=no
+      fi
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: $plugin_rdynamic" >&5
 $as_echo "$plugin_rdynamic" >&6; }
+    fi
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: unable to check" >&5
+$as_echo "unable to check" >&6; }
   fi
 
   # Check -ldl
@@ -25478,7 +25521,14 @@ fi
 
   # Check that we can build shared objects with -fPIC -shared
   saved_LDFLAGS="$LDFLAGS"
-  LDFLAGS="$LDFLAGS -fPIC -shared"
+  case "${host}" in
+    *-*-darwin*)
+      LDFLAGS="$LDFLAGS -fPIC -shared -undefined dynamic_lookup"
+    ;;
+    *)
+      LDFLAGS="$LDFLAGS -fPIC -shared"
+    ;;
+  esac
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for -fPIC -shared" >&5
 $as_echo_n "checking for -fPIC -shared... " >&6; }
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext

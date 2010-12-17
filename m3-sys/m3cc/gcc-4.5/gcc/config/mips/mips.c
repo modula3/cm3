@@ -346,7 +346,7 @@ struct GTY(())  machine_function {
 
   /* How many instructions it takes to load a label into $AT, or 0 if
      this property hasn't yet been calculated.  */
-  unsigned int load_label_length;
+  unsigned int load_label_num_insns;
 
   /* True if mips_adjust_insn_length should ignore an instruction's
      hazard attribute.  */
@@ -11210,14 +11210,14 @@ mips_process_load_label (rtx target)
 /* Return the number of instructions needed to load a label into $AT.  */
 
 static unsigned int
-mips_load_label_length (void)
+mips_load_label_num_insns (void)
 {
-  if (cfun->machine->load_label_length == 0)
+  if (cfun->machine->load_label_num_insns == 0)
     {
       mips_process_load_label (pc_rtx);
-      cfun->machine->load_label_length = mips_multi_num_insns;
+      cfun->machine->load_label_num_insns = mips_multi_num_insns;
     }
-  return cfun->machine->load_label_length;
+  return cfun->machine->load_label_num_insns;
 }
 
 /* Emit an asm sequence to start a noat block and load the address
@@ -11259,7 +11259,7 @@ mips_adjust_insn_length (rtx insn, int length)
 
       /* Load the label into $AT and jump to it.  Ignore the delay
 	 slot of the jump.  */
-      length += mips_load_label_length () + 4;
+      length += 4 * mips_load_label_num_insns() + 4;
     }
 
   /* A unconditional jump has an unfilled delay slot if it is not part
@@ -14014,23 +14014,35 @@ r10k_insert_cache_barriers (void)
 }
 
 /* If INSN is a call, return the underlying CALL expr.  Return NULL_RTX
-   otherwise.  */
+   otherwise.  If INSN has two call rtx, then store the second one in
+   SECOND_CALL.  */
 
 static rtx
-mips_call_expr_from_insn (rtx insn)
+mips_call_expr_from_insn (rtx insn, rtx *second_call)
 {
   rtx x;
+  rtx x2;
 
   if (!CALL_P (insn))
     return NULL_RTX;
 
   x = PATTERN (insn);
   if (GET_CODE (x) == PARALLEL)
-    x = XVECEXP (x, 0, 0);
+    {
+      /* Calls returning complex values have two CALL rtx.  Look for the second
+	 one here, and return it via the SECOND_CALL arg.  */
+      x2 = XVECEXP (x, 0, 1);
+      if (GET_CODE (x2) == SET)
+	x2 = XEXP (x2, 1);
+      if (GET_CODE (x2) == CALL)
+	*second_call = x2;
+
+      x = XVECEXP (x, 0, 0);
+    }
   if (GET_CODE (x) == SET)
     x = XEXP (x, 1);
-
   gcc_assert (GET_CODE (x) == CALL);
+
   return x;
 }
 
@@ -14162,9 +14174,10 @@ mips_annotate_pic_calls (void)
   FOR_EACH_BB (bb)
     FOR_BB_INSNS (bb, insn)
     {
-      rtx call, reg, symbol;
+      rtx call, reg, symbol, second_call;
 
-      call = mips_call_expr_from_insn (insn);
+      second_call = 0;
+      call = mips_call_expr_from_insn (insn, &second_call);
       if (!call)
 	continue;
       gcc_assert (MEM_P (XEXP (call, 0)));
@@ -14174,7 +14187,11 @@ mips_annotate_pic_calls (void)
 
       symbol = mips_find_pic_call_symbol (insn, reg);
       if (symbol)
-	mips_annotate_pic_call_expr (call, symbol);
+	{
+	  mips_annotate_pic_call_expr (call, symbol);
+	  if (second_call)
+	    mips_annotate_pic_call_expr (second_call, symbol);
+	}
     }
 }
 

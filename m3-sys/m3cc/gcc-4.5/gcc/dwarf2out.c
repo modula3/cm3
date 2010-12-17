@@ -12163,7 +12163,8 @@ modified_type_die (tree type, int is_const_type, int is_volatile_type,
   name = qualified_type ? TYPE_NAME (qualified_type) : NULL;
 
   /* Handle C typedef types.  */
-  if (name && TREE_CODE (name) == TYPE_DECL && DECL_ORIGINAL_TYPE (name))
+  if (name && TREE_CODE (name) == TYPE_DECL && DECL_ORIGINAL_TYPE (name)
+      && !DECL_ARTIFICIAL (name))
     {
       tree dtype = TREE_TYPE (name);
 
@@ -12893,11 +12894,18 @@ const_ok_for_output_1 (rtx *rtlp, void *data ATTRIBUTE_UNUSED)
       /* If delegitimize_address couldn't do anything with the UNSPEC, assume
 	 we can't express it in the debug info.  */
 #ifdef ENABLE_CHECKING
-      inform (current_function_decl
-	      ? DECL_SOURCE_LOCATION (current_function_decl)
-	      : UNKNOWN_LOCATION,
-	      "non-delegitimized UNSPEC %d found in variable location",
-	      XINT (rtl, 1));
+      /* Don't complain about TLS UNSPECs, those are just too hard to
+	 delegitimize.  */
+      if (XVECLEN (rtl, 0) != 1
+	  || GET_CODE (XVECEXP (rtl, 0, 0)) != SYMBOL_REF
+	  || SYMBOL_REF_DECL (XVECEXP (rtl, 0, 0)) == NULL
+	  || TREE_CODE (SYMBOL_REF_DECL (XVECEXP (rtl, 0, 0))) != VAR_DECL
+	  || !DECL_THREAD_LOCAL_P (SYMBOL_REF_DECL (XVECEXP (rtl, 0, 0))))
+	inform (current_function_decl
+		? DECL_SOURCE_LOCATION (current_function_decl)
+		: UNKNOWN_LOCATION,
+		"non-delegitimized UNSPEC %d found in variable location",
+		XINT (rtl, 1));
 #endif
       expansion_failed (NULL_TREE, rtl,
 			"UNSPEC hasn't been delegitimized.\n");
@@ -15583,7 +15591,8 @@ rtl_for_decl_init (tree init, tree type)
     ;
   /* Vectors only work if their mode is supported by the target.
      FIXME: generic vectors ought to work too.  */
-  else if (TREE_CODE (type) == VECTOR_TYPE && TYPE_MODE (type) == BLKmode)
+  else if (TREE_CODE (type) == VECTOR_TYPE
+	   && !VECTOR_MODE_P (TYPE_MODE (type)))
     ;
   /* If the initializer is something that we know will expand into an
      immediate RTL constant, expand it now.  We must be careful not to
@@ -19129,6 +19138,10 @@ gen_type_die_with_usage (tree type, dw_die_ref context_die,
 	     out yet, use a NULL context for now; it will be fixed up in
 	     decls_for_scope.  */
 	  context_die = lookup_decl_die (TYPE_CONTEXT (type));
+	  /* A declaration DIE doesn't count; nested types need to go in the
+	     specification.  */
+	  if (context_die && is_declaration_die (context_die))
+	    context_die = NULL;
 	  need_pop = 0;
 	}
       else
@@ -19614,16 +19627,20 @@ gen_decl_die (tree decl, tree origin, dw_die_ref context_die)
       else if (debug_info_level > DINFO_LEVEL_TERSE)
 	{
 	  /* Before we describe the FUNCTION_DECL itself, make sure that we
-	     have described its return type.  */
+	     have its containing type.  */
+	  if (!origin)
+	    origin = decl_class_context (decl);
+	  if (origin != NULL_TREE)
+	    gen_type_die (origin, context_die);
+
+	  /* And its return type.  */
 	  gen_type_die (TREE_TYPE (TREE_TYPE (decl)), context_die);
 
 	  /* And its virtual context.  */
 	  if (DECL_VINDEX (decl) != NULL_TREE)
 	    gen_type_die (DECL_CONTEXT (decl), context_die);
 
-	  /* And its containing type.  */
-	  if (!origin)
-	    origin = decl_class_context (decl);
+	  /* Make sure we have a member DIE for decl.  */
 	  if (origin != NULL_TREE)
 	    gen_type_die_for_member (origin, decl, context_die);
 

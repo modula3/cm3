@@ -1532,7 +1532,7 @@ replace_uses_by (tree name, tree val)
 	  size_t i;
 
 	  fold_stmt_inplace (stmt);
-	  if (cfgcleanup_altered_bbs)
+	  if (cfgcleanup_altered_bbs && !is_gimple_debug (stmt))
 	    bitmap_set_bit (cfgcleanup_altered_bbs, gimple_bb (stmt)->index);
 
 	  /* FIXME.  This should go in update_stmt.  */
@@ -3317,6 +3317,7 @@ verify_gimple_assign_binary (gimple stmt)
       {
 	if (TREE_CODE (rhs1_type) != VECTOR_TYPE
 	    || !(INTEGRAL_TYPE_P (TREE_TYPE (rhs1_type))
+		 || POINTER_TYPE_P (TREE_TYPE (rhs1_type))
 		 || FIXED_POINT_TYPE_P (TREE_TYPE (rhs1_type))
 		 || SCALAR_FLOAT_TYPE_P (TREE_TYPE (rhs1_type)))
 	    || (!INTEGRAL_TYPE_P (rhs2_type)

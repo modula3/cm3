@@ -456,6 +456,14 @@ tree (*make_fname_decl) (location_t, tree, int);
    executed.  */
 int c_inhibit_evaluation_warnings;
 
+/* Whether we are building a boolean conversion inside
+   convert_for_assignment, or some other late binary operation.  If
+   build_binary_op is called for C (from code shared by C and C++) in
+   this case, then the operands have already been folded and the
+   result will not be folded again, so C_MAYBE_CONST_EXPR should not
+   be generated.  */
+bool in_late_binary_op;
+
 /* Whether lexing has been completed, so subsequent preprocessor
    errors should use the compiler's input_location.  */
 bool done_lexing = false;
@@ -2477,10 +2485,26 @@ warn_for_collisions (struct tlist *list)
 static int
 warning_candidate_p (tree x)
 {
-  /* !VOID_TYPE_P (TREE_TYPE (x)) is workaround for cp/tree.c
+  if (DECL_P (x) && DECL_ARTIFICIAL (x))
+    return 0;
+
+  /* VOID_TYPE_P (TREE_TYPE (x)) is workaround for cp/tree.c
      (lvalue_p) crash on TRY/CATCH. */
-  return !(DECL_P (x) && DECL_ARTIFICIAL (x))
-    && TREE_TYPE (x) && !VOID_TYPE_P (TREE_TYPE (x)) && lvalue_p (x);
+  if (TREE_TYPE (x) == NULL_TREE || VOID_TYPE_P (TREE_TYPE (x)))
+    return 0;
+
+  if (!lvalue_p (x))
+    return 0;
+
+  /* No point to track non-const calls, they will never satisfy
+     operand_equal_p.  */
+  if (TREE_CODE (x) == CALL_EXPR && (call_expr_flags (x) & ECF_CONST) == 0)
+    return 0;
+
+  if (TREE_CODE (x) == STRING_CST)
+    return 0;
+
+  return 1;
 }
 
 /* Return nonzero if X and Y appear to be the same candidate (or NULL) */
@@ -4067,7 +4091,7 @@ c_common_truthvalue_conversion (location_t location, tree expr)
 
   if (TREE_CODE (TREE_TYPE (expr)) == COMPLEX_TYPE)
     {
-      tree t = c_save_expr (expr);
+      tree t = (in_late_binary_op ? save_expr (expr) : c_save_expr (expr));
       expr = (build_binary_op
 	      (EXPR_LOCATION (expr),
 	       (TREE_SIDE_EFFECTS (expr)
