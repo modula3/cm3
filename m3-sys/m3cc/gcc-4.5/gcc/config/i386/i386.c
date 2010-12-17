@@ -7160,6 +7160,8 @@ ix86_gimplify_va_arg (tree valist, tree type, gimple_seq *pre_p,
 	      tree dest_addr, dest;
 	      int cur_size = GET_MODE_SIZE (mode);
 
+	      gcc_assert (prev_size <= INTVAL (XEXP (slot, 1)));
+	      prev_size = INTVAL (XEXP (slot, 1));
 	      if (prev_size + cur_size > size)
 		{
 		  cur_size = size - prev_size;
@@ -7192,7 +7194,7 @@ ix86_gimplify_va_arg (tree valist, tree type, gimple_seq *pre_p,
 
 	      dest_addr = fold_convert (daddr_type, addr);
 	      dest_addr = fold_build2 (POINTER_PLUS_EXPR, daddr_type, dest_addr,
-				       size_int (INTVAL (XEXP (slot, 1))));
+				       size_int (prev_size));
 	      if (cur_size == GET_MODE_SIZE (mode))
 		{
 		  src = build_va_arg_indirect_ref (src_addr);
@@ -8648,19 +8650,27 @@ ix86_expand_prologue (void)
   else
     {
       rtx eax = gen_rtx_REG (Pmode, AX_REG);
-      bool eax_live;
+      rtx r10 = NULL;
+      bool eax_live = false;
+      bool r10_live = false;
       rtx t;
 
-      if (cfun->machine->call_abi == MS_ABI)
-	eax_live = false;
-      else
-	eax_live = ix86_eax_live_at_start_p ();
+      if (TARGET_64BIT)
+        r10_live = (DECL_STATIC_CHAIN (current_function_decl) != 0);
+      if (!TARGET_64BIT_MS_ABI)
+        eax_live = ix86_eax_live_at_start_p ();
 
       if (eax_live)
 	{
 	  emit_insn (gen_push (eax));
 	  allocate -= UNITS_PER_WORD;
 	}
+      if (r10_live)
+       {
+         r10 = gen_rtx_REG (Pmode, R10_REG);
+         emit_insn (gen_push (r10));
+         allocate -= UNITS_PER_WORD;
+       }
 
       emit_move_insn (eax, GEN_INT (allocate));
 
@@ -8679,7 +8689,30 @@ ix86_expand_prologue (void)
 	  RTX_FRAME_RELATED_P (insn) = 1;
 	}
 
-      if (eax_live)
+      if (eax_live && r10_live)
+	{
+	  if (frame_pointer_needed)
+	    {
+	      t = plus_constant (hard_frame_pointer_rtx,
+				 allocate
+				 - frame.to_allocate
+				 - frame.nregs * UNITS_PER_WORD);
+	      emit_move_insn (r10, gen_rtx_MEM (Pmode, t));
+	      t = plus_constant (hard_frame_pointer_rtx,
+				 allocate + UNITS_PER_WORD
+				 - frame.to_allocate
+				 - frame.nregs * UNITS_PER_WORD);
+	      emit_move_insn (eax, gen_rtx_MEM (Pmode, t));
+	    }
+          else
+	    {
+	      t = plus_constant (stack_pointer_rtx, allocate);
+	      emit_move_insn (r10, gen_rtx_MEM (Pmode, t));
+	      t = plus_constant (stack_pointer_rtx, allocate + UNITS_PER_WORD);
+	      emit_move_insn (eax, gen_rtx_MEM (Pmode, t));
+	    }
+	}
+      else if (eax_live || r10_live)
 	{
 	  if (frame_pointer_needed)
 	    t = plus_constant (hard_frame_pointer_rtx,
@@ -8688,7 +8721,7 @@ ix86_expand_prologue (void)
 			       - frame.nregs * UNITS_PER_WORD);
 	  else
 	    t = plus_constant (stack_pointer_rtx, allocate);
-	  emit_move_insn (eax, gen_rtx_MEM (Pmode, t));
+	  emit_move_insn ((eax_live ? eax : r10), gen_rtx_MEM (Pmode, t));
 	}
     }
 
@@ -9485,8 +9518,7 @@ ix86_decompose_address (rtx addr, struct ix86_address *out)
      to test cfun for being non-NULL. */
   if (TARGET_K6 && cfun && optimize_function_for_speed_p (cfun)
       && base_reg && !index_reg && !disp
-      && REG_P (base_reg)
-      && REGNO_REG_CLASS (REGNO (base_reg)) == SIREG)
+      && REG_P (base_reg) && REGNO (base_reg) == SI_REG)
     disp = const0_rtx;
 
   /* Special case: encode reg+reg instead of reg*2.  */

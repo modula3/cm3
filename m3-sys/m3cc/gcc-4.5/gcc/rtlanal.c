@@ -1957,6 +1957,33 @@ remove_reg_equal_equiv_notes (rtx insn)
     }
 }
 
+/* Remove all REG_EQUAL and REG_EQUIV notes referring to REGNO.  */
+
+void
+remove_reg_equal_equiv_notes_for_regno (unsigned int regno)
+{
+  df_ref eq_use;
+
+  if (!df)
+    return;
+
+  /* This loop is a little tricky.  We cannot just go down the chain because
+     it is being modified by the actions in the loop.  So we simply iterate
+     over the head.  We plan to drain the list anyway.  */
+  while ((eq_use = DF_REG_EQ_USE_CHAIN (regno)) != NULL)
+    {
+      rtx insn = DF_REF_INSN (eq_use);
+      rtx note = find_reg_equal_equiv_note (insn);
+
+      /* This assert is generally triggered when someone deletes a REG_EQUAL
+	 or REG_EQUIV note by hacking the list manually rather than calling
+	 remove_note.  */
+      gcc_assert (note);
+
+      remove_note (insn, note);
+    }
+}
+
 /* Search LISTP (an EXPR_LIST) for an entry whose first operand is NODE and
    return 1 if it is found.  A simple equality test is used to determine if
    NODE matches.  */
@@ -4761,9 +4788,7 @@ canonicalize_condition (rtx insn, rtx cond, int reverse, rtx *earliest,
 	 stop if it isn't a single set or if it has a REG_INC note because
 	 we don't want to bother dealing with it.  */
 
-      do
-	prev = prev_nonnote_insn (prev);
-      while (prev && DEBUG_INSN_P (prev));
+      prev = prev_nonnote_nondebug_insn (prev);
 
       if (prev == 0
 	  || !NONJUMP_INSN_P (prev)

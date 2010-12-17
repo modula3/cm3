@@ -2323,6 +2323,11 @@ operation_could_trap_helper_p (enum tree_code op,
 	return true;
       return false;
 
+    case COMPLEX_EXPR:
+    case CONSTRUCTOR:
+      /* Constructing an object cannot trap.  */
+      return false;
+
     default:
       /* Any floating arithmetic may trap.  */
       if (fp_operation && flag_trapping_math)
@@ -3726,7 +3731,13 @@ cleanup_empty_eh (eh_landing_pad lp)
 
   /* If the block is totally empty, look for more unsplitting cases.  */
   if (gsi_end_p (gsi))
-    return cleanup_empty_eh_unsplit (bb, e_out, lp);
+    {
+      /* For the degenerate case of an infinite loop bail out.  */
+      if (e_out->dest == bb)
+	return false;
+
+      return cleanup_empty_eh_unsplit (bb, e_out, lp);
+    }
 
   /* The block should consist only of a single RESX statement.  */
   resx = gsi_stmt (gsi);

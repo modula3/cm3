@@ -5563,7 +5563,7 @@ function_arg_advance (struct sparc_args *cum, enum machine_mode mode,
   /* We pass 0 for incoming_p here, it doesn't matter.  */
   function_arg_slotno (cum, mode, type, named, 0, &regno, &padding);
 
-  /* If register required leading padding, add it.  */
+  /* If argument requires leading padding, add it.  */
   cum->words += padding;
 
   if (TARGET_ARCH32)
