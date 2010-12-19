@@ -363,6 +363,7 @@ if [ "x$CM3_TARGET" = "x" ]; then
 
     OpenBSD)
       case "`arch -s`" in
+        alpha) CM3_TARGET=ALPHA_OPENBSD;;
         powerpc) CM3_TARGET=PPC_LINUX;;
         x86_64) CM3_TARGET=AMD64_LINUX;;
         amd64) CM3_TARGET=AMD64_LINUX;;
