@@ -272,11 +272,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     CASE System OF
     
-    |  Systems.ALPHA_LINUX =>
-                 Jumpbuf_size              := 34 * Address.size;
-
-    |  Systems.ALPHA_OSF =>
-                 Jumpbuf_size              := 84 * Address.size;
+    |  Systems.ALPHA_LINUX => Jumpbuf_size := 34 * Address.size;
+    |  Systems.ALPHA_OPENBSD => Jumpbuf_size := 81 * Address.size;
+    |  Systems.ALPHA_OSF => Jumpbuf_size := 84 * Address.size;
 
     |  Systems.I386_FREEBSD, Systems.FreeBSD4 =>
                  Jumpbuf_size              := 11 * Address.size;

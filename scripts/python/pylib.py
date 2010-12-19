@@ -597,7 +597,9 @@ elif UName == "freebsd":
 
 elif UName == "openbsd":
     arch = os.popen("arch -s").read() # or machine -a
-    if arch == "sparc64\n":
+    if arch == "alpha\n":
+        Host = "ALPHA_OPENBSD"
+    elif arch == "sparc64\n":
         Host = "SPARC64_OPENBSD"
     elif arch == "powerpc\n":
         Host = "PPC32_OPENBSD"
@@ -1249,7 +1251,7 @@ def Boot():
 
     AssemblerFlags = " "
 
-    if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX" and Target != "ARMEL_LINUX" and Target != "ALPHA_LINUX":
+    if not Target in ["PPC32_OPENBSD", "PPC_LINUX", "ARMEL_LINUX", "ALPHA_LINUX", "ALPHA_OPENBSD"]:
         # "Tag" not right for LINUX due to LINUXLIBC6
         # "Tag" not right for BSD or 64 either.
         if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
