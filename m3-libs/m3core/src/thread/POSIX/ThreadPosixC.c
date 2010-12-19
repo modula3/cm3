@@ -20,6 +20,7 @@
 #define _DARWIN_C_SOURCE
 
 #if (defined(__APPLE__) && defined(__x86_64__)) \
+    || (defined(__OpenBSD__) && defined(__alpha)) \
     || (defined(__FreeBSD__) && (__FreeBSD__ < 5))
 /* http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
  * http://www.engelschall.com/pw/usenix/2000/pmt-html/
