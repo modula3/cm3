@@ -28,6 +28,8 @@ extern "C"
 #define OpenBSD_sparc64
 #elif defined(__mips64__)
 #define OpenBSD_mips64
+#elif defined(__alpha)
+#define OpenBSD_alpha
 #else
 #error unsupported OpenBSD platform
 #endif
@@ -40,6 +42,8 @@ extern "C"
 #else
 #error unsupported operating system
 #endif
+
+#ifndef OpenBSD_alpha
 
 /* The various numbers are experimentally derived or based
  * on reading (assembly) source or stepping through with
@@ -207,6 +211,8 @@ int swapcontext(ucontext_t* old_context, const ucontext_t* new_context)
     setcontext(new_context);
     return 0;
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
