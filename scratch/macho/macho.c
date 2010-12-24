@@ -86,12 +86,12 @@ typedef struct _macho_file_t {
     uchar swapped;
 } macho_file_t;
 
-uint32 swap4(uint32 a)
+uint32 swap32(uint32 a)
 {
     return (a >> 24) | ((a >> 8) & 0xFF00) | ((a << 8) & 0xFF0000) | (a << 24);
 }
 
-uint64 swap8(uint64 a)
+uint64 swap64(uint64 a)
 {
     const uint64 FF = 0xFF;
     return (a >> 56)
@@ -104,14 +104,14 @@ uint64 swap8(uint64 a)
         | (a << 56);
 }
 
-uint32 macho_swap4(macho_file_t* m, uint32 a)
+uint32 macho_swap32(macho_file_t* m, uint32 a)
 {
-    return m->swapped ? swap4(a) : a;
+    return m->swapped ? swap32(a) : a;
 }
 
-void swap4p(uint32* a)
+void swap32p(uint32* a)
 {
-    *a = swap4(*a);
+    *a = swap32(*a);
 }
 
 int char_is_printable(char ch)
@@ -161,9 +161,9 @@ void field_print(struct_t* s, const field_t* f, void* p)
     else
     {
         if (size == 4)
-            i = sprintf(cursor, "%#16lX %#lX", (ulong)*q32, (ulong)swap4(*q32));
+            i = sprintf(cursor, "%#16lX %#lX", (ulong)*q32, (ulong)swap32(*q32));
         else if (size == 8)
-            i = sprintf(cursor, "%#16" PRINT64 "X %#" PRINT64 "X", *q64, swap8(*q64));
+            i = sprintf(cursor, "%#16" PRINT64 "X %#" PRINT64 "X", *q64, swap64(*q64));
         adjust_hex_case(cursor);
         cursor += i;
     }
@@ -240,12 +240,12 @@ macho_loadcommand_t* macho_first_load_command(macho_file_t* m)
 
 macho_loadcommand_t* macho_next_load_command(macho_file_t* m, macho_loadcommand_t* L)
 {
-    return (macho_loadcommand_t*)(macho_swap4(m, L->cmdsize) + (uchar*)L);
+    return (macho_loadcommand_t*)(macho_swap32(m, L->cmdsize) + (uchar*)L);
 }
 
 uint macho_ncmds(macho_file_t* m)
 {
-    return macho_swap4(m, m->m64 ? m->mh64->ncmds : m->mh32->ncmds);
+    return macho_swap32(m, m->m64 ? m->mh64->ncmds : m->mh32->ncmds);
 }
 
 extern_const field_t macho_segment32_t_fields[] = {
@@ -449,7 +449,7 @@ void macho_dump_load_command_encryption_info(macho_file_t* m, macho_loadcommand_
 
 void macho_dump_load_command(macho_file_t* m, macho_loadcommand_t* L, uint i)
 {
-    uint cmd = macho_swap4(m, L->cmd);
+    uint cmd = macho_swap32(m, L->cmd);
     printf("cmd %u %s\n", i, macho_loadcommand_name(cmd));
     switch (cmd)
     {
