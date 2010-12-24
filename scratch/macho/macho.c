@@ -173,10 +173,11 @@ void field_print(struct_t* s, const field_t* f, void* p)
 void struct_print(struct_t* t, void* p)
 {
     uint i;
+    uint nfields = t->nfields;
     int widest_field = t->widest_field;
     if (widest_field == 0)
     {
-        for (i = 0; i < t->nfields; ++i)
+        for (i = 0; i < nfields; ++i)
         {
             size_t j = strlen(t->fields[i].name);
             if (j > widest_field && j <= INT_MAX)
@@ -184,7 +185,7 @@ void struct_print(struct_t* t, void* p)
         }
         t->widest_field = widest_field;
      }
-    for (i = 0; i < t->nfields; ++i)
+    for (i = 0; i < nfields; ++i)
         field_print(t, &t->fields[i], p);
 }
 
