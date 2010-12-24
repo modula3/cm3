@@ -35,9 +35,16 @@ typedef unsigned long ulong, ULONG, ulong_t;
 
 #define macho_cpu_type_64bit            0x1000000
 #define macho_cpu_type_x86              0x07
-#define macho_cpu_type_x86_64           (macho_cpu_type_x86 | macho_cpu_type_64bit)
+#define macho_cpu_type_amd64            (macho_cpu_type_x86 | macho_cpu_type_64bit)
 #define macho_cpu_type_powerpc          0x12
 #define macho_cpu_type_powerpc64        (macho_cpu_type_powerpc | macho_cpu_type_64bit)
+
+/* alternate names */
+#define macho_cpu_type_x86_64           macho_cpu_type_amd64
+#define macho_cpu_type_powerpc32        macho_cpu_type_powerpc
+#define macho_cpu_type_ppc              macho_cpu_type_powerpc
+#define macho_cpu_type_ppc32            macho_cpu_type_powerpc
+#define macho_cpu_type_ppc64            macho_cpu_type_powerpc64
 
 /* macho_header_t.cpusubtype */
 
