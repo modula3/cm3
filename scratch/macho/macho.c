@@ -98,20 +98,8 @@ macho_header32_t_fields[] = {
     FIELD(macho_header32_t, flags)
 };
 
-extern_const field_t
-macho_header64_t_fields[] = {
-    FIELD_ENUM(macho_header64_t, magic, macho_magic_names),
-    FIELD_ENUM(macho_header64_t, cputype, macho_cputype_names),
-    FIELD_ENUM(macho_header64_t, cpusubtype, macho_cpusubtype_names),
-    FIELD_ENUM(macho_header64_t, filetype, macho_filetype_names),
-    FIELD(macho_header64_t, ncmds),
-    FIELD(macho_header64_t, sizeofcmds),
-    FIELD(macho_header64_t, flags),
-    FIELD(macho_header64_t, reserved)
-};
-
-struct_t struct_macho_header32 = STRUCT(macho_header32_t);
-struct_t struct_macho_header64 = STRUCT(macho_header64_t);
+struct_t
+struct_macho_header32 = STRUCT(macho_header32_t);
 
 typedef union _macho_load_command_u {
     macho_loadcommand_t base;
@@ -123,11 +111,9 @@ typedef struct _macho_file_t {
     const char* path;
     uchar* contents;
     size_t size;
-    uint32_t magic;
-    macho_header32_t* mh32;
-    macho_header64_t* mh64;
-    uchar m64;
-    uchar swapped;
+    /* macho_header64 just adds uint32_t reserved at end */
+    macho_header32_t* macho_header;
+    uchar macho_header_size;
     uint32 (*swap32)(uint32 a);
     uint64 (*swap64)(uint64 a);
 } macho_file_t;
@@ -158,13 +144,13 @@ swap64(uint64 a)
         | (a << 56);
 }
 
+/*
 uint32
 macho_swap32(macho_file_t* m, uint32 a)
 {
     return m->swapped ? swap32(a) : a;
 }
 
-/*
 void
 swap32p(uint32* a)
 {
@@ -332,7 +318,7 @@ macho_loadcommand_name(uint32_t cmd)
 macho_loadcommand_t*
 macho_first_load_command(macho_file_t* m)
 {
-    return (m->m64 ? (macho_loadcommand_t*)(m->mh64 + 1) : (macho_loadcommand_t*)(m->mh32 + 1));
+    return (macho_loadcommand_t*)(m->macho_header_size + (uchar*)m->macho_header);
 }
 
 macho_loadcommand_t*
@@ -344,7 +330,7 @@ macho_next_load_command(macho_file_t* m, macho_loadcommand_t* L)
 uint
 macho_ncmds(macho_file_t* m)
 {
-    return m->swap32(m->m64 ? m->mh64->ncmds : m->mh32->ncmds);
+    return m->swap32(m->macho_header->ncmds);
 }
 
 extern_const field_t
@@ -720,30 +706,29 @@ int
 main(int argc, char** argv)
 {
     macho_file_t m = { 0 };
+    uint32_t magic = { 0 };
+    BOOL swapped = { 0 };
+    BOOL m64 = { 0 };
 
     m.path = argv[1];
+    if (!argv[1])
+        exit(1);
     open_and_read_entire_file(m.path, &m.contents, &m.size);
-    /*printf("%p %lu\n", mh32, (ulong)size);*/
-    
-    m.magic = ((macho_header32_t*)m.contents)->magic;
-    m.m64 =     (m.magic == macho_magic64          || m.magic == macho_magic64_reversed);
-    m.swapped = (m.magic == macho_magic32_reversed || m.magic == macho_magic64_reversed);
-    if (m.swapped)
+    if (!m.contents)
+      exit(1);
+    m.macho_header = ((macho_header32_t*)m.contents);
+    magic = m.macho_header->magic;
+    if (magic != macho_magic32 && magic != macho_magic32_reversed
+        && magic != macho_magic64 && magic != macho_magic64_reversed)
     {
-        m.swap32 = swap32;
-        m.swap64 = swap64;
+        exit(1);
     }
-    else
-    {
-        m.swap32 = no_swap32;
-        m.swap64 = no_swap64;
-    }
-    if (m.m64)
-        m.mh64 = (macho_header64_t*)m.contents;
-    else
-        m.mh32 = (macho_header32_t*)m.contents;;
-
-    struct_print(m.mh64 ? &struct_macho_header64 : &struct_macho_header32, m.contents);
+    m64 =     (magic == macho_magic64          || magic == macho_magic64_reversed);
+    swapped = (magic == macho_magic32_reversed || magic == macho_magic64_reversed);
+    m.swap32 = swapped ? swap32 : no_swap32;
+    m.swap64 = swapped ? swap64 : no_swap64;
+    m.macho_header_size = m64 ? sizeof(macho_header64_t) : sizeof(macho_header32_t);
+    struct_print(&struct_macho_header32, m.contents);
     macho_dump_load_commands(&m);
     return 0;
 }
