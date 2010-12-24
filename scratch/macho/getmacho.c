@@ -1,6 +1,6 @@
 #include <mach-o/nlist.h>
 #include <mach-o/loader.h>
-#include <mach-o/machine.h>
+//#include <mach-o/machine.h>
 #include <mach-o/reloc.h>
 
 #define X(a) x##a a
