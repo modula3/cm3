@@ -54,24 +54,28 @@ typedef struct _struct_t {
 
 #define STRUCT(a) {STRINGIZE(a), sizeof(a), NUMBER_OF(PASTE(a,_fields)), PASTE(a,_fields)}
 
-extern_const enum_t macho_magic_names[] = {
+extern_const enum_t
+macho_magic_names[] = {
     { "magic32", macho_magic32 },
     { "magic64", macho_magic64 }
 };
 
-extern_const enum_t macho_cputype_names[] = {
+extern_const enum_t
+macho_cputype_names[] = {
     { "x86", macho_cpu_type_x86 },
     { "amd64", macho_cpu_type_amd64 },
     { "powerpc", macho_cpu_type_powerpc },
     { "powerpc64", macho_cpu_type_powerpc64 }
 };
 
-extern_const enum_t macho_cpusubtype_names[] = {
+extern_const enum_t
+macho_cpusubtype_names[] = {
     { "powerpc_all", macho_cpu_subtype_powerpc_all },
     { "x86_all", macho_cpu_subtype_x86_all }
 };
 
-extern_const enum_t macho_filetype_names[] = {
+extern_const enum_t
+macho_filetype_names[] = {
     { "object", macho_type_object },
     { "execute", macho_type_execute },
     { "fixed_vm_library", macho_type_fixed_vm_library },
@@ -83,7 +87,8 @@ extern_const enum_t macho_filetype_names[] = {
     { "dylib_stub", macho_type_dylib_stub },
     { "dsym", macho_type_dsym } };
         
-extern_const field_t macho_header32_t_fields[] = {
+extern_const field_t
+macho_header32_t_fields[] = {
     FIELD_ENUM(macho_header32_t, magic, macho_magic_names),
     FIELD_ENUM(macho_header32_t, cputype, macho_cputype_names),
     FIELD_ENUM(macho_header32_t, cpusubtype, macho_cpusubtype_names),
@@ -93,7 +98,8 @@ extern_const field_t macho_header32_t_fields[] = {
     FIELD(macho_header32_t, flags)
 };
 
-extern_const field_t macho_header64_t_fields[] = {
+extern_const field_t
+macho_header64_t_fields[] = {
     FIELD_ENUM(macho_header64_t, magic, macho_magic_names),
     FIELD_ENUM(macho_header64_t, cputype, macho_cputype_names),
     FIELD_ENUM(macho_header64_t, cpusubtype, macho_cpusubtype_names),
@@ -122,14 +128,24 @@ typedef struct _macho_file_t {
     macho_header64_t* mh64;
     uchar m64;
     uchar swapped;
+    uint32 (*swap32)(uint32 a);
+    uint64 (*swap64)(uint64 a);
 } macho_file_t;
 
-uint32 swap32(uint32 a)
+uint32
+no_swap32(uint32 a) { return a; }
+
+uint64
+no_swap64(uint64 a) { return a; }
+
+uint32
+swap32(uint32 a)
 {
     return (a >> 24) | ((a >> 8) & 0xFF00) | ((a << 8) & 0xFF0000) | (a << 24);
 }
 
-uint64 swap64(uint64 a)
+uint64
+swap64(uint64 a)
 {
     const uint64 FF = 0xFF;
     return (a >> 56)
@@ -142,27 +158,31 @@ uint64 swap64(uint64 a)
         | (a << 56);
 }
 
-uint32 macho_swap32(macho_file_t* m, uint32 a)
+uint32
+macho_swap32(macho_file_t* m, uint32 a)
 {
     return m->swapped ? swap32(a) : a;
 }
 
-void swap32p(uint32* a)
+/*
+void
+swap32p(uint32* a)
 {
     *a = swap32(*a);
 }
 
-int char_is_printable(char ch)
+int
+char_is_printable(char ch)
 {
     return (ch >= 0x20 && ch <= 0x7E);
 }
 
-char char_to_printable(char ch)
+char
+char_to_printable(char ch)
 {
     return char_is_printable(ch) ? ch : '.';
 }
 
-/*
 void adjust_hex_case(char* a)
 {
     a = strchr(a, 'X');
@@ -174,7 +194,8 @@ void adjust_hex_case(char* a)
 }
 */
 
-void field_print(struct_t* s, const field_t* f, void* p)
+void
+field_print(struct_t* s, const field_t* f, void* p)
 {
     char buffer[256];
     char* cursor = buffer;
@@ -242,7 +263,8 @@ void field_print(struct_t* s, const field_t* f, void* p)
     printf("%s\n", buffer);
 }
 
-void struct_print(struct_t* t, void* p)
+void
+struct_print(struct_t* t, void* p)
 {
     uint i;
     uint nfields = t->nfields;
@@ -261,7 +283,8 @@ void struct_print(struct_t* t, void* p)
         field_print(t, &t->fields[i], p);
 }
 
-const char* macho_loadcommand_name(uint32_t cmd)
+const char*
+macho_loadcommand_name(uint32_t cmd)
 {
     static char a[99];
     switch (cmd & ~macho_loadcommand_require_dyld)
@@ -306,22 +329,26 @@ const char* macho_loadcommand_name(uint32_t cmd)
     return a;
 }
 
-macho_loadcommand_t* macho_first_load_command(macho_file_t* m)
+macho_loadcommand_t*
+macho_first_load_command(macho_file_t* m)
 {
     return (m->m64 ? (macho_loadcommand_t*)(m->mh64 + 1) : (macho_loadcommand_t*)(m->mh32 + 1));
 }
 
-macho_loadcommand_t* macho_next_load_command(macho_file_t* m, macho_loadcommand_t* L)
+macho_loadcommand_t*
+macho_next_load_command(macho_file_t* m, macho_loadcommand_t* L)
 {
-    return (macho_loadcommand_t*)(macho_swap32(m, L->cmdsize) + (uchar*)L);
+    return (macho_loadcommand_t*)(m->swap32(L->cmdsize) + (uchar*)L);
 }
 
-uint macho_ncmds(macho_file_t* m)
+uint
+macho_ncmds(macho_file_t* m)
 {
-    return macho_swap32(m, m->m64 ? m->mh64->ncmds : m->mh32->ncmds);
+    return m->swap32(m->m64 ? m->mh64->ncmds : m->mh32->ncmds);
 }
 
-extern_const field_t macho_segment32_t_fields[] = {
+extern_const field_t
+macho_segment32_t_fields[] = {
     FIELD(macho_segment32_t, cmd),
     FIELD(macho_segment32_t, cmdsize),
     FIELD_STRING(macho_segment32_t, segname),
@@ -335,9 +362,11 @@ extern_const field_t macho_segment32_t_fields[] = {
     FIELD(macho_segment32_t, flags)
 };
 
-struct_t struct_macho_segment32 = STRUCT(macho_segment32_t);
+struct_t
+struct_macho_segment32 = STRUCT(macho_segment32_t);
 
-extern_const field_t macho_segment64_t_fields[] = {
+extern_const field_t
+macho_segment64_t_fields[] = {
     FIELD(macho_segment64_t, cmd),
     FIELD(macho_segment64_t, cmdsize),
     FIELD_STRING(macho_segment64_t, segname),
@@ -351,9 +380,11 @@ extern_const field_t macho_segment64_t_fields[] = {
     FIELD(macho_segment64_t, flags)
 };
 
-struct_t struct_macho_segment64 = STRUCT(macho_segment64_t);
+struct_t
+struct_macho_segment64 = STRUCT(macho_segment64_t);
 
-extern_const field_t macho_section32_t_fields[] = {
+extern_const
+field_t macho_section32_t_fields[] = {
     FIELD_STRING(macho_section32_t, sectname),
     FIELD_STRING(macho_section32_t, segname),
     FIELD(macho_section32_t, addr),
@@ -367,9 +398,11 @@ extern_const field_t macho_section32_t_fields[] = {
     FIELD(macho_section32_t, reserved2)
 };
 
-struct_t struct_macho_section32 = STRUCT(macho_section32_t);
+struct_t
+struct_macho_section32 = STRUCT(macho_section32_t);
 
-extern_const field_t macho_section64_t_fields[] = {
+extern_const field_t
+macho_section64_t_fields[] = {
     FIELD_STRING(macho_section64_t, sectname),
     FIELD_STRING(macho_section64_t, segname),
     FIELD(macho_section64_t, addr),
@@ -384,149 +417,215 @@ extern_const field_t macho_section64_t_fields[] = {
     FIELD(macho_section64_t, reserved3)
 };
 
-struct_t struct_macho_section64 = STRUCT(macho_section64_t);
+struct_t
+struct_macho_section64 = STRUCT(macho_section64_t);
 
-void macho_dump_load_command_segment32(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_segmentX(macho_file_t* m,
+                                 void* L,
+                                 uint32 load_command_size,
+                                 struct_t* struct_macho_segmentX,
+                                 struct_t* struct_macho_sectionX,
+                                 uint32 section_count,
+                                 uint32 section_size)
 {
-    struct_print(&struct_macho_segment32, L);
+    uint32 i;
+    uchar* sections = load_command_size + (uchar*)L;
+    struct_print(struct_macho_segmentX, L);
+    for (i = 0; i < section_count; ++i)
+    {
+      struct_print(struct_macho_sectionX, sections);
+      sections += section_size;
+    }
 }
 
-void macho_dump_load_command_segment64(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_segment32(macho_file_t* m, macho_segment32_t* L)
 {
-    struct_print(&struct_macho_segment64, L);
+    macho_dump_load_command_segmentX(m,
+                                     L,
+                                     sizeof(*L),
+                                     &struct_macho_segment32,
+                                     &struct_macho_section32,
+                                     m->swap32(L->nsects),
+                                     sizeof(macho_section32_t));
 }
 
-void macho_dump_load_command_symtab(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_segment64(macho_file_t* m, macho_segment64_t* L)
 {
+    macho_dump_load_command_segmentX(m,
+                                     L,
+                                     sizeof(*L),
+                                     &struct_macho_segment64,
+                                     &struct_macho_section64,
+                                     m->swap32(L->nsects),
+                                     sizeof(macho_section64_t));
 }
 
-void macho_dump_load_command_symseg(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_thread(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_unixthread(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_fixed_vm_lib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_id_fixed_vm_lib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_ident(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_fixed_vm_file(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_prepage(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_dysymtab(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void macho_dump_load_command_load_dylib(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_symtab(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_id_dylib(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_symseg(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_load_dylinker(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_thread(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_id_dylinker(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_unixthread(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_prebound_dylib(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_fixed_vm_lib(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_routines32(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_id_fixed_vm_lib(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_sub_framework(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_ident(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_sub_umbrella(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_fixed_vm_file(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_sub_client(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_prepage(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_sub_library(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_dysymtab(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_twolevel_hints(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_load_dylib(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_prebind_checksum(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_id_dylib(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_load_weak_dylib(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_load_dylinker(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_routines64(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_id_dylinker(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_uuid(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_prebound_dylib(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_rpath(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_routines32(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_code_signature(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_sub_framework(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_segment_split_info(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_sub_umbrella(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_reexport_dylib(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_sub_client(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_lazy_load_dylib(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_sub_library(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command_encryption_info(macho_file_t* m, macho_loadcommand_t* L)
+void
+macho_dump_load_command_twolevel_hints(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
-void macho_dump_load_command(macho_file_t* m, macho_loadcommand_t* L, uint i)
+void
+macho_dump_load_command_prebind_checksum(macho_file_t* m, macho_loadcommand_t* L)
 {
-    uint cmd = macho_swap32(m, L->cmd);
+}
+
+void
+macho_dump_load_command_load_weak_dylib(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_routines64(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_uuid(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_rpath(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_code_signature(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_segment_split_info(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_reexport_dylib(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_lazy_load_dylib(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command_encryption_info(macho_file_t* m, macho_loadcommand_t* L)
+{
+}
+
+void
+macho_dump_load_command(macho_file_t* m, macho_loadcommand_t* L, uint i)
+{
+    uint cmd = m->swap32(L->cmd);
     printf("cmd %u %s\n", i, macho_loadcommand_name(cmd));
     switch (cmd)
     {
-#define X(a) case macho_loadcommand_##a & ~macho_loadcommand_require_dyld: macho_dump_load_command_##a(m, L); break;
+#define X(a) case macho_loadcommand_##a & ~macho_loadcommand_require_dyld: macho_dump_load_command_##a(m, (void*)L); break;
     X(segment32)
     X(symtab)
     X(symseg)
@@ -564,7 +663,8 @@ void macho_dump_load_command(macho_file_t* m, macho_loadcommand_t* L, uint i)
     }
 }
 
-void macho_dump_load_commands(macho_file_t* m)
+void
+macho_dump_load_commands(macho_file_t* m)
 {
     uint ncmds = macho_ncmds(m);
     uint i;
@@ -576,7 +676,8 @@ void macho_dump_load_commands(macho_file_t* m)
     }
 }
 
-void open_and_read_entire_file(const char* path, uchar** contents, size_t* size)
+void
+open_and_read_entire_file(const char* path, uchar** contents, size_t* size)
 {
     uchar* buffer = { 0 };
     uchar* prev_buffer = { 0 };
@@ -615,7 +716,8 @@ Exit:
     if (file) fclose(file);
 }
 
-int main(int argc, char** argv)
+int
+main(int argc, char** argv)
 {
     macho_file_t m = { 0 };
 
@@ -626,6 +728,16 @@ int main(int argc, char** argv)
     m.magic = ((macho_header32_t*)m.contents)->magic;
     m.m64 =     (m.magic == macho_magic64          || m.magic == macho_magic64_reversed);
     m.swapped = (m.magic == macho_magic32_reversed || m.magic == macho_magic64_reversed);
+    if (m.swapped)
+    {
+        m.swap32 = swap32;
+        m.swap64 = swap64;
+    }
+    else
+    {
+        m.swap32 = no_swap32;
+        m.swap64 = no_swap64;
+    }
     if (m.m64)
         m.mh64 = (macho_header64_t*)m.contents;
     else
