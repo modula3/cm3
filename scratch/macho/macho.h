@@ -423,7 +423,7 @@ typedef struct _macho_symtab_command_t {
 #define macho_n_undf 0x00 /* undefined */
 #define macho_n_abs  0x02 /* absolute; n_sect = NO_SECT */
 #define macho_n_indr 0x0A
-#define macho_n_pbud 0x0C /* undefined/prebound; n_sect = NO_SECT
+#define macho_n_pbud 0x0C /* undefined/prebound; n_sect = NO_SECT */
 #define macho_n_sect 0x0E /* defined in section n_sect */
 
 /* n_desc */
