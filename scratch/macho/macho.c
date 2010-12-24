@@ -24,17 +24,25 @@
 #define extern_const const
 #endif
 
+typedef struct _enum_t {
+  const char* name;
+  uint64_t value;
+} enum_t;
+
 typedef struct _field_t {
     char name[14];
     uchar offset;
     uchar size;
     uchar element_size;
     uchar str;
+    uchar enum_table_count;
+    const enum_t* enum_table;
 } field_t;
 
 #define FIELD(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f))}
 #define FIELD_ARRAY(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), sizeof((((t*)0)->f)[0]) }
 #define FIELD_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), sizeof((((t*)0)->f)[0]), 1 }
+#define FIELD_ENUM(t, f, e) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), 0, 0, sizeof(e)/sizeof((e)[0]), e }
 
 typedef struct _struct_t {
     const char* name;
@@ -46,21 +54,50 @@ typedef struct _struct_t {
 
 #define STRUCT(a) {STRINGIZE(a), sizeof(a), NUMBER_OF(PASTE(a,_fields)), PASTE(a,_fields)}
 
+extern_const enum_t macho_magic_names[] = {
+    { "magic32", macho_magic32 },
+    { "magic64", macho_magic64 }
+};
+
+extern_const enum_t macho_cputype_names[] = {
+    { "x86", macho_cpu_type_x86 },
+    { "amd64", macho_cpu_type_amd64 },
+    { "powerpc", macho_cpu_type_powerpc },
+    { "powerpc64", macho_cpu_type_powerpc64 }
+};
+
+extern_const enum_t macho_cpusubtype_names[] = {
+    { "powerpc_all", macho_cpu_subtype_powerpc_all },
+    { "x86_all", macho_cpu_subtype_x86_all }
+};
+
+extern_const enum_t macho_filetype_names[] = {
+    { "object", macho_type_object },
+    { "execute", macho_type_execute },
+    { "fixed_vm_library", macho_type_fixed_vm_library },
+    { "core", macho_type_core },
+    { "preload", macho_type_preload },
+    { "dylib", macho_type_dylib },
+    { "dylinker", macho_type_dylinker },
+    { "bundle", macho_type_bundle },
+    { "dylib_stub", macho_type_dylib_stub },
+    { "dsym", macho_type_dsym } };
+        
 extern_const field_t macho_header32_t_fields[] = {
-    FIELD(macho_header32_t, magic),
-    FIELD(macho_header32_t, cputype),
-    FIELD(macho_header32_t, cpusubtype),
-    FIELD(macho_header32_t, filetype),
+    FIELD_ENUM(macho_header32_t, magic, macho_magic_names),
+    FIELD_ENUM(macho_header32_t, cputype, macho_cputype_names),
+    FIELD_ENUM(macho_header32_t, cpusubtype, macho_cpusubtype_names),
+    FIELD_ENUM(macho_header32_t, filetype, macho_filetype_names),
     FIELD(macho_header32_t, ncmds),
     FIELD(macho_header32_t, sizeofcmds),
     FIELD(macho_header32_t, flags)
 };
 
 extern_const field_t macho_header64_t_fields[] = {
-    FIELD(macho_header64_t, magic),
-    FIELD(macho_header64_t, cputype),
-    FIELD(macho_header64_t, cpusubtype),
-    FIELD(macho_header64_t, filetype),
+    FIELD_ENUM(macho_header64_t, magic, macho_magic_names),
+    FIELD_ENUM(macho_header64_t, cputype, macho_cputype_names),
+    FIELD_ENUM(macho_header64_t, cpusubtype, macho_cpusubtype_names),
+    FIELD_ENUM(macho_header64_t, filetype, macho_filetype_names),
     FIELD(macho_header64_t, ncmds),
     FIELD(macho_header64_t, sizeofcmds),
     FIELD(macho_header64_t, flags),
@@ -80,6 +117,7 @@ typedef struct _macho_file_t {
     const char* path;
     uchar* contents;
     size_t size;
+    uint32_t magic;
     macho_header32_t* mh32;
     macho_header64_t* mh64;
     uchar m64;
@@ -124,6 +162,7 @@ char char_to_printable(char ch)
     return char_is_printable(ch) ? ch : '.';
 }
 
+/*
 void adjust_hex_case(char* a)
 {
     a = strchr(a, 'X');
@@ -131,7 +170,9 @@ void adjust_hex_case(char* a)
     else return;
     a = strchr(a, 'X');
     if (a) *a = 'x';
+#endif
 }
+*/
 
 void field_print(struct_t* s, const field_t* f, void* p)
 {
@@ -143,6 +184,10 @@ void field_print(struct_t* s, const field_t* f, void* p)
     uint i = {0};
     uchar size = f->size;
     uchar str = f->str;
+    const enum_t* enum_table = f->enum_table;
+    uint32_t enum_table_count = f->enum_table_count;
+    uint64 value = { 0 };
+    uint64 value_swapped = { 0 };
     cursor += sprintf(cursor, "%s.%-*s ", s->name, s->widest_field, f->name);
     if (str)
     {
@@ -161,10 +206,37 @@ void field_print(struct_t* s, const field_t* f, void* p)
     else
     {
         if (size == 4)
-            i = sprintf(cursor, "%#16lX %#lX", (ulong)*q32, (ulong)swap32(*q32));
+        {
+            value = *q32;
+            value_swapped = swap32(value);
+        }
         else if (size == 8)
-            i = sprintf(cursor, "%#16" PRINT64 "X %#" PRINT64 "X", *q64, swap64(*q64));
-        adjust_hex_case(cursor);
+        {
+            value = *q64;
+            value_swapped = swap64(value);
+        }
+        if (sizeof(value) == sizeof(long))
+            i = sprintf(cursor, "0x%lX 0x%lX", value, value_swapped);
+        else
+            i = sprintf(cursor, "0x%" PRINT64 "X 0x%" PRINT64 "X", value, value_swapped);
+        /* adjust_hex_case(cursor); */
+        if (enum_table && enum_table_count)
+        {
+          uint32_t e;
+          for (e = 0; e < enum_table_count; ++e)
+          {
+            if (enum_table[e].value == value)
+            {
+              i += sprintf(cursor + i, " (%s)", enum_table[e].name);
+              break;
+            }
+            else if (enum_table[e].value == value_swapped)
+            {
+              i += sprintf(cursor + i, " (%s, swapped)", enum_table[e].name);
+              break;
+            }
+          }
+        }
         cursor += i;
     }
     printf("%s\n", buffer);
@@ -522,7 +594,7 @@ void open_and_read_entire_file(const char* path, uchar** contents, size_t* size)
     {
         buffer_size *= 2;
         prev_buffer = buffer;
-        buffer = malloc(buffer_size);
+        buffer = (uchar*)malloc(buffer_size);
         if (!buffer)
             goto Exit;
         if (prev_buffer)
@@ -551,18 +623,15 @@ int main(int argc, char** argv)
     open_and_read_entire_file(m.path, &m.contents, &m.size);
     /*printf("%p %lu\n", mh32, (ulong)size);*/
     
-    m.mh32 = (macho_header32_t*)m.contents;
-    
-    m.m64 =     (m.mh32->magic == macho_magic64          || m.mh32->magic == macho_magic64_reversed);
-    m.swapped = (m.mh32->magic == macho_magic32_reversed || m.mh32->magic == macho_magic64_reversed);
+    m.magic = ((macho_header32_t*)m.contents)->magic;
+    m.m64 =     (m.magic == macho_magic64          || m.magic == macho_magic64_reversed);
+    m.swapped = (m.magic == macho_magic32_reversed || m.magic == macho_magic64_reversed);
     if (m.m64)
         m.mh64 = (macho_header64_t*)m.contents;
-
-    if (m.m64)
-        struct_print(&struct_macho_header64, m.mh64);
     else
-        struct_print(&struct_macho_header32, m.mh32);
+        m.mh32 = (macho_header32_t*)m.contents;;
 
+    struct_print(m.mh64 ? &struct_macho_header64 : &struct_macho_header32, m.contents);
     macho_dump_load_commands(&m);
     return 0;
 }
