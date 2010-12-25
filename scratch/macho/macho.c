@@ -30,11 +30,12 @@ typedef struct _enum_t {
 } enum_t;
 
 typedef struct _field_t {
-    char name[14];
+    char name[16];
     uchar offset;
     uchar size;
     uchar element_size;
     uchar str;
+    uchar macho_string;
     uchar enum_table_count;
     const enum_t* enum_table;
 } field_t;
@@ -42,7 +43,8 @@ typedef struct _field_t {
 #define FIELD(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f))}
 #define FIELD_ARRAY(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), sizeof((((t*)0)->f)[0]) }
 #define FIELD_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), sizeof((((t*)0)->f)[0]), 1 }
-#define FIELD_ENUM(t, f, e) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), 0, 0, sizeof(e)/sizeof((e)[0]), e }
+#define FIELD_ENUM(t, f, e) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), 0, 0, 0, sizeof(e)/sizeof((e)[0]), e }
+#define FIELD_MACHO_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), 0, 0, 1 }
 
 typedef struct _struct_t {
     const char* name;
@@ -181,9 +183,9 @@ void adjust_hex_case(char* a)
 */
 
 void
-field_print(struct_t* s, const field_t* f, void* p)
+field_print(struct_t* s, const field_t* f, const void* p)
 {
-    char buffer[256];
+    char buffer[1024];
     char* cursor = buffer;
     uchar* q = (f->offset + (uchar*)p);
     uint32* q32 = (uint32*)q;
@@ -191,6 +193,7 @@ field_print(struct_t* s, const field_t* f, void* p)
     uint i = {0};
     uchar size = f->size;
     uchar str = f->str;
+    uchar macho_string = f->macho_string;
     const enum_t* enum_table = f->enum_table;
     uint32_t enum_table_count = f->enum_table_count;
     uint64 value = { 0 };
@@ -244,13 +247,19 @@ field_print(struct_t* s, const field_t* f, void* p)
             }
           }
         }
+        else if (macho_string && size == 4)
+        {
+            if (value_swapped < value)
+                value = value_swapped;
+            i += sprintf(cursor + i, " (%s)", value + (char*)p);
+        }
         cursor += i;
     }
     printf("%s\n", buffer);
 }
 
 void
-struct_print(struct_t* t, void* p)
+struct_print(struct_t* t, const void* p)
 {
     uint i;
     uint nfields = t->nfields;
@@ -369,8 +378,8 @@ macho_segment64_t_fields[] = {
 struct_t
 struct_macho_segment64 = STRUCT(macho_segment64_t);
 
-extern_const
-field_t macho_section32_t_fields[] = {
+extern_const field_t
+macho_section32_t_fields[] = {
     FIELD_STRING(macho_section32_t, sectname),
     FIELD_STRING(macho_section32_t, segname),
     FIELD(macho_section32_t, addr),
@@ -408,7 +417,7 @@ struct_macho_section64 = STRUCT(macho_section64_t);
 
 void
 macho_dump_load_command_segmentX(macho_file_t* m,
-                                 void* L,
+                                 const void* L,
                                  uint32 load_command_size,
                                  struct_t* struct_macho_segmentX,
                                  struct_t* struct_macho_sectionX,
@@ -449,9 +458,21 @@ macho_dump_load_command_segment64(macho_file_t* m, macho_segment64_t* L)
                                      sizeof(macho_section64_t));
 }
 
+extern_const field_t
+macho_symtab_command_t_fields[] = {
+    FIELD(macho_symtab_command_t, symoff),
+    FIELD(macho_symtab_command_t, nsyms),
+    FIELD(macho_symtab_command_t, stroff),
+    FIELD(macho_symtab_command_t, strsize)
+};
+
+struct_t
+struct_macho_symtab_command = STRUCT(macho_symtab_command_t);
+
 void
 macho_dump_load_command_symtab(macho_file_t* m, macho_loadcommand_t* L)
 {
+    struct_print(&struct_macho_symtab_command, L);
 }
 
 void
@@ -494,9 +515,34 @@ macho_dump_load_command_prepage(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
+extern_const field_t
+macho_dysymtab_command_t_fields[] = {
+    FIELD(macho_dysymtab_command_t, ilocalsym),
+    FIELD(macho_dysymtab_command_t, nlocalsym),
+    FIELD(macho_dysymtab_command_t, iextdefsym),
+    FIELD(macho_dysymtab_command_t, nextdefsym),
+    FIELD(macho_dysymtab_command_t, iundefsym),
+    FIELD(macho_dysymtab_command_t, nundefsym),
+    FIELD(macho_dysymtab_command_t, tocoff),
+    FIELD(macho_dysymtab_command_t, ntoc),
+    FIELD(macho_dysymtab_command_t, modtaboff),
+    FIELD(macho_dysymtab_command_t, nmodtab),
+    FIELD(macho_dysymtab_command_t, extrefsymoff),
+    FIELD(macho_dysymtab_command_t, nextrefsyms),
+    FIELD(macho_dysymtab_command_t, indirectsymoff),
+    FIELD(macho_dysymtab_command_t, nindirectsyms),
+    FIELD(macho_dysymtab_command_t, extreloff),
+    FIELD(macho_dysymtab_command_t, locreloff),
+    FIELD(macho_dysymtab_command_t, nlocrel)
+};
+
+struct_t
+struct_macho_dysymtab_command = STRUCT(macho_dysymtab_command_t);
+
 void
 macho_dump_load_command_dysymtab(macho_file_t* m, macho_loadcommand_t* L)
 {
+    struct_print(&struct_macho_dysymtab_command, L);
 }
 
 void
@@ -509,9 +555,19 @@ macho_dump_load_command_id_dylib(macho_file_t* m, macho_loadcommand_t* L)
 {
 }
 
+
+extern_const field_t
+macho_dylinker_command_t_fields[] = {
+    FIELD_MACHO_STRING(macho_dylinker_command_t, name.offset),
+};
+
+struct_t
+struct_macho_dylinker_command = STRUCT(macho_dylinker_command_t);
+
 void
 macho_dump_load_command_load_dylinker(macho_file_t* m, macho_loadcommand_t* L)
 {
+    struct_print(&struct_macho_dylinker_command, L);
 }
 
 void
@@ -716,7 +772,7 @@ main(int argc, char** argv)
     open_and_read_entire_file(m.path, &m.contents, &m.size);
     if (!m.contents)
       exit(1);
-    m.macho_header = ((macho_header32_t*)m.contents);
+    m.macho_header = (macho_header32_t*)m.contents;
     magic = m.macho_header->magic;
     if (magic != macho_magic32 && magic != macho_magic32_reversed
         && magic != macho_magic64 && magic != macho_magic64_reversed)
