@@ -4957,6 +4957,8 @@ free_lang_data (void)
   unsigned i;
 
   /* If we are the LTO frontend we have freed lang-specific data already.  */
+  gcc_assert (!in_lto_p);
+  gcc_assert (!flag_generate_lto);
   if (in_lto_p
       || !flag_generate_lto)
     return 0;

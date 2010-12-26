@@ -14,4 +14,4 @@ The contents of the file do not matter.
    - removal of m3-convert.c (combined with parse.c to fix a problem)
    - removal of LTO
 
-965-DA86-4CFC-AB4B-F854C784F4
+965-DA86-4CFC-AB4B-F854C784
