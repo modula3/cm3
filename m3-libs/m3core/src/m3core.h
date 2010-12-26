@@ -202,7 +202,7 @@ typedef ptrdiff_t ssize_t;
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/time.h>
-/* Check if this system really supports _TIME64_T. */
+/* Check if this system really supports _TIME64_T, i.e. Tru64 v5.1 or later. */
 #if defined(_TIME64_T) && !defined(TIMEVAL64TO32) && !defined(TIMEVAL32TO64)
 #undef _TIME64_T
 #endif
