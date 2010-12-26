@@ -7,8 +7,8 @@ END;
 
 TYPE field_t = RECORD
   name:                 TEXT;
-  offset:               uchar := 0; (* small integer *)
-  size:                 uchar := 4; (* small integer *)
+  offset:               uchar; (* small integer *)
+  size:                 uchar; (* small integer *)
   element_size:         uchar := 0; (* small integer *)
   str:                  uchar := 0; (* BOOLEAN *)
   macho_string:         uchar := 0; (* BOOLEAN *)
