@@ -136,9 +136,6 @@
 #define M3EXTERNC_END
 #endif
 
-  #define foo bar
-  int foo(int);
-
 /* m3name vs. cname is structured carefully to deal with identifiers
    being #defined in headers, such as on NetBSD. For example, given:
   #define foo bar
