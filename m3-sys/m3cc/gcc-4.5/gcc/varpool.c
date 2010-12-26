@@ -296,8 +296,7 @@ varpool_finalize_decl (tree decl)
      For the moment just prevent analysis of varpool nodes to happen again, so
      we will re-try to compute "address_taken" flag of varpool that breaks
      in presence of clones.  */
-  if (in_lto_p)
-    node->analyzed = true;
+  gcc_assert(!in_lto_p);
 
   /* The first declaration of a variable that comes through this function
      decides whether it is global (in C, has external linkage)

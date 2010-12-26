@@ -121,11 +121,11 @@ extern int optimize_size;
    output of a front end.  These passes must be bypassed for lto since
    they have already been done before the gimple was written.  */
 
-extern bool in_lto_p;
+#define in_lto_p ((bool)false)
 
 /* Nonzero if we should write GIMPLE bytecode for link-time optimization.  */
 
-extern int flag_generate_lto;
+#define flag_generate_lto ((int)0)
 
 /* Used to set the level of -Wstrict-aliasing, when no level is specified.
    The external way to set the default level is to use

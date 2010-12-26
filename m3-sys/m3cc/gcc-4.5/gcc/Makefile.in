@@ -915,8 +915,6 @@ REAL_H = real.h $(MACHMODE_H)
 IRA_INT_H = ira.h ira-int.h $(CFGLOOP_H) alloc-pool.h
 DBGCNT_H = dbgcnt.h dbgcnt.def
 EBITMAP_H = ebitmap.h sbitmap.h
-LTO_STREAMER_H = lto-streamer.h $(LINKER_PLUGIN_API_H) $(TARGET_H) \
-		$(CGRAPH_H) vec.h vecprim.h $(TREE_H) $(GIMPLE_H)
 TREE_VECTORIZER_H = tree-vectorizer.h $(TREE_DATA_REF_H)
 IPA_PROP_H = ipa-prop.h $(TREE_H) vec.h $(CGRAPH_H)
 GSTAB_H = gstab.h stab.def
@@ -1401,7 +1399,7 @@ MOSTLYCLEANFILES = insn-flags.h insn-config.h insn-codes.h \
  genrtl.c genrtl.h gt-*.h gtype-*.h gtype-desc.c gtyp-input.list \
  xgcc$(exeext) cpp$(exeext) cc1$(exeext) cc1*-dummy$(exeext) $(EXTRA_PASSES) \
  $(EXTRA_PARTS) $(EXTRA_PROGRAMS) gcc-cross$(exeext) \
- $(SPECS) collect2$(exeext) lto-wrapper$(exeext) \
+ $(SPECS) collect2$(exeext) \
  gcov-iov$(build_exeext) gcov$(exeext) gcov-dump$(exeext) \
  *.[0-9][0-9].* *.[si] *-checksum.c libbackend.a libgcc.mk
 
@@ -1682,7 +1680,7 @@ rest.encap: lang.rest.encap
 # This is what is made with the host's compiler
 # whether making a cross compiler or not.
 native: config.status auto-host.h build-@POSUB@ $(LANGUAGES) \
-	$(EXTRA_PASSES) $(EXTRA_PROGRAMS) $(COLLECT2) lto-wrapper$(exeext)
+	$(EXTRA_PASSES) $(EXTRA_PROGRAMS) $(COLLECT2)
 
 # Define the names for selecting languages in LANGUAGES.
 c: cc1$(exeext)
@@ -1976,12 +1974,6 @@ collect2-aix.o : collect2-aix.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
 
 tlink.o: tlink.c $(DEMANGLE_H) $(HASHTAB_H) $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
     $(OBSTACK_H) collect2.h intl.h
-
-lto-wrapper$(exeext): lto-wrapper.o intl.o $(LIBDEPS)
-	$(COMPILER) $(ALL_COMPILERFLAGS) $(LDFLAGS) -o T$@ lto-wrapper.o intl.o $(LIBS)
-	mv -f T$@ $@
-
-lto-wrapper.o: lto-wrapper.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) intl.h
 
 # A file used by all variants of C.
 
@@ -2537,7 +2529,7 @@ opts.o : opts.c opts.h options.h $(TOPLEV_H) $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h $(TREE_H) $(TM_H) langhooks.h $(GGC_H) $(EXPR_H) $(RTL_H) \
    output.h $(DIAGNOSTIC_H) $(TM_P_H) $(INSN_ATTR_H) intl.h $(TARGET_H) \
    $(FLAGS_H) $(PARAMS_H) $(TREE_PASS_H) $(DBGCNT_H) debug.h varray.h \
-   $(PLUGIN_H) $(EXCEPT_H) $(LTO_STREAMER_H)
+   $(PLUGIN_H) $(EXCEPT_H)
 opts-common.o : opts-common.c opts.h $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h intl.h
 targhooks.o : targhooks.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TREE_H) \
@@ -2576,8 +2568,7 @@ passes.o : passes.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
    langhooks.h insn-flags.h $(CFGLAYOUT_H) $(REAL_H) $(CFGLOOP_H) \
    hosthooks.h $(CGRAPH_H) $(COVERAGE_H) $(TREE_PASS_H) $(TREE_DUMP_H) \
    $(GGC_H) $(INTEGRATE_H) $(CPPLIB_H) opts.h $(TREE_FLOW_H) $(TREE_INLINE_H) \
-   gt-passes.h $(DF_H) $(PREDICT_H) $(LTO_HEADER_H) $(LTO_SECTION_OUT_H) \
-   $(PLUGIN_H)
+   gt-passes.h $(DF_H) $(PREDICT_H) $(PLUGIN_H)
 
 plugin.o : plugin.c $(PLUGIN_H) $(CONFIG_H) $(SYSTEM_H) coretypes.h \
    $(TOPLEV_H) $(TREE_H) $(TREE_PASS_H) intl.h $(PLUGIN_VERSION_H) $(GGC_H)
@@ -2752,13 +2743,12 @@ ipa-reference.o : ipa-reference.c $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h $(TM_H) $(TREE_H) $(TREE_FLOW_H) $(TREE_INLINE_H) langhooks.h \
    pointer-set.h $(GGC_H) $(IPA_REFERENCE_H) $(IPA_UTILS_H) $(SPLAY_TREE_H) \
    $(GIMPLE_H) $(CGRAPH_H) output.h $(FLAGS_H) $(TREE_PASS_H) \
-   $(TIMEVAR_H) $(DIAGNOSTIC_H) $(FUNCTION_H) gt-ipa-reference.h \
-   $(LTO_STREAMER_H)
+   $(TIMEVAR_H) $(DIAGNOSTIC_H) $(FUNCTION_H) gt-ipa-reference.h
 ipa-pure-const.o : ipa-pure-const.c $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h $(TM_H) $(TREE_H) $(TREE_FLOW_H) $(TREE_INLINE_H) langhooks.h \
    pointer-set.h $(GGC_H) $(IPA_UTILS_H) $(TARGET_H) \
    $(GIMPLE_H) $(CGRAPH_H) output.h $(FLAGS_H) $(TREE_PASS_H) $(TIMEVAR_H) \
-   $(DIAGNOSTIC_H) $(CFGLOOP_H) $(SCEV_H) $(LTO_STREAMER_H)
+   $(DIAGNOSTIC_H) $(CFGLOOP_H) $(SCEV_H)
 ipa-type-escape.o : ipa-type-escape.c $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h $(TM_H) $(TREE_H) $(TREE_FLOW_H) $(TREE_INLINE_H) langhooks.h \
    pointer-set.h $(GGC_H) $(IPA_TYPE_ESCAPE_H) $(IPA_UTILS_H) $(SPLAY_TREE_H) \
@@ -4090,7 +4080,7 @@ maintainer-clean:
 # broken is small.
 install: install-common $(INSTALL_HEADERS) \
     install-cpp install-man install-info install-@POSUB@ \
-    install-driver install-lto-wrapper
+    install-driver
 
 ifeq ($(enable_plugin),yes)
 install: install-plugin
@@ -4395,10 +4385,6 @@ install-collect2: collect2 installdirs
 	$(INSTALL_PROGRAM) collect2$(exeext) $(DESTDIR)$(libexecsubdir)/collect2$(exeext)
 # Install the driver program as $(libsubdir)/gcc for collect2.
 	$(INSTALL_PROGRAM) xgcc$(exeext) $(DESTDIR)$(libexecsubdir)/gcc$(exeext)
-
-# Install lto-wrapper.
-install-lto-wrapper: lto-wrapper$(exeext)
-	$(INSTALL_PROGRAM) lto-wrapper$(exeext) $(DESTDIR)$(libexecsubdir)/lto-wrapper$(exeext)
 
 # Cancel installation by deleting the installed files.
 uninstall: lang.uninstall
