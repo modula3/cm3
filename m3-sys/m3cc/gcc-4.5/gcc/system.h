@@ -37,16 +37,8 @@ along with GCC; see the file COPYING3.  If not see
 # endif
 #endif
 
-#ifdef HAVE_STDDEF_H
-# include <stddef.h>
-#endif
-
+#include <stddef.h>
 #include <stdio.h>
-
-/* Define a generic NULL if one hasn't already been defined.  */
-#ifndef NULL
-#define NULL 0
-#endif
 
 /* Use the unlocked open routines from libiberty.  */
 #ifdef fopen /* fopen is a #define on VMS.  */
@@ -198,10 +190,6 @@ extern int fprintf_unlocked (FILE *, const char *, ...);
 
 #include <errno.h>
 
-#if !defined (errno) && defined (HAVE_DECL_ERRNO) && !HAVE_DECL_ERRNO
-extern int errno;
-#endif
-
 /* Some of glibc's string inlines cause warnings.  Plus we'd rather
    rely on (and therefore test) GCC's string builtins.  */
 #define __NO_STRING_INLINES
@@ -254,9 +242,7 @@ extern int errno;
 # undef PREFETCH
 #endif
 
-#if HAVE_LIMITS_H
-# include <limits.h>
-#endif
+#include <limits.h>
 
 /* Get definitions of HOST_WIDE_INT and HOST_WIDEST_INT.  */
 #include "hwint.h"
@@ -343,87 +329,13 @@ extern int errno;
 #include <sys/wait.h>
 #endif
 
-#ifndef WIFSIGNALED
-#define WIFSIGNALED(S) (((S) & 0xff) != 0 && ((S) & 0xff) != 0x7f)
-#endif
-#ifndef WTERMSIG
-#define WTERMSIG(S) ((S) & 0x7f)
-#endif
-#ifndef WIFEXITED
-#define WIFEXITED(S) (((S) & 0xff) == 0)
-#endif
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(S) (((S) & 0xff00) >> 8)
-#endif
-#ifndef WSTOPSIG
-#define WSTOPSIG WEXITSTATUS
-#endif
-#ifndef WCOREDUMP
-#define WCOREDUMP(S) ((S) & WCOREFLG)
-#endif
-#ifndef WCOREFLG
-#define WCOREFLG 0200
-#endif
-
 /* The HAVE_DECL_* macros are three-state, undefined, 0 or 1.  If they
    are defined to 0 then we must provide the relevant declaration
    here.  These checks will be in the undefined state while configure
    is running so be careful to test "defined (HAVE_DECL_*)".  */
 
-#if defined (HAVE_DECL_ATOF) && !HAVE_DECL_ATOF
-extern double atof (const char *);
-#endif
-
-#if defined (HAVE_DECL_ATOL) && !HAVE_DECL_ATOL
-extern long atol (const char *);
-#endif
-
-#if defined (HAVE_DECL_FREE) && !HAVE_DECL_FREE
-extern void free (void *);
-#endif
-
-#if defined (HAVE_DECL_GETCWD) && !HAVE_DECL_GETCWD
-extern char *getcwd (char *, size_t);
-#endif
-
-#if defined (HAVE_DECL_GETENV) && !HAVE_DECL_GETENV
-extern char *getenv (const char *);
-#endif
-
-#if defined (HAVE_DECL_GETOPT) && !HAVE_DECL_GETOPT
-extern int getopt (int, char * const *, const char *);
-#endif
-
-#if defined (HAVE_DECL_GETPAGESIZE) && !HAVE_DECL_GETPAGESIZE
-extern int getpagesize (void);
-#endif
-
-#if defined (HAVE_DECL_GETWD) && !HAVE_DECL_GETWD
-extern char *getwd (char *);
-#endif
-
-#if defined (HAVE_DECL_SBRK) && !HAVE_DECL_SBRK
-extern void *sbrk (int);
-#endif
-
-#if defined (HAVE_DECL_STRSTR) && !HAVE_DECL_STRSTR
-extern char *strstr (const char *, const char *);
-#endif
-
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
-#endif
-
-#if defined (HAVE_DECL_MALLOC) && !HAVE_DECL_MALLOC && !defined(__vms)
-extern void *malloc (size_t);
-#endif
-
-#if defined (HAVE_DECL_CALLOC) && !HAVE_DECL_CALLOC && !defined(__vms)
-extern void *calloc (size_t, size_t);
-#endif
-
-#if defined (HAVE_DECL_REALLOC) && !HAVE_DECL_REALLOC && !defined(__vms)
-extern void *realloc (void *, size_t);
 #endif
 
 #ifdef HAVE_STDINT_H

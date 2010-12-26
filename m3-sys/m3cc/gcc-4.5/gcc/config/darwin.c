@@ -47,7 +47,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "debug.h"
 #include "obstack.h"
-#include "lto-streamer.h"
 
 /* Darwin supports a feature called fix-and-continue, which is used
    for rapid turn around debugging.  When code is compiled with the
@@ -1412,70 +1411,12 @@ static struct obstack lto_section_names_obstack;
 static FILE *lto_asm_out_file, *saved_asm_out_file;
 static char *lto_asm_out_name;
 
-/* Prepare asm_out_file for LTO output.  For darwin, this means hiding
-   asm_out_file and switching to an alternative output file.  */
-void
-darwin_asm_lto_start (void)
-{
-  gcc_assert (! saved_asm_out_file);
-  saved_asm_out_file = asm_out_file;
-  if (! lto_asm_out_name)
-    lto_asm_out_name = make_temp_file (".lto.s");
-  lto_asm_out_file = fopen (lto_asm_out_name, "a");
-  if (lto_asm_out_file == NULL)
-    fatal_error ("failed to open temporary file %s for LTO output",
-		 lto_asm_out_name);
-  asm_out_file = lto_asm_out_file;
-}
-
-/* Restore asm_out_file.  */
-void
-darwin_asm_lto_end (void)
-{
-  gcc_assert (saved_asm_out_file);
-  fclose (lto_asm_out_file);
-  asm_out_file = saved_asm_out_file;
-  saved_asm_out_file = NULL;
-}
-
 void
 darwin_asm_named_section (const char *name,
 			  unsigned int flags,
 			  tree decl ATTRIBUTE_UNUSED)
 {
-  /* LTO sections go in a special segment __GNU_LTO.  We want to replace the
-     section name with something we can use to represent arbitrary-length
-     names (section names in Mach-O are at most 16 characters long).  */
-  if (strncmp (name, LTO_SECTION_NAME_PREFIX,
-	       strlen (LTO_SECTION_NAME_PREFIX)) == 0)
-    {
-      /* We expect certain flags to be set...  */
-      gcc_assert ((flags & (SECTION_DEBUG | SECTION_NAMED))
-		  == (SECTION_DEBUG | SECTION_NAMED));
-
-      /* Add the section name to the things to output when we end the
-	 current assembler output file.
-	 This is all not very efficient, but that doesn't matter -- this
-	 shouldn't be a hot path in the compiler...  */
-      obstack_1grow (&lto_section_names_obstack, '\t');
-      obstack_grow (&lto_section_names_obstack, ".ascii ", 7);
-      obstack_1grow (&lto_section_names_obstack, '"');
-      obstack_grow (&lto_section_names_obstack, name, strlen (name));
-      obstack_grow (&lto_section_names_obstack, "\\0\"\n", 4);
-
-      /* Output the dummy section name.  */
-      fprintf (asm_out_file, "\t# %s\n", name);
-      fprintf (asm_out_file, "\t.section %s,__%08X,regular,debug\n",
-	       LTO_SEGMENT_NAME, lto_section_names_offset);
-
-      /* Update the offset for the next section name.  Make sure we stay
-	 within reasonable length.  */  
-      lto_section_names_offset += strlen (name) + 1;
-      gcc_assert (lto_section_names_offset > 0
-		  && lto_section_names_offset < ((unsigned) 1 << 31));
-    }
-  else
-    fprintf (asm_out_file, "\t.section %s\n", name);
+  fprintf (asm_out_file, "\t.section %s\n", name);
 }
 
 void
