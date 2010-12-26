@@ -168,7 +168,7 @@ typedef struct _macho_loadcommand_t {
 typedef struct _macho_segment32_t {
     uint32_t cmd;
     uint32_t cmdsize;
-    char segname[16];
+    char     segname[16];
     uint32_t vmaddr;
     uint32_t vmsize;
     uint32_t fileoff;
@@ -182,7 +182,7 @@ typedef struct _macho_segment32_t {
 typedef struct _macho_segment64_t {
     uint32_t cmd;
     uint32_t cmdsize;
-    char segname[16];
+    char     segname[16];
     uint64_t vmaddr;
     uint64_t vmsize;
     uint64_t fileoff;
