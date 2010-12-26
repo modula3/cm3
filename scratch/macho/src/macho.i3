@@ -4,10 +4,13 @@ IMPORT Cstdint;
 TYPE int8  = Cstdint.int8_t;  int8_t  = int8;  INT8  = int8;
      int16 = Cstdint.int16_t; int16_t = int16; INT16 = int16;
      int32 = Cstdint.int32_t; int32_t = int32; INT32 = int32;
+       int = int32;
      int64 = Cstdint.int64_t; int64_t = int64; INT64 = int64;
      uint8  = Cstdint.uint8_t;  uint8_t  = uint8;  UINT8  = uint8;
+       uchar = uint8;
      uint16 = Cstdint.uint16_t; uint16_t = uint16; UINT16 = uint16;
      uint32 = Cstdint.uint32_t; uint32_t = uint32; UINT32 = uint32;
+       uint = uint32;
      uint64 = Cstdint.uint64_t; uint64_t = uint64; UINT64 = uint64;
 
 CONST macho_vm_prot_none          = 16_00;
@@ -463,7 +466,7 @@ END;
 TYPE macho_dysymtab_command_t = RECORD
     cmd:                uint32_t;
     cmdsize:            uint32_t;
-    ilocalsym:            uint32_t;
+    ilocalsym:          uint32_t;
     nlocalsym:          uint32_t;
     iextdefsym:         uint32_t;
     nextdefsym:         uint32_t;
