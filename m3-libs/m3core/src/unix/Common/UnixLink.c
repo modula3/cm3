@@ -20,11 +20,8 @@ extern "C"
 {
 #endif
 
-/* This file is #included by m3-sys/cm3 for bootstrapping on systems
-whose older m3core does not have Unix.link. m3-sys/cm3 #defines
-Unix__link to be Utils__link. */
-
-int Unix__link(const char* ExistingFile, const char* NewLink)
+M3_DLL_EXPORT int __cdecl
+Unix__link(const char* ExistingFile, const char* NewLink)
 {
 #ifdef _WIN32
 #ifdef _WIN64

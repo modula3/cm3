@@ -37,7 +37,7 @@ M3WRAP2(int, ungetc, int, FILE*)
 M3WRAP1_(int, getw, FILE*)
 M3WRAP2_(int, putw, int, FILE*)
 
-#define X(name, in, out)   void __cdecl Cstdio__##name in { name out; }
+#define X(name, in, out) M3_DLL_EXPORT void __cdecl Cstdio__##name in { name out; }
 #define X1(name, a)             X(name, (a i),      (i))
 #define X2(name, a, b)          X(name, (a i, b j), (i, j))
 
@@ -48,8 +48,8 @@ X2(setbuf, FILE*, char*)
 
 #undef X
 #undef X_
-#define X(a) const unsigned Cstdio__##a = a;
-#define X_(a) const unsigned Cstdio__##a = _##a;
+#define X(a) M3_DLL_EXPORT EXTERN_CONST unsigned Cstdio__##a = a;
+#define X_(a) M3_DLL_EXPORT EXTERN_CONST unsigned Cstdio__##a = _##a;
 
 X(BUFSIZ)
 X(FILENAME_MAX)
@@ -64,20 +64,16 @@ X(SEEK_SET)
 X(TMP_MAX)
 
 #undef X
-#define X(a) const int Cstdio__##a = a;
+#define X(a) M3_DLL_EXPORT EXTERN_CONST int Cstdio__##a = a;
 
 X(EOF)
 
-#ifndef _WIN32
-/* varying ABI in libcmt.lib and msvcrt.lib so just don't expose them */
-
 #undef X
-#define X(a) FILE* __cdecl Cstdio__get_##a(void) { return a; }
+#define X(a) M3_DLL_EXPORT FILE* __cdecl Cstdio__get_##a(void) { return a; }
 
 X(stdin)
 X(stdout)
 X(stderr)
-#endif
 
 #ifdef __cplusplus
 }
