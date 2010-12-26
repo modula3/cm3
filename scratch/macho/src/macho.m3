@@ -1,3 +1,6 @@
+MODULE macho EXPORTS macho, Main;
+
+(*
 #include <stdlib.h>
 #include <string.h>
 #include "macho.h"
@@ -40,11 +43,11 @@ typedef struct _field_t {
     const enum_t* enum_table;
 } field_t;
 
-#define FIELD(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f))}
-#define FIELD_ARRAY(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), sizeof((((t*)0)->f)[0]) }
-#define FIELD_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), sizeof((((t*)0)->f)[0]), 1 }
-#define FIELD_ENUM(t, f, e) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), 0, 0, 0, sizeof(e)/sizeof((e)[0]), e }
-#define FIELD_MACHO_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t*)0)->f)), 0, 0, 1 }
+#define FIELD(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f))}
+#define FIELD_ARRAY(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), sizeof((((t* )0)->f)[0]) }
+#define FIELD_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), sizeof((((t* )0)->f)[0]), 1 }
+#define FIELD_ENUM(t, f, e) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), 0, 0, 0, sizeof(e)/sizeof((e)[0]), e }
+#define FIELD_MACHO_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), 0, 0, 1 }
 
 typedef struct _struct_t {
     const char* name;
@@ -116,8 +119,8 @@ typedef struct _macho_file_t {
     /* macho_header64 just adds uint32_t reserved at end */
     macho_header32_t* macho_header;
     uchar macho_header_size;
-    uint32 (*swap32)(uint32 a);
-    uint64 (*swap64)(uint64 a);
+    uint32 ( *swap32)(uint32 a);
+    uint64 ( *swap64)(uint64 a);
 } macho_file_t;
 
 uint32
@@ -156,7 +159,7 @@ macho_swap32(macho_file_t* m, uint32 a)
 void
 swap32p(uint32* a)
 {
-    *a = swap32(*a);
+    *a = swap32( *a);
 }
 
 int
@@ -187,9 +190,9 @@ field_print(struct_t* s, const field_t* f, const void* p)
 {
     char buffer[1024];
     char* cursor = buffer;
-    uchar* q = (f->offset + (uchar*)p);
-    uint32* q32 = (uint32*)q;
-    uint64* q64 = (uint64*)q;
+    uchar* q = (f->offset + (uchar* )p);
+    uint32* q32 = (uint32* )q;
+    uint64* q64 = (uint64* )q;
     uint i = {0};
     uchar size = f->size;
     uchar str = f->str;
@@ -251,7 +254,7 @@ field_print(struct_t* s, const field_t* f, const void* p)
         {
             if (value_swapped < value)
                 value = value_swapped;
-            i += sprintf(cursor + i, " (%s)", value + (char*)p);
+            i += sprintf(cursor + i, " (%s)", value + (char* )p);
         }
         cursor += i;
     }
@@ -327,13 +330,13 @@ macho_loadcommand_name(uint32_t cmd)
 macho_loadcommand_t*
 macho_first_load_command(macho_file_t* m)
 {
-    return (macho_loadcommand_t*)(m->macho_header_size + (uchar*)m->macho_header);
+    return (macho_loadcommand_t* )(m->macho_header_size + (uchar* )m->macho_header);
 }
 
 macho_loadcommand_t*
 macho_next_load_command(macho_file_t* m, macho_loadcommand_t* L)
 {
-    return (macho_loadcommand_t*)(m->swap32(L->cmdsize) + (uchar*)L);
+    return (macho_loadcommand_t* )(m->swap32(L->cmdsize) + (uchar* )L);
 }
 
 uint
@@ -425,7 +428,7 @@ macho_dump_load_command_segmentX(macho_file_t* m,
                                  uint32 section_size)
 {
     uint32 i;
-    uchar* sections = load_command_size + (uchar*)L;
+    uchar* sections = load_command_size + (uchar* )L;
     struct_print(struct_macho_segmentX, L);
     for (i = 0; i < section_count; ++i)
     {
@@ -439,7 +442,7 @@ macho_dump_load_command_segment32(macho_file_t* m, macho_segment32_t* L)
 {
     macho_dump_load_command_segmentX(m,
                                      L,
-                                     sizeof(*L),
+                                     sizeof( *L),
                                      &struct_macho_segment32,
                                      &struct_macho_section32,
                                      m->swap32(L->nsects),
@@ -451,7 +454,7 @@ macho_dump_load_command_segment64(macho_file_t* m, macho_segment64_t* L)
 {
     macho_dump_load_command_segmentX(m,
                                      L,
-                                     sizeof(*L),
+                                     sizeof( *L),
                                      &struct_macho_segment64,
                                      &struct_macho_section64,
                                      m->swap32(L->nsects),
@@ -667,7 +670,7 @@ macho_dump_load_command(macho_file_t* m, macho_loadcommand_t* L, uint i)
     printf("cmd %u %s\n", i, macho_loadcommand_name(cmd));
     switch (cmd)
     {
-#define X(a) case macho_loadcommand_##a & ~macho_loadcommand_require_dyld: macho_dump_load_command_##a(m, (void*)L); break;
+#define X(a) case macho_loadcommand_##a & ~macho_loadcommand_require_dyld: macho_dump_load_command_##a(m, (void* )L); break;
     X(segment32)
     X(symtab)
     X(symseg)
@@ -737,7 +740,7 @@ open_and_read_entire_file(const char* path, uchar** contents, size_t* size)
     {
         buffer_size *= 2;
         prev_buffer = buffer;
-        buffer = (uchar*)malloc(buffer_size);
+        buffer = (uchar* )malloc(buffer_size);
         if (!buffer)
             goto Exit;
         if (prev_buffer)
@@ -763,8 +766,8 @@ main(int argc, char** argv)
 {
     macho_file_t m = { 0 };
     uint32_t magic = { 0 };
-    BOOL swapped = { 0 };
-    BOOL m64 = { 0 };
+    BOOLEAN swapped = { 0 };
+    BOOLEAN m64 = { 0 };
 
     m.path = argv[1];
     if (!argv[1])
@@ -772,7 +775,7 @@ main(int argc, char** argv)
     open_and_read_entire_file(m.path, &m.contents, &m.size);
     if (!m.contents)
       exit(1);
-    m.macho_header = (macho_header32_t*)m.contents;
+    m.macho_header = (macho_header32_t* )m.contents;
     magic = m.macho_header->magic;
     if (magic != macho_magic32 && magic != macho_magic32_reversed
         && magic != macho_magic64 && magic != macho_magic64_reversed)
@@ -788,3 +791,7 @@ main(int argc, char** argv)
     macho_dump_load_commands(&m);
     return 0;
 }
+*)
+
+BEGIN
+END macho.
