@@ -35,7 +35,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "ggc.h"
 #include "target.h"
-#include "lto-streamer.h"
 
 /* i386/PE specific attribute support.
 
@@ -473,12 +472,6 @@ i386_pe_asm_named_section (const char *name, unsigned int flags,
       if (flags & SECTION_PE_SHARED)
         *f++ = 's';
     }
-
-  /* LTO sections need 1-byte alignment to avoid confusing the
-     zlib decompression algorithm with trailing zero pad bytes.  */
-  if (strncmp (name, LTO_SECTION_NAME_PREFIX,
-			strlen (LTO_SECTION_NAME_PREFIX)) == 0)
-    *f++ = '0';
 
   *f = '\0';
 
