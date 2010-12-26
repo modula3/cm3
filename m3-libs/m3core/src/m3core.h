@@ -146,12 +146,12 @@ we want:
 int Cstdlib__foo (int i) { return bar (i); }
              ^^^                  ^^^
 We want the define to affect the body of the wrapper, but not its name.
-We want m3name do not undergo further evaluation, but we do want cname too.
+We want m3name to not undergo further evaluation, but we do want cname to.
 This should be achieved by immediate prepending with "__", however even this
-can likely fail if __foo is #defined.
+can likely fail if __foo is #defined. We take our chances.
 */
 
-#define M3PASTE_(a, b) a ## b
+#define M3PASTE_(a, b) a##b
 #define M3PASTE(a, b) M3PASTE_(a, b)
 #define M3WRAP(ret, m3name, cname, in, out)     M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, m3name) in { return cname out; } M3EXTERNC_END
 #ifdef _WIN32
