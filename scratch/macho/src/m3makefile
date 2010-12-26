@@ -1,3 +1,4 @@
 import("m3core")
 module("macho")
+build_standalone()
 program("macho")

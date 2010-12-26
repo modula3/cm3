@@ -7,8 +7,8 @@ END;
 
 TYPE field_t = RECORD
   name:                 TEXT;
-  offset:               uchar; (* small integer *)
-  size:                 uchar; (* small integer *)
+  offset:               uchar := 0; (* small integer *)
+  size:                 uchar := 4; (* small integer *)
   element_size:         uchar := 0; (* small integer *)
   str:                  uchar := 0; (* BOOLEAN *)
   macho_string:         uchar := 0; (* BOOLEAN *)
@@ -60,13 +60,13 @@ BEGIN
 END Enum;
 
 VAR macho_header32_t_fields := ARRAY [0..6] OF field_t{
-  field_t{ "magic", 0, 4, enum_table := Enum(macho_magic_names)},
-  field_t{ "cputype", 4, 4, enum_table := Enum(macho_cputype_names)},
-  field_t{ "cpusubtype", 8, 4, enum_table := Enum(macho_cpusubtype_names)},
-  field_t{ "filetype", 12, 4, enum_table := Enum(macho_filetype_names)},
-  field_t{ "ncmds", 16, 4},
-  field_t{ "sizeofcmds", 20, 4},
-  field_t{ "flags", 24, 4}};
+  field_t{ "magic", enum_table := Enum(macho_magic_names)},
+  field_t{ "cputype", enum_table := Enum(macho_cputype_names)},
+  field_t{ "cpusubtype", enum_table := Enum(macho_cpusubtype_names)},
+  field_t{ "filetype", enum_table := Enum(macho_filetype_names)},
+  field_t{ "ncmds"},
+  field_t{ "sizeofcmds"},
+  field_t{ "flags"}};
 
 (*
 extern_const field_t
@@ -805,4 +805,7 @@ main(int argc, char** argv)
 *)
 
 BEGIN
+  FOR i := 0 TO NUMBER(macho_header32_t_fields) - 1 DO
+    macho_header32_t_fields[i].offset := 4 * i;
+  END;
 END macho.
