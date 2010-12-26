@@ -21,7 +21,7 @@ TYPE struct_t = RECORD
     size:               uint;
     nfields:            uint;
     fields:             UNTRACED REF field_t;
-    widest_field:       int;
+    widest_field:       int := 0;
 END;
 
 (* define STRUCT(a) {STRINGIZE(a), sizeof(a), NUMBER_OF(PASTE(a,_fields)), PASTE(a,_fields)} *)
@@ -61,21 +61,9 @@ VAR macho_header32_t_fields := ARRAY [0..6] OF field_t{
   field_t{ "sizeofcmds", 20, 4},
   field_t{ "flags", 24, 4}};
 
-(*
-extern_const field_t
-macho_header32_t_fields[] = {
-    FIELD_ENUM(macho_header32_t, magic, macho_magic_names),
-    FIELD_ENUM(macho_header32_t, cputype, macho_cputype_names),
-    FIELD_ENUM(macho_header32_t, cpusubtype, macho_cpusubtype_names),
-    FIELD_ENUM(macho_header32_t, filetype, macho_filetype_names),
-    FIELD(macho_header32_t, ncmds),
-    FIELD(macho_header32_t, sizeofcmds),
-    FIELD(macho_header32_t, flags)
-};
-
-struct_t
-struct_macho_header32 = STRUCT(macho_header32_t);
-*)
+VAR struct_macho_header32 := struct_t{
+    "macho_header32_t", BYTESIZE(macho_header32_t), NUMBER(macho_header32_t_fields),
+    ADR(macho_header32_t_fields[0]) };
 
 (*
 #include <stdlib.h>
