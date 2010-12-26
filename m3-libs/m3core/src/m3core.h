@@ -136,26 +136,45 @@
 #define M3EXTERNC_END
 #endif
 
-#define M3WRAPNAMEx(a, b) a##__##b
-#define M3WRAPNAME(a, b) M3WRAPNAMEx(a, b)
-#define M3WRAP(ret, name, in, out)     M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3WRAPNAME(M3MODULE, name) in { return name out; } M3EXTERNC_END
-#ifdef _WIN32
-#define M3WRAP_(ret, name, in, out)    M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3WRAPNAME(M3MODULE, name) in { return _##name out; } M3EXTERNC_END
-#else
-#define M3WRAP_(ret, name, in, out)    M3WRAP(ret, name, in, out)
-#endif
-#define M3WRAP0(ret, name)             M3WRAP(ret, name, (void),               ())
-#define M3WRAP1(ret, name, a)          M3WRAP(ret, name, (a i),                (i))
-#define M3WRAP2(ret, name, a, b)       M3WRAP(ret, name, (a i, b j),           (i, j))
-#define M3WRAP3(ret, name, a, b, c)    M3WRAP(ret, name, (a i, b j, c k),      (i, j, k))
-#define M3WRAP4(ret, name, a, b, c, d) M3WRAP(ret, name, (a i, b j, c k, d m), (i, j, k, m))
-#define M3WRAP5(ret, name, a, b, c, d, e) M3WRAP(ret, name, (a i, b j, c k, d m, e n), (i, j, k, m, n))
-#define M3WRAP6(ret, name, a, b, c, d, e, f) M3WRAP(ret, name, (a i, b j, c k, d m, e n, f o), (i, j, k, m, n, o))
+  #define foo bar
+  int foo(int);
 
-#define M3WRAP0_(ret, name)           M3WRAP_(ret, name, (void),               ())
-#define M3WRAP1_(ret, name, a)        M3WRAP_(ret, name, (a i),                (i))
-#define M3WRAP2_(ret, name, a, b)     M3WRAP_(ret, name, (a i, b j),           (i, j))
-#define M3WRAP3_(ret, name, a, b, c)  M3WRAP_(ret, name, (a i, b j, c k),      (i, j, k))
+/* m3name vs. cname is structured carefully to deal with identifiers
+   being #defined in headers, such as on NetBSD. For example, given:
+  #define foo bar
+  int foo(int);
+  M3WRAP1(int, foo, int)
+
+we want:
+int Cstdlib__foo (int i) { return bar (i); }
+             ^^^                  ^^^
+We want the define to affect the body of the wrapper, but not its name.
+We want m3name do not undergo further evaluation, but we do want cname too.
+This should be achieved by immediate prepending with "__", however even this
+can likely fail if __foo is #defined.
+*/
+
+#define M3PASTE_(a, b) a ## b
+#define M3PASTE(a, b) M3PASTE_(a, b)
+#define M3WRAP(ret, m3name, cname, in, out)     M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, m3name) in { return cname out; } M3EXTERNC_END
+#ifdef _WIN32
+#define M3WRAP_(ret, m3name, cname, in, out)    M3WRAP(ret, m3name, _##cname, in, out)
+#else
+#define M3WRAP_(ret, m3name, cname, in, out)    M3WRAP(ret, m3name, cname, in, out)
+#endif
+
+#define M3WRAP0(ret, name)             M3WRAP(ret, __##name, name, (void),               ())
+#define M3WRAP1(ret, name, a)          M3WRAP(ret, __##name, name, (a i),                (i))
+#define M3WRAP2(ret, name, a, b)       M3WRAP(ret, __##name, name, (a i, b j),           (i, j))
+#define M3WRAP3(ret, name, a, b, c)    M3WRAP(ret, __##name, name, (a i, b j, c k),      (i, j, k))
+#define M3WRAP4(ret, name, a, b, c, d) M3WRAP(ret, __##name, name, (a i, b j, c k, d m), (i, j, k, m))
+#define M3WRAP5(ret, name, a, b, c, d, e) M3WRAP(ret, __##name, name, (a i, b j, c k, d m, e n), (i, j, k, m, n))
+#define M3WRAP6(ret, name, a, b, c, d, e, f) M3WRAP(ret, __##name, name, (a i, b j, c k, d m, e n, f o), (i, j, k, m, n, o))
+
+#define M3WRAP0_(ret, name)           M3WRAP_(ret, __##name, name, (void),               ())
+#define M3WRAP1_(ret, name, a)        M3WRAP_(ret, __##name, name, (a i),                (i))
+#define M3WRAP2_(ret, name, a, b)     M3WRAP_(ret, __##name, name, (a i, b j),           (i, j))
+#define M3WRAP3_(ret, name, a, b, c)  M3WRAP_(ret, __##name, name, (a i, b j, c k),      (i, j, k))
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -351,8 +370,6 @@ void __cdecl Utime__tzset(void);
 
 /* Some compilers don't like this, will adjust as needed. */
 #if 1
-#define M3PASTE_(a, b) a ## b
-#define M3PASTE(a, b) M3PASTE_(a, b)
 #define M3_STATIC_ASSERT(expr) typedef char M3PASTE(m3_static_assert, __LINE__)[(expr)?1:-1]
 #else
 #define M3_STATIC_ASSERT(expr) assert(expr)

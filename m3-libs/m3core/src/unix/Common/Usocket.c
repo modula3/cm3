@@ -18,7 +18,8 @@ extern "C" {
 
 #define LOSSLESS_SOCKLEN (TYPES_MATCH(socklen_t, m3_socklen_t))
 
-static void Usocket__assert_plen_in(m3_socklen_t* plen)
+static void
+Usocket__assert_plen_in(m3_socklen_t* plen)
 {
     if (!(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30))))
     {
@@ -31,7 +32,8 @@ static void Usocket__assert_plen_in(m3_socklen_t* plen)
     }
 }
 
-static void Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
+static void
+Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
 {
     assert(LOSSLESS_SOCKLEN || plen == NULL || len <= (1UL << 30));
     if (plen)
@@ -44,7 +46,8 @@ static void Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
 #define ASSERT_LEN \
     assert(len <= (1UL << 30));
 
-void __cdecl Usocket__Assertions(void)
+M3_DLL_LOCAL void __cdecl
+Usocket__Assertions(void)
 {
     /* assert that struct linger is literally { int l_onoff, l_linger },
      * those types (or at least sizes), that order, no padding, except on Cygwin and Win32
@@ -78,25 +81,29 @@ M3WRAP4(INTEGER, recv, int, void*, WORD_T, int)
 
 /* wrap everything taking input socklen_t */
 
-int __cdecl Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len)
+M3_DLL_EXPORT int __cdecl
+Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len)
 {
     ASSERT_LEN
     return bind(s, name, len);
 }
 
-int __cdecl Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len)
+M3_DLL_EXPORT int __cdecl
+Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len)
 {
     ASSERT_LEN
     return connect(s, name, len);
 }
 
-INTEGER __cdecl Usocket__sendto(int s, void* msg, WORD_T length, int flags, struct sockaddr* dest, m3_socklen_t len)
+M3_DLL_EXPORT INTEGER __cdecl
+Usocket__sendto(int s, void* msg, WORD_T length, int flags, struct sockaddr* dest, m3_socklen_t len)
 {
     ASSERT_LEN
     return sendto(s, msg, length, flags, dest, len);
 }
 
-int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
+M3_DLL_EXPORT int __cdecl
+Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
 {
     ASSERT_LEN
 #if defined(__CYGWIN__) || defined(_WIN32)
@@ -116,7 +123,8 @@ int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_
 
 /* wrap everything taking input/output socklen_t */
 
-int __cdecl Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen)
+M3_DLL_EXPORT int __cdecl
+Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {
@@ -127,7 +135,8 @@ int __cdecl Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* ple
     }
 }
 
-int __cdecl Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen)
+M3_DLL_EXPORT int __cdecl
+Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {
@@ -138,7 +147,8 @@ int __cdecl Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* ple
     }
 }
 
-int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
+M3_DLL_EXPORT int __cdecl
+Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {
@@ -149,7 +159,8 @@ int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
     }
 }
 
-int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen)
+M3_DLL_EXPORT int __cdecl
+Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen)
 /*
 Posix says l_onoff and l_linger are int, but they aren't on Cygwin.
 As usual Posix does not mandate the order of the fields or that there aren't
@@ -193,7 +204,8 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, struct sockaddr* address, m3_socklen_t* plen)
+M3_DLL_EXPORT INTEGER __cdecl
+Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, struct sockaddr* address, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {

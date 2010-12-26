@@ -15,6 +15,7 @@ M3_STATIC_ASSERT(sizeof(time64_t) <= sizeof(m3_time_t));
 M3_STATIC_ASSERT(sizeof(time_t) <= sizeof(m3_time_t));
 #endif
 
+M3_DLL_EXPORT
 m3_time_t
 __cdecl
 Utime__time(m3_time_t* tloc)
@@ -30,6 +31,7 @@ Utime__time(m3_time_t* tloc)
     return a;
 }
 
+M3_DLL_EXPORT
 char*
 __cdecl
 Utime__ctime(const m3_time_t* m)
@@ -43,6 +45,7 @@ Utime__ctime(const m3_time_t* m)
 #endif
 }
 
+M3_DLL_EXPORT
 void
 __cdecl
 Utime__tzset(void)
