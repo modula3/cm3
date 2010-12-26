@@ -208,17 +208,6 @@ int optimize = 0;
 
 int optimize_size = 0;
 
-/* True if this is the lto front end.  This is used to disable
-   gimple generation and lowering passes that are normally run on the
-   output of a front end.  These passes must be bypassed for lto since
-   they have already been done before the gimple was written.  */
-
-bool in_lto_p = false;
-
-/* Nonzero if we should write GIMPLE bytecode for link-time optimization.  */
-
-int flag_generate_lto;
-
 /* The FUNCTION_DECL for the function currently being compiled,
    or 0 if between functions.  */
 tree current_function_decl;
@@ -1117,21 +1106,7 @@ compile_file (void)
      We used to emit an undefined reference here, but this produces
      link errors if an object file with IL is stored into a shared
      library without invoking lto1.  */
-  if (flag_generate_lto)
-    {
-#if defined ASM_OUTPUT_ALIGNED_DECL_COMMON
-      ASM_OUTPUT_ALIGNED_DECL_COMMON (asm_out_file, NULL_TREE,
-				      "__gnu_lto_v1",
-				      (unsigned HOST_WIDE_INT) 1, 8);
-#elif defined ASM_OUTPUT_ALIGNED_COMMON
-      ASM_OUTPUT_ALIGNED_COMMON (asm_out_file, "__gnu_lto_v1",
-				 (unsigned HOST_WIDE_INT) 1, 8);
-#else
-      ASM_OUTPUT_COMMON (asm_out_file, "__gnu_lto_v1",
-			 (unsigned HOST_WIDE_INT) 1,
-			 (unsigned HOST_WIDE_INT) 1);
-#endif
-    }
+  gcc_assert (!flag_generate_lto);
 
   /* Attach a special .ident directive to the end of the file to identify
      the version of GCC which compiled this code.  The format of the .ident
