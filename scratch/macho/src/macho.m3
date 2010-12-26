@@ -13,7 +13,7 @@ TYPE field_t = RECORD
   str:                  uchar := 0; (* BOOLEAN *)
   macho_string:         uchar := 0; (* BOOLEAN *)
   enum_table_count:     uchar := 0; (* small integer *)
-  enum_table: REF ARRAY OF enum_t := NIL;
+  enum_table: UNTRACED REF enum_t := NIL;
 END;
 
 TYPE struct_t = RECORD
@@ -26,21 +26,21 @@ END;
 
 (* define STRUCT(a) {STRINGIZE(a), sizeof(a), NUMBER_OF(PASTE(a,_fields)), PASTE(a,_fields)} *)
 
-CONST macho_magic_names = ARRAY OF enum_t{
+VAR macho_magic_names := ARRAY [0..1] OF enum_t{
     enum_t{ "magic32", macho_magic32 },
     enum_t{ "magic64", macho_magic64 } };
 
-CONST macho_cputype_names = ARRAY OF enum_t{
+VAR macho_cputype_names := ARRAY [0..3] OF enum_t{
     enum_t{ "x86", macho_cpu_type_x86 },
     enum_t{ "amd64", macho_cpu_type_amd64 },
     enum_t{ "powerpc", macho_cpu_type_powerpc },
     enum_t{ "powerpc64", macho_cpu_type_powerpc64 } };
 
-CONST macho_cpusubtype_names = ARRAY OF enum_t{
+VAR macho_cpusubtype_names := ARRAY [0..1] OF enum_t{
     enum_t{ "powerpc_all", macho_cpu_subtype_powerpc_all },
     enum_t{ "x86_all", macho_cpu_subtype_x86_all } };
 
-CONST macho_filetype_names = ARRAY OF enum_t{
+VAR macho_filetype_names := ARRAY [0..9] OF enum_t{
     enum_t{ "object", macho_type_object },
     enum_t{ "execute", macho_type_execute },
     enum_t{ "fixed_vm_library", macho_type_fixed_vm_library },
@@ -52,21 +52,14 @@ CONST macho_filetype_names = ARRAY OF enum_t{
     enum_t{ "dylib_stub", macho_type_dylib_stub },
     enum_t{ "dsym", macho_type_dsym } };
 
-PROCEDURE Enum(READONLY a: ARRAY OF enum_t):REF ARRAY OF enum_t =
-  VAR b := NEW (REF ARRAY OF enum_t, NUMBER(a));
-BEGIN
-  b^ := a;
-  RETURN b;
-END Enum;
-
 VAR macho_header32_t_fields := ARRAY [0..6] OF field_t{
-  field_t{ "magic", enum_table := Enum(macho_magic_names)},
-  field_t{ "cputype", enum_table := Enum(macho_cputype_names)},
-  field_t{ "cpusubtype", enum_table := Enum(macho_cpusubtype_names)},
-  field_t{ "filetype", enum_table := Enum(macho_filetype_names)},
-  field_t{ "ncmds"},
-  field_t{ "sizeofcmds"},
-  field_t{ "flags"}};
+  field_t{ "magic", 0, 4, enum_table := ADR(macho_magic_names[0]), enum_table_count := NUMBER(macho_magic_names)},
+  field_t{ "cputype", 4, 4, enum_table := ADR(macho_cputype_names[0]), enum_table_count := NUMBER(macho_cputype_names)},
+  field_t{ "cpusubtype", 8, 4, enum_table := ADR(macho_cpusubtype_names[0]), enum_table_count := NUMBER(macho_cpusubtype_names)},
+  field_t{ "filetype", 12, 4, enum_table := ADR(macho_filetype_names[0]), enum_table_count := NUMBER(macho_filetype_names)},
+  field_t{ "ncmds", 16, 4},
+  field_t{ "sizeofcmds", 20, 4},
+  field_t{ "flags", 24, 4}};
 
 (*
 extern_const field_t
@@ -805,7 +798,4 @@ main(int argc, char** argv)
 *)
 
 BEGIN
-  FOR i := 0 TO NUMBER(macho_header32_t_fields) - 1 DO
-    macho_header32_t_fields[i].offset := 4 * i;
-  END;
 END macho.
