@@ -1,3 +1,5 @@
+# Modula-3: modified
+
 # Top level configure fragment for LTO
 #   Copyright (C) 2009
 #   Free Software Foundation, Inc.
@@ -19,10 +21,10 @@
 # <http://www.gnu.org/licenses/>.
 
 language="lto"
-compilers="lto1\$(exeext)"
-stagestuff="lto1\$(exeext)"
+compilers=
+stagestuff=
 
-gtfiles="\$(srcdir)/lto/lto-tree.h \$(srcdir)/lto/lto-lang.c \$(srcdir)/lto/lto.c"
+gtfiles=
 
 # LTO is a special front end.  From a user's perspective it is not
 # really a language, but a middle end feature.  However, the GIMPLE

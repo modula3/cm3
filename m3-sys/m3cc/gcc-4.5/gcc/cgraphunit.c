@@ -1820,15 +1820,10 @@ ipa_passes (void)
 	((struct ipa_opt_pass_d *) all_regular_ipa_passes);
     }
 
-  /* Some targets need to handle LTO assembler output specially.  */
-  if (flag_generate_lto)
-    targetm.asm_out.lto_start ();
+  gcc_assert (!flag_generate_lto);
 
   if (!in_lto_p)
     ipa_write_summaries ();
-
-  if (flag_generate_lto)
-    targetm.asm_out.lto_end ();
 
   if (!flag_ltrans)
     execute_ipa_pass_list (all_regular_ipa_passes);
