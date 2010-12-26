@@ -38,7 +38,8 @@ extern "C"
 {
 #endif
 
-M3_DLL_LOCAL void __cdecl Unix__Assertions(void)
+M3_DLL_LOCAL void __cdecl
+Unix__Assertions(void)
 {
     /* make sure things are normal */
     M3_STATIC_ASSERT(CHAR_BIT == 8);
@@ -125,7 +126,8 @@ M3WRAP2(char*, getcwd, char*, WORD_T)
 M3WRAP2(int, fchmod, int, m3_mode_t)
 M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 
-m3_pid_t __cdecl Unix__fork(void)
+M3_DLL_EXPORT m3_pid_t __cdecl
+Unix__fork(void)
 {
 #ifdef __sun
     /* Prior to Solaris 2.10, fork() was fork1() or forkall() depending
@@ -141,12 +143,14 @@ m3_pid_t __cdecl Unix__fork(void)
 #endif /* vms */
 #endif /* win32 */
 
-void __cdecl Unix__underscore_exit(int exit_code)
+M3_DLL_EXPORT void __cdecl
+Unix__underscore_exit(int exit_code)
 {
     _exit(exit_code);
 }
 
-void __cdecl Unix__exit(int i)
+M3_DLL_EXPORT void __cdecl
+Unix__exit(int i)
 {
     exit(i);
 }
@@ -154,37 +158,43 @@ void __cdecl Unix__exit(int i)
 #ifdef _WIN32
 
 #if 0
-char* __cdecl Unix__getcwd(char* name, WORD_T len)
+M3_DLL_EXPORT char* __cdecl
+Unix__getcwd(char* name, WORD_T len)
 {
     assert(len < INT_MAX);
     return _getcwd(name, (int)len);
 }
 
-int __cdecl Unix__gethostname(char* name, WORD_T len)
+M3_DLL_EXPORT int __cdecl
+Unix__gethostname(char* name, WORD_T len)
 {
     assert(len < INT_MAX);
     return gethostname(name, (int)len);
 }
 #endif
 
-int __cdecl Unix__mkdir(const char* path, m3_mode_t mode)
+M3_DLL_EXPORT int __cdecl
+Unix__mkdir(const char* path, m3_mode_t mode)
 {
     return _mkdir(path);
 }
 
-int __cdecl Unix__pipe(int* files)
+M3_DLL_EXPORT int __cdecl
+Unix__pipe(int* files)
 {
     return _pipe(files, 0, _O_BINARY);
 }
 
 #if _MSC_VER >= 1000
 
-m3_off_t __cdecl Unix__lseek(int fd, m3_off_t offset, int whence)
+M3_DLL_EXPORT m3_off_t __cdecl
+Unix__lseek(int fd, m3_off_t offset, int whence)
 {
     return _lseeki64(fd, offset, whence);
 }
 
-m3_off_t __cdecl Unix__tell(int fd)
+M3_DLL_EXPORT m3_off_t __cdecl
+Unix__tell(int fd)
 {
     return _telli64(fd);
 }
@@ -193,7 +203,8 @@ m3_off_t __cdecl Unix__tell(int fd)
 
 #else
 
-int __cdecl Unix__fcntl(int fd, int request, int arg)
+M3_DLL_EXPORT int __cdecl
+Unix__fcntl(int fd, int request, int arg)
 /* fcntl is actually fcntl(fd, request, ...).
  * Wrapper is needed on some systems to handle varargs.
  * See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.html.
@@ -216,7 +227,8 @@ int __cdecl Unix__fcntl(int fd, int request, int arg)
 #endif
 }
 
-int __cdecl Unix__ioctl(int fd, int request, void* argp)
+M3_DLL_EXPORT int __cdecl
+Unix__ioctl(int fd, int request, void* argp)
 /* ioctl is varargs. See fcntl. */
 {
 #ifdef __sun

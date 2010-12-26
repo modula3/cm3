@@ -385,18 +385,9 @@ ThreadPThread__Nanosleep(INTEGER nanoseconds)
 #endif
 }
 
-#ifdef __NetBSD__
-/* NetBSD #defines the symbols, breaking the token pasting of M3WAP.
- * Perhaps should fix another way.
- */
-int __cdecl ThreadPThread__pthread_cond_wait(pthread_cond_t* c, pthread_mutex_t* m) { return pthread_cond_wait(c, m); }
-int __cdecl ThreadPThread__pthread_cond_signal(pthread_cond_t* m) { return pthread_cond_signal(m); }
-int __cdecl ThreadPThread__pthread_cond_broadcast(pthread_cond_t* m) { return pthread_cond_broadcast(m); }
-#else
 M3WRAP2(int, pthread_cond_wait, pthread_cond_t*, pthread_mutex_t*)
 M3WRAP1(int, pthread_cond_signal, pthread_cond_t*)
 M3WRAP1(int, pthread_cond_broadcast, pthread_cond_t*)
-#endif
 
 int
 __cdecl

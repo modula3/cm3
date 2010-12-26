@@ -11,7 +11,8 @@ extern "C" {
 
 #ifndef _WIN32
 
-void Uexec__RepackStatus(int* var_status)
+M3_DLL_EXPORT void __cdecl
+Uexec__RepackStatus(int* var_status)
 {
     int status = { 0 };
 

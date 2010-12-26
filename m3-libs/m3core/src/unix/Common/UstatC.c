@@ -69,6 +69,7 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, struct stat* st)
     return result;
 }
 
+M3_DLL_EXPORT
 int
 __cdecl
 Ustat__stat(const char* path, m3_stat_t* m3st)
@@ -77,6 +78,7 @@ Ustat__stat(const char* path, m3_stat_t* m3st)
     return m3stat_from_stat(stat(path, &st), m3st, &st);
 }
 
+M3_DLL_EXPORT
 int
 __cdecl
 Ustat__lstat(const char* path, m3_stat_t* m3st)
@@ -85,6 +87,7 @@ Ustat__lstat(const char* path, m3_stat_t* m3st)
     return m3stat_from_stat(lstat(path, &st), m3st, &st);
 }
 
+M3_DLL_EXPORT
 int
 __cdecl
 Ustat__fstat(int fd, m3_stat_t* m3st)
