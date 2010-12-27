@@ -1841,6 +1841,15 @@ def MoveFile(a, b):
 
 #-----------------------------------------------------------------------------
 
+def RemoveDirectoryRecursive(a):
+    if os.name != "nt":
+        print("rm -rf " + a)
+    else:
+        print("rmdir /q/s " + a)
+    if not isdir(a):
+        shutil.rmtree(a)
+    return True
+
 def CreateDirectory(a):
     if os.name != "nt":
         print("mkdir -p " + a)
@@ -1892,6 +1901,17 @@ def CopyFileIfExist(From, To):
 
 #-----------------------------------------------------------------------------
 
+def DeleteConfig(To):
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
+    Bin  = os.path.join(To, "bin")
+    RemoveDirectoryRecursive(os.path.join(Bin, "config"))
+    for b in ["config", "config-no-install"]:
+        for File in glob.glob(os.path.join(a, b, "*")):
+            if isfile(File):
+                DeleteFile(os.path.join(Bin, os.path.basename(File)))
+
+#-----------------------------------------------------------------------------
+
 def CopyConfigForDevelopment():
     #
     # The development environment is easily reconfigured
@@ -1904,14 +1924,9 @@ def CopyConfigForDevelopment():
     To = os.path.join(InstallRoot, "bin")
 
     #
-    # First delete all the "distribution config files".
+    # First delete all the config files.
     #
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-
-    for b in ["config", "config-no-install"]:
-        for File in glob.glob(os.path.join(a, b, "*")):
-            if isfile(File):
-                DeleteFile(os.path.join(To, os.path.basename(File)))
+    DeleteConfig(To)
 
     # CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
     CopyFile(os.path.join(Root, a, "config-no-install", "cm3.cfg"), To) or FatalError()
@@ -1930,14 +1945,9 @@ def CopyConfigForDevelopment():
 #-----------------------------------------------------------------------------
 
 def CopyConfigForDistribution(To):
-    #
-    # The distributed environment is minimal and targets only one
-    # or a small number of targets (e.g. NT386*).
-    #
-    # The distributed environment does not require a source tree.
-    #
     Bin  = os.path.join(To, "bin")
     dir = os.path.join(Bin, "config")
+    DeleteConfig(To)
     CreateDirectory(dir)
     for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", "*")):
         if isfile(File):
