@@ -7,71 +7,78 @@ TYPE enum_t = RECORD
 END;
 
 TYPE field_t = RECORD
-  name:             TEXT;
-  offset:           uchar; (* small integer *)
-  size:             uchar; (* small integer *)
-  element_size:     uchar := 0; (* small integer *)
-  str:              uchar := 0; (* BOOLEAN *)
-  macho_string:     uchar := 0; (* BOOLEAN *)
-  enum_table:       REF ARRAY OF enum_t := NIL;
+  name:         TEXT;
+  offset:       uchar; (* small integer *)
+  size:         uchar; (* small integer *)
+  element_size: uchar := 0; (* small integer *)
+  str:          uchar := 0; (* BOOLEAN *)
+  macho_string: uchar := 0; (* BOOLEAN *)
+  enum:         REF ARRAY OF enum_t := NIL;
 END;
 
 TYPE struct_t = RECORD
-    name:           TEXT;
-    size:           uint;
-    nfields:        uint;
-    fields:         UNTRACED REF field_t;
-    widest_field:   int := 0;
+  name:           TEXT;
+  size:           uint;
+  fields:         REF ARRAY OF field_t := NIL;
+  widest_field:   uchar := 0; (* small integer *)
 END;
 
-PROCEDURE EnumTable(READONLY a:ARRAY OF enum_t):REF ARRAY OF enum_t =
-  VAR b := NEW(REF ARRAY OF enum_t, NUMBER(a));
-  BEGIN
-    b^ := a;
-    RETURN b;
-  END EnumTable;
+PROCEDURE CopyEnumArray(READONLY a:ARRAY OF enum_t):REF ARRAY OF enum_t =
+(* Modula-3 inefficiency.. *)
+VAR b := NEW(REF ARRAY OF enum_t, NUMBER(a));
+BEGIN
+  b^ := a;
+  RETURN b;
+END CopyEnumArray;
+
+PROCEDURE CopyFieldArray(READONLY a:ARRAY OF field_t):REF ARRAY OF field_t =
+(* Modula-3 inefficiency.. *)
+VAR b := NEW(REF ARRAY OF field_t, NUMBER(a));
+BEGIN
+  b^ := a;
+  RETURN b;
+END CopyFieldArray;
 
 (* define STRUCT(a) {STRINGIZE(a), sizeof(a), NUMBER_OF(PASTE(a,_fields)), PASTE(a,_fields)} *)
 
 CONST macho_magic_names = ARRAY OF enum_t{
-    enum_t{ "magic32", macho_magic32 },
-    enum_t{ "magic64", macho_magic64 }};
+  enum_t{"magic32", macho_magic32},
+  enum_t{"magic64", macho_magic64}};
 
 CONST macho_cputype_names = ARRAY OF enum_t{
-    enum_t{ "x86", macho_cpu_type_x86 },
-    enum_t{ "amd64", macho_cpu_type_amd64 },
-    enum_t{ "powerpc", macho_cpu_type_powerpc },
-    enum_t{ "powerpc64", macho_cpu_type_powerpc64 }};
+  enum_t{"x86", macho_cpu_type_x86},
+  enum_t{"amd64", macho_cpu_type_amd64},
+  enum_t{"powerpc", macho_cpu_type_powerpc},
+  enum_t{"powerpc64", macho_cpu_type_powerpc64}};
 
 CONST macho_cpusubtype_names = ARRAY OF enum_t{
-    enum_t{ "powerpc_all", macho_cpu_subtype_powerpc_all },
-    enum_t{ "x86_all", macho_cpu_subtype_x86_all }};
+  enum_t{"powerpc_all", macho_cpu_subtype_powerpc_all},
+  enum_t{"x86_all", macho_cpu_subtype_x86_all}};
 
 CONST macho_filetype_names = ARRAY OF enum_t{
-    enum_t{ "object", macho_type_object },
-    enum_t{ "execute", macho_type_execute },
-    enum_t{ "fixed_vm_library", macho_type_fixed_vm_library },
-    enum_t{ "core", macho_type_core },
-    enum_t{ "preload", macho_type_preload },
-    enum_t{ "dylib", macho_type_dylib },
-    enum_t{ "dylinker", macho_type_dylinker },
-    enum_t{ "bundle", macho_type_bundle },
-    enum_t{ "dylib_stub", macho_type_dylib_stub },
-    enum_t{ "dsym", macho_type_dsym }};
+  enum_t{"object", macho_type_object},
+  enum_t{"execute", macho_type_execute},
+  enum_t{"fixed_vm_library", macho_type_fixed_vm_library},
+  enum_t{"core", macho_type_core},
+  enum_t{"preload", macho_type_preload},
+  enum_t{"dylib", macho_type_dylib},
+  enum_t{"dylinker", macho_type_dylinker},
+  enum_t{"bundle", macho_type_bundle},
+  enum_t{"dylib_stub", macho_type_dylib_stub},
+  enum_t{"dsym", macho_type_dsym}};
 
 VAR macho_header32_t_fields := ARRAY [0..6] OF field_t{
-  field_t{ "magic", 0, 4, enum_table := EnumTable(macho_magic_names)},
-  field_t{ "cputype", 4, 4, enum_table := EnumTable(macho_cputype_names)},
-  field_t{ "cpusubtype", 8, 4, enum_table := EnumTable(macho_cpusubtype_names)},
-  field_t{ "filetype", 12, 4, enum_table := EnumTable(macho_filetype_names)},
-  field_t{ "ncmds", 16, 4},
-  field_t{ "sizeofcmds", 20, 4},
-  field_t{ "flags", 24, 4}};
+  field_t{"magic", 0, 4, enum := CopyEnumArray(macho_magic_names)},
+  field_t{"cputype", 4, 4, enum := CopyEnumArray(macho_cputype_names)},
+  field_t{"cpusubtype", 8, 4, enum := CopyEnumArray(macho_cpusubtype_names)},
+  field_t{"filetype", 12, 4, enum := CopyEnumArray(macho_filetype_names)},
+  field_t{"ncmds", 16, 4},
+  field_t{"sizeofcmds", 20, 4},
+  field_t{"flags", 24, 4}};
 
-VAR struct_macho_header32 := struct_t{ "macho_header32_t",
-                                       BYTESIZE(macho_header32_t),
-                                       NUMBER(macho_header32_t_fields),
-                                       ADR(macho_header32_t_fields[0]) };
+VAR struct_macho_header32 := struct_t{"macho_header32_t",
+                                      BYTESIZE(macho_header32_t),
+                                      CopyFieldArray(macho_header32_t_fields)};
 
 TYPE macho_file_t = RECORD
     path:               TEXT;
@@ -85,21 +92,21 @@ END;
 
 PROCEDURE no_swap32(a:uint32):uint32 =
 BEGIN
-    RETURN a;
+  RETURN a;
 END no_swap32;
 
 PROCEDURE no_swap64(a:uint64):uint64 =
 BEGIN
-    RETURN a;
+  RETURN a;
 END no_swap64;
 
 PROCEDURE swap32(a:uint32):uint32 =
 CONST Left = Word.LeftShift; Right = Word.RightShift; And = Word.And; Or = Word.Or;
 BEGIN
-    RETURN Or(    Right(a, 24),
-           Or(And(Right(a,  8), 16_FF00),
-           Or(And(Left (a,  8), 16_FF0000),
-                   Left(a, 24))));
+  RETURN Or(    Right(a, 24),
+         Or(And(Right(a,  8), 16_FF00),
+         Or(And(Left (a,  8), 16_FF0000),
+                Left (a, 24))));
 END swap32;
 
 PROCEDURE swap64(a:uint64):uint64 =
@@ -116,6 +123,16 @@ BEGIN
                   Left (a, 56))))))));
 END swap64;
 
+PROCEDURE strnlen(a: UNTRACED REF uchar; max: CARDINAL): CARDINAL =
+VAR i: CARDINAL := 0;
+BEGIN
+  WHILE i < max AND a^ # 0 DO
+    INC(i);
+    INC(a);
+  END;
+  RETURN i;
+END strnlen;
+
 PROCEDURE field_print(VAR s: struct_t; READONLY f: field_t; p: ADDRESS) =
 VAR buffer: TEXT;
     q := LOOPHOLE(p + f.offset, UNTRACED REF uchar);
@@ -124,36 +141,24 @@ VAR buffer: TEXT;
     size := f.size;
     str := f.str;
     macho_string := f.macho_string;
-    enum_table := f.enum_table;
-    enum_table_count: CARDINAL;
+    enum := f.enum;
     value32: uint32 := 0;
     value32_swapped: uint32 := 0;
     value64: uint64 := 0L;
     value64_swapped: uint64 := 0L;
     i: uint := 0;
     length: uint := 0;
-    e: uint32_t := 0;
-    ch: uchar := 0;
 BEGIN
-  IF enum_table # NIL THEN
-    enum_table_count := NUMBER(enum_table^);
-  END;
   buffer := s.name & "." & Fmt.Pad(f.name, s.widest_field, ' ');
   IF str # 0 THEN
-    i := 0;
-    length := 0;
-    WHILE i < size AND LOOPHOLE(q + i, UNTRACED REF uchar)^ # 0 DO
-      INC(length);
-      INC(i);
+    length := strnlen(q + i, size);
+    IF length < size THEN
+      buffer := buffer & Fmt.Pad("", size - length);
     END;
-    WHILE length < 16 DO
-      INC(length);
-      buffer := buffer & " ";
-    END;
-    i := 0;
-    WHILE i < size AND LOOPHOLE(q + i, UNTRACED REF uchar)^ # 0 DO
-      INC(i);
-      buffer := buffer & Text.FromChar(LOOPHOLE(q + i, UNTRACED REF CHAR)^);
+    IF length > 0 THEN
+      FOR i := 0 TO length - 1 DO
+        buffer := buffer & Text.FromChar(LOOPHOLE(q + i, UNTRACED REF CHAR)^);
+      END;
     END;
   ELSE
     IF size = 4 THEN
@@ -166,17 +171,15 @@ BEGIN
        value64_swapped := swap64(value64);
     END;
     buffer := buffer & "0x" & Fmt.LongUnsigned(value64) & " 0x" & Fmt.LongUnsigned(value64_swapped);
-    IF enum_table # NIL AND enum_table_count > 0 THEN
-      e := 0;
-      WHILE e < enum_table_count DO
-        IF enum_table[e].value = value32 THEN
-          buffer := buffer & " (" & enum_table[e].name & ")";
+    IF enum # NIL THEN
+      FOR e := 0 TO NUMBER(enum^) - 1 DO
+        IF enum[e].value = value32 THEN
+          buffer := buffer & " (" & enum[e].name & ")";
           EXIT;
-        ELSIF enum_table[e].value = value32_swapped THEN
-          buffer := buffer & " (" & enum_table[e].name & ", swapped)";
+        ELSIF enum[e].value = value32_swapped THEN
+          buffer := buffer & " (" & enum[e].name & ", swapped)";
           EXIT;
         END;
-        INC(e);
       END;
     ELSIF macho_string # 0 AND size = 4 THEN
       IF Word.LT(value32_swapped, value32) THEN
@@ -184,11 +187,9 @@ BEGIN
       END;
       buffer := buffer & " (";
       q := p + value32;
-      ch := q^;
-      WHILE ch # 0 DO
-        buffer := buffer & Text.FromChar(VAL(ch, CHAR));
+      WHILE q^ # 0 DO
+        buffer := buffer & Text.FromChar(VAL(q^, CHAR));
         INC(q);
-        ch := q^;
       END;
       buffer := buffer & ")";
     END;
@@ -197,26 +198,153 @@ BEGIN
   IO.Put(buffer);
 END field_print;
 
-(*
-void
-field_print(struct_t* s, const field_t* f, const void* p)
-{
-    if (str)
-    {
-    }
-    else
-    {
-        else if (macho_string && size == 4)
-        {
-            if (value_swapped < value)
-                value = value_swapped;
-            i += sprintf(cursor + i, " (%s)", value + (char* )p);
-        }
-        cursor += i;
-    }
-    printf("%s\n", buffer);
-}
+PROCEDURE struct_print(VAR t: struct_t; p: ADDRESS) =
+VAR widest_field := t.widest_field;
+BEGIN
+  IF widest_field = 0 THEN
+    FOR i := 0 TO NUMBER(t.fields^) - 1 DO
+      widest_field := MAX(widest_field, Text.Length(t.fields[i].name));
+    END;
+    t.widest_field := widest_field;
+  END;
+  FOR i := 0 TO NUMBER(t.fields^) - 1 DO
+    field_print(t, t.fields[i], p);
+  END;
+END struct_print;
 
+PROCEDURE macho_loadcommand_name(cmd: uint32_t):TEXT =
+CONST mask = Word.Not(macho_loadcommand_require_dyld);
+      And = Word.And;
+BEGIN
+  cmd := And(cmd, mask);
+  CASE cmd OF
+    | And(macho_loadcommand_segment32, mask)            => RETURN "segment32";
+    | And(macho_loadcommand_symtab, mask)               => RETURN "symtab";
+    | And(macho_loadcommand_symseg, mask)               => RETURN "symseg";
+    | And(macho_loadcommand_thread, mask)               => RETURN "thread";
+    | And(macho_loadcommand_unixthread, mask)           => RETURN "unixthread";
+    | And(macho_loadcommand_fixed_vm_lib, mask)         => RETURN "fixed_vm_lib";
+    | And(macho_loadcommand_id_fixed_vm_lib, mask)      => RETURN "id_fixed_vm_lib";
+    | And(macho_loadcommand_ident, mask)                => RETURN "ident";
+    | And(macho_loadcommand_fixed_vm_file, mask)        => RETURN "fixed_vm_file";
+    | And(macho_loadcommand_prepage, mask)              => RETURN "prepage";
+    | And(macho_loadcommand_dysymtab, mask)             => RETURN "dysymtab";
+    | And(macho_loadcommand_load_dylib, mask)           => RETURN "load_dylib";
+    | And(macho_loadcommand_id_dylib, mask)             => RETURN "id_dylib";
+    | And(macho_loadcommand_load_dylinker, mask)        => RETURN "load_dylinker";
+    | And(macho_loadcommand_id_dylinker, mask)          => RETURN "id_dylinker";
+    | And(macho_loadcommand_prebound_dylib, mask)       => RETURN "prebound_dylib";
+    | And(macho_loadcommand_routines32, mask)           => RETURN "routines32";
+    | And(macho_loadcommand_sub_framework, mask)        => RETURN "sub_framework";
+    | And(macho_loadcommand_sub_umbrella, mask)         => RETURN "sub_umbrella";
+    | And(macho_loadcommand_sub_client, mask)           => RETURN "sub_client";
+    | And(macho_loadcommand_sub_library, mask)          => RETURN "sub_library";
+    | And(macho_loadcommand_twolevel_hints, mask)       => RETURN "twolevel_hints";
+    | And(macho_loadcommand_prebind_checksum, mask)     => RETURN "prebind_checksum";
+    | And(macho_loadcommand_load_weak_dylib, mask)      => RETURN "load_weak_dylib";
+    | And(macho_loadcommand_segment64, mask)            => RETURN "segment64";
+    | And(macho_loadcommand_routines64, mask)           => RETURN "routines64";
+    | And(macho_loadcommand_uuid, mask)                 => RETURN "uuid";
+    | And(macho_loadcommand_rpath, mask)                => RETURN "rpath";
+    | And(macho_loadcommand_code_signature, mask)       => RETURN "code_signature";
+    | And(macho_loadcommand_segment_split_info, mask)   => RETURN "segment_split_info";
+    | And(macho_loadcommand_reexport_dylib, mask)       => RETURN "reexport_dylib";
+    | And(macho_loadcommand_lazy_load_dylib, mask)      => RETURN "lazy_load_dylib";
+    | And(macho_loadcommand_encryption_info, mask)      => RETURN "encryption_info";
+    ELSE                                                RETURN "unknown (" & Fmt.Int(cmd) & ")";
+  END;
+END macho_loadcommand_name;
+
+PROCEDURE macho_first_load_command(READONLY m:macho_file_t):UNTRACED REF macho_loadcommand_t =
+BEGIN
+  RETURN LOOPHOLE(m.macho_header + m.macho_header_size, UNTRACED REF macho_loadcommand_t);
+END macho_first_load_command;
+
+PROCEDURE macho_next_load_command(READONLY m:macho_file_t; L:UNTRACED REF macho_loadcommand_t):UNTRACED REF macho_loadcommand_t =
+BEGIN
+  RETURN LOOPHOLE(L + m.swap32(L.cmdsize), UNTRACED REF macho_loadcommand_t);
+END macho_next_load_command;
+
+PROCEDURE macho_ncmds(READONLY m:macho_file_t):uint =
+BEGIN
+  RETURN m.swap32(m.macho_header.ncmds);
+END macho_ncmds;
+
+VAR macho_segment32_t_fields := ARRAY [0..10] OF field_t{
+  field_t{"cmd", 0, 4},
+  field_t{"cmdsize", 4, 4},
+  field_t{"segname", 8, 16, element_size := 1, str := 1},
+  field_t{"vmaddr", 24, 4},
+  field_t{"vmsize", 28, 4},
+  field_t{"fileoff", 32, 4},
+  field_t{"filesize", 36, 4},
+  field_t{"maxprot", 40, 4},
+  field_t{"initprot", 44, 4},
+  field_t{"nsects", 48, 4},
+  field_t{"flags", 52, 4}};
+
+(*
+
+struct_t
+struct_macho_segment32 = STRUCT(macho_segment32_t);
+
+extern_const field_t
+macho_segment64_t_fields[] = {
+    FIELD(macho_segment64_t, cmd),
+    FIELD(macho_segment64_t, cmdsize),
+    FIELD_STRING(macho_segment64_t, segname),
+    FIELD(macho_segment64_t, vmaddr),
+    FIELD(macho_segment64_t, vmsize),
+    FIELD(macho_segment64_t, fileoff),
+    FIELD(macho_segment64_t, filesize),
+    FIELD(macho_segment64_t, maxprot),
+    FIELD(macho_segment64_t, initprot),
+    FIELD(macho_segment64_t, nsects),
+    FIELD(macho_segment64_t, flags)
+};
+
+struct_t
+struct_macho_segment64 = STRUCT(macho_segment64_t);
+
+extern_const field_t
+macho_section32_t_fields[] = {
+    FIELD_STRING(macho_section32_t, sectname),
+    FIELD_STRING(macho_section32_t, segname),
+    FIELD(macho_section32_t, addr),
+    FIELD(macho_section32_t, size),
+    FIELD(macho_section32_t, offset),
+    FIELD(macho_section32_t, align),
+    FIELD(macho_section32_t, reloff),
+    FIELD(macho_section32_t, nreloc),
+    FIELD(macho_section32_t, flags),
+    FIELD(macho_section32_t, reserved1),
+    FIELD(macho_section32_t, reserved2)
+};
+
+struct_t
+struct_macho_section32 = STRUCT(macho_section32_t);
+
+extern_const field_t
+macho_section64_t_fields[] = {
+    FIELD_STRING(macho_section64_t, sectname),
+    FIELD_STRING(macho_section64_t, segname),
+    FIELD(macho_section64_t, addr),
+    FIELD(macho_section64_t, size),
+    FIELD(macho_section64_t, offset),
+    FIELD(macho_section64_t, align),
+    FIELD(macho_section64_t, reloff),
+    FIELD(macho_section64_t, nreloc),
+    FIELD(macho_section64_t, flags),
+    FIELD(macho_section64_t, reserved1),
+    FIELD(macho_section64_t, reserved2),
+    FIELD(macho_section64_t, reserved3)
+};
+
+struct_t
+struct_macho_section64 = STRUCT(macho_section64_t);
+*)
+
+(*
 #include <stdlib.h>
 #include <string.h>
 #include "macho.h"
@@ -290,163 +418,6 @@ void adjust_hex_case(char* a)
 #endif
 }
 */
-
-void
-struct_print(struct_t* t, const void* p)
-{
-    uint i;
-    uint nfields = t->nfields;
-    int widest_field = t->widest_field;
-    if (widest_field == 0)
-    {
-        for (i = 0; i < nfields; ++i)
-        {
-            size_t j = strlen(t->fields[i].name);
-            if (j > widest_field && j <= INT_MAX)
-                widest_field = (int)j;
-        }
-        t->widest_field = widest_field;
-     }
-    for (i = 0; i < nfields; ++i)
-        field_print(t, &t->fields[i], p);
-}
-
-const char*
-macho_loadcommand_name(uint32_t cmd)
-{
-    static char a[99];
-    switch (cmd & ~macho_loadcommand_require_dyld)
-    {
-#define X(a) case macho_loadcommand_##a & ~macho_loadcommand_require_dyld: return #a;
-    X(segment32)
-    X(symtab)
-    X(symseg)
-    X(thread)
-    X(unixthread)
-    X(fixed_vm_lib)
-    X(id_fixed_vm_lib)
-    X(ident)
-    X(fixed_vm_file)
-    X(prepage)
-    X(dysymtab)
-    X(load_dylib)
-    X(id_dylib)
-    X(load_dylinker)
-    X(id_dylinker)
-    X(prebound_dylib)
-    X(routines32)
-    X(sub_framework)
-    X(sub_umbrella)
-    X(sub_client)
-    X(sub_library)
-    X(twolevel_hints)
-    X(prebind_checksum)
-    X(load_weak_dylib)
-    X(segment64)
-    X(routines64)
-    X(uuid)
-    X(rpath)
-    X(code_signature)
-    X(segment_split_info)
-    X(reexport_dylib)
-    X(lazy_load_dylib)
-    X(encryption_info)
-#undef X
-    }
-    sprintf(a, "unknown (%u)", cmd);
-    return a;
-}
-
-macho_loadcommand_t*
-macho_first_load_command(macho_file_t* m)
-{
-    return (macho_loadcommand_t* )(m->macho_header_size + (uchar* )m->macho_header);
-}
-
-macho_loadcommand_t*
-macho_next_load_command(macho_file_t* m, macho_loadcommand_t* L)
-{
-    return (macho_loadcommand_t* )(m->swap32(L->cmdsize) + (uchar* )L);
-}
-
-uint
-macho_ncmds(macho_file_t* m)
-{
-    return m->swap32(m->macho_header->ncmds);
-}
-
-extern_const field_t
-macho_segment32_t_fields[] = {
-    FIELD(macho_segment32_t, cmd),
-    FIELD(macho_segment32_t, cmdsize),
-    FIELD_STRING(macho_segment32_t, segname),
-    FIELD(macho_segment32_t, vmaddr),
-    FIELD(macho_segment32_t, vmsize),
-    FIELD(macho_segment32_t, fileoff),
-    FIELD(macho_segment32_t, filesize),
-    FIELD(macho_segment32_t, maxprot),
-    FIELD(macho_segment32_t, initprot),
-    FIELD(macho_segment32_t, nsects),
-    FIELD(macho_segment32_t, flags)
-};
-
-struct_t
-struct_macho_segment32 = STRUCT(macho_segment32_t);
-
-extern_const field_t
-macho_segment64_t_fields[] = {
-    FIELD(macho_segment64_t, cmd),
-    FIELD(macho_segment64_t, cmdsize),
-    FIELD_STRING(macho_segment64_t, segname),
-    FIELD(macho_segment64_t, vmaddr),
-    FIELD(macho_segment64_t, vmsize),
-    FIELD(macho_segment64_t, fileoff),
-    FIELD(macho_segment64_t, filesize),
-    FIELD(macho_segment64_t, maxprot),
-    FIELD(macho_segment64_t, initprot),
-    FIELD(macho_segment64_t, nsects),
-    FIELD(macho_segment64_t, flags)
-};
-
-struct_t
-struct_macho_segment64 = STRUCT(macho_segment64_t);
-
-extern_const field_t
-macho_section32_t_fields[] = {
-    FIELD_STRING(macho_section32_t, sectname),
-    FIELD_STRING(macho_section32_t, segname),
-    FIELD(macho_section32_t, addr),
-    FIELD(macho_section32_t, size),
-    FIELD(macho_section32_t, offset),
-    FIELD(macho_section32_t, align),
-    FIELD(macho_section32_t, reloff),
-    FIELD(macho_section32_t, nreloc),
-    FIELD(macho_section32_t, flags),
-    FIELD(macho_section32_t, reserved1),
-    FIELD(macho_section32_t, reserved2)
-};
-
-struct_t
-struct_macho_section32 = STRUCT(macho_section32_t);
-
-extern_const field_t
-macho_section64_t_fields[] = {
-    FIELD_STRING(macho_section64_t, sectname),
-    FIELD_STRING(macho_section64_t, segname),
-    FIELD(macho_section64_t, addr),
-    FIELD(macho_section64_t, size),
-    FIELD(macho_section64_t, offset),
-    FIELD(macho_section64_t, align),
-    FIELD(macho_section64_t, reloff),
-    FIELD(macho_section64_t, nreloc),
-    FIELD(macho_section64_t, flags),
-    FIELD(macho_section64_t, reserved1),
-    FIELD(macho_section64_t, reserved2),
-    FIELD(macho_section64_t, reserved3)
-};
-
-struct_t
-struct_macho_section64 = STRUCT(macho_section64_t);
 
 void
 macho_dump_load_command_segmentX(macho_file_t* m,
