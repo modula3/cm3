@@ -1,4 +1,5 @@
 import("m3core")
+import("libm3")
 module("macho")
 build_standalone()
 program("macho")
