@@ -114,6 +114,7 @@ M3WRAP0(int, getdtablesize)
 M3WRAP0(int, getpagesize)
 M3WRAP1(void*, sbrk, INTEGER)
 M3WRAP3(int, execve, const char*, char**, char**)
+M3WRAP1(unsigned, sleep, unsigned)
 M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
 M3WRAP2(int, mkdir, const char*, m3_mode_t)
 M3WRAP1(int, pipe, int*)
@@ -247,17 +248,6 @@ Unix__ioctl(int fd, int request, void* argp)
 #endif
 }
 
-#endif
-
-#ifndef _WIN32
-
-/* sleep might be used while waiting for another thread to make progress,
-   and disabling switching here could prevent progress. */
-
-#define Scheduler__DisableSwitching() /* nothing */
-#define Scheduler__EnableSwitching() /* nothing */
-
-M3WRAP1(unsigned, sleep, unsigned)
 #endif
 
 #ifdef __cplusplus
