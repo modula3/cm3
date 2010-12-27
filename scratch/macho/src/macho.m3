@@ -271,6 +271,8 @@ BEGIN
   RETURN m.swap32(m.macho_header.ncmds);
 END macho_ncmds;
 
+(* macho_segment32_t *)
+
 CONST macho_segment32: UNTRACED REF macho_segment32_t = NIL;
 
 VAR macho_segment32_t_fields := ARRAY [0..10] OF field_t{
@@ -290,6 +292,8 @@ VAR struct_macho_segment32 := struct_t{"macho_segment32_t",
                                        BYTESIZE(macho_segment32_t),
                                        CopyFieldArray(macho_segment32_t_fields)};
 
+(* macho_segment64_t *)
+
 CONST macho_segment64: UNTRACED REF macho_segment64_t = NIL;
 
 VAR macho_segment64_t_fields := ARRAY [0..10] OF field_t{
@@ -307,7 +311,9 @@ VAR macho_segment64_t_fields := ARRAY [0..10] OF field_t{
 
 VAR struct_macho_segment64 := struct_t{"macho_segment64_t",
                                        BYTESIZE(macho_segment64_t),
-                                       CopyFieldArray(macho_segment64_t_fields)};
+                                       (macho_segment64_t_fields)};
+
+(* macho_section32_t *)
 
 CONST macho_section32: UNTRACED REF macho_section32_t = NIL;
 
@@ -327,8 +333,6 @@ VAR macho_section32_t_fields := ARRAY [0..10] OF field_t{
 VAR struct_macho_section32 := struct_t{"macho_section32_t",
                                        BYTESIZE(macho_section32_t),
                                        CopyFieldArray(macho_section32_t_fields)};
-
-
 
 CONST macho_section64: UNTRACED REF macho_section64_t = NIL;
 
