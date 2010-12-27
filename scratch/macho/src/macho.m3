@@ -311,7 +311,7 @@ VAR macho_segment64_t_fields := ARRAY [0..10] OF field_t{
 
 VAR struct_macho_segment64 := struct_t{"macho_segment64_t",
                                        BYTESIZE(macho_segment64_t),
-                                       (macho_segment64_t_fields)};
+                                       CopyFieldArray(macho_segment64_t_fields)};
 
 (* macho_section32_t *)
 
