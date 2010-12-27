@@ -20,11 +20,9 @@ M3WRAP2(void*, calloc, WORD_T, WORD_T)
 M3WRAP2(double, strtod, const char*, char**)
 M3WRAP1(double, atof, const char*)
 
-#define V(name, in, out) M3_DLL_EXPORT void __cdecl Cstdlib__##name in { name out; }
-
-V(abort, (void), ())
-V(exit, (int status), (status))
-V(free, (void* a), (a))
+M3WRAP_RETURN_VOID(abort, (void), ())
+M3WRAP_RETURN_VOID(exit, (int status), (status))
+M3WRAP_RETURN_VOID(free, (void* a), (a))
 
 #ifdef __cplusplus
 }
