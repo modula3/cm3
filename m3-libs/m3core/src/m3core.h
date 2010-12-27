@@ -151,8 +151,10 @@ This should be achieved by immediate prepending with "__", however even this
 can likely fail if __foo is #defined. We take our chances.
 */
 
+M3EXTERNC_BEGIN
 void Scheduler__DisableSwitching (void);
 void Scheduler__EnableSwitching (void);
+M3EXTERNC_END
 
 #define M3PASTE_(a, b) a##b
 #define M3PASTE(a, b) M3PASTE_(a, b)
@@ -160,18 +162,18 @@ void Scheduler__EnableSwitching (void);
     M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, m3name) in  \
     {                                                                       \
         ret return_value;                                                   \
-        Scheduler__DisableSwitching ();                                     \
+        /* Scheduler__DisableSwitching (); */                               \
         return_value = cname out;                                           \
-        Scheduler__EnableSwitching ();                                      \
+        /* Scheduler__EnableSwitching (); */                                \
         return return_value;                                                \
     } M3EXTERNC_END
 
 #define M3WRAP_RETURN_VOID(name, in, out)                                   \
     M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl M3PASTE(M3MODULE, __##name) in \
     {                                                                       \
-        Scheduler__DisableSwitching ();                                     \
+        /* Scheduler__DisableSwitching (); */                               \
         name out;                                                           \
-        Scheduler__EnableSwitching ();                                      \
+        /* Scheduler__EnableSwitching (); */                                \
     } M3EXTERNC_END
 
 #ifdef _WIN32
