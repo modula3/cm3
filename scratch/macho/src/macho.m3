@@ -8,19 +8,18 @@ END;
 
 TYPE field_t = RECORD
   name:         TEXT;
-  offset:       uchar; (* small integer *)
-  size:         uchar; (* small integer *)
-  element_size: uchar := 0; (* small integer *)
-  str:          uchar := 0; (* BOOLEAN *)
-  macho_string: uchar := 0; (* BOOLEAN *)
+  offset:       ADDRESS; (* small integer *)
+  size:         CARDINAL; (* small integer *)
+  str:          BOOLEAN := FALSE;
+  macho_string: BOOLEAN := FALSE;
   enum:         REF ARRAY OF enum_t := NIL;
 END;
 
 TYPE struct_t = RECORD
   name:           TEXT;
-  size:           uint;
+  size:           CARDINAL;
   fields:         REF ARRAY OF field_t := NIL;
-  widest_field:   uchar := 0; (* small integer *)
+  widest_field:   CARDINAL := 0; (* small integer *)
 END;
 
 PROCEDURE CopyEnumArray(READONLY a:ARRAY OF enum_t):REF ARRAY OF enum_t =
@@ -67,14 +66,16 @@ CONST macho_filetype_names = ARRAY OF enum_t{
   enum_t{"dylib_stub", macho_type_dylib_stub},
   enum_t{"dsym", macho_type_dsym}};
 
+CONST macho_header32: UNTRACED REF macho_header32_t = NIL;
+
 VAR macho_header32_t_fields := ARRAY [0..6] OF field_t{
-  field_t{"magic", 0, 4, enum := CopyEnumArray(macho_magic_names)},
-  field_t{"cputype", 4, 4, enum := CopyEnumArray(macho_cputype_names)},
-  field_t{"cpusubtype", 8, 4, enum := CopyEnumArray(macho_cpusubtype_names)},
-  field_t{"filetype", 12, 4, enum := CopyEnumArray(macho_filetype_names)},
-  field_t{"ncmds", 16, 4},
-  field_t{"sizeofcmds", 20, 4},
-  field_t{"flags", 24, 4}};
+  field_t{"magic", ADR(macho_header32.magic), BYTESIZE(macho_header32.magic), enum := CopyEnumArray(macho_magic_names)},
+  field_t{"cputype", ADR(macho_header32.cputype), BYTESIZE(macho_header32.cputype), enum := CopyEnumArray(macho_cputype_names)},
+  field_t{"cpusubtype", ADR(macho_header32.cpusubtype), BYTESIZE(macho_header32.cpusubtype), enum := CopyEnumArray(macho_cpusubtype_names)},
+  field_t{"filetype", ADR(macho_header32.filetype), BYTESIZE(macho_header32.filetype), enum := CopyEnumArray(macho_filetype_names)},
+  field_t{"ncmds", ADR(macho_header32.ncmds), BYTESIZE(macho_header32.ncmds)},
+  field_t{"sizeofcmds", ADR(macho_header32.sizeofcmds), BYTESIZE(macho_header32.sizeofcmds)},
+  field_t{"flags", ADR(macho_header32.flags), BYTESIZE(macho_header32.flags)}};
 
 VAR struct_macho_header32 := struct_t{"macho_header32_t",
                                       BYTESIZE(macho_header32_t),
@@ -135,7 +136,7 @@ END strnlen;
 
 PROCEDURE field_print(VAR s: struct_t; READONLY f: field_t; p: ADDRESS) =
 VAR buffer: TEXT;
-    q := LOOPHOLE(p + f.offset, UNTRACED REF uchar);
+    q := LOOPHOLE(p + LOOPHOLE(f.offset, INTEGER), UNTRACED REF uchar);
     q32 := LOOPHOLE(q, UNTRACED REF uint32);
     q64 := LOOPHOLE(q, UNTRACED REF uint64);
     size := f.size;
@@ -150,7 +151,7 @@ VAR buffer: TEXT;
     length: uint := 0;
 BEGIN
   buffer := s.name & "." & Fmt.Pad(f.name, s.widest_field, ' ');
-  IF str # 0 THEN
+  IF str THEN
     length := strnlen(q + i, size);
     IF length < size THEN
       buffer := buffer & Fmt.Pad("", size - length);
@@ -181,7 +182,7 @@ BEGIN
           EXIT;
         END;
       END;
-    ELSIF macho_string # 0 AND size = 4 THEN
+    ELSIF macho_string AND size = 4 THEN
       IF Word.LT(value32_swapped, value32) THEN
         value32 := value32_swapped;
       END;
@@ -270,79 +271,84 @@ BEGIN
   RETURN m.swap32(m.macho_header.ncmds);
 END macho_ncmds;
 
+CONST macho_segment32: UNTRACED REF macho_segment32_t = NIL;
+
 VAR macho_segment32_t_fields := ARRAY [0..10] OF field_t{
-  field_t{"cmd", 0, 4},
-  field_t{"cmdsize", 4, 4},
-  field_t{"segname", 8, 16, element_size := 1, str := 1},
-  field_t{"vmaddr", 24, 4},
-  field_t{"vmsize", 28, 4},
-  field_t{"fileoff", 32, 4},
-  field_t{"filesize", 36, 4},
-  field_t{"maxprot", 40, 4},
-  field_t{"initprot", 44, 4},
-  field_t{"nsects", 48, 4},
-  field_t{"flags", 52, 4}};
+  field_t{"cmd",       ADR(macho_segment32.cmd),      BYTESIZE(macho_segment32.cmd)},
+  field_t{"cmdsize",   ADR(macho_segment32.cmdsize),  BYTESIZE(macho_segment32.cmdsize)},
+  field_t{"segname",   ADR(macho_segment32.segname),  BYTESIZE(macho_segment32.segname), str := TRUE},
+  field_t{"vmaddr",    ADR(macho_segment32.vmaddr),   BYTESIZE(macho_segment32.vmaddr)},
+  field_t{"vmsize",    ADR(macho_segment32.vmsize),   BYTESIZE(macho_segment32.vmsize)},
+  field_t{"fileoff",   ADR(macho_segment32.fileoff),  BYTESIZE(macho_segment32.fileoff)},
+  field_t{"filesize",  ADR(macho_segment32.filesize), BYTESIZE(macho_segment32.filesize)},
+  field_t{"maxprot",   ADR(macho_segment32.maxprot),  BYTESIZE(macho_segment32.maxprot)},
+  field_t{"initprot",  ADR(macho_segment32.initprot), BYTESIZE(macho_segment32.initprot)},
+  field_t{"nsects",    ADR(macho_segment32.nsects),   BYTESIZE(macho_segment32.nsects)},
+  field_t{"flags",     ADR(macho_segment32.flags),    BYTESIZE(macho_segment32.flags)}};
 
-(*
+VAR struct_macho_segment32 := struct_t{"macho_segment32_t",
+                                       BYTESIZE(macho_segment32_t),
+                                       CopyFieldArray(macho_segment32_t_fields)};
 
-struct_t
-struct_macho_segment32 = STRUCT(macho_segment32_t);
+CONST macho_segment64: UNTRACED REF macho_segment64_t = NIL;
 
-extern_const field_t
-macho_segment64_t_fields[] = {
-    FIELD(macho_segment64_t, cmd),
-    FIELD(macho_segment64_t, cmdsize),
-    FIELD_STRING(macho_segment64_t, segname),
-    FIELD(macho_segment64_t, vmaddr),
-    FIELD(macho_segment64_t, vmsize),
-    FIELD(macho_segment64_t, fileoff),
-    FIELD(macho_segment64_t, filesize),
-    FIELD(macho_segment64_t, maxprot),
-    FIELD(macho_segment64_t, initprot),
-    FIELD(macho_segment64_t, nsects),
-    FIELD(macho_segment64_t, flags)
-};
+VAR macho_segment64_t_fields := ARRAY [0..10] OF field_t{
+  field_t{"cmd",       ADR(macho_segment64.cmd),      BYTESIZE(macho_segment64.cmd)},
+  field_t{"cmdsize",   ADR(macho_segment64.cmdsize),  BYTESIZE(macho_segment64.cmdsize)},
+  field_t{"segname",   ADR(macho_segment64.segname),  BYTESIZE(macho_segment64.segname), str := TRUE},
+  field_t{"vmaddr",    ADR(macho_segment64.vmaddr),   BYTESIZE(macho_segment64.vmaddr)},
+  field_t{"vmsize",    ADR(macho_segment64.vmsize),   BYTESIZE(macho_segment64.vmsize)},
+  field_t{"fileoff",   ADR(macho_segment64.fileoff),  BYTESIZE(macho_segment64.fileoff)},
+  field_t{"filesize",  ADR(macho_segment64.filesize), BYTESIZE(macho_segment64.filesize)},
+  field_t{"maxprot",   ADR(macho_segment64.maxprot),  BYTESIZE(macho_segment64.maxprot)},
+  field_t{"initprot",  ADR(macho_segment64.initprot), BYTESIZE(macho_segment64.initprot)},
+  field_t{"nsects",    ADR(macho_segment64.nsects),   BYTESIZE(macho_segment64.nsects)},
+  field_t{"flags",     ADR(macho_segment64.flags),    BYTESIZE(macho_segment64.flags)}};
 
-struct_t
-struct_macho_segment64 = STRUCT(macho_segment64_t);
+VAR struct_macho_segment64 := struct_t{"macho_segment64_t",
+                                       BYTESIZE(macho_segment64_t),
+                                       CopyFieldArray(macho_segment64_t_fields)};
 
-extern_const field_t
-macho_section32_t_fields[] = {
-    FIELD_STRING(macho_section32_t, sectname),
-    FIELD_STRING(macho_section32_t, segname),
-    FIELD(macho_section32_t, addr),
-    FIELD(macho_section32_t, size),
-    FIELD(macho_section32_t, offset),
-    FIELD(macho_section32_t, align),
-    FIELD(macho_section32_t, reloff),
-    FIELD(macho_section32_t, nreloc),
-    FIELD(macho_section32_t, flags),
-    FIELD(macho_section32_t, reserved1),
-    FIELD(macho_section32_t, reserved2)
-};
+CONST macho_section32: UNTRACED REF macho_section32_t = NIL;
 
-struct_t
-struct_macho_section32 = STRUCT(macho_section32_t);
+VAR macho_section32_t_fields := ARRAY [0..10] OF field_t{
+  field_t{"sectname",   ADR(macho_section32.sectname),  BYTESIZE(macho_section32.sectname), str := TRUE},
+  field_t{"segname",    ADR(macho_section32.segname),   BYTESIZE(macho_section32.segname), str := TRUE},
+  field_t{"addr",       ADR(macho_section32.addr),      BYTESIZE(macho_section32.addr)},
+  field_t{"size",       ADR(macho_section32.size),      BYTESIZE(macho_section32.size)},
+  field_t{"offset",     ADR(macho_section32.offset),    BYTESIZE(macho_section32.offset)},
+  field_t{"align",      ADR(macho_section32.align),     BYTESIZE(macho_section32.align)},
+  field_t{"reloff",     ADR(macho_section32.reloff),    BYTESIZE(macho_section32.reloff)},
+  field_t{"nreloc",     ADR(macho_section32.nreloc),    BYTESIZE(macho_section32.nreloc)},
+  field_t{"flags",      ADR(macho_section32.flags),     BYTESIZE(macho_section32.flags)},
+  field_t{"reserved1",  ADR(macho_section32.reserved1), BYTESIZE(macho_section32.reserved1)},
+  field_t{"reserved2",  ADR(macho_section32.reserved2), BYTESIZE(macho_section32.reserved2)}};
 
-extern_const field_t
-macho_section64_t_fields[] = {
-    FIELD_STRING(macho_section64_t, sectname),
-    FIELD_STRING(macho_section64_t, segname),
-    FIELD(macho_section64_t, addr),
-    FIELD(macho_section64_t, size),
-    FIELD(macho_section64_t, offset),
-    FIELD(macho_section64_t, align),
-    FIELD(macho_section64_t, reloff),
-    FIELD(macho_section64_t, nreloc),
-    FIELD(macho_section64_t, flags),
-    FIELD(macho_section64_t, reserved1),
-    FIELD(macho_section64_t, reserved2),
-    FIELD(macho_section64_t, reserved3)
-};
+VAR struct_macho_section32 := struct_t{"macho_section32_t",
+                                       BYTESIZE(macho_section32_t),
+                                       CopyFieldArray(macho_section32_t_fields)};
 
-struct_t
-struct_macho_section64 = STRUCT(macho_section64_t);
-*)
+
+
+CONST macho_section64: UNTRACED REF macho_section64_t = NIL;
+
+VAR macho_section64_t_fields := ARRAY [0..11] OF field_t{
+  field_t{"sectname",   ADR(macho_section64.sectname),  BYTESIZE(macho_section64.sectname), str := TRUE},
+  field_t{"segname",    ADR(macho_section64.segname),   BYTESIZE(macho_section64.segname), str := TRUE},
+  field_t{"addr",       ADR(macho_section64.addr),      BYTESIZE(macho_section64.addr)},
+  field_t{"size",       ADR(macho_section64.size),      BYTESIZE(macho_section64.size)},
+  field_t{"offset",     ADR(macho_section64.offset),    BYTESIZE(macho_section64.offset)},
+  field_t{"align",      ADR(macho_section64.align),     BYTESIZE(macho_section64.align)},
+  field_t{"reloff",     ADR(macho_section64.reloff),    BYTESIZE(macho_section64.reloff)},
+  field_t{"nreloc",     ADR(macho_section64.nreloc),    BYTESIZE(macho_section64.nreloc)},
+  field_t{"flags",      ADR(macho_section64.flags),     BYTESIZE(macho_section64.flags)},
+  field_t{"reserved1",  ADR(macho_section64.reserved1), BYTESIZE(macho_section64.reserved1)},
+  field_t{"reserved2",  ADR(macho_section64.reserved2), BYTESIZE(macho_section64.reserved2)},
+  field_t{"reserved3",  ADR(macho_section64.reserved3), BYTESIZE(macho_section64.reserved3)}};
+
+VAR struct_macho_section64 := struct_t{"macho_section64_t",
+                                       BYTESIZE(macho_section64_t),
+                                       CopyFieldArray(macho_section64_t_fields)};
 
 (*
 #include <stdlib.h>
