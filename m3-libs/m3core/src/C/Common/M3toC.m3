@@ -31,9 +31,9 @@ PROCEDURE CopyTtoS (t: TEXT): Ctypes.char_star =
   BEGIN
     IF (t = NIL) THEN RETURN zeroPtr; END;
     t.get_info (info);
-    Scheduler.DisableSwitching();
+    Scheduler.DisableSwitching ();
     arr.start  := Cstdlib.malloc (info.length + 1);
-    Scheduler.EnableSwitching();
+    Scheduler.EnableSwitching ();
     arr.length := info.length;
     Text.SetChars (LOOPHOLE (ADR (arr), ArrayPtr)^, t, 0);
     LOOPHOLE (arr.start + info.length, CharPtr)^ := '\000';
@@ -42,7 +42,9 @@ PROCEDURE CopyTtoS (t: TEXT): Ctypes.char_star =
 
 PROCEDURE FreeCopiedS (s: Ctypes.char_star) =
   BEGIN
-    IF (s # zeroPtr) THEN Cstdlib.free (s); END;
+    IF (s # NIL) AND (s # zeroPtr) THEN
+      Cstdlib.free (s);
+    END;
   END FreeCopiedS;
 
 
@@ -63,9 +65,11 @@ PROCEDURE SharedTtoS (t: TEXT): Ctypes.char_star =
 PROCEDURE FreeSharedS (t: TEXT;  s: Ctypes.char_star) =
   VAR info: TextClass.Info;
   BEGIN
-    IF (s # zeroPtr) THEN
+    IF (s # NIL) AND (s # zeroPtr) THEN
       t.get_info (info);
-      IF (info.start # s) THEN Cstdlib.free (s); END;
+      IF (info.start # s) THEN
+        Cstdlib.free (s);
+      END;
     END;
   END FreeSharedS;
 
