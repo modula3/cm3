@@ -8,8 +8,8 @@ END;
 
 TYPE field_t = RECORD
   name:         TEXT;
-  offset:       ADDRESS; (* small integer *)
-  size:         CARDINAL; (* small integer *)
+  offset:       ADDRESS;    (* small integer *)
+  size:         CARDINAL;   (* small integer *)
   str:          BOOLEAN := FALSE;
   macho_string: BOOLEAN := FALSE;
   enum:         REF ARRAY OF enum_t := NIL;
@@ -22,7 +22,7 @@ TYPE struct_t = RECORD
   widest_field:   CARDINAL := 0; (* small integer *)
 END;
 
-PROCEDURE CopyEnumArray(READONLY a:ARRAY OF enum_t):REF ARRAY OF enum_t =
+PROCEDURE CopyEnumArray(READONLY a: ARRAY OF enum_t): REF ARRAY OF enum_t =
 (* Modula-3 inefficiency.. *)
 VAR b := NEW(REF ARRAY OF enum_t, NUMBER(a));
 BEGIN
@@ -30,7 +30,7 @@ BEGIN
   RETURN b;
 END CopyEnumArray;
 
-PROCEDURE CopyFieldArray(READONLY a:ARRAY OF field_t):REF ARRAY OF field_t =
+PROCEDURE CopyFieldArray(READONLY a: ARRAY OF field_t): REF ARRAY OF field_t =
 (* Modula-3 inefficiency.. *)
 VAR b := NEW(REF ARRAY OF field_t, NUMBER(a));
 BEGIN
@@ -40,68 +40,68 @@ END CopyFieldArray;
 
 (* define STRUCT(a) {STRINGIZE(a), sizeof(a), NUMBER_OF(PASTE(a,_fields)), PASTE(a,_fields)} *)
 
-CONST macho_magic_names = ARRAY OF enum_t{
-  enum_t{"magic32", macho_magic32},
-  enum_t{"magic64", macho_magic64}};
+CONST magic_names = ARRAY OF enum_t{
+  enum_t{"magic32", magic32},
+  enum_t{"magic64", magic64}};
 
-CONST macho_cputype_names = ARRAY OF enum_t{
-  enum_t{"x86", macho_cpu_type_x86},
-  enum_t{"amd64", macho_cpu_type_amd64},
-  enum_t{"powerpc", macho_cpu_type_powerpc},
-  enum_t{"powerpc64", macho_cpu_type_powerpc64}};
+CONST cputype_names = ARRAY OF enum_t{
+  enum_t{"x86", cpu_type_x86},
+  enum_t{"amd64", cpu_type_amd64},
+  enum_t{"powerpc", cpu_type_powerpc},
+  enum_t{"powerpc64", cpu_type_powerpc64}};
 
-CONST macho_cpusubtype_names = ARRAY OF enum_t{
-  enum_t{"powerpc_all", macho_cpu_subtype_powerpc_all},
-  enum_t{"x86_all", macho_cpu_subtype_x86_all}};
+CONST cpusubtype_names = ARRAY OF enum_t{
+  enum_t{"powerpc_all", cpu_subtype_powerpc_all},
+  enum_t{"x86_all", cpu_subtype_x86_all}};
 
-CONST macho_filetype_names = ARRAY OF enum_t{
-  enum_t{"object", macho_type_object},
-  enum_t{"execute", macho_type_execute},
-  enum_t{"fixed_vm_library", macho_type_fixed_vm_library},
-  enum_t{"core", macho_type_core},
-  enum_t{"preload", macho_type_preload},
-  enum_t{"dylib", macho_type_dylib},
-  enum_t{"dylinker", macho_type_dylinker},
-  enum_t{"bundle", macho_type_bundle},
-  enum_t{"dylib_stub", macho_type_dylib_stub},
-  enum_t{"dsym", macho_type_dsym}};
+CONST filetype_names = ARRAY OF enum_t{
+  enum_t{"object", type_object},
+  enum_t{"execute", type_execute},
+  enum_t{"fixed_vm_library", type_fixed_vm_library},
+  enum_t{"core", type_core},
+  enum_t{"preload", type_preload},
+  enum_t{"dylib", type_dylib},
+  enum_t{"dylinker", type_dylinker},
+  enum_t{"bundle", type_bundle},
+  enum_t{"dylib_stub", type_dylib_stub},
+  enum_t{"dsym", type_dsym}};
 
-CONST macho_header32: UNTRACED REF macho_header32_t = NIL;
+CONST header32: UNTRACED REF header32_t = NIL;
 
-VAR macho_header32_t_fields := ARRAY [0..6] OF field_t{
-  field_t{"magic", ADR(macho_header32.magic), BYTESIZE(macho_header32.magic), enum := CopyEnumArray(macho_magic_names)},
-  field_t{"cputype", ADR(macho_header32.cputype), BYTESIZE(macho_header32.cputype), enum := CopyEnumArray(macho_cputype_names)},
-  field_t{"cpusubtype", ADR(macho_header32.cpusubtype), BYTESIZE(macho_header32.cpusubtype), enum := CopyEnumArray(macho_cpusubtype_names)},
-  field_t{"filetype", ADR(macho_header32.filetype), BYTESIZE(macho_header32.filetype), enum := CopyEnumArray(macho_filetype_names)},
-  field_t{"ncmds", ADR(macho_header32.ncmds), BYTESIZE(macho_header32.ncmds)},
-  field_t{"sizeofcmds", ADR(macho_header32.sizeofcmds), BYTESIZE(macho_header32.sizeofcmds)},
-  field_t{"flags", ADR(macho_header32.flags), BYTESIZE(macho_header32.flags)}};
+VAR header32_fields := ARRAY [0..6] OF field_t{
+  field_t{"magic",      ADR(header32.magic),      BYTESIZE(header32.magic), enum := CopyEnumArray(magic_names)},
+  field_t{"cputype",    ADR(header32.cputype),    BYTESIZE(header32.cputype), enum := CopyEnumArray(cputype_names)},
+  field_t{"cpusubtype", ADR(header32.cpusubtype), BYTESIZE(header32.cpusubtype), enum := CopyEnumArray(cpusubtype_names)},
+  field_t{"filetype",   ADR(header32.filetype),   BYTESIZE(header32.filetype), enum := CopyEnumArray(filetype_names)},
+  field_t{"ncmds",      ADR(header32.ncmds),      BYTESIZE(header32.ncmds)},
+  field_t{"sizeofcmds", ADR(header32.sizeofcmds), BYTESIZE(header32.sizeofcmds)},
+  field_t{"flags",      ADR(header32.flags),      BYTESIZE(header32.flags)}};
 
-VAR struct_macho_header32 := struct_t{"macho_header32_t",
-                                      BYTESIZE(macho_header32_t),
-                                      CopyFieldArray(macho_header32_t_fields)};
+VAR struct_header32 := struct_t{"header32_t",
+                                BYTESIZE(header32_t),
+                                CopyFieldArray(header32_fields)};
 
-TYPE macho_file_t = RECORD
-    path:               TEXT;
-    contents:           ADDRESS;
-    size:               CARDINAL;
-    macho_header:       UNTRACED REF macho_header32_t;
-    macho_header_size:  uchar; (* small integer *)
-    swap32: PROCEDURE(a:uint32):uint32 := no_swap32;
-    swap64: PROCEDURE(a:uint64):uint64 := no_swap64;
+TYPE file_t = RECORD
+  path:                 TEXT;
+  contents:             ADDRESS;
+  size:                 CARDINAL;
+  header:               UNTRACED REF header32_t;
+  header_size:          CARDINAL; (* small integer *)
+  swap32: PROCEDURE(a: uint32): uint32 := no_swap32;
+  swap64: PROCEDURE(a: uint64): uint64 := no_swap64;
 END;
 
-PROCEDURE no_swap32(a:uint32):uint32 =
+PROCEDURE no_swap32(a: uint32): uint32 =
 BEGIN
   RETURN a;
 END no_swap32;
 
-PROCEDURE no_swap64(a:uint64):uint64 =
+PROCEDURE no_swap64(a: uint64): uint64 =
 BEGIN
   RETURN a;
 END no_swap64;
 
-PROCEDURE swap32(a:uint32):uint32 =
+PROCEDURE swap32(a: uint32): uint32 =
 CONST Left = Word.LeftShift; Right = Word.RightShift; And = Word.And; Or = Word.Or;
 BEGIN
   RETURN Or(    Right(a, 24),
@@ -110,8 +110,8 @@ BEGIN
                 Left (a, 24))));
 END swap32;
 
-PROCEDURE swap64(a:uint64):uint64 =
-CONST FF:uint64 = 16_FFL;
+PROCEDURE swap64(a: uint64): uint64 =
+CONST FF: uint64 = 16_FFL;
       Left = Long.LeftShift; Right = Long.RightShift; And = Long.And; Or = Long.Or;
 BEGIN
     RETURN Or(    Right(a, 56),
@@ -134,25 +134,25 @@ BEGIN
   RETURN i;
 END strnlen;
 
-PROCEDURE field_print(VAR s: struct_t; READONLY f: field_t; p: ADDRESS) =
+PROCEDURE field_print(VAR s: struct_t; READONLY f: field_t; record: ADDRESS; swapped: BOOLEAN) =
 VAR buffer: TEXT;
-    q := LOOPHOLE(p + LOOPHOLE(f.offset, INTEGER), UNTRACED REF uchar);
+    q := LOOPHOLE(record + LOOPHOLE(f.offset, CARDINAL), UNTRACED REF uchar);
     q32 := LOOPHOLE(q, UNTRACED REF uint32);
     q64 := LOOPHOLE(q, UNTRACED REF uint64);
     size := f.size;
-    str := f.str;
-    macho_string := f.macho_string;
     enum := f.enum;
     value32: uint32 := 0;
     value32_swapped: uint32 := 0;
     value64: uint64 := 0L;
     value64_swapped: uint64 := 0L;
-    i: uint := 0;
-    length: uint := 0;
+    length: CARDINAL := 0;
+    ch: uchar := 0;
 BEGIN
+  <* ASSERT size = 4 OR size = 8 OR f.str *>
+  <* ASSERT size = 4 OR f.macho_string = FALSE *>
   buffer := s.name & "." & Fmt.Pad(f.name, s.widest_field, ' ');
-  IF str THEN
-    length := strnlen(q + i, size);
+  IF f.str THEN
+    length := strnlen(q, size);
     IF length < size THEN
       buffer := buffer & Fmt.Pad("", size - length);
     END;
@@ -182,24 +182,20 @@ BEGIN
           EXIT;
         END;
       END;
-    ELSIF macho_string AND size = 4 THEN
+    ELSIF f.macho_string AND size = 4 THEN
       IF Word.LT(value32_swapped, value32) THEN
         value32 := value32_swapped;
       END;
-      buffer := buffer & " (";
-      q := p + value32;
-      WHILE q^ # 0 DO
-        buffer := buffer & Text.FromChar(VAL(q^, CHAR));
-        INC(q);
-      END;
-      buffer := buffer & ")";
+      buffer := buffer & " (" & M3toC.StoT(record + value32) & ")";
     END;
   END;
   buffer := buffer & "\n";
   IO.Put(buffer);
 END field_print;
 
-PROCEDURE struct_print(VAR t: struct_t; p: ADDRESS) =
+PROCEDURE struct_print(READONLY file: file_t;
+                       VAR t: struct_t;
+                       record: ADDRESS) =
 VAR widest_field := t.widest_field;
 BEGIN
   IF widest_field = 0 THEN
@@ -209,538 +205,431 @@ BEGIN
     t.widest_field := widest_field;
   END;
   FOR i := 0 TO NUMBER(t.fields^) - 1 DO
-    field_print(t, t.fields[i], p);
+    field_print(t, t.fields[i], record, swapped);
   END;
 END struct_print;
 
-PROCEDURE macho_loadcommand_name(cmd: uint32_t):TEXT =
-CONST mask = Word.Not(macho_loadcommand_require_dyld);
+PROCEDURE loadcommand_name(cmd: uint32_t): TEXT =
+CONST mask = Word.Not(loadcommand_require_dyld);
       And = Word.And;
 BEGIN
   cmd := And(cmd, mask);
   CASE cmd OF
-    | And(macho_loadcommand_segment32, mask)            => RETURN "segment32";
-    | And(macho_loadcommand_symtab, mask)               => RETURN "symtab";
-    | And(macho_loadcommand_symseg, mask)               => RETURN "symseg";
-    | And(macho_loadcommand_thread, mask)               => RETURN "thread";
-    | And(macho_loadcommand_unixthread, mask)           => RETURN "unixthread";
-    | And(macho_loadcommand_fixed_vm_lib, mask)         => RETURN "fixed_vm_lib";
-    | And(macho_loadcommand_id_fixed_vm_lib, mask)      => RETURN "id_fixed_vm_lib";
-    | And(macho_loadcommand_ident, mask)                => RETURN "ident";
-    | And(macho_loadcommand_fixed_vm_file, mask)        => RETURN "fixed_vm_file";
-    | And(macho_loadcommand_prepage, mask)              => RETURN "prepage";
-    | And(macho_loadcommand_dysymtab, mask)             => RETURN "dysymtab";
-    | And(macho_loadcommand_load_dylib, mask)           => RETURN "load_dylib";
-    | And(macho_loadcommand_id_dylib, mask)             => RETURN "id_dylib";
-    | And(macho_loadcommand_load_dylinker, mask)        => RETURN "load_dylinker";
-    | And(macho_loadcommand_id_dylinker, mask)          => RETURN "id_dylinker";
-    | And(macho_loadcommand_prebound_dylib, mask)       => RETURN "prebound_dylib";
-    | And(macho_loadcommand_routines32, mask)           => RETURN "routines32";
-    | And(macho_loadcommand_sub_framework, mask)        => RETURN "sub_framework";
-    | And(macho_loadcommand_sub_umbrella, mask)         => RETURN "sub_umbrella";
-    | And(macho_loadcommand_sub_client, mask)           => RETURN "sub_client";
-    | And(macho_loadcommand_sub_library, mask)          => RETURN "sub_library";
-    | And(macho_loadcommand_twolevel_hints, mask)       => RETURN "twolevel_hints";
-    | And(macho_loadcommand_prebind_checksum, mask)     => RETURN "prebind_checksum";
-    | And(macho_loadcommand_load_weak_dylib, mask)      => RETURN "load_weak_dylib";
-    | And(macho_loadcommand_segment64, mask)            => RETURN "segment64";
-    | And(macho_loadcommand_routines64, mask)           => RETURN "routines64";
-    | And(macho_loadcommand_uuid, mask)                 => RETURN "uuid";
-    | And(macho_loadcommand_rpath, mask)                => RETURN "rpath";
-    | And(macho_loadcommand_code_signature, mask)       => RETURN "code_signature";
-    | And(macho_loadcommand_segment_split_info, mask)   => RETURN "segment_split_info";
-    | And(macho_loadcommand_reexport_dylib, mask)       => RETURN "reexport_dylib";
-    | And(macho_loadcommand_lazy_load_dylib, mask)      => RETURN "lazy_load_dylib";
-    | And(macho_loadcommand_encryption_info, mask)      => RETURN "encryption_info";
+    | And(loadcommand_segment32, mask)            => RETURN "segment32";
+    | And(loadcommand_symtab, mask)               => RETURN "symtab";
+    | And(loadcommand_symseg, mask)               => RETURN "symseg";
+    | And(loadcommand_thread, mask)               => RETURN "thread";
+    | And(loadcommand_unixthread, mask)           => RETURN "unixthread";
+    | And(loadcommand_fixed_vm_lib, mask)         => RETURN "fixed_vm_lib";
+    | And(loadcommand_id_fixed_vm_lib, mask)      => RETURN "id_fixed_vm_lib";
+    | And(loadcommand_ident, mask)                => RETURN "ident";
+    | And(loadcommand_fixed_vm_file, mask)        => RETURN "fixed_vm_file";
+    | And(loadcommand_prepage, mask)              => RETURN "prepage";
+    | And(loadcommand_dysymtab, mask)             => RETURN "dysymtab";
+    | And(loadcommand_load_dylib, mask)           => RETURN "load_dylib";
+    | And(loadcommand_id_dylib, mask)             => RETURN "id_dylib";
+    | And(loadcommand_load_dylinker, mask)        => RETURN "load_dylinker";
+    | And(loadcommand_id_dylinker, mask)          => RETURN "id_dylinker";
+    | And(loadcommand_prebound_dylib, mask)       => RETURN "prebound_dylib";
+    | And(loadcommand_routines32, mask)           => RETURN "routines32";
+    | And(loadcommand_sub_framework, mask)        => RETURN "sub_framework";
+    | And(loadcommand_sub_umbrella, mask)         => RETURN "sub_umbrella";
+    | And(loadcommand_sub_client, mask)           => RETURN "sub_client";
+    | And(loadcommand_sub_library, mask)          => RETURN "sub_library";
+    | And(loadcommand_twolevel_hints, mask)       => RETURN "twolevel_hints";
+    | And(loadcommand_prebind_checksum, mask)     => RETURN "prebind_checksum";
+    | And(loadcommand_load_weak_dylib, mask)      => RETURN "load_weak_dylib";
+    | And(loadcommand_segment64, mask)            => RETURN "segment64";
+    | And(loadcommand_routines64, mask)           => RETURN "routines64";
+    | And(loadcommand_uuid, mask)                 => RETURN "uuid";
+    | And(loadcommand_rpath, mask)                => RETURN "rpath";
+    | And(loadcommand_code_signature, mask)       => RETURN "code_signature";
+    | And(loadcommand_segment_split_info, mask)   => RETURN "segment_split_info";
+    | And(loadcommand_reexport_dylib, mask)       => RETURN "reexport_dylib";
+    | And(loadcommand_lazy_load_dylib, mask)      => RETURN "lazy_load_dylib";
+    | And(loadcommand_encryption_info, mask)      => RETURN "encryption_info";
     ELSE                                                RETURN "unknown (" & Fmt.Int(cmd) & ")";
   END;
-END macho_loadcommand_name;
+END loadcommand_name;
 
-PROCEDURE macho_first_load_command(READONLY m:macho_file_t):UNTRACED REF macho_loadcommand_t =
+PROCEDURE first_load_command(READONLY file: file_t): UNTRACED REF loadcommand_t =
 BEGIN
-  RETURN LOOPHOLE(m.macho_header + m.macho_header_size, UNTRACED REF macho_loadcommand_t);
-END macho_first_load_command;
+  RETURN LOOPHOLE(m.header + m.header_size, UNTRACED REF loadcommand_t);
+END first_load_command;
 
-PROCEDURE macho_next_load_command(READONLY m:macho_file_t; L:UNTRACED REF macho_loadcommand_t):UNTRACED REF macho_loadcommand_t =
+PROCEDURE next_load_command(READONLY file: file_t; L: UNTRACED REF loadcommand_t): UNTRACED REF loadcommand_t =
 BEGIN
-  RETURN LOOPHOLE(L + m.swap32(L.cmdsize), UNTRACED REF macho_loadcommand_t);
-END macho_next_load_command;
+  RETURN LOOPHOLE(L + m.swap32(L.cmdsize), UNTRACED REF loadcommand_t);
+END next_load_command;
 
-PROCEDURE macho_ncmds(READONLY m:macho_file_t):uint =
+PROCEDURE ncmds(READONLY file: file_t): CARDINAL =
 BEGIN
-  RETURN m.swap32(m.macho_header.ncmds);
-END macho_ncmds;
-
-(* macho_segment32_t *)
-
-CONST macho_segment32: UNTRACED REF macho_segment32_t = NIL;
-
-VAR macho_segment32_t_fields := ARRAY [0..10] OF field_t{
-  field_t{"cmd",       ADR(macho_segment32.cmd),      BYTESIZE(macho_segment32.cmd)},
-  field_t{"cmdsize",   ADR(macho_segment32.cmdsize),  BYTESIZE(macho_segment32.cmdsize)},
-  field_t{"segname",   ADR(macho_segment32.segname),  BYTESIZE(macho_segment32.segname), str := TRUE},
-  field_t{"vmaddr",    ADR(macho_segment32.vmaddr),   BYTESIZE(macho_segment32.vmaddr)},
-  field_t{"vmsize",    ADR(macho_segment32.vmsize),   BYTESIZE(macho_segment32.vmsize)},
-  field_t{"fileoff",   ADR(macho_segment32.fileoff),  BYTESIZE(macho_segment32.fileoff)},
-  field_t{"filesize",  ADR(macho_segment32.filesize), BYTESIZE(macho_segment32.filesize)},
-  field_t{"maxprot",   ADR(macho_segment32.maxprot),  BYTESIZE(macho_segment32.maxprot)},
-  field_t{"initprot",  ADR(macho_segment32.initprot), BYTESIZE(macho_segment32.initprot)},
-  field_t{"nsects",    ADR(macho_segment32.nsects),   BYTESIZE(macho_segment32.nsects)},
-  field_t{"flags",     ADR(macho_segment32.flags),    BYTESIZE(macho_segment32.flags)}};
-
-VAR struct_macho_segment32 := struct_t{"macho_segment32_t",
-                                       BYTESIZE(macho_segment32_t),
-                                       CopyFieldArray(macho_segment32_t_fields)};
-
-(* macho_segment64_t *)
-
-CONST macho_segment64: UNTRACED REF macho_segment64_t = NIL;
-
-VAR macho_segment64_t_fields := ARRAY [0..10] OF field_t{
-  field_t{"cmd",       ADR(macho_segment64.cmd),      BYTESIZE(macho_segment64.cmd)},
-  field_t{"cmdsize",   ADR(macho_segment64.cmdsize),  BYTESIZE(macho_segment64.cmdsize)},
-  field_t{"segname",   ADR(macho_segment64.segname),  BYTESIZE(macho_segment64.segname), str := TRUE},
-  field_t{"vmaddr",    ADR(macho_segment64.vmaddr),   BYTESIZE(macho_segment64.vmaddr)},
-  field_t{"vmsize",    ADR(macho_segment64.vmsize),   BYTESIZE(macho_segment64.vmsize)},
-  field_t{"fileoff",   ADR(macho_segment64.fileoff),  BYTESIZE(macho_segment64.fileoff)},
-  field_t{"filesize",  ADR(macho_segment64.filesize), BYTESIZE(macho_segment64.filesize)},
-  field_t{"maxprot",   ADR(macho_segment64.maxprot),  BYTESIZE(macho_segment64.maxprot)},
-  field_t{"initprot",  ADR(macho_segment64.initprot), BYTESIZE(macho_segment64.initprot)},
-  field_t{"nsects",    ADR(macho_segment64.nsects),   BYTESIZE(macho_segment64.nsects)},
-  field_t{"flags",     ADR(macho_segment64.flags),    BYTESIZE(macho_segment64.flags)}};
-
-VAR struct_macho_segment64 := struct_t{"macho_segment64_t",
-                                       BYTESIZE(macho_segment64_t),
-                                       CopyFieldArray(macho_segment64_t_fields)};
-
-(* macho_section32_t *)
-
-CONST macho_section32: UNTRACED REF macho_section32_t = NIL;
-
-VAR macho_section32_t_fields := ARRAY [0..10] OF field_t{
-  field_t{"sectname",   ADR(macho_section32.sectname),  BYTESIZE(macho_section32.sectname), str := TRUE},
-  field_t{"segname",    ADR(macho_section32.segname),   BYTESIZE(macho_section32.segname), str := TRUE},
-  field_t{"addr",       ADR(macho_section32.addr),      BYTESIZE(macho_section32.addr)},
-  field_t{"size",       ADR(macho_section32.size),      BYTESIZE(macho_section32.size)},
-  field_t{"offset",     ADR(macho_section32.offset),    BYTESIZE(macho_section32.offset)},
-  field_t{"align",      ADR(macho_section32.align),     BYTESIZE(macho_section32.align)},
-  field_t{"reloff",     ADR(macho_section32.reloff),    BYTESIZE(macho_section32.reloff)},
-  field_t{"nreloc",     ADR(macho_section32.nreloc),    BYTESIZE(macho_section32.nreloc)},
-  field_t{"flags",      ADR(macho_section32.flags),     BYTESIZE(macho_section32.flags)},
-  field_t{"reserved1",  ADR(macho_section32.reserved1), BYTESIZE(macho_section32.reserved1)},
-  field_t{"reserved2",  ADR(macho_section32.reserved2), BYTESIZE(macho_section32.reserved2)}};
-
-VAR struct_macho_section32 := struct_t{"macho_section32_t",
-                                       BYTESIZE(macho_section32_t),
-                                       CopyFieldArray(macho_section32_t_fields)};
-
-CONST macho_section64: UNTRACED REF macho_section64_t = NIL;
-
-VAR macho_section64_t_fields := ARRAY [0..11] OF field_t{
-  field_t{"sectname",   ADR(macho_section64.sectname),  BYTESIZE(macho_section64.sectname), str := TRUE},
-  field_t{"segname",    ADR(macho_section64.segname),   BYTESIZE(macho_section64.segname), str := TRUE},
-  field_t{"addr",       ADR(macho_section64.addr),      BYTESIZE(macho_section64.addr)},
-  field_t{"size",       ADR(macho_section64.size),      BYTESIZE(macho_section64.size)},
-  field_t{"offset",     ADR(macho_section64.offset),    BYTESIZE(macho_section64.offset)},
-  field_t{"align",      ADR(macho_section64.align),     BYTESIZE(macho_section64.align)},
-  field_t{"reloff",     ADR(macho_section64.reloff),    BYTESIZE(macho_section64.reloff)},
-  field_t{"nreloc",     ADR(macho_section64.nreloc),    BYTESIZE(macho_section64.nreloc)},
-  field_t{"flags",      ADR(macho_section64.flags),     BYTESIZE(macho_section64.flags)},
-  field_t{"reserved1",  ADR(macho_section64.reserved1), BYTESIZE(macho_section64.reserved1)},
-  field_t{"reserved2",  ADR(macho_section64.reserved2), BYTESIZE(macho_section64.reserved2)},
-  field_t{"reserved3",  ADR(macho_section64.reserved3), BYTESIZE(macho_section64.reserved3)}};
-
-VAR struct_macho_section64 := struct_t{"macho_section64_t",
-                                       BYTESIZE(macho_section64_t),
-                                       CopyFieldArray(macho_section64_t_fields)};
-
-(*
-#include <stdlib.h>
-#include <string.h>
-#include "macho.h"
-#include <stdio.h>
-#include <stddef.h>
-#include <limits.h>
-#ifdef _WIN32
-#define PRINT64 "I64"
-#else
-#define PRINT64 "ll"
-#endif
-#define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
-#define STRINGIZEx(a) #a
-#define STRINGIZE(a) STRINGIZEx(a)
-#define PASTEx(a, b) a##b
-#define PASTE(a, b) PASTEx(a, b)
-
-/* const means static const in C++, and extern const in C,
- * "extern const" portable means the same thing in either, but gcc warns.
- */
-#if defined(__cplusplus) || !defined(__GNUC__)
-#define extern_const extern const
-#else
-#define extern_const const
-#endif
-
-#define FIELD(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f))}
-#define FIELD_ARRAY(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), sizeof((((t* )0)->f)[0]) }
-#define FIELD_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), sizeof((((t* )0)->f)[0]), 1 }
-#define FIELD_ENUM(t, f, e) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), 0, 0, 0, sizeof(e)/sizeof((e)[0]), e }
-#define FIELD_MACHO_STRING(t, f) {STRINGIZE(f), offsetof(t, f), sizeof((((t* )0)->f)), 0, 0, 1 }
-
-typedef union _macho_load_command_u {
-    macho_loadcommand_t base;
-    macho_segment32_t segment32;
-    macho_segment64_t segment64;
-} macho_load_command_u;
-
-/*
-uint32
-macho_swap32(macho_file_t* m, uint32 a)
-{
-    return m->swapped ? swap32(a) : a;
-}
-
-void
-swap32p(uint32* a)
-{
-    *a = swap32( *a);
-}
-
-int
-char_is_printable(char ch)
-{
-    return (ch >= 0x20 && ch <= 0x7E);
-}
-
-char
-char_to_printable(char ch)
-{
-    return char_is_printable(ch) ? ch : '.';
-}
-
-void adjust_hex_case(char* a)
-{
-    a = strchr(a, 'X');
-    if (a) *a = 'x';
-    else return;
-    a = strchr(a, 'X');
-    if (a) *a = 'x';
-#endif
-}
-*/
-
-void
-macho_dump_load_command_segmentX(macho_file_t* m,
-                                 const void* L,
-                                 uint32 load_command_size,
-                                 struct_t* struct_macho_segmentX,
-                                 struct_t* struct_macho_sectionX,
-                                 uint32 section_count,
-                                 uint32 section_size)
-{
-    uint32 i;
-    uchar* sections = load_command_size + (uchar* )L;
-    struct_print(struct_macho_segmentX, L);
-    for (i = 0; i < section_count; ++i)
-    {
-      struct_print(struct_macho_sectionX, sections);
-      sections += section_size;
-    }
-}
-
-void
-macho_dump_load_command_segment32(macho_file_t* m, macho_segment32_t* L)
-{
-    macho_dump_load_command_segmentX(m,
-                                     L,
-                                     sizeof( *L),
-                                     &struct_macho_segment32,
-                                     &struct_macho_section32,
-                                     m->swap32(L->nsects),
-                                     sizeof(macho_section32_t));
-}
-
-void
-macho_dump_load_command_segment64(macho_file_t* m, macho_segment64_t* L)
-{
-    macho_dump_load_command_segmentX(m,
-                                     L,
-                                     sizeof( *L),
-                                     &struct_macho_segment64,
-                                     &struct_macho_section64,
-                                     m->swap32(L->nsects),
-                                     sizeof(macho_section64_t));
-}
-
-extern_const field_t
-macho_symtab_command_t_fields[] = {
-    FIELD(macho_symtab_command_t, symoff),
-    FIELD(macho_symtab_command_t, nsyms),
-    FIELD(macho_symtab_command_t, stroff),
-    FIELD(macho_symtab_command_t, strsize)
-};
-
-struct_t
-struct_macho_symtab_command = STRUCT(macho_symtab_command_t);
-
-void
-macho_dump_load_command_symtab(macho_file_t* m, macho_loadcommand_t* L)
-{
-    struct_print(&struct_macho_symtab_command, L);
-}
-
-void
-macho_dump_load_command_symseg(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_thread(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_unixthread(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_fixed_vm_lib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_id_fixed_vm_lib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_ident(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_fixed_vm_file(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_prepage(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-extern_const field_t
-macho_dysymtab_command_t_fields[] = {
-    FIELD(macho_dysymtab_command_t, ilocalsym),
-    FIELD(macho_dysymtab_command_t, nlocalsym),
-    FIELD(macho_dysymtab_command_t, iextdefsym),
-    FIELD(macho_dysymtab_command_t, nextdefsym),
-    FIELD(macho_dysymtab_command_t, iundefsym),
-    FIELD(macho_dysymtab_command_t, nundefsym),
-    FIELD(macho_dysymtab_command_t, tocoff),
-    FIELD(macho_dysymtab_command_t, ntoc),
-    FIELD(macho_dysymtab_command_t, modtaboff),
-    FIELD(macho_dysymtab_command_t, nmodtab),
-    FIELD(macho_dysymtab_command_t, extrefsymoff),
-    FIELD(macho_dysymtab_command_t, nextrefsyms),
-    FIELD(macho_dysymtab_command_t, indirectsymoff),
-    FIELD(macho_dysymtab_command_t, nindirectsyms),
-    FIELD(macho_dysymtab_command_t, extreloff),
-    FIELD(macho_dysymtab_command_t, locreloff),
-    FIELD(macho_dysymtab_command_t, nlocrel)
-};
-
-struct_t
-struct_macho_dysymtab_command = STRUCT(macho_dysymtab_command_t);
-
-void
-macho_dump_load_command_dysymtab(macho_file_t* m, macho_loadcommand_t* L)
-{
-    struct_print(&struct_macho_dysymtab_command, L);
-}
-
-void
-macho_dump_load_command_load_dylib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_id_dylib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-
-extern_const field_t
-macho_dylinker_command_t_fields[] = {
-    FIELD_MACHO_STRING(macho_dylinker_command_t, name.offset),
-};
-
-struct_t
-struct_macho_dylinker_command = STRUCT(macho_dylinker_command_t);
-
-void
-macho_dump_load_command_load_dylinker(macho_file_t* m, macho_loadcommand_t* L)
-{
-    struct_print(&struct_macho_dylinker_command, L);
-}
-
-void
-macho_dump_load_command_id_dylinker(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_prebound_dylib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_routines32(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_sub_framework(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_sub_umbrella(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_sub_client(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_sub_library(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_twolevel_hints(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_prebind_checksum(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_load_weak_dylib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_routines64(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_uuid(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_rpath(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_code_signature(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_segment_split_info(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_reexport_dylib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_lazy_load_dylib(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command_encryption_info(macho_file_t* m, macho_loadcommand_t* L)
-{
-}
-
-void
-macho_dump_load_command(macho_file_t* m, macho_loadcommand_t* L, uint i)
-{
-    uint cmd = m->swap32(L->cmd);
-    printf("cmd %u %s\n", i, macho_loadcommand_name(cmd));
-    switch (cmd)
-    {
-#define X(a) case macho_loadcommand_##a & ~macho_loadcommand_require_dyld: macho_dump_load_command_##a(m, (void* )L); break;
-    X(segment32)
-    X(symtab)
-    X(symseg)
-    X(thread)
-    X(unixthread)
-    X(fixed_vm_lib)
-    X(id_fixed_vm_lib)
-    X(ident)
-    X(fixed_vm_file)
-    X(prepage)
-    X(dysymtab)
-    X(load_dylib)
-    X(id_dylib)
-    X(load_dylinker)
-    X(id_dylinker)
-    X(prebound_dylib)
-    X(routines32)
-    X(sub_framework)
-    X(sub_umbrella)
-    X(sub_client)
-    X(sub_library)
-    X(twolevel_hints)
-    X(prebind_checksum)
-    X(load_weak_dylib)
-    X(segment64)
-    X(routines64)
-    X(uuid)
-    X(rpath)
-    X(code_signature)
-    X(segment_split_info)
-    X(reexport_dylib)
-    X(lazy_load_dylib)
-    X(encryption_info)
-#undef X
-    }
-}
-
-void
-macho_dump_load_commands(macho_file_t* m)
-{
-    uint ncmds = macho_ncmds(m);
-    uint i;
-    macho_loadcommand_t* L = macho_first_load_command(m);
-    for (i = 0; i < ncmds; ++i)
-    {
-        macho_dump_load_command(m, L, i);
-        L = macho_next_load_command(m, L);
-    }
-}
-
-void
-open_and_read_entire_file(const char* path, uchar** contents, size_t* size)
-{
-    uchar* buffer = { 0 };
-    uchar* prev_buffer = { 0 };
-    size_t buffer_size = { 0x10000 / 2 };
-    size_t prev_buffer_size = { 0 };
-    FILE* file = { 0 };
-    size_t bytes_read = { 0 };
+  RETURN m.swap32(m.header.ncmds);
+END ncmds;
+
+(* segment32_t *)
+
+CONST segment32: UNTRACED REF segment32_t = NIL;
+
+VAR segment32_fields := ARRAY [0..10] OF field_t{
+  field_t{"cmd",       ADR(segment32.cmd),      BYTESIZE(segment32.cmd)},
+  field_t{"cmdsize",   ADR(segment32.cmdsize),  BYTESIZE(segment32.cmdsize)},
+  field_t{"segname",   ADR(segment32.segname),  BYTESIZE(segment32.segname), str := TRUE},
+  field_t{"vmaddr",    ADR(segment32.vmaddr),   BYTESIZE(segment32.vmaddr)},
+  field_t{"vmsize",    ADR(segment32.vmsize),   BYTESIZE(segment32.vmsize)},
+  field_t{"fileoff",   ADR(segment32.fileoff),  BYTESIZE(segment32.fileoff)},
+  field_t{"filesize",  ADR(segment32.filesize), BYTESIZE(segment32.filesize)},
+  field_t{"maxprot",   ADR(segment32.maxprot),  BYTESIZE(segment32.maxprot)},
+  field_t{"initprot",  ADR(segment32.initprot), BYTESIZE(segment32.initprot)},
+  field_t{"nsects",    ADR(segment32.nsects),   BYTESIZE(segment32.nsects)},
+  field_t{"flags",     ADR(segment32.flags),    BYTESIZE(segment32.flags)}};
+
+VAR struct_segment32 := struct_t{"segment32_t",
+                                 BYTESIZE(segment32_t),
+                                 CopyFieldArray(segment32_fields)};
+
+(* segment64_t *)
+
+CONST segment64: UNTRACED REF segment64_t = NIL;
+
+VAR segment64_fields := ARRAY [0..10] OF field_t{
+  field_t{"cmd",       ADR(segment64.cmd),      BYTESIZE(segment64.cmd)},
+  field_t{"cmdsize",   ADR(segment64.cmdsize),  BYTESIZE(segment64.cmdsize)},
+  field_t{"segname",   ADR(segment64.segname),  BYTESIZE(segment64.segname), str := TRUE},
+  field_t{"vmaddr",    ADR(segment64.vmaddr),   BYTESIZE(segment64.vmaddr)},
+  field_t{"vmsize",    ADR(segment64.vmsize),   BYTESIZE(segment64.vmsize)},
+  field_t{"fileoff",   ADR(segment64.fileoff),  BYTESIZE(segment64.fileoff)},
+  field_t{"filesize",  ADR(segment64.filesize), BYTESIZE(segment64.filesize)},
+  field_t{"maxprot",   ADR(segment64.maxprot),  BYTESIZE(segment64.maxprot)},
+  field_t{"initprot",  ADR(segment64.initprot), BYTESIZE(segment64.initprot)},
+  field_t{"nsects",    ADR(segment64.nsects),   BYTESIZE(segment64.nsects)},
+  field_t{"flags",     ADR(segment64.flags),    BYTESIZE(segment64.flags)}};
+
+VAR struct_segment64 := struct_t{"segment64_t",
+                                 BYTESIZE(segment64_t),
+                                 CopyFieldArray(segment64_fields)};
+
+(* section32_t *)
+
+CONST section32: UNTRACED REF section32_t = NIL;
+
+VAR section32_fields := ARRAY [0..10] OF field_t{
+  field_t{"sectname",   ADR(section32.sectname),  BYTESIZE(section32.sectname), str := TRUE},
+  field_t{"segname",    ADR(section32.segname),   BYTESIZE(section32.segname), str := TRUE},
+  field_t{"addr",       ADR(section32.addr),      BYTESIZE(section32.addr)},
+  field_t{"size",       ADR(section32.size),      BYTESIZE(section32.size)},
+  field_t{"offset",     ADR(section32.offset),    BYTESIZE(section32.offset)},
+  field_t{"align",      ADR(section32.align),     BYTESIZE(section32.align)},
+  field_t{"reloff",     ADR(section32.reloff),    BYTESIZE(section32.reloff)},
+  field_t{"nreloc",     ADR(section32.nreloc),    BYTESIZE(section32.nreloc)},
+  field_t{"flags",      ADR(section32.flags),     BYTESIZE(section32.flags)},
+  field_t{"reserved1",  ADR(section32.reserved1), BYTESIZE(section32.reserved1)},
+  field_t{"reserved2",  ADR(section32.reserved2), BYTESIZE(section32.reserved2)}};
+
+VAR struct_section32 := struct_t{"section32_t",
+                                 BYTESIZE(section32_t),
+                                 CopyFieldArray(section32_fields)};
+
+CONST section64: UNTRACED REF section64_t = NIL;
+
+VAR section64_fields := ARRAY [0..11] OF field_t{
+  field_t{"sectname",   ADR(section64.sectname),  BYTESIZE(section64.sectname), str := TRUE},
+  field_t{"segname",    ADR(section64.segname),   BYTESIZE(section64.segname), str := TRUE},
+  field_t{"addr",       ADR(section64.addr),      BYTESIZE(section64.addr)},
+  field_t{"size",       ADR(section64.size),      BYTESIZE(section64.size)},
+  field_t{"offset",     ADR(section64.offset),    BYTESIZE(section64.offset)},
+  field_t{"align",      ADR(section64.align),     BYTESIZE(section64.align)},
+  field_t{"reloff",     ADR(section64.reloff),    BYTESIZE(section64.reloff)},
+  field_t{"nreloc",     ADR(section64.nreloc),    BYTESIZE(section64.nreloc)},
+  field_t{"flags",      ADR(section64.flags),     BYTESIZE(section64.flags)},
+  field_t{"reserved1",  ADR(section64.reserved1), BYTESIZE(section64.reserved1)},
+  field_t{"reserved2",  ADR(section64.reserved2), BYTESIZE(section64.reserved2)},
+  field_t{"reserved3",  ADR(section64.reserved3), BYTESIZE(section64.reserved3)}};
+
+VAR struct_section64 := struct_t{"section64_t",
+                                 BYTESIZE(section64_t),
+                                 CopyFieldArray(section64_fields)};
+
+PROCEDURE dump_load_command_segmentX(READONLY file: file_t;
+                                     L: ADDRESS;
+                                     load_command_size: uint32;
+                                     VAR struct_segmentX: struct_t;
+                                     VAR struct_sectionX: struct_t;
+                                     section_count: uint32;
+                                     section_size: uint32) =
+VAR sections := L + load_command_size;
+BEGIN
+  struct_print(struct_segmentX, L);
+  FOR i := 0 TO section_count - 1 DO
+    struct_print(struct_sectionX, sections);
+    INC(sections, section_size);
+  END;
+END dump_load_command_segmentX;
+
+PROCEDURE dump_load_command_segment32(READONLY file: file_t;
+                                      L: UNTRACED REF segment32_t) =
+BEGIN
+    dump_load_command_segmentX(m,
+                               L,
+                               BYTESIZE(L^),
+                               struct_segment32,
+                               struct_section32,
+                               m.swap32(L.nsects),
+                               BYTESIZE(section32_t));
+END dump_load_command_segment32;
+
+PROCEDURE dump_load_command_segment64(READONLY file: file_t;
+                                      L: UNTRACED REF segment64_t) =
+BEGIN
+    dump_load_command_segmentX(m,
+                               L,
+                               BYTESIZE(L^),
+                               struct_segment64,
+                               struct_section64,
+                               m.swap32(L.nsects),
+                               BYTESIZE(section64_t));
+END dump_load_command_segment64;
+
+CONST symtab_command: UNTRACED REF symtab_command_t = NIL;
+
+VAR symtab_command_fields := ARRAY [0..3] OF field_t{
+  field_t{"symoff",     ADR(symtab_command.symoff),     BYTESIZE(symtab_command.symoff)},
+  field_t{"nsyms",      ADR(symtab_command.nsyms),      BYTESIZE(symtab_command.nsyms)},
+  field_t{"stroff",     ADR(symtab_command.stroff),     BYTESIZE(symtab_command.stroff)},
+  field_t{"strsize",    ADR(symtab_command.strsize),    BYTESIZE(symtab_command.strsize)}};
+
+VAR struct_symtab_command := struct_t{"symtab_command_t",
+                                      BYTESIZE(symtab_command_t),
+                                      CopyFieldArray(symtab_command_fields)};
+
+PROCEDURE dump_load_command_symtab(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+  struct_print(struct_symtab_command, ADR(L));
+END dump_load_command_symtab;
+
+PROCEDURE dump_load_command_symseg(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_symseg;
+
+PROCEDURE dump_load_command_thread(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_thread;
+
+PROCEDURE dump_load_command_unixthread(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_unixthread;
+
+PROCEDURE dump_load_command_fixed_vm_lib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_fixed_vm_lib;
+
+PROCEDURE dump_load_command_id_fixed_vm_lib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_id_fixed_vm_lib;
+
+PROCEDURE dump_load_command_ident(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_ident;
+
+PROCEDURE dump_load_command_fixed_vm_file(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_fixed_vm_file;
+
+PROCEDURE dump_load_command_prepage(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_prepage;
+
+CONST dysymtab_command: UNTRACED REF dysymtab_command_t = NIL;
+
+VAR dysymtab_command_fields := ARRAY [0..16] OF field_t{
+  field_t{"ilocalsym",      ADR(dysymtab_command.ilocalsym),      BYTESIZE(dysymtab_command.ilocalsym)},
+  field_t{"nlocalsym",      ADR(dysymtab_command.nlocalsym),      BYTESIZE(dysymtab_command.nlocalsym)},
+  field_t{"iextdefsym",     ADR(dysymtab_command.iextdefsym),     BYTESIZE(dysymtab_command.iextdefsym)},
+  field_t{"nextdefsym",     ADR(dysymtab_command.nextdefsym),     BYTESIZE(dysymtab_command.nextdefsym)},
+  field_t{"iundefsym",      ADR(dysymtab_command.iundefsym),      BYTESIZE(dysymtab_command.iundefsym)},
+  field_t{"nundefsym",      ADR(dysymtab_command.nundefsym),      BYTESIZE(dysymtab_command.nundefsym)},
+  field_t{"tocoff",         ADR(dysymtab_command.tocoff),         BYTESIZE(dysymtab_command.tocoff)},
+  field_t{"ntoc",           ADR(dysymtab_command.ntoc),           BYTESIZE(dysymtab_command.ntoc)},
+  field_t{"modtaboff",      ADR(dysymtab_command.modtaboff),      BYTESIZE(dysymtab_command.modtaboff)},
+  field_t{"nmodtab",        ADR(dysymtab_command.nmodtab),        BYTESIZE(dysymtab_command.nmodtab)},
+  field_t{"extrefsymoff",   ADR(dysymtab_command.extrefsymoff),   BYTESIZE(dysymtab_command.extrefsymoff)},
+  field_t{"nextrefsyms",    ADR(dysymtab_command.nextrefsyms),    BYTESIZE(dysymtab_command.nextrefsyms)},
+  field_t{"indirectsymoff", ADR(dysymtab_command.indirectsymoff), BYTESIZE(dysymtab_command.indirectsymoff)},
+  field_t{"nindirectsyms",  ADR(dysymtab_command.nindirectsyms),  BYTESIZE(dysymtab_command.nindirectsyms)},
+  field_t{"extreloff",      ADR(dysymtab_command.extreloff),      BYTESIZE(dysymtab_command.extreloff)},
+  field_t{"locreloff",      ADR(dysymtab_command.locreloff),      BYTESIZE(dysymtab_command.locreloff)},
+  field_t{"nlocrel",        ADR(dysymtab_command.nlocrel),        BYTESIZE(dysymtab_command.nlocrel)}};
+
+VAR struct_dysymtab_command := struct_t{"dysymtab_command_t",
+                                        BYTESIZE(dysymtab_command_t),
+                                        CopyFieldArray(dysymtab_command_fields)};
+
+PROCEDURE dump_load_command_dysymtab(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+    struct_print(struct_dysymtab_command, ADR(L));
+END dump_load_command_dysymtab;
+
+PROCEDURE dump_load_command_load_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_load_dylib;
+
+PROCEDURE dump_load_command_id_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_id_dylib;
+
+
+CONST dylinker_command: UNTRACED REF dylinker_command_t = NIL;
+
+VAR dylinker_command_fields := ARRAY [0..0] OF field_t{
+  field_t{"name.offset", ADR(dylinker_command.name.offset), BYTESIZE(dylinker_command.name.offset), macho_string := TRUE}};
+
+VAR struct_dylinker_command := struct_t{"dylinker_command_t",
+                                        BYTESIZE(dylinker_command_t),
+                                        CopyFieldArray(dylinker_command_fields)};
+
+PROCEDURE dump_load_command_load_dylinker(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+    struct_print(struct_dylinker_command, ADR(L));
+END dump_load_command_load_dylinker;
+
+PROCEDURE dump_load_command_id_dylinker(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_id_dylinker;
+
+PROCEDURE dump_load_command_prebound_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_prebound_dylib;
+
+PROCEDURE dump_load_command_routines32(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_routines32;
+
+PROCEDURE dump_load_command_sub_framework(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_sub_framework;
+
+PROCEDURE dump_load_command_sub_umbrella(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_sub_umbrella;
+
+PROCEDURE dump_load_command_sub_client(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_sub_client;
+
+PROCEDURE dump_load_command_sub_library(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_sub_library;
+
+PROCEDURE dump_load_command_twolevel_hints(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_twolevel_hints;
+
+PROCEDURE dump_load_command_prebind_checksum(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_prebind_checksum;
+
+PROCEDURE dump_load_command_load_weak_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_load_weak_dylib;
+
+PROCEDURE dump_load_command_routines64(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_routines64;
+
+PROCEDURE dump_load_command_uuid(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_uuid;
+
+PROCEDURE dump_load_command_rpath(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_rpath;
+
+PROCEDURE dump_load_command_code_signature(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_code_signature;
+
+PROCEDURE dump_load_command_segment_split_info(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_segment_split_info;
+
+PROCEDURE dump_load_command_reexport_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_reexport_dylib;
+
+PROCEDURE dump_load_command_lazy_load_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_lazy_load_dylib;
+
+PROCEDURE dump_load_command_encryption_info(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+BEGIN
+END dump_load_command_encryption_info;
+
+PROCEDURE dump_load_command(READONLY file: file_t; L: UNTRACED REF loadcommand_t; i: CARDINAL) =
+CONST mask = Word.Not(loadcommand_require_dyld);
+      And = Word.And;
+VAR cmd := m.swap32(L.cmd);
+    a := LOOPHOLE(L, ADDRESS);
+BEGIN
+  IO.Put("cmd " & Fmt.Int(i) & " " & loadcommand_name(cmd) & "\n");
+  CASE And(cmd, mask) OF
+    | And(loadcommand_segment32, mask)            => dump_load_command_segment32(m, a);
+    | And(loadcommand_symtab, mask)               => dump_load_command_symtab(m, a);
+    | And(loadcommand_symseg, mask)               => dump_load_command_symseg(m, a);
+    | And(loadcommand_thread, mask)               => dump_load_command_thread(m, a);
+    | And(loadcommand_unixthread, mask)           => dump_load_command_unixthread(m, a);
+    | And(loadcommand_fixed_vm_lib, mask)         => dump_load_command_fixed_vm_lib(m, a);
+    | And(loadcommand_id_fixed_vm_lib, mask)      => dump_load_command_id_fixed_vm_lib(m, a);
+    | And(loadcommand_ident, mask)                => dump_load_command_ident(m, a);
+    | And(loadcommand_fixed_vm_file, mask)        => dump_load_command_fixed_vm_file(m, a);
+    | And(loadcommand_prepage, mask)              => dump_load_command_prepage(m, a);
+    | And(loadcommand_dysymtab, mask)             => dump_load_command_dysymtab(m, a);
+    | And(loadcommand_load_dylib, mask)           => dump_load_command_load_dylib(m, a);
+    | And(loadcommand_id_dylib, mask)             => dump_load_command_id_dylib(m, a);
+    | And(loadcommand_load_dylinker, mask)        => dump_load_command_load_dylinker(m, a);
+    | And(loadcommand_id_dylinker, mask)          => dump_load_command_id_dylinker(m, a);
+    | And(loadcommand_prebound_dylib, mask)       => dump_load_command_prebound_dylib(m, a);
+    | And(loadcommand_routines32, mask)           => dump_load_command_routines32(m, a);
+    | And(loadcommand_sub_framework, mask)        => dump_load_command_sub_framework(m, a);
+    | And(loadcommand_sub_umbrella, mask)         => dump_load_command_sub_umbrella(m, a);
+    | And(loadcommand_sub_client, mask)           => dump_load_command_sub_client(m, a);
+    | And(loadcommand_sub_library, mask)          => dump_load_command_sub_library(m, a);
+    | And(loadcommand_twolevel_hints, mask)       => dump_load_command_twolevel_hints(m, a);
+    | And(loadcommand_prebind_checksum, mask)     => dump_load_command_prebind_checksum(m, a);
+    | And(loadcommand_load_weak_dylib, mask)      => dump_load_command_load_weak_dylib(m, a);
+    | And(loadcommand_segment64, mask)            => dump_load_command_segment64(m, a);
+    | And(loadcommand_routines64, mask)           => dump_load_command_routines64(m, a);
+    | And(loadcommand_uuid, mask)                 => dump_load_command_uuid(m, a);
+    | And(loadcommand_rpath, mask)                => dump_load_command_rpath(m, a);
+    | And(loadcommand_code_signature, mask)       => dump_load_command_code_signature(m, a);
+    | And(loadcommand_segment_split_info, mask)   => dump_load_command_segment_split_info(m, a);
+    | And(loadcommand_reexport_dylib, mask)       => dump_load_command_reexport_dylib(m, a);
+    | And(loadcommand_lazy_load_dylib, mask)      => dump_load_command_lazy_load_dylib(m, a);
+    | And(loadcommand_encryption_info, mask)      => dump_load_command_encryption_info(m, a);
+    ELSE IO.Put("unknown load command\n");
+  END;
+END dump_load_command;
+
+PROCEDURE dump_load_commands(READONLY file: file_t) =
+VAR n := ncmds(m);
+    L := first_load_command(m);
+BEGIN
+  FOR i := 0 TO n - 1 DO
+    dump_load_command(m, L, i);
+    L := next_load_command(m, L);
+  END;
+END dump_load_commands;
+
+PROCEDURE open_and_read_entire_file(path: TEXT; VAR contents: ADDRESS; VAR size: CARDINAL) =
+VAR buffer: ADDRESS := NIL;
+    prev_buffer: ADDRESS := NIL;
+    buffer_size: CARDINAL := 16_10000 DIV 2;
+    file: Cstdio.FILE_star := NIL;
+    bytes_read: CARDINAL := 0;
+    cpath := M3toC.SharedTtoS(path);
+BEGIN
+  size := 0;
+  contents := NIL;
+  file := Cstdio.fopen(cpath
     
     *size = 0;
     *contents = 0;
@@ -771,11 +660,12 @@ Exit:
     *contents = buffer;
     if (file) fclose(file);
 }
+END open_and_read_entire_file;
 
 int
 main(int argc, char** argv)
 {
-    macho_file_t m = { 0 };
+    file_t m = { 0 };
     uint32_t magic = { 0 };
     BOOLEAN swapped = { 0 };
     BOOLEAN m64 = { 0 };
@@ -786,20 +676,20 @@ main(int argc, char** argv)
     open_and_read_entire_file(m.path, &m.contents, &m.size);
     if (!m.contents)
       exit(1);
-    m.macho_header = (macho_header32_t* )m.contents;
-    magic = m.macho_header->magic;
-    if (magic != macho_magic32 && magic != macho_magic32_reversed
-        && magic != macho_magic64 && magic != macho_magic64_reversed)
+    m.header = (header32_t* )m.contents;
+    magic = m.header->magic;
+    if (magic != magic32 && magic != magic32_reversed
+        && magic != magic64 && magic != magic64_reversed)
     {
         exit(1);
     }
-    m64 =     (magic == macho_magic64          || magic == macho_magic64_reversed);
-    swapped = (magic == macho_magic32_reversed || magic == macho_magic64_reversed);
+    m64 =     (magic == magic64          || magic == magic64_reversed);
+    swapped = (magic == magic32_reversed || magic == magic64_reversed);
     m.swap32 = swapped ? swap32 : no_swap32;
     m.swap64 = swapped ? swap64 : no_swap64;
-    m.macho_header_size = m64 ? sizeof(macho_header64_t) : sizeof(macho_header32_t);
-    struct_print(&struct_macho_header32, m.contents);
-    macho_dump_load_commands(&m);
+    m.header_size = m64 ? sizeof(header64_t) : sizeof(header32_t);
+    struct_print(&struct_header32, m.contents);
+    dump_load_commands(&m);
     return 0;
 }
 *)
