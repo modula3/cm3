@@ -1,46 +1,53 @@
 UNSAFE MODULE macho EXPORTS macho, Main;
+IMPORT Word, Long, Fmt, Text, IO;
 
 TYPE enum_t = RECORD
   name: TEXT;
-  value: INTEGER;
+  value: uint32_t;
 END;
 
 TYPE field_t = RECORD
-  name:                 TEXT;
-  offset:               uchar; (* small integer *)
-  size:                 uchar; (* small integer *)
-  element_size:         uchar := 0; (* small integer *)
-  str:                  uchar := 0; (* BOOLEAN *)
-  macho_string:         uchar := 0; (* BOOLEAN *)
-  enum_table_count:     uchar := 0; (* small integer *)
-  enum_table: UNTRACED REF enum_t := NIL;
+  name:             TEXT;
+  offset:           uchar; (* small integer *)
+  size:             uchar; (* small integer *)
+  element_size:     uchar := 0; (* small integer *)
+  str:              uchar := 0; (* BOOLEAN *)
+  macho_string:     uchar := 0; (* BOOLEAN *)
+  enum_table:       REF ARRAY OF enum_t := NIL;
 END;
 
 TYPE struct_t = RECORD
-    name:               TEXT;
-    size:               uint;
-    nfields:            uint;
-    fields:             UNTRACED REF field_t;
-    widest_field:       int := 0;
+    name:           TEXT;
+    size:           uint;
+    nfields:        uint;
+    fields:         UNTRACED REF field_t;
+    widest_field:   int := 0;
 END;
+
+PROCEDURE EnumTable(READONLY a:ARRAY OF enum_t):REF ARRAY OF enum_t =
+  VAR b := NEW(REF ARRAY OF enum_t, NUMBER(a));
+  BEGIN
+    b^ := a;
+    RETURN b;
+  END EnumTable;
 
 (* define STRUCT(a) {STRINGIZE(a), sizeof(a), NUMBER_OF(PASTE(a,_fields)), PASTE(a,_fields)} *)
 
-VAR macho_magic_names := ARRAY [0..1] OF enum_t{
+CONST macho_magic_names = ARRAY OF enum_t{
     enum_t{ "magic32", macho_magic32 },
-    enum_t{ "magic64", macho_magic64 } };
+    enum_t{ "magic64", macho_magic64 }};
 
-VAR macho_cputype_names := ARRAY [0..3] OF enum_t{
+CONST macho_cputype_names = ARRAY OF enum_t{
     enum_t{ "x86", macho_cpu_type_x86 },
     enum_t{ "amd64", macho_cpu_type_amd64 },
     enum_t{ "powerpc", macho_cpu_type_powerpc },
-    enum_t{ "powerpc64", macho_cpu_type_powerpc64 } };
+    enum_t{ "powerpc64", macho_cpu_type_powerpc64 }};
 
-VAR macho_cpusubtype_names := ARRAY [0..1] OF enum_t{
+CONST macho_cpusubtype_names = ARRAY OF enum_t{
     enum_t{ "powerpc_all", macho_cpu_subtype_powerpc_all },
-    enum_t{ "x86_all", macho_cpu_subtype_x86_all } };
+    enum_t{ "x86_all", macho_cpu_subtype_x86_all }};
 
-VAR macho_filetype_names := ARRAY [0..9] OF enum_t{
+CONST macho_filetype_names = ARRAY OF enum_t{
     enum_t{ "object", macho_type_object },
     enum_t{ "execute", macho_type_execute },
     enum_t{ "fixed_vm_library", macho_type_fixed_vm_library },
@@ -50,22 +57,166 @@ VAR macho_filetype_names := ARRAY [0..9] OF enum_t{
     enum_t{ "dylinker", macho_type_dylinker },
     enum_t{ "bundle", macho_type_bundle },
     enum_t{ "dylib_stub", macho_type_dylib_stub },
-    enum_t{ "dsym", macho_type_dsym } };
+    enum_t{ "dsym", macho_type_dsym }};
 
 VAR macho_header32_t_fields := ARRAY [0..6] OF field_t{
-  field_t{ "magic", 0, 4, enum_table := ADR(macho_magic_names[0]), enum_table_count := NUMBER(macho_magic_names)},
-  field_t{ "cputype", 4, 4, enum_table := ADR(macho_cputype_names[0]), enum_table_count := NUMBER(macho_cputype_names)},
-  field_t{ "cpusubtype", 8, 4, enum_table := ADR(macho_cpusubtype_names[0]), enum_table_count := NUMBER(macho_cpusubtype_names)},
-  field_t{ "filetype", 12, 4, enum_table := ADR(macho_filetype_names[0]), enum_table_count := NUMBER(macho_filetype_names)},
+  field_t{ "magic", 0, 4, enum_table := EnumTable(macho_magic_names)},
+  field_t{ "cputype", 4, 4, enum_table := EnumTable(macho_cputype_names)},
+  field_t{ "cpusubtype", 8, 4, enum_table := EnumTable(macho_cpusubtype_names)},
+  field_t{ "filetype", 12, 4, enum_table := EnumTable(macho_filetype_names)},
   field_t{ "ncmds", 16, 4},
   field_t{ "sizeofcmds", 20, 4},
   field_t{ "flags", 24, 4}};
 
-VAR struct_macho_header32 := struct_t{
-    "macho_header32_t", BYTESIZE(macho_header32_t), NUMBER(macho_header32_t_fields),
-    ADR(macho_header32_t_fields[0]) };
+VAR struct_macho_header32 := struct_t{ "macho_header32_t",
+                                       BYTESIZE(macho_header32_t),
+                                       NUMBER(macho_header32_t_fields),
+                                       ADR(macho_header32_t_fields[0]) };
+
+TYPE macho_file_t = RECORD
+    path:               TEXT;
+    contents:           ADDRESS;
+    size:               CARDINAL;
+    macho_header:       UNTRACED REF macho_header32_t;
+    macho_header_size:  uchar; (* small integer *)
+    swap32: PROCEDURE(a:uint32):uint32 := no_swap32;
+    swap64: PROCEDURE(a:uint64):uint64 := no_swap64;
+END;
+
+PROCEDURE no_swap32(a:uint32):uint32 =
+BEGIN
+    RETURN a;
+END no_swap32;
+
+PROCEDURE no_swap64(a:uint64):uint64 =
+BEGIN
+    RETURN a;
+END no_swap64;
+
+PROCEDURE swap32(a:uint32):uint32 =
+CONST Left = Word.LeftShift; Right = Word.RightShift; And = Word.And; Or = Word.Or;
+BEGIN
+    RETURN Or(    Right(a, 24),
+           Or(And(Right(a,  8), 16_FF00),
+           Or(And(Left (a,  8), 16_FF0000),
+                   Left(a, 24))));
+END swap32;
+
+PROCEDURE swap64(a:uint64):uint64 =
+CONST FF:uint64 = 16_FFL;
+      Left = Long.LeftShift; Right = Long.RightShift; And = Long.And; Or = Long.Or;
+BEGIN
+    RETURN Or(    Right(a, 56),
+           Or(And(Right(a, 40), Left(FF,  8)),
+           Or(And(Right(a, 24), Left(FF, 16)),
+           Or(And(Right(a,  8), Left(FF, 24)),
+           Or(And(Left (a,  8), Left(FF, 32)),
+           Or(And(Left (a, 24), Left(FF, 40)),
+           Or(And(Left (a, 40), Left(FF, 48)),
+                  Left (a, 56))))))));
+END swap64;
+
+PROCEDURE field_print(VAR s: struct_t; READONLY f: field_t; p: ADDRESS) =
+VAR buffer: TEXT;
+    q := LOOPHOLE(p + f.offset, UNTRACED REF uchar);
+    q32 := LOOPHOLE(q, UNTRACED REF uint32);
+    q64 := LOOPHOLE(q, UNTRACED REF uint64);
+    size := f.size;
+    str := f.str;
+    macho_string := f.macho_string;
+    enum_table := f.enum_table;
+    enum_table_count: CARDINAL;
+    value32: uint32 := 0;
+    value32_swapped: uint32 := 0;
+    value64: uint64 := 0L;
+    value64_swapped: uint64 := 0L;
+    i: uint := 0;
+    length: uint := 0;
+    e: uint32_t := 0;
+    ch: uchar := 0;
+BEGIN
+  IF enum_table # NIL THEN
+    enum_table_count := NUMBER(enum_table^);
+  END;
+  buffer := s.name & "." & Fmt.Pad(f.name, s.widest_field, ' ');
+  IF str # 0 THEN
+    i := 0;
+    length := 0;
+    WHILE i < size AND LOOPHOLE(q + i, UNTRACED REF uchar)^ # 0 DO
+      INC(length);
+      INC(i);
+    END;
+    WHILE length < 16 DO
+      INC(length);
+      buffer := buffer & " ";
+    END;
+    i := 0;
+    WHILE i < size AND LOOPHOLE(q + i, UNTRACED REF uchar)^ # 0 DO
+      INC(i);
+      buffer := buffer & Text.FromChar(LOOPHOLE(q + i, UNTRACED REF CHAR)^);
+    END;
+  ELSE
+    IF size = 4 THEN
+      value32 := q32^;
+      value64 := VAL(value32, uint64);
+      value32_swapped := swap32(value32);
+      value64_swapped := VAL(value32_swapped, uint64);
+     ELSIF size = 8 THEN
+       value64 := q64^;
+       value64_swapped := swap64(value64);
+    END;
+    buffer := buffer & "0x" & Fmt.LongUnsigned(value64) & " 0x" & Fmt.LongUnsigned(value64_swapped);
+    IF enum_table # NIL AND enum_table_count > 0 THEN
+      e := 0;
+      WHILE e < enum_table_count DO
+        IF enum_table[e].value = value32 THEN
+          buffer := buffer & " (" & enum_table[e].name & ")";
+          EXIT;
+        ELSIF enum_table[e].value = value32_swapped THEN
+          buffer := buffer & " (" & enum_table[e].name & ", swapped)";
+          EXIT;
+        END;
+        INC(e);
+      END;
+    ELSIF macho_string # 0 AND size = 4 THEN
+      IF Word.LT(value32_swapped, value32) THEN
+        value32 := value32_swapped;
+      END;
+      buffer := buffer & " (";
+      q := p + value32;
+      ch := q^;
+      WHILE ch # 0 DO
+        buffer := buffer & Text.FromChar(VAL(ch, CHAR));
+        INC(q);
+        ch := q^;
+      END;
+      buffer := buffer & ")";
+    END;
+  END;
+  buffer := buffer & "\n";
+  IO.Put(buffer);
+END field_print;
 
 (*
+void
+field_print(struct_t* s, const field_t* f, const void* p)
+{
+    if (str)
+    {
+    }
+    else
+    {
+        else if (macho_string && size == 4)
+        {
+            if (value_swapped < value)
+                value = value_swapped;
+            i += sprintf(cursor + i, " (%s)", value + (char* )p);
+        }
+        cursor += i;
+    }
+    printf("%s\n", buffer);
+}
+
 #include <stdlib.h>
 #include <string.h>
 #include "macho.h"
@@ -104,43 +255,6 @@ typedef union _macho_load_command_u {
     macho_segment64_t segment64;
 } macho_load_command_u;
 
-typedef struct _macho_file_t {
-    const char* path;
-    uchar* contents;
-    size_t size;
-    /* macho_header64 just adds uint32_t reserved at end */
-    macho_header32_t* macho_header;
-    uchar macho_header_size;
-    uint32 ( *swap32)(uint32 a);
-    uint64 ( *swap64)(uint64 a);
-} macho_file_t;
-
-uint32
-no_swap32(uint32 a) { return a; }
-
-uint64
-no_swap64(uint64 a) { return a; }
-
-uint32
-swap32(uint32 a)
-{
-    return (a >> 24) | ((a >> 8) & 0xFF00) | ((a << 8) & 0xFF0000) | (a << 24);
-}
-
-uint64
-swap64(uint64 a)
-{
-    const uint64 FF = 0xFF;
-    return (a >> 56)
-        | ((a >> 40) & (FF << 8))
-        | ((a >> 24) & (FF << 16))
-        | ((a >>  8) & (FF << 24))
-        | ((a <<  8) & (FF << 32))
-        | ((a << 24) & (FF << 40))
-        | ((a << 40) & (FF << 48))
-        | (a << 56);
-}
-
 /*
 uint32
 macho_swap32(macho_file_t* m, uint32 a)
@@ -176,82 +290,6 @@ void adjust_hex_case(char* a)
 #endif
 }
 */
-
-void
-field_print(struct_t* s, const field_t* f, const void* p)
-{
-    char buffer[1024];
-    char* cursor = buffer;
-    uchar* q = (f->offset + (uchar* )p);
-    uint32* q32 = (uint32* )q;
-    uint64* q64 = (uint64* )q;
-    uint i = {0};
-    uchar size = f->size;
-    uchar str = f->str;
-    uchar macho_string = f->macho_string;
-    const enum_t* enum_table = f->enum_table;
-    uint32_t enum_table_count = f->enum_table_count;
-    uint64 value = { 0 };
-    uint64 value_swapped = { 0 };
-    cursor += sprintf(cursor, "%s.%-*s ", s->name, s->widest_field, f->name);
-    if (str)
-    {
-        uint length = 0;
-        for (i = 0; i < size && q[i]; ++i)
-            length += 1;
-        while (length < 16)
-        {
-            length += 1;
-            *cursor++ = ' ';
-        }
-        for (i = 0; i < size && q[i]; ++i)
-            *cursor++ = q[i];
-        *cursor++ = 0;
-    }
-    else
-    {
-        if (size == 4)
-        {
-            value = *q32;
-            value_swapped = swap32(value);
-        }
-        else if (size == 8)
-        {
-            value = *q64;
-            value_swapped = swap64(value);
-        }
-        if (sizeof(value) == sizeof(long))
-            i = sprintf(cursor, "0x%lX 0x%lX", value, value_swapped);
-        else
-            i = sprintf(cursor, "0x%" PRINT64 "X 0x%" PRINT64 "X", value, value_swapped);
-        /* adjust_hex_case(cursor); */
-        if (enum_table && enum_table_count)
-        {
-          uint32_t e;
-          for (e = 0; e < enum_table_count; ++e)
-          {
-            if (enum_table[e].value == value)
-            {
-              i += sprintf(cursor + i, " (%s)", enum_table[e].name);
-              break;
-            }
-            else if (enum_table[e].value == value_swapped)
-            {
-              i += sprintf(cursor + i, " (%s, swapped)", enum_table[e].name);
-              break;
-            }
-          }
-        }
-        else if (macho_string && size == 4)
-        {
-            if (value_swapped < value)
-                value = value_swapped;
-            i += sprintf(cursor + i, " (%s)", value + (char* )p);
-        }
-        cursor += i;
-    }
-    printf("%s\n", buffer);
-}
 
 void
 struct_print(struct_t* t, const void* p)
