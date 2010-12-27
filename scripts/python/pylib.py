@@ -1939,11 +1939,10 @@ def CopyConfigForDistribution(To):
     Bin  = os.path.join(To, "bin")
     dir = os.path.join(Bin, "config")
     CreateDirectory(dir)
-    for b in [Target + "*", "*.common"]:
-        for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", b)):
-            if isfile(File):
-                #print(File + " => " + dir + "\n")
-                CopyFile(File, dir)
+    for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", "*")):
+        if isfile(File):
+            #print(File + " => " + dir + "\n")
+            CopyFile(File, dir)
     open(os.path.join(Bin, "cm3.cfg"), "w").write("\
 if not defined(\"SL\") SL = \"/\" end\n\
 if not defined(\"HOST\") HOST = \"" + Config + "\" end\n\
