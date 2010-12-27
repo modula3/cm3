@@ -168,12 +168,30 @@ M3EXTERNC_END
         return return_value;                                                \
     } M3EXTERNC_END
 
-#define M3WRAP_RETURN_VOID(name, in, out)                                   \
+#define M3WRAP_NO_SWITCHING(ret, name, in, out)                              \
+    M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, __##name) in \
+    {                                                                        \
+        ret return_value;                                                    \
+        Scheduler__DisableSwitching ();                                      \
+        return_value = name out;                                             \
+        Scheduler__EnableSwitching ();                                       \
+        return return_value;                                                 \
+    } M3EXTERNC_END
+
+#define M3WRAP_RETURN_VOID(name, in, out)                                     \
     M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl M3PASTE(M3MODULE, __##name) in \
-    {                                                                       \
-        /* Scheduler__DisableSwitching (); */                               \
-        name out;                                                           \
-        /* Scheduler__EnableSwitching (); */                                \
+    {                                                                         \
+        /* Scheduler__DisableSwitching (); */                                 \
+        name out;                                                             \
+        /* Scheduler__EnableSwitching (); */                                  \
+    } M3EXTERNC_END
+
+#define M3WRAP_RETURN_VOID_NO_SWITCHING(name, in, out)                        \
+    M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl M3PASTE(M3MODULE, __##name) in \
+    {                                                                         \
+        Scheduler__DisableSwitching ();                                       \
+        name out;                                                             \
+        Scheduler__EnableSwitching ();                                        \
     } M3EXTERNC_END
 
 #ifdef _WIN32
