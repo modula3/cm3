@@ -6,10 +6,9 @@
 
 #ifndef _WIN32
 
-typedef struct passwd passwd_t;
 #define M3MODULE Upwd
 
-M3WRAP1(passwd_t*, getpwuid, m3_uid_t)
-M3WRAP1(passwd_t*, getpwnam, char*)
+M3WRAP1(struct passwd*, getpwuid, m3_uid_t)
+M3WRAP1(struct passwd*, getpwnam, char*)
 
 #endif
