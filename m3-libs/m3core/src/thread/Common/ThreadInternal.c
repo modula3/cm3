@@ -23,7 +23,13 @@ ThreadInternal__StackGrowsDownHelper (volatile char* a)
 M3_DLL_LOCAL int __cdecl
 ThreadInternal__StackGrowsDown (void)
 {
-  return ThreadInternal__StackGrowsDownHelper (0);
+  int a = ThreadInternal__StackGrowsDownHelper (0);
+#ifdef __hppa__
+  assert(!a);
+#else
+  assert(a);
+#endif
+  return a;
 }
 
 #ifndef _WIN32
