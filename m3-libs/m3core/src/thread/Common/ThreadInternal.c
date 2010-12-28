@@ -9,12 +9,28 @@
 extern "C" {
 #endif
 
+static int xStackGrowsDown (volatile char* a)
+{
+  volatile char b;
+  return (&b < a);
+}
+
+M3_DLL_LOCAL
+int
+__cdecl
+ThreadInternal__StackGrowsDown (void)
+{
+  volatile char a;
+  return xStackGrowsDown (&a);
+}
+
 #ifndef _WIN32
 
 enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout};
 
 #define MILLION (1000 * 1000)
 
+M3_DLL_LOCAL
 int
 __cdecl
 ThreadInternal__Poll(int fd,
@@ -40,6 +56,7 @@ ThreadInternal__Poll(int fd,
         return WaitResult_FDError;
 }
 
+M3_DLL_LOCAL
 int
 __cdecl
 ThreadInternal__Select(int nfds,
