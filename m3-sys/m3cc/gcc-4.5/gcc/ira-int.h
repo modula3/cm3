@@ -21,6 +21,8 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION < 2007) || (defined(__cplusplus) && (GCC_VERSION <= 3003)))
+
 #include "cfgloop.h"
 #include "ira.h"
 #include "alloc-pool.h"
@@ -155,7 +157,7 @@ extern int ira_loop_tree_height;
 extern ira_loop_tree_node_t ira_bb_nodes;
 
 /* Two access macros to the nodes representing basic blocks.  */
-#if defined ENABLE_IRA_CHECKING && (GCC_VERSION >= 2007)
+#if defined(ENABLE_IRA_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 #define IRA_BB_NODE_BY_INDEX(index) __extension__			\
 (({ ira_loop_tree_node_t _node = (&ira_bb_nodes[index]);	\
      if (_node->children != NULL || _node->loop != NULL || _node->bb == NULL)\
@@ -177,7 +179,7 @@ extern ira_loop_tree_node_t ira_bb_nodes;
 extern ira_loop_tree_node_t ira_loop_nodes;
 
 /* Two access macros to the nodes representing loops.  */
-#if defined ENABLE_IRA_CHECKING && (GCC_VERSION >= 2007)
+#if defined(ENABLE_IRA_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 #define IRA_LOOP_NODE_BY_INDEX(index) __extension__			\
 (({ ira_loop_tree_node_t const _node = (&ira_loop_nodes[index]);\
      if (_node->children == NULL || _node->bb != NULL || _node->loop == NULL)\
@@ -583,7 +585,7 @@ extern int ira_max_nregs;
 /* Set, clear or test bit number I in R, a bit vector of elements with
    minimal index and maximal index equal correspondingly to MIN and
    MAX.  */
-#if defined ENABLE_IRA_CHECKING && (GCC_VERSION >= 2007)
+#if defined(ENABLE_IRA_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 
 #define SET_ALLOCNO_SET_BIT(R, I, MIN, MAX) __extension__	        \
   (({ int _min = (MIN), _max = (MAX), _i = (I);				\

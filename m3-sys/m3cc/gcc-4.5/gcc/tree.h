@@ -24,6 +24,8 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_TREE_H
 #define GCC_TREE_H
 
+#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION < 2007) || (defined(__cplusplus) && (GCC_VERSION <= 3003)))
+
 #include "hashtab.h"
 #include "machmode.h"
 #include "input.h"
@@ -649,7 +651,7 @@ enum tree_node_structure_enum {
 
 /* When checking is enabled, errors will be generated if a tree node
    is accessed incorrectly. The macros die with a fatal error.  */
-#if defined ENABLE_TREE_CHECKING && (GCC_VERSION >= 2007)
+#if defined(ENABLE_TREE_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 
 #define TREE_CHECK(T, CODE) __extension__				\
 ({  __typeof (T) const __t = (T);					\
