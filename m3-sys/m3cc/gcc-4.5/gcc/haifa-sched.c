@@ -1132,7 +1132,8 @@ setup_insn_reg_pressure_info (rtx insn)
   excess_cost_change = 0;
   for (i = 0; i < ira_reg_class_cover_size; i++)
     death[ira_reg_class_cover[i]] = 0;
-  for (use = INSN_REG_USE_LIST (insn); use != NULL; use = use->next_insn_use)
+  use = INSN_REG_USE_LIST (insn);
+  for (; use != NULL; use = use->next_insn_use)
     if (dying_use_p (use))
       {
 	cl = sched_regno_cover_class[use->regno];
@@ -1569,10 +1570,12 @@ update_register_pressure (rtx insn)
   struct reg_use_data *use;
   struct reg_set_data *set;
 
-  for (use = INSN_REG_USE_LIST (insn); use != NULL; use = use->next_insn_use)
+  use = INSN_REG_USE_LIST (insn);
+  for (; use != NULL; use = use->next_insn_use)
     if (dying_use_p (use) && bitmap_bit_p (curr_reg_live, use->regno))
       mark_regno_birth_or_death (use->regno, false);
-  for (set = INSN_REG_SET_LIST (insn); set != NULL; set = set->next_insn_set)
+  set = INSN_REG_SET_LIST (insn);
+  for (; set != NULL; set = set->next_insn_set)
     mark_regno_birth_or_death (set->regno, true);
 }
 
