@@ -11,18 +11,19 @@ extern "C" {
 
 M3_NO_INLINE static int
 ThreadInternal__StackGrowsDownHelper (volatile char* a)
-/* Inlining could potentially reverse the relative placement
- * of a and b, leading to an incorrect result! */
+/* Inlining could potentially reverse the relative placements,
+ * leading to an incorrect result! Recursion used to
+ * help defeat inlining optimizer, though a smart compiler
+ * could still inline. */
 {
   volatile char b;
-  return (&b < a);
+  return a ? (&b < a) : ThreadInternal__StackGrowsDownHelper (&b);
 }
 
-M3_NO_INLINE M3_DLL_LOCAL int __cdecl
+M3_DLL_LOCAL int __cdecl
 ThreadInternal__StackGrowsDown (void)
 {
-  volatile char a;
-  return ThreadInternal__StackGrowsDownHelper (&a);
+  return ThreadInternal__StackGrowsDownHelper (0);
 }
 
 #ifndef _WIN32
