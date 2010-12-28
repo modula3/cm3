@@ -11,6 +11,8 @@ extern "C" {
 
 M3_NO_INLINE static int
 ThreadInternal__StackGrowsDownHelper (volatile char* a)
+/* Inlining could potentially reverse the relative placement
+ * of a and b, leading to an incorrect result! */
 {
   volatile char b;
   return (&b < a);
