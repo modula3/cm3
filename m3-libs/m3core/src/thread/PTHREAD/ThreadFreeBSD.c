@@ -39,7 +39,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
                               void (*p)(void *start, void *limit))
 {
   pthread_attr_t attr;
@@ -60,8 +60,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   assert(stack_grows_down); /* See ThreadPThreadC.c */
 #endif
   assert(context == 0);
-  assert((char *)bottom >= stackaddr);
-  assert((char *)bottom <= (stackaddr + stacksize));
+  assert(bottom >= stackaddr);
+  assert(bottom <= (stackaddr + stacksize));
   p(stackaddr, bottom);
   /* assume registers are stored in the stack */
   /* but call p to simulate processing registers: see RTHeapStats.m3 */
