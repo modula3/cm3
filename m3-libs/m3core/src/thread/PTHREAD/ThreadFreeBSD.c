@@ -38,13 +38,27 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
   return success;
 }
 
+static void
+ThreadFreeBSD__Fail(int error, const char* message)
+{
+  fprintf (stderr, "ThreadFreeBSD fatal error: %d %s\n", error, message);
+  abort ();
+}
+
+static void
+ThreadFreeBSD__Check(int error, const char* message)
+{
+  if (error)
+    ThreadFreeBSD__Fail(error, message);
+}
+
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
                               void (*p)(void *start, void *limit))
 {
-  pthread_attr_t attr;
-  char *stackaddr;
-  WORD_T stacksize;
+  pthread_attr_t attr = { 0 };
+  char *stackaddr = { 0 };
+  size_t stacksize = { 0 };
 
   /*
      NOTE: This will scan the entire allocated stack,
@@ -52,10 +66,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
    */
 
   /* process the stacks */
-  if (pthread_attr_init(&attr) != 0) abort();
-  if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
-  if (pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize) != 0) abort();
-  if (pthread_attr_destroy(&attr) != 0) abort();
+  ThreadFreeBSD__Check(pthread_attr_init(&attr), "pthread_attr_init");
+  ThreadFreeBSD__Check(pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr), "pthread_attr_get_np");
+  ThreadFreeBSD__Check(pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize), "pthread_attr_getstack");
+  ThreadFreeBSD__Check(pthread_attr_destroy(&attr), "pthread_attr_destroy");
 #if 0
   assert(stack_grows_down); /* See ThreadPThreadC.c */
 #endif
