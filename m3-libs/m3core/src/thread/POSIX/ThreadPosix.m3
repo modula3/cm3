@@ -147,8 +147,6 @@ VAR
 
   defaultStackSize := 3000;
 
-  stack_grows_down: BOOLEAN;
-
 VAR
   stats: RECORD
            n_forks := 0;
@@ -1252,8 +1250,6 @@ PROCEDURE Init() =
       FloatMode.InitThread (self.floatState);
 
       INC (nextId);
-    
-      stack_grows_down := ADR (xx) > QQ();
 
       pausedThreads := NIL;
 
@@ -1276,12 +1272,6 @@ PROCEDURE Init() =
       RTCollectorSRC.StartForegroundCollection();
     END;
   END Init;
-
-PROCEDURE QQ(): ADDRESS =
-  VAR xx: INTEGER;
-  BEGIN
-    RETURN ADR (xx);
-  END QQ;
 
 PROCEDURE AtForkPrepare() =
   BEGIN
