@@ -511,6 +511,11 @@ void
 __cdecl
 Scheduler__EnableScheduling(void);
 
+M3_DLL_LOCAL
+int
+__cdecl
+ThreadInternal__StackGrowsDown (void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
