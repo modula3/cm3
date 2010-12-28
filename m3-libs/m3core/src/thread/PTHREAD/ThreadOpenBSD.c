@@ -43,8 +43,8 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
-                              void (*p)(void *start, void *limit))
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
+                              void (*p)(char *start, char *limit))
 {
   stack_t stack = { 0 };
   char* stackaddr = { 0 };
@@ -60,16 +60,20 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   assert(i == 0);
   stackaddr = ((char*)stack.ss_sp) - stack.ss_size;
   stacksize = stack.ss_size;
-  
-  /* same as FreeBSD from here */
 
-#if 0
-  assert(stack_grows_down); /* See ThreadPThreadC.c */
-#endif
   assert(context == 0);
-  assert((char *)bottom >= stackaddr);
-  assert((char *)bottom <= (stackaddr + stacksize));
-  p(stackaddr, bottom);
+  if (ThreadInternal__StackGrowsDown ())
+  {
+    assert(stackaddr <= bottom);
+    assert(stackaddr >= (bottom - stacksize));
+    p(stackaddr, bottom);
+  }
+  else
+  {
+    assert(stackaddr >= bottom);
+    assert(stackaddr <= (bottom + stacksize));
+    p(bottom, stackaddr);
+  }
   /* assume registers are stored in the stack */
   /* but call p to simulate processing registers: see RTHeapStats.m3 */
   p(0, 0);
