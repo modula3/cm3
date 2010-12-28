@@ -194,22 +194,12 @@ extern int fprintf_unlocked (FILE *, const char *, ...);
    rely on (and therefore test) GCC's string builtins.  */
 #define __NO_STRING_INLINES
 
+#include <string.h>
 #ifdef STRING_WITH_STRINGS
-# include <string.h>
 # include <strings.h>
-#else
-# ifdef HAVE_STRING_H
-#  include <string.h>
-# else
-#  ifdef HAVE_STRINGS_H
-#   include <strings.h>
-#  endif
-# endif
 #endif
 
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
+#include <stdlib.h>
 
 /* If we don't have an overriding definition, set SUCCESS_EXIT_CODE and
    FATAL_EXIT_CODE to EXIT_SUCCESS and EXIT_FAILURE respectively,
