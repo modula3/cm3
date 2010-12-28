@@ -274,6 +274,8 @@ HP-UX? AIX?
 */
 #if defined(__linux) || defined(__sun)
 
+#define M3_COMPILER_THREAD_LOCAL
+
 static __thread void* activations;
 
 void
@@ -479,7 +481,9 @@ InitC(int *bottom)
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__INTERIX)
   assert(stack_grows_down); /* See ThreadApple.c, ThreadFreeBSD.c */
 #endif
+#ifndef M3_COMPILER_THREAD_LOCAL
   M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
+#endif
 
 #ifndef M3_DIRECT_SUSPEND
   ZERO_MEMORY(act);
