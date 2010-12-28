@@ -9,7 +9,9 @@
 extern "C" {
 #endif
 
-static int xStackGrowsDown (volatile char* a)
+static
+int
+ThreadInternal__StackGrowsDownHelper (volatile char* a)
 {
   volatile char b;
   return (&b < a);
@@ -21,7 +23,7 @@ __cdecl
 ThreadInternal__StackGrowsDown (void)
 {
   volatile char a;
-  return xStackGrowsDown (&a);
+  return ThreadInternal__StackGrowsDownHelper (&a);
 }
 
 #ifndef _WIN32
