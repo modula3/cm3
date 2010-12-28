@@ -443,7 +443,7 @@ void vec_heap_free (void *);
 #define vec_heap_free(V) free (V)
 #endif
 
-#if ENABLE_CHECKING
+#if ENABLE_CHECKING && ENABLE_CHECKING_GCC_VERSION
 #define VEC_CHECK_INFO ,__FILE__,__LINE__,__FUNCTION__
 #define VEC_CHECK_DECL ,const char *file_,unsigned line_,const char *function_
 #define VEC_CHECK_PASS ,file_,line_,function_
