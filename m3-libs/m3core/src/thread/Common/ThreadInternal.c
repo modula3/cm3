@@ -9,17 +9,14 @@
 extern "C" {
 #endif
 
-static
-int
+M3_NO_INLINE static int
 ThreadInternal__StackGrowsDownHelper (volatile char* a)
 {
   volatile char b;
   return (&b < a);
 }
 
-M3_DLL_LOCAL
-int
-__cdecl
+M3_NO_INLINE M3_DLL_LOCAL int __cdecl
 ThreadInternal__StackGrowsDown (void)
 {
   volatile char a;
