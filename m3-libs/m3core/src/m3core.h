@@ -23,6 +23,14 @@
 #pragma warning(disable:4668) /* #if of undefined symbol */
 #endif
 
+#if __GNUC__ || __SUNPRO_C >= 0x590
+#define M3_NO_INLINE __attribute__((noinline))
+#elif _MSC_VER >= 1300
+#define M3_NO_INLINE __declspec(noinline)
+#else
+#define M3_NO_INLINE
+#endif
+
 #ifdef __osf__
 /* To get struct tm.tm_gmtoff, tm_zone. Would be good to autoconf this? */
 #ifndef _OSF_SOURCE
