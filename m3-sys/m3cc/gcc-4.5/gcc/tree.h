@@ -33,8 +33,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "alias.h"
 #include "options.h"
 
-#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
-
 #ifdef __cplusplus
 extern "C" {
 #endif
