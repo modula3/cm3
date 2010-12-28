@@ -24,8 +24,6 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_RTL_H
 #define GCC_RTL_H
 
-#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
-
 #include "statistics.h"
 #include "machmode.h"
 #include "input.h"
@@ -33,6 +31,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "vec.h"
 #include "fixed-value.h"
 #include "alias.h"
+
+#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
 
 #ifdef __cplusplus
 extern "C" {

@@ -21,11 +21,11 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
-
 #include "cfgloop.h"
 #include "ira.h"
 #include "alloc-pool.h"
+
+#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
 
 #ifdef __cplusplus
 extern "C" {
