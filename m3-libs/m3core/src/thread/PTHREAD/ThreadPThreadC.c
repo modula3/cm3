@@ -264,6 +264,34 @@ MUTEX(perf)                     /* global lock for thread state tracing */
 MUTEX(heap)                     /* global lock for heap atomicity */
 CONDITION_VARIABLE(heap)        /* CV for heap state changes */
 
+/*
+NetBSD 5.0.2 compiles __thread, but segfault at runtime.
+OpenBSD 4.7 compiles __thread, but segfault at runtime.
+Apple doesn't compile
+FreeBSD not tested
+AIX probably works, not tested
+HP-UX? AIX?
+*/
+#if defined(__linux) || defined(__sun)
+
+static __thread void* activations;
+
+void
+__cdecl
+ThreadPThread__SetActivation(void *value)
+{
+  activations = value;
+}
+
+void*
+__cdecl
+ThreadPThread__GetActivation(void)
+{
+  return activations;
+}
+
+#else
+
 static pthread_key_t activations;
 
 void
@@ -281,6 +309,8 @@ ThreadPThread__GetActivation(void)
 {
   return pthread_getspecific(activations);
 }
+
+#endif
 
 typedef int (*generic_init_t)(void *, const void *);
 
