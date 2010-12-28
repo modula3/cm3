@@ -299,7 +299,7 @@ ThreadPThread_pthread_generic_new(WORD_T size, generic_init_t init)
   if (r != 0)
     goto Error;
   return p;
- Error:
+Error:
   if (p) free(p);
   return NULL;
 }
