@@ -272,17 +272,17 @@ END ncmds;
 CONST segment32: UNTRACED REF segment32_t = NIL;
 
 VAR segment32_fields := ARRAY [0..10] OF field_t{
-  field_t{"cmd",       ADR(segment32.cmd),      BYTESIZE(segment32.cmd)},
-  field_t{"cmdsize",   ADR(segment32.cmdsize),  BYTESIZE(segment32.cmdsize)},
-  field_t{"segname",   ADR(segment32.segname),  BYTESIZE(segment32.segname), str := TRUE},
-  field_t{"vmaddr",    ADR(segment32.vmaddr),   BYTESIZE(segment32.vmaddr)},
-  field_t{"vmsize",    ADR(segment32.vmsize),   BYTESIZE(segment32.vmsize)},
-  field_t{"fileoff",   ADR(segment32.fileoff),  BYTESIZE(segment32.fileoff)},
-  field_t{"filesize",  ADR(segment32.filesize), BYTESIZE(segment32.filesize)},
-  field_t{"maxprot",   ADR(segment32.maxprot),  BYTESIZE(segment32.maxprot)},
-  field_t{"initprot",  ADR(segment32.initprot), BYTESIZE(segment32.initprot)},
-  field_t{"nsects",    ADR(segment32.nsects),   BYTESIZE(segment32.nsects)},
-  field_t{"flags",     ADR(segment32.flags),    BYTESIZE(segment32.flags)}};
+  field_t{"cmd",      ADR(segment32.cmd),      BYTESIZE(segment32.cmd)},
+  field_t{"cmdsize",  ADR(segment32.cmdsize),  BYTESIZE(segment32.cmdsize)},
+  field_t{"segname",  ADR(segment32.segname),  BYTESIZE(segment32.segname), str := TRUE},
+  field_t{"vmaddr",   ADR(segment32.vmaddr),   BYTESIZE(segment32.vmaddr)},
+  field_t{"vmsize",   ADR(segment32.vmsize),   BYTESIZE(segment32.vmsize)},
+  field_t{"fileoff",  ADR(segment32.fileoff),  BYTESIZE(segment32.fileoff)},
+  field_t{"filesize", ADR(segment32.filesize), BYTESIZE(segment32.filesize)},
+  field_t{"maxprot",  ADR(segment32.maxprot),  BYTESIZE(segment32.maxprot)},
+  field_t{"initprot", ADR(segment32.initprot), BYTESIZE(segment32.initprot)},
+  field_t{"nsects",   ADR(segment32.nsects),   BYTESIZE(segment32.nsects)},
+  field_t{"flags",    ADR(segment32.flags),    BYTESIZE(segment32.flags)}};
 
 VAR struct_segment32 := struct_t{"segment32_t",
                                  BYTESIZE(segment32_t),
@@ -293,17 +293,17 @@ VAR struct_segment32 := struct_t{"segment32_t",
 CONST segment64: UNTRACED REF segment64_t = NIL;
 
 VAR segment64_fields := ARRAY [0..10] OF field_t{
-  field_t{"cmd",       ADR(segment64.cmd),      BYTESIZE(segment64.cmd)},
-  field_t{"cmdsize",   ADR(segment64.cmdsize),  BYTESIZE(segment64.cmdsize)},
-  field_t{"segname",   ADR(segment64.segname),  BYTESIZE(segment64.segname), str := TRUE},
-  field_t{"vmaddr",    ADR(segment64.vmaddr),   BYTESIZE(segment64.vmaddr)},
-  field_t{"vmsize",    ADR(segment64.vmsize),   BYTESIZE(segment64.vmsize)},
-  field_t{"fileoff",   ADR(segment64.fileoff),  BYTESIZE(segment64.fileoff)},
-  field_t{"filesize",  ADR(segment64.filesize), BYTESIZE(segment64.filesize)},
-  field_t{"maxprot",   ADR(segment64.maxprot),  BYTESIZE(segment64.maxprot)},
-  field_t{"initprot",  ADR(segment64.initprot), BYTESIZE(segment64.initprot)},
-  field_t{"nsects",    ADR(segment64.nsects),   BYTESIZE(segment64.nsects)},
-  field_t{"flags",     ADR(segment64.flags),    BYTESIZE(segment64.flags)}};
+  field_t{"cmd",      ADR(segment64.cmd),      BYTESIZE(segment64.cmd)},
+  field_t{"cmdsize",  ADR(segment64.cmdsize),  BYTESIZE(segment64.cmdsize)},
+  field_t{"segname",  ADR(segment64.segname),  BYTESIZE(segment64.segname), str := TRUE},
+  field_t{"vmaddr",   ADR(segment64.vmaddr),   BYTESIZE(segment64.vmaddr)},
+  field_t{"vmsize",   ADR(segment64.vmsize),   BYTESIZE(segment64.vmsize)},
+  field_t{"fileoff",  ADR(segment64.fileoff),  BYTESIZE(segment64.fileoff)},
+  field_t{"filesize", ADR(segment64.filesize), BYTESIZE(segment64.filesize)},
+  field_t{"maxprot",  ADR(segment64.maxprot),  BYTESIZE(segment64.maxprot)},
+  field_t{"initprot", ADR(segment64.initprot), BYTESIZE(segment64.initprot)},
+  field_t{"nsects",   ADR(segment64.nsects),   BYTESIZE(segment64.nsects)},
+  field_t{"flags",    ADR(segment64.flags),    BYTESIZE(segment64.flags)}};
 
 VAR struct_segment64 := struct_t{"segment64_t",
                                  BYTESIZE(segment64_t),
@@ -314,17 +314,17 @@ VAR struct_segment64 := struct_t{"segment64_t",
 CONST section32: UNTRACED REF section32_t = NIL;
 
 VAR section32_fields := ARRAY [0..10] OF field_t{
-  field_t{"sectname",   ADR(section32.sectname),  BYTESIZE(section32.sectname), str := TRUE},
-  field_t{"segname",    ADR(section32.segname),   BYTESIZE(section32.segname), str := TRUE},
-  field_t{"addr",       ADR(section32.addr),      BYTESIZE(section32.addr)},
-  field_t{"size",       ADR(section32.size),      BYTESIZE(section32.size)},
-  field_t{"offset",     ADR(section32.offset),    BYTESIZE(section32.offset)},
-  field_t{"align",      ADR(section32.align),     BYTESIZE(section32.align)},
-  field_t{"reloff",     ADR(section32.reloff),    BYTESIZE(section32.reloff)},
-  field_t{"nreloc",     ADR(section32.nreloc),    BYTESIZE(section32.nreloc)},
-  field_t{"flags",      ADR(section32.flags),     BYTESIZE(section32.flags)},
-  field_t{"reserved1",  ADR(section32.reserved1), BYTESIZE(section32.reserved1)},
-  field_t{"reserved2",  ADR(section32.reserved2), BYTESIZE(section32.reserved2)}};
+  field_t{"sectname",  ADR(section32.sectname),  BYTESIZE(section32.sectname), str := TRUE},
+  field_t{"segname",   ADR(section32.segname),   BYTESIZE(section32.segname), str := TRUE},
+  field_t{"addr",      ADR(section32.addr),      BYTESIZE(section32.addr)},
+  field_t{"size",      ADR(section32.size),      BYTESIZE(section32.size)},
+  field_t{"offset",    ADR(section32.offset),    BYTESIZE(section32.offset)},
+  field_t{"align",     ADR(section32.align),     BYTESIZE(section32.align)},
+  field_t{"reloff",    ADR(section32.reloff),    BYTESIZE(section32.reloff)},
+  field_t{"nreloc",    ADR(section32.nreloc),    BYTESIZE(section32.nreloc)},
+  field_t{"flags",     ADR(section32.flags),     BYTESIZE(section32.flags)},
+  field_t{"reserved1", ADR(section32.reserved1), BYTESIZE(section32.reserved1)},
+  field_t{"reserved2", ADR(section32.reserved2), BYTESIZE(section32.reserved2)}};
 
 VAR struct_section32 := struct_t{"section32_t",
                                  BYTESIZE(section32_t),
@@ -333,18 +333,18 @@ VAR struct_section32 := struct_t{"section32_t",
 CONST section64: UNTRACED REF section64_t = NIL;
 
 VAR section64_fields := ARRAY [0..11] OF field_t{
-  field_t{"sectname",   ADR(section64.sectname),  BYTESIZE(section64.sectname), str := TRUE},
-  field_t{"segname",    ADR(section64.segname),   BYTESIZE(section64.segname), str := TRUE},
-  field_t{"addr",       ADR(section64.addr),      BYTESIZE(section64.addr)},
-  field_t{"size",       ADR(section64.size),      BYTESIZE(section64.size)},
-  field_t{"offset",     ADR(section64.offset),    BYTESIZE(section64.offset)},
-  field_t{"align",      ADR(section64.align),     BYTESIZE(section64.align)},
-  field_t{"reloff",     ADR(section64.reloff),    BYTESIZE(section64.reloff)},
-  field_t{"nreloc",     ADR(section64.nreloc),    BYTESIZE(section64.nreloc)},
-  field_t{"flags",      ADR(section64.flags),     BYTESIZE(section64.flags)},
-  field_t{"reserved1",  ADR(section64.reserved1), BYTESIZE(section64.reserved1)},
-  field_t{"reserved2",  ADR(section64.reserved2), BYTESIZE(section64.reserved2)},
-  field_t{"reserved3",  ADR(section64.reserved3), BYTESIZE(section64.reserved3)}};
+  field_t{"sectname",  ADR(section64.sectname),  BYTESIZE(section64.sectname), str := TRUE},
+  field_t{"segname",   ADR(section64.segname),   BYTESIZE(section64.segname), str := TRUE},
+  field_t{"addr",      ADR(section64.addr),      BYTESIZE(section64.addr)},
+  field_t{"size",      ADR(section64.size),      BYTESIZE(section64.size)},
+  field_t{"offset",    ADR(section64.offset),    BYTESIZE(section64.offset)},
+  field_t{"align",     ADR(section64.align),     BYTESIZE(section64.align)},
+  field_t{"reloff",    ADR(section64.reloff),    BYTESIZE(section64.reloff)},
+  field_t{"nreloc",    ADR(section64.nreloc),    BYTESIZE(section64.nreloc)},
+  field_t{"flags",     ADR(section64.flags),     BYTESIZE(section64.flags)},
+  field_t{"reserved1", ADR(section64.reserved1), BYTESIZE(section64.reserved1)},
+  field_t{"reserved2", ADR(section64.reserved2), BYTESIZE(section64.reserved2)},
+  field_t{"reserved3", ADR(section64.reserved3), BYTESIZE(section64.reserved3)}};
 
 VAR struct_section64 := struct_t{"section64_t",
                                  BYTESIZE(section64_t),
@@ -393,10 +393,10 @@ END dump_load_command_segment64;
 CONST symtab_command: UNTRACED REF symtab_command_t = NIL;
 
 VAR symtab_command_fields := ARRAY [0..3] OF field_t{
-  field_t{"symoff",     ADR(symtab_command.symoff),     BYTESIZE(symtab_command.symoff)},
-  field_t{"nsyms",      ADR(symtab_command.nsyms),      BYTESIZE(symtab_command.nsyms)},
-  field_t{"stroff",     ADR(symtab_command.stroff),     BYTESIZE(symtab_command.stroff)},
-  field_t{"strsize",    ADR(symtab_command.strsize),    BYTESIZE(symtab_command.strsize)}};
+  field_t{"symoff",  ADR(symtab_command.symoff),  BYTESIZE(symtab_command.symoff)},
+  field_t{"nsyms",   ADR(symtab_command.nsyms),   BYTESIZE(symtab_command.nsyms)},
+  field_t{"stroff",  ADR(symtab_command.stroff),  BYTESIZE(symtab_command.stroff)},
+  field_t{"strsize", ADR(symtab_command.strsize), BYTESIZE(symtab_command.strsize)}};
 
 VAR struct_symtab_command := struct_t{"symtab_command_t",
                                       BYTESIZE(symtab_command_t),
@@ -571,39 +571,39 @@ VAR cmd := file.swap32(L.cmd);
 BEGIN
   IO.Put("cmd " & Fmt.Int(i) & " " & loadcommand_name(cmd) & "\n");
   CASE And(cmd, mask) OF
-    | And(loadcommand_segment32, mask)            => dump_load_command_segment32(file, a);
-    | And(loadcommand_symtab, mask)               => dump_load_command_symtab(file, a);
-    | And(loadcommand_symseg, mask)               => dump_load_command_symseg(file, a);
-    | And(loadcommand_thread, mask)               => dump_load_command_thread(file, a);
-    | And(loadcommand_unixthread, mask)           => dump_load_command_unixthread(file, a);
-    | And(loadcommand_fixed_vm_lib, mask)         => dump_load_command_fixed_vm_lib(file, a);
-    | And(loadcommand_id_fixed_vm_lib, mask)      => dump_load_command_id_fixed_vm_lib(file, a);
-    | And(loadcommand_ident, mask)                => dump_load_command_ident(file, a);
-    | And(loadcommand_fixed_vm_file, mask)        => dump_load_command_fixed_vm_file(file, a);
-    | And(loadcommand_prepage, mask)              => dump_load_command_prepage(file, a);
-    | And(loadcommand_dysymtab, mask)             => dump_load_command_dysymtab(file, a);
-    | And(loadcommand_load_dylib, mask)           => dump_load_command_load_dylib(file, a);
-    | And(loadcommand_id_dylib, mask)             => dump_load_command_id_dylib(file, a);
-    | And(loadcommand_load_dylinker, mask)        => dump_load_command_load_dylinker(file, a);
-    | And(loadcommand_id_dylinker, mask)          => dump_load_command_id_dylinker(file, a);
-    | And(loadcommand_prebound_dylib, mask)       => dump_load_command_prebound_dylib(file, a);
-    | And(loadcommand_routines32, mask)           => dump_load_command_routines32(file, a);
-    | And(loadcommand_sub_framework, mask)        => dump_load_command_sub_framework(file, a);
-    | And(loadcommand_sub_umbrella, mask)         => dump_load_command_sub_umbrella(file, a);
-    | And(loadcommand_sub_client, mask)           => dump_load_command_sub_client(file, a);
-    | And(loadcommand_sub_library, mask)          => dump_load_command_sub_library(file, a);
-    | And(loadcommand_twolevel_hints, mask)       => dump_load_command_twolevel_hints(file, a);
-    | And(loadcommand_prebind_checksum, mask)     => dump_load_command_prebind_checksum(file, a);
-    | And(loadcommand_load_weak_dylib, mask)      => dump_load_command_load_weak_dylib(file, a);
-    | And(loadcommand_segment64, mask)            => dump_load_command_segment64(file, a);
-    | And(loadcommand_routines64, mask)           => dump_load_command_routines64(file, a);
-    | And(loadcommand_uuid, mask)                 => dump_load_command_uuid(file, a);
-    | And(loadcommand_rpath, mask)                => dump_load_command_rpath(file, a);
-    | And(loadcommand_code_signature, mask)       => dump_load_command_code_signature(file, a);
-    | And(loadcommand_segment_split_info, mask)   => dump_load_command_segment_split_info(file, a);
-    | And(loadcommand_reexport_dylib, mask)       => dump_load_command_reexport_dylib(file, a);
-    | And(loadcommand_lazy_load_dylib, mask)      => dump_load_command_lazy_load_dylib(file, a);
-    | And(loadcommand_encryption_info, mask)      => dump_load_command_encryption_info(file, a);
+    | And(loadcommand_segment32, mask)          => dump_load_command_segment32(file, a);
+    | And(loadcommand_symtab, mask)             => dump_load_command_symtab(file, a);
+    | And(loadcommand_symseg, mask)             => dump_load_command_symseg(file, a);
+    | And(loadcommand_thread, mask)             => dump_load_command_thread(file, a);
+    | And(loadcommand_unixthread, mask)         => dump_load_command_unixthread(file, a);
+    | And(loadcommand_fixed_vm_lib, mask)       => dump_load_command_fixed_vm_lib(file, a);
+    | And(loadcommand_id_fixed_vm_lib, mask)    => dump_load_command_id_fixed_vm_lib(file, a);
+    | And(loadcommand_ident, mask)              => dump_load_command_ident(file, a);
+    | And(loadcommand_fixed_vm_file, mask)      => dump_load_command_fixed_vm_file(file, a);
+    | And(loadcommand_prepage, mask)            => dump_load_command_prepage(file, a);
+    | And(loadcommand_dysymtab, mask)           => dump_load_command_dysymtab(file, a);
+    | And(loadcommand_load_dylib, mask)         => dump_load_command_load_dylib(file, a);
+    | And(loadcommand_id_dylib, mask)           => dump_load_command_id_dylib(file, a);
+    | And(loadcommand_load_dylinker, mask)      => dump_load_command_load_dylinker(file, a);
+    | And(loadcommand_id_dylinker, mask)        => dump_load_command_id_dylinker(file, a);
+    | And(loadcommand_prebound_dylib, mask)     => dump_load_command_prebound_dylib(file, a);
+    | And(loadcommand_routines32, mask)         => dump_load_command_routines32(file, a);
+    | And(loadcommand_sub_framework, mask)      => dump_load_command_sub_framework(file, a);
+    | And(loadcommand_sub_umbrella, mask)       => dump_load_command_sub_umbrella(file, a);
+    | And(loadcommand_sub_client, mask)         => dump_load_command_sub_client(file, a);
+    | And(loadcommand_sub_library, mask)        => dump_load_command_sub_library(file, a);
+    | And(loadcommand_twolevel_hints, mask)     => dump_load_command_twolevel_hints(file, a);
+    | And(loadcommand_prebind_checksum, mask)   => dump_load_command_prebind_checksum(file, a);
+    | And(loadcommand_load_weak_dylib, mask)    => dump_load_command_load_weak_dylib(file, a);
+    | And(loadcommand_segment64, mask)          => dump_load_command_segment64(file, a);
+    | And(loadcommand_routines64, mask)         => dump_load_command_routines64(file, a);
+    | And(loadcommand_uuid, mask)               => dump_load_command_uuid(file, a);
+    | And(loadcommand_rpath, mask)              => dump_load_command_rpath(file, a);
+    | And(loadcommand_code_signature, mask)     => dump_load_command_code_signature(file, a);
+    | And(loadcommand_segment_split_info, mask) => dump_load_command_segment_split_info(file, a);
+    | And(loadcommand_reexport_dylib, mask)     => dump_load_command_reexport_dylib(file, a);
+    | And(loadcommand_lazy_load_dylib, mask)    => dump_load_command_lazy_load_dylib(file, a);
+    | And(loadcommand_encryption_info, mask)    => dump_load_command_encryption_info(file, a);
     ELSE IO.Put("unknown load command\n");
   END;
 END dump_load_command;
