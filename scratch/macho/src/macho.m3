@@ -87,7 +87,7 @@ TYPE file_t = RECORD
   contents:             ADDRESS;
   size:                 CARDINAL;
   header:               UNTRACED REF header32_t;
-  header_size:          CARDINAL; (* small integer *)
+  header_size:          CARDINAL := BYTESIZE(header32_t); (* small integer *)
   swap32: PROCEDURE(a: uint32): uint32 := no_swap32;
   swap64: PROCEDURE(a: uint64): uint64 := no_swap64;
 END;
@@ -671,8 +671,6 @@ END open_and_read_entire_file;
 PROCEDURE main() =
 VAR file: file_t;
     magic: uint32_t := 0;
-    swapped: BOOLEAN := FALSE;
-    m64: BOOLEAN := FALSE;
 BEGIN
   file.path := Params.Get(0);
   open_and_read_entire_file(file.path, file.contents, file.size);
@@ -685,15 +683,13 @@ BEGIN
        AND magic # magic64 AND magic # magic64_reversed THEN
     Process.Exit(1);
   END;
-  m64 := ((magic = magic64) OR (magic = magic64_reversed));
-  swapped := ((magic = magic32_reversed) OR (magic = magic64_reversed));
-  file.swap32 := no_swap32;
-  file.swap64 := no_swap64;
-  IF swapped THEN
+  IF (magic = magic64) OR (magic = magic64_reversed) THEN
+    file.header_size := BYTESIZE(header64_t);
+  END;
+  IF (magic = magic32_reversed) OR (magic = magic64_reversed) THEN
     file.swap32 := swap32;
     file.swap64 := swap64;
   END;
-  file.header_size := (ORD(m64) * BYTESIZE(header64_t)) + (ORD(NOT m64) * BYTESIZE(header32_t));
   struct_print(file, struct_header32, file.contents);
   dump_load_commands(file);
 END main;
