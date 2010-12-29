@@ -160,8 +160,8 @@ can likely fail if __foo is #defined. We take our chances.
 */
 
 M3EXTERNC_BEGIN
-void Scheduler__DisableSwitching (void);
-void Scheduler__EnableSwitching (void);
+void __cdecl Scheduler__DisableSwitching (void);
+void __cdecl Scheduler__EnableSwitching (void);
 M3EXTERNC_END
 
 #define M3PASTE_(a, b) a##b
