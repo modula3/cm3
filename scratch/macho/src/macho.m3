@@ -135,11 +135,11 @@ BEGIN
   RETURN i;
 END strnlen;
 
-PROCEDURE field_print(READONLY file: file_t;
+ PROCEDURE field_print(READONLY file: file_t;
                       VAR s: struct_t;
                       READONLY f: field_t;
                       record: ADDRESS) =
-VAR buffer: TEXT;
+VAR buffer: TEXT := "";
     q := LOOPHOLE(record + LOOPHOLE(f.offset, CARDINAL), UNTRACED REF uchar);
     q32 := LOOPHOLE(q, UNTRACED REF uint32);
     q64 := LOOPHOLE(q, UNTRACED REF uint64);
@@ -153,7 +153,11 @@ VAR buffer: TEXT;
 BEGIN
   <* ASSERT size = 4 OR size = 8 OR f.str *>
   <* ASSERT size = 4 OR f.macho_string = FALSE *>
-  buffer := s.name & "." & Fmt.Pad(f.name, s.widest_field, ' ');
+  (*
+  buffer := buffer & "(" & Fmt.Unsigned(LOOPHOLE(record, INTEGER)) & ".";
+  buffer := buffer & "+" & Fmt.Unsigned(LOOPHOLE(f.offset, INTEGER));
+  buffer := buffer & "." & Fmt.Unsigned(LOOPHOLE(q, INTEGER)) & ") "; *)
+  buffer := buffer & s.name & "." & Fmt.Pad(f.name, s.widest_field, ' ', align := Fmt.Align.Left) & " ";
   IF f.str THEN
     length := strnlen(q, size);
     IF length < size THEN
@@ -167,9 +171,9 @@ BEGIN
   ELSE
     IF size = 4 THEN
       value32 := q32^;
-      value64 := VAL(value32, uint64);
       value32_swapped := swap32(value32);
-      value64_swapped := VAL(value32_swapped, uint64);
+      value64 := Long.And(16_FFFFFFFFL, VAL(value32, uint64));
+      value64_swapped := Long.And(16_FFFFFFFFL, VAL(value32_swapped, uint64));
      ELSIF size = 8 THEN
        value64 := q64^;
        value64_swapped := swap64(value64);
@@ -371,7 +375,7 @@ PROCEDURE dump_load_command_segment32(READONLY file: file_t;
 BEGIN
     dump_load_command_segmentX(file,
                                L,
-                               BYTESIZE(L^),
+                               BYTESIZE(segment32_t),
                                struct_segment32,
                                struct_section32,
                                file.swap32(L.nsects),
@@ -383,7 +387,7 @@ PROCEDURE dump_load_command_segment64(READONLY file: file_t;
 BEGIN
     dump_load_command_segmentX(file,
                                L,
-                               BYTESIZE(L^),
+                               BYTESIZE(segment64_t),
                                struct_segment64,
                                struct_section64,
                                file.swap32(L.nsects),
@@ -404,7 +408,7 @@ VAR struct_symtab_command := struct_t{"symtab_command_t",
 
 PROCEDURE dump_load_command_symtab(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
-  struct_print(file, struct_symtab_command, ADR(L));
+  struct_print(file, struct_symtab_command, L);
 END dump_load_command_symtab;
 
 <*NOWARN*>PROCEDURE dump_load_command_symseg(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
@@ -466,7 +470,7 @@ VAR struct_dysymtab_command := struct_t{"dysymtab_command_t",
 
 PROCEDURE dump_load_command_dysymtab(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
-    struct_print(file, struct_dysymtab_command, ADR(L));
+    struct_print(file, struct_dysymtab_command, L);
 END dump_load_command_dysymtab;
 
 <*NOWARN*>PROCEDURE dump_load_command_load_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
@@ -488,7 +492,7 @@ VAR struct_dylinker_command := struct_t{"dylinker_command_t",
 
 PROCEDURE dump_load_command_load_dylinker(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
-    struct_print(file, struct_dylinker_command, ADR(L));
+    struct_print(file, struct_dylinker_command, L);
 END dump_load_command_load_dylinker;
 
 <*NOWARN*>PROCEDURE dump_load_command_id_dylinker(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
@@ -672,7 +676,7 @@ PROCEDURE main() =
 VAR file: file_t;
     magic: uint32_t := 0;
 BEGIN
-  file.path := Params.Get(0);
+  file.path := Params.Get(1);
   open_and_read_entire_file(file.path, file.contents, file.size);
   IF file.contents = NIL THEN
     Process.Exit(1);
