@@ -157,7 +157,7 @@ BEGIN
   buffer := buffer & "(" & Fmt.Unsigned(LOOPHOLE(record, INTEGER)) & ".";
   buffer := buffer & "+" & Fmt.Unsigned(LOOPHOLE(f.offset, INTEGER));
   buffer := buffer & "." & Fmt.Unsigned(LOOPHOLE(q, INTEGER)) & ") "; *)
-  buffer := buffer & s.name & "." & Fmt.Pad(f.name, s.widest_field, ' ', align := Fmt.Align.Left) & " ";
+  buffer := buffer & s.name & "." & Fmt.Pad(f.name, s.widest_field + 1, ' ', align := Fmt.Align.Left);
   IF f.str THEN
     length := strnlen(q, size);
     IF length < size THEN
