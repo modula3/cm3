@@ -1,6 +1,6 @@
 UNSAFE MODULE macho EXPORTS macho, Main;
 IMPORT Word, Long, Fmt, Text, IO, M3toC, Cstdio, Ctypes, Scheduler, Cstdlib,
-       Cstring;
+       Cstring, Process, Params;
 
 TYPE enum_t = RECORD
   name: TEXT;
@@ -668,38 +668,36 @@ BEGIN
   END;
 END open_and_read_entire_file;
 
-(*
-int
-main(int argc, char** argv)
-{
-    file_t file = { 0 };
-    uint32_t magic = { 0 };
-    BOOLEAN swapped = { 0 };
-    BOOLEAN m64 = { 0 };
-
-    file.path = argv[1];
-    if (!argv[1])
-        exit(1);
-    open_and_read_entire_file(file.path, &file.contents, &file.size);
-    if (!file.contents)
-      exit(1);
-    file.header = (header32_t* )file.contents;
-    magic = file.header->magic;
-    if (magic != magic32 && magic != magic32_reversed
-        && magic != magic64 && magic != magic64_reversed)
-    {
-        exit(1);
-    }
-    m64 =     (magic == magic64          || magic == magic64_reversed);
-    swapped = (magic == magic32_reversed || magic == magic64_reversed);
-    file.swap32 = swapped ? swap32 : no_swap32;
-    file.swap64 = swapped ? swap64 : no_swap64;
-    file.header_size = m64 ? sizeof(header64_t) : sizeof(header32_t);
-    struct_print(file, &struct_header32, file.contents);
-    dump_load_commands(&file);
-    return 0;
-}
-*)
+PROCEDURE main() =
+VAR file: file_t;
+    magic: uint32_t := 0;
+    swapped: BOOLEAN := FALSE;
+    m64: BOOLEAN := FALSE;
+BEGIN
+  file.path := Params.Get(0);
+  open_and_read_entire_file(file.path, file.contents, file.size);
+  IF file.contents = NIL THEN
+    Process.Exit(1);
+  END;
+  file.header := LOOPHOLE(file.contents, UNTRACED REF header32_t);
+  magic := file.header.magic;
+  IF magic # magic32 AND magic # magic32_reversed
+       AND magic # magic64 AND magic # magic64_reversed THEN
+    Process.Exit(1);
+  END;
+  m64 := ((magic = magic64) OR (magic = magic64_reversed));
+  swapped := ((magic = magic32_reversed) OR (magic = magic64_reversed));
+  file.swap32 := no_swap32;
+  file.swap64 := no_swap64;
+  IF swapped THEN
+    file.swap32 := swap32;
+    file.swap64 := swap64;
+  END;
+  file.header_size := (ORD(m64) * BYTESIZE(header64_t)) + (ORD(NOT m64) * BYTESIZE(header32_t));
+  struct_print(file, struct_header32, file.contents);
+  dump_load_commands(file);
+END main;
 
 BEGIN
+  main();
 END macho.
