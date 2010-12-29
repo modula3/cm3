@@ -111,8 +111,8 @@ PROCEDURE Init(self: T;
       self.closed := FALSE;
 
       self.strmp := NEW(Ugzip.z_stream_star,
-	zalloc := Ugzip.SafeAlloc,
-	zfree := Ugzip.SafeFree,
+	zalloc := Ugzip.malloc,
+	zfree := Ugzip.free,
 	opaque := NIL,
 	state := NIL);
       status := Ugzip.inflateInit(self.strmp);
