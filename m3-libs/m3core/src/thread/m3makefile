@@ -71,7 +71,7 @@ if equal (OS_TYPE, "WIN32") or equal(TARGET, "NT386")
   include_dir ("WIN32")
 else
   if (not defined("NOPTHREAD"))
-     and (not equal(TARGET_OS, "OPENBSD"))
+     % and (not equal(TARGET_OS, "OPENBSD"))
      and (not IsTargetFreeBSD4())
     include_dir("PTHREAD")
   else
