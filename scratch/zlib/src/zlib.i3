@@ -157,7 +157,7 @@ PROCEDURE inflateEnd(strm: z_streamp): int;
 
 PROCEDURE malloc(opaque: void_star;
                  items: unsigned;
-		 size: unsigned): void_star;
+                 size: unsigned): void_star;
 
 PROCEDURE free(opaque: void_star;
                address: void_star);
@@ -305,13 +305,13 @@ ZEXTERN uLong ZEXPORT crc32_combine OF((uLong crc1, uLong crc2, z_off_t len2));
 <*EXTERNAL*>
 PROCEDURE deflateInit_(strm: z_streamp;
                        level: int;
-		       version: const_char_star;
-		       stream_size: int): int;
+                       version: const_char_star;
+                       stream_size: int): int;
 
 <*EXTERNAL*>
 PROCEDURE inflateInit_(strm: z_streamp;
-		       version: const_char_star;
-		       stream_size: int): int;
+                       version: const_char_star;
+                       stream_size: int): int;
 
 <*EXTERNAL*>
 PROCEDURE inflateBackInit_(strm: z_streamp;
