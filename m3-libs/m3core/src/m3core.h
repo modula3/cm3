@@ -28,7 +28,7 @@
 #elif _MSC_VER >= 1300
 #define M3_NO_INLINE __declspec(noinline)
 #else
-#define M3_NO_INLINE
+#define M3_NO_INLINE /* nothing */
 #endif
 
 #ifdef __osf__
@@ -65,9 +65,9 @@
 #endif
 #define M3_DLL_LOCAL  __attribute__ ((visibility("hidden")))
 #else
-#define M3_DLL_IMPORT
-#define M3_DLL_EXPORT
-#define M3_DLL_LOCAL
+#define M3_DLL_IMPORT /* nothing */
+#define M3_DLL_EXPORT /* nothing */
+#define M3_DLL_LOCAL  /* nothing */
 #endif
 
 /* Autoconf: AC_SYS_LARGEFILE
@@ -140,8 +140,8 @@
 #define M3EXTERNC_BEGIN extern "C" {
 #define M3EXTERNC_END }
 #else
-#define M3EXTERNC_BEGIN
-#define M3EXTERNC_END
+#define M3EXTERNC_BEGIN  /* nothing */
+#define M3EXTERNC_END    /* nothing */
 #endif
 
 /* m3name vs. cname is structured carefully to deal with identifiers
@@ -157,6 +157,11 @@ We want the define to affect the body of the wrapper, but not its name.
 We want m3name to not undergo further evaluation, but we do want cname to.
 This should be achieved by immediate prepending with "__", however even this
 can likely fail if __foo is #defined. We take our chances.
+
+__malloc is #defined on OpenBSD, so we can't even do __#name.
+It is possible we could win by using just _malloc as the intermediate.
+However we selectively don't use token pasting, e.g. in the NO_SWITCHING macros.
+Also #undef __foo as needed.
 */
 
 M3EXTERNC_BEGIN
