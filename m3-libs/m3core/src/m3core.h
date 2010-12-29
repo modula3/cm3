@@ -128,10 +128,6 @@
 #endif
 #endif
 
-#ifdef __OpenBSD__
-#define ucontext_t openbsd_ucontext_t
-#endif
-
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
 #endif
@@ -269,10 +265,6 @@ typedef ptrdiff_t ssize_t;
 
 #ifdef __INTERIX
 #include <utime.h>
-#endif
-
-#ifdef __OpenBSD__
-#undef ucontext_t
 #endif
 
 #if UCHAR_MAX == 0x0FFUL

@@ -44,11 +44,3 @@ if equal (TARGET, "NT386")
     Interface ("Utermio")
 end
 end
-
-
-%
-% get/set/make/swapcontext for systems that don't have them
-% and that don't have a working sigaltstack. ie. OpenBSD.
-%
-
-include_dir("context")

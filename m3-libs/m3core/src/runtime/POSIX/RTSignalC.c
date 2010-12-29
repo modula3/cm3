@@ -18,7 +18,6 @@
 #include "m3core.h"
 
 #if defined(__APPLE__)
-
 /*
 http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi\
   ?tree=cm3&brief-log=1258879870.10595#err9
@@ -30,8 +29,8 @@ http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
 #include <sys/ucontext.h>
 
 #elif !(defined(__OpenBSD__) || defined(__CYGWIN__) || defined(__vms))
-/* OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
-        Cygwin: no state provided to signal handler? */
+/* OpenBSD 4.3, 4.7: ucontext.h doesn't exist, ucontext_t is in signal.h
+   Cygwin: no state provided to signal handler? */
 #include <ucontext.h>
 #endif
 
@@ -101,11 +100,7 @@ static void RestoreOneHandler(WORD_T i);
 static WORD_T GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */
 {
-#ifdef __OpenBSD__
-    openbsd_ucontext_t* context = (openbsd_ucontext_t*)xcontext;
-#else
     ucontext_t* context = (ucontext_t*)xcontext;
-#endif
 
     if (context == NULL)
         return 0;
