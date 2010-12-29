@@ -117,16 +117,16 @@ PROCEDURE inflate(strm: z_stream_star; flush: int): int;
 <*EXTERNAL*>
 PROCEDURE inflateEnd(strm: z_stream_star): int;
 
-(* The following procedures implement thread-safe wrappers around malloc
-   and free.  They should be used for the "zalloc" and "zfree" fields
+(* The following procedures are trivial wrappers around malloc
+   and free. They should be used for the "zalloc" and "zfree" fields
    of "z_stream" structures. *)
 
-PROCEDURE SafeAlloc(opaque: void_star;
-                    items: unsigned_int;
-		    size: unsigned_int): void_star;
+PROCEDURE malloc(opaque: void_star;
+                 items: unsigned_int;
+                 size: unsigned_int): void_star;
 
-PROCEDURE SafeFree(opaque: void_star;
-                   address: void_star);
+PROCEDURE free(opaque: void_star;
+               address: void_star);
 
 (* Procedures below this point should not be used directly *)
 
