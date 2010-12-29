@@ -170,9 +170,7 @@ M3EXTERNC_END
     M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, m3name) in  \
     {                                                                       \
         ret return_value;                                                   \
-        /* Scheduler__DisableSwitching (); */                               \
         return_value = cname out;                                           \
-        /* Scheduler__EnableSwitching (); */                                \
         return return_value;                                                \
     } M3EXTERNC_END
 
@@ -189,9 +187,7 @@ M3EXTERNC_END
 #define M3WRAP_RETURN_VOID(name, in, out)                                     \
     M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl M3PASTE(M3MODULE, __##name) in \
     {                                                                         \
-        /* Scheduler__DisableSwitching (); */                                 \
         name out;                                                             \
-        /* Scheduler__EnableSwitching (); */                                  \
     } M3EXTERNC_END
 
 #define M3WRAP_RETURN_VOID_NO_SWITCHING(name, in, out)                        \
