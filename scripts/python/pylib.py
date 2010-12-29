@@ -1846,7 +1846,7 @@ def RemoveDirectoryRecursive(a):
         print("rm -rf " + a)
     else:
         print("rmdir /q/s " + a)
-    if not isdir(a):
+    if isdir(a):
         shutil.rmtree(a)
     return True
 
