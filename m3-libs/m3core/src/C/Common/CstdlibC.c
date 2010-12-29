@@ -18,12 +18,12 @@ M3WRAP1(int, system, const char*)
 M3WRAP2(double, strtod, const char*, char**)
 M3WRAP1(double, atof, const char*)
 
-M3WRAP_RETURN_VOID(abort, (void), ())
-M3WRAP_RETURN_VOID(exit, (int status), (status))
+M3WRAP_RETURN_VOID(Cstdlib__abort, abort, (void), ())
+M3WRAP_RETURN_VOID(Cstdlib__exit, exit, (int status), (status))
 
-M3WRAP_NO_SWITCHING(void*, malloc, (WORD_T a), (a))
-M3WRAP_NO_SWITCHING(void*, calloc, (WORD_T a, WORD_T b), (a, b))
-M3WRAP_RETURN_VOID_NO_SWITCHING(free, (void* a), (a))
+M3WRAP_NO_SWITCHING(void*, Cstdlib__malloc, malloc, (WORD_T a), (a))
+M3WRAP_NO_SWITCHING(void*, Cstdlib__calloc, calloc, (WORD_T a, WORD_T b), (a, b))
+M3WRAP_RETURN_VOID_NO_SWITCHING(Cstdlib__free, free, (void* a), (a))
 
 #ifdef __cplusplus
 }
