@@ -19,24 +19,23 @@
 #define _XPG4_2
 #define _DARWIN_C_SOURCE
 
+#ifdef __OpenBSD__
+#error User threads not supported on OpenBSD (no get/set/make/swapcontext nor working sigaltstack?)
+#endif
+
 #if (defined(__APPLE__) && defined(__x86_64__)) \
-    || (defined(__OpenBSD__) && defined(__alpha)) \
     || (defined(__FreeBSD__) && (__FreeBSD__ < 5))
 /* http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
  * http://www.engelschall.com/pw/usenix/2000/pmt-html/
  * Sigaltstack is more portable -- OpenBSD and Darwin/AMD64 do not
  * implement get/set/make/swapcontext. Ditto FreeBSD < 5.
- * But OpenBSD's sigaltack seems to have problems.
+ * But OpenBSD's sigaltstack seems to have problems.
  */
 #define M3_USE_SIGALTSTACK
 #endif
 
 #include "m3core.h"
-#ifdef __OpenBSD__
-#include "context.h" /* We provide this file. */
-#else
 #include <ucontext.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {
