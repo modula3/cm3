@@ -1,3 +1,4 @@
 import("m3core")
+interface("zconf")
 module("zlib")
 library("m3zlib")
