@@ -3,9 +3,7 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #include "m3core.h"
-#ifdef __OpenBSD__
-#define ucontext_t openbsd_ucontext_t
-#else
+#ifndef __OpenBSD__
 #include <sys/ucontext.h>
 #endif
 
