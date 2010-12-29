@@ -14,10 +14,6 @@
 #define M3_DIRECT_SUSPEND
 #endif
 
-#ifdef __OpenBSD__
-#error OpenBSD pthreads do not work (remove this and try, debug, please)
-#endif
-
 #ifndef M3_DIRECT_SUSPEND
 #include <semaphore.h>
 #endif

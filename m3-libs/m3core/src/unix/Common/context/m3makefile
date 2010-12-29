@@ -1,1 +1,1 @@
-include_dir("setjmp")
+%include_dir("setjmp")
