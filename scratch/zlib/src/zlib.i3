@@ -27,12 +27,51 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *)
 
-(* From John D. Polstra's Ugzip.i3, and UgzipP.i3. *)
+(* zlib.h -- interface of the 'zlib' general purpose compression library
+  version 1.2.3, July 18th, 2005
+
+  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+
+  Jean-loup Gailly        Mark Adler
+  jloup@gzip.org          madler@alumni.caltech.edu
+
+
+  The data format used by the zlib library is described by RFCs (Request for
+  Comments) 1950 to 1952 in the files http://www.ietf.org/rfc/rfc1950.txt
+  (zlib format), rfc1951.txt (deflate format) and rfc1952.txt (gzip format).
+*)
+
+(* From John D. Polstra's Ugzip.i3, and UgzipP.i3, and /usr/include/zlib.h *)
 
 INTERFACE zlib;
 
+FROM zconf IMPORT <*NOWARN*>Byte, uInt, uLong, Bytef, <*NOWARN*>charf, <*NOWARN*>intf, uLongf,
+                  <*NOWARN*>voidpc, voidpf, <*NOWARN*>voidp, z_off_t;
+IMPORT Ctypes;
 FROM Ctypes IMPORT char_star, const_char_star, unsigned_char_star,
   int, unsigned, unsigned_long, void_star, unsigned_char_star_star;
+
+TYPE
+  Bytef_star = UNTRACED REF Bytef;
+  const_Bytef_star = Bytef_star;
+  uLongf_star = UNTRACED REF uLongf;
+  const_uLongf_star = uLongf_star;
 
 CONST
   (* ZLIB_VERSION = "1.2.3"; *)
@@ -76,37 +115,39 @@ CONST
   Z_ASCII   = Z_TEXT; (* for compatibility with 1.2.2 and earlier *)
   Z_UNKNOWN = 2;
 
-TYPE
-  alloc_func = PROCEDURE(opaque: void_star;
-                         items: unsigned;
-                         size: unsigned): void_star;
+(* The deflate compression method (the only one supported in this version) *)
+CONST Z_DEFLATED = 8;
 
-  free_func = PROCEDURE(opaque: void_star;
-                        address: void_star);
+CONST Z_NULL = NIL; (* for initializing zalloc, zfree, opaque *)
+
+TYPE
+  alloc_func = PROCEDURE(opaque: voidpf;
+                         items: uInt;
+                         size: uInt): voidpf;
+
+  free_func = PROCEDURE(opaque: voidpf;
+                        address: voidpf);
+
+  internal_state_star = UNTRACED REF RECORD END;
 
   z_stream = RECORD
-    next_in: unsigned_char_star;
-    avail_in: unsigned;
-    total_in: unsigned_long;
-
-    next_out: unsigned_char_star;
-    avail_out: unsigned;
-    total_out: unsigned_long;
-
-    msg: char_star;
-    state: void_star;
-
-    zalloc: alloc_func;
-    zfree: free_func;
-    opaque: void_star;
-
-    data_type: int;
-    adler: unsigned_long;
-    reserved: unsigned_long;
+    next_in:    Bytef_star;
+    avail_in:   uInt;
+    total_in:   uLong;
+    next_out:   Bytef_star;
+    avail_out:  uInt;
+    total_out:  uLong;
+    msg:        char_star;
+    state:      void_star;
+    zalloc:     alloc_func;
+    zfree:      free_func;
+    opaque:     voidpf;
+    data_type:  int;
+    adler:      uLong;
+    reserved:   uLong;
   END;
 
   z_streamp = UNTRACED REF z_stream;
-  z_stream_star = z_streamp; (* compatibility *)
 
 (*
      gzip header information passed to and from zlib routines.  See RFC 1952
@@ -114,16 +155,16 @@ TYPE
 *)
 gz_header = RECORD
   text:         int;
-  time:         unsigned_long;
+  time:         uLong;
   xflags:       int;
   os:           int;
-  extra:        ADDRESS;
-  extra_len:    unsigned;
-  extra_max:    unsigned;
-  name:         ADDRESS;
-  name_max:     unsigned;
-  comment:      ADDRESS;
-  comm_max:     unsigned;
+  extra:        Bytef_star;
+  extra_len:    uInt;
+  extra_max:    uInt;
+  name:         Bytef_star;
+  name_max:     uInt;
+  comment:      Bytef_star;
+  comm_max:     uInt;
   hcrc:         int;
   done:         int;
 END;
@@ -181,8 +222,8 @@ PROCEDURE deflateInit2(strm: z_streamp;
 
 <*EXTERNAL*>
 PROCEDURE deflateSetDictionary(strm: z_streamp;
-                               dictionary: ADDRESS;
-                               dictLength: unsigned): int;
+                               dictionary: const_Bytef_star;
+                               dictLength: uInt): int;
 
 <*EXTERNAL*>
 PROCEDURE deflateCopy(dest: z_streamp;
@@ -205,7 +246,7 @@ PROCEDURE deflateTune(strm: z_streamp;
 
 <*EXTERNAL*>
 PROCEDURE deflateBound(strm: z_streamp;
-                       sourceLen: unsigned_long): unsigned_long;
+                       sourceLen: uLong): unsigned_long;
 
 <*EXTERNAL*>
 PROCEDURE deflatePrime(strm: z_streamp;
@@ -221,8 +262,8 @@ PROCEDURE inflateInit2(strm: z_streamp;
 
 <*EXTERNAL*>
 PROCEDURE inflateSetDictionary(strm: z_streamp;
-                               dictionary: ADDRESS;
-                               dictLength: unsigned): int;
+                               dictionary: const_Bytef_star;
+                               dictLength: uInt): int;
 
 <*EXTERNAL*>
 PROCEDURE inflateSync(strm: z_streamp): int;
@@ -247,15 +288,13 @@ PROCEDURE inflateBackInit(strm: z_streamp;
                           windowBits: int;
                           window: unsigned_char_star): int;
 
-
-
-CONST Z_DEFLATED = 8;
-
 (*
-ZEXTERN uLong ZEXPORT zlibCompileFlags OF((void));
+PROCEDURE zlibCompileFlags(): uLong;
 
-ZEXTERN int ZEXPORT compress OF((Bytef *dest,   uLongf *destLen,
-                                 const Bytef *source, uLong sourceLen));
+PROCEDURE compress(dest: UNTRACED REF Bytef;
+                   destLen: UNTRACED REF uLongf;
+                   source: UNTRACED REF Bytef;
+                   sourceLen: uLong);
 
 
 ZEXTERN int ZEXPORT compress2 OF((Bytef *dest,   uLongf *destLen,
@@ -267,7 +306,7 @@ ZEXTERN uLong ZEXPORT compressBound OF((uLong sourceLen));
 ZEXTERN int ZEXPORT uncompress OF((Bytef *dest,   uLongf *destLen,
                                    const Bytef *source, uLong sourceLen));
 
-TYPE gzFile = ADDRESS;
+TYPE gzFile = UNTRACED REF RECORD END;
 
 ZEXTERN gzFile ZEXPORT gzopen  OF((const char *path, const char *mode));
 
@@ -343,6 +382,6 @@ PROCEDURE zError(a: int): const_char_star;
 PROCEDURE inflateSyncPoint(z: z_streamp): int;
 
 <*EXTERNAL*>
-PROCEDURE get_crc_table(): UNTRACED REF unsigned_long;
+PROCEDURE get_crc_table(): const_uLongf_star;
 
 END zlib.

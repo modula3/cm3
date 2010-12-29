@@ -38,12 +38,12 @@ VAR ZLIB_VERSION_CHAR_ARRAY :=
         ARRAY [0..5] OF CHAR {'1', '.', '2', '.', '3', '\000'};
 VAR ZLIB_VERSION := ADR(ZLIB_VERSION_CHAR_ARRAY);
 
-PROCEDURE deflateInit(strm: z_stream_star; level: int): int =
+PROCEDURE deflateInit(strm: z_streamp; level: int): int =
   BEGIN
     RETURN deflateInit_(strm, level, ZLIB_VERSION, BYTESIZE(z_stream));
   END deflateInit;
 
-PROCEDURE inflateInit(strm: z_stream_star): int =
+PROCEDURE inflateInit(strm: z_streamp): int =
   BEGIN
     RETURN inflateInit_(strm, ZLIB_VERSION, BYTESIZE(z_stream));
   END inflateInit;
