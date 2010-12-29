@@ -29,7 +29,7 @@
 
 UNSAFE MODULE Ugzip;
 
-IMPORT Cstdlib, CText, Scheduler, UgzipP;
+IMPORT Cstdlib, CText, UgzipP;
 
 FROM Ctypes IMPORT int, unsigned_int, void_star;
 
@@ -55,28 +55,18 @@ PROCEDURE inflateInit(strm: z_stream_star): int =
     RETURN retVal;
   END inflateInit;
 
-PROCEDURE SafeAlloc(<*UNUSED*> opaque: void_star;
-                    items: unsigned_int;
-		    size: unsigned_int): void_star =
+PROCEDURE malloc(<*UNUSED*> opaque: void_star;
+                 items: unsigned_int;
+                 size: unsigned_int): void_star =
   BEGIN
-    Scheduler.DisableSwitching();
-    TRY
-      RETURN Cstdlib.malloc(items * size);
-    FINALLY
-      Scheduler.EnableSwitching();
-    END;
-  END SafeAlloc;
+    RETURN Cstdlib.malloc(items * size);
+  END malloc;
 
-PROCEDURE SafeFree(<*UNUSED*> opaque: void_star;
-                   address: void_star) =
+PROCEDURE free(<*UNUSED*> opaque: void_star;
+               address: void_star) =
   BEGIN
-    Scheduler.DisableSwitching();
-    TRY
-      Cstdlib.free(address);
-    FINALLY
-      Scheduler.EnableSwitching();
-    END;
-  END SafeFree;
+    Cstdlib.free(address);
+  END free;
 
 BEGIN
 END Ugzip.
