@@ -1,5 +1,6 @@
 UNSAFE MODULE macho EXPORTS macho, Main;
-IMPORT Word, Long, Fmt, Text, IO;
+IMPORT Word, Long, Fmt, Text, IO, M3toC, Cstdio, Ctypes, Scheduler, Cstdlib,
+       Cstring;
 
 TYPE enum_t = RECORD
   name: TEXT;
@@ -134,7 +135,10 @@ BEGIN
   RETURN i;
 END strnlen;
 
-PROCEDURE field_print(VAR s: struct_t; READONLY f: field_t; record: ADDRESS; swapped: BOOLEAN) =
+PROCEDURE field_print(READONLY file: file_t;
+                      VAR s: struct_t;
+                      READONLY f: field_t;
+                      record: ADDRESS) =
 VAR buffer: TEXT;
     q := LOOPHOLE(record + LOOPHOLE(f.offset, CARDINAL), UNTRACED REF uchar);
     q32 := LOOPHOLE(q, UNTRACED REF uint32);
@@ -146,7 +150,6 @@ VAR buffer: TEXT;
     value64: uint64 := 0L;
     value64_swapped: uint64 := 0L;
     length: CARDINAL := 0;
-    ch: uchar := 0;
 BEGIN
   <* ASSERT size = 4 OR size = 8 OR f.str *>
   <* ASSERT size = 4 OR f.macho_string = FALSE *>
@@ -183,10 +186,7 @@ BEGIN
         END;
       END;
     ELSIF f.macho_string AND size = 4 THEN
-      IF Word.LT(value32_swapped, value32) THEN
-        value32 := value32_swapped;
-      END;
-      buffer := buffer & " (" & M3toC.StoT(record + value32) & ")";
+      buffer := buffer & " (" & M3toC.StoT(record + file.swap32(value32)) & ")";
     END;
   END;
   buffer := buffer & "\n";
@@ -205,7 +205,7 @@ BEGIN
     t.widest_field := widest_field;
   END;
   FOR i := 0 TO NUMBER(t.fields^) - 1 DO
-    field_print(t, t.fields[i], record, swapped);
+    field_print(file, t, t.fields[i], record);
   END;
 END struct_print;
 
@@ -254,17 +254,17 @@ END loadcommand_name;
 
 PROCEDURE first_load_command(READONLY file: file_t): UNTRACED REF loadcommand_t =
 BEGIN
-  RETURN LOOPHOLE(m.header + m.header_size, UNTRACED REF loadcommand_t);
+  RETURN LOOPHOLE(file.header + file.header_size, UNTRACED REF loadcommand_t);
 END first_load_command;
 
 PROCEDURE next_load_command(READONLY file: file_t; L: UNTRACED REF loadcommand_t): UNTRACED REF loadcommand_t =
 BEGIN
-  RETURN LOOPHOLE(L + m.swap32(L.cmdsize), UNTRACED REF loadcommand_t);
+  RETURN LOOPHOLE(L + file.swap32(L.cmdsize), UNTRACED REF loadcommand_t);
 END next_load_command;
 
 PROCEDURE ncmds(READONLY file: file_t): CARDINAL =
 BEGIN
-  RETURN m.swap32(m.header.ncmds);
+  RETURN file.swap32(file.header.ncmds);
 END ncmds;
 
 (* segment32_t *)
@@ -359,9 +359,9 @@ PROCEDURE dump_load_command_segmentX(READONLY file: file_t;
                                      section_size: uint32) =
 VAR sections := L + load_command_size;
 BEGIN
-  struct_print(struct_segmentX, L);
+  struct_print(file, struct_segmentX, L);
   FOR i := 0 TO section_count - 1 DO
-    struct_print(struct_sectionX, sections);
+    struct_print(file, struct_sectionX, sections);
     INC(sections, section_size);
   END;
 END dump_load_command_segmentX;
@@ -369,24 +369,24 @@ END dump_load_command_segmentX;
 PROCEDURE dump_load_command_segment32(READONLY file: file_t;
                                       L: UNTRACED REF segment32_t) =
 BEGIN
-    dump_load_command_segmentX(m,
+    dump_load_command_segmentX(file,
                                L,
                                BYTESIZE(L^),
                                struct_segment32,
                                struct_section32,
-                               m.swap32(L.nsects),
+                               file.swap32(L.nsects),
                                BYTESIZE(section32_t));
 END dump_load_command_segment32;
 
 PROCEDURE dump_load_command_segment64(READONLY file: file_t;
                                       L: UNTRACED REF segment64_t) =
 BEGIN
-    dump_load_command_segmentX(m,
+    dump_load_command_segmentX(file,
                                L,
                                BYTESIZE(L^),
                                struct_segment64,
                                struct_section64,
-                               m.swap32(L.nsects),
+                               file.swap32(L.nsects),
                                BYTESIZE(section64_t));
 END dump_load_command_segment64;
 
@@ -404,38 +404,38 @@ VAR struct_symtab_command := struct_t{"symtab_command_t",
 
 PROCEDURE dump_load_command_symtab(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
-  struct_print(struct_symtab_command, ADR(L));
+  struct_print(file, struct_symtab_command, ADR(L));
 END dump_load_command_symtab;
 
-PROCEDURE dump_load_command_symseg(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_symseg(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_symseg;
 
-PROCEDURE dump_load_command_thread(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_thread(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_thread;
 
-PROCEDURE dump_load_command_unixthread(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_unixthread(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_unixthread;
 
-PROCEDURE dump_load_command_fixed_vm_lib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_fixed_vm_lib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_fixed_vm_lib;
 
-PROCEDURE dump_load_command_id_fixed_vm_lib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_id_fixed_vm_lib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_id_fixed_vm_lib;
 
-PROCEDURE dump_load_command_ident(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_ident(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_ident;
 
-PROCEDURE dump_load_command_fixed_vm_file(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_fixed_vm_file(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_fixed_vm_file;
 
-PROCEDURE dump_load_command_prepage(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_prepage(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_prepage;
 
@@ -466,17 +466,16 @@ VAR struct_dysymtab_command := struct_t{"dysymtab_command_t",
 
 PROCEDURE dump_load_command_dysymtab(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
-    struct_print(struct_dysymtab_command, ADR(L));
+    struct_print(file, struct_dysymtab_command, ADR(L));
 END dump_load_command_dysymtab;
 
-PROCEDURE dump_load_command_load_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_load_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_load_dylib;
 
-PROCEDURE dump_load_command_id_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_id_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_id_dylib;
-
 
 CONST dylinker_command: UNTRACED REF dylinker_command_t = NIL;
 
@@ -489,133 +488,133 @@ VAR struct_dylinker_command := struct_t{"dylinker_command_t",
 
 PROCEDURE dump_load_command_load_dylinker(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
-    struct_print(struct_dylinker_command, ADR(L));
+    struct_print(file, struct_dylinker_command, ADR(L));
 END dump_load_command_load_dylinker;
 
-PROCEDURE dump_load_command_id_dylinker(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_id_dylinker(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_id_dylinker;
 
-PROCEDURE dump_load_command_prebound_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_prebound_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_prebound_dylib;
 
-PROCEDURE dump_load_command_routines32(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_routines32(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_routines32;
 
-PROCEDURE dump_load_command_sub_framework(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_sub_framework(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_sub_framework;
 
-PROCEDURE dump_load_command_sub_umbrella(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_sub_umbrella(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_sub_umbrella;
 
-PROCEDURE dump_load_command_sub_client(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_sub_client(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_sub_client;
 
-PROCEDURE dump_load_command_sub_library(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_sub_library(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_sub_library;
 
-PROCEDURE dump_load_command_twolevel_hints(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_twolevel_hints(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_twolevel_hints;
 
-PROCEDURE dump_load_command_prebind_checksum(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_prebind_checksum(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_prebind_checksum;
 
-PROCEDURE dump_load_command_load_weak_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_load_weak_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_load_weak_dylib;
 
-PROCEDURE dump_load_command_routines64(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_routines64(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_routines64;
 
-PROCEDURE dump_load_command_uuid(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_uuid(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_uuid;
 
-PROCEDURE dump_load_command_rpath(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_rpath(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_rpath;
 
-PROCEDURE dump_load_command_code_signature(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_code_signature(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_code_signature;
 
-PROCEDURE dump_load_command_segment_split_info(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_segment_split_info(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_segment_split_info;
 
-PROCEDURE dump_load_command_reexport_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_reexport_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_reexport_dylib;
 
-PROCEDURE dump_load_command_lazy_load_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_lazy_load_dylib(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_lazy_load_dylib;
 
-PROCEDURE dump_load_command_encryption_info(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
+<*NOWARN*>PROCEDURE dump_load_command_encryption_info(READONLY file: file_t; L: UNTRACED REF loadcommand_t) =
 BEGIN
 END dump_load_command_encryption_info;
 
 PROCEDURE dump_load_command(READONLY file: file_t; L: UNTRACED REF loadcommand_t; i: CARDINAL) =
 CONST mask = Word.Not(loadcommand_require_dyld);
       And = Word.And;
-VAR cmd := m.swap32(L.cmd);
+VAR cmd := file.swap32(L.cmd);
     a := LOOPHOLE(L, ADDRESS);
 BEGIN
   IO.Put("cmd " & Fmt.Int(i) & " " & loadcommand_name(cmd) & "\n");
   CASE And(cmd, mask) OF
-    | And(loadcommand_segment32, mask)            => dump_load_command_segment32(m, a);
-    | And(loadcommand_symtab, mask)               => dump_load_command_symtab(m, a);
-    | And(loadcommand_symseg, mask)               => dump_load_command_symseg(m, a);
-    | And(loadcommand_thread, mask)               => dump_load_command_thread(m, a);
-    | And(loadcommand_unixthread, mask)           => dump_load_command_unixthread(m, a);
-    | And(loadcommand_fixed_vm_lib, mask)         => dump_load_command_fixed_vm_lib(m, a);
-    | And(loadcommand_id_fixed_vm_lib, mask)      => dump_load_command_id_fixed_vm_lib(m, a);
-    | And(loadcommand_ident, mask)                => dump_load_command_ident(m, a);
-    | And(loadcommand_fixed_vm_file, mask)        => dump_load_command_fixed_vm_file(m, a);
-    | And(loadcommand_prepage, mask)              => dump_load_command_prepage(m, a);
-    | And(loadcommand_dysymtab, mask)             => dump_load_command_dysymtab(m, a);
-    | And(loadcommand_load_dylib, mask)           => dump_load_command_load_dylib(m, a);
-    | And(loadcommand_id_dylib, mask)             => dump_load_command_id_dylib(m, a);
-    | And(loadcommand_load_dylinker, mask)        => dump_load_command_load_dylinker(m, a);
-    | And(loadcommand_id_dylinker, mask)          => dump_load_command_id_dylinker(m, a);
-    | And(loadcommand_prebound_dylib, mask)       => dump_load_command_prebound_dylib(m, a);
-    | And(loadcommand_routines32, mask)           => dump_load_command_routines32(m, a);
-    | And(loadcommand_sub_framework, mask)        => dump_load_command_sub_framework(m, a);
-    | And(loadcommand_sub_umbrella, mask)         => dump_load_command_sub_umbrella(m, a);
-    | And(loadcommand_sub_client, mask)           => dump_load_command_sub_client(m, a);
-    | And(loadcommand_sub_library, mask)          => dump_load_command_sub_library(m, a);
-    | And(loadcommand_twolevel_hints, mask)       => dump_load_command_twolevel_hints(m, a);
-    | And(loadcommand_prebind_checksum, mask)     => dump_load_command_prebind_checksum(m, a);
-    | And(loadcommand_load_weak_dylib, mask)      => dump_load_command_load_weak_dylib(m, a);
-    | And(loadcommand_segment64, mask)            => dump_load_command_segment64(m, a);
-    | And(loadcommand_routines64, mask)           => dump_load_command_routines64(m, a);
-    | And(loadcommand_uuid, mask)                 => dump_load_command_uuid(m, a);
-    | And(loadcommand_rpath, mask)                => dump_load_command_rpath(m, a);
-    | And(loadcommand_code_signature, mask)       => dump_load_command_code_signature(m, a);
-    | And(loadcommand_segment_split_info, mask)   => dump_load_command_segment_split_info(m, a);
-    | And(loadcommand_reexport_dylib, mask)       => dump_load_command_reexport_dylib(m, a);
-    | And(loadcommand_lazy_load_dylib, mask)      => dump_load_command_lazy_load_dylib(m, a);
-    | And(loadcommand_encryption_info, mask)      => dump_load_command_encryption_info(m, a);
+    | And(loadcommand_segment32, mask)            => dump_load_command_segment32(file, a);
+    | And(loadcommand_symtab, mask)               => dump_load_command_symtab(file, a);
+    | And(loadcommand_symseg, mask)               => dump_load_command_symseg(file, a);
+    | And(loadcommand_thread, mask)               => dump_load_command_thread(file, a);
+    | And(loadcommand_unixthread, mask)           => dump_load_command_unixthread(file, a);
+    | And(loadcommand_fixed_vm_lib, mask)         => dump_load_command_fixed_vm_lib(file, a);
+    | And(loadcommand_id_fixed_vm_lib, mask)      => dump_load_command_id_fixed_vm_lib(file, a);
+    | And(loadcommand_ident, mask)                => dump_load_command_ident(file, a);
+    | And(loadcommand_fixed_vm_file, mask)        => dump_load_command_fixed_vm_file(file, a);
+    | And(loadcommand_prepage, mask)              => dump_load_command_prepage(file, a);
+    | And(loadcommand_dysymtab, mask)             => dump_load_command_dysymtab(file, a);
+    | And(loadcommand_load_dylib, mask)           => dump_load_command_load_dylib(file, a);
+    | And(loadcommand_id_dylib, mask)             => dump_load_command_id_dylib(file, a);
+    | And(loadcommand_load_dylinker, mask)        => dump_load_command_load_dylinker(file, a);
+    | And(loadcommand_id_dylinker, mask)          => dump_load_command_id_dylinker(file, a);
+    | And(loadcommand_prebound_dylib, mask)       => dump_load_command_prebound_dylib(file, a);
+    | And(loadcommand_routines32, mask)           => dump_load_command_routines32(file, a);
+    | And(loadcommand_sub_framework, mask)        => dump_load_command_sub_framework(file, a);
+    | And(loadcommand_sub_umbrella, mask)         => dump_load_command_sub_umbrella(file, a);
+    | And(loadcommand_sub_client, mask)           => dump_load_command_sub_client(file, a);
+    | And(loadcommand_sub_library, mask)          => dump_load_command_sub_library(file, a);
+    | And(loadcommand_twolevel_hints, mask)       => dump_load_command_twolevel_hints(file, a);
+    | And(loadcommand_prebind_checksum, mask)     => dump_load_command_prebind_checksum(file, a);
+    | And(loadcommand_load_weak_dylib, mask)      => dump_load_command_load_weak_dylib(file, a);
+    | And(loadcommand_segment64, mask)            => dump_load_command_segment64(file, a);
+    | And(loadcommand_routines64, mask)           => dump_load_command_routines64(file, a);
+    | And(loadcommand_uuid, mask)                 => dump_load_command_uuid(file, a);
+    | And(loadcommand_rpath, mask)                => dump_load_command_rpath(file, a);
+    | And(loadcommand_code_signature, mask)       => dump_load_command_code_signature(file, a);
+    | And(loadcommand_segment_split_info, mask)   => dump_load_command_segment_split_info(file, a);
+    | And(loadcommand_reexport_dylib, mask)       => dump_load_command_reexport_dylib(file, a);
+    | And(loadcommand_lazy_load_dylib, mask)      => dump_load_command_lazy_load_dylib(file, a);
+    | And(loadcommand_encryption_info, mask)      => dump_load_command_encryption_info(file, a);
     ELSE IO.Put("unknown load command\n");
   END;
 END dump_load_command;
 
 PROCEDURE dump_load_commands(READONLY file: file_t) =
-VAR n := ncmds(m);
-    L := first_load_command(m);
+VAR n := ncmds(file);
+    L := first_load_command(file);
 BEGIN
   FOR i := 0 TO n - 1 DO
-    dump_load_command(m, L, i);
-    L := next_load_command(m, L);
+    dump_load_command(file, L, i);
+    L := next_load_command(file, L);
   END;
 END dump_load_commands;
 
@@ -623,61 +622,69 @@ PROCEDURE open_and_read_entire_file(path: TEXT; VAR contents: ADDRESS; VAR size:
 VAR buffer: ADDRESS := NIL;
     prev_buffer: ADDRESS := NIL;
     buffer_size: CARDINAL := 16_10000 DIV 2;
+    prev_buffer_size: CARDINAL := 0;
     file: Cstdio.FILE_star := NIL;
     bytes_read: CARDINAL := 0;
-    cpath := M3toC.SharedTtoS(path);
+    cpath: Ctypes.char_star := NIL;
 BEGIN
-  size := 0;
-  contents := NIL;
-  file := Cstdio.fopen(cpath
-    
-    *size = 0;
-    *contents = 0;
-    file = fopen(path, "rb");
-    if (!file)
-        goto Exit;
-    while (1)
-    {
-        buffer_size *= 2;
-        prev_buffer = buffer;
-        buffer = (uchar* )malloc(buffer_size);
-        if (!buffer)
-            goto Exit;
-        if (prev_buffer)
-        {
-            memcpy(buffer, prev_buffer, prev_buffer_size);
-            free(prev_buffer);
-            prev_buffer = 0;
-        }
-        bytes_read = fread(buffer + prev_buffer_size, 1, buffer_size - prev_buffer_size, file);
-        if (bytes_read < (buffer_size - prev_buffer_size))
-            break;
-        prev_buffer_size = buffer_size;
-    }
-Exit:
-    if (prev_buffer) free(prev_buffer);
-    *size = prev_buffer_size + bytes_read;
-    *contents = buffer;
-    if (file) fclose(file);
-}
+  LOOP
+    TRY
+      Scheduler.DisableSwitching();
+      cpath := M3toC.SharedTtoS(path);
+      size := 0;
+      contents := NIL;
+      file := Cstdio.fopen(cpath, M3toC.FlatTtoS("rb"));
+    FINALLY
+      M3toC.FreeSharedS(path, cpath);
+      Scheduler.EnableSwitching();
+    END;
+    IF file = NIL THEN EXIT END;
+    WHILE TRUE DO
+      INC(buffer_size, buffer_size);
+      prev_buffer := buffer;
+      buffer := Cstdlib.malloc(buffer_size);
+      IF buffer = NIL THEN
+        EXIT
+      END;
+      IF prev_buffer # NIL THEN
+        EVAL Cstring.memcpy(buffer, prev_buffer, prev_buffer_size);
+        Cstdlib.free(prev_buffer);
+        prev_buffer := NIL;
+      END;
+      bytes_read := Cstdio.fread(buffer + prev_buffer_size, 1, buffer_size - prev_buffer_size, file);
+      IF bytes_read < (buffer_size - prev_buffer_size) THEN
+        EXIT;
+      END;
+      prev_buffer_size := buffer_size;
+    END;
+    EXIT;
+  END;
+  
+  Cstdlib.free(prev_buffer);
+  size := prev_buffer_size + bytes_read;
+  contents := buffer;
+  IF file # NIL THEN
+    EVAL Cstdio.fclose(file);
+  END;
 END open_and_read_entire_file;
 
+(*
 int
 main(int argc, char** argv)
 {
-    file_t m = { 0 };
+    file_t file = { 0 };
     uint32_t magic = { 0 };
     BOOLEAN swapped = { 0 };
     BOOLEAN m64 = { 0 };
 
-    m.path = argv[1];
+    file.path = argv[1];
     if (!argv[1])
         exit(1);
-    open_and_read_entire_file(m.path, &m.contents, &m.size);
-    if (!m.contents)
+    open_and_read_entire_file(file.path, &file.contents, &file.size);
+    if (!file.contents)
       exit(1);
-    m.header = (header32_t* )m.contents;
-    magic = m.header->magic;
+    file.header = (header32_t* )file.contents;
+    magic = file.header->magic;
     if (magic != magic32 && magic != magic32_reversed
         && magic != magic64 && magic != magic64_reversed)
     {
@@ -685,11 +692,11 @@ main(int argc, char** argv)
     }
     m64 =     (magic == magic64          || magic == magic64_reversed);
     swapped = (magic == magic32_reversed || magic == magic64_reversed);
-    m.swap32 = swapped ? swap32 : no_swap32;
-    m.swap64 = swapped ? swap64 : no_swap64;
-    m.header_size = m64 ? sizeof(header64_t) : sizeof(header32_t);
-    struct_print(&struct_header32, m.contents);
-    dump_load_commands(&m);
+    file.swap32 = swapped ? swap32 : no_swap32;
+    file.swap64 = swapped ? swap64 : no_swap64;
+    file.header_size = m64 ? sizeof(header64_t) : sizeof(header32_t);
+    struct_print(file, &struct_header32, file.contents);
+    dump_load_commands(&file);
     return 0;
 }
 *)
