@@ -34,7 +34,8 @@ UNSAFE MODULE zlib;
 IMPORT Cstdlib;
 FROM Ctypes IMPORT int, unsigned, void_star, unsigned_char_star;
 
-VAR ZLIB_VERSION_CHAR_ARRAY := ARRAY [0..5] OF CHAR {'1', '.', '2', '.', '3', '\000'};
+VAR ZLIB_VERSION_CHAR_ARRAY :=
+        ARRAY [0..5] OF CHAR {'1', '.', '2', '.', '3', '\000'};
 VAR ZLIB_VERSION := ADR(ZLIB_VERSION_CHAR_ARRAY);
 
 PROCEDURE deflateInit(strm: z_stream_star; level: int): int =
@@ -55,14 +56,14 @@ PROCEDURE deflateInit2(strm: z_streamp;
                        strategy: int): int =
   BEGIN
     RETURN deflateInit2_(strm, level, method, windowBits, memLevel,
-                                strategy, ZLIB_VERSION, BYTESIZE(z_stream));
+                         strategy, ZLIB_VERSION, BYTESIZE(z_stream));
   END deflateInit2;
 
 PROCEDURE inflateInit2(strm: z_streamp;
                        windowBits: int): int =
   BEGIN
     RETURN inflateInit2_(strm, windowBits,
-                                ZLIB_VERSION, BYTESIZE(z_stream));
+                         ZLIB_VERSION, BYTESIZE(z_stream));
   END inflateInit2;
 
 PROCEDURE inflateBackInit(strm: z_streamp;
@@ -70,18 +71,17 @@ PROCEDURE inflateBackInit(strm: z_streamp;
                           window: unsigned_char_star): int =
   BEGIN
     RETURN inflateBackInit_(strm, windowBits, window,
-                                   ZLIB_VERSION, BYTESIZE(z_stream));
+                            ZLIB_VERSION, BYTESIZE(z_stream));
   END inflateBackInit;
 
 PROCEDURE malloc(<*UNUSED*> opaque: void_star;
-                    items: unsigned;
-		    size: unsigned): void_star =
+                 items: unsigned;
+                 size: unsigned): void_star =
   BEGIN
     RETURN Cstdlib.malloc(items * size);
   END malloc;
 
-PROCEDURE free(<*UNUSED*> opaque: void_star;
-                   address: void_star) =
+PROCEDURE free(<*UNUSED*> opaque: void_star; address: void_star) =
   BEGIN
     Cstdlib.free(address);
   END free;
