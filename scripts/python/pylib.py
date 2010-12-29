@@ -1922,6 +1922,7 @@ def CopyConfigForDevelopment():
     #
 
     To = os.path.join(InstallRoot, "bin")
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
 
     #
     # First delete all the config files.
