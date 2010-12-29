@@ -174,28 +174,28 @@ M3EXTERNC_END
         return return_value;                                                \
     } M3EXTERNC_END
 
-#define M3WRAP_NO_SWITCHING(ret, name, in, out)                              \
-    M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, __##name) in \
-    {                                                                        \
-        ret return_value;                                                    \
-        Scheduler__DisableSwitching ();                                      \
-        return_value = name out;                                             \
-        Scheduler__EnableSwitching ();                                       \
-        return return_value;                                                 \
+#define M3WRAP_NO_SWITCHING(ret, m3name, cname, in, out) \
+    M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl m3name in  \
+    {                                                    \
+        ret return_value;                                \
+        Scheduler__DisableSwitching ();                  \
+        return_value = cname out;                        \
+        Scheduler__EnableSwitching ();                   \
+        return return_value;                             \
     } M3EXTERNC_END
 
-#define M3WRAP_RETURN_VOID(name, in, out)                                     \
-    M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl M3PASTE(M3MODULE, __##name) in \
-    {                                                                         \
-        name out;                                                             \
+#define M3WRAP_RETURN_VOID(m3name, cname, in, out)       \
+    M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl m3name in \
+    {                                                    \
+        cname out;                                       \
     } M3EXTERNC_END
 
-#define M3WRAP_RETURN_VOID_NO_SWITCHING(name, in, out)                        \
-    M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl M3PASTE(M3MODULE, __##name) in \
-    {                                                                         \
-        Scheduler__DisableSwitching ();                                       \
-        name out;                                                             \
-        Scheduler__EnableSwitching ();                                        \
+#define M3WRAP_RETURN_VOID_NO_SWITCHING(m3name, cname, in, out) \
+    M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl m3name in        \
+    {                                                           \
+        Scheduler__DisableSwitching ();                         \
+        cname out;                                              \
+        Scheduler__EnableSwitching ();                          \
     } M3EXTERNC_END
 
 #ifdef _WIN32
@@ -421,7 +421,6 @@ void __cdecl Utime__tzset(void);
 
 void __cdecl Unix__Assertions(void);
 void __cdecl Usocket__Assertions(void);
-
 
 int __cdecl Unix__open(const char* path, int flags, m3_mode_t mode);
 int __cdecl Unix__mkdir(const char* path, m3_mode_t mode);
