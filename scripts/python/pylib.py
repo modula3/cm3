@@ -565,29 +565,34 @@ GCC_BACKEND = True
 # Sniff to determine host.
 #
 
-UNameCommand = os.popen("uname").read().lower()
-UNameTuple = uname()
-UName = UNameTuple[0].lower()
-UNameArchP = platform.processor().lower()
-UNameArchM = UNameTuple[4].lower()
-UNameRevision = UNameTuple[2].lower()
-
 Host = None
+_Cm3Host = os.popen(CM3 + " -version 2>/dev/null | egrep \" +host: +\"").read()
+if _Cm3Host != "":
+  Host = _Cm3Host.replace(" ", "").replace("host:", "").replace("\r", "").replace("\n", "")
 
-if (UName.startswith("windows")
+if Host == None:
+
+  UNameCommand = os.popen("uname").read().lower()
+  UNameTuple = uname()
+  UName = UNameTuple[0].lower()
+  UNameArchP = platform.processor().lower()
+  UNameArchM = UNameTuple[4].lower()
+  UNameRevision = UNameTuple[2].lower()
+
+  if (UName.startswith("windows")
         or UNameCommand.startswith("mingw")
         or UNameCommand.startswith("cygwin")):
 
     # Host = "NT386"
     Host = "I386_NT"
 
-elif UName == "osf1":
+  elif UName == "osf1":
     Host = "ALPHA_OSF"
 
-elif UName == "interix":
+  elif UName == "interix":
     Host = "I386_INTERIX"
 
-elif UName == "freebsd":
+  elif UName == "freebsd":
     if UNameArchM == "i386":
         Host = "I386_FREEBSD"
     elif UNameArchM == "amd64":
@@ -595,7 +600,7 @@ elif UName == "freebsd":
     else:
         Host = "ALPHA_FREEBSD"
 
-elif UName == "openbsd":
+  elif UName == "openbsd":
     arch = os.popen("arch -s").read() # or machine -a
     if arch == "alpha\n":
         Host = "ALPHA_OPENBSD"
@@ -612,7 +617,7 @@ elif UName == "openbsd":
     else:
         FatalError("unknown OpenBSD platform")
 
-elif UName == "darwin":
+  elif UName == "darwin":
     if UNameArchP == "powerpc":
         if "ppc970\n" == os.popen("machine").read().lower():
           Host = "PPC64_DARWIN"
@@ -628,7 +633,7 @@ elif UName == "darwin":
     elif UNameArchP == "powerpc64":
         Host = "PPC64_DARWIN"
 
-elif UName == "sunos":
+  elif UName == "sunos":
     isainfo = os.popen("isainfo").read().lower()
     if UNameArchP == "i386":
         if StringContains(isainfo, "amd64"):
@@ -643,7 +648,7 @@ elif UName == "sunos":
             #Host = "SOLsun"
             #Host = "SPARC32_SOLARIS"
 
-elif UName == "linux":
+  elif UName == "linux":
     if UNameArchM == "ppc":
         Host = "PPC_LINUX"
     elif UNameArchM == "x86_64":
@@ -655,20 +660,20 @@ elif UName == "linux":
     else:
         Host = "I386_LINUX"
 
-elif UName == "netbsd":
+  elif UName == "netbsd":
     if UNameArchM == "amd64":
 	Host = "AMD64_NETBSD"
     elif UNameArchM == "i386":
 	Host = "I386_NETBSD"
 
-elif UName == "irix":
+  elif UName == "irix":
 
     Host = "MIPS32_IRIX"
     # later
     # if UName.startswith("irix64"):
     #   Host = "MIPS64_IRIX"
 
-elif UName == "hp-ux":
+  elif UName == "hp-ux":
 
     Host = "PA32_HPUX"
     #
@@ -676,7 +681,7 @@ elif UName == "hp-ux":
     # user will have to say PA64_HPUX manually on the command line
     #
 
-else:
+  else:
     # more need to be added here, I haven't got all the platform info ready
     pass
 
