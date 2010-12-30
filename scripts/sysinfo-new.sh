@@ -219,7 +219,7 @@ if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
 fi
 
 #-----------------------------------------------------------------------------
-# evaluate uname information
+# evaluate target information
 
 #
 # If on NT and OSTYPE and/or BACKEND are set and TARGET isn't:
@@ -297,85 +297,9 @@ case "x$CM3_TARGET" in
         ;;
 esac
 
-if [ "x$CM3_TARGET" = "x" ]; then
-  case "`uname`" in
-    FreeBSD)
-      case "`uname -m`" in
-        i386) CM3_TARGET=I386_FREEBSD;;
-        amd64)  CM3_TARGET=AMD64_FREEBSD;;
-        x86_64) CM3_TARGET=AMD64_FREEBSD;;
-        alpha) CM3_TARGET=ALPHA_FREEBSD;;
-      esac;;
-
-    Darwin)
-      case "`uname -p`" in
-        powerpc)
-          CM3_TARGET=PPC_DARWIN;;
-          rm -rf ./m3ppc64
-          echo "int main() { return 0; }" | (gcc -arch ppc64 -x c - -o ./m3ppc64) || true
-          if ./m3ppc64 2/dev/null; then
-            #CM3_TARGET=PPC64_DARWIN;;
-          fi;;
-          rm -rf ./m3ppc64
-        i386)
-          if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
-            CM3_TARGET=AMD64_DARWIN
-          else
-            CM3_TARGET=I386_DARWIN
-          fi;;
-      esac;;
-
-    SunOS)
-      case "`uname -p`" in
-        i386)
-          case "`isainfo`" in
-            *amd64*) CM3_TARGET=AMD64_SOLARIS;;
-            *) CM3_TARGET=I386_SOLARIS;;
-          esac;;
-        sparc)
-          case "`isainfo`" in
-            *sparcv9*) CM3_TARGET=SPARC64_SOLARIS;;
-            *) CM3_TARGET=SPARC32_SOLARIS;;
-               #CM3_TARGET=SOLsun;;
-               #CM3_TARGET=SOLgnu;;
-          esac;;
-      esac;;
-
-    Interix) CM3_TARGET=I386_INTERIX;;
-
-    Linux)
-      case "`uname -m`" in
-        alpha) CM3_TARGET=ALPHA_LINUX;;
-        ppc) CM3_TARGET=PPC_LINUX;;
-        x86_64) CM3_TARGET=AMD64_LINUX;;
-         amd64) CM3_TARGET=AMD64_LINUX;;
-        sparc64) CM3_TARGET=SPARC32_LINUX;;
-        i*86)    CM3_TARGET=I386_LINUX;;
-                 #CM3_TARGET=LINUXLIBC6;;
-      esac;;
-
-    NetBSD)
-      case "`uname -m`" in
-        x86_64) CM3_TARGET=AMD64_NETBSD;;
-         amd64) CM3_TARGET=AMD64_NETBSD;;
-        i386) CM3_TARGET=I386_NETBSD;;
-      esac;;
-
-    OpenBSD)
-      case "`arch -s`" in
-        alpha) CM3_TARGET=ALPHA_OPENBSD;;
-        powerpc) CM3_TARGET=PPC_LINUX;;
-        x86_64) CM3_TARGET=AMD64_LINUX;;
-        amd64) CM3_TARGET=AMD64_LINUX;;
-        sparc64) CM3_TARGET=SPARC64_OPENBSD;;
-        mips64) CM3_TARGET=MIPS64_OPENBSD;;
-        mips64el) CM3_TARGET=MIPS64EL_OPENBSD;;
-        i386) CM3_TARGET=I386_OPENBSD;;
-      esac;;
-
-    *) echo "$0 doesn't know about `uname -a`"
-       exit 1;;
-  esac
+if [ "x$CM3_TARGET" = "x" ] ; then
+  # If no $CM3_TARGET/$TARGET, use cm3 -version | grep host:
+  CM3_TARGET=`$CM3 -version 2>/dev/null | grep host: | perl -pi -e "s/ *host: *//"`
 fi
 
 case "x$CM3_TARGET" in
