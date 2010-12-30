@@ -567,7 +567,7 @@ GCC_BACKEND = True
 
 Host = None
 for a in os.popen(CM3 + " -version 2>/dev/null"):
-  if StringContains(a, " host: " ):
+  if StringContains(a, "host:" ):
     Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("host:", "")
     break
 
