@@ -566,12 +566,12 @@ GCC_BACKEND = True
 #
 
 Host = None
-_Cm3Host = os.popen(CM3 + " -version 2>/dev/null | egrep \" +host: +\"").read()
-if _Cm3Host != "":
-  Host = _Cm3Host.replace(" ", "").replace("host:", "").replace("\r", "").replace("\n", "")
+for a in os.popen(CM3 + " -version 2>/dev/null"):
+  if StringContains(a, " host: " ):
+    Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("host:", "")
+    break
 
 if Host == None:
-
   UNameCommand = os.popen("uname").read().lower()
   UNameTuple = uname()
   UName = UNameTuple[0].lower()
