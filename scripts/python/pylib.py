@@ -562,7 +562,7 @@ GCC_BACKEND = True
 
 #-----------------------------------------------------------------------------
 #
-# Sniff to determine host.
+# Sniff to determine host, which is the default target.
 #
 
 Host = None
@@ -570,120 +570,6 @@ for a in os.popen(CM3 + " -version 2>/dev/null"):
   if StringContains(a, " host: " ):
     Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("host:", "")
     break
-
-if Host == None:
-  UNameCommand = os.popen("uname").read().lower()
-  UNameTuple = uname()
-  UName = UNameTuple[0].lower()
-  UNameArchP = platform.processor().lower()
-  UNameArchM = UNameTuple[4].lower()
-  UNameRevision = UNameTuple[2].lower()
-
-  if (UName.startswith("windows")
-        or UNameCommand.startswith("mingw")
-        or UNameCommand.startswith("cygwin")):
-
-    # Host = "NT386"
-    Host = "I386_NT"
-
-  elif UName == "osf1":
-    Host = "ALPHA_OSF"
-
-  elif UName == "interix":
-    Host = "I386_INTERIX"
-
-  elif UName == "freebsd":
-    if UNameArchM == "i386":
-        Host = "I386_FREEBSD"
-    elif UNameArchM == "amd64":
-        Host = "AMD64_FREEBSD"
-    else:
-        Host = "ALPHA_FREEBSD"
-
-  elif UName == "openbsd":
-    arch = os.popen("arch -s").read() # or machine -a
-    if arch == "alpha\n":
-        Host = "ALPHA_OPENBSD"
-    elif arch == "sparc64\n":
-        Host = "SPARC64_OPENBSD"
-    elif arch == "powerpc\n":
-        Host = "PPC32_OPENBSD"
-    elif arch == "i386\n":
-        Host = "I386_OPENBSD"
-    elif arch == "mips64\n":
-        Host = "MIPS64_OPENBSD"
-    elif arch == "mips64el\n":
-        Host = "MIPS64EL_OPENBSD"
-    else:
-        FatalError("unknown OpenBSD platform")
-
-  elif UName == "darwin":
-    if UNameArchP == "powerpc":
-        if "ppc970\n" == os.popen("machine").read().lower():
-          Host = "PPC64_DARWIN"
-        else:
-          Host = "PPC_DARWIN"
-    elif UNameArchP == "i386":
-        if os.popen("sysctl hw.cpu64bit_capable").read() == "hw.cpu64bit_capable: 1\n":
-            Host = "AMD64_DARWIN"
-        else:
-            Host = "I386_DARWIN"
-    elif UNameArchP == "x86-64":
-        Host = "AMD64_DARWIN"
-    elif UNameArchP == "powerpc64":
-        Host = "PPC64_DARWIN"
-
-  elif UName == "sunos":
-    isainfo = os.popen("isainfo").read().lower()
-    if UNameArchP == "i386":
-        if StringContains(isainfo, "amd64"):
-            Host = "AMD64_SOLARIS"
-        else:
-            Host = "I386_SOLARIS"
-    else:
-        if False: # StringContains(isainfo, "sparcv9"):
-            Host = "SPARC64_SOLARIS"
-        else:
-            Host = "SOLgnu"
-            #Host = "SOLsun"
-            #Host = "SPARC32_SOLARIS"
-
-  elif UName == "linux":
-    if UNameArchM == "ppc":
-        Host = "PPC_LINUX"
-    elif UNameArchM == "x86_64":
-        Host = "AMD64_LINUX"
-    elif UNameArchM == "sparc64":
-        Host = "SPARC32_LINUX"
-    elif UNameArchM == "alpha":
-        Host = "ALPHA_LINUX"
-    else:
-        Host = "I386_LINUX"
-
-  elif UName == "netbsd":
-    if UNameArchM == "amd64":
-	Host = "AMD64_NETBSD"
-    elif UNameArchM == "i386":
-	Host = "I386_NETBSD"
-
-  elif UName == "irix":
-
-    Host = "MIPS32_IRIX"
-    # later
-    # if UName.startswith("irix64"):
-    #   Host = "MIPS64_IRIX"
-
-  elif UName == "hp-ux":
-
-    Host = "PA32_HPUX"
-    #
-    # no good way found to sniff for 64bit, not even from 64bit Python
-    # user will have to say PA64_HPUX manually on the command line
-    #
-
-  else:
-    # more need to be added here, I haven't got all the platform info ready
-    pass
 
 #-----------------------------------------------------------------------------
 #
