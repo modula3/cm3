@@ -70,4 +70,3 @@ TYPE (* Lock *)
   END;
 
 END RTExFrame.
-
