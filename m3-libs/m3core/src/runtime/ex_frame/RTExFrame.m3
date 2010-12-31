@@ -278,4 +278,3 @@ BEGIN
   DEBUG := RTParams.IsPresent ("debugex");
   EVAL SanityCheck; (* avoid the unused warning *)
 END RTExFrame.
-
