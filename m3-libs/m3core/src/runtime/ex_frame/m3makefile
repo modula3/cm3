@@ -4,7 +4,7 @@
 %
 % Last modified on Tue May  2 11:37:20 PDT 1995 by kalsow
 
-module ("RTExFrame")
+implementation ("RTExFrame")
 if HAS_STACK_WALKER contains TARGET
   if not HAS_STACK_WALKER{TARGET}
     c_source ("RTStackC")
