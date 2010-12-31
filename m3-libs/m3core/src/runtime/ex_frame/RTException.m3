@@ -282,4 +282,3 @@ BEGIN
   dump_enabled := RTParams.IsPresent ("stackdump");
   EVAL SanityCheck; (* avoid the unused warning *)
 END RTException.
-
