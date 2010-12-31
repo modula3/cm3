@@ -4,8 +4,7 @@ FROM Ctypes IMPORT int, const_char_star, void_star;
 FROM Cstddef IMPORT size_t;
 
 TYPE
-    FILE = RECORD END;
-    FILE_star = UNTRACED REF FILE;
+    FILE_star = UNTRACED REF RECORD END;
 
 <*EXTERNAL Cstdio__feof*> PROCEDURE feof (f: FILE_star): int;
 <*EXTERNAL Cstdio__getc*> PROCEDURE getc (f: FILE_star): int;
