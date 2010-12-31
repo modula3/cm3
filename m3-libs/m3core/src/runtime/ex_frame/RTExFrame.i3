@@ -22,21 +22,17 @@ TYPE
                 Lock };
 
 TYPE
-  Frame = UNTRACED REF EF;
-
-TYPE
   ExceptionList = UNTRACED REF (*ARRAY OF*) RT0.ExceptionUID;
   FinallyProc   = PROCEDURE (VAR a: RT0.RaiseActivation) RAISES ANY;
 
 TYPE (* RaisesNone *)
-  EF = RECORD
+  Frame = UNTRACED REF RECORD (* EF *)
     next  : Frame;
     class : INTEGER;    (* ORD(ScopeKind) *)
   END;
 
 TYPE (* Except, ExceptElse, Finally *)
-  PF1 = UNTRACED REF EF1;
-  EF1 = RECORD
+  PF1 = UNTRACED REF RECORD (* EF1 *)
     next      : Frame;
     class     : INTEGER;    (* ORD(ScopeKind) *)
     handles   : ExceptionList;    (* NIL-terminated list of exceptions handled *)
@@ -45,8 +41,7 @@ TYPE (* Except, ExceptElse, Finally *)
   END;
 
 TYPE (* FinallyProc *)
-  PF2 = UNTRACED REF EF2;
-  EF2 = RECORD
+  PF2 = UNTRACED REF RECORD (* EF2 *)
     next    : Frame;
     class   : INTEGER;      (* ORD(ScopeKind) *)
     handler : ADDRESS;      (* the procedure *)
@@ -54,16 +49,14 @@ TYPE (* FinallyProc *)
   END;
 
 TYPE (* Raises *)
-  PF3 = UNTRACED REF EF3;
-  EF3 = RECORD
+  PF3 = UNTRACED REF RECORD (* EF3 *)
     next    : Frame;
     class   : INTEGER;  (* ORD(ScopeKind) *)
     raises  : ExceptionList;  (*  NIL-terminated list of exceptions allowed *)
   END;
 
 TYPE (* Lock *)
-  PF4 = UNTRACED REF EF4;
-  EF4 = RECORD
+  PF4 = UNTRACED REF RECORD (* EF4 *)
     next    : Frame;
     class   : INTEGER;  (* ORD(ScopeKind) *)
     mutex   : MUTEX;    (* the locked mutex *)
