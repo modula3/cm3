@@ -14,6 +14,3 @@ PROCEDURE ReportReachable ();
    and reporting.  *)
 
 END RTHeapStats.
-
-   
-   
