@@ -66,7 +66,7 @@ proc FileExists(a) is
     return not stale (a, a)
 end
 
-if (equal(TARGET, "NT386") and equal(OS_TYPE, "POSIX"))
+if     not FileExists(path() & "/../" & TARGET & "/RTMachine.i3")
     or not FileExists(path() & "/../" & TARGET & "/m3makefile")
   interface      ("RTMachine")   
 end 
