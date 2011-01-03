@@ -39,13 +39,31 @@ FROM RT0 IMPORT Typecode;
    The global variable p0 and p1 hold the bounds of the heap pages: only
    pages in the range [p0, p1) are in a space other than Unallocated.  For
    these pages, the array "desc" holds more information; desc[p - p0] holds
-   state for page "p". *)
+   state for page "p".
+
+   The heap page size used to be machine-dependent, since it could depend
+   on the architecture's VM page size (if VM was TRUE). VM is now always
+   FALSE. Otherwise, 64K bytes is a reasonable page size. The page size must
+   be a power of two. 
+   
+   Actually 64K is chosen because it is the granularity of VirtualAlloc on
+   Windows (GetSystemInfo.dwAllocationGranularity).
+   Using smaller than this on Windows, with VirtualAlloc, will allocate
+   extra memory but never use it. So it is in fact somewhat machine-dependent.
+   Smaller values like 4K or 8K are reasonable on other platforms, however
+   larger values do reduce some bookkeeping overhead (but probably
+   also have an advantage.) It may also make sense to make this
+   a variable and tune it at runtime (or at least startup) to adapt
+   to machines with more or less memory (e.g. more memory => larger pages).
+   (note that memory can be added/removed to some running systems!
+   not to mention overall system memory pressure..)
+*)
 
 CONST
-  BytesPerPage    = RTMachine.BytesPerHeapPage;
-  LogBytesPerPage = RTMachine.LogBytesPerHeapPage;
-  AdrPerPage      = RTMachine.BytesPerHeapPage;
-  LogAdrPerPage   = RTMachine.LogBytesPerHeapPage;
+  BytesPerPage    = 65536;
+  LogBytesPerPage = 16;
+  AdrPerPage      = BytesPerPage;
+  LogAdrPerPage   = LogBytesPerPage;
 
 TYPE Page = [0 .. Word.Divide(-1, AdrPerPage)];
 
