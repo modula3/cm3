@@ -9,16 +9,6 @@
 
 INTERFACE RTMachine;
 
-(*------------------------------------------------------------------ heap ---*)
-
-(* The heap page size is machine-dependent, since it might depend on the
-   architecture's VM page size (if VM is TRUE).  Otherwise, 8192 bytes is a
-   reasonable page size.  The page size must be a power of two. *)
-
-CONST
-  BytesPerHeapPage    = 65536;              (* bytes per page *)
-  LogBytesPerHeapPage = 16;
-
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 

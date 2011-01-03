@@ -9,21 +9,10 @@
 
 INTERFACE RTMachine;
 
-(*------------------------------------------------------------------ heap ---*)
-
-CONST
-(* The heap page size used to be machine-dependent, since it could depend
-   on the architecture's VM page size (if VM was TRUE). VM is now always
-   FALSE. Otherwise, 8192 bytes is a reasonable page size. The page size must
-   be a power of two. *)
-
-  BytesPerHeapPage    = 8192;               (* bytes per page *)
-  LogBytesPerHeapPage = 13;
-
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
-  Has_stack_walker = FALSE;
+CONST Has_stack_walker = FALSE;
   (* Indicates whether this platform supports the stack walking functions
      defined in the "RTStack" interface. *)
 
