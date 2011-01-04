@@ -19,7 +19,7 @@ PROCEDURE Init64 () =
     Word := Word64;
     Address := Word64;
     Address.cg_type := CGType.Addr;
-    Jumpbuf_align := Address.align;
+    (* Jumpbuf_align := 2 * Address.align; *)
   END Init64;
 
 PROCEDURE IsX86(): BOOLEAN =
@@ -155,12 +155,25 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* this is overly optimistic... *)
 
     Allow_packed_byte_aligned := FALSE;
-    Jumpbuf_align             := Address.align;
     All_floats_legal          := TRUE;
     PCC_bitfield_type_matters := TRUE;
     Structure_size_boundary   := 8;
     Little_endian             := TRUE;
     Setjmp                    := "_setjmp";
+
+    (* Jumpbuf_align should be 128 on PPC_LINUX, PA64_HPUX, SPARC64_LINUX,
+       but we don't have a way to express that in Csetjmp.i3.
+       On PPC_LINUX the setjmp.h comments say 32 is all that is needed,
+       but that 128 is ideal. PA64_HPUX, SPARC64_LINUX might be plain wrong.
+       On many platforms 32 is sufficient, and this might waste a word in the
+       stack frame, but it is useful to have the same value across many
+       platforms, and this is an efficient area anyway. Hopefully we'll
+       get stack walkers for many platforms before long.
+       If possible, it would be nice to set this to 2 * Address.size.
+       i.e. if the compiler would inject Csetjmp.jmp_buf instead of
+       it being delclared in Csetjmp.i3.
+    *)
+    Jumpbuf_align := 2 * Address.align;
 
     (* There is no portable stack walker, and therefore few systems have one.
        Having a stack walker theoretically speeds up everything nicely.  If
@@ -286,19 +299,16 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.ARMEL_LINUX =>
                  Jumpbuf_size := 32 * Int64.size;
-                 Jumpbuf_align := 64;
 
     |  Systems.PA32_HPUX =>
                  Structure_size_boundary   := 16;
                  (* 200 bytes with 8 byte alignment *)
                  Jumpbuf_size              := 50 * Address.size;
-                 Jumpbuf_align             := 64;
 
     |  Systems.PA64_HPUX =>
                  Structure_size_boundary   := 16;
                  (* 640 bytes with 16 byte alignment *)
                  Jumpbuf_size              := 80 * Address.size;
-                 Jumpbuf_align             := 128;
 
     |  Systems.MIPS64_OPENBSD,
        Systems.MIPS64EL_OPENBSD =>
@@ -328,7 +338,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
                  (* 48 bytes with 4 byte alignment *)
                  Jumpbuf_size     := 12 * Address.size;
-                 Jumpbuf_align    := Address.size;
 
     | Systems.SPARC32_LINUX =>
                  Jumpbuf_size              := 16_90 * Char.size;
@@ -338,22 +347,18 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.SPARC64_LINUX =>
                  Jumpbuf_size := 16_280 * Char.size;
-                 Jumpbuf_align := 16 * Char.size;
 
     | Systems.SPARC64_SOLARIS =>
                  (* 96 bytes with 8 byte alignment *)
                  Jumpbuf_size     := 12 * Address.size;
-                 Jumpbuf_align    := Address.size;
 
     |  Systems.I386_SOLARIS =>
                  (* 40 bytes with 4 byte alignment *)
                  Jumpbuf_size := 10 * Address.size;
-                 Jumpbuf_align := Address.size;
 
     |  Systems.AMD64_SOLARIS =>
                  (* 64 bytes with 8 byte alignment *)
                  Jumpbuf_size := 8 * Address.size;
-                 Jumpbuf_align := Address.size;
 
     |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
                  Jumpbuf_size              := 39 * Address.size;
@@ -372,21 +377,17 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.PPC_DARWIN =>
                  Jumpbuf_size  := 768 * Word8.size;
-                 Jumpbuf_align := Word32.size;
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
 
     | Systems.PPC64_DARWIN =>
                  Jumpbuf_size  := 872 * Word8.size;
-                 Jumpbuf_align := Word32.size;
 
     |  Systems.PPC_LINUX => 
                  Jumpbuf_size              := 74 * Int64.size;
                  (* ideal alignment is 16 bytes, but 4 is ok *)
-                 Jumpbuf_align             := 128;
 
     |  Systems.PPC32_OPENBSD => 
                  Jumpbuf_size              := 100 * Address.size;
-                 Jumpbuf_align             := Word64.align;
 
     | Systems.I386_NETBSD =>
                  Jumpbuf_size              := 14 * Address.size; (* 13? *)
@@ -394,7 +395,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     | Systems.ALPHA32_VMS,
       Systems.ALPHA64_VMS =>
                  Jumpbuf_size              := 68 * Word64.size;
-                 Jumpbuf_align             := Word64.align;
                  Setjmp                    := "decc$setjmp";
 
 (*  | Systems.I386_MSDOS =>
@@ -479,6 +479,7 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
 PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =
   VAR success := TRUE;
   BEGIN
+    <* ASSERT i.align = MIN (i.align, max_align) *>
     i.align := MIN (i.align, max_align);
     i.bytes := i.size DIV Byte;
     i.pack  := (i.size + i.align - 1) DIV i.align * i.align;
