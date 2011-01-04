@@ -1029,17 +1029,6 @@ generate_summary (void)
 }
 
 
-/* Return true if we need to write summary of NODE. */
-
-static bool
-write_node_summary_p (struct cgraph_node *node)
-{
-  gcc_assert (node->global.inlined_to == NULL);
-  return (node->analyzed
-	  && cgraph_function_body_availability (node) >= AVAIL_OVERWRITABLE
-	  && get_reference_vars_info (node) != NULL);
-}
-
 /* Serialize the ipa info for lto.  */
 
 static void
