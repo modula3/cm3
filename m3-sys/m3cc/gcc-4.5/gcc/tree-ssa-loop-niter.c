@@ -231,9 +231,10 @@ loop_only_exit_p (const struct loop *loop, const_edge exit)
    potentially unsafe assumptions.  */
 
 bool
-number_of_iterations_exit (struct loop *loop, edge exit,
-			   struct tree_niter_desc *niter,
-			   bool warn)
+number_of_iterations_exit (struct loop *loop ATTRIBUTE_UNUSED,
+                           edge exit ATTRIBUTE_UNUSED,
+			   struct tree_niter_desc *niter ATTRIBUTE_UNUSED,
+			   bool warn ATTRIBUTE_UNUSED)
 {
   return false;
 }
@@ -246,7 +247,8 @@ number_of_iterations_exit (struct loop *loop, edge exit,
    of the iterations of LOOP if successful, chrec_dont_know otherwise.  */
 
 tree
-loop_niter_by_eval (struct loop *loop, edge exit)
+loop_niter_by_eval (struct loop *loop ATTRIBUTE_UNUSED,
+                    edge exit ATTRIBUTE_UNUSED)
 {
   return chrec_dont_know;
 }
@@ -308,9 +310,11 @@ nowrap_type_p (tree type)
    arithmetics in C does not overflow).  */
 
 bool
-scev_probably_wraps_p (tree base, tree step,
-		       gimple at_stmt, struct loop *loop,
-		       bool use_overflow_semantics)
+scev_probably_wraps_p (tree base ATTRIBUTE_UNUSED,
+                       tree step ATTRIBUTE_UNUSED,
+		       gimple at_stmt ATTRIBUTE_UNUSED,
+		       struct loop *loop ATTRIBUTE_UNUSED,
+		       bool use_overflow_semantics ATTRIBUTE_UNUSED)
 {
   return true;
 }
