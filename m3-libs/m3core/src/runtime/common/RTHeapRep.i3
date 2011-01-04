@@ -18,7 +18,7 @@ UNSAFE INTERFACE RTHeapRep;
    garbage collector.  Some items here should be made private or moved
    elsewhere. *)
 
-IMPORT RT0, RTMachine, Word;
+IMPORT RT0, Word;
 FROM RT0 IMPORT Typecode;
 
 (* The allocator and collector maintain two heaps of objects.  One heap is
