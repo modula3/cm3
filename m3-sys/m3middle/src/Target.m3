@@ -167,7 +167,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        but that 128 is ideal. PA64_HPUX, SPARC64_LINUX might be plain wrong.
        On many platforms 32 is sufficient, and this might waste a word in the
        stack frame, but it is useful to have the same value across many
-       platforms, and this is an efficient area anyway. Hopefully we'll
+       platforms, and this is an inefficient area anyway. Hopefully we'll
        get stack walkers for many platforms before long.
        If possible, it would be nice to set this to 2 * Address.size.
        i.e. if the compiler would inject Csetjmp.jmp_buf instead of
