@@ -1,0 +1,9 @@
+quake("write(path())")
+import("m3core")
+import("libm3")
+import_lib("lua5.1","/usr/lib")
+
+include_dir ("helpers")
+include_dir ("lua")
+
+Library("m3lua")

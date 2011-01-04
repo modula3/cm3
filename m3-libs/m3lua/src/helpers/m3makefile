@@ -1,0 +1,7 @@
+import("m3core")
+import("libm3")
+
+Module("ObjectRegistry")
+Module("SimpleMemory")
+
+

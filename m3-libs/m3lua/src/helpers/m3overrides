@@ -1,0 +1,7 @@
+PWD = path()
+BASEDIR = pn_prefix(PWD)
+
+write("pwd: " & PWD & "\n")
+write("basedir: " & BASEDIR & "\n")
+
+override("m3lua", BASEDIR)

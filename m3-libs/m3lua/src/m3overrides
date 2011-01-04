@@ -1,0 +1,11 @@
+% Copyright (C) 2010, Peter Eiserloh
+% All rights reserved
+
+PWD = path()
+% BASEDIR = pn_prefix(pn_prefix(pn_prefix(pn_prefix(PWD))))
+BASEDIR = "/home/peter/src/modula-3"
+
+write("pwd: " & PWD & "\n")
+write("basedir: " & BASEDIR & "\n")
+
+override("m3lua", BASEDIR)
