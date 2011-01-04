@@ -1,7 +1,11 @@
 /* Show the alignment of alloca. */
 
-#include <stdlib.h>
 #include <stdio.h>
+#if defined(__sun) || defined(__linux) || defined(__APPLE__)
+#include <alloca.h>
+#else
+#include <stdlib.h>
+#endif
 
 int main()
 {
