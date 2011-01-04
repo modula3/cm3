@@ -258,17 +258,13 @@ struct gimple_opt_pass pass_vectorize =
 static unsigned int
 tree_linear_transform (void)
 {
-  if (number_of_loops () <= 1)
-    return 0;
-
-  linear_transform_loops ();
   return 0;
 }
 
 static bool
 gate_tree_linear_transform (void)
 {
-  return flag_tree_loop_linear != 0;
+  return false;
 }
 
 struct gimple_opt_pass pass_linear_transform =
@@ -303,13 +299,7 @@ graphite_transforms (void)
 static bool
 gate_graphite_transforms (void)
 {
-  /* Enable -fgraphite pass if any one of the graphite optimization flags
-     is turned on.  */
-  if (flag_loop_block || flag_loop_interchange || flag_loop_strip_mine
-      || flag_graphite_identity || flag_loop_parallelize_all)
-    flag_graphite = 1;
-
-  return flag_graphite != 0;
+  return false;
 }
 
 struct gimple_opt_pass pass_graphite_transforms =
