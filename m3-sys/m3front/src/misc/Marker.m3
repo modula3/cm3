@@ -50,12 +50,12 @@ CONST
   };
 
 VAR
-  all_frames  : FramePtr := NIL;
-  n_frames    : INTEGER  := 0;
-  save_depth  : INTEGER  := 0;
-  setjmp      : CG.Proc  := NIL;
-  tos         : INTEGER  := 0;
-  stack       : ARRAY [0..50] OF Frame;
+  all_frames   : FramePtr := NIL;
+  n_frames     : INTEGER  := 0;
+  save_depth   : INTEGER  := 0;
+  setjmp       : CG.Proc  := NIL;
+  tos          : INTEGER  := 0;
+  stack        : ARRAY [0..50] OF Frame;
 
 (*---------------------------------------------------------- marker stack ---*)
 
@@ -769,11 +769,11 @@ PROCEDURE NextHandler (VAR(*OUT*) handler: CG.Label;
 
 PROCEDURE Reset () =
   BEGIN
-    all_frames  := NIL;
-    n_frames    := 0;
-    save_depth  := 0;
-    setjmp      := NIL;
-    tos         := 0;
+    all_frames   := NIL;
+    n_frames     := 0;
+    save_depth   := 0;
+    setjmp       := NIL;
+    tos          := 0;
   END Reset;
 
 BEGIN
