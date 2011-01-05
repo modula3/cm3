@@ -264,9 +264,10 @@ OpenBSD 4.7 compiles __thread, but segfault at runtime.
 Apple doesn't compile
 FreeBSD not tested
 AIX probably works, not tested
+Solaris: failed to link on Solaris 2.9: http://hudson.modula3.com:8080/job/cm3-current-build-SOLsun-opencsw-current9s/166/console
 HP-UX? AIX?
 */
-#if defined(__linux) || defined(__sun)
+#if defined(__linux)
 
 #define M3_COMPILER_THREAD_LOCAL
 
