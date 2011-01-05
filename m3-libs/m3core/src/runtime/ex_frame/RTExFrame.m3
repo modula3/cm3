@@ -35,7 +35,7 @@ TYPE (* Except, ExceptElse, Finally *)
     class     : INTEGER;    (* ORD(ScopeKind) *)
     handles   : ExceptionList;    (* NIL-terminated list of exceptions handled *)
     info      : RT0.RaiseActivation;   (* current exception being dispatched *)
-    jmpbuf    : Csetjmp.jmp_buf;
+    jmpbuf    : ADDRESS;
   END;
 
 TYPE (* FinallyProc *)

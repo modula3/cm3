@@ -2973,11 +2973,37 @@ m3_pop_param (tree type)
   EXPR_POP ();
 }
 
+static tree
+m3_convert_function_to_builtin (tree p)
+{
+  tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
+
+  if (slot)
+  {
+    p = *slot;
+  }
+  else
+  {
+    const char *name = IDENTIFIER_POINTER (DECL_NAME (p));
+    if (name[0] == 'a' || name[0] == '_')
+    {
+      if (strcmp(name, "alloca") == 0
+        || strcmp(name, "_alloca") == 0
+        || strcmp(name, "__builtin_alloca") == 0)
+      {
+        p = built_in_decls[BUILT_IN_ALLOCA];
+      }
+    }
+  }
+  return p;
+}
+
 #if GCC42
 
 static void
 m3_call_direct (tree p, tree return_type)
 {
+  p = m3_convert_function_to_builtin (p);
   tree call = m3_build3 (CALL_EXPR, return_type, proc_addr (p), CALL_TOP_ARG (),
                          CALL_TOP_STATIC_CHAIN ());
   if (return_type == t_void)
@@ -3087,10 +3113,7 @@ m3_volatilize_current_function (void)
 static void
 m3_call_direct (tree p, tree return_type)
 {
-  tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
-
-  if (slot)
-    p = *slot;
+  p = m3_convert_function_to_builtin (p);
   if (TREE_USED (p) == false)
   {
       TREE_USED (p) = true;
