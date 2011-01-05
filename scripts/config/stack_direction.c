@@ -2,21 +2,21 @@
 #include <assert.h>
 #include <stdlib.h>
 
-int get_stack_direction_helper(char* a)
+static int xStackGrowsDown (volatile char* a)
 {
-    char b;
-    assert(a != &b);
-    return (&b < a) ? -1 : 1;
+  volatile char b;
+  return (&b < a);
 }
 
-int get_stack_direction()
+int
+ThreadInternal__StackGrowsDown (void)
 {
-    char a;
-    return get_stack_direction_helper(&a);
+  volatile char a;
+  return xStackGrowsDown (&a);
 }
 
 int main()
 {
-    printf("stack grows %s\n", (get_stack_direction() < 0) ? "down" : "up"));
+    printf("stack grows %s\n", ThreadInternal__StackGrowsDown () ? "down" : "up");
     return EXIT_SUCCESS;
 }
