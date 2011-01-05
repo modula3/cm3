@@ -42,21 +42,20 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 #endif
 
 #undef X
-#define X(x) const int Uerror__##x = x;
+#define X(x) EXTERN_CONST int Uerror__##x = x;
 #include "UerrorX.h"
 
 #ifndef _WIN32
 
 #undef X
-#define X(x) const int Uexec__##x = x; \
-             const int Uexec_##x = x;
+#define X(x) EXTERN_CONST int Uexec__##x = x; \
+             EXTERN_CONST int Uexec_##x = x;
 X(WNOHANG)
-
 
 #endif
 
 #undef X
-#define X(x) const int Usignal__##x = x;
+#define X(x) EXTERN_CONST int Usignal__##x = x;
 X(SIGINT)
 X(SIGTERM)
 #ifndef _WIN32
@@ -172,9 +171,9 @@ X(SIG_SETMASK)
 #endif
 
 #undef X
-#define X(x) const int Unix__##x = x;
+#define X(x) EXTERN_CONST int Unix__##x = x;
 #undef Y
-#define Y(x, y) const int Unix__##x = y;
+#define Y(x, y) EXTERN_CONST int Unix__##x = y;
 
 X(FIONREAD)
 
@@ -226,7 +225,7 @@ Y(Mrwrwrw, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 #endif
 
 #undef X
-#define X(x) const int Usocket__##x = x;
+#define X(x) EXTERN_CONST int Usocket__##x = x;
 
 /* core Usocket that m3core/libm3 use */
 
@@ -549,9 +548,9 @@ X(SOMAXCONN)
 
 
 #undef X
-#define X(x) const int Ustat__##x = x;
+#define X(x) EXTERN_CONST int Ustat__##x = x;
 #undef Y
-#define Y(x, y) const int Ustat__##x = y;
+#define Y(x, y) EXTERN_CONST int Ustat__##x = y;
 
 X(S_IFMT)
 X(S_IFREG)
@@ -676,19 +675,19 @@ Y(SF_SNAPSHOT, 0)
 #endif
 
 #undef X
-#define X(x) const int Unetdb__##x = x;
+#define X(x) EXTERN_CONST int Unetdb__##x = x;
 X(TRY_AGAIN)
 X(NO_RECOVERY)
 X(NO_ADDRESS)
 
 
 #undef X
-#define X(x) const int Uin__##x = x;
+#define X(x) EXTERN_CONST int Uin__##x = x;
 X(IPPROTO_TCP)
 
 
 #undef X
-#define X(x) const int Umman__##x = x;
+#define X(x) EXTERN_CONST int Umman__##x = x;
 
 #ifndef _WIN32
 X(PROT_NONE)
@@ -736,16 +735,16 @@ X(PROT_WRITE)
 #ifdef __CYGWIN__
 
 #undef X
-#define X(x) const int Usysdep__##x = x;
+#define X(x) EXTERN_CONST int Usysdep__##x = x;
 #undef Y
-#define Y(x, y) const int Usysdep__##x = y;
+#define Y(x, y) EXTERN_CONST int Usysdep__##x = y;
 
 Y(P_NOWAIT, _P_NOWAIT)
 
 #undef X
 #undef Y
-#define X(x) const int Utermio__##x = x;
-#define Y(x, y) const int Utermio__##x = y;
+#define X(x) EXTERN_CONST int Utermio__##x = x;
+#define Y(x, y) EXTERN_CONST int Utermio__##x = y;
 
 Y(BAUDBITS, CBAUD)
 X(B75)
@@ -789,7 +788,7 @@ X(TCSANOW)
 #endif /* cygwin */
 
 #undef X
-#define X(x) const int Unix__##x = x;
+#define X(x) EXTERN_CONST int Unix__##x = x;
 
 #ifdef TIOCCAR
 X(TIOCCAR)
