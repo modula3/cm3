@@ -197,7 +197,7 @@ REVEAL
 "#endif",
 "",
 "typedef   signed char       INT8;",
-"typedef unsigned char      UINT8, WORD8;",
+"typedef unsigned char      UINT8, WORD8, BYTE;",
 "typedef   signed short      INT16;",
 "typedef unsigned short     UINT16, WORD16;",
 "typedef   signed int        INT32;",
@@ -220,7 +220,7 @@ REVEAL
 "typedef ptrdiff_t INTEGER;",
 "typedef size_t WORD_T, CARDINAL;",
 "#endif",
-"typedef void *ADDRESS, *PVOID, *TEXT, *STRUCT;",
+"typedef BYTE *ADDRESS, *PVOID, *TEXT, *STRUCT, *RECORD;",
 "typedef float REAL;",
 "typedef double LONGREAL, EXTENDED;"
   };
