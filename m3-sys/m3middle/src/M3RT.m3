@@ -1,8 +1,6 @@
 (* Copyright (C) 1993, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
-(*                                                             *)
-(* Last modified on Mon Jul 25 09:11:22 PDT 1994 by kalsow     *)
 
 MODULE M3RT;
 
@@ -57,10 +55,8 @@ PROCEDURE Init () =
     (* Except, ExceptElse, and Finally  frames *)
     EF1_handles    := EF_SIZE;             (* : ADDRESS *)
     EF1_info       := EF1_handles + AP;    (* : RTException.Activation *)
-    EF1_jmpbuf     := RoundUp (EF1_info + EA_SIZE, Target.Jumpbuf_align);
-                                           (* : jmp_buf *)
-    EF1_SIZE       := EF1_jmpbuf + Target.Jumpbuf_size;
-    EF1_ALIGN      := MAX (Target.Address.align, Target.Jumpbuf_align);
+    EF1_jmpbuf     := EF1_info + EA_SIZE;  (* : jmp_buf *)
+    EF1_SIZE       := EF1_jmpbuf + AP;
 
     (* FinallyProc frames *)
     EF2_handler    := EF_SIZE;            (* : ADDRESS (PROC) *)
@@ -94,6 +90,7 @@ PROCEDURE Init () =
     TC_next           := TC_name           + AP; (* : ADDRESS *)
     TC_SIZE           := TC_next           + AP;
     TC_ALIGN          := MAX (Target.Address.align, Target.Integer.align);
+    <* ASSERT Target.Address.align = Target.Integer.align *>
 
     OTC_parentID       := TC_SIZE;                 (* : INTEGER *)
     OTC_linkProc       := OTC_parentID       + IP; (* : PROC()  *)

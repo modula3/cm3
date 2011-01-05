@@ -79,7 +79,6 @@ VAR (* Except, ExceptElse, and Finally  frames *)
   EF1_info       : CARDINAL;  (* : RTException.Activation *)
   EF1_jmpbuf     : CARDINAL;  (* : jmp_buf *)
   EF1_SIZE       : CARDINAL;
-  EF1_ALIGN      : CARDINAL;  (* because of the jmp_buf alignment... *)
 
 VAR (* FinallyProc frames *)
   EF2_handler    : CARDINAL;  (* : ADDRESS (PROC) *)

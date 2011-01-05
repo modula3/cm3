@@ -19,7 +19,6 @@ PROCEDURE Init64 () =
     Word := Word64;
     Address := Word64;
     Address.cg_type := CGType.Addr;
-    (* Jumpbuf_align := 2 * Address.align; *)
   END Init64;
 
 PROCEDURE IsX86(): BOOLEAN =
@@ -52,9 +51,8 @@ PROCEDURE IsSPARC(): BOOLEAN =
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   CONST FF = 16_FF;
   VAR sys := 0;  max_align := 64;
-      calling_conventions := FALSE;
   BEGIN
-    (* lookup the system *)
+    (* lookup the system -- linear search *)
     IF (system = NIL) THEN RETURN FALSE END;
     WHILE NOT Text.Equal (system, SystemNames[sys]) DO
       INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN RETURN FALSE END;
@@ -160,20 +158,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Structure_size_boundary   := 8;
     Little_endian             := TRUE;
     Setjmp                    := "_setjmp";
-
-    (* Jumpbuf_align should be 128 on PPC_LINUX, PA64_HPUX, SPARC64_LINUX,
-       but we don't have a way to express that in Csetjmp.i3.
-       On PPC_LINUX the setjmp.h comments say 32 is all that is needed,
-       but that 128 is ideal. PA64_HPUX, SPARC64_LINUX might be plain wrong.
-       On many platforms 32 is sufficient, and this might waste a word in the
-       stack frame, but it is useful to have the same value across many
-       platforms, and this is an inefficient area anyway. Hopefully we'll
-       get stack walkers for many platforms before long.
-       If possible, it would be nice to set this to 2 * Address.size.
-       i.e. if the compiler would inject Csetjmp.jmp_buf instead of
-       it being delclared in Csetjmp.i3.
-    *)
-    Jumpbuf_align := 2 * Address.align;
 
     (* There is no portable stack walker, and therefore few systems have one.
        Having a stack walker theoretically speeds up everything nicely.  If
@@ -283,130 +267,22 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Aligned_procedures := TRUE; (* Assume aligned => unaligned is ok. *)
     END;
 
-    CASE System OF
-    
-    |  Systems.ALPHA_LINUX => Jumpbuf_size := 34 * Address.size;
-    |  Systems.ALPHA_OPENBSD => Jumpbuf_size := 81 * Address.size;
-    |  Systems.ALPHA_OSF => Jumpbuf_size := 84 * Address.size;
-
-    |  Systems.I386_FREEBSD, Systems.FreeBSD4 =>
-                 Jumpbuf_size              := 11 * Address.size;
-
-    |  Systems.AMD64_NETBSD,
-       Systems.AMD64_OPENBSD,
-       Systems.AMD64_FREEBSD =>
-                 Jumpbuf_size              := 12 * Address.size;
-
-    | Systems.ARMEL_LINUX =>
-                 Jumpbuf_size := 32 * Int64.size;
-
-    |  Systems.PA32_HPUX =>
-                 Structure_size_boundary   := 16;
-                 (* 200 bytes with 8 byte alignment *)
-                 Jumpbuf_size              := 50 * Address.size;
-
-    |  Systems.PA64_HPUX =>
-                 Structure_size_boundary   := 16;
-                 (* 640 bytes with 16 byte alignment *)
-                 Jumpbuf_size              := 80 * Address.size;
-
-    |  Systems.MIPS64_OPENBSD,
-       Systems.MIPS64EL_OPENBSD =>
-                 Jumpbuf_size              := 16_53 * Address.size;
-
-    | Systems.I386_INTERIX =>
-
-                (* Visual C++'s 16 plus 2 ints: is sigmask saved, its value. *)
-
-                Jumpbuf_size := 18 * Address.size;
-                calling_conventions := TRUE;
-
-    | Systems.NT386, Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
-
-                 (* Cygwin: 13, Visual C++: 16, Interix: 18.
-                    Use 18 for interop.
-                    Cygwin's setjmp.h is wrong by a factor of 4.
-                    Cygwin provides setjmp and _setjmp that resolve the same.
-                    Visual C++ provides only _setjmp.
-                    Visual C++ also has _setjmp3 that the compiler generates
-                    a call to. In fact _setjmp appears to only use 8 ints
-                    and _setjmp3 appears to use more. Consider using _setjmp3.
-                 *)
-                 Jumpbuf_size := (18 * Address.size);
-                 calling_conventions := TRUE;
-
-    | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
-                 (* 48 bytes with 4 byte alignment *)
-                 Jumpbuf_size     := 12 * Address.size;
-
-    | Systems.SPARC32_LINUX =>
-                 Jumpbuf_size              := 16_90 * Char.size;
-
-    | Systems.SPARC64_OPENBSD =>
-                 Jumpbuf_size := 14 * Address.size;
-
-    | Systems.SPARC64_LINUX =>
-                 Jumpbuf_size := 16_280 * Char.size;
-
-    | Systems.SPARC64_SOLARIS =>
-                 (* 96 bytes with 8 byte alignment *)
-                 Jumpbuf_size     := 12 * Address.size;
-
-    |  Systems.I386_SOLARIS =>
-                 (* 40 bytes with 4 byte alignment *)
-                 Jumpbuf_size := 10 * Address.size;
-
-    |  Systems.AMD64_SOLARIS =>
-                 (* 64 bytes with 8 byte alignment *)
-                 Jumpbuf_size := 8 * Address.size;
-
-    |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
-                 Jumpbuf_size              := 39 * Address.size;
-
-    |  Systems.AMD64_LINUX =>
-                 Jumpbuf_size              := 25 * Address.size;
-
-    |  Systems.I386_DARWIN =>
-                 Jumpbuf_size              := 18 * Address.size;
-
-     | Systems.AMD64_DARWIN =>
-                 Jumpbuf_size              := ((9 * 2) + 3 + 16) * Int32.size;
-
-    |  Systems.ARM_DARWIN =>
-                 Jumpbuf_size              := 28 * Address.size;
-
-    |  Systems.PPC_DARWIN =>
-                 Jumpbuf_size  := 768 * Word8.size;
-                 (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
-
-    | Systems.PPC64_DARWIN =>
-                 Jumpbuf_size  := 872 * Word8.size;
-
-    |  Systems.PPC_LINUX => 
-                 Jumpbuf_size              := 74 * Int64.size;
-                 (* ideal alignment is 16 bytes, but 4 is ok *)
-
-    |  Systems.PPC32_OPENBSD => 
-                 Jumpbuf_size              := 100 * Address.size;
-
-    | Systems.I386_NETBSD =>
-                 Jumpbuf_size              := 14 * Address.size; (* 13? *)
-                 
-    | Systems.ALPHA32_VMS,
-      Systems.ALPHA64_VMS =>
-                 Jumpbuf_size              := 68 * Word64.size;
-                 Setjmp                    := "decc$setjmp";
-
-(*  | Systems.I386_MSDOS =>
-                 Jumpbuf_size              := 172 * Char.size; TBD *)
-
-    | Systems.I386_OPENBSD =>
-                 Jumpbuf_size              := 10 * Address.size;
-
-    ELSE RETURN FALSE;
+    IF System IN SET OF Systems{Systems.ALPHA32_VMS,
+                                Systems.ALPHA64_VMS} THEN
+        Setjmp := "decc$setjmp";
     END;
 
-    InitCallingConventions (backend_mode, calling_conventions);
+    IF System IN SET OF Systems{Systems.PA32_HPUX,
+                                Systems.PA64_HPUX} THEN
+        Structure_size_boundary := 16;
+    END;
+    
+    InitCallingConventions (backend_mode,
+                            System IN SET OF Systems{Systems.I386_INTERIX,
+                                                     Systems.NT386,
+                                                     Systems.I386_NT,
+                                                     Systems.I386_CYGWIN,
+                                                     Systems.I386_MINGW});
 
     (* fill in the "bytes" and "pack" fields *)
     FixI (Address, max_align);

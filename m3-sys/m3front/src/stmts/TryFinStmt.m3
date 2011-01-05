@@ -293,7 +293,7 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
     <* ASSERT NOT p.viaProc *>
 
     (* declare and initialize the info record *)
-    frame := CG.Declare_local (M3ID.NoID, M3RT.EF1_SIZE, M3RT.EF1_ALIGN,
+    frame := CG.Declare_local (M3ID.NoID, M3RT.EF1_SIZE, Target.Address.align,
                                CG.Type.Struct, 0, in_memory := TRUE,
                                up_level := FALSE, f := CG.Never);
     CG.Load_nil ();

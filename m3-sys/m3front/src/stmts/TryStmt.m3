@@ -401,7 +401,7 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     CG.Set_label (l, barrier := TRUE);
 
     (* declare and initialize the info record *)
-    frame := CG.Declare_local (M3ID.NoID, M3RT.EF1_SIZE, M3RT.EF1_ALIGN,
+    frame := CG.Declare_local (M3ID.NoID, M3RT.EF1_SIZE, Target.Address.align,
                                CG.Type.Struct, 0, in_memory := TRUE,
                                up_level := FALSE, f := CG.Never);
 
