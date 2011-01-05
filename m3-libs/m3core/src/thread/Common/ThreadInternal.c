@@ -20,7 +20,7 @@ ThreadInternal__StackGrowsDownHelper (volatile char* a)
   return a ? (&b < a) : ThreadInternal__StackGrowsDownHelper (&b);
 }
 
-M3_DLL_LOCAL int /*bool*/ __cdecl
+M3_NO_INLINE M3_DLL_LOCAL int /*bool*/ __cdecl
 ThreadInternal__StackGrowsDown (void)
 /* Most stacks do grow down, which is why we don't
    name this more generally "StackDirection" or such. */
