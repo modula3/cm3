@@ -1,0 +1,17 @@
+MODULE Main;
+
+<*NOWARN*>PROCEDURE F1(x: [VAL(0, LONGINT)..VAL(0, LONGINT)]):REFANY =
+  BEGIN
+    RETURN F2(x)
+  END F1;
+
+PROCEDURE F2(x: LONGINT): REFANY  = 
+  BEGIN
+    WITH ref = NEW(REF LONGINT) DO
+      ref^ := x;
+      RETURN ref;
+    END
+  END F2;
+
+BEGIN
+END Main.
