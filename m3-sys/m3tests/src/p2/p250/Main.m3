@@ -1,17 +1,9 @@
 MODULE Main;
 
-<*NOWARN*>PROCEDURE F1(x: [0L..0L]):REFANY =
-  BEGIN
-    RETURN F2(x)
-  END F1;
+VAR x: [0L..1L];
 
-PROCEDURE F2(x: LONGINT): REFANY  = 
-  BEGIN
-    WITH ref = NEW(REF LONGINT) DO
-      ref^ := x;
-      RETURN ref;
-    END
-  END F2;
+PROCEDURE F2(<*UNUSED*>x: LONGINT) = BEGIN END F2;
 
 BEGIN
+  F2(x);
 END Main.
