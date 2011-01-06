@@ -11,6 +11,7 @@ IMPORT Thread, Csetjmp;
 
 (* This defines the low-level routines and data structures
    used by the exception runtime.
+   See also m3middle/src/M3RT, which also describes these structures.
 *)
 
 TYPE

@@ -12,6 +12,7 @@ FROM RT0 IMPORT RaiseActivation;
 
 (* This defines the low-level data structures
    used by the exception runtime's stack walker.
+   See also m3middle/src/M3RT, which also describes these structures.
 *)
 
 TYPE
