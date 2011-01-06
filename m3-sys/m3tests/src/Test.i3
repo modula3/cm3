@@ -5,7 +5,6 @@
 INTERFACE Test;
 
 IMPORT Text;
-IMPORT Csetjmp;
 IMPORT Cstdint;
 
 VAR
@@ -19,7 +18,7 @@ TYPE
     align := 0.0d0;
   END;
 
-<*EXTERNAL "Test__CheckFloatsAndTypes"*> PROCEDURE CheckFloatsAndTypes(READONLY t:T; size := BYTESIZE(T); jbsize := BYTESIZE(Csetjmp.jmp_buf));
+<*EXTERNAL "Test__CheckFloatsAndTypes"*> PROCEDURE CheckFloatsAndTypes(READONLY t:T; size := BYTESIZE(T));
 
 PROCEDURE msg (t: Text.T);
 PROCEDURE msgB (b: BOOLEAN);
