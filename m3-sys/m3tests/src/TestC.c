@@ -66,7 +66,7 @@ static const T t1 =
     0
 };
 
-void __cdecl Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
+void __cdecl Test__CheckFloatsAndTypes(const T* t2, size_t size)
 {
 #ifndef _WIN32
     if (size != SIZE(t1))
@@ -96,22 +96,6 @@ void __cdecl Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
 
     assert(memcmp(&t1.d, &t2->d, SIZE(t1.d)) == 0);
     assert(memcmp(&t1.f, &t2->f, SIZE(t1.f)) == 0);
-
-#if defined(_WIN32)
-    assert(jbsize >= SIZE(jmp_buf));
-#elif defined(__CYGWIN__)
-    assert(jbsize >= (SIZE(jmp_buf) / 4));
-#elif defined(__FreeBSD__) && defined(__i386__)
-    assert(jbsize == SIZE(jmp_buf) || (jbsize + 4) == SIZE(jmp_buf));
-#elif defined(__sun) || defined(__APPLE__)
-    assert(jbsize == SIZE(jmp_buf) || jbsize == SIZE(sigjmp_buf));
-#else
-    if (jbsize != SIZE(jmp_buf))
-    {
-        fprintf(stderr, "%x vs. %x\n", (U)jbsize, SIZE(jmp_buf));
-        assert(jbsize == SIZE(jmp_buf));
-    }
-#endif
 }
 
 /* Test sign/zero extension of
