@@ -1,0 +1,4 @@
+m3back_optimize = ""
+implementation("Main")
+build_standalone()
+include ("../../Test.common")
