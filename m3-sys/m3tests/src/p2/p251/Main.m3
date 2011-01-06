@@ -100,7 +100,7 @@ EXCEPTION E1;
 EXCEPTION E2;
 EXCEPTION E3;
 
-PROCEDURE F4() RAISES ANY =
+PROCEDURE F4() =
 CONST Function = "F4 ";
 BEGIN
   Put(Function & Int(Line())); NL();
@@ -121,13 +121,27 @@ BEGIN
   END;
 END F4;
 
+PROCEDURE F5() =
+CONST Function = "F5 ";
+BEGIN
+  FOR i := 1 TO 10 DO
+    TRY
+      Put(Function & Int(Line())); NL();
+      PrintStackHeight();
+      RAISE E1;
+    EXCEPT ELSE
+    END
+  END;
+END F5;
+
 PROCEDURE Main() =
 BEGIN
   top_of_stack := GetStack();
   TRY F1(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
   TRY F2(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
   TRY F3(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
-  TRY F4(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+  TRY F4(); EXCEPT END;
+  TRY F5(); EXCEPT END;
 END Main;
 
 BEGIN
