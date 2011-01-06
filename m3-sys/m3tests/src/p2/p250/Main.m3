@@ -1,0 +1,9 @@
+MODULE Main;
+
+VAR x: [0L..1L];
+
+PROCEDURE F2(<*UNUSED*>x: LONGINT) = BEGIN END F2;
+
+BEGIN
+  F2(x);
+END Main.
