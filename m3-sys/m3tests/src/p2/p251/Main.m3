@@ -72,7 +72,7 @@ END F2;
 PROCEDURE F3() RAISES ANY =
 CONST Function = "F3 ";
 BEGIN
-  Put(Function); NL();
+  Put(Function & Int(Line())); NL();
   PrintStackHeight();
   TRY
     PrintStackHeight();
@@ -96,6 +96,30 @@ BEGIN
   END;
 END F3;
 
+EXCEPTION E1;
+EXCEPTION E2;
+EXCEPTION E3;
+
+PROCEDURE F4() RAISES ANY =
+CONST Function = "F4 ";
+BEGIN
+  Put(Function & Int(Line())); NL();
+  TRY
+    Put(Function & Int(Line())); NL();
+    TRY
+      Put(Function & Int(Line())); NL();
+      TRY
+        Put(Function & Int(Line())); NL();
+        RAISE E1;
+      EXCEPT ELSE
+        RAISE E2;
+      END;
+    EXCEPT ELSE
+      RAISE E3;
+    END;
+  EXCEPT ELSE
+  END;
+END F4;
 
 PROCEDURE Main() =
 BEGIN
@@ -103,6 +127,7 @@ BEGIN
   TRY F1(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
   TRY F2(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
   TRY F3(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+  TRY F4(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
 END Main;
 
 BEGIN
