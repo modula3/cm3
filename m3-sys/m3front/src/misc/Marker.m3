@@ -268,13 +268,11 @@ PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
     CG.Load_int (Target.Word.cg_type, Jumpbuf_size);
     CG.Pop_param (Target.Word.cg_type);
     CG.Call_direct (alloca, Target.Address.cg_type);
-    CG.Store (frame, M3RT.EF1_jmpbuf, Target.Address.size, Target.Address.align,
-              Target.Address.cg_type);
+    CG.Store_addr (frame, M3RT.EF1_jmpbuf);
 
     (* setmp(frame.jmpbuf) *)
     CG.Start_call_direct (setjmp, 0, Target.Integer.cg_type);
-    CG.Load (frame, M3RT.EF1_jmpbuf, Target.Address.size, Target.Address.align,
-             Target.Address.cg_type);
+    CG.Load_addr (frame, M3RT.EF1_jmpbuf);
     CG.Pop_param (CG.Type.Addr);
     CG.Call_direct (setjmp, Target.Integer.cg_type);
     CG.If_true (handler, CG.Never);
