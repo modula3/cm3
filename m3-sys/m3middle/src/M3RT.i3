@@ -10,6 +10,8 @@
     to interface to the Modula-3 runtime.
 
     Note that all runtime structures have their fields naturally aligned.
+
+    see also m3-libs/m3core/src/runtime/ex*
 *)
 
 INTERFACE M3RT;
