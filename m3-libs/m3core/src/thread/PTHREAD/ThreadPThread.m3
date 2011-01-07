@@ -1250,8 +1250,14 @@ PROCEDURE Init ()=
 VAR
   locks := ARRAY [0..3] OF pthread_mutex_t{activeMu, slotsMu, initMu, perfMu};
 
-PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
+VAR PThreadLockMutex_index: INTEGER;
+VAR PThreadUnlockMutex_index: INTEGER;
+
+PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t;
+                           line: INTEGER;
+                           index: INTEGER) =
   BEGIN
+    PThreadLockMutex_index := index; (* inhibit optimization *)
     IF mutex # NIL THEN
       WITH r = pthread_mutex_lock(mutex) DO
         IF r # 0 THEN DieI(line, r) END;
@@ -1259,8 +1265,11 @@ PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
     END;
   END PThreadLockMutex;
 
-PROCEDURE PThreadUnlockMutex(mutex: pthread_mutex_t; line: INTEGER) =
+PROCEDURE PThreadUnlockMutex(mutex: pthread_mutex_t;
+                             line: INTEGER;
+                             index: INTEGER) =
   BEGIN
+    PThreadUnlockMutex_index := index; (* inhibit optimization *)
     IF mutex # NIL THEN
       WITH r = pthread_mutex_unlock(mutex) DO
         IF r # 0 THEN DieI(line, r) END;
@@ -1276,7 +1285,7 @@ PROCEDURE AtForkPrepare() =
     Acquire(joinMu);
     LockHeap();
     FOR i := FIRST(locks) TO LAST(locks) DO
-      PThreadLockMutex(locks[i], ThisLine());
+      PThreadLockMutex(locks[i], ThisLine(), i);
     END;
     (* Walk activations and lock all threads, conditions.
      * NOTE: We have initMu, activeMu, so slots
@@ -1285,10 +1294,10 @@ PROCEDURE AtForkPrepare() =
      *)
     act := me;
     REPEAT
-      PThreadLockMutex(act.mutex, ThisLine());
+      PThreadLockMutex(act.mutex, ThisLine(), -1);
       (*PThreadLockMutex(act.waitingOn, ThisLine());*)
       cond := slots[act.slot].join;
-      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine()) END;
+      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine(), -2) END;
       act := act.next;
     UNTIL act = me;
   END AtForkPrepare;
@@ -1302,14 +1311,14 @@ PROCEDURE AtForkParent() =
     act := me;
     REPEAT
       cond := slots[act.slot].join;
-      IF cond # NIL THEN PThreadUnlockMutex(cond.mutex, ThisLine()) END;
-      (*PThreadUnlockMutex(act.waitingOn, ThisLine());*)
-      PThreadUnlockMutex(act.mutex, ThisLine());
+      IF cond # NIL THEN PThreadUnlockMutex(cond.mutex, ThisLine(), -1) END;
+      (*PThreadUnlockMutex(act.waitingOn, ThisLine(), -2);*)
+      PThreadUnlockMutex(act.mutex, ThisLine(), -3);
       act := act.next;
     UNTIL act = me;
 
     FOR i := LAST(locks) TO FIRST(locks) BY -1 DO
-      PThreadUnlockMutex(locks[i], ThisLine());
+      PThreadUnlockMutex(locks[i], ThisLine(), i);
     END;
     UnlockHeap();
     Release(joinMu);
