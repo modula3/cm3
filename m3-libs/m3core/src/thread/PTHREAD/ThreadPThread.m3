@@ -1295,9 +1295,9 @@ PROCEDURE AtForkPrepare() =
     act := me;
     REPEAT
       PThreadLockMutex(act.mutex, ThisLine(), -1);
-      (*PThreadLockMutex(act.waitingOn, ThisLine());*)
+      (*PThreadLockMutex(act.waitingOn, ThisLine(), -2);*)
       cond := slots[act.slot].join;
-      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine(), -2) END;
+      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine(), -3) END;
       act := act.next;
     UNTIL act = me;
   END AtForkPrepare;
