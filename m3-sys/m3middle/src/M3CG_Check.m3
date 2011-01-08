@@ -186,11 +186,11 @@ PROCEDURE Int (i: INTEGER): TEXT =
 
 (*--------------------------------------------------------- low level I/O ---*)
 
-PROCEDURE PutErr (self: U;  a, b, c: TEXT := NIL) =
+PROCEDURE PutErr (u: U;  a, b, c: TEXT := NIL) =
   BEGIN
-    self.note_error ("********* M3CG_Check ERROR *********** " & a & b & c);
-    self.child.comment ("********* M3CG_Check ERROR *********** ", a, b, c);
-    INC (self.n_errors);
+    u.note_error ("********* M3CG_Check ERROR *********** " & a & b & c);
+    u.child.comment ("********* M3CG_Check ERROR *********** ", a, b, c);
+    INC (u.n_errors);
   END PutErr;
 
 (*-------------------------------------------------------- stack checking ---*)
