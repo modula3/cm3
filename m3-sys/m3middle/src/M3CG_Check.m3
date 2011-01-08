@@ -57,6 +57,7 @@ TYPE
         s_push (t: Type) := Stack_Push;
         s_repush () := Stack_Repush;
         s_empty () := Stack_Empty;
+        PutErr (a, b, c: TEXT) := PutErr;
       OVERRIDES
         set_error_handler := set_error_handler;
         begin_unit := begin_unit;
@@ -185,10 +186,11 @@ PROCEDURE Int (i: INTEGER): TEXT =
 
 (*--------------------------------------------------------- low level I/O ---*)
 
-PROCEDURE PutErr (u: U;  a, b, c: TEXT := NIL) =
+PROCEDURE PutErr (self: U;  a, b, c: TEXT := NIL) =
   BEGIN
-    u.child.comment ("********* M3CG_Check ERROR *********** ", a, b, c);
-    INC (u.n_errors);
+    self.note_error ("********* M3CG_Check ERROR *********** " & a & b & c);
+    self.child.comment ("********* M3CG_Check ERROR *********** ", a, b, c);
+    INC (self.n_errors);
   END PutErr;
 
 (*-------------------------------------------------------- stack checking ---*)
