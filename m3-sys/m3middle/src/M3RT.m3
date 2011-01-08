@@ -149,10 +149,5 @@ PROCEDURE Init () =
     MUTEX_release := 1 * AP;          (*: PROC() *)
   END Init;
 
-PROCEDURE RoundUp (a, b: INTEGER): INTEGER =
-  BEGIN
-    RETURN (a + b - 1) DIV b * b;
-  END RoundUp;
-
 BEGIN
 END M3RT.
