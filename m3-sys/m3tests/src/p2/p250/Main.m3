@@ -1,9 +1,20 @@
 MODULE Main;
 
-VAR x: [0L..1L];
+PROCEDURE F1(<*UNUSED*>x: LONGINT) = BEGIN END F1;
 
-PROCEDURE F2(<*UNUSED*>x: LONGINT) = BEGIN END F2;
+PROCEDURE F2() =
+<*UNUSED*>VAR x: [0L..0L];
+BEGIN
+END F2;
+
+PROCEDURE F3() =
+VAR x: [0L..0L];
+BEGIN
+  F1(x);
+END F3;
 
 BEGIN
-  F2(x);
+  F1(0L);
+  F2();
+  F3();
 END Main.
