@@ -99,9 +99,9 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
   BEGIN
     TRY
       WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
-      (* Did someone else win? *)
+      (* Did someone else win the race? *)
       IF m # NIL THEN RETURN END;
-      (* We won, but we might have failed to allocate! *)
+      (* We won the race, but we might have failed to allocate. *)
       IF mutex = NIL THEN RTE.Raise (RTE.T.OutOfMemory) END;
       RTHeapRep.RegisterFinalCleanup (root, Clean);
       m := mutex;
