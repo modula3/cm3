@@ -19,7 +19,6 @@ def _CleanupEnvironment():
             del(os.environ[a])
 
 SetupEnvironment()
-#CopyConfigForDevelopment() or sys.exit(1)
 
 #
 # clean everything
@@ -66,7 +65,7 @@ ShipFront() or sys.exit(1)
 os.environ["OMIT_GCC"] = "yes"
 _CleanupEnvironment();
 reload(pylib) # compiler host type may have changed and need to recompute stuff
-CopyConfigForDevelopment() or sys.exit(1)
+CopyConfigForDistribution() or sys.exit(1)
 
 # once more
 
