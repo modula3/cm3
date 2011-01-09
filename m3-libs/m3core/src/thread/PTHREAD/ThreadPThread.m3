@@ -1247,15 +1247,7 @@ PROCEDURE Init ()=
     InitWithStackBase(ADR(r)); (* not quite accurate but hopefully ok *)
   END Init;
 
-VAR
-  locks := ARRAY [0..3] OF pthread_mutex_t{activeMu, slotsMu, initMu, perfMu};
-
-VAR PThreadLockMutex_index: INTEGER;
-VAR PThreadUnlockMutex_index: INTEGER;
-
-PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t;
-                           line: INTEGER;
-                           index: INTEGER) =
+PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
   BEGIN
     PThreadLockMutex_index := index; (* inhibit optimization *)
     IF mutex # NIL THEN
@@ -1283,10 +1275,11 @@ PROCEDURE AtForkPrepare() =
       cond: Condition;
   BEGIN
     Acquire(joinMu);
-    FOR i := FIRST(locks) TO LAST(locks) DO
-      PThreadLockMutex(locks[i], ThisLine(), i);
-    END;
-    LockHeap();
+    PThreadLockMutex(initMu, ThisLine());
+    LockHeap(); (* after initMu to avoid deadlock with InitMutex *)
+    PThreadLockMutex(activeMu, ThisLine());
+    PThreadLockMutex(slotsMu, ThisLine());
+    PThreadLockMutex(perfMu, ThisLine());
     (* Walk activations and lock all threads, conditions.
      * NOTE: We have initMu, activeMu, so slots
      * won't change, conditions and mutexes
@@ -1317,10 +1310,11 @@ PROCEDURE AtForkParent() =
       act := act.next;
     UNTIL act = me;
 
-    FOR i := LAST(locks) TO FIRST(locks) BY -1 DO
-      PThreadUnlockMutex(locks[i], ThisLine(), i);
-    END;
+    PThreadUnlockMutex(perfMu, ThisLine());
+    PThreadUnlockMutex(slotsMu, ThisLine());
+    PThreadUnlockMutex(activeMu, ThisLine());
     UnlockHeap();
+    PThreadUnlockMutex(initMu, ThisLine());
     Release(joinMu);
   END AtForkParent;
 
