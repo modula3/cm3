@@ -1283,10 +1283,10 @@ PROCEDURE AtForkPrepare() =
       cond: Condition;
   BEGIN
     Acquire(joinMu);
-    LockHeap();
     FOR i := FIRST(locks) TO LAST(locks) DO
       PThreadLockMutex(locks[i], ThisLine(), i);
     END;
+    LockHeap();
     (* Walk activations and lock all threads, conditions.
      * NOTE: We have initMu, activeMu, so slots
      * won't change, conditions and mutexes
