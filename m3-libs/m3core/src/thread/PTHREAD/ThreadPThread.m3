@@ -1249,7 +1249,6 @@ PROCEDURE Init ()=
 
 PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
   BEGIN
-    PThreadLockMutex_index := index; (* inhibit optimization *)
     IF mutex # NIL THEN
       WITH r = pthread_mutex_lock(mutex) DO
         IF r # 0 THEN DieI(line, r) END;
@@ -1258,10 +1257,8 @@ PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
   END PThreadLockMutex;
 
 PROCEDURE PThreadUnlockMutex(mutex: pthread_mutex_t;
-                             line: INTEGER;
-                             index: INTEGER) =
+                             line: INTEGER) =
   BEGIN
-    PThreadUnlockMutex_index := index; (* inhibit optimization *)
     IF mutex # NIL THEN
       WITH r = pthread_mutex_unlock(mutex) DO
         IF r # 0 THEN DieI(line, r) END;
@@ -1287,10 +1284,10 @@ PROCEDURE AtForkPrepare() =
      *)
     act := me;
     REPEAT
-      PThreadLockMutex(act.mutex, ThisLine(), -1);
-      (*PThreadLockMutex(act.waitingOn, ThisLine(), -2);*)
+      PThreadLockMutex(act.mutex, ThisLine());
+      (*PThreadLockMutex(act.waitingOn, ThisLine());*)
       cond := slots[act.slot].join;
-      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine(), -3) END;
+      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine()) END;
       act := act.next;
     UNTIL act = me;
   END AtForkPrepare;
@@ -1304,9 +1301,9 @@ PROCEDURE AtForkParent() =
     act := me;
     REPEAT
       cond := slots[act.slot].join;
-      IF cond # NIL THEN PThreadUnlockMutex(cond.mutex, ThisLine(), -1) END;
-      (*PThreadUnlockMutex(act.waitingOn, ThisLine(), -2);*)
-      PThreadUnlockMutex(act.mutex, ThisLine(), -3);
+      IF cond # NIL THEN PThreadUnlockMutex(cond.mutex, ThisLine()) END;
+      (*PThreadUnlockMutex(act.waitingOn, ThisLine());*)
+      PThreadUnlockMutex(act.mutex, ThisLine());
       act := act.next;
     UNTIL act = me;
 
