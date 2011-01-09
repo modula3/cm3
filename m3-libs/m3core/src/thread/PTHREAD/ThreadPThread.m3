@@ -96,7 +96,6 @@ PROCEDURE CleanMutex (r: REFANY) =
 PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
   VAR mutex := pthread_mutex_new();
-      register := FALSE;
   BEGIN
     TRY
       WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
@@ -104,23 +103,12 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
       IF m # NIL THEN RETURN END;
       (* We won the race, but we might have failed to allocate. *)
       IF mutex = NIL THEN RTE.Raise (RTE.T.OutOfMemory) END;
+      RTHeapRep.RegisterFinalCleanup (root, Clean);
       m := mutex;
       mutex := NIL;
-      register := TRUE;
     FINALLY
       WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
       pthread_mutex_delete(mutex);
-    END;
-    IF register THEN
-      (* RegisterFinalCleanup serializes itself using RTOS.LockHeap.
-         Call it outside initMu to avoid deadlock with AtForkPrepare.
-         Register can happen outside a lock because the root is yet
-         alive and therefore will not be collected between pthread_mutex_new
-         and RegisterFinalCleanup. We are careful to only RegisterFinalCleanup
-         once -- not in the lost race cases -- though it doesn't clearly
-         matter.
-       *)
-      RTHeapRep.RegisterFinalCleanup (root, Clean);
     END;
   END InitMutex;
 
