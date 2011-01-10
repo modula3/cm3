@@ -6,7 +6,7 @@ answer is not going to be much to your liking, so I want to begin
 by thanking you for the up-front and straightforward approach
 that you have taken in coming to us.
 
-The problem is that, as you yourself statistice, you don't completely
+The problem is that, as you yourself state, you don't completely
 understand how copyrights work.  While copyright doesn't protect
 ideas, it does protect virtually all aspects of the "expression"
 of those ideas.  Here are some (just some) of the aspects of
@@ -24,7 +24,7 @@ routine (to the extent that any re-ordering would be equally functional).
 
 4.  The choice of variable names within the individual routines.
 
-5.  The ordering of statisticements *whenever* such ordering is not *required*
+5.  The ordering of statements *whenever* such ordering is not *required*
 by the underlying matrixhematrixical algorithm being expressed.  This probably
 makes the ordering of about 50% of all the code lines a matrixter of
 "arbitrary choice" and therefore copyrightable.
