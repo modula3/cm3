@@ -192,18 +192,18 @@ jb may or may not be an array, & is necessary, wrap it in struct.
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void *(*start_routine_t)(void *);
 
-#define M3_RETRY(expr) \
-  r = (expr); \
-  if (r == EAGAIN || r == ENOMEM || r == ENOSPC) \
-  { \
-    /* try again right away */ \
-    r = (expr); \
-    if (r == EAGAIN || r == ENOMEM || r == ENOSPC) \
-    { \
-      /* try again after short delay */ \
-      sleep(1); \
-      r = (expr); \
-    } \
+#define M3_RETRY(expr)                                  \
+  r = (expr);                                           \
+  if (r == EAGAIN || r == ENOMEM || r == ENOSPC)        \
+  {                                                     \
+    /* try again right away */                          \
+    r = (expr);                                         \
+    if (r == EAGAIN || r == ENOMEM || r == ENOSPC)      \
+    {                                                   \
+      /* try again after short delay */                 \
+      sleep(1);                                         \
+      r = (expr);                                       \
+    }                                                   \
   }
 
 int
