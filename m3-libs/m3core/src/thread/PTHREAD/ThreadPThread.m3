@@ -1248,7 +1248,7 @@ PROCEDURE Init ()=
   END Init;
 
 VAR locks := ARRAY [0..4] OF pthread_mutex_t
-  { heapMu, activeMu, slotsMu, initMu, perfMu };
+  { initMu, heapMu, activeMu, slotsMu, perfMu };
 
 PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
   BEGIN
