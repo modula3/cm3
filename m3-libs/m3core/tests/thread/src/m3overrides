@@ -1,0 +1,9 @@
+ if defined("CM3_VERSION")
+      	/* Critical Mass Modula-3 */
+% see http://www.elegosoft.com/cm3/doc/help/cm3/cm3.html
+
+% not sure about this:
+      build_standalone()
+
+      m3_optimize("")
+end
