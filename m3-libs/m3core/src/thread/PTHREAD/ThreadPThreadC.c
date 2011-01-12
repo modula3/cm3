@@ -249,11 +249,10 @@ pthread_mutex_t * const ThreadPThread__##name##Mu = &name##Mu; \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
 pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
 
-/* activeMu slotMu initMu perfMu heapMu heapCond */
+/* activeMu slotMu perfMu heapMu heapCond */
 
 MUTEX(active)                   /* global lock for list of active threads */
 MUTEX(slots)                    /* global lock for thread slots table */
-MUTEX(init)                     /* global lock for initializers */
 MUTEX(perf)                     /* global lock for thread state tracing */
 MUTEX(heap)                     /* global lock for heap atomicity */
 CONDITION_VARIABLE(heap)        /* CV for heap lockers */
