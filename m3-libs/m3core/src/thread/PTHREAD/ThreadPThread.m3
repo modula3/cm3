@@ -98,7 +98,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
   VAR mutex := pthread_mutex_new();
   BEGIN
     TRY
-      WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
+      LockHeap(); (* RegisterFinalCleanup locks heap so might as well use it here too *)
       (* Did someone else win the race? *)
       IF m # NIL THEN RETURN END;
       (* We won the race, but we might have failed to allocate. *)
@@ -107,7 +107,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
       m := mutex;
       mutex := NIL;
     FINALLY
-      WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
+      UnlockHeap();
       pthread_mutex_delete(mutex);
     END;
   END InitMutex;
@@ -1247,9 +1247,6 @@ PROCEDURE Init ()=
     InitWithStackBase(ADR(r)); (* not quite accurate but hopefully ok *)
   END Init;
 
-VAR locks := ARRAY [0..4] OF pthread_mutex_t
-  { initMu, heapMu, activeMu, slotsMu, perfMu };
-
 PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
   BEGIN
     IF mutex # NIL THEN
@@ -1275,11 +1272,12 @@ PROCEDURE AtForkPrepare() =
       cond: Condition;
   BEGIN
     Acquire(joinMu);
-    FOR i := FIRST(locks) TO LAST(locks) DO
-      PThreadLockMutex(locks[i], ThisLine());
-    END;
+    PThreadLockMutex(heapMu);
+    PThreadLockMutex(activeMu);
+    PThreadLockMutex(slotsMu);
+    PThreadLockMutex(perfMu);
     (* Walk activations and lock all threads, conditions.
-     * NOTE: We have initMu, activeMu, so slots
+     * NOTE: We have activeMu, so slots
      * won't change, conditions and mutexes
      * won't be initialized on-demand.
      *)
@@ -1307,9 +1305,10 @@ PROCEDURE AtForkParent() =
       PThreadUnlockMutex(act.mutex, ThisLine());
       act := act.next;
     UNTIL act = me;
-    FOR i := LAST(locks) TO FIRST(locks) BY -1 DO
-      PThreadUnlockMutex(locks[i], ThisLine());
-    END;
+    PThreadLockMutex(perfMu);
+    PThreadLockMutex(slotsMu);
+    PThreadLockMutex(activeMu);
+    PThreadLockMutex(heapMu);
     Release(joinMu);
   END AtForkParent;
 
