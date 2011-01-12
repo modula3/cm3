@@ -45,7 +45,8 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 #define X(x) EXTERN_CONST int Uerror__##x = x;
 #include "UerrorX.h"
 
-EXTERN_CONST INTEGER Csetjmp__Jumpbuf_size = sizeof(jmp_buf);
+/* This needs to be aligned to 16, at least for Win32. */
+EXTERN_CONST INTEGER Csetjmp__Jumpbuf_size = ((sizeof(jmp_buf) + 15) & ~15);
 
 #ifndef _WIN32
 
