@@ -1272,10 +1272,10 @@ PROCEDURE AtForkPrepare() =
       cond: Condition;
   BEGIN
     Acquire(joinMu);
-    PThreadLockMutex(heapMu);
-    PThreadLockMutex(activeMu);
-    PThreadLockMutex(slotsMu);
-    PThreadLockMutex(perfMu);
+    PThreadLockMutex(heapMu, ThisLine());
+    PThreadLockMutex(activeMu, ThisLine());
+    PThreadLockMutex(slotsMu, ThisLine());
+    PThreadLockMutex(perfMu, ThisLine());
     (* Walk activations and lock all threads, conditions.
      * NOTE: We have activeMu, so slots
      * won't change, conditions and mutexes
@@ -1305,10 +1305,10 @@ PROCEDURE AtForkParent() =
       PThreadUnlockMutex(act.mutex, ThisLine());
       act := act.next;
     UNTIL act = me;
-    PThreadLockMutex(perfMu);
-    PThreadLockMutex(slotsMu);
-    PThreadLockMutex(activeMu);
-    PThreadLockMutex(heapMu);
+    PThreadUnlockMutex(perfMu, ThisLine());
+    PThreadUnlockMutex(slotsMu, ThisLine());
+    PThreadUnlockMutex(activeMu, ThisLine());
+    PThreadUnlockMutex(heapMu, ThisLine());
     Release(joinMu);
   END AtForkParent;
 
