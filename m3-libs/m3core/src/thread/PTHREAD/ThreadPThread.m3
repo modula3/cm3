@@ -1332,18 +1332,20 @@ PROCEDURE LockHeap () =
   BEGIN
     IF pthread_equal(holder, self) = 0 THEN
       WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
-      WHILE inCritical # 0 DO
+      WHILE holder # NIL DO
         WITH r = pthread_cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
       END;
       holder := self;
       WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
     END;
     INC(inCritical);
+    <*ASSERT pthread_equal(holder, self) # 0*>
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
+  VAR self := pthread_self();
   BEGIN
-    <*ASSERT pthread_equal(holder, pthread_self()) # 0*>
+    <*ASSERT pthread_equal(holder, self) # 0*>
     DEC(inCritical);
     IF inCritical = 0 THEN
       WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
@@ -1361,7 +1363,11 @@ PROCEDURE WaitHeap () =
     <*ASSERT inCritical = 0*>
     WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
     holder := NIL;
+    WITH r = pthread_cond_signal(heapCond) DO <*ASSERT r=0*> END;
     WITH r = pthread_cond_wait(waitCond, heapMu) DO <*ASSERT r=0*> END;
+    WHILE holder # NIL DO
+      WITH r = pthread_cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
+    END;      
     holder := self;
     WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
     <*ASSERT inCritical = 0*>
