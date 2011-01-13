@@ -1,8 +1,53 @@
-(* $Id: Main.m3,v 1.1 2011-01-11 15:57:22 mika Exp $ *)
-
 MODULE Main;
 
-(* threading stress-test *)
+(* Threading stress-test.
+
+   Create n threads, currently n = 100.  n must be a compile-time
+   constant since it's used for statically allocated arrays.
+
+   The threads created are of three types.  Each type of thread starts
+   by sleeping for a while, to give the other threads a chance to be 
+   created (so the program currently does not test thread creation
+   under load, which is a limitation).
+
+   The threads are of the following types:
+   
+   1. Reader -- continuously read the contents of the file "hohum",
+      created during startup in CWD by the main thread.
+ 
+   2. Forker -- repeatedly fork the Unix process "sleep 1" using
+      Process.Create.
+ 
+   3. Allocator -- repeatedly allocate heap memory and perform 
+      meaningless operations on it.
+
+   Each thread writes the the it performs an operation to the times1 
+   array.  The times1 array is copied by the main thread, every 10+ 
+   seconds, into the times2 array.  No locks are used to synchronize 
+   this copying activity as we don't want to introduce too many possible
+   places things could deadlock.
+
+   The main thread then prints out how long ago the thread that has not
+   written times1 last wrote that array.
+
+   Note that Fmt.Int in the main thread allocates memory and therefore
+   acquires locks in ThreadPThread.m3, the file which the program is
+   mainly intended to test.  The design is based on a knowledge of the
+   internal behavior of ThreadPThread.m3 and also on a knowledge of the
+   misbehavior of existing, highly multithreaded applications.
+
+   Author: Mika Nystrom <mika@alum.mit.edu>
+
+   Copyright (c) 2011 Generation Capital Ltd.  All rights reserved.
+
+   Permission to use, copy, modify, and distribute this software            
+   and its documentation for any purpose and without fee is hereby         
+   granted, provided that the above copyright notice appear in all        
+   copies. Generation Capital Ltd. makes no representations
+   about the suitability of this software for any purpose. It is         
+   provided "as is" without express or implied warranty.
+
+ *)
 
 IMPORT Params, Scan, Thread, Rd, FileRd, Wr, FileWr, Process, IO;
 IMPORT Time;
