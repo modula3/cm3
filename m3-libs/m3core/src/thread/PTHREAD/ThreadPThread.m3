@@ -1271,7 +1271,7 @@ PROCEDURE AtForkPrepare() =
       cond: Condition;
   BEGIN
     Acquire(joinMu);
-    PThreadLockMutex(heapMu, ThisLine());
+    LockHeap();
     PThreadLockMutex(activeMu, ThisLine());
     PThreadLockMutex(slotsMu, ThisLine());
     PThreadLockMutex(perfMu, ThisLine());
@@ -1307,7 +1307,7 @@ PROCEDURE AtForkParent() =
     PThreadUnlockMutex(perfMu, ThisLine());
     PThreadUnlockMutex(slotsMu, ThisLine());
     PThreadUnlockMutex(activeMu, ThisLine());
-    PThreadUnlockMutex(heapMu, ThisLine());
+    UnlockHeap();
     Release(joinMu);
   END AtForkParent;
 
