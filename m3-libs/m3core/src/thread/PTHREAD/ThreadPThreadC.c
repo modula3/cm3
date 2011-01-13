@@ -255,8 +255,7 @@ MUTEX(active)                   /* global lock for list of active threads */
 MUTEX(slots)                    /* global lock for thread slots table */
 MUTEX(perf)                     /* global lock for thread state tracing */
 MUTEX(heap)                     /* global lock for heap atomicity */
-CONDITION_VARIABLE(heap)        /* CV for heap lockers */
-CONDITION_VARIABLE(wait)        /* CV for heap waiters */
+CONDITION_VARIABLE(heap)        /* CV for heap waiters */
 
 /*
 NetBSD 5.0.2 compiles __thread, but segfault at runtime.

@@ -78,7 +78,6 @@ PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 <*EXTERNAL "ThreadPThread__perfMu"*>   VAR perfMu: pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__heapMu"*>   VAR heapMu: pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__heapCond"*> VAR heapCond: pthread_cond_t;
-<*EXTERNAL "ThreadPThread__waitCond"*> VAR waitCond: pthread_cond_t;
 
 (* thread local "activation" *)
 
