@@ -248,7 +248,7 @@ PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
     END;
     (* void* _alloca(size_t); *)
     IF (alloca = NIL) THEN
-      alloca := CG.Import_procedure (M3ID.Add ("_alloca"), 1, CG.Type.Addr,
+      alloca := CG.Import_procedure (M3ID.Add ("m3_alloca"), 1, CG.Type.Addr,
                                      Target.DefaultCall, new);
       IF (new) THEN
         EVAL CG.Declare_param (M3ID.NoID, Target.Word.size, Target.Word.align,
