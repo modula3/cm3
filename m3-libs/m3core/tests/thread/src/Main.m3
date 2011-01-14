@@ -52,6 +52,8 @@ MODULE Main;
 IMPORT Thread, Rd, FileRd, Wr, FileWr, Process, IO;
 IMPORT Time;
 IMPORT Fmt, IntArraySort;
+IMPORT Atom, AtomList;
+IMPORT OSError;
 
 <* FATAL Thread.Alerted *>
 
@@ -85,15 +87,21 @@ PROCEDURE RApply(cl : Closure) : REFANY =
   BEGIN
     Thread.Pause(InitPause);
     LOOP
-      WITH rd = FileRd.Open(Filename) DO
-        TRY
-          LOOP
-            VAR c := Rd.GetChar(rd); BEGIN  END
-          END
-        EXCEPT
-          Rd.EndOfFile => Rd.Close(rd)
-        END;
-        times1[cl.id]:= FLOOR(Time.Now()) 
+      TRY 
+        WITH rd = FileRd.Open(Filename) DO
+          TRY
+            LOOP
+              <*UNUSED*>VAR c := Rd.GetChar(rd); BEGIN  END
+            END
+          EXCEPT
+            Rd.EndOfFile => Rd.Close(rd)
+          END;
+          times1[cl.id]:= FLOOR(Time.Now()) 
+        END
+      EXCEPT 
+        OSError.E(x) => Error("RApply: OSError.E: " & FmtAtomList(x))
+      |
+        Rd.Failure(x) => Error("RApply: Rd.Failure: " & FmtAtomList(x))
       END 
     END
   END RApply;
@@ -102,9 +110,13 @@ PROCEDURE FApply(cl : Closure) : REFANY =
   BEGIN
     Thread.Pause(InitPause);
     LOOP
-      WITH proc = Process.Create("sleep",
-                                 ARRAY OF TEXT { "1" }) DO
-        EVAL Process.Wait(proc); times1[cl.id] := FLOOR(Time.Now())
+      TRY
+        WITH proc = Process.Create("sleep",
+                                   ARRAY OF TEXT { "1" }) DO
+          EVAL Process.Wait(proc); times1[cl.id] := FLOOR(Time.Now())
+        END
+      EXCEPT 
+        OSError.E(x) => Error("FApply: OSError.E: " & FmtAtomList(x))
       END
     END
   END FApply;
@@ -127,6 +139,7 @@ PROCEDURE AApply(cl : Closure) : REFANY =
 CONST Filename = "hohum";
 
 PROCEDURE WriteAFile() =
+  <*FATAL Wr.Failure, OSError.E*>  (* errors during setup are just fatal *)
   BEGIN
     WITH wr = FileWr.Open(Filename) DO
       FOR i := 1 TO 256 DO
@@ -150,6 +163,22 @@ PROCEDURE FmtStats(VAR a : ARRAY OF INTEGER) : TEXT =
       RETURN Fmt.F("%s/%s/%s",Fmt.Int(now-min), Fmt.Int(now-med), Fmt.Int(now-max))
     END
   END FmtStats;
+
+PROCEDURE FmtAtomList(err : AtomList.T) : TEXT =
+  VAR
+    msg := "";
+    p := err;
+  BEGIN
+    WHILE p # NIL DO
+      msg := msg & " " & Atom.ToText(p.head); p := p.tail
+    END;
+    RETURN msg
+  END FmtAtomList;
+
+PROCEDURE Error(msg : TEXT) =
+  BEGIN
+    IO.Put("ERROR " & msg & "\n")
+  END Error;
 
 VAR
   times1, times2, times3 : ARRAY [0..n-1] OF INTEGER;
