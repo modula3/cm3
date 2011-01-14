@@ -2,8 +2,9 @@ MODULE Main;
 
 (* Threading stress-test.
 
-   Create n threads, currently n = 100.  n must be a compile-time
-   constant since it's used for statically allocated arrays.
+   Create n threads, currently n = 33.  n is specified via nOver3,
+   which must be a compile-time constant since it's used for
+   statically allocated arrays.
 
    The threads created are of three types.  Each type of thread starts
    by sleeping for a while, to give the other threads a chance to be 
@@ -153,6 +154,7 @@ PROCEDURE WriteAFile() =
   END WriteAFile;
 
 PROCEDURE FmtStats(VAR a : ARRAY OF INTEGER) : TEXT =
+  (* now is global in Main.m3 *)
   BEGIN
     <*ASSERT NUMBER(a) MOD 2 = 1*>
     IntArraySort.Sort(a);
