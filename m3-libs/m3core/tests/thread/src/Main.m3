@@ -49,12 +49,16 @@ MODULE Main;
 
  *)
 
-IMPORT Params, Scan, Thread, Rd, FileRd, Wr, FileWr, Process, IO;
+IMPORT Thread, Rd, FileRd, Wr, FileWr, Process, IO;
 IMPORT Time;
-IMPORT IntArraySort, Fmt;
+IMPORT Fmt, IntArraySort;
 
-(* VAR  n := Scan.Int(Params.Get(1)); *)
-CONST n = 100;
+<* FATAL Thread.Alerted *>
+
+CONST nOver3 = 33; (* must be odd *)
+
+CONST n = 3 * nOver3;
+
 CONST InitPause = 1.0d0;
 
 TYPE 
@@ -135,35 +139,55 @@ PROCEDURE WriteAFile() =
     END
   END WriteAFile;
 
+PROCEDURE FmtStats(VAR a : ARRAY OF INTEGER) : TEXT =
+  BEGIN
+    <*ASSERT NUMBER(a) MOD 2 = 1*>
+    IntArraySort.Sort(a);
+    
+    WITH min = a[FIRST(a)],
+         max = a[LAST(a)],
+         med = a[NUMBER(a) DIV 2 - 1] DO
+      RETURN Fmt.F("%s/%s/%s",Fmt.Int(now-min), Fmt.Int(now-med), Fmt.Int(now-max))
+    END
+  END FmtStats;
+
 VAR
-  times1, times2 : ARRAY [0..n-1] OF INTEGER;
+  times1, times2, times3 : ARRAY [0..n-1] OF INTEGER;
+  (* times1 : input array
+     times2 : a stable copy of times1
+     times3 : another stable copy of times1 *)
+
+  now : INTEGER;
 BEGIN
   IO.Put("Writing file...");
   WriteAFile();
   IO.Put("done\n");
   IO.Put("Creating reader threads...");
-  FOR i := 0 TO n DIV 3 - 1 DO
+  FOR i := 0 TO nOver3 - 1 DO
     MakeReaderThread(i)
   END;
   IO.Put("done\n");
   IO.Put("Creating forker threads...");
-  FOR i := n DIV 3 TO 2*(n DIV 3)-1 DO
+  FOR i := nOver3 TO 2*nOver3 - 1 DO
     MakeForkerThread(i)
   END;
   IO.Put("done\n");
   IO.Put("Creating allocator threads...");
-  FOR i := 2*(n DIV 3) TO n-1 DO
+  FOR i := 2*nOver3 TO n-1 DO
     MakeAllocatorThread(i)
   END;
   IO.Put("done\n");
 
-  IO.Put("running...\n");
+  IO.Put("running...printing oldest/median age/newest\n");
   FOR i := 1 TO 10 DO
     Thread.Pause(10.0d0);
     times2 := times1;
-    IntArraySort.Sort(times2);
-    WITH delta = FLOOR(Time.Now()) - times2[0] DO
-      IO.Put("laziest thread is " & Fmt.Int(delta) & " seconds behind\n")
+    times3 := times2;
+    now  := FLOOR(Time.Now());
+    WITH read  = SUBARRAY(times2,       0,nOver3), 
+         fork  = SUBARRAY(times2,  nOver3,nOver3), 
+         alloc = SUBARRAY(times2,2*nOver3,nOver3)  DO
+      IO.Put("laziest thread is " & FmtStats(times2) & " seconds behind (read " & FmtStats(read) & " fork " & FmtStats(fork) &  " alloc " & FmtStats(alloc) & ")\n")
     END
   END
 END Main.
