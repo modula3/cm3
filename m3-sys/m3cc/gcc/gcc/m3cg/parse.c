@@ -1547,25 +1547,6 @@ m3_push_type_decl (tree type, tree name)
    copied from gcc/c-decl.c
 */
 
-static GTY ((param_is (union tree_node))) htab_t builtins;
-
-static hashval_t
-htab_hash_builtin (const PTR p)
-{
-  const_tree t = (const_tree)p;
-
-  return htab_hash_pointer (DECL_NAME (t));
-}
-
-static int
-htab_eq_builtin (const PTR p1, const PTR p2)
-{
-  const_tree t1 = (const_tree)p1;
-  const_tree t2 = (const_tree)p2;
-
-  return DECL_NAME (t1) == DECL_NAME (t2);
-}
-
 static tree
 builtin_function (PCSTR name, tree type,
 #if GCC42
@@ -1594,13 +1575,6 @@ builtin_function (PCSTR name, tree type,
   {
     gcc_assert (!library_name);
   }
-
-  if (!builtins)
-    builtins = htab_create_ggc (1021, htab_hash_builtin,
-                                htab_eq_builtin, NULL);
-  tree* slot = (tree *)htab_find_slot (builtins, decl, INSERT);
-  gcc_assert (*slot == NULL);
-  *slot = decl;
 
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
@@ -2979,11 +2953,7 @@ m3_pop_param (tree type)
 static tree
 m3_convert_function_to_builtin (tree p)
 {
-  tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
-
-  if (slot)
-    p = *slot;
-  else if (DECL_NAME (p) == m3_alloca)
+  if (DECL_NAME (p) == m3_alloca)
     p = built_in_decls[BUILT_IN_ALLOCA];
   return p;
 }
