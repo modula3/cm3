@@ -2,11 +2,12 @@ MODULE Main;
 
 (* Threading stress-test.
 
-   Create n threads, currently n = 33.  n is specified via nOver3,
+   Create n threads, currently n = 12.  n is specified via nOver4,
    which must be a compile-time constant since it's used for
-   statically allocated arrays.
+   statically allocated arrays.  It is reasonable for nOver4 to be
+   from 1 to a few hundred.
 
-   The threads created are of three types.  Each type of thread starts
+   The threads created are of four types.  Each type of thread starts
    by sleeping for a while, to give the other threads a chance to be 
    created (so the program currently does not test thread creation
    under load, which is a limitation).
@@ -21,6 +22,9 @@ MODULE Main;
  
    3. Allocator -- repeatedly allocate heap memory and perform 
       meaningless operations on it.
+
+   3. Creator -- repeatedly fork a simple Thread.T that does nothing
+      and exits.  Wait for it to exit before forking another.
 
    Each thread writes the the it performs an operation to the times1 
    array.  The times1 array is copied by the main thread, every 10+ 
@@ -58,9 +62,9 @@ IMPORT OSError;
 
 <* FATAL Thread.Alerted *>
 
-CONST nOver3 = 33; (* must be odd *)
+CONST nOver4 = 3; (* must be odd *)
 
-CONST n = 3 * nOver3;
+CONST n = 4 * nOver4;
 
 CONST InitPause = 1.0d0;
 
@@ -81,6 +85,11 @@ PROCEDURE MakeAllocatorThread(i : CARDINAL) =
   BEGIN 
     EVAL Thread.Fork(NEW(Closure, id := i, apply := AApply)) 
   END MakeAllocatorThread;
+
+PROCEDURE MakeCreatorThread(i : CARDINAL) =
+  BEGIN 
+    EVAL Thread.Fork(NEW(Closure, id := i, apply := CApply)) 
+  END MakeCreatorThread;
 
 (**********************************************************************)
 
@@ -136,6 +145,19 @@ PROCEDURE AApply(cl : Closure) : REFANY =
     END
   END AApply;
 
+PROCEDURE CApply(cl : Closure) : REFANY =
+  BEGIN
+    Thread.Pause(InitPause);
+    LOOP
+      VAR
+        t := Thread.Fork(NEW(Thread.Closure, apply := ThreadNOP));
+      BEGIN
+        EVAL Thread.Join(t); times1[cl.id] := FLOOR(Time.Now())
+      END
+    END
+  END CApply;
+
+PROCEDURE ThreadNOP(<*UNUSED*>cl : Thread.Closure) : REFANY = BEGIN RETURN NIL END ThreadNOP;
 
 CONST Filename = "hohum";
 
@@ -156,9 +178,9 @@ PROCEDURE WriteAFile() =
 PROCEDURE FmtStats(VAR a : ARRAY OF INTEGER) : TEXT =
   (* now is global in Main.m3 *)
   BEGIN
-    <*ASSERT NUMBER(a) MOD 2 = 1*>
     IntArraySort.Sort(a);
     
+    (* the result isn't quite right if NUMBER(a) is even *)
     WITH min = a[FIRST(a)],
          max = a[LAST(a)],
          med = a[NUMBER(a) DIV 2 - 1] DO
@@ -194,18 +216,23 @@ BEGIN
   WriteAFile();
   IO.Put("done\n");
   IO.Put("Creating reader threads...");
-  FOR i := 0 TO nOver3 - 1 DO
+  FOR i := 0 TO nOver4 - 1 DO
     MakeReaderThread(i)
   END;
   IO.Put("done\n");
-  IO.Put("Creating forker threads...");
-  FOR i := nOver3 TO 2*nOver3 - 1 DO
+  IO.Put("Creating process forker threads...");
+  FOR i := nOver4 TO 2*nOver4 - 1 DO
     MakeForkerThread(i)
   END;
   IO.Put("done\n");
   IO.Put("Creating allocator threads...");
-  FOR i := 2*nOver3 TO n-1 DO
+  FOR i := 2*nOver4 TO 3*nOver4-1 DO
     MakeAllocatorThread(i)
+  END;
+  IO.Put("done\n");
+  IO.Put("Creating thread creator threads...");
+  FOR i := 3*nOver4 TO 4*nOver4-1 DO
+    MakeCreatorThread(i)
   END;
   IO.Put("done\n");
 
@@ -215,10 +242,11 @@ BEGIN
     times2 := times1;
     times3 := times2;
     now  := FLOOR(Time.Now());
-    WITH read  = SUBARRAY(times2,       0,nOver3), 
-         fork  = SUBARRAY(times2,  nOver3,nOver3), 
-         alloc = SUBARRAY(times2,2*nOver3,nOver3)  DO
-      IO.Put("laziest thread is " & FmtStats(times2) & " seconds behind (read " & FmtStats(read) & " fork " & FmtStats(fork) &  " alloc " & FmtStats(alloc) & ")\n")
+    WITH read  = SUBARRAY(times2,       0,nOver4), 
+         fork  = SUBARRAY(times2,  nOver4,nOver4), 
+         alloc = SUBARRAY(times2,2*nOver4,nOver4),
+         creat = SUBARRAY(times2,3*nOver4,nOver4)  DO
+      IO.Put("laziest thread is " & FmtStats(times2) & " seconds behind (read " & FmtStats(read) & " fork " & FmtStats(fork) &  " alloc " & FmtStats(alloc) & " creat " & FmtStats(creat) & ")\n")
     END
   END
 END Main.
