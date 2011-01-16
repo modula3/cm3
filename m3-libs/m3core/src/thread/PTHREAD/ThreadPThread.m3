@@ -98,7 +98,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
   VAR mutex := pthread_mutex_new();
   BEGIN
     TRY
-      LockHeap(); (* RegisterFinalCleanup locks heap so might as well use it here too *)
+      WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
       (* Did someone else win the race? *)
       IF m # NIL THEN RETURN END;
       (* We won the race, but we might have failed to allocate. *)
@@ -107,7 +107,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
       m := mutex;
       mutex := NIL;
     FINALLY
-      UnlockHeap();
+      WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
       pthread_mutex_delete(mutex);
     END;
   END InitMutex;
@@ -1271,12 +1271,13 @@ PROCEDURE AtForkPrepare() =
       cond: Condition;
   BEGIN
     Acquire(joinMu);
-    LockHeap();
     PThreadLockMutex(activeMu, ThisLine());
+    PThreadLockMutex(initMu, ThisLine());
     PThreadLockMutex(slotsMu, ThisLine());
     PThreadLockMutex(perfMu, ThisLine());
+    LockHeap();
     (* Walk activations and lock all threads, conditions.
-     * NOTE: We have activeMu, so slots
+     * NOTE: We have initMu, activeMu, so slots
      * won't change, conditions and mutexes
      * won't be initialized on-demand.
      *)
@@ -1304,10 +1305,11 @@ PROCEDURE AtForkParent() =
       PThreadUnlockMutex(act.mutex, ThisLine());
       act := act.next;
     UNTIL act = me;
+    UnlockHeap();
     PThreadUnlockMutex(perfMu, ThisLine());
     PThreadUnlockMutex(slotsMu, ThisLine());
+    PThreadUnlockMutex(initMu, ThisLine());
     PThreadUnlockMutex(activeMu, ThisLine());
-    UnlockHeap();
     Release(joinMu);
   END AtForkParent;
 
