@@ -2773,20 +2773,18 @@ PROCEDURE FinishBench() =
 
 PROCEDURE AtForkPrepare() =
   BEGIN
-    RTOS.LockHeap();
   END AtForkPrepare;
 
 PROCEDURE AtForkParent() =
   BEGIN
-    RTOS.UnlockHeap();
   END AtForkParent;
 
 PROCEDURE AtForkChild() =
   BEGIN
+    (* There are no other threads (and synchronisation is unnecessary) *)
     startedForeground := FALSE;
     startedBackground := FALSE;
     startedWeakCleaner := FALSE;
-    RTOS.UnlockHeap();
   END AtForkChild;
 
 PROCEDURE Init () =
