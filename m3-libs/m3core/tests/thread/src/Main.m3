@@ -238,7 +238,10 @@ BEGIN
 
   IO.Put("running...printing oldest/median age/newest\n");
   FOR i := 1 TO 10 DO
-    Thread.Pause(10.0d0);
+    FOR j := 1 TO 10 DO
+      Thread.Pause(1.0d0);
+      IO.Put(".")
+    END;
     times2 := times1;
     times3 := times2;
     now  := FLOOR(Time.Now());
