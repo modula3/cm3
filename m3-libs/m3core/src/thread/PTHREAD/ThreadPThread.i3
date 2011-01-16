@@ -75,6 +75,7 @@ PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 
 <*EXTERNAL "ThreadPThread__activeMu"*> VAR activeMu: pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__slotsMu"*>  VAR slotsMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__initMu"*>   VAR initMu: pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__perfMu"*>   VAR perfMu: pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__heapMu"*>   VAR heapMu: pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__heapCond"*> VAR heapCond: pthread_cond_t;
