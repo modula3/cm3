@@ -2771,17 +2771,9 @@ PROCEDURE FinishBench() =
 
 (*** INITIALIZATION ***)
 
-PROCEDURE AtForkPrepare() =
-  BEGIN
-  END AtForkPrepare;
-
-PROCEDURE AtForkParent() =
-  BEGIN
-  END AtForkParent;
-
 PROCEDURE AtForkChild() =
   BEGIN
-    (* There are no other threads (and synchronisation is unnecessary) *)
+    (* There are no other threads (so synchronisation is unnecessary) *)
     startedForeground := FALSE;
     startedBackground := FALSE;
     startedWeakCleaner := FALSE;
@@ -2789,9 +2781,7 @@ PROCEDURE AtForkChild() =
 
 PROCEDURE Init () =
   BEGIN
-    WITH r = RTProcess.RegisterForkHandlers(AtForkPrepare,
-                                            AtForkParent,
-                                            AtForkChild) DO
+    WITH r = RTProcess.RegisterForkHandlers(NIL, NIL, AtForkChild) DO
       <* ASSERT r = 0 *>
     END;
     IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
