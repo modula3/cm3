@@ -2,12 +2,12 @@ MODULE Main;
 
 (* Threading stress-test.
 
-   Create n threads, currently n = 12.  n is specified via nOver4,
+   Create n threads, currently n = 12.  n is specified via nOver5,
    which must be a compile-time constant since it's used for
-   statically allocated arrays.  It is reasonable for nOver4 to be
+   statically allocated arrays.  It is reasonable for nOver5 to be
    from 1 to a few hundred.
 
-   The threads created are of four types.  Each type of thread starts
+   The threads created are of five types.  Each type of thread starts
    by sleeping for a while, to give the other threads a chance to be 
    created (so the program currently does not test thread creation
    under load, which is a limitation).
@@ -23,8 +23,11 @@ MODULE Main;
    3. Allocator -- repeatedly allocate heap memory and perform 
       meaningless operations on it.
 
-   3. Creator -- repeatedly fork a simple Thread.T that does nothing
+   4. Creator -- repeatedly fork a simple Thread.T that does nothing
       and exits.  Wait for it to exit before forking another.
+
+   5. Locker -- repeatedly increment or decrement a single integer
+      variable from within a MUTEX-protected critical section.
 
    Each thread writes the the it performs an operation to the times1 
    array.  The times1 array is copied by the main thread, every 10+ 
@@ -62,9 +65,9 @@ IMPORT OSError;
 
 <* FATAL Thread.Alerted *>
 
-CONST nOver4 = 3; (* must be odd *)
+CONST nOver5 = 3; (* must be odd *)
 
-CONST n = 4 * nOver4;
+CONST n = 5 * nOver5;
 
 CONST InitPause = 1.0d0;
 
@@ -90,6 +93,11 @@ PROCEDURE MakeCreatorThread(i : CARDINAL) =
   BEGIN 
     EVAL Thread.Fork(NEW(Closure, id := i, apply := CApply)) 
   END MakeCreatorThread;
+
+PROCEDURE MakeLockerThread(i : CARDINAL) =
+  BEGIN 
+    EVAL Thread.Fork(NEW(Closure, id := i, apply := LApply)) 
+  END MakeLockerThread;
 
 (**********************************************************************)
 
@@ -159,6 +167,26 @@ PROCEDURE CApply(cl : Closure) : REFANY =
 
 PROCEDURE ThreadNOP(<*UNUSED*>cl : Thread.Closure) : REFANY = BEGIN RETURN NIL END ThreadNOP;
 
+VAR mu     := NEW(MUTEX);
+VAR shared := 0;
+
+PROCEDURE LApply(cl : Closure) : REFANY =
+  BEGIN
+    Thread.Pause(InitPause);
+    LOOP
+      LOCK mu DO
+        CASE cl.id MOD 2 OF
+          1 => INC(shared)
+        |
+          0 => DEC(shared)
+        ELSE
+          <*ASSERT FALSE*>
+        END
+      END; times1[cl.id] := FLOOR(Time.Now())
+    END
+  END LApply;
+
+
 CONST Filename = "hohum";
 
 PROCEDURE WriteAFile() =
@@ -216,23 +244,28 @@ BEGIN
   WriteAFile();
   IO.Put("done\n");
   IO.Put("Creating reader threads...");
-  FOR i := 0 TO nOver4 - 1 DO
+  FOR i := 0 TO nOver5 - 1 DO
     MakeReaderThread(i)
   END;
   IO.Put("done\n");
   IO.Put("Creating process forker threads...");
-  FOR i := nOver4 TO 2*nOver4 - 1 DO
+  FOR i := nOver5 TO 2*nOver5 - 1 DO
     MakeForkerThread(i)
   END;
   IO.Put("done\n");
   IO.Put("Creating allocator threads...");
-  FOR i := 2*nOver4 TO 3*nOver4-1 DO
+  FOR i := 2*nOver5 TO 3*nOver5-1 DO
     MakeAllocatorThread(i)
   END;
   IO.Put("done\n");
   IO.Put("Creating thread creator threads...");
-  FOR i := 3*nOver4 TO 4*nOver4-1 DO
+  FOR i := 3*nOver5 TO 4*nOver5-1 DO
     MakeCreatorThread(i)
+  END;
+  IO.Put("done\n");
+  IO.Put("Creating locker threads...");
+  FOR i := 4*nOver5 TO 5*nOver5-1 DO
+    MakeLockerThread(i)
   END;
   IO.Put("done\n");
 
@@ -245,11 +278,12 @@ BEGIN
     times2 := times1;
     times3 := times2;
     now  := FLOOR(Time.Now());
-    WITH read  = SUBARRAY(times2,       0,nOver4), 
-         fork  = SUBARRAY(times2,  nOver4,nOver4), 
-         alloc = SUBARRAY(times2,2*nOver4,nOver4),
-         creat = SUBARRAY(times2,3*nOver4,nOver4)  DO
-      IO.Put("laziest thread is " & FmtStats(times2) & " seconds behind (read " & FmtStats(read) & " fork " & FmtStats(fork) &  " alloc " & FmtStats(alloc) & " creat " & FmtStats(creat) & ")\n")
+    WITH read  = SUBARRAY(times2,       0,nOver5), 
+         fork  = SUBARRAY(times2,  nOver5,nOver5), 
+         alloc = SUBARRAY(times2,2*nOver5,nOver5),
+         creat = SUBARRAY(times2,3*nOver5,nOver5),  
+         lock  = SUBARRAY(times2,4*nOver5,nOver5)  DO
+      IO.Put("laziest thread is " & FmtStats(times2) & " seconds behind (read " & FmtStats(read) & " fork " & FmtStats(fork) &  " alloc " & FmtStats(alloc) & " creat " & FmtStats(creat) & " lock " & FmtStats(lock) & ")\n")
     END
   END
 END Main.
