@@ -1312,7 +1312,12 @@ i386_extract_return_value (struct gdbarch *gdbarch, struct type *type,
   int len = TYPE_LENGTH (type);
   gdb_byte buf[I386_MAX_REGISTER_SIZE];
 
-  if (TYPE_CODE (type) == TYPE_CODE_FLT)
+  if (TYPE_CODE (type) == TYPE_CODE_FLT
+/* FIXME: A very temporary expedient for getting return values working. */
+      || TYPE_CODE (type) == TYPE_CODE_M3_REAL
+      || TYPE_CODE (type) == TYPE_CODE_M3_LONGREAL
+      || TYPE_CODE (type) == TYPE_CODE_M3_EXTENDED
+     )
     {
       if (tdep->st0_regnum < 0)
 	{
@@ -1326,7 +1331,9 @@ i386_extract_return_value (struct gdbarch *gdbarch, struct type *type,
 	 exactly how it would happen on the target itself, but it is
 	 the best we can do.  */
       regcache_raw_read (regcache, I386_ST0_REGNUM, buf);
-      convert_typed_floating (buf, builtin_type_i387_ext, valbuf, type);
+/* FIXME: A very temporary expedient for getting return values working. */
+      convert_typed_floating 
+        (buf, builtin_type_i387_ext, valbuf, builtin_type_double);
     }
   else
     {
