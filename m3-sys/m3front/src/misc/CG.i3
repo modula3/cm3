@@ -431,7 +431,6 @@ PROCEDURE Store_addr (v: Var;  o: Offset := 0);
 
 (*-------------------------------------------------------------- literals ---*)
 
-
 PROCEDURE Load_nil     ();                         (*push ; s0.A := NIL*)
 PROCEDURE Load_byte_address (x: INTEGER);          (*push ; s0.A := x *)
 PROCEDURE Load_intt    (i: INTEGER);               (*push;  s0.I := i *)
