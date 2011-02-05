@@ -2,15 +2,24 @@ MODULE Main;
 
 (* Threading stress-test.
 
-   Create n threads, currently n = 12.  n is specified via nOver5,
-   which must be a compile-time constant since it's used for
-   statically allocated arrays.  It is reasonable for nOver5 to be
-   from 1 to a few hundred.
+   Create a number of threads.  n is specified via nPer, It is
+   reasonable for nPer to be from 1 to a few hundred.  nPer defaults
+   to 3 but can be set by the -n command-line switch.
+
+   Other command-line switches:
+
+   -wait <steps>  
+      how many one-second waits to execute between prints (default 10)
+
+   -iters <iters>
+      how many iterations to run for (default 10)
+
+   -tests <test1>,<test2>,...
+      comma-separated list of tests (default all types)
 
    The threads created are of five types.  Each type of thread starts
    by sleeping for a while, to give the other threads a chance to be 
-   created (so the program currently does not test thread creation
-   under load, which is a limitation).
+   created.
 
    The threads are of the following types:
    
@@ -62,17 +71,15 @@ IMPORT Time;
 IMPORT Fmt, IntArraySort;
 IMPORT Atom, AtomList;
 IMPORT OSError;
+IMPORT ParseParams;
+IMPORT Stdio;
+IMPORT Text;
 
 <* FATAL Thread.Alerted *>
 
-CONST nOver5 = 3; (* must be odd *)
-
-CONST n = 5 * nOver5;
-
 CONST InitPause = 1.0d0;
 
-TYPE 
-  Closure = Thread.Closure OBJECT id : CARDINAL END;
+TYPE Closure = Thread.Closure OBJECT id : CARDINAL END;
 
 PROCEDURE MakeReaderThread(i : CARDINAL) =
   BEGIN 
@@ -98,6 +105,21 @@ PROCEDURE MakeLockerThread(i : CARDINAL) =
   BEGIN 
     EVAL Thread.Fork(NEW(Closure, id := i, apply := LApply)) 
   END MakeLockerThread;
+
+TYPE 
+  ThreadMaker = PROCEDURE(i : CARDINAL);
+  Named = RECORD maker : ThreadMaker; named : TEXT END;
+
+CONST
+  Makers = ARRAY OF Named {
+    Named { MakeReaderThread,    "read"  },
+    Named { MakeForkerThread,    "fork"  },
+    Named { MakeAllocatorThread, "alloc" },
+    Named { MakeCreatorThread,   "creat" },
+    Named { MakeLockerThread,    "lock"  } 
+  };
+
+TYPE M = [ FIRST(Makers)..LAST(Makers) ];
 
 (**********************************************************************)
 
@@ -211,7 +233,7 @@ PROCEDURE FmtStats(VAR a : ARRAY OF INTEGER) : TEXT =
     (* the result isn't quite right if NUMBER(a) is even *)
     WITH min = a[FIRST(a)],
          max = a[LAST(a)],
-         med = a[NUMBER(a) DIV 2 - 1] DO
+         med = a[LAST(a) DIV 2] DO
       RETURN Fmt.F("%s/%s/%s",Fmt.Int(now-min), Fmt.Int(now-med), Fmt.Int(now-max))
     END
   END FmtStats;
@@ -232,58 +254,126 @@ PROCEDURE Error(msg : TEXT) =
     IO.Put("ERROR " & msg & "\n")
   END Error;
 
+PROCEDURE AddTest(test : TEXT) =
+  BEGIN
+    FOR i := FIRST(Makers) TO LAST(Makers) DO
+      IF Text.Equal(Makers[i].named,test) THEN
+        sets := sets + SET OF M { i }; RETURN
+      END
+    END;
+
+    (* no match *)
+    
+    VAR 
+      msg := "No test named \"" & test & "\", known tests:";
+    BEGIN
+      FOR i := FIRST(Makers) TO LAST(Makers) DO
+        msg := msg & " " & Makers[i].named
+      END;
+      Process.Crash(msg)
+    END
+  END AddTest;
+
+CONST
+  DefaultNPer = 3;
 VAR
-  times1, times2, times3 : ARRAY [0..n-1] OF INTEGER;
+  nPer := DefaultNPer; (* must be odd *)
+  
+  n : CARDINAL;
+
+  times1, times2, times3 : REF ARRAY OF INTEGER;
   (* times1 : input array
      times2 : a stable copy of times1
-     times3 : another stable copy of times1 *)
 
+     times3 : a copy of those bits of times1 that are active
+  *)
   now : INTEGER;
+  sets := SET OF M { FIRST(M) .. LAST(M) };
+  
+  pp := NEW(ParseParams.T).init(Stdio.stderr);
+
+  iters := 10;
+  wait  := 10;
 BEGIN
+
+  TRY
+    IF pp.keywordPresent("-n")     THEN nPer := pp.getNextInt() END;
+    IF pp.keywordPresent("-wait")  THEN wait := pp.getNextInt() END;
+    IF pp.keywordPresent("-iters") THEN iters := pp.getNextInt() END;
+
+    IF pp.keywordPresent("-tests") THEN 
+      VAR
+        s := 0;
+      BEGIN
+        sets := SET OF M {} ;
+
+        WITH tests = pp.getNext(),
+             l     = Text.Length(tests) DO
+          FOR i := 0 TO l-1 DO
+            IF i = l-1 THEN
+              AddTest(Text.Sub(tests,s,l-s))
+            ELSIF Text.GetChar(tests,i) = ',' THEN
+              AddTest(Text.Sub(tests,s,i-s));
+              s := i+1
+            END
+          END
+        END
+      END
+    END
+
+  EXCEPT
+    ParseParams.Error => Process.Crash("Couldnt parse cmd-line args.")
+  END;
+
+  n := NUMBER(Makers) * nPer;
+  times1 := NEW(REF ARRAY OF INTEGER, n);
+  times2 := NEW(REF ARRAY OF INTEGER, n);
+  times3 := NEW(REF ARRAY OF INTEGER, n);
+
   IO.Put("Writing file...");
   WriteAFile();
   IO.Put("done\n");
-  IO.Put("Creating reader threads...");
-  FOR i := 0 TO nOver5 - 1 DO
-    MakeReaderThread(i)
+
+  FOR i := FIRST(M) TO LAST(M) DO
+    IF i IN sets THEN
+      IO.Put("Creating " & Makers[i].named & " threads...");
+      FOR j := 0 TO nPer - 1 DO
+        Makers[i].maker(i * nPer + j) 
+      END;
+      IO.Put("done\n")
+    END
   END;
-  IO.Put("done\n");
-  IO.Put("Creating process forker threads...");
-  FOR i := nOver5 TO 2*nOver5 - 1 DO
-    MakeForkerThread(i)
-  END;
-  IO.Put("done\n");
-  IO.Put("Creating allocator threads...");
-  FOR i := 2*nOver5 TO 3*nOver5-1 DO
-    MakeAllocatorThread(i)
-  END;
-  IO.Put("done\n");
-  IO.Put("Creating thread creator threads...");
-  FOR i := 3*nOver5 TO 4*nOver5-1 DO
-    MakeCreatorThread(i)
-  END;
-  IO.Put("done\n");
-  IO.Put("Creating locker threads...");
-  FOR i := 4*nOver5 TO 5*nOver5-1 DO
-    MakeLockerThread(i)
-  END;
-  IO.Put("done\n");
 
   IO.Put("running...printing oldest/median age/newest\n");
-  FOR i := 1 TO 10 DO
-    FOR j := 1 TO 10 DO
+  FOR i := 1 TO iters DO
+    FOR j := 1 TO wait DO
       Thread.Pause(1.0d0);
       IO.Put(".")
     END;
-    times2 := times1;
-    times3 := times2;
+    times2^ := times1^;
     now  := FLOOR(Time.Now());
-    WITH read  = SUBARRAY(times2,       0,nOver5), 
-         fork  = SUBARRAY(times2,  nOver5,nOver5), 
-         alloc = SUBARRAY(times2,2*nOver5,nOver5),
-         creat = SUBARRAY(times2,3*nOver5,nOver5),  
-         lock  = SUBARRAY(times2,4*nOver5,nOver5)  DO
-      IO.Put("laziest thread is " & FmtStats(times2) & " seconds behind (read " & FmtStats(read) & " fork " & FmtStats(fork) &  " alloc " & FmtStats(alloc) & " creat " & FmtStats(creat) & " lock " & FmtStats(lock) & ")\n")
+    VAR
+      p := 0;
+    BEGIN
+      FOR i := FIRST(M) TO LAST(M) DO
+        IF i IN sets THEN
+          SUBARRAY(times3^,p,nPer) := SUBARRAY(times2^,i*nPer,nPer);
+          INC(p,nPer)
+        END
+      END;
+      VAR
+        str := "laziest thread is " & FmtStats(SUBARRAY(times3^,0,p)) & 
+                   " (tests:";
+      BEGIN
+        FOR i := FIRST(M) TO LAST(M) DO
+          IF i IN sets THEN
+            str := str & " " & Makers[i].named & " " & 
+                       FmtStats(SUBARRAY(times2^,i*nPer,nPer))
+          END
+        END;
+        str := str & ")\n";
+        IO.Put(str)
+      END
     END
   END
 END Main.
