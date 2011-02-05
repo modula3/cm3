@@ -66,16 +66,16 @@ MODULE Main;
 
  *)
 
-IMPORT Thread, Rd, FileRd, Wr, FileWr, Process, IO;
+IMPORT Thread, Rd, FileRd, Wr, FileWr, Process;
 IMPORT Time;
-IMPORT Fmt, IntArraySort;
+IMPORT IntArraySort;
 IMPORT Atom, AtomList;
 IMPORT OSError;
 IMPORT ParseParams;
 IMPORT Stdio;
 IMPORT Text;
 
-<* FATAL Thread.Alerted *>
+<* FATAL Thread.Alerted, Wr.Failure *>
 
 CONST InitPause = 1.0d0;
 
@@ -225,7 +225,15 @@ PROCEDURE WriteAFile() =
     END
   END WriteAFile;
 
-PROCEDURE FmtStats(VAR a : ARRAY OF INTEGER) : TEXT =
+PROCEDURE PutCard(c : CARDINAL) =
+  BEGIN
+    IF c > 10 THEN
+      PutCard(c DIV 10)
+    END;
+    Wr.PutChar(Stdio.stdout,VAL(c MOD 10 + ORD('0'),CHAR))
+  END PutCard;
+
+PROCEDURE PutStats(VAR a : ARRAY OF INTEGER) =
   (* now is global in Main.m3 *)
   BEGIN
     IntArraySort.Sort(a);
@@ -234,9 +242,13 @@ PROCEDURE FmtStats(VAR a : ARRAY OF INTEGER) : TEXT =
     WITH min = a[FIRST(a)],
          max = a[LAST(a)],
          med = a[LAST(a) DIV 2] DO
-      RETURN Fmt.F("%s/%s/%s",Fmt.Int(now-min), Fmt.Int(now-med), Fmt.Int(now-max))
+      PutCard(now-min);
+      Wr.PutChar(Stdio.stdout,'/');
+      PutCard(now-med);
+      Wr.PutChar(Stdio.stdout,'/');
+      PutCard(now-max)
     END
-  END FmtStats;
+  END PutStats;
 
 PROCEDURE FmtAtomList(err : AtomList.T) : TEXT =
   VAR
@@ -251,7 +263,7 @@ PROCEDURE FmtAtomList(err : AtomList.T) : TEXT =
 
 PROCEDURE Error(msg : TEXT) =
   BEGIN
-    IO.Put("ERROR " & msg & "\n")
+    Wr.PutText(Stdio.stdout,"ERROR " & msg & "\n")
   END Error;
 
 PROCEDURE AddTest(test : TEXT) =
@@ -330,25 +342,28 @@ BEGIN
   times2 := NEW(REF ARRAY OF INTEGER, n);
   times3 := NEW(REF ARRAY OF INTEGER, n);
 
-  IO.Put("Writing file...");
+  Wr.PutText(Stdio.stdout,"Writing file..."); Wr.Flush(Stdio.stdout);
   WriteAFile();
-  IO.Put("done\n");
+  Wr.PutText(Stdio.stdout,"done\n"); Wr.Flush(Stdio.stdout);
 
   FOR i := FIRST(M) TO LAST(M) DO
     IF i IN sets THEN
-      IO.Put("Creating " & Makers[i].named & " threads...");
+      Wr.PutText(Stdio.stdout,"Creating " & Makers[i].named & " threads...");
+      Wr.Flush(Stdio.stdout);
       FOR j := 0 TO nPer - 1 DO
         Makers[i].maker(i * nPer + j) 
       END;
-      IO.Put("done\n")
+      Wr.PutText(Stdio.stdout,"done\n");  Wr.Flush(Stdio.stdout)
     END
   END;
 
-  IO.Put("running...printing oldest/median age/newest\n");
+  Wr.PutText(Stdio.stdout,"running...printing oldest/median age/newest\n");
+  Wr.Flush(Stdio.stdout);
   FOR i := 1 TO iters DO
     FOR j := 1 TO wait DO
       Thread.Pause(1.0d0);
-      IO.Put(".")
+      Wr.PutText(Stdio.stdout,".");
+      Wr.Flush(Stdio.stdout)
     END;
     times2^ := times1^;
     now  := FLOOR(Time.Now());
@@ -361,19 +376,20 @@ BEGIN
           INC(p,nPer)
         END
       END;
-      VAR
-        str := "laziest thread is " & FmtStats(SUBARRAY(times3^,0,p)) & 
-                   " (tests:";
-      BEGIN
-        FOR i := FIRST(M) TO LAST(M) DO
-          IF i IN sets THEN
-            str := str & " " & Makers[i].named & " " & 
-                       FmtStats(SUBARRAY(times2^,i*nPer,nPer))
-          END
-        END;
-        str := str & ")\n";
-        IO.Put(str)
-      END
+      Wr.PutText(Stdio.stdout,"laziest thread is ");
+      PutStats(SUBARRAY(times3^,0,p));
+      Wr.PutText(Stdio.stdout," (tests:");
+      
+      FOR i := FIRST(M) TO LAST(M) DO
+        IF i IN sets THEN
+          Wr.PutText(Stdio.stdout," ");
+          Wr.PutText(Stdio.stdout,Makers[i].named);
+          Wr.PutText(Stdio.stdout," ");
+          PutStats(SUBARRAY(times2^,i*nPer,nPer))
+        END
+      END;
+      Wr.PutText(Stdio.stdout,")\n");
+      Wr.Flush(Stdio.stdout)
     END
   END
 END Main.
