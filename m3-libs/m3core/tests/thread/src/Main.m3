@@ -16,6 +16,12 @@ MODULE Main;
 
    -tests <test1>,<test2>,...
       comma-separated list of tests (default all types)
+      can specify all with "all"  
+      and can subtract tests with -<name of test>
+      examples.
+         -tests read,alloc,creat
+   
+         -tests all,-read
 
    The threads created are of five types.  Each type of thread starts
    by sleeping for a while, to give the other threads a chance to be 
@@ -268,9 +274,16 @@ PROCEDURE Error(msg : TEXT) =
 
 PROCEDURE AddTest(test : TEXT) =
   BEGIN
+    IF Text.Equal("all",test) THEN
+      sets := SET OF M { FIRST(M) .. LAST(M) };
+      RETURN
+    END;
+
     FOR i := FIRST(Makers) TO LAST(Makers) DO
-      IF Text.Equal(Makers[i].named,test) THEN
+      IF    Text.Equal(Makers[i].named,test) THEN
         sets := sets + SET OF M { i }; RETURN
+      ELSIF Text.Equal("-" & Makers[i].named,test) THEN
+        sets := sets - SET OF M { i }; RETURN
       END
     END;
 
