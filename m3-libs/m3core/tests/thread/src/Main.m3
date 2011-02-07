@@ -57,11 +57,20 @@ MODULE Main;
    The main thread then prints out how long ago the thread that has not
    written times1 last wrote that array.
 
-   Note that Fmt.Int in the main thread allocates memory and therefore
+   Note that actions in the main thread may allocate memory and therefore
    acquires locks in ThreadPThread.m3, the file which the program is
    mainly intended to test.  The design is based on a knowledge of the
    internal behavior of ThreadPThread.m3 and also on a knowledge of the
    misbehavior of existing, highly multithreaded applications.
+
+
+   FAIRNESS ISSUES
+
+   Especially with user threads, there may be fairness problems.  The
+   point of the program is to test threading so there is obviously no
+   attempt at enforcing fairness.  With user threads, this may cause
+   certain types of threads to monopolize the cpu.  "std,-lock" might
+   be advised for the list of tests for user threads.
 
    Author: Mika Nystrom <mika@alum.mit.edu>
 
@@ -190,6 +199,7 @@ EXCEPTION X;
 
 PROCEDURE TApply(cl : Closure) : REFANY =
   BEGIN
+    Thread.Pause(InitPause);
     LOOP
       TRY
         WITH now = Time.Now() DO
