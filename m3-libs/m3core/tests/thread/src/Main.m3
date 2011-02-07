@@ -15,8 +15,8 @@ MODULE Main;
       how many iterations to run for (default 10)
 
    -tests <test1>,<test2>,...
-      comma-separated list of tests (default all types)
-      can specify all with "all"  
+      comma-separated list of tests (default std types)
+      can specify all with "all" or standard tests with "std"
       and can subtract tests with -<name of test>
       examples.
          -tests read,alloc,creat
@@ -43,6 +43,10 @@ MODULE Main;
 
    5. Locker -- repeatedly increment or decrement a single integer
       variable from within a MUTEX-protected critical section.
+
+   6. ReaderNoExcept -- like Reader but without TRY-EXCEPT
+  
+   7. TryExcept -- a loop that catches an exception that never happens
 
    Each thread writes the the it performs an operation to the times1 
    array.  The times1 array is copied by the main thread, every 10+ 
@@ -92,6 +96,16 @@ PROCEDURE MakeReaderThread(i : CARDINAL) =
     EVAL Thread.Fork(NEW(Closure, id := i, apply := RApply)) 
   END MakeReaderThread;
 
+PROCEDURE MakeReaderNoExceptThread(i : CARDINAL) =
+  BEGIN 
+    EVAL Thread.Fork(NEW(Closure, id := i, apply := NApply)) 
+  END MakeReaderNoExceptThread;
+
+PROCEDURE MakeTryExceptThread(i : CARDINAL) =
+  BEGIN 
+    EVAL Thread.Fork(NEW(Closure, id := i, apply := TApply)) 
+  END MakeTryExceptThread;
+
 PROCEDURE MakeForkerThread(i : CARDINAL) =
   BEGIN 
     EVAL Thread.Fork(NEW(Closure, id := i, apply := FApply)) 
@@ -118,12 +132,17 @@ TYPE
 
 CONST
   Makers = ARRAY OF Named {
-    Named { MakeReaderThread,    "read"  },
-    Named { MakeForkerThread,    "fork"  },
-    Named { MakeAllocatorThread, "alloc" },
-    Named { MakeCreatorThread,   "creat" },
-    Named { MakeLockerThread,    "lock"  } 
+    Named { MakeReaderThread,         "read"  },
+    Named { MakeReaderNoExceptThread, "nxread"  },
+    Named { MakeTryExceptThread,      "tryexcept"  },
+    Named { MakeForkerThread,         "fork"  },
+    Named { MakeAllocatorThread,      "alloc" },
+    Named { MakeCreatorThread,        "creat" },
+    Named { MakeLockerThread,         "lock"  } 
   };
+
+CONST StdTestArr = ARRAY OF TEXT { "read", "fork", "alloc", "create", "lock" };
+(* designated "standard" tests *)
 
 TYPE M = [ FIRST(Makers)..LAST(Makers) ];
 
@@ -151,6 +170,36 @@ PROCEDURE RApply(cl : Closure) : REFANY =
       END 
     END
   END RApply;
+
+PROCEDURE NApply(cl : Closure) : REFANY =
+  <*FATAL OSError.E, Rd.Failure, Rd.EndOfFile*>
+  BEGIN
+    Thread.Pause(InitPause);
+    LOOP
+      WITH rd = FileRd.Open(Filename) DO
+        WHILE NOT Rd.EOF(rd) DO
+          <*UNUSED*>VAR c := Rd.GetChar(rd); BEGIN  END
+        END;
+        Rd.Close(rd);
+        times1[cl.id]:= FLOOR(Time.Now()) 
+      END
+    END
+  END NApply;
+
+EXCEPTION X;
+
+PROCEDURE TApply(cl : Closure) : REFANY =
+  BEGIN
+    LOOP
+      TRY
+        WITH now = Time.Now() DO
+          times1[cl.id]:= FLOOR(now);
+          IF now < 0.0d0 THEN RAISE X END
+        END
+      EXCEPT X => <*ASSERT FALSE*>
+      END
+    END
+  END TApply;
 
 PROCEDURE FApply(cl : Closure) : REFANY =
   BEGIN
@@ -274,8 +323,11 @@ PROCEDURE Error(msg : TEXT) =
 
 PROCEDURE AddTest(test : TEXT) =
   BEGIN
-    IF Text.Equal("all",test) THEN
+    IF    Text.Equal("all",test) THEN
       sets := SET OF M { FIRST(M) .. LAST(M) };
+      RETURN
+    ELSIF Text.Equal("std",test) THEN
+      sets := StdTests;
       RETURN
     END;
 
@@ -313,13 +365,23 @@ VAR
      times3 : a copy of those bits of times1 that are active
   *)
   now : INTEGER;
-  sets := SET OF M { FIRST(M) .. LAST(M) };
-  
+  sets : SET OF M;
+ 
   pp := NEW(ParseParams.T).init(Stdio.stderr);
 
   iters := 10;
   wait  := 10;
+  StdTests := SET OF M { };
 BEGIN
+  FOR i := FIRST(StdTestArr) TO LAST(StdTestArr) DO
+    FOR j := FIRST(M) TO LAST(M) DO
+      IF Text.Equal(StdTestArr[i],Makers[j].named) THEN
+        StdTests := StdTests + SET OF M { j }
+      END
+    END
+  END;
+ 
+  sets := StdTests;
 
   TRY
     IF pp.keywordPresent("-n")     THEN nPer := pp.getNextInt() END;
@@ -404,6 +466,7 @@ BEGIN
       Wr.PutText(Stdio.stdout,")\n");
       Wr.Flush(Stdio.stdout)
     END
-  END
+  END;
+  Wr.PutText(Stdio.stdout, "All tests complete.  Congratulations.\n");
 END Main.
   
