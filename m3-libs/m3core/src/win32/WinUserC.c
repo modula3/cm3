@@ -8,15 +8,13 @@
 extern "C" {
 #endif
 
-
+HWND __stdcall WinUser__WindowFromPointWorkaround (POINT* Point)
 /* The Modula-3 gcc backend is not naming WindowFromPoint correctly.
    It is calling it WindowFromPoint@4 instead of WindowFromPoint@8
 */
-HWND __stdcall WinUser__WindowFromPointWorkaround (POINT* Point)
 {
 	return WindowFromPoint(*Point);
 }
-
 
 #ifdef __cplusplus
 } /* extern C */
