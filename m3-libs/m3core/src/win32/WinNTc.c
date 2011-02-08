@@ -5,11 +5,9 @@ extern "C" {
 #endif
 
 void __cdecl WinNT__MemoryBarrier(void)
-/*
-This function ensure that all reads/writes before it
-finish before any reads/writes after it.
-It is both a compiler barrier and a processor barrier.
-*/
+/* This function ensure that all reads/writes before it
+   finish before any reads/writes after it.
+   It is both a compiler barrier and a processor barrier. */
 {
 #ifdef MemoryBarrier
     /* newer headers */
