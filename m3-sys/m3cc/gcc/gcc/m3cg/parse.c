@@ -416,7 +416,8 @@ m3_fill_hex_value (INT64 value, PSTR* p, PSTR limit)
 #define UID_SIZE 6
 #define NO_UID (0xFFFFFFFFUL)
 
-/* see RTBuiltin.mx */
+/* see RTBuiltin.mx
+   see RT0.i3 */
 #define UID_INTEGER 0x195C2A74 /* INTEGER */
 #define UID_LONGINT 0x05562176 /* LONGINT */
 #define UID_WORD 0x97E237E2 /* CARDINAL */
