@@ -231,7 +231,7 @@ BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
     case DLL_PROCESS_DETACH:
         if (Static)
             return TRUE; /* no need for any cleanup */
-        return ThreadWin32__Cleanup();
+        ThreadWin32__Cleanup();
 
     case DLL_PROCESS_ATTACH:
         /* Module initializers belong here */.
