@@ -58,7 +58,7 @@ PROCEDURE Init () =
     EF1_handles    := EF_SIZE;             (* : ADDRESS *)
     EF1_info       := EF1_handles + AP;    (* : RTException.Activation *)
     EF1_jmpbuf     := EF1_info + EA_SIZE;  (* : jmp_buf *)
-    EF1_SIZE       := EF1_jmpbuf + AP;
+    EF1_SIZE       := EF1_jmpbuf + 1024 * 8; (* gigantic 1K jmp_buf *)
 
     (* FinallyProc frames *)
     EF2_handler    := EF_SIZE;            (* : ADDRESS (PROC) *)

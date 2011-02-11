@@ -246,33 +246,8 @@ PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
                                f := CG.Never);
       END;
     END;
-    (* void* _alloca(size_t); *)
-    IF (alloca = NIL) THEN
-      alloca := CG.Import_procedure (M3ID.Add ("m3_alloca"), 1, CG.Type.Addr,
-                                     Target.DefaultCall, new);
-      IF (new) THEN
-        EVAL CG.Declare_param (M3ID.NoID, Target.Word.size, Target.Word.align,
-                               Target.Word.cg_type, 0, in_memory := FALSE,
-                               up_level := FALSE, f := CG.Never);
-      END;
-    END;
-    (* extern /*const*/ size_t Csetjmp__Jumpbuf_size/* = sizeof(jmp_buf)*/; *)
-    IF (Jumpbuf_size = NIL) THEN
-      Jumpbuf_size := CG.Import_global (M3ID.Add ("Csetjmp__Jumpbuf_size"),
-                                        Target.Word.size, Target.Word.align,
-                                        Target.Word.cg_type, 0);
-    END;
-    
-    (* frame.jmpbuf = alloca(Csetjmp__Jumpbuf_size); *)
-    CG.Start_call_direct (alloca, 0, Target.Address.cg_type);
-    CG.Load_int (Target.Word.cg_type, Jumpbuf_size);
-    CG.Pop_param (Target.Word.cg_type);
-    CG.Call_direct (alloca, Target.Address.cg_type);
-    CG.Store_addr (frame, M3RT.EF1_jmpbuf);
-
-    (* setmp(frame.jmpbuf) *)
     CG.Start_call_direct (setjmp, 0, Target.Integer.cg_type);
-    CG.Load_addr (frame, M3RT.EF1_jmpbuf);
+    CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, 64);
     CG.Pop_param (CG.Type.Addr);
     CG.Call_direct (setjmp, Target.Integer.cg_type);
     CG.If_true (handler, CG.Never);
