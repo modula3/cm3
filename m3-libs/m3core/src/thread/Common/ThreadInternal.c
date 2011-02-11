@@ -9,6 +9,10 @@
 extern "C" {
 #endif
 
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
+#endif
+
 M3_NO_INLINE static int /*bool*/
 ThreadInternal__StackGrowsDownHelper (volatile char* a)
 /* Inlining could potentially reverse the relative placements,
