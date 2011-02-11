@@ -57,7 +57,7 @@ PROCEDURE Init () =
     (* Except, ExceptElse, and Finally  frames *)
     EF1_handles    := EF_SIZE;             (* : ADDRESS *)
     EF1_info       := EF1_handles + AP;    (* : RTException.Activation *)
-    EF1_jmpbuf     := EF1_info + EA_SIZE;  (* : jmp_buf *)
+    EF1_jmpbuf     := RoundUp (EF1_info + EA_SIZE, 64); (* : jmp_buf *)
     EF1_SIZE       := EF1_jmpbuf + 1024 * 8; (* gigantic 1K jmp_buf *)
 
     (* FinallyProc frames *)
@@ -148,6 +148,11 @@ PROCEDURE Init () =
     MUTEX_acquire := 0 * AP;          (*: PROC() *)
     MUTEX_release := 1 * AP;          (*: PROC() *)
   END Init;
+
+PROCEDURE RoundUp (a, b: INTEGER): INTEGER =
+  BEGIN
+    RETURN (a + b - 1) DIV b * b;
+  END RoundUp;
 
 BEGIN
 END M3RT.
