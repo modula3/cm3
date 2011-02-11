@@ -9,6 +9,10 @@ We use gettimeofday() which returns seconds and microseconds.
 
 #include "m3core.h"
 
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
