@@ -36,7 +36,7 @@ TYPE (* Except, ExceptElse, Finally *)
     class     : INTEGER;    (* ORD(ScopeKind) *)
     handles   : ExceptionList;    (* NIL-terminated list of exceptions handled *)
     info      : RT0.RaiseActivation;   (* current exception being dispatched *)
-    jmpbuf    : ARRAY [0..127] OF LONGREAL; (* gigantic 1K! *)
+    jmpbuf    : ARRAY [0..16_FFFF] OF LONGREAL; (* gigantic, size is not used *)
   END;
 
 TYPE (* FinallyProc *)
