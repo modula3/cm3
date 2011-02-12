@@ -35,6 +35,9 @@ MODULE Main;
    2. Forker -- repeatedly fork the Unix process "sleep 1" using
       Process.Create.
  
+   2b. ForkTooMuch -- fork "sleep 10" and do NOT call Process.Wait.
+      May generate lots of zombies.
+ 
    3. Allocator -- repeatedly allocate heap memory and perform 
       meaningless operations on it.
 
@@ -120,6 +123,11 @@ PROCEDURE MakeForkerThread(i : CARDINAL) =
     EVAL Thread.Fork(NEW(Closure, id := i, apply := FApply)) 
   END MakeForkerThread;
 
+PROCEDURE MakeForkTooMuchThread(i : CARDINAL) =
+  BEGIN 
+    EVAL Thread.Fork(NEW(Closure, id := i, apply := MApply)) 
+  END MakeForkTooMuchThread;
+
 PROCEDURE MakeAllocatorThread(i : CARDINAL) =
   BEGIN 
     EVAL Thread.Fork(NEW(Closure, id := i, apply := AApply)) 
@@ -145,6 +153,7 @@ CONST
     Named { MakeReaderNoExceptThread, "nxread"  },
     Named { MakeTryExceptThread,      "tryexcept"  },
     Named { MakeForkerThread,         "fork"  },
+    Named { MakeForkTooMuchThread,    "forktoomuch"  },
     Named { MakeAllocatorThread,      "alloc" },
     Named { MakeCreatorThread,        "creat" },
     Named { MakeLockerThread,         "lock"  } 
@@ -225,6 +234,23 @@ PROCEDURE FApply(cl : Closure) : REFANY =
       END
     END
   END FApply;
+
+PROCEDURE MApply(cl : Closure) : REFANY =
+  BEGIN
+    Thread.Pause(InitPause);
+    LOOP
+      TRY
+        <*NOWARN*>WITH proc = Process.Create("sleep",
+                                   ARRAY OF TEXT { "10" }) DO
+          (* no Process.Wait *)
+          times1[cl.id] := FLOOR(Time.Now());
+          Thread.Pause(1.0d0)
+        END
+      EXCEPT 
+        OSError.E(x) => Error("FApply: OSError.E: " & FmtAtomList(x))
+      END
+    END
+  END MApply;
 
 PROCEDURE AApply(cl : Closure) : REFANY =
   BEGIN
