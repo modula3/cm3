@@ -34,6 +34,10 @@
 #define M3_USE_SIGALTSTACK
 #endif
 
+#if (defined(__FreeBSD__) && (__FreeBSD__ >= 5))
+#define __BSD_VISIBLE 1
+#endif
+
 #include "m3core.h"
 #include <ucontext.h>
 
