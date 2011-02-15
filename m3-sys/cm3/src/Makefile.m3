@@ -256,6 +256,9 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                WITH fn = GetArg (arg, s.args) DO
                  s.prepend_files.addhi(fn);
                END;
+             ELSIF Text.Equal (arg, "-pb") THEN
+               Out (wr, "M3_PARALLEL_BACK = ", GetArg (arg, s.args));
+               ok := TRUE;
              END;
 
     | 'O' => IF (arg_len = 2) THEN
@@ -547,6 +550,7 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
         traceQuake := TRUE;
       ELSIF Text.Equal (arg, "-x") OR Text.Equal (arg, "-override") THEN
         use_overrides := TRUE;
+      ELSIF Text.Equal (arg, "-parallelback") THEN
       ELSIF Text.Equal (arg, "-pretend") THEN
         IF i < Params.Count - 1 THEN
           EVAL defs.put("CM3_VERSION", Params.Get(i+1));
@@ -659,6 +663,7 @@ CONST
     "  -pretend <val> pretend to run as CM3_Version <val>",
     "  -gw            install group writable files",
     "  -group-writable \"",
+    "  -pb <n>        allow <n> parallelism in running back-end (experimental)",
     "  -no-m3ship-resolution use quake variables in .M3SHIP (experimental)",
     "",
     "environment variables:",
