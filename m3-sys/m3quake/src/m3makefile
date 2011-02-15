@@ -26,6 +26,8 @@ Module   ("QMachine")
 Module   ("QVal")
 Module   ("MxConfig")
 Module   ("M3Path")
+Module   ("QPromise")
+Sequence ("QPromise", "QPromise")
 
 
 %
