@@ -21,6 +21,7 @@
 INTERFACE TextReader;
 IMPORT TextList, Rd;
 IMPORT Thread;
+IMPORT FloatMode, Lex;
 
 (* Think ``strtok''. A "TextReader.T" is initialized with 
 |  txtRd := NEW(TextReader.T).init(string);
@@ -65,6 +66,18 @@ TYPE
     nextE(delims : TEXT; skipNulls := FALSE) : TEXT RAISES { NoMore };
 (* same as "next", except failure is signalled thru an exception *)
 
+    nextSE(READONLY delims : SET OF CHAR; skipNulls := FALSE) : TEXT RAISES { NoMore };
+(* same as "nextS", except failure is signalled thru an exception *)
+
+    get() : TEXT RAISES { NoMore };
+(* same as nextE(" \t\n\r", skipNulls := TRUE) *)
+
+    getLR() : LONGREAL RAISES { NoMore, Lex.Error, FloatMode.Trap };
+    getLongReal() : LONGREAL RAISES { NoMore, Lex.Error, FloatMode.Trap };
+    getInt() : INTEGER RAISES { NoMore, Lex.Error, FloatMode.Trap };
+    getCard() : CARDINAL RAISES { NoMore, Lex.Error, FloatMode.Trap };
+    getBool() : BOOLEAN RAISES { NoMore, Lex.Error };
+
     init(line : TEXT) : T;
 (* initialize a new "TextReader.T" *)
 
@@ -74,6 +87,9 @@ TYPE
 
     isEmpty() : BOOLEAN;
 (* probe a "TextReader.T" *)
+
+    empty() : BOOLEAN;
+(* alias for above *)
 
     shatter(listDelims : TEXT; 
             endDelims : TEXT; skipNulls := FALSE) : TextList.T;
@@ -89,6 +105,17 @@ TYPE
    be seen if "skipNulls" is always "TRUE" and "t" always ends in a
    delimiter anyway. *)
 
+    save() : Continuation;
+    continue(from : Continuation);
+(* permits parsing and returning to an old state *)
   END;
+
+TYPE Continuation <: ROOT;
+
+CONST Brand = "TextReader";
+
+PROCEDURE New(txt : TEXT) : T;
+(* equiv. to NEW(T).init(txt) *)
+
 END TextReader.
     
