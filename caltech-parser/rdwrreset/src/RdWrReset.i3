@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 INTERFACE RdWrReset;
 IMPORT Rd AS R, Wr AS W;
 

@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 MODULE RdWrReset;
 IMPORT Rd AS R, Wr AS W;
 IMPORT RdClass, WrClass;
