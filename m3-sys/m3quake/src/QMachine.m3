@@ -1585,10 +1585,11 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
                                      wr := wrx,
                                      args := a,
                                      t := t,
-                                     ignore_errors := ignore_errors) DO
+                                     ignore_errors := ignore_errors OR onlyTry) DO
                 IF t.doRecord THEN
                   t.promises.addhi(promise)
                 ELSE
+                  promise.wr := NIL; (* no extra output *)
                   exit_code := promise.fulfil()
                 END
               END
@@ -1637,7 +1638,7 @@ TYPE
     fulfil := FulfilExecPromise;
   END;
 
-PROCEDURE FulfilExecPromise(ep : ExecPromise) : Process.ExitCode
+PROCEDURE FulfilExecPromise(ep : ExecPromise) : QPromise.ExitCode
   RAISES { Error, Thread.Alerted } = 
   VAR
     stdin, stdout, stderr: File.T;
@@ -1656,7 +1657,7 @@ PROCEDURE FulfilExecPromise(ep : ExecPromise) : Process.ExitCode
 
       WITH  exit_code = Process.Wait(handle) DO
         IF exit_code # 0 AND NOT ep.ignore_errors THEN
-          Err (ep.t, Fmt.F("exit %s: %s", Fmt.Int(exit_code), ep.cmd));
+          Err (ep.t, Fmt.F("exit %s: %s", Fmt.Int(exit_code), ep.args[1]));
           <*ASSERT FALSE*>
         ELSE
           RETURN exit_code
@@ -1672,7 +1673,7 @@ PROCEDURE FulfilExecPromise(ep : ExecPromise) : Process.ExitCode
         <*ASSERT FALSE*>
     | OSError.E (ec) =>
         KillProcess (handle);
-        Err (ep.t, Fmt.F ("exec failed%s *** %s", OSErr (ec), ep.cmd));
+        Err (ep.t, Fmt.F ("exec failed%s *** %s", OSErr (ec), ep.args[1]));
         <*ASSERT FALSE*>
     END
   END FulfilExecPromise;
