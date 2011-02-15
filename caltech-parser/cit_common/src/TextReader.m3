@@ -22,11 +22,12 @@ MODULE TextReader;
 IMPORT Text, TextList;
 (*IMPORT Debug,Fmt;*)
 IMPORT Rd, Wr, Thread, RdCopy, TextWr;
+IMPORT FloatMode, Lex, Scan;
 
 EXCEPTION IncompatibleDelimiters;
 
 REVEAL 
-  T = Public BRANDED "TextReader" OBJECT
+  T = Public BRANDED Brand OBJECT
 
     (* the remaining text is represented as (pushback & Sub(line, start)) *)
 
@@ -36,13 +37,62 @@ REVEAL
     start : CARDINAL := 0;
   OVERRIDES
     next := Next;
+    nextS := NextS;
     nextE := NextE;
+    get := Get;
+    getLR := GetLR;
+    getLongReal := GetLR;
+    getInt := GetInt;
+    getCard := GetCard;
+    getBool := GetBool;
+    nextSE := NextSE;
     init := Init;
     initFromRd := InitFromRd;
     isEmpty := IsEmpty;
+    empty := IsEmpty;
     shatter := Shatter;
     pushBack := PushBack;
+
+    save := Save;
+    continue := Unwind;
   END;
+
+(**********************************************************************)
+
+REVEAL
+  Continuation = BRANDED Brand & " Continuation" OBJECT
+    t : T;
+    pushback, line : TEXT;
+    start : CARDINAL;
+  END;
+
+PROCEDURE Save(t : T) : Continuation =
+  BEGIN 
+    WITH c = NEW(Continuation) DO
+      c.t := t;
+      c.pushback := t.pushback;
+      c.line := t.line;
+      c.start := t.start;
+      RETURN c
+    END
+  END Save;
+
+PROCEDURE Unwind(t : T; to : Continuation) =
+  BEGIN
+    <* ASSERT t = to.t *>
+    t.pushback := to.pushback;
+    t.line := to.line;
+    t.start := to.start
+  END Unwind;
+
+(**********************************************************************)
+
+PROCEDURE Get(self : T) : TEXT RAISES { NoMore } = 
+  CONST
+    Delims = SET OF CHAR { ' ', '\t', '\n', '\r' };
+  BEGIN
+    RETURN self.nextSE(Delims,TRUE)
+  END Get;
 
 PROCEDURE NextE(self : T; 
                 delims : TEXT; skipNulls : BOOLEAN) : TEXT RAISES { NoMore } = 
@@ -51,6 +101,15 @@ PROCEDURE NextE(self : T;
     ELSE RAISE NoMore
     END
   END NextE;
+
+PROCEDURE NextSE(self : T; 
+                READONLY delims : SET OF CHAR; 
+                skipNulls : BOOLEAN) : TEXT RAISES { NoMore } = 
+  VAR res : TEXT; BEGIN 
+    IF self.nextS(delims,res,skipNulls) THEN RETURN res
+    ELSE RAISE NoMore
+    END
+  END NextSE;
 
 PROCEDURE IsEmpty(self : T) : BOOLEAN = 
   BEGIN RETURN Text.Length(self.line) <= self.start END IsEmpty;
@@ -96,6 +155,18 @@ PROCEDURE NextS(self : T;
 *)
 
     self.start := min+1;
+
+    (* clear out any stray delimiters after the end, if skipNulls is true *)
+    IF skipNulls THEN
+      VAR
+        len := Text.Length(self.line);
+      BEGIN
+        WHILE len > self.start AND Text.GetChar(self.line, self.start) IN delims DO
+          INC(self.start)
+        END
+      END
+    END;
+
     IF Text.Length(self.line) <= self.start THEN
       self.line := "";
       self.start := 0;
@@ -188,7 +259,44 @@ PROCEDURE Simplify(self: T) =
 
 PROCEDURE PushBack(self: T; t: TEXT) =
   BEGIN
-    self.pushback := t & self.pushback;
+    (* this is buggy if we change delimiters 
+       self.pushback := t & self.pushback;
+    *)
+    (* less efficient, but: *)
+    self.line := Text.Sub(self.line,0,self.start) & t & Text.Sub(self.line,self.start)
   END PushBack; 
 
+(**********************************************************************)
+
+PROCEDURE GetLR(t : T) : LONGREAL RAISES { NoMore, Lex.Error, FloatMode.Trap }=
+  BEGIN RETURN Scan.LongReal(t.get()) END GetLR;
+
+PROCEDURE GetInt(t : T) : INTEGER
+  RAISES { NoMore, Lex.Error, FloatMode.Trap }=
+  BEGIN RETURN Scan.Int(t.get()) END GetInt;
+
+PROCEDURE GetBool(t : T) : BOOLEAN
+  RAISES { NoMore, Lex.Error } =
+  BEGIN RETURN Scan.Bool(t.get()) END GetBool;
+
+PROCEDURE GetCard(t : T) : CARDINAL 
+  RAISES { NoMore, Lex.Error, FloatMode.Trap }=
+  BEGIN 
+    WITH res = Scan.Int(t.get()) DO
+      IF res < FIRST(CARDINAL) OR res > LAST(CARDINAL) THEN
+        RAISE Lex.Error
+      END;
+      RETURN res
+    END
+  END GetCard;
+
+PROCEDURE New(txt : TEXT) : T = BEGIN RETURN NEW(T).init(txt) END New;
+
 BEGIN END TextReader.
+
+
+
+
+
+
+
