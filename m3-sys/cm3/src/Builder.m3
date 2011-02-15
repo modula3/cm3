@@ -15,6 +15,8 @@ IMPORT M3Loc, M3Unit, M3Options, MxConfig;
 IMPORT QIdent;
 FROM Target IMPORT M3BackendMode_t, BackendAssembly, BackendModeStrings;
 FROM M3Path IMPORT OSKind, OSKindStrings;
+IMPORT Pathname;
+IMPORT QPromise, QPromiseSeq, RefSeq;
 
 TYPE
   UK = M3Unit.Kind;
@@ -131,6 +133,9 @@ TYPE
     link_coverage : TEXT;               (* coverage library *)
     m3_front_flags: Arg.List;           (* configuration options for the front *)
     m3_options    : Arg.List;           (* misc. user options for the frontend *)
+    parallelback  : INTEGER;            (* back-end parallelism *)
+    
+    delayBackend  := FALSE;             (* delay back-end? *)
   END;
 
 TYPE
@@ -314,6 +319,12 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.m3_front_flags := GetConfigArray (s, "M3_FRONT_FLAGS");
     s.m3_options     := GetConfigArray (s, "M3_OPTIONS");
 
+    IF GetDefn (s, "M3_PARALLEL_BACK") # NIL THEN
+      s.parallelback := GetConfigInt (s, "M3_PARALLEL_BACK");
+    ELSE
+      s.parallelback := 1
+    END;
+
     ETimer.Push (M3Timers.localobj);
       Utils.NoteLocalFileTimes ();
     ETimer.Pop ();
@@ -360,7 +371,6 @@ PROCEDURE GetConfigProc (s: State;  symbol: TEXT;
     RETURN x;
   END GetConfigProc;
 
-(*
 PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
   VAR bind := GetDefn (s, symbol);
   BEGIN
@@ -372,7 +382,6 @@ PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
     END;
     RETURN 0;
   END GetConfigInt;
-*)
 
 PROCEDURE GetConfigBool (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
   VAR bind := GetDefn (s, symbol);
@@ -932,6 +941,76 @@ PROCEDURE VisitProbe (VAR scc: SCCState;  class: INTEGER;
 
 (*------------------------------------------------------------ compilation --*)
 
+(* parallel back-end build added by Mika Nystrom, February 2011
+
+   We do the parallel build by commanding the QMachine to return its
+   builds as "promises" rather than completing them on-the-fly.
+
+   The promises are returned in s.machine.promises, of type QPromiseSeq.T
+
+   Between each call to the compile step, we insert an innocuous
+   marker of type QPromise.Empty.
+
+   Within each compile (M3BACK ; ASM; DELETE TEMP FILES) we maintain
+   sequencing.  We do this by running these tasks from a SeqClosure.
+   However the different compiles are launched in parallel and landed
+   in one join.
+
+   Hence, we scan the promises and launch each subsequence of promises
+   between QPromise.Empty markers as a sequence but unordered with
+   respect to all other subsequences.
+
+   The mechanism is currently only enabled in PushOneM3, case 3.
+   This is the majority of normal operation cycles.
+
+   Parallel speedups of about 2x on a 4-processor machine have been
+   observed with n = 40.
+
+*)
+
+TYPE SeqClosure = Thread.Closure OBJECT seq : QPromiseSeq.T; OVERRIDES apply := SeqApply END;
+
+PROCEDURE SeqApply(cl : SeqClosure) : REFANY =
+  BEGIN
+    TRY
+      FOR i := 0 TO cl.seq.size()-1 DO
+        EVAL cl.seq.get(i).fulfil()
+      END;
+    EXCEPT Quake.Error(x) =>
+      Msg.FatalError (NIL, "quake error in parallel build ", x)
+    | Thread.Alerted =>
+      Msg.FatalError (NIL, "Thread.Alerted in parallel build ")
+    END;
+    RETURN NIL
+  END SeqApply;
+
+PROCEDURE ForceAllPromisesInParallel(promises : QPromiseSeq.T;
+                                     parallelism : CARDINAL) =
+  VAR
+    curSeq  := NEW(QPromiseSeq.T).init();
+    threads := NEW(RefSeq.T).init();
+  BEGIN
+    FOR i := 0 TO promises.size()-1 DO
+      WITH p = promises.get(i) DO
+        curSeq.addhi(p);
+        IF i = promises.size()-1 OR ISTYPE(p,QPromise.Empty) THEN
+          WITH cl = NEW(SeqClosure, seq := curSeq) DO
+            threads.addhi (Thread.Fork(cl));
+            
+            IF threads.size() > parallelism-1 THEN 
+              EVAL Thread.Join(threads.remlo()) 
+            END;
+            
+            curSeq := NEW(QPromiseSeq.T).init()
+          END
+        END
+      END
+    END;
+    WHILE threads.size() > 0 DO EVAL Thread.Join(threads.remlo()) END;
+    
+    EVAL promises.init(); (* empty promises *)
+  END ForceAllPromisesInParallel;
+
 PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
   VAR u: M3Unit.T;
   BEGIN
@@ -941,8 +1020,22 @@ PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
 
     (* compile all the sources using the initial schedule *)
     FOR i := 0 TO LAST (schedule^) DO
-      CompileOne (s, schedule[i]);
+      s.delayBackend := s.parallelback > 1;
+      TRY
+        CompileOne (s, schedule[i]);
+      FINALLY
+        s.delayBackend := FALSE;
+      END;
+
+      s.machine.promises.addhi(NEW(QPromise.Empty));
     END;
+
+    IF s.parallelback > 1 THEN
+      Msg.Explain ("****  PARALLEL BACK-END BUILD, M3_PARALLEL_BACK = ", Fmt.Int(s.parallelback))
+    END;
+
+    ForceAllPromisesInParallel(s.machine.promises,s.parallelback);
+
     FlushPending (s);
 
     (* recompile any interfaces where we goofed on the exports *)
@@ -1151,6 +1244,27 @@ PROCEDURE CompileM3 (s: State;  u: M3Unit.T) =
     END;
   END CompileM3;
 
+TYPE
+  NotePromise = QPromise.T OBJECT
+    nam : Pathname.T;
+  OVERRIDES
+    fulfil := FulfilNP;
+  END;
+
+  RemovePromise = QPromise.T OBJECT
+    nam : Pathname.T;
+  OVERRIDES
+    fulfil := FulfilRP;
+  END;
+
+VAR utilsMu := NEW(MUTEX);  (* Utils.* fiddles with a table *)
+
+PROCEDURE FulfilNP(np : NotePromise) : QPromise.ExitCode = 
+  BEGIN LOCK utilsMu DO Utils.NoteTempFile(np.nam) END; RETURN 0 END FulfilNP;
+
+PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode = 
+  BEGIN LOCK utilsMu DO Utils.Remove(rp.nam) END; RETURN 0 END FulfilRP;
+
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
   VAR
     tmpC, tmpS: TEXT;
@@ -1191,18 +1305,50 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 
 
     | 3 =>  (* -bootstrap, +m3back, +asm *)
+      IF s.delayBackend THEN
+        (* parallel/delayed version of back-end code *)
         tmpC := TempCName (u);
         tmpS := TempSName (u);
-        IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
-        IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
+        IF (NOT s.keep_files) THEN 
+          s.machine.promises.addhi(NEW(NotePromise, nam := tmpC)) 
+        END;
+        IF (NOT s.keep_files) THEN 
+          s.machine.promises.addhi(NEW(NotePromise, nam := tmpS)) 
+        END;
+
         IF RunM3 (s, u, tmpC) THEN
-          IF  RunM3Back (s, tmpC, tmpS, u.debug, u.optimize)
-          AND RunAsm (s, tmpS, u.object) THEN
+          s.machine.record(TRUE); 
+          TRY
+            IF  RunM3Back (s, tmpC, tmpS, u.debug, u.optimize)
+            AND RunAsm (s, tmpS, u.object) THEN
+            END;
+          FINALLY
+            s.machine.record(FALSE)
           END;
+
           need_merge := TRUE;
         END;
-        IF (NOT s.keep_files) THEN Utils.Remove (tmpC) END;
-        IF (NOT s.keep_files) THEN Utils.Remove (tmpS) END;
+        IF (NOT s.keep_files) THEN 
+          s.machine.promises.addhi(NEW(RemovePromise, nam := tmpC)) 
+        END;
+        IF (NOT s.keep_files) THEN 
+          s.machine.promises.addhi(NEW(RemovePromise, nam := tmpS)) 
+        END;
+
+      ELSE (* NOT s.delayBackend *)
+          tmpC := TempCName (u);
+          tmpS := TempSName (u);
+          IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
+          IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
+          IF RunM3 (s, u, tmpC) THEN
+            IF  RunM3Back (s, tmpC, tmpS, u.debug, u.optimize)
+            AND RunAsm (s, tmpS, u.object) THEN
+            END;
+            need_merge := TRUE;
+          END;
+          IF (NOT s.keep_files) THEN Utils.Remove (tmpC) END;
+          IF (NOT s.keep_files) THEN Utils.Remove (tmpS) END;
+      END
 
     | 6,    (* +bootstrap, +m3back, -asm *)
       7 =>  (* +bootstrap, +m3back, +asm *)
