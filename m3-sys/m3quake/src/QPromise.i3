@@ -20,11 +20,15 @@ IMPORT Thread, Process;
    see "delayed evaluation" in Abelson and Sussman,
    Structure and Interpretation of Computer Programs,
    for the inspiration to this.
+
+   Author : Mika Nystrom <mika@alum.mit.edu>
 *)
 
 TYPE
+  ExitCode = Process.ExitCode;
+
   T = OBJECT METHODS
-    fulfil() : Process.ExitCode RAISES { Error, Thread.Alerted } 
+    fulfil() : ExitCode RAISES { Error, Thread.Alerted } 
     (* force the promise *)
   END;
 
