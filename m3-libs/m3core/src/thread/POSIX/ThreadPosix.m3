@@ -70,6 +70,73 @@ TYPE SelectRec = RECORD
 
    Eric Muller, 3/16/94
 *)
+
+(* Support for catching signals (other than alarm clock) added by 
+   Mika Nystrom <mika@alum.mit.edu>, February, 2011.
+
+   The idea is to piggy-back general signal catching on the mechanism 
+   already used for thread switching.  Every thread that is "pausing"
+   can now wait for the disjunction of an expired timer or the delivery 
+   of a specific signal.
+
+   The main (only) client of pausing for signal delivery is
+   Process.Wait which, under user threads, used to have a 0.1 second
+   delay between polling for change of child-process status.  We
+   now make it wait (WaitProcess) for 0.1 seconds OR the delivery
+   of SIGCHLD.
+
+   The changes are as follows:
+
+   1. The system relies on changing ThreadPosix.XPause such that if a
+   signal is allowed to wake up a threads, that fact is recorded in a
+   new field in the thread's descriptor record (of type
+   ThreadPosix.T).  
+
+   2. On receipt of a waited-for unix signal, a mask is set and
+   control is passed to the thread scheduler which maintains the
+   non-zero mask for exactly one iteration through the thread ring.
+
+   3. If a thread is paused and waiting for EITHER a signal or some
+   time, the thread is released for running and the thread's waiting
+   state is cleared.
+
+   A final subtlety is that signals are traditionally re-enabled
+   in switch_thread (i.e., inside the signal handler itself).  This
+   approach can't be used unchanged when catching SIGCHLD because 
+   it can lead to very deeply nested signal handlers if many child
+   processes are exiting at around the same time.  Instead, we only
+   re-enable SIGCHLD when inCritical is zero, i.e., in an unnested
+   signal handler, so that these signals are taken from an unnested
+   signal handler only.  This may also be important if longjmp is
+   used (probably not anymore?)
+
+   Implementation notes:
+
+   1. a new field of type "int" to ThreadPosix.T, waitingForSig
+
+   2. modifications to Pause, especially the new procedure SigPause
+
+   3. received-signals mask
+
+   4. ValueOfSIGCHLD used to get the value of the C constant SIGCHLD
+      in the Modula-3 environment
+
+   5. signal handler has to be installed even if program is single-threaded
+
+   The mechanism could be generalized to handle other signals as well
+   as multiple types of signals.
+
+   I have not carefully verified that no signals are ever "lost" 
+   (the 0.1-second delay serves as a backstop), but I believe this
+   to be the case.
+
+   One area of some concern is the use of longjmp in switching out
+   of the signal handler.  This may not be legal in nested signal
+   handlers and it should be verified it cannot occur.  I believe
+   the check for inCritical = 0 before calling InternalYield has
+   the desired effect.
+*)
+
 REVEAL
   T = BRANDED "Thread.T Posix-1.6" OBJECT
     state: State;
@@ -96,6 +163,9 @@ REVEAL
 
     (* if state = pausing, the time at which we can restart *)
     waitingForTime: Time.T;
+
+    (* if state = pausing, the signal that truncates the pause *)
+    waitingForSig: int := -1;
 
     (* true if we are waiting during an AlertWait or AlertJoin 
        or AlertPause *)
@@ -146,6 +216,11 @@ VAR
   pausedThreads : T;
 
   defaultStackSize := 3000;
+
+  (* note that even though the "heavy machinery" is only used for 
+     multipleThreads, we still need to set up the signal handler so
+     that we can catch signals from other sources than thread switching.
+     e.g., we use SIGCHLD to speed up Process.Wait *)
 
 VAR
   stats: RECORD
@@ -511,17 +586,28 @@ PROCEDURE Pause(n: LONGREAL)=
     XPause(until, FALSE);
   END Pause;
 
+PROCEDURE SigPause(n: LONGREAL; sig: int)=
+  <*FATAL Alerted*>
+  VAR until := n + Time.Now ();
+  BEGIN
+    XPause(until, FALSE, sig);
+  END SigPause;
+
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted}=
   VAR until := n + Time.Now ();
   BEGIN
     XPause(until, TRUE);
   END AlertPause;
 
-PROCEDURE XPause (READONLY until: Time.T; alertable := FALSE) RAISES {Alerted} =
+PROCEDURE XPause (READONLY until: Time.T; alertable := FALSE; sig:int := -1) 
+  RAISES {Alerted} =
   BEGIN
     INC (inCritical);
       self.waitingForTime := until;
       self.alertable := alertable;
+      IF sig # -1 THEN
+        self.waitingForSig := sig
+      END;
       ICannotRun (State.pausing);
     DEC (inCritical);
     InternalYield ();
@@ -700,13 +786,33 @@ PROCEDURE StartSwitching () =
         RAISE InternalError;
       END;
       allow_sigvtalrm ();
+      allow_othersigs ();
     END;
   END StartSwitching;
 
-PROCEDURE switch_thread (<*UNUSED*> sig: int) RAISES {Alerted} =
+CONST MaxSigs = 64;
+TYPE Sig = [ 0..MaxSigs-1 ];
+
+VAR (*CONST*) SIGCHLD := ValueOfSIGCHLD();
+              
+    gotSigs := SET OF Sig { };
+
+PROCEDURE switch_thread (sig: int) RAISES {Alerted} =
   BEGIN
-    allow_sigvtalrm ();
-    IF inCritical = 0 AND heapState.inCritical = 0 THEN InternalYield () END;
+    allow_sigvtalrm (); 
+
+    INC(inCritical);
+    IF inCritical = 1 THEN allow_othersigs ();  END;
+    
+    (* mark signal as being delivered *)
+    IF sig >= 0 AND sig < MaxSigs THEN
+      gotSigs := gotSigs + SET OF Sig { sig }
+    END;
+    DEC(inCritical);
+
+    IF inCritical = 0 AND heapState.inCritical = 0 THEN 
+      InternalYield () 
+    END;
   END switch_thread;
 
 (*------------------------------------------------------------- scheduler ---*)
@@ -782,11 +888,16 @@ BEGIN
             IF t.alertable AND t.alertPending THEN
               CanRun (t);
               EXIT;
+              
+            ELSIF t.waitingForSig IN gotSigs THEN
+              t.waitingForSig := -1;
+              CanRun(t);
+              EXIT;
 
             ELSIF t.waitingForTime <= now THEN
               CanRun (t);
               EXIT;
-  
+
             ELSIF NOT somePausing THEN
               earliest := t.waitingForTime;
               somePausing := TRUE;
@@ -886,6 +997,8 @@ BEGIN
       END;
     END;
 
+    gotSigs := SET OF Sig {};
+
     IF t.state = State.alive AND (scanned OR NOT someBlocking) THEN
       IF perfOn THEN PerfRunning (t.id); END;
       (* At least one thread wants to run; transfer to it *)
@@ -954,7 +1067,7 @@ PROCEDURE WaitProcess (pid: int; VAR status: int): int =
       WITH r = Uexec.waitpid(pid, ADR(status), Uexec.WNOHANG) DO
         IF r # 0 THEN RETURN r END;
       END;
-      Pause(Delay);
+      SigPause(Delay,SIGCHLD);
     END;
   END WaitProcess;
 
@@ -984,6 +1097,7 @@ PROCEDURE RunThread () =
     handlerStack := self.handlers;
     Cerrno.SetErrno(self.errno);
     allow_sigvtalrm ();
+    allow_othersigs ();
     DEC (inCritical);
 
     IF debug THEN
@@ -1010,7 +1124,7 @@ PROCEDURE Transfer (from, to: T) =
   VAR xx: INTEGER;
   BEGIN
     IF from # to THEN
-      disallow_sigvtalrm ();
+      disallow_signals ();
       from.handlers := handlerStack;
       from.errno := Cerrno.GetErrno();
       self := to;
@@ -1019,6 +1133,7 @@ PROCEDURE Transfer (from, to: T) =
       handlerStack := from.handlers;
       Cerrno.SetErrno(from.errno);
       allow_sigvtalrm ();
+      allow_othersigs ();
     END;
   END Transfer;
 
@@ -1361,4 +1476,7 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
 VAR debug := RTParams.IsPresent ("debugthreads");
 
 BEGIN
+  (* we need to call set up the signal handler for other reasons than
+     just thread switching now *)
+  setup_sigvtalrm (switch_thread);
 END ThreadPosix.
