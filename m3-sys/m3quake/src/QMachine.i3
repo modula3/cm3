@@ -8,6 +8,7 @@ INTERFACE QMachine;
 
 IMPORT Thread, Wr, QValue, QCode;
 FROM Quake IMPORT Machine, Error, ID, IDMap;
+IMPORT QPromiseSeq;
 
 REVEAL
   T <: T_;
@@ -15,6 +16,7 @@ TYPE
   T = Machine;
   T_ = OBJECT
     map: IDMap := NIL; (* READONLY *)
+    promises : QPromiseSeq.T;
   METHODS
     init      (map: IDMap): T;
     evaluate  (s: QCode.Stream)                     RAISES {Error, Thread.Alerted};
@@ -37,6 +39,8 @@ TYPE
     set_wr    (wr: Wr.T);
     exec_echo (b: BOOLEAN): BOOLEAN;
     trace     (b: BOOLEAN);
+    
+    record(on : BOOLEAN);     (* instead of performing certain acts, promise *)
   END;
 
 PROCEDURE PushBool (t: T;  b: BOOLEAN);
@@ -52,3 +56,6 @@ PROCEDURE PopID   (t: T): ID         RAISES {Error};
 PROCEDURE GetEnv (default, v0, v1, v2, v3, v4: TEXT := NIL): TEXT;
 
 END QMachine.
+
+
+

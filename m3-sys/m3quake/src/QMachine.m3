@@ -16,6 +16,7 @@ IMPORT Date, Time;
 IMPORT TextUtils, FSUtils, System, DirStack; (* sysutils *)
 IMPORT Compiler;
 IMPORT M3Path;
+IMPORT QPromise, QPromiseSeq;
 
 CONST
   OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
@@ -44,6 +45,8 @@ REVEAL
     shell     : TEXT         := NIL;
     sh_option : TEXT         := NIL;
     tmp_dir   : TEXT         := NIL;
+
+    doRecord := FALSE;
   OVERRIDES
     init      := Init;
     evaluate  := Evaluate;
@@ -66,7 +69,12 @@ REVEAL
     set_wr    := SetWr;
     exec_echo := ExecEcho;
     trace     := Trace;
+
+    record := Record;
   END;
+
+PROCEDURE Record(t : T; on : BOOLEAN) = 
+  BEGIN t.doRecord := on END Record;
 
 TYPE
   Registers = RECORD
@@ -138,6 +146,8 @@ PROCEDURE Init (t: T;  map: IDMap): T =
     t.includes   := NEW (IncludeStack, 10);
     t.globals    := NEW (IntRefTbl.Default).init ();
     t.default_wr := Stdio.stdout;
+
+    t.promises := NEW(QPromiseSeq.T).init();
 
     InitOSEnv (t);
     InitBuiltins (t);
@@ -1533,6 +1543,11 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
 
       (* finally, execute the command *)
       TRY
+        
+        (* guideline for future cleanup: turn the IF clause below into
+           a promise that can be forced or delayed depending on the 
+           doRecord variable, same as the ELSE clause *)
+        
         IF mergeStdoutStderr THEN
           Process.GetStandardFileHandles (stdin, stdout, stderr);
           Pipe.Open (hr := quake_in, hw := process_out);
@@ -1555,10 +1570,30 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
           END;
         ELSE
           FlushIO ();
-          Process.GetStandardFileHandles (stdin, stdout, stderr);
-          handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
-                                    stdin := stdin, stdout := stdout,
-                                    stderr := stderr);
+          handle := NIL;
+          exit_code := 0;
+          WITH a = NEW(REF ARRAY OF TEXT, n_shell_args) DO
+            a^ := SUBARRAY(args,0,n_shell_args);
+            VAR wrx : Wr.T; BEGIN
+              IF echo OR t.do_echo THEN
+                wrx := wr
+              ELSE
+                wrx := NIL
+              END;
+              WITH promise = NEW(ExecPromise,
+                                     cmd := t.shell,
+                                     wr := wrx,
+                                     args := a,
+                                     t := t,
+                                     ignore_errors := ignore_errors) DO
+                IF t.doRecord THEN
+                  t.promises.addhi(promise)
+                ELSE
+                  exit_code := promise.fulfil()
+                END
+              END
+            END
+          END
         END;
       EXCEPT
       | Thread.Alerted =>
@@ -1573,7 +1608,9 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
       END;
 
       (* wait for everything to shutdown... *)
-      exit_code := Process.Wait (handle);
+      IF handle # NIL THEN
+        exit_code := Process.Wait (handle);
+      END;
     END;
 
     IF onlyTry THEN
@@ -1588,6 +1625,57 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
     END;
 
   END ExecCommand;
+
+TYPE 
+  ExecPromise = QPromise.T OBJECT
+    cmd : TEXT;
+    args : REF ARRAY OF TEXT;
+    t : T;
+    wr : Wr.T;
+    ignore_errors : BOOLEAN;
+  OVERRIDES
+    fulfil := FulfilExecPromise;
+  END;
+
+PROCEDURE FulfilExecPromise(ep : ExecPromise) : Process.ExitCode
+  RAISES { Error, Thread.Alerted } = 
+  VAR
+    stdin, stdout, stderr: File.T;
+    handle : Process.T;
+  BEGIN
+    Process.GetStandardFileHandles (stdin, stdout, stderr);
+    TRY
+      IF ep.wr # NIL THEN
+        Wr.PutText (ep.wr, ep.args[1]);
+        Wr.PutText (ep.wr, Wr.EOL);
+        FlushIO ();
+      END;
+      handle := Process.Create (ep.cmd, ep.args^,
+                                    stdin := stdin, stdout := stdout,
+                                    stderr := stderr);
+
+      WITH  exit_code = Process.Wait(handle) DO
+        IF exit_code # 0 AND NOT ep.ignore_errors THEN
+          Err (ep.t, Fmt.F("exit %s: %s", Fmt.Int(exit_code), ep.cmd));
+          <*ASSERT FALSE*>
+        ELSE
+          RETURN exit_code
+        END
+      END
+    EXCEPT (* unfortunately this code is duplicated *)
+    | Thread.Alerted =>
+        KillProcess (handle);
+        RAISE Thread.Alerted;
+    | Wr.Failure (ec) =>
+        KillProcess (handle);
+        Err (ep.t, "write failed" & OSErr (ec));
+        <*ASSERT FALSE*>
+    | OSError.E (ec) =>
+        KillProcess (handle);
+        Err (ep.t, Fmt.F ("exec failed%s *** %s", OSErr (ec), ep.cmd));
+        <*ASSERT FALSE*>
+    END
+  END FulfilExecPromise;
 
 PROCEDURE KillProcess (handle: Process.T) =
   BEGIN
