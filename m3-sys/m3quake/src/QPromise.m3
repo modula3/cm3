@@ -8,14 +8,15 @@
    copies.  Generation Capital, Ltd. makes no representations about
    the suitability of this software for any purpose. It is provided
    "as is" without express or implied warranty.
+
+   Author : Mika Nystrom <mika@alum.mit.edu>
 *)
 
 MODULE QPromise;
-IMPORT Process;
 
 REVEAL Empty = T BRANDED Brand OBJECT OVERRIDES fulfil := FulfilNothing END;
 
-PROCEDURE FulfilNothing(<*UNUSED*>p : Empty) : Process.ExitCode = 
+PROCEDURE FulfilNothing(<*UNUSED*>p : Empty) : ExitCode = 
   BEGIN RETURN 0 END FulfilNothing;
 
 BEGIN END QPromise.
