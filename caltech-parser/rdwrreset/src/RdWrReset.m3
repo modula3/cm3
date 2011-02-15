@@ -1,5 +1,3 @@
-(* $Id: RdWrReset.m3,v 1.1 2011-02-15 08:42:26 mika Exp $ *)
-
 MODULE RdWrReset;
 IMPORT Rd AS R, Wr AS W;
 IMPORT RdClass, WrClass;
