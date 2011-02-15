@@ -53,14 +53,17 @@ typedef void (*SignalHandler1)(int signo);
 
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
 #define allow_sigvtalrm     ThreadPosix__allow_sigvtalrm
-#define disallow_sigvtalrm  ThreadPosix__disallow_sigvtalrm
+#define allow_othersigs     ThreadPosix__allow_othersigs
+#define disallow_signals    ThreadPosix__disallow_signals
 #define MakeContext         ThreadPosix__MakeContext
 #define SwapContext         ThreadPosix__SwapContext
 #define DisposeContext      ThreadPosix__DisposeContext
 #define ProcessContext      ThreadPosix__ProcessContext
 #define InitC               ThreadPosix__InitC
+#define value_of_SIGCHLD    ThreadPosix__value_of_SIGCHLD
 
 static sigset_t ThreadSwitchSignal;
+static sigset_t OtherSignals;
 
 #ifdef __CYGWIN__
 #define SIG_TIMESLICE SIGALRM
@@ -72,17 +75,33 @@ void
 __cdecl
 setup_sigvtalrm(SignalHandler1 handler)
 {
-  struct sigaction act;
+  struct sigaction act; /* (VT)ALRM signal */
+  struct sigaction oct; /* other signals (specifically SIGCHLD) */
+
+  ZERO_MEMORY(oct);
+  sigemptyset(&OtherSignals);
+  sigaddset(&OtherSignals, SIGCHLD);
 
   ZERO_MEMORY(act);
-
   sigemptyset(&ThreadSwitchSignal);
   sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
+
+  oct.sa_handler = handler;
+  oct.sa_flags = SA_RESTART;
 
   act.sa_handler = handler;
   act.sa_flags = SA_RESTART;
   sigemptyset(&(act.sa_mask));
+  sigemptyset(&(oct.sa_mask));
   if (sigaction (SIG_TIMESLICE, &act, NULL)) abort();
+  if (sigaction (SIGCHLD, &oct, NULL)) abort();
+}
+
+int
+__cdecl
+value_of_SIGCHLD(void)
+{
+	return SIGCHLD;
 }
 
 void
@@ -95,10 +114,20 @@ allow_sigvtalrm(void)
 
 void
 __cdecl
-disallow_sigvtalrm(void)
+allow_othersigs(void)
+{
+    int i = sigprocmask(SIG_UNBLOCK, &OtherSignals, NULL);
+    assert(i == 0);
+}
+
+void
+__cdecl
+disallow_signals(void) /* disallow all, really */
 {
     int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
+    int j = sigprocmask(SIG_BLOCK, &OtherSignals, NULL);
+    assert(j == 0);
 }
 
 typedef struct {
