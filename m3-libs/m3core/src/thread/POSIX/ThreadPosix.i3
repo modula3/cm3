@@ -15,8 +15,11 @@ PROCEDURE setup_sigvtalrm(handler: SignalHandler1);
 <*EXTERNAL ThreadPosix__allow_sigvtalrm*>
 PROCEDURE allow_sigvtalrm();
 
-<*EXTERNAL ThreadPosix__disallow_sigvtalrm*>
-PROCEDURE disallow_sigvtalrm();
+<*EXTERNAL ThreadPosix__allow_othersigs*>
+PROCEDURE allow_othersigs();
+
+<*EXTERNAL ThreadPosix__disallow_signals*>
+PROCEDURE disallow_signals();
 
 <*EXTERNAL ThreadPosix__MakeContext*>
 PROCEDURE MakeContext(p: PROCEDURE(); size: CARDINAL): ADDRESS;
@@ -38,5 +41,8 @@ PROCEDURE SetVirtualTimer(): int;
 (* Thin wrapper around setitimer. *)
 
 (*---------------------------------------------------------------------------*)
+
+<*EXTERNAL ThreadPosix__value_of_SIGCHLD*>
+PROCEDURE ValueOfSIGCHLD(): int;
 
 END ThreadPosix.
