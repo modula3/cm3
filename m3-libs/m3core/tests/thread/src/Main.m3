@@ -16,12 +16,12 @@ MODULE Main;
 
    -tests <test1>,<test2>,...
       comma-separated list of tests (default std types)
-      can specify all with "all" or standard tests with "std"
+      can specify all with "ALL" or standard tests with "STD"
       and can subtract tests with -<name of test>
       examples.
          -tests read,alloc,creat
    
-         -tests all,-read
+         -tests ALL,-read
 
    The threads created are of five types.  Each type of thread starts
    by sleeping for a while, to give the other threads a chance to be 
@@ -72,7 +72,7 @@ MODULE Main;
    Especially with user threads, there may be fairness problems.  The
    point of the program is to test threading so there is obviously no
    attempt at enforcing fairness.  With user threads, this may cause
-   certain types of threads to monopolize the cpu.  "std,-lock" might
+   certain types of threads to monopolize the cpu.  "STD,-lock" might
    be advised for the list of tests for user threads.
 
    Author: Mika Nystrom <mika@alum.mit.edu>
@@ -359,12 +359,16 @@ PROCEDURE Error(msg : TEXT) =
 
 PROCEDURE AddTest(test : TEXT) =
   BEGIN
-    IF    Text.Equal("all",test) THEN
+    IF    Text.Equal("ALL",test) THEN
       sets := SET OF M { FIRST(M) .. LAST(M) };
       RETURN
-    ELSIF Text.Equal("std",test) THEN
+    ELSIF Text.Equal("STD",test) THEN
       sets := StdTests;
       RETURN
+    ELSIF Text.Equal("POSIX",test) THEN
+      (* equal to STD,-lock *)
+      sets := StdTests;
+      test := "-lock"
     END;
 
     FOR i := FIRST(Makers) TO LAST(Makers) DO
