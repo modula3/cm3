@@ -137,6 +137,47 @@ TYPE SelectRec = RECORD
    the desired effect.
 *)
 
+(* Support for catching SEGV added by Mika Nystrom <mika@alum.mit.edu>,
+   February, 2011.
+
+   The system is similar to the CHLD mechanism above and borrows the
+   design of the mechanism for delivering Thread.Alerted.  The CHLD
+   signal handler is registered for SEGV as well (see ThreadPosixC.c)
+   and the old handler installation is removed from the file
+
+   m3-libs/m3core/src/runtime/POSIX/RTSignalC.c
+
+   SEGV is delivered here.  On a delivery of this signal all proceeds as
+   a normal threadswitch except that the field self.runtimeError is updated
+   to read RuntimeError.T.BadMemoryReference.  No other modifications
+   are made to the thread handling except that if self is in state pausing
+   it is nevertheless scheduleable (same as for waitingForSig)---not even
+   sure this is necessary.
+
+   The real trick is when the thread is switched to.  As with the case
+   of delivering the exception Thread.Alerted, the manipulations span the
+   end of the critical region, that is, they are prepared before the
+   barrier DEC(inCritical) and executed after the barrier.  If a SEGV is
+   pending, this is the point at which the exception is raised, same as
+   for Thread.Alerted 
+*)
+
+(* Note for people attempting to understand the code in this module:
+   The real "magic" happens in the procedure Transfer.  It is vital that
+   the magic only happens in one place as the procedure will appear to a
+   thread to return from where it left off (i.e., it has exactly the 
+   semantics of a coroutine call).
+
+   This also means that applications can only be linked with ONE
+   version of Transfer (as they would otherwise return into the middle
+   of a call to somewhere else, which is almost guaranteed to crash
+   and burn) and that Transfer must never, never be inlined anywhere.
+
+   Transfer should therefore be kept as small as possible and changes to
+   it mean all libraries linked with m3core must be re-linked before 
+   linking any applications!
+*)
+
 REVEAL
   T = BRANDED "Thread.T Posix-1.6" OBJECT
     state: State;
@@ -191,7 +232,14 @@ REVEAL
 
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;
+
+    (* pending RuntimeError from signal handler *)
+    runtimeError := NoXError;
   END;
+
+TYPE XError = [ ORD(FIRST(RuntimeError.T))-1..ORD(LAST(RuntimeError.T)) ];
+
+CONST NoXError = FIRST(XError);      (* FIRST is special *)
 
 (*------------------------------------------------------ mutual exclusion ---*)
 
@@ -794,6 +842,7 @@ CONST MaxSigs = 64;
 TYPE Sig = [ 0..MaxSigs-1 ];
 
 VAR (*CONST*) SIGCHLD := ValueOfSIGCHLD();
+VAR (*CONST*) SIGSEGV := ValueOfSIGSEGV();
               
     gotSigs := SET OF Sig { };
 
@@ -805,7 +854,9 @@ PROCEDURE switch_thread (sig: int) RAISES {Alerted} =
     IF inCritical = 1 THEN allow_othersigs ();  END;
     
     (* mark signal as being delivered *)
-    IF sig >= 0 AND sig < MaxSigs THEN
+    IF    sig = SIGSEGV THEN
+      self.runtimeError := ORD(RuntimeError.T.BadMemoryReference)
+    ELSIF sig >= 0 AND sig < MaxSigs THEN
       gotSigs := gotSigs + SET OF Sig { sig }
     END;
     DEC(inCritical);
@@ -850,6 +901,7 @@ VAR t, from: T;
     selectResult := 0;
     do_alert     : BOOLEAN;
     did_delete   : BOOLEAN;
+    do_error     : XError;
 
 BEGIN
   INC (inCritical);
@@ -891,6 +943,10 @@ BEGIN
               
             ELSIF t.waitingForSig IN gotSigs THEN
               t.waitingForSig := -1;
+              CanRun(t);
+              EXIT;
+
+            ELSIF t.runtimeError # -1 THEN
               CanRun(t);
               EXIT;
 
@@ -1007,8 +1063,19 @@ BEGIN
       do_alert := self.alertable AND self.alertPending;
       self.alertable := FALSE;
       IF do_alert THEN self.alertPending := FALSE END;
+
+      IF NOT do_alert AND self.runtimeError # NoXError THEN
+        do_error := self.runtimeError;
+        self.runtimeError := NoXError;
+      ELSE
+        do_error := NoXError
+      END;
+
       DEC (inCritical);
       IF do_alert THEN RAISE Alerted END;
+      IF do_error # NoXError THEN
+        RAISE RuntimeError.E(VAL(do_error, RuntimeError.T)) 
+      END;
       RETURN;
 
     ELSIF did_delete THEN
@@ -1134,7 +1201,7 @@ PROCEDURE Transfer (from, to: T) =
       Cerrno.SetErrno(from.errno);
       allow_sigvtalrm ();
       allow_othersigs ();
-    END;
+    END
   END Transfer;
 
 PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =

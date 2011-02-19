@@ -216,7 +216,7 @@ Handlers[] =
     { SIGHUP,  Shutdown },
     { SIGINT,  Interrupt },
     { SIGQUIT, Quit },
-    { SIGSEGV, SegV },
+    /*{ SIGSEGV, SegV }, */
     { SIGPIPE, IgnoreSignal },
     { SIGTERM, Shutdown },
     { SIGBUS,  SegV },
