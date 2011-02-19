@@ -61,6 +61,7 @@ typedef void (*SignalHandler1)(int signo);
 #define ProcessContext      ThreadPosix__ProcessContext
 #define InitC               ThreadPosix__InitC
 #define value_of_SIGCHLD    ThreadPosix__value_of_SIGCHLD
+#define value_of_SIGSEGV    ThreadPosix__value_of_SIGSEGV
 
 static sigset_t ThreadSwitchSignal;
 static sigset_t OtherSignals;
@@ -81,6 +82,7 @@ setup_sigvtalrm(SignalHandler1 handler)
   ZERO_MEMORY(oct);
   sigemptyset(&OtherSignals);
   sigaddset(&OtherSignals, SIGCHLD);
+  sigaddset(&OtherSignals, SIGSEGV);
 
   ZERO_MEMORY(act);
   sigemptyset(&ThreadSwitchSignal);
@@ -95,6 +97,7 @@ setup_sigvtalrm(SignalHandler1 handler)
   sigemptyset(&(oct.sa_mask));
   if (sigaction (SIG_TIMESLICE, &act, NULL)) abort();
   if (sigaction (SIGCHLD, &oct, NULL)) abort();
+  if (sigaction (SIGSEGV, &oct, NULL)) abort();
 }
 
 int
@@ -102,6 +105,13 @@ __cdecl
 value_of_SIGCHLD(void)
 {
 	return SIGCHLD;
+}
+
+int
+__cdecl
+value_of_SIGSEGV(void)
+{
+	return SIGSEGV;
 }
 
 void
