@@ -45,4 +45,7 @@ PROCEDURE SetVirtualTimer(): int;
 <*EXTERNAL ThreadPosix__value_of_SIGCHLD*>
 PROCEDURE ValueOfSIGCHLD(): int;
 
+<*EXTERNAL ThreadPosix__value_of_SIGSEGV*>
+PROCEDURE ValueOfSIGSEGV(): int;
+
 END ThreadPosix.
