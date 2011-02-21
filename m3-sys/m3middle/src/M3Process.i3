@@ -9,7 +9,8 @@ PROCEDURE Interrupt (t: Process.T)  RAISES {OSError.E};
 (* Send an interrupt signal to process 't'.  *)
 
 PROCEDURE Abort (t: Process.T)  RAISES {OSError.E};
-(* Make a best effort attempt to stop process 't'. *)
+(* Make a best effort attempt to stop process 't'.
+   The implementation for Win32 here in libm3/m3middle
+   is completely incorrect. *)
 
 END M3Process.
-
