@@ -165,14 +165,14 @@ PROCEDURE DisposeUntracedRef (VAR a: ADDRESS) =
   END DisposeUntracedRef;
 
 PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
-  VAR def: RT0.TypeDefn;
+  VAR p: ADDRESS;
   BEGIN
     IF a # NIL THEN
+      p := a - MAX(BYTESIZE(Header), RTType.Get(TYPECODE (a)).dataAlignment);
       Scheduler.DisableSwitching();
-      def := RTType.Get (TYPECODE (a));
-      Cstdlib.free (a - MAX(BYTESIZE(Header), def.dataAlignment));
-      a := NIL;
+      Cstdlib.free(p);
       Scheduler.EnableSwitching();
+      a := NIL;
     END;
   END DisposeUntracedObj;
 
@@ -235,12 +235,13 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
 
 PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
   VAR res : ADDRESS;
+      dataSize := def.dataSize;
   BEGIN
     IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Ref) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     Scheduler.DisableSwitching();
-    res := Cstdlib.calloc(1, def.dataSize);
+    res := Cstdlib.calloc(1, dataSize);
     Scheduler.EnableSwitching();
     IF res = NIL THEN RETURN NIL END;
     IF def.initProc # NIL THEN def.initProc(res); END;
@@ -252,13 +253,14 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
   (* NOTE: result requires special treatment by DisposeUntracedObj *)
   VAR
     hdrSize := MAX(BYTESIZE(Header), def.dataAlignment);
+    size    := hdrSize + def.dataSize;
     res     : ADDRESS;
   BEGIN
     IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Obj) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     Scheduler.DisableSwitching();
-    res := Cstdlib.malloc(hdrSize + def.dataSize);
+    res := Cstdlib.malloc(size);
     Scheduler.EnableSwitching();
     IF res = NIL THEN RETURN NIL END;
     res := res + hdrSize;
