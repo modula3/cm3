@@ -32,8 +32,8 @@ MODULE Main;
    1. Reader -- continuously read the contents of the file "hohum",
       created during startup in CWD by the main thread.
  
-   2. Forker -- repeatedly fork the Unix process "sleep 1" using
-      Process.Create.
+   2. Forker -- repeatedly fork a subprocess that sleeps for one second
+      using Process.Create.
  
    2b. ForkTooMuch -- fork "sleep 10" and do NOT call Process.Wait.
       May generate lots of zombies.
@@ -93,7 +93,7 @@ IMPORT Time;
 IMPORT IntArraySort;
 IMPORT Atom, AtomList;
 IMPORT OSError;
-IMPORT ParseParams;
+IMPORT ParseParams, Params;
 IMPORT Stdio;
 IMPORT Text;
 
@@ -225,8 +225,8 @@ PROCEDURE FApply(cl : Closure) : REFANY =
     Thread.Pause(InitPause);
     LOOP
       TRY
-        WITH proc = Process.Create("sleep",
-                                   ARRAY OF TEXT { "1" }) DO
+        WITH proc = Process.Create(Params.Get(0),
+                                   ARRAY OF TEXT { "-sleep" }) DO
           EVAL Process.Wait(proc); times1[cl.id] := FLOOR(Time.Now())
         END
       EXCEPT 
@@ -424,6 +424,12 @@ BEGIN
   sets := StdTests;
 
   TRY
+    IF pp.keywordPresent("-sleep") THEN
+      (* sleep and exit *)
+      Thread.Pause(1.0d0);
+      Process.Exit(0)
+    END;
+
     IF pp.keywordPresent("-n")     THEN nPer := pp.getNextInt() END;
     IF pp.keywordPresent("-wait")  THEN wait := pp.getNextInt() END;
     IF pp.keywordPresent("-iters") THEN iters := pp.getNextInt() END;
