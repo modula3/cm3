@@ -310,7 +310,7 @@ PROCEDURE WriteAFile() =
         FOR j := 1 TO i DO
           Wr.PutChar(wr, VAL(ORD('A') + i MOD 25, CHAR))
         END;
-        Wr.PutChar(wr, '\n')
+        Wr.PutText(wr, Wr.EOL)
       END;
       Wr.Close(wr)
     END
@@ -354,7 +354,7 @@ PROCEDURE FmtAtomList(err : AtomList.T) : TEXT =
 
 PROCEDURE Error(msg : TEXT) =
   BEGIN
-    Wr.PutText(Stdio.stdout,"ERROR " & msg & "\n")
+    Wr.PutText(Stdio.stdout,"ERROR " & msg & Wr.EOL)
   END Error;
 
 PROCEDURE AddTest(test : TEXT) =
@@ -465,7 +465,7 @@ BEGIN
 
   Wr.PutText(Stdio.stdout,"Writing file..."); Wr.Flush(Stdio.stdout);
   WriteAFile();
-  Wr.PutText(Stdio.stdout,"done\n"); Wr.Flush(Stdio.stdout);
+  Wr.PutText(Stdio.stdout,"done" & Wr.EOL); Wr.Flush(Stdio.stdout);
 
   FOR i := FIRST(M) TO LAST(M) DO
     IF i IN sets THEN
@@ -474,11 +474,11 @@ BEGIN
       FOR j := 0 TO nPer - 1 DO
         Makers[i].maker(i * nPer + j) 
       END;
-      Wr.PutText(Stdio.stdout,"done\n");  Wr.Flush(Stdio.stdout)
+      Wr.PutText(Stdio.stdout,"done" & Wr.EOL);  Wr.Flush(Stdio.stdout)
     END
   END;
 
-  Wr.PutText(Stdio.stdout,"running...printing oldest/median age/newest\n");
+  Wr.PutText(Stdio.stdout,"running...printing oldest/median age/newest" & Wr.EOL);
   Wr.Flush(Stdio.stdout);
   FOR i := 1 TO iters DO
     FOR j := 1 TO wait DO
@@ -509,10 +509,11 @@ BEGIN
           PutStats(SUBARRAY(times2^,i*nPer,nPer))
         END
       END;
-      Wr.PutText(Stdio.stdout,")\n");
+      Wr.PutText(Stdio.stdout,")");Wr.PutText(Stdio.stdout,Wr.EOL);
       Wr.Flush(Stdio.stdout)
     END
   END;
-  Wr.PutText(Stdio.stdout, "All tests complete.  Congratulations.\n");
+  Wr.PutText(Stdio.stdout, "All tests complete.  Congratulations.");
+  Wr.PutText(Stdio.stdout, Wr.EOL);
 END Main.
   
