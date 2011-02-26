@@ -8,7 +8,7 @@ int __cdecl RTDebug__IsDebuggerPresent(void)
   return IsDebuggerPresent();
 }
 
-void  __cdecl RTDebug__DebugBreak(void)
+void __cdecl RTDebug__DebugBreak(void)
 {
   DebugBreak();
 }
