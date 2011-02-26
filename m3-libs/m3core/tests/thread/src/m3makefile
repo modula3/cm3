@@ -2,5 +2,5 @@ import ("libm3")
 import ("parseparams")
 
 implementation ("Main")
-
+build_standalone()
 program ("threadtest")
