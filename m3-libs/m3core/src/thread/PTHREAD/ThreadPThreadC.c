@@ -327,6 +327,11 @@ ThreadPThread_pthread_generic_new(WORD_T size, generic_init_t init)
     goto Error;
   return p;
 Error:
+  if (r)
+  {
+    fprintf(stderr, "ERROR: pthread_generic_new:%d\n", r);
+    abort();
+  }
   if (p) free(p);
   return NULL;
 }
@@ -369,7 +374,14 @@ ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
 #else
   e = pthread_mutex_destroy(p);
 #endif
-  assert(e == 0);
+  if (e)
+  {
+    if (e == EBUSY)
+      fprintf(stderr, "pthread_mutex_destroy:EBUSY\n");
+    else
+      fprintf(stderr, "pthread_mutex_destroy:%d\n", e);
+    abort();
+  }
   free(p);
 }
 
@@ -460,8 +472,34 @@ ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
   return pthread_kill(PTHREAD_FROM_M3(thread), sig);
 }
 
-M3WRAP1(int, pthread_mutex_lock, pthread_mutex_t*)
-M3WRAP1(int, pthread_mutex_unlock, pthread_mutex_t*)
+int
+__cdecl
+ThreadPThread__pthread_mutex_lock(pthread_mutex_t* mutex)
+{
+  int a = pthread_mutex_lock(mutex);
+  if (a)
+  {
+    if (a == EINVAL)
+      fprintf(stderr, "ERROR: pthread_mutex_lock:EINVAL\n");
+    else
+      fprintf(stderr, "ERROR: pthread_mutex_lock:%d\n", a);
+    abort();
+  }
+  return a;
+}
+
+int
+__cdecl
+ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* mutex)
+{
+  int a = pthread_mutex_unlock(mutex);
+  if (a)
+  {
+    fprintf(stderr, "ERROR: pthread_mutex_unlock:%d\n", a);
+    abort();
+  }
+  return a;
+}
 
 void
 __cdecl
