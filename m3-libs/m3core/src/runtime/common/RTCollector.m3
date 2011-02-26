@@ -2571,8 +2571,8 @@ CONST
   MB = 16_100000;
   MinNewFactor = 0.2;			 (* grow the heap by at least 20% *)
 
-  InitialPages = 32;			 (* 32 * 8K = 256K *)
-  MinNewPages  = 32;			 (* 32 * 8K = 256K *)
+  InitialPages = 4;			 (* 4 * 64K = 256K *)
+  MinNewPages  = 4;			 (* 4 * 64K = 256K *)
 
 VAR
   heap_stats := FALSE;
