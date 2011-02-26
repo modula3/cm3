@@ -240,8 +240,8 @@ PROCEDURE MApply(cl : Closure) : REFANY =
     Thread.Pause(InitPause);
     LOOP
       TRY
-        <*NOWARN*>WITH proc = Process.Create("sleep",
-                                   ARRAY OF TEXT { "10" }) DO
+        <*NOWARN*>WITH proc = Process.Create(Params.Get(0),
+                                   ARRAY OF TEXT { "-sleep10" }) DO
           (* no Process.Wait *)
           times1[cl.id] := FLOOR(Time.Now());
           Thread.Pause(1.0d0)
@@ -424,6 +424,11 @@ BEGIN
   sets := StdTests;
 
   TRY
+    IF pp.keywordPresent("-sleep10") THEN
+      (* sleep and exit *)
+      Thread.Pause(10.0d0);
+      Process.Exit(0)
+    END;
     IF pp.keywordPresent("-sleep") THEN
       (* sleep and exit *)
       Thread.Pause(1.0d0);
