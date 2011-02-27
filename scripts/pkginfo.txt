@@ -192,3 +192,4 @@ elego/pkg_vc elego
 elego/pkgvm elego
 elego/prjbase elego
 elego/prjm elego
+m3sleep core
