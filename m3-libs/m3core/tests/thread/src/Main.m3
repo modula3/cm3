@@ -316,13 +316,17 @@ PROCEDURE WriteAFile() =
     END
   END WriteAFile;
 
-PROCEDURE PutCard(c : CARDINAL) =
+PROCEDURE PutInt(c : INTEGER) =
   BEGIN
+    IF c < 0 THEN
+      Wr.PutChar(Stdio.stdout,'-');
+      c := -c;
+    END;
     IF c > 10 THEN
-      PutCard(c DIV 10)
+      PutInt(c DIV 10)
     END;
     Wr.PutChar(Stdio.stdout,VAL(c MOD 10 + ORD('0'),CHAR))
-  END PutCard;
+  END PutInt;
 
 PROCEDURE PutStats(VAR a : ARRAY OF INTEGER) =
   (* now is global in Main.m3 *)
@@ -333,11 +337,11 @@ PROCEDURE PutStats(VAR a : ARRAY OF INTEGER) =
     WITH min = a[FIRST(a)],
          max = a[LAST(a)],
          med = a[LAST(a) DIV 2] DO
-      PutCard(now-min);
+      PutInt(now-min);
       Wr.PutChar(Stdio.stdout,'/');
-      PutCard(now-med);
+      PutInt(now-med);
       Wr.PutChar(Stdio.stdout,'/');
-      PutCard(now-max)
+      PutInt(now-max)
     END
   END PutStats;
 
