@@ -1,0 +1,33 @@
+(DEFPRED (Q x y) (OR (> x 7) (< y 0)))
+
+(Q 5 5)
+
+(IMPLIES
+ (AND
+  (> a 8)
+  (< b -5)
+  )
+ (Q a b))
+
+(IMPLIES
+ (AND
+  (> a 4)
+  (< b 2)
+  )
+ (Q a b))
+
+(Q 5 5)
+
+(IMPLIES
+ (AND
+  (> a 8)
+  (< b -5)
+  )
+ (Q a b))
+
+(IMPLIES
+ (AND
+  (> a 4)
+  (< b 2)
+  )
+ (Q a b))

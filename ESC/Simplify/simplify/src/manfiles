@@ -1,0 +1,4 @@
+#!/bin/csh
+
+mtex2man < Simplify.1.mtex > Simplify.1
+mtex2html < Simplify.1.mtex > Simplify.1.html

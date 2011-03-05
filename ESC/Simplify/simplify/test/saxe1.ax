@@ -1,0 +1,68 @@
+;;; 1-*- lisp -*-
+
+;;; Axioms for litmus tests.
+
+;;; "(Op p n)" represents the "n"th operation of processor "p"
+;;; "(IsOp2 p n)" is true if "(Op p n)" occurs in the execution
+;;; history. The following axioms constrain the execution history
+;;; not to contain unmentioned operations. "NProcs" is the number
+;;; of processors in the system.  The processors are numbered
+;;; "1" through "NProcs", and there is also a dummy processor
+;;; numbered "0" to which initializations are attributed.
+;;; "(Steps p)" is the number of references (numbered "1" through
+;;; "(Steps p)") performed by processor p.
+
+(FORALL (p n k a v)
+  (PATS (IsOp p n k a v))
+  (IMPLIES
+   (EQ (IsOp p n k a v) T)
+   (AND (EQ (IsOp2 p n) T)
+        (IFF (EQ p 0) (EQ k Init)))))
+
+(FORALL (p n)
+  (PATS (IsOp2 p n))
+  (IMPLIES
+   (EQ (IsOp2 p n) T)
+   (AND (<= 0 p) (<= p NProcs) (< 0 n) (<= n (Steps p)))))
+
+(FORALL (p1 p2 n1 n2)
+  (PATS (MPAT (IsOp2 p1 n1) (IsOp2 p2 n2)))
+  (IMPLIES
+   (AND (EQ (IsOp2 p1 n1) T)
+        (EQ (IsOp2 p2 n2) T))
+   (AND (OR (EQ p1 p2)
+            (<= p1 (- p2 1))
+            (<= p2 (- p1 1)))
+        (OR (EQ n1 n2)
+            (<= n1 (- n2 1))
+            (<= n2 (- n1 1))))))
+
+;;; 3.  Coherence order agrees with program order for references to
+;;; the same location.
+(FORALL (p n1 n2 k1 k2 a v1 v2)
+  (PATS (MPAT (IsOp p n1 k1 a v1) (IsOp p n2 k2 a v2)))
+  (IMPLIES
+   (AND (EQ (IsOp p n1 k1 a v1) T)
+	(EQ (IsOp p n2 k2 a v2) T)
+	(< n1 n2))
+   (EQ (OrdLT (Op p n1) (Op p n2)) T)))
+
+;;; 5. A load returns the value of the latest write (if any) in
+;;; coherence order to the same location.
+
+;;; To implement this, we first require that if (Op p2 n2) is a
+;;; read and is preceded in coherence order) by any write or init,
+;;; (Op p1 n1), then the source of (Op p2 n2) occurs in the
+;;; execution history and is equal to or precedes (Op p1 n1)
+;;; in coherence order.
+
+(FORALL (p1 p2 n1 n2 k1 a v1 v2)
+  (PATS (MPAT (IsOp p1 n1 k1 a v1) (IsOp p2 n2 Read a v2)))
+  (IMPLIES
+   (AND (EQ (IsOp p1 n1 k1 a v1) T)
+	(EQ (IsOp p2 n2 Read a v2) T)
+	(OR (EQ k1 Write) (EQ k1 Init))
+	(EQ (OrdLT (Op p1 n1) (Op p2 n2)) T))
+   (AND (EQ (IsOp2 (SrcP p2 n2) (SrcN p2 n2)) T)
+        (EQ (OrdLTE (Op (SrcP p2 n2)(SrcN p2 n2)) (Op p1 n1)) T))))
+

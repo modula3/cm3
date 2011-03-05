@@ -1,0 +1,39 @@
+(IMPLIES
+ (ORDER GT1 GE1)
+ (IMPLIES
+  (AND
+   (EQ (GT1 x y) |@true|)
+   (EQ (GT1 y z) |@true|)
+   )
+  (EQ (GT1 x z) |@true|)
+  ))
+
+(IMPLIES
+ (ORDER GT1 GE1)
+ (NEQ (GT1 x x) |@true|))
+
+;; This ought to work
+(IMPLIES
+ (ORDER GT1 GE1)
+ (EQ (GE1 x x) |@true|))
+
+;; It would be nice if this worked...
+(IMPLIES
+ (ORDER GT1 GE1)
+ (IMPLIES 
+  (EQ (GE1 x y) |@true|)
+  (OR
+   (EQ (GT1 x y) |@true|)
+   (EQ x y))))
+
+(IMPLIES
+ (ORDER GT1 GE1)
+ (IMPLIES 
+  (AND
+   (EQ (GE1 x y) |@true|)
+   (EQ (GT1 x y) |@true|)
+   (EQ (GE1 y z) |@true|)
+   )
+  (EQ (GT1 x z) |@true|)))
+
+

@@ -1,0 +1,662 @@
+Greg --
+
+For reference while you're away, I found and fixed the following bugs:
+
+----------------------------------------------------------------------
+* DeleteLiteral can make an empty clause, so we have to re-enable
+  ScanClauseList.
+
+Before we changed the loop structure in DNF, it was always true that
+we would do a ScanClauseList after a Pop.  We had:
+
+    (* Q *)
+    LOOP
+      WHILE lits # NIL AND Context.Assert(lits.first) DO
+        lits := lits.tail
+      END (* WHILE *);
+      IF lits # NIL THEN
+        lits := NIL;
+        IF pushes # 0 THEN
+          Pop()
+        ELSE
+          RETURN PredSx.falseSym
+        END (* IF *)
+      ELSIF l = NIL THEN
+        l := Match.FindNonUnits();
+        IF l = NIL THEN
+          RETURN Context.Top()
+        END (* IF *)
+      ELSE
+        IF debug # 0 THEN
+          Wr.PutText(Stdio.stdout, "Before ScanClauseList.\n");
+          PrintClauseList(l)
+        END (* IF *);
+        ScanClauseList(l, lits);
+        ...
+      END (* IF *)
+    END (* LOOP *);
+
+Pop would return us to a state in which lits is NIL and l is non-NIL,
+so the next iteration would take the last branch of the IF in the
+LOOP, doing ScanClauseList.
+
+This turns out to be necessary, because the part that does a case
+split does
+
+        lits := List.List1(DeleteLiteral(l, NIL));
+        Push();
+        DeleteClause(l, NIL)
+
+Delete literal can leave the first clause with only one literal; when
+you Pop back to that state, you have to do a ScanClauseList to
+recognize this as a unit clause.
+
+The upshot of all this is that our code for Pop originally said
+
+        IF pushes # 0 THEN
+          Pop(); sat := TRUE; auB := FALSE; sclB := FALSE; fnuB := TRUE;
+
+and it changed to
+
+        IF pushes # 0 THEN
+          Pop(); sat := TRUE; auB := FALSE; sclB := TRUE; fnuB := TRUE;
+
+----------------------------------------------------------------------
+* ProcessClause didn't move pointer along with a NIL argument.
+
+The spec for ProcessClause says:
+
+  PROCEDURE ProcessClause(VAR lp: TList;
+                          VAR (*INOUT*) p: TList) =
+    (* Process the clause "p.first".  Requires that "lp" is the
+       predecessor of "p" in "l", or "NIL" if "p" is the first clause.
+       If "p.first" is or reduces to a literal, adds the literal to "lits"
+       and leaves "l" unmodified.  If "p.first" reduces to "TRUE",
+       delete "p" from "l".  Otherwise, reduces "p.first" as much as
+       possible, modifying it in place.  Updates "lp", "minWidth",
+       and "minP" to maintain P.
+    *)
+
+This procedure was supposed to handle the case in which "p.first" was
+the empty clause, but did so incorrectly.  We had the code
+
+        IF p.first = NIL THEN
+          lits := List.New(Context.falseLit, lits)
+        ELSIF NARROW(p.first, T).tail = NIL THEN
+          lits := List.New(NARROW(p.first, T).first, lits);
+          DeleteClause(l, lp);
+        ELSE
+          VAR width := List.Length(p.first); BEGIN
+            IF width < minWidth THEN
+              minP := lp; minWidth := width;
+            END (* IF *)
+          END (* BEGIN *);
+          IF lp = NIL THEN
+            lp := l
+          ELSE
+            lp := lp.tail
+          END (* IF *)
+        END (* IF *)
+      END (* BEGIN *)
+
+But if p.first is NIL, we still need to update lp, just as in the ELSE
+clause.  So this became
+
+        IF p.first = NIL THEN
+          lits := List.New(Context.falseLit, lits);
+          IF lp = NIL THEN
+            lp := l
+          ELSE
+            lp := lp.tail
+          END (* IF *)
+        ELSIF NARROW(p.first, T).tail = NIL THEN
+          lits := List.New(NARROW(p.first, T).first, lits);
+          DeleteClause(l, lp);
+        ELSE
+          VAR width := List.Length(p.first); BEGIN
+            IF width < minWidth THEN
+              minP := lp; minWidth := width;
+            END (* IF *)
+          END (* BEGIN *);
+          IF lp = NIL THEN
+            lp := l
+          ELSE
+            lp := lp.tail
+          END (* IF *)
+        END (* IF *)
+
+which seems to work better.
+
+----------------------------------------------------------------------
+* Bug in Simplex.
+
+  This one had some very strange side effects; I thought Pop wasn't
+  working right for a while.  Simplex.AssertNonNeg has the code:
+
+    IF NOT sense THEN
+      FOR j := 0 TO m-1 DO a[u.index,j].num := -a[u.index,j].num END (* FOR *);
+      a[u.index,0] := Rat.Minus(a[u.index,0], Rat.One)
+    END (* IF *);
+    u.restricted := TRUE;
+    UndoStackPush(UndoType.Restrict, u);
+    IF MakePositive(u) THEN
+      RETURN TRUE
+    ELSIF a[u.index,0].num = 0 THEN
+      KillRow(u); RETURN TRUE
+    ELSE
+      RETURN FALSE
+    END (* IF *)
+
+ If the sense was FALSE, and we negated the row, and we end up in the
+ RETURN FALSE arm of the IF, we obviously need to negate the row back
+ to its original value:
+
+    IF NOT sense THEN
+      FOR j := 0 TO m-1 DO a[u.index,j].num := -a[u.index,j].num END (* FOR *);
+      a[u.index,0] := Rat.Minus(a[u.index,0], Rat.One)
+    END (* IF *);
+    u.restricted := TRUE;
+    UndoStackPush(UndoType.Restrict, u);
+    IF MakePositive(u) THEN
+      RETURN TRUE
+    ELSIF a[u.index,0].num = 0 THEN
+      KillRow(u); RETURN TRUE
+    ELSE
+      IF NOT sense THEN
+        FOR j := 0 TO m-1 DO
+          a[u.index,j].num := -a[u.index,j].num
+        END (* FOR *);
+        a[u.index,0] := Rat.Minus(a[u.index,0], Rat.One)
+      END (* IF *);
+      RETURN FALSE
+    END (* IF *)
+
+  We don't need to do this in the other two arms because we succeeded
+  in keeping the Tableu feasible.
+
+Part two...
+
+I said
+*  We don't need to do this in the other two arms because we succeeded
+*  in keeping the Tableu feasible.
+
+Ha! If the sense was "FALSE", and we negated the row and succeeded in
+making it positive, we still have to unnegate it when we Pop!  I
+changed this to use a new kind of undo entry.  And, of course, the
+undo code should add Rat.One to a[0], not subtract One again as I did
+above.   Oops; I thought this was obvious, but it was wrong:
+(-a - 1)*-1 + 1 = a + 1 + 1 = a + 2; the right inverse is *(-1); +(-1).
+
+----------------------------------------------------------------------
+* Infinite loop in FindNonUnits.
+
+  I actually found this bug by inspection before I found the last one,
+  and had to figure out why the infinite loop that the code seemed to
+  imply wasn't happening.  When I found and fixed the previous bug,
+  this one occured as expected.
+
+  In Clause.m3, we have
+
+      ELSIF fnuB THEN
+        IF debug # 0 THEN
+          Wr.PutText(Stdio.stderr, "Before FindNonUnits.\n")
+        END (* IF *);
+        l := Match.FindNonUnits();
+        CASE Match.AssertUnits() OF <*NOWARN*>
+        | Match.Res.Unsat => sat := FALSE
+        | Match.Res.NoChange => auB := FALSE
+        | Match.Res.Sat => sclB := TRUE; auB := TRUE; fnuB := TRUE;
+        END (* CASE *);
+        ScanClauseList(l, lits);
+        fnuB := FALSE
+
+  Consider a test case in which we call "FindNonUnits" for the first time.
+  It finds some matches, which produces some conjunction of clauses,
+  which becomes the new value of "l", and sets "fnuB" to "FALSE".  We
+  process these clauses, and find that the context remains
+  satisfiable.  The processing of these clauses did some asserts, so
+  "fnuB" was reset to "TRUE".  So we reach a state in which we do
+  matching again.  Let's assume (as is actually true in the test case
+  that exposed this bug) that the set of matches is the same as
+  before.  Well, we still have to process them in order to determine
+  that they're satisfiable, and that still does some asserts, so that
+  again sets "fnuB" to "TRUE".
+
+  The intuition we wanted to capture is that the second round of
+  matching won't change the egraph, and after matching we want to
+  disable matching unless the egraph changed.  Therefore, I think we
+  need to treat "fnuB" as a property of the egraph (actually, the
+  Match interface).  For that matter, the same argument applies to
+  "auB".  Each of "FindNonUnits" and "AssertUnits" sets their
+  respective booleans to "FALSE"; any egraph operations that enable
+  them ("Enode.Cons" that creates new node structure, or a non-trivial
+  "Merge") sets both to "TRUE".  Anyway, I did this, and it seems to
+  work.
+
+----------------------------------------------------------------------
+Bug in matching.
+
+We began each the various Ax<n>RHS procedures with
+
+    VAR lhs := s[0].parent.parent.parent.parent; BEGIN
+
+thinking that this would get us to the enode that matched the LHS of
+the pattern.  This was just confused; the ".parent" field gets us to
+one of the possibly many parents; we need to get back to the one used
+in the match.  I modified all the match procedures to carry along an
+"lhs" argument, the root enode that this match matches.
+
+----------------------------------------------------------------------
+* Forgot Simplex.Pop in Context.Pop!
+
+  Ditto for Simplex.Push in Context.Push.  I'm amazed that none of our
+  earlier tests detected this.
+
+  This turns out not to have been causing the problem I thought it
+  was, but it was still obviously wrong.
+
+----------------------------------------------------------------------
+* Non-nil "lits" after pop.
+
+  Consider the DNF loop.  Imagine that "lits" is of length two.  We
+  "assert" the first element of the list; it is not satisfiable in the
+  current context.  Therefore, the next iteration of the loop does a
+  Pop to some previous state.  But "lits" is still non-nil, though
+  lits was NIL in the state at the time of the corresponding Push.
+  Therefore, we must set "lits" to NIL after a Pop.
+
+----------------------------------------------------------------------
+* Bug in Simplex algorithm.
+
+Let's say we are attempting to restrict an unknown to be non-negative.
+We pivot until we reach a state in which the sample value is negative,
+but the unknown rows contains a positive coefficient for an
+unrestricted column variable.  "FindPivot" signals this fact by
+returning an <i, j> pair where "i" is the row of unknown being
+restricted, and "j" is the column of the unrestricted column variable.
+In this case, "MakePositive" takes no further action, but simply returns
+"TRUE", indicating that the assertion was satisfiable.  However, by
+doing so we seem to have violated an important invariant, that the
+tableu remain feasible at all times (all restricted variables have
+sample values that obey the restriction.)  The fact that this is a bug
+shows up because if we don't do the pivot, there is an implicit
+restriction on the unrestricted column variable (that it have a value
+large enough to make the restricted variable non-negative) that is not
+recorded in the tableu.  Later another assertion could make a
+conflicting requirement on the value of the unrestricted variable that
+would not be detected; this is in fact what occurred in the test case
+that revealed this bug.
+
+What I did to fix this:
+
+I added an argument to MakePositive:
+
+PROCEDURE MakePositive(u: Unknown; lastPivot: BOOLEAN := FALSE): BOOLEAN =
+  (* Requires that "u" owns a row.  Determines the sign of "u"'s
+     maximum.  If this is strictly positive returns "TRUE".  Otherwise,
+     returns "FALSE", leaving "u" at its maximum value.  If
+     "lastPivot" is "FALSE", leaves "u" in a row variable, but may not
+     preserve the feasibility of the tableu.  If "lastPivot" is
+     "TRUE", preserves the feasibility of the tableu, but may leave
+     "u" in a column.
+  *)
+
+Only AssertNonNeg calls MakePositive with "lastPivot" TRUE.
+
+This raises another problem.
+
+The undo code for a NegRow undo record assumes that the unknown being
+unnegated owns a row.  If we do the lastPivot of such an unknown, we
+have to undo the pivot before undoing the row negation.  Indeed, since
+we add subtract one from the row in a row negation, we may have
+destroyed essential equalities that are supposed to hold in the
+tableu.  Consider
+
+(AND (< (+ x 5) 0) (< (+ x 2) 0))
+
+This could result in the tableu
+
+     1   x
+   +--------
+s1 | 5   1
+s2 | 2   1
+
+We first try to see if (NOT (>= (+ x 5) 0)) is satisfiable, by
+negating s1's row and then trying to restrict it to be non-negative.
+
+     1   x
+   +--------
+s1 |-6  -1
+s2 | 2   1
+
+As observed before, even though the fact that x is unrestricted shows
+that (NOT (>= (+ x 5) 0)) is satisfiable, we must pivot s1 and x to
+preserve feasibility of the tablue.
+
+     1   s1(n)
+   +--------
+x  |-6  -1
+s2 |-4  -1
+
+Now we try to satisfy (NOT (>= (+ x 2) 0)), by first negating the row:
+
+     1   s1(n)
+   +--------
+x  |-6  -1
+s2 | 3   1
+
+We see that s2 is manifestly unbounded.  Now, if we undo from this
+state, we must undo the s2 row negation, then the pivot of x and s1,
+and then the row negation of s1.
+
+I think that in general, we must mark an unknown whose that has
+undergone row negation as infected, and record an undo record whenever
+we pivot with an infected row or column; if one of the row or column
+was not infected, it becomes infected (since it no longer obeys the
+equalities that defined the original tableu.)  When we undo one of
+these undo records, we reverse the pivot and reset the "infected bits"
+of both the unknowns.
+
+Let me know what you think.
+
+----------------------------------------------------------------------
+* Yet another Simplex undo bug.
+
+The end of "KillColWork" did
+
+    u.restricted := TRUE; u.isZero := TRUE;
+    UndoStackPush(UndoType.DeadCol, x[dcol]);
+    INC(dcol)
+
+But the "DeadCol" entry in Pop just did:
+
+        | UndoType.DeadCol =>
+            DEC(dcol);
+            <*ASSERT top.u.index = dcol*>
+
+Obviously, it needs to unrestrict the unknown as well.
+
+        | UndoType.DeadCol =>
+            top.u.restricted := FALSE;
+            DEC(dcol);
+            <*ASSERT top.u.index = dcol*>
+
+
+----------------------------------------------------------------------
+* Simplex undo bug 3.
+
+AssertNonNeg did
+
+    u.restricted := TRUE;
+    u.isZero := FALSE;
+    UndoStackPush(UndoType.Restrict, u);
+    IF MakePositive(u, TRUE) THEN
+
+and Pop just did
+
+        | UndoType.Restrict =>
+            top.u.restricted := FALSE
+
+If an unknown was restricted to be zero, then this restriction was undone,
+then the unknown was restricted to be non-negative, the isZero flag
+would still be set.  I solved this by having both AssertNonNeg 
+explicitly set the isZero flag, to FALSE, just as AssertZero sets it
+to TRUE, so the undo code is sufficient.
+
+    u.restricted := TRUE;
+    u.isZero := FALSE;
+    UndoStackPush(UndoType.Restrict, u);
+    IF MakePositive(u, TRUE) THEN
+
+----------------------------------------------------------------------
+* Simplex undo bug 4.
+
+AssertNonNeg did
+
+    u.restricted := TRUE;
+    u.isZero := FALSE;
+    UndoStackPush(UndoType.Restrict, u);
+    IF MakePositive(u, TRUE) THEN
+      RETURN TRUE
+    ELSIF a[u.index,0].num = 0 THEN
+      KillRow(u); RETURN TRUE
+
+and KillRow pushed no undo record for u.  This was fine for
+AssertNonNeg, but AssertZero pushes no Restrict records, and makes
+various calls to KillCol and KillRow.  KillCol pushes a DeadCol
+record, so I thought it symmetric to make KillRow push a restrict
+record.  So AssertNonNeg changed to:
+
+    IF MakePositive(u, TRUE) THEN
+      u.restricted := TRUE;
+      u.isZero := FALSE;
+      UndoStackPush(UndoType.Restrict, u);
+      RETURN TRUE
+    ELSIF a[u.index,0].num = 0 THEN
+      KillRow(u); RETURN TRUE
+
+----------------------------------------------------------------------
+* Simplex undo bug 5.
+
+The infection thing still didn't work, because: I was only undoing the
+"infected" pivots, but a non-infected pivot could make a pivot cell
+zero, making the undo of the infected pivot impossible.
+
+Solution: Undo all pivots!
+
+Further speculation: we are doing pivot operation to the whole tableu,
+including dead columns.  Can't we get away with doing pivot operations
+only on live columns if we undo pivots?  This might actually be a net
+win!
+
+----------------------------------------------------------------------
+* Simplex undo bug 6!
+
+In "Yet another Simplex undo bug", I made the DeadCol undo entry
+unrestrict the unknown owning the row that comes back to life.  This
+is well-intentioned, but not quite right; the owner of the column
+being killed may already have been restricted to be non-negative.  So
+there are three possible restriction transitions:
+
+  unrestricted -> non-negative
+  unrestricted -> zero
+  non-negative -> zero
+
+and two corresponding undo transitions (back to unrestricted or back
+to non-negative).  I also decided to "unbundle" unrestricting the owner
+of a DeadCol entry; I'll push two undo records in KillCol.
+
+----------------------------------------------------------------------
+* Simplex speedup 1.
+
+We had many many redundant slack variables.  In procedures like
+Simplex.IsSum, we don't have to create a new slack if the "res"
+has already been assigned an unknown; the only way it could get one was
+by a previous call to IsSum.  So we can have headers like
+
+PROCEDURE IsSum(res, x, y: Enode.T): BOOLEAN =
+  VAR ures, ux, uy, slack: Unknown; BEGIN
+    IF res.unknown # NIL THEN
+      RETURN TRUE
+    END (* IF *);
+
+EXPERIMENT: Test5VC
+
+With this optimization: (see Test5VC.stats.1)
+  Array: 315 x 12
+  Instructions: 3610467870 (3.6x10^9) instructions.
+  Ratio: 1.00
+
+With this optimization: (see Test5VC.stats.2)
+  Array: 268 x 12
+  Instructions: 2915238869 (2.9x10^9)
+  Ratio: .81
+
+----------------------------------------------------------------------
+* Simplex speedup 2.
+
+When we do a pivot, we still do operations on dead columns.  This is
+2.915because we wanted to be able to undo a column kill by simply moving
+the dead column index over; the tableu would still be feasible.
+However, since we're now undoing all pivots, this is no longer
+possible.  However, since it is no longer possible, it means that
+there is no longer any need to do pivot operations on dead columns.
+
+This may actually be an overall win.  Undoing pivots can increase
+overall work by no more than a factor of 2; if the averate fraction of
+live columns is less than 1/2, this would have been a win anyway.
+
+Doing this produces:
+
+With this optimization: (see Test5VC.stats.3)
+  Array: 268 x 12
+  Instructions: 1271574403 (1.3x10^9)
+  Ratio with last: .43
+  Cum ratio: .35
+
+----------------------------------------------------------------------
+* Simplex speedup 3.
+
+The array still had an awfully large number of rows after speedup 1;
+where are they all coming from?  It turns out we have an "unknown
+leak".  Going down a path, we may introduce new unknowns (after
+matching, for example), increasing the value of n, but if we pop,
+these unknowns are irrelevant.  n should go back to its state at the
+time of the push.
+
+With this optimization: (see Test5VC.stats.4)
+  Array: 34 x 12
+  Instructions: 348186886 (.35x10^9)
+  Ratio with last: .27
+  Cum ratio: .09
+
+----------------------------------------------------------------------
+* Simplex speedup 4.
+
+
+In Pivot changed
+
+        IF i # row THEN
+          FOR j := dcol TO m-1 DO
+            IF j # col THEN
+              a[i,j] := Rat.Plus(a[i,j], Rat.Times(a[row,j], a[i,col]))
+            END (* IF *)
+          END (* FOR *);
+          a[i,0] := Rat.Plus(a[i,0], Rat.Times(a[row,0], a[i,col]))
+        END (* IF *)
+
+to
+
+        IF i # row AND a[i,col].num # 0 THEN
+          FOR j := dcol TO m-1 DO
+            IF j # col THEN
+              a[i,j] := Rat.Plus(a[i,j], Rat.Times(a[row,j], a[i,col]))
+            END (* IF *)
+          END (* FOR *);
+          a[i,0] := Rat.Plus(a[i,0], Rat.Times(a[row,0], a[i,col]))
+        END (* IF *)
+
+With this optimization: (see Test5VC.stats.5)
+  Instructions: 249338497 (.25x10^9)
+  Ratio with last: .72
+  Cum ratio: .069
+
+
+----------------------------------------------------------------------
+* Simplex speedup 5.
+
+Went a little further in the above: made the inner loop
+
+            IF j # col AND a[row,j].num # 0 THEN
+              a[i,j] := Rat.Plus(a[i,j], Rat.Times(a[row,j], a[i,col]))
+            END (* IF *)
+
+The results here were not so dramatic:
+
+With this optimization: (see Test5VC.stats.6)
+  Instructions: 222461278 (.22x10^9)
+  Ratio with last: .89
+  Cum ratio: .061
+
+----------------------------------------------------------------------
+4/22 PM: Shipped VERS/31.
+
+  Found that enode id's were being used in pair set calculations as
+  if they were immutable, but they are not.  We fixed this by adding
+  the "shortId" method to "Enode.T", and using it in place of "id" in
+  appropriate places.
+
+4/23 PM: Shipped. VERS/32.
+
+----------------------------------------------------------------------
+5/2: Fixed bug in Context.PlungeOnClause -- we were throwing away literals
+     for which "tryLit" was FALSE.
+
+     Also fixed ScanClauseList not to harvest unit ProxyProp literals
+     from the "nuMatches" list.
+
+----------------------------------------------------------------------
+5/17:  Introduced PRED_DIST's: if we assert a # b and both "a" and "b"
+have pred terms, and neither is equal or different from "TRUE", we
+introduce the pair of clauses (a = T \/ b = t) /\ (a = F \/ b = F).
+Each clause rightmost if the original assertion is.
+
+A later refinement; we *don't* introduce the distinction "a # b" to
+the egraph in this case.
+
+----------------------------------------------------------------------
+5/21:  Eliminate rows for "trivially redundant" Simplex assertions
+early.
+
+Checked in.
+
+----------------------------------------------------------------------
+5/24:  Fixed up handling of labels, especially with respect to quantification.
+
+----------------------------------------------------------------------
+6/13:
+
+2) I noticed that when introducing a predicate distinction via the two
+clauses
+
+   (P OR Q) AND (NOT P OR NOT Q)
+
+I made both clauses rightmost.  I now make only the one containing the
+negations rightmost.
+
+3) Introduced ProxyProp TrueCNF.
+
+5) Further investigation revealed that many of the case splits being done
+were being done because of clause promotion.  On the other hand,
+clause promotion was definitely serving a useful purpose when we did
+resort to unrestricted non-unit matching.  So I instituted a new
+policy to try to get the good without the bad: the prover notes when
+it first does a case split on a non-rightmost clause along a search
+path.  When we backtrack out past that point, we clear the promote
+set.  Promotion is needed when it is necessary to use unrestricted
+non-unit matching to prove something, but there are several
+non-rightmost clauses (such as might arise from disjunctions in, say,
+postconditions of called procedures) split upon before resorting to
+unrestricted non-unit matching.  If we don't have promotion, and there
+are, say, "n" such non-rightmost clauses, lets say binary, then we
+would do unrestricted matching 2^n times without promotion.  Promotion
+enables us to avoid this.  But the promote clause or clauses probably
+aren't relevant to the next proof obligation, and the current
+mechanism was still keeping them around and splitting on them.
+Clearing the promote set when the first split on a non-rightmost
+clause is undone prevents such irrelevant splits.
+
+6) Similarly, clauses were accumulating high scores, and needed to have their
+scores normalized after each subproof.
+
+CHECK IN 6/11, VERS 35.
+
+----------------------------------------------------------------------
+Fixed inter-proof interference via Rule scores.
+
+CHECK IN 6/18, VERS 36.
+
+----------------------------------------------------------------------
+Added select(store) quiescence.
+
+CHECK IN 7/29, VERS 41

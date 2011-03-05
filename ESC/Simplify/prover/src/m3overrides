@@ -1,0 +1,11 @@
+% On some systems, the following line may be unnecessary or may need to
+% be changed :
+WDROOT = "../.."
+
+%override("m3core",	WDROOT)
+%override("libm3",        WDROOT)
+%override("libm3-esc",     WDROOT)
+%override("set",		WDROOT)
+%override("table-list",	WDROOT)
+%override("intpair",	WDROOT)
+override("digraph",	WDROOT)

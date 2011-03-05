@@ -1,0 +1,244 @@
+<!-- This file generated automatically by mtex2html(1) -->
+<HTML>
+<HEAD>
+<TITLE>Simplify - attempt to prove first-order formulas.</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>Simplify(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+<B>Simplify</B> -- attempt to prove first-order formulas.
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<B>Simplify</B> [<I>-print</I>] [<I>-ax axfile</I>] [<I>-nosc</I>] [<I>-noprune</I>] [<I>-help</I>] [<I>-version</I>] [<I>file</I>]
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+<P>
+
+  <B>Simplify</B> accepts a sequence of first order formulas as input,
+  and attempts to prove each one.  <B>Simplify</B> does not implement a
+  decision procedure for its inputs: it can sometimes fail to prove a
+  valid formula.  But it is conservative in that it never claims that
+  an invalid formula is valid.<P>
+
+  The <A HREF="http://jellybean.pa.dec.com:3828/3PredSx.i3"><TT>PredSx</TT></A>
+  interface in the <TT>prover</TT> package specifies the syntax used to
+  specify the formulas; this syntax is based on S-expressions, with
+  one S-expression per formula.  (I include this interface later in
+  this man page.)  If the <I>file</I> argument is provided, S-expression
+  formulas are read one at a time from the file, and proved;
+  otherwise, <B>Simplify</B> enters a "read-prove-print" loop in which
+  the user enters formulas interactively.  The input formula is not
+  normally echoed, but it is when the <I>-print</I> argument is given.<P>
+
+  If <B>Simplify</B> can prove the formula, it prints <TT>valid</TT>.  If it
+  cannot prove the formula, it normally prints a conjunction of
+  literals that it believes to satisfy the negation of the formula.
+  Computing this satisfying context takes some time, and sometimes one
+  may be interested only in whether the input was valid or not; the
+  <I>-nosc</I> options causes <B>Simplify</B> to simply output "valid" or
+  "invalid".  The <I>-noprune</I> flag causes <B>Simplify</B> to skip the step
+  of "pruning" any satisfying context resulting from a failed proof;
+  instead, it prints the entire context.<P>
+
+  The <I>-version</I> option prints out the version number of the
+  <B>Simplify</B> executable, and the <I>-help</I> option prints out a
+  usage message.<P>
+
+  <B>Simplify</B> proves its formulas assuming some set of <I>axioms</I>.
+  The first step in a <B>Simplify</B> execution is loading the axioms.
+  You can customize the axiom set you use in two ways.  The <I>-ax</I> flag
+  allows you to specify an alternate axiom set, and the the <TT>AXIOMDIR</TT>
+  environment variable allows you to specify where <B>Simplify</B>
+  should look for that axiom set.  <B>Simplify</B> comes with a
+  collection of axiom sets included via the Modula-3 "bundle"
+  facility; currently, these consist of "def.ax" and "esc.ax".
+  (<B>Simplify</B> assumes axiom files use the ".ax" suffix.)
+  If the <I>-ax</I> flag is not used, <B>Simplify</B> looks for "def.ax";
+  if the argument <I>-ax file</I> is given, <B>Simplify</B> looks for
+  "file.ax".  If the <TT>AXIOMDIR</TT> environment variable is set,
+  <B>Simplify</B> looks for that file in the given directory, otherwise,
+  it looks in its compiled-in bundle.  Axiom files use the same syntax
+  as other input.<P>
+
+  The <A HREF="http://jellybean.pa.dec.com:3828/3Prover.i3"><TT>Prover</TT></A>
+  interface describes (among other things) various environment
+  variables that can be set to control heuristic parameters that can
+  affect the performance of <B>Simplify</B>.
+</BLOCKQUOTE>
+
+<H3>FORMULA SYNTAX (PredSx)</H3>
+<BLOCKQUOTE>
+<P>
+
+  This section reproduces the part of the <TT>PredSx</TT> interface that
+  defines the syntax of formulas.
+<PRE>
+(* A "PredSx.T" satisfies the following grammar:
+
+|  formula ::= "(" ( AND | OR )  { formula } ")" |
+|              "(" NOT formula ")" |
+|              "(" IMPLIES formula formula ")" |
+|              "(" IFF formula formula ")" |
+|              "(" FORALL "(" var* ")" formula ")" |
+|              "(" EXISTS "(" var* ")" formula ")" |
+|              "(" PROOF formula* ")" |
+|              literal 
+|
+|  literal ::= "(" ( "EQ" | "NEQ" | "&lt;" | "&lt;=" | "&gt;" | "&gt;=" )
+|              term term ")" |
+               "(" "DISTINCT" term term+ ")" |
+|               "TRUE" | "FALSE" | &lt;propVar&gt;
+|
+|  term    ::= var | integer | "(" func { term } ")"
+
+"var"'s, "func"'s, and "propVar"'s (propositional variables) are
+represented as "Atom.T"'s.
+
+The formula
+
+| (DISTINCT term1 ... termN)
+
+represents a conjunction of distinctions between all pairs of terms in
+the list.
+
+The formula
+
+| (PROOF form1 ... formN)
+
+is sugar for
+
+| (AND (IMPLIES form1 form2)
+|      (IMPLIES (AND form1 form2) form3)
+|      ...
+|      (IMPLIES (AND form1 ... formN-1) formN))
+
+"func"'s are uninterpreted, except for "+", "-", and "*", which
+represent the obvious operations on integers.
+*)
+</PRE>
+
+  <TT>&lt;func&gt;</TT>'s are uninterpreted, except for "+", "-", and "*", which
+  represent the obvious operations on integers.<P>
+
+  In addition, the following forms control the environment in which
+  theorems are proved.<P>
+
+| (BG_PUSH pred)<P>
+
+  adds "pred" to the set of predicates assumed to be true, and<P>
+
+| (BG_POP)<P>
+
+  removes the last predicate added to the set.<P>
+
+| (LEMMA pred*)<P>
+
+  attempts to prove each predicate in the list, assuming all previous
+  predicates.  If all proofs succeed, adds the last predicate in the
+  list to the set of assumed predicates.
+</BLOCKQUOTE>
+
+<H3>DEFAULT AXIOMS</H3>
+<BLOCKQUOTE>
+<P>
+
+  The default axiom set used by simplify interprets function symbols
+  defining array operations: <TT>select</TT>, <TT>store</TT>, <TT>subMap</TT>,
+  <TT>storeSub</TT>, and <TT>mapFill</TT>:
+<PRE>
+|     (FORALL (a i x k)
+|        (EQ (select (store a i x) i k) x))
+| 
+|     (FORALL (a i n)
+|        (EQ (len (subMap a i n)) n))
+| 	
+|     (FORALL (a i n j k)
+|        (EQ (select (subMap a i n) j k) (select a (+ i j) k)))
+| 
+|     (FORALL (a i x)
+|        (EQ (len (store a i x)) (len a)))
+| 
+|     (FORALL (a i n b)
+|        (EQ (len (storeSub a i n b)) (len a)))
+|
+|     (FORALL (v i)
+|         ( EQ (select (mapFill v) i) v)
+|
+| #| non-unit RHS |#
+| 
+|     (FORALL (i j a x k)
+|       (OR (EQ i j) (EQ (select (store a i x) j k) (select a j k))))
+| 
+|     (FORALL (j i a n b k)
+|       (OR (AND (OR (&lt; j i) (&gt;= j (+ i n)))
+|                (EQ (select (storeSub a i n b) j k) (select a j k)))
+|           (AND (&gt;= j i)
+|                (&lt; j (+ i n))
+|                (EQ (select (storeSub a i n b) j k) (select b (- j i) k))))) 
+*)
+</PRE>
+
+  The axiom set used for ESC includes the axioms above, and others
+  that change on a daily basis :-)
+</BLOCKQUOTE>
+
+<H3>AXIOM SETS</H3>
+<BLOCKQUOTE>
+<P>
+
+  If you specify a customized axiom set, the axioms are S-expressions
+  that are read from the file using the procedure:
+<PRE>
+    PROCEDURE AddAxioms(rd: Rd.T) RAISES { Error };
+    (* "rd" must be a reader onto a sequence of syntactically correct
+       axioms; if not, raises "Error".  The syntax for an axiom is:
+
+    | axiom ::=   "(" ( UNIT | NONUNIT ) vars pat template ")"
+    |           | "(" UNITLHS vars opSym pat template ")"
+
+       "vars" is a list of atoms that represent {\it pattern variables} in the
+       S-expressions "pat" and "template".  "opSym" is an atom.
+       The "UNIT" or "UNITLHS" forms should be used to express a rule
+       whose template is a literal (hence is a unit clause.)  The
+       "UNITLHS" form should be used to gain some efficiency if the
+       template is a relation between that matched enode and some other
+       enode.  In the "NONUNIT" form, "pat" is a multipattern; that is, a
+       list of patterns.
+
+       An axiom corresponds to a "Match.MatchingRuleSet" "mrs" such that
+       "mrs.unit" is "TRUE" for "UNIT" or "UNITLHS" axioms, and "FALSE"
+       otherwise; "mrs.pats" is the singleton list containing "pat";
+       "mrs.template" is "template", and "mrs.vars" is the array of atoms
+       corresponding to "vars".  In a "UNITLHS", "mrs.opSym" is
+       "opSym", in other axioms, it is "NIL".  (This means that the
+       meaning of a "UNITLHS" axiom is "(opsym pat template)".
+
+       All the axioms in "rd" are added to the global list of axioms.
+    *)
+</PRE>
+
+  until the file is empty.  "pat"s and "template"s should follow the
+  "PredSx" syntax given above.
+</BLOCKQUOTE>
+
+<H3>AUTHOR</H3>
+<BLOCKQUOTE>
+  Greg Nelson and Dave Detlefs
+</BLOCKQUOTE>
+
+<H3>AUTHOR OF MAN PAGE</H3>
+<BLOCKQUOTE>
+  Dave Detlefs
+</BLOCKQUOTE>
+
+This page was generated automatically by
+<A HREF="http://www.research.digital.com/SRC/mtex/">mtex software</A>.
+</BODY>
+</HTML>

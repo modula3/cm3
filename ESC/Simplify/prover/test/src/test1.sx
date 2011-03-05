@@ -1,0 +1,10 @@
+(OR
+ (EQ (f a) (f b))
+ (EQ (g c) (g d))
+ )
+
+(EQ (f a) (h a))
+unchanged
+
+(EQ (f a) a)
+changed

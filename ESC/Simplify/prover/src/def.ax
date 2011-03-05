@@ -1,0 +1,13 @@
+;;; -*- lisp -*-
+
+(FORALL (m i x)
+  (PATS (select (store m i x) i))
+  (EQ (select (store m i x) i) x))
+
+(FORALL (m i v j)
+  (PATS (select (store m i v) j) PROMOTE)
+  (OR (EQ i j)
+      (EQ (select (store m i v) j)
+	  (select m j))))
+
+(ORDER LT LE)

@@ -1,0 +1,515 @@
+;;; -*- lisp -*-
+
+(FORALL (m i x dum)
+  (PATS (select (store m i x) i dum))
+  (EQ (select (store m i x) i dum) x))
+
+(FORALL (m i v j dum)
+  (PATS (select (store m i v) j dum) PROMOTE)
+  (OR 
+   (EQ i j)
+   (EQ (select (store m i v) j dum)
+       (select m j dum))
+   )
+  )
+
+(FORALL (m i n dum1 dum2) 
+  (PATS (NUMBER (ADDR (SUBARRAY m i n)) 0))
+  (EQ (NUMBER (ADDR (SUBARRAY m i n)) 0) n))
+
+(FORALL (m i n j dum)
+  (PATS (select (SUBARRAY m i n) j dum))
+  (EQ (select (SUBARRAY m i n) j dum) (select m (+ i j) dum)))
+
+;; EXP
+;(FORALL (a b i dum)
+;  (PATS (NEQ (select a i dum) (select b i dum)))
+;  (IMPLIES
+;   (NEQ (select a i dum) (select b i dum))
+;   (NEQ a b)))
+    
+
+(FORALL (m i x)
+  (PATS (ADDR (store m i x)))
+  (EQ (ADDR (store m i x)) (ADDR m)))
+
+(FORALL (m i n m2)
+  (PATS (ADDR (storeSub m i n m2)))
+  (EQ (ADDR (storeSub m i n m2)) (ADDR m)))
+
+(FORALL (m r dum)
+  (PATS (ADDR (select m r dum)))
+  (IMPLIES
+   (AND
+    (EQ (SUBTYPE1 (TYPECODE r |@DUMMY|) |REFANY.TYPECODE|) |@true|)
+    (NEQ (TYPECODE r |@DUMMY|) |ROOT.TYPECODE|)
+    )
+   (EQ (ADDR (select m r dum)) r)))
+
+
+;; I know this to be wrong.
+;(FORALL (m1 m1First m2 m2First )
+;  (PATS (NUMBER (CONCAT m1 m1First m2 m2First)))
+;  (EQ (NUMBER (CONCAT m1 m1First m2 m2First)) (+ (NUMBER m1) (NUMBER m2))))
+
+(FORALL (v i dum)
+  (PATS (select (mapFill v) i dum))
+  (EQ (select (mapFill v) i dum) v))
+
+(FORALL (m i)
+  (PATS (NUMBER m i))
+  (>= (NUMBER m i) 0))
+
+(FORALL (i t)
+  (PATS (ORD (VAL i t)))
+  (EQ (ORD (VAL i t)) i))
+
+(FORALL (i dum)
+  (PATS (ORD i))
+  (EQ (VAL (ORD i) (TYPECODE i |@DUMMY|)) i))
+
+;(FORALL (i j dum1 dum2)
+;  (PATS (MPAT (ORD i) (ORD j) (TYPECODE i dum1) (TYPECODE j dum2)))
+;  (IMPLIES (AND (EQ (TYPECODE i dum1) (TYPECODE j dum2))
+;		(EQ (ORD i) (ORD j)))
+;	   (EQ i j)))
+
+(FORALL (x tc)
+  (PATS (NARROW x tc))
+  (EQ (NARROW x tc) x))
+
+(FORALL (ao ll virg tc pos)
+  (PATS (NEW ao ll virg tc pos))
+  (NEQ (select ao (NEW ao ll virg tc pos) |@SPECIAL|) |@true|))
+(FORALL (ao ll virg tc pos)
+  (PATS (NEW ao ll virg tc pos))
+  (NEQ (MEMBER (NEW ao ll virg tc pos) ll) |@true|))
+(FORALL (ao ll virg tc pos)
+  (PATS (NEW ao ll virg tc pos))
+  (EQ (select virg (NEW ao ll virg tc pos) |@SPECIAL|) |@true|))
+(FORALL (ao ll virg tc pos)
+  (PATS (NEW ao ll virg tc pos))
+  (EQ (TYPECODE (NEW ao ll virg tc pos) |@DUMMY|) tc))
+
+(FORALL (ao ll virg tc pos)
+  (PATS (NEW ao ll virg tc pos))
+  (NEQ (NEW ao ll virg tc pos) |$NIL|))
+
+(FORALL (s1 s2)
+  (PATS (SUBSET s1 s2))
+  (IMPLIES (EQ (SUBSET s1 s2) |@true|)
+	   (FORALL (r dum)
+	     (OR (NEQ (select s1 r dum) |@true|)
+		 (EQ (select s2 r dum) |@true|)))))
+
+;; Subtype...
+(ORDER SUBTYPE_STRICT SUBTYPE)
+
+(FORALL (x al0 al1)
+  (PATS (MPAT (SUBSET al0 al1) (|Is$DCL| x al0)))
+  (IMPLIES
+   (AND (EQ (|Is$DCL| x al0) |@true|)
+	(EQ (SUBSET al0 al1)  |@true|))
+   (EQ (|Is$DCL| x al1) |@true|)))
+
+(FORALL (x v0 v1)
+  (PATS (MPAT (SUBSET v1 v0) (|Is$VDCL| x v0)))
+  (IMPLIES
+   (AND (EQ (|Is$VDCL| x v0) |@true|)
+	(EQ (SUBSET v1 v0)  |@true|))
+   (EQ (|Is$VDCL| x v1) |@true|)))
+
+
+;;-----------------------------------
+;; Store SUBSET rule. $$$
+(FORALL (x al)
+  (PATS (store al x |@true|))
+  (EQ (SUBSET al (store al x |@true|)) |@true|))
+
+;; Def of DCL rule.
+(FORALL (x al dum)
+  (PATS (MPAT (|Is$REFANY| x dum) (|Is$DCL| x al)))
+  (IMPLIES (AND (EQ (|Is$REFANY| x dum) |@true|)
+		(EQ (|Is$DCL| x al) |@true|))
+	   (EQ (select al x |@SPECIAL|) |@true|))
+  )
+
+;; SUBSET reflexive rule. $$$
+(FORALL (al) 
+  (PATS (SUBSET al al))
+  (EQ (SUBSET al al) |@true|))
+
+;; DCL select(store) rule
+(FORALL (x al y)
+  (PATS (|Is$DCL| x (store al y |@true|)))
+  (IMPLIES (EQ (|Is$DCL| x (store al y |@true|)) |@true|)
+	   (OR (EQ x y)
+	       (EQ (|Is$DCL| x al) |@true|))))
+
+;; VDCL select(store) rule
+(FORALL (x v y)
+  (PATS (|Is$VDCL| x (store v y |@false|)))
+  (IMPLIES (EQ (|Is$VDCL| x (store v y |@false|)) |@true|)
+	   (OR (EQ x y)
+	       (EQ (|Is$VDCL| x v) |@true|))))
+;;-----------------------------------
+
+;; Subtype1 implies subtype
+(FORALL (tc1 tc2) 
+  (PATS (SUBTYPE1 tc1 tc2))
+  (IMPLIES (EQ (SUBTYPE1 tc1 tc2) |@true|)
+	   (EQ (SUBTYPE tc1 tc2) |@true|)))
+
+;; Necessary to make type distinctions work.
+(FORALL (x dum)
+  (PATS (TYPECODE x dum))
+  (EQ (SUBTYPE (TYPECODE x dum) (TYPECODE x dum)) |@true|))
+
+;; The incomparable type rule (Jim Saxe version...yay!)
+(FORALL (tc1 tc2 tc3)
+  (PATS (MPAT (SUBTYPE1 tc2 tc1) (SUBTYPE tc3 tc2)
+	      (NEQ (TYPECODE |$NIL| |@DUMMY|) tc3)))
+  (IMPLIES
+   (AND
+    (EQ (SUBTYPE1 tc2 tc1) |@true|)
+    (EQ (SUBTYPE tc3 tc2) |@true|)
+    (NEQ tc3 (TYPECODE |$NIL| |@DUMMY|))
+    )
+   (EQ (ONESTEP tc1 tc3) tc2)
+   ))
+
+;;; Some facts about NULL.
+(EQ (TYPECODE |$NIL| |@DUMMY|) |NULL.TYPECODE|)
+
+(FORALL (x dum) 
+  (PATS (NEQ x |$NIL|))
+  (IMPLIES (NEQ x |$NIL|) (NEQ (TYPECODE x |@DUMMY|) |NULL.TYPECODE|)))
+
+;; Ordinals and refs are distinct
+(FORALL (x dum)
+  (PATS (MPAT (TYPECODE x dum) (|Is$ORDINAL| x dum)))
+  (OR
+   (NEQ (SUBTYPE (TYPECODE x dum) |REFANY.TYPECODE|) |@true|)
+   (NEQ (|Is$ORDINAL| x dum) |@true|))
+  )
+
+;; INTEGER are MATHINTs; MATHINTs are ordinals.
+(FORALL (x dum)
+  (PATS (|Is$INTEGER| x dum))
+  (IMPLIES (EQ (|Is$INTEGER| x dum) |@true|)
+	   (EQ (|Is$MATHINT| x dum) |@true|)))
+(FORALL (x dum)
+  (PATS (|Is$MATHINT| x dum))
+  (IMPLIES (EQ (|Is$MATHINT| x dum) |@true|)
+	   (EQ (|Is$ORDINAL| x dum) |@true|)))
+
+
+;;; Definitions of MAX and MIN.
+(FORALL (a b)
+  (PATS (MAX a b))
+  (OR (NOT (>= a b)) (EQ (MAX a b) a)))
+
+(FORALL (a b)
+  (PATS (MAX a b))
+  (OR (NOT (<= a b)) (EQ (MAX a b) b)))
+       
+(FORALL (a b)
+  (PATS (MIN a b))
+  (OR (NOT (>= a b)) (EQ (MIN a b) b)))
+
+(FORALL (a b)
+  (PATS (MIN a b))
+  (OR (NOT (<= a b)) (EQ (MIN a b) a)))
+
+;; MUT_LT is a partial order used for mutex lock order.
+
+;; MUT_LT Irreflexive...
+(FORALL (x)
+  (PATS (MUT_LT x x))
+  (NEQ (MUT_LT x x) |@true|))
+
+;; MUT_LT Anti-symmetric...
+(FORALL (x y)
+  (PATS (MUT_LT x y))
+  (OR (NEQ (MUT_LT x y) |@true|) (NEQ (MUT_LT y x) |@true|)))
+
+;; MUT_LT Transitive.
+(FORALL (x y z)
+  (PATS (MPAT (MUT_LT x y) (MUT_LT y z)))
+  (OR (NEQ (MUT_LT x y) |@true|) 
+      (NEQ (MUT_LT y z) |@true|) (EQ (MUT_LT x z) |@true|)))
+
+;; Other of MUT_LT...
+
+;; MUT_LE
+(FORALL (a b)
+  (PATS (MUT_LE a b))
+  (IMPLIES (EQ (MUT_LE a b) |@true|) (OR (EQ a b) (EQ (MUT_LT a b) |@true|))))
+
+;; MUT_GE
+(FORALL (a b)
+  (PATS (MUT_GE a b))
+  (EQ (MUT_GE a b) (MUT_LE b a)))
+
+;; MUT_GT
+(FORALL (a b)
+  (PATS (MUT_GT a b))
+  (EQ (MUT_GT a b) (MUT_LT b a)))
+
+;;; Manipulation of locking level sets.
+
+;; MEMBER 1
+(FORALL (x s)
+  (PATS (MEMBER x (INSERT s x)))
+  (EQ (MEMBER x (INSERT s x)) |@true|))
+
+;; MEMBER 2
+(FORALL (x y s) 
+  (PATS (MEMBER x (INSERT s y)))
+  (IMPLIES (NEQ x y) (EQ (MEMBER x (INSERT s y)) (MEMBER x s))))
+
+;; DELETE 1
+(FORALL (x s) 
+  (PATS (DELETE s x))
+  (IMPLIES (NEQ (MEMBER x s) |@true|) (EQ (DELETE s x) s)))
+
+;; DELETE 2
+(FORALL (x s) 
+  (PATS (DELETE (INSERT s x) x))
+  (EQ (DELETE (INSERT s x) x) (DELETE s x)))
+
+;; DELETE 3
+(FORALL (x y s) 
+  (PATS (DELETE (INSERT s y) x))
+  (IMPLIES (NEQ x y) (EQ (DELETE (INSERT s y) x) (INSERT (DELETE s x) y))))
+
+;; sup 1
+(FORALL (s) (PATS (sup s)) (EQ (MEMBER (sup s) s) |@true|))
+
+;; sup 2
+(FORALL (s x)
+  (PATS (MEMBER x s))
+  (IMPLIES (EQ (MEMBER x s) |@true|)  (EQ (MUT_LE x (sup s)) |@true|)))
+
+;; sup 3
+(FORALL (s x)
+  (PATS (sup (INSERT s x)))
+  (IMPLIES (EQ (MUT_LT (sup s) x) |@true|) (EQ (sup (INSERT s x)) x)))
+
+(FORALL (m i n m2 j dum)
+  (PATS (select (storeSub m i n m2) j dum))
+  (AND (OR (>= j i)
+	   (EQ (select (storeSub m i n m2) j dum)
+	       (select m j dum)))
+       (OR (< j (+ i n))
+	   (EQ (select (storeSub m i n m2) j dum)
+	       (select m j dum)))
+       (OR (< j i)
+	   (>= j (+ i n))
+	   (EQ (select (storeSub m i n m2) j dum)
+	       (select m2 (- j i) dum)))
+       (OR (EQ (select (storeSub m i n m2) j dum)
+	       (select m j dum))
+	   (EQ (select (storeSub m i n m2) j dum)
+	       (select m2 (- j i) dum))))
+	)
+
+;; Hmm.
+;(FORALL (m1 m1First m2 m2First i dum)
+;  (PATS (select (CONCAT m1 m1First m2 m2First) i dum))
+;  (AND (OR (NOT (< i (NUMBER m1)))
+;	   (EQ (select (CONCAT m1 m1First m2 m2First) i dum)
+;	       (select m1 (+ i m1First) dum)))
+;       (OR (NOT (>= i (NUMBER m1)))
+;	   (EQ (select (CONCAT m1 m1First m2 m2First) i dum)
+;	       (select m2 (+ (- i (NUMBER m1)) m2First) dum)))))
+
+;;; Integer arithmetic operations.
+
+(FORALL (x y)
+  (PATS (DIV x y))
+  (EQ (+ (MOD x y) (* y (DIV x y))) x))
+
+(FORALL (x y)
+  (PATS (MOD x y))
+  (IMPLIES (> y 0) (<= 0 (MOD x y))))
+(FORALL (x y)
+  (PATS (MOD x y))
+  (IMPLIES (> y 0) (< (MOD x y) y)))
+(FORALL (x y)
+  (PATS (MOD x y))
+  (IMPLIES (< y 0) (< y (MOD x y))))
+(FORALL (x y)
+  (PATS (MOD x y))
+  (IMPLIES (< y 0) (<= (MOD x y) 0)))
+(FORALL (x y)
+  (PATS (MOD (+ x y) y))
+  (EQ (MOD (+ x y) y) (MOD x y)))
+(FORALL (x y)
+  (PATS (MOD (+ y x) y))
+  (EQ (MOD (+ y x) y) (MOD x y)))
+(FORALL (x y)
+  (PATS (MOD (- x y) y))
+  (EQ (MOD (+ y x) y) (MOD x y)))
+
+;; Rules about operations on REAL's.
+
+(FORALL (r1 r2)
+  (PATS (|R<=| r1 r2))
+  (IMPLIES (EQ (|R<=| r1 r2) |@true|)
+	   (OR (EQ (|R<| r1 r2) |@true|) (EQ r1 r2))))
+(FORALL (r1 r2)
+  (PATS (|R<| r1 r2))
+  (IMPLIES (EQ (|R<| r1 r2) |@true|) (EQ (|R<=| r1 r2) |@true|)))
+(FORALL (r1 r2)
+  (PATS (|R>=| r1 r2))
+  (IMPLIES (EQ (|R>=| r1 r2) |@true|)
+	   (OR (EQ (|R>| r1 r2) |@true|) (EQ r1 r2))))
+(FORALL (r1 r2)
+  (PATS (|R>| r1 r2))
+  (IMPLIES (EQ (|R>| r1 r2) |@true|) (OR (EQ (|R>=| r1 r2) |@true|))))
+
+(FORALL (r)
+  (PATS (|R*| r 0.0D0))
+  (EQ (|R*| r 0.0D0) 0.0D0))
+(FORALL (r)
+  (PATS (|R*| 0.0D0 r))
+  (EQ (|R*| 0.0D0 r) 0.0D0))
+(FORALL (r1 r2)
+  (PATS (|R*| r1 r2))
+  (IMPLIES (OR (AND (EQ (|R>=| r1 0.0D0) |@true|)
+		    (EQ (|R>=| r2 0.0D0) |@true|))
+	       (AND (EQ (|R<=| r1 0.0D0) |@true|)
+		    (EQ (|R<=| r2 0.0D0) |@true|)))
+	   (EQ (|R>=| (|R*| r1 r2) 0.0D0) |@true|)))
+(FORALL (r1 r2)
+  (PATS (|R*| r1 r2))
+  (IMPLIES (OR (AND (EQ (|R>| r1 0.0D0) |@true|)
+		    (EQ (|R<| r2 0.0D0) |@true|))
+	       (AND (EQ (|R<| r1 0.0D0) |@true|)
+		    (EQ (|R>| r2 0.0D0) |@true|)))
+	   (EQ (|R<| (|R*| r1 r2) 0.0D0) |@true|)))
+
+(FORALL (r) (PATS (|R+| r 0.0D0)) (EQ (|R+| r 0.0D0) r))
+(FORALL (r) (PATS (|R+| 0.0D0 r)) (EQ (|R+| 0.0D0 r) r))
+(FORALL (r1 r2)
+  (PATS (|R+| r1 r2))
+  (IMPLIES (AND (EQ (|R>=| r1 0.0D0) |@true|)
+		(EQ (|R>=| r2 0.0D0) |@true|))
+	   (EQ (|R>=| (|R+| r1 r2) 0.0D0) |@true|)))
+(FORALL (r1 r2)
+  (PATS (|R+| r1 r2))
+  (IMPLIES (AND (EQ (|R<=| r1 0.0D0) |@true|)
+		(EQ (|R<=| r2 0.0D0) |@true|))
+	   (EQ (|R<=| (|R+| r1 r2) 0.0D0) |@true|)))
+
+
+(FORALL (i type)
+  (PATS (FLOAT i type))
+  (IMPLIES (>= i 0) (EQ (|R>=| (FLOAT i type) 0.0D0) |@true|)))
+
+(FORALL (r)
+  (PATS (ROUND r))
+  (IMPLIES (EQ (|R>=| r 0.0D0) |@true|) (>= (ROUND r) 0)))
+
+;; Term versions of relational and boolean operators.
+(FORALL (x y)
+  (PATS (|TERM=| x y))
+  (IFF (EQ (|TERM=| x y) |@true|) (EQ x y)))
+(FORALL (x y)
+  (PATS (|TERM#| x y))
+  (IFF (EQ (|TERM#| x y) |@true|) (NEQ x y)))
+(FORALL (x y)
+  (PATS (|TERM<| x y))
+  (IFF (EQ (|TERM<| x y) |@true|) (< x y)))
+(FORALL (x y)
+  (PATS (|TERM>| x y))
+  (IFF (EQ (|TERM>| x y) |@true|) (> x y)))
+(FORALL (x y)
+  (PATS (|TERM<=| x y))
+  (IFF (EQ (|TERM<=| x y) |@true|) (<= x y)))
+(FORALL (x y)
+  (PATS (|TERM>=| x y))
+  (IFF (EQ (|TERM>=| x y) |@true|) (>= x y)))
+(FORALL (x y)
+  (PATS (|TERM_AND| x y))
+  (IFF (EQ (|TERM_AND| x y) |@true|) (AND (EQ x |@true|) (EQ y |@true|))))
+(FORALL (x y)
+  (PATS (|TERM_OR| x y))
+  (IFF (EQ (|TERM_OR| x y) |@true|) (OR (EQ x |@true|) (EQ y |@true|))))
+(FORALL (x)
+  (PATS (|TERM_NOT| x))
+  (IFF (EQ (|TERM_NOT| x) |@true|) (NEQ x |@true|)))
+
+(FORALL (x)
+  (PATS (|Is$PRED| x))
+  (IMPLIES
+   (EQ (|Is$PRED| x) |@true|)
+   (FORALL (y)
+     (PATS
+      (MPAT 
+       (|Is$PRED| y)
+       (NEQ x y))
+      PROMOTE)
+     (IMPLIES
+      (AND
+       (EQ (|Is$PRED| y) |@true|)
+       (NEQ x y)
+       )
+      (OR (AND (EQ x |@true|) (EQ y |@false|))
+	  (AND (EQ y |@true|) (EQ x |@false|))
+	  )
+      )
+     )
+   )
+  )
+
+
+
+;; For all the function symbols axiomatized in this file that always
+;; return a single type, we need to axiomatize that type restriction.
+;; It would be good to have a more general mechanism that does this
+;; for user declared types, as well; what I think of as the "side
+;; condition" mechanism.
+(FORALL (s) (PATS (sup s)) (EQ (|Is$MUTEX| (sup s) |@DUMMY|) |@true|))
+
+;; Performance of this is questionable...
+(FORALL (m i)
+  (PATS (NUMBER m i))
+  (EQ (|Is$MATHINT| (NUMBER m i) |@DUMMY|) |@true|))
+
+(FORALL (b)
+  (PATS (|Is$PRED| b))
+  (IMPLIES (EQ (|Is$PRED| b) |@true|)
+	   (EQ (|Is$BOOLEAN| b |@DUMMY|) |@true|)
+	   ))
+
+(FORALL (s1 s2) (PATS (SUBSET s1 s2))
+      (EQ (|Is$BOOLEAN| (SUBSET s1 s2) |@DUMMY|) |@true|))
+(FORALL (r d) (PATS (TYPECODE r d))
+      (EQ (|Is$ORDINAL| (TYPECODE r d) |@DUMMY|) |@true|))
+(FORALL (a b) (PATS (MAX a b)) (EQ (|Is$INTEGER| (MAX a b) |@DUMMY|) |@true|))
+(FORALL (a b) (PATS (MIN a b)) (EQ (|Is$INTEGER| (MIN a b) |@DUMMY|) |@true|))
+(FORALL (r) (PATS (ROUND r)) (EQ (|Is$INTEGER| (ROUND r) |@DUMMY|) |@true|))
+(FORALL (a b) (PATS (+ a b)) (EQ (|Is$MATHINT| (+ a b) |@DUMMY|) |@true|))
+(FORALL (a b) (PATS (- a b)) (EQ (|Is$MATHINT| (- a b) |@DUMMY|) |@true|))
+(FORALL (m1 m2) (PATS (MUT_LT m1 m2))
+      (EQ (|Is$BOOLEAN| (MUT_LT m1 m2) |@DUMMY|) |@true|))
+(FORALL (m1 m2) (PATS (MUT_LE m1 m2))
+      (EQ (|Is$BOOLEAN| (MUT_LE m1 m2) |@DUMMY|) |@true|))
+(FORALL (m1 m2) (PATS (MUT_GT m1 m2))
+      (EQ (|Is$BOOLEAN| (MUT_GT m1 m2) |@DUMMY|) |@true|))
+(FORALL (m1 m2) (PATS (MUT_GE m1 m2))
+      (EQ (|Is$BOOLEAN| (MUT_GE m1 m2) |@DUMMY|) |@true|))
+(FORALL (s m)
+  (PATS (MEMBER m s))
+  (EQ (|Is$BOOLEAN| (MEMBER m s) |@DUMMY|) |@true|))
+(FORALL (a b)
+  (PATS (DIV a b))
+  (IMPLIES (NEQ b 0)
+	   (EQ (|Is$MATHINT| (DIV a b) |@DUMMY|) |@true|)))
+(FORALL (a b)
+  (PATS (MOD a b))
+  (IMPLIES (NEQ b 0)
+	   (EQ (|Is$MATHINT| (MOD a b) |@DUMMY|) |@true|)))
+
