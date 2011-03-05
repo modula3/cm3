@@ -1,0 +1,197 @@
+(BG_PUSH
+ (NEQ |@true| |@false|)
+ (EQ (select ALLOCATED |$NIL| |@SPECIAL|) |@true|)
+ (NOT (EQ (MEMBER |$NIL| LL) |@true|))
+ (EQ (TYPECODE |$NIL| |@DUMMY|) |NULL.TYPECODE|)
+ (> |INTEGER.LAST| 0)
+ (< |INTEGER.FIRST| 0)
+ (EQ (SUBTYPE1 |MUTEX.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (EQ (SUBTYPE1 |ROOT.TYPECODE| |REFANY.TYPECODE|) |@true|)
+ (FORALL (v dum) (IMPLIES (EQ (|Is$INTEGER| v dum) |@true|) (AND (>= v |INTEGER.FIRST|) (<= v |INTEGER.LAST|))))
+ (EQ (SUBSET ALLOCATED ALLOCATED) |@true|)
+ (FORALL
+     (|@q| |@dummy|)
+   (IMPLIES
+    (EQ (|Is$CHAR| |@q| |@dummy|) |@true|)
+    (AND (<= 0 (ORD |@q|)) (< (ORD |@q|) 256) (EQ (TYPECODE |@q| |@DUMMY|) |CHAR.TYPECODE|))))
+ (FORALL
+     (|@q$1| |@dummy$1|)
+   (IMPLIES (EQ (|Is$CHAR| |@q$1| |@dummy$1|) |@true|) (EQ (|Is$ORDINAL| |@q$1| |@DUMMY|) |@true|)))
+ (FORALL
+     (|@q$2| |@alloc| |@dummy1| |@dummy2|)
+   (IMPLIES
+    (AND (EQ (|Is$TEXT| |@q$2| |@dummy1|) |@true|) (EQ (|Is$DCL| |@q$2| |@alloc| |@dummy2|) |@true|))
+    (EQ (select |@alloc| |@q$2| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$3| |@dummy1$1| |@dummy2$1|)
+   (IFF
+    (EQ (|Is$TEXT| |@q$3| |@dummy1$1|) |@true|)
+    (IFF (EQ |@q$3| |$NIL|) (NOT (EQ (TYPECODE |@q$3| |@dummy2$1|) |TEXT.TYPECODE|)))))
+ (FORALL
+     (|@q$4| |@dummy$2|)
+   (IMPLIES
+    (EQ (|Is$CARDINAL| |@q$4| |@dummy$2|) |@true|)
+    (AND (<= 0 |@q$4|) (EQ (|Is$INTEGER| |@q$4| |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$5| |@dummy$3|)
+   (IMPLIES (EQ (|Is$CARDINAL| |@q$5| |@dummy$3|) |@true|) (EQ (|Is$ORDINAL| |@q$5| |@DUMMY|) |@true|)))
+ (FORALL
+     (|@q$6| |@alloc$1| |@dummy1$2| |@dummy2$2|)
+   (IMPLIES
+    (AND (EQ (|Is$MUTEX| |@q$6| |@dummy1$2|) |@true|) (EQ (|Is$DCL| |@q$6| |@alloc$1| |@dummy2$2|) |@true|))
+    (EQ (select |@alloc$1| |@q$6| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$7| |@dummy1$3|)
+   (IFF
+    (EQ (|Is$MUTEX| |@q$7| |@dummy1$3|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$7| |@DUMMY|) |MUTEX.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$8| |@dummy$4|)
+   (IFF
+    (EQ (|Is$REFANY| |@q$8| |@dummy$4|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$8| |@DUMMY|) |REFANY.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$9| |@alloc$2| |@dummy1$4| |@dummy2$3|)
+   (IMPLIES
+    (AND (EQ (|Is$Set.T| |@q$9| |@dummy1$4|) |@true|) (EQ (|Is$DCL| |@q$9| |@alloc$2| |@dummy2$3|) |@true|))
+    (EQ (select |@alloc$2| |@q$9| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$10| |@dummy1$5|)
+   (IFF
+    (EQ (|Is$Set.T| |@q$10| |@dummy1$5|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$10| |@DUMMY|) |Set.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@ofm| |@dummy1$6|)
+   (IMPLIES
+    (EQ (|Is$Set.T.list$MAP| |@ofm| |@dummy1$6|) |@true|)
+    (FORALL (|@q$11|) (EQ (|Is$Set.List| (select |@ofm| |@q$11| |@OBJECT|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@ofm$1| |@alloc1| |@dummy1$7|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Set.T.list$MAP| |@ofm$1| |@dummy1$7|) |@true|)
+     (EQ (|Is$DCL| |@ofm$1| |@alloc1| |@DUMMY|) |@true|))
+    (FORALL
+	(|@q$12| |@alloc1$1| |@dummy2$4| |@dummy3|)
+      (IMPLIES
+       (AND
+	(EQ (|Is$Set.T| |@q$12| |@dummy2$4|) |@true|)
+	(EQ (|Is$DCL| |@q$12| |@alloc1$1| |@dummy3|) |@true|)
+	(EQ (SUBSET |@alloc1$1| |@alloc1|) |@true|)
+	(NEQ |@q$12| |$NIL|))
+       (EQ (|Is$DCL| (select |@ofm$1| |@q$12| |@OBJECT|) |@alloc1| |@DUMMY|) |@true|)))))
+ (EQ (|Is$Set.T.list$MAP| |Set.T.list| |@DUMMY|) |@true|)
+ (EQ (SUBTYPE1 |Set.T.TYPECODE| |Set.Public.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$13| |@dummy$5|)
+   (IMPLIES (EQ (|Is$Set.T| |@q$13| |@dummy$5|) |@true|) (EQ (|Is$Set.Public| |@q$13| |@DUMMY|) |@true|)))
+ (FORALL
+     (|@q$14| |@alloc$3| |@dummy1$8| |@dummy2$5|)
+   (IMPLIES
+    (AND (EQ (|Is$Set.List| |@q$14| |@dummy1$8|) |@true|) (EQ (|Is$DCL| |@q$14| |@alloc$3| |@dummy2$5|) |@true|))
+    (EQ (select |@alloc$3| |@q$14| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$15| |@dummy1$9|)
+   (IFF
+    (EQ (|Is$Set.List| |@q$15| |@dummy1$9|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$15| |@DUMMY|) |Set.List.TYPECODE|) |@true|)))
+ (FORALL
+     (|@ofm$2| |@dummy1$10|)
+   (IMPLIES
+    (EQ (|Is$Set.List.data$MAP| |@ofm$2| |@dummy1$10|) |@true|)
+    (FORALL (|@q$16|) (EQ (|Is$INTEGER| (select |@ofm$2| |@q$16| |@OBJECT|) |@DUMMY|) |@true|))))
+ (EQ (|Is$Set.List.data$MAP| |Set.List.data| |@DUMMY|) |@true|)
+ (FORALL
+     (|@ofm$3| |@dummy1$10|)
+   (IMPLIES
+    (EQ (|Is$Set.List.next$MAP| |@ofm$3| |@dummy1$10|) |@true|)
+    (FORALL (|@q$16|) (EQ (|Is$Set.List| (select |@ofm$3| |@q$16| |@OBJECT|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@ofm$4| |@alloc1$2| |@dummy1$11|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Set.List.next$MAP| |@ofm$4| |@dummy1$11|) |@true|)
+     (EQ (|Is$DCL| |@ofm$4| |@alloc1$2| |@DUMMY|) |@true|))
+    (FORALL
+	(|@q$17| |@alloc1$3| |@dummy2$6| |@dummy3$1|)
+      (IMPLIES
+       (AND
+	(EQ (|Is$Set.List| |@q$17| |@dummy2$6|) |@true|)
+	(EQ (|Is$DCL| |@q$17| |@alloc1$3| |@dummy3$1|) |@true|)
+	(EQ (SUBSET |@alloc1$3| |@alloc1$2|) |@true|)
+	(NEQ |@q$17| |$NIL|))
+       (EQ (|Is$DCL| (select |@ofm$4| |@q$17| |@OBJECT|) |@alloc1$2| |@DUMMY|) |@true|)))))
+ (EQ (|Is$Set.List.next$MAP| |Set.List.next| |@DUMMY|) |@true|)
+ (EQ (SUBTYPE1 |Set.List.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (EQ (|Is$INTEGER| |Set.dummy| |@DUMMY|) |@true|)
+ (FORALL
+     (|@q$18| |@alloc$4| |@dummy1$12| |@dummy2$7|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Set.Public| |@q$18| |@dummy1$12|) |@true|)
+     (EQ (|Is$DCL| |@q$18| |@alloc$4| |@dummy2$7|) |@true|))
+    (EQ (select |@alloc$4| |@q$18| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$19| |@dummy1$13|)
+   (IFF
+    (EQ (|Is$Set.Public| |@q$19| |@dummy1$13|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$19| |@DUMMY|) |Set.Public.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |Set.Public.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (EQ (SUBTYPE |Set.T.TYPECODE| |Set.Public.TYPECODE|) |@true|)
+ (EQ (|Is$Set.List| |$NIL| |@DUMMY|) |@true|)
+ (DISTINCT RETURN EXIT)
+ (DISTINCT
+  |Set.Public.TYPECODE|
+  |Set.List.TYPECODE|
+  |Set.T.TYPECODE|
+  |MUTEX.TYPECODE|
+  |TEXT.TYPECODE|
+  |REFANY.TYPECODE|
+  |ROOT.TYPECODE|)
+ (< |INTEGER.FIRST| -1000000)
+ (< 1000000 |INTEGER.LAST|)
+ )
+
+(IMPLIES
+ (AND
+  (EQ lst (select |Set.T.list| s |@OBJECT|))
+
+  (IMPLIES
+   (AND
+    (EQ (|Is$Set.T| r |@DUMMY|) |@true|)
+    (NEQ r |$NIL|)
+    (NEQ s r)
+    )
+   (FORALL
+       (c)
+     (OR
+      (EQ c |$NIL|)
+      (NOT (EQ (|Set.Reach| lst c |$NIL| |Set.List.next|) |@true|))
+      (NOT (EQ (|Set.Reach| 
+		(select |Set.T.list| r |@OBJECT|)
+		c |$NIL| |Set.List.next|) |@true|)))))
+
+
+  (NEQ s |$NIL|)
+  (NEQ lst |$NIL|)
+  (FORALL
+      (l)
+    (IMPLIES (EQ (|Is$Set.List| l |@DUMMY|) |@true|) (EQ (|Set.Reach| l |$NIL| |$NIL| |Set.List.next|) |@true|)))
+
+  )
+ (AND
+  (OR
+   (NEQ lst |$NIL|) 
+   (NOT |ERROR.DEREF.223.7|)
+  )
+  (IMPLIES
+   (AND
+    (EQ (|Is$Set.T| r |@DUMMY|) |@true|)
+    (NEQ r |$NIL|)
+    (EQ rlst (select |Set.T.list| r |@OBJECT|))
+    )
+   (EQ (|Set.Reach| rlst |$NIL| |$NIL| (store |Set.List.next| lst |$NIL|)) |@true|))
+
+  ))
+
+

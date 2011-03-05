@@ -1,0 +1,16 @@
+(OR
+ (> (f a) b)
+ P
+ (DISTINCT x y z)
+ (FORALL (u)
+   (IMPLIES (EQ (R u 6 5.0D0) T) (EQ (S u 6 2.0D0) T)))
+ )
+
+(EQ b c)
+unchanged
+
+(EQ z r)
+unchanged
+
+(EQ (f a) a)
+changed

@@ -1,0 +1,81 @@
+/* Copyright (C) 2002 Hewlett-Packard Company                                */
+/* Copyright (C) 2000, 2002 Compaq Computer Corporation                      */
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Tue Jul 16 21:19:10 PDT 2002 by saxe                     */
+/*      modified on Mon Nov  4 16:07:45 PST 1996 by detlefs                  */
+
+% m3_option("-g2 -times")
+
+%  import("esc")
+
+  import("libm3")
+%  import("libm3-esc")
+
+  import("set")
+  import("table-list")
+  import("digraph")
+
+  resource("def.ax")
+  resource("esc.ax")
+  resource("esc0.ax")
+  bundle("Axioms")
+
+  include_dir("gens")
+
+  Module("SxPrint")
+
+  Module("RefListDebug")
+
+  Module("Trit")
+
+  module("PropVar")
+  interface("ContextPrivate")
+  interface("ContextUndoRec")
+  interface("AFTabUndoRec")
+  interface("LNUndoRec")
+  Interface("Match")
+  Module("Perf")
+  Module("PairSet")
+  Interface("IdSet")
+  Module("ParentSet")
+  module("SigTab")
+  module("Signature")
+  module("RefListMisc")
+  Module("FPrint")
+  Module("IntPair")
+
+  module("PromoteSet")
+
+  module("OrdNode")
+  module("Orders")
+  module("PredDefs")
+
+  Module("LabelName")
+  Module("Rat")
+  Module("MatchingRule")
+  Module("ProxyProp")
+  Module("Enode")
+  Module("Simplex")
+  Module("AF")
+  Module("Clause")
+  module("ClauseList")
+  interface("ClauseListUndoRec")
+  Interface("ClausePrivate")
+  Module("Context")
+  Module("Satisfy")
+  Module("PredSx")
+  Module("Prover")
+
+%  esc_option("-v1 -LMI")
+%  esc("Simplex")
+
+% On systems that do not support shared libraries the following
+% line (or, on some systems, the one after it) is necessary:
+% option("standalone", "T")
+% "build_standalone()
+% Using cm3 on OS X, neither line is necessary.
+
+  Library("prover")

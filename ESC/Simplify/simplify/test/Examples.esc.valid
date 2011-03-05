@@ -1,0 +1,2958 @@
+;;; -*- lisp -*-
+
+TRUE
+
+(IMPLIES (EQ x y) (EQ (f x) (f y)))
+
+(IMPLIES (AND (EQ a (f (f (f (f (f a)))))) (EQ a (f (f (f a))))) (EQ a (f a)))
+
+(EQ (select (store a i x) i knd) x)
+
+;; 5
+(EQ (NUMBER (SUBARRAY a i n)) n)
+
+(IMPLIES (EQ j 5) (EQ (select (SUBARRAY a 3 10) j knd) (select a 8 knd)))
+
+(EQ (NUMBER (store a i x)) (NUMBER a))
+
+(EQ (NUMBER (storeSub a i n b)) (NUMBER a))
+
+(IMPLIES (NEQ i j) (EQ (select (store a i x) j knd) (select a j knd)))
+
+;; 10
+(EQ (select (storeSub a 4 4 b) 6 knd) (select b 2 knd))
+
+(NOT
+ (AND
+  (OR (EQ Edge1x2S T) (EQ Edge1x2E T))
+  (NEQ (f Edge1x2S Edge1x2E) (f T T))
+  (OR (EQ Edge1x2E T) (EQ Edge1x3S T) (EQ Edge1x3E T))
+  (NEQ (f Edge1x2E Edge1x3S) (f T T))
+  (NEQ (f Edge1x2E Edge1x3E) (f T T))
+  (NEQ (f Edge1x3S Edge1x3E) (f T T))
+  (OR (EQ Edge1x3E T) (EQ Edge1x4S T))
+  (NEQ (f Edge1x3E Edge1x4S) (f T T))
+  (OR (EQ Edge2x1S T) (EQ Edge2x1E T))
+  (NEQ (f Edge2x1S Edge2x1E) (f T T))
+  (OR (EQ Edge2x1E T) (EQ Edge2x2S T) (EQ Edge2x2E T) (EQ Edge1x2S T))
+  (NEQ (f Edge2x1E Edge2x2S) (f T T))
+  (NEQ (f Edge2x1E Edge2x2E) (f T T))
+  (NEQ (f Edge2x1E Edge1x2S) (f T T))
+  (NEQ (f Edge2x2S Edge2x2E) (f T T))
+  (NEQ (f Edge2x2S Edge1x2S) (f T T))
+  (NEQ (f Edge2x2E Edge1x2S) (f T T))
+  (OR (EQ Edge2x2E T) (EQ Edge2x3S T) (EQ Edge2x3E T) (EQ Edge1x3S T))
+  (NEQ (f Edge2x2E Edge2x3S) (f T T))
+  (NEQ (f Edge2x2E Edge2x3E) (f T T))
+  (NEQ (f Edge2x2E Edge1x3S) (f T T))
+  (NEQ (f Edge2x3S Edge2x3E) (f T T))
+  (NEQ (f Edge2x3S Edge1x3S) (f T T))
+  (NEQ (f Edge2x3E Edge1x3S) (f T T))
+  (OR (EQ Edge2x3E T) (EQ Edge2x4S T) (EQ Edge1x4S T))
+  (NEQ (f Edge2x3E Edge2x4S) (f T T))
+  (NEQ (f Edge2x3E Edge1x4S) (f T T))
+  (NEQ (f Edge2x4S Edge1x4S) (f T T))
+  (OR (EQ Edge3x1S T) (EQ Edge3x1E T) (EQ Edge2x1S T))
+  (NEQ (f Edge3x1S Edge3x1E) (f T T))
+  (NEQ (f Edge3x1S Edge2x1S) (f T T))
+  (NEQ (f Edge3x1E Edge2x1S) (f T T))
+  (OR (EQ Edge3x1E T) (EQ Edge3x2S T) (EQ Edge3x2E T) (EQ Edge2x2S T))
+  (NEQ (f Edge3x1E Edge3x2S) (f T T))
+  (NEQ (f Edge3x1E Edge3x2E) (f T T))
+  (NEQ (f Edge3x1E Edge2x2S) (f T T))
+  (NEQ (f Edge3x2S Edge3x2E) (f T T))
+  (NEQ (f Edge3x2S Edge2x2S) (f T T))
+  (NEQ (f Edge3x2E Edge2x2S) (f T T))
+  (OR (EQ Edge3x2E T) (EQ Edge3x3S T) (EQ Edge3x3E T) (EQ Edge2x3S T))
+  (NEQ (f Edge3x2E Edge3x3S) (f T T))
+  (NEQ (f Edge3x2E Edge3x3E) (f T T))
+  (NEQ (f Edge3x2E Edge2x3S) (f T T))
+  (NEQ (f Edge3x3S Edge3x3E) (f T T))
+  (NEQ (f Edge3x3S Edge2x3S) (f T T))
+  (NEQ (f Edge3x3E Edge2x3S) (f T T))
+  (OR (EQ Edge3x3E T) (EQ Edge2x4S T))
+  (NEQ (f Edge3x3E Edge2x4S) (f T T))
+  (OR (EQ Edge4x1E T) (EQ Edge3x1S T))
+  (NEQ (f Edge4x1E Edge3x1S) (f T T))
+  (OR (EQ Edge4x1E T) (EQ Edge4x2E T) (EQ Edge3x2S T))
+  (NEQ (f Edge4x1E Edge4x2E) (f T T))
+  (NEQ (f Edge4x1E Edge3x2S) (f T T))
+  (NEQ (f Edge4x2E Edge3x2S) (f T T))
+  (OR (EQ Edge4x2E T) (EQ Edge3x3S T))
+  (NEQ (f Edge4x2E Edge3x3S) (f T T))
+  ))
+
+;;; See CHANGELOG: Bug in Simplex algorithm.
+(IMPLIES (AND 
+	  (< (- (NUMBER a) 1) (- (NUMBER b) 1))
+	  (<= 0 |i.39|)
+	  (<= |i.39| (- (NUMBER a) 1))
+	  )
+	 (AND (AND (<= 0 |i.39|)
+		   (< |i.39| (+ (NUMBER a) 0))
+		   )
+	      (< |i.39| (+ (NUMBER b) 0))
+	      ))
+
+(IMPLIES (EQ (NUMBER |a.9|) 10)
+	 (AND (AND (<= 0 0) (<= 0 (+ 9 1)))
+	      (IMPLIES
+	       (AND (<= 0 |i.11|) (<= |i.11| 9))
+	       (AND (OR (< |i.11| (+ (NUMBER |a.9|) 0))
+
+			(NOT |ERROR.ARRAY_BOUNDS.8.13|)
+
+			)
+		    (AND (<= 0 (+ |i.11| 1)) (<= (+ |i.11| 1) (+ 9 1))
+			 )))))
+
+;;; This exposed another bug in Simplex undo
+(IMPLIES (AND
+	  (>= (NUMBER a) (NUMBER b))
+	  (>= (NUMBER b) 1)
+	  )
+	 (AND 
+	  (AND
+	   (<= 0 0)
+	   (<= 0 (+ (- (NUMBER b) 1) 1))
+	   )
+	  (IMPLIES
+	   (AND
+	    (<= 0 |i.51|)
+	    (<= |i.51| (+ (- (NUMBER b) 1) 1))
+	    )
+	   (IMPLIES
+	    (<= |i.51| (- (NUMBER b) 1))
+	    (AND
+	     (<= 0 |i.51|)
+	     (< |i.51| (+ (NUMBER a) 0))
+	     )
+	    )
+	   )))
+
+;;; 15: Bug in Simplex.AssertNonNeg
+(IMPLIES
+ (EQ x 10)
+ (AND (AND
+       (EQ y y)
+       (EQ y y)
+       )
+      (IMPLIES
+       (AND
+	(EQ x 10)
+	(EQ x 10)
+	)
+       (AND
+	(EQ y y)
+	(AND
+	 (EQ y y)
+	 (<= 0 0)
+	 )))))
+
+;;; Bug in Simplex.Assert of negated unknowns
+
+(AND
+ (IMPLIES
+  (< (NUMBER a) (NUMBER b))
+  (IMPLIES
+   (<= 0 (- (NUMBER a) 1))
+   (AND (<= 0 (NUMBER a))
+	(IMPLIES
+	 (<= 0 |i.39|)
+	 (IMPLIES (<= |i.39| (- (NUMBER a) 1))
+		  (OR
+		   (< |i.39| (+ (NUMBER b) 0))
+		   (NOT |ERROR.ARRAY_BOUNDS.16.20|)
+		   ))))))
+ (IMPLIES
+  (NOT (< (NUMBER a) (NUMBER b)))
+  (IMPLIES
+   (<= 0 (- (NUMBER b) 1))
+   (IMPLIES
+    (<= 0 |i.51|)
+    (IMPLIES (<= |i.51| (- (NUMBER b) 1))
+	     (OR
+	      (< |i.51| (+ (NUMBER b) 0))
+	      (NOT |ERROR.ARRAY_BOUNDS.16.20|)
+	      ))))))
+
+
+
+;;; The infamous perfbug1!
+(IMPLIES
+ TRUE
+ (IMPLIES
+  TRUE
+  (IMPLIES (AND (AND TRUE (>= (NUMBER a) 0)) (>= (NUMBER b) 0))
+	   (IMPLIES (AND TRUE TRUE)
+		    (AND
+		     (IMPLIES
+		      (< (- (NUMBER a) 1) (- (NUMBER b) 1))
+		      (AND
+		       (IMPLIES (<= 0 (- (NUMBER a) 1))
+				(AND (AND (<= 0 0) (<= 0 (+ (- (NUMBER a) 1) 1)))
+				     (AND (IMPLIES (AND (<= 0 |i.39|)
+							(<= |i.39| (+ (- (NUMBER a) 1) 1)))
+
+						   (IMPLIES (<= |i.39| (- (NUMBER a) 1))
+							    (AND (OR (AND (<= 0 |i.39|)
+									  (< |i.39| (+ (NUMBER a) 0)))
+								     (NOT |ERROR.ARRAY_BOUNDS.16.13|))
+								 (AND
+								  (OR (AND (<= 0 |i.39|)
+									   (< |i.39| (+ (NUMBER b) 0)))
+
+								      (NOT |ERROR.ARRAY_BOUNDS.16.20|))
+								  (AND (<= 0 (+ |i.39| 1))
+								       (<= (+ |i.39| 1)
+									   (+ (- (NUMBER a) 1) 1)))))))
+
+					  (IMPLIES
+					   (AND (AND (<= 0 |i.45|)
+						     (<= |i.45| (+ (- (NUMBER a) 1) 1)))
+
+						(OR (NOT (<= |i.45| (- (NUMBER a) 1)))
+						    (AND (OR (AND (<= 0 |i.45|)
+								  (< |i.45| (+ (NUMBER a) 0)))
+							     (NOT |ERROR.ARRAY_BOUNDS.16.13|))
+
+							 (AND (OR (AND (<= 0 |i.45|)
+								       (< |i.45| (+ (NUMBER b) 0)))
+								  (NOT |ERROR.ARRAY_BOUNDS.16.20|))
+							      (NOT TRUE)))))
+					   TRUE))))
+		       (IMPLIES (OR (NOT (<= 0 (- (NUMBER a) 1))) (NOT TRUE))
+				TRUE)))
+		     (IMPLIES
+		      (OR (NOT (< (- (NUMBER a) 1) (- (NUMBER b) 1))) (NOT TRUE))
+		      (AND
+		       (IMPLIES (<= 0 (- (NUMBER b) 1))
+				(AND (AND (<= 0 0) (<= 0 (+ (- (NUMBER b) 1) 1)))
+				     (AND (IMPLIES (AND (<= 0 |i.51|)
+							(<= |i.51| (+ (- (NUMBER b) 1) 1)))
+
+						   (IMPLIES (<= |i.51| (- (NUMBER b) 1))
+							    (AND (OR (AND (<= 0 |i.51|)
+									  (< |i.51| (+ (NUMBER a) 0)))
+								     (NOT |ERROR.ARRAY_BOUNDS.16.13|))
+								 (AND
+								  (OR (AND (<= 0 |i.51|)
+									   (< |i.51| (+ (NUMBER b) 0)))
+
+								      (NOT |ERROR.ARRAY_BOUNDS.16.20|))
+								  (AND (<= 0 (+ |i.51| 1))
+								       (<= (+ |i.51| 1)
+									   (+ (- (NUMBER b) 1) 1)))))))
+
+					  (IMPLIES
+					   (AND (AND (<= 0 |i.57|)
+						     (<= |i.57| (+ (- (NUMBER b) 1) 1)))
+
+						(OR (NOT (<= |i.57| (- (NUMBER b) 1)))
+						    (AND (OR (AND (<= 0 |i.57|)
+								  (< |i.57| (+ (NUMBER a) 0)))
+							     (NOT |ERROR.ARRAY_BOUNDS.16.13|))
+
+							 (AND (OR (AND (<= 0 |i.57|)
+								       (< |i.57| (+ (NUMBER b) 0)))
+								  (NOT |ERROR.ARRAY_BOUNDS.16.20|))
+							      (NOT TRUE)))))
+					   TRUE))))
+		       (IMPLIES (OR (NOT (<= 0 (- (NUMBER b) 1))) (NOT TRUE))
+				TRUE))))))))
+
+
+(IMPLIES TRUE
+  (IMPLIES TRUE
+    (IMPLIES TRUE
+      (IMPLIES (AND (AND TRUE TRUE) TRUE)
+        (IMPLIES (AND (AND (EQ (select |.ObjUniverse| |res.21| knd) 1)
+                        (NOT (EQ (select |.AllocObjs| |res.21| knd) 1)))
+                      (AND (EQ (select TYPECODE_map |res.21| knd) |Gorp.TYPECODE|)
+                        (AND (NOT (EQ |res.21| 0)) TRUE)))
+
+          (IMPLIES (AND (AND (EQ (select |.ObjUniverse| |res.23| knd) 1)
+                          (NOT (EQ (select (store |.AllocObjs| |res.21| 1)
+                                     |res.23| knd)
+                                   1)))
+                        (AND
+                          (EQ (select TYPECODE_map |res.23| knd) |IntArr.TYPECODE|)
+                          (AND (NOT (EQ |res.23| 0))
+                            (AND TRUE
+                              (EQ (NUMBER (select IntArr |res.23| knd)) 20)))))
+                   (AND (OR (AND (<= 0 7)
+                              (< 7 (+ (NUMBER (select IntArr
+                                             (select (store |Gorp.a| |res.21|
+                                                       |res.23|)
+                                                     |res.21| knd) knd))
+                                      0)))
+                            (NOT |ERROR.ARRAY_BOUNDS.17.8|))
+                        TRUE)))))))
+
+;;; These are to test user-specified matching rules.
+
+(IMPLIES (FORALL (x y) (EQ (f x y) (f y x)))
+	 (EQ (g (f a b)) (g (f b a))))
+
+;; 20
+(IMPLIES (FORALL (x) (NEQ (f x) (g x)))
+	 (NEQ (f 7) (g 7)))
+
+(AND (IMPLIES (FORALL (x y) (EQ (f x y) (f y x)))
+	      (EQ (g (f a b)) (g (f b a))))
+     (IMPLIES (FORALL (x) (NEQ (f2 x) (g x)))
+	      (NEQ (f2 7) (g 7))))
+
+(IMPLIES (FORALL (S s) (IMPLIES (EQ (AbsRel1 S s) true) (EQ (+ S 1) s)))
+	 (IMPLIES (EQ (AbsRel1 Spre s_tmp) true)
+		  (IMPLIES (EQ (AbsRel1 S_tmp (+ s_tmp 1)) true)
+			   (EQ S_tmp (+ Spre 1)))))
+		   
+
+(IMPLIES
+ (FORALL (r) (EQ (select Ipre r 0) (+ (select j_tmp r 0) 1)))
+ (IMPLIES
+  (FORALL (r) (EQ (select I_tmp r 0)
+		  (+ (select (store j_tmp r (+ (select j_tmp r 0) 1)) r 0) 1)))
+  (EQ (select I_tmp r 0) (+ (select Ipre r 0) 1))))
+
+
+(IMPLIES
+ (AND (FORALL (x) (IMPLIES (EQ (g x) 7) (EQ (f x) 8))) (EQ (g a) 7))
+ (EQ (f a) 8))
+
+;; 25
+(FORALL (a)
+  (IMPLIES
+   (AND (FORALL (x) (IMPLIES (EQ (g x) 7) (EQ (f x) 8))) (EQ (g a) 7))
+   (EQ (f a) 8)))
+
+;; This exposed a bug in the matcher...
+(EQ (NUMBER (select (store RefArray k (store m 7 x)) k 2)) (NUMBER m))
+
+;; This was a bug in Simplex... simple version...
+(IMPLIES
+ (AND
+  (NOT (EQ sDotElem 0))
+  (> TheNumber 0)
+  (>= sDotSz 0)
+  (<= sDotSz TheNumber))
+ (OR (EQ sDotSz TheNumber)
+     (AND
+	(NOT (EQ sDotElem 0))
+	(< sDotSz TheNumber))))
+
+;;; And complex.
+
+(IMPLIES
+ (AND
+  (NOT (EQ |s`| 0))
+  (AND
+   (NOT (EQ (select |IntSeq.T.elem`| |s`| 3) 0))
+   (AND
+    (> (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 0)
+    (AND
+     (>= (select |IntSeq.T.st`| |s`| 3) 0)
+     (AND
+      (>= (select |IntSeq.T.sz`| |s`| 3) 0)
+      (AND
+       (< (select |IntSeq.T.st`| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)))
+       (<= (select |IntSeq.T.sz`| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)))))))))
+ (FORALL
+     (x s)
+   (FORALL
+       (ri)
+     (FORALL
+	 (res)
+       (FORALL
+	   (|res$1|)
+	 (FORALL
+	     (|res$2|)
+	   (AND
+	    (OR (NOT (EQ (select |IntSeq.T.elem`| |s`| 3) 0)) (NOT |ERROR.DEREF.56.27|))
+	    (AND
+	     (IMPLIES
+	      (EQ (select |IntSeq.T.sz`| |s`| 3) (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+	      (FORALL
+		  (|s`$1| |IntSeq.T.elem`$1| |IntSeq.T.elem'| |IntSeq.T.st`$1| |IntSeq.T.st'| |EXCEPTION.code|)
+		(AND
+		 (OR
+		  (AND
+		   (NOT (EQ |s`| 0))
+		   (AND
+		    (NOT (EQ (select |IntSeq.T.elem`| |s`| 3) 0))
+		    (AND
+		     (> (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 0)
+		     (AND
+		      (>= (select |IntSeq.T.st`| |s`| 3) 0)
+		      (AND
+		       (>= (select |IntSeq.T.sz`| |s`| 3) 0)
+		       (AND
+			(< (select |IntSeq.T.st`| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)))
+			(<= (select |IntSeq.T.sz`| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)))))))))
+		  (NOT |ERROR.CALL.56.35|))
+		 (IMPLIES
+		  (AND
+		   (EQ |EXCEPTION.code| 0)
+		   (AND
+		    (AND
+		     (NOT (EQ |s`| 0))
+		     (AND
+		      (NOT (EQ (select |IntSeq.T.elem'| |s`| 3) 0))
+		      (AND
+		       (> (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 0)
+		       (AND
+			(>= (select |IntSeq.T.st'| |s`| 3) 0)
+			(AND
+			 (>= (select |IntSeq.T.sz`| |s`| 3) 0)
+			 (AND
+			  (< (select |IntSeq.T.st'| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)))
+			  (<= (select |IntSeq.T.sz`| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)))))))))
+		    (AND
+		     (EQ (select |IntSeq.T.st'| |s`| 3) 0)
+		     (> (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2))))))
+		  (AND
+		   (IMPLIES
+		    (EQ |EXCEPTION.code| 0)
+		    (FORALL
+			(i)
+		      (FORALL
+			  (|res$3|)
+			(FORALL
+			    (|res$4|)
+			  (FORALL
+			      (|res$5|)
+			    (AND
+			     (OR (NOT (EQ (select |IntSeq.T.elem'| |s`| 3) 0)) (NOT |ERROR.DEREF.58.27|))
+			     (AND
+			      (IMPLIES
+			       (>=
+				(+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+				(+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 1) 0) 1))
+			       (FORALL
+				   (|res$6|)
+				 (FORALL
+				     (|res$7|)
+				   (FORALL
+				       (|res$8|)
+				     (AND
+				      (OR (NOT (EQ (select |IntSeq.T.elem'| |s`| 3) 0)) (NOT |ERROR.DEREF.58.57|))
+				      (AND
+				       (OR
+					(AND
+					 (<=
+					  0
+					  (-
+					   (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+					   (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 1) 0) 1)))
+					 (<
+					  (-
+					   (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+					   (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 1) 0) 1))
+					  (+ (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 0)))
+					(NOT |ERROR.INDEX.59.13|))
+				       (OR
+					(AND
+					 (FORALL
+					     (|T.Size'| |T.Size`|)
+					   (IMPLIES
+					    (EQ |T.Size`| |IntSeq.T.sz`|)
+					    (IMPLIES
+					     (EQ |T.Size'| (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)))
+					     (AND
+					      (EQ 0 0)
+					      (AND
+					       (AND
+						(NOT (EQ |s`| 0))
+						(AND
+						 (NOT (EQ (select |IntSeq.T.elem'| |s`| 3) 0))
+						 (AND
+						  (>
+						   (NUMBER
+						    (select
+						     (store
+						      |RefArray`|
+						      (select |IntSeq.T.elem'| |s`| 3)
+						      (store
+						       (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)
+						       (-
+							(+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+							(+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 1) 0) 1))
+						       |x`|))
+						     (select |IntSeq.T.elem'| |s`| 3)
+						     2))
+						   0)
+						  (AND
+						   (>= (select |IntSeq.T.st'| |s`| 3) 0)
+						   (AND
+						    (>= (select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3) 0)
+						    (AND
+						     (<
+						      (select |IntSeq.T.st'| |s`| 3)
+						      (NUMBER
+						       (select
+							(store
+							 |RefArray`|
+							 (select |IntSeq.T.elem'| |s`| 3)
+							 (store
+							  (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)
+							  (-
+							   (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+							   (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 1) 0) 1))
+							  |x`|))
+							(select |IntSeq.T.elem'| |s`| 3)
+							2)))
+						     (<=
+						      (select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3)
+						      (NUMBER
+						       (select
+							(store
+							 |RefArray`|
+							 (select |IntSeq.T.elem'| |s`| 3)
+							 (store
+							  (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)
+							  (-
+							   (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+							   (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 1) 0) 1))
+							  |x`|))
+							(select |IntSeq.T.elem'| |s`| 3)
+							2)))))))))
+					       (EQ |T.Size'| (store |T.Size`| |s`| (+ (select |T.Size`| |s`| 3) 1))))))))
+					 (EQ 0 0))
+					(NOT |ERROR.POSTCONDITION.53.0|))))))))
+			      (OR
+			       (AND
+				(>=
+				 (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+				 (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 1) 0) 1))
+				(EXISTS (|res$6|) (EXISTS (|res$7|) (EXISTS (|res$8|) TRUE))))
+			       (AND
+				(OR
+				 (AND
+				  (<= 0 (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3)))
+				  (<
+				   (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+				   (+ (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 0)))
+				 (NOT |ERROR.INDEX.59.13|))
+				(OR
+				 (AND
+				  (FORALL
+				      (|T.Size'| |T.Size`|)
+				    (IMPLIES
+				     (EQ |T.Size`| |IntSeq.T.sz`|)
+				     (IMPLIES
+				      (EQ |T.Size'| (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)))
+				      (AND
+				       (EQ 0 0)
+				       (AND
+					(AND
+					 (NOT (EQ |s`| 0))
+					 (AND
+					  (NOT (EQ (select |IntSeq.T.elem'| |s`| 3) 0))
+					  (AND
+					   (>
+					    (NUMBER
+					     (select
+					      (store
+					       |RefArray`|
+					       (select |IntSeq.T.elem'| |s`| 3)
+					       (store
+						(select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)
+						(+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+						|x`|))
+					      (select |IntSeq.T.elem'| |s`| 3)
+					      2))
+					    0)
+					   (AND
+					    (>= (select |IntSeq.T.st'| |s`| 3) 0)
+					    (AND
+					     (>= (select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3) 0)
+					     (AND
+					      (<
+					       (select |IntSeq.T.st'| |s`| 3)
+					       (NUMBER
+						(select
+						 (store
+						  |RefArray`|
+						  (select |IntSeq.T.elem'| |s`| 3)
+						  (store
+						   (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)
+						   (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+						   |x`|))
+						 (select |IntSeq.T.elem'| |s`| 3)
+						 2)))
+					      (<=
+					       (select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3)
+					       (NUMBER
+						(select
+						 (store
+						  |RefArray`|
+						  (select |IntSeq.T.elem'| |s`| 3)
+						  (store
+						   (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)
+						   (+ (select |IntSeq.T.st'| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+						   |x`|))
+						 (select |IntSeq.T.elem'| |s`| 3)
+						 2)))))))))
+					(EQ |T.Size'| (store |T.Size`| |s`| (+ (select |T.Size`| |s`| 3) 1))))))))
+				  (EQ 0 0))
+				 (NOT |ERROR.POSTCONDITION.53.0|)))))))))))
+		   (OR
+		    (EQ |EXCEPTION.code| 0)
+		    (OR
+		     (AND
+		      (FORALL
+			  (|T.Size'| |T.Size`|)
+			(IMPLIES
+			 (EQ |T.Size`| |IntSeq.T.sz`|)
+			 (IMPLIES
+			  (EQ |T.Size'| |IntSeq.T.sz`|)
+			  (AND
+			   (EQ |EXCEPTION.code| 0)
+			   (AND
+			    (AND
+			     (NOT (EQ |s`| 0))
+			     (AND
+			      (NOT (EQ (select |IntSeq.T.elem'| |s`| 3) 0))
+			      (AND
+			       (> (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)) 0)
+			       (AND
+				(>= (select |IntSeq.T.st'| |s`| 3) 0)
+				(AND
+				 (>= (select |IntSeq.T.sz`| |s`| 3) 0)
+				 (AND
+				  (< (select |IntSeq.T.st'| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)))
+				  (<= (select |IntSeq.T.sz`| |s`| 3) (NUMBER (select |RefArray`| (select |IntSeq.T.elem'| |s`| 3) 2)))))))))
+			    (EQ |T.Size'| (store |T.Size`| |s`| (+ (select |T.Size`| |s`| 3) 1))))))))
+		      (EQ |EXCEPTION.code| 0))
+		     (NOT |ERROR.POSTCONDITION.53.0|))))))))
+	     (OR
+	      (AND
+	       (EQ (select |IntSeq.T.sz`| |s`| 3) (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+	       (EXISTS (|s`$1| |IntSeq.T.elem`$1| |IntSeq.T.elem'| |IntSeq.T.st`$1| |IntSeq.T.st'| |EXCEPTION.code|) TRUE))
+	      (FORALL
+		  (i)
+		(FORALL
+		    (|res$3|)
+		  (FORALL
+		      (|res$4|)
+		    (FORALL
+			(|res$5|)
+		      (AND
+		       (OR (NOT (EQ (select |IntSeq.T.elem`| |s`| 3) 0)) (NOT |ERROR.DEREF.58.27|))
+		       (AND
+			(IMPLIES
+			 (>=
+			  (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+			  (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+			 (FORALL
+			     (|res$6|)
+			   (FORALL
+			       (|res$7|)
+			     (FORALL
+				 (|res$8|)
+			       (AND
+				(OR (NOT (EQ (select |IntSeq.T.elem`| |s`| 3) 0)) (NOT |ERROR.DEREF.58.57|))
+				(AND
+				 (OR
+				  (AND
+				   (<=
+				    0
+				    (-
+				     (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+				     (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1)))
+				   (<
+				    (-
+				     (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+				     (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+				    (+ (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 0)))
+				  (NOT |ERROR.INDEX.59.13|))
+				 (OR
+				  (AND
+				   (FORALL
+				       (|T.Size'| |T.Size`|)
+				     (IMPLIES
+				      (EQ |T.Size`| |IntSeq.T.sz`|)
+				      (IMPLIES
+				       (EQ |T.Size'| (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)))
+				       (AND
+					(EQ 0 0)
+					(AND
+					 (AND
+					  (NOT (EQ |s`| 0))
+					  (AND
+					   (NOT (EQ (select |IntSeq.T.elem`| |s`| 3) 0))
+					   (AND
+					    (>
+					     (NUMBER
+					      (select
+					       (store
+						|RefArray`|
+						(select |IntSeq.T.elem`| |s`| 3)
+						(store
+						 (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)
+						 (-
+						  (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+						  (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+						 |x`|))
+					       (select |IntSeq.T.elem`| |s`| 3)
+					       2))
+					     0)
+					    (AND
+					     (>= (select |IntSeq.T.st`| |s`| 3) 0)
+					     (AND
+					      (>= (select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3) 0)
+					      (AND
+					       (<
+						(select |IntSeq.T.st`| |s`| 3)
+						(NUMBER
+						 (select
+						  (store
+						   |RefArray`|
+						   (select |IntSeq.T.elem`| |s`| 3)
+						   (store
+						    (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)
+						    (-
+						     (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+						     (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+						    |x`|))
+						  (select |IntSeq.T.elem`| |s`| 3)
+						  2)))
+					       (<=
+						(select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3)
+						(NUMBER
+						 (select
+						  (store
+						   |RefArray`|
+						   (select |IntSeq.T.elem`| |s`| 3)
+						   (store
+						    (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)
+						    (-
+						     (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+						     (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+						    |x`|))
+						  (select |IntSeq.T.elem`| |s`| 3)
+						  2)))))))))
+					 (EQ |T.Size'| (store |T.Size`| |s`| (+ (select |T.Size`| |s`| 3) 1))))))))
+				   (EQ 0 0))
+				  (NOT |ERROR.POSTCONDITION.53.0|))))))))
+			(OR
+			 (AND
+			  (>=
+			   (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+			   (+ (- (- (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 1) 0) 1))
+			  (EXISTS (|res$6|) (EXISTS (|res$7|) (EXISTS (|res$8|) TRUE))))
+			 (AND
+			  (OR
+			   (AND
+			    (<= 0 (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3)))
+			    (<
+			     (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+			     (+ (NUMBER (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)) 0)))
+			   (NOT |ERROR.INDEX.59.13|))
+			  (OR
+			   (AND
+			    (FORALL
+				(|T.Size'| |T.Size`|)
+			      (IMPLIES
+			       (EQ |T.Size`| |IntSeq.T.sz`|)
+			       (IMPLIES
+				(EQ |T.Size'| (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)))
+				(AND
+				 (EQ 0 0)
+				 (AND
+				  (AND
+				   (NOT (EQ |s`| 0))
+				   (AND
+				    (NOT (EQ (select |IntSeq.T.elem`| |s`| 3) 0))
+				    (AND
+				     (>
+				      (NUMBER
+				       (select
+					(store
+					 |RefArray`|
+					 (select |IntSeq.T.elem`| |s`| 3)
+					 (store
+					  (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)
+					  (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+					  |x`|))
+					(select |IntSeq.T.elem`| |s`| 3)
+					2))
+				      0)
+				     (AND
+				      (>= (select |IntSeq.T.st`| |s`| 3) 0)
+				      (AND
+				       (>= (select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3) 0)
+				       (AND
+					(<
+					 (select |IntSeq.T.st`| |s`| 3)
+					 (NUMBER
+					  (select
+					   (store
+					    |RefArray`|
+					    (select |IntSeq.T.elem`| |s`| 3)
+					    (store
+					     (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)
+					     (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+					     |x`|))
+					   (select |IntSeq.T.elem`| |s`| 3)
+					   2)))
+					(<=
+					 (select (store |IntSeq.T.sz`| |s`| (+ (select |IntSeq.T.sz`| |s`| 3) 1)) |s`| 3)
+					 (NUMBER
+					  (select
+					   (store
+					    |RefArray`|
+					    (select |IntSeq.T.elem`| |s`| 3)
+					    (store
+					     (select |RefArray`| (select |IntSeq.T.elem`| |s`| 3) 2)
+					     (+ (select |IntSeq.T.st`| |s`| 3) (select |IntSeq.T.sz`| |s`| 3))
+					     |x`|))
+					   (select |IntSeq.T.elem`| |s`| 3)
+					   2)))))))))
+				  (EQ |T.Size'| (store |T.Size`| |s`| (+ (select |T.Size`| |s`| 3) 1))))))))
+			    (EQ 0 0))
+			   (NOT |ERROR.POSTCONDITION.53.0|)))))))))))))))))))
+
+(IMPLIES
+ (FORALL (|t$2|)
+   (EQ (select |T_A'| |t$2| 0)
+       (+ (select
+	   (store |Test13.T.c`| |t`| (- 0 1)) |t$2| 0) 1)))
+ (AND (EQ (select |T_A'| |t`| 0) 0)
+      (EQ (store |Test13.T.c`| |t`| (- 0 1))
+	  (store |Test13.T.c`| |t`|
+		 (select (store |Test13.T.c`| |t`| (- 0 1)) |t`| 0)))))
+
+;; 30
+(IMPLIES
+ (AND
+  (IMPLIES
+   (EQ (Is_TYPE2 q) |@true|)
+   (<= q 9)
+  )
+  (FORALL (|q$1|) (IMPLIES (EQ (Is_TYPE3 |q$1|) |@true|)
+			   (EQ (NUMBER |q$1|) 10)))
+  )
+ (IMPLIES (EQ (Is_TYPE3 a) |@true|) (< 7 (NUMBER a))))
+
+(IMPLIES
+ (AND
+  (NEQ |@true| |@false|)
+  (FORALL (|q$22|)
+    (IMPLIES
+     (EQ (|Is_IntSeq.T| |q$22|) |@true|)
+     (EQ (SUBTYPE (TYPECODE |q$22| |@DUMMY|) |IntSeq.T.TYPECODE|) |@true|)))
+  (FORALL (|q$22|)
+    (IMPLIES
+     (EQ (|Is_IntSeq.T| |q$22|) |@true|)
+     (EQ (SUBTYPE (TYPECODE |q$22| |@DUMMY|) |IntSeq.T.TYPECODE|) |@true|)))
+  (FORALL (|q$19|)
+    (IMPLIES (EQ (Is_CARDINAL |q$19|) |@true|) (<= 0 |q$19|)))
+  (FORALL (|q$32|)
+    (EQ (Is_CARDINAL (select |IntSeqRep.Public.sz`| |q$32| |@ARRAY|)) |@true|))
+  (FORALL (|q$34|)
+    (IMPLIES
+     (EQ (|Is_IntSeqRep.Public| |q$34|) |@true|)
+     (EQ (SUBTYPE (TYPECODE |q$34| |@DUMMY|) |IntSeqRep.Public.TYPECODE|)
+	 |@true|)))
+  (EQ |IntSeqRep.RefArray.TYPECODE| (TYPECODE |res$2| |@DUMMY|))
+  (EQ (SUBTYPE (TYPECODE s |@DUMMY|) |IntSeq.T.TYPECODE|) |@true|)
+  )
+ (>= (select |IntSeqRep.Public.sz`| |s`| |@ARRAY|) 0)
+ )
+
+;; Bug in skolemization of matching rules.
+(IMPLIES (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (NEQ |@true| |@false|) (FORALL (|@q$15|) (IMPLIES (EQ (Is_CARDINAL |@q$15| |@DUMMY|) |@true|) (<= 0 |@q$15|)))) (EQ (SUBTYPE |TEXT.TYPECODE| |TEXT.TYPECODE|) |@true|)) (FORALL (|@q$16|) (IMPLIES (EQ (|Is_TYPE@111| |@q$16| |@DUMMY|) |@true|) (AND (<= -1 |@q$16|) (<= |@q$16| 1))))) (AND (FORALL (|@q$17|) (EQ (Is_TEXT (select |AtomList.T.head| |@q$17| |@ARRAY|) |@DUMMY|) |@true|)) (FORALL (|@q$18|) (EQ (|Is_AtomList.T| (select |AtomList.T.tail| |@q$18| |@ARRAY|) |@DUMMY|) |@true|)))) (FORALL (|@q$19| |@dummy$8|) (IMPLIES (EQ (|Is_AtomList.T| |@q$19| |@dummy$8|) |@true|) (EQ (SUBTYPE (TYPECODE |@q$19| |@DUMMY|) |AtomList.T.TYPECODE|) |@true|)))) (FORALL (|@dummy$9| |@q$20| |@i$4|) (IMPLIES (EQ (|Is_TYPE@46| |@q$20| |@dummy$9|) |@true|) (EQ (Is_TEXT (select |@q$20| |@i$4| |@ARRAY|) |@dummy$9|) |@true|)))) (EQ (SUBTYPE |MUTEX.TYPECODE| |MUTEX.TYPECODE|) |@true|)) (EQ (SUBTYPE |MUTEX.TYPECODE| |MUTEX.TYPECODE|) |@true|)) (FORALL (|@q$21| |@dummy$10|) (IMPLIES (EQ (|Is_Thread.Closure| |@q$21| |@dummy$10|) |@true|) (EQ (SUBTYPE (TYPECODE |@q$21| |@DUMMY|) |Thread.Closure.TYPECODE|) |@true|)))) (FORALL (|@q$22|) (EQ (Is_CARDINAL (select |Thread.SizedClosure.stackSize| |@q$22| |@ARRAY|) |@DUMMY|) |@true|))) (FORALL (|@q$23| |@dummy$11|) (IMPLIES (EQ (|Is_Thread.SizedClosure| |@q$23| |@dummy$11|) |@true|) (EQ (SUBTYPE (TYPECODE |@q$23| |@DUMMY|) |Thread.SizedClosure.TYPECODE|) |@true|)))) (EQ (SUBTYPE |MUTEX.TYPECODE| |MUTEX.TYPECODE|) |@true|)) (FORALL (|@dummy$12| |@q$24| |@i$5|) (IMPLIES (EQ (|Is_TYPE@120| |@q$24| |@dummy$12|) |@true|) (EQ (Is_CHAR (select |@q$24| |@i$5| |@ARRAY|) |@dummy$12|) |@true|)))) (EQ (SUBTYPE |MUTEX.TYPECODE| |MUTEX.TYPECODE|) |@true|)) (FORALL (|@q$25|) (IMPLIES (EQ (|Is_Fmt.Base| |@q$25| |@DUMMY|) |@true|) (AND (<= 2 |@q$25|) (<= |@q$25| 16))))) (FORALL (|@dummy$13| |@q$26| |@i$6|) (IMPLIES (EQ (|Is_TYPE@45| |@q$26| |@dummy$13|) |@true|) (EQ (Is_TEXT (select |@q$26| |@i$6| |@ARRAY|) |@dummy$13|) |@true|)))) (EQ Root 1)) (EQ Max 1000)) (FORALL (|@q$27|) (IMPLIES (EQ (|Is_TYPE@113| |@q$27| |@DUMMY|) |@true|) (AND (<= 1 |@q$27|) (<= |@q$27| 1000))))) (FORALL (|@q$28| |@dummy$14|) (IMPLIES (EQ (|Is_TYPE@119| |@q$28| |@dummy$14|) |@true|) (EQ (NUMBER |@q$28|) 1000)))) (FORALL (|@dummy$15| |@q$29| |@i$7|) (IMPLIES (EQ (|Is_TYPE@119| |@q$29| |@dummy$15|) |@true|) (EQ (Is_INTEGER (select |@q$29| |@i$7| |@ARRAY|) |@dummy$15|) |@true|)))) (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (NEQ |IO.Error| |Wr.Failure|) (NEQ |IO.Error| |Rd.Failure|)) (NEQ |IO.Error| |Rd.EndOfFile|)) (NEQ |IO.Error| |Thread.Alerted|)) (NEQ |IO.Error| RETURN)) (NEQ |IO.Error| EXIT)) (NEQ |Wr.Failure| |Rd.Failure|)) (NEQ |Wr.Failure| |Rd.EndOfFile|)) (NEQ |Wr.Failure| |Thread.Alerted|)) (NEQ |Wr.Failure| RETURN)) (NEQ |Wr.Failure| EXIT)) (NEQ |Rd.Failure| |Rd.EndOfFile|)) (NEQ |Rd.Failure| |Thread.Alerted|)) (NEQ |Rd.Failure| RETURN)) (NEQ |Rd.Failure| EXIT)) (NEQ |Rd.EndOfFile| |Thread.Alerted|)) (NEQ |Rd.EndOfFile| RETURN)) (NEQ |Rd.EndOfFile| EXIT)) (NEQ |Thread.Alerted| RETURN)) (NEQ |Thread.Alerted| EXIT)) (NEQ RETURN EXIT))) (AND (AND (NEQ |Thread.SizedClosure.TYPECODE| |Thread.Closure.TYPECODE|) (NEQ |Thread.SizedClosure.TYPECODE| |AtomList.T.TYPECODE|)) (NEQ |Thread.Closure.TYPECODE| |AtomList.T.TYPECODE|))) (NEQ |Fmt.Align.Right| |Fmt.Align.Left|)) (AND (AND (AND (AND (AND (AND (AND (AND (AND (NEQ |Fmt.Style.Mix| |Fmt.Style.AltSci|) (NEQ |Fmt.Style.Mix| |Fmt.Style.Sci|)) (NEQ |Fmt.Style.Mix| |Fmt.Style.AltFlo|)) (NEQ |Fmt.Style.Mix| |Fmt.Style.Flo|)) (NEQ |Fmt.Style.AltSci| |Fmt.Style.Sci|)) (NEQ |Fmt.Style.AltSci| |Fmt.Style.AltFlo|)) (NEQ |Fmt.Style.AltSci| |Fmt.Style.Flo|)) (NEQ |Fmt.Style.Sci| |Fmt.Style.AltFlo|)) (NEQ |Fmt.Style.Sci| |Fmt.Style.Flo|)) (NEQ |Fmt.Style.AltFlo| |Fmt.Style.Flo|))) (EQ (|Is_TYPE@119| T |@DUMMY|) |@true|)) (EQ (Is_INTEGER N |@DUMMY|) |@true|)) (IMPLIES (<= N Max) (FORALL (|N`| |T`$1|) (AND (IMPLIES (> N 0) (FORALL (i) (AND (IMPLIES (>= (DIV N 2) 1) (AND (OR (AND (>= (DIV N 2) (DIV N 2)) (>= (DIV N 2) (+ 1 -1))) (NOT |ERROR.LOOPINV_INIT.75.6|)) (AND (FORALL (|EXCEPTION.code| |T$3| |i$1|) (IMPLIES (AND (AND (>= (DIV N 2) |i$1|) (>= |i$1| (+ 1 -1))) (AND (EQ (|Is_TYPE@119| |T$3| |@DUMMY|) |@true|) (EQ (Is_INTEGER |EXCEPTION.code| |@DUMMY|) |@true|))) (IMPLIES (<= 1 |i$1|) (FORALL (|EXCEPTION.code$1| |father$3| |size$1| |T$4| |T'|) (AND (OR (AND (<= 1 |i$1|) (AND (<= |i$1| N) (AND (<= N N) (<= N Max)))) (NOT |ERROR.CALL.76.8|)) (IMPLIES (EQ |EXCEPTION.code$1| RETURN) (AND (IMPLIES (EQ |EXCEPTION.code$1| RETURN) (OR (AND (>= (DIV N 2) (+ |i$1| -1)) (>= (+ |i$1| -1) (+ 1 -1))) (NOT |ERROR.LOOPINV_INV.75.6|))) (OR (EQ |EXCEPTION.code$1| RETURN) (IMPLIES (EQ |EXCEPTION.code$1| RETURN) (OR (EQ |EXCEPTION.code$1| RETURN) (NOT |ERROR.POSTCONDITION.72.0|))))))))))) (FORALL (|EXCEPTION.code$2| |T$5| |i$2|) (IMPLIES (AND (AND (AND (>= (DIV N 2) |i$2|) (>= |i$2| (+ 1 -1))) (AND (EQ (|Is_TYPE@119| |T$5| |@DUMMY|) |@true|) (EQ (Is_INTEGER |EXCEPTION.code$2| |@DUMMY|) |@true|))) (NOT (<= 1 |i$2|))) (OR (EQ RETURN RETURN) (NOT |ERROR.POSTCONDITION.72.0|))))))) (OR (>= (DIV N 2) 1) (OR (EQ RETURN RETURN) (NOT |ERROR.POSTCONDITION.72.0|)))))) (OR (> N 0) (OR (EQ RETURN RETURN) (NOT |ERROR.POSTCONDITION.72.0|)))))))
+
+(BG_PUSH
+  (EQ (|Is_TYPE@119| |HeapSort.T| |@DUMMY|) |@true|)
+  (FORALL (|@q$10| |@dummy$6|)
+    (IMPLIES (EQ (|Is_TYPE@119| |@q$10| |@dummy$6|) |@true|)
+	     (EQ (NUMBER |@q$10|) 1000)))
+ )
+(IMPLIES
+ (AND
+  (<= father size)
+  (<= size |HeapSort.N|)
+  (<= |HeapSort.N| 1000)
+  )
+ (< father (+ (NUMBER |HeapSort.T|) 1))
+ )
+(BG_POP)
+
+(IMPLIES
+  (FORALL (a)
+    (IMPLIES
+     (EQ (IsT1 a) T)
+     (FORALL (i)
+       (EQ (IsT2 (select a i DUM)) T))))
+  (IMPLIES (EQ (IsT1 AAA) T)
+	   (EQ (IsT2 (select AAA 7 DUM)) T)))
+
+
+;; 35
+(IMPLIES
+ (NEQ x 0)
+ (FORALL (i)
+   (IMPLIES
+    (AND
+     (<= 0 i)
+     (<= i 2)
+     )
+    (NEQ (select (store (store (store a 0 x) 1 x) 2 x) i dum) 0))))
+
+(BG_PUSH
+ (NEQ |@true| |@false|)
+ (EQ (select SHARED |$NIL| |@SPECIAL|) |@true|)
+ (EQ (TYPECODE |$NIL| |@DUMMY|) |NULL.TYPECODE|)
+ (FORALL
+     (|@q| |@dummy|)
+   (IMPLIES (EQ (|Is$CHAR| |@q| |@dummy|) |@true|) (AND (<= 0 (ORD |@q|)) (< (ORD |@q|) 256))))
+ (FORALL
+     (|@q$1| |@dummy$1|)
+   (IMPLIES
+    (AND (EQ (|Is$TEXT| |@q$1| |@dummy$1|) |@true|) (EQ (|Is$VAR| |@q$1|) |@true|))
+    (IFF (EQ |@q$1| |$NIL|) (NOT (EQ (select ALLOCATED |@q$1| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$1| |@dummy$1|)
+   (IMPLIES
+    (EQ (|Is$TEXT| |@q$1| |@dummy$1|) |@true|)
+    (IFF (EQ |@q$1| |$NIL|) (NOT (EQ (TYPECODE |@q$1| |@DUMMY|) |TEXT.TYPECODE|)))))
+ (FORALL (|@q$2|) (IMPLIES (EQ (|Is$CARDINAL| |@q$2| |@DUMMY|) |@true|) (<= 0 |@q$2|)))
+ (FORALL
+     (|@q$3| |@dummy$2|)
+   (IMPLIES
+    (AND (EQ (|Is$MUTEX| |@q$3| |@dummy$2|) |@true|) (EQ (|Is$VAR| |@q$3|) |@true|))
+    (IFF (EQ |@q$3| |$NIL|) (NOT (EQ (select ALLOCATED |@q$3| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$3| |@dummy$2|)
+   (IMPLIES
+    (EQ (|Is$MUTEX| |@q$3| |@dummy$2|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$3| |@DUMMY|) |MUTEX.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |MUTEX.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$4| |@dummy$3|)
+   (IMPLIES
+    (AND (EQ (|Is$Atom.T| |@q$4| |@dummy$3|) |@true|) (EQ (|Is$VAR| |@q$4|) |@true|))
+    (IFF (EQ |@q$4| |$NIL|) (NOT (EQ (select ALLOCATED |@q$4| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$4| |@dummy$3|)
+   (IMPLIES
+    (EQ (|Is$Atom.T| |@q$4| |@dummy$3|) |@true|)
+    (IFF (EQ |@q$4| |$NIL|) (NOT (EQ (TYPECODE |@q$4| |@DUMMY|) |Atom.T.TYPECODE|)))))
+ (FORALL
+     (|@q$5|)
+   (IMPLIES (EQ (|Is$TYPE@102| |@q$5| |@DUMMY|) |@true|) (AND (<= -1 |@q$5|) (<= |@q$5| 1))))
+ (FORALL
+     (|@q$6| |@dummy$4|)
+   (IMPLIES
+    (AND (EQ (|Is$AtomList.T| |@q$6| |@dummy$4|) |@true|) (EQ (|Is$VAR| |@q$6|) |@true|))
+    (IFF (EQ |@q$6| |$NIL|) (NOT (EQ (select ALLOCATED |@q$6| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$6| |@dummy$4|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T| |@q$6| |@dummy$4|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$6| |@DUMMY|) |AtomList.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$7|)
+   (EQ (|Is$Atom.T| (select |AtomList.T.head| |@q$7| |@OBJECT|) |@DUMMY|) |@true|))
+ (FORALL
+     (|@q$7| |@dummy$5|)
+   (IMPLIES
+    (AND (EQ (|Is$AtomList.T| |@q$7| |@DUMMY|) |@true|) (EQ (|Is$VAR| |@q$7|) |@true|))
+    (EQ (|Is$VAR| (select |AtomList.T.head| |@q$7| |@dummy$5|)) |@true|)))
+ (FORALL
+     (|@q$7|)
+   (EQ (|Is$AtomList.T| (select |AtomList.T.tail| |@q$7| |@OBJECT|) |@DUMMY|) |@true|))
+ (FORALL
+     (|@q$7| |@dummy$5|)
+   (IMPLIES
+    (AND (EQ (|Is$AtomList.T| |@q$7| |@DUMMY|) |@true|) (EQ (|Is$VAR| |@q$7|) |@true|))
+    (EQ (|Is$VAR| (select |AtomList.T.tail| |@q$7| |@dummy$5|)) |@true|)))
+ (EQ (SUBTYPE1 |AtomList.T.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$8| |@dummy$6|)
+   (IMPLIES
+    (EQ (|Is$TYPE@44| |@q$8| |@dummy$6|) |@true|)
+    (FORALL (|@i|) (EQ (|Is$Atom.T| (select |@q$8| |@i| |@ARRAY|) |@dummy$6|) |@true|))))
+ (FORALL
+     (|@q$8| |@dummy$6|)
+   (IMPLIES
+    (AND (EQ (|Is$TYPE@44| |@q$8| |@dummy$6|) |@true|) (EQ (|Is$VAR| |@q$8|) |@true|))
+    (FORALL (|@i|) (EQ (|Is$VAR| (select |@q$8| |@i| |@ARRAY|)) |@true|))))
+ (FORALL
+     (|@q$9| |@dummy$7|)
+   (IMPLIES
+    (AND (EQ (|Is$Thread.T| |@q$9| |@dummy$7|) |@true|) (EQ (|Is$VAR| |@q$9|) |@true|))
+    (IFF (EQ |@q$9| |$NIL|) (NOT (EQ (select ALLOCATED |@q$9| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$9| |@dummy$7|)
+   (IMPLIES
+    (EQ (|Is$Thread.T| |@q$9| |@dummy$7|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$9| |@DUMMY|) |Thread.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$10| |@dummy$8|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.Condition| |@q$10| |@dummy$8|) |@true|)
+     (EQ (|Is$VAR| |@q$10|) |@true|))
+    (IFF (EQ |@q$10| |$NIL|) (NOT (EQ (select ALLOCATED |@q$10| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$10| |@dummy$8|)
+   (IMPLIES
+    (EQ (|Is$Thread.Condition| |@q$10| |@dummy$8|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$10| |@DUMMY|) |Thread.Condition.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$11| |@dummy$9|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.Closure| |@q$11| |@dummy$9|) |@true|)
+     (EQ (|Is$VAR| |@q$11|) |@true|))
+    (IFF (EQ |@q$11| |$NIL|) (NOT (EQ (select ALLOCATED |@q$11| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$11| |@dummy$9|)
+   (IMPLIES
+    (EQ (|Is$Thread.Closure| |@q$11| |@dummy$9|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$11| |@DUMMY|) |Thread.Closure.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |Thread.Closure.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$12| |@dummy$10|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.SizedClosure| |@q$12| |@dummy$10|) |@true|)
+     (EQ (|Is$VAR| |@q$12|) |@true|))
+    (IFF (EQ |@q$12| |$NIL|) (NOT (EQ (select ALLOCATED |@q$12| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$12| |@dummy$10|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure| |@q$12| |@dummy$10|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$12| |@DUMMY|) |Thread.SizedClosure.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$13|)
+   (EQ
+    (|Is$CARDINAL| (select |Thread.SizedClosure.stackSize| |@q$13| |@OBJECT|) |@DUMMY|)
+    |@true|))
+ (FORALL
+     (|@q$13| |@dummy$11|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.SizedClosure| |@q$13| |@DUMMY|) |@true|)
+     (EQ (|Is$VAR| |@q$13|) |@true|))
+    (EQ (|Is$VAR| (select |Thread.SizedClosure.stackSize| |@q$13| |@dummy$11|)) |@true|)))
+ (EQ (SUBTYPE1 |Thread.SizedClosure.TYPECODE| |Thread.Closure.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$14| |@dummy$12|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure| |@q$14| |@dummy$12|) |@true|)
+    (EQ (|Is$Thread.Closure| |@q$14| |@DUMMY|) |@true|)))
+ (FORALL
+     (|@q$15| |@dummy$13|)
+   (IMPLIES
+    (AND (EQ (|Is$Rd.T| |@q$15| |@dummy$13|) |@true|) (EQ (|Is$VAR| |@q$15|) |@true|))
+    (IFF (EQ |@q$15| |$NIL|) (NOT (EQ (select ALLOCATED |@q$15| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$15| |@dummy$13|)
+   (IMPLIES
+    (EQ (|Is$Rd.T| |@q$15| |@dummy$13|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$15| |@DUMMY|) |Rd.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$16| |@dummy$14|)
+   (IMPLIES
+    (EQ (|Is$TYPE@112| |@q$16| |@dummy$14|) |@true|)
+    (FORALL (|@i$1|) (EQ (|Is$CHAR| (select |@q$16| |@i$1| |@ARRAY|) |@dummy$14|) |@true|))))
+ (FORALL
+     (|@q$16| |@dummy$14|)
+   (IMPLIES
+    (AND (EQ (|Is$TYPE@112| |@q$16| |@dummy$14|) |@true|) (EQ (|Is$VAR| |@q$16|) |@true|))
+    (FORALL (|@i$1|) (EQ (|Is$VAR| (select |@q$16| |@i$1| |@ARRAY|)) |@true|))))
+ (FORALL
+     (|@q$17| |@dummy$15|)
+   (IMPLIES
+    (AND (EQ (|Is$Wr.T| |@q$17| |@dummy$15|) |@true|) (EQ (|Is$VAR| |@q$17|) |@true|))
+    (IFF (EQ |@q$17| |$NIL|) (NOT (EQ (select ALLOCATED |@q$17| |@SPECIAL|) |@true|)))))
+ (FORALL
+     (|@q$17| |@dummy$15|)
+   (IMPLIES
+    (EQ (|Is$Wr.T| |@q$17| |@dummy$15|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$17| |@DUMMY|) |Wr.T.TYPECODE|) |@true|)))
+ (EQ |Word.Size| 32)
+ (FORALL
+     (|@q$18|)
+   (IMPLIES
+    (EQ (|Is$TYPE@105| |@q$18| |@DUMMY|) |@true|)
+    (AND (<= 0 |@q$18|) (<= |@q$18| 31))))
+ (EQ |Real.Base| 2)
+ (EQ |Real.Precision| 24)
+ (EQ |Real.MaxFinite| |REAL$0|)
+ (EQ |Real.MinPos| |REAL$1|)
+ (EQ |Real.MinPosNormal| |REAL$2|)
+ (EQ |Real.MaxExpDigits| 2)
+ (EQ |Real.MaxSignifDigits| 9)
+ (EQ |LongReal.Base| 2)
+ (EQ |LongReal.Precision| 53)
+ (EQ |LongReal.MaxFinite| |REAL$3|)
+ (EQ |LongReal.MinPos| |REAL$4|)
+ (EQ |LongReal.MinPosNormal| |REAL$5|)
+ (EQ |LongReal.MaxExpDigits| 3)
+ (EQ |LongReal.MaxSignifDigits| 17)
+ (EQ |Extended.Base| 2)
+ (EQ |Extended.Precision| 53)
+ (EQ |Extended.MaxFinite| |REAL$6|)
+ (EQ |Extended.MinPos| |REAL$7|)
+ (EQ |Extended.MinPosNormal| |REAL$8|)
+ (EQ |Extended.MaxExpDigits| 3)
+ (EQ |Extended.MaxSignifDigits| 17)
+ (FORALL
+     (|@q$19|)
+   (IMPLIES
+    (EQ (|Is$Fmt.Base| |@q$19| |@DUMMY|) |@true|)
+    (AND (<= 2 |@q$19|) (<= |@q$19| 16))))
+ (FORALL
+     (|@q$20| |@dummy$16|)
+   (IMPLIES
+    (EQ (|Is$Fmt.Style| |@q$20| |@dummy$16|) |@true|)
+    (AND (<= 0 (ORD |@q$20|)) (< (ORD |@q$20|) 3))))
+ (FORALL
+     (|@q$21| |@dummy$17|)
+   (IMPLIES
+    (EQ (|Is$Fmt.Align| |@q$21| |@dummy$17|) |@true|)
+    (AND (<= 0 (ORD |@q$21|)) (< (ORD |@q$21|) 2))))
+ (FORALL
+     (|@q$22| |@dummy$18|)
+   (IMPLIES
+    (EQ (|Is$TYPE@43| |@q$22| |@dummy$18|) |@true|)
+    (FORALL (|@i$2|) (EQ (|Is$TEXT| (select |@q$22| |@i$2| |@ARRAY|) |@dummy$18|) |@true|))))
+ (FORALL
+     (|@q$22| |@dummy$18|)
+   (IMPLIES
+    (AND (EQ (|Is$TYPE@43| |@q$22| |@dummy$18|) |@true|) (EQ (|Is$VAR| |@q$22|) |@true|))
+    (FORALL (|@i$2|) (EQ (|Is$VAR| (select |@q$22| |@i$2| |@ARRAY|)) |@true|))))
+ (EQ |HeapSort.Root| 1)
+ (EQ |HeapSort.Max| 1000)
+ (FORALL
+     (|@q$23|)
+   (IMPLIES
+    (EQ (|Is$TYPE@104| |@q$23| |@DUMMY|) |@true|)
+    (AND (<= 1 |@q$23|) (<= |@q$23| 1000))))
+ (FORALL
+     (|@q$24| |@dummy$19|)
+   (IMPLIES (EQ (|Is$TYPE@111| |@q$24| |@dummy$19|) |@true|) (EQ (NUMBER |@q$24|) 1000)))
+ (FORALL
+     (|@q$24| |@dummy$19|)
+   (IMPLIES
+    (EQ (|Is$TYPE@111| |@q$24| |@dummy$19|) |@true|)
+    (FORALL
+	(|@i$3|)
+      (EQ (|Is$INTEGER| (select |@q$24| |@i$3| |@ARRAY|) |@dummy$19|) |@true|))))
+ (FORALL
+     (|@q$24| |@dummy$19|)
+   (IMPLIES
+    (AND (EQ (|Is$TYPE@111| |@q$24| |@dummy$19|) |@true|) (EQ (|Is$VAR| |@q$24|) |@true|))
+    (FORALL (|@i$3|) (EQ (|Is$VAR| (select |@q$24| |@i$3| |@ARRAY|)) |@true|))))
+ (NEQ |IO.Error| |Wr.Failure|)
+ (NEQ |IO.Error| |Rd.Failure|)
+ (NEQ |IO.Error| |Rd.EndOfFile|)
+ (NEQ |IO.Error| |Thread.Alerted|)
+ (NEQ |IO.Error| RETURN)
+ (NEQ |IO.Error| EXIT)
+ (NEQ |Wr.Failure| |Rd.Failure|)
+ (NEQ |Wr.Failure| |Rd.EndOfFile|)
+ (NEQ |Wr.Failure| |Thread.Alerted|)
+ (NEQ |Wr.Failure| RETURN)
+ (NEQ |Wr.Failure| EXIT)
+ (NEQ |Rd.Failure| |Rd.EndOfFile|)
+ (NEQ |Rd.Failure| |Thread.Alerted|)
+ (NEQ |Rd.Failure| RETURN)
+ (NEQ |Rd.Failure| EXIT)
+ (NEQ |Rd.EndOfFile| |Thread.Alerted|)
+ (NEQ |Rd.EndOfFile| RETURN)
+ (NEQ |Rd.EndOfFile| EXIT)
+ (NEQ |Thread.Alerted| RETURN)
+ (NEQ |Thread.Alerted| EXIT)
+ (NEQ RETURN EXIT)
+ (NEQ |Wr.T.TYPECODE| |Rd.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.SizedClosure.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.SizedClosure.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |MUTEX.TYPECODE| |TEXT.TYPECODE|)
+ (EQ (ORD |Fmt.Style.Sci|) 0)
+ (EQ (ORD |Fmt.Style.Fix|) 1)
+ (EQ (ORD |Fmt.Style.Auto|) 2)
+ (EQ (ORD |Fmt.Align.Left|) 0)
+ (EQ (ORD |Fmt.Align.Right|) 1)
+ (EQ (|Is$TYPE@111| |HeapSort.T| |@DUMMY|) |@true|)
+ (EQ (|Is$VAR| |HeapSort.T|) |@true|)
+ (EQ (|Is$INTEGER| |HeapSort.N| |@DUMMY|) |@true|)
+ (EQ (|Is$VAR| |HeapSort.N|) |@true|)
+ )
+(FORALL
+    (|HeapSort.N`| |ALLOCATED`| |SHARED`| |LL`|)
+  (FORALL
+      (res)
+    (FORALL
+	(|EXCEPTION.code| |EXCEPTION.val| |ALLOCATED$1| |ALLOCATED'|)
+      (IMPLIES
+       (AND
+	(EQ |EXCEPTION.code| RETURN)
+	(EQ (SUBSET ALLOCATED |ALLOCATED'|) |@true|)
+	(EQ (|Is$INTEGER| |EXCEPTION.val| |@DUMMY|) |@true|))
+       (AND
+	(IMPLIES
+	 (EQ |EXCEPTION.code| RETURN)
+	 (FORALL
+	     (|ALLOCATED$2|)
+	   (FORALL
+	       (|ALLOCATED$3| |HeapSort.N$1| |EXCEPTION.code$1|)
+	     (IMPLIES
+	      (AND
+	       (EQ (|Is$INTEGER| |EXCEPTION.code$1| |@DUMMY|) |@true|)
+	       (EQ (|Is$INTEGER| |HeapSort.N$1| |@DUMMY|) |@true|)
+	       (EQ (|Is$NULL| |ALLOCATED$3| |@DUMMY|) |@true|)
+	       (EQ (SUBSET |ALLOCATED$3| |ALLOCATED'|) |@true|))
+	      (IMPLIES
+	       (NOT (<= |HeapSort.N$1| |HeapSort.Max|))
+	       (FORALL
+		   (res)
+		 (FORALL
+		     (|EXCEPTION.code| |EXCEPTION.val| |ALLOCATED$1| |ALLOCATED'|)
+		   (IMPLIES
+		    (AND
+		     (EQ |EXCEPTION.code| RETURN)
+		     (EQ (SUBSET |ALLOCATED$3| |ALLOCATED'|) |@true|)
+		     (EQ (|Is$INTEGER| |EXCEPTION.val| |@DUMMY|) |@true|))
+		    (OR (EQ |EXCEPTION.code| RETURN) (NOT |ERROR.RAISES.123.2|))))))))))
+	(OR (EQ |EXCEPTION.code| RETURN) (NOT |ERROR.RAISES.123.2|)))))))
+(BG_POP)
+
+(BG_PUSH
+ (NEQ |@true| |@false|)
+ (EQ (select SHARED |$NIL| |@SPECIAL|) |@true|)
+ (EQ (select ALLOCATED |$NIL| |@SPECIAL|) |@true|)
+ (EQ (TYPECODE |$NIL| |@DUMMY|) |NULL.TYPECODE|)
+ (FORALL (|@q| |@dummy|) (IMPLIES (EQ (|Is$CHAR| |@q| |@dummy|) |@true|) (AND (<= 0 (ORD |@q|)) (< (ORD |@q|) 256))))
+ (FORALL
+     (|@q$1| |@dummy1| |@dummy2|)
+   (IMPLIES
+    (AND (EQ (|Is$TEXT| |@q$1| |@dummy1|) |@true|) (EQ (|Is$VAR2| |@q$1| |@dummy2|) |@true|))
+    (EQ (select ALLOCATED |@q$1| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$1| |@dummy1| |@dummy2|)
+   (IMPLIES
+    (EQ (|Is$TEXT| |@q$1| |@dummy1|) |@true|)
+    (IFF (EQ |@q$1| |$NIL|) (NOT (EQ (TYPECODE |@q$1| |@dummy2|) |TEXT.TYPECODE|)))))
+ (FORALL (|@q$2|) (IMPLIES (EQ (|Is$CARDINAL| |@q$2| |@DUMMY|) |@true|) (<= 0 |@q$2|)))
+ (FORALL
+     (|@q$3| |@dummy1$1| |@dummy2$1|)
+   (IMPLIES
+    (AND (EQ (|Is$MUTEX| |@q$3| |@dummy1$1|) |@true|) (EQ (|Is$VAR2| |@q$3| |@dummy2$1|) |@true|))
+    (EQ (select ALLOCATED |@q$3| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$3| |@dummy1$1|)
+   (IMPLIES
+    (EQ (|Is$MUTEX| |@q$3| |@dummy1$1|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$3| |@DUMMY|) |MUTEX.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |MUTEX.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$4| |@dummy1$2| |@dummy2$2|)
+   (IMPLIES
+    (AND (EQ (|Is$TextSeq2.T| |@q$4| |@dummy1$2|) |@true|) (EQ (|Is$VAR2| |@q$4| |@dummy2$2|) |@true|))
+    (EQ (select ALLOCATED |@q$4| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$4| |@dummy1$2|)
+   (IMPLIES
+    (EQ (|Is$TextSeq2.T| |@q$4| |@dummy1$2|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$4| |@DUMMY|) |TextSeq2.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$5| |@dummy$1|)
+   (IMPLIES
+    (EQ (|Is$TextSeq2.T| |@q$5| |@dummy$1|) |@true|)
+    (EQ (|Is$TextSeq2.Public| |@q$5| |@dummy$1|) |@true|)))
+ (EQ (SUBTYPE |TextSeq2.T.TYPECODE| |TextSeq2.Public.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$6| |@dummy$2|)
+   (IMPLIES
+    (EQ (|Is$TYPE@66| |@q$6| |@dummy$2|) |@true|)
+    (FORALL (|@i|) (EQ (|Is$TEXT| (select |@q$6| |@i| |@ARRAY|) |@dummy$2|) |@true|))))
+ (FORALL
+     (|@q$6| |@dummy$2|)
+   (IMPLIES
+    (AND (EQ (|Is$TYPE@66| |@q$6| |@dummy$2|) |@true|) (EQ (|Is$VAR2| |@q$6| |@DUMMY|) |@true|))
+    (FORALL (|@i|) (EQ (|Is$VAR2| (select |@q$6| |@i| |@ARRAY|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$7| |@dummy1$3| |@dummy2$3|)
+   (IMPLIES
+    (AND (EQ (|Is$TextSeq2.Public| |@q$7| |@dummy1$3|) |@true|) (EQ (|Is$VAR2| |@q$7| |@dummy2$3|) |@true|))
+    (EQ (select ALLOCATED |@q$7| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$7| |@dummy1$3|)
+   (IMPLIES
+    (EQ (|Is$TextSeq2.Public| |@q$7| |@dummy1$3|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$7| |@DUMMY|) |TextSeq2.Public.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |TextSeq2.Public.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$8| |@dummy1$4| |@dummy2$4|)
+   (IMPLIES
+    (AND (EQ (|Is$Atom.T| |@q$8| |@dummy1$4|) |@true|) (EQ (|Is$VAR2| |@q$8| |@dummy2$4|) |@true|))
+    (EQ (select ALLOCATED |@q$8| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$8| |@dummy1$4| |@dummy2$4|)
+   (IMPLIES
+    (EQ (|Is$Atom.T| |@q$8| |@dummy1$4|) |@true|)
+    (IFF (EQ |@q$8| |$NIL|) (NOT (EQ (TYPECODE |@q$8| |@dummy2$4|) |Atom.T.TYPECODE|)))))
+ (FORALL (|@q$9|) (IMPLIES (EQ (|Is$TYPE@129| |@q$9| |@DUMMY|) |@true|) (AND (<= -1 |@q$9|) (<= |@q$9| 1))))
+ (FORALL
+     (|@q$10| |@dummy1$5| |@dummy2$5|)
+   (IMPLIES
+    (AND (EQ (|Is$AtomList.T| |@q$10| |@dummy1$5|) |@true|) (EQ (|Is$VAR2| |@q$10| |@dummy2$5|) |@true|))
+    (EQ (select ALLOCATED |@q$10| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$10| |@dummy1$5|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T| |@q$10| |@dummy1$5|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$10| |@DUMMY|) |AtomList.T.TYPECODE|) |@true|)))
+ (FORALL (|@q$11|) (EQ (|Is$Atom.T| (select |AtomList.T.head| |@q$11| |@OBJECT|) |@DUMMY|) |@true|))
+ (FORALL
+     (|@q$11| |@dummy1$7| |@dummy1$6|)
+   (IMPLIES
+    (AND (EQ (|Is$AtomList.T| |@q$11| |@DUMMY|) |@true|) (EQ (|Is$VAR2| |@q$11| |@dummy1$6|) |@true|))
+    (EQ (|Is$VAR2| (select |AtomList.T.head| |@q$11| |@dummy1$7|) |@DUMMY|) |@true|)))
+ (FORALL (|@q$11|) (EQ (select SHARED (select |AtomList.T.head| |@q$11| |@OBJECT|) |@SPECIAL|) |@true|))
+ (FORALL (|@q$11|) (EQ (|Is$AtomList.T| (select |AtomList.T.tail| |@q$11| |@OBJECT|) |@DUMMY|) |@true|))
+ (FORALL
+     (|@q$11| |@dummy1$7| |@dummy1$6|)
+   (IMPLIES
+    (AND (EQ (|Is$AtomList.T| |@q$11| |@DUMMY|) |@true|) (EQ (|Is$VAR2| |@q$11| |@dummy1$6|) |@true|))
+    (EQ (|Is$VAR2| (select |AtomList.T.tail| |@q$11| |@dummy1$7|) |@DUMMY|) |@true|)))
+ (FORALL (|@q$11|) (EQ (select SHARED (select |AtomList.T.tail| |@q$11| |@OBJECT|) |@SPECIAL|) |@true|))
+ (EQ (SUBTYPE1 |AtomList.T.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$12| |@dummy$3|)
+   (IMPLIES
+    (EQ (|Is$TYPE@67| |@q$12| |@dummy$3|) |@true|)
+    (FORALL (|@i$1|) (EQ (|Is$Atom.T| (select |@q$12| |@i$1| |@ARRAY|) |@dummy$3|) |@true|))))
+ (FORALL
+     (|@q$12| |@dummy$3|)
+   (IMPLIES
+    (AND (EQ (|Is$TYPE@67| |@q$12| |@dummy$3|) |@true|) (EQ (|Is$VAR2| |@q$12| |@DUMMY|) |@true|))
+    (FORALL (|@i$1|) (EQ (|Is$VAR2| (select |@q$12| |@i$1| |@ARRAY|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$13| |@dummy1$8| |@dummy2$6|)
+   (IMPLIES
+    (AND (EQ (|Is$Thread.T| |@q$13| |@dummy1$8|) |@true|) (EQ (|Is$VAR2| |@q$13| |@dummy2$6|) |@true|))
+    (EQ (select ALLOCATED |@q$13| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$13| |@dummy1$8|)
+   (IMPLIES
+    (EQ (|Is$Thread.T| |@q$13| |@dummy1$8|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$13| |@DUMMY|) |Thread.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$14| |@dummy1$9| |@dummy2$7|)
+   (IMPLIES
+    (AND (EQ (|Is$Thread.Condition| |@q$14| |@dummy1$9|) |@true|) (EQ (|Is$VAR2| |@q$14| |@dummy2$7|) |@true|))
+    (EQ (select ALLOCATED |@q$14| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$14| |@dummy1$9|)
+   (IMPLIES
+    (EQ (|Is$Thread.Condition| |@q$14| |@dummy1$9|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$14| |@DUMMY|) |Thread.Condition.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$15| |@dummy1$10| |@dummy2$8|)
+   (IMPLIES
+    (AND (EQ (|Is$Thread.Closure| |@q$15| |@dummy1$10|) |@true|) (EQ (|Is$VAR2| |@q$15| |@dummy2$8|) |@true|))
+    (EQ (select ALLOCATED |@q$15| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$15| |@dummy1$10|)
+   (IMPLIES
+    (EQ (|Is$Thread.Closure| |@q$15| |@dummy1$10|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$15| |@DUMMY|) |Thread.Closure.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |Thread.Closure.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$16| |@dummy1$11| |@dummy2$9|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.SizedClosure| |@q$16| |@dummy1$11|) |@true|)
+     (EQ (|Is$VAR2| |@q$16| |@dummy2$9|) |@true|))
+    (EQ (select ALLOCATED |@q$16| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$16| |@dummy1$11|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure| |@q$16| |@dummy1$11|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$16| |@DUMMY|) |Thread.SizedClosure.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$17|)
+   (EQ (|Is$CARDINAL| (select |Thread.SizedClosure.stackSize| |@q$17| |@OBJECT|) |@DUMMY|) |@true|))
+ (FORALL
+     (|@q$17| |@dummy1$13| |@dummy1$12|)
+   (IMPLIES
+    (AND (EQ (|Is$Thread.SizedClosure| |@q$17| |@DUMMY|) |@true|) (EQ (|Is$VAR2| |@q$17| |@dummy1$12|) |@true|))
+    (EQ (|Is$VAR2| (select |Thread.SizedClosure.stackSize| |@q$17| |@dummy1$13|) |@DUMMY|) |@true|)))
+ (FORALL
+     (|@q$17|)
+   (EQ (select SHARED (select |Thread.SizedClosure.stackSize| |@q$17| |@OBJECT|) |@SPECIAL|) |@true|))
+ (EQ (SUBTYPE1 |Thread.SizedClosure.TYPECODE| |Thread.Closure.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$18| |@dummy$4|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure| |@q$18| |@dummy$4|) |@true|)
+    (EQ (|Is$Thread.Closure| |@q$18| |@dummy$4|) |@true|)))
+ (FORALL
+     (|@q$19| |@dummy1$14| |@dummy2$10|)
+   (IMPLIES
+    (AND (EQ (|Is$Rd.T| |@q$19| |@dummy1$14|) |@true|) (EQ (|Is$VAR2| |@q$19| |@dummy2$10|) |@true|))
+    (EQ (select ALLOCATED |@q$19| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$19| |@dummy1$14|)
+   (IMPLIES
+    (EQ (|Is$Rd.T| |@q$19| |@dummy1$14|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$19| |@DUMMY|) |Rd.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$20| |@dummy$5|)
+   (IMPLIES
+    (EQ (|Is$TYPE@134| |@q$20| |@dummy$5|) |@true|)
+    (FORALL (|@i$2|) (EQ (|Is$CHAR| (select |@q$20| |@i$2| |@ARRAY|) |@dummy$5|) |@true|))))
+ (FORALL
+     (|@q$20| |@dummy$5|)
+   (IMPLIES
+    (AND (EQ (|Is$TYPE@134| |@q$20| |@dummy$5|) |@true|) (EQ (|Is$VAR2| |@q$20| |@DUMMY|) |@true|))
+    (FORALL (|@i$2|) (EQ (|Is$VAR2| (select |@q$20| |@i$2| |@ARRAY|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$21| |@dummy1$15| |@dummy2$11|)
+   (IMPLIES
+    (AND (EQ (|Is$Wr.T| |@q$21| |@dummy1$15|) |@true|) (EQ (|Is$VAR2| |@q$21| |@dummy2$11|) |@true|))
+    (EQ (select ALLOCATED |@q$21| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$21| |@dummy1$15|)
+   (IMPLIES
+    (EQ (|Is$Wr.T| |@q$21| |@dummy1$15|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$21| |@DUMMY|) |Wr.T.TYPECODE|) |@true|)))
+ (EQ |Word.Size| 32)
+ (FORALL (|@q$22|) (IMPLIES (EQ (|Is$TYPE@130| |@q$22| |@DUMMY|) |@true|) (AND (<= 0 |@q$22|) (<= |@q$22| 31))))
+ (NEQ |IO.Error| |Wr.Failure|)
+ (NEQ |IO.Error| |Rd.Failure|)
+ (NEQ |IO.Error| |Rd.EndOfFile|)
+ (NEQ |IO.Error| |Thread.Alerted|)
+ (NEQ |IO.Error| RETURN)
+ (NEQ |IO.Error| EXIT)
+ (NEQ |Wr.Failure| |Rd.Failure|)
+ (NEQ |Wr.Failure| |Rd.EndOfFile|)
+ (NEQ |Wr.Failure| |Thread.Alerted|)
+ (NEQ |Wr.Failure| RETURN)
+ (NEQ |Wr.Failure| EXIT)
+ (NEQ |Rd.Failure| |Rd.EndOfFile|)
+ (NEQ |Rd.Failure| |Thread.Alerted|)
+ (NEQ |Rd.Failure| RETURN)
+ (NEQ |Rd.Failure| EXIT)
+ (NEQ |Rd.EndOfFile| |Thread.Alerted|)
+ (NEQ |Rd.EndOfFile| RETURN)
+ (NEQ |Rd.EndOfFile| EXIT)
+ (NEQ |Thread.Alerted| RETURN)
+ (NEQ |Thread.Alerted| EXIT)
+ (NEQ RETURN EXIT)
+ (NEQ |Wr.T.TYPECODE| |Rd.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.SizedClosure.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.SizedClosure.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |TextSeq2.Public.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |TextSeq2.Public.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |TextSeq2.Public.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |TextSeq2.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |TextSeq2.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |MUTEX.TYPECODE| |TEXT.TYPECODE|)
+ )
+(FORALL
+    (|Text.Value`| |TextSeq2.valid`| |TextSeq2.data`| |TextSeq2.size`| |ALLOCATED`| |SHARED`| |LL`|)
+  (FORALL
+      (seq t)
+    (IMPLIES
+     (AND
+      (EQ (|Is$TextSeq2.T| seq |@DUMMY|) |@true|)
+      (EQ (|Is$VAR2| seq |@DUMMY|) |@true|)
+      (EQ (|Is$TEXT| t |@DUMMY|) |@true|)
+      (EQ (|Is$VAR2| t |@DUMMY|) |@true|))
+     (FORALL
+	 (res)
+       (FORALL
+	   (|res$1|)
+	 (IMPLIES
+	  (EQ (|Is$TextSeq2.T| (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|) |@DUMMY|) |@true|)
+	  (AND
+	   (OR (NEQ (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|) |$NIL|) (NOT |ERROR.DEREF.53.28|))
+	   (FORALL
+	       (|EXCEPTION.code|
+		|EXCEPTION.val|
+		|t$1|
+		sizeHint
+		|TextSeq2.valid$1|
+		|TextSeq2.valid'|
+		|TextSeq2.size$1|
+		|TextSeq2.size'|
+		|ALLOCATED$1|
+		|ALLOCATED'|)
+	     (IMPLIES
+	      (AND
+	       (EQ |EXCEPTION.code| RETURN)
+	       (EQ (select |TextSeq2.valid'| (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|) |@OBJECT|) |@true|)
+	       (EQ (select |TextSeq2.size'| (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|) |@OBJECT|) 0)
+	       (EQ |EXCEPTION.val| (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|))
+	       (EQ
+		|TextSeq2.size'|
+		(store
+		 |TextSeq2.size|
+		 (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|)
+		 (select |TextSeq2.size'| (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|) |@OBJECT|)))
+	       (EQ
+		|TextSeq2.valid'|
+		(store
+		 |TextSeq2.valid|
+		 (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|)
+		 (select |TextSeq2.valid'| (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|) |@OBJECT|)))
+	       (EQ (SUBSET (store ALLOCATED (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$53$13|) |@true|) |ALLOCATED'|) |@true|)
+	       (FORALL (|@q$23|) (EQ (|Is$BOOLEAN| (select |TextSeq2.valid'| |@q$23| |@OBJECT|) |@DUMMY|) |@true|))
+	       (FORALL
+		   (|@q$23| |@dummy$6|)
+		 (IMPLIES
+		  (AND (EQ (|Is$TextSeq2.Public| |@q$23| |@dummy$6|) |@true|) (EQ (|Is$VAR2| |@q$23| |@DUMMY|) |@true|))
+		  (EQ (|Is$VAR2| (select |TextSeq2.valid'| |@q$23| |@OBJECT|) |@DUMMY|) |@true|)))
+	       (FORALL (|@q$24|) (EQ (|Is$CARDINAL| (select |TextSeq2.size'| |@q$24| |@OBJECT|) |@DUMMY|) |@true|))
+	       (FORALL
+		   (|@q$24| |@dummy$7|)
+		 (IMPLIES
+		  (AND (EQ (|Is$TextSeq2.Public| |@q$24| |@dummy$7|) |@true|) (EQ (|Is$VAR2| |@q$24| |@DUMMY|) |@true|))
+		  (EQ (|Is$VAR2| (select |TextSeq2.size'| |@q$24| |@OBJECT|) |@DUMMY|) |@true|)))
+	       (EQ (|Is$TextSeq2.T| |EXCEPTION.val| |@DUMMY|) |@true|))
+	      (AND
+	       (IMPLIES
+		(EQ |EXCEPTION.code| RETURN)
+		(FORALL
+		    (|res$2|)
+		  (AND
+		   (OR (NEQ |EXCEPTION.val| |$NIL|) (NOT |ERROR.DEREF.56.7|))
+		   (FORALL
+		       (|res$3|)
+		     (IMPLIES
+		      (AND
+		       (NEQ |res$3| |$NIL|)
+		       (EQ (select ALLOCATED |res$3| |@SPECIAL|) |@true|)
+		       (EQ (|Is$TEXT| |res$3| |@DUMMY|) |@true|)
+		       (EQ (NUMBER (select |Text.Value| |res$3| |@ARRAY|)) 3)
+		       (EQ (select (select |Text.Value| |res$3| |@ARRAY|) 0 |@ARRAY|) (VAL 111 |CHAR.TYPECODE|))
+		       (EQ (select (select |Text.Value| |res$3| |@ARRAY|) 1 |@ARRAY|) (VAL 110 |CHAR.TYPECODE|))
+		       (EQ (select (select |Text.Value| |res$3| |@ARRAY|) 2 |@ARRAY|) (VAL 101 |CHAR.TYPECODE|)))
+		      (FORALL
+			  (|EXCEPTION.code$1|
+			   |t$2|
+			   x
+			   |TextSeq2.size$2|
+			   |TextSeq2.size'$1|
+			   |TextSeq2.data$1|
+			   |TextSeq2.data'|
+			   |ALLOCATED$2|
+			   |ALLOCATED'$1|)
+			(AND
+			 (OR (EQ (select |TextSeq2.valid'| |EXCEPTION.val| |@OBJECT|) |@true|) (NOT |ERROR.CALL.56.7|))
+			 (IMPLIES
+			  (AND
+			   (EQ |EXCEPTION.code$1| RETURN)
+			   (EQ (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|) (+ (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|) 1))
+			   (EQ
+			    (select (select |TextSeq2.data'| |EXCEPTION.val| |@OBJECT|) (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|) |@ARRAY|)
+			    |res$3|)
+			   (EQ |TextSeq2.size'$1| (store |TextSeq2.size'| |EXCEPTION.val| (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|)))
+			   (EQ
+			    |TextSeq2.data'|
+			    (store
+			     |TextSeq2.data|
+			     |EXCEPTION.val|
+			     (store
+			      (select |TextSeq2.data| |EXCEPTION.val| |@OBJECT|)
+			      (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|)
+			      (select (select |TextSeq2.data'| |EXCEPTION.val| |@OBJECT|) (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|) |@ARRAY|))))
+			   (EQ (SUBSET |ALLOCATED'| |ALLOCATED'$1|) |@true|)
+			   (FORALL (|@q$25|) (EQ (|Is$CARDINAL| (select |TextSeq2.size'$1| |@q$25| |@OBJECT|) |@DUMMY|) |@true|))
+			   (FORALL
+			       (|@q$25| |@dummy$8|)
+			     (IMPLIES
+			      (AND (EQ (|Is$TextSeq2.Public| |@q$25| |@dummy$8|) |@true|) (EQ (|Is$VAR2| |@q$25| |@DUMMY|) |@true|))
+			      (EQ (|Is$VAR2| (select |TextSeq2.size'$1| |@q$25| |@OBJECT|) |@DUMMY|) |@true|)))
+			   (FORALL (|@q$26|) (EQ (|Is$NULL| (select |TextSeq2.data'| |@q$26| |@OBJECT|) |@DUMMY|) |@true|))
+			   (FORALL
+			       (|@q$26| |@dummy$9|)
+			     (IMPLIES
+			      (AND (EQ (|Is$TextSeq2.Public| |@q$26| |@dummy$9|) |@true|) (EQ (|Is$VAR2| |@q$26| |@DUMMY|) |@true|))
+			      (EQ (|Is$VAR2| (select |TextSeq2.data'| |@q$26| |@OBJECT|) |@DUMMY|) |@true|))))
+			  (AND
+			   (IMPLIES
+			    (EQ |EXCEPTION.code$1| RETURN)
+			    (FORALL
+				(|res$4|)
+			      (AND
+			       (OR (NEQ |EXCEPTION.val| |$NIL|) (NOT |ERROR.DEREF.57.7|))
+			       (FORALL
+				   (|res$5|)
+				 (IMPLIES
+				  (AND
+				   (NEQ |res$5| |$NIL|)
+				   (EQ (select ALLOCATED |res$5| |@SPECIAL|) |@true|)
+				   (EQ (|Is$TEXT| |res$5| |@DUMMY|) |@true|)
+				   (EQ (NUMBER (select |Text.Value| |res$5| |@ARRAY|)) 3)
+				   (EQ (select (select |Text.Value| |res$5| |@ARRAY|) 0 |@ARRAY|) (VAL 116 |CHAR.TYPECODE|))
+				   (EQ (select (select |Text.Value| |res$5| |@ARRAY|) 1 |@ARRAY|) (VAL 119 |CHAR.TYPECODE|))
+				   (EQ (select (select |Text.Value| |res$5| |@ARRAY|) 2 |@ARRAY|) (VAL 111 |CHAR.TYPECODE|)))
+				  (FORALL
+				      (|EXCEPTION.code$2|
+				       |t$3|
+				       |x$1|
+				       |TextSeq2.size$3|
+				       |TextSeq2.size'$2|
+				       |TextSeq2.data$2|
+				       |TextSeq2.data'$1|
+				       |ALLOCATED$3|
+				       |ALLOCATED'$2|)
+				    (AND
+				     (OR (EQ (select |TextSeq2.valid'| |EXCEPTION.val| |@OBJECT|) |@true|) (NOT |ERROR.CALL.57.7|))
+				     (IMPLIES
+				      (AND
+				       (EQ |EXCEPTION.code$2| RETURN)
+				       (EQ (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|) (+ (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|) 1))
+				       (EQ
+					(select (select |TextSeq2.data'$1| |EXCEPTION.val| |@OBJECT|) (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|) |@ARRAY|)
+					|res$5|)
+				       (EQ |TextSeq2.size'$2| (store |TextSeq2.size'$1| |EXCEPTION.val| (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|)))
+				       (EQ
+					|TextSeq2.data'$1|
+					(store
+					 |TextSeq2.data'|
+					 |EXCEPTION.val|
+					 (store
+					  (select |TextSeq2.data'| |EXCEPTION.val| |@OBJECT|)
+					  (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|)
+					  (select (select |TextSeq2.data'$1| |EXCEPTION.val| |@OBJECT|) (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|) |@ARRAY|))))
+				       (EQ (SUBSET |ALLOCATED'$1| |ALLOCATED'$2|) |@true|)
+				       (FORALL (|@q$27|) (EQ (|Is$CARDINAL| (select |TextSeq2.size'$2| |@q$27| |@OBJECT|) |@DUMMY|) |@true|))
+				       (FORALL
+					   (|@q$27| |@dummy$10|)
+					 (IMPLIES
+					  (AND (EQ (|Is$TextSeq2.Public| |@q$27| |@dummy$10|) |@true|) (EQ (|Is$VAR2| |@q$27| |@DUMMY|) |@true|))
+					  (EQ (|Is$VAR2| (select |TextSeq2.size'$2| |@q$27| |@OBJECT|) |@DUMMY|) |@true|)))
+				       (FORALL (|@q$28|) (EQ (|Is$NULL| (select |TextSeq2.data'$1| |@q$28| |@OBJECT|) |@DUMMY|) |@true|))
+				       (FORALL
+					   (|@q$28| |@dummy$11|)
+					 (IMPLIES
+					  (AND (EQ (|Is$TextSeq2.Public| |@q$28| |@dummy$11|) |@true|) (EQ (|Is$VAR2| |@q$28| |@DUMMY|) |@true|))
+					  (EQ (|Is$VAR2| (select |TextSeq2.data'$1| |@q$28| |@OBJECT|) |@DUMMY|) |@true|))))
+				      (AND
+				       (IMPLIES
+					(EQ |EXCEPTION.code$2| RETURN)
+					(FORALL
+					    (|res$6|)
+					  (AND
+					   (OR (NEQ |EXCEPTION.val| |$NIL|) (NOT |ERROR.DEREF.58.7|))
+					   (FORALL
+					       (|res$7|)
+					     (IMPLIES
+					      (AND
+					       (NEQ |res$7| |$NIL|)
+					       (EQ (select ALLOCATED |res$7| |@SPECIAL|) |@true|)
+					       (EQ (|Is$TEXT| |res$7| |@DUMMY|) |@true|)
+					       (EQ (NUMBER (select |Text.Value| |res$7| |@ARRAY|)) 5)
+					       (EQ (select (select |Text.Value| |res$7| |@ARRAY|) 0 |@ARRAY|) (VAL 116 |CHAR.TYPECODE|))
+					       (EQ (select (select |Text.Value| |res$7| |@ARRAY|) 1 |@ARRAY|) (VAL 104 |CHAR.TYPECODE|))
+					       (EQ (select (select |Text.Value| |res$7| |@ARRAY|) 2 |@ARRAY|) (VAL 114 |CHAR.TYPECODE|))
+					       (EQ (select (select |Text.Value| |res$7| |@ARRAY|) 3 |@ARRAY|) (VAL 101 |CHAR.TYPECODE|))
+					       (EQ (select (select |Text.Value| |res$7| |@ARRAY|) 4 |@ARRAY|) (VAL 101 |CHAR.TYPECODE|)))
+					      (FORALL
+						  (|EXCEPTION.code$3|
+						   |t$4|
+						   |x$2|
+						   |TextSeq2.size$4|
+						   |TextSeq2.size'$3|
+						   |TextSeq2.data$3|
+						   |TextSeq2.data'$2|
+						   |ALLOCATED$4|
+						   |ALLOCATED'$3|)
+						(AND
+						 (OR (EQ (select |TextSeq2.valid'| |EXCEPTION.val| |@OBJECT|) |@true|) (NOT |ERROR.CALL.58.7|))
+						 (IMPLIES
+						  (AND
+						   (EQ |EXCEPTION.code$3| RETURN)
+						   (EQ (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|) (+ (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|) 1))
+						   (EQ
+						    (select (select |TextSeq2.data'$2| |EXCEPTION.val| |@OBJECT|) (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|) |@ARRAY|)
+						    |res$7|)
+						   (EQ |TextSeq2.size'$3| (store |TextSeq2.size'$2| |EXCEPTION.val| (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|)))
+						   (EQ
+						    |TextSeq2.data'$2|
+						    (store
+						     |TextSeq2.data'$1|
+						     |EXCEPTION.val|
+						     (store
+						      (select |TextSeq2.data'$1| |EXCEPTION.val| |@OBJECT|)
+						      (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|)
+						      (select (select |TextSeq2.data'$2| |EXCEPTION.val| |@OBJECT|) (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|) |@ARRAY|))))
+						   (EQ (SUBSET |ALLOCATED'$2| |ALLOCATED'$3|) |@true|)
+						   (FORALL (|@q$29|) (EQ (|Is$CARDINAL| (select |TextSeq2.size'$3| |@q$29| |@OBJECT|) |@DUMMY|) |@true|))
+						   (FORALL
+						       (|@q$29| |@dummy$12|)
+						     (IMPLIES
+						      (AND (EQ (|Is$TextSeq2.Public| |@q$29| |@dummy$12|) |@true|) (EQ (|Is$VAR2| |@q$29| |@DUMMY|) |@true|))
+						      (EQ (|Is$VAR2| (select |TextSeq2.size'$3| |@q$29| |@OBJECT|) |@DUMMY|) |@true|)))
+						   (FORALL (|@q$30|) (EQ (|Is$NULL| (select |TextSeq2.data'$2| |@q$30| |@OBJECT|) |@DUMMY|) |@true|))
+						   (FORALL
+						       (|@q$30| |@dummy$13|)
+						     (IMPLIES
+						      (AND (EQ (|Is$TextSeq2.Public| |@q$30| |@dummy$13|) |@true|) (EQ (|Is$VAR2| |@q$30| |@DUMMY|) |@true|))
+						      (EQ (|Is$VAR2| (select |TextSeq2.data'$2| |@q$30| |@OBJECT|) |@DUMMY|) |@true|))))
+						  (AND
+						   (IMPLIES
+						    (EQ |EXCEPTION.code$3| RETURN)
+						    (FORALL
+							(|EXCEPTION.code$4| s |TextSeq2.data$4| |TextSeq2.data'$3| |ALLOCATED$5| |ALLOCATED'$4|)
+						      (AND
+						       (OR
+							(AND
+							 (NEQ |EXCEPTION.val| |$NIL|)
+							 (EQ (select |TextSeq2.valid'| |EXCEPTION.val| |@OBJECT|) |@true|)
+							 (FORALL
+							     (i)
+							   (IMPLIES
+							    (AND (<= 0 i) (< i (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|)))
+							    (NEQ (select (select |TextSeq2.data'$2| |EXCEPTION.val| |@OBJECT|) i |@ARRAY|) |$NIL|))))
+							(NOT |ERROR.CALL.59.4|))
+						       (IMPLIES
+							(AND
+							 (EQ |EXCEPTION.code$4| RETURN)
+							 (FORALL
+							     (|i$1|)
+							   (IMPLIES
+							    (AND (<= 0 |i$1|) (< |i$1| (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|)))
+							    (NEQ (select (select |TextSeq2.data'$3| |EXCEPTION.val| |@OBJECT|) |i$1| |@ARRAY|) |$NIL|)))
+							 (EQ |TextSeq2.data'$3| (store |TextSeq2.data'$2| |EXCEPTION.val| (select |TextSeq2.data'$3| |EXCEPTION.val| |@OBJECT|)))
+							 (EQ (SUBSET |ALLOCATED'$3| |ALLOCATED'$4|) |@true|)
+							 (FORALL (|@q$31|) (EQ (|Is$NULL| (select |TextSeq2.data'$3| |@q$31| |@OBJECT|) |@DUMMY|) |@true|))
+							 (FORALL
+							     (|@q$31| |@dummy$14|)
+							   (IMPLIES
+							    (AND (EQ (|Is$TextSeq2.Public| |@q$31| |@dummy$14|) |@true|) (EQ (|Is$VAR2| |@q$31| |@DUMMY|) |@true|))
+							    (EQ (|Is$VAR2| (select |TextSeq2.data'$3| |@q$31| |@OBJECT|) |@DUMMY|) |@true|))))
+							(AND
+							 (IMPLIES
+							  (EQ |EXCEPTION.code$4| RETURN)
+							  (FORALL
+							      (|i$2| |res$8|)
+							    (FORALL
+								(|res$9|)
+							      (AND
+							       (OR (NEQ |EXCEPTION.val| |$NIL|) (NOT |ERROR.DEREF.60.21|))
+							       (FORALL
+								   (|EXCEPTION.code$5| |EXCEPTION.val$1| |t$5| |ALLOCATED$6| |ALLOCATED'$5|)
+								 (AND
+								  (OR (EQ (select |TextSeq2.valid'| |EXCEPTION.val| |@OBJECT|) |@true|) (NOT |ERROR.CALL.60.21|))
+								  (IMPLIES
+								   (AND
+								    (EQ |EXCEPTION.code$5| RETURN)
+								    (EQ |EXCEPTION.val$1| (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|))
+								    (EQ (SUBSET |ALLOCATED'$4| |ALLOCATED'$5|) |@true|)
+								    (EQ (|Is$CARDINAL| |EXCEPTION.val$1| |@DUMMY|) |@true|))
+								   (AND
+								    (IMPLIES
+								     (EQ |EXCEPTION.code$5| RETURN)
+								     (AND
+								      (IMPLIES
+								       (<= 0 (- |EXCEPTION.val$1| 1))
+								       (FORALL
+									   (|ALLOCATED$7|)
+									 (AND
+									  (OR (AND (<= 0 0) (<= 0 (+ (- |EXCEPTION.val$1| 1) 1))) (NOT |ERROR.LOOPINV_INIT.60.4|))
+									  (FORALL
+									      (|ALLOCATED$8| |i$3| |EXCEPTION.code$6|)
+									    (IMPLIES
+									     (AND
+									      (<= 0 |i$3|)
+									      (<= |i$3| (+ (- |EXCEPTION.val$1| 1) 1))
+									      (EQ (|Is$INTEGER| |EXCEPTION.code$6| |@DUMMY|) |@true|)
+									      (EQ (|Is$NULL| |ALLOCATED$8| |@DUMMY|) |@true|)
+									      (EQ (SUBSET |ALLOCATED'$5| |ALLOCATED$8|) |@true|))
+									     (IMPLIES
+									      (<= |i$3| (- |EXCEPTION.val$1| 1))
+									      (FORALL
+										  (|res$10|)
+										(FORALL
+										    (|res$12| |res$11|)
+										  (AND
+										   (OR (NEQ |EXCEPTION.val| |$NIL|) (NOT |ERROR.DEREF.61.16|))
+										   (FORALL
+										       (|EXCEPTION.code$7| |EXCEPTION.val$2| |t$6| |i$4| |ALLOCATED$9| |ALLOCATED'$6|)
+										     (AND
+										      (OR (<= 0 |i$3|) (NOT |ERROR.SUBRANGE_ASSIGN.61.21|))
+										      (OR
+										       (AND
+											(EQ (select |TextSeq2.valid'| |EXCEPTION.val| |@OBJECT|) |@true|)
+											(< |i$3| (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|)))
+										       (NOT |ERROR.CALL.61.16|))
+										      (IMPLIES
+										       (AND
+											(EQ |EXCEPTION.code$7| RETURN)
+											(EQ |EXCEPTION.val$2| (select (select |TextSeq2.data'$3| |EXCEPTION.val| |@OBJECT|) |i$3| |@ARRAY|))
+											(EQ (SUBSET |ALLOCATED$8| |ALLOCATED'$6|) |@true|)
+											(EQ (|Is$TEXT| |EXCEPTION.val$2| |@DUMMY|) |@true|))
+										       (AND
+											(IMPLIES
+											 (EQ |EXCEPTION.code$7| RETURN)
+											 (FORALL
+											     (|res$13|)
+											   (IMPLIES
+											    (AND
+											     (NEQ |res$13| |$NIL|)
+											     (EQ (select ALLOCATED |res$13| |@SPECIAL|) |@true|)
+											     (EQ (|Is$TEXT| |res$13| |@DUMMY|) |@true|)
+											     (EQ (NUMBER (select |Text.Value| |res$13| |@ARRAY|)) 2)
+											     (EQ (select (select |Text.Value| |res$13| |@ARRAY|) 0 |@ARRAY|) (VAL 92 |CHAR.TYPECODE|))
+											     (EQ (select (select |Text.Value| |res$13| |@ARRAY|) 1 |@ARRAY|) (VAL 110 |CHAR.TYPECODE|)))
+											    (AND
+											     (OR (NEQ |EXCEPTION.val$2| |$NIL|) (NOT |ERROR.DEREF.61.16|))
+											     (OR (NEQ |res$13| |$NIL|) (NOT |ERROR.DEREF.61.26|))
+											     (FORALL
+												 (|res$14|)
+											       (IMPLIES
+												(AND
+												 (NEQ |res$14| |$NIL|)
+												 (EQ (select ALLOCATED |res$14| |@SPECIAL|) |@true|)
+												 (EQ (|Is$TEXT| |res$14| |@DUMMY|) |@true|)
+												 (EQ
+												  (NUMBER (select |Text.Value| |res$14| |@ARRAY|))
+												  (+ (NUMBER (select |Text.Value| |EXCEPTION.val$2| |@ARRAY|)) (NUMBER (select |Text.Value| |res$13| |@ARRAY|))))
+												 (EQ
+												  (select |Text.Value| |res$14| |@ARRAY|)
+												  (CONCAT (select |Text.Value| |EXCEPTION.val$2| |@ARRAY|) 0 (select |Text.Value| |res$13| |@ARRAY|) 0)))
+												(FORALL
+												    (|EXCEPTION.code$8| txt wr |ALLOCATED$10| |ALLOCATED'$7|)
+												  (IMPLIES
+												   (AND (EQ |EXCEPTION.code$8| RETURN) (EQ (SUBSET |ALLOCATED'$6| |ALLOCATED'$7|) |@true|))
+												   (AND
+												    (IMPLIES
+												     (EQ |EXCEPTION.code$8| RETURN)
+												     (OR (AND (<= 0 (+ |i$3| 1)) (<= (+ |i$3| 1) (+ (- |EXCEPTION.val$1| 1) 1))) (NOT |ERROR.LOOPINV_INV.60.4|)))
+												    (OR
+												     (EQ |EXCEPTION.code$8| RETURN)
+												     (AND
+												      (IMPLIES
+												       (EQ |EXCEPTION.code$8| RETURN)
+												       (AND
+													(OR (EQ |EXCEPTION.code$8| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+													(OR
+													 (FORALL
+													     (|@r|)
+													   (OR
+													    (EQ |@r| |$NIL|)
+													    (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+													    (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+													 (NOT |ERROR.MOD_POST.52.0|))))
+												      (OR
+												       (EQ |EXCEPTION.code$8| RETURN)
+												       (AND
+													(NOT |ERROR.RAISES.52.0|)
+													(OR (EQ |EXCEPTION.code$8| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+													(OR
+													 (FORALL
+													     (|@r|)
+													   (OR
+													    (EQ |@r| |$NIL|)
+													    (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+													    (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+													 (NOT |ERROR.MOD_POST.52.0|)))))))))))))))
+											(OR
+											 (EQ |EXCEPTION.code$7| RETURN)
+											 (AND
+											  (IMPLIES
+											   (EQ |EXCEPTION.code$7| RETURN)
+											   (AND
+											    (OR (EQ |EXCEPTION.code$7| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+											    (OR
+											     (FORALL
+												 (|@r|)
+											       (OR
+												(EQ |@r| |$NIL|)
+												(IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+												(NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+											     (NOT |ERROR.MOD_POST.52.0|))))
+											  (OR
+											   (EQ |EXCEPTION.code$7| RETURN)
+											   (AND
+											    (NOT |ERROR.RAISES.52.0|)
+											    (OR (EQ |EXCEPTION.code$7| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+											    (OR
+											     (FORALL
+												 (|@r|)
+											       (OR
+												(EQ |@r| |$NIL|)
+												(IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+												(NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+											     (NOT |ERROR.MOD_POST.52.0|))))))))))))))))
+									  (FORALL
+									      (|ALLOCATED$11| |i$5| |EXCEPTION.code$9|)
+									    (IMPLIES
+									     (AND
+									      (<= 0 |i$5|)
+									      (<= |i$5| (+ (- |EXCEPTION.val$1| 1) 1))
+									      (EQ (|Is$INTEGER| |EXCEPTION.code$9| |@DUMMY|) |@true|)
+									      (EQ (|Is$NULL| |ALLOCATED$11| |@DUMMY|) |@true|)
+									      (EQ (SUBSET |ALLOCATED'$5| |ALLOCATED$11|) |@true|)
+									      (NOT (<= |i$5| (- |EXCEPTION.val$1| 1))))
+									     (AND
+									      (OR (EQ RETURN RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+									      (OR
+									       (FORALL
+										   (|@r|)
+										 (OR
+										  (EQ |@r| |$NIL|)
+										  (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+										  (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+									       (NOT |ERROR.MOD_POST.52.0|))))))))
+								      (OR
+								       (<= 0 (- |EXCEPTION.val$1| 1))
+								       (AND
+									(OR (EQ RETURN RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+									(OR
+									 (FORALL
+									     (|@r|)
+									   (OR
+									    (EQ |@r| |$NIL|)
+									    (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+									    (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+									 (NOT |ERROR.MOD_POST.52.0|))))))
+								    (OR
+								     (EQ |EXCEPTION.code$5| RETURN)
+								     (AND
+								      (IMPLIES
+								       (EQ |EXCEPTION.code$5| RETURN)
+								       (AND
+									(OR (EQ |EXCEPTION.code$5| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+									(OR
+									 (FORALL
+									     (|@r|)
+									   (OR
+									    (EQ |@r| |$NIL|)
+									    (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+									    (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+									 (NOT |ERROR.MOD_POST.52.0|))))
+								      (OR
+								       (EQ |EXCEPTION.code$5| RETURN)
+								       (AND
+									(NOT |ERROR.RAISES.52.0|)
+									(OR (EQ |EXCEPTION.code$5| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+									(OR
+									 (FORALL
+									     (|@r|)
+									   (OR
+									    (EQ |@r| |$NIL|)
+									    (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+									    (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+									 (NOT |ERROR.MOD_POST.52.0|))))))))))))))
+							 (OR
+							  (EQ |EXCEPTION.code$4| RETURN)
+							  (AND
+							   (IMPLIES
+							    (EQ |EXCEPTION.code$4| RETURN)
+							    (AND
+							     (OR (EQ |EXCEPTION.code$4| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+							     (OR
+							      (FORALL
+								  (|@r|)
+								(OR
+								 (EQ |@r| |$NIL|)
+								 (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+								 (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+							      (NOT |ERROR.MOD_POST.52.0|))))
+							   (OR
+							    (EQ |EXCEPTION.code$4| RETURN)
+							    (AND
+							     (NOT |ERROR.RAISES.52.0|)
+							     (OR (EQ |EXCEPTION.code$4| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+							     (OR
+							      (FORALL
+								  (|@r|)
+								(OR
+								 (EQ |@r| |$NIL|)
+								 (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+								 (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+							      (NOT |ERROR.MOD_POST.52.0|)))))))))))
+						   (OR
+						    (EQ |EXCEPTION.code$3| RETURN)
+						    (AND
+						     (IMPLIES
+						      (EQ |EXCEPTION.code$3| RETURN)
+						      (AND
+						       (OR (EQ |EXCEPTION.code$3| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+						       (OR
+							(FORALL
+							    (|@r|)
+							  (OR
+							   (EQ |@r| |$NIL|)
+							   (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+							   (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+							(NOT |ERROR.MOD_POST.52.0|))))
+						     (OR
+						      (EQ |EXCEPTION.code$3| RETURN)
+						      (AND
+						       (NOT |ERROR.RAISES.52.0|)
+						       (OR (EQ |EXCEPTION.code$3| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+						       (OR
+							(FORALL
+							    (|@r|)
+							  (OR
+							   (EQ |@r| |$NIL|)
+							   (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+							   (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+							(NOT |ERROR.MOD_POST.52.0|)))))))))))))))
+				       (OR
+					(EQ |EXCEPTION.code$2| RETURN)
+					(AND
+					 (IMPLIES
+					  (EQ |EXCEPTION.code$2| RETURN)
+					  (AND
+					   (OR (EQ |EXCEPTION.code$2| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+					   (OR
+					    (FORALL
+						(|@r|)
+					      (OR
+					       (EQ |@r| |$NIL|)
+					       (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+					       (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+					    (NOT |ERROR.MOD_POST.52.0|))))
+					 (OR
+					  (EQ |EXCEPTION.code$2| RETURN)
+					  (AND
+					   (NOT |ERROR.RAISES.52.0|)
+					   (OR (EQ |EXCEPTION.code$2| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+					   (OR
+					    (FORALL
+						(|@r|)
+					      (OR
+					       (EQ |@r| |$NIL|)
+					       (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+					       (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+					    (NOT |ERROR.MOD_POST.52.0|)))))))))))))))
+			   (OR
+			    (EQ |EXCEPTION.code$1| RETURN)
+			    (AND
+			     (IMPLIES
+			      (EQ |EXCEPTION.code$1| RETURN)
+			      (AND
+			       (OR (EQ |EXCEPTION.code$1| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+			       (OR
+				(FORALL
+				    (|@r|)
+				  (OR
+				   (EQ |@r| |$NIL|)
+				   (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+				   (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+				(NOT |ERROR.MOD_POST.52.0|))))
+			     (OR
+			      (EQ |EXCEPTION.code$1| RETURN)
+			      (AND
+			       (NOT |ERROR.RAISES.52.0|)
+			       (OR (EQ |EXCEPTION.code$1| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+			       (OR
+				(FORALL
+				    (|@r|)
+				  (OR
+				   (EQ |@r| |$NIL|)
+				   (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+				   (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+				(NOT |ERROR.MOD_POST.52.0|)))))))))))))))
+	       (OR
+		(EQ |EXCEPTION.code| RETURN)
+		(AND
+		 (IMPLIES
+		  (EQ |EXCEPTION.code| RETURN)
+		  (AND
+		   (OR (EQ |EXCEPTION.code| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+		   (OR
+		    (FORALL
+			(|@r|)
+		      (OR
+		       (EQ |@r| |$NIL|)
+		       (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+		       (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+		    (NOT |ERROR.MOD_POST.52.0|))))
+		 (OR
+		  (EQ |EXCEPTION.code| RETURN)
+		  (AND
+		   (NOT |ERROR.RAISES.52.0|)
+		   (OR (EQ |EXCEPTION.code| RETURN) (NOT |ERROR.POSTCONDITION.52.0|))
+		   (OR
+		    (FORALL
+			(|@r|)
+		      (OR
+		       (EQ |@r| |$NIL|)
+		       (IMPLIES (EQ (select SHARED |@r| |@SPECIAL|) |@true|) (EQ (select SHARED |@r| |@SPECIAL|) |@true|))
+		       (NOT (EQ (select ALLOCATED |@r| |@SPECIAL|) |@true|))))
+		    (NOT |ERROR.MOD_POST.52.0|))))))))))))))))
+(BG_POP)
+
+(BG_PUSH
+ (FORALL (|@q$6| |@dummy$1|)
+   (IMPLIES (EQ (|Is$TestLL.T| |@q$6| |@dummy$1|) |@true|)
+	    (EQ (|Is$ROOT| |@q$6| |@dummy$1|) |@true|)))
+ (FORALL (x)
+   (IMPLIES (EQ (|Is$TestLL.T| x |@DUMMY|) |@true|)
+	    (EQ (LT |TestLL.mu| x) |@true|)))
+  
+ )
+(IMPLIES
+ (AND
+  (EQ (sup LL) |TestLL.mu|) (NEQ |x$1| |$NIL|)
+  (EQ (|Is$TestLL.T| |x$1| |@DUMMY|) |@true|)
+  )
+ (EQ (LT (sup LL) |x$1|) |@true|)
+ )
+(BG_POP)
+
+(IMPLIES
+ (AND
+  (OR
+   (EQ m length)
+   (EQ m (- num start))
+   )
+  (<= m length)
+  (<= m (- num start))
+
+  (>= num -1)
+  (>= start 0)
+  (>= length 0)
+
+  )
+ (IMPLIES
+  (<= m 0)
+  (OR 
+   (EQ length 0)
+   (>= start num)
+   )))
+
+;; This one is suspended because I took out the NEQ-trigger stuff for a while...
+;; 40
+(OR TRUE
+(IMPLIES
+ (AND
+  (EQ |IntSeqRep.Public.elem'|
+      (store |IntSeqRep.Public.elem| s
+	     (select |IntSeqRep.Public.elem'| s |@OBJECT|)))
+
+  ;; 2: Module invariant after call to expand...
+  (FORALL (t1 t2)
+    (IMPLIES (NEQ t1 t2)
+	     (NEQ (select |IntSeqRep.Public.elem'| t1 |@OBJECT|)
+		  (select |IntSeqRep.Public.elem'| t2 |@OBJECT|))))
+
+  (NEQ s0 s)
+  )
+ (NEQ (select |IntSeqRep.Public.elem| s0 |@OBJECT|)
+      (select |IntSeqRep.Public.elem'| s |@OBJECT|))
+ )
+)
+
+(IMPLIES
+ (AND
+  (EQ (MUT_LT (sup LL) wr) |@true|)
+  (EQ (MUT_LT wr ch) |@true|)
+  (EQ |LL'| (INSERT LL wr))
+  (EQ |LL'$1| (INSERT |LL'| ch))
+  )
+ (AND
+  (EQ (MEMBER ch |LL'$1|) |@true|) 
+  (IMPLIES
+   (EQ |LL'$2| (DELETE |LL'$1| ch))
+   (EQ (MEMBER wr |LL'$2|) |@true|) 
+   )))
+
+(IMPLIES
+ (OR 
+  TRUE
+  (FORALL
+      (|k2$3| |k1$3|)
+    (OR
+     (NOT
+      (EQ (select (select (select |MyIntIntTable.equiv| tbl |@OBJECT|) |k1$3| |@ARRAY|) |k2$3| |@ARRAY|) |@true|))
+     (EQ
+      (select (select |MyIntIntTable.hash| tbl |@OBJECT|) |k1$3| |@ARRAY|)
+      (select (select |MyIntIntTable.hash| tbl |@OBJECT|) |k2$3| |@ARRAY|))))
+  )
+ (OR
+  (IFF
+   (FORALL
+       (|k2$3| |k1$3|)
+     (OR
+      (NOT
+       (EQ
+	(select (select (select |MyIntIntTable.equiv| |@s0$1| |@OBJECT|) |k1$3| |@ARRAY|) |k2$3| |@ARRAY|)
+	|@true|))
+      (EQ
+       (select (select |MyIntIntTable.hash| |@s0$1| |@OBJECT|) |k1$3| |@ARRAY|)
+       (select (select |MyIntIntTable.hash| |@s0$1| |@OBJECT|) |k2$3| |@ARRAY|))))
+   (FORALL
+       (|k2$3| |k1$3|)
+     (OR
+      (NOT
+       (EQ
+	(select (select (select |MyIntIntTable.equiv| |@s0$1| |@OBJECT|) |k1$3| |@ARRAY|) |k2$3| |@ARRAY|)
+	|@true|))
+      (EQ
+       (select (select |MyIntIntTable.hash| |@s0$1| |@OBJECT|) |k1$3| |@ARRAY|)
+       (select (select |MyIntIntTable.hash| |@s0$1| |@OBJECT|) |k2$3| |@ARRAY|))))
+   )
+  (NOT (EQ (select ALLOCATED |@s0$1| |@SPECIAL|) |@true|))
+  (EQ |@s0$1| tbl))
+ )
+
+(BG_PUSH
+ (NEQ |@true| |@false|)
+ (EQ (select ALLOCATED |$NIL| |@SPECIAL|) |@true|)
+ (EQ (TYPECODE |$NIL| |@DUMMY|) |NULL.TYPECODE|)
+ (> |INTEGER.LAST| 0)
+ (< |INTEGER.FIRST| 0)
+ (FORALL
+     (v dum)
+   (IMPLIES
+    (EQ (|Is$INTEGER| v dum) |@true|)
+    (AND (>= v |INTEGER.FIRST|) (<= v |INTEGER.LAST|))))
+ (FORALL
+     (|@q| |@dummy|)
+   (IMPLIES (EQ (|Is$CHAR| |@q| |@dummy|) |@true|) (AND (<= 0 (ORD |@q|)) (< (ORD |@q|) 256))))
+ (FORALL
+     (|@q$1| |@dummy1| |@dummy2|)
+   (IMPLIES
+    (AND (EQ (|Is$TEXT| |@q$1| |@dummy1|) |@true|) (EQ (|Is$VAR2| |@q$1| |@dummy2|) |@true|))
+    (EQ (select ALLOCATED |@q$1| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$1| |@dummy1| |@dummy2|)
+   (IMPLIES
+    (EQ (|Is$TEXT| |@q$1| |@dummy1|) |@true|)
+    (IFF (EQ |@q$1| |$NIL|) (NOT (EQ (TYPECODE |@q$1| |@dummy2|) |TEXT.TYPECODE|)))))
+ (FORALL
+     (|@q$2| |@dummy$1|)
+   (IMPLIES
+    (EQ (|Is$CARDINAL| |@q$2| |@dummy$1|) |@true|)
+    (AND (<= 0 |@q$2|) (EQ (|Is$INTEGER| |@q$2| |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$3| |@dummy1$1| |@dummy2$1|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$MUTEX| |@q$3| |@dummy1$1|) |@true|)
+     (EQ (|Is$VAR2| |@q$3| |@dummy2$1|) |@true|))
+    (EQ (select ALLOCATED |@q$3| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$3| |@dummy1$1|)
+   (IMPLIES
+    (EQ (|Is$MUTEX| |@q$3| |@dummy1$1|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$3| |@DUMMY|) |MUTEX.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |MUTEX.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$4| |@dummy1$2| |@dummy2$2|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$TextSeq2.T| |@q$4| |@dummy1$2|) |@true|)
+     (EQ (|Is$VAR2| |@q$4| |@dummy2$2|) |@true|))
+    (EQ (select ALLOCATED |@q$4| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$4| |@dummy1$2|)
+   (IMPLIES
+    (EQ (|Is$TextSeq2.T| |@q$4| |@dummy1$2|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$4| |@DUMMY|) |TextSeq2.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$5| |@dummy$2|)
+   (IMPLIES
+    (EQ (|Is$TextSeq2.T| |@q$5| |@dummy$2|) |@true|)
+    (EQ (|Is$TextSeq2.Public| |@q$5| |@DUMMY|) |@true|)))
+ (EQ (SUBTYPE |TextSeq2.T.TYPECODE| |TextSeq2.Public.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$6| |@dummy$3|)
+   (IMPLIES
+    (EQ (|Is$TYPE@66| |@q$6| |@dummy$3|) |@true|)
+    (FORALL (|@i|) (EQ (|Is$TEXT| (select |@q$6| |@i| |@ARRAY|) |@dummy$3|) |@true|))))
+ (FORALL
+     (|@q$6| |@dummy$3|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$TYPE@66| |@q$6| |@dummy$3|) |@true|)
+     (EQ (|Is$VAR2| |@q$6| |@DUMMY|) |@true|))
+    (FORALL (|@i|) (EQ (|Is$VAR2| (select |@q$6| |@i| |@ARRAY|) |@DUMMY|) |@true|))))
+ (FORALL
+     (map |dum$1|)
+   (IMPLIES
+    (EQ (|Is$TYPE@66| map |dum$1|) |@true|)
+    (FORALL (ind val) (EQ (|Is$TYPE@66| (store map ind val) |@DUMMY|) |@true|))))
+ (FORALL
+     (map |dum$1|)
+   (IMPLIES
+    (EQ (|Is$TYPE@66| map |dum$1|) |@true|)
+    (FORALL
+	(start num map2)
+      (EQ (|Is$TYPE@66| (storeSub map start num map2) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$7| |@dummy1$3| |@dummy2$3|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$TextSeq2.Public| |@q$7| |@dummy1$3|) |@true|)
+     (EQ (|Is$VAR2| |@q$7| |@dummy2$3|) |@true|))
+    (EQ (select ALLOCATED |@q$7| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$7| |@dummy1$3|)
+   (IMPLIES
+    (EQ (|Is$TextSeq2.Public| |@q$7| |@dummy1$3|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$7| |@DUMMY|) |TextSeq2.Public.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |TextSeq2.Public.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|map$1| |dum$2|)
+   (IMPLIES
+    (EQ (|Is$TextSeq2.Public| |map$1| |dum$2|) |@true|)
+    (FORALL
+	(|ind$1| |val$1|)
+      (EQ (|Is$TextSeq2.Public| (store |map$1| |ind$1| |val$1|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$8| |@dummy1$4| |@dummy2$4|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Atom.T| |@q$8| |@dummy1$4|) |@true|)
+     (EQ (|Is$VAR2| |@q$8| |@dummy2$4|) |@true|))
+    (EQ (select ALLOCATED |@q$8| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$8| |@dummy1$4| |@dummy2$4|)
+   (IMPLIES
+    (EQ (|Is$Atom.T| |@q$8| |@dummy1$4|) |@true|)
+    (IFF (EQ |@q$8| |$NIL|) (NOT (EQ (TYPECODE |@q$8| |@dummy2$4|) |Atom.T.TYPECODE|)))))
+ (FORALL
+     (|@q$9| |@dummy$4|)
+   (IMPLIES
+    (EQ (|Is$TYPE@129| |@q$9| |@dummy$4|) |@true|)
+    (AND (<= -1 |@q$9|) (<= |@q$9| 1) (EQ (|Is$INTEGER| |@q$9| |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$10| |@dummy1$5| |@dummy2$5|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$AtomList.T| |@q$10| |@dummy1$5|) |@true|)
+     (EQ (|Is$VAR2| |@q$10| |@dummy2$5|) |@true|))
+    (EQ (select ALLOCATED |@q$10| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$10| |@dummy1$5|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T| |@q$10| |@dummy1$5|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$10| |@DUMMY|) |AtomList.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@ofm| |@dummy1$6|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T.head$MAP| |@ofm| |@dummy1$6|) |@true|)
+    (FORALL (|@q$11|) (EQ (|Is$Atom.T| (select |@ofm| |@q$11| |@OBJECT|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@ofm| |@dummy1$6|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T.head$MAP| |@ofm| |@dummy1$6|) |@true|)
+    (FORALL
+	(|@q$11| |@dummy1$6| |@dummy2$6|)
+      (IMPLIES
+       (AND
+	(EQ (|Is$AtomList.T| |@q$11| |@DUMMY|) |@true|)
+	(EQ (|Is$VAR2| |@q$11| |@dummy2$6|) |@true|)
+	(NEQ |@q$11| |$NIL|))
+       (EQ (|Is$VAR2| (select |AtomList.T.head| |@q$11| |@dummy1$6|) |@DUMMY|) |@true|)))))
+ (EQ (|Is$AtomList.T.head$MAP| |AtomList.T.head| |@DUMMY|) |@true|)
+ (FORALL
+     (|@ofm$1| |@dummy1$6|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T.tail$MAP| |@ofm$1| |@dummy1$6|) |@true|)
+    (FORALL
+	(|@q$11|)
+      (EQ (|Is$AtomList.T| (select |@ofm$1| |@q$11| |@OBJECT|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@ofm$1| |@dummy1$6|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T.tail$MAP| |@ofm$1| |@dummy1$6|) |@true|)
+    (FORALL
+	(|@q$11| |@dummy1$6| |@dummy2$6|)
+      (IMPLIES
+       (AND
+	(EQ (|Is$AtomList.T| |@q$11| |@DUMMY|) |@true|)
+	(EQ (|Is$VAR2| |@q$11| |@dummy2$6|) |@true|)
+	(NEQ |@q$11| |$NIL|))
+       (EQ (|Is$VAR2| (select |AtomList.T.tail| |@q$11| |@dummy1$6|) |@DUMMY|) |@true|)))))
+ (EQ (|Is$AtomList.T.tail$MAP| |AtomList.T.tail| |@DUMMY|) |@true|)
+ (EQ (SUBTYPE1 |AtomList.T.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|map$2| |dum$3|)
+   (IMPLIES
+    (EQ (|Is$AtomList.T| |map$2| |dum$3|) |@true|)
+    (FORALL
+	(|ind$2| |val$2|)
+      (EQ (|Is$AtomList.T| (store |map$2| |ind$2| |val$2|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$12| |@dummy$5|)
+   (IMPLIES
+    (EQ (|Is$TYPE@67| |@q$12| |@dummy$5|) |@true|)
+    (FORALL (|@i$1|) (EQ (|Is$Atom.T| (select |@q$12| |@i$1| |@ARRAY|) |@dummy$5|) |@true|))))
+ (FORALL
+     (|@q$12| |@dummy$5|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$TYPE@67| |@q$12| |@dummy$5|) |@true|)
+     (EQ (|Is$VAR2| |@q$12| |@DUMMY|) |@true|))
+    (FORALL (|@i$1|) (EQ (|Is$VAR2| (select |@q$12| |@i$1| |@ARRAY|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|map$3| |dum$4|)
+   (IMPLIES
+    (EQ (|Is$TYPE@67| |map$3| |dum$4|) |@true|)
+    (FORALL
+	(|ind$3| |val$3|)
+      (EQ (|Is$TYPE@67| (store |map$3| |ind$3| |val$3|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|map$3| |dum$4|)
+   (IMPLIES
+    (EQ (|Is$TYPE@67| |map$3| |dum$4|) |@true|)
+    (FORALL
+	(|start$1| |num$1| |map2$1|)
+      (EQ (|Is$TYPE@67| (storeSub |map$3| |start$1| |num$1| |map2$1|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$13| |@dummy1$7| |@dummy2$7|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.T| |@q$13| |@dummy1$7|) |@true|)
+     (EQ (|Is$VAR2| |@q$13| |@dummy2$7|) |@true|))
+    (EQ (select ALLOCATED |@q$13| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$13| |@dummy1$7|)
+   (IMPLIES
+    (EQ (|Is$Thread.T| |@q$13| |@dummy1$7|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$13| |@DUMMY|) |Thread.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$14| |@dummy1$8| |@dummy2$8|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.Condition| |@q$14| |@dummy1$8|) |@true|)
+     (EQ (|Is$VAR2| |@q$14| |@dummy2$8|) |@true|))
+    (EQ (select ALLOCATED |@q$14| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$14| |@dummy1$8|)
+   (IMPLIES
+    (EQ (|Is$Thread.Condition| |@q$14| |@dummy1$8|) |@true|)
+    (EQ
+     (SUBTYPE (TYPECODE |@q$14| |@DUMMY|) |Thread.Condition.TYPECODE|)
+     |@true|)))
+ (FORALL
+     (|@q$15| |@dummy1$9| |@dummy2$9|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.Closure| |@q$15| |@dummy1$9|) |@true|)
+     (EQ (|Is$VAR2| |@q$15| |@dummy2$9|) |@true|))
+    (EQ (select ALLOCATED |@q$15| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$15| |@dummy1$9|)
+   (IMPLIES
+    (EQ (|Is$Thread.Closure| |@q$15| |@dummy1$9|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$15| |@DUMMY|) |Thread.Closure.TYPECODE|) |@true|)))
+ (EQ (SUBTYPE1 |Thread.Closure.TYPECODE| |ROOT.TYPECODE|) |@true|)
+ (FORALL
+     (|map$4| |dum$5|)
+   (IMPLIES
+    (EQ (|Is$Thread.Closure| |map$4| |dum$5|) |@true|)
+    (FORALL
+	(|ind$4| |val$4|)
+      (EQ (|Is$Thread.Closure| (store |map$4| |ind$4| |val$4|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$16| |@dummy1$10| |@dummy2$10|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Thread.SizedClosure| |@q$16| |@dummy1$10|) |@true|)
+     (EQ (|Is$VAR2| |@q$16| |@dummy2$10|) |@true|))
+    (EQ (select ALLOCATED |@q$16| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$16| |@dummy1$10|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure| |@q$16| |@dummy1$10|) |@true|)
+    (EQ
+     (SUBTYPE (TYPECODE |@q$16| |@DUMMY|) |Thread.SizedClosure.TYPECODE|)
+     |@true|)))
+ (FORALL
+     (|@ofm$2| |@dummy1$11|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure.stackSize$MAP| |@ofm$2| |@dummy1$11|) |@true|)
+    (FORALL
+	(|@q$17|)
+      (EQ (|Is$CARDINAL| (select |@ofm$2| |@q$17| |@OBJECT|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@ofm$2| |@dummy1$11|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure.stackSize$MAP| |@ofm$2| |@dummy1$11|) |@true|)
+    (FORALL
+	(|@q$17| |@dummy1$11| |@dummy2$11|)
+      (IMPLIES
+       (AND
+	(EQ (|Is$Thread.SizedClosure| |@q$17| |@DUMMY|) |@true|)
+	(EQ (|Is$VAR2| |@q$17| |@dummy2$11|) |@true|)
+	(NEQ |@q$17| |$NIL|))
+       (EQ
+	(|Is$VAR2| (select |Thread.SizedClosure.stackSize| |@q$17| |@dummy1$11|) |@DUMMY|)
+	|@true|)))))
+ (EQ
+  (|Is$Thread.SizedClosure.stackSize$MAP| |Thread.SizedClosure.stackSize| |@DUMMY|)
+  |@true|)
+ (EQ (SUBTYPE1 |Thread.SizedClosure.TYPECODE| |Thread.Closure.TYPECODE|) |@true|)
+ (FORALL
+     (|@q$18| |@dummy$6|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure| |@q$18| |@dummy$6|) |@true|)
+    (EQ (|Is$Thread.Closure| |@q$18| |@DUMMY|) |@true|)))
+ (FORALL
+     (|map$5| |dum$6|)
+   (IMPLIES
+    (EQ (|Is$Thread.SizedClosure| |map$5| |dum$6|) |@true|)
+    (FORALL
+	(|ind$5| |val$5|)
+      (EQ (|Is$Thread.SizedClosure| (store |map$5| |ind$5| |val$5|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$19| |@dummy1$12| |@dummy2$12|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Rd.T| |@q$19| |@dummy1$12|) |@true|)
+     (EQ (|Is$VAR2| |@q$19| |@dummy2$12|) |@true|))
+    (EQ (select ALLOCATED |@q$19| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$19| |@dummy1$12|)
+   (IMPLIES
+    (EQ (|Is$Rd.T| |@q$19| |@dummy1$12|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$19| |@DUMMY|) |Rd.T.TYPECODE|) |@true|)))
+ (FORALL
+     (|@q$20| |@dummy$7|)
+   (IMPLIES
+    (EQ (|Is$TYPE@134| |@q$20| |@dummy$7|) |@true|)
+    (FORALL (|@i$2|) (EQ (|Is$CHAR| (select |@q$20| |@i$2| |@ARRAY|) |@dummy$7|) |@true|))))
+ (FORALL
+     (|@q$20| |@dummy$7|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$TYPE@134| |@q$20| |@dummy$7|) |@true|)
+     (EQ (|Is$VAR2| |@q$20| |@DUMMY|) |@true|))
+    (FORALL (|@i$2|) (EQ (|Is$VAR2| (select |@q$20| |@i$2| |@ARRAY|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|map$6| |dum$7|)
+   (IMPLIES
+    (EQ (|Is$TYPE@134| |map$6| |dum$7|) |@true|)
+    (FORALL
+	(|ind$6| |val$6|)
+      (EQ (|Is$TYPE@134| (store |map$6| |ind$6| |val$6|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|map$6| |dum$7|)
+   (IMPLIES
+    (EQ (|Is$TYPE@134| |map$6| |dum$7|) |@true|)
+    (FORALL
+	(|start$2| |num$2| |map2$2|)
+      (EQ (|Is$TYPE@134| (storeSub |map$6| |start$2| |num$2| |map2$2|) |@DUMMY|) |@true|))))
+ (FORALL
+     (|@q$21| |@dummy1$13| |@dummy2$13|)
+   (IMPLIES
+    (AND
+     (EQ (|Is$Wr.T| |@q$21| |@dummy1$13|) |@true|)
+     (EQ (|Is$VAR2| |@q$21| |@dummy2$13|) |@true|))
+    (EQ (select ALLOCATED |@q$21| |@SPECIAL|) |@true|)))
+ (FORALL
+     (|@q$21| |@dummy1$13|)
+   (IMPLIES
+    (EQ (|Is$Wr.T| |@q$21| |@dummy1$13|) |@true|)
+    (EQ (SUBTYPE (TYPECODE |@q$21| |@DUMMY|) |Wr.T.TYPECODE|) |@true|)))
+ (EQ (|Is$TEXT| |Wr.EOL| |@DUMMY|) |@true|)
+ (EQ (|Is$VAR2| |Wr.EOL| |@DUMMY|) |@true|)
+ (EQ |Word.Size| 32)
+ (FORALL
+     (|@q$22| |@dummy$8|)
+   (IMPLIES
+    (EQ (|Is$TYPE@130| |@q$22| |@dummy$8|) |@true|)
+    (AND (<= 0 |@q$22|) (<= |@q$22| 31) (EQ (|Is$INTEGER| |@q$22| |@DUMMY|) |@true|))))
+ (NEQ |IO.Error| |Wr.Failure|)
+ (NEQ |IO.Error| |Rd.Failure|)
+ (NEQ |IO.Error| |Rd.EndOfFile|)
+ (NEQ |IO.Error| |Thread.Alerted|)
+ (NEQ |IO.Error| RETURN)
+ (NEQ |IO.Error| EXIT)
+ (NEQ |Wr.Failure| |Rd.Failure|)
+ (NEQ |Wr.Failure| |Rd.EndOfFile|)
+ (NEQ |Wr.Failure| |Thread.Alerted|)
+ (NEQ |Wr.Failure| RETURN)
+ (NEQ |Wr.Failure| EXIT)
+ (NEQ |Rd.Failure| |Rd.EndOfFile|)
+ (NEQ |Rd.Failure| |Thread.Alerted|)
+ (NEQ |Rd.Failure| RETURN)
+ (NEQ |Rd.Failure| EXIT)
+ (NEQ |Rd.EndOfFile| |Thread.Alerted|)
+ (NEQ |Rd.EndOfFile| RETURN)
+ (NEQ |Rd.EndOfFile| EXIT)
+ (NEQ |Thread.Alerted| RETURN)
+ (NEQ |Thread.Alerted| EXIT)
+ (NEQ RETURN EXIT)
+ (NEQ |Wr.T.TYPECODE| |Rd.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.SizedClosure.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Wr.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.SizedClosure.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Rd.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.Closure.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.SizedClosure.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Thread.Condition.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.Closure.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |Thread.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.Condition.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |AtomList.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Thread.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |Atom.T.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |AtomList.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |TextSeq2.Public.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |Atom.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |TextSeq2.Public.TYPECODE| |TextSeq2.T.TYPECODE|)
+ (NEQ |TextSeq2.Public.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |TextSeq2.Public.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |TextSeq2.T.TYPECODE| |MUTEX.TYPECODE|)
+ (NEQ |TextSeq2.T.TYPECODE| |TEXT.TYPECODE|)
+ (NEQ |MUTEX.TYPECODE| |TEXT.TYPECODE|)
+ )
+
+(IMPLIES
+ (AND
+  (EQ (|Is$TextSeq2.T| seq |@DUMMY|) |@true|)
+  (EQ (|Is$VAR2| seq |@DUMMY|) |@true|)
+  (EQ (|Is$TEXT| t |@DUMMY|) |@true|)
+  (EQ (|Is$VAR2| t |@DUMMY|) |@true|)
+  (EQ
+   (|Is$TextSeq2.T|
+    (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+    |@DUMMY|)
+   |@true|)
+  (EQ |EXCEPTION.code| RETURN)
+  (EQ
+   (select
+    |TextSeq2.valid'|
+    (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+    |@OBJECT|)
+   |@true|)
+  (EQ
+   (select
+    |TextSeq2.size'|
+    (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+    |@OBJECT|)
+   0)
+  (EQ |EXCEPTION.val| (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|))
+  (EQ
+   |TextSeq2.valid'|
+   (store
+    |TextSeq2.valid|
+    (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+    (select
+     |TextSeq2.valid'|
+     (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+     |@OBJECT|)))
+  (EQ
+   |TextSeq2.size'|
+   (store
+    |TextSeq2.size|
+    (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+    (select
+     |TextSeq2.size'|
+     (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+     |@OBJECT|)))
+  (EQ
+   (SUBSET
+    (store
+     ALLOCATED
+     (NEW ALLOCATED LL |TextSeq2.T.TYPECODE| |POS$54$13|)
+     |@true|)
+    |ALLOCATED'|)
+   |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.size'| |@DUMMY|) |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.valid'| |@DUMMY|) |@true|)
+  (EQ (|Is$TextSeq2.T| |EXCEPTION.val| |@DUMMY|) |@true|)
+  (NEQ |res$3| |$NIL|)
+  (EQ (select ALLOCATED |res$3| |@SPECIAL|) |@true|)
+  (EQ (|Is$TEXT| |res$3| |@DUMMY|) |@true|)
+  (EQ (NUMBER (select |Text.Value| |res$3| |@ARRAY|)) 3)
+  (EQ
+   (select (select |Text.Value| |res$3| |@ARRAY|) 0 |@ARRAY|)
+   (VAL 111 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$3| |@ARRAY|) 1 |@ARRAY|)
+   (VAL 110 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$3| |@ARRAY|) 2 |@ARRAY|)
+   (VAL 101 |CHAR.TYPECODE|))
+  (EQ |EXCEPTION.code$1| RETURN)
+  (EQ
+   (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|)
+   (+ (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|) 1))
+  (EQ
+   (select
+    (select |TextSeq2.data'| |EXCEPTION.val| |@OBJECT|)
+    (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|)
+    |@ARRAY|)
+   |res$3|)
+  (EQ
+   |TextSeq2.data'|
+   (store
+    |TextSeq2.data|
+    |EXCEPTION.val|
+    (store
+     (select |TextSeq2.data| |EXCEPTION.val| |@OBJECT|)
+     (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|)
+     (select
+      (select |TextSeq2.data'| |EXCEPTION.val| |@OBJECT|)
+      (select |TextSeq2.size'| |EXCEPTION.val| |@OBJECT|)
+      |@ARRAY|))))
+  (EQ
+   |TextSeq2.size'$1|
+   (store
+    |TextSeq2.size'|
+    |EXCEPTION.val|
+    (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|)))
+  (EQ (SUBSET |ALLOCATED'| |ALLOCATED'$1|) |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.size'$1| |@DUMMY|) |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.data'| |@DUMMY|) |@true|)
+  (NEQ |res$5| |$NIL|)
+  (EQ (select ALLOCATED |res$5| |@SPECIAL|) |@true|)
+  (EQ (|Is$TEXT| |res$5| |@DUMMY|) |@true|)
+  (EQ (NUMBER (select |Text.Value| |res$5| |@ARRAY|)) 3)
+  (EQ
+   (select (select |Text.Value| |res$5| |@ARRAY|) 0 |@ARRAY|)
+   (VAL 116 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$5| |@ARRAY|) 1 |@ARRAY|)
+   (VAL 119 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$5| |@ARRAY|) 2 |@ARRAY|)
+   (VAL 111 |CHAR.TYPECODE|))
+  (EQ |EXCEPTION.code$2| RETURN)
+  (EQ
+   (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|)
+   (+ (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|) 1))
+  (EQ
+   (select
+    (select |TextSeq2.data'$1| |EXCEPTION.val| |@OBJECT|)
+    (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|)
+    |@ARRAY|)
+   |res$5|)
+  (EQ
+   |TextSeq2.data'$1|
+   (store
+    |TextSeq2.data'|
+    |EXCEPTION.val|
+    (store
+     (select |TextSeq2.data'| |EXCEPTION.val| |@OBJECT|)
+     (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|)
+     (select
+      (select |TextSeq2.data'$1| |EXCEPTION.val| |@OBJECT|)
+      (select |TextSeq2.size'$1| |EXCEPTION.val| |@OBJECT|)
+      |@ARRAY|))))
+  (EQ
+   |TextSeq2.size'$2|
+   (store
+    |TextSeq2.size'$1|
+    |EXCEPTION.val|
+    (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|)))
+  (EQ (SUBSET |ALLOCATED'$1| |ALLOCATED'$2|) |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.size'$2| |@DUMMY|) |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.data'$1| |@DUMMY|) |@true|)
+  (NEQ |res$7| |$NIL|)
+  (EQ (select ALLOCATED |res$7| |@SPECIAL|) |@true|)
+  (EQ (|Is$TEXT| |res$7| |@DUMMY|) |@true|)
+  (EQ (NUMBER (select |Text.Value| |res$7| |@ARRAY|)) 5)
+  (EQ
+   (select (select |Text.Value| |res$7| |@ARRAY|) 0 |@ARRAY|)
+   (VAL 116 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$7| |@ARRAY|) 1 |@ARRAY|)
+   (VAL 104 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$7| |@ARRAY|) 2 |@ARRAY|)
+   (VAL 114 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$7| |@ARRAY|) 3 |@ARRAY|)
+   (VAL 101 |CHAR.TYPECODE|))
+  (EQ
+   (select (select |Text.Value| |res$7| |@ARRAY|) 4 |@ARRAY|)
+   (VAL 101 |CHAR.TYPECODE|))
+  (EQ |EXCEPTION.code$3| RETURN)
+  (EQ
+   (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|)
+   (+ (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|) 1))
+  (EQ
+   (select
+    (select |TextSeq2.data'$2| |EXCEPTION.val| |@OBJECT|)
+    (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|)
+    |@ARRAY|)
+   |res$7|)
+  (EQ
+   |TextSeq2.data'$2|
+   (store
+    |TextSeq2.data'$1|
+    |EXCEPTION.val|
+    (store
+     (select |TextSeq2.data'$1| |EXCEPTION.val| |@OBJECT|)
+     (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|)
+     (select
+      (select |TextSeq2.data'$2| |EXCEPTION.val| |@OBJECT|)
+      (select |TextSeq2.size'$2| |EXCEPTION.val| |@OBJECT|)
+      |@ARRAY|))))
+  (EQ
+   |TextSeq2.size'$3|
+   (store
+    |TextSeq2.size'$2|
+    |EXCEPTION.val|
+    (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|)))
+  (EQ (SUBSET |ALLOCATED'$2| |ALLOCATED'$3|) |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.size'$3| |@DUMMY|) |@true|)
+  (EQ (|Is$TYPE@-100000| |TextSeq2.data'$2| |@DUMMY|) |@true|)
+  )
+ (AND
+  (NEQ |EXCEPTION.val| |$NIL|)
+  (EQ (select |TextSeq2.valid'| |EXCEPTION.val| |@OBJECT|) |@true|)
+  (FORALL
+      (iiii)
+    (OR
+     (NOT (<= 0 iiii))
+     (NOT (< iiii (select |TextSeq2.size'$3| |EXCEPTION.val| |@OBJECT|)))
+     (NEQ
+      (select (select |TextSeq2.data'$2| |EXCEPTION.val| |@OBJECT|) iiii |@ARRAY|)
+      |$NIL|))))
+ )
+(BG_POP)

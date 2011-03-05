@@ -1,0 +1,667 @@
+;; -*- lisp -*-
+
+;; 1 iff one-point map rule
+(IMPLIES
+ (FORALL (abs)
+   (IMPLIES
+    (FORALL (ind)
+      (IFF (EQ (select abs ind) true)
+	   (AND (> (select c1 ind) 0) (> (select c2 ind) 0))))
+    (EQ (select abs self) true)))
+ (FORALL (absP)
+   (IMPLIES
+    (FORALL (ind)
+      (IFF (EQ (select absP ind) true)
+	   (AND (> (select (store c1 self
+				  (+ (select c1 self) 1)) ind) 0)
+		(> (select (store c2 self
+				  (+ (select c2 self) 1)) ind) 0))))
+    (EQ true (select absP self)))))
+
+;; 2
+(IMPLIES
+ (FORALL (abs)
+   (IMPLIES
+    (FORALL (ind)
+      (AND
+       (IMPLIES
+	(EQ (select abs ind) true)
+	(AND (> (select c1 ind) 0) (> (select c2 ind) 0)))
+       (IMPLIES
+	(AND (> (select c1 ind) 0) (> (select c2 ind) 0))
+	(EQ (select abs ind) true))))
+    (EQ (select abs self) true)))
+ (FORALL (absP)
+   (IMPLIES
+    (FORALL (ind)
+      (IFF (EQ (select absP ind) true)
+	   (AND (> (select (store c1 self
+				  (+ (select c1 self) 1)) ind) 0)
+		(> (select (store c2 self
+				  (+ (select c2 self) 1)) ind) 0))))
+    (EQ true (select absP self)))))
+
+;; 3
+(NOT
+ (AND
+  (NEQ Pi_1 Pi_2)
+  (NEQ Pi_1 Pj_1)
+  (NEQ Pi_1 Pk_1)
+  (NEQ Pi_1 Pk_2)
+  (NEQ Pi_1 Pk_3)
+  (NEQ Pi_2 Pi_1)
+  (NEQ Pi_2 Pj_1)
+  (NEQ Pi_2 Pk_1)
+  (NEQ Pi_2 Pk_2)
+  (NEQ Pi_2 Pk_3)
+  (NEQ Pj_1 Pi_1)
+  (NEQ Pj_1 Pi_2)
+  (NEQ Pj_1 Pk_1)
+  (NEQ Pj_1 Pk_2)
+  (NEQ Pj_1 Pk_3)
+  (NEQ Pk_1 Pi_1)
+  (NEQ Pk_1 Pi_2)
+  (NEQ Pk_1 Pj_1)
+  (NEQ Pk_1 Pk_2)
+  (NEQ Pk_2 Pi_1)
+  (NEQ Pk_2 Pi_2)
+  (NEQ Pk_2 Pj_1)
+  (NEQ Pk_2 Pk_1)
+  (NEQ Pk_2 Pk_3)
+  (NEQ Pk_1 Pk_3)
+  (NEQ Pk_3 Pi_1)
+  (NEQ Pk_3 Pi_2)
+  (NEQ Pk_3 Pj_1)
+  (NEQ Pk_3 Pk_1)
+  (NEQ Pk_3 Pk_2)
+
+  (EQ (source Pk_3) Pi_1)
+  (< Pi_1 Pi_2)
+  (< (source Pk_1) Pk_1)
+  (NOT (< (source Pi_2) Pi_1))
+  (OR 
+   (EQ (source Pi_2) Pj_1)
+   (EQ (source Pi_2) Pk_2)  ;; $$$
+   )
+  (OR
+   (EQ (source Pk_1) Pj_1)  ;; $$$
+   (EQ (source Pk_1) Pk_2)
+   )
+  (NOT (< (source Pi_2) Pk_2))
+  (NOT (< Pk_2 Pk_1))
+
+  (OR
+   (NOT (< (source Pk_3) Pj_1)) ;; $$$
+   (NOT (< Pj_1 Pk_3))
+   )
+  (NOT (< (source Pk_3) Pk_2))
+  ))
+
+;; 4
+(IMPLIES
+ (DISTINCT a b c d e f g)
+ (NEQ a g))
+
+;; 5
+(AND
+ (IMPLIES
+  (DISTINCT a1 a2 a3 a4 a5)
+  (NEQ a1 a5))
+ (IMPLIES
+  (DISTINCT a1 a2 a3 a4 a5)
+  (NEQ a2 a4))
+ )
+
+;; Skolemization.
+(IMPLIES
+ (FORALL (x)
+   (IMPLIES
+    (EQ (f x) T)
+    (EXISTS (y)
+      (AND
+       (EQ (g y) (h (+ x 5)))
+       (FORALL (j)
+	 (> (g y) 7))))))
+ (IMPLIES
+  (EQ (f 8) T)
+  (> (h 13) 7)))
+
+(IMPLIES
+ (AND
+  (EQ (LT x y) |@true|)
+  (EQ (LT y z) |@true|)
+  )
+ (EQ (LT x z) |@true|))
+
+(IMPLIES
+ (AND
+  (EQ (LE x y) |@true|)
+  (EQ (LE y z) |@true|)
+  )
+ (EQ (LE x z) |@true|))
+
+(IMPLIES
+ (AND
+  (EQ (LE x y) |@true|)
+  (EQ (LT y z) |@true|)
+  )
+ (EQ (LT x z) |@true|))
+
+;; 10
+(IMPLIES
+ (AND
+  (EQ (LT x y) |@true|)
+  (EQ (LE y z) |@true|)
+  )
+ (EQ (LT x z) |@true|))
+
+;; 11
+(IMPLIES
+ (AND
+  (EQ (LT x y) |@true|)
+  (EQ (LT y z) |@true|)
+  )
+ (EQ (LE x z) |@true|))
+
+;; 12
+(IMPLIES
+ (AND
+  (EQ (LE x y) |@true|)
+  (EQ (LE y x) |@true|)
+  )
+ (EQ x y))
+
+;; 13
+(IMPLIES
+ (EQ (LT x y) |@true|)
+ (NEQ x y))
+
+;; 14
+(IMPLIES
+ (AND 
+  (FORALL (bar)
+    (IMPLIES
+     (EQ (Foo bar) T)
+     (NOT (EXISTS (n) (EQ (select bar n) T)))))
+  (EQ (Foo q) T)
+  )
+ (NEQ (select q 7) T))
+
+;; 15
+;; Bug introduced by LitUnknowns.
+(EQ (+ (+ 1 1) 1) (+ 1 (+ 1 1)))
+
+;; 16
+;; Incompleteness in TightenBounds
+(IMPLIES
+ (AND
+  (>= a 5)
+  (<= a 6)
+  )
+ (OR (EQ a 5) (EQ a 6))
+ )
+
+;; 17
+;; Testing explicit patterns.
+
+(IMPLIES
+ (FORALL (x y)
+   (PATS (f x y))
+   (EQ (f x y) (g x (+ y y))))
+ (EQ (f 7 8) (g 7 16)))
+
+;; 18
+(IMPLIES
+ (FORALL (x y)
+   (NOPATS (g x (+ y y)))
+   (EQ (f x y) (g x (+ y y))))
+ (EQ (f 7 8) (g 7 16)))
+
+;; 19
+(IMPLIES
+ (FORALL (x y z)
+   (PATS (MPAT (f x y) (f y z)))
+   (IMPLIES
+    (AND
+     (EQ (f x y) T)
+     (EQ (f y z) T)
+     )
+    (EQ (f x z) T)))
+ (IMPLIES
+  (AND
+   (EQ (f 0 1) T)
+   (EQ (f 0 2) T)
+   )
+  (EQ (f 0 2) T)))
+
+;; 20
+(IMPLIES
+ (AND
+  (LBL
+   A1
+   (FORALL
+       (x)
+   ;  (PATS (l (p x) x))
+   ;   (PATS (p x))
+     (IMPLIES (EQ T (q x)) (EQ T (l (p x) x)))))
+  (LBL
+   A2
+   (FORALL
+       (x y)
+  ;   (PATS (l x (s x y)))
+  ;    (PATS (s x y))
+     (IMPLIES (EQ T (q y)) (EQ T (l x (s x y))))))
+  (LBL
+   A3
+   (FORALL
+       (x y z)
+     (PATS (MPAT (l x y) (l y z)))
+     (IMPLIES (AND (EQ T (l x y)) (EQ T (l y z))) (EQ T (l x z))))))
+ (LBL
+  L1
+  (IMPLIES (AND (EQ T (q a)) (EQ T (q b))) (EQ T (l (p a) (s a b))))))
+
+;; 21
+(BG_PUSH TRUE)
+(DEFPRED (Q x))
+(DEFPRED (R x y))
+
+(IMPLIES
+ (FORALL (x)
+   (IFF
+    (Q x)
+    (FORALL (y)
+      (NOPATS (IsInt y))
+      (IMPLIES (AND (EQ (IsInt y) T) (> y 0) (< y 2)) (R x y)))))
+ (IMPLIES
+  (AND
+   (EQ (IsInt 1) T)
+   (R a 1)
+   )
+  (Q a)))
+(BG_POP)
+
+;; 22
+(BG_PUSH
+ (AND
+  (FORALL (m q)
+    (PATS (MPAT (IsT q) (IsTMap m)))
+    (IMPLIES
+     (AND (EQ (IsTMap m) T) (EQ (IsT q) T))
+     (FORALL (al)
+       (PATS (MPAT (IsDcl q al) (select m q)))
+       (IMPLIES (EQ (IsDcl q al) T) (EQ (IsDcl (select m q) al) T)))))
+  )
+ )
+(IMPLIES
+ (AND
+  (EQ (IsTMap T_b) T)
+  (EQ (IsT s) T)
+  (EQ (IsDcl s ALLOCATED) T)
+  )
+ (EQ (IsDcl (select T_b s) ALLOCATED) T)
+ )
+(BG_POP)
+
+;; 23
+(BG_PUSH TRUE)
+(DEFPRED (P x) (> x 5))
+(BG_PUSH
+ (NEQ a |@true|)
+ )
+(IMPLIES
+ (EQ (P X) a)
+ (NOT (> X 5)))
+(BG_POP)
+(BG_POP)
+
+;; 24
+(BG_PUSH TRUE)
+(DEFPRED (P x) (> x 5))
+(BG_PUSH
+ (NEQ (P X) b)
+ )
+(BG_PUSH
+ (EQ b |@true|)
+ )
+(NOT (> X 5))
+(BG_POP)
+(BG_POP)
+(BG_POP)
+
+;; 25
+(BG_PUSH TRUE)
+(DEFPRED (is_read r1))
+(DEFPRED (is_write r1))
+(DEFPRED (is_MB r1))
+(DEFPRED (is_ref r1)
+         (OR (LBLPOS got_R (is_read r1))
+             (LBLPOS got_W (is_write r1))
+             (LBLPOS got_B (is_MB r1)))
+)
+(DEFPRED (overlap r1 r2)
+         (EQ (ref_addr r1) (ref_addr r2)))
+
+(DEFPRED (precedes r1 r2)
+         (AND (EQ (ref_proc r1) (ref_proc r2))
+              (< (ref_step r1) (ref_step r2))))
+(DEFPRED (ovl_prec r1 r2)
+         (AND (overlap r1 r2) (precedes r1 r2)))
+(DEFPRED (precedes_eq r1 r2))
+(DEFPRED (before r1 r2))
+(DEFPRED (before_eq r1 r2))
+(DEFPRED (visible_to r1 r2))
+(DEFPRED (is_BW r1)
+         (OR (is_MB r1) (is_write r1)))
+(DEFPRED (abs_before_bw_bw r1 r2)
+         (LBLPOS bw_bw
+                 (AND (is_BW r1)
+                      (is_BW r2)
+                      (before r1 r2))))
+(DEFPRED (abs_before_bw_r r1 r2)
+         (LBLPOS bw_r
+                 (AND (is_BW r1)
+                      (is_read r2)
+                      (OR (before r1 (ref_source r2))
+                          (EQ r1 (ref_source r2))
+                          (before r1 (ref_last_MB r2))
+                          (EQ r1 (ref_last_MB r2))))))
+(DEFPRED (abs_before_r_bw r1 r2)
+         (LBLPOS r_bw
+                 (AND (is_read r1)
+                      (is_BW r2)
+                      (before (ref_source r1) r2)
+                      (before (ref_last_MB r1) r2))))
+(DEFPRED (abs_before_r_r r1 r2)
+         (LBLPOS r_r
+                 (AND (is_read r1)
+                      (is_read r2)
+                      (OR (ovl_prec r1 r2)
+                          (AND (before (ref_source r1) (ref_source r2))
+                               (before (ref_last_MB r1) (ref_source r2)))
+                          (AND (before (ref_source r1) (ref_last_MB r2))
+                               (before (ref_last_MB r1) (ref_last_MB r2)))))))
+
+(DEFPRED (abs_before r1 r2)
+         (OR (abs_before_bw_bw r1 r2)
+             (abs_before_bw_r r1 r2)
+             (abs_before_r_bw r1 r2)
+             (abs_before_r_r r1 r2)))
+(DEFPRED (not_abs_before r1 r2)
+  (OR (LBLPOS XXXXXXX_r2 (NOT (is_ref r1)))
+      (LBLPOS XXXXXXX_r1 (NOT (is_ref r2)))
+      (LBLPOS XXXXXXX_bw_bw
+	      (AND (is_BW r1)
+		   (is_BW r2)
+		   (NOT (before r1 r2))))
+      (LBLPOS XXXXXXX_bw_r
+	      (AND (is_BW r1)
+		   (is_read r2)
+		   (NOT (before r1 (ref_source r2)))
+		   (NOT (EQ r1 (ref_source r2)))
+		   (NOT (before r1 (ref_last_MB r2)))
+		   (NOT (EQ r1 (ref_last_MB r2)))))
+      (LBLPOS XXXXXXX_r_bw
+	      (AND (is_read r1)
+		   (is_BW r2)
+		   (OR (NOT (before (ref_source r1) r2))
+		       (NOT (before (ref_last_MB r1) r2)))))
+      (LBLPOS XXXXXXX_r_r
+	      (AND (is_read r1)
+		   (is_read r2)
+		   (NOT (ovl_prec r1 r2))
+		   (NOT (AND (before (ref_source r1) (ref_source r2))
+			     (before (ref_last_MB r1) (ref_source r2))))
+		   (NOT (AND (before (ref_source r1) (ref_last_MB r2))
+			     (before (ref_last_MB r1) (ref_last_MB r2)))))))
+  )
+
+(BG_PUSH
+ (AND
+  (DISTINCT R W MB)
+  (FORALL (r1)
+    (PATS (is_read r1))
+    (IMPLIES (is_read r1)
+	     (AND (is_ref r1)
+		  (NOT (is_write r1))
+		  (NOT (is_MB r1)))))
+  (FORALL (r1)
+    (PATS (is_write r1))
+    (IMPLIES (is_write r1)
+	     (AND (is_ref r1)
+		  (NOT (is_read r1))
+		  (NOT (is_MB r1)))))
+  (FORALL (r1)
+    (PATS (is_MB r1))
+    (IMPLIES (is_MB r1)
+	     (AND (is_ref r1)
+		  (NOT (is_read r1))
+		  (NOT (is_write r1)))))
+  (FORALL (r1)
+    (PATS (ref_step r1))
+    (EQ r1 (make_ref (ref_proc r1) (ref_step r1))))
+  (ORDER precedes precedes_eq)
+  (ORDER before before_eq)
+  (FORALL (r1 r2)
+    (PATS (precedes r1 r2))
+    (IMPLIES (AND (ovl_prec r1 r2)
+		  (is_read r1)
+		  (is_read r2))
+	     (before r1 r2)))
+  (FORALL (r1 r2)
+    (PATS (precedes r1 r2))
+    (IMPLIES (AND (ovl_prec r1 r2)
+		  (OR (is_read r1) (is_write r1))
+		  (is_write r2))
+	     (before r1 r2)))
+  (FORALL (r1 r2)
+    (IMPLIES (AND (precedes r1 r2)
+		  (is_ref r1)
+		  (is_MB r2))
+	     (before r1 r2)))
+  (FORALL (r1 r2)
+    (IMPLIES (AND (precedes r1 r2)
+		  (is_MB r1)
+		  (is_ref r2))
+	     (before r1 r2)))
+  (FORALL (r1 r2 )
+    (PATS (before r1 r2) (before r2 r1))
+    (IMPLIES (AND (OR (is_read r1) (is_write r1))
+		  (is_write r2)
+		  (overlap r1 r2))
+	     (OR (before r1 r2)
+		 (EQ r1 r2)
+		 (before r2 r1))))
+  (FORALL (r1 r2)
+    (PATS (visible_to r1 r2))
+    (IMPLIES (AND (is_write r1)
+		  (is_read r2))
+	     (IFF (visible_to r1 r2)
+		  (OR (before r1 r2)
+		      (precedes r1 r2)))))
+  (FORALL (r1)
+    (IMPLIES (is_read r1)
+	     (AND (is_write (ref_source r1))
+		  (overlap r1 (ref_source r1))
+;;;;;                   (EQ (ref_val (ref_source r1)) (ref_val r1))
+		  (visible_to (ref_source r1) r1)
+		  (NOT (EXISTS (r2)
+			 (AND (is_write r2)
+			      (overlap r2 r1)
+			      (visible_to r2 r1)
+			      (before (ref_source r1) r2)))))))
+  (FORALL (r1)
+    (PATS (is_BW r1))
+    (OR (NOT (is_read r1)) (NOT (is_BW r1)))
+    )
+  (FORALL (r1)
+    (PATS (is_read r1))
+    (IMPLIES (is_read r1)
+	     (AND
+	      (is_MB (ref_last_MB r1))
+	      (precedes (ref_last_MB r1) r1)
+	      (NOT (EXISTS (r2)
+		     (AND (is_MB r2)
+			  (precedes (ref_last_MB r1) r2)
+			  (precedes r2 r1))))
+	      )
+	     )
+    )
+  (FORALL (r1 r2)
+    (PATS (ovl_prec r1 r2))
+    (IMPLIES (AND (is_read r1)
+		  (is_read r2)
+		  (ovl_prec r1 r2))
+	     (AND (before_eq (ref_source r1) (ref_source r2))
+		  (before_eq (ref_last_MB r1) (ref_last_MB r2))))
+    )
+  (FORALL (r1 r2)
+    (PATS (abs_before r1 r2) PROMOTE)
+    (IMPLIES (abs_before r1 r2)
+	     (AND (OR (is_read r1) (is_BW r1))
+		  (OR (is_read r2) (is_BW r2)))))
+  (FORALL (r1 r2)
+    (PATS (abs_before r1 r2))
+    (OR (abs_before r1 r2) (not_abs_before r1 r2)))
+  (FORALL (r1 r2)
+    (PATS (abs_before r1 r2) PROMOTE) 
+    (IMPLIES (NOT (abs_before r1 r2))
+	     (not_abs_before r1 r2))
+                   
+    )
+  (FORALL (r1 r2 r3)
+    (PATS (MPAT (abs_before r1 r2) (abs_before r2 r3)) PROMOTE)
+    (IMPLIES (AND (abs_before r1 r2) (abs_before r2 r3))
+	     (AND (OR (LBLPOS YYYYYY_r (is_read r2))
+		      (LBLPOS YYYYYY_bw (is_BW r2)))))
+                   
+    )
+  (FORALL (r1 r2 r3)
+    (IMPLIES (AND (abs_before_r_r r1 r2)
+		  (abs_before_r_r r2 r3))
+	     (abs_before_r_r r1 r3)))
+  )
+ )
+
+(FORALL (r1 r2 r3)
+  (IMPLIES (AND (abs_before r1 r2)
+		(is_read r2)
+		(abs_before r2 r3))
+	   (NOT (not_abs_before r1 r3))))
+(BG_POP)
+(BG_POP)
+
+;; 26
+(BG_PUSH
+ (AND
+  (FORALL (x)
+    (PATS (h1 x))
+    (IMPLIES
+     (EQ (h1 x) T)
+     (OR (EQ (h2 x) T) (EQ (h3 x) T))))
+
+  (FORALL (x)
+    (PATS (h2 x))
+    (IMPLIES (EQ (h2 x) T)
+	     (OR (EQ (h4 x) T)
+		 (EQ (h5 x) T))))
+  (FORALL (x)
+    (PATS (h3 x))
+    (IMPLIES (EQ (h3 x) T)
+	     (OR (EQ (h4 x) T)
+		 (EQ (h5 x) T))))
+  (FORALL (x)
+    (PATS (h4 x))
+    (IMPLIES (EQ (h4 x) T)
+	     (> x 20)))
+  (FORALL (x)
+    (PATS (h5 x))
+    (IMPLIES (EQ (h5 x) T)
+	     (< x 5)))
+
+  (FORALL (x)
+    (PATS (h1 x))
+    (IMPLIES
+     (EQ (h1 x) T)
+     (OR
+      (EQ (h7 x) T)
+      (FORALL (y) (> (q x y) 0)))))
+  )
+ )
+(NEQ (h1 15) T)
+(BG_POP)
+
+;; 27
+(BG_PUSH TRUE)
+(DEFPRED (P x y)
+  (EXISTS (zzz)
+    (AND (EQ (Q1 x zzz) T)
+	 (EQ (Q2 zzz y) T))))
+(IMPLIES
+ (P a b)
+ (EXISTS (k)
+   (EQ (Q1 a k) T)))
+(BG_POP)
+
+;; 28
+;; This gave an assertion failure, because we had assumed that we
+;; would never encounter existential quantifiers after skolemization.
+;; We've now satisfied that assertion.
+(BG_PUSH
+ (FORALL (r1 r2)
+   (IFF 
+    (EQ (P1 r1 r2) T)
+    (LBLPOS L1
+      (FORALL (r3)
+	(EXISTS (r4)
+	  (EQ (P2 r4 r2) T)
+	  ))))))
+(BG_POP)
+
+;;29
+;; These two (the second failed) are from Mamoun FILALI-AMINE <filali@irit.fr>.
+(BG_PUSH)
+(NOT (FORALL (p) (NEQ p q)))
+(EXISTS (p) (EQ p q))
+(BG_POP)
+
+;;30
+;; Tests that fix for constant-propagation bug works.
+(BG_PUSH)
+(IMPLIES (AND (<= x (+ 3 7)) (<= (+ 3 7) x)) (EQ x (+ 3 7)))
+(BG_POP)
+;;31
+(BG_PUSH
+  (AND
+    (<= y (- 2 5))
+    (<= (- 1 4) y)
+  )
+)
+(EQ (f y) (f (- 9 12)))
+(BG_POP)
+;; 32
+;; The following should be valid because x must be an integer.
+(NEQ (* 4 x) 7)
+
+;; 33
+;; The following should be shown valid by use of Simplex.TightenBounds:
+(BG_PUSH)
+(DEFPRED (f x))
+(BG_PUSH (AND (f 0) (f 1) (f 2) (f 3)))
+(IMPLIES
+  (AND
+    (<= 0 x)
+    (<= x 3))
+  (f x)
+)
+(BG_POP)
+(BG_POP)
+
+;; Tests for EXPLIES
+;;34
+(IFF (IMPLIES x y) (EXPLIES y x))
+;;35
+(EXPLIES (< x 10) (< x 5))
+
+
+

@@ -1,0 +1,351 @@
+;;; -*- lisp -*-
+
+FALSE
+
+(NOT
+ (AND
+  (OR (EQ Edge1x1S T) (EQ Edge1x1E T))
+  (NEQ (f Edge1x1S Edge1x1E) (f T T))
+  (OR (EQ Edge1x1E T) (EQ Edge1x2S T) (EQ Edge1x2E T))
+  (NEQ (f Edge1x1E Edge1x2S) (f T T))
+  (NEQ (f Edge1x1E Edge1x2E) (f T T))
+  (NEQ (f Edge1x2S Edge1x2E) (f T T))
+  (OR (EQ Edge1x2E T) (EQ Edge1x3S T))
+  (NEQ (f Edge1x2E Edge1x3S) (f T T))
+  (OR (EQ Edge2x1E T) (EQ Edge1x1S T))
+  (NEQ (f Edge2x1E Edge1x1S) (f T T))
+  (OR (EQ Edge2x1E T) (EQ Edge2x2E T) (EQ Edge1x2S T))
+  (NEQ (f Edge2x1E Edge2x2E) (f T T))
+  (NEQ (f Edge2x1E Edge1x2S) (f T T))
+  (NEQ (f Edge2x2E Edge1x2S) (f T T))
+  (OR (EQ Edge2x2E T) (EQ Edge1x3S T))
+  (NEQ (f Edge2x2E Edge1x3S) (f T T))
+  ))
+
+(EQ (select (store a i x) i knd) (select a i knd))
+
+(EQ (NUMBER (SUBARRAY a i n)) (+ n 1))
+
+;; 5
+(IMPLIES (EQ j 5) (EQ (select (SUBARRAY a 3 10) j knd) (select a 9 knd)))
+
+(EQ (NUMBER (store a i x)) i)
+
+(EQ (NUMBER (storeSub a i n b)) (NUMBER b))
+
+(IMPLIES (EQ i j) (EQ (select (store a i x) j knd) (select a j knd)))
+
+(EQ (select (storeSub a 4 4 b) 6 knd) (select b 3 knd))
+
+
+;;; This one exposed several bugs in Simplex undoing.
+;; 10
+(NOT (OR (NOT (EQ (NUMBER |a.15|) 10))
+	 (AND (AND (<= 0 7)
+		   (< 7 (+ (NUMBER |a.15|) 0))
+		   )
+	      (AND (< (select (store |a.15| 7 12) 7 knd)
+		      (+ (NUMBER (store |a.15| 7 12)) 0))
+		   TRUE
+		   ))))
+
+;;; This one exposed a bug in the Clause.DNF loop.
+(AND (AND (>= 1 0) (>= 1 0))
+     (AND (AND (>= 1 0))
+	  (AND (AND (>= 1 0)
+		    (>= 0 1))
+	       TRUE)))
+
+;;; Exposed various simplex undo bugs...
+(IMPLIES (EQ (NUMBER |a.9|) 10)
+	 (AND (AND
+	       (<= 0 0)
+	       (<= 0 (+ 10 1))
+	       )
+	      (IMPLIES (AND
+			(<= 0 |i.11|)
+			(<= |i.11| 10)
+			)
+			(AND
+			 (< |i.11| (+ (NUMBER |a.9|) 0))
+			 (<= 0 (+ |i.11| 1))
+			 ))))
+
+;;; Another simplex bug: infection has to keep a count, not just a BOOLEAN
+
+(IMPLIES (EQ (NUMBER |a.9|) 10)
+	 (AND (AND (<= 0 0) (<= 0 (+ 10 1)))
+	      (IMPLIES
+	       (AND (<= 0 |i.11|) (<= |i.11| (+ 10 1)))
+	       (IMPLIES (<= |i.11| 10)
+			(AND
+			 (AND (<= 0 |i.11|) (< |i.11| (+ (NUMBER |a.9|) 0)))
+			 (AND (<= 0 (+ |i.11| 1))
+			      (<= (+ |i.11| 1) (+ 10 1))))))
+		   ))
+
+
+;;; This showed an infelicity in Enode.Top.
+(NEQ (NUMBER RefArray) (+ (- (select |T.sz`| s knd) 1) 1))
+
+;;; This showed an infelicity in Simplex.Top.
+;; 15
+(OR
+ (NOT (EQ (NUMBER a) 10))
+ (OR (NOT (> i 0))
+     (OR (NOT (< i 8))
+	 (AND (<= 0 (+ i 5))
+	      (< (+ i 5) (+ (NUMBER a) 0))))))
+
+;;; Another bug in Simplex.Top.
+(AND (OR (NOT (> i 0))
+	 (AND (OR (NOT (<= i (- (NUMBER a) 1)))
+		  (AND (OR (AND (<= 0 (+ i 1)) (< (+ i 1) (+ (NUMBER a) 0)))
+			   (NOT |ERROR.INDEX.8.11|))
+		       (OR (EQ 0 0)
+			   (NOT |ERROR.POSTCONDITION.4.0|))))
+	      (OR (<= i (- (NUMBER a) 1))
+		  (OR (EQ 0 0) (NOT |ERROR.POSTCONDITION.4.0|)))))
+     (OR (> i 0) (OR (EQ 0 0) (NOT |ERROR.POSTCONDITION.4.0|))))
+
+;;; Testing user-supplied matching rules.
+
+(IMPLIES (FORALL (x y) (EQ (f x y) (f y x)))
+	 (EQ (g (f a b)) 7))
+
+(IMPLIES
+ (FORALL (r) (EQ (select Ipre r 0) (+ (select j_tmp r 0) 1)))
+ (IMPLIES
+  (FORALL (r) (EQ (select I_tmp r 0)
+		  (+ (select (store j_tmp r (+ (select j_tmp r 0) 1)) r 0) 1)))
+  (EQ (select I_tmp r 0) (+ (select Ipre r 0) 2))))
+
+(IMPLIES
+ (AND
+  (AND
+   (AND
+    (AND
+     (AND
+      (AND
+       (AND
+	(AND
+	 (AND
+	  (AND
+	   (AND
+	    (AND
+	     (AND
+	      (AND
+	       (AND
+		(AND
+		 (AND (AND (NEQ |@true| |@false|) (FORALL (q) (IMPLIES (EQ (Is_CARDINAL q) |@true|) (<= 0 q)))) (EQ |Word.Size| 32))
+		 (FORALL (|q$1|) (IMPLIES (EQ (|Is_TYPE@34| |q$1|) |@true|) (AND (<= 0 |q$1|) (<= |q$1| 31)))))
+		(FORALL (|q$2|) (IMPLIES (EQ (|Is_TYPE@33| |q$2|) |@true|) (AND (<= -1 |q$2|) (<= |q$2| 1)))))
+	       (EQ (SUBTYPE |IntSeq.T.TYPECODE| |IntSeq.T.TYPECODE|) |@true|))
+	      (FORALL
+		  (|q$3|)
+		(IMPLIES
+		 (EQ (|Is_IntSeq.T| |q$3|) |@true|)
+		 (EQ (SUBTYPE (TYPECODE |q$3| |@DUMMY|) |IntSeq.T.TYPECODE|) |@true|))))
+	     (FORALL
+		 (|q$4|)
+	       (IMPLIES
+		(EQ (|Is_IntSeq.Public| |q$4|) |@true|)
+		(EQ (SUBTYPE (TYPECODE |q$4| |@DUMMY|) |IntSeq.Public.TYPECODE|) |@true|))))
+	    (EQ (SUBTYPE |IntSeq.T.TYPECODE| |IntSeqRep.Public.TYPECODE|) |@true|))
+	   (FORALL (|q$5|) (EQ (|Is_TYPE@38| (select |IntSeqRep.RefArray`| |q$5| |@ARRAY|)) |@true|)))
+	  (FORALL (|q$6|) (EQ (|Is_TYPE@38| (select |IntSeqRep.RefArray'| |q$6| |@ARRAY|)) |@true|)))
+	 (FORALL
+	     (|q$7|)
+	   (IMPLIES (EQ (|Is_IntSeqRep.RefArray| |q$7|) |@true|) (EQ (TYPECODE |q$7| |@DUMMY|) |IntSeqRep.RefArray.TYPECODE|))))
+	(FORALL (|q$8| i) (IMPLIES (EQ (|Is_TYPE@38| |q$8|) |@true|) (EQ (Is_INTEGER (select |q$8| i |@ARRAY|)) |@true|))))
+       (AND
+	(AND
+	 (AND
+	  (AND
+	   (AND
+	    (FORALL (|q$9|) (EQ (|Is_IntSeqRep.RefArray| (select |IntSeqRep.Public.elem`| |q$9| |@ARRAY|)) |@true|))
+	    (FORALL (|q$10|) (EQ (|Is_IntSeqRep.RefArray| (select |IntSeqRep.Public.elem'| |q$10| |@ARRAY|)) |@true|)))
+	   (FORALL (|q$11|) (EQ (Is_CARDINAL (select |IntSeqRep.Public.st`| |q$11| |@ARRAY|)) |@true|)))
+	  (FORALL (|q$12|) (EQ (Is_CARDINAL (select |IntSeqRep.Public.st'| |q$12| |@ARRAY|)) |@true|)))
+	 (FORALL (|q$13|) (EQ (Is_CARDINAL (select |IntSeqRep.Public.sz`| |q$13| |@ARRAY|)) |@true|)))
+	(FORALL (|q$14|) (EQ (Is_CARDINAL (select |IntSeqRep.Public.sz'| |q$14| |@ARRAY|)) |@true|))))
+      (FORALL
+	  (|q$15|)
+	(IMPLIES
+	 (EQ (|Is_IntSeqRep.Public| |q$15|) |@true|)
+	 (EQ (SUBTYPE (TYPECODE |q$15| |@DUMMY|) |IntSeqRep.Public.TYPECODE|) |@true|))))
+     (FORALL (|q$16|) (EQ (Is_INTEGER (select |TYPE@17`| |q$16| |@ARRAY|)) |@true|)))
+    (FORALL (|q$17|) (EQ (Is_INTEGER (select |TYPE@17'| |q$17| |@ARRAY|)) |@true|)))
+   (FORALL (|q$18|) (IMPLIES (EQ (|Is_TYPE@17| |q$18|) |@true|) (EQ (TYPECODE |q$18| |@DUMMY|) |TYPE@17.TYPECODE|))))
+  (AND
+   (AND
+    (AND
+     (AND
+      (AND
+       (AND
+	(AND
+	 (AND
+	  (AND
+	   (NEQ |TYPE@17.TYPECODE| |IntSeqRep.Public.TYPECODE|)
+	   (NEQ |TYPE@17.TYPECODE| |IntSeqRep.RefArray.TYPECODE|))
+	  (NEQ |TYPE@17.TYPECODE| |IntSeq.Public.TYPECODE|))
+	 (NEQ |TYPE@17.TYPECODE| |IntSeq.T.TYPECODE|))
+	(NEQ |IntSeqRep.Public.TYPECODE| |IntSeqRep.RefArray.TYPECODE|))
+       (NEQ |IntSeqRep.Public.TYPECODE| |IntSeq.Public.TYPECODE|))
+      (NEQ |IntSeqRep.Public.TYPECODE| |IntSeq.T.TYPECODE|))
+     (NEQ |IntSeqRep.RefArray.TYPECODE| |IntSeq.Public.TYPECODE|))
+    (NEQ |IntSeqRep.RefArray.TYPECODE| |IntSeq.T.TYPECODE|))
+   (NEQ |IntSeq.Public.TYPECODE| |IntSeq.T.TYPECODE|)))
+ (FORALL
+     (s sizeHint)
+   (IMPLIES
+    (AND (EQ (|Is_IntSeq.T| s) |@true|) (EQ (Is_CARDINAL sizeHint) |@true|))
+    (FORALL
+	(res)
+      (FORALL
+	  (|res$2| |res$1|)
+	(AND
+	 (IMPLIES
+	  (< |sizeHint`| 1)
+	  (IMPLIES
+	   (AND
+	    (NEQ (select |$AllocObjs| |res$2| |@ARRAY|) |@true|)
+	    (AND
+	     (EQ (TYPECODE |res$2| |@DUMMY|) |IntSeqRep.RefArray.TYPECODE|)
+	     (AND (NEQ |res$2| |$NIL|) (EQ (NUMBER (select |IntSeqRep.RefArray`| |res$2| |@ARRAY|)) |sizeHint`|))))
+	   (IMPLIES
+	    (EQ 0 0)
+	    (OR
+	     (AND
+	      (AND
+	       (AND
+		(EQ 0 0)
+		(>
+		 (NUMBER
+		  (select
+		   |IntSeqRep.RefArray`|
+		   (select (store |IntSeqRep.Public.elem`| |s`| |res$2|) |s`| |@ARRAY|)
+		   |@ARRAY|))
+		 0))
+	       (EQ
+		(store |IntSeqRep.Public.elem`| |s`| |res$2|)
+		(store
+		 |IntSeqRep.Public.elem`|
+		 |s`|
+		 (select (store |IntSeqRep.Public.elem`| |s`| |res$2|) |s`| |@ARRAY|))))
+	      (EQ 0 0))
+	     (NOT |ERROR.POSTCONDITION.44.0|)))))
+	 (OR
+	  (< |sizeHint`| 1)
+	  (IMPLIES
+	   (AND
+	    (NEQ (select |$AllocObjs| |res$2| |@ARRAY|) |@true|)
+	    (AND
+	     (EQ (TYPECODE |res$2| |@DUMMY|) |IntSeqRep.RefArray.TYPECODE|)
+	     (AND (NEQ |res$2| |$NIL|) (EQ (NUMBER (select |IntSeqRep.RefArray`| |res$2| |@ARRAY|)) 1))))
+	   (IMPLIES
+	    (EQ 0 0)
+	    (OR
+	     (AND
+	      (AND
+	       (AND
+		(EQ 0 0)
+		(>
+		 (NUMBER
+		  (select
+		   |IntSeqRep.RefArray`|
+		   (select (store |IntSeqRep.Public.elem`| |s`| |res$2|) |s`| |@ARRAY|)
+		   |@ARRAY|))
+		 0))
+	       (EQ
+		(store |IntSeqRep.Public.elem`| |s`| |res$2|)
+		(store
+		 |IntSeqRep.Public.elem`|
+		 |s`|
+		 (select (store |IntSeqRep.Public.elem`| |s`| |res$2|) |s`| |@ARRAY|))))
+	      (EQ 0 0))
+	     (NOT |ERROR.POSTCONDITION.44.0|)))))))))))
+
+
+;; Used to produce matching loop.
+;; 20
+(IMPLIES
+ (AND
+  (FORALL (n) (IMPLIES (EQ (Node n) true)
+		       (EQ (Node (select fff n dum)) true)))
+  (EQ (Node Root) true)
+  )
+ (FORALL (n2) (IMPLIES (EQ (Node n2) true)
+		       (EQ (Node (select (store fff n m) n2 dum)) true)))
+ )
+
+;; Bug in Simplex.PropEq; shouldn't decrease number of primitives.
+
+(IMPLIES (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (AND (NEQ |@true| |@false|) (FORALL (|@q|) (IMPLIES (EQ (Is_CARDINAL |@q| |@DUMMY|) |@true|) (<= 0 |@q|)))) (FORALL (|@dummy| |@q$1| |@i|) (IMPLIES (EQ (|Is_TYPE@71| |@q$1| |@dummy|) |@true|) (EQ (Is_CHAR (select |@q$1| |@i| |@ARRAY|) |@dummy|) |@true|)))) (FORALL (|@q$2|) (IMPLIES (EQ (|Is_TYPE@67| |@q$2| |@DUMMY|) |@true|) (AND (<= -1 |@q$2|) (<= |@q$2| 1))))) (FORALL (|@q$3| |@dummy$1|) (IMPLIES (EQ (|Is_TextSeq.Public| |@q$3| |@dummy$1|) |@true|) (EQ (SUBTYPE (TYPECODE |@q$3| |@DUMMY|) |TextSeq.Public.TYPECODE|) |@true|)))) (EQ (SUBTYPE |TextSeq.Public.TYPECODE| |TextSeq.Public.TYPECODE|) |@true|)) (EQ DirSepChar 47)) (EQ ExtSepChar 46)) (AND (AND (NEQ DirSepText |$NIL|) (AND (EQ (select |@AllocObjs| DirSepText |@ARRAY|) |@true|) (AND (EQ (Is_TEXT DirSepText |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) 1)))) (EQ (select (select |Text.Value| DirSepText |@ARRAY|) 0 |@ARRAY|) 47))) (AND (AND (NEQ ExtSepText |$NIL|) (AND (EQ (select |@AllocObjs| ExtSepText |@ARRAY|) |@true|) (AND (EQ (Is_TEXT ExtSepText |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| ExtSepText |@ARRAY|)) 1)))) (EQ (select (select |Text.Value| ExtSepText |@ARRAY|) 0 |@ARRAY|) 46))) (AND (AND (AND (AND (AND (NEQ |Pathname.Invalid| CheckedRuntimeError) (NEQ |Pathname.Invalid| RETURN)) (NEQ |Pathname.Invalid| EXIT)) (NEQ CheckedRuntimeError RETURN)) (NEQ CheckedRuntimeError EXIT)) (NEQ RETURN EXIT))) (EQ (Is_TEXT |Pathname.Parent| |@DUMMY|) |@true|)) (EQ (Is_TEXT |Pathname.Current| |@DUMMY|) |@true|)) (EQ (|Is_TYPE@66| Legal |@DUMMY|) |@true|)) (IMPLIES (NEQ a |$NIL|) (FORALL (|Legal`| |Text.Value`| |TextSeq.Public_Size`| |a`|) (IMPLIES (EQ (|Is_TextSeq.Public| a |@DUMMY|) |@true|) (FORALL (n t) (IMPLIES (AND (EQ (Is_CARDINAL n |@DUMMY|) |@true|) (EQ (Is_TEXT t |@DUMMY|) |@true|)) (AND (OR (NEQ a |$NIL|) (NOT |ERROR.DEREF.23.12|)) (FORALL (|EXCEPTION.code| |EXCEPTION.val| |t$1|) (IMPLIES (AND (EQ |EXCEPTION.code| RETURN) (EQ |EXCEPTION.val| (select |TextSeq.Public_Size| a |@ARRAY|))) (IMPLIES (EQ (Is_CARDINAL |EXCEPTION.val| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code| RETURN) (AND (IMPLIES (EQ |EXCEPTION.val| 0) (AND (AND (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |Pathname.Invalid|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))) (OR (EQ |EXCEPTION.val| 0) (FORALL (res) (AND (OR (NEQ a |$NIL|) (NOT |ERROR.DEREF.25.10|)) (FORALL (|EXCEPTION.code$1| |EXCEPTION.val$1| |t$2|) (AND (OR (> (select |TextSeq.Public_Size| a |@ARRAY|) 0) (NOT |ERROR.CALL.25.10|)) (IMPLIES (EQ |EXCEPTION.code$1| RETURN) (IMPLIES (EQ (Is_TEXT |EXCEPTION.val$1| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$1| RETURN) (AND (IMPLIES (NEQ |EXCEPTION.val$1| |$NIL|) (FORALL (|res$1|) (FORALL (|res$2|) (FORALL (|res$3|) (FORALL (|res$4|) (IMPLIES (AND (AND (NEQ |res$4| |$NIL|) (AND (EQ (select |@AllocObjs| |res$4| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$4| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$4| |@ARRAY|)) 1)))) (EQ (select (select |Text.Value| |res$4| |@ARRAY|) 0 |@ARRAY|) 47)) (FORALL (|EXCEPTION.code$2| |EXCEPTION.val$2| |t$3| u) (AND (OR (AND (NEQ |EXCEPTION.val$1| |$NIL|) (NEQ |res$4| |$NIL|)) (NOT |ERROR.CALL.27.17|)) (IMPLIES (EQ |EXCEPTION.code$2| RETURN) (IMPLIES (EQ (Is_BOOLEAN |EXCEPTION.val$2| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$2| RETURN) (AND (IMPLIES (NOT (EQ |EXCEPTION.val$2| |@true|)) (AND (AND (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |Pathname.Invalid|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))) (OR (NOT (EQ |EXCEPTION.val$2| |@true|)) (FORALL (i) (AND (IMPLIES (<= 1 (- |EXCEPTION.val| 1)) (AND (OR (AND (<= 1 1) (<= 1 (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INIT.31.4|)) (AND (FORALL (|i$1| |EXCEPTION.code$3| |t$4|) (IMPLIES (AND (AND (<= 1 |i$1|) (<= |i$1| (+ (- |EXCEPTION.val| 1) 1))) (AND (EQ (Is_TEXT |t$4| |@DUMMY|) |@true|) (EQ (Is_INTEGER |EXCEPTION.code$3| |@DUMMY|) |@true|))) (IMPLIES (<= |i$1| (- |EXCEPTION.val| 1)) (FORALL (arc) (IMPLIES (EQ (Is_TEXT arc |@DUMMY|) |@true|) (AND (OR (NEQ a |$NIL|) (NOT |ERROR.DEREF.32.18|)) (FORALL (|EXCEPTION.code$4| |EXCEPTION.val$3| |t$5| |i$2|) (AND (OR (< |i$1| (select |TextSeq.Public_Size| a |@ARRAY|)) (NOT |ERROR.CALL.32.18|)) (IMPLIES (EQ |EXCEPTION.code$4| RETURN) (IMPLIES (EQ (Is_TEXT |EXCEPTION.val$3| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$4| RETURN) (AND (IMPLIES (EQ |EXCEPTION.val$3| |$NIL|) (AND (AND (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |Pathname.Invalid|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))) (OR (EQ |EXCEPTION.val$3| |$NIL|) (FORALL (|i$3| |res$5|) (FORALL (|EXCEPTION.code$5| |EXCEPTION.val$4| |t$6|) (AND (OR (NEQ |EXCEPTION.val$3| |$NIL|) (NOT |ERROR.CALL.34.19|)) (IMPLIES (AND (EQ |EXCEPTION.code$5| RETURN) (EQ |EXCEPTION.val$4| (NUMBER (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|)))) (IMPLIES (EQ (Is_CARDINAL |EXCEPTION.val$4| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$5| RETURN) (AND (IMPLIES (<= 0 |EXCEPTION.val$4|) (AND (OR (AND (<= 0 0) (<= 0 (+ |EXCEPTION.val$4| 1))) (NOT |ERROR.LOOPINV_INIT.34.1|)) (AND (FORALL (|EXCEPTION.code$6| |i$4|) (IMPLIES (AND (AND (<= 0 |i$4|) (<= |i$4| (+ |EXCEPTION.val$4| 1))) (EQ (Is_INTEGER |EXCEPTION.code$6| |@DUMMY|) |@true|)) (IMPLIES (<= |i$4| |EXCEPTION.val$4|) (FORALL (|res$6|) (FORALL (|res$7|) (FORALL (|res$8|) (FORALL (|EXCEPTION.code$7| |EXCEPTION.val$5| |t$7| |i$5|) (AND (OR (AND (NEQ |EXCEPTION.val$3| |$NIL|) (< |i$4| (NUMBER (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|)))) (NOT |ERROR.CALL.35.14|)) (IMPLIES (AND (EQ |EXCEPTION.code$7| RETURN) (EQ |EXCEPTION.val$5| (select (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|) |i$4| |@ARRAY|))) (IMPLIES (EQ (Is_CHAR |EXCEPTION.val$5| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$7| RETURN) (AND (IMPLIES (NOT (EQ (select Legal |EXCEPTION.val$5| |@ARRAY|) |@true|)) (AND (AND (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |Pathname.Invalid|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))) (OR (NOT (EQ (select Legal |EXCEPTION.val$5| |@ARRAY|) |@true|)) (OR (AND (<= 0 (+ |i$4| 1)) (<= (+ |i$4| 1) (+ |EXCEPTION.val$4| 1))) (NOT |ERROR.LOOPINV_INV.34.1|))))) (OR (EQ |EXCEPTION.code$7| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$7| RETURN) (OR (OR (EQ |EXCEPTION.code$7| RETURN) (EQ |EXCEPTION.code$7| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$7|) (OR (OR (EQ |EXCEPTION.code$7| RETURN) (EQ |EXCEPTION.code$7| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$7| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$7|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$7| RETURN) (EQ |EXCEPTION.code$7| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))))))))) (FORALL (|EXCEPTION.code$8| |i$6|) (IMPLIES (AND (AND (AND (<= 0 |i$6|) (<= |i$6| (+ |EXCEPTION.val$4| 1))) (EQ (Is_INTEGER |EXCEPTION.code$8| |@DUMMY|) |@true|)) (NOT (<= |i$6| |EXCEPTION.val$4|))) (FORALL (|res$9|) (FORALL (|res$10|) (IMPLIES (AND (AND (NEQ |res$10| |$NIL|) (AND (EQ (select |@AllocObjs| |res$10| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$10| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$10| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |t$4| |@ARRAY|)) (NUMBER (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|))))))) (EQ (select |Text.Value| |res$10| |@ARRAY|) (storeSub (select |Text.Value| |t$4| |@ARRAY|) (+ (NUMBER (select |Text.Value| |t$4| |@ARRAY|)) 1) (NUMBER (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|)) (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|)))) (AND (IMPLIES (NEQ |i$1| (- |EXCEPTION.val| 1)) (FORALL (|res$11|) (FORALL (|res$12|) (IMPLIES (AND (AND (NEQ |res$12| |$NIL|) (AND (EQ (select |@AllocObjs| |res$12| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$12| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$12| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$10| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$12| |@ARRAY|) (storeSub (select |Text.Value| |res$10| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$10| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|)))) (OR (AND (<= 1 (+ |i$1| 1)) (<= (+ |i$1| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))) (OR (AND (NEQ |i$1| (- |EXCEPTION.val| 1)) (EXISTS (|res$13|) (EXISTS (|res$14|) (AND (AND (NEQ |res$14| |$NIL|) (AND (EQ (select |@AllocObjs| |res$14| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$14| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$14| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$10| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$14| |@ARRAY|) (storeSub (select |Text.Value| |res$10| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$10| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|))))))) (OR (AND (<= 1 (+ |i$1| 1)) (<= (+ |i$1| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))))))))) (OR (<= 0 |EXCEPTION.val$4|) (FORALL (|res$15|) (FORALL (|res$16|) (IMPLIES (AND (AND (NEQ |res$16| |$NIL|) (AND (EQ (select |@AllocObjs| |res$16| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$16| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$16| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |t$4| |@ARRAY|)) (NUMBER (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|))))))) (EQ (select |Text.Value| |res$16| |@ARRAY|) (storeSub (select |Text.Value| |t$4| |@ARRAY|) (+ (NUMBER (select |Text.Value| |t$4| |@ARRAY|)) 1) (NUMBER (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|)) (select |Text.Value| |EXCEPTION.val$3| |@ARRAY|)))) (AND (IMPLIES (NEQ |i$1| (- |EXCEPTION.val| 1)) (FORALL (|res$17|) (FORALL (|res$18|) (IMPLIES (AND (AND (NEQ |res$18| |$NIL|) (AND (EQ (select |@AllocObjs| |res$18| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$18| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$18| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$16| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$18| |@ARRAY|) (storeSub (select |Text.Value| |res$16| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$16| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|)))) (OR (AND (<= 1 (+ |i$1| 1)) (<= (+ |i$1| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))) (OR (AND (NEQ |i$1| (- |EXCEPTION.val| 1)) (EXISTS (|res$19|) (EXISTS (|res$20|) (AND (AND (NEQ |res$20| |$NIL|) (AND (EQ (select |@AllocObjs| |res$20| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$20| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$20| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$16| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$20| |@ARRAY|) (storeSub (select |Text.Value| |res$16| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$16| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|))))))) (OR (AND (<= 1 (+ |i$1| 1)) (<= (+ |i$1| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))))))) (OR (EQ |EXCEPTION.code$5| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$5| RETURN) (OR (OR (EQ |EXCEPTION.code$5| RETURN) (EQ |EXCEPTION.code$5| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$5|) (OR (OR (EQ |EXCEPTION.code$5| RETURN) (EQ |EXCEPTION.code$5| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$5| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$5|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$5| RETURN) (EQ |EXCEPTION.code$5| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))))))) (OR (EQ |EXCEPTION.code$4| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$4| RETURN) (OR (OR (EQ |EXCEPTION.code$4| RETURN) (EQ |EXCEPTION.code$4| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$4|) (OR (OR (EQ |EXCEPTION.code$4| RETURN) (EQ |EXCEPTION.code$4| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$4| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$4|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$4| RETURN) (EQ |EXCEPTION.code$4| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))))))))) (FORALL (|i$7| |EXCEPTION.code$9| |t$8|) (IMPLIES (AND (AND (AND (<= 1 |i$7|) (<= |i$7| (+ (- |EXCEPTION.val| 1) 1))) (AND (EQ (Is_TEXT |t$8| |@DUMMY|) |@true|) (EQ (Is_INTEGER |EXCEPTION.code$9| |@DUMMY|) |@true|))) (NOT (AND (<= |i$7| (- |EXCEPTION.val| 1)) (EXISTS (|arc$1|) (EQ (Is_TEXT |arc$1| |@DUMMY|) |@true|))))) (AND (AND (IMPLIES (EQ RETURN RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ RETURN RETURN) (EQ |Pathname.Invalid| RETURN)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))))))) (OR (<= 1 (- |EXCEPTION.val| 1)) (AND (AND (IMPLIES (EQ RETURN RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ RETURN RETURN) (EQ |Pathname.Invalid| RETURN)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))) (OR (EQ |EXCEPTION.code$2| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$2| RETURN) (OR (OR (EQ |EXCEPTION.code$2| RETURN) (EQ |EXCEPTION.code$2| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$2|) (OR (OR (EQ |EXCEPTION.code$2| RETURN) (EQ |EXCEPTION.code$2| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$2| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$2|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$2| RETURN) (EQ |EXCEPTION.code$2| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))))))))) (OR (AND (NEQ |EXCEPTION.val$1| |$NIL|) (EXISTS (|res$21|) (EXISTS (|res$22|) (EXISTS (|res$23|) (EXISTS (|res$24|) (AND (AND (NEQ |res$24| |$NIL|) (AND (EQ (select |@AllocObjs| |res$24| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$24| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$24| |@ARRAY|)) 1)))) (EQ (select (select |Text.Value| |res$24| |@ARRAY|) 0 |@ARRAY|) 47))))))) (FORALL (|res$25|) (FORALL (|res$26|) (IMPLIES (AND (NEQ |res$26| |$NIL|) (AND (EQ (select |@AllocObjs| |res$26| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$26| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$26| |@ARRAY|)) 0)))) (FORALL (|i$8|) (AND (IMPLIES (<= 1 (- |EXCEPTION.val| 1)) (AND (OR (AND (<= 1 1) (<= 1 (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INIT.31.4|)) (AND (FORALL (|i$9| |EXCEPTION.code$10| |t$9|) (IMPLIES (AND (AND (<= 1 |i$9|) (<= |i$9| (+ (- |EXCEPTION.val| 1) 1))) (AND (EQ (Is_TEXT |t$9| |@DUMMY|) |@true|) (EQ (Is_INTEGER |EXCEPTION.code$10| |@DUMMY|) |@true|))) (IMPLIES (<= |i$9| (- |EXCEPTION.val| 1)) (FORALL (|arc$2|) (IMPLIES (EQ (Is_TEXT |arc$2| |@DUMMY|) |@true|) (AND (OR (NEQ a |$NIL|) (NOT |ERROR.DEREF.32.18|)) (FORALL (|EXCEPTION.code$11| |EXCEPTION.val$6| |t$10| |i$10|) (AND (OR (< |i$9| (select |TextSeq.Public_Size| a |@ARRAY|)) (NOT |ERROR.CALL.32.18|)) (IMPLIES (EQ |EXCEPTION.code$11| RETURN) (IMPLIES (EQ (Is_TEXT |EXCEPTION.val$6| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$11| RETURN) (AND (IMPLIES (EQ |EXCEPTION.val$6| |$NIL|) (AND (AND (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |Pathname.Invalid|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))) (OR (EQ |EXCEPTION.val$6| |$NIL|) (FORALL (|i$11| |res$27|) (FORALL (|EXCEPTION.code$12| |EXCEPTION.val$7| |t$11|) (AND (OR (NEQ |EXCEPTION.val$6| |$NIL|) (NOT |ERROR.CALL.34.19|)) (IMPLIES (AND (EQ |EXCEPTION.code$12| RETURN) (EQ |EXCEPTION.val$7| (NUMBER (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|)))) (IMPLIES (EQ (Is_CARDINAL |EXCEPTION.val$7| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$12| RETURN) (AND (IMPLIES (<= 0 |EXCEPTION.val$7|) (AND (OR (AND (<= 0 0) (<= 0 (+ |EXCEPTION.val$7| 1))) (NOT |ERROR.LOOPINV_INIT.34.1|)) (AND (FORALL (|EXCEPTION.code$13| |i$12|) (IMPLIES (AND (AND (<= 0 |i$12|) (<= |i$12| (+ |EXCEPTION.val$7| 1))) (EQ (Is_INTEGER |EXCEPTION.code$13| |@DUMMY|) |@true|)) (IMPLIES (<= |i$12| |EXCEPTION.val$7|) (FORALL (|res$28|) (FORALL (|res$29|) (FORALL (|res$30|) (FORALL (|EXCEPTION.code$14| |EXCEPTION.val$8| |t$12| |i$13|) (AND (OR (AND (NEQ |EXCEPTION.val$6| |$NIL|) (< |i$12| (NUMBER (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|)))) (NOT |ERROR.CALL.35.14|)) (IMPLIES (AND (EQ |EXCEPTION.code$14| RETURN) (EQ |EXCEPTION.val$8| (select (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|) |i$12| |@ARRAY|))) (IMPLIES (EQ (Is_CHAR |EXCEPTION.val$8| |@DUMMY|) |@true|) (AND (IMPLIES (EQ |EXCEPTION.code$14| RETURN) (AND (IMPLIES (NOT (EQ (select Legal |EXCEPTION.val$8| |@ARRAY|) |@true|)) (AND (AND (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |Pathname.Invalid|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |Pathname.Invalid| RETURN) (EQ |Pathname.Invalid| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))) (OR (NOT (EQ (select Legal |EXCEPTION.val$8| |@ARRAY|) |@true|)) (OR (AND (<= 0 (+ |i$12| 1)) (<= (+ |i$12| 1) (+ |EXCEPTION.val$7| 1))) (NOT |ERROR.LOOPINV_INV.34.1|))))) (OR (EQ |EXCEPTION.code$14| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$14| RETURN) (OR (OR (EQ |EXCEPTION.code$14| RETURN) (EQ |EXCEPTION.code$14| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$14|) (OR (OR (EQ |EXCEPTION.code$14| RETURN) (EQ |EXCEPTION.code$14| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$14| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$14|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$14| RETURN) (EQ |EXCEPTION.code$14| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))))))))) (FORALL (|EXCEPTION.code$15| |i$14|) (IMPLIES (AND (AND (AND (<= 0 |i$14|) (<= |i$14| (+ |EXCEPTION.val$7| 1))) (EQ (Is_INTEGER |EXCEPTION.code$15| |@DUMMY|) |@true|)) (NOT (<= |i$14| |EXCEPTION.val$7|))) (FORALL (|res$31|) (FORALL (|res$32|) (IMPLIES (AND (AND (NEQ |res$32| |$NIL|) (AND (EQ (select |@AllocObjs| |res$32| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$32| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$32| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |t$9| |@ARRAY|)) (NUMBER (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|))))))) (EQ (select |Text.Value| |res$32| |@ARRAY|) (storeSub (select |Text.Value| |t$9| |@ARRAY|) (+ (NUMBER (select |Text.Value| |t$9| |@ARRAY|)) 1) (NUMBER (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|)) (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|)))) (AND (IMPLIES (NEQ |i$9| (- |EXCEPTION.val| 1)) (FORALL (|res$33|) (FORALL (|res$34|) (IMPLIES (AND (AND (NEQ |res$34| |$NIL|) (AND (EQ (select |@AllocObjs| |res$34| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$34| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$34| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$32| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$34| |@ARRAY|) (storeSub (select |Text.Value| |res$32| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$32| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|)))) (OR (AND (<= 1 (+ |i$9| 1)) (<= (+ |i$9| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))) (OR (AND (NEQ |i$9| (- |EXCEPTION.val| 1)) (EXISTS (|res$35|) (EXISTS (|res$36|) (AND (AND (NEQ |res$36| |$NIL|) (AND (EQ (select |@AllocObjs| |res$36| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$36| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$36| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$32| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$36| |@ARRAY|) (storeSub (select |Text.Value| |res$32| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$32| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|))))))) (OR (AND (<= 1 (+ |i$9| 1)) (<= (+ |i$9| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))))))))) (OR (<= 0 |EXCEPTION.val$7|) (FORALL (|res$37|) (FORALL (|res$38|) (IMPLIES (AND (AND (NEQ |res$38| |$NIL|) (AND (EQ (select |@AllocObjs| |res$38| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$38| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$38| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |t$9| |@ARRAY|)) (NUMBER (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|))))))) (EQ (select |Text.Value| |res$38| |@ARRAY|) (storeSub (select |Text.Value| |t$9| |@ARRAY|) (+ (NUMBER (select |Text.Value| |t$9| |@ARRAY|)) 1) (NUMBER (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|)) (select |Text.Value| |EXCEPTION.val$6| |@ARRAY|)))) (AND (IMPLIES (NEQ |i$9| (- |EXCEPTION.val| 1)) (FORALL (|res$39|) (FORALL (|res$40|) (IMPLIES (AND (AND (NEQ |res$40| |$NIL|) (AND (EQ (select |@AllocObjs| |res$40| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$40| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$40| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$38| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$40| |@ARRAY|) (storeSub (select |Text.Value| |res$38| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$38| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|)))) (OR (AND (<= 1 (+ |i$9| 1)) (<= (+ |i$9| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))) (OR (AND (NEQ |i$9| (- |EXCEPTION.val| 1)) (EXISTS (|res$41|) (EXISTS (|res$42|) (AND (AND (NEQ |res$42| |$NIL|) (AND (EQ (select |@AllocObjs| |res$42| |@ARRAY|) |@true|) (AND (EQ (Is_TEXT |res$42| |@DUMMY|) |@true|) (EQ (NUMBER (select |Text.Value| |res$42| |@ARRAY|)) (+ (NUMBER (select |Text.Value| |res$38| |@ARRAY|)) (NUMBER (select |Text.Value| DirSepText |@ARRAY|))))))) (EQ (select |Text.Value| |res$42| |@ARRAY|) (storeSub (select |Text.Value| |res$38| |@ARRAY|) (+ (NUMBER (select |Text.Value| |res$38| |@ARRAY|)) 1) (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) (select |Text.Value| DirSepText |@ARRAY|))))))) (OR (AND (<= 1 (+ |i$9| 1)) (<= (+ |i$9| 1) (+ (- |EXCEPTION.val| 1) 1))) (NOT |ERROR.LOOPINV_INV.31.4|)))))))))) (OR (EQ |EXCEPTION.code$12| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$12| RETURN) (OR (OR (EQ |EXCEPTION.code$12| RETURN) (EQ |EXCEPTION.code$12| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$12|) (OR (OR (EQ |EXCEPTION.code$12| RETURN) (EQ |EXCEPTION.code$12| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$12| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$12|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$12| RETURN) (EQ |EXCEPTION.code$12| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))))))) (OR (EQ |EXCEPTION.code$11| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$11| RETURN) (OR (OR (EQ |EXCEPTION.code$11| RETURN) (EQ |EXCEPTION.code$11| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$11|) (OR (OR (EQ |EXCEPTION.code$11| RETURN) (EQ |EXCEPTION.code$11| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$11| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$11|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$11| RETURN) (EQ |EXCEPTION.code$11| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))))))))))))))))) (FORALL (|i$15| |EXCEPTION.code$16| |t$13|) (IMPLIES (AND (AND (AND (<= 1 |i$15|) (<= |i$15| (+ (- |EXCEPTION.val| 1) 1))) (AND (EQ (Is_TEXT |t$13| |@DUMMY|) |@true|) (EQ (Is_INTEGER |EXCEPTION.code$16| |@DUMMY|) |@true|))) (NOT (AND (<= |i$15| (- |EXCEPTION.val| 1)) (EXISTS (|arc$3|) (EQ (Is_TEXT |arc$3| |@DUMMY|) |@true|))))) (AND (AND (IMPLIES (EQ RETURN RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ RETURN RETURN) (EQ |Pathname.Invalid| RETURN)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))))))) (OR (<= 1 (- |EXCEPTION.val| 1)) (AND (AND (IMPLIES (EQ RETURN RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| RETURN) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ RETURN RETURN) (EQ |Pathname.Invalid| RETURN)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ RETURN RETURN) (EQ RETURN |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))))))))))) (OR (EQ |EXCEPTION.code$1| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code$1| RETURN) (OR (OR (EQ |EXCEPTION.code$1| RETURN) (EQ |EXCEPTION.code$1| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code$1|) (OR (OR (EQ |EXCEPTION.code$1| RETURN) (EQ |EXCEPTION.code$1| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code$1| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code$1|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code$1| RETURN) (EQ |EXCEPTION.code$1| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))))))))))))) (OR (EQ |EXCEPTION.code| RETURN) (AND (AND (IMPLIES (EQ |EXCEPTION.code| RETURN) (OR (OR (EQ |EXCEPTION.code| RETURN) (EQ |EXCEPTION.code| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|))) (IMPLIES (EQ |Pathname.Invalid| |EXCEPTION.code|) (OR (OR (EQ |EXCEPTION.code| RETURN) (EQ |EXCEPTION.code| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))) (OR (OR (EQ |EXCEPTION.code| RETURN) (EQ |Pathname.Invalid| |EXCEPTION.code|)) (AND (NOT |ERROR.RAISES.22.0|) (OR (OR (EQ |EXCEPTION.code| RETURN) (EQ |EXCEPTION.code| |Pathname.Invalid|)) (NOT |ERROR.POSTCONDITION.22.0|)))))))))))))))))
+
+;; Bug in PredSx
+
+(IMPLIES
+ (FORALL (p) (IMPLIES (EQ (IsOp3 p) T) (<= p NProcs)))
+ (NOT (EQ (IsOp3 NProcs) T))
+ )
+
+(NOT
+  (AND
+    (<= x 0)
+    (<= 0 x)
+    (EQ (foo 0) 0)
+    (<= (foo x) 0)
+  )
+)
+
+
+;; 25
+(IMPLIES
+ (FORALL (x y) (NEQ (select x (blue x y) |@SPECIAL|) |@true|))
+ (IMPLIES
+  (EQ
+   (NUMBER
+    (select
+     IntArr
+
+     (blue SHARED 7)
+     ;; (NEW alloc777 SHARED LL TC POS)
+
+     |@REF|))
+   20)
+  (NEQ
+   20
+   (NUMBER
+    (select
+     IntArr
+
+     (select
+      (store
+       GorpA
+       new777
+
+       (blue SHARED 7)
+       ;; (NEW alloc777 SHARED LL TC POS)
+
+       )
+      new777
+      |@OBJECT|)
+
+
+     |@REF|))
+   )
+  )
+ )
+
+;;; Bug in primitiveness of products and quotients.
+(AND
+ (<= 0 (MAX 16
+	    (CEILING (MIN (* (FLOAT n REAL)
+			     |IntIntTbl.IdealDensityReciprocal|)
+			  (FLOAT |IntIntTbl.MaxBuckets| REAL)))))
+ (< (select (store |IntIntTbl.Default.minLogBuckets| tbl RES) tbl |@OBJECT|)
+    |Word.Size|)
+ )
+
+
