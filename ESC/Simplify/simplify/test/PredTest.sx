@@ -1,0 +1,56 @@
+;; 18 OK
+(DEFPREDMAP (Valid x y) r)
+
+;; 19 OK
+(IMPLIES (select (Valid a b) R)
+	 (OR (select (Valid a b) R0)
+	     (select (Valid a b) R)
+	     ))
+
+;; 20 Error
+(IMPLIES (select (Valid2 a b) R)
+	 (OR (select (Valid2 a b) R0)
+	     (select (Valid2 a b) R)
+	     ))
+
+(BG_PUSH TRUE)
+
+;; 21 OK
+(DEFPREDMAP (Valid2 x y) r
+  (AND (NEQ r NIL)
+       (> (+ (select x r) (select y r)) 0)))
+
+;; 22 Error
+(IMPLIES (Valid2 X Y) TRUE)
+
+;; 23 OK
+(IMPLIES
+ (select (Valid2 X Y) R)
+ (> (+ (select X R) (select Y R)) -5)
+ )
+
+;; 7 OK
+(IMPLIES
+ (AND
+  (> (+ (select X R) (select Y R)) 5)
+  (NEQ R NIL)
+  )
+ (select (Valid2 X Y) R)
+ )
+
+;; 24 OK
+(IMPLIES
+ (AND
+  (NEQ R NIL)
+  (> (+ (select X R) (select Y R)) 5)
+  (EQ a (Valid2 X Y))
+  )
+ (select (Valid2 X Y) R))
+
+(BG_POP)
+
+;; 25 Error
+(IMPLIES (select (Valid2 a b) R)
+	 (OR (select (Valid2 a b) R0)
+	     (select (Valid2 a b) R)
+	     ))

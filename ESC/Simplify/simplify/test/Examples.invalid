@@ -1,0 +1,456 @@
+;;; -*- lisp -*-
+
+;; 1
+(IMPLIES
+ (FORALL (abs)
+   (IMPLIES
+    (FORALL (ind)
+      (IFF (EQ (select abs ind) true)
+	   (AND (> (select c1 ind) 0) (> (select c2 ind) 0))))
+    (EQ (select abs self) true)))
+ (FORALL (absP)
+   (IMPLIES
+    (FORALL (ind)
+      (IFF (EQ (select absP ind) true)
+	   (AND (> (select (store c1 self
+				  (- (select c1 self) 1)) ind) 0)
+		(> (select (store c2 self
+				  (+ (select c2 self) 1)) ind) 0))))
+    (EQ true (select absP self)))))
+
+;; 2
+(IMPLIES
+ (FORALL (abs)
+   (IMPLIES
+    (FORALL (ind)
+      (AND
+       (IMPLIES
+	(EQ (select abs ind) true)
+	(AND (> (select c1 ind) 0) (> (select c2 ind) 0)))
+       (IMPLIES
+	(AND (> (select c1 ind) 0) (> (select c2 ind) 0))
+	(EQ (select abs ind) true))))
+    (EQ (select abs self) true)))
+ (FORALL (absP)
+   (IMPLIES
+    (FORALL (ind)
+      (IFF (EQ (select absP ind) true)
+	   (AND (> (select (store c1 self
+				  (- (select c1 self) 1)) ind) 0)
+		(> (select (store c2 self
+				  (+ (select c2 self) 1)) ind) 0))))
+    (EQ true (select absP self)))))
+
+;; 3 This produced an inconsistent counterexample.
+(NOT
+ (AND
+  (NEQ a c)
+  (OR (EQ g c) (EQ g e))
+  (NOT (AND (< g a) (< a b)))
+  (NOT (AND (< h c) (< c d)))
+  (NOT (< h e))
+  (EQ i a)
+  (NOT (< i e))
+  ))
+
+;; 4
+(NOT
+ (AND
+  (AND (< (EVT 0) (EVT 3))
+       (AND
+	(AND (OR (< (EVT 0) (EVT 3))
+		 (< (EVT 3) (EVT 0)))
+	     (OR (< (EVT 2) (EVT 7))
+		 (< (EVT 7) (EVT 2)))
+	     (OR (< (EVT 2) (EVT 8))
+		 (< (EVT 8) (EVT 2))))
+	(AND (OR (< (EVT 4) (EVT 3))
+		 (< (EVT 3) (EVT 4)))
+	     (OR (< (EVT 6) (EVT 7))
+		 (< (EVT 7) (EVT 6)))
+	     (OR (< (EVT 6) (EVT 8))
+		 (< (EVT 8) (EVT 6)))))
+       (AND
+	(OR
+	 (AND (< (EVT 0) (EVT 4))
+	      (< (EVT 1) (EVT 5))
+	      (< (EVT 2) (EVT 6)))
+	 (AND (< (EVT 4) (EVT 0))
+	      (< (EVT 5) (EVT 1))
+	      (< (EVT 6) (EVT 2))))
+	(OR
+	 (AND (< (EVT 4) (EVT 0))
+	      (< (EVT 5) (EVT 1))
+	      (< (EVT 6) (EVT 2)))
+	 (AND (< (EVT 0) (EVT 4))
+	      (< (EVT 1) (EVT 5))
+	      (< (EVT 2) (EVT 6)))))
+       (AND
+	(AND (< (EVT 4) (EVT 3))
+	     (OR (NOT (< (EVT 4) (EVT 0)))
+		 (NOT (< (EVT 0) (EVT 3)))))
+	(AND (< (EVT 6) (EVT 7))
+	     (OR (NOT (< (EVT 6) (EVT 2)))
+		 (NOT (< (EVT 2) (EVT 7)))))
+	(AND (< (EVT 2) (EVT 8))
+	     (OR (NOT (< (EVT 2) (EVT 6)))
+		 (NOT (< (EVT 6) (EVT 8))))))
+       (AND
+	(OR
+	 (OR
+	  (AND (< (EVT 0) (EVT 3))
+	       (OR (NOT (< (EVT 0) (EVT 4)))
+		   (NOT (< (EVT 4) (EVT 3)))))
+	  (AND (< (EVT 4) (EVT 3))
+	       (OR (NOT (< (EVT 4) (EVT 0)))
+		   (NOT (< (EVT 0) (EVT 3))))))
+	 (AND (NOT (< (EVT 0) (EVT 3)))
+	      (NOT (< (EVT 4) (EVT 3)))))
+	(OR
+	 (OR
+	  (AND (< (EVT 2) (EVT 7))
+	       (OR (NOT (< (EVT 2) (EVT 6)))
+		   (NOT (< (EVT 6) (EVT 7)))))
+	  (AND (< (EVT 6) (EVT 7))
+	       (OR (NOT (< (EVT 6) (EVT 2)))
+		   (NOT (< (EVT 2) (EVT 7))))))
+	 (AND (NOT (< (EVT 2) (EVT 7)))
+	      (NOT (< (EVT 6) (EVT 7)))))
+	(OR
+	 (OR
+	  (AND (< (EVT 2) (EVT 8))
+	       (OR (NOT (< (EVT 2) (EVT 6)))
+		   (NOT (< (EVT 6) (EVT 8)))))
+	  (AND (< (EVT 6) (EVT 8))
+	       (OR (NOT (< (EVT 6) (EVT 2)))
+		   (NOT (< (EVT 2) (EVT 8))))))
+	 (AND (NOT (< (EVT 2) (EVT 8)))
+	      (NOT (< (EVT 6) (EVT 8)))))))
+  (EQ (FOO (EVT 0)) 0)
+  (EQ (FOO (EVT 1)) 1)
+  (EQ (FOO (EVT 2)) 2)
+  (EQ (FOO (EVT 3)) 3)
+  (EQ (FOO (EVT 4)) 4)
+  (EQ (FOO (EVT 5)) 5)
+  (EQ (FOO (EVT 6)) 6)
+  (EQ (FOO (EVT 7)) 7)
+  (EQ (FOO (EVT 8)) 8)))
+
+
+;; 5
+(IMPLIES
+ (DISTINCT a b c d e f g)
+ (EQ b c))
+
+;; 6
+(DISTINCT a1 a2 a3 a4 a5)
+
+;; 7 Skolemization
+(IMPLIES
+ (FORALL (x)
+   (IMPLIES
+    (EQ (f x) T)
+    (EXISTS (y)
+      (AND
+       (EQ (g y) (f (+ x 5)))
+       (FORALL (j)
+	 (> (g y) 7))))))
+ (IMPLIES
+  (EQ (f 8) T)
+  (> (f 13) 8)))
+
+;; 8
+(IMPLIES
+ (AND
+  (EQ (LT x y) |@true|)
+  (EQ (LT y z) |@true|)
+  (EQ (LT z u) |@true|)
+  )
+ (EQ a b))
+
+(IMPLIES
+ (AND
+  (EQ (LE x y) |@true|)
+  (EQ (LE y z) |@true|)
+  (EQ (LE z u) |@true|)
+  )
+ (EQ a b))
+
+;; 10
+(IMPLIES
+ (AND
+  (EQ (LE x y) |@true|)
+  (EQ (LE y z) |@true|)
+  )
+ (EQ (LT x z) |@true|))
+
+
+;; Bug in Simplex.AssertEQ, when one of the Unknowns was no longer in use.
+;; (George's bug :-)
+(BG_PUSH
+ (FORALL (x) (EQ (Id x) x))
+ )
+(EQ
+ (select
+  (store
+   (Foo (+ 1 1))
+   r1
+   (+
+    (Id 1)
+    1)
+   )
+  r1)
+ 678)
+(BG_POP)
+
+;;; These are for testing labels.  The following should have labels:
+
+;; 12
+(IMPLIES
+ (EQ x 7)
+ (AND
+  (LBL e1 (> x 5))
+  (LBL e2 (> x 9))))
+
+;; 13
+(IMPLIES
+ (EQ (f 7) (f x))
+ (AND
+  (LBL e1 (EQ x 7))
+  (LBL e2 (EQ 5 5))
+  )
+ )
+
+;; 14
+(IMPLIES
+ (EQ x 7)
+ (AND
+  (> x 0)
+  (LBL e1
+       (AND (> x 1)
+	    (> x 9)))
+  ))
+
+;; 15
+(IMPLIES
+ (EQ x 7)
+ (AND
+  (> x 0)
+  (OR (LBL e1 (> x 9))
+      (LBL e2 (> x 10)))
+  ))
+
+;; 16
+(IMPLIES
+ (EQ x 7)
+ (LBL e1 (LBL e2 (> x 9))))
+
+;; 17
+(IMPLIES
+ (FORALL (x) (NOT (LBL e1 (NOT (> (f x) 0)))))
+ (> (f 7) 1))
+
+;; 18
+(IMPLIES
+ (FORALL (x) (LBLPOS e1 (> (f x) 0)))
+ (> (f 7) 1))
+
+;; 19
+(IMPLIES
+ (FORALL (x)
+         (OR (NOT (LBL e1 (NOT (< (f x) 0))))
+	     (NOT (LBL e2 (NOT (> (f x) 10))))))
+ (LBL e3 (> (f 7) 5)))
+
+;; 20
+(IMPLIES
+ (FORALL (x)
+   (OR (EQ (P1 x) T)
+       (LBLPOS e (AND (EQ (Q1 x) T) (EQ (R1 x) T)))))
+ (EQ (P1 a) T))
+
+;; 21
+(IMPLIES
+ (FORALL (x)
+   (AND
+    (LBLPOS e (AND (EQ (Q1 x) T) (EQ (R1 x) T)))
+    (LBLPOS e (AND (EQ (Q2 x) T) (EQ (R2 x) T))))
+   )
+ (OR
+  (EQ (Q1 a) F)
+  (EQ (R1 a) F)
+  )
+ )
+
+;; 22
+;; Bug in handling of labels in Skolemize.
+(BG_PUSH
+ (FORALL (x) 
+   (IMPLIES
+    (LBLPOS LP (> (PP x) 0))
+    (FORALL (y)
+      (LBL LQ (EQ (Q x y) T)))))
+ )
+(IMPLIES
+ (> (PP a) 5)
+ (NEQ (Q a b) T))
+;; Should get LP label.
+(BG_POP)
+
+;; Below this line, should not have labels printed.
+;; 23
+(IMPLIES
+ (FORALL (x)
+   (AND
+    (LBLPOS e (AND (EQ (Q1 x) T) (EQ (R1 x) T)))
+    (LBLPOS e (AND (EQ (Q2 x) T) (EQ (R2 x) T))))
+   )
+ (OR
+  (EQ (Q1 a) F)
+  (EQ (R2 a) F)
+  )
+ )
+
+;; 24
+(BG_PUSH
+ (FORALL (x) 
+   (OR (EQ (PP x) T)
+       (LBLPOS L (AND (EQ (QQ x) T) (EQ (R x) T)))))
+ )
+(OR
+ (EQ (PP a) T)
+ (NEQ (QQ a) T)
+ (EQ (PP b) T)
+ (NEQ (R b) T))
+(BG_POP)
+
+;; 25
+(BG_PUSH
+ (FORALL (x) 
+   (OR (EQ (PP x) T)
+       (LBLPOS L (AND (> (QQ x) 0) (> (R x) 0)))))
+ )
+(NOT
+ (AND
+  (> (QQ a) 5)
+  (> (R b) 5)
+  (< (QQ b) 0)
+  (< (R a) 0)
+  )
+ )
+(BG_POP)
+
+;; 26
+(BG_PUSH TRUE)
+(DEFPRED (Blah x) 
+  (FORALL (y) 
+    (OR (EQ (P x y) T)
+	(LBLPOS L (AND (> (Q x y) 0) (> (R x y) 0))))))
+(IMPLIES
+ (AND (Blah a) (Blah b))
+ (NOT
+  (AND
+   (> (Q a xx) 5)
+   (> (R b xx) 5)
+   )))
+(BG_POP)
+
+
+;; This should have produced a satisfying context containing two matching
+;; rules, corresponding to
+;;
+;; (FORALL (x) (EQ (P x (y x)) T))
+;; (FORALL (j) (NEQ (P (i2 j) j) T))
+;;
+;; But instead, it produced a ground term!
+;; 
+;; (NEQ (P (|i%2| (|j%1|)) (|j%1|)) T)
+;; 
+;; What happened was that we didn't manage the substitution used both to
+;; map existentially quantified variables to skolem functions and to
+;; map universally quantified variables to pattern variables in
+;; Clause.LitForUniversalQuantWork correctly.  In a place where we
+;; needed to compose substitutions, we just overwrote.
+
+;; 27
+(IMPLIES
+ (FORALL (x)
+   (EXISTS (y)
+     (EQ (P x y) T)
+     ))
+ (FORALL (i)
+   (EXISTS (j)
+     (FORALL (i)
+       (EQ (P i j) T)
+       )))
+ )
+
+;; This failed to produce the label "Foo".
+;; 28
+(OR (EQ i 0)
+    (LBL Foo FALSE))
+
+;; This was a soundness bug: we were throwing away the matching rule
+;; literal during D1P.
+;; 29
+(BG_PUSH
+ (FORALL (x)
+   (IMPLIES (> (f x) 6)
+	    (FORALL (y) (EQ (ggg x y) T))))
+ )
+(IMPLIES
+ (> (f a) 8)
+ (EQ (q b) (r b)))
+(BG_POP)
+
+;; These test the syntax checking.
+;; 30
+(EQ (f a) (a))
+;; 31
+(EQ (a) (f a))
+
+;; These test that constant propagation from the simplex tableau is
+;; undone when the context is popped.
+;; 32
+(IMPLIES
+  (<= n 6)
+  (AND
+    (IMPLIES (<= 6 n) (EQ 6 n))
+    (EQ 6 n)
+    (IMPLIES (<= 6 n) (EQ 6 n))
+  )
+)
+;; 33
+(BG_PUSH
+  (AND (<= y 6) (<= 6 y))
+)
+(BG_POP)
+(EQ 6 y)
+
+;; 34
+;; This example formerly produced an assertion failure in
+;; Simplex.TightenBounds:
+
+(NOT
+  (AND
+    (> x y)
+    (< (* 69 y) (+ 50 (* 31 x)))
+    (> (* 69 y) (* 31 x))))
+
+;;35
+;; This example formerly crashed with an attempt to derefernce
+;; NIL in Atom.m3.
+
+  (IMPLIES
+   (NEQ (f j) m)
+   (NOT
+    (OR
+     (FORALL (k) (EQ (f k) m))
+     (EQ x y))))
+
+;;36
+;; This example was formerly found "Valid" because of a name-capture bug.
+
+(BG_PUSH (EXISTS (x) (NEQ x 3)))
+(NEQ x 3)
+(BG_POP)

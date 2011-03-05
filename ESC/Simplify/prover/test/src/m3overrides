@@ -1,0 +1,5 @@
+% On some systems, the following line may be unnecessary or may need to
+% be changed :
+WDROOT = "../.."
+
+override("prover", WDROOT)

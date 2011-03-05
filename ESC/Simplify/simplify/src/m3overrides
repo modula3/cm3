@@ -1,0 +1,17 @@
+
+WDROOT = "../.."
+MYROOT = $ESCTOOLS_ROOT & "/Simplify"
+
+override("prover", WDROOT)
+override("cgi-utils", WDROOT)
+% override("libm3", WDROOT)
+
+override("ui",MYROOT & "/libs/m3-ui")
+override("X11R4",MYROOT & "/libs/m3-ui")
+override("mtex",MYROOT & "/libs/m3-tools")
+
+
+
+
+
+

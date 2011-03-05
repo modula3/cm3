@@ -1,0 +1,15 @@
+% Copyright (C) 2002 Hewlett-Packard Company
+% Copyright (C) 2000, 2002, Compaq Computer Corporation
+% All rights reserved.
+% Last modified on Wed Jul 17 10:49:38 PDT 2002 by saxe   
+import("libm3")
+Module("HTMLUtils")
+Module("CGITrans")
+
+% On systems that do not support shared libraries the following
+% line (or, on some systems, the one after it) is necessary:
+% option("standalone", "T")
+% "build_standalone()
+% Using cm3 on OS X, neither line is necessary.
+
+Library("CGIUtils")

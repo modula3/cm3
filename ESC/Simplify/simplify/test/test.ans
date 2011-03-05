@@ -1,0 +1,975 @@
+The following should be valid:
+1: Valid.
+
+2: Valid.
+
+3: Valid.
+
+4: Valid.
+
+5: Valid.
+
+6: Valid.
+
+7: Valid.
+
+8: Valid.
+
+9: Valid.
+
+10: Valid.
+
+11: Valid.
+
+12: Valid.
+
+13: Valid.
+
+14: Valid.
+
+15: Valid.
+
+16: Valid.
+
+17: Valid.
+
+18: Valid.
+
+19: Valid.
+
+20: Valid.
+
+21: Valid.
+
+22: Valid.
+
+23: Valid.
+
+24: Valid.
+
+25: Valid.
+
+26: Valid.
+
+27: Valid.
+
+28: Valid.
+
+29: Valid.
+
+30: Valid.
+
+31: Valid.
+
+32: Valid.
+
+33: Valid.
+
+34: Valid.
+
+35: Valid.
+
+1: Valid.
+
+2: Valid.
+
+3: Valid.
+
+4: Valid.
+
+5: Valid.
+
+6: Valid.
+
+7: Valid.
+
+8: Valid.
+
+9: Valid.
+
+10: Valid.
+
+11: Valid.
+
+12: Valid.
+
+13: Valid.
+
+14: Valid.
+
+15: Valid.
+
+16: Valid.
+
+17: Valid.
+
+18: Valid.
+
+19: Valid.
+
+20: Valid.
+
+21: Valid.
+
+22: Valid.
+
+23: Valid.
+
+24: Valid.
+
+25: Valid.
+
+26: Valid.
+
+27: Valid.
+
+28: Valid.
+
+29: Valid.
+
+30: Valid.
+
+31: Valid.
+
+32: Valid.
+
+33: Valid.
+
+34: Valid.
+
+35: Valid.
+
+36: Valid.
+
+37: Valid.
+
+38: Valid.
+
+39: Valid.
+
+40: Valid.
+
+41: Valid.
+
+42: Valid.
+
+43: Valid.
+
+1: Valid.
+
+2: Valid.
+
+3: Valid.
+
+1: Valid.
+
+
+The following should be invalid:
+Counterexample:
+  context:
+    (AND
+      (NEQ (select |absP%0| (|ind%1| (store c1 self 0))) true)
+      (NEQ (select |absP%0| self) true)
+      (EQ (|ind%1| (store c2 self true)) self)
+      (EQ (select c1 (|ind%1| (store c1 self 0))) true)
+      (EQ (|ind%1| |absP%0|) self)
+      (EQ (select c1 self) 1)
+      (EQ (select c1 (|ind%1| c1)) true)
+      (EQ (select c2 (|ind%1| c2)) true)
+      (EQ (+ (select c2 self) 1) true)
+      (<= (select c2 (|ind%1| c1)) 0)
+      (<= (select c1 (|ind%1| c2)) 0)
+      (< 0 (select c2 self))
+      (<= (select c2 (|ind%1| (store c1 self 0))) 0)
+    )
+
+1: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (select |absP%0| (|ind%1| (store c1 self 0))) true)
+      (NEQ (select |absP%0| self) true)
+      (EQ (select c2 (|ind%1| c2)) true)
+      (EQ (|ind%1| (store c2 self true)) self)
+      (EQ (+ (select c2 self) 1) true)
+      (EQ (|ind%1| |absP%0|) self)
+      (EQ (select c1 (|ind%1| (store c1 self 0))) true)
+      (EQ (select c1 self) 1)
+      (EQ (select c1 (|ind%1| c1)) true)
+      (<= (select c2 (|ind%1| (store c1 self 0))) 0)
+      (<= (select c2 (|ind%1| c1)) 0)
+      (< 0 (select c2 self))
+      (<= (select c1 (|ind%1| c2)) 0)
+    )
+
+2: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ a g)
+      (EQ g c)
+      (EQ a i)
+      (<= e a)
+      (<= a g)
+      (<= g h)
+    )
+
+3: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (FOO (EVT 1)) 1)
+      (EQ (FOO (EVT 6)) 6)
+      (EQ (FOO (EVT 2)) 2)
+      (EQ (FOO (EVT 7)) 7)
+      (EQ (FOO (EVT 3)) 3)
+      (EQ (FOO (EVT 8)) 8)
+      (EQ (FOO (EVT 4)) 4)
+      (EQ (FOO (EVT 0)) 0)
+      (EQ (FOO (EVT 5)) 5)
+      (< (EVT 8) (EVT 6))
+      (< (EVT 2) (EVT 8))
+      (< (EVT 6) (EVT 7))
+      (< (EVT 4) (EVT 3))
+      (< (EVT 0) (EVT 4))
+      (< (EVT 1) (EVT 5))
+    )
+
+4: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (DISTINCT a b c d e f g)
+    )
+
+5: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ a4 a5)
+    )
+
+6: Invalid.
+
+Bad input: g is used as both a variable and a function symbol.
+Counterexample:
+  context:
+    (AND
+      (NEQ b a)
+      (EQ (LT z u) |@true|)
+      (EQ (LT x y) |@true|)
+      (EQ (LE z u) |@true|)
+      (EQ (LE x y) |@true|)
+      (EQ (LT y u) |@true|)
+      (EQ (LT y z) |@true|)
+      (EQ (LE y u) |@true|)
+      (EQ (LE y z) |@true|)
+    )
+
+8: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ b a)
+      (EQ (LE z u) |@true|)
+      (EQ (LE x y) |@true|)
+      (EQ (LE y u) |@true|)
+      (EQ (LE x u) |@true|)
+      (EQ (LE y z) |@true|)
+    )
+
+9: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (LT x z) |@true|)
+      (EQ (LE y z) |@true|)
+      (EQ (LE x y) |@true|)
+      (EQ (LE x z) |@true|)
+    )
+
+10: Invalid.
+
+Counterexample:
+
+11: Invalid.
+
+Counterexample:
+  labels: (|e2|)
+  context:
+    (AND
+      (EQ x 7)
+    )
+
+12: Invalid.
+
+Counterexample:
+  labels: (|e1|)
+  context:
+    (AND
+      (NEQ x 7)
+      (EQ (f x) (f 7))
+    )
+
+13: Invalid.
+
+Counterexample:
+  labels: (|e1|)
+  context:
+    (AND
+      (EQ x 7)
+    )
+
+14: Invalid.
+
+Counterexample:
+  labels: (|e2| |e1|)
+  context:
+    (AND
+      (EQ x 7)
+    )
+
+15: Invalid.
+
+Counterexample:
+  labels: (|e2| |e1|)
+  context:
+    (AND
+      (EQ x 7)
+    )
+
+16: Invalid.
+
+Counterexample:
+  labels: (|e1|)
+  context:
+    (AND
+      (EQ (f 7) 1)
+    )
+
+17: Invalid.
+
+Counterexample:
+  labels: (|e1|)
+  context:
+    (AND
+      (EQ (f 7) 1)
+    )
+
+18: Invalid.
+
+Counterexample:
+  labels: (|e1| |e3|)
+  context:
+    (AND
+      (< (f 7) 0)
+    )
+
+19: Invalid.
+
+Counterexample:
+  labels: (|e|)
+  context:
+    (AND
+      (NEQ (P1 a) T)
+      (EQ (Q1 a) T)
+      (EQ (R1 a) T)
+    )
+
+20: Invalid.
+
+Counterexample:
+  labels: (|e|)
+  context:
+    (AND
+      (NEQ F T)
+      (EQ (R1 a) T)
+      (EQ (Q1 a) T)
+    )
+
+21: Invalid.
+
+Counterexample:
+  labels: (|LP|)
+  context:
+    (AND
+      (<= 6 (PP a))
+    )
+
+22: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ F T)
+      (EQ (R2 a) T)
+      (EQ (Q1 a) T)
+    )
+
+23: Invalid.
+
+Counterexample:
+  labels: (|L|)
+  context:
+    (AND
+      (NEQ T (PP b))
+      (NEQ T (PP a))
+      (EQ (R b) T)
+      (EQ (QQ b) T)
+      (EQ (R a) T)
+      (EQ (QQ a) T)
+    )
+
+24: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (< (R a) 0)
+      (< (QQ b) 0)
+      (<= 6 (R b))
+      (<= 6 (QQ a))
+    )
+
+25: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (Blah b)
+      (Blah a)
+      (<= 6 (R b xx))
+      (<= 6 (Q a xx))
+    )
+
+26: Invalid.
+
+Counterexample:
+
+27: Invalid.
+
+Counterexample:
+  labels: (|Foo|)
+  context:
+    (AND
+      (NEQ i 0)
+    )
+
+28: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (r b) (q b))
+      (<= 9 (f a))
+    )
+
+29: Invalid.
+
+Bad input: a is used as both a variable and a function symbol.
+Bad input: a is used as both a variable and a function symbol.
+Counterexample:
+  context:
+    (AND
+      (NEQ n 6)
+      (<= n 6)
+    )
+
+32: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ y 6)
+    )
+
+33: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (< (* 31 x) (* 69 y))
+      (< y x)
+      (<= (* 69 y) (+ (* 31 x) 49))
+    )
+
+34: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ m (f j))
+      (EQ y x)
+    )
+
+35: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ x 3)
+    )
+
+36: Invalid.
+
+Counterexample:
+
+1: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (f Edge1x1E T) (f T T))
+      (NEQ (f Edge1x1E Edge1x2E) (f T T))
+      (NEQ (f T T) (f T Edge1x1E))
+      (NEQ (f Edge2x2E T) (f T T))
+      (NEQ (f Edge2x1E T) (f T T))
+      (NEQ (f T Edge1x2E) (f T T))
+      (NEQ (f Edge1x2E T) (f T T))
+      (NEQ (f Edge2x1E Edge2x2E) (f T T))
+      (EQ Edge1x3S T)
+      (EQ Edge1x2S T)
+      (EQ Edge1x1S T)
+    )
+
+2: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (select a i knd) x)
+    )
+
+3: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (|Is$MATHINT| n |@DUMMY|) |@true|)
+      (<= 0 n)
+    )
+
+4: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (select a 9 knd) (select a 8 knd))
+      (EQ j 5)
+    )
+
+5: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (NUMBER a) i)
+    )
+
+6: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (NUMBER b) (NUMBER a))
+    )
+
+7: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (select a i knd) x)
+      (EQ i j)
+    )
+
+8: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (select b 3 knd) (select b 2 knd))
+      (EQ (|Is$MATHINT| 2 |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| 2 |@DUMMY|) |@true|)
+      (EQ (select a 6 knd) (select b 2 knd))
+      (EQ (|Is$MATHINT| 8 |@DUMMY|) |@true|)
+    )
+
+9: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ 10 (NUMBER |a.15|))
+    )
+
+10: Invalid.
+
+Counterexample:
+
+11: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (NUMBER |a.9|) 10)
+      (EQ (|Is$MATHINT| |i.11| |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| |i.11| |@DUMMY|) |@true|)
+      (EQ (+ |i.11| 1) 11)
+    )
+
+12: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (NUMBER |a.9|) 10)
+      (EQ (+ |i.11| 0) 10)
+    )
+
+13: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (select |T.sz`| s knd) (NUMBER RefArray))
+    )
+
+14: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (NUMBER a) 10)
+      (EQ (|Is$MATHINT| 10 |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| 10 |@DUMMY|) |@true|)
+      (<= i 7)
+      (<= 5 i)
+    )
+
+15: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (NUMBER a) (+ i 1))
+      (EQ (|Is$MATHINT| i |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| i |@DUMMY|) |@true|)
+      (<= 2 (+ i 1))
+      |ERROR.INDEX.8.11|
+    )
+
+16: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ 7 (g (f a b)))
+      (EQ (f a b) (f b a))
+    )
+
+17: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (+ (select Ipre r 0) 1) (select I_tmp r 0))
+      (EQ (+ (select j_tmp r 0) 1) (select Ipre r 0))
+      (EQ (|Is$MATHINT| (select Ipre r 0) |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| (select Ipre r 0) |@DUMMY|) |@true|)
+      (EQ (|Is$MATHINT| (select I_tmp r 0) |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| (select I_tmp r 0) |@DUMMY|) |@true|)
+    )
+
+18: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ |@true| |@false|)
+      (NEQ |IntSeqRep.Public.TYPECODE| |IntSeq.T.TYPECODE|)
+      (NEQ |IntSeqRep.Public.TYPECODE| |IntSeq.Public.TYPECODE|)
+      (NEQ |IntSeq.Public.TYPECODE| |IntSeq.T.TYPECODE|)
+      (NEQ |TYPE@17.TYPECODE| |IntSeq.T.TYPECODE|)
+      (NEQ |TYPE@17.TYPECODE| |IntSeqRep.Public.TYPECODE|)
+      (NEQ |TYPE@17.TYPECODE| |IntSeqRep.RefArray.TYPECODE|)
+      (NEQ |TYPE@17.TYPECODE| |IntSeq.Public.TYPECODE|)
+      (NEQ (|Is_TYPE@38| |IntSeqRep.RefArray`|) |@true|)
+      (NEQ (|Is_IntSeq.Public| |$NIL|) |@true|)
+      (NEQ (select |$AllocObjs| |res$2%0| |@ARRAY|) |@true|)
+      (NEQ (|Is_IntSeq.T| |res$2%0|) |@true|)
+      (NEQ (|Is_TYPE@38| (store |IntSeqRep.Public.elem`| |s`| |res$2%0|)) |@true|)
+      (NEQ (|Is_IntSeqRep.RefArray| |$NIL|) |@true|)
+      (NEQ (|Is_TYPE@17| |res$2%0|) |@true|)
+      (NEQ |IntSeqRep.RefArray.TYPECODE| |IntSeq.T.TYPECODE|)
+      (NEQ |IntSeqRep.RefArray.TYPECODE| |IntSeqRep.Public.TYPECODE|)
+      (NEQ |IntSeqRep.RefArray.TYPECODE| |IntSeq.Public.TYPECODE|)
+      (NEQ (|Is_IntSeqRep.Public| |res$2%0|) |@true|)
+      (NEQ (|Is_TYPE@38| |$AllocObjs|) |@true|)
+      (NEQ (|Is_TYPE@17| |$NIL|) |@true|)
+      (NEQ (|Is_IntSeq.Public| |res$2%0|) |@true|)
+      (EQ |IntSeqRep.RefArray.TYPECODE| (TYPECODE |res$2%0| |@DUMMY|))
+      (EQ |$NIL| |s%0|)
+      (EQ |Word.Size| 32)
+      (EQ |sizeHint`| 0)
+      (EQ (|Is_TYPE@38| (select |IntSeqRep.RefArray`| |res$2%0| |@ARRAY|)) |@true|)
+      (EQ (SUBTYPE |NULL.TYPECODE| |IntSeq.T.TYPECODE|) |@true|)
+      (EQ (|Is$ORDINAL| |NULL.TYPECODE| |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| |IntSeqRep.RefArray.TYPECODE| |@DUMMY|) |@true|)
+      (EQ (SUBTYPE |IntSeq.T.TYPECODE| |IntSeqRep.Public.TYPECODE|) |@true|)
+      (EQ (SUBTYPE |NULL.TYPECODE| |IntSeqRep.Public.TYPECODE|) |@true|)
+      (EQ (|Is_IntSeq.T| |$NIL|) |@true|)
+      (EQ (NUMBER (select |IntSeqRep.RefArray`| |res$2%0| |@ARRAY|)) 0)
+      (EQ (|Is$MATHINT| |sizeHint`| |@DUMMY|) |@true|)
+      (EQ (Is_CARDINAL |sizeHint%0|) |@true|)
+      (<= 0 |sizeHint%0|)
+      |ERROR.POSTCONDITION.44.0|
+    )
+
+19: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ (Node m) true)
+      (EQ |n2%0| n)
+      (EQ (Node n) true)
+      (EQ (Node Root) true)
+    )
+
+20: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ |EXCEPTION.code$5%0| |Pathname.Invalid|)
+      (NEQ |EXCEPTION.code$5%0| CheckedRuntimeError)
+      (NEQ |res$4%0| |$NIL|)
+      (NEQ EXIT |EXCEPTION.code$5%0|)
+      (NEQ EXIT |Pathname.Invalid|)
+      (NEQ EXIT CheckedRuntimeError)
+      (NEQ |EXCEPTION.val$2%0| |@false|)
+      (NEQ DirSepText |$NIL|)
+      (NEQ ExtSepText |$NIL|)
+      (NEQ |EXCEPTION.val$1%0| |$NIL|)
+      (NEQ CheckedRuntimeError |Pathname.Invalid|)
+      (NEQ |EXCEPTION.val$3%0| |$NIL|)
+      (NEQ (TYPECODE a |@DUMMY|) |NULL.TYPECODE|)
+      (EQ |EXCEPTION.code$2%0| RETURN)
+      (EQ |EXCEPTION.val$4%0| |i$4%0|)
+      (EQ DirSepChar 47)
+      (EQ |EXCEPTION.code%0| RETURN)
+      (EQ |EXCEPTION.code$1%0| RETURN)
+      (EQ ExtSepChar 46)
+      (EQ |EXCEPTION.code$4%0| RETURN)
+      (EQ |EXCEPTION.val$2%0| |@true|)
+      (EQ |EXCEPTION.code$5%0| RETURN)
+      (EQ (Is_BOOLEAN |EXCEPTION.val$2%0| |@DUMMY|) |@true|)
+      (EQ (Is_TEXT |arc%0| |@DUMMY|) |@true|)
+      (EQ (|Is_TYPE@66| Legal |@DUMMY|) |@true|)
+      (EQ (Is_INTEGER |EXCEPTION.code$3%0| |@DUMMY|) |@true|)
+      (EQ (Is_TEXT |Pathname.Current| |@DUMMY|) |@true|)
+      (EQ (Is_TEXT |t%0| |@DUMMY|) |@true|)
+      (EQ (|Is_TextSeq.Public| a |@DUMMY|) |@true|)
+      (EQ (select (select |Text.Value| DirSepText |@ARRAY|) 0 |@ARRAY|) 47)
+      (EQ (NUMBER (select |Text.Value| DirSepText |@ARRAY|)) 1)
+      (EQ (Is_TEXT ExtSepText |@DUMMY|) |@true|)
+      (EQ (NUMBER (select |Text.Value| ExtSepText |@ARRAY|)) 1)
+      (EQ (Is_TEXT |Pathname.Parent| |@DUMMY|) |@true|)
+      (EQ (Is_TEXT |res$4%0| |@DUMMY|) |@true|)
+      (EQ (NUMBER (select |Text.Value| |res$4%0| |@ARRAY|)) 1)
+      (EQ (NUMBER (select |Text.Value| |EXCEPTION.val$3%0| |@ARRAY|)) |i$4%0|)
+      (EQ (SUBTYPE (TYPECODE a |@DUMMY|) |TextSeq.Public.TYPECODE|) |@true|)
+      (EQ (select |@AllocObjs| DirSepText |@ARRAY|) |@true|)
+      (EQ (Is_CARDINAL |i$4%0| |@DUMMY|) |@true|)
+      (EQ (Is_TEXT |EXCEPTION.val$3%0| |@DUMMY|) |@true|)
+      (EQ (Is_CARDINAL |EXCEPTION.val%0| |@DUMMY|) |@true|)
+      (EQ (select |TextSeq.Public_Size| a |@ARRAY|) |EXCEPTION.val%0|)
+      (EQ (Is_TEXT |EXCEPTION.val$1%0| |@DUMMY|) |@true|)
+      (EQ (Is_TEXT DirSepText |@DUMMY|) |@true|)
+      (EQ (|Is$MATHINT| |i$4%0| |@DUMMY|) |@true|)
+      (EQ (select (select |Text.Value| ExtSepText |@ARRAY|) 0 |@ARRAY|) 46)
+      (EQ (Is_INTEGER |EXCEPTION.code$6%0| |@DUMMY|) |@true|)
+      (EQ (Is_TEXT |t$4%0| |@DUMMY|) |@true|)
+      (EQ (select (select |Text.Value| |res$4%0| |@ARRAY|) 0 |@ARRAY|) 47)
+      (EQ (select |@AllocObjs| ExtSepText |@ARRAY|) |@true|)
+      (EQ (|Is$MATHINT| |EXCEPTION.val%0| |@DUMMY|) |@true|)
+      (EQ (Is_CARDINAL |n%0| |@DUMMY|) |@true|)
+      (EQ (select |@AllocObjs| |res$4%0| |@ARRAY|) |@true|)
+      (EQ (|Is$ORDINAL| |i$4%0| |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| |EXCEPTION.val%0| |@DUMMY|) |@true|)
+      (<= 0 |n%0|)
+      (< |i$1%0| |EXCEPTION.val%0|)
+      (<= 0 |i$4%0|)
+      (< 0 |i$1%0|)
+      |ERROR.CALL.35.14|
+    )
+
+21: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (IsOp3 NProcs) T)
+    )
+
+22: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ x 0)
+      (EQ (foo 0) 0)
+    )
+
+23: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ |@true| (select SHARED (blue SHARED 7) |@SPECIAL|))
+      (EQ (NUMBER (select IntArr (blue SHARED 7) |@REF|)) 20)
+    )
+
+24: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (|Is$INTEGER| (* (FLOAT n REAL) |IntIntTbl.IdealDensityReciprocal|) |@DUMMY|) |@true|)
+      (EQ (|Is$MATHINT| 16 |@DUMMY|) |@true|)
+      (EQ (|Is$ORDINAL| 16 |@DUMMY|) |@true|)
+      (EQ (|Is$MATHINT| (* (FLOAT n REAL) |IntIntTbl.IdealDensityReciprocal|) |@DUMMY|) |@true|)
+      (< (* (FLOAT n REAL) |IntIntTbl.IdealDensityReciprocal|) (FLOAT |IntIntTbl.MaxBuckets| REAL))
+      (<= |Word.Size| RES)
+      (< |IntIntTbl.MaxBuckets| 0)
+      (< n 0)
+      (<= (CEILING (* (FLOAT n REAL) |IntIntTbl.IdealDensityReciprocal|)) 15)
+    )
+
+25: Invalid.
+
+Counterexample:
+  labels: (|ERROR.POSTCONDITION.15.0.Normal return|)
+  context:
+    (AND
+      (EQ |Test11.g$1%0| |Test11.g|)
+      (EQ (|Is$BOOLEAN| b |@DUMMY|) |@true|)
+      (EQ (VAL (ORD b) |BOOLEAN.TYPECODE|) |@true|)
+      (<= 0 (ORD b))
+      (<= (ORD b) 1)
+    )
+
+1: Invalid.
+
+Counterexample:
+  labels: (|ERROR.CALL.31.4|)
+  context:
+    (AND
+      (EQ |EXCEPTION.code%0| RETURN)
+      (EQ (|Is$INTEGER| |y%0| |@DUMMY|) |@true|)
+      (EQ (|Is$TYPE@24| |x%0| |@DUMMY|) |@true|)
+      (EQ (- |Test11.g'%0| 1) -1)
+      (EQ (|Is$INTEGER| |Test11.g'%0| |@DUMMY|) |@true|)
+      (EQ (SUBSET ALLOCATED |ALLOCATED'%0|) |@true|)
+      (EQ (|Is$MATHINT| -1 |@DUMMY|) |@true|)
+      (EQ (select |ALLOCATED'%0| |$NIL| |@SPECIAL|) |@true|)
+      (EQ (|Is$MATHINT| |y%0| |@DUMMY|) |@true|)
+      (EQ (NUMBER (ADDR |x%0|) |Test11.g'%0|) 4)
+      (EQ (|Is$ORDINAL| |Test11.g'%0| |@DUMMY|) |@true|)
+      (<= |y%0| |INTEGER.LAST|)
+      (<= |INTEGER.FIRST| |y%0|)
+    )
+
+2: Invalid.
+
+Counterexample:
+  context:
+    (AND
+      (EQ (SrcP NProcs 2) 1)
+      (EQ (Steps NProcs) 2)
+      (EQ (IsOp 0 NProcs Init x NProcs) T)
+      (EQ (IsOp NProcs 2 Read x NProcs) T)
+      (EQ (OrdLTE (Op NProcs 2) (Op 0 NProcs)) T)
+      (EQ (SrcN NProcs 2) 2)
+      (EQ (IsOp NProcs NProcs Write x 2) T)
+      (EQ (OrdLTE (Op NProcs 2) (Op NProcs NProcs)) T)
+      (EQ (OrdLT (Op NProcs NProcs) (Op NProcs 2)) T)
+      (EQ (Steps 0) 1)
+      (EQ (IsOp2 0 NProcs) T)
+    )
+
+1: Invalid.
+
+These should be mixed:
+1: Valid.
+
+Bad input: 'select' can only be used as a predicate when applied to a PREDMAP; 'Valid2' is not a PREDMAP.
+Bad input: Unknown predicate symbol: Valid2.
+4: Valid.
+
+5: Valid.
+
+6: Valid.
+
+Bad input: 'select' can only be used as a predicate when applied to a PREDMAP; 'Valid2' is not a PREDMAP.
+Counterexample:
+
+1: Invalid.
+
+2: Valid.
+
+Counterexample:
+  context:
+    (AND
+      (<= a 7)
+      (<= 0 b)
+      (<= b 1)
+      (<= 5 a)
+    )
+
+3: Invalid.
+
+Counterexample:
+
+4: Invalid.
+
+5: Valid.
+
+Counterexample:
+  context:
+    (AND
+      (<= a 7)
+      (<= 0 b)
+      (<= b 1)
+      (<= 5 a)
+    )
+
+6: Invalid.
+
+1: Valid.
+
+2: Valid.
+
+3: Valid.
+
+Counterexample:
+  context:
+    (AND
+      (NEQ y x)
+      (NEQ (GT1 x y) |@true|)
+      (EQ (GE1 x y) |@true|)
+    )
+
+4: Invalid.
+
+5: Valid.
+
+

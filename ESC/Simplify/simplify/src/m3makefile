@@ -1,0 +1,43 @@
+/* Copyright (C) 2002 Hewlett-Packard Company                                */
+/* Copyright (C) 2000 Compaq Computer Corporation                            */
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Tue Jul 16 21:18:59 PDT 2002 by saxe                     */
+/*      modified on Wed Oct 21 15:07:36 PDT 1998 by gnelson                  */
+/*      modified on Fri Apr 19 16:04:32 PDT 1996 by detlefs                  */
+
+%m3_option("-g2 -times")
+/* m3_option("-X2%-p%") */
+
+%m3_option("-verbose")
+%m3_option("-Y2@cc@-ieee_with_inexact@-non_shared@-v@")
+%import("m3ild")
+
+import("libm3")
+import("ui")
+import("cgi-utils")
+import("mtex")
+import("prover")
+
+resource("html-output1")
+resource("html-output2")
+bundle("Html")
+
+if defined("AT_SRC") and equal (OS_TYPE, "POSIX")
+  Mtex("Simplify", 1)
+end
+
+implementation("Simplify")
+
+% On systems that do not support shared libraries the following
+% line (or, on some systems, the one after it) is necessary:
+% option("standalone", "T")
+build_standalone()
+% Using cm3 on OS X, neither line is necessary.
+
+Program("Simplify")
+
+
+

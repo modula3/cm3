@@ -1,0 +1,206 @@
+.\" This file generated automatically by mtex2man(1)
+.nh
+.TH "Simplify" "1"
+.SH "NAME"
+\fBSimplify\fR \-\- attempt to prove first\-order formulas.
+.SH "SYNTAX"
+\fBSimplify\fR [\fI\-print\fR] [\fI\-ax axfile\fR] [\fI\-nosc\fR] [\fI\-noprune\fR] [\fI\-help\fR] [\fI\-version\fR] [\fIfile\fR]
+.SH "DESCRIPTION"
+.PP
+  \fBSimplify\fR accepts a sequence of first order formulas as input,
+  and attempts to prove each one.  \fBSimplify\fR does not implement a
+  decision procedure for its inputs: it can sometimes fail to prove a
+  valid formula.  But it is conservative in that it never claims that
+  an invalid formula is valid.
+.PP
+  The PredSx
+  interface in the prover package specifies the syntax used to
+  specify the formulas; this syntax is based on S\-expressions, with
+  one S\-expression per formula.  (I include this interface later in
+  this man page.)  If the \fIfile\fR argument is provided, S\-expression
+  formulas are read one at a time from the file, and proved;
+  otherwise, \fBSimplify\fR enters a "read\-prove\-print" loop in which
+  the user enters formulas interactively.  The input formula is not
+  normally echoed, but it is when the \fI\-print\fR argument is given.
+.PP
+  If \fBSimplify\fR can prove the formula, it prints valid.  If it
+  cannot prove the formula, it normally prints a conjunction of
+  literals that it believes to satisfy the negation of the formula.
+  Computing this satisfying context takes some time, and sometimes one
+  may be interested only in whether the input was valid or not; the
+  \fI\-nosc\fR options causes \fBSimplify\fR to simply output "valid" or
+  "invalid".  The \fI\-noprune\fR flag causes \fBSimplify\fR to skip the step
+  of "pruning" any satisfying context resulting from a failed proof;
+  instead, it prints the entire context.
+.PP
+  The \fI\-version\fR option prints out the version number of the
+  \fBSimplify\fR executable, and the \fI\-help\fR option prints out a
+  usage message.
+.PP
+  \fBSimplify\fR proves its formulas assuming some set of \fIaxioms\fR.
+  The first step in a \fBSimplify\fR execution is loading the axioms.
+  You can customize the axiom set you use in two ways.  The \fI\-ax\fR flag
+  allows you to specify an alternate axiom set, and the the AXIOMDIR
+  environment variable allows you to specify where \fBSimplify\fR
+  should look for that axiom set.  \fBSimplify\fR comes with a
+  collection of axiom sets included via the Modula\-3 "bundle"
+  facility; currently, these consist of "def.ax" and "esc.ax".
+  (\fBSimplify\fR assumes axiom files use the ".ax" suffix.)
+  If the \fI\-ax\fR flag is not used, \fBSimplify\fR looks for "def.ax";
+  if the argument \fI\-ax file\fR is given, \fBSimplify\fR looks for
+  "file.ax".  If the AXIOMDIR environment variable is set,
+  \fBSimplify\fR looks for that file in the given directory, otherwise,
+  it looks in its compiled\-in bundle.  Axiom files use the same syntax
+  as other input.
+.PP
+  The Prover
+  interface describes (among other things) various environment
+  variables that can be set to control heuristic parameters that can
+  affect the performance of \fBSimplify\fR.
+.SH "FORMULA SYNTAX (PredSx)"
+.PP
+  This section reproduces the part of the PredSx interface that
+  defines the syntax of formulas.
+.EX
+(* A "PredSx.T" satisfies the following grammar:
+
+|  formula ::= "(" ( AND | OR )  { formula } ")" |
+|              "(" NOT formula ")" |
+|              "(" IMPLIES formula formula ")" |
+|              "(" IFF formula formula ")" |
+|              "(" FORALL "(" var* ")" formula ")" |
+|              "(" EXISTS "(" var* ")" formula ")" |
+|              "(" PROOF formula* ")" |
+|              literal 
+|
+|  literal ::= "(" ( "EQ" | "NEQ" | "<" | "<=" | ">" | ">=" )
+|              term term ")" |
+               "(" "DISTINCT" term term+ ")" |
+|               "TRUE" | "FALSE" | <propVar>
+|
+|  term    ::= var | integer | "(" func { term } ")"
+
+"var"'s, "func"'s, and "propVar"'s (propositional variables) are
+represented as "Atom.T"'s.
+
+The formula
+
+| (DISTINCT term1 ... termN)
+
+represents a conjunction of distinctions between all pairs of terms in
+the list.
+
+The formula
+
+| (PROOF form1 ... formN)
+
+is sugar for
+
+| (AND (IMPLIES form1 form2)
+|      (IMPLIES (AND form1 form2) form3)
+|      ...
+|      (IMPLIES (AND form1 ... formN\-1) formN))
+
+"func"'s are uninterpreted, except for "+", "\-", and "*", which
+represent the obvious operations on integers.
+*)
+.EE
+  <func>'s are uninterpreted, except for "+", "\-", and "*", which
+  represent the obvious operations on integers.
+.PP
+  In addition, the following forms control the environment in which
+  theorems are proved.
+.PP
+| (BG_PUSH pred)
+.PP
+  adds "pred" to the set of predicates assumed to be true, and
+.PP
+| (BG_POP)
+.PP
+  removes the last predicate added to the set.
+.PP
+| (LEMMA pred*)
+.PP
+  attempts to prove each predicate in the list, assuming all previous
+  predicates.  If all proofs succeed, adds the last predicate in the
+  list to the set of assumed predicates.
+.SH "DEFAULT AXIOMS"
+.PP
+  The default axiom set used by simplify interprets function symbols
+  defining array operations: select, store, subMap,
+  storeSub, and mapFill:
+.EX
+|     (FORALL (a i x k)
+|        (EQ (select (store a i x) i k) x))
+| 
+|     (FORALL (a i n)
+|        (EQ (len (subMap a i n)) n))
+| 	
+|     (FORALL (a i n j k)
+|        (EQ (select (subMap a i n) j k) (select a (+ i j) k)))
+| 
+|     (FORALL (a i x)
+|        (EQ (len (store a i x)) (len a)))
+| 
+|     (FORALL (a i n b)
+|        (EQ (len (storeSub a i n b)) (len a)))
+|
+|     (FORALL (v i)
+|         ( EQ (select (mapFill v) i) v)
+|
+| #| non\-unit RHS |#
+| 
+|     (FORALL (i j a x k)
+|       (OR (EQ i j) (EQ (select (store a i x) j k) (select a j k))))
+| 
+|     (FORALL (j i a n b k)
+|       (OR (AND (OR (< j i) (>= j (+ i n)))
+|                (EQ (select (storeSub a i n b) j k) (select a j k)))
+|           (AND (>= j i)
+|                (< j (+ i n))
+|                (EQ (select (storeSub a i n b) j k) (select b (\- j i) k))))) 
+*)
+.EE
+  The axiom set used for ESC includes the axioms above, and others
+  that change on a daily basis :\-)
+.SH "AXIOM SETS"
+.PP
+  If you specify a customized axiom set, the axioms are S\-expressions
+  that are read from the file using the procedure:
+.EX
+    PROCEDURE AddAxioms(rd: Rd.T) RAISES { Error };
+    (* "rd" must be a reader onto a sequence of syntactically correct
+       axioms; if not, raises "Error".  The syntax for an axiom is:
+
+    | axiom ::=   "(" ( UNIT | NONUNIT ) vars pat template ")"
+    |           | "(" UNITLHS vars opSym pat template ")"
+
+       "vars" is a list of atoms that represent {\eit pattern variables} in the
+       S\-expressions "pat" and "template".  "opSym" is an atom.
+       The "UNIT" or "UNITLHS" forms should be used to express a rule
+       whose template is a literal (hence is a unit clause.)  The
+       "UNITLHS" form should be used to gain some efficiency if the
+       template is a relation between that matched enode and some other
+       enode.  In the "NONUNIT" form, "pat" is a multipattern; that is, a
+       list of patterns.
+
+       An axiom corresponds to a "Match.MatchingRuleSet" "mrs" such that
+       "mrs.unit" is "TRUE" for "UNIT" or "UNITLHS" axioms, and "FALSE"
+       otherwise; "mrs.pats" is the singleton list containing "pat";
+       "mrs.template" is "template", and "mrs.vars" is the array of atoms
+       corresponding to "vars".  In a "UNITLHS", "mrs.opSym" is
+       "opSym", in other axioms, it is "NIL".  (This means that the
+       meaning of a "UNITLHS" axiom is "(opsym pat template)".
+
+       All the axioms in "rd" are added to the global list of axioms.
+    *)
+.EE
+  until the file is empty.  "pat"s and "template"s should follow the
+  "PredSx" syntax given above.
+.SH "AUTHOR"
+  Greg Nelson and Dave Detlefs
+.SH "AUTHOR OF MAN PAGE"
+  Dave Detlefs
+.PP
+This file was generated automatically by mtex software; see the
+mtex home page at http://www.research.digital.com/SRC/mtex/.

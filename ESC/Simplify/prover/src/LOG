@@ -1,0 +1,87 @@
+11/14
+
+  6:10PM PredSx.SimplifyQuants:
+      SimplifyQuantWork only works on FORALL.  If result is not a
+      FORALL, we need to recurse using SimplifyQuants.
+
+  6:25PM Enode.m3:
+      Really would be more powerful if asserting a matching rule left
+      the Enodes in the egraph; no push/pop.  With the fix for
+      Simplex.IsSum etc, shouldn't have much performance impact.
+
+11/15:
+  1:30 Enode.m3:
+      SxToClause had been in a push/pop pair.  Took the push/pop pair
+      out, added Prover variable to specify when you want to add
+      clause instantiations for non-unit rules.
+
+  6:00: PredSx.m3:
+      Added SimplifyOneQuant, for Esc::Pred.m3 to call.  Later fixed to loop
+      until SimplifyQuantWork didn't do anything.
+
+11/17:
+  1:30: PredSx.m3:
+      Made SimplifyQuantWork distribute FORALL over AND.
+
+11/18:
+  PredSx: Added test in SimplifyLit to detect (FORALL (x) (EQ x C)) => FALSE.
+  No performance effect.
+
+
+1/16:
+
+Clause.CNFWork recognizes trueLit/falseLit.
+Enode.NewEq recognizes x =/# x, returns truelit/falseLit.
+Clause.SxToClause recognizes trueLit/falseLit.
+
+1/17
+Simplex canonicalizes equality literals.
+Clause sorts partial patterns by pattern size, preferring smaller.
+
+1/18
+Went back to true CNF as an experiment.  It was still slow.  Simplex time
+and number of unknowns up considerably.  What is tableau size when hit
+NU matching?
+
+Changed Simplex.NewGT to use negated NewGE.
+
+Seq.addhi doesn't work.  Try:
+  Simplex.NewEq...no.
+  Simplex.NewGt...no.
+  Enode.NewEq...no.
+  Are there any opaque clauses?  no.
+  Pattern difference? not obvious, anyway...
+  clause always set? yes.
+  Is the context consistent? no.
+  Turns out clause is NOT always set.  Name hiding problem.
+
+TO UNDO:
+  True CNF in Clause.
+
+BUG:
+  Here's what should happen in proving:
+
+(IMPLIES (EQ j 5) (EQ (select (SUBARRAY a 3 10) j knd) (select a 8 knd)))
+
+assert
+
+(EQ j 5)
+(NEQ (select (SUBARRAY a 3 10) j knd) (select a 8 knd)))
+
+do unit matching, yield
+
+(EQ (select (SUBARRAY a 3 10) j knd) (select a (+ 3 j) knd))
+
+activate (+ 3 j)
+  propogate (EQ (+ 3 j) 8)
+    propogate (EQ (select a (+ 3 j) knd) (select a 8 knd))
+assert
+  (EQ (select (SUBARRAY a 3 10) j knd) (select a (+ 3 j) knd))
+return false because on forbids list.
+
+3: 13
+j: 8, 5: 9
+(+ 3 j): 60
+8: 24
+(select a (+ 3 j) knd): 63
+(select a 8 knd): 27

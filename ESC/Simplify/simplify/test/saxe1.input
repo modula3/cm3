@@ -1,0 +1,25 @@
+;;; -*- lisp -*-
+
+(BG_PUSH
+ (NEQ Init Write)
+ (NEQ Init Read)
+ (NEQ Init MB)
+ (NEQ Write Read)
+ (NEQ Write MB)
+ (NEQ Read MB)
+ (NEQ x y)
+ )
+
+(NOT
+ (AND
+  (EQ NProcs 1)
+  (EQ (IsOp 0 1 Init  x 1) T)
+  (EQ (Steps 0) 1)
+
+  (EQ (IsOp 1 1 Write x 2) T)
+  (EQ (IsOp 1 2 Read  x 1) T)
+  (EQ (Steps 1) 2)
+  )
+ )
+
+

@@ -1,0 +1,16 @@
+(OR
+ (EQ (f a) (f b))
+ (EQ (g c) (g d))
+ )
+
+(EQ (f a) (h a))
+unchanged
+
+push
+
+(EQ (f a) a)
+changed
+
+pop
+
+
