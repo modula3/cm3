@@ -8,4 +8,4 @@ WDROOT = "../.."
 %override("set",		WDROOT)
 %override("table-list",	WDROOT)
 %override("intpair",	WDROOT)
-override("digraph",	WDROOT)
+%override("digraph",	WDROOT)
