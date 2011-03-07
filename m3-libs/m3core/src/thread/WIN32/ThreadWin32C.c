@@ -69,7 +69,7 @@ void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
 PCONTEXT __cdecl ThreadWin32__NewContext(void)
 {
     /* 0x300 to workaround apparent bug -- otherwise GetThreadContext fails when using pageheap */
-	typedef union  {
+	typedef union {
 	  CONTEXT a;
 	  unsigned char b[0x300];
 	} CONTEXT300;
