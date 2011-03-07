@@ -68,7 +68,8 @@ void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
 
 PCONTEXT __cdecl ThreadWin32__NewContext(void)
 {
-    PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context));
+    /* 0x300 | to workaround apparent bug -- otherwise GetThreadContext fails when using pageheap */
+    PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 0x300 | sizeof(*context));
     if (context)
         context->ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
     return context;
