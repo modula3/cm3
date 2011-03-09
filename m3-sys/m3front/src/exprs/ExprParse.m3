@@ -172,16 +172,16 @@ PROCEDURE E8 (types: BOOLEAN): Expr.T =
   VAR a: Expr.T;  here := offset;
   BEGIN
     CASE cur.token OF
-    | TK.tIDENT        => a := NamedExpr.New (cur.id, cur.defn);    GetToken ();
-    | TK.tINTEGERCONST => a := IntegerExpr.New (Int.T, cur.int);    GetToken ();
-    | TK.tLONGINTCONST => a := IntegerExpr.New (LInt.T, cur.int);   GetToken ();
-    | TK.tCHARCONST    => a := EnumExpr.New (Charr.T, cur.int);     GetToken ();
-    | TK.tWCHARCONST   => a := EnumExpr.New (WCharr.T, cur.int);    GetToken ();
-    | TK.tTEXTCONST    => a := TextExpr.New8 (cur.str);             GetToken ();
-    | TK.tWTEXTCONST   => a := TextExpr.New16 (cur.wstr);           GetToken ();
-    | TK.tREALCONST    => a := ReelExpr.New (cur.float);            GetToken ();
-    | TK.tLONGREALCONST=> a := ReelExpr.New (cur.float);            GetToken ();
-    | TK.tEXTENDEDCONST=> a := ReelExpr.New (cur.float);            GetToken();
+    | TK.tIDENT         => a := NamedExpr.New (cur.id, cur.defn);   GetToken ();
+    | TK.tCARDCONST     => a := IntegerExpr.New (Int.T, cur.int);   GetToken ();
+    | TK.tLONGCARDCONST => a := IntegerExpr.New (LInt.T, cur.int);  GetToken ();
+    | TK.tCHARCONST     => a := EnumExpr.New (Charr.T, cur.int);    GetToken ();
+    | TK.tWCHARCONST    => a := EnumExpr.New (WCharr.T, cur.int);   GetToken ();
+    | TK.tTEXTCONST     => a := TextExpr.New8 (cur.str);            GetToken ();
+    | TK.tWTEXTCONST    => a := TextExpr.New16 (cur.wstr);          GetToken ();
+    | TK.tREALCONST     => a := ReelExpr.New (cur.float);           GetToken ();
+    | TK.tLONGREALCONST => a := ReelExpr.New (cur.float);           GetToken ();
+    | TK.tEXTENDEDCONST => a := ReelExpr.New (cur.float);           GetToken();
 
     | TK.tLPAREN =>
         GetToken ();

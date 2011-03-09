@@ -289,7 +289,7 @@ PROCEDURE DoFail (msg: TEXT;  stop: TK) =
           Error.Txt (M3WString.ToLiteral (cur.wstr), t);
       | TK.tREALCONST, TK.tLONGREALCONST, TK.tEXTENDEDCONST =>
           Error.Txt ("<float>", t);
-      | TK.tINTEGERCONST, TK.tLONGINTCONST =>
+      | TK.tCARDCONST, TK.tLONGCARDCONST =>
           IF TInt.ToInt (cur.int, i)
             THEN Error.Int (i, t);
             ELSE Error.Txt ("<integer>", t);
@@ -530,7 +530,7 @@ PROCEDURE ScanNumber () =
           Error.Msg ("illegal based LONGINT literal, zero used");
           val := TInt.Zero;
         END;
-        cur.token := TK.tLONGINTCONST;
+        cur.token := TK.tLONGCARDCONST;
         EVAL TInt.Extend (val, Target.Longint.bytes, cur.int);
       ELSE
         IF (len = 0)
@@ -539,7 +539,7 @@ PROCEDURE ScanNumber () =
           Error.Msg ("illegal based INTEGER literal, zero used");
           val := TInt.Zero;
         END;
-        cur.token := TK.tINTEGERCONST;
+        cur.token := TK.tCARDCONST;
         EVAL TInt.Extend (val, Target.Integer.bytes, cur.int);
       END;
 
@@ -559,7 +559,7 @@ PROCEDURE ScanNumber () =
           Error.Msg ("illegal INTEGER literal, zero used");
           val := TInt.Zero;
         END;
-        cur.token := TK.tINTEGERCONST;
+        cur.token := TK.tCARDCONST;
         cur.int   := val;
         RETURN;
       END;
@@ -626,7 +626,7 @@ PROCEDURE ScanNumber () =
           Error.Msg ("illegal LONGINT literal, zero used");
           val := TInt.Zero;
         END;
-        cur.token := TK.tLONGINTCONST;
+        cur.token := TK.tLONGCARDCONST;
         cur.int   := val;
       ELSE
         IF NOT TInt.New (SUBARRAY (buf, 0, len), val)
@@ -635,7 +635,7 @@ PROCEDURE ScanNumber () =
           Error.Msg ("illegal INTEGER literal, zero used");
           val := TInt.Zero;
         END;
-        cur.token := TK.tINTEGERCONST;
+        cur.token := TK.tCARDCONST;
         cur.int   := val;
       END;
     END;
@@ -916,7 +916,7 @@ PROCEDURE ScanPragma () =
 
     IF (cur.id = LINE) THEN
       GetToken (); (* LINE *)
-      IF (cur.token # TK.tINTEGERCONST) THEN
+      IF (cur.token # TK.tCARDCONST) THEN
         Error.Msg ("missing line number on LINE pragma; skipping to \'*>\'");
         WHILE (cur.token # TK.tENDPRAGMA) AND (cur.token # TK.tEOF) DO
           GetToken ();
