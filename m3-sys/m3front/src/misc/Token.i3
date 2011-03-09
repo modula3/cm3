@@ -15,7 +15,7 @@ TYPE
 
        (* lexical classes *)
        tIDENT,
-       tINTEGERCONST, tLONGINTCONST,
+       tCARD, tLONGCARDCONST,
        tREALCONST, tLONGREALCONST, tEXTENDEDCONST,
        tCHARCONST, tWCHARCONST,
        tTEXTCONST, tWTEXTCONST,
@@ -79,7 +79,7 @@ CONST
                    T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
 
   ExprStart = Set {T.tNOT, T.tPLUS, T.tMINUS, T.tIDENT,
-                   T.tINTEGERCONST, T.tLONGINTCONST,
+                   T.tCARDCONST, T.tLONGCARDCONST,
                    T.tLONGREALCONST, T.tREALCONST, T.tEXTENDEDCONST,
                    T.tCHARCONST, T.tWCHARCONST, T.tTEXTCONST, T.tWTEXTCONST,
                    T.tLPAREN, T.tARRAY, T.tBITS, T.tRECORD, T.tSET};
