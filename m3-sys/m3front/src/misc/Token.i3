@@ -15,7 +15,7 @@ TYPE
 
        (* lexical classes *)
        tIDENT,
-       tCARD, tLONGCARDCONST,
+       tCARDCONST, tLONGCARDCONST,
        tREALCONST, tLONGREALCONST, tEXTENDEDCONST,
        tCHARCONST, tWCHARCONST,
        tTEXTCONST, tWTEXTCONST,
