@@ -590,7 +590,7 @@ BEGIN
       DO
          IF active[i] AND (counts2[i] = counts3[i])
          THEN
-            Wr.PutText(Stdio.stdout, Makers[threadM[i]].named & " Thread " & Fmt.Int(i) & " appears starved or deadlocked !!!" & Wr.EOL);
+            Wr.PutText(Stdio.stdout, "!!! " & Makers[threadM[i]].named & " Thread " & Fmt.Int(i) & " appears starved or deadlocked !!!" & Wr.EOL);
          ELSIF verbose AND active[i] AND (counts2[i] > counts3[i])
          THEN
             Wr.PutText(Stdio.stdout, "   " & Makers[threadM[i]].named & " Thread " & Fmt.Int(i) & " completed " & Fmt.LongInt(counts2[i] - counts3[i]) & " loops." & Wr.EOL);
