@@ -326,8 +326,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size := 18 * Address.size;
 
     | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
-                 (* 48 bytes with 4 byte alignment *)
-                 Jumpbuf_size     := 12 * Address.size;
+                 (* 76 bytes with 4 byte alignment *)
+                 Jumpbuf_size     := 19 * Address.size;
 
     | Systems.SPARC32_LINUX =>
                  Jumpbuf_size              := 16_90 * Char.size;
