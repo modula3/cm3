@@ -9,6 +9,8 @@
 _FloatPieces = {
 % Fill in TARGET or TARGET_ARCH or TARGET_OS specifics here if they exist,
 % otherwise we fallback to defaults below.
+  "LINUXLIBC6"    : [ "IEEE", "IEEE-le", "C99" ],
+  "AMD64_LINUX"   : [ "IEEE", "IEEE-le", "C99" ],
   "AMD64_FREEBSD" : [ "IEEE", "IEEE-le", "C99" ],
   "FreeBSD4"      : [ "IEEE", "IEEE-le", "C99" ]
 }
