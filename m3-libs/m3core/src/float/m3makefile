@@ -12,6 +12,7 @@ _FloatPieces = {
   "LINUXLIBC6"    : [ "IEEE", "IEEE-le", "C99" ],
   "AMD64_LINUX"   : [ "IEEE", "IEEE-le", "C99" ],
   "AMD64_FREEBSD" : [ "IEEE", "IEEE-le", "C99" ],
+  "I386_DARWIN"   : [ "IEEE", "IEEE-le", "C99" ],
   "FreeBSD4"      : [ "IEEE", "IEEE-le", "C99" ]
 }
 
