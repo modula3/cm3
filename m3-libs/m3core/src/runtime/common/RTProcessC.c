@@ -20,7 +20,8 @@ typedef struct _vector_t {
   size_t count_used;
 } vector_t;
 
-vector_t fork_handlers;
+#define fork_handlers RTProcess__fork_handlers
+static vector_t fork_handlers;
 
 INTEGER
 __cdecl
