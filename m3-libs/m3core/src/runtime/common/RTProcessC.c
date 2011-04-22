@@ -106,12 +106,14 @@ RTProcess__Fork(void)
 {
 #ifdef M3_USER_THREADS
   int new_pid = { 0 };
-  fork_handlers_t* p = fork_handlers.p;
-  size_t count_used = fork_handlers.count_used;
+  fork_handlers_t* p = { 0 };
+  size_t count_used = { 0 };
   size_t i = { 0 };
   ForkHandler handler = { 0 };
 
   Scheduler__DisableSwitching();
+  p = fork_handlers.p;
+  count_used = fork_handlers.count_used;
   for (i = 0; < i < count_used; ++i)
   {
     handler = p[i].prepare;
