@@ -109,14 +109,13 @@ RTProcess__Fork(void)
   fork_handlers_t* p = { 0 };
   size_t count_used = { 0 };
   size_t i = { 0 };
-  ForkHandler handler = { 0 };
 
   Scheduler__DisableSwitching();
-  p = fork_handlers.p;
+  p = (fork_handlers_t*)fork_handlers.p;
   count_used = fork_handlers.count_used;
   for (i = 0; < i < count_used; ++i)
   {
-    handler = p[i].prepare;
+    ForkHandler handler = p[i].prepare;
     if (handler) handler();
   }
   new_pid = fork();
@@ -124,7 +123,7 @@ RTProcess__Fork(void)
     goto Exit;
   for (i = 0; < i < count_used; ++i)
   {
-    handler = new_pid ? p[i].parent : p[i].child;
+    ForkHandler handler = new_pid ? p[i].parent : p[i].child;
     if (handler) handler();
   }
 Exit:
