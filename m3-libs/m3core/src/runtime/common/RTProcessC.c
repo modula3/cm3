@@ -40,7 +40,7 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
   count_allocated = fork_handlers.count_allocated;
   if (count_used + 1 >= count_allocated)
   {
-    new_allocated = 2 * (1 + count_allocated);
+    new_allocated = count_allocated ? (2 * count_allocated) : 4;
     p = (T*)calloc(new_allocated, sizeof(T));
     if (!p)
     {
@@ -51,6 +51,7 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
     free(fork_handlers.p);
     fork_handlers.count_allocated = new_allocated;
     fork_handlers.p = p;
+    p += count_used;
   }
   else
   {
@@ -97,6 +98,42 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
 }
 
 #endif /* M3_USER_THREADS */
+
+INTEGER
+__cdecl
+RTProcess__Fork(void)
+{
+#ifdef M3_USER_THREADS
+  int new_pid = { 0 };
+  fork_handlers_t* p = fork_handlers.p;
+  size_t count_used = fork_handlers.count_used;
+  size_t i = { 0 };
+  ForkHandler handler = { 0 };
+
+  Scheduler__DisableSwitching();
+  for (i = 0; < i < count_used; ++i)
+  {
+    handler = p[i].prepare;
+    if (handler) handler();
+  }
+  new_pid = fork();
+  if (new_pid == -1)
+    goto Exit;
+  for (i = 0; < i < count_used; ++i)
+  {
+    handler = new_pid ? p[i].parent : p[i].child;
+    if (handler) handler();
+  }
+Exit:
+  Scheduler__EnableSwitching();
+  return new_pid;
+#elif defined(_WIN32)
+  fprintf(stderr, "RTProcess__Fork called on Win32\n");
+  abort();
+#else
+  return fork();
+#endif
+}
 
 #ifdef __cplusplus
 } /* extern "C" */
