@@ -41,7 +41,7 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
   count_allocated = fork_handlers.count_allocated;
   if (count_used + 1 >= count_allocated)
   {
-    new_allocated = count_allocated ? ((count_allocated * 3 / 2) : 4;
+    new_allocated = count_allocated ? (count_allocated * 3 / 2) : 4;
     p = (T*)calloc(new_allocated, sizeof(T));
     if (!p)
     {
