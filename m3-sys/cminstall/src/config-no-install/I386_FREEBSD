@@ -1,2 +1,0 @@
-readonly TARGET = "I386_FREEBSD"
-include("I386_FREEBSD.common")

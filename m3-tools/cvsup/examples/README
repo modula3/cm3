@@ -1,6 +1,0 @@
-This directory contains some sample configuration files for cvsup and
-cvsupd.  It's not very complete yet.
-
-  supfile.cvs
-    A sample supfile for mirroring the FreeBSD "src" and "ports" trees
-    in a local CVS repository.

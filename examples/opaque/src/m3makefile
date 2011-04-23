@@ -1,9 +1,0 @@
-% m3makefile for opaque
-
-import ("libm3")
-
-module("Person")
-
-implementation ("OpaqueExample")
-program ("opaque")
-

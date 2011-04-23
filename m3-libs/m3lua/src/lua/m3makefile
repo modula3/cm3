@@ -1,6 +1,0 @@
-import("m3core")
-import("libm3")
-
-Interface("M3LuaBase")
-Module("M3LuaRaw")
-Module("M3LuaObject")

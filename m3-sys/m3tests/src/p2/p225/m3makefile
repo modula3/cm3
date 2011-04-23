@@ -1,5 +1,0 @@
-implementation("Main")
-interface("finally")
-c_source("finally")
-build_standalone()
-include ("../../Test.common")

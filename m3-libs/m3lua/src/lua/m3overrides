@@ -1,7 +1,0 @@
-PWD = path()
-BASEDIR = pn_prefix(PWD)
-
-write("pwd: " & PWD)
-write("basedir: " & BASEDIR)
-
-override("m3lua", BASEDIR)

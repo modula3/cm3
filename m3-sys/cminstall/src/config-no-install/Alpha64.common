@@ -1,4 +1,0 @@
-readonly TARGET_ENDIAN = "LITTLE" % { "BIG" OR "LITTLE" }
-readonly TARGET_ARCH = "ALPHA64"
-readonly WORD_SIZE = "64BITS"
-m3back_mieee = "-mieee"

@@ -1,2 +1,0 @@
-readonly TARGET = "LINUXLIBC6" % code generation target
-include("I386_LINUX.common")

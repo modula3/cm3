@@ -1,2 +1,0 @@
-INTERFACE Div;
-END Div.

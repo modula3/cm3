@@ -1,9 +1,0 @@
-
-import("libm3")
-import("pkg_vc")
-import("fileinfo")
-
-build_standalone()
-implementation("Main")
-
-Program("pkgvc_test")

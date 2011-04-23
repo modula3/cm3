@@ -1,4 +1,0 @@
-include(ROOT & "/m3overrides")
-
-_ZUME_EXEC = format (ROOT & "/m3-ui/m3zume/%s/m3zume", BUILD_DIR)
-_ZUME_OVERRIDE = "T"

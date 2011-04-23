@@ -1,5 +1,0 @@
-override ("zeus", ROOT & "/m3-ui")
-override ("obliqrt", ROOT & "/m3-obliq")
-override ("obliqparse", ROOT & "/m3-obliq")
-override ("obliqlibm3", ROOT & "/m3-obliq")
-override ("obliqlibanim", ROOT & "/m3-obliq")

@@ -1,6 +1,0 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("m3quake", ROOT & "/m3-sys")
-override ("tcp", ROOT & "/m3-comm")
-override ("http", ROOT & "/m3-www")
-override ("m3scan", ROOT & "/m3-tools")
-override ("m3markup", ROOT & "/m3-tools")

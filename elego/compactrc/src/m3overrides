@@ -1,7 +1,0 @@
-override("libm3",           ROOT & SL & "m3-libs")
-override("vbtkit",          ROOT & SL & "m3-ui")
-override("patternmatching", ROOT & SL & "m3-libs")
-override("sysutils",        ROOT & SL & "m3-libs")
-override("langutils",       ROOT & SL & "elego")
-override("compact-client",  ROOT & SL & "elego")
-override("tuple",           ROOT & SL & "elego")

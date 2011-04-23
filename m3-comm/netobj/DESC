@@ -1,5 +1,0 @@
-<p>
-Network objects are Modula-3 objects which can be exported and
-imported across networks. This is an object-oriented form of
-RPC.
-</p>
