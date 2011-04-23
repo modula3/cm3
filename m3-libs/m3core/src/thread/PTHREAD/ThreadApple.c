@@ -40,12 +40,21 @@ void ThreadApple__Dummy(void) { } /* avoid empty file */
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
+  kern_return_t status;
   mach_port_t mach_thread = pthread_mach_thread_np(PTHREAD_FROM_M3(mt));
-  if (thread_suspend(mach_thread) != KERN_SUCCESS)
-    return 0;
-  if (thread_abort_safely(mach_thread) != KERN_SUCCESS)
+  status = thread_suspend(mach_thread);
+  if (status != KERN_SUCCESS)
   {
-    kern_return_t status = thread_resume(mach_thread);
+    fprintf(stderr, "thread_suspend returned %d instead of %d\n",
+            (int)status, (int)KERN_SUCCESS);
+    return 0;
+  }
+  status = thread_abort_safely(mach_thread);
+  if (status != KERN_SUCCESS)
+  {
+    fprintf(stderr, "thread_abort_safely returned %d instead of %d\n",
+            (int)status, (int)KERN_SUCCESS);
+    status = thread_resume(mach_thread);
     if (status != KERN_SUCCESS)
     {
       fprintf(stderr, "thread_resume returned %d instead of %d\n",
