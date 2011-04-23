@@ -1,5 +1,5 @@
 typedef void (*ForkHandler)(void);
- 
+
 #include "m3core.h"
 
 #ifdef __cplusplus
@@ -23,15 +23,19 @@ typedef struct _vector_t {
 #define fork_handlers RTProcess__fork_handlers
 static vector_t fork_handlers;
 
+M3_DLL_EXPORT
 INTEGER
 __cdecl
 RTProcess__RegisterForkHandlers(ForkHandler prepare,
                                 ForkHandler parent,
                                 ForkHandler child)
+/* This is a replacement for pthread_atfork.
+   pthread_atfork could/should work, but apparently using -pthread
+   on some systems causes problems with user threads. That
+   doesn't really make sense, but oh well. */
 {
   typedef fork_handlers_t T;
   T* p = { 0 };
-  size_t new_allocated = { 0 };
   size_t count_allocated = { 0 };
   size_t count_used = { 0 };
   int ret = { 0 };
@@ -41,7 +45,7 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
   count_allocated = fork_handlers.count_allocated;
   if (count_used + 1 >= count_allocated)
   {
-    new_allocated = count_allocated ? (count_allocated * 3 / 2) : 4;
+    size_t new_allocated = count_allocated ? (count_allocated * 3 / 2) : 16;
     p = (T*)calloc(new_allocated, sizeof(T));
     if (!p)
     {
@@ -69,6 +73,7 @@ Exit:
 
 #else /* M3_USER_THREADS */
 
+M3_DLL_EXPORT
 INTEGER
 __cdecl
 RTProcess__RegisterForkHandlers(ForkHandler prepare,
@@ -100,6 +105,9 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
 
 #endif /* M3_USER_THREADS */
 
+#ifndef _WIN32
+
+M3_DLL_EXPORT
 INTEGER
 __cdecl
 RTProcess__Fork(void)
@@ -109,6 +117,7 @@ RTProcess__Fork(void)
   fork_handlers_t* p = { 0 };
   size_t count_used = { 0 };
   size_t i = { 0 };
+  int err = { 0 };
 
   Scheduler__DisableSwitching();
   p = (fork_handlers_t*)fork_handlers.p;
@@ -120,22 +129,30 @@ RTProcess__Fork(void)
   }
   new_pid = fork();
   if (new_pid == -1)
-    goto Exit;
+    err = errno;
   for (i = 0; < i < count_used; ++i)
   {
     ForkHandler handler = new_pid ? p[i].parent : p[i].child;
     if (handler) handler();
   }
+  if (new_pid == -1)
+    errno = err;
 Exit:
   Scheduler__EnableSwitching();
   return new_pid;
-#elif defined(_WIN32)
-  fprintf(stderr, "RTProcess__Fork called on Win32\n");
-  abort();
+#elif defined(__sun)
+  /* Prior to Solaris 2.10, fork() was fork1() or forkall() depending
+   * on which library used. In Solaris 2.10, fork() is always fork1(),
+   * and a separate forkall() is available. fork1()'s declaration
+   * does have some #ifdef guards around it; hopefully ok.
+   */
+  return fork1();
 #else
   return fork();
 #endif
 }
+
+#endif /* Win32 */
 
 #ifdef __cplusplus
 } /* extern "C" */
