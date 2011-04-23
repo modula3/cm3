@@ -33,9 +33,9 @@ IMPORT
   AccessRules, AtomList, AuthMD5, ChannelMux, ClassDB, ClientClass,
   CVProto, ErrMsg, ExecRec, FileAttr, FileRd, Fmt, FS, Glob, GlobTree,
   IOWatchDog, IP, Logger, OSError, OSErrorPosix, Passwd, Pathname,
-  Process, ProcTitle, RCSComp, RCSKeyword, Rd, Reaper, SigHandler,
+  Process, ProcTitle, RCSComp, RCSKeyword, Rd, Reaper, RTProcess, SigHandler,
   StreamRd, StreamWr, SupFileRec, SupFileRecSeq, SupMisc, TCPMisc,
-  Text, Thread, Time, TokScan, TreeComp, Uerror, Unix, Usignal,
+  Text, Thread, Time, TokScan, TreeComp, Uerror, Usignal,
   Utypes, Version, WatchDog, Wr;
 
 IMPORT ConnRW;
@@ -1821,7 +1821,7 @@ PROCEDURE ConnectFrom(to, from: IP.Endpoint): TCP.T
 PROCEDURE Fork(): Utypes.pid_t
   RAISES {ForkFailed} =
   VAR
-    childPid := Unix.fork();
+    childPid := RTProcess.Fork();
   BEGIN
     IF childPid = -1 THEN
       RAISE ForkFailed(AtomList.List1(OSErrorPosix.ErrnoAtom(
