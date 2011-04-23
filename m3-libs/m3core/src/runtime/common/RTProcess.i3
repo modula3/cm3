@@ -39,8 +39,20 @@ PROCEDURE RegisterInterruptSetup (enable, disable: PROCEDURE ());
 
 TYPE ForkHandler = PROCEDURE();
 
-(* RegisterForkHandlers = pthread_atfork or just 0 on Win32. *)
+(* RegisterForkHandlers:
+  pthreads: pthread_atfork
+  Win32: just return 0 -- success but it doesn't do anything
+  user threads: maintains its own globals
+                no dependence on -pthread/-pthreads/-lpthread
+                because they are apparently broken on some systems *)
 <* EXTERNAL RTProcess__RegisterForkHandlers *>
 PROCEDURE RegisterForkHandlers(prep, parent, child: ForkHandler): INTEGER;
+
+(* Fork:
+  pthreads: fork (fork1 on Solaris)
+  Win32: non-existant
+  user threads: fork but handles RegisterForkHandlers *)
+<* EXTERNAL RTProcess__Fork *>
+PROCEDURE Fork(): INTEGER;
  
 END RTProcess.
