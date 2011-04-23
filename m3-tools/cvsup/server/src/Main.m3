@@ -31,8 +31,8 @@ MODULE Main;
 
 IMPORT
   ClientClass, CVProto, ErrMsg, File, FilePosix, FileWr, Fmt, FS, FSServer,
-  IO, IP, Logger, OSError, OSErrorPosix, Params, Pathname,
-  Process, RCSComp, RegularFile, Stdio, SupMisc, SysLogger, Text, Thread,
+  IO, IP, Logger, OSError, OSErrorPosix, Params, Pathname, Process,
+  RCSComp, RegularFile, RTProcess, Stdio, SupMisc, SysLogger, Text, Thread,
   TimeStampLogger, TokScan, TreeComp, Unix, UnixMisc, Version, WrLogger;
 
 CONST
@@ -45,7 +45,7 @@ VAR
 PROCEDURE BecomeDaemon()
   RAISES {OSError.E} =
   BEGIN
-    WITH pid = Unix.fork() DO
+    WITH pid = RTProcess.Fork() DO
       IF pid = -1 THEN  (* Error. *)
 	OSErrorPosix.Raise()
       ELSIF pid # 0 THEN  (* Parent process. *)

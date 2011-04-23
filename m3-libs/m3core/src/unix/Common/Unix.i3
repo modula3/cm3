@@ -109,8 +109,9 @@ PROCEDURE  truncate (file: const_char_star; length: off_t): int;
 PROCEDURE ftruncate (file: int;             length: off_t): int;
 <*EXTERNAL "Unix__unlink"*>
 PROCEDURE unlink (path: const_char_star): int;
-<*EXTERNAL "Unix__fork"*>
-PROCEDURE fork (): pid_t;
+(* <*EXTERNAL "Unix__fork"*>
+  PROCEDURE fork (): pid_t;
+  see RTProcess.Fork *)
 
 (* Do not wrap vfork in C; doing so violates the Posix standard, because
  callers of vfork cannot return without calling exec or _exit. *)

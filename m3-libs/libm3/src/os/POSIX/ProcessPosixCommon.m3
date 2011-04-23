@@ -72,7 +72,7 @@ PROCEDURE Create_ForkExec(
 
     execResult := 0;
     LOOP (* based on bash *)
-      forkResult := Unix.fork();
+      forkResult := RTProcess.Fork();
       IF forkResult >= 0 THEN EXIT END;
       forkErrno := Cerrno.GetErrno();
       IF forkErrno # Uerror.EAGAIN AND forkErrno # Uerror.ENOMEM THEN EXIT END;

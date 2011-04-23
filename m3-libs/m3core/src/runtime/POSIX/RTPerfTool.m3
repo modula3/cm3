@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTPerfTool;
 
-IMPORT Ctypes, Unix, Text, M3toC, Uexec, Uuio, RTParams;
+IMPORT Ctypes, Unix, Text, M3toC, Uexec, Uuio, RTParams, RTProcess;
 
 PROCEDURE Start (param: TEXT;  VAR w: Handle): BOOLEAN =
   VAR value: TEXT;  c: Ctypes.char;  r: Handle;
@@ -60,7 +60,7 @@ PROCEDURE StartTool (name: TEXT; VAR r, w: Handle): BOOLEAN =
     IF Unix.pipe (fromTool) = -1 THEN  ClosePipe (toTool); RETURN FALSE; END;
   
     (* Create the tool process *)
-    CASE Unix.fork () OF
+    CASE RTProcess.Fork () OF
       
     | -1 => (* fork failed *)
       ClosePipe (fromTool);
