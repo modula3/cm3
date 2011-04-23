@@ -1,0 +1,37 @@
+# Copyright (C) 2009, 2010
+# Free Software Foundation, Inc.
+#
+# This file is part of GCC.
+#
+# GCC is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3, or (at your option)
+# any later version.
+#
+# GCC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GCC; see the file COPYING3.  If not see
+# <http://www.gnu.org/licenses/>.
+
+STMP_FIXPROTO =
+STMP_FIXINC =
+LIMITS_H_TEST = false
+
+# Under VMS, directory names cannot contain dots.
+version:=$(shell echo $(BASEVER_c) | sed -e 's/\./_/g')
+
+VMS_EXTRA_PARTS=vcrt0.o pcrt0.o
+
+# Assemble startup files.
+$(T)vcrt0.o: $(srcdir)/config/vms/vms-ucrt0.c $(GCC_PASSES)
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(MULTILIB_CFLAGS) $(INCLUDES) \
+	-c -o $(T)vcrt0.o $(srcdir)/config/vms/vms-ucrt0.c
+
+$(T)pcrt0.o: $(srcdir)/config/vms/vms-ucrt0.c $(GCC_PASSES)
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(MULTILIB_CFLAGS) $(INCLUDES) \
+	-c -o $(T)pcrt0.o -DCRT0_POSIX_EXIT $(srcdir)/config/vms/vms-ucrt0.c
+
