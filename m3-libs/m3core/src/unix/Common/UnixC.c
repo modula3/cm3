@@ -126,6 +126,7 @@ M3WRAP2(char*, getcwd, char*, WORD_T)
 M3WRAP2(int, fchmod, int, m3_mode_t)
 M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 
+#if 0 /* See RTProcess.Fork. */
 M3_DLL_EXPORT m3_pid_t __cdecl
 Unix__fork(void)
 {
@@ -140,6 +141,8 @@ Unix__fork(void)
     return fork();
 #endif
 }
+#endif
+
 #endif /* vms */
 #endif /* win32 */
 
