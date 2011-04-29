@@ -50,7 +50,7 @@ m3cgc1$(exeext): $(M3CG_OBJS) $(BACKEND) $(LIBDEPS)
 
 m3cg/parse.o: m3cg/parse.c $(CONFIG_H) $(SYSTEM_H) $(HASHTAB_H) coretypes.h \
   $(TM_H) $(TREE_H) flags.h output.h $(RTL_H) $(GGC_H) toplev.h \
-  varray.h $(LANGHOOKS_DEF_H) langhooks.h input.h opts.h options.h \
+  $(VARRAY_H) $(LANGHOOKS_DEF_H) langhooks.h input.h opts.h options.h \
   gt-m3cg-parse.h gtype-m3cg.h \
   m3cg/m3gty43.h \
 
