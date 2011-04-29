@@ -1,3 +1,5 @@
+# Modula-3: modified
+
 # Makefile for GNU Compiler Collection
 # Run 'configure' to generate Makefile from Makefile.in
 
@@ -1484,7 +1486,7 @@ ALL_HOST_FRONTEND_OBJS = $(C_OBJS) \
   $(foreach v,$(CONFIG_LANGUAGES),$($(v)_OBJS))
 
 ALL_HOST_BACKEND_OBJS = $(GCC_OBJS) $(OBJS) \
-  @TREEBROWSER@ main.o gccspec.o version.o intl.o prefix.o cppspec.o \
+  tree-browser.o main.o gccspec.o version.o intl.o prefix.o cppspec.o \
   $(COLLECT2_OBJS) $(EXTRA_GCC_OBJS) mips-tfile.o mips-tdump.o \
   $(GCOV_OBJS) $(GCOV_DUMP_OBJS)
 
@@ -1492,7 +1494,7 @@ ALL_HOST_BACKEND_OBJS = $(GCC_OBJS) $(OBJS) \
 # compilation or not.
 ALL_HOST_OBJS = $(ALL_HOST_FRONTEND_OBJS) $(ALL_HOST_BACKEND_OBJS)
 
-BACKEND = main.o @TREEBROWSER@ libbackend.a $(CPPLIB) $(LIBDECNUMBER)
+BACKEND = main.o tree-browser.o libbackend.a $(CPPLIB) $(LIBDECNUMBER)
 
 MOSTLYCLEANFILES = insn-flags.h insn-config.h insn-codes.h \
  insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c \
