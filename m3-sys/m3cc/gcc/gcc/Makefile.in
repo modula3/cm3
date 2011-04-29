@@ -4596,5 +4596,3 @@ po/gcc.pot: force
 	$(MAKE) srcextra
 	AWK=$(AWK) $(SHELL) $(srcdir)/po/exgettext \
 		$(XGETTEXT) gcc $(srcdir)
-
-VARRAY_H=varray.h
