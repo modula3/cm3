@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Command line option handling.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -790,16 +792,7 @@ finish_options (struct gcc_options *opts, struct gcc_options *opts_set,
 
   if (opts->x_flag_lto)
     {
-#ifdef ENABLE_LTO
-      opts->x_flag_generate_lto = 1;
-
-      /* When generating IL, do not operate in whole-program mode.
-	 Otherwise, symbols will be privatized too early, causing link
-	 errors later.  */
-      opts->x_flag_whole_program = 0;
-#else
       error_at (loc, "LTO support has not been enabled in this configuration");
-#endif
     }
   if ((opts->x_flag_lto_partition_balanced != 0) + (opts->x_flag_lto_partition_1to1 != 0)
        + (opts->x_flag_lto_partition_none != 0) >= 1)

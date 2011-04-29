@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Command line option handling.  Code involving global state that
    should not be shared with the driver.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -32,7 +34,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "dbgcnt.h"
 #include "debug.h"
-#include "lto-streamer.h"
 #include "output.h"
 #include "plugin.h"
 #include "toplev.h"
@@ -167,10 +168,6 @@ static void
 post_handling_callback (const struct cl_decoded_option *decoded ATTRIBUTE_UNUSED,
 			unsigned int mask ATTRIBUTE_UNUSED)
 {
-#ifdef ENABLE_LTO
-  lto_register_user_option (decoded->opt_index, decoded->arg,
-			    decoded->value, mask);
-#endif
 }
 
 /* Handle a front-end option; arguments and return value as for
@@ -318,11 +315,6 @@ decode_options (struct gcc_options *opts, struct gcc_options *opts_set,
   default_options_optimization (opts, opts_set,
 				decoded_options, decoded_options_count,
 				loc, lang_mask, &handlers, dc);
-
-#ifdef ENABLE_LTO
-  /* Clear any options currently held for LTO.  */
-  lto_clear_user_options ();
-#endif
 
   read_cmdline_options (opts, opts_set,
 			decoded_options, decoded_options_count,
