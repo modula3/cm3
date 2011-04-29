@@ -1,4 +1,4 @@
-# some small modifications for Modula-3
+# Modula-3: modified
 
 # Makefile for GNU Compiler Collection
 # Run 'configure' to generate Makefile from Makefile.in
@@ -4775,3 +4775,5 @@ po/gcc.pot: force
 	$(MAKE) srcextra
 	AWK=$(AWK) $(SHELL) $(srcdir)/po/exgettext \
 		$(XGETTEXT) gcc $(srcdir)
+
+VARRAY_H=varray.h
