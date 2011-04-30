@@ -23,6 +23,10 @@ along with this program; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "mkdeps.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static int write_macdef (cpp_reader *, cpp_hashnode *, void *);
 static int save_idents (cpp_reader *, cpp_hashnode *, void *);
 static hashval_t hashmem (const void *, size_t);
@@ -894,3 +898,7 @@ cpp_read_state (cpp_reader *r, const char *name, FILE *f,
   cpp_errno (r, CPP_DL_ERROR, "while reading precompiled header");
   return -1;
 }
+
+#ifdef __cplusplus
+}
+#endif

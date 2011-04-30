@@ -28,6 +28,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Print an error at the location of the previously lexed token.  */
 bool
 cpp_error (cpp_reader * pfile, int level, const char *msgid, ...)
@@ -94,3 +98,7 @@ cpp_errno (cpp_reader *pfile, int level, const char *msgid)
 
   return cpp_error (pfile, level, "%s: %s", msgid, xstrerror (errno));
 }
+
+#ifdef __cplusplus
+}
+#endif

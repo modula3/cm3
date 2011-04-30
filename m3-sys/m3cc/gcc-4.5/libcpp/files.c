@@ -32,6 +32,10 @@ along with this program; see the file COPYING3.  If not see
 #include "md5.h"
 #include <dirent.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Variable length record files on VMS will have a stat size that includes
    record control characters that won't be included in the read size.  */
 #ifdef VMS
@@ -1824,3 +1828,7 @@ check_file_against_entries (cpp_reader *pfile ATTRIBUTE_UNUSED,
   return bsearch (&d, pchf->entries, pchf->count, sizeof (struct pchf_entry),
 		  pchf_compare) != NULL;
 }
+
+#ifdef __cplusplus
+}
+#endif

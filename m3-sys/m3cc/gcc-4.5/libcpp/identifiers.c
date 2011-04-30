@@ -28,6 +28,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static hashnode alloc_node (hash_table *);
 
 /* Return an identifier node for hashtable.c.  Used by cpplib except
@@ -119,3 +123,7 @@ cpp_forall_identifiers (cpp_reader *pfile, cpp_cb cb, void *v)
 {
   ht_forall (pfile->hash_table, (ht_cb) cb, v);
 }
+
+#ifdef __cplusplus
+}
+#endif

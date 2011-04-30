@@ -27,6 +27,10 @@ along with this program; see the file COPYING3.  If not see
 #include "mkdeps.h"
 #include "localedir.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static void init_library (void);
 static void mark_named_operators (cpp_reader *, int);
 static void read_original_filename (cpp_reader *);
@@ -713,3 +717,7 @@ post_options (cpp_reader *pfile)
       CPP_OPTION (pfile, warn_trigraphs) = 0;
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
