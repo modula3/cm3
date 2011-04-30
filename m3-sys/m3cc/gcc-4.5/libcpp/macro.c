@@ -29,6 +29,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct macro_arg macro_arg;
 struct macro_arg
 {
@@ -2103,3 +2107,7 @@ cpp_macro_definition (cpp_reader *pfile, const cpp_hashnode *node)
   *buffer = '\0';
   return pfile->macro_buffer;
 }
+
+#ifdef __cplusplus
+}
+#endif

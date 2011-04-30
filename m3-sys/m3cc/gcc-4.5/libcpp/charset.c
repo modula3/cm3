@@ -25,6 +25,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Character set handling for C-family languages.
 
    Terminological note: In what follows, "charset" or "character set"
@@ -1658,3 +1662,7 @@ _cpp_default_encoding (void)
 {
   return SOURCE_CHARSET;
 }
+
+#ifdef __cplusplus
+}
+#endif

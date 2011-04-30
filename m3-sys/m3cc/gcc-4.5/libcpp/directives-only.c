@@ -22,6 +22,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* DO (Directive only) flags. */
 #define DO_BOL		 (1 << 0) /* At the beginning of a logical line. */
 #define DO_STRING	 (1 << 1) /* In a string constant. */
@@ -239,3 +243,7 @@ _cpp_preprocess_dir_only (cpp_reader *pfile,
   if (pfile->buffer)
     goto restart;
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -24,6 +24,10 @@ along with this program; see the file COPYING3.  If not see
 #include "system.h"
 #include "line-map.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static void trace_include (const struct line_maps *, const struct line_map *);
 
 /* Initialize a line map set.  */
@@ -318,3 +322,7 @@ trace_include (const struct line_maps *set, const struct line_map *map)
     putc ('.', stderr);
   fprintf (stderr, " %s\n", map->to_file);
 }
+
+#ifdef __cplusplus
+}
+#endif

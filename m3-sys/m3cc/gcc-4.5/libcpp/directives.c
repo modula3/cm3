@@ -27,6 +27,10 @@ along with this program; see the file COPYING3.  If not see
 #include "mkdeps.h"
 #include "obstack.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Stack of conditionals currently in progress
    (including both successful and failing conditionals).  */
 struct if_stack
@@ -2507,3 +2511,7 @@ _cpp_init_directives (cpp_reader *pfile)
       node->directive_index = i;
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
