@@ -22,6 +22,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PART_PRECISION (sizeof (cpp_num_part) * CHAR_BIT)
 #define HALF_MASK (~(cpp_num_part) 0 >> (PART_PRECISION / 2))
 #define LOW_PART(num_part) (num_part & HALF_MASK)
@@ -1777,3 +1781,7 @@ num_div_op (cpp_reader *pfile, cpp_num lhs, cpp_num rhs, enum cpp_ttype op,
 
   return lhs;
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -25,6 +25,10 @@ along with this program; see the file COPYING3.  If not see
 #include "system.h"
 #include "mkdeps.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Keep this structure local to this file, so clients don't find it
    easy to start making assumptions.  */
 struct deps
@@ -428,3 +432,7 @@ deps_restore (struct deps *deps, FILE *fd, const char *self)
   free (buf);
   return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif

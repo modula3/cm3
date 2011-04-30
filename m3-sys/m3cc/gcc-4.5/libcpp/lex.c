@@ -25,6 +25,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum spell_type
 {
   SPELL_OPERATOR = 0,
@@ -2284,3 +2288,7 @@ cpp_token_val_index (cpp_token *tok)
       return CPP_TOKEN_FLD_NONE;
     }
 }
+
+#ifdef __cplusplus
+}
+#endif

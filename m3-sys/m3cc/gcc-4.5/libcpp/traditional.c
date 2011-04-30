@@ -22,6 +22,10 @@ along with this program; see the file COPYING3.  If not see
 #include "cpplib.h"
 #include "internal.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The replacement text of a function-like macro is stored as a
    contiguous sequence of aligned blocks, each representing the text
    between subsequent parameters.
@@ -1168,3 +1172,7 @@ _cpp_expansions_different_trad (const cpp_macro *macro1,
   free (p1);
   return mismatch;
 }
+
+#ifdef __cplusplus
+}
+#endif

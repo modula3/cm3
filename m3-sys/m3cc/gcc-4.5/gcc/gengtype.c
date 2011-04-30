@@ -1845,8 +1845,10 @@ close_output_files (void)
         FILE *newfile = fopen (of->name, "w");
         if (newfile == NULL)
           fatal ("opening output file %s: %s", of->name, strerror (errno));
+        fprintf (newfile, "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n");
         if (fwrite (of->buf, 1, of->bufused, newfile) != of->bufused)
           fatal ("writing output file %s: %s", of->name, strerror (errno));
+        fprintf (newfile, "\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
         if (fclose (newfile) != 0)
           fatal ("closing output file %s: %s", of->name, strerror (errno));
       }

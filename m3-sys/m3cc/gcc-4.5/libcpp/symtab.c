@@ -24,6 +24,10 @@ along with this program; see the file COPYING3.  If not see
 #include "system.h"
 #include "symtab.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The code below is a specialization of Vladimir Makarov's expandable
    hash tables (see libiberty/hashtab.c).  The abstraction penalty was
    too high to continue using the generic form.  This code knows
@@ -361,3 +365,7 @@ approx_sqrt (double x)
   while (d > .0001);
   return s;
 }
+
+#ifdef __cplusplus
+}
+#endif
