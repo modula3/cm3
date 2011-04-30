@@ -2713,9 +2713,8 @@ resolve_mixers (struct loop *loop, tree chrec)
 tree
 number_of_latch_executions (struct loop *loop)
 {
-  tree res, type;
+  tree res;
   edge exit;
-  struct tree_niter_desc niter_desc;
 
   /* Determine whether the number_of_iterations_in_loop has already
      been computed.  */
