@@ -277,6 +277,7 @@ PROCEDURE CompileUnit(
     checkedSem := FALSE;
   BEGIN
    current_g := cu;
+   M3Error.SetCu(cu);
    TRY
     (* PARSING *)
     IF M3CUnit.State.Parsed IN phases THEN
