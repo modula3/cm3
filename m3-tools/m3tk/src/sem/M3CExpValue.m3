@@ -1100,12 +1100,9 @@ PROCEDURE Eval(
           literal := longint_literal.lx_litrep;
         CONST LongFlag = SET OF CHAR{'l', 'L'};
         BEGIN
-          (* Why are checks like this necessary?  Can a literal AST 
-             node of this type be produced other than by scanning, 
-             at: syn/M3CLex.m3:436?  This will have previously verified 
-             _all_ characters of the literal.  If bad literals can occur 
-             some other way, why do we need to check only the final 
-             character? 
+          (* Checks like this pick up literals detected as malformed by
+             scanning.  They have a suffix BadLiteralTail, declared in 
+             MODULE M3CLex.m3, which ends with ')'.  
           *) 
           IF LiteralLastChar(literal) IN LongFlag THEN
             ChkVal(e, M3CBackEnd.LiteralValue(e, er));
@@ -1115,7 +1112,6 @@ PROCEDURE Eval(
         END;
 
     | M3AST_AS.NUMERIC_LITERAL(numeric_literal) =>
-      (* All other numeric literals. *) 
         VAR
           literal := numeric_literal.lx_litrep;
         CONST HexDigit = SET OF CHAR{'a'..'f', 'A'..'F', '0'..'9'};

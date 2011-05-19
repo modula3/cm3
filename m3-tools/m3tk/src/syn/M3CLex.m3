@@ -286,10 +286,10 @@ PROCEDURE CalculateBase(buffer: Buffer; pos: CARDINAL): CARDINAL=
 
 PROCEDURE HexValue(ch: CHAR; VAR val: CARDINAL): BOOLEAN=
   BEGIN
-    IF 'a' <= ch AND ch <= 'z' THEN
+    IF 'a' <= ch AND ch <= 'f' THEN
       val := ORD(ch) - ORD('a') + 10;
       RETURN TRUE;
-    ELSIF 'A' <= ch AND ch <= 'Z' THEN
+    ELSIF 'A' <= ch AND ch <= 'F' THEN
       val := ORD(ch) - ORD('A') + 10;
       RETURN TRUE;
     ELSIF '0' <= ch AND ch <= '9' THEN
@@ -305,33 +305,44 @@ PROCEDURE ReadHexDigits(
     t: T;
     hashValue: M3CHash.Value;
     VAR buffer: Buffer;
-    VAR pos: CARDINAL)
-    : BOOLEAN
+    VAR pos: CARDINAL;
+    VAR ok: BOOLEAN)
+    : M3CToken.T
     RAISES {Rd.Failure}=
+  (* PRE: d* seen and in buffer. '_' fetched. *) 
   VAR
     start := pos;
     eof: BOOLEAN;
-    ch := CheckedGet(t, eof);
+    ch := CheckedGet(t, eof); (* Char after '_' *) 
     val, base: CARDINAL;
-    ok := TRUE;
+    result : M3CToken.T := M3CToken.IntegerLiteral; 
   BEGIN
+    ok := TRUE;
     IF HexValue(ch, val) THEN
       IF pos > 2 THEN
-        base := 17; (* will force error; saves worry about overflow *)
+        base := 16; ok := FALSE
       ELSE
         base := CalculateBase(buffer, pos - 1);
       END;
       IF 2 > base OR base > 16 THEN base := 16; ok := FALSE END;
       HashAndBufferPut('_', hashValue, buffer, pos);
       REPEAT
+        (* INVARIANT: ch is a hex digit and val is its integer value. *) 
         IF val >= base THEN ok := FALSE END;
         HashAndBufferPut(ch, hashValue, buffer, pos);
         ch := CheckedGet(t, eof);
       UNTIL NOT HexValue(ch, val);
+      (* d*_h+ seen and in buffer.  ch is character after. *) 
+      IF ch = 'L' OR ch = 'l' 
+      THEN 
+        HashAndBufferPut(ch, hashValue, buffer, pos);
+        ch := CheckedGet(t, eof);
+        result := M3CToken.LongintLiteral; 
+      END;
     END;
-    IF NOT eof THEN Unget(t, ch) END;
-    IF pos = start THEN Unget(t, '_') END;
-    RETURN ok;
+    IF NOT eof THEN Unget(t, ch) END; (* Char after based literal. *) 
+    IF pos = start THEN (* No hex digits. *) ok := FALSE END;
+    RETURN result; 
   END ReadHexDigits;
 
 
@@ -429,10 +440,11 @@ PROCEDURE ReadNumericLiteral(
         ch := Get(t);
       UNTIL NOT ch IN ASCII.Digits;
       IF ch = '_' THEN
-        ok := ReadHexDigits(t, hashValue, buffer, pos);
+        result := ReadHexDigits(t, hashValue, buffer, pos, ok);
       ELSIF ch = '.' THEN
         result := ReadRealOrRange(t, hashValue, buffer, pos);
       ELSIF ch = 'l' OR ch = 'L' THEN
+        HashAndBufferPut(ch, hashValue, buffer, pos);
         result := M3CToken.LongintLiteral;
       ELSE
         Unget(t, ch);

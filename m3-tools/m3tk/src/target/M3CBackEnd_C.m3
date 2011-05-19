@@ -289,7 +289,7 @@ PROCEDURE LiteralValue_C(lit: M3AST_AS.EXP;
   BEGIN
     TYPECASE lit OF <*NOWARN*>
     | M3AST_AS.Char_literal =>
-        (* 'x' or '\n' or '\ddd' or '\xDD'*)
+        (* 'x' or '\n' or '\ddd' or '\xDD' or '\XDD'*)
         VAR
           cvi: INTEGER;
           t: TEXT := M3CLiteral.ToText(
@@ -305,7 +305,7 @@ PROCEDURE LiteralValue_C(lit: M3AST_AS.EXP;
             | '\"' => cvi := ORD('\"');
             | 'f' => cvi := ORD('\f');
             | '\\' => cvi := ORD('\\');
-            | 'x' =>
+            | 'x' , 'X' =>
               cvi := CHV(Text.GetChar(t, 3)) * 16 +
                      CHV(Text.GetChar(t, 4));
             ELSE  (* \ddd *)
@@ -320,7 +320,7 @@ PROCEDURE LiteralValue_C(lit: M3AST_AS.EXP;
         END;
 
     | M3AST_AS.WideChar_literal =>
-        (* 'x' or '\n' or '\dddddd' or '\xDDDD' *)
+        (* 'x' or '\n' or '\dddddd' or '\xDDDD' or '\XDDDD' *)
         VAR
           cvi: INTEGER;
           t: TEXT := M3CLiteral.ToText(
@@ -336,7 +336,7 @@ PROCEDURE LiteralValue_C(lit: M3AST_AS.EXP;
             | '\"' => cvi := ORD('\"');
             | 'f' => cvi := ORD('\f');
             | '\\' => cvi := ORD('\\');
-            | 'x' =>
+            | 'x' , 'X' =>
               cvi := CHV(Text.GetChar(t, 3)) * 4096 + 
                      CHV(Text.GetChar(t, 4)) * 256 + 
                      CHV(Text.GetChar(t, 5)) * 16 + 
@@ -1237,38 +1237,39 @@ PROCEDURE TextTo_Integer(t: Text.T;
     VAR i: INTEGER;
     <*UNUSED*> base: Fmt.Base := 10)
     : BOOLEAN=
-  VAR used: INTEGER; l: INTEGER;  buf: ARRAY [0..63] OF CHAR;
+  VAR used: INTEGER; len: INTEGER;  buf: ARRAY [0..65] OF CHAR;
   BEGIN
     M3Assert.Check(t # NIL);
-    l := Text.Length(t);
-    M3Assert.Check(l <= NUMBER(buf));
+    len := Text.Length(t);
+    M3Assert.Check(len <= NUMBER(buf));
     Text.SetChars(buf, t);
-    IF l>2 AND buf[2] = '_' OR
-       l>1 AND buf[1] = '_' THEN
-      i := Convert.ToUnsigned(SUBARRAY(buf, 0, l), used);
+    IF len>2 AND buf[2] = '_' OR
+       len>1 AND buf[1] = '_' THEN
+      i := Convert.ToUnsigned(SUBARRAY(buf, 0, len), used);
     ELSE
-      i := Convert.ToInt(SUBARRAY(buf, 0, l), used);
+      i := Convert.ToInt(SUBARRAY(buf, 0, len), used);
     END;
-    RETURN used = l;
+    RETURN used = len;
   END TextTo_Integer;
 
 PROCEDURE TextTo_Longint(t: Text.T;
     VAR i: LONGINT;
     <*UNUSED*> base: Fmt.Base := 10)
     : BOOLEAN=
-  VAR used: INTEGER; l: INTEGER;  buf: ARRAY [0..63] OF CHAR;
+  VAR used: INTEGER; len: INTEGER;  buf: ARRAY [0..66] OF CHAR;
   BEGIN
     M3Assert.Check(t # NIL);
-    l := Text.Length(t);
-    M3Assert.Check(l <= NUMBER(buf));
+    len := Text.Length(t);
+    M3Assert.Check(len <= NUMBER(buf));
     Text.SetChars(buf, t);
-    IF l>2 AND buf[2] = '_' OR
-       l>1 AND buf[1] = '_' THEN
-      i := Convert.ToLongUnsigned(SUBARRAY(buf, 0, l), used);
+    IF len>2 AND buf[2] = '_' OR
+       len>1 AND buf[1] = '_' THEN
+      i := Convert.ToLongUnsigned(SUBARRAY(buf, 0, len), used);
     ELSE
-      i := Convert.ToLongInt(SUBARRAY(buf, 0, l), used);
+      i := Convert.ToLongInt(SUBARRAY(buf, 0, len), used);
     END;
-    RETURN used = l;
+    INC (used , ORD(buf[len-1] = 'L' OR buf[len-1] = 'l')); 
+    RETURN used = len;
   END TextTo_Longint;
 
 PROCEDURE TextTo_Real(t: Text.T; VAR real: REAL): BOOLEAN=
