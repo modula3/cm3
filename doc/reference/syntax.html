@@ -120,7 +120,7 @@ We use the following notation for defining syntax:
 "Followed by" has greater binding power than <TT>|</TT> or <TT>&</TT>;
 parentheses are used to override this precedence rule.  Non-terminals
 begin with an upper-case letter.  Terminals are either keywords or
-quoted operators.  The symbols <TT>Ident</TT>, <TT>Number</TT>,
+quoted operators.  The symbols <TT>Id</TT>, <TT>Number</TT>,
 <TT>TextLiteral</TT>, and <TT>CharLiteral</TT> are defined in the
 <A HREF="#idx.220">token grammar</A>.
 Each production is terminated by a period.
@@ -342,10 +342,10 @@ Letter = "A"  | "B"  | ... | "Z"  | "a"  | "b"  | ... | "z".
 OtherChar = " " | "!" | "#" | "$" | "%" | "&amp;" | "(" | ")"
           | "*" | "+" | "," | "-" | "." | "/" | ":" | ";"
           | "&lt;" | "=" | "&gt;" | "?" | "@" | "[" | "]" | "^"
-          | "_" | "`" | "{" | "|" | "}" | " "
+          | "_" | "`" | "{" | "|" | "}" | "~"
           | ExtendedChar
 
-ExtendedChar = any char with ISO-Latin-1 code in [8_ 240..8_ 377].
+ExtendedChar = any char with ISO-Latin-1 code in [8_240..8_377].
 </PRE>
 <P>
 
