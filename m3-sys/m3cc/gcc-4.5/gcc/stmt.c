@@ -1404,7 +1404,7 @@ resolve_operand_name_1 (char *p, tree outputs, tree inputs, tree labels)
 	goto found;
     }
 
-  error ("undefined named operand %qs", identifier_to_locale (p));
+  error ("undefined named operand %qs", p);
   op = 0;
 
  found:

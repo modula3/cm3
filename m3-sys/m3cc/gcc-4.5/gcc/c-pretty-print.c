@@ -37,10 +37,6 @@ along with GCC; see the file COPYING3.  If not see
 extern "C" {
 #endif
 
-/* Translate if being used for diagnostics, but not for dump files or
-   __PRETTY_FUNCTION.  */
-#define M_(msgid) (pp_translate_identifiers (pp) ? _(msgid) : (msgid))
-
 /* The pretty-printer code is primarily designed to closely follow
    (GNU) C and C++ grammars.  That is to be contrasted with spaghetti
    codes we used to have in the past.  Following a structured
@@ -327,7 +323,7 @@ pp_c_type_specifier (c_pretty_printer *pp, tree t)
   switch (code)
     {
     case ERROR_MARK:
-      pp_c_ws_string (pp, M_("<type-error>"));
+      pp_c_ws_string (pp, "<type-error>");
       break;
 
     case IDENTIFIER_NODE:
@@ -366,14 +362,14 @@ pp_c_type_specifier (c_pretty_printer *pp, tree t)
 		{
 		case INTEGER_TYPE:
 		  pp_string (pp, (TYPE_UNSIGNED (t)
-				  ? M_("<unnamed-unsigned:")
-				  : M_("<unnamed-signed:")));
+				  ? "<unnamed-unsigned:"
+				  : "<unnamed-signed:"));
 		  break;
 		case REAL_TYPE:
-		  pp_string (pp, M_("<unnamed-float:"));
+		  pp_string (pp, "<unnamed-float:");
 		  break;
 		case FIXED_POINT_TYPE:
-		  pp_string (pp, M_("<unnamed-fixed:"));
+		  pp_string (pp, "<unnamed-fixed:");
 		  break;
 		default:
 		  gcc_unreachable ();
@@ -388,7 +384,7 @@ pp_c_type_specifier (c_pretty_printer *pp, tree t)
       if (DECL_NAME (t))
 	pp_id_expression (pp, t);
       else
-	pp_c_ws_string (pp, M_("<typedef-error>"));
+	pp_c_ws_string (pp, "<typedef-error>");
       break;
 
     case UNION_TYPE:
@@ -401,12 +397,12 @@ pp_c_type_specifier (c_pretty_printer *pp, tree t)
       else if (code == ENUMERAL_TYPE)
 	pp_c_ws_string (pp, "enum");
       else
-	pp_c_ws_string (pp, M_("<tag-error>"));
+	pp_c_ws_string (pp, "<tag-error>");
 
       if (TYPE_NAME (t))
 	pp_id_expression (pp, TYPE_NAME (t));
       else
-	pp_c_ws_string (pp, M_("<anonymous>"));
+	pp_c_ws_string (pp, "<anonymous>");
       break;
 
     default:
@@ -1145,11 +1141,11 @@ pp_c_primary_expression (c_pretty_printer *pp, tree e)
       break;
 
     case ERROR_MARK:
-      pp_c_ws_string (pp, M_("<erroneous-expression>"));
+      pp_c_ws_string (pp, "<erroneous-expression>");
       break;
 
     case RESULT_DECL:
-      pp_c_ws_string (pp, M_("<return-value>"));
+      pp_c_ws_string (pp, "<return-value>");
       break;
 
     case INTEGER_CST:
