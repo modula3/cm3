@@ -1,3 +1,5 @@
+# Modula-3: modified
+
 [+ AutoGen5 template -*- Mode: Makefile -*-
 in
 +]
@@ -220,14 +222,6 @@ HOST_EXPORTS = \
 	RANLIB_FOR_TARGET="$(RANLIB_FOR_TARGET)"; export RANLIB_FOR_TARGET; \
 	TOPLEVEL_CONFIGURE_ARGUMENTS="$(TOPLEVEL_CONFIGURE_ARGUMENTS)"; export TOPLEVEL_CONFIGURE_ARGUMENTS; \
 	HOST_LIBS="$(STAGE1_LIBS)"; export HOST_LIBS; \
-	GMPLIBS="$(HOST_GMPLIBS)"; export GMPLIBS; \
-	GMPINC="$(HOST_GMPINC)"; export GMPINC; \
-	PPLLIBS="$(HOST_PPLLIBS)"; export PPLLIBS; \
-	PPLINC="$(HOST_PPLINC)"; export PPLINC; \
-	CLOOGLIBS="$(HOST_CLOOGLIBS)"; export CLOOGLIBS; \
-	CLOOGINC="$(HOST_CLOOGINC)"; export CLOOGINC; \
-	LIBELFLIBS="$(HOST_LIBELFLIBS)" ; export LIBELFLIBS; \
-	LIBELFINC="$(HOST_LIBELFINC)" ; export LIBELFINC; \
 @if gcc-bootstrap
 	$(RPATH_ENVVAR)=`echo "$(TARGET_LIB_PATH)$$$(RPATH_ENVVAR)" | sed 's,::*,:,g;s,^:*,,;s,:*$$,,'`; export $(RPATH_ENVVAR); \
 @endif gcc-bootstrap
@@ -304,22 +298,6 @@ RAW_CXX_TARGET_EXPORTS = \
 NORMAL_TARGET_EXPORTS = \
 	$(BASE_TARGET_EXPORTS) \
 	CXX="$(CXX_FOR_TARGET) $(XGCC_FLAGS_FOR_TARGET) $$TFLAGS"; export CXX;
-
-# Where to find GMP
-HOST_GMPLIBS = @gmplibs@
-HOST_GMPINC = @gmpinc@
-
-# Where to find PPL
-HOST_PPLLIBS = @ppllibs@
-HOST_PPLINC = @pplinc@
-
-# Where to find CLOOG
-HOST_CLOOGLIBS = @clooglibs@
-HOST_CLOOGINC = @clooginc@
-
-# Where to find libelf
-HOST_LIBELFLIBS = @libelflibs@
-HOST_LIBELFINC = @libelfinc@
 
 # ----------------------------------------------
 # Programs producing files for the BUILD machine
