@@ -450,10 +450,10 @@ announce_function (tree decl)
     {
       if (rtl_dump_and_exit)
 	fprintf (stderr, "%s ",
-		 identifier_to_locale (IDENTIFIER_POINTER (DECL_NAME (decl))));
+		 IDENTIFIER_POINTER (DECL_NAME (decl)));
       else
 	fprintf (stderr, " %s",
-		 identifier_to_locale (lang_hooks.decl_printable_name (decl, 2)));
+		 lang_hooks.decl_printable_name (decl, 2));
       fflush (stderr);
       pp_needs_newline (global_dc->printer) = true;
       diagnostic_set_last_function (global_dc, (diagnostic_info *) NULL);
@@ -1204,14 +1204,14 @@ print_version (FILE *file, const char *indent)
 #define __VERSION__ "[?]"
 #endif
   fprintf (file,
-	   file == stderr ? _(fmt1) : fmt1,
+	   fmt1,
 	   indent, *indent != 0 ? " " : "",
 	   lang_hooks.name, pkgversion_string, version_string, TARGET_NAME,
 	   indent, __VERSION__);
 
   fprintf (file, fmt2);
   fprintf (file,
-	   file == stderr ? _(fmt4) : fmt4,
+	   fmt4,
 	   indent, *indent != 0 ? " " : "",
 	   PARAM_VALUE (GGC_MIN_EXPAND), PARAM_VALUE (GGC_MIN_HEAPSIZE));
 
@@ -1329,7 +1329,7 @@ print_switch_values (print_switch_fn_type print_fn)
 
   /* Print the options as passed.  */
   pos = print_single_switch (print_fn, pos,
-			     SWITCH_TYPE_DESCRIPTIVE, _("options passed: "));
+			     SWITCH_TYPE_DESCRIPTIVE, "options passed: ");
 
   for (p = &save_argv[1]; *p != NULL; p++)
     {
@@ -1364,7 +1364,7 @@ print_switch_values (print_switch_fn_type print_fn)
      We don't handle language specific options but printing argv
      should suffice.  */
   pos = print_single_switch (print_fn, 0,
-			     SWITCH_TYPE_DESCRIPTIVE, _("options enabled: "));
+			     SWITCH_TYPE_DESCRIPTIVE, "options enabled: ");
 
   for (j = 0; j < cl_options_count; j++)
     if ((cl_options[j].flags & CL_REPORT)
@@ -1499,9 +1499,9 @@ pch_option_mismatch (const char *option)
 {
   char *r;
 
-  asprintf (&r, _("created and used with differing settings of '%s'"), option);
+  asprintf (&r, "created and used with differing settings of '%s'", option);
   if (r == NULL)
-    return _("out of memory");
+    return "out of memory";
   return r;
 }
 
@@ -1516,9 +1516,9 @@ default_pch_valid_p (const void *data_p, size_t len)
 
   /* -fpic and -fpie also usually make a PCH invalid.  */
   if (data[0] != flag_pic)
-    return _("created and used with different settings of -fpic");
+    return "created and used with different settings of -fpic";
   if (data[1] != flag_pie)
-    return _("created and used with different settings of -fpie");
+    return "created and used with different settings of -fpie";
   data += 2;
 
   /* Check target_flags.  */
@@ -1590,8 +1590,8 @@ default_tree_printer (pretty_printer *pp, text_info *text, const char *spec,
   if (DECL_P (t))
     {
       const char *n = DECL_NAME (t)
-        ? identifier_to_locale (lang_hooks.decl_printable_name (t, 2))
-        : _("<anonymous>");
+        ? lang_hooks.decl_printable_name (t, 2)
+        : "<anonymous>";
       pp_string (pp, n);
     }
   else
