@@ -60,29 +60,6 @@ host_modules= { module= gcc; bootstrap=true;
 		extra_make_flags="$(EXTRA_GCC_FLAGS)"; };
 host_modules= { module= gawk; };
 host_modules= { module= gettext; };
-host_modules= { module= gmp; lib_path=.libs; bootstrap=true;
-		extra_configure_flags='--disable-shared';
-		no_install= true;
-		// none-*-* disables asm optimizations, bootstrap-testing
-		// the compiler more thoroughly.
-	        host="none-${host_vendor}-${host_os}";
-		// gmp's configure will complain if given anything
-		// different from host for target.
-	        target="none-${host_vendor}-${host_os}"; };
-host_modules= { module= mpfr; lib_path=.libs; bootstrap=true;
-		extra_configure_flags='--disable-shared @extra_mpfr_configure_flags@';
-		no_install= true; };
-host_modules= { module= mpc; lib_path=.libs; bootstrap=true;
-		extra_configure_flags='--disable-shared @extra_mpc_gmp_configure_flags@ @extra_mpc_mpfr_configure_flags@';
-		no_install= true; };
-host_modules= { module= ppl; lib_path=src/.libs; bootstrap=true;
-		extra_configure_flags='--disable-shared --with-libgmp-prefix=$$r/$(HOST_SUBDIR)/gmp/ --with-libgmpxx-prefix=$$r/$(HOST_SUBDIR)/gmp/';
-		no_install= true; };
-host_modules= { module= cloog; lib_path=.libs; bootstrap=true;
-		extra_configure_flags='--disable-shared --with-gmp-library=$$r/$(HOST_SUBDIR)/gmp/.libs --with-gmp-include=$$r/$(HOST_SUBDIR)/gmp --with-bits=gmp --with-ppl';
-		extra_exports='CPPFLAGS="${CPPFLAGS} ${HOST_PPLINC}"; export CPPFLAGS; LDFLAGS="$$LDFLAGS ${HOST_PPLLIBS}"; export LDFLAGS; ';
-		extra_make_flags='CPPFLAGS="${CPPFLAGS} ${HOST_PPLINC}" LDFLAGS="$$LDFLAGS"';
-		no_install= true; };
 host_modules= { module= libelf; lib_path=.libs; bootstrap=true;
 		extra_configure_flags='--disable-shared';
 		no_install= true; };
@@ -329,12 +306,6 @@ dependencies = { module=configure-gcc; on=all-ld; };
 dependencies = { module=configure-gcc; on=all-gold; };
 dependencies = { module=configure-gcc; on=all-libelf; };
 dependencies = { module=all-gcc; on=all-libiberty; hard=true; };
-dependencies = { module=all-gcc; on=all-gmp; };
-dependencies = { module=all-gcc; on=all-intl; };
-dependencies = { module=all-gcc; on=all-mpfr; };
-dependencies = { module=all-gcc; on=all-mpc; };
-dependencies = { module=all-gcc; on=all-ppl; };
-dependencies = { module=all-gcc; on=all-cloog; };
 dependencies = { module=all-gcc; on=all-build-texinfo; };
 dependencies = { module=all-gcc; on=all-build-bison; };
 dependencies = { module=all-gcc; on=all-build-byacc; };
@@ -365,12 +336,6 @@ dependencies = { module=all-fixincludes; on=all-libiberty; };
 dependencies = { module=all-gnattools; on=all-target-libada; };
 
 dependencies = { module=all-lto-plugin; on=all-libiberty; };
-
-dependencies = { module=configure-mpfr; on=all-gmp; };
-dependencies = { module=configure-mpc; on=all-mpfr; };
-dependencies = { module=configure-ppl; on=all-gmp; };
-dependencies = { module=configure-ppl; on=all-mpfr; };
-dependencies = { module=configure-cloog; on=all-ppl; };
 
 // Host modules specific to gdb.
 dependencies = { module=configure-gdb; on=all-intl; };
