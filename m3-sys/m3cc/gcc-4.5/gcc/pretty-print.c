@@ -709,7 +709,6 @@ pp_construct (pretty_printer *pp, const char *prefix, int maximum_length)
   pp_line_cutoff (pp) = maximum_length;
   pp_prefixing_rule (pp) = DIAGNOSTICS_SHOW_PREFIX_ONCE;
   pp_set_prefix (pp, prefix);
-  pp_translate_identifiers (pp) = true;
 }
 
 /* Append a string delimited by START and END to the output area of
@@ -846,29 +845,8 @@ pp_base_maybe_space (pretty_printer *pp)
 void
 pp_base_tree_identifier (pretty_printer *pp, tree id)
 {
-  if (pp_translate_identifiers (pp))
-    {
-      const char *text = identifier_to_locale (IDENTIFIER_POINTER (id));
-      pp_append_text (pp, text, text + strlen (text));
-    }
-  else
-    pp_append_text (pp, IDENTIFIER_POINTER (id),
-		    IDENTIFIER_POINTER (id) + IDENTIFIER_LENGTH (id));
-}
-
-/* Given IDENT, an identifier in the internal encoding, return a
-   version of IDENT suitable for diagnostics in the locale character
-   set: either IDENT itself, or a garbage-collected string converted
-   to the locale character set and using escape sequences if not
-   representable in the locale character set or containing control
-   characters or invalid byte sequences.  Existing backslashes in
-   IDENT are not doubled, so the result may not uniquely specify the
-   contents of an arbitrary byte sequence identifier.  */
-
-const char *
-identifier_to_locale (const char *ident)
-{
-  return ident;
+  pp_append_text (pp, IDENTIFIER_POINTER (id),
+		  IDENTIFIER_POINTER (id) + IDENTIFIER_LENGTH (id));
 }
 
 #ifdef __cplusplus

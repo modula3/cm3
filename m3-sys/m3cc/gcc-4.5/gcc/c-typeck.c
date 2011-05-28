@@ -5585,8 +5585,8 @@ push_member_name (tree decl)
 {
   const char *const string
     = (DECL_NAME (decl)
-       ? identifier_to_locale (IDENTIFIER_POINTER (DECL_NAME (decl)))
-       : _("<anonymous>"));
+       ? IDENTIFIER_POINTER (DECL_NAME (decl))
+       : "<anonymous>");
   PUSH_SPELLING (SPELLING_MEMBER, string, u.s);
 }
 
@@ -5652,7 +5652,7 @@ error_init (const char *msgid)
 {
   char *ofwhat;
 
-  error ("%s", _(msgid));
+  error ("%s", msgid);
   ofwhat = print_spelling ((char *) alloca (spelling_length () + 1));
   if (*ofwhat)
     error ("(near initialization for %qs)", ofwhat);
@@ -5668,7 +5668,7 @@ pedwarn_init (location_t location, int opt, const char *msgid)
 {
   char *ofwhat;
 
-  pedwarn (location, opt, "%s", _(msgid));
+  pedwarn (location, opt, "%s", msgid);
   ofwhat = print_spelling ((char *) alloca (spelling_length () + 1));
   if (*ofwhat)
     pedwarn (location, opt, "(near initialization for %qs)", ofwhat);
@@ -5685,7 +5685,7 @@ warning_init (int opt, const char *msgid)
 {
   char *ofwhat;
 
-  warning (opt, "%s", _(msgid));
+  warning (opt, "%s", msgid);
   ofwhat = print_spelling ((char *) alloca (spelling_length () + 1));
   if (*ofwhat)
     warning (opt, "(near initialization for %qs)", ofwhat);
@@ -6220,13 +6220,13 @@ start_init (tree decl, tree asmspec_tree ATTRIBUTE_UNUSED, int top_level)
 	       || TREE_CODE (TREE_TYPE (decl)) == RECORD_TYPE
 	       || TREE_CODE (TREE_TYPE (decl)) == UNION_TYPE
 	       || TREE_CODE (TREE_TYPE (decl)) == QUAL_UNION_TYPE));
-      locus = identifier_to_locale (IDENTIFIER_POINTER (DECL_NAME (decl)));
+      locus = IDENTIFIER_POINTER (DECL_NAME (decl));
     }
   else
     {
       require_constant_value = 0;
       require_constant_elements = 0;
-      locus = _("(anonymous)");
+      locus = "(anonymous)";
     }
 
   constructor_stack = 0;

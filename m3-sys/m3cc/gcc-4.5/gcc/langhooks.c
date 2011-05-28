@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default language-specific hooks.
    Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -351,7 +353,7 @@ lhd_print_error_function (diagnostic_context *context, const char *file,
       pp_set_prefix (context->printer, new_prefix);
 
       if (current_function_decl == NULL)
-	pp_printf (context->printer, _("At top level:"));
+	pp_printf (context->printer, "At top level:");
       else
 	{
 	  tree fndecl, ao;
@@ -371,12 +373,12 @@ lhd_print_error_function (diagnostic_context *context, const char *file,
 
 	  if (TREE_CODE (TREE_TYPE (fndecl)) == METHOD_TYPE)
 	    pp_printf
-	      (context->printer, _("In member function %qs"),
-	       identifier_to_locale (lang_hooks.decl_printable_name (fndecl, 2)));
+	      (context->printer, "In member function %qs",
+	       lang_hooks.decl_printable_name (fndecl, 2));
 	  else
 	    pp_printf
-	      (context->printer, _("In function %qs"),
-	       identifier_to_locale (lang_hooks.decl_printable_name (fndecl, 2)));
+	      (context->printer, "In function %qs",
+	       lang_hooks.decl_printable_name (fndecl, 2));
 
 	  while (abstract_origin)
 	    {
@@ -426,19 +428,19 @@ lhd_print_error_function (diagnostic_context *context, const char *file,
 		    {
 		      if (flag_show_column)
 			pp_printf (context->printer,
-				   _("    inlined from %qs at %s:%d:%d"),
-				   identifier_to_locale (lang_hooks.decl_printable_name (fndecl, 2)),
+				   "    inlined from %qs at %s:%d:%d",
+				   lang_hooks.decl_printable_name (fndecl, 2),
 				   s.file, s.line, s.column);
 		      else
 			pp_printf (context->printer,
-				   _("    inlined from %qs at %s:%d"),
-				   identifier_to_locale (lang_hooks.decl_printable_name (fndecl, 2)),
+				   "    inlined from %qs at %s:%d",
+				   lang_hooks.decl_printable_name (fndecl, 2),
 				   s.file, s.line);
 
 		    }
 		  else
-		    pp_printf (context->printer, _("    inlined from %qs"),
-			       identifier_to_locale (lang_hooks.decl_printable_name (fndecl, 2)));
+		    pp_printf (context->printer, "    inlined from %qs",
+			       lang_hooks.decl_printable_name (fndecl, 2));
 		}
 	    }
 	  pp_character (context->printer, ':');

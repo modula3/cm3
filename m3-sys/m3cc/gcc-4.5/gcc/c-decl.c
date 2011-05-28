@@ -4575,8 +4575,8 @@ check_bitfield_type_and_width (tree *type, tree *width, tree orig_name)
   unsigned int max_width;
   unsigned HOST_WIDE_INT w;
   const char *name = (orig_name
-		      ? identifier_to_locale (IDENTIFIER_POINTER (orig_name))
-		      : _("<anonymous>"));
+		      ? IDENTIFIER_POINTER (orig_name)
+		      : "<anonymous>");
 
   /* Detect and ignore out of range field width and process valid
      field widths.  */
