@@ -1032,11 +1032,6 @@ case "${host}" in
 esac
 AC_FUNC_FORK
 
-AM_ICONV
-# Until we have in-tree GNU iconv:
-LIBICONV_DEP=
-AC_SUBST(LIBICONV_DEP)
-
 AM_LC_MESSAGES
 
 AM_LANGINFO_CODESET
@@ -1518,12 +1513,6 @@ changequote([,])dnl
 
 # Internationalization
 ZW_GNU_GETTEXT_SISTER_DIR
-
-# If LIBINTL contains LIBICONV, then clear LIBICONV so we don't get
-# -liconv on the link line twice.
-case "$LIBINTL" in *$LIBICONV*)
-	LIBICONV= ;;
-esac
 
 AC_ARG_ENABLE(secureplt,
 [  --enable-secureplt      enable -msecure-plt by default for PowerPC],

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Natural loop functions
    Copyright (C) 1987, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
    2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
@@ -680,6 +682,6 @@ enum
 extern void unroll_and_peel_loops (int);
 extern void doloop_optimize_loops (void);
 extern void move_loop_invariants (void);
-extern bool finite_loop_p (struct loop *);
+#define finite_loop_p ((bool)false)
 
 #endif /* GCC_CFGLOOP_H */

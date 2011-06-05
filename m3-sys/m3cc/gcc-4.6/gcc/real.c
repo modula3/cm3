@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* real.c - software floating point emulation.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002,
    2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
@@ -28,9 +30,7 @@
 #include "tree.h"
 #include "diagnostic-core.h"
 #include "real.h"
-#include "realmpfr.h"
 #include "tm_p.h"
-#include "dfp.h"
 
 /* The floating point model used internally is not exactly IEEE 754
    compliant, and close to the description in the ISO C99 standard,
@@ -112,7 +112,6 @@ static int do_compare (const REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *, int);
 static void do_fix_trunc (REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *);
 
 static unsigned long rtd_divmod (REAL_VALUE_TYPE *, REAL_VALUE_TYPE *);
-static void decimal_from_integer (REAL_VALUE_TYPE *);
 static void decimal_integer_string (char *, const REAL_VALUE_TYPE *,
 				    size_t);
 
@@ -480,9 +479,6 @@ normalize (REAL_VALUE_TYPE *r)
   int shift = 0, exp;
   int i, j;
 
-  if (r->decimal)
-    return;
-
   /* Find the first word that is nonzero.  */
   for (i = SIGSZ - 1; i >= 0; i--)
     if (r->sig[i] == 0)
@@ -646,7 +642,6 @@ do_add (REAL_VALUE_TYPE *r, const REAL_VALUE_TYPE *a,
   /* Zero out the remaining fields.  */
   r->signalling = 0;
   r->canonical = 0;
-  r->decimal = 0;
 
   /* Re-normalize the result.  */
   normalize (r);
@@ -911,10 +906,6 @@ do_compare (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b,
       return 0;
 
     case CLASS2 (rvc_normal, rvc_zero):
-      /* Decimal float zero is special and uses rvc_normal, not rvc_zero.  */
-      if (a->decimal)
-	return decimal_do_compare (a, b, nan_result);
-      /* Fall through.  */
     case CLASS2 (rvc_inf, rvc_zero):
     case CLASS2 (rvc_inf, rvc_normal):
       return (a->sign ? -1 : 1);
@@ -923,10 +914,6 @@ do_compare (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b,
       return -a->sign - -b->sign;
 
     case CLASS2 (rvc_zero, rvc_normal):
-      /* Decimal float zero is special and uses rvc_normal, not rvc_zero.  */
-      if (b->decimal)
-	return decimal_do_compare (a, b, nan_result);
-      /* Fall through.  */
     case CLASS2 (rvc_zero, rvc_inf):
     case CLASS2 (rvc_normal, rvc_inf):
       return (b->sign ? 1 : -1);
@@ -949,9 +936,6 @@ do_compare (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b,
 
   if (a->sign != b->sign)
     return -a->sign - -b->sign;
-
-  if (a->decimal || b->decimal)
-    return decimal_do_compare (a, b, nan_result);
 
   if (REAL_EXP (a) > REAL_EXP (b))
     ret = 1;
@@ -978,11 +962,6 @@ do_fix_trunc (REAL_VALUE_TYPE *r, const REAL_VALUE_TYPE *a)
       break;
 
     case rvc_normal:
-      if (r->decimal)
-	{
-	  decimal_do_fix_trunc (r, a);
-	  return;
-	}
       if (REAL_EXP (r) <= 0)
 	get_zero (r, r->sign);
       else if (REAL_EXP (r) < SIGNIFICAND_BITS)
@@ -1003,9 +982,6 @@ real_arithmetic (REAL_VALUE_TYPE *r, int icode, const REAL_VALUE_TYPE *op0,
 		 const REAL_VALUE_TYPE *op1)
 {
   enum tree_code code = (enum tree_code) icode;
-
-  if (op0->decimal || (op1 && op1->decimal))
-    return decimal_real_arithmetic (r, code, op0, op1);
 
   switch (code)
     {
@@ -1233,8 +1209,6 @@ real_identical (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b)
       return true;
 
     case rvc_normal:
-      if (a->decimal != b->decimal)
-        return false;
       if (REAL_EXP (a) != REAL_EXP (b))
 	return false;
       break;
@@ -1346,9 +1320,6 @@ real_to_integer (const REAL_VALUE_TYPE *r)
       return i;
 
     case rvc_normal:
-      if (r->decimal)
-	return decimal_real_to_integer (r);
-
       if (REAL_EXP (r) <= 0)
 	goto underflow;
       /* Only force overflow for unsigned overflow.  Signed overflow is
@@ -1410,12 +1381,6 @@ real_to_integer2 (HOST_WIDE_INT *plow, HOST_WIDE_INT *phigh,
       break;
 
     case rvc_normal:
-      if (r->decimal)
-	{
-	  decimal_real_to_integer2 (plow, phigh, r);
-	  return;
-	}
-
       exp = REAL_EXP (r);
       if (exp <= 0)
 	goto underflow;
@@ -1543,12 +1508,6 @@ real_to_decimal_for_mode (char *str, const REAL_VALUE_TYPE *r_orig,
       return;
     default:
       gcc_unreachable ();
-    }
-
-  if (r.decimal)
-    {
-      decimal_real_to_decimal (str, &r, buf_size, digits, crop_trailing_zeros);
-      return;
     }
 
   /* Bound the number of digits printed by the size of the representation.  */
@@ -1852,13 +1811,6 @@ real_to_hexadecimal (char *str, const REAL_VALUE_TYPE *r, size_t buf_size,
       gcc_unreachable ();
     }
 
-  if (r->decimal)
-    {
-      /* Hexadecimal format for decimal floats is not interesting. */
-      strcpy (str, "N/A");
-      return;
-    }
-
   if (digits == 0)
     digits = SIGNIFICAND_BITS / 4;
 
@@ -2137,10 +2089,8 @@ real_from_string2 (const char *s, enum machine_mode mode)
 void
 real_from_string3 (REAL_VALUE_TYPE *r, const char *s, enum machine_mode mode)
 {
-  if (DECIMAL_FLOAT_MODE_P (mode))
-    decimal_real_from_string (r, s);
-  else
-    real_from_string (r, s);
+  gcc_assert (!DECIMAL_FLOAT_MODE_P (mode));
+  real_from_string (r, s);
 
   if (mode != VOIDmode)
     real_convert (r, mode, r);
@@ -2188,9 +2138,8 @@ real_from_integer (REAL_VALUE_TYPE *r, enum machine_mode mode,
       normalize (r);
     }
 
-  if (DECIMAL_FLOAT_MODE_P (mode))
-    decimal_from_integer (r);
-  else if (mode != VOIDmode)
+  gcc_assert (!DECIMAL_FLOAT_MODE_P (mode));
+  if (mode != VOIDmode)
     real_convert (r, mode, r);
 }
 
@@ -2239,17 +2188,6 @@ decimal_integer_string (char *str, const REAL_VALUE_TYPE *r_orig,
     }
   *p++ = '.';
   *p++ = '\0';
-}
-
-/* Convert a real with an integral value to decimal float.  */
-
-static void
-decimal_from_integer (REAL_VALUE_TYPE *r)
-{
-  char str[256];
-
-  decimal_integer_string (str, r, sizeof (str) - 1);
-  decimal_real_from_string (r, str);
 }
 
 /* Returns 10**2**N.  */
@@ -2340,64 +2278,6 @@ times_pten (REAL_VALUE_TYPE *r, int exp)
 
   if (negative)
     do_divide (r, r, &pten);
-}
-
-/* Returns the special REAL_VALUE_TYPE corresponding to 'e'.  */
-
-const REAL_VALUE_TYPE *
-dconst_e_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      mpfr_t m;
-      mpfr_init2 (m, SIGNIFICAND_BITS);
-      mpfr_set_ui (m, 1, GMP_RNDN);
-      mpfr_exp (m, m, GMP_RNDN);
-      real_from_mpfr (&value, m, NULL_TREE, GMP_RNDN);
-      mpfr_clear (m);
-
-    }
-  return &value;
-}
-
-/* Returns the special REAL_VALUE_TYPE corresponding to 1/3.  */
-
-const REAL_VALUE_TYPE *
-dconst_third_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      real_arithmetic (&value, RDIV_EXPR, &dconst1, real_digit (3));
-    }
-  return &value;
-}
-
-/* Returns the special REAL_VALUE_TYPE corresponding to sqrt(2).  */
-
-const REAL_VALUE_TYPE *
-dconst_sqrt2_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      mpfr_t m;
-      mpfr_init2 (m, SIGNIFICAND_BITS);
-      mpfr_sqrt_ui (m, 2, GMP_RNDN);
-      real_from_mpfr (&value, m, NULL_TREE, GMP_RNDN);
-      mpfr_clear (m);
-    }
-  return &value;
 }
 
 /* Fills R with +Inf.  */
@@ -2515,9 +2395,7 @@ real_maxval (REAL_VALUE_TYPE *r, int sign, enum machine_mode mode)
   gcc_assert (fmt);
   memset (r, 0, sizeof (*r));
 
-  if (fmt->b == 10)
-    decimal_real_maxval (r, sign, mode);
-  else
+  gcc_assert (fmt->b != 10);
     {
       r->cl = rvc_normal;
       r->sign = sign;
@@ -2556,8 +2434,7 @@ real_2expN (REAL_VALUE_TYPE *r, int n, enum machine_mode fmode)
       SET_REAL_EXP (r, n);
       r->sig[SIGSZ-1] = SIG_MSB;
     }
-  if (DECIMAL_FLOAT_MODE_P (fmode))
-    decimal_real_convert (r, fmode, r);
+  gcc_assert (!DECIMAL_FLOAT_MODE_P (fmode));
 }
 
 
@@ -2567,20 +2444,6 @@ round_for_format (const struct real_format *fmt, REAL_VALUE_TYPE *r)
   int p2, np2, i, w;
   int emin2m1, emax2;
   bool round_up = false;
-
-  if (r->decimal)
-    {
-      if (fmt->b == 10)
-	{
-	  decimal_round_for_format (fmt, r);
-	  return;
-	}
-      /* FIXME. We can come here via fp_easy_constant
-	 (e.g. -O0 on '_Decimal32 x = 1.0 + 2.0dd'), but have not
-	 investigated whether this convert needs to be here, or
-	 something else is missing. */
-      decimal_real_convert (r, DFmode, r);
-    }
 
   p2 = fmt->p;
   emin2m1 = fmt->emin - 1;
@@ -2698,8 +2561,7 @@ real_convert (REAL_VALUE_TYPE *r, enum machine_mode mode,
 
   *r = *a;
 
-  if (a->decimal || fmt->b == 10)
-    decimal_real_convert (r, mode, a);
+  gcc_assert (fmt->b != 10);
 
   round_for_format (fmt, r);
 
@@ -4479,7 +4341,7 @@ encode_decimal_single (const struct real_format *fmt ATTRIBUTE_UNUSED,
                        long *buf ATTRIBUTE_UNUSED,
 		       const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
 {
-  encode_decimal32 (fmt, buf, r);
+  gcc_unreachable ();
 }
 
 /* Decode a single precision DFP value in BUF into a real R.  */
@@ -4488,7 +4350,7 @@ decode_decimal_single (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		       REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
 		       const long *buf ATTRIBUTE_UNUSED)
 {
-  decode_decimal32 (fmt, r, buf);
+  gcc_unreachable ();
 }
 
 /* Encode real R into a double precision DFP value in BUF.  */
@@ -4497,7 +4359,7 @@ encode_decimal_double (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		       long *buf ATTRIBUTE_UNUSED,
 		       const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
 {
-  encode_decimal64 (fmt, buf, r);
+  gcc_unreachable ();
 }
 
 /* Decode a double precision DFP value in BUF into a real R.  */
@@ -4506,7 +4368,7 @@ decode_decimal_double (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		       REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
 		       const long *buf ATTRIBUTE_UNUSED)
 {
-  decode_decimal64 (fmt, r, buf);
+  gcc_unreachable ();
 }
 
 /* Encode real R into a quad precision DFP value in BUF.  */
@@ -4515,7 +4377,7 @@ encode_decimal_quad (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		     long *buf ATTRIBUTE_UNUSED,
 		     const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
 {
-  encode_decimal128 (fmt, buf, r);
+  gcc_unreachable ();
 }
 
 /* Decode a quad precision DFP value in BUF into a real R.  */
@@ -4524,7 +4386,7 @@ decode_decimal_quad (const struct real_format *fmt ATTRIBUTE_UNUSED,
 		     REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
 		     const long *buf ATTRIBUTE_UNUSED)
 {
-  decode_decimal128 (fmt, r, buf);
+  gcc_unreachable ();
 }
 
 /* Single precision decimal floating point (IEEE 754). */

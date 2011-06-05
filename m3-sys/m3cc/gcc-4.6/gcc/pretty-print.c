@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for language-independent pretty-print subroutines.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -25,9 +27,11 @@ along with GCC; see the file COPYING3.  If not see
 #include "intl.h"
 #include "pretty-print.h"
 
-#if HAVE_ICONV
-#include <iconv.h>
-#endif
+/* Opening quotation mark for diagnostics.  */
+static const char open_quote[] = "'";
+
+/* Closing quotation mark for diagnostics.  */
+static const char close_quote[] = "'";
 
 /* A pointer to the formatted diagnostic message.  */
 #define pp_formatted_text_data(PP) \
@@ -665,7 +669,6 @@ pp_construct (pretty_printer *pp, const char *prefix, int maximum_length)
   pp_line_cutoff (pp) = maximum_length;
   pp_prefixing_rule (pp) = DIAGNOSTICS_SHOW_PREFIX_ONCE;
   pp_set_prefix (pp, prefix);
-  pp_translate_identifiers (pp) = true;
 }
 
 /* Append a string delimited by START and END to the output area of
@@ -797,62 +800,6 @@ pp_base_maybe_space (pretty_printer *pp)
     }
 }
 
-/* The string starting at P has LEN (at least 1) bytes left; if they
-   start with a valid UTF-8 sequence, return the length of that
-   sequence and set *VALUE to the value of that sequence, and
-   otherwise return 0 and set *VALUE to (unsigned int) -1.  */
-
-static int
-decode_utf8_char (const unsigned char *p, size_t len, unsigned int *value)
-{
-  unsigned int t = *p;
-
-  if (len == 0)
-    abort ();
-  if (t & 0x80)
-    {
-      size_t utf8_len = 0;
-      unsigned int ch;
-      size_t i;
-      for (t = *p; t & 0x80; t <<= 1)
-	utf8_len++;
-
-      if (utf8_len > len || utf8_len < 2 || utf8_len > 6)
-	{
-	  *value = (unsigned int) -1;
-	  return 0;
-	}
-      ch = *p & ((1 << (7 - utf8_len)) - 1);
-      for (i = 1; i < utf8_len; i++)
-	{
-	  unsigned int u = p[i];
-	  if ((u & 0xC0) != 0x80)
-	    {
-	      *value = (unsigned int) -1;
-	      return 0;
-	    }
-	  ch = (ch << 6) | (u & 0x3F);
-	}
-      if (   (ch <=      0x7F && utf8_len > 1)
-	  || (ch <=     0x7FF && utf8_len > 2)
-	  || (ch <=    0xFFFF && utf8_len > 3)
-	  || (ch <=  0x1FFFFF && utf8_len > 4)
-	  || (ch <= 0x3FFFFFF && utf8_len > 5)
-	  || (ch >= 0xD800 && ch <= 0xDFFF))
-	{
-	  *value = (unsigned int) -1;
-	  return 0;
-	}
-      *value = ch;
-      return utf8_len;
-    }
-  else
-    {
-      *value = t;
-      return 1;
-    }
-}
-
 /* Allocator for identifier_to_locale and corresponding function to
    free memory.  */
 
@@ -872,150 +819,5 @@ void (*identifier_to_locale_free) (void *) = free;
 const char *
 identifier_to_locale (const char *ident)
 {
-  const unsigned char *uid = (const unsigned char *) ident;
-  size_t idlen = strlen (ident);
-  bool valid_printable_utf8 = true;
-  bool all_ascii = true;
-  size_t i;
-
-  for (i = 0; i < idlen;)
-    {
-      unsigned int c;
-      size_t utf8_len = decode_utf8_char (&uid[i], idlen - i, &c);
-      if (utf8_len == 0 || c <= 0x1F || (c >= 0x7F && c <= 0x9F))
-	{
-	  valid_printable_utf8 = false;
-	  break;
-	}
-      if (utf8_len > 1)
-	all_ascii = false;
-      i += utf8_len;
-    }
-
-  /* If IDENT contains invalid UTF-8 sequences (which may occur with
-     attributes putting arbitrary byte sequences in identifiers), or
-     control characters, we use octal escape sequences for all bytes
-     outside printable ASCII.  */
-  if (!valid_printable_utf8)
-    {
-      char *ret = (char *) identifier_to_locale_alloc (4 * idlen + 1);
-      char *p = ret;
-      for (i = 0; i < idlen; i++)
-	{
-	  if (uid[i] > 0x1F && uid[i] < 0x7F)
-	    *p++ = uid[i];
-	  else
-	    {
-	      sprintf (p, "\\%03o", uid[i]);
-	      p += 4;
-	    }
-	}
-      *p = 0;
-      return ret;
-    }
-
-  /* Otherwise, if it is valid printable ASCII, or printable UTF-8
-     with the locale character set being UTF-8, IDENT is used.  */
-  if (all_ascii || locale_utf8)
-    return ident;
-
-  /* Otherwise IDENT is converted to the locale character set if
-     possible.  */
-#if defined ENABLE_NLS && defined HAVE_LANGINFO_CODESET && HAVE_ICONV
-  if (locale_encoding != NULL)
-    {
-      iconv_t cd = iconv_open (locale_encoding, "UTF-8");
-      bool conversion_ok = true;
-      char *ret = NULL;
-      if (cd != (iconv_t) -1)
-	{
-	  size_t ret_alloc = 4 * idlen + 1;
-	  for (;;)
-	    {
-	      /* Repeat the whole conversion process as needed with
-		 larger buffers so non-reversible transformations can
-		 always be detected.  */
-	      ICONV_CONST char *inbuf = CONST_CAST (char *, ident);
-	      char *outbuf;
-	      size_t inbytesleft = idlen;
-	      size_t outbytesleft = ret_alloc - 1;
-	      size_t iconv_ret;
-
-	      ret = (char *) identifier_to_locale_alloc (ret_alloc);
-	      outbuf = ret;
-
-	      if (iconv (cd, 0, 0, 0, 0) == (size_t) -1)
-		{
-		  conversion_ok = false;
-		  break;
-		}
-
-	      iconv_ret = iconv (cd, &inbuf, &inbytesleft,
-				 &outbuf, &outbytesleft);
-	      if (iconv_ret == (size_t) -1 || inbytesleft != 0)
-		{
-		  if (errno == E2BIG)
-		    {
-		      ret_alloc *= 2;
-		      identifier_to_locale_free (ret);
-		      ret = NULL;
-		      continue;
-		    }
-		  else
-		    {
-		      conversion_ok = false;
-		      break;
-		    }
-		}
-	      else if (iconv_ret != 0)
-		{
-		  conversion_ok = false;
-		  break;
-		}
-	      /* Return to initial shift state.  */
-	      if (iconv (cd, 0, 0, &outbuf, &outbytesleft) == (size_t) -1)
-		{
-		  if (errno == E2BIG)
-		    {
-		      ret_alloc *= 2;
-		      identifier_to_locale_free (ret);
-		      ret = NULL;
-		      continue;
-		    }
-		  else
-		    {
-		      conversion_ok = false;
-		      break;
-		    }
-		}
-	      *outbuf = 0;
-	      break;
-	    }
-	  iconv_close (cd);
-	  if (conversion_ok)
-	    return ret;
-	}
-    }
-#endif
-
-  /* Otherwise, convert non-ASCII characters in IDENT to UCNs.  */
-  {
-    char *ret = (char *) identifier_to_locale_alloc (10 * idlen + 1);
-    char *p = ret;
-    for (i = 0; i < idlen;)
-      {
-	unsigned int c;
-	size_t utf8_len = decode_utf8_char (&uid[i], idlen - i, &c);
-	if (utf8_len == 1)
-	  *p++ = uid[i];
-	else
-	  {
-	    sprintf (p, "\\U%08x", c);
-	    p += 10;
-	  }
-	i += utf8_len;
-      }
-    *p = 0;
-    return ret;
-  }
+  return ident;
 }

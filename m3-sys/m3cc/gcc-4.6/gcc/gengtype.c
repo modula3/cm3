@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process source files and output type information.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1549,7 +1551,7 @@ open_base_files (void)
       "optabs.h", "libfuncs.h", "debug.h", "ggc.h", "cgraph.h",
       "tree-flow.h", "reload.h", "cpp-id-data.h", "tree-chrec.h",
       "cfglayout.h", "except.h", "output.h", "gimple.h", "cfgloop.h",
-      "target.h", "ipa-prop.h", "lto-streamer.h", "target-globals.h", NULL
+      "target.h", "ipa-prop.h", "target-globals.h", NULL
     };
     const char *const *ifp;
     outf_p gtype_desc_c;
@@ -2156,8 +2158,10 @@ close_output_files (void)
 	  newfile = fopen (of->name, "w");
 	  if (newfile == NULL)
 	    fatal ("opening output file %s: %s", of->name, xstrerror (errno));
+          fprintf (newfile, "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n");
 	  if (fwrite (of->buf, 1, of->bufused, newfile) != of->bufused)
 	    fatal ("writing output file %s: %s", of->name, xstrerror (errno));
+          fprintf (newfile, "\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
 	  if (fclose (newfile) != 0)
 	    fatal ("closing output file %s: %s", of->name, xstrerror (errno));
 	  nbwrittenfiles++;

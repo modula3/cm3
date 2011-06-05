@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Statement simplification on GIMPLE.
    Copyright (C) 2010 Free Software Foundation, Inc.
    Split out from tree-ssa-ccp.c.
@@ -1331,29 +1333,9 @@ gimple_fold_builtin (gimple stmt)
 
     case BUILT_IN_STRCPY_CHK:
     case BUILT_IN_STPCPY_CHK:
-      if (val[1] && is_gimple_val (val[1]) && nargs == 3)
-	result = fold_builtin_stxcpy_chk (loc, callee,
-                                          gimple_call_arg (stmt, 0),
-                                          gimple_call_arg (stmt, 1),
-                                          gimple_call_arg (stmt, 2),
-					  val[1], ignore,
-					  DECL_FUNCTION_CODE (callee));
-      break;
-
     case BUILT_IN_STRNCPY_CHK:
-      if (val[2] && is_gimple_val (val[2]) && nargs == 4)
-	result = fold_builtin_strncpy_chk (loc, gimple_call_arg (stmt, 0),
-                                           gimple_call_arg (stmt, 1),
-                                           gimple_call_arg (stmt, 2),
-                                           gimple_call_arg (stmt, 3),
-					   val[2]);
-      break;
-
     case BUILT_IN_SNPRINTF_CHK:
     case BUILT_IN_VSNPRINTF_CHK:
-      if (val[1] && is_gimple_val (val[1]))
-	result = gimple_fold_builtin_snprintf_chk (stmt, val[1],
-                                                   DECL_FUNCTION_CODE (callee));
       break;
 
     default:
