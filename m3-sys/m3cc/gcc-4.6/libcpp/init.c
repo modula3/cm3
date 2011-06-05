@@ -274,7 +274,6 @@ cpp_destroy (cpp_reader *pfile)
 
   _cpp_destroy_hashtable (pfile);
   _cpp_cleanup_files (pfile);
-  _cpp_destroy_iconv (pfile);
 
   _cpp_free_buff (pfile->a_buff);
   _cpp_free_buff (pfile->u_buff);

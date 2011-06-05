@@ -102,8 +102,6 @@ if test $ac_cv_type_uchar = yes; then
   [Define if <sys/types.h> defines \`uchar'.])
 fi
 
-AM_ICONV
-
 # More defines and substitutions.
 PACKAGE="$PACKAGE_TARNAME"
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE", [Define to the name of this package.])
