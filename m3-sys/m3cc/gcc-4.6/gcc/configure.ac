@@ -1,3 +1,5 @@
+# Modula-3: modified
+
 # configure.ac for GCC
 # Process this file with autoconf to generate a configuration script.
 
@@ -4441,17 +4443,6 @@ if test -z "${HOST_LIBS+set}"; then
   HOST_LIBS=
 fi
 AC_SUBST(HOST_LIBS)
-
-# Use the system's zlib library.
-zlibdir=-L../zlib
-zlibinc="-I\$(srcdir)/../zlib"
-AC_ARG_WITH(system-zlib,
-[  --with-system-zlib      use installed libz],
-zlibdir=
-zlibinc=
-)
-AC_SUBST(zlibdir)
-AC_SUBST(zlibinc)
 
 dnl Very limited version of automake's enable-maintainer-mode
 
