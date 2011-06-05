@@ -28,7 +28,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "machmode.h"
 #include "rtl.h"
 #include "tree.h"
-#include "realmpfr.h"
 #include "gimple.h"
 #include "flags.h"
 #include "regs.h"
@@ -138,7 +137,6 @@ static rtx expand_builtin_expect (tree, rtx);
 static tree rewrite_call_expr (location_t, tree, int, tree, int, ...);
 static bool validate_arg (const_tree, enum tree_code code);
 static bool integer_valued_real_p (tree);
-static tree fold_trunc_transparent_mathfn (location_t, tree, tree);
 static bool readonly_data_expr (tree);
 static rtx expand_builtin_fabs (tree, rtx, rtx);
 static rtx expand_builtin_signbit (tree, rtx);
@@ -151,14 +149,6 @@ static tree fold_builtin_3 (location_t, tree, tree, tree, tree, bool);
 static rtx expand_builtin_object_size (tree);
 static rtx expand_builtin_memory_chk (tree, rtx, enum machine_mode,
 				      enum built_in_function);
-
-static unsigned HOST_WIDE_INT target_newline;
-static unsigned HOST_WIDE_INT target_percent;
-static unsigned HOST_WIDE_INT target_c;
-static unsigned HOST_WIDE_INT target_s;
-static char target_percent_c[3];
-static char target_percent_s[3];
-static char target_percent_s_newline[4];
 
 /* Return true if NAME starts with __builtin_ or __sync_.  */
 
@@ -2627,87 +2617,6 @@ static rtx
 expand_builtin_pow_root (location_t loc, tree arg0, tree arg1, tree type,
 			 rtx subtarget)
 {
-  if (TREE_CODE (arg1) == REAL_CST
-      && !TREE_OVERFLOW (arg1)
-      && flag_unsafe_math_optimizations)
-    {
-      enum machine_mode mode = TYPE_MODE (type);
-      tree sqrtfn = mathfn_built_in (type, BUILT_IN_SQRT);
-      tree cbrtfn = mathfn_built_in (type, BUILT_IN_CBRT);
-      REAL_VALUE_TYPE c = TREE_REAL_CST (arg1);
-      tree op = NULL_TREE;
-
-      if (sqrtfn)
-	{
-	  /* Optimize pow (x, 0.5) into sqrt.  */
-	  if (REAL_VALUES_EQUAL (c, dconsthalf))
-	    op = build_call_nofold_loc (loc, sqrtfn, 1, arg0);
-
-	  /* Don't do this optimization if we don't have a sqrt insn.  */
-	  else if (optab_handler (sqrt_optab, mode) != CODE_FOR_nothing)
-	    {
-	      REAL_VALUE_TYPE dconst1_4 = dconst1;
-	      REAL_VALUE_TYPE dconst3_4;
-	      SET_REAL_EXP (&dconst1_4, REAL_EXP (&dconst1_4) - 2);
-
-	      real_from_integer (&dconst3_4, VOIDmode, 3, 0, 0);
-	      SET_REAL_EXP (&dconst3_4, REAL_EXP (&dconst3_4) - 2);
-
-	      /* Optimize pow (x, 0.25) into sqrt (sqrt (x)).  Assume on most
-		 machines that a builtin sqrt instruction is smaller than a
-		 call to pow with 0.25, so do this optimization even if
-		 -Os.  */
-	      if (REAL_VALUES_EQUAL (c, dconst1_4))
-		{
-		  op = build_call_nofold_loc (loc, sqrtfn, 1, arg0);
-		  op = build_call_nofold_loc (loc, sqrtfn, 1, op);
-		}
-
-	      /* Optimize pow (x, 0.75) = sqrt (x) * sqrt (sqrt (x)) unless we
-		 are optimizing for space.  */
-	      else if (optimize_insn_for_speed_p ()
-		       && !TREE_SIDE_EFFECTS (arg0)
-		       && REAL_VALUES_EQUAL (c, dconst3_4))
-		{
-		  tree sqrt1 = build_call_expr_loc (loc, sqrtfn, 1, arg0);
-		  tree sqrt2 = builtin_save_expr (sqrt1);
-		  tree sqrt3 = build_call_expr_loc (loc, sqrtfn, 1, sqrt1);
-		  op = fold_build2_loc (loc, MULT_EXPR, type, sqrt2, sqrt3);
-		}
-	    }
-	}
-
-      /* Check whether we can do cbrt insstead of pow (x, 1./3.) and
-	 cbrt/sqrts instead of pow (x, 1./6.).  */
-      if (cbrtfn && ! op
-	  && (tree_expr_nonnegative_p (arg0) || !HONOR_NANS (mode)))
-	{
-	  /* First try 1/3.  */
-	  REAL_VALUE_TYPE dconst1_3
-	    = real_value_truncate (mode, dconst_third ());
-
-	  if (REAL_VALUES_EQUAL (c, dconst1_3))
-	    op = build_call_nofold_loc (loc, cbrtfn, 1, arg0);
-
-	      /* Now try 1/6.  */
-	  else if (optimize_insn_for_speed_p ()
-		   && optab_handler (sqrt_optab, mode) != CODE_FOR_nothing)
-	    {
-	      REAL_VALUE_TYPE dconst1_6 = dconst1_3;
-	      SET_REAL_EXP (&dconst1_6, REAL_EXP (&dconst1_6) - 1);
-
-	      if (REAL_VALUES_EQUAL (c, dconst1_6))
-		{
-		  op = build_call_nofold_loc (loc, sqrtfn, 1, arg0);
-		  op = build_call_nofold_loc (loc, cbrtfn, 1, op);
-		}
-	    }
-	}
-
-      if (op)
-	return expand_expr (op, subtarget, mode, EXPAND_NORMAL);
-    }
-
   return NULL_RTX;
 }
 
@@ -6222,28 +6131,6 @@ builtin_mathfn_code (const_tree t)
   return DECL_FUNCTION_CODE (fndecl);
 }
 
-/* Create builtin_expect with PRED and EXPECTED as its arguments and
-   return it as a truthvalue.  */
-
-static tree
-build_builtin_expect_predicate (location_t loc, tree pred, tree expected)
-{
-  tree fn, arg_types, pred_type, expected_type, call_expr, ret_type;
-
-  fn = built_in_decls[BUILT_IN_EXPECT];
-  arg_types = TYPE_ARG_TYPES (TREE_TYPE (fn));
-  ret_type = TREE_TYPE (TREE_TYPE (fn));
-  pred_type = TREE_VALUE (arg_types);
-  expected_type = TREE_VALUE (TREE_CHAIN (arg_types));
-
-  pred = fold_convert_loc (loc, pred_type, pred);
-  expected = fold_convert_loc (loc, expected_type, expected);
-  call_expr = build_call_expr_loc (loc, fn, 2, pred, expected);
-
-  return build2 (NE_EXPR, TREE_TYPE (pred), call_expr,
-		 build_int_cst (ret_type, 0));
-}
-
 /* Return true if the floating point expression T has an integer value.
    We also allow +Inf, -Inf and NaN to be considered integer values.  */
 
@@ -6314,130 +6201,6 @@ integer_valued_real_p (tree t)
       break;
     }
   return false;
-}
-
-/* FNDECL is assumed to be a builtin where truncation can be propagated
-   across (for instance floor((double)f) == (double)floorf (f).
-   Do the transformation for a call with argument ARG.  */
-
-static tree
-fold_trunc_transparent_mathfn (location_t loc, tree fndecl, tree arg)
-{
-  enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
-
-  if (!validate_arg (arg, REAL_TYPE))
-    return NULL_TREE;
-
-  /* Integer rounding functions are idempotent.  */
-  if (fcode == builtin_mathfn_code (arg))
-    return arg;
-
-  /* If argument is already integer valued, and we don't need to worry
-     about setting errno, there's no need to perform rounding.  */
-  if (! flag_errno_math && integer_valued_real_p (arg))
-    return arg;
-
-  if (optimize)
-    {
-      tree arg0 = strip_float_extensions (arg);
-      tree ftype = TREE_TYPE (TREE_TYPE (fndecl));
-      tree newtype = TREE_TYPE (arg0);
-      tree decl;
-
-      if (TYPE_PRECISION (newtype) < TYPE_PRECISION (ftype)
-	  && (decl = mathfn_built_in (newtype, fcode)))
-	return fold_convert_loc (loc, ftype,
-				 build_call_expr_loc (loc, decl, 1,
-						  fold_convert_loc (loc,
-								    newtype,
-								    arg0)));
-    }
-  return NULL_TREE;
-}
-
-/* FNDECL is assumed to be builtin which can narrow the FP type of
-   the argument, for instance lround((double)f) -> lroundf (f).
-   Do the transformation for a call with argument ARG.  */
-
-static tree
-fold_fixed_mathfn (location_t loc, tree fndecl, tree arg)
-{
-  enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
-
-  if (!validate_arg (arg, REAL_TYPE))
-    return NULL_TREE;
-
-  /* If argument is already integer valued, and we don't need to worry
-     about setting errno, there's no need to perform rounding.  */
-  if (! flag_errno_math && integer_valued_real_p (arg))
-    return fold_build1_loc (loc, FIX_TRUNC_EXPR,
-			TREE_TYPE (TREE_TYPE (fndecl)), arg);
-
-  if (optimize)
-    {
-      tree ftype = TREE_TYPE (arg);
-      tree arg0 = strip_float_extensions (arg);
-      tree newtype = TREE_TYPE (arg0);
-      tree decl;
-
-      if (TYPE_PRECISION (newtype) < TYPE_PRECISION (ftype)
-	  && (decl = mathfn_built_in (newtype, fcode)))
-	return build_call_expr_loc (loc, decl, 1,
-				fold_convert_loc (loc, newtype, arg0));
-    }
-
-  /* Canonicalize llround (x) to lround (x) on LP64 targets where
-     sizeof (long long) == sizeof (long).  */
-  if (TYPE_PRECISION (long_long_integer_type_node)
-      == TYPE_PRECISION (long_integer_type_node))
-    {
-      tree newfn = NULL_TREE;
-      switch (fcode)
-	{
-	CASE_FLT_FN (BUILT_IN_LLCEIL):
-	  newfn = mathfn_built_in (TREE_TYPE (arg), BUILT_IN_LCEIL);
-	  break;
-
-	CASE_FLT_FN (BUILT_IN_LLFLOOR):
-	  newfn = mathfn_built_in (TREE_TYPE (arg), BUILT_IN_LFLOOR);
-	  break;
-
-	CASE_FLT_FN (BUILT_IN_LLROUND):
-	  newfn = mathfn_built_in (TREE_TYPE (arg), BUILT_IN_LROUND);
-	  break;
-
-	CASE_FLT_FN (BUILT_IN_LLRINT):
-	  newfn = mathfn_built_in (TREE_TYPE (arg), BUILT_IN_LRINT);
-	  break;
-
-	default:
-	  break;
-	}
-
-      if (newfn)
-	{
-	  tree newcall = build_call_expr_loc (loc, newfn, 1, arg);
-	  return fold_convert_loc (loc,
-				   TREE_TYPE (TREE_TYPE (fndecl)), newcall);
-	}
-    }
-
-  return NULL_TREE;
-}
-
-/* Build a complex (inf +- 0i) for the result of cproj.  TYPE is the
-   complex tree type of the result.  If NEG is true, the imaginary
-   zero is negative.  */
-
-static tree
-build_complex_cproj (tree type, bool neg)
-{
-  REAL_VALUE_TYPE rinf, rzero = dconst0;
-  
-  real_inf (&rinf);
-  rzero.sign = neg;
-  return build_complex (type, build_real (TREE_TYPE (type), rinf),
-			build_real (TREE_TYPE (type), rzero));
 }
 
 /* Return true if VAR is a VAR_DECL or a component thereof.  */
@@ -6946,7 +6709,6 @@ fold_fma (location_t loc ATTRIBUTE_UNUSED,
 static tree
 fold_builtin_2 (location_t loc, tree fndecl, tree arg0, tree arg1, bool ignore)
 {
-  tree type = TREE_TYPE (TREE_TYPE (fndecl));
   enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
 
   switch (fcode)
@@ -7247,25 +7009,6 @@ rewrite_call_expr_valist (location_t loc, int oldnargs, tree *args,
     buffer = args + skip;
 
   return build_call_expr_loc_array (loc, fndecl, nargs, buffer);
-}
-
-/* Construct a new CALL_EXPR to FNDECL using the tail of the argument
-   list ARGS along with N new arguments specified as the "..."
-   parameters.  SKIP is the number of arguments in ARGS to be omitted.
-   OLDNARGS is the number of elements in ARGS.  */
-
-static tree
-rewrite_call_expr_array (location_t loc, int oldnargs, tree *args,
-			 int skip, tree fndecl, int n, ...)
-{
-  va_list ap;
-  tree t;
-
-  va_start (ap, n);
-  t = rewrite_call_expr_valist (loc, oldnargs, args, skip, fndecl, n, ap);
-  va_end (ap);
-
-  return t;
 }
 
 /* Construct a new CALL_EXPR using the tail of the argument list of EXP
@@ -7844,114 +7587,6 @@ fold_builtin_memory_chk (location_t loc, tree fndecl,
   return build_call_expr_loc (loc, fn, 3, dest, src, len);
 }
 
-/* Fold a call to the __st[rp]cpy_chk builtin.
-   DEST, SRC, and SIZE are the arguments to the call.
-   IGNORE is true if return value can be ignored.  FCODE is the BUILT_IN_*
-   code of the builtin.  If MAXLEN is not NULL, it is maximum length of
-   strings passed as second argument.  */
-
-tree
-fold_builtin_stxcpy_chk (location_t loc, tree fndecl, tree dest,
-			 tree src, tree size,
-			 tree maxlen, bool ignore,
-			 enum built_in_function fcode)
-{
-  return NULL_TREE;
-}
-
-/* Fold a call to the __strncpy_chk builtin.  DEST, SRC, LEN, and SIZE
-   are the arguments to the call.  If MAXLEN is not NULL, it is maximum
-   length passed as third argument.  */
-
-tree
-fold_builtin_strncpy_chk (location_t loc, tree dest, tree src,
-			  tree len, tree size, tree maxlen)
-{
-  return NULL_TREE;
-}
-
-/* Fold a call EXP to {,v}snprintf.  Return NULL_TREE if
-   a normal call should be emitted rather than expanding the function
-   inline.  FCODE is either BUILT_IN_SNPRINTF_CHK or
-   BUILT_IN_VSNPRINTF_CHK.  If MAXLEN is not NULL, it is maximum length
-   passed as second argument.  */
-
-tree
-fold_builtin_snprintf_chk (location_t loc, tree exp, tree maxlen,
-			   enum built_in_function fcode)
-{
-  return NULL_TREE;
-}
-
-/* Fold a call to the {,v}printf{,_unlocked} and __{,v}printf_chk builtins.
-   FMT and ARG are the arguments to the call; we don't fold cases with
-   more than 2 arguments, and ARG may be null if this is a 1-argument case.
-
-   Return NULL_TREE if no simplification was possible, otherwise return the
-   simplified form of the call as a tree.  FCODE is the BUILT_IN_*
-   code of the function to be simplified.  */
-
-static tree
-fold_builtin_printf (location_t loc, tree fndecl, tree fmt,
-		     tree arg, bool ignore,
-		     enum built_in_function fcode)
-{
-  return NULL_TREE;
-}
-
-/* Fold a call to the {,v}fprintf{,_unlocked} and __{,v}printf_chk builtins.
-   FP, FMT, and ARG are the arguments to the call.  We don't fold calls with
-   more than 3 arguments, and ARG may be null in the 2-argument case.
-
-   Return NULL_TREE if no simplification was possible, otherwise return the
-   simplified form of the call as a tree.  FCODE is the BUILT_IN_*
-   code of the function to be simplified.  */
-
-static tree
-fold_builtin_fprintf (location_t loc, tree fndecl, tree fp,
-		      tree fmt, tree arg, bool ignore,
-		      enum built_in_function fcode)
-{
-  return NULL_TREE;
-}
-
-/* Fold a call STMT to __{,v}sprintf_chk.  Return NULL_TREE if
-   a normal call should be emitted rather than expanding the function
-   inline.  FCODE is either BUILT_IN_SPRINTF_CHK or BUILT_IN_VSPRINTF_CHK.  */
-
-static tree
-gimple_fold_builtin_sprintf_chk (gimple stmt, enum built_in_function fcode)
-{
-  return NULL_TREE;
-}
-
-/* Fold a call STMT to {,v}snprintf.  Return NULL_TREE if
-   a normal call should be emitted rather than expanding the function
-   inline.  FCODE is either BUILT_IN_SNPRINTF_CHK or
-   BUILT_IN_VSNPRINTF_CHK.  If MAXLEN is not NULL, it is maximum length
-   passed as second argument.  */
-
-tree
-gimple_fold_builtin_snprintf_chk (gimple stmt, tree maxlen,
-                                  enum built_in_function fcode)
-{
-  return NULL_TREE;
-}
-
-/* Builtins with folding operations that operate on "..." arguments
-   need special handling; we need to store the arguments in a convenient
-   data structure before attempting any folding.  Fortunately there are
-   only a few builtins that fall into this category.  FNDECL is the
-   function, EXP is the CALL_EXPR for the call, and IGNORE is true if the
-   result of the function call is ignored.  */
-
-static tree
-gimple_fold_builtin_varargs (tree fndecl, gimple stmt,
-			     bool ignore ATTRIBUTE_UNUSED)
-{
-  return NULL_TREE;
-}
-
 /* A wrapper function for builtin folding that prevents warnings for
    "statement without effect" and the like, caused by removing the
    call node earlier than the warning is generated.  */
@@ -7982,8 +7617,6 @@ fold_call_stmt (gimple stmt, bool ignore)
 	{
 	  if (nargs <= MAX_ARGS_TO_FOLD_BUILTIN)
 	    ret = fold_builtin_n (loc, fndecl, args, nargs, ignore);
-	  if (!ret)
-	    ret = gimple_fold_builtin_varargs (fndecl, stmt, ignore);
 	  if (ret)
 	    {
 	      /* Propagate location information from original call to

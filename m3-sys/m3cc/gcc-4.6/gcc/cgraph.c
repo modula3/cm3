@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph handling code.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -97,7 +99,6 @@ The callgraph:
 #include "diagnostic-core.h"
 #include "rtl.h"
 #include "ipa-utils.h"
-#include "lto-streamer.h"
 
 const char * const ld_plugin_symbol_resolution_names[]=
 {
@@ -2556,11 +2557,6 @@ cgraph_make_decl_local (tree decl)
 	      struct cgraph_node *node = cgraph_get_node_or_alias (decl);
 	      change_decl_assembler_name (decl,
 					  clone_function_name (decl, "local"));
-	      if (node->local.lto_file_data)
-		lto_record_renamed_decl (node->local.lto_file_data,
-					 old_name,
-					 IDENTIFIER_POINTER
-					   (DECL_ASSEMBLER_NAME (decl)));
 	    }
 	  else if (TREE_CODE (decl) == VAR_DECL)
 	    {
@@ -2569,11 +2565,6 @@ cgraph_make_decl_local (tree decl)
 		 C++ frontend still sets TREE_SYMBOL_REFERENCED on them.  */
 	      SET_DECL_ASSEMBLER_NAME (decl,
 				       clone_function_name (decl, "local"));
-	      if (vnode->lto_file_data)
-		lto_record_renamed_decl (vnode->lto_file_data,
-					 old_name,
-					 IDENTIFIER_POINTER
-					   (DECL_ASSEMBLER_NAME (decl)));
 	    }
 	}
       DECL_SECTION_NAME (decl) = 0;
@@ -2862,16 +2853,7 @@ bool
 cgraph_will_be_removed_from_program_if_no_direct_calls (struct cgraph_node *node)
 {
   gcc_assert (!node->global.inlined_to);
-  if (cgraph_used_from_object_file_p (node))
-    return false;
-  if (!in_lto_p && !flag_whole_program)
-    return cgraph_only_called_directly_p (node);
-  else
-    {
-       if (DECL_EXTERNAL (node->decl))
-         return true;
-      return cgraph_can_remove_if_no_direct_calls_p (node);
-    }
+  return false;
 }
 
 /* Return true when RESOLUTION indicate that linker will use

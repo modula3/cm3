@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations for insn-output.c.  These functions are defined in recog.c,
    final.c, and varasm.c.
    Copyright (C) 1987, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
@@ -42,17 +44,33 @@ extern int dbr_sequence_length (void);
 /* Indicate that branch shortening hasn't yet been done.  */
 extern void init_insn_lengths (void);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Obtain the current length of an insn.  If branch shortening has been done,
    get its actual length.  Otherwise, get its maximum length.  */
 extern int get_attr_length (rtx);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 /* Obtain the current length of an insn.  If branch shortening has been done,
    get its actual length.  Otherwise, get its minimum length.  */
 extern int get_attr_min_length (rtx);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Make a pass over all insns and compute their actual lengths by shortening
    any branches of variable length if possible.  */
 extern void shorten_branches (rtx);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 /* Output assembler code for the start of a function,
    and initialize some of the variables in this file

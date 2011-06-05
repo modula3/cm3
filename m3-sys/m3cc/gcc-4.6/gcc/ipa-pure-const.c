@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph based analysis of static variables.
    Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -53,7 +55,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple-pretty-print.h"
 #include "langhooks.h"
 #include "target.h"
-#include "lto-streamer.h"
 #include "cfgloop.h"
 #include "tree-scalar-evolution.h"
 #include "intl.h"
@@ -925,142 +926,6 @@ generate_summary (void)
   pointer_set_destroy (visited_nodes);
   visited_nodes = NULL;
 }
-
-
-/* Serialize the ipa info for lto.  */
-
-static void
-pure_const_write_summary (cgraph_node_set set,
-			  varpool_node_set vset ATTRIBUTE_UNUSED)
-{
-  struct cgraph_node *node;
-  struct lto_simple_output_block *ob
-    = lto_create_simple_output_block (LTO_section_ipa_pure_const);
-  unsigned int count = 0;
-  cgraph_node_set_iterator csi;
-
-  for (csi = csi_start (set); !csi_end_p (csi); csi_next (&csi))
-    {
-      node = csi_node (csi);
-      if (node->analyzed && has_function_state (node))
-	count++;
-    }
-
-  lto_output_uleb128_stream (ob->main_stream, count);
-
-  /* Process all of the functions.  */
-  for (csi = csi_start (set); !csi_end_p (csi); csi_next (&csi))
-    {
-      node = csi_node (csi);
-      if (node->analyzed && has_function_state (node))
-	{
-	  struct bitpack_d bp;
-	  funct_state fs;
-	  int node_ref;
-	  lto_cgraph_encoder_t encoder;
-
-	  fs = get_function_state (node);
-
-	  encoder = ob->decl_state->cgraph_node_encoder;
-	  node_ref = lto_cgraph_encoder_encode (encoder, node);
-	  lto_output_uleb128_stream (ob->main_stream, node_ref);
-
-	  /* Note that flags will need to be read in the opposite
-	     order as we are pushing the bitflags into FLAGS.  */
-	  bp = bitpack_create (ob->main_stream);
-	  bp_pack_value (&bp, fs->pure_const_state, 2);
-	  bp_pack_value (&bp, fs->state_previously_known, 2);
-	  bp_pack_value (&bp, fs->looping_previously_known, 1);
-	  bp_pack_value (&bp, fs->looping, 1);
-	  bp_pack_value (&bp, fs->can_throw, 1);
-	  lto_output_bitpack (&bp);
-	}
-    }
-
-  lto_destroy_simple_output_block (ob);
-}
-
-
-/* Deserialize the ipa info for lto.  */
-
-static void
-pure_const_read_summary (void)
-{
-  struct lto_file_decl_data **file_data_vec = lto_get_file_decl_data ();
-  struct lto_file_decl_data *file_data;
-  unsigned int j = 0;
-
-  register_hooks ();
-  while ((file_data = file_data_vec[j++]))
-    {
-      const char *data;
-      size_t len;
-      struct lto_input_block *ib
-	= lto_create_simple_input_block (file_data,
-					 LTO_section_ipa_pure_const,
-					 &data, &len);
-      if (ib)
-	{
-	  unsigned int i;
-	  unsigned int count = lto_input_uleb128 (ib);
-
-	  for (i = 0; i < count; i++)
-	    {
-	      unsigned int index;
-	      struct cgraph_node *node;
-	      struct bitpack_d bp;
-	      funct_state fs;
-	      lto_cgraph_encoder_t encoder;
-
-	      fs = XCNEW (struct funct_state_d);
-	      index = lto_input_uleb128 (ib);
-	      encoder = file_data->cgraph_node_encoder;
-	      node = lto_cgraph_encoder_deref (encoder, index);
-	      set_function_state (node, fs);
-
-	      /* Note that the flags must be read in the opposite
-		 order in which they were written (the bitflags were
-		 pushed into FLAGS).  */
-	      bp = lto_input_bitpack (ib);
-	      fs->pure_const_state
-			= (enum pure_const_state_e) bp_unpack_value (&bp, 2);
-	      fs->state_previously_known
-			= (enum pure_const_state_e) bp_unpack_value (&bp, 2);
-	      fs->looping_previously_known = bp_unpack_value (&bp, 1);
-	      fs->looping = bp_unpack_value (&bp, 1);
-	      fs->can_throw = bp_unpack_value (&bp, 1);
-	      if (dump_file)
-		{
-		  int flags = flags_from_decl_or_type (node->decl);
-		  fprintf (dump_file, "Read info for %s/%i ",
-			   cgraph_node_name (node),
-			   node->uid);
-		  if (flags & ECF_CONST)
-		    fprintf (dump_file, " const");
-		  if (flags & ECF_PURE)
-		    fprintf (dump_file, " pure");
-		  if (flags & ECF_NOTHROW)
-		    fprintf (dump_file, " nothrow");
-		  fprintf (dump_file, "\n  pure const state: %s\n",
-			   pure_const_names[fs->pure_const_state]);
-		  fprintf (dump_file, "  previously known state: %s\n",
-			   pure_const_names[fs->looping_previously_known]);
-		  if (fs->looping)
-		    fprintf (dump_file,"  function is locally looping\n");
-		  if (fs->looping_previously_known)
-		    fprintf (dump_file,"  function is previously known looping\n");
-		  if (fs->can_throw)
-		    fprintf (dump_file,"  function is locally throwing\n");
-		}
-	    }
-
-	  lto_destroy_simple_input_block (file_data,
-					  LTO_section_ipa_pure_const,
-					  ib, data, len);
-	}
-    }
-}
-
 
 static bool
 ignore_edge (struct cgraph_edge *e)

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph handling code.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -51,10 +53,6 @@ enum availability
   AVAIL_LOCAL
 };
 
-/* This is the information that is put into the cgraph local structure
-   to recover a function.  */
-struct lto_file_decl_data;
-
 extern const char * const cgraph_availability_names[];
 extern const char * const ld_plugin_symbol_resolution_names[];
 
@@ -92,8 +90,6 @@ struct GTY(()) cgraph_thunk_info {
    Available after function is analyzed.  */
 
 struct GTY(()) cgraph_local_info {
-  /* File stream where this node is being written to.  */
-  struct lto_file_decl_data * lto_file_data;
 
   struct inline_summary inline_summary;
 
@@ -468,8 +464,6 @@ struct GTY((chain_next ("%h.next"), chain_prev ("%h.prev"))) varpool_node {
   /* Circular list of nodes in the same comdat group if non-NULL.  */
   struct varpool_node *same_comdat_group;
   struct ipa_ref_list ref_list;
-  /* File stream where this node is being written to.  */
-  struct lto_file_decl_data * lto_file_data;
   PTR GTY ((skip)) aux;
   /* Ordering of all cgraph nodes.  */
   int order;
