@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* CPP Library - charsets
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2008, 2009,
    2010 Free Software Foundation, Inc.
@@ -67,16 +69,6 @@ along with this program; see the file COPYING3.  If not see
    Technical Report #16).  With limited exceptions, it relies on the
    system library's iconv() primitive to do charset conversion
    (specified in SUSv2).  */
-
-#if !HAVE_ICONV
-/* Make certain that the uses of iconv(), iconv_open(), iconv_close()
-   below, which are guarded only by if statements with compile-time
-   constant conditions, do not cause link errors.  */
-#define iconv_open(x, y) (errno = EINVAL, (iconv_t)-1)
-#define iconv(a,b,c,d,e) (errno = EINVAL, (size_t)-1)
-#define iconv_close(x)   (void)0
-#define ICONV_CONST
-#endif
 
 #if HOST_CHARSET == HOST_CHARSET_ASCII
 #define SOURCE_CHARSET "UTF-8"
@@ -261,10 +253,10 @@ one_cppchar_to_utf8 (cppchar_t c, uchar **outbufp, size_t *outbytesleftp)
 
 /* The following four functions transform one character between the two
    encodings named in the function name.  All have the signature
-   int (*)(iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+   int (*)(int bigend, const uchar **inbufp, size_t *inbytesleftp,
            uchar **outbufp, size_t *outbytesleftp)
 
-   BIGEND must have the value 0 or 1, coerced to (iconv_t); it is
+   BIGEND must have the value 0 or 1; it is
    interpreted as a boolean indicating whether big-endian or
    little-endian encoding is to be used for the member of the pair
    that is not UTF-8.
@@ -277,7 +269,7 @@ one_cppchar_to_utf8 (cppchar_t c, uchar **outbufp, size_t *outbytesleftp)
    input sequence), ir EINVAL (incomplete input sequence).  */
 
 static inline int
-one_utf8_to_utf32 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf8_to_utf32 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   uchar *outbuf;
@@ -304,7 +296,7 @@ one_utf8_to_utf32 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
 }
 
 static inline int
-one_utf32_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf32_to_utf8 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   cppchar_t s;
@@ -334,7 +326,7 @@ one_utf32_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
 }
 
 static inline int
-one_utf8_to_utf16 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf8_to_utf16 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   int rval;
@@ -397,7 +389,7 @@ one_utf8_to_utf16 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
 }
 
 static inline int
-one_utf16_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
+one_utf16_to_utf8 (int bigend, const uchar **inbufp, size_t *inbytesleftp,
 		   uchar **outbufp, size_t *outbytesleftp)
 {
   cppchar_t s;
@@ -452,9 +444,9 @@ one_utf16_to_utf8 (iconv_t bigend, const uchar **inbufp, size_t *inbytesleftp,
    pointed to, which lets the inliner see through it.  */
 
 static inline bool
-conversion_loop (int (*const one_conversion)(iconv_t, const uchar **, size_t *,
+conversion_loop (int (*const one_conversion)(int, const uchar **, size_t *,
 					     uchar **, size_t *),
-		 iconv_t cd, const uchar *from, size_t flen, struct _cpp_strbuf *to)
+		 int cd, const uchar *from, size_t flen, struct _cpp_strbuf *to)
 {
   const uchar *inbuf;
   uchar *outbuf;
@@ -495,7 +487,7 @@ conversion_loop (int (*const one_conversion)(iconv_t, const uchar **, size_t *,
 /* These functions convert entire strings between character sets.
    They all have the signature
 
-   bool (*)(iconv_t cd, const uchar *from, size_t flen, struct _cpp_strbuf *to);
+   bool (*)(int cd, const uchar *from, size_t flen, struct _cpp_strbuf *to);
 
    The input string FROM is converted as specified by the function
    name plus the iconv descriptor CD (which may be fake), and the
@@ -503,28 +495,28 @@ conversion_loop (int (*const one_conversion)(iconv_t, const uchar **, size_t *,
 
 /* These four use the custom conversion code above.  */
 static bool
-convert_utf8_utf16 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf8_utf16 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf8_to_utf16, cd, from, flen, to);
 }
 
 static bool
-convert_utf8_utf32 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf8_utf32 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf8_to_utf32, cd, from, flen, to);
 }
 
 static bool
-convert_utf16_utf8 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf16_utf8 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf16_to_utf8, cd, from, flen, to);
 }
 
 static bool
-convert_utf32_utf8 (iconv_t cd, const uchar *from, size_t flen,
+convert_utf32_utf8 (int cd, const uchar *from, size_t flen,
 		    struct _cpp_strbuf *to)
 {
   return conversion_loop (one_utf32_to_utf8, cd, from, flen, to);
@@ -532,7 +524,7 @@ convert_utf32_utf8 (iconv_t cd, const uchar *from, size_t flen,
 
 /* Identity conversion, used when we have no alternative.  */
 static bool
-convert_no_conversion (iconv_t cd ATTRIBUTE_UNUSED,
+convert_no_conversion (int cd ATTRIBUTE_UNUSED,
 		       const uchar *from, size_t flen, struct _cpp_strbuf *to)
 {
   if (to->len + flen > to->asize)
@@ -545,64 +537,6 @@ convert_no_conversion (iconv_t cd ATTRIBUTE_UNUSED,
   return true;
 }
 
-/* And this one uses the system iconv primitive.  It's a little
-   different, since iconv's interface is a little different.  */
-#if HAVE_ICONV
-
-#define CONVERT_ICONV_GROW_BUFFER \
-  do { \
-      outbytesleft += OUTBUF_BLOCK_SIZE; \
-      to->asize += OUTBUF_BLOCK_SIZE; \
-      to->text = XRESIZEVEC (uchar, to->text, to->asize); \
-      outbuf = (char *)to->text + to->asize - outbytesleft; \
-  } while (0)
-
-static bool
-convert_using_iconv (iconv_t cd, const uchar *from, size_t flen,
-		     struct _cpp_strbuf *to)
-{
-  ICONV_CONST char *inbuf;
-  char *outbuf;
-  size_t inbytesleft, outbytesleft;
-
-  /* Reset conversion descriptor and check that it is valid.  */
-  if (iconv (cd, 0, 0, 0, 0) == (size_t)-1)
-    return false;
-
-  inbuf = (ICONV_CONST char *)from;
-  inbytesleft = flen;
-  outbuf = (char *)to->text + to->len;
-  outbytesleft = to->asize - to->len;
-
-  for (;;)
-    {
-      iconv (cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-      if (__builtin_expect (inbytesleft == 0, 1))
-	{
-	  /* Close out any shift states, returning to the initial state.  */
-	  if (iconv (cd, 0, 0, &outbuf, &outbytesleft) == (size_t)-1)
-	    {
-	      if (errno != E2BIG)
-		return false;
-
-	      CONVERT_ICONV_GROW_BUFFER;
-	      if (iconv (cd, 0, 0, &outbuf, &outbytesleft) == (size_t)-1)
-		return false;
-	    }
-
-	  to->len = to->asize - outbytesleft;
-	  return true;
-	}
-      if (errno != E2BIG)
-	return false;
-
-      CONVERT_ICONV_GROW_BUFFER;
-    }
-}
-#else
-#define convert_using_iconv 0 /* prevent undefined symbol error below */
-#endif
-
 /* Arrange for the above custom conversion logic to be used automatically
    when conversion between a suitable pair of character sets is requested.  */
 
@@ -613,17 +547,17 @@ struct conversion
 {
   const char *pair;
   convert_f func;
-  iconv_t fake_cd;
+  int fake_cd;
 };
 static const struct conversion conversion_tab[] = {
-  { "UTF-8/UTF-32LE", convert_utf8_utf32, (iconv_t)0 },
-  { "UTF-8/UTF-32BE", convert_utf8_utf32, (iconv_t)1 },
-  { "UTF-8/UTF-16LE", convert_utf8_utf16, (iconv_t)0 },
-  { "UTF-8/UTF-16BE", convert_utf8_utf16, (iconv_t)1 },
-  { "UTF-32LE/UTF-8", convert_utf32_utf8, (iconv_t)0 },
-  { "UTF-32BE/UTF-8", convert_utf32_utf8, (iconv_t)1 },
-  { "UTF-16LE/UTF-8", convert_utf16_utf8, (iconv_t)0 },
-  { "UTF-16BE/UTF-8", convert_utf16_utf8, (iconv_t)1 },
+  { "UTF-8/UTF-32LE", convert_utf8_utf32, (int)0 },
+  { "UTF-8/UTF-32BE", convert_utf8_utf32, (int)1 },
+  { "UTF-8/UTF-16LE", convert_utf8_utf16, (int)0 },
+  { "UTF-8/UTF-16BE", convert_utf8_utf16, (int)1 },
+  { "UTF-32LE/UTF-8", convert_utf32_utf8, (int)0 },
+  { "UTF-32BE/UTF-8", convert_utf32_utf8, (int)1 },
+  { "UTF-16LE/UTF-8", convert_utf16_utf8, (int)0 },
+  { "UTF-16BE/UTF-8", convert_utf16_utf8, (int)1 },
 };
 
 /* Subroutine of cpp_init_iconv: initialize and return a
@@ -641,7 +575,7 @@ init_iconv_desc (cpp_reader *pfile, const char *to, const char *from)
   if (!strcasecmp (to, from))
     {
       ret.func = convert_no_conversion;
-      ret.cd = (iconv_t) -1;
+      ret.cd = -1;
       ret.width = -1;
       return ret;
     }
@@ -660,32 +594,12 @@ init_iconv_desc (cpp_reader *pfile, const char *to, const char *from)
 	return ret;
       }
 
-  /* No custom converter - try iconv.  */
-  if (HAVE_ICONV)
-    {
-      ret.func = convert_using_iconv;
-      ret.cd = iconv_open (to, from);
-      ret.width = -1;
-
-      if (ret.cd == (iconv_t) -1)
-	{
-	  if (errno == EINVAL)
-	    cpp_error (pfile, CPP_DL_ERROR, /* FIXME should be DL_SORRY */
-		       "conversion from %s to %s not supported by iconv",
-		       from, to);
-	  else
-	    cpp_errno (pfile, CPP_DL_ERROR, "iconv_open");
-
-	  ret.func = convert_no_conversion;
-	}
-    }
-  else
     {
       cpp_error (pfile, CPP_DL_ERROR, /* FIXME: should be DL_SORRY */
 		 "no iconv implementation, cannot convert from %s to %s",
 		 from, to);
       ret.func = convert_no_conversion;
-      ret.cd = (iconv_t) -1;
+      ret.cd = -1;
       ret.width = -1;
     }
   return ret;
@@ -733,25 +647,6 @@ cpp_init_iconv (cpp_reader *pfile)
   pfile->char32_cset_desc.width = 32;
   pfile->wide_cset_desc = init_iconv_desc (pfile, wcset, SOURCE_CHARSET);
   pfile->wide_cset_desc.width = CPP_OPTION (pfile, wchar_precision);
-}
-
-/* Destroy iconv(3) descriptors set up by cpp_init_iconv, if necessary.  */
-void
-_cpp_destroy_iconv (cpp_reader *pfile)
-{
-  if (HAVE_ICONV)
-    {
-      if (pfile->narrow_cset_desc.func == convert_using_iconv)
-	iconv_close (pfile->narrow_cset_desc.cd);
-      if (pfile->utf8_cset_desc.func == convert_using_iconv)
-	iconv_close (pfile->utf8_cset_desc.cd);
-      if (pfile->char16_cset_desc.func == convert_using_iconv)
-	iconv_close (pfile->char16_cset_desc.cd);
-      if (pfile->char32_cset_desc.func == convert_using_iconv)
-	iconv_close (pfile->char32_cset_desc.cd);
-      if (pfile->wide_cset_desc.func == convert_using_iconv)
-	iconv_close (pfile->wide_cset_desc.cd);
-    }
 }
 
 /* Utility routine for use by a full compiler.  C is a character taken
@@ -1457,7 +1352,7 @@ cpp_interpret_string_notranslate (cpp_reader *pfile, const cpp_string *from,
   bool retval;
 
   pfile->narrow_cset_desc.func = convert_no_conversion;
-  pfile->narrow_cset_desc.cd = (iconv_t) -1;
+  pfile->narrow_cset_desc.cd = -1;
   pfile->narrow_cset_desc.width = CPP_OPTION (pfile, char_precision);
 
   retval = cpp_interpret_string (pfile, from, count, to, CPP_STRING);
@@ -1724,10 +1619,6 @@ _cpp_convert_input (cpp_reader *pfile, const char *input_charset,
       free (input);
     }
 
-  /* Clean up the mess.  */
-  if (input_cset.func == convert_using_iconv)
-    iconv_close (input_cset.cd);
-
   /* Resize buffer if we allocated substantially too much, or if we
      haven't enough space for the \n-terminator.  */
   if (to.len + 4096 < to.asize || to.len >= to.asize)
@@ -1766,32 +1657,5 @@ _cpp_convert_input (cpp_reader *pfile, const char *input_charset,
 const char *
 _cpp_default_encoding (void)
 {
-  const char *current_encoding = NULL;
-
-  /* We disable this because the default codeset is 7-bit ASCII on
-     most platforms, and this causes conversion failures on every
-     file in GCC that happens to have one of the upper 128 characters
-     in it -- most likely, as part of the name of a contributor.
-     We should definitely recognize in-band markers of file encoding,
-     like:
-     - the appropriate Unicode byte-order mark (FE FF) to recognize
-       UTF16 and UCS4 (in both big-endian and little-endian flavors)
-       and UTF8
-     - a "#i", "#d", "/ *", "//", " #p" or "#p" (for #pragma) to
-       distinguish ASCII and EBCDIC.
-     - now we can parse something like "#pragma GCC encoding <xyz>
-       on the first line, or even Emacs/VIM's mode line tags (there's
-       a problem here in that VIM uses the last line, and Emacs has
-       its more elaborate "local variables" convention).
-     - investigate whether Java has another common convention, which
-       would be friendly to support.
-     (Zack Weinberg and Paolo Bonzini, May 20th 2004)  */
-#if defined (HAVE_LOCALE_H) && defined (HAVE_LANGINFO_CODESET) && 0
-  setlocale (LC_CTYPE, "");
-  current_encoding = nl_langinfo (CODESET);
-#endif
-  if (current_encoding == NULL || *current_encoding == '\0')
-    current_encoding = SOURCE_CHARSET;
-
-  return current_encoding;
+  return SOURCE_CHARSET;
 }

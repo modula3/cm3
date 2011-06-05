@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Part of CPP library.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007,
    2008, 2009, 2010 Free Software Foundation, Inc.
@@ -26,13 +28,6 @@ along with this program; see the file COPYING3.  If not see
 #include "symtab.h"
 #include "cpp-id-data.h"
 
-#if HAVE_ICONV
-#include <iconv.h>
-#else
-#define HAVE_ICONV 0
-typedef int iconv_t;  /* dummy */
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,12 +37,12 @@ struct pending_option;
 struct op;
 struct _cpp_strbuf;
 
-typedef bool (*convert_f) (iconv_t, const unsigned char *, size_t,
+typedef bool (*convert_f) (int, const unsigned char *, size_t,
 			   struct _cpp_strbuf *);
 struct cset_converter
 {
   convert_f func;
-  iconv_t cd;
+  int cd;
   int width;
 };
 
@@ -668,7 +663,6 @@ struct normalize_state
 extern cppchar_t _cpp_valid_ucn (cpp_reader *, const unsigned char **,
 				 const unsigned char *, int,
 				 struct normalize_state *state);
-extern void _cpp_destroy_iconv (cpp_reader *);
 extern unsigned char *_cpp_convert_input (cpp_reader *, const char *,
 					  unsigned char *, size_t, size_t,
 					  const unsigned char **, off_t *);
