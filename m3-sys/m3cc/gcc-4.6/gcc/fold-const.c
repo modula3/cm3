@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Fold a constant sub-tree into a single node for C-compiler
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -48,7 +50,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 #include "flags.h"
 #include "tree.h"
-#include "realmpfr.h"
 #include "rtl.h"
 #include "expr.h"
 #include "tm_p.h"
@@ -1250,9 +1251,7 @@ const_binop (enum tree_code code, tree arg1, tree arg2)
 
 	case MULT_EXPR:
 	  if (COMPLEX_FLOAT_TYPE_P (type))
-	    return do_mpc_arg2 (arg1, arg2, type,
-				/* do_nonfinite= */ folding_initializer,
-				mpc_mul);
+	    return 0;
 
 	  real = const_binop (MINUS_EXPR,
 			      const_binop (MULT_EXPR, r1, r2),
@@ -1264,9 +1263,8 @@ const_binop (enum tree_code code, tree arg1, tree arg2)
 
 	case RDIV_EXPR:
 	  if (COMPLEX_FLOAT_TYPE_P (type))
-	    return do_mpc_arg2 (arg1, arg2, type,
-                                /* do_nonfinite= */ folding_initializer,
-				mpc_div);
+	    return 0;
+
 	  /* Fallthru ... */
 	case TRUNC_DIV_EXPR:
 	case CEIL_DIV_EXPR:

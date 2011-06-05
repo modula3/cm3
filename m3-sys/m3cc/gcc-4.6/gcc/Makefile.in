@@ -48,11 +48,10 @@ MAKEOVERRIDES =
 
 # The only suffixes we want for implicit rules are .c and .o, so clear
 # the list and add them.  This speeds up GNU Make, and allows -r to work.
-# For i18n support, we also need .gmo, .po, .pox.
 # This must come before the language makefile fragments to allow them to
 # add suffixes and rules of their own.
 .SUFFIXES:
-.SUFFIXES: .c .o .po .pox .gmo
+.SUFFIXES: .c .o
 
 # -------------------------------
 # Standard autoconf-set variables
@@ -127,7 +126,7 @@ SUBDIRS =@subdirs@ build
 
 # Selection of languages to be made.
 CONFIG_LANGUAGES = @all_selected_languages@
-LANGUAGES = c gcov$(exeext) gcov-dump$(exeext) $(CONFIG_LANGUAGES)
+LANGUAGES = c $(CONFIG_LANGUAGES)
 
 # Default values for variables overridden in Makefile fragments.
 # CFLAGS is for the user to override to, e.g., do a cross build with -O2.
@@ -305,24 +304,6 @@ write_entries_to_file = $(shell rm -f $(2) || :) $(shell touch $(2)) \
 # In stage2 and beyond, we force this to "-o $@" since we know we're using gcc.
 OUTPUT_OPTION = @OUTPUT_OPTION@
 
-# This is where we get zlib from.  zlibdir is -L../zlib and zlibinc is
-# -I../zlib, unless we were configured with --with-system-zlib, in which
-# case both are empty.
-ZLIB = @zlibdir@ -lz
-ZLIBINC = @zlibinc@
-
-# How to find GMP
-GMPLIBS = @GMPLIBS@
-GMPINC = @GMPINC@
-
-# How to find PPL
-PPLLIBS = @PPLLIBS@
-PPLINC = @PPLINC@
-
-# How to find CLOOG
-CLOOGLIBS = @CLOOGLIBS@
-CLOOGINC = @CLOOGINC@
-
 # Compiler and flags needed for plugin support
 ifneq ($(ENABLE_BUILD_WITH_CXX),yes)
 PLUGINCC = @CC@
@@ -339,13 +320,6 @@ enable_plugin = @enable_plugin@
 
 CPPLIB = ../libcpp/libcpp.a
 CPPINC = -I$(srcdir)/../libcpp/include
-
-# Where to find decNumber
-enable_decimal_float = @enable_decimal_float@
-DECNUM = $(srcdir)/../libdecnumber
-DECNUMFMT = $(srcdir)/../libdecnumber/$(enable_decimal_float)
-DECNUMINC = -I$(DECNUM) -I$(DECNUMFMT) -I../libdecnumber
-LIBDECNUMBER = ../libdecnumber/libdecnumber.a
 
 # Target to use when installing include directory.  Either
 # install-headers-tar, install-headers-cpio or install-headers-cp.
@@ -617,15 +591,15 @@ build_htmldir = $(objdir)/HTML/gcc-$(version)
 htmldir = @htmldir@
 
 # Whether we were configured with NLS.
-USE_NLS = @USE_NLS@
+USE_NLS = 
 
 # Internationalization library.
-LIBINTL = @LIBINTL@
-LIBINTL_DEP = @LIBINTL_DEP@
+LIBINTL = 
+LIBINTL_DEP = 
 
 # Character encoding conversion library.
-LIBICONV = @LIBICONV@
-LIBICONV_DEP = @LIBICONV_DEP@
+LIBICONV =
+LIBICONV_DEP =
 
 # The GC method to be used on this system.
 GGC=@GGC@.o
@@ -774,7 +748,6 @@ BUILD_CPPFLAGS=$(ALL_CPPFLAGS)
 GCC_INSTALL_NAME := $(shell echo gcc|sed '$(program_transform_name)')
 GCC_TARGET_INSTALL_NAME := $(target_noncanonical)-$(shell echo gcc|sed '$(program_transform_name)')
 CPP_INSTALL_NAME := $(shell echo cpp|sed '$(program_transform_name)')
-GCOV_INSTALL_NAME := $(shell echo gcov|sed '$(program_transform_name)')
 
 # Setup the testing framework, if you have one
 EXPECT = `if [ -f $${rootme}/../expect/expect ] ; then \
@@ -943,9 +916,6 @@ CPPLIB_H = $(srcdir)/../libcpp/include/line-map.h \
 	$(srcdir)/../libcpp/include/cpplib.h
 INPUT_H = $(srcdir)/../libcpp/include/line-map.h input.h
 OPTS_H = $(INPUT_H) $(VEC_H) opts.h
-DECNUM_H = $(DECNUM)/decContext.h $(DECNUM)/decDPD.h $(DECNUM)/decNumber.h \
-	$(DECNUMFMT)/decimal32.h $(DECNUMFMT)/decimal64.h \
-	$(DECNUMFMT)/decimal128.h $(DECNUMFMT)/decimal128Local.h
 MKDEPS_H = $(srcdir)/../libcpp/include/mkdeps.h
 SYMTAB_H = $(srcdir)/../libcpp/include/symtab.h $(OBSTACK_H)
 CPP_ID_DATA_H = $(CPPLIB_H) $(srcdir)/../libcpp/include/cpp-id-data.h
@@ -1022,7 +992,7 @@ LIBIBERTY = ../libiberty/libiberty.a
 BUILD_LIBIBERTY = $(build_libobjdir)/libiberty/libiberty.a
 
 # Dependencies on the intl and portability libraries.
-LIBDEPS= $(CPPLIB) $(LIBIBERTY) $(LIBINTL_DEP) $(LIBICONV_DEP) $(LIBDECNUMBER)
+LIBDEPS= $(CPPLIB) $(LIBIBERTY)
 
 # Likewise, for use in the tools that must run on this machine
 # even if we are cross-building GCC.
@@ -1030,10 +1000,9 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 
 # How to link with both our special library facilities
 # and the system's installed libraries.
-LIBS = @LIBS@ $(CPPLIB) $(LIBINTL) $(LIBICONV) $(LIBIBERTY) $(LIBDECNUMBER) \
+LIBS = @LIBS@ $(CPPLIB) $(LIBIBERTY) \
 	$(HOST_LIBS)
-BACKENDLIBS = $(CLOOGLIBS) $(PPLLIBS) $(GMPLIBS) $(PLUGINLIBS) $(HOST_LIBS) \
-	$(ZLIB)
+BACKENDLIBS = $(PLUGINLIBS) $(HOST_LIBS)
 # Any system libraries needed just for GNAT.
 SYSLIBS = @GNAT_LIBEXC@
 
@@ -1062,9 +1031,8 @@ BUILD_ERRORS = build/errors.o
 # currently being compiled, in both source trees, to be examined as well.
 # libintl.h will be found in ../intl if we are using the included libintl.
 INCLUDES = -I. -I$(@D) -I$(srcdir) -I$(srcdir)/$(@D) \
-	   -I$(srcdir)/../include @INCINTL@ \
-	   $(CPPINC) $(GMPINC) $(DECNUMINC) \
-	   $(PPLINC) $(CLOOGINC)
+	   -I$(srcdir)/../include \
+	   $(CPPINC)
 
 .c.o:
 	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $< $(OUTPUT_OPTION)
@@ -1212,7 +1180,6 @@ OBJS-common = \
 	df-core.o \
 	df-problems.o \
 	df-scan.o \
-	dfp.o \
 	diagnostic.o \
 	dojump.o \
 	dominance.o \
@@ -1466,7 +1433,7 @@ ALL_HOST_BACKEND_OBJS = $(GCC_OBJS) $(OBJS) \
 # compilation or not.
 ALL_HOST_OBJS = $(ALL_HOST_FRONTEND_OBJS) $(ALL_HOST_BACKEND_OBJS)
 
-BACKEND = main.o tree-browser.o libbackend.a $(CPPLIB) $(LIBDECNUMBER)
+BACKEND = main.o tree-browser.o libbackend.a $(CPPLIB)
 
 MOSTLYCLEANFILES = insn-flags.h insn-config.h insn-codes.h \
  insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c \
@@ -1477,19 +1444,10 @@ MOSTLYCLEANFILES = insn-flags.h insn-config.h insn-codes.h \
  xgcc$(exeext) cpp$(exeext) cc1$(exeext) $(EXTRA_PASSES) \
  $(EXTRA_PARTS) $(EXTRA_PROGRAMS) gcc-cross$(exeext) \
  $(SPECS) collect2$(exeext) \
- gcov-iov$(build_exeext) gcov$(exeext) gcov-dump$(exeext) \
  *.[0-9][0-9].* *.[si] *-checksum.c libbackend.a libgcc.mk
 
 # Defined in libgcc2.c, included only in the static library.
 LIB2FUNCS_ST = _eprintf __gcc_bcmp
-
-# Defined in libgcov.c, included only in gcov library
-LIBGCOV = _gcov _gcov_merge_add _gcov_merge_single _gcov_merge_delta \
-    _gcov_fork _gcov_execl _gcov_execlp _gcov_execle \
-    _gcov_execv _gcov_execvp _gcov_execve \
-    _gcov_interval_profiler _gcov_pow2_profiler _gcov_one_value_profiler \
-    _gcov_indirect_call_profiler _gcov_average_profiler _gcov_ior_profiler \
-    _gcov_merge_ior
 
 FPBIT_FUNCS = _pack_sf _unpack_sf _addsub_sf _mul_sf _div_sf \
     _fpcmp_parts_sf _compare_sf _eq_sf _ne_sf _gt_sf _ge_sf \
@@ -1761,7 +1719,7 @@ start.encap: native xgcc$(exeext) cpp$(exeext) specs \
 rest.encap: lang.rest.encap
 # This is what is made with the host's compiler
 # whether making a cross compiler or not.
-native: config.status auto-host.h build-@POSUB@ $(LANGUAGES) \
+native: config.status auto-host.h $(LANGUAGES) \
 	$(EXTRA_PASSES) $(EXTRA_PROGRAMS) $(COLLECT2)
 
 # Define the names for selecting languages in LANGUAGES.
@@ -2666,7 +2624,7 @@ tree-diagnostic.o : tree-diagnostic.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
 fold-const.o : fold-const.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
    $(TREE_H) $(FLAGS_H) $(DIAGNOSTIC_CORE_H) $(HASHTAB_H) $(EXPR_H) $(RTL_H) \
    $(GGC_H) $(TM_P_H) langhooks.h $(MD5_H) intl.h $(TARGET_H) \
-   $(GIMPLE_H) realmpfr.h $(TREE_FLOW_H)
+   $(GIMPLE_H) $(TREE_FLOW_H)
 diagnostic.o : diagnostic.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
    version.h $(INPUT_H) intl.h $(DIAGNOSTIC_H) diagnostic.def
 opts.o : opts.c $(OPTS_H) $(OPTIONS_H) $(DIAGNOSTIC_CORE_H) $(CONFIG_H) $(SYSTEM_H) \
@@ -2704,7 +2662,7 @@ toplev.o : toplev.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
    langhooks.h insn-flags.h $(CFGLAYOUT_H) $(CFGLOOP_H) hosthooks.h \
    $(CGRAPH_H) $(COVERAGE_H) alloc-pool.h $(GGC_H) $(INTEGRATE_H) \
    $(OPTS_H) params.def tree-mudflap.h $(TREE_PASS_H) $(GIMPLE_H) \
-   tree-ssa-alias.h $(PLUGIN_H) realmpfr.h tree-diagnostic.h \
+   tree-ssa-alias.h $(PLUGIN_H) tree-diagnostic.h \
    tree-pretty-print.h opts-diagnostic.h
 	$(COMPILER) $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) \
 	  -DTARGET_NAME=\"$(target_noncanonical)\" \
@@ -2789,7 +2747,7 @@ builtins.o : builtins.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(RTL_H) \
    $(EXPR_H) $(OPTABS_H) insn-config.h $(RECOG_H) output.h typeclass.h \
    hard-reg-set.h $(DIAGNOSTIC_CORE_H) hard-reg-set.h $(EXCEPT_H) \
    $(TM_P_H) $(PREDICT_H) $(LIBFUNCS_H) langhooks.h $(BASIC_BLOCK_H) \
-   tree-mudflap.h realmpfr.h $(BUILTINS_DEF) $(MACHMODE_H) \
+   tree-mudflap.h $(BUILTINS_DEF) $(MACHMODE_H) \
    $(DIAGNOSTIC_CORE_H) $(TREE_FLOW_H) value-prof.h
 calls.o : calls.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(RTL_H) \
    $(TREE_H) $(FLAGS_H) $(EXPR_H) $(OPTABS_H) langhooks.h $(TARGET_H) \
@@ -2840,9 +2798,7 @@ emit-rtl.o : emit-rtl.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(RTL_H) \
    $(HASHTAB_H) $(TM_P_H) debug.h langhooks.h $(TREE_PASS_H) gt-emit-rtl.h \
    $(DF_H) $(PARAMS_H) $(TARGET_H) $(TREE_FLOW_H)
 real.o : real.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
-   $(DIAGNOSTIC_CORE_H) $(TM_P_H) $(REAL_H) dfp.h realmpfr.h
-dfp.o : dfp.c dfp.h $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H)	$(TREE_H) \
-   $(DIAGNOSTIC_CORE_H) $(TM_P_H) $(REAL_H) $(DECNUM_H)
+   $(DIAGNOSTIC_CORE_H) $(TM_P_H) $(REAL_H)
 fixed-value.o: fixed-value.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
    $(TREE_H) $(REAL_H) $(DIAGNOSTIC_CORE_H)
 integrate.o : integrate.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
@@ -3414,7 +3370,7 @@ insn-automata.o : insn-automata.c $(CONFIG_H) $(SYSTEM_H) coretypes.h	\
   insn-config.h toplev.h $(DIAGNOSTIC_CORE_H) $(RECOG_H) $(TM_P_H) $(FLAGS_H) $(EMIT_RTL_H)
 insn-emit.o : insn-emit.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H)	\
   $(RTL_H) $(TM_P_H) $(FUNCTION_H) $(EXPR_H) $(OPTABS_H) 		\
-  dfp.h $(FLAGS_H) output.h insn-config.h hard-reg-set.h $(RECOG_H)	\
+  $(FLAGS_H) output.h insn-config.h hard-reg-set.h $(RECOG_H)	\
   $(RESOURCE_H) reload.h $(DIAGNOSTIC_CORE_H) $(REGS_H) tm-constrs.h $(GGC_H)	\
   $(BASIC_BLOCK_H) $(INTEGRATE_H)
 insn-enums.o : insn-enums.c $(CONFIG_H) $(SYSTEM_H) insn-constants.h
@@ -3895,362 +3851,6 @@ gcov-dump.o: gcov-dump.c gcov-io.c $(GCOV_IO_H) $(SYSTEM_H) coretypes.h \
    $(TM_H) $(CONFIG_H) version.h
 
 GCOV_OBJS = gcov.o intl.o version.o errors.o
-gcov$(exeext): $(GCOV_OBJS) $(LIBDEPS)
-	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GCOV_OBJS) $(LIBS) -o $@
-GCOV_DUMP_OBJS = gcov-dump.o version.o errors.o
-gcov-dump$(exeext): $(GCOV_DUMP_OBJS) $(LIBDEPS)
-	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GCOV_DUMP_OBJS) \
-		$(LIBS) -o $@
-#
-# Build the include directories.  The stamp files are stmp-* rather than
-# s-* so that mostlyclean does not force the include directory to
-# be rebuilt.
-
-# Build the include directories.
-stmp-int-hdrs: $(STMP_FIXINC) $(USER_H) $(UNWIND_H) fixinc_list
-# Copy in the headers provided with gcc.
-# The sed command gets just the last file name component;
-# this is necessary because VPATH could add a dirname.
-# Using basename would be simpler, but some systems don't have it.
-# The touch command is here to workaround an AIX/Linux NFS bug.
-	-if [ -d include ] ; then true; else mkdir include; chmod a+rx include; fi
-	-if [ -d include-fixed ] ; then true; else mkdir include-fixed; chmod a+rx include-fixed; fi
-	for file in .. $(USER_H); do \
-	  if [ X$$file != X.. ]; then \
-	    realfile=`echo $$file | sed -e 's|.*/\([^/]*\)$$|\1|'`; \
-	    $(STAMP) include/$$realfile; \
-	    rm -f include/$$realfile; \
-	    cp $$file include; \
-	    chmod a+r include/$$realfile; \
-	  fi; \
-	done
-	for file in .. $(USER_H_INC_NEXT_PRE); do \
-	  if [ X$$file != X.. ]; then \
-            mv include/$$file include/x_$$file; \
-            echo "#include_next <$$file>" >include/$$file; \
-            cat include/x_$$file >>include/$$file; \
-            rm -f include/x_$$file; \
-	    chmod a+r include/$$file; \
-	  fi; \
-	done
-	for file in .. $(USER_H_INC_NEXT_POST); do \
-	  if [ X$$file != X.. ]; then \
-	    echo "#include_next <$$file>" >>include/$$file; \
-	    chmod a+r include/$$file; \
-	  fi; \
-	done
-	rm -f include/unwind.h
-	cp $(UNWIND_H) include/unwind.h
-	chmod a+r include/unwind.h
-	rm -f include/stdint.h
-	if [ $(USE_GCC_STDINT) = wrap ]; then \
-	  rm -f include/stdint-gcc.h; \
-	  cp $(srcdir)/ginclude/stdint-gcc.h include/stdint-gcc.h; \
-	  chmod a+r include/stdint-gcc.h; \
-	  cp $(srcdir)/ginclude/stdint-wrap.h include/stdint.h; \
-	  chmod a+r include/stdint.h; \
-	elif [ $(USE_GCC_STDINT) = provide ]; then \
-	  cp $(srcdir)/ginclude/stdint-gcc.h include/stdint.h; \
-	  chmod a+r include/stdint.h; \
-	fi
-	set -e; for ml in `cat fixinc_list`; do \
-	  sysroot_headers_suffix=`echo $${ml} | sed -e 's/;.*$$//'`; \
-	  multi_dir=`echo $${ml} | sed -e 's/^[^;]*;//'`; \
-	  fix_dir=include-fixed$${multi_dir}; \
-	  if $(LIMITS_H_TEST) ; then \
-	    cat $(srcdir)/limitx.h $(srcdir)/glimits.h $(srcdir)/limity.h > tmp-xlimits.h; \
-	  else \
-	    cat $(srcdir)/glimits.h > tmp-xlimits.h; \
-	  fi; \
-	  $(mkinstalldirs) $${fix_dir}; \
-	  chmod a+rx $${fix_dir} || true; \
-	  rm -f $${fix_dir}/limits.h; \
-	  mv tmp-xlimits.h $${fix_dir}/limits.h; \
-	  chmod a+r $${fix_dir}/limits.h; \
-	done
-# Install the README
-	rm -f include-fixed/README
-	cp $(srcdir)/../fixincludes/README-fixinc include-fixed/README
-	chmod a+r include-fixed/README
-	$(STAMP) $@
-
-.PHONY: install-gcc-tooldir
-install-gcc-tooldir:
-	$(mkinstalldirs) $(DESTDIR)$(gcc_tooldir)
-
-macro_list: s-macro_list; @true
-s-macro_list : $(GCC_PASSES)
-	echo | $(GCC_FOR_TARGET) -E -dM - | \
-	  sed -n -e 's/^#define \([^_][a-zA-Z0-9_]*\).*/\1/p' \
-		 -e 's/^#define \(_[^_A-Z][a-zA-Z0-9_]*\).*/\1/p' | \
-	  sort -u > tmp-macro_list
-	$(SHELL) $(srcdir)/../move-if-change tmp-macro_list macro_list
-	$(STAMP) s-macro_list
-
-fixinc_list: s-fixinc_list; @true
-s-fixinc_list : $(GCC_PASSES)
-# Build up a list of multilib directories and corresponding sysroot
-# suffixes, in form sysroot;multilib.
-	if $(GCC_FOR_TARGET) -print-sysroot-headers-suffix > /dev/null 2>&1; then \
-	  set -e; for ml in `$(GCC_FOR_TARGET) -print-multi-lib`; do \
-	    multi_dir=`echo $${ml} | sed -e 's/;.*$$//'`; \
-	    flags=`echo $${ml} | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`; \
-	    sfx=`$(GCC_FOR_TARGET) $${flags} -print-sysroot-headers-suffix`; \
-	    if [ "$${multi_dir}" = "." ]; \
-	      then multi_dir=""; \
-	    else \
-	      multi_dir=/$${multi_dir}; \
-	    fi; \
-	    echo "$${sfx};$${multi_dir}"; \
-	  done; \
-	else \
-	  echo ";"; \
-	fi > tmp-fixinc_list
-	$(SHELL) $(srcdir)/../move-if-change tmp-fixinc_list fixinc_list
-	$(STAMP) s-fixinc_list
-
-# The line below is supposed to avoid accidentally matching the
-# built-in suffix rule `.o:' to build fixincl out of fixincl.o.  You'd
-# expect fixincl to be newer than fixincl.o, such that this situation
-# would never come up.  As it turns out, if you use ccache with
-# CCACHE_HARDLINK enabled, the compiler doesn't embed the current
-# working directory in object files (-g absent, or -fno-working-dir
-# present), and build and host are the same, fixincl for the host will
-# build after fixincl for the build machine, getting a cache hit,
-# thereby updating the timestamp of fixincl.o in the host tree.
-# Because of CCACHE_HARDLINK, this will also update the timestamp in
-# the build tree, and so fixincl in the build tree will appear to be
-# out of date.  Yuck.
-../$(build_subdir)/fixincludes/fixincl: ; @ :
-
-# Build fixed copies of system files.
-# Abort if no system headers available, unless building a crosscompiler.
-# FIXME: abort unless building --without-headers would be more accurate and less ugly
-stmp-fixinc: gsyslimits.h macro_list fixinc_list \
-  $(build_objdir)/fixincludes/fixincl \
-  $(build_objdir)/fixincludes/fixinc.sh
-	rm -rf include-fixed; mkdir include-fixed
-	-chmod a+rx include-fixed
-	if [ -d ../prev-gcc ]; then \
-	  cd ../prev-gcc && \
-	  $(MAKE) real-$(INSTALL_HEADERS_DIR) DESTDIR=`pwd`/../gcc/ \
-	    libsubdir=. ; \
-	else \
-	  set -e; for ml in `cat fixinc_list`; do \
-	    sysroot_headers_suffix=`echo $${ml} | sed -e 's/;.*$$//'`; \
-	    multi_dir=`echo $${ml} | sed -e 's/^[^;]*;//'`; \
-	    fix_dir=include-fixed$${multi_dir}; \
-	    if ! $(inhibit_libc) && test ! -d ${SYSTEM_HEADER_DIR}; then \
-	      echo The directory that should contain system headers does not exist: >&2 ; \
-	      echo "  ${SYSTEM_HEADER_DIR}" >&2 ; \
-	      tooldir_sysinc=`echo "${gcc_tooldir}/sys-include" | sed -e :a -e "s,[^/]*/\.\.\/,," -e ta`; \
-	      if test "x${SYSTEM_HEADER_DIR}" = "x$${tooldir_sysinc}"; \
-	      then sleep 1; else exit 1; fi; \
-	    fi; \
-	    $(mkinstalldirs) $${fix_dir}; \
-	    chmod a+rx $${fix_dir} || true; \
-	    (TARGET_MACHINE='$(target)'; srcdir=`cd $(srcdir); ${PWD_COMMAND}`; \
-	      SHELL='$(SHELL)'; MACRO_LIST=`${PWD_COMMAND}`/macro_list ; \
-	      gcc_dir=`${PWD_COMMAND}` ; \
-	      export TARGET_MACHINE srcdir SHELL MACRO_LIST && \
-	      cd $(build_objdir)/fixincludes && \
-	      $(SHELL) ./fixinc.sh "$${gcc_dir}/$${fix_dir}" \
-	        $(SYSTEM_HEADER_DIR) $(OTHER_FIXINCLUDES_DIRS) ); \
-	    rm -f $${fix_dir}/syslimits.h; \
-	    if [ -f $${fix_dir}/limits.h ]; then \
-	      mv $${fix_dir}/limits.h $${fix_dir}/syslimits.h; \
-	    else \
-	      cp $(srcdir)/gsyslimits.h $${fix_dir}/syslimits.h; \
-	    fi; \
-	    chmod a+r $${fix_dir}/syslimits.h; \
-	  done; \
-	fi
-	$(STAMP) stmp-fixinc
-#
-# Remake the info files.
-
-doc: $(BUILD_INFO) $(GENERATED_MANPAGES)
-
-INFOFILES = doc/cpp.info doc/gcc.info doc/gccint.info \
-            doc/gccinstall.info doc/cppinternals.info
-
-info: $(INFOFILES) lang.info @GENINSRC@ srcinfo lang.srcinfo
-
-srcinfo: $(INFOFILES)
-	-cp -p $^ $(srcdir)/doc
-
-TEXI_CPP_FILES = cpp.texi fdl.texi cppenv.texi cppopts.texi		\
-	 gcc-common.texi gcc-vers.texi
-
-TEXI_GCC_FILES = gcc.texi gcc-common.texi gcc-vers.texi frontends.texi	\
-	 standards.texi invoke.texi extend.texi md.texi objc.texi	\
-	 gcov.texi trouble.texi bugreport.texi service.texi		\
-	 contribute.texi compat.texi funding.texi gnu.texi gpl_v3.texi	\
-	 fdl.texi contrib.texi cppenv.texi cppopts.texi			\
-	 implement-c.texi implement-cxx.texi arm-neon-intrinsics.texi
-
-# we explicitly use $(srcdir)/doc/tm.texi here to avoid confusion with
-# the generated tm.texi; the latter might have a more recent timestamp,
-# but we don't want to rebuild the info files unless the contents of
-# the *.texi files have changed.
-TEXI_GCCINT_FILES = gccint.texi gcc-common.texi gcc-vers.texi		\
-	 contribute.texi makefile.texi configterms.texi options.texi	\
-	 portability.texi interface.texi passes.texi rtl.texi md.texi	\
-	 $(srcdir)/doc/tm.texi hostconfig.texi fragments.texi	\
-	 configfiles.texi collect2.texi headerdirs.texi funding.texi	\
-	 gnu.texi gpl_v3.texi fdl.texi contrib.texi languages.texi	\
-	 sourcebuild.texi gty.texi libgcc.texi cfg.texi tree-ssa.texi	\
-	 loop.texi generic.texi gimple.texi plugins.texi
-
-TEXI_GCCINSTALL_FILES = install.texi install-old.texi fdl.texi		\
-	 gcc-common.texi gcc-vers.texi
-
-TEXI_CPPINT_FILES = cppinternals.texi gcc-common.texi gcc-vers.texi
-
-# gcc-vers.texi is generated from the version files.
-gcc-vers.texi: $(BASEVER) $(DEVPHASE)
-	(echo "@set version-GCC $(BASEVER_c)"; \
-	 if [ "$(DEVPHASE_c)" = "experimental" ]; \
-	 then echo "@set DEVELOPMENT"; \
-	 else echo "@clear DEVELOPMENT"; \
-	 fi) > $@T
-	$(build_file_translate) echo @set srcdir $(abs_srcdir) >> $@T
-	if [ -n "$(PKGVERSION)" ]; then \
-	  echo "@set VERSION_PACKAGE $(PKGVERSION)" >> $@T; \
-	fi
-	echo "@set BUGURL $(BUGURL_TEXI)" >> $@T; \
-	mv -f $@T $@
-
-
-# The *.1, *.7, *.info, *.dvi, and *.pdf files are being generated from implicit
-# patterns.  To use them, put each of the specific targets with its
-# specific dependencies but no build commands.
-
-doc/cpp.info: $(TEXI_CPP_FILES)
-doc/gcc.info: $(TEXI_GCC_FILES)
-doc/gccint.info: $(TEXI_GCCINT_FILES)
-doc/cppinternals.info: $(TEXI_CPPINT_FILES)
-
-doc/%.info: %.texi
-	if [ x$(BUILD_INFO) = xinfo ]; then \
-		$(MAKEINFO) $(MAKEINFOFLAGS) -I . -I $(gcc_docdir) \
-			-I $(gcc_docdir)/include -o $@ $<; \
-	fi
-
-# Duplicate entry to handle renaming of gccinstall.info
-doc/gccinstall.info: $(TEXI_GCCINSTALL_FILES)
-	if [ x$(BUILD_INFO) = xinfo ]; then \
-		$(MAKEINFO) $(MAKEINFOFLAGS) -I $(gcc_docdir) \
-			-I $(gcc_docdir)/include -o $@ $<; \
-	fi
-
-doc/cpp.dvi: $(TEXI_CPP_FILES)
-doc/gcc.dvi: $(TEXI_GCC_FILES)
-doc/gccint.dvi: $(TEXI_GCCINT_FILES)
-doc/cppinternals.dvi: $(TEXI_CPPINT_FILES)
-
-doc/cpp.pdf: $(TEXI_CPP_FILES)
-doc/gcc.pdf: $(TEXI_GCC_FILES)
-doc/gccint.pdf: $(TEXI_GCCINT_FILES)
-doc/cppinternals.pdf: $(TEXI_CPPINT_FILES)
-
-$(build_htmldir)/cpp/index.html: $(TEXI_CPP_FILES)
-$(build_htmldir)/gcc/index.html: $(TEXI_GCC_FILES)
-$(build_htmldir)/gccint/index.html: $(TEXI_GCCINT_FILES)
-$(build_htmldir)/cppinternals/index.html: $(TEXI_CPPINT_FILES)
-
-dvi:: doc/gcc.dvi doc/gccint.dvi doc/gccinstall.dvi doc/cpp.dvi \
-      doc/cppinternals.dvi lang.dvi
-
-doc/%.dvi: %.texi
-	$(TEXI2DVI) -I . -I $(abs_docdir) -I $(abs_docdir)/include -o $@ $<
-
-# Duplicate entry to handle renaming of gccinstall.dvi
-doc/gccinstall.dvi: $(TEXI_GCCINSTALL_FILES)
-	$(TEXI2DVI) -I . -I $(abs_docdir) -I $(abs_docdir)/include -o $@ $<
-
-PDFFILES = doc/gcc.pdf doc/gccint.pdf doc/gccinstall.pdf doc/cpp.pdf \
-           doc/cppinternals.pdf
-
-pdf:: $(PDFFILES) lang.pdf
-
-doc/%.pdf: %.texi
-	$(TEXI2PDF) -I . -I $(abs_docdir) -I $(abs_docdir)/include -o $@ $<
-
-# Duplicate entry to handle renaming of gccinstall.pdf
-doc/gccinstall.pdf: $(TEXI_GCCINSTALL_FILES)
-	$(TEXI2PDF) -I . -I $(abs_docdir) -I $(abs_docdir)/include -o $@ $<
-
-# List the directories or single hmtl files which are installed by
-# install-html. The lang.html file triggers language fragments to build
-# html documentation.
-HTMLS_INSTALL=$(build_htmldir)/cpp $(build_htmldir)/gcc \
-       $(build_htmldir)/gccinstall $(build_htmldir)/gccint \
-       $(build_htmldir)/cppinternals
-
-# List the html file targets.
-HTMLS_BUILD=$(build_htmldir)/cpp/index.html $(build_htmldir)/gcc/index.html \
-       $(build_htmldir)/gccinstall/index.html $(build_htmldir)/gccint/index.html \
-       $(build_htmldir)/cppinternals/index.html lang.html
-
-html:: $(HTMLS_BUILD)
-
-$(build_htmldir)/%/index.html: %.texi
-	$(mkinstalldirs) $(@D)
-	rm -f $(@D)/*
-	$(TEXI2HTML) -I $(abs_docdir) -I $(abs_docdir)/include -o $(@D) $<
-
-# Duplicate entry to handle renaming of gccinstall
-$(build_htmldir)/gccinstall/index.html: $(TEXI_GCCINSTALL_FILES)
-	$(mkinstalldirs) $(@D)
-	echo rm -f $(@D)/*
-	SOURCEDIR=$(abs_docdir) \
-	DESTDIR=$(@D) \
-	$(SHELL) $(srcdir)/doc/install.texi2html
-
-MANFILES = doc/gcov.1 doc/cpp.1 doc/gcc.1 doc/gfdl.7 doc/gpl.7 doc/fsf-funding.7
-
-generated-manpages: man
-
-man: $(MANFILES) lang.man @GENINSRC@ srcman lang.srcman
-
-srcman: $(MANFILES)
-	-cp -p $^ $(srcdir)/doc
-
-doc/%.1: %.pod
-	$(STAMP) $@
-	-($(POD2MAN) --section=1 $< > $(@).T$$$$ && \
-		mv -f $(@).T$$$$ $@) || \
-		(rm -f $(@).T$$$$ && exit 1)
-
-doc/%.7: %.pod
-	$(STAMP) $@
-	-($(POD2MAN) --section=7 $< > $(@).T$$$$ && \
-		mv -f $(@).T$$$$ $@) || \
-		(rm -f $(@).T$$$$ && exit 1)
-
-%.pod: %.texi
-	$(STAMP) $@
-	-$(TEXI2POD) -DBUGURL="$(BUGURL_TEXI)" $< > $@
-
-.INTERMEDIATE: cpp.pod gcc.pod gfdl.pod fsf-funding.pod
-cpp.pod: cpp.texi cppenv.texi cppopts.texi
-
-# These next rules exist because the output name is not the same as
-# the input name, so our implicit %.pod rule will not work.
-
-gcc.pod: invoke.texi cppenv.texi cppopts.texi gcc-vers.texi
-	$(STAMP) $@
-	-$(TEXI2POD) $< > $@
-gfdl.pod: fdl.texi
-	$(STAMP) $@
-	-$(TEXI2POD) $< > $@
-fsf-funding.pod: funding.texi
-	$(STAMP) $@
-	-$(TEXI2POD) $< > $@
-gpl.pod: gpl_v3.texi
-	$(STAMP) $@
-	-$(TEXI2POD) $< > $@
 
 #
 # Deletion of files made during compilation.
@@ -4352,48 +3952,6 @@ maintainer-clean:
 	-rm -f cpp.??s cpp.*aux
 	-rm -f gcc.??s gcc.*aux
 	-rm -f $(gcc_docdir)/*.info $(gcc_docdir)/*.1 $(gcc_docdir)/*.7 $(gcc_docdir)/*.dvi $(gcc_docdir)/*.pdf
-#
-# Entry points `install', `install-strip', and `uninstall'.
-# Also use `install-collect2' to install collect2 when the config files don't.
-
-# Copy the compiler files into directories where they will be run.
-# Install the driver last so that the window when things are
-# broken is small.
-install: install-common $(INSTALL_HEADERS) \
-    install-cpp install-man install-info install-@POSUB@ \
-    install-driver
-
-ifeq ($(enable_plugin),yes)
-install: install-plugin
-endif
-
-install-strip: override INSTALL_PROGRAM = $(INSTALL_STRIP_PROGRAM)
-ifneq ($(STRIP),)
-install-strip: STRIPPROG = $(STRIP)
-export STRIPPROG
-endif
-install-strip: install
-
-# Handle cpp installation.
-install-cpp: installdirs cpp$(exeext)
-	-rm -f $(DESTDIR)$(bindir)/$(CPP_INSTALL_NAME)$(exeext)
-	-$(INSTALL_PROGRAM) -m 755 cpp$(exeext) $(DESTDIR)$(bindir)/$(CPP_INSTALL_NAME)$(exeext)
-	-if [ x$(cpp_install_dir) != x ]; then \
-	  rm -f $(DESTDIR)$(prefix)/$(cpp_install_dir)/$(CPP_INSTALL_NAME)$(exeext); \
-	  $(INSTALL_PROGRAM) -m 755 cpp$(exeext) $(DESTDIR)$(prefix)/$(cpp_install_dir)/$(CPP_INSTALL_NAME)$(exeext); \
-	else true; fi
-
-# Create the installation directories.
-# $(libdir)/gcc/include isn't currently searched by cpp.
-installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(libsubdir)
-	$(mkinstalldirs) $(DESTDIR)$(libexecsubdir)
-	$(mkinstalldirs) $(DESTDIR)$(bindir)
-	$(mkinstalldirs) $(DESTDIR)$(includedir)
-	$(mkinstalldirs) $(DESTDIR)$(infodir)
-	$(mkinstalldirs) $(DESTDIR)$(slibdir)
-	$(mkinstalldirs) $(DESTDIR)$(man1dir)
-	$(mkinstalldirs) $(DESTDIR)$(man7dir)
 
 PLUGIN_HEADERS = $(TREE_H) $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
   toplev.h $(DIAGNOSTIC_CORE_H) $(BASIC_BLOCK_H) $(GIMPLE_H) $(TREE_PASS_H) $(GCC_PLUGIN_H) \
@@ -4556,138 +4114,11 @@ install-man: lang.install-man \
 	$(DESTDIR)$(man7dir)/gfdl$(man7ext) \
 	$(DESTDIR)$(man7dir)/gpl$(man7ext)
 
-$(DESTDIR)$(man7dir)/%$(man7ext): doc/%.7 installdirs
-	-rm -f $@
-	-$(INSTALL_DATA) $< $@
-	-chmod a-x $@
-
-$(DESTDIR)$(man1dir)/$(GCC_INSTALL_NAME)$(man1ext): doc/gcc.1 installdirs
-	-rm -f $@
-	-$(INSTALL_DATA) $< $@
-	-chmod a-x $@
-
-$(DESTDIR)$(man1dir)/$(CPP_INSTALL_NAME)$(man1ext): doc/cpp.1 installdirs
-	-rm -f $@
-	-$(INSTALL_DATA) $< $@
-	-chmod a-x $@
-
 $(DESTDIR)$(man1dir)/$(GCOV_INSTALL_NAME)$(man1ext): doc/gcov.1 installdirs
 	-rm -f $@
 	-$(INSTALL_DATA) $< $@
 	-chmod a-x $@
 
-# Install all the header files built in the include subdirectory.
-install-headers: $(INSTALL_HEADERS_DIR)
-# Fix symlinks to absolute paths in the installed include directory to
-# point to the installed directory, not the build directory.
-# Don't need to use LN_S here since we really do need ln -s and no substitutes.
-	-files=`cd $(DESTDIR)$(libsubdir)/include-fixed; find . -type l -print 2>/dev/null`; \
-	if [ $$? -eq 0 ]; then \
-	  dir=`cd include-fixed; ${PWD_COMMAND}`; \
-	  for i in $$files; do \
-	    dest=`ls -ld $(DESTDIR)$(libsubdir)/include-fixed/$$i | sed -n 's/.*-> //p'`; \
-	    if expr "$$dest" : "$$dir.*" > /dev/null; then \
-	      rm -f $(DESTDIR)$(libsubdir)/include-fixed/$$i; \
-	      ln -s `echo $$i | sed "s|/[^/]*|/..|g" | sed 's|/..$$||'``echo "$$dest" | sed "s|$$dir||"` $(DESTDIR)$(libsubdir)/include-fixed/$$i; \
-	    fi; \
-	  done; \
-	fi
-
-# Create or recreate the gcc private include file directory.
-install-include-dir: installdirs
-	$(mkinstalldirs) $(DESTDIR)$(libsubdir)/include
-	-rm -rf $(DESTDIR)$(libsubdir)/include-fixed
-	mkdir $(DESTDIR)$(libsubdir)/include-fixed
-	-chmod a+rx $(DESTDIR)$(libsubdir)/include-fixed
-
-# Create or recreate the install-tools include file directory.
-itoolsdir = $(libexecsubdir)/install-tools
-itoolsdatadir = $(libsubdir)/install-tools
-install-itoolsdirs: installdirs
-	$(mkinstalldirs) $(DESTDIR)$(itoolsdatadir)/include
-	$(mkinstalldirs) $(DESTDIR)$(itoolsdir)
-
-# Install the include directory using tar.
-install-headers-tar: stmp-int-hdrs install-include-dir
-# We use `pwd`/include instead of just include to problems with CDPATH
-# Unless a full pathname is provided, some shells would print the new CWD,
-# found in CDPATH, corrupting the output.  We could just redirect the
-# output of `cd', but some shells lose on redirection within `()'s
-	(cd `${PWD_COMMAND}`/include ; \
-	 tar -cf - .; exit 0) | (cd $(DESTDIR)$(libsubdir)/include; tar xpf - )
-	(cd `${PWD_COMMAND}`/include-fixed ; \
-	 tar -cf - .; exit 0) | (cd $(DESTDIR)$(libsubdir)/include-fixed; tar xpf - )
-# /bin/sh on some systems returns the status of the first tar,
-# and that can lose with GNU tar which always writes a full block.
-# So use `exit 0' to ignore its exit status.
-
-# Install the include directory using cpio.
-install-headers-cpio: stmp-int-hdrs install-include-dir
-# See discussion about the use of `pwd` above
-	cd `${PWD_COMMAND}`/include ; \
-	find . -print | cpio -pdum $(DESTDIR)$(libsubdir)/include
-	cd `${PWD_COMMAND}`/include-fixed ; \
-	find . -print | cpio -pdum $(DESTDIR)$(libsubdir)/include-fixed
-
-# Install the include directory using cp.
-install-headers-cp: stmp-int-hdrs install-include-dir
-	cp -p -r include $(DESTDIR)$(libsubdir)
-	cp -p -r include-fixed $(DESTDIR)$(libsubdir)
-
-# Targets without dependencies, for use in prev-gcc during bootstrap.
-real-install-headers-tar:
-	(cd `${PWD_COMMAND}`/include-fixed ; \
-	 tar -cf - .; exit 0) | (cd $(DESTDIR)$(libsubdir)/include-fixed; tar xpf - )
-
-real-install-headers-cpio:
-	cd `${PWD_COMMAND}`/include-fixed ; \
-	find . -print | cpio -pdum $(DESTDIR)$(libsubdir)/include-fixed
-
-real-install-headers-cp:
-	cp -p -r include-fixed $(DESTDIR)$(libsubdir)
-
-# Install supporting files for fixincludes to be run later.
-install-mkheaders: stmp-int-hdrs install-itoolsdirs \
-  macro_list fixinc_list
-	$(INSTALL_DATA) $(srcdir)/gsyslimits.h \
-	  $(DESTDIR)$(itoolsdatadir)/gsyslimits.h
-	$(INSTALL_DATA) macro_list $(DESTDIR)$(itoolsdatadir)/macro_list
-	$(INSTALL_DATA) fixinc_list $(DESTDIR)$(itoolsdatadir)/fixinc_list
-	set -e; for ml in `cat fixinc_list`; do \
-	  multi_dir=`echo $${ml} | sed -e 's/^[^;]*;//'`; \
-	  $(mkinstalldirs) $(DESTDIR)$(itoolsdatadir)/include$${multi_dir}; \
-	  $(INSTALL_DATA) include-fixed$${multidir}/limits.h $(DESTDIR)$(itoolsdatadir)/include$${multi_dir}/limits.h; \
-	done
-	$(INSTALL_SCRIPT) $(srcdir)/../mkinstalldirs \
-		$(DESTDIR)$(itoolsdir)/mkinstalldirs ; \
-	sysroot_headers_suffix='$${sysroot_headers_suffix}'; \
-		echo 'SYSTEM_HEADER_DIR="'"$(SYSTEM_HEADER_DIR)"'"' \
-		> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
-	echo 'OTHER_FIXINCLUDES_DIRS="$(OTHER_FIXINCLUDES_DIRS)"' \
-		>> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
-	echo 'STMP_FIXINC="$(STMP_FIXINC)"' \
-		>> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
-
-# Use this target to install the program `collect2' under the name `collect2'.
-install-collect2: collect2 installdirs
-	$(INSTALL_PROGRAM) collect2$(exeext) $(DESTDIR)$(libexecsubdir)/collect2$(exeext)
-# Install the driver program as $(libsubdir)/gcc for collect2.
-	$(INSTALL_PROGRAM) xgcc$(exeext) $(DESTDIR)$(libexecsubdir)/gcc$(exeext)
-
-# Cancel installation by deleting the installed files.
-uninstall: lang.uninstall
-	-rm -rf $(DESTDIR)$(libsubdir)
-	-rm -rf $(DESTDIR)$(libexecsubdir)
-	-rm -rf $(DESTDIR)$(bindir)/$(GCC_INSTALL_NAME)$(exeext)
-	-rm -f $(DESTDIR)$(bindir)/$(CPP_INSTALL_NAME)$(exeext)
-	-if [ x$(cpp_install_dir) != x ]; then \
-	  rm -f $(DESTDIR)$(prefix)/$(cpp_install_dir)/$(CPP_INSTALL_NAME)$(exeext); \
-	else true; fi
-	-rm -rf $(DESTDIR)$(bindir)/$(GCOV_INSTALL_NAME)$(exeext)
-	-rm -rf $(DESTDIR)$(man1dir)/$(GCC_INSTALL_NAME)$(man1ext)
-	-rm -rf $(DESTDIR)$(man1dir)/cpp$(man1ext)
-	-rm -f $(DESTDIR)$(infodir)/cpp.info* $(DESTDIR)$(infodir)/gcc.info*
-	-rm -f $(DESTDIR)$(infodir)/cppinternals.info* $(DESTDIR)$(infodir)/gccint.info*
 #
 # These targets are for the dejagnu testsuites. The file site.exp
 # contains global variables that all the testsuites will use.
@@ -4708,7 +4139,6 @@ site.exp: ./config.status Makefile
 	@echo "set build_triplet $(build)" >> ./tmp0
 	@echo "set target_triplet $(target)" >> ./tmp0
 	@echo "set target_alias $(target_noncanonical)" >> ./tmp0
-	@echo "set libiconv \"$(LIBICONV)\"" >> ./tmp0
 # CFLAGS is set even though it's empty to show we reserve the right to set it.
 	@echo "set CFLAGS \"\"" >> ./tmp0
 	@echo "set CXXFLAGS \"\"" >> ./tmp0
@@ -4725,7 +4155,6 @@ site.exp: ./config.status Makefile
 	  echo "set ENABLE_PLUGIN 1" >> ./tmp0; \
 	  echo "set PLUGINCC \"$(PLUGINCC)\"" >> ./tmp0; \
 	  echo "set PLUGINCFLAGS \"$(PLUGINCFLAGS)\"" >> ./tmp0; \
-	  echo "set GMPINC \"$(GMPINC)\"" >> ./tmp0; \
 	fi
 # If newlib has been configured, we need to pass -B to gcc so it can find
 # newlib's crt0.o if it exists.  This will cause a "path prefix not used"
@@ -4999,75 +4428,3 @@ TAGS: lang.tags
 	done;						\
 	etags -o TAGS.sub c-family/*.h c-family/*.c *.h *.c; \
 	etags --include TAGS.sub $$incs)
-
-# -----------------------------------------------------
-# Rules for generating translated message descriptions.
-# Disabled by autoconf if the tools are not available.
-# -----------------------------------------------------
-
-XGETTEXT = @XGETTEXT@
-GMSGFMT = @GMSGFMT@
-MSGMERGE = msgmerge
-CATALOGS = $(patsubst %,po/%,@CATALOGS@)
-
-.PHONY: build- install- build-po install-po update-po
-
-# Dummy rules to deal with dependencies produced by use of
-# "build-@POSUB@" and "install-@POSUB@" above, when NLS is disabled.
-build-: ; @true
-install-: ; @true
-
-build-po: $(CATALOGS)
-
-# This notation should be acceptable to all Make implementations used
-# by people who are interested in updating .po files.
-update-po: $(CATALOGS:.gmo=.pox)
-
-# N.B. We do not attempt to copy these into $(srcdir).  The snapshot
-# script does that.
-.po.gmo:
-	$(mkinstalldirs) po
-	$(GMSGFMT) --statistics -o $@ $<
-
-# The new .po has to be gone over by hand, so we deposit it into
-# build/po with a different extension.
-# If build/po/gcc.pot exists, use it (it was just created),
-# else use the one in srcdir.
-.po.pox:
-	$(mkinstalldirs) po
-	$(MSGMERGE) $< `if test -f po/gcc.pot; \
-			then echo po/gcc.pot; \
-			else echo $(srcdir)/po/gcc.pot; fi` -o $@
-
-# This rule has to look for .gmo modules in both srcdir and
-# the cwd, and has to check that we actually have a catalog
-# for each language, in case they weren't built or included
-# with the distribution.
-install-po:
-	$(mkinstalldirs) $(DESTDIR)$(datadir)
-	cats="$(CATALOGS)"; for cat in $$cats; do \
-	  lang=`basename $$cat | sed 's/\.gmo$$//'`; \
-	  if [ -f $$cat ]; then :; \
-	  elif [ -f $(srcdir)/$$cat ]; then cat=$(srcdir)/$$cat; \
-	  else continue; \
-	  fi; \
-	  dir=$(localedir)/$$lang/LC_MESSAGES; \
-	  echo $(mkinstalldirs) $(DESTDIR)$$dir; \
-	  $(mkinstalldirs) $(DESTDIR)$$dir || exit 1; \
-	  echo $(INSTALL_DATA) $$cat $(DESTDIR)$$dir/gcc.mo; \
-	  $(INSTALL_DATA) $$cat $(DESTDIR)$$dir/gcc.mo; \
-	done
-
-# Rule for regenerating the message template (gcc.pot).
-# Instead of forcing everyone to edit POTFILES.in, which proved impractical,
-# this rule has no dependencies and always regenerates gcc.pot.  This is
-# relatively harmless since the .po files do not directly depend on it.
-# Note that exgettext has an awk script embedded in it which requires a
-# fairly modern (POSIX-compliant) awk.
-# The .pot file is left in the build directory.
-gcc.pot: po/gcc.pot
-po/gcc.pot: force
-	$(mkinstalldirs) po
-	$(MAKE) srcextra
-	AWK=$(AWK) $(SHELL) $(srcdir)/po/exgettext \
-		$(XGETTEXT) gcc $(srcdir)

@@ -39,7 +39,7 @@ extern int base_of_path (const char *path, const char **base_out);
    output of a front end.  These passes must be bypassed for lto since
    they have already been done before the gimple was written.  */
 
-extern bool in_lto_p;
+#define in_lto_p ((bool)false)
 
 /* Return true iff flags are set as if -ffast-math.  */
 extern bool fast_math_flags_set_p (const struct gcc_options *);

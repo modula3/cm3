@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines for insn-output.c for Windows NT.
    Contributed by Douglas Rupp (drupp@cs.washington.edu)
    Copyright (C) 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
@@ -36,7 +38,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "target.h"
 #include "except.h"
-#include "lto-streamer.h"
 
 /* i386/PE specific attribute support.
 

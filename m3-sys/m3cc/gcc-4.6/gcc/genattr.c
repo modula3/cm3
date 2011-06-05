@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate attribute information (insn-attr.h) from machine description.
    Copyright (C) 1991, 1994, 1996, 1998, 1999, 2000, 2003, 2004, 2007, 2008,
    2010  Free Software Foundation, Inc.
@@ -185,6 +187,7 @@ main (int argc, char **argv)
 
   puts ("#define HAVE_ATTR_alternative");
   puts ("#define get_attr_alternative(insn) which_alternative");
+  puts ("\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n");
 
   /* Read the machine description.  */
 
@@ -376,6 +379,7 @@ main (int argc, char **argv)
   printf("#define ATTR_FLAG_unlikely\t0x10\n");
   printf("#define ATTR_FLAG_very_unlikely\t0x20\n");
 
+  puts("\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
   puts("\n#endif /* GCC_INSN_ATTR_H */");
 
   if (ferror (stdout) || fflush (stdout) || fclose (stdout))

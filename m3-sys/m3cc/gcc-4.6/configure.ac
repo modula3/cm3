@@ -1,3 +1,5 @@
+# Modula-3: modified
+
 #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
 #   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
 #   Free Software Foundation, Inc.
@@ -168,7 +170,7 @@ build_tools="build-texinfo build-byacc build-flex build-bison build-m4 build-fix
 
 # these libraries are used by various programs built for the host environment
 #
-host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui zlib libcpp libdecnumber gmp mpfr mpc ppl cloog libelf libiconv"
+host_libs="intl mmalloc libiberty opcodes bfd readline tcl tk itcl libgui libcpp libdecnumber libiconv"
 
 # these tools are built for the host environment
 # Note, the powerpc-eabi build depends on sim occurring before gdb in order to
@@ -578,10 +580,6 @@ case "${target}" in
     ;;
   *-*-freebsd*)
     noconfigdirs="$noconfigdirs target-newlib target-libgloss"
-    if test "x$with_gmp" = x && test "x$with_gmp_dir" = x \
-	&& test -f /usr/local/include/gmp.h; then
-      with_gmp=/usr/local
-    fi
 
     # Skip some stuff that's unsupported on some FreeBSD configurations.
     case "${target}" in
@@ -1330,232 +1328,6 @@ ENABLE_BUILD_WITH_CXX=no)
 # Used for setting $lt_cv_objdir
 _LT_CHECK_OBJDIR
 
-# Check for GMP, MPFR and MPC
-gmplibs="-lmpc -lmpfr -lgmp"
-gmpinc=
-have_gmp=no
-
-# Specify a location for mpc
-# check for this first so it ends up on the link line before mpfr.
-AC_ARG_WITH(mpc,
-[AS_HELP_STRING([--with-mpc=PATH],
-		[specify prefix directory for installed MPC package.
-		 Equivalent to --with-mpc-include=PATH/include
-		 plus --with-mpc-lib=PATH/lib])])
-AC_ARG_WITH(mpc-include,
-[AS_HELP_STRING([--with-mpc-include=PATH],
-		[specify directory for installed MPC include files])])
-AC_ARG_WITH(mpc-lib,
-[AS_HELP_STRING([--with-mpc-lib=PATH],
-		[specify directory for the installed MPC library])])
-
-if test "x$with_mpc" != x; then
-  gmplibs="-L$with_mpc/lib $gmplibs"
-  gmpinc="-I$with_mpc/include $gmpinc"
-fi
-if test "x$with_mpc_include" != x; then
-  gmpinc="-I$with_mpc_include $gmpinc"
-fi
-if test "x$with_mpc_lib" != x; then
-  gmplibs="-L$with_mpc_lib $gmplibs"
-fi
-if test "x$with_mpc$with_mpc_include$with_mpc_lib" = x && test -d ${srcdir}/mpc; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/mpc/src/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$s/mpc/src '"$gmpinc"
-  # Do not test the mpc version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
-
-# Specify a location for mpfr
-# check for this first so it ends up on the link line before gmp.
-AC_ARG_WITH(mpfr-dir,
-[AS_HELP_STRING([--with-mpfr-dir=PATH], [this option has been REMOVED])],
-[AC_MSG_ERROR([The --with-mpfr-dir=PATH option has been removed.
-Use --with-mpfr=PATH or --with-mpfr-include=PATH plus --with-mpfr-lib=PATH])])
-
-AC_ARG_WITH(mpfr,
-[AS_HELP_STRING([--with-mpfr=PATH],
-		[specify prefix directory for installed MPFR package.
-		 Equivalent to --with-mpfr-include=PATH/include
-		 plus --with-mpfr-lib=PATH/lib])])
-AC_ARG_WITH(mpfr-include,
-[AS_HELP_STRING([--with-mpfr-include=PATH],
-		[specify directory for installed MPFR include files])])
-AC_ARG_WITH(mpfr-lib,
-[AS_HELP_STRING([--with-mpfr-lib=PATH],
-		[specify directory for the installed MPFR library])])
-
-if test "x$with_mpfr" != x; then
-  gmplibs="-L$with_mpfr/lib $gmplibs"
-  gmpinc="-I$with_mpfr/include $gmpinc"
-fi
-if test "x$with_mpfr_include" != x; then
-  gmpinc="-I$with_mpfr_include $gmpinc"
-fi
-if test "x$with_mpfr_lib" != x; then
-  gmplibs="-L$with_mpfr_lib $gmplibs"
-fi
-if test "x$with_mpfr$with_mpfr_include$with_mpfr_lib" = x && test -d ${srcdir}/mpfr; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/mpfr/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$r/$(HOST_SUBDIR)/mpfr -I$$s/mpfr '"$gmpinc"
-  extra_mpc_mpfr_configure_flags='--with-mpfr-include=$$s/mpfr --with-mpfr-lib=$$r/$(HOST_SUBDIR)/mpfr/'"$lt_cv_objdir"
-  # Do not test the mpfr version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
-
-# Specify a location for gmp
-AC_ARG_WITH(gmp-dir,
-[AS_HELP_STRING([--with-gmp-dir=PATH], [this option has been REMOVED])],
-[AC_MSG_ERROR([The --with-gmp-dir=PATH option has been removed.
-Use --with-gmp=PATH or --with-gmp-include=PATH plus --with-gmp-lib=PATH])])
-
-AC_ARG_WITH(gmp,
-[AS_HELP_STRING([--with-gmp=PATH],
-		[specify prefix directory for the installed GMP package.
-		 Equivalent to --with-gmp-include=PATH/include
-		 plus --with-gmp-lib=PATH/lib])])
-AC_ARG_WITH(gmp-include,
-[AS_HELP_STRING([--with-gmp-include=PATH],
-		[specify directory for installed GMP include files])])
-AC_ARG_WITH(gmp-lib,
-[AS_HELP_STRING([--with-gmp-lib=PATH],
-		[specify directory for the installed GMP library])])
-
-
-if test "x$with_gmp" != x; then
-  gmplibs="-L$with_gmp/lib $gmplibs"
-  gmpinc="-I$with_gmp/include $gmpinc"
-fi
-if test "x$with_gmp_include" != x; then
-  gmpinc="-I$with_gmp_include $gmpinc"
-fi
-if test "x$with_gmp_lib" != x; then
-  gmplibs="-L$with_gmp_lib $gmplibs"
-fi
-if test "x$with_gmp$with_gmp_include$with_gmp_lib" = x && test -d ${srcdir}/gmp; then
-  gmplibs='-L$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir $gmplibs"
-  gmpinc='-I$$r/$(HOST_SUBDIR)/gmp -I$$s/gmp '"$gmpinc"
-  extra_mpfr_configure_flags='--with-gmp-include=$$r/$(HOST_SUBDIR)/gmp --with-gmp-lib=$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir"
-  extra_mpc_gmp_configure_flags='--with-gmp-include=$$r/$(HOST_SUBDIR)/gmp --with-gmp-lib=$$r/$(HOST_SUBDIR)/gmp/'"$lt_cv_objdir"
-  # Do not test the gmp version.  Assume that it is sufficient, since
-  # it is in the source tree, and the library has not been built yet
-  # but it would be included on the link line in the version check below
-  # hence making the test fail.
-  have_gmp=yes
-fi
-
-if test -d ${srcdir}/gcc && test "x$have_gmp" = xno; then
-  have_gmp=yes
-  saved_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $gmpinc"
-  # Check for the recommended and required versions of GMP.
-  AC_MSG_CHECKING([for the correct version of gmp.h])
-  AC_TRY_COMPILE([#include "gmp.h"],[
-  #define GCC_GMP_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
-  #define GCC_GMP_VERSION GCC_GMP_VERSION_NUM(__GNU_MP_VERSION,__GNU_MP_VERSION_MINOR,__GNU_MP_VERSION_PATCHLEVEL)
-  #if GCC_GMP_VERSION < GCC_GMP_VERSION_NUM(4,2,0)
-  choke me
-  #endif
-  ], [AC_TRY_COMPILE([#include <gmp.h>],[
-  #define GCC_GMP_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
-  #define GCC_GMP_VERSION GCC_GMP_VERSION_NUM(__GNU_MP_VERSION,__GNU_MP_VERSION_MINOR,__GNU_MP_VERSION_PATCHLEVEL)
-  #if GCC_GMP_VERSION < GCC_GMP_VERSION_NUM(4,3,2)
-  choke me
-  #endif
-  ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([buggy but acceptable])])],
-   [AC_MSG_RESULT([no]); have_gmp=no])
-
-  # If we have GMP, check the MPFR version.
-  if test x"$have_gmp" = xyes; then
-    # Check for the recommended and required versions of MPFR.
-    AC_MSG_CHECKING([for the correct version of mpfr.h])
-    AC_TRY_COMPILE([#include <gmp.h>
-    #include <mpfr.h>],[
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,3,1)
-    choke me
-    #endif
-    ], [AC_TRY_COMPILE([#include <gmp.h>
-    #include <mpfr.h>],[
-    #if MPFR_VERSION < MPFR_VERSION_NUM(2,4,2)
-    choke me
-    #endif
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([buggy but acceptable])])],
-     [AC_MSG_RESULT([no]); have_gmp=no])
-  fi
-
-  # Check for the MPC header version.
-  if test x"$have_gmp" = xyes ; then
-    # Check for the recommended and required versions of MPC.
-    AC_MSG_CHECKING([for the correct version of mpc.h])
-    AC_TRY_COMPILE([#include <mpc.h>],[
-    #if MPC_VERSION < MPC_VERSION_NUM(0,8,0)
-    choke me
-    #endif
-    ], [AC_TRY_COMPILE([#include <mpc.h>],[
-    #if MPC_VERSION < MPC_VERSION_NUM(0,8,1)
-    choke me
-    #endif
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([buggy but acceptable])])],
-     [AC_MSG_RESULT([no]); have_gmp=no])
-  fi
-
-  # Now check the MPFR library.
-  if test x"$have_gmp" = xyes; then
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $gmplibs"
-    AC_MSG_CHECKING([for the correct version of the gmp/mpfr/mpc libraries])
-    AC_TRY_LINK([#include <mpc.h>],[
-    mpfr_t n;
-    mpfr_t x;
-    mpc_t c;
-    int t;
-    mpfr_init (n);
-    mpfr_init (x);
-    mpfr_atan2 (n, n, x, GMP_RNDN);
-    mpfr_erfc (n, x, GMP_RNDN);
-    mpfr_subnormalize (x, t, GMP_RNDN);
-    mpfr_clear(n);
-    mpfr_clear(x);
-    mpc_init2 (c, 53);
-    mpc_set_ui_ui (c, 1, 1, MPC_RNDNN);
-    mpc_cosh (c, c, MPC_RNDNN);
-    mpc_pow (c, c, c, MPC_RNDNN);
-    mpc_acosh (c, c, MPC_RNDNN);
-    mpc_clear (c);
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no]); have_gmp=no])
-    LIBS="$saved_LIBS"
-  fi
-
-  CFLAGS="$saved_CFLAGS"
-
-# The library versions listed in the error message below should match
-# the HARD-minimums enforced above.
-  if test x$have_gmp != xyes; then
-    AC_MSG_ERROR([Building GCC requires GMP 4.2+, MPFR 2.3.1+ and MPC 0.8.0+.
-Try the --with-gmp, --with-mpfr and/or --with-mpc options to specify
-their locations.  Source code for these libraries can be found at
-their respective hosting sites as well as at
-ftp://gcc.gnu.org/pub/gcc/infrastructure/.  See also
-http://gcc.gnu.org/install/prerequisites.html for additional info.  If
-you obtained GMP, MPFR and/or MPC from a vendor distribution package,
-make sure that you have installed both the libraries and the header
-files.  They may be located in separate packages.])
-  fi
-fi
-
-# Flags needed for both GMP, MPFR and/or MPC.
-AC_SUBST(gmplibs)
-AC_SUBST(gmpinc)
-AC_SUBST(extra_mpfr_configure_flags)
-AC_SUBST(extra_mpc_gmp_configure_flags)
-AC_SUBST(extra_mpc_mpfr_configure_flags)
-
 # Allow host libstdc++ to be specified for static linking with PPL.
 AC_ARG_WITH(host-libstdcxx,
 [AS_HELP_STRING([--with-host-libstdcxx=L],
@@ -1619,155 +1391,6 @@ AC_ARG_WITH(boot-ldflags,
    poststage1_ldflags="-static-libstdc++ -static-libgcc"
  fi])
 AC_SUBST(poststage1_ldflags)
-
-# Check for PPL
-ppllibs=
-pplinc=
-pwllib=
-
-AC_ARG_WITH(ppl,
-[AS_HELP_STRING([--with-ppl=PATH],
-		[specify prefix directory for the installed PPL package.
-		 Equivalent to --with-ppl-include=PATH/include
-		 plus --with-ppl-lib=PATH/lib])])
-AC_ARG_WITH(ppl-include,
-[AS_HELP_STRING([--with-ppl-include=PATH],
-		[specify directory for installed PPL include files])])
-AC_ARG_WITH(ppl-lib,
-[AS_HELP_STRING([--with-ppl-lib=PATH],
-		[specify directory for the installed PPL library])])
-
-AC_ARG_ENABLE(ppl-version-check,
-[AS_HELP_STRING([--disable-ppl-version-check],
-		[disable check for PPL version])])
-
-case $with_ppl in
-  yes | no | "")
-    ;;
-  *)
-    ppllibs="-L$with_ppl/lib"
-    pplinc="-I$with_ppl/include $pplinc"
-    if test -d "$with_ppl/lib" && test -d "$with_ppl/include"; then
-      with_ppl=yes
-    else
-      AC_MSG_ERROR([cannot find directories "$with_ppl/lib" or "$with_ppl/include"])
-    fi
-    ;;
-esac
-
-if test x"$with_ppl_include" != x; then
-  pplinc="-I$with_ppl_include $pplinc"
-  with_ppl=yes
-fi
-
-if test "x$with_ppl_lib" != x; then
-  ppllibs="-L$with_ppl_lib"
-  with_ppl=yes
-fi
-
-if test x"$with_ppl$with_ppl_include$with_ppl_lib" = x && test -d ${srcdir}/ppl; then
-  if test x"$enable_watchdog" = xyes; then
-    pwllib="-lpwl"
-  fi
-  ppllibs='-L$$r/$(HOST_SUBDIR)/ppl/interfaces/C/'"$lt_cv_objdir"' -L$$r/$(HOST_SUBDIR)/ppl/src/'"$lt_cv_objdir"
-  pplinc='-I$$r/$(HOST_SUBDIR)/ppl/src -I$$r/$(HOST_SUBDIR)/ppl/interfaces/C '
-  enable_ppl_version_check=no
-  with_ppl=yes
-fi
-
-if test "x$with_ppl" != xno; then
-  if test "x$pwllib" = x; then
-    saved_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$LDFLAGS $ppllibs"
-    AC_CHECK_LIB(pwl,PWL_handle_timeout,[pwllib="-lpwl"])
-    LDFLAGS="$saved_LDFLAGS"
-  fi
-
-  ppllibs="$ppllibs -lppl_c -lppl $pwllib -lgmpxx"
-
-  if test "$enable_ppl_version_check" != no; then
-    saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $pplinc $gmpinc"
-    AC_MSG_CHECKING([for version 0.11 (revision 0 or later) of PPL])
-    AC_TRY_COMPILE([#include "ppl_c.h"],[
-    #if PPL_VERSION_MAJOR != 0 || PPL_VERSION_MINOR < 11
-    choke me
-    #endif
-    ], [AC_MSG_RESULT([yes])], [AC_MSG_RESULT([no]); ppllibs= ; pplinc= ; with_ppl=no ])
-    CFLAGS="$saved_CFLAGS"
-  fi
-fi
-
-# Flags needed for PPL
-AC_SUBST(ppllibs)
-AC_SUBST(pplinc)
-
-
-# Check for CLOOG
-
-dnl Provide configure switches and initialize clooginc & clooglibs
-dnl with user input.
-CLOOG_INIT_FLAGS
-if test "x$with_ppl" = "xno"; then
-  dnl Only execute fail-action, if CLooG has been requested.
-  CLOOG_REQUESTED([graphite_requested=yes], [graphite_requested=no])
-  if test "${graphite_requested}" = yes; then
-    AC_MSG_ERROR([Unable to find a usable PPL.  See config.log for details.])
-  fi
-  with_cloog=no
-fi
-if test "x${with_cloog}" = x && test "x${with_cloog_include}" = x \
-  && test "x${with_cloog_lib}" = x && test -d ${srcdir}/cloog; then
-  clooglibs='-L$$r/$(HOST_SUBDIR)/cloog/'"$lt_cv_objdir"' '
-  clooginc='-I$$r/$(HOST_SUBDIR)/cloog/include -I$$s/cloog/include '
-fi
-if test "x$with_cloog" != "xno"; then
-  dnl The minimal version of CLooG required for Graphite.
-  dnl
-  dnl If we use CLooG-Legacy, the provided version information is
-  dnl ignored.
-  CLOOG_CHECK_VERSION(0,16,1)
-
-  dnl Only execute fail-action, if CLooG has been requested.
-  CLOOG_IF_FAILED([
-    AC_MSG_ERROR([Unable to find a usable CLooG.  See config.log for details.])])
-fi
-
-# Check for LTO support.
-AC_ARG_ENABLE(lto,
-[AS_HELP_STRING([--enable-lto], [enable link time optimization support])],
-enable_lto=$enableval,
-enable_lto=yes; default_enable_lto=yes)
-
-ACX_ELF_TARGET_IFELSE([# ELF platforms build the lto-plugin always.
-  build_lto_plugin=yes
-],[if test x"$default_enable_lto" = x"yes" ; then
-    case $target in
-      *-apple-darwin9 | *-cygwin* | *-mingw*) ;;
-      # On other non-ELF platforms, LTO has yet to be validated.
-      *) enable_lto=no ;;
-    esac
-  else
-  # Apart from ELF platforms, only Windows and Darwin support LTO so far.
-  # It would also be nice to check the binutils support, but we don't
-  # have gcc_GAS_CHECK_FEATURE available here.  For now, we'll just
-  # warn during gcc/ subconfigure; unless you're bootstrapping with
-  # -flto it won't be needed until after installation anyway.
-    case $target in
-      *-cygwin* | *-mingw* | *-apple-darwin*) ;;
-      *) if test x"$enable_lto" = x"yes"; then
-	AC_MSG_ERROR([LTO support is not enabled for this target.])
-        fi
-      ;;
-    esac
-  fi
-  # Among non-ELF, only Windows platforms support the lto-plugin so far.
-  # Build it unless LTO was explicitly disabled.
-  case $target in
-    *-cygwin* | *-mingw*) build_lto_plugin=$enable_lto ;;
-    *) ;;
-  esac
-])
 
 
 # By default, C is the only stage 1 language.
@@ -1856,18 +1479,7 @@ if test -d ${srcdir}/gcc; then
 
   new_enable_languages=,c,
 
-  # If LTO is enabled, add the LTO front end.
   extra_host_libiberty_configure_flags=
-  if test "$enable_lto" = "yes" ; then
-    case ,${enable_languages}, in
-      *,lto,*) ;;
-      *) enable_languages="${enable_languages},lto" ;;
-    esac
-    if test "${build_lto_plugin}" = "yes" ; then
-      configdirs="$configdirs lto-plugin"
-      extra_host_libiberty_configure_flags=--enable-shared
-    fi
-  fi
   AC_SUBST(extra_host_libiberty_configure_flags)
 
   missing_languages=`echo ",$enable_languages," | sed -e s/,all,/,/ -e s/,c,/,/ `
@@ -2922,18 +2534,6 @@ changequote(,)
       ;;
     esac
 changequote([,])
-
-    case $lib in
-    mpc | mpfr | gmp | ppl | cloog)
-      # If we're processing --with-$lib, --with-$lib-include or
-      # --with-$lib-lib, for one of the libs above, and target is
-      # different from host, don't pass the current argument to any
-      # target library's configure.
-      if test x$is_cross_compiler = xyes; then
-        skip_targ=yes
-      fi
-      ;;
-    esac
     ;;
   esac
 

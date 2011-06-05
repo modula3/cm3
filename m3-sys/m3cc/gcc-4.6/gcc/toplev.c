@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Top level of GCC compilers (cc1, cc1plus, etc.)
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
@@ -31,7 +33,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "line-map.h"
 #include "input.h"
 #include "tree.h"
-#include "realmpfr.h"	/* For GMP/MPFR/MPC versions, in print_version.  */
 #include "version.h"
 #include "rtl.h"
 #include "tm_p.h"
@@ -95,6 +96,10 @@ along with GCC; see the file COPYING3.  If not see
 				   declarations for e.g. AIX 4.x.  */
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static void general_init (const char *);
 static void do_compile (void);
 static void process_options (void);
@@ -123,13 +128,6 @@ unsigned int save_decoded_options_count;
 /* Debug hooks - dependent upon command line options.  */
 
 const struct gcc_debug_hooks *debug_hooks;
-
-/* True if this is the lto front end.  This is used to disable
-   gimple generation and lowering passes that are normally run on the
-   output of a front end.  These passes must be bypassed for lto since
-   they have already been done before the gimple was written.  */
-
-bool in_lto_p = false;
 
 /* The FUNCTION_DECL for the function currently being compiled,
    or 0 if between functions.  */
@@ -693,10 +691,7 @@ print_version (FILE *file, const char *indent)
     N_("%s%s%s %sversion %s (%s) compiled by CC, ")
 #endif
     ;
-  static const char fmt2[] =
-    N_("GMP version %s, MPFR version %s, MPC version %s\n");
-  static const char fmt3[] =
-    N_("%s%swarning: %s header version %s differs from library version %s.\n");
+  static const char fmt2[] = "GMP/MPFR/MPC dependency removed\n";
   static const char fmt4[] =
     N_("%s%sGGC heuristics: --param ggc-min-expand=%d --param ggc-min-heapsize=%d\n");
 #ifndef __VERSION__
@@ -708,40 +703,7 @@ print_version (FILE *file, const char *indent)
 	   lang_hooks.name, pkgversion_string, version_string, TARGET_NAME,
 	   indent, __VERSION__);
 
-  /* We need to stringify the GMP macro values.  Ugh, gmp_version has
-     two string formats, "i.j.k" and "i.j" when k is zero.  As of
-     gmp-4.3.0, GMP always uses the 3 number format.  */
-#define GCC_GMP_STRINGIFY_VERSION3(X) #X
-#define GCC_GMP_STRINGIFY_VERSION2(X) GCC_GMP_STRINGIFY_VERSION3(X)
-#define GCC_GMP_VERSION_NUM(X,Y,Z) (((X) << 16L) | ((Y) << 8) | (Z))
-#define GCC_GMP_VERSION \
-  GCC_GMP_VERSION_NUM(__GNU_MP_VERSION, __GNU_MP_VERSION_MINOR, __GNU_MP_VERSION_PATCHLEVEL)
-#if GCC_GMP_VERSION < GCC_GMP_VERSION_NUM(4,3,0) && __GNU_MP_VERSION_PATCHLEVEL == 0
-#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR)
-#else
-#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_PATCHLEVEL)
-#endif
-  fprintf (file,
-	   file == stderr ? _(fmt2) : fmt2,
-	   GCC_GMP_STRINGIFY_VERSION, MPFR_VERSION_STRING, MPC_VERSION_STRING);
-  if (strcmp (GCC_GMP_STRINGIFY_VERSION, gmp_version))
-    fprintf (file,
-	     file == stderr ? _(fmt3) : fmt3,
-	     indent, *indent != 0 ? " " : "",
-	     "GMP", GCC_GMP_STRINGIFY_VERSION, gmp_version);
-  if (strcmp (MPFR_VERSION_STRING, mpfr_get_version ()))
-    fprintf (file,
-	     file == stderr ? _(fmt3) : fmt3,
-	     indent, *indent != 0 ? " " : "",
-	     "MPFR", MPFR_VERSION_STRING, mpfr_get_version ());
-  if (strcmp (MPC_VERSION_STRING, mpc_get_version ()))
-    fprintf (file,
-	     file == stderr ? _(fmt3) : fmt3,
-	     indent, *indent != 0 ? " " : "",
-	     "MPC", MPC_VERSION_STRING, mpc_get_version ());
+  fprintf (file, fmt2);
   fprintf (file,
 	   file == stderr ? _(fmt4) : fmt4,
 	   indent, *indent != 0 ? " " : "",
@@ -1975,3 +1937,7 @@ toplev_main (int argc, char **argv)
 
   return (SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

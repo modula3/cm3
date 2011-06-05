@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    - prototype declarations for operand predicates (tm-preds.h)
    - function definitions of operand predicates, if defined new-style
@@ -1070,7 +1072,8 @@ write_tm_constrs_h (void)
 
   puts ("\
 #ifndef GCC_TM_CONSTRS_H\n\
-#define GCC_TM_CONSTRS_H\n");
+#define GCC_TM_CONSTRS_H\n\
+#ifdef __cplusplus\nextern \"C\" {\n#endif\n");
 
   FOR_ALL_CONSTRAINTS (c)
     if (!c->is_register)
@@ -1115,6 +1118,7 @@ write_tm_constrs_h (void)
 	write_predicate_stmts (c->exp);
 	fputs ("}\n", stdout);
       }
+  puts ("\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
   puts ("#endif /* tm-constrs.h */");
 }
 
