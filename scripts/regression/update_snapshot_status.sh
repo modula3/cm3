@@ -1,5 +1,5 @@
 #!/bin/sh
-
+#set -x
 NKEEP=${NKEEP:-10}
 if [ -r defs.sh ]; then
   . ./defs.sh >/dev/null
@@ -121,9 +121,14 @@ for d in all std gnu sys; do
 done >> ${INDEX}
 
 # cleanup
+
 for t in ${TARGETS}; do
   pat="${FNPAT1}${t}-*${FNPATSUF}"
-  #echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
+done
+
+for t in ${TARGETS}; do
+  pat="${FNPAT2}${t}-*${FNPATSUF}"
   ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
 done
 
