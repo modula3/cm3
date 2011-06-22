@@ -1,5 +1,5 @@
 #!/bin/sh
-#set -x
+set -x
 NKEEP=${NKEEP:-10}
 if [ -r defs.sh ]; then
   . ./defs.sh >/dev/null
