@@ -21,7 +21,6 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-
 #include "bconfig.h"
 #include "system.h"
 #include "coretypes.h"
@@ -31,6 +30,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "read-md.h"
 #include "gensupport.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void write_upcase (const char *);
 static void gen_attr (rtx);
@@ -387,3 +389,7 @@ main (int argc, char **argv)
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

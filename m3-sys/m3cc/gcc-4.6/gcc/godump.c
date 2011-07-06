@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output Go language descriptions of types.
    Copyright (C) 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
    Written by Ian Lance Taylor <iant@google.com>.
@@ -36,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "obstack.h"
 #include "debug.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* We dump this information from the debug hooks.  This gives us a
    stable and maintainable API to hook into.  In order to work
@@ -1067,5 +1073,9 @@ dump_go_spec_init (const char *filename, const struct gcc_debug_hooks *hooks)
 
   return &go_debug_hooks;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-godump.h"

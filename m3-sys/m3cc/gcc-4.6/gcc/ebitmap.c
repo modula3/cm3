@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Sparse array-based bitmaps.
    Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Daniel Berlin <dberlin@dberlin.org>
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "coretypes.h"
 #include "ebitmap.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The ebitmap data structure is a sparse bitmap structure that works
    by having two pieces:
@@ -1017,3 +1023,7 @@ ebitmap_equal_p (ebitmap dst, ebitmap src)
 		 dst->numwords * sizeof (EBITMAP_ELT_TYPE)) == 0;
   return true;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

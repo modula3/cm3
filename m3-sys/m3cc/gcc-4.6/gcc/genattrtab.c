@@ -117,6 +117,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gensupport.h"
 #include "vecprim.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Flags for make_internal_attr's `special' parameter.  */
 #define ATTR_NONE		0
 #define ATTR_SPECIAL		(1 << 0)
@@ -4998,3 +5002,7 @@ from the machine description file `md'.  */\n\n");
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

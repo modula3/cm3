@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Struct-reorg optimization.
    Copyright (C) 2002, 2003-2007, 2008, 2009 Free Software Foundation, Inc.
    Contributed by Olga Golovanevsky <olga@il.ibm.com>
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef IPA_STRUCT_REORG_H
 #define IPA_STRUCT_REORG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains data structures and interfaces required
    for struct-reorg optimizations.  */
@@ -108,5 +114,9 @@ struct data_structure
 };
 
 typedef struct data_structure * d_str;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* IPA_STRUCT_REORG_H */

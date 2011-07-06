@@ -52,6 +52,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "builtins.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef PAD_VARARGS_DOWN
 #define PAD_VARARGS_DOWN BYTES_BIG_ENDIAN
@@ -7804,3 +7807,7 @@ is_inexpensive_builtin (tree decl)
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

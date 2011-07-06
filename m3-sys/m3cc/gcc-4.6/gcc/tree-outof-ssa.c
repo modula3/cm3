@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert a program in SSA form into Normal form.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1147,3 +1149,7 @@ rewrite_out_of_ssa (struct ssaexpand *sa)
 
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

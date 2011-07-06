@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code to initialize optabs from machine description.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010
@@ -28,6 +30,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "gensupport.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Many parts of GCC use arrays that are indexed by machine mode and
    contain the insn codes for pattern in the MD file that perform a given
@@ -533,3 +538,7 @@ from the machine description file `md'.  */\n\n");
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

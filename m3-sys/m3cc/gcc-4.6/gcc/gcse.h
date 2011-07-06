@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Global common subexpression elimination/Partial redundancy elimination
    and global constant/copy propagation for GNU compiler.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_GCSE_H
 #define GCC_GCSE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Target-dependent globals.  */
 struct target_gcse {
   /* Nonzero for each mode that supports (set (reg) (reg)).
@@ -38,6 +44,10 @@ extern GTY(()) struct target_gcse default_target_gcse;
 extern struct target_gcse *this_target_gcse;
 #else
 #define this_target_gcse (&default_target_gcse)
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif

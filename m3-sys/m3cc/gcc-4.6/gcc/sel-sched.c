@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.  Selective scheduler and pipeliner.
    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -47,10 +49,15 @@ along with GCC; see the file COPYING3.  If not see
 #include "emit-rtl.h"
 
 #ifdef INSN_SCHEDULING
+
 #include "sel-sched-ir.h"
 #include "sel-sched-dump.h"
 #include "sel-sched.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Implementation of selective scheduling approach.
    The below implementation follows the original approach with the following
@@ -7676,5 +7683,9 @@ run_selective_scheduling (void)
 
   sel_global_finish ();
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

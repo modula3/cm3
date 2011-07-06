@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate check macros for tree codes.
    Copyright (C) 1998, 1999, 2000, 2002, 2003, 2004, 2007, 2008
    Free Software Foundation, Inc.
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "coretypes.h"
 #include "tm.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define DEFTREECODE(SYM, NAME, TYPE, LEN) #SYM,
 #define END_OF_BASE_TREE_CODES
@@ -78,3 +84,7 @@ main (int argc, char ** ARG_UNUSED (argv))
   puts ("\n#endif /* GCC_TREE_CHECK_H */");
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

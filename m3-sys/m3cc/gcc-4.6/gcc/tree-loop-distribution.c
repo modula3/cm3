@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop distribution.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1294,3 +1296,7 @@ struct gimple_opt_pass pass_loop_distribution =
   TODO_dump_func                /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

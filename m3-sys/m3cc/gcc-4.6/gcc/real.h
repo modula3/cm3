@@ -26,6 +26,10 @@
 
 #include "machmode.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* An expanded form of the represented number.  */
 
 /* Enumerate the special cases of numbers that we encounter.  */
@@ -480,4 +484,9 @@ extern bool real_isinteger (const REAL_VALUE_TYPE *c, enum machine_mode mode);
    number, (1 - b**-p) * b**emax for a given FP format FMT as a hex
    float string.  BUF must be large enough to contain the result.  */
 extern void get_max_float (const struct real_format *, char *, size_t);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* ! GCC_REAL_H */

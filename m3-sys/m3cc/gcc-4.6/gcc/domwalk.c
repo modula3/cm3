@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generic dominator tree walker
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2010 Free Software Foundation,
    Inc.
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "basic-block.h"
 #include "domwalk.h"
 #include "sbitmap.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements a generic walker for dominator trees.
 
@@ -277,3 +283,7 @@ fini_walk_dominator_tree (struct dom_walk_data *walk_data)
   VEC_free (void_p, heap, walk_data->free_block_data);
   VEC_free (void_p, heap, walk_data->block_data_stack);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

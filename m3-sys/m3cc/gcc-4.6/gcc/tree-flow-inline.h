@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Inline functions for tree-flow.h
    Copyright (C) 2001, 2003, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef _TREE_FLOW_INLINE_H
 #define _TREE_FLOW_INLINE_H 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Inline functions for manipulating various data structures defined in
    tree-flow.h.  See tree-flow.h for documentation.  */
@@ -1226,5 +1232,9 @@ make_ssa_name (tree var, gimple stmt)
 {
   return make_ssa_name_fn (cfun, var, stmt);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _TREE_FLOW_INLINE_H  */

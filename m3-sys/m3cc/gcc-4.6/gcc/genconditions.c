@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process machine description and calculate constant conditions.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2010
    Free Software Foundation, Inc.
@@ -35,6 +37,10 @@
 #include "hashtab.h"
 #include "read-md.h"
 #include "gensupport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* so we can include except.h in the generated file.  */
 static int saw_eh_return;
@@ -255,3 +261,7 @@ main (int argc, char **argv)
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

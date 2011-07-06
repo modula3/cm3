@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SSA-PRE for trees.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -4994,3 +4996,7 @@ struct gimple_opt_pass pass_fre =
   TODO_dump_func | TODO_ggc_collect | TODO_verify_ssa /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

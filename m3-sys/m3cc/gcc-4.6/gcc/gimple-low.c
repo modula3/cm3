@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* GIMPLE lowering pass.  Converts High GIMPLE into Low GIMPLE.
 
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "function.h"
 #include "diagnostic-core.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The differences between High GIMPLE and Low GIMPLE are the
    following:
@@ -917,7 +923,6 @@ record_vars_into (tree vars, tree fn)
     pop_cfun ();
 }
 
-
 /* Record the variables in VARS into current_function_decl.  */
 
 void
@@ -925,3 +930,7 @@ record_vars (tree vars)
 {
   record_vars_into (vars, current_function_decl);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

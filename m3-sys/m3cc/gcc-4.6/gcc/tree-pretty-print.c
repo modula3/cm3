@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Pretty formatting of GENERIC trees in C syntax.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -3009,3 +3011,7 @@ pp_base_tree_identifier (pretty_printer *pp, tree id)
     pp_append_text (pp, IDENTIFIER_POINTER (id),
 		    IDENTIFIER_POINTER (id) + IDENTIFIER_LENGTH (id));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Command line option handling.
    Copyright (C) 2006, 2007, 2008, 2010 Free Software Foundation, Inc.
 
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "opts.h"
 #include "flags.h"
 #include "diagnostic.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void prune_options (struct cl_decoded_option **, unsigned int *);
 
@@ -1235,3 +1241,7 @@ control_warning_option (unsigned int opt_index, int kind, bool imply,
 				 kind, loc, handlers, dc);
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

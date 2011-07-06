@@ -20,7 +20,6 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-
 #include "bconfig.h"
 #include "system.h"
 #include "coretypes.h"
@@ -30,6 +29,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "read-md.h"
 #include "gensupport.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static int max_opno;
 static int max_dup_opno;
@@ -917,3 +919,7 @@ from the machine description file `md'.  */\n\n");
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

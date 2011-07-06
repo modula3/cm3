@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Backward propagation of indirect loads through PHIs.
    Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Richard Guenther <rguenther@suse.de>
@@ -432,3 +434,7 @@ struct gimple_opt_pass pass_phiprop =
   | TODO_verify_ssa		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

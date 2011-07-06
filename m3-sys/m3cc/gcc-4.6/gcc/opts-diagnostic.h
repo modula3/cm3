@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Command line option handling.  Interactions with diagnostics code.
    Copyright (C) 2010 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_OPTS_DIAGNOSTIC_H
 #define GCC_OPTS_DIAGNOSTIC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern char *option_name (diagnostic_context *context, int option_index,
 			  diagnostic_t orig_diag_kind, diagnostic_t diag_kind);

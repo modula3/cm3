@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SSA operands management for trees.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1355,3 +1357,6 @@ unlink_stmt_vdef (gimple stmt)
     SSA_NAME_OCCURS_IN_ABNORMAL_PHI (gimple_vuse (stmt)) = 1;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

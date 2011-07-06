@@ -60,6 +60,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "intl.h"
 #include "opts.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static struct pointer_set_t *visited_nodes;
 
 /* Lattice values for const and pure functions.  Everything starts out
@@ -1558,3 +1562,7 @@ struct gimple_opt_pass pass_local_pure_const =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

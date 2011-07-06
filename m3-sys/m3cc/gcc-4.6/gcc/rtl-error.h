@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL specific diagnostic subroutines for GCC
    Copyright (C) 2010 Free Software Foundation, Inc.
 
@@ -20,5 +22,13 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "diagnostic-core.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void error_for_asm (const_rtx, const char *, ...) ATTRIBUTE_GCC_DIAG(2,3);
 extern void warning_for_asm (const_rtx, const char *, ...) ATTRIBUTE_GCC_DIAG(2,3);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Basic IPA optimizations and utilities.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "target.h"
 #include "tree-iterator.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Fill array order with all nodes with output flag set in the reverse
    topological order.  */
@@ -1828,3 +1834,7 @@ struct ipa_opt_pass_d pass_ipa_cdtor_merge =
  NULL,			                /* function_transform */
  NULL					/* variable_transform */
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

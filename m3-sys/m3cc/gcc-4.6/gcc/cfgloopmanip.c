@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop manipulation code for GNU compiler.
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfghooks.h"
 #include "output.h"
 #include "tree-flow.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void copy_loops_to (struct loop **, int,
 			   struct loop *);
@@ -1724,3 +1730,7 @@ fix_loop_structure (bitmap changed_bbs)
   verify_loop_structure ();
 #endif
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

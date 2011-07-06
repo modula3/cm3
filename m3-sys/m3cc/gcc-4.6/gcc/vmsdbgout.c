@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output VMS debug format symbol table information from GCC.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
@@ -27,6 +29,11 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 
 #ifdef VMS_DEBUGGING_INFO
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "tree.h"
 #include "version.h"
 #include "flags.h"
@@ -1845,4 +1852,11 @@ vms_file_stats_name (const char *filename, long long *cdt, long *siz, char *rfo,
   return 0;
 #endif
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
+
+#endif /* VMS_DEBUGGING_INFO */
+
+char quash_apple_ranlib_warning_vms_file_stats_name;

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Escape analysis for types.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -55,6 +57,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic.h"
 #include "tree-pretty-print.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Some of the aliasing is called very early, before this phase is
    called.  To assure that this is not a problem, we keep track of if
@@ -2124,3 +2130,7 @@ struct simple_ipa_opt_pass pass_ipa_type_escape =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IRA conflict builder.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -38,6 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "sparseset.h"
 #include "ira-int.h"
 #include "addresses.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains code responsible for allocno conflict creation,
    allocno copy creation and allocno info accumulation on upper level
@@ -930,3 +936,7 @@ ira_build_conflicts (void)
       && internal_flag_ira_verbose > 2 && ira_dump_file != NULL)
     print_conflicts (ira_dump_file, false);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

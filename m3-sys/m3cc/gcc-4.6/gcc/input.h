@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations for variables relating to reading the source file.
    Used by parsers, lexical analyzers, and error message routines.
    Copyright (C) 1993, 1997, 1998, 2000, 2003, 2004, 2007, 2008, 2009, 2010
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_INPUT_H
 
 #include "line-map.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern GTY(()) struct line_maps *line_table;
 
@@ -66,5 +72,9 @@ extern location_t input_location;
 #define input_filename LOCATION_FILE (input_location)
 #define in_system_header_at(LOC) ((expand_location (LOC)).sysp != 0)
 #define in_system_header (in_system_header_at (input_location))
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

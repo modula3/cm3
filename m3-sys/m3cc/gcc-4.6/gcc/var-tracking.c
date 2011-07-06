@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Variable tracking routines for the GNU compiler.
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -115,6 +117,10 @@
 #include "tree-pretty-print.h"
 #include "pointer-set.h"
 #include "recog.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* var-tracking.c assumes that tree code with the same value as VALUE rtx code
    has no chance to appear in REG_EXPR/MEM_EXPRs and isn't a decl.
@@ -8614,8 +8620,6 @@ gate_handle_var_tracking (void)
   return (flag_var_tracking);
 }
 
-
-
 struct rtl_opt_pass pass_variable_tracking =
 {
  {
@@ -8634,3 +8638,7 @@ struct rtl_opt_pass pass_variable_tracking =
   TODO_dump_func | TODO_verify_rtl_sharing/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

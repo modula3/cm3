@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Pipeline hazard description translator.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -117,6 +119,10 @@ along with GCC; see the file COPYING3.  If not see
 #include <math.h>
 #include "hashtab.h"
 #include "vec.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef CHAR_BIT
 #define CHAR_BIT 8
@@ -9575,3 +9581,7 @@ main (int argc, char **argv)
   return (ferror (stdout) != 0 || have_error
 	  ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

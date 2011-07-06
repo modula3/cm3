@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Implements exception handling.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -143,6 +145,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "timevar.h"
 #include "tree-flow.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Provide defaults for stuff that may not be defined when using
    sjlj exceptions.  */
@@ -3423,4 +3429,8 @@ verify_eh_tree (struct function *fun)
     }
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #include "gt-except.h"

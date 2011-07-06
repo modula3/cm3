@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Chains of recurrences.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_TREE_CHREC_H
 #define GCC_TREE_CHREC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The following trees are unique elements.  Thus the comparison of another
    element to these elements should be done on the pointer to these trees,
@@ -246,5 +252,9 @@ chrec_fold_op (enum tree_code code, tree type, tree op0, tree op1)
     }
 
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_TREE_CHREC_H  */

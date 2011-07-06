@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description:
    a series of #define statements, one for each constant named in
    a (define_constants ...) pattern.
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "errors.h"
 #include "read-md.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Called via traverse_md_constants; emit a #define for
    the current constant definition.  */
@@ -101,3 +107,7 @@ main (int argc, char **argv)
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

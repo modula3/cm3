@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations of core diagnostic functionality for code that does
    not need to deal with diagnostic contexts or diagnostic info
    structures.
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "input.h"
 #include "bversion.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Constants used to discriminate diagnostics.  */
 typedef enum
@@ -86,6 +92,10 @@ extern bool seen_error (void);
      therefore it can have ATTRIBUTE_PRINTF.  */
 extern void fnotice			(FILE *, const char *, ...)
      ATTRIBUTE_PRINTF_2;
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* ! GCC_DIAGNOSTIC_CORE_H */

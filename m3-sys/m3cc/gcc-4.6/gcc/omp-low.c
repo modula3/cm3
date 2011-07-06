@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Lowering pass for OpenMP directives.  Converts OpenMP directives
    into explicit calls to the runtime library (libgomp) and data
    marshalling to implement data sharing and copying clauses.
@@ -45,6 +47,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "optabs.h"
 #include "cfgloop.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Lowering of OpenMP parallel and workshare constructs proceeds in two
    phases.  The first phase scans the function looking for OMP statements
@@ -6990,5 +6995,9 @@ struct gimple_opt_pass pass_diagnose_omp_blocks =
     0,					/* todo_flags_finish */
   }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-omp-low.h"

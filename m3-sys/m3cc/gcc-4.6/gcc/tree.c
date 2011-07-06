@@ -63,6 +63,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "debug.h"
 #include "intl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Tree code classes.  */
 
 #define DEFTREECODE(SYM, NAME, TYPE, LENGTH) TYPE,
@@ -11108,5 +11112,9 @@ warn_deprecated_use (tree node, tree attr)
 	}
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree.h"

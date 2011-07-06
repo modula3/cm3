@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree inlining.
    Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -5414,3 +5416,7 @@ tree_can_inline_p (struct cgraph_edge *e)
 
   return true;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

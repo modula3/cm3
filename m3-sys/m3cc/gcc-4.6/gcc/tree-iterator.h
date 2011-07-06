@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Iterator routines for manipulating GENERIC tree statement list.
    Copyright (C) 2003, 2004, 2007, 2010 Free Software Foundation, Inc.
    Contributed by Andrew MacLeod  <amacleod@redhat.com>
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_TREE_ITERATOR_H
 #define GCC_TREE_ITERATOR_H 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Iterator object for GENERIC or GIMPLE TREE statements.  */
 
@@ -117,5 +123,9 @@ extern tree alloc_stmt_list (void);
 extern void free_stmt_list (tree);
 extern void append_to_statement_list (tree, tree *);
 extern void append_to_statement_list_force (tree, tree *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_TREE_ITERATOR_H  */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Null garbage collection for the GNU compiler.
    Copyright (C) 1998, 1999, 2000, 2003, 2004, 2005, 2007, 2010
    Free Software Foundation, Inc.
@@ -31,6 +33,10 @@
 #include "system.h"
 #include "coretypes.h"
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void *
 ggc_alloc_typed_stat (enum gt_types_enum ARG_UNUSED (gte), size_t size
@@ -89,4 +95,8 @@ ggc_internal_cleared_alloc_zone_stat (size_t size,
     return xcalloc (size, 1);
 }
 
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

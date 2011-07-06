@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate from machine description the strings for each enum.
    Copyright (C) 2010  Free Software Foundation, Inc.
 
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "errors.h"
 #include "read-md.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Called via traverse_enum_types.  Emit an enum definition for
    enum_type *SLOT.  */
@@ -65,3 +71,7 @@ main (int argc, char **argv)
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

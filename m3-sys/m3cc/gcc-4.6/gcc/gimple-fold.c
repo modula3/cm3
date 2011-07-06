@@ -33,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-propagate.h"
 #include "target.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Return true when DECL can be referenced from current unit.
    We can get declarations that are not possible to reference for
    various reasons:
@@ -2652,3 +2656,7 @@ maybe_fold_or_comparisons (enum tree_code code1, tree op1a, tree op1b,
   else
     return or_comparisons_1 (code2, op2a, op2b, code1, op1a, op1b);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

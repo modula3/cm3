@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop autoparallelization.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -2186,5 +2188,9 @@ parallelize_loops (void)
 
   return changed;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-parloops.h"

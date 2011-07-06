@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert RTL to assembler code and output it, for GNU compiler.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -96,6 +98,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifdef SDB_DEBUGGING_INFO
 #include "sdbout.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Most ports that aren't using cc0 don't need to define CC_STATUS_INIT.
@@ -4515,3 +4521,7 @@ struct rtl_opt_pass pass_clean_state =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

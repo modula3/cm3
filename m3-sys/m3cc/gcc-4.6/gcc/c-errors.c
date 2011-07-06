@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various diagnostic subroutines for the GNU C language.
    Copyright (C) 2000, 2001, 2003, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@codesourcery.com>
@@ -27,6 +29,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm_p.h"
 #include "flags.h"
 #include "diagnostic.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Issue an ISO C99 pedantic warning MSGID.  */
 
@@ -62,3 +68,7 @@ pedwarn_c90 (location_t location, int opt, const char *gmsgid, ...)
   report_diagnostic (&diagnostic);
   va_end (ap);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

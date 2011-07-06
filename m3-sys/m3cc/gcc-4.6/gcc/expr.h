@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for code generation pass of GNU compiler.
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -33,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 /* For GET_MODE_BITSIZE, word_mode */
 #include "machmode.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This is the 4th arg to `expand_expr'.
    EXPAND_STACK_PARM means we are possibly expanding a call param onto
@@ -693,5 +699,9 @@ extern tree build_libfunc_function (const char *);
 
 /* Get the personality libfunc for a function decl.  */
 rtx get_personality_function (tree);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_EXPR_H */

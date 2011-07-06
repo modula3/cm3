@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Predicate aware uninitialized variable warning.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2010 Free Software
    Foundation, Inc.
@@ -42,6 +44,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "diagnostic-core.h"
 #include "timevar.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This implements the pass that does predicate aware warning on uses of
    possibly uninitialized variables. The pass first collects the set of
@@ -1895,3 +1901,7 @@ struct gimple_opt_pass pass_late_warn_uninitialized =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

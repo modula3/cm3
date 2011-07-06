@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Single entry single exit control flow regions.
    Copyright (C) 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "value-prof.h"
 #include "sese.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Print to stderr the element ELT.  */
 
@@ -813,3 +819,7 @@ scalar_evolution_in_region (sese region, loop_p loop, tree t)
   else
     return instantiate_scev (before, loop, t);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

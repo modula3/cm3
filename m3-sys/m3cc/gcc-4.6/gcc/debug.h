@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Debug hooks for GCC.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -18,6 +20,10 @@
 
 #ifndef GCC_DEBUG_H
 #define GCC_DEBUG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This structure contains hooks for the debug information output
    functions, accessed through the global instance debug_hooks set in
@@ -225,5 +231,9 @@ void add_debug_prefix_map (const char *);
 
 extern const struct gcc_debug_hooks *
 dump_go_spec_init (const char *, const struct gcc_debug_hooks *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* !GCC_DEBUG_H  */

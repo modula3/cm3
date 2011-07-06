@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Communication between reload.c, reload1.c and the rest of compiler.
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1997, 1998, 1999,
    2000, 2001, 2003, 2004, 2007, 2008, 2010
@@ -19,6 +21,9 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* If secondary reloads are the same for inputs and outputs, define those
    macros here.  */
@@ -420,3 +425,7 @@ extern void debug_reload (void);
 /* Compute the actual register we should reload to, in case we're
    reloading to/from a register that is wider than a word.  */
 extern rtx reload_adjust_reg_for_mode (rtx, enum machine_mode);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

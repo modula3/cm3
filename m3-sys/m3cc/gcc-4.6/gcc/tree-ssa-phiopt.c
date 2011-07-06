@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Optimization of PHI nodes by converting them into straightline code.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1444,3 +1446,7 @@ struct gimple_opt_pass pass_cselim =
     | TODO_verify_stmts	 		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Basic block reordering routines for the GNU compiler.
    Copyright (C) 2000, 2003, 2004, 2007 Free Software Foundation, Inc.
 
@@ -22,6 +24,10 @@
 
 #include "basic-block.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern GTY(()) rtx cfg_layout_function_footer;
 extern GTY(()) rtx cfg_layout_function_header;
 
@@ -33,5 +39,9 @@ extern void copy_bbs (basic_block *, unsigned, basic_block *,
 		      edge *, unsigned, edge *, struct loop *,
 		      basic_block);
 extern rtx duplicate_insn_chain (rtx, rtx);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_CFGLAYOUT_H */

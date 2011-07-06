@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Control flow optimization code for GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010
@@ -56,6 +58,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "dce.h"
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define FORWARDER_BLOCK_P(BB) ((BB)->flags & BB_FORWARDER_BLOCK)
 
@@ -2768,4 +2774,6 @@ struct rtl_opt_pass pass_jump2 =
  }
 };
 
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

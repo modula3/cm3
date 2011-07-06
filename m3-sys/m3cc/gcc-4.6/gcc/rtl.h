@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Register Transfer Language (RTL) definitions for GCC
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "fixed-value.h"
 #include "alias.h"
 #include "hashtab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #undef FFS  /* Some systems predefine this symbol; don't let it interfere.  */
 #undef FLOAT /* Likewise.  */
@@ -2580,6 +2586,8 @@ extern void _fatal_insn (const char *, const_rtx, const char *, int, const char 
 #define fatal_insn_not_found(insn) \
 	_fatal_insn_not_found (insn, __FILE__, __LINE__, __FUNCTION__)
 
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_RTL_H */

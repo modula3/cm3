@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines for manipulating rtx's in semantically interesting ways.
    Copyright (C) 1987, 1991, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -42,8 +44,11 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "output.h"
 
-static rtx break_out_memory_refs (rtx);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+static rtx break_out_memory_refs (rtx);
 
 /* Truncate and perhaps sign-extend C as appropriate for MODE.  */
 
@@ -1898,5 +1903,9 @@ rtx_to_tree_code (enum rtx_code code)
     }
   return ((int) tcode);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-explow.h"

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Operations with affine combinations of trees.
    Copyright (C) 2005, 2007, 2008, 2010 Free Software Foundation, Inc.
 
@@ -887,3 +889,6 @@ get_inner_reference_aff (tree ref, aff_tree *addr, double_int *size)
   *size = shwi_to_double_int ((bitsize + BITS_PER_UNIT - 1) / BITS_PER_UNIT);
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

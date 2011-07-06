@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Global common subexpression elimination/Partial redundancy elimination
    and global constant/copy propagation for GNU compiler.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
@@ -5438,5 +5440,8 @@ struct rtl_opt_pass pass_rtl_hoist =
  }
 };
 
-#include "gt-gcse.h"
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
+#include "gt-gcse.h"

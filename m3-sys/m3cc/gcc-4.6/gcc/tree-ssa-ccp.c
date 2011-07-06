@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Conditional constant propagation pass for the GNU compiler.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
    2010, 2011 Free Software Foundation, Inc.
@@ -2855,3 +2857,7 @@ struct gimple_opt_pass pass_fold_builtins =
     | TODO_update_ssa			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

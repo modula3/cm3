@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Integrated Register Allocator (IRA) entry point.
    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -322,6 +324,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "ira-int.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct target_ira default_target_ira;
 struct target_ira_int default_target_ira_int;
@@ -358,8 +363,6 @@ HARD_REG_SET eliminable_regset;
 
 /* Temporary hard reg set used for a different calculation.  */
 static HARD_REG_SET temp_hard_regset;
-
-
 
 /* The function sets up the map IRA_REG_MODE_HARD_REGSET.  */
 static void
@@ -3364,3 +3367,7 @@ struct rtl_opt_pass pass_ira =
   TODO_ggc_collect                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

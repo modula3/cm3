@@ -1,6 +1,5 @@
 /* Modula-3: modified */
 
-
 /* Functions to determine/estimate number of iterations of a loop.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -44,7 +43,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "diagnostic-core.h"
 #include "tree-inline.h"
-#include "gmp.h"
 
 #define SWAP(X, Y) do { affine_iv *tmp = (X); (X) = (Y); (Y) = tmp; } while (0)
 
@@ -58,139 +56,6 @@ along with GCC; see the file COPYING3.  If not see
    Analysis of number of iterations of an affine exit test.
 
 */
-
-
-/* Returns inverse of X modulo 2^s, where MASK = 2^s-1.  */
-
-static tree
-inverse (tree x, tree mask)
-{
-  tree type = TREE_TYPE (x);
-  tree rslt;
-  unsigned ctr = tree_floor_log2 (mask);
-
-  if (TYPE_PRECISION (type) <= HOST_BITS_PER_WIDE_INT)
-    {
-      unsigned HOST_WIDE_INT ix;
-      unsigned HOST_WIDE_INT imask;
-      unsigned HOST_WIDE_INT irslt = 1;
-
-      gcc_assert (cst_and_fits_in_hwi (x));
-      gcc_assert (cst_and_fits_in_hwi (mask));
-
-      ix = int_cst_value (x);
-      imask = int_cst_value (mask);
-
-      for (; ctr; ctr--)
-	{
-	  irslt *= ix;
-	  ix *= ix;
-	}
-      irslt &= imask;
-
-      rslt = build_int_cst_type (type, irslt);
-    }
-  else
-    {
-      rslt = build_int_cst (type, 1);
-      for (; ctr; ctr--)
-	{
-	  rslt = int_const_binop (MULT_EXPR, rslt, x, 0);
-	  x = int_const_binop (MULT_EXPR, x, x, 0);
-	}
-      rslt = int_const_binop (BIT_AND_EXPR, rslt, mask, 0);
-    }
-
-  return rslt;
-}
-
-/* Add assertions to NITER that ensure that the control variable of the loop
-   with ending condition IV0 < IV1 does not overflow.  Types of IV0 and IV1
-   are TYPE.  Returns false if we can prove that there is an overflow, true
-   otherwise.  STEP is the absolute value of the step.  */
-
-static bool
-assert_no_overflow_lt (tree type, affine_iv *iv0, affine_iv *iv1,
-		       struct tree_niter_desc *niter, tree step)
-{
-  tree bound, d, assumption, diff;
-  tree niter_type = TREE_TYPE (step);
-
-  if (integer_nonzerop (iv0->step))
-    {
-      /* for (i = iv0->base; i < iv1->base; i += iv0->step) */
-      if (iv0->no_overflow)
-	return true;
-
-      /* If iv0->base is a constant, we can determine the last value before
-	 overflow precisely; otherwise we conservatively assume
-	 MAX - STEP + 1.  */
-
-      if (TREE_CODE (iv0->base) == INTEGER_CST)
-	{
-	  d = fold_build2 (MINUS_EXPR, niter_type,
-			   fold_convert (niter_type, TYPE_MAX_VALUE (type)),
-			   fold_convert (niter_type, iv0->base));
-	  diff = fold_build2 (FLOOR_MOD_EXPR, niter_type, d, step);
-	}
-      else
-	diff = fold_build2 (MINUS_EXPR, niter_type, step,
-			    build_int_cst (niter_type, 1));
-      bound = fold_build2 (MINUS_EXPR, type,
-			   TYPE_MAX_VALUE (type), fold_convert (type, diff));
-      assumption = fold_build2 (LE_EXPR, boolean_type_node,
-				iv1->base, bound);
-    }
-  else
-    {
-      /* for (i = iv1->base; i > iv0->base; i += iv1->step) */
-      if (iv1->no_overflow)
-	return true;
-
-      if (TREE_CODE (iv1->base) == INTEGER_CST)
-	{
-	  d = fold_build2 (MINUS_EXPR, niter_type,
-			   fold_convert (niter_type, iv1->base),
-			   fold_convert (niter_type, TYPE_MIN_VALUE (type)));
-	  diff = fold_build2 (FLOOR_MOD_EXPR, niter_type, d, step);
-	}
-      else
-	diff = fold_build2 (MINUS_EXPR, niter_type, step,
-			    build_int_cst (niter_type, 1));
-      bound = fold_build2 (PLUS_EXPR, type,
-			   TYPE_MIN_VALUE (type), fold_convert (type, diff));
-      assumption = fold_build2 (GE_EXPR, boolean_type_node,
-				iv0->base, bound);
-    }
-
-  if (integer_zerop (assumption))
-    return false;
-  if (!integer_nonzerop (assumption))
-    niter->assumptions = fold_build2 (TRUTH_AND_EXPR, boolean_type_node,
-				      niter->assumptions, assumption);
-
-  iv0->no_overflow = true;
-  iv1->no_overflow = true;
-  return true;
-}
-
-/* Dumps description of affine induction variable IV to FILE.  */
-
-static void
-dump_affine_iv (FILE *file, affine_iv *iv)
-{
-  if (!integer_zerop (iv->step))
-    fprintf (file, "[");
-
-  print_generic_expr (dump_file, iv->base, TDF_SLIM);
-
-  if (!integer_zerop (iv->step))
-    {
-      fprintf (file, ", + , ");
-      print_generic_expr (dump_file, iv->step, TDF_SLIM);
-      fprintf (file, "]%s", iv->no_overflow ? "(no_overflow)" : "");
-    }
-}
 
 /* Substitute NEW for OLD in EXPR and fold the result.  */
 
@@ -2054,3 +1919,7 @@ substitute_in_loop_info (struct loop *loop, tree name, tree val)
 {
   loop->nb_iterations = simplify_replace_tree (loop->nb_iterations, name, val);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

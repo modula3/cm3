@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IPA reference lists.
    Copyright (C) 2010
    Free Software Foundation, Inc.
@@ -18,6 +20,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Return callgraph node REF is refering.  */
 static inline struct cgraph_node *
@@ -117,3 +123,7 @@ ipa_ref_list_nreferences (struct ipa_ref_list *list)
    VEC_iterate(ipa_ref_t, (L)->references, (I), (P))
 #define ipa_ref_list_refering_iterate(L,I,P) \
    VEC_iterate(ipa_ref_ptr, (L)->refering, (I), (P))
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

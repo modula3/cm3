@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "insn-attr.h"
 #include "sched-int.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static char *safe_concat (char *, char *, const char *);
 
@@ -833,3 +839,6 @@ debug_bb_n_slim (int n)
   debug_bb_slim (bb);
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

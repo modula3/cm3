@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Garbage collection for the GNU compiler.  Internal definitions
    for ggc-*.c and stringpool.c.
 
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_GGC_INTERNAL_H
 
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Call ggc_set_mark on all the roots.  */
 extern void ggc_mark_roots (void);
@@ -117,5 +123,9 @@ typedef struct ggc_statistics
 /* Used by the various collectors to gather and print statistics that
    do not depend on the collector in use.  */
 extern void ggc_print_common_statistics (FILE *, ggc_statistics *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

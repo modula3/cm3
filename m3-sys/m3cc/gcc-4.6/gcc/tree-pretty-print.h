@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for language-independent pretty-print
    subroutines that are only for use in the compilers proper and not
    the driver or other programs.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_TREE_PRETTY_PRINT_H
 
 #include "pretty-print.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define pp_tree_identifier(PP, T)                      \
   pp_base_tree_identifier (pp_base (PP), T)
@@ -54,5 +60,9 @@ extern void percent_K_format (text_info *);
 /* In toplev.c  */
 extern bool default_tree_printer (pretty_printer *, text_info *, const char *,
 				  int, bool, bool, bool);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_TREE_PRETTY_PRINT_H */

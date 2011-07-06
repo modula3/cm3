@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree based alias analysis and alias oracle.
    Copyright (C) 2008, 2010 Free Software Foundation, Inc.
    Contributed by Richard Guenther  <rguenther@suse.de>
@@ -23,6 +25,9 @@
 
 #include "coretypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The points-to solution.
 
@@ -140,5 +145,8 @@ extern void dump_pta_stats (FILE *);
 
 extern GTY(()) struct pt_solution ipa_escaped_pt;
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* TREE_SSA_ALIAS_H  */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL dead code elimination.
    Copyright (C) 2005, 2006, 2007, 2010 Free Software Foundation, Inc.
 
@@ -20,8 +22,16 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_DCE_H
 #define GCC_DCE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void run_word_dce (void);
 extern void run_fast_dce (void);
 extern void run_fast_df_dce (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_DCE_H */

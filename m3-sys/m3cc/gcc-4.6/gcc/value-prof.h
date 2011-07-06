@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for transformations based on profile information for values.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_VALUE_PROF_H
 #define GCC_VALUE_PROF_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Supported histogram types.  */
 enum hist_type
@@ -107,5 +113,8 @@ extern void init_branch_prob (void);
 extern void branch_prob (void);
 extern void end_branch_prob (void);
 
-#endif	/* GCC_VALUE_PROF_H */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
+#endif	/* GCC_VALUE_PROF_H */

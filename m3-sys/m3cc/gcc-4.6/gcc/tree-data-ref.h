@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data references and dependences detectors.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "graphds.h"
 #include "omega.h"
 #include "tree-chrec.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
   innermost_loop_behavior describes the evolution of the address of the memory
@@ -755,5 +761,9 @@ lambda_matrix_new (int m, int n, struct obstack *lambda_obstack)
 
   return mat;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_TREE_DATA_REF_H  */

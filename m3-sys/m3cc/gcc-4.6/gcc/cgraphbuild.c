@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph construction.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -33,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "ipa-utils.h"
 #include "except.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Context of record_reference.  */
 struct record_reference_ctx
@@ -565,3 +571,7 @@ struct gimple_opt_pass pass_remove_cgraph_callee_edges =
   0,					/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

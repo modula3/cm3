@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Mudflap: narrow-pointer bounds-checking by tree rewriting.
    Copyright (C) 2001, 2002, 2003, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Frank Ch. Eigler <fche@redhat.com>
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef TREE_MUDFLAP_H
 #define TREE_MUDFLAP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Instrumentation.  */
 extern void mudflap_init (void);
 extern void mudflap_enqueue_decl (tree);
@@ -30,5 +36,9 @@ extern void mudflap_finish_file (void);
 /* Tree node marking.  */
 extern int mf_marked_p (tree);
 extern tree mf_mark (tree);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* TREE_MUDFLAP_H */
