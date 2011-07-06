@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* coverage.h - Defines data exported from coverage.c
    Copyright (C) 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2007, 2008
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "gcov-io.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void coverage_init (const char *);
 extern void coverage_finish (void);
 
@@ -47,5 +53,9 @@ extern gcov_type *get_coverage_counts (unsigned /*counter*/,
 				       const struct gcov_ctr_summary **);
 
 extern tree get_gcov_type (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

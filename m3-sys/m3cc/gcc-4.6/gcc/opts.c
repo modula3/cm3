@@ -38,6 +38,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "insn-attr.h"		/* For INSN_SCHEDULING and DELAY_SLOTS.  */
 #include "target.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Parse the -femit-struct-debug-detailed option value
    and set the flag variables. */
 
@@ -2005,3 +2009,7 @@ option_name (diagnostic_context *context, int option_index,
   else
     return NULL;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

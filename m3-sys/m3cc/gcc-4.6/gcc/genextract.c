@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code from machine description to extract operands from insn as rtl.
    Copyright (C) 1987, 1991, 1992, 1993, 1997, 1998, 1999, 2000, 2003,
    2004, 2005, 2007, 2008, 2009, 2010
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gensupport.h"
 #include "vec.h"
 #include "vecprim.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This structure contains all the information needed to describe one
    set of extractions methods.  Each method may be used by more than
@@ -495,3 +501,7 @@ main (int argc, char **argv)
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

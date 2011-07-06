@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Reassociation for trees.
    Copyright (C) 2005, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Daniel Berlin <dan@dberlin.org>
@@ -2289,3 +2291,6 @@ struct gimple_opt_pass pass_reassoc =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

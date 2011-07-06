@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Expand builtin functions.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_BUILTINS_H
 #define GCC_BUILTINS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Target-dependent globals.  */
 struct target_builtins {
   /* For each register that may be used for calling a function, this
@@ -44,6 +50,10 @@ extern GTY(()) struct target_builtins default_target_builtins;
 extern struct target_builtins *this_target_builtins;
 #else
 #define this_target_builtins (&default_target_builtins)
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif

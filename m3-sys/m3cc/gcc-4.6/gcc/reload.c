@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Search an insn for pseudo regs that must be in hard regs and are not.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -111,6 +113,10 @@ a register with any other reload.  */
 #include "params.h"
 #include "target.h"
 #include "ira.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* True if X is a constant that can be forced into the constant pool.  */
 #define CONST_POOL_OK_P(X)			\
@@ -7424,3 +7430,7 @@ debug_reload (void)
 {
   debug_reload_to_stream (stderr);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

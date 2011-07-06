@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SCC value numbering for trees
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -44,6 +46,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "tree-ssa-propagate.h"
 #include "tree-ssa-sccvn.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This algorithm is based on the SCC algorithm presented by Keith
    Cooper and L. Taylor Simpson in "SCC-Based Value numbering"
@@ -3649,3 +3655,7 @@ vn_nary_may_trap (vn_nary_op_t nary)
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

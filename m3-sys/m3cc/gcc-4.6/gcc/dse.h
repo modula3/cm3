@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL dead store elimination.
    Copyright (C) 2007, 2010 Free Software Foundation, Inc.
 
@@ -23,8 +25,15 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_DSE_H
 #define GCC_DSE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void dse_record_singleton_alias_set (alias_set_type, enum machine_mode);
 extern void dse_invalidate_singleton_alias_set (alias_set_type);
 
-#endif /* GCC_DSE_H */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
+#endif /* GCC_DSE_H */

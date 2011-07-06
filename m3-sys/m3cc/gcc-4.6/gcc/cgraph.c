@@ -100,6 +100,10 @@ The callgraph:
 #include "rtl.h"
 #include "ipa-utils.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const char * const ld_plugin_symbol_resolution_names[]=
 {
   "",
@@ -2887,5 +2891,9 @@ cgraph_used_from_object_file_p (struct cgraph_node *node)
       return true;
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-cgraph.h"

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* TLS emulation.
    Copyright (C) 2006, 2008, 2009 Free Software Foundation, Inc.
    Contributed by Jakub Jelinek <jakub@redhat.com>.

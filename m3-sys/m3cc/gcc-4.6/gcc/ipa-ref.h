@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IPA reference lists.
    Copyright (C) 2010
    Free Software Foundation, Inc.
@@ -18,6 +20,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct cgraph_node;
 struct varpool_node;
@@ -90,3 +96,6 @@ void ipa_clone_references (struct cgraph_node *, struct varpool_node *, struct i
 void ipa_clone_refering (struct cgraph_node *, struct varpool_node *, struct ipa_ref_list *);
 bool ipa_ref_cannot_lead_to_return (struct ipa_ref *);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

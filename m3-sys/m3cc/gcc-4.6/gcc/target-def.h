@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default initializers for a generic GCC target.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -19,6 +21,10 @@
    In other words, you are welcome to use, share and improve this program.
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* See target.def for a description of what this file contains and how to
    use it.
@@ -110,6 +116,10 @@
 
 #if !defined (TARGET_FUNCTION_INCOMING_ARG) && !defined (FUNCTION_INCOMING_ARG)
 #define TARGET_FUNCTION_INCOMING_ARG TARGET_FUNCTION_ARG
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #include "target-hooks-def.h"

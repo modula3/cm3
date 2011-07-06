@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Header file for internal GCC plugin mechanism.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #define PLUGIN_H
 
 #include "gcc-plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct attribute_spec;
 
@@ -64,5 +70,9 @@ invoke_plugin_callbacks (int event ATTRIBUTE_UNUSED,
 /* In attribs.c.  */
 
 extern void register_attribute (const struct attribute_spec *attr);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* PLUGIN_H */

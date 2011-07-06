@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Garbage collection for the GNU compiler.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007,
@@ -21,7 +23,12 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_GGC_H
 #define GCC_GGC_H
+
 #include "statistics.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Symbols are marked with `ggc' for `gcc gc' so as not to interfere with
    an external gc library that might be linked in.  */
@@ -353,5 +360,9 @@ ggc_alloc_cleared_gimple_statement_d_stat (size_t s MEM_STAT_DECL)
   return (union gimple_statement_d *)
     ggc_internal_cleared_alloc_stat (s PASS_MEM_STAT);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

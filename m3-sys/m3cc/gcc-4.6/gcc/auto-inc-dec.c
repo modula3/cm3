@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Discovery of auto-inc and auto-dec instructions.
    Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Kenneth Zadeck <zadeck@naturalbridge.com>
@@ -41,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "dbgcnt.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass was originally removed from flow.c. However there is
    almost nothing that remains of that code.
@@ -1527,3 +1533,7 @@ struct rtl_opt_pass pass_inc_dec =
   TODO_df_finish,                       /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

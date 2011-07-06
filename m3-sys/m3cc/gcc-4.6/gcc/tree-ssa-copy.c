@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Copy propagation and SSA_NAME replacement support routines.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -856,3 +858,7 @@ struct gimple_opt_pass pass_copy_prop =
     | TODO_update_ssa			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

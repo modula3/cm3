@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Switch Conversion converts variable initializations based on switch
    statements to initializations from a static array.
    Copyright (C) 2006, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -95,6 +97,10 @@ eight) times the number of the actual switch branches. */
 #include "tree-dump.h"
 #include "timevar.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The main structure of the pass.  */
 struct switch_conv_info
@@ -1056,3 +1062,7 @@ struct gimple_opt_pass pass_convert_switch =
   | TODO_ggc_collect | TODO_verify_ssa  /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

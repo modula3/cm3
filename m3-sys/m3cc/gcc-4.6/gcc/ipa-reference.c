@@ -61,6 +61,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic.h"
 #include "langhooks.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static void remove_node_data (struct cgraph_node *node,
 			      void *data ATTRIBUTE_UNUSED);
 static void duplicate_node_data (struct cgraph_node *src,
@@ -273,3 +277,7 @@ struct ipa_opt_pass_d pass_ipa_reference =
  NULL,			                /* function_transform */
  NULL					/* variable_transform */
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

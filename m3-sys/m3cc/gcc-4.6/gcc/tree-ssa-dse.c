@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Dead store elimination
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -485,3 +487,6 @@ struct gimple_opt_pass pass_dse =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

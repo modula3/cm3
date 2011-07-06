@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Graph representation.
    Copyright (C) 2007, 2008
    Free Software Foundation, Inc.
@@ -17,6 +19,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Structure representing edge of a graph.  */
 
@@ -61,3 +67,7 @@ void graphds_domtree (struct graph *, int, int *, int *, int *);
 typedef void (*graphds_edge_callback) (struct graph *, struct graph_edge *);
 void for_each_edge (struct graph *, graphds_edge_callback);
 void free_graph (struct graph *g);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

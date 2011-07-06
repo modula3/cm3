@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Expands front end tree to back end RTL for GCC
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
@@ -54,7 +56,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pretty-print.h"
 #include "bitmap.h"
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Functions and data structures for expanding case statements.  */
 
 /* Case label structure, used to hold info on labels within case
@@ -3279,3 +3284,7 @@ emit_case_nodes (rtx index, case_node_ptr node, rtx default_label,
 	}
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SSA operand management for trees.
    Copyright (C) 2003, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -21,8 +23,11 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_TREE_SSA_OPERANDS_H
 #define GCC_TREE_SSA_OPERANDS_H
 
-/* Interface to SSA operands.  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* Interface to SSA operands.  */
 
 /* This represents a pointer to a DEF operand.  */
 typedef tree *def_operand_p;
@@ -229,5 +234,9 @@ typedef struct ssa_operand_iterator_d
 
 /* This macro counts the number of operands in STMT matching FLAGS.  */
 #define NUM_SSA_OPERANDS(STMT, FLAGS)	num_ssa_operands (STMT, FLAGS)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_TREE_SSA_OPERANDS_H  */

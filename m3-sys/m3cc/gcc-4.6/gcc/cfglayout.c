@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Basic block reordering routines for the GNU compiler.
    Copyright (C) 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -40,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "vecprim.h"
 #include "emit-rtl.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Holds the interesting trailing notes for the function.  */
 rtx cfg_layout_function_footer;
@@ -1481,5 +1487,9 @@ copy_bbs (basic_block *bbs, unsigned n, basic_block *new_bbs,
   for (i = 0; i < n; i++)
     bbs[i]->flags &= ~BB_DUPLICATED;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-cfglayout.h"

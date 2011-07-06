@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Statement Analysis and Transformation for Vectorization
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -41,6 +43,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-vectorizer.h"
 #include "langhooks.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Utility functions used by vect_mark_stmts_to_be_vectorized.  */
 
@@ -5665,3 +5670,7 @@ supportable_narrowing_operation (enum tree_code code,
   *code1 = c1;
   return true;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

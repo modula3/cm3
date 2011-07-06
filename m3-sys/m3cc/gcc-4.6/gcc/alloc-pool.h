@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions to support a pool of allocatable objects
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2007
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 #ifndef ALLOC_POOL_H
 #define ALLOC_POOL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef unsigned long ALLOC_POOL_ID_TYPE;
 
@@ -64,4 +70,9 @@ extern void free_alloc_pool_if_empty (alloc_pool *);
 extern void *pool_alloc (alloc_pool);
 extern void pool_free (alloc_pool, void *);
 extern void dump_alloc_pool_statistics (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif

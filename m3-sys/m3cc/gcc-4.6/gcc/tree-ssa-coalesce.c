@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Coalesce SSA_NAMES together for the out-of-ssa pass.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1442,3 +1444,7 @@ coalesce_ssa_name (void)
 
   return map;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

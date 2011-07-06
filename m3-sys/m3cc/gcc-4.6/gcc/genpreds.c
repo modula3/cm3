@@ -33,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "read-md.h"
 #include "gensupport.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Given a predicate expression EXP, from form NAME at line LINENO,
    verify that it does not contain any RTL constructs which are not
    valid in predicate definitions.  Returns true if EXP is
@@ -1244,6 +1248,8 @@ write_tm_preds_h (void)
 #ifndef GCC_TM_PREDS_H\n\
 #define GCC_TM_PREDS_H\n\
 \n\
+#ifdef __cplusplus\nextern \"C\" {\n#endif\n\
+\n\
 #ifdef HAVE_MACHINE_MODES");
 
   FOR_ALL_PREDICATES (p)
@@ -1306,6 +1312,7 @@ write_tm_preds_h (void)
 	puts ("#define EXTRA_ADDRESS_CONSTRAINT(c_,s_) false\n");
     }
 
+  puts("\n#ifdef __cplusplus\n} /* extern \"C\" */\n#endif\n");
   puts ("#endif /* tm-preds.h */");
 }
 
@@ -1434,3 +1441,7 @@ main (int argc, char **argv)
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

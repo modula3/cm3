@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Compilation switch flag type definitions for GCC.
    Copyright (C) 1987, 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002,
    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_FLAG_TYPES_H
 #define GCC_FLAG_TYPES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum debug_info_type
 {
@@ -203,5 +209,9 @@ enum vect_verbosity_levels {
   /* New verbosity levels should be added before this one.  */
   MAX_VERBOSITY_LEVEL
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_FLAG_TYPES_H */

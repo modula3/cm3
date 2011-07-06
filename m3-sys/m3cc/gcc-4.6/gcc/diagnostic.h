@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for language-independent diagnostics subroutines.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
    2010, Free Software Foundation, Inc.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "pretty-print.h"
 #include "diagnostic-core.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A diagnostic is described by the MESSAGE to send, the FILE and LINE of
    its context and its KIND (ice, error, warning, note, ...)  See complete
@@ -278,5 +284,9 @@ void default_diagnostic_finalizer (diagnostic_context *, diagnostic_info *);
 
 /* Pure text formatting support functions.  */
 extern char *file_name_as_prefix (const char *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_DIAGNOSTIC_H */

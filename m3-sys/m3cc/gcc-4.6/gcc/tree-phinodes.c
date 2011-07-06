@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generic routines for manipulating PHIs
    Copyright (C) 2003, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -498,5 +500,9 @@ remove_phi_nodes (basic_block bb)
 
   set_phi_nodes (bb, NULL);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-phinodes.h"

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Conditional Dead Call Elimination pass for the GNU compiler.
    Copyright (C) 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -931,3 +933,7 @@ struct gimple_opt_pass pass_call_cdce =
   TODO_dump_func | TODO_verify_ssa      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

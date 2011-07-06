@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree-dumping functionality for intermediate representation.
    Copyright (C) 1999, 2000, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "splay-tree.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct dump_info *dump_info_p;
 
@@ -98,5 +104,8 @@ extern int dump_flag (dump_info_p, int, const_tree);
 extern unsigned int dump_register (const char *, const char *, const char *,
 				   int);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_TREE_DUMP_H */

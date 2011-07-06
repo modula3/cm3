@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Source code for an implementation of the Omega test, an integer
    programming algorithm for dependence analysis, by William Pugh,
    appeared in Supercomputing '91 and CACM Aug 92.
@@ -38,6 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "tree-pass.h"
 #include "omega.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* When set to true, keep substitution variables.  When set to false,
    resurrect substitution variables (convert substitutions back to EQs).  */
@@ -5558,3 +5564,7 @@ omega_initialize (void)
 
   omega_initialized = true;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

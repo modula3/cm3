@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data structures and function declarations for the SSA value propagation
    engine.
    Copyright (C) 2004, 2005, 2007, 2008, 2010 Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef _TREE_SSA_PROPAGATE_H
 #define _TREE_SSA_PROPAGATE_H 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* If SIM_P is true, statement S will be simulated again.  */
 
@@ -75,5 +81,9 @@ void move_ssa_defining_stmt_for_defs (gimple, gimple);
 bool update_call_from_tree (gimple_stmt_iterator *, tree);
 bool stmt_makes_single_store (gimple);
 bool substitute_and_fold (ssa_prop_get_value_fn, ssa_prop_fold_stmt_fn, bool);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _TREE_SSA_PROPAGATE_H  */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scalar Replacement of Aggregates (SRA) converts some structure
    references into scalar references, exposing them to the scalar
    optimizers.
@@ -4602,4 +4604,6 @@ struct gimple_opt_pass pass_early_ipa_sra =
  }
 };
 
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

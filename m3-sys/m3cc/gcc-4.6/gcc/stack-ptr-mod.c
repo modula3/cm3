@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Discover if the stack pointer is modified in a function.
    Copyright (C) 2007, 2008, 2009
    Free Software Foundation, Inc.
@@ -31,6 +33,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "output.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Determine if the stack pointer is constant over the life of the function.
    Only useful before prologues have been emitted.  */
@@ -109,3 +115,7 @@ struct rtl_opt_pass pass_stack_ptr_mod =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

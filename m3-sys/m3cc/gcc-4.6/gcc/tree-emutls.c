@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Lower TLS operations to emulation functions.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -810,3 +812,7 @@ struct simple_ipa_opt_pass pass_ipa_lower_emutls =
   0,					/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

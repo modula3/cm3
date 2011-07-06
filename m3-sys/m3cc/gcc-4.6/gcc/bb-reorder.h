@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Basic block reordering routines for the GNU compiler.
    Copyright (C) 2000, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@
 #ifndef GCC_BB_REORDER
 #define GCC_BB_REORDER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Target-specific globals.  */
 struct target_bb_reorder {
   /* Length of unconditional jump instruction.  */
@@ -32,6 +38,10 @@ extern GTY(()) struct target_bb_reorder default_target_bb_reorder;
 extern struct target_bb_reorder *this_target_bb_reorder;
 #else
 #define this_target_bb_reorder (&default_target_bb_reorder)
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif

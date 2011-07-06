@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Inlining decision heuristics.
    Copyright (C) 2003, 2004, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -123,6 +125,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "ipa-prop.h"
 #include "except.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MAX_TIME 1000000000
 
@@ -2212,5 +2218,8 @@ struct ipa_opt_pass_d pass_ipa_inline =
  NULL,					/* variable_transform */
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-ipa-inline.h"

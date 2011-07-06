@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Interprocedural reference lists.
    Copyright (C) 2010
    Free Software Foundation, Inc.
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "target.h"
 #include "cgraph.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static const char *ipa_ref_use_name[] = {"read","write","addr"};
 
@@ -241,3 +247,7 @@ ipa_ref_cannot_lead_to_return (struct ipa_ref *ref)
 {
   return cgraph_node_cannot_return (ipa_ref_refering_node (ref));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

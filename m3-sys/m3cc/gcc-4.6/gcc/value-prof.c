@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Transformations based on profile information for values.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -46,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "tree-pass.h"
 #include "pointer-set.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* In this file value profile based optimizations are placed.  Currently the
    following optimizations are implemented (for more detailed descriptions
@@ -1752,3 +1758,6 @@ gimple_find_values_to_profile (histogram_values *values)
     }
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

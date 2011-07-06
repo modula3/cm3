@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IRA processing allocno lives to build allocno live ranges.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -39,6 +41,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "sbitmap.h"
 #include "sparseset.h"
 #include "ira-int.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The code in this file is similar to one in global but the code
    works on the allocno basis and creates live ranges instead of
@@ -1504,3 +1510,7 @@ ira_finish_allocno_live_ranges (void)
   ira_free (ira_finish_point_ranges);
   ira_free (ira_start_point_ranges);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

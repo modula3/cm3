@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop header copying on trees.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -282,3 +284,7 @@ struct gimple_opt_pass pass_ch =
     | TODO_dump_func			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

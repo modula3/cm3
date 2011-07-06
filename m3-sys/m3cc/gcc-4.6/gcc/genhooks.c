@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process target.def to create initialization macros definition in
    target-hooks-def.h and documentation in target-hooks.texi.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "hashtab.h"
 #include "errors.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct hook_desc { const char *doc, *type, *name, *param, *init; };
 static struct hook_desc hook_array[] = {
@@ -340,3 +346,7 @@ main (int argc, char **argv)
     emit_init_macros ();
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Analyze RTL for GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -38,6 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "tree.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Forward declarations */
 static void set_of_1 (rtx, const_rtx, void *);
@@ -5232,3 +5238,7 @@ low_bitmask_len (enum machine_mode mode, unsigned HOST_WIDE_INT m)
 
   return exact_log2 (m + 1);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

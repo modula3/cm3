@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default target hook functions.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1518,5 +1520,9 @@ const struct default_options empty_optimization_table[] =
   {
     { OPT_LEVELS_NONE, 0, NULL, 0 }
   };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-targhooks.h"

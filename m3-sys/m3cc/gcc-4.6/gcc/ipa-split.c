@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Function splitting pass
    Copyright (C) 2010, 2011
    Free Software Foundation, Inc.
@@ -92,6 +94,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "fibheap.h"
 #include "params.h"
 #include "gimple-pretty-print.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Per basic block info.  */
 
@@ -1432,3 +1438,7 @@ struct gimple_opt_pass pass_feedback_split_functions =
   TODO_dump_func			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

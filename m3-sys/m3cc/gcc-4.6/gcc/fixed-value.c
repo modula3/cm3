@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Fixed-point arithmetic support.
    Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 #include "tree.h"
 #include "diagnostic-core.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Compare two fixed objects for bitwise identity.  */
 
@@ -1147,3 +1153,7 @@ fixed_isneg (const FIXED_VALUE_TYPE *f)
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

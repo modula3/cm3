@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* GCC core type declarations.
    Copyright (C) 2002, 2004, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -37,6 +39,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifndef GCC_CORETYPES_H
 #define GCC_CORETYPES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef GTY
 #define GTY(x)  /* nothing - marker for gengtype */
@@ -171,5 +177,8 @@ union _dont_use_tree_here_;
 
 #endif
 
-#endif /* coretypes.h */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
+#endif /* coretypes.h */

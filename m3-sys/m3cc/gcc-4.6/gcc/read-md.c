@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* MD reader for GCC.
    Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
    2003, 2004, 2005, 2006, 2007, 2008, 2010
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "errors.h"
 #include "read-md.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Associates PTR (which can be a string, etc.) with the file location
    specified by FILENAME and LINENO.  */
@@ -1137,3 +1143,7 @@ read_md_files (int argc, char **argv, bool (*parse_opt) (const char *),
 
   return !have_error;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

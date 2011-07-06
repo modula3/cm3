@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL dead store elimination.
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -47,6 +49,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "optabs.h"
 #include "dbgcnt.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains three techniques for performing Dead Store
    Elimination (dse).
@@ -3858,3 +3864,7 @@ struct rtl_opt_pass pass_rtl_dse2 =
   TODO_ggc_collect                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

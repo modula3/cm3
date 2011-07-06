@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Code sinking for trees
    Copyright (C) 2001, 2002, 2003, 2004, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -40,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"
 #include "langhooks.h"
 #include "cfgloop.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* TODO:
    1. Sinking store only using scalar promotion (IE without moving the RHS):
@@ -610,3 +616,7 @@ struct gimple_opt_pass pass_sink_code =
     | TODO_ggc_collect			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

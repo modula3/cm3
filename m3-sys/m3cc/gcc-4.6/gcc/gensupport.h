@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations for rtx-reader support for gen* routines.
    Copyright (C) 2000, 2002, 2003, 2004, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_GENSUPPORT_H
 #define GCC_GENSUPPORT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct obstack;
 extern struct obstack *rtl_obstack;
@@ -82,5 +88,9 @@ extern void add_predicate_code (struct pred_data *, enum rtx_code);
 extern void add_predicate (struct pred_data *);
 
 #define FOR_ALL_PREDICATES(p) for (p = first_predicate; p; p = p->next)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_GENSUPPORT_H */

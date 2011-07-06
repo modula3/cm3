@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Specific flags and argument handling of the C front-end.
    Copyright (C) 1999, 2001, 2003, 2007, 2010 Free Software Foundation, Inc.
 
@@ -106,3 +108,7 @@ lang_specific_pre_link (void)
 
 /* Number of extra output files that lang_specific_pre_link may generate.  */
 int lang_specific_extra_outfiles = 0;  /* Not used for C.  */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Vectorizer
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_TREE_VECTORIZER_H
 
 #include "tree-data-ref.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef source_location LOC;
 #define UNKNOWN_LOC UNKNOWN_LOCATION
@@ -891,5 +897,9 @@ void vect_pattern_recog (loop_vec_info);
 unsigned vectorize_loops (void);
 /* Vectorization debug information */
 extern bool vect_print_dump_info (enum vect_verbosity_levels);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_TREE_VECTORIZER_H  */

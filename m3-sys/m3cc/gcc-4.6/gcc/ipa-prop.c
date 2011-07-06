@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Interprocedural analyses.
    Copyright (C) 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -38,6 +40,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pretty-print.h"
 #include "gimple-pretty-print.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Intermediate information about a parameter that is only useful during the
    run of ipa_analyze_node and is not kept afterwards.  */
@@ -2622,3 +2627,7 @@ ipa_dump_param_adjustments (FILE *file, ipa_parm_adjustment_vec adjustments,
     }
   VEC_free (tree, heap, parms);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

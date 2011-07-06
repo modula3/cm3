@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Macros to support INSN_ADDRESSES
    Copyright (C) 2000, 2007 Free Software Foundation, Inc.
 
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_INSN_ADDR_H
 
 #include "vecprim.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern VEC(int,heap) *insn_addresses_;
 extern int insn_current_address;
@@ -61,5 +67,9 @@ insn_addresses_new (rtx insn, int insn_addr)
 
 #define INSN_ADDRESSES_NEW(insn, addr)		\
   (insn_addresses_new (insn, addr))
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_INSN_ADDR_H */

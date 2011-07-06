@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* sdbout.h - Various declarations for functions found in sdbout.c
    Copyright (C) 1998, 2000, 2003, 2007 Free Software Foundation, Inc.
 
@@ -17,5 +19,13 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void sdbout_symbol (tree, int);
 extern void sdbout_types (tree);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

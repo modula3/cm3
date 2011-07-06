@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Iterator routines for GIMPLE statements.
    Copyright (C) 2007, 2008, 2010 Free Software Foundation, Inc.
    Contributed by Aldy Hernandez  <aldy@quesejoda.com>
@@ -27,6 +29,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "value-prof.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Mark the statement STMT as modified, and update it.  */
 
@@ -818,3 +823,7 @@ gsi_start_phis (basic_block bb)
 {
   return gsi_start (phi_nodes (bb));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* CFG cleanup for trees.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1059,3 +1061,7 @@ struct gimple_opt_pass pass_merge_phi =
   | TODO_verify_ssa
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

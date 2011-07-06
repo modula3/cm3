@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Debug counter for debugging support
    Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
@@ -28,6 +30,10 @@ See dbgcnt.def for usage information.  */
 #include "output.h"
 
 #include "dbgcnt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct string2counter_map {
   const char *name;
@@ -151,3 +157,7 @@ dbg_cnt_list_all_counters (void)
             map[i].name, limit[map[i].counter], count[map[i].counter]);
   printf ("\n");
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

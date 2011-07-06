@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* ET-trees data structure implementation.
    Contributed by Pavel Nejedly
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010 Free Software
@@ -34,6 +36,10 @@ License along with libiberty; see the file COPYING3.  If not see
 
 #ifdef DEBUG_ET
 #include "basic-block.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* The occurrence of a node in the et tree.  */
@@ -772,3 +778,7 @@ et_root (struct et_node *node)
 
   return r->of;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

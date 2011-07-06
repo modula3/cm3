@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.  This file contains definitions used
    internally in the scheduler.
    Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "vecprim.h"
 #include "sched-int.h"
 #include "cfgloop.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* tc_t is a short for target context.  This is a state of the target
    backend.  */
@@ -1657,12 +1663,8 @@ extern void sel_setup_sched_infos (void);
 extern void alloc_sched_pools (void);
 extern void free_sched_pools (void);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* GCC_SEL_SCHED_IR_H */
-
-
-
-
-
-
-
-

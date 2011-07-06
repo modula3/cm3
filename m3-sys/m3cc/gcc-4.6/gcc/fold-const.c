@@ -63,6 +63,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "tree-flow.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Nonzero if we are folding constants inside an initializer; zero
    otherwise.  */
 int folding_initializer = 0;
@@ -15987,3 +15991,7 @@ fold_strip_sign_ops (tree exp)
     }
   return NULL_TREE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

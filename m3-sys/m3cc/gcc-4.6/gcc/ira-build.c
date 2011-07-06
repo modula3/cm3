@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Building internal representation for IRA.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -40,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "sparseset.h"
 #include "ira-int.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static ira_copy_t find_allocno_copy (ira_allocno_t, ira_allocno_t, rtx,
 				     ira_loop_tree_node_t);
@@ -3072,3 +3078,7 @@ ira_destroy (void)
   finish_cost_vectors ();
   ira_finish_allocno_live_ranges ();
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output variables, constants and external declarations, for GNU compiler.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
@@ -57,6 +59,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifdef XCOFF_DEBUGGING_INFO
 #include "xcoffout.h"		/* Needed for external data
 				   declarations for e.g. AIX 4.x.  */
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* The (assembler) name of the first globally-visible object output.  */
@@ -7360,5 +7366,9 @@ make_debug_expr_from_rtl (const_rtx exp)
   SET_DECL_RTL (ddecl, dval);
   return dval;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-varasm.h"

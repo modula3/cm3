@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Get common system includes and various definitions and declarations based
    on autoconf macros.
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
@@ -20,7 +22,6 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-
 #ifndef GCC_SYSTEM_H
 #define GCC_SYSTEM_H
 
@@ -35,11 +36,12 @@ along with GCC; see the file COPYING3.  If not see
 # endif
 #endif
 
-#ifdef HAVE_STDDEF_H
-# include <stddef.h>
-#endif
-
+#include <stddef.h>
 #include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Define a generic NULL if one hasn't already been defined.  */
 #ifndef NULL
@@ -967,6 +969,10 @@ helper_const_non_const_cast (const char *p)
 #else
 #define DEBUG_FUNCTION
 #define DEBUG_VARIABLE
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* ! GCC_SYSTEM_H */

@@ -24,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "coretypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* A large integer is currently represented as a pair of HOST_WIDE_INTs.
    It therefore represents a number with precision of
    2 * HOST_BITS_PER_WIDE_INT bits (it is however possible that the
@@ -308,4 +312,8 @@ extern int div_and_round_double (unsigned, int, unsigned HOST_WIDE_INT,
 				 HOST_WIDE_INT *, unsigned HOST_WIDE_INT *,
 				 HOST_WIDE_INT *);
 				 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* DOUBLE_INT_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree lowering pass.  This pass converts the GENERIC functions-as-trees
    tree representation into the GIMPLE form.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -50,6 +52,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks-def.h"	/* FIXME: for lhd_set_decl_assembler_name.  */
 #include "expr.h"		/* FIXME: for can_move_by_pieces
 				   and STACK_CHECK_MAX_VAR_SIZE.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum gimplify_omp_var_data
 {
@@ -8216,5 +8222,8 @@ force_gimple_operand_gsi (gimple_stmt_iterator *gsi, tree expr,
 				     var, before, m);
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-gimplify.h"

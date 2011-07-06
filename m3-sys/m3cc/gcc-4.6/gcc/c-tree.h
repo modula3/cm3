@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for C parsing and type checking.
    Copyright (C) 1987, 1993, 1994, 1995, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "c-family/c-common.h"
 #include "diagnostic.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* struct lang_identifier is private to c-decl.c, but langhooks.c needs to
    know how big it is.  This is sanity-checked in c-decl.c.  */
@@ -608,5 +614,9 @@ extern void c_write_global_declarations (void);
 /* In c-errors.c */
 extern void pedwarn_c90 (location_t, int opt, const char *, ...) ATTRIBUTE_GCC_DIAG(3,4);
 extern void pedwarn_c99 (location_t, int opt, const char *, ...) ATTRIBUTE_GCC_DIAG(3,4);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_C_TREE_H */

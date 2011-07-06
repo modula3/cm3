@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Calculate branch probabilities, and basic block execution counts.
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010
@@ -579,5 +581,9 @@ struct simple_ipa_opt_pass pass_ipa_tree_profile =
   TODO_dump_func                       /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-profile.h"

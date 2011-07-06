@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Analysis Utilities for Loop Vectorization.
    Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Dorit Nuzman <dorit@il.ibm.com>
@@ -37,6 +39,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-vectorizer.h"
 #include "recog.h"
 #include "diagnostic-core.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Function prototypes */
 static void vect_pattern_recog_1
@@ -853,3 +859,7 @@ vect_pattern_recog (loop_vec_info loop_vinfo)
         }
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

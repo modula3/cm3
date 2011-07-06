@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data References Analysis and Manipulation Utilities for Vectorization.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -42,6 +44,10 @@ along with GCC; see the file COPYING3.  If not see
 /* Need to include rtl.h, expr.h, etc. for optabs.  */
 #include "expr.h"
 #include "optabs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Return the smallest scalar part of STMT.
    This is used to determine the vectype of the stmt.  We generally set the
@@ -4249,3 +4255,7 @@ vect_supportable_dr_alignment (struct data_reference *dr,
   /* Unsupported.  */
   return dr_unaligned_unsupported;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

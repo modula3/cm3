@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2007 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "version.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This is the location of the online document giving instructions for
    reporting bugs.  If you distribute a modified version of GCC,
    please configure with --with-bugurl pointing to a document giving
@@ -26,11 +32,15 @@ along with GCC; see the file COPYING3.  If not see
    welcome to forward us bugs reported to you, if you determine that
    they are not bugs in your modifications.)  */
 
-const char bug_report_url[] = BUGURL;
+extern const char bug_report_url[] = BUGURL;
 
 /* The complete version string, assembled from several pieces.
    BASEVER, DATESTAMP, DEVPHASE, and REVISION are defined by the
    Makefile.  */
 
-const char version_string[] = BASEVER DATESTAMP DEVPHASE REVISION;
-const char pkgversion_string[] = PKGVERSION;
+extern const char version_string[] = BASEVER DATESTAMP DEVPHASE REVISION;
+extern const char pkgversion_string[] = PKGVERSION;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

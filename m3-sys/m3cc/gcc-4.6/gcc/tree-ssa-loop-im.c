@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop invariant motion.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -2594,3 +2596,7 @@ tree_ssa_lim (void)
 
   return todo;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

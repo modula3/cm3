@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Array prefetching.
    Copyright (C) 2005, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
@@ -1945,3 +1947,7 @@ tree_ssa_prefetch_arrays (void)
   free_original_copy_tables ();
   return todo_flags;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

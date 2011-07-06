@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Define builtin-in macros for all front ends that perform preprocessing
    Copyright (C) 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,9 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "coretypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Parse a BASEVER version string of the format "major.minor.patchlevel"
    or "major.minor" to extract its components.  */
@@ -32,6 +37,8 @@ extern void parse_basever (int *, int *, int *);
    preprocessing.  */
 extern void define_language_independent_builtin_macros (cpp_reader *);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_CPPBUILTIN_H */
-
