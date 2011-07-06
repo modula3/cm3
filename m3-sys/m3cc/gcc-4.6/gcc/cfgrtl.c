@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Control flow graph manipulation code for GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -61,6 +63,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "tree-pass.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static int can_delete_note_p (const_rtx);
 static int can_delete_label_p (const_rtx);
@@ -3197,3 +3203,7 @@ struct cfg_hooks cfg_layout_rtl_cfg_hooks = {
   rtl_extract_cond_bb_edges, /* extract_cond_bb_edges */
   NULL		/* flush_pending_stmts */
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

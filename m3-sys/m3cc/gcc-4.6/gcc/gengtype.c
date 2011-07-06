@@ -31,8 +31,11 @@
 #include "obstack.h"
 #include "gengtype.h"
 
-/* Data types, macros, etc. used only in this file.  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* Data types, macros, etc. used only in this file.  */
 
 /* The list of output files.  */
 outf_p output_files;
@@ -5007,3 +5010,7 @@ main (int argc, char **argv)
     return 1;
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

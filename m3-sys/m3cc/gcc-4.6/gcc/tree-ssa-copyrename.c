@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Rename SSA copies.
    Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -393,3 +395,7 @@ struct gimple_opt_pass pass_rename_ssa_copies =
   TODO_dump_func | TODO_verify_ssa      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* SparseSet implementation.
    Copyright (C) 2007, 2010 Free Software Foundation, Inc.
    Contributed by Peter Bergner <bergner@vnet.ibm.com>
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_SPARSESET_H
 #define GCC_SPARSESET_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define SPARSESET_ELT_BITS ((unsigned) HOST_BITS_PER_WIDEST_FAST_INT)
 #define SPARSESET_ELT_TYPE unsigned int
@@ -155,5 +161,9 @@ sparseset_iter_next (sparseset s)
        sparseset_iter_p (SPARSESET)					\
        && (((ITER) = sparseset_iter_elm (SPARSESET)) || 1);		\
        sparseset_iter_next (SPARSESET))
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_SPARSESET_H */

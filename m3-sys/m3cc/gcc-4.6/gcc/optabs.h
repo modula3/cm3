@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for code generation pass of GNU compiler.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_OPTABS_H
 
 #include "insn-codes.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Optabs are tables saying how to generate insn bodies
    for various machine modes and numbers of operands.

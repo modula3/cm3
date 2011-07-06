@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Combining of if-expressions on trees.
    Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Richard Guenther <rguenther@suse.de>
@@ -668,3 +670,7 @@ struct gimple_opt_pass pass_tree_ifcombine =
   | TODO_verify_ssa		/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

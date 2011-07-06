@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Vectorizer
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -70,6 +72,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "timevar.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* vect_dump will be set to stderr or dump_file if exist.  */
 FILE *vect_dump;
 
@@ -84,7 +90,6 @@ LOC vect_location;
 VEC(vec_void_p,heap) *stmt_vec_info_vec;
 
 
-
 /* Function vect_set_dump_settings.
 
    Fix the verbosity level of the vectorizer if the
@@ -371,3 +376,7 @@ struct simple_ipa_opt_pass pass_ipa_increase_alignment =
   0                                     /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

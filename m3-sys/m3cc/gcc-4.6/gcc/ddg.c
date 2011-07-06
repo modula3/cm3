@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* DDG - Data Dependence Graph implementation.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -45,6 +47,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ddg.h"
 
 #ifdef INSN_SCHEDULING
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A flag indicating that a ddg edge belongs to an SCC or not.  */
 enum edge_flag {NOT_IN_SCC = 0, IN_SCC};
@@ -1169,5 +1175,9 @@ longest_simple_path (struct ddg * g, int src, int dest, sbitmap nodes)
   sbitmap_free (tmp);
   return result;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* INSN_SCHEDULING */

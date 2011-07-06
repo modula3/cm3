@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Forward propagation of expressions for single use variables.
    Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -2127,3 +2129,6 @@ struct gimple_opt_pass pass_forwprop =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

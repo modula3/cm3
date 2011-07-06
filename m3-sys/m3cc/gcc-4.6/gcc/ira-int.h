@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Integrated Register Allocator (IRA) intercommunication header file.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfgloop.h"
 #include "ira.h"
 #include "alloc-pool.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* To provide consistency in naming, all IRA external variables,
    functions, common typedefs start with prefix ira_.  */
@@ -1383,3 +1389,7 @@ ira_allocate_and_set_or_copy_costs (int **vec, enum reg_class cover_class,
 	reg_costs[i] = val;
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

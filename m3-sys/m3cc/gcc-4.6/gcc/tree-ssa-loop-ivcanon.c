@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Induction variable canonicalization.
    Copyright (C) 2004, 2005, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -554,3 +556,7 @@ tree_unroll_loops_completely (bool may_increase_size, bool unroll_outer)
 
   return 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

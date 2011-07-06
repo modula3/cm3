@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Mudflap: narrow-pointer bounds-checking by tree rewriting.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1412,5 +1414,9 @@ struct gimple_opt_pass pass_mudflap_2 =
   | TODO_dump_func | TODO_update_ssa    /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-mudflap.h"

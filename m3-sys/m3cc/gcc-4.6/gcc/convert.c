@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Utility routines for data type conversion for GCC.
    Copyright (C) 1987, 1988, 1991, 1992, 1993, 1994, 1995, 1997, 1998,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "convert.h"
 #include "diagnostic-core.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Convert EXPR to some pointer or reference type TYPE.
    EXPR must be pointer, reference, integer, enumeral, or literal zero;
@@ -974,3 +980,7 @@ convert_to_fixed (tree type, tree expr)
       return error_mark_node;
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

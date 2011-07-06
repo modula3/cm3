@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Define regsets.
    Copyright (C) 1987, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
    2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -33,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "bitmap.h"		/* For bitmap_iterator.  */
 #include "hard-reg-set.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Head of register set linked list.  */
 typedef bitmap_head regset_head;
@@ -121,5 +127,9 @@ extern bitmap_obstack reg_obstack;
 /* In cfg.c  */
 extern void dump_regset (regset, FILE *);
 extern void debug_regset (regset);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_REGSET_H */

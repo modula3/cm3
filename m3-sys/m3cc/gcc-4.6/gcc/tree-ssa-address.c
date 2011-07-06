@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Memory address lowering and addressing mode selection.
    Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -948,5 +950,9 @@ dump_mem_address (FILE *file, struct mem_address *parts)
       fprintf (file, "\n");
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-ssa-address.h"

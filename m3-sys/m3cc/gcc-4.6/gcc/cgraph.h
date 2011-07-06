@@ -31,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "function.h"
 #include "ipa-ref.h"	/* FIXME: inappropriate dependency of cgraph on IPA.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum availability
 {
   /* Not yet set by cgraph_function_body_availability.  */
@@ -950,6 +954,10 @@ varpool_all_refs_explicit_p (struct varpool_node *vnode)
 
 /* Constant pool accessor function.  */
 htab_t constant_pool_htab (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 /* FIXME: inappropriate dependency of cgraph on IPA.  */
 #include "ipa-ref-inline.h"

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Structure for saving state for a nested function.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -27,6 +29,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "vecprim.h"
 #include "tm.h"		/* For CUMULATIVE_ARGS.  */
 #include "hard-reg-set.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Stack of pending (incomplete) sequences saved by `start_sequence'.
    Each element describes one pending sequence.
@@ -758,5 +764,9 @@ extern int get_next_funcdef_no (void);
 /* In predict.c */
 extern bool optimize_function_for_size_p (struct function *);
 extern bool optimize_function_for_speed_p (struct function *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_FUNCTION_H */

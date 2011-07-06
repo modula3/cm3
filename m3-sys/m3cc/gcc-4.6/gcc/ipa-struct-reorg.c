@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Struct-reorg optimization.
    Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Olga Golovanevsky <olga@il.ibm.com>
@@ -54,6 +56,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ipa-type-escape.h"
 #include "tree-dump.h"
 #include "gimple.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This optimization implements structure peeling.
 
@@ -4062,3 +4068,7 @@ struct simple_ipa_opt_pass pass_ipa_struct_reorg =
   TODO_dump_func | TODO_verify_ssa	/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

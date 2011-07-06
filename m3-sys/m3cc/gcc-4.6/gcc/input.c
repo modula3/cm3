@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data and functions related to line maps and input files.
    Copyright (C) 2004, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "intl.h"
 #include "input.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Current position in real source file.  */
 
@@ -51,3 +57,7 @@ expand_location (source_location loc)
     };
   return xloc;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

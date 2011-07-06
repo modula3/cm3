@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for code generation pass of GNU compiler.
    Copyright (C) 2001, 2004, 2007, 2008, 2010 Free Software Foundation, Inc.
 

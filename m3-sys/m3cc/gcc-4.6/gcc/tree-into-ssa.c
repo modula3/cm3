@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Rewrite a program in Normal form into SSA.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -3418,3 +3420,7 @@ done:
 
   timevar_pop (TV_TREE_SSA_INCREMENTAL);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

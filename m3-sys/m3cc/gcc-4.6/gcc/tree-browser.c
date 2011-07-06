@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree browser.
    Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "tree.h"
 #include "tree-pretty-print.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define TB_OUT_FILE stdout
 #define TB_IN_FILE stdin
@@ -960,3 +966,7 @@ TB_getline (char **lineptr, long *n, FILE *stream)
   *p = '\0';
   return p - *lineptr;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

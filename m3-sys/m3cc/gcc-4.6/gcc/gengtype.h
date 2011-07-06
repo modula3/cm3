@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process source files and output type information.
    Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010 
    Free Software Foundation, Inc.
@@ -20,6 +22,10 @@
 
 #ifndef GCC_GENGTYPE_H
 #define GCC_GENGTYPE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Sets of accepted source languages like C, C++, Ada... are
    represented by a bitmap.  */
@@ -479,5 +485,9 @@ void dbgprint_count_type_at (const char *, int, const char *, type_p);
 #define DBGPRINTF(Fmt,...) do {/*nodbgrintf*/} while (0)
 #define DBGPRINT_COUNT_TYPE(Msg,Ty) do{/*nodbgprint_count_type*/}while (0)
 #endif /*ENABLE_CHECKING */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

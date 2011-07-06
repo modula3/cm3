@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Predictive commoning.
    Copyright (C) 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -2587,3 +2589,7 @@ tree_predictive_commoning (void)
 
   return ret;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

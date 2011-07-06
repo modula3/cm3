@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of various defaults for tm.h macros.
    Copyright (C) 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
    2005, 2007, 2008, 2009, 2010
@@ -27,6 +29,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifndef GCC_DEFAULTS_H
 #define GCC_DEFAULTS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Store in OUTPUT a string (made with alloca) containing an
    assembler-name for a local static variable or function named NAME.
@@ -1338,5 +1344,9 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #endif
 
 #endif /* GCC_INSN_FLAGS_H  */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* ! GCC_DEFAULTS_H */

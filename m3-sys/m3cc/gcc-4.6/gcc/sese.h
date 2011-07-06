@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Single entry single exit control flow regions.
    Copyright (C) 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_SESE_H
 #define GCC_SESE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A Single Entry, Single Exit region is a part of the CFG delimited
    by two edges.  */
@@ -418,5 +424,9 @@ scev_analyzable_p (tree def, sese region)
     && (tree_does_not_contain_chrecs (scev)
 	|| evolution_function_is_affine_p (scev));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

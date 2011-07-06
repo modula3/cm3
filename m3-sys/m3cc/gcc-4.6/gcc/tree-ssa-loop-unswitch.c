@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop unswitching.
    Copyright (C) 2004, 2005, 2007, 2008, 2010 Free Software Foundation, Inc.
 
@@ -380,3 +382,7 @@ tree_unswitch_loop (struct loop *loop,
 		       NULL, prob_true, prob_true,
 		       REG_BR_PROB_BASE - prob_true, false);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

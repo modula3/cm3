@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generic SSA value propagation engine.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1188,5 +1190,9 @@ substitute_and_fold (ssa_prop_get_value_fn get_value_fn,
 			    prop_stats.num_dce);
   return something_changed;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-ssa-propagate.h"

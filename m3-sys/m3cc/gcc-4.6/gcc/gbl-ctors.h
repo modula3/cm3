@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions relating to the special __do_global_init function used
    for getting g++ file-scope static objects constructed.  This file
    will get included either by libgcc2.c (for systems that don't support
@@ -37,6 +39,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifndef GCC_GBL_CTORS_H
 #define GCC_GBL_CTORS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*  Declare a pointer to void function type.  */
 
@@ -82,6 +88,10 @@ do {									\
   for (i = nptrs; i >= 1; i--)						\
     __CTOR_LIST__[i] ();						\
 } while (0)
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* GCC_GBL_CTORS_H */

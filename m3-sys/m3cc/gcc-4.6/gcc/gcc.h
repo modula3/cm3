@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Header file for modules that link with gcc.c
    Copyright (C) 1999, 2000, 2001, 2003, 2004, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "version.h"
 #include "diagnostic-core.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The mapping of a spec function name to the C function that
    implements it.  */
@@ -55,5 +61,9 @@ extern int lang_specific_extra_outfiles;
 /* A vector of corresponding output files is made up later.  */
 
 extern const char **outfiles;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_GCC_H */

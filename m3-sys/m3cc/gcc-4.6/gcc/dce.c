@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL dead code elimination.
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -38,6 +40,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm_p.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* -------------------------------------------------------------------------
    Core mark/delete routines
@@ -1102,3 +1107,7 @@ struct rtl_opt_pass pass_fast_rtl_dce =
   TODO_ggc_collect                      /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

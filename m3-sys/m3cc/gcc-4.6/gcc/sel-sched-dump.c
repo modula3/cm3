@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.   Log dumping infrastructure.
    Copyright (C) 2006, 2007, 2008, 2010 Free Software Foundation, Inc.
 
@@ -37,9 +39,13 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 
 #ifdef INSN_SCHEDULING
+
 #include "sel-sched-ir.h"
 #include "sel-sched-dump.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* These variables control high-level pretty printing.  */
 static int sel_dump_cfg_flags = SEL_DUMP_CFG_FLAGS;
@@ -969,5 +975,9 @@ debug_mem_addr_value (rtx x)
   debug_rtx (addr);
   return t;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
+#endif

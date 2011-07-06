@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code from to output assembler insns as recognized from rtl.
    Copyright (C) 1987, 1988, 1992, 1994, 1995, 1997, 1998, 1999, 2000, 2002,
    2003, 2004, 2005, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -90,6 +92,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "read-md.h"
 #include "gensupport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* No instruction can have more operands than this.  Sorry for this
    arbitrary limit, but what machine will have an instruction with
@@ -1228,4 +1234,8 @@ constraint_len (const char *p, int genoutput_default_constraint_len)
 #undef DEFAULT_CONSTRAINT_LEN
 #define DEFAULT_CONSTRAINT_LEN(C,STR) 1
 }
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

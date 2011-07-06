@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions to support a pool of allocatable objects.
    Copyright (C) 1987, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006,
    2007, 2008, 2010  Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "alloc-pool.h"
 #include "hashtab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define align_eight(x) (((x+7) >> 3) << 3)
 
@@ -405,3 +411,7 @@ dump_alloc_pool_statistics (void)
   fprintf (stderr, "--------------------------------------------------------------------------------------------------------------\n");
 #endif
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for computing resource usage of specific insns.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
    2009, 2010 Free Software Foundation, Inc.
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "insn-attr.h"
 #include "params.h"
 #include "df.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This structure is used to record liveness information at the targets or
    fallthrough insns of branches.  We will most likely need the information
@@ -1283,3 +1289,7 @@ mark_end_of_function_resources (rtx trial, bool include_delayed_effects)
   mark_referenced_resources (trial, &end_of_function_needs,
 			     include_delayed_effects);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

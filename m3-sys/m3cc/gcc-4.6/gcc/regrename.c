@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Register renaming for the GNU compiler.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
    2010 Free Software Foundation, Inc.
@@ -39,6 +41,10 @@
 #include "tree-pass.h"
 #include "df.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements the RTL register renaming pass of the compiler.  It is
    a semi-local pass whose goal is to maximize the usage of the register file
@@ -1457,3 +1463,6 @@ struct rtl_opt_pass pass_regrename =
  }
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

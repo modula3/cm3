@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Header file for graph routines.
    Copyright (C) 1999, 2003, 2004, 2007 Free Software Foundation, Inc.
 
@@ -20,8 +22,16 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_GRAPH_H
 #define GCC_GRAPH_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void print_rtl_graph_with_bb (const char *, rtx);
 extern void clean_graph_dump_file (const char *);
 extern void finish_graph_dump_file (const char *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_GRAPH_H */

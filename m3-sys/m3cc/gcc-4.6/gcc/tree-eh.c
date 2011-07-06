@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Exception handling semantics and decomposition for trees.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -4155,3 +4157,7 @@ verify_eh_dispatch_edge (gimple stmt)
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

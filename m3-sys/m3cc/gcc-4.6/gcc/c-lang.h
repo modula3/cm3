@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for C language specific types.
    Copyright (C) 2009, 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "c-family/c-common.h"
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct GTY((variable_size)) lang_type {
   /* In a RECORD_TYPE, a sorted array of the fields of the type.  */
@@ -56,5 +62,8 @@ struct GTY(()) language_function {
   int warn_about_return_type;
 };
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_C_LANG_H */

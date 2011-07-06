@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Top-level control of tree optimizations.
    Copyright 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -473,3 +475,7 @@ tree_rest_of_compilation (tree fndecl)
   ggc_collect ();
   timevar_pop (TV_REST_OF_COMPILATION);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Perform doloop optimizations
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -701,3 +703,4 @@ doloop_optimize_loops (void)
 }
 #endif /* HAVE_doloop_end */
 
+char quash_apple_ranlib_warning_doloop_optimize_loops;

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Define per-register tables for data flow info and register allocation.
    Copyright (C) 1987, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2003, 2004, 2005, 2006, 2007, 2008, 2010 Free Software
@@ -24,6 +26,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "machmode.h"
 #include "hard-reg-set.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define REG_BYTES(R) mode_size[(int) GET_MODE (R)]
 
@@ -396,5 +402,9 @@ overlaps_hard_reg_set_p (const HARD_REG_SET regs, enum machine_mode mode,
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_REGS_H */

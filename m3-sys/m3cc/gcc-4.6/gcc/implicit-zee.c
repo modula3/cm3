@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Redundant Zero-extension elimination for targets that implicitly
    zero-extend writes to the lower 32-bit portion of 64-bit registers.
    Copyright (C) 2010 Free Software Foundation, Inc.
@@ -203,6 +205,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "df.h"
 #include "cgraph.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This says if a register is newly created for the purpose of
    zero-extension.  */
@@ -992,3 +998,7 @@ struct rtl_opt_pass pass_implicit_zee =
   TODO_verify_rtl_sharing,              /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

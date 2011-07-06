@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Communication between the Integrated Register Allocator (IRA) and
    the rest of the compiler.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
@@ -19,6 +21,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Function specific hard registers can not be used for the register
    allocation.  */
@@ -117,3 +123,7 @@ extern bool ira_better_spill_reload_regno_p (int *, int *, rtx, rtx, rtx);
 extern bool ira_bad_reload_regno (int, rtx, rtx);
 
 extern void ira_adjust_equiv_reg_cost (unsigned, int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

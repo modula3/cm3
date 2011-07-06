@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Iterator routines for manipulating GENERIC and GIMPLE tree statements.
    Copyright (C) 2003, 2004, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -321,5 +323,9 @@ expr_last (tree expr)
 
   return expr;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-iterator.h"

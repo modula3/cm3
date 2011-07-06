@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree inlining hooks and declarations.
    Copyright 2001, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_TREE_INLINE_H
 
 #include "vecir.h" /* For VEC(gimple,heap).  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct cgraph_edge;
 
@@ -189,5 +195,9 @@ extern tree remap_type (tree type, copy_body_data *id);
 extern gimple_seq copy_gimple_seq_and_replace_locals (gimple_seq seq);
 
 extern HOST_WIDE_INT estimated_stack_frame_size (struct cgraph_node *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_TREE_INLINE_H */

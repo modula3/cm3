@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Language independent return value optimizations
    Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -376,3 +378,7 @@ struct gimple_opt_pass pass_return_slot =
   0					/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

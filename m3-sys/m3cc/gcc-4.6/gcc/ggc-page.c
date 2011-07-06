@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* "Bag-of-pages" garbage collector for the GNU compiler.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009,
    2010 Free Software Foundation, Inc.
@@ -34,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "cfgloop.h"
 #include "plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Prefer MAP_ANON(YMOUS) to /dev/zero, since we don't need to keep a
    file open.  Prefer either to valloc.  */
@@ -2364,3 +2370,7 @@ struct alloc_zone
 struct alloc_zone rtl_zone;
 struct alloc_zone tree_zone;
 struct alloc_zone tree_id_zone;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

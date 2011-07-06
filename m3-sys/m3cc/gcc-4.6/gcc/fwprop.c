@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL-based forward propagation pass for GNU compiler.
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -42,6 +44,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "domwalk.h"
 #include "emit-rtl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This pass does simple forward propagation and simplification when an
    operand of an insn can only come from a single def.  This pass uses
@@ -1525,3 +1530,7 @@ struct rtl_opt_pass pass_rtl_fwprop_addr =
   TODO_dump_func                        /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

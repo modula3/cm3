@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Natural loop discovery code for GNU compiler.
    Copyright (C) 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -35,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "output.h"
 #include "ggc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void flow_loops_cfg_dump (FILE *);
 
@@ -1640,3 +1646,7 @@ loop_exits_from_bb_p (struct loop *loop, basic_block bb)
 
   return false;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

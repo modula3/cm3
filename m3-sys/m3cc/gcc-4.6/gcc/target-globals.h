@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target-dependent globals.
    Copyright (C) 2010  Free Software Foundation, Inc.
 
@@ -75,6 +77,10 @@ restore_target_globals (struct target_globals *g)
   this_target_gcse = g->gcse;
   this_target_bb_reorder = g->bb_reorder;
 }
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Language-independent diagnostic subroutines for the GNU Compiler
    Collection that are only for use in the compilers proper and not
    the driver or other programs.
@@ -47,3 +49,7 @@ default_tree_diagnostic_starter (diagnostic_context *context,
   pp_set_prefix (context->printer, diagnostic_build_prefix (context,
 							    diagnostic));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

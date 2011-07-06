@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Emit RTL for the GCC expander.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
@@ -60,6 +62,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "target.h"
 #include "tree-flow.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct target_rtl default_target_rtl;
 #if SWITCHABLE_TARGET
@@ -6020,5 +6026,9 @@ gen_hard_reg_clobber (enum machine_mode mode, unsigned int regno)
     return (hard_reg_clobbers[mode][regno] =
 	    gen_rtx_CLOBBER (VOIDmode, gen_rtx_REG (mode, regno)));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-emit-rtl.h"

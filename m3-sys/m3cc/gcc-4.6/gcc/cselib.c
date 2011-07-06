@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Common subexpression elimination library for GNU compiler.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -43,6 +45,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "alloc-pool.h"
 #include "target.h"
 #include "bitmap.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A list of cselib_val structures.  */
 struct elt_list {
@@ -2554,5 +2560,9 @@ dump_cselib_table (FILE *out)
     }
   fprintf (out, "next uid %i\n", next_uid);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-cselib.h"

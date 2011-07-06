@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* "Bag-of-pages" zone garbage collector for the GNU compiler.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
    2010 Free Software Foundation, Inc.
@@ -37,6 +39,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "bitmap.h"
 #include "plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Prefer MAP_ANON(YMOUS) to /dev/zero, since we don't need to keep a
    file open.  Prefer either to valloc.  */
@@ -2512,3 +2518,7 @@ ggc_pch_read (FILE *f, void *addr)
   for (p = pch_zone.page; p < pch_zone.end; p += GGC_PAGE_SIZE)
     set_page_table_entry (p, pch_page);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

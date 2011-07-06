@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Dwarf2 assembler output helper routines.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -34,6 +36,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "tm_p.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* How to start an assembler comment.  */
 #ifndef ASM_COMMENT_START
@@ -1024,5 +1029,9 @@ dw2_asm_output_encoded_addr_rtx (int encoding, rtx addr, bool is_public,
 
   va_end (ap);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-dwarf2asm.h"

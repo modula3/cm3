@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for the data structures and codes used in VMS debugging.
    Copyright (C) 2001, 2007, 2010 Free Software Foundation, Inc.
 
@@ -19,6 +21,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_VMSDBG_H
 #define GCC_VMSDBG_H 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*  We define types and constants used in VMS Debug output.  Note that the
     structs only approximate the output that is written.  We write the output
@@ -251,5 +257,9 @@ typedef struct _DST_PROLOG
   unsigned int dst_l_prolog_bkpt_addr;
 } DST_PROLOG;
 #define DST_K_PROLOG_SIZE 8
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_VMSDBG_H */

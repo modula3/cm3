@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree SCC value numbering
    Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Daniel Berlin <dberlin@dberlin.org>
@@ -21,9 +23,12 @@
 #ifndef TREE_SSA_SCCVN_H
 #define TREE_SSA_SCCVN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* In tree-ssa-sccvn.c  */
 bool expressions_equal_p (tree, tree);
-
 
 /* TOP of the VN lattice.  */
 extern tree VN_TOP;
@@ -209,4 +214,9 @@ unsigned int get_constant_value_id (tree);
 unsigned int get_or_alloc_constant_value_id (tree);
 bool value_id_constant_p (unsigned int);
 tree fully_constant_vn_reference_p (vn_reference_t);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* TREE_SSA_SCCVN_H  */

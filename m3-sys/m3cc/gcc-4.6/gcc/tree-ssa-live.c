@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Liveness for SSA trees.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1405,4 +1407,8 @@ verify_live_on_entry (tree_live_info_p live)
     }
   gcc_assert (num <= 0);
 }
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

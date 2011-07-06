@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data structure definitions for a generic GCC target.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -51,6 +53,10 @@
 
 #include "tm.h"
 #include "insn-modes.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Types used by the record_gcc_switches() target function.  */
 typedef enum
@@ -172,11 +178,23 @@ struct default_options
 #define DEFHOOK_UNDOC DEFHOOK
 #define HOOKSTRUCT(FRAGMENT) FRAGMENT
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #include "target.def"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern struct gcc_target targetm;
 
 /* Each target can provide their own.  */
 extern struct gcc_targetcm targetcm;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_TARGET_H */

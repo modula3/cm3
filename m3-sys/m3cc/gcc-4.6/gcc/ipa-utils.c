@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Utilities for ipa analysis.
    Copyright (C) 2005, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Kenneth Zadeck <zadeck@naturalbridge.com>
@@ -39,6 +41,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "diagnostic.h"
 #include "langhooks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Debugging function for postorder and inorder code. NOTE is a string
    that is printed before the nodes are printed.  ORDER is an array of
@@ -227,3 +233,6 @@ get_base_var (tree t)
   return t;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

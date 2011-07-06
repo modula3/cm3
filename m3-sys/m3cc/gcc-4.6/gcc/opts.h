@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Command line option handling.
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "input.h"
 #include "vec.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Specifies how a switch's VAR_VALUE relates to its FLAG_VAR.  */
 enum cl_var_type {

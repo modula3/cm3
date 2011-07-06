@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Simple bitmaps.
    Copyright (C) 1999, 2000, 2002, 2003, 2004, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -30,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
    For now, also only conditionally include basic-block.h, but we should
    find a better place for the dataflow functions.  Perhaps cfganal.c?  */
 #include "basic-block.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #if GCC_VERSION >= 3400
@@ -1111,3 +1117,6 @@ sbitmap_popcount (const_sbitmap a, unsigned long maxbit)
   return count;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

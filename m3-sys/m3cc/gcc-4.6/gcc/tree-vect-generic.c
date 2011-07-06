@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Lower vector operations to scalar operations.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -34,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 /* Need to include rtl.h, expr.h, etc. for optabs.  */
 #include "expr.h"
 #include "optabs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Build a constant of type TYPE, made of VALUE's bits replicated
    every TYPE_SIZE (INNER_TYPE) bits to fit TYPE's precision.  */
@@ -684,5 +690,9 @@ struct gimple_opt_pass pass_lower_vector_ssa =
     | TODO_verify_stmts | TODO_verify_flow
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-tree-vect-generic.h"

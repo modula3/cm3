@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Compilation switch flag definitions for GCC.
    Copyright (C) 1987, 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002,
    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "flag-types.h"
 #include "options.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if !defined(IN_LIBGCC2) && !defined(IN_TARGET_LIBS) && !defined(IN_RTS)
 
@@ -148,6 +154,10 @@ extern int dump_for_graph;
 /* Whether to emit an overflow warning whose code is C.  */
 #define issue_strict_overflow_warning(c) (warn_strict_overflow >= (int) (c))
 
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* ! GCC_FLAGS_H */

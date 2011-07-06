@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate code to allocate RTL structures.
    Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003, 2004, 2007, 2010
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "bconfig.h"
 #include "system.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct rtx_definition
 {
@@ -291,3 +297,7 @@ main (void)
 
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

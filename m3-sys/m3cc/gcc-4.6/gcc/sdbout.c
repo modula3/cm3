@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output sdb-format symbol table information from GNU compiler.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
@@ -50,6 +52,10 @@ AT&T C compiler.  From the example below I would conclude the following:
 #include "ggc.h"
 #include "vec.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static GTY(()) tree anonymous_types;
 
 /* Counter to generate unique "names" for nameless struct members.  */
@@ -67,6 +73,10 @@ static GTY(()) VEC(tree,gc) *deferred_global_decls;
 static GTY(()) tree preinit_symbols;
 static GTY(()) bool sdbout_initialized;
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #ifdef SDB_DEBUGGING_INFO
 
 #include "rtl.h"
@@ -80,6 +90,10 @@ static GTY(()) bool sdbout_initialized;
 #include "gsyms.h"
 #include "langhooks.h"
 #include "target.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* 1 if PARM is passed to this function in memory.  */
 
@@ -1703,6 +1717,10 @@ sdbout_init (const char *input_file_name ATTRIBUTE_UNUSED)
     sdbout_symbol (TREE_VALUE (t), 0);
   preinit_symbols = 0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* SDB_DEBUGGING_INFO */
 

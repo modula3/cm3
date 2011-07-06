@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* dwarf2out.h - Various declarations for functions found in dwarf2out.c
    Copyright (C) 1998, 1999, 2000, 2003, 2007, 2010
    Free Software Foundation, Inc.
@@ -17,6 +19,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern void dwarf2out_decl (tree);
 extern void dwarf2out_frame_debug (rtx, bool);
@@ -47,3 +53,7 @@ struct array_descr_info
       tree stride;
     } dimen[10];
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

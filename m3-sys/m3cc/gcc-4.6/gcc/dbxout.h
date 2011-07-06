@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* dbxout.h - Various declarations for functions found in dbxout.c
    Copyright (C) 1998, 1999, 2000, 2003, 2004, 2007
    Free Software Foundation, Inc.
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_DBXOUT_H
 #define GCC_DBXOUT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern int dbxout_symbol (tree, int);
 extern void dbxout_parms (tree);
 extern void dbxout_reg_parms (tree);
@@ -36,5 +42,9 @@ extern int dbxout_syms (tree);
 #define N_SO_FORTRAN90   7
 #define N_SO_OBJC        50
 #define N_SO_OBJCPLUS    51
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_DBXOUT_H */

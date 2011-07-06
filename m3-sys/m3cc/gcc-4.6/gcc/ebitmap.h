@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Sparse array based bitmaps.
    Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 
@@ -21,6 +23,10 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_EBITMAP_H
 
 #include "sbitmap.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define EBITMAP_ELT_BITS ((unsigned) HOST_BITS_PER_WIDEST_FAST_INT)
 #define EBITMAP_ELT_TYPE unsigned HOST_WIDEST_FAST_INT
@@ -165,5 +171,8 @@ ebitmap_iter_next (ebitmap_iterator *i)
        ebitmap_iter_cond (&(ITER), &(N));			\
        ebitmap_iter_next (&(ITER)))
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_EBITMAP_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Process source files and output type information.
    Copyright (C) 2006, 2007, 2010 Free Software Foundation, Inc.
 
@@ -20,6 +22,10 @@
 #include "bconfig.h"
 #include "system.h"
 #include "gengtype.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This is a simple recursive-descent parser which understands a subset of
    the C type grammar.
@@ -986,3 +992,7 @@ parse_file (const char *fname)
   advance ();
   yyend ();
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

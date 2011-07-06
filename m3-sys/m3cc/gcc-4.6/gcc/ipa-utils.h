@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Utilities for ipa analysis.
    Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Kenneth Zadeck <zadeck@naturalbridge.com>
@@ -20,8 +22,13 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_IPA_UTILS_H
 #define GCC_IPA_UTILS_H
+
 #include "tree.h"
 #include "cgraph.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct ipa_dfs_info {
   int dfn_number;
@@ -32,15 +39,14 @@ struct ipa_dfs_info {
   PTR aux;
 };
 
-
-
 /* In ipa-utils.c  */
 void ipa_utils_print_order (FILE*, const char *, struct cgraph_node**, int);
 int ipa_utils_reduced_inorder (struct cgraph_node **, bool, bool,
 			       bool (*ignore_edge) (struct cgraph_edge *));
 tree get_base_var (tree);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* GCC_IPA_UTILS_H  */
-
-

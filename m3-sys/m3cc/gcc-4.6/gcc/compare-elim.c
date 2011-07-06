@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Post-reload compare elimination.
    Copyright (C) 2010, 2011
    Free Software Foundation, Inc.
@@ -70,7 +72,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "domwalk.h"
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* These structures describe a comparison and how it is used.  */
 
 /* The choice of maximum 3 uses comes from wanting to eliminate the two
@@ -640,3 +645,7 @@ struct rtl_opt_pass pass_compare_elim_after_reload =
   | TODO_ggc_collect			/* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

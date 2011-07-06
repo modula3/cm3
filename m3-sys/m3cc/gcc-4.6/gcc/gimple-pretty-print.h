@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for pretty formatting of GIMPLE statements and
    expressions.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pretty-print.h"
 #include "tree-pretty-print.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* In gimple-pretty-print.c  */
 extern void debug_gimple_stmt (gimple);
 extern void debug_gimple_seq (gimple_seq);
@@ -32,5 +38,9 @@ extern void print_gimple_seq (FILE *, gimple_seq, int, int);
 extern void print_gimple_stmt (FILE *, gimple, int, int);
 extern void print_gimple_expr (FILE *, gimple, int, int);
 extern void dump_gimple_stmt (pretty_printer *, gimple, int, int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_GIMPLE_PRETTY_PRINT_H */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph based interprocedural optimizations.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
    2011 Free Software Foundation, Inc.
@@ -138,6 +140,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "output.h"
 #include "coverage.h"
 #include "plugin.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void cgraph_expand_all_functions (void);
 static void cgraph_mark_functions_to_output (void);
@@ -2385,5 +2391,9 @@ cgraph_materialize_all_clones (void)
 #endif
   cgraph_remove_unreachable_nodes (false, cgraph_dump_file);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-cgraphunit.h"

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Generate the machine mode enumeration and associated tables.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2010
    Free Software Foundation, Inc.
@@ -26,6 +28,10 @@ along with GCC; see the file COPYING3.  If not see
 /* enum mode_class is normally defined by machmode.h but we can't
    include that header here.  */
 #include "mode-classes.def"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define DEF_MODE_CLASS(M) M
 enum mode_class { MODE_CLASSES, MAX_MODE_CLASS };
@@ -1411,3 +1417,7 @@ main (int argc, char **argv)
     return FATAL_EXIT_CODE;
   return SUCCESS_EXIT_CODE;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

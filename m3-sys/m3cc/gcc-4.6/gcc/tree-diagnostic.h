@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Various declarations for language-independent diagnostics
    subroutines that are only for use in the compilers proper and not
    the driver or other programs.
@@ -22,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_TREE_DIAGNOSTIC_H
 #define GCC_TREE_DIAGNOSTIC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* TREE_BLOCK if the diagnostic is to be reported in some inline
    function inlined into other function, otherwise NULL.  */
@@ -52,5 +58,9 @@ along with GCC; see the file COPYING3.  If not see
 void default_tree_diagnostic_starter (diagnostic_context *, diagnostic_info *);
 extern void diagnostic_report_current_function (diagnostic_context *,
 						diagnostic_info *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_TREE_DIAGNOSTIC_H */

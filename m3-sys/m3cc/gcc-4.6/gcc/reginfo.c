@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Compute different info about registers.
    Copyright (C) 1987, 1988, 1991, 1992, 1993, 1994, 1995, 1996
    1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
@@ -51,6 +53,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "df.h"
 #include "ira.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Maximum register number used in this function, plus one.  */
 
@@ -1339,3 +1345,7 @@ finish_subregs_of_mode (void)
 }
 
 #endif /* CANNOT_CHANGE_MODE_CLASS */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

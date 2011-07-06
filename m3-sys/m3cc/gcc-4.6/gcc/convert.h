@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definition of functions in convert.c.
    Copyright (C) 1993, 2000, 2003, 2004, 2007 Free Software Foundation, Inc.
 
@@ -20,11 +22,19 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_CONVERT_H
 #define GCC_CONVERT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern tree convert_to_integer (tree, tree);
 extern tree convert_to_pointer (tree, tree);
 extern tree convert_to_real (tree, tree);
 extern tree convert_to_fixed (tree, tree);
 extern tree convert_to_complex (tree, tree);
 extern tree convert_to_vector (tree, tree);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_CONVERT_H */
