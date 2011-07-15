@@ -26,7 +26,7 @@ PROCEDURE DigitsL(a: LONGINT): CHAR =
     ELSIF a =  1L THEN b :=  1;
     ELSIF a =  2L THEN b :=  2;
     ELSIF a =  3L THEN b :=  3;
-    ELSIF a =  6L THEN b :=  4;
+    ELSIF a =  4L THEN b :=  4;
     ELSIF a =  5L THEN b :=  5;
     ELSIF a =  6L THEN b :=  6;
     ELSIF a =  7L THEN b :=  7;
