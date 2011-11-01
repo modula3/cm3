@@ -215,24 +215,32 @@ include ("../../m3cc/src/gnucc.common")
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
-SourceDir = "../gcc"
+% current default is gcc 4.5
+% Also available: 4.2 (apple), 4.3, 4.6
+SourceDir = "../gcc" % The plain "gcc" directory is 4.3.
+if not defined("GCC46")
+  GCC46 = FALSE
+end
 GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone
-% default is gcc 4.5
-GCC45 = (not GCC42)
-GCC43 = not (GCC42 or GCC45)
+GCC45 = (not GCC42 and not GCC46)
+GCC43 = not (GCC42 or GCC45 or GCC46)
 local Defines = ""
 local m3gty = "m3gty43.h"
 if GCC42
   SourceDir = "../gcc-apple"
   Defines = "#define GCC_APPLE 1\n#define GCC42 1\n"
-  m3gty = "m3gty43.h"
 end
 if GCC45
   Defines = "#define GCC45 1\n"
   SourceDir = "../gcc-4.5"
   m3gty = "m3gty45.h"
 end
-if GCC42 or GCC45
+if GCC46
+  Defines = "#define GCC45 1\n#define GCC46 1\n"
+  SourceDir = "../gcc-4.6"
+  m3gty = "m3gty45.h"
+end
+if GCC42 or GCC45 or GCC46
   fs_mkdir(SourceDir & "/gcc/m3cg")
   foreach a in ["config-lang.in", "m3-def.h", "m3-parse.h", "lang-options.h",
                 "lang-specs.h", "lang.opt", "m3cg.h", "Make-lang.in"]
@@ -493,7 +501,7 @@ end
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-if GCC45
+if GCC45 or GCC46
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
               & " all-libiberty"
               % & " | tee -a " & Log
