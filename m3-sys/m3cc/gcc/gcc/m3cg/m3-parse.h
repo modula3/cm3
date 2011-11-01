@@ -66,14 +66,18 @@ typedef struct _m3buf_t {
 static bool m3_mark_addressable (tree exp);
 #endif
 static tree m3_type_for_size (UINT precision, int unsignedp);
+#if !GCC46
 static tree m3_type_for_mode (enum machine_mode, int unsignedp);
+#endif
 static tree m3_unsigned_type (tree type_node);
 static tree m3_signed_type (tree type_node);
 static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
+#if !GCC46
 #if GCC42
 typedef HOST_WIDE_INT alias_set_type;
 #endif
 static alias_set_type m3_get_alias_set (tree);
+#endif
 
 extern "C" {
 
@@ -93,8 +97,10 @@ builtin_function (PCSTR name, tree type,
 		  enum built_in_class clas, const char *library_name,
 		  tree attrs);
 
+#if !GCC46
 static tree getdecls (void);
 static int global_bindings_p (void);
+#endif
 #if !GCC45
 static void insert_block (tree block);
 #endif
@@ -105,7 +111,9 @@ m3_expand_function (tree fndecl);
 #endif
 
 static tree m3_push_type_decl (tree type, tree name);
+#if !GCC46
 static void m3_write_globals (void);
+#endif
 
 static PCSTR trace_name (PCSTR* inout_name);
 static PSTR trace_upper_hex (PSTR format);
@@ -135,7 +143,6 @@ static tree scan_proc (size_t* a);
 static tree scan_label (size_t* a);
 
 static bool IsHostBigEndian (void);
-static varray_type varray_extend (varray_type va, size_t n);
 
 static void format_tag_v (m3buf_t* buf, char kind, UINT32 type_id, PCSTR fmt, va_list args);
 static void debug_tag (char kind, UINT32 type_id, PCSTR fmt, ...);
@@ -183,7 +190,9 @@ static void setop2 (tree p, int q);
 
 static PCSTR mode_to_string (enum machine_mode mode);
 
+#if !GCC46
 static void declare_fault_proc (void);
+#endif
 static void emit_fault_proc (void);
 static tree generate_fault (int code);
 
@@ -199,6 +208,7 @@ static void m3cg_set_compare (UINT64 n, tree type, tree proc);
 static tree m3_do_fixed_extract (tree x, INT64 m, INT64 n, tree type);
 static void m3cg_fetch_and_op (tree type1, tree type2, enum built_in_function fncode);
 
+#if !GCC46
 static void m3_breakpoint(void);
 static void m3_parse_file (int);
 
@@ -206,6 +216,7 @@ static UINT m3_init_options (UINT argc, PCSTR* argv);
 static int m3_handle_option (size_t code, PCSTR arg, int value);
 static bool m3_post_options (PCSTR* pfilename);
 static bool m3_init (void);
+#endif
 
 static tree m3_build1 (enum tree_code code, tree tipe, tree op0);
 static tree m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1);
@@ -222,7 +233,9 @@ static tree m3_do_extract (tree x, tree i, tree n, tree type);
 static tree m3_do_rotate (enum tree_code code, tree orig_type, tree val, tree cnt);
 static tree m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count);
 
+#if !GCC46 /* work in progress */
 tree convert (tree type, tree expr);
+#endif
 
 /*======================================================= OPTION HANDLING ===*/
 
