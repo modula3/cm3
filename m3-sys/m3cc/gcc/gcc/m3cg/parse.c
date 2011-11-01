@@ -56,7 +56,6 @@ extern "C" {
 #include "ggc.h"
 #include "hashtab.h"
 #include "toplev.h"
-#include "varray.h"
 #include "langhooks-def.h"
 #include "langhooks.h"
 #include "input.h"
@@ -534,11 +533,12 @@ builtin_types[T_LAST] = {
 /* store all trees here for garbage collector */
 static GTY(()) VEC(tree, gc) *m3trees; /* see alias.c for a GTY+VEC example */
 
-static void m3_gc_tree (tree a)
+static tree m3_gc_tree (tree a)
 {
   if (!m3trees)
     m3trees = VEC_alloc (tree, gc, 100);
   VEC_safe_push (tree, gc, m3trees, a);
+  return a;
 }
 
 /* Maintain a qsorted/bsearchable array of type_id/tree pairs to map type_id to tree. */
@@ -878,8 +878,10 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
 #undef LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE
 #define LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE m3_signed_or_unsigned_type
 #endif
+#if !GCC46
 #undef LANG_HOOKS_TYPE_FOR_MODE
 #define LANG_HOOKS_TYPE_FOR_MODE m3_type_for_mode
+#endif
 #undef LANG_HOOKS_TYPE_FOR_SIZE
 #define LANG_HOOKS_TYPE_FOR_SIZE m3_type_for_size
 #undef LANG_HOOKS_PARSE_FILE
@@ -916,7 +918,9 @@ m3_expand_function (tree fndecl)
 #if !GCC45
 const
 #endif
+#if !GCC46
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
+#endif
 
 #if !GCC45
 
@@ -1078,8 +1082,7 @@ m3_build_type_id (m3_type type,
           || TYPE_SIZE_UNIT (ts) != size_int (size / BITS_PER_UNIT)
           || TYPE_ALIGN (ts) != align)
       {
-        ts = make_node (RECORD_TYPE);
-        m3_gc_tree (ts);
+        ts = m3_gc_tree (make_node (RECORD_TYPE));
         TYPE_NAME (ts) = NULL_TREE;
         TYPE_FIELDS (ts) = NULL_TREE;
         TYPE_SIZE (ts) = bitsize_int (size);
@@ -1351,11 +1354,15 @@ m3_do_shift (enum tree_code code, tree type, tree val, tree count)
 
 #endif
 
+#if !GCC46
+
 alias_set_type
 m3_get_alias_set (tree)
 {
   return 0;
 }
+
+#endif
 
 #if !GCC45
 static bool
@@ -1414,6 +1421,8 @@ m3_type_for_size (UINT bits, int unsignedp)
   return NULL;
 }
 
+#if !GCC46
+
 static tree
 m3_type_for_mode (enum machine_mode mode, int unsignedp)
 /* Return a data type that has machine mode MODE.  UNSIGNEDP selects
@@ -1434,6 +1443,8 @@ m3_type_for_mode (enum machine_mode mode, int unsignedp)
 
   return NULL;
 }
+
+#endif
 
 static tree
 m3_unsigned_type (tree type_node)
@@ -1459,6 +1470,8 @@ m3_signed_or_unsigned_type (int unsignedp, tree type)
   else
     return m3_type_for_size (TYPE_PRECISION (type), unsignedp);
 }
+
+#if !GCC46
 
 static int
 global_bindings_p (void)
@@ -1475,6 +1488,8 @@ getdecls (void)
 {
   return current_block ? BLOCK_VARS (current_block) : global_decls;
 }
+
+#endif
 
 #if !GCC45
 
@@ -1583,6 +1598,8 @@ builtin_function (PCSTR name, tree type,
   return decl;
 }
 
+#if !GCC46
+
 static void
 m3_write_globals (void)
 {
@@ -1633,6 +1650,8 @@ m3_write_globals (void)
   if (!GCC45)
     write_global_declarations ();
 }
+
+#endif
 
 static void
 sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
@@ -1702,8 +1721,12 @@ m3_init_decl_processing (void)
 
   current_function_decl = NULL;
 
+#if GCC46
+  build_common_tree_nodes (false /* unsigned char */);
+#else
   build_common_tree_nodes (false /* unsigned char */,
                            false /* unsigned size_type */);
+#endif
 
   if (BITS_PER_INTEGER == 32)
     {
@@ -1929,15 +1952,15 @@ m3_init_decl_processing (void)
 /* Variable arrays of trees. */
 
 static map<size_t, m3cg_BIND_SEGMENT_t*> bind_segments; /* wasteful but ok */
-static GTY (()) varray_type all_vars;
-static GTY (()) varray_type all_procs;
-static GTY (()) varray_type all_labels;
-static GTY (()) varray_type expr_stack;
-static GTY (()) varray_type call_stack;
+static std::vector<tree> all_vars;
+static std::vector<tree> all_procs;
+static std::vector<tree> all_labels;
+static std::vector<tree> expr_stack;
+static std::vector<tree> call_stack;
 
-#define STACK_PUSH(stk, x)      VARRAY_PUSH_TREE (stk, (x))
-#define STACK_POP(stk)          VARRAY_POP (stk)
-#define STACK_REF(stk, n)       ((&VARRAY_TOP_TREE (stk) + 1)[(n)])
+#define STACK_PUSH(stk, x)      ((stk).push_back(x))
+#define STACK_POP(stk)          ((stk).pop_back())
+#define STACK_REF(stk, n)       ((stk)[(stk).size() + (n)])
 
 #define EXPR_PUSH(x)    STACK_PUSH (expr_stack, (x))
 #define EXPR_POP()      STACK_POP (expr_stack)
@@ -1980,11 +2003,11 @@ static UINT m3cg_lineno = 1;
 static void
 m3_init_parse (void)
 {
-  VARRAY_TREE_INIT (all_vars, 100, "all_vars");
-  VARRAY_TREE_INIT (all_procs, 100, "all_procs");
-  VARRAY_TREE_INIT (all_labels, 100, "all_labels");
-  VARRAY_TREE_INIT (expr_stack, 100, "expr_stack");
-  VARRAY_TREE_INIT (call_stack, 100 * 2, "call_stack");
+  all_vars.reserve(100);
+  all_procs.reserve(100);
+  all_labels.reserve(100);
+  expr_stack.reserve(100);
+  call_stack.reserve(200 * 2);
 }
 
 static void
@@ -2393,23 +2416,12 @@ trace_boolean (PCSTR name, bool val)
 
 /*------------------------------------------------------------- variables ---*/
 
-#define VARRAY_EXTEND(va, n) ((va) = varray_extend (va, n))
-
-static varray_type
-varray_extend (varray_type va, size_t n)
+static void
+VARRAY_EXTEND (std::vector<tree>& va, size_t n)
 {
-  if (n <= VARRAY_ACTIVE_SIZE (va))
-    return va;
-  size_t num_elements = VARRAY_SIZE (va);
-  if (n > num_elements)
-  {
-    do
-      num_elements *= 2;
-    while (n > num_elements);
-    VARRAY_GROW (va, num_elements);
-  }
-  VARRAY_ACTIVE_SIZE (va) = n;
-  return va;
+  va.reserve(n);
+  while (n > va.size())
+    va.push_back(NULL);
 }
 
 static tree
@@ -2420,7 +2432,7 @@ scan_var (enum tree_code code, size_t* p)
     *p = i;
 
   VARRAY_EXTEND (all_vars, i + 1);
-  tree var = VARRAY_TREE (all_vars, i);
+  tree var = all_vars[i];
   if (code == ERROR_MARK)
   {
     if (var == NULL)
@@ -2432,8 +2444,8 @@ scan_var (enum tree_code code, size_t* p)
     if (var != NULL)
       fatal_error ("*** variable should not already exist, v.0x%x, line %u",
                    (int)i, m3cg_lineno);
-    var = make_node (code);
-    VARRAY_TREE (all_vars, i) = var;
+    var = m3_gc_tree (make_node (code));
+    all_vars[i] = var;
     DECL_NAME (var) = NULL_TREE;
   }
   return var;
@@ -2470,15 +2482,15 @@ scan_proc (size_t* pi)
   if (i <= 0)
     return NULL;
   VARRAY_EXTEND (all_procs, i + 1);
-  if (VARRAY_TREE (all_procs, i) == NULL)
+  if (all_procs[i] == NULL)
   {
-    p = make_node (FUNCTION_DECL);
+    p = m3_gc_tree (make_node (FUNCTION_DECL));
     DECL_PRESERVE_P (p) = true;
-    VARRAY_TREE (all_procs, i) = p;
+    all_procs[i] = p;
   }
   else
   {
-    p = VARRAY_TREE (all_procs, i);
+    p = all_procs[i];
   }
   return p;
 }
@@ -2505,9 +2517,9 @@ scan_label (size_t* p)
   if (i < 0)
     return NULL;
   VARRAY_EXTEND (all_labels, i + 1);
-  if (VARRAY_TREE (all_labels, i) == NULL)
-    VARRAY_TREE (all_labels, i) = build_decl (LABEL_DECL, NULL_TREE, t_void);
-  return VARRAY_TREE (all_labels, i);
+  if (all_labels[i] == NULL)
+    all_labels[i] = m3_gc_tree (build_decl (LABEL_DECL, NULL_TREE, t_void));
+  return all_labels[i];
 }
 
 static void
@@ -3011,6 +3023,34 @@ m3_language_function (void)
 
 #else
 
+#if GCC46 /* work in progress */
+
+#define GCC46_ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED
+
+static struct language_function*
+m3_language_function (void)
+{
+    return 0;
+}
+
+/* work in progress */
+tree
+build_call_list (tree a ATTRIBUTE_UNUSED, tree b ATTRIBUTE_UNUSED, tree c ATTRIBUTE_UNUSED)
+{
+  return 0;
+}
+
+/* work in progress */
+tree
+build_function_call_expr (tree a ATTRIBUTE_UNUSED, tree b ATTRIBUTE_UNUSED, tree c ATTRIBUTE_UNUSED)
+{
+  return 0;
+}
+
+#else
+
+#define GCC46_ATTRIBUTE_UNUSED /* nothing */
+
 static struct language_function*
 m3_language_function (void)
 {
@@ -3026,6 +3066,8 @@ m3_language_function (void)
     }
     return f;
 }
+
+#endif
 
 static void
 m3_volatilize_decl (tree decl)
@@ -3283,6 +3325,8 @@ static PCSTR mode_to_string (enum machine_mode mode)
 
 /*---------------------------------------------------------------- faults ---*/
 
+#if !GCC46 /* work in progress */
+
 static void
 declare_fault_proc (void)
 {
@@ -3332,6 +3376,8 @@ declare_fault_proc (void)
 
   fault_proc = proc;
 }
+
+#endif
 
 static void
 m3_gimplify_function (tree fndecl)
@@ -3416,8 +3462,10 @@ emit_fault_proc (void)
 #define LINE_SHIFT 5
 
 static tree
-generate_fault (int code)
+generate_fault (int code GCC46_ATTRIBUTE_UNUSED)
 {
+  tree t = { 0 };
+#if !GCC46 /* work in progress */
   /* Losing bits of the code seems bad: wrong error reported.
    * Losing bits of the line number is "ok".
    * Line numbers up to around 100 million are preserved.
@@ -3428,11 +3476,12 @@ generate_fault (int code)
     declare_fault_proc ();
   tree arg = build_int_cst (t_int, (LOCATION_LINE (input_location) << LINE_SHIFT) + (code & FAULT_MASK));
 #if GCC45
-  tree t = build_function_call_expr (input_location, fault_proc, build_tree_list (NULL_TREE, arg));
+  t = build_function_call_expr (input_location, fault_proc, build_tree_list (NULL_TREE, arg));
 #else
-  tree t = build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
+  t = build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
 #endif
   TREE_SIDE_EFFECTS (t) = true; // needed?
+#endif
   return t;
 }
 
@@ -5700,8 +5749,10 @@ M3CG_HANDLER (LOAD_PROCEDURE)
 
 M3CG_HANDLER (LOAD_STATIC_LINK)
 {
+#if !GCC46 /* work in progress */
   DECL_UNINLINABLE (current_function_decl) = true; // bug
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
+#endif
 }
 
 M3CG_HANDLER (COMMENT)
@@ -5891,14 +5942,21 @@ incompatible:
 static SCHAR m3_indent_op[LAST_OPCODE];
 
 static volatile UINT m3_break_lineno; /* set in debugger */
-static void m3_breakpoint(void) /* set breakpoint in debugger */
+
+#if !GCC46
+
+static
+void
+m3_breakpoint(void) /* set breakpoint in debugger */
 {
 #ifdef __GNUC__
   asm(""); /* do not inline */
 #endif
 }
 
-static void trace_op (UCHAR op)
+static
+void
+trace_op (UCHAR op)
 {
   if (option_trace_all)
   {
@@ -6005,7 +6063,11 @@ m3_parse_file (int)
   }
 }
 
+#endif
+
 /*===================================================== RUNTIME FUNCTIONS ===*/
+
+#if !GCC46
 
 /* Prepare to handle switches.  */
 static UINT
@@ -6054,6 +6116,8 @@ m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
 
   return 1;
 }
+
+#endif
 
 /* Post-switch processing. */
 bool
@@ -6124,6 +6188,8 @@ m3_init (void)
   return true;
 }
 
+#if !GCC46 /* work in progress */
+
 tree
 convert (tree type, tree expr)
 /* from c-convert.c */
@@ -6180,6 +6246,8 @@ convert (tree type, tree expr)
   error ("conversion to non-scalar type requested");
   return error_mark_node;
 }
+
+#endif
 
 #if GCC_APPLE
 extern "C" {
