@@ -1,0 +1,8 @@
+readonly TARGET = "IA64_LINUX" % code generation target
+readonly GNU_PLATFORM = "ia64-linux" % "cpu-os" string for GNU
+
+SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC" % C compiler
+readonly SYSTEM_ASM = "as --64" % Assembler
+
+include("IA64.common")
+include("Linux.common")
