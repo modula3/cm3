@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Override definitions in elfos.h/svr4.h to be correct for IA64.
 
 Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005,
@@ -23,6 +25,10 @@ You should have received a copy of the GNU General Public License and
 a copy of the GCC Runtime Library Exception along with this program;
 see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #undef TARGET_INIT_LIBFUNCS
 #define TARGET_INIT_LIBFUNCS ia64_sysv4_init_libfuncs
@@ -152,3 +158,7 @@ do {									\
 
 #define SDATA_SECTION_ASM_OP "\t.sdata"
 #define SBSS_SECTION_ASM_OP "\t.sbss"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
