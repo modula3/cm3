@@ -325,6 +325,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  *)
                  Jumpbuf_size := 18 * Address.size;
 
+    | Systems.IA64_FREEBSD, Systems.IA64_HPUX,
+      Systems.IA64_LINUX, Systems.IA64_NETBSD, Systems.IA64_NT,
+      Systems.IA64_OPENBSD, Systems.IA64_VMS =>
+                 (* random guess: 1K *)
+                 Jumpbuf_size     := 128 * Address.size;
+
     | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
                  (* 76 bytes with 4 byte alignment *)
                  Jumpbuf_size     := 19 * Address.size;
