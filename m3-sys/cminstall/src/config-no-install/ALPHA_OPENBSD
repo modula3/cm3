@@ -3,7 +3,6 @@ readonly GNU_PLATFORM = "alpha-openbsd" % "cpu-os" string for GNU
 
 SYSTEM_CC = "gcc -gstabs+ -fPIC" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
-m3back_m64 = "" % -m64 not allowed
 
 include("Alpha64.common")
 include("OpenBSD.common")
