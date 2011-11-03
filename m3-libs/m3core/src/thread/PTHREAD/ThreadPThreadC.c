@@ -16,10 +16,6 @@
 #include <semaphore.h>
 #endif
 
-#if __GNUC__ >= 4
-#pragma GCC visibility push(hidden)
-#endif
-
 #define M3MODULE ThreadPThread
 
 #if defined(__sparc) || defined(__ia64__)
@@ -43,6 +39,12 @@ extern "C" {
 #define sizeof_pthread_mutex_t  ThreadPThread__sizeof_pthread_mutex_t
 #define sizeof_pthread_cond_t   ThreadPThread__sizeof_pthread_cond_t
 #define SIG_SUSPEND             ThreadPThread__SIG_SUSPEND
+
+void SignalHandler(int signo, siginfo_t *info, void *context);
+
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
+#endif
 
 /* expected values for compat, if compat matters:
     Solaris: 17 (at least 32bit SPARC?)
@@ -81,8 +83,6 @@ static sigset_t mask;
 
 /* Signal based suspend/resume */
 static sem_t ackSem;
-
-void SignalHandler(int signo, siginfo_t *info, void *context);
 
 static void SignalHandlerC(int signo, siginfo_t *info, void *context)
 /* wrapper to workaround on ALPHA_LINUX:
