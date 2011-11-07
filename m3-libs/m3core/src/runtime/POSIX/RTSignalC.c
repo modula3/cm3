@@ -158,7 +158,7 @@ static WORD_T GetPC(void* xcontext)
 #error unknown __sun/__sparc target
 #endif
 #elif defined(__linux)
-/* see /src/glibc-2.14/sysdeps/unix/sysv//linux/*/sigcontextinfo.h */
+/* see /src/glibc-2.14/sysdeps/unix/sysv/linux/*/sigcontextinfo.h */
 #if defined(__i386)
       context->uc_mcontext.gregs[REG_EIP]
 #elif defined(__amd64)
