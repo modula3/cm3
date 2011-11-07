@@ -277,9 +277,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         Structure_size_boundary := 16;
     END;
 
-    (* default *)
-    Jumpbuf_size := 1024 * Char.size;
-
     CASE System OF
     
     |  Systems.ALPHA_LINUX => Jumpbuf_size := 34 * Address.size;
@@ -327,6 +324,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                     and _setjmp3 appears to use more. Consider using _setjmp3.
                  *)
                  Jumpbuf_size := 18 * Address.size;
+
+    | Systems.IA64_FREEBSD, Systems.IA64_HPUX,
+      Systems.IA64_LINUX, Systems.IA64_NETBSD, Systems.IA64_NT,
+      Systems.IA64_OPENBSD, Systems.IA64_VMS =>
+                 (* random guess: 1K *)
+                 Jumpbuf_size     := 128 * Address.size;
 
     | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
                  (* 76 bytes with 4 byte alignment *)
