@@ -170,13 +170,13 @@ static WORD_T GetPC(void* xcontext)
 #elif defined(__alpha__)
       context->uc_mcontext.sc_pc
 #elif defined(__ia64__)
-      context->uc_mcontext->sc_ip
+      context->uc_mcontext.sc_ip
 #elif defined(__sh__)
 #error untested __linux target
-      context->uc_mcontext->sc_pc
+      context->uc_mcontext.sc_pc
 #elif defined(__s390__)
 #error untested __linux target
-      context->uc_mcontext->sregs->regs.psw.addr
+      context->uc_mcontext.sregs.regs.psw.addr
 #else
 #error unknown __linux target
 #endif
