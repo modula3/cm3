@@ -14,7 +14,7 @@ IMPORT ArrayType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Procedure, UserProc, Target, M3RT;
 
 TYPE
-  T = Value.T BRANDED OBJECT 
+  T = Value.T BRANDED OBJECT
         offset   : INTEGER;
         tipe     : Type.T;
         dfault   : Expr.T;
@@ -252,7 +252,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
   VAR
     j                 : INTEGER;
     e, value          : Expr.T;
-    index, elt, t, te : Type.T; 
+    index, elt, t, te : Type.T;
     posOK, ok         : BOOLEAN;
     name              : M3ID.T;
     tt                : T;
@@ -395,8 +395,8 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
     IF (NOT ok) THEN RETURN FALSE END;
 
     (* no more possible errors => build the new argument list *)
-    IF (NUMBER (actuals^) # nFormals) THEN 
-      actuals := NEW (Expr.List, nFormals) 
+    IF (NUMBER (actuals^) # nFormals) THEN
+      actuals := NEW (Expr.List, nFormals)
     END;
     FOR i := 0 TO nFormals - 1 DO  actuals[i] := slots[i].actual  END;
     RETURN TRUE;
@@ -710,7 +710,7 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
 
       tlhs := OpenArrayType.OpenType (tlhs);
       FOR i := d_lhs TO d_rhs - 1 DO
-        b := ArrayType.Split (tlhs, index, /* should this be tlhs? */ elt); <*ASSERT b*>
+        b := ArrayType.Split (tlhs, index, tlhs); <*ASSERT b*>
         <*ASSERT index # NIL*>
         CG.Push (rhs);
         CG.Open_size (i);
