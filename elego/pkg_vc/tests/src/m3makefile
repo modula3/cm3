@@ -1,9 +1,10 @@
 
+% This is completely out-of-date and does currently not compile
 import("libm3")
 import("pkg_vc")
 import("fileinfo")
 
-build_standalone()
-implementation("Main")
+%build_standalone()
+%implementation("Main")
 
-Program("pkgvc_test")
+%Program("pkgvc_test")
