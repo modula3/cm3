@@ -1,8 +1,8 @@
 (*---------------------------------------------------------------------------*)
 MODULE Main;
 
-IMPORT CVS, Msg, Text, TextSeq, Params, Process;
-IMPORT AbstractPathname AS APN;
+IMPORT CVS, SMsg AS Msg, Text, TextSeq, Params, Process;
+IMPORT APN;
 
 PROCEDURE ListOut(list : TextSeq.T) =
   BEGIN
