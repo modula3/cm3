@@ -8,5 +8,5 @@ import("filepool")
 build_standalone()
 
 implementation("Main")
-Program("t_filepool")
+Program("Test")
 

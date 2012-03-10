@@ -3,4 +3,4 @@ import ("fileinfo")
 
 implementation ("Main")
 build_standalone()
-program ("FileInfoTest")
+program ("Test")
