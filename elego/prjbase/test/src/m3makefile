@@ -2,11 +2,13 @@
 override("prjbase", "../../..")
 
 import("libm3")
-import("miscutils")
+import("sysutils")
 import("pkg_base")
 import("prjbase")
+import("compactrc")
+import("miniscan")
 
 implementation("Main")
 
 build_standalone()
-program("t_prjm") 
+program("Test") 

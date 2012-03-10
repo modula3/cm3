@@ -2,7 +2,7 @@
 MODULE Main;
 
 IMPORT Stdio, Fmt, Rd, FileRd, Params;
-IMPORT Msg, SimpleScanner, ScanToken;
+IMPORT SMsg AS Msg, SimpleScanner, ScanToken;
 
 (*---------------------------------------------------------------------------*)
 (*
