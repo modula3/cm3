@@ -1,8 +1,9 @@
 (*---------------------------------------------------------------------------*)
 MODULE Main;
 
-IMPORT Text, TextRd, TextSeq, TextTextTbl, Params, Bundle;
-IMPORT Msg, PkgBase, PkgBaseBundle, PrjDesc, FSUtils;
+IMPORT TextRd, TextSeq, TextTextTbl, Params, Bundle;
+IMPORT SMsg AS Msg, PkgBase, PkgBaseBundle, PrjDesc, FSUtils, CompactRC,
+       SimpleScanner, ScanToken;
 
 
 (*---------------------------------------------------------------------------*)
@@ -28,10 +29,18 @@ PROCEDURE OutTextTable(header : TEXT; tbl : TextTextTbl.T) =
     Msg.T("");
   END OutTextTable;
 
+(*--------------------------------------------------------------------------*)
+REVEAL
+  SimpleScanner.Token = 
+    ScanToken.T BRANDED "ScanToken prjbase test  0.0" OBJECT
+    METHODS
+    END;
+
 (*---------------------------------------------------------------------------*)
 VAR (* Main *)
-  cfg     := NEW(PkgBase.T).init();
   cfgData := Bundle.Get(PkgBaseBundle.Get(), "PkgBase.DefaultData");
+  env     := CompactRC.Evaluate(CompactRC.Eval(PkgBaseBundle.Get()));
+  cfg     := NEW(PkgBase.T).init(env);
   trd     := TextRd.New(cfgData);
   prjdesc :  PrjDesc.T;
   fn      :  TEXT;
