@@ -1,7 +1,7 @@
 (*--------------------------------------------------------------------------*)
 MODULE Main;
 
-IMPORT Msg, M3makefile, Params, OSError, TextSeq, Text;
+IMPORT SMsg AS Msg, M3makefile, Params, OSError, TextSeq, Text;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE TextSeqToText(seq : TextSeq.T; sep := " "; maxCol := 0;

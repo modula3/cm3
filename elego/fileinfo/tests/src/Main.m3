@@ -2,8 +2,10 @@
 MODULE Main;
 
   IMPORT
-    TextSeq, AbstractPathname, AbstractPathnameSeq, Time, Params, Process, 
-    Fmt, Wr, Stdio, FileInfo, SimpleScanner, ScanToken, FingerprintFmt, Msg;
+    TextSeq, APN AS AbstractPathname, APNSeq AS AbstractPathnameSeq,
+    Time, Params, Process, 
+    Fmt, Wr, Stdio, FileInfo, SimpleScanner, ScanToken, FingerprintFmt,
+    SMsg AS Msg;
 
 REVEAL
   SimpleScanner.Token = 
