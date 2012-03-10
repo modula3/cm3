@@ -2,7 +2,7 @@
 MODULE Main;
 
 IMPORT Text, TextSeq, Fmt;
-IMPORT Msg, FilePool, FSUtils, TextUtils;
+IMPORT SMsg AS Msg, FilePool, FSUtils, TextUtils;
 
 (*---------------------------------------------------------------------------*)
 CONST

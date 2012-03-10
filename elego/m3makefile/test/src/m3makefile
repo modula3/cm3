@@ -2,11 +2,11 @@
 m3_option("-commands")
 override("m3makefile", "../../..")
 import("libm3")
-import("miscutils")
+import("sysutils")
 import("m3makefile")
 
 implementation("Main")
 
 build_standalone()
-program("m3makefile-test")
+program("Test")
 
