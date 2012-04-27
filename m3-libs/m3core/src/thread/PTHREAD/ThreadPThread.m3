@@ -781,6 +781,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
           newlySent := 0;
           <*ASSERT act.state # ActState.Starting*>
           IF act.state # ActState.Stopped THEN
+            SetState(act, ActState.Stopping);
             SignalThread(act);
             INC(newlySent);
           END;
@@ -970,6 +971,7 @@ PROCEDURE StopWorld () =
         WHILE act # me DO
           <*ASSERT act.state # ActState.Starting*>
           IF act.state # ActState.Stopped THEN
+            SetState(act, ActState.Stopping);
             SignalThread(act);
             INC(newlySent);
           END;
