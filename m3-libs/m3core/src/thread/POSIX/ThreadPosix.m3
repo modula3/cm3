@@ -19,6 +19,7 @@ IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 FROM ThreadInternal IMPORT FDSet, FDSetSize, FDS, Select;
+FROM Usignal IMPORT SIGCHLD, SIGSEGV;
 
 REVEAL
   (* Remember, the report (p 43-44) says that MUTEX is predeclared and <: ROOT;
@@ -118,10 +119,7 @@ TYPE SelectRec = RECORD
 
    3. received-signals mask
 
-   4. ValueOfSIGCHLD used to get the value of the C constant SIGCHLD
-      in the Modula-3 environment
-
-   5. signal handler has to be installed even if program is single-threaded
+   4. signal handler has to be installed even if program is single-threaded
 
    The mechanism could be generalized to handle other signals as well
    as multiple types of signals.
@@ -841,9 +839,7 @@ PROCEDURE StartSwitching () =
 CONST MaxSigs = 64;
 TYPE Sig = [ 0..MaxSigs-1 ];
 
-VAR (*CONST*) SIGCHLD := ValueOfSIGCHLD();
-VAR (*CONST*) SIGSEGV := ValueOfSIGSEGV();
-              
+VAR           
     gotSigs := SET OF Sig { };
 
 PROCEDURE switch_thread (sig: int) RAISES {Alerted} =
@@ -1134,7 +1130,7 @@ PROCEDURE WaitProcess (pid: int; VAR status: int): int =
       WITH r = Uexec.waitpid(pid, ADR(status), Uexec.WNOHANG) DO
         IF r # 0 THEN RETURN r END;
       END;
-      SigPause(Delay,SIGCHLD);
+      SigPause(Delay, SIGCHLD);
     END;
   END WaitProcess;
 
