@@ -45,12 +45,6 @@ enum plugin_event
   PLUGIN_EVENT_FIRST_DYNAMIC
 };
 
-/* All globals declared here have C linkage to reduce link compatibility
-   issues with implementation language choice and mangling.  */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern const char **plugin_event_name;
 
 struct plugin_argument
@@ -154,20 +148,7 @@ extern int unregister_callback (const char *plugin_name, int event);
    -iplugindir program argument to cc1.  */
 extern const char* default_plugin_dir_name (void);
 
-#ifdef __cplusplus
-}
-#endif
-
-/* In case the C++ compiler does name mangling for globals, declare
-   plugin_is_GPL_compatible extern "C" so that a later definition
-   in a plugin file will have this linkage.  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern int plugin_is_GPL_compatible;
-#ifdef __cplusplus
-}
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

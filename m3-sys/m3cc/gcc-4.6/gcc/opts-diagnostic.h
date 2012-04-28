@@ -28,4 +28,9 @@ extern "C" {
 
 extern char *option_name (diagnostic_context *context, int option_index,
 			  diagnostic_t orig_diag_kind, diagnostic_t diag_kind);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif

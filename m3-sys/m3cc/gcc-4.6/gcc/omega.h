@@ -342,4 +342,8 @@ omega_copy_problem (omega_pb p1, omega_pb p2)
     p1->forwarding_address[i] = p2->forwarding_address[i];
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* GCC_OMEGA_H */
