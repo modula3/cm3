@@ -104,14 +104,14 @@ int
 __cdecl
 value_of_SIGCHLD(void)
 {
-	return SIGCHLD;
+    return SIGCHLD;
 }
 
 int
 __cdecl
 value_of_SIGSEGV(void)
 {
-	return SIGSEGV;
+    return SIGSEGV;
 }
 
 void
@@ -136,8 +136,8 @@ disallow_signals(void) /* disallow all, really */
 {
     int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
-    int j = sigprocmask(SIG_BLOCK, &OtherSignals, NULL);
-    assert(j == 0);
+    i = sigprocmask(SIG_BLOCK, &OtherSignals, NULL);
+    assert(i == 0);
 }
 
 typedef struct {
