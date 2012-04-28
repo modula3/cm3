@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* XCOFF definitions.  These are needed in dbxout.c, final.c,
    and xcoffout.h.
    Copyright (C) 1998, 2000, 2002, 2003, 2004, 2007, 2008

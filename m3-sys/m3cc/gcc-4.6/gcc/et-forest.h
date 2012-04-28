@@ -53,7 +53,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
+#endif
 
 /* The node representing the node in an et tree.  */
 struct et_node
@@ -83,6 +83,6 @@ struct et_node *et_root (struct et_node *);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif
 
 #endif /* _ET_TREE_H */
