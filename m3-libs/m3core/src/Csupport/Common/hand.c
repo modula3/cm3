@@ -128,8 +128,8 @@ WORD_T
 __stdcall
 set_member(WORD_T elt, WORD_T* set)
 {
-  register WORD_T word = elt / SET_GRAIN;
-  register WORD_T bit  = elt % SET_GRAIN;
+  WORD_T word = elt / SET_GRAIN;
+  WORD_T bit  = elt % SET_GRAIN;
   return (set[word] & (1UL << bit)) != 0;
 }
 
@@ -137,8 +137,8 @@ void
 __stdcall
 set_union(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register WORD_T n_words = n_bits / SET_GRAIN;
-  register WORD_T i;
+  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] | c[i];
 }
@@ -147,8 +147,8 @@ void
 __stdcall
 set_intersection(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register WORD_T n_words = n_bits / SET_GRAIN;
-  register WORD_T i;
+  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] & c[i];
 }
@@ -157,8 +157,8 @@ void
 __stdcall
 set_difference(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register WORD_T n_words = n_bits / SET_GRAIN;
-  register WORD_T i;
+  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] & (~ c[i]);
 }
@@ -167,8 +167,8 @@ void
 __stdcall
 set_sym_difference(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register WORD_T n_words = n_bits / SET_GRAIN;
-  register WORD_T i;
+  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] ^ c[i];
 }
@@ -193,8 +193,8 @@ WORD_T
 __stdcall
 set_le(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
-  register WORD_T n_words = n_bits / SET_GRAIN;
-  register WORD_T i;
+  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T i;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
   }
@@ -205,9 +205,9 @@ WORD_T
 __stdcall
 set_lt(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
-  register WORD_T n_words = n_bits / SET_GRAIN;
-  register WORD_T i;
-  register WORD_T eq = 0;
+  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T i;
+  WORD_T eq = 0;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
     eq |= (a[i] ^ b[i]);
