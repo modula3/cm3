@@ -91,11 +91,11 @@ setup_sigvtalrm(SignalHandler1 handler)
 
   act.sa_handler = handler;
   act.sa_flags = SA_RESTART;
-  sigemptyset(&(act.sa_mask));
-  sigemptyset(&(oct.sa_mask));
-  if (sigaction (SIG_TIMESLICE, &act, NULL)) abort();
-  if (sigaction (SIGCHLD, &oct, NULL)) abort();
-  if (sigaction (SIGSEGV, &oct, NULL)) abort();
+  sigemptyset(&act.sa_mask);
+  sigemptyset(&oct.sa_mask);
+  if (sigaction(SIG_TIMESLICE, &act, NULL)) abort();
+  if (sigaction(SIGCHLD, &oct, NULL)) abort();
+  if (sigaction(SIGSEGV, &oct, NULL)) abort();
 }
 
 void
@@ -234,7 +234,7 @@ xMakeContext(
 
 void *
 __cdecl
-MakeContext (void (*p)(void), INTEGER words)
+MakeContext(void (*p)(void), INTEGER words)
 {
   Context *c = (Context *)calloc (1, sizeof(*c));
   INTEGER size = sizeof(void *) * words;
@@ -284,7 +284,7 @@ Error:
 
 void
 __cdecl
-SwapContext (Context *from, Context *to)
+SwapContext(Context *from, Context *to)
 {
 #ifdef M3_USE_SIGALTSTACK
   SWAP_CONTEXT(from, to);
@@ -295,7 +295,7 @@ SwapContext (Context *from, Context *to)
 
 void
 __cdecl
-DisposeContext (Context **c)
+DisposeContext(Context **c)
 {
   if (munmap((*c)->stackaddr, (*c)->stacksize)) abort();
   free(*c);
