@@ -929,4 +929,9 @@ set_direct_optab_handler (direct_optab op, enum machine_mode mode,
 extern rtx optab_libfunc (optab optab, enum machine_mode mode);
 extern rtx convert_optab_libfunc (convert_optab optab, enum machine_mode mode1,
 			          enum machine_mode mode2);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* GCC_OPTABS_H */

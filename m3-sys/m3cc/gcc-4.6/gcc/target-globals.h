@@ -22,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef TARGET_GLOBALS_H
 #define TARGET_GLOBALS_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if SWITCHABLE_TARGET
 extern struct target_flag_state *this_target_flag_state;
 extern struct target_regs *this_target_regs;
