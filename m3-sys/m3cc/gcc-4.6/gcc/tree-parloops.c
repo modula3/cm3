@@ -34,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "tree-vectorizer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This pass tries to distribute iterations of loops into several threads.
    The implementation is straightforward -- for each loop we test whether its
    iterations are independent, and if it is the case (and some additional

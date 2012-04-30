@@ -37,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "ipa-reference.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This file contains the code required to manage the operands cache of the
    SSA optimizer.  For every stmt, we maintain an operand cache in the stmt
    annotation.  This cache contains operands that will be of interest to

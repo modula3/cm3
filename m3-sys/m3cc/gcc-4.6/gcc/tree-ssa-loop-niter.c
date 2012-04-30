@@ -44,6 +44,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "tree-inline.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SWAP(X, Y) do { affine_iv *tmp = (X); (X) = (Y); (Y) = tmp; } while (0)
 
 /* The maximum number of dominator BBs we search for conditions
