@@ -6940,7 +6940,6 @@ fold_builtin_call_array (location_t loc, tree type,
 			 tree *argarray)
 {
   tree ret = NULL_TREE;
-   tree exp;
 
   if (TREE_CODE (fn) == ADDR_EXPR)
   {
