@@ -50,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "alloc-pool.h"
 #include "tree-ssa-alias.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Broad overview of how alias analysis on gimple works:
 
    Statements clobbering or using memory are linked through the

@@ -39,6 +39,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "tree-vectorizer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The loop superpass.  */
 
 static bool

@@ -50,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "debug.h"
 #include "obstack.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Darwin supports a feature called fix-and-continue, which is used
    for rapid turn around debugging.  When code is compiled with the
    -mfix-and-continue flag, two changes are made to the generated code
@@ -3402,5 +3406,9 @@ darwin_function_switched_text_sections (FILE *fp, tree decl, bool new_is_cold)
   assemble_name_raw (fp, (const char *) buf);
   fputs (":\n", fp);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #include "gt-darwin.h"
