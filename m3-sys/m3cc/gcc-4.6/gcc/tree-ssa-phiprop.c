@@ -36,6 +36,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "flags.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This pass propagates indirect loads through the PHI node for its
    address to make the load source possibly non-addressable and to
    allow for PHI optimization to trigger.

@@ -267,6 +267,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "params.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static tree analyze_scalar_evolution_1 (struct loop *, tree, tree);
 
 /* The cached information about an SSA name VAR, claiming that below

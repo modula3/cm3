@@ -42,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfgloop.h"
 #include "flags.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*  This is a simple global reassociation pass.  It is, in part, based
     on the LLVM pass of the same name (They do some things more/less
     than we do, in different orders, etc).

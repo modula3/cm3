@@ -174,6 +174,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "gcse.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* We support GCSE via Partial Redundancy Elimination.  PRE optimizations
    are a superset of those done by classic GCSE.
 

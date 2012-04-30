@@ -42,6 +42,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "langhooks.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The following routines implement the SSA copy renaming phase.
 
    This optimization looks for copies between 2 SSA_NAMES, either through a

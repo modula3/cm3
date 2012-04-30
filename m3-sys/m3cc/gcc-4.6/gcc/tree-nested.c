@@ -37,6 +37,9 @@
 #include "langhooks.h"
 #include "pointer-set.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The object of this pass is to lower the representation of a set of nested
    functions in order to expose all of the gory details of the various

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* CPU mode switching
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
    2009, 2010 Free Software Foundation, Inc.
@@ -41,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 /* We want target macros for the mode switching code to be able to refer
    to instruction attribute values.  */
 #include "insn-attr.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef OPTIMIZE_MODE_SWITCHING
 
@@ -775,3 +781,7 @@ struct rtl_opt_pass pass_mode_switching =
   TODO_dump_func                        /* todo_flags_finish */
  }
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -37,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "tree-scalar-evolution.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Extended folder for chrecs.  */
 
 /* Determines whether CST is not a constant evolution.  */

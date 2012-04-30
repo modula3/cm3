@@ -55,6 +55,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-inline.h"
 #include "target.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Specifies types of loops that may be unrolled.  */
 
 enum unroll_level

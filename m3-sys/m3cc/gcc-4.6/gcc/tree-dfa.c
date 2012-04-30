@@ -46,6 +46,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "cgraph.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Build and maintain data flow information for trees.  */
 
 /* Counters used to display DFA and SSA statistics.  */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* HOST_WIDE_INT definitions for the GNU compiler.
    Copyright (C) 1998, 2002, 2004, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -9,6 +11,10 @@
 
 #ifndef GCC_HWINT_H
 #define GCC_HWINT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This describes the machine the compiler is hosted on.  */
 #define HOST_BITS_PER_CHAR  CHAR_BIT
@@ -256,5 +262,9 @@ least_common_multiple (int a, int b)
 {
   return (abs (a) * abs (b) / gcd (a, b));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_HWINT_H */

@@ -106,6 +106,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "expr.h"		/* Because optabs.h wants sepops.  */
 #include "optabs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This structure represents one basic block that either computes a
    division, or is a common dominator for basic block that compute a
    division.  */

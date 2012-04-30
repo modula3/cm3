@@ -37,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "value-prof.h"
 #include "predict.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Local functions, macros and variables.  */
 static const char *op_symbol (const_tree);
 static void pretty_print_string (pretty_printer *, const char*);

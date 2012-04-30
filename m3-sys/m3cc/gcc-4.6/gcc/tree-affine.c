@@ -31,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "flags.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Extends CST as appropriate for the affine combinations COMB.  */
 
 double_int

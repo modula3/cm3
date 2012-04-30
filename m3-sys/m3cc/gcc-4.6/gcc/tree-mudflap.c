@@ -47,8 +47,11 @@ along with GCC; see the file COPYING3.  If not see
 #include "cgraph.h"
 #include "gimple.h"
 
-/* Internal function decls */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* Internal function decls */
 
 /* Options.  */
 #define flag_mudflap_threads (flag_mudflap == 2)

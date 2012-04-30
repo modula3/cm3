@@ -29,6 +29,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-iterator.h"
 #include "ggc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This is a cache of STATEMENT_LIST nodes.  We create and destroy them
    fairly often during gimplification.  */

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Operations on HOST_WIDE_INT.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -23,6 +25,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 
 #if GCC_VERSION < 3004
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The functions clz_hwi, ctz_hwi, ffs_hwi, floor_log2 and exact_log2
    are defined as inline functions in hwint.h if GCC_VERSION >= 3004.
@@ -96,5 +102,9 @@ ffs_hwi (unsigned HOST_WIDE_INT x)
 {
   return 1 + floor_log2 (x & -x);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* GCC_VERSION < 3004 */
