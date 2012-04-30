@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default host-specific hook definitions.
    Copyright (C) 2003, 2007 Free Software Foundation, Inc.
 
@@ -24,4 +26,12 @@ along with GCC; see the file COPYING3.  If not see
 #include "hosthooks.h"
 #include "hosthooks-def.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

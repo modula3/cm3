@@ -48,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "target.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* TODO -- handling of symbols (according to Richard Hendersons
    comments, http://gcc.gnu.org/ml/gcc-patches/2005-04/msg00949.html):
 

@@ -35,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "tree-inline.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This file implements the loop unswitching, i.e. transformation of loops like
 
    while (A)

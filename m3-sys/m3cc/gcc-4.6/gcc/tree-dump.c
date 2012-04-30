@@ -34,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "tree-iterator.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* If non-NULL, return one past-the-end of the matching SUBPART of
    the WHOLE string.  */
 #define skip_leading_substring(whole,  part) \

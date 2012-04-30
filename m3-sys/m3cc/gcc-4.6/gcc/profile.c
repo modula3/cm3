@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Calculate branch probabilities, and basic block execution counts.
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
@@ -71,6 +73,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 
 #include "profile.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct bb_info {
   unsigned int count_valid : 1;
@@ -1378,3 +1384,6 @@ end_branch_prob (void)
     }
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

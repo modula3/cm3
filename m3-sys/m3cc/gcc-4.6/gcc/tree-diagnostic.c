@@ -31,6 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "langhooks-def.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Prints out, if necessary, the name of the current function
    that caused an error.  Called from all error and warning functions.  */
 void

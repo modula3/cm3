@@ -24,6 +24,10 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_TOPLEV_H
 #define GCC_TOPLEV_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Decoded options, and number of such options.  */
 extern struct cl_decoded_option *save_decoded_options;
 extern unsigned int save_decoded_options_count;
@@ -81,5 +85,9 @@ extern bool set_src_pwd		       (const char *);
 
 extern const char *get_random_seed (bool);
 extern const char *set_random_seed (const char *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_TOPLEV_H */

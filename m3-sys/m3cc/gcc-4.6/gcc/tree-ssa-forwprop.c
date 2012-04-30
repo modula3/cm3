@@ -37,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "expr.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This pass propagates the RHS of assignment statements into use
    sites of the LHS of the assignment.  It's basically a specialized
    form of tree combination.   It is hoped all of this can disappear

@@ -48,6 +48,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "tree-inline.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This file contains functions for building the Control Flow Graph (CFG)
    for a function tree.  */
 

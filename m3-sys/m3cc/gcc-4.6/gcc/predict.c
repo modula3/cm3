@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Branch prediction routines for the GNU compiler.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -60,6 +62,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-scalar-evolution.h"
 #include "cfgloop.h"
 #include "pointer-set.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* real constants: 0, 1, 1-1/REG_BR_PROB_BASE, REG_BR_PROB_BASE,
 		   1/REG_BR_PROB_BASE, 0.5, BB_FREQ_MAX.  */
@@ -2348,3 +2354,7 @@ rebuild_frequencies (void)
     gcc_unreachable ();
   timevar_pop (TV_REBUILD_FREQUENCIES);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

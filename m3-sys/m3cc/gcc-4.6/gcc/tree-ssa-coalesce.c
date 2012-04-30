@@ -35,6 +35,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-live.h"
 #include "diagnostic-core.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This set of routines implements a coalesce_list.  This is an object which
    is used to track pairs of ssa_names which are desirable to coalesce

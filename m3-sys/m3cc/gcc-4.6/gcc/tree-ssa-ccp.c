@@ -135,6 +135,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "dbgcnt.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Possible lattice values.  */
 typedef enum

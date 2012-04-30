@@ -38,6 +38,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file contains placeholder functions, to be used only for
    language processors that cannot handle tree-mudflap.c directly.

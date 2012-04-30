@@ -94,6 +94,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-inline.h"
 #include "gimple-pretty-print.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Enumeration of all aggregate reductions we can do.  */
 enum sra_mode { SRA_MODE_EARLY_IPA,   /* early call regularization */
 		SRA_MODE_EARLY_INTRA, /* early intraprocedural SRA */

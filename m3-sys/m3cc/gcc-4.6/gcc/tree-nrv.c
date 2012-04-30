@@ -36,6 +36,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"	/* For "optimize" in gate_pass_return_slot.
 			   FIXME: That should be up to the pass manager,
 			   but pass_nrv is not in pass_all_optimizations.  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file implements return value optimizations for functions which
    return aggregate types.

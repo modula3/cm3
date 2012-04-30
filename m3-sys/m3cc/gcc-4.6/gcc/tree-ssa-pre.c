@@ -50,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "dbgcnt.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* TODO:
 
    1. Avail sets can be shared by making an avail_find_leader that

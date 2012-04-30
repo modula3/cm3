@@ -47,6 +47,10 @@ compilation is specified by a string called a "spec".  */
 #include "opts.h"
 #include "vec.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* By default there is no special suffix for target executables.  */
 /* FIXME: when autoconf is fixed, remove the host check - dj */
 #if defined(TARGET_EXECUTABLE_SUFFIX) && defined(HOST_EXECUTABLE_SUFFIX)

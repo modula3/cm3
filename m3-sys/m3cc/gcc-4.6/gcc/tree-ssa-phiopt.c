@@ -37,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "domwalk.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static unsigned int tree_ssa_phiopt (void);
 static unsigned int tree_ssa_phiopt_worker (bool);
 static bool conditional_replacement (basic_block, basic_block,

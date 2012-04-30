@@ -44,6 +44,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-propagate.h"
 #include "tree-scalar-evolution.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The set of blocks in that at least one of the following changes happened:
    -- the statement at the end of the block was changed
    -- the block was newly created

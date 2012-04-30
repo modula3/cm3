@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Prints out tree in human readable form - GCC
    Copyright (C) 1990, 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple-pretty-print.h"
 #include "tree-flow.h"
 #include "tree-pass.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Define the hash table of nodes already seen.
    Such nodes are not repeated; brief cross-references are used.  */
@@ -1018,3 +1024,7 @@ print_vec_tree (FILE *file, const char *prefix, VEC(tree,gc) *vec, int indent)
       print_node (file, temp, elt, indent + 4);
     }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

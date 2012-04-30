@@ -46,6 +46,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "value-prof.h"
 #include "cgraph.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static GTY(()) tree gcov_type_node;
 static GTY(()) tree gcov_type_tmp_var;
 static GTY(()) tree tree_interval_profiler_fn;

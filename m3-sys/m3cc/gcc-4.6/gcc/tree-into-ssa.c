@@ -47,6 +47,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "vecprim.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* This file builds the SSA form for a function as described in:
    R. Cytron, J. Ferrante, B. Rosen, M. Wegman, and K. Zadeck. Efficiently

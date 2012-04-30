@@ -54,6 +54,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-scalar-evolution.h"
 #include "tree-pass.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* If bit I is not set, it means that this node represents an
    operation that has already been performed, and that should not be
    performed again.  This is the subgraph of remaining important

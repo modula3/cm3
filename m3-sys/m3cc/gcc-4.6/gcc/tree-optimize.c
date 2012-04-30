@@ -50,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "plugin.h"
 #include "regset.h"	/* FIXME: For reg_obstack.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Gate: execute, or not, all of the non-trivial optimizations.  */
 
 static bool
