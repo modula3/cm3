@@ -686,7 +686,7 @@ enum
 extern void unroll_and_peel_loops (int);
 extern void doloop_optimize_loops (void);
 extern void move_loop_invariants (void);
-#define finite_loop_p ((bool)false)
+extern bool finite_loop_p (struct loop *);
 
 #ifdef __cplusplus
 } /* extern "C" */
