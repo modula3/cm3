@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Sets (bit vectors) of hard registers, and operations on them.
    Copyright (C) 1987, 1992, 1994, 2000, 2003, 2004, 2005, 2007, 2008, 2009,
    2010 Free Software Foundation, Inc.
@@ -20,6 +22,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_HARD_REG_SET_H
 #define GCC_HARD_REG_SET_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Define the type of a set of hard registers.  */
 
@@ -702,5 +708,9 @@ extern const char * reg_class_names[];
    REGN cannot change modes between the specified modes.  */
 #define REG_CANNOT_CHANGE_MODE_P(REGN, FROM, TO)                          \
          CANNOT_CHANGE_MODE_CLASS (FROM, TO, REGNO_REG_CLASS (REGN))
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! GCC_HARD_REG_SET_H */

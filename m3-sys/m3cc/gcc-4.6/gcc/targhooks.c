@@ -74,6 +74,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "tree-ssa-alias.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 bool
 default_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,

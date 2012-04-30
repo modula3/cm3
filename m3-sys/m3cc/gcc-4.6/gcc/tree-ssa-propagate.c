@@ -42,6 +42,10 @@
 #include "value-prof.h"
 #include "gimple.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This file implements a generic value propagation engine based on
    the same propagation used by the SSA-CCP algorithm [1].
 

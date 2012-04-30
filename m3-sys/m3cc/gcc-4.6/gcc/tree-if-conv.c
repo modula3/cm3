@@ -102,6 +102,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "dbgcnt.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* List of basic blocks in if-conversion-suitable order.  */
 static basic_block *ifc_bbs;
 

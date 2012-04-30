@@ -43,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "params.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This file implements optimizations on the dominator tree.  */
 
 /* Representation of a "naked" right-hand-side expression, to be used

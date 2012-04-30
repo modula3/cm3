@@ -37,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "langhooks.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This file implements dead store elimination.
 
    A dead store is a store into a memory location which will later be

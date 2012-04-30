@@ -206,6 +206,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-affine.h"
 #include "tree-inline.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The maximum number of iterations between the considered memory
    references.  */
 

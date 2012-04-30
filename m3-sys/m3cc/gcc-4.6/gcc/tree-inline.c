@@ -58,6 +58,10 @@ along with GCC; see the file COPYING3.  If not see
    non-gimple trees.  */
 #include "gimple.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Inlining, Cloning, Versioning, Parallelization
 
    Inlining: a function body is duplicated, but the PARM_DECLs are

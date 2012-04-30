@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Support for GCC plugin mechanism.
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 
@@ -33,6 +35,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifdef ENABLE_PLUGIN
 #include "plugin-version.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #define GCC_PLUGIN_STRINGIFY0(X) #X
@@ -872,3 +878,7 @@ default_plugin_dir_name (void)
     fatal_error ("-iplugindir <dir> option not passed from the gcc driver");
   return plugindir_string;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

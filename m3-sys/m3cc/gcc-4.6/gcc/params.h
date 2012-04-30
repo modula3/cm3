@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* params.h - Run-time parameters.
    Copyright (C) 2001, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -32,6 +34,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifndef GCC_PARAMS_H
 #define GCC_PARAMS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* No parameter shall have this value.  */
 
@@ -206,4 +212,9 @@ extern void init_param_values (int *params);
   PARAM_VALUE (PARAM_PREFETCH_MIN_INSN_TO_MEM_RATIO)
 #define MIN_NONDEBUG_INSN_UID \
   PARAM_VALUE (PARAM_MIN_NONDEBUG_INSN_UID)
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* ! GCC_PARAMS_H */

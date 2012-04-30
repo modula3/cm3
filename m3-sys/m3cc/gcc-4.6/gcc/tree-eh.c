@@ -41,6 +41,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "target.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* In some instances a tree and a gimple need to be stored in a same table,
    i.e. in hash tables. This is a structure to do this. */
 typedef union {tree *tp; tree t; gimple g;} treemple;

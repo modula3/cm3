@@ -42,6 +42,9 @@ along with GCC; see the file COPYING3.  If not see
    should be in cfgexpand.c.  */
 #include "expr.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 DEF_VEC_I(source_location);
 DEF_VEC_ALLOC_I(source_location,heap);

@@ -35,6 +35,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "flags.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Conditional dead call elimination
 

@@ -37,6 +37,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "gimple.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef ENABLE_CHECKING
 static void  verify_live_on_entry (tree_live_info_p);
 #endif

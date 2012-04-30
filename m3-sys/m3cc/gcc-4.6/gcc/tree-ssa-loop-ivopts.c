@@ -99,6 +99,10 @@ along with GCC; see the file COPYING3.  If not see
    interface between the GIMPLE and RTL worlds.  */
 #include "expr.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The infinite cost.  */
 #define INFTY 10000000
 

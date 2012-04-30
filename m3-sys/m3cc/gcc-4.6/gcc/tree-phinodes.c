@@ -32,6 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "gimple.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Rewriting a function into SSA form can create a huge number of PHIs
    many of which may be thrown away shortly after their creation if jumps
    were threaded through PHI nodes.

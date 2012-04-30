@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* params.c - Run-time parameters.
    Copyright (C) 2001, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -25,6 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 #include "params.h"
 #include "diagnostic-core.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* An array containing the compiler parameters and their current
    values.  */
@@ -171,3 +177,7 @@ get_num_compiler_params (void)
 {
   return num_compiler_params;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

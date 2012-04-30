@@ -40,6 +40,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "cfgloop.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This file implements the copy propagation pass and provides a
    handful of interfaces for performing const/copy propagation and
    simple expression replacement which keep variable annotations

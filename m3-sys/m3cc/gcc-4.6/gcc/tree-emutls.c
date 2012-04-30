@@ -33,6 +33,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "targhooks.h"
 #include "tree-iterator.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Whenever a target does not support thread-local storage (TLS) natively,
    we can emulate it with some run-time support in libgcc.  This will in

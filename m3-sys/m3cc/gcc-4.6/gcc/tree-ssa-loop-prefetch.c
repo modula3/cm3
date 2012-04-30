@@ -50,6 +50,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "expr.h"
 #include "optabs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This pass inserts prefetch instructions to optimize cache usage during
    accesses to arrays in loops.  It processes loops sequentially and:
 

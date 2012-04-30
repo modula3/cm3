@@ -43,6 +43,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "tree-ssa-propagate.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* TODO:  Support for predicated code motion.  I.e.
 
    while (1)

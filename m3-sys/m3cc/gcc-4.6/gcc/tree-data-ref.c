@@ -87,6 +87,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "langhooks.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static struct datadep_stats
 {
   int num_dependence_tests;
