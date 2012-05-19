@@ -156,7 +156,7 @@ static void trace_typeid (PCSTR name, UINT32 val);
 static void trace_string (PCSTR name, PCSTR result, long length);
 static void trace_type (PCSTR name, m3_type type);
 static void trace_type_tree (PCSTR name, tree type);
-//static void trace_float (PCSTR name, UINT kind, long Longs[2]);
+/*static void trace_float (PCSTR name, UINT kind, long Longs[2]);*/
 static void trace_boolean (PCSTR name, bool val);
 static void trace_var (PCSTR name, tree var, size_t a);
 static void trace_proc (PCSTR, tree p, size_t a);
@@ -1256,8 +1256,8 @@ m3_do_fixed_insert (tree x, tree y, UINT64 offset, UINT64 count, tree type)
 {
   /* ??? Use BIT_FIELD_REF ??? */
 
-  //gcc_assert (offset >= 0);
-  //gcc_assert (count >= 0);
+  /*gcc_assert (offset >= 0);*/
+  /*gcc_assert (count >= 0);*/
   gcc_assert (offset <= 64);
   gcc_assert (count <= 64);
   gcc_assert ((offset + count) <= 64);
@@ -1395,15 +1395,15 @@ m3_do_extract (tree x, tree offset, tree count, tree orig_type)
   tree type = m3_unsigned_type (orig_type);
   x = m3_cast (type, m3_cast (orig_type, x));
 
-  // i.e. x = ((x << (32 - count - offset)) >> (32 - count));
-  // shifting left will throw out the bits we don't want,
-  // leaving the bits we do want left justified.
-  // Shift those back to the right, right justifying them,
-  // and throwing out bits below them.
-  //
-  // If count is zero, special case that and return the original value.
-  // (Shifting to the right by 32 as the general case would do might
-  // produce that, but it is probably undefined.)
+  /* i.e. x = ((x << (32 - count - offset)) >> (32 - count));
+     shifting left will throw out the bits we don't want,
+     leaving the bits we do want left justified.
+     Shift those back to the right, right justifying them,
+     and throwing out bits below them.
+
+     If count is zero, special case that and return the original value.
+     (Shifting to the right by 32 as the general case would do might
+     produce that, but it is probably undefined.) */
 
   tree right = m3_build2 (MINUS_EXPR, t_int, m3_cast (t_int, TYPE_SIZE (type)), count);
   tree left = m3_build2 (MINUS_EXPR, t_int, right, offset);
@@ -1455,7 +1455,7 @@ static tree
 m3_do_shift (enum tree_code code, tree type, tree val, tree count)
 {
   tree unsigned_type = m3_unsigned_type (type);
-  tree a = m3_convert (unsigned_type, val); // cast?
+  tree a = m3_convert (unsigned_type, val); /* cast? */
   tree b = m3_cast (type, m3_build2 (code, unsigned_type, a, count));
   if (host_integerp (count, 1) && (TREE_INT_CST_LOW (count) < TYPE_PRECISION (type)))
     return b;
@@ -2958,8 +2958,8 @@ static void add_stmt (tree t)
         SET_EXPR_LOCATION (t, input_location);
     }
 
-  TREE_USED (t) = true; // why?
-  TREE_SIDE_EFFECTS (t) = true; // why?
+  TREE_USED (t) = true; /* why? */
+  TREE_SIDE_EFFECTS (t) = true; /* why? */
   append_to_statement_list (t, &current_stmts);
 }
 
@@ -2971,7 +2971,7 @@ fix_name (PCSTR name, size_t length, UINT32 type_id)
   if (name == 0 || name[0] == '*')
   {
     static UINT64 anonymous_counter;
-    buf = (PSTR)alloca (23); // "L_-9223372036854775808"
+    buf = (PSTR)alloca (23); /* "L_-9223372036854775808" */
     buf[0] = 'L';
     buf[1] = '_';
     m3_uint64_to_dec_shortest (++anonymous_counter, &buf[2]);
@@ -3075,7 +3075,7 @@ m3_call_direct (tree p, tree return_type)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true; // needed?
+    TREE_SIDE_EFFECTS (call) = true; /* needed? */
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3099,7 +3099,7 @@ m3_call_indirect (tree return_type, tree /*calling_convention*/)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true; // needed?
+    TREE_SIDE_EFFECTS (call) = true; /* needed? */
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3216,7 +3216,7 @@ m3_call_direct (tree p, tree return_type)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true; // needed?
+    TREE_SIDE_EFFECTS (call) = true; /* needed? */
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3245,7 +3245,7 @@ m3_call_indirect (tree return_type, tree calling_convention)
   }
   else
   {
-    TREE_SIDE_EFFECTS (call) = true; // needed?
+    TREE_SIDE_EFFECTS (call) = true; /* needed? */
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -3475,8 +3475,8 @@ m3_gimplify_function (tree fndecl)
   cgraph_mark_needed_node (node);    /* keep all functions */
   for (node = node->nested; node; node = node->next_nested)
   {
-    // don't inline nested functions of unlinable parents; bug?
-    // e.g. if parent has a barrier label (exception handling)
+    /* don't inline nested functions of unlinable parents; bug?
+       e.g. if parent has a barrier label (exception handling) */
     DECL_UNINLINABLE (node->decl) |= DECL_UNINLINABLE (fndecl);
     m3_gimplify_function (node->decl);
   }
@@ -3522,7 +3522,7 @@ emit_fault_proc (void)
   DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
                                 BLOCK_VARS (current_block),
                                 current_stmts, current_block);
-  TREE_SIDE_EFFECTS (DECL_SAVED_TREE (p)) = true; // needed?
+  TREE_SIDE_EFFECTS (DECL_SAVED_TREE (p)) = true; /* needed? */
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -3561,7 +3561,7 @@ generate_fault (int code ATTRIBUTE_UNUSED)
 #else
   t = build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
 #endif
-  TREE_SIDE_EFFECTS (t) = true; // needed?
+  TREE_SIDE_EFFECTS (t) = true; /* needed? */
   return t;
 }
 
@@ -4158,7 +4158,7 @@ M3CG_HANDLER (DECLARE_SEGMENT)
   TREE_STATIC (var) = true;
   TREE_READONLY (var) = is_const;
   TREE_ADDRESSABLE (var) = true;
-  //DECL_DEFER_OUTPUT (var) = true;
+  /*DECL_DEFER_OUTPUT (var) = true; ? todo/revisit? */
   current_segment = var;
 
   TREE_CHAIN (var) = global_decls;
@@ -4571,7 +4571,7 @@ M3CG_HANDLER (BEGIN_PROCEDURE)
   announce_function (p);
   current_function_decl = p;
   allocate_struct_function (p, false);
-  m3_language_function (); // force allocation
+  m3_language_function (); /* force allocation is this needed? todo? revisit */
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
@@ -4596,7 +4596,7 @@ M3CG_HANDLER (END_PROCEDURE)
   DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
                                 BLOCK_VARS (current_block),
                                 current_stmts, current_block);
-  TREE_SIDE_EFFECTS (DECL_SAVED_TREE (p)) = true; // needed?
+  TREE_SIDE_EFFECTS (DECL_SAVED_TREE (p)) = true; /* needed? */
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -4640,7 +4640,7 @@ M3CG_HANDLER (END_BLOCK)
   tree bind = build3 (BIND_EXPR, t_void,
                       BLOCK_VARS (current_block),
                       current_stmts, current_block);
-  TREE_SIDE_EFFECTS (bind) = true; // needed?
+  TREE_SIDE_EFFECTS (bind) = true; /* needed? */
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -4798,7 +4798,7 @@ M3CG_HANDLER (EXIT_PROC)
     m3_store (res, 0, type, T, type, T);
 #else
     res = build2 (MODIFY_EXPR, TREE_TYPE (res), res, m3_cast (TREE_TYPE (res), EXPR_REF (-1)));
-    TREE_SIDE_EFFECTS (res); // needed?
+    TREE_SIDE_EFFECTS (res); /* needed? */
     EXPR_POP ();
 #endif
   }
@@ -5218,7 +5218,7 @@ M3CG_HANDLER (SHIFT)
 {
   tree n = m3_convert (t_int, EXPR_REF (-1));
   tree x = EXPR_REF (-2);
-  // x = m3_convert (type, x); // redundant with do_shift
+  /* x = m3_convert (type, x);    redundant with do_shift */
 
   gcc_assert (INTEGRAL_TYPE_P (type));
 
@@ -5251,7 +5251,7 @@ M3CG_HANDLER (SHIFT_RIGHT)
 M3CG_HANDLER (ROTATE)
 {
   tree n = m3_convert (t_int, EXPR_REF (-1));
-  tree x = m3_convert (type, EXPR_REF (-2)); // cast?
+  tree x = m3_convert (type, EXPR_REF (-2)); /* cast? */
 
   gcc_assert (INTEGRAL_TYPE_P (type));
 
@@ -5394,7 +5394,7 @@ M3CG_HANDLER (EXTRACT_MN)
   }
   else if (offset == 0 && count == TYPE_PRECISION (type))
   {
-    // nothing further
+    /* nothing further */
   }
   else
   {
@@ -5816,7 +5816,7 @@ M3CG_HANDLER (POP_STRUCT)
 
 M3CG_HANDLER (POP_STATIC_LINK)
 {
-  DECL_UNINLINABLE (current_function_decl) = true; // bug
+  DECL_UNINLINABLE (current_function_decl) = true; /* bug */
   tree v = declare_temp (t_addr);
   m3_store (v, 0, t_addr, T_addr, t_addr, T_addr);
   CALL_TOP_STATIC_CHAIN () = v;
@@ -5829,7 +5829,7 @@ M3CG_HANDLER (LOAD_PROCEDURE)
 
 M3CG_HANDLER (LOAD_STATIC_LINK)
 {
-  DECL_UNINLINABLE (current_function_decl) = true; // bug
+  DECL_UNINLINABLE (current_function_decl) = true; /* bug */
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
 }
 
@@ -6213,7 +6213,7 @@ m3_post_options (PCSTR* /*pfilename*/)
 #endif
 
 #if GCC45
-  flag_tree_forwprop = false; // bug
+  flag_tree_forwprop = false; /* bug */
 #endif
 
   return false;
