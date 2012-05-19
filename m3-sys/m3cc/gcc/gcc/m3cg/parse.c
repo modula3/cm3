@@ -117,18 +117,14 @@ typedef struct _m3buf_t {
 static bool m3_mark_addressable (tree exp);
 #endif
 static tree m3_type_for_size (UINT precision, int unsignedp);
-#if !GCC46
 static tree m3_type_for_mode (enum machine_mode, int unsignedp);
-#endif
 static tree m3_unsigned_type (tree type_node);
 static tree m3_signed_type (tree type_node);
 static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
-#if !GCC46
 #if GCC42
 typedef HOST_WIDE_INT alias_set_type;
 #endif
 static alias_set_type m3_get_alias_set (tree);
-#endif
 
 extern "C" {
 
@@ -148,10 +144,8 @@ builtin_function (PCSTR name, tree type,
 		  enum built_in_class clas, const char *library_name,
 		  tree attrs);
 
-#if !GCC46
 static tree getdecls (void);
 static int global_bindings_p (void);
-#endif
 #if !GCC45
 static void insert_block (tree block);
 #endif
@@ -162,9 +156,7 @@ m3_expand_function (tree fndecl);
 #endif
 
 static tree m3_push_type_decl (tree type, tree name);
-#if !GCC46
 static void m3_write_globals (void);
-#endif
 
 static PCSTR trace_name (PCSTR* inout_name);
 static PSTR trace_upper_hex (PSTR format);
@@ -202,7 +194,6 @@ static void m3_volatilize_current_function (void);
 #define m3_volatilize_current_function() /* nothing */
 #endif
 
-#if !GCC46
 static void m3_breakpoint(void);
 static void m3_parse_file (int);
 
@@ -210,11 +201,8 @@ static UINT m3_init_options (UINT argc, PCSTR* argv);
 static int m3_handle_option (size_t code, PCSTR arg, int value);
 static bool m3_post_options (PCSTR* pfilename);
 static bool m3_init (void);
-#endif
 
-#if !GCC46 /* work in progress */
 tree convert (tree type, tree expr);
-#endif
 
 /*======================================================= OPTION HANDLING ===*/
 
@@ -1022,10 +1010,8 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
 #undef LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE
 #define LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE m3_signed_or_unsigned_type
 #endif
-#if !GCC46
 #undef LANG_HOOKS_TYPE_FOR_MODE
 #define LANG_HOOKS_TYPE_FOR_MODE m3_type_for_mode
-#endif
 #undef LANG_HOOKS_TYPE_FOR_SIZE
 #define LANG_HOOKS_TYPE_FOR_SIZE m3_type_for_size
 #undef LANG_HOOKS_PARSE_FILE
@@ -1062,9 +1048,7 @@ m3_expand_function (tree fndecl)
 #if !GCC45
 const
 #endif
-#if !GCC46
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
-#endif
 
 #if !GCC45
 
@@ -1498,15 +1482,11 @@ m3_do_shift (enum tree_code code, tree type, tree val, tree count)
 
 #endif
 
-#if !GCC46
-
 alias_set_type
 m3_get_alias_set (tree)
 {
   return 0;
 }
-
-#endif
 
 #if !GCC45
 static bool
@@ -1565,8 +1545,6 @@ m3_type_for_size (UINT bits, int unsignedp)
   return NULL;
 }
 
-#if !GCC46
-
 static tree
 m3_type_for_mode (enum machine_mode mode, int unsignedp)
 /* Return a data type that has machine mode MODE.  UNSIGNEDP selects
@@ -1587,8 +1565,6 @@ m3_type_for_mode (enum machine_mode mode, int unsignedp)
 
   return NULL;
 }
-
-#endif
 
 static tree
 m3_unsigned_type (tree type_node)
@@ -1614,8 +1590,6 @@ m3_signed_or_unsigned_type (int unsignedp, tree type)
   else
     return m3_type_for_size (TYPE_PRECISION (type), unsignedp);
 }
-
-#if !GCC46
 
 static int
 global_bindings_p (void)
@@ -1632,8 +1606,6 @@ getdecls (void)
 {
   return current_block ? BLOCK_VARS (current_block) : global_decls;
 }
-
-#endif
 
 #if !GCC45
 
@@ -1742,8 +1714,6 @@ builtin_function (PCSTR name, tree type,
   return decl;
 }
 
-#if !GCC46
-
 static void
 m3_write_globals (void)
 {
@@ -1794,8 +1764,6 @@ m3_write_globals (void)
   if (!GCC45)
     write_global_declarations ();
 }
-
-#endif
 
 static void
 sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
@@ -3169,8 +3137,6 @@ m3_language_function (void)
 
 #if GCC46 /* work in progress */
 
-#define GCC46_ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED
-
 static struct language_function*
 m3_language_function (void)
 {
@@ -3192,8 +3158,6 @@ build_function_call_expr (tree a ATTRIBUTE_UNUSED, tree b ATTRIBUTE_UNUSED, tree
 }
 
 #else
-
-#define GCC46_ATTRIBUTE_UNUSED /* nothing */
 
 static struct language_function*
 m3_language_function (void)
@@ -3469,8 +3433,6 @@ static PCSTR mode_to_string (enum machine_mode mode)
 
 /*---------------------------------------------------------------- faults ---*/
 
-#if !GCC46 /* work in progress */
-
 static void
 declare_fault_proc (void)
 {
@@ -3520,8 +3482,6 @@ declare_fault_proc (void)
 
   fault_proc = proc;
 }
-
-#endif
 
 static void
 m3_gimplify_function (tree fndecl)
@@ -3606,10 +3566,9 @@ emit_fault_proc (void)
 #define LINE_SHIFT 5
 
 static tree
-generate_fault (int code GCC46_ATTRIBUTE_UNUSED)
+generate_fault (int code ATTRIBUTE_UNUSED)
 {
   tree t = { 0 };
-#if !GCC46 /* work in progress */
   /* Losing bits of the code seems bad: wrong error reported.
    * Losing bits of the line number is "ok".
    * Line numbers up to around 100 million are preserved.
@@ -3625,7 +3584,6 @@ generate_fault (int code GCC46_ATTRIBUTE_UNUSED)
   t = build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
 #endif
   TREE_SIDE_EFFECTS (t) = true; // needed?
-#endif
   return t;
 }
 
@@ -5893,10 +5851,8 @@ M3CG_HANDLER (LOAD_PROCEDURE)
 
 M3CG_HANDLER (LOAD_STATIC_LINK)
 {
-#if !GCC46 /* work in progress */
   DECL_UNINLINABLE (current_function_decl) = true; // bug
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
-#endif
 }
 
 M3CG_HANDLER (COMMENT)
@@ -6087,8 +6043,6 @@ static SCHAR m3_indent_op[LAST_OPCODE];
 
 static volatile UINT m3_break_lineno; /* set in debugger */
 
-#if !GCC46
-
 static
 void
 m3_breakpoint(void) /* set breakpoint in debugger */
@@ -6207,11 +6161,7 @@ m3_parse_file (int)
   }
 }
 
-#endif
-
 /*===================================================== RUNTIME FUNCTIONS ===*/
-
-#if !GCC46
 
 /* Prepare to handle switches.  */
 static UINT
@@ -6261,8 +6211,6 @@ m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
   return 1;
 }
 
-#endif
-
 /* Post-switch processing. */
 bool
 m3_post_options (PCSTR* /*pfilename*/)
@@ -6286,7 +6234,9 @@ m3_post_options (PCSTR* /*pfilename*/)
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
 
+#if GCC45
   flag_tree_forwprop = false; // bug
+#endif
 
   return false;
 }
@@ -6331,8 +6281,6 @@ m3_init (void)
   m3_init_decl_processing ();
   return true;
 }
-
-#if !GCC46 /* work in progress */
 
 tree
 convert (tree type, tree expr)
@@ -6390,8 +6338,6 @@ convert (tree type, tree expr)
   error ("conversion to non-scalar type requested");
   return error_mark_node;
 }
-
-#endif
 
 #if GCC_APPLE
 extern "C" {
