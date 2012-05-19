@@ -109,7 +109,6 @@ typedef enum
   /* 12 */ T_LAST
 } m3_type;
 
-
 typedef struct _m3buf_t {
   char buf[256];
 } m3buf_t;
@@ -194,30 +193,6 @@ static tree scan_var (enum tree_code code, size_t* a);
 static tree scan_proc (size_t* a);
 static tree scan_label (size_t* a);
 
-static bool IsHostBigEndian (void);
-
-static void format_tag_v (m3buf_t* buf, char kind, UINT32 type_id, PCSTR fmt, va_list args);
-static void debug_tag (char kind, UINT32 type_id, PCSTR fmt, ...);
-static void dump_record_type (tree record_type);
-static void debug_field_name_length (PCSTR name, size_t length);
-static void debug_field_name (PCSTR name);
-static void debug_field_id (UINT32 type_id);
-static void debug_field_fmt_v (UINT32 type_id, PCSTR fmt, va_list args);
-static void debug_field_fmt (UINT32 type_id, PCSTR fmt, ...);
-static void debug_struct (void);
-static void one_field (UINT64 offset, UINT64 size, tree type, tree *out_f, tree *out_v);
-static void one_gap (UINT64 next_offset);
-
-static void m3_gap (UINT64 next_offset);
-static void m3_field (PCSTR name, size_t name_length, tree type, UINT64 offset,
-                      UINT64 size, tree* out_f, tree* out_v);
-
-static void add_stmt (tree t);
-static tree fix_name (PCSTR name, size_t length, UINT32 type_id);
-static tree declare_temp (tree type);
-static tree proc_addr (tree p);
-static void m3_start_call (void);
-static void m3_pop_param (tree t);
 static struct language_function* m3_language_function (void);
 #if !GCC42
 static void m3_volatilize_decl (tree decl);
@@ -226,39 +201,6 @@ static void m3_volatilize_current_function (void);
 #define m3_volatilize_decl(x) /* nothing */
 #define m3_volatilize_current_function() /* nothing */
 #endif
-static void m3_call_direct (tree p, tree return_type);
-static void m3_call_indirect (tree return_type, tree calling_convention);
-static void m3_swap (void);
-static tree m3_deduce_field_reference (PCSTR caller, tree value, UINT64 offset,
-                                       tree field_treetype, m3_type field_m3type);
-static bool m3_type_match (tree t1, tree t2);
-static bool m3_type_mismatch (tree t1, tree t2);
-static void m3_load (tree v, UINT64 offset, tree src_t, m3_type src_T,
-                     tree dst_t, m3_type dst_T);
-static void m3_store (tree v, UINT64 offset, tree src_t, m3_type src_T,
-                      tree dst_t, m3_type dst_T);
-static void setop (tree p, INT64 n, int q);
-static void setop2 (tree p, int q);
-
-static PCSTR mode_to_string (enum machine_mode mode);
-
-#if !GCC46
-static void declare_fault_proc (void);
-#endif
-static void emit_fault_proc (void);
-static tree generate_fault (int code);
-
-static void m3_gimplify_function (tree fndecl);
-
-static void m3_declare_record_common (void);
-static void m3_declare_pointer_common (PCSTR caller, UINT32 my_id, UINT32 target_id);
-static void m3cg_if_compare (tree type, tree label, enum tree_code o);
-static void m3cg_compare (tree src_t, tree dst_t, enum tree_code op);
-static void m3_minmax (tree type, int min);
-static tree m3cg_set_member_ref (tree type, tree* out_bit_in_word);
-static void m3cg_set_compare (UINT64 n, tree type, tree proc);
-static tree m3_do_fixed_extract (tree x, INT64 m, INT64 n, tree type);
-static void m3cg_fetch_and_op (tree type1, tree type2, enum built_in_function fncode);
 
 #if !GCC46
 static void m3_breakpoint(void);
@@ -269,21 +211,6 @@ static int m3_handle_option (size_t code, PCSTR arg, int value);
 static bool m3_post_options (PCSTR* pfilename);
 static bool m3_init (void);
 #endif
-
-static tree m3_build1 (enum tree_code code, tree tipe, tree op0);
-static tree m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1);
-static tree m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2);
-static tree m3_cast (tree type, tree op0);
-static tree m3_convert (tree type, tree op0);
-static tree m3_build_pointer_type (tree a);
-static tree m3_build_type_id (m3_type type, UINT64 size, UINT64 align, UINT32 type_id);
-static tree m3_build_type (m3_type type, UINT64 size, UINT64 align);
-static tree m3_do_insert (tree x, tree y, tree i, tree n, tree orig_type);
-static tree left_shift (tree t, int i);
-static tree m3_do_fixed_insert (tree x, tree y, UINT64 i, UINT64 n, tree type);
-static tree m3_do_extract (tree x, tree i, tree n, tree type);
-static tree m3_do_rotate (enum tree_code code, tree orig_type, tree val, tree cnt);
-static tree m3_do_shift (enum tree_code code, tree orig_type, tree val, tree count);
 
 #if !GCC46 /* work in progress */
 tree convert (tree type, tree expr);
