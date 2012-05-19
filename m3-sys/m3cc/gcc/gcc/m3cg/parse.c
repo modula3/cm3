@@ -4045,7 +4045,7 @@ M3CG_HANDLER (IMPORT_GLOBAL)
 {
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
@@ -4063,7 +4063,7 @@ M3CG_HANDLER (DECLARE_SEGMENT)
 {
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
    m3cg_BIND_SEGMENT_t* bind_segment = bind_segments[var_integer];
@@ -4107,7 +4107,7 @@ M3CG_HANDLER (DECLARE_GLOBAL)
 {
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
@@ -4126,7 +4126,7 @@ M3CG_HANDLER (DECLARE_CONSTANT)
 {
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
@@ -4146,7 +4146,7 @@ M3CG_HANDLER (DECLARE_LOCAL)
 {
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
@@ -4182,7 +4182,7 @@ M3CG_HANDLER (DECLARE_PARAM)
 
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
 
   if (current_param_count > 0)
@@ -4727,14 +4727,14 @@ M3CG_HANDLER (EXIT_PROC)
 
 M3CG_HANDLER (LOAD)
 {
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   m3_load (var, offset, src_t, src_T, dst_t, dst_T);
 }
 
 M3CG_HANDLER (LOAD_ADDRESS)
 {
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   TREE_USED (var) = true;
   tree xvar = m3_build1 (ADDR_EXPR, t_addr, var);
@@ -4761,7 +4761,7 @@ M3CG_HANDLER (LOAD_INDIRECT)
 
 M3CG_HANDLER (STORE)
 {
-  if (option_trace_all && m3gdb)
+  if (option_trace_all)
     fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
   m3_store (var, offset, src_t, src_T, dst_t, dst_T);
 }
