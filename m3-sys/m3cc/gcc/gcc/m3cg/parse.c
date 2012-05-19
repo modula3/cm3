@@ -121,10 +121,6 @@ static tree m3_type_for_mode (enum machine_mode, int unsignedp);
 static tree m3_unsigned_type (tree type_node);
 static tree m3_signed_type (tree type_node);
 static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
-#if GCC42
-typedef HOST_WIDE_INT alias_set_type;
-#endif
-static alias_set_type m3_get_alias_set (tree);
 
 extern "C" {
 
@@ -148,11 +144,6 @@ static tree getdecls (void);
 static int global_bindings_p (void);
 #if !GCC45
 static void insert_block (tree block);
-#endif
-
-#if GCC42
-static void
-m3_expand_function (tree fndecl);
 #endif
 
 static tree m3_push_type_decl (tree type, tree name);
@@ -1016,21 +1007,14 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
 #define LANG_HOOKS_TYPE_FOR_SIZE m3_type_for_size
 #undef LANG_HOOKS_PARSE_FILE
 #define LANG_HOOKS_PARSE_FILE m3_parse_file
-#undef LANG_HOOKS_GET_ALIAS_SET
-#define LANG_HOOKS_GET_ALIAS_SET m3_get_alias_set
 
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
 
 #if GCC42
-static void
-m3_expand_function (tree fndecl)
-{
   /* We have nothing special to do while expanding functions for Modula-3.  */
-  tree_rest_of_compilation (fndecl);
-}
 #undef LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION
-#define LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION m3_expand_function
+#define LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION tree_rest_of_compilation
 #endif
 
 /* Hook routines and data unique to Modula-3 back-end.  */
@@ -1481,12 +1465,6 @@ m3_do_shift (enum tree_code code, tree type, tree val, tree count)
 }
 
 #endif
-
-alias_set_type
-m3_get_alias_set (tree)
-{
-  return 0;
-}
 
 #if !GCC45
 static bool
