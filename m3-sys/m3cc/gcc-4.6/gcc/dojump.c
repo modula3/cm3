@@ -39,9 +39,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "basic-block.h"
 #include "output.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static bool prefer_and_bit_test (enum machine_mode, int);
 static void do_jump_by_parts_greater (tree, tree, int, rtx, rtx, int);
@@ -1192,8 +1190,6 @@ do_compare_and_jump (tree treeop0, tree treeop1, enum rtx_code signed_code,
 			   if_false_label, if_true_label, prob);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-dojump.h"

@@ -36,9 +36,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ipa-utils.h"
 #include "except.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Context of record_reference.  */
 struct record_reference_ctx
@@ -75,9 +73,6 @@ record_reference (tree *tp, int *walk_subtrees, void *data)
 	{
 	  if (!ctx->only_vars)
 	  cgraph_mark_address_taken_node (cgraph_node (decl));
-	  ipa_record_reference (NULL, ctx->varpool_node,
-			        cgraph_node (decl), NULL,
-			        IPA_REF_ADDR, NULL);
 	}
 
       if (TREE_CODE (decl) == VAR_DECL)
@@ -88,9 +83,6 @@ record_reference (tree *tp, int *walk_subtrees, void *data)
 	  varpool_mark_needed_node (vnode);
 	  if (vnode->alias && vnode->extra_name)
 	    vnode = vnode->extra_name;
-	  ipa_record_reference (NULL, ctx->varpool_node,
-				NULL, vnode,
-				IPA_REF_ADDR, NULL);
 	}
       *walk_subtrees = 0;
       break;
@@ -131,71 +123,11 @@ record_type_list (struct cgraph_node *node, tree list)
 	    {
 	      struct varpool_node *vnode = varpool_node (type);
 	      varpool_mark_needed_node (vnode);
-	      ipa_record_reference (node, NULL,
-				    NULL, vnode,
-				    IPA_REF_ADDR, NULL);
 	    }
 	}
     }
 }
-
-/* Record all references we will introduce by producing EH tables
-   for NODE.  */
-
-static void
-record_eh_tables (struct cgraph_node *node, struct function *fun)
-{
-  eh_region i;
-
-  if (DECL_FUNCTION_PERSONALITY (node->decl))
-    ipa_record_reference (node, NULL,
-			  cgraph_node (DECL_FUNCTION_PERSONALITY (node->decl)),
-			  NULL, IPA_REF_ADDR, NULL);
-
-  i = fun->eh->region_tree;
-  if (!i)
-    return;
-
-  while (1)
-    {
-      switch (i->type)
-	{
-	case ERT_CLEANUP:
-	case ERT_MUST_NOT_THROW:
-	  break;
-
-	case ERT_TRY:
-	  {
-	    eh_catch c;
-	    for (c = i->u.eh_try.first_catch; c; c = c->next_catch)
-	      record_type_list (node, c->type_list);
-	  }
-	  break;
-
-	case ERT_ALLOWED_EXCEPTIONS:
-	  record_type_list (node, i->u.allowed.type_list);
-	  break;
-	}
-      /* If there are sub-regions, process them.  */
-      if (i->inner)
-	i = i->inner;
-      /* If there are peers, process them.  */
-      else if (i->next_peer)
-	i = i->next_peer;
-      /* Otherwise, step back up the tree to the next peer.  */
-      else
-	{
-	  do
-	    {
-	      i = i->outer;
-	      if (i == NULL)
-		return;
-	    }
-	  while (i->next_peer == NULL);
-	  i = i->next_peer;
-	}
-    }
-}
+ 
 
 /* Reset inlining information of all incoming call edges of NODE.  */
 
@@ -252,9 +184,6 @@ mark_address (gimple stmt, tree addr, void *data)
     {
       struct cgraph_node *node = cgraph_node (addr);
       cgraph_mark_address_taken_node (node);
-      ipa_record_reference ((struct cgraph_node *)data, NULL,
-			    node, NULL,
-			    IPA_REF_ADDR, stmt);
     }
   else if (addr && TREE_CODE (addr) == VAR_DECL
 	   && (TREE_STATIC (addr) || DECL_EXTERNAL (addr)))
@@ -267,9 +196,6 @@ mark_address (gimple stmt, tree addr, void *data)
       varpool_mark_needed_node (vnode);
       if (vnode->alias && vnode->extra_name)
 	vnode = vnode->extra_name;
-      ipa_record_reference ((struct cgraph_node *)data, NULL,
-			    NULL, vnode,
-			    IPA_REF_ADDR, stmt);
     }
 
   return false;
@@ -287,9 +213,6 @@ mark_load (gimple stmt, tree t, void *data)
 	 directly manipulated in the code.  Pretend that it's an address.  */
       struct cgraph_node *node = cgraph_node (t);
       cgraph_mark_address_taken_node (node);
-      ipa_record_reference ((struct cgraph_node *)data, NULL,
-			    node, NULL,
-			    IPA_REF_ADDR, stmt);
     }
   else if (t && TREE_CODE (t) == VAR_DECL
 	   && (TREE_STATIC (t) || DECL_EXTERNAL (t)))
@@ -302,9 +225,6 @@ mark_load (gimple stmt, tree t, void *data)
       varpool_mark_needed_node (vnode);
       if (vnode->alias && vnode->extra_name)
 	vnode = vnode->extra_name;
-      ipa_record_reference ((struct cgraph_node *)data, NULL,
-			    NULL, vnode,
-			    IPA_REF_LOAD, stmt);
     }
   return false;
 }
@@ -326,9 +246,6 @@ mark_store (gimple stmt, tree t, void *data)
       varpool_mark_needed_node (vnode);
       if (vnode->alias && vnode->extra_name)
 	vnode = vnode->extra_name;
-      ipa_record_reference ((struct cgraph_node *)data, NULL,
-			    NULL, vnode,
-			    IPA_REF_STORE, stmt);
      }
   return false;
 }
@@ -376,19 +293,11 @@ build_cgraph_edges (void)
 	      && gimple_omp_parallel_child_fn (stmt))
 	    {
 	      tree fn = gimple_omp_parallel_child_fn (stmt);
-	      ipa_record_reference (node, NULL, cgraph_node (fn),
-				    NULL, IPA_REF_ADDR, stmt);
 	    }
 	  if (gimple_code (stmt) == GIMPLE_OMP_TASK)
 	    {
 	      tree fn = gimple_omp_task_child_fn (stmt);
-	      if (fn)
-		ipa_record_reference (node, NULL, cgraph_node (fn),
-				      NULL, IPA_REF_ADDR, stmt);
 	      fn = gimple_omp_task_copy_fn (stmt);
-	      if (fn)
-		ipa_record_reference (node, NULL, cgraph_node (fn),
-				      NULL, IPA_REF_ADDR, stmt);
 	    }
 	}
       for (gsi = gsi_start (phi_nodes (bb)); !gsi_end_p (gsi); gsi_next (&gsi))
@@ -401,7 +310,6 @@ build_cgraph_edges (void)
     if (TREE_CODE (decl) == VAR_DECL
 	&& (TREE_STATIC (decl) && !DECL_EXTERNAL (decl)))
       varpool_finalize_decl (decl);
-  record_eh_tables (node, cfun);
 
   pointer_set_destroy (visited_nodes);
   return 0;
@@ -455,7 +363,6 @@ rebuild_cgraph_edges (void)
   gimple_stmt_iterator gsi;
 
   cgraph_node_remove_callees (node);
-  ipa_remove_all_references (&node->ref_list);
 
   node->count = ENTRY_BLOCK_PTR->count;
 
@@ -489,7 +396,6 @@ rebuild_cgraph_edges (void)
 	walk_stmt_load_store_addr_ops (gsi_stmt (gsi), node,
 				       mark_load, mark_store, mark_address);
     }
-  record_eh_tables (node, cfun);
   gcc_assert (!node->global.inlined_to);
 
   return 0;
@@ -504,8 +410,6 @@ cgraph_rebuild_references (void)
   basic_block bb;
   struct cgraph_node *node = cgraph_node (current_function_decl);
   gimple_stmt_iterator gsi;
-
-  ipa_remove_all_references (&node->ref_list);
 
   node->count = ENTRY_BLOCK_PTR->count;
 
@@ -523,7 +427,6 @@ cgraph_rebuild_references (void)
 	walk_stmt_load_store_addr_ops (gsi_stmt (gsi), node,
 				       mark_load, mark_store, mark_address);
     }
-  record_eh_tables (node, cfun);
 }
 
 struct gimple_opt_pass pass_rebuild_cgraph_edges =
@@ -572,6 +475,4 @@ struct gimple_opt_pass pass_remove_cgraph_callee_edges =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

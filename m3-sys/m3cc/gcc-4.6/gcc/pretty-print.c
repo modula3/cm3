@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "intl.h"
 #include "pretty-print.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Opening quotation mark for diagnostics.  */
 static const char open_quote[] = "'";
@@ -826,6 +824,4 @@ identifier_to_locale (const char *ident)
   return ident;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

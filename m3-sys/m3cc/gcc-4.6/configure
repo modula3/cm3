@@ -526,7 +526,7 @@ as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
 as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
 
 
-exec 7<&0 </dev/null 6>&1
+exec 6>&1
 
 # Name of the host.
 # hostname on some systems (SVR3.2, Linux) returns a bogus exit status,
@@ -5289,19 +5289,7 @@ if test -d ${srcdir}/gcc; then
 
   new_enable_languages=,c,
 
-  # If LTO is enabled, add the LTO front end.
   extra_host_libiberty_configure_flags=
-  if test "$enable_lto" = "yes" ; then
-    case ,${enable_languages}, in
-      *,lto,*) ;;
-      *) enable_languages="${enable_languages},lto" ;;
-    esac
-    if test "${build_lto_plugin}" = "yes" ; then
-      configdirs="$configdirs lto-plugin"
-      extra_host_libiberty_configure_flags=--enable-shared
-    fi
-  fi
-
 
   missing_languages=`echo ",$enable_languages," | sed -e s/,all,/,/ -e s/,c,/,/ `
   potential_languages=,c,
@@ -13150,8 +13138,8 @@ stage1_cflags="-g"
 case $build in
   vax-*-*)
     case ${GCC} in
-      yes) stage1_cflags="-g -Wa,-J" ;;
-      *) stage1_cflags="-g -J" ;;
+      yes) stage1_cflags="  -Wa,-J" ;;
+      *) stage1_cflags="  -J" ;;
     esac ;;
 esac
 

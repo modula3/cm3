@@ -29,9 +29,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "input.h"
 #include "bversion.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Constants used to discriminate diagnostics.  */
 typedef enum
@@ -94,8 +92,6 @@ extern void fnotice			(FILE *, const char *, ...)
      ATTRIBUTE_PRINTF_2;
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_DIAGNOSTIC_CORE_H */

@@ -33,9 +33,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "vec.h"
 #include "vecprim.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This structure contains all the information needed to describe one
    set of extractions methods.  Each method may be used by more than
@@ -502,6 +500,4 @@ main (int argc, char **argv)
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

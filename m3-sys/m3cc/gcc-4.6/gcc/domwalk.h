@@ -20,9 +20,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 typedef void *void_p;
 DEF_VEC_P(void_p);
@@ -81,6 +79,4 @@ void walk_dominator_tree (struct dom_walk_data *, basic_block);
 void init_walk_dominator_tree (struct dom_walk_data *);
 void fini_walk_dominator_tree (struct dom_walk_data *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

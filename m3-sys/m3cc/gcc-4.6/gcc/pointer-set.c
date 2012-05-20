@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "pointer-set.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* A pointer set is represented as a simple open-addressing hash
    table.  Simplifications: The hash code is based on the value of the
@@ -308,6 +306,4 @@ void pointer_map_traverse (const struct pointer_map_t *pmap,
       break;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

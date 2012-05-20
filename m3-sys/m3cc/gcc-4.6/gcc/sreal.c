@@ -56,9 +56,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "sreal.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static inline void copy (sreal *, sreal *);
 static inline void shift_right (sreal *, int);
@@ -547,6 +545,4 @@ sreal_div (sreal *r, sreal *a, sreal *b)
   return r;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

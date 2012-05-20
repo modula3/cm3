@@ -31,9 +31,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "langhooks-def.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Prints out, if necessary, the name of the current function
    that caused an error.  Called from all error and warning functions.  */
@@ -54,6 +52,4 @@ default_tree_diagnostic_starter (diagnostic_context *context,
 							    diagnostic));
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

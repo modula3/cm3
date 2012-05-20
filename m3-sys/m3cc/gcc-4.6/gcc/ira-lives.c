@@ -42,9 +42,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "sparseset.h"
 #include "ira-int.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The code in this file is similar to one in global but the code
    works on the allocno basis and creates live ranges instead of
@@ -1511,6 +1509,4 @@ ira_finish_allocno_live_ranges (void)
   ira_free (ira_start_point_ranges);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

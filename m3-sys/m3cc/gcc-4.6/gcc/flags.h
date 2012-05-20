@@ -28,9 +28,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "flag-types.h"
 #include "options.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #if !defined(IN_LIBGCC2) && !defined(IN_TARGET_LIBS) && !defined(IN_RTS)
 
@@ -156,8 +154,6 @@ extern int dump_for_graph;
 
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_FLAGS_H */

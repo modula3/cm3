@@ -22,16 +22,12 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_DCE_H
 #define GCC_DCE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern void run_word_dce (void);
 extern void run_fast_dce (void);
 extern void run_fast_df_dce (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_DCE_H */

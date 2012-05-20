@@ -46,9 +46,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "basic-block.h"
 #include "target.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct target_optabs default_target_optabs;
 struct target_libfuncs default_target_libfuncs;
@@ -7336,8 +7334,6 @@ expand_sync_lock_test_and_set (rtx mem, rtx val, rtx target)
   return NULL_RTX;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-optabs.h"

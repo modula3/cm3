@@ -7162,34 +7162,6 @@ fi
   esac;
 
 
-
-
-# Sanity check enable_languages in case someone does not run the toplevel
-# configure # script.
-# Check whether --enable-languages was given.
-if test "${enable_languages+set}" = set; then :
-  enableval=$enable_languages; case ,${enable_languages}, in
-       ,,|,yes,)
-		# go safe -- we cannot be much sure without the toplevel
-		# configure's
-		# analysis of which target libs are present and usable
-		enable_languages=c
-		;;
-	 *,all,*)
-		as_fn_error "only the toplevel supports --enable-languages=all" "$LINENO" 5
-		;;
-	*,c,*)
-		;;
-        *)
-		enable_languages=c,${enable_languages}
-		;;
-esac
-else
-  enable_languages=c
-fi
-
-
-
 # Check whether --with-multilib-list was given.
 if test "${with_multilib_list+set}" = set; then :
   withval=$with_multilib_list; :
@@ -23115,23 +23087,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking linker plugin support" >&5
 $as_echo_n "checking linker plugin support... " >&6; }
 gcc_cv_lto_plugin=no
-if test -f liblto_plugin.la; then
-  if test $in_tree_ld = yes -a x"$ORIGINAL_PLUGIN_LD_FOR_TARGET=" = x"$gcc_cv_ld"; then
-    if test x"$ld_is_gold" = xyes; then
-      gcc_cv_lto_plugin=yes
-    elif test "$gcc_cv_gld_major_version" -eq 2 -a "$gcc_cv_gld_minor_version" -ge 21 -o "$gcc_cv_gld_major_version" -gt 2; then \
-      gcc_cv_lto_plugin=yes
-    fi
-  # Check if the linker supports --plugin-opt option
-  elif $ORIGINAL_PLUGIN_LD_FOR_TARGET --help 2>/dev/null | grep plugin-opt > /dev/null; then
-    gcc_cv_lto_plugin=yes
-  fi
-fi
-if test x"$gcc_cv_lto_plugin" = xyes; then
-
-$as_echo "#define HAVE_LTO_PLUGIN 1" >>confdefs.h
-
-fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $gcc_cv_lto_plugin" >&5
 $as_echo "$gcc_cv_lto_plugin" >&6; }
 
@@ -26009,16 +25964,6 @@ do
 	all_compilers="$all_compilers $compilers"
 	all_outputs="$all_outputs $outputs"
 	all_gtfiles="$all_gtfiles [$subdir] $gtfiles"
-        case ",$enable_languages," in
-        	*,lto,*)
-
-$as_echo "#define ENABLE_LTO 1" >>confdefs.h
-
-		    enable_lto=yes
-
-		    ;;
-		*) ;;
-	esac
 done
 
 # Pick up gtfiles for c
@@ -27698,7 +27643,7 @@ case ${CONFIG_HEADERS} in
   echo > cstamp-h ;;
 esac
 # Make sure all the subdirs exist.
-for d in $subdirs doc build c-family
+for d in $subdirs doc build
 do
     test -d $d || mkdir $d
 done

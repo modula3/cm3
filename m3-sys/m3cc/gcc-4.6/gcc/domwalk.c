@@ -29,9 +29,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "domwalk.h"
 #include "sbitmap.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This file implements a generic walker for dominator trees.
 
@@ -284,6 +282,4 @@ fini_walk_dominator_tree (struct dom_walk_data *walk_data)
   VEC_free (void_p, heap, walk_data->block_data_stack);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

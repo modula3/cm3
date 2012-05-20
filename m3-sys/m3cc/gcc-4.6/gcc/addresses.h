@@ -19,9 +19,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Wrapper function to unify target macros MODE_CODE_BASE_REG_CLASS,
    MODE_BASE_REG_REG_CLASS, MODE_BASE_REG_CLASS and BASE_REG_CLASS.
@@ -86,6 +84,4 @@ regno_ok_for_base_p (unsigned regno, enum machine_mode mode,
   return ok_for_base_p_1 (regno, mode, outer_code, index_code);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

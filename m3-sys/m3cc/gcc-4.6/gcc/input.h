@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "line-map.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern GTY(()) struct line_maps *line_table;
 
@@ -73,8 +71,6 @@ extern location_t input_location;
 #define in_system_header_at(LOC) ((expand_location (LOC)).sysp != 0)
 #define in_system_header (in_system_header_at (input_location))
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

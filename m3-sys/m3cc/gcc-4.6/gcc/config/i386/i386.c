@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines used for code generation on IA-32.
    Copyright (C) 1988, 1992, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -58,6 +60,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "sched-int.h"
 #include "sbitmap.h"
 #include "fibheap.h"
+
+EXTERN_C_START
 
 enum upper_128bits_state
 {
@@ -9243,15 +9247,7 @@ ix86_compute_frame_layout (struct ix86_frame *frame)
 	 feedback only).  Weight the size of function by number of registers
 	 to save as it is cheap to use one or two push instructions but very
 	 slow to use many of them.  */
-      if (count)
-	count = (count - 1) * FAST_PROLOGUE_INSN_COUNT;
-      if (node->frequency < NODE_FREQUENCY_NORMAL
-	  || (flag_branch_probabilities
-	      && node->frequency < NODE_FREQUENCY_HOT))
-        cfun->machine->use_fast_prologue_epilogue = false;
-      else
-        cfun->machine->use_fast_prologue_epilogue
-	   = !expensive_function_p (count);
+      cfun->machine->use_fast_prologue_epilogue = false;
     }
   if (TARGET_PROLOGUE_USING_MOVE
       && cfun->machine->use_fast_prologue_epilogue)
@@ -22732,150 +22728,14 @@ core2i7_first_cycle_multipass_filter_ready_try
     }
 }
 
-/* Prepare for a new round of multipass lookahead scheduling.  */
-static void
-core2i7_first_cycle_multipass_begin (void *_data, char *ready_try, int n_ready,
-				     bool first_cycle_insn_p)
-{
-  ix86_first_cycle_multipass_data_t data
-    = (ix86_first_cycle_multipass_data_t) _data;
-  const_ix86_first_cycle_multipass_data_t prev_data
-    = ix86_first_cycle_multipass_data;
-
-  /* Restore the state from the end of the previous round.  */
-  data->ifetch_block_len = prev_data->ifetch_block_len;
-  data->ifetch_block_n_insns = prev_data->ifetch_block_n_insns;
-
-  /* Filter instructions that cannot be issued on current cycle due to
-     decoder restrictions.  */
-  core2i7_first_cycle_multipass_filter_ready_try (data, ready_try, n_ready,
-						  first_cycle_insn_p);
-}
-
-/* INSN is being issued in current solution.  Account for its impact on
-   the decoder model.  */
-static void
-core2i7_first_cycle_multipass_issue (void *_data, char *ready_try, int n_ready,
-				     rtx insn, const void *_prev_data)
-{
-  ix86_first_cycle_multipass_data_t data
-    = (ix86_first_cycle_multipass_data_t) _data;
-  const_ix86_first_cycle_multipass_data_t prev_data
-    = (const_ix86_first_cycle_multipass_data_t) _prev_data;
-
-  int insn_size = min_insn_size (insn);
-
-  data->ifetch_block_len = prev_data->ifetch_block_len + insn_size;
-  data->ifetch_block_n_insns = prev_data->ifetch_block_n_insns + 1;
-  gcc_assert (data->ifetch_block_len <= core2i7_ifetch_block_size
-	      && data->ifetch_block_n_insns <= core2i7_ifetch_block_max_insns);
-
-  /* Allocate or resize the bitmap for storing INSN's effect on ready_try.  */
-  if (!data->ready_try_change)
-    {
-      data->ready_try_change = sbitmap_alloc (n_ready);
-      data->ready_try_change_size = n_ready;
-    }
-  else if (data->ready_try_change_size < n_ready)
-    {
-      data->ready_try_change = sbitmap_resize (data->ready_try_change,
-					       n_ready, 0);
-      data->ready_try_change_size = n_ready;
-    }
-  sbitmap_zero (data->ready_try_change);
-
-  /* Filter out insns from ready_try that the core will not be able to issue
-     on current cycle due to decoder.  */
-  core2i7_first_cycle_multipass_filter_ready_try (data, ready_try, n_ready,
-						  false);
-}
-
-/* Revert the effect on ready_try.  */
-static void
-core2i7_first_cycle_multipass_backtrack (const void *_data,
-					 char *ready_try,
-					 int n_ready ATTRIBUTE_UNUSED)
-{
-  const_ix86_first_cycle_multipass_data_t data
-    = (const_ix86_first_cycle_multipass_data_t) _data;
-  unsigned int i = 0;
-  sbitmap_iterator sbi;
-
-  gcc_assert (sbitmap_last_set_bit (data->ready_try_change) < n_ready);
-  EXECUTE_IF_SET_IN_SBITMAP (data->ready_try_change, 0, i, sbi)
-    {
-      ready_try[i] = 0;
-    }
-}
-
-/* Save the result of multipass lookahead scheduling for the next round.  */
-static void
-core2i7_first_cycle_multipass_end (const void *_data)
-{
-  const_ix86_first_cycle_multipass_data_t data
-    = (const_ix86_first_cycle_multipass_data_t) _data;
-  ix86_first_cycle_multipass_data_t next_data
-    = ix86_first_cycle_multipass_data;
-
-  if (data != NULL)
-    {
-      next_data->ifetch_block_len = data->ifetch_block_len;
-      next_data->ifetch_block_n_insns = data->ifetch_block_n_insns;
-    }
-}
-
-/* Deallocate target data.  */
-static void
-core2i7_first_cycle_multipass_fini (void *_data)
-{
-  ix86_first_cycle_multipass_data_t data
-    = (ix86_first_cycle_multipass_data_t) _data;
-
-  if (data->ready_try_change)
-    {
-      sbitmap_free (data->ready_try_change);
-      data->ready_try_change = NULL;
-      data->ready_try_change_size = 0;
-    }
-}
-
 /* Prepare for scheduling pass.  */
 static void
 ix86_sched_init_global (FILE *dump ATTRIBUTE_UNUSED,
 			int verbose ATTRIBUTE_UNUSED,
 			int max_uid ATTRIBUTE_UNUSED)
 {
-  /* Install scheduling hooks for current CPU.  Some of these hooks are used
-     in time-critical parts of the scheduler, so we only set them up when
-     they are actually used.  */
-  switch (ix86_tune)
-    {
-    case PROCESSOR_CORE2_32:
-    case PROCESSOR_CORE2_64:
-    case PROCESSOR_COREI7_32:
-    case PROCESSOR_COREI7_64:
-      targetm.sched.dfa_post_advance_cycle
-	= core2i7_dfa_post_advance_cycle;
-      targetm.sched.first_cycle_multipass_init
-	= core2i7_first_cycle_multipass_init;
-      targetm.sched.first_cycle_multipass_begin
-	= core2i7_first_cycle_multipass_begin;
-      targetm.sched.first_cycle_multipass_issue
-	= core2i7_first_cycle_multipass_issue;
-      targetm.sched.first_cycle_multipass_backtrack
-	= core2i7_first_cycle_multipass_backtrack;
-      targetm.sched.first_cycle_multipass_end
-	= core2i7_first_cycle_multipass_end;
-      targetm.sched.first_cycle_multipass_fini
-	= core2i7_first_cycle_multipass_fini;
-
-      /* Set decoder parameters.  */
-      core2i7_secondary_decoder_max_insn_size = 8;
-      core2i7_ifetch_block_size = 16;
-      core2i7_ifetch_block_max_insns = 6;
-      break;
-
-    default:
+  gcc_unreachable ();
+#if 0
       targetm.sched.dfa_post_advance_cycle = NULL;
       targetm.sched.first_cycle_multipass_init = NULL;
       targetm.sched.first_cycle_multipass_begin = NULL;
@@ -22883,8 +22743,7 @@ ix86_sched_init_global (FILE *dump ATTRIBUTE_UNUSED,
       targetm.sched.first_cycle_multipass_backtrack = NULL;
       targetm.sched.first_cycle_multipass_end = NULL;
       targetm.sched.first_cycle_multipass_fini = NULL;
-      break;
-    }
+#endif
 }
 
 
@@ -23131,7 +22990,7 @@ ix86_static_chain (const_tree fndecl, bool incoming_p)
 {
   unsigned regno;
 
-  if (!DECL_STATIC_CHAIN (fndecl))
+  if (fndecl && !DECL_STATIC_CHAIN (fndecl))
     return NULL;
 
   if (TARGET_64BIT)
@@ -23141,41 +23000,44 @@ ix86_static_chain (const_tree fndecl, bool incoming_p)
     }
   else
     {
-      tree fntype;
       /* By default in 32-bit mode we use ECX to pass the static chain.  */
       regno = CX_REG;
+      
+      if (fndecl) /* Modula-3 can pass NULL */
+      {
+        tree fntype = TREE_TYPE (fndecl);
 
-      fntype = TREE_TYPE (fndecl);
-      if (lookup_attribute ("fastcall", TYPE_ATTRIBUTES (fntype)))
-	{
-	  /* Fastcall functions use ecx/edx for arguments, which leaves
-	     us with EAX for the static chain.  */
-	  regno = AX_REG;
-	}
-      else if (lookup_attribute ("thiscall", TYPE_ATTRIBUTES (fntype)))
-	{
-	  /* Thiscall functions use ecx for arguments, which leaves
-	     us with EAX for the static chain.  */
-	  regno = AX_REG;
-	}
-      else if (ix86_function_regparm (fntype, fndecl) == 3)
-	{
-	  /* For regparm 3, we have no free call-clobbered registers in
-	     which to store the static chain.  In order to implement this,
-	     we have the trampoline push the static chain to the stack.
-	     However, we can't push a value below the return address when
-	     we call the nested function directly, so we have to use an
-	     alternate entry point.  For this we use ESI, and have the
-	     alternate entry point push ESI, so that things appear the
-	     same once we're executing the nested function.  */
-	  if (incoming_p)
-	    {
-	      if (fndecl == current_function_decl)
-		ix86_static_chain_on_stack = true;
-	      return gen_frame_mem (SImode,
-				    plus_constant (arg_pointer_rtx, -8));
-	    }
-	  regno = SI_REG;
+        if (lookup_attribute ("fastcall", TYPE_ATTRIBUTES (fntype)))
+	  {
+	    /* Fastcall functions use ecx/edx for arguments, which leaves
+	       us with EAX for the static chain.  */
+	    regno = AX_REG;
+	  }
+        else if (lookup_attribute ("thiscall", TYPE_ATTRIBUTES (fntype)))
+	  {
+	    /* Thiscall functions use ecx for arguments, which leaves
+	       us with EAX for the static chain.  */
+	    regno = AX_REG;
+	  }
+        else if (ix86_function_regparm (fntype, fndecl) == 3)
+	  {
+	    /* For regparm 3, we have no free call-clobbered registers in
+	       which to store the static chain.  In order to implement this,
+	       we have the trampoline push the static chain to the stack.
+	       However, we can't push a value below the return address when
+	       we call the nested function directly, so we have to use an
+	       alternate entry point.  For this we use ESI, and have the
+	       alternate entry point push ESI, so that things appear the
+	       same once we're executing the nested function.  */
+	    if (incoming_p)
+	      {
+	        if (fndecl == current_function_decl)
+		  ix86_static_chain_on_stack = true;
+	        return gen_frame_mem (SImode,
+				      plus_constant (arg_pointer_rtx, -8));
+	      }
+	    regno = SI_REG;
+	  }
 	}
     }
 
@@ -34683,13 +34545,7 @@ debug_insn_dispatch_info_file (FILE *file, rtx insn)
 DEBUG_FUNCTION void
 debug_ready_dispatch (void)
 {
-  int i;
-  int no_ready = number_in_ready ();
-
-  fprintf (stdout, "Number of ready: %d\n", no_ready);
-
-  for (i = 0; i < no_ready; i++)
-    debug_insn_dispatch_info_file (stdout, get_ready_element (i));
+  gcc_unreachable ();
 }
 
 /* This routine is the driver of the dispatch scheduler.  */
@@ -35095,5 +34951,7 @@ ix86_autovectorize_vector_sizes (void)
 #endif
 
 struct gcc_target targetm = TARGET_INITIALIZER;
+
+EXTERN_C_END
 
 #include "gt-i386.h"

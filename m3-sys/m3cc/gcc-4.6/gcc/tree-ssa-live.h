@@ -28,9 +28,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "partition.h"
 #include "vecprim.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Used to create the variable mapping when we go out of SSA form.
 
@@ -347,8 +345,6 @@ extern var_map coalesce_ssa_name (void);
 extern bitmap find_replaceable_exprs (var_map);
 extern void dump_replaceable_exprs (FILE *, bitmap);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* _TREE_SSA_LIVE_H  */

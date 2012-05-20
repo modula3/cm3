@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "intl.h"
 #include "input.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Current position in real source file.  */
 
@@ -58,6 +56,4 @@ expand_location (source_location loc)
   return xloc;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -41,9 +41,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Forward declarations */
 static void set_of_1 (rtx, const_rtx, void *);
@@ -5239,6 +5237,4 @@ low_bitmask_len (enum machine_mode mode, unsigned HOST_WIDE_INT m)
   return exact_log2 (m + 1);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

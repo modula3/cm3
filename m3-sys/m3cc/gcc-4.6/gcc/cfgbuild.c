@@ -40,9 +40,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "sbitmap.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void make_edges (basic_block, basic_block, int);
 static void make_label_edge (sbitmap, basic_block, rtx, int);
@@ -628,6 +626,4 @@ find_many_sub_basic_blocks (sbitmap blocks)
     SET_STATE (bb, 0);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

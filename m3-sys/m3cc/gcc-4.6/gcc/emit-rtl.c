@@ -63,9 +63,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "tree-flow.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct target_rtl default_target_rtl;
 #if SWITCHABLE_TARGET
@@ -1677,7 +1675,7 @@ set_mem_attributes_minus_bitpos (rtx ref, tree t, int objectp,
 	t = TREE_OPERAND (t, 0);
 
       /* Note whether this expression can trap.  */
-      MEM_NOTRAP_P (ref) = !tree_could_trap_p (t);
+      MEM_NOTRAP_P (ref) = tree_could_trap_p (t);
 
       base = get_base_address (t);
       if (base && DECL_P (base)
@@ -6027,8 +6025,6 @@ gen_hard_reg_clobber (enum machine_mode mode, unsigned int regno)
 	    gen_rtx_CLOBBER (VOIDmode, gen_rtx_REG (mode, regno)));
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-emit-rtl.h"

@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "sparseset.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Allocate and clear a n_elms SparseSet.  */
 
@@ -241,6 +239,4 @@ sparseset_equal_p (sparseset a, sparseset b)
   return true;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

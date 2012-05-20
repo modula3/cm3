@@ -32,9 +32,7 @@
 #include "real.h"
 #include "tm_p.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The floating point model used internally is not exactly IEEE 754
    compliant, and close to the description in the ISO C99 standard,
@@ -116,8 +114,6 @@ static int do_compare (const REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *, int);
 static void do_fix_trunc (REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *);
 
 static unsigned long rtd_divmod (REAL_VALUE_TYPE *, REAL_VALUE_TYPE *);
-static void decimal_integer_string (char *, const REAL_VALUE_TYPE *,
-				    size_t);
 
 static const REAL_VALUE_TYPE * ten_to_ptwo (int);
 static const REAL_VALUE_TYPE * ten_to_mptwo (int);
@@ -2145,53 +2141,6 @@ real_from_integer (REAL_VALUE_TYPE *r, enum machine_mode mode,
   gcc_assert (!DECIMAL_FLOAT_MODE_P (mode));
   if (mode != VOIDmode)
     real_convert (r, mode, r);
-}
-
-/* Render R, an integral value, as a floating point constant with no
-   specified exponent.  */
-
-static void
-decimal_integer_string (char *str, const REAL_VALUE_TYPE *r_orig,
-			size_t buf_size)
-{
-  int dec_exp, digit, digits;
-  REAL_VALUE_TYPE r, pten;
-  char *p;
-  bool sign;
-
-  r = *r_orig;
-
-  if (r.cl == rvc_zero)
-    {
-      strcpy (str, "0.");
-      return;
-    }
-
-  sign = r.sign;
-  r.sign = 0;
-
-  dec_exp = REAL_EXP (&r) * M_LOG10_2;
-  digits = dec_exp + 1;
-  gcc_assert ((digits + 2) < (int)buf_size);
-
-  pten = *real_digit (1);
-  times_pten (&pten, dec_exp);
-
-  p = str;
-  if (sign)
-    *p++ = '-';
-
-  digit = rtd_divmod (&r, &pten);
-  gcc_assert (digit >= 0 && digit <= 9);
-  *p++ = digit + '0';
-  while (--digits > 0)
-    {
-      times_pten (&r, 1);
-      digit = rtd_divmod (&r, &pten);
-      *p++ = digit + '0';
-    }
-  *p++ = '.';
-  *p++ = '\0';
 }
 
 /* Returns 10**2**N.  */
@@ -4908,6 +4857,4 @@ get_max_float (const struct real_format *fmt, char *buf, size_t len)
   gcc_assert (strlen (buf) < len);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

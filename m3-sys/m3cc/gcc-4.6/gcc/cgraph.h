@@ -31,9 +31,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "function.h"
 #include "ipa-ref.h"	/* FIXME: inappropriate dependency of cgraph on IPA.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 enum availability
 {
@@ -94,7 +92,6 @@ struct GTY(()) cgraph_thunk_info {
    Available after function is analyzed.  */
 
 struct GTY(()) cgraph_local_info {
-
   struct inline_summary inline_summary;
 
   /* Set when function function is visible in current compilation unit only
@@ -304,6 +301,8 @@ DEF_VEC_P(cgraph_node_ptr);
 DEF_VEC_ALLOC_P(cgraph_node_ptr,heap);
 DEF_VEC_ALLOC_P(cgraph_node_ptr,gc);
 
+EXTERN_C_END
+
 /* A cgraph node set is a collection of cgraph nodes.  A cgraph node
    can appear in multiple sets.  */
 struct GTY(()) cgraph_node_set_def
@@ -313,6 +312,8 @@ struct GTY(()) cgraph_node_set_def
 };
 
 typedef struct varpool_node *varpool_node_ptr;
+
+EXTERN_C_START
 
 DEF_VEC_P(varpool_node_ptr);
 DEF_VEC_ALLOC_P(varpool_node_ptr,heap);
@@ -955,9 +956,7 @@ varpool_all_refs_explicit_p (struct varpool_node *vnode)
 /* Constant pool accessor function.  */
 htab_t constant_pool_htab (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 /* FIXME: inappropriate dependency of cgraph on IPA.  */
 #include "ipa-ref-inline.h"

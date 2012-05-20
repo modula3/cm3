@@ -30,9 +30,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "basic-block.h"
 #include "df.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 typedef struct ddg_node *ddg_node_ptr;
 typedef struct ddg_edge *ddg_edge_ptr;
@@ -192,8 +190,6 @@ void free_ddg_all_sccs (ddg_all_sccs_ptr);
 int find_nodes_on_paths (sbitmap result, ddg_ptr, sbitmap from, sbitmap to);
 int longest_simple_path (ddg_ptr, int from, int to, sbitmap via);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_DDG_H */

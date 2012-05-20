@@ -34,9 +34,7 @@
 #include "coretypes.h"
 #include "ggc.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 void *
 ggc_alloc_typed_stat (enum gt_types_enum ARG_UNUSED (gte), size_t size
@@ -97,6 +95,4 @@ ggc_internal_cleared_alloc_zone_stat (size_t size,
 
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

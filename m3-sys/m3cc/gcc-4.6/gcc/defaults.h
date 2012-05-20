@@ -30,9 +30,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #ifndef GCC_DEFAULTS_H
 #define GCC_DEFAULTS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Store in OUTPUT a string (made with alloca) containing an
    assembler-name for a local static variable or function named NAME.
@@ -1345,8 +1343,6 @@ extern "C" {
 
 #endif /* GCC_INSN_FLAGS_H  */
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* ! GCC_DEFAULTS_H */

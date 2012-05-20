@@ -20,9 +20,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Structure representing edge of a graph.  */
 
@@ -68,6 +66,4 @@ typedef void (*graphds_edge_callback) (struct graph *, struct graph_edge *);
 void for_each_edge (struct graph *, graphds_edge_callback);
 void free_graph (struct graph *g);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

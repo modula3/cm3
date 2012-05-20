@@ -38,9 +38,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "output.h"
 #include "ggc.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void flow_loops_cfg_dump (FILE *);
 
@@ -655,28 +653,7 @@ mfb_redirect_edges_in_set (edge e)
 static void
 form_subloop (struct loop *loop, edge latch)
 {
-  edge_iterator ei;
-  edge e, new_entry;
-  struct loop *new_loop;
-
-  mfb_reis_set = pointer_set_create ();
-  FOR_EACH_EDGE (e, ei, loop->header->preds)
-    {
-      if (e != latch)
-	pointer_set_insert (mfb_reis_set, e);
-    }
-  new_entry = make_forwarder_block (loop->header, mfb_redirect_edges_in_set,
-				    NULL);
-  pointer_set_destroy (mfb_reis_set);
-
-  loop->header = new_entry->src;
-
-  /* Find the blocks and subloops that belong to the new loop, and add it to
-     the appropriate place in the loop tree.  */
-  new_loop = alloc_loop ();
-  new_loop->header = new_entry->dest;
-  new_loop->latch = latch->src;
-  add_loop (new_loop, loop);
+  gcc_unreachable ();
 }
 
 /* Make all the latch edges of LOOP to go to a single forwarder block --
@@ -685,31 +662,7 @@ form_subloop (struct loop *loop, edge latch)
 static void
 merge_latch_edges (struct loop *loop)
 {
-  VEC (edge, heap) *latches = get_loop_latch_edges (loop);
-  edge latch, e;
-  unsigned i;
-
-  gcc_assert (VEC_length (edge, latches) > 0);
-
-  if (VEC_length (edge, latches) == 1)
-    loop->latch = VEC_index (edge, latches, 0)->src;
-  else
-    {
-      if (dump_file)
-	fprintf (dump_file, "Merged latch edges of loop %d\n", loop->num);
-
-      mfb_reis_set = pointer_set_create ();
-      FOR_EACH_VEC_ELT (edge, latches, i, e)
-	pointer_set_insert (mfb_reis_set, e);
-      latch = make_forwarder_block (loop->header, mfb_redirect_edges_in_set,
-				    NULL);
-      pointer_set_destroy (mfb_reis_set);
-
-      loop->header = latch->dest;
-      loop->latch = latch->src;
-    }
-
-  VEC_free (edge, heap, latches);
+  gcc_unreachable ();
 }
 
 /* LOOP may have several latch edges.  Transform it into (possibly several)
@@ -718,41 +671,7 @@ merge_latch_edges (struct loop *loop)
 static void
 disambiguate_multiple_latches (struct loop *loop)
 {
-  edge e;
-
-  /* We eliminate the multiple latches by splitting the header to the forwarder
-     block F and the rest R, and redirecting the edges.  There are two cases:
-
-     1) If there is a latch edge E that corresponds to a subloop (we guess
-        that based on profile -- if it is taken much more often than the
-	remaining edges; and on trees, using the information about induction
-	variables of the loops), we redirect E to R, all the remaining edges to
-	F, then rescan the loops and try again for the outer loop.
-     2) If there is no such edge, we redirect all latch edges to F, and the
-        entry edges to R, thus making F the single latch of the loop.  */
-
-  if (dump_file)
-    fprintf (dump_file, "Disambiguating loop %d with multiple latches\n",
-	     loop->num);
-
-  /* During latch merging, we may need to redirect the entry edges to a new
-     block.  This would cause problems if the entry edge was the one from the
-     entry block.  To avoid having to handle this case specially, split
-     such entry edge.  */
-  e = find_edge (ENTRY_BLOCK_PTR, loop->header);
-  if (e)
-    split_edge (e);
-
-  while (1)
-    {
-      e = find_subloop_latch_edge (loop);
-      if (!e)
-	break;
-
-      form_subloop (loop, e);
-    }
-
-  merge_latch_edges (loop);
+  gcc_unreachable ();
 }
 
 /* Split loops with multiple latch edges.  */
@@ -1647,6 +1566,4 @@ loop_exits_from_bb_p (struct loop *loop, basic_block bb)
   return false;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

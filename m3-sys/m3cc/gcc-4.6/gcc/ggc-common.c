@@ -37,9 +37,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "vec.h"
 #include "timevar.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* When set, ggc_collect will do collection.  */
 bool ggc_force_collect;
@@ -1111,6 +1109,4 @@ dump_ggc_loc_statistics (bool final ATTRIBUTE_UNUSED)
 #endif
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

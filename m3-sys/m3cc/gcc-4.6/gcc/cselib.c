@@ -46,9 +46,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "bitmap.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* A list of cselib_val structures.  */
 struct elt_list {
@@ -2561,8 +2559,6 @@ dump_cselib_table (FILE *out)
   fprintf (out, "next uid %i\n", next_uid);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-cselib.h"

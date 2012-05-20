@@ -22,9 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_EMIT_RTL_H
 #define GCC_EMIT_RTL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Set the alias set of MEM to SET.  */
 extern void set_mem_alias_set (rtx, alias_set_type);
@@ -111,8 +109,6 @@ get_max_uid (void)
   return crtl->emit.x_cur_insn_uid;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_EMIT_RTL_H */

@@ -43,6 +43,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "cgraph.h"
 #include "output.h"
 
+EXTERN_C_START
+
 /* Do nothing; in many cases the default hook.  */
 
 void
@@ -659,3 +661,5 @@ lhd_end_section (void)
       saved_section = NULL;
     }
 }
+
+EXTERN_C_END

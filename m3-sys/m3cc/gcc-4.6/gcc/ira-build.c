@@ -43,9 +43,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ira-int.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static ira_copy_t find_allocno_copy (ira_allocno_t, ira_allocno_t, rtx,
 				     ira_loop_tree_node_t);
@@ -3079,6 +3077,4 @@ ira_destroy (void)
   ira_finish_allocno_live_ranges ();
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

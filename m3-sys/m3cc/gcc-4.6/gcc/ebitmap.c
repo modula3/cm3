@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "ebitmap.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The ebitmap data structure is a sparse bitmap structure that works
    by having two pieces:
@@ -1024,6 +1022,4 @@ ebitmap_equal_p (ebitmap dst, ebitmap src)
   return true;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

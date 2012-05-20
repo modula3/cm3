@@ -120,9 +120,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "vec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #ifndef CHAR_BIT
 #define CHAR_BIT 8
@@ -9582,6 +9580,4 @@ main (int argc, char **argv)
 	  ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

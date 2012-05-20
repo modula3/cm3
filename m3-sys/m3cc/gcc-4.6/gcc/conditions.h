@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifdef HAVE_cc0
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The variable cc_status says how to interpret the condition code.
    It is set by output routines for an instruction that sets the cc's
@@ -120,8 +118,6 @@ extern CC_STATUS cc_status;
  (cc_status.flags = 0, cc_status.value1 = 0, cc_status.value2 = 0,  \
   CC_STATUS_MDEP_INIT)
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

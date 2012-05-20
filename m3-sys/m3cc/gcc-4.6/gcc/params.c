@@ -28,9 +28,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "diagnostic-core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* An array containing the compiler parameters and their current
    values.  */
@@ -178,6 +176,4 @@ get_num_compiler_params (void)
   return num_compiler_params;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

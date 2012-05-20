@@ -95,9 +95,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "tree-flow.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void dwarf2out_source_line (unsigned int, const char *, int, bool);
 static rtx last_var_location_insn;
@@ -23664,8 +23662,6 @@ dwarf2out_finish (const char *filename)
     htab_traverse (debug_str_hash, output_indirect_string, NULL);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-dwarf2out.h"

@@ -26,12 +26,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "hosthooks.h"
 #include "hosthooks-def.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

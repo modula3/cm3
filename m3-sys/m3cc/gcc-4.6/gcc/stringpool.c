@@ -35,11 +35,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc-internal.h"
 #include "tree.h"
 #include "symtab.h"
-#include "cpplib.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The "" allocated string.  */
 extern const char empty_string[] = "";
@@ -265,8 +262,6 @@ gt_pch_restore_stringpool (void)
   spd = NULL;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-stringpool.h"

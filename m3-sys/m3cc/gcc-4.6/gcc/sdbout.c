@@ -52,9 +52,7 @@ AT&T C compiler.  From the example below I would conclude the following:
 #include "ggc.h"
 #include "vec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static GTY(()) tree anonymous_types;
 
@@ -73,9 +71,7 @@ static GTY(()) VEC(tree,gc) *deferred_global_decls;
 static GTY(()) tree preinit_symbols;
 static GTY(()) bool sdbout_initialized;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #ifdef SDB_DEBUGGING_INFO
 
@@ -91,9 +87,7 @@ static GTY(()) bool sdbout_initialized;
 #include "langhooks.h"
 #include "target.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* 1 if PARM is passed to this function in memory.  */
 
@@ -1718,9 +1712,7 @@ sdbout_init (const char *input_file_name ATTRIBUTE_UNUSED)
   preinit_symbols = 0;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* SDB_DEBUGGING_INFO */
 

@@ -35,9 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 /* For VEC (int, heap).  */
 #include "vecprim.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Identificator of a scheduler pass.  */
 enum sched_pass_id_t { SCHED_PASS_UNKNOWN, SCHED_RGN_PASS, SCHED_EBB_PASS,
@@ -1487,15 +1485,11 @@ extern void sd_copy_back_deps (rtx, rtx, bool);
 extern void sd_delete_dep (sd_iterator_def);
 extern void sd_debug_lists (rtx, sd_list_types_def);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* INSN_SCHEDULING */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Functions in sched-vis.c.  These must be outside INSN_SCHEDULING as
    sched-vis.c is compiled always.  */
@@ -1503,8 +1497,6 @@ extern void print_insn (char *, const_rtx, int);
 extern void print_pattern (char *, const_rtx, int);
 extern void print_value (char *, const_rtx, int);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_SCHED_INT_H */

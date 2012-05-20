@@ -93,9 +93,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "read-md.h"
 #include "gensupport.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* No instruction can have more operands than this.  Sorry for this
    arbitrary limit, but what machine will have an instruction with
@@ -1236,6 +1234,4 @@ constraint_len (const char *p, int genoutput_default_constraint_len)
 }
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -29,9 +29,7 @@ along with GCC; see the file COPYING3.  If not see
    include that header here.  */
 #include "mode-classes.def"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define DEF_MODE_CLASS(M) M
 enum mode_class { MODE_CLASSES, MAX_MODE_CLASS };
@@ -1418,6 +1416,4 @@ main (int argc, char **argv)
   return SUCCESS_EXIT_CODE;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

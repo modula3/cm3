@@ -78,7 +78,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "timevar.h"
 #include "cgraph.h"
-#include "coverage.h"
 #include "df.h"
 #include "vecprim.h"
 #include "ggc.h"
@@ -100,9 +99,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "sdbout.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Most ports that aren't using cc0 don't need to define CC_STATUS_INIT.
    So define a null default for it to save conditionalization later.  */
@@ -729,7 +726,6 @@ compute_alignments (void)
       dump_flow_info (dump_file, TDF_DETAILS);
       flow_loops_dump (dump_file, NULL, 1);
     }
-  loop_optimizer_init (AVOID_CFG_MODIFICATIONS);
   FOR_EACH_BB (bb)
     if (bb->frequency > freq_max)
       freq_max = bb->frequency;
@@ -821,7 +817,6 @@ compute_alignments (void)
       LABEL_TO_MAX_SKIP (label) = max_skip;
     }
 
-  loop_optimizer_finalize ();
   free_dominance_info (CDI_DOMINATORS);
   return 0;
 }
@@ -4457,7 +4452,6 @@ rest_of_clean_state (void)
     sdbout_types (NULL_TREE);
 #endif
 
-  flag_rerun_cse_after_global_opts = 0;
   reload_completed = 0;
   epilogue_completed = 0;
 #ifdef STACK_REGS
@@ -4522,6 +4516,4 @@ struct rtl_opt_pass pass_clean_state =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

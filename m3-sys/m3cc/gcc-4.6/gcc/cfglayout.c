@@ -43,9 +43,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "vecprim.h"
 #include "emit-rtl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Holds the interesting trailing notes for the function.  */
 rtx cfg_layout_function_footer;
@@ -1039,6 +1037,8 @@ fixup_fallthru_exit_predecessor (void)
   edge e;
   basic_block bb = NULL;
 
+  gcc_unreachable ();
+
   /* This transformation is not valid before reload, because we might
      separate a call from the instruction that copies the return
      value.  */
@@ -1085,6 +1085,8 @@ force_one_exit_fallthru (void)
   bool more = false;
   edge_iterator ei;
   basic_block forwarder, bb;
+
+  gcc_unreachable ();
 
   FOR_EACH_EDGE (e, ei, EXIT_BLOCK_PTR->preds)
     if (e->flags & EDGE_FALLTHRU)
@@ -1163,6 +1165,8 @@ rtx
 duplicate_insn_chain (rtx from, rtx to)
 {
   rtx insn, last, copy;
+
+  gcc_unreachable ();
 
   /* Avoid updating of boundaries of previous basic block.  The
      note will get removed from insn stream in fixup.  */
@@ -1255,6 +1259,8 @@ cfg_layout_duplicate_bb (basic_block bb)
   rtx insn;
   basic_block new_bb;
 
+  gcc_unreachable ();
+
   insn = duplicate_insn_chain (BB_HEAD (bb), BB_END (bb));
   new_bb = create_basic_block (insn,
 			       insn ? get_last_insn () : NULL,
@@ -1296,6 +1302,8 @@ cfg_layout_initialize (unsigned int flags)
   rtx x;
   basic_block bb;
 
+  gcc_unreachable ();
+
   initialize_original_copy_tables ();
 
   cfg_layout_rtl_register_cfg_hooks ();
@@ -1319,6 +1327,8 @@ break_superblocks (void)
   sbitmap superblocks;
   bool need = false;
   basic_block bb;
+
+  gcc_unreachable ();
 
   superblocks = sbitmap_alloc (last_basic_block);
   sbitmap_zero (superblocks);
@@ -1376,6 +1386,8 @@ can_copy_bbs_p (basic_block *bbs, unsigned n)
   edge e;
   int ret = true;
 
+  gcc_unreachable ();
+
   for (i = 0; i < n; i++)
     bbs[i]->flags |= BB_DUPLICATED;
 
@@ -1431,6 +1443,8 @@ copy_bbs (basic_block *bbs, unsigned n, basic_block *new_bbs,
   unsigned i, j;
   basic_block bb, new_bb, dom_bb;
   edge e;
+  
+  gcc_unreachable ();
 
   /* Duplicate bbs, update dominators, assign bbs to loops.  */
   for (i = 0; i < n; i++)
@@ -1488,8 +1502,6 @@ copy_bbs (basic_block *bbs, unsigned n, basic_block *new_bbs,
     bbs[i]->flags &= ~BB_DUPLICATED;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-cfglayout.h"

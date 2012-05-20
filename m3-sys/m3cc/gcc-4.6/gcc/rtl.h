@@ -34,9 +34,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "alias.h"
 #include "hashtab.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #undef FFS  /* Some systems predefine this symbol; don't let it interfere.  */
 #undef FLOAT /* Likewise.  */
@@ -2586,8 +2584,6 @@ extern void _fatal_insn (const char *, const_rtx, const char *, int, const char 
 #define fatal_insn_not_found(insn) \
 	_fatal_insn_not_found (insn, __FILE__, __LINE__, __FUNCTION__)
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_RTL_H */

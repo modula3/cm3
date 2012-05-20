@@ -22,9 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_SREAL_H
 #define GCC_SREAL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* SREAL_PART_BITS has to be an even number.  */
 #if (HOST_BITS_PER_WIDE_INT / 2) % 2 == 1
@@ -67,8 +65,6 @@ extern sreal *sreal_sub (sreal *, sreal *, sreal *);
 extern sreal *sreal_mul (sreal *, sreal *, sreal *);
 extern sreal *sreal_div (sreal *, sreal *, sreal *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

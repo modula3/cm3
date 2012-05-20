@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "tree-pretty-print.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define TB_OUT_FILE stdout
 #define TB_IN_FILE stdin
@@ -967,6 +965,4 @@ TB_getline (char **lineptr, long *n, FILE *stream)
   return p - *lineptr;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

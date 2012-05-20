@@ -42,9 +42,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "output.h"
 #include "ggc.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define MOVE_MAX_WORDS (MOVE_MAX / UNITS_PER_WORD)
 
@@ -1424,8 +1422,6 @@ insert_one_insn (struct insn_chain *chain, int before_p, int code, rtx pat)
   return new_chain;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-caller-save.h"

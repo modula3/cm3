@@ -42,6 +42,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "df.h"
 
+EXTERN_C_START
+
 #ifdef STACK_GROWS_DOWNWARD
 # undef STACK_GROWS_DOWNWARD
 # define STACK_GROWS_DOWNWARD 1
@@ -1400,3 +1402,5 @@ struct rtl_opt_pass pass_lower_subreg2 =
   TODO_verify_flow                      /* todo_flags_finish */
  }
 };
+
+EXTERN_C_END

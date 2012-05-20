@@ -32,9 +32,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "highlev-plugin-common.h"
 #include "hashtab.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Event names.  */
 enum plugin_event
@@ -150,8 +148,6 @@ extern const char* default_plugin_dir_name (void);
 
 extern int plugin_is_GPL_compatible;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_PLUGIN_H */

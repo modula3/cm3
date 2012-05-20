@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_DBXOUT_H
 #define GCC_DBXOUT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern int dbxout_symbol (tree, int);
 extern void dbxout_parms (tree);
@@ -43,8 +41,6 @@ extern int dbxout_syms (tree);
 #define N_SO_OBJC        50
 #define N_SO_OBJCPLUS    51
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_DBXOUT_H */

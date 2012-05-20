@@ -35,9 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_PARAMS_H
 #define GCC_PARAMS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* No parameter shall have this value.  */
 
@@ -213,8 +211,6 @@ extern void init_param_values (int *params);
 #define MIN_NONDEBUG_INSN_UID \
   PARAM_VALUE (PARAM_MIN_NONDEBUG_INSN_UID)
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_PARAMS_H */

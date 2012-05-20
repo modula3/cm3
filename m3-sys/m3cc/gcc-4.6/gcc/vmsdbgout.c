@@ -30,9 +30,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifdef VMS_DEBUGGING_INFO
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #include "tree.h"
 #include "version.h"
@@ -1690,8 +1688,8 @@ to_vms_file_spec (char *filespec)
 }
 
 #else
-#define VMS_EPOCH_OFFSET 35067168000000000
-#define VMS_GRANULARITY_FACTOR 10000000
+#define VMS_EPOCH_OFFSET (35067168 * (long long)1000000000)
+#define VMS_GRANULARITY_FACTOR ((long long)10000000)
 #endif
 
 /* Return VMS file date, size, format, version given a name.  */
@@ -1853,9 +1851,7 @@ vms_file_stats_name (const char *filename, long long *cdt, long *siz, char *rfo,
 #endif
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* VMS_DEBUGGING_INFO */
 

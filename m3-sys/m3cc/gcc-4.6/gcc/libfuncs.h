@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "hashtab.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Enumeration of indexes into libfunc_table.  */
 enum libfunc_index
@@ -107,8 +105,6 @@ extern struct target_libfuncs *this_target_libfuncs;
 /* In explow.c */
 extern void set_stack_check_libfunc (const char *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_LIBFUNCS_H */

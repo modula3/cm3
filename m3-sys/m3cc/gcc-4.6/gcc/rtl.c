@@ -40,9 +40,7 @@ along with GCC; see the file COPYING3.  If not see
 # include "diagnostic-core.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Indexed by rtx code, gives number of operands for an rtx with that code.
    Does NOT include rtx header data (code and links).  */
@@ -825,6 +823,4 @@ rtl_check_failed_flag (const char *name, const_rtx r, const char *file,
 }
 #endif /* ENABLE_RTL_FLAG_CHECKING */
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

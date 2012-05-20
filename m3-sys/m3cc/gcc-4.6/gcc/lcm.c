@@ -71,6 +71,8 @@ along with GCC; see the file COPYING3.  If not see
    to instruction attribute values.  */
 #include "insn-attr.h"
 
+EXTERN_C_START
+
 /* Edge based LCM routines.  */
 static void compute_antinout_edge (sbitmap *, sbitmap *, sbitmap *, sbitmap *);
 static void compute_earliest (struct edge_list *, int, sbitmap *, sbitmap *,
@@ -812,3 +814,4 @@ pre_edge_rev_lcm (int n_exprs, sbitmap *transp,
   return edge_list;
 }
 
+EXTERN_C_END

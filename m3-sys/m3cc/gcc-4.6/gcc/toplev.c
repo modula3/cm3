@@ -70,8 +70,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "cgraph.h"
 #include "opts.h"
 #include "opts-diagnostic.h"
-#include "coverage.h"
-#include "value-prof.h"
 #include "alloc-pool.h"
 #include "tree-mudflap.h"
 #include "tree-pass.h"
@@ -96,9 +94,7 @@ along with GCC; see the file COPYING3.  If not see
 				   declarations for e.g. AIX 4.x.  */
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void general_init (const char *);
 static void do_compile (void);
@@ -566,7 +562,6 @@ compile_file (void)
 
   init_cgraph ();
   init_final (main_input_filename);
-  coverage_init (aux_base_name);
   statistics_init ();
   invoke_plugin_callbacks (PLUGIN_START_UNIT, NULL);
 
@@ -625,27 +620,6 @@ compile_file (void)
 
   /* Flush any pending external directives.  */
   process_pending_assemble_externals ();
-
-  /* Emit LTO marker if LTO info has been previously emitted.  This is
-     used by collect2 to determine whether an object file contains IL.
-     We used to emit an undefined reference here, but this produces
-     link errors if an object file with IL is stored into a shared
-     library without invoking lto1.  */
-  if (flag_generate_lto)
-    {
-#if defined ASM_OUTPUT_ALIGNED_DECL_COMMON
-      ASM_OUTPUT_ALIGNED_DECL_COMMON (asm_out_file, NULL_TREE,
-				      "__gnu_lto_v1",
-				      (unsigned HOST_WIDE_INT) 1, 8);
-#elif defined ASM_OUTPUT_ALIGNED_COMMON
-      ASM_OUTPUT_ALIGNED_COMMON (asm_out_file, "__gnu_lto_v1",
-				 (unsigned HOST_WIDE_INT) 1, 8);
-#else
-      ASM_OUTPUT_COMMON (asm_out_file, "__gnu_lto_v1",
-			 (unsigned HOST_WIDE_INT) 1,
-			 (unsigned HOST_WIDE_INT) 1);
-#endif
-    }
 
   /* Attach a special .ident directive to the end of the file to identify
      the version of GCC which compiled this code.  The format of the .ident
@@ -1617,7 +1591,6 @@ backend_init (void)
   init_emit_once ();
 
   init_rtlanal ();
-  init_inline_once ();
   init_varasm_once ();
   save_register_info ();
 
@@ -1771,22 +1744,6 @@ target_reinit (void)
     }
 }
 
-void
-dump_memory_report (bool final)
-{
-  ggc_print_statistics ();
-  stringpool_statistics ();
-  dump_tree_statistics ();
-  dump_gimple_statistics ();
-  dump_rtx_statistics ();
-  dump_alloc_pool_statistics ();
-  dump_bitmap_statistics ();
-  dump_vec_loc_statistics ();
-  dump_ggc_loc_statistics (final);
-  dump_alias_stats (stderr);
-  dump_pta_stats (stderr);
-}
-
 /* Clean up: close opened files, etc.  */
 
 static void
@@ -1825,9 +1782,6 @@ finalize (bool no_backend)
 
       ira_finish_once ();
     }
-
-  if (mem_report)
-    dump_memory_report (true);
 
   /* Language-specific end of compilation actions.  */
   lang_hooks.finish ();
@@ -1938,6 +1892,4 @@ toplev_main (int argc, char **argv)
   return (SUCCESS_EXIT_CODE);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

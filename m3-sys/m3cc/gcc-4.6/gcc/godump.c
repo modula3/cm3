@@ -39,9 +39,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "obstack.h"
 #include "debug.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* We dump this information from the debug hooks.  This gives us a
    stable and maintainable API to hook into.  In order to work
@@ -1074,8 +1072,6 @@ dump_go_spec_init (const char *filename, const struct gcc_debug_hooks *hooks)
   return &go_debug_hooks;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-godump.h"

@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "statistics.h"		/* For MEM_STAT_DECL.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The macros here implement a set of templated vector types and
    associated interfaces.  These templates are implemented with
@@ -1397,8 +1395,6 @@ static inline VEC(T,stack) *VEC_OP (T,stack,alloc1)			  \
   return (VEC(T,stack) *) vec_stack_p_reserve_exact_1 (alloc_, space);   \
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_VEC_H */

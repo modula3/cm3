@@ -22,9 +22,7 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* See target.def for a description of what this file contains and how to
    use it.
@@ -118,9 +116,7 @@ extern "C" {
 #define TARGET_FUNCTION_INCOMING_ARG TARGET_FUNCTION_ARG
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "target-hooks-def.h"
 

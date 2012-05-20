@@ -98,9 +98,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "xcoffout.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define DBXOUT_DECR_NESTING \
   if (--debug_nesting == 0 && symbol_queue_index > 0) \
@@ -3730,8 +3728,6 @@ dbxout_begin_function (tree decl)
 
 #endif /* DBX_DEBUGGING_INFO || XCOFF_DEBUGGING_INFO */
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-dbxout.h"

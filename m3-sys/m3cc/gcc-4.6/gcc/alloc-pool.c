@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "alloc-pool.h"
 #include "hashtab.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define align_eight(x) (((x+7) >> 3) << 3)
 
@@ -412,6 +410,4 @@ dump_alloc_pool_statistics (void)
 #endif
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

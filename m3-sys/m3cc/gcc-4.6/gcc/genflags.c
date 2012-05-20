@@ -32,9 +32,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "read-md.h"
 #include "gensupport.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Obstack to remember insns with.  */
 static struct obstack obstack;
@@ -306,6 +304,4 @@ main (int argc, char **argv)
   return SUCCESS_EXIT_CODE;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

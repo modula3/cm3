@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "ggc.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Call ggc_set_mark on all the roots.  */
 extern void ggc_mark_roots (void);
@@ -124,8 +122,6 @@ typedef struct ggc_statistics
    do not depend on the collector in use.  */
 extern void ggc_print_common_statistics (FILE *, ggc_statistics *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

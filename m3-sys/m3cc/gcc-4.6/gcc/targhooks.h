@@ -20,9 +20,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern bool default_legitimate_address_p (enum machine_mode, rtx, bool);
 
@@ -190,6 +188,4 @@ extern const struct default_options empty_optimization_table[];
 extern void *default_get_pch_validity (size_t *);
 extern const char *default_pch_valid_p (const void *, size_t);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

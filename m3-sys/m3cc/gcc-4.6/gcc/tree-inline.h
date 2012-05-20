@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "vecir.h" /* For VEC(gimple,heap).  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct cgraph_edge;
 
@@ -176,7 +174,6 @@ extern eni_weights eni_time_weights;
 /* Function prototypes.  */
 
 extern tree copy_tree_body_r (tree *, int *, void *);
-extern void insert_decl_map (copy_body_data *, tree, tree);
 
 unsigned int optimize_inline_calls (tree);
 tree maybe_inline_call_in_expr (tree);
@@ -196,8 +193,6 @@ extern gimple_seq copy_gimple_seq_and_replace_locals (gimple_seq seq);
 
 extern HOST_WIDE_INT estimated_stack_frame_size (struct cgraph_node *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_TREE_INLINE_H */

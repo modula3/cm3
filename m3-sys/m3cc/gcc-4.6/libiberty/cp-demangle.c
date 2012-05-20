@@ -1122,7 +1122,7 @@ d_encoding (struct d_info *di, int top_level)
     return d_special_name (di);
   else
     {
-      struct demangle_component *dc;
+      struct demangle_component *dc = { 0 };
 
       dc = d_name (di);
 
@@ -1179,7 +1179,7 @@ static struct demangle_component *
 d_name (struct d_info *di)
 {
   char peek = d_peek_char (di);
-  struct demangle_component *dc;
+  struct demangle_component *dc = { 0 };
 
   switch (peek)
     {
@@ -1299,7 +1299,7 @@ d_prefix (struct d_info *di)
     {
       char peek;
       enum demangle_component_type comb_type;
-      struct demangle_component *dc;
+      struct demangle_component *dc = { 0 };
 
       peek = d_peek_char (di);
       if (peek == '\0')
@@ -4443,7 +4443,7 @@ d_print_mod_list (struct d_print_info *dpi,
   else if (mods->mod->type == DEMANGLE_COMPONENT_LOCAL_NAME)
     {
       struct d_print_mod *hold_modifiers;
-      struct demangle_component *dc;
+      struct demangle_component *dc = { 0 };
 
       /* When this is on the modifier stack, we have pulled any
 	 qualifiers off the right argument already.  Otherwise, we
@@ -4791,7 +4791,7 @@ d_demangle_callback (const char *mangled, int options,
     }
   type;
   struct d_info di;
-  struct demangle_component *dc;
+  struct demangle_component *dc = { 0 };
   int status;
 
   if (mangled[0] == '_' && mangled[1] == 'Z')
@@ -5081,7 +5081,7 @@ is_ctor_or_dtor (const char *mangled,
                  enum gnu_v3_dtor_kinds *dtor_kind)
 {
   struct d_info di;
-  struct demangle_component *dc;
+  struct demangle_component *dc = { 0 };
   int ret;
 
   *ctor_kind = (enum gnu_v3_ctor_kinds) 0;

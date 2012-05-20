@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_RECOG_H
 #define GCC_RECOG_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Random number that should be large enough for all purposes.  */
 #define MAX_RECOG_ALTERNATIVES 30
@@ -315,8 +313,6 @@ struct insn_data_d
 extern const struct insn_data_d insn_data[];
 extern int peep2_current_count;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_RECOG_H */

@@ -114,9 +114,7 @@ a register with any other reload.  */
 #include "target.h"
 #include "ira.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* True if X is a constant that can be forced into the constant pool.  */
 #define CONST_POOL_OK_P(X)			\
@@ -7431,6 +7429,4 @@ debug_reload (void)
   debug_reload_to_stream (stderr);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

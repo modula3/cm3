@@ -554,7 +554,7 @@ PACKAGE_STRING='cpplib  '
 PACKAGE_BUGREPORT='gcc-bugs@gcc.gnu.org'
 PACKAGE_URL=''
 
-ac_unique_file="ucnid.h"
+ac_unique_file="line-map.c"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>

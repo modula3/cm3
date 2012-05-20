@@ -42,9 +42,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "langhooks.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The following routines implement the SSA copy renaming phase.
 
@@ -400,6 +398,4 @@ struct gimple_opt_pass pass_rename_ssa_copies =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

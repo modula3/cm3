@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "md5.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void
 usage (void)
@@ -126,6 +124,4 @@ main (int argc, char ** argv)
   return 0;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

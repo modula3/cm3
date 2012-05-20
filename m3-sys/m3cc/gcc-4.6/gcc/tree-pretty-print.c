@@ -32,14 +32,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "langhooks.h"
 #include "tree-iterator.h"
-#include "tree-chrec.h"
 #include "tree-pass.h"
-#include "value-prof.h"
 #include "predict.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Local functions, macros and variables.  */
 static const char *op_symbol (const_tree);
@@ -1504,6 +1500,12 @@ dump_generic_node (pretty_printer *buffer, tree node, int spc, int flags,
 	pp_string (buffer, " [return slot optimization]");
       if (CALL_EXPR_TAILCALL (node))
 	pp_string (buffer, " [tail call]");
+      break;
+
+    case STATIC_CHAIN_EXPR:
+      pp_string (buffer, "<<static chain of ");
+      dump_generic_node (buffer, TREE_OPERAND (node, 0), spc, flags, false);
+      pp_string (buffer, ">>");
       break;
 
     case WITH_CLEANUP_EXPR:
@@ -3016,6 +3018,4 @@ pp_base_tree_identifier (pretty_printer *pp, tree id)
 		    IDENTIFIER_POINTER (id) + IDENTIFIER_LENGTH (id));
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -36,9 +36,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "alias.h"
 #include "flags.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Codes of tree nodes */
 
@@ -5716,8 +5714,6 @@ is_lang_specific (tree t)
 /* In gimple-low.c.  */
 extern bool block_may_fallthru (const_tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* GCC_TREE_H  */

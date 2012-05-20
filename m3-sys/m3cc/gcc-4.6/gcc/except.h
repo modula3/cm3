@@ -32,9 +32,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "vecprim.h"
 #include "vecir.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct function;
 struct eh_region_d;
@@ -344,6 +342,4 @@ ehr_next (eh_region r, eh_region start)
 
 #define FOR_ALL_EH_REGION(R) FOR_ALL_EH_REGION_FN (R, cfun)
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

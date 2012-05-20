@@ -39,9 +39,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "toplev.h"
 #include "tree-pass.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 typedef const char *const_char_p; /* For DEF_VEC_P.  */
 DEF_VEC_P(const_char_p);
@@ -428,6 +426,4 @@ handle_common_deferred_options (void)
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

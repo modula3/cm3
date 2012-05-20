@@ -528,6 +528,10 @@ DEFTREECODE (BIND_EXPR, "bind_expr", tcc_expression, 3)
    arguments to the call.  */
 DEFTREECODE (CALL_EXPR, "call_expr", tcc_vl_exp, 3)
 
+/* Static chain.  Operand 0 is the FUNCTION_DECL for which the static chain is
+   to be computed. */
+DEFTREECODE (STATIC_CHAIN_EXPR, "static_chain_expr", tcc_expression, 1)
+
 /* Specify a value to compute along with its corresponding cleanup.
    Operand 0 is the cleanup expression.
    The cleanup is executed by the first enclosing CLEANUP_POINT_EXPR,

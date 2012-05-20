@@ -33,9 +33,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "cfgloop.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* A pointer to one of the hooks containers.  */
 static struct cfg_hooks *cfg_hooks;
@@ -1099,6 +1097,4 @@ lv_add_condition_to_bb (basic_block first, basic_block second,
   cfg_hooks->lv_add_condition_to_bb (first, second, new_block, cond);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

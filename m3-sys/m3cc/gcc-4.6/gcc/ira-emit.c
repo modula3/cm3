@@ -44,9 +44,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "ira-int.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 typedef struct move *move_t;
 
@@ -1167,6 +1165,4 @@ ira_emit (bool loops_p)
   ira_free (at_bb_start);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

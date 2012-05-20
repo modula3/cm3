@@ -36,9 +36,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"		/* For bitmap_iterator.  */
 #include "hard-reg-set.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Head of register set linked list.  */
 typedef bitmap_head regset_head;
@@ -128,8 +126,6 @@ extern bitmap_obstack reg_obstack;
 extern void dump_regset (regset, FILE *);
 extern void debug_regset (regset);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_REGSET_H */

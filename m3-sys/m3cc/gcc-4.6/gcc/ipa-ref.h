@@ -21,10 +21,6 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct cgraph_node;
 struct varpool_node;
 
@@ -81,21 +77,21 @@ struct GTY(()) ipa_ref_list
   VEC(ipa_ref_ptr,heap) * GTY((skip)) refering;
 };
 
+EXTERN_C_START
+
 struct ipa_ref * ipa_record_reference (struct cgraph_node *,
 				       struct varpool_node *,
 				       struct cgraph_node *,
 				       struct varpool_node *,
 				       enum ipa_ref_use, gimple);
 
-void ipa_remove_reference (struct ipa_ref *);
-void ipa_remove_all_references (struct ipa_ref_list *);
-void ipa_remove_all_refering (struct ipa_ref_list *);
-void ipa_dump_references (FILE *, struct ipa_ref_list *);
-void ipa_dump_refering (FILE *, struct ipa_ref_list *);
-void ipa_clone_references (struct cgraph_node *, struct varpool_node *, struct ipa_ref_list *);
-void ipa_clone_refering (struct cgraph_node *, struct varpool_node *, struct ipa_ref_list *);
-bool ipa_ref_cannot_lead_to_return (struct ipa_ref *);
+extern void ipa_remove_reference (struct ipa_ref *);
+extern void ipa_remove_all_references (struct ipa_ref_list *);
+extern void ipa_remove_all_refering (struct ipa_ref_list *);
+extern void ipa_dump_references (FILE *, struct ipa_ref_list *);
+extern void ipa_dump_refering (FILE *, struct ipa_ref_list *);
+extern void ipa_clone_references (struct cgraph_node *, struct varpool_node *, struct ipa_ref_list *);
+extern void ipa_clone_refering (struct cgraph_node *, struct varpool_node *, struct ipa_ref_list *);
+extern bool ipa_ref_cannot_lead_to_return (struct ipa_ref *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

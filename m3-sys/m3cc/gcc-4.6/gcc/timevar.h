@@ -22,6 +22,8 @@
 #ifndef GCC_TIMEVAR_H
 #define GCC_TIMEVAR_H
 
+EXTERN_C_START
+
 /* Timing variables are used to measure elapsed time in various
    portions of the compiler.  Each measures elapsed user, system, and
    wall-clock time, as appropriate to and supported by the host
@@ -113,5 +115,7 @@ timevar_pop (timevar_id_t tv)
 }
 
 extern void print_time (const char *, long);
+
+EXTERN_C_END
 
 #endif /* ! GCC_TIMEVAR_H */

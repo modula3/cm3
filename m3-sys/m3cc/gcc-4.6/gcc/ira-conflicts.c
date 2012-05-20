@@ -41,9 +41,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ira-int.h"
 #include "addresses.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This file contains code responsible for allocno conflict creation,
    allocno copy creation and allocno info accumulation on upper level
@@ -937,6 +935,4 @@ ira_build_conflicts (void)
     print_conflicts (ira_dump_file, false);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

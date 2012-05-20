@@ -49,9 +49,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "df.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Round to the next highest integer that meets the alignment.  */
 #define CEIL_ROUND(VALUE,ALIGN)	(((VALUE) + (ALIGN) - 1) & ~((ALIGN)- 1))
@@ -378,8 +376,6 @@ allocate_initial_values (rtx *reg_equiv_memory_loc)
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-integrate.h"

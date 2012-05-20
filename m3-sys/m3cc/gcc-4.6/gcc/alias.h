@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "coretypes.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The type of an alias set.  Code currently assumes that variables of
    this type can take the values 0 (the alias set which aliases
@@ -56,8 +54,6 @@ extern int nonoverlapping_memrefs_p (const_rtx, const_rtx, bool);
    memory barriers, including an address of SCRATCH.  */
 #define ALIAS_SET_MEMORY_BARRIER	((alias_set_type) -1)
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_ALIAS_H */

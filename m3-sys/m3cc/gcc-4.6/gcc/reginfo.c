@@ -54,9 +54,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "ira.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Maximum register number used in this function, plus one.  */
 
@@ -1346,6 +1344,4 @@ finish_subregs_of_mode (void)
 
 #endif /* CANNOT_CHANGE_MODE_CLASS */
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
