@@ -221,7 +221,7 @@ SourceDir = "../gcc" % The plain "gcc" directory is 4.3.
 if not defined("GCC46")
   GCC46 = FALSE
 end
-GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone
+GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone, iPad
 GCC45 = (not GCC42 and not GCC46)
 GCC43 = not (GCC42 or GCC45 or GCC46)
 local Defines = ""
@@ -242,8 +242,12 @@ if GCC46
 end
 if GCC42 or GCC45 or GCC46
   fs_mkdir(SourceDir & "/gcc/m3cg")
-  foreach a in ["config-lang.in", "m3-def.h", "m3-parse.h", "lang-options.h",
-                "lang-specs.h", "lang.opt", "m3cg.h", "Make-lang.in"]
+  local files = ["config-lang.in", "m3-def.h", "m3-parse.h", "lang-options.h",
+                 "lang.opt", "m3cg.h", "Make-lang.in"]
+  if not GCC46
+    files += "lang-specs.h"
+  end
+  foreach a in files
     cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
   end
   cp_if("../gcc/gcc/m3cg/" & m3gty, SourceDir & "/gcc/m3cg/m3gty43.h")
@@ -256,17 +260,14 @@ if GCC42 or GCC45 or GCC46
 end
 
 % figure out where we're going to build gcc
-build_dir = "."  % let m3build set the build directory
+build_dir = "../" & BUILD_DIR
 
-Log = ""
-if not Native
-  build_dir = "../" & HOST & "-" & M3CC_TARGET
-  Log = path() & "/" & build_dir & "/_m3.log"
-else
-  Log = path() & "/../" & BUILD_DIR & "/_m3.log"
-end
-
-Log = subst_chars(Log, "\\", "/")
+if not Native build_dir = "../" & HOST & "-" & M3CC_TARGET end
+if GCC42 build_dir = build_dir & "-gcc42" end
+%if GCC43 build_dir = build_dir & "-gcc43" end
+%if GCC45 build_dir = build_dir & "-gcc45" end
+if GCC46 build_dir = build_dir & "-gcc46" end
+Log = subst_chars(path() & "/" & build_dir & "/_m3.log", "\\", "/")
 
 fs_mkdir (build_dir)
 
@@ -417,8 +418,11 @@ Configure = Configure & " -enable-languages=m3cg"
 %  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
 %end
 if {"I386_DARWIN","AMD64_DARWIN","AMD64_LINUX","LINUXLIBC6","I386_LINUX","I386_OPENBSD"} contains HOST
+if GCC42
+  Configure = Configure & " -enable-checking=assert,fold,misc,rtl,rtlflag,runtime,tree"
+else
   Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree,types"
-end
+end end
 % These are compatible with just building m3cg, but user might
 % build gcc/cc1/libgcc here.
 Configure = Configure & " -disable-fixincludes"
@@ -497,11 +501,16 @@ if HostIsNT()
   end
 end
 
+M3CC_MAKE = M3CC_MAKE & "  "
+
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-if GCC45 or GCC46
+if GCC46
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " | tee -a " & Log])
+else
+if GCC45
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
               & " all-libiberty"
               % & " | tee -a " & Log
@@ -529,6 +538,7 @@ m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a"
 m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg"
           % & " | tee -a " & Log
           ])
+end
 
 if DoMipsTfile
   m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " mips-tfile"
