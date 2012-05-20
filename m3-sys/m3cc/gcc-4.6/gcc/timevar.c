@@ -86,6 +86,8 @@ struct tms
 #endif
 #endif
 
+EXTERN_C_START
+
 /* libc is very likely to have snuck a call to sysconf() into one of
    the underlying constants, and that can be very slow, so we have to
    precompute them.  Whose wonderful idea was it to make all those
@@ -495,3 +497,5 @@ print_time (const char *str, long total)
 	   all_time == 0 ? 0
 	   : (long) (((100.0 * (double) total) / (double) all_time) + .5));
 }
+
+EXTERN_C_END

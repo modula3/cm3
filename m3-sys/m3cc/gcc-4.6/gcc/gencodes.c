@@ -31,9 +31,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "gensupport.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void
 gen_insn (rtx insn, int code)
@@ -102,6 +100,4 @@ enum insn_code {");
   return SUCCESS_EXIT_CODE;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

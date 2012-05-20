@@ -40,9 +40,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "target.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Simplification and canonicalization of RTL.  */
 
@@ -5672,6 +5670,4 @@ simplify_rtx (const_rtx x)
   return NULL;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

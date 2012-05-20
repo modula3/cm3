@@ -67,9 +67,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "vecprim.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* So we can assign to cfun in this file.  */
 #undef cfun
@@ -6115,8 +6113,6 @@ struct rtl_opt_pass pass_match_asm_constraints =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-function.h"

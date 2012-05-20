@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #error "vecir.h must be included after coretypes.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* A varray of trees.  */
 DEF_VEC_P(tree);
@@ -55,8 +53,6 @@ DEF_VEC_P(rtx);
 DEF_VEC_ALLOC_P(rtx,heap);
 DEF_VEC_ALLOC_P(rtx,gc);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_VECIR_H */

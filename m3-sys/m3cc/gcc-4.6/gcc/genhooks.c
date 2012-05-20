@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "errors.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct hook_desc { const char *doc, *type, *name, *param, *init; };
 static struct hook_desc hook_array[] = {
@@ -347,6 +345,4 @@ main (int argc, char **argv)
   return 0;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

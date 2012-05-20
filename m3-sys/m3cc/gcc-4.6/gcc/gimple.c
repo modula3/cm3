@@ -33,15 +33,12 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "diagnostic.h"
 #include "tree-flow.h"
-#include "value-prof.h"
 #include "flags.h"
 #include "alias.h"
 #include "demangle.h"
 #include "langhooks.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Global type table.  FIXME lto, it should be possible to re-use some
    of the type hashing routines in tree.c (type_hash_canon, type_hash_lookup,
@@ -211,21 +208,6 @@ gimple_build_return (tree retval)
   return s;
 }
 
-/* Reset alias information on call S.  */
-
-void
-gimple_call_reset_alias_info (gimple s)
-{
-  if (gimple_call_flags (s) & ECF_CONST)
-    memset (gimple_call_use_set (s), 0, sizeof (struct pt_solution));
-  else
-    pt_solution_reset (gimple_call_use_set (s));
-  if (gimple_call_flags (s) & (ECF_CONST|ECF_PURE|ECF_NOVOPS))
-    memset (gimple_call_clobber_set (s), 0, sizeof (struct pt_solution));
-  else
-    pt_solution_reset (gimple_call_clobber_set (s));
-}
-
 /* Helper for gimple_build_call, gimple_build_call_vec and
    gimple_build_call_from_tree.  Build the basic components of a
    GIMPLE_CALL statement to function FN with NARGS arguments.  */
@@ -237,7 +219,6 @@ gimple_build_call_1 (tree fn, unsigned nargs)
   if (TREE_CODE (fn) == FUNCTION_DECL)
     fn = build_fold_addr_expr (fn);
   gimple_set_op (s, 1, fn);
-  gimple_call_reset_alias_info (s);
   return s;
 }
 
@@ -2402,45 +2383,8 @@ gimple_rhs_has_side_effects (const_gimple s)
 bool
 gimple_could_trap_p_1 (gimple s, bool include_mem, bool include_stores)
 {
-  tree t, div = NULL_TREE;
-  enum tree_code op;
-
-  if (include_mem)
-    {
-      unsigned i, start = (is_gimple_assign (s) && !include_stores) ? 1 : 0;
-
-      for (i = start; i < gimple_num_ops (s); i++)
-	if (tree_could_trap_p (gimple_op (s, i)))
-	  return true;
-    }
-
-  switch (gimple_code (s))
-    {
-    case GIMPLE_ASM:
-      return gimple_asm_volatile_p (s);
-
-    case GIMPLE_CALL:
-      t = gimple_call_fndecl (s);
-      /* Assume that calls to weak functions may trap.  */
-      if (!t || !DECL_P (t) || DECL_WEAK (t))
-	return true;
-      return false;
-
-    case GIMPLE_ASSIGN:
-      t = gimple_expr_type (s);
-      op = gimple_assign_rhs_code (s);
-      if (get_gimple_rhs_class (op) == GIMPLE_BINARY_RHS)
-	div = gimple_assign_rhs2 (s);
-      return (operation_could_trap_p (op, FLOAT_TYPE_P (t),
-				      (INTEGRAL_TYPE_P (t)
-				       && TYPE_OVERFLOW_TRAPS (t)),
-				      div));
-
-    default:
-      break;
-    }
-
-  return false;
+  gcc_unreachable ();
+  return true;
 }
 
 /* Return true if statement S can trap.  */
@@ -2448,7 +2392,8 @@ gimple_could_trap_p_1 (gimple s, bool include_mem, bool include_stores)
 bool
 gimple_could_trap_p (gimple s)
 {
-  return gimple_could_trap_p_1 (s, true, true);
+  gcc_unreachable ();
+  return true;
 }
 
 /* Return true if RHS of a GIMPLE_ASSIGN S can trap.  */
@@ -2456,37 +2401,9 @@ gimple_could_trap_p (gimple s)
 bool
 gimple_assign_rhs_could_trap_p (gimple s)
 {
-  gcc_assert (is_gimple_assign (s));
-  return gimple_could_trap_p_1 (s, true, false);
+  gcc_unreachable ();
+  return true;
 }
-
-
-/* Print debugging information for gimple stmts generated.  */
-
-void
-dump_gimple_statistics (void)
-{
-#ifdef GATHER_STATISTICS
-  int i, total_tuples = 0, total_bytes = 0;
-
-  fprintf (stderr, "\nGIMPLE statements\n");
-  fprintf (stderr, "Kind                   Stmts      Bytes\n");
-  fprintf (stderr, "---------------------------------------\n");
-  for (i = 0; i < (int) gimple_alloc_kind_all; ++i)
-    {
-      fprintf (stderr, "%-20s %7d %10d\n", gimple_alloc_kind_names[i],
-	  gimple_alloc_counts[i], gimple_alloc_sizes[i]);
-      total_tuples += gimple_alloc_counts[i];
-      total_bytes += gimple_alloc_sizes[i];
-    }
-  fprintf (stderr, "---------------------------------------\n");
-  fprintf (stderr, "%-20s %7d %10d\n", "Total", total_tuples, total_bytes);
-  fprintf (stderr, "---------------------------------------\n");
-#else
-  fprintf (stderr, "No gimple statistics\n");
-#endif
-}
-
 
 /* Return the number of operands needed on the RHS of a GIMPLE
    assignment for an expression with tree code CODE.  */
@@ -2531,6 +2448,7 @@ get_gimple_rhs_num_ops (enum tree_code code)
       || (SYM) == POLYNOMIAL_CHREC					    \
       || (SYM) == DOT_PROD_EXPR						    \
       || (SYM) == VEC_COND_EXPR						    \
+      || (SYM) == STATIC_CHAIN_EXPR                                         \
       || (SYM) == REALIGN_LOAD_EXPR) ? GIMPLE_SINGLE_RHS		    \
    : GIMPLE_INVALID_RHS),
 #define END_OF_BASE_TREE_CODES (unsigned char) GIMPLE_INVALID_RHS,
@@ -5164,8 +5082,6 @@ gimple_call_builtin_p (gimple stmt, enum built_in_function code)
 	  && DECL_FUNCTION_CODE (fndecl) == code);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-gimple.h"

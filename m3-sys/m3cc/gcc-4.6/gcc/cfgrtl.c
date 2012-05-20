@@ -64,9 +64,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "df.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static int can_delete_note_p (const_rtx);
 static int can_delete_label_p (const_rtx);
@@ -3204,6 +3202,4 @@ struct cfg_hooks cfg_layout_rtl_cfg_hooks = {
   NULL		/* flush_pending_stmts */
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

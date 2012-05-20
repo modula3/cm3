@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_FLAG_TYPES_H
 #define GCC_FLAG_TYPES_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 enum debug_info_type
 {
@@ -210,8 +208,6 @@ enum vect_verbosity_levels {
   MAX_VERBOSITY_LEVEL
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_FLAG_TYPES_H */

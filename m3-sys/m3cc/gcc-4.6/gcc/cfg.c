@@ -71,9 +71,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfgloop.h"
 #include "tree-flow.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The obstack on which the flow graph components are allocated.  */
 
@@ -1305,6 +1303,4 @@ get_loop_copy (struct loop *loop)
     return NULL;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

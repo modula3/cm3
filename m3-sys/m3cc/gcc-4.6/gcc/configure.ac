@@ -765,28 +765,6 @@ AC_SUBST(CONFIGURE_SPECS)
 ACX_PKGVERSION([GCC])
 ACX_BUGURL([http://gcc.gnu.org/bugs.html])
 
-# Sanity check enable_languages in case someone does not run the toplevel
-# configure # script.
-AC_ARG_ENABLE(languages,
-[  --enable-languages=LIST specify which front-ends to build],
-[case ,${enable_languages}, in
-       ,,|,yes,)
-		# go safe -- we cannot be much sure without the toplevel
-		# configure's
-		# analysis of which target libs are present and usable
-		enable_languages=c
-		;;
-	 *,all,*)
-		AC_MSG_ERROR([only the toplevel supports --enable-languages=all])
-		;;
-	*,c,*)
-		;;
-        *)
-		enable_languages=c,${enable_languages}
-		;;
-esac],
-[enable_languages=c])
-
 AC_ARG_WITH(multilib-list,
 [  --with-multilib-list    Select multilibs (SH only)],
 :,
@@ -3165,22 +3143,6 @@ fi
 
 AC_MSG_CHECKING(linker plugin support)
 gcc_cv_lto_plugin=no
-if test -f liblto_plugin.la; then
-  if test $in_tree_ld = yes -a x"$ORIGINAL_PLUGIN_LD_FOR_TARGET=" = x"$gcc_cv_ld"; then
-    if test x"$ld_is_gold" = xyes; then
-      gcc_cv_lto_plugin=yes
-    elif test "$gcc_cv_gld_major_version" -eq 2 -a "$gcc_cv_gld_minor_version" -ge 21 -o "$gcc_cv_gld_major_version" -gt 2; then \
-      gcc_cv_lto_plugin=yes
-    fi
-  # Check if the linker supports --plugin-opt option
-  elif $ORIGINAL_PLUGIN_LD_FOR_TARGET --help 2>/dev/null | grep plugin-opt > /dev/null; then
-    gcc_cv_lto_plugin=yes
-  fi
-fi
-if test x"$gcc_cv_lto_plugin" = xyes; then
-  AC_DEFINE(HAVE_LTO_PLUGIN, 1,
-[Define if your linker supports plugin.])
-fi
 AC_MSG_RESULT($gcc_cv_lto_plugin)
 
 case "$target" in
@@ -4580,14 +4542,6 @@ changequote([,])dnl
 	all_compilers="$all_compilers $compilers"
 	all_outputs="$all_outputs $outputs"
 	all_gtfiles="$all_gtfiles [[$subdir]] $gtfiles"
-        case ",$enable_languages," in
-        	*,lto,*)
-		    AC_DEFINE(ENABLE_LTO, 1, [Define to enable LTO support.])
-		    enable_lto=yes
-		    AC_SUBST(enable_lto)
-		    ;;
-		*) ;;
-	esac
 done
 
 # Pick up gtfiles for c
@@ -4896,7 +4850,7 @@ case ${CONFIG_HEADERS} in
   echo > cstamp-h ;;
 esac
 # Make sure all the subdirs exist.
-for d in $subdirs doc build c-family
+for d in $subdirs doc build
 do
     test -d $d || mkdir $d
 done

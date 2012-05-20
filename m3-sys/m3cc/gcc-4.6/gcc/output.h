@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_OUTPUT_H
 #define GCC_OUTPUT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Initialize data in final at the beginning of a compilation.  */
 extern void init_final (const char *);
@@ -687,8 +685,6 @@ extern void dbxout_stab_value_internal_label_diff (const char *, int *,
 
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_OUTPUT_H */

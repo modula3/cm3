@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_BUILTINS_H
 #define GCC_BUILTINS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Target-dependent globals.  */
 struct target_builtins {
@@ -52,8 +50,6 @@ extern struct target_builtins *this_target_builtins;
 #define this_target_builtins (&default_target_builtins)
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

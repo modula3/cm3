@@ -178,9 +178,7 @@
 #include "vecprim.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #ifdef STACK_REGS
 
@@ -3340,6 +3338,4 @@ struct rtl_opt_pass pass_stack_regs_run =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -46,9 +46,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "dbxout.h"
 #include "gstab.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Line number of beginning of current function, minus one.
    Negative means not in a function or not using xcoff.  */
@@ -497,9 +495,7 @@ xcoffout_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
   ASM_OUTPUT_LABEL (asm_out_file, fname);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* XCOFF_DEBUGGING_INFO */
 

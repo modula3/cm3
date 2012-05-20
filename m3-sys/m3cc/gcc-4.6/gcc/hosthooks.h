@@ -22,9 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_HOST_HOOKS_H
 #define GCC_HOST_HOOKS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct host_hooks
 {
@@ -51,8 +49,6 @@ struct host_hooks
 /* Each host provides its own.  */
 extern const struct host_hooks host_hooks;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_LANG_HOOKS_H */

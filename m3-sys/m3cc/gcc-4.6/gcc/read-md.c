@@ -28,9 +28,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "read-md.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Associates PTR (which can be a string, etc.) with the file location
    specified by FILENAME and LINENO.  */
@@ -1144,6 +1142,4 @@ read_md_files (int argc, char **argv, bool (*parse_opt) (const char *),
   return !have_error;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "splay-tree.h"
 #include "tree-pass.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 typedef struct dump_info *dump_info_p;
 
@@ -104,8 +102,6 @@ extern int dump_flag (dump_info_p, int, const_tree);
 extern unsigned int dump_register (const char *, const char *, const char *,
 				   int);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_TREE_DUMP_H */

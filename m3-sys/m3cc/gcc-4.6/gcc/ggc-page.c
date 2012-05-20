@@ -37,9 +37,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfgloop.h"
 #include "plugin.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Prefer MAP_ANON(YMOUS) to /dev/zero, since we don't need to keep a
    file open.  Prefer either to valloc.  */
@@ -2371,6 +2369,4 @@ struct alloc_zone rtl_zone;
 struct alloc_zone tree_zone;
 struct alloc_zone tree_id_zone;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

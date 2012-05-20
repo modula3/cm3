@@ -23,9 +23,7 @@
 #include "system.h"
 #include "gengtype.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This is a simple recursive-descent parser which understands a subset of
    the C type grammar.
@@ -993,6 +991,4 @@ parse_file (const char *fname)
   yyend ();
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -35,9 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "read-md.h"
 #include "gensupport.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* One element in a singly-linked list of (integer, string) pairs.  */
 struct map_value {
@@ -1145,6 +1143,4 @@ read_rtx_variadic (struct map_value **mode_maps, rtx form)
   return form;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

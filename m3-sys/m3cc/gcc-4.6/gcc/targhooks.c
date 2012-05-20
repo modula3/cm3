@@ -74,9 +74,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "tree-ssa-alias.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 bool
 default_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
@@ -1047,26 +1045,8 @@ default_valid_pointer_mode (enum machine_mode mode)
 bool
 default_ref_may_alias_errno (ao_ref *ref)
 {
-  tree base = ao_ref_base (ref);
-  /* The default implementation assumes the errno location is
-     a declaration of type int or is always accessed via a
-     pointer to int.  We assume that accesses to errno are
-     not deliberately obfuscated (even in conforming ways).  */
-  if (TYPE_UNSIGNED (TREE_TYPE (base))
-      || TYPE_MODE (TREE_TYPE (base)) != TYPE_MODE (integer_type_node))
-    return false;
-  /* The default implementation assumes an errno location
-     declaration is never defined in the current compilation unit.  */
-  if (DECL_P (base)
-      && !TREE_STATIC (base))
-    return true;
-  else if (TREE_CODE (base) == MEM_REF
-	   && TREE_CODE (TREE_OPERAND (base, 0)) == SSA_NAME)
-    {
-      struct ptr_info_def *pi = SSA_NAME_PTR_INFO (TREE_OPERAND (base, 0));
-      return !pi || pi->pt.anything || pi->pt.nonlocal;
-    }
-  return false;
+  gcc_unreachable ();
+  return true;
 }
 
 /* Return the mode for a pointer to a given ADDRSPACE, defaulting to ptr_mode
@@ -1524,8 +1504,6 @@ const struct default_options empty_optimization_table[] =
     { OPT_LEVELS_NONE, 0, NULL, 0 }
   };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-targhooks.h"

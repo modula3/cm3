@@ -31,9 +31,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_ERRORS_H
 #define GCC_ERRORS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern void warning (const char *, ...) ATTRIBUTE_PRINTF_1 ATTRIBUTE_COLD;
 extern void error (const char *, ...) ATTRIBUTE_PRINTF_1 ATTRIBUTE_COLD;
@@ -44,8 +42,6 @@ extern const char *trim_filename (const char *);
 extern int have_error;
 extern const char *progname;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_ERRORS_H */

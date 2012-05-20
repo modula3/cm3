@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef ALLOC_POOL_H
 #define ALLOC_POOL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 typedef unsigned long ALLOC_POOL_ID_TYPE;
 
@@ -71,8 +69,6 @@ extern void *pool_alloc (alloc_pool);
 extern void pool_free (alloc_pool, void *);
 extern void dump_alloc_pool_statistics (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

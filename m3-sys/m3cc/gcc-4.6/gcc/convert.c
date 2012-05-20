@@ -35,9 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "langhooks.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Convert EXPR to some pointer or reference type TYPE.
    EXPR must be pointer, reference, integer, enumeral, or literal zero;
@@ -383,12 +381,9 @@ convert_to_real (tree type, tree expr)
       return build1 (FLOAT_EXPR, type, expr);
 
     case FIXED_POINT_TYPE:
-      return build1 (FIXED_CONVERT_EXPR, type, expr);
-
     case COMPLEX_TYPE:
-      return convert (type,
-		      fold_build1 (REALPART_EXPR,
-				   TREE_TYPE (TREE_TYPE (expr)), expr));
+      gcc_unreachable ();
+      return 0;
 
     case POINTER_TYPE:
     case REFERENCE_TYPE:
@@ -845,20 +840,10 @@ convert_to_integer (tree type, tree expr)
       return build1 (FIX_TRUNC_EXPR, type, expr);
 
     case FIXED_POINT_TYPE:
-      return build1 (FIXED_CONVERT_EXPR, type, expr);
-
     case COMPLEX_TYPE:
-      return convert (type,
-		      fold_build1 (REALPART_EXPR,
-				   TREE_TYPE (TREE_TYPE (expr)), expr));
-
     case VECTOR_TYPE:
-      if (!tree_int_cst_equal (TYPE_SIZE (type), TYPE_SIZE (TREE_TYPE (expr))))
-	{
-	  error ("can%'t convert between vector values of different size");
-	  return error_mark_node;
-	}
-      return build1 (VIEW_CONVERT_EXPR, type, expr);
+      gcc_unreachable ();
+      return 0;
 
     default:
       error ("aggregate value used where an integer was expected");
@@ -871,53 +856,8 @@ convert_to_integer (tree type, tree expr)
 tree
 convert_to_complex (tree type, tree expr)
 {
-  tree subtype = TREE_TYPE (type);
-
-  switch (TREE_CODE (TREE_TYPE (expr)))
-    {
-    case REAL_TYPE:
-    case FIXED_POINT_TYPE:
-    case INTEGER_TYPE:
-    case ENUMERAL_TYPE:
-    case BOOLEAN_TYPE:
-      return build2 (COMPLEX_EXPR, type, convert (subtype, expr),
-		     convert (subtype, integer_zero_node));
-
-    case COMPLEX_TYPE:
-      {
-	tree elt_type = TREE_TYPE (TREE_TYPE (expr));
-
-	if (TYPE_MAIN_VARIANT (elt_type) == TYPE_MAIN_VARIANT (subtype))
-	  return expr;
-	else if (TREE_CODE (expr) == COMPLEX_EXPR)
-	  return fold_build2 (COMPLEX_EXPR, type,
-			      convert (subtype, TREE_OPERAND (expr, 0)),
-			      convert (subtype, TREE_OPERAND (expr, 1)));
-	else
-	  {
-	    expr = save_expr (expr);
-	    return
-	      fold_build2 (COMPLEX_EXPR, type,
-			   convert (subtype,
-				    fold_build1 (REALPART_EXPR,
-						 TREE_TYPE (TREE_TYPE (expr)),
-						 expr)),
-			   convert (subtype,
-				    fold_build1 (IMAGPART_EXPR,
-						 TREE_TYPE (TREE_TYPE (expr)),
-						 expr)));
-	  }
-      }
-
-    case POINTER_TYPE:
-    case REFERENCE_TYPE:
-      error ("pointer value used where a complex was expected");
-      return convert_to_complex (type, integer_zero_node);
-
-    default:
-      error ("aggregate value used where a complex was expected");
-      return convert_to_complex (type, integer_zero_node);
-    }
+  gcc_unreachable ();
+  return 0;    
 }
 
 /* Convert EXPR to the vector type TYPE in the usual ways.  */
@@ -925,21 +865,8 @@ convert_to_complex (tree type, tree expr)
 tree
 convert_to_vector (tree type, tree expr)
 {
-  switch (TREE_CODE (TREE_TYPE (expr)))
-    {
-    case INTEGER_TYPE:
-    case VECTOR_TYPE:
-      if (!tree_int_cst_equal (TYPE_SIZE (type), TYPE_SIZE (TREE_TYPE (expr))))
-	{
-	  error ("can%'t convert between vector values of different size");
-	  return error_mark_node;
-	}
-      return build1 (VIEW_CONVERT_EXPR, type, expr);
-
-    default:
-      error ("can%'t convert value to a vector");
-      return error_mark_node;
-    }
+  gcc_unreachable ();
+  return 0;
 }
 
 /* Convert EXPR to some fixed-point type TYPE.
@@ -950,37 +877,8 @@ convert_to_vector (tree type, tree expr)
 tree
 convert_to_fixed (tree type, tree expr)
 {
-  if (integer_zerop (expr))
-    {
-      tree fixed_zero_node = build_fixed (type, FCONST0 (TYPE_MODE (type)));
-      return fixed_zero_node;
-    }
-  else if (integer_onep (expr) && ALL_SCALAR_ACCUM_MODE_P (TYPE_MODE (type)))
-    {
-      tree fixed_one_node = build_fixed (type, FCONST1 (TYPE_MODE (type)));
-      return fixed_one_node;
-    }
-
-  switch (TREE_CODE (TREE_TYPE (expr)))
-    {
-    case FIXED_POINT_TYPE:
-    case INTEGER_TYPE:
-    case ENUMERAL_TYPE:
-    case BOOLEAN_TYPE:
-    case REAL_TYPE:
-      return build1 (FIXED_CONVERT_EXPR, type, expr);
-
-    case COMPLEX_TYPE:
-      return convert (type,
-		      fold_build1 (REALPART_EXPR,
-				   TREE_TYPE (TREE_TYPE (expr)), expr));
-
-    default:
-      error ("aggregate value used where a fixed-point was expected");
-      return error_mark_node;
-    }
+  gcc_unreachable ();
+  return 0;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

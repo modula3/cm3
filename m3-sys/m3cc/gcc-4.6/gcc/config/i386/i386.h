@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of target machine for GCC for IA-32.
    Copyright (C) 1988, 1992, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -78,6 +80,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #define	OPTION_ISA_ROUND	((ix86_isa_flags & OPTION_MASK_ISA_ROUND) != 0)
 
 #include "config/vxworks-dummy.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Algorithm to expand string function with.  */
 enum stringop_alg
@@ -2367,6 +2373,9 @@ extern void debug_dispatch_window (int);
 #define CLZ_DEFINED_VALUE_AT_ZERO(MODE, VALUE) \
 	((VALUE) = GET_MODE_BITSIZE (MODE), TARGET_BMI)
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 /*
 Local variables:

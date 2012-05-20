@@ -56,9 +56,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "pretty-print.h"
 #include "bitmap.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Functions and data structures for expanding case statements.  */
 
@@ -3285,6 +3283,4 @@ emit_case_nodes (rtx index, case_node_ptr node, rtx default_label,
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

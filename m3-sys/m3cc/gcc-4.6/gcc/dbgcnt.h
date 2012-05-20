@@ -24,9 +24,7 @@ See dbgcnt.def for usage information.  */
 #ifndef GCC_DBGCNT_H
 #define GCC_DBGCNT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define DEBUG_COUNTER(a) a,
 
@@ -42,8 +40,6 @@ extern bool dbg_cnt (enum debug_counter index);
 extern void dbg_cnt_process_opt (const char *arg);
 extern void dbg_cnt_list_all_counters (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_DBGCNT_H */

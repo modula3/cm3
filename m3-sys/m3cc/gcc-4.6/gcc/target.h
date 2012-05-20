@@ -54,9 +54,7 @@
 #include "tm.h"
 #include "insn-modes.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Types used by the record_gcc_switches() target function.  */
 typedef enum
@@ -178,23 +176,17 @@ struct default_options
 #define DEFHOOK_UNDOC DEFHOOK
 #define HOOKSTRUCT(FRAGMENT) FRAGMENT
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "target.def"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern struct gcc_target targetm;
 
 /* Each target can provide their own.  */
 extern struct gcc_targetcm targetcm;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_TARGET_H */

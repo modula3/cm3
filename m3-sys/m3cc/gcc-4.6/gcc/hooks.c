@@ -31,9 +31,7 @@
 #include "tm.h"
 #include "hooks.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Generic hook that does absolutely zappo.  */
 void
@@ -382,6 +380,4 @@ hook_void_gcc_optionsp (struct gcc_options *opts ATTRIBUTE_UNUSED)
 {
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

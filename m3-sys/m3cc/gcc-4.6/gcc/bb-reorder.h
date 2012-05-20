@@ -23,9 +23,7 @@
 #ifndef GCC_BB_REORDER
 #define GCC_BB_REORDER
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Target-specific globals.  */
 struct target_bb_reorder {
@@ -40,8 +38,6 @@ extern struct target_bb_reorder *this_target_bb_reorder;
 #define this_target_bb_reorder (&default_target_bb_reorder)
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

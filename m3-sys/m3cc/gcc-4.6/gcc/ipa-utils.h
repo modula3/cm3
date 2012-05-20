@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "cgraph.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct ipa_dfs_info {
   int dfn_number;
@@ -45,8 +43,6 @@ int ipa_utils_reduced_inorder (struct cgraph_node **, bool, bool,
 			       bool (*ignore_edge) (struct cgraph_edge *));
 tree get_base_var (tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* GCC_IPA_UTILS_H  */

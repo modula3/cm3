@@ -22,13 +22,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "diagnostic-core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern void error_for_asm (const_rtx, const char *, ...) ATTRIBUTE_GCC_DIAG(2,3);
 extern void warning_for_asm (const_rtx, const char *, ...) ATTRIBUTE_GCC_DIAG(2,3);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

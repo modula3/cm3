@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "gcc-plugin.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct attribute_spec;
 
@@ -71,8 +69,6 @@ invoke_plugin_callbacks (int event ATTRIBUTE_UNUSED,
 
 extern void register_attribute (const struct attribute_spec *attr);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* PLUGIN_H */

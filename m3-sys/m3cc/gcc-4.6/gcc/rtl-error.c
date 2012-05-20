@@ -32,9 +32,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "intl.h"
 #include "diagnostic.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static location_t location_for_asm (const_rtx);
 static void diagnostic_for_asm (const_rtx, const char *, va_list *, diagnostic_t) ATTRIBUTE_GCC_DIAG(2,0);
@@ -127,6 +125,4 @@ _fatal_insn_not_found (const_rtx insn, const char *file, int line,
 		insn, file, line, function);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

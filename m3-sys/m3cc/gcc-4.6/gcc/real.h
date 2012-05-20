@@ -26,9 +26,7 @@
 
 #include "machmode.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* An expanded form of the represented number.  */
 
@@ -485,8 +483,6 @@ extern bool real_isinteger (const REAL_VALUE_TYPE *c, enum machine_mode mode);
    float string.  BUF must be large enough to contain the result.  */
 extern void get_max_float (const struct real_format *, char *, size_t);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_REAL_H */

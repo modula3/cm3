@@ -42,9 +42,7 @@
 #include "df.h"
 #include "target.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This file implements the RTL register renaming pass of the compiler.  It is
    a semi-local pass whose goal is to maximize the usage of the register file
@@ -1463,6 +1461,4 @@ struct rtl_opt_pass pass_regrename =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

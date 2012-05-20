@@ -27,9 +27,7 @@
 
 #include "machmode.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern bool hook_bool_void_false (void);
 extern bool hook_bool_void_true (void);
@@ -97,8 +95,6 @@ extern const char *hook_constcharptr_const_tree_const_tree_null (const_tree, con
 extern const char *hook_constcharptr_int_const_tree_null (int, const_tree);
 extern const char *hook_constcharptr_int_const_tree_const_tree_null (int, const_tree, const_tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

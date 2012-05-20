@@ -36,9 +36,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "graph.h"
 #include "emit-rtl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static const char *const graph_ext[] =
 {
@@ -444,6 +442,4 @@ finish_graph_dump_file (const char *base)
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

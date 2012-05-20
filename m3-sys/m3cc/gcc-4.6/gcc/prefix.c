@@ -75,9 +75,7 @@ License along with GCC; see the file COPYING3.  If not see
 #endif
 #include "prefix.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static const char *std_prefix = PREFIX;
 
@@ -361,6 +359,4 @@ set_std_prefix (const char *prefix, int len)
   std_prefix = save_string (prefix, len);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

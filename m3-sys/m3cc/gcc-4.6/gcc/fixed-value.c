@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "diagnostic-core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Compare two fixed objects for bitwise identity.  */
 
@@ -1154,6 +1152,4 @@ fixed_isneg (const FIXED_VALUE_TYPE *f)
   return false;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

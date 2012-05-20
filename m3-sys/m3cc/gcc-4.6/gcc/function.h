@@ -30,9 +30,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"		/* For CUMULATIVE_ARGS.  */
 #include "hard-reg-set.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Stack of pending (incomplete) sequences saved by `start_sequence'.
    Each element describes one pending sequence.
@@ -765,8 +763,6 @@ extern int get_next_funcdef_no (void);
 extern bool optimize_function_for_size_p (struct function *);
 extern bool optimize_function_for_speed_p (struct function *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* GCC_FUNCTION_H */

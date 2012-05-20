@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "pretty-print.h"
 #include "tree-pretty-print.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* In gimple-pretty-print.c  */
 extern void debug_gimple_stmt (gimple);
@@ -39,8 +37,6 @@ extern void print_gimple_stmt (FILE *, gimple, int, int);
 extern void print_gimple_expr (FILE *, gimple, int, int);
 extern void dump_gimple_stmt (pretty_printer *, gimple, int, int);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_GIMPLE_PRETTY_PRINT_H */

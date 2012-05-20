@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef TREE_MUDFLAP_H
 #define TREE_MUDFLAP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Instrumentation.  */
 extern void mudflap_init (void);
@@ -37,8 +35,6 @@ extern void mudflap_finish_file (void);
 extern int mf_marked_p (tree);
 extern tree mf_mark (tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* TREE_MUDFLAP_H */

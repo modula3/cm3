@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "tree-ssa-live.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This structure (of which only a singleton SA exists) is used to
    pass around information between the outof-SSA functions, cfgexpand
@@ -59,11 +57,8 @@ extern struct ssaexpand SA;
 static inline rtx
 get_rtx_for_ssa_name (tree exp)
 {
-  int p = partition_find (SA.map->var_partition, SSA_NAME_VERSION (exp));
-  if (SA.map->partition_to_view)
-    p = SA.map->partition_to_view[p];
-  gcc_assert (p != NO_PARTITION);
-  return SA.partition_to_pseudo[p];
+  gcc_unreachable ();
+  return 0;
 }
 
 /* If TER decided to forward the definition of SSA name EXP this function
@@ -71,10 +66,8 @@ get_rtx_for_ssa_name (tree exp)
 static inline gimple
 get_gimple_for_ssa_name (tree exp)
 {
-  int v = SSA_NAME_VERSION (exp);
-  if (SA.values && bitmap_bit_p (SA.values, v))
-    return SSA_NAME_DEF_STMT (exp);
-  return NULL;
+  gcc_unreachable ();
+  return 0;
 }
 
 /* In tree-outof-ssa.c.  */
@@ -82,8 +75,6 @@ void finish_out_of_ssa (struct ssaexpand *sa);
 unsigned int rewrite_out_of_ssa (struct ssaexpand *sa);
 void expand_phi_nodes (struct ssaexpand *sa);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

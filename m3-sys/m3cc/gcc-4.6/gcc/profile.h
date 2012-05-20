@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef PROFILE_H
 #define PROFILE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Additional information about edges. */
 struct edge_info
@@ -50,8 +48,6 @@ extern void mcf_smooth_cfg (void);
 
 extern gcov_type sum_edge_counts (VEC (edge, gc) *edges);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* PROFILE_H */

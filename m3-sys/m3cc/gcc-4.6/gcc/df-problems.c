@@ -48,9 +48,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "dce.h"
 #include "vecprim.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Note that turning REG_DEAD_DEBUGGING on will cause
    gcc.c-torture/unsorted/dump-noaddr.c to fail because it prints
@@ -4545,6 +4543,4 @@ df_md_add_problem (void)
   df_add_problem (&problem_MD);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

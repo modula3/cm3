@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines used for macro/preprocessor support on the ia-32.
    Copyright (C) 2008, 2009, 2010
    Free Software Foundation, Inc.

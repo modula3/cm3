@@ -27,16 +27,12 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"
 #include "tree.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* In ipa-reference.c  */
 bitmap ipa_reference_get_not_read_global (struct cgraph_node *fn);
 bitmap ipa_reference_get_not_written_global (struct cgraph_node *fn);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* GCC_IPA_REFERENCE_H  */

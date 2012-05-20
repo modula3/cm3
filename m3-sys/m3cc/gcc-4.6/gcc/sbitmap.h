@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_SBITMAP_H
 #define GCC_SBITMAP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* It's not clear yet whether using bitmap.[ch] will be a win.
    It should be straightforward to convert so for now we keep things simple
@@ -270,8 +268,6 @@ extern sbitmap sbitmap_realloc (sbitmap, unsigned int);
 extern unsigned long sbitmap_popcount(const_sbitmap, unsigned long);
 extern void sbitmap_verify_popcount (const_sbitmap);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_SBITMAP_H */

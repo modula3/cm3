@@ -41,8 +41,14 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #define GCC_CORETYPES_H
 
 #ifdef __cplusplus
-extern "C" {
+#define EXTERN_C_START extern "C" {
+#define EXTERN_C_END }
+#else
+#define EXTERN_C_START
+#define EXTERN_C_END
 #endif
+
+EXTERN_C_START
 
 #ifndef GTY
 #define GTY(x)  /* nothing - marker for gengtype */
@@ -177,8 +183,6 @@ union _dont_use_tree_here_;
 
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* coretypes.h */

@@ -37,9 +37,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "pointer-set.h"
 #include "domwalk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static unsigned int tree_ssa_phiopt (void);
 static unsigned int tree_ssa_phiopt_worker (bool);
@@ -1451,6 +1449,4 @@ struct gimple_opt_pass pass_cselim =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

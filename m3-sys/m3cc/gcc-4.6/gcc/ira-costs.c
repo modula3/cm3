@@ -41,9 +41,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "ira-int.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The flags is set up every time when we calculate pseudo register
    classes through function ira_set_pseudo_classes.  */
@@ -1832,6 +1830,4 @@ ira_adjust_equiv_reg_cost (unsigned regno, int cost)
     regno_equiv_gains[regno] += cost;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -25,15 +25,11 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_DSE_H
 #define GCC_DSE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern void dse_record_singleton_alias_set (alias_set_type, enum machine_mode);
 extern void dse_invalidate_singleton_alias_set (alias_set_type);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_DSE_H */

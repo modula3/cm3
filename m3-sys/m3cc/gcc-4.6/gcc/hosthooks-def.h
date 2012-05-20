@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "hooks.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define HOST_HOOKS_EXTRA_SIGNALS hook_void_void
 #if HAVE_MMAP_FILE
@@ -54,8 +52,6 @@ extern int mmap_gt_pch_use_address (void *, size_t, int, size_t);
   HOST_HOOKS_GT_PCH_ALLOC_GRANULARITY		\
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_HOST_HOOKS_DEF_H */

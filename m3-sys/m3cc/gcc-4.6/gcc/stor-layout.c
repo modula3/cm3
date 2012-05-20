@@ -43,9 +43,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-dump.h"
 #include "gimple.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Data type for the expressions representing sizes of data types.
    It is the first integer type laid out.  */
@@ -2528,8 +2526,6 @@ get_mode_bounds (enum machine_mode mode, int sign,
   *mmax = gen_int_mode (max_val, target_mode);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-stor-layout.h"

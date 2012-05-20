@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "rtl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define RTL_HOOKS_GEN_LOWPART gen_lowpart_general
 #define RTL_HOOKS_GEN_LOWPART_NO_EMIT gen_lowpart_no_emit_general
@@ -54,8 +52,6 @@ extern rtx reg_num_sign_bit_copies_general (const_rtx, enum machine_mode, const_
 					    unsigned int, unsigned int *);
 extern bool reg_truncated_to_mode_general (enum machine_mode, const_rtx);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_RTL_HOOKS_DEF_H */

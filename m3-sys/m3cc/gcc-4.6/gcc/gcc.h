@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "version.h"
 #include "diagnostic-core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The mapping of a spec function name to the C function that
    implements it.  */
@@ -62,8 +60,6 @@ extern int lang_specific_extra_outfiles;
 
 extern const char **outfiles;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_GCC_H */

@@ -29,9 +29,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_TREE_ITERATOR_H
 #define GCC_TREE_ITERATOR_H 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Iterator object for GENERIC or GIMPLE TREE statements.  */
 
@@ -124,8 +122,6 @@ extern void free_stmt_list (tree);
 extern void append_to_statement_list (tree, tree *);
 extern void append_to_statement_list_force (tree, tree *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_TREE_ITERATOR_H  */

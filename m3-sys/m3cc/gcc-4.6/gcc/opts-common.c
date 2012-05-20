@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "diagnostic.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void prune_options (struct cl_decoded_option **, unsigned int *);
 
@@ -1242,6 +1240,4 @@ control_warning_option (unsigned int opt_index, int kind, bool imply,
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

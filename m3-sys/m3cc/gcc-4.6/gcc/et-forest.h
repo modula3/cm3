@@ -51,9 +51,7 @@
 #ifndef _ET_TREE_H
 #define _ET_TREE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The node representing the node in an et tree.  */
 struct et_node
@@ -81,8 +79,6 @@ struct et_node *et_nca (struct et_node *, struct et_node *);
 bool et_below (struct et_node *, struct et_node *);
 struct et_node *et_root (struct et_node *);
 
-#ifdef __cplusplus
-}
-#endif
+EXTERN_C_END
 
 #endif /* _ET_TREE_H */

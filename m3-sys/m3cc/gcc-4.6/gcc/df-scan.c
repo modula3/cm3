@@ -49,9 +49,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 DEF_VEC_P(df_ref);
 DEF_VEC_ALLOC_P_STACK(df_ref);
@@ -4542,6 +4540,4 @@ df_scan_verify (void)
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -40,9 +40,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm_p.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* -------------------------------------------------------------------------
    Core mark/delete routines
@@ -699,64 +697,6 @@ fini_dce (bool fast)
     }
 }
 
-
-/* UD-chain based DCE.  */
-
-static unsigned int
-rest_of_handle_ud_dce (void)
-{
-  rtx insn;
-
-  init_dce (false);
-
-  prescan_insns_for_dce (false);
-  mark_artificial_uses ();
-  while (VEC_length (rtx, worklist) > 0)
-    {
-      insn = VEC_pop (rtx, worklist);
-      mark_reg_dependencies (insn);
-    }
-  VEC_free (rtx, heap, worklist);
-
-  /* Before any insns are deleted, we must remove the chains since
-     they are not bidirectional.  */
-  df_remove_problem (df_chain);
-  delete_unmarked_insns ();
-
-  fini_dce (false);
-  return 0;
-}
-
-
-static bool
-gate_ud_dce (void)
-{
-  return optimize > 1 && flag_dce
-    && dbg_cnt (dce_ud);
-}
-
-struct rtl_opt_pass pass_ud_rtl_dce =
-{
- {
-  RTL_PASS,
-  "ud dce",                             /* name */
-  gate_ud_dce,                          /* gate */
-  rest_of_handle_ud_dce,                /* execute */
-  NULL,                                 /* sub */
-  NULL,                                 /* next */
-  0,                                    /* static_pass_number */
-  TV_DCE,                               /* tv_id */
-  0,                                    /* properties_required */
-  0,                                    /* properties_provided */
-  0,                                    /* properties_destroyed */
-  0,                                    /* todo_flags_start */
-  TODO_dump_func |
-  TODO_df_finish | TODO_verify_rtl_sharing |
-  TODO_ggc_collect                     /* todo_flags_finish */
- }
-};
-
-
 /* -------------------------------------------------------------------------
    Fast DCE functions
    ------------------------------------------------------------------------- */
@@ -1061,6 +1001,8 @@ run_fast_df_dce (void)
       int old_flags =
 	df_clear_flags (DF_DEFER_INSN_RESCAN + DF_NO_INSN_RESCAN);
 
+      gcc_unreachable ();
+
       df_in_progress = true;
       rest_of_handle_fast_dce ();
       df_in_progress = false;
@@ -1069,45 +1011,4 @@ run_fast_df_dce (void)
     }
 }
 
-
-/* Run a fast DCE pass.  */
-
-void
-run_fast_dce (void)
-{
-  if (flag_dce)
-    rest_of_handle_fast_dce ();
-}
-
-
-static bool
-gate_fast_dce (void)
-{
-  return optimize > 0 && flag_dce
-    && dbg_cnt (dce_fast);
-}
-
-struct rtl_opt_pass pass_fast_rtl_dce =
-{
- {
-  RTL_PASS,
-  "rtl dce",                            /* name */
-  gate_fast_dce,                        /* gate */
-  rest_of_handle_fast_dce,              /* execute */
-  NULL,                                 /* sub */
-  NULL,                                 /* next */
-  0,                                    /* static_pass_number */
-  TV_DCE,                               /* tv_id */
-  0,                                    /* properties_required */
-  0,                                    /* properties_provided */
-  0,                                    /* properties_destroyed */
-  0,                                    /* todo_flags_start */
-  TODO_dump_func |
-  TODO_df_finish | TODO_verify_rtl_sharing |
-  TODO_ggc_collect                      /* todo_flags_finish */
- }
-};
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "statistics.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Symbols are marked with `ggc' for `gcc gc' so as not to interfere with
    an external gc library that might be linked in.  */
@@ -361,8 +359,6 @@ ggc_alloc_cleared_gimple_statement_d_stat (size_t s MEM_STAT_DECL)
     ggc_internal_cleared_alloc_stat (s PASS_MEM_STAT);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

@@ -22,9 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef POINTER_SET_H
 #define POINTER_SET_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct pointer_set_t;
 struct pointer_set_t *pointer_set_create (void);
@@ -45,8 +43,6 @@ void **pointer_map_insert (struct pointer_map_t *pmap, const void *p);
 void pointer_map_traverse (const struct pointer_map_t *,
 			   bool (*) (const void *, void **, void *), void *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* POINTER_SET_H  */

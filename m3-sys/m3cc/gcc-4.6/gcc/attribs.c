@@ -30,15 +30,12 @@ along with GCC; see the file COPYING3.  If not see
 #include "diagnostic-core.h"
 #include "ggc.h"
 #include "tm_p.h"
-#include "cpplib.h"
 #include "target.h"
 #include "langhooks.h"
 #include "hashtab.h"
 #include "plugin.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void init_attributes (void);
 
@@ -484,6 +481,4 @@ decl_attributes (tree *node, tree attributes, int flags)
   return returned_attrs;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

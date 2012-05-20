@@ -25,6 +25,14 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_SYSTEM_H
 #define GCC_SYSTEM_H
 
+#ifdef __cplusplus
+#define EXTERN_C_START extern "C" {
+#define EXTERN_C_END }
+#else
+#define EXTERN_C_START
+#define EXTERN_C_END
+#endif
+
 /* We must include stdarg.h before stdio.h.  */
 #include <stdarg.h>
 
@@ -38,10 +46,6 @@ along with GCC; see the file COPYING3.  If not see
 
 #include <stddef.h>
 #include <stdio.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Define a generic NULL if one hasn't already been defined.  */
 #ifndef NULL
@@ -627,10 +631,14 @@ extern int vsnprintf(char *, size_t, const char *, va_list);
 #define __builtin_expect(a, b) (a)
 #endif
 
+EXTERN_C_START
+
 /* Redefine abort to report an internal error w/o coredump, and
    reporting the location of the error in the source file.  */
 extern void fancy_abort (const char *, int, const char *) ATTRIBUTE_NORETURN;
 #define abort() fancy_abort (__FILE__, __LINE__, __FUNCTION__)
+
+EXTERN_C_END
 
 /* Use gcc_assert(EXPR) to test invariants.  */
 #if ENABLE_ASSERT_CHECKING
@@ -969,10 +977,6 @@ helper_const_non_const_cast (const char *p)
 #else
 #define DEBUG_FUNCTION
 #define DEBUG_VARIABLE
-#endif
-
-#ifdef __cplusplus
-} /* extern "C" */
 #endif
 
 #endif /* ! GCC_SYSTEM_H */

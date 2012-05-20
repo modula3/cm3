@@ -59,6 +59,8 @@
 #include "read-md.h"
 #include "gensupport.h"
 
+EXTERN_C_START
+
 #define OUTPUT_LABEL(INDENT_STRING, LABEL_NUMBER) \
   printf("%sL%d: ATTRIBUTE_UNUSED_LABEL\n", (INDENT_STRING), (LABEL_NUMBER))
 
@@ -2882,3 +2884,5 @@ debug_decision_list (struct decision *d)
       d = d->next;
     }
 }
+
+EXTERN_C_END

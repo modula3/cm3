@@ -34,9 +34,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ipa-reference.h"
 #include "tree-ssa-alias.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Gimple dataflow datastructure. All publicly available fields shall have
    gimple_ accessor defined in tree-flow-inline.h, all publicly modifiable
@@ -722,7 +720,6 @@ void tree_transform_and_unroll_loop (struct loop *, unsigned,
 				     transform_callback, void *);
 bool contains_abnormal_ssa_name_p (tree);
 bool stmt_dominates_stmt_p (gimple, gimple);
-void mark_virtual_ops_for_renaming (gimple);
 
 /* In tree-ssa-dce.c */
 void mark_virtual_phi_result_for_renaming (gimple);
@@ -860,20 +857,14 @@ void warn_function_noreturn (tree);
 /* In tree-ssa-ter.c  */
 bool stmt_is_replaceable_p (gimple);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "tree-flow-inline.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 void swap_tree_operands (gimple, tree *, tree *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* _TREE_FLOW_H  */

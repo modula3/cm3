@@ -36,9 +36,7 @@ along with GCC; see the file COPYING3.  If not see
 /* For GET_MODE_BITSIZE, word_mode */
 #include "machmode.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This is the 4th arg to `expand_expr'.
    EXPAND_STACK_PARM means we are possibly expanding a call param onto
@@ -700,8 +698,6 @@ extern tree build_libfunc_function (const char *);
 /* Get the personality libfunc for a function decl.  */
 rtx get_personality_function (tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_EXPR_H */

@@ -1,3 +1,5 @@
+# Modula-3: modified
+
 # @configure_input@
 # Makefile for libcpp.  Run 'configure' to generate Makefile from Makefile.in
 
@@ -30,7 +32,7 @@ ARFLAGS = cru
 ACLOCAL = @ACLOCAL@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
-CATALOGS = $(patsubst %,po/%,@CATALOGS@)
+CATALOGS = 
 CC = @CC@
 CFLAGS = @CFLAGS@
 WARN_CFLAGS = @warn@ @c_warn@ @WARN_PEDANTIC@ @WERROR@
@@ -86,16 +88,11 @@ COMPILER_FLAGS = $(ALL_CXXFLAGS)
 DEPMODE = $(CXXDEPMODE)
 endif
 
+libcpp_a_OBJS =  line-map.o symtab.o
 
-libcpp_a_OBJS = charset.o directives.o directives-only.o errors.o \
-	expr.o files.o identifiers.o init.o lex.o line-map.o macro.o \
-	mkdeps.o pch.o symtab.o traditional.o
+libcpp_a_SOURCES = line-map.c symtab.c
 
-libcpp_a_SOURCES = charset.c directives.c directives-only.c errors.c \
-	expr.c files.c identifiers.c init.c lex.c line-map.c macro.c \
-	mkdeps.c pch.c symtab.c traditional.c
-
-all: libcpp.a $(USED_CATALOGS)
+all: libcpp.a 
 
 .SUFFIXES:
 .SUFFIXES: .c .gmo .o .obj .po .pox
@@ -151,26 +148,8 @@ localedir.hs: Makefile
 # for each language, in case they weren't built or included
 # with the distribution.
 installdirs:
-	@$(mkinstalldirs) $(DESTDIR)$(datadir); \
-	cats="$(CATALOGS)"; for cat in $$cats; do \
-	  lang=`basename $$cat | sed 's/\.gmo$$//'`; \
-	  if [ -f $$cat ] || [ -f $(srcdir)/$$cat ]; then \
-	    dir=$(localedir)/$$lang/LC_MESSAGES; \
-	    $(mkinstalldirs) $(DESTDIR)$$dir || exit 1; \
-	  fi; \
-	done
 
 install-strip install: all installdirs
-	cats="$(CATALOGS)"; for cat in $$cats; do \
-	  lang=`basename $$cat | sed 's/\.gmo$$//'`; \
-	  if [ -f $$cat ]; then :; \
-	  elif [ -f $(srcdir)/$$cat ]; then cat=$(srcdir)/$$cat; \
-	  else continue; \
-	  fi; \
-	  dir=$(localedir)/$$lang/LC_MESSAGES; \
-	  echo $(INSTALL_DATA) $$cat $(DESTDIR)$$dir/$(PACKAGE).mo; \
-	  $(INSTALL_DATA) $$cat $(DESTDIR)$$dir/$(PACKAGE).mo; \
-	done
 
 mostlyclean:
 	-rm -f *.o
@@ -265,9 +244,8 @@ po/$(PACKAGE).pot: $(libcpp_a_SOURCES)
 	sed 's:$(srcdir)/::g' <po/$(PACKAGE).pot.tmp >po/$(PACKAGE).pot
 	rm po/$(PACKAGE).pot.tmp
 
-TAGS_SOURCES = $(libcpp_a_SOURCES) internal.h ucnid.h \
-    include/line-map.h include/symtab.h include/cpp-id-data.h \
-    include/cpplib.h include/mkdeps.h system.h
+TAGS_SOURCES = $(libcpp_a_SOURCES) \
+    include/line-map.h include/symtab.h system.h
 
 TAGS: $(TAGS_SOURCES)
 	cd $(srcdir) && etags $(TAGS_SOURCES)
