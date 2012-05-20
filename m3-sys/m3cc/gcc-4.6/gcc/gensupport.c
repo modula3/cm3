@@ -31,9 +31,7 @@
 #include "read-md.h"
 #include "gensupport.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* In case some macros used by files we include need it, define this here.  */
 int target_flags;
@@ -1373,6 +1371,4 @@ record_insn_name (int code, const char *name)
   insn_name_ptr[code] = new_name;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

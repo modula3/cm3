@@ -42,9 +42,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "expmed.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct target_expmed default_target_expmed;
 #if SWITCHABLE_TARGET
@@ -5825,6 +5823,4 @@ do_cmp_and_jump (rtx arg1, rtx arg2, enum rtx_code op, enum machine_mode mode,
 			   NULL_RTX, NULL_RTX, label, -1);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

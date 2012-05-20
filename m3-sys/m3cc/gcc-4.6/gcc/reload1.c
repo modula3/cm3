@@ -49,9 +49,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "emit-rtl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This file contains the reload pass of the compiler, which is
    run after register allocation has been done.  It checks that
@@ -9229,6 +9227,4 @@ fixup_abnormal_edges (void)
 #endif
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

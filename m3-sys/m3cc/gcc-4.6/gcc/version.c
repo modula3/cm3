@@ -21,9 +21,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "version.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This is the location of the online document giving instructions for
    reporting bugs.  If you distribute a modified version of GCC,
@@ -41,6 +39,4 @@ extern const char bug_report_url[] = BUGURL;
 extern const char version_string[] = BASEVER DATESTAMP DEVPHASE REVISION;
 extern const char pkgversion_string[] = PKGVERSION;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

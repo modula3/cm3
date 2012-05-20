@@ -42,9 +42,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "splay-tree.h"
 #include "ira-int.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This file contains code for regional graph coloring, spill/restore
    code placement optimization, and code helping the reload pass to do
@@ -3281,6 +3279,4 @@ ira_color (void)
     fast_allocation ();
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

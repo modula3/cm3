@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "hard-reg-set.h"
 #include "df.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Macro to clear all resources.  */
 #define CLEAR_RESOURCE(RES)	\
@@ -62,8 +60,6 @@ extern void mark_end_of_function_resources (rtx, bool);
 extern void init_resource_info (rtx);
 extern void free_resource_info (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_RESOURCE_H */

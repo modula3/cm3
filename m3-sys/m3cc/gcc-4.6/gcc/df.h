@@ -35,9 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "alloc-pool.h"
 #include "timevar.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct dataflow;
 struct df_d;
@@ -1107,8 +1105,6 @@ extern void union_defs (df_ref, struct web_entry *,
 			unsigned int *used, struct web_entry *,
 			bool (*fun) (struct web_entry *, struct web_entry *));
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_DF_H */

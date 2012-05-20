@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "read-md.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Called via traverse_enum_types.  Emit an enum definition for
    enum_type *SLOT.  */
@@ -72,6 +70,4 @@ main (int argc, char **argv)
   return SUCCESS_EXIT_CODE;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

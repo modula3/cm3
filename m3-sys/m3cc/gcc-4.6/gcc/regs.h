@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "machmode.h"
 #include "hard-reg-set.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define REG_BYTES(R) mode_size[(int) GET_MODE (R)]
 
@@ -403,8 +401,6 @@ overlaps_hard_reg_set_p (const HARD_REG_SET regs, enum machine_mode mode,
   return false;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_REGS_H */

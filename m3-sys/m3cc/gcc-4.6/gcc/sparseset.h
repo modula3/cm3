@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_SPARSESET_H
 #define GCC_SPARSESET_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define SPARSESET_ELT_BITS ((unsigned) HOST_BITS_PER_WIDEST_FAST_INT)
 #define SPARSESET_ELT_TYPE unsigned int
@@ -162,8 +160,6 @@ sparseset_iter_next (sparseset s)
        && (((ITER) = sparseset_iter_elm (SPARSESET)) || 1);		\
        sparseset_iter_next (SPARSESET))
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_SPARSESET_H */

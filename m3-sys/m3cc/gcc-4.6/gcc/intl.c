@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "intl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 const char *
 fake_ngettext (const char *singular, const char *plural, unsigned long n)
@@ -52,6 +50,4 @@ get_spaces (const char *str)
    return spaces;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

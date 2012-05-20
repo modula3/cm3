@@ -25,9 +25,7 @@
 
 #include "coretypes.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The points-to solution.
 
@@ -143,10 +141,6 @@ extern void pt_solution_set_var (struct pt_solution *, tree);
 
 extern void dump_pta_stats (FILE *);
 
-extern GTY(()) struct pt_solution ipa_escaped_pt;
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* TREE_SSA_ALIAS_H  */

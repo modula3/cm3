@@ -40,9 +40,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"
 #include "plugin.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Prefer MAP_ANON(YMOUS) to /dev/zero, since we don't need to keep a
    file open.  Prefer either to valloc.  */
@@ -2519,6 +2517,4 @@ ggc_pch_read (FILE *f, void *addr)
     set_page_table_entry (p, pch_page);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

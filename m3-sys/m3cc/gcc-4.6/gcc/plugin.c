@@ -37,9 +37,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "plugin-version.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define GCC_PLUGIN_STRINGIFY0(X) #X
 #define GCC_PLUGIN_STRINGIFY1(X) GCC_PLUGIN_STRINGIFY0 (X)
@@ -879,6 +877,4 @@ default_plugin_dir_name (void)
   return plugindir_string;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

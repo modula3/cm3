@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "obstack.h"
 #include "input.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Maximum number of format string arguments.  */
 #define PP_NL_ARGMAX   30
@@ -348,8 +346,6 @@ extern const char *identifier_to_locale (const char *);
 extern void *(*identifier_to_locale_alloc) (size_t);
 extern void (*identifier_to_locale_free) (void *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_PRETTY_PRINT_H */

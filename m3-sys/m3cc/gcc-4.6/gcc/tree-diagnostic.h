@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_TREE_DIAGNOSTIC_H
 #define GCC_TREE_DIAGNOSTIC_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* TREE_BLOCK if the diagnostic is to be reported in some inline
    function inlined into other function, otherwise NULL.  */
@@ -59,8 +57,6 @@ void default_tree_diagnostic_starter (diagnostic_context *, diagnostic_info *);
 extern void diagnostic_report_current_function (diagnostic_context *,
 						diagnostic_info *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_TREE_DIAGNOSTIC_H */

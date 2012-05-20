@@ -29,9 +29,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "vecprim.h"
 #include "graphds.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Dumps graph G into F.  */
 
@@ -477,6 +475,4 @@ graphds_domtree (struct graph *g, int entry,
       }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

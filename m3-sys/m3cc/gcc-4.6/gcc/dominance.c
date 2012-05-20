@@ -51,9 +51,7 @@
 #include "graphds.h"
 #include "bitmap.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* We name our nodes with integers, beginning with 1.  Zero is reserved for
    'undefined' or 'end of list'.  The name of each node is given by the dfs
@@ -1534,6 +1532,4 @@ debug_dominance_tree (enum cdi_direction dir, basic_block root)
   debug_dominance_tree_1 (dir, root, 0, false);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

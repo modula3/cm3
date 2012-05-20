@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "vec.h"
 #include "function.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Type we use to hold basic block counters.  Should be at least
    64bit.  Although a counter cannot be negative, we use a signed
@@ -941,8 +939,6 @@ extern void rtl_profile_for_bb (basic_block);
 extern void rtl_profile_for_edge (edge);
 extern void default_rtl_profile (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_BASIC_BLOCK_H */

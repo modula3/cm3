@@ -30,9 +30,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "errors.h"
 #include "gensupport.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* flags to determine output of machine description dependent #define's.  */
 static int max_recog_operands;  /* Largest operand number seen.  */
@@ -369,6 +367,4 @@ main (int argc, char **argv)
   return SUCCESS_EXIT_CODE;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

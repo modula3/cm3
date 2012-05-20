@@ -32,9 +32,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "bitmap.h"
 #include "sbitmap.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Structure to hold decision about unrolling/peeling.  */
 enum lpt_dec
@@ -688,8 +686,6 @@ extern void doloop_optimize_loops (void);
 extern void move_loop_invariants (void);
 extern bool finite_loop_p (struct loop *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_CFGLOOP_H */

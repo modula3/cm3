@@ -42,11 +42,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfglayout.h"
 #include "hashtab.h"
 #include "tree-ssa-propagate.h"
-#include "tree-scalar-evolution.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The set of blocks in that at least one of the following changes happened:
    -- the statement at the end of the block was changed
@@ -783,6 +780,8 @@ repair_loop_structures (void)
 {
   bitmap changed_bbs;
 
+    gcc_unreachable ();
+
   timevar_push (TV_REPAIR_LOOPS);
   changed_bbs = BITMAP_ALLOC (NULL);
   fix_loop_structure (changed_bbs);
@@ -791,14 +790,16 @@ repair_loop_structures (void)
      were inside a loop get out of it due to edge removal (since they
      become unreachable by back edges from latch).  */
   if (loops_state_satisfies_p (LOOP_CLOSED_SSA))
-    rewrite_into_loop_closed_ssa (changed_bbs, TODO_update_ssa);
+  {
+    gcc_unreachable ();
+    //rewrite_into_loop_closed_ssa (changed_bbs, TODO_update_ssa);
+  }
 
   BITMAP_FREE (changed_bbs);
 
 #ifdef ENABLE_CHECKING
   verify_loop_structure ();
 #endif
-  scev_reset ();
 
   loops_state_clear (LOOPS_NEED_FIXUP);
   timevar_pop (TV_REPAIR_LOOPS);
@@ -1066,6 +1067,4 @@ struct gimple_opt_pass pass_merge_phi =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

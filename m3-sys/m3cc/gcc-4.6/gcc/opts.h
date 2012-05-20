@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "input.h"
 #include "vec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Specifies how a switch's VAR_VALUE relates to its FLAG_VAR.  */
 enum cl_var_type {
@@ -374,8 +372,6 @@ extern void set_struct_debug_option (struct gcc_options *opts,
 				     location_t loc,
 				     const char *value);
 				     
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

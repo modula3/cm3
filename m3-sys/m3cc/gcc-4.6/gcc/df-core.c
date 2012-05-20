@@ -399,9 +399,7 @@ are write-only operations.
 #include "tree-pass.h"
 #include "params.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static void *df_get_bb_info (struct dataflow *, unsigned int);
 static void df_set_bb_info (struct dataflow *, unsigned int, void *);
@@ -2262,6 +2260,4 @@ debug_df_chain (struct df_link *link)
   fputc ('\n', stderr);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

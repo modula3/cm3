@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "sel-sched-ir.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* These values control the dumping of control flow graph to the .dot file.  */
 enum sel_dump_cfg_def
@@ -223,8 +221,6 @@ extern void debug_insn_vector (rtx_vec_t);
 extern void debug_hard_reg_set (HARD_REG_SET);
 extern rtx debug_mem_addr_value (rtx);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

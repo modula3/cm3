@@ -12,9 +12,7 @@
 #ifndef GCC_HWINT_H
 #define GCC_HWINT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This describes the machine the compiler is hosted on.  */
 #define HOST_BITS_PER_CHAR  CHAR_BIT
@@ -263,8 +261,6 @@ least_common_multiple (int a, int b)
   return (abs (a) * abs (b) / gcd (a, b));
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_HWINT_H */

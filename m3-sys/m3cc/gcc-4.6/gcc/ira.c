@@ -324,9 +324,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "ira-int.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct target_ira default_target_ira;
 struct target_ira_int default_target_ira_int;
@@ -3368,6 +3366,4 @@ struct rtl_opt_pass pass_ira =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

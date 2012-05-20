@@ -38,9 +38,7 @@
 #include "read-md.h"
 #include "gensupport.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* so we can include except.h in the generated file.  */
 static int saw_eh_return;
@@ -262,6 +260,4 @@ main (int argc, char **argv)
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

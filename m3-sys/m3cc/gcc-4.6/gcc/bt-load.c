@@ -41,9 +41,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "recog.h"
 #include "df.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Target register optimizations - these are performed after reload.  */
 
@@ -1580,6 +1578,4 @@ struct rtl_opt_pass pass_branch_target_load_optimize2 =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

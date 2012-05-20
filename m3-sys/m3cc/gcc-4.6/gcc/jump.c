@@ -57,6 +57,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "target.h"
 
+EXTERN_C_START
+
 /* Optimize jump y; x: ... y: jumpif... x?
    Don't know if it is worth bothering with.  */
 /* Optimize two cases of conditional jump to conditional jump?
@@ -1815,3 +1817,5 @@ reg_or_subregno (const_rtx reg)
   gcc_assert (REG_P (reg));
   return REGNO (reg);
 }
+
+EXTERN_C_END

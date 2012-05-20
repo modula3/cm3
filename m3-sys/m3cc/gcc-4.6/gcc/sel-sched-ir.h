@@ -35,9 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "sched-int.h"
 #include "cfgloop.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* tc_t is a short for target context.  This is a state of the target
    backend.  */
@@ -1663,8 +1661,6 @@ extern void sel_setup_sched_infos (void);
 extern void alloc_sched_pools (void);
 extern void free_sched_pools (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_SEL_SCHED_IR_H */

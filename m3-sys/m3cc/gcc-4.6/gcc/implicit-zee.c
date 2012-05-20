@@ -206,9 +206,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "cgraph.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This says if a register is newly created for the purpose of
    zero-extension.  */
@@ -999,6 +997,4 @@ struct rtl_opt_pass pass_implicit_zee =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

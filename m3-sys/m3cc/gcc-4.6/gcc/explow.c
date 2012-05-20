@@ -44,9 +44,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "output.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static rtx break_out_memory_refs (rtx);
 
@@ -1904,8 +1902,6 @@ rtx_to_tree_code (enum rtx_code code)
   return ((int) tcode);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-explow.h"

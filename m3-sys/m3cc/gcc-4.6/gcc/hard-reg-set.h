@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_HARD_REG_SET_H
 #define GCC_HARD_REG_SET_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Define the type of a set of hard registers.  */
 
@@ -709,8 +707,6 @@ extern const char * reg_class_names[];
 #define REG_CANNOT_CHANGE_MODE_P(REGN, FROM, TO)                          \
          CANNOT_CHANGE_MODE_CLASS (FROM, TO, REGNO_REG_CLASS (REGN))
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_HARD_REG_SET_H */

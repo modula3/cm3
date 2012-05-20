@@ -32,9 +32,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "df.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Check all of the uses of pseudo variables.  If any use that is MUST
    uninitialized, add a store of 0 immediately before it.  For
@@ -164,6 +162,4 @@ struct rtl_opt_pass pass_initialize_regs =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

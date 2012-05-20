@@ -26,9 +26,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #if GCC_VERSION < 3004
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The functions clz_hwi, ctz_hwi, ffs_hwi, floor_log2 and exact_log2
    are defined as inline functions in hwint.h if GCC_VERSION >= 3004.
@@ -103,8 +101,8 @@ ffs_hwi (unsigned HOST_WIDE_INT x)
   return 1 + floor_log2 (x & -x);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_VERSION < 3004 */
+
+char quash_apple_ranlib_warning_hwint;

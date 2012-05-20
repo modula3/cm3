@@ -40,9 +40,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "sbitmap.h"
 #include "timevar.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Store the data structures necessary for depth-first search.  */
 struct depth_first_search_dsS {
@@ -1362,6 +1360,4 @@ compute_idf (bitmap def_blocks, bitmap_head *dfs)
   return phi_insertion_points;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

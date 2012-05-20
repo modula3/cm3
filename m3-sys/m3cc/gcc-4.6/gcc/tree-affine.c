@@ -31,9 +31,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "flags.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Extends CST as appropriate for the affine combinations COMB.  */
 
@@ -893,6 +891,4 @@ get_inner_reference_aff (tree ref, aff_tree *addr, double_int *size)
   *size = shwi_to_double_int ((bitsize + BITS_PER_UNIT - 1) / BITS_PER_UNIT);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

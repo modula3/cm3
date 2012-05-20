@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "vecprim.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern VEC(int,heap) *insn_addresses_;
 extern int insn_current_address;
@@ -68,8 +66,6 @@ insn_addresses_new (rtx insn, int insn_addr)
 #define INSN_ADDRESSES_NEW(insn, addr)		\
   (insn_addresses_new (insn, addr))
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_INSN_ADDR_H */

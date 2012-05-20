@@ -35,9 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "flags.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Conditional dead call elimination
 
@@ -937,6 +935,4 @@ struct gimple_opt_pass pass_call_cdce =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

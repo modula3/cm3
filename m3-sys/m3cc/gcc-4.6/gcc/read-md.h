@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "obstack.h"
 #include "hashtab.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Holds one symbol or number in the .md file.  */
 struct md_name {
@@ -145,6 +143,4 @@ extern struct enum_type *lookup_enum_type (const char *);
 extern bool read_md_files (int, char **, bool (*) (const char *),
 			   directive_handler_t);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

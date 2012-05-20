@@ -43,9 +43,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "sel-sched-ir.h"
 #include "sel-sched-dump.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* These variables control high-level pretty printing.  */
 static int sel_dump_cfg_flags = SEL_DUMP_CFG_FLAGS;
@@ -976,8 +974,6 @@ debug_mem_addr_value (rtx x)
   return t;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

@@ -139,9 +139,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "tree-pass.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #ifdef DELAY_SLOTS
 
@@ -4132,6 +4130,4 @@ struct rtl_opt_pass pass_machine_reorg =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

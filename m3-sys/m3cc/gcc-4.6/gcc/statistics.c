@@ -30,9 +30,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "hashtab.h"
 #include "function.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 static int statistics_dump_nr;
 static int statistics_dump_flags;
@@ -351,6 +349,4 @@ statistics_histogram_event (struct function *fn, const char *id, int val)
 	   fn ? IDENTIFIER_POINTER (DECL_NAME (fn->decl)) : "(nofn)");
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

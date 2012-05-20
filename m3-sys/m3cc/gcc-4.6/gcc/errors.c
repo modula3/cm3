@@ -32,9 +32,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "system.h"
 #include "errors.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Set this to argv[0] at the beginning of main.  */
 
@@ -139,6 +137,4 @@ fancy_abort (const char *file, int line, const char *func)
   internal_error ("abort in %s, at %s:%d", func, trim_filename (file), line);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

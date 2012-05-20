@@ -22,9 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_CONVERT_H
 #define GCC_CONVERT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern tree convert_to_integer (tree, tree);
 extern tree convert_to_pointer (tree, tree);
@@ -33,8 +31,6 @@ extern tree convert_to_fixed (tree, tree);
 extern tree convert_to_complex (tree, tree);
 extern tree convert_to_vector (tree, tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_CONVERT_H */

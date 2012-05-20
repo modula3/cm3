@@ -40,9 +40,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #ifndef GCC_GBL_CTORS_H
 #define GCC_GBL_CTORS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /*  Declare a pointer to void function type.  */
 
@@ -90,8 +88,6 @@ do {									\
 } while (0)
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_GBL_CTORS_H */

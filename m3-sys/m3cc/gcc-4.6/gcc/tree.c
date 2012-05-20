@@ -63,9 +63,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "debug.h"
 #include "intl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Tree code classes.  */
 
@@ -3210,17 +3208,6 @@ substitute_in_expr (tree exp, tree f, tree r)
 	  int i;
 
 	  new_tree = NULL_TREE;
-
-	  /* If we are trying to replace F with a constant, inline back
-	     functions which do nothing else than computing a value from
-	     the arguments they are passed.  This makes it possible to
-	     fold partially or entirely the replacement expression.  */
-	  if (CONSTANT_CLASS_P (r) && code == CALL_EXPR)
-	    {
-	      tree t = maybe_inline_call_in_expr (exp);
-	      if (t)
-		return SUBSTITUTE_IN_EXPR (t, f, r);
-	    }
 
 	  for (i = 1; i < TREE_OPERAND_LENGTH (exp); i++)
 	    {
@@ -8211,8 +8198,9 @@ find_var_from_fn (tree *tp, int *walk_subtrees, void *data)
 
    is valid, and other languages may define similar constructs.  */
 
+static
 bool
-variably_modified_type_p (tree type, tree fn)
+variably_modified_type_p_1 (tree type, tree fn)
 {
   tree t;
 
@@ -8294,6 +8282,14 @@ variably_modified_type_p (tree type, tree fn)
   return lang_hooks.tree_inlining.var_mod_type_p (type, fn);
 
 #undef RETURN_TRUE_IF_VAR
+}
+
+bool
+variably_modified_type_p (tree type, tree fn)
+{
+  bool result = variably_modified_type_p_1 (type, fn);
+  gcc_assert(!result);
+  return result;
 }
 
 /* Given a DECL or TYPE, return the scope in which it was declared, or
@@ -11113,8 +11109,6 @@ warn_deprecated_use (tree node, tree attr)
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-tree.h"

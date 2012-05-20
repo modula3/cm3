@@ -26,6 +26,8 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "hooks.h"
 
+EXTERN_C_START
+
 struct diagnostic_info;
 
 /* Note to creators of new hooks:
@@ -311,5 +313,7 @@ extern void lhd_end_section (void);
   LANG_HOOKS_EH_USE_CXA_END_CLEANUP, \
   LANG_HOOKS_DEEP_UNSHARING \
 }
+
+EXTERN_C_END
 
 #endif /* GCC_LANG_HOOKS_DEF_H */

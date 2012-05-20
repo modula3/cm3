@@ -47,9 +47,7 @@ compilation is specified by a string called a "spec".  */
 #include "opts.h"
 #include "vec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* By default there is no special suffix for target executables.  */
 /* FIXME: when autoconf is fixed, remove the host check - dj */
@@ -8273,6 +8271,4 @@ pass_through_libs_spec_func (int argc, const char **argv)
   return prepended;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

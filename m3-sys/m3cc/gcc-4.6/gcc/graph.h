@@ -22,16 +22,12 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_GRAPH_H
 #define GCC_GRAPH_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern void print_rtl_graph_with_bb (const char *, rtx);
 extern void clean_graph_dump_file (const char *);
 extern void finish_graph_dump_file (const char *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_GRAPH_H */

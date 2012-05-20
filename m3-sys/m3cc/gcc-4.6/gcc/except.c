@@ -146,9 +146,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "timevar.h"
 #include "tree-flow.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Provide defaults for stuff that may not be defined when using
    sjlj exceptions.  */
@@ -3429,8 +3427,6 @@ verify_eh_tree (struct function *fun)
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-except.h"

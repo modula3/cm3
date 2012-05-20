@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef EXPMED_H
 #define EXPMED_H 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 enum alg_code {
   alg_unknown,
@@ -203,8 +201,6 @@ extern struct target_expmed *this_target_expmed;
 #define mul_highpart_cost \
   (this_target_expmed->x_mul_highpart_cost)
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

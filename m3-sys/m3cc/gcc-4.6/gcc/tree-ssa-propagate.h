@@ -24,9 +24,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef _TREE_SSA_PROPAGATE_H
 #define _TREE_SSA_PROPAGATE_H 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* If SIM_P is true, statement S will be simulated again.  */
 
@@ -82,8 +80,6 @@ bool update_call_from_tree (gimple_stmt_iterator *, tree);
 bool stmt_makes_single_store (gimple);
 bool substitute_and_fold (ssa_prop_get_value_fn, ssa_prop_fold_stmt_fn, bool);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* _TREE_SSA_PROPAGATE_H  */

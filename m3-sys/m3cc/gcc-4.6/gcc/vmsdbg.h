@@ -22,9 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_VMSDBG_H
 #define GCC_VMSDBG_H 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /*  We define types and constants used in VMS Debug output.  Note that the
     structs only approximate the output that is written.  We write the output
@@ -258,8 +256,6 @@ typedef struct _DST_PROLOG
 } DST_PROLOG;
 #define DST_K_PROLOG_SIZE 8
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_VMSDBG_H */

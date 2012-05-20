@@ -33,9 +33,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-ssa-operands.h"
 #include "tree-ssa-alias.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct gimple_seq_node_d;
 typedef struct gimple_seq_node_d *gimple_seq_node;
@@ -4900,8 +4898,6 @@ extern tree maybe_fold_and_comparisons (enum tree_code, tree, tree,
 extern tree maybe_fold_or_comparisons (enum tree_code, tree, tree,
 				       enum tree_code, tree, tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* GCC_GIMPLE_H */

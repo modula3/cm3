@@ -34,9 +34,8 @@
 #include "obstack.h"
 #include "gengtype.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
+EXTERN_C_START
 
 /* Gives the file location of a type, if any.  */
 static inline struct fileloc*
@@ -2442,6 +2441,4 @@ read_state (const char *path)
 
 /* End of file gengtype-state.c.  */
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

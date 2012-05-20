@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Prototypes.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -17,6 +19,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern void darwin_init_sections (void);
 extern int name_needs_quotes (const char *);
@@ -75,9 +81,6 @@ extern void darwin_pragma_ms_struct (struct cpp_reader *);
 extern void darwin_file_start (void);
 extern void darwin_file_end (void);
 
-extern void darwin_asm_lto_start (void);
-extern void darwin_asm_lto_end (void);
-
 extern void darwin_mark_decl_preserved (const char *);
 
 extern tree darwin_handle_kext_attribute (tree *, tree, tree, int, bool *);
@@ -125,3 +128,7 @@ extern bool darwin_kextabi_p (void);
 extern void darwin_override_options (void);
 extern void darwin_patch_builtins (void);
 extern void darwin_rename_builtins (void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -36,9 +36,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "tm_p.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* How to start an assembler comment.  */
 #ifndef ASM_COMMENT_START
@@ -1030,8 +1028,6 @@ dw2_asm_output_encoded_addr_rtx (int encoding, rtx addr, bool is_public,
   va_end (ap);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-dwarf2asm.h"

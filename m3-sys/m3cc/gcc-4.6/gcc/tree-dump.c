@@ -34,9 +34,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "tree-iterator.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* If non-NULL, return one past-the-end of the matching SUBPART of
    the WHOLE string.  */
@@ -646,6 +644,10 @@ dequeue_and_dump (dump_info_p di)
       }
       break;
 
+    case STATIC_CHAIN_EXPR:
+      dump_child ("fn", TREE_OPERAND (t, 0));
+      break;
+
     case CONSTRUCTOR:
       {
 	unsigned HOST_WIDE_INT cnt;
@@ -1135,6 +1137,4 @@ enable_rtl_dump_file (void)
   return dump_enable_all (TDF_RTL | TDF_DETAILS | TDF_BLOCKS) > 0;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

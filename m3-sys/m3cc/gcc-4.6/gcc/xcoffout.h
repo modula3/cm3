@@ -21,9 +21,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Tags and typedefs are C_DECL in XCOFF, not C_LSYM.  */
 
@@ -189,6 +187,4 @@ extern int xcoff_assign_fundamental_type_number (tree);
 extern void xcoffout_declare_function (FILE *, tree, const char *);
 extern void xcoffout_source_line (unsigned int, const char *, int, bool);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

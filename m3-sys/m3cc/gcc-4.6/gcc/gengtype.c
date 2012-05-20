@@ -31,9 +31,8 @@
 #include "obstack.h"
 #include "gengtype.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
+EXTERN_C_START
 
 /* Data types, macros, etc. used only in this file.  */
 
@@ -155,9 +154,6 @@ size_t num_lang_dirs;
    BASE_FILES entry for each language.  */
 static outf_p *base_files;
 
-
-
-#if ENABLE_CHECKING
 /* Utility debugging function, printing the various type counts within
    a list of types.  Called thru the DBGPRINT_COUNT_TYPE macro.  */
 void
@@ -213,7 +209,6 @@ dbgprint_count_type_at (const char *fil, int lin, const char *msg, type_p t)
 	     nb_lang_struct, nb_param_struct);
   fprintf (stderr, "\n");
 }
-#endif /* ENABLE_CHECKING */
 
 /* Scan the input file, LIST, and determine how much space we need to
    store strings in.  Also, count the number of language directories
@@ -1552,9 +1547,9 @@ open_base_files (void)
       "tree.h", "rtl.h", "function.h", "insn-config.h", "expr.h",
       "hard-reg-set.h", "basic-block.h", "cselib.h", "insn-addr.h",
       "optabs.h", "libfuncs.h", "debug.h", "ggc.h", "cgraph.h",
-      "tree-flow.h", "reload.h", "cpp-id-data.h", "tree-chrec.h",
+      "tree-flow.h", "reload.h",
       "cfglayout.h", "except.h", "output.h", "gimple.h", "cfgloop.h",
-      "target.h", "ipa-prop.h", "target-globals.h", NULL
+      "target.h", NULL
     };
     const char *const *ifp;
     outf_p gtype_desc_c;
@@ -1650,9 +1645,7 @@ get_file_langdir (const input_file *inpf)
     return NULL;
 
   lang_index = get_prefix_langdir_index (srcdir_relative_path);
-  if (lang_index < 0 && strncmp (srcdir_relative_path, "c-family", 8) == 0)
-    r = "c-family";
-  else if (lang_index >= 0)
+  if (lang_index >= 0)
     r = lang_dir_names[lang_index];
   else
     r = NULL;
@@ -1763,41 +1756,6 @@ static outf_p source_dot_c_frul (input_file*, char**, char**);
    matters, so change with extreme care!  */
 
 struct file_rule_st files_rules[] = {
-  /* the c-family/ source directory is special.  */
-  { DIR_PREFIX_REGEX "c-family/([[:alnum:]_-]*)\\.c$",
-    REG_EXTENDED, NULL_REGEX,
-    "gt-c-family-$3.h", "c-family/$3.c", NULL_FRULACT},
-
-  { DIR_PREFIX_REGEX "c-family/([[:alnum:]_-]*)\\.h$",
-    REG_EXTENDED, NULL_REGEX,
-    "gt-c-family-$3.h", "c-family/$3.h", NULL_FRULACT},
-
-  /* Both c-lang.h & c-tree.h gives gt-c-decl.h for c-decl.c !  */
-  { DIR_PREFIX_REGEX "c-lang\\.h$",
-    REG_EXTENDED, NULL_REGEX, "gt-c-decl.h", "c-decl.c", NULL_FRULACT},
-
-  { DIR_PREFIX_REGEX "c-tree\\.h$",
-    REG_EXTENDED, NULL_REGEX, "gt-c-decl.h", "c-decl.c", NULL_FRULACT},
-
-  /* cp/cp-tree.h gives gt-cp-tree.h for cp/tree.c !  */
-  { DIR_PREFIX_REGEX "cp/cp-tree\\.h$",
-    REG_EXTENDED, NULL_REGEX,
-    "gt-cp-tree.h", "cp/tree.c", NULL_FRULACT },
-
-  /* cp/decl.h & cp/decl.c gives gt-cp-decl.h for cp/decl.c !  */
-  { DIR_PREFIX_REGEX "cp/decl\\.[ch]$",
-    REG_EXTENDED, NULL_REGEX,
-    "gt-cp-decl.h", "cp/decl.c", NULL_FRULACT },
-
-  /* cp/name-lookup.h gives gt-cp-name-lookup.h for cp/name-lookup.c !  */
-  { DIR_PREFIX_REGEX "cp/name-lookup\\.h$",
-    REG_EXTENDED, NULL_REGEX,
-    "gt-cp-name-lookup.h", "cp/name-lookup.c", NULL_FRULACT },
-
-  /* objc/objc-act.h fives gt-objc-objc-act.h for objc/objc-act.c !  */
-  { DIR_PREFIX_REGEX "objc/objc-act\\.h$",
-    REG_EXTENDED, NULL_REGEX,
-    "gt-objc-objc-act.h", "objc/objc-act.c", NULL_FRULACT },
 
   /* General cases.  For header *.h and source *.c files, we need
    * special actions to handle the language.  */
@@ -5011,6 +4969,4 @@ main (int argc, char **argv)
   return 0;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

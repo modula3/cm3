@@ -50,9 +50,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "dbgcnt.h"
 #include "target.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This file contains three techniques for performing Dead Store
    Elimination (dse).
@@ -3865,6 +3863,4 @@ struct rtl_opt_pass pass_rtl_dse2 =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

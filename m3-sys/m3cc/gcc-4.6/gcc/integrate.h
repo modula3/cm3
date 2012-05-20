@@ -20,9 +20,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern rtx get_hard_reg_initial_val (enum machine_mode, unsigned int);
 extern rtx has_hard_reg_initial_val (enum machine_mode, unsigned int);
@@ -38,6 +36,4 @@ extern void allocate_initial_values (rtx *);
    true otherwise.  */
 extern bool function_attribute_inlinable_p (const_tree);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

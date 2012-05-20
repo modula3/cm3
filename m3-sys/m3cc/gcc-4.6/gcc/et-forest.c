@@ -38,9 +38,7 @@ License along with libiberty; see the file COPYING3.  If not see
 #include "basic-block.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The occurrence of a node in the et tree.  */
 struct et_occ
@@ -779,6 +777,4 @@ et_root (struct et_node *node)
   return r->of;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

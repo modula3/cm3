@@ -44,9 +44,7 @@ along with GCC; see the file COPYING3.  If not see
    to instruction attribute values.  */
 #include "insn-attr.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #ifdef OPTIMIZE_MODE_SWITCHING
 
@@ -782,6 +780,4 @@ struct rtl_opt_pass pass_mode_switching =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

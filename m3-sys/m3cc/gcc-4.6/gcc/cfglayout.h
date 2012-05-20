@@ -24,9 +24,7 @@
 
 #include "basic-block.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern GTY(()) rtx cfg_layout_function_footer;
 extern GTY(()) rtx cfg_layout_function_header;
@@ -40,8 +38,6 @@ extern void copy_bbs (basic_block *, unsigned, basic_block *,
 		      basic_block);
 extern rtx duplicate_insn_chain (rtx, rtx);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_CFGLAYOUT_H */

@@ -31,9 +31,7 @@ See dbgcnt.def for usage information.  */
 
 #include "dbgcnt.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct string2counter_map {
   const char *name;
@@ -158,6 +156,4 @@ dbg_cnt_list_all_counters (void)
   printf ("\n");
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

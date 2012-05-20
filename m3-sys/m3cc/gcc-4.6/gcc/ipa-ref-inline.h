@@ -21,9 +21,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Return callgraph node REF is refering.  */
 static inline struct cgraph_node *
@@ -124,6 +122,4 @@ ipa_ref_list_nreferences (struct ipa_ref_list *list)
 #define ipa_ref_list_refering_iterate(L,I,P) \
    VEC_iterate(ipa_ref_ptr, (L)->refering, (I), (P))
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

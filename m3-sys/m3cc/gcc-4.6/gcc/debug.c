@@ -25,9 +25,7 @@
 #include "tree.h"
 #include "debug.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The do-nothing debug hooks.  */
 const struct gcc_debug_hooks do_nothing_debug_hooks =
@@ -153,6 +151,4 @@ debug_nothing_uid (int uid ATTRIBUTE_UNUSED)
 {
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

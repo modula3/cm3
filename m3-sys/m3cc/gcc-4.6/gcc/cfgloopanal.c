@@ -34,9 +34,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "graphds.h"
 #include "params.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 struct target_cfgloop default_target_cfgloop;
 #if SWITCHABLE_TARGET
@@ -453,6 +451,4 @@ mark_loop_exit_edges (void)
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

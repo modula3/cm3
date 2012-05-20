@@ -22,16 +22,12 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_SEL_SCHED_H
 #define GCC_SEL_SCHED_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The main entry point.  */
 extern void run_selective_scheduling (void);
 extern bool maybe_skip_selective_scheduling (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* GCC_SEL_SCHED_H */

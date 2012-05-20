@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "coretypes.h"
 #include "tm.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define DEFTREECODE(SYM, NAME, TYPE, LEN) #SYM,
 #define END_OF_BASE_TREE_CODES
@@ -85,6 +83,4 @@ main (int argc, char ** ARG_UNUSED (argv))
   return 0;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

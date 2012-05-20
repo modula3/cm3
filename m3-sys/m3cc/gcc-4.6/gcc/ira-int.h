@@ -25,9 +25,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ira.h"
 #include "alloc-pool.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* To provide consistency in naming, all IRA external variables,
    functions, common typedefs start with prefix ira_.  */
@@ -1390,6 +1388,4 @@ ira_allocate_and_set_or_copy_costs (int **vec, enum reg_class cover_class,
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

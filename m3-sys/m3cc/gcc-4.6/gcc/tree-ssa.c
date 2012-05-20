@@ -46,9 +46,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pass.h"
 #include "diagnostic-core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Pointer map of variable mappings, keyed by edge.  */
 static struct pointer_map_t *edge_var_maps;
@@ -475,7 +473,6 @@ insert_debug_temp_for_var_def (gimple_stmt_iterator *gsi, tree var)
     }
 }
 
-
 /* Insert a DEBUG BIND stmt before STMT for each DEF referenced by
    other DEBUG stmts, and replace uses of the DEF with the
    newly-created debug temp.  */
@@ -510,65 +507,7 @@ insert_debug_temps_for_defs (gimple_stmt_iterator *gsi)
 void
 release_defs_bitset (bitmap toremove)
 {
-  unsigned j;
-  bitmap_iterator bi;
-
-  /* Performing a topological sort is probably overkill, this will
-     most likely run in slightly superlinear time, rather than the
-     pathological quadratic worst case.  */
-  while (!bitmap_empty_p (toremove))
-    EXECUTE_IF_SET_IN_BITMAP (toremove, 0, j, bi)
-      {
-	bool remove_now = true;
-	tree var = ssa_name (j);
-	gimple stmt;
-	imm_use_iterator uit;
-
-	FOR_EACH_IMM_USE_STMT (stmt, uit, var)
-	  {
-	    ssa_op_iter dit;
-	    def_operand_p def_p;
-
-	    /* We can't propagate PHI nodes into debug stmts.  */
-	    if (gimple_code (stmt) == GIMPLE_PHI
-		|| is_gimple_debug (stmt))
-	      continue;
-
-	    /* If we find another definition to remove that uses
-	       the one we're looking at, defer the removal of this
-	       one, so that it can be propagated into debug stmts
-	       after the other is.  */
-	    FOR_EACH_SSA_DEF_OPERAND (def_p, stmt, dit, SSA_OP_DEF)
-	      {
-		tree odef = DEF_FROM_PTR (def_p);
-
-		if (bitmap_bit_p (toremove, SSA_NAME_VERSION (odef)))
-		  {
-		    remove_now = false;
-		    break;
-		  }
-	      }
-
-	    if (!remove_now)
-	      BREAK_FROM_IMM_USE_STMT (uit);
-	  }
-
-	if (remove_now)
-	  {
-	    gimple def = SSA_NAME_DEF_STMT (var);
-	    gimple_stmt_iterator gsi = gsi_for_stmt (def);
-
-	    if (gimple_code (def) == GIMPLE_PHI)
-	      remove_phi_node (&gsi, true);
-	    else
-	      {
-		gsi_remove (&gsi, true);
-		release_defs (def);
-	      }
-
-	    bitmap_clear_bit (toremove, j);
-	  }
-      }
+  gcc_unreachable ();
 }
 
 /* Return true if SSA_NAME is malformed and mark it visited.
@@ -871,216 +810,7 @@ error:
 DEBUG_FUNCTION void
 verify_ssa (bool check_modified_stmt)
 {
-  size_t i;
-  basic_block bb;
-  basic_block *definition_block = XCNEWVEC (basic_block, num_ssa_names);
-  ssa_op_iter iter;
-  tree op;
-  enum dom_state orig_dom_state = dom_info_state (CDI_DOMINATORS);
-  bitmap names_defined_in_bb = BITMAP_ALLOC (NULL);
-
-  gcc_assert (!need_ssa_update_p (cfun));
-
-  verify_stmts ();
-
-  timevar_push (TV_TREE_SSA_VERIFY);
-
-  /* Keep track of SSA names present in the IL.  */
-  for (i = 1; i < num_ssa_names; i++)
-    {
-      tree name = ssa_name (i);
-      if (name)
-	{
-	  gimple stmt;
-	  TREE_VISITED (name) = 0;
-
-	  stmt = SSA_NAME_DEF_STMT (name);
-	  if (!gimple_nop_p (stmt))
-	    {
-	      basic_block bb = gimple_bb (stmt);
-	      verify_def (bb, definition_block,
-			  name, stmt, !is_gimple_reg (name));
-
-	    }
-	}
-    }
-
-  calculate_dominance_info (CDI_DOMINATORS);
-
-  /* Now verify all the uses and make sure they agree with the definitions
-     found in the previous pass.  */
-  FOR_EACH_BB (bb)
-    {
-      edge e;
-      gimple phi;
-      edge_iterator ei;
-      gimple_stmt_iterator gsi;
-
-      /* Make sure that all edges have a clear 'aux' field.  */
-      FOR_EACH_EDGE (e, ei, bb->preds)
-	{
-	  if (e->aux)
-	    {
-	      error ("AUX pointer initialized for edge %d->%d", e->src->index,
-		      e->dest->index);
-	      goto err;
-	    }
-	}
-
-      /* Verify the arguments for every PHI node in the block.  */
-      for (gsi = gsi_start_phis (bb); !gsi_end_p (gsi); gsi_next (&gsi))
-	{
-	  phi = gsi_stmt (gsi);
-	  if (verify_phi_args (phi, bb, definition_block))
-	    goto err;
-
-	  bitmap_set_bit (names_defined_in_bb,
-			  SSA_NAME_VERSION (gimple_phi_result (phi)));
-	}
-
-      /* Now verify all the uses and vuses in every statement of the block.  */
-      for (gsi = gsi_start_bb (bb); !gsi_end_p (gsi); gsi_next (&gsi))
-	{
-	  gimple stmt = gsi_stmt (gsi);
-	  use_operand_p use_p;
-	  bool has_err;
-	  int count;
-	  unsigned i;
-
-	  if (check_modified_stmt && gimple_modified_p (stmt))
-	    {
-	      error ("stmt (%p) marked modified after optimization pass: ",
-		     (void *)stmt);
-	      print_gimple_stmt (stderr, stmt, 0, TDF_VOPS);
-	      goto err;
-	    }
-
-	  if (is_gimple_assign (stmt)
-	      && TREE_CODE (gimple_assign_lhs (stmt)) != SSA_NAME)
-	    {
-	      tree lhs, base_address;
-
-	      lhs = gimple_assign_lhs (stmt);
-	      base_address = get_base_address (lhs);
-
-	      if (base_address
-		  && SSA_VAR_P (base_address)
-		  && !gimple_vdef (stmt)
-		  && optimize > 0)
-		{
-		  error ("statement makes a memory store, but has no VDEFS");
-		  print_gimple_stmt (stderr, stmt, 0, TDF_VOPS);
-		  goto err;
-		}
-	    }
-	  else if (gimple_debug_bind_p (stmt)
-		   && !gimple_debug_bind_has_value_p (stmt))
-	    continue;
-
-	  /* Verify the single virtual operand and its constraints.  */
-	  has_err = false;
-	  if (gimple_vdef (stmt))
-	    {
-	      if (gimple_vdef_op (stmt) == NULL_DEF_OPERAND_P)
-		{
-		  error ("statement has VDEF operand not in defs list");
-		  has_err = true;
-		}
-	      if (!gimple_vuse (stmt))
-		{
-		  error ("statement has VDEF but no VUSE operand");
-		  has_err = true;
-		}
-	      else if (SSA_NAME_VAR (gimple_vdef (stmt))
-		       != SSA_NAME_VAR (gimple_vuse (stmt)))
-		{
-		  error ("VDEF and VUSE do not use the same symbol");
-		  has_err = true;
-		}
-	      has_err |= verify_ssa_name (gimple_vdef (stmt), true);
-	    }
-	  if (gimple_vuse (stmt))
-	    {
-	      if  (gimple_vuse_op (stmt) == NULL_USE_OPERAND_P)
-		{
-		  error ("statement has VUSE operand not in uses list");
-		  has_err = true;
-		}
-	      has_err |= verify_ssa_name (gimple_vuse (stmt), true);
-	    }
-	  if (has_err)
-	    {
-	      error ("in statement");
-	      print_gimple_stmt (stderr, stmt, 0, TDF_VOPS|TDF_MEMSYMS);
-	      goto err;
-	    }
-
-	  count = 0;
-	  FOR_EACH_SSA_TREE_OPERAND (op, stmt, iter, SSA_OP_USE|SSA_OP_DEF)
-	    {
-	      if (verify_ssa_name (op, false))
-		{
-		  error ("in statement");
-		  print_gimple_stmt (stderr, stmt, 0, TDF_VOPS|TDF_MEMSYMS);
-		  goto err;
-		}
-	      count++;
-	    }
-
-	  for (i = 0; i < gimple_num_ops (stmt); i++)
-	    {
-	      op = gimple_op (stmt, i);
-	      if (op && TREE_CODE (op) == SSA_NAME && --count < 0)
-		{
-		  error ("number of operands and imm-links don%'t agree"
-			 " in statement");
-		  print_gimple_stmt (stderr, stmt, 0, TDF_VOPS|TDF_MEMSYMS);
-		  goto err;
-		}
-	    }
-
-	  FOR_EACH_SSA_USE_OPERAND (use_p, stmt, iter, SSA_OP_USE|SSA_OP_VUSE)
-	    {
-	      op = USE_FROM_PTR (use_p);
-	      if (verify_use (bb, definition_block[SSA_NAME_VERSION (op)],
-			      use_p, stmt, false, names_defined_in_bb))
-		goto err;
-	    }
-
-	  FOR_EACH_SSA_TREE_OPERAND (op, stmt, iter, SSA_OP_ALL_DEFS)
-	    {
-	      if (SSA_NAME_DEF_STMT (op) != stmt)
-		{
-		  error ("SSA_NAME_DEF_STMT is wrong");
-		  fprintf (stderr, "Expected definition statement:\n");
-		  print_gimple_stmt (stderr, stmt, 4, TDF_VOPS);
-		  fprintf (stderr, "\nActual definition statement:\n");
-		  print_gimple_stmt (stderr, SSA_NAME_DEF_STMT (op),
-				     4, TDF_VOPS);
-		  goto err;
-		}
-	      bitmap_set_bit (names_defined_in_bb, SSA_NAME_VERSION (op));
-	    }
-	}
-
-      bitmap_clear (names_defined_in_bb);
-    }
-
-  free (definition_block);
-
-  /* Restore the dominance information to its prior known state, so
-     that we do not perturb the compiler's subsequent behavior.  */
-  if (orig_dom_state == DOM_NONE)
-    free_dominance_info (CDI_DOMINATORS);
-  else
-    set_dom_info_availability (CDI_DOMINATORS, orig_dom_state);
-
-  BITMAP_FREE (names_defined_in_bb);
-  timevar_pop (TV_TREE_SSA_VERIFY);
-  return;
-
-err:
-  internal_error ("verify_ssa failed");
+  gcc_unreachable ();
 }
 
 /* Return true if the uid in both int tree maps are equal.  */
@@ -1182,8 +912,6 @@ delete_tree_ssa (void)
   /* We no longer maintain the SSA operand cache at this point.  */
   if (ssa_operands_active ())
     fini_ssa_operands ();
-
-  delete_alias_heapvars ();
 
   htab_delete (cfun->gimple_df->default_defs);
   cfun->gimple_df->default_defs = NULL;
@@ -1627,39 +1355,6 @@ walk_use_def_chains (tree var, walk_use_def_chains_fn fn, void *data,
 void
 warn_uninit (tree t, const char *gmsgid, void *data)
 {
-  tree var = SSA_NAME_VAR (t);
-  gimple context = (gimple) data;
-  location_t location;
-  expanded_location xloc, floc;
-
-  if (!ssa_undefined_value_p (t))
-    return;
-
-  /* TREE_NO_WARNING either means we already warned, or the front end
-     wishes to suppress the warning.  */
-  if (TREE_NO_WARNING (var))
-    return;
-
-  /* Do not warn if it can be initialized outside this module.  */
-  if (is_global_var (var))
-    return;
-
-  location = (context != NULL && gimple_has_location (context))
-	     ? gimple_location (context)
-	     : DECL_SOURCE_LOCATION (var);
-  xloc = expand_location (location);
-  floc = expand_location (DECL_SOURCE_LOCATION (cfun->decl));
-  if (warning_at (location, OPT_Wuninitialized, gmsgid, var))
-    {
-      TREE_NO_WARNING (var) = 1;
-
-      if (location == DECL_SOURCE_LOCATION (var))
-	return;
-      if (xloc.file != floc.file
-	  || xloc.line < floc.line
-	  || xloc.line > LOCATION_LINE (cfun->function_end_locus))
-	inform (DECL_SOURCE_LOCATION (var), "%qD was declared here", var);
-    }
 }
 
 struct walk_data {
@@ -2204,6 +1899,4 @@ struct gimple_opt_pass pass_update_address_taken =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

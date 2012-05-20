@@ -22,9 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 /* Affine combination of trees.  We keep track of at most MAX_AFF_ELTS elements
    to make things simpler; this is sufficient in most cases.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define MAX_AFF_ELTS 8
 
@@ -87,6 +85,4 @@ void free_affine_expand_cache (struct pointer_map_t **);
 void print_aff (FILE *, aff_tree *);
 void debug_aff (aff_tree *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

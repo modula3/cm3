@@ -25,9 +25,7 @@
 # include <locale.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #ifndef HAVE_SETLOCALE
 # define setlocale(category, locale) (locale)
@@ -61,8 +59,6 @@ extern const char *fake_ngettext(const char *singular,const char *plural,
 
 extern char *get_spaces (const char *);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* intl.h */

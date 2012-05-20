@@ -27,9 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "pretty-print.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define pp_tree_identifier(PP, T)                      \
   pp_base_tree_identifier (pp_base (PP), T)
@@ -61,8 +59,6 @@ extern void percent_K_format (text_info *);
 extern bool default_tree_printer (pretty_printer *, text_info *, const char *,
 				  int, bool, bool, bool);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* ! GCC_TREE_PRETTY_PRINT_H */

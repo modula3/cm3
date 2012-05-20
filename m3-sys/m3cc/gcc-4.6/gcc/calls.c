@@ -47,9 +47,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "dbgcnt.h"
 #include "tree-flow.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Like PREFERRED_STACK_BOUNDARY but in units of bytes, not bits.  */
 #define STACK_BYTES (PREFERRED_STACK_BOUNDARY / BITS_PER_UNIT)
@@ -197,7 +195,7 @@ prepare_call_address (tree fndecl, rtx funexp, rtx static_chain_value,
     {
       rtx chain;
 
-      gcc_assert (fndecl);
+      /*gcc_assert (fndecl); removed for Modula-3 */
       chain = targetm.calls.static_chain (fndecl, false);
       static_chain_value = convert_memory_address (Pmode, static_chain_value);
 
@@ -4445,6 +4443,4 @@ must_pass_in_stack_var_size_or_pad (enum machine_mode mode, const_tree type)
   return false;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

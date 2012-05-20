@@ -29,6 +29,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "ggc.h"
 
+EXTERN_C_START
+
 static void free_list (rtx *, rtx *);
 
 /* Functions for maintaining cache-able lists of EXPR_LIST and INSN_LISTs.  */
@@ -216,5 +218,7 @@ remove_free_EXPR_LIST_node (rtx *listp)
 
   return elem;
 }
+
+EXTERN_C_END
 
 #include "gt-lists.h"

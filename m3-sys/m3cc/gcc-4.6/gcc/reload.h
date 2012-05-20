@@ -21,9 +21,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* If secondary reloads are the same for inputs and outputs, define those
    macros here.  */
@@ -426,6 +424,4 @@ extern void debug_reload (void);
    reloading to/from a register that is wider than a word.  */
 extern rtx reload_adjust_reg_for_mode (rtx, enum machine_mode);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

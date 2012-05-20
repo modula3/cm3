@@ -34,9 +34,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "output.h"
 #include "df.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Determine if the stack pointer is constant over the life of the function.
    Only useful before prologues have been emitted.  */
@@ -116,6 +114,4 @@ struct rtl_opt_pass pass_stack_ptr_mod =
  }
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

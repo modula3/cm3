@@ -37,10 +37,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "diagnostic-core.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* This file contains placeholder functions, to be used only for
    language processors that cannot handle tree-mudflap.c directly.
@@ -139,6 +136,4 @@ EXPORTED_CONST struct ggc_root_tab gt_ggc_r_gt_tree_mudflap_h[] = {
   LAST_GGC_ROOT_TAB
 };
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
