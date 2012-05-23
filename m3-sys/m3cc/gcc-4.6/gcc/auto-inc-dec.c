@@ -318,8 +318,44 @@ static struct inc_insn
 static void
 dump_inc_insn (FILE *file)
 {
-  gcc_unreachable ();
+  const char *f = ((inc_insn.form == FORM_PRE_ADD)
+	      || (inc_insn.form == FORM_PRE_INC)) ? "pre" : "post";
+
+  dump_insn_slim (file, inc_insn.insn);
+
+  switch (inc_insn.form)
+    {
+    case FORM_PRE_ADD:
+    case FORM_POST_ADD:
+      if (inc_insn.reg1_is_const)
+	fprintf (file, "found %s add(%d) r[%d]=r[%d]+%d\n",
+		 f, INSN_UID (inc_insn.insn),
+		 REGNO (inc_insn.reg_res),
+		 REGNO (inc_insn.reg0), (int) inc_insn.reg1_val);
+      else
+	fprintf (file, "found %s add(%d) r[%d]=r[%d]+r[%d]\n",
+		 f, INSN_UID (inc_insn.insn),
+		 REGNO (inc_insn.reg_res),
+		 REGNO (inc_insn.reg0), REGNO (inc_insn.reg1));
+      break;
+
+    case FORM_PRE_INC:
+    case FORM_POST_INC:
+      if (inc_insn.reg1_is_const)
+	fprintf (file, "found %s inc(%d) r[%d]+=%d\n",
+		 f, INSN_UID (inc_insn.insn),
+		 REGNO (inc_insn.reg_res), (int) inc_insn.reg1_val);
+      else
+	fprintf (file, "found %s inc(%d) r[%d]+=r[%d]\n",
+		 f, INSN_UID (inc_insn.insn),
+		 REGNO (inc_insn.reg_res), REGNO (inc_insn.reg1));
+      break;
+
+    default:
+      break;
+    }
 }
+
 
 /* Parsed fields of a mem ref of the form "*(reg0+reg1)" or "*(reg0+c)".  */
 
@@ -343,7 +379,16 @@ static struct mem_insn
 static void
 dump_mem_insn (FILE *file)
 {
-  gcc_unreachable ();
+  dump_insn_slim (file, mem_insn.insn);
+
+  if (mem_insn.reg1_is_const)
+    fprintf (file, "found mem(%d) *(r[%d]+%d)\n",
+	     INSN_UID (mem_insn.insn),
+	     REGNO (mem_insn.reg0), (int) mem_insn.reg1_val);
+  else
+    fprintf (file, "found mem(%d) *(r[%d]+r[%d])\n",
+	     INSN_UID (mem_insn.insn),
+	     REGNO (mem_insn.reg0), REGNO (mem_insn.reg1));
 }
 
 
@@ -539,7 +584,8 @@ attempt_change (rtx new_addr, rtx inc_reg)
 
   if (dump_file && mov_insn)
     {
-      gcc_unreachable ();
+      fprintf (dump_file, "inserting mov ");
+      dump_insn_slim (dump_file, mov_insn);
     }
 
   /* Record that this insn has an implicit side effect.  */
@@ -547,7 +593,8 @@ attempt_change (rtx new_addr, rtx inc_reg)
 
   if (dump_file)
     {
-      gcc_unreachable ();
+      fprintf (dump_file, "****success ");
+      dump_insn_slim (dump_file, mem_insn.insn);
     }
 
   return true;
@@ -1314,9 +1361,7 @@ merge_in_block (int max_reg, basic_block bb)
 	continue;
 
       if (dump_file)
-      {
-        gcc_unreachable ();
-      }
+	dump_insn_slim (dump_file, insn);
 
       /* Does this instruction increment or decrement a register?  */
       if (parse_add_or_inc (insn, true))

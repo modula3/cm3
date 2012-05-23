@@ -31,8 +31,6 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #include "tm.h"
 #include "gthr.h"
 
-EXTERN_C_START
-
 typedef unsigned int word __attribute__((mode(word)));
 typedef unsigned int pointer __attribute__((mode(pointer)));
 
@@ -204,5 +202,3 @@ __emutls_register_common (struct __emutls_object *obj,
   if (templ && size == obj->size)
     obj->templ = templ;
 }
-
-EXTERN_C_END

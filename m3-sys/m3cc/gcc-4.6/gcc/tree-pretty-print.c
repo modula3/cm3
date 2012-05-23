@@ -32,7 +32,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "langhooks.h"
 #include "tree-iterator.h"
+#include "tree-chrec.h"
 #include "tree-pass.h"
+#include "value-prof.h"
 #include "predict.h"
 
 EXTERN_C_START
@@ -1500,12 +1502,6 @@ dump_generic_node (pretty_printer *buffer, tree node, int spc, int flags,
 	pp_string (buffer, " [return slot optimization]");
       if (CALL_EXPR_TAILCALL (node))
 	pp_string (buffer, " [tail call]");
-      break;
-
-    case STATIC_CHAIN_EXPR:
-      pp_string (buffer, "<<static chain of ");
-      dump_generic_node (buffer, TREE_OPERAND (node, 0), spc, flags, false);
-      pp_string (buffer, ">>");
       break;
 
     case WITH_CLEANUP_EXPR:

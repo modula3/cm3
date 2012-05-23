@@ -57,8 +57,11 @@ extern struct ssaexpand SA;
 static inline rtx
 get_rtx_for_ssa_name (tree exp)
 {
-  gcc_unreachable ();
-  return 0;
+  int p = partition_find (SA.map->var_partition, SSA_NAME_VERSION (exp));
+  if (SA.map->partition_to_view)
+    p = SA.map->partition_to_view[p];
+  gcc_assert (p != NO_PARTITION);
+  return SA.partition_to_pseudo[p];
 }
 
 /* If TER decided to forward the definition of SSA name EXP this function
@@ -66,8 +69,10 @@ get_rtx_for_ssa_name (tree exp)
 static inline gimple
 get_gimple_for_ssa_name (tree exp)
 {
-  gcc_unreachable ();
-  return 0;
+  int v = SSA_NAME_VERSION (exp);
+  if (SA.values && bitmap_bit_p (SA.values, v))
+    return SSA_NAME_DEF_STMT (exp);
+  return NULL;
 }
 
 /* In tree-outof-ssa.c.  */

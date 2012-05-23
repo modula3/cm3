@@ -35,6 +35,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc-internal.h"
 #include "tree.h"
 #include "symtab.h"
+#include "cpplib.h"
 
 EXTERN_C_START
 

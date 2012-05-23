@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Copyright (C) 2003 Free Software Foundation, Inc.
 
 This file is part of GCC.

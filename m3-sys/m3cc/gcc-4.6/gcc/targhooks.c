@@ -1045,8 +1045,26 @@ default_valid_pointer_mode (enum machine_mode mode)
 bool
 default_ref_may_alias_errno (ao_ref *ref)
 {
-  gcc_unreachable ();
-  return true;
+  tree base = ao_ref_base (ref);
+  /* The default implementation assumes the errno location is
+     a declaration of type int or is always accessed via a
+     pointer to int.  We assume that accesses to errno are
+     not deliberately obfuscated (even in conforming ways).  */
+  if (TYPE_UNSIGNED (TREE_TYPE (base))
+      || TYPE_MODE (TREE_TYPE (base)) != TYPE_MODE (integer_type_node))
+    return false;
+  /* The default implementation assumes an errno location
+     declaration is never defined in the current compilation unit.  */
+  if (DECL_P (base)
+      && !TREE_STATIC (base))
+    return true;
+  else if (TREE_CODE (base) == MEM_REF
+	   && TREE_CODE (TREE_OPERAND (base, 0)) == SSA_NAME)
+    {
+      struct ptr_info_def *pi = SSA_NAME_PTR_INFO (TREE_OPERAND (base, 0));
+      return !pi || pi->pt.anything || pi->pt.nonlocal;
+    }
+  return false;
 }
 
 /* Return the mode for a pointer to a given ADDRSPACE, defaulting to ptr_mode

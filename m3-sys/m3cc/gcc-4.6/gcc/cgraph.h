@@ -92,6 +92,7 @@ struct GTY(()) cgraph_thunk_info {
    Available after function is analyzed.  */
 
 struct GTY(()) cgraph_local_info {
+
   struct inline_summary inline_summary;
 
   /* Set when function function is visible in current compilation unit only
@@ -301,8 +302,6 @@ DEF_VEC_P(cgraph_node_ptr);
 DEF_VEC_ALLOC_P(cgraph_node_ptr,heap);
 DEF_VEC_ALLOC_P(cgraph_node_ptr,gc);
 
-EXTERN_C_END
-
 /* A cgraph node set is a collection of cgraph nodes.  A cgraph node
    can appear in multiple sets.  */
 struct GTY(()) cgraph_node_set_def
@@ -312,8 +311,6 @@ struct GTY(()) cgraph_node_set_def
 };
 
 typedef struct varpool_node *varpool_node_ptr;
-
-EXTERN_C_START
 
 DEF_VEC_P(varpool_node_ptr);
 DEF_VEC_ALLOC_P(varpool_node_ptr,heap);

@@ -63,8 +63,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "gimple.h"
 #include "tree-flow.h"
 
-#define ENABLE_FOLD_CHECKING
-
 EXTERN_C_START
 
 /* Nonzero if we are folding constants inside an initializer; zero
@@ -13540,8 +13538,7 @@ fold_ternary_loc (location_t loc, enum tree_code code, tree type,
       /* A bit-field-ref that referenced the full argument can be stripped.  */
       if (INTEGRAL_TYPE_P (TREE_TYPE (arg0))
 	  && TYPE_PRECISION (TREE_TYPE (arg0)) == tree_low_cst (arg1, 1)
-          && TYPE_UNSIGNED (TREE_TYPE (arg0)) == TYPE_UNSIGNED (type) /* Modula-3 */
-          && integer_zerop (op2))
+	  && integer_zerop (op2))
 	return fold_convert_loc (loc, type, arg0);
 
       return NULL_TREE;

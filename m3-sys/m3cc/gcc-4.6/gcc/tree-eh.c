@@ -3520,9 +3520,6 @@ static bool
 cleanup_empty_eh_merge_phis (basic_block new_bb, basic_block old_bb,
 			     edge old_bb_out, bool change_region)
 {
-  gcc_unreachable ();
-  return false;
-#if 0
   gimple_stmt_iterator ngsi, ogsi;
   edge_iterator ei;
   edge e;
@@ -3652,7 +3649,6 @@ cleanup_empty_eh_merge_phis (basic_block new_bb, basic_block old_bb,
   BITMAP_FREE (ophi_handled);
   BITMAP_FREE (rename_virts);
   return false;
-#endif
 }
 
 /* A subroutine of cleanup_empty_eh.  Move a landing pad LP from its
@@ -3662,8 +3658,6 @@ static void
 cleanup_empty_eh_move_lp (basic_block bb, edge e_out,
 			  eh_landing_pad lp, eh_region new_region)
 {
-  gcc_unreachable ();
-#if 0
   gimple_stmt_iterator gsi;
   eh_landing_pad *pp;
 
@@ -3683,7 +3677,6 @@ cleanup_empty_eh_move_lp (basic_block bb, edge e_out,
   /* Clean up E_OUT for the fallthru.  */
   e_out->flags = (e_out->flags & ~EDGE_EH) | EDGE_FALLTHRU;
   e_out->probability = REG_BR_PROB_BASE;
-#endif
 }
 
 /* A subroutine of cleanup_empty_eh.  Handle more complex cases of

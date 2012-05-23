@@ -3115,6 +3115,404 @@ peep2_find_free_register (int from, int to, const char *class_str,
   return NULL_RTX;
 }
 
+/* Forget all currently tracked instructions, only remember current
+   LIVE regset.  */
+
+static void
+peep2_reinit_state (regset live)
+{
+  int i;
+
+  /* Indicate that all slots except the last holds invalid data.  */
+  for (i = 0; i < MAX_INSNS_PER_PEEP2; ++i)
+    peep2_insn_data[i].insn = NULL_RTX;
+  peep2_current_count = 0;
+
+  /* Indicate that the last slot contains live_after data.  */
+  peep2_insn_data[MAX_INSNS_PER_PEEP2].insn = PEEP2_EOB;
+  peep2_current = MAX_INSNS_PER_PEEP2;
+
+  COPY_REG_SET (peep2_insn_data[MAX_INSNS_PER_PEEP2].live_before, live);
+}
+
+/* While scanning basic block BB, we found a match of length MATCH_LEN,
+   starting at INSN.  Perform the replacement, removing the old insns and
+   replacing them with ATTEMPT.  Returns the last insn emitted, or NULL
+   if the replacement is rejected.  */
+
+static rtx
+peep2_attempt (basic_block bb, rtx insn, int match_len, rtx attempt)
+{
+  int i;
+  rtx last, note, before_try, x;
+  rtx old_insn, new_insn;
+  bool was_call = false;
+
+  /* If we are splittind an RTX_FRAME_RELATED_P insn, do not allow it to
+     match more than one insn, or to be split into more than one insn.  */
+  old_insn = peep2_insn_data[peep2_current].insn;
+  if (RTX_FRAME_RELATED_P (old_insn))
+    {
+      bool any_note = false;
+
+      if (match_len != 0)
+	return NULL;
+
+      /* Look for one "active" insn.  I.e. ignore any "clobber" insns that
+	 may be in the stream for the purpose of register allocation.  */
+      if (active_insn_p (attempt))
+	new_insn = attempt;
+      else
+	new_insn = next_active_insn (attempt);
+      if (next_active_insn (new_insn))
+	return NULL;
+
+      /* We have a 1-1 replacement.  Copy over any frame-related info.  */
+      RTX_FRAME_RELATED_P (new_insn) = 1;
+
+      /* Allow the backend to fill in a note during the split.  */
+      for (note = REG_NOTES (new_insn); note ; note = XEXP (note, 1))
+	switch (REG_NOTE_KIND (note))
+	  {
+	  case REG_FRAME_RELATED_EXPR:
+	  case REG_CFA_DEF_CFA:
+	  case REG_CFA_ADJUST_CFA:
+	  case REG_CFA_OFFSET:
+	  case REG_CFA_REGISTER:
+	  case REG_CFA_EXPRESSION:
+	  case REG_CFA_RESTORE:
+	  case REG_CFA_SET_VDRAP:
+	    any_note = true;
+	    break;
+	  default:
+	    break;
+	  }
+
+      /* If the backend didn't supply a note, copy one over.  */
+      if (!any_note)
+        for (note = REG_NOTES (old_insn); note ; note = XEXP (note, 1))
+	  switch (REG_NOTE_KIND (note))
+	    {
+	    case REG_FRAME_RELATED_EXPR:
+	    case REG_CFA_DEF_CFA:
+	    case REG_CFA_ADJUST_CFA:
+	    case REG_CFA_OFFSET:
+	    case REG_CFA_REGISTER:
+	    case REG_CFA_EXPRESSION:
+	    case REG_CFA_RESTORE:
+	    case REG_CFA_SET_VDRAP:
+	      add_reg_note (new_insn, REG_NOTE_KIND (note), XEXP (note, 0));
+	      any_note = true;
+	      break;
+	    default:
+	      break;
+	    }
+
+      /* If there still isn't a note, make sure the unwind info sees the
+	 same expression as before the split.  */
+      if (!any_note)
+	{
+	  rtx old_set, new_set;
+
+	  /* The old insn had better have been simple, or annotated.  */
+	  old_set = single_set (old_insn);
+	  gcc_assert (old_set != NULL);
+
+	  new_set = single_set (new_insn);
+	  if (!new_set || !rtx_equal_p (new_set, old_set))
+	    add_reg_note (new_insn, REG_FRAME_RELATED_EXPR, old_set);
+	}
+
+      /* Copy prologue/epilogue status.  This is required in order to keep
+	 proper placement of EPILOGUE_BEG and the DW_CFA_remember_state.  */
+      maybe_copy_prologue_epilogue_insn (old_insn, new_insn);
+    }
+
+  /* If we are splitting a CALL_INSN, look for the CALL_INSN
+     in SEQ and copy our CALL_INSN_FUNCTION_USAGE and other
+     cfg-related call notes.  */
+  for (i = 0; i <= match_len; ++i)
+    {
+      int j;
+
+      j = peep2_buf_position (peep2_current + i);
+      old_insn = peep2_insn_data[j].insn;
+      if (!CALL_P (old_insn))
+	continue;
+      was_call = true;
+
+      new_insn = attempt;
+      while (new_insn != NULL_RTX)
+	{
+	  if (CALL_P (new_insn))
+	    break;
+	  new_insn = NEXT_INSN (new_insn);
+	}
+
+      gcc_assert (new_insn != NULL_RTX);
+
+      CALL_INSN_FUNCTION_USAGE (new_insn)
+	= CALL_INSN_FUNCTION_USAGE (old_insn);
+
+      for (note = REG_NOTES (old_insn);
+	   note;
+	   note = XEXP (note, 1))
+	switch (REG_NOTE_KIND (note))
+	  {
+	  case REG_NORETURN:
+	  case REG_SETJMP:
+	    add_reg_note (new_insn, REG_NOTE_KIND (note),
+			  XEXP (note, 0));
+	    break;
+	  default:
+	    /* Discard all other reg notes.  */
+	    break;
+	  }
+
+      /* Croak if there is another call in the sequence.  */
+      while (++i <= match_len)
+	{
+	  j = peep2_buf_position (peep2_current + i);
+	  old_insn = peep2_insn_data[j].insn;
+	  gcc_assert (!CALL_P (old_insn));
+	}
+      break;
+    }
+
+  i = peep2_buf_position (peep2_current + match_len);
+
+  note = find_reg_note (peep2_insn_data[i].insn, REG_EH_REGION, NULL_RTX);
+
+  /* Replace the old sequence with the new.  */
+  last = emit_insn_after_setloc (attempt,
+				 peep2_insn_data[i].insn,
+				 INSN_LOCATOR (peep2_insn_data[i].insn));
+  before_try = PREV_INSN (insn);
+  delete_insn_chain (insn, peep2_insn_data[i].insn, false);
+
+  /* Re-insert the EH_REGION notes.  */
+  if (note || (was_call && nonlocal_goto_handler_labels))
+    {
+      edge eh_edge;
+      edge_iterator ei;
+
+      FOR_EACH_EDGE (eh_edge, ei, bb->succs)
+	if (eh_edge->flags & (EDGE_EH | EDGE_ABNORMAL_CALL))
+	  break;
+
+      if (note)
+	copy_reg_eh_region_note_backward (note, last, before_try);
+
+      if (eh_edge)
+	for (x = last; x != before_try; x = PREV_INSN (x))
+	  if (x != BB_END (bb)
+	      && (can_throw_internal (x)
+		  || can_nonlocal_goto (x)))
+	    {
+	      edge nfte, nehe;
+	      int flags;
+
+	      nfte = split_block (bb, x);
+	      flags = (eh_edge->flags
+		       & (EDGE_EH | EDGE_ABNORMAL));
+	      if (CALL_P (x))
+		flags |= EDGE_ABNORMAL_CALL;
+	      nehe = make_edge (nfte->src, eh_edge->dest,
+				flags);
+
+	      nehe->probability = eh_edge->probability;
+	      nfte->probability
+		= REG_BR_PROB_BASE - nehe->probability;
+
+	      peep2_do_cleanup_cfg |= purge_dead_edges (nfte->dest);
+	      bb = nfte->src;
+	      eh_edge = nehe;
+	    }
+
+      /* Converting possibly trapping insn to non-trapping is
+	 possible.  Zap dummy outgoing edges.  */
+      peep2_do_cleanup_cfg |= purge_dead_edges (bb);
+    }
+
+  /* If we generated a jump instruction, it won't have
+     JUMP_LABEL set.  Recompute after we're done.  */
+  for (x = last; x != before_try; x = PREV_INSN (x))
+    if (JUMP_P (x))
+      {
+	peep2_do_rebuild_jump_labels = true;
+	break;
+      }
+
+  return last;
+}
+
+/* After performing a replacement in basic block BB, fix up the life
+   information in our buffer.  LAST is the last of the insns that we
+   emitted as a replacement.  PREV is the insn before the start of
+   the replacement.  MATCH_LEN is the number of instructions that were
+   matched, and which now need to be replaced in the buffer.  */
+
+static void
+peep2_update_life (basic_block bb, int match_len, rtx last, rtx prev)
+{
+  int i = peep2_buf_position (peep2_current + match_len + 1);
+  rtx x;
+  regset_head live;
+
+  INIT_REG_SET (&live);
+  COPY_REG_SET (&live, peep2_insn_data[i].live_before);
+
+  gcc_assert (peep2_current_count >= match_len + 1);
+  peep2_current_count -= match_len + 1;
+
+  x = last;
+  do
+    {
+      if (INSN_P (x))
+	{
+	  df_insn_rescan (x);
+	  if (peep2_current_count < MAX_INSNS_PER_PEEP2)
+	    {
+	      peep2_current_count++;
+	      if (--i < 0)
+		i = MAX_INSNS_PER_PEEP2;
+	      peep2_insn_data[i].insn = x;
+	      df_simulate_one_insn_backwards (bb, x, &live);
+	      COPY_REG_SET (peep2_insn_data[i].live_before, &live);
+	    }
+	}
+      x = PREV_INSN (x);
+    }
+  while (x != prev);
+  CLEAR_REG_SET (&live);
+
+  peep2_current = i;
+}
+
+/* Add INSN, which is in BB, at the end of the peep2 insn buffer if possible.
+   Return true if we added it, false otherwise.  The caller will try to match
+   peepholes against the buffer if we return false; otherwise it will try to
+   add more instructions to the buffer.  */
+
+static bool
+peep2_fill_buffer (basic_block bb, rtx insn, regset live)
+{
+  int pos;
+
+  /* Once we have filled the maximum number of insns the buffer can hold,
+     allow the caller to match the insns against peepholes.  We wait until
+     the buffer is full in case the target has similar peepholes of different
+     length; we always want to match the longest if possible.  */
+  if (peep2_current_count == MAX_INSNS_PER_PEEP2)
+    return false;
+
+  /* If an insn has RTX_FRAME_RELATED_P set, do not allow it to be matched with
+     any other pattern, lest it change the semantics of the frame info.  */
+  if (RTX_FRAME_RELATED_P (insn))
+    {
+      /* Let the buffer drain first.  */
+      if (peep2_current_count > 0)
+	return false;
+      /* Now the insn will be the only thing in the buffer.  */
+    }
+
+  pos = peep2_buf_position (peep2_current + peep2_current_count);
+  peep2_insn_data[pos].insn = insn;
+  COPY_REG_SET (peep2_insn_data[pos].live_before, live);
+  peep2_current_count++;
+
+  df_simulate_one_insn_forwards (bb, insn, live);
+  return true;
+}
+
+/* Perform the peephole2 optimization pass.  */
+
+static void
+peephole2_optimize (void)
+{
+  rtx insn;
+  bitmap live;
+  int i;
+  basic_block bb;
+
+  peep2_do_cleanup_cfg = false;
+  peep2_do_rebuild_jump_labels = false;
+
+  df_set_flags (DF_LR_RUN_DCE);
+  df_note_add_problem ();
+  df_analyze ();
+
+  /* Initialize the regsets we're going to use.  */
+  for (i = 0; i < MAX_INSNS_PER_PEEP2 + 1; ++i)
+    peep2_insn_data[i].live_before = BITMAP_ALLOC (&reg_obstack);
+  live = BITMAP_ALLOC (&reg_obstack);
+
+  FOR_EACH_BB_REVERSE (bb)
+    {
+      bool past_end = false;
+      int pos;
+
+      rtl_profile_for_bb (bb);
+
+      /* Start up propagation.  */
+      bitmap_copy (live, DF_LR_IN (bb));
+      df_simulate_initialize_forwards (bb, live);
+      peep2_reinit_state (live);
+
+      insn = BB_HEAD (bb);
+      for (;;)
+	{
+	  rtx attempt, head;
+	  int match_len;
+
+	  if (!past_end && !NONDEBUG_INSN_P (insn))
+	    {
+	    next_insn:
+	      insn = NEXT_INSN (insn);
+	      if (insn == NEXT_INSN (BB_END (bb)))
+		past_end = true;
+	      continue;
+	    }
+	  if (!past_end && peep2_fill_buffer (bb, insn, live))
+	    goto next_insn;
+
+	  /* If we did not fill an empty buffer, it signals the end of the
+	     block.  */
+	  if (peep2_current_count == 0)
+	    break;
+
+	  /* The buffer filled to the current maximum, so try to match.  */
+
+	  pos = peep2_buf_position (peep2_current + peep2_current_count);
+	  peep2_insn_data[pos].insn = PEEP2_EOB;
+	  COPY_REG_SET (peep2_insn_data[pos].live_before, live);
+
+	  /* Match the peephole.  */
+	  head = peep2_insn_data[peep2_current].insn;
+	  attempt = peephole2_insns (PATTERN (head), head, &match_len);
+	  if (attempt != NULL)
+	    {
+	      rtx last = peep2_attempt (bb, head, match_len, attempt);
+	      if (last)
+		{
+		  peep2_update_life (bb, match_len, last, PREV_INSN (attempt));
+		  continue;
+		}
+	    }
+
+	  /* No match: advance the buffer by one insn.  */
+	  peep2_current = peep2_buf_position (peep2_current + 1);
+	  peep2_current_count--;
+	}
+    }
+
+  default_rtl_profile ();
+  for (i = 0; i < MAX_INSNS_PER_PEEP2 + 1; ++i)
+    BITMAP_FREE (peep2_insn_data[i].live_before);
+  BITMAP_FREE (live);
+  if (peep2_do_rebuild_jump_labels)
+    rebuild_jump_labels (get_insns ());
+}
 #endif /* HAVE_peephole2 */
 
 /* Common predicates for use with define_bypass.  */
@@ -3265,6 +3663,41 @@ if_test_bypass_p (rtx out_insn, rtx in_insn)
   return true;
 }
 
+static bool
+gate_handle_peephole2 (void)
+{
+  return (optimize > 0 && flag_peephole2);
+}
+
+static unsigned int
+rest_of_handle_peephole2 (void)
+{
+#ifdef HAVE_peephole2
+  peephole2_optimize ();
+#endif
+  return 0;
+}
+
+struct rtl_opt_pass pass_peephole2 =
+{
+ {
+  RTL_PASS,
+  "peephole2",                          /* name */
+  gate_handle_peephole2,                /* gate */
+  rest_of_handle_peephole2,             /* execute */
+  NULL,                                 /* sub */
+  NULL,                                 /* next */
+  0,                                    /* static_pass_number */
+  TV_PEEPHOLE2,                         /* tv_id */
+  0,                                    /* properties_required */
+  0,                                    /* properties_provided */
+  0,                                    /* properties_destroyed */
+  0,                                    /* todo_flags_start */
+  TODO_df_finish | TODO_verify_rtl_sharing |
+  TODO_dump_func                       /* todo_flags_finish */
+ }
+};
+
 static unsigned int
 rest_of_handle_split_all_insns (void)
 {
@@ -3321,11 +3754,58 @@ struct rtl_opt_pass pass_split_after_reload =
  }
 };
 
+static bool
+gate_handle_split_before_regstack (void)
+{
+#if defined (HAVE_ATTR_length) && defined (STACK_REGS)
+  /* If flow2 creates new instructions which need splitting
+     and scheduling after reload is not done, they might not be
+     split until final which doesn't allow splitting
+     if HAVE_ATTR_length.  */
+# ifdef INSN_SCHEDULING
+  return (optimize && !flag_schedule_insns_after_reload);
+# else
+  return (optimize);
+# endif
+#else
+  return 0;
+#endif
+}
+
 static unsigned int
 rest_of_handle_split_before_regstack (void)
 {
   split_all_insns ();
   return 0;
+}
+
+struct rtl_opt_pass pass_split_before_regstack =
+{
+ {
+  RTL_PASS,
+  "split3",                             /* name */
+  gate_handle_split_before_regstack,    /* gate */
+  rest_of_handle_split_before_regstack, /* execute */
+  NULL,                                 /* sub */
+  NULL,                                 /* next */
+  0,                                    /* static_pass_number */
+  TV_NONE,                              /* tv_id */
+  0,                                    /* properties_required */
+  0,                                    /* properties_provided */
+  0,                                    /* properties_destroyed */
+  0,                                    /* todo_flags_start */
+  TODO_dump_func                        /* todo_flags_finish */
+ }
+};
+
+static bool
+gate_handle_split_before_sched2 (void)
+{
+#ifdef INSN_SCHEDULING
+  return optimize > 0 && flag_schedule_insns_after_reload;
+#else
+  return 0;
+#endif
 }
 
 static unsigned int
@@ -3336,6 +3816,26 @@ rest_of_handle_split_before_sched2 (void)
 #endif
   return 0;
 }
+
+struct rtl_opt_pass pass_split_before_sched2 =
+{
+ {
+  RTL_PASS,
+  "split4",                             /* name */
+  gate_handle_split_before_sched2,      /* gate */
+  rest_of_handle_split_before_sched2,   /* execute */
+  NULL,                                 /* sub */
+  NULL,                                 /* next */
+  0,                                    /* static_pass_number */
+  TV_NONE,                              /* tv_id */
+  0,                                    /* properties_required */
+  0,                                    /* properties_provided */
+  0,                                    /* properties_destroyed */
+  0,                                    /* todo_flags_start */
+  TODO_verify_flow |
+  TODO_dump_func                        /* todo_flags_finish */
+ }
+};
 
 /* The placement of the splitting that we do for shorten_branches
    depends on whether regstack is used by the target or not.  */

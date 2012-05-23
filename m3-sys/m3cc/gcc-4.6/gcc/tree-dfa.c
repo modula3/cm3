@@ -246,8 +246,52 @@ debug_referenced_vars (void)
 void
 dump_variable (FILE *file, tree var)
 {
-  gcc_unreachable ();
+  if (TREE_CODE (var) == SSA_NAME)
+    {
+      if (POINTER_TYPE_P (TREE_TYPE (var)))
+	dump_points_to_info_for (file, var);
+      var = SSA_NAME_VAR (var);
+    }
+
+  if (var == NULL_TREE)
+    {
+      fprintf (file, "<nil>");
+      return;
+    }
+
+  print_generic_expr (file, var, dump_flags);
+
+  fprintf (file, ", UID D.%u", (unsigned) DECL_UID (var));
+  if (DECL_PT_UID (var) != DECL_UID (var))
+    fprintf (file, ", PT-UID D.%u", (unsigned) DECL_PT_UID (var));
+
+  fprintf (file, ", ");
+  print_generic_expr (file, TREE_TYPE (var), dump_flags);
+
+  if (TREE_ADDRESSABLE (var))
+    fprintf (file, ", is addressable");
+
+  if (is_global_var (var))
+    fprintf (file, ", is global");
+
+  if (TREE_THIS_VOLATILE (var))
+    fprintf (file, ", is volatile");
+
+  if (cfun && gimple_default_def (cfun, var))
+    {
+      fprintf (file, ", default def: ");
+      print_generic_expr (file, gimple_default_def (cfun, var), dump_flags);
+    }
+
+  if (DECL_INITIAL (var))
+    {
+      fprintf (file, ", initial: ");
+      print_generic_expr (file, DECL_INITIAL (var), dump_flags);
+    }
+
+  fprintf (file, "\n");
 }
+
 
 /* Dump variable VAR and its may-aliases to stderr.  */
 

@@ -39,6 +39,10 @@ along with GCC; see the file COPYING3.  If not see
 
 EXTERN_C_START
 
+#ifdef ENABLE_CHECKING
+static void  verify_live_on_entry (tree_live_info_p);
+#endif
+
 
 /* VARMAP maintains a mapping from SSA version number to real variables.
 
@@ -687,7 +691,157 @@ debug_scope_blocks (int flags)
 void
 remove_unused_locals (void)
 {
+  basic_block bb;
+  tree var, t;
+  referenced_var_iterator rvi;
+  var_ann_t ann;
+  bitmap global_unused_vars = NULL;
+  unsigned srcidx, dstidx, num;
+
+  /* Removing declarations from lexical blocks when not optimizing is
+     not only a waste of time, it actually causes differences in stack
+     layout.  */
+  if (!optimize)
+    return;
+
+  timevar_push (TV_REMOVE_UNUSED);
+
+  mark_scope_block_unused (DECL_INITIAL (current_function_decl));
+
+  /* Assume all locals are unused.  */
+  FOR_EACH_REFERENCED_VAR (cfun, t, rvi)
+    clear_is_used (t);
+
+  /* Walk the CFG marking all referenced symbols.  */
+  FOR_EACH_BB (bb)
+    {
+      gimple_stmt_iterator gsi;
+      size_t i;
+      edge_iterator ei;
+      edge e;
+
+      /* Walk the statements.  */
+      for (gsi = gsi_start_bb (bb); !gsi_end_p (gsi); gsi_next (&gsi))
+	{
+	  gimple stmt = gsi_stmt (gsi);
+	  tree b = gimple_block (stmt);
+
+	  if (is_gimple_debug (stmt))
+	    continue;
+
+	  if (b)
+	    TREE_USED (b) = true;
+
+	  for (i = 0; i < gimple_num_ops (stmt); i++)
+	    mark_all_vars_used (gimple_op_ptr (gsi_stmt (gsi), i), NULL);
+	}
+
+      for (gsi = gsi_start_phis (bb); !gsi_end_p (gsi); gsi_next (&gsi))
+        {
+          use_operand_p arg_p;
+          ssa_op_iter i;
+	  tree def;
+	  gimple phi = gsi_stmt (gsi);
+
+	  /* No point processing globals.  */
+	  if (is_global_var (SSA_NAME_VAR (gimple_phi_result (phi))))
+	    continue;
+
+	  def = gimple_phi_result (phi);
+	  mark_all_vars_used (&def, NULL);
+
+          FOR_EACH_PHI_ARG (arg_p, phi, i, SSA_OP_ALL_USES)
+            {
+	      tree arg = USE_FROM_PTR (arg_p);
+	      mark_all_vars_used (&arg, NULL);
+            }
+        }
+
+      FOR_EACH_EDGE (e, ei, bb->succs)
+	if (e->goto_locus)
+	  TREE_USED (e->goto_block) = true;
+    }
+
+  cfun->has_local_explicit_reg_vars = false;
+
+  /* Remove unmarked local vars from local_decls.  */
+  num = VEC_length (tree, cfun->local_decls);
+  for (srcidx = 0, dstidx = 0; srcidx < num; srcidx++)
+    {
+      var = VEC_index (tree, cfun->local_decls, srcidx);
+      if (TREE_CODE (var) != FUNCTION_DECL
+	  && (!(ann = var_ann (var))
+	      || !is_used_p (var)))
+	{
+	  if (is_global_var (var))
+	    {
+	      if (global_unused_vars == NULL)
+		global_unused_vars = BITMAP_ALLOC (NULL);
+	      bitmap_set_bit (global_unused_vars, DECL_UID (var));
+	    }
+	  else
+	    continue;
+	}
+      else if (TREE_CODE (var) == VAR_DECL
+	       && DECL_HARD_REGISTER (var)
+	       && !is_global_var (var))
+	cfun->has_local_explicit_reg_vars = true;
+
+      if (srcidx != dstidx)
+	VEC_replace (tree, cfun->local_decls, dstidx, var);
+      dstidx++;
+    }
+  if (dstidx != num)
+    VEC_truncate (tree, cfun->local_decls, dstidx);
+
+  /* Remove unmarked global vars from local_decls.  */
+  if (global_unused_vars != NULL)
+    {
+      tree var;
+      unsigned ix;
+      FOR_EACH_LOCAL_DECL (cfun, ix, var)
+	if (TREE_CODE (var) == VAR_DECL
+	    && is_global_var (var)
+	    && (ann = var_ann (var)) != NULL
+	    && is_used_p (var))
+	  mark_all_vars_used (&DECL_INITIAL (var), global_unused_vars);
+
+      num = VEC_length (tree, cfun->local_decls);
+      for (srcidx = 0, dstidx = 0; srcidx < num; srcidx++)
+	{
+	  var = VEC_index (tree, cfun->local_decls, srcidx);
+	  if (TREE_CODE (var) == VAR_DECL
+	      && is_global_var (var)
+	      && bitmap_bit_p (global_unused_vars, DECL_UID (var)))
+	    continue;
+
+	  if (srcidx != dstidx)
+	    VEC_replace (tree, cfun->local_decls, dstidx, var);
+	  dstidx++;
+	}
+      if (dstidx != num)
+	VEC_truncate (tree, cfun->local_decls, dstidx);
+      BITMAP_FREE (global_unused_vars);
+    }
+
+  /* Remove unused variables from REFERENCED_VARs.  */
+  FOR_EACH_REFERENCED_VAR (cfun, t, rvi)
+    if (!is_global_var (t)
+	&& TREE_CODE (t) != PARM_DECL
+	&& TREE_CODE (t) != RESULT_DECL
+	&& !is_used_p (t)
+	&& !var_ann (t)->is_heapvar)
+      remove_referenced_var (t);
+  remove_unused_scope_block_p (DECL_INITIAL (current_function_decl));
+  if (dump_file && (dump_flags & TDF_DETAILS))
+    {
+      fprintf (dump_file, "Scope blocks after cleanups:\n");
+      dump_scope_blocks (dump_file, dump_flags);
+    }
+
+  timevar_pop (TV_REMOVE_UNUSED);
 }
+
 
 /* Allocate and return a new live range information object base on MAP.  */
 
@@ -696,8 +850,6 @@ new_tree_live_info (var_map map)
 {
   tree_live_info_p live;
   unsigned x;
-
-  gcc_unreachable ();
 
   live = (tree_live_info_p) xmalloc (sizeof (struct tree_live_info_d));
   live->map = map;
@@ -893,8 +1045,49 @@ set_var_live_on_entry (tree ssa_name, tree_live_info_p live)
 void
 calculate_live_on_exit (tree_live_info_p liveinfo)
 {
-  gcc_unreachable ();
+  basic_block bb;
+  edge e;
+  edge_iterator ei;
+
+  /* live on entry calculations used liveout vectors for defs, clear them.  */
+  FOR_EACH_BB (bb)
+    bitmap_clear (liveinfo->liveout[bb->index]);
+
+  /* Set all the live-on-exit bits for uses in PHIs.  */
+  FOR_EACH_BB (bb)
+    {
+      gimple_stmt_iterator gsi;
+      size_t i;
+
+      /* Mark the PHI arguments which are live on exit to the pred block.  */
+      for (gsi = gsi_start_phis (bb); !gsi_end_p (gsi); gsi_next (&gsi))
+	{
+	  gimple phi = gsi_stmt (gsi);
+	  for (i = 0; i < gimple_phi_num_args (phi); i++)
+	    {
+	      tree t = PHI_ARG_DEF (phi, i);
+	      int p;
+
+	      if (TREE_CODE (t) != SSA_NAME)
+		continue;
+
+	      p = var_to_partition (liveinfo->map, t);
+	      if (p == NO_PARTITION)
+		continue;
+	      e = gimple_phi_arg_edge (phi, i);
+	      if (e->src != ENTRY_BLOCK_PTR)
+		bitmap_set_bit (liveinfo->liveout[e->src->index], p);
+	    }
+	}
+
+      /* Add each successors live on entry to this bock live on exit.  */
+      FOR_EACH_EDGE (e, ei, bb->succs)
+        if (e->dest != EXIT_BLOCK_PTR)
+	  bitmap_ior_into (liveinfo->liveout[bb->index],
+			   live_on_entry (liveinfo, e->dest));
+    }
 }
+
 
 /* Given partition map MAP, calculate all the live on entry bitmaps for
    each partition.  Return a new live info object.  */
@@ -902,9 +1095,28 @@ calculate_live_on_exit (tree_live_info_p liveinfo)
 tree_live_info_p
 calculate_live_ranges (var_map map)
 {
-  gcc_unreachable ();
-  return 0;
+  tree var;
+  unsigned i;
+  tree_live_info_p live;
+
+  live = new_tree_live_info (map);
+  for (i = 0; i < num_var_partitions (map); i++)
+    {
+      var = partition_to_var (map, i);
+      if (var != NULL_TREE)
+	set_var_live_on_entry (var, live);
+    }
+
+  live_worklist (live);
+
+#ifdef ENABLE_CHECKING
+  verify_live_on_entry (live);
+#endif
+
+  calculate_live_on_exit (live);
+  return live;
 }
+
 
 /* Output partition map MAP to file F.  */
 
@@ -914,8 +1126,6 @@ dump_var_map (FILE *f, var_map map)
   int t;
   unsigned x, y;
   int p;
-
-  gcc_unreachable ();
 
   fprintf (f, "\nPartition map \n\n");
 
@@ -962,8 +1172,6 @@ dump_live_info (FILE *f, tree_live_info_p live, int flag)
   unsigned i;
   var_map map = live->map;
   bitmap_iterator bi;
-
-  gcc_unreachable ();
 
   if ((flag & LIVEDUMP_ENTRY) && live->livein)
     {
@@ -1013,8 +1221,6 @@ compare_decls_by_uid (const void *pa, const void *pb)
   const numbered_tree *nt_a = ((const numbered_tree *)pa);
   const numbered_tree *nt_b = ((const numbered_tree *)pb);
 
-  gcc_unreachable ();
-
   if (DECL_UID (nt_a->t) != DECL_UID (nt_b->t))
     return  DECL_UID (nt_a->t) - DECL_UID (nt_b->t);
   return nt_a->num - nt_b->num;
@@ -1027,8 +1233,6 @@ dump_enumerated_decls_push (tree *tp, int *walk_subtrees, void *data)
   struct walk_stmt_info *wi = (struct walk_stmt_info *) data;
   VEC (numbered_tree, heap) **list = (VEC (numbered_tree, heap) **) &wi->info;
   numbered_tree nt;
-
-  gcc_unreachable ();
 
   if (!DECL_P (*tp))
     return NULL_TREE;
@@ -1050,7 +1254,41 @@ dump_enumerated_decls_push (tree *tp, int *walk_subtrees, void *data)
 void
 dump_enumerated_decls (FILE *file, int flags)
 {
-  gcc_unreachable ();
+  basic_block bb;
+  struct walk_stmt_info wi;
+  VEC (numbered_tree, heap) *decl_list = VEC_alloc (numbered_tree, heap, 40);
+
+  memset (&wi, '\0', sizeof (wi));
+  wi.info = (void*) decl_list;
+  FOR_EACH_BB (bb)
+    {
+      gimple_stmt_iterator gsi;
+
+      for (gsi = gsi_start_bb (bb); !gsi_end_p (gsi); gsi_next (&gsi))
+	if (!is_gimple_debug (gsi_stmt (gsi)))
+	  walk_gimple_stmt (&gsi, NULL, dump_enumerated_decls_push, &wi);
+    }
+  decl_list = (VEC (numbered_tree, heap) *) wi.info;
+  VEC_qsort (numbered_tree, decl_list, compare_decls_by_uid);
+  if (VEC_length (numbered_tree, decl_list))
+    {
+      unsigned ix;
+      numbered_tree *ntp;
+      tree last = NULL_TREE;
+
+      fprintf (file, "Declarations used by %s, sorted by DECL_UID:\n",
+	       current_function_name ());
+      FOR_EACH_VEC_ELT (numbered_tree, decl_list, ix, ntp)
+	{
+	  if (ntp->t == last)
+	    continue;
+	  fprintf (file, "%d: ", ntp->num);
+	  print_generic_decl (file, ntp->t, flags);
+	  fprintf (file, "\n");
+	  last = ntp->t;
+	}
+    }
+  VEC_free (numbered_tree, heap, decl_list);
 }
 
 #ifdef ENABLE_CHECKING
@@ -1069,6 +1307,108 @@ register_ssa_partition_check (tree ssa_var)
     }
 }
 
+
+/* Verify that the info in LIVE matches the current cfg.  */
+
+static void
+verify_live_on_entry (tree_live_info_p live)
+{
+  unsigned i;
+  tree var;
+  gimple stmt;
+  basic_block bb;
+  edge e;
+  int num;
+  edge_iterator ei;
+  var_map map = live->map;
+
+   /* Check for live on entry partitions and report those with a DEF in
+      the program. This will typically mean an optimization has done
+      something wrong.  */
+  bb = ENTRY_BLOCK_PTR;
+  num = 0;
+  FOR_EACH_EDGE (e, ei, bb->succs)
+    {
+      int entry_block = e->dest->index;
+      if (e->dest == EXIT_BLOCK_PTR)
+        continue;
+      for (i = 0; i < (unsigned)num_var_partitions (map); i++)
+	{
+	  basic_block tmp;
+	  tree d;
+	  bitmap loe;
+	  var = partition_to_var (map, i);
+	  stmt = SSA_NAME_DEF_STMT (var);
+	  tmp = gimple_bb (stmt);
+	  d = gimple_default_def (cfun, SSA_NAME_VAR (var));
+
+	  loe = live_on_entry (live, e->dest);
+	  if (loe && bitmap_bit_p (loe, i))
+	    {
+	      if (!gimple_nop_p (stmt))
+		{
+		  num++;
+		  print_generic_expr (stderr, var, TDF_SLIM);
+		  fprintf (stderr, " is defined ");
+		  if (tmp)
+		    fprintf (stderr, " in BB%d, ", tmp->index);
+		  fprintf (stderr, "by:\n");
+		  print_gimple_stmt (stderr, stmt, 0, TDF_SLIM);
+		  fprintf (stderr, "\nIt is also live-on-entry to entry BB %d",
+			   entry_block);
+		  fprintf (stderr, " So it appears to have multiple defs.\n");
+		}
+	      else
+	        {
+		  if (d != var)
+		    {
+		      num++;
+		      print_generic_expr (stderr, var, TDF_SLIM);
+		      fprintf (stderr, " is live-on-entry to BB%d ",
+			       entry_block);
+		      if (d)
+		        {
+			  fprintf (stderr, " but is not the default def of ");
+			  print_generic_expr (stderr, d, TDF_SLIM);
+			  fprintf (stderr, "\n");
+			}
+		      else
+			fprintf (stderr, " and there is no default def.\n");
+		    }
+		}
+	    }
+	  else
+	    if (d == var)
+	      {
+		/* The only way this var shouldn't be marked live on entry is
+		   if it occurs in a PHI argument of the block.  */
+		size_t z;
+		bool ok = false;
+		gimple_stmt_iterator gsi;
+		for (gsi = gsi_start_phis (e->dest);
+		     !gsi_end_p (gsi) && !ok;
+		     gsi_next (&gsi))
+		  {
+		    gimple phi = gsi_stmt (gsi);
+		    for (z = 0; z < gimple_phi_num_args (phi); z++)
+		      if (var == gimple_phi_arg_def (phi, z))
+			{
+			  ok = true;
+			  break;
+			}
+		  }
+		if (ok)
+		  continue;
+	        num++;
+		print_generic_expr (stderr, var, TDF_SLIM);
+		fprintf (stderr, " is not marked live-on-entry to entry BB%d ",
+			 entry_block);
+		fprintf (stderr, "but it is a default def so it should be.\n");
+	      }
+	}
+    }
+  gcc_assert (num <= 0);
+}
 #endif
 
 EXTERN_C_END

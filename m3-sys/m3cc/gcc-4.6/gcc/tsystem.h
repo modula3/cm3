@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Get common system includes and various definitions and declarations
    based on target macros.
    Copyright (C) 2000, 2001, 2004, 2005, 2009 Free Software Foundation, Inc.
