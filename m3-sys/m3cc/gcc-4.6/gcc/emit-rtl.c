@@ -1675,7 +1675,7 @@ set_mem_attributes_minus_bitpos (rtx ref, tree t, int objectp,
 	t = TREE_OPERAND (t, 0);
 
       /* Note whether this expression can trap.  */
-      MEM_NOTRAP_P (ref) = tree_could_trap_p (t);
+      MEM_NOTRAP_P (ref) = !tree_could_trap_p (t);
 
       base = get_base_address (t);
       if (base && DECL_P (base)

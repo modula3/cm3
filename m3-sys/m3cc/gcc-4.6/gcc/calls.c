@@ -195,7 +195,7 @@ prepare_call_address (tree fndecl, rtx funexp, rtx static_chain_value,
     {
       rtx chain;
 
-      /*gcc_assert (fndecl); removed for Modula-3 */
+      gcc_assert (fndecl);
       chain = targetm.calls.static_chain (fndecl, false);
       static_chain_value = convert_memory_address (Pmode, static_chain_value);
 

@@ -40,15 +40,15 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #ifndef GCC_CORETYPES_H
 #define GCC_CORETYPES_H
 
+EXTERN_C_START
+
 #ifdef __cplusplus
 #define EXTERN_C_START extern "C" {
-#define EXTERN_C_END }
+#define EXTERN_C_END  }
 #else
-#define EXTERN_C_START
-#define EXTERN_C_END
+#define EXTERN_C_START  /* nothing */
+#define EXTERN_C_END    /* nothing */
 #endif
-
-EXTERN_C_START
 
 #ifndef GTY
 #define GTY(x)  /* nothing - marker for gengtype */

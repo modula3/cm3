@@ -87,8 +87,6 @@ save_target_globals (void)
   return g;
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif

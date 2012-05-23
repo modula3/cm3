@@ -88,6 +88,7 @@ enum tree_dump_index
 #define TDF_ENUMERATE_LOCALS (1 << 22)	/* Enumerate locals by uid.  */
 #define TDF_CSELIB	(1 << 23)	/* Dump cselib details.  */
 
+
 /* In tree-dump.c */
 
 extern char *get_dump_file_name (int);
@@ -368,6 +369,8 @@ extern struct gimple_opt_pass pass_sra_early;
 extern struct gimple_opt_pass pass_early_ipa_sra;
 extern struct gimple_opt_pass pass_tail_recursion;
 extern struct gimple_opt_pass pass_tail_calls;
+extern struct gimple_opt_pass pass_tree_loop;
+extern struct gimple_opt_pass pass_tree_loop_init;
 extern struct gimple_opt_pass pass_lim;
 extern struct gimple_opt_pass pass_tree_unswitch;
 extern struct gimple_opt_pass pass_predcom;
@@ -375,6 +378,8 @@ extern struct gimple_opt_pass pass_iv_canon;
 extern struct gimple_opt_pass pass_scev_cprop;
 extern struct gimple_opt_pass pass_empty_loop;
 extern struct gimple_opt_pass pass_record_bounds;
+extern struct gimple_opt_pass pass_graphite;
+extern struct gimple_opt_pass pass_graphite_transforms;
 extern struct gimple_opt_pass pass_if_conversion;
 extern struct gimple_opt_pass pass_loop_distribution;
 extern struct gimple_opt_pass pass_vectorize;
@@ -433,6 +438,7 @@ extern struct gimple_opt_pass pass_sink_code;
 extern struct gimple_opt_pass pass_fre;
 extern struct gimple_opt_pass pass_check_data_deps;
 extern struct gimple_opt_pass pass_copy_prop;
+extern struct gimple_opt_pass pass_vrp;
 extern struct gimple_opt_pass pass_uncprop;
 extern struct gimple_opt_pass pass_return_slot;
 extern struct gimple_opt_pass pass_reassoc;
@@ -443,16 +449,19 @@ extern struct gimple_opt_pass pass_local_pure_const;
 extern struct gimple_opt_pass pass_tracer;
 extern struct gimple_opt_pass pass_warn_unused_result;
 extern struct gimple_opt_pass pass_split_functions;
+extern struct gimple_opt_pass pass_feedback_split_functions;
 
 /* IPA Passes */
 extern struct simple_ipa_opt_pass pass_ipa_lower_emutls;
 extern struct simple_ipa_opt_pass pass_ipa_function_and_variable_visibility;
+extern struct simple_ipa_opt_pass pass_ipa_tree_profile;
 
 extern struct simple_ipa_opt_pass pass_early_local_passes;
 
 extern struct ipa_opt_pass_d pass_ipa_whole_program_visibility;
 extern struct ipa_opt_pass_d pass_ipa_lto_gimple_out;
 extern struct simple_ipa_opt_pass pass_ipa_increase_alignment;
+extern struct simple_ipa_opt_pass pass_ipa_matrix_reorg;
 extern struct ipa_opt_pass_d pass_ipa_inline;
 extern struct simple_ipa_opt_pass pass_ipa_free_lang_data;
 extern struct ipa_opt_pass_d pass_ipa_cp;
@@ -460,7 +469,9 @@ extern struct ipa_opt_pass_d pass_ipa_reference;
 extern struct ipa_opt_pass_d pass_ipa_pure_const;
 extern struct simple_ipa_opt_pass pass_ipa_type_escape;
 extern struct simple_ipa_opt_pass pass_ipa_pta;
+extern struct simple_ipa_opt_pass pass_ipa_struct_reorg;
 extern struct ipa_opt_pass_d pass_ipa_lto_wpa_fixup;
+extern struct ipa_opt_pass_d pass_ipa_lto_finish_out;
 extern struct ipa_opt_pass_d pass_ipa_profile;
 extern struct ipa_opt_pass_d pass_ipa_cdtor_merge;
 
@@ -571,12 +582,16 @@ extern struct gimple_opt_pass pass_update_address_taken;
 extern struct gimple_opt_pass pass_convert_switch;
 
 /* The root of the compilation pass tree, once constructed.  */
-extern struct opt_pass *all_passes, *all_lowering_passes;
+extern struct opt_pass *all_passes, *all_small_ipa_passes, *all_lowering_passes,
+                       *all_regular_ipa_passes, *all_lto_gen_passes;
 
 /* Define a list of pass lists so that both passes.c and plugins can easily
    find all the pass lists.  */
 #define GCC_PASS_LISTS \
   DEF_PASS_LIST (all_lowering_passes) \
+  DEF_PASS_LIST (all_small_ipa_passes) \
+  DEF_PASS_LIST (all_regular_ipa_passes) \
+  DEF_PASS_LIST (all_lto_gen_passes) \
   DEF_PASS_LIST (all_passes)
 
 #define DEF_PASS_LIST(LIST) PASS_LIST_NO_##LIST,
@@ -600,12 +615,18 @@ extern void execute_pass_list (struct opt_pass *);
 extern void execute_ipa_pass_list (struct opt_pass *);
 extern void execute_ipa_summary_passes (struct ipa_opt_pass_d *);
 extern void execute_all_ipa_transforms (void);
+extern void execute_all_ipa_stmt_fixups (struct cgraph_node *, gimple *);
 extern bool pass_init_dump_file (struct opt_pass *);
 extern void pass_fini_dump_file (struct opt_pass *);
 
 extern const char *get_current_pass_name (void);
 extern void print_current_pass (FILE *);
 extern void debug_pass (void);
+extern void ipa_write_summaries (void);
+extern void ipa_write_optimization_summaries (struct cgraph_node_set_def *,
+					      struct varpool_node_set_def *);
+extern void ipa_read_summaries (void);
+extern void ipa_read_optimization_summaries (void);
 extern void register_one_dump_file (struct opt_pass *);
 extern bool function_called_by_processed_nodes_p (void);
 extern void register_pass (struct register_pass_info *);

@@ -314,8 +314,6 @@ add_coalesce (coalesce_list_p cl, int p1, int p2, int value)
 {
   coalesce_pair_p node;
 
-  gcc_unreachable ();
-
   gcc_assert (cl->sorted == NULL);
   if (p1 == p2)
     return;
@@ -424,8 +422,6 @@ sort_coalesce_list (coalesce_list_p cl)
   coalesce_pair_p p;
   coalesce_pair_iterator ppi;
 
-  gcc_unreachable ();
-
   gcc_assert (cl->sorted == NULL);
 
   num = num_coalesce_pairs (cl);
@@ -473,8 +469,6 @@ dump_coalesce_list (FILE *f, coalesce_list_p cl)
   coalesce_pair_iterator ppi;
   int x;
   tree var;
-
-  gcc_unreachable ();
 
   if (cl->sorted == NULL)
     {
@@ -526,7 +520,6 @@ ssa_conflicts_new (unsigned size)
 {
   ssa_conflicts_p ptr;
 
-  gcc_unreachable ();
   ptr = XNEW (struct ssa_conflicts_d);
   ptr->conflicts = XCNEWVEC (bitmap, size);
   ptr->size = size;
@@ -540,7 +533,6 @@ static inline void
 ssa_conflicts_delete (ssa_conflicts_p ptr)
 {
   unsigned x;
-  gcc_unreachable ();
   for (x = 0; x < ptr->size; x++)
     if (ptr->conflicts[x])
       BITMAP_FREE (ptr->conflicts[x]);
@@ -557,7 +549,6 @@ ssa_conflicts_test_p (ssa_conflicts_p ptr, unsigned x, unsigned y)
 {
   bitmap b;
 
-  gcc_unreachable ();
   gcc_checking_assert (x < ptr->size);
   gcc_checking_assert (y < ptr->size);
   gcc_checking_assert (x != y);
@@ -576,7 +567,6 @@ ssa_conflicts_test_p (ssa_conflicts_p ptr, unsigned x, unsigned y)
 static inline void
 ssa_conflicts_add_one (ssa_conflicts_p ptr, unsigned x, unsigned y)
 {
-  gcc_unreachable ();
   /* If there are no conflicts yet, allocate the bitmap and set bit.  */
   if (!ptr->conflicts[x])
     ptr->conflicts[x] = BITMAP_ALLOC (NULL);
@@ -589,7 +579,6 @@ ssa_conflicts_add_one (ssa_conflicts_p ptr, unsigned x, unsigned y)
 static inline void
 ssa_conflicts_add (ssa_conflicts_p ptr, unsigned x, unsigned y)
 {
-  gcc_unreachable ();
   gcc_checking_assert (x < ptr->size);
   gcc_checking_assert (y < ptr->size);
   gcc_checking_assert (x != y);
@@ -605,8 +594,6 @@ ssa_conflicts_merge (ssa_conflicts_p ptr, unsigned x, unsigned y)
 {
   unsigned z;
   bitmap_iterator bi;
-
-  gcc_unreachable ();
 
   gcc_assert (x != y);
   if (!(ptr->conflicts[y]))
@@ -640,8 +627,6 @@ static void
 ssa_conflicts_dump (FILE *file, ssa_conflicts_p ptr)
 {
   unsigned x;
-
-  gcc_unreachable ();
 
   fprintf (file, "\nConflict graph:\n");
 
@@ -683,8 +668,6 @@ new_live_track (var_map map)
   live_track_p ptr;
   int lim, x;
 
-  gcc_unreachable ();
-
   /* Make sure there is a partition view in place.  */
   gcc_assert (map->partition_to_base_index != NULL);
 
@@ -706,8 +689,6 @@ delete_live_track (live_track_p ptr)
 {
   int x, lim;
 
-  gcc_unreachable ();
-
   lim = num_basevars (ptr->map);
   for (x = 0; x < lim; x++)
     BITMAP_FREE (ptr->live_base_partitions[x]);
@@ -724,8 +705,6 @@ live_track_remove_partition (live_track_p ptr, int partition)
 {
   int root;
 
-  gcc_unreachable ();
-
   root = basevar_index (ptr->map, partition);
   bitmap_clear_bit (ptr->live_base_partitions[root], partition);
   /* If the element list is empty, make the base variable not live either.  */
@@ -740,8 +719,6 @@ static inline void
 live_track_add_partition (live_track_p ptr, int partition)
 {
   int root;
-
-  gcc_unreachable ();
 
   root = basevar_index (ptr->map, partition);
   /* If this base var wasn't live before, it is now.  Clear the element list
@@ -760,8 +737,6 @@ live_track_clear_var (live_track_p ptr, tree var)
 {
   int p;
 
-  gcc_unreachable ();
-
   p = var_to_partition (ptr->map, var);
   if (p != NO_PARTITION)
     live_track_remove_partition (ptr, p);
@@ -774,8 +749,6 @@ static inline bool
 live_track_live_p (live_track_p ptr, tree var)
 {
   int p, root;
-
-  gcc_unreachable ();
 
   p = var_to_partition (ptr->map, var);
   if (p != NO_PARTITION)
@@ -795,8 +768,6 @@ static inline void
 live_track_process_use (live_track_p ptr, tree use)
 {
   int p;
-
-  gcc_unreachable ();
 
   p = var_to_partition (ptr->map, use);
   if (p == NO_PARTITION)
@@ -818,8 +789,6 @@ live_track_process_def (live_track_p ptr, tree def, ssa_conflicts_p graph)
   bitmap b;
   unsigned x;
   bitmap_iterator bi;
-
-  gcc_unreachable ();
 
   p = var_to_partition (ptr->map, def);
   if (p == NO_PARTITION)
@@ -847,8 +816,6 @@ live_track_init (live_track_p ptr, bitmap init)
   unsigned p;
   bitmap_iterator bi;
 
-  gcc_unreachable ();
-
   /* Mark all live on exit partitions.  */
   EXECUTE_IF_SET_IN_BITMAP (init, 0, p, bi)
     live_track_add_partition (ptr, p);
@@ -860,7 +827,6 @@ live_track_init (live_track_p ptr, bitmap init)
 static inline void
 live_track_clear_base_vars (live_track_p ptr)
 {
-  gcc_unreachable ();
   /* Simply clear the live base list.  Anything marked as live in the element
      lists will be cleared later if/when the base variable ever comes alive
      again.  */
@@ -881,8 +847,6 @@ build_ssa_conflict_graph (tree_live_info_p liveinfo)
   basic_block bb;
   ssa_op_iter iter;
   live_track_p live;
-
-  gcc_unreachable ();
 
   map = live_var_map (liveinfo);
   graph = ssa_conflicts_new (num_var_partitions (map));
@@ -956,7 +920,6 @@ static inline void
 print_exprs (FILE *f, const char *str1, tree expr1, const char *str2,
 	     tree expr2, const char *str3)
 {
-  gcc_unreachable ();
   fprintf (f, "%s", str1);
   print_generic_expr (f, expr1, TDF_SLIM);
   fprintf (f, "%s", str2);
@@ -975,8 +938,6 @@ abnormal_corrupt (gimple phi, int i)
   edge e = gimple_phi_arg_edge (phi, i);
   tree res = gimple_phi_result (phi);
   tree arg = gimple_phi_arg_def (phi, i);
-
-  gcc_unreachable ();
 
   fprintf (stderr, " Corrupt SSA across abnormal edge BB%d->BB%d\n",
 	   e->src->index, e->dest->index);
@@ -1000,7 +961,6 @@ abnormal_corrupt (gimple phi, int i)
 static inline void
 fail_abnormal_edge_coalesce (int x, int y)
 {
-  gcc_unreachable ();
   fprintf (stderr, "\nUnable to coalesce ssa_names %d and %d",x, y);
   fprintf (stderr, " which are marked as MUST COALESCE.\n");
   print_generic_expr (stderr, ssa_name (x), TDF_SLIM);
@@ -1034,8 +994,6 @@ create_outofssa_var_map (coalesce_list_p cl, bitmap used_in_copy)
   used_in_real_ops = BITMAP_ALLOC (NULL);
   used_in_virtual_ops = BITMAP_ALLOC (NULL);
 #endif
-
-  gcc_unreachable ();
 
   map = init_var_map (num_ssa_names);
 
@@ -1256,8 +1214,6 @@ attempt_coalesce (var_map map, ssa_conflicts_p graph, int x, int y,
   tree var1, var2;
   int p1, p2;
 
-  gcc_unreachable ();
-
   p1 = var_to_partition (map, ssa_name (x));
   p2 = var_to_partition (map, ssa_name (y));
 
@@ -1324,8 +1280,6 @@ coalesce_partitions (var_map map, ssa_conflicts_p graph, coalesce_list_p cl,
   basic_block bb;
   edge e;
   edge_iterator ei;
- 
-  gcc_unreachable ();
 
   /* First, coalesce all the copies across abnormal edges.  These are not placed
      in the coalesce list because they do not need to be sorted, and simply
@@ -1380,7 +1334,6 @@ static hashval_t
 hash_ssa_name_by_var (const void *p)
 {
   const_tree n = (const_tree) p;
-  gcc_unreachable ();
   return (hashval_t) htab_hash_pointer (SSA_NAME_VAR (n));
 }
 
@@ -1391,7 +1344,6 @@ eq_ssa_name_by_var (const void *p1, const void *p2)
 {
   const_tree n1 = (const_tree) p1;
   const_tree n2 = (const_tree) p2;
-  gcc_unreachable ();
   return SSA_NAME_VAR (n1) == SSA_NAME_VAR (n2);
 }
 
@@ -1408,8 +1360,6 @@ coalesce_ssa_name (void)
   var_map map;
   unsigned int i;
   static htab_t ssa_name_hash;
-
-  gcc_unreachable ();
 
   cl = create_coalesce_list ();
   map = create_outofssa_var_map (cl, used_in_copies);

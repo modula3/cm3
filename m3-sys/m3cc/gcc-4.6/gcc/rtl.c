@@ -40,7 +40,7 @@ along with GCC; see the file COPYING3.  If not see
 # include "diagnostic-core.h"
 #endif
 
-EXTERN_C_START
+EXTERN_C_START
 
 /* Indexed by rtx code, gives number of operands for an rtx with that code.
    Does NOT include rtx header data (code and links).  */

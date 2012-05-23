@@ -26,8 +26,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "gcc.h"
 #include "opts.h"
 
-EXTERN_C_START
-
 /* Filter command line before processing by the gcc driver proper.  */
 void
 lang_specific_driver (struct cl_decoded_option **in_decoded_options ATTRIBUTE_UNUSED,

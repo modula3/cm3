@@ -174,8 +174,6 @@ get_name_decl (const_tree t)
 bool
 ssa_operands_active (void)
 {
-  bool result;
-
   /* This function may be invoked from contexts where CFUN is NULL
      (IPA passes), return false for now.  FIXME: operands may be
      active in each individual function, maybe this function should
@@ -183,9 +181,7 @@ ssa_operands_active (void)
   if (cfun == NULL)
     return false;
 
-  result = cfun->gimple_df && gimple_ssa_operands (cfun)->ops_active;
-  gcc_assert (!result);
-  return result;
+  return cfun->gimple_df && gimple_ssa_operands (cfun)->ops_active;
 }
 
 
@@ -1153,8 +1149,48 @@ update_stmt_operands (gimple stmt)
 void
 swap_tree_operands (gimple stmt, tree *exp0, tree *exp1)
 {
-  gcc_unreachable ();
+  tree op0, op1;
+  op0 = *exp0;
+  op1 = *exp1;
+
+  /* If the operand cache is active, attempt to preserve the relative
+     positions of these two operands in their respective immediate use
+     lists.  */
+  if (ssa_operands_active () && op0 != op1)
+    {
+      use_optype_p use0, use1, ptr;
+      use0 = use1 = NULL;
+
+      /* Find the 2 operands in the cache, if they are there.  */
+      for (ptr = gimple_use_ops (stmt); ptr; ptr = ptr->next)
+	if (USE_OP_PTR (ptr)->use == exp0)
+	  {
+	    use0 = ptr;
+	    break;
+	  }
+
+      for (ptr = gimple_use_ops (stmt); ptr; ptr = ptr->next)
+	if (USE_OP_PTR (ptr)->use == exp1)
+	  {
+	    use1 = ptr;
+	    break;
+	  }
+
+      /* If both uses don't have operand entries, there isn't much we can do
+         at this point.  Presumably we don't need to worry about it.  */
+      if (use0 && use1)
+        {
+	  tree *tmp = USE_OP_PTR (use1)->use;
+	  USE_OP_PTR (use1)->use = USE_OP_PTR (use0)->use;
+	  USE_OP_PTR (use0)->use = tmp;
+	}
+    }
+
+  /* Now swap the data.  */
+  *exp0 = op1;
+  *exp1 = op0;
 }
+
 
 /* Scan the immediate_use list for VAR making sure its linked properly.
    Return TRUE if there is a problem and emit an error message to F.  */

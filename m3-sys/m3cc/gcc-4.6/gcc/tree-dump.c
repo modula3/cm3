@@ -644,10 +644,6 @@ dequeue_and_dump (dump_info_p di)
       }
       break;
 
-    case STATIC_CHAIN_EXPR:
-      dump_child ("fn", TREE_OPERAND (t, 0));
-      break;
-
     case CONSTRUCTOR:
       {
 	unsigned HOST_WIDE_INT cnt;

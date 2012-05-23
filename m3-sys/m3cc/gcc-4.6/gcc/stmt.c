@@ -56,7 +56,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "pretty-print.h"
 #include "bitmap.h"
 
-EXTERN_C_START
+EXTERN_C_START
 
 /* Functions and data structures for expanding case statements.  */
 

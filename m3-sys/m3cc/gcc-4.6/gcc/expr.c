@@ -55,6 +55,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "diagnostic.h"
 #include "ssaexpand.h"
+#include "target-globals.h"
 
 EXTERN_C_START
 
@@ -4176,8 +4177,6 @@ expand_assignment (tree to, tree from, bool nontemporal)
 	{
 	  addr_space_t as = TYPE_ADDR_SPACE (TREE_TYPE (to));
 	  struct mem_address addr;
-	  
-	  gcc_unreachable ();
 
 	  get_address_description (to, &addr);
 	  op0 = addr_for_mem_ref (&addr, as, true);
@@ -4423,7 +4422,7 @@ expand_assignment (tree to, tree from, bool nontemporal)
       && TREE_CODE (from) == INDIRECT_REF
       && ADDR_SPACE_GENERIC_P
 	   (TYPE_ADDR_SPACE (TREE_TYPE (TREE_TYPE (TREE_OPERAND (from, 0)))))
-      && true//refs_may_alias_p (to, from)
+      && refs_may_alias_p (to, from)
       && cfun->returns_struct
       && !cfun->returns_pcc_struct)
     {
@@ -8393,6 +8392,13 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
 				   NULL);
 
       g = get_gimple_for_ssa_name (exp);
+      /* For EXPAND_INITIALIZER try harder to get something simpler.  */
+      if (g == NULL
+	  && modifier == EXPAND_INITIALIZER
+	  && !SSA_NAME_IS_DEFAULT_DEF (exp)
+	  && (optimize || DECL_IGNORED_P (SSA_NAME_VAR (exp)))
+	  && stmt_is_replaceable_p (SSA_NAME_DEF_STMT (exp)))
+	g = SSA_NAME_DEF_STMT (exp);
       if (g)
 	return expand_expr_real (gimple_assign_rhs_to_tree (g), target, tmode,
 				 modifier, NULL);
@@ -8657,8 +8663,6 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
 	addr_space_t as = TYPE_ADDR_SPACE (TREE_TYPE (exp));
 	struct mem_address addr;
 	int icode, align;
-	
-	gcc_unreachable ();
 
 	get_address_description (exp, &addr);
 	op0 = addr_for_mem_ref (&addr, as, true);

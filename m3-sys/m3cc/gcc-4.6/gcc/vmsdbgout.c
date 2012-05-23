@@ -1688,8 +1688,8 @@ to_vms_file_spec (char *filespec)
 }
 
 #else
-#define VMS_EPOCH_OFFSET (35067168 * (long long)1000000000)
-#define VMS_GRANULARITY_FACTOR ((long long)10000000)
+#define VMS_EPOCH_OFFSET 35067168000000000
+#define VMS_GRANULARITY_FACTOR 10000000
 #endif
 
 /* Return VMS file date, size, format, version given a name.  */

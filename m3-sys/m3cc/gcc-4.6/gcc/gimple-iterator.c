@@ -27,6 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree.h"
 #include "gimple.h"
 #include "tree-flow.h"
+#include "value-prof.h"
 
 EXTERN_C_START
 
@@ -406,8 +407,16 @@ gsi_replace (gimple_stmt_iterator *gsi, gimple stmt, bool update_eh_info)
   gimple_set_location (stmt, gimple_location (orig_stmt));
   gimple_set_bb (stmt, gsi_bb (*gsi));
 
+  /* Preserve EH region information from the original statement, if
+     requested by the caller.  */
+  if (update_eh_info)
+    maybe_clean_or_replace_eh_stmt (orig_stmt, stmt);
+
+  gimple_duplicate_stmt_histograms (cfun, stmt, cfun, orig_stmt);
+
   /* Free all the data flow information for ORIG_STMT.  */
   gimple_set_bb (orig_stmt, NULL);
+  gimple_remove_stmt_histograms (cfun, orig_stmt);
   delink_stmt_imm_use (orig_stmt);
 
   *gsi_stmt_ptr (gsi) = stmt;
@@ -508,6 +517,12 @@ gsi_remove (gimple_stmt_iterator *i, bool remove_permanently)
   gimple_set_bb (stmt, NULL);
   delink_stmt_imm_use (stmt);
   gimple_set_modified (stmt, true);
+
+  if (remove_permanently)
+    {
+      remove_stmt_from_eh_lp (stmt);
+      gimple_remove_stmt_histograms (cfun, stmt);
+    }
 
   /* Update the iterator and re-wire the links in I->SEQ.  */
   cur = i->ptr;

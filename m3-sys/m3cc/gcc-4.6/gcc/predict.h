@@ -23,9 +23,7 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_PREDICT_H
 #define GCC_PREDICT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 #define DEF_PREDICTOR(ENUM, NAME, HITRATE, FLAGS) ENUM,
 enum br_predictor
@@ -51,8 +49,6 @@ extern void tree_estimate_probability (void);
 extern void compute_function_frequency (void);
 extern void rebuild_frequencies (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif  /* GCC_PREDICT_H */
