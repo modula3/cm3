@@ -501,7 +501,7 @@ if HostIsNT()
   end
 end
 
-M3CC_MAKE = M3CC_MAKE & "  "
+M3CC_MAKE = M3CC_MAKE & " -j4 "
 
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
