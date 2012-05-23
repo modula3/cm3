@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Type class enum
    Copyright (C) 2004, 2005, 2009 Free Software Foundation, Inc.
 

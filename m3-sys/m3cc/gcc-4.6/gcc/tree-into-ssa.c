@@ -1463,8 +1463,29 @@ rewrite_leave_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
 void
 dump_decl_set (FILE *file, bitmap set)
 {
-  gcc_unreachable ();
+  if (set)
+    {
+      bitmap_iterator bi;
+      unsigned i;
+
+      fprintf (file, "{ ");
+
+      EXECUTE_IF_SET_IN_BITMAP (set, 0, i, bi)
+	{
+	  tree var = referenced_var_lookup (cfun, i);
+	  if (var)
+	    print_generic_expr (file, var, 0);
+	  else
+	    fprintf (file, "D.%u", i);
+	  fprintf (file, " ");
+	}
+
+      fprintf (file, "}");
+    }
+  else
+    fprintf (file, "NIL");
 }
+
 
 /* Dump bitmap SET (assumed to contain VAR_DECLs) to FILE.  */
 
@@ -2204,6 +2225,14 @@ rewrite_blocks (basic_block entry, enum rewrite_mode what)
   /* Finalize the dominator walker.  */
   fini_walk_dominator_tree (&walk_data);
 
+  /* Debugging dumps.  */
+  if (dump_file && (dump_flags & TDF_STATS))
+    {
+      dump_dfa_stats (dump_file);
+      if (def_blocks)
+	dump_tree_ssa_stats (dump_file);
+    }
+
   VEC_free (tree, heap, block_defs_stack);
 
   timevar_pop (TV_TREE_SSA_REWRITE_BLOCKS);
@@ -2556,8 +2585,6 @@ prepare_use_sites_for (tree name, bool insert_phi_p)
   use_operand_p use_p;
   imm_use_iterator iter;
 
-  gcc_unreachable ();
-
   FOR_EACH_IMM_USE_FAST (use_p, iter, name)
     {
       gimple stmt = USE_STMT (use_p);
@@ -2589,8 +2616,6 @@ prepare_def_site_for (tree name, bool insert_phi_p)
   gimple stmt;
   basic_block bb;
 
-  gcc_unreachable ();
-
   gcc_assert (names_to_release == NULL
 	      || !bitmap_bit_p (names_to_release, SSA_NAME_VERSION (name)));
 
@@ -2615,8 +2640,6 @@ prepare_names_to_update (bool insert_phi_p)
   unsigned i = 0;
   bitmap_iterator bi;
   sbitmap_iterator sbi;
-
-  gcc_unreachable ();
 
   /* If a name N from NEW_SSA_NAMES is also marked to be released,
      remove it from NEW_SSA_NAMES so that we don't try to visit its
@@ -2644,13 +2667,108 @@ prepare_names_to_update (bool insert_phi_p)
 }
 
 
+/* Dump all the names replaced by NAME to FILE.  */
+
+void
+dump_names_replaced_by (FILE *file, tree name)
+{
+  unsigned i;
+  bitmap old_set;
+  bitmap_iterator bi;
+
+  print_generic_expr (file, name, 0);
+  fprintf (file, " -> { ");
+
+  old_set = names_replaced_by (name);
+  EXECUTE_IF_SET_IN_BITMAP (old_set, 0, i, bi)
+    {
+      print_generic_expr (file, ssa_name (i), 0);
+      fprintf (file, " ");
+    }
+
+  fprintf (file, "}\n");
+}
+
+
+/* Dump all the names replaced by NAME to stderr.  */
+
+DEBUG_FUNCTION void
+debug_names_replaced_by (tree name)
+{
+  dump_names_replaced_by (stderr, name);
+}
+
+
+/* Dump SSA update information to FILE.  */
+
+void
+dump_update_ssa (FILE *file)
+{
+  unsigned i = 0;
+  bitmap_iterator bi;
+
+  if (!need_ssa_update_p (cfun))
+    return;
+
+  if (new_ssa_names && sbitmap_first_set_bit (new_ssa_names) >= 0)
+    {
+      sbitmap_iterator sbi;
+
+      fprintf (file, "\nSSA replacement table\n");
+      fprintf (file, "N_i -> { O_1 ... O_j } means that N_i replaces "
+	             "O_1, ..., O_j\n\n");
+
+      EXECUTE_IF_SET_IN_SBITMAP (new_ssa_names, 0, i, sbi)
+	dump_names_replaced_by (file, ssa_name (i));
+
+      fprintf (file, "\n");
+      fprintf (file, "Number of virtual NEW -> OLD mappings: %7u\n",
+	       update_ssa_stats.num_virtual_mappings);
+      fprintf (file, "Number of real NEW -> OLD mappings:    %7u\n",
+	       update_ssa_stats.num_total_mappings
+	       - update_ssa_stats.num_virtual_mappings);
+      fprintf (file, "Number of total NEW -> OLD mappings:   %7u\n",
+	       update_ssa_stats.num_total_mappings);
+
+      fprintf (file, "\nNumber of virtual symbols: %u\n",
+	       update_ssa_stats.num_virtual_symbols);
+    }
+
+  if (!bitmap_empty_p (SYMS_TO_RENAME (cfun)))
+    {
+      fprintf (file, "\n\nSymbols to be put in SSA form\n\n");
+      dump_decl_set (file, SYMS_TO_RENAME (cfun));
+      fprintf (file, "\n");
+    }
+
+  if (names_to_release && !bitmap_empty_p (names_to_release))
+    {
+      fprintf (file, "\n\nSSA names to release after updating the SSA web\n\n");
+      EXECUTE_IF_SET_IN_BITMAP (names_to_release, 0, i, bi)
+	{
+	  print_generic_expr (file, ssa_name (i), 0);
+	  fprintf (file, " ");
+	}
+    }
+
+  fprintf (file, "\n\n");
+}
+
+
+/* Dump SSA update information to stderr.  */
+
+DEBUG_FUNCTION void
+debug_update_ssa (void)
+{
+  dump_update_ssa (stderr);
+}
+
+
 /* Initialize data structures used for incremental SSA updates.  */
 
 static void
 init_update_ssa (struct function *fn)
 {
-  gcc_unreachable ();
-
   /* Reserve more space than the current number of names.  The calls to
      add_new_name_mapping are typically done after creating new SSA
      names, so we'll need to reallocate these arrays.  */
@@ -2675,8 +2793,6 @@ delete_update_ssa (void)
 {
   unsigned i;
   bitmap_iterator bi;
-
-  gcc_unreachable ();
 
   sbitmap_free (old_ssa_names);
   old_ssa_names = NULL;
@@ -2724,7 +2840,6 @@ delete_update_ssa (void)
 tree
 create_new_def_for (tree old_name, gimple stmt, def_operand_p def)
 {
-  gcc_unreachable ();
   tree new_name = duplicate_ssa_name (old_name, stmt);
 
   SET_DEF (def, new_name);
@@ -2755,7 +2870,6 @@ create_new_def_for (tree old_name, gimple stmt, def_operand_p def)
 void
 register_new_name_mapping (tree new_tree, tree old)
 {
-  gcc_unreachable ();
   if (!update_ssa_initialized_fn)
     init_update_ssa (cfun);
 
@@ -2770,7 +2884,6 @@ register_new_name_mapping (tree new_tree, tree old)
 void
 mark_sym_for_renaming (tree sym)
 {
-  gcc_unreachable ();
   bitmap_set_bit (SYMS_TO_RENAME (cfun), DECL_UID (sym));
 }
 
@@ -2780,8 +2893,6 @@ mark_sym_for_renaming (tree sym)
 void
 mark_set_for_renaming (bitmap set)
 {
-  gcc_unreachable ();
-
   bitmap_iterator bi;
   unsigned i;
 
@@ -2799,7 +2910,10 @@ mark_set_for_renaming (bitmap set)
 bool
 need_ssa_update_p (struct function *fn)
 {
-  return false;
+  gcc_assert (fn != NULL);
+  return (update_ssa_initialized_fn == fn
+	  || (fn->gimple_df
+	      && !bitmap_empty_p (SYMS_TO_RENAME (fn))));
 }
 
 /* Return true if SSA name mappings have been registered for SSA updating.  */
@@ -2807,8 +2921,6 @@ need_ssa_update_p (struct function *fn)
 bool
 name_mappings_registered_p (void)
 {
-  gcc_unreachable ();
-
   if (!update_ssa_initialized_fn)
     return false;
 
@@ -2822,8 +2934,6 @@ name_mappings_registered_p (void)
 bool
 name_registered_for_update_p (tree n ATTRIBUTE_UNUSED)
 {
-  gcc_unreachable ();
-
   if (!update_ssa_initialized_fn)
     return false;
 
@@ -2838,8 +2948,18 @@ name_registered_for_update_p (tree n ATTRIBUTE_UNUSED)
 bitmap
 ssa_names_to_replace (void)
 {
-  gcc_unreachable ();
-  return 0;
+  unsigned i = 0;
+  bitmap ret;
+  sbitmap_iterator sbi;
+
+  gcc_assert (update_ssa_initialized_fn == NULL
+	      || update_ssa_initialized_fn == cfun);
+
+  ret = BITMAP_ALLOC (NULL);
+  EXECUTE_IF_SET_IN_SBITMAP (old_ssa_names, 0, i, sbi)
+    bitmap_set_bit (ret, i);
+
+  return ret;
 }
 
 
@@ -2848,7 +2968,6 @@ ssa_names_to_replace (void)
 void
 release_ssa_name_after_update_ssa (tree name)
 {
-  gcc_unreachable ();
   gcc_assert (cfun && update_ssa_initialized_fn == cfun);
 
   if (names_to_release == NULL)
@@ -2858,7 +2977,179 @@ release_ssa_name_after_update_ssa (tree name)
 }
 
 
+/* Insert new PHI nodes to replace VAR.  DFS contains dominance
+   frontier information.  BLOCKS is the set of blocks to be updated.
 
+   This is slightly different than the regular PHI insertion
+   algorithm.  The value of UPDATE_FLAGS controls how PHI nodes for
+   real names (i.e., GIMPLE registers) are inserted:
+
+   - If UPDATE_FLAGS == TODO_update_ssa, we are only interested in PHI
+     nodes inside the region affected by the block that defines VAR
+     and the blocks that define all its replacements.  All these
+     definition blocks are stored in DEF_BLOCKS[VAR]->DEF_BLOCKS.
+
+     First, we compute the entry point to the region (ENTRY).  This is
+     given by the nearest common dominator to all the definition
+     blocks. When computing the iterated dominance frontier (IDF), any
+     block not strictly dominated by ENTRY is ignored.
+
+     We then call the standard PHI insertion algorithm with the pruned
+     IDF.
+
+   - If UPDATE_FLAGS == TODO_update_ssa_full_phi, the IDF for real
+     names is not pruned.  PHI nodes are inserted at every IDF block.  */
+
+static void
+insert_updated_phi_nodes_for (tree var, bitmap_head *dfs, bitmap blocks,
+                              unsigned update_flags)
+{
+  basic_block entry;
+  struct def_blocks_d *db;
+  bitmap idf, pruned_idf;
+  bitmap_iterator bi;
+  unsigned i;
+
+  if (TREE_CODE (var) == SSA_NAME)
+    gcc_checking_assert (is_old_name (var));
+  else
+    gcc_checking_assert (symbol_marked_for_renaming (var));
+
+  /* Get all the definition sites for VAR.  */
+  db = find_def_blocks_for (var);
+
+  /* No need to do anything if there were no definitions to VAR.  */
+  if (db == NULL || bitmap_empty_p (db->def_blocks))
+    return;
+
+  /* Compute the initial iterated dominance frontier.  */
+  idf = compute_idf (db->def_blocks, dfs);
+  pruned_idf = BITMAP_ALLOC (NULL);
+
+  if (TREE_CODE (var) == SSA_NAME)
+    {
+      if (update_flags == TODO_update_ssa)
+	{
+	  /* If doing regular SSA updates for GIMPLE registers, we are
+	     only interested in IDF blocks dominated by the nearest
+	     common dominator of all the definition blocks.  */
+	  entry = nearest_common_dominator_for_set (CDI_DOMINATORS,
+						    db->def_blocks);
+	  if (entry != ENTRY_BLOCK_PTR)
+	    EXECUTE_IF_SET_IN_BITMAP (idf, 0, i, bi)
+	      if (BASIC_BLOCK (i) != entry
+		  && dominated_by_p (CDI_DOMINATORS, BASIC_BLOCK (i), entry))
+		bitmap_set_bit (pruned_idf, i);
+	}
+      else
+	{
+	  /* Otherwise, do not prune the IDF for VAR.  */
+	  gcc_assert (update_flags == TODO_update_ssa_full_phi);
+	  bitmap_copy (pruned_idf, idf);
+	}
+    }
+  else
+    {
+      /* Otherwise, VAR is a symbol that needs to be put into SSA form
+	 for the first time, so we need to compute the full IDF for
+	 it.  */
+      bitmap_copy (pruned_idf, idf);
+    }
+
+  if (!bitmap_empty_p (pruned_idf))
+    {
+      /* Make sure that PRUNED_IDF blocks and all their feeding blocks
+	 are included in the region to be updated.  The feeding blocks
+	 are important to guarantee that the PHI arguments are renamed
+	 properly.  */
+
+      /* FIXME, this is not needed if we are updating symbols.  We are
+	 already starting at the ENTRY block anyway.  */
+      bitmap_ior_into (blocks, pruned_idf);
+      EXECUTE_IF_SET_IN_BITMAP (pruned_idf, 0, i, bi)
+	{
+	  edge e;
+	  edge_iterator ei;
+	  basic_block bb = BASIC_BLOCK (i);
+
+	  FOR_EACH_EDGE (e, ei, bb->preds)
+	    if (e->src->index >= 0)
+	      bitmap_set_bit (blocks, e->src->index);
+	}
+
+      insert_phi_nodes_for (var, pruned_idf, true);
+    }
+
+  BITMAP_FREE (pruned_idf);
+  BITMAP_FREE (idf);
+}
+
+
+/* Heuristic to determine whether SSA name mappings for virtual names
+   should be discarded and their symbols rewritten from scratch.  When
+   there is a large number of mappings for virtual names, the
+   insertion of PHI nodes for the old names in the mappings takes
+   considerable more time than if we inserted PHI nodes for the
+   symbols instead.
+
+   Currently the heuristic takes these stats into account:
+
+   	- Number of mappings for virtual SSA names.
+	- Number of distinct virtual symbols involved in those mappings.
+
+   If the number of virtual mappings is much larger than the number of
+   virtual symbols, then it will be faster to compute PHI insertion
+   spots for the symbols.  Even if this involves traversing the whole
+   CFG, which is what happens when symbols are renamed from scratch.  */
+
+static bool
+switch_virtuals_to_full_rewrite_p (void)
+{
+  if (update_ssa_stats.num_virtual_mappings < (unsigned) MIN_VIRTUAL_MAPPINGS)
+    return false;
+
+  if (update_ssa_stats.num_virtual_mappings
+      > (unsigned) VIRTUAL_MAPPINGS_TO_SYMS_RATIO
+        * update_ssa_stats.num_virtual_symbols)
+    return true;
+
+  return false;
+}
+
+
+/* Remove every virtual mapping and mark all the affected virtual
+   symbols for renaming.  */
+
+static void
+switch_virtuals_to_full_rewrite (void)
+{
+  unsigned i = 0;
+  sbitmap_iterator sbi;
+
+  if (dump_file)
+    {
+      fprintf (dump_file, "\nEnabled virtual name mapping heuristic.\n");
+      fprintf (dump_file, "\tNumber of virtual mappings:       %7u\n",
+	       update_ssa_stats.num_virtual_mappings);
+      fprintf (dump_file, "\tNumber of unique virtual symbols: %7u\n",
+	       update_ssa_stats.num_virtual_symbols);
+      fprintf (dump_file, "Updating FUD-chains from top of CFG will be "
+	                  "faster than processing\nthe name mappings.\n\n");
+    }
+
+  /* Remove all virtual names from NEW_SSA_NAMES and OLD_SSA_NAMES.
+     Note that it is not really necessary to remove the mappings from
+     REPL_TBL, that would only waste time.  */
+  EXECUTE_IF_SET_IN_SBITMAP (new_ssa_names, 0, i, sbi)
+    if (!is_gimple_reg (ssa_name (i)))
+      RESET_BIT (new_ssa_names, i);
+
+  EXECUTE_IF_SET_IN_SBITMAP (old_ssa_names, 0, i, sbi)
+    if (!is_gimple_reg (ssa_name (i)))
+      RESET_BIT (old_ssa_names, i);
+
+  mark_set_for_renaming (update_ssa_stats.virtual_symbols);
+}
 
 
 /* Given a set of newly created SSA names (NEW_SSA_NAMES) and a set of
@@ -2928,7 +3219,207 @@ release_ssa_name_after_update_ssa (tree name)
 void
 update_ssa (unsigned update_flags)
 {
-  gcc_unreachable ();
+  basic_block bb, start_bb;
+  bitmap_iterator bi;
+  unsigned i = 0;
+  bool insert_phi_p;
+  sbitmap_iterator sbi;
+
+  if (!need_ssa_update_p (cfun))
+    return;
+
+  timevar_push (TV_TREE_SSA_INCREMENTAL);
+
+  if (!update_ssa_initialized_fn)
+    init_update_ssa (cfun);
+  gcc_assert (update_ssa_initialized_fn == cfun);
+
+  blocks_with_phis_to_rewrite = BITMAP_ALLOC (NULL);
+  if (!phis_to_rewrite)
+    phis_to_rewrite = VEC_alloc (gimple_vec, heap, last_basic_block);
+  blocks_to_update = BITMAP_ALLOC (NULL);
+
+  /* Ensure that the dominance information is up-to-date.  */
+  calculate_dominance_info (CDI_DOMINATORS);
+
+  /* Only one update flag should be set.  */
+  gcc_assert (update_flags == TODO_update_ssa
+              || update_flags == TODO_update_ssa_no_phi
+	      || update_flags == TODO_update_ssa_full_phi
+	      || update_flags == TODO_update_ssa_only_virtuals);
+
+  /* If we only need to update virtuals, remove all the mappings for
+     real names before proceeding.  The caller is responsible for
+     having dealt with the name mappings before calling update_ssa.  */
+  if (update_flags == TODO_update_ssa_only_virtuals)
+    {
+      sbitmap_zero (old_ssa_names);
+      sbitmap_zero (new_ssa_names);
+      htab_empty (repl_tbl);
+    }
+
+  insert_phi_p = (update_flags != TODO_update_ssa_no_phi);
+
+  if (insert_phi_p)
+    {
+      /* If the caller requested PHI nodes to be added, initialize
+	 live-in information data structures (DEF_BLOCKS).  */
+
+      /* For each SSA name N, the DEF_BLOCKS table describes where the
+	 name is defined, which blocks have PHI nodes for N, and which
+	 blocks have uses of N (i.e., N is live-on-entry in those
+	 blocks).  */
+      def_blocks = htab_create (num_ssa_names, def_blocks_hash,
+				def_blocks_eq, def_blocks_free);
+    }
+  else
+    {
+      def_blocks = NULL;
+    }
+
+  /* Heuristic to avoid massive slow downs when the replacement
+     mappings include lots of virtual names.  */
+  if (insert_phi_p && switch_virtuals_to_full_rewrite_p ())
+    switch_virtuals_to_full_rewrite ();
+
+  /* If there are names defined in the replacement table, prepare
+     definition and use sites for all the names in NEW_SSA_NAMES and
+     OLD_SSA_NAMES.  */
+  if (sbitmap_first_set_bit (new_ssa_names) >= 0)
+    {
+      prepare_names_to_update (insert_phi_p);
+
+      /* If all the names in NEW_SSA_NAMES had been marked for
+	 removal, and there are no symbols to rename, then there's
+	 nothing else to do.  */
+      if (sbitmap_first_set_bit (new_ssa_names) < 0
+	  && bitmap_empty_p (SYMS_TO_RENAME (cfun)))
+	goto done;
+    }
+
+  /* Next, determine the block at which to start the renaming process.  */
+  if (!bitmap_empty_p (SYMS_TO_RENAME (cfun)))
+    {
+      /* If we have to rename some symbols from scratch, we need to
+	 start the process at the root of the CFG.  FIXME, it should
+	 be possible to determine the nearest block that had a
+	 definition for each of the symbols that are marked for
+	 updating.  For now this seems more work than it's worth.  */
+      start_bb = ENTRY_BLOCK_PTR;
+
+      /* Traverse the CFG looking for existing definitions and uses of
+	 symbols in SYMS_TO_RENAME.  Mark interesting blocks and
+	 statements and set local live-in information for the PHI
+	 placement heuristics.  */
+      prepare_block_for_update (start_bb, insert_phi_p);
+    }
+  else
+    {
+      /* Otherwise, the entry block to the region is the nearest
+	 common dominator for the blocks in BLOCKS.  */
+      start_bb = nearest_common_dominator_for_set (CDI_DOMINATORS,
+						   blocks_to_update);
+    }
+
+  /* If requested, insert PHI nodes at the iterated dominance frontier
+     of every block, creating new definitions for names in OLD_SSA_NAMES
+     and for symbols in SYMS_TO_RENAME.  */
+  if (insert_phi_p)
+    {
+      bitmap_head *dfs;
+
+      /* If the caller requested PHI nodes to be added, compute
+	 dominance frontiers.  */
+      dfs = XNEWVEC (bitmap_head, last_basic_block);
+      FOR_EACH_BB (bb)
+	bitmap_initialize (&dfs[bb->index], &bitmap_default_obstack);
+      compute_dominance_frontiers (dfs);
+
+      if (sbitmap_first_set_bit (old_ssa_names) >= 0)
+	{
+	  sbitmap_iterator sbi;
+
+	  /* insert_update_phi_nodes_for will call add_new_name_mapping
+	     when inserting new PHI nodes, so the set OLD_SSA_NAMES
+	     will grow while we are traversing it (but it will not
+	     gain any new members).  Copy OLD_SSA_NAMES to a temporary
+	     for traversal.  */
+	  sbitmap tmp = sbitmap_alloc (old_ssa_names->n_bits);
+	  sbitmap_copy (tmp, old_ssa_names);
+	  EXECUTE_IF_SET_IN_SBITMAP (tmp, 0, i, sbi)
+	    insert_updated_phi_nodes_for (ssa_name (i), dfs, blocks_to_update,
+	                                  update_flags);
+	  sbitmap_free (tmp);
+	}
+
+      EXECUTE_IF_SET_IN_BITMAP (SYMS_TO_RENAME (cfun), 0, i, bi)
+	insert_updated_phi_nodes_for (referenced_var (i), dfs, blocks_to_update,
+	                              update_flags);
+
+      FOR_EACH_BB (bb)
+	bitmap_clear (&dfs[bb->index]);
+      free (dfs);
+
+      /* Insertion of PHI nodes may have added blocks to the region.
+	 We need to re-compute START_BB to include the newly added
+	 blocks.  */
+      if (start_bb != ENTRY_BLOCK_PTR)
+	start_bb = nearest_common_dominator_for_set (CDI_DOMINATORS,
+						     blocks_to_update);
+    }
+
+  /* Reset the current definition for name and symbol before renaming
+     the sub-graph.  */
+  EXECUTE_IF_SET_IN_SBITMAP (old_ssa_names, 0, i, sbi)
+    set_current_def (ssa_name (i), NULL_TREE);
+
+  EXECUTE_IF_SET_IN_BITMAP (SYMS_TO_RENAME (cfun), 0, i, bi)
+    set_current_def (referenced_var (i), NULL_TREE);
+
+  /* Now start the renaming process at START_BB.  */
+  interesting_blocks = sbitmap_alloc (last_basic_block);
+  sbitmap_zero (interesting_blocks);
+  EXECUTE_IF_SET_IN_BITMAP (blocks_to_update, 0, i, bi)
+    SET_BIT (interesting_blocks, i);
+
+  rewrite_blocks (start_bb, REWRITE_UPDATE);
+
+  sbitmap_free (interesting_blocks);
+
+  /* Debugging dumps.  */
+  if (dump_file)
+    {
+      int c;
+      unsigned i;
+
+      dump_update_ssa (dump_file);
+
+      fprintf (dump_file, "Incremental SSA update started at block: %d\n\n",
+	       start_bb->index);
+
+      c = 0;
+      EXECUTE_IF_SET_IN_BITMAP (blocks_to_update, 0, i, bi)
+	c++;
+      fprintf (dump_file, "Number of blocks in CFG: %d\n", last_basic_block);
+      fprintf (dump_file, "Number of blocks to update: %d (%3.0f%%)\n\n",
+	       c, PERCENT (c, last_basic_block));
+
+      if (dump_flags & TDF_DETAILS)
+	{
+	  fprintf (dump_file, "Affected blocks: ");
+	  EXECUTE_IF_SET_IN_BITMAP (blocks_to_update, 0, i, bi)
+	    fprintf (dump_file, "%u ", i);
+	  fprintf (dump_file, "\n");
+	}
+
+      fprintf (dump_file, "\n\n");
+    }
+
+  /* Free allocated memory.  */
+done:
+  delete_update_ssa ();
+
+  timevar_pop (TV_TREE_SSA_INCREMENTAL);
 }
 
 EXTERN_C_END

@@ -27,10 +27,10 @@ along with GCC; see the file COPYING3.  If not see
 
 #ifdef __cplusplus
 #define EXTERN_C_START extern "C" {
-#define EXTERN_C_END }
+#define EXTERN_C_END  }
 #else
-#define EXTERN_C_START
-#define EXTERN_C_END
+#define EXTERN_C_START  /* nothing */
+#define EXTERN_C_END    /* nothing */
 #endif
 
 /* We must include stdarg.h before stdio.h.  */
@@ -192,10 +192,6 @@ extern int fprintf_unlocked (FILE *, const char *, ...);
 
 #include <errno.h>
 
-#if !defined (errno) && defined (HAVE_DECL_ERRNO) && !HAVE_DECL_ERRNO
-extern int errno;
-#endif
-
 #ifdef __cplusplus
 # include <cstring>
 #endif
@@ -217,9 +213,7 @@ extern int errno;
 # endif
 #endif
 
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
+#include <stdlib.h>
 
 /* If we don't have an overriding definition, set SUCCESS_EXIT_CODE and
    FATAL_EXIT_CODE to EXIT_SUCCESS and EXIT_FAILURE respectively,
@@ -252,9 +246,7 @@ extern int errno;
 # undef PREFETCH
 #endif
 
-#if HAVE_LIMITS_H
-# include <limits.h>
-#endif
+#include <limits.h>
 
 /* Get definitions of HOST_WIDE_INT and HOST_WIDEST_INT.  */
 #include "hwint.h"
@@ -396,60 +388,8 @@ extern int errno;
    here.  These checks will be in the undefined state while configure
    is running so be careful to test "defined (HAVE_DECL_*)".  */
 
-#if defined (HAVE_DECL_ATOF) && !HAVE_DECL_ATOF
-extern double atof (const char *);
-#endif
-
-#if defined (HAVE_DECL_ATOL) && !HAVE_DECL_ATOL
-extern long atol (const char *);
-#endif
-
-#if defined (HAVE_DECL_FREE) && !HAVE_DECL_FREE
-extern void free (void *);
-#endif
-
-#if defined (HAVE_DECL_GETCWD) && !HAVE_DECL_GETCWD
-extern char *getcwd (char *, size_t);
-#endif
-
-#if defined (HAVE_DECL_GETENV) && !HAVE_DECL_GETENV
-extern char *getenv (const char *);
-#endif
-
-#if defined (HAVE_DECL_GETOPT) && !HAVE_DECL_GETOPT
-extern int getopt (int, char * const *, const char *);
-#endif
-
-#if defined (HAVE_DECL_GETPAGESIZE) && !HAVE_DECL_GETPAGESIZE
-extern int getpagesize (void);
-#endif
-
-#if defined (HAVE_DECL_GETWD) && !HAVE_DECL_GETWD
-extern char *getwd (char *);
-#endif
-
-#if defined (HAVE_DECL_SBRK) && !HAVE_DECL_SBRK
-extern void *sbrk (int);
-#endif
-
-#if defined (HAVE_DECL_STRSTR) && !HAVE_DECL_STRSTR
-extern char *strstr (const char *, const char *);
-#endif
-
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
-#endif
-
-#if defined (HAVE_DECL_MALLOC) && !HAVE_DECL_MALLOC
-extern void *malloc (size_t);
-#endif
-
-#if defined (HAVE_DECL_CALLOC) && !HAVE_DECL_CALLOC
-extern void *calloc (size_t, size_t);
-#endif
-
-#if defined (HAVE_DECL_REALLOC) && !HAVE_DECL_REALLOC
-extern void *realloc (void *, size_t);
 #endif
 
 #ifdef HAVE_STDINT_H
@@ -485,18 +425,6 @@ struct rlimit;
 extern int setrlimit (int, const struct rlimit *);
 #  endif
 # endif
-#endif
-
-#if defined (HAVE_DECL_ABORT) && !HAVE_DECL_ABORT
-extern void abort (void);
-#endif
-
-#if defined (HAVE_DECL_SNPRINTF) && !HAVE_DECL_SNPRINTF
-extern int snprintf (char *, size_t, const char *, ...);
-#endif
-
-#if defined (HAVE_DECL_VSNPRINTF) && !HAVE_DECL_VSNPRINTF
-extern int vsnprintf(char *, size_t, const char *, va_list);
 #endif
 
 /* 1 if we have C99 designated initializers.  */
@@ -611,10 +539,6 @@ extern int vsnprintf(char *, size_t, const char *, va_list);
 #define ENUM_BITFIELD(TYPE) __extension__ enum TYPE
 #else
 #define ENUM_BITFIELD(TYPE) unsigned int
-#endif
-
-#ifndef offsetof
-#define offsetof(TYPE, MEMBER)	((size_t) &((TYPE *) 0)->MEMBER)
 #endif
 
 /* Various error reporting routines want to use __FUNCTION__.  */

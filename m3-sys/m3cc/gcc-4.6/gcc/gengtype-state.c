@@ -34,7 +34,6 @@
 #include "obstack.h"
 #include "gengtype.h"
 
-
 EXTERN_C_START
 
 /* Gives the file location of a type, if any.  */

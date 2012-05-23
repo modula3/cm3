@@ -174,6 +174,7 @@ extern eni_weights eni_time_weights;
 /* Function prototypes.  */
 
 extern tree copy_tree_body_r (tree *, int *, void *);
+extern void insert_decl_map (copy_body_data *, tree, tree);
 
 unsigned int optimize_inline_calls (tree);
 tree maybe_inline_call_in_expr (tree);

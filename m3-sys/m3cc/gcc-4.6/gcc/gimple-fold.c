@@ -561,6 +561,96 @@ maybe_fold_stmt_addition (location_t loc, tree res_type, tree op0, tree op1)
 static tree
 maybe_fold_reference (tree expr, bool is_lhs)
 {
+  tree *t = &expr;
+  tree result;
+
+  if (!is_lhs
+      && (result = fold_const_aggregate_ref (expr))
+      && is_gimple_min_invariant (result))
+    return result;
+
+  /* ???  We might want to open-code the relevant remaining cases
+     to avoid using the generic fold.  */
+  if (handled_component_p (*t)
+      && CONSTANT_CLASS_P (TREE_OPERAND (*t, 0)))
+    {
+      tree tem = fold (*t);
+      if (tem != *t)
+	return tem;
+    }
+
+  while (handled_component_p (*t))
+    t = &TREE_OPERAND (*t, 0);
+
+  /* Fold back MEM_REFs to reference trees.  */
+  if (TREE_CODE (*t) == MEM_REF
+      && TREE_CODE (TREE_OPERAND (*t, 0)) == ADDR_EXPR
+      && integer_zerop (TREE_OPERAND (*t, 1))
+      && (TREE_THIS_VOLATILE (*t)
+	  == TREE_THIS_VOLATILE (TREE_OPERAND (TREE_OPERAND (*t, 0), 0)))
+      && !TYPE_REF_CAN_ALIAS_ALL (TREE_TYPE (TREE_OPERAND (*t, 1)))
+      && (TYPE_MAIN_VARIANT (TREE_TYPE (*t))
+	  == TYPE_MAIN_VARIANT (TREE_TYPE (TREE_TYPE (TREE_OPERAND (*t, 1)))))
+      /* We have to look out here to not drop a required conversion
+	 from the rhs to the lhs if is_lhs, but we don't have the
+	 rhs here to verify that.  Thus require strict type
+	 compatibility.  */
+      && types_compatible_p (TREE_TYPE (*t),
+			     TREE_TYPE (TREE_OPERAND
+					  (TREE_OPERAND (*t, 0), 0))))
+    {
+      tree tem;
+      *t = TREE_OPERAND (TREE_OPERAND (*t, 0), 0);
+      tem = maybe_fold_reference (expr, is_lhs);
+      if (tem)
+	return tem;
+      return expr;
+    }
+  /* Canonicalize MEM_REFs invariant address operand.  */
+  else if (TREE_CODE (*t) == MEM_REF
+	   && !is_gimple_mem_ref_addr (TREE_OPERAND (*t, 0)))
+    {
+      bool volatile_p = TREE_THIS_VOLATILE (*t);
+      tree tem = fold_binary (MEM_REF, TREE_TYPE (*t),
+			      TREE_OPERAND (*t, 0),
+			      TREE_OPERAND (*t, 1));
+      if (tem)
+	{
+	  TREE_THIS_VOLATILE (tem) = volatile_p;
+	  *t = tem;
+	  tem = maybe_fold_reference (expr, is_lhs);
+	  if (tem)
+	    return tem;
+	  return expr;
+	}
+    }
+  else if (TREE_CODE (*t) == TARGET_MEM_REF)
+    {
+      tree tem = maybe_fold_tmr (*t);
+      if (tem)
+	{
+	  *t = tem;
+	  tem = maybe_fold_reference (expr, is_lhs);
+	  if (tem)
+	    return tem;
+	  return expr;
+	}
+    }
+  else if (!is_lhs
+	   && DECL_P (*t))
+    {
+      tree tem = get_symbol_constant_value (*t);
+      if (tem
+	  && useless_type_conversion_p (TREE_TYPE (*t), TREE_TYPE (tem)))
+	{
+	  *t = unshare_expr (tem);
+	  tem = maybe_fold_reference (expr, is_lhs);
+	  if (tem)
+	    return tem;
+	  return expr;
+	}
+    }
+
   return NULL_TREE;
 }
 
@@ -817,6 +907,160 @@ fold_gimple_cond (gimple stmt)
   return false;
 }
 
+/* Convert EXPR into a GIMPLE value suitable for substitution on the
+   RHS of an assignment.  Insert the necessary statements before
+   iterator *SI_P.  The statement at *SI_P, which must be a GIMPLE_CALL
+   is replaced.  If the call is expected to produces a result, then it
+   is replaced by an assignment of the new RHS to the result variable.
+   If the result is to be ignored, then the call is replaced by a
+   GIMPLE_NOP.  A proper VDEF chain is retained by making the first
+   VUSE and the last VDEF of the whole sequence be the same as the replaced
+   statement and using new SSA names for stores in between.  */
+
+void
+gimplify_and_update_call_from_tree (gimple_stmt_iterator *si_p, tree expr)
+{
+  tree lhs;
+  tree tmp = NULL_TREE;  /* Silence warning.  */
+  gimple stmt, new_stmt;
+  gimple_stmt_iterator i;
+  gimple_seq stmts = gimple_seq_alloc();
+  struct gimplify_ctx gctx;
+  gimple last = NULL;
+  gimple laststore = NULL;
+  tree reaching_vuse;
+
+  stmt = gsi_stmt (*si_p);
+
+  gcc_assert (is_gimple_call (stmt));
+
+  lhs = gimple_call_lhs (stmt);
+  reaching_vuse = gimple_vuse (stmt);
+
+  push_gimplify_context (&gctx);
+
+  if (lhs == NULL_TREE)
+    {
+      gimplify_and_add (expr, &stmts);
+      /* We can end up with folding a memcpy of an empty class assignment
+	 which gets optimized away by C++ gimplification.  */
+      if (gimple_seq_empty_p (stmts))
+	{
+	  pop_gimplify_context (NULL);
+	  if (gimple_in_ssa_p (cfun))
+	    {
+	      unlink_stmt_vdef (stmt);
+	      release_defs (stmt);
+	    }
+	  gsi_remove (si_p, true);
+	  return;
+	}
+    }
+  else
+    tmp = get_initialized_tmp_var (expr, &stmts, NULL);
+
+  pop_gimplify_context (NULL);
+
+  if (gimple_has_location (stmt))
+    annotate_all_with_location (stmts, gimple_location (stmt));
+
+  /* The replacement can expose previously unreferenced variables.  */
+  for (i = gsi_start (stmts); !gsi_end_p (i); gsi_next (&i))
+    {
+      if (last)
+	{
+	  gsi_insert_before (si_p, last, GSI_NEW_STMT);
+	  gsi_next (si_p);
+	}
+      new_stmt = gsi_stmt (i);
+      if (gimple_in_ssa_p (cfun))
+	{
+	  find_new_referenced_vars (new_stmt);
+	  mark_symbols_for_renaming (new_stmt);
+	}
+      /* If the new statement has a VUSE, update it with exact SSA name we
+         know will reach this one.  */
+      if (gimple_vuse (new_stmt))
+	{
+	  /* If we've also seen a previous store create a new VDEF for
+	     the latter one, and make that the new reaching VUSE.  */
+	  if (laststore)
+	    {
+	      reaching_vuse = make_ssa_name (gimple_vop (cfun), laststore);
+	      gimple_set_vdef (laststore, reaching_vuse);
+	      update_stmt (laststore);
+	      laststore = NULL;
+	    }
+	  gimple_set_vuse (new_stmt, reaching_vuse);
+	  gimple_set_modified (new_stmt, true);
+	}
+      if (gimple_assign_single_p (new_stmt)
+	  && !is_gimple_reg (gimple_assign_lhs (new_stmt)))
+	{
+	  laststore = new_stmt;
+	}
+      last = new_stmt;
+    }
+
+  if (lhs == NULL_TREE)
+    {
+      /* If we replace a call without LHS that has a VDEF and our new
+         sequence ends with a store we must make that store have the same
+	 vdef in order not to break the sequencing.  This can happen
+	 for instance when folding memcpy calls into assignments.  */
+      if (gimple_vdef (stmt) && laststore)
+	{
+	  gimple_set_vdef (laststore, gimple_vdef (stmt));
+	  if (TREE_CODE (gimple_vdef (stmt)) == SSA_NAME)
+	    SSA_NAME_DEF_STMT (gimple_vdef (stmt)) = laststore;
+	  update_stmt (laststore);
+	}
+      else if (gimple_in_ssa_p (cfun))
+	{
+	  unlink_stmt_vdef (stmt);
+	  release_defs (stmt);
+	}
+      new_stmt = last;
+    }
+  else
+    {
+      if (last)
+	{
+	  gsi_insert_before (si_p, last, GSI_NEW_STMT);
+	  gsi_next (si_p);
+	}
+      if (laststore && is_gimple_reg (lhs))
+	{
+	  gimple_set_vdef (laststore, gimple_vdef (stmt));
+	  update_stmt (laststore);
+	  if (TREE_CODE (gimple_vdef (stmt)) == SSA_NAME)
+	    SSA_NAME_DEF_STMT (gimple_vdef (stmt)) = laststore;
+	  laststore = NULL;
+	}
+      else if (laststore)
+	{
+	  reaching_vuse = make_ssa_name (gimple_vop (cfun), laststore);
+	  gimple_set_vdef (laststore, reaching_vuse);
+	  update_stmt (laststore);
+	  laststore = NULL;
+	}
+      new_stmt = gimple_build_assign (lhs, tmp);
+      if (!is_gimple_reg (tmp))
+	gimple_set_vuse (new_stmt, reaching_vuse);
+      if (!is_gimple_reg (lhs))
+	{
+	  gimple_set_vdef (new_stmt, gimple_vdef (stmt));
+	  if (TREE_CODE (gimple_vdef (stmt)) == SSA_NAME)
+	    SSA_NAME_DEF_STMT (gimple_vdef (stmt)) = new_stmt;
+	}
+      else if (reaching_vuse == gimple_vuse (stmt))
+	unlink_stmt_vdef (stmt);
+    }
+
+  gimple_set_location (new_stmt, gimple_location (stmt));
+  gsi_replace (si_p, new_stmt, false);
+}
+
 /* Return the string length, maximum string length or maximum value of
    ARG in LENGTH.
    If ARG is an SSA name variable, follow its use-def chains.  If LENGTH
@@ -1045,9 +1289,34 @@ gimple_fold_builtin (gimple stmt)
       break;
 
     case BUILT_IN_STRCPY:
+      if (val[1] && is_gimple_val (val[1]) && nargs == 2)
+	result = fold_builtin_strcpy (loc, callee,
+                                      gimple_call_arg (stmt, 0),
+                                      gimple_call_arg (stmt, 1),
+				      val[1]);
+      break;
+
     case BUILT_IN_STRNCPY:
+      if (val[1] && is_gimple_val (val[1]) && nargs == 3)
+	result = fold_builtin_strncpy (loc, callee,
+                                       gimple_call_arg (stmt, 0),
+                                       gimple_call_arg (stmt, 1),
+                                       gimple_call_arg (stmt, 2),
+				       val[1]);
+      break;
+
     case BUILT_IN_FPUTS:
+      if (nargs == 2)
+	result = fold_builtin_fputs (loc, gimple_call_arg (stmt, 0),
+				     gimple_call_arg (stmt, 1),
+				     ignore, false, val[0]);
+      break;
+
     case BUILT_IN_FPUTS_UNLOCKED:
+      if (nargs == 2)
+	result = fold_builtin_fputs (loc, gimple_call_arg (stmt, 0),
+				     gimple_call_arg (stmt, 1),
+				     ignore, true, val[0]);
       break;
 
     case BUILT_IN_MEMCPY_CHK:
@@ -1166,6 +1435,23 @@ gimple_adjust_this_by_delta (gimple_stmt_iterator *gsi, tree delta)
 bool
 gimple_fold_call (gimple_stmt_iterator *gsi, bool inplace)
 {
+  gimple stmt = gsi_stmt (*gsi);
+
+  tree callee = gimple_call_fndecl (stmt);
+
+  /* Check for builtins that CCP can handle using information not
+     available in the generic fold routines.  */
+  if (!inplace && callee && DECL_BUILT_IN (callee))
+    {
+      tree result = gimple_fold_builtin (stmt);
+
+      if (result)
+	{
+          if (!update_call_from_tree (gsi, result))
+	    gimplify_and_update_call_from_tree (gsi, result);
+	  return true;
+	}
+    }
   return false;
 }
 

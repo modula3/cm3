@@ -94,6 +94,7 @@ The callgraph:
 #include "gimple.h"
 #include "tree-dump.h"
 #include "tree-flow.h"
+#include "value-prof.h"
 #include "except.h"
 #include "diagnostic-core.h"
 #include "rtl.h"
@@ -113,6 +114,10 @@ const char * const ld_plugin_symbol_resolution_names[]=
   "resolved_exec",
   "resolved_dyn"
 };
+
+static void cgraph_node_remove_callers (struct cgraph_node *node);
+static inline void cgraph_edge_remove_caller (struct cgraph_edge *e);
+static inline void cgraph_edge_remove_callee (struct cgraph_edge *e);
 
 /* Hash table used to convert declarations into nodes.  */
 static GTY((param_is (struct cgraph_node))) htab_t cgraph_hash;
@@ -236,8 +241,6 @@ cgraph_remove_edge_removal_hook (struct cgraph_edge_hook_list *entry)
 {
   struct cgraph_edge_hook_list **ptr = &first_cgraph_edge_removal_hook;
 
-  gcc_unreachable ();
-
   while (*ptr != entry)
     ptr = &(*ptr)->next;
   *ptr = entry->next;
@@ -278,8 +281,6 @@ void
 cgraph_remove_node_removal_hook (struct cgraph_node_hook_list *entry)
 {
   struct cgraph_node_hook_list **ptr = &first_cgraph_node_removal_hook;
-
-  gcc_unreachable ();
 
   while (*ptr != entry)
     ptr = &(*ptr)->next;
@@ -322,8 +323,6 @@ cgraph_remove_function_insertion_hook (struct cgraph_node_hook_list *entry)
 {
   struct cgraph_node_hook_list **ptr = &first_cgraph_function_insertion_hook;
 
-  gcc_unreachable ();
-
   while (*ptr != entry)
     ptr = &(*ptr)->next;
   *ptr = entry->next;
@@ -364,8 +363,6 @@ void
 cgraph_remove_edge_duplication_hook (struct cgraph_2edge_hook_list *entry)
 {
   struct cgraph_2edge_hook_list **ptr = &first_cgraph_edge_duplicated_hook;
-
-  gcc_unreachable ();
 
   while (*ptr != entry)
     ptr = &(*ptr)->next;
@@ -408,8 +405,6 @@ void
 cgraph_remove_node_duplication_hook (struct cgraph_2node_hook_list *entry)
 {
   struct cgraph_2node_hook_list **ptr = &first_cgraph_node_duplicated_hook;
-
-  gcc_unreachable ();
 
   while (*ptr != entry)
     ptr = &(*ptr)->next;
@@ -490,10 +485,6 @@ cgraph_create_node (void)
   ipa_empty_ref_list (&node->ref_list);
   cgraph_nodes = node;
   cgraph_n_nodes++;
-  
-  /* node->needed = true;          /  * Modula-3? */
-  /* node->reachable = true;       /  * Modula-3? */
-
   return node;
 }
 
@@ -877,7 +868,7 @@ cgraph_set_call_stmt (struct cgraph_edge *e, gimple new_stmt)
     }
 
   push_cfun (DECL_STRUCT_FUNCTION (e->caller->decl));
-  e->can_throw_external = true;
+  e->can_throw_external = stmt_can_throw_external (new_stmt);
   pop_cfun ();
   if (e->caller->call_site_hash)
     cgraph_add_edge_to_call_site_hash (e);
@@ -1045,7 +1036,8 @@ cgraph_create_edge_1 (struct cgraph_node *caller, struct cgraph_node *callee,
 
   edge->call_stmt = call_stmt;
   push_cfun (DECL_STRUCT_FUNCTION (caller->decl));
-  edge->can_throw_external = !!call_stmt;
+  edge->can_throw_external
+    = call_stmt ? stmt_can_throw_external (call_stmt) : false;
   pop_cfun ();
   edge->call_stmt_cannot_inline_p =
     (call_stmt ? gimple_call_cannot_inline_p (call_stmt) : false);
@@ -1139,7 +1131,6 @@ cgraph_edge_remove_callee (struct cgraph_edge *e)
 static inline void
 cgraph_edge_remove_caller (struct cgraph_edge *e)
 {
-  gcc_unreachable ();
   if (e->prev_callee)
     e->prev_callee->next_callee = e->next_callee;
   if (e->next_callee)
@@ -1176,7 +1167,6 @@ cgraph_free_edge (struct cgraph_edge *e)
 void
 cgraph_remove_edge (struct cgraph_edge *e)
 {
-  gcc_unreachable ();
   /* Call all edge removal hooks.  */
   cgraph_call_edge_removal_hooks (e);
 
@@ -1395,8 +1385,6 @@ cgraph_node_remove_callers (struct cgraph_node *node)
 {
   struct cgraph_edge *e, *f;
 
-  gcc_unreachable ();
-
   /* It is sufficient to remove the edges from the lists of callees of
      the callers.  The caller list of the node can be zapped with one
      assignment.  */
@@ -1433,6 +1421,8 @@ cgraph_release_function_body (struct cgraph_node *node)
 	  gcc_assert (dom_computed[1] == DOM_NONE);
 	  clear_edges ();
 	}
+      if (cfun->value_histograms)
+	free_histograms ();
       gcc_assert (!current_loops);
       pop_cfun();
       gimple_set_body (node->decl, NULL);
@@ -1458,8 +1448,6 @@ cgraph_remove_same_body_alias (struct cgraph_node *node)
 {
   void **slot;
   int uid = node->uid;
-
-  gcc_unreachable ();
 
   gcc_assert (node->same_body_alias);
   if (node->previous)
@@ -1501,11 +1489,11 @@ cgraph_remove_node (struct cgraph_node *node)
   struct cgraph_node *n;
   int uid = node->uid;
 
-  gcc_unreachable ();
-
   cgraph_call_node_removal_hooks (node);
   cgraph_node_remove_callers (node);
   cgraph_node_remove_callees (node);
+  ipa_remove_all_references (&node->ref_list);
+  ipa_remove_all_refering (&node->ref_list);
   VEC_free (ipa_opt_pass, heap,
             node->ipa_transforms_to_apply);
 
@@ -1717,9 +1705,6 @@ void
 cgraph_remove_node_and_inline_clones (struct cgraph_node *node)
 {
   struct cgraph_edge *e, *next;
-
-  gcc_unreachable ();
-
   for (e = node->callees; e; e = next)
     {
       next = e->next_callee;
@@ -1972,6 +1957,10 @@ dump_cgraph_node (FILE *f, struct cgraph_node *node)
 	fprintf(f, "(can throw external) ");
     }
   fprintf (f, "\n");
+  fprintf (f, "  References: ");
+  ipa_dump_references (f, &node->ref_list);
+  fprintf (f, "  Refering this function: ");
+  ipa_dump_refering (f, &node->ref_list);
 
   for (edge = node->indirect_calls; edge; edge = edge->next_callee)
     indirect_calls_count++;
@@ -2238,6 +2227,7 @@ cgraph_clone_node (struct cgraph_node *n, tree decl, gcov_type count, int freq,
   for (e = n->indirect_calls; e; e = e->next_callee)
     cgraph_clone_edge (e, new_node, e->call_stmt, e->lto_stmt_uid,
 		       count_scale, freq, loop_nest, update_original);
+  ipa_clone_references (new_node, NULL, &n->ref_list);
 
   new_node->next_sibling_clone = n->clones;
   if (n->clones)
@@ -2290,6 +2280,113 @@ clone_function_name (tree decl, const char *suffix)
 #endif
   ASM_FORMAT_PRIVATE_NAME (tmp_name, prefix, clone_fn_id_num++);
   return get_identifier (tmp_name);
+}
+
+/* Create callgraph node clone with new declaration.  The actual body will
+   be copied later at compilation stage.
+
+   TODO: after merging in ipa-sra use function call notes instead of args_to_skip
+   bitmap interface.
+   */
+struct cgraph_node *
+cgraph_create_virtual_clone (struct cgraph_node *old_node,
+			     VEC(cgraph_edge_p,heap) *redirect_callers,
+			     VEC(ipa_replace_map_p,gc) *tree_map,
+			     bitmap args_to_skip,
+			     const char * suffix)
+{
+  tree old_decl = old_node->decl;
+  struct cgraph_node *new_node = NULL;
+  tree new_decl;
+  size_t i;
+  struct ipa_replace_map *map;
+
+  if (!flag_wpa)
+    gcc_checking_assert  (tree_versionable_function_p (old_decl));
+
+  gcc_assert (old_node->local.can_change_signature || !args_to_skip);
+
+  /* Make a new FUNCTION_DECL tree node */
+  if (!args_to_skip)
+    new_decl = copy_node (old_decl);
+  else
+    new_decl = build_function_decl_skip_args (old_decl, args_to_skip);
+  DECL_STRUCT_FUNCTION (new_decl) = NULL;
+
+  /* Generate a new name for the new version. */
+  DECL_NAME (new_decl) = clone_function_name (old_decl, suffix);
+  SET_DECL_ASSEMBLER_NAME (new_decl, DECL_NAME (new_decl));
+  SET_DECL_RTL (new_decl, NULL);
+
+  new_node = cgraph_clone_node (old_node, new_decl, old_node->count,
+				CGRAPH_FREQ_BASE, 0, false,
+				redirect_callers);
+  /* Update the properties.
+     Make clone visible only within this translation unit.  Make sure
+     that is not weak also.
+     ??? We cannot use COMDAT linkage because there is no
+     ABI support for this.  */
+  DECL_EXTERNAL (new_node->decl) = 0;
+  if (DECL_ONE_ONLY (old_decl))
+    DECL_SECTION_NAME (new_node->decl) = NULL;
+  DECL_COMDAT_GROUP (new_node->decl) = 0;
+  TREE_PUBLIC (new_node->decl) = 0;
+  DECL_COMDAT (new_node->decl) = 0;
+  DECL_WEAK (new_node->decl) = 0;
+  new_node->clone.tree_map = tree_map;
+  new_node->clone.args_to_skip = args_to_skip;
+  FOR_EACH_VEC_ELT (ipa_replace_map_p, tree_map, i, map)
+    {
+      tree var = map->new_tree;
+
+      STRIP_NOPS (var);
+      if (TREE_CODE (var) != ADDR_EXPR)
+	continue;
+      var = get_base_var (var);
+      if (!var)
+	continue;
+
+      /* Record references of the future statement initializing the constant
+	 argument.  */
+      if (TREE_CODE (var) == FUNCTION_DECL)
+	ipa_record_reference (new_node, NULL, cgraph_node (var),
+			      NULL, IPA_REF_ADDR, NULL);
+      else if (TREE_CODE (var) == VAR_DECL)
+	ipa_record_reference (new_node, NULL, NULL, varpool_node (var),
+			      IPA_REF_ADDR, NULL);
+    }
+  if (!args_to_skip)
+    new_node->clone.combined_args_to_skip = old_node->clone.combined_args_to_skip;
+  else if (old_node->clone.combined_args_to_skip)
+    {
+      int newi = 0, oldi = 0;
+      tree arg;
+      bitmap new_args_to_skip = BITMAP_GGC_ALLOC ();
+      struct cgraph_node *orig_node;
+      for (orig_node = old_node; orig_node->clone_of; orig_node = orig_node->clone_of)
+        ;
+      for (arg = DECL_ARGUMENTS (orig_node->decl); arg; arg = DECL_CHAIN (arg), oldi++)
+	{
+	  if (bitmap_bit_p (old_node->clone.combined_args_to_skip, oldi))
+	    {
+	      bitmap_set_bit (new_args_to_skip, oldi);
+	      continue;
+	    }
+	  if (bitmap_bit_p (args_to_skip, newi))
+	    bitmap_set_bit (new_args_to_skip, oldi);
+	  newi++;
+	}
+      new_node->clone.combined_args_to_skip = new_args_to_skip;
+    }
+  else
+    new_node->clone.combined_args_to_skip = args_to_skip;
+  new_node->local.externally_visible = 0;
+  new_node->local.local = 1;
+  new_node->lowered = true;
+  new_node->reachable = true;
+
+
+  return new_node;
 }
 
 /* NODE is no longer nested function; update cgraph accordingly.  */
@@ -2370,8 +2467,6 @@ cgraph_add_new_function (tree fndecl, bool lowered)
 
       case CGRAPH_STATE_IPA:
       case CGRAPH_STATE_IPA_SSA:
-        gcc_unreachable ();
-        
       case CGRAPH_STATE_EXPANSION:
 	/* Bring the function into finalized state and enqueue for later
 	   analyzing and compilation.  */
@@ -2386,10 +2481,8 @@ cgraph_add_new_function (tree fndecl, bool lowered)
 	    gimple_register_cfg_hooks ();
 	    tree_lowering_passes (fndecl);
 	    bitmap_obstack_initialize (NULL);
-#if 0 /* Modula-3 */
 	    if (!gimple_in_ssa_p (DECL_STRUCT_FUNCTION (fndecl)))
 	      execute_pass_list (pass_early_local_passes.pass.sub);
-#endif
 	    bitmap_obstack_release (NULL);
 	    pop_cfun ();
 	    current_function_decl = NULL;
@@ -2411,11 +2504,9 @@ cgraph_add_new_function (tree fndecl, bool lowered)
 	if (!lowered)
           tree_lowering_passes (fndecl);
 	bitmap_obstack_initialize (NULL);
-#if 0 /* Modula-3 */
 	if (!gimple_in_ssa_p (DECL_STRUCT_FUNCTION (fndecl)))
 	  execute_pass_list (pass_early_local_passes.pass.sub);
-#endif
-        bitmap_obstack_release (NULL);
+	bitmap_obstack_release (NULL);
 	tree_rest_of_compilation (fndecl);
 	pop_cfun ();
 	current_function_decl = NULL;

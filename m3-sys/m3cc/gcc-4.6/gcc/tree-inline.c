@@ -46,6 +46,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "except.h"
 #include "debug.h"
 #include "pointer-set.h"
+#include "ipa-prop.h"
+#include "value-prof.h"
 #include "tree-pass.h"
 #include "target.h"
 #include "integrate.h"
@@ -1505,9 +1507,6 @@ static basic_block
 copy_bb (copy_body_data *id, basic_block bb, int frequency_scale,
          gcov_type count_scale)
 {
-  gcc_unreachable ();
-  return 0;
-#if 0
   gimple_stmt_iterator gsi, copy_gsi, seq_gsi;
   basic_block copy_basic_block;
   tree decl;
@@ -1546,6 +1545,7 @@ copy_bb (copy_body_data *id, basic_block bb, int frequency_scale,
       if (gimple_nop_p (stmt))
 	continue;
 
+      gimple_duplicate_stmt_histograms (cfun, stmt, id->src_cfun, orig_stmt);
       seq_gsi = copy_gsi;
 
       /* With return slot optimization we can end up with
@@ -1792,7 +1792,6 @@ copy_bb (copy_body_data *id, basic_block bb, int frequency_scale,
     }
 
   return copy_basic_block;
-#endif
 }
 
 /* Inserting Single Entry Multiple Exit region in SSA form into code in SSA
@@ -1871,9 +1870,6 @@ update_ssa_across_abnormal_edges (basic_block bb, basic_block ret_bb,
 static bool
 copy_edges_for_bb (basic_block bb, gcov_type count_scale, basic_block ret_bb)
 {
-  gcc_unreachable ();
-  return false;
-#if 0
   basic_block new_bb = (basic_block) bb->aux;
   edge_iterator ei;
   edge old_edge;
@@ -1967,7 +1963,6 @@ copy_edges_for_bb (basic_block bb, gcov_type count_scale, basic_block ret_bb)
 					  can_throw, nonlocal_goto);
     }
   return need_debug_cleanup;
-#endif
 }
 
 /* Copy the PHIs.  All blocks and edges are copied, some blocks
@@ -2130,8 +2125,6 @@ initialize_cfun (tree new_fndecl, tree callee_fndecl, gcov_type count)
 static void
 maybe_move_debug_stmts_to_successors (copy_body_data *id, basic_block new_bb)
 {
-  gcc_unreachable ();
-#if 0
   edge e;
   edge_iterator ei;
   gimple_stmt_iterator si = gsi_last_nondebug_bb (new_bb);
@@ -2179,7 +2172,6 @@ maybe_move_debug_stmts_to_successors (copy_body_data *id, basic_block new_bb)
 	  gsi_prev (&ssi);
 	}
     }
-#endif
 }
 
 /* Make a copy of the body of FN so that it can be inserted inline in
@@ -3754,9 +3746,6 @@ add_local_variables (struct function *callee, struct function *caller,
 static bool
 expand_call_inline (basic_block bb, gimple stmt, copy_body_data *id)
 {
-  gcc_unreachable ();
-  return false;
-#if 0
   tree use_retvar;
   tree fn;
   struct pointer_map_t *st, *dst;
@@ -4077,7 +4066,6 @@ expand_call_inline (basic_block bb, gimple stmt, copy_body_data *id)
  egress:
   input_location = saved_location;
   return successfully_inlined;
-#endif
 }
 
 /* Expand call statements reachable from STMT_P.
@@ -4110,8 +4098,6 @@ gimple_expand_calls_inline (basic_block bb, copy_body_data *id)
 static void
 fold_marked_statements (int first, struct pointer_set_t *statements)
 {
-  gcc_unreachable ();
-#if 0
   for (; first < n_basic_blocks; first++)
     if (BASIC_BLOCK (first))
       {
@@ -4183,7 +4169,6 @@ fold_marked_statements (int first, struct pointer_set_t *statements)
 		}
 	    }
       }
-#endif
 }
 
 /* Return true if BB has at least one abnormal outgoing edge.  */
@@ -5048,8 +5033,6 @@ tree_function_versioning (tree old_decl, tree new_decl,
 			  bool update_clones, bitmap args_to_skip,
 			  bitmap blocks_to_copy, basic_block new_entry)
 {
-  gcc_unreachable ();
-#if 0
   struct cgraph_node *old_version_node;
   struct cgraph_node *new_version_node;
   copy_body_data id;
@@ -5276,7 +5259,6 @@ tree_function_versioning (tree old_decl, tree new_decl,
   gcc_assert (!current_function_decl
 	      || DECL_STRUCT_FUNCTION (current_function_decl) == cfun);
   return;
-#endif
 }
 
 /* EXP is CALL_EXPR present in a GENERIC expression tree.  Try to integrate

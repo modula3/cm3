@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* main.c: defines main() for cc1, cc1plus, etc.
    Copyright (C) 2007, 2010  Free Software Foundation, Inc.
 

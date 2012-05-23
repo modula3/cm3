@@ -31,8 +31,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "demangle.h"
 #include "collect2.h"
 
-EXTERN_C_START
-
 /* TARGET_64BIT may be defined to use driver specific functionality. */
 #undef TARGET_64BIT
 #define TARGET_64BIT TARGET_64BIT_DEFAULT
@@ -807,5 +805,3 @@ do_tlink (char **ld_argv, char **object_lst ATTRIBUTE_UNUSED)
       collect_exit (exit);
     }
 }
-
-EXTERN_C_END

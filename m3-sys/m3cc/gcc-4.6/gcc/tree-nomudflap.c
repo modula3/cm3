@@ -37,6 +37,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "diagnostic-core.h"
 
+
 EXTERN_C_START
 
 /* This file contains placeholder functions, to be used only for
