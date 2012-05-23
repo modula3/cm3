@@ -166,8 +166,6 @@ typedef enum {
   M3CG_FETCH_AND_XOR,          /* 159 */
   LAST_OPCODE } M3CG_opcode;
 
-#if !GCC46 /* work in progress */
-
 static const char *M3CG_opnames[] = {
   "begin_unit",             /* 0 */
   "end_unit",               /* 1 */
@@ -330,8 +328,6 @@ static const char *M3CG_opnames[] = {
   "fetch_and_and",          /* 158 */
   "fetch_and_xor",          /* 159 */
   0 };
-
-#endif
 
 #define M3CG_Int1        255
 #define M3CG_NInt1       254
