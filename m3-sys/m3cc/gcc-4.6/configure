@@ -4452,13 +4452,13 @@ if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
 elif test $ac_cv_prog_cc_g = yes; then
   if test "$GCC" = yes; then
-    CFLAGS="-g -O2"
+    CFLAGS="-g"
   else
     CFLAGS="-g"
   fi
 else
   if test "$GCC" = yes; then
-    CFLAGS="-O2"
+    CFLAGS=""
   else
     CFLAGS=
   fi
@@ -4800,13 +4800,13 @@ if test "$ac_test_CXXFLAGS" = set; then
   CXXFLAGS=$ac_save_CXXFLAGS
 elif test $ac_cv_prog_cxx_g = yes; then
   if test "$GXX" = yes; then
-    CXXFLAGS="-g -O2"
+    CXXFLAGS="-g"
   else
     CXXFLAGS="-g"
   fi
 else
   if test "$GXX" = yes; then
-    CXXFLAGS="-O2"
+    CXXFLAGS=""
   else
     CXXFLAGS=
   fi
@@ -5712,13 +5712,13 @@ fi
 # might be empty or "-g".  We don't require a C++ compiler, so CXXFLAGS
 # might also be empty (or "-g", if a non-GCC C++ compiler is in the path).
 # We want to ensure that TARGET libraries (which we know are built with
-# gcc) are built with "-O2 -g", so include those options when setting
+# gcc) are built with "-g", so include those options when setting
 # CFLAGS_FOR_TARGET and CXXFLAGS_FOR_TARGET.
 if test "x$CFLAGS_FOR_TARGET" = x; then
   CFLAGS_FOR_TARGET=$CFLAGS
   case " $CFLAGS " in
     *" -O2 "*) ;;
-    *) CFLAGS_FOR_TARGET="-O2 $CFLAGS" ;;
+    *) CFLAGS_FOR_TARGET="$CFLAGS" ;;
   esac
   case " $CFLAGS " in
     *" -g "* | *" -g3 "*) ;;
@@ -5731,7 +5731,7 @@ if test "x$CXXFLAGS_FOR_TARGET" = x; then
   CXXFLAGS_FOR_TARGET=$CXXFLAGS
   case " $CXXFLAGS " in
     *" -O2 "*) ;;
-    *) CXXFLAGS_FOR_TARGET="-O2 $CXXFLAGS" ;;
+    *) CXXFLAGS_FOR_TARGET="$CXXFLAGS" ;;
   esac
   case " $CXXFLAGS " in
     *" -g "* | *" -g3 "*) ;;
