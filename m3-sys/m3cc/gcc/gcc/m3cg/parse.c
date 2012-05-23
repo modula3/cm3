@@ -72,9 +72,6 @@ extern "C" {
 #if GCC42
 } /* extern "C" */
 #endif
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "m3gty43.h"
 #include "m3-parse.h"
 
@@ -122,12 +119,14 @@ static tree m3_unsigned_type (tree type_node);
 static tree m3_signed_type (tree type_node);
 static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
 
+#if GCC42
 extern "C" {
-
+#endif
 /* Functions to keep track of the current scope */
 static tree pushdecl (tree decl);
-
-}
+#if GCC42
+} /* extern "C" */
+#endif
 
 /* Langhooks.  */
 static tree
@@ -177,19 +176,28 @@ static tree scan_proc (size_t* a);
 static tree scan_label (size_t* a);
 
 static struct language_function* m3_language_function (void);
-#if !GCC42
 static void m3_volatilize_decl (tree decl);
 static void m3_volatilize_current_function (void);
-#else
-#define m3_volatilize_decl(x) /* nothing */
-#define m3_volatilize_current_function() /* nothing */
-#endif
 
 static void m3_breakpoint(void);
+#if GCC46
+static void m3_parse_file (void);
+#else
 static void m3_parse_file (int);
+#endif
 
+#if !GCC46
 static UINT m3_init_options (UINT argc, PCSTR* argv);
-static int m3_handle_option (size_t code, PCSTR arg, int value);
+#endif
+static
+#if GCC46
+bool
+m3_handle_option (size_t code, PCSTR arg, int value, int /* kind */,
+                  location_t /* loc */,
+                  const struct cl_option_handlers * /* handlers */);
+#else
+int m3_handle_option (size_t code, PCSTR arg, int value);
+#endif
 static bool m3_post_options (PCSTR* pfilename);
 static bool m3_init (void);
 
@@ -253,6 +261,9 @@ static bool M3_LOOPHOLE_VIEW_CONVERT = false;
 #ifndef GCC42
 #define GCC42 0
 #endif
+#ifndef GCC46
+#define GCC46 0
+#endif
 
 #ifndef GCC_APPLE
 #define GCC_APPLE 0
@@ -305,8 +316,6 @@ int arm_float_words_big_endian (void);
 
 #define DESTRUCTOR ~ /* hack for gengtype */
 
-extern "C++" {
-
 struct m3cg_op_t
 {
   UCHAR op;
@@ -327,8 +336,6 @@ struct m3cg_op_t
         fields };
 #include "m3-def.h"
 #undef M3CG
-
-} /* extern "C++" */
 
 #undef M3CG_EXTRA_FIELDS
 #define M3CG_EXTRA_FIELDS(x) /* nothing */
@@ -405,11 +412,11 @@ struct m3cg_op_t
 #define LABEL(x) trace_label (#x, x##_integer);
 #define TYPEID(x) trace_typeid (#x, x);
 
-#define M3CG(sym, fields) extern "C++" { void m3cg_##sym##_t::trace() { fields } }
+#define M3CG(sym, fields) void m3cg_##sym##_t::trace() { fields }
 #include "m3-def.h"
 #undef M3CG
 
-extern "C++" m3cg_op_t* m3cg_op_t::create(UCHAR op) { switch (op) {
+m3cg_op_t* m3cg_op_t::create(UCHAR op) { switch (op) {
 #define M3CG(sym, fields) case M3CG_##sym: return new m3cg_##sym##_t();
 #include "m3-def.h"
 #undef M3CG
@@ -970,19 +977,24 @@ static tree m3_current_scope (void)
 static bool
 get_volatize (void)
 {
-#if GCC42
-  return false;
-#else
-  return m3_language_function () && m3_language_function ()->volatil;
-#endif
+  /* gcc 4.2 volatize nothing
+     gcc 4.6 volatize everything */
+  if (GCC46)
+    return true;
+  else if (GCC42)
+    return false;
+  else
+    return m3_language_function () && m3_language_function ()->volatil;
 }
 
 static void
 set_volatize (bool a ATTRIBUTE_UNUSED)
 {
-#if !GCC42
+  /* gcc 4.2 volatize nothing
+     gcc 4.6 volatize everything */
+  if (GCC42 || GCC46)
+    return;
   m3_language_function ()->volatil = a;
-#endif
 }
 
 /* The front end language hooks (addresses of code for this front
@@ -1023,12 +1035,20 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
 #define LANG_HOOKS_INIT m3_init
 #undef LANG_HOOKS_NAME
 #define LANG_HOOKS_NAME "Modula-3 backend"
+#if !GCC46
 #undef LANG_HOOKS_INIT_OPTIONS
 #define LANG_HOOKS_INIT_OPTIONS  m3_init_options
+#endif
 #undef LANG_HOOKS_HANDLE_OPTION
 #define LANG_HOOKS_HANDLE_OPTION m3_handle_option
 #undef LANG_HOOKS_POST_OPTIONS
 #define LANG_HOOKS_POST_OPTIONS m3_post_options
+#if GCC46
+/* Return language mask for option parsing. (gcc 4.6) */
+#undef LANG_HOOKS_OPTION_LANG_MASK
+static unsigned int m3_lang_mask (void) { return CL_m3cg | CL_M3CG; }
+#define LANG_HOOKS_OPTION_LANG_MASK m3_lang_mask
+#endif
 #if !GCC45
 const
 #endif
@@ -1110,6 +1130,8 @@ m3_build_type_id (m3_type type,
                   UINT32 type_id)
 {
   tree ts = { 0 };
+
+  /* TODO? build_qualified_type (x, TYPE_QUAL_VOLATILE); */
 
   if (!M3_TYPES)
     type_id = NO_UID; /* disable */
@@ -1605,8 +1627,6 @@ insert_block (tree block)
 /* Records a ..._DECL node DECL as belonging to the current lexical scope.
    Returns the ..._DECL node. */
 
-extern "C" {
-
 static tree
 pushdecl (tree decl)
 {
@@ -1618,6 +1638,15 @@ pushdecl (tree decl)
   return decl;
 }
 
+static void
+m3_set_decl_source_location_avoid_unknown (tree decl)
+{
+#if !GCC42
+  if (input_location == UNKNOWN_LOCATION)
+    DECL_SOURCE_LOCATION (decl) = BUILTINS_LOCATION;
+  else
+#endif
+    DECL_SOURCE_LOCATION (decl) = input_location;
 }
 
 static tree
@@ -1633,13 +1662,8 @@ m3_push_type_decl (tree type, tree name)
   if (M3_TYPES_ENUM)
   {
     DECL_CONTEXT (decl) = m3_current_scope ();
-#if !GCC42
-    if (input_location == UNKNOWN_LOCATION)
-      DECL_SOURCE_LOCATION (decl) = BUILTINS_LOCATION;
-    else
-#endif
-      DECL_SOURCE_LOCATION (decl) = input_location;
   }
+  m3_set_decl_source_location_avoid_unknown (decl);
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
   return decl;
@@ -1878,13 +1902,17 @@ m3_init_decl_processing (void)
   sync_builtin (BUILT_IN_FETCH_AND_OR_1,   t, "__sync_fetch_and_or_1");
   sync_builtin (BUILT_IN_FETCH_AND_AND_1,  t, "__sync_fetch_and_and_1");
   sync_builtin (BUILT_IN_FETCH_AND_XOR_1,  t, "__sync_fetch_and_xor_1");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_FETCH_AND_NAND_1, t, "__sync_fetch_and_nand_1");
+#endif
   sync_builtin (BUILT_IN_ADD_AND_FETCH_1,  t, "__sync_add_and_fetch_1");
   sync_builtin (BUILT_IN_SUB_AND_FETCH_1,  t, "__sync_sub_and_fetch_1");
   sync_builtin (BUILT_IN_OR_AND_FETCH_1,   t, "__sync_or_and_fetch_1");
   sync_builtin (BUILT_IN_AND_AND_FETCH_1,  t, "__sync_and_and_fetch_1");
   sync_builtin (BUILT_IN_XOR_AND_FETCH_1,  t, "__sync_xor_and_fetch_1");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_NAND_AND_FETCH_1, t, "__sync_nand_and_fetch_1");
+#endif
 
   t = t_int_16;
   t = build_function_type_list (t, t_addr, t, NULL_TREE);
@@ -1893,13 +1921,17 @@ m3_init_decl_processing (void)
   sync_builtin (BUILT_IN_FETCH_AND_OR_2,   t, "__sync_fetch_and_or_2");
   sync_builtin (BUILT_IN_FETCH_AND_AND_2,  t, "__sync_fetch_and_and_2");
   sync_builtin (BUILT_IN_FETCH_AND_XOR_2,  t, "__sync_fetch_and_xor_2");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_FETCH_AND_NAND_2, t, "__sync_fetch_and_nand_2");
+#endif
   sync_builtin (BUILT_IN_ADD_AND_FETCH_2,  t, "__sync_add_and_fetch_2");
   sync_builtin (BUILT_IN_SUB_AND_FETCH_2,  t, "__sync_sub_and_fetch_2");
   sync_builtin (BUILT_IN_OR_AND_FETCH_2,   t, "__sync_or_and_fetch_2");
   sync_builtin (BUILT_IN_AND_AND_FETCH_2,  t, "__sync_and_and_fetch_2");
   sync_builtin (BUILT_IN_XOR_AND_FETCH_2,  t, "__sync_xor_and_fetch_2");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_NAND_AND_FETCH_2, t, "__sync_nand_and_fetch_2");
+#endif
 
   t = t_int_32;
   t = build_function_type_list (t, t_addr, t, NULL_TREE);
@@ -1908,13 +1940,17 @@ m3_init_decl_processing (void)
   sync_builtin (BUILT_IN_FETCH_AND_OR_4,   t, "__sync_fetch_and_or_4");
   sync_builtin (BUILT_IN_FETCH_AND_AND_4,  t, "__sync_fetch_and_and_4");
   sync_builtin (BUILT_IN_FETCH_AND_XOR_4,  t, "__sync_fetch_and_xor_4");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_FETCH_AND_NAND_4, t, "__sync_fetch_and_nand_4");
+#endif
   sync_builtin (BUILT_IN_ADD_AND_FETCH_4,  t, "__sync_add_and_fetch_4");
   sync_builtin (BUILT_IN_SUB_AND_FETCH_4,  t, "__sync_sub_and_fetch_4");
   sync_builtin (BUILT_IN_OR_AND_FETCH_4,   t, "__sync_or_and_fetch_4");
   sync_builtin (BUILT_IN_AND_AND_FETCH_4,  t, "__sync_and_and_fetch_4");
   sync_builtin (BUILT_IN_XOR_AND_FETCH_4,  t, "__sync_xor_and_fetch_4");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_NAND_AND_FETCH_4, t, "__sync_nand_and_fetch_4");
+#endif
 
   t = t_int_64;
   t = build_function_type_list (t, t_addr, t, NULL_TREE);
@@ -1923,13 +1959,17 @@ m3_init_decl_processing (void)
   sync_builtin (BUILT_IN_FETCH_AND_OR_8,   t, "__sync_fetch_and_or_8");
   sync_builtin (BUILT_IN_FETCH_AND_AND_8,  t, "__sync_fetch_and_and_8");
   sync_builtin (BUILT_IN_FETCH_AND_XOR_8,  t, "__sync_fetch_and_xor_8");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_FETCH_AND_NAND_8, t, "__sync_fetch_and_nand_8");
+#endif
   sync_builtin (BUILT_IN_ADD_AND_FETCH_8,  t, "__sync_add_and_fetch_8");
   sync_builtin (BUILT_IN_SUB_AND_FETCH_8,  t, "__sync_sub_and_fetch_8");
   sync_builtin (BUILT_IN_OR_AND_FETCH_8,   t, "__sync_or_and_fetch_8");
   sync_builtin (BUILT_IN_AND_AND_FETCH_8,  t, "__sync_and_and_fetch_8");
   sync_builtin (BUILT_IN_XOR_AND_FETCH_8,  t, "__sync_xor_and_fetch_8");
+#if 0 /* warning -- nand changed semantics in gcc 4.4 */
   sync_builtin (BUILT_IN_NAND_AND_FETCH_8, t, "__sync_nand_and_fetch_8");
+#endif
 
   t = t_int_8;
   sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_1,
@@ -2041,44 +2081,44 @@ m3_init_decl_processing (void)
 
 /* Variable arrays of trees. */
 
-static map<size_t, m3cg_BIND_SEGMENT_t*> bind_segments; /* wasteful but ok */
+static map<size_t, m3cg_BIND_SEGMENT_t*> bind_segments; /* wasteful but ok -- there's only ever about two */
 static std::vector<tree> all_vars;
 static std::vector<tree> all_procs;
 static std::vector<tree> all_labels;
 static std::vector<tree> expr_stack;
 static std::vector<tree> call_stack;
 
-#define STACK_PUSH(stk, x)      ((stk).push_back(x))
-#define STACK_POP(stk)          ((stk).pop_back())
-#define STACK_REF(stk, n)       ((stk)[(stk).size() + (n)])
+static void STACK_PUSH(std::vector<tree>& stack, tree x) { stack.push_back(x); }
+static void STACK_POP(std::vector<tree>& stack) { stack.pop_back(); }
+static tree& STACK_REF(std::vector<tree>& stack, ptrdiff_t n)
+{
+  size_t const size = stack.size ();
+  gcc_assert (n < 0);
+  gcc_assert (size >= (size_t)-n);
+  return stack[size + n];
+}
 
-#define EXPR_PUSH(x)    STACK_PUSH (expr_stack, (x))
-#define EXPR_POP()      STACK_POP (expr_stack)
-#define EXPR_REF(n)     STACK_REF (expr_stack, (n))
+static void EXPR_PUSH (tree x) { STACK_PUSH (expr_stack, x); }
+static void EXPR_POP (void) { STACK_POP (expr_stack); }
+static tree& EXPR_REF (int n) { return STACK_REF (expr_stack, n); }
 
 /* The call stack has triples on it: first the argument chain, then
    the type chain, then the static chain expression. */
-#define CALL_PUSH(a, t, s)              \
-    do                                  \
-      {                                 \
-        STACK_PUSH (call_stack, (a));   \
-        STACK_PUSH (call_stack, (t));   \
-        STACK_PUSH (call_stack, (s));   \
-      }                                 \
-    while (0)
+static void CALL_PUSH (tree args, tree types, tree static_chain)
+{
+  STACK_PUSH (call_stack, args);
+  STACK_PUSH (call_stack, types);
+  STACK_PUSH (call_stack, static_chain);
+}
 
-#define CALL_POP()                     \
-    do                                 \
-      {                                \
-        STACK_POP (call_stack);        \
-        STACK_POP (call_stack);        \
-        STACK_POP (call_stack);        \
-      }                                \
-    while (0)
+static void CALL_POP (void)
+{
+  call_stack.resize(call_stack.size() - 3);
+}
 
-#define CALL_TOP_ARG()          STACK_REF (call_stack, -3)
-#define CALL_TOP_TYPE()         STACK_REF (call_stack, -2)
-#define CALL_TOP_STATIC_CHAIN() STACK_REF (call_stack, -1)
+static tree& CALL_TOP_ARG (void) { return STACK_REF (call_stack, -3); }
+static tree& CALL_TOP_TYPE (void) { return STACK_REF (call_stack, -2); }
+static tree& CALL_TOP_STATIC_CHAIN (void) { return STACK_REF (call_stack, -1); }
 
 /*=============================================================== PARSING ===*/
 
@@ -2535,6 +2575,7 @@ scan_var (enum tree_code code, size_t* p)
       fatal_error ("*** variable should not already exist, v.0x%x, line %u",
                    (int)i, m3cg_lineno);
     var = m3_gc_tree (make_node (code));
+    m3_set_decl_source_location_avoid_unknown (var);
     all_vars[i] = var;
     DECL_NAME (var) = NULL_TREE;
   }
@@ -2575,6 +2616,7 @@ scan_proc (size_t* pi)
   if (all_procs[i] == NULL)
   {
     p = m3_gc_tree (make_node (FUNCTION_DECL));
+    m3_set_decl_source_location_avoid_unknown (p);
     DECL_PRESERVE_P (p) = true;
     all_procs[i] = p;
   }
@@ -3006,6 +3048,7 @@ declare_temp (tree type)
 {
   tree v = build_decl (VAR_DECL, 0, type);
 
+  m3_set_decl_source_location_avoid_unknown (v);
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (type);
   DECL_CONTEXT (v) = current_function_decl;
 
@@ -3105,99 +3148,51 @@ m3_call_indirect (tree return_type, tree /*calling_convention*/)
   CALL_POP ();
 }
 
-static struct language_function*
-m3_language_function (void)
-{
-    return 0;
-}
-
 #else
 
-#if GCC46 /* work in progress */
+#if GCC46
 
-static struct language_function*
-m3_language_function (void)
-{
-    return 0;
-}
-
-/* work in progress */
+static
 tree
-build_call_list (tree a ATTRIBUTE_UNUSED, tree b ATTRIBUTE_UNUSED, tree c ATTRIBUTE_UNUSED)
+build_call_list (tree return_type, tree fn, tree arglist)
 {
-  return 0;
-}
-
-/* work in progress */
-tree
-build_function_call_expr (tree a ATTRIBUTE_UNUSED, tree b ATTRIBUTE_UNUSED, tree c ATTRIBUTE_UNUSED)
-{
-  return 0;
-}
-
+#if 1
+  int n = list_length (arglist);
+  tree *argarray = (tree *) alloca (n * sizeof (tree));
+  for (int i = 0; i < n; i++, arglist = TREE_CHAIN (arglist))
+    argarray[i] = TREE_VALUE (arglist);
+  tree t = build_call_array_loc (UNKNOWN_LOCATION, return_type, fn, n, argarray);
 #else
+/* copied from/based on gcc 4.{5,6}/tree.c */
+  tree t = build_vl_exp (CALL_EXPR, list_length (arglist) + 3);
+  TREE_TYPE (t) = return_type;
+  CALL_EXPR_FN (t) = fn;
+  CALL_EXPR_STATIC_CHAIN (t) = NULL_TREE;
+  for (int i = 0; arglist; arglist = TREE_CHAIN (arglist), i++)
+    CALL_EXPR_ARG (t, i) = TREE_VALUE (arglist);
+#endif
+  TREE_SIDE_EFFECTS (t) = true; /* pessimistic process_call_operands */
+  TREE_READONLY (t) = true;     /* pessimistic process_call_operands */
+  return t;
+}
 
-static struct language_function*
-m3_language_function (void)
+static
+tree
+build_function_call_expr (location_t loc, tree fndecl, tree arglist)
+/* copied from gcc 4.5/builtins.c */
 {
-    if (!current_function_decl || !DECL_STRUCT_FUNCTION (current_function_decl))
-      return 0;
-    struct language_function* f
-      = DECL_STRUCT_FUNCTION (current_function_decl)->language;
-    if (!f)
-    {
-        f = GGC_NEW (struct language_function);
-        memset (f, 0, sizeof(*f));
-        DECL_STRUCT_FUNCTION (current_function_decl)->language = f;
-    }
-    return f;
+  tree fntype = TREE_TYPE (fndecl);
+  tree fn = build1 (ADDR_EXPR, build_pointer_type (fntype), fndecl);
+  int n = list_length (arglist);
+  tree *argarray = (tree *) alloca (n * sizeof (tree));
+  int i;
+
+  for (i = 0; i < n; i++, arglist = TREE_CHAIN (arglist))
+    argarray[i] = TREE_VALUE (arglist);
+  return fold_builtin_call_array (loc, TREE_TYPE (fntype), fn, n, argarray);
 }
 
 #endif
-
-static void
-m3_volatilize_decl (tree decl)
-{
-  enum tree_code code = TREE_CODE (decl);
-  if ((code == VAR_DECL || code == PARM_DECL)
-      && !TYPE_VOLATILE (TREE_TYPE (decl))
-      && !TREE_STATIC (decl))
-  {
-    if (option_trace_all && DECL_NAME (decl) && IDENTIFIER_POINTER (DECL_NAME (decl)))
-      fprintf(stderr, "volatile:%s\n", IDENTIFIER_POINTER (DECL_NAME (decl)));
-    TREE_TYPE (decl) = build_qualified_type (TREE_TYPE (decl), TYPE_QUAL_VOLATILE);
-    TREE_THIS_VOLATILE (decl) = true;
-    TREE_SIDE_EFFECTS (decl) = true;
-    DECL_REGISTER (decl) = false;
-  }
-}
-
-static void
-m3_volatilize_current_function (void)
-{
-  tree block, decl;
-
-  /* note it for later so that later temporaries and locals ("WITH")
-   * are also made volatile
-   */
-  set_volatize (true);
-
-  /* make locals volatile */
-
-  for (block = current_block;
-       block != current_function_decl;
-       block = BLOCK_SUPERCONTEXT (block))
-  {
-    for (decl = BLOCK_VARS (block); decl; decl = TREE_CHAIN (decl))
-      m3_volatilize_decl (decl);
-  }
-
-  /* make arguments volatile  */
-
-  for (decl = DECL_ARGUMENTS (current_function_decl);
-       decl; decl = TREE_CHAIN (decl))
-    m3_volatilize_decl (decl);
-}
 
 static void
 m3_call_direct (tree p, tree return_type)
@@ -3253,6 +3248,81 @@ m3_call_indirect (tree return_type, tree calling_convention)
 
 #endif
 
+static struct language_function*
+m3_language_function (void)
+{
+  /* gcc 4.2 volatize nothing
+     gcc 4.6 volatize everything */
+    if (GCC42 || GCC46)
+    {
+        /* gcc_unreachable (); almost */
+        return 0;
+    }
+    if (!current_function_decl || !DECL_STRUCT_FUNCTION (current_function_decl))
+      return 0;
+    struct language_function* f
+      = DECL_STRUCT_FUNCTION (current_function_decl)->language;
+    if (!f)
+    {
+#if defined(GGC_CNEW)
+        f = GGC_CNEW (struct language_function);
+#elif defined(ggc_alloc_cleared_language_function)
+        f = ggc_alloc_cleared_language_function ();
+#else
+#error neither GGC_CNEW nor ggc_alloc_cleared_language_function defined
+#endif
+        DECL_STRUCT_FUNCTION (current_function_decl)->language = f;
+    }
+    return f;
+}
+
+static void
+m3_volatilize_decl (tree decl)
+{
+  if (GCC42)
+    return;
+
+  enum tree_code code = TREE_CODE (decl);
+  if ((code == VAR_DECL || code == PARM_DECL)
+      && !TYPE_VOLATILE (TREE_TYPE (decl))
+      && !TREE_STATIC (decl))
+  {
+    if (option_trace_all && DECL_NAME (decl) && IDENTIFIER_POINTER (DECL_NAME (decl)))
+        fprintf(stderr, "volatile:%s\n", IDENTIFIER_POINTER (DECL_NAME (decl)));
+    TREE_TYPE (decl) = build_qualified_type (TREE_TYPE (decl), TYPE_QUAL_VOLATILE);
+    TREE_THIS_VOLATILE (decl) = true;
+    TREE_SIDE_EFFECTS (decl) = true;
+    DECL_REGISTER (decl) = false;
+  }
+}
+
+static void
+m3_volatilize_current_function (void)
+{
+  if (GCC42 || GCC46)
+    return;
+
+  /* note it for later so that later temporaries and locals ("WITH")
+   * are also made volatile */
+  set_volatize (true);
+
+  /* make locals volatile */
+
+  for (tree block = current_block;
+       block != current_function_decl;
+       block = BLOCK_SUPERCONTEXT (block))
+  {
+    for (tree decl = BLOCK_VARS (block); decl; decl = TREE_CHAIN (decl))
+      m3_volatilize_decl (decl);
+  }
+
+  /* make arguments volatile  */
+
+  for (tree decl = DECL_ARGUMENTS (current_function_decl);
+       decl; decl = TREE_CHAIN (decl))
+    m3_volatilize_decl (decl);
+}
+
 static void
 m3_swap (void)
 {
@@ -3265,9 +3335,23 @@ static void
 mark_address_taken (tree ref)
 /* from tree-ssa-operands.c */
 {
+  /* Note that it is *NOT OKAY* to use the target of a COMPONENT_REF
+     as the only thing we take the address of.  If VAR is a structure,
+     taking the address of a field means that the whole structure may
+     be referenced using pointer arithmetic.  See PR 21407 and the
+     ensuing mailing list discussion.  */
   tree var = get_base_address (ref);
-  if (var && DECL_P (var))
-    TREE_ADDRESSABLE (var) = true;
+  if (var)
+    {
+      if (DECL_P (var))
+	TREE_ADDRESSABLE (var) = 1;
+#if GCC46
+      else if (TREE_CODE (var) == MEM_REF
+	       && TREE_CODE (TREE_OPERAND (var, 0)) == ADDR_EXPR
+	       && DECL_P (TREE_OPERAND (TREE_OPERAND (var, 0), 0)))
+	TREE_ADDRESSABLE (TREE_OPERAND (TREE_OPERAND (var, 0), 0)) = 1;
+#endif
+    }
 }
 
 static tree
@@ -3436,6 +3520,7 @@ declare_fault_proc (void)
   DECL_CONTEXT (proc) = NULL;
 
   tree parm = build_decl (PARM_DECL, fix_name ("arg", 3, UID_INTEGER), t_word);
+
   if (DECL_MODE (parm) == VOIDmode)
   {
       if (option_trace_all)
@@ -3535,7 +3620,6 @@ emit_fault_proc (void)
 
   m3_gimplify_function (p);
   cgraph_finalize_function (p, false);
-
   current_function_decl = NULL_TREE;
 }
 
@@ -3567,7 +3651,7 @@ generate_fault (int code ATTRIBUTE_UNUSED)
 
 /*-------------------------------------------------- M3CG opcode handlers ---*/
 
-#define M3CG_HANDLER(code) extern "C++" void m3cg_##code##_t::handler ()
+#define M3CG_HANDLER(code) void m3cg_##code##_t::handler ()
 
 M3CG_HANDLER (BEGIN_UNIT)
 {
@@ -4126,7 +4210,7 @@ M3CG_HANDLER (IMPORT_GLOBAL)
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
 
@@ -4144,7 +4228,7 @@ M3CG_HANDLER (DECLARE_SEGMENT)
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
 
    m3cg_BIND_SEGMENT_t* bind_segment = bind_segments[var_integer];
 
@@ -4188,7 +4272,7 @@ M3CG_HANDLER (DECLARE_GLOBAL)
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
 
@@ -4207,7 +4291,7 @@ M3CG_HANDLER (DECLARE_CONSTANT)
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
 
@@ -4227,7 +4311,7 @@ M3CG_HANDLER (DECLARE_LOCAL)
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
 
   gcc_assert (align >= !!size);
 
@@ -4239,9 +4323,6 @@ M3CG_HANDLER (DECLARE_LOCAL)
 
   if (current_block)
     {
-      if (get_volatize ())
-        m3_volatilize_decl (var);
-
       add_stmt (build1 (DECL_EXPR, t_void, var));
       TREE_CHAIN (var) = BLOCK_VARS (current_block);
       BLOCK_VARS (current_block) = var;
@@ -4263,7 +4344,7 @@ M3CG_HANDLER (DECLARE_PARAM)
   DECL_NAME (var) = fix_name (name, name_length, type_id);
 
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
 
   if (current_param_count > 0)
   {
@@ -4417,6 +4498,14 @@ M3CG_HANDLER (INIT_VAR)
 {
   tree f = { 0 };
   tree v = { 0 };
+  
+  /* hack? */
+  if (GCC46 && DECL_COMMON (var))
+  {
+    if (option_trace_all)
+      fprintf (stderr, " clearing DECL_COMMON on %s", m3_get_var_trace_name (var));
+    DECL_COMMON (var) = false;
+  }
 
   TREE_USED (var) = true;
   one_field (offset, POINTER_SIZE, t_addr, &f, &v);
@@ -4589,8 +4678,6 @@ M3CG_HANDLER (BEGIN_PROCEDURE)
 
 M3CG_HANDLER (END_PROCEDURE)
 {
-  gcc_assert (current_function_decl == p);
-
   /* Attach block to the function */
   gcc_assert (current_block == BLOCK_SUBBLOCKS (DECL_INITIAL (p)));
   DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
@@ -4608,7 +4695,7 @@ M3CG_HANDLER (END_PROCEDURE)
   current_function_decl = DECL_CONTEXT (p);
 
   gcc_assert (!current_block == !current_function_decl);
-
+  
   if (current_block)
   { /* Register this function with cgraph just far enough to get it
        added to our parent's nested function list.  */
@@ -4808,14 +4895,14 @@ M3CG_HANDLER (EXIT_PROC)
 M3CG_HANDLER (LOAD)
 {
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
   m3_load (var, offset, src_t, src_T, dst_t, dst_T);
 }
 
 M3CG_HANDLER (LOAD_ADDRESS)
 {
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
   TREE_USED (var) = true;
   tree xvar = m3_build1 (ADDR_EXPR, t_addr, var);
   if (offset)
@@ -4842,7 +4929,7 @@ M3CG_HANDLER (LOAD_INDIRECT)
 M3CG_HANDLER (STORE)
 {
   if (option_trace_all)
-    fprintf (stderr, " m3name:%s", m3_get_var_trace_name (var));
+    fprintf (stderr, " m3name:%s ", m3_get_var_trace_name (var));
   m3_store (var, offset, src_t, src_T, dst_t, dst_T);
 }
 
@@ -6049,7 +6136,11 @@ trace_op (UCHAR op)
 }
 
 static void
+#if GCC46
+m3_parse_file (void)
+#else
 m3_parse_file (int)
+#endif
 {
   typedef_vector<m3cg_op_t*> ops_t;
   ops_t ops;
@@ -6128,7 +6219,7 @@ m3_parse_file (int)
     m3cg_lineno += 1;
   }
 
-  if (GCC45)
+  if (GCC45/* && !GCC46*/)
   {
     write_global_declarations ();
   }
@@ -6141,6 +6232,8 @@ m3_parse_file (int)
 
 /*===================================================== RUNTIME FUNCTIONS ===*/
 
+#if !GCC46
+
 /* Prepare to handle switches.  */
 static UINT
 m3_init_options (UINT /*argc*/, PCSTR* /*argv*/)
@@ -6148,11 +6241,21 @@ m3_init_options (UINT /*argc*/, PCSTR* /*argv*/)
   return CL_m3cg;
 }
 
+#endif
+
 static bool version_done;
 
 /* Process a switch - called by opts.c.  */
-static int
+static
+#if GCC46
+bool
+m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/, int /*kind*/,
+                  location_t /*loc*/,
+                  const struct cl_option_handlers * /*handlers*/)
+#else
+int
 m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
+#endif
 {
   switch ((enum opt_code)code)
     {
@@ -6210,9 +6313,7 @@ m3_post_options (PCSTR* /*pfilename*/)
 #if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
-#endif
 
-#if GCC45
   flag_tree_forwprop = false; /* bug */
 #endif
 
@@ -6341,7 +6442,3 @@ tree pushdecl_top_level (tree)
 #include "debug.h"
 #include "gtype-m3cg.h"
 #include "gt-m3cg-parse.h"
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
