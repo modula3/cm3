@@ -97,7 +97,7 @@ DEF_VEC_ALLOC_P(edge,heap);
 
 /* Counter summary from the last set of coverage counts read by
    profile.c.  */
-extern const struct gcov_ctr_summary *profile_info;
+#define profile_info ((const struct gcov_ctr_summary *)0)
 
 /* Declared in cfgloop.h.  */
 struct loop;

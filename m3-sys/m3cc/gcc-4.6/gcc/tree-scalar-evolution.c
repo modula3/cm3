@@ -2770,53 +2770,8 @@ resolve_mixers (struct loop *loop, tree chrec)
 tree
 number_of_latch_executions (struct loop *loop)
 {
-  edge exit;
-  struct tree_niter_desc niter_desc;
-  tree may_be_zero;
-  tree res;
-
-  /* Determine whether the number of iterations in loop has already
-     been computed.  */
-  res = loop->nb_iterations;
-  if (res)
-    return res;
-
-  may_be_zero = NULL_TREE;
-
-  if (dump_file && (dump_flags & TDF_DETAILS))
-    fprintf (dump_file, "(number_of_iterations_in_loop = \n");
-
-  res = chrec_dont_know;
-  exit = single_exit (loop);
-
-  if (exit && number_of_iterations_exit (loop, exit, &niter_desc, false))
-    {
-      may_be_zero = niter_desc.may_be_zero;
-      res = niter_desc.niter;
-    }
-
-  if (res == chrec_dont_know
-      || !may_be_zero
-      || integer_zerop (may_be_zero))
-    ;
-  else if (integer_nonzerop (may_be_zero))
-    res = build_int_cst (TREE_TYPE (res), 0);
-
-  else if (COMPARISON_CLASS_P (may_be_zero))
-    res = fold_build3 (COND_EXPR, TREE_TYPE (res), may_be_zero,
-		       build_int_cst (TREE_TYPE (res), 0), res);
-  else
-    res = chrec_dont_know;
-
-  if (dump_file && (dump_flags & TDF_DETAILS))
-    {
-      fprintf (dump_file, "  (set_nb_iterations_in_loop = ");
-      print_generic_expr (dump_file, res, 0);
-      fprintf (dump_file, "))\n");
-    }
-
-  loop->nb_iterations = res;
-  return res;
+  gcc_unreachable ();
+  return 0;
 }
 
 /* Returns the number of executions of the exit condition of LOOP,

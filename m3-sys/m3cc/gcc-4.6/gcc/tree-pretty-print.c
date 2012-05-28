@@ -1504,6 +1504,12 @@ dump_generic_node (pretty_printer *buffer, tree node, int spc, int flags,
 	pp_string (buffer, " [tail call]");
       break;
 
+    case STATIC_CHAIN_EXPR:
+      pp_string (buffer, "<<static chain of ");
+      dump_generic_node (buffer, TREE_OPERAND (node, 0), spc, flags, false);
+      pp_string (buffer, ">>");
+      break;
+
     case WITH_CLEANUP_EXPR:
       NIY;
       break;

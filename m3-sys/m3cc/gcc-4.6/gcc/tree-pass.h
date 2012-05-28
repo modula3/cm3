@@ -590,8 +590,6 @@ extern struct opt_pass *all_passes, *all_small_ipa_passes, *all_lowering_passes,
 #define GCC_PASS_LISTS \
   DEF_PASS_LIST (all_lowering_passes) \
   DEF_PASS_LIST (all_small_ipa_passes) \
-  DEF_PASS_LIST (all_regular_ipa_passes) \
-  DEF_PASS_LIST (all_lto_gen_passes) \
   DEF_PASS_LIST (all_passes)
 
 #define DEF_PASS_LIST(LIST) PASS_LIST_NO_##LIST,

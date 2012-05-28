@@ -237,30 +237,19 @@ static GTY(()) struct string_pool_data * spd;
 void
 gt_pch_save_stringpool (void)
 {
-  spd = ggc_alloc_string_pool_data ();
-  spd->nslots = ident_hash->nslots;
-  spd->nelements = ident_hash->nelements;
-  spd->entries = ggc_alloc_vec_ht_identifier_ptr (spd->nslots);
-  memcpy (spd->entries, ident_hash->entries,
-	  spd->nslots * sizeof (spd->entries[0]));
+  gcc_unreachable ();
 }
-
-/* Return the stringpool to its state before gt_pch_save_stringpool
-   was called.  */
 
 void
 gt_pch_fixup_stringpool (void)
 {
+  gcc_unreachable ();
 }
-
-/* A PCH file has been restored, which loaded SPD; fill the real hash table
-   from SPD.  */
 
 void
 gt_pch_restore_stringpool (void)
 {
-  ht_load (ident_hash, spd->entries, spd->nslots, spd->nelements, false);
-  spd = NULL;
+  gcc_unreachable ();
 }
 
 EXTERN_C_END

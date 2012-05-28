@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Map logical line numbers to (source file, line number) pairs.
    Copyright (C) 2001, 2003, 2004, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -22,6 +24,16 @@ along with this program; see the file COPYING3.  If not see
 
 #ifndef LIBCPP_LINE_MAP_H
 #define LIBCPP_LINE_MAP_H
+
+#ifdef __cplusplus
+#define EXTERN_C_START extern "C" {
+#define EXTERN_C_END }
+#else
+#define EXTERN_C_START
+#define EXTERN_C_END
+#endif
+
+EXTERN_C_START
 
 #ifndef GTY
 #define GTY(x) /* nothing */
@@ -189,5 +201,7 @@ extern const struct line_map *linemap_lookup
 
 extern source_location
 linemap_position_for_column (struct line_maps *set, unsigned int to_column);
+
+EXTERN_C_END
 
 #endif /* !LIBCPP_LINE_MAP_H  */

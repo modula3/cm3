@@ -453,7 +453,6 @@ rebuild_cgraph_edges (void)
   gimple_stmt_iterator gsi;
 
   cgraph_node_remove_callees (node);
-  ipa_remove_all_references (&node->ref_list);
 
   node->count = ENTRY_BLOCK_PTR->count;
 
@@ -502,8 +501,6 @@ cgraph_rebuild_references (void)
   basic_block bb;
   struct cgraph_node *node = cgraph_node (current_function_decl);
   gimple_stmt_iterator gsi;
-
-  ipa_remove_all_references (&node->ref_list);
 
   node->count = ENTRY_BLOCK_PTR->count;
 

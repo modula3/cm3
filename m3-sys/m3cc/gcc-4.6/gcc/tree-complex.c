@@ -272,13 +272,7 @@ init_dont_simulate_again (void)
 
 	      case REALPART_EXPR:
 	      case IMAGPART_EXPR:
-		/* The total store transformation performed during
-		  gimplification creates such uninitialized loads
-		  and we need to lower the statement to be able
-		  to fix things up.  */
-		if (TREE_CODE (op0) == SSA_NAME
-		    && ssa_undefined_value_p (op0))
-		  saw_a_complex_op = true;
+	        gcc_unreachable ();
 		break;
 
 	      default:

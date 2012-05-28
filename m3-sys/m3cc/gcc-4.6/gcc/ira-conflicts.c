@@ -841,32 +841,7 @@ ira_build_conflicts (void)
   ira_allocno_t a;
   ira_allocno_iterator ai;
   HARD_REG_SET temp_hard_reg_set;
-
-  if (ira_conflicts_p)
-    {
-      ira_conflicts_p = build_conflict_bit_table ();
-      if (ira_conflicts_p)
-	{
-	  ira_object_t obj;
-	  ira_object_iterator oi;
-
-	  build_conflicts ();
-	  ira_traverse_loop_tree (true, ira_loop_tree_root, NULL, add_copies);
-	  /* We need finished conflict table for the subsequent call.  */
-	  if (flag_ira_region == IRA_REGION_ALL
-	      || flag_ira_region == IRA_REGION_MIXED)
-	    propagate_copies ();
-
-	  /* Now we can free memory for the conflict table (see function
-	     build_object_conflicts for details).  */
-	  FOR_EACH_OBJECT (obj, oi)
-	    {
-	      if (OBJECT_CONFLICT_ARRAY (obj) != conflicts[OBJECT_CONFLICT_ID (obj)])
-		ira_free (conflicts[OBJECT_CONFLICT_ID (obj)]);
-	    }
-	  ira_free (conflicts);
-	}
-    }
+    
   if (! targetm.class_likely_spilled_p (base_reg_class (VOIDmode, ADDRESS,
 							SCRATCH)))
     CLEAR_HARD_REG_SET (temp_hard_reg_set);
@@ -930,9 +905,6 @@ ira_build_conflicts (void)
 	    }
 	}
     }
-  if (optimize && ira_conflicts_p
-      && internal_flag_ira_verbose > 2 && ira_dump_file != NULL)
-    print_conflicts (ira_dump_file, false);
 }
 
 EXTERN_C_END

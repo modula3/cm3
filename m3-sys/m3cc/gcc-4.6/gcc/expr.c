@@ -4175,15 +4175,7 @@ expand_assignment (tree to, tree from, bool nontemporal)
 	}
       else if (TREE_CODE (to) == TARGET_MEM_REF)
 	{
-	  addr_space_t as = TYPE_ADDR_SPACE (TREE_TYPE (to));
-	  struct mem_address addr;
-
-	  get_address_description (to, &addr);
-	  op0 = addr_for_mem_ref (&addr, as, true);
-	  op0 = memory_address_addr_space (mode, op0, as);
-	  mem = gen_rtx_MEM (mode, op0);
-	  set_mem_attributes (mem, to, 0);
-	  set_mem_addr_space (mem, as);
+	  gcc_unreachable ();
 	}
       else
 	gcc_unreachable ();
@@ -8659,41 +8651,7 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
       return expand_constructor (exp, target, modifier, false);
 
     case TARGET_MEM_REF:
-      {
-	addr_space_t as = TYPE_ADDR_SPACE (TREE_TYPE (exp));
-	struct mem_address addr;
-	int icode, align;
-
-	get_address_description (exp, &addr);
-	op0 = addr_for_mem_ref (&addr, as, true);
-	op0 = memory_address_addr_space (mode, op0, as);
-	temp = gen_rtx_MEM (mode, op0);
-	set_mem_attributes (temp, exp, 0);
-	set_mem_addr_space (temp, as);
-	align = MAX (TYPE_ALIGN (TREE_TYPE (exp)),
-		     get_object_alignment (exp, BIGGEST_ALIGNMENT));
-	if (mode != BLKmode
-	    && (unsigned) align < GET_MODE_ALIGNMENT (mode)
-	    /* If the target does not have special handling for unaligned
-	       loads of mode then it can use regular moves for them.  */
-	    && ((icode = optab_handler (movmisalign_optab, mode))
-		!= CODE_FOR_nothing))
-	  {
-	    rtx reg, insn;
-
-	    /* We've already validated the memory, and we're creating a
-	       new pseudo destination.  The predicates really can't fail.  */
-	    reg = gen_reg_rtx (mode);
-
-	    /* Nor can the insn generator.  */
-	    insn = GEN_FCN (icode) (reg, temp);
-	    gcc_assert (insn != NULL_RTX);
-	    emit_insn (insn);
-
-	    return reg;
-	  }
-	return temp;
-      }
+      gcc_unreachable ();
 
     case MEM_REF:
       {

@@ -899,11 +899,10 @@ expand_phi_nodes (struct ssaexpand *sa)
 
 
 /* Remove the ssa-names in the current function and translate them into normal
-   compiler variables.  PERFORM_TER is true if Temporary Expression Replacement
-   should also be used.  */
+   compiler variables. */
 
 static void
-remove_ssa_form (bool perform_ter, struct ssaexpand *sa)
+remove_ssa_form (struct ssaexpand *sa)
 {
   bitmap values = NULL;
   var_map map;
@@ -919,13 +918,6 @@ remove_ssa_form (bool perform_ter, struct ssaexpand *sa)
     {
       fprintf (dump_file, "After Coalescing:\n");
       dump_var_map (dump_file, map);
-    }
-
-  if (perform_ter)
-    {
-      values = find_replaceable_exprs (map);
-      if (values && dump_file && (dump_flags & TDF_DETAILS))
-	dump_replaceable_exprs (dump_file, values);
     }
 
   rewrite_trees (map);
@@ -1143,7 +1135,7 @@ rewrite_out_of_ssa (struct ssaexpand *sa)
   if (dump_file && (dump_flags & TDF_DETAILS))
     gimple_dump_cfg (dump_file, dump_flags & ~TDF_DETAILS);
 
-  remove_ssa_form (flag_tree_ter, sa);
+  remove_ssa_form (sa);
 
   if (dump_file && (dump_flags & TDF_DETAILS))
     gimple_dump_cfg (dump_file, dump_flags & ~TDF_DETAILS);

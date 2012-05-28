@@ -13534,13 +13534,13 @@ fold_ternary_loc (location_t loc, enum tree_code code, tree type,
 		return build_zero_cst (type);
 	    }
 	}
-
+#if 0 /* removed for Modula-3 */
       /* A bit-field-ref that referenced the full argument can be stripped.  */
       if (INTEGRAL_TYPE_P (TREE_TYPE (arg0))
 	  && TYPE_PRECISION (TREE_TYPE (arg0)) == tree_low_cst (arg1, 1)
 	  && integer_zerop (op2))
 	return fold_convert_loc (loc, type, arg0);
-
+#endif
       return NULL_TREE;
 
     case FMA_EXPR:

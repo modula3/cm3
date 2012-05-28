@@ -968,7 +968,7 @@ extern int *ira_allocate_cost_vector (enum reg_class);
 extern void ira_free_cost_vector (int *, enum reg_class);
 
 extern void ira_flattening (int, int);
-extern bool ira_build (bool);
+extern bool ira_build (void);
 extern void ira_destroy (void);
 
 /* ira-costs.c */

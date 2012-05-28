@@ -1016,6 +1016,8 @@ add_new_edges_to_heap (fibheap_t heap, VEC (cgraph_edge_p, heap) *new_edges)
 static void
 cgraph_decide_inlining_of_small_functions (void)
 {
+  gcc_unreachable ();
+
   struct cgraph_node *node;
   struct cgraph_edge *edge;
   cgraph_inline_failed_t failed_reason;
@@ -1088,29 +1090,6 @@ cgraph_decide_inlining_of_small_functions (void)
 
       growth = (cgraph_estimate_size_after_inlining (edge->caller, edge->callee)
 		- edge->caller->global.size);
-
-      if (dump_file)
-	{
-	  fprintf (dump_file,
-		   "\nConsidering %s with %i size\n",
-		   cgraph_node_name (edge->callee),
-		   edge->callee->global.size);
-	  fprintf (dump_file,
-		   " to be inlined into %s in %s:%i\n"
-		   " Estimated growth after inlined into all callees is %+i insns.\n"
-		   " Estimated badness is %i, frequency %.2f.\n",
-		   cgraph_node_name (edge->caller),
-		   flag_wpa ? "unknown"
-		   : gimple_filename ((const_gimple) edge->call_stmt),
-		   flag_wpa ? -1 : gimple_lineno ((const_gimple) edge->call_stmt),
-		   cgraph_estimate_growth (edge->callee),
-		   badness,
-		   edge->frequency / (double)CGRAPH_FREQ_BASE);
-	  if (edge->count)
-	    fprintf (dump_file," Called "HOST_WIDEST_INT_PRINT_DEC"x\n", edge->count);
-	  if (dump_flags & TDF_DETAILS)
-	    cgraph_edge_badness (edge, true);
-	}
 
       /* When not having profile info ready we don't weight by any way the
          position of call in procedure itself.  This means if call of
@@ -1274,29 +1253,7 @@ cgraph_decide_inlining_of_small_functions (void)
 	continue;
 #ifdef ENABLE_CHECKING
       gcc_assert (cgraph_edge_badness (edge, false) >= badness);
-#endif
-      if (dump_file)
-	{
-	  fprintf (dump_file,
-		   "\nSkipping %s with %i size\n",
-		   cgraph_node_name (edge->callee),
-		   edge->callee->global.size);
-	  fprintf (dump_file,
-		   " called by %s in %s:%i\n"
-		   " Estimated growth after inlined into all callees is %+i insns.\n"
-		   " Estimated badness is %i, frequency %.2f.\n",
-		   cgraph_node_name (edge->caller),
-		   flag_wpa ? "unknown"
-		   : gimple_filename ((const_gimple) edge->call_stmt),
-		   flag_wpa ? -1 : gimple_lineno ((const_gimple) edge->call_stmt),
-		   cgraph_estimate_growth (edge->callee),
-		   badness,
-		   edge->frequency / (double)CGRAPH_FREQ_BASE);
-	  if (edge->count)
-	    fprintf (dump_file," Called "HOST_WIDEST_INT_PRINT_DEC"x\n", edge->count);
-	  if (dump_flags & TDF_DETAILS)
-	    cgraph_edge_badness (edge, true);
-	}
+#endif	
       if (!edge->callee->local.disregard_inline_limits && edge->inline_failed
           && !cgraph_recursive_inlining_p (edge->caller, edge->callee,
 				           &edge->inline_failed))
