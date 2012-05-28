@@ -92,7 +92,6 @@ struct GTY(()) cgraph_thunk_info {
    Available after function is analyzed.  */
 
 struct GTY(()) cgraph_local_info {
-
   struct inline_summary inline_summary;
 
   /* Set when function function is visible in current compilation unit only
@@ -623,7 +622,7 @@ bool cgraph_inline_p (struct cgraph_edge *, cgraph_inline_failed_t *reason);
 bool cgraph_preserve_function_body_p (tree);
 void verify_cgraph (void);
 void verify_cgraph_node (struct cgraph_node *);
-void cgraph_build_static_cdtor (char which, tree body, int priority);
+#define cgraph_build_static_cdtor(which, body, priority) (gcc_unreachable ())
 void cgraph_reset_static_var_maps (void);
 void init_cgraph (void);
 struct cgraph_node *cgraph_function_versioning (struct cgraph_node *,

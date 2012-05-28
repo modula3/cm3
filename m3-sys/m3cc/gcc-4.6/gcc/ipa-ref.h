@@ -79,11 +79,7 @@ struct GTY(()) ipa_ref_list
   VEC(ipa_ref_ptr,heap) * GTY((skip)) refering;
 };
 
-struct ipa_ref * ipa_record_reference (struct cgraph_node *,
-				       struct varpool_node *,
-				       struct cgraph_node *,
-				       struct varpool_node *,
-				       enum ipa_ref_use, gimple);
+#define ipa_record_reference(cgraph_node1, varpool_node2, cgraph_node3, varpool_node4, ipa_ref_use5, gimple6) /* nothing */
 
 void ipa_remove_reference (struct ipa_ref *);
 void ipa_remove_all_references (struct ipa_ref_list *);

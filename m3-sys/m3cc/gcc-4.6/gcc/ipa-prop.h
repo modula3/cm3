@@ -333,8 +333,6 @@ DEF_VEC_ALLOC_O (ipa_edge_args_t, gc);
 
 /* Vector where the parameter infos are actually stored. */
 extern VEC (ipa_node_params_t, heap) *ipa_node_params_vector;
-/* Vector where the parameter infos are actually stored. */
-extern GTY(()) VEC (ipa_edge_args_t, gc) *ipa_edge_args_vector;
 
 /* Return the associated parameter/argument info corresponding to the given
    node/edge.  */
@@ -380,14 +378,7 @@ ipa_check_create_node_params (void)
 static inline void
 ipa_check_create_edge_args (void)
 {
-  if (!ipa_edge_args_vector)
-    ipa_edge_args_vector = VEC_alloc (ipa_edge_args_t, gc,
-				      cgraph_edge_max_uid);
-
-  if (VEC_length (ipa_edge_args_t, ipa_edge_args_vector)
-      <=  (unsigned) cgraph_edge_max_uid)
-    VEC_safe_grow_cleared (ipa_edge_args_t, gc, ipa_edge_args_vector,
-			   cgraph_edge_max_uid + 1);
+  gcc_unreachable ();
 }
 
 /* Returns true if the array of edge infos is large enough to accommodate an
@@ -397,8 +388,7 @@ ipa_check_create_edge_args (void)
 static inline bool
 ipa_edge_args_info_available_for_edge_p (struct cgraph_edge *edge)
 {
-  return ((unsigned) edge->uid < VEC_length (ipa_edge_args_t,
-					     ipa_edge_args_vector));
+  gcc_unreachable ();
 }
 
 /* A function list element.  It is used to create a temporary worklist used in

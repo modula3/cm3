@@ -911,6 +911,8 @@ branch_prob (void)
   struct edge_list *el;
   histogram_values values = NULL;
 
+  gcc_unreachable ();
+
   total_num_times_called++;
 
   flow_call_edges_add (NULL);
@@ -1264,6 +1266,8 @@ find_spanning_tree (struct edge_list *el)
   int i;
   int num_edges = NUM_EDGES (el);
   basic_block bb;
+  
+  gcc_unreachable ();
 
   /* We use aux field for standard union-find algorithm.  */
   FOR_BB_BETWEEN (bb, ENTRY_BLOCK_PTR, NULL, next_bb)
@@ -1323,63 +1327,6 @@ find_spanning_tree (struct edge_list *el)
 
   FOR_BB_BETWEEN (bb, ENTRY_BLOCK_PTR, NULL, next_bb)
     bb->aux = NULL;
-}
-
-/* Perform file-level initialization for branch-prob processing.  */
-
-void
-init_branch_prob (void)
-{
-  int i;
-
-  total_num_blocks = 0;
-  total_num_edges = 0;
-  total_num_edges_ignored = 0;
-  total_num_edges_instrumented = 0;
-  total_num_blocks_created = 0;
-  total_num_passes = 0;
-  total_num_times_called = 0;
-  total_num_branches = 0;
-  for (i = 0; i < 20; i++)
-    total_hist_br_prob[i] = 0;
-}
-
-/* Performs file-level cleanup after branch-prob processing
-   is completed.  */
-
-void
-end_branch_prob (void)
-{
-  if (dump_file)
-    {
-      fprintf (dump_file, "\n");
-      fprintf (dump_file, "Total number of blocks: %d\n",
-	       total_num_blocks);
-      fprintf (dump_file, "Total number of edges: %d\n", total_num_edges);
-      fprintf (dump_file, "Total number of ignored edges: %d\n",
-	       total_num_edges_ignored);
-      fprintf (dump_file, "Total number of instrumented edges: %d\n",
-	       total_num_edges_instrumented);
-      fprintf (dump_file, "Total number of blocks created: %d\n",
-	       total_num_blocks_created);
-      fprintf (dump_file, "Total number of graph solution passes: %d\n",
-	       total_num_passes);
-      if (total_num_times_called != 0)
-	fprintf (dump_file, "Average number of graph solution passes: %d\n",
-		 (total_num_passes + (total_num_times_called  >> 1))
-		 / total_num_times_called);
-      fprintf (dump_file, "Total number of branches: %d\n",
-	       total_num_branches);
-      if (total_num_branches)
-	{
-	  int i;
-
-	  for (i = 0; i < 10; i++)
-	    fprintf (dump_file, "%d%% branches in range %d-%d%%\n",
-		     (total_hist_br_prob[i] + total_hist_br_prob[19-i]) * 100
-		     / total_num_branches, 5*i, 5*i+5);
-	}
-    }
 }
 
 EXTERN_C_END

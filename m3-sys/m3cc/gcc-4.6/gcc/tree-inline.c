@@ -3832,11 +3832,6 @@ expand_call_inline (basic_block bb, gimple stmt, copy_body_data *id)
     }
   fn = cg_edge->callee->decl;
 
-#ifdef ENABLE_CHECKING
-  if (cg_edge->callee->decl != id->dst_node->decl)
-    verify_cgraph_node (cg_edge->callee);
-#endif
-
   /* We will be inlining this callee.  */
   id->eh_lp_nr = lookup_stmt_eh_lp (stmt);
 
@@ -4191,93 +4186,8 @@ has_abnormal_outgoing_edge_p (basic_block bb)
 unsigned int
 optimize_inline_calls (tree fn)
 {
-  copy_body_data id;
-  basic_block bb;
-  int last = n_basic_blocks;
-  struct gimplify_ctx gctx;
-  bool inlined_p = false;
-
-  /* There is no point in performing inlining if errors have already
-     occurred -- and we might crash if we try to inline invalid
-     code.  */
-  if (seen_error ())
-    return 0;
-
-  /* Clear out ID.  */
-  memset (&id, 0, sizeof (id));
-
-  id.src_node = id.dst_node = cgraph_node (fn);
-  id.dst_fn = fn;
-  /* Or any functions that aren't finished yet.  */
-  if (current_function_decl)
-    id.dst_fn = current_function_decl;
-
-  id.copy_decl = copy_decl_maybe_to_var;
-  id.transform_call_graph_edges = CB_CGE_DUPLICATE;
-  id.transform_new_cfg = false;
-  id.transform_return_to_modify = true;
-  id.transform_lang_insert_block = NULL;
-  id.statements_to_fold = pointer_set_create ();
-
-  push_gimplify_context (&gctx);
-
-  /* We make no attempts to keep dominance info up-to-date.  */
-  free_dominance_info (CDI_DOMINATORS);
-  free_dominance_info (CDI_POST_DOMINATORS);
-
-  /* Register specific gimple functions.  */
-  gimple_register_cfg_hooks ();
-
-  /* Reach the trees by walking over the CFG, and note the
-     enclosing basic-blocks in the call edges.  */
-  /* We walk the blocks going forward, because inlined function bodies
-     will split id->current_basic_block, and the new blocks will
-     follow it; we'll trudge through them, processing their CALL_EXPRs
-     along the way.  */
-  FOR_EACH_BB (bb)
-    inlined_p |= gimple_expand_calls_inline (bb, &id);
-
-  pop_gimplify_context (NULL);
-
-#ifdef ENABLE_CHECKING
-    {
-      struct cgraph_edge *e;
-
-      verify_cgraph_node (id.dst_node);
-
-      /* Double check that we inlined everything we are supposed to inline.  */
-      for (e = id.dst_node->callees; e; e = e->next_callee)
-	gcc_assert (e->inline_failed);
-    }
-#endif
-
-  /* Fold queued statements.  */
-  fold_marked_statements (last, id.statements_to_fold);
-  pointer_set_destroy (id.statements_to_fold);
-
-  gcc_assert (!id.debug_stmts);
-
-  /* If we didn't inline into the function there is nothing to do.  */
-  if (!inlined_p)
-    return 0;
-
-  /* Renumber the lexical scoping (non-code) blocks consecutively.  */
-  number_blocks (fn);
-
-  delete_unreachable_blocks_update_callgraph (&id);
-#ifdef ENABLE_CHECKING
-  verify_cgraph_node (id.dst_node);
-#endif
-
-  /* It would be nice to check SSA/CFG/statement consistency here, but it is
-     not possible yet - the IPA passes might make various functions to not
-     throw and they don't care to proactively update local EH info.  This is
-     done later in fixup_cfg pass that also execute the verification.  */
-  return (TODO_update_ssa
-	  | TODO_cleanup_cfg
-	  | (gimple_in_ssa_p (cfun) ? TODO_remove_unused_locals : 0)
-	  | (gimple_in_ssa_p (cfun) ? TODO_update_address_taken : 0)
-	  | (profile_status != PROFILE_ABSENT ? TODO_rebuild_frequencies : 0));
+  gcc_unreachable ();
+  return 0;
 }
 
 /* Passed to walk_tree.  Copies the node pointed to, if appropriate.  */

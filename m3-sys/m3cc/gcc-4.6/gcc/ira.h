@@ -30,7 +30,7 @@ extern HARD_REG_SET ira_no_alloc_regs;
 
 /* True if we have allocno conflicts.  It is false for non-optimized
    mode or when the conflict table is too big.  */
-extern bool ira_conflicts_p;
+#define ira_conflicts_p (false)
 
 struct target_ira {
   /* Number of given class hard registers available for the register

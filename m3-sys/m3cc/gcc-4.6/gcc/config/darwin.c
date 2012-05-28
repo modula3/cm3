@@ -50,9 +50,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "debug.h"
 #include "obstack.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* Darwin supports a feature called fix-and-continue, which is used
    for rapid turn around debugging.  When code is compiled with the
@@ -84,12 +82,6 @@ extern "C" {
    of MACHO_SYMBOL_STATIC for the code that handles @code{static}
    symbol indirection.  */
 
-/* For darwin >= 9  (OSX 10.5) the linker is capable of making the necessary
-   branch islands and we no longer need to emit darwin stubs.
-   However, if we are generating code for earlier systems (or for use in the 
-   kernel) the stubs might still be required, and this will be set true.  */
-int darwin_emit_branch_islands = false;
-
 /* A flag to determine whether we are running c++ or obj-c++.  This has to be
    settable from non-c-family contexts too (i.e. we can't use the c_dialect_
    functions).  */
@@ -110,10 +102,6 @@ section * darwin_sections[NUM_DARWIN_SECTIONS];
 
 /* True if we're setting __attribute__ ((ms_struct)).  */
 int darwin_ms_struct = false;
-
-/* Earlier versions of Darwin as do not recognize an alignment field in 
-   .comm directives, this should be set for versions that allow it.  */
-int emit_aligned_common = false;
 
 /* A get_unnamed_section callback used to switch to an ObjC section.
    DIRECTIVE is as for output_section_asm_op.  */
@@ -720,28 +708,6 @@ machopic_indirect_data_reference (rtx orig, rtx reg)
 rtx
 machopic_indirect_call_target (rtx target)
 {
-  if (! darwin_emit_branch_islands)
-    return target;
-
-  if (GET_CODE (target) != MEM)
-    return target;
-
-  if (MACHOPIC_INDIRECT
-      && GET_CODE (XEXP (target, 0)) == SYMBOL_REF
-      && !(SYMBOL_REF_FLAGS (XEXP (target, 0))
-	   & MACHO_SYMBOL_FLAG_DEFINED))
-    {
-      rtx sym_ref = XEXP (target, 0);
-      const char *stub_name = machopic_indirection_name (sym_ref,
-							 /*stub_p=*/true);
-      enum machine_mode mode = GET_MODE (sym_ref);
-
-      XEXP (target, 0) = gen_rtx_SYMBOL_REF (mode, stub_name);
-      SYMBOL_REF_DATA (XEXP (target, 0)) = SYMBOL_REF_DATA (sym_ref);
-      MEM_READONLY_P (target) = 1;
-      MEM_NOTRAP_P (target) = 1;
-    }
-
   return target;
 }
 
@@ -2194,10 +2160,8 @@ darwin_emit_common (FILE *fp, const char *name,
 
   /* Earlier systems complain if the alignment exceeds the page size. 
      The magic number is 4096 * 8 - hard-coded for legacy systems.  */
-  if (!emit_aligned_common && (align > 32768UL))
+  if (align > 32768UL)
     align = 4096UL; /* In units.  */
-  else
-    align /= BITS_PER_UNIT;
 
   /* Make sure we have a meaningful align.  */
   if (!align)
@@ -2227,8 +2191,8 @@ darwin_emit_common (FILE *fp, const char *name,
   fputs ("\t.comm\t", fp);
   assemble_name (fp, name);
   fprintf (fp, "," HOST_WIDE_INT_PRINT_UNSIGNED, 
-	   emit_aligned_common?size:rounded);
-  if (l2align && emit_aligned_common)
+	   rounded);
+  if (l2align)
     fprintf (fp, ",%u", l2align);
   fputs ("\n", fp);
 }
@@ -2783,21 +2747,7 @@ darwin_override_options (void)
 
   if (flag_mkernel || flag_apple_kext)
     {
-      /* -mkernel implies -fapple-kext for C++ */
-      if (strcmp (lang_hooks.name, "GNU C++") == 0)
-	flag_apple_kext = 1;
-
-      flag_no_common = 1;
-
-      /* No EH in kexts.  */
-      flag_exceptions = 0;
-      /* No -fnon-call-exceptions data in kexts.  */
-      flag_non_call_exceptions = 0;
-      /* so no tables either.. */
-      flag_unwind_tables = 0;
-      flag_asynchronous_unwind_tables = 0;
-      /* We still need to emit branch islands for kernel context.  */
-      darwin_emit_branch_islands = true;
+      gcc_unreachable ();
     }
 
   if (flag_var_tracking
@@ -2807,23 +2757,8 @@ darwin_override_options (void)
       && write_symbols == DWARF2_DEBUG)
     flag_var_tracking_uninit = 1;
 
-  if (MACHO_DYNAMIC_NO_PIC_P)
-    {
-      if (flag_pic)
-	warning (0, "-mdynamic-no-pic overrides -fpic or -fPIC");
-      flag_pic = 0;
-    }
-  else if (flag_pic == 1)
-    {
-      /* Darwin's -fpic is -fPIC.  */
-      flag_pic = 2;
-    }
-
-  /* It is assumed that branch island stubs are needed for earlier systems.  */
-  if (generating_for_darwin_version < 9)
-    darwin_emit_branch_islands = true;
-  else
-    emit_aligned_common = true; /* Later systems can support aligned common.  */
+  /* Darwin's -fpic is -fPIC.  */
+  flag_pic = 2;
 
   /* The c_dialect...() macros are not available to us here.  */
   darwin_running_cxx = (strstr (lang_hooks.name, "C++") != 0);
@@ -3280,8 +3215,6 @@ darwin_function_switched_text_sections (FILE *fp, tree decl, bool new_is_cold)
   fputs (":\n", fp);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #include "gt-darwin.h"

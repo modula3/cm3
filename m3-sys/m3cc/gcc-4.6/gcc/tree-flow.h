@@ -388,7 +388,7 @@ extern struct omp_region *new_omp_region (basic_block, enum gimple_code,
 					  struct omp_region *);
 extern void free_omp_regions (void);
 void omp_expand_local (basic_block);
-extern tree find_omp_clause (tree, enum omp_clause_code);
+#define find_omp_clause(tree, omp_clause_code) (gcc_unreachable (), 0)
 tree copy_var_decl (tree, tree, tree);
 
 /*---------------------------------------------------------------------------
@@ -549,7 +549,7 @@ extern edge ssa_redirect_edge (edge, basic_block);
 extern void flush_pending_stmts (edge);
 extern void verify_ssa (bool);
 extern void delete_tree_ssa (void);
-extern bool ssa_undefined_value_p (tree);
+#define ssa_undefined_value_p(tree) (gcc_unreachable (), true)
 extern void warn_uninit (tree, const char *, void *);
 extern unsigned int warn_uninitialized_vars (bool);
 extern void execute_update_addresses_taken (void);
@@ -596,7 +596,7 @@ extern void ssanames_print_statistics (void);
 #endif
 
 /* In tree-ssa-ccp.c  */
-tree fold_const_aggregate_ref (tree);
+#define fold_const_aggregate_ref(tree) (gcc_unreachable (), 0)
 
 /* In tree-ssa-dom.c  */
 extern void dump_dominator_optimization_stats (FILE *);

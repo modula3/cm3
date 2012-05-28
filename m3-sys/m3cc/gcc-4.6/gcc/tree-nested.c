@@ -93,17 +93,31 @@ struct nesting_info
   tree context;
   tree new_local_var_chain;
   tree debug_var_chain;
-  tree frame_type;
-  tree frame_decl;
-  tree chain_field;
-  tree chain_decl;
+  tree frame_type;  /* Type of the non-local frame struct. */
+  tree frame_decl;  /* Vardecl of the non-local frame struct. */
+  tree chain_field; /* A field of the non-local frame struct that contains 
+                       a copy of the static link.  Used at runtime when 
+                       we followed one SL to get here (and thus we know the 
+                       address of only the non-local frame struct, not of the 
+                       activation record that contains it), and we need to 
+                       follow another static link. */ 
+  tree chain_decl;  /* Vardecl of the static link stored in the activation 
+                       record itself.  This is not contained in the non-local
+                       frame struct.  It is used to follow the first static
+                       link from the executing frame. */ 
   tree nl_goto_field;
 
-  bool any_parm_remapped;
+  bool any_parm_remapped; /* The non-local frame struct contains a pointer
+                             to a parameter.  This will be a copy of the
+                             pointer that was passed by the caller. */ 
   bool any_tramp_created;
   char static_chain_added;
 };
 
+/* must agree with m3gdb/m3-util.c */
+static const char nonlocal_var_rec_name[] = "_nonlocal_var_rec"; 
+static const char static_link_var_name[] = "_static_link_var"; 
+static const char static_link_copy_field_name[] = "_static_link_copy_field"; 
 
 /* Iterate over the nesting tree, starting with ROOT, depth first.  */
 
@@ -237,7 +251,7 @@ get_frame_type (struct nesting_info *info)
       free (name);
 
       info->frame_type = type;
-      info->frame_decl = create_tmp_var_for (info, type, "FRAME");
+      info->frame_decl = create_tmp_var_for (info, type, nonlocal_var_rec_name);
 
       /* ??? Always make it addressable for now, since it is meant to
 	 be pointed to by the static chain pointer.  This pessimizes
@@ -246,6 +260,7 @@ get_frame_type (struct nesting_info *info)
 	 reachable, but the true pessimization is to create the non-
 	 local frame structure in the first place.  */
       TREE_ADDRESSABLE (info->frame_decl) = 1;
+      DECL_IGNORED_P (info->frame_decl) = 0; /* m3gdb needs this */
     }
   return type;
 }
@@ -340,9 +355,9 @@ get_chain_decl (struct nesting_info *info)
 	 close to the truth, since the initial value does come from
 	 the caller.  */
       decl = build_decl (DECL_SOURCE_LOCATION (info->context),
-			 PARM_DECL, create_tmp_var_name ("CHAIN"), type);
+			 PARM_DECL, create_tmp_var_name (static_link_var_name), type);
       DECL_ARTIFICIAL (decl) = 1;
-      DECL_IGNORED_P (decl) = 1;
+      DECL_IGNORED_P (decl) = 0; /* m3gdb needs this */
       TREE_USED (decl) = 1;
       DECL_CONTEXT (decl) = info->context;
       DECL_ARG_TYPE (decl) = type;
@@ -378,10 +393,11 @@ get_chain_field (struct nesting_info *info)
       tree type = build_pointer_type (get_frame_type (info->outer));
 
       field = make_node (FIELD_DECL);
-      DECL_NAME (field) = get_identifier ("__chain");
+      DECL_NAME (field) = get_identifier (static_link_copy_field_name);
       TREE_TYPE (field) = type;
       DECL_ALIGN (field) = TYPE_ALIGN (type);
       DECL_NONADDRESSABLE_P (field) = 1;
+      DECL_IGNORED_P (field) = 0; /* m3gdb should know about this field. */
 
       insert_field_into_struct (get_frame_type (info), field);
 
@@ -2066,6 +2082,35 @@ convert_gimple_call (gimple_stmt_iterator *gsi, bool *handled_ops_p,
   return NULL_TREE;
 }
 
+static tree
+convert_gimple_call_op (tree *tp, int *walk_subtrees, void *data)
+{
+  struct walk_stmt_info *wi = (struct walk_stmt_info *) data;
+  struct nesting_info *const info = (struct nesting_info *) wi->info;
+  tree t = *tp, decl, target_context;
+
+  *walk_subtrees = 0;
+  switch (TREE_CODE (t))
+    {
+    case STATIC_CHAIN_EXPR:
+      decl = TREE_OPERAND (t, 0);
+      target_context = decl_function_context (decl);
+      gcc_assert (target_context);
+	  if (info->context == target_context)
+	    {
+	      /* Make sure frame_decl gets created.  */
+	      (void) get_frame_type (info);
+	    }
+	  *tp = get_static_chain (info, target_context, &wi->gsi);
+      break;
+
+    default:
+      break;
+    }
+
+  return NULL_TREE;
+}
+
 /* Walk the nesting tree starting with ROOT.  Convert all trampolines and
    call expressions.  At the same time, determine if a nested function
    actually uses its static chain; if not, remember that.  */
@@ -2115,7 +2160,7 @@ convert_all_function_calls (struct nesting_info *root)
 	  tree decl = n->context;
 	  walk_function (convert_tramp_reference_stmt,
 			 convert_tramp_reference_op, n);
-	  walk_function (convert_gimple_call, NULL, n);
+	  walk_function (convert_gimple_call, convert_gimple_call_op, n);
 	  chain_count += DECL_STATIC_CHAIN (decl);
 	}
     }
@@ -2433,7 +2478,7 @@ finalize_nesting_tree_1 (struct nesting_info *root)
   if (root->new_local_var_chain)
     declare_vars (root->new_local_var_chain,
 		  gimple_seq_first_stmt (gimple_body (root->context)),
-		  false);
+		  true);
 
   if (root->debug_var_chain)
     {

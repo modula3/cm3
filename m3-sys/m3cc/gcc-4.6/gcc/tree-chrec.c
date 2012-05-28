@@ -1171,99 +1171,9 @@ convert_affine_scev (struct loop *loop, tree type,
 		     tree *base, tree *step, gimple at_stmt,
 		     bool use_overflow_semantics)
 {
-  tree ct = TREE_TYPE (*step);
-  bool enforce_overflow_semantics;
-  bool must_check_src_overflow, must_check_rslt_overflow;
-  tree new_base, new_step;
-  tree step_type = POINTER_TYPE_P (type) ? sizetype : type;
-
-  /* In general,
-     (TYPE) (BASE + STEP * i) = (TYPE) BASE + (TYPE -- sign extend) STEP * i,
-     but we must check some assumptions.
-
-     1) If [BASE, +, STEP] wraps, the equation is not valid when precision
-        of CT is smaller than the precision of TYPE.  For example, when we
-	cast unsigned char [254, +, 1] to unsigned, the values on left side
-	are 254, 255, 0, 1, ..., but those on the right side are
-	254, 255, 256, 257, ...
-     2) In case that we must also preserve the fact that signed ivs do not
-        overflow, we must additionally check that the new iv does not wrap.
-	For example, unsigned char [125, +, 1] casted to signed char could
-	become a wrapping variable with values 125, 126, 127, -128, -127, ...,
-	which would confuse optimizers that assume that this does not
-	happen.  */
-  must_check_src_overflow = TYPE_PRECISION (ct) < TYPE_PRECISION (type);
-
-  enforce_overflow_semantics = (use_overflow_semantics
-				&& nowrap_type_p (type));
-  if (enforce_overflow_semantics)
-    {
-      /* We can avoid checking whether the result overflows in the following
-	 cases:
-
-	 -- must_check_src_overflow is true, and the range of TYPE is superset
-	    of the range of CT -- i.e., in all cases except if CT signed and
-	    TYPE unsigned.
-         -- both CT and TYPE have the same precision and signedness, and we
-	    verify instead that the source does not overflow (this may be
-	    easier than verifying it for the result, as we may use the
-	    information about the semantics of overflow in CT).  */
-      if (must_check_src_overflow)
-	{
-	  if (TYPE_UNSIGNED (type) && !TYPE_UNSIGNED (ct))
-	    must_check_rslt_overflow = true;
-	  else
-	    must_check_rslt_overflow = false;
-	}
-      else if (TYPE_UNSIGNED (ct) == TYPE_UNSIGNED (type)
-	       && TYPE_PRECISION (ct) == TYPE_PRECISION (type))
-	{
-	  must_check_rslt_overflow = false;
-	  must_check_src_overflow = true;
-	}
-      else
-	must_check_rslt_overflow = true;
-    }
-  else
-    must_check_rslt_overflow = false;
-
-  if (must_check_src_overflow
-      && scev_probably_wraps_p (*base, *step, at_stmt, loop,
-				use_overflow_semantics))
-    return false;
-
-  new_base = chrec_convert_1 (type, *base, at_stmt,
-			      use_overflow_semantics);
-  /* The step must be sign extended, regardless of the signedness
-     of CT and TYPE.  This only needs to be handled specially when
-     CT is unsigned -- to avoid e.g. unsigned char [100, +, 255]
-     (with values 100, 99, 98, ...) from becoming signed or unsigned
-     [100, +, 255] with values 100, 355, ...; the sign-extension is
-     performed by default when CT is signed.  */
-  new_step = *step;
-  if (TYPE_PRECISION (step_type) > TYPE_PRECISION (ct) && TYPE_UNSIGNED (ct))
-    {
-      tree signed_ct = build_nonstandard_integer_type (TYPE_PRECISION (ct), 0);
-      new_step = chrec_convert_1 (signed_ct, new_step, at_stmt,
-                                  use_overflow_semantics);
-    }
-  new_step = chrec_convert_1 (step_type, new_step, at_stmt, use_overflow_semantics);
-
-  if (automatically_generated_chrec_p (new_base)
-      || automatically_generated_chrec_p (new_step))
-    return false;
-
-  if (must_check_rslt_overflow
-      /* Note that in this case we cannot use the fact that signed variables
-	 do not overflow, as this is what we are verifying for the new iv.  */
-      && scev_probably_wraps_p (new_base, new_step, at_stmt, loop, false))
-    return false;
-
-  *base = new_base;
-  *step = new_step;
-  return true;
+  gcc_unreachable ();
+  return 0;
 }
-
 
 /* Convert CHREC for the right hand side of a CHREC.
    The increment for a pointer type is always sizetype.  */

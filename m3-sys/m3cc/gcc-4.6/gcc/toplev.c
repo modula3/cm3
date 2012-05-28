@@ -412,7 +412,7 @@ wrapup_global_declaration_2 (tree decl)
       bool needed = true;
       node = varpool_get_node (decl);
 
-      if (!node && flag_ltrans)
+      if (!node)
 	needed = false;
       else if (node && node->finalized)
 	needed = false;
@@ -564,7 +564,6 @@ compile_file (void)
 
   init_cgraph ();
   init_final (main_input_filename);
-  coverage_init (aux_base_name);
   statistics_init ();
   invoke_plugin_callbacks (PLUGIN_START_UNIT, NULL);
 
@@ -578,7 +577,7 @@ compile_file (void)
      what's left of the symbol table output.  */
   timevar_pop (TV_PARSE);
 
-  if (flag_syntax_only || flag_wpa)
+  if (flag_syntax_only)
     return;
 
   ggc_protect_identifiers = false;
@@ -1808,8 +1807,6 @@ finalize (bool no_backend)
 	fatal_error ("error writing to %s: %m", asm_file_name);
       if (fclose (asm_out_file) != 0)
 	fatal_error ("error closing %s: %m", asm_file_name);
-      if (flag_wpa)
-	unlink_if_ordinary (asm_file_name);
     }
 
   if (stack_usage_file)

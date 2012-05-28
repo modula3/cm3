@@ -231,7 +231,7 @@ extern bool flow_bb_inside_loop_p (const struct loop *, const_basic_block);
 extern struct loop * find_common_loop (struct loop *, struct loop *);
 struct loop *superloop_at_depth (struct loop *, unsigned);
 struct eni_weights_d;
-extern unsigned tree_num_loop_insns (struct loop *, struct eni_weights_d *);
+#define tree_num_loop_insns(loop, eni_weights_d) (gcc_unreachable (), 1)
 extern int num_loop_insns (const struct loop *);
 extern int average_num_loop_insns (const struct loop *);
 extern unsigned get_loop_level (const struct loop *);
@@ -668,8 +668,8 @@ extern unsigned estimate_reg_pressure_cost (unsigned, unsigned, bool, bool);
 extern void init_set_costs (void);
 
 /* Loop optimizer initialization.  */
-extern void loop_optimizer_init (unsigned);
-extern void loop_optimizer_finalize (void);
+#define loop_optimizer_init(x) gcc_unreachable ()
+#define loop_optimizer_finalize() gcc_unreachable ()
 
 /* Optimization passes.  */
 extern void unswitch_loops (void);

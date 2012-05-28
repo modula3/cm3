@@ -32494,57 +32494,8 @@ ix86_builtin_vectorization_cost (enum vect_cost_for_stmt type_of_cost,
 static tree
 ix86_vectorize_builtin_vec_perm (tree vec_type, tree *mask_type)
 {
-  tree itype = TREE_TYPE (vec_type);
-  bool u = TYPE_UNSIGNED (itype);
-  enum machine_mode vmode = TYPE_MODE (vec_type);
-  enum ix86_builtins fcode;
-  bool ok = TARGET_SSE2;
-
-  switch (vmode)
-    {
-    case V4DFmode:
-      ok = TARGET_AVX;
-      fcode = IX86_BUILTIN_VEC_PERM_V4DF;
-      goto get_di;
-    case V2DFmode:
-      fcode = IX86_BUILTIN_VEC_PERM_V2DF;
-    get_di:
-      itype = ix86_get_builtin_type (IX86_BT_DI);
-      break;
-
-    case V8SFmode:
-      ok = TARGET_AVX;
-      fcode = IX86_BUILTIN_VEC_PERM_V8SF;
-      goto get_si;
-    case V4SFmode:
-      ok = TARGET_SSE;
-      fcode = IX86_BUILTIN_VEC_PERM_V4SF;
-    get_si:
-      itype = ix86_get_builtin_type (IX86_BT_SI);
-      break;
-
-    case V2DImode:
-      fcode = u ? IX86_BUILTIN_VEC_PERM_V2DI_U : IX86_BUILTIN_VEC_PERM_V2DI;
-      break;
-    case V4SImode:
-      fcode = u ? IX86_BUILTIN_VEC_PERM_V4SI_U : IX86_BUILTIN_VEC_PERM_V4SI;
-      break;
-    case V8HImode:
-      fcode = u ? IX86_BUILTIN_VEC_PERM_V8HI_U : IX86_BUILTIN_VEC_PERM_V8HI;
-      break;
-    case V16QImode:
-      fcode = u ? IX86_BUILTIN_VEC_PERM_V16QI_U : IX86_BUILTIN_VEC_PERM_V16QI;
-      break;
-    default:
-      ok = false;
-      break;
-    }
-
-  if (!ok)
-    return NULL_TREE;
-
-  *mask_type = itype;
-  return ix86_builtins[(int) fcode];
+  gcc_unreachable ();
+  return 0;
 }
 
 /* Return a vector mode with twice as many elements as VMODE.  */
@@ -33594,53 +33545,8 @@ ix86_expand_vec_perm_builtin (tree exp)
 static bool
 ix86_vectorize_builtin_vec_perm_ok (tree vec_type, tree mask)
 {
-  struct expand_vec_perm_d d;
-  int vec_mask;
-  bool ret, one_vec;
-
-  d.vmode = TYPE_MODE (vec_type);
-  d.nelt = GET_MODE_NUNITS (d.vmode);
-  d.testing_p = true;
-
-  /* Given sufficient ISA support we can just return true here
-     for selected vector modes.  */
-  if (GET_MODE_SIZE (d.vmode) == 16)
-    {
-      /* All implementable with a single vpperm insn.  */
-      if (TARGET_XOP)
-	return true;
-      /* All implementable with 2 pshufb + 1 ior.  */
-      if (TARGET_SSSE3)
-	return true;
-      /* All implementable with shufpd or unpck[lh]pd.  */
-      if (d.nelt == 2)
-	return true;
-    }
-
-  vec_mask = extract_vec_perm_cst (&d, mask);
-
-  /* This hook is cannot be called in response to something that the
-     user does (unlike the builtin expander) so we shouldn't ever see
-     an error generated from the extract.  */
-  gcc_assert (vec_mask > 0 && vec_mask <= 3);
-  one_vec = (vec_mask != 3);
-
-  /* Implementable with shufps or pshufd.  */
-  if (one_vec && (d.vmode == V4SFmode || d.vmode == V4SImode))
-    return true;
-
-  /* Otherwise we have to go through the motions and see if we can
-     figure out how to generate the requested permutation.  */
-  d.target = gen_raw_REG (d.vmode, LAST_VIRTUAL_REGISTER + 1);
-  d.op1 = d.op0 = gen_raw_REG (d.vmode, LAST_VIRTUAL_REGISTER + 2);
-  if (!one_vec)
-    d.op1 = gen_raw_REG (d.vmode, LAST_VIRTUAL_REGISTER + 3);
-
-  start_sequence ();
-  ret = ix86_expand_vec_perm_builtin_1 (&d);
-  end_sequence ();
-
-  return ret;
+  gcc_unreachable ();
+  return 0;
 }
 
 void

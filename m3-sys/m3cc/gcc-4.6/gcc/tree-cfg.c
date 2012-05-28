@@ -595,12 +595,12 @@ make_edges (void)
 	    case GIMPLE_OMP_ORDERED:
 	    case GIMPLE_OMP_CRITICAL:
 	    case GIMPLE_OMP_SECTION:
-	      cur_region = new_omp_region (bb, code, cur_region);
+	      gcc_unreachable ();
 	      fallthru = true;
 	      break;
 
 	    case GIMPLE_OMP_SECTIONS:
-	      cur_region = new_omp_region (bb, code, cur_region);
+	      gcc_unreachable ();
 	      fallthru = true;
 	      break;
 
@@ -686,9 +686,6 @@ make_edges (void)
             assign_discriminator (gimple_location (last), bb->next_bb);
 	}
     }
-
-  if (root_omp_region)
-    free_omp_regions ();
 
   /* Fold COND_EXPR_COND of each COND_EXPR.  */
   fold_cond_expr_cond ();
@@ -1543,68 +1540,7 @@ single_imm_use_1 (const ssa_use_operand_t *head,
 void
 replace_uses_by (tree name, tree val)
 {
-  imm_use_iterator imm_iter;
-  use_operand_p use;
-  gimple stmt;
-  edge e;
-
-  FOR_EACH_IMM_USE_STMT (stmt, imm_iter, name)
-    {
-      FOR_EACH_IMM_USE_ON_STMT (use, imm_iter)
-        {
-	  replace_exp (use, val);
-
-	  if (gimple_code (stmt) == GIMPLE_PHI)
-	    {
-	      e = gimple_phi_arg_edge (stmt, PHI_ARG_INDEX_FROM_USE (use));
-	      if (e->flags & EDGE_ABNORMAL)
-		{
-		  /* This can only occur for virtual operands, since
-		     for the real ones SSA_NAME_OCCURS_IN_ABNORMAL_PHI (name))
-		     would prevent replacement.  */
-		  gcc_assert (!is_gimple_reg (name));
-		  SSA_NAME_OCCURS_IN_ABNORMAL_PHI (val) = 1;
-		}
-	    }
-	}
-
-      if (gimple_code (stmt) != GIMPLE_PHI)
-	{
-	  size_t i;
-
-	  fold_stmt_inplace (stmt);
-	  if (cfgcleanup_altered_bbs && !is_gimple_debug (stmt))
-	    bitmap_set_bit (cfgcleanup_altered_bbs, gimple_bb (stmt)->index);
-
-	  /* FIXME.  This should go in update_stmt.  */
-	  for (i = 0; i < gimple_num_ops (stmt); i++)
-	    {
-	      tree op = gimple_op (stmt, i);
-              /* Operands may be empty here.  For example, the labels
-                 of a GIMPLE_COND are nulled out following the creation
-                 of the corresponding CFG edges.  */
-	      if (op && TREE_CODE (op) == ADDR_EXPR)
-		recompute_tree_invariant_for_addr_expr (op);
-	    }
-
-	  maybe_clean_or_replace_eh_stmt (stmt, stmt);
-	  update_stmt (stmt);
-	}
-    }
-
-  gcc_assert (has_zero_uses (name));
-
-  /* Also update the trees stored in loop structures.  */
-  if (current_loops)
-    {
-      struct loop *loop;
-      loop_iterator li;
-
-      FOR_EACH_LOOP (li, loop, 0)
-	{
-	  substitute_in_loop_info (loop, name, val);
-	}
-    }
+  gcc_unreachable ();
 }
 
 /* Merge block B into block A.  */
@@ -1808,13 +1744,7 @@ remove_bb (basic_block bb)
 
   if (current_loops)
     {
-      struct loop *loop = bb->loop_father;
-
-      /* If a loop gets removed, clean up the information associated
-	 with it.  */
-      if (loop->latch == bb
-	  || loop->header == bb)
-	free_numbers_of_iterations_estimates_loop (loop);
+      gcc_unreachable ();
     }
 
   /* Remove all the instructions in the block.  */
@@ -3101,9 +3031,13 @@ verify_gimple_call (gimple stmt)
   if (gimple_call_chain (stmt)
       && !is_gimple_val (gimple_call_chain (stmt)))
     {
+#if 0 /* Modula-3 hack */
       error ("invalid static chain in gimple call");
       debug_generic_stmt (gimple_call_chain (stmt));
       return true;
+#else
+      return false;
+#endif
     }
 
   /* If there is a static chain argument, this should not be an indirect
@@ -5619,39 +5553,8 @@ static void
 replace_by_duplicate_decl (tree *tp, struct pointer_map_t *vars_map,
 			   tree to_context)
 {
-  tree t = *tp, new_t;
-  struct function *f = DECL_STRUCT_FUNCTION (to_context);
-  void **loc;
-
-  if (DECL_CONTEXT (t) == to_context)
-    return;
-
-  loc = pointer_map_contains (vars_map, t);
-
-  if (!loc)
-    {
-      loc = pointer_map_insert (vars_map, t);
-
-      if (SSA_VAR_P (t))
-	{
-	  new_t = copy_var_decl (t, DECL_NAME (t), TREE_TYPE (t));
-	  add_local_decl (f, new_t);
-	}
-      else
-	{
-	  gcc_assert (TREE_CODE (t) == CONST_DECL);
-	  new_t = copy_node (t);
-	}
-      DECL_CONTEXT (new_t) = to_context;
-
-      *loc = new_t;
-    }
-  else
-    new_t = (tree) *loc;
-
-  *tp = new_t;
+  gcc_unreachable ();
 }
-
 
 /* Creates an ssa name in TO_CONTEXT equivalent to NAME.
    VARS_MAP maps old ssa names and var_decls to the new ones.  */
@@ -7398,62 +7301,6 @@ extract_true_false_edges_from_block (basic_block b,
       *true_edge = EDGE_SUCC (b, 1);
     }
 }
-
-struct gimple_opt_pass pass_warn_function_return =
-{
- {
-  GIMPLE_PASS,
-  "*warn_function_return",		/* name */
-  NULL,					/* gate */
-  execute_warn_function_return,		/* execute */
-  NULL,					/* sub */
-  NULL,					/* next */
-  0,					/* static_pass_number */
-  TV_NONE,				/* tv_id */
-  PROP_cfg,				/* properties_required */
-  0,					/* properties_provided */
-  0,					/* properties_destroyed */
-  0,					/* todo_flags_start */
-  0					/* todo_flags_finish */
- }
-};
-
-/* Emit noreturn warnings.  */
-
-static unsigned int
-execute_warn_function_noreturn (void)
-{
-  if (!TREE_THIS_VOLATILE (current_function_decl)
-      && EDGE_COUNT (EXIT_BLOCK_PTR->preds) == 0)
-    warn_function_noreturn (current_function_decl);
-  return 0;
-}
-
-static bool
-gate_warn_function_noreturn (void)
-{
-  return warn_suggest_attribute_noreturn;
-}
-
-struct gimple_opt_pass pass_warn_function_noreturn =
-{
- {
-  GIMPLE_PASS,
-  "*warn_function_noreturn",		/* name */
-  gate_warn_function_noreturn,		/* gate */
-  execute_warn_function_noreturn,	/* execute */
-  NULL,					/* sub */
-  NULL,					/* next */
-  0,					/* static_pass_number */
-  TV_NONE,				/* tv_id */
-  PROP_cfg,				/* properties_required */
-  0,					/* properties_provided */
-  0,					/* properties_destroyed */
-  0,					/* todo_flags_start */
-  0					/* todo_flags_finish */
- }
-};
-
 
 /* Walk a gimplified function and warn for functions whose return value is
    ignored and attribute((warn_unused_result)) is set.  This is done before

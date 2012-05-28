@@ -30,9 +30,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #ifndef CONFIG_DARWIN_H
 #define CONFIG_DARWIN_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 /* The definitions in this file are common to all processor types
    running Darwin, which is the kernel for Mac OS X.  Darwin is
@@ -983,8 +981,6 @@ extern void darwin_driver_init (unsigned int *,struct cl_decoded_option **);
 #undef SUPPORTS_INIT_PRIORITY
 #define SUPPORTS_INIT_PRIORITY 0
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END
 
 #endif /* CONFIG_DARWIN_H */

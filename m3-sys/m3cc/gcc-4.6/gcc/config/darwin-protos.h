@@ -20,9 +20,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+EXTERN_C_START
 
 extern void darwin_init_sections (void);
 extern int name_needs_quotes (const char *);
@@ -129,6 +127,4 @@ extern void darwin_override_options (void);
 extern void darwin_patch_builtins (void);
 extern void darwin_rename_builtins (void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EXTERN_C_END

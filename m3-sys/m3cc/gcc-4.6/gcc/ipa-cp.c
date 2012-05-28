@@ -812,54 +812,7 @@ ipcp_propagate_types (struct ipa_node_params *caller_info,
 static void
 ipcp_propagate_stage (void)
 {
-  int i;
-  struct ipcp_lattice inc_lat = { IPA_BOTTOM, NULL };
-  struct ipcp_lattice new_lat = { IPA_BOTTOM, NULL };
-  struct ipcp_lattice *dest_lat;
-  struct cgraph_edge *cs;
-  struct ipa_jump_func *jump_func;
-  struct ipa_func_list *wl;
-  int count;
-
-  ipa_check_create_node_params ();
-  ipa_check_create_edge_args ();
-
-  /* Initialize worklist to contain all functions.  */
-  wl = ipa_init_func_list ();
-  while (wl)
-    {
-      struct cgraph_node *node = ipa_pop_func_from_list (&wl);
-      struct ipa_node_params *info = IPA_NODE_REF (node);
-
-      for (cs = node->callees; cs; cs = cs->next_callee)
-	{
-	  struct ipa_node_params *callee_info = IPA_NODE_REF (cs->callee);
-	  struct ipa_edge_args *args = IPA_EDGE_REF (cs);
-
-	  if (ipa_is_called_with_var_arguments (callee_info)
-	      || !cs->callee->analyzed
-	      || ipa_is_called_with_var_arguments (callee_info))
-	    continue;
-
-	  count = ipa_get_cs_argument_count (args);
-	  for (i = 0; i < count; i++)
-	    {
-	      jump_func = ipa_get_ith_jump_func (args, i);
-	      ipcp_lattice_from_jfunc (info, &inc_lat, jump_func);
-	      dest_lat = ipcp_get_lattice (callee_info, i);
-	      ipa_lattice_meet (&new_lat, &inc_lat, dest_lat);
-	      if (ipcp_lattice_changed (&new_lat, dest_lat))
-		{
-		  dest_lat->type = new_lat.type;
-		  dest_lat->constant = new_lat.constant;
-		  ipa_push_func_to_list (&wl, cs->callee);
-		}
-
-	      if (ipcp_propagate_types (info, callee_info, jump_func, i))
-		ipa_push_func_to_list (&wl, cs->callee);
-	    }
-	}
-    }
+  gcc_unreachable ();
 }
 
 /* Call the constant propagation algorithm and re-call it if necessary
@@ -867,41 +820,7 @@ ipcp_propagate_stage (void)
 static void
 ipcp_iterate_stage (void)
 {
-  struct cgraph_node *node;
-  n_cloning_candidates = 0;
-
-  if (dump_file)
-    fprintf (dump_file, "\nIPA iterate stage:\n\n");
-
-  if (in_lto_p)
-    ipa_update_after_lto_read ();
-
-  for (node = cgraph_nodes; node; node = node->next)
-    {
-      ipcp_initialize_node_lattices (node);
-      ipcp_compute_node_scale (node);
-    }
-  if (dump_file && (dump_flags & TDF_DETAILS))
-    {
-      ipcp_print_all_lattices (dump_file);
-      ipcp_function_scale_print (dump_file);
-    }
-
-  ipcp_propagate_stage ();
-  if (ipcp_change_tops_to_bottom ())
-    /* Some lattices have changed from IPA_TOP to IPA_BOTTOM.
-       This change should be propagated.  */
-    {
-      gcc_assert (n_cloning_candidates);
-      ipcp_propagate_stage ();
-    }
-  if (dump_file)
-    {
-      fprintf (dump_file, "\nIPA lattices after propagation:\n");
-      ipcp_print_all_lattices (dump_file);
-      if (dump_flags & TDF_DETAILS)
-        ipcp_print_profile_data (dump_file);
-    }
+  gcc_unreachable ();
 }
 
 /* Check conditions to forbid constant insertion to function described by
@@ -1512,27 +1431,7 @@ ipcp_insert_stage (void)
 static unsigned int
 ipcp_driver (void)
 {
-  cgraph_remove_unreachable_nodes (true,dump_file);
-  if (dump_file)
-    {
-      fprintf (dump_file, "\nIPA structures before propagation:\n");
-      if (dump_flags & TDF_DETAILS)
-        ipa_print_all_params (dump_file);
-      ipa_print_all_jump_functions (dump_file);
-    }
-  /* 2. Do the interprocedural propagation.  */
-  ipcp_iterate_stage ();
-  /* 3. Insert the constants found to the functions.  */
-  ipcp_insert_stage ();
-  if (dump_file && (dump_flags & TDF_DETAILS))
-    {
-      fprintf (dump_file, "\nProfiling info after insert stage:\n");
-      ipcp_print_profile_data (dump_file);
-    }
-  /* Free all IPCP structures.  */
-  ipa_free_all_structures_after_ipa_cp ();
-  if (dump_file)
-    fprintf (dump_file, "\nIPA constant propagation end\n");
+  gcc_unreachable ();
   return 0;
 }
 

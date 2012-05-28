@@ -102,8 +102,9 @@ static int last_basic_block_before_change;
    which corresponds the all function) will be not allocated but nodes
    will still be allocated for basic blocks.  */
 static void
-create_loop_tree_nodes (bool loops_p)
+create_loop_tree_nodes (void)
 {
+  bool loops_p = false;
   unsigned int i, j;
   int max_regno;
   bool skip_p;
@@ -2982,14 +2983,16 @@ update_conflict_hard_reg_costs (void)
    allocation.  A true return means that we really need to flatten IR
    before the reload.  */
 bool
-ira_build (bool loops_p)
+ira_build (void)
 {
+  bool loops_p;
+
   df_analyze ();
 
   initiate_cost_vectors ();
   initiate_allocnos ();
   initiate_copies ();
-  create_loop_tree_nodes (loops_p);
+  create_loop_tree_nodes ();
   form_loop_tree ();
   create_allocnos ();
   ira_costs ();

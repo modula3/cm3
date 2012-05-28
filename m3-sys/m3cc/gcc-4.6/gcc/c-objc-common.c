@@ -1,5 +1,3 @@
-/* Modula-3: modified */
-
 /* Some code common to C and ObjC front ends.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007,
    2009, 2010 Free Software Foundation, Inc.
@@ -32,8 +30,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-pretty-print.h"
 #include "langhooks.h"
 #include "c-objc-common.h"
-
-EXTERN_C_START
 
 static bool c_tree_printer (pretty_printer *, text_info *, const char *,
 			    int, bool, bool, bool);
@@ -216,5 +212,3 @@ c_vla_unspec_p (tree x, tree fn ATTRIBUTE_UNUSED)
 {
   return c_vla_type_p (x);
 }
-
-EXTERN_C_END
