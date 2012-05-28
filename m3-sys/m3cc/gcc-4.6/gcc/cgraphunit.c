@@ -257,7 +257,7 @@ cgraph_process_new_functions (void)
 	      || !optimize)
 	    execute_pass_list (pass_early_local_passes.pass.sub);
 	  else
-	    compute_inline_parameters (node);
+	    gcc_unreachable ();
 	  free_dominance_info (CDI_POST_DOMINATORS);
 	  free_dominance_info (CDI_DOMINATORS);
 	  pop_cfun ();
@@ -453,312 +453,6 @@ cgraph_debug_gimple_stmt (struct function *this_cfun, gimple stmt)
   if (cfun != this_cfun)
     set_cfun (this_cfun);
   debug_gimple_stmt (stmt);
-}
-
-/* Verify cgraph nodes of given cgraph node.  */
-DEBUG_FUNCTION void
-verify_cgraph_node (struct cgraph_node *node)
-{
-  struct cgraph_edge *e;
-  struct function *this_cfun = DECL_STRUCT_FUNCTION (node->decl);
-  basic_block this_block;
-  gimple_stmt_iterator gsi;
-  bool error_found = false;
-
-  if (seen_error ())
-    return;
-
-  timevar_push (TV_CGRAPH_VERIFY);
-  for (e = node->callees; e; e = e->next_callee)
-    if (e->aux)
-      {
-	error ("aux field set for edge %s->%s",
-	       identifier_to_locale (cgraph_node_name (e->caller)),
-	       identifier_to_locale (cgraph_node_name (e->callee)));
-	error_found = true;
-      }
-  if (node->count < 0)
-    {
-      error ("execution count is negative");
-      error_found = true;
-    }
-  if (node->global.inlined_to && node->local.externally_visible)
-    {
-      error ("externally visible inline clone");
-      error_found = true;
-    }
-  if (node->global.inlined_to && node->address_taken)
-    {
-      error ("inline clone with address taken");
-      error_found = true;
-    }
-  if (node->global.inlined_to && node->needed)
-    {
-      error ("inline clone is needed");
-      error_found = true;
-    }
-  for (e = node->indirect_calls; e; e = e->next_callee)
-    {
-      if (e->aux)
-	{
-	  error ("aux field set for indirect edge from %s",
-		 identifier_to_locale (cgraph_node_name (e->caller)));
-	  error_found = true;
-	}
-      if (!e->indirect_unknown_callee
-	  || !e->indirect_info)
-	{
-	  error ("An indirect edge from %s is not marked as indirect or has "
-		 "associated indirect_info, the corresponding statement is: ",
-		 identifier_to_locale (cgraph_node_name (e->caller)));
-	  cgraph_debug_gimple_stmt (this_cfun, e->call_stmt);
-	  error_found = true;
-	}
-    }
-  for (e = node->callers; e; e = e->next_caller)
-    {
-      if (verify_edge_count_and_frequency (e))
-	error_found = true;
-      if (!e->inline_failed)
-	{
-	  if (node->global.inlined_to
-	      != (e->caller->global.inlined_to
-		  ? e->caller->global.inlined_to : e->caller))
-	    {
-	      error ("inlined_to pointer is wrong");
-	      error_found = true;
-	    }
-	  if (node->callers->next_caller)
-	    {
-	      error ("multiple inline callers");
-	      error_found = true;
-	    }
-	}
-      else
-	if (node->global.inlined_to)
-	  {
-	    error ("inlined_to pointer set for noninline callers");
-	    error_found = true;
-	  }
-    }
-  for (e = node->indirect_calls; e; e = e->next_callee)
-    if (verify_edge_count_and_frequency (e))
-      error_found = true;
-  if (!node->callers && node->global.inlined_to)
-    {
-      error ("inlined_to pointer is set but no predecessors found");
-      error_found = true;
-    }
-  if (node->global.inlined_to == node)
-    {
-      error ("inlined_to pointer refers to itself");
-      error_found = true;
-    }
-
-  if (!cgraph_get_node (node->decl))
-    {
-      error ("node not found in cgraph_hash");
-      error_found = true;
-    }
-
-  if (node->clone_of)
-    {
-      struct cgraph_node *n;
-      for (n = node->clone_of->clones; n; n = n->next_sibling_clone)
-        if (n == node)
-	  break;
-      if (!n)
-	{
-	  error ("node has wrong clone_of");
-	  error_found = true;
-	}
-    }
-  if (node->clones)
-    {
-      struct cgraph_node *n;
-      for (n = node->clones; n; n = n->next_sibling_clone)
-        if (n->clone_of != node)
-	  break;
-      if (n)
-	{
-	  error ("node has wrong clone list");
-	  error_found = true;
-	}
-    }
-  if ((node->prev_sibling_clone || node->next_sibling_clone) && !node->clone_of)
-    {
-       error ("node is in clone list but it is not clone");
-       error_found = true;
-    }
-  if (!node->prev_sibling_clone && node->clone_of && node->clone_of->clones != node)
-    {
-      error ("node has wrong prev_clone pointer");
-      error_found = true;
-    }
-  if (node->prev_sibling_clone && node->prev_sibling_clone->next_sibling_clone != node)
-    {
-      error ("double linked list of clones corrupted");
-      error_found = true;
-    }
-  if (node->same_comdat_group)
-    {
-      struct cgraph_node *n = node->same_comdat_group;
-
-      if (!DECL_ONE_ONLY (node->decl))
-	{
-	  error ("non-DECL_ONE_ONLY node in a same_comdat_group list");
-	  error_found = true;
-	}
-      if (n == node)
-	{
-	  error ("node is alone in a comdat group");
-	  error_found = true;
-	}
-      do
-	{
-	  if (!n->same_comdat_group)
-	    {
-	      error ("same_comdat_group is not a circular list");
-	      error_found = true;
-	      break;
-	    }
-	  n = n->same_comdat_group;
-	}
-      while (n != node);
-    }
-
-  if (node->analyzed && gimple_has_body_p (node->decl)
-      && !TREE_ASM_WRITTEN (node->decl)
-      && (!DECL_EXTERNAL (node->decl) || node->global.inlined_to)
-      && !flag_wpa)
-    {
-      if (this_cfun->cfg)
-	{
-	  /* The nodes we're interested in are never shared, so walk
-	     the tree ignoring duplicates.  */
-	  struct pointer_set_t *visited_nodes = pointer_set_create ();
-	  /* Reach the trees by walking over the CFG, and note the
-	     enclosing basic-blocks in the call edges.  */
-	  FOR_EACH_BB_FN (this_block, this_cfun)
-	    for (gsi = gsi_start_bb (this_block);
-                 !gsi_end_p (gsi);
-                 gsi_next (&gsi))
-	      {
-		gimple stmt = gsi_stmt (gsi);
-		if (is_gimple_call (stmt))
-		  {
-		    struct cgraph_edge *e = cgraph_edge (node, stmt);
-		    tree decl = gimple_call_fndecl (stmt);
-		    if (e)
-		      {
-			if (e->aux)
-			  {
-			    error ("shared call_stmt:");
-			    cgraph_debug_gimple_stmt (this_cfun, stmt);
-			    error_found = true;
-			  }
-			if (!e->indirect_unknown_callee)
-			  {
-			    struct cgraph_node *n;
-
-			    if (e->callee->same_body_alias)
-			      {
-				error ("edge points to same body alias:");
-				debug_tree (e->callee->decl);
-				error_found = true;
-			      }
-			    else if (!e->callee->global.inlined_to
-				     && decl
-				     && cgraph_get_node (decl)
-				     && (e->callee->former_clone_of
-					 != cgraph_get_node (decl)->decl)
-				     && !clone_of_p (cgraph_node (decl),
-						     e->callee))
-			      {
-				error ("edge points to wrong declaration:");
-				debug_tree (e->callee->decl);
-				fprintf (stderr," Instead of:");
-				debug_tree (decl);
-				error_found = true;
-			      }
-			    else if (decl
-				     && (n = cgraph_get_node_or_alias (decl))
-				     && (n->same_body_alias
-					 && n->thunk.thunk_p))
-			      {
-				error ("a call to thunk improperly represented "
-				       "in the call graph:");
-				cgraph_debug_gimple_stmt (this_cfun, stmt);
-				error_found = true;
-			      }
-			  }
-			else if (decl)
-			  {
-			    error ("an indirect edge with unknown callee "
-				   "corresponding to a call_stmt with "
-				   "a known declaration:");
-			    error_found = true;
-			    cgraph_debug_gimple_stmt (this_cfun, e->call_stmt);
-			  }
-			e->aux = (void *)1;
-		      }
-		    else if (decl)
-		      {
-			error ("missing callgraph edge for call stmt:");
-			cgraph_debug_gimple_stmt (this_cfun, stmt);
-			error_found = true;
-		      }
-		  }
-	      }
-	  pointer_set_destroy (visited_nodes);
-	}
-      else
-	/* No CFG available?!  */
-	gcc_unreachable ();
-
-      for (e = node->callees; e; e = e->next_callee)
-	{
-	  if (!e->aux)
-	    {
-	      error ("edge %s->%s has no corresponding call_stmt",
-		     identifier_to_locale (cgraph_node_name (e->caller)),
-		     identifier_to_locale (cgraph_node_name (e->callee)));
-	      cgraph_debug_gimple_stmt (this_cfun, e->call_stmt);
-	      error_found = true;
-	    }
-	  e->aux = 0;
-	}
-      for (e = node->indirect_calls; e; e = e->next_callee)
-	{
-	  if (!e->aux)
-	    {
-	      error ("an indirect edge from %s has no corresponding call_stmt",
-		     identifier_to_locale (cgraph_node_name (e->caller)));
-	      cgraph_debug_gimple_stmt (this_cfun, e->call_stmt);
-	      error_found = true;
-	    }
-	  e->aux = 0;
-	}
-    }
-  if (error_found)
-    {
-      dump_cgraph_node (stderr, node);
-      internal_error ("verify_cgraph_node failed");
-    }
-  timevar_pop (TV_CGRAPH_VERIFY);
-}
-
-/* Verify whole cgraph structure.  */
-DEBUG_FUNCTION void
-verify_cgraph (void)
-{
-  struct cgraph_node *node;
-
-  if (seen_error ())
-    return;
-
-  for (node = cgraph_nodes; node; node = node->next)
-    verify_cgraph_node (node);
 }
 
 /* Output all asm statements we have stored up to be output.  */
@@ -1017,21 +711,6 @@ cgraph_analyze_functions (void)
       cgraph_process_new_functions ();
     }
 
-  /* Collect entry points to the unit.  */
-  if (cgraph_dump_file)
-    {
-      fprintf (cgraph_dump_file, "Unit entry points:");
-      for (node = cgraph_nodes; node != first_analyzed; node = node->next)
-	if (node->needed)
-	  fprintf (cgraph_dump_file, " %s", cgraph_node_name (node));
-      fprintf (cgraph_dump_file, "\n\nInitial ");
-      dump_cgraph (cgraph_dump_file);
-      dump_varpool (cgraph_dump_file);
-    }
-
-  if (cgraph_dump_file)
-    fprintf (cgraph_dump_file, "\nReclaiming functions:");
-
   for (node = cgraph_nodes; node != first_analyzed; node = next)
     {
       tree decl = node->decl;
@@ -1052,12 +731,7 @@ cgraph_analyze_functions (void)
       gcc_assert (!node->local.finalized || gimple_has_body_p (decl));
       gcc_assert (node->analyzed == node->local.finalized);
     }
-  if (cgraph_dump_file)
-    {
-      fprintf (cgraph_dump_file, "\n\nReclaimed ");
-      dump_cgraph (cgraph_dump_file);
-      dump_varpool (cgraph_dump_file);
-    }
+    
   bitmap_obstack_release (NULL);
   first_analyzed = cgraph_nodes;
   ggc_collect ();
@@ -1167,7 +841,6 @@ cgraph_mark_functions_to_output (void)
 	      && !node->in_other_partition
 	      && !DECL_EXTERNAL (decl))
 	    {
-	      dump_cgraph_node (stderr, node);
 	      internal_error ("failed to reclaim unneeded function");
 	    }
 #endif
@@ -1193,7 +866,6 @@ cgraph_mark_functions_to_output (void)
 	      && !node->in_other_partition
 	      && !DECL_EXTERNAL (decl))
 	    {
-	      dump_cgraph_node (stderr, node);
 	      internal_error ("failed to reclaim unneeded function");
 	    }
 	}
@@ -1796,33 +1468,11 @@ ipa_passes (void)
 
   if (!in_lto_p)
     {
-      /* Generate coverage variables and constructors.  */
-      coverage_finish ();
-
       /* Process new functions added.  */
       set_cfun (NULL);
       current_function_decl = NULL;
       cgraph_process_new_functions ();
-
-      execute_ipa_summary_passes
-	((struct ipa_opt_pass_d *) all_regular_ipa_passes);
     }
-
-  /* Some targets need to handle LTO assembler output specially.  */
-  if (flag_generate_lto)
-    targetm.asm_out.lto_start ();
-
-  execute_ipa_summary_passes ((struct ipa_opt_pass_d *) all_lto_gen_passes);
-
-  if (!in_lto_p)
-    ipa_write_summaries ();
-
-  if (flag_generate_lto)
-    targetm.asm_out.lto_end ();
-
-  if (!flag_ltrans)
-    execute_ipa_pass_list (all_regular_ipa_passes);
-  invoke_plugin_callbacks (PLUGIN_ALL_IPA_PASSES_END, NULL);
 
   bitmap_obstack_release (NULL);
 }
@@ -1835,10 +1485,6 @@ cgraph_optimize (void)
 {
   if (seen_error ())
     return;
-
-#ifdef ENABLE_CHECKING
-  verify_cgraph ();
-#endif
 
   /* Frontend may output common variables after the unit has been finalized.
      It is safe to deal with them here as they are always zero initialized.  */
@@ -1869,12 +1515,6 @@ cgraph_optimize (void)
      Do this later so other IPA passes see what is really going on.  */
   cgraph_remove_unreachable_nodes (false, dump_file);
   cgraph_global_info_ready = true;
-  if (cgraph_dump_file)
-    {
-      fprintf (cgraph_dump_file, "Optimized ");
-      dump_cgraph (cgraph_dump_file);
-      dump_varpool (cgraph_dump_file);
-    }
   if (post_ipa_mem_report)
     {
       fprintf (stderr, "Memory consumption after IPA\n");
@@ -1886,9 +1526,6 @@ cgraph_optimize (void)
   (*debug_hooks->assembly_start) ();
   if (!quiet_flag)
     fprintf (stderr, "Assembling functions:\n");
-#ifdef ENABLE_CHECKING
-  verify_cgraph ();
-#endif
 
   cgraph_materialize_all_clones ();
   cgraph_mark_functions_to_output ();
@@ -1908,14 +1545,7 @@ cgraph_optimize (void)
   cgraph_process_new_functions ();
   cgraph_state = CGRAPH_STATE_FINISHED;
 
-  if (cgraph_dump_file)
-    {
-      fprintf (cgraph_dump_file, "\nFinal ");
-      dump_cgraph (cgraph_dump_file);
-      dump_varpool (cgraph_dump_file);
-    }
 #ifdef ENABLE_CHECKING
-  verify_cgraph ();
   /* Double check that all inline clones are gone and that all
      function bodies have been released from memory.  */
   if (!seen_error ())
@@ -1929,7 +1559,6 @@ cgraph_optimize (void)
 		|| gimple_has_body_p (node->decl)))
 	  {
 	    error_found = true;
-	    dump_cgraph_node (stderr, node);
 	  }
       if (error_found)
 	internal_error ("nodes with unreleased memory found");
@@ -2161,9 +1790,6 @@ save_inline_function_body (struct cgraph_node *node)
             first_clone->ipa_transforms_to_apply);
   first_clone->ipa_transforms_to_apply = NULL;
 
-#ifdef ENABLE_CHECKING
-  verify_cgraph_node (first_clone);
-#endif
   return first_clone;
 }
 
@@ -2198,7 +1824,6 @@ cgraph_materialize_clone (struct cgraph_node *node)
     {
       cgraph_release_function_body (node->clone_of);
       cgraph_node_remove_callees (node->clone_of);
-      ipa_remove_all_references (&node->clone_of->ref_list);
     }
   node->clone_of = NULL;
   bitmap_obstack_release (NULL);
@@ -2319,9 +1944,6 @@ cgraph_materialize_all_clones (void)
 
   if (cgraph_dump_file)
     fprintf (cgraph_dump_file, "Materializing clones\n");
-#ifdef ENABLE_CHECKING
-  verify_cgraph ();
-#endif
 
   /* We can also do topological order, but number of iterations should be
      bounded by number of IPA passes since single IPA pass is probably not
@@ -2384,9 +2006,6 @@ cgraph_materialize_all_clones (void)
       cgraph_node_remove_callees (node);
   if (cgraph_dump_file)
     fprintf (cgraph_dump_file, "Materialization Call site updates done.\n");
-#ifdef ENABLE_CHECKING
-  verify_cgraph ();
-#endif
   cgraph_remove_unreachable_nodes (false, cgraph_dump_file);
 }
 

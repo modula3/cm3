@@ -560,7 +560,7 @@ AC_ARG_ENABLE(coverage,
     coverage_flags="-fprofile-arcs -ftest-coverage -frandom-seed=\$@ -O0"
     ;;
   opt)
-    coverage_flags="-fprofile-arcs -ftest-coverage -frandom-seed=\$@ -O2"
+    coverage_flags="-fprofile-arcs -ftest-coverage -frandom-seed=\$@"
     ;;
   no)
     # a.k.a. --disable-coverage

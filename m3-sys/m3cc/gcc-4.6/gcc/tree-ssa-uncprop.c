@@ -579,29 +579,5 @@ uncprop_enter_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
   uncprop_into_successor_phis (bb);
 }
 
-static bool
-gate_uncprop (void)
-{
-  return flag_tree_dom != 0;
-}
-
-struct gimple_opt_pass pass_uncprop =
-{
- {
-  GIMPLE_PASS,
-  "uncprop",				/* name */
-  gate_uncprop,				/* gate */
-  tree_ssa_uncprop,			/* execute */
-  NULL,					/* sub */
-  NULL,					/* next */
-  0,					/* static_pass_number */
-  TV_TREE_SSA_UNCPROP,			/* tv_id */
-  PROP_cfg | PROP_ssa,			/* properties_required */
-  0,					/* properties_provided */
-  0,					/* properties_destroyed */
-  0,					/* todo_flags_start */
-  TODO_dump_func | TODO_verify_ssa	/* todo_flags_finish */
- }
-};
 
 EXTERN_C_END

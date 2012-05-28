@@ -649,41 +649,8 @@ bool
 can_unroll_loop_p (struct loop *loop, unsigned factor,
 		   struct tree_niter_desc *niter)
 {
-  edge exit;
-
-  /* Check whether unrolling is possible.  We only want to unroll loops
-     for that we are able to determine number of iterations.  We also
-     want to split the extra iterations of the loop from its end,
-     therefore we require that the loop has precisely one
-     exit.  */
-
-  exit = single_dom_exit (loop);
-  if (!exit)
-    return false;
-
-  if (!number_of_iterations_exit (loop, exit, niter, false)
-      || niter->cmp == ERROR_MARK
-      /* Scalar evolutions analysis might have copy propagated
-	 the abnormal ssa names into these expressions, hence
-	 emitting the computations based on them during loop
-	 unrolling might create overlapping life ranges for
-	 them, and failures in out-of-ssa.  */
-      || contains_abnormal_ssa_name_p (niter->may_be_zero)
-      || contains_abnormal_ssa_name_p (niter->control.base)
-      || contains_abnormal_ssa_name_p (niter->control.step)
-      || contains_abnormal_ssa_name_p (niter->bound))
-    return false;
-
-  /* And of course, we must be able to duplicate the loop.  */
-  if (!can_duplicate_loop_p (loop))
-    return false;
-
-  /* The final loop should be small enough.  */
-  if (tree_num_loop_insns (loop, &eni_size_weights) * factor
-      > (unsigned) PARAM_VALUE (PARAM_MAX_UNROLLED_INSNS))
-    return false;
-
-  return true;
+  gcc_unreachable ();
+  return false;
 }
 
 /* Determines the conditions that control execution of LOOP unrolled FACTOR

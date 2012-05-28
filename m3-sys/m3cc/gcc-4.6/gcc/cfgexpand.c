@@ -2632,31 +2632,7 @@ expand_debug_expr (tree exp)
       return op0;
 
     case TARGET_MEM_REF:
-      if (TREE_CODE (TMR_BASE (exp)) == ADDR_EXPR
-	  && !DECL_RTL_SET_P (TREE_OPERAND (TMR_BASE (exp), 0)))
-	return NULL;
-
-      op0 = expand_debug_expr
-	    (tree_mem_ref_addr (build_pointer_type (TREE_TYPE (exp)), exp));
-      if (!op0)
-	return NULL;
-
-      if (POINTER_TYPE_P (TREE_TYPE (exp)))
-	as = TYPE_ADDR_SPACE (TREE_TYPE (TREE_TYPE (exp)));
-      else
-	as = ADDR_SPACE_GENERIC;
-
-      op0 = convert_debug_memory_address (targetm.addr_space.address_mode (as),
-					  op0, as);
-      if (op0 == NULL_RTX)
-	return NULL;
-
-      op0 = gen_rtx_MEM (mode, op0);
-
-      set_mem_attributes (op0, exp, 0);
-      set_mem_addr_space (op0, as);
-
-      return op0;
+      gcc_unreachable ();
 
     component_ref:
     case ARRAY_REF:

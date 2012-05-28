@@ -1491,14 +1491,8 @@ tree_ssa_dce (void)
 static unsigned int
 tree_ssa_dce_loop (void)
 {
-  unsigned int todo;
-  todo = perform_tree_ssa_dce (/*aggressive=*/false);
-  if (todo)
-    {
-      free_numbers_of_iterations_estimates ();
-      scev_reset ();
-    }
-  return todo;
+  gcc_unreachable ();
+  return 0;
 }
 
 static unsigned int

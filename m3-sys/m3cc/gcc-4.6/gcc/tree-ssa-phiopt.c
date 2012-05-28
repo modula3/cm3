@@ -210,6 +210,8 @@ tree_ssa_phiopt_worker (bool do_store_elim)
   unsigned n, i;
   bool cfgchanged = false;
   struct pointer_set_t *nontrap = 0;
+  
+  gcc_unreachable ();
 
   if (do_store_elim)
     {

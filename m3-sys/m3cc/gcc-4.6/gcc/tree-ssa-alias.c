@@ -144,6 +144,8 @@ bool
 ptr_deref_may_alias_global_p (tree ptr)
 {
   struct ptr_info_def *pi;
+  
+  gcc_unreachable ();
 
   /* If we end up with a pointer constant here that may point
      to global memory.  */
@@ -169,6 +171,8 @@ static bool
 ptr_deref_may_alias_decl_p (tree ptr, tree decl)
 {
   struct ptr_info_def *pi;
+
+  gcc_unreachable ();
 
   /* Conversions are irrelevant for points-to information and
      data-dependence analysis can feed us those.  */
@@ -243,6 +247,8 @@ bool
 ptr_derefs_may_alias_p (tree ptr1, tree ptr2)
 {
   struct ptr_info_def *pi1, *pi2;
+
+  gcc_unreachable ();
 
   /* Conversions are irrelevant for points-to information and
      data-dependence analysis can feed us those.  */
@@ -342,6 +348,8 @@ static bool
 ptr_deref_may_alias_ref_p_1 (tree ptr, ao_ref *ref)
 {
   tree base = ao_ref_base (ref);
+
+  gcc_unreachable ();
 
   if (INDIRECT_REF_P (base)
       || TREE_CODE (base) == MEM_REF)
@@ -471,6 +479,8 @@ debug_points_to_info_for (tree var)
 void
 ao_ref_init (ao_ref *r, tree ref)
 {
+  gcc_unreachable ();
+
   r->ref = ref;
   r->base = NULL_TREE;
   r->offset = 0;
@@ -485,6 +495,8 @@ ao_ref_init (ao_ref *r, tree ref)
 tree
 ao_ref_base (ao_ref *ref)
 {
+  gcc_unreachable ();
+
   if (ref->base)
     return ref->base;
   ref->base = get_ref_base_and_extent (ref->ref, &ref->offset, &ref->size,
@@ -498,6 +510,9 @@ static alias_set_type
 ao_ref_base_alias_set (ao_ref *ref)
 {
   tree base_ref;
+
+  gcc_unreachable ();
+
   if (ref->base_alias_set != -1)
     return ref->base_alias_set;
   if (!ref->ref)
@@ -514,6 +529,8 @@ ao_ref_base_alias_set (ao_ref *ref)
 alias_set_type
 ao_ref_alias_set (ao_ref *ref)
 {
+  gcc_unreachable ();
+
   if (ref->ref_alias_set != -1)
     return ref->ref_alias_set;
   ref->ref_alias_set = get_alias_set (ref->ref);
@@ -529,6 +546,9 @@ void
 ao_ref_init_from_ptr_and_size (ao_ref *ref, tree ptr, tree size)
 {
   HOST_WIDE_INT t1, t2;
+  
+  gcc_unreachable ();
+ 
   ref->ref = NULL_TREE;
   if (TREE_CODE (ptr) == ADDR_EXPR)
     ref->base = get_ref_base_and_extent (TREE_OPERAND (ptr, 0),
@@ -558,6 +578,8 @@ same_type_for_tbaa (tree type1, tree type2)
 {
   type1 = TYPE_MAIN_VARIANT (type1);
   type2 = TYPE_MAIN_VARIANT (type2);
+
+  gcc_unreachable ();
 
   /* If we would have to do structural comparison bail out.  */
   if (TYPE_STRUCTURAL_EQUALITY_P (type1)
@@ -616,6 +638,8 @@ aliasing_component_refs_p (tree ref1, tree type1,
      disambiguating q->i and p->a.j.  */
   tree *refp;
   int same_p;
+
+  gcc_unreachable ();
 
   /* Now search for the type1 in the access path of ref2.  This
      would be a common base for doing offset based disambiguation on.  */
@@ -679,6 +703,8 @@ decl_refs_may_alias_p (tree base1,
 {
   gcc_assert (SSA_VAR_P (base1) && SSA_VAR_P (base2));
 
+  gcc_unreachable ();
+
   /* If both references are based on different variables, they cannot alias.  */
   if (base1 != base2)
     return false;
@@ -709,6 +735,8 @@ indirect_ref_may_alias_decl_p (tree ref1 ATTRIBUTE_UNUSED, tree base1,
   tree ptr1;
   tree ptrtype1;
   HOST_WIDE_INT offset1p = offset1, offset2p = offset2;
+
+  gcc_unreachable ();
 
   ptr1 = TREE_OPERAND (base1, 0);
 
@@ -840,6 +868,8 @@ indirect_refs_may_alias_p (tree ref1 ATTRIBUTE_UNUSED, tree base1,
   tree ptr1;
   tree ptr2;
   tree ptrtype1, ptrtype2;
+
+  gcc_unreachable ();
 
   ptr1 = TREE_OPERAND (base1, 0);
   ptr2 = TREE_OPERAND (base2, 0);
@@ -976,6 +1006,8 @@ refs_may_alias_p_1 (ao_ref *ref1, ao_ref *ref2, bool tbaa_p)
   HOST_WIDE_INT max_size1 = -1, max_size2 = -1;
   bool var1_p, var2_p, ind1_p, ind2_p;
 
+  gcc_unreachable ();
+
   gcc_checking_assert ((!ref1->ref
 			|| TREE_CODE (ref1->ref) == SSA_NAME
 			|| DECL_P (ref1->ref)
@@ -1097,6 +1129,7 @@ refs_may_alias_p (tree ref1, tree ref2)
 {
   ao_ref r1, r2;
   bool res;
+  gcc_unreachable ();
   ao_ref_init (&r1, ref1);
   ao_ref_init (&r2, ref2);
   res = refs_may_alias_p_1 (&r1, &r2, true);
@@ -1114,6 +1147,7 @@ bool
 refs_anti_dependent_p (tree load, tree store)
 {
   ao_ref r1, r2;
+  gcc_unreachable ();
   ao_ref_init (&r1, load);
   ao_ref_init (&r2, store);
   return refs_may_alias_p_1 (&r1, &r2, false);
@@ -1126,6 +1160,7 @@ bool
 refs_output_dependent_p (tree store1, tree store2)
 {
   ao_ref r1, r2;
+  gcc_unreachable ();
   ao_ref_init (&r1, store1);
   ao_ref_init (&r2, store2);
   return refs_may_alias_p_1 (&r1, &r2, false);
@@ -1137,175 +1172,8 @@ refs_output_dependent_p (tree store1, tree store2)
 static bool
 ref_maybe_used_by_call_p_1 (gimple call, ao_ref *ref)
 {
-  tree base, callee;
-  unsigned i;
-  int flags = gimple_call_flags (call);
-
-  /* Const functions without a static chain do not implicitly use memory.  */
-  if (!gimple_call_chain (call)
-      && (flags & (ECF_CONST|ECF_NOVOPS)))
-    goto process_args;
-
-  base = ao_ref_base (ref);
-  if (!base)
-    return true;
-
-  /* If the reference is based on a decl that is not aliased the call
-     cannot possibly use it.  */
-  if (DECL_P (base)
-      && !may_be_aliased (base)
-      /* But local statics can be used through recursion.  */
-      && !is_global_var (base))
-    goto process_args;
-
-  callee = gimple_call_fndecl (call);
-
-  /* Handle those builtin functions explicitly that do not act as
-     escape points.  See tree-ssa-structalias.c:find_func_aliases
-     for the list of builtins we might need to handle here.  */
-  if (callee != NULL_TREE
-      && DECL_BUILT_IN_CLASS (callee) == BUILT_IN_NORMAL)
-    switch (DECL_FUNCTION_CODE (callee))
-      {
-	/* All the following functions clobber memory pointed to by
-	   their first argument.  */
-	case BUILT_IN_STRCPY:
-	case BUILT_IN_STRNCPY:
-	case BUILT_IN_MEMCPY:
-	case BUILT_IN_MEMMOVE:
-	case BUILT_IN_MEMPCPY:
-	case BUILT_IN_STPCPY:
-	case BUILT_IN_STPNCPY:
-	case BUILT_IN_STRCAT:
-	case BUILT_IN_STRNCAT:
-	  {
-	    ao_ref dref;
-	    tree size = NULL_TREE;
-	    if (gimple_call_num_args (call) == 3)
-	      size = gimple_call_arg (call, 2);
-	    ao_ref_init_from_ptr_and_size (&dref,
-					   gimple_call_arg (call, 1),
-					   size);
-	    return refs_may_alias_p_1 (&dref, ref, false);
-	  }
-	case BUILT_IN_BCOPY:
-	  {
-	    ao_ref dref;
-	    tree size = gimple_call_arg (call, 2);
-	    ao_ref_init_from_ptr_and_size (&dref,
-					   gimple_call_arg (call, 0),
-					   size);
-	    return refs_may_alias_p_1 (&dref, ref, false);
-	  }
-	/* The following builtins do not read from memory.  */
-	case BUILT_IN_FREE:
-	case BUILT_IN_MALLOC:
-	case BUILT_IN_CALLOC:
-	case BUILT_IN_MEMSET:
-	case BUILT_IN_FREXP:
-	case BUILT_IN_FREXPF:
-	case BUILT_IN_FREXPL:
-	case BUILT_IN_GAMMA_R:
-	case BUILT_IN_GAMMAF_R:
-	case BUILT_IN_GAMMAL_R:
-	case BUILT_IN_LGAMMA_R:
-	case BUILT_IN_LGAMMAF_R:
-	case BUILT_IN_LGAMMAL_R:
-	case BUILT_IN_MODF:
-	case BUILT_IN_MODFF:
-	case BUILT_IN_MODFL:
-	case BUILT_IN_REMQUO:
-	case BUILT_IN_REMQUOF:
-	case BUILT_IN_REMQUOL:
-	case BUILT_IN_SINCOS:
-	case BUILT_IN_SINCOSF:
-	case BUILT_IN_SINCOSL:
-	  return false;
-	/* __sync_* builtins and some OpenMP builtins act as threading
-	   barriers.  */
-#undef DEF_SYNC_BUILTIN
-#define DEF_SYNC_BUILTIN(ENUM, NAME, TYPE, ATTRS) case ENUM:
-#include "sync-builtins.def"
-#undef DEF_SYNC_BUILTIN
-	case BUILT_IN_GOMP_ATOMIC_START:
-	case BUILT_IN_GOMP_ATOMIC_END:
-	case BUILT_IN_GOMP_BARRIER:
-	case BUILT_IN_GOMP_TASKWAIT:
-	case BUILT_IN_GOMP_CRITICAL_START:
-	case BUILT_IN_GOMP_CRITICAL_END:
-	case BUILT_IN_GOMP_CRITICAL_NAME_START:
-	case BUILT_IN_GOMP_CRITICAL_NAME_END:
-	case BUILT_IN_GOMP_LOOP_END:
-	case BUILT_IN_GOMP_ORDERED_START:
-	case BUILT_IN_GOMP_ORDERED_END:
-	case BUILT_IN_GOMP_PARALLEL_END:
-	case BUILT_IN_GOMP_SECTIONS_END:
-	case BUILT_IN_GOMP_SINGLE_COPY_START:
-	case BUILT_IN_GOMP_SINGLE_COPY_END:
-	  return true;
-
-	default:
-	  /* Fallthru to general call handling.  */;
-      }
-
-  /* Check if base is a global static variable that is not read
-     by the function.  */
-  if (TREE_CODE (base) == VAR_DECL
-      && TREE_STATIC (base))
-    {
-      bitmap not_read;
-
-      if (callee != NULL_TREE
-	  && (not_read
-	        = ipa_reference_get_not_read_global (cgraph_node (callee)))
-	  && bitmap_bit_p (not_read, DECL_UID (base)))
-	goto process_args;
-    }
-
-  /* Check if the base variable is call-used.  */
-  if (DECL_P (base))
-    {
-      if (pt_solution_includes (gimple_call_use_set (call), base))
-	return true;
-    }
-  else if ((INDIRECT_REF_P (base)
-	    || TREE_CODE (base) == MEM_REF)
-	   && TREE_CODE (TREE_OPERAND (base, 0)) == SSA_NAME)
-    {
-      struct ptr_info_def *pi = SSA_NAME_PTR_INFO (TREE_OPERAND (base, 0));
-      if (!pi)
-	return true;
-
-      if (pt_solutions_intersect (gimple_call_use_set (call), &pi->pt))
-	return true;
-    }
-  else
-    return true;
-
-  /* Inspect call arguments for passed-by-value aliases.  */
-process_args:
-  for (i = 0; i < gimple_call_num_args (call); ++i)
-    {
-      tree op = gimple_call_arg (call, i);
-      int flags = gimple_call_arg_flags (call, i);
-
-      if (flags & EAF_UNUSED)
-	continue;
-
-      if (TREE_CODE (op) == WITH_SIZE_EXPR)
-	op = TREE_OPERAND (op, 0);
-
-      if (TREE_CODE (op) != SSA_NAME
-	  && !is_gimple_min_invariant (op))
-	{
-	  ao_ref r;
-	  ao_ref_init (&r, op);
-	  if (refs_may_alias_p_1 (&r, ref, true))
-	    return true;
-	}
-    }
-
-  return false;
+  gcc_unreachable ();
+  return true;
 }
 
 static bool
@@ -1313,6 +1181,7 @@ ref_maybe_used_by_call_p (gimple call, tree ref)
 {
   ao_ref r;
   bool res;
+  gcc_unreachable ();
   ao_ref_init (&r, ref);
   res = ref_maybe_used_by_call_p_1 (call, &r);
   if (res)
@@ -1329,6 +1198,7 @@ ref_maybe_used_by_call_p (gimple call, tree ref)
 bool
 ref_maybe_used_by_stmt_p (gimple stmt, tree ref)
 {
+  gcc_unreachable ();
   if (is_gimple_assign (stmt))
     {
       tree rhs;
@@ -1357,188 +1227,7 @@ ref_maybe_used_by_stmt_p (gimple stmt, tree ref)
 static bool
 call_may_clobber_ref_p_1 (gimple call, ao_ref *ref)
 {
-  tree base;
-  tree callee;
-
-  /* If the call is pure or const it cannot clobber anything.  */
-  if (gimple_call_flags (call)
-      & (ECF_PURE|ECF_CONST|ECF_LOOPING_CONST_OR_PURE|ECF_NOVOPS))
-    return false;
-
-  base = ao_ref_base (ref);
-  if (!base)
-    return true;
-
-  if (TREE_CODE (base) == SSA_NAME
-      || CONSTANT_CLASS_P (base))
-    return false;
-
-  /* If the reference is based on a decl that is not aliased the call
-     cannot possibly clobber it.  */
-  if (DECL_P (base)
-      && !may_be_aliased (base)
-      /* But local non-readonly statics can be modified through recursion
-         or the call may implement a threading barrier which we must
-	 treat as may-def.  */
-      && (TREE_READONLY (base)
-	  || !is_global_var (base)))
-    return false;
-
-  callee = gimple_call_fndecl (call);
-
-  /* Handle those builtin functions explicitly that do not act as
-     escape points.  See tree-ssa-structalias.c:find_func_aliases
-     for the list of builtins we might need to handle here.  */
-  if (callee != NULL_TREE
-      && DECL_BUILT_IN_CLASS (callee) == BUILT_IN_NORMAL)
-    switch (DECL_FUNCTION_CODE (callee))
-      {
-	/* All the following functions clobber memory pointed to by
-	   their first argument.  */
-	case BUILT_IN_STRCPY:
-	case BUILT_IN_STRNCPY:
-	case BUILT_IN_MEMCPY:
-	case BUILT_IN_MEMMOVE:
-	case BUILT_IN_MEMPCPY:
-	case BUILT_IN_STPCPY:
-	case BUILT_IN_STPNCPY:
-	case BUILT_IN_STRCAT:
-	case BUILT_IN_STRNCAT:
-	case BUILT_IN_MEMSET:
-	  {
-	    ao_ref dref;
-	    tree size = NULL_TREE;
-	    if (gimple_call_num_args (call) == 3)
-	      size = gimple_call_arg (call, 2);
-	    ao_ref_init_from_ptr_and_size (&dref,
-					   gimple_call_arg (call, 0),
-					   size);
-	    return refs_may_alias_p_1 (&dref, ref, false);
-	  }
-	case BUILT_IN_BCOPY:
-	  {
-	    ao_ref dref;
-	    tree size = gimple_call_arg (call, 2);
-	    ao_ref_init_from_ptr_and_size (&dref,
-					   gimple_call_arg (call, 1),
-					   size);
-	    return refs_may_alias_p_1 (&dref, ref, false);
-	  }
-	/* Allocating memory does not have any side-effects apart from
-	   being the definition point for the pointer.  */
-	case BUILT_IN_MALLOC:
-	case BUILT_IN_CALLOC:
-	  /* Unix98 specifies that errno is set on allocation failure.  */
-	  if (flag_errno_math
-	      && targetm.ref_may_alias_errno (ref))
-	    return true;
-	  return false;
-	/* Freeing memory kills the pointed-to memory.  More importantly
-	   the call has to serve as a barrier for moving loads and stores
-	   across it.  */
-	case BUILT_IN_FREE:
-	  {
-	    tree ptr = gimple_call_arg (call, 0);
-	    return ptr_deref_may_alias_ref_p_1 (ptr, ref);
-	  }
-	case BUILT_IN_GAMMA_R:
-	case BUILT_IN_GAMMAF_R:
-	case BUILT_IN_GAMMAL_R:
-	case BUILT_IN_LGAMMA_R:
-	case BUILT_IN_LGAMMAF_R:
-	case BUILT_IN_LGAMMAL_R:
-	  {
-	    tree out = gimple_call_arg (call, 1);
-	    if (ptr_deref_may_alias_ref_p_1 (out, ref))
-	      return true;
-	    if (flag_errno_math)
-	      break;
-	    return false;
-	  }
-	case BUILT_IN_FREXP:
-	case BUILT_IN_FREXPF:
-	case BUILT_IN_FREXPL:
-	case BUILT_IN_MODF:
-	case BUILT_IN_MODFF:
-	case BUILT_IN_MODFL:
-	  {
-	    tree out = gimple_call_arg (call, 1);
-	    return ptr_deref_may_alias_ref_p_1 (out, ref);
-	  }
-	case BUILT_IN_REMQUO:
-	case BUILT_IN_REMQUOF:
-	case BUILT_IN_REMQUOL:
-	  {
-	    tree out = gimple_call_arg (call, 2);
-	    if (ptr_deref_may_alias_ref_p_1 (out, ref))
-	      return true;
-	    if (flag_errno_math)
-	      break;
-	    return false;
-	  }
-	case BUILT_IN_SINCOS:
-	case BUILT_IN_SINCOSF:
-	case BUILT_IN_SINCOSL:
-	  {
-	    tree sin = gimple_call_arg (call, 1);
-	    tree cos = gimple_call_arg (call, 2);
-	    return (ptr_deref_may_alias_ref_p_1 (sin, ref)
-		    || ptr_deref_may_alias_ref_p_1 (cos, ref));
-	  }
-	/* __sync_* builtins and some OpenMP builtins act as threading
-	   barriers.  */
-#undef DEF_SYNC_BUILTIN
-#define DEF_SYNC_BUILTIN(ENUM, NAME, TYPE, ATTRS) case ENUM:
-#include "sync-builtins.def"
-#undef DEF_SYNC_BUILTIN
-	case BUILT_IN_GOMP_ATOMIC_START:
-	case BUILT_IN_GOMP_ATOMIC_END:
-	case BUILT_IN_GOMP_BARRIER:
-	case BUILT_IN_GOMP_TASKWAIT:
-	case BUILT_IN_GOMP_CRITICAL_START:
-	case BUILT_IN_GOMP_CRITICAL_END:
-	case BUILT_IN_GOMP_CRITICAL_NAME_START:
-	case BUILT_IN_GOMP_CRITICAL_NAME_END:
-	case BUILT_IN_GOMP_LOOP_END:
-	case BUILT_IN_GOMP_ORDERED_START:
-	case BUILT_IN_GOMP_ORDERED_END:
-	case BUILT_IN_GOMP_PARALLEL_END:
-	case BUILT_IN_GOMP_SECTIONS_END:
-	case BUILT_IN_GOMP_SINGLE_COPY_START:
-	case BUILT_IN_GOMP_SINGLE_COPY_END:
-	  return true;
-	default:
-	  /* Fallthru to general call handling.  */;
-      }
-
-  /* Check if base is a global static variable that is not written
-     by the function.  */
-  if (callee != NULL_TREE
-      && TREE_CODE (base) == VAR_DECL
-      && TREE_STATIC (base))
-    {
-      bitmap not_written;
-
-      if ((not_written
-	     = ipa_reference_get_not_written_global (cgraph_node (callee)))
-	  && bitmap_bit_p (not_written, DECL_UID (base)))
-	return false;
-    }
-
-  /* Check if the base variable is call-clobbered.  */
-  if (DECL_P (base))
-    return pt_solution_includes (gimple_call_clobber_set (call), base);
-  else if ((INDIRECT_REF_P (base)
-	    || TREE_CODE (base) == MEM_REF)
-	   && TREE_CODE (TREE_OPERAND (base, 0)) == SSA_NAME)
-    {
-      struct ptr_info_def *pi = SSA_NAME_PTR_INFO (TREE_OPERAND (base, 0));
-      if (!pi)
-	return true;
-
-      return pt_solutions_intersect (gimple_call_clobber_set (call), &pi->pt);
-    }
-
+  gcc_unreachable ();
   return true;
 }
 
@@ -1548,15 +1237,9 @@ call_may_clobber_ref_p_1 (gimple call, ao_ref *ref)
 bool
 call_may_clobber_ref_p (gimple call, tree ref)
 {
-  bool res;
-  ao_ref r;
-  ao_ref_init (&r, ref);
-  res = call_may_clobber_ref_p_1 (call, &r);
-  if (res)
-    ++alias_stats.call_may_clobber_ref_p_may_alias;
-  else
-    ++alias_stats.call_may_clobber_ref_p_no_alias;
-  return res;
+  gcc_unreachable ();
+  ++alias_stats.call_may_clobber_ref_p_may_alias;
+  return true;
 }
 
 
@@ -1566,42 +1249,15 @@ call_may_clobber_ref_p (gimple call, tree ref)
 bool
 stmt_may_clobber_ref_p_1 (gimple stmt, ao_ref *ref)
 {
-  if (is_gimple_call (stmt))
-    {
-      tree lhs = gimple_call_lhs (stmt);
-      if (lhs
-	  && TREE_CODE (lhs) != SSA_NAME)
-	{
-	  ao_ref r;
-	  ao_ref_init (&r, lhs);
-	  if (refs_may_alias_p_1 (ref, &r, true))
-	    return true;
-	}
-
-      return call_may_clobber_ref_p_1 (stmt, ref);
-    }
-  else if (gimple_assign_single_p (stmt))
-    {
-      tree lhs = gimple_assign_lhs (stmt);
-      if (TREE_CODE (lhs) != SSA_NAME)
-	{
-	  ao_ref r;
-	  ao_ref_init (&r, lhs);
-	  return refs_may_alias_p_1 (ref, &r, true);
-	}
-    }
-  else if (gimple_code (stmt) == GIMPLE_ASM)
-    return true;
-
-  return false;
+  gcc_unreachable ();
+  return true;
 }
 
 bool
 stmt_may_clobber_ref_p (gimple stmt, tree ref)
 {
-  ao_ref r;
-  ao_ref_init (&r, ref);
-  return stmt_may_clobber_ref_p_1 (stmt, &r);
+  gcc_unreachable ();
+  return true;
 }
 
 /* If STMT kills the memory reference REF return true, otherwise
@@ -1610,37 +1266,15 @@ stmt_may_clobber_ref_p (gimple stmt, tree ref)
 static bool
 stmt_kills_ref_p_1 (gimple stmt, ao_ref *ref)
 {
-  if (gimple_has_lhs (stmt)
-      && TREE_CODE (gimple_get_lhs (stmt)) != SSA_NAME)
-    {
-      tree base, lhs = gimple_get_lhs (stmt);
-      HOST_WIDE_INT size, offset, max_size;
-      ao_ref_base (ref);
-      base = get_ref_base_and_extent (lhs, &offset, &size, &max_size);
-      /* We can get MEM[symbol: sZ, index: D.8862_1] here,
-	 so base == ref->base does not always hold.  */
-      if (base == ref->base)
-	{
-	  /* For a must-alias check we need to be able to constrain
-	     the accesses properly.  */
-	  if (size != -1 && size == max_size
-	      && ref->max_size != -1)
-	    {
-	      if (offset <= ref->offset
-		  && offset + size >= ref->offset + ref->max_size)
-		return true;
-	    }
-	}
-    }
-  return false;
+  gcc_unreachable ();
+  return true;
 }
 
 bool
 stmt_kills_ref_p (gimple stmt, tree ref)
 {
-  ao_ref r;
-  ao_ref_init (&r, ref);
-  return stmt_kills_ref_p_1 (stmt, &r);
+  gcc_unreachable ();
+  return true;
 }
 
 
@@ -1652,6 +1286,8 @@ static bool
 maybe_skip_until (gimple phi, tree target, ao_ref *ref,
 		  tree vuse, bitmap *visited)
 {
+  gcc_unreachable ();
+
   if (!*visited)
     *visited = BITMAP_ALLOC (NULL);
 
@@ -1691,6 +1327,8 @@ tree
 get_continuation_for_phi (gimple phi, ao_ref *ref, bitmap *visited)
 {
   unsigned nargs = gimple_phi_num_args (phi);
+  
+  gcc_unreachable ();
 
   /* Through a single-argument PHI we can simply look through.  */
   if (nargs == 1)

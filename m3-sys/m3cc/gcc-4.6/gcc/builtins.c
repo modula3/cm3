@@ -7447,48 +7447,8 @@ expand_builtin_memory_chk (tree exp, rtx target, enum machine_mode mode,
 tree
 fold_builtin_object_size (tree ptr, tree ost)
 {
-  unsigned HOST_WIDE_INT bytes;
-  int object_size_type;
-
-  if (!validate_arg (ptr, POINTER_TYPE)
-      || !validate_arg (ost, INTEGER_TYPE))
-    return NULL_TREE;
-
-  STRIP_NOPS (ost);
-
-  if (TREE_CODE (ost) != INTEGER_CST
-      || tree_int_cst_sgn (ost) < 0
-      || compare_tree_int (ost, 3) > 0)
-    return NULL_TREE;
-
-  object_size_type = tree_low_cst (ost, 0);
-
-  /* __builtin_object_size doesn't evaluate side-effects in its arguments;
-     if there are any side-effects, it returns (size_t) -1 for types 0 and 1
-     and (size_t) 0 for types 2 and 3.  */
-  if (TREE_SIDE_EFFECTS (ptr))
-    return build_int_cst_type (size_type_node, object_size_type < 2 ? -1 : 0);
-
-  if (TREE_CODE (ptr) == ADDR_EXPR)
-    {
-      bytes = compute_builtin_object_size (ptr, object_size_type);
-      if (double_int_fits_to_tree_p (size_type_node,
-				     uhwi_to_double_int (bytes)))
-	return build_int_cstu (size_type_node, bytes);
-    }
-  else if (TREE_CODE (ptr) == SSA_NAME)
-    {
-      /* If object size is not known yet, delay folding until
-       later.  Maybe subsequent passes will help determining
-       it.  */
-      bytes = compute_builtin_object_size (ptr, object_size_type);
-      if (bytes != (unsigned HOST_WIDE_INT) (object_size_type < 2 ? -1 : 0)
-          && double_int_fits_to_tree_p (size_type_node,
-					uhwi_to_double_int (bytes)))
-	return build_int_cstu (size_type_node, bytes);
-    }
-
-  return NULL_TREE;
+  gcc_unreachable ();
+  return 0;
 }
 
 /* Fold a call to the __mem{cpy,pcpy,move,set}_chk builtin.

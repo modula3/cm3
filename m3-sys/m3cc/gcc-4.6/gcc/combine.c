@@ -4311,52 +4311,27 @@ try_combine (rtx i3, rtx i2, rtx i1, rtx i0, int *new_direct_jump_p)
   }
 
   if (undobuf.other_insn != NULL_RTX)
-    {
-      if (dump_file)
-	{
-	  fprintf (dump_file, "modifying other_insn ");
-	  dump_insn_slim (dump_file, undobuf.other_insn);
-	}
+    {	
       df_insn_rescan (undobuf.other_insn);
     }
 
   if (i0 && !(NOTE_P(i0) && (NOTE_KIND (i0) == NOTE_INSN_DELETED)))
     {
-      if (dump_file)
-	{
-	  fprintf (dump_file, "modifying insn i1 ");
-	  dump_insn_slim (dump_file, i0);
-	}
       df_insn_rescan (i0);
     }
 
   if (i1 && !(NOTE_P(i1) && (NOTE_KIND (i1) == NOTE_INSN_DELETED)))
     {
-      if (dump_file)
-	{
-	  fprintf (dump_file, "modifying insn i1 ");
-	  dump_insn_slim (dump_file, i1);
-	}
       df_insn_rescan (i1);
     }
 
   if (i2 && !(NOTE_P(i2) && (NOTE_KIND (i2) == NOTE_INSN_DELETED)))
     {
-      if (dump_file)
-	{
-	  fprintf (dump_file, "modifying insn i2 ");
-	  dump_insn_slim (dump_file, i2);
-	}
       df_insn_rescan (i2);
     }
 
   if (i3 && !(NOTE_P(i3) && (NOTE_KIND (i3) == NOTE_INSN_DELETED)))
     {
-      if (dump_file)
-	{
-	  fprintf (dump_file, "modifying insn i3 ");
-	  dump_insn_slim (dump_file, i3);
-	}
       df_insn_rescan (i3);
     }
 
@@ -13767,61 +13742,4 @@ dump_combine_total_stats (FILE *file)
      total_attempts, total_merges, total_extras, total_successes);
 }
 
-static bool
-gate_handle_combine (void)
-{
-  return (optimize > 0);
-}
-
-/* Try combining insns through substitution.  */
-static unsigned int
-rest_of_handle_combine (void)
-{
-  int rebuild_jump_labels_after_combine;
-
-  df_set_flags (DF_LR_RUN_DCE + DF_DEFER_INSN_RESCAN);
-  df_note_add_problem ();
-  df_analyze ();
-
-  regstat_init_n_sets_and_refs ();
-
-  rebuild_jump_labels_after_combine
-    = combine_instructions (get_insns (), max_reg_num ());
-
-  /* Combining insns may have turned an indirect jump into a
-     direct jump.  Rebuild the JUMP_LABEL fields of jumping
-     instructions.  */
-  if (rebuild_jump_labels_after_combine)
-    {
-      timevar_push (TV_JUMP);
-      rebuild_jump_labels (get_insns ());
-      cleanup_cfg (0);
-      timevar_pop (TV_JUMP);
-    }
-
-  regstat_free_n_sets_and_refs ();
-  return 0;
-}
-
-struct rtl_opt_pass pass_combine =
-{
- {
-  RTL_PASS,
-  "combine",                            /* name */
-  gate_handle_combine,                  /* gate */
-  rest_of_handle_combine,               /* execute */
-  NULL,                                 /* sub */
-  NULL,                                 /* next */
-  0,                                    /* static_pass_number */
-  TV_COMBINE,                           /* tv_id */
-  PROP_cfglayout,                       /* properties_required */
-  0,                                    /* properties_provided */
-  0,                                    /* properties_destroyed */
-  0,                                    /* todo_flags_start */
-  TODO_dump_func |
-  TODO_df_finish | TODO_verify_rtl_sharing |
-  TODO_ggc_collect,                     /* todo_flags_finish */
- }
-};
-
 EXTERN_C_END

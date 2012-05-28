@@ -215,67 +215,7 @@ varpool_remove_node (struct varpool_node *node)
 	prev->same_comdat_group = node->same_comdat_group;
       node->same_comdat_group = NULL;
     }
-  ipa_remove_all_references (&node->ref_list);
-  ipa_remove_all_refering (&node->ref_list);
   ggc_free (node);
-}
-
-/* Dump given cgraph node.  */
-void
-dump_varpool_node (FILE *f, struct varpool_node *node)
-{
-  fprintf (f, "%s:", varpool_node_name (node));
-  fprintf (f, " availability:%s",
-	   cgraph_function_flags_ready
-	   ? cgraph_availability_names[cgraph_variable_initializer_availability (node)]
-	   : "not-ready");
-  if (DECL_ASSEMBLER_NAME_SET_P (node->decl))
-    fprintf (f, " (asm: %s)", IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (node->decl)));
-  if (DECL_INITIAL (node->decl))
-    fprintf (f, " initialized");
-  if (TREE_ASM_WRITTEN (node->decl))
-    fprintf (f, " (asm written)");
-  if (node->needed)
-    fprintf (f, " needed");
-  if (node->analyzed)
-    fprintf (f, " analyzed");
-  if (node->finalized)
-    fprintf (f, " finalized");
-  if (node->output)
-    fprintf (f, " output");
-  if (node->externally_visible)
-    fprintf (f, " externally_visible");
-  if (node->resolution != LDPR_UNKNOWN)
-    fprintf (f, " %s",
- 	     ld_plugin_symbol_resolution_names[(int)node->resolution]);
-  if (node->in_other_partition)
-    fprintf (f, " in_other_partition");
-  else if (node->used_from_other_partition)
-    fprintf (f, " used_from_other_partition");
-  fprintf (f, "\n");
-  fprintf (f, "  References: ");
-  ipa_dump_references (f, &node->ref_list);
-  fprintf (f, "  Refering this var: ");
-  ipa_dump_refering (f, &node->ref_list);
-}
-
-/* Dump the variable pool.  */
-void
-dump_varpool (FILE *f)
-{
-  struct varpool_node *node;
-
-  fprintf (f, "variable pool:\n\n");
-  for (node = varpool_nodes; node; node = node->next)
-    dump_varpool_node (f, node);
-}
-
-/* Dump the variable pool to stderr.  */
-
-DEBUG_FUNCTION void
-debug_varpool (void)
-{
-  dump_varpool (stderr);
 }
 
 /* Given an assembler name, lookup node.  */

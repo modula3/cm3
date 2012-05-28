@@ -109,6 +109,8 @@ EOID	[^[:alnum:]_]
 {WS}				{ update_lineno (yytext, yyleng); }
 \\\n				{ lexer_line.line++; }
 
+"EXTERN_C_START"/{EOID}		/* don't care */
+"EXTERN_C_END"/{EOID}		/* don't care */
 "const"/{EOID}			/* don't care */
 "GTY"/{EOID}			{ return GTY_TOKEN; }
 "VEC"/{EOID}			{ return VEC_TOKEN; }

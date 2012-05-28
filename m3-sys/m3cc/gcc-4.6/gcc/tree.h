@@ -5139,7 +5139,6 @@ truth_value_p (enum tree_code code)
 
 /* In builtins.c */
 extern tree fold_call_expr (location_t, tree, bool);
-extern tree fold_builtin_fputs (location_t, tree, tree, bool, bool, tree);
 extern tree fold_builtin_strcpy (location_t, tree, tree, tree, tree);
 extern tree fold_builtin_strncpy (location_t, tree, tree, tree, tree, tree);
 extern tree fold_builtin_memory_chk (location_t, tree, tree, tree, tree, tree, tree, bool,

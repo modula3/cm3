@@ -43,26 +43,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 
 EXTERN_C_START
-
-/* Debugging function for postorder and inorder code. NOTE is a string
-   that is printed before the nodes are printed.  ORDER is an array of
-   cgraph_nodes that has COUNT useful nodes in it.  */
-
-void
-ipa_utils_print_order (FILE* out,
-		       const char * note,
-		       struct cgraph_node** order,
-		       int count)
-{
-  int i;
-  fprintf (out, "\n\n ordered call graph: %s\n", note);
-
-  for (i = count - 1; i >= 0; i--)
-    dump_cgraph_node(dump_file, order[i]);
-  fprintf (out, "\n");
-  fflush(out);
-}
-
 
 struct searchc_env {
   struct cgraph_node **stack;

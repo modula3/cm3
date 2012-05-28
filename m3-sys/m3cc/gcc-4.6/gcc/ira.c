@@ -2339,375 +2339,9 @@ update_equiv_regs (void)
 	      /* Continue normally in case this is a candidate for
 		 replacements.  */
 	    }
-
-	  if (!optimize)
-	    continue;
-
-	  /* We only handle the case of a pseudo register being set
-	     once, or always to the same value.  */
-	  /* ??? The mn10200 port breaks if we add equivalences for
-	     values that need an ADDRESS_REGS register and set them equivalent
-	     to a MEM of a pseudo.  The actual problem is in the over-conservative
-	     handling of INPADDR_ADDRESS / INPUT_ADDRESS / INPUT triples in
-	     calculate_needs, but we traditionally work around this problem
-	     here by rejecting equivalences when the destination is in a register
-	     that's likely spilled.  This is fragile, of course, since the
-	     preferred class of a pseudo depends on all instructions that set
-	     or use it.  */
-
-	  if (!REG_P (dest)
-	      || (regno = REGNO (dest)) < FIRST_PSEUDO_REGISTER
-	      || reg_equiv[regno].init_insns == const0_rtx
-	      || (targetm.class_likely_spilled_p (reg_preferred_class (regno))
-		  && MEM_P (src) && ! reg_equiv[regno].is_arg_equivalence))
-	    {
-	      /* This might be setting a SUBREG of a pseudo, a pseudo that is
-		 also set somewhere else to a constant.  */
-	      note_stores (set, no_equiv, NULL);
-	      continue;
-	    }
-
-	  note = find_reg_note (insn, REG_EQUAL, NULL_RTX);
-
-	  /* cse sometimes generates function invariants, but doesn't put a
-	     REG_EQUAL note on the insn.  Since this note would be redundant,
-	     there's no point creating it earlier than here.  */
-	  if (! note && ! rtx_varies_p (src, 0))
-	    note = set_unique_reg_note (insn, REG_EQUAL, copy_rtx (src));
-
-	  /* Don't bother considering a REG_EQUAL note containing an EXPR_LIST
-	     since it represents a function call */
-	  if (note && GET_CODE (XEXP (note, 0)) == EXPR_LIST)
-	    note = NULL_RTX;
-
-	  if (DF_REG_DEF_COUNT (regno) != 1
-	      && (! note
-		  || rtx_varies_p (XEXP (note, 0), 0)
-		  || (reg_equiv[regno].replacement
-		      && ! rtx_equal_p (XEXP (note, 0),
-					reg_equiv[regno].replacement))))
-	    {
-	      no_equiv (dest, set, NULL);
-	      continue;
-	    }
-	  /* Record this insn as initializing this register.  */
-	  reg_equiv[regno].init_insns
-	    = gen_rtx_INSN_LIST (VOIDmode, insn, reg_equiv[regno].init_insns);
-
-	  /* If this register is known to be equal to a constant, record that
-	     it is always equivalent to the constant.  */
-	  if (DF_REG_DEF_COUNT (regno) == 1
-	      && note && ! rtx_varies_p (XEXP (note, 0), 0))
-	    {
-	      rtx note_value = XEXP (note, 0);
-	      remove_note (insn, note);
-	      set_unique_reg_note (insn, REG_EQUIV, note_value);
-	    }
-
-	  /* If this insn introduces a "constant" register, decrease the priority
-	     of that register.  Record this insn if the register is only used once
-	     more and the equivalence value is the same as our source.
-
-	     The latter condition is checked for two reasons:  First, it is an
-	     indication that it may be more efficient to actually emit the insn
-	     as written (if no registers are available, reload will substitute
-	     the equivalence).  Secondly, it avoids problems with any registers
-	     dying in this insn whose death notes would be missed.
-
-	     If we don't have a REG_EQUIV note, see if this insn is loading
-	     a register used only in one basic block from a MEM.  If so, and the
-	     MEM remains unchanged for the life of the register, add a REG_EQUIV
-	     note.  */
-
-	  note = find_reg_note (insn, REG_EQUIV, NULL_RTX);
-
-	  if (note == 0 && REG_BASIC_BLOCK (regno) >= NUM_FIXED_BLOCKS
-	      && MEM_P (SET_SRC (set))
-	      && validate_equiv_mem (insn, dest, SET_SRC (set)))
-	    note = set_unique_reg_note (insn, REG_EQUIV, copy_rtx (SET_SRC (set)));
-
-	  if (note)
-	    {
-	      int regno = REGNO (dest);
-	      rtx x = XEXP (note, 0);
-
-	      /* If we haven't done so, record for reload that this is an
-		 equivalencing insn.  */
-	      if (!reg_equiv[regno].is_arg_equivalence)
-		reg_equiv_init[regno]
-		  = gen_rtx_INSN_LIST (VOIDmode, insn, reg_equiv_init[regno]);
-
-	      /* Record whether or not we created a REG_EQUIV note for a LABEL_REF.
-		 We might end up substituting the LABEL_REF for uses of the
-		 pseudo here or later.  That kind of transformation may turn an
-		 indirect jump into a direct jump, in which case we must rerun the
-		 jump optimizer to ensure that the JUMP_LABEL fields are valid.  */
-	      if (GET_CODE (x) == LABEL_REF
-		  || (GET_CODE (x) == CONST
-		      && GET_CODE (XEXP (x, 0)) == PLUS
-		      && (GET_CODE (XEXP (XEXP (x, 0), 0)) == LABEL_REF)))
-		recorded_label_ref = 1;
-
-	      reg_equiv[regno].replacement = x;
-	      reg_equiv[regno].src_p = &SET_SRC (set);
-	      reg_equiv[regno].loop_depth = loop_depth;
-
-	      /* Don't mess with things live during setjmp.  */
-	      if (REG_LIVE_LENGTH (regno) >= 0 && optimize)
-		{
-		  /* Note that the statement below does not affect the priority
-		     in local-alloc!  */
-		  REG_LIVE_LENGTH (regno) *= 2;
-
-		  /* If the register is referenced exactly twice, meaning it is
-		     set once and used once, indicate that the reference may be
-		     replaced by the equivalence we computed above.  Do this
-		     even if the register is only used in one block so that
-		     dependencies can be handled where the last register is
-		     used in a different block (i.e. HIGH / LO_SUM sequences)
-		     and to reduce the number of registers alive across
-		     calls.  */
-
-		  if (REG_N_REFS (regno) == 2
-		      && (rtx_equal_p (x, src)
-			  || ! equiv_init_varies_p (src))
-		      && NONJUMP_INSN_P (insn)
-		      && equiv_init_movable_p (PATTERN (insn), regno))
-		    reg_equiv[regno].replace = 1;
-		}
-	    }
 	}
     }
 
-  if (!optimize)
-    goto out;
-
-  /* A second pass, to gather additional equivalences with memory.  This needs
-     to be done after we know which registers we are going to replace.  */
-
-  for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
-    {
-      rtx set, src, dest;
-      unsigned regno;
-
-      if (! INSN_P (insn))
-	continue;
-
-      set = single_set (insn);
-      if (! set)
-	continue;
-
-      dest = SET_DEST (set);
-      src = SET_SRC (set);
-
-      /* If this sets a MEM to the contents of a REG that is only used
-	 in a single basic block, see if the register is always equivalent
-	 to that memory location and if moving the store from INSN to the
-	 insn that set REG is safe.  If so, put a REG_EQUIV note on the
-	 initializing insn.
-
-	 Don't add a REG_EQUIV note if the insn already has one.  The existing
-	 REG_EQUIV is likely more useful than the one we are adding.
-
-	 If one of the regs in the address has reg_equiv[REGNO].replace set,
-	 then we can't add this REG_EQUIV note.  The reg_equiv[REGNO].replace
-	 optimization may move the set of this register immediately before
-	 insn, which puts it after reg_equiv[REGNO].init_insns, and hence
-	 the mention in the REG_EQUIV note would be to an uninitialized
-	 pseudo.  */
-
-      if (MEM_P (dest) && REG_P (src)
-	  && (regno = REGNO (src)) >= FIRST_PSEUDO_REGISTER
-	  && REG_BASIC_BLOCK (regno) >= NUM_FIXED_BLOCKS
-	  && DF_REG_DEF_COUNT (regno) == 1
-	  && reg_equiv[regno].init_insns != 0
-	  && reg_equiv[regno].init_insns != const0_rtx
-	  && ! find_reg_note (XEXP (reg_equiv[regno].init_insns, 0),
-			      REG_EQUIV, NULL_RTX)
-	  && ! contains_replace_regs (XEXP (dest, 0)))
-	{
-	  rtx init_insn = XEXP (reg_equiv[regno].init_insns, 0);
-	  if (validate_equiv_mem (init_insn, src, dest)
-	      && ! memref_used_between_p (dest, init_insn, insn)
-	      /* Attaching a REG_EQUIV note will fail if INIT_INSN has
-		 multiple sets.  */
-	      && set_unique_reg_note (init_insn, REG_EQUIV, copy_rtx (dest)))
-	    {
-	      /* This insn makes the equivalence, not the one initializing
-		 the register.  */
-	      reg_equiv_init[regno]
-		= gen_rtx_INSN_LIST (VOIDmode, insn, NULL_RTX);
-	      df_notes_rescan (init_insn);
-	    }
-	}
-    }
-
-  cleared_regs = BITMAP_ALLOC (NULL);
-  /* Now scan all regs killed in an insn to see if any of them are
-     registers only used that once.  If so, see if we can replace the
-     reference with the equivalent form.  If we can, delete the
-     initializing reference and this register will go away.  If we
-     can't replace the reference, and the initializing reference is
-     within the same loop (or in an inner loop), then move the register
-     initialization just before the use, so that they are in the same
-     basic block.  */
-  FOR_EACH_BB_REVERSE (bb)
-    {
-      loop_depth = bb->loop_depth;
-      for (insn = BB_END (bb);
-	   insn != PREV_INSN (BB_HEAD (bb));
-	   insn = PREV_INSN (insn))
-	{
-	  rtx link;
-
-	  if (! INSN_P (insn))
-	    continue;
-
-	  /* Don't substitute into a non-local goto, this confuses CFG.  */
-	  if (JUMP_P (insn)
-	      && find_reg_note (insn, REG_NON_LOCAL_GOTO, NULL_RTX))
-	    continue;
-
-	  for (link = REG_NOTES (insn); link; link = XEXP (link, 1))
-	    {
-	      if (REG_NOTE_KIND (link) == REG_DEAD
-		  /* Make sure this insn still refers to the register.  */
-		  && reg_mentioned_p (XEXP (link, 0), PATTERN (insn)))
-		{
-		  int regno = REGNO (XEXP (link, 0));
-		  rtx equiv_insn;
-
-		  if (! reg_equiv[regno].replace
-		      || reg_equiv[regno].loop_depth < loop_depth
-		      /* There is no sense to move insns if we did
-			 register pressure-sensitive scheduling was
-			 done because it will not improve allocation
-			 but worsen insn schedule with a big
-			 probability.  */
-		      || (flag_sched_pressure && flag_schedule_insns))
-		    continue;
-
-		  /* reg_equiv[REGNO].replace gets set only when
-		     REG_N_REFS[REGNO] is 2, i.e. the register is set
-		     once and used once.  (If it were only set, but not used,
-		     flow would have deleted the setting insns.)  Hence
-		     there can only be one insn in reg_equiv[REGNO].init_insns.  */
-		  gcc_assert (reg_equiv[regno].init_insns
-			      && !XEXP (reg_equiv[regno].init_insns, 1));
-		  equiv_insn = XEXP (reg_equiv[regno].init_insns, 0);
-
-		  /* We may not move instructions that can throw, since
-		     that changes basic block boundaries and we are not
-		     prepared to adjust the CFG to match.  */
-		  if (can_throw_internal (equiv_insn))
-		    continue;
-
-		  if (asm_noperands (PATTERN (equiv_insn)) < 0
-		      && validate_replace_rtx (regno_reg_rtx[regno],
-					       *(reg_equiv[regno].src_p), insn))
-		    {
-		      rtx equiv_link;
-		      rtx last_link;
-		      rtx note;
-
-		      /* Find the last note.  */
-		      for (last_link = link; XEXP (last_link, 1);
-			   last_link = XEXP (last_link, 1))
-			;
-
-		      /* Append the REG_DEAD notes from equiv_insn.  */
-		      equiv_link = REG_NOTES (equiv_insn);
-		      while (equiv_link)
-			{
-			  note = equiv_link;
-			  equiv_link = XEXP (equiv_link, 1);
-			  if (REG_NOTE_KIND (note) == REG_DEAD)
-			    {
-			      remove_note (equiv_insn, note);
-			      XEXP (last_link, 1) = note;
-			      XEXP (note, 1) = NULL_RTX;
-			      last_link = note;
-			    }
-			}
-
-		      remove_death (regno, insn);
-		      SET_REG_N_REFS (regno, 0);
-		      REG_FREQ (regno) = 0;
-		      delete_insn (equiv_insn);
-
-		      reg_equiv[regno].init_insns
-			= XEXP (reg_equiv[regno].init_insns, 1);
-
-		      reg_equiv_init[regno] = NULL_RTX;
-		      bitmap_set_bit (cleared_regs, regno);
-		    }
-		  /* Move the initialization of the register to just before
-		     INSN.  Update the flow information.  */
-		  else if (prev_nondebug_insn (insn) != equiv_insn)
-		    {
-		      rtx new_insn;
-
-		      new_insn = emit_insn_before (PATTERN (equiv_insn), insn);
-		      REG_NOTES (new_insn) = REG_NOTES (equiv_insn);
-		      REG_NOTES (equiv_insn) = 0;
-		      /* Rescan it to process the notes.  */
-		      df_insn_rescan (new_insn);
-
-		      /* Make sure this insn is recognized before
-			 reload begins, otherwise
-			 eliminate_regs_in_insn will die.  */
-		      INSN_CODE (new_insn) = INSN_CODE (equiv_insn);
-
-		      delete_insn (equiv_insn);
-
-		      XEXP (reg_equiv[regno].init_insns, 0) = new_insn;
-
-		      REG_BASIC_BLOCK (regno) = bb->index;
-		      REG_N_CALLS_CROSSED (regno) = 0;
-		      REG_FREQ_CALLS_CROSSED (regno) = 0;
-		      REG_N_THROWING_CALLS_CROSSED (regno) = 0;
-		      REG_LIVE_LENGTH (regno) = 2;
-
-		      if (insn == BB_HEAD (bb))
-			BB_HEAD (bb) = PREV_INSN (insn);
-
-		      reg_equiv_init[regno]
-			= gen_rtx_INSN_LIST (VOIDmode, new_insn, NULL_RTX);
-		      bitmap_set_bit (cleared_regs, regno);
-		    }
-		}
-	    }
-	}
-    }
-
-  if (!bitmap_empty_p (cleared_regs))
-    {
-      FOR_EACH_BB (bb)
-	{
-	  bitmap_and_compl_into (DF_LIVE_IN (bb), cleared_regs);
-	  bitmap_and_compl_into (DF_LIVE_OUT (bb), cleared_regs);
-	  bitmap_and_compl_into (DF_LR_IN (bb), cleared_regs);
-	  bitmap_and_compl_into (DF_LR_OUT (bb), cleared_regs);
-	}
-
-      /* Last pass - adjust debug insns referencing cleared regs.  */
-      if (MAY_HAVE_DEBUG_INSNS)
-	for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
-	  if (DEBUG_INSN_P (insn))
-	    {
-	      rtx old_loc = INSN_VAR_LOCATION_LOC (insn);
-	      INSN_VAR_LOCATION_LOC (insn)
-		= simplify_replace_fn_rtx (old_loc, NULL_RTX,
-					   adjust_cleared_regs,
-					   (void *) cleared_regs);
-	      if (old_loc != INSN_VAR_LOCATION_LOC (insn))
-		df_insn_rescan (insn);
-	    }
-    }
-
-  BITMAP_FREE (cleared_regs);
-
-  out:
   /* Clean up.  */
 
   end_alias_analysis ();
@@ -2743,7 +2377,7 @@ pseudo_for_reload_consideration_p (int regno)
 {
   /* Consider spilled pseudos too for IRA because they still have a
      chance to get hard-registers in the reload when IRA is used.  */
-  return (reg_renumber[regno] >= 0 || ira_conflicts_p);
+  return (reg_renumber[regno] >= 0);
 }
 
 /* Init LIVE_SUBREGS[ALLOCNUM] and LIVE_SUBREGS_USED[ALLOCNUM] using
@@ -2862,8 +2496,7 @@ build_insn_chain (void)
 		      }
 
 		    if ((regno < FIRST_PSEUDO_REGISTER
-			 || reg_renumber[regno] >= 0
-			 || ira_conflicts_p)
+			 || reg_renumber[regno] >= 0)
 			&& (!DF_REF_FLAGS_IS_SET (def, DF_REF_CONDITIONAL)))
 		      {
 			rtx reg = DF_REF_REG (def);
@@ -3068,10 +2701,6 @@ init_reg_equiv_memory_loc (void)
 /* All natural loops.  */
 struct loops ira_loops;
 
-/* True if we have allocno conflicts.  It is false for non-optimized
-   mode or when the conflict table is too big.  */
-bool ira_conflicts_p;
-
 /* This is the main entry of IRA.  */
 static void
 ira (FILE *f)
@@ -3099,7 +2728,6 @@ ira (FILE *f)
       ira_dump_file = stderr;
     }
 
-  ira_conflicts_p = optimize > 0;
   setup_prohibited_mode_move_regs ();
 
   df_note_add_problem ();
@@ -3137,25 +2765,6 @@ ira (FILE *f)
   gcc_obstack_init (&ira_obstack);
 #endif
   bitmap_obstack_initialize (&ira_bitmap_obstack);
-  if (optimize)
-    {
-      max_regno = max_reg_num ();
-      ira_reg_equiv_len = max_regno;
-      ira_reg_equiv_invariant_p
-	= (bool *) ira_allocate (max_regno * sizeof (bool));
-      memset (ira_reg_equiv_invariant_p, 0, max_regno * sizeof (bool));
-      ira_reg_equiv_const = (rtx *) ira_allocate (max_regno * sizeof (rtx));
-      memset (ira_reg_equiv_const, 0, max_regno * sizeof (rtx));
-      find_reg_equiv_invariant_const ();
-      if (rebuild_p)
-	{
-	  timevar_push (TV_JUMP);
-	  rebuild_jump_labels (get_insns ());
-	  if (purge_all_dead_edges ())
-	    delete_unreachable_blocks ();
-	  timevar_pop (TV_JUMP);
-	}
-    }
 
   max_regno_before_ira = allocated_reg_info_size = max_reg_num ();
   ira_setup_eliminable_regset ();
@@ -3173,11 +2782,9 @@ ira (FILE *f)
 
   if (internal_flag_ira_verbose > 0 && ira_dump_file != NULL)
     fprintf (ira_dump_file, "Building IRA IR\n");
-  loops_p = ira_build (optimize
-		       && (flag_ira_region == IRA_REGION_ALL
-			   || flag_ira_region == IRA_REGION_MIXED));
+  loops_p = ira_build ();
 
-  ira_assert (ira_conflicts_p || !loops_p);
+  ira_assert (!loops_p);
 
   saved_flag_ira_share_spill_slots = flag_ira_share_spill_slots;
   if (too_high_register_pressure_p () || cfun->calls_setjmp)
@@ -3194,44 +2801,9 @@ ira (FILE *f)
 
   ira_emit (loops_p);
 
-  if (ira_conflicts_p)
-    {
-      max_regno = max_reg_num ();
-
-      if (! loops_p)
-	ira_initiate_assign ();
-      else
-	{
-	  expand_reg_info (allocated_reg_info_size);
-	  setup_preferred_alternate_classes_for_new_pseudos
-	    (allocated_reg_info_size);
-	  allocated_reg_info_size = max_regno;
-
-	  if (internal_flag_ira_verbose > 0 && ira_dump_file != NULL)
-	    fprintf (ira_dump_file, "Flattening IR\n");
-	  ira_flattening (max_regno_before_ira, ira_max_point_before_emit);
-	  /* New insns were generated: add notes and recalculate live
-	     info.  */
-	  df_analyze ();
-
-	  flow_loops_find (&ira_loops);
-	  record_loop_exits ();
-	  current_loops = &ira_loops;
-
-	  setup_allocno_assignment_flags ();
-	  ira_initiate_assign ();
-	  ira_reassign_conflict_allocnos (max_regno);
-	}
-    }
-
   setup_reg_renumber ();
 
   calculate_allocation_cost ();
-
-#ifdef ENABLE_IRA_CHECKING
-  if (ira_conflicts_p)
-    check_allocation ();
-#endif
 
   if (delete_trivially_dead_insns (get_insns (), max_reg_num ()))
     df_analyze ();
@@ -3249,22 +2821,6 @@ ira (FILE *f)
   allocate_initial_values (reg_equiv_memory_loc);
 
   overall_cost_before = ira_overall_cost;
-  if (ira_conflicts_p)
-    {
-      fix_reg_equiv_init ();
-
-#ifdef ENABLE_IRA_CHECKING
-      print_redundant_copies ();
-#endif
-
-      ira_spilled_reg_stack_slots_num = 0;
-      ira_spilled_reg_stack_slots
-	= ((struct ira_spilled_reg_stack_slot *)
-	   ira_allocate (max_regno
-			 * sizeof (struct ira_spilled_reg_stack_slot)));
-      memset (ira_spilled_reg_stack_slots, 0,
-	      max_regno * sizeof (struct ira_spilled_reg_stack_slot));
-    }
 
   timevar_pop (TV_IRA);
 
@@ -3272,19 +2828,12 @@ ira (FILE *f)
   df_set_flags (DF_NO_INSN_RESCAN);
   build_insn_chain ();
 
-  reload_completed = !reload (get_insns (), ira_conflicts_p);
+  reload_completed = !reload (get_insns (), false);
 
   timevar_pop (TV_RELOAD);
 
   timevar_push (TV_IRA);
 
-  if (ira_conflicts_p)
-    {
-      ira_free (ira_spilled_reg_stack_slots);
-
-      ira_finish_assign ();
-
-    }
   if (internal_flag_ira_verbose > 0 && ira_dump_file != NULL
       && overall_cost_before != ira_overall_cost)
     fprintf (ira_dump_file, "+++Overall after reload %d\n", ira_overall_cost);
@@ -3301,14 +2850,6 @@ ira (FILE *f)
   regstat_free_ri ();
   regstat_free_n_sets_and_refs ();
 
-  if (optimize)
-    {
-      cleanup_cfg (CLEANUP_EXPENSIVE);
-
-      ira_free (ira_reg_equiv_invariant_p);
-      ira_free (ira_reg_equiv_const);
-    }
-
   bitmap_obstack_release (&ira_bitmap_obstack);
 #ifndef IRA_NO_OBSTACK
   obstack_free (&ira_obstack, NULL);
@@ -3319,13 +2860,8 @@ ira (FILE *f)
      df_rescan_all_insns is not going to help here because it does not
      touch the artificial uses and defs.  */
   df_finish_pass (true);
-  if (optimize > 1)
-    df_live_add_problem ();
   df_scan_alloc (NULL);
   df_scan_blocks ();
-
-  if (optimize)
-    df_analyze ();
 
   timevar_pop (TV_IRA);
 }
