@@ -3035,8 +3035,6 @@ verify_gimple_call (gimple stmt)
       error ("invalid static chain in gimple call");
       debug_generic_stmt (gimple_call_chain (stmt));
       return true;
-#else
-      return false;
 #endif
     }
 
@@ -3046,8 +3044,12 @@ verify_gimple_call (gimple stmt)
     {
       if (!gimple_call_fndecl (stmt))
 	{
+#if 0 /* Modula-3 hack */
 	  error ("static chain in indirect gimple call");
 	  return true;
+#else
+	  return false;
+#endif
 	}
       fn = TREE_OPERAND (fn, 0);
 

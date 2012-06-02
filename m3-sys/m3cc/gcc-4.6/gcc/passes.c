@@ -707,14 +707,8 @@ init_optimization_passes (void)
     by these passes.  */
   p = &all_lowering_passes;
   NEXT_PASS (pass_warn_unused_result);
-  //NEXT_PASS (pass_diagnose_omp_blocks);
-  //NEXT_PASS (pass_mudflap_1);
-  //NEXT_PASS (pass_lower_omp);
   NEXT_PASS (pass_lower_cf);
-  //NEXT_PASS (pass_refactor_eh);
-  //NEXT_PASS (pass_lower_eh);
   NEXT_PASS (pass_build_cfg);
-  //NEXT_PASS (pass_warn_function_return);
   NEXT_PASS (pass_build_cgraph_edges);
   *p = NULL;
 
@@ -727,47 +721,13 @@ init_optimization_passes (void)
       struct opt_pass **p = &pass_early_local_passes.pass.sub;
       NEXT_PASS (pass_fixup_cfg);
       NEXT_PASS (pass_init_datastructures);
-      //NEXT_PASS (pass_expand_omp);
 
       NEXT_PASS (pass_referenced_vars);
       NEXT_PASS (pass_build_ssa);
-      //NEXT_PASS (pass_lower_vector);
-      //NEXT_PASS (pass_early_warn_uninitialized);
       NEXT_PASS (pass_rebuild_cgraph_edges);
-      //NEXT_PASS (pass_inline_parameters);
-      //NEXT_PASS (pass_early_inline);
       NEXT_PASS (pass_all_early_optimizations);
-#if 0
-        {
-	  struct opt_pass **p = &pass_all_early_optimizations.pass.sub;
-	  NEXT_PASS (pass_remove_cgraph_callee_edges);
-	  NEXT_PASS (pass_rename_ssa_copies);
-	  NEXT_PASS (pass_ccp);
-	  NEXT_PASS (pass_forwprop);
-	  /* pass_build_ealias is a dummy pass that ensures that we
-	     execute TODO_rebuild_alias at this point.  Re-building
-	     alias information also rewrites no longer addressed
-	     locals into SSA form if possible.  */
-	  NEXT_PASS (pass_build_ealias);
-	  NEXT_PASS (pass_sra_early);
-	  NEXT_PASS (pass_copy_prop);
-	  NEXT_PASS (pass_merge_phi);
-	  NEXT_PASS (pass_cd_dce);
-	  NEXT_PASS (pass_early_ipa_sra);
-	  NEXT_PASS (pass_tail_recursion);
-	  NEXT_PASS (pass_convert_switch);
-          NEXT_PASS (pass_cleanup_eh);
-          //NEXT_PASS (pass_profile);
-          //NEXT_PASS (pass_local_pure_const);
-	  /* Split functions creates parts that are not run through
-	     early optimizations again.  It is thus good idea to do this
-	     late.  */
-          NEXT_PASS (pass_split_functions);
-	}
-#endif
       NEXT_PASS (pass_release_ssa_names);
       NEXT_PASS (pass_rebuild_cgraph_edges);
-      //NEXT_PASS (pass_inline_parameters);
     }
   NEXT_PASS (pass_ipa_lower_emutls);
   *p = NULL;
@@ -793,89 +753,30 @@ init_optimization_passes (void)
       NEXT_PASS (pass_jump2);
       NEXT_PASS (pass_lower_subreg);
       NEXT_PASS (pass_df_initialize_opt);
-      //NEXT_PASS (pass_cse);
-      //NEXT_PASS (pass_rtl_fwprop);
-      //NEXT_PASS (pass_rtl_cprop);
-      //NEXT_PASS (pass_rtl_pre);
-      //NEXT_PASS (pass_rtl_hoist);
-      //NEXT_PASS (pass_rtl_cprop);
-      //NEXT_PASS (pass_rtl_store_motion);
-      //NEXT_PASS (pass_cse_after_global_opts);
-      //NEXT_PASS (pass_rtl_ifcvt);
       NEXT_PASS (pass_reginfo_init);
-      /* Perform loop optimizations.  It might be better to do them a bit
-	 sooner, but we want the profile feedback to work more
-	 efficiently.  */
-#if 0
-      NEXT_PASS (pass_loop2);
-	{
-	  struct opt_pass **p = &pass_loop2.pass.sub;
-	  NEXT_PASS (pass_rtl_loop_init);
-	  NEXT_PASS (pass_rtl_move_loop_invariants);
-	  NEXT_PASS (pass_rtl_unswitch);
-	  NEXT_PASS (pass_rtl_unroll_and_peel_loops);
-	  NEXT_PASS (pass_rtl_doloop);
-	  NEXT_PASS (pass_rtl_loop_done);
-	  *p = NULL;
-	}
-#endif
-      //NEXT_PASS (pass_web);
-      //NEXT_PASS (pass_rtl_cprop);
-      //NEXT_PASS (pass_cse2);
-      //NEXT_PASS (pass_rtl_dse1);
-      //NEXT_PASS (pass_rtl_fwprop_addr);
-      //NEXT_PASS (pass_inc_dec);
       NEXT_PASS (pass_initialize_regs);
-      //NEXT_PASS (pass_ud_rtl_dce);
-      //NEXT_PASS (pass_combine);
-      //NEXT_PASS (pass_if_after_combine);
-      //NEXT_PASS (pass_partition_blocks);
-      //NEXT_PASS (pass_regmove);
       NEXT_PASS (pass_outof_cfg_layout_mode);
       NEXT_PASS (pass_split_all_insns);
-      //NEXT_PASS (pass_lower_subreg2);
       NEXT_PASS (pass_df_initialize_no_opt);
       NEXT_PASS (pass_stack_ptr_mod);
-      //NEXT_PASS (pass_mode_switching);
+      NEXT_PASS (pass_mode_switching);
       NEXT_PASS (pass_match_asm_constraints);
-      //NEXT_PASS (pass_sms);
-      //NEXT_PASS (pass_sched);
       NEXT_PASS (pass_ira);
       NEXT_PASS (pass_postreload);
 	{
 	  struct opt_pass **p = &pass_postreload.pass.sub;
-	  //NEXT_PASS (pass_postreload_cse);
-	  //NEXT_PASS (pass_gcse2);
 	  NEXT_PASS (pass_split_after_reload);
-	  //NEXT_PASS (pass_implicit_zee);
-	  //NEXT_PASS (pass_compare_elim_after_reload);
-	  //NEXT_PASS (pass_branch_target_load_optimize1);
 	  NEXT_PASS (pass_thread_prologue_and_epilogue);
-	  //NEXT_PASS (pass_rtl_dse2);
-	  //NEXT_PASS (pass_stack_adjustments);
-	  //NEXT_PASS (pass_peephole2);
-	  //NEXT_PASS (pass_if_after_reload);
-	  //NEXT_PASS (pass_regrename);
-	  //NEXT_PASS (pass_cprop_hardreg);
-	  //NEXT_PASS (pass_fast_rtl_dce);
-	  //NEXT_PASS (pass_reorder_blocks);
-	  //NEXT_PASS (pass_branch_target_load_optimize2);
 	  NEXT_PASS (pass_leaf_regs);
 	  NEXT_PASS (pass_split_before_sched2);
-	  //NEXT_PASS (pass_sched2);
 	  NEXT_PASS (pass_stack_regs);
 	    {
 	      struct opt_pass **p = &pass_stack_regs.pass.sub;
 	      NEXT_PASS (pass_split_before_regstack);
 	      NEXT_PASS (pass_stack_regs_run);
 	    }
-	  //NEXT_PASS (pass_compute_alignments);
-	  //NEXT_PASS (pass_duplicate_computed_gotos);
-	  //NEXT_PASS (pass_variable_tracking);
 	  NEXT_PASS (pass_free_cfg);
-	  //NEXT_PASS (pass_machine_reorg);
 	  NEXT_PASS (pass_cleanup_barriers);
-	  //NEXT_PASS (pass_delay_slots);
 	  NEXT_PASS (pass_split_for_shorten_branches);
 	  NEXT_PASS (pass_convert_to_eh_region_ranges);
 	  NEXT_PASS (pass_shorten_branches);
