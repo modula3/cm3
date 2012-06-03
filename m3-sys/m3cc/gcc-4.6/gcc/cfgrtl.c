@@ -3140,7 +3140,7 @@ struct cfg_hooks rtl_cfg_hooks = {
   rtl_can_merge_blocks,  /* can_merge_blocks_p */
   rtl_merge_blocks,
   rtl_predict_edge,
-  rtl_predicted_by_p,
+  NULL, /* predicted_by_p */
   NULL, /* can_duplicate_block_p */
   NULL, /* duplicate_block */
   rtl_split_edge,
@@ -3184,7 +3184,7 @@ struct cfg_hooks cfg_layout_rtl_cfg_hooks = {
   cfg_layout_can_merge_blocks_p,
   cfg_layout_merge_blocks,
   rtl_predict_edge,
-  rtl_predicted_by_p,
+  NULL, /* predicted_by_p */
   cfg_layout_can_duplicate_bb_p,
   cfg_layout_duplicate_bb,
   cfg_layout_split_edge,

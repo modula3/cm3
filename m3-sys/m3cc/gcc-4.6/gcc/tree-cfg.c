@@ -7087,7 +7087,7 @@ struct cfg_hooks gimple_cfg_hooks = {
   gimple_can_merge_blocks_p,	/* can_merge_blocks_p  */
   gimple_merge_blocks,		/* merge_blocks  */
   gimple_predict_edge,		/* predict_edge  */
-  gimple_predicted_by_p,	/* predicted_by_p  */
+  NULL,	                        /* predicted_by_p  */
   gimple_can_duplicate_bb_p,	/* can_duplicate_block_p  */
   gimple_duplicate_bb,		/* duplicate_block  */
   gimple_split_edge,		/* split_edge  */

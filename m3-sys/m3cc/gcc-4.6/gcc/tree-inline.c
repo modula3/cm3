@@ -38,7 +38,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-iterator.h"
 #include "cgraph.h"
 #include "intl.h"
-#include "tree-mudflap.h"
 #include "tree-flow.h"
 #include "function.h"
 #include "tree-flow.h"
@@ -4214,10 +4213,6 @@ copy_tree_r (tree *tp, int *walk_subtrees, void *data ATTRIBUTE_UNUSED)
       /* Copy the node.  */
       new_tree = copy_node (*tp);
 
-      /* Propagate mudflap marked-ness.  */
-      if (flag_mudflap && mf_marked_p (*tp))
-        mf_mark (new_tree);
-
       *tp = new_tree;
 
       /* Now, restore the chain, if appropriate.  That will cause
@@ -4239,10 +4234,6 @@ copy_tree_r (tree *tp, int *walk_subtrees, void *data ATTRIBUTE_UNUSED)
       tree new_tree;
 
       new_tree = copy_node (*tp);
-
-      /* Propagate mudflap marked-ness.  */
-      if (flag_mudflap && mf_marked_p (*tp))
-        mf_mark (new_tree);
 
       CONSTRUCTOR_ELTS (new_tree) = VEC_copy (constructor_elt, gc,
 					 CONSTRUCTOR_ELTS (*tp));
