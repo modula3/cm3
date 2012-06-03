@@ -979,9 +979,7 @@ get_volatize (void)
 {
   /* gcc 4.2 volatize nothing
      gcc 4.6 volatize everything */
-  if (GCC46)
-    return true;
-  else if (GCC42)
+  if (GCC42)
     return false;
   else
     return m3_language_function () && m3_language_function ()->volatil;
@@ -992,7 +990,7 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
 {
   /* gcc 4.2 volatize nothing
      gcc 4.6 volatize everything */
-  if (GCC42 || GCC46)
+  if (GCC42)
     return;
   m3_language_function ()->volatil = a;
 }
@@ -3253,7 +3251,7 @@ m3_language_function (void)
 {
   /* gcc 4.2 volatize nothing
      gcc 4.6 volatize everything */
-    if (GCC42 || GCC46)
+    if (GCC42)
     {
         /* gcc_unreachable (); almost */
         return 0;
@@ -3299,7 +3297,7 @@ m3_volatilize_decl (tree decl)
 static void
 m3_volatilize_current_function (void)
 {
-  if (GCC42 || GCC46)
+  if (GCC42)
     return;
 
   /* note it for later so that later temporaries and locals ("WITH")
@@ -6219,7 +6217,7 @@ m3_parse_file (int)
     m3cg_lineno += 1;
   }
 
-  if (GCC45/* && !GCC46*/)
+  if (GCC45)
   {
     write_global_declarations ();
   }
