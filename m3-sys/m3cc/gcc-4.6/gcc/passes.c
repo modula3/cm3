@@ -721,21 +721,17 @@ init_optimization_passes (void)
       struct opt_pass **p = &pass_early_local_passes.pass.sub;
       NEXT_PASS (pass_fixup_cfg);
       NEXT_PASS (pass_init_datastructures);
-
       NEXT_PASS (pass_referenced_vars);
       NEXT_PASS (pass_build_ssa);
       NEXT_PASS (pass_rebuild_cgraph_edges);
-      NEXT_PASS (pass_all_early_optimizations);
       NEXT_PASS (pass_release_ssa_names);
       NEXT_PASS (pass_rebuild_cgraph_edges);
     }
-  NEXT_PASS (pass_ipa_lower_emutls);
   *p = NULL;
 
   /* These passes are run after IPA passes on every function that is being
      output to the assembler file.  */
   p = &all_passes;
-  NEXT_PASS (pass_all_optimizations);
   NEXT_PASS (pass_cleanup_cfg_post_optimizing);
 
   NEXT_PASS (pass_expand);

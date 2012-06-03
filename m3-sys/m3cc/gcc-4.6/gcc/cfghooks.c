@@ -664,15 +664,6 @@ predict_edge (edge e, enum br_predictor predictor, int probability)
   cfg_hooks->predict_edge (e, predictor, probability);
 }
 
-bool
-predicted_by_p (const_basic_block bb, enum br_predictor predictor)
-{
-  if (!cfg_hooks->predict_edge)
-    internal_error ("%s does not support predicted_by_p", cfg_hooks->name);
-
-  return cfg_hooks->predicted_by_p (bb, predictor);
-}
-
 /* Merges basic block B into basic block A.  */
 
 void
