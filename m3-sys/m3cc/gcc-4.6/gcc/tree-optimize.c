@@ -40,7 +40,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "flags.h"
 #include "cgraph.h"
 #include "tree-inline.h"
-#include "tree-mudflap.h"
 #include "tree-pass.h"
 #include "ggc.h"
 #include "cgraph.h"
@@ -51,36 +50,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "regset.h"	/* FIXME: For reg_obstack.  */
 
 EXTERN_C_START
-
-/* Gate: execute, or not, all of the non-trivial optimizations.  */
-
-static bool
-gate_all_optimizations (void)
-{
-  return (optimize >= 1
-	  /* Don't bother doing anything if the program has errors.
-	     We have to pass down the queue if we already went into SSA */
-	  && (!seen_error () || gimple_in_ssa_p (cfun)));
-}
-
-struct gimple_opt_pass pass_all_optimizations =
-{
- {
-  GIMPLE_PASS,
-  "*all_optimizations",			/* name */
-  gate_all_optimizations,		/* gate */
-  NULL,					/* execute */
-  NULL,					/* sub */
-  NULL,					/* next */
-  0,					/* static_pass_number */
-  TV_OPTIMIZE,				/* tv_id */
-  0,					/* properties_required */
-  0,					/* properties_provided */
-  0,					/* properties_destroyed */
-  0,					/* todo_flags_start */
-  0					/* todo_flags_finish */
- }
-};
 
 /* Gate: execute, or not, all of the non-trivial optimizations.  */
 
@@ -123,36 +92,6 @@ struct simple_ipa_opt_pass pass_early_local_passes =
   TODO_remove_functions	 		/* todo_flags_finish */
  }
 };
-
-/* Gate: execute, or not, all of the non-trivial optimizations.  */
-
-static bool
-gate_all_early_optimizations (void)
-{
-  return (optimize >= 1
-	  /* Don't bother doing anything if the program has errors.  */
-	  && !seen_error ());
-}
-
-struct gimple_opt_pass pass_all_early_optimizations =
-{
- {
-  GIMPLE_PASS,
-  "early_optimizations",		/* name */
-  gate_all_early_optimizations,		/* gate */
-  NULL,					/* execute */
-  NULL,					/* sub */
-  NULL,					/* next */
-  0,					/* static_pass_number */
-  TV_NONE,				/* tv_id */
-  0,					/* properties_required */
-  0,					/* properties_provided */
-  0,					/* properties_destroyed */
-  0,					/* todo_flags_start */
-  0					/* todo_flags_finish */
- }
-};
-
 
 /* Pass: cleanup the CFG just before expanding trees to RTL.
    This is just a round of label cleanups and case node grouping

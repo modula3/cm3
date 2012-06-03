@@ -49,7 +49,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "debug.h"
 #include "target.h"
 #include "targhooks.h"
-#include "tree-mudflap.h"
 #include "cgraph.h"
 #include "cfglayout.h"
 #include "basic-block.h"
@@ -1199,10 +1198,6 @@ make_decl_rtl (tree decl)
 	  && SYMBOL_REF_HAS_BLOCK_INFO_P (XEXP (x, 0)))
 	change_symbol_block (XEXP (x, 0), get_block_for_decl (decl));
 
-      /* Make this function static known to the mudflap runtime.  */
-      if (flag_mudflap && TREE_CODE (decl) == VAR_DECL)
-	mudflap_enqueue_decl (decl);
-
       return;
     }
 
@@ -1332,10 +1327,6 @@ make_decl_rtl (tree decl)
      If the name is changed, the macro ASM_OUTPUT_LABELREF
      will have to know how to strip this information.  */
   targetm.encode_section_info (decl, DECL_RTL (decl), true);
-
-  /* Make this function static known to the mudflap runtime.  */
-  if (flag_mudflap && TREE_CODE (decl) == VAR_DECL)
-    mudflap_enqueue_decl (decl);
 }
 
 /* Like make_decl_rtl, but inhibit creation of new alias sets when
@@ -3077,10 +3068,6 @@ build_constant_desc (tree exp)
   desc = ggc_alloc_constant_descriptor_tree ();
   desc->value = copy_constant (exp);
 
-  /* Propagate marked-ness to copied constant.  */
-  if (flag_mudflap && mf_marked_p (exp))
-    mf_mark (desc->value);
-
   /* Create a string containing the label name, in LABEL.  */
   labelno = const_labelno++;
   ASM_GENERATE_INTERNAL_LABEL (label, "LC", labelno);
@@ -3261,8 +3248,6 @@ output_constant_def_contents (rtx symbol)
 	ASM_OUTPUT_ALIGN (asm_out_file, floor_log2 (align / BITS_PER_UNIT));
       assemble_constant_contents (exp, XSTR (symbol, 0), align);
     }
-  if (flag_mudflap)
-    mudflap_enqueue_constant (exp);
 }
 
 /* Look up EXP in the table of constant descriptors.  Return the rtl
