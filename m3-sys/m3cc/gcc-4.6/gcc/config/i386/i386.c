@@ -5817,10 +5817,6 @@ ix86_asm_output_function_label (FILE *asm_out_file, const char *fname,
         fprintf (asm_out_file, ASM_LONG " %#x\n", filler_cc);
     }
 
-#ifdef SUBTARGET_ASM_UNWIND_INIT
-  SUBTARGET_ASM_UNWIND_INIT (asm_out_file);
-#endif
-
   ASM_OUTPUT_LABEL (asm_out_file, fname);
 
   /* Output magic byte marker, if hot-patch attribute is set.  */
