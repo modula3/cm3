@@ -955,7 +955,7 @@ execute_function_todo (void *data)
   if (seen_error ())
     return;
 
-#if defined ENABLE_CHECKING
+#ifdef ENABLE_CHECKING
   if (flags & TODO_verify_ssa
       || (current_loops && loops_state_satisfies_p (LOOP_CLOSED_SSA)))
     verify_ssa (true);
@@ -976,7 +976,7 @@ execute_function_todo (void *data)
 static void
 execute_todo (unsigned int flags)
 {
-#if defined ENABLE_CHECKING
+#ifdef ENABLE_CHECKING
   if (cfun
       && need_ssa_update_p (cfun))
     gcc_assert (flags & TODO_update_ssa_any);
@@ -1282,10 +1282,10 @@ execute_one_pass (struct opt_pass *pass)
   /* Run pre-pass verification.  */
   execute_todo (pass->todo_flags_start);
 
-  if (ENABLE_CHECKING)
+#ifdef ENABLE_CHECKING
     do_per_function (verify_curr_properties,
                      (void *)(size_t)pass->properties_required);
-
+#endif
   /* If a timevar is present, start it.  */
   if (pass->tv_id != TV_NONE)
     timevar_push (pass->tv_id);
