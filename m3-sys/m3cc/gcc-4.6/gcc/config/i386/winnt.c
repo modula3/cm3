@@ -494,12 +494,6 @@ i386_pe_asm_named_section (const char *name, unsigned int flags,
         *f++ = 's';
     }
 
-  /* LTO sections need 1-byte alignment to avoid confusing the
-     zlib decompression algorithm with trailing zero pad bytes.  */
-  if (strncmp (name, LTO_SECTION_NAME_PREFIX,
-			strlen (LTO_SECTION_NAME_PREFIX)) == 0)
-    *f++ = '0';
-
   *f = '\0';
 
   fprintf (asm_out_file, "\t.section\t%s,\"%s\"\n", name, flagchars);
@@ -764,75 +758,19 @@ struct seh_frame_state
   rtx cfa_reg;
 };
 
-/* Set up data structures beginning output for SEH.  */
-
 void
 i386_pe_seh_init (FILE *f)
 {
-  struct seh_frame_state *seh;
-
-  if (!TARGET_SEH)
-    return;
-  if (cfun->is_thunk)
-    return;
-
-  /* We cannot support DRAP with SEH.  We turned off support for it by
-     re-defining MAX_STACK_ALIGNMENT when SEH is enabled.  */
-  gcc_assert (!stack_realign_drap);
-
-  seh = XCNEW (struct seh_frame_state);
-  cfun->machine->seh = seh;
-
-  seh->sp_offset = INCOMING_FRAME_SP_OFFSET;
-  seh->cfa_offset = INCOMING_FRAME_SP_OFFSET;
-  seh->cfa_reg = stack_pointer_rtx;
-
-  fputs ("\t.seh_proc\t", f);
-  assemble_name (f, IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (cfun->decl)));
-  fputc ('\n', f);
 }
 
 void
 i386_pe_seh_end_prologue (FILE *f)
 {
-  struct seh_frame_state *seh;
-
-  if (!TARGET_SEH)
-    return;
-  if (cfun->is_thunk)
-    return;
-  seh = cfun->machine->seh;
-
-  /* Emit an assembler directive to set up the frame pointer.  Always do
-     this last.  The documentation talks about doing this "before" any
-     other code that uses offsets, but (experimentally) that's after we
-     emit the codes in reverse order (handled by the assembler).  */
-  if (seh->cfa_reg != stack_pointer_rtx)
-    {
-      HOST_WIDE_INT offset = seh->sp_offset - seh->cfa_offset;
-
-      gcc_assert ((offset & 15) == 0);
-      gcc_assert (IN_RANGE (offset, 0, 240));
-
-      fputs ("\t.seh_setframe\t", f);
-      print_reg (seh->cfa_reg, 0, f);
-      fprintf (f, ", " HOST_WIDE_INT_PRINT_DEC "\n", offset);
-    }
-
-  XDELETE (seh);
-  cfun->machine->seh = NULL;
-
-  fputs ("\t.seh_endprologue\n", f);
 }
 
 static void
 i386_pe_seh_fini (FILE *f)
 {
-  if (!TARGET_SEH)
-    return;
-  if (cfun->is_thunk)
-    return;
-  fputs ("\t.seh_endproc\n", f);
 }
 
 /* Emit an assembler directive to save REG via a PUSH.  */
@@ -1049,67 +987,6 @@ seh_frame_related_expr (FILE *f, struct seh_frame_state *seh, rtx pat)
 void
 i386_pe_seh_unwind_emit (FILE *asm_out_file, rtx insn)
 {
-  rtx note, pat;
-  bool handled_one = false;
-  struct seh_frame_state *seh;
-
-  if (!TARGET_SEH)
-    return;
-
-  /* We free the SEH data once done with the prologue.  Ignore those
-     RTX_FRAME_RELATED_P insns that are associated with the epilogue.  */
-  seh = cfun->machine->seh;
-  if (seh == NULL)
-    return;
-
-  if (NOTE_P (insn) || !RTX_FRAME_RELATED_P (insn))
-    return;
-
-  for (note = REG_NOTES (insn); note ; note = XEXP (note, 1))
-    {
-      pat = XEXP (note, 0);
-      switch (REG_NOTE_KIND (note))
-	{
-	case REG_FRAME_RELATED_EXPR:
-	  goto found;
-
-	case REG_CFA_DEF_CFA:
-	case REG_CFA_EXPRESSION:
-	  /* Only emitted with DRAP, which we disable.  */
-	  gcc_unreachable ();
-	  break;
-
-	case REG_CFA_REGISTER:
-	  /* Only emitted in epilogues, which we skip.  */
-	  gcc_unreachable ();
-
-	case REG_CFA_ADJUST_CFA:
-	  if (pat == NULL)
-	    {
-	      pat = PATTERN (insn);
-	      if (GET_CODE (pat) == PARALLEL)
-		pat = XVECEXP (pat, 0, 0);
-	    }
-	  seh_cfa_adjust_cfa (asm_out_file, seh, pat);
-	  handled_one = true;
-	  break;
-
-	case REG_CFA_OFFSET:
-	  if (pat == NULL)
-	    pat = single_set (insn);
-	  seh_cfa_offset (asm_out_file, seh, pat);
-	  handled_one = true;
-	  break;
-
-	default:
-	  break;
-	}
-    }
-  if (handled_one)
-    return;
-  pat = PATTERN (insn);
- found:
-  seh_frame_related_expr (asm_out_file, seh, pat);
 }
 
 void
