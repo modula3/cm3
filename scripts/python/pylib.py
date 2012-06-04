@@ -1818,7 +1818,7 @@ def CopyConfigForDevelopment():
     #
     # First delete all the config files.
     #
-    DeleteConfig(To)
+    DeleteConfig(InstallRoot)
 
     # CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
     CopyFile(os.path.join(Root, a, "config-no-install", "cm3.cfg"), To) or FatalError()
