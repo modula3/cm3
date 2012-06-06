@@ -45,7 +45,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "except.h"
 #include "debug.h"
 #include "pointer-set.h"
-#include "ipa-prop.h"
 #include "value-prof.h"
 #include "tree-pass.h"
 #include "target.h"
