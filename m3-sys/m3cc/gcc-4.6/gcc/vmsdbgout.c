@@ -44,7 +44,7 @@ EXTERN_C_START
 #include "target.h"
 
 /* Difference in seconds between the VMS Epoch and the Unix Epoch */
-static const long long vms_epoch_offset = 3506716800ll;
+static const long long vms_epoch_offset = 3506716800LL;
 
 int vms_file_stats_name (const char *, long long *, long *, char *, int *);
 
@@ -124,7 +124,7 @@ static VEC(unsigned,heap) *funcnum_table;
 static const char *primary_filename;
 
 static char *module_producer;
-static unsigned int module_language;
+static DST_LANGUAGE module_language;
 
 /* A pointer to the base of a table that contains line information
    for each source code line in .text in the compilation unit.  */
@@ -1688,7 +1688,7 @@ to_vms_file_spec (char *filespec)
 }
 
 #else
-#define VMS_EPOCH_OFFSET 35067168000000000
+#define VMS_EPOCH_OFFSET (35067168 * (long long)1000000000)
 #define VMS_GRANULARITY_FACTOR 10000000
 #endif
 
@@ -1835,8 +1835,8 @@ vms_file_stats_name (const char *filename, long long *cdt, long *siz, char *rfo,
      return 1;
 
   if (cdt)
-    *cdt = (long long) (buff.st_mtime * VMS_GRANULARITY_FACTOR)
-                        + VMS_EPOCH_OFFSET;
+    *cdt = (buff.st_mtime * (long long)VMS_GRANULARITY_FACTOR)
+           + (long long)VMS_EPOCH_OFFSET;
 
   if (siz)
     *siz = buff.st_size;

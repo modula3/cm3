@@ -89,6 +89,7 @@ default_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
     return memory_address_p (mode, addr);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 

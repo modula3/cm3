@@ -474,7 +474,7 @@ struct GTY((variable_size)) rtvec_def {
 
 /* General accessor macros for accessing the fields of an rtx.  */
 
-#if defined ENABLE_RTL_CHECKING && (GCC_VERSION >= 2007)
+#if defined(ENABLE_RTL_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 /* The bit with a star outside the statement expr and an & inside is
    so that N can be evaluated only once.  */
 #define RTL_CHECK1(RTX, N, C1) __extension__				\
@@ -615,7 +615,7 @@ extern void rtvec_check_failed_bounds (const_rtvec, int, const char *, int,
 /* Access an individual rtx flag, with no checking of any kind.  */
 #define RTX_FLAG(RTX, FLAG)	((RTX)->FLAG)
 
-#if defined ENABLE_RTL_FLAG_CHECKING && (GCC_VERSION >= 2007)
+#if defined(ENABLE_RTL_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 #define RTL_FLAG_CHECK1(NAME, RTX, C1) __extension__			\
 ({ __typeof (RTX) const _rtx = (RTX);					\
    if (GET_CODE(_rtx) != C1)						\
@@ -994,7 +994,7 @@ enum label_kind
   LABEL_WEAK_ENTRY	/* alternate entry point, exported as weak symbol */
 };
 
-#if defined ENABLE_RTL_FLAG_CHECKING && (GCC_VERSION > 2007)
+#if defined(ENABLE_RTL_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 
 /* Retrieve the kind of LABEL.  */
 #define LABEL_KIND(LABEL) __extension__					\
@@ -2542,7 +2542,7 @@ extern int asm_str_count (const char *templ);
 
 struct rtl_hooks
 {
-  rtx (*gen_lowpart) (enum machine_mode, rtx);
+  rtx (*gen_lowpart_) (enum machine_mode, rtx);
   rtx (*gen_lowpart_no_emit) (enum machine_mode, rtx);
   rtx (*reg_nonzero_bits) (const_rtx, enum machine_mode, const_rtx, enum machine_mode,
 			   unsigned HOST_WIDE_INT, unsigned HOST_WIDE_INT *);
@@ -2560,7 +2560,7 @@ extern struct rtl_hooks rtl_hooks;
 extern const struct rtl_hooks general_rtl_hooks;
 
 /* Keep this for the nonce.  */
-#define gen_lowpart rtl_hooks.gen_lowpart
+#define gen_lowpart rtl_hooks.gen_lowpart_
 
 extern void insn_locators_alloc (void);
 extern void insn_locators_free (void);
