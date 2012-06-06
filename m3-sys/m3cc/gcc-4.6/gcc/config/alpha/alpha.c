@@ -5587,7 +5587,7 @@ alpha_trampoline_init (rtx m_tramp, tree fndecl, rtx chain_value)
 	 the function's procedure descriptor with certain fields zeroed IAW
 	 the VMS calling standard. This is stored in the first quadword.  */
       word1 = force_reg (DImode, gen_const_mem (DImode, fnaddr));
-      word1 = expand_and (DImode, word1, GEN_INT (0xffff0fff0000fff0), NULL);
+      word1 = expand_and (DImode, word1, GEN_INT (0xffff0fff0000fff0LL), NULL);
     }
   else
     {
@@ -5598,8 +5598,8 @@ alpha_trampoline_init (rtx m_tramp, tree fndecl, rtx chain_value)
 	    nop
 	 We don't bother setting the HINT field of the jump; the nop
 	 is merely there for padding.  */
-      word1 = GEN_INT (0xa77b0010a43b0018);
-      word2 = GEN_INT (0x47ff041f6bfb0000);
+      word1 = GEN_INT (0xa77b0010a43b0018LL);
+      word2 = GEN_INT (0x47ff041f6bfb0000LL);
     }
 
   /* Store the first two words, as computed above.  */
