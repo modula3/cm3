@@ -1837,47 +1837,6 @@ counts_to_freqs (void)
   return true_count_max;
 }
 
-/* Return true if function is likely to be expensive, so there is no point to
-   optimize performance of prologue, epilogue or do inlining at the expense
-   of code size growth.  THRESHOLD is the limit of number of instructions
-   function can execute at average to be still considered not expensive.  */
-
-bool
-expensive_function_p (int threshold)
-{
-  unsigned int sum = 0;
-  basic_block bb;
-  unsigned int limit;
-
-  /* We can not compute accurately for large thresholds due to scaled
-     frequencies.  */
-  gcc_assert (threshold <= BB_FREQ_MAX);
-
-  /* Frequencies are out of range.  This either means that function contains
-     internal loop executing more than BB_FREQ_MAX times or profile feedback
-     is available and function has not been executed at all.  */
-  if (ENTRY_BLOCK_PTR->frequency == 0)
-    return true;
-
-  /* Maximally BB_FREQ_MAX^2 so overflow won't happen.  */
-  limit = ENTRY_BLOCK_PTR->frequency * threshold;
-  FOR_EACH_BB (bb)
-    {
-      rtx insn;
-
-      for (insn = BB_HEAD (bb); insn != NEXT_INSN (BB_END (bb));
-	   insn = NEXT_INSN (insn))
-	if (active_insn_p (insn))
-	  {
-	    sum += bb->frequency;
-	    if (sum > limit)
-	      return true;
-	}
-    }
-
-  return false;
-}
-
 /* Estimate basic blocks frequency by given branch probabilities.  */
 
 void
