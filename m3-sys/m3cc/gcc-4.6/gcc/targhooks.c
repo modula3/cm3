@@ -609,6 +609,7 @@ default_function_arg (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
   return FUNCTION_ARG (*ca, mode, CONST_CAST_TREE (type), named);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
@@ -622,6 +623,7 @@ default_function_incoming_arg (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
   return FUNCTION_INCOMING_ARG (*ca, mode, CONST_CAST_TREE (type), named);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
@@ -766,6 +768,7 @@ default_function_value (const_tree ret_type ATTRIBUTE_UNUSED,
   return FUNCTION_VALUE (ret_type, fn_decl_or_type);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
@@ -777,6 +780,7 @@ default_libcall_value (enum machine_mode mode ATTRIBUTE_UNUSED,
   return LIBCALL_VALUE (mode);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
@@ -789,6 +793,7 @@ default_function_value_regno_p (const unsigned int regno ATTRIBUTE_UNUSED)
   return FUNCTION_VALUE_REGNO_P (regno);
 #else
   gcc_unreachable ();
+  return 0;
 #endif
 }
 
@@ -1164,6 +1169,7 @@ default_addr_space_convert (rtx op ATTRIBUTE_UNUSED,
 			    tree to_type ATTRIBUTE_UNUSED)
 {
   gcc_unreachable ();
+  return 0;
 }
 
 bool
