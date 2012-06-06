@@ -190,6 +190,7 @@ tree
 lhd_type_promotes_to (tree ARG_UNUSED (type))
 {
   gcc_unreachable ();
+  return 0;
 }
 
 /* Registration of machine- or os-specific builtin types.  */
@@ -281,6 +282,7 @@ size_t
 lhd_tree_size (enum tree_code c ATTRIBUTE_UNUSED)
 {
   gcc_unreachable ();
+  return 0;
 }
 
 /* Return true if decl, which is a function decl, may be called by a
