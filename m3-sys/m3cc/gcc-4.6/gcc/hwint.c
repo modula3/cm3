@@ -104,3 +104,5 @@ ffs_hwi (unsigned HOST_WIDE_INT x)
 EXTERN_C_END
 
 #endif /* GCC_VERSION < 3004 */
+
+char quash_apple_ranlib_warning_hwint_ffs_hwi;
