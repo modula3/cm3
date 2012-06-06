@@ -183,9 +183,6 @@ static void htab_statistics (FILE *, htab_t);
 static void record_cond (cond_equivalence *);
 static void record_const_or_copy (tree, tree);
 static void record_equality (tree, tree);
-static void record_equivalences_from_phis (basic_block);
-static void record_equivalences_from_incoming_edge (basic_block);
-static void eliminate_redundant_computations (gimple_stmt_iterator *);
 static void record_equivalences_from_stmt (gimple, int);
 static void remove_local_expressions_from_table (void);
 static void restore_vars_to_original_value (void);
@@ -612,62 +609,6 @@ simplify_stmt_for_jump_threading (gimple stmt,
   return lookup_avail_expr (stmt, false);
 }
 
-/* PHI nodes can create equivalences too.
-
-   Ignoring any alternatives which are the same as the result, if
-   all the alternatives are equal, then the PHI node creates an
-   equivalence.  */
-
-static void
-record_equivalences_from_phis (basic_block bb)
-{
-  gimple_stmt_iterator gsi;
-
-  for (gsi = gsi_start_phis (bb); !gsi_end_p (gsi); gsi_next (&gsi))
-    {
-      gimple phi = gsi_stmt (gsi);
-
-      tree lhs = gimple_phi_result (phi);
-      tree rhs = NULL;
-      size_t i;
-
-      for (i = 0; i < gimple_phi_num_args (phi); i++)
-	{
-	  tree t = gimple_phi_arg_def (phi, i);
-
-	  /* Ignore alternatives which are the same as our LHS.  Since
-	     LHS is a PHI_RESULT, it is known to be a SSA_NAME, so we
-	     can simply compare pointers.  */
-	  if (lhs == t)
-	    continue;
-
-	  /* If we have not processed an alternative yet, then set
-	     RHS to this alternative.  */
-	  if (rhs == NULL)
-	    rhs = t;
-	  /* If we have processed an alternative (stored in RHS), then
-	     see if it is equal to this one.  If it isn't, then stop
-	     the search.  */
-	  else if (! operand_equal_for_phi_arg_p (rhs, t))
-	    break;
-	}
-
-      /* If we had no interesting alternatives, then all the RHS alternatives
-	 must have been the same as LHS.  */
-      if (!rhs)
-	rhs = lhs;
-
-      /* If we managed to iterate through each PHI alternative without
-	 breaking out of the loop, then we have a PHI which may create
-	 a useful equivalence.  We do not need to record unwind data for
-	 this, since this is a true assignment and not an equivalence
-	 inferred from a comparison.  All uses of this ssa name are dominated
-	 by this assignment, so unwinding just costs time and space.  */
-      if (i == gimple_phi_num_args (phi) && may_propagate_copy (lhs, rhs))
-	set_ssa_name_value (lhs, rhs);
-    }
-}
-
 /* Ignoring loop backedges, if BB has precisely one incoming edge then
    return that edge.  Otherwise return NULL.  */
 static edge
@@ -695,47 +636,6 @@ single_incoming_edge_ignoring_loop_edges (basic_block bb)
     }
 
   return retval;
-}
-
-/* Record any equivalences created by the incoming edge to BB.  If BB
-   has more than one incoming edge, then no equivalence is created.  */
-
-static void
-record_equivalences_from_incoming_edge (basic_block bb)
-{
-  edge e;
-  basic_block parent;
-  struct edge_info *edge_info;
-
-  /* If our parent block ended with a control statement, then we may be
-     able to record some equivalences based on which outgoing edge from
-     the parent was followed.  */
-  parent = get_immediate_dominator (CDI_DOMINATORS, bb);
-
-  e = single_incoming_edge_ignoring_loop_edges (bb);
-
-  /* If we had a single incoming edge from our parent block, then enter
-     any data associated with the edge into our tables.  */
-  if (e && e->src == parent)
-    {
-      unsigned int i;
-
-      edge_info = (struct edge_info *) e->aux;
-
-      if (edge_info)
-	{
-	  tree lhs = edge_info->lhs;
-	  tree rhs = edge_info->rhs;
-	  cond_equivalence *eq;
-
-	  if (lhs)
-	    record_equality (lhs, rhs);
-
-	  for (i = 0; VEC_iterate (cond_equivalence,
-				   edge_info->cond_equivalences, i, eq); ++i)
-	    record_cond (eq);
-	}
-    }
 }
 
 /* Dump SSA statistics on FILE.  */
@@ -1259,99 +1159,6 @@ record_edge_info (basic_block bb)
 
       /* ??? TRUTH_NOT_EXPR can create an equivalence too.  */
     }
-}
-
-/* Search for redundant computations in STMT.  If any are found, then
-   replace them with the variable holding the result of the computation.
-
-   If safe, record this expression into the available expression hash
-   table.  */
-
-static void
-eliminate_redundant_computations (gimple_stmt_iterator* gsi)
-{
-  tree expr_type;
-  tree cached_lhs;
-  bool insert = true;
-  bool assigns_var_p = false;
-
-  gimple stmt = gsi_stmt (*gsi);
-
-  tree def = gimple_get_lhs (stmt);
-
-  /* Certain expressions on the RHS can be optimized away, but can not
-     themselves be entered into the hash tables.  */
-  if (! def
-      || TREE_CODE (def) != SSA_NAME
-      || SSA_NAME_OCCURS_IN_ABNORMAL_PHI (def)
-      || gimple_vdef (stmt)
-      /* Do not record equivalences for increments of ivs.  This would create
-	 overlapping live ranges for a very questionable gain.  */
-      || simple_iv_increment_p (stmt))
-    insert = false;
-
-  /* Check if the expression has been computed before.  */
-  cached_lhs = lookup_avail_expr (stmt, insert);
-
-  opt_stats.num_exprs_considered++;
-
-  /* Get the type of the expression we are trying to optimize.  */
-  if (is_gimple_assign (stmt))
-    {
-      expr_type = TREE_TYPE (gimple_assign_lhs (stmt));
-      assigns_var_p = true;
-    }
-  else if (gimple_code (stmt) == GIMPLE_COND)
-    expr_type = boolean_type_node;
-  else if (is_gimple_call (stmt))
-    {
-      gcc_assert (gimple_call_lhs (stmt));
-      expr_type = TREE_TYPE (gimple_call_lhs (stmt));
-      assigns_var_p = true;
-    }
-  else if (gimple_code (stmt) == GIMPLE_SWITCH)
-    expr_type = TREE_TYPE (gimple_switch_index (stmt));
-  else
-    gcc_unreachable ();
-
-  if (!cached_lhs)
-    return;
-
-  /* It is safe to ignore types here since we have already done
-     type checking in the hashing and equality routines.  In fact
-     type checking here merely gets in the way of constant
-     propagation.  Also, make sure that it is safe to propagate
-     CACHED_LHS into the expression in STMT.  */
-  if ((TREE_CODE (cached_lhs) != SSA_NAME
-       && (assigns_var_p
-           || useless_type_conversion_p (expr_type, TREE_TYPE (cached_lhs))))
-      || may_propagate_copy_into_stmt (stmt, cached_lhs))
-  {
-      gcc_checking_assert (TREE_CODE (cached_lhs) == SSA_NAME
-			   || is_gimple_min_invariant (cached_lhs));
-
-      if (dump_file && (dump_flags & TDF_DETAILS))
-	{
-	  fprintf (dump_file, "  Replaced redundant expr '");
-	  print_gimple_expr (dump_file, stmt, 0, dump_flags);
-	  fprintf (dump_file, "' with '");
-	  print_generic_expr (dump_file, cached_lhs, dump_flags);
-          fprintf (dump_file, "'\n");
-	}
-
-      opt_stats.num_re++;
-
-      if (assigns_var_p
-	  && !useless_type_conversion_p (expr_type, TREE_TYPE (cached_lhs)))
-	cached_lhs = fold_convert (expr_type, cached_lhs);
-
-      propagate_tree_value_into_stmt (gsi, cached_lhs);
-
-      /* Since it is always necessary to mark the result as modified,
-         perhaps we should move this into propagate_tree_value_into_stmt
-         itself.  */
-      gimple_set_modified (gsi_stmt (*gsi), true);
-  }
 }
 
 /* STMT, a GIMPLE_ASSIGN, may create certain equivalences, in either
