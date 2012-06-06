@@ -1961,107 +1961,6 @@ cgraph_clone_edge (struct cgraph_edge *e, struct cgraph_node *n,
   return new_edge;
 }
 
-/* Create node representing clone of N executed COUNT times.  Decrease
-   the execution counts from original node too.
-   The new clone will have decl set to DECL that may or may not be the same
-   as decl of N.
-
-   When UPDATE_ORIGINAL is true, the counts are subtracted from the original
-   function's profile to reflect the fact that part of execution is handled
-   by node.  */
-struct cgraph_node *
-cgraph_clone_node (struct cgraph_node *n, tree decl, gcov_type count, int freq,
-		   int loop_nest, bool update_original,
-		   VEC(cgraph_edge_p,heap) *redirect_callers)
-{
-  gcc_unreachable ();
-  return 0;
-#if 0
-  struct cgraph_node *new_node = cgraph_create_node ();
-  struct cgraph_edge *e;
-  gcov_type count_scale;
-  unsigned i;
-
-  new_node->decl = decl;
-  new_node->origin = n->origin;
-  if (new_node->origin)
-    {
-      new_node->next_nested = new_node->origin->nested;
-      new_node->origin->nested = new_node;
-    }
-  new_node->analyzed = n->analyzed;
-  new_node->local = n->local;
-  new_node->local.externally_visible = false;
-  new_node->local.local = true;
-  new_node->local.vtable_method = false;
-  new_node->global = n->global;
-  new_node->rtl = n->rtl;
-  new_node->count = count;
-  new_node->frequency = n->frequency;
-  new_node->clone = n->clone;
-  new_node->clone.tree_map = 0;
-  if (n->count)
-    {
-      if (new_node->count > n->count)
-        count_scale = REG_BR_PROB_BASE;
-      else
-        count_scale = new_node->count * REG_BR_PROB_BASE / n->count;
-    }
-  else
-    count_scale = 0;
-  if (update_original)
-    {
-      n->count -= count;
-      if (n->count < 0)
-	n->count = 0;
-    }
-
-  FOR_EACH_VEC_ELT (cgraph_edge_p, redirect_callers, i, e)
-    {
-      /* Redirect calls to the old version node to point to its new
-	 version.  */
-      cgraph_redirect_edge_callee (e, new_node);
-    }
-
-
-  for (e = n->callees;e; e=e->next_callee)
-    cgraph_clone_edge (e, new_node, e->call_stmt, e->lto_stmt_uid,
-		       count_scale, freq, loop_nest, update_original);
-
-  for (e = n->indirect_calls; e; e = e->next_callee)
-    cgraph_clone_edge (e, new_node, e->call_stmt, e->lto_stmt_uid,
-		       count_scale, freq, loop_nest, update_original);
-  ipa_clone_references (new_node, NULL, &n->ref_list);
-
-  new_node->next_sibling_clone = n->clones;
-  if (n->clones)
-    n->clones->prev_sibling_clone = new_node;
-  n->clones = new_node;
-  new_node->clone_of = n;
-
-  cgraph_call_node_duplication_hooks (n, new_node);
-  if (n->decl != decl)
-    {
-      struct cgraph_node **slot;
-      slot = (struct cgraph_node **) htab_find_slot (cgraph_hash, new_node, INSERT);
-      gcc_assert (!*slot);
-      *slot = new_node;
-      if (assembler_name_hash)
-	{
-	  void **aslot;
-	  tree name = DECL_ASSEMBLER_NAME (decl);
-
-	  aslot = htab_find_slot_with_hash (assembler_name_hash, name,
-					    decl_assembler_name_hash (name),
-					    INSERT);
-	  gcc_assert (!*aslot);
-	  *aslot = new_node;
-	}
-    }
-  return new_node;
-#endif
-}
-
 /* Create a new name for clone of DECL, add SUFFIX.  Returns an identifier.  */
 
 static GTY(()) unsigned int clone_fn_id_num;
@@ -2085,23 +1984,6 @@ clone_function_name (tree decl, const char *suffix)
 #endif
   ASM_FORMAT_PRIVATE_NAME (tmp_name, prefix, clone_fn_id_num++);
   return get_identifier (tmp_name);
-}
-
-/* Create callgraph node clone with new declaration.  The actual body will
-   be copied later at compilation stage.
-
-   TODO: after merging in ipa-sra use function call notes instead of args_to_skip
-   bitmap interface.
-   */
-struct cgraph_node *
-cgraph_create_virtual_clone (struct cgraph_node *old_node,
-			     VEC(cgraph_edge_p,heap) *redirect_callers,
-			     VEC(ipa_replace_map_p,gc) *tree_map,
-			     bitmap args_to_skip,
-			     const char * suffix)
-{
-  gcc_unreachable ();
-  return 0;
 }
 
 /* NODE is no longer nested function; update cgraph accordingly.  */
@@ -2282,27 +2164,6 @@ cgraph_make_decl_local (tree decl)
     return;
 
   SYMBOL_REF_WEAK (symbol) = DECL_WEAK (decl);
-}
-
-/* Bring NODE local.  */
-void
-cgraph_make_node_local (struct cgraph_node *node)
-{
-  gcc_unreachable ();
-  gcc_assert (cgraph_node_can_be_local_p (node));
-  if (DECL_COMDAT (node->decl) || DECL_EXTERNAL (node->decl))
-    {
-      struct cgraph_node *alias;
-      cgraph_make_decl_local (node->decl);
-
-      for (alias = node->same_body; alias; alias = alias->next)
-	cgraph_make_decl_local (alias->decl);
-
-      node->local.externally_visible = false;
-      node->local.local = true;
-      node->resolution = LDPR_PREVAILING_DEF_IRONLY;
-      gcc_assert (cgraph_function_body_availability (node) == AVAIL_LOCAL);
-    }
 }
 
 /* Set TREE_NOTHROW on NODE's decl and on same_body aliases of NODE
