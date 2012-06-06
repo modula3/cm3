@@ -1535,22 +1535,12 @@ single_imm_use_1 (const ssa_use_operand_t *head,
   return !!single_use;
 }
 
-/* Replaces all uses of NAME by VAL.  */
-
-void
-replace_uses_by (tree name, tree val)
-{
-  gcc_unreachable ();
-}
-
 /* Merge block B into block A.  */
 
 static void
 gimple_merge_blocks (basic_block a, basic_block b)
 {
-  gcc_unreachable ();
 }
-
 
 /* Return the one of two successors of BB that is not reachable by a
    complex edge, if there is one.  Else, return BB.  We use
