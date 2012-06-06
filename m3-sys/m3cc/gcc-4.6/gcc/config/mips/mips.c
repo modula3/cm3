@@ -6013,6 +6013,12 @@ mips_output_args_xfer (int fp_code, char direction)
 static void
 mips16_build_function_stub (void)
 {
+/* Modula-3, workaround: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=45345
+*/
+#if 1
+  fprintf(stderr, "mips16 not supported here\n");
+  gcc_assert(0);
+#else
   const char *fnname, *alias_name, *separator;
   char *secname, *stubname;
   tree stubdecl;
@@ -6096,6 +6102,7 @@ mips16_build_function_stub (void)
   ASM_OUTPUT_DEF (asm_out_file, alias_name, fnname);
 
   switch_to_section (function_section (current_function_decl));
+#endif
 }
 
 /* The current function is a MIPS16 function that returns a value in an FPR.
