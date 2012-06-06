@@ -139,6 +139,7 @@ So instead we use the macro below and test it against specific values.  */
    gcc at all.  */
 #ifndef GCC_VERSION
 #define GCC_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
+#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
 #endif /* GCC_VERSION */
 
 #if defined (__STDC__) || defined(__cplusplus) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4)) || defined(_WIN32)
@@ -279,17 +280,16 @@ So instead we use the macro below and test it against specific values.  */
 # endif
 #endif
 
-#ifndef ATTRIBUTE_UNUSED
-#define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
-#endif /* ATTRIBUTE_UNUSED */
-
 /* Before GCC 3.4, the C++ frontend couldn't parse attributes placed after the
    identifier name.  */
+#ifndef ATTRIBUTE_UNUSED
 #if ! defined(__cplusplus) || (GCC_VERSION >= 3004)
-# define ARG_UNUSED(NAME) NAME ATTRIBUTE_UNUSED
-#else /* !__cplusplus || GNUC >= 3.4 */
-# define ARG_UNUSED(NAME) NAME
-#endif /* !__cplusplus || GNUC >= 3.4 */
+#define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
+#else
+#define ATTRIBUTE_UNUSED /* nothing */
+#endif
+#endif
+#define ARG_UNUSED(NAME) NAME ATTRIBUTE_UNUSED
 
 #ifndef ATTRIBUTE_NORETURN
 #define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
