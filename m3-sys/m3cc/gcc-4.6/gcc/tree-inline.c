@@ -3161,69 +3161,6 @@ inline_forbidden_into_p (tree caller, tree callee)
   return false;
 }
 
-/* Returns nonzero if FN is a function that does not have any
-   fundamental inline blocking properties.  */
-
-bool
-tree_inlinable_function_p (tree fn)
-{
-  bool inlinable = true;
-  bool do_warning;
-  tree always_inline;
-
-  /* If we've already decided this function shouldn't be inlined,
-     there's no need to check again.  */
-  if (DECL_UNINLINABLE (fn))
-    return false;
-
-  /* We only warn for functions declared `inline' by the user.  */
-  do_warning = (warn_inline
-		&& DECL_DECLARED_INLINE_P (fn)
-		&& !DECL_NO_INLINE_WARNING_P (fn)
-		&& !DECL_IN_SYSTEM_HEADER (fn));
-
-  always_inline = lookup_attribute ("always_inline", DECL_ATTRIBUTES (fn));
-
-  if (flag_no_inline
-      && always_inline == NULL)
-    {
-      if (do_warning)
-        warning (OPT_Winline, "function %q+F can never be inlined because it "
-                 "is suppressed using -fno-inline", fn);
-      inlinable = false;
-    }
-
-  else if (!function_attribute_inlinable_p (fn))
-    {
-      if (do_warning)
-        warning (OPT_Winline, "function %q+F can never be inlined because it "
-                 "uses attributes conflicting with inlining", fn);
-      inlinable = false;
-    }
-
-  else if (inline_forbidden_p (fn))
-    {
-      /* See if we should warn about uninlinable functions.  Previously,
-	 some of these warnings would be issued while trying to expand
-	 the function inline, but that would cause multiple warnings
-	 about functions that would for example call alloca.  But since
-	 this a property of the function, just one warning is enough.
-	 As a bonus we can now give more details about the reason why a
-	 function is not inlinable.  */
-      if (always_inline)
-	sorry (inline_forbidden_reason, fn);
-      else if (do_warning)
-	warning (OPT_Winline, inline_forbidden_reason, fn);
-
-      inlinable = false;
-    }
-
-  /* Squirrel away the result so that we don't have to check again.  */
-  DECL_UNINLINABLE (fn) = !inlinable;
-
-  return inlinable;
-}
-
 /* Estimate the cost of a memory move.  Use machine dependent
    word size and take possible memcpy call into account.  */
 

@@ -154,60 +154,6 @@ FILE *cgraph_dump_file;
 /* Used for vtable lookup in thunk adjusting.  */
 static GTY (()) tree vtable_entry_type;
 
-/* Determine if function DECL is needed.  That is, visible to something
-   either outside this translation unit, something magic in the system
-   configury.  */
-
-bool
-cgraph_decide_is_function_needed (struct cgraph_node *node, tree decl)
-{
-  /* If the user told us it is used, then it must be so.  */
-  if (node->local.externally_visible)
-    return true;
-
-  /* ??? If the assembler name is set by hand, it is possible to assemble
-     the name later after finalizing the function and the fact is noticed
-     in assemble_name then.  This is arguably a bug.  */
-  if (DECL_ASSEMBLER_NAME_SET_P (decl)
-      && TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (decl)))
-    return true;
-
-  /* With -fkeep-inline-functions we are keeping all inline functions except
-     for extern inline ones.  */
-  if (flag_keep_inline_functions
-      && DECL_DECLARED_INLINE_P (decl)
-      && !DECL_EXTERNAL (decl)
-      && !lookup_attribute ("always_inline", DECL_ATTRIBUTES (decl)))
-     return true;
-
-  /* If we decided it was needed before, but at the time we didn't have
-     the body of the function available, then it's still needed.  We have
-     to go back and re-check its dependencies now.  */
-  if (node->needed)
-    return true;
-
-  /* Externally visible functions must be output.  The exception is
-     COMDAT functions that must be output only when they are needed.
-
-     When not optimizing, also output the static functions. (see
-     PR24561), but don't do so for always_inline functions, functions
-     declared inline and nested functions.  These were optimized out
-     in the original implementation and it is unclear whether we want
-     to change the behavior here.  */
-  if (((TREE_PUBLIC (decl)
-	|| (!optimize
-	    && !node->local.disregard_inline_limits
-	    && !DECL_DECLARED_INLINE_P (decl)
-	    && !(DECL_CONTEXT (decl)
-		 && TREE_CODE (DECL_CONTEXT (decl)) == FUNCTION_DECL)))
-       && !flag_whole_program
-       && !flag_lto)
-      && !DECL_COMDAT (decl) && !DECL_EXTERNAL (decl))
-    return true;
-
-  return false;
-}
-
 /* Process CGRAPH_NEW_FUNCTIONS and perform actions necessary to add these
    functions into callgraph in a way so they look like ordinary reachable
    functions inserted into callgraph already at construction time.  */
@@ -359,8 +305,7 @@ cgraph_finalize_function (tree decl, bool nested)
   node->lowered = DECL_STRUCT_FUNCTION (decl)->cfg != NULL;
   node->finalized_by_frontend = true;
 
-  if (cgraph_decide_is_function_needed (node, decl))
-    cgraph_mark_needed_node (node);
+  cgraph_mark_needed_node (node);
 
   /* Since we reclaim unreachable nodes at the end of every language
      level unit, we need to be conservative about possible entry points
@@ -396,7 +341,7 @@ void
 cgraph_mark_if_needed (tree decl)
 {
   struct cgraph_node *node = cgraph_node (decl);
-  if (node->local.finalized && cgraph_decide_is_function_needed (node, decl))
+  if (node->local.finalized)
     cgraph_mark_needed_node (node);
 }
 
