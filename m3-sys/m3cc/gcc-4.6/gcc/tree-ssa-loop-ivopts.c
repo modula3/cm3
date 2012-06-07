@@ -89,7 +89,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "cfgloop.h"
 #include "params.h"
 #include "langhooks.h"
-#include "tree-affine.h"
 #include "target.h"
 #include "tree-inline.h"
 #include "tree-ssa-propagate.h"

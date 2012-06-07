@@ -980,7 +980,6 @@ OBJS-common = \
 	targhooks.o \
 	timevar.o \
 	toplev.o \
-	tree-affine.o \
 	tree-cfg.o \
 	tree-cfgcleanup.o \
 	tree-chrec.o \
@@ -1637,28 +1636,13 @@ tree-ssa-loop-ch.o : tree-ssa-loop-ch.c $(TREE_FLOW_H) $(CONFIG_H) \
    $(SYSTEM_H) $(RTL_H) $(TREE_H) $(TM_P_H) $(CFGLOOP_H) $(TREE_INLINE_H) \
    output.h $(DIAGNOSTIC_H) $(TIMEVAR_H) $(TM_H) coretypes.h $(TREE_DUMP_H) \
    $(TREE_PASS_H) $(FLAGS_H) $(BASIC_BLOCK_H)
-tree-ssa-loop-prefetch.o: tree-ssa-loop-prefetch.c $(TREE_FLOW_H) $(CONFIG_H) \
-   $(SYSTEM_H) $(TREE_H) $(TM_P_H) $(CFGLOOP_H) $(EXPR_H) \
-   output.h $(DIAGNOSTIC_H) $(TIMEVAR_H) $(TM_H) coretypes.h $(TREE_DUMP_H) \
-   $(TREE_PASS_H) $(RECOG_H) insn-config.h $(HASHTAB_H) \
-   $(CFGLOOP_H) $(PARAMS_H) langhooks.h $(BASIC_BLOCK_H) \
-   $(DIAGNOSTIC_CORE_H) langhooks.h $(TREE_INLINE_H) $(TREE_DATA_REF_H) \
-   $(OPTABS_H) tree-pretty-print.h
-tree-predcom.o: tree-predcom.c $(CONFIG_H) $(SYSTEM_H) $(TREE_H) $(TM_P_H) \
-   $(CFGLOOP_H) $(TREE_FLOW_H) $(GGC_H) $(TREE_DATA_REF_H) \
-   $(PARAMS_H) $(DIAGNOSTIC_H) $(TREE_PASS_H) $(TM_H) coretypes.h \
-   tree-affine.h $(TREE_INLINE_H) tree-pretty-print.h
 tree-ssa-loop-ivopts.o : tree-ssa-loop-ivopts.c $(TREE_FLOW_H) $(CONFIG_H) \
    $(SYSTEM_H) $(TREE_H) $(TM_P_H) $(CFGLOOP_H) $(EXPR_H) \
    output.h $(DIAGNOSTIC_H) $(TIMEVAR_H) $(TM_H) coretypes.h $(TREE_DUMP_H) \
    $(TREE_PASS_H) $(GGC_H) $(RECOG_H) insn-config.h $(HASHTAB_H) $(SCEV_H) \
    $(CFGLOOP_H) $(PARAMS_H) langhooks.h $(BASIC_BLOCK_H) \
-   tree-affine.h pointer-set.h $(TARGET_H) tree-pretty-print.h \
+   pointer-set.h $(TARGET_H) tree-pretty-print.h \
    gimple-pretty-print.h tree-ssa-propagate.h
-tree-affine.o : tree-affine.c tree-affine.h $(CONFIG_H) pointer-set.h \
-   $(SYSTEM_H) $(TREE_H) $(GIMPLE_H) \
-   output.h $(DIAGNOSTIC_H) coretypes.h $(TREE_DUMP_H) $(FLAGS_H) \
-   tree-pretty-print.h
 tree-ssa-loop-manip.o : tree-ssa-loop-manip.c $(TREE_FLOW_H) $(CONFIG_H) \
    $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
    $(BASIC_BLOCK_H) output.h $(DIAGNOSTIC_H) $(TREE_FLOW_H) $(TREE_DUMP_H) \
@@ -1668,7 +1652,7 @@ tree-ssa-loop-im.o : tree-ssa-loop-im.c $(TREE_FLOW_H) $(CONFIG_H) \
    $(SYSTEM_H) $(TREE_H) $(TM_P_H) $(CFGLOOP_H) domwalk.h \
    $(PARAMS_H) output.h $(DIAGNOSTIC_H) $(TIMEVAR_H) $(TM_H) coretypes.h \
    $(TREE_DUMP_H) $(TREE_PASS_H) $(FLAGS_H) $(BASIC_BLOCK_H) \
-   pointer-set.h tree-affine.h tree-ssa-propagate.h gimple-pretty-print.h \
+   pointer-set.h tree-ssa-propagate.h gimple-pretty-print.h \
    tree-pretty-print.h
 tree-ssa-math-opts.o : tree-ssa-math-opts.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
    $(TM_H) $(FLAGS_H) $(TREE_H) $(TREE_FLOW_H) $(TIMEVAR_H) \
