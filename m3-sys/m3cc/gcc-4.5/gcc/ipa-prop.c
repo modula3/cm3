@@ -1905,7 +1905,7 @@ ipa_dump_param_adjustments (FILE *file, ipa_parm_adjustment_vec adjustments,
 /* Write jump functions for nodes in SET.  */
 
 void
-ipa_prop_write_jump_functions (cgraph_node_set)
+ipa_prop_write_jump_functions (cgraph_node_set set)
 {
   gcc_unreachable ();
 }
@@ -1917,7 +1917,7 @@ ipa_prop_read_jump_functions (void)
 }
 
 void
-lto_ipa_fixup_call_notes (struct cgraph_node *, gimple *)
+lto_ipa_fixup_call_notes (struct cgraph_node *node, gimple *stmts)
 {
   gcc_unreachable ();
 }
