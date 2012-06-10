@@ -1,9 +1,0 @@
-readonly TARGET = "ALPHA64_VMS"
-readonly GNU_PLATFORM = "alpha64-dec-vms"
-m3back_flags = "-mgas"
-m3back_debug = ""
-m3back_optimize = "" % don't optimize
-SYSTEM_CC = "cc /pointer_size=64"
-SYSTEM_LD = "link"
-include("Alpha64.common")
-include("VMS.common")

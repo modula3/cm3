@@ -1,1 +1,0 @@
-@cm3CommandShell startIDE SameWindow

@@ -1,9 +1,0 @@
-PROC Cmd0() IS 
-  IF 
-    VAR x ~ 1 IN 
-      (100 + x) * (100 - x) = 9998 -> 
-        SKIP 
-    END 
-  FI 
-END;
-

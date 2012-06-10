@@ -1,4 +1,0 @@
-import ("libm3")
-Module("TextReader") % needed by m3tmplhack, must be compiled before cit_util
-
-Library("cit_common")

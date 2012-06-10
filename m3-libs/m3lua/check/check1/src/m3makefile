@@ -1,6 +1,0 @@
-import("m3core")
-import("libm3")
-import("m3lua")
-
-implementation("m3interp")
-program("m3interp")

@@ -1,6 +1,0 @@
-override("libm3",             ROOT & SL & "m3-libs")
-override("sysutils",          ROOT & SL & "m3-libs")
-override("filepool",          ROOT & SL & "elego")
-override("pkg_vc",            ROOT & SL & "elego")
-override("pkg_base",          ROOT & SL & "elego")
-override("depgraph",          ROOT & SL & "elego")

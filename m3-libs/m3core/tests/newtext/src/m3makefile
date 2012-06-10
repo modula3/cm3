@@ -1,7 +1,0 @@
-%option("internal_backend","")
-%^pm3 only. Disables the internal backend.
-import("libm3")
-module("UnsafeUtils") 
-module("TextUtils") 
-implementation("Test")
-program("test") 

@@ -1,1 +1,0 @@
-INTERFACE Dummy; END Dummy.

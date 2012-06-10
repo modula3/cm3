@@ -1,7 +1,0 @@
-[Desktop Entry]
-Comment=Modula 3 Sourcecode
-Hidden=false
-Icon=source
-MimeType=text/x-modula3
-Patterns=*.i3;*.m3;*.ig;*.mg;*.atg;*.frm
-Type=MimeType

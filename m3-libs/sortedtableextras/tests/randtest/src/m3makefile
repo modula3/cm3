@@ -1,3 +1,0 @@
-import ("libm3")
-implementation ("RandTest")
-program ("RandTest")
