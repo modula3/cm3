@@ -1032,7 +1032,7 @@ generate_summary (void)
 /* Serialize the ipa info for lto.  */
 
 static void
-ipa_reference_write_summary (cgraph_node_set)
+ipa_reference_write_summary (cgraph_node_set set)
 {
   gcc_unreachable ();
 }
