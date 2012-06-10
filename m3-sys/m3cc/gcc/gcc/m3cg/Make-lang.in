@@ -52,7 +52,8 @@ m3cg/parse.o: m3cg/parse.c $(CONFIG_H) $(SYSTEM_H) $(HASHTAB_H) coretypes.h \
   $(TM_H) $(TREE_H) flags.h output.h $(RTL_H) $(GGC_H) toplev.h \
  $(LANGHOOKS_DEF_H) langhooks.h input.h opts.h options.h \
   gt-m3cg-parse.h gtype-m3cg.h $(EXPR_H) \
-  m3cg/m3gty43.h \
+  m3cg/m3gty43.h
+	$(CXX) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $< $(OUTPUT_OPTION)
 
 # looks like rules for gtfiles are now generated automatically
 # gt-m3cg-parse.h gtype-m3cg.h : s-gtype; @true
