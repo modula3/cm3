@@ -1,3 +1,0 @@
-override ("ui", ROOT & "/m3-ui")
-override ("netobj", ROOT & "/m3-comm")
-override ("board", ROOT & "/m3-demo/sharedboard")

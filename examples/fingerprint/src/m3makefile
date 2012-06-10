@@ -1,5 +1,0 @@
-
-
-import("libm3")
-implementation("M3Compare")
-program("m3cmp")

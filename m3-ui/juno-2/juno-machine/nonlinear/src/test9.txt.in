@@ -1,7 +1,0 @@
-3 3
-a ~ 0.5
-b ~ 1
-c ~ -1
-a = TIMES(b, b)
-a = TIMES(c, c)
-b = PLUS(1, c)

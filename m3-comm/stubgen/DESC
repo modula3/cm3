@@ -1,9 +1,0 @@
-<p>
-Support tool for Modula-3 network objects.
-Stubgen is a program that generates stubs for Modula-3 network
-objects.  Network objects are Modula-3 objects whose methods may
-be invoked from multiple address spaces.  They thus provide an
-object-based form of remote procedure call.  For a description of
-network objects and examples of their use, see the network objects
-paper available from "printdoc netobj".
-</p>

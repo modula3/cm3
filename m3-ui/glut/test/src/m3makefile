@@ -1,6 +1,0 @@
-import("libm3")
-import("glut")
-
-implementation("Main")
-
-program("test")

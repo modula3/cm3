@@ -1,2 +1,0 @@
-c_source("m3sleep")
-C_program("m3sleep")

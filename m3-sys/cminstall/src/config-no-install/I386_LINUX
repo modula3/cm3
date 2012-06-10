@@ -1,2 +1,0 @@
-readonly TARGET = "I386_LINUX" % code generation target
-include("I386_LINUX.common")

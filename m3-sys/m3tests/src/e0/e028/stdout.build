@@ -1,6 +1,0 @@
-"../B.i3", line 9: circular imports: A -> B -> A
-"../B.i3", line 7: symbol not exported (A.a)
-2 errors encountered
-"../B.i3", line 9: imported interface contains errors (A)
-1 error encountered
-Fatal Error: package build failed
