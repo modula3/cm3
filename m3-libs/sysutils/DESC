@@ -1,6 +1,0 @@
-<p>
-Miscellaneous useful interfaces for writing M3 tools, including
-file and directory access, environment access, process creation and
-command execution, directory stacks, pathname manipulation, and
-message output.
-</p>

@@ -1,3 +1,0 @@
-#!/bin/csh -f
-../../../SOLgnu/shobjcodegen -o TrackerPosition -so TrackerPosition.T -i TrackerPositionF -T../../../../coterie/SOLgnu/.M3IMPTAB
-

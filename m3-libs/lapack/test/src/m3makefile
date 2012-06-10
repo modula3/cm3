@@ -1,9 +1,0 @@
-import("libm3")
-import("unittest")
-import("unittest-numeric")
-import("lapack")
-
-Module("TestLapack")
-implementation("Main")
-
-program("test")

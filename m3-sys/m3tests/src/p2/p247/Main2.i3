@@ -1,2 +1,0 @@
-INTERFACE Main2;
-END Main2.

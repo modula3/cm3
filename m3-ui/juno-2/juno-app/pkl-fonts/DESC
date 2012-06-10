@@ -1,7 +1,0 @@
-<p>
-This directory contains a program for building a pickle of Juno's font
-metric data structure. The Adobe ASCII font metric files are bundled
-in with the program itself. Since pickles are not (yet) architecture
-independent, you have to build a different pickle for each
-architecture.
-</p>

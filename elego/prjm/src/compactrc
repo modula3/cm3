@@ -1,6 +1,0 @@
-
-# default settings for prjm (ComPact Project Manager)
-
-cvspath		"cvs"		
-repository	"/usr/cvs"
-editor		"emacsclient"

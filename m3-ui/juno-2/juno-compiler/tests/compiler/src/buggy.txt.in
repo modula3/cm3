@@ -1,3 +1,0 @@
-IF VAR y, z IN 1 ~ y AND y + 0.5 = z -> SKIP END FI
-IF VAR y, z IN 1 ~ y AND y + 0.5 = z AND z * z = 2 -> SKIP END FI
-IF VAR x, y, z IN 2 ~ y AND 3 ~ z AND z = _MINUS(x, y) -> SKIP END FI

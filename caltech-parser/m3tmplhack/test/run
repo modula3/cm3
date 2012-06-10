@@ -1,6 +1,0 @@
-#!/bin/sh
-../FreeBSD3/m3tmplhack chan.test
-../FreeBSD3/m3tmplhack thingy.test
-../FreeBSD3/m3tmplhack box.test
-../FreeBSD3/m3tmplhack insides.test
-cat *.tmpl

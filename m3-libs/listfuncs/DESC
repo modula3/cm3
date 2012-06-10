@@ -1,5 +1,0 @@
-<p>
-The generic interface "List" provides operations on linked lists of
-arbitrary element types.  This interface extends the operations you
-can perform on the generic lists.
-</p>

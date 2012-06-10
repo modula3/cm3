@@ -1,9 +1,0 @@
-<p>
-vocgi - gateway for visual obliq.
-</p>
-<p>
-   This is responsible for a variety of operations that result in the
-   creation of an html page on the fly to support distributed apps on the
-   world-wide web.
-</p>
-
