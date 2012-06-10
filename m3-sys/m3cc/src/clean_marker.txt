@@ -13,5 +13,6 @@ The contents of the file do not matter.
    - switch to configure -enable-build-with-cxx
    - removal of m3-convert.c (combined with parse.c to fix a problem)
    - removal of LTO
+   - back to C compilation, long passage of time also, remove enable-checking
 
-DA86-4CFC-AB4B-F854C784
+A86-4CFC-AB4B-F854C784
