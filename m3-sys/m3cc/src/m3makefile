@@ -47,6 +47,10 @@ readonly m3cc_config = {
 %  building m3cg, does locate and test an assembler. Building on HP-UX will
 %  fail and say the GNU assembler is required, if it is not the one found.
 %
+  "MIPS64_OPENBSD" : "-enable-obsolete",
+  "MIPS64EL_OPENBSD" : "-enable-obsolete",
+  "MIPS32_IRIX"  : "-enable-obsolete",
+  "MIPS64_IRIX"  : "-enable-obsolete",
   "ALPHA_OSF"    : "-enable-obsolete",
   "I386_LINUX"   : "-with-gnu-as -with-gnu-ld",
   "AMD64_LINUX"  : "-with-gnu-as -with-gnu-ld",
@@ -57,7 +61,7 @@ readonly m3cc_config = {
   "SPARC64_LINUX": "-with-gnu-as -with-gnu-ld",
   "LINUXLIBC6"   : "-with-gnu-as -with-gnu-ld",
   "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-float=soft "
-                 & "-enable-target-optspace -enable-threads -enable-shared",
+                   & "-enable-target-optspace -enable-threads -enable-shared",
 
   %
   % AIX usually requires native as and ld -- cross builds are not possible.
@@ -215,32 +219,118 @@ include ("../../m3cc/src/gnucc.common")
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
-% current default is gcc 4.5
+% current default is gcc 4.5 for most platforms
 % Also available: 4.2 (apple), 4.3, 4.6
 SourceDir = "../gcc" % The plain "gcc" directory is 4.3.
 if not defined("GCC46")
-  GCC46 = FALSE
+  GCC46 = {
+    % "I386_DARWIN",
+    % "I386_OPENBSD",
+    % "I386_NETBSD",
+    % "I386_LINUX",
+    % "I386_CYGWIN",
+    % "I386_MINGWIN",
+    % "I386_FREEBSD",
+    % "I386_SOLARIS",
+    % "I386_INTERIX",
+    % "AMD64_DARWIN",
+    % "AMD64_OPENBSD",
+    % "AMD64_NETBSD",
+    % "AMD64_LINUX",
+    % "AMD64_CYGWIN",
+    % "AMD64_FREEBSD",
+    % "AMD64_SOLARIS",
+    % "AMD64_INTERIX",
+    % "AMD64_MINGWIN",
+    % "SPARC32_SOLARIS",
+    % "SPARC32_LINUX",
+    % "SPARC64_OPENBSD",
+    % "SPARC64_SOLARIS",
+    % "SPARC64_LINUX",
+    % "ALPHA64_LINUX",
+    % "ALPHA32_VMS",
+    % "ALPHA64_VMS",
+    % "IA64_VMS",
+    % "IA64_LINUX",
+    % "IA64_FREEBSD",
+    % "IA64_HPUX",
+    % "PA32_LINUX",
+    % "PA32_HPUX",
+    % "PA64_HPUX",
+    % "PA64_LINUX",
+    % "LINUXLIBC6",
+    % "FreeBSD4",
+    % "NT386GNU",
+    } contains M3CC_TARGET
+end
+if not defined("GCC47")
+  GCC47 = {
+    % "I386_DARWIN",
+    % "I386_OPENBSD",
+    % "I386_NETBSD",
+    % "I386_LINUX",
+    % "I386_CYGWIN",
+    % "I386_MINGWIN",
+    % "I386_FREEBSD",
+    % "I386_SOLARIS",
+    % "I386_INTERIX",
+    % "AMD64_DARWIN",
+    % "AMD64_OPENBSD",
+    % "AMD64_NETBSD",
+    % "AMD64_LINUX",
+    % "AMD64_CYGWIN",
+    % "AMD64_FREEBSD",
+    % "AMD64_SOLARIS",
+    % "AMD64_INTERIX",
+    % "AMD64_MINGWIN",
+    % "SPARC32_SOLARIS",
+    % "SPARC32_LINUX",
+    % "SPARC64_OPENBSD",
+    % "SPARC64_SOLARIS",
+    % "SPARC64_LINUX",
+    % "ALPHA64_LINUX",
+    % "ALPHA32_VMS",
+    % "ALPHA64_VMS",
+    % "IA64_VMS",
+    % "IA64_LINUX",
+    % "IA64_FREEBSD",
+    % "IA64_HPUX",
+    % "PA32_LINUX",
+    % "PA32_HPUX",
+    % "PA64_HPUX",
+    % "PA64_LINUX",
+    % "LINUXLIBC6",
+    % "FreeBSD4",
+    % "NT386GNU",
+    } contains M3CC_TARGET
 end
 GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone, iPad
-GCC45 = (not GCC42 and not GCC46)
-GCC43 = not (GCC42 or GCC45 or GCC46)
+% GCC46 = (not GCC42)
+% GCC47 = (not GCC42)
+GCC45 = not (GCC42          or GCC46 or GCC47)
+GCC43 = not (GCC42 or GCC45 or GCC46 or GCC47)
 local Defines = ""
 local m3gty = "m3gty43.h"
 if GCC42
   SourceDir = "../gcc-apple"
-  Defines = "#define GCC_APPLE 1\n#define GCC42 1\n"
+  Defines = Defines & "#define GCC_APPLE 1\n#define GCC42 1\n"
+end
+if GCC45 or GCC46 or GCC47 % not 4.2 or 4.3
+  m3gty = "m3gty45.h"
 end
 if GCC45
-  Defines = "#define GCC45 1\n"
+  Defines = Defines & "#define GCC45 1\n"
   SourceDir = "../gcc-4.5"
-  m3gty = "m3gty45.h"
 end
 if GCC46
-  Defines = "#define GCC45 1\n#define GCC46 1\n"
+  Defines = Defines & "#define GCC46 1\n"
   SourceDir = "../gcc-4.6"
-  m3gty = "m3gty45.h"
 end
-if GCC42 or GCC45 or GCC46
+if GCC47
+  Defines = Defines & "#define GCC47 1\n"
+  SourceDir = "../gcc-4.7"
+end
+if GCC42 or GCC45 or GCC46 or GCC47 % all but 4.3
   fs_mkdir(SourceDir & "/gcc/m3cg")
   local files = ["config-lang.in", "m3-def.h", "m3-parse.h", "lang-options.h",
                  "lang.opt", "m3cg.h", "Make-lang.in"]
@@ -257,16 +347,23 @@ if GCC42 or GCC45 or GCC46
     write(a)
   end
   cp_if(b & ".temp", b)
+  if GCC47
+    foreach a in ["gmp", "mpfr", "mpc"]
+      %link_file("../gcc/" & a, SourceDir & "/" & a)
+      link_file("/src/" & a, SourceDir & "/" & a)
+    end
+  end
 end
 
 % figure out where we're going to build gcc
 build_dir = "../" & BUILD_DIR
 
 if not Native build_dir = "../" & HOST & "-" & M3CC_TARGET end
-if GCC42 build_dir = build_dir & "-gcc42" end
+%if GCC42 build_dir = build_dir & "-gcc42" end
 %if GCC43 build_dir = build_dir & "-gcc43" end
 %if GCC45 build_dir = build_dir & "-gcc45" end
-if GCC46 build_dir = build_dir & "-gcc46" end
+%if GCC46 build_dir = build_dir & "-gcc46" end
+if GCC47 build_dir = build_dir & "-gcc47" end
 Log = subst_chars(path() & "/" & build_dir & "/_m3.log", "\\", "/")
 
 fs_mkdir (build_dir)
@@ -374,7 +471,8 @@ end
 % configure the sources
 % check for non-default flags
 
-Configure = " -enable-build-with-cxx "
+Configure = "  "
+%Configure = " -enable-build-with-cxx -enable-obsolete "
 
 if not equal (HOST, M3CC_TARGET)
   Configure = Configure & " -with-sysroot" % shouldn't matter
@@ -419,9 +517,9 @@ Configure = Configure & " -enable-languages=m3cg"
 %end
 if {"I386_DARWIN","AMD64_DARWIN","AMD64_LINUX","LINUXLIBC6","I386_LINUX","I386_OPENBSD"} contains HOST
 if GCC42
-  Configure = Configure & " -enable-checking=assert,fold,misc,rtl,rtlflag,runtime,tree"
+  % Configure = Configure & " -enable-checking=assert,fold,misc,rtl,rtlflag,runtime,tree"
 else
-  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree,types"
+  % Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree,types"
 end end
 % These are compatible with just building m3cg, but user might
 % build gcc/cc1/libgcc here.
@@ -501,7 +599,8 @@ if HostIsNT()
   end
 end
 
-M3CC_MAKE = M3CC_MAKE & " -j4 "
+M3CC_MAKE = M3CC_MAKE & " "
+M3CC_MAKE = M3CC_MAKE & " "
 
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
@@ -510,7 +609,7 @@ M3CC_MAKE = M3CC_MAKE & " -j4 "
 if GCC46
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " | tee -a " & Log])
 else
-if GCC45
+if GCC45 or GCC47
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
               & " all-libiberty"
               % & " | tee -a " & Log
