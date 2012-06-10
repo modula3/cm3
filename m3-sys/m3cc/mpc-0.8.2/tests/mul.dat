@@ -1,0 +1,130 @@
+# Data file for mpc_mul
+#
+# Copyright (C) 2008 Philippe Th\'eveny, Andreas Enge, Paul Zimmermann
+#
+# This file is part of the MPC Library.
+#
+# The MPC Library is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or (at your
+# option) any later version.
+#
+# The MPC Library is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+# License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with the MPC Library; see the file COPYING.LIB.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# The line format respects the parameter order in function prototype as
+# follow:
+#
+# INEX_RE  INEX_IM  PREC_ROP_RE  ROP_RE  PREC_ROP_IM  ROP_IM  PREC_OP1_RE  OP1_RE  PREC_OP1_IM  OP1_IM  PREC_OP2_RE  OP2_RE  PREC_OP2_IM  OP2_IM  RND_RE  RND_IM
+#
+# See add.dat for more details.
+
+# special values (following ISO C99 standard, G.5.1)
+0 0 53  nan 53 +inf    53 -inf 53 -inf 53 -inf 53 -inf N Z
+0 0 53  nan 53 +inf    53 -inf 53 +inf 53   +1 53 -inf Z U
+0 0 53 +inf 53 -inf    53 +inf 53 -inf 53 +inf 53   +0 U D
+0 0 53 +inf 53 -inf    53 +inf 53 +inf 53   -0 53   -1 D N
+0 0 53 -inf 53 +inf    53 -inf 53 -inf 53   -0 53   -1 N U
+0 0 53 -inf 53 +inf    53 -inf 53 +inf 53 +inf 53  nan Z D
+0 0 53 -inf 53 -inf    53 +inf 53 -inf 53  nan 53   -1 U N
+0 0 53  nan 53  nan    53 +inf 53 +inf 53   -0 53  nan D Z
+0 0 53  nan 53  nan    53 -inf 53 -inf 53  nan 53  nan N D
+
+0 0 53 -inf 53 -inf    53   -1 53 -inf 53 +inf 53   -1 N D
+0 0 53 -inf 53  nan    53 -inf 53   +1 53 +inf 53   -0 Z N
+0 0 53 +inf 53  nan    53   +1 53 -inf 53   -0 53   +1 U Z
+0 0 53  nan 53  nan    53 +inf 53   +1 53   -0 53   -0 D U
+0 0 53  nan 53 -inf    53   -1 53 -inf 53 +inf 53  nan N N
+0 0 53  nan 53 -inf    53 -inf 53   +1 53  nan 53   +1 Z Z
+0 0 53  nan 53  nan    53   +1 53 -inf 53   -0 53  nan U U
+0 0 53  nan 53  nan    53 +inf 53   +1 53  nan 53  nan D D
+
+0 0 53 +inf 53  nan    53   -0 53 -inf 53   +0 53 +inf D D
+0 0 53 -inf 53  nan    53 -inf 53   +0 53   +1 53   -0 N Z
+0 0 53  nan 53  nan    53   +0 53 -inf 53   -0 53   -0 Z U
+0 0 53 -inf 53  nan    53 +inf 53   +0 53 -inf 53  nan U D
+0 0 53 -inf 53  nan    53   -0 53 -inf 53  nan 53   -1 D N
+0 0 53  nan 53  nan    53 -inf 53   +0 53   +0 53  nan N U
+0 0 53  nan 53  nan    53   +0 53 -inf 53  nan 53  nan Z D
+
+0 0 53   +1 53   -0    53   +0 53   +1 53   -0 53   -1 Z D
+0 0 53   -0 53   +0    53   -1 53   -0 53   +0 53   -0 U N
+0 0 53 -inf 53  nan    53   -0 53   +1 53  nan 53 +inf D Z
+0 0 53  nan 53  nan    53   +1 53   -0 53   -1 53  nan N D
+0 0 53  nan 53  nan    53   +0 53   +1 53  nan 53   -0 Z N
+0 0 53  nan 53  nan    53   -1 53   -0 53  nan 53  nan U Z
+
+0 0 53   +0 53   +0    53   -0 53   +0 53   +0 53   -0 U Z
+0 0 53  nan 53  nan    53   +0 53   -0 53  nan 53 -inf D U
+0 0 53  nan 53  nan    53   +0 53   +0 53   -1 53  nan N N
+0 0 53  nan 53  nan    53   -0 53   -0 53  nan 53   -0 Z Z
+0 0 53  nan 53  nan    53   -0 53   +0 53  nan 53  nan U U
+
+0 0 53 +inf 53  nan    53  nan 53 -inf 53  nan 53 +inf U U
+0 0 53 -inf 53  nan    53 +inf 53  nan 53   -1 53  nan D D
+0 0 53  nan 53  nan    53  nan 53 -inf 53  nan 53   -0 N Z
+0 0 53  nan 53  nan    53 -inf 53  nan 53  nan 53  nan Z U
+
+0 0 53  nan 53  nan    53   +1 53  nan 53  nan 53   -1 Z U
+0 0 53  nan 53  nan    53  nan 53   +1 53   -0 53  nan U D
+0 0 53  nan 53  nan    53   -1 53  nan 53  nan 53  nan D N
+
+0 0 53  nan 53  nan    53  nan 53   +0 53   +0 53  nan D N
+0 0 53  nan 53  nan    53   +0 53  nan 53  nan 53  nan N U
+
+0 0 53  nan 53  nan    53  nan 53  nan 53  nan 53  nan N U
+
+# pure real arguments
+0 0 53  0x10000000000001p-52 53 -0    53 +1 53 -0 53 0x10000000000001p-52 53 -0 N N
+0 0 53  0x10000000000001p-52 53 -0    53 +1 53 -0 53 0x10000000000001p-52 53 -0 Z Z
+0 0 53  0x10000000000001p-52 53 -0    53 +1 53 -0 53 0x10000000000001p-52 53 -0 U U
+0 0 53 -0x10000000000001p-52 53 -0    53 -1 53 -0 53 0x10000000000001p-52 53 -0 D D
+
+# one pure real argument
+0 0 53  0x10000000000001p-52 53  0x10000000000001p-52    53 +1 53 +1 53 0x10000000000001p-52 53 -0 N N
+0 0 53  0x10000000000001p-52 53 -0x10000000000001p-51    53 +1 53 -2 53 0x10000000000001p-52 53 -0 Z Z
+- + 53 -0x30000000000004p-52 53  0x30000000000004p-52    53 -3 53 +3 53 0x10000000000001p-52 53 +0 N N
++ - 53 -0x30000000000002p-52 53  0x30000000000002p-52    53 -3 53 +3 53 0x10000000000001p-52 53 +0 Z Z
++ + 53 -0x30000000000002p-52 53  0x30000000000004p-52    53 -3 53 +3 53 0x10000000000001p-52 53 +0 U U
+- - 53 -0x30000000000004p-52 53  0x30000000000002p-52    53 -3 53 +3 53 0x10000000000001p-52 53 +0 D D
+0 0 53 -0x10000000000001p-52 53 -0x10000000000001p-50    53 -1 53 -4 53 0x10000000000001p-52 53 +0 D D
+0 0 53                    +0 53                    +0    53 +0 53 +0 53 0x10000000000001p-52 53 -1 N N
+0 0 53                    +0 53                    -0    53 +0 53 -0 53 0x10000000000001p-52 53 -2 Z Z
+0 0 53                    +0 53                    +0    53 +0 53 +0 53 0x10000000000001p-52 53 +3 U U
+0 0 53                    -0 53                    -0    53 -0 53 -0 53 0x10000000000001p-52 53 +4 D D
+
+# pure imaginary arguments
+0 0 53 -0x10000000000001p-52 53 -0     53 -0 53 0x10000000000001p-52 53 -0 53 +1 N N
+0 0 53 -0x10000000000001p-52 53 +0     53 +0 53 0x10000000000001p-52 53 -0 53 +1 Z Z
+0 0 53 -0x10000000000001p-52 53 +0     53 +0 53 0x10000000000001p-52 53 -0 53 +1 U U
+0 0 53 -0x10000000000001p-52 53 -0     53 -0 53 0x10000000000001p-52 53 -0 53 +1 D D
+
+# one pure imaginary argument
+0 0 53 -0x10000000000001p-52 53 -0x10000000000001p-52   53 -0 53 0x10000000000001p-52 53 -1 53 +1 N N
+0 0 53 +0x10000000000001p-52 53 -0x10000000000001p-51   53 +0 53 0x10000000000001p-52 53 -2 53 -1 Z Z
++ - 53  0x30000000000004p-52 53 -0x30000000000004p-52   53 +0 53 0x10000000000001p-52 53 -3 53 -3 N N
+- + 53  0x30000000000002p-52 53 -0x30000000000002p-52   53 +0 53 0x10000000000001p-52 53 -3 53 -3 Z Z
++ + 53  0x30000000000004p-52 53 -0x30000000000002p-52   53 +0 53 0x10000000000001p-52 53 -3 53 -3 U U
+- - 53  0x30000000000002p-52 53 -0x30000000000004p-52   53 +0 53 0x10000000000001p-52 53 -3 53 -3 D D
+0 0 53 +0x10000000000001p-52 53 -0x10000000000001p-50   53 -0 53 0x10000000000001p-52 53 -4 53 -1 D D
+
+# big precision uses Karatsuba method
+0 0 4096 0x1420176785BD601FC018AD36471p-96 4096 -0x1ECCDBDA38B2611A32848E7ADF43p-100    53  0x6B2E363676587p-44 53  0x1AC20AAC49ED37p-47 53  0x12264C57B44C6Bp-53 53 -0x138639A4B8D8B3p-50 N N
+
+# Karatsuba case where x=0 since ad=bc: (1+i)^2 at artificially high
+# precision so that Karatsuba is actually used.
+0 0 4096 0 4096 2    4096 1 4096 1  4096 1 4096 1  N N
+# trigger the line reducing prec_x to prec_u
+0 0 4096 0 4096 2    40960 1 40960 1  40960 1 40960 1  N N
+# another particular cases
++ + 6 -0x9p-497 6 0x33p-315    6 -0x1dp-73 6  0x3p148   6  0x11p-463 6 0x3p-645  N N
++ - 6 0x33p-315 6 0x9p-497     6   0x3p148 6  0x1dp-73  6  0x11p-463 6 0x3p-645  N N
+0 0 4 0x1p-1902 4 0x3p-1085    4 -0x1p-892 4 -0x3p-75   4 -0x1p-1010 4 0         N N
+
