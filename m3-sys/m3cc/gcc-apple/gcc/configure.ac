@@ -285,12 +285,6 @@ fi
 AC_SUBST(NO_MINUS_C_MINUS_O)
 AC_SUBST(OUTPUT_OPTION)
 
-# Remove the -O2: for historical reasons, unless bootstrapping we prefer
-# optimizations to be activated explicitly by the toplevel.
-case "$CC" in
-  */prev-gcc/xgcc*) ;;
-  *) CFLAGS=`echo $CFLAGS | sed "s/-O[[s0-9]]* *//" ` ;;
-esac
 AC_SUBST(CFLAGS)
 
 # -------------------------
