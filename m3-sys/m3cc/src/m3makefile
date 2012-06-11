@@ -617,11 +617,6 @@ if GCC47
   foreach a in ["libcpp", "gcc"]
     Sed (a & "/Makefile", "LIBICONV = -liconv", "LIBICONV = ")
   end
-
-  % remove dependency in system zlib which isn't really supposed to be there
-  % change -L../zlib -lz to ../lib/libz.a
-  % after make configure-host, so as to not require patching gcc
-  Sed ("gcc/Makefile", "ZLIB = -L\\.\\.\\/zlib -lz", "ZLIB = ..\\/zlib\\/libz.a")
 end
 
 %
@@ -632,7 +627,7 @@ m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-li
            % & " | tee -a " & Log
           ])
 if GCC47
-  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-mpc"
+  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-mpc all-zlib"
              % & " | tee -a " & Log
              ])
 end
