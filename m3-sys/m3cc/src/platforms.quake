@@ -9,7 +9,7 @@ readonly Platform_info = {
   "ALPHA_LINUX" : "alpha-linux",
   "ALPHA_NETBSD" : "alpha-netbsd",
   "ALPHA_OPENBSD" : "alpha-openbsd",
-  "ALPHA_OSF" : "alpha-dec-osf4",
+  "ALPHA_OSF" : "alpha-dec-osf5.1",
   "ALPHA32_VMS" : "alpha-dec-vms",
   "ALPHA64_VMS" : "alpha64-dec-vms",
   "AMD64_DARWIN" : "amd64-apple-darwin",
