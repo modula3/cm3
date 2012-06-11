@@ -220,8 +220,8 @@ if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 % current default is gcc 4.5 for most platforms
-% Also available: 4.2 (apple), 4.3, 4.6
-SourceDir = "../gcc" % The plain "gcc" directory is 4.3.
+% Also available: 4.2 (apple), 4.3, 4.6, 4.7
+
 if not defined("GCC46")
   GCC46 = {
     % "I386_DARWIN",
@@ -306,29 +306,40 @@ if not defined("GCC47")
 end
 GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone, iPad
 % GCC46 = (not GCC42)
-% GCC47 = (not GCC42)
+GCC47 = (not GCC42)
 GCC45 = not (GCC42          or GCC46 or GCC47)
 GCC43 = not (GCC42 or GCC45 or GCC46 or GCC47)
 local Defines = ""
 local m3gty = "m3gty43.h"
-if GCC42
-  SourceDir = "../gcc-apple"
-  Defines = Defines & "#define GCC_APPLE 1\n#define GCC42 1\n"
-end
 if GCC45 or GCC46 or GCC47 % not 4.2 or 4.3
   m3gty = "m3gty45.h"
 end
+if GCC42
+  SourceDir = "../gcc-apple"
+end
+if GCC43
+  SourceDir = "../gcc" % The plain "gcc" directory is 4.3.
+end
 if GCC45
-  Defines = Defines & "#define GCC45 1\n"
   SourceDir = "../gcc-4.5"
 end
 if GCC46
-  Defines = Defines & "#define GCC46 1\n"
   SourceDir = "../gcc-4.6"
 end
 if GCC47
-  Defines = Defines & "#define GCC47 1\n"
   SourceDir = "../gcc-4.7"
+end
+if GCC42
+  Defines = Defines & "#define GCC_APPLE 1\n#define GCC42 1\n"
+end
+if GCC45 or GCC46 or GCC47
+  Defines = Defines & "#define GCC45 1\n"
+end
+if GCC46 or GCC47
+  Defines = Defines & "#define GCC46 1\n"
+end
+if GCC47
+  Defines = Defines & "#define GCC47 1\n"
 end
 if GCC42 or GCC45 or GCC46 or GCC47 % all but 4.3
   fs_mkdir(SourceDir & "/gcc/m3cg")
@@ -347,12 +358,11 @@ if GCC42 or GCC45 or GCC46 or GCC47 % all but 4.3
     write(a)
   end
   cp_if(b & ".temp", b)
-  if GCC47
-    foreach a in ["gmp", "mpfr", "mpc"]
-      %link_file("../gcc/" & a, SourceDir & "/" & a)
-      link_file("/src/" & a, SourceDir & "/" & a)
-    end
-  end
+end
+if GCC47
+  link_file("../gmp-4.3.2", SourceDir & "/gmp")
+  link_file("../mpfr-2.4.2", SourceDir & "/mpfr")
+  link_file("../mpc-0.8.2", SourceDir & "/mpc")
 end
 
 % figure out where we're going to build gcc
@@ -360,10 +370,10 @@ build_dir = "../" & BUILD_DIR
 
 if not Native build_dir = "../" & HOST & "-" & M3CC_TARGET end
 %if GCC42 build_dir = build_dir & "-gcc42" end
-%if GCC43 build_dir = build_dir & "-gcc43" end
-%if GCC45 build_dir = build_dir & "-gcc45" end
-%if GCC46 build_dir = build_dir & "-gcc46" end
-if GCC47 build_dir = build_dir & "-gcc47" end
+if GCC43 build_dir = build_dir & "-gcc43" end
+if GCC45 build_dir = build_dir & "-gcc45" end
+if GCC46 build_dir = build_dir & "-gcc46" end
+%if GCC47 build_dir = build_dir & "-gcc47" end
 Log = subst_chars(path() & "/" & build_dir & "/_m3.log", "\\", "/")
 
 fs_mkdir (build_dir)
@@ -568,9 +578,7 @@ M3CC_MAKE = M3CC_MAKE & " " & env
 
 if not defined ("no_config")
   if not FileExists (done)
-    m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure
-    % , " | tee -a " & Log
-    ])
+    m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure])
   end
 end
 
@@ -586,6 +594,7 @@ proc Sed (file0, find, replace) is
   end
 end
 
+
 %
 % Configure is for some reason unable to find Cygwin /usr/bin/libtool?
 %
@@ -599,35 +608,34 @@ if HostIsNT()
   end
 end
 
-M3CC_MAKE = M3CC_MAKE & " "
-M3CC_MAKE = M3CC_MAKE & " "
+if GCC47
+  % remove libiconv dependency
+  % after make configure-host, so as to not require patching gcc
+  foreach a in ["libcpp/config.h", "gcc/auto-host.h"]
+    Sed (a, "#define HAVE_ICONV 1", "#define HAVE_ICONV 0")
+  end
+  foreach a in ["libcpp", "gcc"]
+    Sed (a & "/Makefile", "LIBICONV = -liconv", "LIBICONV = ")
+  end
+
+  % remove dependency in system zlib which isn't really supposed to be there
+  % change -L../zlib -lz to ../lib/libz.a
+  % after make configure-host, so as to not require patching gcc
+  Sed ("gcc/Makefile", "ZLIB = -L\\.\\.\\/zlib -lz", "ZLIB = ..\\/zlib\\/libz.a")
+end
 
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-if GCC46
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " | tee -a " & Log])
-else
-if GCC45 or GCC47
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
-              & " all-libiberty"
-              % & " | tee -a " & Log
-              ])
-else
-if GCC42
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
-              & " all-libiberty"
-              % & " | tee -a " & Log
-              ])
-else
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE
-              & " all-build-libiberty all-libiberty"
-              % & " | tee -a " & Log
-              ])
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber"
+           % & " | tee -a " & Log
+          ])
+if GCC47
+  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-mpc"
+             % & " | tee -a " & Log
+             ])
 end
-end
-
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %
@@ -637,7 +645,6 @@ m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a"
 m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg"
           % & " | tee -a " & Log
           ])
-end
 
 if DoMipsTfile
   m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " mips-tfile"
