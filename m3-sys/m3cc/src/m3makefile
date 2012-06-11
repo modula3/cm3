@@ -601,10 +601,7 @@ end
 
 if HostIsNT()
   foreach dir in ["gcc", "libcpp"]
-    local file = build_dir & "/" & dir & "/Makefile"
-    if FileExists(file)
-      Sed(file, "@LIBTOOL@", "libtool")
-    end
+    Sed(build_dir & "/" & dir & "/Makefile", "@LIBTOOL@", "libtool")
   end
 end
 
@@ -614,8 +611,8 @@ if GCC47
   foreach a in ["libcpp/config.h", "gcc/auto-host.h"]
     Sed (a, "#define HAVE_ICONV 1", "#define HAVE_ICONV 0")
   end
-  foreach a in ["libcpp", "gcc"]
-    Sed (a & "/Makefile", "LIBICONV = -liconv", "LIBICONV = ")
+  foreach dir in ["libcpp", "gcc"]
+    Sed (build_dir & "/" & dir & "/Makefile", "LIBICONV = -liconv", "LIBICONV = ")
   end
 
   % remove dependency in system zlib which isn't really supposed to be there
