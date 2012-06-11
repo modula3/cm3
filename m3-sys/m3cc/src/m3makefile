@@ -618,8 +618,12 @@ if GCC47
   % remove dependency in system zlib which isn't really supposed to be there
   % change -L../zlib -lz to ../lib/libz.a
   % after make configure-host, so as to not require patching gcc
-  Sed ("gcc/Makefile", "ZLIB = -L\\.\\.\\/zlib -lz", "ZLIB = ..\\/zlib\\/libz.a")
+  Sed (build_dir & "/gcc/Makefile", "ZLIB = -L\\.\\.\\/zlib -lz", "ZLIB = ..\\/zlib\\/libz.a")
 end
+
+% remove CATALOGS = $(patsubst %,po/%,) that older GNU make don't like
+% after make configure-host, so as to not require patching gcc
+Sed (build_dir & "/gcc/Makefile", "^CATALOGS = ", "# CATALOGS = ")
 
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
