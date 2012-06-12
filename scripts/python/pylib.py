@@ -196,6 +196,9 @@ def isdir(a):
 def FileExists(a):
     return isfile(a)
 
+def DirectoryExists(a):
+    return isdir(a)
+
 #-----------------------------------------------------------------------------
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
@@ -1245,6 +1248,8 @@ def Boot():
 
     for q in P:
         dir = GetPackagePath(q)
+        if not DirectoryExists(os.path.join(Root, dir, Config)):
+            continue
         for a in os.listdir(os.path.join(Root, dir, Config)):
             ext_c = a.endswith(".c")
             ext_h = a.endswith(".h")
