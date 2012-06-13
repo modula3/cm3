@@ -609,7 +609,7 @@ if GCC47
   % remove libiconv dependency
   % after make configure-host, so as to not require patching gcc
   foreach a in ["libcpp/config.h", "gcc/auto-host.h"]
-    Sed (a, "#define HAVE_ICONV 1", "#define HAVE_ICONV 0")
+    Sed (build_dir & "/" & a, "#define HAVE_ICONV 1", "#define HAVE_ICONV 0")
   end
   foreach dir in ["libcpp", "gcc"]
     Sed (build_dir & "/" & dir & "/Makefile", "LIBICONV = -liconv", "LIBICONV = ")
