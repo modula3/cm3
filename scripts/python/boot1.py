@@ -15,4 +15,5 @@ from pylib import *
 # From there, the tree can be rebuilt normally from cm3cg, m3core and on up.
 #
 
+CopyConfigForDevelopment() or sys.exit(1)
 Boot();
