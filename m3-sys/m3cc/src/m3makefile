@@ -306,7 +306,7 @@ if not defined("GCC47")
 end
 GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone, iPad
 % GCC46 = (not GCC42)
-GCC47 = (not GCC42)
+% GCC47 = (not GCC42)
 GCC45 = not (GCC42          or GCC46 or GCC47)
 GCC43 = not (GCC42 or GCC45 or GCC46 or GCC47)
 local Defines = ""
@@ -371,9 +371,9 @@ build_dir = "../" & BUILD_DIR
 if not Native build_dir = "../" & HOST & "-" & M3CC_TARGET end
 %if GCC42 build_dir = build_dir & "-gcc42" end
 if GCC43 build_dir = build_dir & "-gcc43" end
-if GCC45 build_dir = build_dir & "-gcc45" end
+%if GCC45 build_dir = build_dir & "-gcc45" end
 if GCC46 build_dir = build_dir & "-gcc46" end
-%if GCC47 build_dir = build_dir & "-gcc47" end
+if GCC47 build_dir = build_dir & "-gcc47" end
 Log = subst_chars(path() & "/" & build_dir & "/_m3.log", "\\", "/")
 
 fs_mkdir (build_dir)
