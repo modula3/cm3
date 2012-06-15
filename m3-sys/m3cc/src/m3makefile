@@ -16,6 +16,8 @@ DefaultGccVersion = "45"
 readonly TargeDefaultGccVersion = {
   "ARM_DARWIN" : "42",
   "AMD64_OPENBSD" : "45",
+  "I386_DARWIN" : "47",
+  "AMD64_DARWIN" : "47",
 }
 
 include("platforms.quake")
