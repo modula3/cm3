@@ -6,7 +6,17 @@
 
 %
 % user can say cm3 -DM3CC_TARGET=FreeBSD4, for example.
+% -DM3CC_GCC_VERSION=47
 %
+
+% current default is gcc 4.5 for most platforms
+% Also available: 4.2 (apple), 4.3, 4.6, 4.7.
+DefaultGccVersion = "45"
+
+readonly TargeDefaultGccVersion = {
+  "ARM_DARWIN" : "42",
+  "AMD64_OPENBSD" : "45",
+}
 
 include("platforms.quake")
 
@@ -219,129 +229,50 @@ include ("../../m3cc/src/gnucc.common")
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
-% current default is gcc 4.5 for most platforms
-% Also available: 4.2 (apple), 4.3, 4.6, 4.7
+if defined("M3CC_GCC_VERSION")
+  GccVersion = M3CC_GCC_VERSION
+end
 
-if not defined("GCC46")
-  GCC46 = {
-    % "I386_DARWIN",
-    % "I386_OPENBSD",
-    % "I386_NETBSD",
-    % "I386_LINUX",
-    % "I386_CYGWIN",
-    % "I386_MINGWIN",
-    % "I386_FREEBSD",
-    % "I386_SOLARIS",
-    % "I386_INTERIX",
-    % "AMD64_DARWIN",
-    % "AMD64_OPENBSD",
-    % "AMD64_NETBSD",
-    % "AMD64_LINUX",
-    % "AMD64_CYGWIN",
-    % "AMD64_FREEBSD",
-    % "AMD64_SOLARIS",
-    % "AMD64_INTERIX",
-    % "AMD64_MINGWIN",
-    % "SPARC32_SOLARIS",
-    % "SPARC32_LINUX",
-    % "SPARC64_OPENBSD",
-    % "SPARC64_SOLARIS",
-    % "SPARC64_LINUX",
-    % "ALPHA64_LINUX",
-    % "ALPHA32_VMS",
-    % "ALPHA64_VMS",
-    % "IA64_VMS",
-    % "IA64_LINUX",
-    % "IA64_FREEBSD",
-    % "IA64_HPUX",
-    % "PA32_LINUX",
-    % "PA32_HPUX",
-    % "PA64_HPUX",
-    % "PA64_LINUX",
-    % "LINUXLIBC6",
-    % "FreeBSD4",
-    % "NT386GNU",
-    } contains M3CC_TARGET
+% translate old/simple command line option to new enum/string
+if defined("GCC42") GccVersion = "42" end
+if defined("GCC43") GccVersion = "43" end
+if defined("GCC44") GccVersion = "44" end
+if defined("GCC45") GccVersion = "45" end
+if defined("GCC46") GccVersion = "46" end
+if defined("GCC47") GccVersion = "47" end
+
+if not defined("GccVersion")
+  if TargeDefaultGccVersion contains M3CC_TARGET
+    DefaultGccVersion = TargeDefaultGccVersion{M3CC_TARGET}
+  end
+  GccVersion = DefaultGccVersion
 end
-if not defined("GCC47")
-  GCC47 = {
-    % "I386_DARWIN",
-    % "I386_OPENBSD",
-    % "I386_NETBSD",
-    % "I386_LINUX",
-    % "I386_CYGWIN",
-    % "I386_MINGWIN",
-    % "I386_FREEBSD",
-    % "I386_SOLARIS",
-    % "I386_INTERIX",
-    % "AMD64_DARWIN",
-    % "AMD64_OPENBSD",
-    % "AMD64_NETBSD",
-    % "AMD64_LINUX",
-    % "AMD64_CYGWIN",
-    % "AMD64_FREEBSD",
-    % "AMD64_SOLARIS",
-    % "AMD64_INTERIX",
-    % "AMD64_MINGWIN",
-    % "SPARC32_SOLARIS",
-    % "SPARC32_LINUX",
-    % "SPARC64_OPENBSD",
-    % "SPARC64_SOLARIS",
-    % "SPARC64_LINUX",
-    % "ALPHA64_LINUX",
-    % "ALPHA32_VMS",
-    % "ALPHA64_VMS",
-    % "IA64_VMS",
-    % "IA64_LINUX",
-    % "IA64_FREEBSD",
-    % "IA64_HPUX",
-    % "PA32_LINUX",
-    % "PA32_HPUX",
-    % "PA64_HPUX",
-    % "PA64_LINUX",
-    % "LINUXLIBC6",
-    % "FreeBSD4",
-    % "NT386GNU",
-    } contains M3CC_TARGET
-end
-GCC42 = equal(M3CC_TARGET, "ARM_DARWIN") % iPhone, iPad
-% GCC46 = (not GCC42)
-% GCC47 = (not GCC42)
-GCC45 = not (GCC42          or GCC46 or GCC47)
-GCC43 = not (GCC42 or GCC45 or GCC46 or GCC47)
-local Defines = ""
-local m3gty = "m3gty43.h"
-if GCC45 or GCC46 or GCC47 % not 4.2 or 4.3
-  m3gty = "m3gty45.h"
-end
-if GCC42
-  SourceDir = "../gcc-apple"
-end
-if GCC43
-  SourceDir = "../gcc" % The plain "gcc" directory is 4.3.
-end
-if GCC45
-  SourceDir = "../gcc-4.5"
-end
-if GCC46
-  SourceDir = "../gcc-4.6"
-end
-if GCC47
-  SourceDir = "../gcc-4.7"
-end
-if GCC42
-  Defines = Defines & "#define GCC_APPLE 1\n#define GCC42 1\n"
-end
-if GCC45 or GCC46 or GCC47
-  Defines = Defines & "#define GCC45 1\n"
-end
-if GCC46 or GCC47
-  Defines = Defines & "#define GCC46 1\n"
-end
-if GCC47
-  Defines = Defines & "#define GCC47 1\n"
-end
-if GCC42 or GCC45 or GCC46 or GCC47 % all but 4.3
+
+% translate enum/string to simple booleans
+GCC42 = equal(GccVersion, "42")
+GCC43 = equal(GccVersion, "43")
+GCC44 = equal(GccVersion, "44")
+GCC45 = equal(GccVersion, "45")
+GCC46 = equal(GccVersion, "46")
+GCC47 = equal(GccVersion, "47")
+
+readonly GccBackendVersionData = {
+  % 0: SourceDir we symlink out of gcc/gcc/m3cg to SourceDir/gcc/m3cg
+  % 1: m3gty garbage collection syntax changed, need two versions
+  % 2: #defines to guide gcc/gcc/m3cg/parse.c
+  "42": [ "../gcc-apple", "m3gty43.h", "#define GCC_APPLE 1\n#define GCC42 1\n" ],
+  "43": [ "../gcc", "m3gty43.h", "" ],
+  % "44" skipped
+  "45": [ "../gcc-4.5", "m3gty45.h", "#define GCC45 1\n" ],
+  "46": [ "../gcc-4.6", "m3gty45.h", "#define GCC45 1\n#define GCC46 1\n" ],
+  "47": [ "../gcc-4.7", "m3gty45.h", "#define GCC45 1\n#define GCC46 1\n#define GCC47 1\n" ],
+}
+
+local SourceDir = GccBackendVersionData{GccVersion}[0]
+
+if not GCC43
+  local m3gty = GccBackendVersionData{GccVersion}[1]
+  local Defines = GccBackendVersionData{GccVersion}[2]
   fs_mkdir(SourceDir & "/gcc/m3cg")
   local files = ["config-lang.in", "m3-def.h", "m3-parse.h", "lang-options.h",
                  "lang.opt", "m3cg.h", "Make-lang.in"]
@@ -369,11 +300,10 @@ end
 build_dir = "../" & BUILD_DIR
 
 if not Native build_dir = "../" & HOST & "-" & M3CC_TARGET end
-%if GCC42 build_dir = build_dir & "-gcc42" end
-if GCC43 build_dir = build_dir & "-gcc43" end
-%if GCC45 build_dir = build_dir & "-gcc45" end
-if GCC46 build_dir = build_dir & "-gcc46" end
-if GCC47 build_dir = build_dir & "-gcc47" end
+
+if not equal(GccVersion, DefaultGccVersion)
+  build_dir = build_dir & "-gcc" & GccVersion
+end
 Log = subst_chars(path() & "/" & build_dir & "/_m3.log", "\\", "/")
 
 fs_mkdir (build_dir)
@@ -525,12 +455,12 @@ Configure = Configure & " -enable-languages=m3cg"
 %if not {"FreeBSD4","I386_FREEBSD","PPC_DARWIN"} contains HOST
 %  Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree"
 %end
-if {"I386_DARWIN","AMD64_DARWIN","AMD64_LINUX","LINUXLIBC6","I386_LINUX","I386_OPENBSD"} contains HOST
-if GCC42
-  % Configure = Configure & " -enable-checking=assert,fold,misc,rtl,rtlflag,runtime,tree"
-else
-  % Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree,types"
-end end
+%if {"I386_DARWIN","AMD64_DARWIN","AMD64_LINUX","LINUXLIBC6","I386_LINUX","I386_OPENBSD"} contains HOST
+%if GCC42
+%   Configure = Configure & " -enable-checking=assert,fold,misc,rtl,rtlflag,runtime,tree"
+%else
+%   Configure = Configure & " -enable-checking=assert,df,fold,misc,rtl,rtlflag,runtime,tree,types"
+%end end
 % These are compatible with just building m3cg, but user might
 % build gcc/cc1/libgcc here.
 Configure = Configure & " -disable-fixincludes"
@@ -582,10 +512,6 @@ if not defined ("no_config")
   end
 end
 
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host"
-  % & " | tee -a " & Log
-  ])
-
 proc Sed (file0, find, replace) is
   if FileExists (file0)
     local file1 = file0 & ".1"
@@ -594,6 +520,22 @@ proc Sed (file0, find, replace) is
   end
 end
 
+if GCC47
+  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-gmp"
+    % & " | tee -a " & Log
+    ])
+    
+  % Do not build unneeded directories, esp. doc that writes back
+  % into source tree.
+
+  Sed (build_dir & "/gmp/Makefile",
+      "SUBDIRS = tests mpn mpz mpq mpf printf scanf cxx mpbsd demos tune doc",
+      "SUBDIRS = mpn mpz")
+end
+
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host"
+  % & " | tee -a " & Log
+  ])
 
 %
 % Configure is for some reason unable to find Cygwin /usr/bin/libtool?
