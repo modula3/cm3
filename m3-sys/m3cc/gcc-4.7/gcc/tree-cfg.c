@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Control flow functions for trees.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
    2010, 2011, 2012  Free Software Foundation, Inc.
@@ -3195,26 +3197,33 @@ verify_gimple_call (gimple stmt)
   if (gimple_call_chain (stmt)
       && !is_gimple_val (gimple_call_chain (stmt)))
     {
+#if 0 /* Modula-3 hack */
       error ("invalid static chain in gimple call");
       debug_generic_stmt (gimple_call_chain (stmt));
       return true;
+#endif
     }
 
   /* If there is a static chain argument, this should not be an indirect
      call, and the decl should have DECL_STATIC_CHAIN set.  */
   if (gimple_call_chain (stmt))
     {
-      if (!gimple_call_fndecl (stmt))
-	{
+#if 0 /* Modula-3 hack */
 	  error ("static chain in indirect gimple call");
 	  return true;
-	}
+#else
+	  return false;
+#endif
       fn = TREE_OPERAND (fn, 0);
 
       if (!DECL_STATIC_CHAIN (fn))
 	{
-	  error ("static chain with function that doesn%'t use one");
+#if 0 /* Modula-3 hack */
+	  error ("static chain with function that doesn't use one");
 	  return true;
+#else
+	  return false;
+#endif
 	}
     }
 

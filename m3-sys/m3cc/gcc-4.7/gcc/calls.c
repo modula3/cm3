@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert function calls to rtl insns, for GNU C compiler.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
@@ -190,7 +192,7 @@ prepare_call_address (tree fndecl, rtx funexp, rtx static_chain_value,
     {
       rtx chain;
 
-      gcc_assert (fndecl);
+      /*gcc_assert (fndecl); removed for Modula-3 */
       chain = targetm.calls.static_chain (fndecl, false);
       static_chain_value = convert_memory_address (Pmode, static_chain_value);
 

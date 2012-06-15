@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines used for code generation on IA-32.
    Copyright (C) 1988, 1992, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -24164,27 +24166,19 @@ ix86_minimum_alignment (tree exp, enum machine_mode mode,
 
 static rtx
 ix86_static_chain (const_tree fndecl, bool incoming_p)
+/* Modula-3: modified */
 {
-  unsigned regno;
+  /* We always use R10 in 64-bit mode.  */
+  /* By default in 32-bit mode we use ECX to pass the static chain.  */  
+  unsigned regno = TARGET_64BIT ? R10_REG : CX_REG;
 
-  if (!DECL_STATIC_CHAIN (fndecl))
+  if (fndecl && !DECL_STATIC_CHAIN (fndecl))
     return NULL;
 
-  if (TARGET_64BIT)
+  if (!TARGET_64BIT && fndecl)
     {
-      /* We always use R10 in 64-bit mode.  */
-      regno = R10_REG;
-    }
-  else
-    {
-      tree fntype;
-      unsigned int ccvt;
-
-      /* By default in 32-bit mode we use ECX to pass the static chain.  */
-      regno = CX_REG;
-
-      fntype = TREE_TYPE (fndecl);
-      ccvt = ix86_get_callcvt (fntype);
+      tree fntype = TREE_TYPE (fndecl);
+      unsigned ccvt = ix86_get_callcvt (fntype);
       if ((ccvt & (IX86_CALLCVT_FASTCALL | IX86_CALLCVT_THISCALL)) != 0)
 	{
 	  /* Fastcall functions use ecx/edx for arguments, which leaves

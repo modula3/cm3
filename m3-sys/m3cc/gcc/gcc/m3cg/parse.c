@@ -31,9 +31,10 @@ using namespace std;
 #include <errno.h>
 #include <setjmp.h>
 #include <limits.h>
-#if GCC42
-extern "C" {
+#if GCC47
+#include <gmp.h>
 #endif
+extern "C" {
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -69,11 +70,25 @@ extern "C" {
 #include "options.h"
 #include "debug.h"
 #include "convert.h"
-#if GCC42
 } /* extern "C" */
-#endif
 #include "m3gty43.h"
 #include "m3-parse.h"
+
+#if !defined(GCC47) || (defined(GCC47) && !GCC47)
+#define GCC47 0
+#define BUILT_IN_SYNC_SYNCHRONIZE               BUILT_IN_SYNCHRONIZE
+#define BUILT_IN_SYNC_LOCK_TEST_AND_SET_N       BUILT_IN_LOCK_TEST_AND_SET_N
+#define BUILT_IN_SYNC_FETCH_AND_ADD_N           BUILT_IN_FETCH_AND_ADD_N
+#define BUILT_IN_SYNC_FETCH_AND_SUB_N           BUILT_IN_FETCH_AND_SUB_N
+#define BUILT_IN_SYNC_FETCH_AND_OR_N            BUILT_IN_FETCH_AND_OR_N
+#define BUILT_IN_SYNC_FETCH_AND_AND_N           BUILT_IN_FETCH_AND_AND_N
+#define BUILT_IN_SYNC_FETCH_AND_XOR_N           BUILT_IN_FETCH_AND_XOR_N
+#define BUILT_IN_SYNC_BOOL_COMPARE_AND_SWAP_N   BUILT_IN_BOOL_COMPARE_AND_SWAP_N
+#define cgraph_get_create_node                  cgraph_node
+typedef int global_bindings_p_return_type;
+#else
+typedef bool global_bindings_p_return_type;
+#endif
 
 typedef char* PSTR;
 typedef const char* PCSTR;
@@ -140,7 +155,8 @@ builtin_function (PCSTR name, tree type,
 		  tree attrs);
 
 static tree getdecls (void);
-static int global_bindings_p (void);
+static global_bindings_p_return_type
+global_bindings_p (void);
 #if !GCC45
 static void insert_block (tree block);
 #endif
@@ -202,6 +218,25 @@ static bool m3_post_options (PCSTR* pfilename);
 static bool m3_init (void);
 
 tree convert (tree type, tree expr);
+
+#if !GCC47 /* copied from gcc 4.7 */
+tree
+build_case_label (tree low_value, tree high_value, tree label_decl)
+/* Create a CASE_LABEL_EXPR tree node and return it.  */
+{
+  tree t = make_node (CASE_LABEL_EXPR);
+
+  TREE_TYPE (t) = void_type_node;
+  SET_EXPR_LOCATION (t, DECL_SOURCE_LOCATION (label_decl));
+
+  CASE_LOW (t) = low_value;
+  CASE_HIGH (t) = high_value;
+  CASE_LABEL (t) = label_decl;
+  /*CASE_CHAIN (t) = NULL_TREE;*/
+
+  return t;
+}
+#endif
 
 /*======================================================= OPTION HANDLING ===*/
 
@@ -938,11 +973,15 @@ static GTY (()) tree bytes_per_integer_tree;
 #define v_one integer_one_node
 #define v_null null_pointer_node
 
+#if !GCC47
+#define builtin_decl_explicit(a) (built_in_decls[a])
+#endif
+
 /* Procedures. */
-#define memcpy_proc built_in_decls[BUILT_IN_MEMCPY]
-#define memmove_proc built_in_decls[BUILT_IN_MEMMOVE]
-#define memset_proc built_in_decls[BUILT_IN_MEMSET]
-#define memcmp_proc built_in_decls[BUILT_IN_MEMCMP]
+#define memcpy_proc builtin_decl_explicit (BUILT_IN_MEMCPY)
+#define memmove_proc builtin_decl_explicit (BUILT_IN_MEMMOVE)
+#define memset_proc builtin_decl_explicit (BUILT_IN_MEMSET)
+#define memcmp_proc builtin_decl_explicit (BUILT_IN_MEMCMP)
 static GTY (()) tree set_union_proc;
 static GTY (()) tree set_diff_proc;
 static GTY (()) tree set_inter_proc;
@@ -1589,7 +1628,7 @@ m3_signed_or_unsigned_type (int unsignedp, tree type)
     return m3_type_for_size (TYPE_PRECISION (type), unsignedp);
 }
 
-static int
+static global_bindings_p_return_type
 global_bindings_p (void)
 /* Return non-zero if we are currently in the global binding level.  */
 {
@@ -1765,6 +1804,7 @@ m3_write_globals (void)
     write_global_declarations ();
 }
 
+#if !GCC47
 static void
 sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
 {
@@ -1772,6 +1812,7 @@ sync_builtin (enum built_in_function fncode, tree type, PCSTR name)
   TREE_NOTHROW (decl) = true;
   built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
+#endif
 
 #if 0 /* future? */
 
@@ -1833,11 +1874,11 @@ m3_init_decl_processing (void)
 
   current_function_decl = NULL;
 
-#if GCC46
+#if GCC46 && !GCC47
   build_common_tree_nodes (false /* unsigned char */);
 #else
   build_common_tree_nodes (false /* unsigned char */,
-                           false /* unsigned size_type */);
+                           false /* unsigned size_type or short_double */);
 #endif
 
   if (BITS_PER_INTEGER == 32)
@@ -1868,8 +1909,10 @@ m3_init_decl_processing (void)
 
   /* Set the type used for sizes and build the remaining common nodes. */
   size_type_node = t_word;
+#if !GCC47
   set_sizetype (size_type_node);
   build_common_tree_nodes_2 (0);
+#endif
   void_list_node = build_tree_list (NULL_TREE, void_type_node);
 
   /* add builtin uids */
@@ -1893,6 +1936,7 @@ m3_init_decl_processing (void)
 
   targetm.init_builtins ();
 
+#if !GCC47
   t = t_int_8;
   t = build_function_type_list (t, t_addr, t, NULL_TREE);
   sync_builtin (BUILT_IN_FETCH_AND_ADD_1,  t, "__sync_fetch_and_add_1");
@@ -2040,6 +2084,7 @@ m3_init_decl_processing (void)
   sync_builtin (BUILT_IN_LOCK_RELEASE_8,
                 build_function_type_list (t, t_addr, NULL_TREE),
                 "__sync_lock_release_8");
+#endif
 
   t = build_function_type_list (t_void, NULL_TREE);
   set_union_proc  = builtin_function ("set_union", t, ezero, NOT_BUILT_IN, 0, 0);
@@ -3098,7 +3143,7 @@ static tree
 m3_convert_function_to_builtin (tree p)
 {
   if (DECL_NAME (p) == m3_alloca)
-    p = built_in_decls[BUILT_IN_ALLOCA];
+    p = builtin_decl_explicit (BUILT_IN_ALLOCA);
   return p;
 }
 
@@ -3554,7 +3599,7 @@ m3_gimplify_function (tree fndecl)
   /* Convert all nested functions to GIMPLE now.  We do things in this order
      so that items like VLA sizes are expanded properly in the context of the
      correct function.  */
-  struct cgraph_node* node = cgraph_node (fndecl);
+  struct cgraph_node* node = cgraph_get_create_node (fndecl);
   cgraph_mark_needed_node (node);    /* keep all functions */
   for (node = node->nested; node; node = node->next_nested)
   {
@@ -4697,7 +4742,7 @@ M3CG_HANDLER (END_PROCEDURE)
   if (current_block)
   { /* Register this function with cgraph just far enough to get it
        added to our parent's nested function list.  */
-    struct cgraph_node* node = cgraph_node (p);
+    struct cgraph_node* node = cgraph_get_create_node (p);
     cgraph_mark_needed_node (node);    /* keep all functions */
   }
   else
@@ -4851,8 +4896,7 @@ M3CG_HANDLER (CASE_JUMP)
 #else
     tree case_label = create_artificial_label ();
 #endif
-    add_stmt (build3 (CASE_LABEL_EXPR, t_void, build_int_cst (t_int, i),
-                      NULL_TREE, case_label));
+    add_stmt (build_case_label(build_int_cst (t_int, i), NULL_TREE, case_label));
     add_stmt (build1 (GOTO_EXPR, t_void, target_label));
   }
   tree body = current_stmts;
@@ -5958,8 +6002,8 @@ M3CG_HANDLER (LOAD_ORDERED)
 M3CG_HANDLER (EXCHANGE)
 {
   INT64 size = { 0 };
-  enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
-  /* SYNCH_LOCK_TEST_AND_SET is an acquire barrier */
+  enum built_in_function fncode = BUILT_IN_SYNC_LOCK_TEST_AND_SET_N;
+  /* SYNC_LOCK_TEST_AND_SET is an acquire barrier */
 
   if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
     goto incompatible;
@@ -5971,14 +6015,14 @@ M3CG_HANDLER (EXCHANGE)
   {
     /* is this enough to make it Sequential or just AcquireRelease */
     m3_start_call ();
-    m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
+    m3_call_direct (builtin_decl_explicit (BUILT_IN_SYNC_SYNCHRONIZE), t_void);
   }
   m3_start_call ();
   m3_pop_param (type2);
   m3_pop_param (t_addr);
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], type2);
+  m3_call_direct (builtin_decl_explicit ((enum built_in_function)(fncode + exact_log2 (size) + 1)), type2);
   return;
 
 incompatible:
@@ -5989,7 +6033,7 @@ M3CG_HANDLER (COMPARE_EXCHANGE)
 {
   tree v = declare_temp (type2);
   INT64 size = { 0 };
-  enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
+  enum built_in_function fncode = BUILT_IN_SYNC_BOOL_COMPARE_AND_SWAP_N;
 
   if (!INTEGRAL_TYPE_P (type1) && !POINTER_TYPE_P (type1))
     goto incompatible;
@@ -6010,7 +6054,7 @@ M3CG_HANDLER (COMPARE_EXCHANGE)
   m3_pop_param (t_addr);
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], return_type);
+  m3_call_direct (builtin_decl_explicit ((enum built_in_function)(fncode + exact_log2 (size) + 1)), return_type);
 
   EXPR_PUSH (v);
 
@@ -6023,7 +6067,7 @@ incompatible:
 M3CG_HANDLER (FENCE)
 {
   m3_start_call ();
-  m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
+  m3_call_direct (builtin_decl_explicit (BUILT_IN_SYNC_SYNCHRONIZE), t_void);
 }
 
 static void
@@ -6042,18 +6086,18 @@ m3cg_fetch_and_op (tree type1, tree type2, enum built_in_function fncode)
   m3_pop_param (t_addr);
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], type2);
+  m3_call_direct (builtin_decl_explicit ((enum built_in_function)(fncode + exact_log2 (size) + 1)), type2);
   return;
 
 incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 
-M3CG_HANDLER (FETCH_AND_ADD) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_ADD_N); }
-M3CG_HANDLER (FETCH_AND_SUB) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_SUB_N); }
-M3CG_HANDLER (FETCH_AND_OR) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_OR_N); }
-M3CG_HANDLER (FETCH_AND_AND) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_AND_N); }
-M3CG_HANDLER (FETCH_AND_XOR) { m3cg_fetch_and_op (type1, type2, BUILT_IN_FETCH_AND_XOR_N); }
+M3CG_HANDLER (FETCH_AND_ADD) { m3cg_fetch_and_op (type1, type2, BUILT_IN_SYNC_FETCH_AND_ADD_N); }
+M3CG_HANDLER (FETCH_AND_SUB) { m3cg_fetch_and_op (type1, type2, BUILT_IN_SYNC_FETCH_AND_SUB_N); }
+M3CG_HANDLER (FETCH_AND_OR) { m3cg_fetch_and_op (type1, type2, BUILT_IN_SYNC_FETCH_AND_OR_N); }
+M3CG_HANDLER (FETCH_AND_AND) { m3cg_fetch_and_op (type1, type2, BUILT_IN_SYNC_FETCH_AND_AND_N); }
+M3CG_HANDLER (FETCH_AND_XOR) { m3cg_fetch_and_op (type1, type2, BUILT_IN_SYNC_FETCH_AND_XOR_N); }
 
 #if 0
 M3CG_HANDLER (LOCK_TEST_AND_SET)
@@ -6072,7 +6116,7 @@ M3CG_HANDLER (LOCK_TEST_AND_SET)
   m3_pop_param (t_addr);
   CALL_TOP_ARG () = nreverse (CALL_TOP_ARG ());
   CALL_TOP_TYPE () = nreverse (CALL_TOP_TYPE ());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], type);
+  m3_call_direct (builtin_decl_explicit ((enum built_in_function)(fncode + exact_log2 (size) + 1)), type);
   return;
 
 incompatible:
@@ -6092,7 +6136,7 @@ M3CG_HANDLER (LOCK_RELEASE)
 
   m3_start_call ();
   m3_pop_param (t_addr);
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t_void);
+  m3_call_direct (builtin_decl_explicit ((enum built_in_function)(fncode + exact_log2 (size) + 1)), t_void);
   return;
 
 incompatible:
@@ -6294,25 +6338,24 @@ m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
 bool
 m3_post_options (PCSTR* /*pfilename*/)
 {
-  /* These optimizations break our exception handling? */
-  flag_reorder_blocks = false;
-  flag_reorder_blocks_and_partition = false;
-
-  flag_strict_aliasing = false;
-  flag_strict_overflow = false;
-
-  flag_exceptions = true; /* ? */
-
-#if !GCC45 /* needs retesting */
-  flag_tree_store_ccp = false;
-  flag_tree_salias = false;
+#if GCC47
+  flag_tree_sra = false;                        /* bug */
 #endif
-
+  flag_reorder_blocks = false;                  /* breaks our exception handling? */
+  flag_reorder_blocks_and_partition = false;    /* breaks our exception handling? */
+  flag_strict_aliasing = false;                 /* ? */
+  flag_strict_overflow = false;                 /* ? */
+  flag_exceptions = true;                       /* ? */
+#if !GCC45
+  flag_tree_store_ccp = false;                  /* needs retesting */
+  flag_tree_salias = false;                     /* needs retesting */
+#endif
 #if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
-
-  flag_tree_forwprop = false; /* bug */
+#if !GCC47
+  flag_tree_forwprop = false;                   /* bug */
+#endif
 #endif
 
   return false;
