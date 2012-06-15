@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default target hook functions.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -785,8 +787,13 @@ default_internal_arg_pointer (void)
 rtx
 default_static_chain (const_tree fndecl, bool incoming_p)
 {
+#if 0
   if (!DECL_STATIC_CHAIN (fndecl))
     return NULL;
+#else /* For Modula-3 July 2010 */
+  if (fndecl && !DECL_STATIC_CHAIN (fndecl))
+    return NULL;
+#endif
 
   if (incoming_p)
     {

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree lowering pass.  This pass converts the GENERIC functions-as-trees
    tree representation into the GIMPLE form.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
@@ -6906,7 +6908,11 @@ gimplify_expr (tree *expr_p, gimple_seq *pre_p, gimple_seq *post_p,
 	      ret = GS_OK;
 	    }
 	  break;
-
+#if 1 /* Modula-3: This gets converted fairly early, in tree-nested.c. */
+	case STATIC_CHAIN_EXPR:
+	  ret = GS_ALL_DONE;
+	  break;
+#endif
 	case CALL_EXPR:
 	  ret = gimplify_call_expr (expr_p, pre_p, fallback != fb_none);
 

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Gimple IR support functions.
 
    Copyright 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
@@ -2624,6 +2626,7 @@ get_gimple_rhs_num_ops (enum tree_code code)
       || (SYM) == ASSERT_EXPR						    \
       || (SYM) == ADDR_EXPR						    \
       || (SYM) == WITH_SIZE_EXPR					    \
+      || (SYM) == STATIC_CHAIN_EXPR					    \
       || (SYM) == SSA_NAME) ? GIMPLE_SINGLE_RHS				    \
    : GIMPLE_INVALID_RHS),
 #define END_OF_BASE_TREE_CODES (unsigned char) GIMPLE_INVALID_RHS,

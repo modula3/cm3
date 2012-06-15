@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Pretty formatting of GENERIC trees in C syntax.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
    2011  Free Software Foundation, Inc.
@@ -1561,6 +1563,14 @@ dump_generic_node (pretty_printer *buffer, tree node, int spc, int flags,
       if (CALL_EXPR_TAILCALL (node))
 	pp_string (buffer, " [tail call]");
       break;
+
+#if 1 /* Modula-3 */
+    case STATIC_CHAIN_EXPR:
+      pp_string (buffer, "<<static chain of ");
+      dump_generic_node (buffer, TREE_OPERAND (node, 0), spc, flags, false);
+      pp_string (buffer, ">>");
+      break;
+#endif
 
     case WITH_CLEANUP_EXPR:
       NIY;

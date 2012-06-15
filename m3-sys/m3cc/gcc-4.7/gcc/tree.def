@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* This file contains the definitions and documentation for the
    tree codes used in GCC.
    Copyright (C) 1987, 1988, 1993, 1995, 1997, 1998, 2000, 2001, 2004, 2005,
@@ -541,6 +543,12 @@ DEFTREECODE (BIND_EXPR, "bind_expr", tcc_expression, 3)
    is static chain argument, or NULL.  The remaining operands are the
    arguments to the call.  */
 DEFTREECODE (CALL_EXPR, "call_expr", tcc_vl_exp, 3)
+
+#if 1 /* Modula-3 */
+/* Static chain.  Operand 0 is the FUNCTION_DECL for which the static chain is
+   to be computed. */
+DEFTREECODE (STATIC_CHAIN_EXPR, "static_chain_expr", tcc_expression, 1)
+#endif
 
 /* Specify a value to compute along with its corresponding cleanup.
    Operand 0 is the cleanup expression.

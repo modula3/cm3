@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Fold a constant sub-tree into a single node for C-compiler
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
@@ -12043,6 +12045,7 @@ fold_binary_loc (location_t loc,
 	 At one time others generated faster code, it's not clear if they do
 	 after the last round to changes to the DIV code in expmed.c.  */
       if ((code == CEIL_DIV_EXPR || code == FLOOR_DIV_EXPR)
+	  && arg0 == op0 && arg1 == op1 /* Modula-3 needed? */
 	  && multiple_of_p (type, arg0, arg1))
 	return fold_build2_loc (loc, EXACT_DIV_EXPR, type, arg0, arg1);
 
@@ -13970,13 +13973,15 @@ fold_ternary_loc (location_t loc, enum tree_code code, tree type,
 	      return build_zero_cst (type);
 	    }
 	}
-
       /* A bit-field-ref that referenced the full argument can be stripped.  */
       if (INTEGRAL_TYPE_P (TREE_TYPE (arg0))
 	  && TYPE_PRECISION (TREE_TYPE (arg0)) == tree_low_cst (arg1, 1)
+#if 1 /* Modula-3 */
+	  && INTEGRAL_TYPE_P (type)
+	  && TYPE_UNSIGNED (type) == TYPE_UNSIGNED (TREE_TYPE (arg0))
+#endif
 	  && integer_zerop (op2))
 	return fold_convert_loc (loc, type, arg0);
-
       return NULL_TREE;
 
     case FMA_EXPR:
