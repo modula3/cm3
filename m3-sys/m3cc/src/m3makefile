@@ -18,6 +18,7 @@ readonly TargeDefaultGccVersion = {
   "AMD64_OPENBSD" : "45",
   "I386_DARWIN" : "47",
   "AMD64_DARWIN" : "47",
+  "I386_SOLARIS" : "47",
 }
 
 include("platforms.quake")
