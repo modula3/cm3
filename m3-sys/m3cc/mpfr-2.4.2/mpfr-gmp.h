@@ -175,9 +175,9 @@ __MPFR_DECLSPEC void mpfr_assert_fail _MPFR_PROTO((const char *, int,
 #define XDEBUG
 
 /* For longlong.h */
-typedef unsigned char UQItype;
-typedef          long SItype;
-typedef unsigned long USItype;
+typedef unsigned char UQItype; /* 8 bits */
+typedef int SItype; /* 32 bits */
+typedef unsigned USItype; /* 32 bits */
 #if defined(_MSC_VER) || defined(__DECC)
 typedef __int64 DItype; /* 64 bits */
 typedef unsigned __int64 UDItype; /* 64 bits */
