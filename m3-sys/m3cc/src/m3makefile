@@ -16,6 +16,7 @@ DefaultGccVersion = "45"
 readonly TargeDefaultGccVersion = {
   "ARM_DARWIN" : "42",
   "AMD64_OPENBSD" : "45",
+  "AMD64_LINUX" : "47",
   "I386_DARWIN" : "47",
   "AMD64_DARWIN" : "47",
   "I386_SOLARIS" : "47",
