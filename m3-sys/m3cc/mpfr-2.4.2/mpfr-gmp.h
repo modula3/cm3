@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Interface to replace gmp-impl.h
 
 Copyright 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
@@ -173,24 +175,17 @@ __MPFR_DECLSPEC void mpfr_assert_fail _MPFR_PROTO((const char *, int,
 #define XDEBUG
 
 /* For longlong.h */
-#ifdef HAVE_ATTRIBUTE_MODE
-typedef unsigned int UQItype    __attribute__ ((mode (QI)));
-typedef          int SItype     __attribute__ ((mode (SI)));
-typedef unsigned int USItype    __attribute__ ((mode (SI)));
-typedef          int DItype     __attribute__ ((mode (DI)));
-typedef unsigned int UDItype    __attribute__ ((mode (DI)));
-#else
 typedef unsigned char UQItype;
 typedef          long SItype;
 typedef unsigned long USItype;
-#ifdef HAVE_LONG_LONG
-typedef long long int DItype;
-typedef unsigned long long int UDItype;
-#else /* Assume `long' gives us a wide enough type.  Needed for hppa2.0w.  */
-typedef long int DItype;
-typedef unsigned long int UDItype;
+#if defined(_MSC_VER) || defined(__DECC)
+typedef __int64 DItype; /* 64 bits */
+typedef unsigned __int64 UDItype; /* 64 bits */
+#else
+typedef long long DItype; /* 64 bits */
+typedef unsigned long long UDItype; /* 64 bits */
 #endif
-#endif
+
 typedef mp_limb_t UWtype;
 typedef unsigned int UHWtype;
 #define W_TYPE_SIZE BITS_PER_MP_LIMB
