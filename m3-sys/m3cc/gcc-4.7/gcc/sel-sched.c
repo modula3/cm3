@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.  Selective scheduler and pipeliner.
    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -579,9 +581,9 @@ static void debug_state (state_t);
 static void
 advance_one_cycle (fence_t fence)
 {
-  unsigned i;
-  int cycle;
-  rtx insn;
+  unsigned i = { 0 };
+  int cycle = { 0 };
+  rtx insn = { 0 };
 
   advance_state (FENCE_STATE (fence));
   cycle = ++FENCE_CYCLE (fence);
@@ -613,7 +615,7 @@ static bool
 in_fallthru_bb_p (rtx insn, rtx succ)
 {
   basic_block bb = BLOCK_FOR_INSN (insn);
-  edge e;
+  edge e = { 0 };
 
   if (bb == BLOCK_FOR_INSN (succ))
     return true;
@@ -640,11 +642,11 @@ extract_new_fences_from (flist_t old_fences, flist_tail_t new_fences,
 {
   bool was_here_p = false;
   insn_t insn = NULL_RTX;
-  insn_t succ;
-  succ_iterator si;
-  ilist_iterator ii;
+  insn_t succ = { 0 };
+  succ_iterator si = { 0 };
+  ilist_iterator ii = { 0 };
   fence_t fence = FLIST_FENCE (old_fences);
-  basic_block bb;
+  basic_block bb = { 0 };
 
   /* Get the only element of FENCE_BNDS (fence).  */
   FOR_EACH_INSN (insn, ii, FENCE_BNDS (fence))
@@ -743,11 +745,12 @@ can_substitute_through_p (insn_t insn, ds_t ds)
 static bool
 substitute_reg_in_expr (expr_t expr, insn_t insn, bool undo)
 {
-  rtx *where;
-  bool new_insn_valid;
+  rtx *where = { 0 };
+  bool new_insn_valid = { 0 };
   vinsn_t *vi = &EXPR_VINSN (expr);
   bool has_rhs = VINSN_RHS (*vi) != NULL;
-  rtx old, new_rtx;
+  rtx old = { 0 };
+  rtx new_rtx = { 0 };
 
   /* Do not try to replace in SET_DEST.  Although we'll choose new
      register for the RHS, we don't want to change RHS' original reg.
@@ -850,7 +853,7 @@ count_occurrences_1 (rtx *cur_rtx, void *arg)
 static int
 count_occurrences_equiv (rtx what, rtx where)
 {
-  struct rtx_search_arg arg;
+  struct rtx_search_arg arg = { 0 };
 
   gcc_assert (REG_P (what));
   arg.x = what;
@@ -876,9 +879,9 @@ rtx_ok_for_substitution_p (rtx what, rtx where)
 static rtx
 create_insn_rtx_with_rhs (vinsn_t vi, rtx rhs_rtx)
 {
-  rtx lhs_rtx;
-  rtx pattern;
-  rtx insn_rtx;
+  rtx lhs_rtx = { 0 };
+  rtx pattern = { 0 };
+  rtx insn_rtx = { 0 };
 
   lhs_rtx = copy_rtx (VINSN_LHS (vi));
 
@@ -913,9 +916,9 @@ static bool
 replace_src_with_reg_ok_p (insn_t insn, rtx new_src_reg)
 {
   vinsn_t vi = INSN_VINSN (insn);
-  enum machine_mode mode;
-  rtx dst_loc;
-  bool res;
+  enum machine_mode mode = (enum machine_mode)0;
+  rtx dst_loc = { 0 };
+  bool res = { 0 };
 
   gcc_assert (VINSN_SEPARABLE_P (vi));
 
@@ -939,7 +942,7 @@ static bool
 replace_dest_with_reg_ok_p (insn_t insn, rtx new_reg)
 {
   vinsn_t vi = INSN_VINSN (insn);
-  bool res;
+  bool res = { 0 };
 
   /* We should deal here only with separable insns.  */
   gcc_assert (VINSN_SEPARABLE_P (vi));
@@ -974,8 +977,8 @@ create_insn_rtx_with_lhs (vinsn_t vi, rtx lhs_rtx)
 static void
 replace_dest_with_reg_in_expr (expr_t expr, rtx new_reg)
 {
-  rtx insn_rtx;
-  vinsn_t vinsn;
+  rtx insn_rtx = { 0 };
+  vinsn_t vinsn = { 0 };
 
   insn_rtx = create_insn_rtx_with_lhs (EXPR_VINSN (expr), new_reg);
   vinsn = create_vinsn_from_insn_rtx (insn_rtx, false);
@@ -991,8 +994,8 @@ static bool
 vinsn_writes_one_of_regs_p (vinsn_t vi, regset used_regs,
                             HARD_REG_SET unavailable_hard_regs)
 {
-  unsigned regno;
-  reg_set_iterator rsi;
+  unsigned regno = { 0 };
+  reg_set_iterator rsi = { 0 };
 
   EXECUTE_IF_SET_IN_REG_SET (VINSN_REG_SETS (vi), 0, regno, rsi)
     {
@@ -1023,7 +1026,9 @@ vinsn_writes_one_of_regs_p (vinsn_t vi, regset used_regs,
 static enum reg_class
 get_reg_class (rtx insn)
 {
-  int alt, i, n_ops;
+  int alt = { 0 };
+  int i = { 0 };
+  int n_ops = { 0 };
 
   extract_insn (insn);
   if (! constrain_operands (1))
@@ -1080,7 +1085,7 @@ get_reg_class (rtx insn)
 static void
 init_hard_regno_rename (int regno)
 {
-  int cur_reg;
+  int cur_reg = { 0 };
 
   SET_HARD_REG_BIT (sel_hrd.regs_for_rename[regno], regno);
 
@@ -1118,7 +1123,7 @@ sel_hard_regno_rename_ok (int from ATTRIBUTE_UNUSED, int to ATTRIBUTE_UNUSED)
 static void
 init_regs_for_mode (enum machine_mode mode)
 {
-  int cur_reg;
+  int cur_reg = { 0 };
 
   CLEAR_HARD_REG_SET (sel_hrd.regs_for_mode[mode]);
   CLEAR_HARD_REG_SET (sel_hrd.regs_for_call_clobbered[mode]);
@@ -1207,11 +1212,12 @@ static void
 mark_unavailable_hard_regs (def_t def, struct reg_rename *reg_rename_p,
                             regset used_regs ATTRIBUTE_UNUSED)
 {
-  enum machine_mode mode;
+  enum machine_mode mode = (enum machine_mode)0;
   enum reg_class cl = NO_REGS;
-  rtx orig_dest;
-  unsigned cur_reg, regno;
-  hard_reg_set_iterator hrsi;
+  rtx orig_dest = { 0 };
+  unsigned cur_reg = { 0 };
+  unsigned regno = { 0 };
+  hard_reg_set_iterator hrsi = { 0 };
 
   gcc_assert (GET_CODE (PATTERN (def->orig_insn)) == SET);
   gcc_assert (reg_rename_p);
@@ -1375,13 +1381,15 @@ choose_best_reg_1 (HARD_REG_SET hard_regs_used,
                    struct reg_rename *reg_rename_p,
                    def_list_t original_insns, bool *is_orig_reg_p_ptr)
 {
-  int best_new_reg;
-  unsigned cur_reg;
+  int best_new_reg = { 0 };
+  unsigned cur_reg = { 0 };
   enum machine_mode mode = VOIDmode;
-  unsigned regno, i, n;
-  hard_reg_set_iterator hrsi;
-  def_list_iterator di;
-  def_t def;
+  unsigned regno = { 0 };
+  unsigned i = { 0 };
+  unsigned n = { 0 };
+  hard_reg_set_iterator hrsi = { 0 };
+  def_list_iterator di = { 0 };
+  def_t def = { 0 };
 
   /* If original register is available, return it.  */
   *is_orig_reg_p_ptr = true;
@@ -1486,8 +1494,8 @@ choose_best_pseudo_reg (regset used_regs,
                         struct reg_rename *reg_rename_p,
                         def_list_t original_insns, bool *is_orig_reg_p_ptr)
 {
-  def_list_iterator i;
-  def_t def;
+  def_list_iterator i = { 0 };
+  def_t def = { 0 };
   enum machine_mode mode = VOIDmode;
   bool bad_hard_regs = false;
 
@@ -1565,9 +1573,13 @@ static void
 verify_target_availability (expr_t expr, regset used_regs,
 			    struct reg_rename *reg_rename_p)
 {
-  unsigned n, i, regno;
-  enum machine_mode mode;
-  bool target_available, live_available, hard_available;
+  unsigned n = { 0 };
+  unsigned i = { 0 };
+  unsigned regno = { 0 };
+  enum machine_mode mode = (enum machine_mode)0;
+  bool target_available = { 0 };
+  bool live_available = { 0 };
+  bool hard_available = { 0 };
 
   if (!REG_P (EXPR_LHS (expr)) || EXPR_TARGET_AVAILABLE (expr) < 0)
     return;
@@ -1621,7 +1633,7 @@ collect_unavailable_regs_from_bnds (expr_t expr, blist_t bnds, regset used_regs,
 {
   for (; bnds; bnds = BLIST_NEXT (bnds))
     {
-      bool res;
+      bool res = { 0 };
       av_set_t orig_ops = NULL;
       bnd_t bnd = BLIST_BND (bnds);
 
@@ -1684,9 +1696,9 @@ find_best_reg_for_expr (expr_t expr, blist_t bnds, bool *is_orig_reg_p)
 {
   static struct reg_rename reg_rename_data;
 
-  regset used_regs;
+  regset used_regs = { 0 };
   def_list_t original_insns = NULL;
-  bool reg_ok;
+  bool reg_ok = { 0 };
 
   *is_orig_reg_p = false;
 
@@ -1705,8 +1717,8 @@ find_best_reg_for_expr (expr_t expr, blist_t bnds, bool *is_orig_reg_p)
   /* If after reload, make sure we're working with hard regs here.  */
   if (reload_completed)
     {
-      reg_set_iterator rsi;
-      unsigned i;
+      reg_set_iterator rsi = { 0 };
+      unsigned i = { 0 };
 
       EXECUTE_IF_SET_IN_REG_SET (used_regs, FIRST_PSEUDO_REGISTER, i, rsi)
         gcc_unreachable ();
@@ -1815,11 +1827,11 @@ can_speculate_dep_p (ds_t ds)
 static insn_t
 create_speculation_check (expr_t c_expr, ds_t check_ds, insn_t orig_insn)
 {
-  rtx check_pattern;
-  rtx insn_rtx;
-  insn_t insn;
-  basic_block recovery_block;
-  rtx label;
+  rtx check_pattern = { 0 };
+  rtx insn_rtx = { 0 };
+  insn_t insn = { 0 };
+  basic_block recovery_block = { 0 };
+  rtx label = { 0 };
 
   /* Create a recovery block if target is going to emit branchy check, or if
      ORIG_INSN was speculative already.  */
@@ -1860,7 +1872,7 @@ create_speculation_check (expr_t c_expr, ds_t check_ds, insn_t orig_insn)
      if needed) to the recovery block.  */
   if (recovery_block != NULL)
     {
-      rtx twin_rtx;
+      rtx twin_rtx = { 0 };
 
       twin_rtx = copy_rtx (PATTERN (EXPR_INSN_RTX (c_expr)));
       twin_rtx = create_insn_rtx_from_pattern (twin_rtx, NULL_RTX);
@@ -1887,7 +1899,9 @@ create_speculation_check (expr_t c_expr, ds_t check_ds, insn_t orig_insn)
 static bool
 identical_copy_p (rtx insn)
 {
-  rtx lhs, rhs, pat;
+  rtx lhs = { 0 };
+  rtx rhs = { 0 };
+  rtx pat = { 0 };
 
   pat = PATTERN (insn);
 
@@ -1910,8 +1924,8 @@ identical_copy_p (rtx insn)
 static void
 undo_transformations (av_set_t *av_ptr, rtx insn)
 {
-  av_set_iterator av_iter;
-  expr_t expr;
+  av_set_iterator av_iter = { 0 };
+  expr_t expr = { 0 };
   av_set_t new_set = NULL;
 
   /* First, kill any EXPR that uses registers set by an insn.  This is
@@ -2014,8 +2028,8 @@ static enum MOVEUP_EXPR_CODE
 moveup_expr_inside_insn_group (expr_t expr, insn_t through_insn)
 {
   vinsn_t vi = EXPR_VINSN (expr);
-  ds_t *has_dep_p;
-  ds_t full_ds;
+  ds_t *has_dep_p = { 0 };
+  ds_t full_ds = { 0 };
 
   /* Do this only inside insn group.  */
   gcc_assert (INSN_SCHED_CYCLE (through_insn) > 0);
@@ -2072,9 +2086,12 @@ static bool
 moving_insn_creates_bookkeeping_block_p (insn_t insn,
 					 insn_t through_insn)
 {
-  basic_block bbi, bbt;
-  edge e1, e2;
-  edge_iterator ei1, ei2;
+  basic_block bbi = { 0 };
+  basic_block bbt = { 0 };
+  edge e1 = { 0 };
+  edge e2 = { 0 };
+  edge_iterator ei1 = { 0 };
+  edge_iterator ei2 = { 0 };
 
   if (!bookkeeping_can_be_created_if_moved_through_p (through_insn))
     {
@@ -2128,8 +2145,8 @@ moveup_expr (expr_t expr, insn_t through_insn, bool inside_insn_group,
   insn_t insn = VINSN_INSN_RTX (vi);
   bool was_changed = false;
   bool as_rhs = false;
-  ds_t *has_dep_p;
-  ds_t full_ds;
+  ds_t *has_dep_p = { 0 };
+  ds_t full_ds = { 0 };
 
   /* ??? We use dependencies of non-debug insns on debug insns to
      indicate that the debug insns need to be reset if the non-debug
@@ -2274,7 +2291,7 @@ moveup_expr (expr_t expr, insn_t through_insn, bool inside_insn_group,
 
       if (can_speculate_dep_p (*rhs_dsp))
 	{
-          int res;
+          int res = { 0 };
 
           res = speculate_expr (expr, *rhs_dsp);
           if (res >= 0)
@@ -2469,7 +2486,7 @@ update_transformation_cache (expr_t expr, insn_t insn,
                              enum local_trans_type trans_type,
                              vinsn_t expr_old_vinsn)
 {
-  struct transformed_insns *pti;
+  struct transformed_insns *pti = { 0 };
 
   if (inside_insn_group)
     return;
@@ -2494,7 +2511,7 @@ update_transformation_cache (expr_t expr, insn_t insn,
 static enum MOVEUP_EXPR_CODE
 moveup_expr_cached (expr_t expr, insn_t insn, bool inside_insn_group)
 {
-  enum MOVEUP_EXPR_CODE res;
+  enum MOVEUP_EXPR_CODE res = (enum MOVEUP_EXPR_CODE)0;
   bool got_answer = false;
 
   if (sched_verbose >= 6)
@@ -2583,8 +2600,8 @@ moveup_expr_cached (expr_t expr, insn_t insn, bool inside_insn_group)
 static void
 moveup_set_expr (av_set_t *avp, insn_t insn, bool inside_insn_group)
 {
-  av_set_iterator i;
-  expr_t expr;
+  av_set_iterator i = { 0 };
+  expr_t expr = { 0 };
 
   FOR_EACH_EXPR_1 (expr, i, avp)
     {
@@ -2613,7 +2630,7 @@ moveup_set_expr (av_set_t *avp, insn_t insn, bool inside_insn_group)
 static void
 moveup_set_inside_insn_group (av_set_t *avp, ilist_t path)
 {
-  int last_cycle;
+  int last_cycle = { 0 };
 
   if (sched_verbose >= 6)
     sel_print ("Moving expressions up in the insn group...\n");
@@ -2632,8 +2649,9 @@ moveup_set_inside_insn_group (av_set_t *avp, ilist_t path)
 static bool
 equal_after_moveup_path_p (expr_t expr, ilist_t path, expr_t expr_vliw)
 {
-  expr_def _tmp, *tmp = &_tmp;
-  int last_cycle;
+  expr_def _tmp = { 0 };
+  expr_def *tmp = &_tmp;
+  int last_cycle = { 0 };
   bool res = true;
 
   copy_expr_onside (tmp, expr);
@@ -2668,7 +2686,7 @@ equal_after_moveup_path_p (expr_t expr, ilist_t path, expr_t expr_vliw)
 static bool
 is_ineligible_successor (insn_t insn, ilist_t p)
 {
-  insn_t prev_insn;
+  insn_t prev_insn = { 0 };
 
   /* Check if insn is not deleted.  */
   if (PREV_INSN (insn) && NEXT_INSN (PREV_INSN (insn)) != insn)
@@ -2713,10 +2731,11 @@ is_ineligible_successor (insn_t insn, ilist_t p)
 static av_set_t
 compute_av_set_at_bb_end (insn_t insn, ilist_t p, int ws)
 {
-  struct succs_info *sinfo;
+  struct succs_info *sinfo = { 0 };
   av_set_t expr_in_all_succ_branches = NULL;
-  int is;
-  insn_t succ, zero_succ = NULL;
+  int is = { 0 };
+  insn_t succ = { 0 };
+  insn_t zero_succ = NULL;
   av_set_t av1 = NULL;
 
   gcc_assert (sel_bb_end_p (insn));
@@ -2809,8 +2828,8 @@ compute_av_set_at_bb_end (insn_t insn, ilist_t p, int ws)
 
   if (sinfo->all_succs_n > 1)
     {
-      av_set_iterator i;
-      expr_t expr;
+      av_set_iterator i = { 0 };
+      expr_t expr = { 0 };
 
       /* Increase the spec attribute of all EXPR'es that didn't come
 	 from all successors.  */
@@ -2853,11 +2872,11 @@ static av_set_t
 compute_av_set_inside_bb (insn_t first_insn, ilist_t p, int ws,
 			  bool need_copy_p)
 {
-  insn_t cur_insn;
+  insn_t cur_insn = { 0 };
   int end_ws = ws;
   insn_t bb_end = sel_bb_end (BLOCK_FOR_INSN (first_insn));
   insn_t after_bb_end = NEXT_INSN (bb_end);
-  insn_t last_insn;
+  insn_t last_insn = { 0 };
   av_set_t av = NULL;
   basic_block cur_bb = BLOCK_FOR_INSN (first_insn);
 
@@ -3026,8 +3045,8 @@ propagate_lv_set (regset lv, insn_t insn)
 static regset
 compute_live_after_bb (basic_block bb)
 {
-  edge e;
-  edge_iterator ei;
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
   regset lv = get_clear_regset_from_pool ();
 
   gcc_assert (!ignore_first);
@@ -3056,8 +3075,9 @@ regset
 compute_live (insn_t insn)
 {
   basic_block bb = BLOCK_FOR_INSN (insn);
-  insn_t final, temp;
-  regset lv;
+  insn_t final = { 0 };
+  insn_t temp = { 0 };
+  regset lv = { 0 };
 
   /* Return the valid set if we're already on it.  */
   if (!ignore_first)
@@ -3148,8 +3168,8 @@ update_liveness_on_insn (rtx insn)
 static inline void
 compute_live_below_insn (rtx insn, regset regs)
 {
-  rtx succ;
-  succ_iterator si;
+  rtx succ = { 0 };
+  succ_iterator si = { 0 };
 
   FOR_EACH_SUCC_1 (succ, si, insn, SUCCS_ALL)
     IOR_REG_SET (regs, compute_live (succ));
@@ -3175,7 +3195,7 @@ update_data_sets (rtx insn)
 static ds_t
 get_spec_check_type_for_insn (insn_t insn, expr_t expr)
 {
-  ds_t to_check_ds;
+  ds_t to_check_ds = { 0 };
   ds_t already_checked_ds = EXPR_SPEC_DONE_DS (INSN_EXPR (insn));
 
   to_check_ds = EXPR_SPEC_TO_CHECK_DS (expr);
@@ -3235,14 +3255,14 @@ static bool
 find_used_regs (insn_t insn, av_set_t orig_ops, regset used_regs,
 		struct reg_rename  *reg_rename_p, def_list_t *original_insns)
 {
-  def_list_iterator i;
-  def_t def;
-  int res;
+  def_list_iterator i = { 0 };
+  def_t def = { 0 };
+  int res = { 0 };
   bool needs_spec_check_p = false;
-  expr_t expr;
-  av_set_iterator expr_iter;
-  struct fur_static_params sparams;
-  struct cmpd_local_params lparams;
+  expr_t expr = { 0 };
+  av_set_iterator expr_iter = { 0 };
+  struct fur_static_params sparams = { 0 };
+  struct cmpd_local_params lparams = { 0 };
 
   /* We haven't visited any blocks yet.  */
   bitmap_clear (code_motion_visited_blocks);
@@ -3297,7 +3317,7 @@ static int
 sel_target_adjust_priority (expr_t expr)
 {
   int priority = EXPR_PRIORITY (expr);
-  int new_priority;
+  int new_priority = { 0 };
 
   if (targetm.sched.adjust_priority)
     new_priority = targetm.sched.adjust_priority (EXPR_INSN_RTX (expr), priority);
@@ -3323,9 +3343,11 @@ sel_rank_for_schedule (const void *x, const void *y)
 {
   expr_t tmp = *(const expr_t *) y;
   expr_t tmp2 = *(const expr_t *) x;
-  insn_t tmp_insn, tmp2_insn;
-  vinsn_t tmp_vinsn, tmp2_vinsn;
-  int val;
+  insn_t tmp_insn = { 0 };
+  insn_t tmp2_insn = { 0 };
+  vinsn_t tmp_vinsn = { 0 };
+  vinsn_t tmp2_vinsn = { 0 };
+  int val = { 0 };
 
   tmp_vinsn = EXPR_VINSN (tmp);
   tmp2_vinsn = EXPR_VINSN (tmp2);
@@ -3428,8 +3450,8 @@ sel_rank_for_schedule (const void *x, const void *y)
 static void
 process_pipelined_exprs (av_set_t *av_ptr)
 {
-  expr_t expr;
-  av_set_iterator si;
+  expr_t expr = { 0 };
+  av_set_iterator si = { 0 };
 
   /* Don't pipeline already pipelined code as that would increase
      number of unnecessary register moves.  */
@@ -3447,8 +3469,8 @@ process_spec_exprs (av_set_t *av_ptr)
 {
   bool try_data_p = true;
   bool try_control_p = true;
-  expr_t expr;
-  av_set_iterator si;
+  expr_t expr = { 0 };
+  av_set_iterator si = { 0 };
 
   if (spec_info == NULL)
     return;
@@ -3510,8 +3532,8 @@ process_spec_exprs (av_set_t *av_ptr)
 static expr_t
 process_use_exprs (av_set_t *av_ptr)
 {
-  expr_t expr;
-  av_set_iterator si;
+  expr_t expr = { 0 };
+  av_set_iterator si = { 0 };
   bool uses_present_p = false;
   bool try_uses_p = true;
 
@@ -3571,8 +3593,8 @@ process_use_exprs (av_set_t *av_ptr)
 static bool
 vinsn_vec_has_expr_p (vinsn_vec_t vinsn_vec, expr_t expr)
 {
-  vinsn_t vinsn;
-  int n;
+  vinsn_t vinsn = { 0 };
+  int n = { 0 };
 
   FOR_EACH_VEC_ELT (vinsn_t, vinsn_vec, n, vinsn)
     if (VINSN_SEPARABLE_P (vinsn))
@@ -3645,8 +3667,8 @@ vinsn_vec_clear (vinsn_vec_t *vinsn_vec)
   unsigned len = VEC_length (vinsn_t, *vinsn_vec);
   if (len > 0)
     {
-      vinsn_t vinsn;
-      int n;
+      vinsn_t vinsn = { 0 };
+      int n = { 0 };
 
       FOR_EACH_VEC_ELT (vinsn_t, *vinsn_vec, n, vinsn)
         vinsn_detach (vinsn);
