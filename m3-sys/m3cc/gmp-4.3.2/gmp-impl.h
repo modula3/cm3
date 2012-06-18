@@ -2148,64 +2148,6 @@ void    mpn_xnor_n __GMP_PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
   } while (0)
 #endif
 
-
-/* MPN_INCR_U does {ptr,size} += n, MPN_DECR_U does {ptr,size} -= n, both
-   expecting no carry (or borrow) from that.
-
-   The size parameter is only for the benefit of assertion checking.  In a
-   normal build it's unused and the carry/borrow is just propagated as far
-   as it needs to go.
-
-   On random data, usually only one or two limbs of {ptr,size} get updated,
-   so there's no need for any sophisticated looping, just something compact
-   and sensible.
-
-   FIXME: Switch all code from mpn_{incr,decr}_u to MPN_{INCR,DECR}_U,
-   declaring their operand sizes, then remove the former.  This is purely
-   for the benefit of assertion checking.  */
-
-#if defined (__GNUC__) && HAVE_HOST_CPU_FAMILY_x86 && GMP_NAIL_BITS == 0      \
-  && BITS_PER_MP_LIMB == 32 && ! defined (NO_ASM) && ! WANT_ASSERT
-/* Better flags handling than the generic C gives on i386, saving a few
-   bytes of code and maybe a cycle or two.  */
-
-#define MPN_IORD_U(ptr, incr, aors)					\
-  do {									\
-    mp_ptr  __ptr_dummy;						\
-    if (__builtin_constant_p (incr) && (incr) == 1)			\
-      {									\
-        __asm__ __volatile__						\
-          ("\n" ASM_L(top) ":\n"					\
-           "\t" aors " $1, (%0)\n"					\
-           "\tleal 4(%0),%0\n"						\
-           "\tjc " ASM_L(top)						\
-           : "=r" (__ptr_dummy)						\
-           : "0"  (ptr)							\
-           : "memory");							\
-      }									\
-    else								\
-      {									\
-        __asm__ __volatile__						\
-          (   aors  " %2,(%0)\n"					\
-           "\tjnc " ASM_L(done) "\n"					\
-           ASM_L(top) ":\n"						\
-           "\t" aors " $1,4(%0)\n"					\
-           "\tleal 4(%0),%0\n"						\
-           "\tjc " ASM_L(top) "\n"					\
-           ASM_L(done) ":\n"						\
-           : "=r" (__ptr_dummy)						\
-           : "0"  (ptr),						\
-             "ri" (incr)						\
-           : "memory");							\
-      }									\
-  } while (0)
-
-#define MPN_INCR_U(ptr, size, incr)  MPN_IORD_U (ptr, incr, "addl")
-#define MPN_DECR_U(ptr, size, incr)  MPN_IORD_U (ptr, incr, "subl")
-#define mpn_incr_u(ptr, incr)  MPN_INCR_U (ptr, 0, incr)
-#define mpn_decr_u(ptr, incr)  MPN_DECR_U (ptr, 0, incr)
-#endif
-
 #if GMP_NAIL_BITS == 0
 #ifndef mpn_incr_u
 #define mpn_incr_u(p,incr)                              \
@@ -2824,55 +2766,11 @@ __GMP_DECLSPEC extern const unsigned char  binvert_limb_table[128];
    to 0 if there's an even number.  "n" should be an unsigned long and "p"
    an int.  */
 
-#if defined (__GNUC__) && ! defined (NO_ASM) && HAVE_HOST_CPU_alpha_CIX
-#define ULONG_PARITY(p, n)						\
-  do {									\
-    int __p;								\
-    __asm__ ("ctpop %1, %0" : "=r" (__p) : "r" (n));			\
-    (p) = __p & 1;							\
-  } while (0)
-#endif
-
 /* Cray intrinsic _popcnt. */
 #ifdef _CRAY
 #define ULONG_PARITY(p, n)      \
   do {                          \
     (p) = _popcnt (n) & 1;      \
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)			\
-    && ! defined (NO_ASM) && defined (__ia64)
-/* unsigned long is either 32 or 64 bits depending on the ABI, zero extend
-   to a 64 bit unsigned long long for popcnt */
-#define ULONG_PARITY(p, n)						\
-  do {									\
-    unsigned long long  __n = (unsigned long) (n);			\
-    int  __p;								\
-    __asm__ ("popcnt %0 = %1" : "=r" (__p) : "r" (__n));		\
-    (p) = __p & 1;							\
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)			\
-    && ! defined (NO_ASM) && HAVE_HOST_CPU_FAMILY_x86
-#if __GMP_GNUC_PREREQ (3,1)
-#define __GMP_qm "=Qm"
-#define __GMP_q "=Q"
-#else
-#define __GMP_qm "=qm"
-#define __GMP_q "=q"
-#endif
-#define ULONG_PARITY(p, n)						\
-  do {									\
-    char	   __p;							\
-    unsigned long  __n = (n);						\
-    __n ^= (__n >> 16);							\
-    __asm__ ("xorb %h1, %b1\n\t"					\
-	     "setpo %0"							\
-	 : __GMP_qm (__p), __GMP_q (__n)				\
-	 : "1" (__n));							\
-    (p) = __p;								\
   } while (0)
 #endif
 
@@ -2889,69 +2787,6 @@ __GMP_DECLSPEC extern const unsigned char  binvert_limb_table[128];
     while (__n != 0);							\
 									\
     (p) = __p & 1;							\
-  } while (0)
-#endif
-
-
-/* 3 cycles on 604 or 750 since shifts and rlwimi's can pair.  gcc (as of
-   version 3.1 at least) doesn't seem to know how to generate rlwimi for
-   anything other than bit-fields, so use "asm".  */
-#if defined (__GNUC__) && ! defined (NO_ASM)                    \
-  && HAVE_HOST_CPU_FAMILY_powerpc && BITS_PER_MP_LIMB == 32
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    mp_limb_t  __bswapl_src = (src);					\
-    mp_limb_t  __tmp1 = __bswapl_src >> 24;		/* low byte */	\
-    mp_limb_t  __tmp2 = __bswapl_src << 24;		/* high byte */	\
-    __asm__ ("rlwimi %0, %2, 24, 16, 23"		/* 2nd low */	\
-	 : "=r" (__tmp1) : "0" (__tmp1), "r" (__bswapl_src));		\
-    __asm__ ("rlwimi %0, %2,  8,  8, 15"		/* 3nd high */	\
-	 : "=r" (__tmp2) : "0" (__tmp2), "r" (__bswapl_src));		\
-    (dst) = __tmp1 | __tmp2;				/* whole */	\
-  } while (0)
-#endif
-
-/* bswap is available on i486 and up and is fast.  A combination rorw $8 /
-   roll $16 / rorw $8 is used in glibc for plain i386 (and in the linux
-   kernel with xchgb instead of rorw), but this is not done here, because
-   i386 means generic x86 and mixing word and dword operations will cause
-   partial register stalls on P6 chips.  */
-#if defined (__GNUC__) && ! defined (NO_ASM)            \
-  && HAVE_HOST_CPU_FAMILY_x86 && ! HAVE_HOST_CPU_i386   \
-  && BITS_PER_MP_LIMB == 32
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    __asm__ ("bswap %0" : "=r" (dst) : "0" (src));			\
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (NO_ASM)            \
-  && defined (__amd64__) && BITS_PER_MP_LIMB == 64
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    __asm__ ("bswap %q0" : "=r" (dst) : "0" (src));			\
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)			\
-    && ! defined (NO_ASM) && defined (__ia64) && GMP_LIMB_BITS == 64
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    __asm__ ("mux1 %0 = %1, @rev" : "=r" (dst) :  "r" (src));		\
-  } while (0)
-#endif
-
-/* As per glibc. */
-#if defined (__GNUC__) && ! defined (NO_ASM)                    \
-  && HAVE_HOST_CPU_FAMILY_m68k && BITS_PER_MP_LIMB == 32
-#define BSWAP_LIMB(dst, src)						\
-  do {									\
-    mp_limb_t  __bswapl_src = (src);					\
-    __asm__ ("ror%.w %#8, %0\n\t"					\
-	     "swap   %0\n\t"						\
-	     "ror%.w %#8, %0"						\
-	     : "=d" (dst)						\
-	     : "0" (__bswapl_src));					\
   } while (0)
 #endif
 
@@ -3007,50 +2842,10 @@ __GMP_DECLSPEC extern const unsigned char  binvert_limb_table[128];
   } while (0)
 #endif
 
-
-/* Apparently lwbrx might be slow on some PowerPC chips, so restrict it to
-   those we know are fast.  */
-#if defined (__GNUC__) && ! defined (NO_ASM)                            \
-  && BITS_PER_MP_LIMB == 32 && HAVE_LIMB_BIG_ENDIAN                     \
-  && (HAVE_HOST_CPU_powerpc604                                          \
-      || HAVE_HOST_CPU_powerpc604e                                      \
-      || HAVE_HOST_CPU_powerpc750                                       \
-      || HAVE_HOST_CPU_powerpc7400)
-#define BSWAP_LIMB_FETCH(limb, src)					\
-  do {									\
-    mp_srcptr  __blf_src = (src);					\
-    mp_limb_t  __limb;							\
-    __asm__ ("lwbrx %0, 0, %1"						\
-	     : "=r" (__limb)						\
-	     : "r" (__blf_src),						\
-	       "m" (*__blf_src));					\
-    (limb) = __limb;							\
-  } while (0)
-#endif
-
 #if ! defined (BSWAP_LIMB_FETCH)
 #define BSWAP_LIMB_FETCH(limb, src)  BSWAP_LIMB (limb, *(src))
 #endif
 
-
-/* On the same basis that lwbrx might be slow, restrict stwbrx to those we
-   know are fast.  FIXME: Is this necessary?  */
-#if defined (__GNUC__) && ! defined (NO_ASM)                            \
-  && BITS_PER_MP_LIMB == 32 && HAVE_LIMB_BIG_ENDIAN                     \
-  && (HAVE_HOST_CPU_powerpc604                                          \
-      || HAVE_HOST_CPU_powerpc604e                                      \
-      || HAVE_HOST_CPU_powerpc750                                       \
-      || HAVE_HOST_CPU_powerpc7400)
-#define BSWAP_LIMB_STORE(dst, limb)					\
-  do {									\
-    mp_ptr     __dst = (dst);						\
-    mp_limb_t  __limb = (limb);						\
-    __asm__ ("stwbrx %1, 0, %2"						\
-	     : "=m" (*__dst)						\
-	     : "r" (__limb),						\
-	       "r" (__dst));						\
-  } while (0)
-#endif
 
 #if ! defined (BSWAP_LIMB_STORE)
 #define BSWAP_LIMB_STORE(dst, limb)  BSWAP_LIMB (*(dst), limb)
@@ -3094,38 +2889,12 @@ __GMP_DECLSPEC extern const unsigned char  binvert_limb_table[128];
   } while (0)
 
 
-/* No processor claiming to be SPARC v9 compliant seems to
-   implement the POPC instruction.  Disable pattern for now.  */
-#if 0
-#if defined __GNUC__ && defined __sparc_v9__ && BITS_PER_MP_LIMB == 64
-#define popc_limb(result, input)					\
-  do {									\
-    DItype __res;							\
-    __asm__ ("popc %1,%0" : "=r" (result) : "rI" (input));		\
-  } while (0)
-#endif
-#endif
-
-#if defined (__GNUC__) && ! defined (NO_ASM) && HAVE_HOST_CPU_alpha_CIX
-#define popc_limb(result, input)					\
-  do {									\
-    __asm__ ("ctpop %1, %0" : "=r" (result) : "r" (input));		\
-  } while (0)
-#endif
 
 /* Cray intrinsic. */
 #ifdef _CRAY
 #define popc_limb(result, input)        \
   do {                                  \
     (result) = _popcnt (input);         \
-  } while (0)
-#endif
-
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)			\
-    && ! defined (NO_ASM) && defined (__ia64) && GMP_LIMB_BITS == 64
-#define popc_limb(result, input)					\
-  do {									\
-    __asm__ ("popcnt %0 = %1" : "=r" (result) : "r" (input));		\
   } while (0)
 #endif
 
@@ -3188,15 +2957,10 @@ __GMP_DECLSPEC extern const unsigned char  binvert_limb_table[128];
   } while (0)
 #endif
 
-typedef unsigned char UQItype; /* 8 bits */
-typedef int SItype; /* 32 bits */
-typedef unsigned USItype; /* 32 bits */
 #if defined(_MSC_VER) || defined(__DECC)
 typedef __int64 DItype; /* 64 bits */
-typedef unsigned __int64 UDItype; /* 64 bits */
 #else
 typedef long long DItype; /* 64 bits */
-typedef unsigned long long UDItype; /* 64 bits */
 #endif
 
 typedef mp_limb_t UWtype;
