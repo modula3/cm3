@@ -8384,9 +8384,14 @@ mips16e_collect_argument_save_p (rtx dest, rtx src, rtx *reg_values,
 static unsigned int
 mips16e_collect_argument_saves (void)
 {
-  rtx reg_values[FIRST_PSEUDO_REGISTER];
-  rtx insn, next, set, dest, src;
-  unsigned int nargs, regno;
+  rtx reg_values[FIRST_PSEUDO_REGISTER] = { 0 };
+  rtx insn = { 0 };
+  rtx next = { 0 };
+  rtx set = { 0 };
+  rtx dest = { 0 };
+  rtx src = { 0 };
+  unsigned  nargs = { 0 };
+  unsigned regno = { 0 };
 
   push_topmost_sequence ();
   nargs = 0;
