@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* RTL dead store elimination.
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -3449,11 +3451,11 @@ mark_reachable_blocks (sbitmap unreachable_blocks, basic_block bb)
 static void
 dse_step3 (bool for_spills)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
   sbitmap unreachable_blocks = sbitmap_alloc (last_basic_block);
-  sbitmap_iterator sbi;
-  bitmap all_ones = NULL;
-  unsigned int i;
+  sbitmap_iterator sbi = { 0 };
+  bitmap all_ones = { 0 };
+  unsigned int i = { 0 };
 
   sbitmap_ones (unreachable_blocks);
 
@@ -3673,7 +3675,7 @@ dse_step4 (void)
 static void
 dse_step5_nospill (void)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
   FOR_EACH_BB (bb)
     {
       bb_info_t bb_info = bb_table[bb->index];
@@ -3774,7 +3776,7 @@ dse_step5_nospill (void)
 static void
 dse_step5_spill (void)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
   FOR_EACH_BB (bb)
     {
       bb_info_t bb_info = bb_table[bb->index];
@@ -3848,7 +3850,7 @@ dse_step5_spill (void)
 static void
 dse_step6 (void)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
 
   FOR_ALL_BB (bb)
     {
@@ -3897,9 +3899,9 @@ dse_step6 (void)
 static void
 dse_step7 (bool global_done)
 {
-  unsigned int i;
-  group_info_t group;
-  basic_block bb;
+  unsigned int i = { 0 };
+  group_info_t group = { 0 };
+  basic_block bb = { 0 };
 
   FOR_EACH_VEC_ELT (group_info_t, rtx_group_vec, i, group)
     {
