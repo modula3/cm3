@@ -341,7 +341,7 @@ get_default_value (tree var)
 {
   tree sym = SSA_NAME_VAR (var);
   prop_value_t val = { UNINITIALIZED, NULL_TREE };
-  gimple stmt;
+  gimple stmt = { 0 };
 
   stmt = SSA_NAME_DEF_STMT (var);
 
@@ -391,7 +391,7 @@ get_default_value (tree var)
 static inline prop_value_t *
 get_value (tree var)
 {
-  prop_value_t *val;
+  prop_value_t *val = { 0 };
 
   if (const_val == NULL)
     return NULL;
@@ -435,9 +435,9 @@ set_value_varying (tree var)
 static void
 canonicalize_float_value (prop_value_t *val)
 {
-  enum machine_mode mode;
-  tree type;
-  REAL_VALUE_TYPE d;
+  enum machine_mode mode = (enum machine_mode)0;
+  tree type = { 0 };
+  REAL_VALUE_TYPE d = { 0 };
 
   if (val->lattice_val != CONSTANT
       || TREE_CODE (val->value) != REAL_CST)
@@ -514,10 +514,12 @@ set_lattice_value (tree var, prop_value_t new_val)
 static ccp_lattice_t
 likely_value (gimple stmt)
 {
-  bool has_constant_operand, has_undefined_operand, all_undefined_operands;
-  tree use;
-  ssa_op_iter iter;
-  unsigned i;
+  bool has_constant_operand = { 0 };
+  bool has_undefined_operand = { 0 };
+  bool all_undefined_operands = { 0 };
+  tree use = { 0 };
+  ssa_op_iter iter = { 0 };
+  unsigned i = { 0 };
 
   enum gimple_code code = gimple_code (stmt);
 
@@ -647,7 +649,7 @@ surely_varying_stmt_p (gimple stmt)
 static void
 ccp_initialize (void)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
 
   const_val = XCNEWVEC (prop_value_t, num_ssa_names);
 
@@ -688,7 +690,7 @@ ccp_initialize (void)
      except for phi nodes for virtual operands when we do not do store ccp.  */
   FOR_EACH_BB (bb)
     {
-      gimple_stmt_iterator i;
+      gimple_stmt_iterator i = { 0 };
 
       for (i = gsi_start_phis (bb); !gsi_end_p (i); gsi_next (&i))
         {
@@ -709,7 +711,7 @@ ccp_initialize (void)
 static void
 do_dbg_cnt (void)
 {
-  unsigned i;
+  unsigned i = { 0 };
   for (i = 0; i < num_ssa_names; i++)
     {
       if (!dbg_cnt (ccp))
@@ -729,7 +731,7 @@ do_dbg_cnt (void)
 static bool
 ccp_finalize (void)
 {
-  bool something_changed;
+  bool something_changed = { 0 };
 
   do_dbg_cnt ();
   /* Perform substitutions based on the known constant values.  */
@@ -800,7 +802,7 @@ ccp_lattice_meet (prop_value_t *val1, prop_value_t *val2)
 static enum ssa_prop_result
 ccp_visit_phi_node (gimple phi)
 {
-  unsigned i;
+  unsigned i = { 0 };
   prop_value_t *old_val, new_val;
 
   if (dump_file && (dump_flags & TDF_DETAILS))
@@ -1218,10 +1220,14 @@ ccp_fold (gimple stmt)
 tree
 fold_const_aggregate_ref (tree t)
 {
-  prop_value_t *value;
-  tree base, ctor, idx, field;
-  unsigned HOST_WIDE_INT cnt;
-  tree cfield, cval;
+  prop_value_t *value = { 0 };
+  tree base = { 0 };
+  tree ctor = { 0 };
+  tree idx = { 0 };
+  tree field = { 0 };
+  unsigned HOST_WIDE_INT cnt = { 0 };
+  tree cfield = { 0 };
+  tree cval = { 0 };
 
   if (TREE_CODE_CLASS (TREE_CODE (t)) == tcc_declaration)
     return get_symbol_constant_value (t);
@@ -1401,10 +1407,10 @@ fold_const_aggregate_ref (tree t)
 static prop_value_t
 evaluate_stmt (gimple stmt)
 {
-  prop_value_t val;
+  prop_value_t val = { 0 };
   tree simplified = NULL_TREE;
   ccp_lattice_t likelyvalue = likely_value (stmt);
-  bool is_constant;
+  bool is_constant = { 0 };
 
   fold_defer_overflow_warnings ();
 
@@ -1597,8 +1603,8 @@ ccp_fold_stmt (gimple_stmt_iterator *gsi)
 static enum ssa_prop_result
 visit_assignment (gimple stmt, tree *output_p)
 {
-  prop_value_t val;
-  enum ssa_prop_result retval;
+  prop_value_t val = { 0 };
+  enum ssa_prop_result retval = (enum ssa_prop_result)0;
 
   tree lhs = gimple_get_lhs (stmt);
 
@@ -1651,8 +1657,8 @@ visit_assignment (gimple stmt, tree *output_p)
 static enum ssa_prop_result
 visit_cond_stmt (gimple stmt, edge *taken_edge_p)
 {
-  prop_value_t val;
-  basic_block block;
+  prop_value_t val = { 0 };
+  basic_block block = { 0 };
 
   block = gimple_bb (stmt);
   val = evaluate_stmt (stmt);
@@ -1681,8 +1687,8 @@ visit_cond_stmt (gimple stmt, edge *taken_edge_p)
 static enum ssa_prop_result
 ccp_visit_stmt (gimple stmt, edge *taken_edge_p, tree *output_p)
 {
-  tree def;
-  ssa_op_iter iter;
+  tree def = { 0 };
+  ssa_op_iter iter = { 0 };
 
   if (dump_file && (dump_flags & TDF_DETAILS))
     {
@@ -1787,9 +1793,14 @@ maybe_fold_offset_to_array_ref (location_t loc, tree base, tree offset,
 				tree orig_type,
 				bool allow_negative_idx)
 {
-  tree min_idx, idx, idx_type, elt_offset = integer_zero_node;
-  tree array_type, elt_type, elt_size;
-  tree domain_type;
+  tree min_idx = { 0 };
+  tree idx = { 0 };
+  tree idx_type = { 0 };
+  tree elt_offset = integer_zero_node;
+  tree array_type = { 0 };
+  tree elt_type = { 0 };
+  tree elt_size = { 0 };
+  tree domain_type = { 0 };
 
   /* If BASE is an ARRAY_REF, we can pick up another offset (this time
      measured in units of the size of elements type) from that ARRAY_REF).
@@ -1836,9 +1847,11 @@ maybe_fold_offset_to_array_ref (location_t loc, tree base, tree offset,
     }
   else
     {
-      unsigned HOST_WIDE_INT lquo, lrem;
-      HOST_WIDE_INT hquo, hrem;
-      double_int soffset;
+      unsigned HOST_WIDE_INT lquo = { 0 };
+      unsigned HOST_WIDE_INT lrem = { 0 };
+      HOST_WIDE_INT hquo = { 0 };
+      HOST_WIDE_INT hrem = { 0 };
+      double_int soffset = { 0 };
 
       /* The final array offset should be signed, so we need
 	 to sign-extend the (possibly pointer) offset here
@@ -1935,9 +1948,13 @@ static tree
 maybe_fold_offset_to_component_ref (location_t loc, tree record_type,
 				    tree base, tree offset, tree orig_type)
 {
-  tree f, t, field_type, tail_array_field, field_offset;
-  tree ret;
-  tree new_base;
+  tree f = { 0 };
+  tree t = { 0 };
+  tree field_type = { 0 };
+  tree tail_array_field = { 0 };
+  tree field_offset = { 0 };
+  tree ret = { 0 };
+  tree new_base = { 0 };
 
   if (TREE_CODE (record_type) != RECORD_TYPE
       && TREE_CODE (record_type) != UNION_TYPE
@@ -1951,7 +1968,7 @@ maybe_fold_offset_to_component_ref (location_t loc, tree record_type,
   tail_array_field = NULL_TREE;
   for (f = TYPE_FIELDS (record_type); f ; f = TREE_CHAIN (f))
     {
-      int cmp;
+      int cmp = { 0 };
 
       if (TREE_CODE (f) != FIELD_DECL)
 	continue;
@@ -2055,8 +2072,8 @@ tree
 maybe_fold_offset_to_reference (location_t loc, tree base, tree offset,
 				tree orig_type)
 {
-  tree ret;
-  tree type;
+  tree ret = { 0 };
+  tree type = { 0 };
 
   STRIP_NOPS (base);
   if (TREE_CODE (base) != ADDR_EXPR)
@@ -2109,7 +2126,7 @@ tree
 maybe_fold_offset_to_address (location_t loc, tree addr, tree offset,
 			      tree orig_type)
 {
-  tree t;
+  tree t = { 0 };
 
   gcc_assert (POINTER_TYPE_P (TREE_TYPE (addr))
 	      && POINTER_TYPE_P (orig_type));
@@ -2164,7 +2181,7 @@ maybe_fold_offset_to_address (location_t loc, tree addr, tree offset,
 static tree
 maybe_fold_stmt_indirect (tree expr, tree base, tree offset)
 {
-  tree t;
+  tree t = { 0 };
   bool volatile_p = TREE_THIS_VOLATILE (expr);
   location_t loc = EXPR_LOCATION (expr);
 
@@ -2277,8 +2294,8 @@ maybe_fold_stmt_indirect (tree expr, tree base, tree offset)
 tree
 maybe_fold_stmt_addition (location_t loc, tree res_type, tree op0, tree op1)
 {
-  tree ptd_type;
-  tree t;
+  tree ptd_type = { 0 };
+  tree t = { 0 };
 
   /* The first operand should be an ADDR_EXPR.  */
   if (TREE_CODE (op0) != ADDR_EXPR)
@@ -2341,7 +2358,7 @@ maybe_fold_stmt_addition (location_t loc, tree res_type, tree op0, tree op1)
       tree array_idx = TREE_OPERAND (op0, 1);
       tree elt_type = TREE_TYPE (op0);
       tree elt_size = TYPE_SIZE_UNIT (elt_type);
-      tree min_idx;
+      tree min_idx = { 0 };
 
       if (TREE_CODE (array_idx) != INTEGER_CST)
 	break;
@@ -2481,8 +2498,9 @@ maybe_fold_reference (tree expr, bool is_lhs)
 static bool
 get_maxval_strlen (tree arg, tree *length, bitmap visited, int type)
 {
-  tree var, val;
-  gimple def_stmt;
+  tree var = { 0 };
+  tree val = { 0 };
+  gimple def_stmt = { 0 };
 
   if (TREE_CODE (arg) != SSA_NAME)
     {
@@ -2596,8 +2614,8 @@ get_maxval_strlen (tree arg, tree *length, bitmap visited, int type)
 static tree
 ccp_fold_builtin (gimple stmt)
 {
-  tree result;
-  bool ignore;
+  tree result = { 0 };
+  bool ignore = { 0 };
   location_t loc = gimple_location (stmt);
 
   gcc_assert (is_gimple_call (stmt));
@@ -2908,7 +2926,7 @@ fold_stmt_1 (gimple_stmt_iterator *gsi, bool inplace)
 {
   bool changed = false;
   gimple stmt = gsi_stmt (*gsi);
-  unsigned i;
+  unsigned i = { 0 };
 
   /* Fold the main computation performed by the statement.  */
   switch (gimple_code (stmt))
@@ -3041,8 +3059,8 @@ fold_stmt_inplace (gimple stmt)
 static tree
 optimize_stack_restore (gimple_stmt_iterator i)
 {
-  tree callee;
-  gimple stmt;
+  tree callee = { 0 };
+  gimple stmt = { 0 };
 
   basic_block bb = gsi_bb (i);
   gimple call = gsi_stmt (i);
@@ -3125,8 +3143,11 @@ optimize_stack_restore (gimple_stmt_iterator i)
 static tree
 optimize_stdarg_builtin (gimple call)
 {
-  tree callee, lhs, rhs, cfun_va_list;
-  bool va_list_simple_ptr;
+  tree callee = { 0 };
+  tree lhs = { 0 };
+  tree rhs = { 0 };
+  tree cfun_va_list = { 0 };
+  bool va_list_simple_ptr = { 0 };
   location_t loc = gimple_location (call);
 
   if (gimple_code (call) != GIMPLE_CALL)
@@ -3204,12 +3225,13 @@ optimize_stdarg_builtin (gimple call)
 static void
 gimplify_and_update_call_from_tree (gimple_stmt_iterator *si_p, tree expr)
 {
-  tree lhs;
+  tree lhs = { 0 };
   tree tmp = NULL_TREE;  /* Silence warning.  */
-  gimple stmt, new_stmt;
-  gimple_stmt_iterator i;
+  gimple stmt = { 0 };
+  gimple new_stmt = { 0 };
+  gimple_stmt_iterator i = { 0 };
   gimple_seq stmts = gimple_seq_alloc();
-  struct gimplify_ctx gctx;
+  struct gimplify_ctx gctx = { 0 };
 
   stmt = gsi_stmt (*si_p);
 
@@ -3264,7 +3286,7 @@ static unsigned int
 execute_fold_all_builtins (void)
 {
   bool cfg_changed = false;
-  basic_block bb;
+  basic_block bb = { 0 };
   unsigned int todoflags = 0;
 
   FOR_EACH_BB (bb)
@@ -3272,9 +3294,11 @@ execute_fold_all_builtins (void)
       gimple_stmt_iterator i;
       for (i = gsi_start_bb (bb); !gsi_end_p (i); )
 	{
-          gimple stmt, old_stmt;
-	  tree callee, result;
-	  enum built_in_function fcode;
+          gimple stmt = { 0 };
+          gimple old_stmt = { 0 };
+	  tree callee = { 0 };
+	  tree result = { 0 };
+	  enum built_in_function fcode = (enum built_in_function)fcode;
 
 	  stmt = gsi_stmt (i);
 
