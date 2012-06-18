@@ -15,5 +15,6 @@ The contents of the file do not matter.
    - removal of LTO
    - back to C compilation, long passage of time also, remove enable-checking
    - upgrade from 4.5 to 4.7
+   - reduction of gmp, removal of mpfr, mpc
 
-86-4CFC-AB4B-F854C784
+6-4CFC-AB4B-F854C784
