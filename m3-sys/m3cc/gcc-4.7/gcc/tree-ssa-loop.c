@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop optimizations over tree-ssa.
    Copyright (C) 2003, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -249,11 +251,6 @@ struct gimple_opt_pass pass_vectorize =
 static unsigned int
 graphite_transforms (void)
 {
-  if (!current_loops)
-    return 0;
-
-  graphite_transform_loops ();
-
   return 0;
 }
 
