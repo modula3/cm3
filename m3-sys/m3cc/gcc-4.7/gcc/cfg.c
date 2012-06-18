@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Control flow graph manipulation code for GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -113,9 +115,9 @@ free_edge (edge e ATTRIBUTE_UNUSED)
 void
 clear_edges (void)
 {
-  basic_block bb;
-  edge e;
-  edge_iterator ei;
+  basic_block bb = { 0 };
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
 
   FOR_EACH_BB (bb)
     {
@@ -138,7 +140,7 @@ clear_edges (void)
 basic_block
 alloc_block (void)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
   bb = ggc_alloc_cleared_basic_block_def ();
   return bb;
 }
@@ -167,7 +169,7 @@ unlink_block (basic_block b)
 void
 compact_blocks (void)
 {
-  int i;
+  int i = { 0 };
 
   SET_BASIC_BLOCK (ENTRY_BLOCK, ENTRY_BLOCK_PTR);
   SET_BASIC_BLOCK (EXIT_BLOCK, EXIT_BLOCK_PTR);
@@ -1092,8 +1094,8 @@ void
 scale_bbs_frequencies_gcov_type (basic_block *bbs, int nbbs, gcov_type num,
 				 gcov_type den)
 {
-  int i;
-  edge e;
+  int i = { 0 };
+  edge e = { 0 };
   gcov_type fraction = RDIV (num * 65536, den);
 
   gcc_assert (fraction >= 0);
@@ -1101,7 +1103,7 @@ scale_bbs_frequencies_gcov_type (basic_block *bbs, int nbbs, gcov_type num,
   if (num < MAX_SAFE_MULTIPLIER)
     for (i = 0; i < nbbs; i++)
       {
-	edge_iterator ei;
+	edge_iterator ei = { 0 };
 	bbs[i]->frequency = RDIV (bbs[i]->frequency * num, den);
 	if (bbs[i]->count <= MAX_SAFE_MULTIPLIER)
 	  bbs[i]->count = RDIV (bbs[i]->count * num, den);
@@ -1116,7 +1118,7 @@ scale_bbs_frequencies_gcov_type (basic_block *bbs, int nbbs, gcov_type num,
    else
     for (i = 0; i < nbbs; i++)
       {
-	edge_iterator ei;
+	edge_iterator ei = { 0 };
 	if (sizeof (gcov_type) > sizeof (int))
 	  bbs[i]->frequency = RDIV (bbs[i]->frequency * num, den);
 	else

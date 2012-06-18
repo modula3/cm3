@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Integrated Register Allocator (IRA) entry point.
    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012
    Free Software Foundation, Inc.
@@ -700,9 +702,11 @@ ira_free_bitmap (bitmap b ATTRIBUTE_UNUSED)
 void
 ira_print_disposition (FILE *f)
 {
-  int i, n, max_regno;
-  ira_allocno_t a;
-  basic_block bb;
+  int i = { 0 };
+  int n = { 0 };
+  int max_regno = { 0 };
+  ira_allocno_t a = { 0 };
+  basic_block bb = { 0 };
 
   fprintf (f, "Disposition:");
   max_regno = max_reg_num ();
@@ -1686,7 +1690,7 @@ static bool
 ira_bad_reload_regno_1 (int regno, rtx x)
 {
   int x_regno, n, i;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   enum reg_class pref;
 
   /* We only deal with pseudo regs.  */
@@ -1926,9 +1930,10 @@ short *reg_renumber;
 static void
 setup_reg_renumber (void)
 {
-  int regno, hard_regno;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  int regno = { 0 };
+  int hard_regno = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   caller_save_needed = 0;
   FOR_EACH_ALLOCNO (a, ai)
@@ -1976,9 +1981,9 @@ setup_reg_renumber (void)
 static void
 setup_allocno_assignment_flags (void)
 {
-  int hard_regno;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  int hard_regno = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {
@@ -2009,9 +2014,10 @@ setup_allocno_assignment_flags (void)
 static void
 calculate_allocation_cost (void)
 {
-  int hard_regno, cost;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  int hard_regno = { 0 };
+  int cost = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   ira_overall_cost = ira_reg_cost = ira_mem_cost = 0;
   FOR_EACH_ALLOCNO (a, ai)
@@ -2060,9 +2066,11 @@ calculate_allocation_cost (void)
 static void
 check_allocation (void)
 {
-  ira_allocno_t a;
-  int hard_regno, nregs, conflict_nregs;
-  ira_allocno_iterator ai;
+  ira_allocno_t a = { 0 };
+  int hard_regno = { 0 };
+  int nregs = { 0 };
+  int conflict_nregs = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {
@@ -2184,10 +2192,11 @@ fix_reg_equiv_init (void)
 static void
 print_redundant_copies (void)
 {
-  int hard_regno;
-  ira_allocno_t a;
-  ira_copy_t cp, next_cp;
-  ira_allocno_iterator ai;
+  int hard_regno = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_copy_t cp = { 0 };
+  ira_copy_t next_cp = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {

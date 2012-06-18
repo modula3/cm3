@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Partial redundancy elimination / Hoisting for RTL.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
    2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
@@ -1960,8 +1962,8 @@ prune_insertions_deletions (int n_elems)
 static struct edge_list *
 compute_pre_data (void)
 {
-  struct edge_list *edge_list;
-  basic_block bb;
+  struct edge_list *edge_list = { 0 };
+  basic_block bb = { 0 };
 
   compute_local_properties (transp, comp, antloc, &expr_hash_table);
   prune_expressions (true);
@@ -2009,8 +2011,8 @@ static int
 pre_expr_reaches_here_p_work (basic_block occr_bb, struct expr *expr,
 			      basic_block bb, char *visited)
 {
-  edge pred;
-  edge_iterator ei;
+  edge pred = { 0 };
+  edge_iterator ei = { 0 };
 
   FOR_EACH_EDGE (pred, ei, bb->preds)
     {
@@ -2055,7 +2057,7 @@ pre_expr_reaches_here_p_work (basic_block occr_bb, struct expr *expr,
 static int
 pre_expr_reaches_here_p (basic_block occr_bb, struct expr *expr, basic_block bb)
 {
-  int rval;
+  int rval = { 0 };
   char *visited = XCNEWVEC (char, last_basic_block);
 
   rval = pre_expr_reaches_here_p_work (occr_bb, expr, bb, visited);
@@ -2072,7 +2074,7 @@ process_insert_insn (struct expr *expr)
   rtx reg = expr->reaching_reg;
   /* Copy the expression to make sure we don't have any sharing issues.  */
   rtx exp = copy_rtx (expr->expr);
-  rtx pat;
+  rtx pat = { 0 };
 
   start_sequence ();
 
@@ -2105,10 +2107,11 @@ static void
 insert_insn_end_basic_block (struct expr *expr, basic_block bb)
 {
   rtx insn = BB_END (bb);
-  rtx new_insn;
+  rtx new_insn = { 0 };
   rtx reg = expr->reaching_reg;
   int regno = REGNO (reg);
-  rtx pat, pat_end;
+  rtx pat = { 0 };
+  rtx pat_end = { 0 };
 
   pat = process_insert_insn (expr);
   gcc_assert (pat && INSN_P (pat));
@@ -3266,10 +3269,10 @@ static struct ls_expr *
 ldst_entry (rtx x)
 {
   int do_not_record_p = 0;
-  struct ls_expr * ptr;
-  unsigned int hash;
-  void **slot;
-  struct ls_expr e;
+  struct ls_expr * ptr = { 0 };
+  unsigned int hash = { 0 };
+  void **slot = { 0 };
+  struct ls_expr e = { 0 };
 
   hash = hash_rtx (x, GET_MODE (x), &do_not_record_p,
 		   NULL,  /*have_reg_qty=*/false);
@@ -3334,7 +3337,7 @@ free_ld_motion_mems (void)
 static void
 print_ldst_list (FILE * file)
 {
-  struct ls_expr * ptr;
+  struct ls_expr * ptr = { 0 };
 
   fprintf (file, "LDST list: \n");
 
@@ -3369,8 +3372,8 @@ print_ldst_list (FILE * file)
 static struct ls_expr *
 find_rtx_in_ldst (rtx x)
 {
-  struct ls_expr e;
-  void **slot;
+  struct ls_expr e = { 0 };
+  void **slot = { 0 };
   if (!pre_ldst_table)
     return NULL;
   e.pattern = x;
@@ -3425,9 +3428,10 @@ simple_mem (const_rtx x)
 static void
 invalidate_any_buried_refs (rtx x)
 {
-  const char * fmt;
-  int i, j;
-  struct ls_expr * ptr;
+  const char * fmt = { 0 };
+  int i = { 0 };
+  int j = { 0 };
+  struct ls_expr * ptr = { 0 };
 
   /* Invalidate it in the list.  */
   if (MEM_P (x) && simple_mem (x))
@@ -3460,9 +3464,9 @@ invalidate_any_buried_refs (rtx x)
 static void
 compute_ld_motion_mems (void)
 {
-  struct ls_expr * ptr;
-  basic_block bb;
-  rtx insn;
+  struct ls_expr * ptr = { 0 };
+  basic_block bb = { 0 };
+  rtx insn = { 0 };
 
   pre_ldst_mems = NULL;
   pre_ldst_table
@@ -3530,7 +3534,7 @@ trim_ld_motion_mems (void)
 
   while (ptr != NULL)
     {
-      struct expr * expr;
+      struct expr * expr = { 0 };
 
       /* Delete if entry has been made invalid.  */
       if (! ptr->invalid)
@@ -3578,7 +3582,7 @@ trim_ld_motion_mems (void)
 static void
 update_ld_motion_stores (struct expr * expr)
 {
-  struct ls_expr * mem_ptr;
+  struct ls_expr * mem_ptr = { 0 };
 
   if ((mem_ptr = find_rtx_in_ldst (expr->expr)))
     {
@@ -3686,7 +3690,7 @@ gate_rtl_pre (void)
 static unsigned int
 execute_rtl_pre (void)
 {
-  int changed;
+  int changed = { 0 };
   delete_unreachable_blocks ();
   df_analyze ();
   changed = one_pre_gcse_pass ();
@@ -3711,7 +3715,7 @@ gate_rtl_hoist (void)
 static unsigned int
 execute_rtl_hoist (void)
 {
-  int changed;
+  int changed = { 0 };
   delete_unreachable_blocks ();
   df_analyze ();
   changed = one_code_hoisting_pass ();
