@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of floating-point conversion from compiler
    internal format to MPFR.
    Copyright (C) 2010
@@ -23,18 +25,7 @@
 #define GCC_REALGMP_H
 
 #include <gmp.h>
-#include <mpfr.h>
-#include <mpc.h>
 #include "real.h"
-
-/* In builtins.c.  */
-extern tree do_mpc_arg2 (tree, tree, tree, int, int (*)(mpc_ptr, mpc_srcptr, mpc_srcptr, mpc_rnd_t));
-
-/* Convert between MPFR and REAL_VALUE_TYPE.  The caller is
-   responsible for initializing and clearing the MPFR parameter.  */
-
-extern void real_from_mpfr (REAL_VALUE_TYPE *, mpfr_srcptr, tree, mp_rnd_t);
-extern void mpfr_from_real (mpfr_ptr, const REAL_VALUE_TYPE *, mp_rnd_t);
 
 #endif /* ! GCC_REALGMP_H */
 

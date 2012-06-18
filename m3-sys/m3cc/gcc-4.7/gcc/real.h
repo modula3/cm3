@@ -426,18 +426,10 @@ extern REAL_VALUE_TYPE dconst2;
 extern REAL_VALUE_TYPE dconstm1;
 extern REAL_VALUE_TYPE dconsthalf;
 
-#define dconst_e()  (*dconst_e_ptr ())
 #define dconst_third()  (*dconst_third_ptr ())
-#define dconst_sqrt2()  (*dconst_sqrt2_ptr ())
-
-/* Function to return the real value special constant 'e'.  */
-extern const REAL_VALUE_TYPE * dconst_e_ptr (void);
 
 /* Returns the special REAL_VALUE_TYPE corresponding to 1/3.  */
 extern const REAL_VALUE_TYPE * dconst_third_ptr (void);
-
-/* Returns the special REAL_VALUE_TYPE corresponding to sqrt(2).  */
-extern const REAL_VALUE_TYPE * dconst_sqrt2_ptr (void);
 
 /* Function to return a real value (not a tree node)
    from a given integer constant.  */

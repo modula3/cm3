@@ -1108,12 +1108,13 @@ const_binop (enum tree_code code, tree arg1, tree arg2)
   if (TREE_CODE (arg1) == REAL_CST)
     {
       enum machine_mode mode;
-      REAL_VALUE_TYPE d1;
-      REAL_VALUE_TYPE d2;
-      REAL_VALUE_TYPE value;
-      REAL_VALUE_TYPE result;
-      bool inexact;
-      tree t, type;
+      REAL_VALUE_TYPE d1 = { 0 };
+      REAL_VALUE_TYPE d2 = { 0 };
+      REAL_VALUE_TYPE value = { 0 };
+      REAL_VALUE_TYPE result = { 0 };
+      bool inexact = { 0 };
+      tree t = { 0 };
+      tree type = { 0 };
 
       /* The following codes are handled by real_arithmetic.  */
       switch (code)
@@ -1185,12 +1186,13 @@ const_binop (enum tree_code code, tree arg1, tree arg2)
 
   if (TREE_CODE (arg1) == FIXED_CST)
     {
-      FIXED_VALUE_TYPE f1;
-      FIXED_VALUE_TYPE f2;
-      FIXED_VALUE_TYPE result;
-      tree t, type;
-      int sat_p;
-      bool overflow_p;
+      FIXED_VALUE_TYPE f1 = { 0 };
+      FIXED_VALUE_TYPE f2 = { 0 };
+      FIXED_VALUE_TYPE result = { 0 };
+      tree t = { 0 };
+      tree type = { 0 };
+      int sat_p = { 0 };
+      bool overflow_p = { 0 };
 
       /* The following codes are handled by fixed_arithmetic.  */
       switch (code)
@@ -1243,9 +1245,7 @@ const_binop (enum tree_code code, tree arg1, tree arg2)
 
 	case MULT_EXPR:
 	  if (COMPLEX_FLOAT_TYPE_P (type))
-	    return do_mpc_arg2 (arg1, arg2, type,
-				/* do_nonfinite= */ folding_initializer,
-				mpc_mul);
+	    return NULL_TREE;
 
 	  real = const_binop (MINUS_EXPR,
 			      const_binop (MULT_EXPR, r1, r2),
@@ -1257,9 +1257,7 @@ const_binop (enum tree_code code, tree arg1, tree arg2)
 
 	case RDIV_EXPR:
 	  if (COMPLEX_FLOAT_TYPE_P (type))
-	    return do_mpc_arg2 (arg1, arg2, type,
-                                /* do_nonfinite= */ folding_initializer,
-				mpc_div);
+	    return NULL_TREE;
 	  /* Fallthru ... */
 	case TRUNC_DIV_EXPR:
 	case CEIL_DIV_EXPR:
@@ -1462,7 +1460,7 @@ tree
 size_diffop_loc (location_t loc, tree arg0, tree arg1)
 {
   tree type = TREE_TYPE (arg0);
-  tree ctype;
+  tree ctype = { 0 };
 
   gcc_assert (int_binop_types_match_p (MINUS_EXPR, TREE_TYPE (arg0),
 				       TREE_TYPE (arg1)));
@@ -1509,7 +1507,7 @@ size_diffop_loc (location_t loc, tree arg0, tree arg1)
 static tree
 fold_convert_const_int_from_int (tree type, const_tree arg1)
 {
-  tree t;
+  tree t = { 0 };
 
   /* Given an integer constant, make new constant with new type,
      appropriately sign-extended or truncated.  */
@@ -1530,7 +1528,7 @@ static tree
 fold_convert_const_int_from_real (enum tree_code code, tree type, const_tree arg1)
 {
   int overflow = 0;
-  tree t;
+  tree t = { 0 };
 
   /* The following code implements the floating point to integer
      conversion rules required by the Java Language Specification,
@@ -1541,8 +1539,8 @@ fold_convert_const_int_from_real (enum tree_code code, tree type, const_tree arg
      C and C++ standards that simply state that the behavior of
      FP-to-integer conversion is unspecified upon overflow.  */
 
-  double_int val;
-  REAL_VALUE_TYPE r;
+  double_int val = { 0 };
+  REAL_VALUE_TYPE r = { 0 };
   REAL_VALUE_TYPE x = TREE_REAL_CST (arg1);
 
   switch (code)

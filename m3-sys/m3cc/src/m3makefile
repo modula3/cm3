@@ -298,8 +298,6 @@ if not GCC43
 end
 if GCC47
   link_file("../gmp-4.3.2", SourceDir & "/gmp")
-  link_file("../mpfr-2.4.2", SourceDir & "/mpfr")
-  link_file("../mpc-0.8.2", SourceDir & "/mpc")
 end
 
 % figure out where we're going to build gcc
@@ -581,7 +579,7 @@ m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-li
            % & " | tee -a " & Log
           ])
 if GCC47
-  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-mpc all-zlib"
+  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-zlib"
              % & " | tee -a " & Log
              ])
 end

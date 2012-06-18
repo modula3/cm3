@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* real.c - software floating point emulation.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002,
    2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
@@ -2342,28 +2344,6 @@ times_pten (REAL_VALUE_TYPE *r, int exp)
     do_divide (r, r, &pten);
 }
 
-/* Returns the special REAL_VALUE_TYPE corresponding to 'e'.  */
-
-const REAL_VALUE_TYPE *
-dconst_e_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      mpfr_t m;
-      mpfr_init2 (m, SIGNIFICAND_BITS);
-      mpfr_set_ui (m, 1, GMP_RNDN);
-      mpfr_exp (m, m, GMP_RNDN);
-      real_from_mpfr (&value, m, NULL_TREE, GMP_RNDN);
-      mpfr_clear (m);
-
-    }
-  return &value;
-}
-
 /* Returns the special REAL_VALUE_TYPE corresponding to 1/3.  */
 
 const REAL_VALUE_TYPE *
@@ -2376,26 +2356,6 @@ dconst_third_ptr (void)
   if (value.cl == rvc_zero)
     {
       real_arithmetic (&value, RDIV_EXPR, &dconst1, real_digit (3));
-    }
-  return &value;
-}
-
-/* Returns the special REAL_VALUE_TYPE corresponding to sqrt(2).  */
-
-const REAL_VALUE_TYPE *
-dconst_sqrt2_ptr (void)
-{
-  static REAL_VALUE_TYPE value;
-
-  /* Initialize mathematical constants for constant folding builtins.
-     These constants need to be given to at least 160 bits precision.  */
-  if (value.cl == rvc_zero)
-    {
-      mpfr_t m;
-      mpfr_init2 (m, SIGNIFICAND_BITS);
-      mpfr_sqrt_ui (m, 2, GMP_RNDN);
-      real_from_mpfr (&value, m, NULL_TREE, GMP_RNDN);
-      mpfr_clear (m);
     }
   return &value;
 }
