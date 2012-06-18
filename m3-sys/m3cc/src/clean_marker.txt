@@ -17,4 +17,4 @@ The contents of the file do not matter.
    - upgrade from 4.5 to 4.7
    - reduction of gmp, removal of mpfr, mpc
 
-6-4CFC-AB4B-F854C784
+4CFC-AB4B-F854C784
