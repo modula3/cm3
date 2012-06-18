@@ -3713,9 +3713,11 @@ static bool
 fill_vec_av_set (av_set_t av, blist_t bnds, fence_t fence,
                  int *pneed_stall)
 {
-  av_set_iterator si;
-  expr_t expr;
-  int sched_next_worked = 0, stalled, n;
+  av_set_iterator si = { 0 };
+  expr_t expr = { 0 };
+  int sched_next_worked = 0;
+  int stalled = { 0 };
+  int n = { 0 };
   static int av_max_prio, est_ticks_till_branch;
   int min_need_stall = -1;
   deps_t dc = BND_DC (BLIST_BND (bnds));
@@ -3978,8 +3980,8 @@ fill_vec_av_set (av_set_t av, blist_t bnds, fence_t fence,
 static void
 convert_vec_av_set_to_ready (void)
 {
-  int n;
-  expr_t expr;
+  int n = { 0 };
+  expr_t expr = { 0 };
 
   /* Allocate and fill the ready list from the sorted vector.  */
   ready.n_ready = VEC_length (expr_t, vec_av_set);
@@ -4012,7 +4014,7 @@ static expr_t
 fill_ready_list (av_set_t *av_ptr, blist_t bnds, fence_t fence,
                  int *pneed_stall)
 {
-  expr_t expr;
+  expr_t expr = { 0 };
 
   /* We do not support multiple boundaries per fence.  */
   gcc_assert (BLIST_NEXT (bnds) == NULL);
@@ -4075,7 +4077,7 @@ sel_dfa_new_cycle (insn_t insn, fence_t fence)
 static int
 invoke_reorder_hooks (fence_t fence)
 {
-  int issue_more;
+  int issue_more = { 0 };
   bool ran_hook = false;
 
   /* Call the reorder hook at the beginning of the cycle, and call
@@ -4167,8 +4169,8 @@ invoke_reorder_hooks (fence_t fence)
 static inline expr_t
 find_expr_for_ready (int index, bool follow_ready_element)
 {
-  expr_t expr;
-  int real_index;
+  expr_t expr = { 0 };
+  int real_index = { 0 };
 
   real_index = follow_ready_element ? ready.first - index : index;
 
@@ -4183,7 +4185,8 @@ find_expr_for_ready (int index, bool follow_ready_element)
 static int
 invoke_dfa_lookahead_guard (void)
 {
-  int i, n;
+  int i = { 0 };
+  int n = { 0 };
   bool have_hook
     = targetm.sched.first_cycle_multipass_dfa_lookahead_guard != NULL;
 
@@ -4192,9 +4195,9 @@ invoke_dfa_lookahead_guard (void)
 
   for (i = 0, n = 0; i < ready.n_ready; i++)
     {
-      expr_t expr;
-      insn_t insn;
-      int r;
+      expr_t expr = { 0 };
+      insn_t insn = { 0 };
+      int r = { 0 };
 
       /* In this loop insn is Ith element of the ready list given by
          ready_element, not Ith element of ready.vec.  */
@@ -4232,8 +4235,10 @@ invoke_dfa_lookahead_guard (void)
 static int
 calculate_privileged_insns (void)
 {
-  expr_t cur_expr, min_spec_expr = NULL;
-  int privileged_n = 0, i;
+  expr_t cur_expr = { 0 };
+  expr_t min_spec_expr = NULL;
+  int privileged_n = 0;
+  int i = { 0 };
 
   for (i = 0; i < ready.n_ready; i++)
     {
@@ -4292,7 +4297,7 @@ static int
 estimate_insn_cost (rtx insn, state_t state)
 {
   static state_t temp = NULL;
-  int cost;
+  int cost = { 0 };
 
   if (!temp)
     temp = xmalloc (dfa_state_size);
@@ -4388,7 +4393,7 @@ static expr_t
 find_best_expr (av_set_t *av_vliw_ptr, blist_t bnds, fence_t fence,
                 int *pneed_stall)
 {
-  expr_t best;
+  expr_t best = { 0 };
 
   /* Choose the best insn for scheduling via:
      1) sorting the ready list based on priority;
@@ -4507,7 +4512,7 @@ static basic_block
 find_block_for_bookkeeping (edge e1, edge e2, bool lax)
 {
   basic_block candidate_block = NULL;
-  edge e;
+  edge e = { 0 };
 
   /* Loop over edges from E1 to E2, inclusive.  */
   for (e = e1; !lax || e->dest != EXIT_BLOCK_PTR; e = EDGE_SUCC (e->dest, 0))
@@ -4548,7 +4553,8 @@ find_block_for_bookkeeping (edge e1, edge e2, bool lax)
 static basic_block
 create_block_for_bookkeeping (edge e1, edge e2)
 {
-  basic_block new_bb, bb = e2->dest;
+  basic_block new_bb = { 0 };
+  basic_block bb = e2->dest;
 
   /* Check that we don't spoil the loop structure.  */
   if (current_loop_nest)
@@ -4594,9 +4600,9 @@ create_block_for_bookkeeping (edge e1, edge e2)
 
   if (MAY_HAVE_DEBUG_INSNS)
     {
-      basic_block succ;
+      basic_block succ = { 0 };
       insn_t insn = sel_bb_head (new_bb);
-      insn_t last;
+      insn_t last = { 0 };
 
       if (DEBUG_INSN_P (insn)
 	  && single_succ_p (new_bb)
@@ -4684,7 +4690,7 @@ create_block_for_bookkeeping (edge e1, edge e2)
 static insn_t
 find_place_for_bookkeeping (edge e1, edge e2, fence_t *fence_to_rewind)
 {
-  insn_t place_to_insert;
+  insn_t place_to_insert = { 0 };
   /* Find a basic block that can hold bookkeeping.  If it can be found, do not
      create new basic block, but insert bookkeeping there.  */
   basic_block book_block = find_block_for_bookkeeping (e1, e2, FALSE);
@@ -4741,8 +4747,8 @@ find_place_for_bookkeeping (edge e1, edge e2, fence_t *fence_to_rewind)
 static int
 find_seqno_for_bookkeeping (insn_t place_to_insert, insn_t join_point)
 {
-  int seqno;
-  rtx next;
+  int seqno = { 0 };
+  rtx next = { 0 };
 
   /* Check if we are about to insert bookkeeping copy before a jump, and use
      jump's seqno for the copy; otherwise, use JOIN_POINT's seqno.  */
@@ -4803,10 +4809,12 @@ emit_bookkeeping_insn (insn_t place_to_insert, expr_t c_expr, int new_seqno)
 static basic_block
 generate_bookkeeping_insn (expr_t c_expr, edge e1, edge e2)
 {
-  insn_t join_point, place_to_insert, new_insn;
-  int new_seqno;
-  bool need_to_exchange_data_sets;
-  fence_t fence_to_rewind;
+  insn_t join_point = { 0 };
+  insn_t place_to_insert = { 0 };
+  insn_t new_insn = { 0 };
+  int new_seqno = { 0 };
+  bool need_to_exchange_data_sets = { 0 };
+  fence_t fence_to_rewind = { 0 };
 
   if (sched_verbose >= 4)
     sel_print ("Generating bookkeeping insn (%d->%d)\n", e1->src->index,
@@ -4844,8 +4852,8 @@ generate_bookkeeping_insn (expr_t c_expr, edge e1, edge e2)
 static void
 remove_insns_that_need_bookkeeping (fence_t fence, av_set_t *av_ptr)
 {
-  expr_t expr;
-  av_set_iterator i;
+  expr_t expr = { 0 };
+  av_set_iterator i = { 0 };
 
   /*  An expression does not need bookkeeping if it is available on all paths
       from current block to original block and current block dominates
@@ -4906,9 +4914,16 @@ remove_insns_that_need_bookkeeping (fence_t fence, av_set_t *av_ptr)
 static void
 move_cond_jump (rtx insn, bnd_t bnd)
 {
-  edge ft_edge;
-  basic_block block_from, block_next, block_new, block_bnd, bb;
-  rtx next, prev, link, head;
+  edge ft_edge = { 0 };
+  basic_block block_from = { 0 };
+  basic_block block_next = { 0 };
+  basic_block block_new = { 0 };
+  basic_block block_bnd = { 0 };
+  basic_block bb = { 0 };
+  rtx next = { 0 };
+  rtx prev = { 0 };
+  rtx link = { 0 };
+  rtx head = { 0 };
 
   block_from = BLOCK_FOR_INSN (insn);
   block_bnd = BLOCK_FOR_INSN (BND_TO (bnd));
@@ -4955,7 +4970,8 @@ move_cond_jump (rtx insn, bnd_t bnd)
   head = BB_HEAD (block_new);
   while (bb != block_from->next_bb)
     {
-      rtx from, to;
+      rtx from = { 0 };
+      rtx to = { 0 };
       from = bb == block_bnd ? prev : sel_bb_head (bb);
       to = bb == block_from ? next : sel_bb_end (bb);
 
@@ -5004,8 +5020,8 @@ move_cond_jump (rtx insn, bnd_t bnd)
 static void
 remove_temp_moveop_nops (bool full_tidying)
 {
-  int i;
-  insn_t insn;
+  int i = { 0 };
+  insn_t insn = { 0 };
 
   FOR_EACH_VEC_ELT (insn_t, vec_temp_moveop_nops, i, insn)
     {
@@ -5031,8 +5047,8 @@ remove_insns_for_debug (blist_t bnds, av_set_t *av_vliw_p)
   if (! dbg_cnt (sel_sched_insn_cnt))
     /* Leave only the next insn in av_vliw.  */
     {
-      av_set_iterator av_it;
-      expr_t expr;
+      av_set_iterator av_it = { 0 };
+      expr_t expr = { 0 };
       bnd_t bnd = BLIST_BND (bnds);
       insn_t next = BND_TO (bnd);
 
@@ -5109,8 +5125,8 @@ static av_set_t
 find_sequential_best_exprs (bnd_t bnd, expr_t expr_vliw, bool for_moveop)
 {
   av_set_t expr_seq = NULL;
-  expr_t expr;
-  av_set_iterator i;
+  expr_t expr = { 0 };
+  av_set_iterator i = { 0 };
 
   FOR_EACH_EXPR (expr, i, BND_AV (bnd))
     {
@@ -5167,7 +5183,9 @@ find_sequential_best_exprs (bnd_t bnd, expr_t expr_vliw, bool for_moveop)
 static void ATTRIBUTE_UNUSED
 move_nop_to_previous_block (insn_t nop, basic_block prev_bb)
 {
-  insn_t prev_insn, next_insn, note;
+  insn_t prev_insn = { 0 };
+  insn_t next_insn = { 0 };
+  insn_t note = { 0 };
 
   gcc_assert (sel_bb_head_p (nop)
               && prev_bb == BLOCK_FOR_INSN (nop)->prev_bb);
@@ -5194,7 +5212,7 @@ move_nop_to_previous_block (insn_t nop, basic_block prev_bb)
 static insn_t
 prepare_place_to_insert (bnd_t bnd)
 {
-  insn_t place_to_insert;
+  insn_t place_to_insert = { 0 };
 
   /* Init place_to_insert before calling move_op, as the later
      can possibly remove BND_TO (bnd).  */
@@ -5234,10 +5252,11 @@ static bool
 move_exprs_to_boundary (bnd_t bnd, expr_t expr_vliw,
                         av_set_t expr_seq, expr_t c_expr)
 {
-  bool b, should_move;
-  unsigned book_uid;
-  bitmap_iterator bi;
-  int n_bookkeeping_copies_before_moveop;
+  bool b = { 0 };
+  bool should_move = { 0 };
+  unsigned book_uid = { 0 };
+  bitmap_iterator bi = { 0 };
+  int n_bookkeeping_copies_before_moveop = { 0 };
 
   /* Make a move.  This call will remove the original operation,
      insert all necessary bookkeeping instructions and update the
@@ -5285,8 +5304,9 @@ move_exprs_to_boundary (bnd_t bnd, expr_t expr_vliw,
 static void
 debug_state (state_t state)
 {
-  unsigned char *p;
-  unsigned int i, size = dfa_state_size;
+  unsigned char *p = { 0 };
+  unsigned i = { 0 };
+  unsigned size = dfa_state_size;
 
   sel_print ("state (%u):", size);
   for (i = 0, p = (unsigned char *) state; i < size; i++)
@@ -5299,11 +5319,11 @@ debug_state (state_t state)
 static bool
 advance_state_on_fence (fence_t fence, insn_t insn)
 {
-  bool asm_p;
+  bool asm_p = { 0 };
 
   if (recog_memoized (insn) >= 0)
     {
-      int res;
+      int res = { 0 };
       state_t temp_state = alloca (dfa_state_size);
 
       gcc_assert (!INSN_ASM_P (insn));
@@ -5344,7 +5364,7 @@ advance_state_on_fence (fence_t fence, insn_t insn)
 static void
 update_fence_and_insn (fence_t fence, insn_t insn, int need_stall)
 {
-  bool asm_p;
+  bool asm_p = { 0 };
 
   /* First, reflect that something is scheduled on this fence.  */
   asm_p = advance_state_on_fence (fence, insn);
@@ -5401,8 +5421,8 @@ static blist_t *
 update_boundaries (fence_t fence, bnd_t bnd, insn_t insn, blist_t *bndsp,
                    blist_t *bnds_tailp)
 {
-  succ_iterator si;
-  insn_t succ;
+  succ_iterator si = { 0 };
+  insn_t succ = { 0 };
 
   advance_deps_context (BND_DC (bnd), insn);
   FOR_EACH_SUCC_1 (succ, si, insn,
@@ -5438,11 +5458,11 @@ update_boundaries (fence_t fence, bnd_t bnd, insn_t insn, blist_t *bndsp,
 static insn_t
 schedule_expr_on_boundary (bnd_t bnd, expr_t expr_vliw, int seqno)
 {
-  av_set_t expr_seq;
+  av_set_t expr_seq = { 0 };
   expr_t c_expr = XALLOCA (expr_def);
-  insn_t place_to_insert;
-  insn_t insn;
-  bool should_move;
+  insn_t place_to_insert = { 0 };
+  insn_t insn = { 0 };
+  bool should_move = { 0 };
 
   expr_seq = find_sequential_best_exprs (bnd, expr_vliw, true);
 
