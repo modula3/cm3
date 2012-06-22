@@ -6338,9 +6338,7 @@ m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
 bool
 m3_post_options (PCSTR* /*pfilename*/)
 {
-#if GCC47
-  flag_tree_sra = false;                        /* bug */
-#endif
+  flag_tree_sra = false;                        /* Scalar Replacement of Aggregates -- we abuse bit_field_ref */
   flag_reorder_blocks = false;                  /* breaks our exception handling? */
   flag_reorder_blocks_and_partition = false;    /* breaks our exception handling? */
   flag_strict_aliasing = false;                 /* ? */
