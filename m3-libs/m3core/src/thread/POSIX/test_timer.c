@@ -6,9 +6,9 @@ Let's see.
 
 #include "m3core.h"
 
-void alarm_handler(int sig)
+void __cdecl alarm_handler(int sig)
 {
-    char buffer[1000];
+    char buffer[1000] = { 0 };
 
     sprintf(buffer, "%d alarm\n", getpid());
     write(1, buffer, strlen(buffer));
@@ -20,9 +20,9 @@ static sigset_t ThreadSwitchSignal;
 
 #define SIG_TIMESLICE SIGVTALRM
 
-void setup_sigvtalrm(SignalHandler1 handler)
+void __cdecl setup_sigvtalrm(SignalHandler1 handler)
 {
-  struct sigaction act;
+  struct sigaction act = { 0 };
 
   memset(&act, 0, sizeof(act));
   memset(&ThreadSwitchSignal, 0, sizeof(ThreadSwitchSignal));
@@ -36,13 +36,13 @@ void setup_sigvtalrm(SignalHandler1 handler)
   if (sigaction (SIG_TIMESLICE, &act, NULL)) abort();
 }
 
-void allow_sigvtalrm(void)
+void __cdecl allow_sigvtalrm(void)
 {
     int i = sigprocmask(SIG_UNBLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
-void disallow_sigvtalrm(void)
+void __cdecl disallow_sigvtalrm(void)
 {
     int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
@@ -50,8 +50,8 @@ void disallow_sigvtalrm(void)
 
 int main()
 {
-    struct timeval tv;
-    struct itimerval it;
+    struct timeval tv = { 0 };
+    struct itimerval it = { 0 };
 
     alarm_handler(0);
 

@@ -7,32 +7,7 @@
 #undef _GNU_SOURCE
 #define _GNU_SOURCE
 
-/* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
- * but older headers still have context "ss" instead of "__ss"
- * and such, so we have to force 0.
- */
-#if defined(__APPLE__) && !defined(__DARWIN_UNIX03)
-#define __DARWIN_UNIX03 0
-#endif
-
 #include "m3core.h"
-
-#if defined(__APPLE__)
-/*
-http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi\
-  ?tree=cm3&brief-log=1258879870.10595#err9
-/usr/include/ucontext.h:42:2: error: #error ucontext routines are
-    deprecated, and require _XOPEN_SOURCE to be defined
-http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
-  routines-are-deprecated%22-error-on-Mac-OS-X-Snow-Leopard.html
-*/
-#include <sys/ucontext.h>
-
-#elif !(defined(__OpenBSD__) || defined(__CYGWIN__) || defined(__vms))
-/* OpenBSD 4.3, 4.7: ucontext.h doesn't exist, ucontext_t is in signal.h
-   Cygwin: no state provided to signal handler? */
-#include <ucontext.h>
-#endif
 
 #if !defined(__INTERIX) && !defined(__vms) && !defined(SA_SIGINFO)
 #define SA_SIGINFO SA_SIGINFO

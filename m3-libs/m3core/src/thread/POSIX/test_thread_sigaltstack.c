@@ -28,9 +28,11 @@ Context * volatile mctx_create;
 void (* volatile mctx_create_func)(void);
 sigset_t mctx_create_sigs;
 
-void mctx_create_boot(void)
+void
+__cdecl
+mctx_create_boot(void)
 {
-    void (*volatile mctx_start_func)(void);
+    void (*volatile mctx_start_func)(void) = { 0 };
 
     fprintf(stderr, "mctx_create_boot\n");
     
@@ -41,7 +43,9 @@ void mctx_create_boot(void)
     abort(); /* not reached */
 }
 
-void mctx_create_trampoline(int sig)
+void
+__cdecl
+mctx_create_trampoline(int sig)
 {
     fprintf(stderr, "mctx_create_trampoline\n");
     if (sigsetjmp(mctx_create->jb, 0) == 0)
@@ -54,18 +58,19 @@ void mctx_create_trampoline(int sig)
 }
 
 void
+__cdecl
 xMakeContext( 
     Context *context, 
     void (*function)(void),
     void *stack,
     size_t stack_size) 
 {
-    struct sigaction sa;
-    struct sigaction osa;
-    stack_t ss;
-    stack_t oss;
-    sigset_t osigs;
-    sigset_t sigs;
+    struct sigaction sa = { 0 };
+    struct sigaction osa = { 0 };
+    stack_t ss = { 0 };
+    stack_t oss = { 0 };
+    sigset_t osigs = { 0 };
+    sigset_t sigs = { 0 };
 
     fprintf(stderr, "xMakeContext\n");
 
@@ -112,6 +117,7 @@ xMakeContext(
 }
 
 void *
+__cdecl
 MakeContext (void (*p)(void), size_t  words)
 {
   Context *c = (Context *)calloc (1, sizeof(*c));
@@ -150,14 +156,17 @@ Error:
   return NULL;
 }
 
-void F1(void)
+void
+__cdecl
+F1(void)
 {
   fprintf(stderr, "F1\n");
 }
 
-int main()
+int
+__cdecl
+main()
 {
   MakeContext(F1, 1000);
   return 0;
 }
-

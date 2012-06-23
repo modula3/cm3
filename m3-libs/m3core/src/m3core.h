@@ -5,6 +5,26 @@
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
+#if __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__)
+#define M3_HAS_VISIBILITY 1
+#else
+#define M3_HAS_VISIBILITY 0
+#endif
+
+#undef _GNU_SOURCE
+#define _GNU_SOURCE
+
+/* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
+ * but older headers still have context "ss" instead of "__ss"
+ * and such, so we have to force 0.
+ * That is -- the defaults vary, the behavior of the newer
+ * default is not available in older headers, so we must
+ * force the older behavior, so that we can write one compatible source.
+ */
+#if defined(__APPLE__) && !defined(__DARWIN_UNIX03)
+#define __DARWIN_UNIX03 0
+#endif
+
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
@@ -56,8 +76,7 @@
 
 /* http://gcc.gnu.org/wiki/Visibility */
 /* Helpers for shared library support */
-#if __GNUC__ >= 4 && !defined(__osf__)
-#define M3_DLL_IMPORT __attribute__ ((visibility("default")))
+#if M3_HAS_VISIBILITY
 #ifdef __APPLE__
 #define M3_DLL_EXPORT __attribute__ ((visibility("default")))
 #else
@@ -65,7 +84,6 @@
 #endif
 #define M3_DLL_LOCAL  __attribute__ ((visibility("hidden")))
 #else
-#define M3_DLL_IMPORT /* nothing */
 #define M3_DLL_EXPORT /* nothing */
 #define M3_DLL_LOCAL  /* nothing */
 #endif
@@ -134,10 +152,14 @@
 
 #ifdef __cplusplus
 #define M3EXTERNC_BEGIN extern "C" {
+#define M3_EXTERNC_BEGIN extern "C" {
 #define M3EXTERNC_END }
+#define M3_EXTERNC_END }
 #else
 #define M3EXTERNC_BEGIN  /* nothing */
+#define M3_EXTERNC_BEGIN  /* nothing */
 #define M3EXTERNC_END    /* nothing */
+#define M3_EXTERNC_END    /* nothing */
 #endif
 
 /* m3name vs. cname is structured carefully to deal with identifiers
@@ -258,8 +280,23 @@ typedef ptrdiff_t ssize_t;
 #include <pthread.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <semaphore.h>
+#if !(defined(__OpenBSD__) || defined(__CYGWIN__) || defined(__vms))
+#include <sys/ucontext.h>
+#ifndef __APPLE__
+/* OpenBSD 4.3, 4.7: ucontext.h doesn't exist, ucontext_t is in signal.h
+   Cygwin: no state provided to signal handler?
+   Apple: http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi\
+          ?tree=cm3&brief-log=1258879870.10595#err9
+          /usr/include/ucontext.h:42:2: error: #error ucontext routines are
+          deprecated, and require _XOPEN_SOURCE to be defined
+          http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
+          routines-are-deprecated%22-error-on-Mac-OS-X-Snow-Leopard.html */
+#include <ucontext.h>
+#endif /* Apple */
+#endif /* OpenBSD, Cygwin, VMS */
 #define ZeroMemory(a, b) (memset((a), 0, (b)))
-#endif
+#endif /* Win32 vs. Posix */
 
 #define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
 

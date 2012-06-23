@@ -51,7 +51,9 @@ static volatile long ThreadDebug__LogCounter;
 
 #ifndef ReadTimeStampCounter
 #ifdef _M_IX86
-static unsigned __int64 ReadTimeStampCounter(void)
+static unsigned __int64
+__cdecl
+ReadTimeStampCounter(void)
 {
     __asm {
         _emit 0xF
@@ -70,7 +72,8 @@ static unsigned ReadTimeStampCounter(void)
 static const char LockMutex[] = "LockMutex";
 static const char UnlockMutex[] = "UnlockMutex";
 
-static void ThreadDebug__LogEntry(const char* function, void* c, void* m, void* t)
+static void __cdecl
+ThreadDebug__LogEntry(const char* function, void* c, void* m, void* t)
 {
     if (function != LockMutex && function != UnlockMutex)
     {
@@ -104,122 +107,146 @@ static void* const t;
 
 #endif
 
-void __cdecl ThreadDebug__LockMutex(void* m)
+void __cdecl
+ThreadDebug__LockMutex(void* m)
 {
     LOG(LockMutex);
 }
 
-void __cdecl ThreadDebug__UnlockMutex(void* m)
+void __cdecl
+ThreadDebug__UnlockMutex(void* m)
 {
     LOG(UnlockMutex);
 }
 
-void __cdecl ThreadDebug__InnerWait(void* m, void* c, void* t /* self */)
+void __cdecl
+ThreadDebug__InnerWait(void* m, void* c, void* t /* self */)
 {
     LOG("InnerWait");
 }
 
-void __cdecl ThreadDebug__XWait(void* m, void* c, void* t /* self */)
+void __cdecl
+ThreadDebug__XWait(void* m, void* c, void* t /* self */)
 {
     LOG("XWait");
 }
 
-void __cdecl ThreadDebug__XPause(void* t /*self */, double n, int a /* alertable */)
+void __cdecl
+ThreadDebug__XPause(void* t /*self */, double n, int a /* alertable */)
 {
     LOG("XPause");
 }
 
-void __cdecl ThreadDebug__Pause(void* t /*self */, double n)
+void __cdecl
+ThreadDebug__Pause(void* t /*self */, double n)
 {
     LOG("Pause");
 }
 
-void __cdecl ThreadDebug__AlertPause(void* t /*self */, double n)
+void __cdecl
+ThreadDebug__AlertPause(void* t /*self */, double n)
 {
     LOG("AlertPause");
 }
 
-void __cdecl ThreadDebug__InnerTestAlert(void* t /* self */)
+void __cdecl
+ThreadDebug__InnerTestAlert(void* t /* self */)
 {
     LOG("InnerTestAlert");
 }
 
-void __cdecl ThreadDebug__AlertWait(void* m, void* c)
+void __cdecl
+ThreadDebug__AlertWait(void* m, void* c)
 {
     LOG("AlertWait");
 }
 
-void __cdecl ThreadDebug__Wait(void* m, void* c)
+void __cdecl
+ThreadDebug__Wait(void* m, void* c)
 {
     LOG("Wait");
 }
 
-void __cdecl ThreadDebug__DequeueHead(void* c)
+void __cdecl
+ThreadDebug__DequeueHead(void* c)
 {
     LOG("DequeueHead");
 }
 
-void __cdecl ThreadDebug__Signal(void* c)
+void __cdecl
+ThreadDebug__Signal(void* c)
 {
     LOG("Signal");
 }
 
-void __cdecl ThreadDebug__Broadcast(void* c)
+void __cdecl
+ThreadDebug__Broadcast(void* c)
 {
     LOG("Broadcast");
 }
 
-void __cdecl ThreadDebug__Alert(void* t)
+void __cdecl
+ThreadDebug__Alert(void* t)
 {
     LOG("Alert");
 }
 
-void __cdecl ThreadDebug__XTestAlert(void* t /* self */)
+void __cdecl
+ThreadDebug__XTestAlert(void* t /* self */)
 {
     LOG("XTestAlert");
 }
 
-void __cdecl ThreadDebug__TestAlert(void)
+void __cdecl
+ThreadDebug__TestAlert(void)
 {
     LOG("TestAlert");
 }
 
-void __cdecl ThreadDebug__Join(void* t)
+void __cdecl
+ThreadDebug__Join(void* t)
 {
     LOG("Join");
 }
 
-void __cdecl ThreadDebug__AlertJoin(void* t)
+void __cdecl
+ThreadDebug__AlertJoin(void* t)
 {
     LOG("AlertJoin");
 }
 
-void __cdecl ThreadDebug__RunThread(void)
+void __cdecl
+ThreadDebug__RunThread(void)
 {
     LOG("RunThread");
 }
 
-void __cdecl ThreadDebug__Fork(void)
+void __cdecl
+ThreadDebug__Fork(void)
 {
     LOG("Fork");
 }
 
-void __cdecl ThreadDebug__LockHeap(void)
+void __cdecl
+ThreadDebug__LockHeap(void)
 {
     LOG("LockHeap");
 }
 
-void __cdecl ThreadDebug__UnlockHeap(void)
+void __cdecl
+ThreadDebug__UnlockHeap(void)
 {
     LOG("UnlockHeap");
 }
 
-void __cdecl ThreadDebug__WaitHeap(void)
+void __cdecl
+ThreadDebug__WaitHeap(void)
 {
     LOG("WaitHeap");
 }
 
-void __cdecl ThreadDebug__BroadcastHeap(void)
+void __cdecl
+ThreadDebug__BroadcastHeap(void)
 {
     LOG("BroadcastHeap");
 }

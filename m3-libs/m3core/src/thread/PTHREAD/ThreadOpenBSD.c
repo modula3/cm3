@@ -8,21 +8,20 @@
 #include <pthread_np.h>
 #endif
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+M3_EXTERNC_BEGIN
 
 #ifndef __OpenBSD__
 
-void ThreadOpenBSD__Dummy(void) { } /* avoid empty file */
+void __cdecl ThreadOpenBSD__Dummy(void) { } /* avoid empty file */
 
 #else /* OpenBSD */
 
 int
+__cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 /* same as FreeBSD */
 {
@@ -33,6 +32,7 @@ ThreadPThread__SuspendThread (m3_pthread_t mt)
 }
 
 int
+__cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 /* same as FreeBSD */
 {
@@ -43,6 +43,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
+__cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
                               void (*p)(char *start, char *limit))
 {
@@ -81,6 +82,4 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 
 #endif /* OpenBSD */
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+M3_EXTERNC_END

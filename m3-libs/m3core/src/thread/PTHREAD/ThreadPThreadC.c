@@ -3,17 +3,10 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #include "m3core.h"
-#ifndef __OpenBSD__
-#include <sys/ucontext.h>
-#endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 /* See ThreadApple.c, ThreadFreeBSD.c, ThreadOpenBSD.c. */
 #define M3_DIRECT_SUSPEND
-#endif
-
-#ifndef M3_DIRECT_SUSPEND
-#include <semaphore.h>
 #endif
 
 #define M3MODULE ThreadPThread
@@ -30,9 +23,7 @@
   } while(0);
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+M3_EXTERNC_BEGIN
 
 #define InitC                   ThreadPThread__InitC
 #define SignalHandler           ThreadPThread__SignalHandler
@@ -40,9 +31,9 @@ extern "C" {
 #define sizeof_pthread_cond_t   ThreadPThread__sizeof_pthread_cond_t
 #define SIG_SUSPEND             ThreadPThread__SIG_SUSPEND
 
-void SignalHandler(int signo, siginfo_t *info, void *context);
+void __cdecl SignalHandler(int signo, siginfo_t *info, void *context);
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 
@@ -84,7 +75,7 @@ static sigset_t mask;
 /* Signal based suspend/resume */
 static sem_t ackSem;
 
-static void SignalHandlerC(int signo, siginfo_t *info, void *context)
+static void __cdecl SignalHandlerC(int signo, siginfo_t *info, void *context)
 /* wrapper to workaround on ALPHA_LINUX:
    /usr/bin/ld: ThreadPThreadC.o: gp-relative relocation against dynamic symbol ThreadPThread__SignalHandler
    http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46861 */
@@ -92,15 +83,15 @@ static void SignalHandlerC(int signo, siginfo_t *info, void *context)
   SignalHandler(signo, info, context);
 }
 
-int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
-int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
-int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
+int __cdecl ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
+int __cdecl ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
+int __cdecl ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
 
 void
 __cdecl
 ThreadPThread__sigsuspend(void)
 {
-  sigjmp_buf jb;
+  sigjmp_buf jb = { 0 };
 
   if (sigsetjmp(jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
@@ -131,10 +122,13 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 {
   /* process stack */
   if (!bottom) return;
-  if (stack_grows_down) {
+  if (stack_grows_down)
+  {
     assert(context < bottom);
     p(context, bottom);
-  } else {
+  }
+  else
+  {
     assert(bottom < context);
     p(bottom, context);
   }
@@ -144,10 +138,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 
 #else /* M3_DIRECT_SUSPEND */
 
-void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void __cdecl ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void __cdecl ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void __cdecl ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void __cdecl ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #endif /* M3_DIRECT_SUSPEND */
 
@@ -167,7 +161,7 @@ jb may or may not be an array, & is necessary, wrap it in struct.
 */
   struct {
     sigjmp_buf jb;
-  } s;
+  } s = { 0 };
 
   if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
@@ -178,10 +172,13 @@ jb may or may not be an array, & is necessary, wrap it in struct.
     /* capture top after longjmp because longjmp can clobber non-volatile locals */
     char *top = (char*)&top;
     assert(bottom);
-    if (stack_grows_down) {
+    if (stack_grows_down)
+    {
       assert(top < bottom);
       p(top, bottom);
-    } else {
+    }
+    else
+    {
       assert(bottom < top);
       p(bottom, top);
     }
@@ -212,10 +209,10 @@ ThreadPThread__thread_create(WORD_T stackSize,
                              start_routine_t start_routine,
                              void *arg)
 {
-  int r;
-  WORD_T bytes;
-  pthread_attr_t attr;
-  pthread_t pthread;
+  int r = { 0 };
+  WORD_T bytes = { 0 };
+  pthread_attr_t attr = { 0 };
+  pthread_t pthread = { 0 };
 
   M3_RETRY(pthread_attr_init(&attr));
 #ifdef __hpux
@@ -295,7 +292,7 @@ void
 __cdecl
 ThreadPThread__SetActivation(void *value)
 {
-  int r;
+  int r = { 0 };
   M3_RETRY(pthread_setspecific(activations, value));
   assert(r == 0);
 }
@@ -364,7 +361,7 @@ void
 __cdecl
 ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
 {
-  int e;
+  int e = { 0 };
   if (p == NULL) return;
 #if defined(__hpux) || defined(__osf)
   /* workaround Tru64 5.1 and HP-UX bug: pthread_mutex_destroy()
@@ -389,7 +386,7 @@ void
 __cdecl
 ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
 {
-  int r;
+  int r = { 0 };
   if (p == NULL) return;
   r = pthread_cond_destroy(p);
   assert(r == 0);
@@ -506,9 +503,9 @@ __cdecl
 InitC(int *bottom)
 {
 #ifndef M3_DIRECT_SUSPEND
-  struct sigaction act;
+  struct sigaction act = { 0 };
 #endif
-  int r;
+  int r = { 0 };
 
   stack_grows_down = (bottom > &r);
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__INTERIX)
@@ -537,6 +534,4 @@ InitC(int *bottom)
 #endif
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+M3_EXTERNC_END

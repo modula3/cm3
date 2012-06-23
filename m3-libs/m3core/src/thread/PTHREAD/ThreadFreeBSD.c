@@ -6,21 +6,20 @@
 #include "m3core.h"
 #endif
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+M3_EXTERNC_BEGIN
 
 #ifndef __FreeBSD__
 
-void ThreadFreeBSD__Dummy(void) { } /* avoid empty file */
+void __cdecl ThreadFreeBSD__Dummy(void) { } /* avoid empty file */
 
 #else /* FreeBSD */
 
 int
+__cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   int a = pthread_suspend_np(PTHREAD_FROM_M3(mt));
@@ -30,6 +29,7 @@ ThreadPThread__SuspendThread (m3_pthread_t mt)
 }
 
 int
+__cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
   int a = pthread_resume_np(PTHREAD_FROM_M3(mt));
@@ -38,14 +38,14 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
   return success;
 }
 
-static void
+static void __cdecl
 ThreadFreeBSD__Fail(int error, const char* message)
 {
   fprintf (stderr, "ThreadFreeBSD fatal error: %d %s\n", error, message);
   abort ();
 }
 
-static void
+static void __cdecl
 ThreadFreeBSD__Check(int error, const char* message)
 {
   if (error)
@@ -53,6 +53,7 @@ ThreadFreeBSD__Check(int error, const char* message)
 }
 
 void
+__cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
                               void (*p)(void *start, void *limit))
 {
@@ -84,6 +85,4 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 
 #endif /* FreeBSD */
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+M3_EXTERNC_END

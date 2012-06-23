@@ -176,8 +176,8 @@ A:      jmp A
 
 void SignalHandler(int sig)
 {
-    CONTEXT context;
-    CONTEXT* pcontext = 0;
+    CONTEXT context = { 0 };
+    CONTEXT* pcontext = { 0 };
 
     memset(&context, 0, sizeof(context));
     context.ContextFlags = CONTEXT_i386 | CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS;
@@ -225,8 +225,8 @@ void SignalHandler(int sig)
 
 int main()
 {
-    pthread_t t[8];
-    int i;
+    pthread_t t[8] = { 0 };
+    int i = { 0 };
 
     getchar();
 
