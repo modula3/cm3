@@ -36,7 +36,7 @@ commonality.
     INTEGER uid;
 };
 
-static int m3stat_from_stat(int result, m3_stat_t* m3st, struct stat* st)
+static int __cdecl m3stat_from_stat(int result, m3_stat_t* m3st, struct stat* st)
 {
     assert(result == 0 || result == -1);
     if (result == 0)

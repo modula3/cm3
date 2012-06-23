@@ -14,7 +14,7 @@ HWND __stdcall WinUser__WindowFromPointWorkaround (POINT* Point)
    We workaround that by passing by VAR instead of by value.
 */
 {
-	return WindowFromPoint(*Point);
+    return WindowFromPoint(*Point);
 }
 
 #ifdef __cplusplus

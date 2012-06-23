@@ -18,7 +18,7 @@ extern "C" {
 
 #define LOSSLESS_SOCKLEN (TYPES_MATCH(socklen_t, m3_socklen_t))
 
-static void
+static void __cdecl
 Usocket__assert_plen_in(m3_socklen_t* plen)
 {
     if (!(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30))))
@@ -32,7 +32,7 @@ Usocket__assert_plen_in(m3_socklen_t* plen)
     }
 }
 
-static void
+static void __cdecl
 Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
 {
     assert(LOSSLESS_SOCKLEN || plen == NULL || len <= (1UL << 30));
@@ -53,21 +53,29 @@ Usocket__Assertions(void)
      * those types (or at least sizes), that order, no padding, except on Cygwin and Win32
      */
     typedef struct linger T;
+#if defined(__CYGWIN__) || defined(_WIN32)
+    typedef short T2;
+#else
+    typedef int T2;
+#endif
     typedef m3_linger_t M;
+    
+    /* Modula-3 type is two integers, oneoff followed by linger. */
 
     M3_STATIC_ASSERT(sizeof(M) == 8);
     M3_STATIC_ASSERT(offsetof(M, onoff) == 0);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(M, onoff) == 4);
     M3_STATIC_ASSERT(offsetof(M, linger) == 4);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(M, linger) == 4);
+
+    /* C type is two integers or two shorts, oneoff followed by linger. */
+
     M3_STATIC_ASSERT(sizeof(T) == (M3_FIELD_SIZE(T, l_onoff) + M3_FIELD_SIZE(T, l_linger)));
-#if !(defined(__CYGWIN__) || defined(_WIN32))
-    M3_STATIC_ASSERT(sizeof(T) == 8);
+    M3_STATIC_ASSERT(sizeof(T) == 2 * sizeof(T2));
     M3_STATIC_ASSERT(offsetof(T, l_onoff) == 0);
-    M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_onoff) == 4);
-    M3_STATIC_ASSERT(offsetof(T, l_linger) == 4);
-    M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_linger) == 4);
-#endif
+    M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_onoff) == sizeof(T2));
+    M3_STATIC_ASSERT(offsetof(T, l_linger) == sizeof(T2));
+    M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_linger) == sizeof(T2));
 }
 
 /* wrap everything */
@@ -170,7 +178,7 @@ the same order. This is checked in Usocket__Assertions.
 {
     ASSERT_PLEN_IN
     {
-        int r;
+        int r = { 0 };
         socklen_t len = plen ? *plen : 0;
 
 #if defined(__CYGWIN__) || defined(_WIN32)

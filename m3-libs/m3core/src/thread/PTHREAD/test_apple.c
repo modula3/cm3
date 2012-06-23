@@ -73,8 +73,8 @@ typedef x86_thread_state64_t m3_thread_state_t;
 void
 ProcessStopped (pthread_t t)
 {
-  m3_thread_state_t state;
-  kern_return_t status;
+  m3_thread_state_t state = { 0 };
+  kern_return_t status = { 0 };
   mach_port_t mach_thread = pthread_mach_thread_np(t);
   mach_msg_type_number_t thread_state_count = M3_THREAD_STATE_COUNT;
   status = thread_get_state(mach_thread, M3_THREAD_STATE,
@@ -97,7 +97,7 @@ ProcessStopped (pthread_t t)
 
 int main()
 {  
-    pthread_t t;
+    pthread_t t = { 0 };
     assert(0 == pthread_create(&t, NULL, thread1, 0));
     sleep(1);
     assert(1 == SuspendThread(t));

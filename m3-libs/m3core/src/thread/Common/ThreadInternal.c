@@ -5,11 +5,9 @@
 #include "m3core.h"
 #include <poll.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+M3_EXTERNC_BEGIN
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 
@@ -93,6 +91,4 @@ ThreadInternal__Select(int nfds,
 
 #endif
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+M3_EXTERNC_END

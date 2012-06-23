@@ -93,8 +93,8 @@ void __cdecl ThreadWin32__ProcessStopped(
     CONTEXT* context,
     void (*p)(void* start, void* limit))
 {
-  volatile char assertReadable;
-  char* top;
+  volatile char assertReadable = { 0 };
+  char* top = { 0 };
 
   /* stack bounds are not yet set or have been cleared;
      therefore the thread either doesn't yet have any traced

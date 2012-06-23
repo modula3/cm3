@@ -41,13 +41,11 @@
 #include "m3core.h"
 #include <ucontext.h>
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+M3_EXTERNC_BEGIN
 
 typedef void (*SignalHandler1)(int signo);
 
@@ -74,8 +72,8 @@ void
 __cdecl
 setup_sigvtalrm(SignalHandler1 handler)
 {
-  struct sigaction act; /* (VT)ALRM signal */
-  struct sigaction oct; /* other signals (specifically SIGCHLD) */
+  struct sigaction act = { 0 }; /* (VT)ALRM signal */
+  struct sigaction oct = { 0 }; /* other signals (specifically SIGCHLD) */
 
   ZERO_MEMORY(oct);
   sigemptyset(&OtherSignals);
@@ -151,9 +149,9 @@ static Context * volatile mctx_create;
 static void (* volatile mctx_create_func)(void);
 static sigset_t mctx_create_sigs;
 
-static void mctx_create_boot(void)
+static void __cdecl mctx_create_boot(void)
 {
-    void (*volatile mctx_start_func)(void);
+    void (*volatile mctx_start_func)(void) = { 0 };
     
     sigprocmask(SIG_SETMASK, &mctx_create_sigs, NULL);
     mctx_start_func = mctx_create_func;
@@ -162,7 +160,7 @@ static void mctx_create_boot(void)
     abort(); /* not reached */
 }
 
-static void mctx_create_trampoline(int sig)
+static void __cdecl mctx_create_trampoline(int sig)
 {
     if (sigsetjmp(mctx_create->jb, 0) == 0)
     {
@@ -181,12 +179,12 @@ xMakeContext(
     void *stack,
     WORD_T stack_size) 
 {
-    struct sigaction sa;
-    struct sigaction osa;
-    stack_t ss;
-    stack_t oss;
-    sigset_t osigs;
-    sigset_t sigs;
+    struct sigaction sa = { 0 };
+    struct sigaction osa = { 0 };
+    stack_t ss = { 0 };
+    stack_t oss = { 0 };
+    sigset_t osigs = { 0 };
+    sigset_t sigs = { 0 };
 
     ZERO_MEMORY(sa);
     ZERO_MEMORY(osa);
@@ -307,8 +305,9 @@ __cdecl
 ProcessContext(Context *c, char *bottom, char *top,
                void (*p) (void *start, void *limit))
 {
-  WORD_T xx;
-  if (top == NULL) {
+  WORD_T xx = { 0 };
+  if (top == NULL)
+  {
     /* live thread */
     /* do we need to flush register windows too? */
 #ifdef M3_USE_SIGALTSTACK
@@ -333,8 +332,8 @@ int
 __cdecl
 ThreadPosix__SetVirtualTimer(void)
 {
-    struct timeval selected_interval;
-    struct itimerval it;
+    struct timeval selected_interval = { 0 };
+    struct itimerval it = { 0 };
 
     ZERO_MEMORY(selected_interval);
     ZERO_MEMORY(it);
@@ -345,6 +344,4 @@ ThreadPosix__SetVirtualTimer(void)
     return setitimer(ITIMER_VIRTUAL, &it, NULL);
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+M3_EXTERNC_END

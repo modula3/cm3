@@ -11,7 +11,7 @@
 
 void* thread1(void*a)
 {
-    int b;
+    int b = { 0 };
     printf("thread %ld stack %p\n", pthread_self(), &b);
     while (1)
     {
@@ -25,17 +25,17 @@ void* thread1(void*a)
 int main()
 {  
     long pid = getpid();
-    long t[3]; /* thread */
-    char p[255]; /* path */
-    int status[3];
+    long t[3] = { 0 };; /* thread */
+    char p[255] = { 0 }; /* path */
+    int status[3] = { 0 };
     int ctl[3]; /* control */
-    int i;
-    int j;
+    int i = { 0 };
+    int j = { 0 };
     const static PROC_CTL_WORD_TYPE set_async[] = { PCSET, PR_ASYNC };
     const static PROC_CTL_WORD_TYPE stop[] = { PCSTOP };
     const static PROC_CTL_WORD_TYPE run[] = { PCRUN, 0 };
-    lwpstatus_t lwpstatus[3];
-    off_t off;
+    lwpstatus_t lwpstatus[3] = { 0 };
+    off_t off = { 0 };
 
     memset(&lwpstatus, 0, sizeof(lwpstatus));
 
