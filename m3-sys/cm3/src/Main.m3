@@ -29,6 +29,8 @@ PROCEDURE DoIt () =
     END;
     Process.RegisterExitor (CleanUp);
 
+    Makefile.ScanCommandLine1 ();
+
     config := MxConfig.FindFile ();
     IF (config = NIL) THEN
       Msg.FatalError (NIL, "unable to locate configuration file, \"",
@@ -40,7 +42,7 @@ PROCEDURE DoIt () =
       TRY
         (* figure out what we're trying to do *)
         VAR
-          defs := Makefile.ScanCommandLine ();
+          defs := Makefile.ScanCommandLine2 ();
           name, val: TEXT;
           iter := defs.iterate();
         BEGIN
