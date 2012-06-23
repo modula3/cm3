@@ -315,7 +315,7 @@ void *
 __cdecl
 ThreadPThread_pthread_generic_new(WORD_T size, generic_init_t init)
 {
-  int r;
+  int r = ENOMEM;
   void *p = calloc(1, size);
   if (p == NULL)
     goto Error;
