@@ -514,7 +514,23 @@ PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
 
 (*----------------------------------------- pre-scan command line ---*)
 
-PROCEDURE ScanCommandLine () : TextTextTbl.T =
+PROCEDURE ScanCommandLine1 () =
+  VAR arg: TEXT;
+  BEGIN
+    FOR i := 1 TO Params.Count-1 DO
+      arg := Params.Get (i);
+      IF Text.Length(arg) > 1 AND Text.GetChar (arg, 1) = '-' THEN
+        arg := Text.Sub (arg, 1);
+      END;
+      IF    Text.Equal (arg, "-?")         THEN  PrintHelp ();
+      ELSIF Text.Equal (arg, "-help")      THEN  PrintHelp ();
+      ELSIF Text.Equal (arg, "-config")    THEN  PrintVersion (TRUE);
+      ELSIF Text.Equal (arg, "-version")   THEN  PrintVersion (TRUE);
+      END;
+    END;
+  END ScanCommandLine1;
+
+PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
   VAR 
     use_overrides := FALSE;
     cnt := 0;  arg: TEXT;
@@ -530,10 +546,6 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
       ELSIF Text.Equal (arg, "-find")      THEN  SetMode (cnt, MM.Find);
       ELSIF Text.Equal (arg, "-ship")      THEN  SetMode (cnt, MM.Ship);
       ELSIF Text.Equal (arg, "-depend")    THEN  SetMode (cnt, MM.Depend);
-      ELSIF Text.Equal (arg, "-?")         THEN  PrintHelp ();
-      ELSIF Text.Equal (arg, "-help")      THEN  PrintHelp ();
-      ELSIF Text.Equal (arg, "-config")    THEN  PrintVersion (TRUE);
-      ELSIF Text.Equal (arg, "-version")   THEN  PrintVersion (TRUE);
       ELSIF Text.Equal (arg, "-silent") THEN  
         Msg.SetLevel (Msg.Level.Silent);
       ELSIF Text.Equal (arg, "-why") THEN  
@@ -562,7 +574,7 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
     IF (cnt <= 0) THEN SetMode (cnt, MM.Build); END;
     EVAL defs.put("M3_USE_OVERRIDES", ARRAY BOOLEAN OF TEXT {"", "TRUE"}[use_overrides]);
     RETURN defs;
-  END ScanCommandLine;
+  END ScanCommandLine2;
 
 PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
   BEGIN
