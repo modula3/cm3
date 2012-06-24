@@ -211,7 +211,6 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     shared = AdjustShared(shared)
     imported_libs = OldGCAdjust(imported_libs)
     local suffix = "so"
-    local hpux_flags = ""
     local soname_flag = "-soname"
     if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
       suffix = "sl"
