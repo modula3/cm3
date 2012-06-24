@@ -142,7 +142,7 @@ proc compile_c(source, object, options, optimize, debug) is
     local args = options
     if M3_PROFILING args += "-pg" end
     return try_exec ("@" & SYSTEM_CC, args, "-c", source)
-    end
+end
 
 end
 
@@ -205,17 +205,35 @@ end
 % "make_lib" is called to combine a collection of object modules into
 % a library.
 
-if not defined("make_lib")
+if not defined("make_lib_get_shared_suffix")
+proc make_lib_get_shared_suffix() is
+  local readonly TargetSharedSuffix = {
+    "PA32_HPUX" : "sl",
+    "PA64_HPUX" : "sl",
+  }
+  if TargetSharedSuffix contains TARGET
+    return TargetSharedSuffix{TARGET}
+  end
+  return "so"
+end
+end
 
-proc make_lib(lib, options, objects, imported_libs, shared) is
-    shared = AdjustShared(shared)
-    imported_libs = OldGCAdjust(imported_libs)
-    local suffix = "so"
-    local soname_flag = "-soname"
-    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
-      suffix = "sl"
-      soname_flag = "+h"
-    end
+if not defined("make_lib_get_soname_flag")
+proc make_lib_get_soname_flag() is
+  local readonly TargetSonameFlag = {
+    "PA32_HPUX" : "+h",
+    "PA64_HPUX" : "+h",
+  }
+  if TargetSonameFlag contains TARGET
+    return TargetSonameFlag{TARGET}
+  end
+  return "-soname"
+end
+end
+
+if not defined("make_lib_delete_outputs")
+proc make_lib_delete_outputs(lib) is
+    local suffix = make_lib_get_shared_suffix()
     local ret_code = 0
     local lib_a   = format("lib%s.a", lib)
     local readonly lib0_file = lib_a & ".sa" % standalone
@@ -224,23 +242,42 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local expfile = "lib" & lib & ".exp" % libfoo.exp
 
     DeleteFiles([lib_a, lib0_file, lib_so, lib_sox, expfile])
+end
+end
+
+if not defined("make_lib")
+
+proc make_lib(lib, options, objects, imported_libs, shared) is
+    shared = AdjustShared(shared)
+    imported_libs = OldGCAdjust(imported_libs)
+    local suffix = make_lib_get_shared_suffix()
+    local soname_flag = make_lib_get_soname_flag()
+    local ret_code = 0
+    local lib_a   = format("lib%s.a", lib)
+    local readonly lib0_file = lib_a & ".sa" % standalone
+    local lib_so  = format("lib%s.%s", lib, suffix)
+    local lib_sox = format("lib%s.%s.5", lib, suffix)
+    local expfile = "lib" & lib & ".exp" % libfoo.exp
+
+    make_lib_delete_outputs(lib)
 
     % first build the non-shared library in the usual ar/ranlib way
 
     local S = ""
-
     if defined("AR_AND_RANLIB_ARE_ONE")
         S = "s"
     end
 
     ret_code = try_exec("@ar", "cru" & S, lib_a, objects)
     if not equal(ret_code, 0)
+        make_lib_delete_outputs(lib)
         return ret_code
     end
 
     if not defined("AR_AND_RANLIB_ARE_ONE")
         ret_code = try_exec("@ranlib", lib_a)
         if not equal(ret_code, 0)
+            make_lib_delete_outputs(lib)
             return ret_code
         end
     end
@@ -258,7 +295,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             MoveFile(lib_a, lib0_file)
             soname_opt = ""
             expfile = "lib" & lib & ".exp" % libfoo.exp
-            exec(DLLTOOL,  "--dllname", lib_sox, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
+            ret_code = try_exec(DLLTOOL,  "--dllname", lib_sox, "--kill-at", "--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
+            if not equal(ret_code, 0)
+                make_lib_delete_outputs(lib)
+                return ret_code
+            end
         else
             expfile = ""
         end
@@ -275,6 +316,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
           ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, objects, imported_libs)
         end
         if not equal(ret_code, 0)
+            make_lib_delete_outputs(lib)
             return ret_code
         end
     end
@@ -286,6 +328,7 @@ end
 
 end
 
+
 %-------------------------------------------------------------------
 % "skip_lib" is called when the compiler decides it doesn't need to
 % call "make_lib", but it wants to discover the names of the derived
@@ -295,11 +338,7 @@ if not defined("skip_lib")
 
 proc skip_lib(lib, shared) is
     shared = AdjustShared(shared)
-    local suffix = "so"
-    if equal (TARGET, "PA32_HPUX")
-      suffix = "sl"
-    end
-
+    local suffix = make_lib_get_shared_suffix()
     local lib_a   = format("lib%s.a", lib)
     local lib0_file = lib_a & ".sa" % standalone
     local lib_so  = format("lib%s.%s", lib, suffix)

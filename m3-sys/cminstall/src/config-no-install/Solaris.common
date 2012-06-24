@@ -124,9 +124,12 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     local lib_so   = format ("lib%s.so", lib)
     local lib_sox  = format ("lib%s.so.5", lib)
 
+    make_lib_delete_outputs(lib)
+
     % first, build the non-shared library
     ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
     if not equal (ret_code, 0)
+        make_lib_delete_outputs(lib)
         return ret_code
     end
 
@@ -141,6 +144,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
                              lib_sox, "-h", lib_sox, objects,
                              imported_libs)
         if not equal (ret_code, 0)
+            make_lib_delete_outputs(lib)
             return ret_code
         end
     end
