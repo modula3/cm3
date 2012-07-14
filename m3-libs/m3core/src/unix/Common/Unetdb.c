@@ -4,9 +4,7 @@
 
 #include "m3core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+M3EXTERNC_BEGIN
 
 /* This is an idealized version of hostent where
 the types are the same across platforms. We copy
@@ -28,27 +26,33 @@ struct _m3_hostent_t
 static m3_hostent_t* native_to_m3(const struct hostent* native, m3_hostent_t* m3)
 {
     if (native == NULL)
-        return NULL;
-    m3->name = native->h_name;
-    m3->aliases = native->h_aliases;
-    m3->addrtype = native->h_addrtype;
-    m3->length = native->h_length;
-    m3->addr_list = native->h_addr_list;
+    {
+        m3 = NULL;
+    }
+    else
+    {
+      m3->name = native->h_name;
+      m3->aliases = native->h_aliases;
+      m3->addrtype = native->h_addrtype;
+      m3->length = native->h_length;
+      m3->addr_list = native->h_addr_list;
+    }
+    Scheduler__EnableSwitching();
     return m3;
 }
 
 M3_DLL_EXPORT m3_hostent_t* __cdecl
 Unetdb__gethostbyname(const char* name, m3_hostent_t* m3)
 {
+    Scheduler__DisableSwitching();
     return native_to_m3(gethostbyname(name), m3);
 }
 
 M3_DLL_EXPORT m3_hostent_t* __cdecl
 Unetdb__gethostbyaddr(const char* addr, int len, int type, m3_hostent_t* m3)
 {
+    Scheduler__DisableSwitching();
     return native_to_m3(gethostbyaddr(addr, len, type), m3);
 }
 
-#ifdef __cplusplus
-}
-#endif
+M3EXTERNC_END
