@@ -11,10 +11,7 @@
 
 #ifndef _WIN32
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+M3EXTERNC_BEGIN
 
 struct _m3_group_t
 /* This MUST match Ugrp.i3 */
@@ -27,28 +24,37 @@ struct _m3_group_t
 static m3_group_t* native_to_m3(const struct group* native, m3_group_t* m3)
 {
     if (native == NULL)
-        return NULL;
-    m3->name = native->gr_name;
-    m3->gid = native->gr_gid;
-    m3->mem = native->gr_mem;
+    {
+        m3 = NULL;
+    }
+    else
+    {
+        m3->name = native->gr_name;
+        m3->gid = native->gr_gid;
+        m3->mem = native->gr_mem;
+    }
+    Scheduler__EnableSwitching();
     return m3;
 }
 
 M3_DLL_EXPORT m3_group_t* __cdecl
 Ugrp__getgrent(m3_group_t* m3group)
 {
+    Scheduler__DisableSwitching();
     return native_to_m3(getgrent(), m3group);
 }
 
 M3_DLL_EXPORT m3_group_t* __cdecl
 Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid)
 {
+    Scheduler__DisableSwitching();
     return native_to_m3(getgrgid(gid), m3group);
 }
 
 M3_DLL_EXPORT m3_group_t* __cdecl
 Ugrp__getgrnam(m3_group_t* m3group, const char* name)
 {
+    Scheduler__DisableSwitching();
     return native_to_m3(getgrnam(name), m3group);
 }
 
@@ -64,8 +70,6 @@ Ugrp__endgrent(void)
     endgrent();
 }
 
-#ifdef __cplusplus
-} /* extern C */
-#endif
+M3EXTERNC_END
 
 #endif
