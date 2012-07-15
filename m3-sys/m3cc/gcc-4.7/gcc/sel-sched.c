@@ -7459,9 +7459,9 @@ update_seqnos_and_stage (int min_seqno, int max_seqno,
                          int highest_seqno_in_use,
                          ilist_t *pscheduled_insns)
 {
-  int new_hs;
-  ilist_iterator ii;
-  insn_t insn;
+  int new_hs = { 0 };
+  ilist_iterator ii = { 0 };
+  insn_t insn = { 0 };
 
   /* Actually, new_hs is the seqno of the instruction, that was
      scheduled first (i.e. it is the first one in SCHEDULED_INSNS).  */
@@ -7538,7 +7538,7 @@ sel_sched_region_2 (int orig_max_seqno)
 static void
 sel_sched_region_1 (void)
 {
-  int orig_max_seqno;
+  int orig_max_seqno = { 0 };
 
   /* Remove empty blocks that might be in the region from the beginning.  */
   purge_empty_blocks ();
@@ -7561,9 +7561,9 @@ sel_sched_region_1 (void)
 
   if (pipelining_p)
     {
-      int i;
-      basic_block bb;
-      struct flist_tail_def _new_fences;
+      int i = { 0 };
+      basic_block bb = { 0 };
+      struct flist_tail_def _new_fences = { 0 };
       flist_tail_t new_fences = &_new_fences;
       bool do_p = true;
 
@@ -7643,8 +7643,8 @@ sel_sched_region_1 (void)
 void
 sel_sched_region (int rgn)
 {
-  bool schedule_p;
-  bool reset_sched_cycles_p;
+  bool schedule_p = { 0 };
+  bool reset_sched_cycles_p = { 0 };
 
   if (sel_region_init (rgn))
     return;
@@ -7724,7 +7724,7 @@ maybe_skip_selective_scheduling (void)
 void
 run_selective_scheduling (void)
 {
-  int rgn;
+  int rgn = { 0 };
 
   if (n_basic_blocks == NUM_FIXED_BLOCKS)
     return;
