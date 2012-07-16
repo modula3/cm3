@@ -1,0 +1,11 @@
+
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for GenBitNoArrays                                       *)
+% (* Copyright 2010 .. 2012, Rodney M. Bates.                                 *)
+% (* rbates@acm.org                                                           *)
+% (* Licensed under the Gnu Public License, version 2 or later.               *)
+% (* ----------------------------------------------------------------------2- *)
+
+import("libm3")
+implementation("GenBitNoArrays")
+program("GenBitNoArrays")

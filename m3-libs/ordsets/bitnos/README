@@ -1,0 +1,11 @@
+  
+(* -----------------------------------------------------------------------1- *)
+(* File README, in directory bitnos, for GenBitNoArrays.                     *)
+(* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
+(* rbates@acm.org                                                            *)
+(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* -----------------------------------------------------------------------2- *)
+
+Program GenBitNoArrays mechanically generates source file
+BitNoTable.i3, needed by any instantiation of OrdSets.[im]g, which are
+found in directory ordsets, beside this directory, bitnos.
