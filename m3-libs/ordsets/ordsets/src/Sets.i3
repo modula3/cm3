@@ -18,9 +18,16 @@
    in this form any more. GMD has been merged with "Fraunhofergesellschaft".   
 *) 
 
-(* $Id: Sets.i3,v 1.1 2012-07-16 16:29:16 rodney Exp $ *) 
+(* $Id: Sets.i3,v 1.2 2012-07-19 18:43:55 rodney Exp $ *) 
 
-(* $Log: not supported by cvs2svn $ 
+(* $Log: not supported by cvs2svn $
+* Revision 1.1  2012-07-16 16:29:16  rodney
+*
+* Sets.i3 Sets.m3
+*
+* Sets is an old package that OrdSets replaces.  Used here to compare
+* results between the packages, for testing OrdSets.
+* 
  
  * RMB Aug 2001 Converted to Modula-3 
  
