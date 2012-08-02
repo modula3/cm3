@@ -6,6 +6,7 @@ readonly GNU_PLATFORM = "i586-solaris2.10" % "cpu-os" string for GNU
 readonly C_COMPILER = "SUN" % or GNU to use gcc (untested)
 readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s"
 SunXArch = "pentium_pro"
+SunXRegs = ""
 m3back_debug = "-gstabs" % Sun assembler doesn't like .stabd.
 
 include("I386.common")
