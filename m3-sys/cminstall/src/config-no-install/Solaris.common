@@ -30,7 +30,7 @@ if equal (C_COMPILER, "SUN")
     % We presumably can't just always use the new syntax, in case
     % we are using older tools that don't understand it.
 
-    local cc = "/usr/bin/cc -g -mt -xldscope=symbolic "
+    local cc = "/usr/bin/cc -g -mt -xldscope=symbolic " & SunXRegs & " "
     local old = "-xarch=" & SunXArch
     local new = "-m" & WordSize
     if equal(WORD_SIZE, "32BITS") and not equal(TARGET, "I386_SOLARIS")
