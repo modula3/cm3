@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target Code for moxie
    Copyright (C) 2008, 2009, 2010, 2011  Free Software Foundation
    Contributed by Anthony Green.
@@ -500,8 +502,13 @@ moxie_static_chain (const_tree fndecl, bool incoming_p)
 {
   rtx addr, mem;
 
+#if 0 /* Modula-3 */
   if (!DECL_STATIC_CHAIN (fndecl))
     return NULL;
+#else /* for Modula-3 July 2010 */
+  if (fndecl && !DECL_STATIC_CHAIN (fndecl))
+    return NULL;
+#endif
 
   if (incoming_p)
     addr = plus_constant (arg_pointer_rtx, 2 * UNITS_PER_WORD);
