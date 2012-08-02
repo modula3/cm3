@@ -2610,7 +2610,8 @@ PROCEDURE If_closure (proc: Val;  true, false: Label;  freq: Frequency) =
       cg.loophole (Type.Addr, Target.Integer.cg_type);
       Push_int (TargetMap.CG_Align_bytes[Target.Integer.cg_type] - 1);
       cg.and (Target.Integer.cg_type);
-      cg.if_true (Target.Integer.cg_type, nope, Always - freq);
+      cg.load_integer (Target.Integer.cg_type, TInt.Zero);
+      cg.if_compare (Target.Integer.cg_type, Cmp.NE, nope, Always - freq);
       SPop (1, "If_closure-unaligned");
     END;
     Push (proc);
