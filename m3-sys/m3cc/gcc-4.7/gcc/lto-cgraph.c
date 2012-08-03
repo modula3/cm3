@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Write and read the cgraph to the memory mapped representation of a
    .o file.
 

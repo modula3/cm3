@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* LTO IL options.
 
    Copyright 2009, 2010, 2011, 2012 Free Software Foundation, Inc.

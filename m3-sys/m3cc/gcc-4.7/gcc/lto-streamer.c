@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Miscellaneous utilities for GIMPLE streaming.  Things that are used
    in both input and output are here.
 

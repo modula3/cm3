@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Read the GIMPLE representation from a file stream.
 
    Copyright 2009, 2010 Free Software Foundation, Inc.

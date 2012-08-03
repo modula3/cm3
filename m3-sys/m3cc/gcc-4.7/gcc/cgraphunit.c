@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph based interprocedural optimizations.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
    2011, 2012 Free Software Foundation, Inc.
@@ -140,7 +142,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "plugin.h"
 #include "ipa-inline.h"
 #include "ipa-utils.h"
-#include "lto-streamer.h"
 
 static void cgraph_expand_all_functions (void);
 static void cgraph_mark_functions_to_output (void);
@@ -1301,10 +1302,6 @@ cgraph_finalize_compilation_unit (void)
 {
   timevar_push (TV_CGRAPH);
 
-  /* If LTO is enabled, initialize the streamer hooks needed by GIMPLE.  */
-  if (flag_lto)
-    lto_streamer_hooks_init ();
-
   /* If we're here there's no current function anymore.  Some frontends
      are lazy in clearing these.  */
   current_function_decl = NULL;
@@ -2078,17 +2075,8 @@ ipa_passes (void)
 	((struct ipa_opt_pass_d *) all_regular_ipa_passes);
     }
 
-  /* Some targets need to handle LTO assembler output specially.  */
-  if (flag_generate_lto)
-    targetm.asm_out.lto_start ();
-
-  execute_ipa_summary_passes ((struct ipa_opt_pass_d *) all_lto_gen_passes);
-
   if (!in_lto_p)
     ipa_write_summaries ();
-
-  if (flag_generate_lto)
-    targetm.asm_out.lto_end ();
 
   if (!flag_ltrans && (in_lto_p || !flag_lto || flag_fat_lto_objects))
     execute_ipa_pass_list (all_regular_ipa_passes);

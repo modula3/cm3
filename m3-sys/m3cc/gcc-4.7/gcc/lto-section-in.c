@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Input functions for reading LTO sections.
 
    Copyright 2009, 2010 Free Software Foundation, Inc.
