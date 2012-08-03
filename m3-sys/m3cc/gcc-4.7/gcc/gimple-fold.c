@@ -821,34 +821,11 @@ gimple_fold_builtin (gimple stmt)
   /* Limit the work only for builtins we know how to simplify.  */
   switch (DECL_FUNCTION_CODE (callee))
     {
-    case BUILT_IN_STRLEN:
-    case BUILT_IN_FPUTS:
-    case BUILT_IN_FPUTS_UNLOCKED:
-      arg_idx = 0;
-      type = 0;
-      break;
-    case BUILT_IN_STRCPY:
-    case BUILT_IN_STRNCPY:
-      arg_idx = 1;
-      type = 0;
-      break;
     case BUILT_IN_MEMCPY_CHK:
     case BUILT_IN_MEMPCPY_CHK:
     case BUILT_IN_MEMMOVE_CHK:
     case BUILT_IN_MEMSET_CHK:
-    case BUILT_IN_STRNCPY_CHK:
-    case BUILT_IN_STPNCPY_CHK:
       arg_idx = 2;
-      type = 2;
-      break;
-    case BUILT_IN_STRCPY_CHK:
-    case BUILT_IN_STPCPY_CHK:
-      arg_idx = 1;
-      type = 1;
-      break;
-    case BUILT_IN_SNPRINTF_CHK:
-    case BUILT_IN_VSNPRINTF_CHK:
-      arg_idx = 1;
       type = 2;
       break;
     default:
@@ -872,52 +849,6 @@ gimple_fold_builtin (gimple stmt)
   result = NULL_TREE;
   switch (DECL_FUNCTION_CODE (callee))
     {
-    case BUILT_IN_STRLEN:
-      if (val[0] && nargs == 1)
-	{
-	  tree new_val =
-              fold_convert (TREE_TYPE (gimple_call_lhs (stmt)), val[0]);
-
-	  /* If the result is not a valid gimple value, or not a cast
-	     of a valid gimple value, then we cannot use the result.  */
-	  if (is_gimple_val (new_val)
-	      || (CONVERT_EXPR_P (new_val)
-		  && is_gimple_val (TREE_OPERAND (new_val, 0))))
-	    return new_val;
-	}
-      break;
-
-    case BUILT_IN_STRCPY:
-      if (val[1] && is_gimple_val (val[1]) && nargs == 2)
-	result = fold_builtin_strcpy (loc, callee,
-                                      gimple_call_arg (stmt, 0),
-                                      gimple_call_arg (stmt, 1),
-				      val[1]);
-      break;
-
-    case BUILT_IN_STRNCPY:
-      if (val[1] && is_gimple_val (val[1]) && nargs == 3)
-	result = fold_builtin_strncpy (loc, callee,
-                                       gimple_call_arg (stmt, 0),
-                                       gimple_call_arg (stmt, 1),
-                                       gimple_call_arg (stmt, 2),
-				       val[1]);
-      break;
-
-    case BUILT_IN_FPUTS:
-      if (nargs == 2)
-	result = fold_builtin_fputs (loc, gimple_call_arg (stmt, 0),
-				     gimple_call_arg (stmt, 1),
-				     ignore, false, val[0]);
-      break;
-
-    case BUILT_IN_FPUTS_UNLOCKED:
-      if (nargs == 2)
-	result = fold_builtin_fputs (loc, gimple_call_arg (stmt, 0),
-				     gimple_call_arg (stmt, 1),
-				     ignore, true, val[0]);
-      break;
-
     case BUILT_IN_MEMCPY_CHK:
     case BUILT_IN_MEMPCPY_CHK:
     case BUILT_IN_MEMMOVE_CHK:
@@ -930,35 +861,6 @@ gimple_fold_builtin (gimple stmt)
                                           gimple_call_arg (stmt, 3),
 					  val[2], ignore,
 					  DECL_FUNCTION_CODE (callee));
-      break;
-
-    case BUILT_IN_STRCPY_CHK:
-    case BUILT_IN_STPCPY_CHK:
-      if (val[1] && is_gimple_val (val[1]) && nargs == 3)
-	result = fold_builtin_stxcpy_chk (loc, callee,
-                                          gimple_call_arg (stmt, 0),
-                                          gimple_call_arg (stmt, 1),
-                                          gimple_call_arg (stmt, 2),
-					  val[1], ignore,
-					  DECL_FUNCTION_CODE (callee));
-      break;
-
-    case BUILT_IN_STRNCPY_CHK:
-    case BUILT_IN_STPNCPY_CHK:
-      if (val[2] && is_gimple_val (val[2]) && nargs == 4)
-	result = fold_builtin_stxncpy_chk (loc, gimple_call_arg (stmt, 0),
-                                           gimple_call_arg (stmt, 1),
-                                           gimple_call_arg (stmt, 2),
-                                           gimple_call_arg (stmt, 3),
-					   val[2], ignore,
-					   DECL_FUNCTION_CODE (callee));
-      break;
-
-    case BUILT_IN_SNPRINTF_CHK:
-    case BUILT_IN_VSNPRINTF_CHK:
-      if (val[1] && is_gimple_val (val[1]))
-	result = gimple_fold_builtin_snprintf_chk (stmt, val[1],
-                                                   DECL_FUNCTION_CODE (callee));
       break;
 
     default:

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for describing one tree-ssa optimization pass.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -589,7 +591,7 @@ extern struct gimple_opt_pass pass_convert_switch;
 
 /* The root of the compilation pass tree, once constructed.  */
 extern struct opt_pass *all_passes, *all_small_ipa_passes, *all_lowering_passes,
-                       *all_regular_ipa_passes, *all_lto_gen_passes, *all_late_ipa_passes;
+                       *all_regular_ipa_passes, *all_late_ipa_passes;
 
 /* Define a list of pass lists so that both passes.c and plugins can easily
    find all the pass lists.  */
@@ -597,7 +599,6 @@ extern struct opt_pass *all_passes, *all_small_ipa_passes, *all_lowering_passes,
   DEF_PASS_LIST (all_lowering_passes) \
   DEF_PASS_LIST (all_small_ipa_passes) \
   DEF_PASS_LIST (all_regular_ipa_passes) \
-  DEF_PASS_LIST (all_lto_gen_passes) \
   DEF_PASS_LIST (all_passes)
 
 #define DEF_PASS_LIST(LIST) PASS_LIST_NO_##LIST,

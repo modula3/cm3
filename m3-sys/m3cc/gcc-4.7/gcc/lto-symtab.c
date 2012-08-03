@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* LTO symbol table.
    Copyright 2009, 2010 Free Software Foundation, Inc.
    Contributed by CodeSourcery, Inc.

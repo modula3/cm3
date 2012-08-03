@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions for writing LTO sections.
 
    Copyright (C) 2009, 2010 Free Software Foundation, Inc.
@@ -128,14 +130,7 @@ static struct lto_compression_stream *compression_stream = NULL;
 void
 lto_begin_section (const char *name, bool compress)
 {
-  lang_hooks.lto.begin_section (name);
-
-  /* FIXME lto: for now, suppress compression if the lang_hook that appends
-     data is anything other than assembler output.  The effect here is that
-     we get compression of IL only in non-ltrans object files.  */
-  gcc_assert (compression_stream == NULL);
-  if (compress)
-    compression_stream = lto_start_compression (lto_append_data, NULL);
+  gcc_unreachable ();
 }
 
 

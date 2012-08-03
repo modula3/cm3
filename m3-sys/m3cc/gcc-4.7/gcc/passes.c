@@ -339,7 +339,7 @@ struct rtl_opt_pass pass_postreload =
 
 /* The root of the compilation pass tree, once constructed.  */
 struct opt_pass *all_passes, *all_small_ipa_passes, *all_lowering_passes,
-  *all_regular_ipa_passes, *all_late_ipa_passes, *all_lto_gen_passes;
+  *all_regular_ipa_passes, *all_late_ipa_passes;
 
 /* This is used by plugins, and should also be used in register_pass.  */
 #define DEF_PASS_LIST(LIST) &LIST,
@@ -624,7 +624,6 @@ dump_passes (void)
   dump_pass_list (all_lowering_passes, 1);
   dump_pass_list (all_small_ipa_passes, 1);
   dump_pass_list (all_regular_ipa_passes, 1);
-  dump_pass_list (all_lto_gen_passes, 1);
   dump_pass_list (all_late_ipa_passes, 1);
   dump_pass_list (all_passes, 1);
 
@@ -1110,8 +1109,6 @@ register_pass (struct register_pass_info *pass_info)
   if (!success || all_instances)
     success |= position_pass (pass_info, &all_regular_ipa_passes);
   if (!success || all_instances)
-    success |= position_pass (pass_info, &all_lto_gen_passes);
-  if (!success || all_instances)
     success |= position_pass (pass_info, &all_late_ipa_passes);
   if (!success || all_instances)
     success |= position_pass (pass_info, &all_passes);
@@ -1263,11 +1260,6 @@ init_optimization_passes (void)
   NEXT_PASS (pass_ipa_inline);
   NEXT_PASS (pass_ipa_pure_const);
   NEXT_PASS (pass_ipa_reference);
-  *p = NULL;
-
-  p = &all_lto_gen_passes;
-  NEXT_PASS (pass_ipa_lto_gimple_out);
-  NEXT_PASS (pass_ipa_lto_finish_out);  /* This must be the last LTO pass.  */
   *p = NULL;
 
   /* Simple IPA passes executed after the regular passes.  In WHOPR mode the
@@ -1543,9 +1535,6 @@ init_optimization_passes (void)
 		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
 		       | PROP_cfg);
   register_dump_files (all_regular_ipa_passes,
-		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
-		       | PROP_cfg);
-  register_dump_files (all_lto_gen_passes,
 		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
 		       | PROP_cfg);
   register_dump_files (all_late_ipa_passes,
@@ -2200,7 +2189,6 @@ ipa_write_summaries_1 (cgraph_node_set set, varpool_node_set vset)
 
   gcc_assert (!flag_wpa);
   ipa_write_summaries_2 (all_regular_ipa_passes, set, vset, state);
-  ipa_write_summaries_2 (all_lto_gen_passes, set, vset, state);
 
   gcc_assert (lto_get_out_decl_state () == state);
   lto_pop_out_decl_state ();
@@ -2334,7 +2322,6 @@ ipa_write_optimization_summaries (cgraph_node_set set, varpool_node_set vset)
 
   gcc_assert (flag_wpa);
   ipa_write_optimization_summaries_1 (all_regular_ipa_passes, set, vset, state);
-  ipa_write_optimization_summaries_1 (all_lto_gen_passes, set, vset, state);
 
   gcc_assert (lto_get_out_decl_state () == state);
   lto_pop_out_decl_state ();
@@ -2382,13 +2369,12 @@ ipa_read_summaries_1 (struct opt_pass *pass)
 }
 
 
-/* Read all the summaries for all_regular_ipa_passes and all_lto_gen_passes.  */
+/* Read all the summaries for all_regular_ipa_passes.  */
 
 void
 ipa_read_summaries (void)
 {
   ipa_read_summaries_1 (all_regular_ipa_passes);
-  ipa_read_summaries_1 (all_lto_gen_passes);
 }
 
 /* Same as execute_pass_list but assume that subpasses of IPA passes
@@ -2431,13 +2417,12 @@ ipa_read_optimization_summaries_1 (struct opt_pass *pass)
     }
 }
 
-/* Read all the summaries for all_regular_ipa_passes and all_lto_gen_passes.  */
+/* Read all the summaries for all_regular_ipa_passes.  */
 
 void
 ipa_read_optimization_summaries (void)
 {
   ipa_read_optimization_summaries_1 (all_regular_ipa_passes);
-  ipa_read_optimization_summaries_1 (all_lto_gen_passes);
 }
 
 /* Same as execute_pass_list but assume that subpasses of IPA passes

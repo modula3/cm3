@@ -511,9 +511,10 @@ static bool is_too_expensive (const char *);
 static void
 compute_can_copy (void)
 {
-  int i;
+  int i = { 0 };
 #ifndef AVOID_CCMODE_COPIES
-  rtx reg, insn;
+  rtx reg = { 0 };
+  rtx insn = { 0 };
 #endif
   memset (can_copy, 0, NUM_MACHINE_MODES);
 
@@ -636,7 +637,7 @@ static void
 compute_local_properties (sbitmap *transp, sbitmap *comp, sbitmap *antloc,
 			  struct hash_table_d *table)
 {
-  unsigned int i;
+  unsigned i = { 0 };
 
   /* Initialize any bitmaps that were passed in.  */
   if (transp)
@@ -805,8 +806,8 @@ static GTY(()) rtx test_insn;
 bool
 can_assign_to_reg_without_clobbers_p (rtx x)
 {
-  int num_clobbers = 0;
-  int icode;
+  int num_clobbers = { 0 };
+  int icode = { 0 };
 
   /* If this is a valid operand, we are OK.  If it's VOIDmode, we aren't.  */
   if (general_operand (x, GET_MODE (x)))
@@ -851,9 +852,10 @@ can_assign_to_reg_without_clobbers_p (rtx x)
 static int
 oprs_unchanged_p (const_rtx x, const_rtx insn, int avail_p)
 {
-  int i, j;
-  enum rtx_code code;
-  const char *fmt;
+  int i = { 0 };
+  int j = { 0 };
+  enum rtx_code code = (enum rtx_code)0;
+  const char *fmt = { 0 };
 
   if (x == 0)
     return 1;
@@ -987,8 +989,8 @@ load_killed_in_block_p (const_basic_block bb, int uid_limit, const_rtx x,
 			int avail_p)
 {
   VEC (rtx,heap) *list = modify_mem_list[bb->index];
-  rtx setter;
-  unsigned ix;
+  rtx setter = { 0 };
+  unsigned ix = { 0 };
 
   /* If this is a readonly then we aren't going to be changing it.  */
   if (MEM_READONLY_P (x))
@@ -1084,10 +1086,13 @@ static void
 insert_expr_in_table (rtx x, enum machine_mode mode, rtx insn, int antic_p,
 		      int avail_p, int max_distance, struct hash_table_d *table)
 {
-  int found, do_not_record_p;
-  unsigned int hash;
-  struct expr *cur_expr, *last_expr = NULL;
-  struct occr *antic_occr, *avail_occr;
+  int found = { 0 };
+  int do_not_record_p = { 0 };
+  unsigned hash = { 0 };
+  struct expr* cur_expr = { 0 };
+  struct expr* last_expr = { 0 };
+  struct occr* antic_occr = { 0 };
+  struct occr* avail_occr = { 0 };
 
   hash = hash_expr (x, mode, &do_not_record_p, table->size);
 
@@ -1190,7 +1195,7 @@ hash_scan_set (rtx set, rtx insn, struct hash_table_d *table)
 {
   rtx src = SET_SRC (set);
   rtx dest = SET_DEST (set);
-  rtx note;
+  rtx note = { 0 };
 
   if (GET_CODE (src) == CALL)
     hash_scan_call (src, insn, table);
@@ -1324,7 +1329,7 @@ static void
 hash_scan_insn (rtx insn, struct hash_table_d *table)
 {
   rtx pat = PATTERN (insn);
-  int i;
+  int i = { 0 };
 
   /* Pick out the sets of INSN and for other forms of instructions record
      what's been modified.  */
@@ -1357,11 +1362,11 @@ hash_scan_insn (rtx insn, struct hash_table_d *table)
 static void
 dump_hash_table (FILE *file, const char *name, struct hash_table_d *table)
 {
-  int i;
+  int i = { 0 };
   /* Flattened out table, so it's printed in proper order.  */
-  struct expr **flat_table;
-  unsigned int *hash_val;
-  struct expr *expr;
+  struct expr **flat_table = { 0 };
+  unsigned int *hash_val = { 0 };
+  struct expr *expr = { 0 };
 
   flat_table = XCNEWVEC (struct expr *, table->n_elems);
   hash_val = XNEWVEC (unsigned int, table->n_elems);
@@ -1425,9 +1430,10 @@ static void
 canon_list_insert (rtx dest ATTRIBUTE_UNUSED, const_rtx x ATTRIBUTE_UNUSED,
 		   void * v_insn)
 {
-  rtx dest_addr, insn;
-  int bb;
-  modify_pair *pair;
+  rtx dest_addr = { 0 };
+  rtx insn = { 0 };
+  int bb = { 0 };
+  modify_pair *pair = { 0 };
 
   while (GET_CODE (dest) == SUBREG
       || GET_CODE (dest) == ZERO_EXTRACT
@@ -1505,7 +1511,7 @@ record_last_set_info (rtx dest, const_rtx setter ATTRIBUTE_UNUSED, void *data)
 static void
 compute_hash_table_work (struct hash_table_d *table)
 {
-  int i;
+  int i = { 0 };
 
   /* re-Cache any INSN_LIST nodes we have allocated.  */
   clear_modify_mem_tables ();
@@ -1556,9 +1562,7 @@ compute_hash_table_work (struct hash_table_d *table)
 static void
 alloc_hash_table (struct hash_table_d *table)
 {
-  int n;
-
-  n = get_max_insn_count ();
+  int n = get_max_insn_count ();
 
   table->size = n / 4;
   if (table->size < 11)
@@ -1598,8 +1602,8 @@ compute_hash_table (struct hash_table_d *table)
 static void
 clear_modify_mem_tables (void)
 {
-  unsigned i;
-  bitmap_iterator bi;
+  unsigned i = { 0 };
+  bitmap_iterator bi = { 0 };
 
   EXECUTE_IF_SET_IN_BITMAP (modify_mem_list_set, 0, i, bi)
     {
@@ -1630,9 +1634,10 @@ free_modify_mem_tables (void)
 static void
 compute_transp (const_rtx x, int indx, sbitmap *bmap)
 {
-  int i, j;
-  enum rtx_code code;
-  const char *fmt;
+  int i = { 0 };
+  int j = { 0 };
+  enum rtx_code code = (enum rtx_code)0;
+  const char *fmt = { 0 };
 
   /* repeat is used to turn tail-recursion into iteration since GCC
      can't do it when there's no return value.  */
@@ -1808,10 +1813,10 @@ free_pre_mem (void)
 static void
 prune_expressions (bool pre_p)
 {
-  sbitmap prune_exprs;
-  struct expr *expr;
-  unsigned int ui;
-  basic_block bb;
+  sbitmap prune_exprs = { 0 };
+  struct expr *expr = { 0 };
+  unsigned ui = { 0 };
+  basic_block bb = { 0 };
 
   prune_exprs = sbitmap_alloc (expr_hash_table.n_elems);
   sbitmap_zero (prune_exprs);
@@ -1855,8 +1860,8 @@ prune_expressions (bool pre_p)
 
   FOR_EACH_BB (bb)
     {
-      edge e;
-      edge_iterator ei;
+      edge e = { 0 };
+      edge_iterator ei = { 0 };
 
       /* If the current block is the destination of an abnormal edge, we
 	 kill all trapping (for PRE) and memory (for hoist) expressions
@@ -1899,12 +1904,13 @@ prune_expressions (bool pre_p)
 static void
 prune_insertions_deletions (int n_elems)
 {
-  sbitmap_iterator sbi;
-  sbitmap prune_exprs;
+  sbitmap_iterator sbi = { 0 };
+  sbitmap prune_exprs = { 0 };
 
   /* We always use I to iterate over blocks/edges and J to iterate over
      expressions.  */
-  unsigned int i, j;
+  unsigned i = { 0 };
+  unsigned j = { 0 };
 
   /* Counts for the number of times an expression needs to be inserted and
      number of times an expression can be removed as a result.  */
@@ -2218,8 +2224,13 @@ insert_insn_end_basic_block (struct expr *expr, basic_block bb)
 static int
 pre_edge_insert (struct edge_list *edge_list, struct expr **index_map)
 {
-  int e, i, j, num_edges, set_size, did_insert = 0;
-  sbitmap *inserted;
+  int e = { 0 };
+  int i = { 0 };
+  int j = { 0 };
+  int num_edges = { 0 };
+  int set_size = { 0 };
+  int did_insert = { 0 };
+  sbitmap *inserted = { 0 };
 
   /* Where PRE_INSERT_MAP is nonzero, we add the expression on that edge
      if it reaches any of the deleted expressions.  */
@@ -2231,7 +2242,7 @@ pre_edge_insert (struct edge_list *edge_list, struct expr **index_map)
 
   for (e = 0; e < num_edges; e++)
     {
-      int indx;
+      int indx = { 0 };
       basic_block bb = INDEX_EDGE_PRED_BB (edge_list, e);
 
       for (i = indx = 0; i < set_size; i++, indx += SBITMAP_ELT_BITS)
@@ -2319,9 +2330,11 @@ pre_insert_copy_insn (struct expr *expr, rtx insn)
   int regno = REGNO (reg);
   int indx = expr->bitmap_index;
   rtx pat = PATTERN (insn);
-  rtx set, first_set, new_insn;
-  rtx old_reg;
-  int i;
+  rtx set = { 0 };
+  rtx first_set = { 0 };
+  rtx new_insn = { 0 };
+  rtx old_reg = { 0 };
+  int i = { 0 };
 
   /* This block matches the logic in hash_scan_insn.  */
   switch (GET_CODE (pat))
@@ -2404,10 +2417,11 @@ pre_insert_copy_insn (struct expr *expr, rtx insn)
 static void
 pre_insert_copies (void)
 {
-  unsigned int i, added_copy;
-  struct expr *expr;
-  struct occr *occr;
-  struct occr *avail;
+  unsigned i = { 0 };
+  unsigned added_copy = { 0 };
+  struct expr* expr = { 0 };
+  struct occr* occr = { 0 };
+  struct occr* avail = { 0 };
 
   /* For each available expression in the table, copy the result to
      `reaching_reg' if the expression reaches a deleted one.
@@ -2471,10 +2485,10 @@ pre_insert_copies (void)
 static rtx
 gcse_emit_move_after (rtx dest, rtx src, rtx insn)
 {
-  rtx new_rtx;
+  rtx new_rtx = { 0 };
   rtx set = single_set (insn), set2;
-  rtx note;
-  rtx eqv;
+  rtx note = { 0 };
+  rtx eqv = { 0 };
 
   /* This should never fail since we're creating a reg->reg copy
      we've verified to be valid.  */
@@ -2505,10 +2519,10 @@ gcse_emit_move_after (rtx dest, rtx src, rtx insn)
 static int
 pre_delete (void)
 {
-  unsigned int i;
-  int changed;
-  struct expr *expr;
-  struct occr *occr;
+  unsigned i = { 0 };
+  int changed = { 0 };
+  struct expr* expr = { 0 };
+  struct occr* occr = { 0 };
 
   changed = 0;
   for (i = 0; i < expr_hash_table.size; i++)
@@ -2578,10 +2592,11 @@ pre_delete (void)
 static int
 pre_gcse (struct edge_list *edge_list)
 {
-  unsigned int i;
-  int did_insert, changed;
-  struct expr **index_map;
-  struct expr *expr;
+  unsigned i = { 0 };
+  int did_insert = { 0 };
+  int changed = { 0 };
+  struct expr** index_map = { 0 };
+  struct expr* expr = { 0 };
 
   /* Compute a mapping from expression number (`bitmap_index') to
      hash table entry.  */
@@ -2693,8 +2708,9 @@ static void
 add_label_notes (rtx x, rtx insn)
 {
   enum rtx_code code = GET_CODE (x);
-  int i, j;
-  const char *fmt;
+  int i = { 0 };
+  int j = { 0 };
+  const char *fmt = { 0 };
 
   if (code == LABEL_REF && !LABEL_REF_NONLOCAL_P (x))
     {
@@ -2775,8 +2791,9 @@ free_code_hoist_mem (void)
 static void
 compute_code_hoist_vbeinout (void)
 {
-  int changed, passes;
-  basic_block bb;
+  int changed = { 0 };
+  int passes = { 0 };
+  basic_block bb = { 0 };
 
   sbitmap_vector_zero (hoist_vbeout, last_basic_block);
   sbitmap_vector_zero (hoist_vbein, last_basic_block);
@@ -2858,8 +2875,8 @@ static int
 hoist_expr_reaches_here_p (basic_block expr_bb, int expr_index, basic_block bb,
 			   char *visited, int distance, int *bb_size)
 {
-  edge pred;
-  edge_iterator ei;
+  edge pred = { 0 };
+  edge_iterator ei = { 0 };
   int visited_allocated_locally = 0;
 
   /* Terminate the search if distance, for which EXPR is allowed to move,
@@ -2926,15 +2943,17 @@ find_occr_in_bb (struct occr *occr, basic_block bb)
 static int
 hoist_code (void)
 {
-  basic_block bb, dominated;
-  VEC (basic_block, heap) *dom_tree_walk;
-  unsigned int dom_tree_walk_index;
-  VEC (basic_block, heap) *domby;
-  unsigned int i,j;
-  struct expr **index_map;
-  struct expr *expr;
-  int *to_bb_head;
-  int *bb_size;
+  basic_block bb = { 0 };
+  basic_block dominated = { 0 };
+  VEC (basic_block, heap) *dom_tree_walk = { 0 };
+  unsigned int dom_tree_walk_index = { 0 };
+  VEC (basic_block, heap) *domby = { 0 };
+  unsigned i = { 0 };
+  unsigned j = { 0 };
+  struct expr** index_map = { 0 };
+  struct expr* expr = { 0 };
+  int* to_bb_head = { 0 };
+  int* bb_size = { 0 };
   int changed = 0;
 
   /* Compute a mapping from expression number (`bitmap_index') to
@@ -2954,8 +2973,8 @@ hoist_code (void)
 
   FOR_EACH_BB (bb)
     {
-      rtx insn;
-      int to_head;
+      rtx insn = { 0 };
+      int to_head = { 0 };
 
       to_head = 0;
       FOR_BB_INSNS (bb, insn)
@@ -3270,8 +3289,8 @@ ldst_entry (rtx x)
 {
   int do_not_record_p = 0;
   struct ls_expr * ptr = { 0 };
-  unsigned int hash = { 0 };
-  void **slot = { 0 };
+  unsigned hash = { 0 };
+  void** slot = { 0 };
   struct ls_expr e = { 0 };
 
   hash = hash_rtx (x, GET_MODE (x), &do_not_record_p,
