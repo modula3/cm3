@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Forward propagation of expressions for single use variables.
    Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -177,8 +179,8 @@ static tree rhs_to_tree (tree type, gimple stmt);
 static gimple
 get_prop_dest_stmt (tree name, tree *final_name_p)
 {
-  use_operand_p use;
-  gimple use_stmt;
+  use_operand_p use = { 0 };
+  gimple use_stmt = { 0 };
 
   do {
     /* If name has multiple uses, bail out.  */
@@ -305,8 +307,8 @@ can_propagate_from (gimple def_stmt)
 static bool
 remove_prop_source_from_use (tree name)
 {
-  gimple_stmt_iterator gsi;
-  gimple stmt;
+  gimple_stmt_iterator gsi = { 0 };
+  gimple stmt = { 0 };
   bool cfg_changed = false;
 
   do {
@@ -372,7 +374,7 @@ static tree
 combine_cond_expr_cond (gimple stmt, enum tree_code code, tree type,
 			tree op0, tree op1, bool invariant_only)
 {
-  tree t;
+  tree t = { 0 };
 
   gcc_assert (TREE_CODE_CLASS (code) == tcc_comparison);
 
@@ -463,7 +465,7 @@ static int
 forward_propagate_into_comparison (gimple_stmt_iterator *gsi)
 {
   gimple stmt = gsi_stmt (*gsi);
-  tree tmp;
+  tree tmp = { 0 };
   bool cfg_changed = false;
   tree type = TREE_TYPE (gimple_assign_lhs (stmt));
   tree rhs1 = gimple_assign_rhs1 (stmt);
@@ -499,7 +501,7 @@ forward_propagate_into_comparison (gimple_stmt_iterator *gsi)
 static int
 forward_propagate_into_gimple_cond (gimple stmt)
 {
-  tree tmp;
+  tree tmp = { 0 };
   enum tree_code code = gimple_cond_code (stmt);
   bool cfg_changed = false;
   tree rhs1 = gimple_cond_lhs (stmt);
@@ -574,7 +576,7 @@ forward_propagate_into_cond (gimple_stmt_iterator *gsi_p)
 					       TREE_OPERAND (cond, 1));
   else if (TREE_CODE (cond) == SSA_NAME)
     {
-      enum tree_code code;
+      enum tree_code code = (enum tree_code)0;
       tree name = cond;
       gimple def_stmt = get_prop_source_stmt (name, true, NULL);
       if (!def_stmt || !can_propagate_from (def_stmt))
@@ -667,9 +669,12 @@ forward_propagate_addr_into_variable_array_index (tree offset,
 						  tree def_rhs,
 						  gimple_stmt_iterator *use_stmt_gsi)
 {
-  tree index, tunit;
-  gimple offset_def, use_stmt = gsi_stmt (*use_stmt_gsi);
-  tree new_rhs, tmp;
+  tree index = { 0 };
+  tree tunit = { 0 };
+  gimple offset_def = { 0 };
+  gimple use_stmt = gsi_stmt (*use_stmt_gsi);
+  tree new_rhs = { 0 };
+  tree tmp = { 0 };
 
   if (TREE_CODE (TREE_OPERAND (def_rhs, 0)) == ARRAY_REF)
     tunit = TYPE_SIZE_UNIT (TREE_TYPE (TREE_TYPE (def_rhs)));
@@ -784,9 +789,12 @@ forward_propagate_addr_expr_1 (tree name, tree def_rhs,
 			       gimple_stmt_iterator *use_stmt_gsi,
 			       bool single_use_p)
 {
-  tree lhs, rhs, rhs2, array_ref;
+  tree lhs = { 0 };
+  tree rhs = { 0 };
+  tree rhs2 = { 0 };
+  tree array_ref = { 0 };
   gimple use_stmt = gsi_stmt (*use_stmt_gsi);
-  enum tree_code rhs_code;
+  enum tree_code rhs_code = (enum tree_code)0;
   bool res = true;
 
   gcc_assert (TREE_CODE (def_rhs) == ADDR_EXPR);
@@ -1088,15 +1096,15 @@ static bool
 forward_propagate_addr_expr (tree name, tree rhs)
 {
   int stmt_loop_depth = gimple_bb (SSA_NAME_DEF_STMT (name))->loop_depth;
-  imm_use_iterator iter;
-  gimple use_stmt;
+  imm_use_iterator iter = { 0 };
+  gimple use_stmt = { 0 };
   bool all = true;
   bool single_use_p = has_single_use (name);
 
   FOR_EACH_IMM_USE_STMT (use_stmt, iter, name)
     {
-      bool result;
-      tree use_rhs;
+      bool result = { 0 };
+      tree use_rhs = { 0 };
 
       /* If the use is not in a simple assignment statement, then
 	 there is nothing we can do.  */
@@ -1161,11 +1169,11 @@ static bool
 forward_propagate_comparison (gimple stmt)
 {
   tree name = gimple_assign_lhs (stmt);
-  gimple use_stmt;
+  gimple use_stmt = { 0 };
   tree tmp = NULL_TREE;
-  gimple_stmt_iterator gsi;
-  enum tree_code code;
-  tree lhs;
+  gimple_stmt_iterator gsi = { 0 };
+  enum tree_code code = (enum tree_code)0;
+  tree lhs = { 0 };
 
   /* Don't propagate ssa names that occur in abnormal phis.  */
   if ((TREE_CODE (gimple_assign_rhs1 (stmt)) == SSA_NAME
@@ -1274,8 +1282,10 @@ static bool
 simplify_gimple_switch (gimple stmt)
 {
   tree cond = gimple_switch_index (stmt);
-  tree def, to, ti;
-  gimple def_stmt;
+  tree def = { 0 };
+  tree to = { 0 };
+  tree ti = { 0 };
+  gimple def_stmt = { 0 };
 
   /* The optimization that we really care about is removing unnecessary
      casts.  That will let us do much better in propagating the inferred
@@ -1287,8 +1297,8 @@ simplify_gimple_switch (gimple stmt)
 	{
 	  if (gimple_assign_rhs_code (def_stmt) == NOP_EXPR)
 	    {
-	      int need_precision;
-	      bool fail;
+	      int need_precision = { 0 };
+	      bool fail = { 0 };
 
 	      def = gimple_assign_rhs1 (def_stmt);
 
@@ -1331,18 +1341,19 @@ simplify_gimple_switch (gimple stmt)
 static tree
 constant_pointer_difference (tree p1, tree p2)
 {
-  int i, j;
+  int i = { 0 };
+  int j = { 0 };
 #define CPD_ITERATIONS 5
-  tree exps[2][CPD_ITERATIONS];
-  tree offs[2][CPD_ITERATIONS];
-  int cnt[2];
+  tree exps[2][CPD_ITERATIONS] = { 0 };
+  tree offs[2][CPD_ITERATIONS] = { 0 };
+  int cnt[2] = { 0 };
 
   for (i = 0; i < 2; i++)
     {
       tree p = i ? p1 : p2;
       tree off = size_zero_node;
-      gimple stmt;
-      enum tree_code code;
+      gimple stmt = { 0 };
+      enum tree_code code = (enum tree_code)0;
 
       /* For each of p1 and p2 we need to iterate at least
 	 twice, to handle ADDR_EXPR directly in p1/p2,
@@ -1356,7 +1367,7 @@ constant_pointer_difference (tree p1, tree p2)
 	  if (TREE_CODE (p) == ADDR_EXPR)
 	    {
 	      tree q = TREE_OPERAND (p, 0);
-	      HOST_WIDE_INT offset;
+	      HOST_WIDE_INT offset = { 0 };
 	      tree base = get_addr_base_and_unit_offset (q, &offset);
 	      if (base)
 		{
@@ -1424,7 +1435,8 @@ constant_pointer_difference (tree p1, tree p2)
 static bool
 simplify_builtin_call (gimple_stmt_iterator *gsi_p, tree callee2)
 {
-  gimple stmt1, stmt2 = gsi_stmt (*gsi_p);
+  gimple stmt1 = { 0 };
+  gimple stmt2 = gsi_stmt (*gsi_p);
   tree vuse = gimple_vuse (stmt2);
   if (vuse == NULL)
     return false;
@@ -1440,17 +1452,24 @@ simplify_builtin_call (gimple_stmt_iterator *gsi_p, tree callee2)
 	break;
       else
 	{
-	  tree callee1;
-	  tree ptr1, src1, str1, off1, len1, lhs1;
+	  tree callee1 = { 0 };
+	  tree ptr1 = { 0 };
+	  tree src1 = { 0 };
+	  tree str1 = { 0 };
+	  tree off1 = { 0 };
+	  tree len1 = { 0 };
+	  tree lhs1 = { 0 };
 	  tree ptr2 = gimple_call_arg (stmt2, 0);
 	  tree val2 = gimple_call_arg (stmt2, 1);
 	  tree len2 = gimple_call_arg (stmt2, 2);
-	  tree diff, vdef, new_str_cst;
-	  gimple use_stmt;
-	  unsigned int ptr1_align;
-	  unsigned HOST_WIDE_INT src_len;
-	  char *src_buf;
-	  use_operand_p use_p;
+	  tree diff = { 0 };
+	  tree vdef = { 0 };
+	  tree new_str_cst = { 0 };
+	  gimple use_stmt = { 0 };
+	  unsigned ptr1_align = { 0 };
+	  unsigned HOST_WIDE_INT src_len = { 0 };
+	  char *src_buf = { 0 };
+	  use_operand_p use_p = { 0 };
 
 	  if (!host_integerp (val2, 0)
 	      || !host_integerp (len2, 1))
@@ -1627,7 +1646,7 @@ simplify_builtin_call (gimple_stmt_iterator *gsi_p, tree callee2)
 static bool
 truth_valued_ssa_name (tree name)
 {
-  gimple def;
+  gimple def = { 0 };
   tree type = TREE_TYPE (name);
 
   if (!INTEGRAL_TYPE_P (type))
@@ -1651,9 +1670,10 @@ truth_valued_ssa_name (tree name)
 static tree
 lookup_logical_inverted_value (tree name)
 {
-  tree op1, op2;
-  enum tree_code code;
-  gimple def;
+  tree op1 = { 0 };
+  tree op2 = { 0 };
+  enum tree_code code = (enum tree_code)0;
+  gimple def = { 0 };
 
   /* If name has none-intergal type, or isn't a SSA_NAME, then
      return.  */
@@ -1713,7 +1733,7 @@ static tree
 simplify_bitwise_binary_1 (enum tree_code code, tree type,
 			   tree arg1, tree arg2)
 {
-  tree anot;
+  tree anot = { 0 };
 
   /* If CODE isn't a bitwise binary operation, return NULL_TREE.  */
   if (code != BIT_AND_EXPR && code != BIT_IOR_EXPR
@@ -1752,10 +1772,13 @@ simplify_bitwise_binary (gimple_stmt_iterator *gsi)
   tree arg1 = gimple_assign_rhs1 (stmt);
   tree arg2 = gimple_assign_rhs2 (stmt);
   enum tree_code code = gimple_assign_rhs_code (stmt);
-  tree res;
-  gimple def1 = NULL, def2 = NULL;
-  tree def1_arg1, def2_arg1;
-  enum tree_code def1_code, def2_code;
+  tree res = { 0 };
+  gimple def1 = { 0 };
+  gimple def2 = { 0 };
+  tree def1_arg1 = { 0 };
+  tree def2_arg1 = { 0 };
+  enum tree_code def1_code = (enum tree_code)0;
+  enum tree_code def2_code = (enum tree_code)0;
 
   def1_code = TREE_CODE (arg1);
   def1_arg1 = arg1;
@@ -1787,7 +1810,7 @@ simplify_bitwise_binary (gimple_stmt_iterator *gsi)
       && INTEGRAL_TYPE_P (TREE_TYPE (def1_arg1))
       && int_fits_type_p (arg2, TREE_TYPE (def1_arg1)))
     {
-      gimple newop;
+      gimple newop = { 0 };
       tree tem = create_tmp_reg (TREE_TYPE (def1_arg1), NULL);
       newop =
         gimple_build_assign_with_ops (code, tem, def1_arg1,
@@ -1820,7 +1843,7 @@ simplify_bitwise_binary (gimple_stmt_iterator *gsi)
 	  || (TYPE_PRECISION (TREE_TYPE (arg1))
 	      != GET_MODE_PRECISION (TYPE_MODE (TREE_TYPE (arg1))))))
     {
-      gimple newop;
+      gimple newop = { 0 };
       tree tem = create_tmp_reg (TREE_TYPE (def1_arg1),
 				 NULL);
       newop = gimple_build_assign_with_ops (code, tem, def1_arg1, def2_arg1);
@@ -1842,8 +1865,8 @@ simplify_bitwise_binary (gimple_stmt_iterator *gsi)
     {
       tree cst = fold_build2 (BIT_AND_EXPR, TREE_TYPE (arg2),
 			      arg2, gimple_assign_rhs2 (def1));
-      tree tem;
-      gimple newop;
+      tree tem = { 0 };
+      gimple newop = { 0 };
       if (integer_zerop (cst))
 	{
 	  gimple_assign_set_rhs1 (stmt, def1_arg1);
@@ -1915,7 +1938,7 @@ associate_plusminus (gimple_stmt_iterator *gsi)
   tree rhs1 = gimple_assign_rhs1 (stmt);
   tree rhs2 = gimple_assign_rhs2 (stmt);
   enum tree_code code = gimple_assign_rhs_code (stmt);
-  bool changed;
+  bool changed = { 0 };
 
   /* We can't reassociate at all for saturating types.  */
   if (TYPE_SATURATING (TREE_TYPE (rhs1)))
@@ -2199,8 +2222,9 @@ static int
 combine_conversions (gimple_stmt_iterator *gsi)
 {
   gimple stmt = gsi_stmt (*gsi);
-  gimple def_stmt;
-  tree op0, lhs;
+  gimple def_stmt = { 0 };
+  tree op0 = { 0 };
+  tree lhs = { 0 };
   enum tree_code code = gimple_assign_rhs_code (stmt);
 
   gcc_checking_assert (CONVERT_EXPR_CODE_P (code)
@@ -2331,7 +2355,7 @@ combine_conversions (gimple_stmt_iterator *gsi)
 	  && final_prec > inter_prec
 	  && inter_unsignedp)
 	{
-	  tree tem;
+	  tree tem = { 0 };
 	  tem = fold_build2 (BIT_AND_EXPR, inside_type,
 			     defop0,
 			     double_int_to_tree
@@ -2358,8 +2382,8 @@ combine_conversions (gimple_stmt_iterator *gsi)
 static unsigned int
 ssa_forward_propagate_and_combine (void)
 {
-  basic_block bb;
-  unsigned int todoflags = 0;
+  basic_block bb = { 0 };
+  unsigned todoflags = { 0 };
 
   cfg_changed = false;
 
@@ -2516,7 +2540,7 @@ ssa_forward_propagate_and_combine (void)
 
 	    case GIMPLE_COND:
 	      {
-		int did_something;
+		int did_something = { 0 };
 		did_something = forward_propagate_into_gimple_cond (stmt);
 		if (did_something == 2)
 		  cfg_changed = true;

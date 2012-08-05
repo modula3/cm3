@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Chains of recurrences.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -92,7 +94,8 @@ chrec_fold_plus_poly_poly (enum tree_code code,
 			   tree poly0,
 			   tree poly1)
 {
-  tree left, right;
+  tree left = { 0 };
+  tree right = { 0 };
   struct loop *loop0 = get_chrec_loop (poly0);
   struct loop *loop1 = get_chrec_loop (poly1);
   tree rtype = code == POINTER_PLUS_EXPR ? chrec_type (poly1) : type;
@@ -177,8 +180,10 @@ chrec_fold_multiply_poly_poly (tree type,
 			       tree poly0,
 			       tree poly1)
 {
-  tree t0, t1, t2;
-  int var;
+  tree t0 = { 0 };
+  tree t1 = { 0 };
+  tree t2 = { 0 };
+  int var = { 0 };
   struct loop *loop0 = get_chrec_loop (poly0);
   struct loop *loop1 = get_chrec_loop (poly1);
 
@@ -348,7 +353,7 @@ chrec_fold_plus (tree type,
 		 tree op0,
 		 tree op1)
 {
-  enum tree_code code;
+  enum tree_code code = (enum tree_code)0;
   if (automatically_generated_chrec_p (op0)
       || automatically_generated_chrec_p (op1))
     return chrec_fold_automatically_generated_operands (op0, op1);
@@ -461,10 +466,18 @@ chrec_fold_multiply (tree type,
 static tree
 tree_fold_binomial (tree type, tree n, unsigned int k)
 {
-  unsigned HOST_WIDE_INT lidx, lnum, ldenom, lres, ldum;
-  HOST_WIDE_INT hidx, hnum, hdenom, hres, hdum;
-  unsigned int i;
-  tree res;
+  unsigned HOST_WIDE_INT lidx = { 0 };
+  unsigned HOST_WIDE_INT lnum = { 0 };
+  unsigned HOST_WIDE_INT ldenom = { 0 };
+  unsigned HOST_WIDE_INT lres = { 0 };
+  unsigned HOST_WIDE_INT ldum = { 0 };
+  HOST_WIDE_INT hidx = { 0 };
+  HOST_WIDE_INT hnum = { 0 };
+  HOST_WIDE_INT hdenom = { 0 };
+  HOST_WIDE_INT hres = { 0 };
+  HOST_WIDE_INT hdum = { 0 };
+  unsigned i = { 0 };
+  tree res = { 0 };
 
   /* Handle the most frequent cases.  */
   if (k == 0)
@@ -534,7 +547,9 @@ tree_fold_binomial (tree type, tree n, unsigned int k)
 static tree
 chrec_evaluate (unsigned var, tree chrec, tree n, unsigned int k)
 {
-  tree arg0, arg1, binomial_n_k;
+  tree arg0 = { 0 };
+  tree arg1 = { 0 };
+  tree binomial_n_k = { 0 };
   tree type = TREE_TYPE (chrec);
   struct loop *var_loop = get_loop (var);
 
@@ -654,8 +669,8 @@ chrec_apply (unsigned var,
 tree
 chrec_apply_map (tree chrec, VEC (tree, heap) *iv_map)
 {
-  int i;
-  tree expr;
+  int i = { 0 };
+  tree expr = { 0 };
 
   FOR_EACH_VEC_ELT (tree, iv_map, i, expr)
     if (expr)
@@ -749,7 +764,7 @@ chrec_component_in_loop_num (tree chrec,
 			     unsigned loop_num,
 			     bool right)
 {
-  tree component;
+  tree component = { 0 };
   struct loop *loop = get_loop (loop_num), *chloop;
 
   if (automatically_generated_chrec_p (chrec))
@@ -929,7 +944,8 @@ is_multivariate_chrec (const_tree chrec)
 bool
 chrec_contains_symbols (const_tree chrec)
 {
-  int i, n;
+  int i = { 0 };
+  int n = { 0 };
 
   if (chrec == NULL_TREE)
     return false;
@@ -955,7 +971,8 @@ chrec_contains_symbols (const_tree chrec)
 bool
 chrec_contains_undetermined (const_tree chrec)
 {
-  int i, n;
+  int i = { 0 };
+  int n = { 0 };
 
   if (chrec == chrec_dont_know)
     return true;
@@ -977,7 +994,8 @@ chrec_contains_undetermined (const_tree chrec)
 bool
 tree_contains_chrecs (const_tree expr, int *size)
 {
-  int i, n;
+  int i = { 0 };
+  int n = { 0 };
 
   if (expr == NULL_TREE)
     return false;
@@ -1171,9 +1189,11 @@ convert_affine_scev (struct loop *loop, tree type,
 		     bool use_overflow_semantics)
 {
   tree ct = TREE_TYPE (*step);
-  bool enforce_overflow_semantics;
-  bool must_check_src_overflow, must_check_rslt_overflow;
-  tree new_base, new_step;
+  bool enforce_overflow_semantics = { 0 };
+  bool must_check_src_overflow = { 0 };
+  bool must_check_rslt_overflow = { 0 };
+  tree new_base = { 0 };
+  tree new_step = { 0 };
   tree step_type = POINTER_TYPE_P (type) ? sizetype : type;
 
   /* In general,
@@ -1322,9 +1342,11 @@ static tree
 chrec_convert_1 (tree type, tree chrec, gimple at_stmt,
 		 bool use_overflow_semantics)
 {
-  tree ct, res;
-  tree base, step;
-  struct loop *loop;
+  tree ct = { 0 };
+  tree res = { 0 };
+  tree base = { 0 };
+  tree step = { 0 };
+  struct loop *loop = { 0 };
 
   if (automatically_generated_chrec_p (chrec))
     return chrec;
@@ -1387,7 +1409,12 @@ keep_cast:
 tree
 chrec_convert_aggressive (tree type, tree chrec)
 {
-  tree inner_type, left, right, lc, rc, rtype;
+  tree inner_type = { 0 };
+  tree left = { 0 };
+  tree right = { 0 };
+  tree lc = { 0 };
+  tree rc = { 0 };
+  tree rtype = { 0 };
 
   if (automatically_generated_chrec_p (chrec)
       || TREE_CODE (chrec) != POLYNOMIAL_CHREC)
@@ -1455,7 +1482,7 @@ eq_evolutions_p (const_tree chrec0, const_tree chrec1)
 enum ev_direction
 scev_direction (const_tree chrec)
 {
-  const_tree step;
+  const_tree step = { 0 };
 
   if (!evolution_function_is_affine_p (chrec))
     return EV_DIR_UNKNOWN;
