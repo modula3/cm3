@@ -85,9 +85,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "tree-flow.h"
 #include "ipa-prop.h"
-#include "lto-streamer.h"
-#include "data-streamer.h"
-#include "tree-streamer.h"
 #include "ipa-inline.h"
 #include "alloc-pool.h"
 
@@ -2974,210 +2971,13 @@ inline_generate_summary (void)
       inline_analyze_function (node);
 }
 
-
-/* Read predicate from IB.  */
-
-static struct predicate
-read_predicate (struct lto_input_block *ib)
-{
-  struct predicate out = { 0 };
-  clause_t clause = { 0 };
-  int k = 0;
-
-  do 
-    {
-      gcc_assert (k <= MAX_CLAUSES);
-      clause = out.clause[k++] = streamer_read_uhwi (ib);
-    }
-  while (clause);
-
-  /* Zero-initialize the remaining clauses in OUT.  */
-  while (k <= MAX_CLAUSES)
-    out.clause[k++] = 0;
-
-  return out;
-}
-
-
-/* Write inline summary for edge E to OB.  */
-
-static void
-read_inline_edge_summary (struct lto_input_block *ib, struct cgraph_edge *e)
-{
-  struct inline_edge_summary *es = inline_edge_summary (e);
-  struct predicate p = { 0 };
-  int length = { 0 };
-  int i = { 0 };
-
-  es->call_stmt_size = streamer_read_uhwi (ib);
-  es->call_stmt_time = streamer_read_uhwi (ib);
-  es->loop_depth = streamer_read_uhwi (ib);
-  p = read_predicate (ib);
-  edge_set_predicate (e, &p);
-  length = streamer_read_uhwi (ib);
-  if (length)
-    {
-      VEC_safe_grow_cleared (inline_param_summary_t, heap, es->param, length);
-      for (i = 0; i < length; i++)
-	VEC_index (inline_param_summary_t, es->param, i)->change_prob
-	  = streamer_read_uhwi (ib);
-    }
-}
-
-
-/* Stream in inline summaries from the section.  */
-
-static void
-inline_read_section (struct lto_file_decl_data *file_data, const char *data,
-		     size_t len)
-{
-  const struct lto_function_header *header =
-    (const struct lto_function_header *) data;
-  const int cfg_offset = sizeof (struct lto_function_header);
-  const int main_offset = cfg_offset + header->cfg_size;
-  const int string_offset = main_offset + header->main_size;
-  struct data_in *data_in = { 0 };
-  struct lto_input_block ib = { 0 };
-  unsigned i = { 0 };
-  unsigned count2 = { 0 };
-  unsigned j = { 0 };
-  unsigned int f_count = { 0 };
-
-  LTO_INIT_INPUT_BLOCK (ib, (const char *) data + main_offset, 0,
-			header->main_size);
-
-  data_in =
-    lto_data_in_create (file_data, (const char *) data + string_offset,
-			header->string_size, NULL);
-  f_count = streamer_read_uhwi (&ib);
-  for (i = 0; i < f_count; i++)
-    {
-      unsigned int index = { 0 };
-      struct cgraph_node *node = { 0 };
-      struct inline_summary *info = { 0 };
-      lto_cgraph_encoder_t encoder = { 0 };
-      struct bitpack_d bp = { 0 };
-      struct cgraph_edge *e = { 0 };
-
-      index = streamer_read_uhwi (&ib);
-      encoder = file_data->cgraph_node_encoder;
-      node = lto_cgraph_encoder_deref (encoder, index);
-      info = inline_summary (node);
-
-      info->estimated_stack_size
-	= info->estimated_self_stack_size = streamer_read_uhwi (&ib);
-      info->size = info->self_size = streamer_read_uhwi (&ib);
-      info->time = info->self_time = streamer_read_uhwi (&ib);
-
-      bp = streamer_read_bitpack (&ib);
-      info->inlinable = bp_unpack_value (&bp, 1);
-
-      count2 = streamer_read_uhwi (&ib);
-      gcc_assert (!info->conds);
-      for (j = 0; j < count2; j++)
-	{
-	  struct condition c;
-	  c.operand_num = streamer_read_uhwi (&ib);
-	  c.code = (enum tree_code) streamer_read_uhwi (&ib);
-	  c.val = stream_read_tree (&ib, data_in);
-	  VEC_safe_push (condition, gc, info->conds, &c);
-	}
-      count2 = streamer_read_uhwi (&ib);
-      gcc_assert (!info->entry);
-      for (j = 0; j < count2; j++)
-	{
-	  struct size_time_entry e;
-
-	  e.size = streamer_read_uhwi (&ib);
-	  e.time = streamer_read_uhwi (&ib);
-	  e.predicate = read_predicate (&ib);
-
-	  VEC_safe_push (size_time_entry, gc, info->entry, &e);
-	}
-      for (e = node->callees; e; e = e->next_callee)
-	read_inline_edge_summary (&ib, e);
-      for (e = node->indirect_calls; e; e = e->next_callee)
-	read_inline_edge_summary (&ib, e);
-    }
-
-  lto_free_section_data (file_data, LTO_section_inline_summary, NULL, data,
-			 len);
-  lto_data_in_delete (data_in);
-}
-
-
 /* Read inline summary.  Jump functions are shared among ipa-cp
    and inliner, so when ipa-cp is active, we don't need to write them
    twice.  */
 
 void
 inline_read_summary (void)
-{
-  struct lto_file_decl_data **file_data_vec = lto_get_file_decl_data ();
-  struct lto_file_decl_data *file_data = { 0 };
-  unsigned int j = 0;
-
-  inline_summary_alloc ();
-
-  while ((file_data = file_data_vec[j++]))
-    {
-      size_t len;
-      const char *data = lto_get_section_data (file_data,
-					       LTO_section_inline_summary,
-					       NULL, &len);
-      if (data)
-        inline_read_section (file_data, data, len);
-      else
-	/* Fatal error here.  We do not want to support compiling ltrans units
-	   with different version of compiler or different flags than the WPA
-	   unit, so this should never happen.  */
-	fatal_error ("ipa inline summary is missing in input file");
-    }
-  if (optimize)
-    {
-      ipa_register_cgraph_hooks ();
-      if (!flag_ipa_cp)
-        ipa_prop_read_jump_functions ();
-    }
-  function_insertion_hook_holder =
-      cgraph_add_function_insertion_hook (&add_new_function, NULL);
-}
-
-
-/* Write predicate P to OB.  */
-
-static void
-write_predicate (struct output_block *ob, struct predicate *p)
-{
-  int j = { 0 };
-  if (p)
-    for (j = 0; p->clause[j]; j++)
-      {
-	 gcc_assert (j < MAX_CLAUSES);
-	 streamer_write_uhwi (ob, p->clause[j]);
-      }
-  streamer_write_uhwi (ob, 0);
-}
-
-
-/* Write inline summary for edge E to OB.  */
-
-static void
-write_inline_edge_summary (struct output_block *ob, struct cgraph_edge *e)
-{
-  struct inline_edge_summary *es = inline_edge_summary (e);
-  int i = { 0 };
-
-  streamer_write_uhwi (ob, es->call_stmt_size);
-  streamer_write_uhwi (ob, es->call_stmt_time);
-  streamer_write_uhwi (ob, es->loop_depth);
-  write_predicate (ob, es->predicate);
-  streamer_write_uhwi (ob, VEC_length (inline_param_summary_t, es->param));
-  for (i = 0; i < (int)VEC_length (inline_param_summary_t, es->param); i++)
-    streamer_write_uhwi (ob, VEC_index (inline_param_summary_t,
-				        es->param, i)->change_prob);
-}
-
+{ }
 
 /* Write inline summary for node in SET.
    Jump functions are shared among ipa-cp and inliner, so when ipa-cp is
@@ -3186,66 +2986,7 @@ write_inline_edge_summary (struct output_block *ob, struct cgraph_edge *e)
 void
 inline_write_summary (cgraph_node_set set,
 		      varpool_node_set vset ATTRIBUTE_UNUSED)
-{
-  struct cgraph_node *node = { 0 };
-  struct output_block *ob = create_output_block (LTO_section_inline_summary);
-  lto_cgraph_encoder_t encoder = ob->decl_state->cgraph_node_encoder;
-  unsigned int count = 0;
-  int i = { 0 };
-
-  for (i = 0; i < lto_cgraph_encoder_size (encoder); i++)
-    if (lto_cgraph_encoder_deref (encoder, i)->analyzed)
-      count++;
-  streamer_write_uhwi (ob, count);
-
-  for (i = 0; i < lto_cgraph_encoder_size (encoder); i++)
-    {
-      node = lto_cgraph_encoder_deref (encoder, i);
-      if (node->analyzed)
-	{
-	  struct inline_summary *info = inline_summary (node);
-	  struct bitpack_d bp;
-	  struct cgraph_edge *edge;
-	  int i;
-	  size_time_entry *e;
-	  struct condition *c;
-
-	  streamer_write_uhwi (ob, lto_cgraph_encoder_encode (encoder, node));
-	  streamer_write_hwi (ob, info->estimated_self_stack_size);
-	  streamer_write_hwi (ob, info->self_size);
-	  streamer_write_hwi (ob, info->self_time);
-	  bp = bitpack_create (ob->main_stream);
-	  bp_pack_value (&bp, info->inlinable, 1);
-	  streamer_write_bitpack (&bp);
-	  streamer_write_uhwi (ob, VEC_length (condition, info->conds));
-	  for (i = 0; VEC_iterate (condition, info->conds, i, c); i++)
-	    {
-	      streamer_write_uhwi (ob, c->operand_num);
-	      streamer_write_uhwi (ob, c->code);
-	      stream_write_tree (ob, c->val, true);
-	    }
-	  streamer_write_uhwi (ob, VEC_length (size_time_entry, info->entry));
-	  for (i = 0;
-	       VEC_iterate (size_time_entry, info->entry, i, e);
-	       i++)
-	    {
-	      streamer_write_uhwi (ob, e->size);
-	      streamer_write_uhwi (ob, e->time);
-	      write_predicate (ob, &e->predicate);
-	    }
-	  for (edge = node->callees; edge; edge = edge->next_callee)
-	    write_inline_edge_summary (ob, edge);
-	  for (edge = node->indirect_calls; edge; edge = edge->next_callee)
-	    write_inline_edge_summary (ob, edge);
-	}
-    }
-  streamer_write_char_stream (ob->main_stream, 0);
-  produce_asm (ob, NULL);
-  destroy_output_block (ob);
-
-  if (optimize && !flag_ipa_cp)
-    ipa_prop_write_jump_functions (set);
-}
+{ }
 
 
 /* Release inline summary.  */

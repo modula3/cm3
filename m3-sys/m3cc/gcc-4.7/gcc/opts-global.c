@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Command line option handling.  Code involving global state that
    should not be shared with the driver.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -32,7 +34,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "rtl.h"
 #include "dbgcnt.h"
 #include "debug.h"
-#include "lto-streamer.h"
 #include "output.h"
 #include "plugin.h"
 #include "toplev.h"

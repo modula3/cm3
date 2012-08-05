@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Interprocedural constant propagation
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
    Free Software Foundation, Inc.
@@ -1632,10 +1634,6 @@ ipcp_propagate_stage (struct topo_info *topo)
 
   if (dump_file)
     fprintf (dump_file, "\n Propagating constants:\n\n");
-
-  if (in_lto_p)
-    ipa_update_after_lto_read ();
-
 
   FOR_EACH_DEFINED_FUNCTION (node)
   {
