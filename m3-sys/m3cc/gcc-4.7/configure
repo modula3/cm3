@@ -626,7 +626,6 @@ CFLAGS_FOR_BUILD
 CC_FOR_BUILD
 AS_FOR_BUILD
 AR_FOR_BUILD
-target_configdirs
 configdirs
 build_configdirs
 INSTALL_GDB_TK
@@ -2631,12 +2630,9 @@ extra_host_args=
 #
 build_libs="build-libiberty"
 
-# these tools are built for the build environment
-build_tools="build-texinfo build-flex build-bison build-m4 build-fixincludes"
-
 # these libraries are used by various programs built for the host environment
 #
-host_libs="intl libiberty opcodes bfd readline tcl tk itcl libgui zlib libcpp libdecnumber gmp ppl cloog libelf libiconv"
+host_libs="libiberty libcpp libdecnumber"
 
 # these tools are built for the host environment
 # Note, the powerpc-eabi build depends on sim occurring before gdb in order to
@@ -2647,28 +2643,12 @@ host_libs="intl libiberty opcodes bfd readline tcl tk itcl libgui zlib libcpp li
 host_tools="texinfo flex bison binutils gas ld fixincludes gcc cgen sid sim gdb gprof etc expect dejagnu m4 utils guile fastjar gnattools"
 
 # libgcj represents the runtime libraries only used by gcj.
-libgcj="target-libffi \
-	target-zlib \
-	target-libjava"
+libgcj=
 
 # these libraries are built for the target environment, and are built after
 # the host libraries and the host tools (which may be a cross compiler)
 # Note that libiberty is not a target library.
-target_libraries="target-libgcc \
-		target-libgloss \
-		target-newlib \
-		target-libgomp \
-		target-libitm \
-		target-libstdc++-v3 \
-		target-libmudflap \
-		target-libssp \
-		target-libquadmath \
-		target-libgfortran \
-		target-boehm-gc \
-		${libgcj} \
-		target-libobjc \
-		target-libada \
-		target-libgo"
+target_libraries=
 
 # these tools are built using the target libraries, and are intended to
 # run only in the target environment
@@ -2676,7 +2656,7 @@ target_libraries="target-libgcc \
 # note: any program that *uses* libraries that are in the "target_libraries"
 # list belongs in this list.
 #
-target_tools="target-rda"
+target_tools=
 
 ################################################################################
 
@@ -2686,8 +2666,8 @@ target_tools="target-rda"
 ## ${configdirs} is directories we build using the host tools.
 ## ${target_configdirs} is directories we build using the target tools.
 configdirs=`echo ${host_libs} ${host_tools}`
-target_configdirs=`echo ${target_libraries} ${target_tools}`
-build_configdirs=`echo ${build_libs} ${build_tools}`
+target_configdirs=
+build_configdirs=`echo ${build_libs}`
 
 
 
@@ -3469,13 +3449,7 @@ case "${target}" in
     # No gdb or ld support yet.
     noconfigdirs="$noconfigdirs readline libgui itcl gdb ld"
     ;;
-  i[3456789]86-w64-mingw*)
-    ;;
-  i[3456789]86-*-mingw*)
-    target_configdirs="$target_configdirs target-winsup"
-    ;;
   *-*-cygwin*)
-    target_configdirs="$target_configdirs target-libtermcap target-winsup"
     noconfigdirs="$noconfigdirs target-libgloss"
     # always build newlib if winsup directory is present.
     if test -d "$srcdir/winsup/cygwin"; then
@@ -3518,7 +3492,6 @@ case "${target}" in
     noconfigdirs="$noconfigdirs gprof"
     ;;
   powerpc*-*-winnt* | powerpc*-*-pe*)
-    target_configdirs="$target_configdirs target-winsup"
     noconfigdirs="$noconfigdirs gdb tcl tk target-libgloss itcl"
     # always build newlib.
     skipdirs=`echo " ${skipdirs} " | sed -e 's/ target-newlib / /'`
@@ -6030,7 +6003,7 @@ Supported languages are: ${potential_languages}" "$LINENO" 5
 fi
 
 # Handle --disable-<component> generically.
-for dir in $configdirs $build_configdirs $target_configdirs ; do
+for dir in $configdirs $build_configdirs ; do
   dirname=`echo $dir | sed -e s/target-//g -e s/build-//g -e s/-/_/g`
   varname=`echo $dirname | sed -e s/+/_/g`
   if eval test x\${enable_${varname}} "=" xno ; then
@@ -6070,45 +6043,6 @@ case ,${enable_languages}, in
     ;;
 esac
 
-# Remove the entries in $skipdirs and $noconfigdirs from $configdirs,
-# $build_configdirs and $target_configdirs.
-# If we have the source for $noconfigdirs entries, add them to $notsupp.
-
-notsupp=""
-for dir in . $skipdirs $noconfigdirs ; do
-  dirname=`echo $dir | sed -e s/target-//g -e s/build-//g`
-  if test $dir != .  && echo " ${configdirs} " | grep " ${dir} " >/dev/null 2>&1; then
-    configdirs=`echo " ${configdirs} " | sed -e "s/ ${dir} / /"`
-    if test -r $srcdir/$dirname/configure ; then
-      if echo " ${skipdirs} " | grep " ${dir} " >/dev/null 2>&1; then
-	true
-      else
-	notsupp="$notsupp $dir"
-      fi
-    fi
-  fi
-  if test $dir != .  && echo " ${build_configdirs} " | grep " ${dir} " >/dev/null 2>&1; then
-    build_configdirs=`echo " ${build_configdirs} " | sed -e "s/ ${dir} / /"`
-    if test -r $srcdir/$dirname/configure ; then
-      if echo " ${skipdirs} " | grep " ${dir} " >/dev/null 2>&1; then
-	true
-      else
-	notsupp="$notsupp $dir"
-      fi
-    fi
-  fi
-  if test $dir != . && echo " ${target_configdirs} " | grep " ${dir} " >/dev/null 2>&1; then
-    target_configdirs=`echo " ${target_configdirs} " | sed -e "s/ ${dir} / /"`
-    if test -r $srcdir/$dirname/configure ; then
-      if echo " ${skipdirs} " | grep " ${dir} " >/dev/null 2>&1; then
-	true
-      else
-	notsupp="$notsupp $dir"
-      fi
-    fi
-  fi
-done
-
 # Quietly strip out all directories which aren't configurable in this tree.
 # This relies on all configurable subdirectories being autoconfiscated, which
 # is now the case.
@@ -6143,35 +6077,6 @@ done
 # FSF releases, it's important to let people know when their machine isn't
 # supported by the one or two programs in a package.
 
-if test -n "${notsupp}" && test -z "${norecursion}" ; then
-  # If $appdirs is non-empty, at least one of those directories must still
-  # be configured, or we error out.  (E.g., if the gas release supports a
-  # specified target in some subdirs but not the gas subdir, we shouldn't
-  # pretend that all is well.)
-  if test -n "$appdirs" ; then
-    for dir in $appdirs ; do
-      if test -r $dir/Makefile.in ; then
-	if echo " ${configdirs} " | grep " ${dir} " >/dev/null 2>&1; then
-	  appdirs=""
-	  break
-	fi
-	if echo " ${target_configdirs} " | grep " target-${dir} " >/dev/null 2>&1; then
-	  appdirs=""
-	  break
-	fi
-      fi
-    done
-    if test -n "$appdirs" ; then
-      echo "*** This configuration is not supported by this package." 1>&2
-      exit 1
-    fi
-  fi
-  # Okay, some application will build, or we don't care to check.  Still
-  # notify of subdirs not getting built.
-  echo "*** This configuration is not supported in the following subdirectories:" 1>&2
-  echo "    ${notsupp}" 1>&2
-  echo "    (Any other directories should still work fine.)" 1>&2
-fi
 
 case "$host" in
   *msdosdjgpp*)

@@ -4,6 +4,8 @@ in
 
 # Makefile.in is generated from Makefile.tpl by 'autogen Makefile.def'.
 #
+# Modula-3: modified
+#
 # Makefile for directory with subdirs to build.
 #   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
 #   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -83,10 +85,10 @@ man7dir = $(mandir)/man7
 man8dir = $(mandir)/man8
 man9dir = $(mandir)/man9
 
-INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_DATA = @INSTALL_DATA@
+INSTALL = 
+INSTALL_PROGRAM = 
+INSTALL_SCRIPT = 
+INSTALL_DATA = 
 LN = @LN@
 LN_S = @LN_S@
 MAINT = @MAINT@
@@ -220,14 +222,6 @@ HOST_EXPORTS = \
 	READELF_FOR_TARGET="$(READELF_FOR_TARGET)"; export READELF_FOR_TARGET; \
 	TOPLEVEL_CONFIGURE_ARGUMENTS="$(TOPLEVEL_CONFIGURE_ARGUMENTS)"; export TOPLEVEL_CONFIGURE_ARGUMENTS; \
 	HOST_LIBS="$(STAGE1_LIBS)"; export HOST_LIBS; \
-	GMPLIBS="$(HOST_GMPLIBS)"; export GMPLIBS; \
-	GMPINC="$(HOST_GMPINC)"; export GMPINC; \
-	PPLLIBS="$(HOST_PPLLIBS)"; export PPLLIBS; \
-	PPLINC="$(HOST_PPLINC)"; export PPLINC; \
-	CLOOGLIBS="$(HOST_CLOOGLIBS)"; export CLOOGLIBS; \
-	CLOOGINC="$(HOST_CLOOGINC)"; export CLOOGINC; \
-	LIBELFLIBS="$(HOST_LIBELFLIBS)" ; export LIBELFLIBS; \
-	LIBELFINC="$(HOST_LIBELFINC)" ; export LIBELFINC; \
 @if gcc-bootstrap
 	$(RPATH_ENVVAR)=`echo "$(TARGET_LIB_PATH)$$$(RPATH_ENVVAR)" | sed 's,::*,:,g;s,^:*,,;s,:*$$,,'`; export $(RPATH_ENVVAR); \
 @endif gcc-bootstrap
@@ -310,20 +304,20 @@ NORMAL_TARGET_EXPORTS = \
 	CXX="$(CXX_FOR_TARGET) $(XGCC_FLAGS_FOR_TARGET) $$TFLAGS"; export CXX;
 
 # Where to find GMP
-HOST_GMPLIBS = @gmplibs@
-HOST_GMPINC = @gmpinc@
+HOST_GMPLIBS = 
+HOST_GMPINC = 
 
 # Where to find PPL
-HOST_PPLLIBS = @ppllibs@
-HOST_PPLINC = @pplinc@
+HOST_PPLLIBS = 
+HOST_PPLINC = 
 
 # Where to find CLOOG
-HOST_CLOOGLIBS = @clooglibs@
-HOST_CLOOGINC = @clooginc@
+HOST_CLOOGLIBS = 
+HOST_CLOOGINC = 
 
 # Where to find libelf
-HOST_LIBELFLIBS = @libelflibs@
-HOST_LIBELFINC = @libelfinc@
+HOST_LIBELFLIBS = 
+HOST_LIBELFINC = 
 
 EXTRA_CONFIGARGS_LIBJAVA = @EXTRA_CONFIGARGS_LIBJAVA@
 
@@ -765,7 +759,6 @@ do-[+make_target+]:
 # Here are the targets which correspond to the do-X targets.
 
 .PHONY: info installcheck dvi pdf html
-.PHONY: install-info install-pdf install-html
 .PHONY: clean distclean mostlyclean maintainer-clean realclean
 .PHONY: local-clean local-distclean local-maintainer-clean
 info: do-info
@@ -777,16 +770,6 @@ html: do-html
 # Make sure makeinfo is built before we do a `make info', if we're
 # in fact building texinfo.
 do-info: maybe-all-texinfo
-
-install-info: do-install-info dir.info
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	if [ -f dir.info ] ; then \
-	  $(INSTALL_DATA) dir.info $(DESTDIR)$(infodir)/dir.info ; \
-	else true ; fi
-
-install-pdf: do-install-pdf
-
-install-html: do-install-html
 
 local-clean:
 	-rm -f *.a TEMP errs core *.o *~ \#* TAGS *.E *.log
@@ -805,7 +788,7 @@ local-distclean:
 	-rm -f texinfo/doc/Makefile texinfo/po/POTFILES
 	-rmdir texinfo/doc texinfo/info texinfo/intl texinfo/lib 2>/dev/null
 	-rmdir texinfo/makeinfo texinfo/po texinfo/util 2>/dev/null
-	-rmdir fastjar gcc libiberty texinfo zlib 2>/dev/null
+	-rmdir fastjar gcc libiberty texinfo 2>/dev/null
 	-find . -name config.cache -exec rm -f {} \; \; 2>/dev/null
 
 local-maintainer-clean:
@@ -864,74 +847,6 @@ mail-report-with-warnings.log: warning.log
 	chmod +x $@
 	echo If you really want to send e-mail, run ./$@ now
 
-# Installation targets.
-
-.PHONY: install uninstall
-install:
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(MAKE) $(RECURSE_FLAGS_TO_PASS) installdirs install-host install-target
-
-.PHONY: install-host-nogcc
-install-host-nogcc: [+
-  FOR host_modules +][+ IF (not (= (get "module") "gcc")) +] \
-    maybe-install-[+module+][+ ENDIF +][+
-  ENDFOR host_modules +]
-
-.PHONY: install-host
-install-host: [+
-  FOR host_modules +] \
-    maybe-install-[+module+][+
-  ENDFOR host_modules +]
-
-.PHONY: install-target
-install-target: [+
-  FOR target_modules +] \
-    maybe-install-target-[+module+][+
-  ENDFOR target_modules +]
-
-uninstall:
-	@echo "the uninstall target is not supported in this tree"
-
-.PHONY: install.all
-install.all: install-no-fixedincludes
-	@if [ -f ./gcc/Makefile ] ; then \
-		r=`${PWD_COMMAND}` ; export r ; \
-		s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-		$(HOST_EXPORTS) \
-		(cd ./gcc && \
-		$(MAKE) $(FLAGS_TO_PASS) install-headers) ; \
-	else \
-		true ; \
-	fi
-
-# install-no-fixedincludes is used because Cygnus can not distribute
-# the fixed header files.
-.PHONY: install-no-fixedincludes
-install-no-fixedincludes: installdirs install-host-nogcc \
-	install-target gcc-no-fixedincludes
-
-.PHONY: install-strip
-install-strip:
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(MAKE) $(RECURSE_FLAGS_TO_PASS) installdirs install-strip-host install-strip-target
-
-.PHONY: install-strip-host
-install-strip-host: [+
-  FOR host_modules +] \
-    maybe-install-strip-[+module+][+
-  ENDFOR host_modules +]
-
-.PHONY: install-strip-target
-install-strip-target: [+
-  FOR target_modules +] \
-    maybe-install-strip-target-[+module+][+
-  ENDFOR target_modules +]
-
-
 ### other supporting targets
 
 MAKEDIRS= \
@@ -941,13 +856,7 @@ MAKEDIRS= \
 installdirs: mkinstalldirs
 	$(SHELL) $(srcdir)/mkinstalldirs $(MAKEDIRS)
 
-dir.info: do-install-info
-	if [ -f $(srcdir)/texinfo/gen-info-dir ] ; then \
-	  $(srcdir)/texinfo/gen-info-dir $(DESTDIR)$(infodir) $(srcdir)/texinfo/dir.info-template > dir.info.new ; \
-	  mv -f dir.info.new dir.info ; \
-	else true ; \
-	fi
-
+dir.info: 
 dist:
 	@echo "Building a full distribution of this tree isn't done"
 	@echo "via 'make dist'.  Check out the etc/ subdirectory" 
@@ -1200,73 +1109,6 @@ check-[+module+]:
 [+ ENDIF no_check +]
 @endif [+module+]
 
-.PHONY: install-[+module+] maybe-install-[+module+]
-maybe-install-[+module+]:
-@if [+module+]
-maybe-install-[+module+]: install-[+module+]
-[+ IF no_install +]
-install-[+module+]:
-[+ ELSE install +]
-install-[+module+]: installdirs
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	(cd $(HOST_SUBDIR)/[+module+] && \
-	  $(MAKE) $(FLAGS_TO_PASS) [+extra_make_flags+] install)
-[+ ENDIF no_install +]
-@endif [+module+]
-
-.PHONY: install-strip-[+module+] maybe-install-strip-[+module+]
-maybe-install-strip-[+module+]:
-@if [+module+]
-maybe-install-strip-[+module+]: install-strip-[+module+]
-[+ IF no_install +]
-install-strip-[+module+]:
-[+ ELSE install +]
-install-strip-[+module+]: installdirs
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	(cd $(HOST_SUBDIR)/[+module+] && \
-	  $(MAKE) $(FLAGS_TO_PASS) [+extra_make_flags+] install-strip)
-[+ ENDIF no_install +]
-@endif [+module+]
-
-# Other targets (info, dvi, pdf, etc.)
-[+ FOR recursive_targets +]
-.PHONY: maybe-[+make_target+]-[+module+] [+make_target+]-[+module+]
-maybe-[+make_target+]-[+module+]:
-@if [+module+]
-maybe-[+make_target+]-[+module+]: [+make_target+]-[+module+]
-[+ IF (match-value? = "missing" (get "make_target") ) +]
-# [+module+] doesn't support [+make_target+].
-[+make_target+]-[+module+]:
-[+ ELSE +]
-[+make_target+]-[+module+]: [+
-  FOR depend +]\
-    [+depend+]-[+module+] [+
-  ENDFOR depend +]
-	@[+ IF bootstrap +][+ ELSE +]: $(MAKE); $(unstage)
-	@[+ ENDIF bootstrap +][ -f ./[+module+]/Makefile ] || exit 0; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS) \
-	for flag in $(EXTRA_HOST_FLAGS) [+extra_make_flags+]; do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	echo "Doing [+make_target+] in [+module+]" ; \
-	(cd $(HOST_SUBDIR)/[+module+] && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          [+make_target+]) \
-	  || exit 1
-[+ ENDIF +]
-@endif [+module+]
-[+ ENDFOR recursive_targets +]
 [+ ENDFOR host_modules +]
 
 # ---------------------------------------
@@ -1324,87 +1166,6 @@ ENDIF raw_cxx +]
 [+ ENDIF no_check +]
 @endif target-[+module+]
 
-.PHONY: install-target-[+module+] maybe-install-target-[+module+]
-maybe-install-target-[+module+]:
-@if target-[+module+]
-maybe-install-target-[+module+]: install-target-[+module+]
-[+ IF no_install +]
-# Dummy target for uninstallable.
-install-target-[+module+]:
-[+ ELSE install +]
-install-target-[+module+]: installdirs
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \[+
-IF raw_cxx +]
-	$(RAW_CXX_TARGET_EXPORTS) \[+
-ELSE normal_cxx +]
-	$(NORMAL_TARGET_EXPORTS) \[+
-ENDIF raw_cxx +]
-	(cd $(TARGET_SUBDIR)/[+module+] && \
-	  $(MAKE) $(TARGET_FLAGS_TO_PASS) [+extra_make_flags+] install)
-[+ ENDIF no_install +]
-@endif target-[+module+]
-
-.PHONY: install-strip-target-[+module+] maybe-install-strip-target-[+module+]
-maybe-install-strip-target-[+module+]:
-@if target-[+module+]
-maybe-install-strip-target-[+module+]: install-strip-target-[+module+]
-[+ IF no_install +]
-# Dummy target for uninstallable.
-install-strip-target-[+module+]:
-[+ ELSE install +]
-install-strip-target-[+module+]: installdirs
-	@: $(MAKE); $(unstage)
-	@r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \[+
-IF raw_cxx +]
-	$(RAW_CXX_TARGET_EXPORTS) \[+
-ELSE normal_cxx +]
-	$(NORMAL_TARGET_EXPORTS) \[+
-ENDIF raw_cxx +]
-	(cd $(TARGET_SUBDIR)/[+module+] && \
-	  $(MAKE) $(TARGET_FLAGS_TO_PASS) [+extra_make_flags+] install-strip)
-[+ ENDIF no_install +]
-@endif target-[+module+]
-
-# Other targets (info, dvi, pdf, etc.)
-[+ FOR recursive_targets +]
-.PHONY: maybe-[+make_target+]-target-[+module+] [+make_target+]-target-[+module+]
-maybe-[+make_target+]-target-[+module+]:
-@if target-[+module+]
-maybe-[+make_target+]-target-[+module+]: [+make_target+]-target-[+module+]
-[+ IF (match-value? = "missing" (get "make_target") ) +]
-# [+module+] doesn't support [+make_target+].
-[+make_target+]-target-[+module+]:
-[+ ELSE +]
-[+make_target+]-target-[+module+]: [+
-  FOR depend +]\
-    [+depend+]-target-[+module+] [+
-  ENDFOR depend +]
-	@: $(MAKE); $(unstage)
-	@[ -f $(TARGET_SUBDIR)/[+module+]/Makefile ] || exit 0 ; \
-	r=`${PWD_COMMAND}`; export r; \
-	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \[+
-IF raw_cxx +]
-	$(RAW_CXX_TARGET_EXPORTS) \[+
-ELSE normal_cxx +]
-	$(NORMAL_TARGET_EXPORTS) \[+
-ENDIF raw_cxx +]
-	echo "Doing [+make_target+] in $(TARGET_SUBDIR)/[+module+]" ; \
-	for flag in $(EXTRA_TARGET_FLAGS); do \
-	  eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'; export \1|"`; \
-	done; \
-	(cd $(TARGET_SUBDIR)/[+module+] && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
-	          "CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
-	          "RANLIB=$${RANLIB}" \
-	          "DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" "WINDMC=$${WINDMC}" \
-	          [+extra_make_flags+] [+make_target+]) \
-	  || exit 1
-[+ ENDIF +]
-@endif target-[+module+]
-[+ ENDFOR recursive_targets +]
 [+ ENDFOR target_modules +]
 
 @if target-libmudflap
@@ -1860,10 +1621,9 @@ configure-target-[+module+]: maybe-all-target-libstdc++-v3[+
 
 CONFIGURE_GDB_TK = @CONFIGURE_GDB_TK@
 GDB_TK = @GDB_TK@
-INSTALL_GDB_TK = @INSTALL_GDB_TK@
+INSTALL_GDB_TK = 
 configure-gdb: $(CONFIGURE_GDB_TK)
 all-gdb: $(gdbnlmrequirements) $(GDB_TK)
-install-gdb: $(INSTALL_GDB_TK)
 
 # Serialization dependencies.  Host configures don't work well in parallel to
 # each other, due to contention over config.cache.  Target configures and 

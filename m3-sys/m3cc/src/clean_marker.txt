@@ -16,5 +16,7 @@ The contents of the file do not matter.
    - back to C compilation, long passage of time also, remove enable-checking
    - upgrade from 4.5 to 4.7
    - reduction of gmp, removal of mpfr, mpc
+   - removal of gmp, zlib
+   - switching more targets to 4.7
 
-4CFC-AB4B-F854C784
+562344E0-A736-4EB3-A23A-54F71DB8232D

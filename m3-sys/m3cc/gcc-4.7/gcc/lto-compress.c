@@ -23,11 +23,6 @@ along with GCC; see the file COPYING3.  If not see
 
 #include "config.h"
 #include "system.h"
-/* zlib.h includes other system headers.  Those headers may test feature
-   test macros.  config.h may define feature test macros.  For this reason,
-   zlib.h needs to be included after, rather than before, config.h and
-   system.h.  */
-#include <zlib.h>
 #include "coretypes.h"
 #include "tree.h"
 #include "diagnostic-core.h"

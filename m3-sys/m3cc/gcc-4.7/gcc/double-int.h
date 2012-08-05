@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Operations with long integers.
    Copyright (C) 2006, 2007, 2008, 2010 Free Software Foundation, Inc.
 
@@ -20,9 +22,6 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef DOUBLE_INT_H
 #define DOUBLE_INT_H
 
-#ifndef GENERATOR_FILE
-#include <gmp.h>
-#endif
 #include "coretypes.h"
 
 /* A large integer is currently represented as a pair of HOST_WIDE_INTs.
@@ -308,13 +307,5 @@ extern int div_and_round_double (unsigned, int, unsigned HOST_WIDE_INT,
 				 HOST_WIDE_INT, unsigned HOST_WIDE_INT *,
 				 HOST_WIDE_INT *, unsigned HOST_WIDE_INT *,
 				 HOST_WIDE_INT *);
-
-
-#ifndef GENERATOR_FILE
-/* Conversion to and from GMP integer representations.  */
-
-void mpz_set_double_int (mpz_t, double_int, bool);
-double_int mpz_get_double_int (const_tree, mpz_t, bool);
-#endif
 
 #endif /* DOUBLE_INT_H */

@@ -31,9 +31,6 @@ using namespace std;
 #include <errno.h>
 #include <setjmp.h>
 #include <limits.h>
-#if GCC47
-#include <gmp.h>
-#endif
 extern "C" {
 #include "config.h"
 #include "system.h"

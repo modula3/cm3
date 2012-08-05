@@ -30,7 +30,6 @@
 #include "tree.h"
 #include "diagnostic-core.h"
 #include "real.h"
-#include "realmpfr.h"
 #include "tm_p.h"
 #include "dfp.h"
 
