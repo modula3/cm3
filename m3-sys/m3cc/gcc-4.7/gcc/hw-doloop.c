@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Code to analyze doloop loops in order for targets to perform late
    optimizations converting doloops to other forms of hardware loops.
    Copyright (C) 2011 Free Software Foundation, Inc.
@@ -670,3 +672,5 @@ reorg_loops (bool do_reorder, struct hw_doloop_hooks *hooks)
     print_rtl (dump_file, get_insns ());
 }
 #endif
+
+char quash_apple_ranlib_warning_hw_doloop;

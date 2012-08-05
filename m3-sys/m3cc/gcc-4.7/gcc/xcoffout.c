@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output xcoff-format symbol table information from GNU compiler.
    Copyright (C) 1992, 1994, 1995, 1997, 1998, 1999, 2000, 2002, 2003, 2004,
    2007, 2008, 2010  Free Software Foundation, Inc.
@@ -491,3 +493,5 @@ xcoffout_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
   ASM_OUTPUT_LABEL (asm_out_file, fname);
 }
 #endif /* XCOFF_DEBUGGING_INFO */
+
+char quash_apple_ranlib_warning_xcoffout;
