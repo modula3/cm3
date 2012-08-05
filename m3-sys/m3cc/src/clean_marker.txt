@@ -18,5 +18,6 @@ The contents of the file do not matter.
    - reduction of gmp, removal of mpfr, mpc
    - removal of gmp, zlib
    - switching more targets to 4.7
+   - removal of LTO
 
-562344E0-A736-4EB3-A23A-54F71DB8232D
+45EB858A-69AC-480A-93C2-169EAC07B936

@@ -73,7 +73,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-dump.h"
 #include "df.h"
 #include "predict.h"
-#include "lto-streamer.h"
 #include "plugin.h"
 #include "ipa-utils.h"
 #include "tree-pretty-print.h"
@@ -152,7 +151,7 @@ rest_of_decl_compilation (tree decl,
      other attributes such as visibility.  Emit the alias now.  */
   if (!in_lto_p)
   {
-    tree alias;
+    tree alias = { 0 };
     alias = lookup_attribute ("alias", DECL_ATTRIBUTES (decl));
     if (alias)
       {
@@ -2132,293 +2131,26 @@ execute_pass_list (struct opt_pass *pass)
   while (pass);
 }
 
-/* Same as execute_pass_list but assume that subpasses of IPA passes
-   are local passes. If SET is not NULL, write out summaries of only
-   those node in SET. */
-
-static void
-ipa_write_summaries_2 (struct opt_pass *pass, cgraph_node_set set,
-		       varpool_node_set vset,
-		       struct lto_out_decl_state *state)
-{
-  while (pass)
-    {
-      struct ipa_opt_pass_d *ipa_pass = (struct ipa_opt_pass_d *)pass;
-      gcc_assert (!current_function_decl);
-      gcc_assert (!cfun);
-      gcc_assert (pass->type == SIMPLE_IPA_PASS || pass->type == IPA_PASS);
-      if (pass->type == IPA_PASS
-	  && ipa_pass->write_summary
-	  && (!pass->gate || pass->gate ()))
-	{
-	  /* If a timevar is present, start it.  */
-	  if (pass->tv_id)
-	    timevar_push (pass->tv_id);
-
-          pass_init_dump_file (pass);
-
-	  ipa_pass->write_summary (set,vset);
-
-          pass_fini_dump_file (pass);
-
-	  /* If a timevar is present, start it.  */
-	  if (pass->tv_id)
-	    timevar_pop (pass->tv_id);
-	}
-
-      if (pass->sub && pass->sub->type != GIMPLE_PASS)
-	ipa_write_summaries_2 (pass->sub, set, vset, state);
-
-      pass = pass->next;
-    }
-}
-
-/* Helper function of ipa_write_summaries. Creates and destroys the
-   decl state and calls ipa_write_summaries_2 for all passes that have
-   summaries.  SET is the set of nodes to be written.  */
-
-static void
-ipa_write_summaries_1 (cgraph_node_set set, varpool_node_set vset)
-{
-  struct lto_out_decl_state *state = lto_new_out_decl_state ();
-  compute_ltrans_boundary (state, set, vset);
-
-  gcc_assert (!flag_wpa);
-  ipa_write_summaries_2 (all_regular_ipa_passes, set, vset, state);
-
-  gcc_assert (lto_get_out_decl_state () == state);
-  lto_delete_out_decl_state (state);
-}
-
 /* Write out summaries for all the nodes in the callgraph.  */
 
 void
 ipa_write_summaries (void)
-{
-  cgraph_node_set set;
-  varpool_node_set vset;
-  struct cgraph_node **order;
-  struct varpool_node *vnode;
-  int i, order_pos;
-
-  if (!flag_generate_lto || seen_error ())
-    return;
-
-  set = cgraph_node_set_new ();
-
-  /* Create the callgraph set in the same order used in
-     cgraph_expand_all_functions.  This mostly facilitates debugging,
-     since it causes the gimple file to be processed in the same order
-     as the source code.  */
-  order = XCNEWVEC (struct cgraph_node *, cgraph_n_nodes);
-  order_pos = ipa_reverse_postorder (order);
-  gcc_assert (order_pos == cgraph_n_nodes);
-
-  for (i = order_pos - 1; i >= 0; i--)
-    {
-      struct cgraph_node *node = order[i];
-
-      if (cgraph_function_with_gimple_body_p (node))
-	{
-	  /* When streaming out references to statements as part of some IPA
-	     pass summary, the statements need to have uids assigned and the
-	     following does that for all the IPA passes here. Naturally, this
-	     ordering then matches the one IPA-passes get in their stmt_fixup
-	     hooks.  */
-
-	  push_cfun (DECL_STRUCT_FUNCTION (node->decl));
-	  renumber_gimple_stmt_uids ();
-	  pop_cfun ();
-	}
-      if (node->analyzed)
-        cgraph_node_set_add (set, node);
-    }
-  vset = varpool_node_set_new ();
-
-  for (vnode = varpool_nodes; vnode; vnode = vnode->next)
-    if (vnode->needed && (!vnode->alias || vnode->alias_of))
-      varpool_node_set_add (vset, vnode);
-
-  ipa_write_summaries_1 (set, vset);
-
-  free (order);
-  free_cgraph_node_set (set);
-  free_varpool_node_set (vset);
-}
-
-/* Same as execute_pass_list but assume that subpasses of IPA passes
-   are local passes. If SET is not NULL, write out optimization summaries of
-   only those node in SET. */
-
-static void
-ipa_write_optimization_summaries_1 (struct opt_pass *pass, cgraph_node_set set,
-		       varpool_node_set vset,
-		       struct lto_out_decl_state *state)
-{
-  while (pass)
-    {
-      struct ipa_opt_pass_d *ipa_pass = (struct ipa_opt_pass_d *)pass;
-      gcc_assert (!current_function_decl);
-      gcc_assert (!cfun);
-      gcc_assert (pass->type == SIMPLE_IPA_PASS || pass->type == IPA_PASS);
-      if (pass->type == IPA_PASS
-	  && ipa_pass->write_optimization_summary
-	  && (!pass->gate || pass->gate ()))
-	{
-	  /* If a timevar is present, start it.  */
-	  if (pass->tv_id)
-	    timevar_push (pass->tv_id);
-
-          pass_init_dump_file (pass);
-
-	  ipa_pass->write_optimization_summary (set, vset);
-
-          pass_fini_dump_file (pass);
-
-	  /* If a timevar is present, start it.  */
-	  if (pass->tv_id)
-	    timevar_pop (pass->tv_id);
-	}
-
-      if (pass->sub && pass->sub->type != GIMPLE_PASS)
-	ipa_write_optimization_summaries_1 (pass->sub, set, vset, state);
-
-      pass = pass->next;
-    }
-}
+{ }
 
 /* Write all the optimization summaries for the cgraph nodes in SET.  If SET is
    NULL, write out all summaries of all nodes. */
 
 void
 ipa_write_optimization_summaries (cgraph_node_set set, varpool_node_set vset)
-{
-  struct lto_out_decl_state *state = lto_new_out_decl_state ();
-  cgraph_node_set_iterator csi;
-  compute_ltrans_boundary (state, set, vset);
-
-  lto_push_out_decl_state (state);
-  for (csi = csi_start (set); !csi_end_p (csi); csi_next (&csi))
-    {
-      struct cgraph_node *node = csi_node (csi);
-      /* When streaming out references to statements as part of some IPA
-	 pass summary, the statements need to have uids assigned.
-
-	 For functions newly born at WPA stage we need to initialize
-	 the uids here.  */
-      if (node->analyzed
-	  && gimple_has_body_p (node->decl))
-	{
-	  push_cfun (DECL_STRUCT_FUNCTION (node->decl));
-	  renumber_gimple_stmt_uids ();
-	  pop_cfun ();
-	}
-    }
-
-  gcc_assert (flag_wpa);
-  ipa_write_optimization_summaries_1 (all_regular_ipa_passes, set, vset, state);
-
-  gcc_assert (lto_get_out_decl_state () == state);
-  lto_pop_out_decl_state ();
-  lto_delete_out_decl_state (state);
-}
-
-/* Same as execute_pass_list but assume that subpasses of IPA passes
-   are local passes.  */
-
-static void
-ipa_read_summaries_1 (struct opt_pass *pass)
-{
-  while (pass)
-    {
-      struct ipa_opt_pass_d *ipa_pass = (struct ipa_opt_pass_d *) pass;
-
-      gcc_assert (!current_function_decl);
-      gcc_assert (!cfun);
-      gcc_assert (pass->type == SIMPLE_IPA_PASS || pass->type == IPA_PASS);
-
-      if (pass->gate == NULL || pass->gate ())
-	{
-	  if (pass->type == IPA_PASS && ipa_pass->read_summary)
-	    {
-	      /* If a timevar is present, start it.  */
-	      if (pass->tv_id)
-		timevar_push (pass->tv_id);
-
-	      pass_init_dump_file (pass);
-
-	      ipa_pass->read_summary ();
-
-	      pass_fini_dump_file (pass);
-
-	      /* Stop timevar.  */
-	      if (pass->tv_id)
-		timevar_pop (pass->tv_id);
-	    }
-
-	  if (pass->sub && pass->sub->type != GIMPLE_PASS)
-	    ipa_read_summaries_1 (pass->sub);
-	}
-      pass = pass->next;
-    }
-}
-
-
-/* Read all the summaries for all_regular_ipa_passes.  */
+{ }
 
 void
 ipa_read_summaries (void)
-{
-  ipa_read_summaries_1 (all_regular_ipa_passes);
-}
-
-/* Same as execute_pass_list but assume that subpasses of IPA passes
-   are local passes.  */
-
-static void
-ipa_read_optimization_summaries_1 (struct opt_pass *pass)
-{
-  while (pass)
-    {
-      struct ipa_opt_pass_d *ipa_pass = (struct ipa_opt_pass_d *) pass;
-
-      gcc_assert (!current_function_decl);
-      gcc_assert (!cfun);
-      gcc_assert (pass->type == SIMPLE_IPA_PASS || pass->type == IPA_PASS);
-
-      if (pass->gate == NULL || pass->gate ())
-	{
-	  if (pass->type == IPA_PASS && ipa_pass->read_optimization_summary)
-	    {
-	      /* If a timevar is present, start it.  */
-	      if (pass->tv_id)
-		timevar_push (pass->tv_id);
-
-	      pass_init_dump_file (pass);
-
-	      ipa_pass->read_optimization_summary ();
-
-	      pass_fini_dump_file (pass);
-
-	      /* Stop timevar.  */
-	      if (pass->tv_id)
-		timevar_pop (pass->tv_id);
-	    }
-
-	  if (pass->sub && pass->sub->type != GIMPLE_PASS)
-	    ipa_read_optimization_summaries_1 (pass->sub);
-	}
-      pass = pass->next;
-    }
-}
-
-/* Read all the summaries for all_regular_ipa_passes.  */
+{ }
 
 void
 ipa_read_optimization_summaries (void)
-{
-  ipa_read_optimization_summaries_1 (all_regular_ipa_passes);
-}
+{ }
 
 /* Same as execute_pass_list but assume that subpasses of IPA passes
    are local passes.  */

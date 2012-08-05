@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Inlining decision heuristics.
    Copyright (C) 2003, 2004, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -1674,9 +1676,6 @@ ipa_inline (void)
   struct cgraph_node **order =
     XCNEWVEC (struct cgraph_node *, cgraph_n_nodes);
   int i;
-
-  if (in_lto_p && optimize)
-    ipa_update_after_lto_read ();
 
   if (dump_file)
     dump_inline_summaries (dump_file);

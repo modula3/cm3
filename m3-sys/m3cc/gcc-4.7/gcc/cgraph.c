@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph handling code.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -97,7 +99,6 @@ The callgraph:
 #include "diagnostic-core.h"
 #include "rtl.h"
 #include "ipa-utils.h"
-#include "lto-streamer.h"
 #include "ipa-inline.h"
 
 const char * const ld_plugin_symbol_resolution_names[]=
@@ -2508,7 +2509,7 @@ cgraph_make_decl_local (tree decl)
 	 to avoid cross partition references.  */
       if (flag_wpa)
 	{
-	  const char *old_name;
+	  const char *old_name = { 0 };
 
 	  old_name  = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
 	  if (TREE_CODE (decl) == FUNCTION_DECL)
@@ -2516,11 +2517,6 @@ cgraph_make_decl_local (tree decl)
 	      struct cgraph_node *node = cgraph_get_node (decl);
 	      change_decl_assembler_name (decl,
 					  clone_function_name (decl, "local"));
-	      if (node->local.lto_file_data)
-		lto_record_renamed_decl (node->local.lto_file_data,
-					 old_name,
-					 IDENTIFIER_POINTER
-					   (DECL_ASSEMBLER_NAME (decl)));
 	    }
 	  else if (TREE_CODE (decl) == VAR_DECL)
 	    {
@@ -2529,11 +2525,6 @@ cgraph_make_decl_local (tree decl)
 		 C++ frontend still sets TREE_SYMBOL_REFERENCED on them.  */
 	      SET_DECL_ASSEMBLER_NAME (decl,
 				       clone_function_name (decl, "local"));
-	      if (vnode->lto_file_data)
-		lto_record_renamed_decl (vnode->lto_file_data,
-					 old_name,
-					 IDENTIFIER_POINTER
-					   (DECL_ASSEMBLER_NAME (decl)));
 	    }
 	}
       DECL_SECTION_NAME (decl) = 0;
