@@ -14,13 +14,13 @@
 DefaultGccVersion = "45"
 
 readonly TargeDefaultGccVersion = {
-  "ARM_DARWIN" : "42",
-  "AMD64_OPENBSD" : "45",
-  "AMD64_LINUX" : "47",
-  "I386_DARWIN" : "47",
-  "AMD64_DARWIN" : "47",
-  "I386_SOLARIS" : "47",
-  "AMD64_SOLARIS" : "47",
+    "AMD64_OPENBSD" : "45",
+      "AMD64_LINUX" : "47",
+       "ARM_DARWIN" : "42",
+     "AMD64_DARWIN" : "47",
+      "I386_DARWIN" : "47",
+     "I386_SOLARIS" : "47",
+    "AMD64_SOLARIS" : "47",
   "SPARC32_SOLARIS" : "47",
   "SPARC64_SOLARIS" : "47",
 }
@@ -297,8 +297,8 @@ if not GCC43
   end
   cp_if(b & ".temp", b)
 end
-if GCC47
-  link_file("../gmp-4.3.2", SourceDir & "/gmp")
+foreach a in ["gmp", "mpfr", "mpc"]
+  delete_file (SourceDir & "/" & a)
 end
 
 % figure out where we're going to build gcc
@@ -525,18 +525,6 @@ proc Sed (file0, find, replace) is
   end
 end
 
-if GCC47
-  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-gmp"
-    % & " | tee -a " & Log
-    ])
-    
-  % Do not build unneeded directories, esp. doc that writes back
-  % into source tree.
-
-  Sed (build_dir & "/gmp/Makefile",
-      "SUBDIRS = tests mpn mpz mpq mpf printf scanf cxx mpbsd demos tune doc",
-      "SUBDIRS = mpn mpz")
-end
 
 m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host"
   % & " | tee -a " & Log
@@ -561,16 +549,7 @@ if GCC47
   foreach dir in ["libcpp", "gcc"]
     Sed (build_dir & "/" & dir & "/Makefile", "LIBICONV = -liconv", "LIBICONV = ")
   end
-
-  % remove dependency in system zlib which isn't really supposed to be there
-  % change -L../zlib -lz to ../lib/libz.a
-  % after make configure-host, so as to not require patching gcc
-  Sed (build_dir & "/gcc/Makefile", "ZLIB = -L\\.\\.\\/zlib -lz", "ZLIB = ..\\/zlib\\/libz.a")
 end
-
-% remove CATALOGS = $(patsubst %,po/%,) that older GNU make don't like
-% after make configure-host, so as to not require patching gcc
-Sed (build_dir & "/gcc/Makefile", "^CATALOGS = ", "# CATALOGS = ")
 
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
@@ -579,11 +558,6 @@ Sed (build_dir & "/gcc/Makefile", "^CATALOGS = ", "# CATALOGS = ")
 m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber"
            % & " | tee -a " & Log
           ])
-if GCC47
-  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-zlib"
-             % & " | tee -a " & Log
-             ])
-end
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %

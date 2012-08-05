@@ -1295,7 +1295,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_fre);
       NEXT_PASS (pass_copy_prop);
       NEXT_PASS (pass_merge_phi);
-      NEXT_PASS (pass_vrp);
       NEXT_PASS (pass_dce);
       NEXT_PASS (pass_cselim);
       NEXT_PASS (pass_tree_ifcombine);
@@ -1372,7 +1371,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_lower_vector_ssa);
       NEXT_PASS (pass_cse_reciprocals);
       NEXT_PASS (pass_reassoc);
-      NEXT_PASS (pass_vrp);
       NEXT_PASS (pass_dominator);
       /* The only const/copy propagation opportunities left after
 	 DOM should be due to degenerate PHI nodes.  So rather than
@@ -2185,13 +2183,10 @@ ipa_write_summaries_1 (cgraph_node_set set, varpool_node_set vset)
   struct lto_out_decl_state *state = lto_new_out_decl_state ();
   compute_ltrans_boundary (state, set, vset);
 
-  lto_push_out_decl_state (state);
-
   gcc_assert (!flag_wpa);
   ipa_write_summaries_2 (all_regular_ipa_passes, set, vset, state);
 
   gcc_assert (lto_get_out_decl_state () == state);
-  lto_pop_out_decl_state ();
   lto_delete_out_decl_state (state);
 }
 

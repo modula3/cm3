@@ -4728,16 +4728,6 @@ if test -z "${HOST_LIBS+set}"; then
 fi
 AC_SUBST(HOST_LIBS)
 
-# Use the system's zlib library.
-zlibdir=-L../zlib
-zlibinc="-I\$(srcdir)/../zlib"
-AC_ARG_WITH(system-zlib,
-[AS_HELP_STRING([--with-system-zlib], [use installed libz])],
-zlibdir=
-zlibinc=
-)
-AC_SUBST(zlibdir)
-AC_SUBST(zlibinc)
 
 dnl Very limited version of automake's enable-maintainer-mode
 
@@ -5035,18 +5025,6 @@ else
     echo "Links are now set up to build (on ${build}) a cross-compiler" 1>&2
     echo " from ${host} to ${target}." 1>&2
   fi
-fi
-
-AC_ARG_VAR(GMPLIBS,[How to link GMP])
-AC_ARG_VAR(GMPINC,[How to find GMP include files])
-
-AC_ARG_VAR(PPLLIBS,[How to link PPL])
-AC_ARG_VAR(PPLINC,[How to find PPL include files])
-
-AC_ARG_VAR(CLOOGLIBS,[How to link CLOOG])
-AC_ARG_VAR(CLOOGINC,[How to find CLOOG include files])
-if test "x${CLOOGLIBS}" != "x" ; then 
-   AC_DEFINE(HAVE_cloog, 1, [Define if cloog is in use.])
 fi
 
 # Check for plugin support

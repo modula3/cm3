@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Front-end tree definitions for GNU compiler.
    Copyright (C) 1989, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -5472,9 +5474,6 @@ extern int really_constant_p (const_tree);
 extern bool decl_address_invariant_p (const_tree);
 extern bool decl_address_ip_invariant_p (const_tree);
 extern bool int_fits_type_p (const_tree, const_tree);
-#ifndef GENERATOR_FILE
-extern void get_type_static_bounds (const_tree, mpz_t, mpz_t);
-#endif
 extern bool variably_modified_type_p (tree, tree);
 extern int tree_log2 (const_tree);
 extern int tree_floor_log2 (const_tree);

@@ -605,12 +605,6 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 enable_plugin
 pluginlibs
-CLOOGINC
-CLOOGLIBS
-PPLINC
-PPLLIBS
-GMPINC
-GMPLIBS
 target_cpu_default
 fortran_target_objs
 cxx_target_objs
@@ -675,8 +669,6 @@ dollar
 gcc_tooldir
 enable_lto
 MAINT
-zlibinc
-zlibdir
 HOST_LIBS
 GGC
 libgcc_visibility
@@ -914,7 +906,6 @@ enable_gnu_unique_object
 enable_linker_build_id
 with_long_double_128
 with_gc
-with_system_zlib
 enable_maintainer_mode
 enable_version_specific_runtime_libs
 enable_plugin
@@ -933,13 +924,7 @@ CXX
 CXXFLAGS
 CCC
 CPP
-CXXCPP
-GMPLIBS
-GMPINC
-PPLLIBS
-PPLINC
-CLOOGLIBS
-CLOOGINC'
+CXXCPP'
 
 
 # Initialize some variables set by options.
@@ -1671,7 +1656,6 @@ Optional Packages:
   --with-long-double-128  use 128-bit long double by default
   --with-gc={page,zone}   choose the garbage collection mechanism to use with
                           the compiler
-  --with-system-zlib      use installed libz
   --with-linker-hash-style={sysv,gnu,both}
                           specify the linker hash style
 
@@ -1687,12 +1671,6 @@ Some influential environment variables:
   CXXFLAGS    C++ compiler flags
   CPP         C preprocessor
   CXXCPP      C++ preprocessor
-  GMPLIBS     How to link GMP
-  GMPINC      How to find GMP include files
-  PPLLIBS     How to link PPL
-  PPLINC      How to find PPL include files
-  CLOOGLIBS   How to link CLOOG
-  CLOOGINC    How to find CLOOG include files
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -26843,21 +26821,6 @@ if test -z "${HOST_LIBS+set}"; then
 fi
 
 
-# Use the system's zlib library.
-zlibdir=-L../zlib
-zlibinc="-I\$(srcdir)/../zlib"
-
-# Check whether --with-system-zlib was given.
-if test "${with_system_zlib+set}" = set; then :
-  withval=$with_system_zlib; zlibdir=
-zlibinc=
-
-fi
-
-
-
-
-
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable maintainer-specific portions of Makefiles" >&5
 $as_echo_n "checking whether to enable maintainer-specific portions of Makefiles... " >&6; }
     # Check whether --enable-maintainer-mode was given.
@@ -27159,16 +27122,6 @@ fi
 
 
 
-
-
-
-
-
-if test "x${CLOOGLIBS}" != "x" ; then
-
-$as_echo "#define HAVE_cloog 1" >>confdefs.h
-
-fi
 
 # Check for plugin support
 # Check whether --enable-plugin was given.

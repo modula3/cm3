@@ -33,7 +33,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "line-map.h"
 #include "input.h"
 #include "tree.h"
-#include "realmpfr.h"	/* For GMP/MPFR/MPC versions, in print_version.  */
 #include "version.h"
 #include "rtl.h"
 #include "tm_p.h"
@@ -699,10 +698,6 @@ print_version (FILE *file, const char *indent)
     N_("%s%s%s %sversion %s (%s) compiled by CC, ")
 #endif
     ;
-  static const char fmt2[] =
-    N_("GMP version %s\n");
-  static const char fmt3[] =
-    N_("%s%swarning: %s header version %s differs from library version %s.\n");
   static const char fmt4[] =
     N_("%s%sGGC heuristics: --param ggc-min-expand=%d --param ggc-min-heapsize=%d\n");
 #ifndef __VERSION__
@@ -714,30 +709,6 @@ print_version (FILE *file, const char *indent)
 	   lang_hooks.name, pkgversion_string, version_string, TARGET_NAME,
 	   indent, __VERSION__);
 
-  /* We need to stringify the GMP macro values.  Ugh, gmp_version has
-     two string formats, "i.j.k" and "i.j" when k is zero.  As of
-     gmp-4.3.0, GMP always uses the 3 number format.  */
-#define GCC_GMP_STRINGIFY_VERSION3(X) #X
-#define GCC_GMP_STRINGIFY_VERSION2(X) GCC_GMP_STRINGIFY_VERSION3(X)
-#define GCC_GMP_VERSION_NUM(X,Y,Z) (((X) << 16L) | ((Y) << 8) | (Z))
-#define GCC_GMP_VERSION \
-  GCC_GMP_VERSION_NUM(__GNU_MP_VERSION, __GNU_MP_VERSION_MINOR, __GNU_MP_VERSION_PATCHLEVEL)
-#if GCC_GMP_VERSION < GCC_GMP_VERSION_NUM(4,3,0) && __GNU_MP_VERSION_PATCHLEVEL == 0
-#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR)
-#else
-#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR) "." \
-  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_PATCHLEVEL)
-#endif
-  fprintf (file,
-	   file == stderr ? _(fmt2) : fmt2,
-	   GCC_GMP_STRINGIFY_VERSION);
-  if (strcmp (GCC_GMP_STRINGIFY_VERSION, gmp_version))
-    fprintf (file,
-	     file == stderr ? _(fmt3) : fmt3,
-	     indent, *indent != 0 ? " " : "",
-	     "GMP", GCC_GMP_STRINGIFY_VERSION, gmp_version);
   fprintf (file,
 	   file == stderr ? _(fmt4) : fmt4,
 	   indent, *indent != 0 ? " " : "",
