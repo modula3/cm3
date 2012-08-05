@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert RTL to assembler code and output it, for GNU compiler.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
@@ -382,8 +384,8 @@ get_attr_length_1 (rtx insn ATTRIBUTE_UNUSED,
 		   int (*fallback_fn) (rtx) ATTRIBUTE_UNUSED)
 {
 #ifdef HAVE_ATTR_length
-  rtx body;
-  int i;
+  rtx body = { 0 };
+  int i = { 0 };
   int length = 0;
 
   if (insn_lengths_max_uid > INSN_UID (insn))
@@ -618,14 +620,15 @@ static int
 align_fuzz (rtx start, rtx end, int known_align_log, unsigned int growth)
 {
   int uid = INSN_UID (start);
-  rtx align_label;
+  rtx align_label = { 0 };
   int known_align = 1 << known_align_log;
   int end_shuid = INSN_SHUID (end);
   int fuzz = 0;
 
   for (align_label = uid_align[uid]; align_label; align_label = uid_align[uid])
     {
-      int align_addr, new_align;
+      int align_addr = { 0 };
+      int new_align = { 0 };
 
       uid = INSN_UID (align_label);
       align_addr = INSN_ADDRESSES (uid) - insn_lengths[uid];
@@ -656,8 +659,9 @@ align_fuzz (rtx start, rtx end, int known_align_log, unsigned int growth)
 int
 insn_current_reference_address (rtx branch)
 {
-  rtx dest, seq;
-  int seq_uid;
+  rtx dest = { 0 };
+  rtx seq = { 0 };
+  int seq_uid = { 0 };
 
   if (! INSN_ADDRESSES_SET_P ())
     return 0;
@@ -696,10 +700,12 @@ insn_current_reference_address (rtx branch)
 unsigned int
 compute_alignments (void)
 {
-  int log, max_skip, max_log;
-  basic_block bb;
-  int freq_max = 0;
-  int freq_threshold = 0;
+  int log = { 0 };
+  int max_skip = { 0 };
+  int max_log = { 0 };
+  basic_block bb = { 0 };
+  int freq_max = { 0 };
+  int freq_threshold = { 0 };
 
   if (label_align)
     {
@@ -731,9 +737,11 @@ compute_alignments (void)
   FOR_EACH_BB (bb)
     {
       rtx label = BB_HEAD (bb);
-      int fallthru_frequency = 0, branch_frequency = 0, has_fallthru = 0;
-      edge e;
-      edge_iterator ei;
+      int fallthru_frequency = { 0 };
+      int branch_frequency = { 0 };
+      int has_fallthru = { 0 };
+      edge e = { 0 };
+      edge_iterator ei = { 0 };
 
       if (!LABEL_P (label)
 	  || optimize_bb_for_size_p (bb))
@@ -852,19 +860,19 @@ struct rtl_opt_pass pass_compute_alignments =
 void
 shorten_branches (rtx first ATTRIBUTE_UNUSED)
 {
-  rtx insn;
-  int max_uid;
-  int i;
-  int max_log;
-  int max_skip;
+  rtx insn = { 0 };
+  int max_uid = { 0 };
+  int i = { 0 };
+  int max_log = { 0 };
+  int max_skip = { 0 };
 #ifdef HAVE_ATTR_length
 #define MAX_CODE_ALIGN 16
-  rtx seq;
+  rtx seq = { 0 };
   int something_changed = 1;
-  char *varying_length;
-  rtx body;
-  int uid;
-  rtx align_tab[MAX_CODE_ALIGN];
+  char *varying_length = { 0 };
+  rtx body = { 0 };
+  int uid = { 0 };
+  rtx align_tab[MAX_CODE_ALIGN] = { 0 };
 
 #endif
 
@@ -879,8 +887,8 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
   if (max_labelno != max_label_num ())
     {
       int old = max_labelno;
-      int n_labels;
-      int n_old_labels;
+      int n_labels = { 0 };
+      int n_old_labels = { 0 };
 
       max_labelno = max_label_num ();
 
@@ -908,7 +916,7 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 
   for (insn = get_insns (), i = 1; insn; insn = NEXT_INSN (insn))
     {
-      int log;
+      int log = { 0 };
 
       INSN_SHUID (insn) = i++;
       if (INSN_P (insn))
@@ -916,8 +924,8 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 
       if (LABEL_P (insn))
 	{
-	  rtx next;
-	  bool next_is_jumptable;
+	  rtx next = { 0 };
+	  bool next_is_jumptable = { 0 };
 
 	  /* Merge in alignments computed by compute_alignments.  */
 	  log = LABEL_TO_ALIGNMENT (insn);
@@ -958,7 +966,7 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 	}
       else if (BARRIER_P (insn))
 	{
-	  rtx label;
+	  rtx label = { 0 };
 
 	  for (label = insn; label && ! INSN_P (label);
 	       label = NEXT_INSN (label))
@@ -998,7 +1006,7 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
   for (; seq; seq = PREV_INSN (seq))
     {
       int uid = INSN_UID (seq);
-      int log;
+      int log = { 0 };
       log = (LABEL_P (seq) ? LABEL_TO_ALIGNMENT (seq) : 0);
       uid_align[uid] = align_tab[0];
       if (log)
@@ -1017,14 +1025,19 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 
       int min_shuid = INSN_SHUID (get_insns ()) - 1;
       int max_shuid = INSN_SHUID (get_last_insn ()) + 1;
-      int rel;
+      int rel = { 0 };
 
       for (insn = first; insn != 0; insn = NEXT_INSN (insn))
 	{
-	  rtx min_lab = NULL_RTX, max_lab = NULL_RTX, pat;
-	  int len, i, min, max, insn_shuid;
-	  int min_align;
-	  addr_diff_vec_flags flags;
+	  rtx min_lab = NULL_RTX, max_lab = NULL_RTX;
+	  rtx pat = { 0 };
+	  int len = { 0 };
+	  int i = { 0 };
+	  int min = { 0 };
+	  int max = { 0 };
+	  int insn_shuid = { 0 };
+	  int min_align = { 0 };
+	  addr_diff_vec_flags flags = { 0 };
 
 	  if (!JUMP_P (insn)
 	      || GET_CODE (PATTERN (insn)) != ADDR_DIFF_VEC)
@@ -1110,8 +1123,8 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 	insn_lengths[uid] = asm_insn_count (body) * insn_default_length (insn);
       else if (GET_CODE (body) == SEQUENCE)
 	{
-	  int i;
-	  int const_delay_slots;
+	  int i = { 0 };
+	  int const_delay_slots = { 0 };
 #ifdef DELAY_SLOTS
 	  const_delay_slots = const_num_delay_slots (XVECEXP (body, 0, 0));
 #else
@@ -1124,7 +1137,7 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 	    {
 	      rtx inner_insn = XVECEXP (body, 0, i);
 	      int inner_uid = INSN_UID (inner_insn);
-	      int inner_length;
+	      int inner_length = { 0 };
 
 	      if (GET_CODE (body) == ASM_INPUT
 		  || asm_noperands (PATTERN (XVECEXP (body, 0, i))) >= 0)
@@ -1173,11 +1186,11 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 	   insn != 0;
 	   insn = NEXT_INSN (insn))
 	{
-	  int new_length;
+	  int new_length = { 0 };
 #ifdef ADJUST_INSN_LENGTH
-	  int tmp_length;
+	  int tmp_length = { 0 };
 #endif
-	  int length_align;
+	  int length_align = { 0 };
 
 	  uid = INSN_UID (insn);
 
@@ -1217,9 +1230,9 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 	      int rel_addr = INSN_ADDRESSES (INSN_UID (rel_lab));
 	      int min_addr = INSN_ADDRESSES (INSN_UID (min_lab));
 	      int max_addr = INSN_ADDRESSES (INSN_UID (max_lab));
-	      rtx prev;
+	      rtx prev = { 0 };
 	      int rel_align = 0;
-	      addr_diff_vec_flags flags;
+	      addr_diff_vec_flags flags = { 0 };
 
 	      /* Avoid automatic aggregate initialization.  */
 	      flags = ADDR_DIFF_VEC_FLAGS (body);
@@ -1320,7 +1333,7 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 	      if (NONJUMP_INSN_P (insn)
 		  && GET_CODE (PATTERN (insn)) == SEQUENCE)
 		{
-		  int i;
+		  int i = { 0 };
 
 		  body = PATTERN (insn);
 		  for (i = 0; i < XVECLEN (body, 0); i++)
@@ -1341,7 +1354,7 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 
 	  if (NONJUMP_INSN_P (insn) && GET_CODE (PATTERN (insn)) == SEQUENCE)
 	    {
-	      int i;
+	      int i = { 0 };
 
 	      body = PATTERN (insn);
 	      new_length = 0;
@@ -1406,7 +1419,7 @@ shorten_branches (rtx first ATTRIBUTE_UNUSED)
 static int
 asm_insn_count (rtx body)
 {
-  const char *templ;
+  const char *templ = { 0 };
 
   if (GET_CODE (body) == ASM_INPUT)
     templ = XSTR (body, 0);
@@ -1458,8 +1471,8 @@ debug_prefix_map *debug_prefix_maps;
 void
 add_debug_prefix_map (const char *arg)
 {
-  debug_prefix_map *map;
-  const char *p;
+  debug_prefix_map *map = { 0 };
+  const char *p = { 0 };
 
   p = strchr (arg, '=');
   if (!p)
@@ -1483,10 +1496,10 @@ add_debug_prefix_map (const char *arg)
 const char *
 remap_debug_filename (const char *filename)
 {
-  debug_prefix_map *map;
-  char *s;
-  const char *name;
-  size_t name_len;
+  debug_prefix_map *map = { 0 };
+  char *s = { 0 };
+  const char *name = { 0 };
+  size_t name_len = { 0 };
 
   for (map = debug_prefix_maps; map; map = map->next)
     if (filename_ncmp (filename, map->old_prefix, map->old_len) == 0)
@@ -1671,7 +1684,7 @@ static void
 dump_basic_block_info (FILE *file, rtx insn, basic_block *start_to_bb,
                        basic_block *end_to_bb, int bb_map_size, int *bb_seqn)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
 
   if (!flag_debug_asm)
     return;
@@ -1717,7 +1730,8 @@ dump_basic_block_info (FILE *file, rtx insn, basic_block *start_to_bb,
 void
 final (rtx first, FILE *file, int optimize_p)
 {
-  rtx insn, next;
+  rtx insn = { 0 };
+  rtx next = { 0 };
   int max_uid = 0;
   int seen = 0;
 
@@ -1753,7 +1767,7 @@ final (rtx first, FILE *file, int optimize_p)
 
   if (flag_debug_asm)
     {
-      basic_block bb;
+      basic_block bb = { 0 };
 
       bb_map_size = get_max_uid () + 1;
       start_to_bb = XCNEWVEC (basic_block, bb_map_size);
@@ -1856,7 +1870,7 @@ output_alternate_entry_point (FILE *file, rtx insn)
 static rtx
 call_from_call_insn (rtx insn)
 {
-  rtx x;
+  rtx x = { 0 };
   gcc_assert (CALL_P (insn));
   x = PATTERN (insn);
 
@@ -1899,9 +1913,9 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 		 int nopeepholes ATTRIBUTE_UNUSED, int *seen)
 {
 #ifdef HAVE_cc0
-  rtx set;
+  rtx set = { 0 };
 #endif
-  rtx next;
+  rtx next = { 0 };
 
   insn_counter++;
 
@@ -2145,7 +2159,7 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 #else
 	  if (! JUMP_TABLES_IN_TEXT_SECTION)
 	    {
-	      int log_align;
+	      int log_align = { 0 };
 
 	      switch_to_section (targetm.asm_out.function_rodata_section
 				 (current_function_decl));
@@ -2178,9 +2192,9 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
     default:
       {
 	rtx body = PATTERN (insn);
-	int insn_code_number;
-	const char *templ;
-	bool is_stmt;
+	int insn_code_number = { 0 };
+	const char *templ = { 0 };
+	bool is_stmt = { 0 };
 
 	/* Reset this early so it is correct for ASM statements.  */
 	current_insn_predicate = NULL_RTX;
@@ -2214,7 +2228,8 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 	if (GET_CODE (body) == ADDR_VEC || GET_CODE (body) == ADDR_DIFF_VEC)
 	  {
 #if !(defined(ASM_OUTPUT_ADDR_VEC) || defined(ASM_OUTPUT_ADDR_DIFF_VEC))
-	    int vlen, idx;
+	    int vlen = { 0 };
+	    int idx = { 0 };
 #endif
 
 	    if (! JUMP_TABLES_IN_TEXT_SECTION)
@@ -2316,9 +2331,9 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 	  {
 	    unsigned int noperands = asm_noperands (body);
 	    rtx *ops = XALLOCAVEC (rtx, noperands);
-	    const char *string;
-	    location_t loc;
-	    expanded_location expanded;
+	    const char *string = { 0 };
+	    location_t loc = { 0 };
+	    expanded_location expanded = { 0 };
 
 	    /* There's no telling what that did to the condition codes.  */
 	    CC_STATUS_INIT;
@@ -2361,7 +2376,7 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 	if (GET_CODE (body) == SEQUENCE)
 	  {
 	    /* A delayed-branch sequence */
-	    int i;
+	    int i = { 0 };
 
 	    final_sequence = body;
 
@@ -2550,7 +2565,9 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 	if (cc_status.flags != 0
 	    && set != 0)
 	  {
-	    rtx cond_rtx, then_rtx, else_rtx;
+	    rtx cond_rtx = { 0 };
+	    rtx then_rtx = { 0 };
+	    rtx else_rtx = { 0 };
 
 	    if (!JUMP_P (insn)
 		&& GET_CODE (SET_SRC (set)) == IF_THEN_ELSE)
@@ -2686,7 +2703,7 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 	   needs to be reinserted.  */
 	if (templ == 0)
 	  {
-	    rtx prev;
+	    rtx prev = { 0 };
 
 	    gcc_assert (prev_nonnote_insn (insn) == last_ignored_compare);
 
@@ -2774,8 +2791,8 @@ final_scan_insn (rtx insn, FILE *file, int optimize_p ATTRIBUTE_UNUSED,
 static bool
 notice_source_line (rtx insn, bool *is_stmt)
 {
-  const char *filename;
-  int linenum;
+  const char *filename = { 0 };
+  int linenum = { 0 };
 
   if (override_filename)
     {
@@ -2824,7 +2841,7 @@ notice_source_line (rtx insn, bool *is_stmt)
 void
 cleanup_subreg_operands (rtx insn)
 {
-  int i;
+  int i = { 0 };
   bool changed = false;
   extract_insn_cached (insn);
   for (i = 0; i < recog_data.n_operands; i++)
@@ -3114,9 +3131,9 @@ alter_cond (rtx cond)
 void
 output_operand_lossage (const char *cmsgid, ...)
 {
-  char *fmt_string;
-  char *new_message;
-  const char *pfx_str;
+  char *fmt_string = { 0 };
+  char *new_message = { 0 };
+  const char *pfx_str = { 0 };
   va_list ap;
 
   va_start (ap, cmsgid);
@@ -3168,8 +3185,8 @@ output_asm_name (void)
 static tree
 get_mem_expr_from_op (rtx op, int *paddressp)
 {
-  tree expr;
-  int inner_addressp;
+  tree expr = { 0 };
+  int inner_addressp = { 0 };
 
   *paddressp = 0;
 
@@ -3210,7 +3227,7 @@ static void
 output_asm_operand_names (rtx *operands, int *oporder, int nops)
 {
   int wrote = 0;
-  int i;
+  int i = { 0 };
 
   for (i = 0; i < nops; i++)
     {
@@ -3253,13 +3270,13 @@ output_asm_operand_names (rtx *operands, int *oporder, int nops)
 void
 output_asm_insn (const char *templ, rtx *operands)
 {
-  const char *p;
-  int c;
+  const char *p = { 0 };
+  int c = { 0 };
 #ifdef ASSEMBLER_DIALECT
   int dialect = 0;
 #endif
-  int oporder[MAX_RECOG_OPERANDS];
-  char opoutput[MAX_RECOG_OPERANDS];
+  int oporder[MAX_RECOG_OPERANDS] = { 0 };
+  char opoutput[MAX_RECOG_OPERANDS] = { 0 };
   int ops = 0;
 
   /* An insn may return a null string template
@@ -3682,7 +3699,7 @@ output_quoted_string (FILE *asm_file, const char *string)
 #ifdef OUTPUT_QUOTED_STRING
   OUTPUT_QUOTED_STRING (asm_file, string);
 #else
-  char c;
+  char c = { 0 };
 
   putc ('\"', asm_file);
   while ((c = *string++) != 0)
@@ -3749,7 +3766,7 @@ fprint_ul (FILE *f, unsigned long value)
 {
   /* python says: len(str(2**64)) == 20 */
   char s[20];
-  int i;
+  int i = { 0 };
 
   i = sprint_ul_rev (s, value);
 
@@ -3769,10 +3786,10 @@ fprint_ul (FILE *f, unsigned long value)
 int
 sprint_ul (char *s, unsigned long value)
 {
-  int len;
-  char tmp_c;
-  int i;
-  int j;
+  int len = { 0 };
+  char tmp_c = { 0 };
+  int i = { 0 };
+  int j = { 0 };
 
   len = sprint_ul_rev (s, value);
   s[len] = '\0';
@@ -3805,7 +3822,8 @@ void
 asm_fprintf (FILE *file, const char *p, ...)
 {
   char buf[10];
-  char *q, c;
+  char *q = { 0 };
+  char c = { 0 };
   va_list argptr;
 
   va_start (argptr, p);
@@ -3976,8 +3994,11 @@ split_double (rtx value, rtx *first, rtx *second)
 	  /* In this case the CONST_INT holds both target words.
 	     Extract the bits from it into two word-sized pieces.
 	     Sign extend each half to HOST_WIDE_INT.  */
-	  unsigned HOST_WIDE_INT low, high;
-	  unsigned HOST_WIDE_INT mask, sign_bit, sign_extend;
+	  unsigned HOST_WIDE_INT low = { 0 };
+	  unsigned HOST_WIDE_INT high = { 0 };
+	  unsigned HOST_WIDE_INT mask = { 0 };
+	  unsigned HOST_WIDE_INT sign_bit = { 0 };
+	  unsigned HOST_WIDE_INT sign_extend = { 0 };
 	  unsigned bits_per_word = BITS_PER_WORD;
 
 	  /* Set sign_bit to the most significant bit of a word.  */
@@ -4073,8 +4094,8 @@ split_double (rtx value, rtx *first, rtx *second)
     }
   else
     {
-      REAL_VALUE_TYPE r;
-      long l[2];
+      REAL_VALUE_TYPE r = { 0 };
+      long l[2] = { 0 };
       REAL_VALUE_FROM_CONST_DOUBLE (r, value);
 
       /* Note, this converts the REAL_VALUE_TYPE to the target's
@@ -4109,8 +4130,8 @@ split_double (rtx value, rtx *first, rtx *second)
 int
 leaf_function_p (void)
 {
-  rtx insn;
-  rtx link;
+  rtx insn = { 0 };
+  rtx link = { 0 };
 
   if (crtl->profile || profile_arc_flag)
     return 0;
@@ -4152,7 +4173,8 @@ leaf_function_p (void)
 int
 final_forward_branch_p (rtx insn)
 {
-  int insn_id, label_id;
+  int insn_id = { 0 };
+  int label_id = { 0 };
 
   gcc_assert (uid_shuid);
   insn_id = INSN_SHUID (insn);
@@ -4179,7 +4201,7 @@ final_forward_branch_p (rtx insn)
 int
 only_leaf_regs_used (void)
 {
-  int i;
+  int i = { 0 };
   const char *const permitted_reg_in_leaf_functions = LEAF_REGISTERS;
 
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
@@ -4202,7 +4224,7 @@ only_leaf_regs_used (void)
 static void
 leaf_renumber_regs (rtx first)
 {
-  rtx insn;
+  rtx insn = { 0 };
 
   /* Renumber only the actual patterns.
      The reg-notes can contain frame pointer refs,
@@ -4223,8 +4245,9 @@ leaf_renumber_regs (rtx first)
 void
 leaf_renumber_regs_insn (rtx in_rtx)
 {
-  int i, j;
-  const char *format_ptr;
+  int i = { 0 };
+  int j = { 0 };
+  const char *format_ptr = { 0 };
 
   if (in_rtx == 0)
     return;
@@ -4235,7 +4258,7 @@ leaf_renumber_regs_insn (rtx in_rtx)
 
   if (REG_P (in_rtx))
     {
-      int newreg;
+      int newreg = { 0 };
 
       /* Don't renumber the same reg twice.  */
       if (in_rtx->used)
@@ -4302,8 +4325,8 @@ leaf_renumber_regs_insn (rtx in_rtx)
 static unsigned int
 rest_of_handle_final (void)
 {
-  rtx x;
-  const char *fnname;
+  rtx x = { 0 };
+  const char *fnname = { 0 };
 
   /* Get the function's name, as described by its RTL.  This may be
      different from the DECL_NAME name used in the source file.  */
@@ -4417,7 +4440,8 @@ struct rtl_opt_pass pass_shorten_branches =
 static unsigned int
 rest_of_clean_state (void)
 {
-  rtx insn, next;
+  rtx insn = { 0 };
+  rtx next = { 0 };
   FILE *final_output = NULL;
   int save_unnumbered = flag_dump_unnumbered;
   int save_noaddr = flag_dump_noaddr;
