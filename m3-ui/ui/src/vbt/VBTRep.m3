@@ -641,12 +641,10 @@ PROCEDURE Redisplay() RAISES {} =
       (* All d: dcount[d].n = # VBTs in list with depth at most d. *)
       WITH v = NEW(REF ARRAY OF VBT.T, n) DO
         FOR i := 0 TO n - 1 DO
-          IF list[i].depth > 0 THEN
-            v[dcount[list[i].depth - 1].n] := list[i].v;
-            INC(dcount[list[i].depth - 1].n);
-            (* All d: dcount[d-1].n = # VBTs in list with depth < d,
-               or with depth = d that have been copied into v. *)
-          END;
+          v[dcount[list[i].depth - 1].n] := list[i].v;
+          INC(dcount[list[i].depth - 1].n);
+          (* All d: dcount[d-1].n = # VBTs in list with depth < d,
+             or with depth = d that have been copied into v. *)
         END;
         (* v has all the VBTs in the list and is sorted by depth *)
         FOR i := 0 TO n - 1 DO
