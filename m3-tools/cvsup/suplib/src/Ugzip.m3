@@ -29,37 +29,31 @@
 
 UNSAFE MODULE Ugzip;
 
-IMPORT Cstdlib, CText, UgzipP;
+IMPORT Cstdlib, UgzipP;
 
-FROM Ctypes IMPORT int, unsigned_int, void_star;
+FROM Ctypes IMPORT int, unsigned_int, void_star, char;
+
+CONST
+  ZLIB_VERSION = ARRAY [0..5] OF char{
+                 ORD('1'), ORD('.'), ORD('0'), ORD('.'), ORD('4'), 0};
 
 PROCEDURE deflateInit(strm: z_stream_star; level: int): int =
-  VAR
-    ver := ZLIB_VERSION;
-    verStr := CText.SharedTtoS(ver);
-    retVal: int;
+  VAR version := ZLIB_VERSION;
   BEGIN
-    retVal := UgzipP.deflateInit_(strm, level, verStr, BYTESIZE(z_stream));
-    CText.FreeSharedS(ver, verStr);
-    RETURN retVal;
+    RETURN UgzipP.deflateInit_(strm, level, ADR(version[0]), BYTESIZE(z_stream));
   END deflateInit;
 
 PROCEDURE inflateInit(strm: z_stream_star): int =
-  VAR
-    ver := ZLIB_VERSION;
-    verStr := CText.SharedTtoS(ver);
-    retVal: int;
+  VAR version := ZLIB_VERSION;
   BEGIN
-    retVal := UgzipP.inflateInit_(strm, verStr, BYTESIZE(z_stream));
-    CText.FreeSharedS(ver, verStr);
-    RETURN retVal;
+    RETURN UgzipP.inflateInit_(strm, ADR(version[0]), BYTESIZE(z_stream));
   END inflateInit;
 
 PROCEDURE malloc(<*UNUSED*> opaque: void_star;
                  items: unsigned_int;
                  size: unsigned_int): void_star =
   BEGIN
-    RETURN Cstdlib.malloc(items * size);
+    RETURN Cstdlib.calloc(items, size);
   END malloc;
 
 PROCEDURE free(<*UNUSED*> opaque: void_star;
