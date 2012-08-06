@@ -16,38 +16,30 @@ void __cdecl ThreadFreeBSD__Dummy(void) { } /* avoid empty file */
 
 #else /* FreeBSD */
 
+static void __cdecl
+ThreadFreeBSD__Fatal(int error, const char* message)
+{
+  if (error)
+  {
+    fprintf (stderr, "ThreadFreeBSD fatal error: %d %s\n", error, message);
+    abort ();
+  }
+}
+
 int
 __cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
-  int a = pthread_suspend_np(PTHREAD_FROM_M3(mt));
-  int success = (a == 0);
-  assert(success);
-  return success;
+  ThreadFreeBSD__Fatal(pthread_suspend_np(PTHREAD_FROM_M3(mt)), "pthread_suspend_np");
+  return 1;
 }
 
 int
 __cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
-  int a = pthread_resume_np(PTHREAD_FROM_M3(mt));
-  int success = (a == 0);
-  assert(success);
-  return success;
-}
-
-static void __cdecl
-ThreadFreeBSD__Fail(int error, const char* message)
-{
-  fprintf (stderr, "ThreadFreeBSD fatal error: %d %s\n", error, message);
-  abort ();
-}
-
-static void __cdecl
-ThreadFreeBSD__Check(int error, const char* message)
-{
-  if (error)
-    ThreadFreeBSD__Fail(error, message);
+  ThreadFreeBSD__Fatal(pthread_resume_np(PTHREAD_FROM_M3(mt)), "pthread_resume_np");
+  return 1;
 }
 
 void
@@ -67,10 +59,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
    */
 
   /* process the stacks */
-  ThreadFreeBSD__Check(pthread_attr_init(&attr), "pthread_attr_init");
-  ThreadFreeBSD__Check(pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr), "pthread_attr_get_np");
-  ThreadFreeBSD__Check(pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize), "pthread_attr_getstack");
-  ThreadFreeBSD__Check(pthread_attr_destroy(&attr), "pthread_attr_destroy");
+  ThreadFreeBSD__Fatal(pthread_attr_init(&attr), "pthread_attr_init");
+  ThreadFreeBSD__Fatal(pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr), "pthread_attr_get_np");
+  ThreadFreeBSD__Fatal(pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize), "pthread_attr_getstack");
+  ThreadFreeBSD__Fatal(pthread_attr_destroy(&attr), "pthread_attr_destroy");
 #if 0
   assert(stack_grows_down); /* See ThreadPThreadC.c */
 #endif
