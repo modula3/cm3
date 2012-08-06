@@ -36,7 +36,6 @@ FROM Ctypes IMPORT char_star, const_char_star, unsigned_char_star,
   int, unsigned_int, unsigned_long, void_star;
 
 CONST
-  ZLIB_VERSION = "1.0.4";
 
   (* Flush values *)
   Z_NO_FLUSH      = 0;
