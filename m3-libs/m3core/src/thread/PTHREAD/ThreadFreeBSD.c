@@ -61,6 +61,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
   char *stackaddr = { 0 };
   size_t stacksize = { 0 };
 
+  if (!bottom) return;
+
   /*
      NOTE: This will scan the entire allocated stack,
      not just the currently in use part.

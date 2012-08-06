@@ -52,6 +52,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
   size_t stacksize = { 0 };
   int i = { 0 };
 
+  if (!bottom) return;
+
   /*
      NOTE: Like FreeBSD, this code would scan the
      entire stack, not just the "currently used" part.

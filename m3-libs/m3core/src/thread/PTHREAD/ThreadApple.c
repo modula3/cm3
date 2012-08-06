@@ -110,10 +110,12 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   void *sp = { 0 };
   m3_thread_state_t state = { 0 };
   kern_return_t status = { 0 };
-  mach_port_t mach_thread = pthread_mach_thread_np(PTHREAD_FROM_M3(mt));
   mach_msg_type_number_t thread_state_count = M3_THREAD_STATE_COUNT;
-  status = thread_get_state(mach_thread, M3_THREAD_STATE,
-                            (thread_state_t)&state, &thread_state_count);
+
+  if (!bottom) return;
+  status = thread_get_state(pthread_mach_thread_np(PTHREAD_FROM_M3(mt)),
+                            M3_THREAD_STATE, (thread_state_t)&state,
+                            &thread_state_count);
   if (status != KERN_SUCCESS)
   {
     fprintf(stderr, "thread_get_state returned %d instead of %d\n",

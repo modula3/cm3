@@ -882,7 +882,9 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    ProcessStopped(act.handle, act.stackbase, act.context, p);
+    IF act.stackbase # NIL THEN
+      ProcessStopped(act.handle, act.stackbase, act.context, p);
+    END;
   END ProcessOther;
 
 (* Signal based suspend/resume *)
