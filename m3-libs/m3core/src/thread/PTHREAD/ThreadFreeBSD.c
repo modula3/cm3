@@ -2,9 +2,7 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifdef __FreeBSD__
 #include "m3core.h"
-#endif
 
 #if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
