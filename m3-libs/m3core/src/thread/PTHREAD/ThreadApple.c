@@ -2,8 +2,8 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifdef __APPLE__
 #include "m3core.h"
+#ifdef __APPLE__
 #include <mach/mach.h>
 #include <mach/thread_act.h>
 #if defined(__ppc__) || defined(__ppc64__)

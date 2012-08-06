@@ -2,8 +2,8 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifdef __OpenBSD__
 #include "m3core.h"
+#ifdef __OpenBSD__
 #include <sys/signal.h>
 #include <pthread_np.h>
 #endif
