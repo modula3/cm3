@@ -1620,42 +1620,6 @@ execute_pass_list (struct opt_pass *pass)
   while (pass);
 }
 
-/* Same as execute_pass_list but assume that subpasses of IPA passes
-   are local passes. If SET is not NULL, write out summaries of only
-   those node in SET. */
-
-static void
-ipa_write_summaries_2 (struct opt_pass *pass, cgraph_node_set set,
-		       struct lto_out_decl_state *state)
-{
-  while (pass)
-    {
-      struct ipa_opt_pass_d *ipa_pass = (struct ipa_opt_pass_d *)pass;
-      gcc_assert (!current_function_decl);
-      gcc_assert (!cfun);
-      gcc_assert (pass->type == SIMPLE_IPA_PASS || pass->type == IPA_PASS);
-      if (pass->type == IPA_PASS
-	  && ipa_pass->write_summary
-	  && (!pass->gate || pass->gate ()))
-	{
-	  /* If a timevar is present, start it.  */
-	  if (pass->tv_id)
-	    timevar_push (pass->tv_id);
-
-	  ipa_pass->write_summary (set);
-
-	  /* If a timevar is present, start it.  */
-	  if (pass->tv_id)
-	    timevar_pop (pass->tv_id);
-	}
-
-      if (pass->sub && pass->sub->type != GIMPLE_PASS)
-	ipa_write_summaries_2 (pass->sub, set, state);
-
-      pass = pass->next;
-    }
-}
-
 /* Write out summaries for all the nodes in the callgraph.  */
 
 void
