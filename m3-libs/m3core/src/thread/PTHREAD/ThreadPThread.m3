@@ -421,11 +421,10 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 
     RunThread(me);
 
-    me.stackbase := NIL; (* disable GC scanning of my stack *)
-
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
+      me.stackbase := NIL; (* disable GC scanning of my stack *)
       me.next.prev := me.prev;
       me.prev.next := me.next;
       WITH r = pthread_detach_self() DO <*ASSERT r=0*> END;
