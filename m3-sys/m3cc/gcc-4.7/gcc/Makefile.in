@@ -591,16 +591,13 @@ tmpdir = /tmp
 datarootdir = @datarootdir@
 docdir = @docdir@
 
-# Whether we were configured with NLS.
-USE_NLS = @USE_NLS@
-
 # Internationalization library.
-LIBINTL = @LIBINTL@
-LIBINTL_DEP = @LIBINTL_DEP@
+LIBINTL = 
+LIBINTL_DEP = 
 
 # Character encoding conversion library.
-LIBICONV = @LIBICONV@
-LIBICONV_DEP = @LIBICONV_DEP@
+LIBICONV = 
+LIBICONV_DEP = 
 
 # The GC method to be used on this system.
 GGC=@GGC@.o
@@ -912,7 +909,7 @@ LIBIBERTY = ../libiberty/libiberty.a
 BUILD_LIBIBERTY = $(build_libobjdir)/libiberty/libiberty.a
 
 # Dependencies on the intl and portability libraries.
-LIBDEPS= libcommon.a $(CPPLIB) $(LIBIBERTY) $(LIBINTL_DEP) $(LIBICONV_DEP) \
+LIBDEPS= libcommon.a $(CPPLIB) $(LIBIBERTY) \
 	$(LIBDECNUMBER)
 
 # Likewise, for use in the tools that must run on this machine
@@ -921,7 +918,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 
 # How to link with both our special library facilities
 # and the system's installed libraries.
-LIBS = @LIBS@ libcommon.a $(CPPLIB) $(LIBINTL) $(LIBICONV) $(LIBIBERTY) \
+LIBS = @LIBS@ libcommon.a $(CPPLIB) $(LIBIBERTY) \
 	$(LIBDECNUMBER) $(HOST_LIBS)
 BACKENDLIBS = $(PLUGINLIBS) $(HOST_LIBS)
 
@@ -1078,8 +1075,6 @@ OBJS = \
 	compare-elim.o \
 	convert.o \
 	coverage.o \
-	cppbuiltin.o \
-	cppdefault.o \
 	cprop.o \
 	cse.o \
 	cselib.o \
@@ -1316,7 +1311,7 @@ OBJS = \
 
 # Objects in libcommon.a, potentially used by all host binaries and with
 # no target dependencies.
-OBJS-libcommon = diagnostic.o pretty-print.o intl.o input.o version.o
+OBJS-libcommon = diagnostic.o pretty-print.o input.o version.o
 
 # Objects in libcommon-target.a, used by drivers and by the core
 # compiler and containing target-dependent code.
@@ -3483,37 +3478,6 @@ gengtype-lex.c : gengtype-lex.l
 	  cat $@ >> $@.tmp; \
 	  mv $@.tmp $@; \
 	}
-
-#
-# Remake internationalization support.
-CFLAGS-intl.o += -DLOCALEDIR=\"$(localedir)\"
-intl.o: intl.c $(CONFIG_H) $(SYSTEM_H) coretypes.h intl.h Makefile
-
-#
-# Remake cpp.
-
-PREPROCESSOR_DEFINES = \
-  -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
-  -DFIXED_INCLUDE_DIR=\"$(libsubdir)/include-fixed\" \
-  -DGPLUSPLUS_INCLUDE_DIR=\"$(gcc_gxx_include_dir)\" \
-  -DGPLUSPLUS_INCLUDE_DIR_ADD_SYSROOT=$(gcc_gxx_include_dir_add_sysroot) \
-  -DGPLUSPLUS_TOOL_INCLUDE_DIR=\"$(gcc_gxx_include_dir)/$(target_noncanonical)\" \
-  -DGPLUSPLUS_BACKWARD_INCLUDE_DIR=\"$(gcc_gxx_include_dir)/backward\" \
-  -DLOCAL_INCLUDE_DIR=\"$(local_includedir)\" \
-  -DCROSS_INCLUDE_DIR=\"$(CROSS_SYSTEM_HEADER_DIR)\" \
-  -DTOOL_INCLUDE_DIR=\"$(gcc_tooldir)/include\" \
-  -DNATIVE_SYSTEM_HEADER_DIR=\"$(NATIVE_SYSTEM_HEADER_DIR)\" \
-  -DPREFIX=\"$(prefix)/\" \
-  -DSTANDARD_EXEC_PREFIX=\"$(libdir)/gcc/\" \
-  @TARGET_SYSTEM_ROOT_DEFINE@
-
-CFLAGS-cppbuiltin.o += $(PREPROCESSOR_DEFINES) -DBASEVER=$(BASEVER_s)
-cppbuiltin.o: cppbuiltin.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
-	$(TREE_H) cppbuiltin.h Makefile
-
-CFLAGS-cppdefault.o += $(PREPROCESSOR_DEFINES)
-cppdefault.o: cppdefault.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
-	cppdefault.h Makefile
 
 # Note for the stamp targets, we run the program `true' instead of
 # having an empty command (nothing following the semicolon).
