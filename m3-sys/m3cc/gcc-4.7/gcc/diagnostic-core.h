@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations of core diagnostic functionality for code that does
    not need to deal with diagnostic contexts or diagnostic info
    structures.
@@ -45,17 +47,7 @@ extern const char *trim_filename (const char *);
 
 /* If we haven't already defined a front-end-specific diagnostics
    style, use the generic one.  */
-#ifndef GCC_DIAG_STYLE
-#define GCC_DIAG_STYLE __gcc_tdiag__
-#endif
-/* None of these functions are suitable for ATTRIBUTE_PRINTF, because
-   each language front end can extend them with its own set of format
-   specifiers.  We must use custom format checks.  */
-#if (ENABLE_CHECKING && GCC_VERSION >= 4001) || GCC_VERSION == BUILDING_GCC_VERSION
-#define ATTRIBUTE_GCC_DIAG(m, n) __attribute__ ((__format__ (GCC_DIAG_STYLE, m, n))) ATTRIBUTE_NONNULL(m)
-#else
 #define ATTRIBUTE_GCC_DIAG(m, n) ATTRIBUTE_NONNULL(m)
-#endif
 extern void internal_error (const char *, ...) ATTRIBUTE_GCC_DIAG(1,2)
      ATTRIBUTE_NORETURN;
 /* Pass one of the OPT_W* from options.h as the first parameter.  */
