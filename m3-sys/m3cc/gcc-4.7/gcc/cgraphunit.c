@@ -2579,9 +2579,11 @@ cgraph_materialize_all_clones (void)
 			      replace_info = VEC_index (ipa_replace_map_p,
 			      				node->clone.tree_map,
 							i);
-			      print_generic_expr (cgraph_dump_file, replace_info->old_tree, 0);
+			      print_generic_expr (cgraph_dump_file,
+						  replace_info->old_tree, 0);
 			      fprintf (cgraph_dump_file, " -> ");
-			      print_generic_expr (cgraph_dump_file, replace_info->new_tree, 0);
+			      print_generic_expr (cgraph_dump_file,
+						  replace_info->new_tree, 0);
 			      fprintf (cgraph_dump_file, "%s%s;",
 			      	       replace_info->replace_p ? "(replace)":"",
 				       replace_info->ref_p ? "(ref)":"");
@@ -2591,12 +2593,15 @@ cgraph_materialize_all_clones (void)
 		      if (node->clone.args_to_skip)
 			{
 		          fprintf (cgraph_dump_file, "   args_to_skip: ");
-		          dump_bitmap (cgraph_dump_file, node->clone.args_to_skip);
+		          dump_bitmap (cgraph_dump_file,
+				       node->clone.args_to_skip);
 			}
 		      if (node->clone.args_to_skip)
 			{
-		          fprintf (cgraph_dump_file, "   combined_args_to_skip:");
-		          dump_bitmap (cgraph_dump_file, node->clone.combined_args_to_skip);
+		          fprintf (cgraph_dump_file,
+				   "   combined_args_to_skip:");
+		          dump_bitmap (cgraph_dump_file,
+				       node->clone.combined_args_to_skip);
 			}
 		    }
 		  cgraph_materialize_clone (node);
