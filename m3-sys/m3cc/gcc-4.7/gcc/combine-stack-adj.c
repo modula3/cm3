@@ -320,17 +320,122 @@ maybe_move_args_size_note (rtx last, rtx insn, bool after)
     add_reg_note (last, REG_ARGS_SIZE, XEXP (note, 0));
 }
 
+/* Return the next (or previous) active insn within BB.  */
+
+static rtx
+prev_active_insn_bb (basic_block bb, rtx insn)
+{
+  for (insn = PREV_INSN (insn);
+       insn != PREV_INSN (BB_HEAD (bb));
+       insn = PREV_INSN (insn))
+    if (active_insn_p (insn))
+      return insn;
+  return NULL_RTX;
+}
+
+static rtx
+next_active_insn_bb (basic_block bb, rtx insn)
+{
+  for (insn = NEXT_INSN (insn);
+       insn != NEXT_INSN (BB_END (bb));
+       insn = NEXT_INSN (insn))
+    if (active_insn_p (insn))
+      return insn;
+  return NULL_RTX;
+}
+
+/* If INSN has a REG_ARGS_SIZE note, if possible move it to PREV.  Otherwise
+   search for a nearby candidate within BB where we can stick the note.  */
+
+static void
+force_move_args_size_note (basic_block bb, rtx prev, rtx insn)
+{
+  rtx note, test, next_candidate, prev_candidate;
+
+  /* If PREV exists, tail-call to the logic in the other function.  */
+  if (prev)
+    {
+      maybe_move_args_size_note (prev, insn, false);
+      return;
+    }
+
+  /* First, make sure there's anything that needs doing.  */
+  note = find_reg_note (insn, REG_ARGS_SIZE, NULL_RTX);
+  if (note == NULL)
+    return;
+
+  /* We need to find a spot between the previous and next exception points
+     where we can place the note and "properly" deallocate the arguments.  */
+  next_candidate = prev_candidate = NULL;
+
+  /* It is often the case that we have insns in the order:
+	call
+	add sp (previous deallocation)
+	sub sp (align for next arglist)
+	push arg
+     and the add/sub cancel.  Therefore we begin by searching forward.  */
+
+  test = insn;
+  while ((test = next_active_insn_bb (bb, test)) != NULL)
+    {
+      /* Found an existing note: nothing to do.  */
+      if (find_reg_note (test, REG_ARGS_SIZE, NULL_RTX))
+        return;
+      /* Found something that affects unwinding.  Stop searching.  */
+      if (CALL_P (test) || !insn_nothrow_p (test))
+	break;
+      if (next_candidate == NULL)
+	next_candidate = test;
+    }
+
+  test = insn;
+  while ((test = prev_active_insn_bb (bb, test)) != NULL)
+    {
+      rtx tnote;
+      /* Found a place that seems logical to adjust the stack.  */
+      tnote = find_reg_note (test, REG_ARGS_SIZE, NULL_RTX);
+      if (tnote)
+	{
+	  XEXP (tnote, 0) = XEXP (note, 0);
+	  return;
+	}
+      if (prev_candidate == NULL)
+	prev_candidate = test;
+      /* Found something that affects unwinding.  Stop searching.  */
+      if (CALL_P (test) || !insn_nothrow_p (test))
+	break;
+    }
+
+  if (prev_candidate)
+    test = prev_candidate;
+  else if (next_candidate)
+    test = next_candidate;
+  else
+    {
+      /* ??? We *must* have a place, lest we ICE on the lost adjustment.
+	 Options are: dummy clobber insn, nop, or prevent the removal of
+	 the sp += 0 insn.  */
+      /* TODO: Find another way to indicate to the dwarf2 code that we
+	 have not in fact lost an adjustment.  */
+      test = emit_insn_before (gen_rtx_CLOBBER (VOIDmode, const0_rtx), insn);
+    }
+  add_reg_note (test, REG_ARGS_SIZE, XEXP (note, 0));
+}
+
 /* Subroutine of combine_stack_adjustments, called for each basic block.  */
 
 static void
 combine_stack_adjustments_for_block (basic_block bb)
 {
-  HOST_WIDE_INT last_sp_adjust = 0;
-  rtx last_sp_set = NULL_RTX;
-  struct csa_reflist *reflist = NULL;
-  rtx insn, next, set;
-  struct record_stack_refs_data data;
-  bool end_of_block = false;
+  HOST_WIDE_INT last_sp_adjust = { 0 };
+  rtx last_sp_set = { 0 };
+  rtx last2_sp_set = { 0 };
+  struct csa_reflist *reflist = { 0 };
+  rtx insn = { 0 };
+  rtx next = { 0 };
+  rtx set = { 0 };
+  struct record_stack_refs_data data = { 0 };
+  bool end_of_block = { 0 };
 
   for (insn = BB_HEAD (bb); !end_of_block ; insn = next)
     {
