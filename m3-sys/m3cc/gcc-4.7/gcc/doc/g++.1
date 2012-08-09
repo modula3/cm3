@@ -132,7 +132,7 @@
 .\" ========================================================================
 .\"
 .IX Title "GCC 1"
-.TH GCC 1 "2012-03-22" "gcc-4.7.0" "GNU"
+.TH GCC 1 "2012-06-14" "gcc-4.7.1" "GNU"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -3829,9 +3829,10 @@ Warn if an empty body occurs in an \fBif\fR, \fBelse\fR or \fBdo
 while\fR statement.  This warning is also enabled by \fB\-Wextra\fR.
 .IP "\fB\-Wenum\-compare\fR" 4
 .IX Item "-Wenum-compare"
-Warn about a comparison between values of different enumerated types. In \*(C+
-this warning is enabled by default.  In C this warning is enabled by
-\&\fB\-Wall\fR.
+Warn about a comparison between values of different enumerated types.
+In \*(C+ enumeral mismatches in conditional expressions are also
+diagnosed and the warning is enabled by default.  In C this warning is 
+enabled by \fB\-Wall\fR.
 .IP "\fB\-Wjump\-misses\-init\fR (C, Objective-C only)" 4
 .IX Item "-Wjump-misses-init (C, Objective-C only)"
 Warn if a \f(CW\*(C`goto\*(C'\fR statement or a \f(CW\*(C`switch\*(C'\fR statement jumps
@@ -10166,81 +10167,148 @@ generating these instructions.  This option is enabled by default when
 .PP
 \fI\s-1AVR\s0 Options\fR
 .IX Subsection "AVR Options"
-.PP
-These options are defined for \s-1AVR\s0 implementations:
 .IP "\fB\-mmcu=\fR\fImcu\fR" 4
 .IX Item "-mmcu=mcu"
 Specify Atmel \s-1AVR\s0 instruction set architectures (\s-1ISA\s0) or \s-1MCU\s0 type.
 .Sp
-For a complete list of \fImcu\fR values that are supported by avr-gcc,
-see the compiler output when called with the \f(CW\*(C`\-\-help=target\*(C'\fR
+For a complete list of \fImcu\fR values that are supported by \fBavr-gcc\fR,
+see the compiler output when called with the \fB\-\-help=target\fR
 command line option.
 The default for this option is@tie{}\f(CW\*(C`avr2\*(C'\fR.
 .Sp
-avr-gcc supports the following \s-1AVR\s0 devices and ISAs:
+\&\s-1GCC\s0 supports the following \s-1AVR\s0 devices and ISAs:
 .RS 4
-.ie n .IP """avr1""" 4
-.el .IP "\f(CWavr1\fR" 4
-.IX Item "avr1"
-This \s-1ISA\s0 is implemented by the minimal \s-1AVR\s0 core and supported
-for assembler only.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90s1200\*(C'\fR,
-\&\f(CW\*(C`attiny10\*(C'\fR, \f(CW\*(C`attiny11\*(C'\fR, \f(CW\*(C`attiny12\*(C'\fR, \f(CW\*(C`attiny15\*(C'\fR,
-\&\f(CW\*(C`attiny28\*(C'\fR.
 .ie n .IP """avr2""" 4
 .el .IP "\f(CWavr2\fR" 4
 .IX Item "avr2"
 \&\*(L"Classic\*(R" devices with up to 8@tie{}KiB of program memory.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90s2313\*(C'\fR, \f(CW\*(C`attiny26\*(C'\fR, \f(CW\*(C`at90c8534\*(C'\fR,
-\&...
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90c8534\*(C'\fR, \f(CW\*(C`at90s2313\*(C'\fR,
+\&\f(CW\*(C`at90s2323\*(C'\fR, \f(CW\*(C`at90s2333\*(C'\fR, \f(CW\*(C`at90s2343\*(C'\fR,
+\&\f(CW\*(C`at90s4414\*(C'\fR, \f(CW\*(C`at90s4433\*(C'\fR, \f(CW\*(C`at90s4434\*(C'\fR,
+\&\f(CW\*(C`at90s8515\*(C'\fR, \f(CW\*(C`at90s8535\*(C'\fR, \f(CW\*(C`attiny22\*(C'\fR, \f(CW\*(C`attiny26\*(C'\fR.
 .ie n .IP """avr25""" 4
 .el .IP "\f(CWavr25\fR" 4
 .IX Item "avr25"
 \&\*(L"Classic\*(R" devices with up to 8@tie{}KiB of program memory and with
 the \f(CW\*(C`MOVW\*(C'\fR instruction.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`attiny2313\*(C'\fR, \f(CW\*(C`attiny261\*(C'\fR, \f(CW\*(C`attiny24\*(C'\fR,
-\&...
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at86rf401\*(C'\fR, \f(CW\*(C`ata6289\*(C'\fR, \f(CW\*(C`attiny13\*(C'\fR,
+\&\f(CW\*(C`attiny13a\*(C'\fR, \f(CW\*(C`attiny2313\*(C'\fR, \f(CW\*(C`attiny2313a\*(C'\fR,
+\&\f(CW\*(C`attiny24\*(C'\fR, \f(CW\*(C`attiny24a\*(C'\fR, \f(CW\*(C`attiny25\*(C'\fR, \f(CW\*(C`attiny261\*(C'\fR,
+\&\f(CW\*(C`attiny261a\*(C'\fR, \f(CW\*(C`attiny4313\*(C'\fR, \f(CW\*(C`attiny43u\*(C'\fR,
+\&\f(CW\*(C`attiny44\*(C'\fR, \f(CW\*(C`attiny44a\*(C'\fR, \f(CW\*(C`attiny45\*(C'\fR, \f(CW\*(C`attiny461\*(C'\fR,
+\&\f(CW\*(C`attiny461a\*(C'\fR, \f(CW\*(C`attiny48\*(C'\fR, \f(CW\*(C`attiny84\*(C'\fR, \f(CW\*(C`attiny84a\*(C'\fR,
+\&\f(CW\*(C`attiny85\*(C'\fR, \f(CW\*(C`attiny861\*(C'\fR, \f(CW\*(C`attiny861a\*(C'\fR, \f(CW\*(C`attiny87\*(C'\fR,
+\&\f(CW\*(C`attiny88\*(C'\fR.
 .ie n .IP """avr3""" 4
 .el .IP "\f(CWavr3\fR" 4
 .IX Item "avr3"
-\&\*(L"Classic\*(R" devices with 16@tie{}KiB up to 64@tie{}KiB of program memory.
+\&\*(L"Classic\*(R" devices with 16@tie{}KiB up to 64@tie{}KiB of  program memory.
 \&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at43usb355\*(C'\fR, \f(CW\*(C`at76c711\*(C'\fR.
 .ie n .IP """avr31""" 4
 .el .IP "\f(CWavr31\fR" 4
 .IX Item "avr31"
 \&\*(L"Classic\*(R" devices with 128@tie{}KiB of program memory.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atmega103\*(C'\fR, \f(CW\*(C`at43usb320\*(C'\fR.
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at43usb320\*(C'\fR, \f(CW\*(C`atmega103\*(C'\fR.
 .ie n .IP """avr35""" 4
 .el .IP "\f(CWavr35\fR" 4
 .IX Item "avr35"
 \&\*(L"Classic\*(R" devices with 16@tie{}KiB up to 64@tie{}KiB of program
 memory and with the \f(CW\*(C`MOVW\*(C'\fR instruction.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90usb162\*(C'\fR, \f(CW\*(C`atmega8u2\*(C'\fR,
-\&\f(CW\*(C`attiny167\*(C'\fR, ...
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90usb162\*(C'\fR, \f(CW\*(C`at90usb82\*(C'\fR,
+\&\f(CW\*(C`atmega16u2\*(C'\fR, \f(CW\*(C`atmega32u2\*(C'\fR, \f(CW\*(C`atmega8u2\*(C'\fR,
+\&\f(CW\*(C`attiny167\*(C'\fR.
 .ie n .IP """avr4""" 4
 .el .IP "\f(CWavr4\fR" 4
 .IX Item "avr4"
 \&\*(L"Enhanced\*(R" devices with up to 8@tie{}KiB of program memory.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atmega8\*(C'\fR, \f(CW\*(C`atmega88\*(C'\fR, \f(CW\*(C`at90pwm81\*(C'\fR,
-\&...
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90pwm1\*(C'\fR, \f(CW\*(C`at90pwm2\*(C'\fR, \f(CW\*(C`at90pwm2b\*(C'\fR,
+\&\f(CW\*(C`at90pwm3\*(C'\fR, \f(CW\*(C`at90pwm3b\*(C'\fR, \f(CW\*(C`at90pwm81\*(C'\fR, \f(CW\*(C`atmega48\*(C'\fR,
+\&\f(CW\*(C`atmega48a\*(C'\fR, \f(CW\*(C`atmega48p\*(C'\fR, \f(CW\*(C`atmega8\*(C'\fR, \f(CW\*(C`atmega8515\*(C'\fR,
+\&\f(CW\*(C`atmega8535\*(C'\fR, \f(CW\*(C`atmega88\*(C'\fR, \f(CW\*(C`atmega88a\*(C'\fR,
+\&\f(CW\*(C`atmega88p\*(C'\fR, \f(CW\*(C`atmega88pa\*(C'\fR, \f(CW\*(C`atmega8hva\*(C'\fR.
 .ie n .IP """avr5""" 4
 .el .IP "\f(CWavr5\fR" 4
 .IX Item "avr5"
 \&\*(L"Enhanced\*(R" devices with 16@tie{}KiB up to 64@tie{}KiB of program memory.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atmega16\*(C'\fR, \f(CW\*(C`atmega6490\*(C'\fR, \f(CW\*(C`at90can64\*(C'\fR,
-\&...
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90can32\*(C'\fR, \f(CW\*(C`at90can64\*(C'\fR,
+\&\f(CW\*(C`at90pwm216\*(C'\fR, \f(CW\*(C`at90pwm316\*(C'\fR, \f(CW\*(C`at90scr100\*(C'\fR,
+\&\f(CW\*(C`at90usb646\*(C'\fR, \f(CW\*(C`at90usb647\*(C'\fR, \f(CW\*(C`at94k\*(C'\fR, \f(CW\*(C`atmega16\*(C'\fR,
+\&\f(CW\*(C`atmega161\*(C'\fR, \f(CW\*(C`atmega162\*(C'\fR, \f(CW\*(C`atmega163\*(C'\fR,
+\&\f(CW\*(C`atmega164a\*(C'\fR, \f(CW\*(C`atmega164p\*(C'\fR, \f(CW\*(C`atmega165\*(C'\fR,
+\&\f(CW\*(C`atmega165a\*(C'\fR, \f(CW\*(C`atmega165p\*(C'\fR, \f(CW\*(C`atmega168\*(C'\fR,
+\&\f(CW\*(C`atmega168a\*(C'\fR, \f(CW\*(C`atmega168p\*(C'\fR, \f(CW\*(C`atmega169\*(C'\fR,
+\&\f(CW\*(C`atmega169a\*(C'\fR, \f(CW\*(C`atmega169p\*(C'\fR, \f(CW\*(C`atmega169pa\*(C'\fR,
+\&\f(CW\*(C`atmega16a\*(C'\fR, \f(CW\*(C`atmega16hva\*(C'\fR, \f(CW\*(C`atmega16hva2\*(C'\fR,
+\&\f(CW\*(C`atmega16hvb\*(C'\fR, \f(CW\*(C`atmega16m1\*(C'\fR, \f(CW\*(C`atmega16u4\*(C'\fR,
+\&\f(CW\*(C`atmega32\*(C'\fR, \f(CW\*(C`atmega323\*(C'\fR, \f(CW\*(C`atmega324a\*(C'\fR,
+\&\f(CW\*(C`atmega324p\*(C'\fR, \f(CW\*(C`atmega324pa\*(C'\fR, \f(CW\*(C`atmega325\*(C'\fR,
+\&\f(CW\*(C`atmega3250\*(C'\fR, \f(CW\*(C`atmega3250a\*(C'\fR, \f(CW\*(C`atmega3250p\*(C'\fR,
+\&\f(CW\*(C`atmega325a\*(C'\fR, \f(CW\*(C`atmega325p\*(C'\fR, \f(CW\*(C`atmega328\*(C'\fR,
+\&\f(CW\*(C`atmega328p\*(C'\fR, \f(CW\*(C`atmega329\*(C'\fR, \f(CW\*(C`atmega3290\*(C'\fR,
+\&\f(CW\*(C`atmega3290a\*(C'\fR, \f(CW\*(C`atmega3290p\*(C'\fR, \f(CW\*(C`atmega329a\*(C'\fR,
+\&\f(CW\*(C`atmega329p\*(C'\fR, \f(CW\*(C`atmega329pa\*(C'\fR, \f(CW\*(C`atmega32c1\*(C'\fR,
+\&\f(CW\*(C`atmega32hvb\*(C'\fR, \f(CW\*(C`atmega32m1\*(C'\fR, \f(CW\*(C`atmega32u4\*(C'\fR,
+\&\f(CW\*(C`atmega32u6\*(C'\fR, \f(CW\*(C`atmega406\*(C'\fR, \f(CW\*(C`atmega64\*(C'\fR,
+\&\f(CW\*(C`atmega640\*(C'\fR, \f(CW\*(C`atmega644\*(C'\fR, \f(CW\*(C`atmega644a\*(C'\fR,
+\&\f(CW\*(C`atmega644p\*(C'\fR, \f(CW\*(C`atmega644pa\*(C'\fR, \f(CW\*(C`atmega645\*(C'\fR,
+\&\f(CW\*(C`atmega6450\*(C'\fR, \f(CW\*(C`atmega6450a\*(C'\fR, \f(CW\*(C`atmega6450p\*(C'\fR,
+\&\f(CW\*(C`atmega645a\*(C'\fR, \f(CW\*(C`atmega645p\*(C'\fR, \f(CW\*(C`atmega649\*(C'\fR,
+\&\f(CW\*(C`atmega6490\*(C'\fR, \f(CW\*(C`atmega649a\*(C'\fR, \f(CW\*(C`atmega649p\*(C'\fR,
+\&\f(CW\*(C`atmega64c1\*(C'\fR, \f(CW\*(C`atmega64hve\*(C'\fR, \f(CW\*(C`atmega64m1\*(C'\fR,
+\&\f(CW\*(C`m3000\*(C'\fR.
 .ie n .IP """avr51""" 4
 .el .IP "\f(CWavr51\fR" 4
 .IX Item "avr51"
 \&\*(L"Enhanced\*(R" devices with 128@tie{}KiB of program memory.
-\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atmega128\*(C'\fR, \f(CW\*(C`at90can128\*(C'\fR, \f(CW\*(C`at90usb1287\*(C'\fR,
-\&...
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90can128\*(C'\fR, \f(CW\*(C`at90usb1286\*(C'\fR,
+\&\f(CW\*(C`at90usb1287\*(C'\fR, \f(CW\*(C`atmega128\*(C'\fR, \f(CW\*(C`atmega1280\*(C'\fR,
+\&\f(CW\*(C`atmega1281\*(C'\fR, \f(CW\*(C`atmega1284p\*(C'\fR, \f(CW\*(C`atmega128rfa1\*(C'\fR.
 .ie n .IP """avr6""" 4
 .el .IP "\f(CWavr6\fR" 4
 .IX Item "avr6"
-\&\*(L"Enhanced\*(R" devices with 3\-byte \s-1PC\s0, i.e. with at least 256@tie{}KiB
-of program memory.
+\&\*(L"Enhanced\*(R" devices with 3\-byte \s-1PC\s0, i.e. with more than
+128@tie{}KiB of program memory.
 \&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atmega2560\*(C'\fR, \f(CW\*(C`atmega2561\*(C'\fR.
+.ie n .IP """avrxmega2""" 4
+.el .IP "\f(CWavrxmega2\fR" 4
+.IX Item "avrxmega2"
+\&\*(L"\s-1XMEGA\s0\*(R" devices with more than 8@tie{}KiB and up to 64@tie{}KiB of
+program memory.
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atxmega16a4\*(C'\fR, \f(CW\*(C`atxmega16d4\*(C'\fR,
+\&\f(CW\*(C`atxmega16x1\*(C'\fR, \f(CW\*(C`atxmega32a4\*(C'\fR, \f(CW\*(C`atxmega32d4\*(C'\fR,
+\&\f(CW\*(C`atxmega32x1\*(C'\fR.
+.ie n .IP """avrxmega4""" 4
+.el .IP "\f(CWavrxmega4\fR" 4
+.IX Item "avrxmega4"
+\&\*(L"\s-1XMEGA\s0\*(R" devices with more than 64@tie{}KiB and up to 128@tie{}KiB of
+program memory.
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atxmega64a3\*(C'\fR, \f(CW\*(C`atxmega64d3\*(C'\fR.
+.ie n .IP """avrxmega5""" 4
+.el .IP "\f(CWavrxmega5\fR" 4
+.IX Item "avrxmega5"
+\&\*(L"\s-1XMEGA\s0\*(R" devices with more than 64@tie{}KiB and up to 128@tie{}KiB of
+program memory and more than 64@tie{}KiB of \s-1RAM\s0.
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atxmega64a1\*(C'\fR, \f(CW\*(C`atxmega64a1u\*(C'\fR.
+.ie n .IP """avrxmega6""" 4
+.el .IP "\f(CWavrxmega6\fR" 4
+.IX Item "avrxmega6"
+\&\*(L"\s-1XMEGA\s0\*(R" devices with more than 128@tie{}KiB of program memory.
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atxmega128a3\*(C'\fR, \f(CW\*(C`atxmega128d3\*(C'\fR,
+\&\f(CW\*(C`atxmega192a3\*(C'\fR, \f(CW\*(C`atxmega192d3\*(C'\fR, \f(CW\*(C`atxmega256a3\*(C'\fR,
+\&\f(CW\*(C`atxmega256a3b\*(C'\fR, \f(CW\*(C`atxmega256a3bu\*(C'\fR, \f(CW\*(C`atxmega256d3\*(C'\fR.
+.ie n .IP """avrxmega7""" 4
+.el .IP "\f(CWavrxmega7\fR" 4
+.IX Item "avrxmega7"
+\&\*(L"\s-1XMEGA\s0\*(R" devices with more than 128@tie{}KiB of program memory and
+more than 64@tie{}KiB of \s-1RAM\s0.
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`atxmega128a1\*(C'\fR, \f(CW\*(C`atxmega128a1u\*(C'\fR.
+.ie n .IP """avr1""" 4
+.el .IP "\f(CWavr1\fR" 4
+.IX Item "avr1"
+This \s-1ISA\s0 is implemented by the minimal \s-1AVR\s0 core and supported for
+assembler only.
+\&\fImcu\fR\f(CW@tie\fR{}= \f(CW\*(C`at90s1200\*(C'\fR, \f(CW\*(C`attiny11\*(C'\fR, \f(CW\*(C`attiny12\*(C'\fR,
+\&\f(CW\*(C`attiny15\*(C'\fR, \f(CW\*(C`attiny28\*(C'\fR.
 .RE
 .RS 4
 .RE
@@ -10266,19 +10334,19 @@ Set the branch costs for conditional branch instructions to
 integers. The default branch cost is 0.
 .IP "\fB\-mcall\-prologues\fR" 4
 .IX Item "-mcall-prologues"
-Functions prologues/epilogues expanded as call to appropriate
-subroutines.  Code size will be smaller.
+Functions prologues/epilogues are expanded as calls to appropriate
+subroutines.  Code size is smaller.
 .IP "\fB\-mint8\fR" 4
 .IX Item "-mint8"
-Assume int to be 8\-bit integer.  This affects the sizes of all types: a
-char will be 1 byte, an int will be 1 byte, a long will be 2 bytes
-and long long will be 4 bytes.  Please note that this option does not
-comply to the C standards, but it will provide you with smaller code
+Assume \f(CW\*(C`int\*(C'\fR to be 8\-bit integer.  This affects the sizes of all types: a
+\&\f(CW\*(C`char\*(C'\fR is 1 byte, an \f(CW\*(C`int\*(C'\fR is 1 byte, a \f(CW\*(C`long\*(C'\fR is 2 bytes,
+and \f(CW\*(C`long long\*(C'\fR is 4 bytes.  Please note that this option does not
+conform to the C standards, but it results in smaller code
 size.
 .IP "\fB\-mno\-interrupts\fR" 4
 .IX Item "-mno-interrupts"
 Generated code is not compatible with hardware interrupts.
-Code size will be smaller.
+Code size is smaller.
 .IP "\fB\-mrelax\fR" 4
 .IX Item "-mrelax"
 Try to replace \f(CW\*(C`CALL\*(C'\fR resp. \f(CW\*(C`JMP\*(C'\fR instruction by the shorter
@@ -10288,25 +10356,42 @@ linker command line when the linker is called.
 .Sp
 Jump relaxing is performed by the linker because jump offsets are not
 known before code is located. Therefore, the assembler code generated by the
-compiler will be the same, but the instructions in the executable may
+compiler is the same, but the instructions in the executable may
 differ from instructions in the assembler code.
+.Sp
+Relaxing must be turned on if linker stubs are needed, see the
+section on \f(CW\*(C`EIND\*(C'\fR and linker stubs below.
 .IP "\fB\-mshort\-calls\fR" 4
 .IX Item "-mshort-calls"
 Use \f(CW\*(C`RCALL\*(C'\fR/\f(CW\*(C`RJMP\*(C'\fR instructions even on devices with
 16@tie{}KiB or more of program memory, i.e. on devices that
 have the \f(CW\*(C`CALL\*(C'\fR and \f(CW\*(C`JMP\*(C'\fR instructions.
 See also the \f(CW\*(C`\-mrelax\*(C'\fR command line option.
+.IP "\fB\-msp8\fR" 4
+.IX Item "-msp8"
+Treat the stack pointer register as an 8\-bit register,
+i.e. assume the high byte of the stack pointer is zero.
+In general, you don't need to set this option by hand.
+.Sp
+This option is used internally by the compiler to select and
+build multilibs for architectures \f(CW\*(C`avr2\*(C'\fR and \f(CW\*(C`avr25\*(C'\fR.
+These architectures mix devices with and without \f(CW\*(C`SPH\*(C'\fR.
+For any setting other than \f(CW\*(C`\-mmcu=avr2\*(C'\fR or \f(CW\*(C`\-mmcu=avr25\*(C'\fR
+the compiler driver will add or remove this option from the compiler
+proper's command line, because the compiler then knows if the device
+or architecture has an 8\-bit stack pointer and thus no \f(CW\*(C`SPH\*(C'\fR
+register or not.
 .IP "\fB\-mstrict\-X\fR" 4
 .IX Item "-mstrict-X"
 Use address register \f(CW\*(C`X\*(C'\fR in a way proposed by the hardware.  This means
-that \f(CW\*(C`X\*(C'\fR will only be used in indirect, post-increment or
+that \f(CW\*(C`X\*(C'\fR is only used in indirect, post-increment or
 pre-decrement addressing.
 .Sp
 Without this option, the \f(CW\*(C`X\*(C'\fR register may be used in the same way
 as \f(CW\*(C`Y\*(C'\fR or \f(CW\*(C`Z\*(C'\fR which then is emulated by additional
 instructions.  
 For example, loading a value with \f(CW\*(C`X+const\*(C'\fR addressing with a
-small non-negative \f(CW\*(C`const < 64\*(C'\fR to a register \fIRn\fR will be
+small non-negative \f(CW\*(C`const < 64\*(C'\fR to a register \fIRn\fR is
 performed as
 .Sp
 .Vb 3
@@ -10316,8 +10401,7 @@ performed as
 .Ve
 .IP "\fB\-mtiny\-stack\fR" 4
 .IX Item "-mtiny-stack"
-Only use the lower 8@tie{}bits of the stack pointer and assume that the high
-byte of \s-1SP\s0 is always zero.
+Only change the lower 8@tie{}bits of the stack pointer.
 .PP
 \f(CW\*(C`EIND\*(C'\fR and Devices with more than 128 Ki Bytes of Flash
 .IX Subsection "EIND and Devices with more than 128 Ki Bytes of Flash"
@@ -10337,11 +10421,6 @@ the compiler and are subject to some limitations:
 .IP "\(bu" 4
 The compiler never sets \f(CW\*(C`EIND\*(C'\fR.
 .IP "\(bu" 4
-The startup code from libgcc never sets \f(CW\*(C`EIND\*(C'\fR.
-Notice that startup code is a blend of code from libgcc and avr-libc.
-For the impact of avr-libc on \f(CW\*(C`EIND\*(C'\fR, see the
-avr-libc\ user\ manual (\f(CW\*(C`http://nongnu.org/avr\-libc/user\-manual\*(C'\fR).
-.IP "\(bu" 4
 The compiler uses \f(CW\*(C`EIND\*(C'\fR implicitely in \f(CW\*(C`EICALL\*(C'\fR/\f(CW\*(C`EIJMP\*(C'\fR
 instructions or might read \f(CW\*(C`EIND\*(C'\fR directly in order to emulate an
 indirect call/jump by means of a \f(CW\*(C`RET\*(C'\fR instruction.
@@ -10351,17 +10430,50 @@ code or during the application. In particular, \f(CW\*(C`EIND\*(C'\fR is not
 saved/restored in function or interrupt service routine
 prologue/epilogue.
 .IP "\(bu" 4
+For indirect calls to functions and computed goto, the linker
+generates \fIstubs\fR. Stubs are jump pads sometimes also called
+\&\fItrampolines\fR. Thus, the indirect call/jump jumps to such a stub.
+The stub contains a direct jump to the desired address.
+.IP "\(bu" 4
+Linker relaxation must be turned on so that the linker will generate
+the stubs correctly an all situaltion. See the compiler option
+\&\f(CW\*(C`\-mrelax\*(C'\fR and the linler option \f(CW\*(C`\-\-relax\*(C'\fR.
+There are corner cases where the linker is supposed to generate stubs
+but aborts without relaxation and without a helpful error message.
+.IP "\(bu" 4
+The default linker script is arranged for code with \f(CW\*(C`EIND = 0\*(C'\fR.
+If code is supposed to work for a setup with \f(CW\*(C`EIND != 0\*(C'\fR, a custom
+linker script has to be used in order to place the sections whose
+name start with \f(CW\*(C`.trampolines\*(C'\fR into the segment where \f(CW\*(C`EIND\*(C'\fR
+points to.
+.IP "\(bu" 4
+The startup code from libgcc never sets \f(CW\*(C`EIND\*(C'\fR.
+Notice that startup code is a blend of code from libgcc and AVR-LibC.
+For the impact of AVR-LibC on \f(CW\*(C`EIND\*(C'\fR, see the
+AVR-LibC\ user\ manual (\f(CW\*(C`http://nongnu.org/avr\-libc/user\-manual\*(C'\fR).
+.IP "\(bu" 4
 It is legitimate for user-specific startup code to set up \f(CW\*(C`EIND\*(C'\fR
 early, for example by means of initialization code located in
 section \f(CW\*(C`.init3\*(C'\fR. Such code runs prior to general startup code
-that initializes \s-1RAM\s0 and calls constructors.
+that initializes \s-1RAM\s0 and calls constructors, but after the bit
+of startup code from AVR-LibC that sets \f(CW\*(C`EIND\*(C'\fR to the segment
+where the vector table is located.
+.Sp
+.Vb 1
+\&        #include <avr/io.h>
+\&        
+\&        static void
+\&        _\|_attribute_\|_((section(".init3"),naked,used,no_instrument_function))
+\&        init3_set_eind (void)
+\&        {
+\&          _\|_asm volatile ("ldi r24,pm_hh8(_\|_trampolines_start)\en\et"
+\&                          "out %i0,r24" :: "n" (&EIND) : "r24","memory");
+\&        }
+.Ve
+.Sp
+The \f(CW\*(C`_\|_trampolines_start\*(C'\fR symbol is defined in the linker script.
 .IP "\(bu" 4
-For indirect calls to functions and computed goto, the linker will
-generate \fIstubs\fR. Stubs are jump pads sometimes also called
-\&\fItrampolines\fR. Thus, the indirect call/jump will jump to such a stub.
-The stub contains a direct jump to the desired address.
-.IP "\(bu" 4
-Stubs will be generated automatically by the linker if
+Stubs are generated automatically by the linker if
 the following two conditions are met:
 .RS 4
 .ie n .IP "\-<The address of a label is taken by means of the ""gs"" modifier>" 4
@@ -10380,7 +10492,7 @@ the following two conditions are met:
 .RS 4
 .RE
 .IP "\(bu" 4
-The compiler will emit such \f(CW\*(C`gs\*(C'\fR modifiers for code labels in the
+The compiler emits such \f(CW\*(C`gs\*(C'\fR modifiers for code labels in the
 following situations:
 .RS 4
 .IP "\-<Taking address of a function or code label.>" 4
@@ -10406,12 +10518,6 @@ tables you can specify the \fB\-fno\-jump\-tables\fR command-line option.
 .RE
 .IP "\(bu" 4
 .PD
-The default linker script is arranged for code with \f(CW\*(C`EIND = 0\*(C'\fR.
-If code is supposed to work for a setup with \f(CW\*(C`EIND != 0\*(C'\fR, a custom
-linker script has to be used in order to place the sections whose
-name start with \f(CW\*(C`.trampolines\*(C'\fR into the segment where \f(CW\*(C`EIND\*(C'\fR
-points to.
-.IP "\(bu" 4
 Jumping to non-symbolic addresses like so is \fInot\fR supported:
 .Sp
 .Vb 5
@@ -10438,11 +10544,43 @@ through a symbol (\f(CW\*(C`func_4\*(C'\fR in the example):
 and the application be linked with \f(CW\*(C`\-Wl,\-\-defsym,func_4=0x4\*(C'\fR.
 Alternatively, \f(CW\*(C`func_4\*(C'\fR can be defined in the linker script.
 .PP
+Handling of the \f(CW\*(C`RAMPD\*(C'\fR, \f(CW\*(C`RAMPX\*(C'\fR, \f(CW\*(C`RAMPY\*(C'\fR and \f(CW\*(C`RAMPZ\*(C'\fR Special Function Registers
+.IX Subsection "Handling of the RAMPD, RAMPX, RAMPY and RAMPZ Special Function Registers"
+.PP
+Some \s-1AVR\s0 devices support memories larger than the 64@tie{}KiB range
+that can be accessed with 16\-bit pointers.  To access memory locations
+outside this 64@tie{}KiB range, the contentent of a \f(CW\*(C`RAMP\*(C'\fR
+register is used as high part of the address:
+The \f(CW\*(C`X\*(C'\fR, \f(CW\*(C`Y\*(C'\fR, \f(CW\*(C`Z\*(C'\fR address register is concatenated
+with the \f(CW\*(C`RAMPX\*(C'\fR, \f(CW\*(C`RAMPY\*(C'\fR, \f(CW\*(C`RAMPZ\*(C'\fR special function
+register, respectively, to get a wide address. Similarly,
+\&\f(CW\*(C`RAMPD\*(C'\fR is used together with direct addressing.
+.IP "\(bu" 4
+The startup code initializes the \f(CW\*(C`RAMP\*(C'\fR special function
+registers with zero.
+.IP "\(bu" 4
+If a \fB\s-1AVR\s0 Named Address Spaces,named address space\fR other than
+generic or \f(CW\*(C`_\|_flash\*(C'\fR is used, then \f(CW\*(C`RAMPZ\*(C'\fR is set
+as needed before the operation.
+.IP "\(bu" 4
+If the device supports \s-1RAM\s0 larger than 64@tie{KiB} and the compiler
+needs to change \f(CW\*(C`RAMPZ\*(C'\fR to accomplish an operation, \f(CW\*(C`RAMPZ\*(C'\fR
+is reset to zero after the operation.
+.IP "\(bu" 4
+If the device comes with a specific \f(CW\*(C`RAMP\*(C'\fR register, the \s-1ISR\s0
+prologue/epilogue saves/restores that \s-1SFR\s0 and initializes it with
+zero in case the \s-1ISR\s0 code might (implicitly) use it.
+.IP "\(bu" 4
+\&\s-1RAM\s0 larger than 64@tie{KiB} is not supported by \s-1GCC\s0 for \s-1AVR\s0 targets.
+If you use inline assembler to read from locations outside the
+16\-bit address range and change one of the \f(CW\*(C`RAMP\*(C'\fR registers,
+you must reset it to zero after the access.
+.PP
 \s-1AVR\s0 Built-in Macros
 .IX Subsection "AVR Built-in Macros"
 .PP
-avr-gcc defines several built-in macros so that the user code can test
-for presence of absence of features.  Almost any of the following
+\&\s-1GCC\s0 defines several built-in macros so that the user code can test
+for the presence or absence of features.  Almost any of the following
 built-in macros are deduced from device capabilities and thus
 triggered by the \f(CW\*(C`\-mmcu=\*(C'\fR command-line option.
 .PP
@@ -10452,7 +10590,7 @@ For even more AVR-specific built-in macros see
 .el .IP "\f(CW_\|_AVR_\f(CIDevice\f(CW_\|_\fR" 4
 .IX Item "__AVR_Device__"
 Setting \f(CW\*(C`\-mmcu=\f(CIdevice\f(CW\*(C'\fR defines this built-in macro which reflects
-the device's name. For example, \f(CW\*(C`\-mmcu=atmega8\*(C'\fR will define the
+the device's name. For example, \f(CW\*(C`\-mmcu=atmega8\*(C'\fR defines the
 built-in macro \f(CW\*(C`_\|_AVR_ATmega8_\|_\*(C'\fR, \f(CW\*(C`\-mmcu=attiny261a\*(C'\fR defines
 \&\f(CW\*(C`_\|_AVR_ATtiny261A_\|_\*(C'\fR, etc.
 .Sp
@@ -10461,16 +10599,10 @@ the scheme \f(CW\*(C`_\|_AVR_\f(CIDevice\f(CW_\|_\*(C'\fR where \fIDevice\fR is
 the device name as from the \s-1AVR\s0 user manual. The difference between
 \&\fIDevice\fR in the built-in macro and \fIdevice\fR in
 \&\f(CW\*(C`\-mmcu=\f(CIdevice\f(CW\*(C'\fR is that the latter is always lowercase.
-.ie n .IP """_\|_AVR_HAVE_RAMPZ_\|_""" 4
-.el .IP "\f(CW_\|_AVR_HAVE_RAMPZ_\|_\fR" 4
-.IX Item "__AVR_HAVE_RAMPZ__"
-.PD 0
 .ie n .IP """_\|_AVR_HAVE_ELPM_\|_""" 4
 .el .IP "\f(CW_\|_AVR_HAVE_ELPM_\|_\fR" 4
 .IX Item "__AVR_HAVE_ELPM__"
-.PD
-The device has the \f(CW\*(C`RAMPZ\*(C'\fR special function register and thus the
-\&\f(CW\*(C`ELPM\*(C'\fR instruction.
+The device has the the \f(CW\*(C`ELPM\*(C'\fR instruction.
 .ie n .IP """_\|_AVR_HAVE_ELPMX_\|_""" 4
 .el .IP "\f(CW_\|_AVR_HAVE_ELPMX_\|_\fR" 4
 .IX Item "__AVR_HAVE_ELPMX__"
@@ -10484,8 +10616,8 @@ register-register moves.
 .ie n .IP """_\|_AVR_HAVE_LPMX_\|_""" 4
 .el .IP "\f(CW_\|_AVR_HAVE_LPMX_\|_\fR" 4
 .IX Item "__AVR_HAVE_LPMX__"
-The device has the \f(CW\*(C`LPM R\f(CIn\f(CW,Z\*(C'\fR and \f(CW\*(C`LPM
-R\f(CIn\f(CW,Z+\*(C'\fR instructions.
+The device has the \f(CW\*(C`LPM R\f(CIn\f(CW,Z\*(C'\fR and
+\&\f(CW\*(C`LPM R\f(CIn\f(CW,Z+\*(C'\fR instructions.
 .ie n .IP """_\|_AVR_HAVE_MUL_\|_""" 4
 .el .IP "\f(CW_\|_AVR_HAVE_MUL_\|_\fR" 4
 .IX Item "__AVR_HAVE_MUL__"
@@ -10505,7 +10637,7 @@ memory and if \f(CW\*(C`\-mshort\-calls\*(C'\fR is not set.
 .IX Item "__AVR_3_BYTE_PC__"
 .PD
 The device has the \f(CW\*(C`EIJMP\*(C'\fR and \f(CW\*(C`EICALL\*(C'\fR instructions.
-This is the case for devices with at least 256@tie{}KiB of program memory.
+This is the case for devices with more than 128@tie{}KiB of program memory.
 This also means that the program counter
 (\s-1PC\s0) is 3@tie{}bytes wide.
 .ie n .IP """_\|_AVR_2_BYTE_PC_\|_""" 4
@@ -10521,8 +10653,38 @@ with up to 128@tie{}KiB of program memory.
 .el .IP "\f(CW_\|_AVR_HAVE_16BIT_SP_\|_\fR" 4
 .IX Item "__AVR_HAVE_16BIT_SP__"
 .PD
-The stack pointer (\s-1SP\s0) is respectively 8 or 16 bits wide.
+The stack pointer (\s-1SP\s0) register is treated as 8\-bit respectively
+16\-bit register by the compiler.
 The definition of these macros is affected by \f(CW\*(C`\-mtiny\-stack\*(C'\fR.
+.ie n .IP """_\|_AVR_HAVE_SPH_\|_""" 4
+.el .IP "\f(CW_\|_AVR_HAVE_SPH_\|_\fR" 4
+.IX Item "__AVR_HAVE_SPH__"
+.PD 0
+.ie n .IP """_\|_AVR_SP8_\|_""" 4
+.el .IP "\f(CW_\|_AVR_SP8_\|_\fR" 4
+.IX Item "__AVR_SP8__"
+.PD
+The device has the \s-1SPH\s0 (high part of stack pointer) special function
+register or has an 8\-bit stack pointer, respectively.
+The definition of these macros is affected by \f(CW\*(C`\-mmcu=\*(C'\fR and
+in the cases of \f(CW\*(C`\-mmcu=avr2\*(C'\fR and \f(CW\*(C`\-mmcu=avr25\*(C'\fR also
+by \f(CW\*(C`\-msp8\*(C'\fR.
+.ie n .IP """_\|_AVR_HAVE_RAMPD_\|_""" 4
+.el .IP "\f(CW_\|_AVR_HAVE_RAMPD_\|_\fR" 4
+.IX Item "__AVR_HAVE_RAMPD__"
+.PD 0
+.ie n .IP """_\|_AVR_HAVE_RAMPX_\|_""" 4
+.el .IP "\f(CW_\|_AVR_HAVE_RAMPX_\|_\fR" 4
+.IX Item "__AVR_HAVE_RAMPX__"
+.ie n .IP """_\|_AVR_HAVE_RAMPY_\|_""" 4
+.el .IP "\f(CW_\|_AVR_HAVE_RAMPY_\|_\fR" 4
+.IX Item "__AVR_HAVE_RAMPY__"
+.ie n .IP """_\|_AVR_HAVE_RAMPZ_\|_""" 4
+.el .IP "\f(CW_\|_AVR_HAVE_RAMPZ_\|_\fR" 4
+.IX Item "__AVR_HAVE_RAMPZ__"
+.PD
+The device has the \f(CW\*(C`RAMPD\*(C'\fR, \f(CW\*(C`RAMPX\*(C'\fR, \f(CW\*(C`RAMPY\*(C'\fR,
+\&\f(CW\*(C`RAMPZ\*(C'\fR special function register, respectively.
 .ie n .IP """_\|_NO_INTERRUPTS_\|_""" 4
 .el .IP "\f(CW_\|_NO_INTERRUPTS_\|_\fR" 4
 .IX Item "__NO_INTERRUPTS__"

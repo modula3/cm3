@@ -550,7 +550,10 @@ store_bit_field_1 (rtx str_rtx, unsigned HOST_WIDE_INT bitsize,
 	{
 	  /* If I is 0, use the low-order word in both field and target;
 	     if I is 1, use the next to lowest word; and so on.  */
-	  unsigned int wordnum = (backwards ? nwords - i - 1 : i);
+	  unsigned int wordnum = (backwards
+				  ? GET_MODE_SIZE (fieldmode) / UNITS_PER_WORD
+				  - i - 1
+				  : i);
 	  unsigned int bit_offset = (backwards
 				     ? MAX ((int) bitsize - ((int) i + 1)
 					    * BITS_PER_WORD,
@@ -637,7 +640,13 @@ store_bit_field_1 (rtx str_rtx, unsigned HOST_WIDE_INT bitsize,
       && !(MEM_P (op0) && MEM_VOLATILE_P (op0)
 	   && flag_strict_volatile_bitfields > 0)
       && ! ((REG_P (op0) || GET_CODE (op0) == SUBREG)
-	    && (bitsize + bitpos > GET_MODE_BITSIZE (op_mode))))
+	    && (bitsize + bitpos > GET_MODE_BITSIZE (op_mode)))
+      /* Do not use insv if the bit region is restricted and
+	 op_mode integer at offset doesn't fit into the
+	 restricted region.  */
+      && !(MEM_P (op0) && bitregion_end
+	   && bitnum - bitpos + GET_MODE_BITSIZE (op_mode)
+	      > bitregion_end + 1))
     {
       struct expand_operand ops[4];
       int xbitpos = bitpos;
@@ -757,7 +766,7 @@ store_bit_field_1 (rtx str_rtx, unsigned HOST_WIDE_INT bitsize,
 	  || GET_MODE_BITSIZE (GET_MODE (op0)) > maxbits
 	  || (op_mode != MAX_MACHINE_MODE
 	      && GET_MODE_SIZE (GET_MODE (op0)) > GET_MODE_SIZE (op_mode)))
-	bestmode = get_best_mode  (bitsize, bitnum,
+	bestmode = get_best_mode (bitsize, bitnum,
 				  bitregion_start, bitregion_end,
 				  MEM_ALIGN (op0),
 				  (op_mode == MAX_MACHINE_MODE
@@ -828,8 +837,7 @@ store_bit_field (rtx str_rtx, unsigned HOST_WIDE_INT bitsize,
   /* Under the C++0x memory model, we must not touch bits outside the
      bit region.  Adjust the address to start at the beginning of the
      bit region.  */
-  if (MEM_P (str_rtx)
-      && bitregion_start > 0)
+  if (MEM_P (str_rtx) && bitregion_start > 0)
     {
       enum machine_mode bestmode;
       enum machine_mode op_mode;
@@ -838,6 +846,8 @@ store_bit_field (rtx str_rtx, unsigned HOST_WIDE_INT bitsize,
       op_mode = mode_for_extraction (EP_insv, 3);
       if (op_mode == MAX_MACHINE_MODE)
 	op_mode = VOIDmode;
+
+      gcc_assert ((bitregion_start % BITS_PER_UNIT) == 0);
 
       offset = bitregion_start / BITS_PER_UNIT;
       bitnum -= bitregion_start;
@@ -1091,6 +1101,16 @@ store_split_bit_field (rtx op0, unsigned HOST_WIDE_INT bitsize,
 
       offset = (bitpos + bitsdone) / unit;
       thispos = (bitpos + bitsdone) % unit;
+
+      /* When region of bytes we can touch is restricted, decrease
+	 UNIT close to the end of the region as needed.  */
+      if (bitregion_end
+	  && unit > BITS_PER_UNIT
+	  && bitpos + bitsdone - thispos + unit > bitregion_end + 1)
+	{
+	  unit = unit / 2;
+	  continue;
+	}
 
       /* THISSIZE must not overrun a word boundary.  Otherwise,
 	 store_fixed_bit_field will call us again, and we will mutually
