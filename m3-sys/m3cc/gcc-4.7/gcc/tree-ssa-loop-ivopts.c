@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Induction variable optimizations.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -3510,13 +3512,13 @@ static bool
 get_shiftadd_cost (tree expr, enum machine_mode mode, comp_cost cost0,
                    comp_cost cost1, tree mult, bool speed, comp_cost *cost)
 {
-  comp_cost res;
+  comp_cost res = { 0 };
   tree op1 = TREE_OPERAND (expr, 1);
   tree cst = TREE_OPERAND (mult, 1);
   tree multop = TREE_OPERAND (mult, 0);
   int m = exact_log2 (int_cst_value (cst));
   int maxm = MIN (BITS_PER_WORD, GET_MODE_BITSIZE (mode));
-  int sa_cost;
+  int sa_cost = { 0 };
 
   if (!(m >= 0 && m < maxm))
     return false;
