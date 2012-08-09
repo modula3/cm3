@@ -1118,11 +1118,6 @@ general_init (const char *argv0)
   /* Unlock the stdio streams.  */
   unlock_std_streams ();
 
-  gcc_init_libintl ();
-
-  identifier_to_locale_alloc = alloc_for_identifier_to_locale;
-  identifier_to_locale_free = ggc_free;
-
   /* Initialize the diagnostics reporting machinery, so option parsing
      can give warnings and errors.  */
   diagnostic_initialize (global_dc, N_OPTS);

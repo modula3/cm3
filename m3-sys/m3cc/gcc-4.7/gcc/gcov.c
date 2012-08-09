@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Gcov.c: prepend line execution counts and branch probabilities to a
    source file.
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998, 1999,
@@ -409,8 +411,6 @@ main (int argc, char **argv)
 
   /* Unlock the stdio streams.  */
   unlock_std_streams ();
-
-  gcc_init_libintl ();
 
   diagnostic_initialize (global_dc, 0);
 

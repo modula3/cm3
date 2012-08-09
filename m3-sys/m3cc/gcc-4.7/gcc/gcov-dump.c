@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Dump a gcov file, for debugging use.
    Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
    2012 Free Software Foundation, Inc.
@@ -89,8 +91,6 @@ main (int argc ATTRIBUTE_UNUSED, char **argv)
 
   /* Unlock the stdio streams.  */
   unlock_std_streams ();
-
-  gcc_init_libintl ();
 
   diagnostic_initialize (global_dc, 0);
 

@@ -287,7 +287,7 @@ struct pretty_print_info
 #define pp_pointer(PP, P)      pp_scalar (PP, "%p", P)
 
 #define pp_identifier(PP, ID)  pp_string (PP, (pp_translate_identifiers (PP) \
-					  ? identifier_to_locale (ID)	\
+					  ? (ID)	\
 					  : (ID)))
 
 
@@ -350,8 +350,6 @@ pp_set_verbatim_wrapping_ (pretty_printer *pp)
 }
 #define pp_set_verbatim_wrapping(PP) pp_set_verbatim_wrapping_ (pp_base (PP))
 
-extern const char *identifier_to_locale (const char *);
-extern void *(*identifier_to_locale_alloc) (size_t);
-extern void (*identifier_to_locale_free) (void *);
+#define identifier_to_locale(ident) (ident)
 
 #endif /* GCC_PRETTY_PRINT_H */
