@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Chains of recurrences.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -128,7 +130,7 @@ build_polynomial_chrec (unsigned loop_num,
 			tree left,
 			tree right)
 {
-  bool val;
+  bool val = { 0 };
 
   if (left == chrec_dont_know
       || right == chrec_dont_know)
