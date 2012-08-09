@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Building internal representation for IRA.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -371,12 +373,13 @@ form_loop_tree (void)
 static void
 rebuild_regno_allocno_maps (void)
 {
-  unsigned int l;
-  int max_regno, regno;
-  ira_allocno_t a;
-  ira_loop_tree_node_t loop_tree_node;
-  loop_p loop;
-  ira_allocno_iterator ai;
+  unsigned l = { 0 };
+  int max_regno = { 0 };
+  int regno = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_loop_tree_node_t loop_tree_node = { 0 };
+  loop_p loop = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   ira_assert (current_loops != NULL);
   max_regno = max_reg_num ();
@@ -484,7 +487,7 @@ ira_allocno_t
 ira_create_allocno (int regno, bool cap_p,
 		    ira_loop_tree_node_t loop_tree_node)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   a = (ira_allocno_t) pool_alloc (allocno_pool);
   ALLOCNO_REGNO (a) = regno;
@@ -579,8 +582,8 @@ ira_create_allocno_objects (ira_allocno_t a)
 static void
 create_allocno_objects (void)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     ira_create_allocno_objects (a);
@@ -1148,8 +1151,8 @@ finish_allocno (ira_allocno_t a)
 static void
 finish_allocnos (void)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     finish_allocno (a);
@@ -1187,8 +1190,9 @@ static ira_copy_t
 find_allocno_copy (ira_allocno_t a1, ira_allocno_t a2, rtx insn,
 		   ira_loop_tree_node_t loop_tree_node)
 {
-  ira_copy_t cp, next_cp;
-  ira_allocno_t another_a;
+  ira_copy_t cp = { 0 };
+  ira_copy_t next_cp = { 0 };
+  ira_allocno_t another_a = { 0 };
 
   for (cp = ALLOCNO_COPIES (a1); cp != NULL; cp = next_cp)
     {
@@ -1350,8 +1354,9 @@ ira_debug_copies (void)
 static void
 print_allocno_copies (FILE *f, ira_allocno_t a)
 {
-  ira_allocno_t another_a;
-  ira_copy_t cp, next_cp;
+  ira_allocno_t another_a = { 0 };
+  ira_copy_t cp = { 0 };
+  ira_copy_t next_cp = { 0 };
 
   fprintf (f, " a%d(r%d):", ALLOCNO_NUM (a), ALLOCNO_REGNO (a));
   for (cp = ALLOCNO_COPIES (a); cp != NULL; cp = next_cp)
@@ -1531,7 +1536,7 @@ create_insn_allocnos (rtx x, bool output_p)
 
       if ((regno = REGNO (x)) >= FIRST_PSEUDO_REGISTER)
 	{
-	  ira_allocno_t a;
+	  ira_allocno_t a = { 0 };
 
 	  if ((a = ira_curr_regno_allocno_map[regno]) == NULL)
 	    a = ira_create_allocno (regno, false, ira_curr_loop_tree_node);
@@ -1680,9 +1685,10 @@ propagate_modified_regnos (ira_loop_tree_node_t loop_tree_node)
 static void
 propagate_allocno_info (void)
 {
-  int i;
-  ira_allocno_t a, parent_a;
-  ira_loop_tree_node_t parent;
+  int i = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_t parent_a = { 0 };
+  ira_loop_tree_node_t parent = { 0 };
   enum reg_class aclass;
 
   if (flag_ira_region != IRA_REGION_ALL
@@ -2053,8 +2059,9 @@ static ira_allocno_t *regno_allocnos;
 static void
 ira_rebuild_regno_allocno_list (int regno)
 {
-  int i, n;
-  ira_allocno_t a;
+  int i = { 0 };
+  int n = { 0 };
+  ira_allocno_t a = { 0 };
 
   for (n = 0, a = ira_regno_allocno_map[regno];
        a != NULL;
@@ -2102,10 +2109,15 @@ propagate_some_info_from_allocno (ira_allocno_t a, ira_allocno_t from_a)
 static void
 remove_unnecessary_allocnos (void)
 {
-  int regno;
-  bool merged_p, rebuild_p;
-  ira_allocno_t a, prev_a, next_a, parent_a;
-  ira_loop_tree_node_t a_node, parent;
+  int regno = { 0 };
+  bool merged_p = { 0 };
+  bool rebuild_p = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_t prev_a = { 0 };
+  ira_allocno_t next_a = { 0 };
+  ira_allocno_t parent_a = { 0 };
+  ira_loop_tree_node_t a_node = { 0 };
+  ira_loop_tree_node_t parent = { 0 };
 
   merged_p = false;
   regno_allocnos = NULL;
@@ -2177,11 +2189,14 @@ remove_unnecessary_allocnos (void)
 static void
 remove_low_level_allocnos (void)
 {
-  int regno;
-  bool merged_p, propagate_p;
-  ira_allocno_t a, top_a;
-  ira_loop_tree_node_t a_node, parent;
-  ira_allocno_iterator ai;
+  int regno = { 0 };
+  bool merged_p = { 0 };
+  bool propagate_p = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_t top_a = { 0 };
+  ira_loop_tree_node_t a_node = { 0 };
+  ira_loop_tree_node_t parent = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   merged_p = false;
   FOR_EACH_ALLOCNO (a, ai)
@@ -2291,14 +2306,14 @@ remove_unnecessary_regions (bool all_p)
 static void
 update_bad_spill_attribute (void)
 {
-  int i;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
-  ira_allocno_object_iterator aoi;
-  ira_object_t obj;
-  live_range_t r;
-  enum reg_class aclass;
-  bitmap_head dead_points[N_REG_CLASSES];
+  int i = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  ira_allocno_object_iterator aoi = { 0 };
+  ira_object_t obj = { 0 };
+  live_range_t r = { 0 };
+  enum reg_class aclass = (enum reg_class)0;
+  bitmap_head dead_points[N_REG_CLASSES] = { 0 };
 
   for (i = 0; i < ira_allocno_classes_num; i++)
     {
@@ -2351,15 +2366,17 @@ update_bad_spill_attribute (void)
 static void
 setup_min_max_allocno_live_range_point (void)
 {
-  int i;
-  ira_allocno_t a, parent_a, cap;
-  ira_allocno_iterator ai;
+  int i = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_t parent_a = { 0 };
+  ira_allocno_t cap = { 0 };
+  ira_allocno_iterator ai = { 0 };
 #ifdef ENABLE_IRA_CHECKING
-  ira_object_iterator oi;
-  ira_object_t obj;
+  ira_object_iterator oi = { 0 };
+  ira_object_t obj = { 0 };
 #endif
-  live_range_t r;
-  ira_loop_tree_node_t parent;
+  live_range_t r = { 0 };
+  ira_loop_tree_node_t parent = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {
@@ -2382,13 +2399,13 @@ setup_min_max_allocno_live_range_point (void)
 	 a != NULL;
 	 a = ALLOCNO_NEXT_REGNO_ALLOCNO (a))
       {
-	int j;
+	int j = { 0 };
 	int n = ALLOCNO_NUM_OBJECTS (a);
 
 	for (j = 0; j < n; j++)
 	  {
 	    ira_object_t obj = ALLOCNO_OBJECT (a, j);
-	    ira_object_t parent_obj;
+	    ira_object_t parent_obj = { 0 };
 
 	    if (OBJECT_MAX (obj) < 0)
 	      continue;
@@ -2435,7 +2452,7 @@ setup_min_max_allocno_live_range_point (void)
 static int
 object_range_compare_func (const void *v1p, const void *v2p)
 {
-  int diff;
+  int diff = { 0 };
   ira_object_t obj1 = *(const ira_object_t *) v1p;
   ira_object_t obj2 = *(const ira_object_t *) v2p;
   ira_allocno_t a1 = OBJECT_ALLOCNO (obj1);
@@ -2452,15 +2469,16 @@ object_range_compare_func (const void *v1p, const void *v2p)
 static void
 sort_conflict_id_map (void)
 {
-  int i, num;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  int i = { 0 };
+  int num = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   num = 0;
   FOR_EACH_ALLOCNO (a, ai)
     {
-      ira_allocno_object_iterator oi;
-      ira_object_t obj;
+      ira_allocno_object_iterator oi = { 0 };
+      ira_object_t obj = { 0 };
 
       FOR_EACH_ALLOCNO_OBJECT (a, obj, oi)
 	ira_object_id_map[num++] = obj;
@@ -2483,12 +2501,21 @@ sort_conflict_id_map (void)
 static void
 setup_min_max_conflict_allocno_ids (void)
 {
-  int aclass;
-  int i, j, min, max, start, finish, first_not_finished, filled_area_start;
-  int *live_range_min, *last_lived;
-  int word0_min, word0_max;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  int aclass = { 0 };
+  int i = { 0 };
+  int j = { 0 };
+  int min = { 0 };
+  int max = { 0 };
+  int start = { 0 };
+  int finish = { 0 };
+  int first_not_finished = { 0 };
+  int filled_area_start = { 0 };
+  int* live_range_min = { 0 };
+  int* last_lived = { 0 };
+  int word0_min = { 0 };
+  int word0_max = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   live_range_min = (int *) ira_allocate (sizeof (int) * ira_objects_num);
   aclass = -1;
@@ -2591,7 +2618,7 @@ setup_min_max_conflict_allocno_ids (void)
   FOR_EACH_ALLOCNO (a, ai)
     {
       int n = ALLOCNO_NUM_OBJECTS (a);
-      ira_object_t obj0;
+      ira_object_t obj0 = { 0 };
 
       if (n < 2)
 	continue;
@@ -2603,14 +2630,12 @@ setup_min_max_conflict_allocno_ids (void)
     }
 }
 
-
-
 static void
 create_caps (void)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
-  ira_loop_tree_node_t loop_tree_node;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  ira_loop_tree_node_t loop_tree_node = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {
@@ -2644,7 +2669,7 @@ static ira_allocno_t *regno_top_level_allocno_map;
 ira_allocno_t
 ira_parent_allocno (ira_allocno_t a)
 {
-  ira_loop_tree_node_t parent;
+  ira_loop_tree_node_t parent = { 0 };
 
   if (ALLOCNO_CAP (a) != NULL)
     return NULL;
@@ -2675,10 +2700,10 @@ ira_parent_or_cap_allocno (ira_allocno_t a)
 static bool
 copy_info_to_removed_store_destinations (int regno)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_t parent_a = NULL;
-  ira_loop_tree_node_t parent;
-  bool merged_p;
+  ira_loop_tree_node_t parent = { 0 };
+  bool merged_p = { 0 };
 
   merged_p = false;
   for (a = ira_regno_allocno_map[regno];
@@ -2725,18 +2750,26 @@ copy_info_to_removed_store_destinations (int regno)
 void
 ira_flattening (int max_regno_before_emit, int ira_max_point_before_emit)
 {
-  int i, j;
-  bool keep_p;
-  int hard_regs_num;
-  bool new_pseudos_p, merged_p, mem_dest_p;
-  unsigned int n;
-  enum reg_class aclass;
-  ira_allocno_t a, parent_a, first, second, node_first, node_second;
-  ira_copy_t cp;
-  ira_loop_tree_node_t node;
-  live_range_t r;
-  ira_allocno_iterator ai;
-  ira_copy_iterator ci;
+  int i = { 0 };
+  int j = { 0 };
+  bool keep_p = { 0 };
+  int hard_regs_num = { 0 };
+  bool new_pseudos_p = { 0 };
+  bool merged_p = { 0 };
+  bool mem_dest_p = { 0 };
+  unsigned n = { 0 };
+  enum reg_class aclass = (enum reg_class)0;
+  ira_allocno_t a = { 0 };
+  ira_allocno_t parent_a = { 0 };
+  ira_allocno_t first = { 0 };
+  ira_allocno_t second = { 0 };
+  ira_allocno_t node_first = { 0 };
+  ira_allocno_t node_second = { 0 };
+  ira_copy_t cp = { 0 };
+  ira_loop_tree_node_t node = { 0 };
+  live_range_t r = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  ira_copy_iterator ci = { 0 };
 
   regno_top_level_allocno_map
     = (ira_allocno_t *) ira_allocate (max_reg_num ()
@@ -2839,13 +2872,13 @@ ira_flattening (int max_regno_before_emit, int ira_max_point_before_emit)
     ira_rebuild_start_finish_chains ();
   if (new_pseudos_p)
     {
-      sparseset objects_live;
+      sparseset objects_live = { 0 };
 
       /* Rebuild conflicts.  */
       FOR_EACH_ALLOCNO (a, ai)
 	{
-	  ira_allocno_object_iterator oi;
-	  ira_object_t obj;
+	  ira_allocno_object_iterator oi = { 0 };
+	  ira_object_t obj = { 0 };
 
 	  if (a != regno_top_level_allocno_map[REGNO (allocno_emit_reg (a))]
 	      || ALLOCNO_CAP_MEMBER (a) != NULL)
@@ -2988,17 +3021,15 @@ ira_flattening (int max_regno_before_emit, int ira_max_point_before_emit)
   ira_free (regno_top_level_allocno_map);
 }
 
-
-
 #ifdef ENABLE_IRA_CHECKING
 /* Check creation of all allocnos.  Allocnos on lower levels should
    have allocnos or caps on all upper levels.  */
 static void
 check_allocno_creation (void)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
-  ira_loop_tree_node_t loop_tree_node;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  ira_loop_tree_node_t loop_tree_node = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {
@@ -3024,9 +3055,11 @@ check_allocno_creation (void)
 static void
 update_conflict_hard_reg_costs (void)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
-  int i, index, min;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  int i = { 0 };
+  int index = { 0 };
+  int min = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {
@@ -3064,7 +3097,7 @@ update_conflict_hard_reg_costs (void)
 bool
 ira_build (void)
 {
-  bool loops_p;
+  bool loops_p = { 0 };
 
   df_analyze ();
   initiate_cost_vectors ();
@@ -3096,8 +3129,8 @@ ira_build (void)
   update_conflict_hard_reg_costs ();
   if (! ira_conflicts_p)
     {
-      ira_allocno_t a;
-      ira_allocno_iterator ai;
+      ira_allocno_t a = { 0 };
+      ira_allocno_iterator ai = { 0 };
 
       /* Remove all regions but root one.  */
       if (loops_p)
@@ -3116,10 +3149,12 @@ ira_build (void)
     print_copies (ira_dump_file);
   if (internal_flag_ira_verbose > 0 && ira_dump_file != NULL)
     {
-      int n, nr, nr_big;
-      ira_allocno_t a;
-      live_range_t r;
-      ira_allocno_iterator ai;
+      int n = { 0 };
+      int nr = { 0 };
+      int nr_big = { 0 };
+      ira_allocno_t a = { 0 };
+      live_range_t r = { 0 };
+      ira_allocno_iterator ai = { 0 };
 
       n = 0;
       nr = 0;
