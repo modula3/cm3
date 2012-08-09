@@ -1,7 +1,9 @@
+/* Modula-3: modified */
+
 /* Combine stack adjustments.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
    1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-   2010 Free Software Foundation, Inc.
+   2010, 2012 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -496,9 +498,8 @@ combine_stack_adjustments_for_block (basic_block bb)
 						  last_sp_adjust + this_adjust,
 						  this_adjust))
 		    {
-		      maybe_move_args_size_note (last_sp_set, insn, false);
-
 		      /* It worked!  */
+		      maybe_move_args_size_note (last_sp_set, insn, false);
 		      delete_insn (insn);
 		      last_sp_adjust += this_adjust;
 		      continue;
@@ -514,9 +515,8 @@ combine_stack_adjustments_for_block (basic_block bb)
 						  last_sp_adjust + this_adjust,
 						  -last_sp_adjust))
 		    {
-		      maybe_move_args_size_note (insn, last_sp_set, true);
-
 		      /* It worked!  */
+		      maybe_move_args_size_note (insn, last_sp_set, true);
 		      delete_insn (last_sp_set);
 		      last_sp_set = insn;
 		      last_sp_adjust += this_adjust;
@@ -529,8 +529,16 @@ combine_stack_adjustments_for_block (basic_block bb)
 	      /* Combination failed.  Restart processing from here.  If
 		 deallocation+allocation conspired to cancel, we can
 		 delete the old deallocation insn.  */
-	      if (last_sp_set && last_sp_adjust == 0)
-		delete_insn (last_sp_set);
+	      if (last_sp_set)
+		{
+		  if (last_sp_adjust == 0)
+		    {
+		      maybe_move_args_size_note (insn, last_sp_set, true);
+		      delete_insn (last_sp_set);
+		    }
+		  else
+		    last2_sp_set = last_sp_set;
+		}
 	      free_csa_reflist (reflist);
 	      reflist = NULL;
 	      last_sp_set = insn;
@@ -566,6 +574,10 @@ combine_stack_adjustments_for_block (basic_block bb)
 	      && try_apply_stack_adjustment (insn, reflist, 0,
 					     -last_sp_adjust))
 	    {
+	      if (last2_sp_set)
+		maybe_move_args_size_note (last2_sp_set, last_sp_set, false);
+	      else
+	        maybe_move_args_size_note (insn, last_sp_set, true);
 	      delete_insn (last_sp_set);
 	      free_csa_reflist (reflist);
 	      reflist = NULL;
@@ -592,16 +604,23 @@ combine_stack_adjustments_for_block (basic_block bb)
 	      || reg_mentioned_p (stack_pointer_rtx, PATTERN (insn))))
 	{
 	  if (last_sp_set && last_sp_adjust == 0)
-	    delete_insn (last_sp_set);
+	    {
+	      force_move_args_size_note (bb, last2_sp_set, last_sp_set);
+	      delete_insn (last_sp_set);
+	    }
 	  free_csa_reflist (reflist);
 	  reflist = NULL;
+	  last2_sp_set = NULL_RTX;
 	  last_sp_set = NULL_RTX;
 	  last_sp_adjust = 0;
 	}
     }
 
   if (last_sp_set && last_sp_adjust == 0)
-    delete_insn (last_sp_set);
+    {
+      force_move_args_size_note (bb, last2_sp_set, last_sp_set);
+      delete_insn (last_sp_set);
+    }
 
   if (reflist)
     free_csa_reflist (reflist);

@@ -1,7 +1,7 @@
 /* Modula-3: modified */
 
 /* Functions to determine/estimate number of iterations of a loop.
-   Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+   Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -372,6 +372,7 @@ number_of_iterations_exit (struct loop *loop, edge exit,
 {
   return false;
 }
+
 
 /* Try to determine the number of iterations of LOOP.  If we succeed,
    expression giving number of iterations is returned and *EXIT is
