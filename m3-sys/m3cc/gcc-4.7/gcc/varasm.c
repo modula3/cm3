@@ -2105,6 +2105,7 @@ contains_pointers_p (tree type)
    it all the way to final.  See PR 17982 for further discussion.  */
 static GTY(()) tree pending_assemble_externals;
 
+#ifdef ASM_OUTPUT_EXTERNAL
 /* FIXME: Trunk is at GCC 4.8 now and the above problem still hasn't been
    addressed properly.  This caused PR 52640 due to O(external_decls**2)
    lookups in the pending_assemble_externals TREE_LIST in assemble_external.
@@ -2118,7 +2119,6 @@ static struct pointer_set_t *pending_assemble_externals_set;
    is processed and the pointer set destroyed.  */
 static bool pending_assemble_externals_processed;
 
-#ifdef ASM_OUTPUT_EXTERNAL
 /* True if DECL is a function decl for which no out-of-line copy exists.
    It is assumed that DECL's assembler name has been set.  */
 
