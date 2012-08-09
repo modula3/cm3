@@ -2514,13 +2514,13 @@ cgraph_make_decl_local (tree decl)
 	  old_name  = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
 	  if (TREE_CODE (decl) == FUNCTION_DECL)
 	    {
-	      struct cgraph_node *node = cgraph_get_node (decl);
+	      cgraph_get_node (decl);
 	      change_decl_assembler_name (decl,
 					  clone_function_name (decl, "local"));
 	    }
 	  else if (TREE_CODE (decl) == VAR_DECL)
 	    {
-	      struct varpool_node *vnode = varpool_get_node (decl);
+	      varpool_get_node (decl);
 	      /* change_decl_assembler_name will warn here on vtables because
 		 C++ frontend still sets TREE_SYMBOL_REFERENCED on them.  */
 	      SET_DECL_ASSEMBLER_NAME (decl,
