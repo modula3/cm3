@@ -1311,18 +1311,18 @@ support is available or not:
 #ifdef __FLASH
 const __flash int var = 1;
 
-int read_i (void)
+int read_var (void)
 @{
-    return i;
+    return var;
 @}
 #else
-#include <avr/pgmspace.h> /* From avr-libc */
+#include <avr/pgmspace.h> /* From AVR-LibC */
 
 const int var PROGMEM = 1;
 
-int read_i (void)
+int read_var (void)
 @{
-    return (int) pgm_read_word (&i);
+    return (int) pgm_read_word (&var);
 @}
 #endif /* __FLASH */
 @end example
@@ -1332,7 +1332,8 @@ locates data in flash but
 accesses to these data will read from generic address space, i.e.@:
 from RAM,
 so that you need special accessors like @code{pgm_read_byte}
-from @w{@uref{http://nongnu.org/avr-libc/user-manual,avr-libc}}.
+from @w{@uref{http://nongnu.org/avr-libc/user-manual,AVR-LibC}}
+together with attribute @code{progmem}.
 
 @b{Limitations and caveats}
 
@@ -1345,7 +1346,7 @@ supports reading across the 64@tie{}KiB flash segment boundaries is
 @code{__memx}.
 
 @item
-If you use one if the @code{__flash@var{N}} address spaces
+If you use one of the @code{__flash@var{N}} address spaces
 you will have to arrange your linker skript to locate the
 @code{.progmem@var{N}.data} sections according to your needs.
 
@@ -1757,7 +1758,8 @@ ISO C99 supports compound literals.  A compound literal looks like
 a cast containing an initializer.  Its value is an object of the
 type specified in the cast, containing the elements specified in
 the initializer; it is an lvalue.  As an extension, GCC supports
-compound literals in C90 mode and in C++.
+compound literals in C90 mode and in C++, though the semantics are
+somewhat different in C++.
 
 Usually, the specified type is a structure.  Assume that
 @code{struct foo} and @code{structure} are declared as shown:
@@ -1783,8 +1785,9 @@ This is equivalent to writing the following:
 @}
 @end smallexample
 
-You can also construct an array.  If all the elements of the compound literal
-are (made up of) simple constant expressions, suitable for use in
+You can also construct an array, though this is dangerous in C++, as
+explained below.  If all the elements of the compound literal are
+(made up of) simple constant expressions, suitable for use in
 initializers of objects of static storage duration, then the compound
 literal can be coerced to a pointer to its first element and used in
 such an initializer, as shown here:
@@ -1819,6 +1822,25 @@ static struct foo x = @{1, 'a', 'b'@};
 static int y[] = @{1, 2, 3@};
 static int z[] = @{1, 0, 0@};
 @end smallexample
+
+In C, a compound literal designates an unnamed object with static or
+automatic storage duration.  In C++, a compound literal designates a
+temporary object, which only lives until the end of its
+full-expression.  As a result, well-defined C code that takes the
+address of a subobject of a compound literal can be undefined in C++.
+For instance, if the array compound literal example above appeared
+inside a function, any subsequent use of @samp{foo} in C++ has
+undefined behavior because the lifetime of the array ends after the
+declaration of @samp{foo}.  As a result, the C++ compiler now rejects
+the conversion of a temporary array to a pointer.
+
+As an optimization, the C++ compiler sometimes gives array compound
+literals longer lifetimes: when the array either appears outside a
+function or has const-qualified type.  If @samp{foo} and its
+initializer had elements of @samp{char *const} type rather than
+@samp{char *}, or if @samp{foo} were a global variable, the array
+would have static storage duration.  But it is probably safest just to
+avoid the use of array compound literals in code compiled as C++.
 
 @node Designated Inits
 @section Designated Initializers
@@ -2713,6 +2735,51 @@ then be sure to write this declaration in both files.
 
 This attribute is ignored for R8C target.
 
+@item ifunc ("@var{resolver}")
+@cindex @code{ifunc} attribute
+The @code{ifunc} attribute is used to mark a function as an indirect
+function using the STT_GNU_IFUNC symbol type extension to the ELF
+standard.  This allows the resolution of the symbol value to be
+determined dynamically at load time, and an optimized version of the
+routine can be selected for the particular processor or other system
+characteristics determined then.  To use this attribute, first define
+the implementation functions available, and a resolver function that
+returns a pointer to the selected implementation function.  The
+implementation functions' declarations must match the API of the
+function being implemented, the resolver's declaration is be a
+function returning pointer to void function returning void:
+
+@smallexample
+void *my_memcpy (void *dst, const void *src, size_t len)
+@{
+  @dots{}
+@}
+
+static void (*resolve_memcpy (void)) (void)
+@{
+  return my_memcpy; // we'll just always select this routine
+@}
+@end smallexample
+
+The exported header file declaring the function the user calls would
+contain:
+
+@smallexample
+extern void *memcpy (void *, const void *, size_t);
+@end smallexample
+
+allowing the user to call this as a regular function, unaware of the
+implementation.  Finally, the indirect function needs to be defined in
+the same translation unit as the resolver function:
+
+@smallexample
+void *memcpy (void *, const void *, size_t)
+     __attribute__ ((ifunc ("resolve_memcpy")));
+@end smallexample
+
+Indirect functions cannot be weak, and require a recent binutils (at
+least version 2.20.1), and GNU C library (at least version 2.11.1).
+
 @item interrupt
 @cindex interrupt handler functions
 Use this attribute on the ARM, AVR, CR16, Epiphany, M32C, M32R/D, m68k, MeP, MIPS,
@@ -2725,7 +2792,13 @@ code to initialize the interrupt vector table.
 Note, interrupt handlers for the Blackfin, H8/300, H8/300H, H8S, MicroBlaze,
 and SH processors can be specified via the @code{interrupt_handler} attribute.
 
-Note, on the AVR, interrupts will be enabled inside the function.
+Note, on the AVR, the hardware globally disables interrupts when an
+interrupt is executed.  The first instruction of an interrupt handler
+declared with this attribute will be a @code{SEI} instruction to
+re-enable interrupts.  See also the @code{signal} function attribute
+that does not insert a @code{SEI} instuction.  If both @code{signal} and
+@code{interrupt} are specified for the same function, @code{signal}
+will be silently ignored.
 
 Note, for the ARM, you can specify the kind of interrupt to be handled by
 adding an optional parameter to the interrupt attribute like this:
@@ -2820,51 +2893,6 @@ void __attribute__ ((interrupt, use_shadow_register_set,
 On RL78, use @code{brk_interrupt} instead of @code{interrupt} for
 handlers intended to be used with the @code{BRK} opcode (i.e.  those
 that must end with @code{RETB} instead of @code{RETI}).
-
-@item ifunc ("@var{resolver}")
-@cindex @code{ifunc} attribute
-The @code{ifunc} attribute is used to mark a function as an indirect
-function using the STT_GNU_IFUNC symbol type extension to the ELF
-standard.  This allows the resolution of the symbol value to be
-determined dynamically at load time, and an optimized version of the
-routine can be selected for the particular processor or other system
-characteristics determined then.  To use this attribute, first define
-the implementation functions available, and a resolver function that
-returns a pointer to the selected implementation function.  The
-implementation functions' declarations must match the API of the
-function being implemented, the resolver's declaration is be a
-function returning pointer to void function returning void:
-
-@smallexample
-void *my_memcpy (void *dst, const void *src, size_t len)
-@{
-  @dots{}
-@}
-
-static void (*resolve_memcpy (void)) (void)
-@{
-  return my_memcpy; // we'll just always select this routine
-@}
-@end smallexample
-
-The exported header file declaring the function the user calls would
-contain:
-
-@smallexample
-extern void *memcpy (void *, const void *, size_t);
-@end smallexample
-
-allowing the user to call this as a regular function, unaware of the
-implementation.  Finally, the indirect function needs to be defined in
-the same translation unit as the resolver function:
-
-@smallexample
-void *memcpy (void *, const void *, size_t)
-     __attribute__ ((ifunc ("resolve_memcpy")));
-@end smallexample
-
-Indirect functions cannot be weak, and require a recent binutils (at
-least version 2.20.1), and GNU C library (at least version 2.11.1).
 
 @item interrupt_handler
 @cindex interrupt handler functions on the Blackfin, m68k, H8/300 and SH processors
@@ -3470,11 +3498,23 @@ See long_call/short_call.
 See longcall/shortcall.
 
 @item signal
-@cindex signal handler functions on the AVR processors
+@cindex interrupt handler functions on the AVR processors
 Use this attribute on the AVR to indicate that the specified
-function is a signal handler.  The compiler will generate function
-entry and exit sequences suitable for use in a signal handler when this
-attribute is present.  Interrupts will be disabled inside the function.
+function is an interrupt handler.  The compiler will generate function
+entry and exit sequences suitable for use in an interrupt handler when this
+attribute is present.
+
+See also the @code{interrupt} function attribute. 
+
+The AVR hardware globally disables interrupts when an interrupt is executed.
+Interrupt handler functions defined with the @code{signal} attribute
+do not re-enable interrupts.  It is save to enable interrupts in a
+@code{signal} handler.  This ``save'' only applies to the code
+generated by the compiler and not to the IRQ-layout of the
+application which is responsibility of the application.
+
+If both @code{signal} and @code{interrupt} are specified for the same
+function, @code{signal} will be silently ignored.
 
 @item sp_switch
 Use this attribute on the SH to indicate an @code{interrupt_handler}
@@ -4782,7 +4822,7 @@ of the data but not how this data is accessed.
 In order to read data located with the @code{progmem} attribute
 (inline) assembler must be used.
 @example
-/* Use custom macros from @w{@uref{http://nongnu.org/avr-libc/user-manual,avr-libc}} */
+/* Use custom macros from @w{@uref{http://nongnu.org/avr-libc/user-manual,AVR-LibC}} */
 #include <avr/pgmspace.h> 
 
 /* Locate var in flash memory */
