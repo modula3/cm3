@@ -44,11 +44,6 @@ convert_to_pointer (tree type, tree expr)
   if (TREE_TYPE (expr) == type)
     return expr;
 
-  /* Propagate overflow to the NULL pointer.  */
-  if (integer_zerop (expr))
-    return force_fit_type_double (type, double_int_zero, 0,
-				  TREE_OVERFLOW (expr));
-
   switch (TREE_CODE (TREE_TYPE (expr)))
     {
     case POINTER_TYPE:
@@ -774,6 +769,7 @@ convert_to_integer (tree type, tree expr)
 		   (Otherwise would recurse infinitely in convert.  */
 		if (TYPE_PRECISION (typex) != inprec)
 		  {
+		    tree otypex = typex;
 		    /* Don't do unsigned arithmetic where signed was wanted,
 		       or vice versa.
 		       Exception: if both of the original operands were
@@ -811,10 +807,12 @@ convert_to_integer (tree type, tree expr)
 		      typex = unsigned_type_for (typex);
 		    else
 		      typex = signed_type_for (typex);
-		    return convert (type,
-				    fold_build2 (ex_form, typex,
-						 convert (typex, arg0),
-						 convert (typex, arg1)));
+
+		    if (TYPE_PRECISION (otypex) == TYPE_PRECISION (typex))
+		      return convert (type,
+				      fold_build2 (ex_form, typex,
+						   convert (typex, arg0),
+						   convert (typex, arg1)));
 		  }
 	      }
 	  }

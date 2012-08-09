@@ -1141,11 +1141,7 @@ vector_alignment_reachable_p (struct data_reference *dr)
   if (!known_alignment_for_access_p (dr))
     {
       tree type = (TREE_TYPE (DR_REF (dr)));
-      tree ba = DR_BASE_OBJECT (dr);
-      bool is_packed = false;
-
-      if (ba)
-	is_packed = contains_packed_reference (ba);
+      bool is_packed = contains_packed_reference (DR_REF (dr));
 
       if (compare_tree_int (TYPE_SIZE (type), TYPE_ALIGN (type)) > 0)
 	is_packed = true;
@@ -2872,10 +2868,6 @@ vect_analyze_data_refs (loop_vec_info loop_vinfo,
           return false;
         }
 
-      base = unshare_expr (DR_BASE_ADDRESS (dr));
-      offset = unshare_expr (DR_OFFSET (dr));
-      init = unshare_expr (DR_INIT (dr));
-
       if (stmt_can_throw_internal (stmt))
         {
           if (vect_print_dump_info (REPORT_UNVECTORIZED_LOCATIONS))
@@ -2896,6 +2888,32 @@ vect_analyze_data_refs (loop_vec_info loop_vinfo,
 	    free_data_ref (dr);
           return false;
         }
+
+      if (TREE_CODE (DR_REF (dr)) == COMPONENT_REF
+	  && DECL_BIT_FIELD (TREE_OPERAND (DR_REF (dr), 1)))
+	{
+          if (vect_print_dump_info (REPORT_UNVECTORIZED_LOCATIONS))
+            {
+              fprintf (vect_dump, "not vectorized: statement is bitfield "
+                       "access ");
+              print_gimple_stmt (vect_dump, stmt, 0, TDF_SLIM);
+            }
+
+          if (bb_vinfo)
+            {
+              STMT_VINFO_VECTORIZABLE (stmt_info) = false;
+              stop_bb_analysis = true;
+              continue;
+            }
+
+	  if (gather)
+	    free_data_ref (dr);
+          return false;
+	}
+
+      base = unshare_expr (DR_BASE_ADDRESS (dr));
+      offset = unshare_expr (DR_OFFSET (dr));
+      init = unshare_expr (DR_INIT (dr));
 
       if (is_gimple_call (stmt))
 	{
@@ -4672,12 +4690,7 @@ vect_supportable_dr_alignment (struct data_reference *dr,
 	    return dr_explicit_realign_optimized;
 	}
       if (!known_alignment_for_access_p (dr))
-	{
-	  tree ba = DR_BASE_OBJECT (dr);
-
-	  if (ba)
-	    is_packed = contains_packed_reference (ba);
-	}
+	is_packed = contains_packed_reference (DR_REF (dr));
 
       if (targetm.vectorize.
 	  support_vector_misalignment (mode, type,
@@ -4691,12 +4704,7 @@ vect_supportable_dr_alignment (struct data_reference *dr,
       tree type = (TREE_TYPE (DR_REF (dr)));
 
       if (!known_alignment_for_access_p (dr))
-	{
-	  tree ba = DR_BASE_OBJECT (dr);
-
-	  if (ba)
-	    is_packed = contains_packed_reference (ba);
-	}
+	is_packed = contains_packed_reference (DR_REF (dr));
 
      if (targetm.vectorize.
          support_vector_misalignment (mode, type,
