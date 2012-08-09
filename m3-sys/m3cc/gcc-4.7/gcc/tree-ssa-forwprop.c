@@ -2389,16 +2389,18 @@ ssa_forward_propagate_and_combine (void)
 
   FOR_EACH_BB (bb)
     {
-      gimple_stmt_iterator gsi, prev;
-      bool prev_initialized;
+      gimple_stmt_iterator gsi = { 0 };
+      gimple_stmt_iterator prev = { 0 };
+      bool prev_initialized = { 0 };
 
       /* Apply forward propagation to all stmts in the basic-block.
 	 Note we update GSI within the loop as necessary.  */
       for (gsi = gsi_start_bb (bb); !gsi_end_p (gsi); )
 	{
 	  gimple stmt = gsi_stmt (gsi);
-	  tree lhs, rhs;
-	  enum tree_code code;
+	  tree lhs = { 0 };
+	  tree rhs = { 0 };
+	  enum tree_code code = (enum tree_code)0;
 
 	  if (!is_gimple_assign (stmt))
 	    {

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Scalar evolution detector.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -304,7 +306,7 @@ static GTY ((param_is (struct scev_info_str))) htab_t scalar_evolution_info;
 static inline struct scev_info_str *
 new_scev_info_str (basic_block instantiated_below, tree var)
 {
-  struct scev_info_str *res;
+  struct scev_info_str *res = { 0 };
 
   res = ggc_alloc_scev_info_str ();
   res->var = var;
@@ -348,9 +350,9 @@ del_scev_info (void *e)
 static tree *
 find_var_scev_info (basic_block instantiated_below, tree var)
 {
-  struct scev_info_str *res;
-  struct scev_info_str tmp;
-  PTR *slot;
+  struct scev_info_str *res = { 0 };
+  struct scev_info_str tmp = { 0 };
+  PTR *slot = { 0 };
 
   tmp.var = var;
   tmp.instantiated_below = instantiated_below;
@@ -369,7 +371,8 @@ find_var_scev_info (basic_block instantiated_below, tree var)
 bool
 chrec_contains_symbols_defined_in_loop (const_tree chrec, unsigned loop_nb)
 {
-  int i, n;
+  int i = { 0 };
+  int n = { 0 };
 
   if (chrec == NULL_TREE)
     return false;
@@ -504,7 +507,7 @@ compute_overall_effect_of_inner_loop (struct loop *loop, tree evolution_fn)
 static void
 set_scalar_evolution (basic_block instantiated_below, tree scalar, tree chrec)
 {
-  tree *scalar_info;
+  tree *scalar_info = { 0 };
 
   if (TREE_CODE (scalar) != SSA_NAME)
     return;
@@ -537,7 +540,7 @@ set_scalar_evolution (basic_block instantiated_below, tree scalar, tree chrec)
 static tree
 get_scalar_evolution (basic_block instantiated_below, tree scalar)
 {
-  tree res;
+  tree res = { 0 };
 
   if (dump_file)
     {
@@ -593,7 +596,9 @@ static tree
 add_to_evolution_1 (unsigned loop_nb, tree chrec_before, tree to_add,
 		    gimple at_stmt)
 {
-  tree type, left, right;
+  tree type = { 0 };
+  tree left = { 0 };
+  tree right = { 0 };
   struct loop *loop = get_loop (loop_nb), *chloop;
 
   switch (TREE_CODE (chrec_before))
@@ -921,7 +926,7 @@ follow_ssa_edge_binary (struct loop *loop, gimple at_stmt,
 			gimple halting_phi, tree *evolution_of_loop, int limit)
 {
   t_bool res = t_false;
-  tree evol;
+  tree evol = { 0 };
 
   switch (code)
     {
@@ -1056,8 +1061,10 @@ follow_ssa_edge_expr (struct loop *loop, gimple at_stmt, tree expr,
 		      gimple halting_phi, tree *evolution_of_loop, int limit)
 {
   enum tree_code code = TREE_CODE (expr);
-  tree type = TREE_TYPE (expr), rhs0, rhs1;
-  t_bool res;
+  tree type = TREE_TYPE (expr);
+  tree rhs0 = { 0 };
+  tree rhs1 = { 0 };
+  t_bool res = { 0 };
 
   /* The EXPR is one of the following cases:
      - an SSA_NAME,
@@ -1146,8 +1153,10 @@ follow_ssa_edge_in_rhs (struct loop *loop, gimple stmt,
 			gimple halting_phi, tree *evolution_of_loop, int limit)
 {
   enum tree_code code = gimple_assign_rhs_code (stmt);
-  tree type = gimple_expr_type (stmt), rhs1, rhs2;
-  t_bool res;
+  tree type = gimple_expr_type (stmt);
+  tree rhs1 = { 0 };
+  tree rhs2 = { 0 };
+  t_bool res = { 0 };
 
   switch (code)
     {
@@ -1242,9 +1251,10 @@ follow_ssa_edge_in_condition_phi (struct loop *loop,
 				  gimple halting_phi,
 				  tree *evolution_of_loop, int limit)
 {
-  int i, n;
+  int i = { 0 };
+  int n = { 0 };
   tree init = *evolution_of_loop;
-  tree evolution_of_branch;
+  tree evolution_of_branch = { 0 };
   t_bool res = follow_ssa_edge_in_condition_phi_branch (0, loop, condition_phi,
 							halting_phi,
 							&evolution_of_branch,
@@ -1334,7 +1344,7 @@ static t_bool
 follow_ssa_edge (struct loop *loop, gimple def, gimple halting_phi,
 		 tree *evolution_of_loop, int limit)
 {
-  struct loop *def_loop;
+  struct loop *def_loop = { 0 };
 
   if (gimple_nop_p (def))
     return t_false;
@@ -1397,10 +1407,11 @@ static tree
 analyze_evolution_in_loop (gimple loop_phi_node,
 			   tree init_cond)
 {
-  int i, n = gimple_phi_num_args (loop_phi_node);
+  int i = { 0 };
+  int n = gimple_phi_num_args (loop_phi_node);
   tree evolution_function = chrec_not_analyzed_yet;
   struct loop *loop = loop_containing_stmt (loop_phi_node);
-  basic_block bb;
+  basic_block bb = { 0 };
 
   if (dump_file && (dump_flags & TDF_SCEV))
     {
@@ -1478,7 +1489,8 @@ analyze_evolution_in_loop (gimple loop_phi_node,
 static tree
 analyze_initial_condition (gimple loop_phi_node)
 {
-  int i, n;
+  int i = { 0 };
+  int n = { 0 };
   tree init_cond = chrec_not_analyzed_yet;
   struct loop *loop = loop_containing_stmt (loop_phi_node);
 
@@ -1549,13 +1561,13 @@ analyze_initial_condition (gimple loop_phi_node)
 static tree
 interpret_loop_phi (struct loop *loop, gimple loop_phi_node)
 {
-  tree res;
+  tree res = { 0 };
   struct loop *phi_loop = loop_containing_stmt (loop_phi_node);
-  tree init_cond;
+  tree init_cond = { 0 };
 
   if (phi_loop != loop)
     {
-      struct loop *subloop;
+      struct loop *subloop = { 0 };
       tree evolution_fn = analyze_scalar_evolution
 	(phi_loop, PHI_RESULT (loop_phi_node));
 
@@ -1598,12 +1610,13 @@ interpret_loop_phi (struct loop *loop, gimple loop_phi_node)
 static tree
 interpret_condition_phi (struct loop *loop, gimple condition_phi)
 {
-  int i, n = gimple_phi_num_args (condition_phi);
+  int i = { 0 };
+  int n = gimple_phi_num_args (condition_phi);
   tree res = chrec_not_analyzed_yet;
 
   for (i = 0; i < n; i++)
     {
-      tree branch_chrec;
+      tree branch_chrec = { 0 };
 
       if (backedge_phi_arg_p (condition_phi, i))
 	{
@@ -1631,7 +1644,9 @@ static tree
 interpret_rhs_expr (struct loop *loop, gimple at_stmt,
 		    tree type, tree rhs1, enum tree_code code, tree rhs2)
 {
-  tree res, chrec1, chrec2;
+  tree res = { 0 };
+  tree chrec1 = { 0 };
+  tree chrec2 = { 0 };
 
   if (get_gimple_rhs_class (code) == GIMPLE_SINGLE_RHS)
     {
@@ -1731,7 +1746,7 @@ interpret_rhs_expr (struct loop *loop, gimple at_stmt,
 static tree
 interpret_expr (struct loop *loop, gimple at_stmt, tree expr)
 {
-  enum tree_code code;
+  enum tree_code code = (enum tree_code)0;
   tree type = TREE_TYPE (expr), op0, op1;
 
   if (automatically_generated_chrec_p (expr))
@@ -1776,8 +1791,8 @@ compute_scalar_evolution_in_loop (struct loop *wrto_loop,
 				  struct loop *def_loop,
 				  tree ev)
 {
-  bool val;
-  tree res;
+  bool val = { 0 };
+  tree res = { 0 };
 
   if (def_loop == wrto_loop)
     return ev;
@@ -1797,9 +1812,9 @@ static tree
 analyze_scalar_evolution_1 (struct loop *loop, tree var, tree res)
 {
   tree type = TREE_TYPE (var);
-  gimple def;
-  basic_block bb;
-  struct loop *def_loop;
+  gimple def = { 0 };
+  basic_block bb = { 0 };
+  struct loop *def_loop = { 0 };
 
   if (loop == NULL || TREE_CODE (type) == VECTOR_TYPE)
     return chrec_dont_know;
@@ -1882,7 +1897,7 @@ analyze_scalar_evolution_1 (struct loop *loop, tree var, tree res)
 tree
 analyze_scalar_evolution (struct loop *loop, tree var)
 {
-  tree res;
+  tree res = { 0 };
 
   if (dump_file && (dump_flags & TDF_SCEV))
     {
@@ -1957,7 +1972,8 @@ analyze_scalar_evolution_in_loop (struct loop *wrto_loop, struct loop *use_loop,
 				  tree version, bool *folded_casts)
 {
   bool val = false;
-  tree ev = version, tmp;
+  tree ev = version;
+  tree tmp = { 0 };
 
   /* We cannot just do
 
@@ -2009,7 +2025,8 @@ static tree
 get_instantiated_value (htab_t cache, basic_block instantiated_below,
 			tree version)
 {
-  struct scev_info_str *info, pattern;
+  struct scev_info_str* info = { 0 };
+  struct scev_info_str pattern = { 0 };
 
   pattern.var = version;
   pattern.instantiated_below = instantiated_below;
@@ -2028,8 +2045,9 @@ static void
 set_instantiated_value (htab_t cache, basic_block instantiated_below,
 			tree version, tree val)
 {
-  struct scev_info_str *info, pattern;
-  PTR *slot;
+  struct scev_info_str* info = { 0 };
+  struct scev_info_str pattern = { 0 };
+  PTR *slot = { 0 };
 
   pattern.var = version;
   pattern.instantiated_below = instantiated_below;
@@ -2047,10 +2065,10 @@ set_instantiated_value (htab_t cache, basic_block instantiated_below,
 static tree
 loop_closed_phi_def (tree var)
 {
-  struct loop *loop;
-  edge exit;
-  gimple phi;
-  gimple_stmt_iterator psi;
+  struct loop *loop = { 0 };
+  edge exit = { 0 };
+  gimple phi = { 0 };
+  gimple_stmt_iterator psi = { 0 };
 
   if (var == NULL_TREE
       || TREE_CODE (var) != SSA_NAME)
@@ -2093,8 +2111,8 @@ instantiate_scev_name (basic_block instantiate_below,
 		       struct loop *evolution_loop, tree chrec,
 		       bool fold_conversions, htab_t cache, int size_expr)
 {
-  tree res;
-  struct loop *def_loop;
+  tree res = { 0 };
+  struct loop *def_loop = { 0 };
   basic_block def_bb = gimple_bb (SSA_NAME_DEF_STMT (chrec));
 
   /* A parameter (or loop invariant and we do not want to include
@@ -2185,7 +2203,7 @@ instantiate_scev_poly (basic_block instantiate_below,
 		       struct loop *evolution_loop, tree chrec,
 		       bool fold_conversions, htab_t cache, int size_expr)
 {
-  tree op1;
+  tree op1 = { 0 };
   tree op0 = instantiate_scev_r (instantiate_below, evolution_loop,
 				 CHREC_LEFT (chrec), fold_conversions, cache,
 				 size_expr);
@@ -2239,7 +2257,7 @@ instantiate_scev_binary (basic_block instantiate_below,
 			 tree type, tree c0, tree c1,
 			 bool fold_conversions, htab_t cache, int size_expr)
 {
-  tree op1;
+  tree op1 = { 0 };
   tree op0 = instantiate_scev_r (instantiate_below, evolution_loop,
 				 c0, fold_conversions, cache,
 				 size_expr);
@@ -2297,7 +2315,7 @@ instantiate_array_ref (basic_block instantiate_below,
 		       struct loop *evolution_loop, tree chrec,
 		       bool fold_conversions, htab_t cache, int size_expr)
 {
-  tree res;
+  tree res = { 0 };
   tree index = TREE_OPERAND (chrec, 1);
   tree op1 = instantiate_scev_r (instantiate_below, evolution_loop, index,
 				 fold_conversions, cache, size_expr);
@@ -2428,7 +2446,8 @@ instantiate_scev_3 (basic_block instantiate_below,
 		    struct loop *evolution_loop, tree chrec,
 		    bool fold_conversions, htab_t cache, int size_expr)
 {
-  tree op1, op2;
+  tree op1 = { 0 };
+  tree op2 = { 0 };
   tree op0 = instantiate_scev_r (instantiate_below, evolution_loop,
 				 TREE_OPERAND (chrec, 0),
 				 fold_conversions, cache, size_expr);
@@ -2475,7 +2494,7 @@ instantiate_scev_2 (basic_block instantiate_below,
 		    struct loop *evolution_loop, tree chrec,
 		    bool fold_conversions, htab_t cache, int size_expr)
 {
-  tree op1;
+  tree op1 = { 0 };
   tree op0 = instantiate_scev_r (instantiate_below, evolution_loop,
 				 TREE_OPERAND (chrec, 0),
 				 fold_conversions, cache, size_expr);
@@ -2640,7 +2659,7 @@ tree
 instantiate_scev (basic_block instantiate_below, struct loop *evolution_loop,
 		  tree chrec)
 {
-  tree res;
+  tree res = { 0 };
   htab_t cache = htab_create (10, hash_scev_info, eq_scev_info, del_scev_info);
 
   if (dump_file && (dump_flags & TDF_SCEV))
@@ -2709,10 +2728,10 @@ resolve_mixers (struct loop *loop, tree chrec)
 tree
 number_of_latch_executions (struct loop *loop)
 {
-  edge exit;
-  struct tree_niter_desc niter_desc;
-  tree may_be_zero;
-  tree res;
+  edge exit = { 0 };
+  struct tree_niter_desc niter_desc = { 0 };
+  tree may_be_zero = { 0 };
+  tree res = { 0 };
 
   /* Determine whether the number of iterations in loop has already
      been computed.  */
@@ -2792,10 +2811,10 @@ number_of_exit_cond_executions (struct loop *loop)
 static void
 number_of_iterations_for_all_loops (VEC(gimple,heap) **exit_conditions)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   unsigned nb_chrec_dont_know_loops = 0;
   unsigned nb_static_loops = 0;
-  gimple cond;
+  gimple cond = { 0 };
 
   FOR_EACH_VEC_ELT (gimple, *exit_conditions, i, cond)
     {
@@ -2944,10 +2963,11 @@ gather_chrec_stats (tree chrec, struct chrec_stats *stats)
 static void
 analyze_scalar_evolution_for_all_loop_phi_nodes (VEC(gimple,heap) **exit_conditions)
 {
-  unsigned int i;
-  struct chrec_stats stats;
-  gimple cond, phi;
-  gimple_stmt_iterator psi;
+  unsigned int i = { 0 };
+  struct chrec_stats stats = { 0 };
+  gimple cond = { 0 };
+  gimple phi = { 0 };
+  gimple_stmt_iterator psi = { 0 };
 
   reset_chrecs_counters (&stats);
 
@@ -2997,7 +3017,7 @@ gather_stats_on_scev_database_1 (void **slot, void *stats)
 void
 gather_stats_on_scev_database (void)
 {
-  struct chrec_stats stats;
+  struct chrec_stats stats = { 0 };
 
   if (!dump_file)
     return;
@@ -3033,8 +3053,8 @@ initialize_scalar_evolutions_analyzer (void)
 void
 scev_initialize (void)
 {
-  loop_iterator li;
-  struct loop *loop;
+  loop_iterator li = { 0 };
+  struct loop *loop = { 0 };
 
 
   scalar_evolution_info = htab_create_ggc (100, hash_scev_info, eq_scev_info,
@@ -3066,8 +3086,8 @@ scev_reset_htab (void)
 void
 scev_reset (void)
 {
-  loop_iterator li;
-  struct loop *loop;
+  loop_iterator li = { 0 };
+  struct loop *loop = { 0 };
 
   scev_reset_htab ();
 
@@ -3105,8 +3125,9 @@ bool
 simple_iv (struct loop *wrto_loop, struct loop *use_loop, tree op,
 	   affine_iv *iv, bool allow_nonconstant_step)
 {
-  tree type, ev;
-  bool folded_casts;
+  tree type = { 0 };
+  tree ev = { 0 };
+  bool folded_casts = { 0 };
 
   iv->base = NULL_TREE;
   iv->step = NULL_TREE;
@@ -3154,7 +3175,7 @@ simple_iv (struct loop *wrto_loop, struct loop *use_loop, tree op,
 void
 scev_analysis (void)
 {
-  VEC(gimple,heap) *exit_conditions;
+  VEC(gimple,heap) *exit_conditions = { 0 };
 
   exit_conditions = VEC_alloc (gimple, heap, 37);
   select_loops_exit_conditions (&exit_conditions);
@@ -3183,7 +3204,7 @@ scev_finalize (void)
 bool
 expression_expensive_p (tree expr)
 {
-  enum tree_code code;
+  enum tree_code code = (enum tree_code)0;
 
   if (is_gimple_val (expr))
     return false;
@@ -3231,14 +3252,18 @@ expression_expensive_p (tree expr)
 unsigned int
 scev_const_prop (void)
 {
-  basic_block bb;
-  tree name, type, ev;
-  gimple phi, ass;
-  struct loop *loop, *ex_loop;
+  basic_block bb = { 0 };
+  tree name = { 0 };
+  tree type = { 0 };
+  tree ev = { 0 };
+  gimple phi = { 0 };
+  gimple ass = { 0 };
+  struct loop* loop = { 0 };
+  struct loop* ex_loop = { 0 };
   bitmap ssa_names_to_remove = NULL;
-  unsigned i;
-  loop_iterator li;
-  gimple_stmt_iterator psi;
+  unsigned i = { 0 };
+  loop_iterator li = { 0 };
+  gimple_stmt_iterator psi = { 0 };
 
   if (number_of_loops () <= 1)
     return 0;
@@ -3281,11 +3306,11 @@ scev_const_prop (void)
      invalidates scev cache.  */
   if (ssa_names_to_remove)
     {
-      bitmap_iterator bi;
+      bitmap_iterator bi = { 0 };
 
       EXECUTE_IF_SET_IN_BITMAP (ssa_names_to_remove, 0, i, bi)
 	{
-	  gimple_stmt_iterator psi;
+	  gimple_stmt_iterator psi = { 0 };
 	  name = ssa_name (i);
 	  phi = SSA_NAME_DEF_STMT (name);
 
@@ -3301,9 +3326,11 @@ scev_const_prop (void)
   /* Now the regular final value replacement.  */
   FOR_EACH_LOOP (li, loop, LI_FROM_INNERMOST)
     {
-      edge exit;
-      tree def, rslt, niter;
-      gimple_stmt_iterator bsi;
+      edge exit = { 0 };
+      tree def = { 0 };
+      tree rslt = { 0 };
+      tree niter = { 0 };
+      gimple_stmt_iterator bsi = { 0 };
 
       /* If we do not know exact number of iterations of the loop, we cannot
 	 replace the final value.  */
