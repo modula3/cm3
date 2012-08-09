@@ -1785,6 +1785,18 @@ array_to_pointer_conversion (location_t loc, tree exp)
   if (TREE_CODE (exp) == INDIRECT_REF)
     return convert (ptrtype, TREE_OPERAND (exp, 0));
 
+  /* In C++ array compound literals are temporary objects unless they are
+     const or appear in namespace scope, so they are destroyed too soon
+     to use them for much of anything  (c++/53220).  */
+  if (warn_cxx_compat && TREE_CODE (exp) == COMPOUND_LITERAL_EXPR)
+    {
+      tree decl = TREE_OPERAND (TREE_OPERAND (exp, 0), 0);
+      if (!TREE_READONLY (decl) && !TREE_STATIC (decl))
+	warning_at (DECL_SOURCE_LOCATION (decl), OPT_Wc___compat,
+		    "converting an array compound literal to a pointer "
+		    "is ill-formed in C++");
+    }
+
   adr = build_unary_op (loc, ADDR_EXPR, exp, 1);
   return convert (ptrtype, adr);
 }
@@ -4410,6 +4422,11 @@ build_conditional_expr (location_t colon_loc, tree ifexp, bool ifexp_bcp,
     ret = fold_build3_loc (colon_loc, COND_EXPR, result_type, ifexp, op1, op2);
   else
     {
+      if (int_operands)
+	{
+	  op1 = remove_c_maybe_const_expr (op1);
+	  op2 = remove_c_maybe_const_expr (op2);
+	}
       ret = build3 (COND_EXPR, result_type, ifexp, op1, op2);
       if (int_operands)
 	ret = note_integer_operands (ret);
@@ -7598,7 +7615,7 @@ set_nonincremental_init (struct obstack * braced_init_obstack)
 
   FOR_EACH_CONSTRUCTOR_ELT (constructor_elements, ix, index, value)
     {
-      add_pending_init (index, value, NULL_TREE, false,
+      add_pending_init (index, value, NULL_TREE, true,
 			braced_init_obstack);
     }
   constructor_elements = 0;
@@ -7691,7 +7708,7 @@ set_nonincremental_init_from_string (tree str,
 	}
 
       value = build_int_cst_wide (type, val[1], val[0]);
-      add_pending_init (purpose, value, NULL_TREE, false,
+      add_pending_init (purpose, value, NULL_TREE, true,
                         braced_init_obstack);
     }
 
@@ -9734,7 +9751,7 @@ build_binary_op (location_t location, enum tree_code code,
 	      sc = convert (TREE_TYPE (type0), sc);
 	      op1 = build_vector_from_val (type0, sc);
 	      if (!maybe_const)
-		op0 = c_wrap_maybe_const (op1, true);
+		op1 = c_wrap_maybe_const (op1, true);
 	      orig_type1 = type1 = TREE_TYPE (op1);
 	      code1 = TREE_CODE (type1);
 	      converted = 1;

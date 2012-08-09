@@ -6850,6 +6850,78 @@ try_move_mult_to_index (location_t loc, tree addr, tree op1)
       s = integer_one_node;
     }
 
+  /* Handle &x.array the same as we would handle &x.array[0].  */
+  if (TREE_CODE (ref) == COMPONENT_REF
+      && TREE_CODE (TREE_TYPE (ref)) == ARRAY_TYPE)
+    {
+      tree domain;
+
+      /* Remember if this was a multi-dimensional array.  */
+      if (TREE_CODE (TREE_OPERAND (ref, 0)) == ARRAY_REF)
+	mdim = true;
+
+      domain = TYPE_DOMAIN (TREE_TYPE (ref));
+      if (! domain)
+	goto cont;
+      itype = TREE_TYPE (domain);
+
+      step = TYPE_SIZE_UNIT (TREE_TYPE (TREE_TYPE (ref)));
+      if (TREE_CODE (step) != INTEGER_CST)
+	goto cont;
+
+      if (s)
+	{
+	  if (! tree_int_cst_equal (step, s))
+	    goto cont;
+	}
+      else
+	{
+	  /* Try if delta is a multiple of step.  */
+	  tree tmp = div_if_zero_remainder (EXACT_DIV_EXPR, op1, step);
+	  if (! tmp)
+	    goto cont;
+	  delta = tmp;
+	}
+
+      /* Only fold here if we can verify we do not overflow one
+	 dimension of a multi-dimensional array.  */
+      if (mdim)
+	{
+	  tree tmp;
+
+	  if (!TYPE_MIN_VALUE (domain)
+	      || !TYPE_MAX_VALUE (domain)
+	      || TREE_CODE (TYPE_MAX_VALUE (domain)) != INTEGER_CST)
+	    goto cont;
+
+	  tmp = fold_binary_loc (loc, PLUS_EXPR, itype,
+				 fold_convert_loc (loc, itype,
+						   TYPE_MIN_VALUE (domain)),
+				 fold_convert_loc (loc, itype, delta));
+	  if (TREE_CODE (tmp) != INTEGER_CST
+	      || tree_int_cst_lt (TYPE_MAX_VALUE (domain), tmp))
+	    goto cont;
+	}
+
+      /* We found a suitable component reference.  */
+
+      pref = TREE_OPERAND (addr, 0);
+      ret = copy_node (pref);
+      SET_EXPR_LOCATION (ret, loc);
+
+      ret = build4_loc (loc, ARRAY_REF, TREE_TYPE (TREE_TYPE (ref)), ret,
+			fold_build2_loc
+			  (loc, PLUS_EXPR, itype,
+			   fold_convert_loc (loc, itype,
+					     TYPE_MIN_VALUE
+					       (TYPE_DOMAIN (TREE_TYPE (ref)))),
+			   fold_convert_loc (loc, itype, delta)),
+			NULL_TREE, NULL_TREE);
+      return build_fold_addr_expr_loc (loc, ret);
+    }
+
+cont:
+
   for (;; ref = TREE_OPERAND (ref, 0))
     {
       if (TREE_CODE (ref) == ARRAY_REF)
@@ -6906,60 +6978,6 @@ try_move_mult_to_index (location_t loc, tree addr, tree op1)
 
 	  break;
 	}
-      else if (TREE_CODE (ref) == COMPONENT_REF
-	       && TREE_CODE (TREE_TYPE (ref)) == ARRAY_TYPE)
-	{
-	  tree domain;
-
-	  /* Remember if this was a multi-dimensional array.  */
-	  if (TREE_CODE (TREE_OPERAND (ref, 0)) == ARRAY_REF)
-	    mdim = true;
-
-	  domain = TYPE_DOMAIN (TREE_TYPE (ref));
-	  if (! domain)
-	    continue;
-	  itype = TREE_TYPE (domain);
-
-	  step = TYPE_SIZE_UNIT (TREE_TYPE (TREE_TYPE (ref)));
-	  if (TREE_CODE (step) != INTEGER_CST)
-	    continue;
-
-	  if (s)
-	    {
-	      if (! tree_int_cst_equal (step, s))
-                continue;
-	    }
-	  else
-	    {
-	      /* Try if delta is a multiple of step.  */
-	      tree tmp = div_if_zero_remainder (EXACT_DIV_EXPR, op1, step);
-	      if (! tmp)
-		continue;
-	      delta = tmp;
-	    }
-
-	  /* Only fold here if we can verify we do not overflow one
-	     dimension of a multi-dimensional array.  */
-	  if (mdim)
-	    {
-	      tree tmp;
-
-	      if (!TYPE_MIN_VALUE (domain)
-		  || !TYPE_MAX_VALUE (domain)
-		  || TREE_CODE (TYPE_MAX_VALUE (domain)) != INTEGER_CST)
-		continue;
-
-	      tmp = fold_binary_loc (loc, PLUS_EXPR, itype,
-				     fold_convert_loc (loc, itype,
-						       TYPE_MIN_VALUE (domain)),
-				     fold_convert_loc (loc, itype, delta));
-	      if (TREE_CODE (tmp) != INTEGER_CST
-		  || tree_int_cst_lt (TYPE_MAX_VALUE (domain), tmp))
-		continue;
-	    }
-
-	  break;
-	}
       else
 	mdim = false;
 
@@ -6982,29 +7000,11 @@ try_move_mult_to_index (location_t loc, tree addr, tree op1)
       pos = TREE_OPERAND (pos, 0);
     }
 
-  if (TREE_CODE (ref) == ARRAY_REF)
-    {
-      TREE_OPERAND (pos, 1)
-	= fold_build2_loc (loc, PLUS_EXPR, itype,
-			   fold_convert_loc (loc, itype, TREE_OPERAND (pos, 1)),
-			   fold_convert_loc (loc, itype, delta));
-      return fold_build1_loc (loc, ADDR_EXPR, TREE_TYPE (addr), ret);
-    }
-  else if (TREE_CODE (ref) == COMPONENT_REF)
-    {
-      gcc_assert (ret == pos);
-      ret = build4_loc (loc, ARRAY_REF, TREE_TYPE (TREE_TYPE (ref)), ret,
-			fold_build2_loc
-			  (loc, PLUS_EXPR, itype,
-			   fold_convert_loc (loc, itype,
-					     TYPE_MIN_VALUE
-					       (TYPE_DOMAIN (TREE_TYPE (ref)))),
-			   fold_convert_loc (loc, itype, delta)),
-			NULL_TREE, NULL_TREE);
-      return build_fold_addr_expr_loc (loc, ret);
-    }
-  else
-    gcc_unreachable ();
+  TREE_OPERAND (pos, 1)
+    = fold_build2_loc (loc, PLUS_EXPR, itype,
+		       fold_convert_loc (loc, itype, TREE_OPERAND (pos, 1)),
+		       fold_convert_loc (loc, itype, delta));
+  return fold_build1_loc (loc, ADDR_EXPR, TREE_TYPE (addr), ret);
 }
 
 
@@ -10022,12 +10022,15 @@ fold_binary_loc (location_t loc,
 	    }
 	}
 
-      /* Handle (A1 * C1) + (A2 * C2) with A1, A2 or C1, C2 being the
-	 same or one.  Make sure type is not saturating.
-	 fold_plusminus_mult_expr will re-associate.  */
+      /* Handle (A1 * C1) + (A2 * C2) with A1, A2 or C1, C2 being the same or
+	 one.  Make sure the type is not saturating and has the signedness of
+	 the stripped operands, as fold_plusminus_mult_expr will re-associate.
+	 ??? The latter condition should use TYPE_OVERFLOW_* flags instead.  */
       if ((TREE_CODE (arg0) == MULT_EXPR
 	   || TREE_CODE (arg1) == MULT_EXPR)
 	  && !TYPE_SATURATING (type)
+	  && TYPE_UNSIGNED (type) == TYPE_UNSIGNED (TREE_TYPE (arg0))
+	  && TYPE_UNSIGNED (type) == TYPE_UNSIGNED (TREE_TYPE (arg1))
 	  && (!FLOAT_TYPE_P (type) || flag_associative_math))
         {
 	  tree tem = fold_plusminus_mult_expr (loc, code, type, arg0, arg1);
@@ -10634,12 +10637,15 @@ fold_binary_loc (location_t loc,
 	  && (tem = distribute_real_division (loc, code, type, arg0, arg1)))
 	return tem;
 
-      /* Handle (A1 * C1) - (A2 * C2) with A1, A2 or C1, C2 being the
-	 same or one.  Make sure type is not saturating.
-	 fold_plusminus_mult_expr will re-associate.  */
+      /* Handle (A1 * C1) - (A2 * C2) with A1, A2 or C1, C2 being the same or
+	 one.  Make sure the type is not saturating and has the signedness of
+	 the stripped operands, as fold_plusminus_mult_expr will re-associate.
+	 ??? The latter condition should use TYPE_OVERFLOW_* flags instead.  */
       if ((TREE_CODE (arg0) == MULT_EXPR
 	   || TREE_CODE (arg1) == MULT_EXPR)
 	  && !TYPE_SATURATING (type)
+	  && TYPE_UNSIGNED (type) == TYPE_UNSIGNED (TREE_TYPE (arg0))
+	  && TYPE_UNSIGNED (type) == TYPE_UNSIGNED (TREE_TYPE (arg1))
 	  && (!FLOAT_TYPE_P (type) || flag_associative_math))
         {
 	  tree tem = fold_plusminus_mult_expr (loc, code, type, arg0, arg1);
@@ -12828,13 +12834,13 @@ fold_binary_loc (location_t loc,
       if (TREE_CODE (arg0) == BIT_XOR_EXPR
 	  && operand_equal_p (TREE_OPERAND (arg0, 1), arg1, 0))
 	return fold_build2_loc (loc, code, type, TREE_OPERAND (arg0, 0),
-				build_int_cst (TREE_TYPE (arg0), 0));
+				build_zero_cst (TREE_TYPE (arg0)));
       /* Likewise (X ^ Y) == X becomes Y == 0.  X has no side-effects.  */
       if (TREE_CODE (arg0) == BIT_XOR_EXPR
 	  && operand_equal_p (TREE_OPERAND (arg0, 0), arg1, 0)
 	  && reorder_operands_p (TREE_OPERAND (arg0, 1), arg1))
 	return fold_build2_loc (loc, code, type, TREE_OPERAND (arg0, 1),
-				build_int_cst (TREE_TYPE (arg0), 0));
+				build_zero_cst (TREE_TYPE (arg0)));
 
       /* (X ^ C1) op C2 can be rewritten as X op (C1 ^ C2).  */
       if (TREE_CODE (arg0) == BIT_XOR_EXPR
@@ -12922,7 +12928,7 @@ fold_binary_loc (location_t loc,
 							  BIT_XOR_EXPR, itype,
 							  arg00, arg10),
 					     arg01),
-				build_int_cst (itype, 0));
+				build_zero_cst (itype));
 
 	  if (operand_equal_p (arg01, arg10, 0))
 	    return fold_build2_loc (loc, code, type,
@@ -12931,7 +12937,7 @@ fold_binary_loc (location_t loc,
 							  BIT_XOR_EXPR, itype,
 							  arg00, arg11),
 					     arg01),
-				build_int_cst (itype, 0));
+				build_zero_cst (itype));
 
 	  if (operand_equal_p (arg00, arg11, 0))
 	    return fold_build2_loc (loc, code, type,
@@ -12940,7 +12946,7 @@ fold_binary_loc (location_t loc,
 							  BIT_XOR_EXPR, itype,
 							  arg01, arg10),
 					     arg00),
-				build_int_cst (itype, 0));
+				build_zero_cst (itype));
 
 	  if (operand_equal_p (arg00, arg10, 0))
 	    return fold_build2_loc (loc, code, type,
@@ -12949,7 +12955,7 @@ fold_binary_loc (location_t loc,
 							  BIT_XOR_EXPR, itype,
 							  arg01, arg11),
 					     arg00),
-				build_int_cst (itype, 0));
+				build_zero_cst (itype));
 	}
 
       if (TREE_CODE (arg0) == BIT_XOR_EXPR
