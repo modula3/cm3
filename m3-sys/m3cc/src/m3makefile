@@ -300,6 +300,9 @@ end
 foreach a in ["gmp", "mpfr", "mpc"]
   delete_file (SourceDir & "/" & a)
 end
+if GCC43
+  link_file("../gmp-4.3.2", SourceDir & "/gmp")
+end
 
 % figure out where we're going to build gcc
 build_dir = "../" & BUILD_DIR
