@@ -481,9 +481,6 @@ normalize (REAL_VALUE_TYPE *r)
   int shift = 0, exp;
   int i, j;
 
-  if (r->decimal)
-    return;
-
   /* Find the first word that is nonzero.  */
   for (i = SIGSZ - 1; i >= 0; i--)
     if (r->sig[i] == 0)
@@ -647,7 +644,6 @@ do_add (REAL_VALUE_TYPE *r, const REAL_VALUE_TYPE *a,
   /* Zero out the remaining fields.  */
   r->signalling = 0;
   r->canonical = 0;
-  r->decimal = 0;
 
   /* Re-normalize the result.  */
   normalize (r);
@@ -912,10 +908,6 @@ do_compare (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b,
       return 0;
 
     case CLASS2 (rvc_normal, rvc_zero):
-      /* Decimal float zero is special and uses rvc_normal, not rvc_zero.  */
-      if (a->decimal)
-	return decimal_do_compare (a, b, nan_result);
-      /* Fall through.  */
     case CLASS2 (rvc_inf, rvc_zero):
     case CLASS2 (rvc_inf, rvc_normal):
       return (a->sign ? -1 : 1);
@@ -924,10 +916,6 @@ do_compare (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b,
       return -a->sign - -b->sign;
 
     case CLASS2 (rvc_zero, rvc_normal):
-      /* Decimal float zero is special and uses rvc_normal, not rvc_zero.  */
-      if (b->decimal)
-	return decimal_do_compare (a, b, nan_result);
-      /* Fall through.  */
     case CLASS2 (rvc_zero, rvc_inf):
     case CLASS2 (rvc_normal, rvc_inf):
       return (b->sign ? 1 : -1);
@@ -950,9 +938,6 @@ do_compare (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b,
 
   if (a->sign != b->sign)
     return -a->sign - -b->sign;
-
-  if (a->decimal || b->decimal)
-    return decimal_do_compare (a, b, nan_result);
 
   if (REAL_EXP (a) > REAL_EXP (b))
     ret = 1;
@@ -978,12 +963,7 @@ do_fix_trunc (REAL_VALUE_TYPE *r, const REAL_VALUE_TYPE *a)
     case rvc_nan:
       break;
 
-    case rvc_normal:
-      if (r->decimal)
-	{
-	  decimal_do_fix_trunc (r, a);
-	  return;
-	}
+    case rvc_normal:	
       if (REAL_EXP (r) <= 0)
 	get_zero (r, r->sign);
       else if (REAL_EXP (r) < SIGNIFICAND_BITS)
@@ -1004,9 +984,6 @@ real_arithmetic (REAL_VALUE_TYPE *r, int icode, const REAL_VALUE_TYPE *op0,
 		 const REAL_VALUE_TYPE *op1)
 {
   enum tree_code code = (enum tree_code) icode;
-
-  if (op0->decimal || (op1 && op1->decimal))
-    return decimal_real_arithmetic (r, code, op0, op1);
 
   switch (code)
     {
@@ -1234,8 +1211,6 @@ real_identical (const REAL_VALUE_TYPE *a, const REAL_VALUE_TYPE *b)
       return true;
 
     case rvc_normal:
-      if (a->decimal != b->decimal)
-        return false;
       if (REAL_EXP (a) != REAL_EXP (b))
 	return false;
       break;
@@ -1309,8 +1284,7 @@ real_can_shorten_arithmetic (enum machine_mode imode, enum machine_mode tmode)
   /* These conditions are conservative rather than trying to catch the
      exact boundary conditions; the main case to allow is IEEE float
      and double.  */
-  return (ifmt->b == tfmt->b
-	  && ifmt->p > 2 * tfmt->p
+  return (   ifmt->p > 2 * tfmt->p
 	  && ifmt->emin < 2 * tfmt->emin - tfmt->p - 2
 	  && ifmt->emin < tfmt->emin - tfmt->emax - tfmt->p - 2
 	  && ifmt->emax > 2 * tfmt->emax + 2
@@ -1347,9 +1321,6 @@ real_to_integer (const REAL_VALUE_TYPE *r)
       return i;
 
     case rvc_normal:
-      if (r->decimal)
-	return decimal_real_to_integer (r);
-
       if (REAL_EXP (r) <= 0)
 	goto underflow;
       /* Only force overflow for unsigned overflow.  Signed overflow is
@@ -1411,12 +1382,6 @@ real_to_integer2 (HOST_WIDE_INT *plow, HOST_WIDE_INT *phigh,
       break;
 
     case rvc_normal:
-      if (r->decimal)
-	{
-	  decimal_real_to_integer2 (plow, phigh, r);
-	  return;
-	}
-
       exp = REAL_EXP (r);
       if (exp <= 0)
 	goto underflow;
@@ -1544,12 +1509,6 @@ real_to_decimal_for_mode (char *str, const REAL_VALUE_TYPE *r_orig,
       return;
     default:
       gcc_unreachable ();
-    }
-
-  if (r.decimal)
-    {
-      decimal_real_to_decimal (str, &r, buf_size, digits, crop_trailing_zeros);
-      return;
     }
 
   /* Bound the number of digits printed by the size of the representation.  */
@@ -1851,13 +1810,6 @@ real_to_hexadecimal (char *str, const REAL_VALUE_TYPE *r, size_t buf_size,
       return;
     default:
       gcc_unreachable ();
-    }
-
-  if (r->decimal)
-    {
-      /* Hexadecimal format for decimal floats is not interesting. */
-      strcpy (str, "N/A");
-      return;
     }
 
   if (digits == 0)
@@ -2247,10 +2199,7 @@ decimal_integer_string (char *str, const REAL_VALUE_TYPE *r_orig,
 static void
 decimal_from_integer (REAL_VALUE_TYPE *r)
 {
-  char str[256];
-
-  decimal_integer_string (str, r, sizeof (str) - 1);
-  decimal_real_from_string (r, str);
+  gcc_unreachable ();
 }
 
 /* Returns 10**2**N.  */
@@ -2474,9 +2423,6 @@ real_maxval (REAL_VALUE_TYPE *r, int sign, enum machine_mode mode)
   gcc_assert (fmt);
   memset (r, 0, sizeof (*r));
 
-  if (fmt->b == 10)
-    decimal_real_maxval (r, sign, mode);
-  else
     {
       r->cl = rvc_normal;
       r->sign = sign;
@@ -2515,8 +2461,7 @@ real_2expN (REAL_VALUE_TYPE *r, int n, enum machine_mode fmode)
       SET_REAL_EXP (r, n);
       r->sig[SIGSZ-1] = SIG_MSB;
     }
-  if (DECIMAL_FLOAT_MODE_P (fmode))
-    decimal_real_convert (r, fmode, r);
+  gcc_assert (!DECIMAL_FLOAT_MODE_P (fmode));
 }
 
 
@@ -2526,20 +2471,6 @@ round_for_format (const struct real_format *fmt, REAL_VALUE_TYPE *r)
   int p2, np2, i, w;
   int emin2m1, emax2;
   bool round_up = false;
-
-  if (r->decimal)
-    {
-      if (fmt->b == 10)
-	{
-	  decimal_round_for_format (fmt, r);
-	  return;
-	}
-      /* FIXME. We can come here via fp_easy_constant
-	 (e.g. -O0 on '_Decimal32 x = 1.0 + 2.0dd'), but have not
-	 investigated whether this convert needs to be here, or
-	 something else is missing. */
-      decimal_real_convert (r, DFmode, r);
-    }
 
   p2 = fmt->p;
   emin2m1 = fmt->emin - 1;
@@ -2657,9 +2588,6 @@ real_convert (REAL_VALUE_TYPE *r, enum machine_mode mode,
 
   *r = *a;
 
-  if (a->decimal || fmt->b == 10)
-    decimal_real_convert (r, mode, a);
-
   round_for_format (fmt, r);
 
   /* round_for_format de-normalizes denormals.  Undo just that part.  */
@@ -2772,15 +2700,6 @@ significand_size (enum machine_mode mode)
   if (fmt == NULL)
     return 0;
 
-  if (fmt->b == 10)
-    {
-      /* Return the size in bits of the largest binary value that can be
-	 held by the decimal coefficient for this mode.  This is one more
-	 than the number of bits required to hold the largest coefficient
-	 of this mode.  */
-      double log2_10 = 3.3219281;
-      return fmt->p * log2_10;
-    }
   return fmt->p;
 }
 
@@ -2951,7 +2870,6 @@ const struct real_format ieee_single_format =
   {
     encode_ieee_single,
     decode_ieee_single,
-    2,
     24,
     24,
     -125,
@@ -2972,7 +2890,6 @@ const struct real_format mips_single_format =
   {
     encode_ieee_single,
     decode_ieee_single,
-    2,
     24,
     24,
     -125,
@@ -2993,7 +2910,6 @@ const struct real_format motorola_single_format =
   {
     encode_ieee_single,
     decode_ieee_single,
-    2,
     24,
     24,
     -125,
@@ -3025,7 +2941,6 @@ const struct real_format spu_single_format =
   {
     encode_ieee_single,
     decode_ieee_single,
-    2,
     24,
     24,
     -125,
@@ -3234,7 +3149,6 @@ const struct real_format ieee_double_format =
   {
     encode_ieee_double,
     decode_ieee_double,
-    2,
     53,
     53,
     -1021,
@@ -3255,7 +3169,6 @@ const struct real_format mips_double_format =
   {
     encode_ieee_double,
     decode_ieee_double,
-    2,
     53,
     53,
     -1021,
@@ -3276,7 +3189,6 @@ const struct real_format motorola_double_format =
   {
     encode_ieee_double,
     decode_ieee_double,
-    2,
     53,
     53,
     -1021,
@@ -3615,7 +3527,6 @@ const struct real_format ieee_extended_motorola_format =
   {
     encode_ieee_extended_motorola,
     decode_ieee_extended_motorola,
-    2,
     64,
     64,
     -16382,
@@ -3636,7 +3547,6 @@ const struct real_format ieee_extended_intel_96_format =
   {
     encode_ieee_extended_intel_96,
     decode_ieee_extended_intel_96,
-    2,
     64,
     64,
     -16381,
@@ -3657,7 +3567,6 @@ const struct real_format ieee_extended_intel_128_format =
   {
     encode_ieee_extended_intel_128,
     decode_ieee_extended_intel_128,
-    2,
     64,
     64,
     -16381,
@@ -3680,7 +3589,6 @@ const struct real_format ieee_extended_intel_96_round_53_format =
   {
     encode_ieee_extended_intel_96,
     decode_ieee_extended_intel_96,
-    2,
     53,
     53,
     -16381,
@@ -3768,7 +3676,6 @@ const struct real_format ibm_extended_format =
   {
     encode_ibm_extended,
     decode_ibm_extended,
-    2,
     53 + 53,
     53,
     -1021 + 53,
@@ -3789,7 +3696,6 @@ const struct real_format mips_extended_format =
   {
     encode_ibm_extended,
     decode_ibm_extended,
-    2,
     53 + 53,
     53,
     -1021 + 53,
@@ -4052,7 +3958,6 @@ const struct real_format ieee_quad_format =
   {
     encode_ieee_quad,
     decode_ieee_quad,
-    2,
     113,
     113,
     -16381,
@@ -4073,7 +3978,6 @@ const struct real_format mips_quad_format =
   {
     encode_ieee_quad,
     decode_ieee_quad,
-    2,
     113,
     113,
     -16381,
@@ -4373,7 +4277,6 @@ const struct real_format vax_f_format =
   {
     encode_vax_f,
     decode_vax_f,
-    2,
     24,
     24,
     -127,
@@ -4394,7 +4297,6 @@ const struct real_format vax_d_format =
   {
     encode_vax_d,
     decode_vax_d,
-    2,
     56,
     56,
     -127,
@@ -4415,7 +4317,6 @@ const struct real_format vax_g_format =
   {
     encode_vax_g,
     decode_vax_g,
-    2,
     53,
     53,
     -1023,
@@ -4431,126 +4332,18 @@ const struct real_format vax_g_format =
     false,
     false
   };
-
-/* Encode real R into a single precision DFP value in BUF.  */
-static void
-encode_decimal_single (const struct real_format *fmt ATTRIBUTE_UNUSED,
-                       long *buf ATTRIBUTE_UNUSED,
-		       const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
-{
-  encode_decimal32 (fmt, buf, r);
-}
-
-/* Decode a single precision DFP value in BUF into a real R.  */
-static void
-decode_decimal_single (const struct real_format *fmt ATTRIBUTE_UNUSED,
-		       REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
-		       const long *buf ATTRIBUTE_UNUSED)
-{
-  decode_decimal32 (fmt, r, buf);
-}
-
-/* Encode real R into a double precision DFP value in BUF.  */
-static void
-encode_decimal_double (const struct real_format *fmt ATTRIBUTE_UNUSED,
-		       long *buf ATTRIBUTE_UNUSED,
-		       const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
-{
-  encode_decimal64 (fmt, buf, r);
-}
-
-/* Decode a double precision DFP value in BUF into a real R.  */
-static void
-decode_decimal_double (const struct real_format *fmt ATTRIBUTE_UNUSED,
-		       REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
-		       const long *buf ATTRIBUTE_UNUSED)
-{
-  decode_decimal64 (fmt, r, buf);
-}
-
-/* Encode real R into a quad precision DFP value in BUF.  */
-static void
-encode_decimal_quad (const struct real_format *fmt ATTRIBUTE_UNUSED,
-		     long *buf ATTRIBUTE_UNUSED,
-		     const REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED)
-{
-  encode_decimal128 (fmt, buf, r);
-}
-
-/* Decode a quad precision DFP value in BUF into a real R.  */
-static void
-decode_decimal_quad (const struct real_format *fmt ATTRIBUTE_UNUSED,
-		     REAL_VALUE_TYPE *r ATTRIBUTE_UNUSED,
-		     const long *buf ATTRIBUTE_UNUSED)
-{
-  decode_decimal128 (fmt, r, buf);
-}
 
 /* Single precision decimal floating point (IEEE 754). */
 const struct real_format decimal_single_format =
-  {
-    encode_decimal_single,
-    decode_decimal_single,
-    10,
-    7,
-    7,
-    -94,
-    97,
-    31,
-    31,
-    false,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    false
-  };
+  { 0 };
 
 /* Double precision decimal floating point (IEEE 754). */
 const struct real_format decimal_double_format =
-  {
-    encode_decimal_double,
-    decode_decimal_double,
-    10,
-    16,
-    16,
-    -382,
-    385,
-    63,
-    63,
-    false,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    false
-  };
+  { 0 };
 
 /* Quad precision decimal floating point (IEEE 754). */
 const struct real_format decimal_quad_format =
-  {
-    encode_decimal_quad,
-    decode_decimal_quad,
-    10,
-    34,
-    34,
-    -6142,
-    6145,
-    127,
-    127,
-    false,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    false
-  };
+  { 0 };
 
 /* Encode half-precision floats.  This routine is used both for the IEEE
    ARM alternative encodings.  */
@@ -4672,7 +4465,6 @@ const struct real_format ieee_half_format =
   {
     encode_ieee_half,
     decode_ieee_half,
-    2,
     11,
     11,
     -13,
@@ -4696,7 +4488,6 @@ const struct real_format arm_half_format =
   {
     encode_ieee_half,
     decode_ieee_half,
-    2,
     11,
     11,
     -13,
@@ -4741,7 +4532,6 @@ const struct real_format real_internal_format =
   {
     encode_internal,
     decode_internal,
-    2,
     SIGNIFICAND_BITS - 2,
     SIGNIFICAND_BITS - 2,
     -MAX_EXP,

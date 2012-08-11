@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Map logical line numbers to (source file, line number) pairs.
    Copyright (C) 2001, 2003, 2004, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -24,7 +26,6 @@ along with this program; see the file COPYING3.  If not see
 #include "system.h"
 #include "line-map.h"
 #include "cpplib.h"
-#include "internal.h"
 
 static void trace_include (const struct line_maps *, const struct line_map *);
 static const struct line_map * linemap_ordinary_map_lookup (struct line_maps *,
@@ -1245,102 +1246,4 @@ linemap_dump_location (struct line_maps *set,
      E: macro expansion?, LOC: original location, R: resolved location   */
   fprintf (stream, "{P:%s;F:%s;L:%d;C:%d;S:%d;M:%p;E:%d,LOC:%d,R:%d}",
 	   path, from, l, c, s, (void*)map, e, loc, location);
-}
-
-/* Compute and return statistics about the memory consumption of some
-   parts of the line table SET.  */
-
-void
-linemap_get_statistics (struct line_maps *set,
-			struct linemap_stats *s)
-{
-  long ordinary_maps_allocated_size, ordinary_maps_used_size,
-    macro_maps_allocated_size, macro_maps_used_size,
-    macro_maps_locations_size = 0, duplicated_macro_maps_locations_size = 0;
-
-  struct line_map *cur_map;
-
-  ordinary_maps_allocated_size =
-    LINEMAPS_ORDINARY_ALLOCATED (set) * sizeof (struct line_map);
-
-  ordinary_maps_used_size =
-    LINEMAPS_ORDINARY_USED (set) * sizeof (struct line_map);
-
-  macro_maps_allocated_size =
-    LINEMAPS_MACRO_ALLOCATED (set) * sizeof (struct line_map);
-
-  for (cur_map = LINEMAPS_MACRO_MAPS (set);
-       cur_map && cur_map <= LINEMAPS_LAST_MACRO_MAP (set);
-       ++cur_map)
-    {
-      unsigned i;
-
-      linemap_assert (linemap_macro_expansion_map_p (cur_map));
-
-      macro_maps_locations_size +=
-	2 * MACRO_MAP_NUM_MACRO_TOKENS (cur_map) * sizeof (source_location);
-
-      for (i = 0; i < 2 * MACRO_MAP_NUM_MACRO_TOKENS (cur_map); i += 2)
-	{
-	  if (MACRO_MAP_LOCATIONS (cur_map)[i] ==
-	      MACRO_MAP_LOCATIONS (cur_map)[i + 1])
-	    duplicated_macro_maps_locations_size +=
-	      sizeof (source_location);
-	}
-    }
-
-  macro_maps_used_size =
-    LINEMAPS_MACRO_USED (set) * sizeof (struct line_map);
-
-  s->num_ordinary_maps_allocated = LINEMAPS_ORDINARY_ALLOCATED (set);
-  s->num_ordinary_maps_used = LINEMAPS_ORDINARY_USED (set);
-  s->ordinary_maps_allocated_size = ordinary_maps_allocated_size;
-  s->ordinary_maps_used_size = ordinary_maps_used_size;
-  s->num_expanded_macros = num_expanded_macros_counter;
-  s->num_macro_tokens = num_macro_tokens_counter;
-  s->num_macro_maps_used = LINEMAPS_MACRO_USED (set);
-  s->macro_maps_allocated_size = macro_maps_allocated_size;
-  s->macro_maps_locations_size = macro_maps_locations_size;
-  s->macro_maps_used_size = macro_maps_used_size;
-  s->duplicated_macro_maps_locations_size =
-    duplicated_macro_maps_locations_size;
-}
-
-
-/* Dump line table SET to STREAM.  If STREAM is NULL, stderr is used.
-   NUM_ORDINARY specifies how many ordinary maps to dump.  NUM_MACRO
-   specifies how many macro maps to dump.  */
-
-void
-line_table_dump (FILE *stream, struct line_maps *set, unsigned int num_ordinary,
-		 unsigned int num_macro)
-{
-  unsigned int i;
-
-  if (set == NULL)
-    return;
-
-  if (stream == NULL)
-    stream = stderr;
-
-  fprintf (stream, "# of ordinary maps:  %d\n", LINEMAPS_ORDINARY_USED (set));
-  fprintf (stream, "# of macro maps:     %d\n", LINEMAPS_MACRO_USED (set));
-  fprintf (stream, "Include stack depth: %d\n", set->depth);
-  fprintf (stream, "Highest location:    %u\n", set->highest_location);
-
-  if (num_ordinary)
-    {
-      fprintf (stream, "\nOrdinary line maps\n");
-      for (i = 0; i < num_ordinary && i < LINEMAPS_ORDINARY_USED (set); i++)
-	linemap_dump (stream, set, i, false);
-      fprintf (stream, "\n");
-    }
-
-  if (num_macro)
-    {
-      fprintf (stream, "\nMacro line maps\n");
-      for (i = 0; i < num_macro && i < LINEMAPS_MACRO_USED (set); i++)
-	linemap_dump (stream, set, i, true);
-      fprintf (stream, "\n");
-    }
 }

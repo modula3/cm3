@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Utility routines for data type conversion for GCC.
    Copyright (C) 1987, 1988, 1991, 1992, 1993, 1994, 1995, 1997, 1998,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
@@ -286,30 +288,6 @@ convert_to_real (tree type, tree expr)
 		 && DECIMAL_FLOAT_TYPE_P (itype) == DECIMAL_FLOAT_TYPE_P (type))
 	       {
 		  tree newtype = type;
-
-		  if (TYPE_MODE (TREE_TYPE (arg0)) == SDmode
-		      || TYPE_MODE (TREE_TYPE (arg1)) == SDmode
-		      || TYPE_MODE (type) == SDmode)
-		    newtype = dfloat32_type_node;
-		  if (TYPE_MODE (TREE_TYPE (arg0)) == DDmode
-		      || TYPE_MODE (TREE_TYPE (arg1)) == DDmode
-		      || TYPE_MODE (type) == DDmode)
-		    newtype = dfloat64_type_node;
-		  if (TYPE_MODE (TREE_TYPE (arg0)) == TDmode
-		      || TYPE_MODE (TREE_TYPE (arg1)) == TDmode
-		      || TYPE_MODE (type) == TDmode)
-                    newtype = dfloat128_type_node;
-		  if (newtype == dfloat32_type_node
-		      || newtype == dfloat64_type_node
-		      || newtype == dfloat128_type_node)
-		    {
-		      expr = build2 (TREE_CODE (expr), newtype,
-				     fold (convert_to_real (newtype, arg0)),
-				     fold (convert_to_real (newtype, arg1)));
-		      if (newtype == type)
-			return expr;
-		      break;
-		    }
 
 		  if (TYPE_PRECISION (TREE_TYPE (arg0)) > TYPE_PRECISION (newtype))
 		    newtype = TREE_TYPE (arg0);

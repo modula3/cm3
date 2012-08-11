@@ -1,4 +1,7 @@
 # @configure_input@
+
+# Modula-3: modified
+
 # Makefile for libcpp.  Run 'configure' to generate Makefile from Makefile.in
 
 # Copyright (C) 2004, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -89,13 +92,9 @@ DEPMODE = $(CXXDEPMODE)
 endif
 
 
-libcpp_a_OBJS = charset.o directives.o directives-only.o errors.o \
-	expr.o files.o identifiers.o init.o lex.o line-map.o macro.o \
-	mkdeps.o pch.o symtab.o traditional.o
+libcpp_a_OBJS = line-map.o symtab.o
 
-libcpp_a_SOURCES = charset.c directives.c directives-only.c errors.c \
-	expr.c files.c identifiers.c init.c lex.c line-map.c macro.c \
-	mkdeps.c pch.c symtab.c traditional.c
+libcpp_a_SOURCES = line-map.c symtab.c
 
 all: libcpp.a $(USED_CATALOGS)
 

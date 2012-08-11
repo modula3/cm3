@@ -124,7 +124,7 @@ SUBDIRS =@subdirs@ build
 
 # Selection of languages to be made.
 CONFIG_LANGUAGES = @all_selected_languages@
-LANGUAGES = c gcov$(exeext) gcov-dump$(exeext) $(CONFIG_LANGUAGES)
+LANGUAGES = $(CONFIG_LANGUAGES)
 
 # Default values for variables overridden in Makefile fragments.
 # CFLAGS is for the user to override to, e.g., do a cross build with -O2.
@@ -317,13 +317,6 @@ enable_plugin = @enable_plugin@
 
 CPPLIB = ../libcpp/libcpp.a
 CPPINC = -I$(srcdir)/../libcpp/include
-
-# Where to find decNumber
-enable_decimal_float = @enable_decimal_float@
-DECNUM = $(srcdir)/../libdecnumber
-DECNUMFMT = $(srcdir)/../libdecnumber/$(enable_decimal_float)
-DECNUMINC = -I$(DECNUM) -I$(DECNUMFMT) -I../libdecnumber
-LIBDECNUMBER = ../libdecnumber/libdecnumber.a
 
 # Header files that are made available under the same name
 # to programs compiled with GCC.
@@ -829,9 +822,6 @@ CPPLIB_H = $(srcdir)/../libcpp/include/line-map.h \
 	$(srcdir)/../libcpp/include/cpplib.h
 INPUT_H = $(srcdir)/../libcpp/include/line-map.h input.h
 OPTS_H = $(INPUT_H) $(VEC_H) opts.h
-DECNUM_H = $(DECNUM)/decContext.h $(DECNUM)/decDPD.h $(DECNUM)/decNumber.h \
-	$(DECNUMFMT)/decimal32.h $(DECNUMFMT)/decimal64.h \
-	$(DECNUMFMT)/decimal128.h $(DECNUMFMT)/decimal128Local.h
 MKDEPS_H = $(srcdir)/../libcpp/include/mkdeps.h
 SYMTAB_H = $(srcdir)/../libcpp/include/symtab.h $(OBSTACK_H)
 CPP_ID_DATA_H = $(CPPLIB_H) $(srcdir)/../libcpp/include/cpp-id-data.h
@@ -911,8 +901,7 @@ LIBIBERTY = ../libiberty/libiberty.a
 BUILD_LIBIBERTY = $(build_libobjdir)/libiberty/libiberty.a
 
 # Dependencies on the intl and portability libraries.
-LIBDEPS= libcommon.a $(CPPLIB) $(LIBIBERTY) \
-	$(LIBDECNUMBER)
+LIBDEPS= libcommon.a $(CPPLIB) $(LIBIBERTY)
 
 # Likewise, for use in the tools that must run on this machine
 # even if we are cross-building GCC.
@@ -920,8 +909,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 
 # How to link with both our special library facilities
 # and the system's installed libraries.
-LIBS = @LIBS@ libcommon.a $(CPPLIB) $(LIBIBERTY) \
-	$(LIBDECNUMBER) $(HOST_LIBS)
+LIBS = @LIBS@ libcommon.a $(CPPLIB) $(LIBIBERTY) $(HOST_LIBS)
 BACKENDLIBS = $(PLUGINLIBS) $(HOST_LIBS)
 
 # Likewise, for use in the tools that must run on this machine
@@ -942,8 +930,7 @@ BUILD_ERRORS = build/errors.o
 # currently being compiled, in both source trees, to be examined as well.
 # libintl.h will be found in ../intl if we are using the included libintl.
 INCLUDES = -I. -I$(@D) -I$(srcdir) -I$(srcdir)/$(@D) \
-	   -I$(srcdir)/../include \
-	   $(CPPINC) $(DECNUMINC)
+	   -I$(srcdir)/../include $(CPPINC)
 
 .c.o:
 	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $< $(OUTPUT_OPTION)
@@ -1126,7 +1113,6 @@ OBJS = \
 	hwint.o \
 	ifcvt.o \
 	ree.o \
-	incpath.o \
 	init-regs.o \
 	integrate.o \
 	internal-fn.o \
@@ -1325,7 +1311,7 @@ ALL_HOST_FRONTEND_OBJS = $(C_OBJS) \
   $(foreach v,$(CONFIG_LANGUAGES),$($(v)_OBJS))
 
 ALL_HOST_BACKEND_OBJS = $(GCC_OBJS) $(OBJS) $(OBJS-libcommon) \
-  $(OBJS-libcommon-target) @TREEBROWSER@ main.o \
+  $(OBJS-libcommon-target) tree-browser.o main.o \
   $(EXTRA_GCC_OBJS) mips-tfile.o mips-tdump.o \
   $(GCOV_OBJS) $(GCOV_DUMP_OBJS)
 
@@ -1333,8 +1319,8 @@ ALL_HOST_BACKEND_OBJS = $(GCC_OBJS) $(OBJS) $(OBJS-libcommon) \
 # compilation or not.
 ALL_HOST_OBJS = $(ALL_HOST_FRONTEND_OBJS) $(ALL_HOST_BACKEND_OBJS)
 
-BACKEND = main.o @TREEBROWSER@ libbackend.a libcommon-target.a libcommon.a \
-	$(CPPLIB) $(LIBDECNUMBER)
+BACKEND = main.o tree-browser.o libbackend.a libcommon-target.a libcommon.a \
+	$(CPPLIB)
 
 MOSTLYCLEANFILES = insn-flags.h insn-config.h insn-codes.h \
  insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c \
@@ -1712,7 +1698,7 @@ CFLAGS-c-family/c-opts.o += @TARGET_SYSTEM_ROOT_DEFINE@
 c-family/c-opts.o : c-family/c-opts.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
         $(TREE_H) $(C_PRAGMA_H) $(FLAGS_H) toplev.h langhooks.h \
         $(DIAGNOSTIC_H) intl.h debug.h $(C_COMMON_H) $(C_TARGET_H) \
-        $(OPTS_H) $(OPTIONS_H) $(MKDEPS_H) incpath.h cppdefault.h
+        $(OPTS_H) $(OPTIONS_H) $(MKDEPS_H) cppdefault.h
 
 CFLAGS-c-family/c-pch.o += -DHOST_MACHINE=\"$(host)\" \
 	-DTARGET_MACHINE=\"$(target)\"
@@ -1757,10 +1743,6 @@ default-c.o: config/default-c.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
 attribs.o : attribs.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
 	$(FLAGS_H) toplev.h $(DIAGNOSTIC_CORE_H) output.h $(GGC_H) $(TM_P_H) \
 	$(TARGET_H) langhooks.h $(CPPLIB_H) $(PLUGIN_H)
-
-incpath.o: incpath.c incpath.h $(CONFIG_H) $(SYSTEM_H) $(CPPLIB_H) \
-		intl.h prefix.h coretypes.h $(TM_H) cppdefault.h $(TARGET_H) \
-		$(MACHMODE_H)
 
 CFLAGS-prefix.o += -DPREFIX=\"$(prefix)\" -DBASEVER=$(BASEVER_s)
 prefix.o: prefix.c $(CONFIG_H) $(SYSTEM_H) coretypes.h prefix.h \
@@ -2446,7 +2428,7 @@ emit-rtl.o : emit-rtl.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(RTL_H) \
 real.o : real.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
    $(DIAGNOSTIC_CORE_H) $(TM_P_H) $(REAL_H) dfp.h
 dfp.o : dfp.c dfp.h $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H)	$(TREE_H) \
-   $(DIAGNOSTIC_CORE_H) $(TM_P_H) $(REAL_H) $(DECNUM_H)
+   $(DIAGNOSTIC_CORE_H) $(TM_P_H) $(REAL_H)
 fixed-value.o: fixed-value.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
    $(TREE_H) $(REAL_H) $(DIAGNOSTIC_CORE_H)
 integrate.o : integrate.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
@@ -3591,7 +3573,7 @@ PLUGIN_HEADERS = $(TREE_H) $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
   $(host_xm_file_list) $(host_xm_include_list) $(xm_include_list) \
   intl.h $(PLUGIN_VERSION_H) $(DIAGNOSTIC_H) ${C_TREE_H} \
   $(C_COMMON_H) c-family/c-objc.h $(C_PRETTY_PRINT_H) \
-  tree-iterator.h $(PLUGIN_H) $(TREE_FLOW_H) langhooks.h incpath.h debug.h \
+  tree-iterator.h $(PLUGIN_H) $(TREE_FLOW_H) langhooks.h debug.h \
   $(EXCEPT_H) tree-ssa-sccvn.h $(REAL_H) output.h $(IPA_UTILS_H) \
   $(C_PRAGMA_H)  $(CPPLIB_H)  $(FUNCTION_H) \
   cppdefault.h flags.h $(MD5_H) params.def params.h prefix.h tree-inline.h \
