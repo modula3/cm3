@@ -5649,16 +5649,6 @@ $as_echo "$gcc_cv_cloog_ct_0_15_5" >&6; }
 
 fi
 
-# Check for LTO support.
-# Check whether --enable-lto was given.
-if test "${enable_lto+set}" = set; then :
-  enableval=$enable_lto; enable_lto=$enableval
-else
-  enable_lto=yes; default_enable_lto=yes
-fi
-
-
-
 
 
 target_elf=no
@@ -5672,41 +5662,6 @@ case $target in
     target_elf=yes
     ;;
 esac
-
-if test $target_elf = yes; then :
-  # ELF platforms build the lto-plugin always.
-  build_lto_plugin=yes
-
-else
-  if test x"$default_enable_lto" = x"yes" ; then
-    case $target in
-      *-apple-darwin9* | *-cygwin* | *-mingw*) ;;
-      # On other non-ELF platforms, LTO has yet to be validated.
-      *) enable_lto=no ;;
-    esac
-  else
-  # Apart from ELF platforms, only Windows and Darwin support LTO so far.
-  # It would also be nice to check the binutils support, but we don't
-  # have gcc_GAS_CHECK_FEATURE available here.  For now, we'll just
-  # warn during gcc/ subconfigure; unless you're bootstrapping with
-  # -flto it won't be needed until after installation anyway.
-    case $target in
-      *-cygwin* | *-mingw* | *-apple-darwin*) ;;
-      *) if test x"$enable_lto" = x"yes"; then
-	as_fn_error "LTO support is not enabled for this target." "$LINENO" 5
-        fi
-      ;;
-    esac
-  fi
-  # Among non-ELF, only Windows platforms support the lto-plugin so far.
-  # Build it unless LTO was explicitly disabled.
-  case $target in
-    *-cygwin* | *-mingw*) build_lto_plugin=$enable_lto ;;
-    *) ;;
-  esac
-
-fi
-
 
 
 # By default, C is the only stage 1 language.
@@ -5808,19 +5763,7 @@ if test -d ${srcdir}/gcc; then
 
   new_enable_languages=,c,
 
-  # If LTO is enabled, add the LTO front end.
   extra_host_libiberty_configure_flags=
-  if test "$enable_lto" = "yes" ; then
-    case ,${enable_languages}, in
-      *,lto,*) ;;
-      *) enable_languages="${enable_languages},lto" ;;
-    esac
-    if test "${build_lto_plugin}" = "yes" ; then
-      configdirs="$configdirs lto-plugin"
-      extra_host_libiberty_configure_flags=--enable-shared
-    fi
-  fi
-
 
   missing_languages=`echo ",$enable_languages," | sed -e s/,all,/,/ -e s/,c,/,/ `
   potential_languages=,c,
