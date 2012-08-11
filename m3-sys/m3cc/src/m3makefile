@@ -558,9 +558,15 @@ end
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
+if GCC47
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty"
+           % & " | tee -a " & Log
+          ])
+else
 m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber"
            % & " | tee -a " & Log
           ])
+end
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %
