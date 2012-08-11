@@ -672,5 +672,3 @@ reorg_loops (bool do_reorder, struct hw_doloop_hooks *hooks)
     print_rtl (dump_file, get_insns ());
 }
 #endif
-
-char quash_apple_ranlib_warning_hw_doloop;

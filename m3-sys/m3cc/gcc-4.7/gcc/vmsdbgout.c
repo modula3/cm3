@@ -1841,5 +1841,3 @@ vms_file_stats_name (const char *filename, long long *cdt, long *siz, char *rfo,
 #endif
 }
 #endif
-
-char quash_apple_ranlib_warning_vmsdbgout;

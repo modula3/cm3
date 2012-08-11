@@ -493,5 +493,3 @@ xcoffout_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
   ASM_OUTPUT_LABEL (asm_out_file, fname);
 }
 #endif /* XCOFF_DEBUGGING_INFO */
-
-char quash_apple_ranlib_warning_xcoffout;
