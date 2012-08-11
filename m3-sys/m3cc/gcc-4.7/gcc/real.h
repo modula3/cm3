@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of floating-point access for GNU compiler.
    Copyright (C) 1989, 1991, 1994, 1996, 1997, 1998, 1999,
    2000, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
@@ -45,7 +47,7 @@ struct GTY(()) real_value {
      sure they're packed together, otherwise REAL_VALUE_TYPE_SIZE will
      be miscomputed.  */
   unsigned int /* ENUM_BITFIELD (real_value_class) */ cl : 2;
-  unsigned int decimal : 1;
+  unsigned int unused_decimal : 1;
   unsigned int sign : 1;
   unsigned int signalling : 1;
   unsigned int canonical : 1;
@@ -121,7 +123,7 @@ struct real_format
 		  const long *);
 
   /* The radix of the exponent and digits of the significand.  */
-  int b;
+  /*int b;*/
 
   /* Size of the significand in digits of radix B.  */
   int p;

@@ -9301,25 +9301,6 @@ build_common_tree_nodes (bool signed_char, bool short_double)
   uint32_type_node = build_nonstandard_integer_type (32, true);
   uint64_type_node = build_nonstandard_integer_type (64, true);
 
-  /* Decimal float types. */
-  dfloat32_type_node = make_node (REAL_TYPE);
-  TYPE_PRECISION (dfloat32_type_node) = DECIMAL32_TYPE_SIZE;
-  layout_type (dfloat32_type_node);
-  SET_TYPE_MODE (dfloat32_type_node, SDmode);
-  dfloat32_ptr_type_node = build_pointer_type (dfloat32_type_node);
-
-  dfloat64_type_node = make_node (REAL_TYPE);
-  TYPE_PRECISION (dfloat64_type_node) = DECIMAL64_TYPE_SIZE;
-  layout_type (dfloat64_type_node);
-  SET_TYPE_MODE (dfloat64_type_node, DDmode);
-  dfloat64_ptr_type_node = build_pointer_type (dfloat64_type_node);
-
-  dfloat128_type_node = make_node (REAL_TYPE);
-  TYPE_PRECISION (dfloat128_type_node) = DECIMAL128_TYPE_SIZE;
-  layout_type (dfloat128_type_node);
-  SET_TYPE_MODE (dfloat128_type_node, TDmode);
-  dfloat128_ptr_type_node = build_pointer_type (dfloat128_type_node);
-
   complex_integer_type_node = build_complex_type (integer_type_node);
   complex_float_type_node = build_complex_type (float_type_node);
   complex_double_type_node = build_complex_type (double_type_node);

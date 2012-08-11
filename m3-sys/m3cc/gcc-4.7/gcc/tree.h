@@ -3793,12 +3793,12 @@ enum tree_index
   TI_BOOLEAN_TYPE,
   TI_FILEPTR_TYPE,
 
-  TI_DFLOAT32_TYPE,
-  TI_DFLOAT64_TYPE,
-  TI_DFLOAT128_TYPE,
-  TI_DFLOAT32_PTR_TYPE,
-  TI_DFLOAT64_PTR_TYPE,
-  TI_DFLOAT128_PTR_TYPE,
+  unused_TI_DFLOAT32_TYPE,
+  unused_TI_DFLOAT64_TYPE,
+  unused_TI_DFLOAT128_TYPE,
+  unused_TI_DFLOAT32_PTR_TYPE,
+  unused_TI_DFLOAT64_PTR_TYPE,
+  unused_TI_DFLOAT128_PTR_TYPE,
 
   TI_VOID_LIST_NODE,
 
@@ -3951,14 +3951,6 @@ extern GTY(()) tree global_trees[TI_MAX];
 #define boolean_type_node		global_trees[TI_BOOLEAN_TYPE]
 #define boolean_false_node		global_trees[TI_BOOLEAN_FALSE]
 #define boolean_true_node		global_trees[TI_BOOLEAN_TRUE]
-
-/* The decimal floating point types. */
-#define dfloat32_type_node              global_trees[TI_DFLOAT32_TYPE]
-#define dfloat64_type_node              global_trees[TI_DFLOAT64_TYPE]
-#define dfloat128_type_node             global_trees[TI_DFLOAT128_TYPE]
-#define dfloat32_ptr_type_node          global_trees[TI_DFLOAT32_PTR_TYPE]
-#define dfloat64_ptr_type_node          global_trees[TI_DFLOAT64_PTR_TYPE]
-#define dfloat128_ptr_type_node         global_trees[TI_DFLOAT128_PTR_TYPE]
 
 /* The fixed-point types.  */
 #define sat_short_fract_type_node       global_trees[TI_SAT_SFRACT_TYPE]
