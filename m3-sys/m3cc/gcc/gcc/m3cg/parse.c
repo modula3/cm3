@@ -6335,6 +6335,7 @@ m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
 bool
 m3_post_options (PCSTR* /*pfilename*/)
 {
+  flag_unit_at_a_time = 1; /* to handle multiple .mc files on command line */
   flag_tree_sra = false;                        /* Scalar Replacement of Aggregates -- we abuse bit_field_ref */
   flag_reorder_blocks = false;                  /* breaks our exception handling? */
   flag_reorder_blocks_and_partition = false;    /* breaks our exception handling? */
