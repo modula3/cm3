@@ -8,14 +8,13 @@
 
 INTERFACE M3C;
 
-IMPORT M3CG, M3ObjFile, Wr;
+IMPORT M3CG, Wr;
 
 TYPE U <: Public;
 TYPE Public = M3CG.T OBJECT
       END;
 
-PROCEDURE New (logfile: Wr.T; obj: M3ObjFile.T): M3CG.T;
-(* returns a fresh, initialized code generator that writes its
-   log on 'logfile', or is silent if logfile = NIL. *)
+PROCEDURE New (cfile: Wr.T): M3CG.T;
+(* returns a new code generator that writes to 'cfile'. *)
 
 END M3C.
