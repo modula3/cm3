@@ -75,7 +75,6 @@ BEGIN
   END;
 END F2;
 
-
 PROCEDURE F3() RAISES ANY =
 VAR Function := "F3 ";
     i: CARDINAL;
