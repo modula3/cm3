@@ -1574,7 +1574,7 @@ PROCEDURE load_address (u: U; v: Var; offset: ByteOffset) =
       u.wr.NL    ();
     END;
     print(u, "/* load_address */\n");
-    push (u, "(" & Fmt.Int(offset) + "(char*)&" & M3ID.ToText (var.name) & ")");
+    push (u, "(" & Fmt.Int(offset) & "(char*)&" & M3ID.ToText (var.name) & ")");
   END load_address;
 
 PROCEDURE load_indirect (u: U; offset: ByteOffset; type: MType; type_multiple_of_32: ZType) =
@@ -1589,7 +1589,9 @@ PROCEDURE load_indirect (u: U; offset: ByteOffset; type: MType; type_multiple_of
     END;
     print(u, "/* load_indirect */\n");
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
-    push (u, "((" TypeNames[type_multiple_of_32] & ")(*(" & TypeNames[type] * "*)" & (" & Fmt.Int(offset) + "(char*)&" & M3ID.ToText (var.name) & "))");
+    WITH s0 = pop(u) DO
+      push (u, "((" & TypeNames[type_multiple_of_32] & ")(*(" & TypeNames[type] & "*)(" & Fmt.Int(offset) & "+ (char*)" & s0 & ")))");
+    END;
   END load_indirect;
 
 PROCEDURE store_indirect (u: U; offset: ByteOffset; type_multiple_of_32: ZType; type: MType) =
