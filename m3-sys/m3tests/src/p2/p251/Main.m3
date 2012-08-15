@@ -33,6 +33,13 @@ END PrintStackHeight;
 
 PROCEDURE NL() = BEGIN Put("\n"); END NL;
 
+PROCEDURE F0() =
+CONST Function = "F0 ";
+BEGIN
+  Put(Function); NL();
+  PrintStackHeight();
+END F0;
+
 PROCEDURE F1() RAISES ANY =
 CONST Function = "F1 ";
 BEGIN
@@ -70,29 +77,31 @@ END F2;
 
 
 PROCEDURE F3() RAISES ANY =
-CONST Function = "F3 ";
+VAR Function := "F3 ";
+    i: CARDINAL;
 BEGIN
-  Put(Function & Int(Line())); NL();
+  Put(Int(i) & " " & Function & Int(Line())); NL(); INC(i);
   PrintStackHeight();
   TRY
     PrintStackHeight();
-    Put(Function & Int(Line())); NL();
+    Put(Int(i) & " " & Function & Int(Line())); NL(); INC(i);
     PrintStackHeight();
     TRY
       PrintStackHeight();
-      Put(Function & Int(Line())); NL();
+      Put(Int(i) & " " & Function & Int(Line())); NL(); INC(i);
       TRY
         PrintStackHeight();
-        Put(Function & Int(Line())); NL();
+        Put(Int(i) & " " & Function & Int(Line())); NL(); INC(i);
         RAISE E;
       FINALLY
-        Put(Function & Int(Line())); NL();
+        Function := "finally F3 ";
+        Put(Int(i) & " " & Function & Int(Line())); NL(); INC(i);
       END;
     FINALLY
-      Put(Function & Int(Line())); NL();
+      Put(Int(i) & " " & Function & Int(Line())); NL(); INC(i);
     END;
   FINALLY
-    Put(Function & Int(Line())); NL();
+    Put(Int(i) & " " & Function & Int(Line())); NL(); INC(i);
   END;
 END F3;
 
@@ -104,12 +113,16 @@ PROCEDURE F4() =
 CONST Function = "F4 ";
 BEGIN
   Put(Function & Int(Line())); NL();
+  PrintStackHeight();
   TRY
     Put(Function & Int(Line())); NL();
+    PrintStackHeight();
     TRY
       Put(Function & Int(Line())); NL();
+      PrintStackHeight();
       TRY
         Put(Function & Int(Line())); NL();
+        PrintStackHeight();
         RAISE E1;
       EXCEPT ELSE
         RAISE E2;
@@ -134,14 +147,26 @@ BEGIN
   END;
 END F5;
 
+PROCEDURE F6() =
+CONST Function = "F6 ";
+BEGIN
+  FOR i := 1 TO 10 DO
+    TRY
+    FINALLY
+    END
+  END;
+END F6;
+
 PROCEDURE Main() =
 BEGIN
   top_of_stack := GetStack();
+  F0();
   TRY F1(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
   TRY F2(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
   TRY F3(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
   TRY F4(); EXCEPT END;
   TRY F5(); EXCEPT END;
+  TRY F6(); EXCEPT END;
 END Main;
 
 BEGIN
