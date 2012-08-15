@@ -265,14 +265,12 @@ BEGIN
   RETURN t;
 END Type_Init;
 
-PROCEDURE TypeidToType(typeid: TypeUID): Type_t =
-VAR type: REFANY;
+PROCEDURE TypeidToType_Get(typeid: TypeUID): Type_t =
+VAR type: REFANY := NIL;
 BEGIN
-  IF typeidToType.get(typeid, type) THEN
-    RETURN NARROW(type, Type_t);
-  END;
-  RETURN Type_Init(NEW(Type_t, typeid := typeid));
-END TypeidToType;
+  EVAL typeidToType.get(typeid, type);
+  RETURN NARROW(type, Type_t);
+END TypeidToType_Get;
 
 (* see RTBuiltin.mx
    see RT0.i3 *)
@@ -609,8 +607,6 @@ END TypeIDToText;
 PROCEDURE declare_array (u: U; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
 VAR index_type: Type_t; 
     element_type: Type_t;
-    index_type_refany: REFANY; 
-    element_type_refany: REFANY;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_array");
@@ -621,18 +617,16 @@ VAR index_type: Type_t;
       u.wr.NL   ();
     END;
     print (u, "/* declare_array */\n");
-    EVAL typeidToType.get(index_typeid, index_type_refany);
-    EVAL typeidToType.get(element_typeid, element_type_refany);
-    IF index_type_refany = NIL THEN
+    index_type := TypeidToType_Get(index_typeid);
+    element_type :=  TypeidToType_Get(element_typeid);
+    IF index_type = NIL THEN
       RTIO.PutText("declare_array nil index_type\n");
       RTIO.Flush();
     END;
-    IF element_type_refany = NIL THEN
+    IF element_type = NIL THEN
       RTIO.PutText("declare_array nil element_type\n");
       RTIO.Flush();
     END;
-    index_type := NARROW(index_type_refany, Type_t);
-    element_type := NARROW(element_type_refany, Type_t);
     EVAL typeidToType.put(typeid, NEW(FixedArray_t,
             typeid := typeid,
             byte_size := total_bit_size DIV 8,
@@ -650,8 +644,7 @@ VAR index_type: Type_t;
   END declare_array;
 
 PROCEDURE declare_open_array (u: U; typeid, element_typeid: TypeUID; bit_size: BitSize) =
-VAR element_type_refany: REFANY;
-    element_type: Type_t;
+VAR element_type: Type_t;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_open_array");
@@ -662,12 +655,11 @@ VAR element_type_refany: REFANY;
     END;
     print (u, "/* declare_open_array */\n");
     <* ASSERT bit_size MOD Target.Integer.size = 0 *>
-    EVAL typeidToType.get(element_typeid, element_type_refany);
-    IF element_type_refany = NIL THEN
+    element_type := TypeidToType_Get(element_typeid);
+    IF element_type = NIL THEN
       RTIO.PutText("declare_array nil element_type\n");
       RTIO.Flush();
     END;
-    element_type := NARROW(element_type_refany, Type_t);
     print(u, "typedef struct { ");
     print(u, TypeIDToText(element_typeid));
     print(u, "* _elts; CARDINAL _size");
@@ -1476,11 +1468,9 @@ PROCEDURE if_false (u: U; itype: IType; label: Label; <*UNUSED*> frequency: Freq
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_false");
-      (*
       u.wr.TName (itype);
       u.wr.Lab   (label);
       u.wr.NL    ();
-      *)
     END;
     print (u, "/* if_false */\n");
     print(u, "if (!(" & pop(u) & ")) goto L" & Fmt.Unsigned(label) & ";\n");
