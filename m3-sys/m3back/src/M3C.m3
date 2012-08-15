@@ -24,6 +24,14 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT Wrx86, M3ID, TInt, SortedIntRefTbl;
 (*IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq;*)
 
+(* ztype: zero extended type -- a "larger" type that is a multiple of 32 bits in size
+ *                              a type to store in registers, a type
+ *                              to store on the compile-time or runtime stack
+ *                              a type to pass a parameter as
+ * mtype: memory type -- a "smaller" type that is possibly truncated to fit
+ *        an in-memory layout
+ *)
+ 
 REVEAL
   U = Public BRANDED "M3C.U" OBJECT
         wr     : Wrx86.T := NIL;
@@ -581,16 +589,16 @@ PROCEDURE set_source_line (u: U; line: INTEGER) =
 
 (*------------------------------------------- debugging type declarations ---*)
 
-PROCEDURE declare_typename (u: U; type: TypeUID; name: Name) =
+PROCEDURE declare_typename (u: U; typeid: TypeUID; name: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_typename");
-      u.wr.Tipe  (type);
+      u.wr.Tipe  (typeid);
       u.wr.ZName (name);
       u.wr.NL    ();
     END;
     print(u, "/* declare_typename */\n");
-    print(u, "typedef M" & Fmt.Unsigned(type) & " " & M3ID.ToText(name) & ";\n");
+    print(u, "typedef M" & Fmt.Unsigned(typeid) & " " & M3ID.ToText(name) & ";\n");
   END declare_typename;
 
 PROCEDURE TypeIDToText (x: INTEGER): TEXT =
@@ -718,61 +726,61 @@ PROCEDURE declare_enum_elt (u: U; name: Name) =
     END;
   END declare_enum_elt;
 
-PROCEDURE declare_packed  (u: U; type: TypeUID; size: BitSize; base: TypeUID) =
+PROCEDURE declare_packed  (u: U; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_packed");
-      u.wr.Tipe (type);
-      u.wr.BInt (size);
+      u.wr.Tipe (typeid);
+      u.wr.BInt (bit_size);
       u.wr.Tipe (base);
       u.wr.NL   ();
     END;
     print (u, "/* declare_packed */\n");
   END declare_packed;
 
-PROCEDURE declare_record (u: U; type: TypeUID; size: BitSize; n_fields: INTEGER) =
+PROCEDURE declare_record (u: U; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_record");
-      u.wr.Tipe (type);
-      u.wr.BInt (size);
+      u.wr.Tipe (typeid);
+      u.wr.BInt (bit_size);
       u.wr.Int  (n_fields);
       u.wr.NL   ();
     END;
     print (u, "/* declare_record */\n");
   END declare_record;
 
-PROCEDURE declare_field (u: U; name: Name; offset: BitOffset; size: BitSize; type: TypeUID) =
+PROCEDURE declare_field (u: U; name: Name; offset: BitOffset; size: BitSize; typeid: TypeUID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_field");
       u.wr.ZName (name);
       u.wr.BInt  (offset);
       u.wr.BInt  (size);
-      u.wr.Tipe  (type);
+      u.wr.Tipe  (typeid);
       u.wr.NL    ();
     END;
     print (u, "/* declare_field */\n");
   END declare_field;
 
-PROCEDURE declare_set (u: U; type, domain: TypeUID; size: BitSize) =
+PROCEDURE declare_set (u: U; typeid, domain: TypeUID; size: BitSize) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_set");
-      u.wr.Tipe (type);
+      u.wr.Tipe (typeid);
       u.wr.Tipe (domain);
       u.wr.BInt (size);
     END;
     print (u, "/* declare_set */\n");
   END declare_set;
 
-PROCEDURE declare_subrange (u: U; type, domain: TypeUID;
+PROCEDURE declare_subrange (u: U; typeid, domain: TypeUID;
                             READONLY min, max: Target.Int;
                             size: BitSize) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_subrange");
-      u.wr.Tipe (type);
+      u.wr.Tipe (typeid);
       u.wr.Tipe (domain);
       u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(min))); (* What about size? *)
       u.wr.TInt (TIntN.FromTargetInt(max, NUMBER(max))); (* What about size? *)
@@ -781,11 +789,11 @@ PROCEDURE declare_subrange (u: U; type, domain: TypeUID;
     print (u, "/* declare_subrange */\n");
   END declare_subrange;
 
-PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+PROCEDURE declare_pointer (u: U; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_pointer");
-      u.wr.Tipe (type);
+      u.wr.Tipe (typeid);
       u.wr.Tipe (target);
       u.wr.Txt  (brand);
       u.wr.Bool (traced);
@@ -794,11 +802,11 @@ PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOO
     print (u, "/* declare_pointer */\n");
   END declare_pointer;
 
-PROCEDURE declare_indirect (u: U; type, target: TypeUID) =
+PROCEDURE declare_indirect (u: U; typeid, target: TypeUID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_indirect");
-      u.wr.Tipe (type);
+      u.wr.Tipe (typeid);
       u.wr.Tipe (target);
       u.wr.NL   ();
     END;
@@ -806,13 +814,13 @@ PROCEDURE declare_indirect (u: U; type, target: TypeUID) =
   END declare_indirect;
 
 
-PROCEDURE declare_proctype (u: U; type: TypeUID; n_formals: INTEGER;
+PROCEDURE declare_proctype (u: U; typeid: TypeUID; n_formals: INTEGER;
                             result: TypeUID; n_raises: INTEGER;
                             callingConvention: CallingConvention) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_proctype");
-      u.wr.Tipe (type);
+      u.wr.Tipe (typeid);
       u.wr.Int  (n_formals);
       u.wr.Tipe (result);
       u.wr.Int  (n_raises);
@@ -822,12 +830,12 @@ PROCEDURE declare_proctype (u: U; type: TypeUID; n_formals: INTEGER;
     print (u, "/* declare_proctype */\n");
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U; name: Name; type: TypeUID) =
+PROCEDURE declare_formal (u: U; name: Name; typeid: TypeUID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_formal");
       u.wr.ZName (name);
-      u.wr.Tipe  (type);
+      u.wr.Tipe  (typeid);
       u.wr.NL    ();
     END;
     print(u, "/* declare_formal */\n");
@@ -843,14 +851,14 @@ PROCEDURE declare_raises (u: U; name: Name) =
     print (u, "/* declare_raises */\n");
   END declare_raises;
 
-PROCEDURE declare_object (u: U; type, super: TypeUID;
+PROCEDURE declare_object (u: U; typeid, super: TypeUID;
                           brand: TEXT; traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
                           field_size: BitSize) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_object");
-      u.wr.Tipe (type);
+      u.wr.Tipe (typeid);
       u.wr.Tipe (super);
       u.wr.Txt  (brand);
       u.wr.Bool (traced);
@@ -873,11 +881,11 @@ PROCEDURE declare_method (u: U; name: Name; signature: TypeUID) =
     print (u, "/* declare_method */\n");
   END declare_method;
 
-PROCEDURE declare_opaque (u: U; type, super: TypeUID) =
+PROCEDURE declare_opaque (u: U; typeid, super: TypeUID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_opaque");
-      u.wr.Tipe  (type);
+      u.wr.Tipe  (typeid);
       u.wr.Tipe  (super);
       u.wr.NL    ();
     END;
@@ -943,7 +951,7 @@ PROCEDURE import_global (u: U; name: Name; size: ByteSize; alignment: Alignment;
     RETURN var;
   END import_global;
 
-PROCEDURE declare_segment (u: U; name: Name; type: TypeUID; is_const: BOOLEAN): Var =
+PROCEDURE declare_segment (u: U; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var =
 VAR var := NEW(CVar, name := FixName(name));
     text: TEXT := NIL;
     length := 0;
@@ -951,7 +959,7 @@ BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_segment");
       u.wr.ZName (name);
-      u.wr.Tipe  (type);
+      u.wr.Tipe  (typeid);
       u.wr.Bool  (is_const);
       u.wr.VName (var);
       u.wr.NL    ();
@@ -1450,12 +1458,12 @@ PROCEDURE jump (u: U; label: Label) =
     print(u, "goto L" & Fmt.Unsigned(label) & ";\n");
   END jump;
 
-PROCEDURE if_true  (u: U; type: IType; label: Label; <*UNUSED*> frequency: Frequency) =
-  (* IF (s0.type # 0) GOTO label ; pop *)
+PROCEDURE if_true  (u: U; itype: IType; label: Label; <*UNUSED*> frequency: Frequency) =
+  (* IF (s0.itype # 0) GOTO label ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_true");
-      u.wr.TName (type);
+      u.wr.TName (itype);
       u.wr.Lab   (label);
       u.wr.NL    ();
     END;
@@ -1463,13 +1471,13 @@ PROCEDURE if_true  (u: U; type: IType; label: Label; <*UNUSED*> frequency: Frequ
     print(u, "if (" & pop(u) & ") goto L" & Fmt.Unsigned(label) & ";\n");
   END if_true;
 
-PROCEDURE if_false (u: U; <*UNUSED*> type: IType; label: Label; <*UNUSED*> frequency: Frequency) =
-  (* IF (s0.type = 0) GOTO label ; pop *)
+PROCEDURE if_false (u: U; itype: IType; label: Label; <*UNUSED*> frequency: Frequency) =
+  (* IF (s0.itype = 0) GOTO label ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_false");
       (*
-      u.wr.TName (type);
+      u.wr.TName (itype);
       u.wr.Lab   (label);
       u.wr.NL    ();
       *)
@@ -1478,15 +1486,15 @@ PROCEDURE if_false (u: U; <*UNUSED*> type: IType; label: Label; <*UNUSED*> frequ
     print(u, "if (!(" & pop(u) & ")) goto L" & Fmt.Unsigned(label) & ";\n");
   END if_false;
 
-PROCEDURE if_compare (u: U; type: ZType; op: CompareOp; label: Label;
+PROCEDURE if_compare (u: U; ztype: ZType; op: CompareOp; label: Label;
                       <*UNUSED*> frequency: Frequency) =
-  (* IF (s1.type  op  s0.type) GOTO label ; pop(2) *)
+  (* IF (s1.ztype op s0.ztype) GOTO label ; pop(2) *)
   VAR s0 := pop(u);
       s1 := pop(u);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_compare");
-      u.wr.TName (type);
+      u.wr.TName (ztype);
       u.wr.OutT  (CompareOpName [op]);
       u.wr.Lab   (label);
       u.wr.NL    ();
@@ -1495,12 +1503,12 @@ PROCEDURE if_compare (u: U; type: ZType; op: CompareOp; label: Label;
     print(u, "if ((" & s1 & ")" & "op" & "(" & s0 & ")) goto L" & Fmt.Unsigned(label) & ";\n");
   END if_compare;
 
-PROCEDURE case_jump (u: U; type: IType; READONLY labels: ARRAY OF Label) =
-  (* "GOTO labels[s0.type] ; pop" with no range checking on s0.type *)
+PROCEDURE case_jump (u: U; itype: IType; READONLY labels: ARRAY OF Label) =
+  (* "GOTO labels[s0.itype] ; pop" with no range checking on s0.itype *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("case_jump");
-      u.wr.TName (type);
+      u.wr.TName (itype);
       u.wr.Int   (NUMBER(labels));
       FOR i := FIRST (labels) TO LAST (labels) DO
         u.wr.Lab (labels [i]);
@@ -1527,10 +1535,10 @@ PROCEDURE exit_proc (u: U; type: Type) =
 
 (*------------------------------------------------------------ load/store ---*)
 
-PROCEDURE load  (u: U; v: Var; offset: ByteOffset; type: MType; type_multiple_of_32: ZType) =
-(* push; s0.u := Mem [ ADR(var) + offset ].type ; The only allowed (type->u) conversions
+PROCEDURE load  (u: U; v: Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
+(* push; s0.ztype := Mem [ ADR(var) + offset ].mtype ; The only allowed (mtype->ztype) conversions
    are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
-   The source type, type, determines whether the value is sign-extended or
+   The source type, mtype, determines whether the value is sign-extended or
    zero-extended. *)
   VAR var := NARROW(v, CVar);
   BEGIN
@@ -1538,29 +1546,30 @@ PROCEDURE load  (u: U; v: Var; offset: ByteOffset; type: MType; type_multiple_of
       u.wr.Cmd   ("load");
       u.wr.VName (var);
       u.wr.Int   (offset);
-      u.wr.TName (type);
-      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (mtype);
+      u.wr.TName (ztype);
       u.wr.NL    ();
     END;
     print(u, "/* load */\n");
-    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     push (u, M3ID.ToText (var.name));
+    push (u, "(" & Fmt.Int(offset) & "(char*)&" & M3ID.ToText (var.name) & ")");
   END load;
 
-PROCEDURE store (u: U; v: Var; offset: ByteOffset; type_multiple_of_32: ZType; type: MType) =
-(* Mem [ ADR(var) + offset ].u := s0.type; pop *)
+PROCEDURE store (u: U; v: Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
+(* Mem [ ADR(var) + offset ].ztype := s0.mtype; pop *)
   VAR var := NARROW(v, CVar);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store");
       u.wr.VName (var);
       u.wr.Int   (offset);
-      u.wr.TName (type_multiple_of_32);
-      u.wr.TName (type);
+      u.wr.TName (ztype);
+      u.wr.TName (mtype);
       u.wr.NL    ();
     END;
     print(u, "/* store */\n");
-    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
   END store;
 
 PROCEDURE load_address (u: U; v: Var; offset: ByteOffset) =
@@ -1577,35 +1586,35 @@ PROCEDURE load_address (u: U; v: Var; offset: ByteOffset) =
     push (u, "(" & Fmt.Int(offset) & "(char*)&" & M3ID.ToText (var.name) & ")");
   END load_address;
 
-PROCEDURE load_indirect (u: U; offset: ByteOffset; type: MType; type_multiple_of_32: ZType) =
-(* s0.type_multiple_of_32 := Mem [s0.A + offset].type  *)
+PROCEDURE load_indirect (u: U; offset: ByteOffset; mtype: MType; ztype: ZType) =
+(* s0.ztype := Mem [s0.A + offset].mtype  *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_indirect");
       u.wr.Int   (offset);
-      u.wr.TName (type);
-      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (mtype);
+      u.wr.TName (ztype);
       u.wr.NL    ();
     END;
     print(u, "/* load_indirect */\n");
-    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     WITH s0 = pop(u) DO
-      push (u, "((" & TypeNames[type_multiple_of_32] & ")(*(" & TypeNames[type] & "*)(" & Fmt.Int(offset) & "+ (char*)" & s0 & ")))");
+      push (u, "((" & TypeNames[ztype] & ")(*(" & TypeNames[mtype] & "*)(" & Fmt.Int(offset) & "+ (char*)" & s0 & ")))");
     END;
   END load_indirect;
 
-PROCEDURE store_indirect (u: U; offset: ByteOffset; type_multiple_of_32: ZType; type: MType) =
-(* Mem [s1.A + offset].type := s0.type_multiple_of_32; pop (2) *)
+PROCEDURE store_indirect (u: U; offset: ByteOffset; ztype: ZType; mtype: MType) =
+(* Mem [s1.A + offset].mtype := s0.ztype; pop (2) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store_indirect");
       u.wr.Int   (offset);
-      u.wr.TName (type_multiple_of_32);
-      u.wr.TName (type);
+      u.wr.TName (ztype);
+      u.wr.TName (mtype);
       u.wr.NL    ();
     END;
     print(u, "/* store_indirect */\n");
-    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
   END store_indirect;
 
 (*-------------------------------------------------------------- literals ---*)
@@ -1620,25 +1629,25 @@ PROCEDURE load_nil (u: U) =
     print(u, "/* load_nil */\n");
   END load_nil;
 
-PROCEDURE load_integer  (u: U; type: IType; READONLY j: Target.Int) =
-  (* push ; s0.type := i *)
-  VAR i := TIntN.FromTargetInt(j, CG_Bytes[type]);
+PROCEDURE load_integer  (u: U; itype: IType; READONLY j: Target.Int) =
+  (* push ; s0.itype := i *)
+  VAR i := TIntN.FromTargetInt(j, CG_Bytes[itype]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_integer");
-      u.wr.TName (type);
+      u.wr.TName (itype);
       u.wr.TInt  (i);
       u.wr.NL    ();
     END;
     print(u, "/* load_integer */\n");
   END load_integer;
 
-PROCEDURE load_float    (u: U; type: RType; READONLY float: Target.Float) =
-  (* push ; s0.type := float *)
+PROCEDURE load_float    (u: U; rtype: RType; READONLY float: Target.Float) =
+  (* push ; s0.rtype := float *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_float");
-      u.wr.TName (type);
+      u.wr.TName (rtype);
       u.wr.Flt   (float);
       u.wr.NL    ();
     END;
@@ -1647,13 +1656,13 @@ PROCEDURE load_float    (u: U; type: RType; READONLY float: Target.Float) =
 
 (*------------------------------------------------------------ arithmetic ---*)
 
-PROCEDURE compare (u: U; type: ZType; result_type: IType; op: CompareOp) =
-  (* s1.result_type := (s1.type  op  s0.type)  ; pop *)
+PROCEDURE compare (u: U; ztype: ZType; itype: IType; op: CompareOp) =
+  (* s1.itype := (s1.ztype op s0.ztype)  ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("compare");
-      u.wr.TName (type);
-      u.wr.TName (result_type);
+      u.wr.TName (ztype);
+      u.wr.TName (itype);
       u.wr.OutT  (CompareOpName [op]);
       u.wr.NL    ();
     END;
@@ -1807,13 +1816,13 @@ PROCEDURE min (u: U; type: ZType) =
     *)
   END min;
 
-PROCEDURE cvt_int (u: U; type: RType; x: IType; op: ConvertOp) =
+PROCEDURE cvt_int (u: U; rtype: RType; itype: IType; op: ConvertOp) =
   (* s0.x := ROUND (s0.type) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("cvt_int");
-      u.wr.TName (type);
-      u.wr.TName (x);
+      u.wr.TName (rtype);
+      u.wr.TName (itype);
       u.wr.OutT  (ConvertOpName [op]);
       u.wr.NL    ();
     END;
@@ -1823,13 +1832,13 @@ PROCEDURE cvt_int (u: U; type: RType; x: IType; op: ConvertOp) =
     *)
   END cvt_int;
 
-PROCEDURE cvt_float (u: U; type: AType; x: RType) =
+PROCEDURE cvt_float (u: U; atype: AType; rtype: RType) =
   (* s0.x := FLOAT (s0.type, x) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("cvt_float");
-      u.wr.TName (type);
-      u.wr.TName (x);
+      u.wr.TName (atype);
+      u.wr.TName (rtype);
       u.wr.NL    ();
     END;
     print(u, "/* cvt_float */\n");
@@ -1893,7 +1902,7 @@ PROCEDURE set_member (u: U; size: ByteSize; type: IType) =
   END set_member;
 
 PROCEDURE set_compare (u: U; size: ByteSize; op: CompareOp; type: IType) =
-  (* s1.type := (s1.B  op  s0.B)  ; pop *)
+  (* s1.type := (s1.B op s0.B) ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_compare");
@@ -2191,13 +2200,13 @@ PROCEDURE cg_pop (u: U; type: Type) =
     EVAL pop(u);
   END cg_pop;
 
-PROCEDURE copy_n (u: U; type_multiple_of_32: IType; type: MType; overlap: BOOLEAN) =
-  (* Mem[s2.A:s0.type_multiple_of_32] := Mem[s1.A:s0.type_multiple_of_32]; pop(3)*)
+PROCEDURE copy_n (u: U; itype: IType; mtype: MType; overlap: BOOLEAN) =
+  (* Mem[s2.A:s0.ztype] := Mem[s1.A:s0.ztype]; pop(3)*)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy_n");
-      u.wr.TName (type_multiple_of_32);
-      u.wr.TName (type);
+      u.wr.TName (itype);
+      u.wr.TName (mtype);
       u.wr.Bool  (overlap);
       u.wr.NL    ();
     END;
@@ -2217,13 +2226,13 @@ PROCEDURE copy (u: U; n: INTEGER; type: MType; overlap: BOOLEAN) =
     print(u, "/* copy */\n");
   END copy;
 
-PROCEDURE zero_n (u: U; type_multiple_of_32: IType; type: MType) =
+PROCEDURE zero_n (u: U; itype: IType; mtype: MType) =
   (* Mem[s1.A:s0.type_multiple_of_32] := 0; pop(2) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("zero_n");
-      u.wr.TName (type_multiple_of_32);
-      u.wr.TName (type);
+      u.wr.TName (itype);
+      u.wr.TName (mtype);
       u.wr.NL    ();
     END;
 
@@ -2456,13 +2465,13 @@ PROCEDURE pop_param (u: U; type: MType) =
     END;
   END pop_param;
 
-PROCEDURE pop_struct (u: U; type: TypeUID; size: ByteSize; alignment: Alignment) =
+PROCEDURE pop_struct (u: U; typeid: TypeUID; size: ByteSize; alignment: Alignment) =
   (* pop s0 and make it the "next" parameter in the current call
    * NOTE: it is passed by value *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("pop_struct");
-      u.wr.Tipe  (type);
+      u.wr.Tipe  (typeid);
       u.wr.Int   (size);
       u.wr.Int   (alignment);
       u.wr.NL    ();
@@ -2573,55 +2582,55 @@ PROCEDURE Cmt2 (u: U; text: TEXT; VAR width: INTEGER) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE store_ordered (u: U; type_multiple_of_32: ZType; type: MType; <*UNUSED*>order: MemoryOrder) =
-(* Mem [s1.A].u := s0.type;
+PROCEDURE store_ordered (u: U; ztype: ZType; mtype: MType; <*UNUSED*>order: MemoryOrder) =
+(* Mem [s1.A].mtype := s0.ztype;
    pop (2) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store_ordered");
-      u.wr.TName (type_multiple_of_32);
-      u.wr.TName (type);
+      u.wr.TName (ztype);
+      u.wr.TName (mtype);
       u.wr.NL    ();
     END;
     print(u, "/* store_ordered */\n");
   END store_ordered;
 
-PROCEDURE load_ordered (u: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>order: MemoryOrder) =
-(* s0.type_multiple_of_32 := Mem [s0.A].type  *)
+PROCEDURE load_ordered (u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
+(* s0.ztype := Mem [s0.A].mtype  *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_ordered");
-      u.wr.TName (type);
-      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (mtype);
+      u.wr.TName (ztype);
       u.wr.NL    ();
     END;
     print(u, "/* load_ordered */\n");
   END load_ordered;
 
-PROCEDURE exchange (u: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>order: MemoryOrder) =
-(* tmp := Mem [s1.A + offset].type;
-   Mem [s1.A + offset].type := s0.type_multiple_of_32;
-   s0.type_multiple_of_32 := tmp;
+PROCEDURE exchange (u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
+(* tmp := Mem [s1.A + offset].mtype;
+   Mem [s1.A + offset].mtype := s0.ztype;
+   s0.ztype := tmp;
    pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("exchange");
-      u.wr.TName (type);
-      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (mtype);
+      u.wr.TName (ztype);
       u.wr.NL    ();
     END;
     print(u, "/* exchange */\n");
   END exchange;
 
-PROCEDURE compare_exchange (u: U; type: MType; type_multiple_of_32: ZType; result_type: IType;
+PROCEDURE compare_exchange (u: U; mtype: MType; ztype: ZType; result_type: IType;
                             <*UNUSED*>success, failure: MemoryOrder) =
-(* original := Mem[s2.A].type;
+(* original := Mem[s2.A].mtype;
    spurious_failure := whatever;
-   IF original = Mem[s1.A].type AND NOT spurious_failure THEN
-     Mem [s2.A].type := s0.type_multiple_of_32;
+   IF original = Mem[s1.A].mtype AND NOT spurious_failure THEN
+     Mem [s2.A].mtype := s0.ztype;
      s2.result_type := 1;
    ELSE
-     Mem [s2.A].type := original; x86 really does rewrite the original value, atomically
+     Mem [s2.A].mtype := original; x86 really does rewrite the original value, atomically
      s2.result_type := 0;
    END;
    pop(2);
@@ -2632,8 +2641,8 @@ PROCEDURE compare_exchange (u: U; type: MType; type_multiple_of_32: ZType; resul
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("compare_exchange");
-      u.wr.TName (type);
-      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (mtype);
+      u.wr.TName (ztype);
       u.wr.TName (result_type);
       u.wr.NL    ();
     END;
@@ -2654,11 +2663,11 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op (u: U; atomic_op: AtomicOp; type: MType; type_multiple_of_32: ZType;
+PROCEDURE fetch_and_op (u: U; atomic_op: AtomicOp; mtype: MType; ztype: ZType;
                         <*UNUSED*>order: MemoryOrder) =
-(* original := Mem [s1.A].type;
-   Mem [s1.A].type := original op s0.type_multiple_of_32;
-   s1.type_multiple_of_32 := original;
+(* original := Mem [s1.A].mtype;
+   Mem [s1.A].mtype := original op s0.ztype;
+   s1.ztype := original;
    pop
 
 => store the new value, return the old value
@@ -2670,8 +2679,8 @@ Some operations can be done better though.
     IF u.debug THEN
       u.wr.Cmd   ("fetch_and_op");
       u.wr.OutT  (AtomicOpName[atomic_op]);
-      u.wr.TName (type);
-      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (mtype);
+      u.wr.TName (ztype);
       u.wr.NL    ();
     END;
     print(u, "/* fetch_and_op */\n");
