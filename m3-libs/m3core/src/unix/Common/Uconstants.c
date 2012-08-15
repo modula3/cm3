@@ -208,6 +208,14 @@ Y(R_OK, 4)
 X(F_SETFD) /* Set close-on-exec flag */
 X(F_GETFL) /* Get fd status flags */
 X(F_SETFL) /* Set fd status flags */
+X(F_DUPFD)  /* Duplicate fd */
+X(F_GETFD)  /* Get close-on-exec flag */
+X(F_GETOWN) /* Set owner */
+X(F_SETOWN) /* Get owner */
+X(F_GETLK)  /* Get file lock */
+X(F_SETLK)  /* Set file lock */
+X(F_SETLKW) /* Set file lock and wait */
+X(FD_CLOEXEC)   /* Close file descriptor on exec() */
 
 Y(MSETUID, S_ISUID) /* set user id on execution */
 Y(MSETGID, S_ISGID) /* set group id on execution */

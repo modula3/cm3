@@ -50,11 +50,29 @@ CONST
 <*EXTERNAL "Unix__underscore_exit"*>PROCEDURE underscore_exit (i: int);
 
 (*CONST*)
-<*EXTERNAL "Unix__F_SETFD"*> VAR F_SETFD: int; (* Set close-on-exec flag *)
-<*EXTERNAL "Unix__F_GETFL"*> VAR F_GETFL: int; (* Get fd status flags *)
-<*EXTERNAL "Unix__F_SETFL"*> VAR F_SETFL: int; (* Set fd status flags *)
+<*EXTERNAL "Unix__F_DUPFD"*> VAR F_DUPFD: int;      (* Duplicate fd *)
+<*EXTERNAL "Unix__F_GETFD"*> VAR F_GETFD: int;      (* Get close-on-exec flag *)
+<*EXTERNAL "Unix__F_SETFD"*> VAR F_SETFD: int;      (* Set close-on-exec flag *)
+<*EXTERNAL "Unix__F_GETFL"*> VAR F_GETFL: int;      (* Get fd status flags *)
+<*EXTERNAL "Unix__F_SETFL"*> VAR F_SETFL: int;      (* Set fd status flags *)
+<*EXTERNAL "Unix__F_GETOWN"*> VAR F_GETOWN: int;    (* Set owner *)
+<*EXTERNAL "Unix__F_SETOWN"*> VAR F_SETOWN: int;    (* Get owner *)
+<*EXTERNAL "Unix__F_GETLK"*> VAR F_GETLK: int;      (* Get file lock *)
+<*EXTERNAL "Unix__F_SETLK"*> VAR F_SETLK: int;      (* Set file lock *)
+<*EXTERNAL "Unix__F_SETLKW"*> VAR F_SETLKW: int;    (* Set file lock and wait *)
+<*EXTERNAL "Unix__FD_CLOEXEC"*> VAR FD_CLOEXEC: int; (* Close file descriptor on exec() *)
 
-<*EXTERNAL "Unix__fcntl"*>PROCEDURE fcntl (fd, request, arg: int): int;
+TYPE struct_flock = RECORD
+(* sorted by size and then name
+   This must match between Unix.i3 and UnixC.c. *)
+  l_len:    LONGINT := 0L;
+  l_start:  LONGINT := 0L;
+  l_pid:    INTEGER := 0;
+  l_type:   INTEGER := 0;
+  l_whence: INTEGER := 0;
+END;
+
+<*EXTERNAL "Unix__fcntl"*>PROCEDURE fcntl (fd: int; request, arg: INTEGER): int;
 
 <*EXTERNAL "Unix__fsync"*>PROCEDURE fsync (fd: int): int;
 <*EXTERNAL "Unix__getdtablesize"*>PROCEDURE getdtablesize (): int;
@@ -65,7 +83,7 @@ CONST
 (*CONST*) <*EXTERNAL "Unix__FIONREAD"*> VAR FIONREAD: int;
 
 <*EXTERNAL "Unix__ioctl"*>
-PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
+PROCEDURE ioctl (d: int; request: INTEGER; argp: ADDRESS): int;
 
 <*EXTERNAL "Unix__lseek"*>
 PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;

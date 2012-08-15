@@ -206,37 +206,71 @@ Unix__tell(int fd)
 
 #else
 
+typedef struct m3_flock_t {
+/* sorted by size and then name
+   This must match between Unix.i3 and UnixC.c. */
+  LONGINT len;
+  LONGINT start;
+  INTEGER pid;
+  INTEGER type;
+  INTEGER whence;
+} m3_flock_t;
+
 M3_DLL_EXPORT int __cdecl
-Unix__fcntl(int fd, int request, int arg)
+Unix__fcntl(int fd, INTEGER request, void* m3_arg)
 /* fcntl is actually fcntl(fd, request, ...).
  * Wrapper is needed on some systems to handle varargs.
  * See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.html.
  */
 {
-#ifdef __sun
-/*
- * This is to work around a bug in the Solaris-2 'libsocket' library 
+/* Errno preservation for success:
+ * work around a bug in the Solaris-2 'libsocket' library 
  * which redefines 'fcntl' in such a way as to zero out 'errno' if the
  * call is successful.
  * See m3-libs/m3core/src/unix/solaris-2-x/Unix.m3.
  */
     int e = errno;
-    int r = fcntl(fd, request, arg);
+    struct flock native_lock = { 0 };
+    m3_flock_t* m3_lock = { 0 };
+    void* native_arg = m3_arg;
+    int r = { 0 };
+
+    memset(&native_lock, 0, sizeof(native_lock));
+    if (m3_arg)
+    {
+      switch (request)
+      {
+      case F_GETLK: case F_SETLK: case F_SETLKW:
+        m3_lock = (m3_flock_t*)m3_arg;
+        native_lock.l_len = m3_lock->len;
+        native_lock.l_pid = m3_lock->pid;
+        native_lock.l_start = m3_lock->start;
+        native_lock.l_type = m3_lock->type;
+        native_lock.l_whence = m3_lock->whence;
+        native_arg = &native_lock;
+        break;
+      }
+    }
+    r = fcntl(fd, request, native_arg);
     if (r == 0)
         errno = e;
+   if (m3_lock)
+   {
+      m3_lock->len = native_lock.l_len;
+      m3_lock->pid = native_lock.l_pid;
+      m3_lock->start = native_lock.l_start;
+      m3_lock->type = native_lock.l_type;
+      m3_lock->whence = native_lock.l_whence;
+    }
     return r;
-#else
-    return fcntl(fd, request, arg);
-#endif
 }
 
 M3_DLL_EXPORT int __cdecl
-Unix__ioctl(int fd, int request, void* argp)
+Unix__ioctl(int fd, INTEGER request, void* argp)
 /* ioctl is varargs. See fcntl. */
 {
-#ifdef __sun
-/*
- * This is to work around a bug in the Solaris-2 'libsocket' library 
+/* Errno preservation for success:
+ * Work around a bug in the Solaris-2 'libsocket' library 
  * which redefines 'ioctl' in such a way as to zero out 'errno' if the
  * call is successful.
  * See m3-libs/m3core/src/unix/solaris-2-x/Unix.m3.
@@ -246,9 +280,6 @@ Unix__ioctl(int fd, int request, void* argp)
     if (r == 0)
         errno = e;
     return r;
-#else
-    return ioctl(fd, request, argp);
-#endif
 }
 
 #endif
