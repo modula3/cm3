@@ -2550,27 +2550,27 @@ PROCEDURE Cmt (u: U; text: TEXT; VAR width: INTEGER) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE store_ordered (x: U; type_multiple_of_32: ZType; type: MType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE store_ordered (u: U; type_multiple_of_32: ZType; type: MType; <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].u := s0.type;
    pop (2) *)
   BEGIN
-    IF x.debug THEN
-      x.wr.Cmd   ("store_ordered");
-      x.wr.TName (type_multiple_of_32);
-      x.wr.TName (type);
-      x.wr.NL    ();
+    IF u.debug THEN
+      u.wr.Cmd   ("store_ordered");
+      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (type);
+      u.wr.NL    ();
     END;
     print(u, "/* store_ordered */\n");
   END store_ordered;
 
-PROCEDURE load_ordered (x: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE load_ordered (u: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>order: MemoryOrder) =
 (* s0.type_multiple_of_32 := Mem [s0.A].type  *)
   BEGIN
-    IF x.debug THEN
-      x.wr.Cmd   ("load_ordered");
-      x.wr.TName (type);
-      x.wr.TName (type_multiple_of_32);
-      x.wr.NL    ();
+    IF u.debug THEN
+      u.wr.Cmd   ("load_ordered");
+      u.wr.TName (type);
+      u.wr.TName (type_multiple_of_32);
+      u.wr.NL    ();
     END;
     print(u, "/* load_ordered */\n");
   END load_ordered;
@@ -2590,7 +2590,7 @@ PROCEDURE exchange (u: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>ord
     print(u, "/* exchange */\n");
   END exchange;
 
-PROCEDURE compare_exchange (x: U; type: MType; type_multiple_of_32: ZType; result_type: IType;
+PROCEDURE compare_exchange (u: U; type: MType; type_multiple_of_32: ZType; result_type: IType;
                             <*UNUSED*>success, failure: MemoryOrder) =
 (* original := Mem[s2.A].type;
    spurious_failure := whatever;
@@ -2607,13 +2607,12 @@ PROCEDURE compare_exchange (x: U; type: MType; type_multiple_of_32: ZType; resul
      still go down the then branch.
 *)
   BEGIN
-
-    IF x.debug THEN
-      x.wr.Cmd   ("compare_exchange");
-      x.wr.TName (type);
-      x.wr.TName (type_multiple_of_32);
-      x.wr.TName (result_type);
-      x.wr.NL    ();
+    IF u.debug THEN
+      u.wr.Cmd   ("compare_exchange");
+      u.wr.TName (type);
+      u.wr.TName (type_multiple_of_32);
+      u.wr.TName (result_type);
+      u.wr.NL    ();
     END;
     print(u, "/* compare_exchange */\n");
   END compare_exchange;
@@ -2632,7 +2631,7 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_multiple_of_32: ZType;
+PROCEDURE fetch_and_op (u: U; atomic_op: AtomicOp; type: MType; type_multiple_of_32: ZType;
                         <*UNUSED*>order: MemoryOrder) =
 (* original := Mem [s1.A].type;
    Mem [s1.A].type := original op s0.type_multiple_of_32;
@@ -2645,12 +2644,12 @@ Generally we use interlocked compare exchange loop.
 Some operations can be done better though.
 *)
   BEGIN
-    IF x.debug THEN
-      x.wr.Cmd   ("fetch_and_op");
-      x.wr.OutT  (AtomicOpName[atomic_op]);
-      x.wr.TName (type);
-      x.wr.TName (type_multiple_of_32);
-      x.wr.NL    ();
+    IF u.debug THEN
+      u.wr.Cmd   ("fetch_and_op");
+      u.wr.OutT  (AtomicOpName[atomic_op]);
+      u.wr.TName (type);
+      u.wr.TName (type_multiple_of_32);
+      u.wr.NL    ();
     END;
     print(u, "/* fetch_and_op */\n");
   END fetch_and_op;
