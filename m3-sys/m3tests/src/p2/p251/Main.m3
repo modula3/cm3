@@ -148,10 +148,12 @@ BEGIN
 END F5;
 
 PROCEDURE F6() =
-(*CONST Function = "F6 ";*)
+CONST Function = "F6 ";
 BEGIN
   FOR i := 1 TO 10 DO
     TRY
+      Put(Function & Int(Line())); NL();
+      PrintStackHeight();
     FINALLY
     END
   END;
