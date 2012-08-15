@@ -30,16 +30,17 @@ REVEAL
         c      : Wr.T := NIL;
         debug  := FALSE;
         stack  : TextSeq.T := NIL;
-        enum_id: TEXT := ""; (* formatted typeid *)
-        enum_type: TEXT; (* UINT8, UINT16, UINT32 *)
-        enum_value: CARDINAL;
-        current_unit_name: TEXT;
-        current_function_decl: CProc;
-        current_param_count := 0;
-        (*current_init_fields: CFieldSeq := NIL;*)
-        current_init_fields: TextSeq.T := NIL;
-        current_init_offset: INTEGER := 0;
-        current_initializer: TextSeq.T := NIL;
+        enum_type: TEXT := NIL;
+        enum: Enum_t := NIL;
+        enum_id: TEXT := NIL;
+        enum_value: CARDINAL := 0;
+        unit_name: TEXT := NIL;
+        function_decl: CProc := NIL;
+        param_count := 0;
+        (*init_fields: CFieldSeq := NIL;*)
+        init_fields: TextSeq.T := NIL;
+        xinit_offset: INTEGER := 0;
+        initializer: TextSeq.T := NIL;
       OVERRIDES
         next_label := next_label;
         set_error_handler := set_error_handler;
@@ -185,6 +186,8 @@ REVEAL
 
 (*---------------------------------------------------------------------------*)
 
+VAR BitSizeToEnumCGType := ARRAY [0..32] OF M3CG.Type { M3CG.Type.Void, .. };
+
 VAR anonymousCounter: INTEGER;
 
 PROCEDURE FixName(name: Name): Name =
@@ -202,10 +205,12 @@ TYPE CFieldSeq = M3CFieldSeq.T;
 *)
 
 TYPE Type_t = OBJECT
-  bit_size: INTEGER;  (* FUTURE Target.Int or LONGINT *)
-  byte_size: INTEGER; (* FUTURE Target.Int or LONGINT *)
-  typeid: INTEGER;
-  cg_type: M3CG.Type;
+  bit_size: INTEGER := 0;  (* FUTURE Target.Int or LONGINT *)
+  byte_size: INTEGER := 0; (* FUTURE Target.Int or LONGINT *)
+  typeid: INTEGER := 0;
+  cg_type: M3CG.Type := M3CG.Type.Addr;
+  (*name_id: INTEGER;
+  name_text: TEXT;*)
 END;
 
 (* We probably need "Ordinal_t": Integer_t, Enum_t, Subrange_t *)
@@ -258,9 +263,7 @@ BEGIN
   IF typeidToType.get(typeid, type) THEN
     RETURN NARROW(type, Type_t);
   END;
-  type := NEW(Type_t, typeid := typeid);
-  EVAL typeidToType.put(typeid, type);
-  RETURN type;
+  RETURN Type_Init(NEW(Type_t, typeid := typeid));
 END TypeidToType;
 
 (* see RTBuiltin.mx
@@ -586,55 +589,20 @@ PROCEDURE declare_typename (u: U; type: TypeUID; name: Name) =
       u.wr.ZName (name);
       u.wr.NL    ();
     END;
-    print (u, "/* declare_typename */\n");
-    print (u, "typedef M" & Fmt.Unsigned(type) & " " & M3ID.ToText(name) & ";\n");
+    print(u, "/* declare_typename */\n");
+    print(u, "typedef M" & Fmt.Unsigned(type) & " " & M3ID.ToText(name) & ";\n");
   END declare_typename;
 
-CONST UID_SIZE = 6;
-CONST NO_UID = 16_FFFFFFFF;
-
-PROCEDURE fmt_uid (x: INTEGER): TEXT =
-(*
-CONST alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  VAR   buf: ARRAY [0 .. UID_SIZE - 1] OF CHAR;
-        i := UID_SIZE;
-  BEGIN
-    <* ASSERT Text.Length (alphabet) = 62 *>
-    IF x = NO_UID THEN
-      RETURN "zzzzzz";
-    END;
-    WHILE i # 0 DO
-      DEC (i);
-      buf[i] := Text.GetChar(alphabet, x MOD 62);
-      x := x DIV 62;
-    END;
-    <* ASSERT buf[0] >= 'A' AND buf[0] <= 'Z' AND x = 0 *>
-    RETURN Text.FromChars (buf);
-*)
-  BEGIN
+PROCEDURE TypeIDToText (x: INTEGER): TEXT =
+BEGIN
   RETURN "M" & Fmt.Unsigned(x);
-  END fmt_uid;
-
-VAR anonymous_counter: INTEGER;
-VAR m3gdb := TRUE;
-
-<*UNUSED*>PROCEDURE fix_name (name: TEXT; typeid: INTEGER): TEXT =
-  BEGIN
-    IF name = NIL OR Text.GetChar(name, 0) = '*' THEN
-      INC (anonymous_counter);
-      RETURN "L_" & Fmt.Int (anonymous_counter);
-    ELSIF typeid = 0 OR NOT m3gdb THEN
-      RETURN name;
-    ELSIF typeid = NO_UID THEN
-      RETURN "M" & name;
-    ELSE
-      RETURN "M3_" & fmt_uid (typeid) & "_" & name;
-    END;
-  END fix_name;
+END TypeIDToText;
 
 PROCEDURE declare_array (u: U; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
-VAR index_type: REFANY; 
-    element_type: REFANY;
+VAR index_type: Type_t; 
+    element_type: Type_t;
+    index_type_refany: REFANY; 
+    element_type_refany: REFANY;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_array");
@@ -645,62 +613,90 @@ VAR index_type: REFANY;
       u.wr.NL   ();
     END;
     print (u, "/* declare_array */\n");
-    EVAL typeidToType.get(index_typeid, index_type);
-    EVAL typeidToType.get(element_typeid, element_type);
-    IF index_type = NIL THEN
+    EVAL typeidToType.get(index_typeid, index_type_refany);
+    EVAL typeidToType.get(element_typeid, element_type_refany);
+    IF index_type_refany = NIL THEN
       RTIO.PutText("declare_array nil index_type\n");
       RTIO.Flush();
     END;
-    IF element_type = NIL THEN
+    IF element_type_refany = NIL THEN
       RTIO.PutText("declare_array nil element_type\n");
       RTIO.Flush();
     END;
-    EVAL typeidToType.put(typeid, NEW(FixedArray_t
-            (*,typeid := typeid;
-            byte_size := total_bit_size / 8;
-            bit_size := total_bit_size;
-            index_type := NARROW(Type_t, index_type);
-            element_type := NARROW(Type_t, element_type)*)
-            ));
-    (*
-    typedef M3_eltid m3_typeid[size / 8 / sizeof(elt)];
-    print(u, "typedef struct { " & M3ID.ToText (elt) & " _elts[" & Fmt.Int(size / 8 / sizeof(CG_Bytes[type]M3_eltid m3_typeid[size / 8 / sizeof(elt)];\n");
-    print(u, "typedef struct { M3_eltid* _elts; CARDINAL _size; } m3_typeid;\n");
-    *)
+    index_type := NARROW(index_type_refany, Type_t);
+    element_type := NARROW(element_type_refany, Type_t);
+    EVAL typeidToType.put(typeid, NEW(FixedArray_t,
+            typeid := typeid,
+            byte_size := total_bit_size DIV 8,
+            bit_size := total_bit_size,
+            index_type := index_type,
+            element_type := element_type));
+
+    print(u, "typedef struct{");
+    print(u, TypeIDToText(element_typeid));
+    print(u, " _elts[");
+    print(u, Fmt.Int(total_bit_size DIV element_type.bit_size));
+    print(u, "];}");
+    print(u, TypeIDToText(typeid));
+    print(u, ";\n");
   END declare_array;
 
-PROCEDURE declare_open_array (u: U; type, elt: TypeUID; size: BitSize) =
+PROCEDURE declare_open_array (u: U; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+VAR element_type_refany: REFANY;
+    element_type: Type_t;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_open_array");
-      u.wr.Tipe (type);
-      u.wr.Tipe (elt);
-      u.wr.BInt (size);
+      u.wr.Tipe (typeid);
+      u.wr.Tipe (element_typeid);
+      u.wr.BInt (bit_size);
       u.wr.NL   ();
     END;
     print (u, "/* declare_open_array */\n");
-    <* ASSERT size MOD Target.Integer.size = 0 *>
-    IF size = Target.Integer.size * 2 THEN
-      print(u, "typedef struct { M3_eltid* _elts; CARDINAL _size; } m3_typeid;\n");
-    ELSE
-      print(u, "typedef struct { M3_eltid* _elts; CARDINAL _sizes[size / Target.Integer.size]; } m3_typeid;\n");
-    END
+    <* ASSERT bit_size MOD Target.Integer.size = 0 *>
+    EVAL typeidToType.get(element_typeid, element_type_refany);
+    IF element_type_refany = NIL THEN
+      RTIO.PutText("declare_array nil element_type\n");
+      RTIO.Flush();
+    END;
+    element_type := NARROW(element_type_refany, Type_t);
+    print(u, "typedef struct { ");
+    print(u, TypeIDToText(element_typeid));
+    print(u, "* _elts; CARDINAL _size");
+    IF bit_size > Target.Integer.size * 2 THEN
+      print(u, "s[");
+      print(u, Fmt.Int((bit_size - Target.Integer.size) DIV Target.Integer.size));
+      print(u, "]");
+    END;
+    print(u, ";}");
+    print(u, TypeIDToText(element_typeid));
+    print(u, ";\n");
+    EVAL typeidToType.put(typeid, NEW(OpenArray_t,
+            typeid := typeid,
+            byte_size := bit_size DIV 8,
+            bit_size := bit_size,
+            element_typeid := element_typeid,
+            element_type := element_type));
   END declare_open_array;
-
-PROCEDURE declare_enum (u: U; type: TypeUID; n_elts: INTEGER; size: BitSize) =
+ 
+PROCEDURE declare_enum (u: U; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
+VAR type := NEW(Enum_t, typeid := typeid, max := n_elts - 1, cg_type := BitSizeToEnumCGType[bit_size]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_enum");
-      u.wr.Tipe (type);
+      u.wr.Tipe (typeid);
       u.wr.Int  (n_elts);
-      u.wr.BInt (size);
+      u.wr.BInt (bit_size);
       u.wr.NL   ();
     END;
     print (u, "/* declare_enum */\n");
-    <* ASSERT size = 8 OR size = 16 OR size = 32 OR size = 64 *>
-    u.enum_id := fmt_uid (type);
+    <* ASSERT u.enum = NIL *>
+    u.enum := type;
+    EVAL Type_Init(type);
+    <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
+    u.enum_id := TypeIDToText(typeid);
     u.enum_value := 0;
-    u.enum_type := "UINT" & Fmt.Int(size);
+    u.enum_type := "UINT" & Fmt.Int(bit_size);
     print(u, "typedef " & u.enum_type & " " & u.enum_id & ";\n");
   END declare_enum;
 
@@ -714,6 +710,12 @@ PROCEDURE declare_enum_elt (u: U; name: Name) =
     print (u, "/* declare_enum_elt */\n");
     print(u, "#define " & u.enum_id & "_" & M3ID.ToText(name) & " ((" & u.enum_type & ")" & Fmt.Int(u.enum_value) & ")\n");
     INC (u.enum_value);
+    IF u.enum_value = u.enum.max + 1 THEN
+      u.enum := NIL;
+      u.enum_id := NIL;
+      u.enum_type := NIL;
+      u.enum_value := 10000;
+    END;
   END declare_enum_elt;
 
 PROCEDURE declare_packed  (u: U; type: TypeUID; size: BitSize; base: TypeUID) =
@@ -800,7 +802,7 @@ PROCEDURE declare_indirect (u: U; type, target: TypeUID) =
       u.wr.Tipe (target);
       u.wr.NL   ();
     END;
-    print (u, "/* declare_indirect */\n");
+    print(u, "/* declare_indirect */\n");
   END declare_indirect;
 
 
@@ -828,7 +830,7 @@ PROCEDURE declare_formal (u: U; name: Name; type: TypeUID) =
       u.wr.Tipe  (type);
       u.wr.NL    ();
     END;
-    print (u, "/* declare_formal */\n");
+    print(u, "/* declare_formal */\n");
   END declare_formal;
 
 PROCEDURE declare_raises (u: U; name: Name) =
@@ -925,7 +927,7 @@ PROCEDURE set_runtime_proc (u: U; name: Name; p: Proc) =
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE import_global (u: U; name: Name; size: ByteSize; alignment: Alignment; type: Type; m3t: TypeUID): Var =
-  VAR var := NEW(CVar, name := FixName (name));
+  VAR var := NEW(CVar, name := FixName(name));
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("import_global");
@@ -942,7 +944,7 @@ PROCEDURE import_global (u: U; name: Name; size: ByteSize; alignment: Alignment;
   END import_global;
 
 PROCEDURE declare_segment (u: U; name: Name; type: TypeUID; is_const: BOOLEAN): Var =
-VAR var := NEW(CVar, name := FixName (name));
+VAR var := NEW(CVar, name := FixName(name));
     text: TEXT := NIL;
     length := 0;
 BEGIN
@@ -956,16 +958,16 @@ BEGIN
     END;
     print (u, "/* declare_segment */\n");
     IF name # 0 THEN
-      text := M3ID.ToText (name);
-      length := Text.Length (text);
+      text := M3ID.ToText(name);
+      length := Text.Length(text);
       IF length > 2 THEN
-        <* ASSERT Text.GetChar (text, 0) # '_' *>
-        <* ASSERT Text.GetChar (text, 1) = '_' OR Text.GetChar (text, 2) = '_' *>
-        text := Text.Sub (text, 2);
-        WHILE Text.GetChar (text, 0) = '_' DO
-          text := Text.Sub (text, 1);
+        <* ASSERT Text.GetChar(text, 0) # '_' *>
+        <* ASSERT Text.GetChar(text, 1) = '_' OR Text.GetChar(text, 2) = '_' *>
+        text := Text.Sub(text, 2);
+        WHILE Text.GetChar(text, 0) = '_' DO
+          text := Text.Sub(text, 1);
         END;
-       u.current_unit_name := text;
+       u.unit_name := text;
       END;
     END;
     RETURN var;
@@ -1006,7 +1008,7 @@ PROCEDURE DeclareGlobal (u: U; name: Name; size: ByteSize; alignment: Alignment;
                          type: Type; m3t: TypeUID;
                          exported, inited, is_const: BOOLEAN): Var =
   CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
-  VAR var := NEW(CVar, name := FixName (name));
+  VAR var := NEW(CVar, name := FixName(name));
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   (DeclTag [is_const]);
@@ -1026,7 +1028,7 @@ PROCEDURE DeclareGlobal (u: U; name: Name; size: ByteSize; alignment: Alignment;
 PROCEDURE declare_local (u: U; name: Name; size: ByteSize; alignment: Alignment;
                          type: Type; m3t: TypeUID; in_memory, up_level: BOOLEAN;
                          frequency: Frequency): Var =
-VAR var := NEW(CVar, name := FixName (name));
+VAR var := NEW(CVar, name := FixName(name));
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_local");
@@ -1046,10 +1048,37 @@ VAR var := NEW(CVar, name := FixName (name));
     RETURN var;
   END declare_local;
 
+PROCEDURE function_prototype(u: U; proc: CProc) =
+VAR params := proc.params;
+BEGIN
+  print(u, TypeNames[proc.return_type]);
+  print(u, "\n");
+  print(u, "__cdecl\n");
+  print(u, M3ID.ToText(proc.name));
+  IF NUMBER (params^) = 0 THEN
+    print(u, "(void)");
+  ELSE
+    print(u, "(");
+    FOR i := FIRST(params^) TO LAST(params^) DO
+      WITH param = params[i] DO
+        print(u, "\n");
+        print(u, TypeNames[param.type]);
+        print(u, " ");
+        print(u, M3ID.ToText(param.name));
+        IF i # LAST(params^) THEN
+          print(u, ",");
+        ELSE
+          print(u, ")");
+        END;
+      END;
+    END;
+  END;
+END function_prototype;
+
 PROCEDURE declare_param (u: U; name: Name; size: ByteSize; alignment: Alignment;
                          type: Type; m3t: TypeUID; in_memory, up_level: BOOLEAN;
                          frequency: Frequency): Var =
-VAR var := NEW(CVar, name := FixName (name), type := type);
+VAR var := NEW(CVar, name := FixName(name), type := type);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_param");
@@ -1066,13 +1095,19 @@ VAR var := NEW(CVar, name := FixName (name), type := type);
       u.wr.NL    ();
     END;
     print (u, "/* declare_param */\n");
-    u.current_function_decl.params[u.current_param_count] := var;
-    INC(u.current_param_count);
+    u.function_decl.params[u.param_count] := var;
+    INC(u.param_count);
+    IF u.param_count = NUMBER(u.function_decl.params^) THEN
+      function_prototype(u, u.function_decl);
+      print(u, ";\n");
+      u.param_count := -1000; (* catch bugs *)
+      u.function_decl := NIL;
+    END;
     RETURN var;
   END declare_param;
 
 PROCEDURE declare_temp (u: U; size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): Var =
-VAR var := NEW(CVar, name := FixName (0));
+VAR var := NEW(CVar, name := FixName(0));
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_temp");
@@ -1110,15 +1145,15 @@ PROCEDURE begin_init (u: U; v: Var) =
       u.wr.NL    ();
     END;
     print (u, "/* begin_init */\n");
-    u.current_init_fields := NEW(TextSeq.T).init();
-    u.current_initializer := NEW(TextSeq.T).init();
-    u.current_init_offset := 0;
+    u.init_fields := NEW(TextSeq.T).init();
+    u.initializer := NEW(TextSeq.T).init();
+    u.xinit_offset := 0;
   END begin_init;
 
 PROCEDURE end_init (u: U; v: Var) =
   VAR var := NARROW(v, CVar);
-      current_init_fields := u.current_init_fields;
-      current_initializer := u.current_initializer;
+      init_fields := u.init_fields;
+      initializer := u.initializer;
       end_name: TEXT;
   BEGIN
     IF u.debug THEN
@@ -1130,8 +1165,8 @@ PROCEDURE end_init (u: U; v: Var) =
     print (u, "struct ");
     print (u, M3ID.ToText(var.name));
     print (u, "_t {\n");
-    WHILE current_init_fields.size() > 0 DO
-      print (u, current_init_fields.remlo());
+    WHILE init_fields.size() > 0 DO
+      print (u, init_fields.remlo());
     END;
     (* one more field due to trailing comma in initializer *)
     end_name := M3ID.ToText(FixName(0));
@@ -1140,30 +1175,30 @@ PROCEDURE end_init (u: U; v: Var) =
     print(u, ";\n} ");
     print(u, M3ID.ToText(var.name));
     print(u, " = {\n    ");
-    WHILE current_initializer.size() > 0 DO
-      print (u, current_initializer.remlo());
+    WHILE initializer.size() > 0 DO
+      print (u, initializer.remlo());
     END;
     print (u, "0\n};");
   END end_init;
 
 PROCEDURE init_to_offset (u: U; offset: ByteOffset) =
-  VAR pad := offset - u.current_init_offset;
-      current_init_fields := u.current_init_fields;
-      current_initializer := u.current_initializer;
+  VAR pad := offset - u.xinit_offset;
+      init_fields := u.init_fields;
+      initializer := u.initializer;
       pad_name: TEXT;
   BEGIN
-    <* ASSERT offset >= u.current_init_offset *>
+    <* ASSERT offset >= u.xinit_offset *>
     IF pad > 0 THEN
-      current_init_fields.addhi ("char ");
+      init_fields.addhi ("char ");
       pad_name := M3ID.ToText(FixName(0));
-      current_init_fields.addhi (pad_name);
-      current_init_fields.addhi ("[");
-      current_init_fields.addhi (Fmt.Int(pad));
-      current_init_fields.addhi ("];\n");
+      init_fields.addhi (pad_name);
+      init_fields.addhi ("[");
+      init_fields.addhi (Fmt.Int(pad));
+      init_fields.addhi ("];\n");
       FOR i := 1 TO pad DO
-        current_initializer.addhi ("0,");
+        initializer.addhi ("0,");
         IF (i = pad) OR (i MOD 25 = 0) THEN
-          current_initializer.addhi ("\n");
+          initializer.addhi ("\n");
         END;
       END;
     END;
@@ -1180,13 +1215,13 @@ PROCEDURE init_int (u: U; offset: ByteOffset; READONLY value: Target.Int; type: 
     END;
     print (u, "/* init_int */\n");
     init_to_offset (u, offset);
-    u.current_init_fields.addhi (TypeNames[type]);
-    u.current_init_fields.addhi (" ");
-    u.current_init_fields.addhi (M3ID.ToText(FixName(0)));
-    u.current_init_fields.addhi (";\n");
-    u.current_initializer.addhi (TInt.ToText (value));
-    u.current_initializer.addhi (",\n");
-    u.current_init_offset := offset + TargetMap.CG_Bytes[type];
+    u.init_fields.addhi (TypeNames[type]);
+    u.init_fields.addhi (" ");
+    u.init_fields.addhi (M3ID.ToText(FixName(0)));
+    u.init_fields.addhi (";\n");
+    u.initializer.addhi (TInt.ToText(value));
+    u.initializer.addhi (",\n");
+    u.xinit_offset := offset + TargetMap.CG_Bytes[type];
   END init_int;
 
 PROCEDURE init_proc (u: U; offset: ByteOffset; p: Proc) =
@@ -1200,13 +1235,13 @@ PROCEDURE init_proc (u: U; offset: ByteOffset; p: Proc) =
     END;
     print (u, "/* init_proc */\n");
     init_to_offset (u, offset);
-    u.current_init_fields.addhi ("ADDRESS "); (* FUTURE: better typing *)
-    u.current_init_fields.addhi (M3ID.ToText(FixName(0)));
-    u.current_init_fields.addhi (";\n");
-    u.current_initializer.addhi ("(ADDRESS)&");
-    u.current_initializer.addhi (M3ID.ToText(proc.name));
-    u.current_initializer.addhi (",\n");
-    u.current_init_offset := offset + TargetMap.CG_Bytes[Type.Addr];
+    u.init_fields.addhi ("ADDRESS "); (* FUTURE: better typing *)
+    u.init_fields.addhi (M3ID.ToText(FixName(0)));
+    u.init_fields.addhi (";\n");
+    u.initializer.addhi ("(ADDRESS)&");
+    u.initializer.addhi (M3ID.ToText(proc.name));
+    u.initializer.addhi (",\n");
+    u.xinit_offset := offset + TargetMap.CG_Bytes[Type.Addr];
   END init_proc;
 
 PROCEDURE init_label (u: U; offset: ByteOffset; value: Label) =
@@ -1233,17 +1268,17 @@ PROCEDURE init_var (u: U; offset: ByteOffset; v: Var; bias: ByteOffset) =
     END;
     print (u, "/* init_var */\n");
     init_to_offset (u, offset);
-    u.current_init_fields.addhi ("ADDRESS "); (* FUTURE: better typing *)
-    u.current_init_fields.addhi (M3ID.ToText(FixName(0)));
-    u.current_init_fields.addhi (";\n");
+    u.init_fields.addhi ("ADDRESS "); (* FUTURE: better typing *)
+    u.init_fields.addhi (M3ID.ToText(FixName(0)));
+    u.init_fields.addhi (";\n");
     IF bias # 0 THEN
-      u.current_initializer.addhi (Fmt.Int(bias));
-      u.current_initializer.addhi (" + ");
+      u.initializer.addhi (Fmt.Int(bias));
+      u.initializer.addhi (" + ");
     END;
-    u.current_initializer.addhi ("(ADDRESS)&");
-    u.current_initializer.addhi (M3ID.ToText(var.name));
-    u.current_initializer.addhi (",\n");
-    u.current_init_offset := offset + TargetMap.CG_Bytes[Type.Addr];
+    u.initializer.addhi ("(ADDRESS)&");
+    u.initializer.addhi (M3ID.ToText(var.name));
+    u.initializer.addhi (",\n");
+    u.xinit_offset := offset + TargetMap.CG_Bytes[Type.Addr];
   END init_var;
 
 PROCEDURE init_offset (u: U; offset: ByteOffset; value: Var) =
@@ -1284,7 +1319,7 @@ PROCEDURE init_float (u: U; offset: ByteOffset; READONLY float: Target.Float) =
 
 PROCEDURE import_procedure (u: U; name: Name; n_params: INTEGER;
                             return_type: Type; callingConvention: CallingConvention): Proc =
-VAR proc := NEW(CProc, name := FixName (name), n_params := n_params,
+VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type,
                 callingConvention := callingConvention,
                 params := NEW(REF ARRAY OF CVar, n_params));
@@ -1299,8 +1334,12 @@ VAR proc := NEW(CProc, name := FixName (name), n_params := n_params,
       u.wr.NL    ();
     END;
     print (u, "/* import_procedure */\n");
-    u.current_param_count := 0;
-    u.current_function_decl := proc;
+    u.param_count := 0;
+    u.function_decl := proc;
+    IF n_params = 0 THEN
+      function_prototype(u, proc);
+      print(u, ";\n");
+    END;
     RETURN proc;
   END import_procedure;
 
@@ -1308,7 +1347,7 @@ PROCEDURE declare_procedure (u: U; name: Name; n_params: INTEGER;
                              return_type: Type; level: INTEGER;
                              callingConvention: CallingConvention;
                              exported: BOOLEAN; parent: Proc): Proc =
-VAR proc := NEW(CProc, name := FixName (name), n_params := n_params,
+VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent,
@@ -1327,14 +1366,13 @@ VAR proc := NEW(CProc, name := FixName (name), n_params := n_params,
       u.wr.NL    ();
     END;
     print (u, "/* declare_procedure */\n");
-    u.current_param_count := 0;
-    u.current_function_decl := proc;
+    u.param_count := 0;
+    u.function_decl := proc;
     RETURN proc;
   END declare_procedure;
 
 PROCEDURE begin_procedure (u: U; p: Proc) =
   VAR proc := NARROW(p, CProc);
-      params := proc.params;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("begin_procedure");
@@ -1342,28 +1380,8 @@ PROCEDURE begin_procedure (u: U; p: Proc) =
       u.wr.NL    ();
     END;
     print (u, "/* begin_procedure */\n");
-    print(u, TypeNames[proc.return_type]);
-    print(u, "\n");
-    print(u, "__cdecl\n");
-    print(u, M3ID.ToText (proc.name));
-    IF NUMBER (params^) = 0 THEN
-      print(u, "(void)\n{");
-    ELSE
-      print(u, "(");
-      FOR i := FIRST(params^) TO LAST(params^) DO
-        WITH param = params[i] DO
-          print(u, "\n");
-          print(u, TypeNames[param.type]);
-          print(u, " ");
-          print(u, M3ID.ToText (param.name));
-          IF i # LAST(params^) THEN
-            print(u, ",");
-          ELSE
-            print(u, ")\n{");
-          END
-        END;
-      END;
-    END;
+    function_prototype(u, proc);
+    print(u, "\n{");
   END begin_procedure;
 
 PROCEDURE end_procedure (u: U; p: Proc) =
@@ -2519,20 +2537,17 @@ PROCEDURE load_static_link (u: U; p: Proc) =
 PROCEDURE comment (u: U; a, b, c, d: TEXT := NIL) =
   VAR i: INTEGER := -1;
   BEGIN
-    print(u, "/* comment */\n");
-    Cmt (u, a, i);
-    Cmt (u, b, i);
-    Cmt (u, c, i);
-    Cmt (u, d, i);
-    Cmt (u, "\n", i);
+    Cmt2 (u, a, i);
+    Cmt2 (u, b, i);
+    Cmt2 (u, c, i);
+    Cmt2 (u, d, i);
+    Cmt1 (u, "\n", i);
   END comment;
 
-PROCEDURE Cmt (u: U; text: TEXT; VAR width: INTEGER) =
+PROCEDURE Cmt1 (u: U; text: TEXT; VAR width: INTEGER) =
   VAR ch: CHAR;
   BEGIN
-    IF (NOT u.debug) OR (text = NIL) THEN
-      RETURN
-    END;
+    IF (NOT u.debug OR text = NIL) THEN RETURN END;
     FOR i := 0 TO Text.Length (text) - 1 DO
       ch := Text.GetChar (text, i);
       IF (ch = '\n' OR ch = '\r') THEN
@@ -2546,7 +2561,16 @@ PROCEDURE Cmt (u: U; text: TEXT; VAR width: INTEGER) =
         u.wr.OutC (ch);
       END
     END;
-  END Cmt;
+  END Cmt1;
+
+PROCEDURE Cmt2 (u: U; text: TEXT; VAR width: INTEGER) =
+  BEGIN
+    IF text = NIL THEN
+      RETURN
+    END;
+    Cmt1 (u, text, width);
+    print(u, "/* comment: " & text & " */\n");
+  END Cmt2;
 
 (*--------------------------------------------------------------- atomics ---*)
 
@@ -2655,4 +2679,7 @@ Some operations can be done better though.
   END fetch_and_op;
 
 BEGIN
+  BitSizeToEnumCGType[8] := M3CG.Type.Word8;
+  BitSizeToEnumCGType[16] := M3CG.Type.Word16;
+  BitSizeToEnumCGType[32] := M3CG.Type.Word32;
 END M3C.
