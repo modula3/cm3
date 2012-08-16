@@ -167,7 +167,7 @@ TYPE
         fence := fence;
         fetch_and_op := fetch_and_op;
       END;
-        
+
 
 (*----------------------------------------------- binary/ASCII conversion ---*)
 
@@ -405,7 +405,7 @@ PROCEDURE declare_temp   (self: U;  s: ByteSize;  a: Alignment;  t: Type;
   VAR v: Var;
   BEGIN
 (*
-    IF (self.temps = NIL) THEN 
+    IF (self.temps = NIL) THEN
       self.temps := NEW (IntIntTbl.Default).init (); END;
 *)
     v := self.child.declare_temp (s, a, t, in_memory);
@@ -422,7 +422,7 @@ PROCEDURE free_temp (self: U;  v: Var) =
   BEGIN
     CheckVar (self, v);
 (*
-    IF (self.temps = NIL) THEN 
+    IF (self.temps = NIL) THEN
       self.temps := NEW (IntIntTbl.Default).init (); END;
     IF NOT self.temps.delete (v, line) THEN
       PutErr (self, "temp freed twice");
@@ -967,7 +967,7 @@ PROCEDURE shift (self: U;  t: IType) =
   END shift;
 
 PROCEDURE shift_left (self: U;  t: IType) =
-  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)  
+  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
   BEGIN
     self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
     self.s_push (t);
@@ -1353,7 +1353,7 @@ PROCEDURE compare_exchange (self: U;  t: MType;  u: ZType;  r: IType;
     self.child.compare_exchange (t, u, r, success, failure);
   END compare_exchange;
 
-PROCEDURE fence (self: U;  order: MemoryOrder) = 
+PROCEDURE fence (self: U;  order: MemoryOrder) =
   BEGIN
     self.child.fence (order);
   END fence;

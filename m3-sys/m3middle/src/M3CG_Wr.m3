@@ -178,7 +178,6 @@ TYPE
         fence := fence;
         fetch_and_op := fetch_and_op;
       END;
-        
 
 (*------------------------------------------------------------------- I/O ---*)
 
@@ -454,7 +453,6 @@ PROCEDURE set_source_line (u: U; line: INTEGER) =
     OutT (u, Wr.EOL);
   END set_source_line;
 
-
 (*------------------------------------------- debugging type declarations ---*)
 
 PROCEDURE declare_typename (u: U;  t: TypeUID;  n: Name) =
@@ -487,7 +485,7 @@ PROCEDURE declare_open_array (u: U;  t, elt: TypeUID;  s: BitSize) =
 PROCEDURE declare_enum (u: U;  t: TypeUID;  n_elts: INTEGER;  s: BitSize) =
   BEGIN
     Cmd  (u, "declare_enum");
-    Tipe (u, t); 
+    Tipe (u, t);
     Int  (u, n_elts);
     BInt (u, s);
     NL   (u);
@@ -547,7 +545,7 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
     Tipe (u, t);
     Tipe (u, domain);
     TInt (u, min);
-    TInt (u, max); 
+    TInt (u, max);
     BInt (u, s);
     NL   (u);
   END declare_subrange;
@@ -563,7 +561,6 @@ PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
     NL   (u);
   END declare_pointer;
 
-
 PROCEDURE declare_indirect (u: U;  t, target: TypeUID) =
   BEGIN
     Cmd  (u, "declare_indirect");
@@ -571,7 +568,6 @@ PROCEDURE declare_indirect (u: U;  t, target: TypeUID) =
     Tipe (u, target);
     NL   (u);
   END declare_indirect;
-
 
 PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
@@ -601,7 +597,6 @@ PROCEDURE declare_raises (u: U;  n: Name) =
     NL    (u);
   END declare_raises;
 
-
 PROCEDURE declare_object (u: U;  t, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
@@ -612,7 +607,7 @@ PROCEDURE declare_object (u: U;  t, super: TypeUID;
     Tipe (u, super);
     Txt  (u, brand);
     Bool (u, traced);
-    Int  (u, n_fields);  
+    Int  (u, n_fields);
     Int  (u, n_methods);
     BInt (u, field_size);
     NL   (u);
@@ -655,7 +650,7 @@ PROCEDURE declare_exception (u: U;  n: Name;  arg_type: TypeUID;
   END declare_exception;
 
 (*--------------------------------------------------------- runtime hooks ---*)
-  
+
 PROCEDURE GetRuntimeHook (u: U;  n: Name): RuntimeHook =
   VAR ref: REFANY;  e: RuntimeHook;
   BEGIN
@@ -750,8 +745,8 @@ PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     Cmd   (u, "declare_constant");
     ZName (u, n);
-    Int   (u, s);  
-    Int   (u, a);  
+    Int   (u, s);
+    Int   (u, a);
     TName (u, t);
     Tipe  (u, m3t);
     Bool  (u, exported);
@@ -768,8 +763,8 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     Cmd   (u, "declare_local");
     ZName (u, n);
-    Int   (u, s);  
-    Int   (u, a);  
+    Int   (u, s);
+    Int   (u, a);
     TName (u, t);
     Tipe  (u, m3t);
     Bool  (u, in_memory);
@@ -787,8 +782,8 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     Cmd   (u, "declare_param");
     ZName (u, n);
-    Int   (u, s);  
-    Int   (u, a);  
+    Int   (u, s);
+    Int   (u, a);
     TName (u, t);
     Tipe  (u, m3t);
     Bool  (u, in_memory);
@@ -804,7 +799,7 @@ PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_temp");
-    Int   (u, s);  
+    Int   (u, s);
     Int   (u, a);
     TName (u, t);
     Bool  (u, in_memory);
@@ -1012,7 +1007,6 @@ PROCEDURE if_false (u: U;  t: IType;  l: Label;  f: Frequency) =
     NL    (u);
   END if_false;
 
-
 PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  l: Label;  f: Frequency) =
   (* IF (s1.t  op  s0.t) GOTO l ; pop(2) *)
   CONST OpName = ARRAY CompareOp OF TEXT {
@@ -1049,7 +1043,7 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  t: MType;  z: ZType) =
   BEGIN
     Cmd   (u, "load");
     VName (u, v);
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
     NL    (u);
@@ -1059,7 +1053,7 @@ PROCEDURE store  (u: U;  v: Var;  o: ByteOffset;  t: ZType;  z: MType) =
   BEGIN
     Cmd   (u, "store");
     VName (u, v);
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
     NL    (u);
@@ -1076,7 +1070,7 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
 PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
   BEGIN
     Cmd   (u, "load_indirect");
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
     NL    (u);
@@ -1085,7 +1079,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
 PROCEDURE store_indirect (u: U;  o: ByteOffset;  t: ZType;  z: MType) =
   BEGIN
     Cmd   (u, "store_indirect");
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
     NL    (u);
@@ -1350,7 +1344,7 @@ PROCEDURE shift (u: U;  t: IType) =
   END shift;
 
 PROCEDURE shift_left (u: U;  t: IType) =
-  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)  
+  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
   BEGIN
     Cmd   (u, "shift_left");
     TName (u, t);
@@ -1432,7 +1426,7 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: CARDINAL) =
     Cmd   (u, "extract_mn");
     TName (u, t);
     Bool  (u, sign);
-    Int   (u, m); 
+    Int   (u, m);
     Int   (u, n);
     NL    (u);
   END extract_mn;
@@ -1459,7 +1453,7 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: CARDINAL) =
   BEGIN
     Cmd   (u, "insert_mn");
     TName (u, t);
-    Int   (u, m); 
+    Int   (u, m);
     Int   (u, n);
     NL    (u);
   END insert_mn;
@@ -1623,7 +1617,7 @@ PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
   BEGIN
     Cmd   (u, "start_call_direct");
     PName (u, p);
-    Int   (u, lev);  
+    Int   (u, lev);
     TName (u, t);
     NL    (u);
   END start_call_direct;

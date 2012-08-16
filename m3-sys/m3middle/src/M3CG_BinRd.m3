@@ -214,7 +214,7 @@ PROCEDURE Inhale (rd: Rd.T;  cg: M3CG.T) =
     s.labels  := NEW (REF ARRAY OF M3CG.Label, 400);
 
     FOR i := 0 TO LAST(s.labels^) DO s.labels[i] := M3CG.No_label END;
-    
+
     cmd := Scan_int (s);
     IF (cmd # M3CG_Binary.Version) THEN
       Error (s, "** bad intermediate code version: expected ",

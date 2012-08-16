@@ -69,7 +69,7 @@ REVEAL
     jump := jump;
     if_true := if_true;
     if_false := if_false;
-    if_compare := if_compare; 
+    if_compare := if_compare;
     case_jump := case_jump;
     exit_proc := exit_proc;
     load := load;
@@ -77,22 +77,22 @@ REVEAL
     load_indirect := load_indirect;
     store := store;
     store_indirect := store_indirect;
-    load_nil := load_nil;                           
-    load_integer := load_integer; 
+    load_nil := load_nil;
+    load_integer := load_integer;
     load_float := load_float;
     compare := compare;
-    add := add;       
-    subtract := subtract;  
-    multiply := multiply;  
-    divide := divide;    
-    negate := negate;    
-    abs := abs;       
-    max := max;       
+    add := add;
+    subtract := subtract;
+    multiply := multiply;
+    divide := divide;
+    negate := negate;
+    abs := abs;
+    max := max;
     min := min;
     cvt_int := cvt_int;
-    cvt_float := cvt_float; 
-    div := div;     
-    mod := mod;     
+    cvt_float := cvt_float;
+    div := div;
+    mod := mod;
     set_union := set_union;
     set_difference := set_difference;
     set_intersection := set_intersection;
@@ -101,15 +101,15 @@ REVEAL
     set_compare := set_compare;
     set_range := set_range;
     set_singleton := set_singleton;
-    not := not;  
-    and := and;  
-    or := or;   
-    xor := xor;  
-    shift := shift;         
-    shift_left := shift_left;    
-    shift_right := shift_right;   
-    rotate := rotate;        
-    rotate_left := rotate_left;   
+    not := not;
+    and := and;
+    or := or;
+    xor := xor;
+    shift := shift;
+    shift_left := shift_left;
+    shift_right := shift_right;
+    rotate := rotate;
+    rotate_left := rotate_left;
     rotate_right := rotate_right;
     widen := widen;
     chop := chop;
@@ -151,7 +151,7 @@ REVEAL
     compare_exchange := compare_exchange;
     fence := fence;
     fetch_and_op := fetch_and_op;
-  END; 
+  END;
 
 (*----------------------------------------------------------- ID counters ---*)
 
