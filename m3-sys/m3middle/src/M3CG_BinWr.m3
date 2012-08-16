@@ -480,7 +480,7 @@ PROCEDURE declare_open_array (u: U;  t, elt: TypeUID;  s: BitSize) =
 PROCEDURE declare_enum (u: U;  t: TypeUID;  n_elts: INTEGER;  s: BitSize) =
   BEGIN
     Cmd  (u, Bop.declare_enum);
-    Tipe (u, t); 
+    Tipe (u, t);
     Int  (u, n_elts);
     BInt (u, s);
   END declare_enum;
@@ -534,7 +534,7 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
     Tipe (u, t);
     Tipe (u, domain);
     TInt (u, min);
-    TInt (u, max); 
+    TInt (u, max);
     BInt (u, s);
   END declare_subrange;
 
@@ -593,7 +593,7 @@ PROCEDURE declare_object (u: U;  t, super: TypeUID;
     Tipe (u, super);
     Txt  (u, brand);
     Bool (u, traced);
-    Int  (u, n_fields);  
+    Int  (u, n_fields);
     Int  (u, n_methods);
     BInt (u, field_size);
   END declare_object;
@@ -631,7 +631,7 @@ PROCEDURE declare_exception (u: U;  n: Name;  arg_type: TypeUID;
   END declare_exception;
 
 (*--------------------------------------------------------- runtime hooks ---*)
-  
+
 PROCEDURE GetRuntimeHook (u: U;  n: Name): RuntimeHook =
   VAR ref: REFANY;  e: RuntimeHook;
   BEGIN
@@ -721,8 +721,8 @@ PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     Cmd   (u, Bop.declare_constant);
     ZName (u, n);
-    Int   (u, s);  
-    Int   (u, a);  
+    Int   (u, s);
+    Int   (u, a);
     TName (u, t);
     Tipe  (u, m3t);
     Bool  (u, exported);
@@ -738,8 +738,8 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     Cmd   (u, Bop.declare_local);
     ZName (u, n);
-    Int   (u, s);  
-    Int   (u, a);  
+    Int   (u, s);
+    Int   (u, a);
     TName (u, t);
     Tipe  (u, m3t);
     Bool  (u, in_memory);
@@ -756,8 +756,8 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     Cmd   (u, Bop.declare_param);
     ZName (u, n);
-    Int   (u, s);  
-    Int   (u, a);  
+    Int   (u, s);
+    Int   (u, a);
     TName (u, t);
     Tipe  (u, m3t);
     Bool  (u, in_memory);
@@ -772,7 +772,7 @@ PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_temp);
-    Int   (u, s);  
+    Int   (u, s);
     Int   (u, a);
     TName (u, t);
     Bool  (u, in_memory);
@@ -991,7 +991,7 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  t: MType;  z: ZType) =
   BEGIN
     Cmd   (u, Bop.load);
     VName (u, v);
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
   END load;
@@ -1000,7 +1000,7 @@ PROCEDURE store  (u: U;  v: Var;  o: ByteOffset;  t: ZType;  z: MType) =
   BEGIN
     Cmd   (u, Bop.store);
     VName (u, v);
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
   END store;
@@ -1015,7 +1015,7 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
 PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
   BEGIN
     Cmd   (u, Bop.load_indirect);
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
   END load_indirect;
@@ -1023,7 +1023,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
 PROCEDURE store_indirect (u: U;  o: ByteOffset;  t: ZType;  z: MType) =
   BEGIN
     Cmd   (u, Bop.store_indirect);
-    Int   (u, o);  
+    Int   (u, o);
     TName (u, t);
     TName (u, z);
   END store_indirect;
@@ -1259,7 +1259,7 @@ PROCEDURE shift (u: U;  t: IType) =
   END shift;
 
 PROCEDURE shift_left   (u: U;  t: IType) =
-  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)  
+  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
   BEGIN
     Cmd   (u, Bop.shift_left);
     TName (u, t);
@@ -1332,7 +1332,7 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: CARDINAL) =
     Cmd   (u, Bop.extract_mn);
     TName (u, t);
     Bool  (u, sign);
-    Int   (u, m); 
+    Int   (u, m);
     Int   (u, n);
   END extract_mn;
 
@@ -1356,7 +1356,7 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: CARDINAL) =
   BEGIN
     Cmd   (u, Bop.insert_mn);
     TName (u, t);
-    Int   (u, m); 
+    Int   (u, m);
     Int   (u, n);
   END insert_mn;
 
@@ -1503,7 +1503,7 @@ PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
   BEGIN
     Cmd   (u, Bop.start_call_direct);
     PName (u, p);
-    Int   (u, lev);  
+    Int   (u, lev);
     TName (u, t);
   END start_call_direct;
 

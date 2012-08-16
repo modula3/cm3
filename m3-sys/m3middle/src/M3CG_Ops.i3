@@ -129,10 +129,10 @@ declare_exception (n: Name;  arg_type: TypeUID;  raise_proc: BOOLEAN;
    that carries an argument of type 'arg_type'.  If 'raise_proc', then
    'base+offset+BYTESIZE(ADDRESS)' is a pointer to the procedure that
    packages the argument and calls the runtime to raise the exception. *)
-   
+
 
 (*--------------------------------------------------------- runtime hooks ---*)
-  
+
 set_runtime_proc (n: Name;  p: Proc);
 (* declares 'n' as a runtime procedure 'p'.  *)
 
@@ -183,7 +183,7 @@ declare_global (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
 declare_constant (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
               m3t: TypeUID;  exported, init: BOOLEAN): Var;
 (* declares a read-only global variable *)
- 
+
 declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                f: Frequency): Var;
@@ -373,7 +373,7 @@ store_indirect (o: ByteOffset;  t: ZType;  u: MType);
     Integer values on the stack, regardless of how they are loaded,
     are sign-extended to at least 32-bit values.  Similarly, word values
     on the stack are always zero-extended to at least 32-bit values.
-    
+
     The expression stack must be empty at each label, jump, or call.
     The stack must contain exactly one value prior to a conditional
     or indexed jump.
@@ -405,7 +405,7 @@ load_float   (t: RType;  READONLY f: Target.Float); (*push; s0.t := f *)
 (* when any of these operators is passed t=Type.Word32 or Type.Word64,
    the operator does the unsigned comparison or arithmetic, but the operands
    and the result are of type Integer *)
-   
+
 compare  (t: ZType;  u: IType;  op: CompareOp);   (* s1.u := (s1.t op s0.t); pop *)
 add      (t: AType);   (* s1.t := s1.t + s0.t; pop *)
 subtract (t: AType);   (* s1.t := s1.t - s0.t; pop *)
@@ -541,19 +541,19 @@ index_address (t: IType;  size: INTEGER);
 (*------------------------------------------------------- procedure calls ---*)
 
 (* To generate a direct procedure call:
-    
+
       cg.start_call_direct (proc, level, t);
-    
+
       for each actual parameter i
           <generate value for parameter i>
           cg.pop_param ();  -or-  cg.pop_struct();
-        
+
       cg.call_direct (proc, t);
 
    or to generate an indirect call:
 
       cg.start_call_indirect (t);
-    
+
       for each actual parameter i
           <generate value for parameter i>
           cg.pop_param ();  -or-  cg.pop_struct();

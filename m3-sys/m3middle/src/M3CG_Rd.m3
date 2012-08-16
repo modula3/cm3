@@ -306,7 +306,7 @@ PROCEDURE Scan_text (VAR s: State): TEXT =
           s.ch := VAL (d0 * 64 + d1 * 8 + d2, CHAR);
         END;
       END;
-  
+
       IF (len > LAST (buf)) THEN
         overflow := overflow & Text.FromChars (SUBARRAY (buf, 0, len));
         len := 0;
