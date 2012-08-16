@@ -400,12 +400,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     ELSE RETURN FALSE;
     END;
 
-    InitCallingConventions (backend_mode,
-                            System IN SET OF Systems{Systems.I386_INTERIX,
-                                                     Systems.NT386,
-                                                     Systems.I386_NT,
-                                                     Systems.I386_CYGWIN,
-                                                     Systems.I386_MINGW});
+    MaybeInitCallingConventions (backend_mode,
+                                 System IN SET OF Systems{Systems.I386_INTERIX,
+                                                          Systems.NT386,
+                                                          Systems.I386_NT,
+                                                          Systems.I386_CYGWIN,
+                                                          Systems.I386_MINGW});
 
     (* fill in the "bytes" and "pack" fields *)
     FixI (Address, max_align);
@@ -438,6 +438,17 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     RETURN TRUE;
   END Init;
+
+CONST DefaultBackendMode = M3BackendMode_t.ExternalAssembly;
+CONST DefaultHasCallingConventions = FALSE;
+
+PROCEDURE MaybeInitCallingConventions(backend_mode: M3BackendMode_t;
+                                      calling_conventions: BOOLEAN) =
+BEGIN
+  IF backend_mode # DefaultBackendMode OR calling_conventions # DefaultHasCallingConventions THEN
+    InitCallingConventions(backend_mode, calling_conventions);
+  END;
+END MaybeInitCallingConventions;
 
 PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
                                  calling_conventions: BOOLEAN) =
@@ -520,4 +531,5 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
   END ConventionFromID;
 
 BEGIN
+  InitCallingConventions (DefaultBackendMode, DefaultHasCallingConventions);
 END Target.
