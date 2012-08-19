@@ -4,8 +4,7 @@ UNSAFE INTERFACE M3CG_MultiPass;
  * passes can be run over it.
  *)
 
-IMPORT M3CG, M3CG_Ops, M3CG_Binary;
-FROM M3CG_Binary IMPORT Op;
+IMPORT M3CG_Ops;
 
 TYPE T <: Public;
 
