@@ -29,9 +29,10 @@ BEGIN
 END New;
 
 PROCEDURE get_data(self: T): REF ARRAY OF REFANY =
-VAR a := NEW(ARRAY OF REFANY, data.size());
+VAR data := self.data;
+    a := NEW(REF ARRAY OF REFANY, data.size());
 BEGIN
-  FOR b := FIRST(a) to LAST(a) DO
+  FOR b := FIRST(a^) TO LAST(a^) DO
     a[b] := data.get(b);
   END;
   RETURN a;
