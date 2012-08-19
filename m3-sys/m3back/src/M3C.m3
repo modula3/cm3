@@ -35,7 +35,7 @@ REVEAL
   U = Public BRANDED "M3C.U" OBJECT
         wr     : Wrx86.T := NIL;
         c      : Wr.T := NIL;
-        debug  := TRUE;
+        debug  := FALSE;
         stack  : TextSeq.T := NIL;
         enum_type: TEXT := NIL;
         (*enum: Enum_t := NIL;*)
@@ -57,8 +57,9 @@ REVEAL
         in_block := 0;
         file: TEXT := NIL;
         line: INTEGER := 0;
-        line_directive: TEXT := NIL;
+        line_directive := "";
         nl_line_directive := "\n";
+        last_char_was_newline := FALSE;
         suppress_line_directive: INTEGER := 0;
         width := 0;
       OVERRIDES
@@ -218,9 +219,13 @@ BEGIN
   IF u.line > 0 AND u.file # NIL THEN
     u.line_directive := "#line " & Fmt.Int(u.line) & " \"" & u.file & "\"\n";
     u.nl_line_directive := "\n" & u.line_directive;
-    print(u, u.nl_line_directive);
+    IF u.last_char_was_newline THEN
+      print(u, u.line_directive);
+    ELSE
+      print(u, u.nl_line_directive);
+    END;
   ELSE
-    u.line_directive := NIL;
+    u.line_directive := "";
     u.nl_line_directive := "\n";
   END;
 END SetLineDirective;
@@ -468,25 +473,40 @@ PROCEDURE print(u: U; text: TEXT) = <*FATAL ANY*>
     ELSE
       Wr.PutText(u.c, text);
     END;
+
     IF text = u.line_directive OR text = u.nl_line_directive THEN
       u.width := 0;
+      u.last_char_was_newline := TRUE;
       RETURN;
     END;
-    IF (*u.suppress_line_directive < 1 AND*) u.line_directive # NIL AND length > 1 AND Text.GetChar(text, length - 1) = '\n' THEN
+
+    IF (*u.suppress_line_directive < 1 AND*) Text.GetChar(text, length - 1) = '\n' THEN
       Wr.PutText(u.c, u.line_directive);
       u.width := 0;
+      u.last_char_was_newline := TRUE;
       RETURN;
     END;
+
     IF Text.FindChar(text, '\n') # -1 THEN
       u.width := 0; (* roughly *)
+      Wr.PutText(u.c, u.nl_line_directive);
+      u.last_char_was_newline := TRUE;
       RETURN;
     END;
+
     INC(u.width, length);
-    IF u.width < 500 THEN
+    IF u.width < 900 THEN
+      u.last_char_was_newline := FALSE;
       RETURN;
     END;
+
     u.width := 0;
-    Wr.PutText(u.c, u.nl_line_directive);
+    IF u.last_char_was_newline THEN
+      Wr.PutText(u.c, u.line_directive);
+    ELSE
+      Wr.PutText(u.c, u.nl_line_directive);
+    END;
+    u.last_char_was_newline := TRUE;
   END print;
 
 (*---------------------------------------------------------------------------*)
