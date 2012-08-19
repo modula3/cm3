@@ -49,10 +49,16 @@ REVEAL
         init_varstore   : x86Var := NIL;
         init_count      : INTEGER;
 
-        (* What determines the sizes here? Historically it was 2. *)
-        call_param_size := ARRAY [0 .. 9] OF INTEGER { 0, .. };
-        in_proc_call    : [0 .. 10] := 0;
-        static_link     := ARRAY [0 .. 9] OF x86Var { NIL, .. };
+        (* calls are never nested; results are stored in temporaries and repushed
+        F1(F2(F3()) compiles to
+          temp = F3()
+          temp = F2(temp)
+          F1(temp)
+          (whether it is the same temp, is a different matter; I don't know)
+        *)
+        call_param_size := ARRAY [0 .. 1] OF INTEGER { 0, 0 };
+        in_proc_call    : [0 .. 1] := 0;
+        static_link     := ARRAY [0 .. 1] OF x86Var { NIL, NIL };
 
         current_proc    : x86Proc := NIL;
         param_proc      : x86Proc := NIL;
