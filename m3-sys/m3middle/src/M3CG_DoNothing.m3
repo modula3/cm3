@@ -265,9 +265,8 @@ BEGIN
 END NewProc;
 
 <*NOWARN*>PROCEDURE import_procedure(u: U; n: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention): Proc =
-VAR p := NewProc(u);
 BEGIN
-  RETURN p;
+  RETURN NewProc(u);
 END import_procedure;
 
 <*NOWARN*>PROCEDURE declare_procedure(u: U; n: Name; n_params: INTEGER; return_type: Type; lev: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc): Proc =
