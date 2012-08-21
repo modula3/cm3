@@ -37,9 +37,9 @@ Module ("M3CG_Wr")
 Module ("M3CG_Binary")
 Module ("M3CG_BinRd")
 Module ("M3CG_BinWr")
+Module ("M3CG_MultiPass")
+Module ("M3CG_DoNothing")
 Module ("M3RT")
 
 build_standalone ()
 Library ("m3middle")
-
-
