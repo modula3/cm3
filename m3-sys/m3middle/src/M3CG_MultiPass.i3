@@ -4,7 +4,15 @@ UNSAFE INTERFACE M3CG_MultiPass;
  * passes can be run over it.
  *)
 
-IMPORT M3CG_Ops;
+IMPORT M3CG_Ops, M3CG, Target;
+FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
+FROM M3CG IMPORT Name, Var, Proc, Alignment, TypeUID, Label;
+FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
+FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
+FROM M3CG IMPORT MemoryOrder;
+
+TYPE TVar = Var OBJECT tag: INTEGER END;
+TYPE TProc = Proc OBJECT tag: INTEGER END;
 
 TYPE T <: Public;
 
@@ -13,18 +21,147 @@ TYPE Public = M3CG_Ops.Public OBJECT
   get_data(): REF ARRAY OF REFANY;
 END;
 
-PROCEDURE New (): T;
+PROCEDURE New(): T;
 
-(*----------------------------------------------------------- ID counters ---*)
-
-TYPE next_label_t = REF RECORD
-  n: INTEGER;
-END;
-
-(*------------------------------------------------ READONLY configuration ---*)
-
-TYPE set_error_handler_t = REF RECORD
-  p: PROCEDURE (msg: TEXT);
-END;
+TYPE import_procedure_t = REF RECORD name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention END;
+TYPE declare_procedure_t = REF RECORD name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: TProc END;
+TYPE next_label_t = REF RECORD label_count: INTEGER; END;
+(* TYPE set_error_handler_t; *)
+TYPE begin_procedure_t = REF RECORD proc: TProc; END;
+TYPE end_procedure_t = REF RECORD proc: TProc; END;
+TYPE import_global_t = REF RECORD name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID END;
+TYPE declare_segment_t = REF RECORD name: Name; typeid: TypeUID; is_const: BOOLEAN END;
+TYPE declare_global_t = REF RECORD name: Name; byte_size: ByteSize; alignment: Alignment; typeid: Type; type: TypeUID; exported, inited: BOOLEAN END;
+TYPE declare_constant_t = REF RECORD name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN END;
+TYPE declare_local_t = REF RECORD name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency END;
+TYPE declare_param_t = REF RECORD name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency END;
+TYPE declare_temp_t = REF RECORD byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN END;
+TYPE begin_unit_t = REF RECORD optimize: INTEGER END;
+TYPE end_unit_t = REF RECORD END;
+TYPE import_unit_t = REF RECORD name: Name END;
+TYPE export_unit_t = REF RECORD name: Name END;
+TYPE set_source_file_t = REF RECORD file: TEXT END;
+TYPE set_source_line_t = REF RECORD line: INTEGER END;
+TYPE declare_typename_t = REF RECORD typeid: TypeUID; name: Name END;
+TYPE declare_array_t = REF RECORD typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize END;
+TYPE declare_open_array_t = REF RECORD typeid, element_typeid: TypeUID; bit_size: BitSize END;
+TYPE declare_enum_t = REF RECORD typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize END;
+TYPE declare_enum_elt_t = REF RECORD name: Name END;
+TYPE declare_packed_t = REF RECORD typeid: TypeUID; bit_size: BitSize; base: TypeUID END;
+TYPE declare_record_t = REF RECORD typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER END;
+TYPE declare_field_t = REF RECORD name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID END;
+TYPE declare_set_t = REF RECORD t, domain: TypeUID; bit_size: BitSize END;
+TYPE declare_subrange_t = REF RECORD typeid, domain_typeid: TypeUID; min, max: Target.Int; bit_size: BitSize END;
+TYPE declare_pointer_t = REF RECORD typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN END;
+TYPE declare_indirect_t = REF RECORD typeid, target_typeid: TypeUID END;
+TYPE declare_proctype_t = REF RECORD typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention END;
+TYPE declare_formal_t = REF RECORD name: Name; typeid: TypeUID END;
+TYPE declare_raises_t = REF RECORD name: Name END;
+TYPE declare_object_t = REF RECORD typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize END;
+TYPE declare_method_t = REF RECORD name: Name; signature: TypeUID END;
+TYPE declare_opaque_t = REF RECORD typeid, super_typeid: TypeUID END;
+TYPE reveal_opaque_t = REF RECORD lhs_typeid, rhs_typeid: TypeUID END;
+TYPE declare_exception_t = REF RECORD name: Name; arg_typeid: TypeUID; raise_proc: BOOLEAN; base: Var; offset: INTEGER END;
+TYPE set_runtime_proc_t = REF RECORD name: Name; proc: TProc END;
+TYPE bind_segment_t = REF RECORD segment: Var; byte_size: ByteSize; alignment: Alignment; type: Type; exported, inited: BOOLEAN END;
+TYPE free_temp_t = REF RECORD var: Var END;
+TYPE begin_init_t = REF RECORD var: Var END;
+TYPE end_init_t = REF RECORD var: Var END;
+TYPE init_int_t = REF RECORD byte_offset: ByteOffset; value: Target.Int; type: Type END;
+TYPE init_proc_t = REF RECORD byte_offset: ByteOffset; value: TProc END;
+TYPE init_label_t = REF RECORD byte_offset: ByteOffset; value: Label END;
+TYPE init_var_t = REF RECORD byte_offset: ByteOffset; value: Var; bias: ByteOffset END;
+TYPE init_offset_t = REF RECORD byte_offset: ByteOffset; value: Var END;
+TYPE init_chars_t = REF RECORD byte_offset: ByteOffset; value: TEXT END;
+TYPE init_float_t = REF RECORD byte_offset: ByteOffset; f: Target.Float END;
+TYPE begin_block_t = REF RECORD END;
+TYPE end_block_t = REF RECORD END;
+TYPE note_procedure_origin_t = REF RECORD proc: TProc END;
+TYPE set_label_t = REF RECORD label: Label; barrier: BOOLEAN END;
+TYPE jump_t = REF RECORD label: Label END;
+TYPE if_true_t = REF RECORD type: IType; label: Label; frequency: Frequency END;
+TYPE if_false_t = REF RECORD type: IType; label: Label; frequency: Frequency END;
+TYPE if_compare_t = REF RECORD type: ZType; op: CompareOp; label: Label; frequency: Frequency END;
+TYPE case_jump_t = REF RECORD type: IType; labels: REF ARRAY OF Label END;
+TYPE exit_proc_t = REF RECORD type: Type END;
+TYPE load_t = REF RECORD var: Var; byte_offset: ByteOffset; mtype: MType; ztype: ZType END;
+TYPE store_t = REF RECORD var: Var; byte_offset: ByteOffset; ztype: ZType; mtype: MType END;
+TYPE load_address_t = REF RECORD var: Var; byte_offset: ByteOffset END;
+TYPE load_indirect_t = REF RECORD byte_offset: ByteOffset; mtype: MType; ztype: ZType END;
+TYPE store_indirect_t = REF RECORD byte_offset: ByteOffset; ztype: ZType; mtype: MType END;
+TYPE load_nil_t = REF RECORD END;
+TYPE load_integer_t = REF RECORD type: IType; int: Target.Int END;
+TYPE load_float_t = REF RECORD type: RType; float: Target.Float END;
+TYPE compare_t = REF RECORD ztype: ZType; itype: IType; op: CompareOp END;
+TYPE add_t = REF RECORD type: AType END;
+TYPE subtract_t = REF RECORD type: AType END;
+TYPE multiply_t = REF RECORD type: AType END;
+TYPE divide_t = REF RECORD type: RType END;
+TYPE div_t = REF RECORD type: IType; a, b: Sign END;
+TYPE mod_t = REF RECORD type: IType; a, b: Sign END;
+TYPE negate_t = REF RECORD type: AType END;
+TYPE abs_t = REF RECORD type: AType END;
+TYPE max_t = REF RECORD type: ZType END;
+TYPE min_t = REF RECORD type: ZType END;
+TYPE cvt_int_t = REF RECORD rtype: RType; itype: IType; op: ConvertOp END;
+TYPE cvt_float_t = REF RECORD atype: AType; rtype: RType END;
+TYPE set_union_t = REF RECORD byte_size: ByteSize END;
+TYPE set_difference_t = REF RECORD byte_size: ByteSize END;
+TYPE set_intersection_t = REF RECORD byte_size: ByteSize END;
+TYPE set_sym_difference_t = REF RECORD byte_size: ByteSize END;
+TYPE set_member_t = REF RECORD byte_size: ByteSize; type: IType END;
+TYPE set_compare_t = REF RECORD byte_size: ByteSize; op: CompareOp; type: IType END;
+TYPE set_range_t = REF RECORD byte_size: ByteSize; type: IType END;
+TYPE set_singleton_t = REF RECORD byte_size: ByteSize; type: IType END;
+TYPE not_t = REF RECORD type: IType END;
+TYPE and_t = REF RECORD type: IType END;
+TYPE or_t = REF RECORD type: IType END;
+TYPE xor_t = REF RECORD type: IType END;
+TYPE shift_t = REF RECORD type: IType END;
+TYPE shift_left_t = REF RECORD type: IType END;
+TYPE shift_right_t = REF RECORD type: IType END;
+TYPE rotate_t = REF RECORD type: IType END;
+TYPE rotate_left_t = REF RECORD type: IType END;
+TYPE rotate_right_t = REF RECORD type: IType END;
+TYPE widen_t = REF RECORD sign: BOOLEAN END;
+TYPE chop_t = REF RECORD END;
+TYPE extract_t = REF RECORD type: IType; sign: BOOLEAN END;
+TYPE extract_n_t = REF RECORD type: IType; sign: BOOLEAN; n: CARDINAL END;
+TYPE extract_mn_t = REF RECORD type: IType; sign: BOOLEAN; m, n: CARDINAL END;
+TYPE insert_t = REF RECORD type: IType END;
+TYPE insert_n_t = REF RECORD type: IType; n: CARDINAL END;
+TYPE insert_mn_t = REF RECORD type: IType; m, n: CARDINAL END;
+TYPE swap_t = REF RECORD a, b: Type END;
+TYPE pop_t = REF RECORD type: Type END;
+TYPE copy_n_t = REF RECORD itype: IType; mtype: MType; overlap: BOOLEAN END;
+TYPE copy_t = REF RECORD n: INTEGER; mtype: MType; overlap: BOOLEAN END;
+TYPE zero_n_t = REF RECORD itype: IType; mtype: MType END;
+TYPE zero_t = REF RECORD n: INTEGER; type: MType END;
+TYPE loophole_t = REF RECORD from, to: ZType END;
+TYPE abort_t = REF RECORD code: RuntimeError END;
+TYPE check_nil_t = REF RECORD code: RuntimeError END;
+TYPE check_lo_t = REF RECORD type: IType; i: Target.Int; code: RuntimeError END;
+TYPE check_hi_t = REF RECORD type: IType; i: Target.Int; code: RuntimeError END;
+TYPE check_range_t = REF RECORD type: IType; a, b: Target.Int; code: RuntimeError END;
+TYPE check_index_t = REF RECORD type: IType; code: RuntimeError END;
+TYPE check_eq_t = REF RECORD type: IType; code: RuntimeError END;
+TYPE add_offset_t = REF RECORD i: INTEGER END;
+TYPE index_address_t = REF RECORD type: IType; size: INTEGER END;
+TYPE start_call_direct_t = REF RECORD proc: TProc; level: INTEGER; type: Type END;
+TYPE start_call_indirect_t = REF RECORD type: Type; callingConvention: CallingConvention END;
+TYPE pop_param_t = REF RECORD type: MType END;
+TYPE pop_struct_t = REF RECORD typeid: TypeUID; byte_size: ByteSize; alignment: Alignment END;
+TYPE pop_static_link_t = REF RECORD END;
+TYPE call_direct_t = REF RECORD proc: TProc; type: Type END;
+TYPE call_indirect_t = REF RECORD type: Type; callingConvention: CallingConvention END;
+TYPE load_procedure_t = REF RECORD proc: TProc END;
+TYPE load_static_link_t = REF RECORD proc: TProc END;
+TYPE comment_t = REF RECORD a, b, c, d: TEXT := NIL END;
+TYPE store_ordered_t = REF RECORD ztype: ZType; mtype: MType; order: MemoryOrder END;
+TYPE load_ordered_t = REF RECORD mtype: MType; ztype: ZType; order: MemoryOrder END;
+TYPE exchange_t = REF RECORD mtype: MType; ztype: ZType; order: MemoryOrder END;
+TYPE compare_exchange_t = REF RECORD mtype: MType; ztype: ZType; r: IType; success, failure: MemoryOrder END;
+TYPE fence_t = REF RECORD order: MemoryOrder END;
+TYPE fetch_and_op_t = REF RECORD op: AtomicOp; mtype: MType; ztype: ZType; order: MemoryOrder END;
 
 END M3CG_MultiPass.
