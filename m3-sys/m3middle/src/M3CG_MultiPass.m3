@@ -292,26 +292,94 @@ BEGIN
 self.Add(NEW(import_unit_t, name := name));
 END import_unit;
 
-<*NOWARN*>PROCEDURE export_unit(self: T; name: Name) = BEGIN END export_unit;
-<*NOWARN*>PROCEDURE set_source_file(self: T; file: TEXT) = BEGIN END set_source_file;
-<*NOWARN*>PROCEDURE set_source_line(self: T; line: INTEGER) = BEGIN END set_source_line;
-<*NOWARN*>PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) = BEGIN END declare_typename;
-<*NOWARN*>PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) = BEGIN END declare_array;
-<*NOWARN*>PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize) = BEGIN END declare_open_array;
-<*NOWARN*>PROCEDURE declare_enum(self: T; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) = BEGIN END declare_enum;
-<*NOWARN*>PROCEDURE declare_enum_elt(self: T; name: Name) = BEGIN END declare_enum_elt;
-<*NOWARN*>PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID) = BEGIN END declare_packed;
-<*NOWARN*>PROCEDURE declare_record(self: T; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) = BEGIN END declare_record;
-<*NOWARN*>PROCEDURE declare_field(self: T; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) = BEGIN END declare_field;
-<*NOWARN*>PROCEDURE declare_set(self: T; t, domain: TypeUID; bit_size: BitSize) = BEGIN END declare_set;
-<*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) = BEGIN END declare_subrange;
-<*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) = BEGIN END declare_pointer;
-<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) = BEGIN END declare_indirect;
-<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) = BEGIN END declare_proctype;
-<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) = BEGIN END declare_formal;
-<*NOWARN*>PROCEDURE declare_raises(self: T; name: Name) = BEGIN END declare_raises;
-<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) = BEGIN END declare_object;
-<*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) = BEGIN END declare_method;
+PROCEDURE export_unit(self: T; name: Name) = BEGIN
+self.Add(NEW(export_unit_t, name := name));
+END export_unit;
+
+PROCEDURE set_source_file(self: T; file: TEXT) =
+BEGIN
+self.Add(NEW(set_source_file_t, file := file));
+END set_source_file;
+
+PROCEDURE set_source_line(self: T; line: INTEGER) =
+BEGIN
+self.Add(NEW(set_source_line_t, line := line));
+END set_source_line;
+
+PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) =
+BEGIN
+self.Add(NEW(declare_typename_t, typeid := typeid, name := name));
+END declare_typename;
+
+PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
+BEGIN
+self.Add(NEW(declare_array_t, typeid := typeid, index_typeid := index_typeid, element_typeid := element_typeid, bit_size := bit_size));
+END declare_array;
+
+PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+BEGIN
+self.Add(NEW(declare_open_array_t, typeid := typeid, element_typeid := element_typeid, bit_size := bit_size));
+END declare_open_array;
+
+PROCEDURE declare_enum(self: T; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
+BEGIN
+self.Add(NEW(declare_enum_t, typeid := typeid, n_elts := n_elts, bit_size := bit_size));
+END declare_enum;
+
+PROCEDURE declare_enum_elt(self: T; name: Name) =
+BEGIN
+self.Add(NEW(declare_enum_elt_t, name := name));
+END declare_enum_elt;
+
+PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
+BEGIN
+self.Add(NEW(declare_packed_t, typeid := typeid, bit_size := bit_size, base := base));
+END declare_packed;
+
+<*NOWARN*>PROCEDURE declare_record(self: T; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
+BEGIN
+END declare_record;
+
+<*NOWARN*>PROCEDURE declare_field(self: T; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+BEGIN
+END declare_field;
+
+<*NOWARN*>PROCEDURE declare_set(self: T; t, domain: TypeUID; bit_size: BitSize) =
+BEGIN
+END declare_set;
+
+<*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
+BEGIN
+END declare_subrange;
+
+<*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) =
+BEGIN
+END declare_pointer;
+
+<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) =
+BEGIN
+END declare_indirect;
+
+<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
+BEGIN
+END declare_proctype;
+
+<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) =
+BEGIN
+END declare_formal;
+
+<*NOWARN*>PROCEDURE declare_raises(self: T; name: Name) =
+BEGIN
+END declare_raises;
+
+<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) =
+BEGIN
+END declare_object;
+
+<*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) =
+BEGIN
+END declare_method;
+
 <*NOWARN*>PROCEDURE declare_opaque(self: T; typeid, super_typeid: TypeUID) = BEGIN END declare_opaque;
 <*NOWARN*>PROCEDURE reveal_opaque(self: T; lhs_typeid, rhs_typeid: TypeUID) = BEGIN END reveal_opaque;
 <*NOWARN*>PROCEDURE declare_exception(self: T; name: Name; arg_typeid: TypeUID; raise_proc: BOOLEAN; base: Var; offset: INTEGER) = BEGIN END declare_exception;
