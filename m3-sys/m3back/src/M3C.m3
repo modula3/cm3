@@ -61,6 +61,10 @@ REVEAL
         nl_line_directive := "\n";
         last_char_was_newline := FALSE;
         suppress_line_directive: INTEGER := 0;
+        global_var: TEXT := NIL; (* based on M3x86 *)
+        in_proc_call := 0; (* based on M3x86 *)
+        reportlabel := 0; (* based on M3x86 *)
+        usedfault := FALSE; (* based on M3x86 *)
         width := 0;
       OVERRIDES
         next_label := next_label;
@@ -342,6 +346,7 @@ TYPE CVar = M3CG.Var OBJECT
   name: Name;
   type: Type;
   is_const := FALSE;
+  proc: CProc;
 END;
 
 TYPE CProc = M3CG.Proc OBJECT
@@ -376,7 +381,10 @@ CONST Prefix = ARRAY OF TEXT {
 "#endif",
 *)
 "#if !(defined(_MSC_VER) || defined(__cdecl))",
-"#define __cdecl",
+"#define __cdecl /* nothing */",
+"#endif",
+"#if !defined(_MSC_VER) && !defined(__stdcall)",
+"#define __stdcall /* nothing */",
 "#endif",
 "typedef signed char INT8;",
 "typedef unsigned char UINT8, WORD8;",
@@ -389,6 +397,68 @@ CONST Prefix = ARRAY OF TEXT {
 "#endif",
 "typedef signed __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
+"typedef char *ADDRESS;",
+"/* return positive form of a negative value, avoiding overflow */",
+"/* T should be an unsigned type */",
+"#define M3_POS(T, a) (((T)-((a) + 1)) + 1)",
+"#define m3_rotate_left_T(T)  static T m3_rotate_left_##T (T a, int b) { return ((a << b) | (a >> ((sizeof(a) * 8) - b))); }",
+"#define m3_rotate_right_T(T) static T m3_rotate_right_##T(T a, int b) { return ((a >> b) | (a << ((sizeof(a) * 8) - b))); }",
+"#define m3_rotate_T(T)       static T m3_rotate_##T(T a, int b) { b &= ((sizeof(a) * 8) - 1); if (b > 0) a = m3_rotate_left_##T(a, b); else if (b < 0) a = m3_rotate_right_##T(a, -b); return a; }",
+"#define m3_abs_T(T) static T m3_abs_##T(T a) { return ((a < 0) ? ((T)-(U##T)a) : a); }",
+"#define m3_min_T(T) static T m3_min_##T(T a, T b) { return ((a < b) ? a : b); }",
+"#define m3_max_T(T) static T m3_max_##T(T a, T b) { return ((a > b) ? a : b); }",
+"#define m3_div_T(T) static T m3_div_##T(T a, T b) \\",
+"{ \\",
+"  int aneg = (a < 0); \\",
+"  int bneg = (b < 0); \\",
+"  if (aneg == bneg || a == 0 || b == 0) \\",
+"    return (a / b); \\",
+"  else \\",
+"  { \\",
+"    /* round negative result down by rounding positive result up \\",
+"       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */ \\",
+"    U##T ua = (aneg ? M3_POS(U##T, a) : (U##T)a); \\",
+"    U##T ub = (bneg ? M3_POS(U##T, b) : (U##T)b); \\",
+"    return -(T)((ua + ub - 1) / ub); \\",
+"  } \\",
+"} \\",
+"",
+"#define m3_mod_T(T) static T m3_mod_##T(T a, T b) \\",
+"{ \\",
+"  int aneg = (a < 0); \\",
+"  int bneg = (b < 0); \\",
+"  if (aneg == bneg || a == 0 || b == 0) \\",
+"    return (a % b); \\",
+"  else \\",
+"  { \\",
+"    U##T ua = (aneg ? M3_POS(U##T, a) : (U##T)a); \\",
+"    U##T ub = (bneg ? M3_POS(U##T, b) : (U##T)b); \\",
+"    a = (T)(ub - 1 - (ua + ub - 1) % ub); \\",
+"    return (bneg ? -a : a); \\",
+"  } \\",
+"}",
+"",
+"m3_div_T(INT32)",
+"m3_mod_T(INT32)",
+"m3_rotate_left_T(UINT32)",
+"m3_rotate_right_T(UINT32)",
+"m3_rotate_T(UINT32)",
+"m3_abs_T(INT32)",
+"m3_min_T(UINT32)",
+"m3_max_T(UINT32)",
+"m3_min_T(INT32)",
+"m3_max_T(INT32)",
+"m3_div_T(INT64)",
+"m3_mod_T(INT64)",
+"m3_rotate_left_T(UINT64)",
+"m3_rotate_right_T(UINT64)",
+"m3_rotate_T(UINT64)",
+"m3_abs_T(INT64)",
+"m3_min_T(UINT64)",
+"m3_max_T(UINT64)",
+"m3_min_T(INT64)",
+"m3_max_T(INT64)",
+
 (*
 "/* WORD_T/INTEGER are always exactly the same size as a pointer.",
 " * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.",
@@ -409,7 +479,7 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef INT64 LONGINT;",
 "typedef UINT64 WORD64, LONGCARD;",
 *)
-"typedef char *ADDRESS;"
+""
 };
 
 <*NOWARN*>CONST Suffix = ARRAY OF TEXT {
@@ -453,7 +523,7 @@ PROCEDURE get(u: U; n: CARDINAL := 0): TEXT =
     RETURN u.stack.get(n);
   END get;
 
-PROCEDURE SuppressLineDirective(u: U; adjust: INTEGER; reason: TEXT) =
+PROCEDURE SuppressLineDirective(u: U; adjust: INTEGER; <*UNUSED*>reason: TEXT) =
 BEGIN
   INC(u.suppress_line_directive, adjust);
   (*
@@ -572,6 +642,21 @@ PROCEDURE set_error_handler (<*NOWARN*>u: U; <*NOWARN*>p: ErrorHandler) =
 
 (*----------------------------------------------------- compilation units ---*)
 
+PROCEDURE F1(a: INTEGER): INTEGER = BEGIN RETURN F2(F3(F4(F5(F6(F7(F8(F9(F10(F11(F12(F13(F14(a))))))))))))); END F1;
+PROCEDURE F2(a: INTEGER): INTEGER = BEGIN RETURN a; END F2;
+PROCEDURE F3(a: INTEGER): INTEGER = BEGIN RETURN a; END F3;
+PROCEDURE F4(a: INTEGER): INTEGER = BEGIN RETURN a; END F4;
+PROCEDURE F5(a: INTEGER): INTEGER = BEGIN RETURN a; END F5;
+PROCEDURE F6(a: INTEGER): INTEGER = BEGIN RETURN a; END F6;
+PROCEDURE F7(a: INTEGER): INTEGER = BEGIN RETURN a; END F7;
+PROCEDURE F8(a: INTEGER): INTEGER = BEGIN RETURN a; END F8;
+PROCEDURE F9(a: INTEGER): INTEGER = BEGIN RETURN a; END F9;
+PROCEDURE F10(a: INTEGER): INTEGER = BEGIN RETURN a; END F10;
+PROCEDURE F11(a: INTEGER): INTEGER = BEGIN RETURN a; END F11;
+PROCEDURE F12(a: INTEGER): INTEGER = BEGIN RETURN a; END F12;
+PROCEDURE F13(a: INTEGER): INTEGER = BEGIN RETURN a; END F13;
+PROCEDURE F14(a: INTEGER): INTEGER = BEGIN RETURN a; END F14;
+
 PROCEDURE begin_unit (u: U; optimize: INTEGER) =
   (* called before any other method to initialize the compilation unit *)
   BEGIN
@@ -587,6 +672,12 @@ PROCEDURE begin_unit (u: U; optimize: INTEGER) =
       print(u, "\n");
     END;
     SuppressLineDirective(u, -1, "begin_unit");
+
+    u.global_var := NIL;
+    u.in_proc_call := 0;
+    u.reportlabel := u.next_label();
+    u.usedfault := FALSE;
+
   END begin_unit;
 
 PROCEDURE end_unit   (u: U) =
@@ -598,6 +689,8 @@ PROCEDURE end_unit   (u: U) =
       u.wr.NL  ();
     END;
     print(u, "/* end unit */\n");
+    u.line_directive := ""; (* really suppress *)
+    u.nl_line_directive := "\n"; (* really suppress *)
     SuppressLineDirective(u, 1, "end_unit");
     FOR i := FIRST(Suffix) TO LAST(Suffix) DO
       print(u, Suffix[i]);
@@ -1262,9 +1355,6 @@ PROCEDURE end_init (u: U; v: Var) =
       initializer := u.initializer;
       var_name := M3ID.ToText(var.name);
       comma := "";
-      t: TEXT;
-      len: INTEGER;
-      ch0: CHAR;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("end_init");
@@ -1294,7 +1384,6 @@ PROCEDURE init_to_offset (u: U; offset: ByteOffset) =
   VAR pad := offset - u.current_init_offset;
       init_fields := u.init_fields;
       initializer := u.initializer;
-      pad_name: TEXT;
   BEGIN
     <* ASSERT offset >= u.current_init_offset *>
     <* ASSERT pad >= 0 *>
@@ -1694,7 +1783,6 @@ PROCEDURE load  (u: U; v: Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
   END load;
 
 PROCEDURE store_helper(u: U; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType) =
-  VAR text: TEXT;
   BEGIN
     <* ASSERT CG_Bytes[in_ztype] >= CG_Bytes[out_mtype] *>
     print(u, "(*(volatile " & typeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset) & ")=(" & typeToText[in_ztype] & ")(" & in & ");");
@@ -1951,12 +2039,10 @@ PROCEDURE abs (u: U; type: AType) =
       u.wr.Cmd   ("abs");
       u.wr.TName (type);
       u.wr.NL    ();
-      print(u, "/* abs */ ");
+      print(u, "/* abs */");
     END;
-    (* UNDONE *)
-    (*
-      stack[0] := "m3_abs&type(" & stack[0] & ")"
-    *)
+    pop(u);
+    push(u, type, "m3_abs_" & typeToText[type] & "(" & s0 & ")");
   END abs;
 
 PROCEDURE max (u: U; type: ZType) =
@@ -1970,11 +2056,8 @@ PROCEDURE max (u: U; type: ZType) =
       u.wr.NL    ();
       print(u, "/* max */ ");
     END;
-    (* UNDONE *)
-    (*
-      stack[1] := "m3_max&type(" & stack[0] & "," stack[1] & ")"
-      pop();
-    *)
+    pop(u, 2);
+    push(u, type, "m3_max_" & typeToText[type] & "(" & s0 & "," & s1 & ")");
   END max;
 
 PROCEDURE min (u: U; type: ZType) =
@@ -1988,11 +2071,8 @@ PROCEDURE min (u: U; type: ZType) =
       u.wr.NL    ();
       print(u, "/* min */ ");
     END;
-    (* UNDONE *)
-    (*
-      stack[1] := "m3_min&type(" & stack[0] & "," stack[1] & ")"
-      pop();
-    *)
+    pop(u, 2);
+    push(u, type, "m3_min_" & typeToText[type] & "(" & s0 & "," & s1 & ")");
   END min;
 
 PROCEDURE cvt_int (u: U; rtype: RType; itype: IType; op: ConvertOp) =
@@ -2007,10 +2087,9 @@ PROCEDURE cvt_int (u: U; rtype: RType; itype: IType; op: ConvertOp) =
       u.wr.NL    ();
       print(u, "/* cvt_int */ ");
     END;
-    (* UNDONE *)
-    (*
-      stack[0] := "((long)(" & stack[0] & ")"
-    *)
+    (* UNDONE close but not quite *)
+    pop(u);
+    push(u, itype, "((" & typeToText[itype] & ")(" & typeToText[rtype] & ")(" & s0 & "))");
   END cvt_int;
 
 PROCEDURE cvt_float (u: U; atype: AType; rtype: RType) =
@@ -2024,10 +2103,9 @@ PROCEDURE cvt_float (u: U; atype: AType; rtype: RType) =
       u.wr.NL    ();
       print(u, "/* cvt_float */ ");
     END;
-    (* UNDONE *)
-    (*
-      stack[0] := "((double)(" & stack[0] & ")"
-    *)
+    (* UNDONE close but not quite *)
+    pop(u);
+    push(u, atype, "((" & typeToText[rtype] & ")(" & typeToText[atype] & ")(" & s0 & "))");
   END cvt_float;
 
 (*------------------------------------------------------------------ sets ---*)
