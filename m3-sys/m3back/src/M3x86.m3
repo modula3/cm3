@@ -2386,8 +2386,8 @@ PROCEDURE set_member (u: U;  s: ByteSize;  type: IType) =
 
     u.vstack.unlock();
 
-    WITH stack0 = u.vstack.pos(0, "set_singleton"),
-         stack1 = u.vstack.pos(1, "set_singleton") DO
+    WITH stack0 = u.vstack.pos(0, "set_member"),
+         stack1 = u.vstack.pos(1, "set_member") DO
 
       (* Better would be:
       IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, TWordN.Max8) THEN
