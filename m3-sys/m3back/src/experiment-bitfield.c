@@ -109,7 +109,7 @@ int main()
      Offset16(short, Size16, 1, 1);
      Offset8(char, Size8, 1, 1);
    }
-   for (value[2] = -1; value[2] > -1024; ++value[2])
+   for (value[2] = -1; value[2] > -1024; --value[2])
    {
      Offset32(int, Size32, 1, 1);
      Offset16(short, Size16, 1, 1);
