@@ -416,6 +416,9 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef /*long*/ double EXTENDED;",
 "#define m3_extract_T(T) static T __stdcall m3_extract_##T(T value,WORD_T offset,WORD_T count){return((value>>offset)&~(((~(T)0))<<count));}",
 "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){T mask=(~((~(T)0)<<count))<<offset;return(((y<<offset)&mask)|(x&~mask));}",
+"#define m3_signextend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}",
+"m3_signextend_T(UINT32)",
+"m3_signextend_T(UINT64)",
 "m3_extract_T(UINT32)",
 "m3_extract_T(UINT64)",
 "m3_insert_T(UINT32)",
@@ -1288,7 +1291,7 @@ PROCEDURE function_prototype(u: U; proc: CProc) =
 VAR params := proc.params;
 BEGIN
   SuppressLineDirective(u, 1, "funtion_prototype");
-  print(u, typeToText[proc.return_type] & " __cdecl " & M3ID.ToText(proc.name));
+  print(u, typeToText[proc.return_type] & " __stdcall " & M3ID.ToText(proc.name));
   IF NUMBER (params^) = 0 THEN
     print(u, "(void)");
   ELSE
@@ -2436,7 +2439,8 @@ PROCEDURE extract (u: U; type: IType; sign_extend: BOOLEAN) =
       print(u, "/* extract */ ");
     END;
     pop(u, 3);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    <* ASSERT sign_extend = FALSE *>
+    push(u, type, "m3_extract_" & typeToText[type] & "(" & s2 & "," & s1 & "," & s0 & ")");
   END extract;
 
 PROCEDURE extract_n (u: U; type: IType; sign_extend: BOOLEAN; n: CARDINAL) =
@@ -2454,7 +2458,8 @@ PROCEDURE extract_n (u: U; type: IType; sign_extend: BOOLEAN; n: CARDINAL) =
       print(u, "/* extract_m */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    <* ASSERT sign_extend = FALSE *>
+    push(u, type, "m3_extract_" & typeToText[type] & "(" & s1 & "," & s0 & "," & Fmt.Int(n) & ")");
   END extract_n;
 
 PROCEDURE extract_mn (u: U; type: IType; sign_extend: BOOLEAN; m, n: CARDINAL) =
@@ -2472,7 +2477,11 @@ PROCEDURE extract_mn (u: U; type: IType; sign_extend: BOOLEAN; m, n: CARDINAL) =
       print(u, "/* extract_mn */ ");
     END;
     pop(u);
-    push(u, type, cast(cast(s0, type) & ">>1/*UNDONE*/" , type)); (* UNDONE *)
+    s0 := "m3_extract_" & typeToText[type] & "(" & s0 & "," & Fmt.Int(m) & "," & Fmt.Int(n) & ")";
+    IF sign_extend THEN
+      s0 := "m3_signextend_" & typeToText[type] & "(" & s0 & ")";
+    END;
+    push(u, type, s0);
   END extract_mn;
 
 PROCEDURE insert  (u: U; type: IType) =
@@ -2489,7 +2498,7 @@ PROCEDURE insert  (u: U; type: IType) =
       print(u, "/* insert */ ");
     END;
     pop(u, 4);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    push(u, type, "m3_insert_" & typeToText[type] & "(" & s3 & "," & s2 & "," & s1 & "," & s0 & ")");
   END insert;
 
 PROCEDURE insert_n  (u: U; type: IType; n: CARDINAL) =
@@ -2506,7 +2515,7 @@ PROCEDURE insert_n  (u: U; type: IType; n: CARDINAL) =
       print(u, "/* insert_n */ ");
     END;
     pop(u, 3);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    push(u, type, "m3_insert_" & typeToText[type] & "(" & s2 & "," & "," & s1 & "," & s0 & "," & Fmt.Int(n) & ")");
   END insert_n;
 
 PROCEDURE insert_mn  (u: U; type: IType; m, n: CARDINAL) =
@@ -2523,7 +2532,7 @@ PROCEDURE insert_mn  (u: U; type: IType; m, n: CARDINAL) =
       print(u, "/* insert_mn */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    push(u, type, "m3_insert_" & typeToText[type] & "(" & s1 & "," & s0 & "," & Fmt.Int(m) & "," & Fmt.Int(n) & ")");
   END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
