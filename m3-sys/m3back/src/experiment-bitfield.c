@@ -5,7 +5,10 @@
  (OFFSET ? (((struct { T : OFFSET; unsigned T value: SIZE; }*)&VALUE)->value) \
          : (((struct { unsigned T value: SIZE; }*)&VALUE)->value))
 
-#define X(type, offset, size) printf("%s %llX[%X:%X] => %X\n", #type, (unsigned long long)value[2], (unsigned)offset, (unsigned)size, (unsigned)EXTRACT(type, value[2], offset, size))
+#define X(type, offset, size) \
+  do { result = EXTRACT(type, value[2], offset, size); \
+       if (result) \
+         printf("%s %llX[%X:%X] => %llX\n", #type, (unsigned long long)value[2], (unsigned)offset, (unsigned)size, result); } while(0)
 #define Size8(type, offset, initial_size) \
         X(type, offset, initial_size); \
         X(type, offset, initial_size + 1); \
@@ -45,9 +48,17 @@
 
 int main()
 {
+ unsigned long long result = { 0 };
  {
-   volatile long long value[5] = {0};
-   for (value[2] = 1; value[2] < 1024; ++value[2])
+   long long value[5] = { 0 };
+   for (value[2] = 1; value[2] < 10; ++value[2])
+   {
+     Offset64(long long, Size64, 1, 1);
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = -1; value[2]; value[2] <<= 1)
    {
      Offset64(long long, Size64, 1, 1);
      Offset32(int, Size32, 1, 1);
@@ -75,7 +86,7 @@ int main()
      Offset16(short, Size16, 1, 1);
      Offset8(char, Size8, 1, 1);
    }
-   for (value[2] = -1; value[2] > -1024; --value[2])
+   for (value[2] = -1; value[2] > -10; --value[2])
    {
      Offset64(long long, Size64, 1, 1);
      Offset32(int, Size32, 1, 1);
@@ -84,8 +95,14 @@ int main()
    }
  }
  {
-   volatile int value[5] = {0};
-   for (value[2] = 1; value[2] < 1024; ++value[2])
+   int value[5] = { 0 };
+   for (value[2] = 1; value[2] < 10; ++value[2])
+   {
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = -1; value[2]; value[2] <<= 1)
    {
      Offset32(int, Size32, 1, 1);
      Offset16(short, Size16, 1, 1);
@@ -109,7 +126,7 @@ int main()
      Offset16(short, Size16, 1, 1);
      Offset8(char, Size8, 1, 1);
    }
-   for (value[2] = -1; value[2] > -1024; --value[2])
+   for (value[2] = -1; value[2] > -10; --value[2])
    {
      Offset32(int, Size32, 1, 1);
      Offset16(short, Size16, 1, 1);
@@ -117,8 +134,18 @@ int main()
    }
  }
  {
-   volatile unsigned short value[5] = {0};
-   for (value[2] = 1; value[2] < 0xFFFF; ++value[2])
+   short value[5] = { 0 };
+   for (value[2] = 1; value[2] < 10; ++value[2])
+   {
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = -1; value[2] > -10; --value[2])
+   {
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = -1; value[2]; value[2] <<= 1)
    {
      Offset16(short, Size16, 1, 1);
      Offset8(char, Size8, 1, 1);
@@ -140,7 +167,7 @@ int main()
    }
  }
  {
-   volatile unsigned char value[5] = {0};
+   unsigned char value[5] = { 0 };
    for (value[2] = 1; value[2] < 255; ++value[2])
    {
      Offset8(char, Size8, 1, 1);
