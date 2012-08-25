@@ -53,136 +53,136 @@ int main()
    long long value[5] = { 0 };
    for (value[2] = 1; value[2] < 10; ++value[2])
    {
-     Offset64(long long, Size64, 1, 1);
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset64(long long, Size64, 0, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = -1; value[2]; value[2] <<= 1)
    {
-     Offset64(long long, Size64, 1, 1);
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset64(long long, Size64, 0, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 1; value[2]; value[2] <<= 1)
    {
-     Offset64(long long, Size64, 1, 1);
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset64(long long, Size64, 0, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 3; value[2]; value[2] <<= 1)
    {
-     Offset64(long long, Size64, 1, 1);
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset64(long long, Size64, 0, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 5; value[2]; value[2] <<= 1)
    {
-     Offset64(long long, Size64, 1, 1);
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset64(long long, Size64, 0, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = -1; value[2] > -10; --value[2])
    {
-     Offset64(long long, Size64, 1, 1);
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset64(long long, Size64, 0, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
  }
  {
    int value[5] = { 0 };
    for (value[2] = 1; value[2] < 10; ++value[2])
    {
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = -1; value[2]; value[2] <<= 1)
    {
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 1; value[2]; value[2] <<= 1)
    {
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 3; value[2]; value[2] <<= 1)
    {
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 5; value[2]; value[2] <<= 1)
    {
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = -1; value[2] > -10; --value[2])
    {
-     Offset32(int, Size32, 1, 1);
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset32(int, Size32, 0, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
  }
  {
    short value[5] = { 0 };
    for (value[2] = 1; value[2] < 10; ++value[2])
    {
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = -1; value[2] > -10; --value[2])
    {
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = -1; value[2]; value[2] <<= 1)
    {
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 1; value[2]; value[2] <<= 1)
    {
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 3; value[2]; value[2] <<= 1)
    {
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 5; value[2]; value[2] <<= 1)
    {
-     Offset16(short, Size16, 1, 1);
-     Offset8(char, Size8, 1, 1);
+     Offset16(short, Size16, 0, 1);
+     Offset8(char, Size8, 0, 1);
    }
  }
  {
    unsigned char value[5] = { 0 };
    for (value[2] = 1; value[2] < 255; ++value[2])
    {
-     Offset8(char, Size8, 1, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 1; value[2]; value[2] <<= 1)
    {
-     Offset8(char, Size8, 1, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 3; value[2]; value[2] <<= 1)
    {
-     Offset8(char, Size8, 1, 1);
+     Offset8(char, Size8, 0, 1);
    }
    for (value[2] = 5; value[2]; value[2] <<= 1)
    {
-     Offset8(char, Size8, 1, 1);
+     Offset8(char, Size8, 0, 1);
    }
  }
  return 0;
