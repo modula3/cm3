@@ -122,14 +122,14 @@ m3_mod64(INT64 b, INT64 a)
   }
 }
 
-#define SET_GRAIN (sizeof (WORD_T) * 8)
+#define SET_GRAIN (sizeof(WORD_T) * 8)
 
 WORD_T
 __stdcall
 set_member(WORD_T elt, WORD_T* set)
 {
-  WORD_T word = elt / SET_GRAIN;
-  WORD_T bit  = elt % SET_GRAIN;
+  WORD_T const word = elt / SET_GRAIN;
+  WORD_T const bit  = elt % SET_GRAIN;
   return (set[word] & (((WORD_T)1) << bit)) != 0;
 }
 
@@ -137,7 +137,7 @@ void
 __stdcall
 set_union(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T const n_words = n_bits / SET_GRAIN;
   WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] | c[i];
@@ -147,7 +147,7 @@ void
 __stdcall
 set_intersection(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T const n_words = n_bits / SET_GRAIN;
   WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] & c[i];
@@ -157,7 +157,7 @@ void
 __stdcall
 set_difference(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T const n_words = n_bits / SET_GRAIN;
   WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] & (~ c[i]);
@@ -167,7 +167,7 @@ void
 __stdcall
 set_sym_difference(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T const n_words = n_bits / SET_GRAIN;
   WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] ^ c[i];
@@ -193,7 +193,7 @@ WORD_T
 __stdcall
 set_le(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
-  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T const n_words = n_bits / SET_GRAIN;
   WORD_T i;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
@@ -205,7 +205,7 @@ WORD_T
 __stdcall
 set_lt(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
-  WORD_T n_words = n_bits / SET_GRAIN;
+  WORD_T const n_words = n_bits / SET_GRAIN;
   WORD_T i;
   WORD_T eq = 0;
   for (i = 0; i < n_words; i++) {
@@ -236,22 +236,22 @@ void
 __stdcall
 set_range(WORD_T b, WORD_T a, WORD_T* s)
 {
-  if (b < a) {
+  if (a >= b) {
       /* no bits to set */
   } else {
-    WORD_T a_word = a / SET_GRAIN;
-    WORD_T b_word = b / SET_GRAIN;
+    WORD_T const a_word = a / SET_GRAIN;
+    WORD_T const b_word = b / SET_GRAIN;
     WORD_T i;
-    WORD_T high_bits = HIGH_BITS(a % SET_GRAIN);
-    WORD_T low_bits = LOW_BITS(b % SET_GRAIN);
+    WORD_T const high_bits = HIGH_BITS(a % SET_GRAIN);
+    WORD_T const low_bits = LOW_BITS(b % SET_GRAIN);
 
     if (a_word == b_word) {
-      s [a_word] |= (high_bits & low_bits);
+      s[a_word] |= (high_bits & low_bits);
     } else {
-      s [a_word] |= high_bits;
+      s[a_word] |= high_bits;
       for (i = a_word + 1; i < b_word; ++i)
         s[i] = ~(WORD_T)0;
-      s [b_word] |= low_bits;
+      s[b_word] |= low_bits;
     }
   }
 }
