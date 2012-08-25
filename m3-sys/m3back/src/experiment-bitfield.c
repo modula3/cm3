@@ -5,13 +5,7 @@
  (OFFSET ? (((struct { T : OFFSET; unsigned T value: SIZE; }*)&VALUE)->value) \
          : (((struct { unsigned T value: SIZE; }*)&VALUE)->value))
 
-int main()
-{
- {
-   long long value;
-   for (value = 1; value < 1024; ++value)
-   {
-#define X(type, offset, size) printf("%s %llX[%X:%X] => %X\n", #type, (long long)value, (int)offset, size, (unsigned)EXTRACT(type, value, offset, size))
+#define X(type, offset, size) printf("%s %llX[%X:%X] => %X\n", #type, (unsigned long long)value[2], (unsigned)offset, (unsigned)size, (unsigned)EXTRACT(type, value[2], offset, size))
 #define Size8(type, offset, initial_size) \
         X(type, offset, initial_size); \
         X(type, offset, initial_size + 1); \
@@ -48,32 +42,118 @@ int main()
 #define Offset64(type, expand_size_macro, initial_offset, initial_size) \
         Offset32(type, expand_size_macro, initial_offset, initial_size); \
         Offset32(type, expand_size_macro, initial_offset + 32, initial_size)
+
+int main()
+{
+ {
+   volatile long long value[5] = {0};
+   for (value[2] = 1; value[2] < 1024; ++value[2])
+   {
+     Offset64(long long, Size64, 1, 1);
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 1; value[2]; value[2] <<= 1)
+   {
+     Offset64(long long, Size64, 1, 1);
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 3; value[2]; value[2] <<= 1)
+   {
+     Offset64(long long, Size64, 1, 1);
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 5; value[2]; value[2] <<= 1)
+   {
+     Offset64(long long, Size64, 1, 1);
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = -1; value[2] > -1024; --value[2])
+   {
      Offset64(long long, Size64, 1, 1);
      Offset32(int, Size32, 1, 1);
      Offset16(short, Size16, 1, 1);
      Offset8(char, Size8, 1, 1);
    }
  }
-{
-   int  value;
-   for (value = 1; value < 1024; ++value)
+ {
+   volatile int value[5] = {0};
+   for (value[2] = 1; value[2] < 1024; ++value[2])
+   {
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 1; value[2]; value[2] <<= 1)
+   {
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 3; value[2]; value[2] <<= 1)
+   {
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 5; value[2]; value[2] <<= 1)
+   {
+     Offset32(int, Size32, 1, 1);
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = -1; value[2] > -1024; ++value[2])
    {
      Offset32(int, Size32, 1, 1);
      Offset16(short, Size16, 1, 1);
      Offset8(char, Size8, 1, 1);
    }
  }
-{
-   short value;
-   for (value = 1; value < 30000; ++value)
+ {
+   volatile unsigned short value[5] = {0};
+   for (value[2] = 1; value[2] < 0xFFFF; ++value[2])
+   {
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 1; value[2]; value[2] <<= 1)
+   {
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 3; value[2]; value[2] <<= 1)
+   {
+     Offset16(short, Size16, 1, 1);
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 5; value[2]; value[2] <<= 1)
    {
      Offset16(short, Size16, 1, 1);
      Offset8(char, Size8, 1, 1);
    }
  }
-{
-   unsigned char value;
-   for (value = 1; value < 255; ++value)
+ {
+   volatile unsigned char value[5] = {0};
+   for (value[2] = 1; value[2] < 255; ++value[2])
+   {
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 1; value[2]; value[2] <<= 1)
+   {
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 3; value[2]; value[2] <<= 1)
+   {
+     Offset8(char, Size8, 1, 1);
+   }
+   for (value[2] = 5; value[2]; value[2] <<= 1)
    {
      Offset8(char, Size8, 1, 1);
    }
