@@ -1,6 +1,6 @@
 MODULE M3C;
 
-IMPORT TextSeq, Wr, Text, Fmt;
+IMPORT TextSeq, Wr, Text, Fmt, Cstdint;
 IMPORT M3CG, M3CG_Ops, Target, TIntN, TFloat, TargetMap;
 IMPORT Stdio;
 IMPORT RTIO, RTProcess;
@@ -392,12 +392,46 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef unsigned short UINT16, WORD16;",
 "typedef int INT32;",
 "typedef unsigned int UINT32, WORD32;",
-"#if !(defined(_MSC_VER) || defined(__DECC) || defined(__int64))",
-"#define __int64 long long",
-"#endif",
-"typedef signed __int64 INT64;",
+"#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
+"typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
+"#else",
+"typedef long long INT64;",
+"typedef unsigned long long UINT64;",
+"#endif",
+"/* WORD_T/INTEGER are always exactly the same size as a pointer.",
+" * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.",
+" */",
+"#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64) || defined(__LP64__)",
+"typedef INT64 INTEGER;",
+"typedef UINT64 WORD_T;",
+"#else",
+"typdef long INTEGER;",
+"typdef unsigned long WORD_T;",
+"#endif",
 "typedef char *ADDRESS;",
+"typedef float REAL;",
+"typedef double LONGREAL;",
+"typedef /*long*/ double EXTENDED;",
+"#define SET_GRAIN (sizeof(WORD_T)*8)",
+"static WORD_T __stdcall m3_set_member(WORD_T elt,WORD_T*set){return(set[elt/SET_GRAIN]&(((WORD_T)1)<<(elt%SET_GRAIN)))!=0;}",
+"static void __stdcall m3_set_union(WORD_T n_bits,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i,n_words = n_bits / SET_GRAIN;for (i = 0; i < n_words; i++)a[i] = b[i] | c[i];}",
+"static void __stdcall m3_set_intersection(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a){WORD_T i,n_words = n_bits / SET_GRAIN;for (i = 0; i < n_words; i++)a[i] = b[i] & c[i];}",
+"static void __stdcall m3_set_difference(WORD_T n_bits,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i,n_words=n_bits/SET_GRAIN;for(i=0;i<n_words;++i)a[i]=b[i]&(~c[i]);}",
+"static void __stdcall m3_set_sym_difference(WORD_T n_bits,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i,n_words=n_bits/SET_GRAIN;for(i=0;i<n_words;++i)a[i]=b[i]^c[i];}",
+"static WORD_T __stdcall m3_set_eq(WORD_T n_bits,WORD_T*b,WORD_T*a){return(memcmp(a,b,n_bits/8)==0);}",
+"static WORD_T __stdcall m3_set_ne(WORD_T n_bits,WORD_T*b,WORD_T*a){return(memcmp(a,b,n_bits/8)!=0);}",
+"static WORD_T __stdcall m3_set_le(WORD_T n_bits,WORD_T*b,WORD_T*a){WORD_T n_words=n_bits/SET_GRAIN;WORD_T i;for(i=0;i<n_words;++i)if(a[i]&(~b[i]))return 0;return 1;}",
+"static WORD_T __stdcall m3_set_lt(WORD_T n_bits,WORD_T*b,WORD_T*a){WORD_T n_words=n_bits/SET_GRAIN;WORD_T i,eq=0;for(i=0;i<n_words;++i)if(a[i]&(~b[i]))return 0;else eq|=(a[i]^b[i]);return(eq!=0);}",
+"static WORD_T __stdcall m3_set_ge(WORD_T n_bits,WORD_T*b,WORD_T*a){return set_le(n_bits,a,b);}",
+"static WORD_T __stdcall m3_set_gt(WORD_T n_bits,WORD_T*b,WORD_T*a){return set_lt(n_bits,a,b);}",
+"#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))",
+"#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))",
+"static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T*s){if(a>=b){WORD_T i,a_word=a/SET_GRAIN,b_word=b/SET_GRAIN,high_bits=M3_HIGH_BITS(a%SET_GRAIN),low_bits=M3_LOW_BITS(b%SET_GRAIN);if(a_word==b_word){s[a_word]|=(high_bits&low_bits);}else{s[a_word]|=high_bits;for(i=a_word+1;i<b_word;++i)s[i]=~(WORD_T)0;s[b_word]|=low_bits;}}}",
+"static void __stdcall m3_set_singleton(WORD_T a,WORD_T*s){s[a/SET_GRAIN]|=(((WORD_T)1)<<(a%SET_GRAIN));}",
+"#define m3_shift_T(T) T m3_shift_##T(T value,INTEGER shift){if((shift>=(sizeof(T)*8))||(shift<=-(sizeof(T)*8)))value=0;else if(shift<0)value<<=shift;else if(shift>0)value>>=shift;return value;}",
+"m3_shift_T(UINT32)",
+"m3_shift_T(UINT64)",
 "/* return positive form of a negative value, avoiding overflow */",
 "/* T should be an unsigned type */",
 "#define M3_POS(T, a) (((T)-((a) + 1)) + 1)",
@@ -458,29 +492,14 @@ CONST Prefix = ARRAY OF TEXT {
 "m3_max_T(UINT64)",
 "m3_min_T(INT64)",
 "m3_max_T(INT64)",
-
-(*
-"/* WORD_T/INTEGER are always exactly the same size as a pointer.",
-" * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.",
-" */",
-"#if __INITIAL_POINTER_SIZE == 64",
-"typedef __int64 INTEGER;",
-"typedef unsigned __int64 WORD_T;",
-"#elif defined(_WIN64)",
-"typdef INT64 INTEGER;",
-"typdef UINT64 WORD_T;",
-"#elif defined(_WIN32)",
-"typdef INT32 INTEGER;",
-"typdef UINT32 WORD_T;",
-"#else",
-"typdef long INTEGER;",
-"typdef unsigned long WORD_T;",
-"#endif",
-"typedef INT64 LONGINT;",
-"typedef UINT64 WORD64, LONGCARD;",
-*)
-""
-};
+"double floor(double);",
+"double ceil(double);",
+"INT64 llroundl(long double);",
+"static INT64 m3_floor(EXTENDED f) { return floor(f); }",
+"static INT64 m3_ceil(EXTENDED f) { return ceil(f); }",
+"static INT64 m3_trunc(EXTENDED f) { return (INT64)f; }",
+"static INT64 m3_round(EXTENDED f) { return (INT64)llroundl(f); }",
+""};
 
 <*NOWARN*>CONST Suffix = ARRAY OF TEXT {
 "#ifdef __cplusplus",
@@ -492,16 +511,23 @@ CONST typeToText = ARRAY CGType OF TEXT {
     "UINT8",  "INT8",
     "UINT16", "INT16",
     "UINT32", "INT32",
-    "UINT64", "INT64",
-    "float", "double", "double",
+    "UINT64", "UINT64",
+    "REAL", "LONGREAL", "EXTENDED",
     "ADDRESS",
     "STRUCT",
     "void"
   };
 
+PROCEDURE Tests() = 
+  PROCEDURE Trunc1(f: REAL): Cstdint.int16_t = BEGIN RETURN TRUNC(f); END Trunc1;
+  PROCEDURE Trunc2(f: REAL): INTEGER = BEGIN RETURN TRUNC(f); END Trunc2;
+  PROCEDURE Trunc3(f: REAL): CARDINAL = BEGIN RETURN TRUNC(f); END Trunc3;
+BEGIN
+END Tests;
+
 CONST CompareOpC = ARRAY CompareOp OF TEXT { "==", "!=", ">", ">=", "<", "<=" };
-CONST ConvertOpName = ARRAY ConvertOp OF TEXT { " round", " trunc", " floor", " ceiling" };
-CONST CompareOpName = ARRAY CompareOp OF TEXT { " EQ", " NE", " GT", " GE", " LT", " LE" };
+CONST ConvertOpName = ARRAY ConvertOp OF TEXT { "round", "trunc", "floor", "ceil" };
+CONST CompareOpName = ARRAY CompareOp OF TEXT { "eq", "ne", "gt", "ge", "lt", "le" };
 
 (*---------------------------------------------------------------------------*)
 
@@ -1694,7 +1720,7 @@ PROCEDURE if_compare (u: U; ztype: ZType; op: CompareOp; label: Label;
     IF u.debug THEN
       u.wr.Cmd   ("if_compare");
       u.wr.TName (ztype);
-      u.wr.OutT  (CompareOpName [op]);
+      u.wr.OutT  (" " & CompareOpName[op]);
       u.wr.Lab   (label);
       u.wr.NL    ();
       print(u, "/* if_compare */ ");
@@ -1912,7 +1938,7 @@ PROCEDURE compare (u: U; ztype: ZType; itype: IType; op: CompareOp) =
       u.wr.Cmd   ("compare");
       u.wr.TName (ztype);
       u.wr.TName (itype);
-      u.wr.OutT  (CompareOpName [op]);
+      u.wr.OutT  (" " & CompareOpName[op]);
       u.wr.NL    ();
       print(u, "/* compare */ ");
     END;
@@ -2083,13 +2109,12 @@ PROCEDURE cvt_int (u: U; rtype: RType; itype: IType; op: ConvertOp) =
       u.wr.Cmd   ("cvt_int");
       u.wr.TName (rtype);
       u.wr.TName (itype);
-      u.wr.OutT  (ConvertOpName [op]);
+      u.wr.OutT  (" " & ConvertOpName[op]);
       u.wr.NL    ();
       print(u, "/* cvt_int */ ");
     END;
-    (* UNDONE close but not quite *)
     pop(u);
-    push(u, itype, "((" & typeToText[itype] & ")(" & typeToText[rtype] & ")(" & s0 & "))");
+    push(u, itype, "(" & typeToText[itype] & ")m3_" & ConvertOpName[op] & "((" & typeToText[rtype] & ")(" & s0 & "))");
   END cvt_int;
 
 PROCEDURE cvt_float (u: U; atype: AType; rtype: RType) =
@@ -2103,7 +2128,7 @@ PROCEDURE cvt_float (u: U; atype: AType; rtype: RType) =
       u.wr.NL    ();
       print(u, "/* cvt_float */ ");
     END;
-    (* UNDONE close but not quite *)
+    (* UNDONE is this correct? *)
     pop(u);
     push(u, atype, "((" & typeToText[rtype] & ")(" & typeToText[atype] & ")(" & s0 & "))");
   END cvt_float;
@@ -2122,12 +2147,8 @@ PROCEDURE set_op3(u: U; size: ByteSize; op: TEXT) =
       u.wr.NL    ();
       print(u, "/* " & op & " */ ");
     END;
-    (* UNDONE *)
-    (*
-      stack[2] := "m3_" & op & "(" & stack[0] & stack[1] & stack[2] & ")"
-      pop();
-      pop();
-    *)
+    pop(u, 3);
+    print(u, op & "(" & s2 & "," & s1 & "," & s0 & ")");
   END set_op3;
 
 PROCEDURE set_union (u: U; size: ByteSize) =
@@ -2166,7 +2187,8 @@ PROCEDURE set_member (u: U; size: ByteSize; type: IType) =
       u.wr.NL    ();
       print(u, "/* set_member */ ");
     END;
-    (* UNDONE *)
+    pop(u, 2);
+    push(u, type, "set_member(" & s0 & "," & s1 & ")");
   END set_member;
 
 PROCEDURE set_compare (u: U; size: ByteSize; op: CompareOp; type: IType) =
@@ -2177,12 +2199,13 @@ PROCEDURE set_compare (u: U; size: ByteSize; op: CompareOp; type: IType) =
     IF u.debug THEN
       u.wr.Cmd   ("set_compare");
       u.wr.Int   (size);
-      u.wr.OutT  (CompareOpName [op]);
+      u.wr.OutT  (" " & CompareOpName[op]);
       u.wr.TName (type);
       u.wr.NL    ();
       print(u, "/* set_compare */ ");
     END;
-    (* UNDONE *)
+    pop(u, 2);
+    push(u, type, "m3_set_" & CompareOpName[op] & "(" & s1 & "," & s0 & ")");
   END set_compare;
 
 PROCEDURE set_range (u: U; size: ByteSize; type: IType) =
@@ -2198,7 +2221,8 @@ PROCEDURE set_range (u: U; size: ByteSize; type: IType) =
       u.wr.NL    ();
       print(u, "/* set_range */ ");
     END;
-    (* UNDONE *)
+    pop(u, 2);
+    push(u, type, "m3_set_range(" & s2 & s1 & "," & s0 & ")");
   END set_range;
 
 PROCEDURE set_singleton (u: U; size: ByteSize; type: IType) =
@@ -2213,6 +2237,8 @@ PROCEDURE set_singleton (u: U; size: ByteSize; type: IType) =
       u.wr.NL    ();
       print(u, "/* set_singleton */ ");
     END;
+    pop(u, 2);
+    push(u, type, "m3_set_singleton(" & s0 & "," & s1 & ")");
   END set_singleton;
 
 (*------------------------------------------------- Word.T bit operations ---*)
@@ -2220,6 +2246,7 @@ PROCEDURE set_singleton (u: U; size: ByteSize; type: IType) =
 PROCEDURE not (u: U; type: IType) =
   (* s0.type := Word.Not (s0.type) *)
   VAR s0 := get(u);
+      t := "(" & typeToText[type] & ")";
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("not");
@@ -2227,10 +2254,8 @@ PROCEDURE not (u: U; type: IType) =
       u.wr.NL    ();
       print(u, "/* not */ ");
     END;
-    (* UNDONE *)
-    (*
-    stack[0] := "((type)~(type)" & stack[0] & ")";
-    *)
+    pop(u, 2);
+    push(u, type, cast("~" & cast(s0, type), type));
   END not;
 
 PROCEDURE and (u: U; type: IType) =
@@ -2320,7 +2345,7 @@ PROCEDURE shift (u: U; type: IType) =
       print(u, "/* shift */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    push(u, type, "m3_shift_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
   END shift;
 
 PROCEDURE rotate (u: U; type: IType) =
@@ -2335,7 +2360,7 @@ PROCEDURE rotate (u: U; type: IType) =
       print(u, "/* rotate */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    push(u, type, "m3_rotate_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
   END rotate;
 
 PROCEDURE rotate_left  (u: U; type: IType) =
@@ -2350,7 +2375,7 @@ PROCEDURE rotate_left  (u: U; type: IType) =
       print(u, "/* rotate_left */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    push(u, type, "m3_rotate_left" & typeToText[type] & "(" & s1 & "," & s0 & ")");
   END rotate_left;
 
 PROCEDURE rotate_right (u: U; type: IType) =
@@ -2365,7 +2390,7 @@ PROCEDURE rotate_right (u: U; type: IType) =
       print(u, "/* rotate_right */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(cast(s1, type) & ">>/*UNDONE*/" & cast(s0, type), type)); (* UNDONE *)
+    push(u, type, "m3_rotate_right" & typeToText[type] & "(" & s1 & "," & s0 & ")");
   END rotate_right;
 
 PROCEDURE widen (u: U; sign_extend: BOOLEAN) =
