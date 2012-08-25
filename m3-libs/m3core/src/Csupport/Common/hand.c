@@ -130,7 +130,7 @@ set_member(WORD_T elt, WORD_T* set)
 {
   WORD_T word = elt / SET_GRAIN;
   WORD_T bit  = elt % SET_GRAIN;
-  return (set[word] & (1UL << bit)) != 0;
+  return (set[word] & (((WORD_T)1) << bit)) != 0;
 }
 
 void
