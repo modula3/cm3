@@ -2971,7 +2971,11 @@ BEGIN
       comma := ",";
     END;
     proc := proc & ")";
-    push(u, type, proc);
+    IF type = Type.Void THEN
+        print(u, proc & ";");
+    ELSE
+        push(u, type, proc);
+    END;
 END call_helper;
 
 PROCEDURE call_direct(u: U; p: Proc; type: Type) =
