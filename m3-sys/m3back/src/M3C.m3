@@ -2394,7 +2394,7 @@ PROCEDURE rotate(u: U; type: IType) =
     push(u, type, "m3_rotate_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
   END rotate;
 
-PROCEDURE rotate_left (u: U; type: IType) =
+PROCEDURE rotate_left(u: U; type: IType) =
   (* s1.type := Word.Rotate (s1.type, s0.type); pop *)
   VAR s0 := get(u, 0);
       s1 := get(u, 1);
@@ -2847,7 +2847,7 @@ PROCEDURE start_call_direct(u: U; p: Proc; level: INTEGER; type: Type) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "/* start_call_direct */ ");
+    print(u, " /* start_call_direct */ ");
     start_call(u);
     print(u, M3ID.ToText(proc.name) &  "(" (* ) *) );
   END start_call_direct;
@@ -2862,12 +2862,12 @@ PROCEDURE start_call_indirect(u: U; type: Type; callingConvention: CallingConven
       u.wr.Txt   (callingConvention.name);
       u.wr.NL    ();
     END;
-    print(u, "\n/* start_call_indirect */\n");
+    print(u, " /* start_call_indirect */ ");
     start_call(u);
     print(u, s0 &  "(" (* ) *) );
   END start_call_indirect;
 
-PROCEDURE pop_param (u: U; type: MType) =
+PROCEDURE pop_param(u: U; type: MType) =
   (* pop s0 and make it the "next" parameter in the current call *)
   VAR s0 := cast(get(u, 0), type);
   BEGIN
@@ -2876,13 +2876,13 @@ PROCEDURE pop_param (u: U; type: MType) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "\n/* pop_param */\n");
+    print(u, " /* pop_param */ ");
     print(u, u.param_comma);
     print(u, s0);
     u.param_comma := ",";
   END pop_param;
 
-PROCEDURE pop_struct (u: U; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
+PROCEDURE pop_struct(u: U; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
   (* pop s0 and make it the "next" parameter in the current call
    * NOTE: it is passed by value *)
   VAR s0 := get(u, 0);
@@ -2894,23 +2894,23 @@ PROCEDURE pop_struct (u: U; typeid: TypeUID; byte_size: ByteSize; alignment: Ali
       u.wr.Int   (alignment);
       u.wr.NL    ();
     END;
-    print(u, "\n/* pop_struct */\n");
+    print(u, " /* pop_struct */ ");
     print(u, u.param_comma);
     print(u, s0);
     u.param_comma := ",";
   END pop_struct;
 
-PROCEDURE pop_static_link (u: U) =
+PROCEDURE pop_static_link(u: U) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("pop_static_link");
       u.wr.NL    ();
     END;
-    print(u, "\n/* pop_static_link */\n");
+    print(u, " /* pop_static_link */ ");
     (* UNDONE *)
   END pop_static_link;
 
-PROCEDURE call_direct (u: U; p: Proc; type: Type) =
+PROCEDURE call_direct(u: U; p: Proc; type: Type) =
   (* call the procedure identified by Proc p. The procedure
      returns a value of type type. *)
   VAR proc := NARROW(p, CProc);
@@ -2921,11 +2921,11 @@ PROCEDURE call_direct (u: U; p: Proc; type: Type) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, "\n/* call_direct */\n");
+    print(u, " /* call_direct */ ");
     DEC(u.in_proc_call);
   END call_direct;
 
-PROCEDURE call_indirect (u: U; type: Type; callingConvention: CallingConvention) =
+PROCEDURE call_indirect(u: U; type: Type; callingConvention: CallingConvention) =
   (* call the procedure whose address is in s0.A and pop s0. The
      procedure returns a value of type type. *)
   BEGIN
@@ -2935,13 +2935,13 @@ PROCEDURE call_indirect (u: U; type: Type; callingConvention: CallingConvention)
       u.wr.Txt   (callingConvention.name);
       u.wr.NL    ();
     END;
-    print(u, "\n/* call_indirect */\n");
+    print(u, " /* call_indirect */ ");
     DEC(u.in_proc_call);
   END call_indirect;
 
 (*------------------------------------------- procedure and closure types ---*)
 
-PROCEDURE load_procedure (u: U; p: Proc) =
+PROCEDURE load_procedure(u: U; p: Proc) =
   (* push; s0.A := ADDR (proc's body) *)
   VAR proc := NARROW(p, CProc);
   BEGIN
@@ -2955,7 +2955,7 @@ PROCEDURE load_procedure (u: U; p: Proc) =
     (* UNDONE *)
   END load_procedure;
 
-PROCEDURE load_static_link (u: U; p: Proc) =
+PROCEDURE load_static_link(u: U; p: Proc) =
   (* push; s0.A := (static link needed to call proc, NIL for top-level procs) *)
   VAR proc := NARROW(p, CProc);
   BEGIN
@@ -2971,7 +2971,7 @@ PROCEDURE load_static_link (u: U; p: Proc) =
 
 (*----------------------------------------------------------------- misc. ---*)
 
-PROCEDURE comment (u: U; a, b, c, d: TEXT := NIL) =
+PROCEDURE comment(u: U; a, b, c, d: TEXT := NIL) =
   VAR i: INTEGER := -1;
   BEGIN
     Cmt2 (u, a, i);
@@ -2981,7 +2981,7 @@ PROCEDURE comment (u: U; a, b, c, d: TEXT := NIL) =
     Cmt1 (u, "\n", i);
   END comment;
 
-PROCEDURE Cmt1 (u: U; text: TEXT; VAR width: INTEGER) =
+PROCEDURE Cmt1(u: U; text: TEXT; VAR width: INTEGER) =
   VAR ch: CHAR;
   BEGIN
     IF (NOT u.debug OR text = NIL) THEN RETURN END;
@@ -3000,7 +3000,7 @@ PROCEDURE Cmt1 (u: U; text: TEXT; VAR width: INTEGER) =
     END;
   END Cmt1;
 
-PROCEDURE Cmt2 (u: U; text: TEXT; VAR width: INTEGER) =
+PROCEDURE Cmt2(u: U; text: TEXT; VAR width: INTEGER) =
   BEGIN
     IF (NOT u.debug OR text = NIL) THEN RETURN END;
     IF text = NIL THEN
@@ -3012,7 +3012,7 @@ PROCEDURE Cmt2 (u: U; text: TEXT; VAR width: INTEGER) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE store_ordered (u: U; ztype: ZType; mtype: MType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE store_ordered(u: U; ztype: ZType; mtype: MType; <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].mtype := s0.ztype;
    pop (2) *)
   VAR s0 := get(u, 0);
@@ -3028,7 +3028,7 @@ PROCEDURE store_ordered (u: U; ztype: ZType; mtype: MType; <*UNUSED*>order: Memo
     store_helper(u, s0, ztype, s1, 0, mtype);
   END store_ordered;
 
-PROCEDURE load_ordered (u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE load_ordered(u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
 (* s0.ztype := Mem [s0.A].mtype  *)
   VAR s0 := get(u);
   BEGIN
@@ -3043,7 +3043,7 @@ PROCEDURE load_ordered (u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: Memor
     load_helper(u, s0, 0, mtype, ztype);
   END load_ordered;
 
-PROCEDURE exchange (u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE exchange(u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + offset].mtype;
    Mem [s1.A + offset].mtype := s0.ztype;
    s0.ztype := tmp;
@@ -3058,8 +3058,8 @@ PROCEDURE exchange (u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrd
     print(u, "/* exchange */ ");
   END exchange;
 
-PROCEDURE compare_exchange (u: U; mtype: MType; ztype: ZType; result_type: IType;
-                            <*UNUSED*>success, failure: MemoryOrder) =
+PROCEDURE compare_exchange(u: U; mtype: MType; ztype: ZType; result_type: IType;
+                           <*UNUSED*>success, failure: MemoryOrder) =
 (* original := Mem[s2.A].mtype;
    spurious_failure := whatever;
    IF original = Mem[s1.A].mtype AND NOT spurious_failure THEN
@@ -3085,7 +3085,7 @@ PROCEDURE compare_exchange (u: U; mtype: MType; ztype: ZType; result_type: IType
     print(u, "/* compare_exchange */ ");
   END compare_exchange;
 
-PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE fence(u: U; <*UNUSED*>order: MemoryOrder) =
 (*
  * x86: Exchanging any memory with any register is a serializing instruction.
  *)
@@ -3099,8 +3099,8 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op (u: U; atomic_op: AtomicOp; mtype: MType; ztype: ZType;
-                        <*UNUSED*>order: MemoryOrder) =
+PROCEDURE fetch_and_op(u: U; atomic_op: AtomicOp; mtype: MType; ztype: ZType;
+                       <*UNUSED*>order: MemoryOrder) =
 (* original := Mem [s1.A].mtype;
    Mem [s1.A].mtype := original op s0.ztype;
    s1.ztype := original;
