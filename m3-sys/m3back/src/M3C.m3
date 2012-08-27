@@ -686,7 +686,7 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
   VAR u := NEW (U);
   BEGIN
     u.wr := Wrx86.New (Stdio.stdout);
-    (*u.debug := TRUE;*)
+    u.debug := TRUE;
     u.c := cfile;
     u.init_fields := NEW(TextSeq.T).init();
     u.initializer := NEW(TextSeq.T).init();
@@ -1339,7 +1339,7 @@ PROCEDURE declare_local(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
                         frequency: Frequency): Var =
 VAR var := NEW(CVar, type := type, name := FixName(name), up_level := up_level,
-               byte_size := byte_size);
+               byte_size := byte_size, proc := u.function());
 BEGIN
     IF u.debug THEN
         u.wr.Cmd   ("declare_local");
@@ -1414,12 +1414,14 @@ PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
                         frequency: Frequency): Var =
 VAR var: CVar;
 BEGIN
-    IF u.function().level > 0 AND u.param_count = 0 THEN
-        var := NEW(CVar, type := Type.Addr, name := M3ID.Add("_static_link"), byte_size := byte_size, up_level := TRUE);
-        var.type_text := u.function().parent.FrameType() & "*";
+(*    IF u.function().level > 0 AND u.param_count = 0 THEN
+        var := NEW(CVar, type := Type.Addr, name := M3ID.Add("_static_link"), byte_size := byte_size, up_level := TRUE,
+                    proc := u.function(), type_text := u.function().parent.FrameType() & "*");
     ELSE
-        var := NEW(CVar, type := type, name := FixName(name), byte_size := byte_size, up_level := up_level);
+        var := NEW(CVar, type := type, name := FixName(name), byte_size := byte_size, up_level := up_level, proc := u.function());
     END;
+*)
+        var := NEW(CVar, type := type, name := FixName(name), byte_size := byte_size, up_level := up_level, proc := u.function());
 
     IF u.debug THEN
         u.wr.Cmd   ("declare_param");
@@ -1991,17 +1993,25 @@ PROCEDURE load_helper(u: U; in: TEXT; in_offset: INTEGER; in_mtype: MType; out_z
 
 PROCEDURE follow_static_link(u: U; var: CVar): TEXT =
 VAR current_level := u.function().level;
+    var_proc := var.proc;
     var_level := 0;
     static_link := "";
 BEGIN
-    IF var.proc # NIL THEN
-        var_level := var.proc.level;
-
-        (* You cannot access the variables of a nested function, only a containing function. *)
-        <* ASSERT current_level >= var.proc.level *>
-        FOR i := current_level TO var_level DO
-            static_link := static_link & "_static_link->";
-        END;
+    RTIO.PutText("1 " & M3ID.ToText(var.name) & "\n");
+    IF var_proc = NIL OR var.up_level = FALSE THEN
+        RETURN "";
+    END;
+    var_level := var_proc.level;
+    RTIO.PutText("1 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush();
+    IF current_level = var_level THEN
+        RTIO.PutText("2 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush();
+        RETURN var_proc.FrameName() & ".";
+    END;
+    RTIO.PutText("3 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush();
+    (* You cannot access the variables of a nested function, only a containing function. *)
+    <* ASSERT var_level <= current_level *>
+    FOR i := var_level TO current_level DO
+        static_link := static_link & "_static_link->";
     END;
     RETURN static_link;
 END follow_static_link;
