@@ -8,10 +8,10 @@ patternmatching core
 sysutils core front
 unittest core
 m3middle base core front
-m3cggen base core front
 m3objfile core front
 m3linker core front
 m3back core front
+m3cggen base core front
 m3staloneback tool
 m3front core front
 m3quake base core front
