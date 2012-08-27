@@ -309,7 +309,7 @@ if [ "$TESTHOSTNAME" = "current10s" -o "$TESTHOSTNAME" = "current9s" -o \
   SSH="ssh login.opencsw.org ssh -l hudson"
   ship_www() {
     # $1: file to ship (absolute path) (exactly one)
-    # $2: destination path to /var/www/modula3.elegosoft.com/
+    # WWWDEST: destination path to /var/www/modula3.elegosoft.com/
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/}
     if [ ! -f "$1" ]; then
       echo "$1 not found" 1>&2
@@ -318,12 +318,13 @@ if [ "$TESTHOSTNAME" = "current10s" -o "$TESTHOSTNAME" = "current9s" -o \
       echo "$1 not readable" 1>&2
       return 1
     fi
+    echo ssh login.opencsw.org scp "$1" "hudson@${WWWDEST}"
     ssh login.opencsw.org scp "$1" "hudson@${WWWDEST}" < /dev/null
   }
 else
   ship_www() {
     # $1: file to ship (exactly one)
-    # $2: destination path to /var/www/modula3.elegosoft.com/
+    # WWWDEST: destination path to /var/www/modula3.elegosoft.com/
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/}
     if [ ! -f "$1" ]; then
       echo "$1 not found" 1>&2
@@ -332,6 +333,7 @@ else
       echo "$1 not readable" 1>&2
       return 1
     fi
+    echo scp "$1" "${WWWDEST}"
     scp "$1" "${WWWDEST}" < /dev/null
   }
 fi
