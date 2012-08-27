@@ -1,6 +1,6 @@
 MODULE M3C;
 
-IMPORT TextSeq, Wr, Text, Fmt, Cstdint;
+IMPORT TextSeq, Wr, Text, Fmt;
 IMPORT M3CG, M3CG_Ops, Target, TIntN, TFloat, TargetMap;
 IMPORT Stdio;
 IMPORT RTIO, RTProcess;
@@ -42,8 +42,10 @@ REVEAL
         (* import_procedure happens both outside and inside procedurs;
            When it happens inside, it presumed already imported in later ones.
            Record them here for later repetition. Hack. *)
-        import_procedure_repeat_hack : TextSeq.T := NIL;        
+        import_procedure_repeat : TextSeq.T := NIL; (* hack *)
         enum_type: TEXT := NIL;
+        extra_scope_close_braces := ""; (* hack to account for locals/temps within code *)
+        last_char_was_open_brace := FALSE;
         (*enum: Enum_t := NIL;*)
         enum_id: TEXT := NIL;
         enum_value: CARDINAL := 0;
@@ -586,10 +588,15 @@ END SuppressLineDirective;
 
 PROCEDURE print(u: U; text: TEXT) = <*FATAL ANY*>
   VAR length := Text.Length(text);
+      text_last_char := '\000';
   BEGIN
     IF length = 0 THEN
       RETURN;
     END;
+    
+    text_last_char := Text.GetChar(text, length - 1);
+    u.last_char_was_open_brace := text_last_char = '{';
+
     IF output_extra_newlines AND Text.FindChar(text, '\n') = -1 THEN
       Wr.PutText(u.c, text & "\n");
       u.last_char_was_newline := TRUE;
@@ -603,7 +610,7 @@ PROCEDURE print(u: U; text: TEXT) = <*FATAL ANY*>
       RETURN;
     END;
 
-    IF (*u.suppress_line_directive < 1 AND*) Text.GetChar(text, length - 1) = '\n' THEN
+    IF (*u.suppress_line_directive < 1 AND*) text_last_char = '\n' THEN
       Wr.PutText(u.c, u.line_directive);
       u.width := 0;
       u.last_char_was_newline := TRUE;
@@ -644,7 +651,7 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
     u.initializer := NEW(TextSeq.T).init();
     u.stack := NEW(TextSeq.T).init();
     u.params := NEW(TextSeq.T).init();
-    u.import_procedure_repeat_hack := NEW(TextSeq.T).init();
+    u.import_procedure_repeat := NEW(TextSeq.T).init();
 (*
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1274,6 +1281,20 @@ PROCEDURE DeclareGlobal(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
     RETURN var;
   END DeclareGlobal;
 
+PROCEDURE ExtraScope_Open(u: U) =
+BEGIN
+    IF NOT u.last_char_was_open_brace THEN
+      print(u, "{");
+      u.extra_scope_close_braces := u.extra_scope_close_braces & "}";
+    END;
+END ExtraScope_Open;
+
+PROCEDURE ExtraScope_Close(u: U) =
+BEGIN
+    print(u, u.extra_scope_close_braces);
+    u.extra_scope_close_braces := "";
+END ExtraScope_Close;
+
 PROCEDURE declare_local(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
                         frequency: Frequency): Var =
@@ -1302,6 +1323,7 @@ VAR var := NEW(CVar, type := type, name := FixName(name));
     END;
     text := text & " " & M3ID.ToText(var.name) & ";";
     IF u.in_procedure > 0 OR u.in_block > 0 THEN
+      ExtraScope_Open(u);
       print(u, text);
     ELSE
       u.function.locals.addhi(text);
@@ -1334,11 +1356,22 @@ BEGIN
   RETURN text & tail;
 END function_prototype;
 
+PROCEDURE import_procedure_end(u: U) =
+VAR prototype: TEXT;
+BEGIN
+    prototype := function_prototype(u.function, ";");
+    IF u.in_procedure > 0 THEN
+        u.import_procedure_repeat.addhi(prototype);
+        ExtraScope_Open(u);
+    END;
+    print(u, prototype);
+    u.param_count := -1000; (* catch bugs *)
+END import_procedure_end;
+
 PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
                         frequency: Frequency): Var =
 VAR var := NEW(CVar, type := type, name := FixName(name), type := type);
-    prototype: TEXT;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_param");
@@ -1359,12 +1392,7 @@ VAR var := NEW(CVar, type := type, name := FixName(name), type := type);
     SuppressLineDirective(u, -1, "declare_param");
     INC(u.param_count);
     IF u.param_count = NUMBER(u.function.params^) THEN
-      prototype := function_prototype(u.function, ";");
-      print(u, prototype);
-      IF u.in_procedure > 0 THEN
-        u.import_procedure_repeat_hack.addhi(prototype);
-      END;
-      u.param_count := -1000; (* catch bugs *)
+      import_procedure_end(u);
     END;
     RETURN var;
   END declare_param;
@@ -1578,7 +1606,6 @@ VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 callingConvention := callingConvention,
                 locals := NEW(TextSeq.T).init(),
                 params := NEW(REF ARRAY OF CVar, n_params));
-    prototype: TEXT;
 BEGIN
     IF u.debug THEN
         u.wr.Cmd   ("import_procedure");
@@ -1594,11 +1621,7 @@ BEGIN
     u.param_count := 0;
     u.function := proc;
     IF n_params = 0 THEN
-        prototype := function_prototype(proc, ";");
-        IF u.in_procedure > 0 THEN
-          u.import_procedure_repeat_hack.addhi(prototype);
-        END;
-        print(u, prototype);
+        import_procedure_end(u);
     END;
     RETURN proc;
 END import_procedure;
@@ -1643,8 +1666,8 @@ PROCEDURE begin_procedure(u: U; p: Proc) =
     END;
     print(u, " /* begin_procedure */ ");
     INC(u.in_procedure);
-    WHILE u.import_procedure_repeat_hack.size() > 0 DO
-      print(u, u.import_procedure_repeat_hack.remlo());
+    WHILE u.import_procedure_repeat.size() > 0 DO
+      print(u, u.import_procedure_repeat.remlo());
     END;
     u.function := proc;
     print(u, function_prototype(proc));
@@ -1665,6 +1688,7 @@ PROCEDURE end_procedure(u: U; p: Proc) =
     print(u, " /* end_procedure */ ");
     DEC(u.in_procedure);
     print(u, "}");
+    ExtraScope_Close(u);
   END end_procedure;
 
 PROCEDURE begin_block(u: U) =
@@ -1675,8 +1699,10 @@ PROCEDURE begin_block(u: U) =
       u.wr.NL    ();
     END;
     print(u, " /* begin_block */ ");
+(*
     INC(u.in_block);
     print(u, "{");
+*)
   END begin_block;
 
 PROCEDURE end_block(u: U) =
@@ -1686,9 +1712,11 @@ PROCEDURE end_block(u: U) =
       u.wr.Cmd   ("end_block");
       u.wr.NL    ();
     END;
+(*
     print(u, " /* end_block */ ");
     DEC(u.in_block);
     print(u, "}");
+*)
   END end_block;
 
 PROCEDURE note_procedure_origin(u: U; p: Proc) =
@@ -2594,8 +2622,13 @@ PROCEDURE cg_pop(u: U; type: Type) =
     pop(u);
   END cg_pop;
 
+CONST MemCopyOrMove = ARRAY OF TEXT{"memcpy", "memmove"};
+
 PROCEDURE copy_n(u: U; itype: IType; mtype: MType; overlap: BOOLEAN) =
   (* Mem[s2.A:s0.ztype] := Mem[s1.A:s0.ztype]; pop(3)*)
+  VAR s0 := cast(get(u, 0), itype);
+      s1 := get(u, 1);
+      s2 := get(u, 2);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy_n");
@@ -2605,21 +2638,25 @@ PROCEDURE copy_n(u: U; itype: IType; mtype: MType; overlap: BOOLEAN) =
       u.wr.NL    ();
       print(u, " /* copy_n */ ");
     END;
-    (* UNDONE *)
+    pop(u, 3);
+    print(u, MemCopyOrMove[ORD(overlap)] & "(" & s2 & "," & s1 & "," & Fmt.Int(CG_Bytes[mtype]) & "*" & s0 & ")");
   END copy_n;
 
-PROCEDURE copy(u: U; n: INTEGER; type: MType; overlap: BOOLEAN) =
+PROCEDURE copy(u: U; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
   (* Mem[s1.A:sz] := Mem[s0.A:sz]; pop(2)*)
+  VAR s0 := get(u, 0);
+      s1 := get(u, 1);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy");
       u.wr.Int   (n);
-      u.wr.TName (type);
+      u.wr.TName (mtype);
       u.wr.Bool  (overlap);
       u.wr.NL    ();
       print(u, " /* copy */ ");
     END;
-    (* UNDONE *)
+    pop(u, 2);
+    print(u, MemCopyOrMove[ORD(overlap)] & "(" & s1 & "," & s0 & "," & Fmt.Int(CG_Bytes[mtype] * n) & ")");
   END copy;
 
 PROCEDURE zero_n(u: U; itype: IType; mtype: MType) =
