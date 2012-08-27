@@ -1342,7 +1342,7 @@ BEGIN
   RETURN text & tail;
 END function_prototype;
 
-PROCEDURE import_procedure_end(u: U) =
+PROCEDURE last_param(u: U) =
 VAR prototype: TEXT;
 BEGIN
     prototype := function_prototype(u.function, ";");
@@ -1352,7 +1352,7 @@ BEGIN
     END;
     print(u, prototype);
     u.param_count := -1000; (* catch bugs *)
-END import_procedure_end;
+END last_param;
 
 PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
@@ -1378,7 +1378,7 @@ VAR var := NEW(CVar, type := type, name := FixName(name), type := type);
     SuppressLineDirective(u, -1, "declare_param");
     INC(u.param_count);
     IF u.param_count = NUMBER(u.function.params^) THEN
-      import_procedure_end(u);
+      last_param(u);
     END;
     RETURN var;
   END declare_param;
@@ -1626,7 +1626,7 @@ BEGIN
     u.param_count := 0;
     u.function := proc;
     IF n_params = 0 THEN
-        import_procedure_end(u);
+        last_param(u);
     END;
     RETURN proc;
 END import_procedure;
@@ -1641,25 +1641,28 @@ VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 parent := parent,
                 locals := NEW(TextSeq.T).init(),
                 params := NEW(REF ARRAY OF CVar, n_params));
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("declare_procedure");
-      u.wr.ZName (name);
-      u.wr.Int   (n_params);
-      u.wr.TName (return_type);
-      u.wr.Int   (level);
-      u.wr.Txt   (callingConvention.name);
-      u.wr.Bool  (exported);
-      u.wr.PName (parent);
-      u.wr.PName (proc);
-      u.wr.NL    ();
-      print(u, " /* declare_procedure */ ");
+        u.wr.Cmd   ("declare_procedure");
+        u.wr.ZName (name);
+        u.wr.Int   (n_params);
+        u.wr.TName (return_type);
+        u.wr.Int   (level);
+        u.wr.Txt   (callingConvention.name);
+        u.wr.Bool  (exported);
+        u.wr.PName (parent);
+        u.wr.PName (proc);
+        u.wr.NL    ();
+        print(u, " /* declare_procedure */ ");
     END;
     SuppressLineDirective(u, n_params, "declare_procedure n_params");
     u.param_count := 0;
     u.function := proc;
+    IF n_params = 0 THEN
+        last_param(u);
+    END;
     RETURN proc;
-  END declare_procedure;
+END declare_procedure;
 
 PROCEDURE begin_procedure(u: U; p: Proc) =
   VAR proc := NARROW(p, CProc);
