@@ -13,6 +13,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT Wrx86, M3ID, TInt;
+IMPORT ASCII;
 (*
 IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq;
 IMPORT SortedIntRefTbl;
@@ -703,21 +704,6 @@ PROCEDURE set_error_handler (<*NOWARN*>u: U; <*NOWARN*>p: ErrorHandler) =
   END set_error_handler;
 
 (*----------------------------------------------------- compilation units ---*)
-
-PROCEDURE F1(a: INTEGER): INTEGER = BEGIN RETURN F2(F3(F4(F5(F6(F7(F8(F9(F10(F11(F12(F13(F14(a))))))))))))); END F1;
-PROCEDURE F2(a: INTEGER): INTEGER = BEGIN RETURN a; END F2;
-PROCEDURE F3(a: INTEGER): INTEGER = BEGIN RETURN a; END F3;
-PROCEDURE F4(a: INTEGER): INTEGER = BEGIN RETURN a; END F4;
-PROCEDURE F5(a: INTEGER): INTEGER = BEGIN RETURN a; END F5;
-PROCEDURE F6(a: INTEGER): INTEGER = BEGIN RETURN a; END F6;
-PROCEDURE F7(a: INTEGER): INTEGER = BEGIN RETURN a; END F7;
-PROCEDURE F8(a: INTEGER): INTEGER = BEGIN RETURN a; END F8;
-PROCEDURE F9(a: INTEGER): INTEGER = BEGIN RETURN a; END F9;
-PROCEDURE F10(a: INTEGER): INTEGER = BEGIN RETURN a; END F10;
-PROCEDURE F11(a: INTEGER): INTEGER = BEGIN RETURN a; END F11;
-PROCEDURE F12(a: INTEGER): INTEGER = BEGIN RETURN a; END F12;
-PROCEDURE F13(a: INTEGER): INTEGER = BEGIN RETURN a; END F13;
-PROCEDURE F14(a: INTEGER): INTEGER = BEGIN RETURN a; END F14;
 
 PROCEDURE begin_unit(u: U; optimize: INTEGER) =
   (* called before any other method to initialize the compilation unit *)
@@ -1494,7 +1480,7 @@ END end_init_helper;
 
 PROCEDURE init_helper(u: U; offset: ByteOffset; type: Type) =
 BEGIN
-    init_to_offset (u, offset);
+    init_to_offset(u, offset);
     IF offset = 0 OR u.init_type # type OR offset # u.current_init_offset THEN
       end_init_helper(u);
       u.init_fields.addhi(typeToText[type] & " " & M3ID.ToText(FixName(0)));
@@ -1575,7 +1561,13 @@ PROCEDURE init_offset(u: U; offset: ByteOffset; value: Var) =
     <* ASSERT FALSE *>
   END init_offset;
 
+CONST Printable = ASCII.AlphaNumerics
+        + ASCII.Set{' ','!','@','#','$','%','^','&','*','(',')','-','_','='}
+        + ASCII.Set{'+','[','{',']','}','|',';',':','"',',','<','.','>','/'}
+        + ASCII.Set{'?','`','~' };
 PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
+  VAR length := Text.Length(value);
+      ch: CHAR;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_chars");
@@ -1584,6 +1576,15 @@ PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
       u.wr.NL    ();
     END;
     print(u, " /* init_chars */ ");
+    FOR i := 0 TO length - 1 DO
+     init_helper(u, offset + i, Type.Word8);
+      ch := Text.GetChar(value, i);
+      IF ch IN Printable THEN
+        u.initializer.addhi("'" & Text.Sub(value, i, 1) & "'");
+      ELSE
+        u.initializer.addhi(Fmt.Int(ORD(ch)));
+      END;
+    END;
   END init_chars;
 
 PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
