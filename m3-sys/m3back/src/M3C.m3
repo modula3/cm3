@@ -2849,10 +2849,12 @@ PROCEDURE start_call_direct (u: U; p: Proc; level: INTEGER; type: Type) =
       print(u, "/* start_call_direct */ ");
     END;
     start_call(u);
+    print(u, M3ID.ToText(proc.name) &  "(" (* ) *) );
   END start_call_direct;
 
 PROCEDURE start_call_indirect (u: U; type: Type; callingConvention: CallingConvention) =
   (* begin a procedure call to a procedure at static level 'level'. *)
+  VAR s0 := get(u, 0);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("start_call_indirect");
@@ -2862,6 +2864,7 @@ PROCEDURE start_call_indirect (u: U; type: Type; callingConvention: CallingConve
       print(u, "/* start_call_indirect */ ");
     END;
     start_call(u);
+    print(u, s0 &  "(" (* ) *) );
   END start_call_indirect;
 
 PROCEDURE pop_param (u: U; type: MType) =
@@ -2882,6 +2885,7 @@ PROCEDURE pop_param (u: U; type: MType) =
 PROCEDURE pop_struct (u: U; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
   (* pop s0 and make it the "next" parameter in the current call
    * NOTE: it is passed by value *)
+  VAR s0 := get(u, 0);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("pop_struct");
@@ -2918,7 +2922,6 @@ PROCEDURE call_direct (u: U; p: Proc; type: Type) =
       u.wr.NL    ();
     END;
     print(u, "/* call_direct */ ");
-    (* UNDONE *)
     DEC(u.in_proc_call);
   END call_direct;
 
@@ -2933,7 +2936,6 @@ PROCEDURE call_indirect (u: U; type: Type; callingConvention: CallingConvention)
       u.wr.NL    ();
     END;
     print(u, "/* call_indirect */ ");
-    (* UNDONE *)
     DEC(u.in_proc_call);
   END call_indirect;
 
