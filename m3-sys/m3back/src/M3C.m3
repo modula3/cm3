@@ -1577,7 +1577,7 @@ PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
     END;
     print(u, " /* init_chars */ ");
     FOR i := 0 TO length - 1 DO
-     init_helper(u, offset + i, Type.Word8);
+      init_helper(u, offset + i, Type.Word8);
       ch := Text.GetChar(value, i);
       IF ch IN Printable THEN
         u.initializer.addhi("'" & Text.Sub(value, i, 1) & "'");
@@ -1588,6 +1588,8 @@ PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
   END init_chars;
 
 PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
+  VAR buf: ARRAY [0..255] OF CHAR;
+      type := TargetMap.Float_types[TFloat.Prec(float)].cg_type;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_float");
@@ -1595,7 +1597,9 @@ PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
       u.wr.Flt   (float);
       u.wr.NL    ();
     END;
-    print(u, " /* init_float */ ");
+    print(u, " /* init_float */ "); (* UNDONE needs work? *)
+      init_helper(u, offset, type);
+      u.initializer.addhi(Text.FromChars(SUBARRAY(buf, 0, TFloat.ToChars(float, buf))));
   END init_float;
 
 (*------------------------------------------------------------ PROCEDUREs ---*)
