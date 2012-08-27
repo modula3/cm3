@@ -354,11 +354,14 @@ def _GetAllTargets():
 
 #-----------------------------------------------------------------------------
 
+_PossibleCm3Flags = ["boot", "keep", "override", "commands"]
+_SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
+_PossiblePylibFlags = ["noclean", "nocleangcc"] + _SkipGccFlags + _PossibleCm3Flags
+
 CM3_FLAGS = ""
-if "boot" in sys.argv:
-    CM3_FLAGS = CM3_FLAGS + " -boot"
-if "keep" in sys.argv:
-    CM3_FLAGS = CM3_FLAGS + " -keep"
+for a in _PossibleCm3Flags:
+    if a in sys.argv:
+        CM3_FLAGS = CM3_FLAGS + " -" + a
 
 CM3 = ConvertPathForPython(getenv("CM3")) or "cm3"
 CM3 = SearchPath(CM3)
@@ -1471,7 +1474,7 @@ def _FilterPackage(Package):
         "tapi": BuildAll or TargetOS == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
         "X11R4": BuildAll or TargetOS != "WIN32",
-        "m3cc": (GCC_BACKEND and (not OMIT_GCC) and (not "skipgcc" in sys.argv) and (not "omitgcc" in sys.argv) and (not "nogcc" in sys.argv)),
+        "m3cc": (GCC_BACKEND and (not OMIT_GCC) and not [a for a in _SkipGccFlags if a in sys.argv])
     }
     return PackageConditions.get(Package, True)
 
@@ -1607,13 +1610,8 @@ GenericCommand:
     for arg in args:
         if ((arg == "")
             or (arg in AllTargets)
-            or (arg == "keep")
-            or (arg == "noclean")
-            or (arg == "nocleangcc")
-            or (arg == "nogcc")
-            or (arg == "skipgcc")
-            or (arg == "omitgcc")
-            or (arg == "boot")):
+            or (arg in _PossiblePylibFlags)
+            ):
             continue
         if arg.startswith("-"):
             if arg == "-l":
