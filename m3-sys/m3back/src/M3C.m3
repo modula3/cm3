@@ -1598,9 +1598,9 @@ PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
       u.wr.NL    ();
     END;
     print(u, " /* init_float */ "); (* UNDONE needs work? *)
-      init_helper(u, offset, type);
-      u.initializer.addhi(Text.FromChars(SUBARRAY(buf, 0, TFloat.ToChars(float, buf))));
-  END init_float;
+    init_helper(u, offset, type);
+    u.initializer.addhi(Text.FromChars(SUBARRAY(buf, 0, TFloat.ToChars(float, buf))));
+END init_float;
 
 (*------------------------------------------------------------ PROCEDUREs ---*)
 
@@ -2964,7 +2964,6 @@ PROCEDURE pop_static_link(u: U) =
 PROCEDURE call_helper(u: U; type: Type; proc: TEXT) =
 VAR comma := "";
 BEGIN
-    print(u, " /* call_direct */ ");
     DEC(u.in_proc_call);
     proc := proc & "(";
     WHILE u.params.size() > 0 DO
@@ -2986,7 +2985,7 @@ PROCEDURE call_direct(u: U; p: Proc; type: Type) =
       u.wr.TName (type);
       u.wr.NL    ();
     END;
-    print(u, " /* call_direct */ ");
+    print(u, " /* call_direct " & M3ID.ToText(proc.name) & " */ ");
     call_helper(u, type, M3ID.ToText(proc.name));
   END call_direct;
 
