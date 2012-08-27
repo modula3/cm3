@@ -1,6 +1,6 @@
 MODULE M3C;
 
-IMPORT TextSeq, Wr, Text, Fmt;
+IMPORT RefSeq, TextSeq, Wr, Text, Fmt;
 IMPORT M3CG, M3CG_Ops, Target, TIntN, TFloat, TargetMap;
 IMPORT Stdio;
 IMPORT RTIO, RTProcess;
@@ -51,7 +51,7 @@ REVEAL
         enum_id: TEXT := NIL;
         enum_value: CARDINAL := 0;
         unit_name: TEXT := NIL;
-        function: CProc := NIL;
+        functions: RefSeq.T := NIL; (* CProc *)
         param_count := 0;
         init_inited := FALSE;
         init_exported := FALSE;
@@ -73,6 +73,12 @@ REVEAL
         report_fault: TEXT := NIL; (* based on M3x86 -- reportlabel, global_var *)
         width := 0;
         static_link  := ARRAY [0 .. 1] OF CVar { NIL, NIL };
+        
+    METHODS
+        function(): CProc := GetFunction;
+        push_function(proc: CProc) := PushFunction;
+        pop_function() := PopFunction;
+        
       OVERRIDES
         next_label := next_label;
         set_error_handler := set_error_handler;
@@ -218,6 +224,21 @@ REVEAL
 
 (*---------------------------------------------------------------------------*)
 
+PROCEDURE GetFunction(u: U): CProc = 
+BEGIN
+    RETURN NARROW(u.functions.gethi(), CProc);
+END GetFunction;
+
+PROCEDURE PushFunction(u: U; proc: CProc) =
+BEGIN
+    u.functions.addhi(proc);
+END PushFunction;
+
+PROCEDURE PopFunction(u: U) =
+BEGIN
+    EVAL u.functions.remhi();
+END PopFunction;
+
 (*
 VAR BitSizeToEnumCGType := ARRAY [0..32] OF M3CG.Type { M3CG.Type.Void, .. };
 *)
@@ -350,23 +371,42 @@ END TypeidToType_Get;
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
 TYPE CVar = M3CG.Var OBJECT
-  name: Name;
-  type: Type;
-  is_const := FALSE;
-  proc: CProc;
+    name: Name;
+    type: Type;
+    type_text: TEXT;
+    is_const := FALSE;
+    proc: CProc;
+    byte_size := -1; (* esp. for structs *)
+    up_level := FALSE; (* local accessed from nested function *)
+
+    METHODS
+        Declare(tail := ";"): TEXT := Var_Declare;
 END;
 
 TYPE CProc = M3CG.Proc OBJECT
-  name: Name;
-  n_params: INTEGER := 0; (* FUTURE: remove this *)
-  return_type: Type;
-  level: INTEGER := 0;
-  callingConvention: CallingConvention;
-  exported: BOOLEAN;
-  parent: CProc := NIL;
-  params: REF ARRAY OF CVar;
-  locals: TextSeq.T := NIL;
+    name: Name;
+    n_params: INTEGER := 0; (* FUTURE: remove this *)
+    return_type: Type;
+    level: INTEGER := 0;
+    callingConvention: CallingConvention;
+    exported: BOOLEAN;
+    parent: CProc := NIL;
+    params: REF ARRAY OF CVar;
+    locals: RefSeq.T := NIL; (* CVar *)
+    uplevels := FALSE;
+
+    METHODS
+        Locals_Size(): INTEGER := Proc_Locals_Size;
+        Locals(i: INTEGER): CVar := Proc_Locals;
+        FrameName(): TEXT := Proc_FrameName;
+        FrameType(): TEXT := Proc_FrameType;
+ 
 END;
+
+PROCEDURE Proc_FrameName(p: CProc): TEXT = BEGIN RETURN M3ID.ToText(p.name) & "_Frame"; END Proc_FrameName;
+PROCEDURE Proc_FrameType(p: CProc): TEXT = BEGIN RETURN p.FrameName() & "_t"; END Proc_FrameType;
+PROCEDURE Proc_Locals_Size(p: CProc): INTEGER = BEGIN RETURN p.locals.size(); END Proc_Locals_Size;
+PROCEDURE Proc_Locals(p: CProc; i: INTEGER): CVar = BEGIN RETURN NARROW(p.locals.get(i), CVar); END Proc_Locals;
 
 (*CONST IntegerTypeSizes = ARRAY OF INTEGER {8, 16, 32, 64};
 CONST IntegerTypeSignedness = ARRAY OF BOOLEAN { FALSE, TRUE };*)
@@ -653,6 +693,7 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
     u.stack := NEW(TextSeq.T).init();
     u.params := NEW(TextSeq.T).init();
     u.import_procedure_repeat := NEW(TextSeq.T).init();
+    u.functions := NEW(RefSeq.T).init();
 (*
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1281,71 +1322,85 @@ BEGIN
     u.extra_scope_close_braces := "";
 END ExtraScope_Close;
 
+PROCEDURE Var_Declare(var: CVar; tail := ";"): TEXT =
+VAR text := var.type_text;
+BEGIN
+    IF text = NIL THEN
+        IF var.type = Type.Struct THEN
+            text := "struct{char a[" & Fmt.Int(var.byte_size) & "];}";
+        ELSE
+            text := typeToText[var.type];
+        END;
+    END;
+    RETURN text & " " & M3ID.ToText(var.name) & tail;
+END Var_Declare;
+
 PROCEDURE declare_local(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
                         frequency: Frequency): Var =
-VAR var := NEW(CVar, type := type, name := FixName(name));
-    text: TEXT;
-  BEGIN
+VAR var := NEW(CVar, type := type, name := FixName(name), up_level := up_level,
+               byte_size := byte_size);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("declare_local");
-      u.wr.ZName (name);
-      u.wr.Int   (byte_size);
-      u.wr.Int   (alignment);
-      u.wr.TName (type);
-      u.wr.Tipe  (typeid);
-      u.wr.Bool  (in_memory);
-      u.wr.Bool  (up_level);
-      u.wr.Int   (frequency);
-      u.wr.VName (var);
-      (*u.wr.Int   (var.offset);*)
-      u.wr.NL    ();
+        u.wr.Cmd   ("declare_local");
+        u.wr.ZName (name);
+        u.wr.Int   (byte_size);
+        u.wr.Int   (alignment);
+        u.wr.TName (type);
+        u.wr.Tipe  (typeid);
+        u.wr.Bool  (in_memory);
+        u.wr.Bool  (up_level);
+        u.wr.Int   (frequency);
+        u.wr.VName (var);
+        (*u.wr.Int   (var.offset);*)
+        u.wr.NL    ();
     END;
     print(u, " /* declare_local */ ");
-    IF type = Type.Struct THEN
-      text := "struct{char a[" & Fmt.Int(byte_size) & "];}";
-    ELSE
-      text := typeToText[type];
-    END;
-    text := text & " " & M3ID.ToText(var.name) & ";";
     IF u.in_procedure > 0 OR u.in_block > 0 THEN
-      ExtraScope_Open(u);
-      print(u, text);
+        ExtraScope_Open(u);
+        print(u, var.Declare("={0};"));
+        <* ASSERT up_level = FALSE *>
     ELSE
-      u.function.locals.addhi(text);
+        IF up_level THEN
+            u.function().uplevels := TRUE;
+        END;
+        u.function().locals.addhi(var);
     END;
     RETURN var;
-  END declare_local;
+END declare_local;
 
 PROCEDURE function_prototype(proc: CProc; tail := ""): TEXT =
 VAR params := proc.params;
-    text := "";
+    text := typeToText[proc.return_type] & " __stdcall " & M3ID.ToText(proc.name);
 BEGIN
-  text := text & typeToText[proc.return_type] & " __stdcall " & M3ID.ToText(proc.name);
-  IF NUMBER (params^) = 0 THEN
-    text := text & "(void)";
-  ELSE
-    text := text & "(";
-    FOR i := FIRST(params^) TO LAST(params^) DO
-      WITH param = params[i] DO
-        text := text & typeToText[param.type];
-        text := text & " ";
-        text := text & M3ID.ToText(param.name);
-        IF i # LAST(params^) THEN
-          text := text & ",";
-        ELSE
-          text := text & ")";
+    IF NUMBER (params^) = 0 THEN
+        text := text & "(void)";
+    ELSE
+        text := text & "(";
+        FOR i := FIRST(params^) TO LAST(params^) DO
+            WITH param = params[i] DO
+                IF param.type_text # NIL THEN
+                    text := text & param.type_text;
+                ELSE
+                    text := text & typeToText[param.type];
+                END;
+                text := text & " ";
+                text := text & M3ID.ToText(param.name);
+                IF i # LAST(params^) THEN
+                    text := text & ",";
+                ELSE
+                    text := text & ")";
+                END;
+            END;
         END;
-      END;
     END;
-  END;
-  RETURN text & tail;
+    RETURN text & tail;
 END function_prototype;
 
 PROCEDURE last_param(u: U) =
 VAR prototype: TEXT;
 BEGIN
-    prototype := function_prototype(u.function, ";");
+    prototype := function_prototype(u.function(), ";");
     IF u.in_procedure > 0 THEN
         u.import_procedure_repeat.addhi(prototype);
         ExtraScope_Open(u);
@@ -1357,31 +1412,40 @@ END last_param;
 PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
                         frequency: Frequency): Var =
-VAR var := NEW(CVar, type := type, name := FixName(name), type := type);
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("declare_param");
-      u.wr.ZName (name);
-      u.wr.Int   (byte_size);
-      u.wr.Int   (alignment);
-      u.wr.TName (type);
-      u.wr.Tipe  (typeid);
-      u.wr.Bool  (in_memory);
-      u.wr.Bool  (up_level);
-      u.wr.Int   (frequency);
-      u.wr.VName (var);
-      (*u.wr.Int   (var.offset);*)
-      u.wr.NL    ();
-      print(u, " /* declare_param */ ");
+VAR var: CVar;
+BEGIN
+    IF u.function().level > 0 AND u.param_count = 0 THEN
+        var := NEW(CVar, type := Type.Addr, name := M3ID.Add("_static_link"), byte_size := byte_size, up_level := TRUE);
+        var.type_text := u.function().parent.FrameType() & "*";
+    ELSE
+        var := NEW(CVar, type := type, name := FixName(name), byte_size := byte_size, up_level := up_level);
     END;
-    u.function.params[u.param_count] := var;
+
+    IF u.debug THEN
+        u.wr.Cmd   ("declare_param");
+        u.wr.ZName (name);
+        u.wr.Int   (byte_size);
+        u.wr.Int   (alignment);
+        u.wr.TName (type);
+        u.wr.Tipe  (typeid);
+        u.wr.Bool  (in_memory);
+        u.wr.Bool  (up_level);
+        u.wr.Int   (frequency);
+        u.wr.VName (var);
+        (*u.wr.Int   (var.offset);*)
+        u.wr.NL    ();
+        print(u, " /* declare_param */ ");
+    END;
+
+    u.function().params[u.param_count] := var;
+    u.function().uplevels := u.function().uplevels OR up_level;
     SuppressLineDirective(u, -1, "declare_param");
     INC(u.param_count);
-    IF u.param_count = NUMBER(u.function.params^) THEN
-      last_param(u);
+    IF u.param_count = NUMBER(u.function().params^) THEN
+        last_param(u);
     END;
     RETURN var;
-  END declare_param;
+END declare_param;
 
 PROCEDURE declare_temp(u: U; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): Var =
   BEGIN
@@ -1609,7 +1673,6 @@ PROCEDURE import_procedure(u: U; name: Name; n_params: INTEGER;
 VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type,
                 callingConvention := callingConvention,
-                locals := NEW(TextSeq.T).init(),
                 params := NEW(REF ARRAY OF CVar, n_params));
 BEGIN
     IF u.debug THEN
@@ -1624,9 +1687,10 @@ BEGIN
     print(u, " /* import_procedure " & M3ID.ToText(name) & " */ ");
     SuppressLineDirective(u, n_params, "import_procedure n_params");
     u.param_count := 0;
-    u.function := proc;
     IF n_params = 0 THEN
         last_param(u);
+    ELSE
+        u.push_function(proc);
     END;
     RETURN proc;
 END import_procedure;
@@ -1639,7 +1703,7 @@ VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent,
-                locals := NEW(TextSeq.T).init(),
+                locals := NEW(RefSeq.T).init(),
                 params := NEW(REF ARRAY OF CVar, n_params));
 BEGIN
     IF u.debug THEN
@@ -1655,35 +1719,92 @@ BEGIN
         u.wr.NL    ();
         print(u, " /* declare_procedure */ ");
     END;
+    
+    print(u, "struct " & proc.FrameType() & ";");
+    print(u, "typedef struct " & proc.FrameType() & " " & proc.FrameType() & ";");
+
     SuppressLineDirective(u, n_params, "declare_procedure n_params");
     u.param_count := 0;
-    u.function := proc;
     IF n_params = 0 THEN
         last_param(u);
+    ELSE
+        u.push_function(proc);
     END;
+    
     RETURN proc;
 END declare_procedure;
 
 PROCEDURE begin_procedure(u: U; p: Proc) =
-  VAR proc := NARROW(p, CProc);
-  BEGIN
+VAR proc := NARROW(p, CProc);
+    frame_name := proc.FrameName();
+    frame_type := proc.FrameType();
+    var: CVar;
+    params := proc.params;
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("begin_procedure");
-      u.wr.PName (proc);
-      u.wr.NL    ();
+        u.wr.Cmd   ("begin_procedure");
+        u.wr.PName (proc);
+        u.wr.NL    ();
     END;
     print(u, " /* begin_procedure */ ");
     INC(u.in_procedure);
     WHILE u.import_procedure_repeat.size() > 0 DO
-      print(u, u.import_procedure_repeat.remlo());
+        print(u, u.import_procedure_repeat.remlo());
     END;
-    u.function := proc;
+    u.push_function(proc);
+    
+    (* define frame struct; not usually neededs *)
+    
+    print(u, "struct " & frame_type & " {");
+    print(u, "void* _unused;"); (* add field to ensure frame not empty *)
+    FOR i := 0 TO proc.Locals_Size() - 1 DO
+        var := proc.Locals(i);
+        IF var.up_level THEN
+            print(u, var.Declare());
+        END;
+    END;
+    FOR i := FIRST(params^) TO LAST(params^) DO
+        var := params[i];
+        IF var.up_level THEN
+            print(u, var.Declare());
+        END;
+    END;
+    print(u, "};");
+ 
     print(u, function_prototype(proc));
     print(u, "{");
-    WHILE proc.locals.size() > 0 DO
-      print(u, proc.locals.remlo());
+    
+    (* declare and initialize non-uplevel locals *)
+
+    FOR i := 0 TO proc.Locals_Size() - 1 DO
+        WITH L = proc.Locals(i) DO
+            IF NOT L.up_level THEN
+                print(u, L.Declare("={0};"));
+            END;
+        END;
     END;
-  END begin_procedure;
+    
+    (* declare and initialize frame of uplevels *)
+
+    print(u, frame_type & " " & frame_name & "={0};");
+
+    (* capture uplevel parameters *)
+
+    FOR i := FIRST(params^) TO LAST(params^) DO
+        WITH param = params[i] DO
+            IF param.up_level THEN
+                WITH param_name = M3ID.ToText(param.name) DO
+                    print(u, frame_name & "." & param_name & "=" & param_name & ";");
+                END;
+            END;
+        END;
+    END;
+    
+    (* quash unused warning *)
+
+    print(u, frame_name & "._unused=&" & frame_name & ";");
+
+END begin_procedure;
 
 PROCEDURE end_procedure(u: U; p: Proc) =
   VAR proc := NARROW(p, CProc);
@@ -1697,6 +1818,7 @@ PROCEDURE end_procedure(u: U; p: Proc) =
     DEC(u.in_procedure);
     print(u, "}");
     ExtraScope_Close(u);
+    u.pop_function();
   END end_procedure;
 
 PROCEDURE begin_block(u: U) =
@@ -1867,6 +1989,23 @@ PROCEDURE load_helper(u: U; in: TEXT; in_offset: INTEGER; in_mtype: MType; out_z
     push(u, out_ztype, text);
   END load_helper;
 
+PROCEDURE follow_static_link(u: U; var: CVar): TEXT =
+VAR current_level := u.function().level;
+    var_level := 0;
+    static_link := "";
+BEGIN
+    IF var.proc # NIL THEN
+        var_level := var.proc.level;
+
+        (* You cannot access the variables of a nested function, only a containing function. *)
+        <* ASSERT current_level >= var.proc.level *>
+        FOR i := current_level TO var_level DO
+            static_link := static_link & "_static_link->";
+        END;
+    END;
+    RETURN static_link;
+END follow_static_link;
+
 PROCEDURE load(u: U; v: Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
 (* push; s0.ztype := Mem [ ADR(var) + offset ].mtype; The only allowed (mtype->ztype) conversions
    are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
@@ -1883,7 +2022,7 @@ PROCEDURE load(u: U; v: Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
       u.wr.NL    ();
     END;
     print(u, " /* load */ ");
-    load_helper(u, "&" & M3ID.ToText(var.name), offset, mtype, ztype);
+    load_helper(u, "&" & follow_static_link(u, var) & M3ID.ToText(var.name), offset, mtype, ztype);
   END load;
 
 PROCEDURE store_helper(u: U; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType) =
@@ -1907,7 +2046,7 @@ PROCEDURE store(u: U; v: Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
     END;
     print(u, " /* store */ ");
     pop(u);
-    store_helper(u, s0, ztype, "&" & M3ID.ToText(var.name), offset, mtype);
+    store_helper(u, s0, ztype, "&" & follow_static_link(u, var) & M3ID.ToText(var.name), offset, mtype);
   END store;
 
 PROCEDURE load_address(u: U; v: Var; offset: ByteOffset) =
@@ -1921,7 +2060,7 @@ PROCEDURE load_address(u: U; v: Var; offset: ByteOffset) =
       u.wr.NL    ();
     END;
     print(u, " /* load_address */ ");
-    push(u, Type.Addr, address_plus_offset("&" & M3ID.ToText (var.name), offset));
+    push(u, Type.Addr, address_plus_offset("&" & follow_static_link(u, var) & M3ID.ToText (var.name), offset));
   END load_address;
 
 PROCEDURE load_indirect(u: U; offset: ByteOffset; mtype: MType; ztype: ZType) =
@@ -2891,19 +3030,28 @@ PROCEDURE start_call_helper(u: U) =
   END start_call_helper;
 
 PROCEDURE start_call_direct(u: U; p: Proc; level: INTEGER; type: Type) =
-  (* begin a procedure call to a procedure at static level 'level'. *)
-  VAR proc := NARROW(p, CProc);
-  BEGIN
+(* begin a procedure call to a procedure at static level 'level'. *)
+VAR proc := NARROW(p, CProc);
+    static_link: TEXT;
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("start_call_direct");
-      u.wr.PName (proc);
-      u.wr.Int   (level);
-      u.wr.TName (type);
-      u.wr.NL    ();
+        u.wr.Cmd   ("start_call_direct");
+        u.wr.PName (proc);
+        u.wr.Int   (level);
+        u.wr.TName (type);
+        u.wr.NL    ();
     END;
     print(u, " /* start_call_direct */ ");
     start_call_helper(u);
-  END start_call_direct;
+    IF level > u.function().level THEN
+        static_link := "(&_static_link)";
+        FOR i := u.function().level TO level DO
+            static_link := static_link & "->_static_link";
+        END;
+        push(u, Type.Addr, static_link);
+        pop_parameter_helper(u, static_link);
+    END;
+END start_call_direct;
 
 PROCEDURE start_call_indirect(u: U; type: Type; callingConvention: CallingConvention) =
   (* begin a procedure call to a procedure at static level 'level'. *)
