@@ -124,17 +124,17 @@ done >> ${INDEX}
 
 for t in ${TARGETS}; do
   pat="${FNPAT1}${t}-*${FNPATSUF}"
-  ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
+  ls -1rtd ${pat} | cleanup_all_but_last_n ${NKEEP}
 done
 
 for t in ${TARGETS}; do
   pat="${FNPAT2}${t}-*${FNPATSUF}"
-  ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
+  ls -1rtd ${pat} | cleanup_all_but_last_n ${NKEEP}
 done
 
 for d in all std gnu sys; do
   pat="${FNPATSRCSTART}-${d}-${FNPATSRCEND}"
-  ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
+  ls -1rtd ${pat} | cleanup_all_but_last_n ${NKEEP}
 done
 
 cat >> ${INDEX} <<EOF
