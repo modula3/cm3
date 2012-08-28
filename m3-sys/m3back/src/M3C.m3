@@ -2095,62 +2095,62 @@ END load_indirect;
 
 PROCEDURE store_indirect(u: U; offset: ByteOffset; ztype: ZType; mtype: MType) =
 (* Mem [s1.A + offset].mtype := s0.ztype; pop (2) *)
-  VAR s0 := cast(get(u, 0), ztype);
-      s1 := get(u, 1);
-  BEGIN
+VAR s0 := cast(get(u, 0), ztype);
+    s1 := get(u, 1);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("store_indirect");
-      u.wr.Int   (offset);
-      u.wr.TName (ztype);
-      u.wr.TName (mtype);
-      u.wr.NL    ();
+        u.wr.Cmd   ("store_indirect");
+        u.wr.Int   (offset);
+        u.wr.TName (ztype);
+        u.wr.TName (mtype);
+        u.wr.NL    ();
     END;
     print(u, " /* store_indirect */ ");
     pop(u, 2);
     store_helper(u, s0, ztype, s1, offset, mtype);
-  END store_indirect;
+END store_indirect;
 
 (*-------------------------------------------------------------- literals ---*)
 
 PROCEDURE load_nil(u: U) =
-  (* push; s0.A := NIL *)
-  BEGIN
+(* push; s0.A := NIL *)
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("load_nil");
-      u.wr.NL    ();
+        u.wr.Cmd   ("load_nil");
+        u.wr.NL    ();
     END;
     print(u, " /* load_nil */ ");
     push(u, Type.Addr, "0"); (* UNDONE NULL or (ADDRESS)0? *)
-  END load_nil;
+END load_nil;
 
 PROCEDURE load_integer(u: U; type: IType; READONLY i: Target.Int) =
-  (* push; s0.type := i *)
-  BEGIN
+(* push; s0.type := i *)
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("load_integer");
-      u.wr.TName (type);
-      u.wr.TInt  (TIntN.FromTargetInt(i, CG_Bytes[type])); (* UNDONE? *)
-      u.wr.NL    ();
+        u.wr.Cmd   ("load_integer");
+        u.wr.TName (type);
+        u.wr.TInt  (TIntN.FromTargetInt(i, CG_Bytes[type])); (* UNDONE? *)
+        u.wr.NL    ();
     END;
     print(u, " /* load_integer */ ");
     (* TODO: use suffixes L, U, UL, ULL, i64, ui64 via #ifdef and macro *)
     push(u, type, "((" & typeToText[type] & ")" & TInt.ToText(i) & ")");
-  END load_integer;
+END load_integer;
 
 PROCEDURE load_float(u: U; type: RType; READONLY float: Target.Float) =
-  (* push; s0.type := float *)
-  VAR buffer: ARRAY [0..BITSIZE(EXTENDED)] OF CHAR;
-  BEGIN
+(* push; s0.type := float *)
+VAR buffer: ARRAY [0..BITSIZE(EXTENDED)] OF CHAR;
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("load_float");
-      u.wr.TName (type);
-      u.wr.Flt   (float);
-      u.wr.NL    ();
+        u.wr.Cmd   ("load_float");
+        u.wr.TName (type);
+        u.wr.Flt   (float);
+        u.wr.NL    ();
     END;
     print(u, " /* load_float */ ");
     (* TODO: use suffixes *)
     push(u, type, "((" & typeToText[type] & ")" & Text.FromChars(SUBARRAY(buffer, 0, TFloat.ToChars(float, buffer))) & ")");
-  END load_float;
+END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
 
