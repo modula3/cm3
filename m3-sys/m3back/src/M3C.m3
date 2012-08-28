@@ -1868,6 +1868,9 @@ PROCEDURE set_label(u: U; label: Label; <*UNUSED*> barrier: BOOLEAN) =
   (* define 'label' to be at the current pc *)
   BEGIN
     print(u, " /* set_label */ ");
+    (* semicolon in case we fall off the function here:
+       void F() { L: } is not legal but
+       void F() { L:; } is, and means what you'd think the first means *)
     print(u, "L" & Fmt.Unsigned(label) & ":;");
   END set_label;
 
@@ -1939,8 +1942,8 @@ PROCEDURE case_jump(u: U; itype: IType; READONLY labels: ARRAY OF Label) =
       u.wr.Cmd   ("case_jump");
       u.wr.TName (itype);
       u.wr.Int   (NUMBER(labels));
-      FOR i := FIRST (labels) TO LAST (labels) DO
-        u.wr.Lab (labels [i]);
+      FOR i := FIRST(labels) TO LAST(labels) DO
+        u.wr.Lab (labels[i]);
       END;
       u.wr.NL    ();
     END;
@@ -1949,47 +1952,47 @@ PROCEDURE case_jump(u: U; itype: IType; READONLY labels: ARRAY OF Label) =
   END case_jump;
 
 PROCEDURE exit_proc(u: U; type: Type) =
-  (* Returns s0.type if type is not Void, otherwise returns no value. *)
-  VAR s0: TEXT;
-  BEGIN
+(* Returns s0.type if type is not Void, otherwise returns no value. *)
+VAR s0: TEXT;
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("exit_proc");
-      u.wr.TName (type);
-      u.wr.NL    ();
+        u.wr.Cmd   ("exit_proc");
+        u.wr.TName (type);
+        u.wr.NL    ();
     END;
     print(u, " /* exit_proc */ ");
     IF type = Type.Void THEN
-      print(u, "return;");
+        print(u, "return;");
     ELSE
-      s0 := get(u);
-      IF type = Type.Addr THEN
-        s0 := "(ADDRESS)" & s0;
-      END;
-      print(u, "return " & s0 & ";");
-      pop(u);
+        s0 := get(u);
+        IF type = Type.Addr THEN
+            s0 := "(ADDRESS)" & s0;
+        END;
+        print(u, "return " & s0 & ";");
+        pop(u);
     END;
-  END exit_proc;
+END exit_proc;
 
 (*------------------------------------------------------------ load/store ---*)
 
 PROCEDURE address_plus_offset(in: TEXT; in_offset: INTEGER): TEXT =
 BEGIN
-  IF in_offset # 0 THEN
-    in := "(" & Fmt.Int(in_offset) & "+(ADDRESS)" & in & ")";
-  END;
-  RETURN in;
+    IF in_offset # 0 THEN
+        in := "(" & Fmt.Int(in_offset) & "+(ADDRESS)" & in & ")";
+    END;
+    RETURN in;
 END address_plus_offset;
 
 PROCEDURE load_helper(u: U; in: TEXT; in_offset: INTEGER; in_mtype: MType; out_ztype: ZType) =
-  VAR text: TEXT := NIL;
-  BEGIN
+VAR text: TEXT := NIL;
+BEGIN
     <* ASSERT CG_Bytes[out_ztype] >= CG_Bytes[in_mtype] *>
     text := "*(volatile " & typeToText[in_mtype] & "*)" & address_plus_offset(in, in_offset);
     IF in_mtype # out_ztype THEN
-      text := "((" & typeToText[out_ztype] & ")(" & text & "))";
+        text := "((" & typeToText[out_ztype] & ")(" & text & "))";
     END;
     push(u, out_ztype, text);
-  END load_helper;
+END load_helper;
 
 PROCEDURE follow_static_link(u: U; var: CVar): TEXT =
 VAR current_level := u.function().level;
@@ -1997,17 +2000,17 @@ VAR current_level := u.function().level;
     var_level := 0;
     static_link := "";
 BEGIN
-    RTIO.PutText("1 " & M3ID.ToText(var.name) & "\n");
+    (* RTIO.PutText("1 " & M3ID.ToText(var.name) & "\n"); RTIO.Flush(); *)
     IF var_proc = NIL OR var.up_level = FALSE THEN
         RETURN "";
     END;
     var_level := var_proc.level;
-    RTIO.PutText("1 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush();
+    (* RTIO.PutText("1 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush(); *)
     IF current_level = var_level THEN
-        RTIO.PutText("2 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush();
+        (* RTIO.PutText("2 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush(); *)
         RETURN var_proc.FrameName() & ".";
     END;
-    RTIO.PutText("3 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush();
+    (* RTIO.PutText("3 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush(); *)
     (* You cannot access the variables of a nested function, only a containing function. *)
     <* ASSERT var_level <= current_level *>
     FOR i := var_level TO current_level DO
@@ -2021,38 +2024,38 @@ PROCEDURE load(u: U; v: Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
    are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
    The source type, mtype, determines whether the value is sign-extended or
    zero-extended. *)
-  VAR var := NARROW(v, CVar);
-  BEGIN
+VAR var := NARROW(v, CVar);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("load");
-      u.wr.VName (var);
-      u.wr.Int   (offset);
-      u.wr.TName (mtype);
-      u.wr.TName (ztype);
-      u.wr.NL    ();
+        u.wr.Cmd   ("load");
+        u.wr.VName (var);
+        u.wr.Int   (offset);
+        u.wr.TName (mtype);
+        u.wr.TName (ztype);
+        u.wr.NL    ();
     END;
     print(u, " /* load */ ");
     load_helper(u, "&" & follow_static_link(u, var) & M3ID.ToText(var.name), offset, mtype, ztype);
-  END load;
+END load;
 
 PROCEDURE store_helper(u: U; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType) =
-  BEGIN
+BEGIN
     <* ASSERT CG_Bytes[in_ztype] >= CG_Bytes[out_mtype] *>
     print(u, "(*(volatile " & typeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset) & ")=(" & typeToText[in_ztype] & ")(" & in & ");");
-  END store_helper;
+END store_helper;
 
 PROCEDURE store(u: U; v: Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
 (* Mem [ ADR(var) + offset ].mtype := s0.ztype; pop *)
-  VAR var := NARROW(v, CVar);
-      s0 := cast(get(u, 0), ztype);
-  BEGIN
+VAR var := NARROW(v, CVar);
+    s0 := cast(get(u, 0), ztype);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("store");
-      u.wr.VName (var);
-      u.wr.Int   (offset);
-      u.wr.TName (ztype);
-      u.wr.TName (mtype);
-      u.wr.NL    ();
+        u.wr.Cmd   ("store");
+        u.wr.VName (var);
+        u.wr.Int   (offset);
+        u.wr.TName (ztype);
+        u.wr.TName (mtype);
+        u.wr.NL    ();
     END;
     print(u, " /* store */ ");
     pop(u);
@@ -2061,34 +2064,34 @@ PROCEDURE store(u: U; v: Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
 
 PROCEDURE load_address(u: U; v: Var; offset: ByteOffset) =
 (* push; s0.A := ADR(var) + offset *)
-  VAR var := NARROW(v, CVar);
-  BEGIN
+VAR var := NARROW(v, CVar);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("load_address");
-      u.wr.VName (var);
-      u.wr.Int   (offset);
-      u.wr.NL    ();
+        u.wr.Cmd   ("load_address");
+        u.wr.VName (var);
+        u.wr.Int   (offset);
+        u.wr.NL    ();
     END;
     print(u, " /* load_address */ ");
     push(u, Type.Addr, address_plus_offset("&" & follow_static_link(u, var) & M3ID.ToText (var.name), offset));
-  END load_address;
+END load_address;
 
 PROCEDURE load_indirect(u: U; offset: ByteOffset; mtype: MType; ztype: ZType) =
 (* s0.ztype := Mem [s0.A + offset].mtype  *)
-  VAR s0 := get(u);
-  BEGIN
+VAR s0 := get(u);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("load_indirect");
-      u.wr.Int   (offset);
-      u.wr.TName (mtype);
-      u.wr.TName (ztype);
-      u.wr.NL    ();
+        u.wr.Cmd   ("load_indirect");
+        u.wr.Int   (offset);
+        u.wr.TName (mtype);
+        u.wr.TName (ztype);
+        u.wr.NL    ();
     END;
     print(u, " /* load_indirect */ ");
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     pop(u);
     load_helper(u, s0, offset, mtype, ztype);
-  END load_indirect;
+END load_indirect;
 
 PROCEDURE store_indirect(u: U; offset: ByteOffset; ztype: ZType; mtype: MType) =
 (* Mem [s1.A + offset].mtype := s0.ztype; pop (2) *)
