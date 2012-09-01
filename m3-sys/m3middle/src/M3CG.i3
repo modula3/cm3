@@ -33,7 +33,7 @@ available on an M3CG.T are defined in M3CG_Ops.
 
 INTERFACE M3CG;
 
-IMPORT Target, M3ID;
+IMPORT Target, M3ID, Cstdint;
 
 TYPE T <: ROOT; (* a code generator *)
 
@@ -98,7 +98,7 @@ CONST
   Always : Frequency = LAST (Frequency);
 
 TYPE
-  TypeUID = BITS 32 FOR [-16_7fffffff-1 .. 16_7fffffff];
+  TypeUID = Cstdint.int32_t;
   (* a 32-bit unique id (fingerprint) for each type.  *)
 
 TYPE
