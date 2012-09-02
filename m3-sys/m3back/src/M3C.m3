@@ -3132,6 +3132,7 @@ BEGIN
     END;
     print(u, " /* start_call_direct */ ");
     start_call_helper(u);
+    (*
     IF level > u.current_proc.level THEN
         static_link := "(&_static_link)";
         FOR i := u.current_proc.level TO level DO
@@ -3140,6 +3141,7 @@ BEGIN
         push(u, Type.Addr, static_link);
         pop_parameter_helper(u, static_link);
     END;
+    *)
 END start_call_direct;
 
 PROCEDURE start_call_indirect(u: U; type: Type; callingConvention: CallingConvention) =
@@ -3242,10 +3244,13 @@ BEGIN
     END;
     print(u, " /* get_static_link */ ");
     IF target_level = 0 THEN
-        RETURN "((ADDRESS)0)";
+        RETURN " /* get_static_link */ ((ADDRESS)0)";
     END;
-    static_link := "_static_link";
     target := target.parent;
+    IF current = target THEN
+        RETURN " /* get_static_link */  &_frame";
+    END;
+    static_link := " /* get_static_link */ _frame.";
     WHILE current # target DO
         static_link := static_link & "->_static_link";
         target := target.parent;
@@ -3256,24 +3261,25 @@ END get_static_link;
 PROCEDURE call_direct(u: U; p: Proc; type: Type) =
   (* call the procedure identified by Proc p. The procedure
      returns a value of type type. *)
-  VAR proc := NARROW(p, CProc);
-  BEGIN
+VAR proc := NARROW(p, CProc);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("call_direct");
-      u.wr.PName (proc);
-      u.wr.TName (type);
-      u.wr.NL    ();
+        u.wr.Cmd   ("call_direct");
+        u.wr.PName (proc);
+        u.wr.TName (type);
+        u.wr.NL    ();
     END;
     print(u, " /* call_direct " & M3ID.ToText(proc.name) & " */ ");
-
+    
     <* ASSERT u.in_proc_call > 0 *>
-
+    
     IF proc.level # 0 THEN
-      u.params.addlo(get_static_link(u, proc));
+        print(u, " /* call_direct => get_static_link */ ");
+        u.params.addlo(get_static_link(u, proc));
     END;
-
+    
     call_helper(u, type, M3ID.ToText(proc.name));
-  END call_direct;
+END call_direct;
 
 PROCEDURE call_indirect(u: U; type: Type; callingConvention: CallingConvention) =
   (* call the procedure whose address is in s0.A and pop s0. The
@@ -3292,8 +3298,8 @@ PROCEDURE call_indirect(u: U; type: Type; callingConvention: CallingConvention) 
     pop(u);
 
     <* ASSERT u.in_proc_call > 0 *>
-    
-    IF static_link # NIL THEN    
+
+    IF static_link # NIL THEN
         u.params.addlo(M3ID.ToText(static_link.name));
         free_temp(u, static_link);
         u.static_link[u.in_proc_call - 1] := NIL;
@@ -3325,7 +3331,6 @@ PROCEDURE load_static_link(u: U; p: Proc) =
 VAR target := NARROW(p, CProc);
     target_level := target.level;
     current := u.current_proc;
-    static_link := "";
 BEGIN
     IF u.debug THEN
         u.wr.Cmd    ("load_static_link");
@@ -3345,13 +3350,7 @@ BEGIN
         u.load_nil();
         RETURN;
     END;
-    static_link := "_static_link";
-    target := target.parent;
-    WHILE current # target DO
-        static_link := static_link & "->_static_link";
-        target := target.parent;
-    END;
-    push(u, Type.Addr, static_link);
+    push(u, Type.Addr, " /* load_static_link */ " & get_static_link(u, target));
 END load_static_link;
 
 (*----------------------------------------------------------------- misc. ---*)
