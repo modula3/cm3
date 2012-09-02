@@ -421,6 +421,28 @@ BEGIN
     proc.forward_declared_frame_type := TRUE;
 END Proc_ForwardDeclareFrameType;
 
+PROCEDURE IsNameExceptionHandler(u: U; name: TEXT): BOOLEAN =
+BEGIN
+    WITH    length = Text.Length(name) DO
+        FOR i := FIRST(u.handler_name_prefixes) TO LAST(u.handler_name_prefixes) DO
+            WITH    prefix = u.handler_name_prefixes[i],
+                    prefix_length = Text.Length(prefix) DO
+                IF length > prefix_length AND TextUtils.StartsWith(name, prefix) THEN
+                    WITH end = Text.Sub(name, prefix_length) DO
+                        FOR i := 0 TO Text.Length(end) - 1 DO
+                            IF NOT Text.GetChar(end, i) IN ASCII.Digits THEN
+                                RETURN FALSE;
+                            END;
+                        END;
+                        RETURN TRUE;
+                    END;
+                END;
+            END;
+        END;
+    END;
+    RETURN FALSE;
+END IsNameExceptionHandler;
+
 PROCEDURE Proc_Init(proc: CProc; u: U): CProc =
     PROCEDURE IsExceptionHandler(): BOOLEAN =
     (* Is the name of the form unit_name + special + number?
@@ -429,25 +451,9 @@ PROCEDURE Proc_Init(proc: CProc; u: U): CProc =
         IF proc.level < 1 THEN
           RETURN FALSE;
         END;
-        WITH    name = M3ID.ToText(proc.name),
-                length = Text.Length(name) DO
-            FOR i := FIRST(u.handler_name_prefixes) TO LAST(u.handler_name_prefixes) DO
-                WITH    prefix = u.handler_name_prefixes[i],
-                        prefix_length = Text.Length(prefix) DO
-                    IF length > prefix_length AND TextUtils.StartsWith(name, prefix) THEN
-                        WITH end = Text.Sub(name, prefix_length) DO
-                            FOR i := 0 TO Text.Length(end) - 1 DO
-                                IF NOT Text.GetChar(end, i) IN ASCII.Digits THEN
-                                    RETURN FALSE;
-                                END;
-                            END;
-                            RETURN TRUE;
-                        END;
-                    END;
-                END;
-            END;
+        WITH    name = M3ID.ToText(proc.name) DO
+            RETURN IsNameExceptionHandler(u, name);
         END;
-        RETURN FALSE;
     END IsExceptionHandler;
 BEGIN
     proc.u := u;
@@ -1759,7 +1765,8 @@ PROCEDURE declare_procedure(u: U; name: Name; xparams: INTEGER;
                             return_type: Type; level: INTEGER;
                             callingConvention: CallingConvention;
                             exported: BOOLEAN; parent: Proc): Proc =
-VAR n_params := xparams + ORD(level > 0);
+VAR add_static_link := level > 0 AND NOT IsNameExceptionHandler(u, M3ID.ToText(FixName(name)));
+    n_params := xparams + ORD(add_static_link);
     proc := NEW(CProc, name := name, n_params := n_params,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
@@ -1795,7 +1802,7 @@ BEGIN
 
     proc.ForwardDeclareFrameType(); (* TODO: Only do this if needed. *)
 
-    IF level > 0 THEN
+    IF add_static_link THEN
         IF u.debug THEN
             u.wr.OutT("adding _static_link parameter to " & M3ID.ToText(name) & "\n");
         END;
@@ -1846,6 +1853,9 @@ BEGIN
                 print(u, var.Declare());
             END;
         END;
+        IF proc.level > 0 THEN
+            print(u, proc.parent.FrameType() & "* _static_link;\n");
+        END;
         print(u, "};");
     END;
  
@@ -1877,6 +1887,10 @@ BEGIN
                     END;
                 END;
             END;
+        END;
+
+        IF proc.level > 0 THEN
+            print(u, frame_name & "._static_link=_static_link;");
         END;
     
         (* quash unused warning *)
@@ -2074,22 +2088,35 @@ PROCEDURE follow_static_link(u: U; var: CVar): TEXT =
 VAR current_level := u.current_proc.level;
     var_proc := var.proc;
     var_level := 0;
+    var_name := M3ID.ToText(var.name);
     static_link := "";
 BEGIN
     (* RTIO.PutText("1 " & M3ID.ToText(var.name) & "\n"); RTIO.Flush(); *)
     IF var_proc = NIL OR var.up_level = FALSE THEN
-        RETURN "";
+        RETURN  "";
     END;
     var_level := var_proc.level;
-    (* RTIO.PutText("1 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush(); *)
+    IF u.debug THEN
+        static_link := " /* accessint var " & var_name & " at level " & Fmt.Int(var_level) & " from level " & Fmt.Int(current_level) & " */ ";
+    END;
+    IF u.debug THEN
+        RTIO.PutText("1 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n");
+        RTIO.Flush();
+    END;
     IF current_level = var_level THEN
-        (* RTIO.PutText("2 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush(); *)
+        IF u.debug THEN
+            RTIO.PutText("2 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n");
+            RTIO.Flush();
+        END;
         RETURN var_proc.FrameName() & ".";
     END;
-    (* RTIO.PutText("3 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n"); RTIO.Flush(); *)
+    IF u.debug THEN
+        RTIO.PutText("3 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n");
+        RTIO.Flush();
+    END;
     (* You cannot access the variables of a nested function, only a containing function. *)
     <* ASSERT var_level <= current_level *>
-    FOR i := var_level TO current_level DO
+    FOR i := var_level + 1 TO current_level DO
         static_link := static_link & "_static_link->";
     END;
     RETURN static_link;
@@ -3121,7 +3148,6 @@ PROCEDURE start_call_helper(u: U) =
 PROCEDURE start_call_direct(u: U; p: Proc; level: INTEGER; type: Type) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 VAR proc := NARROW(p, CProc);
-    static_link: TEXT;
 BEGIN
     IF u.debug THEN
         u.wr.Cmd   ("start_call_direct");
@@ -3248,7 +3274,10 @@ BEGIN
     END;
     target := target.parent;
     IF current = target THEN
-        RETURN " /* get_static_link */  &_frame";
+        IF u.debug THEN
+            RETURN " /* get_static_link */  &_frame";
+        END;
+        RETURN "&_frame";
     END;
     static_link := " /* get_static_link */ _frame.";
     WHILE current # target DO
