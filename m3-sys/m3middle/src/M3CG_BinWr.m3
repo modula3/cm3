@@ -6,7 +6,6 @@ MODULE M3CG_BinWr;
 IMPORT Wr, Text, IntRefTbl, Word;
 IMPORT M3Buf, M3ID, M3CG, M3CG_Ops, M3CG_Binary;
 IMPORT Target, TInt AS TargetInt, TFloat, TWord;
-FROM TFloat IMPORT Byte;
 
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -220,7 +219,7 @@ PROCEDURE TName (u: U;  t: Type) =
 
 PROCEDURE Flt (u: U;  READONLY f: Target.Float) =
   VAR
-    buf : ARRAY [0..BYTESIZE (EXTENDED)] OF Byte;
+    buf : ARRAY [0..BYTESIZE (EXTENDED)] OF TFloat.Byte;
     len := TFloat.ToBytes (f, buf);
   BEGIN
     OutB (u, ORD (TFloat.Prec (f)));
@@ -294,10 +293,10 @@ PROCEDURE OutB  (u: U;  i: Byte) =
 
 PROCEDURE OutI  (u: U;  i: INTEGER) =
   BEGIN
-    IF (i >= 0) AND (i <= M3CG_Binary.LastRegular) THEN
+    IF (0 <= i) AND (i <= M3CG_Binary.LastRegular) THEN
       OutB (u, i);
     ELSIF (i < 0) THEN
-      IF (i >= -255) THEN
+      IF (-255 <= i) THEN
         i := -i;
         OutB (u, M3CG_Binary.NInt1);
         OutB (u, i);
