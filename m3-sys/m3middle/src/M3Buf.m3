@@ -11,7 +11,7 @@ MODULE M3Buf;
 IMPORT Wr, Convert, Text, Text8, Thread, Target, TInt, M3FP;
 
 CONST
-  ChunkSize = 16_FF00; (* approx. 64K *)
+  ChunkSize = 2 * 1024 - 3 * BYTESIZE (INTEGER);
   (* leave some slop for the 'next' pointer & the allocator overhead *)
 
 TYPE
@@ -87,17 +87,43 @@ PROCEDURE PutSubText (t: T;  txt: TEXT;  start, len: CARDINAL) =
 
 CONST digits = ARRAY [0..9] OF CHAR {'0','1','2','3','4','5','6','7','8','9'};
 
+CONST digits_100A = ARRAY [0..99] OF CHAR {
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+  };
+
+CONST digits_100B = ARRAY [0..99] OF CHAR {
+  '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+  '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
+  '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
+  '3', '3', '3', '3', '3', '3', '3', '3', '3', '3',
+  '4', '4', '4', '4', '4', '4', '4', '4', '4', '4',
+  '5', '5', '5', '5', '5', '5', '5', '5', '5', '5',
+  '6', '6', '6', '6', '6', '6', '6', '6', '6', '6',
+  '7', '7', '7', '7', '7', '7', '7', '7', '7', '7',
+  '8', '8', '8', '8', '8', '8', '8', '8', '8', '8',
+  '9', '9', '9', '9', '9', '9', '9', '9', '9', '9'
+  };
+
 PROCEDURE PutInt  (t: T;  i: INTEGER) =
   <*FATAL Convert.Failed*>
   VAR len: INTEGER;  buf: ARRAY [0..BITSIZE(INTEGER) + 3] OF CHAR;
   BEGIN
-    IF (i >= 0) THEN
+    IF (0 <= i) THEN
       IF (i < 10) THEN
         PutChar (t, digits[i]);
         RETURN;
       ELSIF (i < 100) THEN
-        PutChar (t, digits[i DIV 10]);
-        PutChar (t, digits[i MOD 10]);
+        PutChar (t, digits_100B[i]);
+        PutChar (t, digits_100A[i]);
         RETURN;
       ELSIF (i < 1000) THEN
         PutChar (t, digits[i DIV 100]);
