@@ -1701,7 +1701,6 @@ PROCEDURE fetch_and_xor (VAR s: State) =
   END fetch_and_xor;
 
 BEGIN
-  <* ASSERT TRUE *>
   FOR op := FIRST (CmdMap) TO LAST (CmdMap) DO
     <*ASSERT CmdMap[op].bop = op *>
   END;
