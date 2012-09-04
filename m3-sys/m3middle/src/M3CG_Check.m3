@@ -57,7 +57,6 @@ TYPE
         s_push (t: Type) := Stack_Push;
         s_repush () := Stack_Repush;
         s_empty () := Stack_Empty;
-        PutErr (a, b, c: TEXT) := PutErr;
       OVERRIDES
         set_error_handler := set_error_handler;
         begin_unit := begin_unit;
