@@ -8,7 +8,7 @@
 
 MODULE Target;
 
-IMPORT Text, TargetMap, M3RT, TextUtils, TInt;
+IMPORT Text, TargetMap, M3RT, TextUtils;
 
 VAR (*CONST*)
   CCs : ARRAY [0..8] OF CallingConvention;
@@ -476,27 +476,17 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
   END InitCallingConventions;
 
 PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =
-  VAR success := TRUE;
   BEGIN
-    <* ASSERT i.align = MIN (i.align, max_align) *>
     i.align := MIN (i.align, max_align);
     i.bytes := i.size DIV Byte;
     i.pack  := (i.size + i.align - 1) DIV i.align * i.align;
-    success := success AND TInt.FromInt (i.align, i.talign);
-    success := success AND TInt.FromInt (i.bytes, i.tbytes);
-    success := success AND TInt.FromInt (i.pack, i.tpack);
-    <* ASSERT success *>
   END FixI;
 
 PROCEDURE FixF (VAR f: Float_type;  max_align: INTEGER) =
-  VAR success := TRUE;
   BEGIN
     f.align := MIN (f.align, max_align);
     f.bytes := f.size DIV Byte;
     (* f.pack  := (f.size + f.align - 1) DIV f.align * f.align; *)
-    success := success AND TInt.FromInt (f.align, f.talign);
-    success := success AND TInt.FromInt (f.bytes, f.tbytes);
-    <* ASSERT success *>
   END FixF;
 
 PROCEDURE FindConvention (nm: TEXT): CallingConvention =

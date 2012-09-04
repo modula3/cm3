@@ -225,20 +225,15 @@ CONST
 
 TYPE
   Int = (* OPAQUE *) ARRAY [0..7] OF IByte;
-  Cardinal = Int;
   IByte = BITS 8 FOR [0..16_ff];
 
 TYPE
   Int_type = RECORD
     cg_type : CGType;    (* representation *)
     size    : CARDINAL;  (* bit size *)
-    tsize   : Cardinal;  (* bit size *)
     align   : CARDINAL;  (* minimum bit alignment *)
-    talign  : Cardinal;  (* minimum bit alignment *)
     pack    : CARDINAL;  (* minimum width bit packing *)
-    tpack   : Cardinal;  (* minimum width bit packing *)
     bytes   : CARDINAL;  (* byte size *)
-    tbytes  : Cardinal;  (* byte size *)
     min     : Int;       (* minimum value of this type *)
     max     : Int;       (* maximum value of this type *)
   END;
@@ -258,11 +253,8 @@ TYPE
     cg_type : CGType;     (* representation *)
     pre     : Precision;  (* precision *)
     size    : CARDINAL;   (* bit size *)
-    tsize   : Cardinal;   (* bit size *)
     align   : CARDINAL;   (* minimum bit alignment *)
-    talign  : Cardinal;   (* minimum bit alignment *)
     bytes   : CARDINAL;   (* byte size *)
-    tbytes  : Cardinal;   (* byte size *)
     min     : Float;      (* minimum value of this type *)
     max     : Float;      (* maximum value of this type *)
   END;
