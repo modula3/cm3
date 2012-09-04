@@ -331,12 +331,12 @@ PROCEDURE GetDigit (VAR s: State;  VAR val: INTEGER): BOOLEAN =
     END;
   END GetDigit;
 
-PROCEDURE CvtInt (<*UNUSED*>VAR s: State;  READONLY buf: ARRAY OF CHAR): INTEGER =
+PROCEDURE CvtInt (VAR s: State;  READONLY buf: ARRAY OF CHAR): INTEGER =
   VAR value, used: INTEGER;
   BEGIN
     value := Convert.ToInt (buf, used);
     IF (used # NUMBER (buf)) THEN
-      (* Error (s, "bad integer: ", Text.FromChars (buf)); *)
+      Error (s, "bad integer: ", Text.FromChars (buf));
     END;
     RETURN value;
   END CvtInt;
