@@ -284,7 +284,7 @@ PROCEDURE Flush (u: U) =
     u.buf_len := 0;
   END Flush;
 
-PROCEDURE OutB  (u: U;  i: Byte) =
+PROCEDURE OutB  (u: U;  i: [0..255]) =
   BEGIN
     M3Buf.PutChar (u.buf, VAL (i, CHAR));
     INC (u.buf_len);
