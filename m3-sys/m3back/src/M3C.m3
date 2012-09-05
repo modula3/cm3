@@ -2125,7 +2125,7 @@ BEGIN
     END;
     var_level := var_proc.level;
     IF u.debug THEN
-        static_link := " /* accessint var " & var_name & " at level " & Fmt.Int(var_level) & " from level " & Fmt.Int(current_level) & " */ ";
+        static_link := " /* accessing var " & var_name & " at level " & Fmt.Int(var_level) & " from level " & Fmt.Int(current_level) & " */ ";
     END;
     IF u.debug THEN
         RTIO.PutText("1 accessing " & M3ID.ToText(var.name) & " from " & Fmt.Int(current_level) & " to " & Fmt.Int(var_level) & "\n");
