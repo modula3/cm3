@@ -474,7 +474,17 @@ CONST IntegerTypeSignedness = ARRAY OF BOOLEAN { FALSE, TRUE };*)
 
 (*---------------------------------------------------------------------------*)
 
+
 CONST Prefix = ARRAY OF TEXT {
+"#ifdef __cplusplus",
+"#include <string.h>", (* memcmp *)
+"#define M3_INIT",
+"#define new m3_new",
+"#define M3_DOTDOTDOT ...",
+"#else",
+"#define M3_INIT ={0}",
+"#define M3_DOTDOTDOT",
+"#endif",
 "#ifdef __cplusplus",
 "extern \"C\" {",
 "#endif",
@@ -558,8 +568,8 @@ CONST Prefix = ARRAY OF TEXT {
 "static WORD_T __stdcall m3_set_ne(WORD_T n_bits,WORD_T*b,WORD_T*a){return(memcmp(a,b,n_bits/8)!=0);}",
 "static WORD_T __stdcall m3_set_le(WORD_T n_bits,WORD_T*b,WORD_T*a){WORD_T n_words=n_bits/SET_GRAIN;WORD_T i;for(i=0;i<n_words;++i)if(a[i]&(~b[i]))return 0;return 1;}",
 "static WORD_T __stdcall m3_set_lt(WORD_T n_bits,WORD_T*b,WORD_T*a){WORD_T n_words=n_bits/SET_GRAIN;WORD_T i,eq=0;for(i=0;i<n_words;++i)if(a[i]&(~b[i]))return 0;else eq|=(a[i]^b[i]);return(eq!=0);}",
-"static WORD_T __stdcall m3_set_ge(WORD_T n_bits,WORD_T*b,WORD_T*a){return set_le(n_bits,a,b);}",
-"static WORD_T __stdcall m3_set_gt(WORD_T n_bits,WORD_T*b,WORD_T*a){return set_lt(n_bits,a,b);}",
+"static WORD_T __stdcall m3_set_ge(WORD_T n_bits,WORD_T*b,WORD_T*a){return m3_set_le(n_bits,a,b);}",
+"static WORD_T __stdcall m3_set_gt(WORD_T n_bits,WORD_T*b,WORD_T*a){return m3_set_lt(n_bits,a,b);}",
 "#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))",
 "#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))",
 "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T*s){if(a>=b){WORD_T i,a_word=a/SET_GRAIN,b_word=b/SET_GRAIN,high_bits=M3_HIGH_BITS(a%SET_GRAIN),low_bits=M3_LOW_BITS(b%SET_GRAIN);if(a_word==b_word){s[a_word]|=(high_bits&low_bits);}else{s[a_word]|=high_bits;for(i=a_word+1;i<b_word;++i)s[i]=~(WORD_T)0;s[b_word]|=low_bits;}}}",
@@ -650,6 +660,15 @@ CONST typeToText = ARRAY CGType OF TEXT {
     "STRUCT", 
     "void" (* FUTURE: V *)
   };
+
+TYPE IntegerTypes = [Type.Word8 .. Type.Int64];
+
+CONST typeToUnsigned = ARRAY IntegerTypes OF IntegerTypes {
+    Type.Word8, Type.Word8,
+    Type.Word16, Type.Word16,
+    Type.Word32, Type.Word32,
+    Type.Word64, Type.Word64
+};
 
 CONST CompareOpC = ARRAY CompareOp OF TEXT { "==", "!=", ">", ">=", "<", "<=" };
 CONST ConvertOpName = ARRAY ConvertOp OF TEXT { "round", "trunc", "floor", "ceil" };
@@ -1272,50 +1291,51 @@ PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
     RETURN var;
   END import_global;
 
+CONST Const = ARRAY BOOLEAN OF TEXT{"", " const "};
+
 PROCEDURE declare_segment(u: U; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var =
 VAR var := NEW(CVar, name := name, is_const := is_const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
     length := 0;
+    const := Const[is_const];
 BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("declare_segment");
-      u.wr.ZName (name);
-      u.wr.Tipe  (typeid);
-      u.wr.Bool  (is_const);
-      u.wr.VName (var);
-      u.wr.NL    ();
+        u.wr.Cmd   ("declare_segment");
+        u.wr.ZName (name);
+        u.wr.Tipe  (typeid);
+        u.wr.Bool  (is_const);
+        u.wr.VName (var);
+        u.wr.NL    ();
     END;
     print(u, " /* declare_segment */ ");
     IF name # 0 THEN
-      text := M3ID.ToText(name);
-      length := Text.Length(text);
-      IF length > 2 THEN
-        <* ASSERT Text.GetChar(text, 0) # '_' *>
-        <* ASSERT Text.GetChar(text, 1) = '_' OR Text.GetChar(text, 2) = '_' *>
-        text := Text.Sub(text, 2);
-        WHILE Text.GetChar(text, 0) = '_' DO
-          text := Text.Sub(text, 1);
+        text := M3ID.ToText(name);
+        length := Text.Length(text);
+        IF length > 2 THEN
+            <* ASSERT Text.GetChar(text, 0) # '_' *>
+            <* ASSERT Text.GetChar(text, 1) = '_' OR Text.GetChar(text, 2) = '_' *>
+            text := Text.Sub(text, 2);
+            WHILE Text.GetChar(text, 0) = '_' DO
+                text := Text.Sub(text, 1);
+            END;
+            u.unit_name := text;
+            FOR i := FIRST(HandlerNamePieces) TO LAST(HandlerNamePieces) DO
+                u.handler_name_prefixes[i] := text & HandlerNamePieces[i];
+            END;
         END;
-        u.unit_name := text;
-        FOR i := FIRST(HandlerNamePieces) TO LAST(HandlerNamePieces) DO
-            u.handler_name_prefixes[i] := text & HandlerNamePieces[i];
-        END;
-      END;
     END;
     text := M3ID.ToText(fixed_name);
     print(u, "struct " & text & "_t;");
-    IF is_const THEN
-      print(u, "const ");
-    END;
-    print(u, "static struct " & text & "_t " & text & ";");
+    print(u, "typedef struct " & text & "_t " & text & "_t;");
+    print(u, const & "static " & text & "_t " & text & ";");
 
     IF u.report_fault = NIL AND NOT is_const THEN (* See M3x86.m3 *)
-      u.report_fault := M3ID.ToText(var.name) & "_CRASH";
-      print(u, "void __stdcall " & u.report_fault & "(UINT32 code) { RTHooks__ReportFault((ADDRESS)&" & M3ID.ToText(var.name) & ",code);}");
-    END;
+    u.report_fault := M3ID.ToText(var.name) & "_CRASH";
+    print(u, "void __stdcall " & u.report_fault & "(UINT32 code) { RTHooks__ReportFault((ADDRESS)&" & M3ID.ToText(var.name) & ",code);}");
+END;
 
-    RETURN var;
+RETURN var;
   END declare_segment;
 
 PROCEDURE bind_segment(u: U; v: Var; byte_size: ByteSize; alignment: Alignment;
@@ -1420,7 +1440,7 @@ BEGIN
     print(u, " /* declare_local */ ");
     IF u.in_proc THEN
         ExtraScope_Open(u);
-        print(u, var.Declare("={0};"));
+        print(u, var.Declare(" M3_INIT;"));
         <* ASSERT up_level = FALSE *>
     ELSE
         IF up_level THEN
@@ -1563,34 +1583,35 @@ PROCEDURE begin_init(u: U; v: Var) =
   END begin_init;
 
 PROCEDURE end_init(u: U; v: Var) =
-  VAR var := NARROW(v, CVar);
-      init_fields := u.init_fields;
-      initializer := u.initializer;
-      var_name := M3ID.ToText(var.name);
-      comma := "";
-  BEGIN
+VAR var := NARROW(v, CVar);
+    init_fields := u.init_fields;
+    initializer := u.initializer;
+    var_name := M3ID.ToText(var.name);
+    comma := "";
+    const := Const[var.is_const];
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("end_init");
-      u.wr.VName (var);
-      u.wr.NL    ();
+        u.wr.Cmd   ("end_init");
+        u.wr.VName (var);
+        u.wr.NL    ();
     END;
     print(u, " /* end_init */ ");
     end_init_helper(u);
-    IF var.is_const THEN
-      print(u, "const ");
-    END;
-    print(u, "static struct " & var_name & "_t{");
+    
+    print(u, "struct " & var_name & "_t{");
     WHILE init_fields.size() > 0 DO
-      print(u, init_fields.remlo());
+        print(u, init_fields.remlo());
     END;
-    print(u, "}" & var_name & "={");
+    print(u, "};");
+    
+    print(u, "static " & const & var_name & "_t " & var_name & "={");
     WHILE initializer.size() > 0 DO
-      print(u, comma & initializer.remlo());
-      comma := ",";
+        print(u, comma & initializer.remlo());
+        comma := ",";
     END;
     print(u, "};");
     SuppressLineDirective(u, -1, "end_init");
-  END end_init;
+END end_init;
 
 PROCEDURE init_to_offset(u: U; offset: ByteOffset) =
   VAR pad := offset - u.current_init_offset;
@@ -2488,7 +2509,7 @@ PROCEDURE set_op3(u: U; byte_size: ByteSize; op: TEXT) =
       print(u, " /* " & op & " */ ");
     END;
     pop(u, 3);
-    print(u, op & "(" & s2 & "," & s1 & "," & s0 & ")");
+    print(u, "m3_" & op & "(" & s2 & "," & s1 & "," & s0 & ")");
   END set_op3;
 
 PROCEDURE set_union(u: U; byte_size: ByteSize) =
@@ -2769,7 +2790,7 @@ PROCEDURE extract(u: U; type: IType; sign_extend: BOOLEAN) =
     END;
     pop(u, 3);
     <* ASSERT sign_extend = FALSE *>
-    push(u, type, "m3_extract_" & typeToText[type] & "(" & s2 & "," & s1 & "," & s0 & ")");
+    push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s2 & "," & s1 & "," & s0 & ")");
   END extract;
 
 PROCEDURE extract_n(u: U; type: IType; sign_extend: BOOLEAN; n: CARDINAL) =
@@ -2788,7 +2809,7 @@ PROCEDURE extract_n(u: U; type: IType; sign_extend: BOOLEAN; n: CARDINAL) =
     END;
     pop(u, 2);
     <* ASSERT sign_extend = FALSE *>
-    push(u, type, "m3_extract_" & typeToText[type] & "(" & s1 & "," & s0 & "," & Fmt.Int(n) & ")");
+    push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s1 & "," & s0 & "," & Fmt.Int(n) & ")");
   END extract_n;
 
 PROCEDURE extract_mn(u: U; type: IType; sign_extend: BOOLEAN; m, n: CARDINAL) =
@@ -2806,7 +2827,7 @@ PROCEDURE extract_mn(u: U; type: IType; sign_extend: BOOLEAN; m, n: CARDINAL) =
       print(u, " /* extract_mn */ ");
     END;
     pop(u);
-    s0 := "m3_extract_" & typeToText[type] & "(" & s0 & "," & Fmt.Int(m) & "," & Fmt.Int(n) & ")";
+    s0 := "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s0 & "," & Fmt.Int(m) & "," & Fmt.Int(n) & ")";
     IF sign_extend THEN
       s0 := "m3_signextend_" & typeToText[type] & "(" & s0 & ")";
     END;
@@ -3342,7 +3363,7 @@ PROCEDURE call_indirect(u: U; type: Type; callingConvention: CallingConvention) 
     END;
 
     (* UNDONE: cast to more accurate function type *)
-    call_helper(u, type, "((" & typeToText[type] & " (__stdcall*)())" & s0 & ")");
+    call_helper(u, type, "((" & typeToText[type] & " (__stdcall*)(M3_DOTDOTDOT))" & s0 & ")");
 
   END call_indirect;
 
