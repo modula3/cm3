@@ -1478,8 +1478,14 @@ PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
                         frequency: Frequency): Var =
 VAR function := u.param_proc;
-    var := NEW(CVar, type := type, name := name, byte_size := byte_size, up_level := up_level, proc := function).Init();
+    var: CVar;
+    type_text: TEXT := NIL;
 BEGIN
+    IF u.param_count = 0 AND function.is_exception_handler THEN
+        name := M3ID.Add("_static_link");
+        type_text := NARROW(function.parent, CProc).FrameType() & "*";
+    END;
+    var := NEW(CVar, type := type, name := name, byte_size := byte_size, up_level := up_level, proc := function, type_text := type_text).Init();
     IF u.debug THEN
         u.wr.Cmd   ("declare_param");
         u.wr.ZName (name);
@@ -1765,7 +1771,8 @@ PROCEDURE declare_procedure(u: U; name: Name; xparams: INTEGER;
                             return_type: Type; level: INTEGER;
                             callingConvention: CallingConvention;
                             exported: BOOLEAN; parent: Proc): Proc =
-VAR add_static_link := level > 0 AND NOT IsNameExceptionHandler(u, M3ID.ToText(FixName(name)));
+VAR is_exception_handler := level > 0 AND IsNameExceptionHandler(u, M3ID.ToText(FixName(name)));
+    add_static_link := level > 0 AND NOT is_exception_handler;
     n_params := xparams + ORD(add_static_link);
     proc := NEW(CProc, name := name, n_params := n_params,
                 return_type := return_type, level := level,
