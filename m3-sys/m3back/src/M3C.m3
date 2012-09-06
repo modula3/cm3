@@ -2054,20 +2054,25 @@ PROCEDURE if_compare(u: U; ztype: ZType; op: CompareOp; label: Label;
 
 PROCEDURE case_jump(u: U; itype: IType; READONLY labels: ARRAY OF Label) =
   (* "GOTO labels[s0.itype]; pop" with no range checking on s0.itype *)
-  (*VAR s0 := get(u);*)
-  BEGIN
+VAR s0 := get(u);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("case_jump");
-      u.wr.TName (itype);
-      u.wr.Int   (NUMBER(labels));
-      FOR i := FIRST(labels) TO LAST(labels) DO
-        u.wr.Lab (labels[i]);
-      END;
-      u.wr.NL    ();
+        u.wr.Cmd   ("case_jump");
+        u.wr.TName (itype);
+        u.wr.Int   (NUMBER(labels));
+        FOR i := FIRST(labels) TO LAST(labels) DO
+            u.wr.Lab (labels[i]);
+        END;
+        u.wr.NL    ();
     END;
     print(u, " /* case_jump */ ");
+    print(u, "switch(" & s0 & "){");
+    FOR i := FIRST(labels) TO LAST(labels) DO
+        print(u, "case " & Fmt.Int(i) & ":goto L" & Fmt.Unsigned(labels[i]) & ";");
+    END;    
+    print(u, "}");
     pop(u);
-  END case_jump;
+END case_jump;
 
 PROCEDURE exit_proc(u: U; type: Type) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
