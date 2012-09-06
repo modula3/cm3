@@ -253,6 +253,51 @@ BEGIN
     END;
 END SetLineDirective;
 
+TYPE CReservedWord = RECORD
+    id: M3ID.T;
+    replacement_id: M3ID.T;
+END;
+
+PROCEDURE CReservedWord_New(text: TEXT): CReservedWord =
+BEGIN
+    RETURN CReservedWord{id := M3ID.Add(text), replacement_id := M3ID.Add("m3_" & text)};
+END CReservedWord_New;
+
+VAR reservedWords_Inited := FALSE;
+VAR reservedWords: REF ARRAY OF CReservedWord;
+
+PROCEDURE ReservedWords_Replace(id: M3ID.T): M3ID.T =
+BEGIN
+    ReservedWords_Init();
+    FOR i := FIRST(reservedWords^) TO LAST(reservedWords^) DO
+        IF reservedWords[i].id = id THEN
+            RETURN reservedWords[i].replacement_id;
+        END;
+    END;
+    RETURN id;
+END ReservedWords_Replace;
+
+PROCEDURE ReservedWords_Init() =
+CONST reservedWords_Text = ARRAY OF TEXT{
+    "__int8", "__int16", "__int32","__int64",
+    "char", "short", "int", "long",
+    "unsigned", "signed",
+    "new", "delete",
+    "void",
+    "float", "double",
+    "class", "struct", "template", "typename", "typedef",
+    "static_cast", "dynamic_cast", "reinterpret_cast"};
+BEGIN
+    IF reservedWords_Inited THEN
+        RETURN;
+    END;
+    reservedWords := NEW(REF ARRAY OF CReservedWord, NUMBER(reservedWords_Text));
+    FOR i := FIRST(reservedWords_Text) TO LAST(reservedWords_Text) DO
+        reservedWords[i] := CReservedWord_New(reservedWords_Text[i]);
+    END;
+    reservedWords_Inited := TRUE;
+END ReservedWords_Init;
+
 VAR anonymousCounter: INTEGER;
 
 PROCEDURE FixName(name: Name): Name =
@@ -263,6 +308,11 @@ BEGIN
             RETURN t;
         END;
     END;
+    RTIO.PutText("FixName(" & M3ID.ToText(name) & ")\n");
+    RTIO.Flush();
+    name := ReservedWords_Replace(name);
+    RTIO.PutText(" => ReservedWords_Replace => " & M3ID.ToText(name) & ")\n");
+    RTIO.Flush();
     RETURN name;
 END FixName;
 
