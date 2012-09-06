@@ -236,34 +236,34 @@ VAR BitSizeToEnumCGType := ARRAY [0..32] OF M3CG.Type { M3CG.Type.Void, .. };
 
 PROCEDURE SetLineDirective(u: U) =
 BEGIN
-  IF output_line_directives = FALSE THEN
-    RETURN;
-  END;
-  IF u.line > 0 AND u.file # NIL THEN
-    u.line_directive := "#line " & Fmt.Int(u.line) & " \"" & u.file & "\"\n";
-    u.nl_line_directive := "\n" & u.line_directive;
-    IF u.last_char_was_newline THEN
-      print(u, u.line_directive);
-    ELSE
-      print(u, u.nl_line_directive);
+    IF output_line_directives = FALSE THEN
+        RETURN;
     END;
-  ELSE
-    u.line_directive := "";
-    u.nl_line_directive := "\n";
-  END;
+    IF u.line > 0 AND u.file # NIL THEN
+        u.line_directive := "#line " & Fmt.Int(u.line) & " \"" & u.file & "\"\n";
+        u.nl_line_directive := "\n" & u.line_directive;
+        IF u.last_char_was_newline THEN
+            print(u, u.line_directive);
+        ELSE
+            print(u, u.nl_line_directive);
+        END;
+    ELSE
+        u.line_directive := "";
+        u.nl_line_directive := "\n";
+    END;
 END SetLineDirective;
 
 VAR anonymousCounter: INTEGER;
 
 PROCEDURE FixName(name: Name): Name =
 BEGIN
-  IF name = 0 OR Text.GetChar (M3ID.ToText (name), 0) = '*' THEN
-    WITH t = M3ID.Add("L_" & Fmt.Int(anonymousCounter)) DO
-      INC(anonymousCounter);
-      RETURN t;
+    IF name = 0 OR Text.GetChar (M3ID.ToText (name), 0) = '*' THEN
+        WITH t = M3ID.Add("L_" & Fmt.Int(anonymousCounter)) DO
+            INC(anonymousCounter);
+            RETURN t;
+        END;
     END;
-  END;
-  RETURN name;
+    RETURN name;
 END FixName;
 
 (*
@@ -271,12 +271,12 @@ TYPE CField = M3CField.T;
 TYPE CFieldSeq = M3CFieldSeq.T;
 
 TYPE Type_t = OBJECT
-  bit_size: INTEGER := 0;  (* FUTURE Target.Int or LONGINT *)
-  byte_size: INTEGER := 0; (* FUTURE Target.Int or LONGINT *)
-  typeid: INTEGER := 0;
-  cg_type: M3CG.Type := M3CG.Type.Addr;
-  (*name_id: INTEGER;
-  name_text: TEXT;*)
+    bit_size: INTEGER := 0;  (* FUTURE Target.Int or LONGINT *)
+    byte_size: INTEGER := 0; (* FUTURE Target.Int or LONGINT *)
+    typeid: INTEGER := 0;
+    cg_type: M3CG.Type := M3CG.Type.Addr;
+    (*name_id: INTEGER;
+    name_text: TEXT;*)
 END;
 
 (* We probably need "Ordinal_t": Integer_t, Enum_t, Subrange_t *)
@@ -286,24 +286,24 @@ TYPE Float_t  = Type_t OBJECT END;
 TYPE Record_t  = Type_t OBJECT END;
 
 TYPE Enum_t  = Type_t OBJECT
-  (* min is zero *)
-  max: INTEGER; (* FUTURE Target.Int or LONGINT *)
+    (* min is zero *)
+    max: INTEGER; (* FUTURE Target.Int or LONGINT *)
 END;
 
 TYPE Subrange_t  = Type_t OBJECT
-  min: INTEGER; (* FUTURE Target.Int or LONGINT *)
-  max: INTEGER; (* FUTURE Target.Int or LONGINT *)
+    min: INTEGER; (* FUTURE Target.Int or LONGINT *)
+    max: INTEGER; (* FUTURE Target.Int or LONGINT *)
 END;
 
 TYPE Ref_t  = Type_t OBJECT
-  referent: Type_t;
+    referent: Type_t;
 END;
 
 TYPE Array_t = Type_t OBJECT
-  index_typeid: INTEGER;
-  element_typeid: INTEGER;
-  index_type: Type_t;
-  element_type: Type_t;
+    index_typeid: INTEGER;
+    element_typeid: INTEGER;
+    index_type: Type_t;
+    element_type: Type_t;
 END;
 
 TYPE FixedArray_t = Array_t OBJECT END;
@@ -313,21 +313,21 @@ VAR typeidToType := NEW(SortedIntRefTbl.Default).init();
 
 PROCEDURE Type_Init(t: Type_t): Type_t =
 BEGIN
-  IF t.bit_size = 0 THEN
-    t.bit_size := TargetMap.CG_Size[t.cg_type];
-  END;
-  IF t.byte_size = 0 THEN
-    t.byte_size := TargetMap.CG_Bytes[t.cg_type];
-  END;
-  EVAL typeidToType.put(t.typeid, t);
-  RETURN t;
+    IF t.bit_size = 0 THEN
+        t.bit_size := TargetMap.CG_Size[t.cg_type];
+    END;
+    IF t.byte_size = 0 THEN
+        t.byte_size := TargetMap.CG_Bytes[t.cg_type];
+    END;
+    EVAL typeidToType.put(t.typeid, t);
+    RETURN t;
 END Type_Init;
 
 PROCEDURE TypeidToType_Get(typeid: TypeUID): Type_t =
 VAR type: REFANY := NIL;
 BEGIN
-  EVAL typeidToType.get(typeid, type);
-  RETURN NARROW(type, Type_t);
+    EVAL typeidToType.get(typeid, type);
+    RETURN NARROW(type, Type_t);
 END TypeidToType_Get;
 *)
 
