@@ -17,8 +17,8 @@ FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 
-TYPE WrVar    = Var    OBJECT tag: INTEGER; name: Name END;
-TYPE WrProc   = Proc   OBJECT tag: INTEGER; name: Name END;
+TYPE WrVar    = Var    OBJECT tag: INTEGER END;
+TYPE WrProc   = Proc   OBJECT tag: INTEGER END;
 
 TYPE
   RuntimeHook = REF RECORD
@@ -201,9 +201,9 @@ PROCEDURE Cmd (u: U; cmd: TEXT) =
     ***)
   END Cmd;
 
-PROCEDURE ZName (u: U;  n: Name; delim := ' ') =
+PROCEDURE ZName (u: U;  n: Name) =
   BEGIN
-    OutC (u, delim);
+    OutC (u, ' ');
     IF (n = M3ID.NoID)
       THEN OutC (u, '*');
       ELSE OutN (u, n);
@@ -214,9 +214,7 @@ PROCEDURE VName (u: U;  v: Var) =
   BEGIN
     TYPECASE v OF
     | NULL     => OutT (u, " *");
-    | WrVar(x) => OutT (u, " v.");
-                  OutI (u, x.tag);
-                  ZName (u, x.name, '.');
+    | WrVar(x) => OutT (u, " v.");  OutI (u, x.tag);
     ELSE          OutT (u, " v.???");
     END;
   END VName;
@@ -225,9 +223,7 @@ PROCEDURE PName (u: U;  p: Proc) =
   BEGIN
     TYPECASE p OF
     | NULL      => OutT (u, " *");
-    | WrProc(x) => OutT (u, " p.");
-                   OutI (u, x.tag);
-                   ZName (u, x.name, '.');
+    | WrProc(x) => OutT (u, " p.");  OutI (u, x.tag);
     ELSE           OutT (u, " p.???");
     END;
   END PName;
@@ -679,8 +675,8 @@ PROCEDURE set_runtime_proc (u: U;  n: Name;  p: Proc) =
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE NewVar (u: U; name: Name := M3ID.NoID): Var =
-  VAR v := NEW (WrVar, tag := u.next_var, name := name);
+PROCEDURE NewVar (u: U): Var =
+  VAR v := NEW (WrVar, tag := u.next_var);
   BEGIN
     INC (u.next_var);
     RETURN v;
@@ -688,7 +684,7 @@ PROCEDURE NewVar (u: U; name: Name := M3ID.NoID): Var =
 
 PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID): Var =
-  VAR v := NewVar (u, n);
+  VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "import_global");
     ZName (u, n);
@@ -702,7 +698,7 @@ PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   END import_global;
 
 PROCEDURE declare_segment (u: U;  n: Name;  m3t: TypeUID;  is_const: BOOLEAN): Var =
-  VAR v := NewVar (u, n);
+  VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_segment");
     ZName (u, n);
@@ -728,7 +724,7 @@ PROCEDURE bind_segment (u: U;  seg: Var;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                      t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
-  VAR v := NewVar (u, n);
+  VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_global");
     ZName (u, n);
@@ -745,7 +741,7 @@ PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                      t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
-  VAR v := NewVar (u, n);
+  VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_constant");
     ZName (u, n);
@@ -763,7 +759,7 @@ PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                          f: Frequency): Var =
-  VAR v := NewVar (u, n);
+  VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_local");
     ZName (u, n);
@@ -782,7 +778,7 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                          f: Frequency): Var =
-  VAR v := NewVar (u, n);
+  VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_param");
     ZName (u, n);
@@ -896,8 +892,8 @@ PROCEDURE init_float (u: U;  o: ByteOffset;  READONLY f: Target.Float) =
 
 (*------------------------------------------------------------ procedures ---*)
 
-PROCEDURE NewProc (u: U; name: Name): Proc =
-  VAR p := NEW (WrProc, tag := u.next_proc, name := name);
+PROCEDURE NewProc (u: U): Proc =
+  VAR p := NEW (WrProc, tag := u.next_proc);
   BEGIN
     INC (u.next_proc);
     RETURN p;
@@ -905,7 +901,7 @@ PROCEDURE NewProc (u: U; name: Name): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                           ret_type: Type;  cc: CallingConvention): Proc =
-  VAR p := NewProc (u, n);
+  VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "import_procedure");
     ZName (u, n);
@@ -921,7 +917,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc): Proc =
-  VAR p := NewProc (u, n);
+  VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "declare_procedure");
     ZName (u, n);
