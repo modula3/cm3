@@ -701,71 +701,71 @@ END get;
 
 PROCEDURE SuppressLineDirective(u: U; adjust: INTEGER; <*UNUSED*>reason: TEXT) =
 BEGIN
-  INC(u.suppress_line_directive, adjust);
-  (*
-  RTIO.PutText("suppress_line_directive now " & Fmt.Int(u.suppress_line_directive) & " due to " & reason & "\n");
-  RTIO.Flush();
-  *)
+    INC(u.suppress_line_directive, adjust);
+    (*
+    RTIO.PutText("suppress_line_directive now " & Fmt.Int(u.suppress_line_directive) & " due to " & reason & "\n");
+    RTIO.Flush();
+    *)
 END SuppressLineDirective;
 
 PROCEDURE print(u: U; text: TEXT) = <*FATAL ANY*>
-  VAR length := Text.Length(text);
-      text_last_char := '\000';
-  BEGIN
+VAR length := Text.Length(text);
+    text_last_char := '\000';
+BEGIN
     IF length = 0 THEN
-      RETURN;
+        RETURN;
     END;
     
     text_last_char := Text.GetChar(text, length - 1);
     u.last_char_was_open_brace := text_last_char = '{';
-
+    
     IF output_extra_newlines AND Text.FindChar(text, '\n') = -1 THEN
-      Wr.PutText(u.c, text & "\n");
-      u.last_char_was_newline := TRUE;
+        Wr.PutText(u.c, text & "\n");
+        u.last_char_was_newline := TRUE;
     ELSE
-      Wr.PutText(u.c, text);
+        Wr.PutText(u.c, text);
     END;
-
+    
     IF text = u.line_directive OR text = u.nl_line_directive THEN
-      u.width := 0;
-      u.last_char_was_newline := TRUE;
-      RETURN;
+        u.width := 0;
+        u.last_char_was_newline := TRUE;
+        RETURN;
     END;
-
+    
     IF (*u.suppress_line_directive < 1 AND*) text_last_char = '\n' THEN
-      Wr.PutText(u.c, u.line_directive);
-      u.width := 0;
-      u.last_char_was_newline := TRUE;
-      RETURN;
+        Wr.PutText(u.c, u.line_directive);
+        u.width := 0;
+        u.last_char_was_newline := TRUE;
+        RETURN;
     END;
-
+    
     IF Text.FindChar(text, '\n') # -1 THEN
-      u.width := 0; (* roughly *)
-      Wr.PutText(u.c, u.nl_line_directive);
-      u.last_char_was_newline := TRUE;
-      RETURN;
+        u.width := 0; (* roughly *)
+        Wr.PutText(u.c, u.nl_line_directive);
+        u.last_char_was_newline := TRUE;
+        RETURN;
     END;
-
+    
     INC(u.width, length);
     IF u.width < 900 THEN
-      u.last_char_was_newline := FALSE;
-      RETURN;
+    u.last_char_was_newline := FALSE;
+        RETURN;
     END;
-
+    
     u.width := 0;
     IF u.last_char_was_newline THEN
-      Wr.PutText(u.c, u.line_directive);
+        Wr.PutText(u.c, u.line_directive);
     ELSE
-      Wr.PutText(u.c, u.nl_line_directive);
+        Wr.PutText(u.c, u.nl_line_directive);
     END;
     u.last_char_was_newline := TRUE;
-  END print;
+END print;
 
 (*---------------------------------------------------------------------------*)
 
 PROCEDURE New (cfile: Wr.T): M3CG.T =
-  VAR u := NEW (U);
-  BEGIN
+VAR u := NEW (U);
+BEGIN
     u.wr := Wrx86.New (Stdio.stdout);
     u.debug := TRUE;
     u.c := cfile;
@@ -807,22 +807,22 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
 *)
     (* EVAL Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL)); *)
     RETURN u;
-  END New;
+END New;
 
 (*----------------------------------------------------------- ID counters ---*)
 
 PROCEDURE next_label(u: U; n: INTEGER := 1): Label =
 VAR label := u.label;
-  BEGIN
+BEGIN
     INC(u.label, n);
     RETURN label;
-  END next_label;
+END next_label;
 
 (*------------------------------------------------ READONLY configuration ---*)
 
 PROCEDURE set_error_handler (<*NOWARN*>u: U; <*NOWARN*>p: ErrorHandler) =
-  BEGIN
-  END set_error_handler;
+BEGIN
+END set_error_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
@@ -888,66 +888,66 @@ END export_unit;
 PROCEDURE set_source_file(u: U; file: TEXT) =
   (* Sets the current source file name. Subsequent statements
      and expressions are associated with this source location. *)
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.OutT ("\t\t\t\t\t-----FILE ");
-      u.wr.OutT (file);
-      u.wr.OutT ("  -----");
-      u.wr.NL ();
-      print(u, " /* set_source_file */ ");
+        u.wr.OutT ("\t\t\t\t\t-----FILE ");
+        u.wr.OutT (file);
+        u.wr.OutT ("  -----");
+        u.wr.NL ();
+        print(u, " /* set_source_file */ ");
     END;
     u.file := file;
     SetLineDirective(u);
-  END set_source_file;
+END set_source_file;
 
 PROCEDURE set_source_line(u: U; line: INTEGER) =
-  (* Sets the current source line number. Subsequent statements
-   and expressions are associated with this source location. *)
-  BEGIN
+(* Sets the current source line number. Subsequent statements
+and expressions are associated with this source location. *)
+BEGIN
     IF u.debug THEN
-      u.wr.OutT ("\t\t\t\t\t-----LINE");
-      u.wr.Int  (line);
-      u.wr.OutT ("  -----");
-      u.wr.NL ();
-      print(u, " /* set_source_line */ ");
+        u.wr.OutT ("\t\t\t\t\t-----LINE");
+        u.wr.Int  (line);
+        u.wr.OutT ("  -----");
+        u.wr.NL ();
+        print(u, " /* set_source_line */ ");
     END;
     u.line := line;
     SetLineDirective(u);
-  END set_source_line;
+END set_source_line;
 
 (*------------------------------------------- debugging type declarations ---*)
 
 PROCEDURE declare_typename(u: U; typeid: TypeUID; name: Name) =
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("declare_typename");
-      u.wr.Tipe  (typeid);
-      u.wr.ZName (name);
-      u.wr.NL    ();
-      print(u, " /* declare_typename */ ");
+        u.wr.Cmd   ("declare_typename");
+        u.wr.Tipe  (typeid);
+        u.wr.ZName (name);
+        u.wr.NL    ();
+        print(u, " /* declare_typename */ ");
     END;
     (*
     print(u, "typedef M" & Fmt.Unsigned(typeid) & " " & M3ID.ToText(name) & ";\n");
     *)
-  END declare_typename;
+END declare_typename;
 
 (*
 PROCEDURE TypeIDToText(x: INTEGER): TEXT =
 BEGIN
-  RETURN "M" & Fmt.Unsigned(x);
+    RETURN "M" & Fmt.Unsigned(x);
 END TypeIDToText;
 *)
 
 PROCEDURE declare_array(u: U; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd  ("declare_array");
-      u.wr.Tipe (typeid);
-      u.wr.Tipe (index_typeid);
-      u.wr.Tipe (element_typeid);
-      u.wr.BInt (total_bit_size);
-      u.wr.NL   ();
-      print(u, " /* declare_array */ ");
+        u.wr.Cmd  ("declare_array");
+        u.wr.Tipe (typeid);
+        u.wr.Tipe (index_typeid);
+        u.wr.Tipe (element_typeid);
+        u.wr.BInt (total_bit_size);
+        u.wr.NL   ();
+        print(u, " /* declare_array */ ");
     END;
 (*
     WITH index_type = TypeidToType_Get(index_typeid),
@@ -979,98 +979,98 @@ PROCEDURE declare_array(u: U; typeid, index_typeid, element_typeid: TypeUID; tot
   END declare_array;
 
 PROCEDURE declare_open_array(u: U; typeid, element_typeid: TypeUID; bit_size: BitSize) =
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd  ("declare_open_array");
-      u.wr.Tipe (typeid);
-      u.wr.Tipe (element_typeid);
-      u.wr.BInt (bit_size);
-      u.wr.NL   ();
-      print(u, " /* declare_open_array */ ");
+        u.wr.Cmd  ("declare_open_array");
+        u.wr.Tipe (typeid);
+        u.wr.Tipe (element_typeid);
+        u.wr.BInt (bit_size);
+        u.wr.NL   ();
+        print(u, " /* declare_open_array */ ");
     END;
     <* ASSERT bit_size MOD 32 = 0 *>
 (*
     WITH element_type = TypeidToType_Get(element_typeid) DO
-      IF element_type = NIL THEN
-        RTIO.PutText("declare_array nil element_type\n");
-        RTIO.Flush();
-      END;
-      print(u, "typedef struct { ");
-      print(u, TypeIDToText(element_typeid));
-      print(u, "* _elts; CARDINAL _size");
-      IF bit_size > Target.Integer.size * 2 THEN
-        print(u, "s[");
-        print(u, Fmt.Int((bit_size - Target.Integer.size) DIV Target.Integer.size));
-        print(u, "]");
-      END;
-      print(u, ";}" & TypeIDToText(element_typeid) & ";");
-      EVAL typeidToType.put(typeid, NEW(OpenArray_t,
-              typeid := typeid,
-              byte_size := bit_size DIV 8,
-              bit_size := bit_size,
-              element_typeid := element_typeid,
-              element_type := element_type));
+        IF element_type = NIL THEN
+            RTIO.PutText("declare_array nil element_type\n");
+            RTIO.Flush();
+        END;
+        print(u, "typedef struct { ");
+        print(u, TypeIDToText(element_typeid));
+        print(u, "* _elts; CARDINAL _size");
+        IF bit_size > Target.Integer.size * 2 THEN
+            print(u, "s[");
+            print(u, Fmt.Int((bit_size - Target.Integer.size) DIV Target.Integer.size));
+            print(u, "]");
+        END;
+        print(u, ";}" & TypeIDToText(element_typeid) & ";");
+        EVAL typeidToType.put(typeid, NEW(OpenArray_t,
+        typeid := typeid,
+        byte_size := bit_size DIV 8,
+        bit_size := bit_size,
+        element_typeid := element_typeid,
+        element_type := element_type));
     END;
 *)
   END declare_open_array;
 
 PROCEDURE declare_enum(u: U; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd  ("declare_enum");
-      u.wr.Tipe (typeid);
-      u.wr.Int  (n_elts);
-      u.wr.BInt (bit_size);
-      u.wr.NL   ();
-      print(u, " /* declare_enum */ ");
+        u.wr.Cmd  ("declare_enum");
+        u.wr.Tipe (typeid);
+        u.wr.Int  (n_elts);
+        u.wr.BInt (bit_size);
+        u.wr.NL   ();
+        print(u, " /* declare_enum */ ");
     END;
     SuppressLineDirective(u, n_elts, "declare_enum n_elts");
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
-(*
+    (*
     WITH type = NEW(Enum_t, typeid := typeid, max := n_elts - 1, cg_type := BitSizeToEnumCGType[bit_size]) DO
-      <* ASSERT u.enum = NIL *>
-      u.enum := type;
-      EVAL Type_Init(type);
-      u.enum_id := TypeIDToText(typeid);
-      u.enum_value := 0;
-      u.enum_type := "UINT" & Fmt.Int(bit_size);
-      print(u, "typedef " & u.enum_type & " " & u.enum_id & ";");
+        <* ASSERT u.enum = NIL *>
+        u.enum := type;
+        EVAL Type_Init(type);
+        u.enum_id := TypeIDToText(typeid);
+        u.enum_value := 0;
+        u.enum_type := "UINT" & Fmt.Int(bit_size);
+        print(u, "typedef " & u.enum_type & " " & u.enum_id & ";");
     END;
 *)
-  END declare_enum;
+END declare_enum;
 
 PROCEDURE declare_enum_elt(u: U; name: Name) =
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("declare_enum_elt");
-      u.wr.ZName (name);
-      u.wr.NL    ();
-      print(u, " /* declare_enum_elt */ ");
+        u.wr.Cmd   ("declare_enum_elt");
+        u.wr.ZName (name);
+        u.wr.NL    ();
+        print(u, " /* declare_enum_elt */ ");
     END;
     SuppressLineDirective(u, -1, "declare_enum_elt");
 (*
     print(u, "#define " & u.enum_id & "_" & M3ID.ToText(name) & " ((" & u.enum_type & ")" & Fmt.Int(u.enum_value) & ")\n");
-    INC (u.enum_value);
+    INC(u.enum_value);
     IF u.enum_value = u.enum.max + 1 THEN
-      u.enum := NIL;
-      u.enum_id := NIL;
-      u.enum_type := NIL;
-      u.enum_value := 10000;
+        u.enum := NIL;
+        u.enum_id := NIL;
+        u.enum_type := NIL;
+        u.enum_value := 10000;
     END;
 *)
   END declare_enum_elt;
 
 PROCEDURE declare_packed(u: U; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd  ("declare_packed");
-      u.wr.Tipe (typeid);
-      u.wr.BInt (bit_size);
-      u.wr.Tipe (base);
-      u.wr.NL   ();
-      print(u, " /* declare_packed */ ");
+        u.wr.Cmd  ("declare_packed");
+        u.wr.Tipe (typeid);
+        u.wr.BInt (bit_size);
+        u.wr.Tipe (base);
+        u.wr.NL   ();
+        print(u, " /* declare_packed */ ");
     END;
-  END declare_packed;
+END declare_packed;
 
 PROCEDURE declare_record(u: U; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
   BEGIN
@@ -3571,13 +3571,12 @@ BEGIN
     print(u, " /* fetch_and_op */ ");
     
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
-
 END fetch_and_op;
 
 BEGIN
 (*
-  BitSizeToEnumCGType[8] := M3CG.Type.Word8;
-  BitSizeToEnumCGType[16] := M3CG.Type.Word16;
-  BitSizeToEnumCGType[32] := M3CG.Type.Word32;
+    BitSizeToEnumCGType[8] := M3CG.Type.Word8;
+    BitSizeToEnumCGType[16] := M3CG.Type.Word16;
+    BitSizeToEnumCGType[32] := M3CG.Type.Word32;
 *)
 END M3C.
