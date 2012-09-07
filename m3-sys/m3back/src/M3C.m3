@@ -532,8 +532,8 @@ CONST IntegerTypeSignedness = ARRAY OF BOOLEAN { FALSE, TRUE };*)
 
 
 CONST Prefix = ARRAY OF TEXT {
+"#include <string.h>", (* memcmp, memmove *)
 "#ifdef __cplusplus",
-"#include <string.h>", (* memcmp *)
 "#define M3_INIT",
 "#define new m3_new",
 "#define M3_DOTDOTDOT ...",
@@ -3029,7 +3029,7 @@ PROCEDURE copy_n(u: U; itype: IType; mtype: MType; overlap: BOOLEAN) =
       print(u, " /* copy_n */ ");
     END;
     pop(u, 3);
-    print(u, MemCopyOrMove[ORD(overlap)] & "(" & s2 & "," & s1 & "," & Fmt.Int(CG_Bytes[mtype]) & "*" & s0 & ")");
+    print(u, MemCopyOrMove[ORD(overlap)] & "(" & s2 & "," & s1 & "," & Fmt.Int(CG_Bytes[mtype]) & "*" & s0 & ");");
   END copy_n;
 
 PROCEDURE copy(u: U; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
@@ -3046,7 +3046,7 @@ PROCEDURE copy(u: U; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
       print(u, " /* copy */ ");
     END;
     pop(u, 2);
-    print(u, MemCopyOrMove[ORD(overlap)] & "(" & s1 & "," & s0 & "," & Fmt.Int(CG_Bytes[mtype] * n) & ")");
+    print(u, MemCopyOrMove[ORD(overlap)] & "(" & s1 & "," & s0 & "," & Fmt.Int(CG_Bytes[mtype] * n) & ");");
   END copy;
 
 PROCEDURE zero_n(u: U; itype: IType; mtype: MType) =
