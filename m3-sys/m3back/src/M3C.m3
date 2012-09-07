@@ -39,7 +39,7 @@ REVEAL
         debug  := FALSE;
         stack  : TextSeq.T := NIL;
         params : TextSeq.T := NIL;
-        
+
         (* import_procedure happens both outside and inside procedurs;
            When it happens inside, it presumed already imported in later ones.
            Record them here for later repetition. Hack. *)
@@ -54,13 +54,13 @@ REVEAL
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
         param_count := 0;
         label := 0;
-        
+
         (* initialization support *)
 
         init_fields: TextSeq.T := NIL;
         current_init_offset: INTEGER := 0;
         initializer: TextSeq.T := NIL;
-        
+
         (* initializers are aggregated into arrays to avoid
            redeclaring the types and generating new field names *)
 
@@ -82,7 +82,7 @@ REVEAL
         in_proc_call : [0 .. 1] := 0; (* based on M3x86 *)
         report_fault: TEXT := NIL; (* based on M3x86 -- reportlabel, global_var *)
         width := 0;
-        
+
       OVERRIDES
         next_label := next_label;
         set_error_handler := set_error_handler;
@@ -279,14 +279,20 @@ END ReservedWords_Replace;
 
 PROCEDURE ReservedWords_Init() =
 CONST reservedWords_Text = ARRAY OF TEXT{
-    "__int8", "__int16", "__int32","__int64",
-    "char", "short", "int", "long",
-    "unsigned", "signed",
-    "new", "delete",
-    "void",
-    "float", "double",
-    "class", "struct", "template", "typename", "typedef",
-    "static_cast", "dynamic_cast", "reinterpret_cast"};
+"__int8", "__int16", "__int32","__int64",
+"auto","const","double","float","int","short","struct","unsigned",
+"break","continue","else","for","long","signed","switch","void",
+"case","default","enum","goto","register","sizeof","typedef","volatile",
+"char","do","extern","if","return","static","union","while",
+"asm","dynamic_cast","namespace","reinterpret_cast","try",
+"bool","explicit","new","static_cast","typeid",
+"catch","false","operator","template","typename",
+"class","friend","private","this","using",
+"const_cast","inline","public","throw","virtual",
+"delete","mutable","protected","true","wchar_t",
+"and","bitand","compl","not_eq","or_eq","xor_eq",
+"and_eq","bitor","not","or","xor"
+    };
 BEGIN
     IF reservedWords_Inited THEN
         RETURN;
@@ -535,6 +541,11 @@ CONST Prefix = ARRAY OF TEXT {
 "#define M3_INIT ={0}",
 "#define M3_DOTDOTDOT",
 "#endif",
+"#define  MAKE_INT8(x)  x",
+"#define  MAKE_INT16(x) x",
+"#define MAKE_UINT8(x)  x##U",
+"#define MAKE_UINT16(x) x##U",
+"#define MAKE_UINT32(x) x##U", (* INT64/UINT64 are later *)
 "#ifdef __cplusplus",
 "extern \"C\" {",
 "#endif",
@@ -563,9 +574,13 @@ CONST Prefix = ARRAY OF TEXT {
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
+"#define  MAKE_INT64(x) x##I64",
+"#define MAKE_UINT64(x) x##UI64",
 "#else",
 "typedef long long INT64;",
 "typedef unsigned long long UINT64;",
+"#define  MAKE_INT64(x) x##LL",
+"#define MAKE_UINT64(x) x##ULL",
 "#endif",
 (*
 "/* WORD_T/INTEGER are always exactly the same size as a pointer.",
@@ -707,7 +722,7 @@ CONST typeToText = ARRAY CGType OF TEXT {
     "UINT64", "INT64", (* FUTURE: U64, I64 *)
     "REAL", "LONGREAL", "EXTENDED", (* FUTURE: R, L, E *)
     "ADDRESS", (* FUTURE: A or P for pointer *)
-    "STRUCT", 
+    "STRUCT",
     "void" (* FUTURE: V *)
   };
 
@@ -765,43 +780,43 @@ BEGIN
     IF length = 0 THEN
         RETURN;
     END;
-    
+
     text_last_char := Text.GetChar(text, length - 1);
     u.last_char_was_open_brace := text_last_char = '{';
-    
+
     IF output_extra_newlines AND Text.FindChar(text, '\n') = -1 THEN
         Wr.PutText(u.c, text & "\n");
         u.last_char_was_newline := TRUE;
     ELSE
         Wr.PutText(u.c, text);
     END;
-    
+
     IF text = u.line_directive OR text = u.nl_line_directive THEN
         u.width := 0;
         u.last_char_was_newline := TRUE;
         RETURN;
     END;
-    
+
     IF (*u.suppress_line_directive < 1 AND*) text_last_char = '\n' THEN
         Wr.PutText(u.c, u.line_directive);
         u.width := 0;
         u.last_char_was_newline := TRUE;
         RETURN;
     END;
-    
+
     IF Text.FindChar(text, '\n') # -1 THEN
         u.width := 0; (* roughly *)
         Wr.PutText(u.c, u.nl_line_directive);
         u.last_char_was_newline := TRUE;
         RETURN;
     END;
-    
+
     INC(u.width, length);
     IF u.width < 900 THEN
     u.last_char_was_newline := FALSE;
         RETURN;
     END;
-    
+
     u.width := 0;
     IF u.last_char_was_newline THEN
         Wr.PutText(u.c, u.line_directive);
@@ -1647,13 +1662,13 @@ BEGIN
     END;
     print(u, " /* end_init */ ");
     end_init_helper(u);
-    
+
     print(u, "struct " & var_name & "_t{");
     WHILE init_fields.size() > 0 DO
         print(u, init_fields.remlo());
     END;
     print(u, "};");
-    
+
     print(u, "static " & const & var_name & "_t " & var_name & "={");
     WHILE initializer.size() > 0 DO
         print(u, comma & initializer.remlo());
@@ -1795,19 +1810,49 @@ PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
     END;
   END init_chars;
 
-PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
-  VAR buf: ARRAY [0..255] OF CHAR;
-      type := TargetMap.Float_types[TFloat.Prec(float)].cg_type;
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("init_float");
-      u.wr.Int   (offset);
-      u.wr.Flt   (float);
-      u.wr.NL    ();
+PROCEDURE FloatToText(READONLY float: Target.Float): TEXT =
+VAR suffix := '\000';
+    cBuf, modulaBuf: ARRAY [0..BITSIZE(EXTENDED) + 1] OF CHAR;
+    len := TFloat.ToChars(float, modulaBuf);
+    j := 0;
+    ch: CHAR;
+BEGIN
+(* 1.2e3 => 1.2e3F float/REAL
+   1.2d3 => 1.2e3  double/LONGREAL
+   1.2x3 => 1.2e3L long double/EXTENDED
+*)
+    FOR i := 0 TO len - 1 DO
+        ch := modulaBuf[i];
+        IF ch = 'e' OR ch = 'E' THEN
+            suffix := 'F';
+        ELSIF ch = 'd' OR ch = 'D' THEN
+            suffix := '\000';
+            ch := 'e';
+        ELSIF ch = 'x' OR ch = 'X' THEN
+            suffix := 'L';
+            ch := 'e';
+        END;
+        cBuf[j] := ch;
+        INC(j);
     END;
-    print(u, " /* init_float */ "); (* UNDONE needs work? *)
-    init_helper(u, offset, type);
-    u.initializer.addhi(Text.FromChars(SUBARRAY(buf, 0, TFloat.ToChars(float, buf))));
+    IF suffix # '\000' THEN
+        cBuf[j] := suffix;
+        INC(j);
+    END;
+    RETURN Text.FromChars(SUBARRAY(cBuf, 0, j));
+END FloatToText;
+
+PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
+BEGIN
+    IF u.debug THEN
+        u.wr.Cmd   ("init_float");
+        u.wr.Int   (offset);
+        u.wr.Flt   (float);
+        u.wr.NL    ();
+    END;
+    print(u, " /* init_float */ ");
+    init_helper(u, offset, TargetMap.Float_types[TFloat.Prec(float)].cg_type);
+    u.initializer.addhi(FloatToText(float));
 END init_float;
 
 (*------------------------------------------------------------ PROCEDUREs ---*)
@@ -1914,7 +1959,7 @@ BEGIN
     WHILE u.import_procedure_repeat.size() > 0 DO
         print(u, u.import_procedure_repeat.remlo());
     END;
-    
+
     IF proc.forward_declared_frame_type THEN
         print(u, "struct " & frame_type & " {");
         print(u, "void* _unused;"); (* add field to ensure frame not empty *)
@@ -1936,10 +1981,10 @@ BEGIN
         END;
         print(u, "};");
     END;
- 
+
     print(u, function_prototype(proc));
     print(u, "{");
-    
+
     (* declare and initialize non-uplevel locals *)
 
     FOR i := 0 TO proc.Locals_Size() - 1 DO
@@ -1949,14 +1994,14 @@ BEGIN
             END;
         END;
     END;
-    
+
     (* declare and initialize frame of uplevels *)
 
     IF proc.forward_declared_frame_type THEN
         print(u, frame_type & " " & frame_name & "={0};");
 
         (* capture uplevel parameters *)
-    
+
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level THEN
@@ -1970,11 +2015,11 @@ BEGIN
         IF proc.level > 0 THEN
             print(u, frame_name & "._static_link=_static_link;");
         END;
-    
+
         (* quash unused warning *)
-    
+
         print(u, frame_name & "._unused=&" & frame_name & ";");
-        
+
     END;
 
 END begin_procedure;
@@ -2119,7 +2164,7 @@ BEGIN
     print(u, "switch(" & s0 & "){");
     FOR i := FIRST(labels) TO LAST(labels) DO
         print(u, "case " & Fmt.Int(i) & ":goto L" & Fmt.Unsigned(labels[i]) & ";");
-    END;    
+    END;
     print(u, "}");
     pop(u);
 END case_jump;
@@ -2319,13 +2364,12 @@ BEGIN
         u.wr.NL    ();
     END;
     print(u, " /* load_integer */ ");
-    (* TODO: use suffixes L, U, UL, ULL, i64, ui64 via #ifdef and macro *)
-    push(u, type, "((" & typeToText[type] & ")" & TInt.ToText(i) & ")");
+    (* MAKE_type appends suffixes like U, ULL, UI64, etc. *)
+    push(u, type, "((" & typeToText[type] & ") MAKE_" & typeToText[type] & "(" & TInt.ToText(i) & "))");
 END load_integer;
 
 PROCEDURE load_float(u: U; type: RType; READONLY float: Target.Float) =
 (* push; s0.type := float *)
-VAR buffer: ARRAY [0..BITSIZE(EXTENDED)] OF CHAR;
 BEGIN
     IF u.debug THEN
         u.wr.Cmd   ("load_float");
@@ -2334,8 +2378,8 @@ BEGIN
         u.wr.NL    ();
     END;
     print(u, " /* load_float */ ");
-    (* TODO: use suffixes *)
-    push(u, type, "((" & typeToText[type] & ")" & Text.FromChars(SUBARRAY(buffer, 0, TFloat.ToChars(float, buffer))) & ")");
+    (* FloatToText includes suffixes like "F" for float, "" for double, "L" for long double *)
+    push(u, type, "((" & typeToText[type] & ")" & FloatToText(float) & ")");
 END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
@@ -3382,14 +3426,14 @@ BEGIN
         u.wr.NL    ();
     END;
     print(u, " /* call_direct " & M3ID.ToText(proc.name) & " */ ");
-    
+
     <* ASSERT u.in_proc_call > 0 *>
-    
+
     IF proc.level # 0 THEN
         print(u, " /* call_direct => get_static_link */ ");
         u.params.addlo(get_static_link(u, proc));
     END;
-    
+
     call_helper(u, type, M3ID.ToText(proc.name));
 END call_direct;
 
@@ -3619,7 +3663,7 @@ BEGIN
         u.wr.NL    ();
     END;
     print(u, " /* fetch_and_op */ ");
-    
+
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
 END fetch_and_op;
 
