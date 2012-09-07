@@ -253,33 +253,14 @@ BEGIN
     END;
 END SetLineDirective;
 
-TYPE CReservedWord = RECORD
+TYPE ReplacementName_t = RECORD
     id: M3ID.T;
     replacement_id: M3ID.T;
 END;
 
-PROCEDURE CReservedWord_New(text: TEXT): CReservedWord =
-BEGIN
-    RETURN CReservedWord{id := M3ID.Add(text), replacement_id := M3ID.Add("m3_" & text)};
-END CReservedWord_New;
-
-VAR reservedWords_Inited := FALSE;
-VAR reservedWords: REF ARRAY OF CReservedWord;
-
-PROCEDURE ReservedWords_Replace(id: M3ID.T): M3ID.T =
-BEGIN
-    ReservedWords_Init();
-    FOR i := FIRST(reservedWords^) TO LAST(reservedWords^) DO
-        IF reservedWords[i].id = id THEN
-            RETURN reservedWords[i].replacement_id;
-        END;
-    END;
-    RETURN id;
-END ReservedWords_Replace;
-
-PROCEDURE ReservedWords_Init() =
-CONST reservedWords_Text = ARRAY OF TEXT{
-"__int8", "__int16", "__int32","__int64",
+CONST reservedWords = ARRAY OF TEXT{
+"__int8", "__int16", "__int32","__int64","__try","__except", "__finally",
+"_cdecl","_stdcall","_fastcall","__cdecl","__stdcall","__fastcall",
 "auto","const","double","float","int","short","struct","unsigned",
 "break","continue","else","for","long","signed","switch","void",
 "case","default","enum","goto","register","sizeof","typedef","volatile",
@@ -291,35 +272,55 @@ CONST reservedWords_Text = ARRAY OF TEXT{
 "const_cast","inline","public","throw","virtual",
 "delete","mutable","protected","true","wchar_t",
 "and","bitand","compl","not_eq","or_eq","xor_eq",
-"and_eq","bitor","not","or","xor"
+"and_eq","bitor","not","or","xor",
+"size_t","ptrdiff_t",
+(* hack
+The right fix here includes multiple passes.
+  - import_procedure is called on unused function
+    only declare them if they are otherwise referenced
+Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
+*)
+"strcpy", "strcat"
     };
+
+VAR replacementNames_Inited := FALSE;
+VAR replacementNames: ARRAY [FIRST(reservedWords) .. LAST(reservedWords)] OF ReplacementName_t;
+
+PROCEDURE ReplaceName(id: M3ID.T): M3ID.T =
+(* TODO: This is inefficient linear search. Use qsort. *)
 BEGIN
-    IF reservedWords_Inited THEN
-        RETURN;
+    IF replacementNames_Inited = FALSE THEN
+        FOR i := FIRST(reservedWords) TO LAST(reservedWords) DO
+            WITH text = reservedWords[i] DO
+                replacementNames[i] := ReplacementName_t{id := M3ID.Add(text), replacement_id := M3ID.Add("m3_" & text)};
+            END;
+        END;
+        replacementNames_Inited := TRUE;
     END;
-    reservedWords := NEW(REF ARRAY OF CReservedWord, NUMBER(reservedWords_Text));
-    FOR i := FIRST(reservedWords_Text) TO LAST(reservedWords_Text) DO
-        reservedWords[i] := CReservedWord_New(reservedWords_Text[i]);
+    FOR i := FIRST(replacementNames) TO LAST(replacementNames) DO
+        IF replacementNames[i].id = id THEN
+            RETURN replacementNames[i].replacement_id;
+        END;
     END;
-    reservedWords_Inited := TRUE;
-END ReservedWords_Init;
+    RETURN id;
+END ReplaceName;
 
 VAR anonymousCounter: INTEGER;
 
-PROCEDURE FixName(name: Name): Name =
+PROCEDURE FixName(u: U; name: Name): Name =
 BEGIN
     IF name = 0 OR Text.GetChar (M3ID.ToText (name), 0) = '*' THEN
         WITH t = M3ID.Add("L_" & Fmt.Int(anonymousCounter)) DO
+            IF u.debug THEN
+                u.wr.Flush();
+                RTIO.PutText("FixName:L_" & Fmt.Int(anonymousCounter) & "\n");
+                RTIO.Flush();
+            END;
             INC(anonymousCounter);
             RETURN t;
         END;
     END;
-    RTIO.PutText("FixName(" & M3ID.ToText(name) & ")\n");
-    RTIO.Flush();
-    name := ReservedWords_Replace(name);
-    RTIO.PutText(" => ReservedWords_Replace => " & M3ID.ToText(name) & ")\n");
-    RTIO.Flush();
-    RETURN name;
+    RETURN ReplaceName(name);
 END FixName;
 
 (*
@@ -418,6 +419,7 @@ END TypeidToType_Get;
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
 TYPE CVar = M3CG.Var OBJECT
+    u: U;
     name: Name;
     type: Type;
     type_text: TEXT;
@@ -433,7 +435,7 @@ END;
 
 PROCEDURE Var_Init(var: CVar): CVar =
 BEGIN
-    var.name := FixName(var.name);
+    var.name := FixName(var.u, var.name);
     RETURN var;
 END Var_Init;
 
@@ -513,7 +515,7 @@ PROCEDURE Proc_Init(proc: CProc; u: U): CProc =
     END IsExceptionHandler;
 BEGIN
     proc.u := u;
-    proc.name := FixName(proc.name);
+    proc.name := FixName(proc.u, proc.name);
     proc.is_exception_handler := IsExceptionHandler();
     RETURN proc;
 END Proc_Init;
@@ -639,7 +641,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))",
 "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T*s){if(a>=b){WORD_T i,a_word=a/SET_GRAIN,b_word=b/SET_GRAIN,high_bits=M3_HIGH_BITS(a%SET_GRAIN),low_bits=M3_LOW_BITS(b%SET_GRAIN);if(a_word==b_word){s[a_word]|=(high_bits&low_bits);}else{s[a_word]|=high_bits;for(i=a_word+1;i<b_word;++i)s[i]=~(WORD_T)0;s[b_word]|=low_bits;}}}",
 "static void __stdcall m3_set_singleton(WORD_T a,WORD_T*s){s[a/SET_GRAIN]|=(((WORD_T)1)<<(a%SET_GRAIN));}",
-"#define m3_shift_T(T) T m3_shift_##T(T value,INTEGER shift){if((shift>=(sizeof(T)*8))||(shift<=-(sizeof(T)*8)))value=0;else if(shift<0)value<<=shift;else if(shift>0)value>>=shift;return value;}",
+"#define m3_shift_T(T) static T m3_shift_##T(T value,INTEGER shift){if((shift>=(sizeof(T)*8))||(shift<=-(sizeof(T)*8)))value=0;else if(shift<0)value<<=shift;else if(shift>0)value>>=shift;return value;}",
 "m3_shift_T(UINT32)",
 "m3_shift_T(UINT64)",
 "/* return positive form of a negative value, avoiding overflow */",
@@ -764,13 +766,14 @@ BEGIN
     RETURN u.stack.get(n);
 END get;
 
-PROCEDURE SuppressLineDirective(u: U; adjust: INTEGER; <*UNUSED*>reason: TEXT) =
+PROCEDURE SuppressLineDirective(u: U; adjust: INTEGER; reason: TEXT) =
 BEGIN
     INC(u.suppress_line_directive, adjust);
-    (*
-    RTIO.PutText("suppress_line_directive now " & Fmt.Int(u.suppress_line_directive) & " due to " & reason & "\n");
-    RTIO.Flush();
-    *)
+    IF u.debug THEN
+        u.wr.Flush();
+        RTIO.PutText("suppress_line_directive now " & Fmt.Int(u.suppress_line_directive) & " due to " & reason & "\n");
+        RTIO.Flush();
+    END
 END SuppressLineDirective;
 
 PROCEDURE print(u: U; text: TEXT) = <*FATAL ANY*>
@@ -1340,7 +1343,7 @@ PROCEDURE set_runtime_proc(u: U; name: Name; p: Proc) =
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var =
-  VAR var := NEW(CVar, type := type, name := name).Init();
+  VAR var := NEW(CVar, u := u, type := type, name := name).Init();
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("import_global");
@@ -1359,7 +1362,7 @@ PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
 CONST Const = ARRAY BOOLEAN OF TEXT{"", " const "};
 
 PROCEDURE declare_segment(u: U; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var =
-VAR var := NEW(CVar, name := name, is_const := is_const).Init();
+VAR var := NEW(CVar, u := u, name := name, is_const := is_const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
     length := 0;
@@ -1437,23 +1440,26 @@ PROCEDURE declare_constant(u: U; name: Name; byte_size: ByteSize; alignment: Ali
 PROCEDURE DeclareGlobal(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID;
                         exported, inited, is_const: BOOLEAN): Var =
-  CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
-  VAR var := NEW(CVar, name := name).Init();
-  BEGIN
+CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
+VAR   var := NEW(CVar, u := u, type := type, name := name, is_const := is_const,
+                 (*inited := inited, typeid := typeid, alignment := alignment,*)
+                 proc := u.current_proc, byte_size := byte_size).Init();
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   (DeclTag [is_const]);
-      u.wr.ZName (name);
-      u.wr.Int   (byte_size);
-      u.wr.Int   (alignment);
-      u.wr.TName (type);
-      u.wr.Tipe  (typeid);
-      u.wr.Bool  (exported);
-      u.wr.Bool  (inited);
-      u.wr.VName (var);
-      u.wr.NL    ();
+        u.wr.Cmd   (DeclTag [is_const]);
+        u.wr.ZName (name);
+        u.wr.Int   (byte_size);
+        u.wr.Int   (alignment);
+        u.wr.TName (type);
+        u.wr.Tipe  (typeid);
+        u.wr.Bool  (exported);
+        u.wr.Bool  (inited);
+        u.wr.VName (var);
+        u.wr.NL    ();
     END;
+    print(u, var.Declare(" M3_INIT;"));
     RETURN var;
-  END DeclareGlobal;
+END DeclareGlobal;
 
 PROCEDURE ExtraScope_Open(u: U) =
 BEGIN
@@ -1485,7 +1491,7 @@ END Var_Declare;
 PROCEDURE declare_local(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
                         frequency: Frequency): Var =
-VAR var := NEW(CVar, type := type, name := name, up_level := up_level,
+VAR var := NEW(CVar, u := u, type := type, name := name, up_level := up_level,
                byte_size := byte_size, proc := u.current_proc).Init();
 BEGIN
     IF u.debug THEN
@@ -1570,7 +1576,7 @@ BEGIN
         name := M3ID.Add("_static_link");
         type_text := NARROW(function.parent, CProc).FrameType() & "*";
     END;
-    var := NEW(CVar, type := type, name := name, byte_size := byte_size, up_level := up_level, proc := function, type_text := type_text).Init();
+    var := NEW(CVar, u := u, type := type, name := name, byte_size := byte_size, up_level := up_level, proc := function, type_text := type_text).Init();
     IF u.debug THEN
         u.wr.Cmd   ("declare_param");
         u.wr.ZName (name);
@@ -1688,7 +1694,7 @@ PROCEDURE init_to_offset(u: U; offset: ByteOffset) =
     <* ASSERT u.current_init_offset >= 0 *>
     IF pad > 0 THEN
       end_init_helper(u);
-      init_fields.addhi ("char " & M3ID.ToText(FixName(0)) & "[" & Fmt.Int(pad) & "];");
+      init_fields.addhi ("char " & M3ID.ToText(FixName(u, 0)) & "[" & Fmt.Int(pad) & "];");
       initializer.addhi("{0}");
     END;
   END init_to_offset;
@@ -1706,7 +1712,7 @@ BEGIN
     init_to_offset(u, offset);
     IF offset = 0 OR u.init_type # type OR offset # u.current_init_offset THEN
       end_init_helper(u);
-      u.init_fields.addhi(typeToText[type] & " " & M3ID.ToText(FixName(0)));
+      u.init_fields.addhi(typeToText[type] & " " & M3ID.ToText(FixName(u, 0)));
     END;
     INC(u.init_type_count);
     u.init_type := type;
@@ -1887,7 +1893,7 @@ PROCEDURE declare_procedure(u: U; name: Name; xparams: INTEGER;
                             return_type: Type; level: INTEGER;
                             callingConvention: CallingConvention;
                             exported: BOOLEAN; parent: Proc): Proc =
-VAR is_exception_handler := level > 0 AND IsNameExceptionHandler(u, M3ID.ToText(FixName(name)));
+VAR is_exception_handler := level > 0 AND IsNameExceptionHandler(u, M3ID.ToText(FixName(u, name)));
     add_static_link := level > 0 AND NOT is_exception_handler;
     n_params := xparams + ORD(add_static_link);
     proc := NEW(CProc, name := name, n_params := n_params,
@@ -3084,23 +3090,24 @@ PROCEDURE zero(u: U; n: INTEGER; type: MType) =
 (*----------------------------------------------------------- conversions ---*)
 
 PROCEDURE loophole(u: U; from, to: ZType) =
-  (* s0.to := LOOPHOLE(s0.from, to) *)
-  BEGIN
+(* s0.to := LOOPHOLE(s0.from, to) *)
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("loophole");
-      u.wr.TName (from);
-      u.wr.TName (to);
-      u.wr.NL    ();
+        u.wr.Cmd   ("loophole");
+        u.wr.TName (from);
+        u.wr.TName (to);
+        u.wr.NL    ();
     END;
     print(u, " /* loophole */ ");
     (* If type is already a pointer, then we should not add pointer here.
-     * As well, if type does not contain a pointer, then we should store the
-     * value in a non-stack-packed temporary and use its address.
-     * We don't have code to queue up temporary declarations.
-     * (for that matter, to limit/reuse temporaries)
-     *)
-    u.stack.put(0, "*(" & typeToText[to] & "*)&" & get(u, 0));
-  END loophole;
+    * As well, if type does not contain a pointer, then we should store the
+    * value in a non-stack-packed temporary and use its address.
+    * We don't have code to queue up temporary declarations.
+    * (for that matter, to limit/reuse temporaries)
+    *)
+    (* u.stack.put(0, " /* loophole " & typeToText[to] & " */ * (" & typeToText[to] & "* )&" & get(u, 0)); *)
+       u.stack.put(0, " /* loophole " & typeToText[to] & " */   (" & typeToText[to] & "  ) " & get(u, 0));
+END loophole;
 
 (*------------------------------------------------ traps & runtime checks ---*)
 
