@@ -1,6 +1,6 @@
 MODULE M3C;
 
-IMPORT RefSeq, TextSeq, Wr, Text, Fmt;
+IMPORT RefSeq, TextSeq, IntSeq, Wr, Text, Fmt;
 IMPORT M3CG, M3CG_Ops, Target, TIntN, TFloat, TargetMap;
 IMPORT Stdio;
 IMPORT RTIO, RTProcess;
@@ -54,6 +54,12 @@ REVEAL
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
         param_count := 0;
         label := 0;
+        
+        (* Every time we see a struct size, append it here.
+           Later we will sort/unique and typedef them all.
+           typedef struct { char a[size]; } m3struct_size_t;
+        *)
+        struct_sizes: IntSeq.T;
 
         (* initialization support *)
 
@@ -534,6 +540,21 @@ CONST IntegerTypeSignedness = ARRAY OF BOOLEAN { FALSE, TRUE };*)
 
 
 CONST Prefix = ARRAY OF TEXT {
+(* temporary partial solution *)
+"#define M3STRUCT(n) m3struct_##n##_t",
+"#define M3STRUCT_DECLARE(n) typedef struct { char a[n]; } M3STRUCT(n);",
+"M3STRUCT_DECLARE(1)",
+"M3STRUCT_DECLARE(2)",
+"M3STRUCT_DECLARE(3)",
+"M3STRUCT_DECLARE(4)",
+"M3STRUCT_DECLARE(5)",
+"M3STRUCT_DECLARE(6)",
+"M3STRUCT_DECLARE(7)",
+"M3STRUCT_DECLARE(8)",
+"M3STRUCT_DECLARE(9)",
+"M3STRUCT_DECLARE(10)",
+"M3STRUCT_DECLARE(11)",
+"M3STRUCT_DECLARE(12)",
 "#include <string.h>", (* memcmp, memmove *)
 "#ifdef __cplusplus",
 "#define M3_INIT",
@@ -766,14 +787,16 @@ BEGIN
     RETURN u.stack.get(n);
 END get;
 
-PROCEDURE SuppressLineDirective(u: U; adjust: INTEGER; reason: TEXT) =
+PROCEDURE SuppressLineDirective(u: U; adjust: INTEGER; <*UNUSED*>reason: TEXT) =
 BEGIN
     INC(u.suppress_line_directive, adjust);
+    (*
     IF u.debug THEN
         u.wr.Flush();
         RTIO.PutText("suppress_line_directive now " & Fmt.Int(u.suppress_line_directive) & " due to " & reason & "\n");
         RTIO.Flush();
     END
+    *)
 END SuppressLineDirective;
 
 PROCEDURE print(u: U; text: TEXT) = <*FATAL ANY*>
@@ -835,13 +858,14 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
 VAR u := NEW (U);
 BEGIN
     u.wr := Wrx86.New (Stdio.stdout);
-    u.debug := TRUE;
+    (*u.debug := TRUE;*)
     u.c := cfile;
     u.init_fields := NEW(TextSeq.T).init();
     u.initializer := NEW(TextSeq.T).init();
     u.stack := NEW(TextSeq.T).init();
     u.params := NEW(TextSeq.T).init();
     u.import_procedure_repeat := NEW(TextSeq.T).init();
+    u.struct_sizes := NEW(IntSeq.T).init();
 (*
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1477,10 +1501,16 @@ END ExtraScope_Close;
 
 PROCEDURE Var_Declare(var: CVar; tail := ";"): TEXT =
 VAR text := var.type_text;
+    size := var.byte_size;
 BEGIN
     IF text = NIL THEN
         IF var.type = Type.Struct THEN
-            text := "struct{char a[" & Fmt.Int(var.byte_size) & "];}";
+            var.u.struct_sizes.addhi(size);
+            IF size <= 12 THEN
+                text := "M3STRUCT(" & Fmt.Int(size) & ")";
+            ELSE
+                text := "struct{char a[" & Fmt.Int(size) & "];}";
+            END
         ELSE
             text := typeToText[var.type];
         END;
@@ -1525,6 +1555,7 @@ END declare_local;
 PROCEDURE function_prototype(proc: CProc; tail := ""): TEXT =
 VAR params := proc.params;
     text := typeToText[proc.return_type] & " __stdcall " & M3ID.ToText(proc.name);
+    after_param: TEXT;
 BEGIN
     IF NUMBER (params^) = 0 THEN
         text := text & "(void)";
@@ -1532,18 +1563,12 @@ BEGIN
         text := text & "(";
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
-                IF param.type_text # NIL THEN
-                    text := text & param.type_text;
-                ELSE
-                    text := text & typeToText[param.type];
-                END;
-                text := text & " ";
-                text := text & M3ID.ToText(param.name);
                 IF i # LAST(params^) THEN
-                    text := text & ",";
+                    after_param := ",";
                 ELSE
-                    text := text & ")";
+                    after_param := ")";
                 END;
+                text := text & param.Declare(after_param);
             END;
         END;
     END;
@@ -1962,10 +1987,6 @@ BEGIN
     u.in_proc := TRUE;
     u.current_proc := proc;
 
-    WHILE u.import_procedure_repeat.size() > 0 DO
-        print(u, u.import_procedure_repeat.remlo());
-    END;
-
     IF proc.forward_declared_frame_type THEN
         print(u, "struct " & frame_type & " {");
         print(u, "void* _unused;"); (* add field to ensure frame not empty *)
@@ -2042,6 +2063,9 @@ BEGIN
     u.in_proc := FALSE;
     print(u, "}");
     ExtraScope_Close(u);
+    WHILE u.import_procedure_repeat.size() > 0 DO
+        print(u, u.import_procedure_repeat.remlo());
+    END;
 END end_procedure;
 
 PROCEDURE begin_block(u: U) =
