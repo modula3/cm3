@@ -858,7 +858,7 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
 VAR u := NEW (U);
 BEGIN
     u.wr := Wrx86.New (Stdio.stdout);
-    (*u.debug := TRUE;*)
+    u.debug := TRUE;
     u.c := cfile;
     u.init_fields := NEW(TextSeq.T).init();
     u.initializer := NEW(TextSeq.T).init();
@@ -2743,7 +2743,7 @@ PROCEDURE not(u: U; type: IType) =
       u.wr.NL    ();
       print(u, " /* not */ ");
     END;
-    pop(u, 2);
+    pop(u);
     push(u, type, cast("~" & cast(s0, type), type));
   END not;
 
