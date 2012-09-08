@@ -3,6 +3,7 @@
 %pragma(modula3) library="GLUT";
 %pragma(modula3) unsafe="true";
 
+
 #define FGAPI
 #define FGAPIENTRY
 
@@ -10,16 +11,12 @@
 // not necessary to import Ctypes as done be default IMPORT Ctypes AS C;
 
 %insert(m3makefile) %{
-import ("opengl") 
+import ("opengl")
 import_lib("glut","/usr/lib")
 %}
 
-%insert(m3wrapimpl) %{
-IMPORT GL;
-%}
 
 %insert(m3wrapintf) %{
-IMPORT GL;
 
 (*
 /*
@@ -270,148 +267,44 @@ CONST
 
 %}
 
-%insert(m3rawintf) %{
-IMPORT GL;
-%}
+//remove dependancy on GL and typedef the GLenum to its base GL type
+typedef unsigned int     GLenum;
 
-//map the GLint,GLfloat,GLdouble types to either M3 types or GL exported types
+//%typemap("m3rawintype")   GLenum %{GL.GLenum%}
+//%typemap("m3wrapintype")  GLenum %{GL.GLenum%}
 
-%typemap(m3rawintype) GLenum %{GL.GLenum%}
-%typemap(m3wrapintype) GLenum %{GL.GLenum%}
+//map the GLint,GLfloat,GLdouble types to M3 types
 
-%typemap(m3rawintype) GLint %{INTEGER%}
-%typemap(m3wrapintype) GLint %{INTEGER%}
+%typemap("m3rawintype")   GLint %{INTEGER%}
+%typemap("m3wrapintype")  GLint %{INTEGER%}
 
-%typemap(m3rawintype) GLdouble %{GL.GLdouble%}
-%typemap(m3wrapintype) GLdouble %{LONGREAL%}
+%typemap("m3rawintype")   GLdouble %{LONGREAL%}
+%typemap("m3wrapintype")  GLdouble %{LONGREAL%}
 
-%typemap(m3rawintype) GLfloat %{GL.GLfloat%}
-%typemap(m3wrapintype) GLfloat %{REAL%}
-%typemap(m3wraprettype) GLfloat %{REAL%}
+%typemap("m3rawintype")   GLfloat %{REAL%}
+%typemap("m3wrapintype")  GLfloat %{REAL%}
+%typemap("m3wraprettype") GLfloat %{REAL%}
 
-//the GetColor raw return type 
-%typemap(m3rawrettype)  GLfloat %{GL.GLfloat%}
+//the GetColor raw return type
+%typemap("m3rawrettype")  GLfloat %{REAL%}
+
+
+//strip the glut prefix from all names
+%rename("%(strip:[glut])s") "";
+
+//HENCE we dont need all these renames
 
 //RENAMES
 //generated with swig -generaterename m3rename -modula3 glut.i
 //awk '{print "%rename("$2")" $2 }' m3rename.i > renames.out
 //then some replacements
 
+/*
 %rename("Init")  glutInit;
 %rename("InitWindowPosition")  glutInitWindowPosition;
 %rename("InitWindowSize")  glutInitWindowSize;
-%rename("InitDisplayMode")  glutInitDisplayMode;
-%rename("InitDisplayString")  glutInitDisplayString;
-%rename("MainLoop")  glutMainLoop;
-%rename("CreateWindow")  glutCreateWindow;
-%rename("CreateSubWindow")  glutCreateSubWindow;
-%rename("DestroyWindow")  glutDestroyWindow;
-%rename("SetWindow")  glutSetWindow;
-%rename("GetWindow")  glutGetWindow;
-%rename("SetWindowTitle")  glutSetWindowTitle;
-%rename("SetIconTitle")  glutSetIconTitle;
-%rename("ReshapeWindow")  glutReshapeWindow;
-%rename("PositionWindow")  glutPositionWindow;
-%rename("ShowWindow")  glutShowWindow;
-%rename("HideWindow")  glutHideWindow;
-%rename("IconifyWindow")  glutIconifyWindow;
-%rename("PushWindow")  glutPushWindow;
-%rename("PopWindow")  glutPopWindow;
-%rename("FullScreen")  glutFullScreen;
-%rename("PostWindowRedisplay")  glutPostWindowRedisplay;
-%rename("PostRedisplay")  glutPostRedisplay;
-%rename("SwapBuffers")  glutSwapBuffers;
-%rename("WarpPointer")  glutWarpPointer;
-%rename("SetCursor")  glutSetCursor;
-%rename("EstablishOverlay")  glutEstablishOverlay;
-%rename("RemoveOverlay")  glutRemoveOverlay;
-%rename("UseLayer")  glutUseLayer;
-%rename("PostOverlayRedisplay")  glutPostOverlayRedisplay;
-%rename("PostWindowOverlayRedisplay")  glutPostWindowOverlayRedisplay;
-%rename("ShowOverlay")  glutShowOverlay;
-%rename("HideOverlay")  glutHideOverlay;
-%rename("DestroyMenu")  glutDestroyMenu;
-%rename("GetMenu")  glutGetMenu;
-%rename("SetMenu")  glutSetMenu;
-%rename("AddMenuEntry")  glutAddMenuEntry;
-%rename("AddSubMenu")  glutAddSubMenu;
-%rename("ChangeToMenuEntry")  glutChangeToMenuEntry;
-%rename("ChangeToSubMenu")  glutChangeToSubMenu;
-%rename("RemoveMenuItem")  glutRemoveMenuItem;
-%rename("AttachMenu")  glutAttachMenu;
-%rename("DetachMenu")  glutDetachMenu;
-%rename("CreateMenu")  glutCreateMenu;
-%rename("TimerFunc")  glutTimerFunc;
-%rename("IdleFunc")  glutIdleFunc;
-%rename("KeyboardFunc")  glutKeyboardFunc;
-%rename("SpecialFunc")  glutSpecialFunc;
-%rename("ReshapeFunc")  glutReshapeFunc;
-%rename("VisibilityFunc")  glutVisibilityFunc;
-%rename("DisplayFunc")  glutDisplayFunc;
-%rename("MouseFunc")  glutMouseFunc;
-%rename("MotionFunc")  glutMotionFunc;
-%rename("PassiveMotionFunc")  glutPassiveMotionFunc;
-%rename("EntryFunc")  glutEntryFunc;
-%rename("KeyboardUpFunc")  glutKeyboardUpFunc;
-%rename("SpecialUpFunc")  glutSpecialUpFunc;
-%rename("JoystickFunc")  glutJoystickFunc;
-%rename("MenuStateFunc")  glutMenuStateFunc;
-%rename("MenuStatusFunc")  glutMenuStatusFunc;
-%rename("OverlayDisplayFunc")  glutOverlayDisplayFunc;
-%rename("WindowStatusFunc")  glutWindowStatusFunc;
-%rename("SpaceballMotionFunc")  glutSpaceballMotionFunc;
-%rename("SpaceballRotateFunc")  glutSpaceballRotateFunc;
-%rename("SpaceballButtonFunc")  glutSpaceballButtonFunc;
-%rename("ButtonBoxFunc")  glutButtonBoxFunc;
-%rename("DialsFunc")  glutDialsFunc;
-%rename("TabletMotionFunc")  glutTabletMotionFunc;
-%rename("TabletButtonFunc")  glutTabletButtonFunc;
-%rename("Get")  glutGet;
-%rename("DeviceGet")  glutDeviceGet;
-%rename("GetModifiers")  glutGetModifiers;
-%rename("LayerGet")  glutLayerGet;
-%rename("BitmapCharacter")  glutBitmapCharacter;
-%rename("BitmapWidth")  glutBitmapWidth;
-%rename("StrokeCharacter")  glutStrokeCharacter;
-%rename("StrokeWidth")  glutStrokeWidth;
-%rename("BitmapLength")  glutBitmapLength;
-%rename("StrokeLength")  glutStrokeLength;
-%rename("WireCube")  glutWireCube;
-%rename("SolidCube")  glutSolidCube;
-%rename("WireSphere")  glutWireSphere;
-%rename("SolidSphere")  glutSolidSphere;
-%rename("WireCone")  glutWireCone;
-%rename("SolidCone")  glutSolidCone;
-%rename("WireTorus")  glutWireTorus;
-%rename("SolidTorus")  glutSolidTorus;
-%rename("WireDodecahedron")  glutWireDodecahedron;
-%rename("SolidDodecahedron")  glutSolidDodecahedron;
-%rename("WireOctahedron")  glutWireOctahedron;
-%rename("SolidOctahedron")  glutSolidOctahedron;
-%rename("WireTetrahedron")  glutWireTetrahedron;
-%rename("SolidTetrahedron")  glutSolidTetrahedron;
-%rename("WireIcosahedron")  glutWireIcosahedron;
-%rename("SolidIcosahedron")  glutSolidIcosahedron;
-%rename("WireTeapot")  glutWireTeapot;
-%rename("SolidTeapot")  glutSolidTeapot;
-%rename("GameModeString")  glutGameModeString;
-%rename("EnterGameMode")  glutEnterGameMode;
-%rename("LeaveGameMode")  glutLeaveGameMode;
-%rename("GameModeGet")  glutGameModeGet;
-%rename("VideoResizeGet")  glutVideoResizeGet;
-%rename("SetupVideoResizing")  glutSetupVideoResizing;
-%rename("StopVideoResizing")  glutStopVideoResizing;
-%rename("VideoResize")  glutVideoResize;
-%rename("VideoPan")  glutVideoPan;
-%rename("SetColor")  glutSetColor;
-%rename("CopyColormap")  glutCopyColormap;
-%rename("IgnoreKeyRepeat")  glutIgnoreKeyRepeat;
-%rename("SetKeyRepeat")  glutSetKeyRepeat;
-%rename("ForceJoystickFunc")  glutForceJoystickFunc;
-%rename("ExtensionSupported")  glutExtensionSupported;
-%rename("ReportErrors")  glutReportErrors;
-%rename("SolidSierpinskiSponge")  glutSolidSierpinskiSponge;
-
+... lots removed
+*/
 
 /*
  * Initialization functions, see fglut_init.c
@@ -455,8 +348,6 @@ FGAPI void    FGAPIENTRY glutFullScreen( void );
 FGAPI void    FGAPIENTRY glutPostWindowRedisplay( int window );
 FGAPI void    FGAPIENTRY glutPostRedisplay( void );
 FGAPI void    FGAPIENTRY glutSwapBuffers( void );
-
-//rename up to here
 
 /*
  * Mouse cursor functions, see freeglut_cursor.c
@@ -513,11 +404,6 @@ FGAPI int     FGAPIENTRY glutDeviceGet( GLenum query );
 FGAPI int     FGAPIENTRY glutGetModifiers( void );
 FGAPI int     FGAPIENTRY glutLayerGet( GLenum query );
 
-/*
- * Font stuff, see freeglut_font.c
- */
-
-%include glutfont.i
 
 /*
  * Geometry functions, see freeglut_geometry.c
@@ -587,3 +473,9 @@ FGAPI void    FGAPIENTRY glutReportErrors( void );
 
 %include glutext.i
 
+/*
+ * Font stuff, see freeglut_font.c
+ *
+*/
+
+%include glutfont.i
