@@ -7,7 +7,7 @@
 
 INTERFACE FPU;
 
-<*EXTERNAL ldexp*> PROCEDURE scalb (x: LONGREAL; n: INTEGER): LONGREAL;
+<*EXTERNAL FPU__ldexp*> PROCEDURE scalb (x: LONGREAL; n: INTEGER): LONGREAL;
 (* Formerly, the default IEEE implementation of scalb was
   "<*ASSERT FALSE*>". *)
 
