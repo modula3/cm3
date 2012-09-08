@@ -540,6 +540,12 @@ CONST IntegerTypeSignedness = ARRAY OF BOOLEAN { FALSE, TRUE };*)
 
 
 CONST Prefix = ARRAY OF TEXT {
+(* It is unfortunate to #include anything; try to minimize these.
+ * Best way is to provide m3_ wrappers in m3core, at performance cost.
+ *)
+"#include <string.h>", (* memcmp, memmove *)
+"#include <math.h>", (* floor, ceil *)
+"#include <stddef.h>", (* size_t, ptrdiff_t *)
 (* temporary partial solution *)
 "#define M3STRUCT(n) m3struct_##n##_t",
 "#define M3STRUCT_DECLARE(n) typedef struct { char a[n]; } M3STRUCT(n);",
@@ -555,7 +561,6 @@ CONST Prefix = ARRAY OF TEXT {
 "M3STRUCT_DECLARE(10)",
 "M3STRUCT_DECLARE(11)",
 "M3STRUCT_DECLARE(12)",
-"#include <string.h>", (* memcmp, memmove *)
 "#ifdef __cplusplus",
 "#define M3_INIT",
 "#define new m3_new",
@@ -608,13 +613,20 @@ CONST Prefix = ARRAY OF TEXT {
 (*
 "/* WORD_T/INTEGER are always exactly the same size as a pointer.",
 " * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. */",
-*)
 "#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64) || defined(__LP64__) || defined(__x86_64__) || defined(__ppc64__)",
 "typedef INT64 INTEGER;",
 "typedef UINT64 WORD_T;",
 "#else",
 "typedef long INTEGER;",
 "typedef unsigned long WORD_T;",
+"#endif",
+*)
+"#if __INITIAL_POINTER_SIZE == 64",
+"typedef __int64 INTEGER;",
+"typedef unsigned __int64 WORD_T;",
+"#else",
+"typedef ptrdiff_t INTEGER;",
+"typedef size_t WORD_T;",
 "#endif",
 "typedef char *ADDRESS;",
 "#define NIL ((ADDRESS)0)",
@@ -1380,6 +1392,7 @@ PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
       u.wr.NL    ();
       print(u, " /* import_global */ ");
     END;
+    print(u, "extern " & typeToText[type] & " " & M3ID.ToText(name) & ";");
     RETURN var;
   END import_global;
 
@@ -1755,7 +1768,8 @@ PROCEDURE init_int(u: U; offset: ByteOffset; READONLY value: Target.Int; type: T
       print(u, " /* init_int */ ");
     END;
     init_helper(u, offset, type);
-    u.initializer.addhi(TInt.ToText(value));
+    (* IntLiteral includes suffixes like U, ULL, UI64, etc. *)
+    u.initializer.addhi(IntLiteral(type, value));
   END init_int;
 
 PROCEDURE init_proc(u: U; offset: ByteOffset; p: Proc) =
@@ -1841,7 +1855,12 @@ PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
     END;
   END init_chars;
 
-PROCEDURE FloatToText(READONLY float: Target.Float): TEXT =
+PROCEDURE IntLiteral(type: Type; READONLY i: Target.Int): TEXT =
+BEGIN
+    RETURN "MAKE_" & typeToText[type] & "(" & TInt.ToText(i) & ")";
+END IntLiteral;
+
+PROCEDURE FloatLiteral(READONLY float: Target.Float): TEXT =
 VAR suffix := '\000';
     cBuf, modulaBuf: ARRAY [0..BITSIZE(EXTENDED) + 1] OF CHAR;
     len := TFloat.ToChars(float, modulaBuf);
@@ -1871,7 +1890,7 @@ BEGIN
         INC(j);
     END;
     RETURN Text.FromChars(SUBARRAY(cBuf, 0, j));
-END FloatToText;
+END FloatLiteral;
 
 PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
 BEGIN
@@ -1883,7 +1902,7 @@ BEGIN
     END;
     print(u, " /* init_float */ ");
     init_helper(u, offset, TargetMap.Float_types[TFloat.Prec(float)].cg_type);
-    u.initializer.addhi(FloatToText(float));
+    u.initializer.addhi(FloatLiteral(float));
 END init_float;
 
 (*------------------------------------------------------------ PROCEDUREs ---*)
@@ -2394,8 +2413,8 @@ BEGIN
         u.wr.NL    ();
     END;
     print(u, " /* load_integer */ ");
-    (* MAKE_type appends suffixes like U, ULL, UI64, etc. *)
-    push(u, type, "((" & typeToText[type] & ") MAKE_" & typeToText[type] & "(" & TInt.ToText(i) & "))");
+    (* IntLiteral includes suffixes like U, ULL, UI64, etc. *)
+    push(u, type, "((" & typeToText[type] & ")" & IntLiteral(type, i) & ")");
 END load_integer;
 
 PROCEDURE load_float(u: U; type: RType; READONLY float: Target.Float) =
@@ -2408,8 +2427,8 @@ BEGIN
         u.wr.NL    ();
     END;
     print(u, " /* load_float */ ");
-    (* FloatToText includes suffixes like "F" for float, "" for double, "L" for long double *)
-    push(u, type, "((" & typeToText[type] & ")" & FloatToText(float) & ")");
+    (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double *)
+    push(u, type, "((" & typeToText[type] & ")" & FloatLiteral(float) & ")");
 END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
@@ -3172,7 +3191,7 @@ PROCEDURE check_lo(u: U; type: IType; READONLY i: Target.Int; code: RuntimeError
       u.wr.NL    ();
       print(u, " /* check_lo */ ");
     END;
-    print(u, "if(" & paren(s0) & "<" & TInt.ToText(i) & ")");
+    print(u, "if(" & paren(s0) & "<" & IntLiteral(type, i) & ")");
     reportfault(u, code);
   END check_lo;
 
@@ -3188,7 +3207,7 @@ PROCEDURE check_hi(u: U; type: IType; READONLY i: Target.Int; code: RuntimeError
       u.wr.NL    ();
       print(u, " /* check_hi */ ");
     END;
-    print(u, "if(" & TInt.ToText(i) & "<" & paren(s0) & ")");
+    print(u, "if(" & IntLiteral(type, i) & "<" & paren(s0) & ")");
     reportfault(u, code);
   END check_hi;
 
@@ -3204,7 +3223,7 @@ PROCEDURE check_range(u: U; type: IType; READONLY a, b: Target.Int; code: Runtim
       u.wr.NL    ();
       print(u, " /* check_range */ ");
     END;
-    print(u, "if(" & paren(s0) & "<" & TInt.ToText(a) & "||" & TInt.ToText(b) & "<"  & paren(s0) & ")");
+    print(u, "if(" & paren(s0) & "<" & IntLiteral(type, a) & "||" & IntLiteral(type, b) & "<"  & paren(s0) & ")");
     reportfault(u, code);
   END check_range;
 
