@@ -5,50 +5,25 @@
 
 */
 
-%typemap(m3rawintype)  GLdouble offset[3] %{ARRAY [0..2] OF LONGREAL%}
-%typemap(m3wrapintype)  GLdouble offset[3] %{ARRAY [0..2] OF LONGREAL%}
+%typemap(m3rawintype)     GLdouble offset[3] %{ARRAY [0..2] OF LONGREAL%}
+%typemap(m3wrapintype)    GLdouble offset[3] %{ARRAY [0..2] OF LONGREAL%}
 
 %typemap("m3rawrettype")  GLUTproc %{REF CallBack0T%}
-%typemap("m3wraprettype")  GLUTproc %{REF CallBack0T%}
+%typemap("m3wraprettype") GLUTproc %{REF CallBack0T%}
 
 //For the WindowData functions
 %typemap("m3rawrettype")  void * %{REFANY%}
-%typemap("m3wraprettype")  void * %{REFANY%}
-%typemap(m3rawintype) void * %{REFANY%}
-%typemap(m3wrapintype) void * %{REFANY%}
-
-%rename("MainLoopEvent") glutMainLoopEvent;
-%rename("LeaveMainLoop") glutLeaveMainLoop;
-%rename("MouseWheelFunc") glutMouseWheelFunc;
-%rename("CloseFunc") glutCloseFunc;
-%rename("WMCloseFunc") glutWMCloseFunc;
-%rename("MenuDestroyFunc") glutMenuDestroyFunc;
-%rename("SetOption") glutSetOption;
-%rename("GetWindowData") glutGetWindowData;
-%rename("SetWindowData") glutSetWindowData;
-%rename("GetMenuData") glutGetMenuData;
-%rename("SetMenuData") glutSetMenuData;
-%rename("BitmapHeight") glutBitmapHeight;
-%rename("StrokeHeight") glutStrokeHeight;
-%rename("BitmapString") glutBitmapString;
-%rename("StrokeString") glutStrokeString;
-%rename("WireRhombicDodecahedron") glutWireRhombicDodecahedron;
-%rename("SolidRhombicDodecahedron") glutSolidRhombicDodecahedron;
-%rename("WireSierpinskiSponge") glutWireSierpinskiSponge;
-%rename("SolidSierpinskiSponge") glutSolidSierpinskiSponge;
-%rename("WireCylinder") glutWireCylinder;
-%rename("SolidCylinder") glutSolidCylinder;
-%rename("GetProcAddress") glutGetProcAddress;
+%typemap("m3wraprettype") void * %{REFANY%}
+%typemap("m3rawintype")   void * %{REFANY%}
+%typemap("m3wrapintype")  void * %{REFANY%}
 
 
 %insert(m3wrapintf) %{
 
 (*
-
   freeglut_ext.h
 
  GLUT API Extension macro definitions -- behaviour when the user clicks on an "x" to close a window
-
 
 *)
 
@@ -125,13 +100,6 @@ FGAPI void    FGAPIENTRY glutSetWindowData(void* data);
 FGAPI void*   FGAPIENTRY glutGetMenuData( void );
 FGAPI void    FGAPIENTRY glutSetMenuData(void* data);
 
-/*
- * Font stuff, see freeglut_font.c
- */
-FGAPI int     FGAPIENTRY glutBitmapHeight( void* font );
-FGAPI GLfloat FGAPIENTRY glutStrokeHeight( void* font );
-FGAPI void    FGAPIENTRY glutBitmapString( void* font, const unsigned char *string );
-FGAPI void    FGAPIENTRY glutStrokeString( void* font, const unsigned char *string );
 
 /*
  * Geometry functions, see freeglut_geometry.c

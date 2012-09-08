@@ -1,21 +1,8 @@
 
 %insert(m3wrapintf) %{
-
-TYPE
-(* rename from raw *)
-  BYTE = GLUTRaw.BYTE;
-  CallBack0T = GLUTRaw.CallBack0T;
-  CallBack1T = GLUTRaw.CallBack1T;
-  CallBack2T = GLUTRaw.CallBack2T;
-  CallBack3T = GLUTRaw.CallBack3T;
-  CallBack4T = GLUTRaw.CallBack4T;
-  CallBack5T = GLUTRaw.CallBack5T;
-  CallBack6T = GLUTRaw.CallBack6T;
-
-%}
-
-%insert(m3rawintf) %{
-
+(*
+ * Callback functions, see freeglut_callbacks.c
+*)
 TYPE
   BYTE = [0..255];
   CallBack0T = PROCEDURE();
@@ -28,14 +15,20 @@ TYPE
 
 %}
 
+%insert(m3rawintf) %{
+TYPE
+  BYTE = [0..255];
+  CallBack0T = PROCEDURE();
+  CallBack1T = PROCEDURE(p1 : INTEGER);
+  CallBack2T = PROCEDURE(p1,p2 : INTEGER);
+  CallBack3T = PROCEDURE(p1,p2,p3 : INTEGER);
+  CallBack4T = PROCEDURE(p1,p2,p3,p4 : INTEGER);
+  CallBack5T = PROCEDURE(p1 : BYTE; p2,p3 : INTEGER);
+  CallBack6T = PROCEDURE(p1 : CARDINAL; p2,p3,p4 : INTEGER);
+%}
 
-/*
-dont need these
-%typemap(m3wrapintype) void (*) (int) %{CallBack2T%}
-%typemap(m3rawintype) void (*) (int) %{CallBack2T%}
-*/
-
-%typemap("m3wrapintype:import")  void (*) (void) %{GLUTRaw%}
+//deprecated we dont import raw into safe interface
+//%typemap("m3wrapintype:import")  void (*) (void) %{GLUTRaw%}
 
 //these typemaps to remove the VAR for the callback so can pass procedure directly
 %typemap(m3wrapinmode)  void (*) (void)  %{%}
@@ -113,3 +106,4 @@ FGAPI void    FGAPIENTRY glutButtonBoxFunc( void (* callback)( int, int ) );
 FGAPI void    FGAPIENTRY glutDialsFunc( void (* callback)( int, int ) );
 FGAPI void    FGAPIENTRY glutTabletMotionFunc( void (* callback)( int, int ) );
 FGAPI void    FGAPIENTRY glutTabletButtonFunc( void (* callback)( int, int, int, int ) );
+
