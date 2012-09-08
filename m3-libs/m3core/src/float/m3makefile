@@ -7,30 +7,48 @@
 %      modified on Wed May  5 11:53:58 PDT 1993 by mjordan
 
 _FloatPieces = {
-% Fill in TARGET or TARGET_ARCH or TARGET_OS specifics here if they exist,
-% otherwise we fallback to defaults below.
-  "LINUXLIBC6"    : [ "IEEE", "IEEE-le", "C99" ],
-  "AMD64_LINUX"   : [ "IEEE", "IEEE-le", "C99" ],
-  "AMD64_FREEBSD" : [ "IEEE", "IEEE-le", "C99" ],
-  "I386_DARWIN"   : [ "IEEE", "IEEE-le", "C99" ],
-  "FreeBSD4"      : [ "IEEE", "IEEE-le", "C99" ]
+% Fill in TARGET otherwise we fallback to defaults below.
+%  "LINUXLIBC6"    : [ "IEEE", "IEEE-le", "C99" ],
+%  "AMD64_LINUX"   : [ "IEEE", "IEEE-le", "C99" ],
+%  "AMD64_FREEBSD" : [ "IEEE", "IEEE-le", "C99" ],
+%  "AMD64_DARWIN"   : [ "IEEE", "IEEE-le", "C99" ],
+%  "I386_DARWIN"   : [ "IEEE", "IEEE-le", "C99" ],
+%  "FreeBSD4"      : [ "IEEE", "IEEE-le", "C99" ]
 }
 
-% copy from TARGET_OS or TARGET_ARCH or TARGET_ENDIAN to TARGET
+_FloatPiecesNoC99 = {
+    "NT",
+}
+
+_FloatPiecesC99 = {
+    "CYGWIN",
+    "DARWIN",
+    "FREEBSD",
+    "HPUX",
+    "INTERIX",
+    "LINUX",
+    "MINGW",
+    "NETBSD",
+    "OPENBSD",
+    "OSF",
+    "SOLARIS",
+    "VMS",
+}
 
 if _FloatPieces contains TARGET
   % nothing
-else if _FloatPieces contains TARGET_OS
-  _FloatPieces{TARGET} = _FloatPieces{TARGET_OS}
-else if _FloatPieces contains TARGET_ARCH
-  _FloatPieces{TARGET} = _FloatPieces{TARGET_ARCH}
 else
-  % worst case fallback
-  _FloatPieces{TARGET} =
-    { "LITTLE"  : [ "IEEE", "IEEE-le", "IEEE-default" ],
-      "BIG"     : [ "IEEE", "IEEE-be", "IEEE-default" ] }{TARGET_ENDIAN}
-  _FloatPieces{"IEEE-default"} = 1 % indicator to m3-sys/m3tests
-end end end
+    _FloatPieces{TARGET} = [ ]
+    if _FloatPiecesC99 contains TARGET_OS and not _FloatPiecesNoC99 contains TARGET_OS
+        _FloatPieces{TARGET} = ["C99"]
+    else
+        _FloatPieces{TARGET} = ["IEEE-default"]
+        _FloatPieces{"IEEE-default"} = 1 % indicator to m3-sys/m3tests
+    end
+    _FloatPieces{TARGET} =
+        { "LITTLE"  : [ _FloatPieces{TARGET}, "IEEE", "IEEE-le" ],
+          "BIG"     : [ _FloatPieces{TARGET}, "IEEE", "IEEE-be" ] }{TARGET_ENDIAN}
+end
 
 if not defined ("M3TESTS")
   include_dir ("Common")
