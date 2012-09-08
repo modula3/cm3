@@ -543,24 +543,23 @@ CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything; try to minimize these.
  * Best way is to provide m3_ wrappers in m3core, at performance cost.
  *)
-"#include <string.h>", (* memcmp, memmove *)
-"#include <math.h>", (* floor, ceil *)
-"#include <stddef.h>", (* size_t, ptrdiff_t *)
-(* temporary partial solution *)
+"#include <string.h>", (* memcmp, memmove; avoid #include if possible *)
+"#include <math.h>", (* floor, ceil; avoid #include if possible *)
+(* "#include <stddef.h>", *) (* size_t, ptrdiff_t *)
+
+(* need multiple passes and forward declare all structs; temporary partial solution *)
 "#define M3STRUCT(n) m3struct_##n##_t",
 "#define M3STRUCT_DECLARE(n) typedef struct { char a[n]; } M3STRUCT(n);",
-"M3STRUCT_DECLARE(1)",
-"M3STRUCT_DECLARE(2)",
-"M3STRUCT_DECLARE(3)",
-"M3STRUCT_DECLARE(4)",
-"M3STRUCT_DECLARE(5)",
-"M3STRUCT_DECLARE(6)",
-"M3STRUCT_DECLARE(7)",
-"M3STRUCT_DECLARE(8)",
-"M3STRUCT_DECLARE(9)",
-"M3STRUCT_DECLARE(10)",
-"M3STRUCT_DECLARE(11)",
-"M3STRUCT_DECLARE(12)",
+"M3STRUCT_DECLARE(1)M3STRUCT_DECLARE(2)",
+"M3STRUCT_DECLARE(3)M3STRUCT_DECLARE(4)",
+"M3STRUCT_DECLARE(5)M3STRUCT_DECLARE(6)",
+"M3STRUCT_DECLARE(7)M3STRUCT_DECLARE(8)",
+"M3STRUCT_DECLARE(9)M3STRUCT_DECLARE(10)",
+"M3STRUCT_DECLARE(11)M3STRUCT_DECLARE(12)",
+"M3STRUCT_DECLARE(13)M3STRUCT_DECLARE(14)",
+"M3STRUCT_DECLARE(15)M3STRUCT_DECLARE(16)",
+"M3STRUCT_DECLARE(17)M3STRUCT_DECLARE(18)",
+"M3STRUCT_DECLARE(19)M3STRUCT_DECLARE(20)",
 "#ifdef __cplusplus",
 "#define M3_INIT",
 "#define new m3_new",
@@ -569,11 +568,12 @@ CONST Prefix = ARRAY OF TEXT {
 "#define M3_INIT ={0}",
 "#define M3_DOTDOTDOT",
 "#endif",
-"#define  MAKE_INT8(x)  x",
-"#define  MAKE_INT16(x) x",
-"#define MAKE_UINT8(x)  x##U",
-"#define MAKE_UINT16(x) x##U",
-"#define MAKE_UINT32(x) x##U", (* INT64/UINT64 are later *)
+"#define  M3_INT8(x)  x",
+"#define  M3_INT16(x) x",
+"#define  M3_INT32(x) x",
+"#define M3_UINT8(x)  x##U",
+"#define M3_UINT16(x) x##U",
+"#define M3_UINT32(x) x##U", (* INT64/UINT64 are later *)
 "#ifdef __cplusplus",
 "extern \"C\" {",
 "#endif",
@@ -602,25 +602,27 @@ CONST Prefix = ARRAY OF TEXT {
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
-"#define  MAKE_INT64(x) x##I64",
-"#define MAKE_UINT64(x) x##UI64",
+"#define  M3_INT64(x) x##I64",
+"#define M3_UINT64(x) x##UI64",
 "#else",
 "typedef long long INT64;",
 "typedef unsigned long long UINT64;",
-"#define  MAKE_INT64(x) x##LL",
-"#define MAKE_UINT64(x) x##ULL",
+"#define  M3_INT64(x) x##LL",
+"#define M3_UINT64(x) x##ULL",
 "#endif",
 (*
 "/* WORD_T/INTEGER are always exactly the same size as a pointer.",
 " * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. */",
+*)
 "#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64) || defined(__LP64__) || defined(__x86_64__) || defined(__ppc64__)",
+(* or sparcv9 or mips64 or arm64 or hppa64 or alpha64 or ia64? *)
 "typedef INT64 INTEGER;",
 "typedef UINT64 WORD_T;",
 "#else",
 "typedef long INTEGER;",
 "typedef unsigned long WORD_T;",
 "#endif",
-*)
+(*
 "#if __INITIAL_POINTER_SIZE == 64",
 "typedef __int64 INTEGER;",
 "typedef unsigned __int64 WORD_T;",
@@ -628,6 +630,7 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef ptrdiff_t INTEGER;",
 "typedef size_t WORD_T;",
 "#endif",
+*)
 "typedef char *ADDRESS;",
 "#define NIL ((ADDRESS)0)",
 "typedef float REAL;",
@@ -1857,7 +1860,7 @@ PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
 
 PROCEDURE IntLiteral(type: Type; READONLY i: Target.Int): TEXT =
 BEGIN
-    RETURN "MAKE_" & typeToText[type] & "(" & TInt.ToText(i) & ")";
+    RETURN "M3_" & typeToText[type] & "(" & TInt.ToText(i) & ")";
 END IntLiteral;
 
 PROCEDURE FloatLiteral(READONLY float: Target.Float): TEXT =
