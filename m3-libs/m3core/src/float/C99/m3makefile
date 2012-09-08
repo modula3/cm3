@@ -5,8 +5,6 @@
 % Last modified on Fri Jul 30 09:36:51 PDT 1993 by kalsow
 %      modified on Fri May  7 14:52:56 PDT 1993 by muller
 
-Interface ("FPU")
-c_source ("FPU")
 Module ("FloatMode")
 
 interface("FloatModeC")

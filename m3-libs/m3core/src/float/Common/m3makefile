@@ -6,6 +6,9 @@
 %      modified on Thu Sep  2 15:08:45 PDT 1993 by mcjones
 %      modified on Fri May  7 14:59:36 PDT 1993 by muller
 
+Interface ("FPU")
+c_source ("FPU")
+
 Generic_interface ("Float")
 
 Interface ("RealFloat")
@@ -25,6 +28,3 @@ module ("DragonT")
 % identical to the versions in the other subdirectories except for the
 % values of the constants IEEE and RoundDefault. -- Paul McJones
 % 8/31/91
-
-
-
