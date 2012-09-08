@@ -7,7 +7,6 @@
 %      modified on Fri May  7 14:59:36 PDT 1993 by muller
 
 Interface ("FPU")
-c_source ("FPU")
 
 Generic_interface ("Float")
 
