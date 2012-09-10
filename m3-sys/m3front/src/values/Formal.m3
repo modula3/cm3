@@ -356,6 +356,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             ELSIF Type.IsEqual (t, te, NIL) THEN
               Expr.NeedsAddress (e);
             ELSIF ArrayType.Split (t, index, elt)
+              AND ArrayType.Split (te, index, elt)
               AND Type.IsAssignable (t, te) THEN
               Expr.NeedsAddress (e);
             ELSE
