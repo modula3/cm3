@@ -13,7 +13,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT Wrx86, M3ID, TInt;
-IMPORT ASCII, TextUtils;
+IMPORT ASCII, TextUtils, Cstdint, Long;
 (*
 IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq;
 IMPORT SortedIntRefTbl;
@@ -264,6 +264,66 @@ TYPE ReplacementName_t = RECORD
     replacement_id: M3ID.T;
 END;
 
+PROCEDURE Reverse(VAR a: ARRAY OF CHAR) =
+VAR i := FIRST(a);
+    j := LAST(a);
+    t: CHAR;
+BEGIN
+    WHILE i < j DO
+        t := a[i];
+        a[i] := a[j];
+        a[j] := t;
+        INC(i);
+        DEC(j);
+    END;
+END Reverse;
+
+TYPE  INT32 = Cstdint.int32_t;
+TYPE  INT64 = LONGINT;
+TYPE UINT32 = Cstdint.uint32_t;
+TYPE UINT64 = Long.T;
+TYPE Base_t = [2..36];
+
+PROCEDURE UInt64ToText(a: UINT64; base: Base_t): TEXT =
+VAR buf: ARRAY [0..BITSIZE(a) + 1] OF CHAR;
+    i := LAST(buf);
+    c: UINT64;
+    d: CHAR;
+BEGIN
+    REPEAT
+        c := a MOD VAL(base, UINT64);
+        IF c <= 9L THEN
+            d := VAL(c + VAL(ORD('0'), UINT64), CHAR);
+        ELSE
+            d := VAL(c - 10L + VAL(ORD('A'), UINT64), CHAR);
+        END;
+        buf[i] := d;
+        a := a DIV VAL(base, UINT64);
+        DEC(i);
+    UNTIL a = 0L;
+    RETURN Text.FromChars(SUBARRAY(buf, i + 1, LAST(buf) - i));
+END UInt64ToText;
+
+PROCEDURE Int64ToText(a: INT64; base: Base_t): TEXT =
+BEGIN
+    IF a >= 0L THEN
+        RETURN UInt64ToText(a, base);
+    END;
+    RETURN "-" & UInt64ToText((-(a + 1L)) + 1L, base);
+END Int64ToText;
+
+PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;
+PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END UInt64ToHex;
+PROCEDURE  Int64ToDec(a:  INT64): TEXT = BEGIN RETURN  Int64ToText(a, 10); END Int64ToDec;
+PROCEDURE  Int32ToDec(a:  INT32): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 10); END Int32ToDec;
+PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
+PROCEDURE IntegerToHex(a: INTEGER): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END IntegerToHex;
+
+CONST Int32ToHex = UInt32ToHex;
+CONST Int64ToHex = UInt64ToHex;
+CONST LabelToText = IntegerToHex;
+CONST LabelToHex = IntegerToHex;
+
 CONST reservedWords = ARRAY OF TEXT{
 "__int8", "__int16", "__int32","__int64","__try","__except", "__finally",
 "_cdecl","_stdcall","_fastcall","__cdecl","__stdcall","__fastcall",
@@ -286,8 +346,11 @@ The right fix here includes multiple passes.
     only declare them if they are otherwise referenced
 Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 *)
-"strcpy", "strcat"
-    };
+"strcpy", "strcat",
+
+(* more incorrect declarations *)
+"ldexp", "signgam", "cabs", "frexp", "modf", "jn", "yn"
+};
 
 VAR replacementNames_Inited := FALSE;
 VAR replacementNames: ARRAY [FIRST(reservedWords) .. LAST(reservedWords)] OF ReplacementName_t;
@@ -543,6 +606,8 @@ CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything; try to minimize these.
  * Best way is to provide m3_ wrappers in m3core, at performance cost.
  *)
+ 
+(*"#include <limits.h>",*)
 "#include <string.h>", (* memcmp, memmove; avoid #include if possible *)
 "#include <math.h>", (* floor, ceil; avoid #include if possible *)
 (* "#include <stddef.h>", *) (* size_t, ptrdiff_t *)
@@ -1034,7 +1099,7 @@ BEGIN
         print(u, " /* declare_typename */ ");
     END;
     (*
-    print(u, "typedef M" & Fmt.Unsigned(typeid) & " " & M3ID.ToText(name) & ";\n");
+    print(u, "typedef M" & TypeidToHex(typeid) & " " & M3ID.ToText(name) & ";\n");
     *)
 END declare_typename;
 
@@ -1395,7 +1460,7 @@ PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
       u.wr.NL    ();
       print(u, " /* import_global */ ");
     END;
-    print(u, "extern " & typeToText[type] & " " & M3ID.ToText(name) & ";");
+    print(u, "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";");
     RETURN var;
   END import_global;
 
@@ -2136,7 +2201,7 @@ PROCEDURE set_label(u: U; label: Label; <*UNUSED*> barrier: BOOLEAN) =
     (* semicolon in case we fall off the function here:
        void F() { L: } is not legal but
        void F() { L:; } is, and means what you'd think the first means *)
-    print(u, "L" & Fmt.Unsigned(label) & ":;");
+    print(u, "L" & LabelToHex(label) & ":;");
   END set_label;
 
 PROCEDURE jump(u: U; label: Label) =
@@ -2148,7 +2213,7 @@ PROCEDURE jump(u: U; label: Label) =
       u.wr.NL    ();
     END;
     print(u, " /* jump */ ");
-    print(u, "goto L" & Fmt.Unsigned(label) & ";");
+    print(u, "goto L" & LabelToHex(label) & ";");
   END jump;
 
 PROCEDURE if_true(u: U; itype: IType; label: Label; <*UNUSED*> frequency: Frequency) =
@@ -2162,7 +2227,7 @@ PROCEDURE if_true(u: U; itype: IType; label: Label; <*UNUSED*> frequency: Freque
       u.wr.NL    ();
       print(u, " /* if_true */ ");
     END;
-    print(u, "if(" & s0 & ")goto L" & Fmt.Unsigned(label) & ";");
+    print(u, "if(" & s0 & ")goto L" & LabelToText(label) & ";");
     pop(u);
   END if_true;
 
@@ -2177,7 +2242,7 @@ PROCEDURE if_false(u: U; itype: IType; label: Label; <*UNUSED*> frequency: Frequ
       u.wr.NL    ();
       print(u, " /* if_false */ ");
     END;
-    print(u, "if(!" & paren(s0) & ")goto L" & Fmt.Unsigned(label) & ";");
+    print(u, "if(!" & paren(s0) & ")goto L" & LabelToText(label) & ";");
     pop(u);
   END if_false;
 
@@ -2196,7 +2261,7 @@ PROCEDURE if_compare(u: U; ztype: ZType; op: CompareOp; label: Label;
       print(u, " /* if_compare */ ");
     END;
     pop(u, 2);
-    print(u, "if(" & paren(s1) & CompareOpC[op] & paren(s0) & ")goto L" & Fmt.Unsigned(label) & ";");
+    print(u, "if(" & paren(s1) & CompareOpC[op] & paren(s0) & ")goto L" & LabelToText(label) & ";");
   END if_compare;
 
 PROCEDURE case_jump(u: U; itype: IType; READONLY labels: ARRAY OF Label) =
@@ -2215,7 +2280,7 @@ BEGIN
     print(u, " /* case_jump */ ");
     print(u, "switch(" & s0 & "){");
     FOR i := FIRST(labels) TO LAST(labels) DO
-        print(u, "case " & Fmt.Int(i) & ":goto L" & Fmt.Unsigned(labels[i]) & ";");
+        print(u, "case " & Fmt.Int(i) & ":goto L" & LabelToText(labels[i]) & ";");
     END;
     print(u, "}");
     pop(u);
@@ -3215,20 +3280,21 @@ PROCEDURE check_hi(u: U; type: IType; READONLY i: Target.Int; code: RuntimeError
   END check_hi;
 
 PROCEDURE check_range(u: U; type: IType; READONLY a, b: Target.Int; code: RuntimeError) =
-  (* IF (s0.type < a) OR (b < s0.type) THEN abort(code) *)
-  VAR s0 := cast(get(u), type);
-  BEGIN
+(* IF (s0.type < a) OR (b < s0.type) THEN abort(code) *)
+VAR s0 := cast(get(u), type);
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("check_range");
-      u.wr.TInt  (TIntN.FromTargetInt(a, CG_Bytes[type]));
-      u.wr.TInt  (TIntN.FromTargetInt(b, CG_Bytes[type]));
-      u.wr.Int   (ORD(code));
-      u.wr.NL    ();
-      print(u, " /* check_range */ ");
+        u.wr.Cmd   ("check_range");
+        u.wr.TName (type);
+        u.wr.TInt  (TIntN.FromTargetInt(a, CG_Bytes[type]));
+        u.wr.TInt  (TIntN.FromTargetInt(b, CG_Bytes[type]));
+        u.wr.Int   (ORD(code));
+        u.wr.NL    ();
+    print(u, " /* check_range " & IntLiteral(type, a) & " " & IntLiteral(type, b) & " */ ");
     END;
-    print(u, "if(" & paren(s0) & "<" & IntLiteral(type, a) & "||" & IntLiteral(type, b) & "<"  & paren(s0) & ")");
+    print(u, "if(" & paren(paren(s0) & "<" & IntLiteral(type, a)) & "||" & paren(IntLiteral(type, b) & "<"  & paren(s0) & ")"));
     reportfault(u, code);
-  END check_range;
+END check_range;
 
 PROCEDURE check_index(u: U; type: IType; code: RuntimeError) =
   (* IF NOT (0 <= s1.type < s0.type) THEN
