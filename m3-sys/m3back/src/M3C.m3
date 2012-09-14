@@ -2,8 +2,7 @@ MODULE M3C;
 
 IMPORT RefSeq, TextSeq, IntSeq, Wr, Text, Fmt;
 IMPORT M3CG, M3CG_Ops, Target, TIntN, TFloat, TargetMap;
-IMPORT Stdio;
-IMPORT RTIO, RTProcess;
+IMPORT Stdio, RTIO, Wrx86, M3ID, TInt, ASCII, TextUtils, Cstdint, Long;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -12,11 +11,9 @@ FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
-IMPORT Wrx86, M3ID, TInt;
-IMPORT ASCII, TextUtils, Cstdint, Long;
 (*
 IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq;
-IMPORT SortedIntRefTbl;
+IMPORT SortedIntRefTbl, RTProcess;
 *)
 
 (* Taken together, these help debugging, as you get more lines in the
@@ -264,7 +261,7 @@ TYPE ReplacementName_t = RECORD
     replacement_id: M3ID.T;
 END;
 
-PROCEDURE Reverse(VAR a: ARRAY OF CHAR) =
+<*UNUSED*>PROCEDURE Reverse(VAR a: ARRAY OF CHAR) =
 VAR i := FIRST(a);
     j := LAST(a);
     t: CHAR;
@@ -312,15 +309,15 @@ BEGIN
     RETURN "-" & UInt64ToText((-(a + 1L)) + 1L, base);
 END Int64ToText;
 
-PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;
+<*UNUSED*>PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;
 PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END UInt64ToHex;
-PROCEDURE  Int64ToDec(a:  INT64): TEXT = BEGIN RETURN  Int64ToText(a, 10); END Int64ToDec;
-PROCEDURE  Int32ToDec(a:  INT32): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 10); END Int32ToDec;
+<*UNUSED*>PROCEDURE  Int64ToDec(a:  INT64): TEXT = BEGIN RETURN  Int64ToText(a, 10); END Int64ToDec;
+<*UNUSED*>PROCEDURE  Int32ToDec(a:  INT32): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 10); END Int32ToDec;
 PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
 PROCEDURE IntegerToHex(a: INTEGER): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END IntegerToHex;
 
-CONST Int32ToHex = UInt32ToHex;
-CONST Int64ToHex = UInt64ToHex;
+<*UNUSED*>CONST Int32ToHex = UInt32ToHex;
+<*UNUSED*>CONST Int64ToHex = UInt64ToHex;
 CONST LabelToText = IntegerToHex;
 CONST LabelToHex = IntegerToHex;
 
@@ -3499,6 +3496,7 @@ END call_helper;
 PROCEDURE get_static_link(u: U; target: CProc): TEXT =
 VAR target_level := target.level;
     current := u.current_proc;
+    current_level := current.level;
     static_link := "";
 BEGIN
     IF u.debug THEN
@@ -3516,19 +3514,18 @@ BEGIN
     END;
     print(u, " /* get_static_link */ ");
     IF target_level = 0 THEN
-        RETURN " /* get_static_link */ ((ADDRESS)0)";
+        RETURN " /* get_static_link 1 */ ((ADDRESS)0)";
     END;
-    target := target.parent;
-    IF current = target THEN
-        IF u.debug THEN
-            RETURN " /* get_static_link */  &_frame";
-        END;
-        RETURN "&_frame";
+    IF current_level = target_level THEN
+        RETURN " /* get_static_link 2 */ _static_link";
     END;
-    static_link := " /* get_static_link */ _frame.";
-    WHILE current # target DO
+    IF current_level < target_level THEN
+        RETURN " /* get_static_link 3 */ &_frame";
+    END;
+    static_link := " /* get_static_link 4 */ _frame._static_link";
+    WHILE current_level > target_level DO
         static_link := static_link & "->_static_link";
-        target := target.parent;
+        DEC(current_level);
     END;
     RETURN static_link;
 END get_static_link;
