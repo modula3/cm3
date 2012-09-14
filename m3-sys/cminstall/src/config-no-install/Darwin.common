@@ -94,7 +94,7 @@ SYSTEM_LIBS = {
 }
 
 proc internal_configure_system_lib(name, known, args) is
-  configure_c_compiler()
+  configure_c_compiler() % why? http://modula3.elegosoft.com/cgi-bin/cvsweb.cgi/cm3/m3-sys/cminstall/src/config-no-install/Darwin.common.diff?r1=1.41;r2=1.42
   if SYSTEM_LIBS contains name
     return
   end
@@ -160,7 +160,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
   local lib_pn   = LIB_INSTALL & "/" & lib_soxx
 
-  configure_c_compiler()
+  configure_c_compiler() % why? http://modula3.elegosoft.com/cgi-bin/cvsweb.cgi/cm3/m3-sys/cminstall/src/config-no-install/Darwin.common.diff?r1=1.41;r2=1.42
 
   % first, build the non-shared library
   local arch = ""
