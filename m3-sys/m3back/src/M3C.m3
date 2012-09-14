@@ -629,6 +629,10 @@ CONST Prefix = ARRAY OF TEXT {
 "M3STRUCT_DECLARE(15)M3STRUCT_DECLARE(16)",
 "M3STRUCT_DECLARE(17)M3STRUCT_DECLARE(18)",
 "M3STRUCT_DECLARE(19)M3STRUCT_DECLARE(20)",
+"M3STRUCT_DECLARE(21)M3STRUCT_DECLARE(22)",
+"M3STRUCT_DECLARE(23)M3STRUCT_DECLARE(24)",
+"M3STRUCT_DECLARE(25)M3STRUCT_DECLARE(26)",
+"M3STRUCT_DECLARE(27)M3STRUCT_DECLARE(28)",
 "#ifdef __cplusplus",
 "#define M3_INIT",
 "#define new m3_new",
@@ -1605,7 +1609,7 @@ BEGIN
         print(var.u, " /* Var_Declare 2 */ ");
         IF var.type = Type.Struct THEN
             var.u.struct_sizes.addhi(size);
-            IF size <= 12 THEN
+            IF size <= 28 THEN
                 text := "M3STRUCT(" & Fmt.Int(size) & ")";
             ELSE
                 text := "struct{char a[" & Fmt.Int(size) & "];}";
@@ -2740,7 +2744,7 @@ PROCEDURE set_op3(u: U; byte_size: ByteSize; op: TEXT) =
   (* s2.B := s1.B op s0.B; pop(3) *)
   VAR s0 := cast(get(u, 0), Type.Addr);
       s1 := cast(get(u, 1), Type.Addr);
-      s2 := cast(get(u, 1), Type.Addr);
+      s2 := cast(get(u, 2), Type.Addr);
   BEGIN
     IF u.debug THEN
       (*u.wr.Cmd   (BuiltinDesc[builtin].name);*)
@@ -2749,7 +2753,7 @@ PROCEDURE set_op3(u: U; byte_size: ByteSize; op: TEXT) =
       print(u, " /* " & op & " */ ");
     END;
     pop(u, 3);
-    print(u, "m3_" & op & "(" & s2 & "," & s1 & "," & s0 & ")");
+    print(u, "m3_" & op & "(" & Fmt.Int(byte_size) & ",(WORD_T*)" & s2 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s0 & ");");
   END set_op3;
 
 PROCEDURE set_union(u: U; byte_size: ByteSize) =
@@ -2789,7 +2793,7 @@ PROCEDURE set_member(u: U; byte_size: ByteSize; type: IType) =
       print(u, " /* set_member */ ");
     END;
     pop(u, 2);
-    push(u, type, cast("set_member(" & s0 & "," & s1 & ")", type));
+    push(u, type, cast("set_member(" & s0 & ",(WORD_T*)" & s1 & ")", type));
   END set_member;
 
 PROCEDURE set_compare(u: U; byte_size: ByteSize; op: CompareOp; type: IType) =
@@ -2806,7 +2810,7 @@ PROCEDURE set_compare(u: U; byte_size: ByteSize; op: CompareOp; type: IType) =
       print(u, " /* set_compare */ ");
     END;
     pop(u, 2);
-    push(u, type, cast("m3_set_" & CompareOpName[op] & "(" & s1 & "," & s0 & ")", type));
+    push(u, type, cast("m3_set_" & CompareOpName[op] & "(" & Fmt.Int(byte_size) & s1 & "," & s0 & ")", type));
   END set_compare;
 
 PROCEDURE set_range(u: U; byte_size: ByteSize; type: IType) =
