@@ -801,6 +801,7 @@ CONST Prefix = ARRAY OF TEXT {
 "m3_max_T(UINT64)",
 "m3_min_T(INT64)",
 "m3_max_T(INT64)",
+"m3_abs_T(LONGREAL)",
 "double __cdecl floor(double);",
 "double __cdecl ceil(double);",
 "INT64 __cdecl llroundl(long double);",
@@ -2963,7 +2964,7 @@ PROCEDURE rotate_left(u: U; type: IType) =
       print(u, " /* rotate_left */ ");
     END;
     pop(u, 2);
-    push(u, type, "m3_rotate_left" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+    push(u, type, "m3_rotate_left_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
   END rotate_left;
 
 PROCEDURE rotate_right(u: U; type: IType) =
@@ -2978,7 +2979,7 @@ PROCEDURE rotate_right(u: U; type: IType) =
       print(u, " /* rotate_right */ ");
     END;
     pop(u, 2);
-    push(u, type, "m3_rotate_right" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+    push(u, type, "m3_rotate_right_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
   END rotate_right;
 
 PROCEDURE widen(u: U; sign_extend: BOOLEAN) =
