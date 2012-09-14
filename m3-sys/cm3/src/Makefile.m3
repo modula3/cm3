@@ -13,9 +13,9 @@ TYPE
   MM = M3Options.Mode;
 
 CONST
-  ModeName = ARRAY MM OF TEXT { "-build", "-clean", "-ship", "-find", 
+  ModeName = ARRAY MM OF TEXT { "-build", "-clean", "-ship", "-find",
                                 "-depend", "-realclean" };
-  ModeFlag = ARRAY MM OF TEXT { "_all",   "_clean", "_ship", "_find", 
+  ModeFlag = ARRAY MM OF TEXT { "_all",   "_clean", "_ship", "_find",
                                 "_depend", "_realclean" };
 
 TYPE
@@ -125,7 +125,7 @@ PROCEDURE ConvertArgList (VAR s: State)
         NoteSourceFile (s, NIL, arg, cmd_line := TRUE);
       ELSIF Text.Equal (arg, "--") THEN
         noMoreOptions := TRUE;
-      ELSIF NOT noMoreOptions THEN 
+      ELSIF NOT noMoreOptions THEN
         (* it's an option *)
         ConvertOption (s, arg, len);
       END;
@@ -248,7 +248,7 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                Out (wr, "M3_COMPILE_ONCE = TRUE");  ok := TRUE;
              END;
 
-    | 'p' => IF Text.Equal(arg, "-pretend") OR 
+    | 'p' => IF Text.Equal(arg, "-pretend") OR
                 Text.Equal(arg, "-profile") THEN
                ok := TRUE;
              ELSIF Text.Equal(arg, "-prepend") THEN
@@ -426,7 +426,7 @@ PROCEDURE VisitSourceDir (VAR s: State;  dir: TEXT;  cmd_line: BOOLEAN)
       TRY
         normalizedDerivedDir := FS.GetAbsolutePathname(Dirs.derived);
       EXCEPT OSError.E (args) =>
-        Msg.FatalError (args, "unable to get absolute path for \"", 
+        Msg.FatalError (args, "unable to get absolute path for \"",
                         Dirs.derived, "\"");
       END;
     END;
@@ -531,7 +531,7 @@ PROCEDURE ScanCommandLine1 () =
   END ScanCommandLine1;
 
 PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
-  VAR 
+  VAR
     use_overrides := FALSE;
     cnt := 0;  arg: TEXT;
   BEGIN
@@ -546,15 +546,15 @@ PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
       ELSIF Text.Equal (arg, "-find")      THEN  SetMode (cnt, MM.Find);
       ELSIF Text.Equal (arg, "-ship")      THEN  SetMode (cnt, MM.Ship);
       ELSIF Text.Equal (arg, "-depend")    THEN  SetMode (cnt, MM.Depend);
-      ELSIF Text.Equal (arg, "-silent") THEN  
+      ELSIF Text.Equal (arg, "-silent") THEN
         Msg.SetLevel (Msg.Level.Silent);
-      ELSIF Text.Equal (arg, "-why") THEN  
+      ELSIF Text.Equal (arg, "-why") THEN
         Msg.SetLevel (Msg.Level.Explain);
-      ELSIF Text.Equal (arg, "-commands") THEN  
+      ELSIF Text.Equal (arg, "-commands") THEN
         Msg.SetLevel (Msg.Level.Commands);
-      ELSIF Text.Equal (arg, "-verbose") THEN  
+      ELSIF Text.Equal (arg, "-verbose") THEN
         Msg.SetLevel (Msg.Level.Verbose);
-      ELSIF Text.Equal (arg, "-debug") THEN  
+      ELSIF Text.Equal (arg, "-debug") THEN
         Msg.SetLevel (Msg.Level.Debug);
       ELSIF Text.Equal (arg, "-profile") THEN
         EVAL defs.put("M3_PROFILING", "TRUE");
