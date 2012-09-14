@@ -3033,8 +3033,8 @@ PROCEDURE extract(u: U; type: IType; sign_extend: BOOLEAN) =
     push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s2 & "," & s1 & "," & s0 & ")");
   END extract;
 
-PROCEDURE extract_n(u: U; type: IType; sign_extend: BOOLEAN; n: CARDINAL) =
-  (* s1.type := Word.Extract(s1.type, s0.type, n);
+PROCEDURE extract_n(u: U; type: IType; sign_extend: BOOLEAN; count: CARDINAL) =
+  (* s1.type := Word.Extract(s1.type, s0.type, count);
      IF sign_extend THEN SignExtend s1 END; pop(1) *)
   VAR s0 := get(u, 0);
       s1 := get(u, 1);
@@ -3043,17 +3043,17 @@ PROCEDURE extract_n(u: U; type: IType; sign_extend: BOOLEAN; n: CARDINAL) =
       u.wr.Cmd   ("extract_n");
       u.wr.TName (type);
       u.wr.Bool  (sign_extend);
-      u.wr.Int   (n);
+      u.wr.Int   (count);
       u.wr.NL    ();
       print(u, " /* extract_m */ ");
     END;
     pop(u, 2);
     <* ASSERT sign_extend = FALSE *>
-    push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s1 & "," & s0 & "," & Fmt.Int(n) & ")");
+    push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s1 & "," & s0 & "," & Fmt.Int(count) & ")");
   END extract_n;
 
-PROCEDURE extract_mn(u: U; type: IType; sign_extend: BOOLEAN; m, n: CARDINAL) =
-  (* s0.type := Word.Extract(s0.type, m, n);
+PROCEDURE extract_mn(u: U; type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL) =
+  (* s0.type := Word.Extract(s0.type, offset, count);
      IF sign_extend THEN SignExtend s0 END; *)
   VAR s0 := get(u);
   BEGIN
@@ -3061,15 +3061,15 @@ PROCEDURE extract_mn(u: U; type: IType; sign_extend: BOOLEAN; m, n: CARDINAL) =
       u.wr.Cmd   ("extract_mn");
       u.wr.TName (type);
       u.wr.Bool  (sign_extend);
-      u.wr.Int   (m);
-      u.wr.Int   (n);
+      u.wr.Int   (offset);
+      u.wr.Int   (count);
       u.wr.NL    ();
       print(u, " /* extract_mn */ ");
     END;
     pop(u);
-    s0 := "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s0 & "," & Fmt.Int(m) & "," & Fmt.Int(n) & ")";
+    s0 := "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s0 & "," & Fmt.Int(offset) & "," & Fmt.Int(count) & ")";
     IF sign_extend THEN
-      s0 := "m3_sign_extend_" & typeToText[type] & "(" & s0 & ")";
+      s0 := "m3_sign_extend_" & typeToText[type] & "(" & s0 & "," & Fmt.Int(count) & ")";
     END;
     push(u, type, s0);
   END extract_mn;
@@ -3091,8 +3091,8 @@ PROCEDURE insert(u: U; type: IType) =
     push(u, type, "m3_insert_" & typeToText[type] & "(" & s3 & "," & s2 & "," & s1 & "," & s0 & ")");
   END insert;
 
-PROCEDURE insert_n(u: U; type: IType; n: CARDINAL) =
-  (* s2.type := Word.Insert (s2.type, s1.type, s0.type, n); pop(2) *)
+PROCEDURE insert_n(u: U; type: IType; count: CARDINAL) =
+  (* s2.type := Word.Insert (s2.type, s1.type, s0.type, count); pop(2) *)
   VAR s0 := get(u, 0);
       s1 := get(u, 1);
       s2 := get(u, 2);
@@ -3100,29 +3100,29 @@ PROCEDURE insert_n(u: U; type: IType; n: CARDINAL) =
     IF u.debug THEN
       u.wr.Cmd   ("insert_n");
       u.wr.TName (type);
-      u.wr.Int   (n);
+      u.wr.Int   (count);
       u.wr.NL    ();
       print(u, " /* insert_n */ ");
     END;
     pop(u, 3);
-    push(u, type, "m3_insert_" & typeToText[type] & "(" & s2 & "," & "," & s1 & "," & s0 & "," & Fmt.Int(n) & ")");
+    push(u, type, "m3_insert_" & typeToText[type] & "(" & s2 & "," & "," & s1 & "," & s0 & "," & Fmt.Int(count) & ")");
   END insert_n;
 
-PROCEDURE insert_mn(u: U; type: IType; m, n: CARDINAL) =
-  (* s1.type := Word.Insert (s1.type, s0.type, m, n); pop(2) *)
+PROCEDURE insert_mn(u: U; type: IType; offset, count: CARDINAL) =
+  (* s1.type := Word.Insert (s1.type, s0.type, offset, count); pop(2) *)
   VAR s0 := get(u, 0);
       s1 := get(u, 1);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("insert_mn");
       u.wr.TName (type);
-      u.wr.Int   (m);
-      u.wr.Int   (n);
+      u.wr.Int   (offset);
+      u.wr.Int   (count);
       u.wr.NL    ();
       print(u, " /* insert_mn */ ");
     END;
     pop(u, 2);
-    push(u, type, "m3_insert_" & typeToText[type] & "(" & s1 & "," & s0 & "," & Fmt.Int(m) & "," & Fmt.Int(n) & ")");
+    push(u, type, "m3_insert_" & typeToText[type] & "(" & s1 & "," & s0 & "," & Fmt.Int(offset) & "," & Fmt.Int(count) & ")");
   END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
