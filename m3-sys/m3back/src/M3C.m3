@@ -37,10 +37,10 @@ REVEAL
         stack  : TextSeq.T := NIL;
         params : TextSeq.T := NIL;
 
-        (* import_procedure happens both outside and inside procedurs;
+        (* import_procedure, import_global happens both outside and inside procedurs;
            When it happens inside, it presumed already imported in later ones.
            Record them here for later repetition. Hack. *)
-        import_procedure_repeat : TextSeq.T := NIL; (* hack *)
+        import_repeat : TextSeq.T := NIL; (* hack *)
         enum_type: TEXT := NIL;
         extra_scope_close_braces := ""; (* hack to account for locals/temps within code *)
         last_char_was_open_brace := FALSE;
@@ -942,7 +942,7 @@ BEGIN
     u.initializer := NEW(TextSeq.T).init();
     u.stack := NEW(TextSeq.T).init();
     u.params := NEW(TextSeq.T).init();
-    u.import_procedure_repeat := NEW(TextSeq.T).init();
+    u.import_repeat := NEW(TextSeq.T).init();
     u.struct_sizes := NEW(IntSeq.T).init();
 (*
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
@@ -1446,6 +1446,7 @@ PROCEDURE set_runtime_proc(u: U; name: Name; p: Proc) =
 
 PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var =
   VAR var := NEW(CVar, u := u, type := type, name := name).Init();
+      declaration: TEXT;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("import_global");
@@ -1458,7 +1459,12 @@ PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
       u.wr.NL    ();
       print(u, " /* import_global */ ");
     END;
-    print(u, "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";");
+    declaration := "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";";
+    IF u.in_proc THEN
+        u.import_repeat.addhi(declaration);
+        ExtraScope_Open(u);
+    END;
+    print(u, declaration);
     RETURN var;
   END import_global;
 
@@ -1582,7 +1588,9 @@ PROCEDURE Var_Declare(var: CVar; tail := ";"): TEXT =
 VAR text := var.type_text;
     size := var.byte_size;
 BEGIN
+    print(var.u, " /* Var_Declare 1 */ ");
     IF text = NIL THEN
+        print(var.u, " /* Var_Declare 2 */ ");
         IF var.type = Type.Struct THEN
             var.u.struct_sizes.addhi(size);
             IF size <= 12 THEN
@@ -1658,7 +1666,7 @@ PROCEDURE last_param(u: U) =
 VAR prototype := function_prototype(u.param_proc, ";");
 BEGIN
     IF u.in_proc THEN
-        u.import_procedure_repeat.addhi(prototype);
+        u.import_repeat.addhi(prototype);
         ExtraScope_Open(u);
     END;
     print(u, prototype);
@@ -1669,14 +1677,14 @@ BEGIN
     END;
 END last_param;
 
-PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
-                        type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
-                        frequency: Frequency): Var =
+PROCEDURE internal_declara_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
+                                 type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
+                                 frequency: Frequency; type_text: TEXT): Var =
 VAR function := u.param_proc;
     var: CVar;
-    type_text: TEXT := NIL;
 BEGIN
-    IF u.param_count = 0 AND function.is_exception_handler THEN
+    IF type_text = NIL AND u.param_count = 0 AND function.is_exception_handler THEN
+        print(u, " /* declare_param 1 */ ");
         name := M3ID.Add("_static_link");
         type_text := NARROW(function.parent, CProc).FrameType() & "*";
     END;
@@ -1713,6 +1721,13 @@ BEGIN
         last_param(u);
     END;
     RETURN var;
+END internal_declara_param;
+
+PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
+                        type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
+                        frequency: Frequency): Var =
+BEGIN
+    RETURN internal_declara_param(u, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency, NIL);
 END declare_param;
 
 PROCEDURE declare_temp(u: U; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): Var =
@@ -2045,10 +2060,9 @@ BEGIN
         IF u.debug THEN
             u.wr.OutT("adding _static_link parameter to " & M3ID.ToText(name) & "\n");
         END;
-        WITH var = NARROW(u.declare_param(M3ID.Add("_static_link"), CG_Bytes[Type.Addr], CG_Bytes[Type.Addr],
-                Type.Addr, UID_ADDR, FALSE(*?*), FALSE, M3CG.Never), CVar) DO
-            var.type_text := NARROW(parent, CProc).FrameType() & "*";
-        END;
+        print(u, " /* declare_procedure 2 */ ");
+        EVAL internal_declara_param(u, M3ID.Add("_static_link"), CG_Bytes[Type.Addr], CG_Bytes[Type.Addr],
+                Type.Addr, UID_ADDR, FALSE(*?*), FALSE, M3CG.Never, NARROW(parent, CProc).FrameType() & "*");
     END;
     SuppressLineDirective(u, n_params, "declare_procedure n_params");
     RETURN proc;
@@ -2148,8 +2162,8 @@ BEGIN
     u.in_proc := FALSE;
     print(u, "}");
     ExtraScope_Close(u);
-    WHILE u.import_procedure_repeat.size() > 0 DO
-        print(u, u.import_procedure_repeat.remlo());
+    WHILE u.import_repeat.size() > 0 DO
+        print(u, u.import_repeat.remlo());
     END;
 END end_procedure;
 
