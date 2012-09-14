@@ -51,7 +51,7 @@ CONST
                           "", "", "", "","", "","" }
   };
 
-  Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "noname.exe" };
+  Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE" };
 
 VAR target_os := ARRAY Compiler.OS OF OSKind{OSKind.Unix, OSKind.Win32}[Compiler.ThisOS];
 CONST d_sep = ARRAY Compiler.OS OF CHAR{Slash, BackSlash}[Compiler.ThisOS];
