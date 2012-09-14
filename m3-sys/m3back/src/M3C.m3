@@ -655,6 +655,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#if !defined(_MSC_VER) && !defined(__stdcall)",
 "#define __stdcall /* nothing */",
 "#endif",
+"typedef char *ADDRESS;",
 "typedef signed char INT8;",
 "typedef unsigned char UINT8, WORD8;",
 "typedef short INT16;",
@@ -680,9 +681,11 @@ CONST Prefix = ARRAY OF TEXT {
 (* or sparcv9 or mips64 or arm64 or hppa64 or alpha64 or ia64? *)
 "typedef INT64 INTEGER;",
 "typedef UINT64 WORD_T;",
+"void __stdcall RTHooks__ReportFault(ADDRESS module, INT64 code);",
 "#else",
 "typedef long INTEGER;",
 "typedef unsigned long WORD_T;",
+"void __stdcall RTHooks__ReportFault(ADDRESS module, INT32 code);",
 "#endif",
 (*
 "#if __INITIAL_POINTER_SIZE == 64",
@@ -693,7 +696,6 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef size_t WORD_T;",
 "#endif",
 *)
-"typedef char *ADDRESS;",
 "#define NIL ((ADDRESS)0)",
 "typedef float REAL;",
 "typedef double LONGREAL;",
@@ -722,7 +724,6 @@ CONST Prefix = ARRAY OF TEXT {
 "#define M3_UINT_DEC(i) m3_uint_to_dec(alloca(m3_uint_to_dec_length(i) + 1), i)",
 *)
 "static void __stdcall m3_fence(void){ }",
-"void __stdcall RTHooks__ReportFault(ADDRESS module, INTEGER code);",
 (*"static void __stdcall m3_abort(const char* message, size_t length){fflush(NIL);write(2, message, length);abort();}\n",*)
 "static WORD_T __stdcall m3_set_member(WORD_T elt,WORD_T*set){return(set[elt/SET_GRAIN]&(((WORD_T)1)<<(elt%SET_GRAIN)))!=0;}",
 "static void __stdcall m3_set_union(WORD_T n_bits,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i,n_words = n_bits / SET_GRAIN;for (i = 0; i < n_words; i++)a[i] = b[i] | c[i];}",
@@ -935,7 +936,7 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
 VAR u := NEW (U);
 BEGIN
     u.wr := Wrx86.New (Stdio.stdout);
-    u.debug := TRUE;
+    (*u.debug := TRUE;*)
     u.c := cfile;
     u.init_fields := NEW(TextSeq.T).init();
     u.initializer := NEW(TextSeq.T).init();
