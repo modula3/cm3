@@ -26,6 +26,8 @@ INTERFACE Math;
           C programming, interface to C math library 
 *)
 
+FROM Ctypes IMPORT int;
+
 (*---- miscellaneous useful constants ----*)
 
 CONST
@@ -117,7 +119,7 @@ CONST
 
 <*EXTERNAL*> PROCEDURE rint (x: LONGREAL): LONGREAL;
 (* returns the nearest integer value to x.
-   Note: the Modula-3 function ROUND may  be appropriate. *)
+   Note: the Modula-3 function ROUND may be appropriate. *)
 
 <*EXTERNAL*> PROCEDURE fabs (x: LONGREAL): LONGREAL;
 (* returns the absolute value of x.
@@ -136,11 +138,11 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 
 (*---- Floating point representations ----*)
 
-<*EXTERNAL*> PROCEDURE frexp (x: LONGREAL;  VAR exp: INTEGER): LONGREAL;
+<*EXTERNAL*> PROCEDURE frexp (x: LONGREAL;  VAR exp: int): LONGREAL;
 (* returns a value y and sets exp such that x = y * 2^exp,
     where ABS(y) is in the interval [0.5, 1). *)
 
-<*EXTERNAL*> PROCEDURE ldexp (x: LONGREAL; exp: INTEGER): LONGREAL;
+<*EXTERNAL*> PROCEDURE ldexp (x: LONGREAL; exp: int): LONGREAL;
 (* returns x * 2^exp. *)
 
 <*EXTERNAL*> PROCEDURE modf (x: LONGREAL; VAR(*OUT*) i: LONGREAL): LONGREAL;
@@ -161,7 +163,7 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 (*---- Gamma function ----*)
 
 <*EXTERNAL*> PROCEDURE gamma (x: LONGREAL): LONGREAL;
-<*EXTERNAL*> VAR signgam: INTEGER;
+<*EXTERNAL*> VAR signgam: int;
 (* returns log(ABS(Gamma(ABS(x)))).  The sign of Gamma(ABS(X))
    is returned in signgam. *)
 
@@ -174,7 +176,7 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 <*EXTERNAL "_j1" *> PROCEDURE j1 (x: LONGREAL): LONGREAL;
 (* returns the first-order Bessel function of first kind on x. *)
 
-<*EXTERNAL "_jn" *> PROCEDURE jn (n: INTEGER;  x: LONGREAL): LONGREAL;
+<*EXTERNAL "_jn" *> PROCEDURE jn (n: int;  x: LONGREAL): LONGREAL;
 (* returns the n th-order Bessel function of first kind on x. *)
 
 <*EXTERNAL "_y0" *> PROCEDURE y0 (x: LONGREAL): LONGREAL;
@@ -183,7 +185,7 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 <*EXTERNAL "_y1" *> PROCEDURE y1 (x: LONGREAL): LONGREAL;
 (* returns the first-order Bessel function of second kind on x. *)
 
-<*EXTERNAL "_yn" *> PROCEDURE yn (n: INTEGER;  x: LONGREAL): LONGREAL;
+<*EXTERNAL "_yn" *> PROCEDURE yn (n: int;  x: LONGREAL): LONGREAL;
 (* returns the n th-order Bessel function of second kind on x. *)
 
 (*---- Modulo functions ----*)
