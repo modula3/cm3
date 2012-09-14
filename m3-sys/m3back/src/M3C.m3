@@ -346,8 +346,15 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 "strcpy", "strcat",
 
 (* more incorrect declarations *)
-"ldexp", "signgam", "cabs", "frexp", "modf", "jn", "yn"
+"signgam", "cabs", "frexp", "modf"
 };
+
+(*
+CONST suppressImports = ARRAY OF TEXT{
+"strcpy", "strcat",
+"signgam", "cabs", "frexp", "modf"
+};
+*)
 
 VAR replacementNames_Inited := FALSE;
 VAR replacementNames: ARRAY [FIRST(reservedWords) .. LAST(reservedWords)] OF ReplacementName_t;
@@ -702,10 +709,10 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef /*long*/ double EXTENDED;",
 "#define m3_extract_T(T) static T __stdcall m3_extract_##T(T value,WORD_T offset,WORD_T count){return((value>>offset)&~(((~(T)0))<<count));}",
 "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){T mask=(~((~(T)0)<<count))<<offset;return(((y<<offset)&mask)|(x&~mask));}",
-"#define m3_signextend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}",
-"m3_signextend_T(INT32)",
-"m3_signextend_T(UINT32)",
-"m3_signextend_T(UINT64)",
+"#define m3_sign_extend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}",
+"m3_sign_extend_T(INT32)",
+"m3_sign_extend_T(UINT32)",
+"m3_sign_extend_T(UINT64)",
 "m3_extract_T(UINT32)",
 "m3_extract_T(UINT64)",
 "m3_insert_T(INT32)",
@@ -3062,7 +3069,7 @@ PROCEDURE extract_mn(u: U; type: IType; sign_extend: BOOLEAN; m, n: CARDINAL) =
     pop(u);
     s0 := "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s0 & "," & Fmt.Int(m) & "," & Fmt.Int(n) & ")";
     IF sign_extend THEN
-      s0 := "m3_signextend_" & typeToText[type] & "(" & s0 & ")";
+      s0 := "m3_sign_extend_" & typeToText[type] & "(" & s0 & ")";
     END;
     push(u, type, s0);
   END extract_mn;
