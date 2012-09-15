@@ -1,18 +1,18 @@
 MODULE M3C;
 
-IMPORT RefSeq, TextSeq, IntSeq, Wr, Text, Fmt;
+IMPORT RefSeq, TextSeq, Wr, Text, Fmt;
 IMPORT M3CG, M3CG_Ops, Target, TIntN, TFloat, TargetMap;
 IMPORT Stdio, RTIO, Wrx86, M3ID, TInt, ASCII, TextUtils, Cstdint, Long;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
-FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
+FROM M3CG IMPORT Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 (*
-IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq;
+IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq, IntSeq;
 IMPORT SortedIntRefTbl, RTProcess;
 *)
 
@@ -56,7 +56,7 @@ REVEAL
            Later we will sort/unique and typedef them all.
            typedef struct { char a[size]; } m3struct_size_t;
         *)
-        struct_sizes: IntSeq.T;
+        (* struct_sizes: IntSeq.T; FUTURE *)
 
         (* initialization support *)
 
@@ -491,7 +491,8 @@ END TypeidToType_Get;
 <*NOWARN*>CONST UID_PROC8 = 16_B740EFD0; (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
-TYPE CVar = M3CG.Var OBJECT
+TYPE CVar = Var;
+TYPE Var = M3CG.Var OBJECT
     u: U;
     name: Name;
     type: Type;
@@ -503,8 +504,18 @@ TYPE CVar = M3CG.Var OBJECT
 
     METHODS
         Declare(tail := ";"): TEXT := Var_Declare;
+        DeclareAndInitStructParamLocalValue(): TEXT := Var_DeclareAndInitStructParamLocalValue;
         Init(): CVar := Var_Init;
 END;
+
+(* TYPE Param = CParam; *)
+TYPE CParam = CVar OBJECT
+    OVERRIDES
+        Declare := Param_Declare;
+END;
+
+(* TYPE LocalVar = CVar;  FUTURE *)
+(* TYPE GlobalVar = CVar;  FUTURE *)
 
 PROCEDURE Var_Init(var: CVar): CVar =
 BEGIN
@@ -512,7 +523,8 @@ BEGIN
     RETURN var;
 END Var_Init;
 
-TYPE CProc = M3CG.Proc OBJECT
+TYPE CProc = Proc;
+TYPE Proc = M3CG.Proc OBJECT
     name: Name;
     n_params: INTEGER := 0; (* FUTURE: remove this *)
     return_type: Type;
@@ -520,7 +532,7 @@ TYPE CProc = M3CG.Proc OBJECT
     callingConvention: CallingConvention;
     exported: BOOLEAN;
     parent: CProc := NIL;
-    params: REF ARRAY OF CVar;
+    params: REF ARRAY OF CVar(*CParam*);
     locals: RefSeq.T := NIL; (* CVar *)
     uplevels := FALSE;
     is_exception_handler := FALSE;
@@ -610,69 +622,20 @@ CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything; try to minimize these.
  * Best way is to provide m3_ wrappers in m3core, at performance cost.
  *)
- 
-(*"#include <limits.h>",*)
-"#include <string.h>", (* memcmp, memmove; avoid #include if possible *)
-"#include <math.h>", (* floor, ceil; avoid #include if possible *)
-(* "#include <stddef.h>", *) (* size_t, ptrdiff_t *)
 
-(* need multiple passes and forward declare all structs; temporary partial solution *)
-"#define M3STRUCT(n) m3struct_##n##_t",
-"#define M3STRUCT_DECLARE(n) typedef struct { char a[n]; } M3STRUCT(n);",
-"M3STRUCT_DECLARE(1)M3STRUCT_DECLARE(2)",
-"M3STRUCT_DECLARE(3)M3STRUCT_DECLARE(4)",
-"M3STRUCT_DECLARE(5)M3STRUCT_DECLARE(6)",
-"M3STRUCT_DECLARE(7)M3STRUCT_DECLARE(8)",
-"M3STRUCT_DECLARE(9)M3STRUCT_DECLARE(10)",
-"M3STRUCT_DECLARE(11)M3STRUCT_DECLARE(12)",
-"M3STRUCT_DECLARE(13)M3STRUCT_DECLARE(14)",
-"M3STRUCT_DECLARE(15)M3STRUCT_DECLARE(16)",
-"M3STRUCT_DECLARE(17)M3STRUCT_DECLARE(18)",
-"M3STRUCT_DECLARE(19)M3STRUCT_DECLARE(20)",
-"M3STRUCT_DECLARE(21)M3STRUCT_DECLARE(22)",
-"M3STRUCT_DECLARE(23)M3STRUCT_DECLARE(24)",
-"M3STRUCT_DECLARE(25)M3STRUCT_DECLARE(26)",
-"M3STRUCT_DECLARE(27)M3STRUCT_DECLARE(28)",
-"#ifdef __cplusplus",
-"#define M3_INIT",
-"#define new m3_new",
-"#define M3_DOTDOTDOT ...",
-"#else",
-"#define M3_INIT ={0}",
-"#define M3_DOTDOTDOT",
-"#endif",
-"#define  M3_INT8(x)  x",
-"#define  M3_INT16(x) x",
-"#define  M3_INT32(x) x",
-"#define M3_UINT8(x)  x##U",
-"#define M3_UINT16(x) x##U",
-"#define M3_UINT32(x) x##U", (* INT64/UINT64 are later *)
+"#include <stddef.h>", (* try to remove this, it is slow -- need size_t, ptrdiff_t *)
+
 "#ifdef __cplusplus",
 "extern \"C\" {",
 "#endif",
-(*
-"/* const is extern const in C, but static const in C++,",
-" * but gcc gives a warning for the correct portable form \"extern const\"",
-" */",
-"#if defined(__cplusplus) || !defined(__GNUC__)",
-"#define EXTERN_CONST extern const",
-"#else",
-"#define EXTERN_CONST const",
-"#endif",
-*)
-"#if !(defined(_MSC_VER) || defined(__cdecl))",
-"#define __cdecl /* nothing */",
-"#endif",
-"#if !defined(_MSC_VER) && !defined(__stdcall)",
-"#define __stdcall /* nothing */",
-"#endif",
+
 "typedef char *ADDRESS;",
 "typedef signed char INT8;",
-"typedef unsigned char UINT8, WORD8;",
+"typedef unsigned char UINT8;",
 "typedef short INT16;",
-"typedef unsigned short UINT16, WORD16;",
+"typedef unsigned short UINT16;",
 "typedef int INT32;",
-"typedef unsigned int UINT32, WORD32;",
+"typedef unsigned int UINT32;",
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
@@ -684,20 +647,89 @@ CONST Prefix = ARRAY OF TEXT {
 "#define  M3_INT64(x) x##LL",
 "#define M3_UINT64(x) x##ULL",
 "#endif",
+
+"#if !(defined(_MSC_VER) || defined(__cdecl))",
+"#define __cdecl /* nothing */",
+"#endif",
+"#if !defined(_MSC_VER) && !defined(__stdcall)",
+"#define __stdcall /* nothing */",
+"#endif",
+
+(* string.h *)
+"void* __cdecl memcpy(void*, const void*, size_t);",
+"void* __cdecl memmove(void*, const void*, size_t);",
+"void* __cdecl memset(void*, int, size_t);",
+
+(* math.h *)
+"double __cdecl floor(double);",
+"double __cdecl ceil(double);",
+
+(*"#include <limits.h>",*)
+
+(* need multiple passes and forward declare all structs; temporary partial solution *)
+"#define M3STRUCT(n) m3struct_##n##_t",
+"typedef struct { char a;                   } M3STRUCT(1);",
+"typedef struct { short a;                  } M3STRUCT(2);",
+"typedef struct { short a; char b;          } M3STRUCT(3);",
+"typedef struct { int a;                    } M3STRUCT(4);",
+"typedef struct { int a; char b;            } M3STRUCT(5);",
+"typedef struct { int a; char b[2];         } M3STRUCT(6);",
+"typedef struct { int a; char b[3];         } M3STRUCT(7);",
+"typedef struct { INT64 a;                  } M3STRUCT(8);",
+"#define M3STRUCT_DECLARE(n) typedef struct { INT64 a; char b[n - 8]; } M3STRUCT(n);",
+"M3STRUCT_DECLARE(9)M3STRUCT_DECLARE(10)M3STRUCT_DECLARE(11)M3STRUCT_DECLARE(12)",
+"M3STRUCT_DECLARE(13)M3STRUCT_DECLARE(14)M3STRUCT_DECLARE(15)M3STRUCT_DECLARE(16)",
+"M3STRUCT_DECLARE(17)M3STRUCT_DECLARE(18)M3STRUCT_DECLARE(19)M3STRUCT_DECLARE(20)",
+"M3STRUCT_DECLARE(21)M3STRUCT_DECLARE(22)M3STRUCT_DECLARE(23)M3STRUCT_DECLARE(24)",
+"M3STRUCT_DECLARE(25)M3STRUCT_DECLARE(26)M3STRUCT_DECLARE(27)M3STRUCT_DECLARE(28)",
+"M3STRUCT_DECLARE(29)M3STRUCT_DECLARE(30)M3STRUCT_DECLARE(31)M3STRUCT_DECLARE(32)",
+"M3STRUCT_DECLARE(33)M3STRUCT_DECLARE(34)M3STRUCT_DECLARE(35)M3STRUCT_DECLARE(36)",
+"M3STRUCT_DECLARE(37)M3STRUCT_DECLARE(38)M3STRUCT_DECLARE(39)M3STRUCT_DECLARE(40)",
+"#ifdef __cplusplus",
+"#define M3_INIT",
+"#define new m3_new",
+"#define M3_DOTDOTDOT ...",
+"#else",
+"#define M3_INIT ={0}",
+"#define M3_DOTDOTDOT",
+"#endif",
+
+"#define  M3_INT8(x)  x",
+"#define  M3_INT16(x) x",
+"#define  M3_INT32(x) x",
+"#define M3_UINT8(x)  x##U",
+"#define M3_UINT16(x) x##U",
+"#define M3_UINT32(x) x##U", (* INT64/UINT64 are later *)
+
+(*
+"/* const is extern const in C, but static const in C++,",
+" * but gcc gives a warning for the correct portable form \"extern const\"",
+" */",
+"#if defined(__cplusplus) || !defined(__GNUC__)",
+"#define EXTERN_CONST extern const",
+"#else",
+"#define EXTERN_CONST const",
+"#endif",
+*)
 (*
 "/* WORD_T/INTEGER are always exactly the same size as a pointer.",
 " * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. */",
+We really should not have this #ifdef, esp. the big list of architectures.
 *)
-"#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64) || defined(__LP64__) || defined(__x86_64__) || defined(__ppc64__)",
-(* or sparcv9 or mips64 or arm64 or hppa64 or alpha64 or ia64? *)
+"#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64) || defined(__LP64__) \\",
+"    || defined(__alpha__) || defined(__arm64__) || defined(__hppa64__) \\",
+"    || defined(__ia64__) || defined(__mips64__) || defined(__ppc64__) \\",
+"    || defined(__s390x__) || defined(__sparcv9__) || defined(__x86_64__)",
 "typedef INT64 INTEGER;",
 "typedef UINT64 WORD_T;",
 "void __stdcall RTHooks__ReportFault(ADDRESS module, INT64 code);",
 "#else",
-"typedef long INTEGER;",
-"typedef unsigned long WORD_T;",
+"typedef ptrdiff_t INTEGER;",
+"typedef size_t WORD_T;",
 "void __stdcall RTHooks__ReportFault(ADDRESS module, INT32 code);",
 "#endif",
+(* problem: size_t/ptrdiff_t could be int or long or long long or __int64 *)
+(* RTHooks__ReportFault's signature varies, but it isn't imported *)
 (*
 "#if __INITIAL_POINTER_SIZE == 64",
 "typedef __int64 INTEGER;",
@@ -707,6 +739,7 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef size_t WORD_T;",
 "#endif",
 *)
+
 "#define NIL ((ADDRESS)0)",
 "typedef float REAL;",
 "typedef double LONGREAL;",
@@ -765,6 +798,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#define m3_abs_T(T) static T __stdcall m3_abs_##T(T a) { return ((a < 0) ? (-a) : a); }",
 "#define m3_min_T(T) static T __stdcall m3_min_##T(T a, T b) { return ((a < b) ? a : b); }",
 "#define m3_max_T(T) static T __stdcall m3_max_##T(T a, T b) { return ((a > b) ? a : b); }",
+"#define m3_min_max_abs_T(T) m3_min_T(T) m3_max_T(T) m3_abs_T(T)",
 "#define m3_div_T(T) static T __stdcall m3_div_##T(T a, T b) \\",
 "{ \\",
 "  int aneg = (a < 0); \\",
@@ -799,24 +833,18 @@ CONST Prefix = ARRAY OF TEXT {
 "m3_rotate_left_T(UINT32)",
 "m3_rotate_right_T(UINT32)",
 "m3_rotate_T(UINT32)",
-"m3_abs_T(INT32)",
-"m3_min_T(UINT32)",
-"m3_max_T(UINT32)",
-"m3_min_T(INT32)",
-"m3_max_T(INT32)",
 "m3_div_T(INT64)",
 "m3_mod_T(INT64)",
 "m3_rotate_left_T(UINT64)",
 "m3_rotate_right_T(UINT64)",
 "m3_rotate_T(UINT64)",
-"m3_abs_T(INT64)",
-"m3_min_T(UINT64)",
-"m3_max_T(UINT64)",
-"m3_min_T(INT64)",
-"m3_max_T(INT64)",
-"m3_abs_T(REAL)",
-"m3_abs_T(LONGREAL)",
-"m3_max_T(LONGREAL)",
+"m3_min_max_abs_T(INT32)",
+"m3_min_max_abs_T(UINT32)",
+"m3_min_max_abs_T(INT64)",
+"m3_min_max_abs_T(UINT64)",
+"m3_min_max_abs_T(REAL)",
+"m3_min_max_abs_T(LONGREAL)",
+"m3_min_max_abs_T(EXTENDED)",
 "double __cdecl floor(double);",
 "double __cdecl ceil(double);",
 "INT64 __cdecl llroundl(long double);",
@@ -894,9 +922,14 @@ BEGIN
 END SuppressLineDirective;
 
 PROCEDURE print(u: U; text: TEXT) = <*FATAL ANY*>
-VAR length := Text.Length(text);
+VAR length: INTEGER;
     text_last_char := '\000';
 BEGIN
+    IF text = NIL THEN
+        RETURN;
+    END;
+
+    length := Text.Length(text);
     IF length = 0 THEN
         RETURN;
     END;
@@ -952,14 +985,14 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
 VAR u := NEW (U);
 BEGIN
     u.wr := Wrx86.New (Stdio.stdout);
-    (*u.debug := TRUE;*)
+    (* u.debug := TRUE; *)
     u.c := cfile;
     u.init_fields := NEW(TextSeq.T).init();
     u.initializer := NEW(TextSeq.T).init();
     u.stack := NEW(TextSeq.T).init();
     u.params := NEW(TextSeq.T).init();
     u.import_repeat := NEW(TextSeq.T).init();
-    u.struct_sizes := NEW(IntSeq.T).init();
+    (* u.struct_sizes := NEW(IntSeq.T).init(); FUTURE *)
 (*
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1430,7 +1463,7 @@ PROCEDURE reveal_opaque(u: U; lhs, rhs: TypeUID) =
   END reveal_opaque;
 
 PROCEDURE declare_exception(u: U; name: Name; arg_type: TypeUID;
-                            raise_proc: BOOLEAN; base: Var; offset: INTEGER) =
+                            raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_exception");
@@ -1446,7 +1479,7 @@ PROCEDURE declare_exception(u: U; name: Name; arg_type: TypeUID;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 
-PROCEDURE set_runtime_proc(u: U; name: Name; p: Proc) =
+PROCEDURE set_runtime_proc(u: U; name: Name; p: M3CG.Proc) =
   VAR proc := NARROW(p, CProc);
   BEGIN
     IF u.debug THEN
@@ -1460,7 +1493,7 @@ PROCEDURE set_runtime_proc(u: U; name: Name; p: Proc) =
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var =
+PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): M3CG.Var =
   VAR var := NEW(CVar, u := u, type := type, name := name).Init();
       declaration: TEXT;
   BEGIN
@@ -1486,7 +1519,7 @@ PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignm
 
 CONST Const = ARRAY BOOLEAN OF TEXT{"", " const "};
 
-PROCEDURE declare_segment(u: U; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var =
+PROCEDURE declare_segment(u: U; name: Name; typeid: TypeUID; is_const: BOOLEAN): M3CG.Var =
 VAR var := NEW(CVar, u := u, name := name, is_const := is_const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
@@ -1531,7 +1564,7 @@ END;
 RETURN var;
   END declare_segment;
 
-PROCEDURE bind_segment(u: U; v: Var; byte_size: ByteSize; alignment: Alignment;
+PROCEDURE bind_segment(u: U; v: M3CG.Var; byte_size: ByteSize; alignment: Alignment;
                        type: Type; exported, inited: BOOLEAN) =
   VAR var := NARROW(v, CVar);
   BEGIN
@@ -1549,14 +1582,14 @@ PROCEDURE bind_segment(u: U; v: Var; byte_size: ByteSize; alignment: Alignment;
   END bind_segment;
 
 PROCEDURE declare_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
-                         type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+                         type: Type; typeid: TypeUID; exported, inited: BOOLEAN): M3CG.Var =
   BEGIN
     print(u, " /* declare_global */ ");
     RETURN DeclareGlobal(u, name, byte_size, alignment, type, typeid, exported, inited, FALSE);
   END declare_global;
 
 PROCEDURE declare_constant(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
-                           type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+                           type: Type; typeid: TypeUID; exported, inited: BOOLEAN): M3CG.Var =
   BEGIN
     print(u, " /* declare_constant */ ");
     RETURN DeclareGlobal(u, name, byte_size, alignment, type, typeid, exported, inited, TRUE);
@@ -1564,7 +1597,7 @@ PROCEDURE declare_constant(u: U; name: Name; byte_size: ByteSize; alignment: Ali
 
 PROCEDURE DeclareGlobal(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID;
-                        exported, inited, is_const: BOOLEAN): Var =
+                        exported, inited, is_const: BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR   var := NEW(CVar, u := u, type := type, name := name, is_const := is_const,
                  (*inited := inited, typeid := typeid, alignment := alignment,*)
@@ -1600,30 +1633,46 @@ BEGIN
     u.extra_scope_close_braces := "";
 END ExtraScope_Close;
 
-PROCEDURE Var_Declare(var: CVar; tail := ";"): TEXT =
-VAR text := var.type_text;
-    size := var.byte_size;
+PROCEDURE Struct(size: INTEGER): TEXT =
 BEGIN
-    print(var.u, " /* Var_Declare 1 */ ");
-    IF text = NIL THEN
-        print(var.u, " /* Var_Declare 2 */ ");
-        IF var.type = Type.Struct THEN
-            var.u.struct_sizes.addhi(size);
-            IF size <= 28 THEN
-                text := "M3STRUCT(" & Fmt.Int(size) & ")";
-            ELSE
-                text := "struct{char a[" & Fmt.Int(size) & "];}";
-            END
-        ELSE
-            text := typeToText[var.type];
-        END;
+    IF size <= 40 THEN
+        RETURN "M3STRUCT(" & Fmt.Int(size) & ")";
     END;
-    RETURN text & " " & M3ID.ToText(var.name) & tail;
+    RETURN "struct{char a[" & Fmt.Int(size) & "];}";
+END Struct;
+
+PROCEDURE Var_DeclareAndInitStructParamLocalValue(var: CVar): TEXT =
+BEGIN
+    IF var.type # Type.Struct THEN
+        RETURN NIL;
+    END;
+    RETURN Struct(var.byte_size) & " " & M3ID.ToText(var.name) & "=*_param_struct_pointer_" & M3ID.ToText(var.name) & ";";
+END Var_DeclareAndInitStructParamLocalValue;
+
+PROCEDURE ParamOrVar_Declare(var: CVar; struct_star, struct_name_prefix, tail: TEXT): TEXT =
+BEGIN
+    IF var.type_text # NIL THEN
+        RETURN var.type_text & " " & M3ID.ToText(var.name) & tail;
+    END;
+    IF var.type # Type.Struct THEN
+        RETURN typeToText[var.type] & " " & M3ID.ToText(var.name) & tail;
+    END;
+    RETURN Struct(var.byte_size) & struct_star & " " & struct_name_prefix & M3ID.ToText(var.name) & tail;
+END ParamOrVar_Declare;
+
+PROCEDURE Var_Declare(var: CVar; tail := ";"): TEXT =
+BEGIN
+    RETURN ParamOrVar_Declare(var, "", "", tail);
 END Var_Declare;
+
+PROCEDURE Param_Declare(var: CVar; tail := ";"): TEXT =
+BEGIN
+    RETURN ParamOrVar_Declare(var, "*", "_param_struct_pointer_", tail);
+END Param_Declare;
 
 PROCEDURE declare_local(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
-                        frequency: Frequency): Var =
+                        frequency: Frequency): M3CG.Var =
 VAR var := NEW(CVar, u := u, type := type, name := name, up_level := up_level,
                byte_size := byte_size, proc := u.current_proc).Init();
 BEGIN
@@ -1641,7 +1690,7 @@ BEGIN
         (*u.wr.Int   (var.offset);*)
         u.wr.NL    ();
     END;
-    print(u, " /* declare_local */ ");
+    print(u, " /* declare_local " & typeToText[type] & " " & M3ID.ToText(FixName(u, name)) & " */ ");
     IF u.in_proc THEN
         ExtraScope_Open(u);
         print(u, var.Declare(" M3_INIT;"));
@@ -1693,9 +1742,9 @@ BEGIN
     END;
 END last_param;
 
-PROCEDURE internal_declara_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
+PROCEDURE internal_declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                                  type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
-                                 frequency: Frequency; type_text: TEXT): Var =
+                                 frequency: Frequency; type_text: TEXT): M3CG.Var =
 VAR function := u.param_proc;
     var: CVar;
 BEGIN
@@ -1704,7 +1753,7 @@ BEGIN
         name := M3ID.Add("_static_link");
         type_text := NARROW(function.parent, CProc).FrameType() & "*";
     END;
-    var := NEW(CVar, u := u, type := type, name := name, byte_size := byte_size, up_level := up_level, proc := function, type_text := type_text).Init();
+    var := NEW(CParam, u := u, type := type, name := name, byte_size := byte_size, up_level := up_level, proc := function, type_text := type_text).Init();
     IF u.debug THEN
         u.wr.Cmd   ("declare_param");
         u.wr.ZName (name);
@@ -1718,8 +1767,8 @@ BEGIN
         u.wr.VName (var);
         (*u.wr.Int   (var.offset);*)
         u.wr.NL    ();
-        print(u, " /* declare_param */ ");
     END;
+    print(u, " /* declare_param " & typeToText[type] & " " & M3ID.ToText(FixName(u, name)) & " */ ");
 
     IF up_level THEN
         IF u.debug THEN
@@ -1737,16 +1786,16 @@ BEGIN
         last_param(u);
     END;
     RETURN var;
-END internal_declara_param;
+END internal_declare_param;
 
 PROCEDURE declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
                         type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
-                        frequency: Frequency): Var =
+                        frequency: Frequency): M3CG.Var =
 BEGIN
-    RETURN internal_declara_param(u, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency, NIL);
+    RETURN internal_declare_param(u, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency, NIL);
 END declare_param;
 
-PROCEDURE declare_temp(u: U; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): Var =
+PROCEDURE declare_temp(u: U; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): M3CG.Var =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_temp");
@@ -1762,7 +1811,7 @@ PROCEDURE declare_temp(u: U; byte_size: ByteSize; alignment: Alignment; type: Ty
     RETURN declare_local(u, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
   END declare_temp;
 
-PROCEDURE free_temp(u: U; v: Var) =
+PROCEDURE free_temp(u: U; v: M3CG.Var) =
   VAR var := NARROW(v, CVar);
   BEGIN
     IF u.debug THEN
@@ -1775,7 +1824,7 @@ PROCEDURE free_temp(u: U; v: Var) =
 
 (*---------------------------------------- static variable initialization ---*)
 
-PROCEDURE begin_init(u: U; v: Var) =
+PROCEDURE begin_init(u: U; v: M3CG.Var) =
   VAR var := NARROW(v, CVar);
   BEGIN
     IF u.debug THEN
@@ -1788,7 +1837,7 @@ PROCEDURE begin_init(u: U; v: Var) =
     SuppressLineDirective(u, 1, "begin_init");
   END begin_init;
 
-PROCEDURE end_init(u: U; v: Var) =
+PROCEDURE end_init(u: U; v: M3CG.Var) =
 VAR var := NARROW(v, CVar);
     init_fields := u.init_fields;
     initializer := u.initializer;
@@ -1869,7 +1918,7 @@ PROCEDURE init_int(u: U; offset: ByteOffset; READONLY value: Target.Int; type: T
     u.initializer.addhi(IntLiteral(type, value));
   END init_int;
 
-PROCEDURE init_proc(u: U; offset: ByteOffset; p: Proc) =
+PROCEDURE init_proc(u: U; offset: ByteOffset; p: M3CG.Proc) =
   VAR proc := NARROW(p, CProc);
   BEGIN
     IF u.debug THEN
@@ -1895,7 +1944,7 @@ PROCEDURE init_label(u: U; offset: ByteOffset; value: Label) =
     <* ASSERT FALSE *>
   END init_label;
 
-PROCEDURE init_var(u: U; offset: ByteOffset; v: Var; bias: ByteOffset) =
+PROCEDURE init_var(u: U; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
   VAR var := NARROW(v, CVar);
   BEGIN
     IF u.debug THEN
@@ -1914,7 +1963,7 @@ PROCEDURE init_var(u: U; offset: ByteOffset; v: Var; bias: ByteOffset) =
     END;
   END init_var;
 
-PROCEDURE init_offset(u: U; offset: ByteOffset; value: Var) =
+PROCEDURE init_offset(u: U; offset: ByteOffset; value: M3CG.Var) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_offset");
@@ -2005,7 +2054,7 @@ END init_float;
 (*------------------------------------------------------------ PROCEDUREs ---*)
 
 PROCEDURE import_procedure(u: U; name: Name; n_params: INTEGER;
-                           return_type: Type; callingConvention: CallingConvention): Proc =
+                           return_type: Type; callingConvention: CallingConvention): M3CG.Proc =
 VAR proc := NEW(CProc, name := name, n_params := n_params,
                 return_type := return_type,
                 callingConvention := callingConvention,
@@ -2033,7 +2082,7 @@ END import_procedure;
 PROCEDURE declare_procedure(u: U; name: Name; xparams: INTEGER;
                             return_type: Type; level: INTEGER;
                             callingConvention: CallingConvention;
-                            exported: BOOLEAN; parent: Proc): Proc =
+                            exported: BOOLEAN; parent: M3CG.Proc): M3CG.Proc =
 VAR is_exception_handler := level > 0 AND IsNameExceptionHandler(u, M3ID.ToText(FixName(u, name)));
     add_static_link := level > 0 AND NOT is_exception_handler;
     n_params := xparams + ORD(add_static_link);
@@ -2077,14 +2126,14 @@ BEGIN
             u.wr.OutT("adding _static_link parameter to " & M3ID.ToText(name) & "\n");
         END;
         print(u, " /* declare_procedure 2 */ ");
-        EVAL internal_declara_param(u, M3ID.Add("_static_link"), CG_Bytes[Type.Addr], CG_Bytes[Type.Addr],
+        EVAL internal_declare_param(u, M3ID.Add("_static_link"), CG_Bytes[Type.Addr], CG_Bytes[Type.Addr],
                 Type.Addr, UID_ADDR, FALSE(*?*), FALSE, M3CG.Never, NARROW(parent, CProc).FrameType() & "*");
     END;
     SuppressLineDirective(u, n_params, "declare_procedure n_params");
     RETURN proc;
 END declare_procedure;
 
-PROCEDURE begin_procedure(u: U; p: Proc) =
+PROCEDURE begin_procedure(u: U; p: M3CG.Proc) =
 VAR proc := NARROW(p, CProc);
     frame_name := proc.FrameName();
     frame_type := proc.FrameType();
@@ -2102,16 +2151,27 @@ BEGIN
     u.in_proc := TRUE;
     u.current_proc := proc;
 
+    (* declare frame type *)
+
     IF proc.forward_declared_frame_type THEN
         print(u, "struct " & frame_type & " {");
-        print(u, "void* _unused;"); (* add field to ensure frame not empty *)
-                                    (* TODO only do this if necessary *)
+
+        (* add field to ensure frame not empty *)
+        (* TODO only do this if necessary *)
+
+        print(u, "void* _unused;");
+                                    
+        (* uplevel locals in frame *) (* structs? *)
+
         FOR i := 0 TO proc.Locals_Size() - 1 DO
             var := proc.Locals(i);
             IF var.up_level THEN
                 print(u, var.Declare());
             END;
         END;
+
+        (* uplevel params in frame *) (* structs? *)
+
         FOR i := FIRST(params^) TO LAST(params^) DO
             var := params[i];
             IF var.up_level THEN
@@ -2126,6 +2186,12 @@ BEGIN
 
     print(u, function_prototype(proc));
     print(u, "{");
+
+    (* copy structs from pointers to local value *) (* uplevels? *)
+
+    FOR i := FIRST(params^) TO LAST(params^) DO
+        print(u, params[i].DeclareAndInitStructParamLocalValue());
+    END;
 
     (* declare and initialize non-uplevel locals *)
 
@@ -2153,6 +2219,8 @@ BEGIN
                 END;
             END;
         END;
+        
+        (* copy in static link from param to frame *)
 
         IF proc.level > 0 THEN
             print(u, frame_name & "._static_link=_static_link;");
@@ -2161,12 +2229,12 @@ BEGIN
         (* quash unused warning *)
 
         print(u, frame_name & "._unused=&" & frame_name & ";");
-
+        
     END;
 
 END begin_procedure;
 
-PROCEDURE end_procedure(u: U; p: Proc) =
+PROCEDURE end_procedure(u: U; p: M3CG.Proc) =
 VAR proc := NARROW(p, CProc);
 BEGIN
     IF u.debug THEN
@@ -2209,7 +2277,7 @@ PROCEDURE end_block(u: U) =
 *)
   END end_block;
 
-PROCEDURE note_procedure_origin(u: U; p: Proc) =
+PROCEDURE note_procedure_origin(u: U; p: M3CG.Proc) =
   VAR proc := NARROW(p, CProc);
   BEGIN
     IF u.debug THEN
@@ -2395,7 +2463,7 @@ BEGIN
     RETURN static_link;
 END follow_static_link;
 
-PROCEDURE load(u: U; v: Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
+PROCEDURE load(u: U; v: M3CG.Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
 (* push; s0.ztype := Mem [ ADR(var) + offset ].mtype; The only allowed (mtype->ztype) conversions
    are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
    The source type, mtype, determines whether the value is sign-extended or
@@ -2420,7 +2488,7 @@ BEGIN
     print(u, "(*(volatile " & typeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset) & ")=(" & typeToText[in_ztype] & ")(" & in & ");");
 END store_helper;
 
-PROCEDURE store(u: U; v: Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
+PROCEDURE store(u: U; v: M3CG.Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
 (* Mem [ ADR(var) + offset ].mtype := s0.ztype; pop *)
 VAR var := NARROW(v, CVar);
     s0 := cast(get(u, 0), ztype);
@@ -2438,7 +2506,7 @@ BEGIN
     store_helper(u, s0, ztype, "&" & follow_static_link(u, var) & M3ID.ToText(var.name), offset, mtype);
   END store;
 
-PROCEDURE load_address(u: U; v: Var; offset: ByteOffset) =
+PROCEDURE load_address(u: U; v: M3CG.Var; offset: ByteOffset) =
 (* push; s0.A := ADR(var) + offset *)
 VAR var := NARROW(v, CVar);
 BEGIN
@@ -2538,19 +2606,19 @@ PROCEDURE compare(u: U; ztype: ZType; itype: IType; op: CompareOp) =
   (* s1.itype := (s1.ztype op s0.ztype); pop *)
   VAR s0 := cast(get(u, 0), ztype);
       s1 := cast(get(u, 1), ztype);
-  BEGIN
+BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("compare");
-      u.wr.TName (ztype);
-      u.wr.TName (itype);
-      u.wr.OutT  (" " & CompareOpName[op]);
-      u.wr.NL    ();
-      print(u, " /* compare */ ");
+        u.wr.Cmd   ("compare");
+        u.wr.TName (ztype);
+        u.wr.TName (itype);
+        u.wr.OutT  (" " & CompareOpName[op]);
+        u.wr.NL    ();
+        print(u, " /* compare */ ");
     END;
     (* ASSERT cond # Cond.Z AND cond # Cond.NZ *)
-      pop(u);
-      push(u, itype, cast(s1 & CompareOpC[op] & s0, itype));
-  END compare;
+    pop(u, 2);
+    push(u, itype, cast(s1 & CompareOpC[op] & s0, itype));
+END compare;
 
 PROCEDURE add(u: U; type: AType) =
   (* s1.type := s1.type + s0.type; pop *)
@@ -2670,8 +2738,8 @@ PROCEDURE abs(u: U; type: AType) =
       u.wr.Cmd   ("abs");
       u.wr.TName (type);
       u.wr.NL    ();
-      print(u, " /* abs */");
     END;
+    print(u, " /* abs */");
     pop(u);
     push(u, type, cast("m3_abs_" & typeToText[type] & "(" & s0 & ")", type));
   END abs;
@@ -2753,7 +2821,7 @@ PROCEDURE set_op3(u: U; byte_size: ByteSize; op: TEXT) =
       print(u, " /* " & op & " */ ");
     END;
     pop(u, 3);
-    print(u, "m3_" & op & "(" & Fmt.Int(byte_size) & ",(WORD_T*)" & s2 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s0 & ");");
+    print(u, "m3_" & op & "(" & Fmt.Int(byte_size * 8) & ",(WORD_T*)" & s2 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s0 & ");");
   END set_op3;
 
 PROCEDURE set_union(u: U; byte_size: ByteSize) =
@@ -3419,7 +3487,7 @@ PROCEDURE start_call_helper(u: U) =
     INC(u.in_proc_call);
   END start_call_helper;
 
-PROCEDURE start_call_direct(u: U; p: Proc; level: INTEGER; type: Type) =
+PROCEDURE start_call_direct(u: U; p: M3CG.Proc; level: INTEGER; type: Type) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 VAR proc := NARROW(p, CProc);
 BEGIN
@@ -3490,7 +3558,10 @@ PROCEDURE pop_struct(u: U; typeid: TypeUID; byte_size: ByteSize; alignment: Alig
       u.wr.NL    ();
     END;
     print(u, " /* pop_struct */ ");
-    pop_parameter_helper(u, s0);
+    (* pop_parameter_helper(u, "*(M3STRUCT(" & Fmt.Int(byte_size) & ") * )" & s0); *)
+    (* pop_parameter_helper(u, s0); *)
+    (* BUG? local procedure take struct pointers, imported ones take ADDRESS? *)
+    pop_parameter_helper(u, "(void * )" & s0);
   END pop_struct;
 
 PROCEDURE pop_static_link(u: U) =
@@ -3561,8 +3632,8 @@ BEGIN
     RETURN static_link;
 END get_static_link;
 
-PROCEDURE call_direct(u: U; p: Proc; type: Type) =
-  (* call the procedure identified by Proc p. The procedure
+PROCEDURE call_direct(u: U; p: M3CG.Proc; type: Type) =
+  (* call the procedure identified by M3CG.Proc p. The procedure
      returns a value of type type. *)
 VAR proc := NARROW(p, CProc);
 BEGIN
@@ -3615,7 +3686,7 @@ PROCEDURE call_indirect(u: U; type: Type; callingConvention: CallingConvention) 
 
 (*------------------------------------------- procedure and closure types ---*)
 
-PROCEDURE load_procedure(u: U; p: Proc) =
+PROCEDURE load_procedure(u: U; p: M3CG.Proc) =
   (* push; s0.A := ADDR (proc's body) *)
   VAR proc := NARROW(p, CProc);
   BEGIN
@@ -3629,7 +3700,7 @@ PROCEDURE load_procedure(u: U; p: Proc) =
     push(u, Type.Addr, M3ID.ToText(proc.name));
   END load_procedure;
 
-PROCEDURE load_static_link(u: U; p: Proc) =
+PROCEDURE load_static_link(u: U; p: M3CG.Proc) =
 (* push; s0.A := (static link needed to call proc, NIL for top-level procs) *)
 VAR target := NARROW(p, CProc);
     target_level := target.level;
