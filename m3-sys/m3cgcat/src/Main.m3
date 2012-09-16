@@ -2,7 +2,7 @@ MODULE Main;
 
 IMPORT IO, Params, Process, Stdio, Text, Rd, Wr, OSError;
 IMPORT M3CG, M3CG_Rd, M3CG_Wr, M3CG_BinRd, M3CG_BinWr, MxConfig, Target, M3C;
-IMPORT FileRd, FileWr, Word, RTIO, RTProcess;
+IMPORT FileRd, FileWr, Word;
 FROM Thread IMPORT Alerted;
 
 PROCEDURE TextFindEqual (a: TEXT; READONLY b: ARRAY OF TEXT): INTEGER =
@@ -131,13 +131,14 @@ PROCEDURE DoIt () RAISES {Rd.Failure, Wr.Failure, Alerted, OSError.E} =
   END DoIt;
 
 PROCEDURE Usage () =
+VAR arg0 := Params.Get(0);
   BEGIN
-    IO.Put ("usage: " & Params.Get(0) & " -ascii  < in.asc > out.bin" & Wr.EOL);
-    IO.Put ("       " & Params.Get(0) & " -binary < in.bin > out.asc" & Wr.EOL);
-    IO.Put ("       " & Params.Get(0) & " -[in|out]-[binary|ascii|c] < in > out" & Wr.EOL);
-    IO.Put ("       " & Params.Get(0) & " -[in|out]-[binary|ascii|c][:=file] < in > out" & Wr.EOL);
-    IO.Put ("       example: " & Params.Get(0) & " -in-binary -out-c < in.bin > out.c" & Wr.EOL);
-    IO.Put ("       example: " & Params.Get(0) & " -in-binary=in.bin -out-c:out.c" & Wr.EOL);
+    IO.Put ("usage: " & arg0 & " -ascii  < in.asc > out.bin" & Wr.EOL);
+    IO.Put ("       " & arg0 & " -binary < in.bin > out.asc" & Wr.EOL);
+    IO.Put ("       " & arg0 & " -[in|out]-[binary|ascii|c] < in > out" & Wr.EOL);
+    IO.Put ("       " & arg0 & " -[in|out]-[binary|ascii|c][:=file] < in > out" & Wr.EOL);
+    IO.Put ("       example: " & arg0 & " -in-binary -out-c < in.bin > out.c" & Wr.EOL);
+    IO.Put ("       example: " & arg0 & " -in-binary=in.bin -out-c:out.c" & Wr.EOL);
     Process.Exit (1);
   END Usage;
 
@@ -155,5 +156,5 @@ PROCEDURE Init () =
   END Init;
 
 BEGIN
-  DoIt ();
+  DoIt (); <*NOWARN*>
 END Main.

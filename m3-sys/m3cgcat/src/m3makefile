@@ -5,4 +5,4 @@ import ("m3quake")
 
 implementation ("Main")
 build_standalone ()
-program ("m3cgcat")
+Program ("m3cgcat")
