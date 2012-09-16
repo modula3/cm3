@@ -6,5 +6,16 @@ readonly TARGET = "PPC_DARWIN"
 readonly GNU_PLATFORM = "powerpc-darwin6" % "cpu-os" string for GNU
 DarwinArch = "ppc"
 
+M3_BACKEND_MODE = "ExternalObject"
+M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs" ]
+
 include("PPC.common")
 include("Darwin.common")
+
+proc m3_backend(source, object, optimize, debug) is
+    ret_code = try_exec("@m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
+    if not equal(ret_code, 0)
+        return ret_code
+    end
+    return compile_c(source & ".c", object, [ ], FALSE, TRUE)
+end
