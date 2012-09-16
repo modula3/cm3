@@ -100,6 +100,8 @@ if not defined("m3back_mieee")
   m3back_mieee = ""
 end
 
+if not defined("m3_backend")
+
 proc m3_backend(source, object, optimize, debug) is
     local args = [ "-quiet",
                    "-fno-reorder-blocks",
@@ -119,6 +121,8 @@ proc m3_backend(source, object, optimize, debug) is
     end
     local m3back = GetM3Back()
     return try_exec (m3back, args, source, "-o", object)
+end
+
 end
 
 %--------------------------------------------------------------- C compiler ---
