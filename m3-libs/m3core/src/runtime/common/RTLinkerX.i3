@@ -78,4 +78,3 @@ IMPORT RT0;
 <*EXTERNAL*> PROCEDURE RTutils_M3         (mode: INTEGER): RT0.ModulePtr;
 
 END RTLinkerX.
-
