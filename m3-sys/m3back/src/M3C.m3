@@ -1782,10 +1782,10 @@ TYPE FunctionPrototype_t = { Declare, Define };
 
 PROCEDURE function_prototype(proc: CProc; kind: FunctionPrototype_t): TEXT =
 VAR params := proc.params;
-    is_exception_handler := proc.is_exception_handler;
+    (* is_exception_handler := proc.is_exception_handler; *)
     text := typeToText[proc.return_type] & " __cdecl " & M3ID.ToText(proc.name);
     after_param: TEXT;
-    ansi := NOT is_exception_handler;
+    ansi := TRUE (*NOT is_exception_handler*);
     define_kr := NOT ansi AND kind = FunctionPrototype_t.Define;
     kr_part2 := "";
 BEGIN
@@ -1842,12 +1842,12 @@ BEGIN
             NARROW(proc.parent, CProc).FrameType() & "*"), CVar);
         (* static link is first instead of last
          * it is always present, but activation isn't
-         *)
         IF proc.is_exception_handler THEN
             <* ASSERT NUMBER(proc.params^) = 2 *>
             proc.params[1] := proc.params[0];
             proc.params[0] := param;
         END;
+        *)
     END;
 
     prototype := function_prototype(u.param_proc, FunctionPrototype_t.Declare) & ";";
@@ -3613,6 +3613,11 @@ BEGIN
     END;
     print(u, " /* start_call_direct */ ");
     start_call_helper(u);
+    (* workaround frontend bug? *)
+    IF proc.is_exception_handler THEN
+        push(u, Type.Addr, "0");
+        pop_parameter_helper(u, "0");
+    END;
     (*
     IF level > u.current_proc.level THEN
         static_link := "(&_static_link)";
