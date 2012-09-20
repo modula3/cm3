@@ -34,7 +34,7 @@ PROCEDURE Self (): RT0.ExceptionPtr =
   END Self;
 *)
 PROCEDURE ReturnFromTry(): INTEGER = BEGIN Int(10); TRY Int(20); RETURN 30; FINALLY Int(40); END; END ReturnFromTry;
-PROCEDURE ReturnFromTryUplevelLocal(): INTEGER = VAR i := 1; BEGIN Int(50); RETURN 51; TRY Int(60); FINALLY Int(70+i); END; END ReturnFromTryUplevelLocal;
+(*PROCEDURE ReturnFromTryUplevelLocal(): INTEGER = VAR i := 1; BEGIN Int(50); RETURN 51; TRY Int(60); FINALLY Int(70+i); END; END ReturnFromTryUplevelLocal;*)
 PROCEDURE ReturnFromTryUplevelParam(i:INTEGER): INTEGER = BEGIN TRY Int(80); RETURN 90; FINALLY Int(100+i); END; END ReturnFromTryUplevelParam;
 PROCEDURE ReturnFromFinally(): INTEGER = BEGIN TRY Int(110); FINALLY Int(120); RETURN 130; END; END ReturnFromFinally;
 PROCEDURE ReturnFromFinallyUplevelLocal(): INTEGER = VAR i := 1; BEGIN TRY Int(140); FINALLY RETURN 150 + i; END; END ReturnFromFinallyUplevelLocal;
@@ -46,7 +46,7 @@ PROCEDURE CatchException(): INTEGER = BEGIN TRY Int(240); RAISE E1 EXCEPT E1 => 
 
 BEGIN
 Int(ReturnFromTry());
-Int(ReturnFromTryUplevelLocal());
+(*Int(ReturnFromTryUplevelLocal());*)
 Int(ReturnFromTryUplevelParam(Line()));
 Int(ReturnFromFinally());
 Int(ReturnFromFinallyUplevelParam(Line()));
