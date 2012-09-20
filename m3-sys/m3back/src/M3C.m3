@@ -2793,7 +2793,7 @@ PROCEDURE div(u: U; type: IType; a, b: Sign) =
       print(u, " /* div */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(s1 & "/" & s0, type));
+    push(u, type, cast("m3_div_" & typeToText[type] & "(" & paren(s1) & "," & paren(s0) & ")", type));
   END div;
 
 PROCEDURE mod(u: U; type: IType; a, b: Sign) =
@@ -2810,7 +2810,7 @@ PROCEDURE mod(u: U; type: IType; a, b: Sign) =
       print(u, " /* mod */ ");
     END;
     pop(u, 2);
-    push(u, type, cast(s1 & "%" & s0, type));
+    push(u, type, cast("m3_mod_" & typeToText[type] & "(" & paren(s1) & "," & paren(s0) & ")", type));
   END mod;
 
 PROCEDURE negate(u: U; type: AType) =
