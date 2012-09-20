@@ -784,6 +784,7 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){T mask=(~((~(T)0)<<count))<<offset;return(((y<<offset)&mask)|(x&~mask));}",
 "#define m3_sign_extend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}",
 "m3_sign_extend_T(INT32)",
+"m3_sign_extend_T(INT64)",
 "m3_sign_extend_T(UINT32)",
 "m3_sign_extend_T(UINT64)",
 "m3_extract_T(UINT32)",
