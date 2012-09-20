@@ -598,24 +598,31 @@ BEGIN
 END Proc_ForwardDeclareFrameType;
 
 PROCEDURE IsNameExceptionHandler(u: U; name: TEXT): BOOLEAN =
-(* Is the name of the form unit_name + special + number?
+(* Is the name of the form unit_name + special + number + optionally underscore and another number ?
    See TryFinStmt.m3 *)
+VAR ch: CHAR;
+    underscore := FALSE;
+    length, prefix_length, i := 0;
+    prefix, end := "";
 BEGIN
-    WITH    length = Text.Length(name) DO
-        FOR i := FIRST(u.handler_name_prefixes) TO LAST(u.handler_name_prefixes) DO
-            WITH    prefix = u.handler_name_prefixes[i],
-                    prefix_length = Text.Length(prefix) DO
-                IF length > prefix_length AND TextUtils.StartsWith(name, prefix) THEN
-                    WITH end = Text.Sub(name, prefix_length) DO
-                        FOR i := 0 TO Text.Length(end) - 1 DO
-                            IF NOT Text.GetChar(end, i) IN ASCII.Digits THEN
-                                RETURN FALSE;
-                            END;
-                        END;
-                        RETURN TRUE;
+    length := Text.Length(name);
+    FOR i := FIRST(u.handler_name_prefixes) TO LAST(u.handler_name_prefixes) DO
+        prefix := u.handler_name_prefixes[i];
+        prefix_length := Text.Length(prefix);
+        IF length > prefix_length AND TextUtils.StartsWith(name, prefix) THEN
+            end := Text.Sub(name, prefix_length);
+            FOR i := 0 TO Text.Length(end) - 1 DO
+                ch := Text.GetChar(end, i);
+                IF ch = '_' THEN
+                    IF underscore THEN
+                        RETURN FALSE;
                     END;
+                    underscore := TRUE;
+                ELSIF NOT ch IN ASCII.Digits THEN
+                    RETURN FALSE;
                 END;
             END;
+            RETURN TRUE;
         END;
     END;
     RETURN FALSE;
