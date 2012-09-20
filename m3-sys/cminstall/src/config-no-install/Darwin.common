@@ -53,7 +53,8 @@ proc configure_c_compiler() is
   % here in case user is using a self-built FSF gcc.
   %
 
-  SYSTEM_CC = "gcc -gstabs+ -fPIC"
+  %SYSTEM_CC = "gcc -gstabs+ -fPIC"
+  SYSTEM_CC = "gcc -g -fPIC"
   SYSTEM_CC_ASM = "gcc -fPIC"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
