@@ -926,6 +926,13 @@ CONST typeToText = ARRAY CGType OF TEXT {
 
 TYPE IntegerTypes = [Type.Word8 .. Type.Int64];
 
+CONST typeIsUnsigned = ARRAY IntegerTypes OF BOOLEAN {
+    TRUE, FALSE,
+    TRUE, FALSE,
+    TRUE, FALSE,
+    TRUE, FALSE
+};
+
 CONST typeToUnsigned = ARRAY IntegerTypes OF IntegerTypes {
     Type.Word8, Type.Word8,
     Type.Word16, Type.Word16,
@@ -2793,7 +2800,11 @@ PROCEDURE div(u: U; type: IType; a, b: Sign) =
       print(u, " /* div */ ");
     END;
     pop(u, 2);
-    push(u, type, cast("m3_div_" & typeToText[type] & "(" & paren(s1) & "," & paren(s0) & ")", type));
+    IF typeIsUnsigned[type] THEN
+        push(u, type, cast(s1 & "/" & s0, type));
+    ELSE
+        push(u, type, cast("m3_div_" & typeToText[type] & "(" & paren(s1) & "," & paren(s0) & ")", type));
+    END;
   END div;
 
 PROCEDURE mod(u: U; type: IType; a, b: Sign) =
@@ -2810,7 +2821,11 @@ PROCEDURE mod(u: U; type: IType; a, b: Sign) =
       print(u, " /* mod */ ");
     END;
     pop(u, 2);
-    push(u, type, cast("m3_mod_" & typeToText[type] & "(" & paren(s1) & "," & paren(s0) & ")", type));
+    IF typeIsUnsigned[type] THEN
+        push(u, type, cast(s1 & "%" & s0, type));
+    ELSE
+        push(u, type, cast("m3_mod_" & typeToText[type] & "(" & paren(s1) & "," & paren(s0) & ")", type));
+    END;
   END mod;
 
 PROCEDURE negate(u: U; type: AType) =
