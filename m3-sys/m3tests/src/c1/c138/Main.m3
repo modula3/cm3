@@ -40,9 +40,9 @@ PROCEDURE ReturnFromFinally(): INTEGER = BEGIN TRY Int(110); FINALLY Int(120); R
 PROCEDURE ReturnFromFinallyUplevelLocal(): INTEGER = VAR i := 1; BEGIN TRY Int(140); FINALLY RETURN 150 + i; END; END ReturnFromFinallyUplevelLocal;
 PROCEDURE ReturnFromFinallyUplevelParam(i:INTEGER): INTEGER = BEGIN TRY Int(170); FINALLY RETURN 180 + i; END; END ReturnFromFinallyUplevelParam;
 
-PROCEDURE ReturnRaisedInteger(): INTEGER = BEGIN TRY Int(191); RAISE E2(190) EXCEPT E2(i) => RETURN 190; END; RETURN Line(); END ReturnRaisedInteger;
-PROCEDURE CatchInteger(): INTEGER = BEGIN TRY Int(210); RAISE E2(220); EXCEPT E2(i) => END; RETURN 230; END CatchInteger;
-PROCEDURE CatchException(): INTEGER = BEGIN TRY Int(240); RAISE E1 EXCEPT E1 => Int(250) | E2(i) => Int(260) END; RETURN 270; END CatchException;
+PROCEDURE ReturnRaisedInteger(): INTEGER = BEGIN TRY Int(190); RAISE E2(200) EXCEPT E2(i) => RETURN 210; END; RETURN Line(); END ReturnRaisedInteger;
+PROCEDURE CatchInteger(): INTEGER = BEGIN TRY Int(220); RAISE E2(230); EXCEPT E2(i) => END; RETURN 240; END CatchInteger;
+PROCEDURE CatchException(): INTEGER = BEGIN TRY Int(250); RAISE E1 EXCEPT E1 => Int(260) | E2(i) => Int(270) END; RETURN 280; END CatchException;
 
 BEGIN
 Int(ReturnFromTry());
