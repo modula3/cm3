@@ -1623,13 +1623,10 @@ GenericCommand:
             else:
                 ExtraArgs += arg
         else:
-            if not ActionCommands:
-                Action = ActionInfo.get(arg)
-                if Action:
-                    ActionCommands = Action["Commands"]
-                    KeepGoing = Action.get("KeepGoing", False)
-                else:
-                    PackagesFromCommandLine.append(arg)
+            Action = ActionInfo.get(arg)
+            if Action:
+                ActionCommands = Action["Commands"]
+                KeepGoing = Action.get("KeepGoing", False)
             else:
                 PackagesFromCommandLine.append(arg)
 
