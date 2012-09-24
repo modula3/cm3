@@ -1,8 +1,8 @@
 MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text;
-IMPORT M3CG, M3CG_Ops, Target, TIntN, TFloat, TargetMap;
-IMPORT Stdio, RTIO, Wrx86, M3ID, TInt, ASCII, TextUtils, Cstdint, Long;
+IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap;
+IMPORT RTIO, M3ID, TInt, ASCII, TextUtils, Cstdint, Long;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -27,8 +27,8 @@ C and the error messages reference C line numbers *)
 
 REVEAL
   U = Public BRANDED "M3C.U" OBJECT
+        Err    : ErrorHandler := NIL;
         anonymousCounter := -1;
-        wr     : Wrx86.T := NIL;
         c      : Wr.T := NIL;
         debug  := FALSE;
         stack  : TextSeq.T := NIL;
@@ -152,7 +152,7 @@ REVEAL
         load_indirect := load_indirect;
         store_indirect := store_indirect;
         load_nil      := load_nil;
-        load_integer  := load_integer;
+        load_integer  := load_target_integer;
         load_float    := load_float;
         compare  := compare;
         add      := add;
@@ -606,9 +606,6 @@ BEGIN
     IF proc.forward_declared_frame_type THEN
         RETURN;
     END;
-    IF u.debug THEN
-        u.wr.OutT(" declaring frame type to function " & M3ID.ToText(proc.name) & "\n");
-    END;
     print(u, "struct " & proc.FrameType() & ";");
     print(u, "typedef struct " & proc.FrameType() & " " & proc.FrameType() & ";");
     proc.forward_declared_frame_type := TRUE;
@@ -800,6 +797,7 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "#endif",
 *)
 
+"typedef WORD_T* SET;",
 "#define NIL ((ADDRESS)0)",
 "typedef float REAL;",
 "typedef double LONGREAL;",
@@ -914,6 +912,22 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "static INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); }",
 "static INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }",
 "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }",
+
+"#define m3_pop_T(T) static void __stdcall m3_pop_##T(volatile T a) { }",
+"static void __stdcall m3_pop_STRUCT(volatile const void* a) { }",
+"m3_pop_T(INT8)",
+"m3_pop_T(INT16)",
+"m3_pop_T(INT32)",
+"m3_pop_T(INT64)",
+"m3_pop_T(UINT8)",
+"m3_pop_T(UINT16)",
+"m3_pop_T(UINT32)",
+"m3_pop_T(UINT64)",
+"m3_pop_T(ADDRESS)",
+"m3_pop_T(SET)",
+"m3_pop_T(REAL)",
+"m3_pop_T(LONGREAL)",
+"m3_pop_T(EXTENDED)",
 ""};
 
 <*NOWARN*>CONST Suffix = ARRAY OF TEXT {
@@ -939,14 +953,14 @@ CONST intLiteralSuffix = ARRAY CGType OF TEXT {
 };
 
 CONST typeToText = ARRAY CGType OF TEXT {
-    "UINT8",  "INT8",  (* FUTURE? U8, I8 *)
-    "UINT16", "INT16", (* FUTURE? U16, I16 *)
-    "UINT32", "INT32", (* FUTURE? U32, I32 *)
-    "UINT64", "INT64", (* FUTURE? U64, I64 *)
-    "REAL", "LONGREAL", "EXTENDED", (* FUTURE? R, L, E *)
-    "ADDRESS", (* FUTURE: A or P for pointer *)
+    "UINT8",  "INT8",
+    "UINT16", "INT16",
+    "UINT32", "INT32",
+    "UINT64", "INT64",
+    "REAL", "LONGREAL", "EXTENDED",
+    "ADDRESS",
     "STRUCT",
-    "void" (* FUTURE: V *)
+    "void"
 };
 
 TYPE IntegerTypes = [Type.Word8 .. Type.Int64];
@@ -999,7 +1013,6 @@ BEGIN
     INC(u.suppress_line_directive, adjust);
     (*
     IF u.debug THEN
-        u.wr.Flush();
         RTIO.PutText("suppress_line_directive now " & IntToDec(u.suppress_line_directive) & " due to " & reason & "\n");
         RTIO.Flush();
     END
@@ -1070,7 +1083,6 @@ END print;
 PROCEDURE New (cfile: Wr.T): M3CG.T =
 VAR u := NEW (U);
 BEGIN
-    u.wr := Wrx86.New (Stdio.stdout);
     (* u.debug := TRUE; *)
     u.c := cfile;
     u.init_fields := NEW(TextSeq.T).init();
@@ -1127,18 +1139,14 @@ END next_label;
 
 PROCEDURE set_error_handler (<*NOWARN*>u: U; <*NOWARN*>p: ErrorHandler) =
 BEGIN
+    u.Err := p;
 END set_error_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
-PROCEDURE begin_unit(u: U; optimize: INTEGER) =
+PROCEDURE begin_unit(u: U; <*UNUSED*>optimize: INTEGER) =
 (* called before any other method to initialize the compilation unit *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd ("begin_unit");
-        u.wr.Int (optimize);
-        u.wr.NL  ();
-    END;
     print(u, " /* begin unit */\n");
     print(u, "/* M3_TARGET = " & Target.System_name & " */ ");
     print(u, "/* M3_WORDSIZE = " & IntToDec(Target.Word.size) & " */ ");
@@ -1156,10 +1164,6 @@ PROCEDURE end_unit(u: U) =
 (* called after all other methods to finalize the unit and write the
  resulting object *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd ("end_unit");
-        u.wr.NL  ();
-    END;
     print(u, " /* end unit */\n");
     u.line_directive := ""; (* really suppress *)
     u.nl_line_directive := "\n"; (* really suppress *)
@@ -1171,24 +1175,16 @@ BEGIN
     SuppressLineDirective(u, -1, "end_unit");
 END end_unit;
 
-PROCEDURE import_unit(u: U; name: Name) =
+PROCEDURE import_unit(u: U; <*UNUSED*>name: Name) =
 (* note that the current compilation unit imports the interface 'name' *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("import_unit");
-        u.wr.ZName (name);
-        u.wr.NL    ();
-    END
+    u.comment("import_unit");
 END import_unit;
 
-PROCEDURE export_unit(u: U; name: Name) =
+PROCEDURE export_unit(u: U; <*UNUSED*>name: Name) =
 (* note that the current compilation unit exports the interface 'name' *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("export_unit");
-        u.wr.ZName (name);
-        u.wr.NL    ();
-    END
+    u.comment("export_unit");
 END export_unit;
 
 (*------------------------------------------------ debugging line numbers ---*)
@@ -1197,13 +1193,7 @@ PROCEDURE set_source_file(u: U; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
 BEGIN
-    IF u.debug THEN
-        u.wr.OutT ("\t\t\t\t\t-----FILE ");
-        u.wr.OutT (file);
-        u.wr.OutT ("  -----");
-        u.wr.NL ();
-        print(u, " /* set_source_file */ ");
-    END;
+    u.comment("set_source_file");
     u.file := file;
     SetLineDirective(u);
 END set_source_file;
@@ -1212,28 +1202,16 @@ PROCEDURE set_source_line(u: U; line: INTEGER) =
 (* Sets the current source line number. Subsequent statements
 and expressions are associated with this source location. *)
 BEGIN
-    IF u.debug THEN
-        u.wr.OutT ("\t\t\t\t\t-----LINE");
-        u.wr.Int  (line);
-        u.wr.OutT ("  -----");
-        u.wr.NL ();
-        print(u, " /* set_source_line */ ");
-    END;
+    u.comment("set_source_line");
     u.line := line;
     SetLineDirective(u);
 END set_source_line;
 
 (*------------------------------------------- debugging type declarations ---*)
 
-PROCEDURE declare_typename(u: U; typeid: TypeUID; name: Name) =
+<*NOWARN*>PROCEDURE declare_typename(u: U; typeid: TypeUID; name: Name) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_typename");
-        u.wr.Tipe  (typeid);
-        u.wr.ZName (name);
-        u.wr.NL    ();
-        print(u, " /* declare_typename */ ");
-    END;
+    u.comment("declare_typename");
     (*
     print(u, "typedef M" & TypeidToHex(typeid) & " " & M3ID.ToText(name) & ";\n");
     *)
@@ -1246,17 +1224,9 @@ BEGIN
 END TypeIDToText;
 *)
 
-PROCEDURE declare_array(u: U; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_array(u: U; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_array");
-        u.wr.Tipe (typeid);
-        u.wr.Tipe (index_typeid);
-        u.wr.Tipe (element_typeid);
-        u.wr.BInt (total_bit_size);
-        u.wr.NL   ();
-        print(u, " /* declare_array */ ");
-    END;
+    u.comment("declare_array");
 (*
     WITH index_type = TypeidToType_Get(index_typeid),
          element_type =  TypeidToType_Get(element_typeid) DO
@@ -1286,16 +1256,9 @@ BEGIN
 *)
   END declare_array;
 
-PROCEDURE declare_open_array(u: U; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_open_array(u: U; typeid, element_typeid: TypeUID; bit_size: BitSize) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_open_array");
-        u.wr.Tipe (typeid);
-        u.wr.Tipe (element_typeid);
-        u.wr.BInt (bit_size);
-        u.wr.NL   ();
-        print(u, " /* declare_open_array */ ");
-    END;
+    u.comment("declare_open_array");
     <* ASSERT bit_size MOD 32 = 0 *>
 (*
     WITH element_type = TypeidToType_Get(element_typeid) DO
@@ -1322,16 +1285,9 @@ BEGIN
 *)
   END declare_open_array;
 
-PROCEDURE declare_enum(u: U; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_enum(u: U; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_enum");
-        u.wr.Tipe (typeid);
-        u.wr.Int  (n_elts);
-        u.wr.BInt (bit_size);
-        u.wr.NL   ();
-        print(u, " /* declare_enum */ ");
-    END;
+    u.comment("declare_enum");
     SuppressLineDirective(u, n_elts, "declare_enum n_elts");
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
     (*
@@ -1347,14 +1303,9 @@ BEGIN
 *)
 END declare_enum;
 
-PROCEDURE declare_enum_elt(u: U; name: Name) =
+<*NOWARN*>PROCEDURE declare_enum_elt(u: U; name: Name) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_enum_elt");
-        u.wr.ZName (name);
-        u.wr.NL    ();
-        print(u, " /* declare_enum_elt */ ");
-    END;
+    u.comment("declare_enum_elt");
     SuppressLineDirective(u, -1, "declare_enum_elt");
 (*
     print(u, "#define " & u.enum_id & "_" & M3ID.ToText(name) & " ((" & u.enum_type & ")" & IntToDec(u.enum_value) & ")\n");
@@ -1368,235 +1319,102 @@ BEGIN
 *)
   END declare_enum_elt;
 
-PROCEDURE declare_packed(u: U; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
+<*NOWARN*>PROCEDURE declare_packed(u: U; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_packed");
-        u.wr.Tipe (typeid);
-        u.wr.BInt (bit_size);
-        u.wr.Tipe (base);
-        u.wr.NL   ();
-        print(u, " /* declare_packed */ ");
-    END;
+    u.comment("declare_packed");
 END declare_packed;
 
-PROCEDURE declare_record(u: U; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
+<*NOWARN*>PROCEDURE declare_record(u: U; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_record");
-        u.wr.Tipe (typeid);
-        u.wr.BInt (bit_size);
-        u.wr.Int  (n_fields);
-        u.wr.NL   ();
-        print(u, " /* declare_record */ ");
-    END;
+    u.comment("declare_record");
     SuppressLineDirective(u, n_fields, "declare_record n_fields");
 END declare_record;
 
-PROCEDURE declare_field(u: U; name: Name; offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+<*NOWARN*>PROCEDURE declare_field(u: U; name: Name; offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_field");
-        u.wr.ZName (name);
-        u.wr.BInt  (offset);
-        u.wr.BInt  (bit_size);
-        u.wr.Tipe  (typeid);
-        u.wr.NL    ();
-        print(u, " /* declare_field */ ");
-    END;
+    u.comment("declare_field");
     SuppressLineDirective(u, -1, "declare_field");
 END declare_field;
 
-PROCEDURE declare_set(u: U; typeid, domain: TypeUID; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_set(u: U; typeid, domain: TypeUID; bit_size: BitSize) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_set");
-        u.wr.Tipe (typeid);
-        u.wr.Tipe (domain);
-        u.wr.BInt (bit_size);
-        print(u, " /* declare_set */ ");
-    END;
+    u.comment("declare_set");
 END declare_set;
 
-PROCEDURE declare_subrange(u: U; typeid, domain: TypeUID;
-                           READONLY min, max: Target.Int;
-                           bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_subrange(u: U; typeid, domain: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_subrange");
-        u.wr.Tipe (typeid);
-        u.wr.Tipe (domain);
-        u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(min))); (* What about size? *)
-        u.wr.TInt (TIntN.FromTargetInt(max, NUMBER(max))); (* What about size? *)
-        u.wr.BInt (bit_size);
-        print(u, " /* declare_subrange */ ");
-    END;
+    u.comment("declare_subrange");
 END declare_subrange;
 
-PROCEDURE declare_pointer(u: U; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+<*NOWARN*>PROCEDURE declare_pointer(u: U; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_pointer");
-        u.wr.Tipe (typeid);
-        u.wr.Tipe (target);
-        u.wr.Txt  (brand);
-        u.wr.Bool (traced);
-        u.wr.NL   ();
-        print(u, " /* declare_pointer */ ");
-    END;
+    u.comment("declare_pointer");
 END declare_pointer;
 
-PROCEDURE declare_indirect(u: U; typeid, target: TypeUID) =
+<*NOWARN*>PROCEDURE declare_indirect(u: U; typeid, target: TypeUID) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_indirect");
-        u.wr.Tipe (typeid);
-        u.wr.Tipe (target);
-        u.wr.NL   ();
-        print(u, " /* declare_indirect */ ");
-    END;
+    u.comment("declare_indirect");
 END declare_indirect;
 
-PROCEDURE declare_proctype(u: U; typeid: TypeUID; n_formals: INTEGER;
-                           result: TypeUID; n_raises: INTEGER;
-                           callingConvention: CallingConvention) =
+<*NOWARN*>PROCEDURE declare_proctype(u: U; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_proctype");
-        u.wr.Tipe (typeid);
-        u.wr.Int  (n_formals);
-        u.wr.Tipe (result);
-        u.wr.Int  (n_raises);
-        u.wr.Txt  (callingConvention.name);
-        u.wr.NL   ();
-        print(u, " /* declare_proctype */ ");
-    END;
-    SuppressLineDirective(u, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises");
+    u.comment("declare_proctype");
+    (* SuppressLineDirective(u, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises"); *)
 END declare_proctype;
 
-PROCEDURE declare_formal(u: U; name: Name; typeid: TypeUID) =
+<*NOWARN*>PROCEDURE declare_formal(u: U; name: Name; typeid: TypeUID) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_formal");
-        u.wr.ZName (name);
-        u.wr.Tipe  (typeid);
-        u.wr.NL    ();
-        print(u, " /* declare_formal */ ");
-    END;
-    SuppressLineDirective(u, -1, "declare_formal");
+    u.comment("declare_formal");
+    (* SuppressLineDirective(u, -1, "declare_formal"); *)
 END declare_formal;
 
-PROCEDURE declare_raises(u: U; name: Name) =
+<*NOWARN*>PROCEDURE declare_raises(u: U; name: Name) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_raises");
-        u.wr.ZName (name);
-        u.wr.NL    ();
-        print(u, " /* declare_raises */ ");
-    END;
-    SuppressLineDirective(u, -1, "declare_raises");
+    u.comment("declare_raises");
+    (* SuppressLineDirective(u, -1, "declare_raises"); *)
 END declare_raises;
 
-PROCEDURE declare_object(u: U; typeid, super: TypeUID;
-                         brand: TEXT; traced: BOOLEAN;
-                         n_fields, n_methods: INTEGER;
-                         field_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_object(u: U; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd  ("declare_object");
-        u.wr.Tipe (typeid);
-        u.wr.Tipe (super);
-        u.wr.Txt  (brand);
-        u.wr.Bool (traced);
-        u.wr.Int  (n_fields);
-        u.wr.Int  (n_methods);
-        u.wr.BInt (field_size);
-        u.wr.NL   ();
-        print(u, " /* declare_object */ ");
-    END;
-    SuppressLineDirective(u, n_fields + n_methods, "declare_object n_fields + n_methods");
+    u.comment("declare_object");
+    (* SuppressLineDirective(u, n_fields + n_methods, "declare_object n_fields + n_methods"); *)
 END declare_object;
 
-PROCEDURE declare_method(u: U; name: Name; signature: TypeUID) =
+<*NOWARN*>PROCEDURE declare_method(u: U; name: Name; signature: TypeUID) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_method");
-        u.wr.ZName (name);
-        u.wr.Tipe  (signature);
-        u.wr.NL    ();
-        print(u, " /* declare_method */ ");
-    END;
+    u.comment("declare_method");
     SuppressLineDirective(u, -1, "declare_method");
 END declare_method;
 
-PROCEDURE declare_opaque(u: U; typeid, super: TypeUID) =
+<*NOWARN*>PROCEDURE declare_opaque(u: U; typeid, super: TypeUID) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_opaque");
-        u.wr.Tipe  (typeid);
-        u.wr.Tipe  (super);
-        u.wr.NL    ();
-        print(u, " /* declare_opaque */ ");
-    END;
+    u.comment("declare_opaque");
 END declare_opaque;
 
-PROCEDURE reveal_opaque(u: U; lhs, rhs: TypeUID) =
+<*NOWARN*>PROCEDURE reveal_opaque(u: U; lhs, rhs: TypeUID) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("reveal_opaque");
-        u.wr.Tipe  (lhs);
-        u.wr.Tipe  (rhs);
-        u.wr.NL    ();
-        print(u, " /* reveal_opaque */ ");
-    END;
+    u.comment("reveal_opaque");
 END reveal_opaque;
 
-PROCEDURE declare_exception(u: U; name: Name; arg_type: TypeUID;
-                            raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
+<*NOWARN*>PROCEDURE declare_exception(u: U; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_exception");
-        u.wr.ZName (name);
-        u.wr.Tipe  (arg_type);
-        u.wr.Bool  (raise_proc);
-        u.wr.VName (base);
-        u.wr.Int   (offset);
-        u.wr.NL    ();
-        print(u, " /* declare_exception */ ");
-    END;
+    u.comment("declare_exception");
 END declare_exception;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 
-PROCEDURE set_runtime_proc(u: U; name: Name; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
+<*NOWARN*>PROCEDURE set_runtime_proc(u: U; name: Name; p: M3CG.Proc) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("set_runtime_proc");
-        u.wr.ZName (name);
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* set_runtime_proc */ ");
-    END;
+    u.comment("set_runtime_proc");
 END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(u: U; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): M3CG.Var =
+PROCEDURE import_global(u: U; name: Name; <*UNUSED*>byte_size: ByteSize; <*UNUSED*>alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID): M3CG.Var =
 VAR var := NEW(Var_t, u := u, type := type, name := name, imported := TRUE).Init();
     declaration: TEXT;
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("import_global");
-        u.wr.ZName (name);
-        u.wr.Int   (byte_size);
-        u.wr.Int   (alignment);
-        u.wr.TName (type);
-        u.wr.Tipe  (typeid);
-        u.wr.VName (var);
-        u.wr.NL    ();
-        print(u, " /* import_global */ ");
-    END;
+    u.comment("import_global");
     declaration := "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";";
     IF u.in_proc THEN
         u.import_repeat.addhi(declaration);
@@ -1608,22 +1426,14 @@ END import_global;
 
 CONST Const = ARRAY BOOLEAN OF TEXT{"", " const "};
 
-PROCEDURE declare_segment(u: U; name: Name; typeid: TypeUID; const: BOOLEAN): M3CG.Var =
+PROCEDURE declare_segment(u: U; name: Name; <*UNUSED*>typeid: TypeUID; const: BOOLEAN): M3CG.Var =
 VAR var := NEW(Var_t, u := u, name := name, const := const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
     length := 0;
     const_text := Const[const];
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_segment");
-        u.wr.ZName (name);
-        u.wr.Tipe  (typeid);
-        u.wr.Bool  (const);
-        u.wr.VName (var);
-        u.wr.NL    ();
-        print(u, " /* declare_segment */ ");
-    END;
+    u.comment("declare_segment");
     IF name # 0 THEN
         text := M3ID.ToText(name);
         length := Text.Length(text);
@@ -1653,20 +1463,10 @@ BEGIN
     RETURN var;
   END declare_segment;
 
-PROCEDURE bind_segment(u: U; v: M3CG.Var; byte_size: ByteSize; alignment: Alignment;
-                       type: Type; exported, inited: BOOLEAN) =
+PROCEDURE bind_segment(u: U; v: M3CG.Var; byte_size: ByteSize; <*UNUSED*>alignment: Alignment; <*UNUSED*>type: Type; <*UNUSED*>exported, inited: BOOLEAN) =
 VAR var := NARROW(v, Var_t);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("bind_segment");
-        u.wr.VName (var);
-        u.wr.Int   (byte_size);
-        u.wr.Int   (alignment);
-        u.wr.TName (type);
-        u.wr.Bool  (exported);
-        u.wr.Bool  (inited);
-        u.wr.NL    ();
-    END;
+    u.comment("bind_segment");
     print(u, " /* bind_segment */ ");
     var.byte_size := byte_size;
 END bind_segment;
@@ -1685,27 +1485,14 @@ BEGIN
     RETURN DeclareGlobal(u, name, byte_size, alignment, type, typeid, exported, inited, TRUE);
 END declare_constant;
 
-PROCEDURE DeclareGlobal(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
-                        type: Type; typeid: TypeUID;
-                        exported, inited, const: BOOLEAN): M3CG.Var =
+PROCEDURE DeclareGlobal(u: U; name: Name; byte_size: ByteSize; <*UNUSED*>alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR   var := NEW(Var_t, u := u, type := type, name := name, const := const,
                  (*inited := inited, typeid := typeid, alignment := alignment,*)
                  exported := exported, global := TRUE,
                  proc := u.current_proc, byte_size := byte_size).Init();
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   (DeclTag [const]);
-        u.wr.ZName (name);
-        u.wr.Int   (byte_size);
-        u.wr.Int   (alignment);
-        u.wr.TName (type);
-        u.wr.Tipe  (typeid);
-        u.wr.Bool  (exported);
-        u.wr.Bool  (inited);
-        u.wr.VName (var);
-        u.wr.NL    ();
-    END;
+    u.comment(DeclTag [const]);
     print(u, var.Declare() & " M3_INIT;");
     RETURN var;
 END DeclareGlobal;
@@ -1771,27 +1558,11 @@ BEGIN
     RETURN static & var.Type() & " " & var.Name();
 END Var_Declare;
 
-PROCEDURE declare_local(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
-                        type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
-                        frequency: Frequency): M3CG.Var =
+PROCEDURE declare_local(u: U; name: Name; byte_size: ByteSize; <*UNUSED*>alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID; <*UNUSED*>in_memory: BOOLEAN; up_level: BOOLEAN; <*UNUSED*>frequency: Frequency): M3CG.Var =
 VAR var := NEW(Var_t, u := u, type := type, name := name, up_level := up_level,
                byte_size := byte_size, proc := u.current_proc).Init();
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_local");
-        u.wr.ZName (name);
-        u.wr.Int   (byte_size);
-        u.wr.Int   (alignment);
-        u.wr.TName (type);
-        u.wr.Tipe  (typeid);
-        u.wr.Bool  (in_memory);
-        u.wr.Bool  (up_level);
-        u.wr.Int   (frequency);
-        u.wr.VName (var);
-        (*u.wr.Int   (var.offset);*)
-        u.wr.NL    ();
-        print(u, " /* declare_local " & typeToText[type] & " " & M3ID.ToText(var.name) & " */ ");
-    END;
+    u.comment("declare_local");
     IF u.in_proc THEN
         ExtraScope_Open(u);
         print(u, var.Declare() & " M3_INIT;");
@@ -1852,9 +1623,6 @@ BEGIN
     END;
 
     IF proc.add_static_link THEN
-        IF u.debug THEN
-            u.wr.OutT("adding _static_link parameter to " & M3ID.ToText(proc.name) & "\n");
-        END;
         param := NARROW(internal_declare_param(
             u,
             u.static_link_id,
@@ -1885,29 +1653,13 @@ BEGIN
     print(u, prototype);
 END last_param;
 
-PROCEDURE internal_declare_param(u: U; name: Name; byte_size: ByteSize; alignment: Alignment;
-                                 type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
-                                 frequency: Frequency; type_text: TEXT): M3CG.Var =
+PROCEDURE internal_declare_param(u: U; name: Name; byte_size: ByteSize; <*UNUSED*>alignment: Alignment;
+                                 type: Type; <*UNUSED*>typeid: TypeUID; <*UNUSED*>in_memory: BOOLEAN; up_level: BOOLEAN;
+                                 <*UNUSED*>frequency: Frequency; type_text: TEXT): M3CG.Var =
 VAR function := u.param_proc;
-    var: Var_t;
-BEGIN
     var := NEW(Param_t, u := u, type := type, name := name, byte_size := byte_size, up_level := up_level, proc := function, type_text := type_text).Init();
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_param");
-        u.wr.ZName (name);
-        u.wr.Int   (byte_size);
-        u.wr.Int   (alignment);
-        u.wr.TName (type);
-        u.wr.Tipe  (typeid);
-        u.wr.Bool  (in_memory);
-        u.wr.Bool  (up_level);
-        u.wr.Int   (frequency);
-        u.wr.VName (var);
-        (*u.wr.Int   (var.offset);*)
-        u.wr.NL    ();
-        print(u, " /* declare_param " & typeToText[type] & " " & M3ID.ToText(var.name) & " */ ");
-    END;
-
+BEGIN
+    u.comment("declare_param");
     function.params[u.param_count] := var;
     function.uplevels := function.uplevels OR up_level;
     SuppressLineDirective(u, -1, "declare_param");
@@ -1927,42 +1679,20 @@ END declare_param;
 
 PROCEDURE declare_temp(u: U; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): M3CG.Var =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_temp");
-        u.wr.Int   (byte_size);
-        u.wr.Int   (alignment);
-        u.wr.TName (type);
-        u.wr.Bool  (in_memory);
-        (*u.wr.VName (var);*)
-        (*u.wr.Int   (var.offset);*)
-        u.wr.NL    ();
-        print(u, " /* declare_temp => declare_local */ ");
-    END;
+    u.comment("declare_temp");
     RETURN declare_local(u, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
 END declare_temp;
 
-PROCEDURE free_temp(u: U; v: M3CG.Var) =
-VAR var := NARROW(v, Var_t);
+PROCEDURE free_temp(u: U; <*NOWARN*>v: M3CG.Var) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("free_temp");
-        u.wr.VName (var);
-        u.wr.NL    ();
-        print(u, " /* free_temp */ ");
-    END;
+    u.comment("free_temp");
 END free_temp;
 
 (*---------------------------------------- static variable initialization ---*)
 
-PROCEDURE begin_init(u: U; v: M3CG.Var) =
-VAR var := NARROW(v, Var_t);
+PROCEDURE begin_init(u: U; <*UNUSED*>v: M3CG.Var) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("begin_init");
-        u.wr.VName (var);
-        u.wr.NL    ();
-        print(u, " /* begin_init */ ");
-    END;
+    u.comment("begin_init");
     u.current_init_offset := 0;
     SuppressLineDirective(u, 1, "begin_init");
 END begin_init;
@@ -1975,13 +1705,7 @@ VAR var := NARROW(v, Var_t);
     comma := "";
     const := Const[var.const];
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("end_init");
-        u.wr.VName (var);
-        u.wr.NL    ();
-        print(u, " /* end_init */ ");
-    END;
-
+    u.comment("end_init");
     init_to_offset(u, var.byte_size);
     end_init_helper(u);
 
@@ -2043,46 +1767,24 @@ END init_helper;
 PROCEDURE init_int(u: U; offset: ByteOffset; READONLY value: Target.Int; type: Type) =
 VAR comment := "";
 BEGIN
-    IF u.debug THEN
-        comment := " /* init_int offset=" & IntToDec(offset) & " */ ";
-        u.wr.Cmd   ("init_int");
-        u.wr.Int   (offset);
-        u.wr.TInt  (TIntN.FromTargetInt(value, CG_Bytes[type]));
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, comment);
-    END;
+    u.comment("init_int");
     init_helper(u, offset, type, comment);
-    (* IntLiteral includes suffixes like U, ULL, UI64, etc. *)
-    u.initializer.addhi(IntLiteral(type, value));
+    (* TIntLiteral includes suffixes like U, ULL, UI64, etc. *)
+    u.initializer.addhi(TIntLiteral(type, value));
 END init_int;
 
 PROCEDURE init_proc(u: U; offset: ByteOffset; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
     comment := "";
 BEGIN
-    IF u.debug THEN
-        comment := " /* init_proc offset=" & IntToDec(offset) & " */ ";
-        u.wr.Cmd   ("init_proc");
-        u.wr.Int   (offset);
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* init_proc */ ");
-        print(u, comment);
-    END;
+    u.comment("init_proc");
     init_helper(u, offset, Type.Addr, comment); (* FUTURE: better typing *)
     u.initializer.addhi(comment & "(ADDRESS)&" & M3ID.ToText(proc.name));
 END init_proc;
 
-PROCEDURE init_label(u: U; offset: ByteOffset; value: Label) =
+<*NOWARN*>PROCEDURE init_label(u: U; offset: ByteOffset; value: Label) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("init_label");
-        u.wr.Int   (offset);
-        u.wr.Lab   (value);
-        u.wr.NL    ();
-        print(u, " /* init_label */ ");
-    END;
+    u.comment("init_label");
     <* ASSERT FALSE *>
 END init_label;
 
@@ -2090,16 +1792,7 @@ PROCEDURE init_var(u: U; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
 VAR var := NARROW(v, Var_t);
     comment := "";
 BEGIN
-    IF u.debug THEN
-        comment := " /* init_var offset=" & IntToDec(offset) & " */ ";
-        u.wr.Cmd   ("init_var");
-        u.wr.Int   (offset);
-        u.wr.VName (var);
-        u.wr.Int   (bias);
-        u.wr.NL    ();
-        print(u, " /* init_var */ ");
-        print(u, comment);
-    END;
+    u.comment("init_var");
     init_helper(u, offset, Type.Addr, comment); (* FUTURE: better typing *)
     IF bias # 0 THEN
         u.initializer.addhi(comment & IntToDec(bias) & "+"& "(ADDRESS)&" & M3ID.ToText(var.name));
@@ -2108,15 +1801,9 @@ BEGIN
     END;
 END init_var;
 
-PROCEDURE init_offset(u: U; offset: ByteOffset; value: M3CG.Var) =
+<*NOWARN*>PROCEDURE init_offset(u: U; offset: ByteOffset; value: M3CG.Var) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("init_offset");
-        u.wr.Int   (offset);
-        u.wr.VName (value);
-        u.wr.NL    ();
-        print(u, " /* init_offset */ ");
-    END;
+    u.comment("init_offset");
     <* ASSERT FALSE *>
 END init_offset;
 
@@ -2128,13 +1815,7 @@ PROCEDURE init_chars(u: U; offset: ByteOffset; value: TEXT) =
 VAR length := Text.Length(value);
 ch: CHAR;
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("init_chars");
-        u.wr.Int   (offset);
-        u.wr.Txt   (value);
-        u.wr.NL    ();
-        print(u, " /* init_chars offset=" & IntToDec(offset) & " length=" & IntToDec(length) & " */ ");
-    END;
+    u.comment("init_chars");
     IF length = 0 THEN
         RETURN;
     END;
@@ -2149,7 +1830,7 @@ BEGIN
     END;
 END init_chars;
 
-PROCEDURE IntLiteral(type: Type; READONLY i: Target.Int): TEXT =
+PROCEDURE TIntLiteral(type: Type; READONLY i: Target.Int): TEXT =
 BEGIN
     IF TInt.EQ(i, TInt.Min32) THEN
         RETURN "-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max32) & intLiteralSuffix[type] & "-1";
@@ -2158,6 +1839,11 @@ BEGIN
     ELSE
         RETURN intLiteralPrefix[type] & TInt.ToText(i) & intLiteralSuffix[type];
     END;
+END TIntLiteral;
+
+PROCEDURE IntLiteral(u: U; type: Type; i: INTEGER): TEXT =
+BEGIN
+    RETURN TIntLiteral(type, IntToTarget(u, i));
 END IntLiteral;
 
 PROCEDURE FloatLiteral(READONLY float: Target.Float): TEXT =
@@ -2194,13 +1880,7 @@ END FloatLiteral;
 
 PROCEDURE init_float(u: U; offset: ByteOffset; READONLY float: Target.Float) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("init_float");
-        u.wr.Int   (offset);
-        u.wr.Flt   (float);
-        u.wr.NL    ();
-        print(u, " /* init_float offset=" & IntToDec(offset) & " */ ");
-    END;
+    u.comment("init_float");
     init_helper(u, offset, TargetMap.Float_types[TFloat.Prec(float)].cg_type);
     u.initializer.addhi(FloatLiteral(float));
 END init_float;
@@ -2213,16 +1893,7 @@ VAR proc := NEW(Proc_t, name := name, n_params := n_params,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(u);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("import_procedure");
-        u.wr.ZName (name);
-        u.wr.Int   (n_params);
-        u.wr.TName (return_type);
-        u.wr.Txt   (callingConvention.name);
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* import_procedure " & M3ID.ToText(name) & " */ ");
-    END;
+    u.comment("import_procedure");
     SuppressLineDirective(u, n_params, "import_procedure n_params");
     u.param_proc := proc;
     u.param_count := 0;
@@ -2241,21 +1912,7 @@ VAR proc := NEW(Proc_t, name := name, n_params := n_params,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(u);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("declare_procedure");
-        u.wr.ZName (name);
-        u.wr.OutT  (" n_params:");
-        u.wr.Int   (n_params);
-        u.wr.TName (return_type);
-        u.wr.OutT  (" level:");
-        u.wr.Int   (level);
-        u.wr.Txt   (callingConvention.name);
-        u.wr.Bool  (exported);
-        u.wr.PName (parent);
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* declare_procedure */ ");
-    END;
+    u.comment("declare_procedure");
     u.param_proc := proc;
     u.param_count := 0;
     IF NOT u.in_proc THEN
@@ -2276,12 +1933,7 @@ VAR proc := NARROW(p, Proc_t);
     var: Var_t;
     params := proc.params;
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("begin_procedure");
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* begin_procedure */ ");
-    END;
+    u.comment("begin_procedure");
 
     <* ASSERT NOT u.in_proc *>
     u.in_proc := TRUE;
@@ -2360,15 +2012,9 @@ BEGIN
     END;
 END begin_procedure;
 
-PROCEDURE end_procedure(u: U; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
+PROCEDURE end_procedure(u: U; <*UNUSED*>p: M3CG.Proc) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("end_procedure");
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* end_procedure */ ");
-    END;
+    u.comment("end_procedure");
     u.in_proc := FALSE;
     print(u, "}");
     ExtraScope_Close(u);
@@ -2380,11 +2026,7 @@ END end_procedure;
 PROCEDURE begin_block(u: U) =
 (* marks the beginning of a nested anonymous block *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("begin_block");
-        u.wr.NL    ();
-        print(u, " /* begin_block */ ");
-    END;
+    u.comment("begin_block");
 (* pending import_procedure all moved up to global scope
     print(u, "{");
 *)
@@ -2393,30 +2035,20 @@ END begin_block;
 PROCEDURE end_block(u: U) =
 (* marks the ending of a nested anonymous block *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("end_block");
-        u.wr.NL    ();
-        print(u, " /* end_block */ ");
-    END;
+    u.comment("end_block");
 (* pending import_procedure all moved up to global scope
     print(u, "}");
 *)
 END end_block;
 
-PROCEDURE note_procedure_origin(u: U; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
+PROCEDURE note_procedure_origin(u: U; <*UNUSED*>p: M3CG.Proc) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("note_procedure_origin");
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* note_procedure_origin */ ");
-    END;
+    u.comment("note_procedure_origin");
 END note_procedure_origin;
 
 (*------------------------------------------------------------ statements ---*)
 
-PROCEDURE set_label(u: U; label: Label; <*UNUSED*> barrier: BOOLEAN) =
+PROCEDURE set_label(u: U; label: Label; <*UNUSED*>barrier: BOOLEAN) =
 (* define 'label' to be at the current pc *)
 BEGIN
     IF u.debug THEN
@@ -2431,77 +2063,44 @@ END set_label;
 PROCEDURE jump(u: U; label: Label) =
 (* GOTO label *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("jump");
-        u.wr.Lab   (label);
-        u.wr.NL    ();
-        print(u, " /* jump */ ");
-    END;
+    u.comment("jump");
     print(u, "goto L" & LabelToHex(label) & ";");
 END jump;
 
-PROCEDURE if_true(u: U; itype: IType; label: Label; <*UNUSED*> frequency: Frequency) =
+PROCEDURE if_true(u: U; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
 (* IF (s0.itype # 0) GOTO label; pop *)
 VAR s0 := cast(get(u, 0), itype);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("if_true");
-        u.wr.TName (itype);
-        u.wr.Lab   (label);
-        u.wr.NL    ();
-        print(u, " /* if_true */ ");
-    END;
+    u.comment("if_true");
     print(u, "if(" & s0 & ")goto L" & LabelToText(label) & ";");
     pop(u);
 END if_true;
 
-PROCEDURE if_false(u: U; itype: IType; label: Label; <*UNUSED*> frequency: Frequency) =
+PROCEDURE if_false(u: U; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
 (* IF (s0.itype = 0) GOTO label; pop *)
 VAR s0 := cast(get(u, 0), itype);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("if_false");
-        u.wr.TName (itype);
-        u.wr.Lab   (label);
-        u.wr.NL    ();
-        print(u, " /* if_false */ ");
-    END;
+    u.comment("if_false");
     print(u, "if(!" & s0 & ")goto L" & LabelToText(label) & ";");
     pop(u);
 END if_false;
 
 PROCEDURE if_compare(u: U; ztype: ZType; op: CompareOp; label: Label;
-                     <*UNUSED*> frequency: Frequency) =
+                     <*UNUSED*>frequency: Frequency) =
 (* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
 VAR s0 := cast(get(u, 0), ztype);
     s1 := cast(get(u, 1), ztype);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("if_compare");
-        u.wr.TName (ztype);
-        u.wr.OutT  (" " & CompareOpName[op]);
-        u.wr.Lab   (label);
-        u.wr.NL    ();
-        print(u, " /* if_compare */ ");
-    END;
+    u.comment("if_compare");
     pop(u, 2);
     print(u, "if(" & s1 & CompareOpC[op] & s0 & ")goto L" & LabelToText(label) & ";");
 END if_compare;
 
 PROCEDURE case_jump(u: U; itype: IType; READONLY labels: ARRAY OF Label) =
 (* "GOTO labels[s0.itype]; pop" with no range checking on s0.itype *)
-VAR s0 := get(u);
+VAR s0 := cast(get(u, 0), itype);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("case_jump");
-        u.wr.TName (itype);
-        u.wr.Int   (NUMBER(labels));
-        FOR i := FIRST(labels) TO LAST(labels) DO
-            u.wr.Lab (labels[i]);
-        END;
-        u.wr.NL    ();
-        print(u, " /* case_jump */ ");
-    END;
+    u.comment("case_jump");
     print(u, "switch(" & s0 & "){");
     FOR i := FIRST(labels) TO LAST(labels) DO
         print(u, "case " & IntToDec(i) & ":goto L" & LabelToText(labels[i]) & ";");
@@ -2514,12 +2113,7 @@ PROCEDURE exit_proc(u: U; type: Type) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
 VAR s0: TEXT;
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("exit_proc");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* exit_proc */ ");
-    END;
+    u.comment("exit_proc");
     IF type = Type.Void THEN
         print(u, "return;");
     ELSE
@@ -2599,15 +2193,7 @@ PROCEDURE load(u: U; v: M3CG.Var; offset: ByteOffset; mtype: MType; ztype: ZType
    zero-extended. *)
 VAR var := NARROW(v, Var_t);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load");
-        u.wr.VName (var);
-        u.wr.Int   (offset);
-        u.wr.TName (mtype);
-        u.wr.TName (ztype);
-        u.wr.NL    ();
-        print(u, " /* load */ ");
-    END;
+    u.comment("load");
     load_helper(u, "&" & follow_static_link(u, var) & M3ID.ToText(var.name), offset, mtype, ztype);
 END load;
 
@@ -2622,15 +2208,7 @@ PROCEDURE store(u: U; v: M3CG.Var; offset: ByteOffset; ztype: ZType; mtype: MTyp
 VAR var := NARROW(v, Var_t);
     s0 := cast(get(u, 0), ztype);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("store");
-        u.wr.VName (var);
-        u.wr.Int   (offset);
-        u.wr.TName (ztype);
-        u.wr.TName (mtype);
-        u.wr.NL    ();
-        print(u, " /* store */ ");
-    END;
+    u.comment("store");
     pop(u);
     store_helper(u, s0, ztype, "&" & follow_static_link(u, var) & M3ID.ToText(var.name), offset, mtype);
   END store;
@@ -2639,13 +2217,7 @@ PROCEDURE load_address(u: U; v: M3CG.Var; offset: ByteOffset) =
 (* push; s0.A := ADR(var) + offset *)
 VAR var := NARROW(v, Var_t);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load_address");
-        u.wr.VName (var);
-        u.wr.Int   (offset);
-        u.wr.NL    ();
-        print(u, " /* load_address */ ");
-    END;
+    u.comment("load_address");
     push(u, Type.Addr, address_plus_offset("&" & follow_static_link(u, var) & M3ID.ToText (var.name), offset));
 END load_address;
 
@@ -2653,14 +2225,7 @@ PROCEDURE load_indirect(u: U; offset: ByteOffset; mtype: MType; ztype: ZType) =
 (* s0.ztype := Mem [s0.A + offset].mtype  *)
 VAR s0 := get(u);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load_indirect");
-        u.wr.Int   (offset);
-        u.wr.TName (mtype);
-        u.wr.TName (ztype);
-        u.wr.NL    ();
-        print(u, " /* load_indirect */ ");
-    END;
+    u.comment("load_indirect");
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     pop(u);
     load_helper(u, s0, offset, mtype, ztype);
@@ -2671,14 +2236,7 @@ PROCEDURE store_indirect(u: U; offset: ByteOffset; ztype: ZType; mtype: MType) =
 VAR s0 := cast(get(u, 0), ztype);
     s1 := get(u, 1);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("store_indirect");
-        u.wr.Int   (offset);
-        u.wr.TName (ztype);
-        u.wr.TName (mtype);
-        u.wr.NL    ();
-        print(u, " /* store_indirect */ ");
-    END;
+    u.comment("store_indirect");
     pop(u, 2);
     store_helper(u, s0, ztype, s1, offset, mtype);
 END store_indirect;
@@ -2688,91 +2246,77 @@ END store_indirect;
 PROCEDURE load_nil(u: U) =
 (* push; s0.A := NIL *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load_nil");
-        u.wr.NL    ();
-        print(u, " /* load_nil */ ");
-    END;
+    u.comment("load_nil");
     push(u, Type.Addr, "0"); (* UNDONE NULL or (ADDRESS)0? *)
 END load_nil;
 
-PROCEDURE load_integer(u: U; type: IType; READONLY i: Target.Int) =
+PROCEDURE IntToTarget(u: U; i: INTEGER): Target.Int =
+VAR j: Target.Int;
+BEGIN
+    IF NOT TInt.FromInt(i, j) THEN
+        u.Err ("failed to convert host integer to target integer");
+    END;
+    RETURN j;
+END IntToTarget;
+
+PROCEDURE load_host_integer(u: U; type: IType; i: INTEGER) =
+BEGIN
+    comment(u, "load_host_integer");
+    load_target_integer(u, type, IntToTarget(u, i));
+END load_host_integer;
+
+PROCEDURE load_target_integer(u: U; type: IType; READONLY i: Target.Int) =
 (* push; s0.type := i *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load_integer");
-        u.wr.TName (type);
-        u.wr.TInt  (TIntN.FromTargetInt(i, CG_Bytes[type])); (* UNDONE? *)
-        u.wr.NL    ();
-        print(u, " /* load_integer */ ");
-    END;
-    (* IntLiteral includes suffixes like U, ULL, UI64, etc. *)
-    push(u, type, cast(IntLiteral(type, i), type));
-END load_integer;
+    u.comment("load_integer");
+    (* TIntLiteral includes suffixes like U, ULL, UI64, etc. *)
+    push(u, type, cast(TIntLiteral(type, i), type));
+END load_target_integer;
 
 PROCEDURE load_float(u: U; type: RType; READONLY float: Target.Float) =
 (* push; s0.type := float *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load_float");
-        u.wr.TName (type);
-        u.wr.Flt   (float);
-        u.wr.NL    ();
-        print(u, " /* load_float */ ");
-    END;
+    u.comment("load_float");
     (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double *)
     push(u, type, cast(FloatLiteral(float), type));
 END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
 
-PROCEDURE cast(expr: TEXT; type: Type): TEXT =
+PROCEDURE cast(expr: TEXT; type: Type := Type.Void; type_text: TEXT := NIL): TEXT =
 BEGIN
-  RETURN paren("(" & typeToText[type] & ")" & paren(expr));
+    <* ASSERT (type = Type.Void) # (type_text = NIL) *>
+    IF type_text = NIL THEN
+        type_text := typeToText[type];
+    END;
+    RETURN paren("(" & type_text & ")" & paren(expr));
 END cast;
 
-PROCEDURE unop(u: U; type: Type; name, op: TEXT) =
+PROCEDURE op1(u: U; type: Type; name, op: TEXT) =
 (* unary operation *)
 VAR s0 := cast(get(u, 0), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   (name);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* " & name & " */ ");
-    END;
+    u.comment(name);
     pop(u, 1);
     push(u, type, cast(op & s0, type));
-END unop;
+END op1;
 
-PROCEDURE binop(u: U; type: Type; name, op: TEXT) =
+PROCEDURE op2(u: U; type: Type; name, op: TEXT) =
 (* binary operation *)
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   (name);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* " & name & " */ ");
-    END;
+    u.comment(name);
     pop(u, 2);
     push(u, type, cast(s1 & op & s0, type));
-END binop;
+END op2;
 
 PROCEDURE compare(u: U; ztype: ZType; itype: IType; op: CompareOp) =
 (* s1.itype := (s1.ztype op s0.ztype); pop *)
 VAR s0 := cast(get(u, 0), ztype);
     s1 := cast(get(u, 1), ztype);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("compare");
-        u.wr.TName (ztype);
-        u.wr.TName (itype);
-        u.wr.OutT  (" " & CompareOpName[op]);
-        u.wr.NL    ();
-        print(u, " /* compare */ ");
-    END;
+    u.comment("compare");
     (* ASSERT cond # Cond.Z AND cond # Cond.NZ *)
     pop(u, 2);
     push(u, itype, cast(s1 & CompareOpC[op] & s0, itype));
@@ -2781,42 +2325,33 @@ END compare;
 PROCEDURE add(u: U; type: AType) =
 (* s1.type := s1.type + s0.type; pop *)
 BEGIN
-    binop(u, type, "add", "+");
+    op2(u, type, "add", "+");
 END add;
 
 PROCEDURE subtract(u: U; type: AType) =
 (* s1.type := s1.type - s0.type; pop *)
 BEGIN
-    binop(u, type, "subtract", "-");
+    op2(u, type, "subtract", "-");
 END subtract;
 
 PROCEDURE multiply(u: U; type: AType) =
 (* s1.type := s1.type * s0.type; pop *)
 BEGIN
-    binop(u, type, "multiply", "*");
+    op2(u, type, "multiply", "*");
 END multiply;
 
 PROCEDURE divide(u: U; type: RType) =
 (* s1.type := s1.type / s0.type; pop *)
 BEGIN
-    binop(u, type, "divide", "/");
+    op2(u, type, "divide", "/");
 END divide;
 
-CONST SignName = ARRAY Sign OF TEXT { " P", " N", " X" };
-
-PROCEDURE div(u: U; type: IType; a, b: Sign) =
+PROCEDURE div(u: U; type: IType; <*UNUSED*>a, b: Sign) =
 (* s1.type := s1.type DIV s0.type; pop *)
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("div");
-        u.wr.TName (type);
-        u.wr.OutT  (SignName[a]);
-        u.wr.OutT  (SignName[b]);
-        u.wr.NL    ();
-        print(u, " /* div */ ");
-    END;
+    u.comment("div");
     pop(u, 2);
     IF typeIsUnsigned[type] THEN
         push(u, type, cast(s1 & "/" & s0, type));
@@ -2825,19 +2360,12 @@ BEGIN
     END;
 END div;
 
-PROCEDURE mod(u: U; type: IType; a, b: Sign) =
+PROCEDURE mod(u: U; type: IType; <*UNUSED*>a, b: Sign) =
 (* s1.type := s1.type MOD s0.type; pop *)
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("mod");
-        u.wr.TName (type);
-        u.wr.OutT  (SignName [a]);
-        u.wr.OutT  (SignName [b]);
-        u.wr.NL    ();
-        print(u, " /* mod */ ");
-    END;
+    u.comment("mod");
     pop(u, 2);
     IF typeIsUnsigned[type] THEN
         push(u, type, cast(s1 & "%" & s0, type));
@@ -2849,19 +2377,14 @@ END mod;
 PROCEDURE negate(u: U; type: AType) =
 (* s0.type := - s0.type *)
 BEGIN
-    unop(u, type, "negate", "-");
+    op1(u, type, "negate", "-");
 END negate;
 
 PROCEDURE abs(u: U; type: AType) =
 (* s0.type := ABS (s0.type) (noop on Words) *)
 VAR s0 := cast(get(u, 0), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("abs");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* abs */");
-    END;
+    u.comment("abs");
     pop(u);
     push(u, type, "m3_abs_" & typeToText[type] & "(" & s0 & ")");
 END abs;
@@ -2871,12 +2394,7 @@ PROCEDURE max(u: U; type: ZType) =
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("max");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* max */ ");
-    END;
+    u.comment("max");
     pop(u, 2);
     push(u, type, "m3_max_" & typeToText[type] & "(" & s0 & "," & s1 & ")");
 END max;
@@ -2886,12 +2404,7 @@ PROCEDURE min(u: U; type: ZType) =
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("min");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* min */ ");
-    END;
+    u.comment("min");
     pop(u, 2);
     push(u, type, "m3_min_" & typeToText[type] & "(" & s0 & "," & s1 & ")");
 END min;
@@ -2900,14 +2413,7 @@ PROCEDURE cvt_int(u: U; from_float_type: RType; to_integer_type: IType; op: Conv
 (* s0.itype := ROUND(s0.rtype) *)
 VAR s0 := cast(get(u, 0), from_float_type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("cvt_int");
-        u.wr.TName (from_float_type);
-        u.wr.TName (to_integer_type);
-        u.wr.OutT  (" " & ConvertOpName[op]);
-        u.wr.NL    ();
-        print(u, " /* cvt_int */ ");
-    END;
+    u.comment("cvt_int");
     pop(u);
     push(u, to_integer_type, cast("m3_" & ConvertOpName[op] & "(" & s0 & ")", to_integer_type));
 END cvt_int;
@@ -2916,13 +2422,7 @@ PROCEDURE cvt_float(u: U; from_arithmetic_type: AType; to_float_type: RType) =
 (* s0.rtype := ROUND(s0.atype) *)
 VAR s0 := cast(get(u, 0), from_arithmetic_type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("cvt_float");
-        u.wr.TName (from_arithmetic_type);
-        u.wr.TName (to_float_type);
-        u.wr.NL    ();
-        print(u, " /* cvt_float */ ");
-    END;
+    u.comment("cvt_float");
     (* UNDONE is this correct? *)
     pop(u);
     push(u, to_float_type, cast(s0, to_float_type));
@@ -2936,104 +2436,74 @@ VAR s0 := cast(get(u, 0), Type.Addr);
     s1 := cast(get(u, 1), Type.Addr);
     s2 := cast(get(u, 2), Type.Addr);
 BEGIN
-    IF u.debug THEN
-        (*u.wr.Cmd   (BuiltinDesc[builtin].name);*)
-        u.wr.Int   (byte_size);
-        u.wr.NL    ();
-        print(u, " /* " & op & " */ ");
-    END;
+    u.comment(op);
     pop(u, 3);
     print(u, "m3_" & op & "(" & IntToDec(byte_size * 8) & ",(WORD_T*)" & s2 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s0 & ");");
 END set_op3;
 
 PROCEDURE set_union(u: U; byte_size: ByteSize) =
-(* s2.B := s1.B + s0.B; pop(2) *)
+(* s2.B := s1.B + s0.B; pop(3) *)
 BEGIN
     set_op3(u, byte_size, "set_union");
 END set_union;
 
 PROCEDURE set_difference(u: U; byte_size: ByteSize) =
-(* s2.B := s1.B - s0.B; pop(2) *)
+(* s2.B := s1.B - s0.B; pop(3) *)
 BEGIN
     set_op3(u, byte_size, "set_difference");
 END set_difference;
 
 PROCEDURE set_intersection(u: U; byte_size: ByteSize) =
-(* s2.B := s1.B * s0.B; pop(2) *)
+(* s2.B := s1.B * s0.B; pop(3) *)
 BEGIN
     set_op3(u, byte_size, "set_intersection");
 END set_intersection;
 
 PROCEDURE set_sym_difference(u: U; byte_size: ByteSize) =
-(* s2.B := s1.B / s0.B; pop(2) *)
+(* s2.B := s1.B / s0.B; pop(3) *)
 BEGIN
     set_op3(u, byte_size, "set_sym_difference");
 END set_sym_difference;
 
-PROCEDURE set_member(u: U; byte_size: ByteSize; type: IType) =
+PROCEDURE set_member(u: U; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.type := (s0.type IN s1.B); pop *)
 VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), Type.Addr);
+    s1 := cast(get(u, 1), Type.Void, "SET");
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("set_member");
-        u.wr.Int   (byte_size);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* set_member */ ");
-    END;
+    u.comment("set_member");
     pop(u, 2);
-    push(u, type, cast("m3_set_member(" & s0 & ",(WORD_T*)" & s1 & ")", type));
+    push(u, type, cast("m3_set_member(" & s0 & "," & s1 & ")", type));
 END set_member;
 
 PROCEDURE set_compare(u: U; byte_size: ByteSize; op: CompareOp; type: IType) =
 (* s1.type := (s1.B op s0.B); pop *)
-VAR s0 := cast(get(u, 0), Type.Addr);
-    s1 := cast(get(u, 1), Type.Addr);
+VAR s0 := cast(get(u, 0), Type.Void, "SET");
+    s1 := cast(get(u, 1), Type.Void, "SET");
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("set_compare");
-        u.wr.Int   (byte_size);
-        u.wr.OutT  (" " & CompareOpName[op]);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* set_compare */ ");
-    END;
+    u.comment("set_compare");
     pop(u, 2);
-    push(u, type, cast("m3_set_" & CompareOpName[op] & "(" & IntToDec(byte_size) & s1 & "," & s0 & ")", type));
+    push(u, type, cast("m3_set_" & CompareOpName[op] & "(" & IntLiteral(u, Target.Word.cg_type, byte_size * 8) & "," & s1 & "," & s0 & ")", type));
 END set_compare;
 
-PROCEDURE set_range(u: U; byte_size: ByteSize; type: IType) =
+PROCEDURE set_range(u: U; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s2.A [s1.type .. s0.type] := 1's; pop(3) *)
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
-    s2 := cast(get(u, 2), type);
+    s2 := cast(get(u, 2), Type.Void, "SET");
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("set_range");
-        u.wr.Int   (byte_size);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* set_range */ ");
-    END;
-    pop(u, 2);
-    push(u, type, "m3_set_range(" & s2 & s1 & "," & s0 & ")");
+    u.comment("set_range");
+    pop(u, 3);
+    print(u, "m3_set_range(" & s0 & "," & s1 & "," & s2 & ");");
 END set_range;
 
-PROCEDURE set_singleton(u: U; byte_size: ByteSize; type: IType) =
+PROCEDURE set_singleton(u: U; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.A [s0.type] := 1; pop(2) *)
 VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
+    s1 := cast(get(u, 1), Type.Void, "SET");
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("set_singleton");
-        u.wr.Int   (byte_size);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* set_singleton */ ");
-    END;
+    u.comment("set_singleton");
     pop(u, 2);
-    push(u, type, "m3_set_singleton(" & s0 & "," & s1 & ")");
+    print(u, "m3_set_singleton(" & s0 & "," & s1 & ");");
 END set_singleton;
 
 (*------------------------------------------------- Word.T bit operations ---*)
@@ -3041,258 +2511,187 @@ END set_singleton;
 PROCEDURE not(u: U; type: IType) =
 (* s0.type := Word.Not (s0.type) *)
 BEGIN
-    unop(u, type, "not", "~");
+    op1(u, type, "not", "~");
 END not;
 
 PROCEDURE and(u: U; type: IType) =
 (* s1.type := Word.And (s1.type, s0.type); pop *)
 BEGIN
-    binop(u, type, "and", "&");
+    op2(u, type, "and", "&");
 END and;
 
 PROCEDURE or(u: U; type: IType) =
 (* s1.type := Word.Or  (s1.type, s0.type); pop *)
 BEGIN
-    binop(u, type, "or", "|");
+    op2(u, type, "or", "|");
 END or;
 
 PROCEDURE xor(u: U; type: IType) =
 (* s1.type := Word.Xor (s1.type, s0.type); pop *)
 BEGIN
-    binop(u, type, "xor", "^");
+    op2(u, type, "xor", "^");
 END xor;
 
-PROCEDURE shift_left(u: U; type: IType) =
-(* s1.type := Word.Shift  (s1.type, s0.type); pop *)
+PROCEDURE shift_left_or_right(u: U; type: IType; name, op: TEXT) =
+VAR s0 := cast(get(u, 0), Target.Word.cg_type);
+    s1 := cast(get(u, 1), type);
 BEGIN
-    binop(u, type, "shift_left", "<<");
+    u.comment(name);
+    pop(u, 2);
+    push(u, type, s1 & op & s0);
+END shift_left_or_right;
+
+PROCEDURE shift_left(u: U; type: IType) =
+(* s1.type := Word.Shift  (s1.type, s0.Word); pop *)
+BEGIN
+    shift_left_or_right(u, type, "shift_left", "<<");
 END shift_left;
 
 PROCEDURE shift_right(u: U; type: IType) =
 (* s1.type := Word.Shift  (s1.type, -s0.type); pop *)
 BEGIN
-    binop(u, type, "shift_right", ">>");
+    <* ASSERT typeIsUnsigned[type] *>
+    shift_left_or_right(u, type, "shift_right", ">>");
 END shift_right;
+
+PROCEDURE shift_or_rotate(u: U; type: IType; which: TEXT; count_type: Type) =
+VAR s0 := cast(get(u, 0), count_type);
+    s1 := cast(get(u, 1), type);
+BEGIN
+    u.comment(which);
+    pop(u, 2);
+    push(u, type, "m3_" & which & "_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+END shift_or_rotate;
 
 PROCEDURE shift(u: U; type: IType) =
 (* s1.type := Word.Shift  (s1.type, s0.type); pop *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("shift");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* shift */ ");
-    END;
-    pop(u, 2);
-    push(u, type, "m3_shift_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+    shift_or_rotate(u, type, "shift", Target.Integer.cg_type);
 END shift;
 
 PROCEDURE rotate(u: U; type: IType) =
 (* s1.type := Word.Rotate (s1.type, s0.type); pop *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("rotate");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* rotate */ ");
-    END;
-    pop(u, 2);
-    push(u, type, "m3_rotate_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+    shift_or_rotate(u, type, "rotate", Target.Integer.cg_type);
 END rotate;
 
 PROCEDURE rotate_left(u: U; type: IType) =
 (* s1.type := Word.Rotate (s1.type, s0.type); pop *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("rotate_left");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* rotate_left */ ");
-    END;
-    pop(u, 2);
-    push(u, type, "m3_rotate_left_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+    shift_or_rotate(u, type, "rotate_left", Target.Word.cg_type);
 END rotate_left;
 
 PROCEDURE rotate_right(u: U; type: IType) =
 (* s1.type := Word.Rotate (s1.type, -s0.type); pop *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("rotate_right");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* rotate_right */ ");
-    END;
-    pop(u, 2);
-    push(u, type, "m3_rotate_right_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+    shift_or_rotate(u, type, "rotate_right", Target.Word.cg_type);
 END rotate_right;
 
-PROCEDURE widen(u: U; sign_extend: BOOLEAN) =
+PROCEDURE widen(u: U; <*UNUSED*>sign_extend: BOOLEAN) =
 (* s0.I64 := s0.I32; IF sign_extend THEN SignExtend s0; *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("widen");
-        u.wr.Bool  (sign_extend);
-        u.wr.NL    ();
-    END;
+    u.comment("widen");
     <*ASSERT FALSE*>
 END widen;
 
 PROCEDURE chop(u: U) =
-(* s0.I32 := Word.And (s0.I64, 16_ffffffff); *)
+(* s0.I32 := Word.And (s0.I64, 16_FFFFFFFF); *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("chop");
-        u.wr.NL    ();
-    END;
+    u.comment("chop");
     <*ASSERT FALSE*>
 END chop;
 
 PROCEDURE extract(u: U; type: IType; sign_extend: BOOLEAN) =
 (* s2.type := Word.Extract(s2.type, s1.type, s0.type);
   IF sign_extend THEN SignExtend s2 END; pop(2) *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
-    s2 := cast(get(u, 2), type);
+VAR count := cast(get(u, 0), Target.Word.cg_type);
+    offset := cast(get(u, 1), Target.Word.cg_type);
+    value := cast(get(u, 2), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("extract");
-        u.wr.TName (type);
-        u.wr.Bool  (sign_extend);
-        u.wr.NL    ();
-        print(u, " /* extract */ ");
-    END;
-    pop(u, 3);
+    u.comment("extract");
     <* ASSERT sign_extend = FALSE *>
-    push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s2 & "," & s1 & "," & s0 & ")");
+    pop(u, 3);
+    push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & value & "," & offset & "," & count & ")");
 END extract;
 
 PROCEDURE extract_n(u: U; type: IType; sign_extend: BOOLEAN; count: CARDINAL) =
 (* s1.type := Word.Extract(s1.type, s0.type, count);
    IF sign_extend THEN SignExtend s1 END; pop(1) *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("extract_n");
-        u.wr.TName (type);
-        u.wr.Bool  (sign_extend);
-        u.wr.Int   (count);
-        u.wr.NL    ();
-        print(u, " /* extract_m */ ");
-    END;
-    pop(u, 2);
-    <* ASSERT sign_extend = FALSE *>
-    push(u, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s1 & "," & s0 & "," & IntToDec(count) & ")");
+    u.comment("extract_n");
+    load_host_integer(u, Target.Word.cg_type, count);
+    u.extract(type, sign_extend);
 END extract_n;
+
+PROCEDURE do_sign_extend(u: U; type: IType) =
+VAR count := cast(get(u, 0), Target.Word.cg_type);
+    value := cast(get(u, 1), type);
+BEGIN
+    pop(u, 2);
+    push(u, type, "m3_sign_extend_" & typeToText[type] & "(" & value & "," & count & ")");
+END do_sign_extend;
 
 PROCEDURE extract_mn(u: U; type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL) =
 (* s0.type := Word.Extract(s0.type, offset, count);
     IF sign_extend THEN SignExtend s0 END; *)
-VAR s0 := cast(get(u, 0), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("extract_mn");
-        u.wr.TName (type);
-        u.wr.Bool  (sign_extend);
-        u.wr.Int   (offset);
-        u.wr.Int   (count);
-        u.wr.NL    ();
-        print(u, " /* extract_mn */ ");
-    END;
-    pop(u);
-    s0 := "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & s0 & "," & IntToDec(offset) & "," & IntToDec(count) & ")";
+    u.comment("extract_mn");
+    load_host_integer(u, Target.Word.cg_type, offset);
+    load_host_integer(u, Target.Word.cg_type, count);
+    u.extract(type, FALSE);
     IF sign_extend THEN
-        s0 := "m3_sign_extend_" & typeToText[type] & "(" & s0 & "," & IntToDec(count) & ")";
+        load_host_integer(u, Target.Word.cg_type, count);
+        do_sign_extend(u, type);
     END;
-    push(u, type, s0);
 END extract_mn;
 
 PROCEDURE insert(u: U; type: IType) =
 (* s3.type := Word.Insert (s3.type, s2.type, s1.type, s0.type); pop(3) *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
-    s2 := cast(get(u, 2), type);
-    s3 := cast(get(u, 3), type);
+VAR count := cast(get(u, 0), Target.Word.cg_type);
+    offset := cast(get(u, 1), Target.Word.cg_type);
+    from := cast(get(u, 2), type);
+    to := cast(get(u, 3), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("insert");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* insert */ ");
-    END;
+    u.comment("insert");
     pop(u, 4);
-    push(u, type, "m3_insert_" & typeToText[type] & "(" & s3 & "," & s2 & "," & s1 & "," & s0 & ")");
+    push(u, type, "m3_insert_" & typeToText[type] & "(" & to & "," & from & "," & offset & "," & count & ")");
 END insert;
 
 PROCEDURE insert_n(u: U; type: IType; count: CARDINAL) =
 (* s2.type := Word.Insert (s2.type, s1.type, s0.type, count); pop(2) *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
-    s2 := cast(get(u, 2), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("insert_n");
-        u.wr.TName (type);
-        u.wr.Int   (count);
-        u.wr.NL    ();
-        print(u, " /* insert_n */ ");
-    END;
-    pop(u, 3);
-    push(u, type, "m3_insert_" & typeToText[type] & "(" & s2 & "," & "," & s1 & "," & s0 & "," & IntToDec(count) & ")");
+    u.comment("insert_n");
+    load_host_integer(u, Target.Word.cg_type, count);
+    u.insert(type);
 END insert_n;
 
 PROCEDURE insert_mn(u: U; type: IType; offset, count: CARDINAL) =
 (* s1.type := Word.Insert (s1.type, s0.type, offset, count); pop(2) *)
-VAR s0 := cast(get(u, 0), type);
-    s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("insert_mn");
-        u.wr.TName (type);
-        u.wr.Int   (offset);
-        u.wr.Int   (count);
-        u.wr.NL    ();
-        print(u, " /* insert_mn */ ");
-    END;
-    pop(u, 2);
-    push(u, type, "m3_insert_" & typeToText[type] & "(" & s1 & "," & s0 & "," & IntToDec(offset) & "," & IntToDec(count) & ")");
+    u.comment("insert_mn");
+    load_host_integer(u, Target.Word.cg_type, offset);
+    load_host_integer(u, Target.Word.cg_type, count);
+    u.insert(type);
 END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
 
-PROCEDURE swap(u: U; a, b: Type) =
+PROCEDURE swap(u: U; <*UNUSED*>a, b: Type) =
 (* tmp := s1; s1 := s0; s0 := tmp *)
 VAR temp := get(u, 1);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("swap");
-        u.wr.TName (a);
-        u.wr.TName (b);
-        u.wr.NL    ();
-        print(u, " /* swap */ ");
-    END;
+    u.comment("swap");
     u.stack.put(1, get(u, 0));
     u.stack.put(0, temp);
 END swap;
 
 PROCEDURE cg_pop(u: U; type: Type) =
 (* pop(1) (i.e. discard s0) *)
+VAR s0 := cast(get(u, 0), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("pop");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* pop */ ");
-    END;
+    u.comment("pop");
     pop(u);
+    print(u, "m3_pop_" & typeToText[type] & "(" & s0 & ");");
 END cg_pop;
 
 CONST MemCopyOrMove = ARRAY OF TEXT{"memcpy", "memmove"};
@@ -3303,14 +2702,7 @@ VAR s0 := cast(get(u, 0), itype);
     s1 := get(u, 1);
     s2 := get(u, 2);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("copy_n");
-        u.wr.TName (itype);
-        u.wr.TName (mtype);
-        u.wr.Bool  (overlap);
-        u.wr.NL    ();
-        print(u, " /* copy_n */ ");
-    END;
+    u.comment("copy_n");
     pop(u, 3);
     print(u, MemCopyOrMove[ORD(overlap)] & "(" & s2 & "," & s1 & "," & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0 & ");");
 END copy_n;
@@ -3320,27 +2712,15 @@ PROCEDURE copy(u: U; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
 VAR s0 := get(u, 0);
     s1 := get(u, 1);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("copy");
-        u.wr.Int   (n);
-        u.wr.TName (mtype);
-        u.wr.Bool  (overlap);
-        u.wr.NL    ();
-        print(u, " /* copy */ ");
-    END;
+    u.comment("copy");
     pop(u, 2);
     print(u, MemCopyOrMove[ORD(overlap)] & "(" & s1 & "," & s0 & "," & IntToDec(CG_Bytes[mtype] * n) & ");");
 END copy;
 
-PROCEDURE zero_n(u: U; itype: IType; mtype: MType) =
+<*NOWARN*>PROCEDURE zero_n(u: U; itype: IType; mtype: MType) =
 (* Mem[s1.A:s0.itype] := 0; pop(2) *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("zero_n");
-        u.wr.TName (itype);
-        u.wr.TName (mtype);
-        u.wr.NL    ();
-    END;
+    u.comment("zero_n");
 
     <* ASSERT FALSE *>
 
@@ -3353,13 +2733,7 @@ PROCEDURE zero(u: U; n: INTEGER; type: MType) =
 (* Mem[s0.A:sz] := 0; pop(1) *)
 VAR s0 := get(u, 0);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("zero");
-        u.wr.Int   (n);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* zero */ ");
-    END;
+    u.comment("zero");
     pop(u);
     print(u, "memset(" & s0 & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");");
 END zero;
@@ -3368,33 +2742,17 @@ END zero;
 
 PROCEDURE loophole(u: U; from, to: ZType) =
 (* s0.to := LOOPHOLE(s0.from, to) *)
+VAR s0 := cast(cast(get(u, 0), from), to);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("loophole");
-        u.wr.TName (from);
-        u.wr.TName (to);
-        u.wr.NL    ();
-        print(u, " /* loophole */ ");
-    END;
-    (* If type is already a pointer, then we should not add pointer here.
-    * As well, if type does not contain a pointer, then we should store the
-    * value in a non-stack-packed temporary and use its address.
-    * We don't have code to queue up temporary declarations.
-    * (for that matter, to limit/reuse temporaries)
-    *)
-   u.stack.put(0, " /* loophole " & typeToText[to] & " */ (" & typeToText[to] & ")" & get(u, 0));
+    u.comment("loophole");
+    u.stack.put(0, s0);
 END loophole;
 
 (*------------------------------------------------ traps & runtime checks ---*)
 
 PROCEDURE abort(u: U; code: RuntimeError) =
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("abort");
-        u.wr.Int   (ORD (code));
-        u.wr.NL    ();
-        print(u, " /* abort */ ");
-    END;
+    u.comment("abort");
     reportfault(u, code);
 END abort;
 
@@ -3402,12 +2760,7 @@ PROCEDURE check_nil(u: U; code: RuntimeError) =
 (* IF (s0.A = NIL) THEN abort(code) *)
 VAR s0 := get(u);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("check_nil");
-        u.wr.Int   (ORD (code));
-        u.wr.NL    ();
-        print(u, " /* check_nil */ ");
-    END;
+    u.comment("check_nil");
     print(u, "if(!" & paren(s0) & ")");
     reportfault(u, code);
 END check_nil;
@@ -3416,15 +2769,8 @@ PROCEDURE check_lo(u: U; type: IType; READONLY i: Target.Int; code: RuntimeError
 (* IF (s0.type < i) THEN abort(code) *)
 VAR s0 := cast(get(u), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("check_lo");
-        u.wr.TName (type);
-        u.wr.TInt  (TIntN.FromTargetInt(i, CG_Bytes[type]));
-        u.wr.Int   (ORD (code));
-        u.wr.NL    ();
-        print(u, " /* check_lo */ ");
-    END;
-    print(u, "if(" & s0 & "<" & IntLiteral(type, i) & ")");
+    u.comment("check_lo");
+    print(u, "if(" & s0 & "<" & TIntLiteral(type, i) & ")");
     reportfault(u, code);
 END check_lo;
 
@@ -3432,33 +2778,18 @@ PROCEDURE check_hi(u: U; type: IType; READONLY i: Target.Int; code: RuntimeError
 (* IF (i < s0.type) THEN abort(code) *)
 VAR s0 := cast(get(u), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("check_hi");
-        u.wr.TName (type);
-        u.wr.TInt  (TIntN.FromTargetInt(i, CG_Bytes[type]));
-        u.wr.Int   (ORD (code));
-        u.wr.NL    ();
-        print(u, " /* check_hi */ ");
-    END;
-    print(u, "if(" & IntLiteral(type, i) & "<" & s0 & ")");
+    u.comment("check_hi");
+    print(u, "if(" & TIntLiteral(type, i) & "<" & s0 & ")");
     reportfault(u, code);
 END check_hi;
 
 PROCEDURE check_range(u: U; type: IType; READONLY a, b: Target.Int; code: RuntimeError) =
 (* IF (s0.type < a) OR (b < s0.type) THEN abort(code) *)
 VAR s0 := cast(get(u), type);
-    a_text := IntLiteral(type, a);
-    b_text := IntLiteral(type, b);
+    a_text := TIntLiteral(type, a);
+    b_text := TIntLiteral(type, b);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("check_range");
-        u.wr.TName (type);
-        u.wr.TInt  (TIntN.FromTargetInt(a, CG_Bytes[type]));
-        u.wr.TInt  (TIntN.FromTargetInt(b, CG_Bytes[type]));
-        u.wr.Int   (ORD(code));
-        u.wr.NL    ();
-        print(u, " /* check_range " & a_text & " " & b_text & " */ ");
-    END;
+    u.comment("check_range");
     print(u, "if((" & s0 & "<" & cast(a_text, type) & ")||(" & cast(b_text, type) & "<" & s0 & "))");
     reportfault(u, code);
 END check_range;
@@ -3473,13 +2804,7 @@ PROCEDURE check_index(u: U; type: IType; code: RuntimeError) =
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("check_index");
-        u.wr.TName (type);
-        u.wr.Int   (ORD(code));
-        u.wr.NL    ();
-        print(u, " /* check_index */ ");
-    END;
+    u.comment("check_index");
     print(u, "if(" & s0 & "<=" & s1 & ")");
     reportfault(u, code);
     pop(u);
@@ -3492,13 +2817,7 @@ PROCEDURE check_eq(u: U; type: IType; code: RuntimeError) =
 VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("check_eq");
-        u.wr.TName (type);
-        u.wr.Int   (ORD(code));
-        u.wr.NL    ();
-        print(u, " /* check_eq */ ");
-    END;
+    u.comment("check_eq");
     print(u, "if(" & s0 & "!=" & s1 & ")");
     reportfault(u, code);
 END check_eq;
@@ -3518,12 +2837,7 @@ PROCEDURE add_offset(u: U; offset: INTEGER) =
 (* s0.A := s0.A + offset *)
 VAR s0 := cast(get(u, 0), Type.Addr);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("add_offset");
-        u.wr.Int   (offset);
-        u.wr.NL    ();
-        print(u, " /* add_offset */ ");
-    END;
+    u.comment("add_offset");
     pop(u);
     push(u, Type.Addr, address_plus_offset(s0, offset));
 END add_offset;
@@ -3534,13 +2848,7 @@ VAR s0 := cast(get(u, 0), type);
     s1 := cast(get(u, 1), Type.Addr);
     size_text := IntToDec(size);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("index_address");
-        u.wr.TName (type);
-        u.wr.Int   (size);
-        u.wr.NL    ();
-        print(u, " /* index_address size=" & size_text & " */ ");
-    END;
+    u.comment("index_address");
     IF size = 0 THEN
         pop(u);
         <* ASSERT FALSE *>
@@ -3559,18 +2867,11 @@ BEGIN
     INC(u.in_proc_call);
 END start_call_helper;
 
-PROCEDURE start_call_direct(u: U; p: M3CG.Proc; level: INTEGER; type: Type) =
+PROCEDURE start_call_direct(u: U; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: Type) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("start_call_direct");
-        u.wr.PName (proc);
-        u.wr.Int   (level);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* start_call_direct */ ");
-    END;
+    u.comment("start_call_direct");
     start_call_helper(u);
     (* workaround frontend bug? *)
     IF proc.is_exception_handler THEN
@@ -3589,16 +2890,10 @@ BEGIN
     *)
 END start_call_direct;
 
-PROCEDURE start_call_indirect(u: U; type: Type; callingConvention: CallingConvention) =
+PROCEDURE start_call_indirect(u: U; <*UNUSED*>type: Type; <*UNUSED*>callingConvention: CallingConvention) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("start_call_indirect");
-        u.wr.TName (type);
-        u.wr.Txt   (callingConvention.name);
-        u.wr.NL    ();
-        print(u, " /* start_call_indirect */ ");
-    END;
+    u.comment("start_call_indirect");
     start_call_helper(u);
 END start_call_indirect;
 
@@ -3613,28 +2908,16 @@ PROCEDURE pop_param(u: U; type: MType) =
 (* pop s0 and make it the "next" parameter in the current call *)
 VAR s0 := cast(get(u, 0), type);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("pop_param");
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* pop_param */ ");
-    END;
+    u.comment("pop_param");
     pop_parameter_helper(u, s0);
 END pop_param;
 
-PROCEDURE pop_struct(u: U; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
+PROCEDURE pop_struct(u: U; <*UNUSED*>typeid: TypeUID; <*UNUSED*>byte_size: ByteSize; <*UNUSED*>alignment: Alignment) =
 (* pop s0 and make it the "next" parameter in the current call
 * NOTE: it is passed by value *)
 VAR s0 := get(u, 0);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("pop_struct");
-        u.wr.Tipe  (typeid);
-        u.wr.Int   (byte_size);
-        u.wr.Int   (alignment);
-        u.wr.NL    ();
-        print(u, " /* pop_struct */ ");
-    END;
+    u.comment("pop_struct");
     (* pop_parameter_helper(u, "*(M3STRUCT(" & IntToDec(byte_size) & ") * )" & s0); *)
     (* pop_parameter_helper(u, s0); *)
     (* BUG? local procedure take struct pointers, imported ones take ADDRESS? *)
@@ -3644,11 +2927,7 @@ END pop_struct;
 PROCEDURE pop_static_link(u: U) =
 VAR var := declare_temp(u, CG_Bytes[Type.Addr], CG_Bytes[Type.Addr], Type.Addr, FALSE);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("pop_static_link");
-        u.wr.NL    ();
-        print(u, " /* pop_static_link */ ");
-    END;
+    u.comment("pop_static_link");
     <* ASSERT u.in_proc_call > 0 *>
     u.static_link[u.in_proc_call - 1] := var;
     u.store(var, 0, Type.Addr, Type.Addr);
@@ -3678,30 +2957,17 @@ VAR target_level := target.level;
     current_level := current.level;
     static_link := "";
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd    ("get_static_link");
-        u.wr.OutT   (" target:" & M3ID.ToText(target.name));
-        IF target.parent # NIL THEN
-        u.wr.OutT   (" target.parent:" & M3ID.ToText(target.parent.name));
-        END;
-        u.wr.OutT   (" target.level:");
-        u.wr.Int    (target.level);
-        u.wr.OutT   (" current:" & M3ID.ToText(current.name));
-        u.wr.OutT   (" current.level:");
-        u.wr.Int    (current.level);
-        u.wr.NL     ();
-        print(u, " /* get_static_link */ ");
-    END;
+    u.comment("get_static_link");
     IF target_level = 0 THEN
-        RETURN " /* get_static_link 1 */ ((ADDRESS)0)";
+        RETURN "((ADDRESS)0)";
     END;
     IF current_level = target_level THEN
-        RETURN " /* get_static_link 2 */ _static_link";
+        RETURN "_static_link";
     END;
     IF current_level < target_level THEN
-        RETURN " /* get_static_link 3 */ &_frame";
+        RETURN "&_frame";
     END;
-    static_link := " /* get_static_link 4 */ _frame._static_link";
+    static_link := "_frame._static_link";
     WHILE current_level > target_level DO
         static_link := static_link & "->_static_link";
         DEC(current_level);
@@ -3714,37 +2980,24 @@ PROCEDURE call_direct(u: U; p: M3CG.Proc; type: Type) =
    returns a value of type type. *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("call_direct");
-        u.wr.PName (proc);
-        u.wr.TName (type);
-        u.wr.NL    ();
-        print(u, " /* call_direct " & M3ID.ToText(proc.name) & " */ ");
-    END;
+    u.comment("call_direct");
 
     <* ASSERT u.in_proc_call > 0 *>
 
     IF proc.level # 0 THEN
-        print(u, " /* call_direct => get_static_link */ ");
         u.params.addhi(get_static_link(u, proc));
     END;
 
     call_helper(u, type, M3ID.ToText(proc.name));
 END call_direct;
 
-PROCEDURE call_indirect(u: U; type: Type; callingConvention: CallingConvention) =
+PROCEDURE call_indirect(u: U; type: Type; <*UNUSED*>callingConvention: CallingConvention) =
 (* call the procedure whose address is in s0.A and pop s0. The
    procedure returns a value of type type. *)
 VAR s0 := get(u, 0);
     static_link := u.static_link[u.in_proc_call - 1];
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("call_indirect");
-        u.wr.TName (type);
-        u.wr.Txt   (callingConvention.name);
-        u.wr.NL    ();
-        print(u, " /* call_indirect */ ");
-    END;
+    u.comment("call_indirect");
 
     pop(u);
 
@@ -3767,12 +3020,7 @@ PROCEDURE load_procedure(u: U; p: M3CG.Proc) =
 (* push; s0.A := ADDR (proc's body) *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load_procedure");
-        u.wr.PName (proc);
-        u.wr.NL    ();
-        print(u, " /* load_procedure */ ");
-    END;
+    u.comment("load_procedure");
     (* UNDONE? typeing? *)
     push(u, Type.Addr, M3ID.ToText(proc.name));
 END load_procedure;
@@ -3780,70 +3028,41 @@ END load_procedure;
 PROCEDURE load_static_link(u: U; p: M3CG.Proc) =
 (* push; s0.A := (static link needed to call proc, NIL for top-level procs) *)
 VAR target := NARROW(p, Proc_t);
-    target_level := target.level;
-    current := u.current_proc;
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd    ("load_static_link");
-        u.wr.OutT   (" target:" & M3ID.ToText(target.name));
-        IF target.parent # NIL THEN
-            u.wr.OutT   (" target.parent:" & M3ID.ToText(target.parent.name));
-        END;
-        u.wr.OutT   (" target.level:");
-        u.wr.Int    (target.level);
-        u.wr.OutT   (" current:" & M3ID.ToText(current.name));
-        u.wr.OutT   (" current.level:");
-        u.wr.Int    (current.level);
-        u.wr.NL     ();
-        print(u, " /* load_static_link */ ");
-    END;
-    IF target_level = 0 THEN
+    u.comment("load_static_link");
+    IF target.level = 0 THEN
         u.load_nil();
         RETURN;
     END;
-    push(u, Type.Addr, " /* load_static_link */ " & get_static_link(u, target));
+    push(u, Type.Addr, get_static_link(u, target));
 END load_static_link;
 
 (*----------------------------------------------------------------- misc. ---*)
 
-PROCEDURE comment(u: U; a, b, c, d: TEXT := NIL) =
-VAR i: INTEGER := -1;
+PROCEDURE comment_1(VAR text: TEXT; VAR length: INTEGER) = 
 BEGIN
-    Cmt2 (u, a, i);
-    Cmt2 (u, b, i);
-    Cmt2 (u, c, i);
-    Cmt2 (u, d, i);
-    Cmt1 (u, "\n", i);
-END comment;
-
-PROCEDURE Cmt1(u: U; text: TEXT; VAR width: INTEGER) =
-VAR ch: CHAR;
-BEGIN
-    IF (NOT u.debug OR text = NIL) THEN RETURN END;
-    FOR i := 0 TO Text.Length (text) - 1 DO
-        ch := Text.GetChar (text, i);
-        IF (ch = '\n' OR ch = '\r') THEN
-            u.wr.OutC (ch);
-            width := -1;
-        ELSE
-            IF (width = -1) THEN
-                u.wr.OutT ("\t# ");
-                width := 0;
-            END;
-            u.wr.OutC (ch);
-        END
-    END;
-    print(u, " /* comment: " & text & " */\n");
-END Cmt1;
-
-PROCEDURE Cmt2(u: U; text: TEXT; VAR width: INTEGER) =
-BEGIN
-    IF (NOT u.debug OR text = NIL) THEN RETURN END;
     IF text = NIL THEN
-        RETURN
+        text := "";
+        RETURN;
     END;
-    Cmt1 (u, text, width);
-END Cmt2;
+    INC(length, Text.Length(text));
+END comment_1;
+
+PROCEDURE comment(u: U; a, b, c, d: TEXT := NIL) =
+VAR length := 0;
+BEGIN
+    IF NOT u.debug THEN
+        RETURN;
+    END;
+    comment_1(a, length);
+    comment_1(b, length);
+    comment_1(c, length);
+    comment_1(d, length);
+    IF length = 0 THEN
+        RETURN;
+    END;
+    print(u, " /* " & a & b & c & d & " */\n");
+END comment;
 
 (*--------------------------------------------------------------- atomics ---*)
 
@@ -3853,12 +3072,7 @@ PROCEDURE store_ordered(u: U; ztype: ZType; mtype: MType; <*UNUSED*>order: Memor
 VAR s0 := get(u, 0);
     s1 := get(u, 1);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("store_ordered");
-        u.wr.TName (ztype);
-        u.wr.TName (mtype);
-        u.wr.NL    ();
-    END;
+    u.comment("store_ordered");
     print(u, " /* store_ordered => store */ ");
     store_helper(u, s0, ztype, s1, 0, mtype);
 END store_ordered;
@@ -3867,33 +3081,23 @@ PROCEDURE load_ordered(u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: Memory
 (* s0.ztype := Mem [s0.A].mtype  *)
 VAR s0 := get(u);
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("load_ordered");
-        u.wr.TName (mtype);
-        u.wr.TName (ztype);
-        u.wr.NL    ();
-    END;
+    u.comment("load_ordered");
     print(u, " /* load_ordered */ ");
     pop(u);
     load_helper(u, s0, 0, mtype, ztype);
 END load_ordered;
 
-PROCEDURE exchange(u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
+<*NOWARN*>PROCEDURE exchange(u: U; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + offset].mtype;
    Mem [s1.A + offset].mtype := s0.ztype;
    s0.ztype := tmp;
    pop *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("exchange");
-        u.wr.TName (mtype);
-        u.wr.TName (ztype);
-        u.wr.NL    ();
-    END;
+    u.comment("exchange");
     print(u, " /* exchange */ ");
 END exchange;
 
-PROCEDURE compare_exchange(u: U; mtype: MType; ztype: ZType; result_type: IType;
+<*NOWARN*>PROCEDURE compare_exchange(u: U; mtype: MType; ztype: ZType; result_type: IType;
                            <*UNUSED*>success, failure: MemoryOrder) =
 (* original := Mem[s2.A].mtype;
    spurious_failure := whatever;
@@ -3910,13 +3114,7 @@ PROCEDURE compare_exchange(u: U; mtype: MType; ztype: ZType; result_type: IType;
      still go down the then branch.
 *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("compare_exchange");
-        u.wr.TName (mtype);
-        u.wr.TName (ztype);
-        u.wr.TName (result_type);
-        u.wr.NL    ();
-    END;
+    u.comment("compare_exchange");
     print(u, " /* compare_exchange */ ");
 END compare_exchange;
 
@@ -3925,19 +3123,16 @@ PROCEDURE fence(u: U; <*UNUSED*>order: MemoryOrder) =
  * x86: Exchanging any memory with any register is a serializing instruction.
  *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("fence");
-        u.wr.NL    ();
-    END;
+    u.comment("fence");
     print(u, " /* fence */ ");
     <* ASSERT u.in_proc *>
     <* ASSERT u.current_proc # NIL *>
     print(u, "m3_fence();");
 END fence;
 
-CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
+<*NOWARN*>CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op(u: U; atomic_op: AtomicOp; mtype: MType; ztype: ZType;
+<*NOWARN*>PROCEDURE fetch_and_op(u: U; atomic_op: AtomicOp; mtype: MType; ztype: ZType;
                        <*UNUSED*>order: MemoryOrder) =
 (* original := Mem [s1.A].mtype;
    Mem [s1.A].mtype := original op s0.ztype;
@@ -3950,13 +3145,7 @@ Generally we use interlocked compare exchange loop.
 Some operations can be done better though.
 *)
 BEGIN
-    IF u.debug THEN
-        u.wr.Cmd   ("fetch_and_op");
-        u.wr.OutT  (AtomicOpName[atomic_op]);
-        u.wr.TName (mtype);
-        u.wr.TName (ztype);
-        u.wr.NL    ();
-    END;
+    u.comment("fetch_and_op");
     print(u, " /* fetch_and_op */ ");
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
 END fetch_and_op;
