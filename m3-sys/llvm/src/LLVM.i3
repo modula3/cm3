@@ -272,32 +272,29 @@ TYPE TypeKind = {
 };
 
 TYPE Linkage = {
-  ExternalLinkage,    (**< Externally visible function *)
-  AvailableExternallyLinkage,
-  LinkOnceAnyLinkage, (**< Keep one copy of function when linking (inline)*)
-  LinkOnceODRLinkage, (**< Same, but only replaced by something
-                            equivalent. *)
-  LinkOnceODRAutoHideLinkage, (**< Like LinkOnceODR, but possibly hidden. *)
-  WeakAnyLinkage,     (**< Keep one copy of function when linking (weak) *)
-  WeakODRLinkage,     (**< Same, but only replaced by something
-                            equivalent. *)
-  AppendingLinkage,   (**< Special purpose, only applies to global arrays *)
-  InternalLinkage,    (**< Rename collisions when linking (static
-                               functions) *)
-  PrivateLinkage,     (**< Like Internal, but omit from symbol table *)
-  DLLImportLinkage,   (**< Function to be imported from DLL *)
-  DLLExportLinkage,   (**< Function to be accessible from DLL *)
-  ExternalWeakLinkage,(**< ExternalWeak linkage description *)
-  GhostLinkage,       (**< Obsolete *)
-  CommonLinkage,      (**< Tentative definitions *)
-  LinkerPrivateLinkage, (**< Like Private, but linker removes. *)
-  LinkerPrivateWeakLinkage (**< Like LinkerPrivate, but is weak. *)
+  External,    (**< Externally visible function *)
+  AvailableExternally,
+  LinkOnceAny, (**< Keep one copy of function when linking (inline)*)
+  LinkOnceODR, (**< Same, but only replaced by something equivalent. *)
+  LinkOnceODRAutoHide, (**< Like LinkOnceODR, but possibly hidden. *)
+  WeakAny,     (**< Keep one copy of function when linking (weak) *)
+  WeakODR,     (**< Same, but only replaced by something equivalent. *)
+  Appending,   (**< Special purpose, only applies to global arrays *)
+  Internal,    (**< Rename collisions when linking (static functions) *)
+  Private,     (**< Like Internal, but omit from symbol table *)
+  DLLImport,   (**< Function to be imported from DLL *)
+  DLLExport,   (**< Function to be accessible from DLL *)
+  ExternalWeak,(**< ExternalWeak linkage description *)
+  Ghost,       (**< Obsolete *)
+  Common,      (**< Tentative definitions *)
+  LinkerPrivate, (**< Like Private, but linker removes. *)
+  LinkerPrivateWeak (**< Like LinkerPrivate, but is weak. *)
 };
 
 TYPE Visibility = {
-  DefaultVisibility,  (**< The GV is visible *)
-  HiddenVisibility,   (**< The GV is hidden *)
-  ProtectedVisibility (**< The GV is protected *)
+  Default,  (**< The GV is visible *)
+  Hidden,   (**< The GV is hidden *)
+  Protected (**< The GV is protected *)
 };
 
 CONST
@@ -821,7 +818,7 @@ PROCEDURE GetStructName(Ty: TypeRef): const_char_star;
  * @see llvm::StructType::setBody()
  *)
 PROCEDURE StructSetBody(StructTy: TypeRef; ElementTypes: UNTRACED REF TypeRef;
-                        ElementCount: unsigned; Packed: Bool);
+                        ElementCount: unsigned; Packed: Bool := FALSE);
 
 (**
  * Get the number of elements defined inside the structure.
@@ -906,7 +903,8 @@ PROCEDURE GetArrayLength(ArrayTy: TypeRef): unsigned;
  *
  * @see llvm::PointerType::get()
  *)
-PROCEDURE PointerType(ElementType: TypeRef; AddressSpace: unsigned): TypeRef;
+PROCEDURE PointerType
+  (ElementType: TypeRef; AddressSpace: unsigned := 0): TypeRef;
 
 (**
  * Obtain the address space of a pointer type.
@@ -2642,6 +2640,41 @@ PROCEDURE SizeOfTypeInBits(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
 (** Computes the storage size of a type in bytes for a target.
     See the method llvm::TargetData::getTypeStoreSize. *)
 PROCEDURE StoreSizeOfType(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
+
+(** Computes the ABI size of a type in bytes for a target.
+    See the method llvm::TargetData::getTypeAllocSize. *)
+PROCEDURE ABISizeOfType(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
+
+(** Computes the ABI alignment of a type in bytes for a target.
+    See the method llvm::TargetData::getTypeABISize. *)
+PROCEDURE ABIAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
+
+(** Computes the call frame alignment of a type in bytes for a target.
+    See the method llvm::TargetData::getTypeABISize. *)
+PROCEDURE CallFrameAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
+
+(** Computes the preferred alignment of a type in bytes for a target.
+    See the method llvm::TargetData::getTypeABISize. *)
+PROCEDURE PreferredAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
+
+(** Computes the preferred alignment of a global variable in bytes for a target.
+    See the method llvm::TargetData::getPreferredAlignment. *)
+PROCEDURE PreferredAlignmentOfGlobal(T: TargetDataRef;
+                                     GlobalVar: ValueRef): unsigned;
+
+(** Computes the structure element that contains the byte offset for a target.
+    See the method llvm::StructLayout::getElementContainingOffset. *)
+PROCEDURE ElementAtOffset(T: TargetDataRef; StructTy: TypeRef;
+                          Offset: unsigned_long_long): unsigned;
+
+(** Computes the byte offset of the indexed struct element for a target.
+    See the method llvm::StructLayout::getElementContainingOffset. *)
+PROCEDURE OffsetOfElement(T: TargetDataRef; StructTy: TypeRef;
+                          Element: unsigned): unsigned_long_long;
+
+(** Deallocates a TargetData.
+    See the destructor llvm::TargetData::~TargetData. *)
+PROCEDURE DisposeTargetData(T: TargetDataRef);
 
 (*===-- llvm-c/TargetMachine.h - Target Machine Library C Interface - C++ -*-=*\
 |*                                                                            *|
