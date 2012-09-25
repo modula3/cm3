@@ -130,6 +130,13 @@ PROCEDURE ToText (t: T): TEXT =
     RETURN x;
   END ToText;
 
+PROCEDURE ToStr (t: T) =
+  BEGIN
+    <*ASSERT t < next_t*>
+    IF (t = NoID) THEN RETURN NIL END;
+    RETURN ids[t].start;
+  END ToStr;
+
 PROCEDURE Put (wr: M3Buf.T;  t: T) =
   VAR ptr := LOOPHOLE (ids[t].start, CharBuffer);  len: INTEGER;
   BEGIN

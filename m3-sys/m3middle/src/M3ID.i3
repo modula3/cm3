@@ -35,6 +35,10 @@ PROCEDURE Hash (t: T): INTEGER;
 PROCEDURE Put (wr: M3Buf.T;  t: T);
 (* == M3Buf.PutText (ToText(t)), without the implied TEXT allocation *)
 
+PROCEDURE ToStr (t: T): UNTRACED REF CHAR;
+(* Returns the null-terminated C string with the same contents as "t" and
+   sharing storage with "t". *)
+
 PROCEDURE AdvanceMarks ();
 (* start using a "new" set of marks.  They're recycled after 256 advances. *)
 
