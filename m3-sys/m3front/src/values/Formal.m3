@@ -715,6 +715,7 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
         CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
         CG.Check_eq (Target.Integer.cg_type,
                      CG.RuntimeError.IncompatibleArrayShape);
+        tlhs := elt;
       END;
 
       (* leave the old dope vector as the result *)
