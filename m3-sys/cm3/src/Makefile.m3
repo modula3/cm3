@@ -533,19 +533,19 @@ PROCEDURE ScanCommandLine1 () =
 PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
   VAR
     use_overrides := FALSE;
-    cnt := 0;  arg: TEXT;
+    got_mode := FALSE;  arg: TEXT;
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
       IF Text.Length(arg) > 1 AND Text.GetChar (arg, 1) = '-' THEN
         arg := Text.Sub (arg, 1);
       END;
-      IF    Text.Equal (arg, "-build")     THEN  SetMode (cnt, MM.Build);
-      ELSIF Text.Equal (arg, "-clean")     THEN  SetMode (cnt, MM.Clean);
-      ELSIF Text.Equal (arg, "-realclean") THEN  SetMode (cnt, MM.RealClean);
-      ELSIF Text.Equal (arg, "-find")      THEN  SetMode (cnt, MM.Find);
-      ELSIF Text.Equal (arg, "-ship")      THEN  SetMode (cnt, MM.Ship);
-      ELSIF Text.Equal (arg, "-depend")    THEN  SetMode (cnt, MM.Depend);
+      IF    Text.Equal (arg, "-build")     THEN  SetMode (got_mode, MM.Build);
+      ELSIF Text.Equal (arg, "-clean")     THEN  SetMode (got_mode, MM.Clean);
+      ELSIF Text.Equal (arg, "-realclean") THEN  SetMode (got_mode, MM.RealClean);
+      ELSIF Text.Equal (arg, "-find")      THEN  SetMode (got_mode, MM.Find);
+      ELSIF Text.Equal (arg, "-ship")      THEN  SetMode (got_mode, MM.Ship);
+      ELSIF Text.Equal (arg, "-depend")    THEN  SetMode (got_mode, MM.Depend);
       ELSIF Text.Equal (arg, "-silent") THEN
         Msg.SetLevel (Msg.Level.Silent);
       ELSIF Text.Equal (arg, "-why") THEN
@@ -571,19 +571,19 @@ PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
         END;
       END;
     END;
-    IF (cnt <= 0) THEN SetMode (cnt, MM.Build); END;
+    IF got_mode = FALSE THEN SetMode (got_mode, MM.Build); END;
     EVAL defs.put("M3_USE_OVERRIDES", ARRAY BOOLEAN OF TEXT {"", "TRUE"}[use_overrides]);
     RETURN defs;
   END ScanCommandLine2;
 
-PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
+PROCEDURE SetMode (VAR got_mode: BOOLEAN;  mode: MM) =
   BEGIN
-    INC (cnt);
-    IF (cnt > 1) THEN
+    IF got_mode THEN
       Msg.Error (NIL, "mode \"", ModeName [M3Options.major_mode],
                  "\" already set, \"", ModeName [mode] & "\" ignored.");
     ELSE
       M3Options.major_mode := mode;
+      got_mode := TRUE;
     END;
   END SetMode;
 
