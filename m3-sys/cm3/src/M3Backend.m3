@@ -22,17 +22,16 @@ PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t
   BEGIN
     IF NOT BackendIntegrated[backend_mode] THEN
       RETURN M3CG_BinWr.New (target);
-    ELSE
-      <*ASSERT obj_file = NIL *>
-      obj_file := NTObjFile.New ();
-      obj_wr   := target;
-      obj_name := target_name;
-      IF (Msg.level >= Msg.Level.Verbose) THEN
-        log_name := target_name & "log";
-        log := Utils.OpenWriter (log_name, fatal := TRUE);
-      END;
-      RETURN M3x86.New (log, obj_file);
     END;
+    <*ASSERT obj_file = NIL *>
+    obj_file := NTObjFile.New ();
+    obj_wr   := target;
+    obj_name := target_name;
+    IF (Msg.level >= Msg.Level.Verbose) THEN
+      log_name := target_name & "log";
+      log := Utils.OpenWriter (log_name, fatal := TRUE);
+    END;
+    RETURN M3x86.New (log, obj_file);
   END Open;
 
 PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
