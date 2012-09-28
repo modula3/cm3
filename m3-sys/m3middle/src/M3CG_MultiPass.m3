@@ -1,180 +1,240 @@
 UNSAFE MODULE M3CG_MultiPass;
 
-IMPORT M3CG, RefSeq, Target;
+IMPORT M3CG, M3CG_Ops, RefSeq, Target;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Var, Proc, Alignment, TypeUID, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
-IMPORT M3CG_Ops;
 FROM M3CG_Binary IMPORT Op;
+
+TYPE var_t = Var OBJECT tag: INTEGER END;
+TYPE proc_t = Proc OBJECT tag: INTEGER END;
+
+(* vars and procs (and labels?); maximum count not known ahead of time *)
+TYPE GrowableRefs_t =  OBJECT
+    data: RefSeq.T := NIL;
+METHODS
+    Init(): GrowableRefs_t := GrowableRefs_Init;
+    Size(): INTEGER := GrowableRefs_Size;
+    NewRef(ref: REFANY): INTEGER := GrowableRefs_NewRef;
+    NewVar(): var_t := GrowableRefs_NewVar;
+    NewProc(): proc_t := GrowableRefs_NewProc;
+END;
+
+(* vars and procs (and labels?); maximum count known ahead of time *)
+TYPE StaticRefs_t =  OBJECT
+    data: REF ARRAY OF REFANY := NIL;
+METHODS
+    Init(count: INTEGER): StaticRefs_t := StaticRefs_Init;
+    GetVar(index: INTEGER): var_t := StaticRefs_GetVar;
+    GetProc(index: INTEGER): proc_t := StaticRefs_GetProc;
+END;
+
+PROCEDURE StaticRefs_Init(self: StaticRefs_t; count: INTEGER): StaticRefs_t =
+BEGIN
+    self.data := NEW(REF ARRAY OF REFANY, count);
+    RETURN self;
+END StaticRefs_Init;
+
+PROCEDURE StaticRefs_GetVar(self: StaticRefs_t; tag: INTEGER): var_t =
+BEGIN
+    IF tag = 0 THEN
+        RETURN NIL;
+    END;
+    RETURN NARROW(self.data[tag], var_t);
+END StaticRefs_GetVar;
+
+PROCEDURE StaticRefs_GetProc(self: StaticRefs_t; tag: INTEGER): proc_t =
+BEGIN
+    IF tag = 0 THEN
+        RETURN NIL;
+    END;
+    RETURN NARROW(self.data[tag], proc_t);
+END StaticRefs_GetProc;
 
 REVEAL
 T = Public BRANDED "M3CG_MultiPass.T" OBJECT
-
-data: RefSeq.T := NIL;
-next_label_id := 1;
-next_var := 1;
-next_proc := 1;
-next_scope := 1;
-
+    data: RefSeq.T := NIL;
+    refs: GrowableRefs_t := NIL;
+    next_label_id := 1;
 METHODS
-
-Add(a: REFANY) := Add;
-
+    Add(a: REFANY) := Add;
 OVERRIDES
+    Init := Init;
+    GetData := GetData;
+    Replay := Replay;
 
-get_data := get_data;
-
-next_label := next_label;
-set_error_handler := set_error_handler;
-begin_unit := begin_unit;
-end_unit := end_unit;
-import_unit := import_unit;
-export_unit := export_unit;
-set_source_file := set_source_file;
-set_source_line := set_source_line;
-declare_typename := declare_typename;
-declare_array := declare_array;
-declare_open_array := declare_open_array;
-declare_enum := declare_enum;
-declare_enum_elt := declare_enum_elt;
-declare_packed := declare_packed;
-declare_record := declare_record;
-declare_field := declare_field;
-declare_set := declare_set;
-declare_subrange := declare_subrange;
-declare_pointer := declare_pointer;
-declare_indirect := declare_indirect;
-declare_proctype := declare_proctype;
-declare_formal := declare_formal;
-declare_raises := declare_raises;
-declare_object := declare_object;
-declare_method := declare_method;
-declare_opaque := declare_opaque;
-reveal_opaque := reveal_opaque;
-set_runtime_proc := set_runtime_proc;
-import_global := import_global;
-declare_segment := declare_segment;
-bind_segment := bind_segment;
-declare_global := declare_global;
-declare_constant := declare_constant;
-declare_local := declare_local;
-declare_param := declare_param;
-declare_temp := declare_temp;
-free_temp := free_temp;
-declare_exception := declare_exception;
-begin_init := begin_init;
-end_init := end_init;
-init_int := init_int;
-init_proc := init_proc;
-init_label := init_label;
-init_var := init_var;
-init_offset := init_offset;
-init_chars := init_chars;
-init_float := init_float;
-import_procedure := import_procedure;
-declare_procedure := declare_procedure;
-begin_procedure := begin_procedure;
-end_procedure := end_procedure;
-begin_block := begin_block;
-end_block := end_block;
-note_procedure_origin := note_procedure_origin;
-set_label := set_label;
-jump := jump;
-if_true := if_true;
-if_false := if_false;
-if_compare := if_compare;
-case_jump := case_jump;
-exit_proc := exit_proc;
-load := load;
-store := store;
-load_address := load_address;
-load_indirect := load_indirect;
-store_indirect := store_indirect;
-load_nil := load_nil;
-load_integer := load_integer;
-load_float := load_float;
-compare := compare;
-add := add;
-subtract := subtract;
-multiply := multiply;
-divide := divide;
-div := div;
-mod := mod;
-negate := negate;
-abs := abs;
-max := max;
-min := min;
-cvt_int := cvt_int;
-cvt_float := cvt_float;
-set_union := set_union;
-set_difference := set_difference;
-set_intersection := set_intersection;
-set_sym_difference := set_sym_difference;
-set_member := set_member;
-set_compare := set_compare;
-set_range := set_range;
-set_singleton := set_singleton;
-not := not;
-and := and;
-or := or;
-xor := xor;
-shift := shift;
-shift_left := shift_left;
-shift_right := shift_right;
-rotate := rotate;
-rotate_left := rotate_left;
-rotate_right := rotate_right;
-widen := widen;
-chop := chop;
-extract := extract;
-extract_n := extract_n;
-extract_mn := extract_mn;
-insert := insert;
-insert_n := insert_n;
-insert_mn := insert_mn;
-swap := swap;
-pop := pop;
-copy := copy;
-copy_n := copy_n;
-zero := zero;
-zero_n := zero_n;
-loophole := loophole;
-abort := abort;
-check_nil := check_nil;
-check_lo := check_lo;
-check_hi := check_hi;
-check_range := check_range;
-check_index := check_index;
-check_eq := check_eq;
-add_offset := add_offset;
-index_address := index_address;
-start_call_direct := start_call_direct;
-call_direct := call_direct;
-start_call_indirect := start_call_indirect;
-call_indirect := call_indirect;
-pop_param := pop_param;
-pop_struct := pop_struct;
-pop_static_link := pop_static_link;
-load_procedure := load_procedure;
-load_static_link := load_static_link;
-comment := comment;
-store_ordered := store_ordered;
-load_ordered := load_ordered;
-exchange := exchange;
-compare_exchange := compare_exchange;
-fence := fence;
-fetch_and_op := fetch_and_op;
-
+    next_label := next_label;
+    set_error_handler := set_error_handler;
+    begin_unit := begin_unit;
+    end_unit := end_unit;
+    import_unit := import_unit;
+    export_unit := export_unit;
+    set_source_file := set_source_file;
+    set_source_line := set_source_line;
+    declare_typename := declare_typename;
+    declare_array := declare_array;
+    declare_open_array := declare_open_array;
+    declare_enum := declare_enum;
+    declare_enum_elt := declare_enum_elt;
+    declare_packed := declare_packed;
+    declare_record := declare_record;
+    declare_field := declare_field;
+    declare_set := declare_set;
+    declare_subrange := declare_subrange;
+    declare_pointer := declare_pointer;
+    declare_indirect := declare_indirect;
+    declare_proctype := declare_proctype;
+    declare_formal := declare_formal;
+    declare_raises := declare_raises;
+    declare_object := declare_object;
+    declare_method := declare_method;
+    declare_opaque := declare_opaque;
+    reveal_opaque := reveal_opaque;
+    set_runtime_proc := set_runtime_proc;
+    import_global := import_global;
+    declare_segment := declare_segment;
+    bind_segment := bind_segment;
+    declare_global := declare_global;
+    declare_constant := declare_constant;
+    declare_local := declare_local;
+    declare_param := declare_param;
+    declare_temp := declare_temp;
+    free_temp := free_temp;
+    declare_exception := declare_exception;
+    begin_init := begin_init;
+    end_init := end_init;
+    init_int := init_int;
+    init_proc := init_proc;
+    init_label := init_label;
+    init_var := init_var;
+    init_offset := init_offset;
+    init_chars := init_chars;
+    init_float := init_float;
+    import_procedure := import_procedure;
+    declare_procedure := declare_procedure;
+    begin_procedure := begin_procedure;
+    end_procedure := end_procedure;
+    begin_block := begin_block;
+    end_block := end_block;
+    note_procedure_origin := note_procedure_origin;
+    set_label := set_label;
+    jump := jump;
+    if_true := if_true;
+    if_false := if_false;
+    if_compare := if_compare;
+    case_jump := case_jump;
+    exit_proc := exit_proc;
+    load := load;
+    store := store;
+    load_address := load_address;
+    load_indirect := load_indirect;
+    store_indirect := store_indirect;
+    load_nil := load_nil;
+    load_integer := load_integer;
+    load_float := load_float;
+    compare := compare;
+    add := add;
+    subtract := subtract;
+    multiply := multiply;
+    divide := divide;
+    div := div;
+    mod := mod;
+    negate := negate;
+    abs := abs;
+    max := max;
+    min := min;
+    cvt_int := cvt_int;
+    cvt_float := cvt_float;
+    set_union := set_union;
+    set_difference := set_difference;
+    set_intersection := set_intersection;
+    set_sym_difference := set_sym_difference;
+    set_member := set_member;
+    set_compare := set_compare;
+    set_range := set_range;
+    set_singleton := set_singleton;
+    not := not;
+    and := and;
+    or := or;
+    xor := xor;
+    shift := shift;
+    shift_left := shift_left;
+    shift_right := shift_right;
+    rotate := rotate;
+    rotate_left := rotate_left;
+    rotate_right := rotate_right;
+    widen := widen;
+    chop := chop;
+    extract := extract;
+    extract_n := extract_n;
+    extract_mn := extract_mn;
+    insert := insert;
+    insert_n := insert_n;
+    insert_mn := insert_mn;
+    swap := swap;
+    pop := pop;
+    copy := copy;
+    copy_n := copy_n;
+    zero := zero;
+    zero_n := zero_n;
+    loophole := loophole;
+    abort := abort;
+    check_nil := check_nil;
+    check_lo := check_lo;
+    check_hi := check_hi;
+    check_range := check_range;
+    check_index := check_index;
+    check_eq := check_eq;
+    add_offset := add_offset;
+    index_address := index_address;
+    start_call_direct := start_call_direct;
+    call_direct := call_direct;
+    start_call_indirect := start_call_indirect;
+    call_indirect := call_indirect;
+    pop_param := pop_param;
+    pop_struct := pop_struct;
+    pop_static_link := pop_static_link;
+    load_procedure := load_procedure;
+    load_static_link := load_static_link;
+    comment := comment;
+    store_ordered := store_ordered;
+    load_ordered := load_ordered;
+    exchange := exchange;
+    compare_exchange := compare_exchange;
+    fence := fence;
+    fetch_and_op := fetch_and_op;
 END;
 
-PROCEDURE New(): T =
+PROCEDURE Init(self: T): T =
 BEGIN
-RETURN NEW(T);
-END New;
+    self.data := NEW(RefSeq.T).init();
+    self.refs := NEW(GrowableRefs_t).Init();
+    EVAL self.refs.NewRef(NIL); (* throw away zero *)
+    RETURN self;
+END Init;
 
-PROCEDURE get_data(self: T): REF ARRAY OF REFANY =
+REVEAL Replay_t = BRANDED "M3CG_MultiPass.Replay_t" OBJECT
+    refs: StaticRefs_t; (* vars and procs *)
+METHODS
+    Init(refcount: INTEGER): Replay_t := Replay_Init;
+    PutRef(tag: INTEGER; ref: REFANY) := Replay_PutRef;
+    GetVar(ref: INTEGER): M3CG.Var := Replay_GetVar;
+    GetProc(ref: INTEGER): M3CG.Proc := Replay_GetProc;
+END;
+
+PROCEDURE Replay(self: T; cg: M3CG.T) =
+VAR data := self.data;
+    context := NEW(Replay_t).Init(self.refs.Size());
+BEGIN
+    FOR b := 0 TO data.size() - 1 DO
+        <* ASSERT data.get(b) # NIL *>
+        NARROW(data.get(b), op_t).replay(context, cg);
+    END;
+END Replay;
+
+PROCEDURE GetData(self: T): REF ARRAY OF REFANY =
 VAR data := self.data;
     a := NEW(REF ARRAY OF REFANY, data.size());
 BEGIN
@@ -182,86 +242,118 @@ BEGIN
         a[b] := data.get(b);
     END;
     RETURN a;
-END get_data;
+END GetData;
 
 PROCEDURE Add(self: T; a: REFANY) =
 BEGIN
-self.data.addhi(a);
+    self.data.addhi(a);
 END Add;
+
+PROCEDURE GrowableRefs_Init(self: GrowableRefs_t): GrowableRefs_t =
+BEGIN
+    self.data := NEW(RefSeq.T).init();
+    RETURN self;
+END GrowableRefs_Init;
+
+PROCEDURE GrowableRefs_Size(self: GrowableRefs_t): INTEGER =
+BEGIN
+    RETURN self.data.size();
+END GrowableRefs_Size;
+
+PROCEDURE GrowableRefs_NewRef(self: GrowableRefs_t; ref: REFANY): INTEGER =
+BEGIN
+    self.data.addhi(ref);
+    RETURN self.data.size() - 1;
+END GrowableRefs_NewRef;
+
+PROCEDURE GrowableRefs_NewVar(self: GrowableRefs_t): var_t =
+VAR ref := NEW(var_t);
+BEGIN
+    ref.tag := self.NewRef(ref);
+    RETURN ref;
+END GrowableRefs_NewVar;
+
+PROCEDURE GrowableRefs_NewProc(self: GrowableRefs_t): proc_t =
+VAR ref := NEW(proc_t);
+BEGIN
+    ref.tag := self.NewRef(ref);
+    RETURN ref;
+END GrowableRefs_NewProc;
 
 PROCEDURE next_label(self: T; label_count: INTEGER := 1): Label =
 VAR label := self.next_label_id;
 BEGIN
-self.Add(NEW(next_label_t, label_count := label_count));
-RETURN label;
+    INC(self.next_label_id, label_count);
+    self.Add(NEW(next_label_t, label_count := label_count));
+    RETURN label;
 END next_label;
 
-PROCEDURE NewVar(self: T): var_t =
-VAR v := NEW(var_t, tag := self.next_var);
-BEGIN
-INC(self.next_var);
-RETURN v;
-END NewVar;
-
 PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var =
+VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(import_global_t, op := Op.import_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid));
-RETURN NewVar(self);
+self.Add(NEW(import_global_t, op := Op.import_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, tag := var.tag));
+RETURN var;
 END import_global;
 
 PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var =
+VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_segment_t, op := Op.declare_segment, name := name, typeid := typeid, is_const := is_const));
-RETURN NewVar(self);
+self.Add(NEW(declare_segment_t, op := Op.declare_segment, name := name, typeid := typeid, is_const := is_const, tag := var.tag));
+RETURN var;
 END declare_segment;
 
-PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; typeid: Type; type: TypeUID; exported, inited: BOOLEAN): Var =
+PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_global_t, op := Op.declare_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, exported := exported, inited := inited));
-RETURN NewVar(self);
+self.Add(NEW(declare_global_t, op := Op.declare_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, exported := exported, inited := inited, tag := var.tag));
+RETURN var;
 END declare_global;
 
 PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_constant_t, op := Op.declare_constant, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, exported := exported, inited := inited));
-RETURN NewVar(self);
+self.Add(NEW(declare_constant_t, op := Op.declare_constant, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, exported := exported, inited := inited, tag := var.tag));
+RETURN var;
 END declare_constant;
 
 PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var =
+VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_local_t, op := Op.declare_local, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency));
-RETURN NewVar(self);
+self.Add(NEW(declare_local_t, op := Op.declare_local, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag));
+RETURN var;
 END declare_local;
 
 PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var =
+VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency));
-RETURN NewVar(self);
+self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag));
+RETURN var;
 END declare_param;
 
 PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN): Var =
+VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_temp_t, op := Op.declare_temp, byte_size := byte_size, alignment := alignment, type := type, in_memory := in_memory));
-RETURN NewVar(self);
+self.Add(NEW(declare_temp_t, op := Op.declare_temp, byte_size := byte_size, alignment := alignment, type := type, in_memory := in_memory, tag := var.tag));
+RETURN var;
 END declare_temp;
 
-PROCEDURE NewProc(self: T): proc_t =
-VAR p := NEW(proc_t, tag := self.next_proc);
-BEGIN
-INC(self.next_proc);
-RETURN p;
-END NewProc;
-
 PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention): Proc =
+VAR proc := self.refs.NewProc();
 BEGIN
-self.Add(NEW(import_procedure_t, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention));
-RETURN NewProc(self);
+self.Add(NEW(import_procedure_t, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, tag := proc.tag));
+RETURN proc;
 END import_procedure;
 
 PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc): Proc =
+VAR proc := self.refs.NewProc();
+    parent_tag := 0;
 BEGIN
-self.Add(NEW(declare_procedure_t, name := name, n_params := n_params, return_type := return_type, level := level, callingConvention := callingConvention, exported := exported, parent := NARROW(parent, proc_t)));
-RETURN NewProc(self);
+IF parent # NIL THEN
+    parent_tag := NARROW(parent, proc_t).tag;
+END;
+self.Add(NEW(declare_procedure_t, name := name, n_params := n_params, return_type := return_type, level := level,
+             callingConvention := callingConvention, exported := exported, parent := parent_tag, tag := proc.tag));
+RETURN proc;
 END declare_procedure;
 
 PROCEDURE set_error_handler(self: T; proc: PROCEDURE(msg: TEXT)) =
@@ -271,12 +363,12 @@ END set_error_handler;
 
 PROCEDURE begin_procedure(self: T; proc: Proc) =
 BEGIN
-self.Add(NEW(begin_procedure_t, proc := NARROW(proc, proc_t)));
+self.Add(NEW(begin_procedure_t, proc := NARROW(proc, proc_t).tag));
 END begin_procedure;
 
 PROCEDURE end_procedure(self: T; proc: Proc) =
 BEGIN
-self.Add(NEW(end_procedure_t, proc := NARROW(proc, proc_t)));
+self.Add(NEW(end_procedure_t, proc := NARROW(proc, proc_t).tag));
 END end_procedure;
 
 PROCEDURE begin_unit(self: T; optimize: INTEGER) =
@@ -383,9 +475,9 @@ BEGIN
 self.Add(NEW(declare_raises_t, name := name));
 END declare_raises;
 
-PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) =
+PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize) =
 BEGIN
-self.Add(NEW(declare_object_t, typeid := typeid, super_typeid := super_typeid, brand := brand, traced := traced, n_fields := n_fields, n_methods := n_methods, field_size := field_size));
+self.Add(NEW(declare_object_t, typeid := typeid, super_typeid := super_typeid, brand := brand, traced := traced, n_fields := n_fields, n_methods := n_methods, fields_bit_size := fields_bit_size));
 END declare_object;
 
 PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) =
@@ -405,32 +497,32 @@ END reveal_opaque;
 
 PROCEDURE declare_exception(self: T; name: Name; arg_typeid: TypeUID; raise_proc: BOOLEAN; base: Var; offset: INTEGER) =
 BEGIN
-self.Add(NEW(declare_exception_t, name := name, arg_typeid := arg_typeid, raise_proc := raise_proc, base := NARROW(base, var_t), offset := offset));
+self.Add(NEW(declare_exception_t, name := name, arg_typeid := arg_typeid, raise_proc := raise_proc, base := NARROW(base, var_t).tag, offset := offset));
 END declare_exception;
 
 PROCEDURE set_runtime_proc(self: T; name: Name; proc: Proc) =
 BEGIN
-self.Add(NEW(set_runtime_proc_t, name := name, proc := proc));
+self.Add(NEW(set_runtime_proc_t, name := name, proc := NARROW(proc, proc_t).tag));
 END set_runtime_proc;
 
 PROCEDURE bind_segment(self: T; segment: Var; byte_size: ByteSize; alignment: Alignment; type: Type; exported, inited: BOOLEAN) =
 BEGIN
-self.Add(NEW(bind_segment_t, segment := NARROW(segment, var_t), byte_size := byte_size, alignment := alignment, type := type, exported := exported, inited := inited));
+self.Add(NEW(bind_segment_t, segment := NARROW(segment, var_t).tag, byte_size := byte_size, alignment := alignment, type := type, exported := exported, inited := inited));
 END bind_segment;
 
 PROCEDURE free_temp(self: T; var: Var) =
 BEGIN
-self.Add(NEW(free_temp_t, var := NARROW(var, var_t)));
+self.Add(NEW(free_temp_t, var := NARROW(var, var_t).tag));
 END free_temp;
 
 PROCEDURE begin_init(self: T; var: Var) =
 BEGIN
-self.Add(NEW(begin_init_t, var := NARROW(var, var_t)));
+self.Add(NEW(begin_init_t, var := NARROW(var, var_t).tag));
 END begin_init;
 
 PROCEDURE end_init(self: T; var: Var) =
 BEGIN
-self.Add(NEW(end_init_t, var := NARROW(var, var_t)));
+self.Add(NEW(end_init_t, var := NARROW(var, var_t).tag));
 END end_init;
 
 PROCEDURE init_int(self: T; byte_offset: ByteOffset; READONLY int: Target.Int; type: Type) =
@@ -440,7 +532,7 @@ END init_int;
 
 PROCEDURE init_proc(self: T; byte_offset: ByteOffset; proc: Proc) =
 BEGIN
-self.Add(NEW(init_proc_t, byte_offset := byte_offset, proc := NARROW(proc, proc_t)));
+self.Add(NEW(init_proc_t, byte_offset := byte_offset, proc := NARROW(proc, proc_t).tag));
 END init_proc;
 
 PROCEDURE init_label(self: T; byte_offset: ByteOffset; label: Label) =
@@ -450,12 +542,12 @@ END init_label;
 
 PROCEDURE init_var(self: T; byte_offset: ByteOffset; var: Var; bias: ByteOffset) =
 BEGIN
-self.Add(NEW(init_var_t, byte_offset := byte_offset, var := NARROW(var, var_t), bias := bias));
+self.Add(NEW(init_var_t, byte_offset := byte_offset, var := NARROW(var, var_t).tag, bias := bias));
 END init_var;
 
 PROCEDURE init_offset(self: T; byte_offset: ByteOffset; var: Var) =
 BEGIN
-self.Add(NEW(init_offset_t, byte_offset := byte_offset, var := NARROW(var, var_t)));
+self.Add(NEW(init_offset_t, byte_offset := byte_offset, var := NARROW(var, var_t).tag));
 END init_offset;
 
 PROCEDURE init_chars(self: T; byte_offset: ByteOffset; text: TEXT) =
@@ -477,7 +569,7 @@ self.Add(NEW(end_block_t));
 END end_block;
 
 PROCEDURE note_procedure_origin(self: T; proc: Proc) = BEGIN
-self.Add(NEW(note_procedure_origin_t, proc := NARROW(proc, proc_t)));
+self.Add(NEW(note_procedure_origin_t, proc := NARROW(proc, proc_t).tag));
 END note_procedure_origin;
 
 PROCEDURE set_label(self: T; label: Label; barrier: BOOLEAN) = BEGIN
@@ -515,15 +607,15 @@ self.Add(NEW(exit_proc_t, type := type));
 END exit_proc;
 
 PROCEDURE load(self: T; var: Var; byte_offset: ByteOffset; mtype: MType; ztype: ZType) = BEGIN
-self.Add(NEW(load_t, var := NARROW(var, var_t), byte_offset := byte_offset, mtype := mtype, ztype := ztype));
+self.Add(NEW(load_t, var := NARROW(var, var_t).tag, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
 END load;
 
 PROCEDURE store(self: T; var: Var; byte_offset: ByteOffset; ztype: ZType; mtype: MType) = BEGIN
-self.Add(NEW(store_t, var := NARROW(var, var_t), byte_offset := byte_offset, mtype := mtype, ztype := ztype));
+self.Add(NEW(store_t, var := NARROW(var, var_t).tag, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
 END store;
 
 PROCEDURE load_address(self: T; var: Var; byte_offset: ByteOffset) = BEGIN
-self.Add(NEW(load_address_t, var := NARROW(var, var_t), byte_offset := byte_offset));
+self.Add(NEW(load_address_t, var := NARROW(var, var_t).tag, byte_offset := byte_offset));
 END load_address;
 
 PROCEDURE load_indirect(self: T; byte_offset: ByteOffset; mtype: MType; ztype: ZType) = BEGIN
@@ -634,17 +726,17 @@ PROCEDURE check_eq(self: T; type: IType; code: RuntimeError) = BEGIN self.Add(NE
 PROCEDURE add_offset(self: T; i: INTEGER) = BEGIN self.Add(NEW(add_offset_t, i := i)); END add_offset;
 
 PROCEDURE index_address(self: T; type: IType; size: INTEGER) = BEGIN self.Add(NEW(index_address_t, type := type, size := size)); END index_address;
-PROCEDURE start_call_direct(self: T; proc: Proc; level: INTEGER; type: Type) = BEGIN self.Add(NEW(start_call_direct_t, proc := NARROW(proc, proc_t), level := level, type := type)); END start_call_direct;
+PROCEDURE start_call_direct(self: T; proc: Proc; level: INTEGER; type: Type) = BEGIN self.Add(NEW(start_call_direct_t, proc := NARROW(proc, proc_t).tag, level := level, type := type)); END start_call_direct;
 PROCEDURE start_call_indirect(self: T; type: Type; callingConvention: CallingConvention) = BEGIN self.Add(NEW(start_call_indirect_t, type := type, callingConvention := callingConvention)); END start_call_indirect;
 PROCEDURE pop_param(self: T; type: MType) = BEGIN self.Add(NEW(pop_param_t, type := type)); END pop_param;
 PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
     BEGIN self.Add(NEW(pop_struct_t, typeid := typeid, byte_size := byte_size, alignment := alignment)); END pop_struct;
 PROCEDURE pop_static_link(self: T) = BEGIN self.Add(NEW(pop_static_link_t)); END pop_static_link;
-PROCEDURE call_direct(self: T; proc: Proc; type: Type) = BEGIN self.Add(NEW(call_direct_t, proc := NARROW(proc, proc_t), type := type)); END call_direct;
+PROCEDURE call_direct(self: T; proc: Proc; type: Type) = BEGIN self.Add(NEW(call_direct_t, proc := NARROW(proc, proc_t).tag, type := type)); END call_direct;
 PROCEDURE call_indirect(self: T; type: Type; callingConvention: CallingConvention) = BEGIN self.Add(NEW(call_indirect_t, type := type, callingConvention := callingConvention)); END call_indirect;
 
-PROCEDURE load_procedure(self: T; proc: Proc) = BEGIN self.Add(NEW(load_procedure_t, proc := NARROW(proc, proc_t))); END load_procedure;
-PROCEDURE load_static_link(self: T; proc: Proc) = BEGIN self.Add(NEW(load_static_link_t, proc := NARROW(proc, proc_t))); END load_static_link;
+PROCEDURE load_procedure(self: T; proc: Proc) = BEGIN self.Add(NEW(load_procedure_t, proc := NARROW(proc, proc_t).tag)); END load_procedure;
+PROCEDURE load_static_link(self: T; proc: Proc) = BEGIN self.Add(NEW(load_static_link_t, proc := NARROW(proc, proc_t).tag)); END load_static_link;
 PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) = BEGIN self.Add(NEW(comment_t, a := a, b := b, c := c, d := d)); END comment;
 
 PROCEDURE store_ordered(self: T; ztype: ZType; mtype: MType; order: MemoryOrder) = BEGIN self.Add(NEW(store_ordered_t, mtype := mtype, ztype := ztype, order := order)); END store_ordered;
@@ -657,148 +749,291 @@ PROCEDURE fence(self: T; order: MemoryOrder) = BEGIN self.Add(NEW(fence_t, order
 
 PROCEDURE fetch_and_op(self: T; op: AtomicOp; mtype: MType; ztype: ZType; order: MemoryOrder) = BEGIN self.Add(NEW(fetch_and_op_t, atomic_op := op, mtype := mtype, ztype := ztype, order := order)); END fetch_and_op;
 
+PROCEDURE Replay_Init(self: Replay_t; refcount: INTEGER): Replay_t =
+BEGIN
+    self.refs := NEW(StaticRefs_t).Init(refcount);
+    RETURN self;
+END Replay_Init;
 
-<*NOWARN*>PROCEDURE call_import_procedure(self: import_procedure_t; cg: cg_t) = BEGIN EVAL cg.import_procedure(self.name, self.n_params, self.return_type, self.callingConvention); END call_import_procedure;
-<*NOWARN*>PROCEDURE call_declare_procedure(self: declare_procedure_t; cg: cg_t) = BEGIN EVAL cg.declare_procedure(self.name, self.n_params, self.return_type, self.level, self.callingConvention, self.exported, self.parent) END call_declare_procedure;
-<*NOWARN*>PROCEDURE call_next_label(self: next_label_t; cg: cg_t) = BEGIN EVAL cg.next_label(self.label_count); END call_next_label;
-<*NOWARN*>PROCEDURE call_set_error_handler(self: set_error_handler_t; cg: cg_t) = BEGIN cg.set_error_handler(self.proc); END call_set_error_handler;
-<*NOWARN*>PROCEDURE call_begin_procedure(self: begin_procedure_t; cg: cg_t) = BEGIN END call_begin_procedure;
-<*NOWARN*>PROCEDURE call_end_procedure(self: end_procedure_t; cg: cg_t) = BEGIN END call_end_procedure;
-<*NOWARN*>PROCEDURE call_import_global(self: import_global_t; cg: cg_t) = BEGIN END call_import_global;
-<*NOWARN*>PROCEDURE call_declare_segment(self: declare_segment_t; cg: cg_t) = BEGIN END call_declare_segment;
-<*NOWARN*>PROCEDURE call_declare_global(self: declare_global_t; cg: cg_t) = BEGIN END call_declare_global;
-<*NOWARN*>PROCEDURE call_declare_constant(self: declare_constant_t; cg: cg_t) = BEGIN END call_declare_constant;
-<*NOWARN*>PROCEDURE call_declare_local(self: declare_local_t; cg: cg_t) = BEGIN END call_declare_local;
-<*NOWARN*>PROCEDURE call_declare_param(self: declare_param_t; cg: cg_t) = BEGIN END call_declare_param;
-<*NOWARN*>PROCEDURE call_declare_temp(self: declare_temp_t; cg: cg_t) = BEGIN END call_declare_temp;
-<*NOWARN*>PROCEDURE call_begin_unit(self: begin_unit_t; cg: cg_t) = BEGIN END call_begin_unit;
-<*NOWARN*>PROCEDURE call_end_unit(self: end_unit_t; cg: cg_t) = BEGIN END call_end_unit;
-<*NOWARN*>PROCEDURE call_import_unit(self: import_unit_t; cg: cg_t) = BEGIN END call_import_unit;
-<*NOWARN*>PROCEDURE call_export_unit(self: export_unit_t; cg: cg_t) = BEGIN END call_export_unit;
-<*NOWARN*>PROCEDURE call_set_source_file(self: set_source_file_t; cg: cg_t) = BEGIN END call_set_source_file;
-<*NOWARN*>PROCEDURE call_set_source_line(self: set_source_line_t; cg: cg_t) = BEGIN END call_set_source_line;
-<*NOWARN*>PROCEDURE call_declare_typename(self: declare_typename_t; cg: cg_t) = BEGIN END call_declare_typename;
-<*NOWARN*>PROCEDURE call_declare_array(self: declare_array_t; cg: cg_t) = BEGIN END call_declare_array;
-<*NOWARN*>PROCEDURE call_declare_open_array(self: declare_open_array_t; cg: cg_t) = BEGIN END call_declare_open_array;
-<*NOWARN*>PROCEDURE call_declare_enum(self: declare_enum_t; cg: cg_t) = BEGIN END call_declare_enum;
-<*NOWARN*>PROCEDURE call_declare_enum_elt(self: declare_enum_elt_t; cg: cg_t) = BEGIN END call_declare_enum_elt;
-<*NOWARN*>PROCEDURE call_declare_packed(self: declare_packed_t; cg: cg_t) = BEGIN END call_declare_packed;
-<*NOWARN*>PROCEDURE call_declare_record(self: declare_record_t; cg: cg_t) = BEGIN END call_declare_record;
-<*NOWARN*>PROCEDURE call_declare_field(self: declare_field_t; cg: cg_t) = BEGIN END call_declare_field;
-<*NOWARN*>PROCEDURE call_declare_set(self: declare_set_t; cg: cg_t) = BEGIN END call_declare_set;
-<*NOWARN*>PROCEDURE call_declare_subrange(self: declare_subrange_t; cg: cg_t) = BEGIN END call_declare_subrange;
-<*NOWARN*>PROCEDURE call_declare_pointer(self: declare_pointer_t; cg: cg_t) = BEGIN END call_declare_pointer;
-<*NOWARN*>PROCEDURE call_declare_indirect(self: declare_indirect_t; cg: cg_t) = BEGIN END call_declare_indirect;
-<*NOWARN*>PROCEDURE call_declare_proctype(self: declare_proctype_t; cg: cg_t) = BEGIN END call_declare_proctype;
-<*NOWARN*>PROCEDURE call_declare_formal(self: declare_formal_t; cg: cg_t) = BEGIN END call_declare_formal;
-<*NOWARN*>PROCEDURE call_declare_raises(self: declare_raises_t; cg: cg_t) = BEGIN END call_declare_raises;
-<*NOWARN*>PROCEDURE call_declare_object(self: declare_object_t; cg: cg_t) = BEGIN END call_declare_object;
-<*NOWARN*>PROCEDURE call_declare_method(self: declare_method_t; cg: cg_t) = BEGIN END call_declare_method;
-<*NOWARN*>PROCEDURE call_declare_opaque(self: declare_opaque_t; cg: cg_t) = BEGIN END call_declare_opaque;
-<*NOWARN*>PROCEDURE call_reveal_opaque(self: reveal_opaque_t; cg: cg_t) = BEGIN END call_reveal_opaque;
-<*NOWARN*>PROCEDURE call_declare_exception(self: declare_exception_t; cg: cg_t) = BEGIN END call_declare_exception;
-<*NOWARN*>PROCEDURE call_set_runtime_proc(self: set_runtime_proc_t; cg: cg_t) = BEGIN END call_set_runtime_proc;
-<*NOWARN*>PROCEDURE call_bind_segment(self: bind_segment_t; cg: cg_t) = BEGIN END call_bind_segment;
-<*NOWARN*>PROCEDURE call_free_temp(self: free_temp_t; cg: cg_t) = BEGIN END call_free_temp;
-<*NOWARN*>PROCEDURE call_begin_init(self: begin_init_t; cg: cg_t) = BEGIN END call_begin_init;
-<*NOWARN*>PROCEDURE call_end_init(self: end_init_t; cg: cg_t) = BEGIN END call_end_init;
-<*NOWARN*>PROCEDURE call_init_int(self: init_int_t; cg: cg_t) = BEGIN END call_init_int;
-<*NOWARN*>PROCEDURE call_init_proc(self: init_proc_t; cg: cg_t) = BEGIN END call_init_proc;
-<*NOWARN*>PROCEDURE call_init_label(self: init_label_t; cg: cg_t) = BEGIN END call_init_label;
-<*NOWARN*>PROCEDURE call_init_var(self: init_var_t; cg: cg_t) = BEGIN END call_init_var;
-<*NOWARN*>PROCEDURE call_init_offset(self: init_offset_t; cg: cg_t) = BEGIN END call_init_offset;
-<*NOWARN*>PROCEDURE call_init_chars(self: init_chars_t; cg: cg_t) = BEGIN END call_init_chars;
-<*NOWARN*>PROCEDURE call_init_float(self: init_float_t; cg: cg_t) = BEGIN END call_init_float;
-<*NOWARN*>PROCEDURE call_begin_block(self: begin_block_t; cg: cg_t) = BEGIN END call_begin_block;
-<*NOWARN*>PROCEDURE call_end_block(self: end_block_t; cg: cg_t) = BEGIN END call_end_block;
-<*NOWARN*>PROCEDURE call_note_procedure_origin(self: note_procedure_origin_t; cg: cg_t) = BEGIN END call_note_procedure_origin;
-<*NOWARN*>PROCEDURE call_set_label(self: set_label_t; cg: cg_t) = BEGIN END call_set_label;
-<*NOWARN*>PROCEDURE call_jump(self: jump_t; cg: cg_t) = BEGIN END call_jump;
-<*NOWARN*>PROCEDURE call_if_true(self: if_true_t; cg: cg_t) = BEGIN END call_if_true;
-<*NOWARN*>PROCEDURE call_if_false(self: if_false_t; cg: cg_t) = BEGIN END call_if_false;
-<*NOWARN*>PROCEDURE call_if_compare(self: if_compare_t; cg: cg_t) = BEGIN END call_if_compare;
-<*NOWARN*>PROCEDURE call_case_jump(self: case_jump_t; cg: cg_t) = BEGIN END call_case_jump;
-<*NOWARN*>PROCEDURE call_exit_proc(self: exit_proc_t; cg: cg_t) = BEGIN END call_exit_proc;
-<*NOWARN*>PROCEDURE call_load(self: load_t; cg: cg_t) = BEGIN END call_load;
-<*NOWARN*>PROCEDURE call_store(self: store_t; cg: cg_t) = BEGIN END call_store;
-<*NOWARN*>PROCEDURE call_load_address(self: load_address_t; cg: cg_t) = BEGIN END call_load_address;
-<*NOWARN*>PROCEDURE call_load_indirect(self: load_indirect_t; cg: cg_t) = BEGIN END call_load_indirect;
-<*NOWARN*>PROCEDURE call_store_indirect(self: store_indirect_t; cg: cg_t) = BEGIN END call_store_indirect;
-<*NOWARN*>PROCEDURE call_load_nil(self: load_nil_t; cg: cg_t) = BEGIN END call_load_nil;
-<*NOWARN*>PROCEDURE call_load_integer(self: load_integer_t; cg: cg_t) = BEGIN END call_load_integer;
-<*NOWARN*>PROCEDURE call_load_float(self: load_float_t; cg: cg_t) = BEGIN END call_load_float;
-<*NOWARN*>PROCEDURE call_compare(self: compare_t; cg: cg_t) = BEGIN END call_compare;
-<*NOWARN*>PROCEDURE call_add(self: add_t; cg: cg_t) = BEGIN END call_add;
-<*NOWARN*>PROCEDURE call_subtract(self: subtract_t; cg: cg_t) = BEGIN END call_subtract;
-<*NOWARN*>PROCEDURE call_multiply(self: multiply_t; cg: cg_t) = BEGIN END call_multiply;
-<*NOWARN*>PROCEDURE call_divide(self: divide_t; cg: cg_t) = BEGIN END call_divide;
-<*NOWARN*>PROCEDURE call_div(self: div_t; cg: cg_t) = BEGIN END call_div;
-<*NOWARN*>PROCEDURE call_mod(self: mod_t; cg: cg_t) = BEGIN END call_mod;
-<*NOWARN*>PROCEDURE call_negate(self: negate_t; cg: cg_t) = BEGIN END call_negate;
-<*NOWARN*>PROCEDURE call_abs(self: abs_t; cg: cg_t) = BEGIN END call_abs;
-<*NOWARN*>PROCEDURE call_max(self: max_t; cg: cg_t) = BEGIN END call_max;
-<*NOWARN*>PROCEDURE call_min(self: min_t; cg: cg_t) = BEGIN END call_min;
-<*NOWARN*>PROCEDURE call_cvt_int(self: cvt_int_t; cg: cg_t) = BEGIN END call_cvt_int;
-<*NOWARN*>PROCEDURE call_cvt_float(self: cvt_float_t; cg: cg_t) = BEGIN END call_cvt_float;
-<*NOWARN*>PROCEDURE call_set_union(self: set_union_t; cg: cg_t) = BEGIN END call_set_union;
-<*NOWARN*>PROCEDURE call_set_difference(self: set_difference_t; cg: cg_t) = BEGIN END call_set_difference;
-<*NOWARN*>PROCEDURE call_set_intersection(self: set_intersection_t; cg: cg_t) = BEGIN END call_set_intersection;
-<*NOWARN*>PROCEDURE call_set_sym_difference(self: set_sym_difference_t; cg: cg_t) = BEGIN END call_set_sym_difference;
-<*NOWARN*>PROCEDURE call_set_member(self: set_member_t; cg: cg_t) = BEGIN END call_set_member;
-<*NOWARN*>PROCEDURE call_set_compare(self: set_compare_t; cg: cg_t) = BEGIN END call_set_compare;
-<*NOWARN*>PROCEDURE call_set_range(self: set_range_t; cg: cg_t) = BEGIN END call_set_range;
-<*NOWARN*>PROCEDURE call_set_singleton(self: set_singleton_t; cg: cg_t) = BEGIN END call_set_singleton;
-<*NOWARN*>PROCEDURE call_not(self: not_t; cg: cg_t) = BEGIN END call_not;
-<*NOWARN*>PROCEDURE call_and(self: and_t; cg: cg_t) = BEGIN END call_and;
-<*NOWARN*>PROCEDURE call_or(self: or_t; cg: cg_t) = BEGIN END call_or;
-<*NOWARN*>PROCEDURE call_xor(self: xor_t; cg: cg_t) = BEGIN END call_xor;
-<*NOWARN*>PROCEDURE call_shift(self: shift_t; cg: cg_t) = BEGIN END call_shift;
-<*NOWARN*>PROCEDURE call_shift_left(self: shift_left_t; cg: cg_t) = BEGIN END call_shift_left;
-<*NOWARN*>PROCEDURE call_shift_right(self: shift_right_t; cg: cg_t) = BEGIN END call_shift_right;
-<*NOWARN*>PROCEDURE call_rotate(self: rotate_t; cg: cg_t) = BEGIN END call_rotate;
-<*NOWARN*>PROCEDURE call_rotate_left(self: rotate_left_t; cg: cg_t) = BEGIN END call_rotate_left;
-<*NOWARN*>PROCEDURE call_rotate_right(self: rotate_right_t; cg: cg_t) = BEGIN END call_rotate_right;
-<*NOWARN*>PROCEDURE call_widen(self: widen_t; cg: cg_t) = BEGIN END call_widen;
-<*NOWARN*>PROCEDURE call_chop(self: chop_t; cg: cg_t) = BEGIN END call_chop;
-<*NOWARN*>PROCEDURE call_extract(self: extract_t; cg: cg_t) = BEGIN END call_extract;
-<*NOWARN*>PROCEDURE call_extract_n(self: extract_n_t; cg: cg_t) = BEGIN END call_extract_n;
-<*NOWARN*>PROCEDURE call_extract_mn(self: extract_mn_t; cg: cg_t) = BEGIN END call_extract_mn;
-<*NOWARN*>PROCEDURE call_insert(self: insert_t; cg: cg_t) = BEGIN END call_insert;
-<*NOWARN*>PROCEDURE call_insert_n(self: insert_n_t; cg: cg_t) = BEGIN END call_insert_n;
-<*NOWARN*>PROCEDURE call_insert_mn(self: insert_mn_t; cg: cg_t) = BEGIN END call_insert_mn;
-<*NOWARN*>PROCEDURE call_swap(self: swap_t; cg: cg_t) = BEGIN END call_swap;
-<*NOWARN*>PROCEDURE call_pop(self: pop_t; cg: cg_t) = BEGIN END call_pop;
-<*NOWARN*>PROCEDURE call_copy_n(self: copy_n_t; cg: cg_t) = BEGIN END call_copy_n;
-<*NOWARN*>PROCEDURE call_copy(self: copy_t; cg: cg_t) = BEGIN END call_copy;
-<*NOWARN*>PROCEDURE call_zero_n(self: zero_n_t; cg: cg_t) = BEGIN END call_zero_n;
-<*NOWARN*>PROCEDURE call_zero(self: zero_t; cg: cg_t) = BEGIN END call_zero;
-<*NOWARN*>PROCEDURE call_loophole(self: loophole_t; cg: cg_t) = BEGIN END call_loophole;
-<*NOWARN*>PROCEDURE call_abort(self: abort_t; cg: cg_t) = BEGIN END call_abort;
-<*NOWARN*>PROCEDURE call_check_nil(self: check_nil_t; cg: cg_t) = BEGIN END call_check_nil;
-<*NOWARN*>PROCEDURE call_check_lo(self: check_lo_t; cg: cg_t) = BEGIN END call_check_lo;
-<*NOWARN*>PROCEDURE call_check_hi(self: check_hi_t; cg: cg_t) = BEGIN END call_check_hi;
-<*NOWARN*>PROCEDURE call_check_range(self: check_range_t; cg: cg_t) = BEGIN END call_check_range;
-<*NOWARN*>PROCEDURE call_check_index(self: check_index_t; cg: cg_t) = BEGIN END call_check_index;
-<*NOWARN*>PROCEDURE call_check_eq(self: check_eq_t; cg: cg_t) = BEGIN END call_check_eq;
-<*NOWARN*>PROCEDURE call_add_offset(self: add_offset_t; cg: cg_t) = BEGIN END call_add_offset;
-<*NOWARN*>PROCEDURE call_index_address(self: index_address_t; cg: cg_t) = BEGIN END call_index_address;
-<*NOWARN*>PROCEDURE call_start_call_direct(self: start_call_direct_t; cg: cg_t) = BEGIN END call_start_call_direct;
-<*NOWARN*>PROCEDURE call_start_call_indirect(self: start_call_indirect_t; cg: cg_t) = BEGIN END call_start_call_indirect;
-<*NOWARN*>PROCEDURE call_pop_param(self: pop_param_t; cg: cg_t) = BEGIN END call_pop_param;
-<*NOWARN*>PROCEDURE call_pop_struct(self: pop_struct_t; cg: cg_t) = BEGIN END call_pop_struct;
-<*NOWARN*>PROCEDURE call_pop_static_link(self: pop_static_link_t; cg: cg_t) = BEGIN END call_pop_static_link;
-<*NOWARN*>PROCEDURE call_call_direct(self: call_direct_t; cg: cg_t) = BEGIN END call_call_direct;
-<*NOWARN*>PROCEDURE call_call_indirect(self: call_indirect_t; cg: cg_t) = BEGIN END call_call_indirect;
-<*NOWARN*>PROCEDURE call_load_procedure(self: load_procedure_t; cg: cg_t) = BEGIN END call_load_procedure;
-<*NOWARN*>PROCEDURE call_load_static_link(self: load_static_link_t; cg: cg_t) = BEGIN END call_load_static_link;
-<*NOWARN*>PROCEDURE call_comment(self: comment_t; cg: cg_t) = BEGIN END call_comment;
-<*NOWARN*>PROCEDURE call_store_ordered(self: store_ordered_t; cg: cg_t) = BEGIN END call_store_ordered;
-<*NOWARN*>PROCEDURE call_load_ordered(self: load_ordered_t; cg: cg_t) = BEGIN END call_load_ordered;
-<*NOWARN*>PROCEDURE call_exchange(self: exchange_t; cg: cg_t) = BEGIN END call_exchange;
-<*NOWARN*>PROCEDURE call_compare_exchange(self: compare_exchange_t; cg: cg_t) = BEGIN END call_compare_exchange;
-PROCEDURE call_fence(self: fence_t; cg: cg_t) = BEGIN cg.fence(self.order); END call_fence;
-PROCEDURE call_fetch_and_op(self: fetch_and_op_t; cg: M3CG_Ops.Public) = BEGIN cg.fetch_and_op(self.atomic_op, self.mtype, self.ztype, self.order); END call_fetch_and_op;
+PROCEDURE Replay_PutRef(self: Replay_t; tag: INTEGER; ref: REFANY) =
+BEGIN
+    self.refs.data[tag] := ref;
+END Replay_PutRef;
 
+PROCEDURE Replay_GetProc(self: Replay_t; ref: INTEGER): M3CG.Proc =
+VAR proc := self.refs.data[ref];
+BEGIN
+    IF proc = NIL THEN
+        RETURN NIL;
+    END;
+    RETURN NARROW(proc, M3CG.Proc);
+END Replay_GetProc;
+
+PROCEDURE Replay_GetVar(self: Replay_t; ref: INTEGER): M3CG.Var =
+VAR var := self.refs.data[ref];
+BEGIN
+    IF var = NIL THEN
+        RETURN NIL;
+    END;
+    RETURN NARROW(var, M3CG.Var);
+END Replay_GetVar;
+
+PROCEDURE replay_declare_segment(self: declare_segment_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.declare_segment(self.name, self.typeid, self.is_const));
+END replay_declare_segment;
+
+PROCEDURE replay_declare_global(self: declare_global_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.declare_global(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.exported, self.inited));
+END replay_declare_global;
+
+PROCEDURE replay_declare_constant(self: declare_constant_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.declare_constant(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.exported, self.inited));
+END replay_declare_constant;
+
+PROCEDURE replay_declare_local(self: declare_local_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.declare_local(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.in_memory, self.up_level, self.frequency));
+END replay_declare_local;
+
+PROCEDURE replay_declare_param(self: declare_param_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.declare_param(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.in_memory, self.up_level, self.frequency));
+END replay_declare_param;
+
+PROCEDURE replay_declare_temp(self: declare_temp_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.declare_temp(self.byte_size, self.alignment, self.type, self.in_memory));
+END replay_declare_temp;
+
+PROCEDURE replay_import_procedure(self: import_procedure_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.import_procedure(self.name, self.n_params, self.return_type, self.callingConvention));
+END replay_import_procedure;
+
+PROCEDURE replay_declare_procedure(self: declare_procedure_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.declare_procedure(self.name, self.n_params, self.return_type,
+        self.level, self.callingConvention, self.exported, replay.GetProc(self.parent)));
+END replay_declare_procedure;
+
+PROCEDURE replay_import_global(self: import_global_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    replay.PutRef(self.tag, cg.import_global(self.name, self.byte_size, self.alignment, self.type, self.typeid));
+END replay_import_global;
+
+PROCEDURE replay_next_label(self: next_label_t; <*UNUSED*>replay: Replay_t; cg: cg_t) =
+BEGIN
+    EVAL cg.next_label(self.label_count);
+END replay_next_label;
+
+PROCEDURE replay_begin_procedure(self: begin_procedure_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.begin_procedure(replay.GetProc(self.proc));
+END replay_begin_procedure;
+
+PROCEDURE replay_end_procedure(self: end_procedure_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.end_procedure(replay.GetProc(self.proc));
+END replay_end_procedure;
+
+PROCEDURE replay_set_error_handler(self: set_error_handler_t; <*UNUSED*>replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.set_error_handler(self.proc);
+END replay_set_error_handler;
+
+PROCEDURE replay_set_runtime_proc(self: set_runtime_proc_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.set_runtime_proc(self.name, replay.GetProc(self.proc));
+END replay_set_runtime_proc;
+
+PROCEDURE replay_begin_unit(self: begin_unit_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.begin_unit(self.optimize); END replay_begin_unit;
+PROCEDURE replay_end_unit(<*UNUSED*>self: end_unit_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.end_unit(); END replay_end_unit;
+PROCEDURE replay_import_unit(self: import_unit_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.import_unit(self.name); END replay_import_unit;
+PROCEDURE replay_export_unit(self: export_unit_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.export_unit(self.name); END replay_export_unit;
+PROCEDURE replay_set_source_file(self: set_source_file_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_source_file(self.file); END replay_set_source_file;
+PROCEDURE replay_set_source_line(self: set_source_line_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_source_line(self.line); END replay_set_source_line;
+PROCEDURE replay_declare_typename(self: declare_typename_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_typename(self.typeid, self.name); END replay_declare_typename;
+PROCEDURE replay_declare_array(self: declare_array_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_array(self.typeid, self.index_typeid, self.element_typeid, self.bit_size); END replay_declare_array;
+PROCEDURE replay_declare_open_array(self: declare_open_array_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_open_array(self.typeid, self.element_typeid, self.bit_size); END replay_declare_open_array;
+PROCEDURE replay_declare_enum(self: declare_enum_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_enum(self.typeid, self.n_elts, self.bit_size); END replay_declare_enum;
+PROCEDURE replay_declare_enum_elt(self: declare_enum_elt_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_enum_elt(self.name); END replay_declare_enum_elt;
+PROCEDURE replay_declare_packed(self: declare_packed_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_packed(self.typeid, self.bit_size, self.base); END replay_declare_packed;
+PROCEDURE replay_declare_record(self: declare_record_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_record(self.typeid, self.bit_size, self.n_fields); END replay_declare_record;
+PROCEDURE replay_declare_field(self: declare_field_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_field(self.name, self.bit_offset, self.bit_size, self.typeid); END replay_declare_field;
+PROCEDURE replay_declare_set(self: declare_set_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_set(self.typeid, self.domain_typeid, self.bit_size); END replay_declare_set;
+PROCEDURE replay_declare_subrange(self: declare_subrange_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_subrange(self.typeid, self.domain_typeid, self.min, self.max, self.bit_size); END replay_declare_subrange;
+PROCEDURE replay_declare_pointer(self: declare_pointer_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_pointer(self.typeid, self.target_typeid, self.brand, self.traced); END replay_declare_pointer;
+PROCEDURE replay_declare_indirect(self: declare_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_indirect(self.typeid, self.target_typeid); END replay_declare_indirect;
+PROCEDURE replay_declare_proctype(self: declare_proctype_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_proctype(self.typeid, self.n_formals, self. return_typeid, self.n_raises, self.callingConvention); END replay_declare_proctype;
+PROCEDURE replay_declare_formal(self: declare_formal_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_formal(self.name, self.typeid); END replay_declare_formal;
+PROCEDURE replay_declare_raises(self: declare_raises_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_raises(self.name); END replay_declare_raises;
+PROCEDURE replay_declare_object(self: declare_object_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_object(self.typeid, self.super_typeid, self.brand, self.traced, self.n_fields, self.n_methods, self.fields_bit_size); END replay_declare_object;
+PROCEDURE replay_declare_method(self: declare_method_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_method(self.name, self.signature); END replay_declare_method;
+PROCEDURE replay_declare_opaque(self: declare_opaque_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_opaque(self.typeid, self.super_typeid); END replay_declare_opaque;
+PROCEDURE replay_reveal_opaque(self: reveal_opaque_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.reveal_opaque(self.lhs_typeid, self.rhs_typeid); END replay_reveal_opaque;
+
+PROCEDURE replay_declare_exception(self: declare_exception_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.declare_exception(self.name, self.arg_typeid, self.raise_proc,
+                         replay.GetVar(self.base), self.offset);
+END replay_declare_exception;
+
+PROCEDURE replay_bind_segment(self: bind_segment_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.bind_segment(replay.GetVar(self.segment), self.byte_size, self.alignment, self.type, self.exported, self.inited);
+END replay_bind_segment;
+
+PROCEDURE replay_free_temp(self: free_temp_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.free_temp(replay.GetVar(self.var));
+END replay_free_temp;
+
+PROCEDURE replay_begin_init(self: begin_init_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.begin_init(replay.GetVar(self.var));
+END replay_begin_init;
+
+PROCEDURE replay_end_init(self: end_init_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.end_init(replay.GetVar(self.var));
+END replay_end_init;
+
+PROCEDURE replay_init_proc(self: init_proc_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.init_proc(self.byte_offset, replay.GetProc(self.proc));
+END replay_init_proc;
+
+PROCEDURE replay_note_procedure_origin(self: note_procedure_origin_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.note_procedure_origin(replay.GetProc(self.proc));
+END replay_note_procedure_origin;
+
+PROCEDURE replay_start_call_direct(self: start_call_direct_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.start_call_direct(replay.GetProc(self.proc), self.level, self.type);
+END replay_start_call_direct;
+
+PROCEDURE replay_call_direct(self: call_direct_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.call_direct(replay.GetProc(self.proc), self.type);
+END replay_call_direct;
+
+PROCEDURE replay_load_procedure(self: load_procedure_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.load_procedure(replay.GetProc(self.proc));
+END replay_load_procedure;
+
+PROCEDURE replay_load_static_link(self: load_static_link_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.load_static_link(replay.GetProc(self.proc));
+END replay_load_static_link;
+
+PROCEDURE replay_init_var(self: init_var_t; replay: Replay_t; cg: cg_t) =
+BEGIN
+    cg.init_var(self.byte_offset, replay.GetVar(self.var), self.bias);
+END replay_init_var;
+
+PROCEDURE replay_init_offset(self: init_offset_t; replay: Replay_t; cg: cg_t) =
+BEGIN cg.init_offset(self.byte_offset, replay.GetVar(self.var)); END replay_init_offset;
+
+PROCEDURE replay_load(self: load_t; replay: Replay_t; cg: cg_t) =
+BEGIN cg.load(replay.GetVar(self.var), self.byte_offset, self.mtype, self.ztype); END replay_load;
+
+PROCEDURE replay_store(self: store_t; replay: Replay_t; cg: cg_t) =
+BEGIN cg.store(replay.GetVar(self.var), self.byte_offset, self.ztype, self.mtype); END replay_store;
+
+PROCEDURE replay_load_address(self: load_address_t; replay: Replay_t; cg: cg_t) =
+BEGIN cg.load_address(replay.GetVar(self.var), self.byte_offset); END replay_load_address;
+
+PROCEDURE replay_init_int(self: init_int_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.init_int(self.byte_offset, self.int, self.type); END replay_init_int;
+PROCEDURE replay_init_label(self: init_label_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.init_label(self.byte_offset, self.label); END replay_init_label;
+PROCEDURE replay_init_chars(self: init_chars_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.init_chars(self.byte_offset, self.text); END replay_init_chars;
+PROCEDURE replay_init_float(self: init_float_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.init_float(self.byte_offset, self.float); END replay_init_float;
+PROCEDURE replay_begin_block(<*UNUSED*>self: begin_block_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.begin_block(); END replay_begin_block;
+PROCEDURE replay_end_block(<*UNUSED*>self: end_block_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.end_block(); END replay_end_block;
+PROCEDURE replay_set_label(self: set_label_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_label(self.label, self.barrier); END replay_set_label;
+PROCEDURE replay_jump(self: jump_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.jump(self.label); END replay_jump;
+PROCEDURE replay_if_true(self: if_true_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.if_true(self.type, self.label, self.frequency); END replay_if_true;
+PROCEDURE replay_if_false(self: if_false_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.if_false(self.type, self.label, self.frequency); END replay_if_false;
+PROCEDURE replay_if_compare(self: if_compare_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.if_compare(self.type, self.compare_op, self.label, self.frequency); END replay_if_compare;
+PROCEDURE replay_case_jump(self: case_jump_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.case_jump(self.type, self.labels^); END replay_case_jump;
+PROCEDURE replay_exit_proc(self: exit_proc_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.exit_proc(self.type); END replay_exit_proc;
+PROCEDURE replay_load_indirect(self: load_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.load_indirect(self.byte_offset, self.mtype, self.ztype); END replay_load_indirect;
+PROCEDURE replay_store_indirect(self: store_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.store_indirect(self.byte_offset, self.ztype, self.mtype); END replay_store_indirect;
+PROCEDURE replay_load_nil(<*UNUSED*>self: load_nil_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.load_nil(); END replay_load_nil;
+PROCEDURE replay_load_integer(self: load_integer_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.load_integer(self.type, self.int); END replay_load_integer;
+PROCEDURE replay_load_float(self: load_float_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.load_float(self.type, self.float); END replay_load_float;
+PROCEDURE replay_compare(self: compare_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.compare(self.ztype, self.itype, self.compare_op); END replay_compare;
+PROCEDURE replay_add(self: add_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.add(self.type); END replay_add;
+PROCEDURE replay_subtract(self: subtract_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.subtract(self.type); END replay_subtract;
+PROCEDURE replay_multiply(self: multiply_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.multiply(self.type); END replay_multiply;
+PROCEDURE replay_divide(self: divide_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.divide(self.type); END replay_divide;
+PROCEDURE replay_div(self: div_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.div(self.type, self.a, self.b); END replay_div;
+PROCEDURE replay_mod(self: mod_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.mod(self.type, self.a, self.b); END replay_mod;
+PROCEDURE replay_negate(self: negate_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.negate(self.type); END replay_negate;
+PROCEDURE replay_abs(self: abs_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.abs(self.type); END replay_abs;
+PROCEDURE replay_max(self: max_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.max(self.type); END replay_max;
+PROCEDURE replay_min(self: min_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.min(self.type); END replay_min;
+PROCEDURE replay_cvt_int(self: cvt_int_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.cvt_int(self.rtype, self.itype, self.convert_op); END replay_cvt_int;
+PROCEDURE replay_cvt_float(self: cvt_float_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.cvt_float(self.atype, self.rtype); END replay_cvt_float;
+PROCEDURE replay_set_union(self: set_union_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_union(self.byte_size); END replay_set_union;
+PROCEDURE replay_set_difference(self: set_difference_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_difference(self.byte_size); END replay_set_difference;
+PROCEDURE replay_set_intersection(self: set_intersection_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_intersection(self.byte_size); END replay_set_intersection;
+PROCEDURE replay_set_sym_difference(self: set_sym_difference_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_sym_difference(self.byte_size); END replay_set_sym_difference;
+PROCEDURE replay_set_member(self: set_member_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_member(self.byte_size, self.type); END replay_set_member;
+PROCEDURE replay_set_compare(self: set_compare_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_compare(self.byte_size, self.compare_op, self.type); END replay_set_compare;
+PROCEDURE replay_set_range(self: set_range_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_range(self.byte_size, self.type); END replay_set_range;
+PROCEDURE replay_set_singleton(self: set_singleton_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.set_singleton(self.byte_size, self.type); END replay_set_singleton;
+PROCEDURE replay_not(self: not_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.not(self.type); END replay_not;
+PROCEDURE replay_and(self: and_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.and(self.type); END replay_and;
+PROCEDURE replay_or(self: or_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.or(self.type); END replay_or;
+PROCEDURE replay_xor(self: xor_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.xor(self.type); END replay_xor;
+PROCEDURE replay_shift(self: shift_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.shift(self.type); END replay_shift;
+PROCEDURE replay_shift_left(self: shift_left_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.shift_left(self.type); END replay_shift_left;
+PROCEDURE replay_shift_right(self: shift_right_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.shift_right(self.type); END replay_shift_right;
+PROCEDURE replay_rotate(self: rotate_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.rotate(self.type); END replay_rotate;
+PROCEDURE replay_rotate_left(self: rotate_left_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.rotate_left(self.type); END replay_rotate_left;
+PROCEDURE replay_rotate_right(self: rotate_right_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.rotate_right(self.type); END replay_rotate_right;
+PROCEDURE replay_widen(self: widen_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.widen(self.sign); END replay_widen;
+PROCEDURE replay_chop(<*UNUSED*>self: chop_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.chop(); END replay_chop;
+PROCEDURE replay_extract(self: extract_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.extract(self.type, self.sign_extend); END replay_extract;
+PROCEDURE replay_extract_n(self: extract_n_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.extract_n(self.type, self.sign_extend, self.count); END replay_extract_n;
+PROCEDURE replay_extract_mn(self: extract_mn_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.extract_mn(self.type, self.sign_extend, self.offset, self.count); END replay_extract_mn;
+PROCEDURE replay_insert(self: insert_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.insert(self.type); END replay_insert;
+PROCEDURE replay_insert_n(self: insert_n_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.insert_n(self.type, self.count); END replay_insert_n;
+PROCEDURE replay_insert_mn(self: insert_mn_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.insert_mn(self.type, self.offset, self.count); END replay_insert_mn;
+PROCEDURE replay_swap(self: swap_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.swap(self.a, self.b); END replay_swap;
+PROCEDURE replay_pop(self: pop_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop(self.type); END replay_pop;
+PROCEDURE replay_copy_n(self: copy_n_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.copy_n(self.itype, self.mtype, self.overlap); END replay_copy_n;
+PROCEDURE replay_copy(self: copy_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.copy(self.n, self.mtype, self.overlap); END replay_copy;
+PROCEDURE replay_zero_n(self: zero_n_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.zero_n(self.itype, self.mtype); END replay_zero_n;
+PROCEDURE replay_zero(self: zero_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.zero(self.n, self.type); END replay_zero;
+PROCEDURE replay_loophole(self: loophole_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.loophole(self.from, self.to); END replay_loophole;
+PROCEDURE replay_abort(self: abort_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.abort(self.code); END replay_abort;
+PROCEDURE replay_check_nil(self: check_nil_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.check_nil(self.code); END replay_check_nil;
+PROCEDURE replay_check_lo(self: check_lo_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.check_lo(self.type, self.i, self.code); END replay_check_lo;
+PROCEDURE replay_check_hi(self: check_hi_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.check_hi(self.type, self.i, self.code); END replay_check_hi;
+PROCEDURE replay_check_range(self: check_range_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.check_range(self.type, self.a, self.b, self.code); END replay_check_range;
+PROCEDURE replay_check_index(self: check_index_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.check_index(self.type, self.code); END replay_check_index;
+PROCEDURE replay_check_eq(self: check_eq_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.check_eq(self.type, self.code); END replay_check_eq;
+PROCEDURE replay_add_offset(self: add_offset_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.add_offset(self.i); END replay_add_offset;
+PROCEDURE replay_index_address(self: index_address_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.index_address(self.type, self.size) END replay_index_address;
+PROCEDURE replay_start_call_indirect(self: start_call_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.start_call_indirect(self.type, self.callingConvention); END replay_start_call_indirect;
+PROCEDURE replay_pop_param(self: pop_param_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop_param(self.type); END replay_pop_param;
+PROCEDURE replay_pop_struct(self: pop_struct_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop_struct(self.typeid, self.byte_size, self.alignment); END replay_pop_struct;
+PROCEDURE replay_pop_static_link(<*UNUSED*>self: pop_static_link_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop_static_link(); END replay_pop_static_link;
+PROCEDURE replay_call_indirect(self: call_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.call_indirect(self.type, self.callingConvention); END replay_call_indirect;
+PROCEDURE replay_comment(self: comment_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.comment(self.a, self.b, self.c, self.d); END replay_comment;
+PROCEDURE replay_store_ordered(self: store_ordered_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.store_ordered(self.ztype, self.mtype, self.order); END replay_store_ordered;
+PROCEDURE replay_load_ordered(self: load_ordered_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.load_ordered(self.mtype, self.ztype, self.order); END replay_load_ordered;
+PROCEDURE replay_exchange(self: exchange_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.exchange(self.mtype, self.ztype, self.order); END replay_exchange;
+PROCEDURE replay_compare_exchange(self: compare_exchange_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.compare_exchange(self.mtype, self.ztype, self.r, self.success, self.failure); END replay_compare_exchange;
+
+PROCEDURE replay_fence(self: fence_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.fence(self.order); END replay_fence;
+PROCEDURE replay_fetch_and_op(self: fetch_and_op_t; <*UNUSED*>replay: Replay_t; cg: M3CG.T) = BEGIN cg.fetch_and_op(self.atomic_op, self.mtype, self.ztype, self.order); END replay_fetch_and_op;
 
 BEGIN
 END M3CG_MultiPass.

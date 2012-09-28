@@ -10,10 +10,6 @@ INTERFACE M3C;
 
 IMPORT M3CG, Wr;
 
-TYPE U <: Public;
-TYPE Public = M3CG.T OBJECT
-      END;
-
 PROCEDURE New (cfile: Wr.T): M3CG.T;
 (* returns a new code generator that writes to 'cfile'. *)
 
