@@ -1548,7 +1548,7 @@ BEGIN
 END ExtraScope_Close;
 
 TYPE GetStructSizes_t =  M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
-    sizes: REF ARRAY OF INTEGER;
+    sizes: REF ARRAY OF INTEGER := NIL;
     count := 0;
 METHODS
     Declare(type: Type; byte_size: ByteSize): M3CG.Var := GetStructSizes_Declare;
@@ -1565,6 +1565,7 @@ PROCEDURE multipass_end_unit(self: Multipass_t) =
 (* called after all other methods to finalize the unit and write the
  resulting object *)
 CONST Ops = ARRAY OF M3CG_Binary.Op{
+    (* These are all the operations that can introduce a struct size. *)
         M3CG_Binary.Op.declare_constant,
         M3CG_Binary.Op.declare_global,
         M3CG_Binary.Op.declare_local,
@@ -1572,40 +1573,54 @@ CONST Ops = ARRAY OF M3CG_Binary.Op{
         M3CG_Binary.Op.declare_temp,
         M3CG_Binary.Op.import_global};
 VAR getStructSizes := NEW(GetStructSizes_t);
-     array1: REF ARRAY OF INTEGER;
-     array2: REF ARRAY OF INTEGER;
-     next, prev := -1;
-     count := 0;
+     array1, array2: REF ARRAY OF INTEGER := NIL;
+     next, prev, count := 0;
 BEGIN
+
+    (* let M3CG_MultiPass do its usual last step *)
+
     M3CG_MultiPass.end_unit(self);
+    
+    (* count up how many ops we are going to walk *)
+
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         INC(count, NUMBER(self.op_data[Ops[i]]^));
     END;
+    
+    (* make worst case array -- if all the ops declare a struct *)
+    
     array1 := NEW(REF ARRAY OF INTEGER, count);
+    
+    (* replay the ops through this little pass *)
+    
     getStructSizes.sizes := array1;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         self.Replay(getStructSizes, self.op_data[Ops[i]]);
     END;
+    
+    (* sort and unique and copy into new smaller array *)
+    
+    (* first count the unique *)
+    
     IntArraySort.Sort(SUBARRAY(array1^, 0, getStructSizes.count));
     prev := -1;
     count := 0;
     FOR i := 0 TO getStructSizes.count - 1 DO
         next := array1[i];
-        <* ASSERT next >= prev *>
-        IF (next > 0) AND (prev # next) THEN
+        <* ASSERT (next > 0) AND (next >= prev) *>
+        IF (next > 0) AND (next # prev) THEN
             prev := next;
             INC(count);
         END;
     END;
-    prev := -1;
-    (* RTIO.PutText("getStructSizes.count:" & IntToDec(getStructSizes.count) & "\n");
-    RTIO.PutText("count:" & IntToDec(count) & "\n"); *)
+
     array2 := NEW(REF ARRAY OF INTEGER, count);
+    prev := -1;
     count := 0;
     FOR i := 0 TO getStructSizes.count - 1 DO
         next := array1[i];
-        <* ASSERT next >= prev *>
-        IF (next > 0) AND (prev # next) THEN
+        <* ASSERT (next > 0) AND (next >= prev) *>
+        IF (next > 0) AND (next # prev) THEN
             array2[count] := next;
             prev := next;
             INC(count);
@@ -1613,8 +1628,6 @@ BEGIN
     END;
     <* ASSERT count = NUMBER(array2^) *>
     self.self.struct_sizes := array2;
-    (* RTIO.PutText("array2:" & IntToDec(NUMBER(array2^)) & "\n");
-    RTIO.Flush(); *)
 
     (* last pass *)
 
@@ -1627,8 +1640,6 @@ BEGIN
         <* ASSERT byte_size > 0 *>
         self.sizes[self.count] := byte_size;
         INC(self.count);
-        (* RTIO.PutText("GetStructSizes_Declare " & IntToDec(byte_size) & "\n");
-        RTIO.Flush(); *)
     END;
     RETURN NIL;
 END GetStructSizes_Declare;
