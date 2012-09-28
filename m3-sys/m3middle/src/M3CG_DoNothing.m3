@@ -9,233 +9,161 @@ FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 
-TYPE TVar = Var OBJECT tag: INTEGER END;
-TYPE TProc = Proc OBJECT tag: INTEGER END;
-
-TYPE
-T = M3CG.T OBJECT
-
-next_label_id := 1;
-next_var := 1;
-next_proc := 1;
-next_scope := 1;
-
+REVEAL
+T = Public BRANDED "M3CG_DoNothing.T" OBJECT
 OVERRIDES
-
-next_label := next_label;
-set_error_handler := set_error_handler;
-begin_unit := begin_unit;
-end_unit := end_unit;
-import_unit := import_unit;
-export_unit := export_unit;
-set_source_file := set_source_file;
-set_source_line := set_source_line;
-declare_typename := declare_typename;
-declare_array := declare_array;
-declare_open_array := declare_open_array;
-declare_enum := declare_enum;
-declare_enum_elt := declare_enum_elt;
-declare_packed := declare_packed;
-declare_record := declare_record;
-declare_field := declare_field;
-declare_set := declare_set;
-declare_subrange := declare_subrange;
-declare_pointer := declare_pointer;
-declare_indirect := declare_indirect;
-declare_proctype := declare_proctype;
-declare_formal := declare_formal;
-declare_raises := declare_raises;
-declare_object := declare_object;
-declare_method := declare_method;
-declare_opaque := declare_opaque;
-reveal_opaque := reveal_opaque;
-set_runtime_proc := set_runtime_proc;
-import_global := import_global;
-declare_segment := declare_segment;
-bind_segment := bind_segment;
-declare_global := declare_global;
-declare_constant := declare_constant;
-declare_local := declare_local;
-declare_param := declare_param;
-declare_temp := declare_temp;
-free_temp := free_temp;
-declare_exception := declare_exception;
-begin_init := begin_init;
-end_init := end_init;
-init_int := init_int;
-init_proc := init_proc;
-init_label := init_label;
-init_var := init_var;
-init_offset := init_offset;
-init_chars := init_chars;
-init_float := init_float;
-import_procedure := import_procedure;
-declare_procedure := declare_procedure;
-begin_procedure := begin_procedure;
-end_procedure := end_procedure;
-begin_block := begin_block;
-end_block := end_block;
-note_procedure_origin := note_procedure_origin;
-set_label := set_label;
-jump := jump;
-if_true := if_true;
-if_false := if_false;
-if_compare := if_compare;
-case_jump := case_jump;
-exit_proc := exit_proc;
-load := load;
-store := store;
-load_address := load_address;
-load_indirect := load_indirect;
-store_indirect := store_indirect;
-load_nil := load_nil;
-load_integer := load_integer;
-load_float := load_float;
-compare := compare;
-add := add;
-subtract := subtract;
-multiply := multiply;
-divide := divide;
-div := div;
-mod := mod;
-negate := negate;
-abs := abs;
-max := max;
-min := min;
-cvt_int := cvt_int;
-cvt_float := cvt_float;
-set_union := set_union;
-set_difference := set_difference;
-set_intersection := set_intersection;
-set_sym_difference := set_sym_difference;
-set_member := set_member;
-set_compare := set_compare;
-set_range := set_range;
-set_singleton := set_singleton;
-not := not;
-and := and;
-or := or;
-xor := xor;
-shift := shift;
-shift_left := shift_left;
-shift_right := shift_right;
-rotate := rotate;
-rotate_left := rotate_left;
-rotate_right := rotate_right;
-widen := widen;
-chop := chop;
-extract := extract;
-extract_n := extract_n;
-extract_mn := extract_mn;
-insert := insert;
-insert_n := insert_n;
-insert_mn := insert_mn;
-swap := swap;
-pop := pop;
-copy := copy;
-copy_n := copy_n;
-zero := zero;
-zero_n := zero_n;
-loophole := loophole;
-abort := abort;
-check_nil := check_nil;
-check_lo := check_lo;
-check_hi := check_hi;
-check_range := check_range;
-check_index := check_index;
-check_eq := check_eq;
-add_offset := add_offset;
-index_address := index_address;
-start_call_direct := start_call_direct;
-call_direct := call_direct;
-start_call_indirect := start_call_indirect;
-call_indirect := call_indirect;
-pop_param := pop_param;
-pop_struct := pop_struct;
-pop_static_link := pop_static_link;
-load_procedure := load_procedure;
-load_static_link := load_static_link;
-comment := comment;
-store_ordered := store_ordered;
-load_ordered := load_ordered;
-exchange := exchange;
-compare_exchange := compare_exchange;
-fence := fence;
-fetch_and_op := fetch_and_op;
-
+    next_label := next_label;
+    set_error_handler := set_error_handler;
+    begin_unit := begin_unit;
+    end_unit := end_unit;
+    import_unit := import_unit;
+    export_unit := export_unit;
+    set_source_file := set_source_file;
+    set_source_line := set_source_line;
+    declare_typename := declare_typename;
+    declare_array := declare_array;
+    declare_open_array := declare_open_array;
+    declare_enum := declare_enum;
+    declare_enum_elt := declare_enum_elt;
+    declare_packed := declare_packed;
+    declare_record := declare_record;
+    declare_field := declare_field;
+    declare_set := declare_set;
+    declare_subrange := declare_subrange;
+    declare_pointer := declare_pointer;
+    declare_indirect := declare_indirect;
+    declare_proctype := declare_proctype;
+    declare_formal := declare_formal;
+    declare_raises := declare_raises;
+    declare_object := declare_object;
+    declare_method := declare_method;
+    declare_opaque := declare_opaque;
+    reveal_opaque := reveal_opaque;
+    set_runtime_proc := set_runtime_proc;
+    import_global := import_global;
+    declare_segment := declare_segment;
+    bind_segment := bind_segment;
+    declare_global := declare_global;
+    declare_constant := declare_constant;
+    declare_local := declare_local;
+    declare_param := declare_param;
+    declare_temp := declare_temp;
+    free_temp := free_temp;
+    declare_exception := declare_exception;
+    begin_init := begin_init;
+    end_init := end_init;
+    init_int := init_int;
+    init_proc := init_proc;
+    init_label := init_label;
+    init_var := init_var;
+    init_offset := init_offset;
+    init_chars := init_chars;
+    init_float := init_float;
+    import_procedure := import_procedure;
+    declare_procedure := declare_procedure;
+    begin_procedure := begin_procedure;
+    end_procedure := end_procedure;
+    begin_block := begin_block;
+    end_block := end_block;
+    note_procedure_origin := note_procedure_origin;
+    set_label := set_label;
+    jump := jump;
+    if_true := if_true;
+    if_false := if_false;
+    if_compare := if_compare;
+    case_jump := case_jump;
+    exit_proc := exit_proc;
+    load := load;
+    store := store;
+    load_address := load_address;
+    load_indirect := load_indirect;
+    store_indirect := store_indirect;
+    load_nil := load_nil;
+    load_integer := load_integer;
+    load_float := load_float;
+    compare := compare;
+    add := add;
+    subtract := subtract;
+    multiply := multiply;
+    divide := divide;
+    div := div;
+    mod := mod;
+    negate := negate;
+    abs := abs;
+    max := max;
+    min := min;
+    cvt_int := cvt_int;
+    cvt_float := cvt_float;
+    set_union := set_union;
+    set_difference := set_difference;
+    set_intersection := set_intersection;
+    set_sym_difference := set_sym_difference;
+    set_member := set_member;
+    set_compare := set_compare;
+    set_range := set_range;
+    set_singleton := set_singleton;
+    not := not;
+    and := and;
+    or := or;
+    xor := xor;
+    shift := shift;
+    shift_left := shift_left;
+    shift_right := shift_right;
+    rotate := rotate;
+    rotate_left := rotate_left;
+    rotate_right := rotate_right;
+    widen := widen;
+    chop := chop;
+    extract := extract;
+    extract_n := extract_n;
+    extract_mn := extract_mn;
+    insert := insert;
+    insert_n := insert_n;
+    insert_mn := insert_mn;
+    swap := swap;
+    pop := pop;
+    copy := copy;
+    copy_n := copy_n;
+    zero := zero;
+    zero_n := zero_n;
+    loophole := loophole;
+    abort := abort;
+    check_nil := check_nil;
+    check_lo := check_lo;
+    check_hi := check_hi;
+    check_range := check_range;
+    check_index := check_index;
+    check_eq := check_eq;
+    add_offset := add_offset;
+    index_address := index_address;
+    start_call_direct := start_call_direct;
+    call_direct := call_direct;
+    start_call_indirect := start_call_indirect;
+    call_indirect := call_indirect;
+    pop_param := pop_param;
+    pop_struct := pop_struct;
+    pop_static_link := pop_static_link;
+    load_procedure := load_procedure;
+    load_static_link := load_static_link;
+    comment := comment;
+    store_ordered := store_ordered;
+    load_ordered := load_ordered;
+    exchange := exchange;
+    compare_exchange := compare_exchange;
+    fence := fence;
+    fetch_and_op := fetch_and_op;
 END;
 
-PROCEDURE New(): M3CG.T =
-BEGIN
-RETURN NEW(T);
-END New;
-
-PROCEDURE next_label(self: T; n: INTEGER := 1): Label =
-VAR label := self.next_label_id;
-BEGIN
-INC(self.next_label_id, n);
-RETURN label;
-END next_label;
-
-PROCEDURE NewVar(self: T): Var =
-VAR v := NEW(TVar, tag := self.next_var);
-BEGIN
-INC(self.next_var);
-RETURN v;
-END NewVar;
-
-<*NOWARN*>PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var =
-BEGIN
-RETURN NewVar(self);
-END import_global;
-
-<*NOWARN*>PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var =
-BEGIN
-RETURN NewVar(self);
-END declare_segment;
-
-<*NOWARN*>PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
-BEGIN
-RETURN NewVar(self);
-END declare_global;
-
-<*NOWARN*>PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
-BEGIN
-RETURN NewVar(self);
-END declare_constant;
-
-<*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var =
-BEGIN
-RETURN NewVar(self);
-END declare_local;
-
-<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var =
-BEGIN
-RETURN NewVar(self);
-END declare_param;
-
-<*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN): Var =
-BEGIN
-RETURN NewVar(self);
-END declare_temp;
-
-PROCEDURE NewProc(self: T): Proc =
-VAR p := NEW(TProc, tag := self.next_proc);
-BEGIN
-INC(self.next_proc);
-RETURN p;
-END NewProc;
-
-<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention): Proc =
-BEGIN
-RETURN NewProc(self);
-END import_procedure;
-
-<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc): Proc =
-BEGIN
-RETURN NewProc(self);
-END declare_procedure;
-
+<*NOWARN*>PROCEDURE next_label(self: T; n: INTEGER := 1): Label = BEGIN RETURN 0; END next_label;
+<*NOWARN*>PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var = BEGIN RETURN NIL; END import_global;
+<*NOWARN*>PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var = BEGIN RETURN NIL; END declare_segment;
+<*NOWARN*>PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var = BEGIN RETURN NIL; END declare_global;
+<*NOWARN*>PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var = BEGIN RETURN NIL; END declare_constant;
+<*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var = BEGIN RETURN NIL; END declare_local;
+<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var = BEGIN RETURN NIL; END declare_param;
+<*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN): Var = BEGIN RETURN NIL; END declare_temp;
+<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention): Proc = BEGIN RETURN NIL; END import_procedure;
+<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc): Proc = BEGIN RETURN NIL; END declare_procedure;
 <*NOWARN*>PROCEDURE set_error_handler(self: T; p: M3CG_Ops.ErrorHandler) = BEGIN END set_error_handler;
 <*NOWARN*>PROCEDURE begin_unit(self: T; optimize: INTEGER) = BEGIN END begin_unit;
 <*NOWARN*>PROCEDURE end_unit(self: T) = BEGIN END end_unit;

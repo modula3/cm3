@@ -38,6 +38,7 @@ Module ("M3CG_BinRd")
 Module ("M3CG_BinWr")
 Module ("M3CG_MultiPass")
 Module ("M3CG_DoNothing")
+Module ("M3CG_AssertFalse")
 Module ("M3RT")
 
 build_standalone ()
