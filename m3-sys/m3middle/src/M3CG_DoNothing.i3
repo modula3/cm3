@@ -4,6 +4,8 @@ INTERFACE M3CG_DoNothing;
 
 IMPORT M3CG;
 
-PROCEDURE New (): M3CG.T;
+TYPE T <: Public;
+TYPE Public = M3CG.T OBJECT
+END;
 
 END M3CG_DoNothing.

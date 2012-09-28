@@ -1,7 +1,7 @@
 UNSAFE MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl;
-IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap;
+IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort;
 IMPORT M3ID, TInt, ASCII, TextUtils, Cstdint, Long;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
@@ -11,7 +11,7 @@ FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
-IMPORT M3CG_MultiPass;
+IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_AssertFalse, M3CG_Binary, RTIO;
 
 (* Taken together, these help debugging, as you get more lines in the
 C and the error messages reference C line numbers *)
@@ -33,7 +33,7 @@ TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass" OBJECT
     END;
 
 TYPE
-T = M3CG.T BRANDED "M3C.T" OBJECT
+T = M3CG_AssertFalse.T BRANDED "M3C.T" OBJECT
 
         typeidToType: IntRefTbl.T := NIL; (* FUTURE INTEGER => Type_t *)
         vars: IntRefTbl.T := NIL; (* INTEGER => Var_t *)
@@ -64,11 +64,11 @@ T = M3CG.T BRANDED "M3C.T" OBJECT
         label := 0;
         static_link_id: M3ID.T;
         
-        (* Every time we see a struct size, append it here.
+        (* All discovered struct sizes are here.
         Later we will sort/unique and typedef them all.
         typedef struct { char a[size]; } m3struct_size_t;
         *)
-        (* struct_sizes: IntSeq.T; FUTURE *)
+        struct_sizes: REF ARRAY OF INTEGER;
         
         (* initialization support *)
         
@@ -765,29 +765,10 @@ CONST Prefix = ARRAY OF TEXT {
 
 (* need multiple passes and forward declare all structs; temporary partial solution *)
 "#define M3STRUCT(n) m3struct_##n##_t",
-"typedef struct { volatile UINT8 a1;     } M3STRUCT(1);",
-"typedef struct { volatile UINT16 a2;    } M3STRUCT(2);",
-"typedef struct { volatile UINT8 a3[3];  } M3STRUCT(3);",
-"typedef struct { volatile UINT32 a4;    } M3STRUCT(4);",
-"typedef struct { volatile UINT8 a5[5];  } M3STRUCT(5);",
-"typedef struct { volatile UINT16 a6[3]; } M3STRUCT(6);",
-"typedef struct { volatile UINT8 a7[7];  } M3STRUCT(7);",
-"typedef struct { volatile UINT64 a8;    } M3STRUCT(8);",
 "#define M3STRUCT1(n) typedef struct { volatile UINT8 a[n]; } M3STRUCT(n);",
 "#define M3STRUCT2(n) typedef struct { volatile UINT16 a[(n)/2]; } M3STRUCT(n);",
 "#define M3STRUCT4(n) typedef struct { volatile UINT32 a[(n)/4]; } M3STRUCT(n);",
 "#define M3STRUCT8(n) typedef struct { volatile UINT64 a[(n)/8]; } M3STRUCT(n);",
-"M3STRUCT1(9)M3STRUCT2(10)M3STRUCT1(11)M3STRUCT4(12)",
-"M3STRUCT1(13)M3STRUCT2(14)M3STRUCT1(15)M3STRUCT8(16)",
-"M3STRUCT1(17)M3STRUCT2(18)M3STRUCT1(19)M3STRUCT4(20)",
-"M3STRUCT1(21)M3STRUCT2(22)M3STRUCT1(23)M3STRUCT8(24)",
-"M3STRUCT1(25)M3STRUCT2(26)M3STRUCT1(27)M3STRUCT4(28)",
-"M3STRUCT1(29)M3STRUCT2(30)M3STRUCT1(31)M3STRUCT8(32)",
-"M3STRUCT1(33)M3STRUCT2(34)M3STRUCT1(35)M3STRUCT4(36)",
-"M3STRUCT1(37)M3STRUCT2(38)M3STRUCT1(39)M3STRUCT8(40)",
-"M3STRUCT1(41)M3STRUCT2(42)M3STRUCT1(43)M3STRUCT8(44)",
-"M3STRUCT1(45)M3STRUCT2(46)M3STRUCT1(47)M3STRUCT4(48)",
-"M3STRUCT1(49)M3STRUCT2(50)M3STRUCT1(51)M3STRUCT8(52)",
 "#ifdef __cplusplus",
 "#define M3_INIT",
 "#define new m3_new",
@@ -1127,7 +1108,6 @@ BEGIN
     self.stack := NEW(TextSeq.T).init();
     self.params := NEW(TextSeq.T).init();
     self.import_repeat := NEW(TextSeq.T).init();
-    (* self.struct_sizes := NEW(IntSeq.T).init(); FUTURE *)
 (*
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1183,6 +1163,8 @@ END set_error_handler;
 
 PROCEDURE begin_unit(self: T; <*UNUSED*>optimize: INTEGER) =
 (* called before any other method to initialize the compilation unit *)
+CONST units = ARRAY OF INTEGER{8,4,2,1};
+VAR size := 0;
 BEGIN
     print(self, " /* begin unit */\n");
     print(self, "/* M3_TARGET = " & Target.System_name & " */ ");
@@ -1192,6 +1174,22 @@ BEGIN
     FOR i := FIRST(Prefix) TO LAST(Prefix) DO
         print(self, Prefix[i] & "\n");
     END;
+    
+    (* forward declare all struct sizes that the unit uses *)
+
+    self.comment("start structs " & IntToDec(NUMBER(self.struct_sizes^)));
+    FOR i := FIRST(self.struct_sizes^) TO LAST(self.struct_sizes^) DO
+        size := self.struct_sizes[i];
+        FOR unit := FIRST(units) TO LAST(units) DO
+            IF (size MOD units[unit]) = 0 THEN
+                print(self, "M3STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
+                EXIT;
+            END;
+        END;
+    END;
+    self.struct_sizes := NIL;
+    self.comment("end structs");
+
     SuppressLineDirective(self, -1, "begin_unit");
     self.report_fault := NIL;
     self.in_proc_call := 0;
@@ -1211,13 +1209,6 @@ BEGIN
     END;
     SuppressLineDirective(self, -1, "end_unit");
 END end_unit;
-
-PROCEDURE multipass_end_unit(self: Multipass_t) =
-(* called after all other methods to finalize the unit and write the
- resulting object *)
-BEGIN
-    self.Replay(self.self);
-END multipass_end_unit;
 
 
 PROCEDURE import_unit(self: T; <*UNUSED*>name: Name) =
@@ -1556,12 +1547,156 @@ BEGIN
     self.extra_scope_close_braces := "";
 END ExtraScope_Close;
 
+TYPE GetStructSizes_t =  M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
+    sizes: REF ARRAY OF INTEGER;
+    count := 0;
+METHODS
+    Declare(type: Type; byte_size: ByteSize): M3CG.Var := GetStructSizes_Declare;
+OVERRIDES
+    declare_constant := GetStructSizes_DeclareConstant;
+    declare_global := GetStructSizes_DeclareGlobal;
+    declare_local := GetStructSizes_DeclareLocalOrParam;
+    declare_param := GetStructSizes_DeclareLocalOrParam;
+    declare_temp := GetStructSizes_DeclareTemp;
+    import_global := GetStructSizes_ImportGlobal;
+END;
+
+PROCEDURE multipass_end_unit(self: Multipass_t) =
+(* called after all other methods to finalize the unit and write the
+ resulting object *)
+CONST Ops = ARRAY OF M3CG_Binary.Op{
+        M3CG_Binary.Op.declare_constant,
+        M3CG_Binary.Op.declare_global,
+        M3CG_Binary.Op.declare_local,
+        M3CG_Binary.Op.declare_param,
+        M3CG_Binary.Op.declare_temp,
+        M3CG_Binary.Op.import_global};
+VAR getStructSizes := NEW(GetStructSizes_t);
+     array1: REF ARRAY OF INTEGER;
+     array2: REF ARRAY OF INTEGER;
+     next, prev := -1;
+     count := 0;
+BEGIN
+    M3CG_MultiPass.end_unit(self);
+    FOR i := FIRST(Ops) TO LAST(Ops) DO
+        INC(count, NUMBER(self.op_data[Ops[i]]^));
+    END;
+    array1 := NEW(REF ARRAY OF INTEGER, count);
+    getStructSizes.sizes := array1;
+    FOR i := FIRST(Ops) TO LAST(Ops) DO
+        self.Replay(getStructSizes, self.op_data[Ops[i]]);
+    END;
+    IntArraySort.Sort(SUBARRAY(array1^, 0, getStructSizes.count));
+    prev := -1;
+    count := 0;
+    FOR i := 0 TO getStructSizes.count - 1 DO
+        next := array1[i];
+        <* ASSERT next >= prev *>
+        IF (next > 0) AND (prev # next) THEN
+            prev := next;
+            INC(count);
+        END;
+    END;
+    prev := -1;
+    (* RTIO.PutText("getStructSizes.count:" & IntToDec(getStructSizes.count) & "\n");
+    RTIO.PutText("count:" & IntToDec(count) & "\n"); *)
+    array2 := NEW(REF ARRAY OF INTEGER, count);
+    count := 0;
+    FOR i := 0 TO getStructSizes.count - 1 DO
+        next := array1[i];
+        <* ASSERT next >= prev *>
+        IF (next > 0) AND (prev # next) THEN
+            array2[count] := next;
+            prev := next;
+            INC(count);
+        END;
+    END;
+    <* ASSERT count = NUMBER(array2^) *>
+    self.self.struct_sizes := array2;
+    (* RTIO.PutText("array2:" & IntToDec(NUMBER(array2^)) & "\n");
+    RTIO.Flush(); *)
+
+    (* last pass *)
+
+    self.Replay(self.self);
+END multipass_end_unit;
+
+PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: Type; byte_size: ByteSize): M3CG.Var =
+BEGIN
+    IF type = Type.Struct THEN
+        <* ASSERT byte_size > 0 *>
+        self.sizes[self.count] := byte_size;
+        INC(self.count);
+        (* RTIO.PutText("GetStructSizes_Declare " & IntToDec(byte_size) & "\n");
+        RTIO.Flush(); *)
+    END;
+    RETURN NIL;
+END GetStructSizes_Declare;
+
+PROCEDURE GetStructSizes_DeclareTemp(
+        self: GetStructSizes_t;
+        byte_size: ByteSize;
+        <*UNUSED*>alignment: Alignment;
+        type: Type;
+        <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
+BEGIN
+    RETURN self.Declare(type, byte_size);
+END GetStructSizes_DeclareTemp;
+
+PROCEDURE GetStructSizes_DeclareGlobal(
+        self: GetStructSizes_t;
+        <*UNUSED*>name: Name;
+        byte_size: ByteSize;
+        <*UNUSED*>alignment: Alignment;
+        type: Type;
+        <*UNUSED*>typeid: TypeUID;
+        <*UNUSED*>exported: BOOLEAN;
+        <*UNUSED*>inited: BOOLEAN): M3CG.Var =
+BEGIN
+    RETURN self.Declare(type, byte_size);
+END GetStructSizes_DeclareGlobal;
+
+PROCEDURE GetStructSizes_ImportGlobal(
+        self: GetStructSizes_t;
+        <*UNUSED*>name: Name;
+        byte_size: ByteSize;
+        <*UNUSED*>alignment: Alignment;
+        type: Type;
+        <*UNUSED*>typeid: TypeUID): M3CG.Var =
+BEGIN
+    RETURN self.Declare(type, byte_size);
+END GetStructSizes_ImportGlobal;
+
+PROCEDURE GetStructSizes_DeclareConstant(
+        self: GetStructSizes_t;
+        <*UNUSED*>name: Name;
+        byte_size: ByteSize;
+        <*UNUSED*>alignment: Alignment;
+        type: Type;
+        <*UNUSED*>typeid: TypeUID;
+        <*UNUSED*>exported: BOOLEAN;
+        <*UNUSED*>inited: BOOLEAN): M3CG.Var =
+BEGIN
+    RETURN self.Declare(type, byte_size);
+END GetStructSizes_DeclareConstant;
+
+PROCEDURE GetStructSizes_DeclareLocalOrParam(
+        self: GetStructSizes_t;
+        <*UNUSED*>name: Name;
+        byte_size: ByteSize;
+        <*UNUSED*>alignment: Alignment;
+        type: Type;
+        <*UNUSED*>typeid: TypeUID;
+        <*UNUSED*>in_memory: BOOLEAN;
+        <*UNUSED*>up_level: BOOLEAN;
+        <*UNUSED*>frequency: Frequency): M3CG.Var =
+BEGIN
+    RETURN self.Declare(type, byte_size);
+END GetStructSizes_DeclareLocalOrParam;
+
 PROCEDURE Struct(size: INTEGER): TEXT =
 BEGIN
-    IF size <= 52 THEN
-        RETURN "M3STRUCT(" & IntToDec(size) & ")";
-    END;
-    RETURN "struct{char a[" & IntToDec(size) & "];}";
+    RETURN "M3STRUCT(" & IntToDec(size) & ")";
 END Struct;
 
 PROCEDURE Var_DeclareAndInitStructParamLocalValue(var: Var_t): TEXT =

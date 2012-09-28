@@ -22,10 +22,11 @@ TYPE typeid_t = INTEGER; (* HACK that Tony insists on *)
 TYPE T <: Public;
 
 TYPE Public = M3CG.T OBJECT
- METHODS
-  GetData(): REF ARRAY OF REFANY;
-  Replay(cg: M3CG.T);
-  Init(): T;
+    data: REF ARRAY OF op_t;
+    op_data: ARRAY Op OF REF ARRAY OF op_t;
+METHODS
+    Replay(cg: M3CG.T; data: REF ARRAY OF op_t := NIL);
+    Init(): T;
 END;
 
 TYPE Replay_t <: REFANY;
@@ -188,6 +189,8 @@ TYPE exchange_t = op_t OBJECT mtype: MType; ztype: ZType; order: MemoryOrder; OV
 TYPE compare_exchange_t = op_t OBJECT mtype: MType; ztype: ZType; r: IType; success, failure: MemoryOrder; OVERRIDES replay := replay_compare_exchange END;
 TYPE fence_t = op_t OBJECT order: MemoryOrder; OVERRIDES replay := replay_fence END;
 TYPE fetch_and_op_t = op_t OBJECT atomic_op: AtomicOp; mtype: MType; ztype: ZType; order: MemoryOrder; OVERRIDES replay := replay_fetch_and_op END;
+
+PROCEDURE end_unit(self: T);
 
 PROCEDURE replay_import_procedure(self: import_procedure_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_declare_procedure(self: declare_procedure_t; replay: Replay_t; cg: cg_t);

@@ -1,4 +1,4 @@
-UNSAFE MODULE M3CG_MultiPass;
+MODULE M3CG_MultiPass;
 
 IMPORT M3CG, M3CG_Ops, RefSeq, Target;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
@@ -55,14 +55,15 @@ END StaticRefs_GetProc;
 
 REVEAL
 T = Public BRANDED "M3CG_MultiPass.T" OBJECT
-    data: RefSeq.T := NIL;
     refs: GrowableRefs_t := NIL;
     next_label_id := 1;
+    op_counts := ARRAY Op OF INTEGER{0, ..};
+    (* total_ops: INTEGER := 0; *)
+    private_data: RefSeq.T := NIL;
 METHODS
-    Add(a: REFANY) := Add;
+    Add(a: op_t) := Add;
 OVERRIDES
     Init := Init;
-    GetData := GetData;
     Replay := Replay;
 
     next_label := next_label;
@@ -209,7 +210,7 @@ END;
 
 PROCEDURE Init(self: T): T =
 BEGIN
-    self.data := NEW(RefSeq.T).init();
+    self.private_data := NEW(RefSeq.T).init();
     self.refs := NEW(GrowableRefs_t).Init();
     EVAL self.refs.NewRef(NIL); (* throw away zero *)
     RETURN self;
@@ -224,30 +225,51 @@ METHODS
     GetProc(ref: INTEGER): M3CG.Proc := Replay_GetProc;
 END;
 
-PROCEDURE Replay(self: T; cg: M3CG.T) =
-VAR data := self.data;
-    context := NEW(Replay_t).Init(self.refs.Size());
+PROCEDURE Replay(self: T; cg: M3CG.T; data: REF ARRAY OF op_t := NIL) =
+VAR context := NEW(Replay_t).Init(self.refs.Size());
 BEGIN
-    FOR b := 0 TO data.size() - 1 DO
-        <* ASSERT data.get(b) # NIL *>
-        NARROW(data.get(b), op_t).replay(context, cg);
+    IF data = NIL THEN
+        data := self.data;
+    END;
+    FOR i := FIRST(data^) TO LAST(data^) DO
+        <* ASSERT data[i] # NIL *>
+        data[i].replay(context, cg);
     END;
 END Replay;
 
-PROCEDURE GetData(self: T): REF ARRAY OF REFANY =
-VAR data := self.data;
-    a := NEW(REF ARRAY OF REFANY, data.size());
+PROCEDURE Add(self: T; a: op_t) =
 BEGIN
-    FOR b := FIRST(a^) TO LAST(a^) DO
-        a[b] := data.get(b);
-    END;
-    RETURN a;
-END GetData;
-
-PROCEDURE Add(self: T; a: REFANY) =
-BEGIN
-    self.data.addhi(a);
+    (* INC(self.total_ops); *)
+    INC(self.op_counts[a.op]);
+    self.private_data.addhi(a);
 END Add;
+
+PROCEDURE end_unit(self: T) =
+VAR opt: op_t;
+    op: Op;
+BEGIN
+    self.Add(NEW(end_unit_t));
+    
+    (* convert private_data into a sealed array of op_t
+       and also form per-op arrays to optimize some small passes
+    *)
+    VAR private_data := self.private_data;
+        data := NEW(REF ARRAY OF op_t, private_data.size());
+    BEGIN
+        FOR i := FIRST(Op) TO LAST(Op) DO
+            self.op_data[i] := NEW(REF ARRAY OF op_t, self.op_counts[i]);
+            self.op_counts[i] := 0;
+        END;
+        FOR i := FIRST(data^) TO LAST(data^) DO
+            opt := private_data.get(i);
+            data[i] := opt;
+            op := opt.op;
+            self.op_data[op][self.op_counts[op]] := opt;
+            INC(self.op_counts[op]);
+        END;
+        self.data := data;
+    END;
+END end_unit;
 
 PROCEDURE GrowableRefs_Init(self: GrowableRefs_t): GrowableRefs_t =
 BEGIN
@@ -375,11 +397,6 @@ PROCEDURE begin_unit(self: T; optimize: INTEGER) =
 BEGIN
 self.Add(NEW(begin_unit_t, optimize := optimize));
 END begin_unit;
-
-PROCEDURE end_unit(self: T) =
-BEGIN
-self.Add(NEW(end_unit_t));
-END end_unit;
 
 PROCEDURE import_unit(self: T; name: Name) =
 BEGIN
