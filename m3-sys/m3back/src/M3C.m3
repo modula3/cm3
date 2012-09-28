@@ -26,7 +26,7 @@ C and the error messages reference C line numbers *)
  *        an in-memory layout
  *)
 
-TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass" OBJECT
+TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
         self: T;
     OVERRIDES
         end_unit := multipass_end_unit;
