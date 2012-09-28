@@ -130,7 +130,7 @@ PROCEDURE ToText (t: T): TEXT =
     RETURN x;
   END ToText;
 
-PROCEDURE ToStr (t: T) =
+PROCEDURE ToStr (t: T): UNTRACED REF CHAR =
   BEGIN
     <*ASSERT t < next_t*>
     IF (t = NoID) THEN RETURN NIL END;
