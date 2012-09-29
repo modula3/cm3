@@ -1,7 +1,7 @@
 UNSAFE MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl;
-IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap;
+IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort;
 IMPORT M3ID, TInt, ASCII, TextUtils, Cstdint, Long;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
@@ -1552,7 +1552,6 @@ END ExtraScope_Close;
 TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
     count := 0;
-    max := 0;
 METHODS
     Declare(type: Type; byte_size: ByteSize): M3CG.Var := GetStructSizes_Declare;
 OVERRIDES
@@ -1576,9 +1575,9 @@ CONST Ops = ARRAY OF M3CG_Binary.Op{
 CONST units = ARRAY OF INTEGER{8,4,2,1};
 VAR size := 0;
     count := 0;
+    prev := 0;
     getStructSizes := NEW(GetStructSizes_t);
     sizes: REF ARRAY OF INTEGER := NIL;
-    declared: REF ARRAY OF BOOLEAN := NIL;
 BEGIN
     (* count up how many ops we are going to walk *)
 
@@ -1597,18 +1596,15 @@ BEGIN
         self.Replay(getStructSizes, self.op_data[Ops[i]]);
     END;
 
-    declared := NEW(REF ARRAY OF BOOLEAN, getStructSizes.max);
-    FOR i := 0 TO getStructSizes.max - 1 DO
-        declared[i] := FALSE;
-    END;
-
-    (* forward declare all struct sizes that the unit uses *)
+    (* sort, unique, output *)
     
+    IntArraySort.Sort(SUBARRAY(sizes^, 0, getStructSizes.count));
+    prev := -1;
     FOR i := 0 TO getStructSizes.count - 1 DO
         size := sizes[i];
-        <* ASSERT size > 0 *>
-        IF NOT declared[size - 1] THEN
-            declared[size - 1] := TRUE;
+        <* ASSERT (size > 0) AND (size >= prev) *>
+        IF (size > 0) AND (size # prev) THEN
+            prev := size;
             FOR unit := FIRST(units) TO LAST(units) DO
                 IF (size MOD units[unit]) = 0 THEN
                     print(self.self, "M3STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
@@ -1625,7 +1621,6 @@ BEGIN
     IF type = Type.Struct THEN
         <* ASSERT byte_size > 0 *>
         self.sizes[self.count] := byte_size;
-        self.max := MAX(self.max, byte_size);
         INC(self.count);
     END;
     RETURN NIL;
