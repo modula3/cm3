@@ -1,7 +1,7 @@
 UNSAFE MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl;
-IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort;
+IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap;
 IMPORT M3ID, TInt, ASCII, TextUtils, Cstdint, Long;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
@@ -63,12 +63,6 @@ T = M3CG_AssertFalse.T BRANDED "M3C.T" OBJECT
         param_count := 0;
         label := 0;
         static_link_id: M3ID.T;
-        
-        (* All discovered struct sizes are here.
-        Later we will sort/unique and typedef them all.
-        typedef struct { char a[size]; } m3struct_size_t;
-        *)
-        struct_sizes: REF ARRAY OF INTEGER;
         
         (* initialization support *)
         
@@ -1161,10 +1155,7 @@ END set_error_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
-PROCEDURE begin_unit(self: T; <*UNUSED*>optimize: INTEGER) =
-(* called before any other method to initialize the compilation unit *)
-CONST units = ARRAY OF INTEGER{8,4,2,1};
-VAR size := 0;
+PROCEDURE Prefix_Start(self: T) =
 BEGIN
     print(self, " /* begin unit */\n");
     print(self, "/* M3_TARGET = " & Target.System_name & " */ ");
@@ -1174,30 +1165,42 @@ BEGIN
     FOR i := FIRST(Prefix) TO LAST(Prefix) DO
         print(self, Prefix[i] & "\n");
     END;
-    
-    (* forward declare all struct sizes that the unit uses *)
+END Prefix_Start;
 
-    self.comment("start structs " & IntToDec(NUMBER(self.struct_sizes^)));
-    FOR i := FIRST(self.struct_sizes^) TO LAST(self.struct_sizes^) DO
-        size := self.struct_sizes[i];
-        FOR unit := FIRST(units) TO LAST(units) DO
-            IF (size MOD units[unit]) = 0 THEN
-                print(self, "M3STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
-                EXIT;
-            END;
-        END;
-    END;
-    self.struct_sizes := NIL;
-    self.comment("end structs");
-
+PROCEDURE Prefix_End(self: T) =
+BEGIN
     SuppressLineDirective(self, -1, "begin_unit");
+END Prefix_End;
+
+PROCEDURE multipass_end_unit(self: Multipass_t) =
+(* called at the of the first pass -- we have everything
+   in memory now, except for the end_unit itself.
+ *)
+BEGIN
+    (* let M3CG_MultiPass do its usual last step *)
+
+    M3CG_MultiPass.end_unit(self);
+
+    Prefix_Start(self.self);
+
+    GetStructSizes(self);
+
+    Prefix_End(self.self);
+
+    (* last pass *)
+
+    self.Replay(self.self);
+END multipass_end_unit;
+
+PROCEDURE begin_unit(self: T; <*UNUSED*>optimize: INTEGER) =
+(* The first call in a particular pass. *)
+BEGIN
     self.report_fault := NIL;
     self.in_proc_call := 0;
 END begin_unit;
 
 PROCEDURE end_unit(self: T) =
-(* called after all other methods to finalize the unit and write the
- resulting object *)
+(* The last call in a particular pass. *)
 BEGIN
     print(self, " /* end unit */\n");
     self.line_directive := ""; (* really suppress *)
@@ -1209,7 +1212,6 @@ BEGIN
     END;
     SuppressLineDirective(self, -1, "end_unit");
 END end_unit;
-
 
 PROCEDURE import_unit(self: T; <*UNUSED*>name: Name) =
 (* note that the current compilation unit imports the interface 'name' *)
@@ -1547,9 +1549,10 @@ BEGIN
     self.extra_scope_close_braces := "";
 END ExtraScope_Close;
 
-TYPE GetStructSizes_t =  M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
+TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
     count := 0;
+    max := 0;
 METHODS
     Declare(type: Type; byte_size: ByteSize): M3CG.Var := GetStructSizes_Declare;
 OVERRIDES
@@ -1561,9 +1564,7 @@ OVERRIDES
     import_global := GetStructSizes_ImportGlobal;
 END;
 
-PROCEDURE multipass_end_unit(self: Multipass_t) =
-(* called after all other methods to finalize the unit and write the
- resulting object *)
+PROCEDURE GetStructSizes(self: Multipass_t) =
 CONST Ops = ARRAY OF M3CG_Binary.Op{
     (* These are all the operations that can introduce a struct size. *)
         M3CG_Binary.Op.declare_constant,
@@ -1572,15 +1573,13 @@ CONST Ops = ARRAY OF M3CG_Binary.Op{
         M3CG_Binary.Op.declare_param,
         M3CG_Binary.Op.declare_temp,
         M3CG_Binary.Op.import_global};
-VAR getStructSizes := NEW(GetStructSizes_t);
-     array1, array2: REF ARRAY OF INTEGER := NIL;
-     next, prev, count := 0;
+CONST units = ARRAY OF INTEGER{8,4,2,1};
+VAR size := 0;
+    count := 0;
+    getStructSizes := NEW(GetStructSizes_t);
+    sizes: REF ARRAY OF INTEGER := NIL;
+    declared: REF ARRAY OF BOOLEAN := NIL;
 BEGIN
-
-    (* let M3CG_MultiPass do its usual last step *)
-
-    M3CG_MultiPass.end_unit(self);
-    
     (* count up how many ops we are going to walk *)
 
     FOR i := FIRST(Ops) TO LAST(Ops) DO
@@ -1589,56 +1588,44 @@ BEGIN
     
     (* make worst case array -- if all the ops declare a struct *)
     
-    array1 := NEW(REF ARRAY OF INTEGER, count);
+    sizes := NEW(REF ARRAY OF INTEGER, count);
     
     (* replay the ops through this little pass *)
     
-    getStructSizes.sizes := array1;
+    getStructSizes.sizes := sizes;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         self.Replay(getStructSizes, self.op_data[Ops[i]]);
     END;
+
+    declared := NEW(REF ARRAY OF BOOLEAN, getStructSizes.max);
+    FOR i := 0 TO getStructSizes.max - 1 DO
+        declared[i] := FALSE;
+    END;
+
+    (* forward declare all struct sizes that the unit uses *)
     
-    (* sort and unique and copy into new smaller array *)
-    
-    (* first count the unique *)
-    
-    IntArraySort.Sort(SUBARRAY(array1^, 0, getStructSizes.count));
-    prev := -1;
-    count := 0;
     FOR i := 0 TO getStructSizes.count - 1 DO
-        next := array1[i];
-        <* ASSERT (next > 0) AND (next >= prev) *>
-        IF (next > 0) AND (next # prev) THEN
-            prev := next;
-            INC(count);
+        size := sizes[i];
+        <* ASSERT size > 0 *>
+        IF NOT declared[size - 1] THEN
+            declared[size - 1] := TRUE;
+            FOR unit := FIRST(units) TO LAST(units) DO
+                IF (size MOD units[unit]) = 0 THEN
+                    print(self.self, "M3STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
+                    EXIT;
+                END;
+            END;
         END;
     END;
 
-    array2 := NEW(REF ARRAY OF INTEGER, count);
-    prev := -1;
-    count := 0;
-    FOR i := 0 TO getStructSizes.count - 1 DO
-        next := array1[i];
-        <* ASSERT (next > 0) AND (next >= prev) *>
-        IF (next > 0) AND (next # prev) THEN
-            array2[count] := next;
-            prev := next;
-            INC(count);
-        END;
-    END;
-    <* ASSERT count = NUMBER(array2^) *>
-    self.self.struct_sizes := array2;
-
-    (* last pass *)
-
-    self.Replay(self.self);
-END multipass_end_unit;
+END GetStructSizes;
 
 PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: Type; byte_size: ByteSize): M3CG.Var =
 BEGIN
     IF type = Type.Struct THEN
         <* ASSERT byte_size > 0 *>
         self.sizes[self.count] := byte_size;
+        self.max := MAX(self.max, byte_size);
         INC(self.count);
     END;
     RETURN NIL;
