@@ -23,7 +23,7 @@ METHODS
 END;
 
 (* vars and procs (and labels?); maximum count known ahead of time *)
-TYPE StaticRefs_t =  OBJECT
+TYPE StaticRefs_t = OBJECT
     data: REF ARRAY OF REFANY := NIL;
 METHODS
     Init(count: INTEGER): StaticRefs_t := StaticRefs_Init;
@@ -56,9 +56,9 @@ END StaticRefs_GetProc;
 REVEAL
 T = Public BRANDED "M3CG_MultiPass.T" OBJECT
     refs: GrowableRefs_t := NIL;
-    next_label_id := 1;
+    next_label_id := 100;
     op_counts := ARRAY Op OF INTEGER{0, ..};
-    (* total_ops: INTEGER := 0; *)
+    total_ops: INTEGER := 0;
     private_data: RefSeq.T := NIL;
 METHODS
     Add(a: op_t) := Add;
@@ -218,6 +218,7 @@ END Init;
 
 REVEAL Replay_t = BRANDED "M3CG_MultiPass.Replay_t" OBJECT
     refs: StaticRefs_t; (* vars and procs *)
+    reuse_refs := FALSE;
 METHODS
     Init(refcount: INTEGER): Replay_t := Replay_Init;
     PutRef(tag: INTEGER; ref: REFANY) := Replay_PutRef;
@@ -226,8 +227,14 @@ METHODS
 END;
 
 PROCEDURE Replay(self: T; cg: M3CG.T; data: REF ARRAY OF op_t := NIL) =
-VAR context := NEW(Replay_t).Init(self.refs.Size());
+VAR context: Replay_t := NIL;
 BEGIN
+    IF self.replay # NIL THEN
+        context := self.replay;
+        context.reuse_refs := self.reuse_refs;
+    ELSE
+        context := NEW(Replay_t).Init(self.refs.Size());
+    END;
     IF data = NIL THEN
         data := self.data;
     END;
@@ -235,11 +242,14 @@ BEGIN
         <* ASSERT data[i] # NIL *>
         data[i].replay(context, cg);
     END;
+    IF self.reuse_refs THEN
+        self.replay := context;
+    END;
 END Replay;
 
 PROCEDURE Add(self: T; a: op_t) =
 BEGIN
-    (* INC(self.total_ops); *)
+    INC(self.total_ops);
     INC(self.op_counts[a.op]);
     self.private_data.addhi(a);
 END Add;
@@ -248,7 +258,7 @@ PROCEDURE end_unit(self: T) =
 VAR opt: op_t;
     op: Op;
 BEGIN
-    self.Add(NEW(end_unit_t));
+    self.Add(NEW(end_unit_t, op := Op.end_unit));
     
     (* convert private_data into a sealed array of op_t
        and also form per-op arrays to optimize some small passes
@@ -306,7 +316,7 @@ PROCEDURE next_label(self: T; label_count: INTEGER := 1): Label =
 VAR label := self.next_label_id;
 BEGIN
     INC(self.next_label_id, label_count);
-    self.Add(NEW(next_label_t, label_count := label_count));
+    self.Add(NEW(next_label_t, op := Op.end_unit, label_count := label_count));
     RETURN label;
 END next_label;
 
@@ -362,7 +372,7 @@ END declare_temp;
 PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention): Proc =
 VAR proc := self.refs.NewProc();
 BEGIN
-self.Add(NEW(import_procedure_t, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, tag := proc.tag));
+self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, tag := proc.tag));
 RETURN proc;
 END import_procedure;
 
@@ -370,328 +380,328 @@ PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type:
 VAR proc := self.refs.NewProc();
     parent_tag := 0;
 BEGIN
-IF parent # NIL THEN
-    parent_tag := NARROW(parent, proc_t).tag;
-END;
-self.Add(NEW(declare_procedure_t, name := name, n_params := n_params, return_type := return_type, level := level,
-             callingConvention := callingConvention, exported := exported, parent := parent_tag, tag := proc.tag));
-RETURN proc;
+    IF parent # NIL THEN
+        parent_tag := NARROW(parent, proc_t).tag;
+    END;
+    self.Add(NEW(declare_procedure_t, op := Op.declare_procedure, name := name, n_params := n_params, return_type := return_type, level := level,
+                 callingConvention := callingConvention, exported := exported, parent := parent_tag, tag := proc.tag));
+    RETURN proc;
 END declare_procedure;
 
 PROCEDURE set_error_handler(self: T; proc: PROCEDURE(msg: TEXT)) =
 BEGIN
-self.Add(NEW(set_error_handler_t, proc := proc));
+self.Add(NEW(set_error_handler_t, (*op := Op.set_error_handler,*) proc := proc));
 END set_error_handler;
 
 PROCEDURE begin_procedure(self: T; proc: Proc) =
 BEGIN
-self.Add(NEW(begin_procedure_t, proc := NARROW(proc, proc_t).tag));
+self.Add(NEW(begin_procedure_t, op := Op.begin_procedure, proc := NARROW(proc, proc_t).tag));
 END begin_procedure;
 
 PROCEDURE end_procedure(self: T; proc: Proc) =
 BEGIN
-self.Add(NEW(end_procedure_t, proc := NARROW(proc, proc_t).tag));
+self.Add(NEW(end_procedure_t, op := Op.end_procedure, proc := NARROW(proc, proc_t).tag));
 END end_procedure;
 
 PROCEDURE begin_unit(self: T; optimize: INTEGER) =
 BEGIN
-self.Add(NEW(begin_unit_t, optimize := optimize));
+self.Add(NEW(begin_unit_t, op := Op.begin_unit, optimize := optimize));
 END begin_unit;
 
 PROCEDURE import_unit(self: T; name: Name) =
 BEGIN
-self.Add(NEW(import_unit_t, name := name));
+self.Add(NEW(import_unit_t, op := Op.import_unit, name := name));
 END import_unit;
 
 PROCEDURE export_unit(self: T; name: Name) = BEGIN
-self.Add(NEW(export_unit_t, name := name));
+self.Add(NEW(export_unit_t, op := Op.export_unit, name := name));
 END export_unit;
 
 PROCEDURE set_source_file(self: T; file: TEXT) =
 BEGIN
-self.Add(NEW(set_source_file_t, file := file));
+self.Add(NEW(set_source_file_t, op := Op.set_source_file, file := file));
 END set_source_file;
 
 PROCEDURE set_source_line(self: T; line: INTEGER) =
 BEGIN
-self.Add(NEW(set_source_line_t, line := line));
+self.Add(NEW(set_source_line_t, op := Op.set_source_line, line := line));
 END set_source_line;
 
 PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) =
 BEGIN
-self.Add(NEW(declare_typename_t, typeid := typeid, name := name));
+self.Add(NEW(declare_typename_t, op := Op.declare_typename, typeid := typeid, name := name));
 END declare_typename;
 
 PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
 BEGIN
-self.Add(NEW(declare_array_t, typeid := typeid, index_typeid := index_typeid, element_typeid := element_typeid, bit_size := bit_size));
+self.Add(NEW(declare_array_t, op := Op.declare_array, typeid := typeid, index_typeid := index_typeid, element_typeid := element_typeid, bit_size := bit_size));
 END declare_array;
 
 PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize) =
 BEGIN
-self.Add(NEW(declare_open_array_t, typeid := typeid, element_typeid := element_typeid, bit_size := bit_size));
+self.Add(NEW(declare_open_array_t, op := Op.declare_open_array, typeid := typeid, element_typeid := element_typeid, bit_size := bit_size));
 END declare_open_array;
 
 PROCEDURE declare_enum(self: T; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
 BEGIN
-self.Add(NEW(declare_enum_t, typeid := typeid, n_elts := n_elts, bit_size := bit_size));
+self.Add(NEW(declare_enum_t, op := Op.declare_enum, typeid := typeid, n_elts := n_elts, bit_size := bit_size));
 END declare_enum;
 
 PROCEDURE declare_enum_elt(self: T; name: Name) =
 BEGIN
-self.Add(NEW(declare_enum_elt_t, name := name));
+self.Add(NEW(declare_enum_elt_t, op := Op.declare_enum_elt, name := name));
 END declare_enum_elt;
 
 PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
 BEGIN
-self.Add(NEW(declare_packed_t, typeid := typeid, bit_size := bit_size, base := base));
+self.Add(NEW(declare_packed_t, op := Op.declare_packed, typeid := typeid, bit_size := bit_size, base := base));
 END declare_packed;
 
 PROCEDURE declare_record(self: T; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
 BEGIN
-self.Add(NEW(declare_record_t, typeid := typeid, bit_size := bit_size, n_fields := n_fields));
+self.Add(NEW(declare_record_t, op := Op.declare_record, typeid := typeid, bit_size := bit_size, n_fields := n_fields));
 END declare_record;
 
 PROCEDURE declare_field(self: T; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
 BEGIN
-self.Add(NEW(declare_field_t, name := name, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid));
+self.Add(NEW(declare_field_t, op := Op.declare_field, name := name, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid));
 END declare_field;
 
 PROCEDURE declare_set(self: T; typeid, domain_typeid: TypeUID; bit_size: BitSize) =
 BEGIN
-self.Add(NEW(declare_set_t, typeid := typeid, domain_typeid := domain_typeid, bit_size := bit_size));
+self.Add(NEW(declare_set_t, op := Op.declare_set, typeid := typeid, domain_typeid := domain_typeid, bit_size := bit_size));
 END declare_set;
 
 PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
 BEGIN
-self.Add(NEW(declare_subrange_t, typeid := typeid, domain_typeid := domain_typeid, min := min, max := max, bit_size := bit_size));
+self.Add(NEW(declare_subrange_t, op := Op.declare_subrange, typeid := typeid, domain_typeid := domain_typeid, min := min, max := max, bit_size := bit_size));
 END declare_subrange;
 
 PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) =
 BEGIN
-self.Add(NEW(declare_pointer_t, typeid := typeid, target_typeid := target_typeid, brand := brand, traced := traced));
+self.Add(NEW(declare_pointer_t, op := Op.declare_pointer, typeid := typeid, target_typeid := target_typeid, brand := brand, traced := traced));
 END declare_pointer;
 
 PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) =
 BEGIN
-self.Add(NEW(declare_indirect_t, typeid := typeid, target_typeid := target_typeid));
+self.Add(NEW(declare_indirect_t, op := Op.declare_indirect, typeid := typeid, target_typeid := target_typeid));
 END declare_indirect;
 
 PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
 BEGIN
-self.Add(NEW(declare_proctype_t, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention));
+self.Add(NEW(declare_proctype_t, op := Op.declare_proctype, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention));
 END declare_proctype;
 
 PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) =
 BEGIN
-self.Add(NEW(declare_formal_t, name := name, typeid := typeid));
+self.Add(NEW(declare_formal_t, op := Op.declare_formal, name := name, typeid := typeid));
 END declare_formal;
 
 PROCEDURE declare_raises(self: T; name: Name) =
 BEGIN
-self.Add(NEW(declare_raises_t, name := name));
+self.Add(NEW(declare_raises_t, op := Op.declare_raises, name := name));
 END declare_raises;
 
 PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize) =
 BEGIN
-self.Add(NEW(declare_object_t, typeid := typeid, super_typeid := super_typeid, brand := brand, traced := traced, n_fields := n_fields, n_methods := n_methods, fields_bit_size := fields_bit_size));
+self.Add(NEW(declare_object_t, op := Op.declare_raises, typeid := typeid, super_typeid := super_typeid, brand := brand, traced := traced, n_fields := n_fields, n_methods := n_methods, fields_bit_size := fields_bit_size));
 END declare_object;
 
 PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) =
 BEGIN
-self.Add(NEW(declare_method_t, name := name, signature := signature));
+self.Add(NEW(declare_method_t, op := Op.declare_method, name := name, signature := signature));
 END declare_method;
 
 PROCEDURE declare_opaque(self: T; typeid, super_typeid: TypeUID) =
 BEGIN
-self.Add(NEW(declare_opaque_t, typeid := typeid, super_typeid := super_typeid));
+self.Add(NEW(declare_opaque_t, op := Op.declare_opaque, typeid := typeid, super_typeid := super_typeid));
 END declare_opaque;
 
 PROCEDURE reveal_opaque(self: T; lhs_typeid, rhs_typeid: TypeUID) =
 BEGIN
-self.Add(NEW(reveal_opaque_t, lhs_typeid := lhs_typeid, rhs_typeid := rhs_typeid));
+self.Add(NEW(reveal_opaque_t, op := Op.reveal_opaque, lhs_typeid := lhs_typeid, rhs_typeid := rhs_typeid));
 END reveal_opaque;
 
 PROCEDURE declare_exception(self: T; name: Name; arg_typeid: TypeUID; raise_proc: BOOLEAN; base: Var; offset: INTEGER) =
 BEGIN
-self.Add(NEW(declare_exception_t, name := name, arg_typeid := arg_typeid, raise_proc := raise_proc, base := NARROW(base, var_t).tag, offset := offset));
+self.Add(NEW(declare_exception_t, op := Op.declare_exception, name := name, arg_typeid := arg_typeid, raise_proc := raise_proc, base := NARROW(base, var_t).tag, offset := offset));
 END declare_exception;
 
 PROCEDURE set_runtime_proc(self: T; name: Name; proc: Proc) =
 BEGIN
-self.Add(NEW(set_runtime_proc_t, name := name, proc := NARROW(proc, proc_t).tag));
+self.Add(NEW(set_runtime_proc_t, op := Op.set_runtime_proc, name := name, proc := NARROW(proc, proc_t).tag));
 END set_runtime_proc;
 
 PROCEDURE bind_segment(self: T; segment: Var; byte_size: ByteSize; alignment: Alignment; type: Type; exported, inited: BOOLEAN) =
 BEGIN
-self.Add(NEW(bind_segment_t, segment := NARROW(segment, var_t).tag, byte_size := byte_size, alignment := alignment, type := type, exported := exported, inited := inited));
+self.Add(NEW(bind_segment_t, op := Op.declare_segment, segment := NARROW(segment, var_t).tag, byte_size := byte_size, alignment := alignment, type := type, exported := exported, inited := inited));
 END bind_segment;
 
 PROCEDURE free_temp(self: T; var: Var) =
 BEGIN
-self.Add(NEW(free_temp_t, var := NARROW(var, var_t).tag));
+self.Add(NEW(free_temp_t, op := Op.free_temp, var := NARROW(var, var_t).tag));
 END free_temp;
 
 PROCEDURE begin_init(self: T; var: Var) =
 BEGIN
-self.Add(NEW(begin_init_t, var := NARROW(var, var_t).tag));
+self.Add(NEW(begin_init_t, op := Op.begin_init, var := NARROW(var, var_t).tag));
 END begin_init;
 
 PROCEDURE end_init(self: T; var: Var) =
 BEGIN
-self.Add(NEW(end_init_t, var := NARROW(var, var_t).tag));
+self.Add(NEW(end_init_t, op := Op.end_init, var := NARROW(var, var_t).tag));
 END end_init;
 
 PROCEDURE init_int(self: T; byte_offset: ByteOffset; READONLY int: Target.Int; type: Type) =
 BEGIN
-self.Add(NEW(init_int_t, byte_offset := byte_offset, int := int, type := type));
+self.Add(NEW(init_int_t, op := Op.init_int, byte_offset := byte_offset, int := int, type := type));
 END init_int;
 
 PROCEDURE init_proc(self: T; byte_offset: ByteOffset; proc: Proc) =
 BEGIN
-self.Add(NEW(init_proc_t, byte_offset := byte_offset, proc := NARROW(proc, proc_t).tag));
+self.Add(NEW(init_proc_t, op := Op.init_proc, byte_offset := byte_offset, proc := NARROW(proc, proc_t).tag));
 END init_proc;
 
 PROCEDURE init_label(self: T; byte_offset: ByteOffset; label: Label) =
 BEGIN
-self.Add(NEW(init_label_t, byte_offset := byte_offset, label := label));
+self.Add(NEW(init_label_t, op := Op.init_label, byte_offset := byte_offset, label := label));
 END init_label;
 
 PROCEDURE init_var(self: T; byte_offset: ByteOffset; var: Var; bias: ByteOffset) =
 BEGIN
-self.Add(NEW(init_var_t, byte_offset := byte_offset, var := NARROW(var, var_t).tag, bias := bias));
+self.Add(NEW(init_var_t, op := Op.init_var, byte_offset := byte_offset, var := NARROW(var, var_t).tag, bias := bias));
 END init_var;
 
 PROCEDURE init_offset(self: T; byte_offset: ByteOffset; var: Var) =
 BEGIN
-self.Add(NEW(init_offset_t, byte_offset := byte_offset, var := NARROW(var, var_t).tag));
+self.Add(NEW(init_offset_t, op := Op.init_offset, byte_offset := byte_offset, var := NARROW(var, var_t).tag));
 END init_offset;
 
 PROCEDURE init_chars(self: T; byte_offset: ByteOffset; text: TEXT) =
 BEGIN
-self.Add(NEW(init_chars_t, byte_offset := byte_offset, text := text));
+self.Add(NEW(init_chars_t, op := Op.init_chars, byte_offset := byte_offset, text := text));
 END init_chars;
 
 PROCEDURE init_float(self: T; byte_offset: ByteOffset; READONLY float: Target.Float) =
 BEGIN
-self.Add(NEW(init_float_t, byte_offset := byte_offset, float := float));
+self.Add(NEW(init_float_t, op := Op.init_float, byte_offset := byte_offset, float := float));
 END init_float;
 
 PROCEDURE begin_block(self: T) = BEGIN
-self.Add(NEW(begin_block_t));
+self.Add(NEW(begin_block_t, op := Op.begin_block));
 END begin_block;
 
 PROCEDURE end_block(self: T) = BEGIN
-self.Add(NEW(end_block_t));
+self.Add(NEW(end_block_t, op := Op.end_block));
 END end_block;
 
 PROCEDURE note_procedure_origin(self: T; proc: Proc) = BEGIN
-self.Add(NEW(note_procedure_origin_t, proc := NARROW(proc, proc_t).tag));
+self.Add(NEW(note_procedure_origin_t, op := Op.note_procedure_origin, proc := NARROW(proc, proc_t).tag));
 END note_procedure_origin;
 
 PROCEDURE set_label(self: T; label: Label; barrier: BOOLEAN) = BEGIN
-self.Add(NEW(set_label_t, label := label, barrier := barrier));
+self.Add(NEW(set_label_t, op := Op.set_label, label := label, barrier := barrier));
 END set_label;
 
 PROCEDURE jump(self: T; label: Label) =
 BEGIN
-self.Add(NEW(jump_t, label := label));
+self.Add(NEW(jump_t, op := Op.jump, label := label));
 END jump;
 
 PROCEDURE if_true(self: T; type: IType; label: Label; frequency: Frequency) =
 BEGIN
-self.Add(NEW(if_true_t, type := type, label := label, frequency := frequency));
+self.Add(NEW(if_true_t, op := Op.if_true, type := type, label := label, frequency := frequency));
 END if_true;
 
 PROCEDURE if_false(self: T; type: IType; label: Label; frequency: Frequency) =
 BEGIN
-self.Add(NEW(if_false_t, type := type, label := label, frequency := frequency));
+self.Add(NEW(if_false_t, op := Op.if_false, type := type, label := label, frequency := frequency));
 END if_false;
 
 PROCEDURE if_compare(self: T; type: ZType; op: CompareOp; label: Label; frequency: Frequency) = BEGIN
-self.Add(NEW(if_compare_t, type := type, compare_op := op, label := label, frequency := frequency));
+self.Add(NEW(if_compare_t, (*op := Op.if_compare,*) type := type, compare_op := op, label := label, frequency := frequency));
 END if_compare;
 
 PROCEDURE case_jump(self: T; type: IType; READONLY labels: ARRAY OF Label) =
 VAR a := NEW(REF ARRAY OF Label, NUMBER(labels));
 BEGIN
 a^ := labels;
-self.Add(NEW(case_jump_t, type := type, labels := a));
+self.Add(NEW(case_jump_t, op := Op.case_jump, type := type, labels := a));
 END case_jump;
 
 PROCEDURE exit_proc(self: T; type: Type) = BEGIN
-self.Add(NEW(exit_proc_t, type := type));
+self.Add(NEW(exit_proc_t, op := Op.exit_proc, type := type));
 END exit_proc;
 
 PROCEDURE load(self: T; var: Var; byte_offset: ByteOffset; mtype: MType; ztype: ZType) = BEGIN
-self.Add(NEW(load_t, var := NARROW(var, var_t).tag, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
+self.Add(NEW(load_t, op := Op.load, var := NARROW(var, var_t).tag, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
 END load;
 
 PROCEDURE store(self: T; var: Var; byte_offset: ByteOffset; ztype: ZType; mtype: MType) = BEGIN
-self.Add(NEW(store_t, var := NARROW(var, var_t).tag, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
+self.Add(NEW(store_t, op := Op.store, var := NARROW(var, var_t).tag, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
 END store;
 
 PROCEDURE load_address(self: T; var: Var; byte_offset: ByteOffset) = BEGIN
-self.Add(NEW(load_address_t, var := NARROW(var, var_t).tag, byte_offset := byte_offset));
+self.Add(NEW(load_address_t, op := Op.load_address, var := NARROW(var, var_t).tag, byte_offset := byte_offset));
 END load_address;
 
 PROCEDURE load_indirect(self: T; byte_offset: ByteOffset; mtype: MType; ztype: ZType) = BEGIN
-self.Add(NEW(load_indirect_t, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
+self.Add(NEW(load_indirect_t, op := Op.load_indirect, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
 END load_indirect;
 
 PROCEDURE store_indirect(self: T; byte_offset: ByteOffset; ztype: ZType; mtype: MType) = BEGIN
-self.Add(NEW(store_indirect_t, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
+self.Add(NEW(store_indirect_t, op := Op.store_indirect, byte_offset := byte_offset, mtype := mtype, ztype := ztype));
 END store_indirect;
 
 PROCEDURE load_nil(self: T) = BEGIN
-self.Add(NEW(load_nil_t));
+self.Add(NEW(load_nil_t, op := Op.load_nil));
 END load_nil;
 
 PROCEDURE load_integer(self: T; type: IType; READONLY int: Target.Int) = BEGIN
-self.Add(NEW(load_integer_t, type := type, int := int));
+self.Add(NEW(load_integer_t, op := Op.load_integer, type := type, int := int));
 END load_integer;
 
 PROCEDURE load_float(self: T; type: RType; READONLY float: Target.Float) = BEGIN
-self.Add(NEW(load_float_t, type := type, float := float));
+self.Add(NEW(load_float_t, op := Op.load_float, type := type, float := float));
 END load_float;
 
 PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) = BEGIN
-self.Add(NEW(compare_t, ztype := ztype, itype := itype, compare_op := op));
+self.Add(NEW(compare_t, (*op := Op.compare,*) ztype := ztype, itype := itype, compare_op := op));
 END compare;
 
 PROCEDURE add(self: T; type: AType) = BEGIN
-self.Add(NEW(add_t, type := type));
+self.Add(NEW(add_t, op := Op.add, type := type));
 END add;
 
 PROCEDURE subtract(self: T; type: AType) = BEGIN
-self.Add(NEW(subtract_t, type := type));
+self.Add(NEW(subtract_t, op := Op.subtract, type := type));
 END subtract;
 
 PROCEDURE multiply(self: T; type: AType) = BEGIN
-self.Add(NEW(multiply_t, type := type));
+self.Add(NEW(multiply_t, op := Op.multiply, type := type));
 END multiply;
 
 PROCEDURE divide(self: T; type: RType) = BEGIN
-self.Add(NEW(divide_t, type := type));
+self.Add(NEW(divide_t, op := Op.divide, type := type));
 END divide;
 
 PROCEDURE div(self: T; type: IType; a, b: Sign) = BEGIN
-self.Add(NEW(div_t, type := type, a := a, b := b));
+self.Add(NEW(div_t, op := Op.div, type := type, a := a, b := b));
 END div;
 
 PROCEDURE mod(self: T; type: IType; a, b: Sign) =
 BEGIN
-self.Add(NEW(mod_t, type := type, a := a, b := b));
+self.Add(NEW(mod_t, op := Op.mod, type := type, a := a, b := b));
 END mod;
 
 PROCEDURE negate(self: T; type: AType) =
 BEGIN
-self.Add(NEW(negate_t, type := type));
+self.Add(NEW(negate_t, op := Op.negate, type := type));
 END negate;
 
-PROCEDURE abs(self: T; type: AType) = BEGIN self.Add(NEW(abs_t, type := type)); END abs;
-PROCEDURE max(self: T; type: ZType) = BEGIN self.Add(NEW(max_t, type := type)); END max;
-PROCEDURE min(self: T; type: ZType) = BEGIN self.Add(NEW(min_t, type := type)); END min;
+PROCEDURE abs(self: T; type: AType) = BEGIN self.Add(NEW(abs_t, op := Op.abs, type := type)); END abs;
+PROCEDURE max(self: T; type: ZType) = BEGIN self.Add(NEW(max_t, op := Op.max, type := type)); END max;
+PROCEDURE min(self: T; type: ZType) = BEGIN self.Add(NEW(min_t, op := Op.min, type := type)); END min;
 
 PROCEDURE cvt_int(self: T; rtype: RType; itype: IType; op: ConvertOp) = BEGIN self.Add(NEW(cvt_int_t, rtype := rtype, itype := itype, convert_op := op)); END cvt_int;
 PROCEDURE cvt_float(self: T; atype: AType; rtype: RType) = BEGIN self.Add(NEW(cvt_float_t, atype := atype, rtype := rtype)); END cvt_float;
@@ -774,7 +784,9 @@ END Replay_Init;
 
 PROCEDURE Replay_PutRef(self: Replay_t; tag: INTEGER; ref: REFANY) =
 BEGIN
-    self.refs.data[tag] := ref;
+    IF self.reuse_refs = FALSE OR self.refs.data[tag] = NIL THEN
+        self.refs.data[tag] := ref;
+    END;
 END Replay_PutRef;
 
 PROCEDURE Replay_GetProc(self: Replay_t; ref: INTEGER): M3CG.Proc =
