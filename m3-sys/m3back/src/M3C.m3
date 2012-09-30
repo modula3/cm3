@@ -1,4 +1,4 @@
-UNSAFE MODULE M3C;
+MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort;
@@ -48,10 +48,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         stack  : TextSeq.T := NIL;
         params : TextSeq.T := NIL;
         
-        (* import_procedure, import_global happens both outside and inside procedurs;
-        When it happens inside, it presumed already imported in later ones.
-        Record them here for later repetition. Hack. *)
-        (* import_repeat : TextSeq.T := NIL;  hack *)
         enum_type: TEXT := NIL;
         extra_scope_close_braces := ""; (* hack to account for locals/temps within code *)
         last_char_was_open_brace := FALSE;
@@ -1100,7 +1096,6 @@ BEGIN
     self.initializer := NEW(TextSeq.T).init();
     self.stack := NEW(TextSeq.T).init();
     self.params := NEW(TextSeq.T).init();
-    (* self.import_repeat := NEW(TextSeq.T).init(); *)
 (*
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1188,7 +1183,7 @@ BEGIN
     (* forward declare functions/variables in this module and imports *)
     
     self.self.comment("begin forward declarations");
-    self.Replay(NEW(ForwardDeclarations_t).Init(self.self));
+    self.Replay(NEW(Imports_t).Init(self.self));
     self.self.comment("end forward declarations");
 
     (* last pass *)
@@ -1459,24 +1454,9 @@ BEGIN
     self.comment("import_global");
     declaration := "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";";
     <* ASSERT NOT self.in_proc *>
-    (*
-    IF self.in_proc THEN
-        self.import_repeat.addhi(declaration);
-        ExtraScope_Open(self);
-    END;
-    *)
     print(self, declaration);
     RETURN var;
 END import_global;
-
-PROCEDURE ForwardDeclarations_DeclareSegment(
-    self: ForwardDeclarations_t;
-    name: Name;
-    typeid: TypeUID;
-    const: BOOLEAN): M3CG.Var =
-BEGIN
-    RETURN declare_segment(self.self, name, typeid, const);
-END ForwardDeclarations_DeclareSegment;
 
 CONST ConstText = ARRAY BOOLEAN OF TEXT{"", " const "};
 
@@ -1579,48 +1559,34 @@ BEGIN
     self.extra_scope_close_braces := "";
 END ExtraScope_Close;
 
-TYPE ForwardDeclarations_t = M3CG_DoNothing.T BRANDED "M3C.ForwardDeclarations_t" OBJECT
+TYPE Imports_t = M3CG_DoNothing.T BRANDED "M3C.Imports_t" OBJECT
     self: T;
 METHODS
-    Init(outer: T): ForwardDeclarations_t := ForwardDeclarations_Init;
+    Init(outer: T): Imports_t := Imports_Init;
 OVERRIDES
-    import_procedure := ForwardDeclarations_ImportProcedure;
-    (*declare_procedure := ForwardDeclarations_DeclareProcedure;*)
-    declare_param := ForwardDeclarations_DeclareParam;
-    (*declare_local := ForwardDeclarations_DeclareLocal;*) (* BUG? Or just rename the pass? *)
-    (*declare_temp := ForwardDeclarations_DeclareTemp;*) (* BUG? Or just rename the pass? *)
-    (*declare_constant := ForwardDeclarations_DeclareConstant;*)
-    (*declare_global := ForwardDeclarations_DeclareGlobal;*)
-    (*declare_segment := ForwardDeclarations_DeclareSegment;*)
-    import_global := ForwardDeclarations_ImportGlobal;
-    (*begin_procedure := ForwardDeclarations_BeginProcedure;*)
-    (*end_procedure := ForwardDeclarations_EndProcedure;*)
+    import_procedure := Imports_ImportProcedure;
+    declare_param := Imports_DeclareParam;
+    import_global := Imports_ImportGlobal;
 END;
 
-PROCEDURE ForwardDeclarations_Init(self: ForwardDeclarations_t; outer: T): ForwardDeclarations_t =
+PROCEDURE Imports_Init(self: Imports_t; outer: T): Imports_t =
 BEGIN
     self.self := outer;
     RETURN self;
-END ForwardDeclarations_Init;
+END Imports_Init;
 
-PROCEDURE ForwardDeclarations_ImportProcedure(
-    self: ForwardDeclarations_t; name: Name; n_params: INTEGER;
-    return_type: Type; callingConvention: CallingConvention): M3CG.Proc =
+PROCEDURE Imports_ImportProcedure(
+    self: Imports_t;
+    name: Name;
+    n_params: INTEGER;
+    return_type: Type;
+    callingConvention: CallingConvention): M3CG.Proc =
 BEGIN
     RETURN import_procedure(self.self, name, n_params, return_type, callingConvention);
-END ForwardDeclarations_ImportProcedure;
+END Imports_ImportProcedure;
 
-PROCEDURE ForwardDeclarations_DeclareProcedure(
-    self: ForwardDeclarations_t; name: Name; n_params: INTEGER;
-    return_type: Type; level: INTEGER; callingConvention: CallingConvention;
-    exported: BOOLEAN; parent: M3CG.Proc): M3CG.Proc =
-BEGIN
-    RETURN declare_procedure(self.self, name, n_params, return_type, level,
-        callingConvention, exported, parent);
-END ForwardDeclarations_DeclareProcedure;
-
-PROCEDURE ForwardDeclarations_DeclareLocal(
-    self: ForwardDeclarations_t;
+PROCEDURE Imports_DeclareParam(
+    self: Imports_t;
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
@@ -1630,53 +1596,16 @@ PROCEDURE ForwardDeclarations_DeclareLocal(
     up_level: BOOLEAN;
     frequency: Frequency): M3CG.Var =
 BEGIN
-    RETURN declare_local(self.self, name, byte_size, alignment, type, typeid,
-        in_memory, up_level, frequency);
-END ForwardDeclarations_DeclareLocal;
-
-PROCEDURE ForwardDeclarations_DeclareTemp(
-    self: ForwardDeclarations_t;
-    byte_size: ByteSize;
-    alignment: Alignment;
-    type: Type;
-    in_memory:BOOLEAN): M3CG.Var =
-BEGIN
-    RETURN declare_temp(self.self, byte_size, alignment, type, in_memory);
-END ForwardDeclarations_DeclareTemp;
-
-PROCEDURE ForwardDeclarations_DeclareParam(
-    self: ForwardDeclarations_t; name: Name; byte_size: ByteSize;
-    alignment: Alignment; type: Type; typeid: TypeUID; in_memory: BOOLEAN;
-    up_level: BOOLEAN; frequency: Frequency): M3CG.Var =
-BEGIN
     RETURN declare_param(self.self, name, byte_size, alignment, type, typeid,
         in_memory, up_level, frequency);
-END ForwardDeclarations_DeclareParam;
+END Imports_DeclareParam;
 
-PROCEDURE ForwardDeclarations_DeclareConstant(
-    self: ForwardDeclarations_t; name: Name; byte_size: ByteSize;
-    alignment: Alignment; type: Type; typeid: TypeUID; exported: BOOLEAN;
-    inited: BOOLEAN): M3CG.Var =
-BEGIN
-    RETURN declare_constant(self.self, name, byte_size, alignment, type, typeid,
-        exported, inited);
-END ForwardDeclarations_DeclareConstant;
-
-PROCEDURE ForwardDeclarations_DeclareGlobal(
-    self: ForwardDeclarations_t; name: Name; byte_size: ByteSize;
-    alignment: Alignment; type: Type; typeid: TypeUID; exported: BOOLEAN;
-    inited: BOOLEAN): M3CG.Var =
-BEGIN
-    RETURN declare_global(self.self, name, byte_size, alignment, type, typeid,
-        exported, inited);
-END ForwardDeclarations_DeclareGlobal;
-
-PROCEDURE ForwardDeclarations_ImportGlobal(
-    self: ForwardDeclarations_t; name: Name; byte_size: ByteSize; 
+PROCEDURE Imports_ImportGlobal(
+    self: Imports_t; name: Name; byte_size: ByteSize; 
     alignment: Alignment; type: Type; typeid: TypeUID): M3CG.Var =
 BEGIN
     RETURN import_global(self.self, name, byte_size, alignment, type, typeid);
-END ForwardDeclarations_ImportGlobal;
+END Imports_ImportGlobal;
 
 TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
@@ -1945,12 +1874,6 @@ BEGIN
 
     prototype := function_prototype(self.param_proc, FunctionPrototype_t.Declare) & ";";
     <* ASSERT NOT self.in_proc *>
-    (*
-    IF self.in_proc THEN
-        self.import_repeat.addhi(prototype);
-        ExtraScope_Open(self);
-    END;
-    *)
     print(self, prototype);
     self.param_proc := NIL;
 END last_param;
@@ -2315,15 +2238,6 @@ BEGIN
     END;
 END begin_procedure;
 
-PROCEDURE ForwardDeclarations_BeginProcedure(self: ForwardDeclarations_t; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
-BEGIN
-    self.self.comment("ForwardDeclarations_BeginProcedure " & M3ID.ToText(proc.name));
-    <* ASSERT NOT self.self.in_proc *>
-    self.self.in_proc := TRUE;
-    self.self.current_proc := proc;
-END ForwardDeclarations_BeginProcedure;
-
 PROCEDURE end_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
 BEGIN
@@ -2331,19 +2245,7 @@ BEGIN
     self.in_proc := FALSE;
     print(self, "}");
     ExtraScope_Close(self);
-    (*
-    WHILE self.import_repeat.size() > 0 DO
-        print(self, self.import_repeat.remlo());
-    END;
-    *)
 END end_procedure;
-
-PROCEDURE ForwardDeclarations_EndProcedure(self: ForwardDeclarations_t; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
-BEGIN
-    self.self.comment("ForwardDeclarations_EndProcedure " & M3ID.ToText(proc.name));
-    self.self.in_proc := FALSE;
-END ForwardDeclarations_EndProcedure;
 
 PROCEDURE begin_block(self: T) =
 (* marks the beginning of a nested anonymous block *)
