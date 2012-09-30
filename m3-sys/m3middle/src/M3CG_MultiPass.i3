@@ -24,6 +24,10 @@ TYPE T <: Public;
 TYPE Public = M3CG.T OBJECT
     data: REF ARRAY OF op_t;
     op_data: ARRAY Op OF REF ARRAY OF op_t;
+    
+    (* parameter to Replay indicating to keep whatever vars/procs are first gotten, except NIL *)
+    reuse_refs := FALSE;
+    replay: Replay_t := NIL;
 METHODS
     Replay(cg: M3CG.T; data: REF ARRAY OF op_t := NIL);
     Init(): T;
@@ -55,6 +59,7 @@ TYPE declare_param_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignmen
 TYPE declare_temp_t = op_tag_t OBJECT byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; OVERRIDES replay := replay_declare_temp END;
 TYPE import_global_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; OVERRIDES replay := replay_import_global END;
 
+(* Do labels need translation? *)
 TYPE next_label_t = op_tag_t OBJECT label_count: INTEGER; OVERRIDES replay := replay_next_label END;
 
 TYPE set_error_handler_t = op_t OBJECT proc: PROCEDURE(msg: TEXT); OVERRIDES replay := replay_set_error_handler END;
