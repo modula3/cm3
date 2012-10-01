@@ -1,4 +1,4 @@
-INTERFACE LLVM;
+<*EXTERNAL*> INTERFACE LLVM;
 
 (*===-- llvm-c/Core.h - Core Library C Interface ------------------*- C -*-===*\
 |*                                                                            *|
@@ -350,12 +350,12 @@ TYPE LandingPadClauseTy = {
  * @}
  *)
 
-PROCEDURE InitializeCore(R: PassRegistryRef);
+PROCEDURE LLVMInitializeCore(R: PassRegistryRef);
 
 
 (*===-- Error handling ----------------------------------------------------===*)
 
-PROCEDURE DisposeMessage(Message: char_star);
+PROCEDURE LLVMDisposeMessage(Message: char_star);
 
 
 (**
@@ -376,12 +376,12 @@ PROCEDURE DisposeMessage(Message: char_star);
  * Every call to this function should be paired with a call to
  * LLVMContextDispose() or the context will leak memory.
  *)
-PROCEDURE ContextCreate(): ContextRef;
+PROCEDURE LLVMContextCreate(): ContextRef;
 
 (**
  * Obtain the global context instance.
  *)
-PROCEDURE GetGlobalContext(): ContextRef;
+PROCEDURE LLVMGetGlobalContext(): ContextRef;
 
 (**
  * Destroy a context instance.
@@ -389,11 +389,11 @@ PROCEDURE GetGlobalContext(): ContextRef;
  * This should be called for every call to LLVMContextCreate() or memory
  * will be leaked.
  *)
-PROCEDURE ContextDispose(C: ContextRef);
+PROCEDURE LLVMContextDispose(C: ContextRef);
 
-PROCEDURE GetMDKindIDInContext(
+PROCEDURE LLVMGetMDKindIDInContext(
     C: ContextRef; Name: const_char_star; SLen: unsigned): unsigned;
-PROCEDURE GetMDKindID(Name: const_char_star; SLen: unsigned): unsigned;
+PROCEDURE LLVMGetMDKindID(Name: const_char_star; SLen: unsigned): unsigned;
 
 (**
  * @}
@@ -418,7 +418,7 @@ PROCEDURE GetMDKindID(Name: const_char_star; SLen: unsigned): unsigned;
  * Every invocation should be paired with LLVMDisposeModule() or memory
  * will be leaked.
  *)
-PROCEDURE ModuleCreateWithName(ModuleID: const_char_star): ModuleRef;
+PROCEDURE LLVMModuleCreateWithName(ModuleID: const_char_star): ModuleRef;
 
 (**
  * Create a new, empty module in a specific context.
@@ -426,7 +426,7 @@ PROCEDURE ModuleCreateWithName(ModuleID: const_char_star): ModuleRef;
  * Every invocation should be paired with LLVMDisposeModule() or memory
  * will be leaked.
  *)
-PROCEDURE ModuleCreateWithNameInContext(
+PROCEDURE LLVMModuleCreateWithNameInContext(
     ModuleID: const_char_star; C: ContextRef): ModuleRef;
 
 (**
@@ -435,42 +435,42 @@ PROCEDURE ModuleCreateWithNameInContext(
  * This must be called for every created module or memory will be
  * leaked.
  *)
-PROCEDURE DisposeModule(M: ModuleRef);
+PROCEDURE LLVMDisposeModule(M: ModuleRef);
 
 (**
  * Obtain the data layout for a module.
  *
  * @see Module::getDataLayout()
  *)
-PROCEDURE GetDataLayout(M: ModuleRef): const_char_star;
+PROCEDURE LLVMGetDataLayout(M: ModuleRef): const_char_star;
 
 (**
  * Set the data layout for a module.
  *
  * @see Module::setDataLayout()
  *)
-PROCEDURE SetDataLayout(M: ModuleRef; Triple: const_char_star);
+PROCEDURE LLVMSetDataLayout(M: ModuleRef; Triple: const_char_star);
 
 (**
  * Obtain the target triple for a module.
  *
  * @see Module::getTargetTriple()
  *)
-PROCEDURE GetTarget(M: ModuleRef): const_char_star;
+PROCEDURE LLVMGetTarget(M: ModuleRef): const_char_star;
 
 (**
  * Set the target triple for a module.
  *
  * @see Module::setTargetTriple()
  *)
-PROCEDURE SetTarget(M: ModuleRef; Triple: const_char_star);
+PROCEDURE LLVMSetTarget(M: ModuleRef; Triple: const_char_star);
 
 (**
  * Dump a representation of a module to stderr.
  *
  * @see Module::dump()
  *)
-PROCEDURE DumpModule(M: ModuleRef);
+PROCEDURE LLVMDumpModule(M: ModuleRef);
 
 (**
  * Print a representation of a module to a file. The ErrorMessage needs to be
@@ -478,7 +478,7 @@ PROCEDURE DumpModule(M: ModuleRef);
  *
  * @see Module::print()
  *)
-PROCEDURE PrintModuleToFile(M: ModuleRef; Filename: const_char_star;
+PROCEDURE LLVMPrintModuleToFile(M: ModuleRef; Filename: const_char_star;
     ErrorMessage: char_star_star): Bool;
 
 (**
@@ -486,26 +486,26 @@ PROCEDURE PrintModuleToFile(M: ModuleRef; Filename: const_char_star;
  *
  * @see Module::setModuleInlineAsm()
  *)
-PROCEDURE SetModuleInlineAsm(M: ModuleRef; Asm: const_char_star);
+PROCEDURE LLVMSetModuleInlineAsm(M: ModuleRef; Asm: const_char_star);
 
 (**
  * Obtain the context to which this module is associated.
  *
  * @see Module::getContext()
  *)
-PROCEDURE GetModuleContext(M: ModuleRef): ContextRef;
+PROCEDURE LLVMGetModuleContext(M: ModuleRef): ContextRef;
 
 (**
  * Obtain a Type from a module by its registered name.
  *)
-PROCEDURE GetTypeByName(M: ModuleRef; Name: const_char_star): TypeRef;
+PROCEDURE LLVMGetTypeByName(M: ModuleRef; Name: const_char_star): TypeRef;
 
 (**
  * Obtain the number of operands for named metadata in a module.
  *
  * @see llvm::Module::getNamedMetadata()
  *)
-PROCEDURE GetNamedMetadataNumOperands(
+PROCEDURE LLVMGetNamedMetadataNumOperands(
     M: ModuleRef; name: const_char_star): unsigned;
 
 (**
@@ -519,7 +519,7 @@ PROCEDURE GetNamedMetadataNumOperands(
  * @see llvm::Module::getNamedMetadata()
  * @see llvm::MDNode::getOperand()
  *)
-PROCEDURE GetNamedMetadataOperands(
+PROCEDURE LLVMGetNamedMetadataOperands(
     M: ModuleRef; name: const_char_star; Dest: UNTRACED REF ValueRef);
 
 (**
@@ -528,7 +528,7 @@ PROCEDURE GetNamedMetadataOperands(
  * @see llvm::Module::getNamedMetadata()
  * @see llvm::MDNode::addOperand()
  *)
-PROCEDURE AddNamedMetadataOperand(M: ModuleRef; name: const_char_star;
+PROCEDURE LLVMAddNamedMetadataOperand(M: ModuleRef; name: const_char_star;
                                   Val: ValueRef);
 
 (**
@@ -536,7 +536,7 @@ PROCEDURE AddNamedMetadataOperand(M: ModuleRef; name: const_char_star;
  *
  * @see llvm::Function::Create()
  *)
-PROCEDURE AddFunction(M: ModuleRef; Name: const_char_star;
+PROCEDURE LLVMAddFunction(M: ModuleRef; Name: const_char_star;
                       FunctionTy: TypeRef): ValueRef;
 
 (**
@@ -546,21 +546,21 @@ PROCEDURE AddFunction(M: ModuleRef; Name: const_char_star;
  *
  * @see llvm::Module::getFunction()
  *)
-PROCEDURE GetNamedFunction(M: ModuleRef; Name: const_char_star): ValueRef;
+PROCEDURE LLVMGetNamedFunction(M: ModuleRef; Name: const_char_star): ValueRef;
 
 (**
  * Obtain an iterator to the first Function in a Module.
  *
  * @see llvm::Module::begin()
  *)
-PROCEDURE GetFirstFunction(M: ModuleRef): ValueRef;
+PROCEDURE LLVMGetFirstFunction(M: ModuleRef): ValueRef;
 
 (**
  * Obtain an iterator to the last Function in a Module.
  *
  * @see llvm::Module::end()
  *)
-PROCEDURE GetLastFunction(M: ModuleRef): ValueRef;
+PROCEDURE LLVMGetLastFunction(M: ModuleRef): ValueRef;
 
 (**
  * Advance a Function iterator to the next Function.
@@ -568,7 +568,7 @@ PROCEDURE GetLastFunction(M: ModuleRef): ValueRef;
  * Returns NULL if the iterator was already at the end and there are no more
  * functions.
  *)
-PROCEDURE GetNextFunction(Fn: ValueRef): ValueRef;
+PROCEDURE LLVMGetNextFunction(Fn: ValueRef): ValueRef;
 
 (**
  * Decrement a Function iterator to the previous Function.
@@ -576,7 +576,7 @@ PROCEDURE GetNextFunction(Fn: ValueRef): ValueRef;
  * Returns NULL if the iterator was already at the beginning and there are
  * no previous functions.
  *)
-PROCEDURE GetPreviousFunction(Fn: ValueRef): ValueRef;
+PROCEDURE LLVMGetPreviousFunction(Fn: ValueRef): ValueRef;
 
 (**
  * @}
@@ -616,7 +616,7 @@ PROCEDURE GetPreviousFunction(Fn: ValueRef): ValueRef;
  *
  * @see llvm::Type:getTypeID()
  *)
-PROCEDURE GetTypeKind(Ty: TypeRef): TypeKind;
+PROCEDURE LLVMGetTypeKind(Ty: TypeRef): TypeKind;
 
 (**
  * Whether the type has a known size.
@@ -625,14 +625,14 @@ PROCEDURE GetTypeKind(Ty: TypeRef): TypeKind;
  *
  * @see llvm::Type::isSized()
  *)
-PROCEDURE TypeIsSized(Ty: TypeRef): Bool;
+PROCEDURE LLVMTypeIsSized(Ty: TypeRef): Bool;
 
 (**
  * Obtain the context to which this type instance is associated.
  *
  * @see llvm::Type::getContext()
  *)
-PROCEDURE GetTypeContext(Ty: TypeRef): ContextRef;
+PROCEDURE LLVMGetTypeContext(Ty: TypeRef): ContextRef;
 
 (**
  * @defgroup LLVMCCoreTypeInt Integer Types
@@ -645,24 +645,24 @@ PROCEDURE GetTypeContext(Ty: TypeRef): ContextRef;
 (**
  * Obtain an integer type from a context with specified bit width.
  *)
-PROCEDURE Int1TypeInContext(C: ContextRef): TypeRef;
-PROCEDURE Int8TypeInContext(C: ContextRef): TypeRef;
-PROCEDURE Int16TypeInContext(C: ContextRef): TypeRef;
-PROCEDURE Int32TypeInContext(C: ContextRef): TypeRef;
-PROCEDURE Int64TypeInContext(C: ContextRef): TypeRef;
-PROCEDURE IntTypeInContext(C: ContextRef; NumBits: unsigned): TypeRef;
+PROCEDURE LLVMInt1TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMInt8TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMInt16TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMInt32TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMInt64TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMIntTypeInContext(C: ContextRef; NumBits: unsigned): TypeRef;
 
 (**
  * Obtain an integer type from the global context with a specified bit
  * width.
  *)
-PROCEDURE Int1Type(): TypeRef;
-PROCEDURE Int8Type(): TypeRef;
-PROCEDURE Int16Type(): TypeRef;
-PROCEDURE Int32Type(): TypeRef;
-PROCEDURE Int64Type(): TypeRef;
-PROCEDURE IntType(NumBits: unsigned): TypeRef;
-PROCEDURE GetIntTypeWidth(IntegerTy: TypeRef): unsigned;
+PROCEDURE LLVMInt1Type(): TypeRef;
+PROCEDURE LLVMInt8Type(): TypeRef;
+PROCEDURE LLVMInt16Type(): TypeRef;
+PROCEDURE LLVMInt32Type(): TypeRef;
+PROCEDURE LLVMInt64Type(): TypeRef;
+PROCEDURE LLVMIntType(NumBits: unsigned): TypeRef;
+PROCEDURE LLVMGetIntTypeWidth(IntegerTy: TypeRef): unsigned;
 
 (**
  * @}
@@ -677,45 +677,45 @@ PROCEDURE GetIntTypeWidth(IntegerTy: TypeRef): unsigned;
 (**
  * Obtain a 16-bit floating point type from a context.
  *)
-PROCEDURE HalfTypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMHalfTypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Obtain a 32-bit floating point type from a context.
  *)
-PROCEDURE FloatTypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMFloatTypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Obtain a 64-bit floating point type from a context.
  *)
-PROCEDURE DoubleTypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMDoubleTypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Obtain a 80-bit floating point type (X87) from a context.
  *)
-PROCEDURE X86FP80TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMX86FP80TypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Obtain a 128-bit floating point type (112-bit mantissa) from a
  * context.
  *)
-PROCEDURE FP128TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMFP128TypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Obtain a 128-bit floating point type (two 64-bits) from a context.
  *)
-PROCEDURE PPCFP128TypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMPPCFP128TypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Obtain a floating point type from the global context.
  *
  * These map to the functions in this group of the same name.
  *)
-PROCEDURE HalfType(): TypeRef;
-PROCEDURE FloatType(): TypeRef;
-PROCEDURE DoubleType(): TypeRef;
-PROCEDURE X86FP80Type(): TypeRef;
-PROCEDURE FP128Type(): TypeRef;
-PROCEDURE PPCFP128Type(): TypeRef;
+PROCEDURE LLVMHalfType(): TypeRef;
+PROCEDURE LLVMFloatType(): TypeRef;
+PROCEDURE LLVMDoubleType(): TypeRef;
+PROCEDURE LLVMX86FP80Type(): TypeRef;
+PROCEDURE LLVMFP128Type(): TypeRef;
+PROCEDURE LLVMPPCFP128Type(): TypeRef;
 
 (**
  * @}
@@ -733,24 +733,24 @@ PROCEDURE PPCFP128Type(): TypeRef;
  * The function is defined as a tuple of a return Type, a list of
  * parameter types, and whether the function is variadic.
  *)
-PROCEDURE FunctionType(ReturnType: TypeRef;
+PROCEDURE LLVMFunctionType(ReturnType: TypeRef;
                        ParamTypes: UNTRACED REF TypeRef; ParamCount: unsigned;
                        IsVarArg: Bool): TypeRef;
 
 (**
  * Returns whether a function type is variadic.
  *)
-PROCEDURE IsFunctionVarArg(FunctionTy: TypeRef): Bool;
+PROCEDURE LLVMIsFunctionVarArg(FunctionTy: TypeRef): Bool;
 
 (**
  * Obtain the Type this function Type returns.
  *)
-PROCEDURE GetReturnType(FunctionTy: TypeRef): TypeRef;
+PROCEDURE LLVMGetReturnType(FunctionTy: TypeRef): TypeRef;
 
 (**
  * Obtain the number of parameters this function accepts.
  *)
-PROCEDURE CountParamTypes(FunctionTy: TypeRef): unsigned;
+PROCEDURE LLVMCountParamTypes(FunctionTy: TypeRef): unsigned;
 
 (**
  * Obtain the types of a function's parameters.
@@ -763,7 +763,7 @@ PROCEDURE CountParamTypes(FunctionTy: TypeRef): unsigned;
  * @param FunctionTy The function type to operate on.
  * @param Dest Memory address of an array to be filled with result.
  *)
-PROCEDURE GetParamTypes(FunctionTy: TypeRef; Dest: UNTRACED REF TypeRef);
+PROCEDURE LLVMGetParamTypes(FunctionTy: TypeRef; Dest: UNTRACED REF TypeRef);
 
 (**
  * @}
@@ -787,7 +787,7 @@ PROCEDURE GetParamTypes(FunctionTy: TypeRef; Dest: UNTRACED REF TypeRef);
  *
  * @see llvm::StructType::create()
  *)
-PROCEDURE StructTypeInContext(C: ContextRef; ElementTypes: UNTRACED REF TypeRef;
+PROCEDURE LLVMStructTypeInContext(C: ContextRef; ElementTypes: UNTRACED REF TypeRef;
                               ElementCount: unsigned; Packed: Bool): TypeRef;
 
 (**
@@ -795,7 +795,7 @@ PROCEDURE StructTypeInContext(C: ContextRef; ElementTypes: UNTRACED REF TypeRef;
  *
  * @see llvm::StructType::create()
  *)
-PROCEDURE StructType(ElementTypes: UNTRACED REF TypeRef; ElementCount: unsigned;
+PROCEDURE LLVMStructType(ElementTypes: UNTRACED REF TypeRef; ElementCount: unsigned;
                      Packed: Bool): TypeRef;
 
 (**
@@ -803,21 +803,22 @@ PROCEDURE StructType(ElementTypes: UNTRACED REF TypeRef; ElementCount: unsigned;
  *
  * @see llvm::StructType::create()
  *)
-PROCEDURE StructCreateNamed(C: ContextRef; Name: const_char_star): TypeRef;
+PROCEDURE LLVMStructCreateNamed(C: ContextRef;
+                            Name: const_char_star := NIL): TypeRef;
 
 (**
  * Obtain the name of a structure.
  *
  * @see llvm::StructType::getName()
  *)
-PROCEDURE GetStructName(Ty: TypeRef): const_char_star;
+PROCEDURE LLVMGetStructName(Ty: TypeRef): const_char_star;
 
 (**
  * Set the contents of a structure type.
  *
  * @see llvm::StructType::setBody()
  *)
-PROCEDURE StructSetBody(StructTy: TypeRef; ElementTypes: UNTRACED REF TypeRef;
+PROCEDURE LLVMStructSetBody(StructTy: TypeRef; ElementTypes: UNTRACED REF TypeRef;
                         ElementCount: unsigned; Packed: Bool := FALSE);
 
 (**
@@ -825,7 +826,7 @@ PROCEDURE StructSetBody(StructTy: TypeRef; ElementTypes: UNTRACED REF TypeRef;
  *
  * @see llvm::StructType::getNumElements()
  *)
-PROCEDURE CountStructElementTypes(StructTy: TypeRef): unsigned;
+PROCEDURE LLVMCountStructElementTypes(StructTy: TypeRef): unsigned;
 
 (**
  * Get the elements within a structure.
@@ -837,21 +838,21 @@ PROCEDURE CountStructElementTypes(StructTy: TypeRef): unsigned;
  * of the structure type itself, which is the lifetime of the context it
  * is contained in.
  *)
-PROCEDURE GetStructElementTypes(StructTy: TypeRef; Dest: UNTRACED REF TypeRef);
+PROCEDURE LLVMGetStructElementTypes(StructTy: TypeRef; Dest: UNTRACED REF TypeRef);
 
 (**
  * Determine whether a structure is packed.
  *
  * @see llvm::StructType::isPacked()
  *)
-PROCEDURE IsPackedStruct(StructTy: TypeRef): Bool;
+PROCEDURE LLVMIsPackedStruct(StructTy: TypeRef): Bool;
 
 (**
  * Determine whether a structure is opaque.
  *
  * @see llvm::StructType::isOpaque()
  *)
-PROCEDURE IsOpaqueStruct(StructTy: TypeRef): Bool;
+PROCEDURE LLVMIsOpaqueStruct(StructTy: TypeRef): Bool;
 
 (**
  * @}
@@ -874,7 +875,7 @@ PROCEDURE IsOpaqueStruct(StructTy: TypeRef): Bool;
  *
  * @see llvm::SequentialType::getElementType()
  *)
-PROCEDURE GetElementType(Ty: TypeRef): TypeRef;
+PROCEDURE LLVMGetElementType(Ty: TypeRef): TypeRef;
 
 (**
  * Create a fixed size array type that refers to a specific type.
@@ -884,7 +885,7 @@ PROCEDURE GetElementType(Ty: TypeRef): TypeRef;
  *
  * @see llvm::ArrayType::get()
  *)
-PROCEDURE ArrayType(ElementType: TypeRef; ElementCount: unsigned): TypeRef;
+PROCEDURE LLVMArrayType(ElementType: TypeRef; ElementCount: unsigned): TypeRef;
 
 (**
  * Obtain the length of an array type.
@@ -893,7 +894,7 @@ PROCEDURE ArrayType(ElementType: TypeRef; ElementCount: unsigned): TypeRef;
  *
  * @see llvm::ArrayType::getNumElements()
  *)
-PROCEDURE GetArrayLength(ArrayTy: TypeRef): unsigned;
+PROCEDURE LLVMGetArrayLength(ArrayTy: TypeRef): unsigned;
 
 (**
  * Create a pointer type that points to a defined type.
@@ -903,7 +904,7 @@ PROCEDURE GetArrayLength(ArrayTy: TypeRef): unsigned;
  *
  * @see llvm::PointerType::get()
  *)
-PROCEDURE PointerType
+PROCEDURE LLVMPointerType
   (ElementType: TypeRef; AddressSpace: unsigned := 0): TypeRef;
 
 (**
@@ -913,7 +914,7 @@ PROCEDURE PointerType
  *
  * @see llvm::PointerType::getAddressSpace()
  *)
-PROCEDURE GetPointerAddressSpace(PointerTy: TypeRef): unsigned;
+PROCEDURE LLVMGetPointerAddressSpace(PointerTy: TypeRef): unsigned;
 
 (**
  * Create a vector type that contains a defined type and has a specific
@@ -924,7 +925,7 @@ PROCEDURE GetPointerAddressSpace(PointerTy: TypeRef): unsigned;
  *
  * @see llvm::VectorType::get()
  *)
-PROCEDURE VectorType(ElementType: TypeRef; ElementCount: unsigned): TypeRef;
+PROCEDURE LLVMVectorType(ElementType: TypeRef; ElementCount: unsigned): TypeRef;
 
 (**
  * Obtain the number of elements in a vector type.
@@ -933,7 +934,7 @@ PROCEDURE VectorType(ElementType: TypeRef; ElementCount: unsigned): TypeRef;
  *
  * @see llvm::VectorType::getNumElements()
  *)
-PROCEDURE GetVectorSize(VectorTy: TypeRef): unsigned;
+PROCEDURE LLVMGetVectorSize(VectorTy: TypeRef): unsigned;
 
 (**
  * @}
@@ -948,25 +949,25 @@ PROCEDURE GetVectorSize(VectorTy: TypeRef): unsigned;
 (**
  * Create a void type in a context.
  *)
-PROCEDURE VoidTypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMVoidTypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Create a label type in a context.
  *)
-PROCEDURE LabelTypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMLabelTypeInContext(C: ContextRef): TypeRef;
 
 (**
  * Create a X86 MMX type in a context.
  *)
-PROCEDURE X86MMXTypeInContext(C: ContextRef): TypeRef;
+PROCEDURE LLVMX86MMXTypeInContext(C: ContextRef): TypeRef;
 
 (**
  * These are similar to the above functions except they operate on the
  * global context.
  *)
-PROCEDURE VoidType(): TypeRef;
-PROCEDURE LabelType(): TypeRef;
-PROCEDURE X86MMXType(): TypeRef;
+PROCEDURE LLVMVoidType(): TypeRef;
+PROCEDURE LLVMLabelType(): TypeRef;
+PROCEDURE LLVMX86MMXType(): TypeRef;
 
 (**
  * @}
@@ -991,45 +992,45 @@ PROCEDURE X86MMXType(): TypeRef;
  *
  * @see llvm::Value::getType()
  *)
-PROCEDURE TypeOf(Val: ValueRef): TypeRef;
+PROCEDURE LLVMTypeOf(Val: ValueRef): TypeRef;
 
 (**
  * Obtain the string name of a value.
  *
  * @see llvm::Value::getName()
  *)
-PROCEDURE GetValueName(Val: ValueRef): const_char_star;
+PROCEDURE LLVMGetValueName(Val: ValueRef): const_char_star;
 
 (**
  * Set the string name of a value.
  *
  * @see llvm::Value::setName()
  *)
-PROCEDURE SetValueName(Val: ValueRef; Name: const_char_star);
+PROCEDURE LLVMSetValueName(Val: ValueRef; Name: const_char_star);
 
 (**
  * Dump a representation of a value to stderr.
  *
  * @see llvm::Value::dump()
  *)
-PROCEDURE DumpValue(Val: ValueRef);
+PROCEDURE LLVMDumpValue(Val: ValueRef);
 
 (**
  * Replace all uses of a value with another one.
  *
  * @see llvm::Value::replaceAllUsesWith()
  *)
-PROCEDURE ReplaceAllUsesWith(OldVal: ValueRef; NewVal: ValueRef);
+PROCEDURE LLVMReplaceAllUsesWith(OldVal: ValueRef; NewVal: ValueRef);
 
 (**
  * Determine whether the specified constant instance is constant.
  *)
-PROCEDURE IsConstant(Val: ValueRef): Bool;
+PROCEDURE LLVMIsConstant(Val: ValueRef): Bool;
 
 (**
  * Determine whether a value instance is undefined.
  *)
-PROCEDURE IsUndef(Val: ValueRef): Bool;
+PROCEDURE LLVMIsUndef(Val: ValueRef): Bool;
 
 (**
  * @}
@@ -1058,7 +1059,7 @@ PROCEDURE IsUndef(Val: ValueRef): Bool;
  *
  * @see llvm::Value::use_begin()
  *)
-PROCEDURE GetFirstUse(Val: ValueRef): UseRef;
+PROCEDURE LLVMGetFirstUse(Val: ValueRef): UseRef;
 
 (**
  * Obtain the next use of a value.
@@ -1066,7 +1067,7 @@ PROCEDURE GetFirstUse(Val: ValueRef): UseRef;
  * This effectively advances the iterator. It returns NULL if you are on
  * the final use and no more are available.
  *)
-PROCEDURE GetNextUse(U: UseRef): UseRef;
+PROCEDURE LLVMGetNextUse(U: UseRef): UseRef;
 
 (**
  * Obtain the user value for a use.
@@ -1075,14 +1076,14 @@ PROCEDURE GetNextUse(U: UseRef): UseRef;
  *
  * @see llvm::Use::getUser()
  *)
-PROCEDURE GetUser(U: UseRef): ValueRef;
+PROCEDURE LLVMGetUser(U: UseRef): ValueRef;
 
 (**
  * Obtain the value this use corresponds to.
  *
  * @see llvm::Use::get().
  *)
-PROCEDURE GetUsedValue(U: UseRef): ValueRef;
+PROCEDURE LLVMGetUsedValue(U: UseRef): ValueRef;
 
 (**
  * @}
@@ -1103,21 +1104,21 @@ PROCEDURE GetUsedValue(U: UseRef): ValueRef;
  *
  * @see llvm::User::getOperand()
  *)
-PROCEDURE GetOperand(Val: ValueRef; Index: unsigned): ValueRef;
+PROCEDURE LLVMGetOperand(Val: ValueRef; Index: unsigned): ValueRef;
 
 (**
  * Set an operand at a specific index in a llvm::User value.
  *
  * @see llvm::User::setOperand()
  *)
-PROCEDURE SetOperand(User: ValueRef; Index: unsigned; Val: ValueRef);
+PROCEDURE LLVMSetOperand(User: ValueRef; Index: unsigned; Val: ValueRef);
 
 (**
  * Obtain the number of operands in a llvm::User value.
  *
  * @see llvm::User::getNumOperands()
  *)
-PROCEDURE GetNumOperands(Val: ValueRef): int;
+PROCEDURE LLVMGetNumOperands(Val: ValueRef): int;
 
 (**
  * @}
@@ -1140,7 +1141,7 @@ PROCEDURE GetNumOperands(Val: ValueRef): int;
  *
  * @see llvm::Constant::getNullValue()
  *)
-PROCEDURE ConstNull(Ty: TypeRef): ValueRef; (* all zeroes *)
+PROCEDURE LLVMConstNull(Ty: TypeRef): ValueRef; (* all zeroes *)
 
 (**
  * Obtain a constant value referring to the instance of a type
@@ -1150,27 +1151,27 @@ PROCEDURE ConstNull(Ty: TypeRef): ValueRef; (* all zeroes *)
  *
  * @see llvm::Constant::getAllOnesValue()
  *)
-PROCEDURE ConstAllOnes(Ty: TypeRef): ValueRef;
+PROCEDURE LLVMConstAllOnes(Ty: TypeRef): ValueRef;
 
 (**
  * Obtain a constant value referring to an undefined value of a type.
  *
  * @see llvm::UndefValue::get()
  *)
-PROCEDURE GetUndef(Ty: TypeRef): ValueRef;
+PROCEDURE LLVMGetUndef(Ty: TypeRef): ValueRef;
 
 (**
  * Determine whether a value instance is null.
  *
  * @see llvm::Constant::isNullValue()
  *)
-PROCEDURE IsNull(Val: ValueRef): Bool;
+PROCEDURE LLVMIsNull(Val: ValueRef): Bool;
 
 (**
  * Obtain a constant that is a constant pointer pointing to NULL for a
  * specified type.
  *)
-PROCEDURE ConstPointerNull(Ty: TypeRef): ValueRef;
+PROCEDURE LLVMConstPointerNull(Ty: TypeRef): ValueRef;
 
 (**
  * @defgroup LLVMCCoreValueConstantScalar Scalar constants
@@ -1199,7 +1200,7 @@ PROCEDURE ConstPointerNull(Ty: TypeRef): ValueRef;
  * @param N The value the returned instance should refer to.
  * @param SignExtend Whether to sign extend the produced value.
  *)
-PROCEDURE ConstInt(IntTy: TypeRef; N: unsigned_long_long;
+PROCEDURE LLVMConstInt(IntTy: TypeRef; N: unsigned_long_long;
                    SignExtend: Bool): ValueRef;
 
 (**
@@ -1207,7 +1208,7 @@ PROCEDURE ConstInt(IntTy: TypeRef; N: unsigned_long_long;
  *
  * @see llvm::ConstantInt::get()
  *)
-PROCEDURE ConstIntOfArbitraryPrecision(IntTy: TypeRef;
+PROCEDURE LLVMConstIntOfArbitraryPrecision(IntTy: TypeRef;
                                        NumWords: unsigned;
                                        Words: UNTRACED REF uint64_t): ValueRef;
 
@@ -1220,7 +1221,7 @@ PROCEDURE ConstIntOfArbitraryPrecision(IntTy: TypeRef;
  *
  * @see llvm::ConstantInt::get()
  *)
-PROCEDURE ConstIntOfString(IntTy: TypeRef; Text: const_char_star;
+PROCEDURE LLVMConstIntOfString(IntTy: TypeRef; Text: const_char_star;
                            Radix: uint8_t): ValueRef;
 
 (**
@@ -1229,13 +1230,13 @@ PROCEDURE ConstIntOfString(IntTy: TypeRef; Text: const_char_star;
  *
  * @see llvm::ConstantInt::get()
  *)
-PROCEDURE ConstIntOfStringAndSize(IntTy: TypeRef; Text: const_char_star;
+PROCEDURE LLVMConstIntOfStringAndSize(IntTy: TypeRef; Text: const_char_star;
                                   SLen: unsigned; Radix: uint8_t): ValueRef;
 
 (**
  * Obtain a constant value referring to a double floating point value.
  *)
-PROCEDURE ConstReal(RealTy: TypeRef; N: double): ValueRef;
+PROCEDURE LLVMConstReal(RealTy: TypeRef; N: double): ValueRef;
 
 (**
  * Obtain a constant for a floating point value parsed from a string.
@@ -1243,12 +1244,12 @@ PROCEDURE ConstReal(RealTy: TypeRef; N: double): ValueRef;
  * A similar API, LLVMConstRealOfStringAndSize is also available. It
  * should be used if the input string's length is known.
  *)
-PROCEDURE ConstRealOfString(RealTy: TypeRef; Text: const_char_star): ValueRef;
+PROCEDURE LLVMConstRealOfString(RealTy: TypeRef; Text: const_char_star): ValueRef;
 
 (**
  * Obtain a constant for a floating point value parsed from a string.
  *)
-PROCEDURE ConstRealOfStringAndSize(RealTy: TypeRef; Text: const_char_star;
+PROCEDURE LLVMConstRealOfStringAndSize(RealTy: TypeRef; Text: const_char_star;
                                    SLen: unsigned): ValueRef;
 
 (**
@@ -1256,14 +1257,14 @@ PROCEDURE ConstRealOfStringAndSize(RealTy: TypeRef; Text: const_char_star;
  *
  * @see llvm::ConstantInt::getZExtValue()
  *)
-PROCEDURE ConstIntGetZExtValue(ConstantVal: ValueRef): unsigned_long_long;
+PROCEDURE LLVMConstIntGetZExtValue(ConstantVal: ValueRef): unsigned_long_long;
 
 (**
  * Obtain the sign extended value for an integer constant value.
  *
  * @see llvm::ConstantInt::getSExtValue()
  *)
-PROCEDURE ConstIntGetSExtValue(ConstantVal: ValueRef): long_long;
+PROCEDURE LLVMConstIntGetSExtValue(ConstantVal: ValueRef): long_long;
 
 (**
  * @}
@@ -1282,7 +1283,7 @@ PROCEDURE ConstIntGetSExtValue(ConstantVal: ValueRef): long_long;
  *
  * @see llvm::ConstantDataArray::getString()
  *)
-PROCEDURE ConstStringInContext(C: ContextRef; Str: const_char_star;
+PROCEDURE LLVMConstStringInContext(C: ContextRef; Str: const_char_star;
                                Length: unsigned;
                                DontNullTerminate: Bool): ValueRef;
 
@@ -1295,7 +1296,7 @@ PROCEDURE ConstStringInContext(C: ContextRef; Str: const_char_star;
  * @see LLVMConstStringInContext()
  * @see llvm::ConstantDataArray::getString()
  *)
-PROCEDURE ConstString(Str: const_char_star; Length: unsigned;
+PROCEDURE LLVMConstString(Str: const_char_star; Length: unsigned;
                       DontNullTerminate: Bool): ValueRef;
 
 (**
@@ -1303,7 +1304,7 @@ PROCEDURE ConstString(Str: const_char_star; Length: unsigned;
  *
  * @see llvm::ConstantStruct::getAnon()
  *)
-PROCEDURE ConstStructInContext(C: ContextRef;
+PROCEDURE LLVMConstStructInContext(C: ContextRef;
                                ConstantVals: UNTRACED REF ValueRef;
                                Count: unsigned; Packed: Bool): ValueRef;
 
@@ -1315,7 +1316,7 @@ PROCEDURE ConstStructInContext(C: ContextRef;
  *
  * @see LLVMConstStructInContext()
  *)
-PROCEDURE ConstStruct(ConstantVals: UNTRACED REF ValueRef;
+PROCEDURE LLVMConstStruct(ConstantVals: UNTRACED REF ValueRef;
                       Count: unsigned; Packed: Bool): ValueRef;
 
 (**
@@ -1323,7 +1324,7 @@ PROCEDURE ConstStruct(ConstantVals: UNTRACED REF ValueRef;
  *
  * @see llvm::ConstantArray::get()
  *)
-PROCEDURE ConstArray(ElementTy: TypeRef;
+PROCEDURE LLVMConstArray(ElementTy: TypeRef;
                      ConstantVals: UNTRACED REF ValueRef;
                      Length: unsigned): ValueRef;
 
@@ -1332,7 +1333,7 @@ PROCEDURE ConstArray(ElementTy: TypeRef;
  *
  * @see llvm::ConstantStruct::get()
  *)
-PROCEDURE ConstNamedStruct(StructTy: TypeRef;
+PROCEDURE LLVMConstNamedStruct(StructTy: TypeRef;
                            ConstantVals: UNTRACED REF ValueRef;
                            Count: unsigned): ValueRef;
 
@@ -1341,7 +1342,7 @@ PROCEDURE ConstNamedStruct(StructTy: TypeRef;
  *
  * @see llvm::ConstantVector::get()
  *)
-PROCEDURE ConstVector(ScalarConstantVals: UNTRACED REF ValueRef;
+PROCEDURE LLVMConstVector(ScalarConstantVals: UNTRACED REF ValueRef;
                       Size: unsigned): ValueRef;
 
 (**
@@ -1357,89 +1358,89 @@ PROCEDURE ConstVector(ScalarConstantVals: UNTRACED REF ValueRef;
  *
  * @{
  *)
-PROCEDURE GetConstOpcode(ConstantVal: ValueRef): Opcode;
-PROCEDURE AlignOf(Ty: TypeRef): ValueRef;
-PROCEDURE SizeOf(Ty: TypeRef): ValueRef;
-PROCEDURE ConstNeg(ConstantVal: ValueRef): ValueRef;
-PROCEDURE ConstNSWNeg(ConstantVal: ValueRef): ValueRef;
-PROCEDURE ConstNUWNeg(ConstantVal: ValueRef): ValueRef;
-PROCEDURE ConstFNeg(ConstantVal: ValueRef): ValueRef;
-PROCEDURE ConstNot(ConstantVal: ValueRef): ValueRef;
-PROCEDURE ConstAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstNSWAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstNUWAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstFAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstNSWSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstNUWSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstFSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstNSWMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstNUWMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstFMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstUDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstSDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstExactSDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstFDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstURem(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstSRem(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstFRem(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstAnd(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstOr(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstXor(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstICmp(Predicate: IntPredicate;
+PROCEDURE LLVMGetConstOpcode(ConstantVal: ValueRef): Opcode;
+PROCEDURE LLVMAlignOf(Ty: TypeRef): ValueRef;
+PROCEDURE LLVMSizeOf(Ty: TypeRef): ValueRef;
+PROCEDURE LLVMConstNeg(ConstantVal: ValueRef): ValueRef;
+PROCEDURE LLVMConstNSWNeg(ConstantVal: ValueRef): ValueRef;
+PROCEDURE LLVMConstNUWNeg(ConstantVal: ValueRef): ValueRef;
+PROCEDURE LLVMConstFNeg(ConstantVal: ValueRef): ValueRef;
+PROCEDURE LLVMConstNot(ConstantVal: ValueRef): ValueRef;
+PROCEDURE LLVMConstAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstNSWAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstNUWAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstFAdd(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstNSWSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstNUWSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstFSub(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstNSWMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstNUWMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstFMul(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstUDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstSDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstExactSDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstFDiv(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstURem(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstSRem(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstFRem(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstAnd(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstOr(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstXor(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstICmp(Predicate: IntPredicate;
                     LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstFCmp(Predicate: RealPredicate;
+PROCEDURE LLVMConstFCmp(Predicate: RealPredicate;
                     LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstShl(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstLShr(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstAShr(LHSConstant, RHSConstant: ValueRef): ValueRef;
-PROCEDURE ConstGEP(ConstantVal: ValueRef;
+PROCEDURE LLVMConstShl(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstLShr(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstAShr(LHSConstant, RHSConstant: ValueRef): ValueRef;
+PROCEDURE LLVMConstGEP(ConstantVal: ValueRef;
                    ConstantIndices: UNTRACED REF ValueRef;
                    NumIndices: unsigned): ValueRef;
-PROCEDURE ConstInBoundsGEP(ConstantVal: ValueRef;
+PROCEDURE LLVMConstInBoundsGEP(ConstantVal: ValueRef;
                            ConstantIndices: UNTRACED REF ValueRef;
                            NumIndices: unsigned): ValueRef;
-PROCEDURE ConstTrunc(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstSExt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstZExt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstFPTrunc(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstFPExt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstUIToFP(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstSIToFP(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstFPToUI(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstFPToSI(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstPtrToInt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstIntToPtr(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstZExtOrBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstSExtOrBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstTruncOrBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstPointerCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstIntCast(ConstantVal: ValueRef; ToType: TypeRef;
+PROCEDURE LLVMConstTrunc(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstSExt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstZExt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstFPTrunc(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstFPExt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstUIToFP(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstSIToFP(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstFPToUI(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstFPToSI(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstPtrToInt(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstIntToPtr(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstZExtOrBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstSExtOrBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstTruncOrBitCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstPointerCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstIntCast(ConstantVal: ValueRef; ToType: TypeRef;
                        isSigned: Bool): ValueRef;
-PROCEDURE ConstFPCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
-PROCEDURE ConstSelect(ConstantCondition: ValueRef;
+PROCEDURE LLVMConstFPCast(ConstantVal: ValueRef; ToType: TypeRef): ValueRef;
+PROCEDURE LLVMConstSelect(ConstantCondition: ValueRef;
                       ConstantIfTrue: ValueRef;
                       ConstantIfFalse: ValueRef): ValueRef;
-PROCEDURE ConstExtractElement(VectorConstant: ValueRef;
+PROCEDURE LLVMConstExtractElement(VectorConstant: ValueRef;
                               IndexConstant: ValueRef): ValueRef;
-PROCEDURE ConstInsertElement(VectorConstant: ValueRef;
+PROCEDURE LLVMConstInsertElement(VectorConstant: ValueRef;
                              ElementValueConstant: ValueRef;
                              IndexConstant: ValueRef): ValueRef;
-PROCEDURE ConstShuffleVector(VectorAconstant, VectorBConstant: ValueRef;
+PROCEDURE LLVMConstShuffleVector(VectorAconstant, VectorBConstant: ValueRef;
                              MaskConstant: ValueRef): ValueRef;
-PROCEDURE ConstExtractValue(AggConstant: ValueRef;
+PROCEDURE LLVMConstExtractValue(AggConstant: ValueRef;
                             IdxList: UNTRACED REF unsigned;
                             NumIdx: unsigned): ValueRef;
-PROCEDURE ConstInsertValue(AggConstant: ValueRef;
+PROCEDURE LLVMConstInsertValue(AggConstant: ValueRef;
                            ElementValueConstant: ValueRef;
                            IdxList: UNTRACED REF unsigned;
                            NumIdx: unsigned): ValueRef;
-PROCEDURE ConstInlineAsm(Ty: TypeRef;
+PROCEDURE LLVMConstInlineAsm(Ty: TypeRef;
                          AsmString, Constraints: const_char_star;
                          HasSideEffects, IsAlignStack: Bool): ValueRef;
-PROCEDURE BlockAddress(F: ValueRef; BB: BasicBlockRef): ValueRef;
+PROCEDURE LLVMBlockAddress(F: ValueRef; BB: BasicBlockRef): ValueRef;
 
 (**
  * @}
@@ -1456,16 +1457,16 @@ PROCEDURE BlockAddress(F: ValueRef; BB: BasicBlockRef): ValueRef;
  * @{
  *)
 
-PROCEDURE GetGlobalParent(Global: ValueRef): ModuleRef;
-PROCEDURE IsDeclaration(Global: ValueRef): Bool;
-PROCEDURE GetLinkage(Global: ValueRef): Linkage;
-PROCEDURE SetLinkage(Global: ValueRef; Linkage: Linkage);
-PROCEDURE GetSection(Global: ValueRef): const_char_star;
-PROCEDURE SetSection(Global: ValueRef; Section: const_char_star);
-PROCEDURE GetVisibility(Global: ValueRef): Visibility;
-PROCEDURE SetVisibility(Global: ValueRef; Viz: Visibility);
-PROCEDURE GetAlignment(Global: ValueRef): unsigned;
-PROCEDURE SetAlignment(Global: ValueRef; Bytes: unsigned);
+PROCEDURE LLVMGetGlobalParent(Global: ValueRef): ModuleRef;
+PROCEDURE LLVMIsDeclaration(Global: ValueRef): Bool;
+PROCEDURE LLVMGetLinkage(Global: ValueRef): Linkage;
+PROCEDURE LLVMSetLinkage(Global: ValueRef; Linkage: Linkage);
+PROCEDURE LLVMGetSection(Global: ValueRef): const_char_star;
+PROCEDURE LLVMSetSection(Global: ValueRef; Section: const_char_star);
+PROCEDURE LLVMGetVisibility(Global: ValueRef): Visibility;
+PROCEDURE LLVMSetVisibility(Global: ValueRef; Viz: Visibility);
+PROCEDURE LLVMGetAlignment(Global: ValueRef): unsigned;
+PROCEDURE LLVMSetAlignment(Global: ValueRef; Bytes: unsigned);
 
 (**
  * @defgroup LLVMCoreValueConstantGlobalVariable Global Variables
@@ -1476,22 +1477,22 @@ PROCEDURE SetAlignment(Global: ValueRef; Bytes: unsigned);
  *
  * @{
  *)
-PROCEDURE AddGlobal(M: ModuleRef; Ty: TypeRef; Name: const_char_star): ValueRef;
-PROCEDURE AddGlobalInAddressSpace(M: ModuleRef; Ty: TypeRef;
+PROCEDURE LLVMAddGlobal(M: ModuleRef; Ty: TypeRef; Name: const_char_star): ValueRef;
+PROCEDURE LLVMAddGlobalInAddressSpace(M: ModuleRef; Ty: TypeRef;
                                   Name: const_char_star;
                                   AddressSpace: unsigned): ValueRef;
-PROCEDURE GetNamedGlobal(M: ModuleRef; Name: const_char_star): ValueRef;
-PROCEDURE GetFirstGlobal(M: ModuleRef): ValueRef;
-PROCEDURE GetLastGlobal(M: ModuleRef): ValueRef;
-PROCEDURE GetNextGlobal(GlobalVar: ValueRef): ValueRef;
-PROCEDURE GetPreviousGlobal(GlobalVar: ValueRef): ValueRef;
-PROCEDURE DeleteGlobal(GlobalVar: ValueRef);
-PROCEDURE GetInitializer(GlobalVar: ValueRef): ValueRef;
-PROCEDURE SetInitializer(GlobalVar: ValueRef; ConstantVal: ValueRef);
-PROCEDURE IsThreadLocal(GlobalVar: ValueRef): Bool;
-PROCEDURE SetThreadLocal(GlobalVar: ValueRef; IsThreadLocal: Bool);
-PROCEDURE IsGlobalConstant(GlobalVar: ValueRef): Bool;
-PROCEDURE SetGlobalConstant(GlobalVar: ValueRef; IsConstant: Bool);
+PROCEDURE LLVMGetNamedGlobal(M: ModuleRef; Name: const_char_star): ValueRef;
+PROCEDURE LLVMGetFirstGlobal(M: ModuleRef): ValueRef;
+PROCEDURE LLVMGetLastGlobal(M: ModuleRef): ValueRef;
+PROCEDURE LLVMGetNextGlobal(GlobalVar: ValueRef): ValueRef;
+PROCEDURE LLVMGetPreviousGlobal(GlobalVar: ValueRef): ValueRef;
+PROCEDURE LLVMDeleteGlobal(GlobalVar: ValueRef);
+PROCEDURE LLVMGetInitializer(GlobalVar: ValueRef): ValueRef;
+PROCEDURE LLVMSetInitializer(GlobalVar: ValueRef; ConstantVal: ValueRef);
+PROCEDURE LLVMIsThreadLocal(GlobalVar: ValueRef): Bool;
+PROCEDURE LLVMSetThreadLocal(GlobalVar: ValueRef; IsThreadLocal: Bool);
+PROCEDURE LLVMIsGlobalConstant(GlobalVar: ValueRef): Bool;
+PROCEDURE LLVMSetGlobalConstant(GlobalVar: ValueRef; IsConstant: Bool);
 
 (**
  * @}
@@ -1506,7 +1507,7 @@ PROCEDURE SetGlobalConstant(GlobalVar: ValueRef; IsConstant: Bool);
  *
  * @{
  *)
-PROCEDURE AddAlias(M: ModuleRef; Ty: TypeRef; Aliasee: ValueRef;
+PROCEDURE LLVMAddAlias(M: ModuleRef; Ty: TypeRef; Aliasee: ValueRef;
                    Name: const_char_star): ValueRef;
 
 (**
@@ -1529,14 +1530,14 @@ PROCEDURE AddAlias(M: ModuleRef; Ty: TypeRef; Aliasee: ValueRef;
  *
  * @see llvm::Function::eraseFromParent()
  *)
-PROCEDURE DeleteFunction(Fn: ValueRef);
+PROCEDURE LLVMDeleteFunction(Fn: ValueRef);
 
 (**
  * Obtain the ID number from a function instance.
  *
  * @see llvm::Function::getIntrinsicID()
  *)
-PROCEDURE GetIntrinsicID(Fn: ValueRef): unsigned;
+PROCEDURE LLVMGetIntrinsicID(Fn: ValueRef): unsigned;
 
 (**
  * Obtain the calling function of a function.
@@ -1545,7 +1546,7 @@ PROCEDURE GetIntrinsicID(Fn: ValueRef): unsigned;
  *
  * @see llvm::Function::getCallingConv()
  *)
-PROCEDURE GetFunctionCallConv(Fn: ValueRef): unsigned;
+PROCEDURE LLVMGetFunctionCallConv(Fn: ValueRef): unsigned;
 
 (**
  * Set the calling convention of a function.
@@ -1555,7 +1556,7 @@ PROCEDURE GetFunctionCallConv(Fn: ValueRef): unsigned;
  * @param Fn Function to operate on
  * @param CC LLVMCallConv to set calling convention to
  *)
-PROCEDURE SetFunctionCallConv(Fn: ValueRef; CC: unsigned);
+PROCEDURE LLVMSetFunctionCallConv(Fn: ValueRef; CC: unsigned);
 
 (**
  * Obtain the name of the garbage collector to use during code
@@ -1563,33 +1564,33 @@ PROCEDURE SetFunctionCallConv(Fn: ValueRef; CC: unsigned);
  *
  * @see llvm::Function::getGC()
  *)
-PROCEDURE GetGC(Fn: ValueRef): const_char_star;
+PROCEDURE LLVMGetGC(Fn: ValueRef): const_char_star;
 
 (**
  * Define the garbage collector to use during code generation.
  *
  * @see llvm::Function::setGC()
  *)
-PROCEDURE SetGC(Fn: ValueRef; Name: const_char_star);
+PROCEDURE LLVMSetGC(Fn: ValueRef; Name: const_char_star);
 
 (**
  * Add an attribute to a function.
  *
  * @see llvm::Function::addAttribute()
  *)
-PROCEDURE AddFunctionAttr(Fn: ValueRef; PA: Attribute);
+PROCEDURE LLVMAddFunctionAttr(Fn: ValueRef; PA: Attribute);
 
 (**
  * Obtain an attribute from a function.
  *
  * @see llvm::Function::getAttributes()
  *)
-PROCEDURE GetFunctionAttr(Fn: ValueRef): Attribute;
+PROCEDURE LLVMGetFunctionAttr(Fn: ValueRef): Attribute;
 
 (**
  * Remove an attribute from a function.
  *)
-PROCEDURE RemoveFunctionAttr(Fn: ValueRef; PA: Attribute);
+PROCEDURE LLVMRemoveFunctionAttr(Fn: ValueRef; PA: Attribute);
 
 (**
  * @defgroup LLVMCCoreValueFunctionParameters Function Parameters
@@ -1607,7 +1608,7 @@ PROCEDURE RemoveFunctionAttr(Fn: ValueRef; PA: Attribute);
  *
  * @see llvm::Function::arg_size()
  *)
-PROCEDURE CountParams(Fn: ValueRef): unsigned;
+PROCEDURE LLVMCountParams(Fn: ValueRef): unsigned;
 
 (**
  * Obtain the parameters in a function.
@@ -1620,7 +1621,7 @@ PROCEDURE CountParams(Fn: ValueRef): unsigned;
  *
  * @see llvm::Function::arg_begin()
  *)
-PROCEDURE GetParams(Fn: ValueRef; Params: UNTRACED REF ValueRef);
+PROCEDURE LLVMGetParams(Fn: ValueRef; Params: UNTRACED REF ValueRef);
 
 (**
  * Obtain the parameter at the specified index.
@@ -1629,7 +1630,7 @@ PROCEDURE GetParams(Fn: ValueRef; Params: UNTRACED REF ValueRef);
  *
  * @see llvm::Function::arg_begin()
  *)
-PROCEDURE GetParam(Fn: ValueRef; Index: unsigned): ValueRef;
+PROCEDURE LLVMGetParam(Fn: ValueRef; Index: unsigned): ValueRef;
 
 (**
  * Obtain the function to which this argument belongs.
@@ -1640,21 +1641,21 @@ PROCEDURE GetParam(Fn: ValueRef; Index: unsigned): ValueRef;
  * The returned LLVMValueRef is the llvm::Function to which this
  * argument belongs.
  *)
-PROCEDURE GetParamParent(Inst: ValueRef): ValueRef;
+PROCEDURE LLVMGetParamParent(Inst: ValueRef): ValueRef;
 
 (**
  * Obtain the first parameter to a function.
  *
  * @see llvm::Function::arg_begin()
  *)
-PROCEDURE GetFirstParam(Fn: ValueRef): ValueRef;
+PROCEDURE LLVMGetFirstParam(Fn: ValueRef): ValueRef;
 
 (**
  * Obtain the last parameter to a function.
  *
  * @see llvm::Function::arg_end()
  *)
-PROCEDURE GetLastParam(Fn: ValueRef): ValueRef;
+PROCEDURE LLVMGetLastParam(Fn: ValueRef): ValueRef;
 
 (**
  * Obtain the next parameter to a function.
@@ -1663,33 +1664,33 @@ PROCEDURE GetLastParam(Fn: ValueRef): ValueRef;
  * actually a wrapped iterator) and obtains the next parameter from the
  * underlying iterator.
  *)
-PROCEDURE GetNextParam(Arg: ValueRef): ValueRef;
+PROCEDURE LLVMGetNextParam(Arg: ValueRef): ValueRef;
 
 (**
  * Obtain the previous parameter to a function.
  *
  * This is the opposite of LLVMGetNextParam().
  *)
-PROCEDURE GetPreviousParam(Arg: ValueRef): ValueRef;
+PROCEDURE LLVMGetPreviousParam(Arg: ValueRef): ValueRef;
 
 (**
  * Add an attribute to a function argument.
  *
  * @see llvm::Argument::addAttr()
  *)
-PROCEDURE AddAttribute(Arg: ValueRef; PA: Attribute);
+PROCEDURE LLVMAddAttribute(Arg: ValueRef; PA: Attribute);
 
 (**
  * Remove an attribute from a function argument.
  *
  * @see llvm::Argument::removeAttr()
  *)
-PROCEDURE RemoveAttribute(Arg: ValueRef; PA: Attribute);
+PROCEDURE LLVMRemoveAttribute(Arg: ValueRef; PA: Attribute);
 
 (**
  * Get an attribute from a function argument.
  *)
-PROCEDURE GetAttribute(Arg: ValueRef): Attribute;
+PROCEDURE LLVMGetAttribute(Arg: ValueRef): Attribute;
 
 (**
  * Set the alignment for a function parameter.
@@ -1697,7 +1698,7 @@ PROCEDURE GetAttribute(Arg: ValueRef): Attribute;
  * @see llvm::Argument::addAttr()
  * @see llvm::Attribute::constructAlignmentFromInt()
  *)
-PROCEDURE SetParamAlignment(Arg: ValueRef; align: unsigned);
+PROCEDURE LLVMSetParamAlignment(Arg: ValueRef; align: unsigned);
 
 (**
  * @}
@@ -1730,26 +1731,26 @@ PROCEDURE SetParamAlignment(Arg: ValueRef; align: unsigned);
  * string content is copied, so the backing memory can be freed after
  * this function returns.
  *)
-PROCEDURE StringInContext(C: ContextRef; Str: const_char_star;
+PROCEDURE LLVMStringInContext(C: ContextRef; Str: const_char_star;
                           SLen: unsigned): ValueRef;
 
 (**
  * Obtain a MDString value from the global context.
  *)
-PROCEDURE MDString(Str: const_char_star; SLen: unsigned): ValueRef;
+PROCEDURE LLVMMDString(Str: const_char_star; SLen: unsigned): ValueRef;
 
 (**
  * Obtain a MDNode value from a context.
  *
  * The returned value corresponds to the llvm::MDNode class.
  *)
-PROCEDURE MDNodeInContext(C: ContextRef; Vals: UNTRACED REF ValueRef;
+PROCEDURE LLVMMDNodeInContext(C: ContextRef; Vals: UNTRACED REF ValueRef;
                           Count: unsigned): ValueRef;
 
 (**
  * Obtain a MDNode value from the global context.
  *)
-PROCEDURE MDNode(Vals: UNTRACED REF ValueRef; Count: unsigned): ValueRef;
+PROCEDURE LLVMMDNode(Vals: UNTRACED REF ValueRef; Count: unsigned): ValueRef;
 
 (**
  * Obtain the underlying string from a MDString value.
@@ -1758,7 +1759,7 @@ PROCEDURE MDNode(Vals: UNTRACED REF ValueRef; Count: unsigned): ValueRef;
  * @param Len Memory address which will hold length of returned string.
  * @return String data in MDString.
  *)
-PROCEDURE GetMDString(V: ValueRef; VAR Len: unsigned): const_char_star;
+PROCEDURE LLVMGetMDString(V: ValueRef; VAR Len: unsigned): const_char_star;
 
 (**
  * @}
@@ -1784,24 +1785,24 @@ PROCEDURE GetMDString(V: ValueRef; VAR Len: unsigned): const_char_star;
 (**
  * Convert a basic block instance to a value type.
  *)
-PROCEDURE BasicBlockAsValue(BB: BasicBlockRef): ValueRef;
+PROCEDURE LLVMBasicBlockAsValue(BB: BasicBlockRef): ValueRef;
 
 (**
  * Determine whether a LLVMValueRef is itself a basic block.
  *)
-PROCEDURE IsBasicBlock(Val: ValueRef): Bool;
+PROCEDURE LLVMIsBasicBlock(Val: ValueRef): Bool;
 
 (**
  * Convert a LLVMValueRef to a LLVMBasicBlockRef instance.
  *)
-PROCEDURE ValueAsBasicBlock(Val: ValueRef): BasicBlockRef;
+PROCEDURE LLVMValueAsBasicBlock(Val: ValueRef): BasicBlockRef;
 
 (**
  * Obtain the function to which a basic block belongs.
  *
  * @see llvm::BasicBlock::getParent()
  *)
-PROCEDURE GetBasicBlockParent(BB: BasicBlockRef): ValueRef;
+PROCEDURE LLVMGetBasicBlockParent(BB: BasicBlockRef): ValueRef;
 
 (**
  * Obtain the terminator instruction for a basic block.
@@ -1813,14 +1814,14 @@ PROCEDURE GetBasicBlockParent(BB: BasicBlockRef): ValueRef;
  *
  * @see llvm::BasicBlock::getTerminator()
  *)
-PROCEDURE GetBasicBlockTerminator(BB: BasicBlockRef): ValueRef;
+PROCEDURE LLVMGetBasicBlockTerminator(BB: BasicBlockRef): ValueRef;
 
 (**
  * Obtain the number of basic blocks in a function.
  *
  * @param Fn Function value to operate on.
  *)
-PROCEDURE CountBasicBlocks(Fn: ValueRef): unsigned;
+PROCEDURE LLVMCountBasicBlocks(Fn: ValueRef): unsigned;
 
 (**
  * Obtain all of the basic blocks in a function.
@@ -1830,7 +1831,7 @@ PROCEDURE CountBasicBlocks(Fn: ValueRef): unsigned;
  * LLVMCountBasicBlocks() in length. This array is populated with
  * LLVMBasicBlockRef instances.
  *)
-PROCEDURE GetBasicBlocks(Fn: ValueRef; BasicBlocks: UNTRACED REF BasicBlockRef);
+PROCEDURE LLVMGetBasicBlocks(Fn: ValueRef; BasicBlocks: UNTRACED REF BasicBlockRef);
 
 (**
  * Obtain the first basic block in a function.
@@ -1840,24 +1841,24 @@ PROCEDURE GetBasicBlocks(Fn: ValueRef; BasicBlocks: UNTRACED REF BasicBlockRef);
  *
  * @see llvm::Function::begin()
  *)
-PROCEDURE GetFirstBasicBlock(Fn: ValueRef): BasicBlockRef;
+PROCEDURE LLVMGetFirstBasicBlock(Fn: ValueRef): BasicBlockRef;
 
 (**
  * Obtain the last basic block in a function.
  *
  * @see llvm::Function::end()
  *)
-PROCEDURE GetLastBasicBlock(Fn: ValueRef): BasicBlockRef;
+PROCEDURE LLVMGetLastBasicBlock(Fn: ValueRef): BasicBlockRef;
 
 (**
  * Advance a basic block iterator.
  *)
-PROCEDURE GetNextBasicBlock(BB: BasicBlockRef): BasicBlockRef;
+PROCEDURE LLVMGetNextBasicBlock(BB: BasicBlockRef): BasicBlockRef;
 
 (**
  * Go backwards in a basic block iterator.
  *)
-PROCEDURE GetPreviousBasicBlock(BB: BasicBlockRef): BasicBlockRef;
+PROCEDURE LLVMGetPreviousBasicBlock(BB: BasicBlockRef): BasicBlockRef;
 
 (**
  * Obtain the basic block that corresponds to the entry point of a
@@ -1865,14 +1866,14 @@ PROCEDURE GetPreviousBasicBlock(BB: BasicBlockRef): BasicBlockRef;
  *
  * @see llvm::Function::getEntryBlock()
  *)
-PROCEDURE GetEntryBasicBlock(Fn: ValueRef): BasicBlockRef;
+PROCEDURE LLVMGetEntryBasicBlock(Fn: ValueRef): BasicBlockRef;
 
 (**
  * Append a basic block to the end of a function.
  *
  * @see llvm::BasicBlock::Create()
  *)
-PROCEDURE AppendBasicBlockInContext(C: ContextRef;
+PROCEDURE LLVMAppendBasicBlockInContext(C: ContextRef;
                                     Fn: ValueRef;
                                     Name: const_char_star): BasicBlockRef;
 
@@ -1882,7 +1883,7 @@ PROCEDURE AppendBasicBlockInContext(C: ContextRef;
  *
  * @see llvm::BasicBlock::Create()
  *)
-PROCEDURE AppendBasicBlock(Fn: ValueRef; Name: const_char_star): BasicBlockRef;
+PROCEDURE LLVMAppendBasicBlock(Fn: ValueRef; Name: const_char_star): BasicBlockRef;
 
 (**
  * Insert a basic block in a function before another basic block.
@@ -1892,7 +1893,7 @@ PROCEDURE AppendBasicBlock(Fn: ValueRef; Name: const_char_star): BasicBlockRef;
  *
  * @see llvm::BasicBlock::Create()
  *)
-PROCEDURE InsertBasicBlockInContext(C: ContextRef;
+PROCEDURE LLVMInsertBasicBlockInContext(C: ContextRef;
                                     BB: BasicBlockRef;
                                     Name: const_char_star): BasicBlockRef;
 
@@ -1901,7 +1902,7 @@ PROCEDURE InsertBasicBlockInContext(C: ContextRef;
  *
  * @see llvm::BasicBlock::Create()
  *)
-PROCEDURE InsertBasicBlock(InsertBeforeBB: BasicBlockRef;
+PROCEDURE LLVMInsertBasicBlock(InsertBeforeBB: BasicBlockRef;
                            Name: const_char_star): BasicBlockRef;
 
 (**
@@ -1912,7 +1913,7 @@ PROCEDURE InsertBasicBlock(InsertBeforeBB: BasicBlockRef;
  *
  * @see llvm::BasicBlock::eraseFromParent()
  *)
-PROCEDURE DeleteBasicBlock(BB: BasicBlockRef);
+PROCEDURE LLVMDeleteBasicBlock(BB: BasicBlockRef);
 
 (**
  * Remove a basic block from a function.
@@ -1922,21 +1923,21 @@ PROCEDURE DeleteBasicBlock(BB: BasicBlockRef);
  *
  * @see llvm::BasicBlock::removeFromParent()
  *)
-PROCEDURE RemoveBasicBlockFromParent(BB: BasicBlockRef);
+PROCEDURE LLVMRemoveBasicBlockFromParent(BB: BasicBlockRef);
 
 (**
  * Move a basic block to before another one.
  *
  * @see llvm::BasicBlock::moveBefore()
  *)
-PROCEDURE MoveBasicBlockBefore(BB, MovePos: BasicBlockRef);
+PROCEDURE LLVMMoveBasicBlockBefore(BB, MovePos: BasicBlockRef);
 
 (**
  * Move a basic block to after another one.
  *
  * @see llvm::BasicBlock::moveAfter()
  *)
-PROCEDURE MoveBasicBlockAfter(BB, MovePos: BasicBlockRef);
+PROCEDURE LLVMMoveBasicBlockAfter(BB, MovePos: BasicBlockRef);
 
 (**
  * Obtain the first instruction in a basic block.
@@ -1944,14 +1945,14 @@ PROCEDURE MoveBasicBlockAfter(BB, MovePos: BasicBlockRef);
  * The returned LLVMValueRef corresponds to a llvm::Instruction
  * instance.
  *)
-PROCEDURE GetFirstInstruction(BB: BasicBlockRef): ValueRef;
+PROCEDURE LLVMGetFirstInstruction(BB: BasicBlockRef): ValueRef;
 
 (**
  * Obtain the last instruction in a basic block.
  *
  * The returned LLVMValueRef corresponds to a LLVM:Instruction.
  *)
-PROCEDURE GetLastInstruction(BB: BasicBlockRef): ValueRef;
+PROCEDURE LLVMGetLastInstruction(BB: BasicBlockRef): ValueRef;
 
 (**
  * @}
@@ -1977,24 +1978,24 @@ PROCEDURE GetLastInstruction(BB: BasicBlockRef): ValueRef;
 (**
  * Determine whether an instruction has any metadata attached.
  *)
-PROCEDURE HasMetadata(Val: ValueRef): int;
+PROCEDURE LLVMHasMetadata(Val: ValueRef): int;
 
 (**
  * Return metadata associated with an instruction value.
  *)
-PROCEDURE GetMetadata(Val: ValueRef; KindID: unsigned): ValueRef;
+PROCEDURE LLVMGetMetadata(Val: ValueRef; KindID: unsigned): ValueRef;
 
 (**
  * Set metadata associated with an instruction value.
  *)
-PROCEDURE SetMetadata(Val: ValueRef; KindID: unsigned; Node: ValueRef);
+PROCEDURE LLVMSetMetadata(Val: ValueRef; KindID: unsigned; Node: ValueRef);
 
 (**
  * Obtain the basic block to which an instruction belongs.
  *
  * @see llvm::Instruction::getParent()
  *)
-PROCEDURE GetInstructionParent(Inst: ValueRef): BasicBlockRef;
+PROCEDURE LLVMGetInstructionParent(Inst: ValueRef): BasicBlockRef;
 
 (**
  * Obtain the instruction that occurs after the one specified.
@@ -2004,7 +2005,7 @@ PROCEDURE GetInstructionParent(Inst: ValueRef): BasicBlockRef;
  * If this is the last instruction in a basic block, NULL will be
  * returned.
  *)
-PROCEDURE GetNextInstruction(Inst: ValueRef): ValueRef;
+PROCEDURE LLVMGetNextInstruction(Inst: ValueRef): ValueRef;
 
 (**
  * Obtain the instruction that occurred before this one.
@@ -2012,7 +2013,7 @@ PROCEDURE GetNextInstruction(Inst: ValueRef): ValueRef;
  * If the instruction is the first instruction in a basic block, NULL
  * will be returned.
  *)
-PROCEDURE GetPreviousInstruction(Inst: ValueRef): ValueRef;
+PROCEDURE LLVMGetPreviousInstruction(Inst: ValueRef): ValueRef;
 
 (**
  * Remove and delete an instruction.
@@ -2022,14 +2023,14 @@ PROCEDURE GetPreviousInstruction(Inst: ValueRef): ValueRef;
  *
  * @see llvm::Instruction::eraseFromParent()
  *)
-PROCEDURE InstructionEraseFromParent(Inst: ValueRef);
+PROCEDURE LLVMInstructionEraseFromParent(Inst: ValueRef);
 
 (**
  * Obtain the code opcode for an individual instruction.
  *
  * @see llvm::Instruction::getOpCode()
  *)
-PROCEDURE GetInstructionOpcode(Inst: ValueRef): Opcode;
+PROCEDURE LLVMGetInstructionOpcode(Inst: ValueRef): Opcode;
 
 (**
  * Obtain the predicate of an instruction.
@@ -2039,7 +2040,7 @@ PROCEDURE GetInstructionOpcode(Inst: ValueRef): Opcode;
  *
  * @see llvm::ICmpInst::getPredicate()
  *)
-PROCEDURE GetICmpPredicate(Inst: ValueRef): IntPredicate;
+PROCEDURE LLVMGetICmpPredicate(Inst: ValueRef): IntPredicate;
 
 (**
  * @defgroup LLVMCCoreValueInstructionCall Call Sites and Invocations
@@ -2060,7 +2061,7 @@ PROCEDURE GetICmpPredicate(Inst: ValueRef): IntPredicate;
  * @see llvm::CallInst::setCallingConv()
  * @see llvm::InvokeInst::setCallingConv()
  *)
-PROCEDURE SetInstructionCallConv(Instr: ValueRef; CC: unsigned);
+PROCEDURE LLVMSetInstructionCallConv(Instr: ValueRef; CC: unsigned);
 
 (**
  * Obtain the calling convention for a call instruction.
@@ -2070,12 +2071,12 @@ PROCEDURE SetInstructionCallConv(Instr: ValueRef; CC: unsigned);
  *
  * @see LLVMSetInstructionCallConv()
  *)
-PROCEDURE GetInstructionCallConv(Instr: ValueRef): unsigned;
+PROCEDURE LLVMGetInstructionCallConv(Instr: ValueRef): unsigned;
 
 
-PROCEDURE AddInstrAttribute(Instr: ValueRef; index: unsigned; PA: Attribute);
-PROCEDURE RemoveInstrAttribute(Instr: ValueRef; index: unsigned; PA: Attribute);
-PROCEDURE SetInstrParamAlignment(Instr: ValueRef; index, align: unsigned);
+PROCEDURE LLVMAddInstrAttribute(Instr: ValueRef; index: unsigned; PA: Attribute);
+PROCEDURE LLVMRemoveInstrAttribute(Instr: ValueRef; index: unsigned; PA: Attribute);
+PROCEDURE LLVMSetInstrParamAlignment(Instr: ValueRef; index, align: unsigned);
 
 (**
  * Obtain whether a call instruction is a tail call.
@@ -2084,7 +2085,7 @@ PROCEDURE SetInstrParamAlignment(Instr: ValueRef; index, align: unsigned);
  *
  * @see llvm::CallInst::isTailCall()
  *)
-PROCEDURE IsTailCall(CallInst: ValueRef): Bool;
+PROCEDURE LLVMIsTailCall(CallInst: ValueRef): Bool;
 
 (**
  * Set whether a call instruction is a tail call.
@@ -2093,7 +2094,7 @@ PROCEDURE IsTailCall(CallInst: ValueRef): Bool;
  *
  * @see llvm::CallInst::setTailCall()
  *)
-PROCEDURE SetTailCall(CallInst: ValueRef; IsTailCall: Bool);
+PROCEDURE LLVMSetTailCall(CallInst: ValueRef; IsTailCall: Bool);
 
 (**
  * @}
@@ -2106,7 +2107,7 @@ PROCEDURE SetTailCall(CallInst: ValueRef; IsTailCall: Bool);
  *
  * @see llvm::SwitchInst::getDefaultDest()
  *)
-PROCEDURE GetSwitchDefaultDest(SwitchInstr: ValueRef): BasicBlockRef;
+PROCEDURE LLVMGetSwitchDefaultDest(SwitchInstr: ValueRef): BasicBlockRef;
 
 (**
  * @defgroup LLVMCCoreValueInstructionPHINode PHI Nodes
@@ -2120,7 +2121,7 @@ PROCEDURE GetSwitchDefaultDest(SwitchInstr: ValueRef): BasicBlockRef;
 (**
  * Add an incoming value to the end of a PHI list.
  *)
-PROCEDURE AddIncoming(PhiNode: ValueRef;
+PROCEDURE LLVMAddIncoming(PhiNode: ValueRef;
                       IncomingValues: UNTRACED REF ValueRef;
                       IncomingBlocks: UNTRACED REF BasicBlockRef;
                       Count: unsigned);
@@ -2128,17 +2129,17 @@ PROCEDURE AddIncoming(PhiNode: ValueRef;
 (**
  * Obtain the number of incoming basic blocks to a PHI node.
  *)
-PROCEDURE CountIncoming(PhiNode: ValueRef): unsigned;
+PROCEDURE LLVMCountIncoming(PhiNode: ValueRef): unsigned;
 
 (**
  * Obtain an incoming value to a PHI node as a LLVMValueRef.
  *)
-PROCEDURE GetIncomingValue(PhiNode: ValueRef; Index: unsigned): ValueRef;
+PROCEDURE LLVMGetIncomingValue(PhiNode: ValueRef; Index: unsigned): ValueRef;
 
 (**
  * Obtain an incoming value to a PHI node as a LLVMBasicBlockRef.
  *)
-PROCEDURE GetIncomingBlock(PhiNode: ValueRef; Index: unsigned): BasicBlockRef;
+PROCEDURE LLVMGetIncomingBlock(PhiNode: ValueRef; Index: unsigned): BasicBlockRef;
 
 (**
  * @}
@@ -2161,252 +2162,254 @@ PROCEDURE GetIncomingBlock(PhiNode: ValueRef; Index: unsigned): BasicBlockRef;
  * @{
  *)
 
-PROCEDURE CreateBuilderInContext(C: ContextRef): BuilderRef;
-PROCEDURE CreateBuilder(): BuilderRef;
-PROCEDURE PositionBuilder(Builder: BuilderRef; Block: BasicBlockRef;
+PROCEDURE LLVMCreateBuilderInContext(C: ContextRef): BuilderRef;
+PROCEDURE LLVMCreateBuilder(): BuilderRef;
+PROCEDURE LLVMPositionBuilder(Builder: BuilderRef; Block: BasicBlockRef;
                          Instr: ValueRef);
-PROCEDURE PositionBuilderBefore(Builder: BuilderRef; Instr: ValueRef);
-PROCEDURE PositionBuilderAtEnd(Builder: BuilderRef; Block: BasicBlockRef);
-PROCEDURE GetInsertBlock(Builder: BuilderRef): BasicBlockRef;
-PROCEDURE ClearInsertionPosition(Builder: BuilderRef);
-PROCEDURE InsertIntoBuilder(Builder: BuilderRef; Instr: ValueRef);
-PROCEDURE InsertIntoBuilderWithName(Builder: BuilderRef; Instr: ValueRef;
+PROCEDURE LLVMPositionBuilderBefore(Builder: BuilderRef; Instr: ValueRef);
+PROCEDURE LLVMPositionBuilderAtEnd(Builder: BuilderRef; Block: BasicBlockRef);
+PROCEDURE LLVMGetInsertBlock(Builder: BuilderRef): BasicBlockRef;
+PROCEDURE LLVMClearInsertionPosition(Builder: BuilderRef);
+PROCEDURE LLVMInsertIntoBuilder(Builder: BuilderRef; Instr: ValueRef);
+PROCEDURE LLVMInsertIntoBuilderWithName(Builder: BuilderRef; Instr: ValueRef;
                                     Name: const_char_star);
-PROCEDURE DisposeBuilder(Builder: BuilderRef);
+PROCEDURE LLVMDisposeBuilder(Builder: BuilderRef);
 
 (* Metadata *)
-PROCEDURE SetCurrentDebugLocation(Builder: BuilderRef; L: ValueRef);
-PROCEDURE GetCurrentDebugLocation(Builder: BuilderRef): ValueRef;
-PROCEDURE SetInstDebugLocation(Builder: BuilderRef; Inst: ValueRef);
+PROCEDURE LLVMSetCurrentDebugLocation(Builder: BuilderRef; L: ValueRef);
+PROCEDURE LLVMGetCurrentDebugLocation(Builder: BuilderRef): ValueRef;
+PROCEDURE LLVMSetInstDebugLocation(Builder: BuilderRef; Inst: ValueRef);
 
 
 (* Terminators *)
-PROCEDURE BuildRetVoid(B: BuilderRef): ValueRef;
-PROCEDURE BuildRet(B: BuilderRef; V: ValueRef): ValueRef;
-PROCEDURE BuildAggregateRet(B: BuilderRef; RetVals: UNTRACED REF ValueRef;
+PROCEDURE LLVMBuildRetVoid(B: BuilderRef): ValueRef;
+PROCEDURE LLVMBuildRet(B: BuilderRef; V: ValueRef): ValueRef;
+PROCEDURE LLVMBuildAggregateRet(B: BuilderRef; RetVals: UNTRACED REF ValueRef;
                             N: unsigned): ValueRef;
-PROCEDURE BuildBr(B: BuilderRef; Dest: BasicBlockRef): ValueRef;
-PROCEDURE BuildCondBr(B: BuilderRef; If: ValueRef;
+PROCEDURE LLVMBuildBr(B: BuilderRef; Dest: BasicBlockRef): ValueRef;
+PROCEDURE LLVMBuildCondBr(B: BuilderRef; If: ValueRef;
                       Then, Else: BasicBlockRef): ValueRef;
-PROCEDURE BuildSwitch(B: BuilderRef; V: ValueRef; Else: BasicBlockRef;
+PROCEDURE LLVMBuildSwitch(B: BuilderRef; V: ValueRef; Else: BasicBlockRef;
                       NumCases: unsigned): ValueRef;
-PROCEDURE BuildIndirectBr(B: BuilderRef; Addr: ValueRef;
+PROCEDURE LLVMBuildIndirectBr(B: BuilderRef; Addr: ValueRef;
                           NumDests: unsigned): ValueRef;
-PROCEDURE BuildInvoke(B: BuilderRef; Fn: ValueRef;
+PROCEDURE LLVMBuildInvoke(B: BuilderRef; Fn: ValueRef;
                       Args: UNTRACED REF ValueRef; NumArgs: unsigned;
                       Then, Catch: BasicBlockRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildLandingPad(B: BuilderRef; Ty: TypeRef;
+PROCEDURE LLVMBuildLandingPad(B: BuilderRef; Ty: TypeRef;
                           PersFn: ValueRef; NumClauses: unsigned;
                           Name: const_char_star): ValueRef;
-PROCEDURE BuildResume(B: BuilderRef; Exn: ValueRef): ValueRef;
-PROCEDURE BuildUnreachable(B: BuilderRef): ValueRef;
+PROCEDURE LLVMBuildResume(B: BuilderRef; Exn: ValueRef): ValueRef;
+PROCEDURE LLVMBuildUnreachable(B: BuilderRef): ValueRef;
 
 (* Add a case to the switch instruction *)
-PROCEDURE AddCase(Switch, OnVal: ValueRef; Dest: BasicBlockRef);
+PROCEDURE LLVMAddCase(Switch, OnVal: ValueRef; Dest: BasicBlockRef);
 
 (* Add a destination to the indirectbr instruction *)
-PROCEDURE AddDestination(IndirectBr: ValueRef; Dest: BasicBlockRef);
+PROCEDURE LLVMAddDestination(IndirectBr: ValueRef; Dest: BasicBlockRef);
 
 (* Add a catch or filter clause to the landingpad instruction *)
-PROCEDURE AddClause(LandingPad, ClauseVal: ValueRef);
+PROCEDURE LLVMAddClause(LandingPad, ClauseVal: ValueRef);
 
 (* Set the 'cleanup' flag in the landingpad instruction *)
-PROCEDURE SetCleanup(LandingPad: ValueRef; Val: Bool);
+PROCEDURE LLVMSetCleanup(LandingPad: ValueRef; Val: Bool);
 
 (* Arithmetic *)
-PROCEDURE BuildAdd(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildAdd(B: BuilderRef; LHS, RHS: ValueRef;
                    Name: const_char_star): ValueRef;
-PROCEDURE BuildNSWAdd(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildNSWAdd(B: BuilderRef; LHS, RHS: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildNUWAdd(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildNUWAdd(B: BuilderRef; LHS, RHS: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildFAdd(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildFAdd(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildSub(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildSub(B: BuilderRef; LHS, RHS: ValueRef;
                    Name: const_char_star): ValueRef;
-PROCEDURE BuildNSWSub(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildNSWSub(B: BuilderRef; LHS, RHS: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildNUWSub(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildNUWSub(B: BuilderRef; LHS, RHS: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildFSub(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildFSub(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildMul(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildMul(B: BuilderRef; LHS, RHS: ValueRef;
                    Name: const_char_star): ValueRef;
-PROCEDURE BuildNSWMul(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildNSWMul(B: BuilderRef; LHS, RHS: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildNUWMul(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildNUWMul(B: BuilderRef; LHS, RHS: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildFMul(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildFMul(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildUDiv(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildUDiv(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildSDiv(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildSDiv(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildExactSDiv(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildExactSDiv(B: BuilderRef; LHS, RHS: ValueRef;
                          Name: const_char_star): ValueRef;
-PROCEDURE BuildFDiv(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildFDiv(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildURem(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildURem(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildSRem(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildSRem(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildFRem(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildFRem(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildShl(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildShl(B: BuilderRef; LHS, RHS: ValueRef;
                    Name: const_char_star): ValueRef;
-PROCEDURE BuildLShr(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildLShr(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildAShr(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildAShr(B: BuilderRef; LHS, RHS: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildAnd(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildAnd(B: BuilderRef; LHS, RHS: ValueRef;
                    Name: const_char_star): ValueRef;
-PROCEDURE BuildOr(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildOr(B: BuilderRef; LHS, RHS: ValueRef;
                   Name: const_char_star): ValueRef;
-PROCEDURE BuildXor(B: BuilderRef; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildXor(B: BuilderRef; LHS, RHS: ValueRef;
                    Name: const_char_star): ValueRef;
-PROCEDURE BuildBinop(B: BuilderRef; Op: Opcode; LHS, RHS: ValueRef;
+PROCEDURE LLVMBuildBinop(B: BuilderRef; Op: Opcode; LHS, RHS: ValueRef;
                    Name: const_char_star): ValueRef;
-PROCEDURE BuildNeg(B: BuilderRef; V: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildNSWNeg(B: BuilderRef; V: ValueRef;
+PROCEDURE LLVMBuildNeg(B: BuilderRef; V: ValueRef; Name: const_char_star): ValueRef;
+PROCEDURE LLVMBuildNSWNeg(B: BuilderRef; V: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildNUWNeg(B: BuilderRef; V: ValueRef;
+PROCEDURE LLVMBuildNUWNeg(B: BuilderRef; V: ValueRef;
                       Name: const_char_star): ValueRef;
-PROCEDURE BuildFNeg(B: BuilderRef; V: ValueRef;
+PROCEDURE LLVMBuildFNeg(B: BuilderRef; V: ValueRef;
                     Name: const_char_star): ValueRef;
-PROCEDURE BuildNot(B: BuilderRef; V: ValueRef;
+PROCEDURE LLVMBuildNot(B: BuilderRef; V: ValueRef;
                    Name: const_char_star): ValueRef;
 
 (* Memory *)
-PROCEDURE BuildMalloc(
+PROCEDURE LLVMBuildMalloc(
     B: BuilderRef; Ty: TypeRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildArrayMalloc(
+PROCEDURE LLVMBuildArrayMalloc(
     B: BuilderRef; Ty: TypeRef; Val: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildAlloca(
+PROCEDURE LLVMBuildAlloca(
     B: BuilderRef; Ty: TypeRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildArrayAlloca(
+PROCEDURE LLVMBuildArrayAlloca(
     B: BuilderRef; Ty: TypeRef; Val: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildFree(
+PROCEDURE LLVMBuildFree(
     B: BuilderRef; PointerVal: ValueRef): ValueRef;
-PROCEDURE BuildLoad(
+PROCEDURE LLVMBuildLoad(
     B: BuilderRef; PointerVal: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildStore(B: BuilderRef; Val, Ptr: ValueRef): ValueRef;
-PROCEDURE BuildGEP(
+PROCEDURE LLVMBuildStore(B: BuilderRef; Val, Ptr: ValueRef): ValueRef;
+PROCEDURE LLVMBuildGEP(
     B: BuilderRef; Pointer: ValueRef;
     Indices: UNTRACED REF ValueRef; NumIndices: unsigned;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildInBoundsGEP(
+PROCEDURE LLVMBuildInBoundsGEP(
     B: BuilderRef; Pointer: ValueRef;
     Indices: UNTRACED REF ValueRef; NumIndices: unsigned;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildStructGEP(
+PROCEDURE LLVMBuildStructGEP(
     B: BuilderRef; Pointer: ValueRef; Idx: unsigned;
-    Name: const_char_star): ValueRef;
-PROCEDURE BuildGlobalString(
+    Name: const_char_star := NIL): ValueRef;
+PROCEDURE LLVMBuildGlobalString(
     B: BuilderRef; Str, Name: const_char_star): ValueRef;
-PROCEDURE BuildGlobalStringPtr(
+PROCEDURE LLVMBuildGlobalStringPtr(
     B: BuilderRef; Str, Name: const_char_star): ValueRef;
-PROCEDURE GetVolatile(MemoryAccessInst: ValueRef): Bool;
-PROCEDURE SetVolatile(MemoryAccessInst: ValueRef; IsVolatile: Bool);
+PROCEDURE LLVMGetVolatile(MemoryAccessInst: ValueRef): Bool;
+PROCEDURE LLVMSetVolatile(MemoryAccessInst: ValueRef; IsVolatile: Bool);
+PROCEDURE LLVMGetAllocaAlignment(AllocaInst: ValueRef): unsigned;
+PROCEDURE LLVMSetAllocaAlignment(AllocaInst: ValueRef; Bytes: unsigned);
 
 (* Casts *)
-PROCEDURE BuildTrunc(
+PROCEDURE LLVMBuildTrunc(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildZExt(
+PROCEDURE LLVMBuildZExt(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildSExt(
+PROCEDURE LLVMBuildSExt(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildFPToUI(
+PROCEDURE LLVMBuildFPToUI(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildFPToSI(
+PROCEDURE LLVMBuildFPToSI(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildUIToFP(
+PROCEDURE LLVMBuildUIToFP(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildSIToFP(
+PROCEDURE LLVMBuildSIToFP(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildFPTrunc(
+PROCEDURE LLVMBuildFPTrunc(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildFPExt(
+PROCEDURE LLVMBuildFPExt(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildPtrToInt(
+PROCEDURE LLVMBuildPtrToInt(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildIntToPtr(
+PROCEDURE LLVMBuildIntToPtr(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildBitCast(
+PROCEDURE LLVMBuildBitCast(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildZExtOrBitCast(
+PROCEDURE LLVMBuildZExtOrBitCast(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildSExtOrBitCast(
+PROCEDURE LLVMBuildSExtOrBitCast(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildTruncOrBitCast(
+PROCEDURE LLVMBuildTruncOrBitCast(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildCast(
+PROCEDURE LLVMBuildCast(
     B: BuilderRef; Op: Opcode; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildPointerCast(
+PROCEDURE LLVMBuildPointerCast(
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildIntCast( (* Signed cast! *)
+PROCEDURE LLVMBuildIntCast( (* Signed cast! *)
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildFPCast( (* Signed cast! *)
+PROCEDURE LLVMBuildFPCast( (* Signed cast! *)
     B: BuilderRef; Val: ValueRef; DestTy: TypeRef;
     Name: const_char_star): ValueRef;
 
 (* Comparisons *)
-PROCEDURE BuildICmp(
+PROCEDURE LLVMBuildICmp(
     B: BuilderRef; Op: IntPredicate; LHS, RHS: ValueRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildFCmp(
+PROCEDURE LLVMBuildFCmp(
     B: BuilderRef; Op: RealPredicate; LHS, RHS: ValueRef;
     Name: const_char_star): ValueRef;
 
 (* Miscellaneous instructions *)
-PROCEDURE BuildPhi(
+PROCEDURE LLVMBuildPhi(
     B: BuilderRef; Ty: TypeRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildCall(
+PROCEDURE LLVMBuildCall(
     B: BuilderRef; Fn: ValueRef;
     Args: UNTRACED REF ValueRef; NumArgs: unsigned;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildSelect(
+PROCEDURE LLVMBuildSelect(
     B: BuilderRef; If, Then, Else: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildVAArg(
+PROCEDURE LLVMBuildVAArg(
     B: BuilderRef; List: ValueRef; Ty: TypeRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildExtractElement(
+PROCEDURE LLVMBuildExtractElement(
     B: BuilderRef; VecVal, Index: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildInsertElement(
+PROCEDURE LLVMBuildInsertElement(
     B: BuilderRef; VecVal, EltVal, Index: ValueRef;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildShuffleVector(
+PROCEDURE LLVMBuildShuffleVector(
     B: BuilderRef; V1, V2, Mask: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildExtractValue(
+PROCEDURE LLVMBuildExtractValue(
     B: BuilderRef; AggVal: ValueRef; Index: unsigned;
     Name: const_char_star): ValueRef;
-PROCEDURE BuildInsertValue(
+PROCEDURE LLVMBuildInsertValue(
     B: BuilderRef; AggVal, EltVal: ValueRef; Index: unsigned;
     Name: const_char_star): ValueRef;
 
-PROCEDURE BuildIsNull(
+PROCEDURE LLVMBuildIsNull(
     B: BuilderRef; Val: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildIsNotNull(
+PROCEDURE LLVMBuildIsNotNull(
     B: BuilderRef; Val: ValueRef; Name: const_char_star): ValueRef;
-PROCEDURE BuildPtrDiff(
+PROCEDURE LLVMBuildPtrDiff(
     B: BuilderRef; LHS, RGS: ValueRef; Name: const_char_star): ValueRef;
 
 (**
@@ -2423,13 +2426,13 @@ PROCEDURE BuildPtrDiff(
  * Changes the type of M so it can be passed to FunctionPassManagers and the
  * JIT.  They take ModuleProviders for historical reasons.
  *)
-PROCEDURE CreateModuleProviderForExistingModule(
+PROCEDURE LLVMCreateModuleProviderForExistingModule(
     M: ModuleRef): ModuleProviderRef;
 
 (**
  * Destroys the module M.
  *)
-PROCEDURE DisposeModuleProvider(M: ModuleProviderRef);
+PROCEDURE LLVMDisposeModuleProvider(M: ModuleProviderRef);
 
 (**
  * @}
@@ -2441,14 +2444,14 @@ PROCEDURE DisposeModuleProvider(M: ModuleProviderRef);
  * @{
  *)
 
-PROCEDURE CreateMemoryBufferWithContentsOfFile(
+PROCEDURE LLVMCreateMemoryBufferWithContentsOfFile(
     Path: const_char_star;
     OutMemBuf: UNTRACED REF MemoryBufferRef;
     OutMessage: char_star_star): Bool;
-PROCEDURE CreateMemoryBufferWithSTDIN(
+PROCEDURE LLVMCreateMemoryBufferWithSTDIN(
     OutMemBuf: UNTRACED REF MemoryBufferRef;
     OutMessage: char_star_star): Bool;
-PROCEDURE DisposeMemoryBuffer(MemBuf: MemoryBufferRef);
+PROCEDURE LLVMDisposeMemoryBuffer(MemBuf: MemoryBufferRef);
 
 (**
  * @}
@@ -2462,7 +2465,7 @@ PROCEDURE DisposeMemoryBuffer(MemBuf: MemoryBufferRef);
 
 (** Return the global pass registry, for use with initialization functions.
     @see llvm::PassRegistry::getPassRegistry *)
-PROCEDURE GetGlobalPassRegistry(): PassRegistryRef;
+PROCEDURE LLVMGetGlobalPassRegistry(): PassRegistryRef;
 
 (**
  * @}
@@ -2477,43 +2480,43 @@ PROCEDURE GetGlobalPassRegistry(): PassRegistryRef;
 (** Constructs a new whole-module pass pipeline. This type of pipeline is
     suitable for link-time optimization and whole-module transformations.
     @see llvm::PassManager::PassManager *)
-PROCEDURE CreatePassManager(): PassManagerRef;
+PROCEDURE LLVMCreatePassManager(): PassManagerRef;
 
 (** Constructs a new function-by-function pass pipeline over the module
     provider. It does not take ownership of the module provider. This type of
     pipeline is suitable for code generation and JIT compilation tasks.
     @see llvm::FunctionPassManager::FunctionPassManager *)
-PROCEDURE CreateFunctionPassManagerForModule(M: ModuleRef): PassManagerRef;
+PROCEDURE LLVMCreateFunctionPassManagerForModule(M: ModuleRef): PassManagerRef;
 
 (** Deprecated: Use LLVMCreateFunctionPassManagerForModule instead. *)
-PROCEDURE CreateFunctionPassManager(MP: ModuleProviderRef): PassManagerRef;
+PROCEDURE LLVMCreateFunctionPassManager(MP: ModuleProviderRef): PassManagerRef;
 
 (** Initializes, executes on the provided module, and finalizes all of the
     passes scheduled in the pass manager. Returns 1 if any of the passes
     modified the module, 0 otherwise.
     @see llvm::PassManager::run(Module&) *)
-PROCEDURE RunPassManager(PM: PassManagerRef; M: ModuleRef): Bool;
+PROCEDURE LLVMRunPassManager(PM: PassManagerRef; M: ModuleRef): Bool;
 
 (** Initializes all of the function passes scheduled in the function pass
     manager. Returns 1 if any of the passes modified the module, 0 otherwise.
     @see llvm::FunctionPassManager::doInitialization *)
-PROCEDURE InitializeFunctionPassManager(FPM: PassManagerRef): Bool;
+PROCEDURE LLVMInitializeFunctionPassManager(FPM: PassManagerRef): Bool;
 
 (** Executes all of the function passes scheduled in the function pass manager
     on the provided function. Returns 1 if any of the passes modified the
     function, false otherwise.
     @see llvm::FunctionPassManager::run(Function&) *)
-PROCEDURE RunFunctionPassManager(FPM: PassManagerRef; F: ValueRef): Bool;
+PROCEDURE LLVMRunFunctionPassManager(FPM: PassManagerRef; F: ValueRef): Bool;
 
 (** Finalizes all of the function passes scheduled in in the function pass
     manager. Returns 1 if any of the passes modified the module, 0 otherwise.
     @see llvm::FunctionPassManager::doFinalization *)
-PROCEDURE FinalizeFunctionPassManager(FPM: PassManagerRef): Bool;
+PROCEDURE LLVMFinalizeFunctionPassManager(FPM: PassManagerRef): Bool;
 
 (** Frees the memory of a pass pipeline. For function pipelines, does not free
     the module provider.
     @see llvm::PassManagerBase::~PassManagerBase. *)
-PROCEDURE DisposePassManager(PM: PassManagerRef);
+PROCEDURE LLVMDisposePassManager(PM: PassManagerRef);
 
 (**
  * @}
@@ -2555,14 +2558,14 @@ PROCEDURE DisposePassManager(PM: PassManagerRef);
 (*===-- Operations on modules ---------------------------------------------===*)
 
 (** Writes a module to the specified path. Returns 0 on success. *)
-PROCEDURE WriteBitcodeToFile(M: ModuleRef; Path: const_char_star): int;
+PROCEDURE LLVMWriteBitcodeToFile(M: ModuleRef; Path: const_char_star): int;
 
 (** Writes a module to an open file descriptor. Returns 0 on success. *)
-PROCEDURE WriteBitcodeToFD(M: ModuleRef; FD, ShouldClose, Unbuffered: int): int;
+PROCEDURE LLVMWriteBitcodeToFD(M: ModuleRef; FD, ShouldClose, Unbuffered: int): int;
 
 (** Deprecated for LLVMWriteBitcodeToFD. Writes a module to an open file
     descriptor. Returns 0 on success. Closes the Handle. *)
-PROCEDURE WriteBitcodeToFileHandle(M: ModuleRef; Handle: int): int;
+PROCEDURE LLVMWriteBitcodeToFileHandle(M: ModuleRef; Handle: int): int;
 
 (**
  * @}
@@ -2603,78 +2606,78 @@ TYPE StructLayoutRef = UNTRACED BRANDED "OpaqueStructLayout" REF Opaque;
 
 (** Creates target data from a target layout string.
     See the constructor llvm::TargetData::TargetData. *)
-PROCEDURE CreateTargetData(StringRep: const_char_star): TargetDataRef;
+PROCEDURE LLVMCreateTargetData(StringRep: const_char_star): TargetDataRef;
 
 (** Adds target data information to a pass manager. This does not take ownership
     of the target data.
     See the method llvm::PassManagerBase::add. *)
-PROCEDURE AddTargetData(T: TargetDataRef; P: PassManagerRef);
+PROCEDURE LLVMAddTargetData(T: TargetDataRef; P: PassManagerRef);
 
 (** Adds target library information to a pass manager. This does not take
     ownership of the target library info.
     See the method llvm::PassManagerBase::add. *)
-PROCEDURE AddTargetLibraryInfo(T: TargetLibraryInfoRef; P: PassManagerRef);
+PROCEDURE LLVMAddTargetLibraryInfo(T: TargetLibraryInfoRef; P: PassManagerRef);
 
 (** Converts target data to a target layout string. The string must be disposed
     with LLVMDisposeMessage.
     See the constructor llvm::TargetData::TargetData. *)
-PROCEDURE CopyStringRepOfTargetData(T: TargetDataRef): char_star;
+PROCEDURE LLVMCopyStringRepOfTargetData(T: TargetDataRef): char_star;
 
 (** Returns the byte order of a target, either LLVMBigEndian or
     LLVMLittleEndian.
     See the method llvm::TargetData::isLittleEndian. *)
-PROCEDURE ByteOrder(T: TargetDataRef): ByteOrdering;
+PROCEDURE LLVMByteOrder(T: TargetDataRef): ByteOrdering;
 
 (** Returns the pointer size in bytes for a target.
     See the method llvm::TargetData::getPointerSize. *)
-PROCEDURE PointerSize(T: TargetDataRef): unsigned;
+PROCEDURE LLVMPointerSize(T: TargetDataRef): unsigned;
 
 (** Returns the integer type that is the same size as a pointer on a target.
     See the method llvm::TargetData::getIntPtrType. *)
-PROCEDURE IntPtrType(T: TargetDataRef): TypeRef;
+PROCEDURE LLVMIntPtrType(T: TargetDataRef): TypeRef;
 
 (** Computes the size of a type in bytes for a target.
     See the method llvm::TargetData::getTypeSizeInBits. *)
-PROCEDURE SizeOfTypeInBits(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
+PROCEDURE LLVMSizeOfTypeInBits(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
 
 (** Computes the storage size of a type in bytes for a target.
     See the method llvm::TargetData::getTypeStoreSize. *)
-PROCEDURE StoreSizeOfType(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
+PROCEDURE LLVMStoreSizeOfType(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
 
 (** Computes the ABI size of a type in bytes for a target.
     See the method llvm::TargetData::getTypeAllocSize. *)
-PROCEDURE ABISizeOfType(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
+PROCEDURE LLVMABISizeOfType(T: TargetDataRef; Type: TypeRef): unsigned_long_long;
 
 (** Computes the ABI alignment of a type in bytes for a target.
     See the method llvm::TargetData::getTypeABISize. *)
-PROCEDURE ABIAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
+PROCEDURE LLVMABIAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
 
 (** Computes the call frame alignment of a type in bytes for a target.
     See the method llvm::TargetData::getTypeABISize. *)
-PROCEDURE CallFrameAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
+PROCEDURE LLVMCallFrameAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
 
 (** Computes the preferred alignment of a type in bytes for a target.
     See the method llvm::TargetData::getTypeABISize. *)
-PROCEDURE PreferredAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
+PROCEDURE LLVMPreferredAlignmentOfType(T: TargetDataRef; Type: TypeRef): unsigned;
 
 (** Computes the preferred alignment of a global variable in bytes for a target.
     See the method llvm::TargetData::getPreferredAlignment. *)
-PROCEDURE PreferredAlignmentOfGlobal(T: TargetDataRef;
+PROCEDURE LLVMPreferredAlignmentOfGlobal(T: TargetDataRef;
                                      GlobalVar: ValueRef): unsigned;
 
 (** Computes the structure element that contains the byte offset for a target.
     See the method llvm::StructLayout::getElementContainingOffset. *)
-PROCEDURE ElementAtOffset(T: TargetDataRef; StructTy: TypeRef;
+PROCEDURE LLVMElementAtOffset(T: TargetDataRef; StructTy: TypeRef;
                           Offset: unsigned_long_long): unsigned;
 
 (** Computes the byte offset of the indexed struct element for a target.
     See the method llvm::StructLayout::getElementContainingOffset. *)
-PROCEDURE OffsetOfElement(T: TargetDataRef; StructTy: TypeRef;
+PROCEDURE LLVMOffsetOfElement(T: TargetDataRef; StructTy: TypeRef;
                           Element: unsigned): unsigned_long_long;
 
 (** Deallocates a TargetData.
     See the destructor llvm::TargetData::~TargetData. *)
-PROCEDURE DisposeTargetData(T: TargetDataRef);
+PROCEDURE LLVMDisposeTargetData(T: TargetDataRef);
 
 (*===-- llvm-c/TargetMachine.h - Target Machine Library C Interface - C++ -*-=*\
 |*                                                                            *|
@@ -2726,62 +2729,62 @@ TYPE CodeGenFileType = {
 };
 
 (** Returns the first llvm::Target in the registered targets list. *)
-PROCEDURE GetFirstTarget(): TargetRef;
+PROCEDURE LLVMGetFirstTarget(): TargetRef;
 (** Returns the next llvm::Target given a previous one (or null if there's none) *)
-PROCEDURE GetNextTarget(T: TargetRef): TargetRef;
+PROCEDURE LLVMGetNextTarget(T: TargetRef): TargetRef;
 
 (*===-- Target ------------------------------------------------------------===*)
 (** Returns the name of a target. See llvm::Target::getName *)
-PROCEDURE GetTargetName(T: TargetRef): const_char_star;
+PROCEDURE LLVMGetTargetName(T: TargetRef): const_char_star;
 
 (** Returns the description  of a target. See llvm::Target::getDescription *)
-PROCEDURE GetTargetDescription(T: TargetRef): const_char_star;
+PROCEDURE LLVMGetTargetDescription(T: TargetRef): const_char_star;
 
 (** Returns if the target has a JIT *)
-PROCEDURE TargetHasJIT(T: TargetRef): Bool;
+PROCEDURE LLVMTargetHasJIT(T: TargetRef): Bool;
 
 (** Returns if the target has a TargetMachine associated *)
-PROCEDURE TargetHasTargetMachine(T: TargetRef): Bool;
+PROCEDURE LLVMTargetHasTargetMachine(T: TargetRef): Bool;
 
 (** Returns if the target as an ASM backend (required for emitting output) *)
-PROCEDURE TargetHasAsmBackend(T: TargetRef): Bool;
+PROCEDURE LLVMTargetHasAsmBackend(T: TargetRef): Bool;
 
 (*===-- Target Machine ----------------------------------------------------===*)
 (** Creates a new llvm::TargetMachine. See llvm::Target::createTargetMachine *)
-PROCEDURE CreateTargetMachine(
+PROCEDURE LLVMCreateTargetMachine(
     T: TargetRef; Triple: char_star; CPU: char_star; Features: char_star;
     Level: CodeGenOptLevel; Reloc: RelocMode;
     CodeModel: CodeModel): TargetMachineRef;
 
 (** Dispose the LLVMTargetMachineRef instance generated by
   LLVMCreateTargetMachine. *)
-PROCEDURE DisposeTargetMachine(T: TargetMachineRef);
+PROCEDURE LLVMDisposeTargetMachine(T: TargetMachineRef);
 
 (** Returns the Target used in a TargetMachine *)
-PROCEDURE GetTargetMachineTarget(T: TargetMachineRef): TargetRef;
+PROCEDURE LLVMGetTargetMachineTarget(T: TargetMachineRef): TargetRef;
 
 (** Returns the triple used creating this target machine. See
   llvm::TargetMachine::getTriple. The result needs to be disposed with
   LLVMDisposeMessage. *)
-PROCEDURE GetTargetMachineTriple(T: TargetMachineRef): char_star;
+PROCEDURE LLVMGetTargetMachineTriple(T: TargetMachineRef): char_star;
 
 (** Returns the cpu used creating this target machine. See
   llvm::TargetMachine::getCPU. The result needs to be disposed with
   LLVMDisposeMessage. *)
-PROCEDURE FetTargetMachineCPU(T: TargetMachineRef): char_star;
+PROCEDURE LLVMFetTargetMachineCPU(T: TargetMachineRef): char_star;
 
 (** Returns the feature string used creating this target machine. See
   llvm::TargetMachine::getFeatureString. The result needs to be disposed with
   LLVMDisposeMessage. *)
-PROCEDURE GetTargetMachineFeatureString(T: TargetMachineRef): char_star;
+PROCEDURE LLVMGetTargetMachineFeatureString(T: TargetMachineRef): char_star;
 
 (** Returns the llvm::TargetData used for this llvm:TargetMachine. *)
-PROCEDURE GetTargetMachineData(T: TargetMachineRef): TargetDataRef;
+PROCEDURE LLVMGetTargetMachineData(T: TargetMachineRef): TargetDataRef;
 
 (** Emits an asm or object file for the given module to the filename. This
   wraps several c++ only classes (among them a file stream). Returns any
   error in ErrorMessage. Use LLVMDisposeMessage to dispose the message. *)
-PROCEDURE TargetMachineEmitToFile(
+PROCEDURE LLVMTargetMachineEmitToFile(
     T: TargetMachineRef; M: ModuleRef; Filename: char_star;
     codegen: CodeGenFileType; VAR ErrorMessage: char_star): Bool;
 
