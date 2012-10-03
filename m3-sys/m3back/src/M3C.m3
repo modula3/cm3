@@ -47,6 +47,8 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         debug  := 1;
         stack  : TextSeq.T := NIL;
         params : TextSeq.T := NIL;
+        pop_static_link_temp_vars : RefSeq.T := NIL;
+        pop_static_link_temp_vars_index := 0;
         
         enum_type: TEXT := NIL;
         extra_scope_close_braces := ""; (* hack to account for locals/temps within code *)
@@ -101,36 +103,36 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         export_unit := export_unit;
         set_source_file := set_source_file;
         set_source_line := set_source_line;
-        declare_typename := declare_typename;
-        declare_array := declare_array;
-        declare_open_array := declare_open_array;
-        declare_enum := declare_enum;
-        declare_enum_elt := declare_enum_elt;
-        declare_packed := declare_packed;
-        declare_record := declare_record;
-        declare_field := declare_field;
-        declare_set := declare_set;
-        declare_subrange := declare_subrange;
-        declare_pointer := declare_pointer;
-        declare_indirect := declare_indirect;
-        declare_proctype := declare_proctype;
-        declare_formal := declare_formal;
-        declare_raises := declare_raises;
-        declare_object := declare_object;
-        declare_method := declare_method;
-        declare_opaque := declare_opaque;
-        reveal_opaque := reveal_opaque;
+        (* declare_typename := declare_typename; *)
+        (* declare_array := declare_array; *)
+        (* declare_open_array := declare_open_array; *)
+        (* declare_enum := declare_enum; *)
+        (* declare_enum_elt := declare_enum_elt; *)
+        (* declare_packed := declare_packed; *)
+        (* declare_record := declare_record; *)
+        (* declare_field := declare_field; *)
+        (* declare_set := declare_set; *)
+        (* declare_subrange := declare_subrange; *)
+        (* declare_pointer := declare_pointer; *)
+        (* declare_indirect := declare_indirect; *)
+        (* declare_proctype := declare_proctype; *)
+        (* declare_formal := declare_formal; *)
+        (* declare_raises := declare_raises; *)
+        (* declare_object := declare_object; *)
+        (* declare_method := declare_method; *)
+        (* declare_opaque := declare_opaque; *)
+        (* reveal_opaque := reveal_opaque; *)
         set_runtime_proc := set_runtime_proc;
         (* import_global := import_global; *)
-        declare_segment := declare_segment;
+        (* declare_segment := declare_segment; *)
         bind_segment := bind_segment;
         declare_global := declare_global;
         declare_constant := declare_constant;
-        declare_local := declare_local;
-        declare_param := declare_param;
-        declare_temp := declare_temp;
-        free_temp := free_temp;
-        declare_exception := declare_exception;
+        (* declare_local := declare_local; *)
+        (* declare_param := declare_param; *)
+        (* declare_temp := declare_temp; *)
+        (* free_temp := free_temp; *)
+        (* declare_exception := declare_exception; *)
         begin_init := begin_init;
         end_init := end_init;
         init_int := init_int;
@@ -141,7 +143,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         init_chars := init_chars;
         init_float := init_float;
         (* import_procedure := import_procedure; *)
-        declare_procedure := declare_procedure;
+        (* declare_procedure := declare_procedure; *)
         begin_procedure := begin_procedure;
         end_procedure := end_procedure;
         begin_block := begin_block;
@@ -413,13 +415,8 @@ BEGIN
 END Proc_FixName;
 
 PROCEDURE Var_FixName(self: T; name: Name; imported_or_exported: BOOLEAN): Name =
-VAR name2: Name;
 BEGIN
-    (* First try Proc_FixName; if it changes it, done. *)
-    name2 := Proc_FixName(self, name);
-    IF name2 # name THEN
-        RETURN name2;
-    END;
+    name := Proc_FixName(self, name);
     (* workaround: begin/end_block should keep the names separate,
      * but they do nothing until import_procedure all moved up.
      * e.g. ETimer__Push() has parameter and local "self"
@@ -549,9 +546,9 @@ PROCEDURE expr_mult(<*UNUSED*>left, right: expr_t): expr_t = BEGIN RETURN NIL; E
 *)
 
 TYPE Var_t = M3CG.Var OBJECT
-    self: T;
-    name: Name;
-    name_in_frame: Name; (* if up_level *)
+    self: T := NIL;
+    name: Name := 0;
+    name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
     type: Type;
     type_text: TEXT;
     const := FALSE;
@@ -562,14 +559,17 @@ TYPE Var_t = M3CG.Var OBJECT
     up_level := FALSE; (* local accessed from nested function *)
     in_memory := FALSE; (* ? *)
     is_static_link := FALSE; (* micro optimization -- uplevel but accessed directly *)
-    next_in_block: Var_t;
-    proc: Proc_t;
-    block: Block_t;
+    next_in_block: Var_t := NIL;
+    proc: Proc_t := NIL;
+    block: Block_t := NIL;
 
     METHODS
         Declare(): TEXT := Var_Declare;
+        InFrameDeclare(): TEXT := Var_InFrameDeclare;
         Name(): TEXT := Var_Name;
+        InFrameName(): TEXT := Var_Name;
         Type(): TEXT := Var_Type;
+        InFrameType(): TEXT := Var_Type;
         DeclareAndInitStructParamLocalValue(): TEXT := Var_DeclareAndInitStructParamLocalValue;
         Init(): Var_t := Var_Init;
 END;
@@ -596,10 +596,11 @@ TYPE Block_t = OBJECT
     proc: Proc_t;
     vars: Var_t;
     top_in_proc: Block_t;
+    name: TEXT; (* for frame *)
 END;
 
 TYPE Proc_t = M3CG.Proc OBJECT
-    name: Name;
+    name: Name := 0;
     n_params: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
     n_params_without_static_link: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
     return_type: Type;
@@ -615,7 +616,10 @@ TYPE Proc_t = M3CG.Proc OBJECT
     add_static_link := FALSE;
     declared_frame_type := FALSE;
     forward_declared_frame_type := FALSE;
-    self: T;
+    self: T := NIL;
+    blocks: RefSeq.T := NIL; (* Block_t *)
+    block_stack: RefSeq.T := NIL; (* Block_t *)
+    current_block: Block_t := NIL;
 
     METHODS
         Locals_Size(): INTEGER := Proc_Locals_Size;
@@ -677,6 +681,8 @@ BEGIN
     proc.add_static_link := proc.level > 0;
     INC(proc.n_params, ORD(proc.add_static_link));
     proc.locals := NEW(RefSeq.T).init();
+    proc.blocks := NEW(RefSeq.T).init();
+    proc.block_stack := NEW(RefSeq.T).init();
     proc.params := NEW(REF ARRAY OF Var_t, proc.n_params);
     proc.ForwardDeclareFrameType(); (* TODO don'self always do this *)
     RETURN proc;
@@ -746,6 +752,7 @@ CONST Prefix = ARRAY OF TEXT {
 "void* __cdecl memcpy(void*, const void*, size_t);",
 "void* __cdecl memmove(void*, const void*, size_t);",
 "void* __cdecl memset(void*, int, size_t);",
+"int __cdecl memcmp(const void*, const void*, size_t);",
 
 (* math.h *)
 "double __cdecl floor(double);",
@@ -1089,13 +1096,15 @@ VAR self := NEW (T);
 BEGIN
     self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE *)
     self.multipass := NEW(Multipass_t).Init();
-    self.multipass.reuse_refs := TRUE;
+    self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
     self.multipass.self := self;
     self.c := cfile;
-    self.init_fields := NEW(TextSeq.T).init();
-    self.initializer := NEW(TextSeq.T).init();
-    self.stack := NEW(TextSeq.T).init();
-    self.params := NEW(TextSeq.T).init();
+    self.init_fields := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
+    self.initializer := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
+    self.stack := NEW(TextSeq.T).init();        (* CONSIDER compute maximum depth and use an array *)
+    self.params := NEW(TextSeq.T).init();       (* CONSIDER compute maximum and use an array *)
+    self.pop_static_link_temp_vars := NEW(RefSeq.T).init(); (* CONSIDER compute size -- number of pop_static_link calls *)
+    self.report_fault := NIL;
 (*
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1182,9 +1191,15 @@ BEGIN
 
     (* forward declare functions/variables in this module and imports *)
     
-    self.self.comment("begin forward declarations");
+    self.self.comment("begin pass: imports");
     self.Replay(NEW(Imports_t).Init(self.self));
-    self.self.comment("end forward declarations");
+    self.self.comment("end pass: imports");
+
+    (* discover all locals (including temps and params) *)
+
+    self.self.comment("begin pass: locals");
+    self.Replay(NEW(Locals_t).Init(self.self));
+    self.self.comment("emd pass: locals");
 
     (* last pass *)
 
@@ -1194,8 +1209,10 @@ END multipass_end_unit;
 PROCEDURE begin_unit(self: T; <*UNUSED*>optimize: INTEGER) =
 (* The first call in a particular pass. *)
 BEGIN
-    self.report_fault := NIL;
+    self.in_proc := FALSE;
+    self.current_proc := NIL;
     self.in_proc_call := 0;
+    self.pop_static_link_temp_vars_index := 0;
 END begin_unit;
 
 PROCEDURE end_unit(self: T) =
@@ -1458,6 +1475,15 @@ BEGIN
     RETURN var;
 END import_global;
 
+PROCEDURE Locals_DeclareSegment(
+    self: Locals_t;
+    name: Name;
+    typeid: TypeUID;
+    const: BOOLEAN): M3CG.Var =
+BEGIN
+    RETURN declare_segment(self.self, name, typeid, const);
+END Locals_DeclareSegment;
+
 CONST ConstText = ARRAY BOOLEAN OF TEXT{"", " const "};
 
 PROCEDURE declare_segment(self: T; name: Name; <*UNUSED*>typeid: TypeUID; const: BOOLEAN): M3CG.Var =
@@ -1545,6 +1571,7 @@ BEGIN
     RETURN var;
 END DeclareGlobal;
 
+(*
 PROCEDURE ExtraScope_Open(self: T) =
 BEGIN
     IF NOT self.last_char_was_open_brace THEN
@@ -1552,12 +1579,67 @@ BEGIN
       self.extra_scope_close_braces := self.extra_scope_close_braces & "}";
     END;
 END ExtraScope_Open;
+*)
 
+(*
 PROCEDURE ExtraScope_Close(self: T) =
 BEGIN
     print(self, self.extra_scope_close_braces);
     self.extra_scope_close_braces := "";
 END ExtraScope_Close;
+*)
+
+TYPE Locals_t = M3CG_DoNothing.T BRANDED "M3C.Locals_t" OBJECT
+    self: T := NIL;
+METHODS
+    Init(outer: T): Locals_t := Locals_Init;
+OVERRIDES
+    declare_segment := Locals_DeclareSegment; (* declare_segment is needed, to get the unit name, to check for exception handlers *)
+    declare_procedure := Locals_DeclareProcedure;
+    begin_procedure := Locals_BeginProcedure;
+    end_procedure := Locals_EndProcedure;
+    declare_param := Locals_DeclareParam;
+    declare_local := Locals_DeclareLocal;
+    declare_temp := Locals_DeclareTemp;
+    begin_block := Locals_BeginBlock;   (* FUTURE: for unions in frame struct *)
+    end_block := Locals_EndBlock;       (* FUTURE: for unions in frame struct *)
+    pop_static_link := Locals_PopStaticLink; (* pop_static_link is needed because it calls declare_temp *)
+END;
+
+PROCEDURE Locals_Init(self: Locals_t; outer: T): Locals_t =
+BEGIN
+    self.self := outer;
+    RETURN self;
+END Locals_Init;
+
+PROCEDURE Locals_DeclareParam(
+    self: Locals_t;
+    name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: Type;
+    typeid: TypeUID;
+    in_memory: BOOLEAN;
+    up_level: BOOLEAN;
+    frequency: Frequency): M3CG.Var =
+BEGIN
+    RETURN declare_param(self.self, name, byte_size, alignment, type, typeid,
+        in_memory, up_level, frequency);
+END Locals_DeclareParam;
+
+PROCEDURE Locals_DeclareLocal(
+    self: Locals_t;
+    name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: Type;
+    typeid: TypeUID;
+    in_memory: BOOLEAN;
+    up_level: BOOLEAN;
+    frequency: Frequency): M3CG.Var =
+BEGIN
+    RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency);
+END Locals_DeclareLocal;
 
 TYPE Imports_t = M3CG_DoNothing.T BRANDED "M3C.Imports_t" OBJECT
     self: T;
@@ -1601,8 +1683,12 @@ BEGIN
 END Imports_DeclareParam;
 
 PROCEDURE Imports_ImportGlobal(
-    self: Imports_t; name: Name; byte_size: ByteSize; 
-    alignment: Alignment; type: Type; typeid: TypeUID): M3CG.Var =
+    self: Imports_t;
+    name: Name;
+    byte_size: ByteSize; 
+    alignment: Alignment;
+    type: Type;
+    typeid: TypeUID): M3CG.Var =
 BEGIN
     RETURN import_global(self.self, name, byte_size, alignment, type, typeid);
 END Imports_ImportGlobal;
@@ -1685,62 +1771,62 @@ BEGIN
 END GetStructSizes_Declare;
 
 PROCEDURE GetStructSizes_DeclareTemp(
-        self: GetStructSizes_t;
-        byte_size: ByteSize;
-        <*UNUSED*>alignment: Alignment;
-        type: Type;
-        <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
+    self: GetStructSizes_t;
+    byte_size: ByteSize;
+    <*UNUSED*>alignment: Alignment;
+    type: Type;
+    <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size);
 END GetStructSizes_DeclareTemp;
 
 PROCEDURE GetStructSizes_DeclareGlobal(
-        self: GetStructSizes_t;
-        <*UNUSED*>name: Name;
-        byte_size: ByteSize;
-        <*UNUSED*>alignment: Alignment;
-        type: Type;
-        <*UNUSED*>typeid: TypeUID;
-        <*UNUSED*>exported: BOOLEAN;
-        <*UNUSED*>inited: BOOLEAN): M3CG.Var =
+    self: GetStructSizes_t;
+    <*UNUSED*>name: Name;
+    byte_size: ByteSize;
+    <*UNUSED*>alignment: Alignment;
+    type: Type;
+    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>exported: BOOLEAN;
+    <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size);
 END GetStructSizes_DeclareGlobal;
 
 PROCEDURE GetStructSizes_ImportGlobal(
-        self: GetStructSizes_t;
-        <*UNUSED*>name: Name;
-        byte_size: ByteSize;
-        <*UNUSED*>alignment: Alignment;
-        type: Type;
-        <*UNUSED*>typeid: TypeUID): M3CG.Var =
+    self: GetStructSizes_t;
+    <*UNUSED*>name: Name;
+    byte_size: ByteSize;
+    <*UNUSED*>alignment: Alignment;
+    type: Type;
+    <*UNUSED*>typeid: TypeUID): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size);
 END GetStructSizes_ImportGlobal;
 
 PROCEDURE GetStructSizes_DeclareConstant(
-        self: GetStructSizes_t;
-        <*UNUSED*>name: Name;
-        byte_size: ByteSize;
-        <*UNUSED*>alignment: Alignment;
-        type: Type;
-        <*UNUSED*>typeid: TypeUID;
-        <*UNUSED*>exported: BOOLEAN;
-        <*UNUSED*>inited: BOOLEAN): M3CG.Var =
+    self: GetStructSizes_t;
+    <*UNUSED*>name: Name;
+    byte_size: ByteSize;
+    <*UNUSED*>alignment: Alignment;
+    type: Type;
+    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>exported: BOOLEAN;
+    <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size);
 END GetStructSizes_DeclareConstant;
 
 PROCEDURE GetStructSizes_DeclareLocalOrParam(
-        self: GetStructSizes_t;
-        <*UNUSED*>name: Name;
-        byte_size: ByteSize;
-        <*UNUSED*>alignment: Alignment;
-        type: Type;
-        <*UNUSED*>typeid: TypeUID;
-        <*UNUSED*>in_memory: BOOLEAN;
-        <*UNUSED*>up_level: BOOLEAN;
-        <*UNUSED*>frequency: Frequency): M3CG.Var =
+    self: GetStructSizes_t;
+    <*UNUSED*>name: Name;
+    byte_size: ByteSize;
+    <*UNUSED*>alignment: Alignment;
+    type: Type;
+    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>in_memory: BOOLEAN;
+    <*UNUSED*>up_level: BOOLEAN;
+    <*UNUSED*>frequency: Frequency): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size);
 END GetStructSizes_DeclareLocalOrParam;
@@ -1751,11 +1837,18 @@ BEGIN
 END Struct;
 
 PROCEDURE Var_DeclareAndInitStructParamLocalValue(var: Var_t): TEXT =
+VAR static_link := "";
 BEGIN
     IF var.type # Type.Struct THEN
         RETURN NIL;
     END;
-    RETURN Struct(var.byte_size) & " " & M3ID.ToText(var.name) & "=*_param_struct_pointer_" & M3ID.ToText(var.name) & ";";
+    (* TODO clean this up.. *)
+    static_link := follow_static_link(var.self, var);
+    IF Text.Length(static_link) = 0 THEN
+        RETURN Struct(var.byte_size) & " " & M3ID.ToText(var.name) & "=*_param_struct_pointer_" & M3ID.ToText(var.name) & ";";
+    ELSE
+        RETURN static_link & M3ID.ToText(var.name) & "=*_param_struct_pointer_" & M3ID.ToText(var.name) & ";";
+    END;
 END Var_DeclareAndInitStructParamLocalValue;
 
 PROCEDURE Param_Type(var: Var_t): TEXT =
@@ -1774,7 +1867,9 @@ END Var_Type;
 
 PROCEDURE Param_Name(var: Var_t): TEXT =
 BEGIN
-    IF var.type # Type.Struct THEN RETURN M3ID.ToText(var.name); END;
+    IF var.type # Type.Struct THEN
+        RETURN M3ID.ToText(var.name);
+    END;
     RETURN "_param_struct_pointer_" & M3ID.ToText(var.name);
 END Param_Name;
 
@@ -1789,6 +1884,12 @@ BEGIN
     RETURN static & var.Type() & " " & var.Name();
 END Var_Declare;
 
+PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
+VAR static := ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported];
+BEGIN
+    RETURN static & var.InFrameType() & " " & var.InFrameName();
+END Var_InFrameDeclare;
+
 PROCEDURE declare_local(
     self: T;
     name: Name;
@@ -1802,17 +1903,21 @@ PROCEDURE declare_local(
 VAR var := NEW(Var_t, self := self, type := type, name := name, up_level := up_level,
                in_memory := in_memory, byte_size := byte_size, proc := self.current_proc).Init();
 BEGIN
-    self.comment("declare_local " & M3ID.ToText(var.name));
+    self.comment("declare_local");
+    (* self.comment("declare_local " & M3ID.ToText(var.name)); *)
+(*
+    <* ASSERT NOT self.in_proc *>
     IF self.in_proc THEN
         ExtraScope_Open(self);
         print(self, var.Declare() & " M3_INIT;");
         <* ASSERT up_level = FALSE *>
     ELSE
+*)
         IF up_level THEN
             self.current_proc.uplevels := TRUE;
         END;
         self.current_proc.locals.addhi(var);
-    END;
+(*  END; *)
     RETURN var;
 END declare_local;
 
@@ -1885,7 +1990,8 @@ VAR function := self.param_proc;
     var := NEW(Param_t, self := self, type := type, name := name, byte_size := byte_size,
                in_memory := in_memory, up_level := up_level, proc := function, type_text := type_text).Init();
 BEGIN
-    self.comment("declare_param " & M3ID.ToText(var.name));
+    self.comment("declare_param");
+    (* self.comment("declare_param " & M3ID.ToText(var.name)); *)
     function.params[self.param_count] := var;
     function.uplevels := function.uplevels OR up_level;
     SuppressLineDirective(self, -1, "declare_param");
@@ -1911,6 +2017,11 @@ BEGIN
     self.comment("declare_temp");
     RETURN declare_local(self, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
 END declare_temp;
+
+PROCEDURE Locals_DeclareTemp(self: Locals_t; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): M3CG.Var =
+BEGIN
+    RETURN declare_temp(self.self, byte_size, alignment, type, in_memory);
+END Locals_DeclareTemp;
 
 PROCEDURE free_temp(self: T; <*NOWARN*>v: M3CG.Var) =
 BEGIN
@@ -2129,6 +2240,27 @@ BEGIN
     RETURN proc;
 END import_procedure;
 
+PROCEDURE Locals_DeclareProcedure(
+    self: Locals_t;
+    name: Name;
+    n_params: INTEGER;
+    return_type: Type;
+    level: INTEGER;
+    callingConvention: CallingConvention;
+    exported: BOOLEAN;
+    parent: M3CG.Proc): M3CG.Proc =
+BEGIN
+    RETURN declare_procedure(
+        self.self,
+        name,
+        n_params,
+        return_type,
+        level,
+        callingConvention,
+        exported,
+        parent);
+END Locals_DeclareProcedure;
+
 PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER;
                             return_type: Type; level: INTEGER;
                             callingConvention: CallingConvention;
@@ -2152,14 +2284,54 @@ BEGIN
     RETURN proc;
 END declare_procedure;
 
+PROCEDURE Locals_BeginProcedure(self: Locals_t; p: M3CG.Proc) =
+VAR proc := NARROW(p, Proc_t);
+BEGIN
+    <* ASSERT NOT self.self.in_proc *>
+    self.self.in_proc := TRUE;
+    self.self.current_proc := proc;
+    self.begin_block();
+END Locals_BeginProcedure;
+
+PROCEDURE Locals_EndProcedure(self: Locals_t; <*UNUSED*>p: M3CG.Proc) =
+BEGIN
+    self.end_block();
+    self.self.in_proc := FALSE;
+    self.self.current_proc := NIL;
+END Locals_EndProcedure;
+
+PROCEDURE Locals_BeginBlock(self: Locals_t) =
+VAR proc := self.self.current_proc;
+    (*block := NEW(Block_t, parent_block := proc.current_block);*)
+    block: Block_t;
+BEGIN
+    proc.blocks.addhi(block);
+    proc.block_stack.addhi(block);
+    proc.current_block := block;
+END Locals_BeginBlock;
+
+PROCEDURE Locals_EndBlock(self: Locals_t) =
+VAR proc := self.self.current_proc;
+BEGIN
+    EVAL proc.block_stack.remhi();
+    IF proc.block_stack.size() > 0 THEN
+        proc.current_block := NARROW(proc.block_stack.gethi(), Block_t);
+    ELSE
+        proc.current_block := NIL;
+    END;
+END Locals_EndBlock;
+
 PROCEDURE begin_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
     frame_name := proc.FrameName();
     frame_type := proc.FrameType();
-    var: Var_t;
+    param_name: TEXT := NIL;
+    var_name: TEXT := NIL;
+    var: Var_t := NIL;
     params := proc.params;
 BEGIN
-    self.comment("begin_procedure " & M3ID.ToText(proc.name));
+    self.comment("begin_procedure");
+    (* self.comment("begin_procedure " & M3ID.ToText(proc.name)); *)
 
     <* ASSERT NOT self.in_proc *>
     self.in_proc := TRUE;
@@ -2175,12 +2347,12 @@ BEGIN
 
         print(self, "void* _unused;");
 
-        (* uplevel locals in frame *) (* structs? *)
+        (* uplevel locals in frame *)
 
         FOR i := 0 TO proc.Locals_Size() - 1 DO
             var := proc.Locals(i);
             IF var.up_level THEN
-                print(self, var.Declare() & ";");
+                print(self, var.InFrameDeclare() & ";");
             END;
         END;
 
@@ -2189,7 +2361,7 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             var := params[i];
             IF var.up_level THEN
-                print(self, var.Declare() & ";");
+                print(self, var.InFrameDeclare() & ";");
             END;
         END;
         print(self, "};");
@@ -2197,12 +2369,6 @@ BEGIN
 
     print(self, function_prototype(proc, FunctionPrototype_t.Define));
     print(self, "{");
-
-    (* copy structs from pointers to local value *) (* uplevels? *)
-
-    FOR i := FIRST(params^) TO LAST(params^) DO
-        print(self, params[i].DeclareAndInitStructParamLocalValue());
-    END;
 
     (* declare and initialize non-uplevel locals *)
 
@@ -2224,8 +2390,12 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level THEN
-                    WITH param_name = M3ID.ToText(param.name) DO
-                        print(self, frame_name & "." & param_name & "=" & param_name & ";");
+                    param_name := Param_Name(param);
+                    var_name := Var_Name(param);
+                    IF param.type # Type.Struct THEN
+                        print(self, frame_name & "." & var_name & "=" & param_name & ";");
+                    ELSE
+                        print(self, frame_name & "." & var_name & "=*" & param_name & ";");
                     END;
                 END;
             END;
@@ -2236,15 +2406,26 @@ BEGIN
         print(self, frame_name & "._unused=&" & frame_name & ";");
 
     END;
+
+    (* copy structs from pointers to local value *) (* uplevels? *)
+
+    FOR i := FIRST(params^) TO LAST(params^) DO
+        IF NOT params[i].up_level THEN
+            print(self, params[i].DeclareAndInitStructParamLocalValue());
+        END;
+    END;
+
 END begin_procedure;
 
 PROCEDURE end_procedure(self: T; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
+(*VAR proc := NARROW(p, Proc_t);*)
 BEGIN
-    self.comment("end_procedure " & M3ID.ToText(proc.name));
+    self.comment("end_procedure");
+    (*self.comment("end_procedure " & M3ID.ToText(proc.name));*)
     self.in_proc := FALSE;
+    self.current_proc := NIL;
     print(self, "}");
-    ExtraScope_Close(self);
+    (* ExtraScope_Close(self); *)
 END end_procedure;
 
 PROCEDURE begin_block(self: T) =
@@ -3135,13 +3316,19 @@ BEGIN
 END pop_struct;
 
 PROCEDURE pop_static_link(self: T) =
-VAR var := declare_temp(self, CG_Bytes[Type.Addr], CG_Bytes[Type.Addr], Type.Addr, FALSE);
+VAR var := self.pop_static_link_temp_vars.get(self.pop_static_link_temp_vars_index);
 BEGIN
     self.comment("pop_static_link");
+    INC(self.pop_static_link_temp_vars_index);
     <* ASSERT self.in_proc_call > 0 *>
     self.static_link[self.in_proc_call - 1] := var;
     self.store(var, 0, Type.Addr, Type.Addr);
 END pop_static_link;
+
+PROCEDURE Locals_PopStaticLink(self: Locals_t) =
+BEGIN
+    self.self.pop_static_link_temp_vars.addhi(declare_temp(self.self, CG_Bytes[Type.Addr], CG_Bytes[Type.Addr], Type.Addr, FALSE));
+END Locals_PopStaticLink;
 
 PROCEDURE call_helper(self: T; type: Type; proc: TEXT) =
 VAR comma := "";
