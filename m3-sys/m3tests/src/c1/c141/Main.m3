@@ -2,7 +2,7 @@ UNSAFE MODULE Main;
 IMPORT RTIO, Text;
 
 TYPE BYTE = BITS 8 FOR [0..255];
-TYPE Range = ['a'..'d'];
+TYPE Range = [0..64];
 TYPE Set = SET OF Range;
 
 PROCEDURE NibbleToHexChar(a: BYTE): CHAR =
@@ -33,7 +33,10 @@ VAR p := LOOPHOLE(ADR(charSet), REF ARRAY [0..size - 1] OF BYTE);
   END F1;
 
 BEGIN
-    F1(Set{'a'..'d'});
-    F1(Set{'a','b'} - Set{'c'});
-    F1(Set{'a','b'} + Set{'c'});
+    RTIO.PutInt(ORD(LAST(Range)) - ORD(FIRST(Range)));
+    RTIO.PutText("\n");
+    F1(Set{FIRST(Range)..LAST(Range)});
+    F1(Set{FIRST(Range)..LAST(Range)} - Set{1});
+    F1(Set{FIRST(Range)..LAST(Range)} + Set{1});
+    F1(Set{FIRST(Range)..LAST(Range)} * Set{FIRST(Range)..LAST(Range)});
 END Main.
