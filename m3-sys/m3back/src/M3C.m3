@@ -1466,12 +1466,14 @@ END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(self: T; name: Name; <*UNUSED*>byte_size: ByteSize; <*UNUSED*>alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID): M3CG.Var =
+PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID): M3CG.Var =
 VAR var := NEW(Var_t, self := self, type := type, name := name, imported := TRUE).Init();
     declaration: TEXT;
 BEGIN
     self.comment("import_global");
     declaration := "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";";
+
+    <* ASSERT (byte_size MOD alignment) = 0 *>
     <* ASSERT NOT self.in_proc *>
     print(self, declaration);
     RETURN var;
@@ -1529,13 +1531,14 @@ PROCEDURE bind_segment(
     self: T;
     v: M3CG.Var;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     <*UNUSED*>type: Type;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN) =
 VAR var := NARROW(v, Var_t);
 BEGIN
     self.comment("bind_segment");
+    <* ASSERT (byte_size MOD alignment) = 0 *>
     print(self, " /* bind_segment */ ");
     var.byte_size := byte_size;
 END bind_segment;
@@ -1561,7 +1564,7 @@ BEGIN
     RETURN DeclareGlobal(self, name, byte_size, alignment, type, typeid, exported, inited, TRUE);
 END declare_constant;
 
-PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; <*UNUSED*>alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
+PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR   var := NEW(Var_t, self := self, type := type, name := name, const := const,
                  (*inited := inited, typeid := typeid, alignment := alignment,*)
@@ -1569,6 +1572,7 @@ VAR   var := NEW(Var_t, self := self, type := type, name := name, const := const
                  proc := self.current_proc, byte_size := byte_size).Init();
 BEGIN
     self.comment(DeclTag [const]);
+    <* ASSERT (byte_size MOD alignment) = 0 *>
     print(self, var.Declare() & " M3_INIT;");
     RETURN var;
 END DeclareGlobal;
@@ -1699,7 +1703,7 @@ TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
     count := 0;
 METHODS
-    Declare(type: Type; byte_size: ByteSize): M3CG.Var := GetStructSizes_Declare;
+    Declare(type: Type; byte_size: ByteSize; alignment: Alignment): M3CG.Var := GetStructSizes_Declare;
 OVERRIDES
     declare_constant := GetStructSizes_DeclareConstant;
     declare_global := GetStructSizes_DeclareGlobal;
@@ -1762,10 +1766,12 @@ BEGIN
 
 END GetStructSizes;
 
-PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: Type; byte_size: ByteSize): M3CG.Var =
+PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: Type; byte_size: ByteSize; alignment: Alignment): M3CG.Var =
 BEGIN
+    <* ASSERT byte_size >= 0 *>
+    <* ASSERT (byte_size MOD alignment) = 0 *>
+    byte_size := MAX(byte_size, 1);
     IF type = Type.Struct THEN
-        <* ASSERT byte_size > 0 *>
         self.sizes[self.count] := byte_size;
         INC(self.count);
     END;
@@ -1775,66 +1781,68 @@ END GetStructSizes_Declare;
 PROCEDURE GetStructSizes_DeclareTemp(
     self: GetStructSizes_t;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     type: Type;
     <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
 BEGIN
-    RETURN self.Declare(type, byte_size);
+    RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_DeclareTemp;
 
 PROCEDURE GetStructSizes_DeclareGlobal(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     type: Type;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
-    RETURN self.Declare(type, byte_size);
+    RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_DeclareGlobal;
 
 PROCEDURE GetStructSizes_ImportGlobal(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     type: Type;
     <*UNUSED*>typeid: TypeUID): M3CG.Var =
 BEGIN
-    RETURN self.Declare(type, byte_size);
+    RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_ImportGlobal;
 
 PROCEDURE GetStructSizes_DeclareConstant(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     type: Type;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
-    RETURN self.Declare(type, byte_size);
+    RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_DeclareConstant;
 
 PROCEDURE GetStructSizes_DeclareLocalOrParam(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     type: Type;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency): M3CG.Var =
 BEGIN
-    RETURN self.Declare(type, byte_size);
+    RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_DeclareLocalOrParam;
 
 PROCEDURE Struct(size: INTEGER): TEXT =
 BEGIN
+    <* ASSERT size >= 0 *>
+    size := MAX(size, 1);
     RETURN "M3STRUCT(" & IntToDec(size) & ")";
 END Struct;
 
@@ -1896,7 +1904,7 @@ PROCEDURE declare_local(
     self: T;
     name: Name;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     type: Type;
     <*UNUSED*>typeid: TypeUID;
     in_memory: BOOLEAN;
@@ -1985,7 +1993,7 @@ BEGIN
     self.param_proc := NIL;
 END last_param;
 
-PROCEDURE internal_declare_param(self: T; name: Name; byte_size: ByteSize; <*UNUSED*>alignment: Alignment;
+PROCEDURE internal_declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment;
                                  type: Type; <*UNUSED*>typeid: TypeUID; in_memory: BOOLEAN; up_level: BOOLEAN;
                                  <*UNUSED*>frequency: Frequency; type_text: TEXT): M3CG.Var =
 VAR function := self.param_proc;
@@ -3309,12 +3317,14 @@ BEGIN
     pop_parameter_helper(self, s0);
 END pop_param;
 
-PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: TypeUID; <*UNUSED*>byte_size: ByteSize; <*UNUSED*>alignment: Alignment) =
+PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
 (* pop s0 and make it the "next" parameter in the current call
 * NOTE: it is passed by value *)
 VAR s0 := get(self, 0);
 BEGIN
     self.comment("pop_struct");
+    <* ASSERT (byte_size MOD alignment) = 0 *>
+    <* ASSERT byte_size >= 0 *>
     (* pop_parameter_helper(self, "*(M3STRUCT(" & IntToDec(byte_size) & ") * )" & s0); *)
     (* pop_parameter_helper(self, s0); *)
     (* BUG? local procedure take struct pointers, imported ones take ADDRESS? *)
