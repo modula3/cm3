@@ -2,9 +2,8 @@ UNSAFE MODULE Main;
 IMPORT RTIO, Text;
 
 TYPE BYTE = BITS 8 FOR [0..255];
-TYPE Range = ['\000'..'\377'];
+TYPE Range = ['a'..'d'];
 TYPE Set = SET OF Range;
-CONST Asciis = Set{'\000'.. '\177'};
 
 PROCEDURE NibbleToHexChar(a: BYTE): CHAR =
 BEGIN
@@ -34,7 +33,7 @@ VAR p := LOOPHOLE(ADR(charSet), REF ARRAY [0..size - 1] OF BYTE);
   END F1;
 
 BEGIN
-    F1(Asciis);
-    F1(Set{' '});
-    F1(Asciis - Set{' '});
+    F1(Set{'a'..'d'});
+    F1(Set{'a','b'} - Set{'c'});
+    F1(Set{'a','b'} + Set{'c'});
 END Main.
