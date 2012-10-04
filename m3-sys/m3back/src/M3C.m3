@@ -17,7 +17,8 @@ IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 C and the error messages reference C line numbers *)
   CONST output_line_directives = TRUE;
   CONST output_extra_newlines = FALSE;
-
+  CONST inline_extract = FALSE;
+  
 (* ztype: zero extended type -- a "larger" type that is a multiple of 32 bits in size
  *                              a type to store in registers, a type
  *                              to store on the compile-time or runtime stack
@@ -820,6 +821,7 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "typedef double LONGREAL;",
 "typedef /*long*/ double EXTENDED;",
 "#define m3_extract_T(T) static T __stdcall m3_extract_##T(T value,WORD_T offset,WORD_T count){return((value>>offset)&~(((~(T)0))<<count));}",
+"#define m3_extract(T, value, offset, count) ((((T)value)>>((WORD_T)offset))&~(((~(T)0))<<((WORD_T)count)))",
 "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){T mask=(~((~(T)0)<<count))<<offset;return(((y<<offset)&mask)|(x&~mask));}",
 "#define m3_sign_extend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}",
 "m3_sign_extend_T(INT32)",
@@ -2824,7 +2826,7 @@ VAR s0 := cast(get(self, 0), Type.Addr);
 BEGIN
     self.comment(op);
     pop(self, 3);
-    print(self, "m3_" & op & "(" & IntToDec(byte_size * 8) & ",(WORD_T*)" & s2 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s0 & ");");
+    print(self, "m3_" & op & "(" & IntToDec(byte_size * 8) & ",(WORD_T*)" & s0 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s2 & ");");
 END set_op3;
 
 PROCEDURE set_union(self: T; byte_size: ByteSize) =
@@ -2997,7 +2999,11 @@ BEGIN
     self.comment("extract");
     <* ASSERT sign_extend = FALSE *>
     pop(self, 3);
-    push(self, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & value & "," & offset & "," & count & ")");
+    IF inline_extract THEN
+        push(self, type, "m3_extract(" & typeToText[typeToUnsigned[type]] & "," & value & "," & offset & "," & count & ")");
+    ELSE
+        push(self, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & value & "," & offset & "," & count & ")");
+    END;
 END extract;
 
 PROCEDURE extract_n(self: T; type: IType; sign_extend: BOOLEAN; count: CARDINAL) =
