@@ -1,29 +1,14 @@
 MODULE Main;
-IMPORT RTIO, ASCII, Text;
+IMPORT RTIO, ASCII;
 
-PROCEDURE FindCharSet(
-    t: Text.T;
-    READONLY charSet: ASCII.Set;
-    VAR index: CARDINAL)
-    : BOOLEAN =
-  VAR
-    i: CARDINAL := index;
-    length: CARDINAL := Text.Length(t);
+PROCEDURE FindCharSet(READONLY charSet: ASCII.Set) : BOOLEAN =
   BEGIN
-    REPEAT
-      IF Text.GetChar (t, i) IN charSet THEN index := i; RETURN TRUE END;
-      INC(i);
-    UNTIL i = length;
-    index := i;
-    RETURN FALSE;
+    RETURN 'a' IN charSet;
   END FindCharSet;
 
 PROCEDURE F1() =
-VAR pos: CARDINAL := 0;
 BEGIN
-    RTIO.PutInt(ORD(FindCharSet("abc", ASCII.Asciis - ASCII.Set {' '}, pos)));
-    RTIO.PutText(" ");
-    RTIO.PutInt(pos);
+    RTIO.PutInt(ORD(FindCharSet(ASCII.Asciis - ASCII.Set {' '})));
     RTIO.PutText("\n");
     RTIO.Flush();
 END F1;
