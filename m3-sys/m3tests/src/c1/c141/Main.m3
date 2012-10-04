@@ -1,18 +1,18 @@
-MODULE Main;
+UNSAFE MODULE Main;
 IMPORT RTIO, ASCII;
 
-PROCEDURE FindCharSet(READONLY charSet: ASCII.Set) : BOOLEAN =
+TYPE BYTE = BITS 8 FOR [0..255];
+
+PROCEDURE F1(READONLY charSet: ASCII.Set) =
+CONST size = BITSIZE(charSet) DIV 8;
+VAR p := LOOPHOLE(ADR(charSet), REF ARRAY [0..size - 1] OF BYTE);
   BEGIN
-    RETURN 'a' IN charSet;
-  END FindCharSet;
-
-PROCEDURE F1() =
-BEGIN
-    RTIO.PutInt(ORD(FindCharSet(ASCII.Asciis - ASCII.Set {' '})));
-    RTIO.PutText("\n");
+    FOR i := 0 TO size - 1 DO
+        RTIO.PutHex(p[i]); RTIO.PutText(" ");
+    END;
     RTIO.Flush();
-END F1;
+  END F1;
 
 BEGIN
-    F1();
+    F1(ASCII.Asciis - ASCII.Set {' '});
 END Main.
