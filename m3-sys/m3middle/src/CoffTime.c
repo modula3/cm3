@@ -46,7 +46,7 @@ __cdecl
 CoffTime__OfFile(TEXT tpath)
 {
     const char* path = (tpath ? M3toC__SharedTtoS(tpath) : NULL);
-    INTEGER t = 0; /* ignore error */
+    INTEGER t = { 0 }; /* ignore error */
     if (path)
     {
 #ifdef _WIN32
