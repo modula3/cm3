@@ -30,7 +30,7 @@ __cdecl
 CoffTime__Now(void)
 {
 #ifdef _WIN32
-    FILETIME ft;
+    FILETIME ft = { 0 };
     GetSystemTimeAsFileTime(&ft);
     return CoffTime__FromFileTime(&ft);
 #else
