@@ -81,12 +81,12 @@ ThreadInternal__Select(int nfds,
     double n = { 0 };
 
     if (m3timeout < 0)
-        return select(nfds, read, write, xcept, NULL);
+        return select(nfds, (fd_set*)read, (fd_set*)write, (fd_set*)xcept, NULL);
 
     ZERO_MEMORY(timeout);
     timeout.tv_usec = modf(m3timeout, &n) * MILLION;
     timeout.tv_sec = n;
-    return select(nfds, read, write, xcept, &timeout);
+    return select(nfds, (fd_set*)read, (fd_set*)write, (fd_set*)xcept, &timeout);
 }
 
 #endif
