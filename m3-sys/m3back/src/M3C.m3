@@ -674,14 +674,7 @@ PROCEDURE Proc_Locals(p: Proc_t; i: INTEGER): Var_t = BEGIN RETURN NARROW(p.loca
 CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything -- slows down compilation;
    try to minimize/eliminate it. *)
-"#ifdef __cplusplus",
-"typedef void* ADDRESS;",
-(* BUG? local procedure take struct pointers, imported ones take ADDRESS? *)
-"#define M3CAST_STRUCT_PARAMETER(size, param) ((M3STRUCT(size)*)param)",
-"#else",
 "typedef char* ADDRESS;",
-"#define M3CAST_STRUCT_PARAMETER(size, param) ((void*)param)",
-"#endif",
 "typedef signed char INT8;",
 "typedef unsigned char UINT8;",
 "typedef short INT16;",
@@ -815,19 +808,6 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "m3_insert_T(UINT32)",
 "m3_insert_T(UINT64)",
 "#define SET_GRAIN (sizeof(WORD_T)*8)",
-(*
-"static WORD_T m3_strlen(const char* s) { const char* self = s; while ( *self++) { /* nothing */ } return (WORD_T)(self - s - 1); }",
-"static WORD_T m3_uint_to_dec_length(WORD_T i) { WORD_T length = 0; do { length += 1; i /= 10; } while (i); return length; }",
-"static char* m3_strrev(char* s, unsigned length) { if (length > 1) { unsigned i = 0; unsigned j = length - 1; while (i < j) { \\",
-"char self = s[i]; s[i] = s[j]; s[j] = self; i += 1; j -= 1; } } return s; }",
-"static char* __stdcall m3_concat(char* buffer, char** s, WORD_T i);",
-"static WORD_T __stdcall m3_concat_length(char** s, WORD_T i) { WORD_T length = 0, j; for (i = 0; i < j; ++i) length += m3_strlen(s[i); return length; }",
-#define M3_CONCAT(m3_conc
-"static char* __stdcall m3_uint_to_dec(char* buffer, WORD_T i)",
-"{ WORD_T length = 0; do { buffer[length++] = "0123456789"[i % 10]; i /= 10; } while (i);",
-"  buffer[length] = 0; m3_strrev(buffer, length); return buffer; }",
-"#define M3_UINT_DEC(i) m3_uint_to_dec(alloca(m3_uint_to_dec_length(i) + 1), i)",
-*)
 "static void __stdcall m3_fence(void){ }",
 (*"static void __stdcall m3_abort(const char* message, size_t length){fflush(NIL);write(2, message, length);abort();}\n",*)
 "static WORD_T __stdcall m3_set_member(WORD_T elt,WORD_T*set){return(set[elt/SET_GRAIN]&(((WORD_T)1)<<(elt%SET_GRAIN)))!=0;}",
@@ -958,7 +938,7 @@ CONST typeToText = ARRAY CGType OF TEXT {
     "UINT64", "INT64",
     "REAL", "LONGREAL", "EXTENDED",
     "ADDRESS",
-    "STRUCT",
+    "ADDRESS", (* STRUCT *)
     "void"
 };
 
@@ -1478,7 +1458,7 @@ VAR var := NEW(Var_t, self := self, name := name, const := const).Init();
     text: TEXT := NIL;
     length := 0;
 BEGIN
-    self.comment("declare_segment2");
+    self.comment("declare_segment");
     IF name # 0 THEN
         text := M3ID.ToText(name);
         length := Text.Length(text);
@@ -1867,17 +1847,21 @@ BEGIN
     (* TODO clean this up.. *)
     static_link := follow_static_link(var.self, var);
     IF Text.Length(static_link) = 0 THEN
-        RETURN Struct(var.byte_size) & " " & M3ID.ToText(var.name) & "=*_param_struct_pointer_" & M3ID.ToText(var.name) & ";";
+        RETURN Struct(var.byte_size) & " " & M3ID.ToText(var.name) & "=*(" & Struct(var.byte_size) & "*)(_param_struct_pointer_" & M3ID.ToText(var.name) & ");";
     ELSE
-        RETURN static_link & M3ID.ToText(var.name) & "=*_param_struct_pointer_" & M3ID.ToText(var.name) & ";";
+        RETURN static_link & M3ID.ToText(var.name) & "=*(" & Struct(var.byte_size) & "*)(_param_struct_pointer_" & M3ID.ToText(var.name) & ");";
     END;
 END Var_DeclareAndInitStructParamLocalValue;
 
 PROCEDURE Param_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN RETURN var.type_text; END;
-    IF var.type # Type.Struct THEN RETURN typeToText[var.type]; END;
-    RETURN Struct(var.byte_size) & "*";
+    IF TRUE THEN
+        RETURN typeToText[var.type];
+    ELSE
+        IF var.type # Type.Struct THEN RETURN typeToText[var.type]; END;
+        RETURN Struct(var.byte_size) & "*";
+    END;
 END Param_Type;
 
 PROCEDURE Var_Type(var: Var_t): TEXT =
@@ -2184,7 +2168,7 @@ BEGIN
     self.comment("init_var");
     init_helper(self, offset, Type.Addr, comment); (* FUTURE: better typing *)
     IF bias # 0 THEN
-        self.initializer.addhi(comment & "(ADDRESS)(" & IntToDec(bias) & "+"& "(char*)&" & M3ID.ToText(var.name) & ")");
+        self.initializer.addhi(comment & IntToDec(bias) & "+"& "(ADDRESS)&" & M3ID.ToText(var.name));
     ELSE
         self.initializer.addhi(comment & "(ADDRESS)&" & M3ID.ToText(var.name));
     END;
@@ -2605,7 +2589,7 @@ PROCEDURE address_plus_offset(in: TEXT; in_offset: INTEGER): TEXT =
 BEGIN
     in := paren(in);
     IF in_offset # 0 THEN
-        in := paren(paren(IntToDec(in_offset)) & "+(char*)" & in);
+        in := paren(paren(IntToDec(in_offset)) & "+(ADDRESS)" & in);
     END;
     RETURN in;
 END address_plus_offset;
@@ -3314,7 +3298,7 @@ BEGIN
         <* ASSERT FALSE *>
     ELSE
         pop(self, 2);
-        push(self, Type.Addr, paren("((char*)(" & s1 & "))+" & paren(size_text & "*" & s0)));
+        push(self, Type.Addr, paren(s1 & paren(size_text & "*" & s0)));
     END;
 END index_address;
 
@@ -3366,13 +3350,13 @@ END pop_param;
 
 PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
 (* pop s0 and make it the "next" parameter in the current call
-* NOTE: it is passed by value *)
-VAR s0 := get(self, 0);
+ * NOTE: it is passed by value *)
+VAR s0 := cast(get(self, 0), Type.Addr);
 BEGIN
     self.comment("pop_struct");
     <* ASSERT (byte_size MOD alignment) = 0 *>
     <* ASSERT byte_size >= 0 *>
-    pop_parameter_helper(self, "M3CAST_STRUCT_PARAMETER(" & IntToDec(byte_size) & "," & s0 & ")");
+    pop_parameter_helper(self, s0);
 END pop_struct;
 
 PROCEDURE pop_static_link(self: T) =
