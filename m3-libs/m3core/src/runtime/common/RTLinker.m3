@@ -38,6 +38,8 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     envp := GetEnvironmentStrings (p_envp);
     instance := p_instance;
 
+    (* PrintModule(RTLinkerX.RTHooks_M3(0)); *)
+
     (* initialize the rest of the modules we'll be calling *)
     AddUnit (RTLinkerX.RTLinker_I3);  (* myself! *)
     AddUnit (RTLinkerX.RT0_I3);
