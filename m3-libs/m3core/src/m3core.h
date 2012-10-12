@@ -151,15 +151,19 @@
 #endif
 
 #ifdef __cplusplus
-#define M3EXTERNC_BEGIN extern "C" {
-#define M3_EXTERNC_BEGIN extern "C" {
-#define M3EXTERNC_END }
-#define M3_EXTERNC_END }
+#define M3_EXTERN_C         extern "C"
+#define M3_EXTERN_C_BEGIN   extern "C" {
+#define M3_EXTERN_C_END     }
+#define M3EXTERNC_BEGIN     extern "C" {
+#define M3_EXTERNC_BEGIN    extern "C" {
+#define M3EXTERNC_END       }
+#define M3_EXTERNC_END      }
 #else
-#define M3EXTERNC_BEGIN  /* nothing */
-#define M3_EXTERNC_BEGIN  /* nothing */
-#define M3EXTERNC_END    /* nothing */
-#define M3_EXTERNC_END    /* nothing */
+#define M3_EXTERN_C         /* nothing */
+#define M3EXTERNC_BEGIN     /* nothing */
+#define M3_EXTERNC_BEGIN    /* nothing */
+#define M3EXTERNC_END       /* nothing */
+#define M3_EXTERNC_END      /* nothing */
 #endif
 
 /* m3name vs. cname is structured carefully to deal with identifiers
