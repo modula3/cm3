@@ -144,4 +144,3 @@ END Table.
    effects on the table.  An iterator's "next" method has side-effects
    on the iterator.
 *)
-
