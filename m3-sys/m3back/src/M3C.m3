@@ -658,7 +658,7 @@ BEGIN
     proc.blocks := NEW(RefSeq.T).init();
     proc.block_stack := NEW(RefSeq.T).init();
     proc.params := NEW(REF ARRAY OF Var_t, proc.n_params);
-    proc.ForwardDeclareFrameType(); (* TODO don'self always do this *)
+    proc.ForwardDeclareFrameType(); (* TODO do not always do this *)
     RETURN proc;
 END Proc_Init;
 
@@ -777,7 +777,7 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "void __cdecl RTHooks__ReportFault(ADDRESS module, INT32 code);",
 "#endif",
 (* problem: size_t/ptrdiff_t could be int or long or long long or __int64 *)
-(* RTHooks__ReportFault's signature varies, but it isn'self imported *)
+(* RTHooks__ReportFault's signature varies, but it is not imported *)
 (*
 "#if __INITIAL_POINTER_SIZE == 64",
 "typedef __int64 INTEGER;",
@@ -924,9 +924,9 @@ CONST intLiteralPrefix = ARRAY CGType OF TEXT {
 };
 
 CONST intLiteralSuffix = ARRAY CGType OF TEXT {
-    "T",  "",
-    "T", "",
-    "T", "",
+    "U",  "",
+    "U", "",
+    "U", "",
     ")", ")",
     NIL, ..
 };
@@ -966,7 +966,7 @@ CONST CompareOpName = ARRAY CompareOp OF TEXT { "eq", "ne", "gt", "ge", "lt", "l
 
 PROCEDURE paren(text: TEXT): TEXT =
 BEGIN
-(* It is possible we can reduce parens, but it isn'self as simple as it seems. *)
+(* It is possible we can reduce parens, but it is not as simple as it seems. *)
     RETURN "(" & text & ")";
 END paren;
 
@@ -1839,18 +1839,17 @@ BEGIN
 END Struct;
 
 PROCEDURE Var_DeclareAndInitStructParamLocalValue(var: Var_t): TEXT =
-VAR static_link := "";
+VAR prefix := "";
 BEGIN
     IF var.type # Type.Struct THEN
         RETURN NIL;
     END;
     (* TODO clean this up.. *)
-    static_link := follow_static_link(var.self, var);
-    IF Text.Length(static_link) = 0 THEN
-        RETURN Struct(var.byte_size) & " " & M3ID.ToText(var.name) & "=*(" & Struct(var.byte_size) & "*)(_param_struct_pointer_" & M3ID.ToText(var.name) & ");";
-    ELSE
-        RETURN static_link & M3ID.ToText(var.name) & "=*(" & Struct(var.byte_size) & "*)(_param_struct_pointer_" & M3ID.ToText(var.name) & ");";
+    prefix := follow_static_link(var.self, var);
+    IF Text.Length(prefix) = 0 THEN
+        prefix := Struct(var.byte_size) & " ";
     END;
+    RETURN prefix & M3ID.ToText(var.name) & "=*(" & Struct(var.byte_size) & "*)(_param_struct_pointer_" & M3ID.ToText(var.name) & ");";
 END Var_DeclareAndInitStructParamLocalValue;
 
 PROCEDURE Param_Type(var: Var_t): TEXT =
@@ -3298,7 +3297,7 @@ BEGIN
         <* ASSERT FALSE *>
     ELSE
         pop(self, 2);
-        push(self, Type.Addr, paren(s1 & paren(size_text & "*" & s0)));
+        push(self, Type.Addr, paren(s1 & "+" & paren(size_text & "*" & s0)));
     END;
 END index_address;
 
