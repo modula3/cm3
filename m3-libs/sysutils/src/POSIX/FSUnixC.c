@@ -30,6 +30,15 @@
 #include <unistd.h>
 #endif
 
+/* const is extern const in C, but static const in C++,
+ * but gcc gives a warning for the correct portable form "extern const"
+ */
+#if defined(__cplusplus) || !defined(__GNUC__)
+#define EXTERN_CONST extern const
+#else
+#define EXTERN_CONST const
+#endif
+
 #if __GNUC__ >= 4
 #ifdef __APPLE__
 #pragma GCC visibility push(default)
@@ -65,7 +74,7 @@ extern "C"
 
 M3WRAP2_(int, access, const char*, int)
 
-#define X(x) const int FSUtils__##x = x;
+#define X(x) EXTERN_CONST int FSUtils__##x = x;
 
 X(X_OK)
 X(R_OK)
