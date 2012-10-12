@@ -70,6 +70,27 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
     IF verbose THEN
       INC(debugLevel);
     END;
+
+    IF s.genC THEN
+      Out (s, "#include <stddef.h>", EOL);
+      IF (s.gui) THEN
+        Out (s, "#include <windows.h>", EOL);
+      END;
+      Out (s, "#if __INITIAL_POINTER_SIZE == 64", EOL);
+      Out (s, "typedef __int64 INTEGER;", EOL);
+      Out (s, "#else", EOL);
+      Out (s, "typedef ptrdiff_t INTEGER;", EOL);
+      Out (s, "#endif", EOL);
+      Out (s, "#ifdef __cplusplus", EOL);
+      Out (s, "extern \"C\" {", EOL);
+      Out (s, "#endif", EOL);
+      Out (s, "void RTLinker__InitRuntime(INTEGER, char**, char**, void*);", EOL);
+      Out (s, "void RTProcess__Exit(INTEGER);", EOL);
+      Out (s, "void* Main_M3(void); /* ? */", EOL);
+      Out (s, "void RTLinker__AddUnitImports(void* (*)(void)); /* ? */", EOL);
+      Out (s, "void RTLinker__AddUnit(void* (*)(void)); /* ? */", EOL);
+    END;
+
     IF s.genC
       THEN GenCTypeDecls (s);
       ELSE GenCGTypeDecls (s);
@@ -79,6 +100,13 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
     ELSE
       ImportTopUnits (s);
     END;
+
+    IF s.genC THEN
+      Out (s, "#ifdef __cplusplus", EOL);
+      Out (s, "} /* extern \"C\" */", EOL);
+      Out (s, "#endif", EOL);
+    END;
+
     IF s.genC
       THEN GenerateCEntry (s);
       ELSE GenerateCGEntry (s);
@@ -102,8 +130,8 @@ PROCEDURE GenCGTypeDecls (VAR s: State) =
     s.cg.set_source_line (1);
 
     (* we only need to declare a global segment so the gcc-based backend
-       can pick up the unit name, "_m3main".   But then, the native x86
-       backend requires that it be explicitly initialized... *)
+       can pick up the unit name, "_m3main". But then, the native x86
+       backend requires that it be explicitly initialized. *)
     interface := s.cg.declare_segment (M3ID.Add ("MM__m3main"), 0, FALSE);
     s.cg.bind_segment (interface, Target.Address.bytes, struct_align,
                        Target.CGType.Struct, FALSE, TRUE);
@@ -254,7 +282,7 @@ PROCEDURE ImportUnit (VAR s: State;  ui: UnitInfo) =
   BEGIN
     ui.binder := UnitName (u);
     IF s.genC THEN
-      Out (s, "extern void* ", ui.binder, "();", EOL);
+      Out (s, "extern void* ", ui.binder, "(void);", EOL);
     ELSE
       ui.cg_proc := s.cg.import_procedure (M3ID.Add (ui.binder), 1,
                                           Target.CGType.Addr,
@@ -308,20 +336,7 @@ PROCEDURE GenerateCEntry (VAR s: State) =
     END GenAddUnitImports;
 
   BEGIN
-    Out (s, "#include <stddef.h>", EOL);
-    Out (s, "#if __INITIAL_POINTER_SIZE == 64", EOL);
-    Out (s, "typedef __int64 INTEGER;", EOL);
-    Out (s, "#else", EOL);
-    Out (s, "typedef ptrdiff_t INTEGER;", EOL);
-    Out (s, "#endif", EOL);
-    Out (s, "void RTLinker__InitRuntime(INTEGER, char**, char**, void*);", EOL);
-    Out (s, "void RTProcess__Exit(INTEGER);", EOL);
-    Out (s, "void* Main_M3(void); /* ? */", EOL);
-    Out (s, "void RTLinker__AddUnitImports(); /* ? */", EOL);
-    Out (s, "void RTLinker__AddUnit(void* (*)(void)); /* ? */", EOL);
-
     IF (s.gui) THEN
-      Out (s, "#include <windows.h>", EOL);
       Out (s, "int WINAPI ");
       Out (s, "WinMain (HINSTANCE self, HINSTANCE prev,", EOL);
       Out (s, "                    LPSTR args, int mode)", EOL);
