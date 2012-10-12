@@ -39,4 +39,3 @@ PROCEDURE SortD(l: T; c := Elem.Compare): T;
    fields of the existing cells.  *)
 
 END ListSort.
-
