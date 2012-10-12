@@ -24,6 +24,3 @@ end
 
 import_sys_lib ("FLEX-BISON")
 c_source   ("y.tab")
-
-
-
