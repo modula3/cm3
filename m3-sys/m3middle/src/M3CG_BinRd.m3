@@ -37,7 +37,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY Bop OF Cmd {
+  CmdMap = ARRAY [Bop.begin_unit..Bop.fetch_and_xor] OF Cmd {
     Cmd {Bop.begin_unit, begin_unit},
     Cmd {Bop.end_unit, end_unit},
     Cmd {Bop.import_unit, import_unit},

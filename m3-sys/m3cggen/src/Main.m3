@@ -9,7 +9,7 @@ TYPE
   Desc = RECORD name: TEXT;  op: Op;  END;
 
 CONST
-  Map = ARRAY Op OF Desc {
+  Map = ARRAY [Op.begin_unit..Op.fetch_and_xor] OF Desc {
     Desc { "begin_unit", Op.begin_unit }, 
     Desc { "end_unit", Op.end_unit }, 
     Desc { "import_unit", Op.import_unit }, 

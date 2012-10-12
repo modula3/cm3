@@ -104,36 +104,10 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         export_unit := export_unit;
         set_source_file := set_source_file;
         set_source_line := set_source_line;
-        (* declare_typename := declare_typename; *)
-        (* declare_array := declare_array; *)
-        (* declare_open_array := declare_open_array; *)
-        (* declare_enum := declare_enum; *)
-        (* declare_enum_elt := declare_enum_elt; *)
-        (* declare_packed := declare_packed; *)
-        (* declare_record := declare_record; *)
-        (* declare_field := declare_field; *)
-        (* declare_set := declare_set; *)
-        (* declare_subrange := declare_subrange; *)
-        (* declare_pointer := declare_pointer; *)
-        (* declare_indirect := declare_indirect; *)
-        (* declare_proctype := declare_proctype; *)
-        (* declare_formal := declare_formal; *)
-        (* declare_raises := declare_raises; *)
-        (* declare_object := declare_object; *)
-        (* declare_method := declare_method; *)
-        (* declare_opaque := declare_opaque; *)
-        (* reveal_opaque := reveal_opaque; *)
         set_runtime_proc := set_runtime_proc;
-        (* import_global := import_global; *)
-        (* declare_segment := declare_segment; *)
         bind_segment := bind_segment;
         declare_global := declare_global;
         declare_constant := declare_constant;
-        (* declare_local := declare_local; *)
-        (* declare_param := declare_param; *)
-        (* declare_temp := declare_temp; *)
-        (* free_temp := free_temp; *)
-        (* declare_exception := declare_exception; *)
         begin_init := begin_init;
         end_init := end_init;
         init_int := init_int;
@@ -143,8 +117,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         init_offset := init_offset;
         init_chars := init_chars;
         init_float := init_float;
-        (* import_procedure := import_procedure; *)
-        (* declare_procedure := declare_procedure; *)
         begin_procedure := begin_procedure;
         end_procedure := end_procedure;
         begin_block := begin_block;
@@ -1185,8 +1157,7 @@ PROCEDURE multipass_end_unit(self: Multipass_t) =
  *)
 BEGIN
     M3CG_MultiPass.end_unit(self); (* let M3CG_MultiPass do its usual last step *)
-    (* BUG self.Replay(self.self, self.op_data[M3CG_Binary.Op.begin_unit]); some initialization *)
-    begin_unit(self.self, 0); (* hack till above is fixed *)
+    self.Replay(self.self, self.op_data[M3CG_Binary.Op.begin_unit]);
     Prefix_Start(self.self);
     GetStructSizes(self);
     Prefix_End(self.self);
@@ -1577,24 +1548,6 @@ BEGIN
     RETURN var;
 END DeclareGlobal;
 
-(*
-PROCEDURE ExtraScope_Open(self: T) =
-BEGIN
-    IF NOT self.last_char_was_open_brace THEN
-      print(self, "{");
-      self.extra_scope_close_braces := self.extra_scope_close_braces & "}";
-    END;
-END ExtraScope_Open;
-*)
-
-(*
-PROCEDURE ExtraScope_Close(self: T) =
-BEGIN
-    print(self, self.extra_scope_close_braces);
-    self.extra_scope_close_braces := "";
-END ExtraScope_Close;
-*)
-
 TYPE Locals_t = M3CG_DoNothing.T BRANDED "M3C.Locals_t" OBJECT
     self: T := NIL;
 METHODS
@@ -1904,7 +1857,7 @@ PROCEDURE declare_local(
     self: T;
     name: Name;
     byte_size: ByteSize;
-    alignment: Alignment;
+    <*UNUSED*>alignment: Alignment;
     type: Type;
     <*UNUSED*>typeid: TypeUID;
     in_memory: BOOLEAN;
@@ -1915,19 +1868,10 @@ VAR var := NEW(Var_t, self := self, type := type, name := name, up_level := up_l
 BEGIN
     self.comment("declare_local");
     (* self.comment("declare_local " & M3ID.ToText(var.name)); *)
-(*
-    <* ASSERT NOT self.in_proc *>
-    IF self.in_proc THEN
-        ExtraScope_Open(self);
-        print(self, var.Declare() & " M3_INIT;");
-        <* ASSERT up_level = FALSE *>
-    ELSE
-*)
-        IF up_level THEN
-            self.current_proc.uplevels := TRUE;
-        END;
-        self.current_proc.locals.addhi(var);
-(*  END; *)
+    IF up_level THEN
+        self.current_proc.uplevels := TRUE;
+    END;
+    self.current_proc.locals.addhi(var);
     RETURN var;
 END declare_local;
 
@@ -1993,9 +1937,17 @@ BEGIN
     self.param_proc := NIL;
 END last_param;
 
-PROCEDURE internal_declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment;
-                                 type: Type; <*UNUSED*>typeid: TypeUID; in_memory: BOOLEAN; up_level: BOOLEAN;
-                                 <*UNUSED*>frequency: Frequency; type_text: TEXT): M3CG.Var =
+PROCEDURE internal_declare_param(
+    self: T;
+    name: Name;
+    byte_size: ByteSize;
+    <*UNUSED*>alignment: Alignment;
+    type: Type;
+    <*UNUSED*>typeid: TypeUID;
+    in_memory: BOOLEAN;
+    up_level: BOOLEAN;
+    <*UNUSED*>frequency: Frequency;
+    type_text: TEXT): M3CG.Var =
 VAR function := self.param_proc;
     var := NEW(Param_t, self := self, type := type, name := name, byte_size := byte_size,
                in_memory := in_memory, up_level := up_level, proc := function, type_text := type_text).Init();
@@ -2289,7 +2241,6 @@ BEGIN
     IF n_params = 0 THEN
         last_param(self);
     END;
-
     SuppressLineDirective(self, n_params, "declare_procedure n_params");
     RETURN proc;
 END declare_procedure;
@@ -2427,7 +2378,7 @@ BEGIN
 
 END begin_procedure;
 
-PROCEDURE end_procedure(self: T; p: M3CG.Proc) =
+PROCEDURE end_procedure(self: T; <*UNUSED*>p: M3CG.Proc) =
 (*VAR proc := NARROW(p, Proc_t);*)
 BEGIN
     self.comment("end_procedure");
@@ -2435,7 +2386,6 @@ BEGIN
     self.in_proc := FALSE;
     self.current_proc := NIL;
     print(self, "}");
-    (* ExtraScope_Close(self); *)
 END end_procedure;
 
 PROCEDURE begin_block(self: T) =

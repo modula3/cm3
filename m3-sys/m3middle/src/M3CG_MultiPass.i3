@@ -8,7 +8,7 @@ INTERFACE M3CG_MultiPass;
  * I expect to use #3.
  *)
 
-IMPORT M3CG, Target;
+IMPORT M3CG, Target, M3CG_AssertFalse;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Alignment, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
@@ -21,7 +21,7 @@ TYPE typeid_t = INTEGER; (* HACK that Tony insists on *)
 
 TYPE T <: Public;
 
-TYPE Public = M3CG.T OBJECT
+TYPE Public = M3CG_AssertFalse.T OBJECT
     data: REF ARRAY OF op_t;
     op_data: ARRAY Op OF REF ARRAY OF op_t;
     

@@ -21,14 +21,19 @@ TYPE
     end_init, init_int, init_proc, init_label, init_var, init_offset,
     init_chars, init_float, import_procedure, declare_procedure,
     begin_procedure, end_procedure, begin_block, end_block,
-    note_procedure_origin, set_label, jump, if_true, if_false, if_eq,
-    if_ne, if_gt, if_ge, if_lt, if_le, case_jump, exit_proc, load,
+    note_procedure_origin, set_label, jump, if_true, if_false,
+    if_eq, if_ne, if_gt, if_ge, if_lt, if_le,       (* file only; in-memory uses if_compare *)
+    case_jump, exit_proc, load,
     load_address, load_indirect, store, store_indirect,
-    load_nil, load_integer, load_float, eq, ne,
-    gt, ge, lt, le, add, subtract, multiply, divide, negate, abs, max,
-    min, round, trunc, floor, ceiling, cvt_float, div, mod, set_union,
+    load_nil, load_integer, load_float,
+    eq, ne, gt, ge, lt,  le,                        (* file only; in-memory uses compare *)
+    add, subtract, multiply, divide, negate, abs, max,
+    min,
+    round, trunc, floor, ceiling,                   (* file only; in-memory uses cvt_int *)
+    cvt_float, div, mod, set_union,
     set_difference, set_intersection, set_sym_difference, set_member,
-    set_eq, set_ne, set_lt, set_le, set_gt, set_ge, set_range,
+    set_eq, set_ne, set_lt, set_le, set_gt, set_ge, (* file only; in-memory uses set_compare *)
+    set_range,
     set_singleton, not, and, or, xor, shift, shift_left, shift_right,
     rotate, rotate_left, rotate_right, widen, chop, extract, extract_n,
     extract_mn, insert, insert_n, insert_mn, swap, pop, copy_n, copy,
@@ -38,7 +43,17 @@ TYPE
     call_indirect, pop_param, pop_struct, pop_static_link,
     load_procedure, load_static_link, comment,
     store_ordered, load_ordered, exchange, compare_exchange, fence,
-    fetch_and_add, fetch_and_sub, fetch_and_or, fetch_and_and, fetch_and_xor
+    fetch_and_add,      (* file only; in-memory uses fetch_and_op *)
+    fetch_and_sub,      (* file only; in-memory uses fetch_and_op *)
+    fetch_and_or,       (* file only; in-memory uses fetch_and_op *)
+    fetch_and_and,      (* file only; in-memory uses fetch_and_op *)
+    fetch_and_xor,      (* file only; in-memory uses fetch_and_op *)
+    set_error_handler,  (* in-memory only; contains a pointer, so silently skipped in files *)
+    compare,            (* in-memory only; file converts to eq/ne/etc. *)
+    cvt_int,            (* in-memory only; file converts to trunc/ceiling/etc. *)
+    fetch_and_op,       (* in-memory only; file converts to fetch_and_add/fetch_and_sub/etc. *)
+    if_compare,         (* in-memory only; file converts to if_eq/if_ne/etc. *)
+    set_compare         (* in-memory only; file converts to set_eq/set_ne/etc. *)
   };
 
 (* Integers are encoded as sequences of unsigned bytes, [0..255].
