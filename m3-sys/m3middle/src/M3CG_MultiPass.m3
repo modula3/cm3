@@ -56,7 +56,7 @@ END StaticRefs_GetProc;
 REVEAL
 T = Public BRANDED "M3CG_MultiPass.T" OBJECT
     refs: GrowableRefs_t := NIL;
-    next_label_id := 100;
+    next_label_id := 1;
     op_counts := ARRAY Op OF INTEGER{0, ..};
     total_ops: INTEGER := 0;
     private_data: RefSeq.T := NIL;
@@ -390,7 +390,7 @@ END declare_procedure;
 
 PROCEDURE set_error_handler(self: T; proc: PROCEDURE(msg: TEXT)) =
 BEGIN
-self.Add(NEW(set_error_handler_t, (*op := Op.set_error_handler,*) proc := proc));
+self.Add(NEW(set_error_handler_t, op := Op.set_error_handler, proc := proc));
 END set_error_handler;
 
 PROCEDURE begin_procedure(self: T; proc: Proc) =
@@ -619,7 +619,7 @@ self.Add(NEW(if_false_t, op := Op.if_false, type := type, label := label, freque
 END if_false;
 
 PROCEDURE if_compare(self: T; type: ZType; op: CompareOp; label: Label; frequency: Frequency) = BEGIN
-self.Add(NEW(if_compare_t, (*op := Op.if_compare,*) type := type, compare_op := op, label := label, frequency := frequency));
+self.Add(NEW(if_compare_t, op := Op.if_compare, type := type, compare_op := op, label := label, frequency := frequency));
 END if_compare;
 
 PROCEDURE case_jump(self: T; type: IType; READONLY labels: ARRAY OF Label) =
@@ -666,7 +666,7 @@ self.Add(NEW(load_float_t, op := Op.load_float, type := type, float := float));
 END load_float;
 
 PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) = BEGIN
-self.Add(NEW(compare_t, (*op := Op.compare,*) ztype := ztype, itype := itype, compare_op := op));
+self.Add(NEW(compare_t, op := Op.compare, ztype := ztype, itype := itype, compare_op := op));
 END compare;
 
 PROCEDURE add(self: T; type: AType) = BEGIN
@@ -716,302 +716,302 @@ END min;
 
 PROCEDURE cvt_int(self: T; rtype: RType; itype: IType; op: ConvertOp) =
 BEGIN
-self.Add(NEW(cvt_int_t, rtype := rtype, itype := itype, convert_op := op));
+self.Add(NEW(cvt_int_t, op := Op.cvt_int, rtype := rtype, itype := itype, convert_op := op));
 END cvt_int;
 
 PROCEDURE cvt_float(self: T; atype: AType; rtype: RType) =
 BEGIN
-self.Add(NEW(cvt_float_t, atype := atype, rtype := rtype));
+self.Add(NEW(cvt_float_t, op := Op.cvt_float, atype := atype, rtype := rtype));
 END cvt_float;
 
 PROCEDURE set_union(self: T; byte_size: ByteSize) =
 BEGIN
-self.Add(NEW(set_union_t, byte_size := byte_size));
+self.Add(NEW(set_union_t, op := Op.set_union, byte_size := byte_size));
 END set_union;
 
 PROCEDURE set_difference(self: T; byte_size: ByteSize) =
 BEGIN
-self.Add(NEW(set_difference_t, byte_size := byte_size));
+self.Add(NEW(set_difference_t, op := Op.set_difference, byte_size := byte_size));
 END set_difference;
 
 PROCEDURE set_intersection(self: T; byte_size: ByteSize) =
 BEGIN
-self.Add(NEW(set_intersection_t, byte_size := byte_size));
+self.Add(NEW(set_intersection_t, op := Op.set_intersection, byte_size := byte_size));
 END set_intersection;
 
 PROCEDURE set_sym_difference(self: T; byte_size: ByteSize) =
 BEGIN
-self.Add(NEW(set_sym_difference_t, byte_size := byte_size));
+self.Add(NEW(set_sym_difference_t, op := Op.set_sym_difference, byte_size := byte_size));
 END set_sym_difference;
 
 PROCEDURE set_member(self: T; byte_size: ByteSize; type: IType) =
 BEGIN
-self.Add(NEW(set_member_t, byte_size := byte_size, type := type));
+self.Add(NEW(set_member_t, op := Op.set_member, byte_size := byte_size, type := type));
 END set_member;
 
 PROCEDURE set_compare(self: T; byte_size: ByteSize; op: CompareOp; type: IType) =
 BEGIN
-self.Add(NEW(set_compare_t, byte_size := byte_size, compare_op := op, type := type));
+self.Add(NEW(set_compare_t, op := Op.set_compare, byte_size := byte_size, compare_op := op, type := type));
 END set_compare;
 
 PROCEDURE set_range(self: T; byte_size: ByteSize; type: IType) =
 BEGIN
-self.Add(NEW(set_range_t, byte_size := byte_size, type := type));
+self.Add(NEW(set_range_t, op := Op.set_range, byte_size := byte_size, type := type));
 END set_range;
 
 PROCEDURE set_singleton(self: T; byte_size: ByteSize; type: IType) =
 BEGIN
-self.Add(NEW(set_singleton_t, byte_size := byte_size, type := type));
+self.Add(NEW(set_singleton_t, op := Op.set_singleton, byte_size := byte_size, type := type));
 END set_singleton;
 
 PROCEDURE not(self: T; type: IType) =
 BEGIN
-self.Add(NEW(not_t, type := type));
+self.Add(NEW(not_t, op := Op.not, type := type));
 END not;
 
 PROCEDURE and(self: T; type: IType) =
 BEGIN
-self.Add(NEW(and_t, type := type));
+self.Add(NEW(and_t, op := Op.and, type := type));
 END and;
 
 PROCEDURE or(self: T; type: IType) =
 BEGIN
-self.Add(NEW(or_t, type := type));
+self.Add(NEW(or_t, op := Op.or, type := type));
 END or;
 
 PROCEDURE xor(self: T; type: IType) =
 BEGIN
-self.Add(NEW(xor_t, type := type));
+self.Add(NEW(xor_t, op := Op.xor, type := type));
 END xor;
 
 PROCEDURE shift(self: T; type: IType) =
 BEGIN
-self.Add(NEW(shift_t, type := type));
+self.Add(NEW(shift_t, op := Op.shift, type := type));
 END shift;
 
 PROCEDURE shift_left(self: T; type: IType) =
 BEGIN
-self.Add(NEW(shift_left_t, type := type));
+self.Add(NEW(shift_left_t, op := Op.shift_left, type := type));
 END shift_left;
 
 PROCEDURE shift_right(self: T; type: IType) =
 BEGIN
-self.Add(NEW(shift_right_t, type := type));
+self.Add(NEW(shift_right_t, op := Op.shift_right, type := type));
 END shift_right;
 
 PROCEDURE rotate(self: T; type: IType) =
 BEGIN
-self.Add(NEW(rotate_t, type := type));
+self.Add(NEW(rotate_t, op := Op.rotate, type := type));
 END rotate;
 
 PROCEDURE rotate_left(self: T; type: IType) =
 BEGIN
-self.Add(NEW(rotate_left_t, type := type));
+self.Add(NEW(rotate_left_t, op := Op.rotate_left, type := type));
 END rotate_left;
 
 PROCEDURE rotate_right(self: T; type: IType) =
 BEGIN
-self.Add(NEW(rotate_right_t, type := type));
+self.Add(NEW(rotate_right_t, op := Op.rotate_right, type := type));
 END rotate_right;
 
 PROCEDURE widen(self: T; sign: BOOLEAN) =
 BEGIN
-self.Add(NEW(widen_t, sign := sign));
+self.Add(NEW(widen_t, op := Op.widen, sign := sign));
 END widen;
 
 PROCEDURE chop(self: T) =
 BEGIN
-self.Add(NEW(chop_t));
+self.Add(NEW(chop_t, op := Op.chop));
 END chop;
 
 PROCEDURE extract(self: T; type: IType; sign_extend: BOOLEAN) =
 BEGIN
-self.Add(NEW(extract_t, type := type, sign_extend := sign_extend));
+self.Add(NEW(extract_t, op := Op.extract, type := type, sign_extend := sign_extend));
 END extract;
 
 PROCEDURE extract_n(self: T; type: IType; sign_extend: BOOLEAN; count: CARDINAL) =
 BEGIN
-self.Add(NEW(extract_n_t, type := type, sign_extend := sign_extend, count := count));
+self.Add(NEW(extract_n_t, op := Op.extract_n, type := type, sign_extend := sign_extend, count := count));
 END extract_n;
 
 PROCEDURE extract_mn(self: T; type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL) =
 BEGIN
-self.Add(NEW(extract_mn_t, type := type, sign_extend := sign_extend, offset := offset, count := count));
+self.Add(NEW(extract_mn_t, op := Op.extract_mn, type := type, sign_extend := sign_extend, offset := offset, count := count));
 END extract_mn;
 
 PROCEDURE insert(self: T; type: IType) =
 BEGIN
-self.Add(NEW(insert_t, type := type));
+self.Add(NEW(insert_t, op := Op.insert, type := type));
 END insert;
 
 PROCEDURE insert_n(self: T; type: IType; count: CARDINAL) =
 BEGIN
-self.Add(NEW(insert_n_t, type := type, count := count));
+self.Add(NEW(insert_n_t, op := Op.insert_n, type := type, count := count));
 END insert_n;
 
 PROCEDURE insert_mn(self: T; type: IType; offset, count: CARDINAL) =
 BEGIN
-self.Add(NEW(insert_mn_t, type := type, offset := offset, count := count));
+self.Add(NEW(insert_mn_t, op := Op.insert_mn, type := type, offset := offset, count := count));
 END insert_mn;
 
 PROCEDURE swap(self: T; a, b: Type) =
 BEGIN
-self.Add(NEW(swap_t, a := a, b := b));
+self.Add(NEW(swap_t, op := Op.swap, a := a, b := b));
 END swap;
 
 PROCEDURE pop(self: T; type: Type) =
 BEGIN
-self.Add(NEW(pop_t, type := type));
+self.Add(NEW(pop_t, op := Op.pop, type := type));
 END pop;
 
 PROCEDURE copy_n(self: T; itype: IType; mtype: MType; overlap: BOOLEAN) =
 BEGIN
-self.Add(NEW(copy_n_t, itype := itype, mtype := mtype, overlap := overlap));
+self.Add(NEW(copy_n_t, op := Op.copy_n, itype := itype, mtype := mtype, overlap := overlap));
 END copy_n;
 
 PROCEDURE copy(self: T; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
 BEGIN
-self.Add(NEW(copy_t, n := n, mtype := mtype, overlap := overlap));
+self.Add(NEW(copy_t, op := Op.copy, n := n, mtype := mtype, overlap := overlap));
 END copy;
 
 PROCEDURE zero_n(self: T; itype: IType; mtype: MType) =
 BEGIN
-self.Add(NEW(zero_n_t, itype := itype, mtype := mtype));
+self.Add(NEW(zero_n_t, op := Op.zero_n, itype := itype, mtype := mtype));
 END zero_n;
 
 PROCEDURE zero(self: T; n: INTEGER; type: MType) =
 BEGIN
-self.Add(NEW(zero_t, n := n, type := type));
+self.Add(NEW(zero_t, op := Op.zero, n := n, type := type));
 END zero;
 
 PROCEDURE loophole(self: T; from, to: ZType) =
 BEGIN
-self.Add(NEW(loophole_t, from := from, to := to));
+self.Add(NEW(loophole_t, op := Op.loophole, from := from, to := to));
 END loophole;
 
 PROCEDURE abort(self: T; code: RuntimeError) =
 BEGIN
-self.Add(NEW(abort_t, code := code));
+self.Add(NEW(abort_t, op := Op.abort, code := code));
 END abort;
 
 PROCEDURE check_nil(self: T; code: RuntimeError) =
 BEGIN
-self.Add(NEW(check_nil_t, code := code));
+self.Add(NEW(check_nil_t, op := Op.check_nil, code := code));
 END check_nil;
 
 PROCEDURE check_lo(self: T; type: IType; READONLY i: Target.Int; code: RuntimeError) =
 BEGIN
-self.Add(NEW(check_lo_t, type := type, i := i, code := code));
+self.Add(NEW(check_lo_t, op := Op.check_lo, type := type, i := i, code := code));
 END check_lo;
 
 PROCEDURE check_hi(self: T; type: IType; READONLY i: Target.Int; code: RuntimeError) =
 BEGIN
-self.Add(NEW(check_hi_t, type := type, i := i, code := code));
+self.Add(NEW(check_hi_t, op := Op.check_hi, type := type, i := i, code := code));
 END check_hi;
 
 PROCEDURE check_range(self: T; type: IType; READONLY a, b: Target.Int; code: RuntimeError) =
 BEGIN
-self.Add(NEW(check_range_t, type := type, a := a, b := b, code := code));
+self.Add(NEW(check_range_t, op := Op.check_range, type := type, a := a, b := b, code := code));
 END check_range;
 
 PROCEDURE check_index(self: T; type: IType; code: RuntimeError) =
 BEGIN
-self.Add(NEW(check_index_t, type := type, code := code));
+self.Add(NEW(check_index_t, op := Op.check_index, type := type, code := code));
 END check_index;
 
 PROCEDURE check_eq(self: T; type: IType; code: RuntimeError) =
 BEGIN
-self.Add(NEW(check_eq_t, type := type, code := code));
+self.Add(NEW(check_eq_t, op := Op.check_eq, type := type, code := code));
 END check_eq;
 
 PROCEDURE add_offset(self: T; i: INTEGER) =
 BEGIN
-self.Add(NEW(add_offset_t, i := i));
+self.Add(NEW(add_offset_t, op := Op.add_offset, i := i));
 END add_offset;
 
 PROCEDURE index_address(self: T; type: IType; size: INTEGER) =
 BEGIN
-self.Add(NEW(index_address_t, type := type, size := size));
+self.Add(NEW(index_address_t, op := Op.index_address, type := type, size := size));
 END index_address;
 
 PROCEDURE start_call_direct(self: T; proc: Proc; level: INTEGER; type: Type) =
 BEGIN
-self.Add(NEW(start_call_direct_t, proc := NARROW(proc, proc_t).tag, level := level, type := type));
+self.Add(NEW(start_call_direct_t, op := Op.start_call_direct, proc := NARROW(proc, proc_t).tag, level := level, type := type));
 END start_call_direct;
 
 PROCEDURE start_call_indirect(self: T; type: Type; callingConvention: CallingConvention) =
 BEGIN
-self.Add(NEW(start_call_indirect_t, type := type, callingConvention := callingConvention));
+self.Add(NEW(start_call_indirect_t, op := Op.start_call_indirect, type := type, callingConvention := callingConvention));
 END start_call_indirect;
 
 PROCEDURE pop_param(self: T; type: MType) =
 BEGIN
-self.Add(NEW(pop_param_t, type := type));
+self.Add(NEW(pop_param_t, op := Op.pop_param, type := type));
 END pop_param;
 
 PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
 BEGIN
-self.Add(NEW(pop_struct_t, typeid := typeid, byte_size := byte_size, alignment := alignment));
+self.Add(NEW(pop_struct_t, op := Op.pop_struct, typeid := typeid, byte_size := byte_size, alignment := alignment));
 END pop_struct;
 
 PROCEDURE pop_static_link(self: T) =
 BEGIN
-self.Add(NEW(pop_static_link_t));
+self.Add(NEW(pop_static_link_t, op := Op.pop_static_link));
 END pop_static_link;
 
 PROCEDURE call_direct(self: T; proc: Proc; type: Type) =
 BEGIN
-self.Add(NEW(call_direct_t, proc := NARROW(proc, proc_t).tag, type := type));
+self.Add(NEW(call_direct_t, op := Op.call_direct, proc := NARROW(proc, proc_t).tag, type := type));
 END call_direct;
 
 PROCEDURE call_indirect(self: T; type: Type; callingConvention: CallingConvention) =
 BEGIN
-self.Add(NEW(call_indirect_t, type := type, callingConvention := callingConvention));
+self.Add(NEW(call_indirect_t, op := Op.call_indirect, type := type, callingConvention := callingConvention));
 END call_indirect;
 
 PROCEDURE load_procedure(self: T; proc: Proc) =
 BEGIN
-self.Add(NEW(load_procedure_t, proc := NARROW(proc, proc_t).tag));
+self.Add(NEW(load_procedure_t, op := Op.load_procedure, proc := NARROW(proc, proc_t).tag));
 END load_procedure;
 
 PROCEDURE load_static_link(self: T; proc: Proc) =
 BEGIN
-self.Add(NEW(load_static_link_t, proc := NARROW(proc, proc_t).tag));
+self.Add(NEW(load_static_link_t, op := Op.load_static_link, proc := NARROW(proc, proc_t).tag));
 END load_static_link;
 
 PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) =
 BEGIN
-self.Add(NEW(comment_t, a := a, b := b, c := c, d := d));
+self.Add(NEW(comment_t, op := Op.comment, a := a, b := b, c := c, d := d));
 END comment;
 
 PROCEDURE store_ordered(self: T; ztype: ZType; mtype: MType; order: MemoryOrder) =
 BEGIN
-self.Add(NEW(store_ordered_t, mtype := mtype, ztype := ztype, order := order));
+self.Add(NEW(store_ordered_t, op := Op.store_ordered, mtype := mtype, ztype := ztype, order := order));
 END store_ordered;
 
 PROCEDURE load_ordered(self: T; mtype: MType; ztype: ZType; order: MemoryOrder) =
 BEGIN
-self.Add(NEW(load_ordered_t, mtype := mtype, ztype := ztype, order := order));
+self.Add(NEW(load_ordered_t, op := Op.load_ordered, mtype := mtype, ztype := ztype, order := order));
 END load_ordered;
 
 PROCEDURE exchange(self: T; mtype: MType; ztype: ZType; order: MemoryOrder) =
 BEGIN
-self.Add(NEW(exchange_t, mtype := mtype, ztype := ztype, order := order));
+self.Add(NEW(exchange_t, op := Op.exchange, mtype := mtype, ztype := ztype, order := order));
 END exchange;
 
 PROCEDURE compare_exchange(self: T; mtype: MType; ztype: ZType; r: IType; success, failure: MemoryOrder) =
 BEGIN
-self.Add(NEW(compare_exchange_t, mtype := mtype, ztype := ztype, r := r, success := success, failure := failure));
+self.Add(NEW(compare_exchange_t, op := Op.compare_exchange, mtype := mtype, ztype := ztype, r := r, success := success, failure := failure));
 END compare_exchange;
 
 PROCEDURE fence(self: T; order: MemoryOrder) =
 BEGIN
-self.Add(NEW(fence_t, order := order));
+self.Add(NEW(fence_t, op := Op.fence, order := order));
 END fence;
 
 PROCEDURE fetch_and_op(self: T; op: AtomicOp; mtype: MType; ztype: ZType; order: MemoryOrder) =
 BEGIN
-self.Add(NEW(fetch_and_op_t, atomic_op := op, mtype := mtype, ztype := ztype, order := order));
+self.Add(NEW(fetch_and_op_t, op := Op.fetch_and_op, atomic_op := op, mtype := mtype, ztype := ztype, order := order));
 END fetch_and_op;
 
 PROCEDURE Replay_Init(self: Replay_t; refcount: INTEGER): Replay_t =
