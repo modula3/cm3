@@ -238,13 +238,16 @@ ThreadPThread__thread_create(WORD_T stackSize,
   return r;
 }
 
+
 #define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
-extern pthread_mutex_t * const ThreadPThread__##name##Mu = &name##Mu; \
+extern pthread_mutex_t * const ThreadPThread__##name##Mu; \
+pthread_mutex_t * const ThreadPThread__##name##Mu = &name##Mu; \
 
 #define CONDITION_VARIABLE(name) \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
-extern pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
+extern pthread_cond_t * const ThreadPThread__##name##Cond; \
+pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
 
 /* activeMu slotMu initMu perfMu heapMu heapCond */
 
