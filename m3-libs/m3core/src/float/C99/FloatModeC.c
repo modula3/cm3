@@ -21,6 +21,10 @@
 # pragma STDC FENV_ACCESS ON /* its sloppy to just have this here */
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int
 FloatModeC__get_FE_TONEAREST(void) { return FE_TONEAREST; }
 
@@ -53,7 +57,7 @@ FloatModeC__get_FE_UNDERFLOW(void) { return FE_UNDERFLOW; }
 /**********************************************************************/
 
 /* the following routines are normally inlined by the C compiler, but
-	 we cant do that here so we have to wrap them ... */
+	 we cannot do that here so we have to wrap them. */
 
 int 
 FloatModeC__fegetround(void) { return fegetround(); }
@@ -69,3 +73,7 @@ FloatModeC__feraiseexcept(int excepts) { feraiseexcept(excepts); }
 
 int
 FloatModeC__fetestexcept(int excepts) { return fetestexcept(excepts); }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
