@@ -24,6 +24,3 @@ end
 
 import_sys_lib ("LEX-YACC")
 c_source   ("y.tab")
-
-
-
