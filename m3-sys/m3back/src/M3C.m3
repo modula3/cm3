@@ -544,7 +544,6 @@ TYPE Var_t = M3CG.Var OBJECT
         InFrameName(): TEXT := Var_Name;
         Type(): TEXT := Var_Type;
         InFrameType(): TEXT := Var_Type;
-        DeclareAndInitStructParamLocalValue(): TEXT := Var_DeclareAndInitStructParamLocalValue;
         Init(): Var_t := Var_Init;
 END;
 
@@ -1838,20 +1837,6 @@ BEGIN
     RETURN "M3STRUCT(" & IntToDec(size) & ")";
 END Struct;
 
-PROCEDURE Var_DeclareAndInitStructParamLocalValue(var: Var_t): TEXT =
-VAR prefix := "";
-BEGIN
-    IF var.type # Type.Struct THEN
-        RETURN NIL;
-    END;
-    (* TODO clean this up.. *)
-    prefix := follow_static_link(var.self, var);
-    IF Text.Length(prefix) = 0 THEN
-        prefix := Struct(var.byte_size) & " ";
-    END;
-    RETURN prefix & M3ID.ToText(var.name) & "=*(" & Struct(var.byte_size) & "*)(_param_struct_pointer_" & M3ID.ToText(var.name) & ");";
-END Var_DeclareAndInitStructParamLocalValue;
-
 PROCEDURE Param_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN RETURN var.type_text; END;
@@ -1872,10 +1857,7 @@ END Var_Type;
 
 PROCEDURE Param_Name(var: Var_t): TEXT =
 BEGIN
-    IF var.type # Type.Struct THEN
-        RETURN M3ID.ToText(var.name);
-    END;
-    RETURN "_param_struct_pointer_" & M3ID.ToText(var.name);
+    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.type = Type.Struct] & M3ID.ToText(var.name);
 END Param_Name;
 
 PROCEDURE Var_Name(var: Var_t): TEXT =
@@ -1884,15 +1866,13 @@ BEGIN
 END Var_Name;
 
 PROCEDURE Var_Declare(var: Var_t): TEXT =
-VAR static := ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported];
 BEGIN
-    RETURN static & var.Type() & " " & var.Name();
+    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & " " & var.Name();
 END Var_Declare;
 
 PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
-VAR static := ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported];
 BEGIN
-    RETURN static & var.InFrameType() & " " & var.InFrameName();
+    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.InFrameType() & " " & var.InFrameName();
 END Var_InFrameDeclare;
 
 PROCEDURE declare_local(
@@ -2379,9 +2359,6 @@ PROCEDURE begin_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
     frame_name := proc.FrameName();
     frame_type := proc.FrameType();
-    param_name: TEXT := NIL;
-    var_name: TEXT := NIL;
-    var: Var_t := NIL;
     params := proc.params;
 BEGIN
     self.comment("begin_procedure");
@@ -2399,23 +2376,25 @@ BEGIN
         (* add field to ensure frame not empty *)
         (* TODO only do this if necessary *)
 
-        print(self, "void* _unused;");
+        print(self, "ADDRESS _unused;");
 
         (* uplevel locals in frame *)
 
         FOR i := 0 TO proc.Locals_Size() - 1 DO
-            var := proc.Locals(i);
-            IF var.up_level THEN
-                print(self, var.InFrameDeclare() & ";");
+            WITH var = proc.Locals(i) DO
+                IF var.up_level THEN
+                    print(self, var.InFrameDeclare() & ";");
+                END;
             END;
         END;
 
         (* uplevel params in frame *) (* structs? *)
 
         FOR i := FIRST(params^) TO LAST(params^) DO
-            var := params[i];
-            IF var.up_level THEN
-                print(self, var.InFrameDeclare() & ";");
+            WITH param = params[i] DO
+                IF param.up_level THEN
+                    print(self, param.InFrameDeclare() & ";");
+                END;
             END;
         END;
         print(self, "};");
@@ -2424,48 +2403,58 @@ BEGIN
     print(self, function_prototype(proc, FunctionPrototype_t.Define));
     print(self, "{");
 
-    (* declare and initialize non-uplevel locals *)
+    (* declare and zero non-uplevel locals (including temporaries) *)
 
     FOR i := 0 TO proc.Locals_Size() - 1 DO
-        WITH L = proc.Locals(i) DO
-            IF NOT L.up_level THEN
-                print(self, L.Declare() & "={0};");
+        WITH local = proc.Locals(i) DO
+            IF NOT local.up_level THEN
+                print(self, local.Declare() & "={0};");
             END;
         END;
     END;
+    
+    (* declare and zero non-uplevel struct param values (uplevels are in the frame struct) *)
 
-    (* declare and initialize frame of uplevels *)
+    FOR i := FIRST(params^) TO LAST(params^) DO
+        WITH param = params[i] DO
+            IF NOT param.up_level AND param.type = Type.Struct THEN
+                print(self, Struct(param.byte_size) & " " & Var_Name(param) & "={0};");
+            END;
+        END;
+    END;
+    
+    (* declare frame of uplevels *)
 
     IF proc.forward_declared_frame_type THEN
         print(self, frame_type & " " & frame_name & "={0};");
+    END;
 
-        (* capture uplevel parameters and static_link *)
+    (* init/capture uplevel parameters and static_link (including struct values) *)
 
+    IF proc.forward_declared_frame_type THEN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level THEN
-                    param_name := Param_Name(param);
-                    var_name := Var_Name(param);
                     IF param.type # Type.Struct THEN
-                        print(self, frame_name & "." & var_name & "=" & param_name & ";");
+                        print(self, frame_name & "." & Var_Name(param) & "=" & Param_Name(param) & ";");
                     ELSE
-                        print(self, frame_name & "." & var_name & "=*" & param_name & ";");
+                        print(self, frame_name & "." & Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");");
                     END;
                 END;
             END;
         END;
 
-        (* quash unused warning *)
-
-        print(self, frame_name & "._unused=&" & frame_name & ";");
-
+        (* quash unused warning *) (* TODO cleanup -- only declare if needed *)
+        print(self, frame_name & "._unused=(ADDRESS)&" & frame_name & ";");
     END;
 
-    (* copy structs from pointers to local value *) (* uplevels? *)
+    (* copy non-uplevel struct params from pointers to local value *)
 
     FOR i := FIRST(params^) TO LAST(params^) DO
-        IF NOT params[i].up_level THEN
-            print(self, params[i].DeclareAndInitStructParamLocalValue());
+        WITH param = params[i] DO
+            IF NOT param.up_level AND param.type = Type.Struct THEN
+                print(self, Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");");
+            END;
         END;
     END;
 
