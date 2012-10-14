@@ -18,7 +18,7 @@ m3quake base core front
 cm3 core front
 m3scanner base core
 m3tools base core
-m3cgcat tool
+m3cgcat base core front tool
 m3gdb m3gnudevtool m3gdb
 m3bundle base core
 mklib base core front
