@@ -14,7 +14,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 
 (* Taken together, these help debugging, as you get more lines in the
-C and the error messages reference C line numbers *)
+   C and the error messages reference C line numbers *)
   CONST output_line_directives = TRUE;
   CONST output_extra_newlines = FALSE;
   CONST inline_extract = FALSE;
@@ -33,6 +33,28 @@ TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
         end_unit := multipass_end_unit;
     END;
 
+(*
+TYPE helper_function_t = RECORD
+    first := "";
+    per_type := "";
+    used_input_types := SET OF CGType{};
+END;
+
+TYPE helper_function_enum = {extract, insert, sign_extend};
+
+VAR helper_function_extract : helper_function_t := helper_function_t{""};
+VAR helper_functions := ARRAY helper_function_enum OF helper_function_t {
+    helper_function_t{
+        "#define m3_extract_T(T) static T __stdcall m3_extract_##T(T value,WORD_T offset,WORD_T count){return((value>>offset)&~(((~(T)0))<<count));}",
+    },
+    helper_function_t{
+        "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){T mask=(~((~(T)0)<<count))<<offset;return(((y<<offset)&mask)|(x&~mask));}",
+    },
+    helper_function_t{
+        "#define m3_sign_extend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}",
+    };
+*)
+
 TYPE
 T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
@@ -45,15 +67,13 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := NIL;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug  := 1;
+        debug  := 0;
         stack  : TextSeq.T := NIL;
         params : TextSeq.T := NIL;
         pop_static_link_temp_vars : RefSeq.T := NIL;
         pop_static_link_temp_vars_index := 0;
         
         enum_type: TEXT := NIL;
-        extra_scope_close_braces := ""; (* hack to account for locals/temps within code *)
-        last_char_was_open_brace := FALSE;
         (*enum: Enum_t := NIL;*)
         enum_id: TEXT := NIL;
         enum_value: CARDINAL := 0;
@@ -90,6 +110,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         in_proc_call    : BOOLEAN := FALSE; (* based on M3x86 *)
         proc_being_called : Proc_t := NIL;
         report_fault: TEXT := NIL; (* based on M3x86 -- reportlabel, global_var *)
+        report_fault_used := FALSE;
         width := 0;
 
     METHODS
@@ -106,18 +127,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         set_source_file := set_source_file;
         set_source_line := set_source_line;
         set_runtime_proc := set_runtime_proc;
-        (* bind_segment := bind_segment; *)
-        (* declare_global := declare_global; *)
-        (* declare_constant := declare_constant; *)
-        (* begin_init := begin_init; *)
-        (* end_init := end_init; *)
-        (* init_int := init_int; *)
-        (* init_proc := init_proc; *)
-        (* init_label := init_label; *)
-        (* init_var := init_var; *)
-        (* init_offset := init_offset; *)
-        (* init_chars := init_chars; *)
-        (* init_float := init_float; *)
         begin_procedure := begin_procedure;
         end_procedure := end_procedure;
         begin_block := begin_block;
@@ -713,8 +722,7 @@ CONST Prefix = ARRAY OF TEXT {
 "extern \"C\" {",
 "#endif",
 
-
-"#if !(defined(_MSC_VER) || defined(__cdecl))",
+"#if !defined(_MSC_VER) && !defined(__cdecl)",
 "#define __cdecl /* nothing */",
 "#endif",
 "#if !defined(_MSC_VER) && !defined(__stdcall)",
@@ -731,53 +739,19 @@ CONST Prefix = ARRAY OF TEXT {
 "double __cdecl floor(double);",
 "double __cdecl ceil(double);",
 
-(*"#include <limits.h>",*)
-
-(* need multiple passes and forward declare all structs; temporary partial solution *)
 "#define M3STRUCT(n) m3struct_##n##_t",
 "#define M3STRUCT1(n) typedef struct { volatile UINT8 a[n]; } M3STRUCT(n);",
 "#define M3STRUCT2(n) typedef struct { volatile UINT16 a[(n)/2]; } M3STRUCT(n);",
 "#define M3STRUCT4(n) typedef struct { volatile UINT32 a[(n)/4]; } M3STRUCT(n);",
 "#define M3STRUCT8(n) typedef struct { volatile UINT64 a[(n)/8]; } M3STRUCT(n);",
 "#ifdef __cplusplus",
-"#define M3_INIT",
-"#define new m3_new",
 "#define M3_DOTDOTDOT ...",
 "#else",
-"#define M3_INIT ={0}",
 "#define M3_DOTDOTDOT",
 "#endif",
 
-(*
-"/* const is extern const in C, but static const in C++,",
-" * but gcc gives a warning for the correct portable form \"extern const\"",
-" */",
-"#if defined(__cplusplus) || !defined(__GNUC__)",
-"#define EXTERN_CONST extern const",
-"#else",
-"#define EXTERN_CONST const",
-"#endif",
-*)
-(*
-"/* WORD_T/INTEGER are always exactly the same size as a pointer.",
-" * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. */",
-We really should not have this #ifdef, esp. the big list of architectures.
-*)
-"#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64) || defined(__LP64__) \\",
-"    || defined(__alpha__) || defined(__arm64__) || defined(__hppa64__) \\",
-"    || defined(__ia64__) || defined(__mips64__) || defined(__ppc64__) \\",
-"    || defined(__s390x__) || defined(__sparcv9__) || defined(__x86_64__)",
-"typedef INT64 INTEGER;",
-"typedef UINT64 WORD_T;",
-"void __cdecl RTHooks__ReportFault(ADDRESS module, INT64 code);",
-"#else",
-"typedef ptrdiff_t INTEGER;",
-"typedef size_t WORD_T;",
-"void __cdecl RTHooks__ReportFault(ADDRESS module, INT32 code);",
-"#endif",
-(* problem: size_t/ptrdiff_t could be int or long or long long or __int64 *)
-(* RTHooks__ReportFault's signature varies, but it is not imported *)
-(*
+(* WORD_T/INTEGER are always exactly the same size as a pointer.
+ * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. *)
 "#if __INITIAL_POINTER_SIZE == 64",
 "typedef __int64 INTEGER;",
 "typedef unsigned __int64 WORD_T;",
@@ -785,10 +759,8 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "typedef ptrdiff_t INTEGER;",
 "typedef size_t WORD_T;",
 "#endif",
-*)
 
 "typedef WORD_T* SET;",
-"#define NIL ((ADDRESS)0)",
 "typedef float REAL;",
 "typedef double LONGREAL;",
 "typedef /*long*/ double EXTENDED;",
@@ -807,8 +779,14 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "m3_insert_T(UINT32)",
 "m3_insert_T(UINT64)",
 "#define SET_GRAIN (sizeof(WORD_T)*8)",
-"static void __stdcall m3_fence(void){ }",
-(*"static void __stdcall m3_abort(const char* message, size_t length){fflush(NIL);write(2, message, length);abort();}\n",*)
+"#ifdef _MSC_VER",
+"long __cdecl _InterlockedExchange(volatile long*, long);",
+"#pragma instrinsic(_InterlockedExchange)",
+"static volatile long m3_fence_var;",
+"#define m3_fence() _InterlockedExchange(&m3_fence_var, 0)",
+"#else",
+"static void __stdcall m3_fence(void){}", (* not yet implemented *)
+"#endif",
 "static WORD_T __stdcall m3_set_member(WORD_T elt,WORD_T*set){return(set[elt/SET_GRAIN]&(((WORD_T)1)<<(elt%SET_GRAIN)))!=0;}",
 "static void __stdcall m3_set_union(WORD_T n_bits,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i,n_words = n_bits / SET_GRAIN;for (i = 0; i < n_words; ++i)a[i] = b[i] | c[i];}",
 "static void __stdcall m3_set_intersection(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a){WORD_T i,n_words = n_bits / SET_GRAIN;for (i = 0; i < n_words; ++i)a[i] = b[i] & c[i];}",
@@ -827,62 +805,15 @@ We really should not have this #ifdef, esp. the big list of architectures.
 "#define m3_shift_T(T) static T m3_shift_##T(T value,INTEGER shift){if((shift>=(INTEGER)(sizeof(T)*8))||(shift<=(INTEGER)-(sizeof(T)*8)))value=0;else if(shift>0)value<<=shift;else if(shift<0)value>>=-shift;return value;}",
 "m3_shift_T(UINT32)",
 "m3_shift_T(UINT64)",
-"/* return positive form of a negative value, avoiding overflow */",
-"/* T should be an unsigned type */",
-"#define M3_POS(T, a) (((T)-((a) + 1)) + 1)",
 "#define m3_rotate_left_T(T)  static T __stdcall m3_rotate_left_##T (T a, int b) { return ((a << b) | (a >> ((sizeof(a) * 8) - b))); }",
 "#define m3_rotate_right_T(T) static T __stdcall m3_rotate_right_##T(T a, int b) { return ((a >> b) | (a << ((sizeof(a) * 8) - b))); }",
 "#define m3_rotate_T(T)       static T __stdcall m3_rotate_##T(T a, int b) { b &= ((sizeof(a) * 8) - 1); if (b > 0) a = m3_rotate_left_##T(a, b); else if (b < 0) a = m3_rotate_right_##T(a, -b); return a; }",
-"#define m3_abs_T(T) static T __stdcall m3_abs_##T(T a) { return ((a < 0) ? (-a) : a); }",
-"#define m3_min_T(T) static T __stdcall m3_min_##T(T a, T b) { return ((a < b) ? a : b); }",
-"#define m3_max_T(T) static T __stdcall m3_max_##T(T a, T b) { return ((a > b) ? a : b); }",
-"#define m3_min_max_abs_T(T) m3_min_T(T) m3_max_T(T) m3_abs_T(T)",
-"#define m3_div_T(T) static T __stdcall m3_div_##T(T a, T b) \\",
-"{ \\",
-"  int aneg = (a < 0); \\",
-"  int bneg = (b < 0); \\",
-"  if (aneg == bneg || a == 0 || b == 0) \\",
-"    return (a / b); \\",
-"  else \\",
-"  { \\",
-"    /* round negative result down by rounding positive result up */ \\",
-"    /* unsigned math is much better defined, see gcc -Wstrict-overflow=4 */ \\",
-"    U##T ua = (aneg ? M3_POS(U##T, a) : (U##T)a); \\",
-"    U##T ub = (bneg ? M3_POS(U##T, b) : (U##T)b); \\",
-"    return -(T)((ua + ub - 1) / ub); \\",
-"  } \\",
-"}",
-"#define m3_mod_T(T) static T __stdcall m3_mod_##T(T a, T b) \\",
-"{ \\",
-"  int aneg = (a < 0); \\",
-"  int bneg = (b < 0); \\",
-"  if (aneg == bneg || a == 0 || b == 0) \\",
-"    return (a % b); \\",
-"  else \\",
-"  { \\",
-"    U##T ua = (aneg ? M3_POS(U##T, a) : (U##T)a); \\",
-"    U##T ub = (bneg ? M3_POS(U##T, b) : (U##T)b); \\",
-"    a = (T)(ub - 1 - (ua + ub - 1) % ub); \\",
-"    return (bneg ? -a : a); \\",
-"  } \\",
-"}",
-"m3_div_T(INT32)",
-"m3_mod_T(INT32)",
 "m3_rotate_left_T(UINT32)",
 "m3_rotate_right_T(UINT32)",
 "m3_rotate_T(UINT32)",
-"m3_div_T(INT64)",
-"m3_mod_T(INT64)",
 "m3_rotate_left_T(UINT64)",
 "m3_rotate_right_T(UINT64)",
 "m3_rotate_T(UINT64)",
-"m3_min_max_abs_T(INT32)",
-"m3_min_max_abs_T(UINT32)",
-"m3_min_max_abs_T(INT64)",
-"m3_min_max_abs_T(UINT64)",
-"m3_min_max_abs_T(REAL)",
-"m3_min_max_abs_T(LONGREAL)",
-"m3_min_max_abs_T(EXTENDED)",
 "double __cdecl floor(double);",
 "double __cdecl ceil(double);",
 "INT64 __cdecl llroundl(long double);",
@@ -909,7 +840,7 @@ We really should not have this #ifdef, esp. the big list of architectures.
 ""};
 
 <*NOWARN*>CONST Suffix = ARRAY OF TEXT {
-"#ifdef __cplusplus",
+"\n#ifdef __cplusplus",
 "} /* extern \"C\" */",
 "#endif"
 };
@@ -1005,7 +936,6 @@ BEGIN
     END;
 
     text_last_char := Text.GetChar(text, length - 1);
-    self.last_char_was_open_brace := text_last_char = '{';
 
     IF output_extra_newlines AND Text.FindChar(text, '\n') = -1 THEN
         Wr.PutText(self.c, text & "\n");
@@ -1136,7 +1066,7 @@ BEGIN
 END Prefix_End;
 
 PROCEDURE multipass_end_unit(self: Multipass_t) =
-(* called at the of the first pass -- we have everything
+(* called at the end of the first pass -- we have everything
    in memory now, except for the end_unit itself.
    
    This function is in control of coordinating the passes.
@@ -1165,6 +1095,10 @@ BEGIN
     self.self.comment("begin pass: segments/globals");
     self.Replay(NEW(Segments_t).Init(self.self));
     self.self.comment("end pass: segments/globals");
+
+    self.self.comment("begin pass: helper functions");
+    self.Replay(NEW(HelperFunctions_t).Init(self.self));
+    self.self.comment("end pass: helper functions");
 
     (* last pass *)
 
@@ -1556,7 +1490,7 @@ VAR   var := NEW(Var_t, self := self, type := type, name := name, const := const
 BEGIN
     self.comment(DeclTag [const]);
     <* ASSERT (byte_size MOD alignment) = 0 *>
-    print(self, var.Declare() & " M3_INIT;");
+    print(self, var.Declare() & ";");
     RETURN var;
 END DeclareGlobal;
 
@@ -1575,7 +1509,6 @@ OVERRIDES
     init_offset := Segments_init_offset;
     init_chars := Segments_init_chars;
     init_float := Segments_init_float;
-
     declare_constant := Segments_declare_constant;
     declare_global := Segments_declare_global;
 END;
@@ -1585,6 +1518,260 @@ BEGIN
     self.self := outer;
     RETURN self;
 END Segments_Init;
+
+TYPE HelperFunctions_t = M3CG_DoNothing.T BRANDED "M3C.HelperFunctions_t" OBJECT
+    self: T := NIL;
+    x: RECORD
+        pos, memcpy, memmove, memset, memcmp, floor, ceil, fence, set_member,
+        set_union, set_intersection, set_difference, set_sym_difference,
+        set_eq, set_ne, set_le, set_lt, set_ge, set_gt := FALSE;
+        div, mod, min, max, abs := SET OF CGType{};
+    END;
+METHODS
+    Init(outer: T): HelperFunctions_t := HelperFunctions_Init;
+OVERRIDES
+    div := HelperFunctions_div;
+    mod := HelperFunctions_mod;
+    abs := HelperFunctions_abs;
+    max := HelperFunctions_max;
+    min := HelperFunctions_min;
+    cvt_int := HelperFunctions_cvt_int;
+    set_union := HelperFunctions_set_union;
+    set_difference := HelperFunctions_set_difference;
+    set_intersection := HelperFunctions_set_intersection;
+    set_sym_difference := HelperFunctions_set_sym_difference;
+    set_member := HelperFunctions_set_member;
+    set_compare := HelperFunctions_set_compare;
+    set_range := HelperFunctions_set_range;
+    set_singleton := HelperFunctions_set_singleton;
+    shift := HelperFunctions_shift;
+    shift_left := HelperFunctions_shift_left;
+    shift_right := HelperFunctions_shift_right;
+    rotate := HelperFunctions_rotate;
+    rotate_left := HelperFunctions_rotate_left;
+    rotate_right := HelperFunctions_rotate_right;
+    extract := HelperFunctions_extract;
+    extract_n := HelperFunctions_extract_n;
+    extract_mn := HelperFunctions_extract_mn;
+    insert := HelperFunctions_insert;
+    insert_n := HelperFunctions_insert_n;
+    insert_mn := HelperFunctions_insert_mn;
+    pop := HelperFunctions_pop;
+    copy := HelperFunctions_copy;
+    copy_n := HelperFunctions_copy_n;
+    fence := HelperFunctions_fence;
+END;
+
+PROCEDURE HelperFunctions_Init(self: HelperFunctions_t; outer: T): HelperFunctions_t =
+BEGIN
+    self.self := outer;
+    RETURN self;
+END HelperFunctions_Init;
+
+PROCEDURE HelperFunctions_helper1(self: HelperFunctions_t; VAR boolean: BOOLEAN; READONLY text: ARRAY OF TEXT) =
+BEGIN
+    IF NOT boolean THEN
+        FOR i := FIRST(text) TO LAST(text) DO
+            print(self.self, ARRAY BOOLEAN OF TEXT{"", "\n"}[i = FIRST(text) AND NOT self.self.last_char_was_newline] & text[i] & "\n");
+        END;
+        boolean := TRUE;
+    END;
+END HelperFunctions_helper1;
+
+PROCEDURE HelperFunctions_helper2(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; READONLY first: ARRAY OF TEXT) =
+BEGIN
+    IF types = SET OF CGType{} THEN
+        FOR i := FIRST(first) TO LAST(first) DO
+            print(self.self, ARRAY BOOLEAN OF TEXT{"", "\n"}[i = FIRST(first) AND NOT self.self.last_char_was_newline] & first[i] & "\n");
+        END;
+    END;
+    IF NOT type IN types THEN
+        print(self.self, "m3_" & op & "_T(" & typeToText[type] & ")");
+        types := types + SET OF CGType{type};
+    END;
+END HelperFunctions_helper2;
+
+PROCEDURE HelperFunctions_helper3(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; first: TEXT) =
+BEGIN
+    HelperFunctions_helper2(self, op, type, types, ARRAY OF TEXT{first});
+END HelperFunctions_helper3;
+
+PROCEDURE HelperFunctions_pos(self: HelperFunctions_t) =
+CONST text = ARRAY OF TEXT{
+"/* return positive form of a negative value, avoiding overflow */",
+"/* T should be an unsigned type */",
+"#define M3_POS(T, a) (((T)-((a) + 1)) + 1)"
+};
+BEGIN
+    HelperFunctions_helper1(self, self.x.pos, text);
+END HelperFunctions_pos;
+
+PROCEDURE HelperFunctions_div(self: HelperFunctions_t; type: IType; a, b: Sign) =
+CONST text = ARRAY OF TEXT{
+"#define m3_div_T(T) static T __stdcall m3_div_##T(T a, T b) \\",
+"{ \\",
+"  int aneg = (a < 0); \\",
+"  int bneg = (b < 0); \\",
+"  if (aneg == bneg || a == 0 || b == 0) \\",
+"    return (a / b); \\",
+"  else \\",
+"  { \\",
+"    /* round negative result down by rounding positive result up */ \\",
+"    /* unsigned math is much better defined, see gcc -Wstrict-overflow=4 */ \\",
+"    U##T ua = (aneg ? M3_POS(U##T, a) : (U##T)a); \\",
+"    U##T ub = (bneg ? M3_POS(U##T, b) : (U##T)b); \\",
+"    return -(T)((ua + ub - 1) / ub); \\",
+"  } \\",
+"}"
+};
+BEGIN
+    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type]) THEN
+        HelperFunctions_pos(self);
+        HelperFunctions_helper2(self, "div", type, self.x.div, text);
+    END;
+END HelperFunctions_div;
+
+PROCEDURE HelperFunctions_mod(self: HelperFunctions_t; type: IType; a, b: Sign) =
+CONST text = ARRAY OF TEXT{
+"#define m3_mod_T(T) static T __stdcall m3_mod_##T(T a, T b) \\",
+"{ \\",
+"  int aneg = (a < 0); \\",
+"  int bneg = (b < 0); \\",
+"  if (aneg == bneg || a == 0 || b == 0) \\",
+"    return (a % b); \\",
+"  else \\",
+"  { \\",
+"    U##T ua = (aneg ? M3_POS(U##T, a) : (U##T)a); \\",
+"    U##T ub = (bneg ? M3_POS(U##T, b) : (U##T)b); \\",
+"    a = (T)(ub - 1 - (ua + ub - 1) % ub); \\",
+"    return (bneg ? -a : a); \\",
+"  } \\",
+"}"
+};
+BEGIN
+    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type]) THEN
+        HelperFunctions_pos(self);
+        HelperFunctions_helper2(self, "mod", type, self.x.mod, text);
+    END;
+END HelperFunctions_mod;
+
+PROCEDURE HelperFunctions_abs(self: HelperFunctions_t; type: AType) =
+CONST text = "#define m3_abs_T(T) static T __stdcall m3_abs_##T(T a) { return ((a < 0) ? (-a) : a); }";
+BEGIN
+    HelperFunctions_helper3(self, "abs", type, self.x.abs, text);
+END HelperFunctions_abs;
+
+PROCEDURE HelperFunctions_max(self: HelperFunctions_t; type: ZType) =
+CONST text = "#define m3_max_T(T) static T __stdcall m3_max_##T(T a, T b) { return ((a > b) ? a : b); }";
+BEGIN
+    HelperFunctions_helper3(self, "max", type, self.x.max, text);
+END HelperFunctions_max;
+
+PROCEDURE HelperFunctions_min(self: HelperFunctions_t; type: ZType) =
+CONST text = "#define m3_min_T(T) static T __stdcall m3_min_##T(T a, T b) { return ((a < b) ? a : b); }";
+BEGIN
+    HelperFunctions_helper3(self, "min", type, self.x.min, text);
+END HelperFunctions_min;
+
+<*NOWARN*>PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; rtype: RType; itype: IType; op: ConvertOp) =
+BEGIN
+END HelperFunctions_cvt_int;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_union(self: HelperFunctions_t; byte_size: ByteSize) =
+BEGIN
+END HelperFunctions_set_union;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_difference(self: HelperFunctions_t; byte_size: ByteSize) =
+BEGIN
+END HelperFunctions_set_difference;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_intersection(self: HelperFunctions_t; byte_size: ByteSize) =
+BEGIN
+END HelperFunctions_set_intersection;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_sym_difference(self: HelperFunctions_t; byte_size: ByteSize) =
+BEGIN
+END HelperFunctions_set_sym_difference;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_member(self: HelperFunctions_t; byte_size: ByteSize; type: IType) =
+BEGIN
+END HelperFunctions_set_member;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_compare(self: HelperFunctions_t; byte_size: ByteSize; op: CompareOp; type: IType) =
+BEGIN
+END HelperFunctions_set_compare;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_range(self: HelperFunctions_t; byte_size: ByteSize; type: IType) =
+BEGIN
+END HelperFunctions_set_range;
+
+<*NOWARN*>PROCEDURE HelperFunctions_set_singleton(self: HelperFunctions_t; byte_size: ByteSize; type: IType) =
+BEGIN
+END HelperFunctions_set_singleton;
+
+<*NOWARN*>PROCEDURE HelperFunctions_shift(self: HelperFunctions_t; type: IType) =
+BEGIN
+END HelperFunctions_shift;
+
+<*NOWARN*>PROCEDURE HelperFunctions_shift_left(self: HelperFunctions_t; type: IType) =
+BEGIN
+END HelperFunctions_shift_left;
+
+<*NOWARN*>PROCEDURE HelperFunctions_shift_right(self: HelperFunctions_t; type: IType) =
+BEGIN
+END HelperFunctions_shift_right;
+
+<*NOWARN*>PROCEDURE HelperFunctions_rotate(self: HelperFunctions_t; type: IType) =
+BEGIN
+END HelperFunctions_rotate;
+
+<*NOWARN*>PROCEDURE HelperFunctions_rotate_left(self: HelperFunctions_t; type: IType) =
+BEGIN
+END HelperFunctions_rotate_left;
+
+<*NOWARN*>PROCEDURE HelperFunctions_rotate_right(self: HelperFunctions_t; type: IType) =
+BEGIN
+END HelperFunctions_rotate_right;
+
+<*NOWARN*>PROCEDURE HelperFunctions_extract(self: HelperFunctions_t; type: IType; sign_extend: BOOLEAN) =
+BEGIN
+END HelperFunctions_extract;
+
+<*NOWARN*>PROCEDURE HelperFunctions_extract_n(self: HelperFunctions_t; type: IType; sign_extend: BOOLEAN; count: CARDINAL) =
+BEGIN
+END HelperFunctions_extract_n;
+
+<*NOWARN*>PROCEDURE HelperFunctions_extract_mn(self: HelperFunctions_t; type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL) =
+BEGIN
+END HelperFunctions_extract_mn;
+
+<*NOWARN*>PROCEDURE HelperFunctions_insert(self: HelperFunctions_t; type: IType) =
+BEGIN
+END HelperFunctions_insert;
+
+<*NOWARN*>PROCEDURE HelperFunctions_insert_n(self: HelperFunctions_t; type: IType; count: CARDINAL) =
+BEGIN
+END HelperFunctions_insert_n;
+
+<*NOWARN*>PROCEDURE HelperFunctions_insert_mn(self: HelperFunctions_t; type: IType; offset, count: CARDINAL) =
+BEGIN
+END HelperFunctions_insert_mn;
+
+<*NOWARN*>PROCEDURE HelperFunctions_pop(self: HelperFunctions_t; type: Type) =
+BEGIN
+END HelperFunctions_pop;
+
+<*NOWARN*>PROCEDURE HelperFunctions_copy_n(self: HelperFunctions_t; itype: IType; mtype: MType; overlap: BOOLEAN) =
+BEGIN
+END HelperFunctions_copy_n;
+
+<*NOWARN*>PROCEDURE HelperFunctions_copy(self: HelperFunctions_t; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
+BEGIN
+END HelperFunctions_copy;
+
+<*NOWARN*>PROCEDURE HelperFunctions_fence(self: HelperFunctions_t; order: MemoryOrder) =
+BEGIN
+END HelperFunctions_fence;
 
 TYPE Locals_t = M3CG_DoNothing.T BRANDED "M3C.Locals_t" OBJECT
     self: T := NIL;
@@ -2051,9 +2238,9 @@ BEGIN
     END;
     print(self, "};");
 
-    IF NOT var.const THEN (* See M3x86.m3 *)
+    IF NOT var.const (*AND self.report_fault_used*) THEN (* See M3x86.m3 *)
         self.report_fault := M3ID.ToText(var.name) & "_CRASH";
-        print(self, "void __cdecl " & self.report_fault & "(UINT32 code) { RTHooks__ReportFault((ADDRESS)&" & M3ID.ToText(var.name) & ",code);}");
+        print(self, "void __cdecl " & self.report_fault & "(WORD_T code) { RTHooks__ReportFault((ADDRESS)&" & M3ID.ToText(var.name) & ",code);}");
     END;
 
     SuppressLineDirective(self, -1, "end_init");
@@ -2408,7 +2595,7 @@ BEGIN
     FOR i := 0 TO proc.Locals_Size() - 1 DO
         WITH local = proc.Locals(i) DO
             IF NOT local.up_level THEN
-                print(self, local.Declare() & "={0};");
+                print(self, local.Declare() & ";");
             END;
         END;
     END;
@@ -2418,7 +2605,7 @@ BEGIN
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
             IF NOT param.up_level AND param.type = Type.Struct THEN
-                print(self, Struct(param.byte_size) & " " & Var_Name(param) & "={0};");
+                print(self, Struct(param.byte_size) & " " & Var_Name(param) & ";");
             END;
         END;
     END;
@@ -2426,7 +2613,7 @@ BEGIN
     (* declare frame of uplevels *)
 
     IF proc.forward_declared_frame_type THEN
-        print(self, frame_type & " " & frame_name & "={0};");
+        print(self, frame_type & " " & frame_name & ";");
     END;
 
     (* init/capture uplevel parameters and static_link (including struct values) *)
@@ -2774,28 +2961,28 @@ BEGIN
     op2(self, type, "divide", "/");
 END divide;
 
-PROCEDURE div(self: T; type: IType; <*UNUSED*>a, b: Sign) =
+PROCEDURE div(self: T; type: IType; a, b: Sign) =
 (* s1.type := s1.type DIV s0.type; pop *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
     self.comment("div");
     pop(self, 2);
-    IF typeIsUnsigned[type] THEN
+    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
         push(self, type, cast(s1 & "/" & s0, type));
     ELSE
         push(self, type, cast("m3_div_" & typeToText[type] & "(" & s1 & "," & s0 & ")", type));
     END;
 END div;
 
-PROCEDURE mod(self: T; type: IType; <*UNUSED*>a, b: Sign) =
+PROCEDURE mod(self: T; type: IType; a, b: Sign) =
 (* s1.type := s1.type MOD s0.type; pop *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
     self.comment("mod");
     pop(self, 2);
-    IF typeIsUnsigned[type] THEN
+    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
         push(self, type, cast(s1 & "%" & s0, type));
     ELSE
         push(self, type, cast("m3_mod_" & typeToText[type] & "(" & s1 & "," & s0 & ")", type));
@@ -3261,6 +3448,7 @@ BEGIN
     <* ASSERT ORD (code) < 32 *> (* lose fault code not ok *)
     (* ASSERT self.line <= (LAST(INTEGER) DIV 32) *) (* losing line number ok *)
     print(self, self.report_fault & "(" & IntToDec(info) & ");");
+    self.report_fault_used := TRUE;
 END reportfault;
 
 (*---------------------------------------------------- address arithmetic ---*)
