@@ -24,6 +24,7 @@ TYPE T <: Public;
 TYPE Public = M3CG_AssertFalse.T OBJECT
     data: REF ARRAY OF op_t;
     op_data: ARRAY Op OF REF ARRAY OF op_t;
+    op_counts := ARRAY Op OF INTEGER{0, ..};
     
     (* parameter to Replay indicating to keep whatever vars/procs are first gotten, except NIL *)
     reuse_refs := FALSE;
