@@ -1,6 +1,6 @@
 MODULE M3CG_MultiPass;
 
-IMPORT M3CG, M3CG_Ops, RefSeq, Target;
+IMPORT M3CG, M3CG_Ops, RefSeq, Target, Fmt, RTIO;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Var, Proc, Alignment, TypeUID, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
@@ -57,7 +57,6 @@ REVEAL
 T = Public BRANDED "M3CG_MultiPass.T" OBJECT
     refs: GrowableRefs_t := NIL;
     next_label_id := 1;
-    op_counts := ARRAY Op OF INTEGER{0, ..};
     total_ops: INTEGER := 0;
     private_data: RefSeq.T := NIL;
 METHODS
@@ -263,19 +262,22 @@ BEGIN
     (* convert private_data into a sealed array of op_t
        and also form per-op arrays to optimize some small passes
     *)
-    VAR private_data := self.private_data;
-        data := NEW(REF ARRAY OF op_t, private_data.size());
-    BEGIN
+
+    WITH private_data = self.private_data,
+        data = NEW(REF ARRAY OF op_t, private_data.size()),
+        op_data = self.op_data,
+        op_counts = self.op_counts
+    DO
         FOR i := FIRST(Op) TO LAST(Op) DO
-            self.op_data[i] := NEW(REF ARRAY OF op_t, self.op_counts[i]);
-            self.op_counts[i] := 0;
+            op_data[i] := NEW(REF ARRAY OF op_t, op_counts[i]);
+            op_counts[i] := 0;
         END;
         FOR i := FIRST(data^) TO LAST(data^) DO
             opt := private_data.get(i);
             data[i] := opt;
             op := opt.op;
-            self.op_data[op][self.op_counts[op]] := opt;
-            INC(self.op_counts[op]);
+            op_data[op][op_counts[op]] := opt;
+            INC(op_counts[op]);
         END;
         self.data := data;
     END;
