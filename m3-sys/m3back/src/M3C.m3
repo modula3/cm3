@@ -1426,6 +1426,15 @@ CONST Ops = ARRAY OF Op{
         Op.fence,
         Op.zero
     };
+CONST OpsThatCanFault = ARRAY OF Op{
+        Op.abort,
+        Op.check_nil,
+        Op.check_lo,
+        Op.check_hi,
+        Op.check_range,
+        Op.check_index,
+        Op.check_eq
+    };
 TYPE T1 = RECORD op: Op; text: TEXT END;
 CONST data = ARRAY OF T1{
     T1{Op.set_union, "static void __stdcall m3_set_union(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i;for (i = 0; i < n_words; ++i)a[i] = b[i] | c[i];}"},
@@ -1447,6 +1456,12 @@ BEGIN
     FOR i := FIRST(data) TO LAST(data) DO
         IF self.op_counts[data[i].op] > 0 THEN
             print(x, data[i].text);
+        END;
+    END;
+    FOR i := FIRST(OpsThatCanFault) TO LAST(OpsThatCanFault) DO
+        IF self.op_counts[OpsThatCanFault[i]] > 0 THEN
+            x.report_fault_used := TRUE;
+            EXIT;
         END;
     END;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
@@ -1647,8 +1662,6 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "double __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */"
     };
 BEGIN
-    RTIO.PutText("HelperFunctions_cvt_int op = " & Fmt.Int(ORD(op)) & "\n");
-    RTIO.Flush();
     HelperFunctions_helper_with_boolean(self, self.data.cvt_int[op], text[op]);
 END HelperFunctions_cvt_int;
 
@@ -2243,7 +2256,7 @@ BEGIN
     END;
     print(self, "};");
 
-    IF NOT var.const (*AND self.report_fault_used*) THEN (* See M3x86.m3 *)
+    IF NOT var.const AND self.report_fault_used THEN (* See M3x86.m3 *)
         self.report_fault := M3ID.ToText(var.name) & "_CRASH";
         IF NOT self.ReportFault_imported_or_declared THEN
             print(self, "void __cdecl RTHooks__ReportFault(ADDRESS, WORD_T);");
@@ -3045,8 +3058,6 @@ PROCEDURE cvt_int(self: T; from_float_type: RType; to_integer_type: IType; op: C
 VAR s0 := cast(get(self, 0), from_float_type);
 BEGIN
     self.comment("cvt_int");
-    RTIO.PutText("cvt_int op = " & Fmt.Int(ORD(op)) & "\n");
-    RTIO.Flush();
     pop(self);
     push(self, to_integer_type, cast("m3_" & ConvertOpName[op] & "(" & s0 & ")", to_integer_type));
 END cvt_int;
@@ -3485,7 +3496,6 @@ BEGIN
     <* ASSERT ORD (code) < 32 *> (* lose fault code not ok *)
     (* ASSERT self.line <= (LAST(INTEGER) DIV 32) *) (* losing line number ok *)
     print(self, self.report_fault & "(" & IntToDec(info) & ");");
-    self.report_fault_used := TRUE;
 END reportfault;
 
 (*---------------------------------------------------- address arithmetic ---*)
