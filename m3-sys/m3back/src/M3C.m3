@@ -67,6 +67,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         init_fields: TextSeq.T := NIL;
         current_init_offset: INTEGER := 0;
         initializer: TextSeq.T := NIL;
+        initializer_comma: TEXT := "";
         
         (* initializers are aggregated into arrays to avoid
         redeclaring the types and generating new field names *)
@@ -2223,6 +2224,7 @@ PROCEDURE begin_init(self: T; <*UNUSED*>v: M3CG.Var) =
 BEGIN
     self.comment("begin_init");
     self.current_init_offset := 0;
+    self.initializer_comma := "";
     SuppressLineDirective(self, 1, "begin_init");
 END begin_init;
 
@@ -2231,12 +2233,23 @@ BEGIN
     begin_init(self.self, v);
 END Segments_begin_init;
 
+PROCEDURE initializer_addhi(self: T; text: TEXT) =
+VAR initializer := self.initializer;
+BEGIN
+    initializer.addhi(self.initializer_comma);
+    initializer.addhi(text);
+    IF text = "{" THEN
+        self.initializer_comma := "";
+    ELSE
+        self.initializer_comma := ",";
+    END;
+END initializer_addhi;
+
 PROCEDURE end_init(self: T; v: M3CG.Var) =
 VAR var := NARROW(v, Var_t);
     init_fields := self.init_fields;
     initializer := self.initializer;
     var_name := M3ID.ToText(var.name);
-    comma := "";
     const := ARRAY BOOLEAN OF TEXT{"", " const "}[var.const];
 BEGIN
     self.comment("end_init");
@@ -2251,8 +2264,7 @@ BEGIN
 
     print(self, "static " & const & var_name & "_t " & var_name & "={");
     WHILE initializer.size() > 0 DO
-        print(self, comma & initializer.remlo());
-        comma := ",";
+        print(self, initializer.remlo());
     END;
     print(self, "};");
 
@@ -2274,9 +2286,7 @@ END Segments_end_init;
 
 PROCEDURE init_to_offset(self: T; offset: ByteOffset) =
 VAR pad := offset - self.current_init_offset;
-    init_fields := self.init_fields;
     initializer := self.initializer;
-    comment := "";
 BEGIN
     (* self.comment("init_to_offset offset=", IntToDec(offset)); *)
     <* ASSERT offset >= self.current_init_offset *>
@@ -2284,8 +2294,12 @@ BEGIN
     <* ASSERT self.current_init_offset >= 0 *>
     IF pad > 0 THEN
         end_init_helper(self);
-        init_fields.addhi(comment & "char " & M3ID.ToText(GenerateName(self)) & "[" & IntToDec(pad) & "];");
-        initializer.addhi(comment & "{0}");
+        self.init_fields.addhi("char " & M3ID.ToText(GenerateName(self)) & "[" & IntToDec(pad) & "];");
+        initializer_addhi(self, "{");
+        FOR i := 1 TO pad DO
+            initializer_addhi(self, "0");
+        END;
+        initializer_addhi(self, "}");
     END;
 END init_to_offset;
 
@@ -2293,16 +2307,18 @@ PROCEDURE end_init_helper(self: T) =
 BEGIN
     IF self.init_type_count > 0 THEN
         self.init_fields.addhi("[" & IntToDec(self.init_type_count) & "];");
+        self.initializer.addhi("}");
     END;
     self.init_type_count := 0;
 END end_init_helper;
 
-PROCEDURE init_helper(self: T; offset: ByteOffset; type: Type; comment: TEXT := "") =
+PROCEDURE init_helper(self: T; offset: ByteOffset; type: Type) =
 BEGIN
     init_to_offset(self, offset);
     IF offset = 0 OR self.init_type # type OR offset # self.current_init_offset THEN
         end_init_helper(self);
-        self.init_fields.addhi(typeToText[type] & " " & M3ID.ToText(GenerateName(self)) & comment);
+        self.init_fields.addhi(typeToText[type] & " " & M3ID.ToText(GenerateName(self)));
+        initializer_addhi(self, "{");
     END;
     INC(self.init_type_count);
     self.init_type := type;
@@ -2310,12 +2326,11 @@ BEGIN
 END init_helper;
 
 PROCEDURE init_int(self: T; offset: ByteOffset; READONLY value: Target.Int; type: Type) =
-VAR comment := "";
 BEGIN
     self.comment("init_int");
-    init_helper(self, offset, type, comment);
+    init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
-    self.initializer.addhi(TIntLiteral(type, value));
+    initializer_addhi(self, TIntLiteral(type, value));
 END init_int;
 
 PROCEDURE Segments_init_int(self: Segments_t; offset: ByteOffset; READONLY value: Target.Int; type: Type) =
@@ -2325,11 +2340,10 @@ END Segments_init_int;
 
 PROCEDURE init_proc(self: T; offset: ByteOffset; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
-    comment := "";
 BEGIN
     self.comment("init_proc");
-    init_helper(self, offset, Type.Addr, comment); (* FUTURE: better typing *)
-    self.initializer.addhi(comment & "(ADDRESS)&" & M3ID.ToText(proc.name));
+    init_helper(self, offset, Type.Addr); (* FUTURE: better typing *)
+    initializer_addhi(self, "(ADDRESS)&" & M3ID.ToText(proc.name));
 END init_proc;
 
 PROCEDURE Segments_init_proc(self: Segments_t; offset: ByteOffset; p: M3CG.Proc) =
@@ -2346,19 +2360,19 @@ END init_label;
 PROCEDURE Segments_init_label(self: Segments_t; offset: ByteOffset; value: Label) =
 BEGIN
     init_label(self.self, offset, value);
+    <* ASSERT FALSE *>
 END Segments_init_label;
 
 PROCEDURE init_var(self: T; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
 VAR var := NARROW(v, Var_t);
-    comment := "";
+    bias_text := "";
 BEGIN
     self.comment("init_var");
-    init_helper(self, offset, Type.Addr, comment); (* FUTURE: better typing *)
+    init_helper(self, offset, Type.Addr); (* FUTURE: better typing *)
     IF bias # 0 THEN
-        self.initializer.addhi(comment & IntToDec(bias) & "+"& "(ADDRESS)&" & M3ID.ToText(var.name));
-    ELSE
-        self.initializer.addhi(comment & "(ADDRESS)&" & M3ID.ToText(var.name));
+        bias_text := IntToDec(bias) & "+";
     END;
+    initializer_addhi(self, bias_text & "(ADDRESS)&" & M3ID.ToText(var.name));
 END init_var;
 
 PROCEDURE Segments_init_var(self: Segments_t; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
@@ -2366,7 +2380,7 @@ BEGIN
     init_var(self.self, offset, v, bias);
 END Segments_init_var;
 
-<*NOWARN*>PROCEDURE init_offset(self: T; offset: ByteOffset; value: M3CG.Var) =
+PROCEDURE init_offset(self: T; <*UNUSED*>offset: ByteOffset; <*UNUSED*>value: M3CG.Var) =
 BEGIN
     self.comment("init_offset");
     <* ASSERT FALSE *>
@@ -2383,7 +2397,7 @@ CONST Printable = ASCII.AlphaNumerics
         + ASCII.Set{'?','`','~' };
 PROCEDURE init_chars(self: T; offset: ByteOffset; value: TEXT) =
 VAR length := Text.Length(value);
-ch: CHAR;
+    ch: CHAR;
 BEGIN
     self.comment("init_chars");
     IF length = 0 THEN
@@ -2393,9 +2407,9 @@ BEGIN
         init_helper(self, offset + i, Type.Word8);
         ch := Text.GetChar(value, i);
         IF ch IN Printable THEN
-            self.initializer.addhi("'" & Text.Sub(value, i, 1) & "'");
+            initializer_addhi(self, "'" & Text.Sub(value, i, 1) & "'");
         ELSE
-            self.initializer.addhi(IntToDec(ORD(ch)));
+            initializer_addhi(self, IntToDec(ORD(ch)));
         END;
     END;
 END init_chars;
@@ -2457,7 +2471,7 @@ PROCEDURE init_float(self: T; offset: ByteOffset; READONLY float: Target.Float) 
 BEGIN
     self.comment("init_float");
     init_helper(self, offset, TargetMap.Float_types[TFloat.Prec(float)].cg_type);
-    self.initializer.addhi(FloatLiteral(float));
+    initializer_addhi(self, FloatLiteral(float));
 END init_float;
 
 PROCEDURE Segments_init_float(self: Segments_t; offset: ByteOffset; READONLY float: Target.Float) =
