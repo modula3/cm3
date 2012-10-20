@@ -36,6 +36,8 @@ TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
 TYPE
 T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
+        no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
+
         typeidToType: IntRefTbl.T := NIL; (* FUTURE INTEGER => Type_t *)
         vars: REF ARRAY OF Var_t;
         procs: REF ARRAY OF Proc_t;
@@ -45,7 +47,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := NIL;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug  := 1;
+        debug  := 0;
         stack  : TextSeq.T := NIL;
         params : TextSeq.T := NIL;
         pop_static_link_temp_vars : RefSeq.T := NIL;
@@ -58,9 +60,17 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         unit_name := "L_";
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
         param_count := 0;
-        static_link_id: M3ID.T;
-        ReportFault_id : M3ID.T;
-        ReportFault_imported_or_declared := FALSE;
+        static_link_id: M3ID.T := 0;
+        RTException_Raise_id: M3ID.T := 0;
+        RTHooks_AssertFailed_id: M3ID.T := 0;
+        RTHooks_Raise_id: M3ID.T := 0;
+        RTHooks_ReportFault_id: M3ID.T := 0;
+        RTHooks_ReportFault_imported_or_declared := FALSE;
+        
+        (* labels *)
+        labels_min := FIRST(Label);
+        labels_max := LAST(Label);
+        labels: REF ARRAY (*Label=INTEGER*) OF BOOLEAN := NIL;
         
         (* initialization support *)
         
@@ -514,6 +524,7 @@ PROCEDURE expr_mult(<*UNUSED*>left, right: expr_t): expr_t = BEGIN RETURN NIL; E
 
 TYPE Var_t = M3CG.Var OBJECT
     self: T := NIL;
+    used := FALSE;
     name: Name := 0;
     name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
     type: Type;
@@ -551,6 +562,7 @@ END;
 
 PROCEDURE Var_Init(var: Var_t): Var_t =
 BEGIN
+    var.is_static_link := (var.name = var.self.static_link_id);
     var.name := Var_FixName(var.self, var.name, var.exported OR var.imported);
     RETURN var;
 END Var_Init;
@@ -579,6 +591,10 @@ TYPE Proc_t = M3CG.Proc OBJECT
     locals: RefSeq.T := NIL; (* Var_t *)
     uplevels := FALSE;
     is_exception_handler := FALSE;
+    is_RTHooks_Raise := FALSE;
+    is_RTException_Raise := FALSE;
+    no_return := FALSE;
+    exit_proc_skipped := 0;
     add_static_link := FALSE;
     declared_frame_type := FALSE;
     forward_declared_frame_type := FALSE;
@@ -602,8 +618,8 @@ BEGIN
     IF proc.forward_declared_frame_type THEN
         RETURN;
     END;
-    print(self, "struct " & proc.FrameType() & ";");
-    print(self, "typedef struct " & proc.FrameType() & " " & proc.FrameType() & ";");
+    print(self, "struct " & proc.FrameType() & ";\n");
+    print(self, "typedef struct " & proc.FrameType() & " " & proc.FrameType() & ";\n");
     proc.forward_declared_frame_type := TRUE;
 END Proc_ForwardDeclareFrameType;
 
@@ -639,7 +655,30 @@ BEGIN
 END IsNameExceptionHandler;
 
 PROCEDURE Proc_Init(proc: Proc_t; self: T): Proc_t =
+VAR is_common := (proc.parent = NIL
+                  AND (proc.exported = TRUE OR proc.imported = TRUE)
+                  AND proc.level = 0
+                  AND proc.return_type = Type.Void);
+    is_RTHooks_ReportFault := (is_common
+                               AND proc.name = self.RTHooks_ReportFault_id
+                               AND proc.n_params = 2);
+    is_RTHooks_AssertFailed := (is_common
+                                AND proc.name = self.RTHooks_AssertFailed_id
+                                AND proc.n_params = 3);
 BEGIN
+    proc.is_RTHooks_Raise := (is_common
+                              AND proc.name = self.RTHooks_Raise_id
+                              AND proc.n_params = 4);
+    proc.is_RTException_Raise := (is_common
+                                  AND proc.name = self.RTException_Raise_id
+                                  AND proc.n_params = 1);
+    IF is_RTHooks_ReportFault THEN
+        self.RTHooks_ReportFault_imported_or_declared := TRUE;
+    END;
+    proc.no_return := is_RTHooks_AssertFailed OR is_RTHooks_ReportFault OR proc.is_RTException_Raise OR proc.is_RTHooks_Raise;
+    IF proc.no_return THEN
+        no_return(self);
+    END;
     proc.self := self;
     proc.name := Proc_FixName(proc.self, proc.name);
     proc.is_exception_handler := proc.level > 0 AND proc.n_params = 1 AND IsNameExceptionHandler(self, M3ID.ToText(proc.name));
@@ -949,7 +988,10 @@ BEGIN
     self.comment("M3_TARGET = ", Target.System_name);
     self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
     self.static_link_id := M3ID.Add("_static_link");
-    self.ReportFault_id := M3ID.Add("RTHooks__ReportFault");
+    self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
+    self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
+    self.RTException_Raise_id := M3ID.Add("RTException__Raise");
+    self.RTHooks_AssertFailed_id := M3ID.Add("RTHooks__AssertFailed");
     SuppressLineDirective(self, 1, "begin_unit");
     FOR i := FIRST(Prefix) TO LAST(Prefix) DO
         print(self, Prefix[i] & "\n");
@@ -980,20 +1022,26 @@ BEGIN
     (* forward declare functions/variables in this module and imports *)
     
     x.comment("begin pass: imports");
-    self.Replay(NEW(Imports_t).Init(x));
+    self.Replay(NEW(Imports_t, self := x));
     x.comment("end pass: imports");
 
     (* discover all locals (including temps and params) *)
 
     x.comment("begin pass: locals");
-    self.Replay(NEW(Locals_t).Init(x));
+    self.Replay(NEW(Locals_t, self := x));
     x.comment("end pass: locals");
 
     (* segments/globals *)
 
     x.comment("begin pass: segments/globals");
-    self.Replay(NEW(Segments_t).Init(x));
+    self.Replay(NEW(Segments_t, self := x));
     x.comment("end pass: segments/globals");
+    
+    (* labels -- which are used *)
+    DiscoverUsedLabels(self);
+    
+    (* variables -- which are used *)
+    DiscoverUsedVariables(self);
 
     (* last pass *)
 
@@ -1252,18 +1300,18 @@ BEGIN
     self.comment("import_global");
     <* ASSERT (byte_size MOD alignment) = 0 *>
     <* ASSERT NOT self.in_proc *>
-    print(self, "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";");
+    print(self, "extern " & typeToText[type] & " " & M3ID.ToText(var.name) & ";\n");
     RETURN var;
 END import_global;
 
-PROCEDURE Locals_DeclareSegment(
+PROCEDURE Locals_declare_segment(
     self: Locals_t;
     name: Name;
     typeid: TypeUID;
     const: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN declare_segment(self.self, name, typeid, const);
-END Locals_DeclareSegment;
+END Locals_declare_segment;
 
 PROCEDURE declare_segment(self: T; name: Name; <*UNUSED*>typeid: TypeUID; const: BOOLEAN): M3CG.Var =
 VAR var := NEW(Var_t, self := self, name := name, const := const).Init();
@@ -1289,8 +1337,8 @@ BEGIN
         END;
     END;
     text := M3ID.ToText(fixed_name);
-    print(self, "struct " & text & "_t;");
-    print(self, "typedef struct " & text & "_t " & text & "_t;");
+    print(self, "struct " & text & "_t;\n");
+    print(self, "typedef struct " & text & "_t " & text & "_t;\n");
     RETURN var;
   END declare_segment;
 
@@ -1311,14 +1359,14 @@ END bind_segment;
 
 PROCEDURE Segments_bind_segment(
     self: Segments_t;
-    v: M3CG.Var;
+    var: M3CG.Var;
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
     exported: BOOLEAN;
     inited: BOOLEAN) =
 BEGIN
-    bind_segment(self.self, v, byte_size, alignment, type, exported, inited);
+    bind_segment(self.self, var, byte_size, alignment, type, exported, inited);
 END Segments_bind_segment;
 
 PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment;
@@ -1370,14 +1418,200 @@ VAR   var := NEW(Var_t, self := self, type := type, name := name, const := const
 BEGIN
     self.comment(DeclTag [const]);
     <* ASSERT (byte_size MOD alignment) = 0 *>
-    print(self, var.Declare() & ";");
+    print(self, var.Declare() & ";\n");
     RETURN var;
 END DeclareGlobal;
 
+TYPE DiscoverUsedVariables_t = M3CG_DoNothing.T BRANDED "M3C.DiscoverUsedVariables_t" OBJECT
+OVERRIDES
+    load := DiscoverUsedVariables_load;
+    load_address := DiscoverUsedVariables_load_address;
+    store := DiscoverUsedVariables_store;
+END;
+
+PROCEDURE DiscoverUsedVariables_common(var: M3CG.Var) =
+BEGIN
+    NARROW(var, Var_t).used := TRUE;
+END DiscoverUsedVariables_common;
+
+PROCEDURE DiscoverUsedVariables_load(
+    <*UNUSED*>self: DiscoverUsedVariables_t;
+    var: M3CG.Var;
+    <*UNUSED*>offset: ByteOffset;
+    <*UNUSED*>mtype: MType;
+    <*UNUSED*>ztype: ZType) =
+BEGIN
+    DiscoverUsedVariables_common(var);
+END DiscoverUsedVariables_load;
+
+PROCEDURE DiscoverUsedVariables_load_address(
+    <*UNUSED*>self: DiscoverUsedVariables_t;
+    var: M3CG.Var;
+    <*UNUSED*>offset: ByteOffset) =
+BEGIN
+    DiscoverUsedVariables_common(var);
+END DiscoverUsedVariables_load_address;
+
+PROCEDURE DiscoverUsedVariables_store(
+    <*UNUSED*>self: DiscoverUsedVariables_t;
+    var: M3CG.Var;
+    <*UNUSED*>offset: ByteOffset;
+    <*UNUSED*>ztype: ZType;
+    <*UNUSED*>mtype: MType) =
+BEGIN
+    DiscoverUsedVariables_common(var);
+END DiscoverUsedVariables_store;
+
+PROCEDURE DiscoverUsedVariables(self: Multipass_t) =
+(* frontend creates unreferenced variables, that gcc -Wall complains about;
+   the point of this pass is to discover which variables are actually used,
+   so that later code ignores unused variables
+*)
+TYPE Op = M3CG_Binary.Op;
+CONST Ops = ARRAY OF Op{
+    (* operands that use a variable -- marking the variable as used *)
+        Op.load,
+        Op.load_address,
+        Op.store
+    };
+VAR x := self.self;
+    pass := NEW(DiscoverUsedVariables_t);
+BEGIN
+    x.comment("begin pass: discover used variables");
+    FOR i := FIRST(Ops) TO LAST(Ops) DO
+        self.Replay(pass, self.op_data[Ops[i]]);
+    END;
+   x.comment("end pass: discover used variables");
+END DiscoverUsedVariables;
+
+TYPE CountUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.CountUsedLabels_t" OBJECT
+    count := 0;
+OVERRIDES
+    case_jump := CountUsedLabels_case_jump;
+END;
+
+TYPE DiscoverUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.DiscoverUsedLabels_t" OBJECT
+    array: REF ARRAY OF Label := NIL;
+    index := 0;
+    min := LAST(Label);
+    max := FIRST(Label);
+OVERRIDES
+    jump := DiscoverUsedLabels_jump;
+    if_true := DiscoverUsedLabels_if_true;
+    if_false := DiscoverUsedLabels_if_true;
+    if_compare := DiscoverUsedLabels_if_compare;
+    case_jump := DiscoverUsedLabels_case_jump;
+END;
+
+PROCEDURE DiscoverUsedLabels_jump(self: DiscoverUsedLabels_t; label: Label) =
+BEGIN
+    self.min := MIN(self.min, label);
+    self.max := MAX(self.max, label);
+    self.array[self.index] := label;
+    INC(self.index);
+END DiscoverUsedLabels_jump;
+
+PROCEDURE DiscoverUsedLabels_if_true(self: DiscoverUsedLabels_t; <*UNUSED*>itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
+BEGIN
+    DiscoverUsedLabels_jump(self, label);
+END DiscoverUsedLabels_if_true;
+
+PROCEDURE DiscoverUsedLabels_if_compare(
+    self: DiscoverUsedLabels_t;
+    <*UNUSED*>ztype: ZType;
+    <*UNUSED*>op: CompareOp;
+    label: Label;
+    <*UNUSED*>frequency: Frequency) =
+BEGIN
+    DiscoverUsedLabels_jump(self, label);
+END DiscoverUsedLabels_if_compare;
+
+PROCEDURE DiscoverUsedLabels_case_jump(self: DiscoverUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
+BEGIN
+    FOR i := FIRST(labels) TO LAST(labels) DO
+        DiscoverUsedLabels_jump(self, labels[i]);
+    END;
+END DiscoverUsedLabels_case_jump;
+
+PROCEDURE CountUsedLabels_case_jump(self: CountUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
+BEGIN
+    INC(self.count, NUMBER(labels));
+END CountUsedLabels_case_jump;
+
+PROCEDURE DiscoverUsedLabels(self: Multipass_t) =
+(* frontend creates unreferenced labels, that gcc -Wall complains about;
+   the point of this pass is to discover which labels are actually used,
+   so that later set_label ignores unused labels
+*)
+TYPE Op = M3CG_Binary.Op;
+CONST Ops = ARRAY OF Op{
+    (* operands that goto a label -- marking the label as used *)
+        Op.jump,
+        Op.if_true,
+        Op.if_false,
+        Op.if_compare,
+        Op.case_jump
+    };
+VAR x := self.self;
+    pass := NEW(DiscoverUsedLabels_t);
+    count_pass := NEW(CountUsedLabels_t);
+BEGIN
+    x.comment("begin pass: discover used labels");
+
+    FOR i := FIRST(Ops) TO LAST(Ops) DO
+        INC(pass.index, self.op_counts[Ops[i]]);
+    END;
+    DEC(pass.index, self.op_counts[Op.case_jump]);
+    self.Replay(count_pass, self.op_data[Op.case_jump]);
+    INC(pass.index, count_pass.count);
+
+    IF pass.index # 0 THEN
+        pass.array := NEW(REF ARRAY OF Label, pass.index);
+        pass.index := 0;
+        FOR i := FIRST(Ops) TO LAST(Ops) DO
+            self.Replay(pass, self.op_data[Ops[i]]);
+        END;
+        x.labels := NEW(REF ARRAY OF BOOLEAN, pass.max - pass.min + 1);
+        x.labels_min := pass.min;
+        x.labels_max := pass.max;
+        FOR i := FIRST(x.labels^) TO LAST(x.labels^) DO
+            x.labels[i] := FALSE;
+        END;
+        FOR i := 0 TO pass.index - 1 DO
+            x.labels[pass.array[i] - pass.min] := TRUE;
+        END;
+    END;
+
+   x.comment("end pass: discover used labels");
+END DiscoverUsedLabels;
+
 TYPE Segments_t = M3CG_DoNothing.T BRANDED "M3C.Segments_t" OBJECT
+(* The goal of this pass is to build up segments/globals before they are used.
+   Specifically, we used to do this:
+       struct foo_t; typedef struct foo_t foo_t;
+       [const] [static] foo_t foo; /* foo_t not yet defined */
+       void F1(int);
+       void F2(void) { F1(*(int*)(8 + &foo)); }
+       struct foo_t { int a,b,c,d; };
+       [const] [static] foo_t foo = { 1,2,3,4 };
+    which is legal C but invalid C++.
+
+    It is, I believe, sufficient to:
+       struct foo_t { int a,b,c,d; };
+       typedef struct foo_t foo_t;
+       [const] [static] foo_t foo;
+       void F1(int);
+       void F2(void) { F1(*(int* )(8 + (char* )&foo)); } /* F1(foo.b); */
+       [const] [static] foo_t foo = { 1,2,3,4 };
+
+    However we now produce the clearly valid:
+       struct foo_t { int a,b,c,d; };
+       typedef struct foo_t foo_t;
+       [const] [static] foo_t foo = { 1,2,3,4 };
+       void F1(int);
+       void F2(void) { F1(*(int*)(8 + (char*)&foo)); } /* F1(foo.b); */
+*)
     self: T := NIL;
-METHODS
-    Init(outer: T): Segments_t := Segments_Init;
 OVERRIDES
     bind_segment := Segments_bind_segment;
     begin_init := Segments_begin_init;
@@ -1393,13 +1627,13 @@ OVERRIDES
     declare_global := Segments_declare_global;
 END;
 
-PROCEDURE Segments_Init(self: Segments_t; outer: T): Segments_t =
-BEGIN
-    self.self := outer;
-    RETURN self;
-END Segments_Init;
-
 PROCEDURE HelperFunctions(self: Multipass_t) =
+(* We output several helper functions into the .c files.
+   They are static.
+   gcc -Wall complains about unused static functions.
+   The goal of this pass is to discover exactly which
+   functions we use and output only those.
+*)
 TYPE Op = M3CG_Binary.Op;
 CONST Ops = ARRAY OF Op{
     (* These are operations that use helper functions. *)
@@ -1409,6 +1643,7 @@ CONST Ops = ARRAY OF Op{
         Op.max,
         Op.min,
         Op.cvt_int,
+        Op.set_compare,
         Op.shift,
         Op.shift_left,
         Op.shift_right,
@@ -1438,14 +1673,36 @@ CONST OpsThatCanFault = ARRAY OF Op{
     };
 TYPE T1 = RECORD op: Op; text: TEXT END;
 CONST data = ARRAY OF T1{
-    T1{Op.set_union, "static void __stdcall m3_set_union(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i;for (i = 0; i < n_words; ++i)a[i] = b[i] | c[i];}"},
-    T1{Op.set_difference, "static void __stdcall m3_set_difference(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i;for(i=0;i<n_words;++i)a[i]=b[i]&(~c[i]);}"},
-    T1{Op.set_intersection, "static void __stdcall m3_set_intersection(WORD_T n_words, WORD_T* c, WORD_T* b, WORD_T* a){WORD_T i;for (i = 0; i < n_words; ++i)a[i] = b[i] & c[i];}"},
-    T1{Op.set_sym_difference, "static void __stdcall m3_set_sym_difference(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i;for(i=0;i<n_words;++i)a[i]=b[i]^c[i];}"},
+    T1{Op.set_union, "static void __stdcall m3_set_union(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]|c[i];}"},
+    T1{Op.set_difference, "static void __stdcall m3_set_difference(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]&(~c[i]);}"},
+    T1{Op.set_intersection, "static void __stdcall m3_set_intersection(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]&c[i];}"},
+    T1{Op.set_sym_difference, "static void __stdcall m3_set_sym_difference(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]^c[i];}"},
     T1{Op.set_range,
-          "#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))\n"
+          "\n#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))\n"
         & "#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))\n"
-        & "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T*s){if(a>=b){WORD_T i,a_word=a/SET_GRAIN,b_word=b/SET_GRAIN,high_bits=M3_HIGH_BITS(a%SET_GRAIN),low_bits=M3_LOW_BITS(b%SET_GRAIN);if(a_word==b_word){s[a_word]|=(high_bits&low_bits);}else{s[a_word]|=high_bits;for(i=a_word+1;i<b_word;++i)s[i]=~(WORD_T)0;s[b_word]|=low_bits;}}}"},
+        & "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T* s)\n"
+        & "{\n"
+        & "  if (a >= b)\n"
+        & "  {\n"
+        & "    WORD_T i = 0;\n"
+        & "    WORD_T const a_word = a / SET_GRAIN;\n"
+        & "    WORD_T const b_word = b / SET_GRAIN;\n"
+        & "    WORD_T const high_bits = M3_HIGH_BITS(a % SET_GRAIN);\n"
+        & "    WORD_T const low_bits = M3_LOW_BITS(b % SET_GRAIN);\n"
+        & "    if (a_word == b_word)\n"
+        & "    {\n"
+        & "      s[a_word] |= (high_bits & low_bits);\n"
+        & "    }\n"
+        & "    else\n"
+        & "    {\n"
+        & "      s[a_word] |= high_bits;\n"
+        & "      for (i = a_word + 1; i < b_word; ++i)\n" (* could use memset here *)
+        & "        s[i] = ~(WORD_T)0;\n"
+        & "      s[b_word] |= low_bits;\n"
+        & "    }\n"
+        & "  }\n"
+        & "}\n"
+        },
     T1{Op.set_singleton, "static void __stdcall m3_set_singleton(WORD_T a,WORD_T*s){s[a/SET_GRAIN]|=(((WORD_T)1)<<(a%SET_GRAIN));}"},
     T1{Op.set_member, "static WORD_T __stdcall m3_set_member(WORD_T elt,WORD_T*set){return(set[elt/SET_GRAIN]&(((WORD_T)1)<<(elt%SET_GRAIN)))!=0;}"}
     };
@@ -1461,6 +1718,7 @@ BEGIN
     END;
     FOR i := FIRST(OpsThatCanFault) TO LAST(OpsThatCanFault) DO
         IF self.op_counts[OpsThatCanFault[i]] > 0 THEN
+            no_return(x);
             x.report_fault_used := TRUE;
             EXIT;
         END;
@@ -1667,8 +1925,8 @@ BEGIN
 END HelperFunctions_cvt_int;
 
 PROCEDURE HelperFunctions_set_compare(self: HelperFunctions_t; <*UNUSED*>byte_size: ByteSize; op: CompareOp; <*UNUSED*>type: IType) =
-CONST text_le = "static WORD_T __stdcall m3_set_le(WORD_T n_words,WORD_T*b,WORD_T*a){WORD_T i;for(i=0;i<n_words;++i)if(a[i]&(~b[i]))return 0;return 1;}";
-CONST text_lt = "static WORD_T __stdcall m3_set_lt(WORD_T n_words,WORD_T*b,WORD_T*a){WORD_T i,eq=0;for(i=0;i<n_words;++i)if(a[i]&(~b[i]))return 0;else eq|=(a[i]^b[i]);return(eq!=0);}";
+CONST text_le = "static WORD_T __stdcall m3_set_le(WORD_T n_words,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)if(a[i]&(~b[i]))return 0;return 1;}";
+CONST text_lt = "static WORD_T __stdcall m3_set_lt(WORD_T n_words,WORD_T*b,WORD_T*a){WORD_T i=0,eq=0;for(;i<n_words;++i)if(a[i]&(~b[i]))return 0;else eq|=(a[i]^b[i]);return(eq!=0);}";
 BEGIN
     CASE op OF
         | CompareOp.EQ, CompareOp.NE =>
@@ -1794,28 +2052,20 @@ END HelperFunctions_fence;
 
 TYPE Locals_t = M3CG_DoNothing.T BRANDED "M3C.Locals_t" OBJECT
     self: T := NIL;
-METHODS
-    Init(outer: T): Locals_t := Locals_Init;
 OVERRIDES
-    declare_segment := Locals_DeclareSegment; (* declare_segment is needed, to get the unit name, to check for exception handlers *)
-    declare_procedure := Locals_DeclareProcedure;
-    begin_procedure := Locals_BeginProcedure;
-    end_procedure := Locals_EndProcedure;
-    declare_param := Locals_DeclareParam;
-    declare_local := Locals_DeclareLocal;
-    declare_temp := Locals_DeclareTemp;
-    begin_block := Locals_BeginBlock;   (* FUTURE: for unions in frame struct *)
-    end_block := Locals_EndBlock;       (* FUTURE: for unions in frame struct *)
-    pop_static_link := Locals_PopStaticLink; (* pop_static_link is needed because it calls declare_temp *)
+    declare_segment := Locals_declare_segment; (* declare_segment is needed, to get the unit name, to check for exception handlers *)
+    declare_procedure := Locals_declare_procedure;
+    begin_procedure := Locals_begin_procedure;
+    end_procedure := Locals_end_procedure;
+    declare_param := Locals_declare_param;
+    declare_local := Locals_declare_local;
+    declare_temp := Locals_declare_temp;
+    begin_block := Locals_begin_block;   (* FUTURE: for unions in frame struct *)
+    end_block := Locals_end_block;       (* FUTURE: for unions in frame struct *)
+    pop_static_link := Locals_pop_static_link; (* pop_static_link is needed because it calls declare_temp *)
 END;
 
-PROCEDURE Locals_Init(self: Locals_t; outer: T): Locals_t =
-BEGIN
-    self.self := outer;
-    RETURN self;
-END Locals_Init;
-
-PROCEDURE Locals_DeclareParam(
+PROCEDURE Locals_declare_param(
     self: Locals_t;
     name: Name;
     byte_size: ByteSize;
@@ -1826,11 +2076,19 @@ PROCEDURE Locals_DeclareParam(
     up_level: BOOLEAN;
     frequency: Frequency): M3CG.Var =
 BEGIN
-    RETURN declare_param(self.self, name, byte_size, alignment, type, typeid,
-        in_memory, up_level, frequency);
-END Locals_DeclareParam;
+    RETURN declare_param(
+        self.self,
+        name,
+        byte_size,
+        alignment,
+        type,
+        typeid,
+        in_memory,
+        up_level,
+        frequency);
+END Locals_declare_param;
 
-PROCEDURE Locals_DeclareLocal(
+PROCEDURE Locals_declare_local(
     self: Locals_t;
     name: Name;
     byte_size: ByteSize;
@@ -1842,25 +2100,17 @@ PROCEDURE Locals_DeclareLocal(
     frequency: Frequency): M3CG.Var =
 BEGIN
     RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency);
-END Locals_DeclareLocal;
+END Locals_declare_local;
 
 TYPE Imports_t = M3CG_DoNothing.T BRANDED "M3C.Imports_t" OBJECT
     self: T;
-METHODS
-    Init(outer: T): Imports_t := Imports_Init;
 OVERRIDES
-    import_procedure := Imports_ImportProcedure;
-    declare_param := Imports_DeclareParam;
-    import_global := Imports_ImportGlobal;
+    import_procedure := Imports_import_procedure;
+    declare_param := Imports_declare_param;
+    import_global := Imports_import_global;
 END;
 
-PROCEDURE Imports_Init(self: Imports_t; outer: T): Imports_t =
-BEGIN
-    self.self := outer;
-    RETURN self;
-END Imports_Init;
-
-PROCEDURE Imports_ImportProcedure(
+PROCEDURE Imports_import_procedure(
     self: Imports_t;
     name: Name;
     n_params: INTEGER;
@@ -1868,9 +2118,9 @@ PROCEDURE Imports_ImportProcedure(
     callingConvention: CallingConvention): M3CG.Proc =
 BEGIN
     RETURN import_procedure(self.self, name, n_params, return_type, callingConvention);
-END Imports_ImportProcedure;
+END Imports_import_procedure;
 
-PROCEDURE Imports_DeclareParam(
+PROCEDURE Imports_declare_param(
     self: Imports_t;
     name: Name;
     byte_size: ByteSize;
@@ -1883,9 +2133,9 @@ PROCEDURE Imports_DeclareParam(
 BEGIN
     RETURN declare_param(self.self, name, byte_size, alignment, type, typeid,
         in_memory, up_level, frequency);
-END Imports_DeclareParam;
+END Imports_declare_param;
 
-PROCEDURE Imports_ImportGlobal(
+PROCEDURE Imports_import_global(
     self: Imports_t;
     name: Name;
     byte_size: ByteSize; 
@@ -1894,7 +2144,7 @@ PROCEDURE Imports_ImportGlobal(
     typeid: TypeUID): M3CG.Var =
 BEGIN
     RETURN import_global(self.self, name, byte_size, alignment, type, typeid);
-END Imports_ImportGlobal;
+END Imports_import_global;
 
 TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
@@ -1902,12 +2152,12 @@ TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
 METHODS
     Declare(type: Type; byte_size: ByteSize; alignment: Alignment): M3CG.Var := GetStructSizes_Declare;
 OVERRIDES
-    declare_constant := GetStructSizes_DeclareConstant;
-    declare_global := GetStructSizes_DeclareGlobal;
-    declare_local := GetStructSizes_DeclareLocalOrParam;
-    declare_param := GetStructSizes_DeclareLocalOrParam;
-    declare_temp := GetStructSizes_DeclareTemp;
-    import_global := GetStructSizes_ImportGlobal;
+    declare_constant := GetStructSizes_declare_constant;
+    declare_global := GetStructSizes_declare_global;
+    declare_local := GetStructSizes_declare_local_or_param;
+    declare_param := GetStructSizes_declare_local_or_param;
+    declare_temp := GetStructSizes_declare_temp;
+    import_global := GetStructSizes_import_global;
 END;
 
 PROCEDURE GetStructSizes(self: Multipass_t) =
@@ -1976,7 +2226,7 @@ BEGIN
     RETURN NIL;
 END GetStructSizes_Declare;
 
-PROCEDURE GetStructSizes_DeclareTemp(
+PROCEDURE GetStructSizes_declare_temp(
     self: GetStructSizes_t;
     byte_size: ByteSize;
     alignment: Alignment;
@@ -1984,9 +2234,9 @@ PROCEDURE GetStructSizes_DeclareTemp(
     <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
-END GetStructSizes_DeclareTemp;
+END GetStructSizes_declare_temp;
 
-PROCEDURE GetStructSizes_DeclareGlobal(
+PROCEDURE GetStructSizes_declare_global(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
@@ -1997,9 +2247,9 @@ PROCEDURE GetStructSizes_DeclareGlobal(
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
-END GetStructSizes_DeclareGlobal;
+END GetStructSizes_declare_global;
 
-PROCEDURE GetStructSizes_ImportGlobal(
+PROCEDURE GetStructSizes_import_global(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
@@ -2008,9 +2258,9 @@ PROCEDURE GetStructSizes_ImportGlobal(
     <*UNUSED*>typeid: TypeUID): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
-END GetStructSizes_ImportGlobal;
+END GetStructSizes_import_global;
 
-PROCEDURE GetStructSizes_DeclareConstant(
+PROCEDURE GetStructSizes_declare_constant(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
@@ -2021,9 +2271,9 @@ PROCEDURE GetStructSizes_DeclareConstant(
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
-END GetStructSizes_DeclareConstant;
+END GetStructSizes_declare_constant;
 
-PROCEDURE GetStructSizes_DeclareLocalOrParam(
+PROCEDURE GetStructSizes_declare_local_or_param(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
@@ -2035,7 +2285,7 @@ PROCEDURE GetStructSizes_DeclareLocalOrParam(
     <*UNUSED*>frequency: Frequency): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
-END GetStructSizes_DeclareLocalOrParam;
+END GetStructSizes_declare_local_or_param;
 
 PROCEDURE Struct(size: INTEGER): TEXT =
 BEGIN
@@ -2082,7 +2332,8 @@ BEGIN
     RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.InFrameType() & " " & var.InFrameName();
 END Var_InFrameDeclare;
 
-PROCEDURE declare_local(
+PROCEDURE internal_declare_local(
+(* returns derived Var_t instead of base M3CG.Var *)
     self: T;
     name: Name;
     byte_size: ByteSize;
@@ -2091,7 +2342,7 @@ PROCEDURE declare_local(
     <*UNUSED*>typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    <*UNUSED*>frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency): Var_t =
 VAR var := NEW(Var_t, self := self, type := type, name := name, up_level := up_level,
                in_memory := in_memory, byte_size := byte_size, proc := self.current_proc).Init();
 BEGIN
@@ -2102,13 +2353,28 @@ BEGIN
     END;
     self.current_proc.locals.addhi(var);
     RETURN var;
+END internal_declare_local;
+
+PROCEDURE declare_local(
+(* returns derived Var_t instead of base M3CG.Var *)
+    self: T;
+    name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: Type;
+    typeid: TypeUID;
+    in_memory: BOOLEAN;
+    up_level: BOOLEAN;
+    frequency: Frequency): Var_t =
+BEGIN
+    RETURN internal_declare_local(self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency);
 END declare_local;
 
 TYPE FunctionPrototype_t = { Declare, Define };
 
 PROCEDURE function_prototype(proc: Proc_t; kind: FunctionPrototype_t): TEXT =
 VAR params := proc.params;
-    text := typeToText[proc.return_type] & " __cdecl " & M3ID.ToText(proc.name);
+    text := typeToText[proc.return_type] & "\n__cdecl\n" & M3ID.ToText(proc.name);
     after_param: TEXT;
     ansi := TRUE (*NOT is_exception_handler*);
     define_kr := NOT ansi AND kind = FunctionPrototype_t.Define;
@@ -2119,11 +2385,11 @@ BEGIN
     ELSIF NOT ansi AND NOT define_kr THEN
         text := text & "()";
     ELSE
-        text := text & "(";
+        text := text & "(\n  ";
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF i # LAST(params^) THEN
-                    after_param := ",";
+                    after_param := ",\n  ";
                 ELSE
                     after_param := ")";
                 END;
@@ -2139,11 +2405,33 @@ BEGIN
     RETURN text & kr_part2;
 END function_prototype;
 
+PROCEDURE no_return(self: T) =
+(* note that a no_return function has been seen *)
+CONST text = ARRAY OF TEXT {
+(* see Darwin /usr/include/stdlib.h abort exit /usr/include/sys/cdefs.h __dead2 *)
+"\n#if __GNUC__ > 2 || __GNUC__ == 2 && __GNUC_MINOR__ >= 5",
+"#define M3_ATTRIBUTE_NO_RETURN __attribute__((__noreturn__))",
+"#else",
+"#define M3_ATTRIBUTE_NO_RETURN",
+"#endif"
+};
+BEGIN
+    IF NOT self.no_return THEN
+        self.no_return := TRUE;
+        FOR i := FIRST(text) TO LAST(text) DO
+            print(self, text[i] & "\n");
+        END;
+    END;
+END no_return;
+
 PROCEDURE last_param(self: T) =
 VAR proc := self.param_proc;
     prototype: TEXT;
     param: Var_t;
 BEGIN
+    IF proc.no_return THEN
+        no_return(self);
+    END;
     IF proc.add_static_link THEN
         param := NARROW(internal_declare_param(
             self,
@@ -2159,7 +2447,7 @@ BEGIN
             NARROW(proc.parent, Proc_t).FrameType() & "*"), Var_t);
     END;
 
-    prototype := function_prototype(self.param_proc, FunctionPrototype_t.Declare) & ";";
+    prototype := function_prototype(proc, FunctionPrototype_t.Declare) & ARRAY BOOLEAN OF TEXT{";\n", " M3_ATTRIBUTE_NO_RETURN;\n"}[proc.no_return];
     <* ASSERT NOT self.in_proc *>
     print(self, prototype);
     self.param_proc := NIL;
@@ -2192,9 +2480,17 @@ BEGIN
     RETURN var;
 END internal_declare_param;
 
-PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment;
-                        type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN;
-                        frequency: Frequency): M3CG.Var =
+PROCEDURE
+declare_param(
+    self: T;
+    name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: Type;
+    typeid: TypeUID;
+    in_memory: BOOLEAN;
+    up_level: BOOLEAN;
+    frequency: Frequency): M3CG.Var =
 BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
@@ -2202,16 +2498,28 @@ BEGIN
     RETURN internal_declare_param(self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency, NIL);
 END declare_param;
 
-PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): M3CG.Var =
+PROCEDURE
+internal_declare_temp(
+(* returns derived Var_t instead of base M3CG.Var *)
+    self: T;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: Type;
+    in_memory:BOOLEAN): Var_t =
 BEGIN
     self.comment("declare_temp");
     RETURN declare_local(self, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
+END internal_declare_temp;
+
+PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): M3CG.Var =
+BEGIN
+    RETURN internal_declare_temp(self, byte_size, alignment, type, in_memory);
 END declare_temp;
 
-PROCEDURE Locals_DeclareTemp(self: Locals_t; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): M3CG.Var =
+PROCEDURE Locals_declare_temp(self: Locals_t; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): M3CG.Var =
 BEGIN
     RETURN declare_temp(self.self, byte_size, alignment, type, in_memory);
-END Locals_DeclareTemp;
+END Locals_declare_temp;
 
 PROCEDURE free_temp(self: T; <*NOWARN*>v: M3CG.Var) =
 BEGIN
@@ -2233,12 +2541,14 @@ BEGIN
     begin_init(self.self, v);
 END Segments_begin_init;
 
+CONST CONST_TEXT_LEFT_BRACE = "{";
+
 PROCEDURE initializer_addhi(self: T; text: TEXT) =
 VAR initializer := self.initializer;
 BEGIN
     initializer.addhi(self.initializer_comma);
     initializer.addhi(text);
-    IF text = "{" THEN
+    IF text = CONST_TEXT_LEFT_BRACE THEN
         self.initializer_comma := "";
     ELSE
         self.initializer_comma := ",";
@@ -2260,20 +2570,23 @@ BEGIN
     WHILE init_fields.size() > 0 DO
         print(self, init_fields.remlo());
     END;
-    print(self, "};");
+    print(self, "};\n");
 
     print(self, "static " & const & var_name & "_t " & var_name & "={");
     WHILE initializer.size() > 0 DO
         print(self, initializer.remlo());
     END;
-    print(self, "};");
+    print(self, "};\n");
 
     IF NOT var.const AND self.report_fault_used THEN (* See M3x86.m3 *)
+        <* ASSERT self.no_return *>
+        no_return(self);
         self.report_fault := M3ID.ToText(var.name) & "_CRASH";
-        IF NOT self.ReportFault_imported_or_declared THEN
-            print(self, "void __cdecl RTHooks__ReportFault(ADDRESS, WORD_T);");
+        IF NOT self.RTHooks_ReportFault_imported_or_declared THEN
+            print(self, "void __cdecl RTHooks__ReportFault(ADDRESS, WORD_T) M3_ATTRIBUTE_NO_RETURN;\n");
         END;
-        print(self, "static void __cdecl " & self.report_fault & "(WORD_T code) { RTHooks__ReportFault((ADDRESS)&" & M3ID.ToText(var.name) & ",code);}");
+        print(self, "static void __cdecl " & self.report_fault & "(WORD_T code) M3_ATTRIBUTE_NO_RETURN;\n");
+        print(self, "static void __cdecl " & self.report_fault & "(WORD_T code){RTHooks__ReportFault((ADDRESS)&" & M3ID.ToText(var.name) & ",code);}");
     END;
 
     SuppressLineDirective(self, -1, "end_init");
@@ -2286,7 +2599,6 @@ END Segments_end_init;
 
 PROCEDURE init_to_offset(self: T; offset: ByteOffset) =
 VAR pad := offset - self.current_init_offset;
-    initializer := self.initializer;
 BEGIN
     (* self.comment("init_to_offset offset=", IntToDec(offset)); *)
     <* ASSERT offset >= self.current_init_offset *>
@@ -2294,8 +2606,8 @@ BEGIN
     <* ASSERT self.current_init_offset >= 0 *>
     IF pad > 0 THEN
         end_init_helper(self);
-        self.init_fields.addhi("char " & M3ID.ToText(GenerateName(self)) & "[" & IntToDec(pad) & "];");
-        initializer_addhi(self, "{");
+        self.init_fields.addhi("char " & M3ID.ToText(GenerateName(self)) & "[" & IntToDec(pad) & "];\n");
+        initializer_addhi(self, CONST_TEXT_LEFT_BRACE);
         FOR i := 1 TO pad DO
             initializer_addhi(self, "0");
         END;
@@ -2306,7 +2618,7 @@ END init_to_offset;
 PROCEDURE end_init_helper(self: T) =
 BEGIN
     IF self.init_type_count > 0 THEN
-        self.init_fields.addhi("[" & IntToDec(self.init_type_count) & "];");
+        self.init_fields.addhi("[" & IntToDec(self.init_type_count) & "];\n");
         self.initializer.addhi("}");
     END;
     self.init_type_count := 0;
@@ -2318,7 +2630,7 @@ BEGIN
     IF offset = 0 OR self.init_type # type OR offset # self.current_init_offset THEN
         end_init_helper(self);
         self.init_fields.addhi(typeToText[type] & " " & M3ID.ToText(GenerateName(self)));
-        initializer_addhi(self, "{");
+        initializer_addhi(self, CONST_TEXT_LEFT_BRACE);
     END;
     INC(self.init_type_count);
     self.init_type := type;
@@ -2488,8 +2800,9 @@ VAR proc := NEW(Proc_t, name := name, n_params := n_params,
                 callingConvention := callingConvention).Init(self);
 BEGIN
     self.comment("import_procedure");
-    IF name = self.ReportFault_id THEN
-        self.ReportFault_imported_or_declared := TRUE;
+    IF name = self.RTHooks_ReportFault_id THEN
+        self.RTHooks_ReportFault_imported_or_declared := TRUE;
+        no_return(self);
     END;
     SuppressLineDirective(self, n_params, "import_procedure n_params");
     self.param_proc := proc;
@@ -2500,7 +2813,7 @@ BEGIN
     RETURN proc;
 END import_procedure;
 
-PROCEDURE Locals_DeclareProcedure(
+PROCEDURE Locals_declare_procedure(
     self: Locals_t;
     name: Name;
     n_params: INTEGER;
@@ -2519,7 +2832,7 @@ BEGIN
         callingConvention,
         exported,
         parent);
-END Locals_DeclareProcedure;
+END Locals_declare_procedure;
 
 PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER;
                             return_type: Type; level: INTEGER;
@@ -2531,8 +2844,8 @@ VAR proc := NEW(Proc_t, name := name, n_params := n_params,
                 parent := parent).Init(self);
 BEGIN
     self.comment("declare_procedure");
-    IF name = self.ReportFault_id THEN
-        self.ReportFault_imported_or_declared := TRUE;
+    IF name = self.RTHooks_ReportFault_id THEN
+        self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
     self.param_proc := proc;
     self.param_count := 0;
@@ -2546,7 +2859,7 @@ BEGIN
     RETURN proc;
 END declare_procedure;
 
-PROCEDURE Locals_BeginProcedure(self: Locals_t; p: M3CG.Proc) =
+PROCEDURE Locals_begin_procedure(self: Locals_t; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
     x := self.self;
 BEGIN
@@ -2554,17 +2867,17 @@ BEGIN
     x.in_proc := TRUE;
     x.current_proc := proc;
     self.begin_block();
-END Locals_BeginProcedure;
+END Locals_begin_procedure;
 
-PROCEDURE Locals_EndProcedure(self: Locals_t; <*UNUSED*>p: M3CG.Proc) =
+PROCEDURE Locals_end_procedure(self: Locals_t; <*UNUSED*>p: M3CG.Proc) =
 VAR x := self.self;
 BEGIN
     self.end_block();
     x.in_proc := FALSE;
     x.current_proc := NIL;
-END Locals_EndProcedure;
+END Locals_end_procedure;
 
-PROCEDURE Locals_BeginBlock(self: Locals_t) =
+PROCEDURE Locals_begin_block(self: Locals_t) =
 VAR proc := self.self.current_proc;
     (*block := NEW(Block_t, parent_block := proc.current_block);*)
     block: Block_t;
@@ -2572,9 +2885,9 @@ BEGIN
     proc.blocks.addhi(block);
     proc.block_stack.addhi(block);
     proc.current_block := block;
-END Locals_BeginBlock;
+END Locals_begin_block;
 
-PROCEDURE Locals_EndBlock(self: Locals_t) =
+PROCEDURE Locals_end_block(self: Locals_t) =
 VAR proc := self.self.current_proc;
 BEGIN
     EVAL proc.block_stack.remhi();
@@ -2583,7 +2896,7 @@ BEGIN
     ELSE
         proc.current_block := NIL;
     END;
-END Locals_EndBlock;
+END Locals_end_block;
 
 PROCEDURE begin_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
@@ -2606,14 +2919,14 @@ BEGIN
         (* add field to ensure frame not empty *)
         (* TODO only do this if necessary *)
 
-        print(self, "ADDRESS _unused;");
+        print(self, "ADDRESS _unused;\n");
 
         (* uplevel locals in frame *)
 
         FOR i := 0 TO proc.Locals_Size() - 1 DO
             WITH var = proc.Locals(i) DO
-                IF var.up_level THEN
-                    print(self, var.InFrameDeclare() & ";");
+                IF var.up_level AND var.used THEN
+                    print(self, var.InFrameDeclare() & ";\n");
                 END;
             END;
         END;
@@ -2622,23 +2935,22 @@ BEGIN
 
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
-                IF param.up_level THEN
-                    print(self, param.InFrameDeclare() & ";");
+                IF param.up_level AND param.used THEN
+                    print(self, param.InFrameDeclare() & ";\n");
                 END;
             END;
         END;
-        print(self, "};");
+        print(self, "};\n");
     END;
 
-    print(self, function_prototype(proc, FunctionPrototype_t.Define));
-    print(self, "{");
+    print(self, function_prototype(proc, FunctionPrototype_t.Define) & "\n{\n");
 
     (* declare and zero non-uplevel locals (including temporaries) *)
 
     FOR i := 0 TO proc.Locals_Size() - 1 DO
         WITH local = proc.Locals(i) DO
-            IF NOT local.up_level THEN
-                print(self, local.Declare() & ";");
+            IF (NOT local.up_level) AND local.used THEN
+                print(self, local.Declare() & ";\n");
             END;
         END;
     END;
@@ -2647,8 +2959,8 @@ BEGIN
 
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
-            IF NOT param.up_level AND param.type = Type.Struct THEN
-                print(self, Struct(param.byte_size) & " " & Var_Name(param) & ";");
+            IF (NOT param.up_level) AND (param.type = Type.Struct) AND param.used THEN
+                print(self, Struct(param.byte_size) & " " & Var_Name(param) & ";\n");
             END;
         END;
     END;
@@ -2656,7 +2968,7 @@ BEGIN
     (* declare frame of uplevels *)
 
     IF proc.forward_declared_frame_type THEN
-        print(self, frame_type & " " & frame_name & ";");
+        print(self, frame_type & " " & frame_name & ";\n");
     END;
 
     (* init/capture uplevel parameters and static_link (including struct values) *)
@@ -2664,30 +2976,29 @@ BEGIN
     IF proc.forward_declared_frame_type THEN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
-                IF param.up_level THEN
+                IF param.up_level AND param.used THEN
                     IF param.type # Type.Struct THEN
-                        print(self, frame_name & "." & Var_Name(param) & "=" & Param_Name(param) & ";");
+                        print(self, frame_name & "." & Var_Name(param) & "=" & Param_Name(param) & ";\n");
                     ELSE
-                        print(self, frame_name & "." & Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");");
+                        print(self, frame_name & "." & Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
                     END;
                 END;
             END;
         END;
 
         (* quash unused warning *) (* TODO cleanup -- only declare if needed *)
-        print(self, frame_name & "._unused=(ADDRESS)&" & frame_name & ";");
+        print(self, frame_name & "._unused=(ADDRESS)&" & frame_name & ";\n");
     END;
 
     (* copy non-uplevel struct params from pointers to local value *)
 
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
-            IF NOT param.up_level AND param.type = Type.Struct THEN
-                print(self, Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");");
+            IF (NOT param.up_level) AND param.type = Type.Struct AND param.used THEN
+                print(self, Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
             END;
         END;
     END;
-
 END begin_procedure;
 
 PROCEDURE end_procedure(self: T; <*UNUSED*>p: M3CG.Proc) =
@@ -2727,19 +3038,22 @@ END note_procedure_origin;
 
 PROCEDURE set_label(self: T; label: Label; <*UNUSED*>barrier: BOOLEAN) =
 (* define 'label' to be at the current pc *)
+VAR min := self.labels_min;
 BEGIN
     self.comment("set_label");
-    (* semicolon in case we fall off the function here:
-       void F() { L: } is not legal but
-       void F() { L:; } is, and means what you'd think the first means *)
-    print(self, "L" & LabelToHex(label) & ":;");
+    IF self.labels # NIL AND label >= self.labels_min AND label <= self.labels_max AND self.labels[label - min] THEN
+        (* semicolon in case we fall off the function here:
+           void F() { L: } is not legal but
+           void F() { L:; } is, and means what you'd think the first means *)
+        print(self, "L" & LabelToHex(label) & ":;\n");
+    END;
 END set_label;
 
 PROCEDURE jump(self: T; label: Label) =
 (* GOTO label *)
 BEGIN
     self.comment("jump");
-    print(self, "goto L" & LabelToHex(label) & ";");
+    print(self, "goto L" & LabelToHex(label) & ";\n");
 END jump;
 
 PROCEDURE if_true(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
@@ -2747,7 +3061,7 @@ PROCEDURE if_true(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Freq
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("if_true");
-    print(self, "if(" & s0 & ")goto L" & LabelToText(label) & ";");
+    print(self, "if(" & s0 & ")goto L" & LabelToText(label) & ";\n");
     pop(self);
 END if_true;
 
@@ -2756,7 +3070,7 @@ PROCEDURE if_false(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Fre
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("if_false");
-    print(self, "if(!" & s0 & ")goto L" & LabelToText(label) & ";");
+    print(self, "if(!" & s0 & ")goto L" & LabelToText(label) & ";\n");
     pop(self);
 END if_false;
 
@@ -2768,7 +3082,7 @@ VAR s0 := cast(get(self, 0), ztype);
 BEGIN
     self.comment("if_compare");
     pop(self, 2);
-    print(self, "if(" & s1 & CompareOpC[op] & s0 & ")goto L" & LabelToText(label) & ";");
+    print(self, "if(" & s1 & CompareOpC[op] & s0 & ")goto L" & LabelToText(label) & ";\n");
 END if_compare;
 
 PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
@@ -2778,7 +3092,7 @@ BEGIN
     self.comment("case_jump");
     print(self, "switch(" & s0 & "){");
     FOR i := FIRST(labels) TO LAST(labels) DO
-        print(self, "case " & IntToDec(i) & ":goto L" & LabelToText(labels[i]) & ";");
+        print(self, "case " & IntToDec(i) & ":goto L" & LabelToText(labels[i]) & ";\n");
     END;
     print(self, "}");
     pop(self);
@@ -2786,17 +3100,29 @@ END case_jump;
 
 PROCEDURE exit_proc(self: T; type: Type) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
-VAR s0: TEXT;
+VAR s0: TEXT := NIL;
+    proc := self.current_proc;
 BEGIN
     self.comment("exit_proc");
+    <* ASSERT self.in_proc *>
+    <* ASSERT proc # NIL *>
+    <* ASSERT NOT proc.is_RTException_Raise *>
+    IF proc.no_return THEN
+        <* ASSERT proc.exit_proc_skipped = 0 *>
+        <* ASSERT type = Type.Void  *>
+        INC(proc.exit_proc_skipped);
+        RETURN;
+    END;
     IF type = Type.Void THEN
-        print(self, "return;");
+        IF NOT proc.is_RTHooks_Raise THEN
+            print(self, "return;\n");
+        END;
     ELSE
         s0 := get(self);
         IF type = Type.Addr THEN
             s0 := "(ADDRESS)" & s0;
         END;
-        print(self, "return " & s0 & ";");
+        print(self, "return " & s0 & ";\n");
         pop(self);
     END;
 END exit_proc;
@@ -2829,7 +3155,7 @@ VAR current_level := self.current_proc.level;
     var_level := 0;
     static_link := "";
 BEGIN
-    IF var_proc = NIL OR var.up_level = FALSE OR var.is_static_link THEN
+    IF var_proc = NIL OR var.up_level = FALSE (*OR var.is_static_link*) THEN
         RETURN  "";
     END;
     var_level := var_proc.level;
@@ -2858,7 +3184,7 @@ END load;
 PROCEDURE store_helper(self: T; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType) =
 BEGIN
     <* ASSERT CG_Bytes[in_ztype] >= CG_Bytes[out_mtype] *>
-    print(self, "(*(" & typeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset) & ")=(" & typeToText[in_ztype] & ")(" & in & ");");
+    print(self, "(*(" & typeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset) & ")=(" & typeToText[in_ztype] & ")(" & in & ");\n");
 END store_helper;
 
 PROCEDURE store(self: T; v: M3CG.Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
@@ -2869,7 +3195,7 @@ BEGIN
     self.comment("store");
     pop(self);
     store_helper(self, s0, ztype, "&" & follow_static_link(self, var) & M3ID.ToText(var.name), offset, mtype);
-  END store;
+END store;
 
 PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
 (* push; s0.A := ADR(var) + offset *)
@@ -3098,7 +3424,7 @@ BEGIN
     self.comment(op);
     <* ASSERT (byte_size MOD target_word_bytes) = 0 *>
     pop(self, 3);
-    print(self, "m3_" & op & "(" & IntToDec(byte_size DIV target_word_bytes) & ",(WORD_T*)" & s0 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s2 & ");");
+    print(self, "m3_" & op & "(" & IntToDec(byte_size DIV target_word_bytes) & ",(WORD_T*)" & s0 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s2 & ");\n");
 END set_op3;
 
 PROCEDURE set_union(self: T; byte_size: ByteSize) =
@@ -3170,7 +3496,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("set_range");
     pop(self, 3);
-    print(self, "m3_set_range(" & s0 & "," & s1 & "," & s2 & ");");
+    print(self, "m3_set_range(" & s0 & "," & s1 & "," & s2 & ");\n");
 END set_range;
 
 PROCEDURE set_singleton(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
@@ -3180,7 +3506,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("set_singleton");
     pop(self, 2);
-    print(self, "m3_set_singleton(" & s0 & "," & s1 & ");");
+    print(self, "m3_set_singleton(" & s0 & "," & s1 & ");\n");
 END set_singleton;
 
 (*------------------------------------------------- Word.T bit operations ---*)
@@ -3372,7 +3698,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("pop");
     pop(self);
-    print(self, "m3_pop_" & typeToText[type] & "(" & s0 & ");");
+    print(self, "m3_pop_" & typeToText[type] & "(" & s0 & ");\n");
 END cg_pop;
 
 CONST MemCopyOrMove = ARRAY OF TEXT{"memcpy", "memmove"};
@@ -3385,7 +3711,7 @@ VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("copy_n");
     pop(self, 3);
-    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s2 & "," & s1 & "," & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0 & ");");
+    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s2 & "," & s1 & "," & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0 & ");\n");
 END copy_n;
 
 PROCEDURE copy(self: T; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
@@ -3395,7 +3721,7 @@ VAR s0 := get(self, 0);
 BEGIN
     self.comment("copy");
     pop(self, 2);
-    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s1 & "," & s0 & "," & IntToDec(CG_Bytes[mtype] * n) & ");");
+    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s1 & "," & s0 & "," & IntToDec(CG_Bytes[mtype] * n) & ");\n");
 END copy;
 
 <*NOWARN*>PROCEDURE zero_n(self: T; itype: IType; mtype: MType) =
@@ -3416,7 +3742,7 @@ VAR s0 := get(self, 0);
 BEGIN
     self.comment("zero");
     pop(self);
-    print(self, "memset(" & s0 & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");");
+    print(self, "memset(" & s0 & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
 END zero;
 
 (*----------------------------------------------------------- conversions ---*)
@@ -3509,7 +3835,7 @@ VAR info := ORD (code) + self.line * 32;
 BEGIN
     <* ASSERT ORD (code) < 32 *> (* lose fault code not ok *)
     (* ASSERT self.line <= (LAST(INTEGER) DIV 32) *) (* losing line number ok *)
-    print(self, self.report_fault & "(" & IntToDec(info) & ");");
+    print(self, self.report_fault & "(" & IntToDec(info) & ");\n");
 END reportfault;
 
 (*---------------------------------------------------- address arithmetic ---*)
@@ -3606,11 +3932,13 @@ BEGIN
     self.store(var, 0, Type.Addr, Type.Addr);
 END pop_static_link;
 
-PROCEDURE Locals_PopStaticLink(self: Locals_t) =
+PROCEDURE Locals_pop_static_link(self: Locals_t) =
 VAR x := self.self;
+    var := internal_declare_temp(x, CG_Bytes[Type.Addr], CG_Bytes[Type.Addr], Type.Addr, FALSE);
 BEGIN
-    x.pop_static_link_temp_vars.addhi(declare_temp(x, CG_Bytes[Type.Addr], CG_Bytes[Type.Addr], Type.Addr, FALSE));
-END Locals_PopStaticLink;
+    var.used := TRUE;
+    x.pop_static_link_temp_vars.addhi(var);
+END Locals_pop_static_link;
 
 PROCEDURE call_helper(self: T; type: Type; proc: TEXT) =
 VAR comma := "";
@@ -3625,7 +3953,7 @@ BEGIN
     END;
     proc := proc & ")";
     IF type = Type.Void THEN
-        print(self, proc & ";");
+        print(self, proc & ";\n");
     ELSE
         push(self, type, proc);
     END;
@@ -3802,7 +4130,7 @@ BEGIN
     self.comment("fence");
     <* ASSERT self.in_proc *>
     <* ASSERT self.current_proc # NIL *>
-    print(self, "m3_fence();");
+    print(self, "m3_fence();\n");
 END fence;
 
 <*NOWARN*>CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
