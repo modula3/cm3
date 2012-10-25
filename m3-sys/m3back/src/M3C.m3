@@ -424,13 +424,13 @@ TYPE Float_t  = Type_t OBJECT END;
 TYPE Record_t  = Type_t OBJECT END;
 
 TYPE Enum_t  = Type_t OBJECT
-    (* min is zero *)
-    max: INTEGER; (* FUTURE Target.Int or LONGINT *)
+    min: Target.Int; (* alwways zero *)
+    max: Target.Int;
 END;
 
 TYPE Subrange_t  = Type_t OBJECT
-    min: INTEGER; (* FUTURE Target.Int or LONGINT *)
-    max: INTEGER; (* FUTURE Target.Int or LONGINT *)
+    min: Target.Int;
+    max: Target.Int;
 END;
 
 TYPE Ref_t  = Type_t OBJECT
@@ -497,7 +497,7 @@ END Type_Init;
 <*NOWARN*>CONST UID_PROC8 = 16_B740EFD0; (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
-TYPE expr_t = OBJECT
+TYPE Expr_t = OBJECT
     is_const := FALSE;
     int_value: Target.Int;
     float_value: Target.Float;
@@ -505,21 +505,21 @@ TYPE expr_t = OBJECT
     type: M3CG.Type;
     ctext: TEXT;
     METHODS
-        Add(right: expr_t): expr_t (*:= expr_add*);
-        Sub(right: expr_t): expr_t (*:= expr_sub*);
-        Mult(right: expr_t): expr_t (*:= expr_mult*);
+        Add(right: Expr_t): Expr_t (*:= expr_add*);
+        Sub(right: Expr_t): Expr_t (*:= expr_sub*);
+        Mult(right: Expr_t): Expr_t (*:= expr_mult*);
         CText(): TEXT;
 END;
 
 (*
-PROECURE Expr_FromTInt(i: Target.Int): expr_t;
-PROECURE Expr_FromInt(i: INTEGER): expr_t;
-PROECURE Expr_FromTFloat(f: Target.Float): expr_t;
-PROECURE Expr_FromText(self: TEXT): expr_t;
+PROCEDURE Expr_FromTInt(i: Target.Int): Expr_t;
+PROCEDURE Expr_FromInt(i: INTEGER): Expr_t;
+PROCEDURE Expr_FromTFloat(f: Target.Float): Expr_t;
+PROCEDURE Expr_FromText(self: TEXT): Expr_t;
 
-PROCEDURE expr_add(<*UNUSED*>left, right: expr_t): expr_t = BEGIN RETURN NIL; END expr_add;
-PROCEDURE expr_sub(<*UNUSED*>left, right: expr_t): expr_t = BEGIN RETURN NIL; END expr_sub;
-PROCEDURE expr_mult(<*UNUSED*>left, right: expr_t): expr_t = BEGIN RETURN NIL; END expr_mult;
+PROCEDURE Expr_add(<*UNUSED*>left, right: Expr_t): Expr_t = BEGIN RETURN NIL; END expr_add;
+PROCEDURE Expr_sub(<*UNUSED*>left, right: Expr_t): Expr_t = BEGIN RETURN NIL; END expr_sub;
+PROCEDURE Expr_mult(<*UNUSED*>left, right: Expr_t): Expr_t = BEGIN RETURN NIL; END expr_mult;
 *)
 
 TYPE Var_t = M3CG.Var OBJECT
@@ -2445,6 +2445,7 @@ BEGIN
                      This gets it stored in begin_function. *)
             M3CG.Never,
             NARROW(proc.parent, Proc_t).FrameType() & "*"), Var_t);
+        param.used := TRUE;
     END;
 
     prototype := function_prototype(proc, FunctionPrototype_t.Declare) & ARRAY BOOLEAN OF TEXT{";\n", " M3_ATTRIBUTE_NO_RETURN;\n"}[proc.no_return];
