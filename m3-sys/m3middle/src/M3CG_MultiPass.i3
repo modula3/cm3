@@ -60,9 +60,6 @@ TYPE declare_param_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignmen
 TYPE declare_temp_t = op_tag_t OBJECT byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; OVERRIDES replay := replay_declare_temp END;
 TYPE import_global_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; OVERRIDES replay := replay_import_global END;
 
-(* Do labels need translation? *)
-TYPE next_label_t = op_tag_t OBJECT label_count: INTEGER; OVERRIDES replay := replay_next_label END;
-
 TYPE set_error_handler_t = op_t OBJECT proc: PROCEDURE(msg: TEXT); OVERRIDES replay := replay_set_error_handler END;
 TYPE begin_procedure_t = op_t OBJECT proc: INTEGER(*proc_t*); OVERRIDES replay := replay_begin_procedure END;
 TYPE end_procedure_t = op_t OBJECT proc: INTEGER(*proc_t*); OVERRIDES replay := replay_end_procedure END;
@@ -200,7 +197,6 @@ PROCEDURE end_unit(self: T);
 
 PROCEDURE replay_import_procedure(self: import_procedure_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_declare_procedure(self: declare_procedure_t; replay: Replay_t; cg: cg_t);
-PROCEDURE replay_next_label(self: next_label_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_set_error_handler(self: set_error_handler_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_begin_procedure(self: begin_procedure_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_end_procedure(self: end_procedure_t; replay: Replay_t; cg: cg_t);
