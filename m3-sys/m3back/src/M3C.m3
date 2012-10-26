@@ -4,7 +4,7 @@ IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort;
 IMPORT M3ID, TInt, ASCII, TextUtils, Cstdint, Long, Fmt;
 FROM TargetMap IMPORT CG_Bytes;
-FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
+FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
@@ -12,6 +12,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
+TYPE TypeUID = Cstdint.int32_t; (* HACK around bugs elsewhere *)
 
 (* Taken together, these help debugging, as you get more lines in the
    C and the error messages reference C line numbers *)
@@ -501,6 +502,9 @@ TYPE Expr_t = OBJECT
     is_const := FALSE;
     is_ordinal := FALSE; (* integer, subrange, enum, boolean *)
     is_cast := FALSE;
+    is_only_text := TRUE; (* unable to manipulate it *)
+    pointer_to_m3cgtype: M3CG.Type;
+    pointer_to_typeid: TypeUID := 0;
     int_value: Target.Int;
     float_value: Target.Float;
     text_value: TEXT;
@@ -1107,7 +1111,7 @@ END set_source_line;
 
 (*------------------------------------------- debugging type declarations ---*)
 
-<*NOWARN*>PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) =
+<*NOWARN*>PROCEDURE declare_typename(self: T; typeid: M3CG.TypeUID; name: Name) =
 BEGIN
     self.comment("declare_typename");
     (*
@@ -1122,7 +1126,7 @@ BEGIN
 END TypeIDToText;
 *)
 
-<*NOWARN*>PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: M3CG.TypeUID; total_bit_size: BitSize) =
 BEGIN
     self.comment("declare_array");
 (*
@@ -1154,7 +1158,7 @@ BEGIN
 *)
   END declare_array;
 
-<*NOWARN*>PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_open_array(self: T; typeid, element_typeid: M3CG.TypeUID; bit_size: BitSize) =
 BEGIN
     self.comment("declare_open_array");
     <* ASSERT bit_size MOD 32 = 0 *>
@@ -1183,7 +1187,7 @@ BEGIN
 *)
   END declare_open_array;
 
-<*NOWARN*>PROCEDURE declare_enum(self: T; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_enum(self: T; typeid: M3CG.TypeUID; n_elts: INTEGER; bit_size: BitSize) =
 BEGIN
     self.comment("declare_enum");
     SuppressLineDirective(self, n_elts, "declare_enum n_elts");
@@ -1217,50 +1221,50 @@ BEGIN
 *)
   END declare_enum_elt;
 
-<*NOWARN*>PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
+<*NOWARN*>PROCEDURE declare_packed(self: T; typeid: M3CG.TypeUID; bit_size: BitSize; base: M3CG.TypeUID) =
 BEGIN
     self.comment("declare_packed");
 END declare_packed;
 
-<*NOWARN*>PROCEDURE declare_record(self: T; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
+<*NOWARN*>PROCEDURE declare_record(self: T; typeid: M3CG.TypeUID; bit_size: BitSize; n_fields: INTEGER) =
 BEGIN
     self.comment("declare_record");
     SuppressLineDirective(self, n_fields, "declare_record n_fields");
 END declare_record;
 
-<*NOWARN*>PROCEDURE declare_field(self: T; name: Name; offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+<*NOWARN*>PROCEDURE declare_field(self: T; name: Name; offset: BitOffset; bit_size: BitSize; typeid: M3CG.TypeUID) =
 BEGIN
     self.comment("declare_field");
     SuppressLineDirective(self, -1, "declare_field");
 END declare_field;
 
-<*NOWARN*>PROCEDURE declare_set(self: T; typeid, domain: TypeUID; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_set(self: T; typeid, domain: M3CG.TypeUID; bit_size: BitSize) =
 BEGIN
     self.comment("declare_set");
 END declare_set;
 
-<*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain: M3CG.TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
 BEGIN
     self.comment("declare_subrange");
 END declare_subrange;
 
-<*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+<*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target: M3CG.TypeUID; brand: TEXT; traced: BOOLEAN) =
 BEGIN
     self.comment("declare_pointer");
 END declare_pointer;
 
-<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target: TypeUID) =
+<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target: M3CG.TypeUID) =
 BEGIN
     self.comment("declare_indirect");
 END declare_indirect;
 
-<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
+<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: M3CG.TypeUID; n_formals: INTEGER; result: M3CG.TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
 BEGIN
     self.comment("declare_proctype");
     (* SuppressLineDirective(self, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises"); *)
 END declare_proctype;
 
-<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) =
+<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: M3CG.TypeUID) =
 BEGIN
     self.comment("declare_formal");
     (* SuppressLineDirective(self, -1, "declare_formal"); *)
@@ -1272,29 +1276,29 @@ BEGIN
     (* SuppressLineDirective(self, -1, "declare_raises"); *)
 END declare_raises;
 
-<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super: M3CG.TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) =
 BEGIN
     self.comment("declare_object");
     (* SuppressLineDirective(self, n_fields + n_methods, "declare_object n_fields + n_methods"); *)
 END declare_object;
 
-<*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) =
+<*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: M3CG.TypeUID) =
 BEGIN
     self.comment("declare_method");
     SuppressLineDirective(self, -1, "declare_method");
 END declare_method;
 
-<*NOWARN*>PROCEDURE declare_opaque(self: T; typeid, super: TypeUID) =
+<*NOWARN*>PROCEDURE declare_opaque(self: T; typeid, super: M3CG.TypeUID) =
 BEGIN
     self.comment("declare_opaque");
 END declare_opaque;
 
-<*NOWARN*>PROCEDURE reveal_opaque(self: T; lhs, rhs: TypeUID) =
+<*NOWARN*>PROCEDURE reveal_opaque(self: T; lhs, rhs: M3CG.TypeUID) =
 BEGIN
     self.comment("reveal_opaque");
 END reveal_opaque;
 
-<*NOWARN*>PROCEDURE declare_exception(self: T; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
+<*NOWARN*>PROCEDURE declare_exception(self: T; name: Name; arg_type: M3CG.TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
 BEGIN
     self.comment("declare_exception");
 END declare_exception;
@@ -1308,7 +1312,7 @@ END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID): M3CG.Var =
+PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; <*UNUSED*>typeid: M3CG.TypeUID): M3CG.Var =
 VAR var := NEW(Var_t, self := self, type := type, name := name, imported := TRUE).Init();
 BEGIN
     self.comment("import_global");
@@ -1321,13 +1325,13 @@ END import_global;
 PROCEDURE Locals_declare_segment(
     self: Locals_t;
     name: Name;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     const: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN declare_segment(self.self, name, typeid, const);
 END Locals_declare_segment;
 
-PROCEDURE declare_segment(self: T; name: Name; <*UNUSED*>typeid: TypeUID; const: BOOLEAN): M3CG.Var =
+PROCEDURE declare_segment(self: T; name: Name; <*UNUSED*>typeid: M3CG.TypeUID; const: BOOLEAN): M3CG.Var =
 VAR var := NEW(Var_t, self := self, name := name, const := const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
@@ -1384,14 +1388,14 @@ BEGIN
 END Segments_bind_segment;
 
 PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment;
-                         type: Type; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
+                         type: Type; typeid: M3CG.TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
 BEGIN
     self.comment("declare_global");
     RETURN DeclareGlobal(self, name, byte_size, alignment, type, typeid, exported, inited, FALSE);
 END declare_global;
 
 PROCEDURE Segments_declare_global(self: Segments_t; name: Name; byte_size: ByteSize; alignment: Alignment;
-                                  type: Type; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
+                                  type: Type; typeid: M3CG.TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN declare_global(self.self, name, byte_size, alignment, type, typeid, exported, inited);
 END Segments_declare_global;
@@ -1402,7 +1406,7 @@ PROCEDURE declare_constant(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     exported: BOOLEAN;
     inited: BOOLEAN): M3CG.Var =
 BEGIN
@@ -1416,14 +1420,14 @@ PROCEDURE Segments_declare_constant(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     exported: BOOLEAN;
     inited: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN declare_constant(self.self, name, byte_size, alignment, type, typeid, exported, inited);
 END Segments_declare_constant;
 
-PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
+PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; <*UNUSED*>typeid: M3CG.TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR   var := NEW(Var_t, self := self, type := type, name := name, const := const,
                  (*inited := inited, typeid := typeid, alignment := alignment,*)
@@ -2085,7 +2089,7 @@ PROCEDURE Locals_declare_param(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     frequency: Frequency): M3CG.Var =
@@ -2108,7 +2112,7 @@ PROCEDURE Locals_declare_local(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     frequency: Frequency): M3CG.Var =
@@ -2140,7 +2144,7 @@ PROCEDURE Imports_declare_param(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     frequency: Frequency): M3CG.Var =
@@ -2155,7 +2159,7 @@ PROCEDURE Imports_import_global(
     byte_size: ByteSize; 
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID): M3CG.Var =
+    typeid: M3CG.TypeUID): M3CG.Var =
 BEGIN
     RETURN import_global(self.self, name, byte_size, alignment, type, typeid);
 END Imports_import_global;
@@ -2256,7 +2260,7 @@ PROCEDURE GetStructSizes_declare_global(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>typeid: M3CG.TypeUID;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
@@ -2269,7 +2273,7 @@ PROCEDURE GetStructSizes_import_global(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    <*UNUSED*>typeid: TypeUID): M3CG.Var =
+    <*UNUSED*>typeid: M3CG.TypeUID): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_import_global;
@@ -2280,7 +2284,7 @@ PROCEDURE GetStructSizes_declare_constant(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>typeid: M3CG.TypeUID;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
 BEGIN
@@ -2293,7 +2297,7 @@ PROCEDURE GetStructSizes_declare_local_or_param(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>typeid: M3CG.TypeUID;
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency): M3CG.Var =
@@ -2353,7 +2357,7 @@ PROCEDURE internal_declare_local(
     byte_size: ByteSize;
     <*UNUSED*>alignment: Alignment;
     type: Type;
-    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>typeid: M3CG.TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency): Var_t =
@@ -2376,7 +2380,7 @@ PROCEDURE declare_local(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     frequency: Frequency): Var_t =
@@ -2474,7 +2478,7 @@ PROCEDURE internal_declare_param(
     byte_size: ByteSize;
     <*UNUSED*>alignment: Alignment;
     type: Type;
-    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>typeid: M3CG.TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
@@ -2502,7 +2506,7 @@ declare_param(
     byte_size: ByteSize;
     alignment: Alignment;
     type: Type;
-    typeid: TypeUID;
+    typeid: M3CG.TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     frequency: Frequency): M3CG.Var =
@@ -3937,7 +3941,7 @@ BEGIN
     pop_parameter_helper(self, s0.CText());
 END pop_param;
 
-PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
+PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: M3CG.TypeUID; byte_size: ByteSize; alignment: Alignment) =
 (* pop s0 and make it the "next" parameter in the current call
  * NOTE: it is passed by value *)
 VAR s0 := cast(get(self, 0), Type.Addr);
