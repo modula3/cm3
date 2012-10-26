@@ -264,9 +264,9 @@ BEGIN
     *)
 
     WITH private_data = self.private_data,
-        data = NEW(REF ARRAY OF op_t, private_data.size()),
-        op_data = self.op_data,
-        op_counts = self.op_counts
+         data = NEW(REF ARRAY OF op_t, private_data.size()),
+         op_data = self.op_data,
+         op_counts = self.op_counts
     DO
         FOR i := FIRST(Op) TO LAST(Op) DO
             op_data[i] := NEW(REF ARRAY OF op_t, op_counts[i]);
@@ -317,8 +317,7 @@ END GrowableRefs_NewProc;
 PROCEDURE next_label(self: T; label_count: INTEGER := 1): Label =
 VAR label := self.next_label_id;
 BEGIN
-    INC(self.next_label_id, label_count);
-    self.Add(NEW(next_label_t, op := Op.end_unit, label_count := label_count));
+    self.next_label_id := label + label_count;
     RETURN label;
 END next_label;
 
@@ -1092,11 +1091,6 @@ PROCEDURE replay_import_global(self: import_global_t; replay: Replay_t; cg: cg_t
 BEGIN
     replay.PutRef(self.tag, cg.import_global(self.name, self.byte_size, self.alignment, self.type, self.typeid));
 END replay_import_global;
-
-PROCEDURE replay_next_label(self: next_label_t; <*UNUSED*>replay: Replay_t; cg: cg_t) =
-BEGIN
-    EVAL cg.next_label(self.label_count);
-END replay_next_label;
 
 PROCEDURE replay_begin_procedure(self: begin_procedure_t; replay: Replay_t; cg: cg_t) =
 BEGIN
