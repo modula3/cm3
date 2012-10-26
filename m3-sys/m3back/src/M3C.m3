@@ -48,7 +48,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         anonymousCounter := -1;
         c      : Wr.T := NIL;
         debug  := 0;
-        stack  : TextSeq.T := NIL;
+        stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         pop_static_link_temp_vars : RefSeq.T := NIL;
         pop_static_link_temp_vars_index := 0;
@@ -499,20 +499,34 @@ END Type_Init;
 
 TYPE Expr_t = OBJECT
     is_const := FALSE;
+    is_ordinal := FALSE; (* integer, subrange, enum, boolean *)
+    is_cast := FALSE;
     int_value: Target.Int;
     float_value: Target.Float;
     text_value: TEXT;
-    type: M3CG.Type;
-    ctext: TEXT;
+    m3cgtype: M3CG.Type;
+    typeid: TypeUID;
+    type: Type_t;
+    c_text: TEXT;
+    left, right: Expr_t;
     METHODS
+        CText(): TEXT := Expr_CText;
         Add(right: Expr_t): Expr_t (*:= expr_add*);
         Sub(right: Expr_t): Expr_t (*:= expr_sub*);
         Mult(right: Expr_t): Expr_t (*:= expr_mult*);
-        CText(): TEXT;
 END;
 
+PROCEDURE CTextToExpr(c_text: TEXT): Expr_t =
+BEGIN
+    RETURN NEW(Expr_t, c_text := c_text);
+END CTextToExpr;
+
+PROCEDURE Expr_CText(self: Expr_t): TEXT =
+BEGIN
+    RETURN self.c_text;
+END Expr_CText;
+
 (*
-PROCEDURE Expr_FromTInt(i: Target.Int): Expr_t;
 PROCEDURE Expr_FromInt(i: INTEGER): Expr_t;
 PROCEDURE Expr_FromTFloat(f: Target.Float): Expr_t;
 PROCEDURE Expr_FromText(self: TEXT): Expr_t;
@@ -837,10 +851,10 @@ CONST CompareOpName = ARRAY CompareOp OF TEXT { "eq", "ne", "gt", "ge", "lt", "l
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE paren(text: TEXT): TEXT =
+PROCEDURE paren(expr: Expr_t): Expr_t =
 BEGIN
 (* It is possible we can reduce parens, but it is not as simple as it seems. *)
-    RETURN "(" & text & ")";
+    RETURN CTextToExpr("(" & expr.CText() & ")");
 END paren;
 
 PROCEDURE pop(self: T; n: CARDINAL := 1) =
@@ -850,14 +864,14 @@ BEGIN
     END;
 END pop;
 
-PROCEDURE push(self: T; <*UNUSED*>type: Type; expression: TEXT) =
+PROCEDURE push(self: T; <*UNUSED*>type: Type; expression: Expr_t) =
 BEGIN
     self.stack.addlo(expression);
 END push;
 
-PROCEDURE get(self: T; n: CARDINAL := 0): TEXT =
+PROCEDURE get(self: T; n: CARDINAL := 0): Expr_t =
 BEGIN
-    RETURN self.stack.get(n);
+    RETURN NARROW(self.stack.get(n), Expr_t);
 END get;
 
 PROCEDURE SuppressLineDirective(self: T; adjust: INTEGER; <*UNUSED*>reason: TEXT) =
@@ -935,7 +949,7 @@ BEGIN
     self.c := cfile;
     self.init_fields := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
     self.initializer := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
-    self.stack := NEW(TextSeq.T).init();        (* CONSIDER compute maximum depth and use an array *)
+    self.stack := NEW(RefSeq.T).init();        (* CONSIDER compute maximum depth and use an array *)
     self.params := NEW(TextSeq.T).init();       (* CONSIDER compute maximum and use an array *)
     self.pop_static_link_temp_vars := NEW(RefSeq.T).init(); (* CONSIDER compute size -- number of pop_static_link calls *)
 (*
@@ -3062,7 +3076,7 @@ PROCEDURE if_true(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Freq
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("if_true");
-    print(self, "if(" & s0 & ")goto L" & LabelToText(label) & ";\n");
+    print(self, "if(" & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
     pop(self);
 END if_true;
 
@@ -3071,7 +3085,7 @@ PROCEDURE if_false(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Fre
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("if_false");
-    print(self, "if(!" & s0 & ")goto L" & LabelToText(label) & ";\n");
+    print(self, "if(!" & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
     pop(self);
 END if_false;
 
@@ -3083,7 +3097,7 @@ VAR s0 := cast(get(self, 0), ztype);
 BEGIN
     self.comment("if_compare");
     pop(self, 2);
-    print(self, "if(" & s1 & CompareOpC[op] & s0 & ")goto L" & LabelToText(label) & ";\n");
+    print(self, "if(" & s1.CText() & CompareOpC[op] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
 END if_compare;
 
 PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
@@ -3091,7 +3105,7 @@ PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("case_jump");
-    print(self, "switch(" & s0 & "){");
+    print(self, "switch(" & s0.CText() & "){");
     FOR i := FIRST(labels) TO LAST(labels) DO
         print(self, "case " & IntToDec(i) & ":goto L" & LabelToText(labels[i]) & ";\n");
     END;
@@ -3101,7 +3115,7 @@ END case_jump;
 
 PROCEDURE exit_proc(self: T; type: Type) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
-VAR s0: TEXT := NIL;
+VAR s0: Expr_t := NIL;
     proc := self.current_proc;
 BEGIN
     self.comment("exit_proc");
@@ -3121,33 +3135,33 @@ BEGIN
     ELSE
         s0 := get(self);
         IF type = Type.Addr THEN
-            s0 := "(ADDRESS)" & s0;
+            s0 := CTextToExpr("(ADDRESS)" & s0.CText());
         END;
-        print(self, "return " & s0 & ";\n");
+        print(self, "return " & s0.CText() & ";\n");
         pop(self);
     END;
 END exit_proc;
 
 (*------------------------------------------------------------ load/store ---*)
 
-PROCEDURE address_plus_offset(in: TEXT; in_offset: INTEGER): TEXT =
+PROCEDURE address_plus_offset(in: TEXT; in_offset: INTEGER): Expr_t =
 BEGIN
-    in := paren(in);
     IF in_offset # 0 THEN
-        in := paren(paren(IntToDec(in_offset)) & "+(ADDRESS)" & in);
+        RETURN CTextToExpr("((" & IntToDec(in_offset) & ")+(ADDRESS)(" & in & "))");
+    ELSE
+        RETURN CTextToExpr("(" & in & ")");
     END;
-    RETURN in;
 END address_plus_offset;
 
 PROCEDURE load_helper(self: T; in: TEXT; in_offset: INTEGER; in_mtype: MType; out_ztype: ZType) =
-VAR text: TEXT := NIL;
+VAR expr: TEXT := NIL;
 BEGIN
     <* ASSERT CG_Bytes[out_ztype] >= CG_Bytes[in_mtype] *>
-    text := "*(" & typeToText[in_mtype] & "*)" & address_plus_offset(in, in_offset);
+    expr := "*(" & typeToText[in_mtype] & "*)" & address_plus_offset(in, in_offset).CText();
     IF in_mtype # out_ztype THEN
-        text := "((" & typeToText[out_ztype] & ")(" & text & "))";
+        expr := "((" & typeToText[out_ztype] & ")(" & expr & "))";
     END;
-    push(self, out_ztype, text);
+    push(self, out_ztype, CTextToExpr(expr));
 END load_helper;
 
 PROCEDURE follow_static_link(self: T; var: Var_t): TEXT =
@@ -3185,7 +3199,7 @@ END load;
 PROCEDURE store_helper(self: T; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType) =
 BEGIN
     <* ASSERT CG_Bytes[in_ztype] >= CG_Bytes[out_mtype] *>
-    print(self, "(*(" & typeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset) & ")=(" & typeToText[in_ztype] & ")(" & in & ");\n");
+    print(self, "(*(" & typeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset).CText() & ")=(" & typeToText[in_ztype] & ")(" & in & ");\n");
 END store_helper;
 
 PROCEDURE store(self: T; v: M3CG.Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
@@ -3195,7 +3209,7 @@ VAR var := NARROW(v, Var_t);
 BEGIN
     self.comment("store");
     pop(self);
-    store_helper(self, s0, ztype, "&" & follow_static_link(self, var) & M3ID.ToText(var.name), offset, mtype);
+    store_helper(self, s0.CText(), ztype, "&" & follow_static_link(self, var) & M3ID.ToText(var.name), offset, mtype);
 END store;
 
 PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
@@ -3213,7 +3227,7 @@ BEGIN
     self.comment("load_indirect");
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     pop(self);
-    load_helper(self, s0, offset, mtype, ztype);
+    load_helper(self, s0.CText(), offset, mtype, ztype);
 END load_indirect;
 
 PROCEDURE store_indirect(self: T; offset: ByteOffset; ztype: ZType; mtype: MType) =
@@ -3223,7 +3237,7 @@ VAR s0 := cast(get(self, 0), ztype);
 BEGIN
     self.comment("store_indirect");
     pop(self, 2);
-    store_helper(self, s0, ztype, s1, offset, mtype);
+    store_helper(self, s0.CText(), ztype, s1.CText(), offset, mtype);
 END store_indirect;
 
 (*-------------------------------------------------------------- literals ---*)
@@ -3232,7 +3246,7 @@ PROCEDURE load_nil(self: T) =
 (* push; s0.A := NIL *)
 BEGIN
     self.comment("load_nil");
-    push(self, Type.Addr, "0"); (* UNDONE NULL or (ADDRESS)0? *)
+    push(self, Type.Addr, CTextToExpr("0")); (* UNDONE NULL or (ADDRESS)0? *)
 END load_nil;
 
 PROCEDURE IntToTarget(self: T; i: INTEGER): Target.Int =
@@ -3255,7 +3269,7 @@ PROCEDURE load_target_integer(self: T; type: IType; READONLY i: Target.Int) =
 BEGIN
     self.comment("load_integer");
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
-    push(self, type, cast(TIntLiteral(type, i), type));
+    push(self, type, cast(CTextToExpr(TIntLiteral(type, i)), type));
 END load_target_integer;
 
 PROCEDURE load_float(self: T; type: RType; READONLY float: Target.Float) =
@@ -3263,18 +3277,18 @@ PROCEDURE load_float(self: T; type: RType; READONLY float: Target.Float) =
 BEGIN
     self.comment("load_float");
     (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double *)
-    push(self, type, cast(FloatLiteral(float), type));
+    push(self, type, cast(CTextToExpr(FloatLiteral(float)), type));
 END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
 
-PROCEDURE cast(expr: TEXT; type: Type := Type.Void; type_text: TEXT := NIL): TEXT =
+PROCEDURE cast(expr: Expr_t; type: Type := Type.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT (type = Type.Void) # (type_text = NIL) *>
     IF type_text = NIL THEN
         type_text := typeToText[type];
     END;
-    RETURN paren("(" & type_text & ")" & paren(expr));
+    RETURN CTextToExpr("((" & type_text & ")(" & expr.CText() & "))");
 END cast;
 
 PROCEDURE op1(self: T; type: Type; name, op: TEXT) =
@@ -3283,17 +3297,28 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment(name);
     pop(self, 1);
-    push(self, type, cast(op & s0, type));
+    push(self, type, cast(CTextToExpr(op & s0.CText()), type));
 END op1;
 
-PROCEDURE op2(self: T; type: Type; name, op: TEXT) =
+TYPE TIntOp2 = PROCEDURE (READONLY a, b: Target.Int; VAR i: Target.Int): BOOLEAN;
+TYPE TFloatOp2 = PROCEDURE (READONLY a, b: Target.Float; VAR f: Target.Float): BOOLEAN;
+
+PROCEDURE
+op2(
+    self: T; 
+    type: Type;
+    name: TEXT;
+    op: TEXT;
+    <*UNUSED*>intOp: TIntOp2 := TInt.Add;
+    <*UNUSED*>floatOp: TFloatOp2 := TFloat.Add
+    ) =
 (* binary operation *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
     self.comment(name);
     pop(self, 2);
-    push(self, type, cast(s1 & op & s0, type));
+    push(self, type, cast(CTextToExpr(s1.CText() & op & s0.CText()), type));
 END op2;
 
 PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) =
@@ -3304,13 +3329,13 @@ BEGIN
     self.comment("compare");
     (* ASSERT cond # Cond.Z AND cond # Cond.NZ *)
     pop(self, 2);
-    push(self, itype, cast(s1 & CompareOpC[op] & s0, itype));
+    push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
 END compare;
 
 PROCEDURE add(self: T; type: AType) =
 (* s1.type := s1.type + s0.type; pop *)
 BEGIN
-    op2(self, type, "add", "+");
+    op2(self, type, "add", "+", TInt.Add, TFloat.Add);
 END add;
 
 PROCEDURE subtract(self: T; type: AType) =
@@ -3339,9 +3364,9 @@ BEGIN
     self.comment("div");
     pop(self, 2);
     IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
-        push(self, type, cast(s1 & "/" & s0, type));
+        push(self, type, cast(CTextToExpr(s1.CText() & "/" & s0.CText()), type));
     ELSE
-        push(self, type, cast("m3_div_" & typeToText[type] & "(" & s1 & "," & s0 & ")", type));
+        push(self, type, cast(CTextToExpr("m3_div_" & typeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
     END;
 END div;
 
@@ -3353,9 +3378,9 @@ BEGIN
     self.comment("mod");
     pop(self, 2);
     IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
-        push(self, type, cast(s1 & "%" & s0, type));
+        push(self, type, cast(CTextToExpr(s1.CText() & "%" & s0.CText()), type));
     ELSE
-        push(self, type, cast("m3_mod_" & typeToText[type] & "(" & s1 & "," & s0 & ")", type));
+        push(self, type, cast(CTextToExpr("m3_mod_" & typeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
     END;
 END mod;
 
@@ -3371,7 +3396,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("abs");
     pop(self);
-    push(self, type, "m3_abs_" & typeToText[type] & "(" & s0 & ")");
+    push(self, type, CTextToExpr("m3_abs_" & typeToText[type] & "(" & s0.CText() & ")"));
 END abs;
 
 PROCEDURE max(self: T; type: ZType) =
@@ -3381,7 +3406,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("max");
     pop(self, 2);
-    push(self, type, "m3_max_" & typeToText[type] & "(" & s0 & "," & s1 & ")");
+    push(self, type, CTextToExpr("m3_max_" & typeToText[type] & "(" & s0.CText() & "," & s1.CText() & ")"));
 END max;
 
 PROCEDURE min(self: T; type: ZType) =
@@ -3391,7 +3416,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("min");
     pop(self, 2);
-    push(self, type, "m3_min_" & typeToText[type] & "(" & s0 & "," & s1 & ")");
+    push(self, type, CTextToExpr("m3_min_" & typeToText[type] & "(" & s0.CText() & "," & s1.CText() & ")"));
 END min;
 
 PROCEDURE cvt_int(self: T; from_float_type: RType; to_integer_type: IType; op: ConvertOp) =
@@ -3400,7 +3425,7 @@ VAR s0 := cast(get(self, 0), from_float_type);
 BEGIN
     self.comment("cvt_int");
     pop(self);
-    push(self, to_integer_type, cast("m3_" & ConvertOpName[op] & "(" & s0 & ")", to_integer_type));
+    push(self, to_integer_type, cast(CTextToExpr("m3_" & ConvertOpName[op] & "(" & s0.CText() & ")"), to_integer_type));
 END cvt_int;
 
 PROCEDURE cvt_float(self: T; from_arithmetic_type: AType; to_float_type: RType) =
@@ -3425,7 +3450,7 @@ BEGIN
     self.comment(op);
     <* ASSERT (byte_size MOD target_word_bytes) = 0 *>
     pop(self, 3);
-    print(self, "m3_" & op & "(" & IntToDec(byte_size DIV target_word_bytes) & ",(WORD_T*)" & s0 & ",(WORD_T*)" & s1 & ",(WORD_T*)" & s2 & ");\n");
+    print(self, "m3_" & op & "(" & IntToDec(byte_size DIV target_word_bytes) & ",(WORD_T*)" & s0.CText() & ",(WORD_T*)" & s1.CText() & ",(WORD_T*)" & s2.CText() & ");\n");
 END set_op3;
 
 PROCEDURE set_union(self: T; byte_size: ByteSize) =
@@ -3459,7 +3484,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("set_member");
     pop(self, 2);
-    push(self, type, cast("m3_set_member(" & s0 & "," & s1 & ")", type));
+    push(self, type, cast(CTextToExpr("m3_set_member(" & s0.CText() & "," & s1.CText() & ")"), type));
 END set_member;
 
 PROCEDURE set_compare(self: T; byte_size: ByteSize; op: CompareOp; type: IType) =
@@ -3468,7 +3493,7 @@ VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
     s0 := cast(get(self, ORD(swap)), Type.Void, "SET");
     s1 := cast(get(self, ORD(NOT swap)), Type.Void, "SET");
     target_word_bytes := Target.Word.bytes;
-    eq := ARRAY BOOLEAN OF TEXT{")==0", ")!=0"}[op = CompareOp.EQ];
+    eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
 BEGIN
     self.comment("set_compare");
     <* ASSERT (byte_size MOD target_word_bytes) = 0 *>
@@ -3482,10 +3507,10 @@ BEGIN
     END;
     IF op IN SET OF CompareOp{CompareOp.LT, CompareOp.LE} THEN
         byte_size := byte_size DIV target_word_bytes;
-        push(self, type, cast("m3_set_" & CompareOpName[op] & "(" & IntLiteral(self, Target.Word.cg_type, byte_size) & "," & s1 & "," & s0 & ")", type));
+        push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(" & IntLiteral(self, Target.Word.cg_type, byte_size) & "," & s1.CText() & "," & s0.CText() & ")"), type));
     ELSE
         <* ASSERT op IN SET OF CompareOp{CompareOp.EQ, CompareOp.NE} *>
-        push(self, type, cast("memcmp(" & s1 & "," & s0 & "," & IntLiteral(self, Target.Word.cg_type, byte_size) & eq, type));
+        push(self, type, cast(CTextToExpr("memcmp(" & s1.CText() & "," & s0.CText() & "," & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));
     END;
 END set_compare;
 
@@ -3497,7 +3522,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("set_range");
     pop(self, 3);
-    print(self, "m3_set_range(" & s0 & "," & s1 & "," & s2 & ");\n");
+    print(self, "m3_set_range(" & s0.CText() & "," & s1.CText() & "," & s2.CText() & ");\n");
 END set_range;
 
 PROCEDURE set_singleton(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
@@ -3507,7 +3532,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("set_singleton");
     pop(self, 2);
-    print(self, "m3_set_singleton(" & s0 & "," & s1 & ");\n");
+    print(self, "m3_set_singleton(" & s0.CText() & "," & s1.CText() & ");\n");
 END set_singleton;
 
 (*------------------------------------------------- Word.T bit operations ---*)
@@ -3542,7 +3567,7 @@ VAR s0 := cast(get(self, 0), Target.Word.cg_type);
 BEGIN
     self.comment(name);
     pop(self, 2);
-    push(self, type, s1 & op & s0);
+    push(self, type, CTextToExpr(s1.CText() & op & s0.CText()));
 END shift_left_or_right;
 
 PROCEDURE shift_left(self: T; type: IType) =
@@ -3564,7 +3589,7 @@ VAR s0 := cast(get(self, 0), count_type);
 BEGIN
     self.comment(which);
     pop(self, 2);
-    push(self, type, "m3_" & which & "_" & typeToText[type] & "(" & s1 & "," & s0 & ")");
+    push(self, type, CTextToExpr("m3_" & which & "_" & typeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"));
 END shift_or_rotate;
 
 PROCEDURE shift(self: T; type: IType) =
@@ -3616,9 +3641,9 @@ BEGIN
     <* ASSERT sign_extend = FALSE *>
     pop(self, 3);
     IF inline_extract THEN
-        push(self, type, "m3_extract(" & typeToText[typeToUnsigned[type]] & "," & value & "," & offset & "," & count & ")");
+        push(self, type, CTextToExpr("m3_extract(" & typeToText[typeToUnsigned[type]] & "," & value.CText() & "," & offset.CText() & "," & count.CText() & ")"));
     ELSE
-        push(self, type, "m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & value & "," & offset & "," & count & ")");
+        push(self, type, CTextToExpr("m3_extract_" & typeToText[typeToUnsigned[type]] & "(" & value.CText() & "," & offset.CText() & "," & count.CText() & ")"));
     END;
 END extract;
 
@@ -3636,7 +3661,7 @@ VAR count := cast(get(self, 0), Target.Word.cg_type);
     value := cast(get(self, 1), type);
 BEGIN
     pop(self, 2);
-    push(self, type, "m3_sign_extend_" & typeToText[type] & "(" & value & "," & count & ")");
+    push(self, type, CTextToExpr("m3_sign_extend_" & typeToText[type] & "(" & value.CText() & "," & count.CText() & ")"));
 END do_sign_extend;
 
 PROCEDURE extract_mn(self: T; type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL) =
@@ -3662,7 +3687,7 @@ VAR count := cast(get(self, 0), Target.Word.cg_type);
 BEGIN
     self.comment("insert");
     pop(self, 4);
-    push(self, type, "m3_insert_" & typeToText[type] & "(" & to & "," & from & "," & offset & "," & count & ")");
+    push(self, type, CTextToExpr("m3_insert_" & typeToText[type] & "(" & to.CText() & "," & from.CText() & "," & offset.CText() & "," & count.CText() & ")"));
 END insert;
 
 PROCEDURE insert_n(self: T; type: IType; count: CARDINAL) =
@@ -3699,7 +3724,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("pop");
     pop(self);
-    print(self, "m3_pop_" & typeToText[type] & "(" & s0 & ");\n");
+    print(self, "m3_pop_" & typeToText[type] & "(" & s0.CText() & ");\n");
 END cg_pop;
 
 CONST MemCopyOrMove = ARRAY OF TEXT{"memcpy", "memmove"};
@@ -3712,7 +3737,7 @@ VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("copy_n");
     pop(self, 3);
-    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s2 & "," & s1 & "," & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0 & ");\n");
+    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s2.CText() & "," & s1.CText() & "," & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0.CText() & ");\n");
 END copy_n;
 
 PROCEDURE copy(self: T; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
@@ -3722,7 +3747,7 @@ VAR s0 := get(self, 0);
 BEGIN
     self.comment("copy");
     pop(self, 2);
-    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s1 & "," & s0 & "," & IntToDec(CG_Bytes[mtype] * n) & ");\n");
+    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s1.CText() & "," & s0.CText() & "," & IntToDec(CG_Bytes[mtype] * n) & ");\n");
 END copy;
 
 <*NOWARN*>PROCEDURE zero_n(self: T; itype: IType; mtype: MType) =
@@ -3743,7 +3768,7 @@ VAR s0 := get(self, 0);
 BEGIN
     self.comment("zero");
     pop(self);
-    print(self, "memset(" & s0 & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
+    print(self, "memset(" & s0.CText() & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
 END zero;
 
 (*----------------------------------------------------------- conversions ---*)
@@ -3769,7 +3794,7 @@ PROCEDURE check_nil(self: T; code: RuntimeError) =
 VAR s0 := get(self);
 BEGIN
     self.comment("check_nil");
-    print(self, "if(!" & paren(s0) & ")");
+    print(self, "if(!" & paren(s0).CText() & ")");
     reportfault(self, code);
 END check_nil;
 
@@ -3778,7 +3803,7 @@ PROCEDURE check_lo(self: T; type: IType; READONLY i: Target.Int; code: RuntimeEr
 VAR s0 := cast(get(self), type);
 BEGIN
     self.comment("check_lo");
-    print(self, "if(" & s0 & "<" & TIntLiteral(type, i) & ")");
+    print(self, "if(" & s0.CText() & "<" & TIntLiteral(type, i) & ")");
     reportfault(self, code);
 END check_lo;
 
@@ -3787,18 +3812,18 @@ PROCEDURE check_hi(self: T; type: IType; READONLY i: Target.Int; code: RuntimeEr
 VAR s0 := cast(get(self), type);
 BEGIN
     self.comment("check_hi");
-    print(self, "if(" & TIntLiteral(type, i) & "<" & s0 & ")");
+    print(self, "if(" & TIntLiteral(type, i) & "<" & s0.CText() & ")");
     reportfault(self, code);
 END check_hi;
 
 PROCEDURE check_range(self: T; type: IType; READONLY a, b: Target.Int; code: RuntimeError) =
 (* IF (s0.type < a) OR (b < s0.type) THEN abort(code) *)
 VAR s0 := cast(get(self), type);
-    a_text := TIntLiteral(type, a);
-    b_text := TIntLiteral(type, b);
+    a_expr := CTextToExpr(TIntLiteral(type, a));
+    b_expr := CTextToExpr(TIntLiteral(type, b));
 BEGIN
     self.comment("check_range");
-    print(self, "if((" & s0 & "<" & cast(a_text, type) & ")||(" & cast(b_text, type) & "<" & s0 & "))");
+    print(self, "if((" & s0.CText() & "<" & cast(a_expr, type).CText() & ")||(" & cast(b_expr, type).CText() & "<" & s0.CText() & "))");
     reportfault(self, code);
 END check_range;
 
@@ -3813,7 +3838,7 @@ VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
     self.comment("check_index");
-    print(self, "if(" & s0 & "<=" & s1 & ")");
+    print(self, "if(" & s0.CText() & "<=" & s1.CText() & ")");
     reportfault(self, code);
     pop(self);
 END check_index;
@@ -3826,7 +3851,7 @@ VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
     self.comment("check_eq");
-    print(self, "if(" & s0 & "!=" & s1 & ")");
+    print(self, "if(" & s0.CText() & "!=" & s1.CText() & ")");
     reportfault(self, code);
 END check_eq;
 
@@ -3847,7 +3872,7 @@ VAR s0 := cast(get(self, 0), Type.Addr);
 BEGIN
     self.comment("add_offset");
     pop(self);
-    push(self, Type.Addr, address_plus_offset(s0, offset));
+    push(self, Type.Addr, address_plus_offset(s0.CText(), offset));
 END add_offset;
 
 PROCEDURE index_address(self: T; type: IType; size: INTEGER) =
@@ -3862,7 +3887,7 @@ BEGIN
         <* ASSERT FALSE *>
     ELSE
         pop(self, 2);
-        push(self, Type.Addr, paren(s1 & "+" & paren(size_text & "*" & s0)));
+        push(self, Type.Addr, paren(CTextToExpr(s1.CText() & "+" & paren(CTextToExpr(size_text & "*" & s0.CText())).CText())));
     END;
 END index_address;
 
@@ -3884,7 +3909,7 @@ BEGIN
     start_call_helper(self);
     (* workaround frontend bug? *)
     IF proc.is_exception_handler THEN
-        push(self, Type.Addr, "0");
+        push(self, Type.Addr, CTextToExpr("0"));
         pop_parameter_helper(self, "0");
     END;
     self.proc_being_called := proc;
@@ -3909,7 +3934,7 @@ PROCEDURE pop_param(self: T; type: MType) =
 VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("pop_param");
-    pop_parameter_helper(self, s0);
+    pop_parameter_helper(self, s0.CText());
 END pop_param;
 
 PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
@@ -3920,7 +3945,7 @@ BEGIN
     self.comment("pop_struct");
     <* ASSERT (byte_size MOD alignment) = 0 *>
     <* ASSERT byte_size >= 0 *>
-    pop_parameter_helper(self, s0);
+    pop_parameter_helper(self, s0.CText());
 END pop_struct;
 
 PROCEDURE pop_static_link(self: T) =
@@ -3956,7 +3981,7 @@ BEGIN
     IF type = Type.Void THEN
         print(self, proc & ";\n");
     ELSE
-        push(self, type, proc);
+        push(self, type, CTextToExpr(proc));
     END;
 END call_helper;
 
@@ -4019,7 +4044,7 @@ BEGIN
     END;
 
     (* UNDONE: cast to more accurate function type *)
-    call_helper(self, type, "((" & typeToText[type] & " (__cdecl*)(M3_DOTDOTDOT))" & s0 & ")");
+    call_helper(self, type, "((" & typeToText[type] & " (__cdecl*)(M3_DOTDOTDOT))" & s0.CText() & ")");
 
 END call_indirect;
 
@@ -4031,7 +4056,7 @@ VAR proc := NARROW(p, Proc_t);
 BEGIN
     self.comment("load_procedure");
     (* UNDONE? typeing? *)
-    push(self, Type.Addr, M3ID.ToText(proc.name));
+    push(self, Type.Addr, CTextToExpr(M3ID.ToText(proc.name)));
 END load_procedure;
 
 PROCEDURE load_static_link(self: T; p: M3CG.Proc) =
@@ -4043,7 +4068,7 @@ BEGIN
         self.load_nil();
         RETURN;
     END;
-    push(self, Type.Addr, get_static_link(self, target));
+    push(self, Type.Addr, CTextToExpr(get_static_link(self, target)));
 END load_static_link;
 
 (*----------------------------------------------------------------- misc. ---*)
@@ -4082,7 +4107,7 @@ VAR s0 := get(self, 0);
     s1 := get(self, 1);
 BEGIN
     self.comment("store_ordered => store_helper");
-    store_helper(self, s0, ztype, s1, 0, mtype);
+    store_helper(self, s0.CText(), ztype, s1.CText(), 0, mtype);
 END store_ordered;
 
 PROCEDURE load_ordered(self: T; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
@@ -4091,7 +4116,7 @@ VAR s0 := get(self);
 BEGIN
     self.comment("load_ordered");
     pop(self);
-    load_helper(self, s0, 0, mtype, ztype);
+    load_helper(self, s0.CText(), 0, mtype, ztype);
 END load_ordered;
 
 <*NOWARN*>PROCEDURE exchange(self: T; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
