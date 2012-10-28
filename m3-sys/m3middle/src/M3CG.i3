@@ -98,8 +98,7 @@ CONST
   Always : Frequency = LAST (Frequency);
 
 TYPE
-  Int32 = [-16_7fffffff-1 .. 16_7fffffff];
-  TypeUID = BITS 32 FOR Int32;
+  TypeUID = (* BITS 32 FOR *) [-16_7fffffff-1 .. 16_7fffffff];
   (* a 32-bit unique id (fingerprint) for each type.  *)
 
 TYPE
