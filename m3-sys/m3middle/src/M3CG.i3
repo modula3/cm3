@@ -100,7 +100,7 @@ CONST
 TYPE
   TypeUID = (* BITS 32 FOR *) [-16_7fffffff-1 .. 16_7fffffff];
   (* a 32-bit unique id (fingerprint) for each type.  *)
-  TypeUIDBits = BITS 32 for TypeUID;
+  TypeUIDBits = BITS 32 FOR TypeUID;
 
 TYPE
   Label = INTEGER;
