@@ -503,15 +503,17 @@ TYPE Expr_t = OBJECT
     is_const := FALSE;
     is_ordinal := FALSE; (* integer, subrange, enum, boolean *)
     is_cast := FALSE;
+    is_address := FALSE;
     is_only_text := TRUE; (* unable to manipulate it *)
-    pointer_to_m3cgtype: M3CG.Type;
-    pointer_to_typeid: TypeUID := 0;
+    address_m3cgtype: M3CG.Type;
+    address_typeid: TypeUID := 0;
     int_value: Target.Int;
     float_value: Target.Float;
     text_value: TEXT := NIL;
     m3cgtype: M3CG.Type;
     typeid: TypeUID;
-    type: Type_t;
+    type: Type_t := NIL;
+    var: Var_t := NIL;
     c_text: TEXT := NIL;
     c_unop_text: TEXT := NIL;  (* e.g. ~, -, ! *)
     c_binop_text: TEXT := NIL; (* e.g. +, -, *, / *)
@@ -584,14 +586,14 @@ BEGIN
             => a + b is "int" and needs cast to INT16
         *)
         IF type_text # NIL THEN
-            IF left.type_text = type_text THEN
-                RETURN left.CText();
+            IF left.type_text # NIL AND (left.type_text = type_text OR Text.Equal(left.type_text, type_text)) THEN
+                RETURN (*" /* cast_removed1 */ " &*) left.CText();
             END;
-            type_text := typeToText[m3cgtype];
         ELSE
             IF left.m3cgtype = m3cgtype THEN
-                RETURN left.CText();
+                RETURN " /* cast_removed2 */ " & left.CText();
             END;
+            type_text := typeToText[m3cgtype];
         END;
         RETURN "((" & type_text & ")(" & self.left.CText() & "))";
     END;
@@ -3440,13 +3442,13 @@ END add;
 PROCEDURE subtract(self: T; type: AType) =
 (* s1.type := s1.type - s0.type; pop *)
 BEGIN
-    op2(self, type, "subtract", "-", TInt.Sub, TFloat.Sub);
+    op2(self, type, "subtract", "-", TInt.Subtract, TFloat.Subtract);
 END subtract;
 
 PROCEDURE multiply(self: T; type: AType) =
 (* s1.type := s1.type * s0.type; pop *)
 BEGIN
-    op2(self, type, "multiply", "*", TInt.Mult, TFloat.Mult);
+    op2(self, type, "multiply", "*", TInt.Multiply, TFloat.Multiply);
 END multiply;
 
 PROCEDURE divide(self: T; type: RType) =
