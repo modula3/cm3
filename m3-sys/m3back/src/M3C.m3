@@ -538,8 +538,8 @@ TYPE Expr_Ordinal_t = Expr_t OBJECT END;
 TYPE Expr_Deref_t = Expr_t OBJECT END;
 TYPE Expr_LoadVar_t  = Expr_t OBJECT END;
 
-TYPE Expr_Unary_t = Expr_t OBJECT x: ARRAY [0..0] OF Expr_t; END;
-TYPE Expr_Binary_t = Expr_t OBJECT x: ARRAY [0..1] OF Expr_t; END;
+TYPE Expr_Unary_t  = Expr_t OBJECT (* x: ARRAY [0..0] OF Expr_t; *) END;
+TYPE Expr_Binary_t = Expr_t OBJECT (* x: ARRAY [0..1] OF Expr_t; *) END;
 
 TYPE Expr_Int_t = Expr_t OBJECT x: Target.Int; type: IType OVERRIDES CText := Expr_Int_CText; END;
 PROCEDURE Expr_Int_CText(self: Expr_Int_t): TEXT = BEGIN RETURN TIntLiteral(self.type, self.x); END Expr_Int_CText;
@@ -553,7 +553,7 @@ PROCEDURE Expr_Cast_CText(self: Expr_Cast_t): TEXT =
 VAR type_text := self.type_text;
     m3cgtype := self.m3cgtype;
     force := self.force;
-    x := self.x[0];
+    left := self.left;
 BEGIN
     <* ASSERT (m3cgtype = M3CG.Type.Void) # (self.type_text = NIL) *>
     IF NOT force THEN
@@ -562,21 +562,21 @@ BEGIN
           => a + b is "int" and needs cast to INT16
       *)
       IF type_text # NIL THEN
-          IF x.type_text # NIL AND (x.type_text = type_text OR Text.Equal(x.type_text, type_text)) THEN
-              RETURN (*" /* cast_removed1 */ " &*) x.CText();
+          IF left.type_text # NIL AND (left.type_text = type_text OR Text.Equal(left.type_text, type_text)) THEN
+              RETURN (*" /* cast_removed1 */ " &*) left.CText();
           END;
       ELSE
-          IF x.m3cgtype = m3cgtype THEN
-              RETURN " /* cast_removed2 */ " & x.CText();
+          IF left.m3cgtype = m3cgtype THEN
+              RETURN " /* cast_removed2 */ " & left.CText();
           END;
           type_text := typeToText[m3cgtype];
       END;
     END;
-    RETURN "((" & type_text & ")(" & x.CText() & "))";
+    RETURN "((" & type_text & ")(" & left.CText() & "))";
 END Expr_Cast_CText;
 
 TYPE Expr_Add_t = Expr_Binary_t OBJECT OVERRIDES CText := Expr_Add_CText; END;
-PROCEDURE Expr_Add_CText(self: Expr_Add_t): TEXT = BEGIN RETURN self.x[0].CText() & " + " & self.x[1].CText(); END Expr_Add_CText;
+PROCEDURE Expr_Add_CText(self: Expr_Add_t): TEXT = BEGIN RETURN self.left.CText() & " + " & self.right.CText(); END Expr_Add_CText;
 
 PROCEDURE CTextToExpr(c_text: TEXT): Expr_t =
 BEGIN
@@ -3526,7 +3526,7 @@ END load_float;
 PROCEDURE cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
-    RETURN NEW(Expr_t, m3cgtype := type, type_text := type_text, left := expr, is_cast := TRUE);
+    RETURN NEW(Expr_Cast_t, m3cgtype := type, type_text := type_text, left := expr, is_cast := TRUE);
 END cast;
 
 PROCEDURE op1(self: T; type: M3CG.Type; name, op: TEXT) =
