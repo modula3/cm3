@@ -499,19 +499,8 @@ END Type_Init;
 <*NOWARN*>CONST UID_PROC8 = 16_B740EFD0; (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
-TYPE ExprType = {
-    Invalid,
-    Constant,
-    Ordinal,
-    Cast,
-    AddressOf,
-    Deref,
-    LoadVar
-};
-
 TYPE Expr_t = OBJECT
     self: T := NIL;
-    expr_type := ExprType.Invalid;
     current_proc: Proc_t := NIL;
     is_const := FALSE;
     is_cast := FALSE;
@@ -542,6 +531,52 @@ TYPE Expr_t = OBJECT
         Sub(right: Expr_t): Expr_t (*:= expr_sub*);
         Mult(right: Expr_t): Expr_t (*:= expr_mult*);
 END;
+
+TYPE Expr_Constant_t = Expr_t OBJECT END;
+TYPE Expr_AddressOf_t = Expr_t OBJECT END;
+TYPE Expr_Ordinal_t = Expr_t OBJECT END;
+TYPE Expr_Deref_t = Expr_t OBJECT END;
+TYPE Expr_LoadVar_t  = Expr_t OBJECT END;
+
+TYPE Expr_Unary_t = Expr_t OBJECT x: ARRAY [0..0] OF Expr_t; END;
+TYPE Expr_Binary_t = Expr_t OBJECT x: ARRAY [0..1] OF Expr_t; END;
+
+TYPE Expr_Int_t = Expr_t OBJECT x: Target.Int; type: IType OVERRIDES CText := Expr_Int_CText; END;
+PROCEDURE Expr_Int_CText(self: Expr_Int_t): TEXT = BEGIN RETURN TIntLiteral(self.type, self.x); END Expr_Int_CText;
+
+TYPE Expr_Cast_t = Expr_Unary_t OBJECT
+    force := FALSE;
+    OVERRIDES
+        CText := Expr_Cast_CText;
+END;
+PROCEDURE Expr_Cast_CText(self: Expr_Cast_t): TEXT =
+VAR type_text := self.type_text;
+    m3cgtype := self.m3cgtype;
+    force := self.force;
+    x := self.x[0];
+BEGIN
+    <* ASSERT (m3cgtype = M3CG.Type.Void) # (self.type_text = NIL) *>
+    IF NOT force THEN
+      (* We might need "force_cast":
+          INT16 a, b, c = a + b;
+          => a + b is "int" and needs cast to INT16
+      *)
+      IF type_text # NIL THEN
+          IF x.type_text # NIL AND (x.type_text = type_text OR Text.Equal(x.type_text, type_text)) THEN
+              RETURN (*" /* cast_removed1 */ " &*) x.CText();
+          END;
+      ELSE
+          IF x.m3cgtype = m3cgtype THEN
+              RETURN " /* cast_removed2 */ " & x.CText();
+          END;
+          type_text := typeToText[m3cgtype];
+      END;
+    END;
+    RETURN "((" & type_text & ")(" & x.CText() & "))";
+END Expr_Cast_CText;
+
+TYPE Expr_Add_t = Expr_Binary_t OBJECT OVERRIDES CText := Expr_Add_CText; END;
+PROCEDURE Expr_Add_CText(self: Expr_Add_t): TEXT = BEGIN RETURN self.x[0].CText() & " + " & self.x[1].CText(); END Expr_Add_CText;
 
 PROCEDURE CTextToExpr(c_text: TEXT): Expr_t =
 BEGIN
