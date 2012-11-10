@@ -44,6 +44,8 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         current_block: Block_t := NIL;
     
         multipass: Multipass_t := NIL;
+        replay_index: INTEGER;
+        replay_data: REF ARRAY OF M3CG_MultiPass.op_t;
         Err    : ErrorHandler := NIL;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
@@ -503,12 +505,8 @@ TYPE Expr_t = OBJECT
     self: T := NIL;
     current_proc: Proc_t := NIL;
     is_const := FALSE;
-    is_cast := FALSE;
-    force_cast := FALSE;
     is_address_of := FALSE;
     is_deref := FALSE;
-    is_only_text := TRUE; (* unable to manipulate it *)
-    pointer_indirect_level := 0;
     points_to_m3cgtype: M3CG.Type := M3CG.Type.Void;
     points_to_typeid: TypeUID := 0;
     int_value: Target.Int;
@@ -517,7 +515,6 @@ TYPE Expr_t = OBJECT
     m3cgtype: M3CG.Type := M3CG.Type.Void;
     typeid: TypeUID;
     type: Type_t := NIL;
-    var: Var_t := NIL;
     points_to_var: Var_t := NIL;
     c_text: TEXT := NIL;
     c_unop_text: TEXT := NIL;  (* e.g. ~, -, ! *)
@@ -536,7 +533,10 @@ TYPE Expr_Constant_t = Expr_t OBJECT END;
 TYPE Expr_AddressOf_t = Expr_t OBJECT END;
 TYPE Expr_Ordinal_t = Expr_t OBJECT END;
 TYPE Expr_Deref_t = Expr_t OBJECT END;
-TYPE Expr_LoadVar_t  = Expr_t OBJECT END;
+
+TYPE Expr_LoadVar_t = Expr_t OBJECT
+    var: Var_t := NIL;
+END;
 
 TYPE Expr_Unary_t  = Expr_t OBJECT (* x: ARRAY [0..0] OF Expr_t; *) END;
 TYPE Expr_Binary_t = Expr_t OBJECT (* x: ARRAY [0..1] OF Expr_t; *) END;
@@ -576,7 +576,13 @@ BEGIN
 END Expr_Cast_CText;
 
 TYPE Expr_Add_t = Expr_Binary_t OBJECT OVERRIDES CText := Expr_Add_CText; END;
-PROCEDURE Expr_Add_CText(self: Expr_Add_t): TEXT = BEGIN RETURN self.left.CText() & " + " & self.right.CText(); END Expr_Add_CText;
+PROCEDURE Expr_Add_CText(self: Expr_Add_t): TEXT = BEGIN RETURN self.left.CText() & "+" & self.right.CText(); END Expr_Add_CText;
+
+TYPE Expr_Subtract_t = Expr_Binary_t OBJECT OVERRIDES CText := Expr_Subtract_CText; END;
+PROCEDURE Expr_Subtract_CText(self: Expr_Subtract_t): TEXT = BEGIN RETURN self.left.CText() & "-" & self.right.CText(); END Expr_Subtract_CText;
+
+TYPE Expr_Negate_t = Expr_Unary_t OBJECT OVERRIDES CText := Expr_Negate_CText; END;
+PROCEDURE Expr_Negate_CText(self: Expr_Negate_t): TEXT = BEGIN RETURN "-" & self.left.CText(); END Expr_Negate_CText;
 
 PROCEDURE CTextToExpr(c_text: TEXT): Expr_t =
 BEGIN
@@ -596,21 +602,12 @@ BEGIN
         <* ASSERT self.left # NIL *>
         <* ASSERT self.right = NIL *>
         <* ASSERT self.c_binop_text = NIL *>
-        <* ASSERT NOT self.is_cast *>
         ok := TRUE;
     END;
     IF self.c_binop_text # NIL THEN
         <* ASSERT self.left # NIL *>
         <* ASSERT self.right # NIL *>
         <* ASSERT self.c_unop_text = NIL *>
-        <* ASSERT NOT self.is_cast *>
-        ok := TRUE;
-    END;
-    IF self.is_cast THEN
-        <* ASSERT self.left # NIL *>
-        <* ASSERT self.right = NIL *>
-        <* ASSERT self.c_unop_text = NIL *>
-        <* ASSERT self.c_binop_text = NIL *>
         ok := TRUE;
     END;
     IF self.points_to_var # NIL THEN
@@ -620,17 +617,13 @@ BEGIN
 END Expr_Assert;
 
 PROCEDURE Expr_CText(self: Expr_t): TEXT =
-VAR type_text := self.type_text;
-    m3cgtype := self.m3cgtype;
-    left := self.left;
+VAR left := self.left;
     right := self.right;
     c_text := self.c_text;
     c_unop_text := self.c_unop_text;
     c_binop_text := self.c_binop_text;
     var := self.var;
     points_to_var := self.points_to_var;
-    is_cast := self.is_cast;
-    force_cast := self.force_cast;
     current_proc := self.current_proc;
 BEGIN
     Expr_Assert(self);
@@ -642,25 +635,6 @@ BEGIN
     END;
     IF c_binop_text # NIL THEN
         RETURN left.CText() & c_binop_text & right.CText();
-    END;
-    IF is_cast THEN
-        IF NOT force_cast THEN
-          (* We might need "force_cast":
-              INT16 a, b, c = a + b;
-              => a + b is "int" and needs cast to INT16
-          *)
-          IF type_text # NIL THEN
-              IF left.type_text # NIL AND (left.type_text = type_text OR Text.Equal(left.type_text, type_text)) THEN
-                  RETURN (*" /* cast_removed1 */ " &*) left.CText();
-              END;
-          ELSE
-              IF left.m3cgtype = m3cgtype THEN
-                  RETURN " /* cast_removed2 */ " & left.CText();
-              END;
-              type_text := typeToText[m3cgtype];
-          END;
-        END;
-        RETURN "((" & type_text & ")(" & left.CText() & "))";
     END;
     IF var # NIL THEN
         RETURN follow_static_link(current_proc, var) & M3ID.ToText(var.name);
@@ -683,7 +657,6 @@ PROCEDURE Expr_mult(<*UNUSED*>left, right: Expr_t): Expr_t = BEGIN RETURN NIL; E
 
 TYPE Var_t = M3CG.Var OBJECT
     self: T := NIL;
-    pointer_indirect_level := 0;
     used := FALSE;
     name: Name := 0;
     name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
@@ -1012,7 +985,7 @@ BEGIN
     END;
 END pop;
 
-PROCEDURE push(self: T; <*UNUSED*>type: M3CG.Type; expression: Expr_t) =
+PROCEDURE push(self: T; <*UNUSED*>type: M3CG.Type; expression: M3CG_MultiPass.op_t) =
 BEGIN
     self.stack.addlo(expression);
 END push;
@@ -1165,6 +1138,8 @@ BEGIN
     SuppressLineDirective(self, -1, "begin_unit");
 END Prefix_End;
 
+VAR replay_index_ignored: INTEGER;
+
 PROCEDURE multipass_end_unit(self: Multipass_t) =
 (* called at the end of the first pass -- we have everything
    in memory now, except for the end_unit itself.
@@ -1174,8 +1149,8 @@ PROCEDURE multipass_end_unit(self: Multipass_t) =
 VAR x := self.self;
 BEGIN
     M3CG_MultiPass.end_unit(self); (* let M3CG_MultiPass do its usual last step *)
-    self.Replay(x, self.op_data[M3CG_Binary.Op.begin_unit]);
-    self.Replay(x, self.op_data[M3CG_Binary.Op.set_error_handler]);
+    self.Replay(x, replay_index_ignored, self.op_data[M3CG_Binary.Op.begin_unit]);
+    self.Replay(x, replay_index_ignored, self.op_data[M3CG_Binary.Op.set_error_handler]);
     Prefix_Start(x);
     HelperFunctions(self);
     GetStructSizes(self);
@@ -1184,19 +1159,19 @@ BEGIN
     (* forward declare functions/variables in this module and imports *)
     
     x.comment("begin pass: imports");
-    self.Replay(NEW(Imports_t, self := x));
+    self.Replay(NEW(Imports_t, self := x), replay_index_ignored);
     x.comment("end pass: imports");
 
     (* discover all locals (including temps and params) *)
 
     x.comment("begin pass: locals");
-    self.Replay(NEW(Locals_t, self := x));
+    self.Replay(NEW(Locals_t, self := x), replay_index_ignored);
     x.comment("end pass: locals");
 
     (* segments/globals *)
 
     x.comment("begin pass: segments/globals");
-    self.Replay(NEW(Segments_t, self := x));
+    self.Replay(NEW(Segments_t, self := x), replay_index_ignored);
     x.comment("end pass: segments/globals");
     
     (* labels -- which are used *)
@@ -1207,7 +1182,7 @@ BEGIN
 
     (* last pass *)
 
-    self.Replay(x);
+    self.Replay(x, x.replay_index);
 END multipass_end_unit;
 
 PROCEDURE begin_unit(self: T; <*UNUSED*>optimize: INTEGER) =
@@ -1641,7 +1616,7 @@ VAR x := self.self;
 BEGIN
     x.comment("begin pass: discover used variables");
     FOR i := FIRST(Ops) TO LAST(Ops) DO
-        self.Replay(pass, self.op_data[Ops[i]]);
+        self.Replay(pass, self.op_data[Ops[i]], replay_index_ignored);
     END;
    x.comment("end pass: discover used variables");
 END DiscoverUsedVariables;
@@ -1724,14 +1699,14 @@ BEGIN
         INC(pass.index, self.op_counts[Ops[i]]);
     END;
     DEC(pass.index, self.op_counts[Op.case_jump]);
-    self.Replay(count_pass, self.op_data[Op.case_jump]);
+    self.Replay(count_pass, self.op_data[Op.case_jump], replay_index_ignored);
     INC(pass.index, count_pass.count);
 
     IF pass.index # 0 THEN
         pass.array := NEW(REF ARRAY OF Label, pass.index);
         pass.index := 0;
         FOR i := FIRST(Ops) TO LAST(Ops) DO
-            self.Replay(pass, self.op_data[Ops[i]]);
+            self.Replay(pass, self.op_data[Ops[i]], replay_index_ignored);
         END;
         x.labels := NEW(REF ARRAY OF BOOLEAN, pass.max - pass.min + 1);
         x.labels_min := pass.min;
@@ -1886,7 +1861,7 @@ BEGIN
         END;
     END;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
-        self.Replay(helperFunctions, self.op_data[Ops[i]]);
+        self.Replay(helperFunctions, self.op_data[Ops[i]], replay_index_ignored);
     END;
     x.comment("end pass: helper functions");
 END HelperFunctions;
@@ -2353,7 +2328,7 @@ BEGIN
     
     getStructSizes.sizes := sizes;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
-        self.Replay(getStructSizes, self.op_data[Ops[i]]);
+        self.Replay(getStructSizes, self.op_data[Ops[i]], replay_index_ignored);
     END;
 
     (* sort, unique, output *)
@@ -3350,12 +3325,11 @@ END address_plus_offset;
 
 PROCEDURE load_var(self: T; var: Var_t): Expr_t =
 BEGIN
-    RETURN NEW(Expr_t,
+    RETURN NEW(Expr_LoadVar_t,
                var := var,
                m3cgtype := var.m3cgtype,
                typeid := var.typeid,
-               current_proc := self.current_proc,
-               pointer_indirect_level := var.pointer_indirect_level + 1);
+               current_proc := self.current_proc);
 END load_var;
 
 PROCEDURE address_of(expr: Expr_t): Expr_t =
@@ -3365,13 +3339,11 @@ BEGIN
                points_to_m3cgtype := expr.m3cgtype,
                points_to_typeid := expr.typeid,
                left := expr,
-               c_unop_text := "&",
-               pointer_indirect_level := expr.pointer_indirect_level + 1);
+               c_unop_text := "&");
 END address_of;
 
 PROCEDURE deref(expr: Expr_t): Expr_t =
 BEGIN
-    <* ASSERT expr.pointer_indirect_level > 0 *>
     RETURN
         NEW(Expr_t,
             m3cgtype := expr.points_to_m3cgtype,
@@ -3382,12 +3354,14 @@ END deref;
 PROCEDURE load_helper(self: T; in: TEXT; in_offset: INTEGER; in_mtype: MType; out_ztype: ZType) =
 VAR expr: TEXT := NIL;
 BEGIN
+(*
     <* ASSERT CG_Bytes[out_ztype] >= CG_Bytes[in_mtype] *>
     expr := "*(" & typeToText[in_mtype] & "*)" & address_plus_offset(in, in_offset).CText();
     IF in_mtype # out_ztype THEN
         expr := "((" & typeToText[out_ztype] & ")(" & expr & "))";
     END;
     push(self, out_ztype, CTextToExpr(expr));
+*)
 END load_helper;
 
 PROCEDURE follow_static_link(current_proc: Proc_t; var: Var_t): TEXT =
@@ -3421,7 +3395,8 @@ VAR expr := load_var(self, var);
 BEGIN
     self.comment("load");
     <* ASSERT mtype = var.m3cgtype *>
-    expr := load_var(self, var);
+(*
+expr := load_var(self, var);
     IF offset # 0 THEN
         expr := address_of(expr);
         expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
@@ -3432,6 +3407,8 @@ BEGIN
         expr := cast(expr, ztype);
     END;
     push(self, ztype, expr);
+*)
+    push(self, ztype, self.replay_data[self.replay_index]);
     (* load_helper(self, "&" & follow_static_link(self.current_proc, var) & M3ID.ToText(var.name), offset, mtype, ztype); *)
 END load;
 
@@ -3526,7 +3503,7 @@ END load_float;
 PROCEDURE cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
-    RETURN NEW(Expr_Cast_t, m3cgtype := type, type_text := type_text, left := expr, is_cast := TRUE);
+    RETURN NEW(Expr_Cast_t, m3cgtype := type, type_text := type_text, left := expr);
 END cast;
 
 PROCEDURE op1(self: T; type: M3CG.Type; name, op: TEXT) =
@@ -3585,13 +3562,15 @@ END subtract;
 PROCEDURE multiply(self: T; type: AType) =
 (* s1.type := s1.type * s0.type; pop *)
 BEGIN
-    op2(self, type, "multiply", "*", TInt.Multiply, TFloat.Multiply);
+(*  op2(self, type, "multiply", "*", TInt.Multiply, TFloat.Multiply); *)
+    push(self, type, self.replay_data[self.replay_index]);
 END multiply;
 
 PROCEDURE divide(self: T; type: RType) =
 (* s1.type := s1.type / s0.type; pop *)
 BEGIN
-    op2(self, type, "divide", "/");
+(*    op2(self, type, "divide", "/"); *)
+    push(self, type, self.replay_data[self.replay_index]);
 END divide;
 
 PROCEDURE div(self: T; type: IType; a, b: Sign) =
@@ -3601,11 +3580,14 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("div");
     pop(self, 2);
+(*
     IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "/" & s0.CText()), type));
     ELSE
         push(self, type, cast(CTextToExpr("m3_div_" & typeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
     END;
+*)
+    push(self, type, self.replay_data[self.replay_index]);
 END div;
 
 PROCEDURE mod(self: T; type: IType; a, b: Sign) =
