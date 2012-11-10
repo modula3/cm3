@@ -17,7 +17,7 @@ FROM M3CG IMPORT MemoryOrder;
 FROM M3CG_Binary IMPORT Op;
 
 TYPE cg_t = M3CG.T;
-TYPE typeid_t = INTEGER; (* HACK that Tony insists on *)
+TYPE typeid_t = M3CG.TypeUID;
 
 TYPE T <: Public;
 
