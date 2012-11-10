@@ -44,8 +44,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         current_block: Block_t := NIL;
     
         multipass: Multipass_t := NIL;
-        replay_index: INTEGER;
-        replay_data: REF ARRAY OF M3CG_MultiPass.op_t;
         Err    : ErrorHandler := NIL;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
@@ -515,7 +513,6 @@ TYPE Expr_t = OBJECT
     m3cgtype: M3CG.Type := M3CG.Type.Void;
     typeid: TypeUID;
     type: Type_t := NIL;
-    points_to_var: Var_t := NIL;
     c_text: TEXT := NIL;
     c_unop_text: TEXT := NIL;  (* e.g. ~, -, ! *)
     c_binop_text: TEXT := NIL; (* e.g. +, -, *, / *)
@@ -610,9 +607,6 @@ BEGIN
         <* ASSERT self.c_unop_text = NIL *>
         ok := TRUE;
     END;
-    IF self.points_to_var # NIL THEN
-        <* ASSERT self.current_proc # NIL *>
-    END;
     <* ASSERT ok *>
 END Expr_Assert;
 
@@ -622,8 +616,6 @@ VAR left := self.left;
     c_text := self.c_text;
     c_unop_text := self.c_unop_text;
     c_binop_text := self.c_binop_text;
-    var := self.var;
-    points_to_var := self.points_to_var;
     current_proc := self.current_proc;
 BEGIN
     Expr_Assert(self);
@@ -636,12 +628,14 @@ BEGIN
     IF c_binop_text # NIL THEN
         RETURN left.CText() & c_binop_text & right.CText();
     END;
+    (*
     IF var # NIL THEN
         RETURN follow_static_link(current_proc, var) & M3ID.ToText(var.name);
     END;
     IF points_to_var # NIL THEN
         RETURN "&" & follow_static_link(current_proc, points_to_var) & M3ID.ToText(points_to_var.name);
     END;
+    *)
     RETURN NIL;
 END Expr_CText;
 
@@ -985,7 +979,7 @@ BEGIN
     END;
 END pop;
 
-PROCEDURE push(self: T; <*UNUSED*>type: M3CG.Type; expression: M3CG_MultiPass.op_t) =
+PROCEDURE push(self: T; <*UNUSED*>type: M3CG.Type; expression: Expr_t) =
 BEGIN
     self.stack.addlo(expression);
 END push;
@@ -1138,8 +1132,6 @@ BEGIN
     SuppressLineDirective(self, -1, "begin_unit");
 END Prefix_End;
 
-VAR replay_index_ignored: INTEGER;
-
 PROCEDURE multipass_end_unit(self: Multipass_t) =
 (* called at the end of the first pass -- we have everything
    in memory now, except for the end_unit itself.
@@ -1149,8 +1141,8 @@ PROCEDURE multipass_end_unit(self: Multipass_t) =
 VAR x := self.self;
 BEGIN
     M3CG_MultiPass.end_unit(self); (* let M3CG_MultiPass do its usual last step *)
-    self.Replay(x, replay_index_ignored, self.op_data[M3CG_Binary.Op.begin_unit]);
-    self.Replay(x, replay_index_ignored, self.op_data[M3CG_Binary.Op.set_error_handler]);
+    self.Replay(x, self.op_data[M3CG_Binary.Op.begin_unit]);
+    self.Replay(x, self.op_data[M3CG_Binary.Op.set_error_handler]);
     Prefix_Start(x);
     HelperFunctions(self);
     GetStructSizes(self);
@@ -1159,19 +1151,19 @@ BEGIN
     (* forward declare functions/variables in this module and imports *)
     
     x.comment("begin pass: imports");
-    self.Replay(NEW(Imports_t, self := x), replay_index_ignored);
+    self.Replay(NEW(Imports_t, self := x));
     x.comment("end pass: imports");
 
     (* discover all locals (including temps and params) *)
 
     x.comment("begin pass: locals");
-    self.Replay(NEW(Locals_t, self := x), replay_index_ignored);
+    self.Replay(NEW(Locals_t, self := x));
     x.comment("end pass: locals");
 
     (* segments/globals *)
 
     x.comment("begin pass: segments/globals");
-    self.Replay(NEW(Segments_t, self := x), replay_index_ignored);
+    self.Replay(NEW(Segments_t, self := x));
     x.comment("end pass: segments/globals");
     
     (* labels -- which are used *)
@@ -1182,7 +1174,7 @@ BEGIN
 
     (* last pass *)
 
-    self.Replay(x, x.replay_index);
+    self.Replay(x);
 END multipass_end_unit;
 
 PROCEDURE begin_unit(self: T; <*UNUSED*>optimize: INTEGER) =
@@ -1616,7 +1608,7 @@ VAR x := self.self;
 BEGIN
     x.comment("begin pass: discover used variables");
     FOR i := FIRST(Ops) TO LAST(Ops) DO
-        self.Replay(pass, self.op_data[Ops[i]], replay_index_ignored);
+        self.Replay(pass, self.op_data[Ops[i]]);
     END;
    x.comment("end pass: discover used variables");
 END DiscoverUsedVariables;
@@ -1699,14 +1691,14 @@ BEGIN
         INC(pass.index, self.op_counts[Ops[i]]);
     END;
     DEC(pass.index, self.op_counts[Op.case_jump]);
-    self.Replay(count_pass, self.op_data[Op.case_jump], replay_index_ignored);
+    self.Replay(count_pass, self.op_data[Op.case_jump]);
     INC(pass.index, count_pass.count);
 
     IF pass.index # 0 THEN
         pass.array := NEW(REF ARRAY OF Label, pass.index);
         pass.index := 0;
         FOR i := FIRST(Ops) TO LAST(Ops) DO
-            self.Replay(pass, self.op_data[Ops[i]], replay_index_ignored);
+            self.Replay(pass, self.op_data[Ops[i]]);
         END;
         x.labels := NEW(REF ARRAY OF BOOLEAN, pass.max - pass.min + 1);
         x.labels_min := pass.min;
@@ -1861,7 +1853,7 @@ BEGIN
         END;
     END;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
-        self.Replay(helperFunctions, self.op_data[Ops[i]], replay_index_ignored);
+        self.Replay(helperFunctions, self.op_data[Ops[i]]);
     END;
     x.comment("end pass: helper functions");
 END HelperFunctions;
@@ -2328,7 +2320,7 @@ BEGIN
     
     getStructSizes.sizes := sizes;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
-        self.Replay(getStructSizes, self.op_data[Ops[i]], replay_index_ignored);
+        self.Replay(getStructSizes, self.op_data[Ops[i]]);
     END;
 
     (* sort, unique, output *)
@@ -3354,14 +3346,12 @@ END deref;
 PROCEDURE load_helper(self: T; in: TEXT; in_offset: INTEGER; in_mtype: MType; out_ztype: ZType) =
 VAR expr: TEXT := NIL;
 BEGIN
-(*
     <* ASSERT CG_Bytes[out_ztype] >= CG_Bytes[in_mtype] *>
     expr := "*(" & typeToText[in_mtype] & "*)" & address_plus_offset(in, in_offset).CText();
     IF in_mtype # out_ztype THEN
         expr := "((" & typeToText[out_ztype] & ")(" & expr & "))";
     END;
     push(self, out_ztype, CTextToExpr(expr));
-*)
 END load_helper;
 
 PROCEDURE follow_static_link(current_proc: Proc_t; var: Var_t): TEXT =
@@ -3395,8 +3385,7 @@ VAR expr := load_var(self, var);
 BEGIN
     self.comment("load");
     <* ASSERT mtype = var.m3cgtype *>
-(*
-expr := load_var(self, var);
+    expr := load_var(self, var);
     IF offset # 0 THEN
         expr := address_of(expr);
         expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
@@ -3407,8 +3396,6 @@ expr := load_var(self, var);
         expr := cast(expr, ztype);
     END;
     push(self, ztype, expr);
-*)
-    push(self, ztype, self.replay_data[self.replay_index]);
     (* load_helper(self, "&" & follow_static_link(self.current_proc, var) & M3ID.ToText(var.name), offset, mtype, ztype); *)
 END load;
 
@@ -3562,15 +3549,13 @@ END subtract;
 PROCEDURE multiply(self: T; type: AType) =
 (* s1.type := s1.type * s0.type; pop *)
 BEGIN
-(*  op2(self, type, "multiply", "*", TInt.Multiply, TFloat.Multiply); *)
-    push(self, type, self.replay_data[self.replay_index]);
+    op2(self, type, "multiply", "*", TInt.Multiply, TFloat.Multiply);
 END multiply;
 
 PROCEDURE divide(self: T; type: RType) =
 (* s1.type := s1.type / s0.type; pop *)
 BEGIN
-(*    op2(self, type, "divide", "/"); *)
-    push(self, type, self.replay_data[self.replay_index]);
+    op2(self, type, "divide", "/");
 END divide;
 
 PROCEDURE div(self: T; type: IType; a, b: Sign) =
@@ -3580,14 +3565,11 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("div");
     pop(self, 2);
-(*
     IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "/" & s0.CText()), type));
     ELSE
         push(self, type, cast(CTextToExpr("m3_div_" & typeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
     END;
-*)
-    push(self, type, self.replay_data[self.replay_index]);
 END div;
 
 PROCEDURE mod(self: T; type: IType; a, b: Sign) =
