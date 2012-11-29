@@ -337,6 +337,21 @@ end
 
 end
 
+proc M3BackCanCross(host, target) is
+    foreach c in [{"ALPHA64_VMS", "ALPHA32_VMS"}, % just one ALPHA_VMS system
+                  {"SPARC64_SOLARIS", "SPARC32_SOLARIS", "SOLgnu", "SOLsun"},
+                  {"SPARC64_LINUX", "SPARC32_LINUX"},
+                  {"PA64_HPUX", "PA32_HPUX"},
+                  {"PA64_LINUX", "PA32_LINUX"},
+                  {"AMD64_DARWIN", "I386_DARWIN"}
+                 ]
+      if (c contains host) and (c contains target)
+        return TRUE
+      end
+    end
+    return FALSE
+end
+
 proc GetM3Back() is
   if defined("m3back")
     % write("using " & m3back & "\n")
@@ -349,7 +364,14 @@ proc GetM3Back() is
 
   % for cross builds:
   if defined("ROOT") and not equal(HOST, TARGET)
-    m3back = ROOT & "/m3-sys/m3cc/" & HOST & "-" & TARGET & "/"
+    local m3back1 = ROOT & "/m3-sys/m3cc/" & HOST & "/"
+    local m3back2 = ROOT & "/m3-sys/m3cc/" & HOST & "-" & TARGET & "/"
+    m3back = m3back2
+    if not FileExists(m3back2) and M3BackCanCross(HOST, TARGET) and FileExists(m3back1)
+        m3back = m3back1
+    else
+        m3back = m3back2
+    end        
   
   % for native builds:
   else if equal(HOST, TARGET)
