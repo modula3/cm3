@@ -801,7 +801,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_inline_parameters);
     }
   NEXT_PASS (pass_ipa_increase_alignment);
-  NEXT_PASS (pass_ipa_matrix_reorg);
   *p = NULL;
 
   p = &all_regular_ipa_passes;
@@ -812,7 +811,6 @@ init_optimization_passes (void)
   NEXT_PASS (pass_ipa_pure_const);
   NEXT_PASS (pass_ipa_type_escape);
   NEXT_PASS (pass_ipa_pta);
-  NEXT_PASS (pass_ipa_struct_reorg);
   *p = NULL;
 
   /* These passes are run after IPA passes on every function that is being
