@@ -1,8 +1,8 @@
 MODULE M3C;
 
-IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl;
-IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort;
-IMPORT M3ID, TInt, TWord, ASCII, TextUtils, Cstdint, Long, Fmt;
+IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN;
+IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
+IMPORT M3ID, TInt, TWord, ASCII, TextUtils, Cstdint, Long, Fmt, Thread, Stdio;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -44,7 +44,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         current_block: Block_t := NIL;
     
         multipass: Multipass_t := NIL;
-        Err    : ErrorHandler := NIL;
+        Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
         debug  := 0;
@@ -217,7 +217,7 @@ VAR BitSizeToEnumCGType := ARRAY [0..32] OF M3CG.Type { M3CG.Type.Void, .. };
 *)
 
 PROCEDURE SetLineDirective(self: T) =
-VAR start := ARRAY BOOLEAN OF TEXT{" /* ", "#"}[output_line_directives];
+VAR start := ARRAY BOOLEAN OF TEXT{" /* ", (*"#"*)"//"}[output_line_directives];
     newline := ARRAY BOOLEAN OF TEXT{"", "\n"}[output_line_directives];
     end := ARRAY BOOLEAN OF TEXT{" */ ", "\n"}[output_line_directives];
 BEGIN
@@ -499,17 +499,71 @@ END Type_Init;
 <*NOWARN*>CONST UID_PROC8 = 16_B740EFD0; (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
+TYPE ExprType = {
+    Invalid,
+    Variable,
+    LoadIndirect,
+    LoadAddress,
+    ConstantInt,
+    ConstantFloat,
+    ConstantNil,
+    AddressOf,
+    Cast,
+    Deref,
+    Compare,
+    Add,
+    Subtract,
+    Multiply,
+    FloatDivide,
+    IntDiv,
+    IntMod,
+    Negate,
+    Abs,
+    Max,
+    Min,
+    FloatToInt,
+    ToFloat,
+    SetUnion,
+    SetDifference,
+    SetIntersection,
+    SetSymDifference,
+    SetMember,
+    SetCompare,
+    SetRange,
+    SetSingletone,
+    Not,
+    And,
+    Or,
+    Xor,
+    ShiftLeft,
+    ShiftRight,
+    Shift,
+    Rotate,
+    RotateLeft,
+    RotateRight,
+    Widen,
+    Chop,
+    Extract,
+    Insert,
+    SignExtend,
+    AddOffset,
+    IndexAddress,
+    FieldRef,
+    AsText
+};
+
 TYPE Expr_t = OBJECT
     self: T := NIL;
+    expr_type := ExprType.Invalid;
     current_proc: Proc_t := NIL;
-    is_const := FALSE;
-    is_address_of := FALSE;
-    is_deref := FALSE;
     points_to_m3cgtype: M3CG.Type := M3CG.Type.Void;
     points_to_typeid: TypeUID := 0;
-    int_value: Target.Int;
     float_value: Target.Float;
     text_value: TEXT := NIL;
+    (* The right generalization here is a set of values the expression
+    could possibly have, represented by range lists, not just one range. *)
+    minmax_valid := MinMaxBool_t {FALSE, FALSE};
+    minmax := MinMaxInt_t {TInt.Min64, TInt.Max64};
     m3cgtype: M3CG.Type := M3CG.Type.Void;
     typeid: TypeUID;
     type: Type_t := NIL;
@@ -531,15 +585,26 @@ TYPE Expr_AddressOf_t = Expr_t OBJECT END;
 TYPE Expr_Ordinal_t = Expr_t OBJECT END;
 TYPE Expr_Deref_t = Expr_t OBJECT END;
 
-TYPE Expr_LoadVar_t = Expr_t OBJECT
+TYPE Expr_Variable_t = Expr_t OBJECT
     var: Var_t := NIL;
+    OVERRIDES
+        CText := Expr_Variable_CText;
 END;
+PROCEDURE Expr_Variable_CText(self: Expr_Variable_t): TEXT =
+VAR var := self.var;
+BEGIN
+    RETURN follow_static_link(self.current_proc, var) & M3ID.ToText(var.name);
+END Expr_Variable_CText;
 
 TYPE Expr_Unary_t  = Expr_t OBJECT (* x: ARRAY [0..0] OF Expr_t; *) END;
 TYPE Expr_Binary_t = Expr_t OBJECT (* x: ARRAY [0..1] OF Expr_t; *) END;
 
-TYPE Expr_Int_t = Expr_t OBJECT x: Target.Int; type: IType OVERRIDES CText := Expr_Int_CText; END;
-PROCEDURE Expr_Int_CText(self: Expr_Int_t): TEXT = BEGIN RETURN TIntLiteral(self.type, self.x); END Expr_Int_CText;
+TYPE Expr_ConstantInt_t = Expr_t OBJECT OVERRIDES CText := Expr_ConstantInt_CText; END;
+PROCEDURE Expr_ConstantInt_CText(self: Expr_ConstantInt_t): TEXT =
+BEGIN
+    (* ASSERT self.minmax[Min] = self.minmax[Max] *)
+    RETURN TIntLiteral(self.m3cgtype, self.minmax[Min]);
+END Expr_ConstantInt_CText;
 
 TYPE Expr_Cast_t = Expr_Unary_t OBJECT
     force := FALSE;
@@ -551,25 +616,36 @@ VAR type_text := self.type_text;
     m3cgtype := self.m3cgtype;
     force := self.force;
     left := self.left;
+    left_text := left.CText();
+    remove := 0;
+    lparen := "";
+    rparen := "";
 BEGIN
     <* ASSERT (m3cgtype = M3CG.Type.Void) # (self.type_text = NIL) *>
     IF NOT force THEN
-      (* We might need "force_cast":
-          INT16 a, b, c = a + b;
-          => a + b is "int" and needs cast to INT16
-      *)
-      IF type_text # NIL THEN
-          IF left.type_text # NIL AND (left.type_text = type_text OR Text.Equal(left.type_text, type_text)) THEN
-              RETURN (*" /* cast_removed1 */ " &*) left.CText();
-          END;
-      ELSE
-          IF left.m3cgtype = m3cgtype THEN
-              RETURN " /* cast_removed2 */ " & left.CText();
-          END;
-          type_text := typeToText[m3cgtype];
-      END;
+        (* We might need "force_cast":
+        INT16 a, b, c = a + b;
+        => a + b is "int" and needs cast to INT16
+        *)
+        IF type_text # NIL THEN
+            IF left.type_text # NIL AND (left.type_text = type_text OR Text.Equal(left.type_text, type_text)) THEN
+                remove := 1;
+            END;
+        ELSE
+            type_text := typeToText[m3cgtype];
+            lparen := "(";
+            rparen := ")";
+            IF left.m3cgtype = m3cgtype AND m3cgtype # M3CG.Type.Addr THEN
+                remove := 2;
+            END;
+        END;
     END;
-    RETURN "((" & type_text & ")(" & left.CText() & "))";
+    IF remove > 0 THEN
+        (* RETURN left.CText(); *)
+        RETURN " /* cast_removed" & Fmt.Int(remove) & ": " & type_text & " */ " & left_text;
+    ELSE
+        RETURN "(" & lparen & type_text & rparen & "(" & left_text & "))";
+    END;
 END Expr_Cast_CText;
 
 TYPE Expr_Add_t = Expr_Binary_t OBJECT OVERRIDES CText := Expr_Add_CText; END;
@@ -586,12 +662,29 @@ BEGIN
     RETURN NEW(Expr_t, c_text := c_text);
 END CTextToExpr;
 
+PROCEDURE TextOrNil(a: TEXT): TEXT =
+BEGIN
+    RETURN ARRAY BOOLEAN OF TEXT{"NIL", a}[a # NIL];
+END TextOrNil;
+
 PROCEDURE Expr_Assert(self: Expr_t) =
 VAR type_text := self.type_text;
     m3cgtype := self.m3cgtype;
     ok := FALSE;
 BEGIN
-    <* ASSERT (m3cgtype = M3CG.Type.Void) # (type_text = NIL) *>
+    IF FALSE THEN
+        IF NOT ((m3cgtype = M3CG.Type.Void) # (type_text = NIL)) THEN
+            RTIO.PutText("m3cgtype:" & typeToText[m3cgtype] & " type_text:" & TextOrNil(type_text) & "\n");
+            RTIO.Flush();
+            <* ASSERT (m3cgtype = M3CG.Type.Void) # (type_text = NIL) *>
+        END;
+    END;
+    IF self.expr_type = ExprType.Variable THEN
+        ok := TRUE;
+    END;
+    IF self.expr_type = ExprType.Cast THEN
+        ok := TRUE;
+    END;
     IF self.c_text # NIL THEN
         ok := TRUE;
     END;
@@ -616,7 +709,6 @@ VAR left := self.left;
     c_text := self.c_text;
     c_unop_text := self.c_unop_text;
     c_binop_text := self.c_binop_text;
-    current_proc := self.current_proc;
 BEGIN
     Expr_Assert(self);
     IF c_text # NIL THEN
@@ -628,14 +720,6 @@ BEGIN
     IF c_binop_text # NIL THEN
         RETURN left.CText() & c_binop_text & right.CText();
     END;
-    (*
-    IF var # NIL THEN
-        RETURN follow_static_link(current_proc, var) & M3ID.ToText(var.name);
-    END;
-    IF points_to_var # NIL THEN
-        RETURN "&" & follow_static_link(current_proc, points_to_var) & M3ID.ToText(points_to_var.name);
-    END;
-    *)
     RETURN NIL;
 END Expr_CText;
 
@@ -946,20 +1030,107 @@ CONST typeToText = ARRAY CGType OF TEXT {
 
 TYPE IntegerTypes = [M3CG.Type.Word8 .. M3CG.Type.Int64];
 
-CONST typeIsUnsigned = ARRAY IntegerTypes OF BOOLEAN {
-    TRUE, FALSE,
-    TRUE, FALSE,
-    TRUE, FALSE,
-    TRUE, FALSE
+CONST typeIsInteger = ARRAY CGType OF BOOLEAN {
+    TRUE, TRUE, (* 8 *)
+    TRUE, TRUE, (* 16 *)
+    TRUE, TRUE, (* 32 *)
+    TRUE, TRUE, (* 64 *)
+    FALSE, FALSE, FALSE, (* real, longreal, extended *)
+    FALSE, FALSE, FALSE (* address, struct, void *)
+};
+CONST minMaxPossiblyValidForType = ARRAY CGType OF MinMaxBool_t {
+    minMaxTrue, minMaxTrue, (* 8 *)
+    minMaxTrue, minMaxTrue, (* 16 *)
+    minMaxTrue, minMaxTrue, (* 32 *)
+    minMaxTrue, minMaxTrue, (* 64 *)
+    minMaxFalse, minMaxFalse, minMaxFalse, (* real, longreal, extended *)
+    minMaxFalse, minMaxFalse, minMaxFalse (* address, struct, void *)
+};
+CONST typeIsUnsignedInt = ARRAY CGType OF BOOLEAN {
+    TRUE, FALSE, (* 8 *)
+    TRUE, FALSE, (* 16 *)
+    TRUE, FALSE, (* 32 *)
+    TRUE, FALSE, (* 64 *)
+    FALSE, FALSE, FALSE, (* real, longreal, extended *)
+    FALSE, FALSE, FALSE (* address, struct, void *)
+};
+CONST typeIsSignedInt = ARRAY CGType OF BOOLEAN {
+    FALSE, TRUE, (* 8 *)
+    FALSE, TRUE, (* 16 *)
+    FALSE, TRUE, (* 32 *)
+    FALSE, TRUE, (* 64 *)
+    FALSE, FALSE, FALSE, (* real, longreal, extended *)
+    FALSE, FALSE, FALSE (* address, struct, void *)
+};
+CONST typeSizeBits = ARRAY CGType OF [0..64] {
+    8, 8, 16, 16, 32, 32, 64, 64,
+    32, 64, 64, (* real, longreal, extended *)
+    0, 0, 0 (* address, struct, void *)
+};
+CONST typeSizeBytes = ARRAY CGType OF [0..8] {
+    1, 1, 2, 2, 4, 4, 8, 8,
+    4, 8, 8, (* real, longreal, extended *)
+    0, 0, 0 (* address, struct, void *)
 };
 
+CONST Min = 0;
+CONST Max = 1;
+TYPE MinOrMax = [Min..Max];
+TYPE MinMaxInt_t = ARRAY MinOrMax OF Target.Int;
+TYPE MinMaxBool_t = ARRAY MinOrMax OF BOOLEAN;
+
+CONST minMaxFalse = MinMaxBool_t { FALSE, FALSE };
+CONST minMaxTrue = MinMaxBool_t { TRUE, TRUE };
+(* CONST minMaxPossiblyValidForTypeIsInteger = ARRAY BOOLEAN OF MinMaxBool_t { minMaxFalse, minMaxTrue }; *)
+(*
+CONST integerTypeMinMax = ARRAY IntegerTypes OF MinMaxInt_t {
+    MinMaxInt_t{ TInt.Zero,  TWord.Max8  }, (* UINT8 *)
+    MinMaxInt_t{ TInt.Min8,  TInt.Max8   }, (*  INT8 *)
+    MinMaxInt_t{ TInt.Zero,  TWord.Max16 }, (* UINT16 *)
+    MinMaxInt_t{ TInt.Min16, TInt.Max16  }, (*  INT16 *)
+    MinMaxInt_t{ TInt.Zero,  TWord.Max32 }, (* UINT32 *)
+    MinMaxInt_t{ TInt.Min32, TInt.Max32  }, (*  INT32 *)
+    MinMaxInt_t{ TInt.Zero,  TWord.Max64 }, (* UINT64 *)
+    MinMaxInt_t{ TInt.Min64, TInt.Max64  }  (*  INT64 *)
+};
+*)
+CONST typeMinMax = ARRAY CGType OF MinMaxInt_t {
+    MinMaxInt_t{ TInt.Zero,  TWord.Max8  }, (* UINT8 *)
+    MinMaxInt_t{ TInt.Min8,  TInt.Max8   }, (*  INT8 *)
+    MinMaxInt_t{ TInt.Zero,  TWord.Max16 }, (* UINT16 *)
+    MinMaxInt_t{ TInt.Min16, TInt.Max16  }, (*  INT16 *)
+    MinMaxInt_t{ TInt.Zero,  TWord.Max32 }, (* UINT32 *)
+    MinMaxInt_t{ TInt.Min32, TInt.Max32  }, (*  INT32 *)
+    MinMaxInt_t{ TInt.Zero,  TWord.Max64 }, (* UINT64 *)
+    MinMaxInt_t{ TInt.Min64, TInt.Max64  }, (*  INT64 *)
+    (* The rest are not used, but provided for convenience. *)
+    MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* real *)
+    MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* longreal *)
+    MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* extended  *)
+    MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* address  *)
+    MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* struct  *)
+    MinMaxInt_t{ TInt.Zero,  TInt.Zero   }  (* void  *)
+};
+(*
+CONST typeMin = ARRAY IntegerTypes OF Target.Int {
+    TInt.Zero, TInt.Min8,
+    TInt.Zero, TInt.Min16,
+    TInt.Zero, TInt.Min32,
+    TInt.Zero, TInt.Min64
+};
+CONST typeMax = ARRAY IntegerTypes OF Target.Int {
+    TWord.Max8, TInt.Max8,
+    TWord.Max16, TInt.Max16,
+    TWord.Max32, TInt.Max32,
+    TWord.Max64, TInt.Max64
+};
+*)
 CONST typeToUnsigned = ARRAY IntegerTypes OF IntegerTypes {
     M3CG.Type.Word8, M3CG.Type.Word8,
     M3CG.Type.Word16, M3CG.Type.Word16,
     M3CG.Type.Word32, M3CG.Type.Word32,
     M3CG.Type.Word64, M3CG.Type.Word64
 };
-
 CONST CompareOpC = ARRAY CompareOp OF TEXT { "==", "!=", ">", ">=", "<", "<=" };
 CONST ConvertOpName = ARRAY ConvertOp OF TEXT { "round", "trunc", "floor", "ceil" };
 CONST CompareOpName = ARRAY CompareOp OF TEXT { "eq", "ne", "gt", "ge", "lt", "le" };
@@ -968,7 +1139,14 @@ CONST CompareOpName = ARRAY CompareOp OF TEXT { "eq", "ne", "gt", "ge", "lt", "l
 
 PROCEDURE paren(expr: Expr_t): Expr_t =
 BEGIN
-(* It is possible we can reduce parens, but it is not as simple as it seems. *)
+(* It is possible we can reduce parens, but it is not as simple as it seems.
+e.g. naive approach:
+   ((ADDRESS)(1 + 2))
+=> (ADDRESS)(1 + 2)
+=> ADDRESS)(1 + 2
+oops
+The correct approach requires verifying the parens match.
+*)
     RETURN CTextToExpr("(" & expr.CText() & ")");
 END paren;
 
@@ -1104,6 +1282,13 @@ END New;
 
 (*------------------------------------------------ READONLY configuration ---*)
 
+PROCEDURE DefaultErrorHandler (msg: TEXT) =
+<*FATAL Wr.Failure, Thread.Alerted*>
+BEGIN
+    Wr.PutText (Stdio.stdout, Wr.EOL & "** ERROR in M3C: " & msg & " **" & Wr.EOL);
+    Process.Exit (1);
+END DefaultErrorHandler;
+
 PROCEDURE set_error_handler (<*NOWARN*>self: T; <*NOWARN*>p: ErrorHandler) =
 BEGIN
     self.Err := p;
@@ -1215,7 +1400,11 @@ PROCEDURE set_source_line(self: T; line: INTEGER) =
 (* Sets the current source line number. Subsequent statements
 and expressions are associated with this source location. *)
 BEGIN
-    self.comment("set_source_line");
+    IF self.debug > 0 THEN
+        self.comment("set_source_line " & Fmt.Int(line));
+    ELSE
+        self.comment("set_source_line");
+    END;
     self.line := line;
     SetLineDirective(self);
 END set_source_line;
@@ -1994,7 +2183,7 @@ CONST text = ARRAY OF TEXT{
 "}"
 };
 BEGIN
-    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type]) THEN
+    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type]) THEN
         HelperFunctions_pos(self);
         HelperFunctions_helper_with_type_and_array(self, "div", type, self.data.div, text);
     END;
@@ -2018,7 +2207,7 @@ CONST text = ARRAY OF TEXT{
 "}"
 };
 BEGIN
-    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type]) THEN
+    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type]) THEN
         HelperFunctions_pos(self);
         HelperFunctions_helper_with_type_and_array(self, "mod", type, self.data.mod, text);
     END;
@@ -2745,7 +2934,7 @@ BEGIN
         self.init_fields.addhi("char " & M3ID.ToText(GenerateName(self)) & "[" & IntToDec(pad) & "];\n");
         initializer_addhi(self, CONST_TEXT_LEFT_BRACE);
         FOR i := 1 TO pad DO
-            initializer_addhi(self, "0");
+            initializer_addhi(self, "0 /* " & Fmt.Int(i) & " */ ");
         END;
         initializer_addhi(self, "}");
     END;
@@ -2868,9 +3057,16 @@ BEGIN
 END Segments_init_chars;
 
 PROCEDURE TIntToExpr(self: T; READONLY i: Target.Int): Expr_t =
+VAR e := NEW(Expr_ConstantInt_t,
+             expr_type := ExprType.ConstantInt,
+             self := self,
+             m3cgtype := Target.Integer.cg_type);
 BEGIN
-    RETURN NEW(Expr_t, self := self, int_value := i, is_const := TRUE,
-               m3cgtype := Target.Integer.cg_type);
+    e.minmax[Min] := i;
+    e.minmax[Max] := i;
+    e.minmax_valid[Min] := TRUE;
+    e.minmax_valid[Max] := TRUE;
+    RETURN e;
 END TIntToExpr;
 
 PROCEDURE IntToExpr(self: T; i: INTEGER): Expr_t =
@@ -3040,7 +3236,10 @@ PROCEDURE Locals_begin_procedure(self: Locals_t; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
     x := self.self;
 BEGIN
-    <* ASSERT NOT x.in_proc *>
+    IF x.in_proc THEN (* TODO don't require this *)
+        x.Err ("Locals_begin_procedure: in_proc; C backend requires "
+            & "M3_FRONT_FLAGS = [\"-unfold_nested_procs\"] in config file");
+    END;
     x.in_proc := TRUE;
     x.current_proc := proc;
     self.begin_block();
@@ -3233,25 +3432,89 @@ BEGIN
     print(self, "goto L" & LabelToHex(label) & ";\n");
 END jump;
 
-PROCEDURE if_true(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
+TYPE internal_compare_t = RECORD
+    op: CompareOp;
+    left: Expr_t := NIL;
+    right: Expr_t := NIL;
+    value_valid: BOOLEAN := FALSE;
+    value: BOOLEAN := FALSE;
+    comment: TEXT := NIL;
+    text: TEXT := NIL
+END;
+
+PROCEDURE internal_compare(<*UNUSED*>self: T; VAR t: internal_compare_t) =
+VAR op := t.op;
+    left := t.left;
+    right := t.right;
+BEGIN
+    t.value := FALSE;
+    t.comment := NIL;
+    t.text := left.CText() & CompareOpC[op] & right.CText();
+    IF op = CompareOp.LT AND left.minmax_valid[Min] AND right.minmax_valid[Max] AND TInt.GE(left.minmax[Min], right.minmax[Max]) THEN
+        t.comment := "/* compare skipped 1: " & t.text  & " */\n";
+        t.text := NIL;
+        t.value := FALSE;
+        RETURN;
+    END;
+    IF op = CompareOp.LT AND left.minmax_valid[Max] AND right.minmax_valid[Min] AND TInt.LT(left.minmax[Max], right.minmax[Min]) THEN
+        t.comment := "/* compare skipped 2: " & t.text & " */\n";
+        t.text := NIL;
+        t.value := TRUE;
+        RETURN;
+    END;
+END internal_compare;
+
+PROCEDURE if_true(self: T; itype: IType; label: Label; frequency: Frequency) =
+(* IF (s0.itype # 0) GOTO label; pop *)
+BEGIN
+    self.comment("if_true => if_compare");
+    load_host_integer(self, itype, 0);
+    self.if_compare(itype, CompareOp.NE, label, frequency);
+END if_true;
+
+PROCEDURE if_false(self: T; itype: IType; label: Label; frequency: Frequency) =
+(* IF (s0.itype = 0) GOTO label; pop *)
+BEGIN
+    self.comment("if_false => if_compare");
+    load_host_integer(self, itype, 0);
+    self.if_compare(itype, CompareOp.EQ, label, frequency);
+END if_false;
+
+PROCEDURE old_if_true(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
 (* IF (s0.itype # 0) GOTO label; pop *)
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("if_true");
     print(self, "if(" & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
     pop(self);
-END if_true;
+END old_if_true;
 
-PROCEDURE if_false(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
+PROCEDURE old_if_false(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
 (* IF (s0.itype = 0) GOTO label; pop *)
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("if_false");
     print(self, "if(!" & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
     pop(self);
-END if_false;
+END old_if_false;
 
 PROCEDURE if_compare(self: T; ztype: ZType; op: CompareOp; label: Label;
+                     <*UNUSED*>frequency: Frequency) =
+(* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
+VAR a := internal_compare_t{op := op};
+BEGIN
+    self.comment("if_compare");
+    a.right := cast(get(self, 0), ztype);
+    a.left := cast(get(self, 1), ztype);
+    pop(self, 2);
+    internal_compare(self, a);
+    IF a.comment # NIL THEN print(self, a.comment); END;
+    IF a.value_valid AND a.value THEN print(self, "goto L" & LabelToText(label) & ";\n"); END;
+    IF a.value_valid AND NOT a.value THEN RETURN END;
+    print(self, "if(" & a.text & ")goto L" & LabelToText(label) & ";\n");
+END if_compare;
+
+PROCEDURE old_if_compare(self: T; ztype: ZType; op: CompareOp; label: Label;
                      <*UNUSED*>frequency: Frequency) =
 (* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
 VAR s0 := cast(get(self, 0), ztype);
@@ -3259,8 +3522,19 @@ VAR s0 := cast(get(self, 0), ztype);
 BEGIN
     self.comment("if_compare");
     pop(self, 2);
+(*
+    IF op = CompareOp.LT AND s1.minmax_valid[Min] AND s0.minmax_valid[Max] AND TInt.GE(s1.minmax[Min], s0.minmax[Max]) THEN
+        print(self, "/* compare skipped 1 */\n");
+        RETURN;
+    END;
+    IF op = CompareOp.LT AND s1.minmax_valid[Max] AND s0.minmax_valid[Min] AND TInt.LT(s1.minmax[Max], s0.minmax[Min]) THEN
+        print(self, "/* compare skipped 2 */\n");
+        print(self, "goto L" & LabelToText(label) & ";\n");
+        RETURN;
+    END;
+*)
     print(self, "if(" & s1.CText() & CompareOpC[op] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
-END if_compare;
+END old_if_compare;
 
 PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
 (* "GOTO labels[s0.itype]; pop" with no range checking on s0.itype *)
@@ -3296,9 +3570,6 @@ BEGIN
         END;
     ELSE
         s0 := get(self);
-        IF type = M3CG.Type.Addr THEN
-            s0 := CTextToExpr("(ADDRESS)" & s0.CText());
-        END;
         print(self, "return " & s0.CText() & ";\n");
         pop(self);
     END;
@@ -3315,44 +3586,41 @@ BEGIN
     END;
 END address_plus_offset;
 
-PROCEDURE load_var(self: T; var: Var_t): Expr_t =
+PROCEDURE Variable(self: T; var: Var_t): Expr_t =
+VAR expr := NEW(Expr_Variable_t,
+                expr_type := ExprType.Variable,
+                var := var,
+                m3cgtype := var.m3cgtype,
+                typeid := var.typeid,
+                current_proc := self.current_proc);
 BEGIN
-    RETURN NEW(Expr_LoadVar_t,
-               var := var,
-               m3cgtype := var.m3cgtype,
-               typeid := var.typeid,
-               current_proc := self.current_proc);
-END load_var;
+(* TODO: subranges: for now, variables always have unknown values *)
+    (* minmax := typeMinMax[var.m3cgtype]; *)
+    expr.minmax_valid := minMaxFalse;
+    RETURN expr;
+END Variable;
 
-PROCEDURE address_of(expr: Expr_t): Expr_t =
+PROCEDURE AddressOf(expr: Expr_t): Expr_t =
 BEGIN
     RETURN NEW(Expr_t,
+               expr_type := ExprType.AddressOf,
                m3cgtype := M3CG.Type.Addr,
                points_to_m3cgtype := expr.m3cgtype,
                points_to_typeid := expr.typeid,
                left := expr,
-               c_unop_text := "&");
-END address_of;
+               c_unop_text := "(ADDRESS)&");
+END AddressOf;
 
-PROCEDURE deref(expr: Expr_t): Expr_t =
+PROCEDURE Deref(expr: Expr_t): Expr_t =
 BEGIN
     RETURN
         NEW(Expr_t,
+            expr_type := ExprType.Deref,
             m3cgtype := expr.points_to_m3cgtype,
             typeid := expr.points_to_typeid,
-            left := expr, c_unop_text := "*");
-END deref;
-
-PROCEDURE load_helper(self: T; in: TEXT; in_offset: INTEGER; in_mtype: MType; out_ztype: ZType) =
-VAR expr: TEXT := NIL;
-BEGIN
-    <* ASSERT CG_Bytes[out_ztype] >= CG_Bytes[in_mtype] *>
-    expr := "*(" & typeToText[in_mtype] & "*)" & address_plus_offset(in, in_offset).CText();
-    IF in_mtype # out_ztype THEN
-        expr := "((" & typeToText[out_ztype] & ")(" & expr & "))";
-    END;
-    push(self, out_ztype, CTextToExpr(expr));
-END load_helper;
+            left := expr,
+            c_unop_text := "*");
+END Deref;
 
 PROCEDURE follow_static_link(current_proc: Proc_t; var: Var_t): TEXT =
 VAR current_level := current_proc.level;
@@ -3375,28 +3643,35 @@ BEGIN
     RETURN static_link;
 END follow_static_link;
 
-PROCEDURE load(self: T; v: M3CG.Var; offset: ByteOffset; mtype: MType; ztype: ZType) =
+PROCEDURE load(self: T; v: M3CG.Var; offset: ByteOffset; in_mtype: MType; out_ztype: ZType) =
 (* push; s0.ztype := Mem [ ADR(var) + offset ].mtype; The only allowed (mtype->ztype) conversions
    are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
    The source type, mtype, determines whether the value is sign-extended or
    zero-extended. *)
 VAR var := NARROW(v, Var_t);
-VAR expr := load_var(self, var);
+    expr := Variable(self, var);
 BEGIN
     self.comment("load");
-    <* ASSERT mtype = var.m3cgtype *>
-    expr := load_var(self, var);
-    IF offset # 0 THEN
-        expr := address_of(expr);
-        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
-        (* expr := cast(expr, left := expr, type_text = "(" & typeToText[in_mtype] & " * )"); *)
-        expr := deref(expr);
+    IF FALSE THEN
+        IF NOT in_mtype = var.m3cgtype THEN
+            RTIO.PutText("load in_mtype:" & typeToText[in_mtype] & " var.m3cgtype:" & typeToText[var.m3cgtype]);
+            RTIO.Flush();
+            <* ASSERT in_mtype = var.m3cgtype *>
+        END;
     END;
-    IF mtype # ztype THEN
-        expr := cast(expr, ztype);
+    IF offset # 0 OR var.m3cgtype # in_mtype THEN
+        expr := AddressOf(expr);
+        IF offset # 0 THEN
+            expr := cast(expr, type := M3CG.Type.Addr);
+            expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+        END;
+        expr := cast(expr, type_text := "(" & typeToText[in_mtype] & " * )");
+        expr := Deref(expr);
     END;
-    push(self, ztype, expr);
-    (* load_helper(self, "&" & follow_static_link(self.current_proc, var) & M3ID.ToText(var.name), offset, mtype, ztype); *)
+    IF in_mtype # out_ztype THEN
+        expr := cast(expr, out_ztype);
+    END;
+    push(self, out_ztype, expr);
 END load;
 
 PROCEDURE store_helper(self: T; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType) =
@@ -3418,19 +3693,34 @@ END store;
 PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
 (* push; s0.A := ADR(var) + offset *)
 VAR var := NARROW(v, Var_t);
+    expr: Expr_t := NIL;
 BEGIN
     self.comment("load_address");
-    push(self, M3CG.Type.Addr, address_plus_offset("&" & follow_static_link(self.current_proc, var) & M3ID.ToText (var.name), offset));
+    expr := AddressOf(Variable(self, var));
+    IF offset # 0 THEN
+        expr := cast(expr, type := M3CG.Type.Addr);
+        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+    END;
+    push(self, M3CG.Type.Addr, expr);
 END load_address;
 
 PROCEDURE load_indirect(self: T; offset: ByteOffset; mtype: MType; ztype: ZType) =
 (* s0.ztype := Mem [s0.A + offset].mtype  *)
-VAR s0 := get(self);
+VAR expr := get(self);
 BEGIN
     self.comment("load_indirect");
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     pop(self);
-    load_helper(self, s0.CText(), offset, mtype, ztype);
+    IF offset # 0 THEN
+        expr := cast(expr, type := M3CG.Type.Addr); (* might be redundant *)
+        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+    END;
+    expr := CastAndDeref(expr, type_text := "(" & typeToText[mtype] & "*)"); (* cast might be redundant *)
+    IF mtype # ztype THEN
+        expr := cast(expr, ztype);
+    END;
+    expr.m3cgtype := ztype;
+    push(self, ztype, expr);
 END load_indirect;
 
 PROCEDURE store_indirect(self: T; offset: ByteOffset; ztype: ZType; mtype: MType) =
@@ -3466,15 +3756,31 @@ END IntToTarget;
 PROCEDURE load_host_integer(self: T; type: IType; i: INTEGER) =
 BEGIN
     comment(self, "load_host_integer");
-    load_target_integer(self, type, IntToTarget(self, i));
+    self.load_integer(type, IntToTarget(self, i));
 END load_host_integer;
 
-PROCEDURE load_target_integer(self: T; type: IType; READONLY i: Target.Int) =
+PROCEDURE load_target_integer(self: T; type: IType; READONLY readonly_i: Target.Int) =
 (* push; s0.type := i *)
+VAR i := readonly_i;
+    expr := CTextToExpr(TIntLiteral(type, i));
+    size := typeSizeBytes[type];
+    signed   := typeIsSignedInt[type];
+    unsigned := typeIsUnsignedInt[type];
 BEGIN
     self.comment("load_integer");
+    <* ASSERT signed OR unsigned *>
+    expr.minmax_valid[Min] := TRUE;
+    expr.minmax_valid[Max] := TRUE;
+    expr.m3cgtype := type;
+    IF typeIsUnsignedInt[type] THEN TIntN.ZeroExtend(i, size)
+    ELSIF typeIsSignedInt[type] THEN TIntN.SignExtend(i, size) END;
+    <* ASSERT readonly_i = i *>
+    expr.minmax[Min] := i;
+    expr.minmax[Max] := i;
+    expr := cast(expr, type);
+    expr.m3cgtype := type;
     (* TIntLiteral includes suffixes like U, ULL, UI64, etc. *)
-    push(self, type, cast(CTextToExpr(TIntLiteral(type, i)), type));
+    push(self, type, expr);
 END load_target_integer;
 
 PROCEDURE load_float(self: T; type: RType; READONLY float: Target.Float) =
@@ -3487,11 +3793,77 @@ END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
 
+PROCEDURE InternalTransferMinMax2(
+    from: Expr_t;
+    from_valid: BOOLEAN;
+    READONLY from_value: Target.Int;
+    to: Expr_t;
+    VAR to_valid: BOOLEAN;
+    VAR to_value: Target.Int) =
+VAR from_type     := from.m3cgtype;
+    from_signed   := typeIsSignedInt[from_type];
+    from_unsigned := typeIsUnsignedInt[from_type];
+    to_type       := to.m3cgtype;
+    to_signed     := typeIsSignedInt[to_type];
+    to_unsigned   := typeIsUnsignedInt[to_type];
+BEGIN
+    <* ASSERT NOT (from_signed AND from_unsigned) *>
+    <* ASSERT NOT (to_signed AND to_unsigned) *>
+    <* ASSERT to_signed OR to_unsigned *>
+    to_valid := from_valid;
+    IF NOT from_valid THEN
+        to_value := from_value;
+        RETURN;
+    END;
+    <* ASSERT from_signed OR from_unsigned *>
+    TIntExtendOrTruncate(from_value, to_type, to_value);
+END InternalTransferMinMax2;
+
+PROCEDURE InternalTransferMinMax1(from, to: Expr_t; minOrMax: MinOrMax) =
+BEGIN
+    InternalTransferMinMax2(
+        from,
+        from.minmax_valid[minOrMax],
+        from.minmax[minOrMax],
+        to,
+        to.minmax_valid[minOrMax],
+        to.minmax[minOrMax]);
+END InternalTransferMinMax1;
+
+PROCEDURE TransferMinMax(from, to: Expr_t) =
+BEGIN
+    IF NOT typeIsInteger[to.m3cgtype] THEN
+        to.minmax_valid := minMaxFalse;
+        RETURN;
+    END;
+    IF from.m3cgtype = to.m3cgtype THEN
+        to.minmax := from.minmax;
+        to.minmax_valid := from.minmax_valid;
+        RETURN;
+    END;
+    InternalTransferMinMax1(from, to, Min);
+    InternalTransferMinMax1(from, to, Max);
+END TransferMinMax;
+
 PROCEDURE cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
+VAR e := NEW(Expr_Cast_t, m3cgtype := type, type_text := type_text, left := expr);
+BEGIN
+    <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
+    (* casts are either truncating or sign extending or zero extending *)
+    TransferMinMax(expr, e);
+    RETURN e;
+END cast;
+
+PROCEDURE old_Cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
     RETURN NEW(Expr_Cast_t, m3cgtype := type, type_text := type_text, left := expr);
-END cast;
+END old_Cast;
+
+PROCEDURE CastAndDeref(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
+BEGIN
+    RETURN Deref(cast(expr, type, type_text));
+END CastAndDeref;
 
 PROCEDURE op1(self: T; type: M3CG.Type; name, op: TEXT) =
 (* unary operation *)
@@ -3502,8 +3874,19 @@ BEGIN
     push(self, type, cast(NEW(Expr_t, left := s0, c_unop_text := op), type));
 END op1;
 
-TYPE TIntOp2 = PROCEDURE (READONLY a, b: Target.Int; VAR i: Target.Int): BOOLEAN;
-TYPE TFloatOp2 = PROCEDURE (READONLY a, b: Target.Float; VAR f: Target.Float): BOOLEAN;
+TYPE TIntOp2_t = PROCEDURE (READONLY a, b: Target.Int; VAR i: Target.Int): BOOLEAN;
+TYPE TFloatOp2_t = PROCEDURE (READONLY a, b: Target.Float; VAR f: Target.Float): BOOLEAN;
+
+TYPE TIntExtendOrTruncate_t = PROCEDURE (READONLY in: Target.Int; byte_size: CARDINAL; VAR out: Target.Int): BOOLEAN;
+
+PROCEDURE TIntExtendOrTruncate(READONLY in: Target.Int; type: CGType; VAR out: Target.Int) =
+VAR size := typeSizeBytes[type];
+    signed   := typeIsSignedInt[type];
+    unsigned := typeIsUnsignedInt[type];
+BEGIN
+    <* ASSERT signed OR unsigned *>
+    EVAL ((ARRAY BOOLEAN OF TIntExtendOrTruncate_t{TWord.Truncate, TInt.Extend})[signed])(in, size, out);
+END TIntExtendOrTruncate;
 
 PROCEDURE
 op2(
@@ -3511,19 +3894,44 @@ op2(
     type: M3CG.Type;
     name: TEXT;
     op: TEXT;
-    <*UNUSED*>intOp: TIntOp2 := TInt.Add;
-    <*UNUSED*>floatOp: TFloatOp2 := TFloat.Add
+    <*UNUSED*>intOp: TIntOp2_t := TInt.Add;
+    <*UNUSED*>floatOp: TFloatOp2_t := TFloat.Add
     ) =
 (* binary operation *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
+    expr: Expr_t;
 BEGIN
     self.comment(name);
     pop(self, 2);
-    push(self, type, cast(NEW(Expr_t, left := s1, right := s0, c_binop_text := op), type));
+    expr := NEW(Expr_t, left := s1, right := s0, c_binop_text := op);
+    expr := cast(expr, type);
+    expr.minmax_valid := minMaxPossiblyValidForType[type];
+    expr.minmax := typeMinMax[type];
+    push(self, type, expr);
 END op2;
 
 PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) =
+(* s1.itype := (s1.ztype op s0.ztype); pop *)
+VAR a := internal_compare_t{op := op};
+BEGIN
+    self.comment("compare");
+    a.right := cast(get(self, 0), ztype);
+    a.left := cast(get(self, 1), ztype);
+    (* ASSERT cond # Cond.Z AND cond # Cond.NZ ? what cond? *)
+    pop(self, 2);
+    internal_compare(self, a);
+    IF a.comment # NIL THEN
+        print(self, a.comment);
+    END;
+    IF a.value_valid THEN
+        load_host_integer(self, itype, ORD(a.value));
+        RETURN;
+    END;
+    push(self, itype, cast(CTextToExpr(a.text), itype));
+END compare;
+
+PROCEDURE old_compare(self: T; ztype: ZType; itype: IType; op: CompareOp) =
 (* s1.itype := (s1.ztype op s0.ztype); pop *)
 VAR s0 := cast(get(self, 0), ztype);
     s1 := cast(get(self, 1), ztype);
@@ -3532,7 +3940,7 @@ BEGIN
     (* ASSERT cond # Cond.Z AND cond # Cond.NZ *)
     pop(self, 2);
     push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
-END compare;
+END old_compare;
 
 PROCEDURE add(self: T; type: AType) =
 (* s1.type := s1.type + s0.type; pop *)
@@ -3565,7 +3973,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("div");
     pop(self, 2);
-    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
+    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "/" & s0.CText()), type));
     ELSE
         push(self, type, cast(CTextToExpr("m3_div_" & typeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
@@ -3579,7 +3987,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("mod");
     pop(self, 2);
-    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsigned[type] THEN
+    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "%" & s0.CText()), type));
     ELSE
         push(self, type, cast(CTextToExpr("m3_mod_" & typeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
@@ -3682,7 +4090,7 @@ END set_sym_difference;
 PROCEDURE set_member(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.type := (s0.type IN s1.B); pop *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), M3CG.Type.Void, "SET");
+    s1 := cast(get(self, 1), M3CG.Type.Void, "(SET)");
 BEGIN
     self.comment("set_member");
     pop(self, 2);
@@ -3692,8 +4100,8 @@ END set_member;
 PROCEDURE set_compare(self: T; byte_size: ByteSize; op: CompareOp; type: IType) =
 (* s1.type := (s1.B op s0.B); pop *)
 VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
-    s0 := cast(get(self, ORD(swap)), M3CG.Type.Void, "SET");
-    s1 := cast(get(self, ORD(NOT swap)), M3CG.Type.Void, "SET");
+    s0 := cast(get(self, ORD(swap)), M3CG.Type.Void, "(SET)");
+    s1 := cast(get(self, ORD(NOT swap)), M3CG.Type.Void, "(SET)");
     target_word_bytes := Target.Word.bytes;
     eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
 BEGIN
@@ -3720,7 +4128,7 @@ PROCEDURE set_range(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s2.A [s1.type .. s0.type] := 1's; pop(3) *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
-    s2 := cast(get(self, 2), M3CG.Type.Void, "SET");
+    s2 := cast(get(self, 2), M3CG.Type.Void, "(SET)");
 BEGIN
     self.comment("set_range");
     pop(self, 3);
@@ -3730,7 +4138,7 @@ END set_range;
 PROCEDURE set_singleton(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.A [s0.type] := 1; pop(2) *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), M3CG.Type.Void, "SET");
+    s1 := cast(get(self, 1), M3CG.Type.Void, "(SET)");
 BEGIN
     self.comment("set_singleton");
     pop(self, 2);
@@ -3781,7 +4189,7 @@ END shift_left;
 PROCEDURE shift_right(self: T; type: IType) =
 (* s1.type := Word.Shift  (s1.type, -s0.type); pop *)
 BEGIN
-    <* ASSERT typeIsUnsigned[type] *>
+    <* ASSERT typeIsUnsignedInt[type] *>
     shift_left_or_right(self, type, "shift_right", ">>");
 END shift_right;
 
@@ -4041,7 +4449,7 @@ VAR s0 := cast(get(self, 0), Target.Word.cg_type);
 BEGIN
     self.comment("check_index");
     <* ASSERT type = Target.Integer.cg_type *>
-    <* ASSERT (NOT s0.is_const) OR TInt.GE(s0.int_value, TInt.Zero) *>
+    (* ASSERT (NOT s0.is_const) OR TInt.GE(s0.int_value, TInt.Zero) *)
     print(self, "if(" & s0.CText() & "<=" & s1.CText() & ")");
     reportfault(self, code);
     pop(self);
@@ -4299,7 +4707,10 @@ BEGIN
     IF length < 1 THEN
         RETURN;
     END;
-    print(self, " /* " & a & b & c & d & " */\n");
+    a := " /* " & a & b & c & d & " */\n";
+    print(self, a);
+    RTIO.PutText(a);
+    RTIO.Flush();
 END comment;
 
 (*--------------------------------------------------------------- atomics ---*)
@@ -4316,11 +4727,9 @@ END store_ordered;
 
 PROCEDURE load_ordered(self: T; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
 (* s0.ztype := Mem [s0.A].mtype  *)
-VAR s0 := get(self);
 BEGIN
     self.comment("load_ordered");
-    pop(self);
-    load_helper(self, s0.CText(), 0, mtype, ztype);
+    load_indirect(self, 0, mtype, ztype);
 END load_ordered;
 
 <*NOWARN*>PROCEDURE exchange(self: T; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
