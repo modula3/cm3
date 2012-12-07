@@ -562,8 +562,8 @@ TYPE Expr_t = OBJECT
     text_value: TEXT := NIL;
     (* The right generalization here is a set of values the expression
     could possibly have, represented by range lists, not just one range. *)
-    minmax_valid := MinMaxBool_t {FALSE, FALSE};
-    minmax := MinMaxInt_t {TInt.Min64, TInt.Max64};
+    minmax_valid := minMaxFalse;
+    minmax := int64MinMax;
     m3cgtype: M3CG.Type := M3CG.Type.Void;
     typeid: TypeUID;
     type: Type_t := NIL;
@@ -1081,28 +1081,18 @@ TYPE MinMaxBool_t = ARRAY MinOrMax OF BOOLEAN;
 
 CONST minMaxFalse = MinMaxBool_t { FALSE, FALSE };
 CONST minMaxTrue = MinMaxBool_t { TRUE, TRUE };
-(* CONST minMaxPossiblyValidForTypeIsInteger = ARRAY BOOLEAN OF MinMaxBool_t { minMaxFalse, minMaxTrue }; *)
-(*
-CONST integerTypeMinMax = ARRAY IntegerTypes OF MinMaxInt_t {
-    MinMaxInt_t{ TInt.Zero,  TWord.Max8  }, (* UINT8 *)
-    MinMaxInt_t{ TInt.Min8,  TInt.Max8   }, (*  INT8 *)
-    MinMaxInt_t{ TInt.Zero,  TWord.Max16 }, (* UINT16 *)
-    MinMaxInt_t{ TInt.Min16, TInt.Max16  }, (*  INT16 *)
-    MinMaxInt_t{ TInt.Zero,  TWord.Max32 }, (* UINT32 *)
-    MinMaxInt_t{ TInt.Min32, TInt.Max32  }, (*  INT32 *)
-    MinMaxInt_t{ TInt.Zero,  TWord.Max64 }, (* UINT64 *)
-    MinMaxInt_t{ TInt.Min64, TInt.Max64  }  (*  INT64 *)
-};
-*)
+CONST int32MinMax = MinMaxInt_t{TInt.Min32, TInt.Max32};
+CONST int64MinMax = MinMaxInt_t{TInt.Min64, TInt.Max64};
+
 CONST typeMinMax = ARRAY CGType OF MinMaxInt_t {
     MinMaxInt_t{ TInt.Zero,  TWord.Max8  }, (* UINT8 *)
     MinMaxInt_t{ TInt.Min8,  TInt.Max8   }, (*  INT8 *)
     MinMaxInt_t{ TInt.Zero,  TWord.Max16 }, (* UINT16 *)
     MinMaxInt_t{ TInt.Min16, TInt.Max16  }, (*  INT16 *)
     MinMaxInt_t{ TInt.Zero,  TWord.Max32 }, (* UINT32 *)
-    MinMaxInt_t{ TInt.Min32, TInt.Max32  }, (*  INT32 *)
+    int32MinMax,
     MinMaxInt_t{ TInt.Zero,  TWord.Max64 }, (* UINT64 *)
-    MinMaxInt_t{ TInt.Min64, TInt.Max64  }, (*  INT64 *)
+    int64MinMax,
     (* The rest are not used, but provided for convenience. *)
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* real *)
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* longreal *)
@@ -1111,20 +1101,6 @@ CONST typeMinMax = ARRAY CGType OF MinMaxInt_t {
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* struct  *)
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }  (* void  *)
 };
-(*
-CONST typeMin = ARRAY IntegerTypes OF Target.Int {
-    TInt.Zero, TInt.Min8,
-    TInt.Zero, TInt.Min16,
-    TInt.Zero, TInt.Min32,
-    TInt.Zero, TInt.Min64
-};
-CONST typeMax = ARRAY IntegerTypes OF Target.Int {
-    TWord.Max8, TInt.Max8,
-    TWord.Max16, TInt.Max16,
-    TWord.Max32, TInt.Max32,
-    TWord.Max64, TInt.Max64
-};
-*)
 CONST typeToUnsigned = ARRAY IntegerTypes OF IntegerTypes {
     M3CG.Type.Word8, M3CG.Type.Word8,
     M3CG.Type.Word16, M3CG.Type.Word16,
@@ -1978,7 +1954,8 @@ CONST Ops = ARRAY OF Op{
         Op.copy,
         Op.copy_n,
         Op.fence,
-        Op.zero
+        Op.zero,
+        Op.check_range
     };
 CONST OpsThatCanFault = ARRAY OF Op{
         Op.abort,
@@ -2054,7 +2031,7 @@ TYPE HelperFunctions_t = M3CG_DoNothing.T BRANDED "M3C.HelperFunctions_t" OBJECT
         set_le, set_lt, extract_inline := FALSE;
         cvt_int := ARRAY ConvertOp OF BOOLEAN{FALSE, ..};
         shift, rotate, rotate_left, rotate_right, div, mod, min, max, abs,
-        extract, insert, sign_extend, pop := SET OF CGType{};
+        extract, insert, sign_extend, pop, check_range := SET OF CGType{};
     END;
 METHODS
     Init(outer: T): HelperFunctions_t := HelperFunctions_Init;
@@ -2081,6 +2058,7 @@ OVERRIDES
     copy_n := HelperFunctions_copy_n;
     zero := HelperFunctions_zero;
     fence := HelperFunctions_fence;
+    check_range := HelperFunctions_check_range;
 END;
 
 PROCEDURE HelperFunctions_Init(self: HelperFunctions_t; outer: T): HelperFunctions_t =
@@ -2328,6 +2306,16 @@ CONST text = "#define m3_pop_T(T) static void __stdcall m3_pop_##T(volatile T a)
 BEGIN
     HelperFunctions_helper_with_type(self, "pop", type, self.data.pop, text);
 END HelperFunctions_pop;
+
+PROCEDURE HelperFunctions_check_range(self: HelperFunctions_t; type: IType; READONLY low, high: Target.Int; code: RuntimeError) =
+(* Ideally the helper would call report_fault but I do not think we have the name yet.
+ * This is a helper function to avoid a warning from gcc about the range check
+ * being redundant.
+ *)
+CONST text = "#define m3_check_range_T(T) static int __stdcall m3_check_range_##T(T value, T low, T high){return value<low||high<value;}";
+BEGIN
+    HelperFunctions_helper_with_type(self, "check_range", type, self.data.check_range, text);
+END HelperFunctions_check_range;
 
 PROCEDURE HelperFunctions_copy_common(self: HelperFunctions_t; overlap: BOOLEAN) =
 BEGIN
@@ -4426,14 +4414,15 @@ BEGIN
     reportfault(self, code);
 END check_hi;
 
-PROCEDURE check_range(self: T; type: IType; READONLY a, b: Target.Int; code: RuntimeError) =
-(* IF (s0.type < a) OR (b < s0.type) THEN abort(code) *)
+PROCEDURE check_range(self: T; type: IType; READONLY low, high: Target.Int; code: RuntimeError) =
+(* IF (s0.type < low) OR (high < s0.type) THEN abort(code) *)
+(* TODO capture into temporaries. *)
 VAR s0 := cast(get(self), type);
-    a_expr := CTextToExpr(TIntLiteral(type, a));
-    b_expr := CTextToExpr(TIntLiteral(type, b));
+    low_expr := CTextToExpr(TIntLiteral(type, low));
+    high_expr := CTextToExpr(TIntLiteral(type, high));
 BEGIN
     self.comment("check_range");
-    print(self, "if((" & s0.CText() & "<" & cast(a_expr, type).CText() & ")||(" & cast(b_expr, type).CText() & "<" & s0.CText() & "))");
+    print(self, "if(m3_check_range_" & typeToText[type] & "(" & s0.CText() & "," & low_expr.CText() & "," & high_expr.CText() & "))");
     reportfault(self, code);
 END check_range;
 
