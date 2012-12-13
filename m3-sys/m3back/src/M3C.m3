@@ -3130,8 +3130,7 @@ VAR e := NEW(Expr_ConstantInt_t,
 BEGIN
     e.minmax[Min] := i;
     e.minmax[Max] := i;
-    e.minmax_valid[Min] := TRUE;
-    e.minmax_valid[Max] := TRUE;
+    e.minmax_valid := minMaxTrue;
     RETURN e;
 END TIntToExpr;
 
@@ -3514,193 +3513,47 @@ BEGIN
     RETURN TextUtils.Substitute(TextUtils.Substitute(TextUtils.Substitute(text, "/*", ""), "*/", ""), "  ", " ");
 END remove_comments;
 
-PROCEDURE internal_compare(self: T; VAR t: internal_compare_t) =
-VAR op := t.op;
-    left := t.left;
-    right := t.right;
-    op_LT := (op = CompareOp.LT);
-    op_GT := (op = CompareOp.GT);
-    op_GE := (op = CompareOp.GE);
-    op_LE := (op = CompareOp.LE);
-    op_NE := (op = CompareOp.NE);
-    value := FALSE;
-    m3cgtype := t.m3cgtype;
-    signed := typeIsSignedInt[t.m3cgtype];
-    unsigned := typeIsUnsignedInt[t.m3cgtype];
-    verbose := "";
-BEGIN
-    t.value := FALSE;
-    t.comment := NIL;
-    t.text := left.CText() & CompareOpC[op] & right.CText();
-    
-    IF NOT typeIsInteger[t.m3cgtype] THEN
-        RETURN;
-    END;
-   
-    verbose := " line:" & Fmt.Int(self.line)
-            & " left.min.valid:" & Fmt.Int(ORD(left.minmax_valid[Min]))
-            & " left.max.valid:" & Fmt.Int(ORD(left.minmax_valid[Max]))
-            & " right.min.valid:" & Fmt.Int(ORD(right.minmax_valid[Min]))
-            & " right.max.valid:" & Fmt.Int(ORD(right.minmax_valid[Max]))
-            & " left.min:" & TIntLiteral(CGType.Word64, left.minmax[Min])
-            & " left.max:" & TIntLiteral(CGType.Word64, left.minmax[Max])
-            & " right.min:" & TIntLiteral(CGType.Word64, right.minmax[Min])
-            & " right.max:" & TIntLiteral(CGType.Word64, right.minmax[Max])
-            & " op:" & CompareOpName[op]
-            & " type:" & typeToText[m3cgtype]
-            ;
-                
-    IF left.minmax_valid[Min] AND right.minmax_valid[Max] THEN
-        IF (signed AND TInt.GE(left.minmax[Min], right.minmax[Max]))
-        OR (unsigned AND TWord.GE(left.minmax[Min], right.minmax[Max])) THEN
-            IF (op_GE OR op_LT) THEN
-                t.value_valid := TRUE;
-                value := op_GE;
-                t.value := value;
-                t.comment := "/* compare_skipped_ge_" & CompareOpName[op] & "_" & typeToText[m3cgtype] & "_" & BoolToText[value] & " " & remove_comments(t.text)  & " */\n";
-                t.text := NIL;
-            END;
-            RETURN;
-        END;
-        IF (signed AND TInt.GT(left.minmax[Min], right.minmax[Max]))
-        OR (unsigned AND TWord.GT(left.minmax[Min], right.minmax[Max])) THEN
-            value := (op_GT OR op_GE OR op_NE);
-            t.value := value;
-            t.comment := "/* " & verbose & " compare_skipped_gt_" & BoolToText[value] & " " & remove_comments(t.text)  & " */\n";
-            t.text := NIL;
-            RETURN;
-        END;
-    END;
-    IF left.minmax_valid[Max] AND right.minmax_valid[Min] THEN
-        IF (signed AND TInt.LE(left.minmax[Max], right.minmax[Min]))
-        OR (unsigned AND TWord.LE(left.minmax[Max], right.minmax[Min])) THEN
-            IF (op_LE OR op_GT) THEN
-                t.value_valid := TRUE;
-                value := op_LE;
-                t.value := value;
-                t.comment := "/* " & verbose & " compare_skipped_le_" & BoolToText[value] & " " & remove_comments(t.text)  & " */\n";
-                t.text := NIL;
-            END;
-            RETURN;
-        END;
-        IF (signed AND TInt.LT(left.minmax[Max], right.minmax[Min]))
-        OR (unsigned AND TInt.LT(left.minmax[Max], right.minmax[Min])) THEN
-            value := (op_LT OR op_LE OR op_NE);
-            t.value := value;
-            t.comment := "/* " & verbose & " compare_skipped_lt_" & BoolToText[value] & " " & remove_comments(t.text)  & " */\n";
-            t.text := NIL;
-            RETURN;
-        END;
-    END;
-END internal_compare;
-
 PROCEDURE if_true(self: T; itype: IType; label: Label; frequency: Frequency) =
 (* IF (s0.itype # 0) GOTO label; pop *)
 BEGIN
-    if_false_2(self, itype, label, frequency);
+    if_true_or_false(self, itype, label, frequency, TRUE);
 END if_true;
 
 PROCEDURE if_false(self: T; itype: IType; label: Label; frequency: Frequency) =
 (* IF (s0.itype = 0) GOTO label; pop *)
 BEGIN
-    if_false_2(self, itype, label, frequency);
+    if_true_or_false(self, itype, label, frequency, FALSE);
 END if_false;
 
-PROCEDURE if_true_2(self: T; itype: IType; label: Label; frequency: Frequency) =
-(* IF (s0.itype # 0) GOTO label; pop *)
-BEGIN
-    self.comment("if_true => if_compare");
-    load_host_integer(self, itype, 0);
-    self.if_compare(itype, CompareOp.NE, label, frequency);
-END if_true_2;
-
-PROCEDURE if_false_2(self: T; itype: IType; label: Label; frequency: Frequency) =
-(* IF (s0.itype = 0) GOTO label; pop *)
-BEGIN
-    self.comment("if_false => if_compare");
-    load_host_integer(self, itype, 0);
-    self.if_compare(itype, CompareOp.EQ, label, frequency);
-END if_false_2;
-
-PROCEDURE if_true_1(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
-(* IF (s0.itype # 0) GOTO label; pop *)
-VAR s0 := cast(get(self, 0), itype);
-BEGIN
-    self.comment("if_true");
-    print(self, "if(" & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
-    pop(self);
-END if_true_1;
-
-PROCEDURE if_false_1(self: T; itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
-(* IF (s0.itype = 0) GOTO label; pop *)
-VAR s0 := cast(get(self, 0), itype);
-BEGIN
-    self.comment("if_false");
-    print(self, "if(!" & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
-    pop(self);
-END if_false_1;
-
-PROCEDURE if_compare(self: T; ztype: ZType; op: CompareOp; label: Label;
-                     <*UNUSED*>frequency: Frequency) =
-(* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
-BEGIN
-    if_compare_3(self, ztype, op, label, frequency);
-END if_compare;
-
-PROCEDURE if_compare_3(self: T; ztype: ZType; op: CompareOp; label: Label;
-                     <*UNUSED*>frequency: Frequency) =
-(* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
-VAR s0 := cast(get(self, 0), ztype);
-    s1 := cast(get(self, 1), ztype);
-BEGIN
-    self.comment("if_compare");
-    pop(self, 2);
-    print(self, "if(m3_" & CompareOpName[op] & "_" & typeToText[ztype] & "(" & s1.CText() & "," & s0.CText() & "))goto L" & LabelToText(label) & ";\n");
-END if_compare_3;
-
-PROCEDURE if_compare_2(self: T; ztype: ZType; op: CompareOp; label: Label;
-                     <*UNUSED*>frequency: Frequency) =
-(* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
-VAR a := internal_compare_t{op := op, m3cgtype := ztype};
-BEGIN
-    self.comment("if_compare");
-    a.right := cast(get(self, 0), ztype);
-    a.left := cast(get(self, 1), ztype);
-    pop(self, 2);
-    internal_compare(self, a);
-    IF a.comment # NIL THEN
-        print(self, a.comment);
-    END;
-    IF a.value_valid THEN
-        IF a.value THEN
-            print(self, "goto L" & LabelToText(label) & ";\n");
-        END;
-        RETURN
-    END;
-    print(self, "if( " & a.text & ")goto L" & LabelToText(label) & ";\n");
-END if_compare_2;
-
-PROCEDURE if_compare_1(self: T; ztype: ZType; op: CompareOp; label: Label;
-                     <*UNUSED*>frequency: Frequency) =
-(* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
-VAR s0 := cast(get(self, 0), ztype);
-    s1 := cast(get(self, 1), ztype);
-BEGIN
-    self.comment("if_compare");
-    pop(self, 2);
-(*
-    IF op = CompareOp.LT AND s1.minmax_valid[Min] AND s0.minmax_valid[Max] AND TInt.GE(s1.minmax[Min], s0.minmax[Max]) THEN
-        print(self, "/* compare skipped 1 */\n");
-        RETURN;
-    END;
-    IF op = CompareOp.LT AND s1.minmax_valid[Max] AND s0.minmax_valid[Min] AND TInt.LT(s1.minmax[Max], s0.minmax[Min]) THEN
-        print(self, "/* compare skipped 2 */\n");
-        print(self, "goto L" & LabelToText(label) & ";\n");
-        RETURN;
-    END;
+PROCEDURE if_true_or_false(self: T; itype: IType; label: Label; frequency: Frequency; value: BOOLEAN) =
+(* IF (s0.itype # 0) GOTO label; pop
+   OR IF (s0.itype = 0) GOTO label; pop
 *)
-    print(self, "if(" & s1.CText() & CompareOpC[op] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
-END if_compare_1;
+VAR s0 := cast(get(self, 0), itype);
+BEGIN
+    self.comment("if_true_or_false");
+    IF AvoidGccTypeRangeWarnings THEN
+        load_host_integer(self, itype, 0);
+        self.if_compare(itype, ARRAY BOOLEAN OF CompareOp{CompareOp.EQ, CompareOp.NE}[value], label, frequency);
+    ELSE
+        pop(self);
+        print(self, "if(" & ARRAY BOOLEAN OF TEXT{"!", ""}[value] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
+    END;
+END if_true_or_false;
+
+PROCEDURE if_compare(self: T; ztype: ZType; op: CompareOp; label: Label; <*UNUSED*>frequency: Frequency) =
+(* IF (s1.ztype op s0.ztype) GOTO label; pop(2) *)
+VAR s0 := cast(get(self, 0), ztype);
+    s1 := cast(get(self, 1), ztype);
+BEGIN
+    self.comment("if_compare");
+    pop(self, 2);
+    IF AvoidGccTypeRangeWarnings THEN
+        print(self, "if(m3_" & CompareOpName[op] & "_" & typeToText[ztype] & "(" & s1.CText() & "," & s0.CText() & "))goto L" & LabelToText(label) & ";\n");
+    ELSE
+        print(self, "if(" & s1.CText() & CompareOpC[op] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
+    END;
+END if_compare;
 
 PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
 (* "GOTO labels[s0.itype]; pop" with no range checking on s0.itype *)
@@ -4090,62 +3943,22 @@ BEGIN
     push(self, type, expr);
 END op2;
 
-PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) =
-(* s1.itype := (s1.ztype op s0.ztype); pop *)
-BEGIN
-    compare_3(self, ztype, itype, op);
-END compare;
-
 (* comparison is always false due to limited range of data type *)
 VAR AvoidGccTypeRangeWarnings := TRUE;
 
-PROCEDURE compare_3(self: T; ztype: ZType; itype: IType; op: CompareOp) =
+PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) =
 (* s1.itype := (s1.ztype op s0.ztype); pop *)
 VAR s0 := get(self, 0);
     s1 := get(self, 1);
 BEGIN
     self.comment("compare");
     pop(self, 2);
-    (* avoid warnings from gcc *)
     IF AvoidGccTypeRangeWarnings THEN
         push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "_" & typeToText[ztype] & "(" & s1.CText() & "," & s0.CText() & ")"), itype));
     ELSE
         push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
     END;
-END compare_3;
-
-PROCEDURE compare_2(self: T; ztype: ZType; itype: IType; op: CompareOp) =
-(* s1.itype := (s1.ztype op s0.ztype); pop *)
-VAR a := internal_compare_t{op := op, m3cgtype := ztype};
-BEGIN
-    self.comment("compare");
-    a.right := cast(get(self, 0), ztype);
-    a.left := cast(get(self, 1), ztype);
-    (* ASSERT cond # Cond.Z AND cond # Cond.NZ ? what cond? *)
-    pop(self, 2);
-    (*
-    internal_compare(self, a);
-    IF a.comment # NIL THEN
-        print(self, a.comment);
-    END;
-    IF a.value_valid THEN
-        load_host_integer(self, itype, ORD(a.value));
-        RETURN;
-    END;
-    *)
-    push(self, itype, cast(CTextToExpr(a.text), itype));
-END compare_2;
-
-PROCEDURE compare_1(self: T; ztype: ZType; itype: IType; op: CompareOp) =
-(* s1.itype := (s1.ztype op s0.ztype); pop *)
-VAR s0 := cast(get(self, 0), ztype);
-    s1 := cast(get(self, 1), ztype);
-BEGIN
-    self.comment("compare");
-    (* ASSERT cond # Cond.Z AND cond # Cond.NZ *)
-    pop(self, 2);
-    push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
-END compare_1;
+END compare;
 
 PROCEDURE add(self: T; type: AType) =
 (* s1.type := s1.type + s0.type; pop *)
