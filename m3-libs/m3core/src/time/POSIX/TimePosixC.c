@@ -91,13 +91,14 @@ ComputeGrainViaSampling(void)
     return a;
 }
 
+#if defined(__osf__) /* defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME) */
+
 static
 LONGREAL/*Time.T*/
 __cdecl
 ComputeGrainViaClockGetRes(void)
 {
     struct timespec res = { 0 };
-#if defined(__osf__) /* defined(CLOCK_HIGHRES) || defined(CLOCK_REALTIME) */
     int i = -1;
 #if defined(CLOCK_HIGHRES)
     i = clock_getres(CLOCK_HIGHRES, &res);
@@ -107,9 +108,10 @@ ComputeGrainViaClockGetRes(void)
 #error no CLOCK_HIGHRES or CLOCK_REALTIME
 #endif
     assert(i == 0);
-#endif
     return TimePosix__FromNanotime(&res);
 }
+
+#endif
 
 LONGREAL/*Time.T*/
 __cdecl
