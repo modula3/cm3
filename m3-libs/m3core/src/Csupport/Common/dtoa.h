@@ -527,7 +527,8 @@ Balloc
 #endif
 
 	ACQUIRE_DTOA_LOCK(0);
-	if (rv = freelist[k]) {
+	rv = freelist[k];
+	if (rv) {
 		freelist[k] = rv->next;
 		}
 	else {
