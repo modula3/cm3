@@ -1,3 +1,5 @@
+/* http://svnweb.freebsd.org/base/head/usr.bin/csup/fnmatch.h?revision=216370&view=co */
+
 /*-
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -10,10 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,10 +28,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * $FreeBSD$
+ *
  *	@(#)fnmatch.h	8.1 (Berkeley) 6/2/93
  *
  * From FreeBSD fnmatch.h 1.7
- * $Id: fnmatch.h,v 1.1 2001-12-01 16:07:31 wagner Exp $
+ * $Id: fnmatch.h,v 1.2 2012-12-15 07:44:18 jkrell Exp $
  */
 
 #ifndef	_FNMATCH_H_
@@ -47,6 +47,11 @@
 #define	FNM_LEADING_DIR	0x08	/* Ignore /<tail> after Imatch. */
 #define	FNM_CASEFOLD	0x10	/* Case insensitive search. */
 #define FNM_PREFIX_DIRS	0x20	/* Directory prefixes of pattern match too. */
+
+/* Make this compile successfully with "gcc -traditional" */
+#ifndef __STDC__
+#define const	/* empty */
+#endif
 
 int	 fnmatch(const char *, const char *, int);
 
