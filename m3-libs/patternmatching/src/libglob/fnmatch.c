@@ -1,3 +1,4 @@
+/* http://src.gnu-darwin.org/src/contrib/csup/fnmatch.c.html */
 /*
  * Copyright (c) 1989, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -34,7 +35,7 @@
  * SUCH DAMAGE.
  *
  * From FreeBSD fnmatch.c 1.11
- * $Id: fnmatch.c,v 1.1 2001-12-01 16:07:31 wagner Exp $
+ * $Id: fnmatch.c,v 1.2 2012-12-15 07:37:16 jkrell Exp $
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
@@ -139,8 +140,8 @@ fnmatch(const char *pattern, const char *string, int flags)
 				  tolower((unsigned char)*string)))
 				;
 			else if ((flags & FNM_PREFIX_DIRS) && *string == EOS &&
-			     (c == '/' && string != stringstart ||
-			     string == stringstart+1 && *stringstart == '/') )
+			     ((c == '/' && string != stringstart) ||
+			     (string == stringstart+1 && *stringstart == '/')))
 				return (0);
 			else
 				return (FNM_NOMATCH);
