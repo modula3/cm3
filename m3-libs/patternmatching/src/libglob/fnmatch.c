@@ -1,4 +1,5 @@
-/* http://src.gnu-darwin.org/src/contrib/csup/fnmatch.c.html */
+/* http://svnweb.freebsd.org/base/head/usr.bin/csup/fnmatch.c?revision=216370&view=co */
+
 /*
  * Copyright (c) 1989, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -14,10 +15,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,8 +31,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * $FreeBSD$
+ *
  * From FreeBSD fnmatch.c 1.11
- * $Id: fnmatch.c,v 1.2 2012-12-15 07:37:16 jkrell Exp $
+ * $Id: fnmatch.c,v 1.3 2012-12-15 07:42:42 jkrell Exp $
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
