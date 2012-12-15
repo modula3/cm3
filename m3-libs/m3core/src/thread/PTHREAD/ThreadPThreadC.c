@@ -91,11 +91,15 @@ void
 __cdecl
 ThreadPThread__sigsuspend(void)
 {
-  sigjmp_buf jb = { 0 };
+  struct {
+    sigjmp_buf jb;
+  } s;
 
-  if (sigsetjmp(jb, 0) == 0) /* save registers to stack */
+  ZERO_MEMORY(s);
+
+  if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
-    siglongjmp(jb, 1); /* flush register windows */
+    siglongjmp(s.jb, 1); /* flush register windows */
   else
 #endif
     sigsuspend(&mask);
@@ -161,7 +165,9 @@ jb may or may not be an array, & is necessary, wrap it in struct.
 */
   struct {
     sigjmp_buf jb;
-  } s = { 0 };
+  } s;
+
+  ZERO_MEMORY(s);
 
   if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
@@ -211,9 +217,12 @@ ThreadPThread__thread_create(WORD_T stackSize,
 {
   int r = { 0 };
   WORD_T bytes = { 0 };
-  pthread_attr_t attr = { 0 };
-  pthread_t pthread = { 0 };
+  pthread_attr_t attr;
+  pthread_t pthread;
 
+  ZERO_MEMORY(pthread);
+  ZERO_MEMORY(attr);
+  
   M3_RETRY(pthread_attr_init(&attr));
 #ifdef __hpux
   if (r == ENOSYS)
@@ -505,10 +514,12 @@ void
 __cdecl
 InitC(int *bottom)
 {
-#ifndef M3_DIRECT_SUSPEND
-  struct sigaction act = { 0 };
-#endif
   int r = { 0 };
+
+#ifndef M3_DIRECT_SUSPEND
+  struct sigaction act;
+  ZERO_MEMORY(act);
+#endif
 
   stack_grows_down = (bottom > &r);
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__INTERIX)
