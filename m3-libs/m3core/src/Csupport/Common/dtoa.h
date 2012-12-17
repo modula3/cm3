@@ -538,7 +538,7 @@ Balloc
 #else
 		len = (sizeof(Bigint) + (x-1)*sizeof(ULong) + sizeof(double) - 1)
 			/sizeof(double);
-		if (pmem_next - private_mem + len <= PRIVATE_mem) {
+		if (pmem_next - private_mem + len <= (unsigned)PRIVATE_mem) {
 			rv = (Bigint*)pmem_next;
 			pmem_next += len;
 			}
@@ -1570,7 +1570,7 @@ m3_strtod
 	double aadj, aadj1, adj, rv, rv0;
 	Long L;
 	ULong y, z;
-	Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;
+	Bigint *bb = 0, *bb1, *bd = 0, *bd0, *bs = 0, *delta = 0;
 #ifdef SET_INEXACT
 	int inexact, oldinexact;
 #endif
@@ -2576,7 +2576,7 @@ rv_alloc(int i)
 
 	j = sizeof(ULong);
 	for(k = 0;
-		sizeof(Bigint) - sizeof(ULong) - sizeof(int) + j <= i;
+		sizeof(Bigint) - sizeof(ULong) - sizeof(int) + j <= (unsigned)i;
 		j <<= 1)
 			k++;
 	r = (int*)Balloc(k);
@@ -2703,7 +2703,7 @@ m3_dtoa
 		to hold the suppressed trailing zeros.
 	*/
 
-	int bbits, b2, b5, be, dig, i, ieps, ilim, ilim0, ilim1,
+	int bbits, b2, b5, be, dig, i, ieps, ilim = 0, ilim0, ilim1 = 0,
 		j, j1, k, k0, k_check, leftright, m2, m5, s2, s5,
 		spec_case, try_quick;
 	Long L;
@@ -2711,7 +2711,7 @@ m3_dtoa
 	int denorm;
 	ULong x;
 #endif
-	Bigint *b, *b1, *delta, *mlo, *mhi, *S;
+	Bigint *b, *b1, *delta, *mlo = 0, *mhi, *S;
 	double d2, ds, eps;
 	char *s, *s0;
 #ifdef Honor_FLT_ROUNDS
