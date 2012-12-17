@@ -629,19 +629,18 @@ BEGIN
         *)
         IF type_text # NIL THEN
             IF left.type_text # NIL AND (left.type_text = type_text OR Text.Equal(left.type_text, type_text)) THEN
-                remove := 1;
+                remove := 1; (* I've never seen this -- so skipped below *)
             END;
         ELSE
             type_text := typeToText[m3cgtype];
             lparen := "(";
             rparen := ")";
             IF left.m3cgtype = m3cgtype AND m3cgtype # M3CG.Type.Addr THEN
-                remove := 2;
+                remove := 2; (* This happens fairly often. *)
             END;
         END;
     END;
-    IF remove > 0 THEN
-        (* RETURN left.CText(); *)
+    IF remove > 0 AND remove # 1 THEN
         RETURN " /* cast_removed" & Fmt.Int(remove) & ": " & type_text & " */ " & left_text;
     ELSE
         RETURN "(" & lparen & type_text & rparen & "(" & left_text & "))";
@@ -3391,7 +3390,11 @@ BEGIN
     FOR i := 0 TO proc.Locals_Size() - 1 DO
         WITH local = proc.Locals(i) DO
             IF (NOT local.up_level) AND local.used THEN
-                print(self, local.Declare() & ";\n");
+                IF local.m3cgtype = M3CG.Type.Struct THEN
+                    print(self, local.Declare() & ";\n");
+                ELSE
+                    print(self, local.Declare() & " = 0;\n");
+                END;
             END;
         END;
     END;
