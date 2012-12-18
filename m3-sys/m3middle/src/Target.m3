@@ -49,7 +49,6 @@ PROCEDURE IsSPARC(): BOOLEAN =
   END IsSPARC;
   
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
-  CONST FF = 16_FF;
   VAR sys := 0;  max_align := 64;
   BEGIN
     (* lookup the system -- linear search *)
@@ -65,50 +64,50 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Int8.cg_type     := CGType.Int8;
     Int8.size        := 8;
     Int8.align       := 8;
-    Int8.min         := Int{16_80,FF,..};
-    Int8.max         := Int{16_7f,00,..};
+    Int8.min         := TInt.Min8;
+    Int8.max         := TInt.Max8;
 
     Int16.cg_type    := CGType.Int16;
     Int16.size       := 16;
     Int16.align      := 16;
-    Int16.min        := Int{00,16_80,FF,..};
-    Int16.max        := Int{FF,16_7f,00,..};
+    Int16.min        := TInt.Min16;
+    Int16.max        := TInt.Max16;
 
     Int32.cg_type    := CGType.Int32;
     Int32.size       := 32;
     Int32.align      := 32;
-    Int32.min        := Int{00,00,00,16_80,FF,..};
-    Int32.max        := Int{FF,FF,FF,16_7f,00,..};
+    Int32.min        := TInt.Min32;
+    Int32.max        := TInt.Max32;
 
     Int64.cg_type    := CGType.Int64;
     Int64.size       := 64;
     Int64.align      := 64;
-    Int64.min        := Int{00,00,00,00,00,00,00,16_80};
-    Int64.max        := Int{FF,FF,FF,FF,FF,FF,FF,16_7f};
+    Int64.min        := TInt.Min64;
+    Int64.max        := TInt.Max64;
 
     Word8.cg_type    := CGType.Word8;
     Word8.size       := 8;
     Word8.align      := 8;
-    Word8.min        := Int{00,00,..};
-    Word8.max        := Int{FF,00,..};
+    Word8.min        := TInt.Zero;
+    Word8.max        := TWord.Max8;
 
     Word16.cg_type   := CGType.Word16;
     Word16.size      := 16;
     Word16.align     := 16;
-    Word16.min       := Int{00,00,00,..};
-    Word16.max       := Int{FF,FF,00,..};
+    Word16.min       := TInt.Zero;
+    Word16.max       := TWord.Max16;
 
     Word32.cg_type   := CGType.Word32;
     Word32.size      := 32;
     Word32.align     := 32;
-    Word32.min       := Int{00,00,00,00,00,..};
-    Word32.max       := Int{FF,FF,FF,FF,00,..};
+    Word32.min       := TInt.Zero;
+    Word32.max       := TWord.Max32;
 
     Word64.cg_type   := CGType.Word64;
     Word64.size      := 64;
     Word64.align     := 64;
-    Word64.min       := Int{00,00,00,00,00,00,00,00};
-    Word64.max       := Int{FF,FF,FF,FF,FF,FF,FF,FF};
+    Word64.min       := TInt.Zero;
+    Word64.max       := TWord.Max64;
 
     Integer          := Int32;  (* default for the 32-bit platforms *)
     Longint          := Int64;
@@ -120,8 +119,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Void.cg_type     := CGType.Void;
     Void.size        := 0;
     Void.align       := Byte;
-    Void.min         := Int{0,..};
-    Void.max         := Int{0,..};
+    Void.min         := TInt.Zero;
+    Void.max         := TInt.Zero;
 
     Real.cg_type     := CGType.Reel;
     Real.pre         := Precision.Short;
