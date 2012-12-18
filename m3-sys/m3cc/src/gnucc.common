@@ -112,7 +112,7 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
         else if FileExists("/opt/solarisstudio12.3/bin/CC") and FileExists("/opt/solarisstudio12.3/bin/cc")
             env = "CC=/opt/solarisstudio12.3/bin/cc CXX=/usr/bin/CC " & env
         else if FileExists("/opt/solstudio12.2/bin/CC") and FileExists("/opt/solstudio12.2/bin/cc")
-            env = "CC=/opt/solstudio12.2/bin/cc /opt/solstudio12.2/bin/cc " & env
+            env = "CC=/opt/solstudio12.2/bin/cc CXX=/opt/solstudio12.2/bin/CC " & env
         end end end end end end
     end
 
