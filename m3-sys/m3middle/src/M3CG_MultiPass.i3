@@ -30,7 +30,11 @@ TYPE Public = M3CG_AssertFalse.T OBJECT
     reuse_refs := FALSE;
     replay: Replay_t := NIL;
 METHODS
-    Replay(cg: M3CG.T; data: REF ARRAY OF op_t := NIL);
+    Replay(
+        cg: M3CG.T;
+        VAR index: INTEGER;
+        data: REF ARRAY OF op_t := NIL;
+        );
     Init(): T;
 END;
 
