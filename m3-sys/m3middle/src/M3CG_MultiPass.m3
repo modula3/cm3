@@ -225,7 +225,12 @@ METHODS
     GetProc(ref: INTEGER): M3CG.Proc := Replay_GetProc;
 END;
 
-PROCEDURE Replay(self: T; cg: M3CG.T; data: REF ARRAY OF op_t := NIL) =
+PROCEDURE Replay(
+    self: T;
+    cg: M3CG.T;
+    VAR index: INTEGER;
+    data: REF ARRAY OF op_t := NIL;
+    ) =
 VAR context: Replay_t := NIL;
 BEGIN
     IF self.replay # NIL THEN
@@ -239,6 +244,7 @@ BEGIN
     END;
     FOR i := FIRST(data^) TO LAST(data^) DO
         <* ASSERT data[i] # NIL *>
+        index := i;
         data[i].replay(context, cg);
     END;
     IF self.reuse_refs THEN
