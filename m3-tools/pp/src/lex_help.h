@@ -18,8 +18,8 @@
 /* processing. */
 
 
-int currentCol = 0;	/* current column of input */
-int currentRow = 0;	/* current row of input */
+int currentCol = 0; /* current column of input */
+int currentRow = 0; /* current row of input */
 
 AddLexLength ()
 {
@@ -50,18 +50,18 @@ AddChar(c)
   }
 }
 
-/* The routine BufferLexeme is used to copy a lexeme into */	
+/* The routine BufferLexeme is used to copy a lexeme into */
 /* the buffer declared in pp.yacc (which see) where it can */
 /* be accessed by the parser actions. */
 
 BufferLexeme (addLength)
 int addLength;
 {
-	StopNPS();
-	if (addLength) AddLexLength();
-	lexptr = lexbufsize - lexptr;
-	yylval = lexptr;
-	strcpy (lexbuf + lexptr, yytext);
+    StopNPS();
+    if (addLength) AddLexLength();
+    lexptr = lexbufsize - lexptr;
+    yylval = lexptr;
+    strcpy (lexbuf + lexptr, yytext);
 }
 
 /* The routine CapBufferLexeme is like BufferLexeme, but it
@@ -70,14 +70,14 @@ int addLength;
 CapBufferLexeme (addLength)
 int addLength;
 {
-	char *p, *q = yytext;
-	StopNPS();
+    char *p, *q = yytext;
+    StopNPS();
 
-	if (addLength) AddLexLength();
-	lexptr = lexbufsize - lexptr;
-	yylval = lexptr;
-	p = lexbuf + lexptr;
-	while (*p++ = toupper (*q++)) ;
+    if (addLength) AddLexLength();
+    lexptr = lexbufsize - lexptr;
+    yylval = lexptr;
+    p = lexbuf + lexptr;
+    while (*p++ = toupper (*q++)) ;
 }
 
 
@@ -86,16 +86,16 @@ int addLength;
    and text fields are valid for them.  comments[nComments] contains only a
    newline count, giving the number of newlines after the final comment. */
 struct Comment {
-    int NLs;			/* number of newlines before this comment */
-    int startCol;		/* start column of the comment */
-    char *text;			/* text of the comment; NULL if none */
-    long save;			/* temp */
+    int NLs;            /* number of newlines before this comment */
+    int startCol;       /* start column of the comment */
+    char *text;         /* text of the comment; NULL if none */
+    long save;          /* temp */
 };
 struct Comment *comments = NULL;
 int nComments = 0;
 int nCommentsAlloced = 0;
-static char *commText;		/* the text of the comments goes here */
-static char *commTextPtr;	/* pointer to next available char */
+static char *commText;      /* the text of the comments goes here */
+static char *commTextPtr;   /* pointer to next available char */
 static char *commTextLimit;
 
 /* extern char *malloc(); */
@@ -105,22 +105,22 @@ static char *commTextLimit;
 static AllocComments(n)
 {
     if (nCommentsAlloced == 0) {
-	nCommentsAlloced = n+10;
-	comments = (struct Comment *)
-	    malloc(nCommentsAlloced * sizeof(*comments));
-	/* Also allocate room for text. */
-	commText = (char*) malloc(4096);
-	commTextLimit = commText + 4096;
+        nCommentsAlloced = n+10;
+        comments = (struct Comment *)
+            malloc(nCommentsAlloced * sizeof(*comments));
+        /* Also allocate room for text. */
+        commText = (char*) malloc(4096);
+        commTextLimit = commText + 4096;
     }
     else if (nCommentsAlloced < n) {
-	nCommentsAlloced = n+10;
-	comments = (struct Comment *)
-	    realloc(comments, nCommentsAlloced * sizeof(*comments));
+        nCommentsAlloced = n+10;
+        comments = (struct Comment *)
+        realloc(comments, nCommentsAlloced * sizeof(*comments));
     }
 }
 
-static char commentChar;	/* '(' or '<' */
-static int commentLevel;	/* nesting level */
+static char commentChar;    /* '(' or '<' */
+static int commentLevel;    /* nesting level */
 
 /* Save a char in the current comment (if any) and also count it for lex
    position and current column. */
@@ -128,23 +128,23 @@ static SaveChar(c)
     char c;
 {
     if (c != 0)
-	AddChar(c);
+        AddChar(c);
     if (commentLevel > 0) {
-	if (commTextPtr >= commTextLimit) {
-	    int i;
+        if (commTextPtr >= commTextLimit) {
+            int i;
             long oldSize = commTextLimit - commText;
-	    long newSize = oldSize + 4096;
-	    /* Need to realloc the text.  We first save all the pointers as
-	       offsets, do the realloc, then reset the pointers. */
-	    for (i = 0; i < nComments; ++i)
-		comments[i].save = comments[i].text - commText;
-	    commText = (char*)realloc(commText, newSize);
-	    commTextLimit = commText + newSize;
-	    commTextPtr = commText + oldSize;
-	    for (i = 0; i < nComments; ++i)
-		comments[i].text = commText + comments[i].save;
-	}
-	*commTextPtr++ = c;
+            long newSize = oldSize + 4096;
+            /* Need to realloc the text.  We first save all the pointers as
+               offsets, do the realloc, then reset the pointers. */
+            for (i = 0; i < nComments; ++i)
+                comments[i].save = comments[i].text - commText;
+            commText = (char*)realloc(commText, newSize);
+            commTextLimit = commText + newSize;
+            commTextPtr = commText + oldSize;
+            for (i = 0; i < nComments; ++i)
+                comments[i].text = commText + comments[i].save;
+        }
+        *commTextPtr++ = c;
     }
 }
 
@@ -153,14 +153,14 @@ static StartComment(c)
     char c;
 {
     if (commentLevel == 0) {
-	/* Starting a top-level comment.  Need to allocate two more than
-	   what we have now: one for the new comment, and one for the extra
-	   newline count we keep in comments[nComments]. */
-	AllocComments(nComments+2);
-	comments[nComments].startCol = currentCol;
-	comments[nComments].text = commTextPtr;
-	++nComments;
-	comments[nComments].NLs = 0;
+        /* Starting a top-level comment.  Need to allocate two more than
+           what we have now: one for the new comment, and one for the extra
+           newline count we keep in comments[nComments]. */
+        AllocComments(nComments+2);
+        comments[nComments].startCol = currentCol;
+        comments[nComments].text = commTextPtr;
+        ++nComments;
+        comments[nComments].NLs = 0;
     }
     ++commentLevel;
     commentChar = c;
@@ -169,7 +169,7 @@ static StartComment(c)
 static EndComment()
 {
    if (commentLevel == 1)
-       SaveChar(0);		/* finish off the text. */
+       SaveChar(0);     /* finish off the text. */
    --commentLevel;
 }
 
@@ -208,18 +208,18 @@ int HandleSpaces ()
     StartNPS();
     /* Now deal with the main loop. */
     {
-	int c = yytext[0];
-	do {
-	    if (!IsWhite(c)) {
-		unput(c);
-		return WHITESPACE;
-	    }
-	    if (c == '\n') {
-		++comments[nComments].NLs;
-	    }
-	    SaveChar(c);
+        int c = yytext[0];
+        do {
+            if (!IsWhite(c)) {
+                unput(c);
+                return WHITESPACE;
+            }
+            if (c == '\n') {
+                ++comments[nComments].NLs;
+            }
+            SaveChar(c);
             c = input();
-	} while (c > 0 /* EOF */);
+        } while (c > 0 /* EOF */);
     }
     return WHITESPACE;
 }
@@ -241,47 +241,47 @@ int HandleCommentPragma ()
     /* Now deal with the main loop. */
     c = yytext[0];
     do {
-	/* Check for a comment start whether we're in or out of a comment. */
-	if ((commentLevel == 0 && (c == '(' || c == '<')) ||
-	    (commentLevel > 0 && c == commentChar)) {
-	    c2 = input();
-	    if (c2 == '*') {
-		StartComment(c);
-		SaveChar(c);
-		SaveChar(c2);
-	    }
-	    else if (commentLevel == 0) {
-		unput(c2);
-		unput(c);
-		return WHITESPACE;
-	    }
-	    else {
-		unput(c2);
-		SaveChar(c);
-	    }
-	}
-	/* Not in comment: this should never occur. */
-	else if (commentLevel == 0) {
+        /* Check for a comment start whether we're in or out of a comment. */
+        if ((commentLevel == 0 && (c == '(' || c == '<')) ||
+            (commentLevel > 0 && c == commentChar)) {
+            c2 = input();
+            if (c2 == '*') {
+                StartComment(c);
+                SaveChar(c);
+                SaveChar(c2);
+            }
+            else if (commentLevel == 0) {
+                unput(c2);
+                unput(c);
+                return WHITESPACE;
+            }
+            else {
+                unput(c2);
+                SaveChar(c);
+            }
+        }
+        /* Not in comment: this should never occur. */
+        else if (commentLevel == 0) {
             fprintf(stderr, "outside a comment: bug in program\n");
-	}
-	/* In comment: check for comment end. */
-	else {
-	    SaveChar(c);
-	    if (c == '*') {
-		char target = commentChar == '(' ? ')' : '>';
-		c2 = input();
-		if (c2 == target) {
-		    SaveChar(c2);
-		    EndComment();
-		    if (commentLevel == 0) {
-			return WHITESPACE;
-		    }
-		}
-		else {
-		    unput(c2);
+        }
+        /* In comment: check for comment end. */
+        else {
+            SaveChar(c);
+            if (c == '*') {
+                char target = commentChar == '(' ? ')' : '>';
+                c2 = input();
+                if (c2 == target) {
+                    SaveChar(c2);
+                    EndComment();
+                    if (commentLevel == 0) {
+                        return WHITESPACE;
+                    }
                 }
-	    }
-	}
+                else {
+                    unput(c2);
+                }
+            }
+        }
     } while ((c = input()) > 0 /* EOF */);
     return WHITESPACE;
 }
