@@ -21,7 +21,7 @@
 /* The effect of yyparse is to parse a fragment of the Modula 3
    language and emit a stream of characters and formatting codes
    to a separate process that performs the formatting. This process
-   is actually Formatter. 
+   is actually Formatter.
 
    Several of the non-terminals in this grammar derive the empty
    string and are just used to cause semantic routines to be called.
@@ -111,7 +111,7 @@ int pragdepth = 0;
 int depth = 0;
   /* depth of nesting in blocks, used by NPS for formatting comments */
 
-int blanklinep;  
+int blanklinep;
   /* Set by NPS if the non-program-sequence that it parses ends
      with a blank line. */
 
@@ -176,7 +176,7 @@ typedef enum {NonOptimal, OptimalBreak, OptimalNoBreak} Formatter_BreakType;
 %token AMPERSAND ASSIGN ASTERISK BAR COLON COMMA DOT DOTDOT
 %token EQUAL GREATER GREQUAL LESS LSEQUAL MINUS SHARP PLUS
 %token RARROW RPRAGMA RBRACE RBRACKET RPAREN SEMICOLON SLASH
-%token SUBTYPE UPARROW 
+%token SUBTYPE UPARROW
 %token LPAREN LBRACKET LBRACE /*LPRAGMA*/
 
 %token IDENT CARD_CONST REAL_CONST CHAR_CONST STR_CONST
@@ -201,7 +201,7 @@ typedef enum {NonOptimal, OptimalBreak, OptimalNoBreak} Formatter_BreakType;
 
 
 /* reserved words */
-%token AND ANY ARRAY AS BGN BITS BRANDED BY CASE CONST 
+%token AND ANY ARRAY AS BGN BITS BRANDED BY CASE CONST
 %token DIV DO ELSE ELSIF END EVAL EXCEPT EXCEPTION EXIT EXPORTS
 %token FINALLY FOR FROM GENERIC IF IMPORT IN INTERFACE LOCK LOOP
 %token METHODS MOD MODULE NOT OBJECT OF OR OVERRIDES PROCEDURE RAISE RAISES
@@ -344,7 +344,7 @@ named_block:
 
 declaration_nl_list:
       /* empty */
-    | declaration_nl_list declaration_nl 
+    | declaration_nl_list declaration_nl
     ;
 
 /* to avoid reduce/reduce conflicts we will not make use of the knowledge
@@ -593,7 +593,7 @@ eval_stmt:
       Eval AO B expr E
     ;
 
-for_stmt:      
+for_stmt:
       /* We need the B2/E here and not for similar statements because of
 	 the top-level A's. */
       B2 For SP Ident var_trace A Assign SP expr A To SP expr by Do E
@@ -627,7 +627,7 @@ lock_stmt:
       Lock SP expr SP Do stmts SPNL End
     ;
 
-loop_stmt: 
+loop_stmt:
       Loop loopinv stmts SPNL End
     ;
 
@@ -642,11 +642,11 @@ repeat_stmt:
 
 return_stmt:
       Return
-    | Return AO expr 
+    | Return AO expr
     ;
 
-try_finally_stmt: 
-      Try stmts VZ Finally stmts SPNL End 
+try_finally_stmt:
+      Try stmts VZ Finally stmts SPNL End
     ;
 
 try_stmt:
@@ -680,11 +680,11 @@ tcase:
     ;
 
 while_stmt:
-      While SP expr SP Do loopinv stmts SPNL End 
+      While SP expr SP Do loopinv stmts SPNL End
     ;
 
 with_stmt:
-      With SP AL2 binding_list E E EA SP Do stmts SPNL End 
+      With SP AL2 binding_list E E EA SP Do stmts SPNL End
     ;
 
 binding_list:
@@ -767,7 +767,7 @@ simple_object_type_list:
     ;
 
 simple_object_type:
-      brand Object fields methods_part overrides_part SPNL End 
+      brand Object fields methods_part overrides_part SPNL End
     ;
 
 methods_part:
@@ -1245,7 +1245,7 @@ e6_t:     e7_t | Plus Z e6 | Minus Z e6 ;
 
 e7_t:       type_name
           | type_name                            selector_list_t
-          | type_name SP simple_object_type_list 
+          | type_name SP simple_object_type_list
           | root_type SP simple_object_type_list
           | type_constructor1
           | type_constructor2
@@ -1704,7 +1704,6 @@ static char *builtins[] = {
     "VAL",
     NULL
 };
-    
 
 PRID(s)
     register char *s;
@@ -1750,7 +1749,7 @@ NL ()
 /* Emit a newline at current level. */
 BL ()
 {
-    CheckComm(1); 
+    CheckComm(1);
     Formatter__NewLine (formatter, 0.0, 0);
     blanklinep = 0;
 }
@@ -1888,7 +1887,7 @@ initParser (infile, outfile, emacs, caps, fontInfo,
 yyerror(s) char *s; {
   int temp, temp2; /* must be 'int' instead of 'char'
                       otherwise the test (temp>0)
-                      will fail for characters above code 127 
+                      will fail for characters above code 127
                       and we need negative numbers for detecting end of file */
   Reset();
   Flush();

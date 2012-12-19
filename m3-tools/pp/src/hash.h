@@ -130,7 +130,7 @@ static KEYWORDENTRY aok[] = {
 "ROOT", ROOT,
 "SET", SET,
 "THEN", THEN,
-"TO", TO, 
+"TO", TO,
 "TRY", TRY,
 "TYPE", TYPE,
 "TYPECASE", TYPECASE,
@@ -228,7 +228,7 @@ lookup(s) char *s;
 	}
 	return(NULL);
 }
-  
+
 void
 install(where)  PTRKEYWORDENTRY where;
 {
@@ -251,23 +251,23 @@ install(where)  PTRKEYWORDENTRY where;
 	else
 		/*error */
 		fprintf(stderr,
-		  "lex: keyword %s already installed in hashtable\n", 
+		  "lex: keyword %s already installed in hashtable\n",
 		  where->keyword);
 }
 
 int
 mystrcmp(ss,tt) char *ss, *tt;
-{register char *s, *t; register int hasUpper, hasLower; 
+{register char *s, *t; register int hasUpper, hasLower;
   hasUpper = FALSE; hasLower = FALSE; s=ss; t=tt;
   while (1) {
-    if (isupper(*s)) 
-       if (*s++ == *t++ && !hasLower) hasUpper=TRUE; 
+    if (isupper(*s))
+       if (*s++ == *t++ && !hasLower) hasUpper=TRUE;
        else return FALSE;
     else if (islower(*s))
-       if (toupper(*s++) == *t++ && !hasUpper && capSwitch) hasLower=TRUE; 
+       if (toupper(*s++) == *t++ && !hasUpper && capSwitch) hasLower=TRUE;
        else return FALSE;
     else if (*s)
-       if (*s++ == *t++) /* skip */; 
+       if (*s++ == *t++) /* skip */;
        else return FALSE;
     else return (!*t);
   }
