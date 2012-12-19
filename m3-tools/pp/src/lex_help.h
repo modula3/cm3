@@ -56,7 +56,7 @@ AddChar(c)
 
 BufferLexeme (addLength)
 int addLength;
-{ 
+{
 	StopNPS();
 	if (addLength) AddLexLength();
 	lexptr = lexbufsize - lexptr;
@@ -69,7 +69,7 @@ int addLength;
 
 CapBufferLexeme (addLength)
 int addLength;
-{ 
+{
 	char *p, *q = yytext;
 	StopNPS();
 
