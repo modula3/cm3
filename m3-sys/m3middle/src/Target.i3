@@ -21,6 +21,8 @@ INTERFACE Target;
     boundary (i.e. (size + align - 1) DIV align * align).
 *)
 
+IMPORT TInt, TWord;
+
 TYPE
   Systems = {
     ALPHA32_VMS,
@@ -224,8 +226,8 @@ CONST
    element of the array. *)
 
 TYPE
-  Int = (* OPAQUE *) ARRAY [0..7] OF IByte;
-  IByte = BITS 8 FOR [0..16_ff];
+  Int = TInt.Int;
+  IByte = TInt.IByte;
 
 TYPE
   Int_type = RECORD
@@ -261,25 +263,33 @@ TYPE
 
 (*----------------------------------------------- machine supported types ---*)
 
+(* build a generic 32-bit/IEEE system description *)
+
 VAR (*CONST*)
-  Address   : Int_type;
-  Integer   : Int_type;
-  Longint   : Int_type;
-  Word      : Int_type;
-  Long      : Int_type;
-  Real      : Float_type;
-  Longreal  : Float_type;
-  Extended  : Float_type;
-  Int8      : Int_type;
-  Int16     : Int_type;
-  Int32     : Int_type;
-  Int64     : Int_type;
-  Word8     : Int_type;
-  Word16    : Int_type;
-  Word32    : Int_type;
-  Word64    : Int_type;
-  Void      : Int_type;
-  Char      : Int_type;
+  Address   := Int_type{CGType.Addr, 32, 32, 32, 4, TInt.Zero, TWord.Max32}; (* default for the 32-bit platforms *)
+  Integer   := Int32; (* default for the 32-bit platforms *)
+  Word      := Word32; (* default for the 32-bit platforms *)
+
+CONST
+  Longint   = Int64;
+  Long      = Word64;
+  Int8      = Int_type{CGType.Int8,    8,  8,  8, 1,  TInt.Min8, TInt.Max8};
+  Int16     = Int_type{CGType.Int16,  16, 16, 16, 2, TInt.Min16, TInt.Max16};
+  Int32     = Int_type{CGType.Int32,  32, 32, 32, 4, TInt.Min32, TInt.Max32};
+  Int64     = Int_type{CGType.Int64,  64, 64, 64, 8, TInt.Min64, TInt.Max64};
+  Word8     = Int_type{CGType.Word8,   8,  8,  8, 1, TInt.Zero,  TWord.Max8};
+  Word16    = Int_type{CGType.Word16, 16, 16, 16, 2, TInt.Zero, TWord.Max16};
+  Word32    = Int_type{CGType.Word32, 32, 32, 32, 4, TInt.Zero, TWord.Max32};
+  Word64    = Int_type{CGType.Word64, 64, 64, 64, 8, TInt.Zero, TWord.Max64};
+  Char      = Word8;
+  Void      = Int_type{CGType.Void,  0,  8,  0, 0, TInt.Zero, TInt.Zero};
+  Real      = Float_type{CGType.Reel, Precision.Short, 32, 32, 4, Float{Precision.Short, 0, -internal_Real_max}, Float{Precision.Short, 0, internal_Real_max}};
+  Longreal  = Float_type{CGType.LReel, Precision.Long, 64, 64, 8, Float{Precision.Long, 0, -internal_Longreal_max}, Float{Precision.Long, 0, internal_Longreal_max}};
+VAR
+  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -internal_Longreal_max}, Float{Precision.Extended, 0, internal_Longreal_max}};
+CONST
+  internal_Real_max = 3.40282346638528860x+38;
+  internal_Longreal_max = 1.79769313486231570x+308;
 
 CONST (* sorted list of supported machine alignments *)
   Alignments = ARRAY [0..3] OF CARDINAL{8, 16, 32, 64};

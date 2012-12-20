@@ -9,7 +9,6 @@
 MODULE TInt;
 
 IMPORT Word, TWord, Text;
-FROM Target IMPORT Int, IByte;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;

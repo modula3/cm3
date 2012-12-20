@@ -59,90 +59,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     System := VAL(sys, Systems);
     System_name := SystemNames[sys];
 
-    (* build a generic 32-bit/IEEE system description *)
-
-    Int8.cg_type     := CGType.Int8;
-    Int8.size        := 8;
-    Int8.align       := 8;
-    Int8.min         := TInt.Min8;
-    Int8.max         := TInt.Max8;
-
-    Int16.cg_type    := CGType.Int16;
-    Int16.size       := 16;
-    Int16.align      := 16;
-    Int16.min        := TInt.Min16;
-    Int16.max        := TInt.Max16;
-
-    Int32.cg_type    := CGType.Int32;
-    Int32.size       := 32;
-    Int32.align      := 32;
-    Int32.min        := TInt.Min32;
-    Int32.max        := TInt.Max32;
-
-    Int64.cg_type    := CGType.Int64;
-    Int64.size       := 64;
-    Int64.align      := 64;
-    Int64.min        := TInt.Min64;
-    Int64.max        := TInt.Max64;
-
-    Word8.cg_type    := CGType.Word8;
-    Word8.size       := 8;
-    Word8.align      := 8;
-    Word8.min        := TInt.Zero;
-    Word8.max        := TWord.Max8;
-
-    Word16.cg_type   := CGType.Word16;
-    Word16.size      := 16;
-    Word16.align     := 16;
-    Word16.min       := TInt.Zero;
-    Word16.max       := TWord.Max16;
-
-    Word32.cg_type   := CGType.Word32;
-    Word32.size      := 32;
-    Word32.align     := 32;
-    Word32.min       := TInt.Zero;
-    Word32.max       := TWord.Max32;
-
-    Word64.cg_type   := CGType.Word64;
-    Word64.size      := 64;
-    Word64.align     := 64;
-    Word64.min       := TInt.Zero;
-    Word64.max       := TWord.Max64;
-
-    Integer          := Int32;  (* default for the 32-bit platforms *)
-    Longint          := Int64;
-    Word             := Word32; (* default for the 32-bit platforms *)
-    Long             := Word64;
-    Address          := Word32;  Address.cg_type := CGType.Addr;
-    Char             := Word8;
-
-    Void.cg_type     := CGType.Void;
-    Void.size        := 0;
-    Void.align       := Byte;
-    Void.min         := TInt.Zero;
-    Void.max         := TInt.Zero;
-
-    Real.cg_type     := CGType.Reel;
-    Real.pre         := Precision.Short;
-    Real.size        := 32;
-    Real.align       := 32;
-    Real.min         := Float { Precision.Short, 0, -3.40282346638528860x+38 };
-    Real.max         := Float { Precision.Short, 0,  3.40282346638528860x+38 };
-
-    Longreal.cg_type := CGType.LReel;
-    Longreal.pre     := Precision.Long;
-    Longreal.size    := 64;
-    Longreal.align   := 64;
-    Longreal.min     := Float { Precision.Long, 0,-1.79769313486231570x+308 };
-    Longreal.max     := Float { Precision.Long, 0, 1.79769313486231570x+308 };
-
-    Extended.cg_type := CGType.XReel;
-    Extended.pre     := Precision.Extended;
-    Extended.size    := 64;
-    Extended.align   := 64;
-    Extended.min     := Float{Precision.Extended, 0,-1.79769313486231570x+308};
-    Extended.max     := Float{Precision.Extended, 0, 1.79769313486231570x+308};
-
     OS_name := in_OS_name;
 
     (* common values *)
@@ -406,25 +322,25 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                                                      Systems.I386_CYGWIN,
                                                      Systems.I386_MINGW});
 
-    (* fill in the "bytes" and "pack" fields *)
-    FixI (Address, max_align);
-    FixI (Integer, max_align);
-    FixI (Word, max_align);
-    FixI (Longint, max_align);
-    FixI (Long, max_align);
-    FixF (Real, max_align);
-    FixF (Longreal, max_align);
-    FixF (Extended, max_align);
-    FixI (Int8, max_align);
-    FixI (Int16, max_align);
-    FixI (Int32, max_align);
-    FixI (Int64, max_align);
-    FixI (Word8, max_align);
-    FixI (Word16, max_align);
-    FixI (Word32, max_align);
-    FixI (Word64, max_align);
-    FixI (Void, max_align);
-    FixI (Char, max_align);
+    (* check the "bytes" and "pack" fields *)
+    CheckI (Address, max_align);
+    CheckI (Integer, max_align);
+    CheckI (Word, max_align);
+    CheckI (Longint, max_align);
+    CheckI (Long, max_align);
+    CheckF (Real, max_align);
+    CheckF (Longreal, max_align);
+    CheckF (Extended, max_align);
+    CheckI (Int8, max_align);
+    CheckI (Int16, max_align);
+    CheckI (Int32, max_align);
+    CheckI (Int64, max_align);
+    CheckI (Word8, max_align);
+    CheckI (Word16, max_align);
+    CheckI (Word32, max_align);
+    CheckI (Word64, max_align);
+    CheckI (Void, max_align);
+    CheckI (Char, max_align);
 
     (* fix the alignments *)
     FOR i := FIRST (Alignments) TO LAST (Alignments) DO
@@ -474,19 +390,19 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
     DefaultCall := CCs[0];
   END InitCallingConventions;
 
-PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =
+PROCEDURE CheckI (READONLY i: Int_type; max_align: INTEGER) =
   BEGIN
-    i.align := MIN (i.align, max_align);
-    i.bytes := i.size DIV Byte;
-    i.pack  := (i.size + i.align - 1) DIV i.align * i.align;
-  END FixI;
+    <* ASSERT i.align = MIN (i.align, max_align) *>
+    <* ASSERT i.bytes = i.size DIV Byte *>
+    <* ASSERT i.pack  = (i.size + i.align - 1) DIV i.align * i.align *>
+  END CheckI;
 
-PROCEDURE FixF (VAR f: Float_type;  max_align: INTEGER) =
+PROCEDURE CheckF (READONLY f: Float_type; max_align: INTEGER) =
   BEGIN
-    f.align := MIN (f.align, max_align);
-    f.bytes := f.size DIV Byte;
-    (* f.pack  := (f.size + f.align - 1) DIV f.align * f.align; *)
-  END FixF;
+    <* ASSERT f.align = MIN (f.align, max_align) *>
+    <* ASSERT f.bytes = f.size DIV Byte *>
+    (* ASSERT f.pack  = (f.size + f.align - 1) DIV f.align * f.align *)
+  END CheckF;
 
 PROCEDURE FindConvention (nm: TEXT): CallingConvention =
   VAR cc: CallingConvention;
