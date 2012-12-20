@@ -2032,8 +2032,6 @@ DoBreak (blank, breakpt, offs)
 #include "lex.yy.c"
 #include "lex_help.h"
 
-EXTERN_C_BEGIN
-
 #ifdef USE_PROTOS
 void
 initParser (
@@ -2402,4 +2400,3 @@ HandleComments(firstTime, initNPS, doBreak)
     if (needEnd)
 	EN();
 }
-EXTERN_C_END
