@@ -91,6 +91,20 @@
 
 %{
 
+#if defined(__cplusplus) || __STDC__
+#define USE_PROTOS
+#endif
+
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#define EXTERN_C_BEGIN extern "C" {
+#define EXTERN_C_END }
+#else
+#define EXTERN_C
+#define EXTERN_C_BEGIN
+#define EXTERN_C_END
+#endif
+
 #include <stddef.h>
 
 #define lexbufsize 500
@@ -124,8 +138,8 @@ int capSwitch;
 int callspace;
   /* 1 if -callspace switch was set, 0 otherwise */
 
+/* the opaque Formatter.T object */
 char *formatter;
-  /* the opaque Formatter.T object */
 
 double offset = 2.0;		
   /* indentation */
@@ -166,6 +180,95 @@ typedef long STYLE;
 STYLE style = SRC_STYLE;
 
 typedef enum {NonOptimal, OptimalBreak, OptimalNoBreak} Formatter_BreakType;
+
+#ifdef USE_PROTOS
+EXTERN_C_BEGIN
+#ifdef YYPARSE_PARAM
+int yyparse (void *YYPARSE_PARAM);
+#else
+int yyparse (void);
+#endif
+int yylex(void);
+#ifdef __cplusplus
+typedef void (*PROC)(...);
+typedef double (*FPROC)(...);
+#else
+typedef void (*PROC)();
+typedef double (*FPROC)();
+#endif
+#if 0 /* stronger types would be nice */
+typedef double (*CharWidth_t)(Formatter_t*, char*, char);
+typedef void (*Flush_t)(void);
+typedef void (*SetFont_t)(Formatter_t*, char*);
+typedef void (*PutChar_t)(Formatter_t*, char);
+typedef void (*Break_t)(Formatter_t*, double, int, int);
+typedef void (*Newline_t)(Formatter_t*);
+#else
+typedef char Formatter_t;
+#endif
+int input (void);
+void BufferLexeme (int addLength);
+void CapBufferLexeme (int addLength);
+void PR (char *s);
+void PRID(char *s);
+void PK (char *s);
+void PF(char *s, char *f);
+void PRID(char *s);
+void PRNONL (char *s);
+void BE (double n);
+void EN (void);
+void ENF (void);
+void GR(void);
+void Flush (void);
+void Reset (void);
+void P(int n);
+void P2(int n);
+void NL (void);
+void BL (void);
+void DoSPNL (void);
+void DoQSP (void);
+void DoAlign (int cols, int oneline);
+void ALNL(void);
+void EndAlign(void);
+void DoBreak (int blank, int breakpt, double offs);
+void
+initParser (
+    char *infile,
+    Formatter_t* outfile,
+    long emacs,
+    long caps,
+    FontInfo *fontInfo,
+    double offs,
+    double ccol,
+    STYLE sty,
+    long ad,
+    long breaktype,
+    long follow,
+    long callsp,
+    FPROC charWidth,
+    PROC flush,
+    PROC setFont,
+    PROC putChar,
+    PROC breakF,
+    PROC newLine,
+    PROC unitedBreak,
+    PROC group,
+    PROC begin,
+    PROC align,
+    PROC noAlign,
+    PROC col,
+    PROC end);
+void yyerror(char*);
+void PrintOnePragma(void);
+void PrintNPS(int);
+int FixedComment(char*);
+void
+HandleComments(
+    int firstTime,		/* first time on this comment? */
+    int initNPS,		/* is this an InitialNPS? */
+    int doBreak);   	/* is a Break about to happen? */
+EXTERN_C_END
+#endif
 
 %}
 
@@ -1620,8 +1723,10 @@ static int alignRow = 0;	/* we are at the end of an Align row. */
 static int alignDepth = 0;	/* how many Formatter.Aligns are active? */
 
 /*---- interface to the Modula-3 formatter package ---*/
+#ifndef USE_PROTOS
 typedef void (*PROC)();
 typedef double (*FPROC)();
+#endif
 static PROC Formatter__Flush;
 static PROC Formatter__SetFont;
 static PROC Formatter__PutChar;
@@ -1635,25 +1740,39 @@ static PROC Formatter__NoAlign;
 static PROC Formatter__Col;
 static PROC Formatter__End;
 
+#include <string.h>
+
+#ifdef USE_PROTOS
+void PR (char *s)
+#else
 PR (s)
 char *s;
+#endif
 {
   while (*s != 0) {
     P (*s);
     s++; }
 }
 
-/* Print a keyword. */
+#ifdef USE_PROTOS
+void PK (char *s)
+#else
 PK (s)
     char *s;
+#endif
+/* Print a keyword. */
 {
     PF(s, fonts->keyword);
 }
 
-/* Print in arbitrary font. */
+#ifdef USE_PROTOS
+void PF(char *s, char *f)
+#else
 PF(s, f)
     char *s;
     char *f;
+#endif
+/* Print in arbitrary font. */
 {
     Formatter__SetFont(formatter, f);
     PR(s);
@@ -1705,8 +1824,12 @@ static char *builtins[] = {
     NULL
 };
 
+#ifdef USE_PROTOS
+void PRID(char *s)
+#else
 PRID(s)
     register char *s;
+#endif
 {
     register int i;
     register char *b;
@@ -1720,41 +1843,105 @@ PRID(s)
     PR(s);
 }
 
-PRNONL (s)  /* strip newline */
+#ifdef USE_PROTOS
+void
+PRNONL (char *s)
+#else
+PRNONL (s)
 char *s;
+#endif
+/* strip newline */
 {
   while (*s != 0 && *s != '\n') {
     P (*s);
     s++; }
 }
 
-BE (n) double n; { CheckComm(0); Formatter__Begin (formatter, n, MAXWIDTH); }
-EN ()          { Formatter__End (formatter); }
-ENF ()         { CheckComm(0); Formatter__End (formatter); }
-GR ()          { CheckComm(0); Formatter__Group (formatter); }
-Flush ()       { CheckComm(0); Formatter__Flush (formatter); }
-Reset ()       { }
-P(n) int n;    { CheckComm(0); Formatter__PutChar (formatter, n); }
-P2(n) int n;   { Formatter__PutChar (formatter, n); }
+#ifdef USE_PROTOS
+void BE (double n)
+#else
+BE (n) double n;
+#endif
+{ CheckComm(0); Formatter__Begin (formatter, n, MAXWIDTH); }
+
+#ifdef USE_PROTOS
+void EN (void)
+#else
+EN ()
+#endif
+{ Formatter__End (formatter); }
+
+#ifdef USE_PROTOS
+void ENF (void)
+#else
+ENF ()
+#endif
+{ CheckComm(0); Formatter__End (formatter); }
+
+#ifdef USE_PROTOS
+void GR(void)
+#else
+GR ()
+#endif
+{ CheckComm(0); Formatter__Group (formatter); }
+
+#ifdef USE_PROTOS
+void Flush (void)
+#else
+Flush ()
+#endif
+{ CheckComm(0); Formatter__Flush (formatter); }
+
+#ifdef USE_PROTOS
+void Reset (void) { }
+#else
+Reset () { }
+#endif
+
+#ifdef USE_PROTOS
+void P(int n)
+#else
+P(n) int n;
+#endif
+{ CheckComm(0); Formatter__PutChar (formatter, n); }
+
+#ifdef USE_PROTOS
+void P2(int n)
+#else
+P2(n) int n;
+#endif
+{ Formatter__PutChar (formatter, n); }
 
 
-/* Emit a newline one level out. */
+#ifdef USE_PROTOS
+void NL (void)
+#else
 NL ()
+#endif
+/* Emit a newline one level out. */
 {
     CheckComm(1);
     Formatter__NewLine (formatter, -offset, 0);
     blanklinep = 0;
 }
 
-/* Emit a newline at current level. */
+#ifdef USE_PROTOS
+void BL (void)
+#else
 BL ()
+#endif
+/* Emit a newline at current level. */
 {
     CheckComm(1);
     Formatter__NewLine (formatter, 0.0, 0);
     blanklinep = 0;
 }
 
+#ifdef USE_PROTOS
+void DoSPNL (void)
+#else
 DoSPNL ()
+#endif
 {
    if (style == EM_STYLE) {
      DoBreak (1, 0, 0.0);
@@ -1763,14 +1950,21 @@ DoSPNL ()
    };
 }
 
+#ifdef USE_PROTOS
+void DoQSP (void)
+#else
 DoQSP ()
+#endif
 {
     if (callspace) DoBreak (1, 0, 0);
 }
 
-
+#ifdef USE_PROTOS
+void DoAlign (int cols, int oneline)
+#else
 DoAlign (cols, oneline)
 int cols, oneline;
+#endif
 {
     CheckComm(0);
     ++alignDepth;
@@ -1779,24 +1973,37 @@ int cols, oneline;
     Formatter__Align(formatter, cols, oneline, (oneline || alignDecls));
 }
 
-/* Tell comment code that align is going to insert a newline here. */
+#ifdef USE_PROTOS
+void ALNL(void)
+#else
 ALNL()
+#endif
+/* Tell comment code that align is going to insert a newline here. */
 {
     /* Only do it if there is comment work left to do. */
     if (moreComments)
 	alignRow = 1;
 }
 
+#ifdef USE_PROTOS
+void EndAlign(void)
+#else
 EndAlign()
+#endif
 {
     --alignDepth;
     alignRow = 0;
     Formatter__End(formatter);
 }
 
+#ifdef USE_PROTOS
+void
+DoBreak (int blank, int breakpt, double offs)
+#else
 DoBreak (blank, breakpt, offs)
     int blank, breakpt;
     double offs;
+#endif
 {
   CheckComm(1);
   /* Turn breaks into newlines if there is one left to do from comment
@@ -1825,6 +2032,37 @@ DoBreak (blank, breakpt, offs)
 #include "lex.yy.c"
 #include "lex_help.h"
 
+EXTERN_C_BEGIN
+
+#ifdef USE_PROTOS
+void
+initParser (
+    char *infile,
+    Formatter_t* outfile,
+    long emacs,
+    long caps,
+    FontInfo *fontInfo,
+    double offs,
+    double ccol,
+    STYLE sty,
+    long ad,
+    long breaktype,
+    long follow,
+    long callsp,
+    FPROC charWidth,
+    PROC flush,
+    PROC setFont,
+    PROC putChar,
+    PROC breakF,
+    PROC newLine,
+    PROC unitedBreak,
+    PROC group,
+    PROC begin,
+    PROC align,
+    PROC noAlign,
+    PROC col,
+    PROC end)
+#else
 initParser (infile, outfile, emacs, caps, fontInfo,
 	    offs, ccol, sty, ad, breaktype, follow, callsp,
             charWidth, flush, setFont, putChar, breakF, newLine,
@@ -1840,6 +2078,7 @@ initParser (infile, outfile, emacs, caps, fontInfo,
     FPROC charWidth;
     PROC flush, setFont, putChar, breakF, newLine;
     PROC unitedBreak, group, begin, align, noAlign, col, end;
+#endif
 {
     yyin = stdin;
     if ((!emacs) && (infile != 0)) {
@@ -1884,7 +2123,12 @@ initParser (infile, outfile, emacs, caps, fontInfo,
     insertKeywords();
 }
 
-yyerror(s) char *s; {
+#ifdef USE_PROTOS
+void yyerror(char *s)
+#else
+yyerror(s) char *s;
+#endif
+{
   int temp, temp2; /* must be 'int' instead of 'char'
                       otherwise the test (temp>0)
                       will fail for characters above code 127
@@ -1918,23 +2162,35 @@ yyerror(s) char *s; {
   if ((temp2 != '\n') || (temp > 0)) P(temp2);
 }
 
+#ifdef USE_PROTOS
+void PrintOnePragma(void)
+#else
+PrintOnePragma()
+#endif
 /* Print out first comment.  Hidden down here so it can see the comment
    structure. */
-PrintOnePragma()
 {
     PR(comments[0].text);
 }
 
+#ifdef USE_PROTOS
+void PrintNPS(int initNPS)
+#else
 PrintNPS(initNPS)
     int initNPS;
+#endif
 {
     HandleComments(1, initNPS, 0);
 }
 
-/* Determine if a comment should be refilled or not.  Returns TRUE if it is
-   "fixed" (should not be refilled). */
+#ifdef USE_PROTOS
+int FixedComment(char *s)
+#else
 int FixedComment(s)
     char *s;
+#endif
+/* Determine if a comment should be refilled or not.  Returns TRUE if it is
+   "fixed" (should not be refilled). */
 {
     char c;
 
@@ -1950,11 +2206,19 @@ int FixedComment(s)
 
 static int iComment;
 
-/* Comment and newline handling code. */
+#ifdef USE_PROTOS
+void
+HandleComments(
+    int firstTime,		/* first time on this comment? */
+    int initNPS,		/* is this an InitialNPS? */
+    int doBreak)		/* is a Break about to happen? */
+#else
 HandleComments(firstTime, initNPS, doBreak)
     int firstTime;		/* first time on this comment? */
     int initNPS;		/* is this an InitialNPS? */
     int doBreak;		/* is a Break about to happen? */
+#endif
+/* Comment and newline handling code. */
 {
     int i;
     register char *s, c;
@@ -2138,3 +2402,4 @@ HandleComments(firstTime, initNPS, doBreak)
     if (needEnd)
 	EN();
 }
+EXTERN_C_END
