@@ -18,7 +18,7 @@ INTERFACE TWord;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int;
+FROM TInt IMPORT Int;
 
 CONST Size = BITSIZE(Int);
 

@@ -18,9 +18,9 @@ INTERFACE TInt;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int;
-
 CONST Size = BITSIZE(Int);
+TYPE Int = (* OPAQUE *) ARRAY [0..7] OF IByte;
+TYPE IByte = BITS 8 FOR [0..16_ff];
 
 CONST
   Zero   = Int{ 0, 0,..};

@@ -9,7 +9,7 @@
 MODULE TWord;
 
 IMPORT Word, TInt;
-FROM Target IMPORT Int, IByte;
+FROM TInt IMPORT Int, IByte;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
