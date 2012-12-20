@@ -17,13 +17,39 @@
 /* It also tracks the current column the input is in for comment */
 /* processing. */
 
+#if defined(__cplusplus) || __STDC__
+#define USE_PROTOS
+#endif
+
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#define EXTERN_C_BEGIN extern "C" {
+#define EXTERN_C_END }
+#else
+#define EXTERN_C
+#define EXTERN_C_BEGIN
+#define EXTERN_C_END
+#endif
 
 int currentCol = 0; /* current column of input */
 int currentRow = 0; /* current row of input */
 
+#ifdef USE_PROTOS
+void StopNPS (void);
+void AddChar(char c);
+#endif
+
+#ifdef __cplusplus
+#define input yyinput
+#endif
+
+#ifdef USE_PROTOS
+void AddLexLength (void)
+#else
 AddLexLength ()
+#endif
 {
-  register int i;
+  size_t i;
 
   for (i = 0; i < yyleng; ++i)  AddChar(yytext[i]);
   if (yyleng >= lexbufsize) {
@@ -31,8 +57,12 @@ AddLexLength ()
     exit(-1); }
 }
 
+#ifdef USE_PROTOS
+void AddChar(char c)
+#else
 AddChar(c)
     char c;
+#endif
 {
   ++lexposition;
   switch(c) {
@@ -54,8 +84,12 @@ AddChar(c)
 /* the buffer declared in pp.yacc (which see) where it can */
 /* be accessed by the parser actions. */
 
+#ifdef USE_PROTOS
+void BufferLexeme (int addLength)
+#else
 BufferLexeme (addLength)
 int addLength;
+#endif
 {
     StopNPS();
     if (addLength) AddLexLength();
@@ -67,8 +101,12 @@ int addLength;
 /* The routine CapBufferLexeme is like BufferLexeme, but it
  capitalizes as it copies. */
 
+#ifdef USE_PROTOS
+void CapBufferLexeme (int addLength)
+#else
 CapBufferLexeme (addLength)
 int addLength;
+#endif
 {
     char *p, *q = yytext;
     StopNPS();
@@ -77,9 +115,8 @@ int addLength;
     lexptr = lexbufsize - lexptr;
     yylval = lexptr;
     p = lexbuf + lexptr;
-    while (*p++ = toupper (*q++)) ;
+    while ((*p++ = toupper (*q++))) ;
 }
-
 
 /* The NPS information is saved in the comments array.  Elements 0 to
    nComments-1 refer to top-level comments or pragmas.  The NLs, startCol,
@@ -102,7 +139,11 @@ static char *commTextLimit;
 /* extern char *realloc(); */
 
 /* Make sure we have enough comment space allocated. */
+#ifdef USE_PROTOS
+static void AllocComments(int n)
+#else
 static AllocComments(n)
+#endif
 {
     if (nCommentsAlloced == 0) {
         nCommentsAlloced = n+10;
@@ -115,7 +156,7 @@ static AllocComments(n)
     else if (nCommentsAlloced < n) {
         nCommentsAlloced = n+10;
         comments = (struct Comment *)
-        realloc(comments, nCommentsAlloced * sizeof(*comments));
+            realloc(comments, nCommentsAlloced * sizeof(*comments));
     }
 }
 
@@ -124,8 +165,12 @@ static int commentLevel;    /* nesting level */
 
 /* Save a char in the current comment (if any) and also count it for lex
    position and current column. */
+#ifdef USE_PROTOS
+static void SaveChar(char c)
+#else
 static SaveChar(c)
     char c;
+#endif
 {
     if (c != 0)
         AddChar(c);
@@ -149,8 +194,12 @@ static SaveChar(c)
 }
 
 /* Called when a comment is started, either at top-level or nested. */
+#ifdef USE_PROTOS
+static void StartComment(char c)
+#else
 static StartComment(c)
     char c;
+#endif
 {
     if (commentLevel == 0) {
         /* Starting a top-level comment.  Need to allocate two more than
@@ -166,24 +215,38 @@ static StartComment(c)
     commentChar = c;
 }
 
+#ifdef USE_PROTOS
+static void EndComment(void)
+#else
 static EndComment()
+#endif
 {
    if (commentLevel == 1)
        SaveChar(0);     /* finish off the text. */
    --commentLevel;
 }
 
+#ifdef USE_PROTOS
+static int IsWhite(char c)
+#else
 static int IsWhite(c)
     register char c;
+#endif
 {
     return c == ' ' || c == '\t' || c == '\f' || c == '\n' || c == '\r';
 }
 
+#ifndef __cplusplus
 typedef enum {false, true} bool;
+#endif
 
 static bool inNPS = false;
 
+#ifdef USE_PROTOS
+void StartNPS (void)
+#else
 StartNPS ()
+#endif
 {
     if (inNPS) {
         return;
@@ -196,14 +259,22 @@ StartNPS ()
     comments[0].NLs = 0;
 }
 
+#ifdef USE_PROTOS
+void StopNPS (void)
+#else
 StopNPS ()
+#endif
 {
     inNPS = false;
 }
 
 /* Handle white spaces.
    This was formerly part of HandleNPS. */
+#ifdef USE_PROTOS
+int HandleSpaces (void)
+#else
 int HandleSpaces ()
+#endif
 {
     StartNPS();
     /* Now deal with the main loop. */
@@ -231,7 +302,11 @@ int HandleSpaces ()
 
    When we arrive, the first character of whitespace or comment is in
    yytext, and we're responsible for taking care of the rest. */
+#ifdef USE_PROTOS
+int HandleCommentPragma (void)
+#else
 int HandleCommentPragma ()
+#endif
 {
     /* use 'int' instead of 'char' for distinguishing between end of file
        and characters above 127 */

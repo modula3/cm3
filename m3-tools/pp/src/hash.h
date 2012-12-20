@@ -32,7 +32,7 @@
 /* If the first equals the second, or if the first contains     */
 /* no upper-case letters and converting it to upper case makes  */
 /* it match the second, then it returns TRUE; else it returns   */
-/* FALSE.
+/* FALSE.                                                       */
 
 /* The routine hash takes a string of characters, and returns   */
 /* a hash value for that string.  The hash function has the     */
@@ -65,6 +65,20 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#if defined(__cplusplus) || __STDC__
+#define USE_PROTOS
+#endif
+
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#define EXTERN_C_BEGIN extern "C" {
+#define EXTERN_C_END }
+#else
+#define EXTERN_C
+#define EXTERN_C_BEGIN
+#define EXTERN_C_END
+#endif
+
 #define NUMKEYWORDS (sizeof(aok)/sizeof(struct keywordEntry))
 #define HASHSIZE 200
 #ifndef NULL
@@ -80,97 +94,97 @@ typedef struct keywordEntry {
 
 static KEYWORDENTRY aok[] = {
     /* array of keywords */
-"AND", AND,
-"ANY", ANY,
-"ARRAY", ARRAY,
-"AS", AS,
-"BEGIN", BGN,
-"BITS", BITS,
-"BRANDED", BRANDED,
-"BY", BY,
-"CASE", CASE,
-"CONST", CONST,
-"DIV", DIV,
-"DO", DO,
-"ELSE", ELSE,
-"ELSIF", ELSIF,
-"END", END,
-"EVAL", EVAL,
-"EXCEPT", EXCEPT,
-"EXCEPTION", EXCEPTION,
-"EXIT", EXIT,
-"EXPORTS", EXPORTS,
-"FINALLY", FINALLY,
-"FOR", FOR,
-"FROM", FROM,
-"GENERIC", GENERIC,
-"IF", IF,
-"IMPORT", IMPORT,
-"IN", IN,
-"INTERFACE", INTERFACE,
-"LOCK", LOCK,
-"LOOP", LOOP,
-"METHODS", METHODS,
-"MOD", MOD,
-"MODULE", MODULE,
-"NOT", NOT,
-"OBJECT", OBJECT,
-"OF", OF,
-"OR", OR,
-"OVERRIDES", OVERRIDES,
-"PROCEDURE", PROCEDURE,
-"RAISE", RAISE,
-"RAISES", RAISES,
-"READONLY", READONLY,
-"RECORD", RECORD,
-"REF", REF,
-"REPEAT", REPEAT,
-"RETURN", RETURN,
-"REVEAL", REVEAL,
-"ROOT", ROOT,
-"SET", SET,
-"THEN", THEN,
-"TO", TO,
-"TRY", TRY,
-"TYPE", TYPE,
-"TYPECASE", TYPECASE,
-"UNSAFE", UNSAFE,
-"UNTIL", UNTIL,
-"UNTRACED", UNTRACED,
-"VALUE", VALUE,
-"VAR", VAR,
-"WHILE", WHILE,
-"WITH", WITH,
+{ "AND", AND },
+{ "ANY", ANY },
+{ "ARRAY", ARRAY },
+{ "AS", AS },
+{ "BEGIN", BGN },
+{ "BITS", BITS },
+{ "BRANDED", BRANDED },
+{ "BY", BY },
+{ "CASE", CASE },
+{ "CONST", CONST },
+{ "DIV", DIV },
+{ "DO", DO },
+{ "ELSE", ELSE },
+{ "ELSIF", ELSIF },
+{ "END", END },
+{ "EVAL", EVAL },
+{ "EXCEPT", EXCEPT },
+{ "EXCEPTION", EXCEPTION },
+{ "EXIT", EXIT },
+{ "EXPORTS", EXPORTS },
+{ "FINALLY", FINALLY },
+{ "FOR", FOR },
+{ "FROM", FROM },
+{ "GENERIC", GENERIC },
+{ "IF", IF },
+{ "IMPORT", IMPORT },
+{ "IN", IN },
+{ "INTERFACE", INTERFACE },
+{ "LOCK", LOCK },
+{ "LOOP", LOOP },
+{ "METHODS", METHODS },
+{ "MOD", MOD },
+{ "MODULE", MODULE },
+{ "NOT", NOT },
+{ "OBJECT", OBJECT },
+{ "OF", OF },
+{ "OR", OR },
+{ "OVERRIDES", OVERRIDES },
+{ "PROCEDURE", PROCEDURE },
+{ "RAISE", RAISE },
+{ "RAISES", RAISES },
+{ "READONLY", READONLY },
+{ "RECORD", RECORD },
+{ "REF", REF },
+{ "REPEAT", REPEAT },
+{ "RETURN", RETURN },
+{ "REVEAL", REVEAL },
+{ "ROOT", ROOT },
+{ "SET", SET },
+{ "THEN", THEN },
+{ "TO", TO },
+{ "TRY", TRY },
+{ "TYPE", TYPE },
+{ "TYPECASE", TYPECASE },
+{ "UNSAFE", UNSAFE },
+{ "UNTIL", UNTIL },
+{ "UNTRACED", UNTRACED },
+{ "VALUE", VALUE },
+{ "VAR", VAR },
+{ "WHILE", WHILE },
+{ "WITH", WITH },
 /* keywords of the extended static checker ESC
    which specifications are stored in SPEC pragmas */
-"ABSTRACT", ABSTRACT, /* documentation says REP instead */
-"ALL", ALL,
-"AXIOM", AXIOM,
-"DEPEND", DEPEND, /* documentation says DEPENDS instead */
-"ENSURES", ENSURES,
-"EXISTS", EXISTS,
-"FUNC", FUNC,
-"IFF", IFF,
-"IMPLIES", IMPLIES,
-"INVARIANT", INVARIANT, /* documentation says INV instead */
-"IS", IS,
-"LET", LET,
-"MAP", MAP,
-"MODIFIES", MODIFIES,
-"PRED", PRED,
-"PROTECT", PROTECT,
-"REQUIRES", REQUIRES,
+{ "ABSTRACT", ABSTRACT }, /* documentation says REP instead */
+{ "ALL", ALL },
+{ "AXIOM", AXIOM },
+{ "DEPEND", DEPEND }, /* documentation says DEPENDS instead */
+{ "ENSURES", ENSURES },
+{ "EXISTS", EXISTS },
+{ "FUNC", FUNC },
+{ "IFF", IFF },
+{ "IMPLIES", IMPLIES },
+{ "INVARIANT", INVARIANT }, /* documentation says INV instead */
+{ "IS", IS },
+{ "LET", LET },
+{ "MAP", MAP },
+{ "MODIFIES", MODIFIES },
+{ "PRED", PRED },
+{ "PROTECT", PROTECT },
+{ "REQUIRES", REQUIRES },
 /* special ESC functions -- they not no special treatment
-"CONCAT", CONCAT,
-"DELETE", DELETE,
-"INSERT", INSERT,
-"MEMBER", MEMBER,
-"SHARED", SHARED,
-"SUBSET", SUBSET,
-"MUT_GE", MUT_GE,
-"MUT_GT", MUT_GT,
-"MUT_LE", MUT_LE,
-"MUT_LT", MUT_LT,
+{ "CONCAT", CONCAT },
+{ "DELETE", DELETE },
+{ "INSERT", INSERT },
+{ "MEMBER", MEMBER },
+{ "SHARED", SHARED },
+{ "SUBSET", SUBSET },
+{ "MUT_GE", MUT_GE },
+{ "MUT_GT", MUT_GT },
+{ "MUT_LE", MUT_LE },
+{ "MUT_LT", MUT_LT },
 */
 };
 
@@ -196,26 +210,48 @@ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
+#ifdef USE_PROTOS
+
+int hash(char*);
+int mystrcmp(char*, char*);
+char cap(char s);
+void install(PTRKEYWORDENTRY where);
+void insertKeywords(void);
+PTRKEYWORDENTRY lookup(char*);
+
+#else
+
 int hash(), mystrcmp();
 char cap();
 void install(), insertKeywords();
 PTRKEYWORDENTRY lookup();
 
+#endif
+
 PTRKEYWORDENTRY *starthash = &(hashtab[0]);
 PTRKEYWORDENTRY *endhash = &(hashtab[HASHSIZE]);
 
+#ifdef USE_PROTOS
+int
+hash(char *s)
+#else
 int
 hash(s) char *s;
+#endif
 {
     int hashval;
     for (hashval=0; *s != '\0'; hashval += cap(*s++));
     return(hashval % HASHSIZE);
 }
 
+#ifdef USE_PROTOS
+PTRKEYWORDENTRY
+lookup(char *s)
+#else
 PTRKEYWORDENTRY
 lookup(s) char *s;
+#endif
 {
-    int i;
     PTRKEYWORDENTRY *p, *p1;
     p = &hashtab[hash(s)];
     for (p1 = p; p1 < endhash && *p1 != NULL; p1++) {
@@ -229,8 +265,13 @@ lookup(s) char *s;
     return(NULL);
 }
 
+#ifdef USE_PROTOS
+void
+install(PTRKEYWORDENTRY where)
+#else
 void
 install(where)  PTRKEYWORDENTRY where;
+#endif
 {
     char *keyword;
     PTRKEYWORDENTRY *p1, *p;
@@ -251,37 +292,52 @@ install(where)  PTRKEYWORDENTRY where;
     else
         /*error */
         fprintf(stderr,
-          "lex: keyword %s already installed in hashtable\n",
+          "lex: keyword %s already installed in hashtable\n", 
           where->keyword);
 }
 
+#ifdef USE_PROTOS
+int
+mystrcmp(char *ss, char *tt)
+#else
 int
 mystrcmp(ss,tt) char *ss, *tt;
-{register char *s, *t; register int hasUpper, hasLower;
+#endif
+{register char *s, *t; register int hasUpper, hasLower; 
   hasUpper = FALSE; hasLower = FALSE; s=ss; t=tt;
   while (1) {
-    if (isupper(*s))
-       if (*s++ == *t++ && !hasLower) hasUpper=TRUE;
+    if (isupper(*s)) 
+       if (*s++ == *t++ && !hasLower) hasUpper=TRUE; 
        else return FALSE;
     else if (islower(*s))
-       if (toupper(*s++) == *t++ && !hasUpper && capSwitch) hasLower=TRUE;
+       if (toupper(*s++) == *t++ && !hasUpper && capSwitch) hasLower=TRUE; 
        else return FALSE;
     else if (*s)
-       if (*s++ == *t++) /* skip */;
+       if (*s++ == *t++) /* skip */; 
        else return FALSE;
     else return (!*t);
   }
 }
 
+#ifdef USE_PROTOS
+char
+cap(char s)
+#else
 char
 cap(s) char s;
+#endif
 {
     if (capSwitch && s >= 'a' && s <= 'z') return('A' + (s - 'a'));
     else return(s);
 }
 
+#ifdef USE_PROTOS
+void
+insertKeywords(void)
+#else
 void
 insertKeywords()
+#endif
 {
     PTRKEYWORDENTRY p;
     for (p = aok; p < &aok[NUMKEYWORDS];p++)

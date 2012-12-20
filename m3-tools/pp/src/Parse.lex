@@ -19,6 +19,30 @@
   Some pragmas like NOWARN are known but are handled like unknown
   since they can appear anywhere.
 */
+
+#if defined(__cplusplus) || __STDC__
+#define USE_PROTOS
+#endif
+
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#define EXTERN_C_BEGIN extern "C" {
+#define EXTERN_C_END }
+#else
+#define EXTERN_C
+#define EXTERN_C_BEGIN
+#define EXTERN_C_END
+#endif
+
+#ifdef USE_PROTOS
+EXTERN_C_BEGIN
+int HandleSpaces (void);
+int HandleCommentPragma (void);
+void BufferLexeme (int addLength);
+int input (void);
+EXTERN_C_END
+#endif
+
 %}
 
 %Start Prog Com Prag
