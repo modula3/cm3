@@ -283,13 +283,10 @@ CONST
   Word64    = Int_type{CGType.Word64, 64, 64, 64, 8, TInt.Zero, TWord.Max64};
   Char      = Word8;
   Void      = Int_type{CGType.Void,  0,  8,  0, 0, TInt.Zero, TInt.Zero};
-  Real      = Float_type{CGType.Reel, Precision.Short, 32, 32, 4, Float{Precision.Short, 0, -internal_Real_max}, Float{Precision.Short, 0, internal_Real_max}};
-  Longreal  = Float_type{CGType.LReel, Precision.Long, 64, 64, 8, Float{Precision.Long, 0, -internal_Longreal_max}, Float{Precision.Long, 0, internal_Longreal_max}};
+  Real      = Float_type{CGType.Reel, Precision.Short, 32, 32, 4, Float{Precision.Short, 0, -3.40282346638528860x+38}, Float{Precision.Short, 0, 3.40282346638528860x+38}};
+  Longreal  = Float_type{CGType.LReel, Precision.Long, 64, 64, 8, Float{Precision.Long, 0, -1.79769313486231570x+308}, Float{Precision.Long, 0, 1.79769313486231570x+308}};
 VAR
-  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -internal_Longreal_max}, Float{Precision.Extended, 0, internal_Longreal_max}};
-CONST
-  internal_Real_max = 3.40282346638528860x+38;
-  internal_Longreal_max = 1.79769313486231570x+308;
+  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -1.79769313486231570x+308}, Float{Precision.Extended, 0, 1.79769313486231570x+308}};
 
 CONST (* sorted list of supported machine alignments *)
   Alignments = ARRAY [0..3] OF CARDINAL{8, 16, 32, 64};
