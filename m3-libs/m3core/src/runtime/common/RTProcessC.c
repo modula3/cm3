@@ -133,8 +133,9 @@ RTProcess__Fork(void)
     err = errno;
   for (i = 0; i < count_used; ++i)
   {
-    ForkHandler handler = new_pid ? p[i].parent : p[i].child;
-    if (handler) handler();
+    ForkHandler handler = (new_pid ? p[i].parent : p[i].child);
+    if (handler)
+      handler();
   }
   if (new_pid == -1)
     errno = err;
