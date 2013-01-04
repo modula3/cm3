@@ -139,7 +139,6 @@ RTProcess__Fork(void)
   }
   if (new_pid == -1)
     errno = err;
-Exit:
   Scheduler__EnableSwitching();
   return new_pid;
 #elif defined(__sun)
