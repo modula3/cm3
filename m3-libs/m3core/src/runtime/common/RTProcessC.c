@@ -122,15 +122,16 @@ RTProcess__Fork(void)
   Scheduler__DisableSwitching();
   p = (fork_handlers_t*)fork_handlers.p;
   count_used = fork_handlers.count_used;
-  for (i = 0; < i < count_used; ++i)
+  for (i = 0; i < count_used; ++i)
   {
     ForkHandler handler = p[i].prepare;
-    if (handler) handler();
+    if (handler)
+      handler();
   }
   new_pid = fork();
   if (new_pid == -1)
     err = errno;
-  for (i = 0; < i < count_used; ++i)
+  for (i = 0; i < count_used; ++i)
   {
     ForkHandler handler = new_pid ? p[i].parent : p[i].child;
     if (handler) handler();
