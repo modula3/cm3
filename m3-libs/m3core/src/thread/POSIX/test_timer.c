@@ -8,8 +8,9 @@ Let's see.
 
 void __cdecl alarm_handler(int sig)
 {
-    char buffer[1000] = { 0 };
+    char buffer[1000];
 
+    memset(buffer, 0, sizeof(buffer));
     sprintf(buffer, "%d alarm\n", getpid());
     write(1, buffer, strlen(buffer));
 }
@@ -22,7 +23,7 @@ static sigset_t ThreadSwitchSignal;
 
 void __cdecl setup_sigvtalrm(SignalHandler1 handler)
 {
-  struct sigaction act = { 0 };
+  struct sigaction act;
 
   memset(&act, 0, sizeof(act));
   memset(&ThreadSwitchSignal, 0, sizeof(ThreadSwitchSignal));
@@ -50,13 +51,13 @@ void __cdecl disallow_sigvtalrm(void)
 
 int main()
 {
-    struct timeval tv = { 0 };
-    struct itimerval it = { 0 };
-
-    alarm_handler(0);
+    struct timeval tv;
+    struct itimerval it;
 
     memset(&tv, 0, sizeof(tv));
     memset(&it, 0, sizeof(it));
+
+    alarm_handler(0);
 
     tv.tv_sec = 1;
     it.it_value = tv;

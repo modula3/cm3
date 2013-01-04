@@ -72,9 +72,10 @@ void
 __cdecl
 setup_sigvtalrm(SignalHandler1 handler)
 {
-  struct sigaction act = { 0 }; /* (VT)ALRM signal */
-  struct sigaction oct = { 0 }; /* other signals (specifically SIGCHLD) */
+  struct sigaction act; /* (VT)ALRM signal */
+  struct sigaction oct; /* other signals (specifically SIGCHLD) */
 
+  ZERO_MEMORY(act);
   ZERO_MEMORY(oct);
   sigemptyset(&OtherSignals);
   sigaddset(&OtherSignals, SIGCHLD);
@@ -179,12 +180,12 @@ xMakeContext(
     void *stack,
     WORD_T stack_size) 
 {
-    struct sigaction sa = { 0 };
-    struct sigaction osa = { 0 };
-    stack_t ss = { 0 };
-    stack_t oss = { 0 };
-    sigset_t osigs = { 0 };
-    sigset_t sigs = { 0 };
+    struct sigaction sa;
+    struct sigaction osa;
+    stack_t ss;
+    stack_t oss;
+    sigset_t osigs;
+    sigset_t sigs;
 
     ZERO_MEMORY(sa);
     ZERO_MEMORY(osa);
@@ -332,8 +333,8 @@ int
 __cdecl
 ThreadPosix__SetVirtualTimer(void)
 {
-    struct timeval selected_interval = { 0 };
-    struct itimerval it = { 0 };
+    struct timeval selected_interval;
+    struct itimerval it;
 
     ZERO_MEMORY(selected_interval);
     ZERO_MEMORY(it);
