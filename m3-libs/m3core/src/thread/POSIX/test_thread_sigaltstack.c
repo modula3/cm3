@@ -1,3 +1,7 @@
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
 #include <assert.h>
 #include <errno.h>
 #include <setjmp.h>
@@ -65,14 +69,12 @@ xMakeContext(
     void *stack,
     size_t stack_size) 
 {
-    struct sigaction sa = { 0 };
-    struct sigaction osa = { 0 };
-    stack_t ss = { 0 };
-    stack_t oss = { 0 };
-    sigset_t osigs = { 0 };
-    sigset_t sigs = { 0 };
-
-    fprintf(stderr, "xMakeContext\n");
+    struct sigaction sa;
+    struct sigaction osa;
+    stack_t ss;
+    stack_t oss;
+    sigset_t osigs;
+    sigset_t sigs;
 
     ZERO_MEMORY(sa);
     ZERO_MEMORY(osa);
@@ -80,6 +82,8 @@ xMakeContext(
     ZERO_MEMORY(oss);
     ZERO_MEMORY(osigs);
     ZERO_MEMORY(sigs);
+
+    fprintf(stderr, "xMakeContext\n");
 
     sigemptyset(&sigs);
     sigaddset(&sigs, SIGUSR1);
@@ -129,15 +133,17 @@ MakeContext (void (*p)(void), size_t  words)
 
   if (c == NULL)
     goto Error;
-  if (size <= 0) return c;
-  if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
+  if (size <= 0)
+    goto Error;
+  if (size < MINSIGSTKSZ)
+    size = MINSIGSTKSZ;
 
   /* Round up to a whole number of pages, and
    * allocate two extra pages, one at the start
    * and one at the end, and don't allow accessing
    * either one (catch stack overflow and underflow).
    */
-  pages = (size + pagesize - 1) / pagesize + 2;
+  pages = (size + pagesize - 1) / (pagesize + 2);
   size = pages * pagesize;
   sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
   if (sp == NULL)
