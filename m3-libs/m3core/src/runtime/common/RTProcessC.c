@@ -43,7 +43,7 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
   Scheduler__DisableSwitching();
   count_used = fork_handlers.count_used;
   count_allocated = fork_handlers.count_allocated;
-  if (count_used + 1 >= count_allocated)
+  if ((count_used + 1) >= count_allocated)
   {
     size_t new_allocated = count_allocated ? (count_allocated * 3 / 2) : 16;
     p = (T*)calloc(new_allocated, sizeof(T));
