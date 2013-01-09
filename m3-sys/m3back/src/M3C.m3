@@ -39,8 +39,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
 
         typeidToType: IntRefTbl.T := NIL; (* FUTURE INTEGER => Type_t *)
-        vars: REF ARRAY OF Var_t;
-        procs: REF ARRAY OF Proc_t;
+        temp_vars: REF ARRAY OF Var_t := NIL; (* for check_* to avoid double evaluation, and pop_static_link *)
         current_block: Block_t := NIL;
     
         multipass: Multipass_t := NIL;
@@ -50,8 +49,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         debug  := 0;
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
-        pop_static_link_temp_vars : RefSeq.T := NIL;
-        pop_static_link_temp_vars_index := 0;
+        op_index: INTEGER := 0;
         
         enum_type: TEXT := NIL;
         (*enum: Enum_t := NIL;*)
@@ -1217,9 +1215,8 @@ BEGIN
     self.c := cfile;
     self.init_fields := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
     self.initializer := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
-    self.stack := NEW(RefSeq.T).init();        (* CONSIDER compute maximum depth and use an array *)
+    self.stack := NEW(RefSeq.T).init();         (* CONSIDER compute maximum depth and use an array *)
     self.params := NEW(TextSeq.T).init();       (* CONSIDER compute maximum and use an array *)
-    self.pop_static_link_temp_vars := NEW(RefSeq.T).init(); (* CONSIDER compute size -- number of pop_static_link calls *)
 (*
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
@@ -1315,10 +1312,11 @@ BEGIN
     self.Replay(NEW(Imports_t, self := x), index);
     x.comment("end pass: imports");
 
-    (* discover all locals (including temps and params) *)
+    (* discover all locals, including temps and params and check_* *)
 
     x.comment("begin pass: locals");
-    self.Replay(NEW(Locals_t, self := x), index);
+    x.temp_vars := NEW(REF ARRAY OF Var_t, NUMBER(self.data^));
+    self.Replay(NEW(Locals_t, self := x), x.op_index);
     x.comment("end pass: locals");
 
     (* segments/globals *)
@@ -1335,7 +1333,7 @@ BEGIN
 
     (* last pass *)
 
-    self.Replay(x, index);
+    self.Replay(x, x.op_index);
 END multipass_end_unit;
 
 PROCEDURE begin_unit(self: T; <*UNUSED*>optimize: INTEGER) =
@@ -1344,7 +1342,6 @@ BEGIN
     self.in_proc := FALSE;
     self.current_proc := NIL;
     self.in_proc_call := FALSE;
-    self.pop_static_link_temp_vars_index := 0;
 END begin_unit;
 
 PROCEDURE end_unit(self: T) =
@@ -1840,7 +1837,10 @@ PROCEDURE DiscoverUsedLabels(self: Multipass_t) =
 *)
 TYPE Op = M3CG_Binary.Op;
 CONST Ops = ARRAY OF Op{
-    (* operands that goto a label -- marking the label as used *)
+    (* operands that goto a label -- marking the label as used
+       Except for case_jump, these ops use one label each.
+       case_jump requires more specific analysis
+    *)
         Op.jump,
         Op.if_true,
         Op.if_false,
@@ -1853,10 +1853,14 @@ VAR x := self.self;
     index: INTEGER;
 BEGIN
     x.comment("begin pass: discover used labels");
-
+    
+    (* First estimate label count via op count.
+       This is correct, except for case_jump.
+    *)
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         INC(pass.index, self.op_counts[Ops[i]]);
     END;
+    (* Subtract off case_jump, and then count it accurately. *)
     DEC(pass.index, self.op_counts[Op.case_jump]);
     self.Replay(count_pass, index, self.op_data[Op.case_jump]);
     INC(pass.index, count_pass.count);
@@ -2342,13 +2346,13 @@ BEGIN
     HelperFunctions_helper_with_type(self, "xor", type, self.data.xor, text);
 END HelperFunctions_xor;
 
-PROCEDURE HelperFunctions_if_true(self: HelperFunctions_t; itype: IType; label: Label; frequency: Frequency) =
+PROCEDURE HelperFunctions_if_true(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
 (* IF (s0.itype # 0) GOTO label; pop *)
 BEGIN
     HelperFunctions_internal_compare(self, itype, CompareOp.NE);
 END HelperFunctions_if_true;
 
-PROCEDURE HelperFunctions_if_false(self: HelperFunctions_t; itype: IType; label: Label; frequency: Frequency) =
+PROCEDURE HelperFunctions_if_false(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
 (* IF (s0.itype = 0) GOTO label; pop *)
 BEGIN
     HelperFunctions_internal_compare(self, itype, CompareOp.EQ);
@@ -2444,7 +2448,13 @@ OVERRIDES
     declare_temp := Locals_declare_temp;
     begin_block := Locals_begin_block;   (* FUTURE: for unions in frame struct *)
     end_block := Locals_end_block;       (* FUTURE: for unions in frame struct *)
-    pop_static_link := Locals_pop_static_link; (* pop_static_link is needed because it calls declare_temp *)
+    pop_static_link := Locals_pop_static_link;  (* pop_static_link is needed because it calls declare_temp *)
+
+    check_lo := AllocateTemps_check_lo;
+    check_hi := AllocateTemps_check_hi;
+    check_index := AllocateTemps_check_index;
+    check_range := AllocateTemps_check_range;
+    check_nil := AllocateTemps_check_nil;
 END;
 
 PROCEDURE Locals_declare_param(
@@ -2483,6 +2493,53 @@ PROCEDURE Locals_declare_local(
 BEGIN
     RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency);
 END Locals_declare_local;
+
+TYPE AllocateTemps_t = Locals_t;
+
+PROCEDURE AllocateTemps_common(self: AllocateTemps_t; type: M3CG.Type) =
+VAR x := self.self;
+BEGIN
+    x.comment("AllocateTemps_common");
+    WITH t = internal_declare_temp(x, CG_Bytes[type], CG_Bytes[type], type, FALSE) DO
+        t.used := TRUE;
+        x.temp_vars[x.op_index] := t;
+    END;
+END AllocateTemps_common;
+
+PROCEDURE AllocateTemps_check_nil(self: AllocateTemps_t; <*UNUSED*>code: RuntimeError) =
+VAR x := self.self;
+BEGIN
+    x.comment("AllocateTemps_check_nil");
+    AllocateTemps_common(self, M3CG.Type.Addr);
+END AllocateTemps_check_nil;
+
+PROCEDURE AllocateTemps_check_lo(self: AllocateTemps_t; type: IType; <*UNUSED*>READONLY i: Target.Int; <*UNUSED*>code: RuntimeError) =
+VAR x := self.self;
+BEGIN
+    x.comment("AllocateTemps_check_lo");
+    AllocateTemps_common(self, type);
+END AllocateTemps_check_lo;
+
+PROCEDURE AllocateTemps_check_hi(self: AllocateTemps_t; type: IType; <*UNUSED*>READONLY i: Target.Int; <*UNUSED*>code: RuntimeError) =
+VAR x := self.self;
+BEGIN
+    x.comment("AllocateTemps_check_hi");
+    AllocateTemps_common(self, type);
+END AllocateTemps_check_hi;
+
+PROCEDURE AllocateTemps_check_range(self: AllocateTemps_t; type: IType; <*UNUSED*>READONLY low: Target.Int; <*UNUSED*>READONLY high: Target.Int; <*UNUSED*>code: RuntimeError) =
+VAR x := self.self;
+BEGIN
+    x.comment("AllocateTemps_check_range");
+    AllocateTemps_common(self, type);
+END AllocateTemps_check_range;
+
+PROCEDURE AllocateTemps_check_index(self: AllocateTemps_t; type: IType; <*UNUSED*>code: RuntimeError) =
+VAR x := self.self;
+BEGIN
+    x.comment("AllocateTemps_check_index");
+    AllocateTemps_common(self, type);
+END AllocateTemps_check_index;
 
 TYPE Imports_t = M3CG_DoNothing.T BRANDED "M3C.Imports_t" OBJECT
     self: T;
@@ -2735,8 +2792,13 @@ PROCEDURE internal_declare_local(
 VAR var := NEW(Var_t, self := self, m3cgtype := type, name := name, up_level := up_level,
                in_memory := in_memory, byte_size := byte_size, proc := self.current_proc).Init();
 BEGIN
-    self.comment("declare_local");
-    (* self.comment("declare_local " & M3ID.ToText(var.name)); *)
+    IF self.debug > 1 THEN
+        self.comment("declare_local " & M3ID.ToText(var.name));
+    ELSE
+        self.comment("declare_local");
+    END;
+    <* ASSERT self.current_proc # NIL *>
+    <* ASSERT self.current_proc.locals # NIL *>
     IF up_level THEN
         self.current_proc.uplevels := TRUE;
     END;
@@ -2908,7 +2970,7 @@ END declare_temp;
 
 PROCEDURE Locals_declare_temp(self: Locals_t; byte_size: ByteSize; alignment: Alignment; type: M3CG.Type; in_memory:BOOLEAN): M3CG.Var =
 BEGIN
-    RETURN declare_temp(self.self, byte_size, alignment, type, in_memory);
+    RETURN internal_declare_temp(self.self, byte_size, alignment, type, in_memory);
 END Locals_declare_temp;
 
 PROCEDURE free_temp(self: T; <*NOWARN*>v: M3CG.Var) =
@@ -3297,24 +3359,13 @@ BEGIN
 END declare_procedure;
 
 PROCEDURE Locals_begin_procedure(self: Locals_t; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
-    x := self.self;
 BEGIN
-    IF x.in_proc THEN (* TODO don't require this *)
-        x.Err ("Locals_begin_procedure: in_proc; C backend requires "
-            & "M3_FRONT_FLAGS = [\"-unfold_nested_procs\"] in config file");
-    END;
-    x.in_proc := TRUE;
-    x.current_proc := proc;
-    self.begin_block();
+    internal_begin_procedure(self.self, p);
 END Locals_begin_procedure;
 
-PROCEDURE Locals_end_procedure(self: Locals_t; <*UNUSED*>p: M3CG.Proc) =
-VAR x := self.self;
+PROCEDURE Locals_end_procedure(self: Locals_t; p: M3CG.Proc) =
 BEGIN
-    self.end_block();
-    x.in_proc := FALSE;
-    x.current_proc := NIL;
+    internal_end_procedure(self.self, p);
 END Locals_end_procedure;
 
 PROCEDURE Locals_begin_block(self: Locals_t) =
@@ -3337,6 +3388,32 @@ BEGIN
         proc.current_block := NIL;
     END;
 END Locals_end_block;
+
+PROCEDURE internal_begin_procedure(self: T; p: M3CG.Proc) =
+VAR proc := NARROW(p, Proc_t);
+BEGIN
+    self.comment("internal_begin_procedure");
+    IF self.in_proc THEN (* TODO don't require this *)
+        self.Err ("internal_begin_procedure: in_proc; C backend requires "
+            & "M3_FRONT_FLAGS = [\"-unfold_nested_procs\"] in config file");
+    END;
+    self.in_proc := TRUE;
+    self.current_proc := proc;
+    self.begin_block();
+    <* ASSERT proc # NIL *>
+    <* ASSERT p # NIL *>
+    <* ASSERT self.current_proc = proc *>
+END internal_begin_procedure;
+
+PROCEDURE internal_end_procedure(self: T; p: M3CG.Proc) =
+BEGIN
+    self.comment("internal_end_procedure");
+    <* ASSERT self.in_proc *>
+    <* ASSERT self.current_proc = p *>
+    self.end_block();
+    self.in_proc := FALSE;
+    self.current_proc := NIL;
+END internal_end_procedure;
 
 PROCEDURE begin_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
@@ -3573,8 +3650,7 @@ END case_jump;
 
 PROCEDURE exit_proc(self: T; type: M3CG.Type) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
-VAR s0: Expr_t := NIL;
-    proc := self.current_proc;
+VAR proc := self.current_proc;
 BEGIN
     self.comment("exit_proc");
     <* ASSERT self.in_proc *>
@@ -3591,8 +3667,7 @@ BEGIN
             print(self, "return;\n");
         END;
     ELSE
-        s0 := get(self);
-        print(self, "return " & s0.CText() & ";\n");
+        print(self, "return " & get(self).CText() & ";\n");
         pop(self);
     END;
 END exit_proc;
@@ -3645,11 +3720,16 @@ BEGIN
 END Deref;
 
 PROCEDURE follow_static_link(current_proc: Proc_t; var: Var_t): TEXT =
-VAR current_level := current_proc.level;
-    var_proc := var.proc;
+VAR current_level := 0;
+    var_proc: Proc_t := NIL;
     var_level := 0;
     static_link := "";
 BEGIN
+    <* ASSERT var # NIL *>
+    <* ASSERT current_proc # NIL *>
+    current_level := current_proc.level;
+    var_proc := var.proc;
+
     IF var_proc = NIL OR var.up_level = FALSE (*OR var.is_static_link*) THEN
         RETURN  "";
     END;
@@ -3777,7 +3857,11 @@ END IntToTarget;
 
 PROCEDURE load_host_integer(self: T; type: IType; i: INTEGER) =
 BEGIN
-    comment(self, "load_host_integer");
+    IF self.debug > 1 THEN
+        comment(self, "load_host_integer:" & Fmt.Int(i));
+    ELSE
+        comment(self, "load_host_integer");
+    END;
     self.load_integer(type, IntToTarget(self, i));
 END load_host_integer;
 
@@ -4430,40 +4514,48 @@ END abort;
 
 PROCEDURE check_nil(self: T; code: RuntimeError) =
 (* IF (s0.A = NIL) THEN abort(code) *)
-VAR s0 := get(self);
+VAR t := self.temp_vars[self.op_index];
 BEGIN
     self.comment("check_nil");
-    print(self, "if(!" & paren(s0).CText() & ")");
+    self.store(t, 0, M3CG.Type.Addr, M3CG.Type.Addr);
+    self.load(t, 0, M3CG.Type.Addr, M3CG.Type.Addr);
+    print(self, "/*check_nil*/if(!" & get(self).CText() & ")");
     reportfault(self, code);
 END check_nil;
 
 PROCEDURE check_lo(self: T; type: IType; READONLY i: Target.Int; code: RuntimeError) =
 (* IF (s0.type < i) THEN abort(code) *)
-VAR s0 := cast(get(self), type);
+VAR t := self.temp_vars[self.op_index];
 BEGIN
     self.comment("check_lo");
-    print(self, "if(" & s0.CText() & "<" & TIntLiteral(type, i) & ")");
+    self.store(t, 0, type, type);
+    self.load(t, 0, type, type);
+    print(self, "/*check_lo*/if(" & get(self).CText() & "<" & TIntLiteral(type, i) & ")");
     reportfault(self, code);
 END check_lo;
 
 PROCEDURE check_hi(self: T; type: IType; READONLY i: Target.Int; code: RuntimeError) =
 (* IF (i < s0.type) THEN abort(code) *)
-VAR s0 := cast(get(self), type);
+VAR t := self.temp_vars[self.op_index];
 BEGIN
     self.comment("check_hi");
-    print(self, "if(" & TIntLiteral(type, i) & "<" & s0.CText() & ")");
+    self.store(t, 0, type, type);
+    self.load(t, 0, type, type);
+    print(self, "/*check_hi*/if(" & TIntLiteral(type, i) & "<" & get(self).CText() & ")");
     reportfault(self, code);
 END check_hi;
 
 PROCEDURE check_range(self: T; type: IType; READONLY low, high: Target.Int; code: RuntimeError) =
 (* IF (s0.type < low) OR (high < s0.type) THEN abort(code) *)
 (* TODO capture into temporaries. *)
-VAR s0 := cast(get(self), type);
+VAR t := self.temp_vars[self.op_index];
     low_expr := CTextToExpr(TIntLiteral(type, low));
     high_expr := CTextToExpr(TIntLiteral(type, high));
 BEGIN
     self.comment("check_range");
-    print(self, "if(m3_check_range_" & typeToText[type] & "(" & s0.CText() & "," & low_expr.CText() & "," & high_expr.CText() & "))");
+    self.store(t, 0, type, type);
+    self.load(t, 0, type, type);
+    print(self, "if(m3_check_range_" & typeToText[type] & "(" & get(self).CText() & "," & low_expr.CText() & "," & high_expr.CText() & "))");
     reportfault(self, code);
 END check_range;
 
@@ -4474,13 +4566,21 @@ PROCEDURE check_index(self: T; type: IType; code: RuntimeError) =
    pop
    s0.type is guaranteed to be positive so the unsigned
    check (s0.W <= s1.W) is sufficient. *)
-VAR s0 := cast(get(self, 0), Target.Word.cg_type);
-    s1 := cast(get(self, 1), Target.Word.cg_type);
+VAR s0: Expr_t;
+    s1: Expr_t;
+    t := self.temp_vars[self.op_index];
 BEGIN
     self.comment("check_index");
     <* ASSERT type = Target.Integer.cg_type *>
     (* ASSERT (NOT s0.is_const) OR TInt.GE(s0.int_value, TInt.Zero) *)
-    print(self, "if(" & s0.CText() & "<=" & s1.CText() & ")");
+    
+    self.swap(type, type);
+    self.store(t, 0, type, type);
+    self.load(t, 0, type, type);
+    self.swap(type, type);
+    s0 := cast(get(self, 0), Target.Word.cg_type);
+    s1 := cast(get(self, 1), Target.Word.cg_type);
+    print(self, "/*check_index*/if(" & s0.CText() & "<=" & s1.CText() & ")");
     reportfault(self, code);
     pop(self);
 END check_index;
@@ -4488,13 +4588,14 @@ END check_index;
 PROCEDURE check_eq(self: T; type: IType; code: RuntimeError) =
 (* IF (s0.type # s1.type) THEN
      abort(code);
-     Pop (2) *)
+   Pop (2) *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
     self.comment("check_eq");
-    print(self, "if(" & s0.CText() & "!=" & s1.CText() & ")");
+    print(self, "/*check_eq*/if(" & s0.CText() & "!=" & s1.CText() & ")");
     reportfault(self, code);
+    pop(self, 2);
 END check_eq;
 
 PROCEDURE reportfault(self: T; code: RuntimeError) =
@@ -4591,10 +4692,9 @@ BEGIN
 END pop_struct;
 
 PROCEDURE pop_static_link(self: T) =
-VAR var := self.pop_static_link_temp_vars.get(self.pop_static_link_temp_vars_index);
+VAR var := self.temp_vars[self.op_index];
 BEGIN
     self.comment("pop_static_link");
-    INC(self.pop_static_link_temp_vars_index);
     <* ASSERT self.in_proc_call *>
     self.static_link := var;
     self.store(var, 0, M3CG.Type.Addr, M3CG.Type.Addr);
@@ -4604,8 +4704,9 @@ PROCEDURE Locals_pop_static_link(self: Locals_t) =
 VAR x := self.self;
     var := internal_declare_temp(x, CG_Bytes[M3CG.Type.Addr], CG_Bytes[M3CG.Type.Addr], M3CG.Type.Addr, FALSE);
 BEGIN
+    <* ASSERT x.temp_vars # NIL *>
+    x.temp_vars[x.op_index] := var;
     var.used := TRUE;
-    x.pop_static_link_temp_vars.addhi(var);
 END Locals_pop_static_link;
 
 PROCEDURE call_helper(self: T; type: M3CG.Type; proc: TEXT) =
