@@ -13,6 +13,11 @@ FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 
+(* comparison is always false due to limited range of data type *)
+VAR AvoidGccTypeRangeWarnings := TRUE;
+
+VAR CaseDefaultAssertFalse := FALSE;
+
 (* Taken together, these help debugging, as you get more lines in the
    C and the error messages reference C line numbers *)
   CONST output_line_directives = TRUE;
@@ -1268,7 +1273,7 @@ END set_error_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
-PROCEDURE Prefix_Start(self: T) =
+PROCEDURE Prefix_Start(self: T; multipass: Multipass_t) =
 BEGIN
     self.comment("begin unit");
     self.comment("M3_TARGET = ", Target.System_name);
@@ -1279,6 +1284,11 @@ BEGIN
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
     self.RTHooks_AssertFailed_id := M3ID.Add("RTHooks__AssertFailed");
     SuppressLineDirective(self, 1, "begin_unit");
+    IF NUMBER(multipass.op_data[M3CG_Binary.Op.case_jump]^) > 0 THEN
+        IF CaseDefaultAssertFalse THEN
+            print(self, "#include <assert.h>\n");
+        END;
+    END;
     FOR i := FIRST(Prefix) TO LAST(Prefix) DO
         print(self, Prefix[i] & "\n");
     END;
@@ -1301,7 +1311,7 @@ BEGIN
     M3CG_MultiPass.end_unit(self); (* let M3CG_MultiPass do its usual last step *)
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.begin_unit]);
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.set_error_handler]);
-    Prefix_Start(x);
+    Prefix_Start(x, self);
     HelperFunctions(self);
     GetStructSizes(self);
     Prefix_End(x);
@@ -3206,11 +3216,11 @@ VAR ok1 := TRUE;
 BEGIN
     CASE type OF
         | M3CG.Type.Int8   => ok1 := TInt.GE(i, TInt.Min8 );
-                              ok2 := TInt.LE(i, (*TInt*)TWord.Max8);
+                              (*ok2 := TInt.LE(i, TInt.Max8);*)
         | M3CG.Type.Int16  => ok1 := TInt.GE(i, TInt.Min16);
-                              ok2 := TWord.LE(i, (*TInt*)TWord.Max16);
+                              (*ok2 := TInt.LE(i, TInt.Max16);*)
         | M3CG.Type.Int32  => ok1 := TInt.GE(i, TInt.Min32);
-                              ok2 := TInt.LE(i, TInt.Max32);
+                              (*ok2 := TInt.LE(i, TInt.Max32);*)
         | M3CG.Type.Int64  => ok1 := TInt.GE(i, TInt.Min64);
                               ok2 := TInt.LE(i, TInt.Max64);
         | M3CG.Type.Word8  => ok1 := TWord.LE(i, TWord.Max8);
@@ -3224,7 +3234,6 @@ BEGIN
     END;
     IF NOT ok1 OR NOT ok2 THEN
         RTIO.PutText("TIntLiteral:type=" & typeToText[type]
-                     & " i=" & TInt.ToText(i)
                      & " i=" & TInt.ToText(i)
                      & " ok1=" & BoolToText[ok1]
                      & " ok2=" & BoolToText[ok2] & "\n"
@@ -3640,7 +3649,11 @@ PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("case_jump");
-    print(self, "switch(" & s0.CText() & "){");
+    IF CaseDefaultAssertFalse THEN
+        print(self, "switch(" & s0.CText() & "){\ndefault:assert(!\"case_jump hit default\");\n");
+    ELSE
+        print(self, "switch(" & s0.CText() & "){");
+    END;
     FOR i := FIRST(labels) TO LAST(labels) DO
         print(self, "case " & IntToDec(i) & ":goto L" & LabelToText(labels[i]) & ";\n");
     END;
@@ -4029,9 +4042,6 @@ BEGIN
     expr.minmax := typeMinMax[type];
     push(self, type, expr);
 END op2;
-
-(* comparison is always false due to limited range of data type *)
-VAR AvoidGccTypeRangeWarnings := TRUE;
 
 PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) =
 (* s1.itype := (s1.ztype op s0.ztype); pop *)
