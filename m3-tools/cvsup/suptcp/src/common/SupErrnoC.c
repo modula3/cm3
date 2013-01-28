@@ -2,11 +2,12 @@
  * Helper functions for accessing standard C's "errno" value.
  */
 
-#if defined(__INTERIX) && !defined(_REENTRANT)
-#define _REENTRANT
-#endif
-
+#include "m3core.h"
 #include <errno.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int
 SupErrno_GetErrno(void)
@@ -19,3 +20,7 @@ SupErrno_SetErrno(int e)
 {
     errno = e;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
