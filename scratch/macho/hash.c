@@ -39,7 +39,7 @@ void* hashtable_entry_getkey(hashtable_t* t, hashtable_entry_t* e)
 
 void* hashtable_entry_getvalue(hashtable_t* t, hashtable_entry_t* e)
 {
-    return (e && t->value_size) ? (t->key_size + (char*)e) : 0;
+    return (e && t->value_size) ? (t->key_size + (char*)(1 + e)) : 0;
 }
 
 struct hashtable_t
