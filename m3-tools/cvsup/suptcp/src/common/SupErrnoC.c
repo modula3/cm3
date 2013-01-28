@@ -10,12 +10,14 @@ extern "C" {
 #endif
 
 int
+__cdecl
 SupErrno_GetErrno(void)
 {
     return errno;
 }
 
 void
+__cdecl
 SupErrno_SetErrno(int e)
 {
     errno = e;
