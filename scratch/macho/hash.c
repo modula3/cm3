@@ -116,20 +116,20 @@ int hashtable_add(hashtable_t* table, void* key, void* value)
   hashtable_lookup(&lookup);
   if (entry = lookup.entry)
   {
-    memcpy(hashtable_entry_getvalue(table, entry), value, table->value_size);
+    memmove(hashtable_entry_getvalue(table, entry), value, table->value_size);
     return 0;
   }
   entry = (hashtable_entry_t*)calloc(1, table->key_size + table->value_size + sizeof(hashtable_entry_t));
   if (!entry)
     return -1;
-  memcpy(hashtable_entry_getkey(table, entry), key, table->key_size);
-  memcpy(hashtable_entry_getvalue(table, entry), value, table->value_size);
+  memmove(hashtable_entry_getkey(table, entry), key, table->key_size);
+  memmove(hashtable_entry_getvalue(table, entry), value, table->value_size);
   entry->next = lookup.bucket;
   entry->hashcode = lookup.hashcode;
   table->buckets[lookup.bucket_index] = entry;
   table->entry_count += 1;
   hashtable_rebucket(table);
-  return 0;
+  return 1;
 }
 
 void hashtable_remove(hashtable_t* table, void* key)
