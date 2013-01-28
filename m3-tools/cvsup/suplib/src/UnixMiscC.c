@@ -32,23 +32,28 @@
  * that it's easier to use C.
  */
 
-#include <signal.h>
-#include <string.h>
+#include "m3core.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef void (*Handler)(int);
-typedef void (*PosixHandler)();
 
 /*
  * Set a signal handler, ensuring that SIGVTALRM (and hence thread
  * scheduling) will be blocked when the handler is executing.
  */
 Handler
+__cdecl
 UnixMiscSignal(int sig, Handler func)
 {
-    struct sigaction sa, osa;
+    struct sigaction sa = { 0 };
+    struct sigaction osa = { 0 };
 
-    memset(&sa, 0, sizeof sa);
-    sa.sa_handler = func != NULL ? (PosixHandler)func : SIG_DFL;
+    memset(&sa, 0, sizeof(sa));
+    memset(&osa, 0, sizeof(osa));
+    sa.sa_handler = func != NULL ? (Handler)func : SIG_DFL;
     sigemptyset(&sa.sa_mask);
 #ifdef SIGVTALRM
     sigaddset(&sa.sa_mask, SIGVTALRM);
@@ -65,9 +70,15 @@ UnixMiscSignal(int sig, Handler func)
  * Find out whether a signal is currently ignored.
  */
 int
+__cdecl
 UnixMiscSigIsIgnored(int sig)
 {
-    struct sigaction osa;
+    struct sigaction osa = { 0 };
 
+    memset(&osa, 0, sizeof(osa));
     return sigaction(sig, NULL, &osa) == -1 || osa.sa_handler == SIG_IGN;
 }
+
+#ifdef __cplusplus
+} /* extern C */
+#endif
