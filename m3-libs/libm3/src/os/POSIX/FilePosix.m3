@@ -265,28 +265,37 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
 (*-------------------------Support procedures--------------------------------*)
 
 VAR
+  null_mutex := NEW(MUTEX);
   null_done := FALSE;
-  null_stat: Ustat.struct_stat;
+  null_rdev: Utypes.dev_t;
   null_fd: INTEGER;
 
-PROCEDURE IsDevNull(READONLY statbuf: Ustat.struct_stat): BOOLEAN RAISES {} =
+PROCEDURE IsDevNull_init() =
   VAR result: INTEGER;
+      null_stat: Ustat.struct_stat;
   BEGIN
-    IF NOT null_done THEN
+    IF null_done THEN RETURN END;
+    LOCK null_mutex DO
+      IF null_done THEN RETURN END;
       null_fd := Unix.open(M3toC.FlatTtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
       IF null_fd < 0 THEN
         null_done := TRUE;
-        RETURN FALSE
-      ELSE
-        result := Ustat.fstat(null_fd, ADR(null_stat));
-        EVAL Unix.close(null_fd);
-        IF result # 0 THEN
-          null_fd := -1
-        END
+        RETURN;
+      END;
+      result := Ustat.fstat(null_fd, ADR(null_stat));
+      null_rdev := null_stat.st_rdev;
+      EVAL Unix.close(null_fd);
+      IF result # 0 THEN
+        null_fd := -1;
       END;
       null_done := TRUE;
     END;
-    RETURN null_fd >= 0 AND statbuf.st_rdev = null_stat.st_rdev
+  END IsDevNull_init;
+
+PROCEDURE IsDevNull(READONLY statbuf: Ustat.struct_stat): BOOLEAN RAISES {} =
+  BEGIN
+    IF NOT null_done THEN IsDevNull_init(); END;
+    RETURN null_fd >= 0 AND statbuf.st_rdev = null_rdev
   END IsDevNull;
 
 EXCEPTION IllegalDirection;
