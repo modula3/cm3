@@ -6,7 +6,7 @@
 
 MODULE M3Backend;
 
-IMPORT Wr, Thread;
+IMPORT Wr, Thread, M3C;
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
 IMPORT M3CG_BinWr;
 FROM Target IMPORT M3BackendMode_t, BackendIntegrated;
@@ -20,6 +20,9 @@ VAR
 
 PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t): M3CG.T =
   BEGIN
+    IF backend_mode = M3BackendMode_t.C THEN
+      RETURN M3C.New (target);
+    END;
     IF NOT BackendIntegrated[backend_mode] THEN
       RETURN M3CG_BinWr.New (target);
     END;

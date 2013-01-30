@@ -138,7 +138,8 @@ TYPE
     IntegratedObject,   (* "0"  -- don't call m3_backend, M3CG produces object code *)
     IntegratedAssembly, (* "1"  -- don't call m3_backend, M3CG produces assembly code *)
     ExternalObject,     (* "2"  -- call m3_backend, it produces object code *)
-    ExternalAssembly    (* "3"  -- call m3_backend, it produces assembly code *)
+    ExternalAssembly,   (* "3"  -- call m3_backend, it produces assembly code *)
+    C                   (*      -- don't call m3_backend, call compile_c, M3CG produces C *)
   };
 
 CONST
@@ -146,10 +147,11 @@ CONST
   { "IntegratedObject",
     "IntegratedAssembly",
     "ExternalObject",
-    "ExternalAssembly" };
+    "ExternalAssembly",
+    "C" };
 
-  BackendIntegrated = ARRAY M3BackendMode_t OF BOOLEAN { TRUE, TRUE, FALSE, FALSE };
-  BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE };
+  BackendIntegrated = ARRAY M3BackendMode_t OF BOOLEAN { TRUE, TRUE, FALSE, FALSE, TRUE };
+  (* BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE, FALSE };  *)
 
 (*-------------------------------------------------------- initialization ---*)
 

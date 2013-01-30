@@ -355,20 +355,25 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
   END Init;
 
 PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
-                                 calling_conventions: BOOLEAN) =
+                                 target_has_calling_conventions: BOOLEAN) =
   PROCEDURE New(name: TEXT; id: [0..1]): CallingConvention =
     VAR cc := NEW(CallingConvention, name := name);
     BEGIN
-      (* The external backend handles more calling convention details than the
-         integrated backend -- reversing parameter order and knowing how to
-         return structs. *)
-      IF calling_conventions THEN
+      (* This stuff seems messed up. *)
+      IF (*backend_mode = M3BackendMode_t.C OR*) target_has_calling_conventions THEN
         cc.m3cg_id            := id;
-        cc.args_left_to_right := NOT integrated;
-        cc.results_on_left    := TRUE;
-        cc.standard_structs   := NOT integrated;
       ELSE
         cc.m3cg_id            := 0;
+      END;
+      IF backend_mode = M3BackendMode_t.C THEN
+        cc.args_left_to_right := TRUE;
+        cc.results_on_left    := TRUE;
+        cc.standard_structs   := TRUE;
+      ELSIF integrated THEN
+        cc.args_left_to_right := FALSE;
+        cc.results_on_left    := TRUE;
+        cc.standard_structs   := FALSE;
+      ELSE
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := FALSE;
         cc.standard_structs   := TRUE;

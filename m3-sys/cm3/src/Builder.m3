@@ -13,7 +13,7 @@ IMPORT Msg, Arg, Utils, M3Path, M3Backend, M3Compiler;
 IMPORT Quake, QMachine, QValue, QVal, QVSeq;
 IMPORT M3Loc, M3Unit, M3Options, MxConfig;
 IMPORT QIdent;
-FROM Target IMPORT M3BackendMode_t, BackendAssembly, BackendModeStrings;
+FROM Target IMPORT M3BackendMode_t, BackendModeStrings;
 FROM M3Path IMPORT OSKind, OSKindStrings;
 IMPORT Pathname;
 IMPORT QPromise, QPromiseSeq, RefSeq;
@@ -1165,7 +1165,11 @@ PROCEDURE CompileS (s: State;  u: M3Unit.T) =
   END CompileS;
 
 PROCEDURE CompileC (s: State;  u: M3Unit.T) =
-  VAR tmpS: TEXT;
+  TYPE Mode_t = M3BackendMode_t;
+  VAR tmpS: TEXT := NIL;
+      keep := s.keep_files;
+      mode := s.m3backend_mode;
+      boot := s.bootstrap_mode;
   BEGIN
     IF (u.kind # UK.C) THEN Merge (s, u) END;
 
@@ -1175,36 +1179,37 @@ PROCEDURE CompileC (s: State;  u: M3Unit.T) =
     ELSIF NOT ObjectIsStale (u) THEN
       (* already done *)
     ELSIF (u.kind = UK.C) THEN
-      IF (s.bootstrap_mode)
+      IF boot
         THEN PullForBootstrap (u);
         ELSE RunCC (s, UnitPath (u), u.object, u.debug, u.optimize);
       END;
       Utils.NoteNewFile (u.object);
-    ELSIF s.bootstrap_mode THEN
-      CASE s.m3backend_mode OF
-      | M3BackendMode_t.IntegratedObject, M3BackendMode_t.IntegratedAssembly =>
+    ELSIF boot THEN
+      CASE mode OF
+      | Mode_t.IntegratedObject, Mode_t.IntegratedAssembly, Mode_t.C =>
           Msg.FatalError (NIL, "this compiler cannot compile .ic or .mc files");
-      | M3BackendMode_t.ExternalObject, M3BackendMode_t.ExternalAssembly =>
+      | Mode_t.ExternalObject, Mode_t.ExternalAssembly =>
           EVAL RunM3Back (s, UnitPath (u), u.object, u.debug, u.optimize);
           Utils.NoteNewFile (u.object);
       END;
     ELSE (* UK.IC or UK.MC *)
-      CASE s.m3backend_mode OF
-      | M3BackendMode_t.IntegratedObject, M3BackendMode_t.IntegratedAssembly =>
+      CASE mode OF
+      | Mode_t.IntegratedObject, Mode_t.IntegratedAssembly, Mode_t.C =>
           Msg.FatalError (NIL, "this compiler cannot compile .ic or .mc files");
-      | M3BackendMode_t.ExternalObject =>
+      | Mode_t.ExternalObject =>
           EVAL RunM3Back (s, UnitPath (u), u.object, u.debug, u.optimize);
           Utils.NoteNewFile (u.object);
-      | M3BackendMode_t.ExternalAssembly =>
+      | Mode_t.ExternalAssembly =>
           tmpS := TempSName (u);
-          IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
+          IF NOT keep THEN Utils.NoteTempFile (tmpS) END;
           IF  RunM3Back (s, UnitPath (u), tmpS, u.debug, u.optimize)
           AND RunAsm (s, tmpS, u.object) THEN
           END;
-          IF (NOT s.keep_files) THEN Utils.Remove (tmpS) END;
+          IF NOT keep THEN Utils.Remove (tmpS) END;
           Utils.NoteNewFile (u.object);
       END;
     END;
+    IF NOT keep AND tmpS # NIL THEN Utils.Remove (tmpS) END;
   END CompileC;
 
 PROCEDURE CompileH (s: State;  u: M3Unit.T) =
@@ -1266,100 +1271,124 @@ PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode =
   BEGIN LOCK utilsMu DO Utils.Remove(rp.nam) END; RETURN 0 END FulfilRP;
 
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
+  TYPE Mode_t = M3BackendMode_t;
   VAR
-    tmpC, tmpS: TEXT;
+    delC: BOOLEAN;
+    delS: BOOLEAN;
+    tmpC: TEXT := NIL;
+    tmpS: TEXT := NIL;
+    m3out: TEXT := NIL;
+    m3backOut: TEXT := NIL;
     need_merge := FALSE;
-    plan: [0..7] := ORD(s.m3backend_mode);
+    mode := s.m3backend_mode;
+    boot := s.bootstrap_mode;
+    keep := s.keep_files;
+    extern := mode = Mode_t.ExternalObject OR mode = Mode_t.ExternalAssembly;
+    asm := mode = Mode_t.IntegratedAssembly OR mode = Mode_t.ExternalAssembly;
+    C := mode = Mode_t.C;
+    delay := s.delayBackend;
   BEGIN
+    <* ASSERT mode # Mode_t.ExternalObject *>     (* nonexistant, untested *)
+    <* ASSERT mode # Mode_t.IntegratedAssembly *> (* nonexistant, untested *)
+
+(* The idea here is to push along the representation in one of a few sequences.
+    u.object is where we stop.
+    Where we stop and what sequence we take depends on the mode of the backend,
+    and if we are bootstrapping. Bootstrapping runs later phases separately.
+    Such as assembler or C compiler.
+    "tmpC" is sometimes C (foo.m3.c, foo.i3.c), sometimes binary representation
+    of m3cg for input to external backend ("foo.mc" or "foo.ic").
+    Options include:
+      IntegrateObject        : m3 => o        boot or not (NT/x86)
+      IntegrateAssembly      : m3 => asm => o (no such backends)
+      boot IntegrateAssembly : m3 => asm      (no such backends)
+      ExternalAssembly       : m3 => mc => asm => o
+      boot ExternalAssembly  : m3 => mc => asm
+      ExternalObject         : m3 => mc => o (no such backends, but can with C + m3cgcat)
+      boot ExternalObject    : m3 => mc => o (no such backends, but can with C + m3cgcat, config file would not run assembler)
+      C                      : m3 => c => o
+      boot C                 : m3 => c
+*)
     u.link_info := NIL;
     ResetExports (s, u);
-    IF (s.bootstrap_mode) THEN INC (plan, 4) END;
 
-    CASE plan OF
-    | 0,    (* -bootstrap, -m3back, -asm *)
-      4,    (* +bootstrap, -m3back, -asm *)
-      5 =>  (* +bootstrap, -m3back, +asm *)
-        IF RunM3 (s, u, u.object) THEN
-          need_merge := TRUE;
-        ELSE
-          IF (NOT s.keep_files) THEN Utils.Remove (u.object) END;
+    IF C THEN
+      tmpC := M3Unit.FileName (u) & ".c"; (* ?FUTURE: .cpp *)
+    END;
+    IF asm AND NOT boot THEN
+      tmpS := TempSName (u);
+    END;    
+    IF extern THEN
+      tmpC := TempCName (u);
+    END;
+    IF C OR extern THEN
+      m3out := tmpC;
+    END;
+
+    delC := NOT keep AND NOT (C AND boot) AND tmpC # NIL;
+    delS := NOT keep AND NOT boot AND tmpS # NIL;
+
+    IF delay THEN
+       IF delC THEN s.machine.promises.addhi(NEW(NotePromise, nam := tmpC)); END;
+       IF delS THEN s.machine.promises.addhi(NEW(NotePromise, nam := tmpS)); END;
+    ELSE
+      IF delC THEN Utils.NoteTempFile (tmpC) END;
+      IF delS THEN Utils.NoteTempFile (tmpS) END;
+    END;
+
+    IF mode = Mode_t.IntegratedObject OR (mode = Mode_t.IntegratedAssembly AND boot) THEN
+      m3out := u.object;
+    END;
+
+    IF mode = Mode_t.IntegratedAssembly AND NOT boot THEN
+      m3out := tmpS;
+    END;
+
+    IF mode = Mode_t.ExternalObject THEN
+      m3backOut := u.object;
+    END;
+
+    IF mode = Mode_t.ExternalAssembly THEN
+      IF boot THEN
+        m3backOut := u.object;
+      ELSE
+        m3backOut := tmpS;
+      END;
+    END;
+
+    IF NOT RunM3 (s, u, m3out) THEN
+      IF NOT keep THEN Utils.Remove (m3out) END;
+      Msg.FatalError (NIL, "failed compiling: ");
+    ELSE
+      IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
+        s.machine.record(TRUE);
+      END;
+      TRY
+        IF extern THEN
+          EVAL RunM3Back (s, tmpC, m3backOut, u.debug, u.optimize);
         END;
-
-    | 1 =>  (* -bootstrap, -m3back, +asm *)
-        tmpS := TempSName (u);
-        IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
-        IF RunM3 (s, u, tmpS) THEN
+        IF NOT boot AND C THEN
+          RunCC (s, tmpC, u.object, TRUE, FALSE);
+        END;
+        IF NOT boot AND asm THEN
           EVAL RunAsm (s, tmpS, u.object);
-          need_merge := TRUE;
         END;
-        IF (NOT s.keep_files) THEN Utils.Remove (tmpS) END;
+      FINALLY
+        IF s.delayBackend THEN
+          s.machine.record(FALSE);
+        END;
+        need_merge := TRUE;
+      END;
+    END;
 
-    | 2 =>  (* -bootstrap, +m3back, -asm *)
-        tmpC := TempCName (u);
-        IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
-        IF RunM3 (s, u, tmpC) THEN
-          EVAL RunM3Back (s, tmpC, u.object, u.debug, u.optimize);
-          need_merge := TRUE;
-        END;
-        IF (NOT s.keep_files) THEN Utils.Remove (tmpC) END;
+    IF delay THEN
+      IF delC THEN s.machine.promises.addhi(NEW(RemovePromise, nam := tmpC)) END; 
+      IF delS THEN s.machine.promises.addhi(NEW(RemovePromise, nam := tmpS)) END;
+    ELSE
+      IF delS THEN Utils.Remove (tmpS) END;
+      IF delC THEN Utils.Remove (tmpC) END;
+    END;
 
-
-    | 3 =>  (* -bootstrap, +m3back, +asm *)
-      IF s.delayBackend THEN
-        (* parallel/delayed version of back-end code *)
-        tmpC := TempCName (u);
-        tmpS := TempSName (u);
-        IF (NOT s.keep_files) THEN 
-          s.machine.promises.addhi(NEW(NotePromise, nam := tmpC)) 
-        END;
-        IF (NOT s.keep_files) THEN 
-          s.machine.promises.addhi(NEW(NotePromise, nam := tmpS)) 
-        END;
-
-        IF RunM3 (s, u, tmpC) THEN
-          s.machine.record(TRUE); 
-          TRY
-            IF  RunM3Back (s, tmpC, tmpS, u.debug, u.optimize)
-            AND RunAsm (s, tmpS, u.object) THEN
-            END;
-          FINALLY
-            s.machine.record(FALSE)
-          END;
-
-          need_merge := TRUE;
-        END;
-        IF (NOT s.keep_files) THEN 
-          s.machine.promises.addhi(NEW(RemovePromise, nam := tmpC)) 
-        END;
-        IF (NOT s.keep_files) THEN 
-          s.machine.promises.addhi(NEW(RemovePromise, nam := tmpS)) 
-        END;
-
-      ELSE (* NOT s.delayBackend *)
-          tmpC := TempCName (u);
-          tmpS := TempSName (u);
-          IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
-          IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
-          IF RunM3 (s, u, tmpC) THEN
-            IF  RunM3Back (s, tmpC, tmpS, u.debug, u.optimize)
-            AND RunAsm (s, tmpS, u.object) THEN
-            END;
-            need_merge := TRUE;
-          END;
-          IF (NOT s.keep_files) THEN Utils.Remove (tmpC) END;
-          IF (NOT s.keep_files) THEN Utils.Remove (tmpS) END;
-      END
-
-    | 6,    (* +bootstrap, +m3back, -asm *)
-      7 =>  (* +bootstrap, +m3back, +asm *)
-        tmpC := TempCName (u);
-        IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
-        IF RunM3 (s, u, tmpC) THEN
-          EVAL RunM3Back (s, tmpC, u.object, u.debug, u.optimize);
-          need_merge := TRUE;
-        END;
-        IF (NOT s.keep_files) THEN Utils.Remove (tmpC) END;
-    END; (* CASE plan *)
     Utils.NoteNewFile (u.object);
 
     RETURN need_merge;
@@ -2138,6 +2167,7 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
   END GenerateCMain;
 
 PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
+  TYPE Mode_t = M3BackendMode_t;
   VAR
     Main_MC  := M3Path.Join (NIL, M3Main, UK.MC);
     Main_MS  := M3Path.Join (NIL, M3Main, UK.MS);
@@ -2145,25 +2175,28 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
     init_code: TEXT := NIL;
     time_O   : INTEGER;
     time_MC  : INTEGER;
-    plan     : [0..3] := 0;
+    mode     := s.m3backend_mode;
+    keep     := s.keep_files;
   BEGIN
-    CASE s.m3backend_mode OF
-    | M3BackendMode_t.IntegratedObject =>  (* -m3back, -asm => cg produces object code *)
-        GenCGMain (s, Main_O);
-        Utils.NoteNewFile (Main_O);
+    CASE mode OF
 
-    | M3BackendMode_t.IntegratedAssembly =>  (* -m3back, +asm => cg produces assembly code *)
+    | Mode_t.C =>
+        Msg.FatalError (NIL, "use 'main_in_c' with C backend ");
+
+    | Mode_t.IntegratedObject =>  (* -m3back, -asm => cg produces object code *)
+        GenCGMain (s, Main_O);
+
+    | Mode_t.IntegratedAssembly =>  (* -m3back, +asm => cg produces assembly code *)
         (* don't mess with a file comparison, just build the stupid thing... *)
         GenCGMain (s, Main_MS);
         ETimer.Pop ();
 
         Msg.Debug ("assembling ", Main_MC, " ...", Wr.EOL);
         EVAL RunAsm (s, Main_MS, Main_O);
-        IF (NOT s.keep_files) THEN Utils.Remove (Main_MS); END;
-        Utils.NoteNewFile (Main_O);
+        IF NOT keep THEN Utils.Remove (Main_MS); END;
 
-    | M3BackendMode_t.ExternalObject,    (* +m3back, -asm => cg produces il, m3back produces object *)
-      M3BackendMode_t.ExternalAssembly =>  (* +m3back, +asm => cg produces il, m3back produces assembly *)
+    | Mode_t.ExternalObject,    (* +m3back, -asm => cg produces il, m3back produces object *)
+      Mode_t.ExternalAssembly =>  (* +m3back, +asm => cg produces il, m3back produces assembly *)
         (* check for an up-to-date Main_O *)
         time_O  := Utils.LocalModTime (Main_O);
         time_MC := Utils.LocalModTime (Main_MC);
@@ -2187,19 +2220,20 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
             Utils.Remove (Main_XX);
           END;
           Msg.Debug ("compiling ", Main_MC, " ...", Wr.EOL);
-          IF (plan = 2) THEN
+          IF mode = Mode_t.ExternalAssembly THEN
+            <* ASSERT FALSE *>
             EVAL RunM3Back (s, Main_MC, Main_O, debug := TRUE, optimize := FALSE);
           ELSE
             IF  RunM3Back (s, Main_MC, Main_MS, debug := TRUE, optimize := FALSE)
             AND RunAsm (s, Main_MS, Main_O) THEN
             END;
-            IF (NOT s.keep_files) THEN Utils.Remove (Main_MS); END;
+            IF NOT keep THEN Utils.Remove (Main_MS); END;
           END;
-          Utils.NoteNewFile (Main_O);
           Utils.NoteNewFile (Main_MC);
         END;
 
     END; (* CASE plan *)
+    Utils.NoteNewFile (Main_O);
   END GenerateCGMain;
 
 PROCEDURE GenCGMain (s: State;  object: TEXT) =
@@ -2956,9 +2990,14 @@ PROCEDURE TempSName (u: M3Unit.T): TEXT =
   END TempSName;
 
 PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
+  TYPE Mode_t = M3BackendMode_t;
   VAR ext := u.kind;
+      mode := s.m3backend_mode;
+      boot := s.bootstrap_mode;
+      asm := mode = Mode_t.IntegratedAssembly OR mode = Mode_t.ExternalAssembly;
+      C := mode = Mode_t.C;
   BEGIN
-    IF NOT s.bootstrap_mode THEN
+    IF NOT boot THEN
       (* produce object modules *)
       CASE ext OF
       | UK.I3, UK.IC, UK.IS =>  ext :=  UK.IO;
@@ -2967,8 +3006,15 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
       | UK.IO, UK.MO, UK.O  =>  RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
+      
+    ELSIF C THEN
+      CASE ext OF
+      | UK.I3, UK.M3 => RETURN M3Unit.FileName (u) & ".c"; (* ?FUTURE: .cpp *)
+      | UK.C, UK.S, UK.H    =>  (* skip *)
+      | UK.IO, UK.MO, UK.O  =>  (* skip *)
+      END;
 
-    ELSIF BackendAssembly[s.m3backend_mode] THEN
+    ELSIF asm THEN
       (* bootstrap with an assembler *)
       CASE ext OF
       | UK.I3, UK.IC, UK.IS =>  ext :=  UK.IS;

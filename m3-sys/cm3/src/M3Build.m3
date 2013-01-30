@@ -6,7 +6,7 @@ MODULE M3Build;
 IMPORT Env, IntArraySort, IntRefTbl, M3ID, Pathname, Text, TextList, Thread, Wr;
 IMPORT Quake, QValue, QCode, QMachine, QVal, QVSeq, QVTbl, M3Timers;
 IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
-FROM QMachine IMPORT PushText, PopText, PopID, PopBool;
+FROM QMachine IMPORT PushBool, PushText, PopText, PopID, PopBool;
 IMPORT MxConfig;
 IMPORT OSError, Process, Dirs, TextUtils;
 
@@ -365,6 +365,8 @@ TYPE
 
 CONST
   Builtins = ARRAY OF Builtin {
+(*------------------------------------------------- feature/version probes --*)
+    Builtin {"HasCBackend",                   HasCBackend,       0, TRUE },
     (* packages & locations *)
     Builtin {"Pkg",                           DoPkg,             1, TRUE},
     Builtin {"override",                      DoOverride,        2, FALSE},
@@ -576,6 +578,14 @@ PROCEDURE DefineArray (t: T;  nm: TEXT;  READONLY arr: ARRAY OF TEXT)
     v.ref  := seq;
     t.put (M3ID.Add (nm), v);
   END DefineArray;
+
+(*------------------------------------------------- feature/version probes --*)
+
+PROCEDURE HasCBackend (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) =
+  VAR t := Self (m);
+  BEGIN
+    PushBool (t, TRUE);
+  END HasCBackend;
 
 (*------------------------------------------------------ package locations --*)
 
