@@ -123,7 +123,6 @@ TYPE
     has_loader    : BOOLEAN;            (* gen loader info file *)
     skip_link     : BOOLEAN;            (* don't bother linking final exe *)
     keep_resolved : BOOLEAN;            (* pass resolved library names to linker *)
-    m3main_in_c   : BOOLEAN;            (* generate a C main program *)
     gui           : BOOLEAN;            (* generate a Windows GUI subsystem prog *)
     do_coverage   : BOOLEAN;            (* compile and link for coverage *)
     broken_linker : BOOLEAN;            (* linker can't do build_standalone() *)
@@ -309,7 +308,6 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.has_loader     := GetConfigBool (s, "SYS_HAS_LOADER");
     s.skip_link      := GetConfigBool (s, "M3_SKIP_LINK");
     s.keep_resolved  := NOT GetConfigBool (s, "M3_SPLIT_LIBNAMES");
-    s.m3main_in_c    := GetConfigBool (s, "M3_MAIN_IN_C");
     s.gui            := GetConfigBool (s, "M3_WINDOWS_GUI");
     s.do_coverage    := GetConfigBool (s, "M3_COVERAGE");
     s.broken_linker  := GetConfigBool (s, "M3_NEED_STANDALONE_LINKS");
@@ -2166,100 +2164,6 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
     END;
   END GenerateCMain;
 
-PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
-  TYPE Mode_t = M3BackendMode_t;
-  VAR
-    Main_MC  := M3Path.Join (NIL, M3Main, UK.MC);
-    Main_MS  := M3Path.Join (NIL, M3Main, UK.MS);
-    Main_XX  := M3Main & ".new";
-    init_code: TEXT := NIL;
-    time_O   : INTEGER;
-    time_MC  : INTEGER;
-    mode     := s.m3backend_mode;
-    keep     := s.keep_files;
-  BEGIN
-    CASE mode OF
-
-    | Mode_t.C =>
-        Msg.FatalError (NIL, "use 'main_in_c' with C backend ");
-
-    | Mode_t.IntegratedObject =>  (* -m3back, -asm => cg produces object code *)
-        GenCGMain (s, Main_O);
-
-    | Mode_t.IntegratedAssembly =>  (* -m3back, +asm => cg produces assembly code *)
-        (* don't mess with a file comparison, just build the stupid thing... *)
-        GenCGMain (s, Main_MS);
-        ETimer.Pop ();
-
-        Msg.Debug ("assembling ", Main_MC, " ...", Wr.EOL);
-        EVAL RunAsm (s, Main_MS, Main_O);
-        IF NOT keep THEN Utils.Remove (Main_MS); END;
-
-    | Mode_t.ExternalObject,    (* +m3back, -asm => cg produces il, m3back produces object *)
-      Mode_t.ExternalAssembly =>  (* +m3back, +asm => cg produces il, m3back produces assembly *)
-        (* check for an up-to-date Main_O *)
-        time_O  := Utils.LocalModTime (Main_O);
-        time_MC := Utils.LocalModTime (Main_MC);
-        IF (time_O < time_MC) OR (time_MC = Utils.NO_TIME) THEN
-          (* we must compile the linker generated code *)
-          init_code := Main_MC;
-        ELSE
-          init_code := Main_XX;
-          Utils.NoteTempFile (Main_XX);
-        END;
-
-        (* generate the intermediate code *)
-        GenCGMain (s, init_code);
-
-        IF (init_code = Main_XX) AND Utils.IsEqual (Main_XX, Main_MC) THEN
-          (* we don't need to compile! *)
-          Utils.Remove (Main_XX);
-        ELSE
-          IF (init_code = Main_XX) THEN
-            Utils.Copy (Main_XX, Main_MC);
-            Utils.Remove (Main_XX);
-          END;
-          Msg.Debug ("compiling ", Main_MC, " ...", Wr.EOL);
-          IF mode = Mode_t.ExternalAssembly THEN
-            <* ASSERT FALSE *>
-            EVAL RunM3Back (s, Main_MC, Main_O, debug := TRUE, optimize := FALSE);
-          ELSE
-            IF  RunM3Back (s, Main_MC, Main_MS, debug := TRUE, optimize := FALSE)
-            AND RunAsm (s, Main_MS, Main_O) THEN
-            END;
-            IF NOT keep THEN Utils.Remove (Main_MS); END;
-          END;
-          Utils.NoteNewFile (Main_MC);
-        END;
-
-    END; (* CASE plan *)
-    Utils.NoteNewFile (Main_O);
-  END GenerateCGMain;
-
-PROCEDURE GenCGMain (s: State;  object: TEXT) =
-  VAR
-    wr : Wr.T := NIL;
-    cg : M3CG.T := NIL;
-  BEGIN
-    ETimer.Push (M3Timers.genMain);
-    Msg.Commands ("generate ", object);
-    wr := Utils.OpenWriter (object, fatal := TRUE);
-    cg := M3Backend.Open (wr, object, s.m3backend_mode);
-    IF (cg # NIL) THEN
-      MxGen.GenerateMain (s.link_base, NIL, cg, Msg.level >= Msg.Level.Debug,
-                          (* Use of target_os needs work:
-                             NT386GNU can generate Windowed apps. *)
-                          s.gui AND (s.target_os = M3Path.OSKind.Win32),
-                          s.lazy_init);
-      M3Backend.Close(cg);
-    ELSE
-      IF (NOT s.keep_files) THEN Utils.Remove (object); END;
-      Msg.FatalError (NIL, "couldn't generate ", object);
-    END;
-    Utils.CloseWriter (wr, object);
-    ETimer.Pop ();
-  END GenCGMain;
-
 (*------------------------------------------------ compilations and links ---*)
 
 PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
@@ -2375,10 +2279,7 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
     ETimer.Pop ();
 
     (* produce the module init list & program entry point *)
-    IF s.m3main_in_c
-      THEN GenerateCMain (s, Main_O);
-      ELSE GenerateCGMain (s, Main_O);
-    END;
+    GenerateCMain (s, Main_O);
 
     IF s.has_loader THEN WriteProgramDesc (s, Desc_file, Main_O); END;
 
