@@ -16,8 +16,8 @@ if not defined("M3_PROFILING") M3_PROFILING = FALSE end
 if not defined("SL") SL = "/" end
 %-------------------------------------------------------------------
 
-if not defined("USE_C_BACKEND")
-  USE_C_BACKEND = FALSE
+if not defined("USE_C_BACKEND_VIA_M3CGCAT")
+  USE_C_BACKEND_VIA_M3CGCAT = FALSE
 end
 
 %-------------------------------------------------------------------
@@ -440,7 +440,7 @@ X11_WITH_SHARED_MEM = TRUE
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
 
-if USE_C_BACKEND
+if USE_C_BACKEND_VIA_M3CGCAT
 
 M3_BACKEND_MODE = "ExternalObject"
 
@@ -470,7 +470,7 @@ if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
         or equal(M3_BACKEND_MODE, "IntegratedAssembly")
         or equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
-        or USE_C_BACKEND
+        or USE_C_BACKEND_VIA_M3CGCAT
     M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs" ]
 else
     M3_FRONT_FLAGS = [ ]
