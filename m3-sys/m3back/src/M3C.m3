@@ -3271,9 +3271,11 @@ BEGIN
         IF ch = 'e' OR ch = 'E' THEN
             suffix := 'F';
         ELSIF ch = 'd' OR ch = 'D' THEN
+            suffix := '\000';
             ch := 'e';
         ELSIF ch = 'x' OR ch = 'X' THEN
             (* suffix := 'L'; if actually using long double *)
+            suffix := '\000';
             ch := 'e';
         END;
         cBuf[j] := ch;
