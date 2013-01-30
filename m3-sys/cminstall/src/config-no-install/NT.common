@@ -18,12 +18,15 @@ if not defined("SL") SL = "/" end
 
 %-------------------------------------------------- compilation environment ---
 
-M3_BACKEND_MODE = "0"
+if not defined("M3_BACKEND_MODE")
+  M3_BACKEND_MODE = "0"
+end
 % -- defines how the frontend, backend, and assembler interact
 %  "0"  -- don't call m3_backend, M3CG produces object code
 %  "1"  -- don't call m3_backend, M3CG produces assembly code
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
+%  "C"  -- generate C, then call C compiler
 
 %-------------------------------------------------------------------
 

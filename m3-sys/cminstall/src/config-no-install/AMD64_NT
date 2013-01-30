@@ -1,0 +1,7 @@
+readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
+readonly TARGET_ARCH = "AMD64"
+readonly WORD_SIZE = "64BITS"       % { "32BITS" or "64BITS" }
+
+M3_BACKEND_MODE = "C"
+
+include("NT.common")
