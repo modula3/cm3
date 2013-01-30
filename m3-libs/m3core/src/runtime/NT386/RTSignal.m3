@@ -101,7 +101,7 @@ PROCEDURE Raise (rte: RTE;  err, pc: INTEGER;
     f.err    := err;
     f.pc     := pc;
 
-    ctxt.Esp := LOOPHOLE (f, WinDef.DWORD);
+    ctxt.Esp := LOOPHOLE (f, INTEGER);
     ctxt.Eip := LOOPHOLE (SystemError, INTEGER);
 
     RETURN TRUE;
