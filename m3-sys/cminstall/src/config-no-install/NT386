@@ -27,7 +27,7 @@ else
     readonly PROFILING_P = ""
 end
 
-readonly BUILD_DIR    = "NT386" & PROFILING_P
+readonly BUILD_DIR = TARGET & PROFILING_P
 
 % for bootstrapping from older tools
 readonly NAMING_CONVENTIONS = "2"
