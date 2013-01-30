@@ -2,10 +2,8 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 %
-% Common parameterized configuration file for an x86 machine running Windows NT or perhaps Windows 95,
-%
-% Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95,
-% uses the integrated backend, Win32 threads, Win32 gui, Microsoft C library.
+% Common parameterized configuration file for Windows NT or perhaps Windows 95,
+%% uses the integrated backend, Win32 threads, Win32 gui, Microsoft C library.
 %
 % Most of the variables in this file are independent of each other and
 % arbitrary configurations can be produced by changing them.
@@ -19,10 +17,6 @@ if not defined("M3_PROFILING") M3_PROFILING = FALSE end
 if not defined("SL") SL = "/" end
 
 %-------------------------------------------------- compilation environment ---
-
-readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
-readonly TARGET_ARCH = "I386"
-readonly WORD_SIZE = "32BITS"       % { "32BITS" or "64BITS" }
 
 M3_BACKEND_MODE = "0"
 % -- defines how the frontend, backend, and assembler interact
