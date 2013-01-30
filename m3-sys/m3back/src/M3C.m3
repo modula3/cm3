@@ -1003,7 +1003,7 @@ CONST Prefix = ARRAY OF TEXT {
 
 CONST intLiteralPrefix = ARRAY CGType OF TEXT {
     "",  "((INT8)",
-    "", "",
+    "",  "((INT16)",
     "", "",
     "M3_UINT64(", "M3_INT64(",
     NIL, ..
@@ -1011,7 +1011,7 @@ CONST intLiteralPrefix = ARRAY CGType OF TEXT {
 
 CONST intLiteralSuffix = ARRAY CGType OF TEXT {
     "U",  ")",
-    "U", "",
+    "U",  ")",
     "U", "",
     ")", ")",
     NIL, ..
