@@ -29,13 +29,6 @@ end
 
 readonly BUILD_DIR    = "NT386" & PROFILING_P
 
-readonly M3_BACKEND_MODE = "0"
-% -- defines how the frontend, backend, and assembler interact
-%  "0"  -- don't call m3_backend, M3CG produces object code
-%  "1"  -- don't call m3_backend, M3CG produces assembly code
-%  "2"  -- call m3_backend, it produces object code
-%  "3"  -- call m3_backend, it produces assembly code
-
 % for bootstrapping from older tools
 readonly NAMING_CONVENTIONS = "2"
 

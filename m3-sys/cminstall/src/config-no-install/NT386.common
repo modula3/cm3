@@ -17,6 +17,13 @@ readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
 readonly TARGET_ARCH = "I386"
 readonly WORD_SIZE = "32BITS"       % { "32BITS" or "64BITS" }
 
+M3_BACKEND_MODE = "0"
+% -- defines how the frontend, backend, and assembler interact
+%  "0"  -- don't call m3_backend, M3CG produces object code
+%  "1"  -- don't call m3_backend, M3CG produces assembly code
+%  "2"  -- call m3_backend, it produces object code
+%  "3"  -- call m3_backend, it produces assembly code
+
 %------------------------------------------------------------------------------
 
 include("cm3cfg.common")
