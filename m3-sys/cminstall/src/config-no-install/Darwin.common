@@ -14,6 +14,12 @@ readonly TARGET_OS = "DARWIN"
 
 xxm3back_debug = "-g " % no m3gdb support
 
+if defined("HasCBackend")
+  if HasCBackend()
+    M3_BACKEND_MODE = "C"
+  end
+end
+
 proc FileExists(x) is
     return not stale(x, x)
 end
@@ -55,7 +61,10 @@ proc configure_c_compiler() is
 
   %SYSTEM_CC = "gcc -gstabs+ -fPIC"
   SYSTEM_CC = "gcc -g -fPIC"
+  %SYSTEM_CC = "g++ -g -fPIC"
+  %SYSTEM_CC = "gcc -g -fPIC -Wall -Werror -Wno-return-type"
   SYSTEM_CC_ASM = "gcc -fPIC"
+  %SYSTEM_CC_ASM = "g++ -fPIC"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
   if not equal(try_exec("@" & SYSTEM_CC & m & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
