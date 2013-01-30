@@ -3012,6 +3012,7 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
       | UK.I3, UK.M3 => RETURN M3Unit.FileName (u) & ".c"; (* ?FUTURE: .cpp *)
       | UK.C, UK.S, UK.H    =>  (* skip *)
       | UK.IO, UK.MO, UK.O  =>  (* skip *)
+      ELSE RETURN NIL;
       END;
 
     ELSIF asm THEN
