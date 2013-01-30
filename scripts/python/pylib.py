@@ -354,7 +354,7 @@ def _GetAllTargets():
 
 #-----------------------------------------------------------------------------
 
-_PossibleCm3Flags = ["boot", "keep", "override", "commands"]
+_PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc"] + _SkipGccFlags + _PossibleCm3Flags
 
@@ -1050,6 +1050,8 @@ def Boot():
     vms = StringTagged(Config, "VMS")
     
     # pick the compiler
+    
+    c = "c" in sys.argv
 
     if Config == "ALPHA32_VMS":
         CCompiler = "cc"
@@ -1092,7 +1094,15 @@ def Boot():
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
 
-    Link = "$(CC) $(CFLAGS) *.mo *.io *.o "
+    if Config.endswith("_NT") or Config == "NT386":
+        obj = "obj"
+    else:
+        obj = "o"
+
+    if c:
+        Link = "$(CC) $(CFLAGS) *." + obj + " "
+    else:
+        Link = "$(CC) $(CFLAGS) *.mo *.io *." + obj + " "
 
     # link flags
     
@@ -1162,7 +1172,7 @@ def Boot():
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
-        "I386_SOLARIS"      : " -Qy -s",
+        "I386_SOLARIS"      : " -Qy -s ",
         "AMD64_SOLARIS"     : " -Qy -s        -xarch=generic64 ",
         "SOLgnu"            : " -Qy -s -K PIC -xarch=v8plus ", # Sun assembler
         "SOLsun"            : " -Qy -s -K PIC -xarch=v8plus ",
@@ -1220,9 +1230,11 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
 
-    Makefile.write(".SUFFIXES:\n"
-                   + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo\n\n"
-                   + "all: cm3\n\n"
+    if not c:
+        Makefile.write(".SUFFIXES:\n"
+                       + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo\n\n")
+
+    Makefile.write("all: cm3\n\n"
                    + "clean:\n"
                    + "\trm -rf *.io *.mo *.o *.obj\n\n")
 
@@ -1234,32 +1246,35 @@ def Boot():
     for a in [Makefile]:
         a.write("# edit up here\n\n"
                 + "CC=" + CCompiler + "\n"
-                + "CFLAGS=" + CCompilerFlags + "\n"
-                + "Compile=" + Compile + "\n"
-                + "Assemble=" + Assembler + " " + AssemblerFlags + "\n"
-                + "Link=" + Link + "\n"
+                + "CFLAGS=" + CCompilerFlags + "\n")
+        if not c:
+            a.write("Compile=" + Compile + "\n"
+                    + "Assemble=" + Assembler + " " + AssemblerFlags + "\n")
+        a.write("Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
     for a in [Make]:
         a.write("# edit up here\n\n"
                 + "CC=${CC:-" + CCompiler + "}\n"
                 + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
-                + "Compile=" + Compile + "\n"
-                + "Assemble=" + Assembler + " " + AssemblerFlags + "\n"
-                + "Link=" + Link + "\n"
+                + "Compile=" + Compile + "\n")
+        if not c:
+            a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
+        a.write("Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, Config)):
             ext_c = a.endswith(".c")
+            ext_cpp = a.endswith(".cpp")
             ext_h = a.endswith(".h")
             ext_s = a.endswith(".s")
             ext_ms = a.endswith(".ms")
             ext_is = a.endswith(".is")
             ext_io = a.endswith(".io")
             ext_mo = a.endswith(".mo")
-            if not (ext_c or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
+            if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             fullpath = os.path.join(Root, dir, Config, a)
             if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
@@ -1282,16 +1297,17 @@ def Boot():
                     VmsMake.write("$ " + Assembler + " " + a + "\n")                    
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
-    Makefile.write(".c.o:\n"
-                   + "\t$(Compile) -o $@ $<\n\n"
-                   + ".c.obj:\n"
-                   + "\t$(Compile) -o $@ $<\n\n"
-                   + ".is.io:\n"
-                   + "\t$(Assemble) -o $@ $<\n\n"
-                   + ".s.o:\n"
-                   + "\t$(Assemble) -o $@ $<\n\n"
-                   + ".ms.mo:\n"
-                   + "\t$(Assemble) -o $@ $<\n\n")
+    if not c:
+        Makefile.write(".c.o:\n"
+                       + "\t$(Compile) -o $@ $<\n\n"
+                       + ".c.obj:\n"
+                       + "\t$(Compile) -o $@ $<\n\n"
+                       + ".is.io:\n"
+                       + "\t$(Assemble) -o $@ $<\n\n"
+                       + ".s.o:\n"
+                       + "\t$(Assemble) -o $@ $<\n\n"
+                       + ".ms.mo:\n"
+                       + "\t$(Assemble) -o $@ $<\n\n")
 
     Makefile.write("cm3:")
     Objects = Objects.keys()
