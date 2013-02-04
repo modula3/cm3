@@ -56,7 +56,7 @@ PROCEDURE Create (reliable: BOOLEAN): T
     Map = ARRAY BOOLEAN OF INTEGER { SOCK_DGRAM, SOCK_STREAM };
   VAR
     t    := NEW (T, handle := NIL, ds := FileWin32.ReadWrite);
-    True := 1;
+    True : BOOL := 1;
   BEGIN
     IF NOT init_done THEN Init (); END;
     t.sock := socket (AF_INET, Map[reliable], 0);
@@ -172,8 +172,8 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
   RAISES {OSError.E} =
   VAR
     name  : SockAddrIn;
-    nmLen : INTEGER;
-    len   : INTEGER;
+    nmLen : int;
+    len   : int;
     p_b   : ADDRESS := ADR (b[0]);
   BEGIN
     IF (NOT mayBlock) AND (BytesAvailable (t) <= 0) THEN RETURN -1; END;
@@ -280,7 +280,7 @@ PROCEDURE Peek (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     name : SockAddrIn;
-    len  : INTEGER     := BYTESIZE (name);
+    len  : int := BYTESIZE (name);
     ep   : EndPoint;
   BEGIN
     IF recvfrom (t.sock, NIL, 0, MSG_PEEK,
@@ -295,7 +295,7 @@ PROCEDURE ThisEnd (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     name : SockAddrIn;
-    len  : INTEGER     := BYTESIZE (name);
+    len  : int := BYTESIZE (name);
   BEGIN
     IF t.ep.addr = NullAddress THEN
       t.ep.addr := GetHostAddr ();
@@ -393,7 +393,7 @@ PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint
 PROCEDURE InitSock (sock: SOCKET) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one := 1;
+    one: int := 1;
     linger := struct_linger{0, 0};
   BEGIN
     EVAL setsockopt (sock, SOL_SOCKET, SO_LINGER,
