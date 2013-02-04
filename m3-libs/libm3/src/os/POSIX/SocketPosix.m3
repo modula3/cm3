@@ -55,7 +55,7 @@ PROCEDURE Create (reliable: BOOLEAN): T
   VAR
     (*CONST*) Map := ARRAY BOOLEAN OF INTEGER { SOCK_DGRAM, SOCK_STREAM };
     t    := NEW (T, ds := FilePosix.ReadWrite);
-    True := 1;
+    True : int := 1;
   BEGIN
     t.fd := socket (AF_INET, Map[reliable], 0);
     IF t.fd = -1 THEN
