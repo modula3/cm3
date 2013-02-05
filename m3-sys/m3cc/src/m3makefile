@@ -411,6 +411,7 @@ if (stale(build_dir & "/clean_marker.txt", "../src/clean_marker.txt") or defined
   end
   foreach a in fs_lsdirs (build_dir, FALSE)
     write("rm -rf ", a, CR)
+    exec("rm -rf " & a)
     fs_rmrec(a)
   end
   cp_if("../src/clean_marker.txt", build_dir & "/clean_marker.txt")
