@@ -35,9 +35,8 @@ TYPE
 TYPE 
   Port     = [0..65535];
   AddressType = {IPv4, IPv6};
-  AddressIPv4  = RECORD a: ARRAY [0..0] OF uint32_t; END;
-  AddressIPv6  = RECORD a: ARRAY [0..3] OF uint32_t; END;
-  Address = RECORD type: AddressType; ipv4: AddressIPv4; ipv6: AddressIPv6 END;
+  (* IPv4 is 32 bits; IPv6 is 128 bits; first uint32_t is IPv4 *)
+  Address = RECORD type: AddressType; a: ARRAY [0..3] OF uint32_t; END;
   EndPoint = RECORD addr: Address;  port: Port;  END;
   (* The type "Address" is an IP address in network byte order.
      The type "Port" is an IP port number in host byte order.
@@ -45,9 +44,7 @@ TYPE
 
 CONST 
   NullPort     : Port     = 0;
-  NullAddressIPv4  = AddressIPv4 {a := ARRAY [0..0] OF uint32_t {0}};
-  NullAddressIPv6  = AddressIPv6 {a := ARRAY [0..3] OF uint32_t {0,0,0,0}};
-  NullAddress  = Address {AddressType.IPv4, NullAddressIPv4, NullAddressIPv6};
+  NullAddress  = Address {AddressType.IPv4, ARRAY [0..3] OF uint32_t {0,0,0,0}};
   NullEndPoint = EndPoint {NullAddress, NullPort};
 
 VAR (*CONST*) FileType: File.Type;

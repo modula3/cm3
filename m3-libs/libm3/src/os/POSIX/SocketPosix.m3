@@ -8,7 +8,6 @@ IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread;
 IMPORT Uuio, Ustat, Word;
 FROM Cerrno IMPORT GetErrno;
 FROM Unetdb IMPORT struct_hostent, struct_hostent_star, gethostbyname;
-FROM Utypes IMPORT u_int;
 FROM Ctypes IMPORT int, char, char_star;
 FROM Usocket IMPORT accept, AF_INET, bind, connect, getpeername, getsockname,
                     getsockopt, listen, MSG_PEEK, recvfrom, sendto, setsockopt,
@@ -405,7 +404,7 @@ PROCEDURE GetHostAddr (): Address
 
     ua := LOOPHOLE(info.h_addr_list,
                    UNTRACED REF UNTRACED REF struct_in_addr)^^;
-    address.ipv4 := LOOPHOLE(ua.s_addr, AddressIPv4);
+    address.a[0] := ua.s_addr;
     RETURN address;
   END GetHostAddr;
 
@@ -436,13 +435,13 @@ PROCEDURE EndPointToAddress (READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn
   BEGIN
     name.sin_family      := AF_INET;
     name.sin_port        := htons (ep.port);
-    name.sin_addr.s_addr := LOOPHOLE (ep.addr.ipv4, u_int);
+    name.sin_addr.s_addr := ep.addr.a[0];
     name.sin_zero        := Sin_Zero;
   END EndPointToAddress;
 
 PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint) =
   BEGIN
-    ep.addr.ipv4 := LOOPHOLE (name.sin_addr.s_addr, AddressIPv4);
+    ep.addr.a[0] := name.sin_addr.s_addr;
     ep.port := ntohs (name.sin_port);
   END AddressToEndPoint;
 
