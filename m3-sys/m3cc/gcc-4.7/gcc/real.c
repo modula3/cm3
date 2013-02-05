@@ -2085,20 +2085,6 @@ real_from_string2 (const char *s, enum machine_mode mode)
   return r;
 }
 
-/* Initialize R from string S and desired MODE. */
-
-void
-real_from_string3 (REAL_VALUE_TYPE *r, const char *s, enum machine_mode mode)
-{
-  if (DECIMAL_FLOAT_MODE_P (mode))
-    decimal_real_from_string (r, s);
-  else
-    real_from_string (r, s);
-
-  if (mode != VOIDmode)
-    real_convert (r, mode, r);
-}
-
 /* Initialize R from the integer pair HIGH+LOW.  */
 
 void

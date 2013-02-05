@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Decimal floating point support functions for GNU compiler.
    Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
@@ -32,7 +34,6 @@ void encode_decimal128 (const struct real_format *fmt, long *, const REAL_VALUE_
 
 /* Arithmetic and conversion functions.  */
 int  decimal_do_compare (const REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *, int);
-void decimal_real_from_string (REAL_VALUE_TYPE *, const char *);
 void decimal_round_for_format (const struct real_format *, REAL_VALUE_TYPE *);
 void decimal_real_convert (REAL_VALUE_TYPE *, enum machine_mode, const REAL_VALUE_TYPE *);
 void decimal_real_to_decimal (char *, const REAL_VALUE_TYPE *, size_t, size_t, int);

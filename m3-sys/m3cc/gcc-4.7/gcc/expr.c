@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Convert tree expression to rtl instructions, for GNU compiler.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
@@ -872,7 +874,7 @@ move_by_pieces (rtx to, rtx from, unsigned HOST_WIDE_INT len,
     = targetm.addr_space.address_mode (MEM_ADDR_SPACE (from));
   rtx to_addr, from_addr = XEXP (from, 0);
   unsigned int max_size = MOVE_MAX_PIECES + 1;
-  enum insn_code icode;
+  enum insn_code icode = (enum insn_code)0;
 
   align = MIN (to ? MEM_ALIGN (to) : align, MEM_ALIGN (from));
 
@@ -2367,7 +2369,7 @@ can_store_by_pieces (unsigned HOST_WIDE_INT len,
   unsigned int max_size;
   HOST_WIDE_INT offset = 0;
   enum machine_mode mode;
-  enum insn_code icode;
+  enum insn_code icode = (enum insn_code)0;
   int reverse;
   /* cst is set but not used if LEGITIMATE_CONSTANT doesn't use it.  */
   rtx cst ATTRIBUTE_UNUSED;
@@ -2534,7 +2536,7 @@ store_by_pieces_1 (struct store_by_pieces_d *data ATTRIBUTE_UNUSED,
     = targetm.addr_space.address_mode (MEM_ADDR_SPACE (data->to));
   rtx to_addr = XEXP (data->to, 0);
   unsigned int max_size = STORE_MAX_PIECES + 1;
-  enum insn_code icode;
+  enum insn_code icode = (enum insn_code)0;
 
   data->offset = 0;
   data->to_addr = to_addr;
@@ -3821,7 +3823,7 @@ emit_single_push_insn_1 (enum machine_mode mode, rtx x, tree type)
   rtx dest_addr;
   unsigned rounded_size = PUSH_ROUNDING (GET_MODE_SIZE (mode));
   rtx dest;
-  enum insn_code icode;
+  enum insn_code icode = (enum insn_code)0;
 
   stack_pointer_delta += PUSH_ROUNDING (GET_MODE_SIZE (mode));
   /* If there is push pattern, use it.  Otherwise try old way of throwing
@@ -4550,7 +4552,7 @@ expand_assignment (tree to, tree from, bool nontemporal)
   rtx result;
   enum machine_mode mode;
   unsigned int align;
-  enum insn_code icode;
+  enum insn_code icode = (enum insn_code)0;
 
   /* Don't crash if the lhs of the assignment was erroneous.  */
   if (TREE_CODE (to) == ERROR_MARK)
@@ -9330,7 +9332,7 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
 	addr_space_t as
 	  = TYPE_ADDR_SPACE (TREE_TYPE (TREE_TYPE (TREE_OPERAND (exp, 0))));
 	struct mem_address addr;
-	enum insn_code icode;
+	enum insn_code icode = (enum insn_code)0;
 	unsigned int align;
 
 	get_address_description (exp, &addr);
@@ -9367,7 +9369,7 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
 	enum machine_mode address_mode;
 	tree base = TREE_OPERAND (exp, 0);
 	gimple def_stmt;
-	enum insn_code icode;
+	enum insn_code icode = (enum insn_code)0;
 	unsigned align;
 	/* Handle expansion of non-aliased memory with non-BLKmode.  That
 	   might end up in a register.  */
@@ -10111,7 +10113,7 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
 	 results.  */
       if (MEM_P (op0))
 	{
-	  enum insn_code icode;
+	  enum insn_code icode = (enum insn_code)0;
 
 	  op0 = copy_rtx (op0);
 
