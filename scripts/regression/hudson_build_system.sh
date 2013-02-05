@@ -29,6 +29,7 @@ cd ${WS}/cm3/scripts/regression || {
   exit 1
 }
 
+echo 1 $CM3CG is ${CM3CG}
 if [ -z "${CM3CG}" ]; then
   case "${WS}" in
     *workspace)
@@ -39,6 +40,8 @@ if [ -z "${CM3CG}" ]; then
     ;;
   esac
 fi
+echo 2 $CM3CG is ${CM3CG}
+
 if [ "x$CLEAN" = "xfalse" ]; then
   if [ "x$USE_PREBUILT_CM3CG" = "xtrue" ]; then
     if [ -x "${CM3CG}" ]; then
@@ -63,10 +66,12 @@ fi
   rm -f "${WS}/cm3/scripts/PKGS"
 }
 
-# setup lastok version as a start
+echo setup lastok version as a start
 if [ ! -d "${INSTROOT_CUR}" ]; then
+  echo cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
   cp -pR ${INSTROOT_LOK} ${INSTROOT_CUR}
 else
+  echo cp -pR ${INSTROOT_LOK}/* ${INSTROOT_CUR}
   cp -pR ${INSTROOT_LOK}/* ${INSTROOT_CUR}
 fi
 
