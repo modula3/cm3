@@ -1670,16 +1670,6 @@ analyze_ziv_subscript (tree chrec_a,
     fprintf (dump_file, ")\n");
 }
 
-/* Similar to estimated_loop_iterations, but returns the estimate only
-   if it fits to HOST_WIDE_INT.  If this is not the case, or the estimate
-   on the number of iterations of LOOP could not be derived, returns -1.  */
-
-HOST_WIDE_INT
-estimated_loop_iterations_int (struct loop *loop, bool conservative)
-{
-  return -1;
-}
-
 /* Similar to estimated_loop_iterations, but returns the estimate as a tree,
    and only if it fits to the int type.  If this is not the case, or the
    estimate on the number of iterations of LOOP could not be derived, returns
