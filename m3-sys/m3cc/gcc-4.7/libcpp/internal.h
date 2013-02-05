@@ -737,61 +737,6 @@ extern cpp_hashnode * _cpp_interpret_identifier (cpp_reader *pfile,
 /* Utility routines and macros.  */
 #define DSC(str) (const unsigned char *)str, sizeof str - 1
 
-/* These are inline functions instead of macros so we can get type
-   checking.  */
-static inline int ustrcmp (const unsigned char *, const unsigned char *);
-static inline int ustrncmp (const unsigned char *, const unsigned char *,
-			    size_t);
-static inline size_t ustrlen (const unsigned char *);
-static inline const unsigned char *uxstrdup (const unsigned char *);
-static inline const unsigned char *ustrchr (const unsigned char *, int);
-static inline int ufputs (const unsigned char *, FILE *);
-
-/* Use a const char for the second parameter since it is usually a literal.  */
-static inline int ustrcspn (const unsigned char *, const char *);
-
-static inline int
-ustrcmp (const unsigned char *s1, const unsigned char *s2)
-{
-  return strcmp ((const char *)s1, (const char *)s2);
-}
-
-static inline int
-ustrncmp (const unsigned char *s1, const unsigned char *s2, size_t n)
-{
-  return strncmp ((const char *)s1, (const char *)s2, n);
-}
-
-static inline int
-ustrcspn (const unsigned char *s1, const char *s2)
-{
-  return strcspn ((const char *)s1, s2);
-}
-
-static inline size_t
-ustrlen (const unsigned char *s1)
-{
-  return strlen ((const char *)s1);
-}
-
-static inline const unsigned char *
-uxstrdup (const unsigned char *s1)
-{
-  return (const unsigned char *) xstrdup ((const char *)s1);
-}
-
-static inline const unsigned char *
-ustrchr (const unsigned char *s1, int c)
-{
-  return (const unsigned char *) strchr ((const char *)s1, c);
-}
-
-static inline int
-ufputs (const unsigned char *s, FILE *f)
-{
-  return fputs ((const char *)s, f);
-}
-
 #ifdef __cplusplus
 }
 #endif

@@ -589,6 +589,113 @@ linemap_location_from_macro_expansion_p (struct line_maps *set,
   return (location > set->highest_location);
 }
 
+/* Given two virtual locations *LOC0 and *LOC1, return the first
+   common macro map in their macro expansion histories.  Return NULL
+   if no common macro was found.  *LOC0 (resp. *LOC1) is set to the
+   virtual location of the token inside the resulting macro.  */
+
+static const struct line_map*
+first_map_in_common_1 (struct line_maps *set,
+		       source_location *loc0,
+		       source_location *loc1)
+{
+  source_location l0 = *loc0, l1 = *loc1;
+  const struct line_map *map0 = linemap_lookup (set, l0),
+    *map1 = linemap_lookup (set, l1);
+
+  while (linemap_macro_expansion_map_p (map0)
+	 && linemap_macro_expansion_map_p (map1)
+	 && (map0 != map1))
+    {
+      if (MAP_START_LOCATION (map0) < MAP_START_LOCATION (map1))
+	{
+	  l0 = linemap_macro_map_loc_to_exp_point (map0, l0);
+	  map0 = linemap_lookup (set, l0);
+	}
+      else
+	{
+	  l1 = linemap_macro_map_loc_to_exp_point (map1, l1);
+	  map1 = linemap_lookup (set, l1);
+	}
+    }
+
+  if (map0 == map1)
+    {
+      *loc0 = l0;
+      *loc1 = l1;
+      return map0;
+    }
+  return NULL;
+}
+
+/* Given two virtual locations LOC0 and LOC1, return the first common
+   macro map in their macro expansion histories.  Return NULL if no
+   common macro was found.  *RES_LOC0 (resp. *RES_LOC1) is set to the
+   virtual location of the token inside the resulting macro, upon
+   return of a non-NULL result.  */
+
+static const struct line_map*
+first_map_in_common (struct line_maps *set,
+		     source_location loc0,
+		     source_location loc1,
+		     source_location  *res_loc0,
+		     source_location  *res_loc1)
+{
+  *res_loc0 = loc0;
+  *res_loc1 = loc1;
+
+  return first_map_in_common_1 (set, res_loc0, res_loc1);
+}
+
+/* Return a positive value if PRE denotes the location of a token that
+   comes before the token of POST, 0 if PRE denotes the location of
+   the same token as the token for POST, and a negative value
+   otherwise.  */
+
+int
+linemap_compare_locations (struct line_maps *set,
+			   source_location  pre,
+			   source_location post)
+{
+  bool pre_virtual_p, post_virtual_p;
+  source_location l0 = pre, l1 = post;
+
+  if (l0 == l1)
+    return 0;
+
+  if ((pre_virtual_p = linemap_location_from_macro_expansion_p (set, l0)))
+    l0 = linemap_resolve_location (set, l0,
+				   LRK_MACRO_EXPANSION_POINT,
+				   NULL);
+
+  if ((post_virtual_p = linemap_location_from_macro_expansion_p (set, l1)))
+    l1 = linemap_resolve_location (set, l1,
+				   LRK_MACRO_EXPANSION_POINT,
+				   NULL);
+
+  if (l0 == l1
+      && pre_virtual_p
+      && post_virtual_p)
+    {
+      /* So pre and post represent two tokens that are present in a
+	 same macro expansion.  Let's see if the token for pre was
+	 before the token for post in that expansion.  */
+      unsigned i0, i1;
+      const struct line_map *map =
+	first_map_in_common (set, pre, post, &l0, &l1);
+
+      if (map == NULL)
+	/* This should not be possible.  */
+	abort ();
+
+      i0 = l0 - MAP_START_LOCATION (map);
+      i1 = l1 - MAP_START_LOCATION (map);
+      return i1 - i0;
+    }
+
+  return l1 - l0;
+}
+
 /* Print an include trace, for e.g. the -H option of the preprocessor.  */
 
 static void
