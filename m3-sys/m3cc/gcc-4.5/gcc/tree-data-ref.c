@@ -1670,18 +1670,6 @@ analyze_ziv_subscript (tree chrec_a,
     fprintf (dump_file, ")\n");
 }
 
-/* Sets NIT to the estimated number of executions of the statements in
-   LOOP.  If CONSERVATIVE is true, we must be sure that NIT is at least as
-   large as the number of iterations.  If we have no reliable estimate,
-   the function returns false, otherwise returns true.  */
-
-bool
-estimated_loop_iterations (struct loop *loop, bool conservative,
-			   double_int *nit)
-{
-  return false;
-}
-
 /* Similar to estimated_loop_iterations, but returns the estimate only
    if it fits to HOST_WIDE_INT.  If this is not the case, or the estimate
    on the number of iterations of LOOP could not be derived, returns -1.  */

@@ -282,7 +282,7 @@ extern rtx doloop_condition_get (rtx);
 
 void estimate_numbers_of_iterations_loop (struct loop *);
 HOST_WIDE_INT estimated_loop_iterations_int (struct loop *, bool);
-bool estimated_loop_iterations (struct loop *, bool, double_int *);
+#define estimated_loop_iterations(a, b, c) (false)
 
 /* Loop manipulation.  */
 extern bool can_duplicate_loop_p (const struct loop *loop);
