@@ -39,10 +39,6 @@ void StopNPS (void);
 void AddChar(char c);
 #endif
 
-#ifdef __cplusplus
-#define input yyinput
-#endif
-
 #ifdef USE_PROTOS
 void AddLexLength (void)
 #else
@@ -289,7 +285,7 @@ int HandleSpaces ()
                 ++comments[nComments].NLs;
             }
             SaveChar(c);
-            c = input();
+            c = yyinput();
         } while (c > 0 /* EOF */);
     }
     return WHITESPACE;
@@ -319,7 +315,7 @@ int HandleCommentPragma ()
         /* Check for a comment start whether we're in or out of a comment. */
         if ((commentLevel == 0 && (c == '(' || c == '<')) ||
             (commentLevel > 0 && c == commentChar)) {
-            c2 = input();
+            c2 = yyinput();
             if (c2 == '*') {
                 StartComment(c);
                 SaveChar(c);
@@ -344,7 +340,7 @@ int HandleCommentPragma ()
             SaveChar(c);
             if (c == '*') {
                 char target = commentChar == '(' ? ')' : '>';
-                c2 = input();
+                c2 = yyinput();
                 if (c2 == target) {
                     SaveChar(c2);
                     EndComment();
@@ -357,6 +353,6 @@ int HandleCommentPragma ()
                 }
             }
         }
-    } while ((c = input()) > 0 /* EOF */);
+    } while ((c = yyinput()) > 0 /* EOF */);
     return WHITESPACE;
 }

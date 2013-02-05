@@ -546,11 +546,7 @@ static int yy_flex_strlen YY_PROTO(( yyconst char * ));
 #endif
 
 #ifndef YY_NO_INPUT
-#ifdef __cplusplus
-static int yyinput YY_PROTO(( void ));
-#else
-static int input YY_PROTO(( void ));
-#endif
+int yyinput YY_PROTO(( void ));
 #endif
 
 #if YY_STACK_USED
@@ -1464,11 +1460,7 @@ register char *yy_bp;
 #endif	/* ifndef YY_NO_UNPUT */
 
 
-#ifdef __cplusplus
-static int yyinput()
-#else
-static int input()
-#endif
+int yyinput()
 	{
 	int c;
 
@@ -1514,11 +1506,7 @@ static int input()
 
 					if ( ! yy_did_buffer_switch_on_eof )
 						YY_NEW_FILE;
-#ifdef __cplusplus
 					return yyinput();
-#else
-					return input();
-#endif
 					}
 
 				case EOB_ACT_CONTINUE_SCAN:

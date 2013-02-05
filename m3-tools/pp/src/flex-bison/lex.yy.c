@@ -626,7 +626,7 @@ EXTERN_C_BEGIN
 int HandleSpaces (void);
 int HandleCommentPragma (void);
 void BufferLexeme (int addLength);
-int input (void);
+int yyinput (void);
 EXTERN_C_END
 #endif
 
@@ -706,9 +706,7 @@ static int yy_flex_strlen (yyconst char * );
 #ifndef YY_NO_INPUT
 
 #ifdef __cplusplus
-static int yyinput (void );
-#else
-static int input (void );
+int yyinput (void );
 #endif
 
 #endif
@@ -1629,12 +1627,7 @@ static int yy_get_next_buffer (void)
 }
 
 #ifndef YY_NO_INPUT
-#ifdef __cplusplus
-    static int yyinput (void)
-#else
-    static int input  (void)
-#endif
-
+    int yyinput (void)
 {
 	int c;
     
@@ -1680,11 +1673,7 @@ static int yy_get_next_buffer (void)
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
 						YY_NEW_FILE;
-#ifdef __cplusplus
 					return yyinput();
-#else
-					return input();
-#endif
 					}
 
 				case EOB_ACT_CONTINUE_SCAN:

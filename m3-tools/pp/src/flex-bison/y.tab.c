@@ -462,7 +462,7 @@ typedef void (*Newline_t)(Formatter_t*);
 #else
 typedef char Formatter_t;
 #endif
-int input (void);
+int yyinput (void);
 void BufferLexeme (int addLength);
 void CapBufferLexeme (int addLength);
 void PR (char *s);
@@ -6048,11 +6048,11 @@ yyerror(s) char *s;
      sentinel '001'), and if the last thing before the end-of-file
      is a newline, then don't print that final newline.  This is
      because Flush() will be called by main when yyerror returns. */
-  temp2 = input();   /* input comes from the lex library. */
+  temp2 = yyinput();   /* yyinput comes from the lex library. */
   if ((calledFromEmacs && (temp2 == '\001')) || (temp2 == 0)) return;
-  temp = input();
+  temp = yyinput();
   while ((temp > 0) && (!calledFromEmacs || (temp != '\001')))
-    {P (temp2); temp2 = temp; temp = input();}
+    {P (temp2); temp2 = temp; temp = yyinput();}
   if ((temp2 != '\n') || (temp > 0)) P(temp2);
 }
 
