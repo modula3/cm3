@@ -1685,11 +1685,7 @@ estimated_loop_iterations_int (struct loop *loop, bool conservative)
    estimate on the number of iterations of LOOP could not be derived, returns
    chrec_dont_know.  */
 
-static tree
-estimated_loop_iterations_tree (struct loop *loop, bool conservative)
-{
-  return chrec_dont_know;
-}
+#define estimated_loop_iterations_tree(loop, conservative) (chrec_dont_know)
 
 /* Analyze a SIV (Single Index Variable) subscript where CHREC_A is a
    constant, and CHREC_B is an affine function.  *OVERLAPS_A and

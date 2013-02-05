@@ -281,7 +281,7 @@ extern unsigned expected_loop_iterations (const struct loop *);
 extern rtx doloop_condition_get (rtx);
 
 void estimate_numbers_of_iterations_loop (struct loop *);
-HOST_WIDE_INT estimated_loop_iterations_int (struct loop *, bool);
+#define estimated_loop_iterations_int(a, b) ((HOST_WIDE_INT)-1)
 #define estimated_loop_iterations(a, b, c) (false)
 
 /* Loop manipulation.  */
