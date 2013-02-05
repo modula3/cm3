@@ -492,4 +492,6 @@ xcoffout_end_epilogue (unsigned int line ATTRIBUTE_UNUSED,
   fprintf (asm_out_file, "FE..");
   ASM_OUTPUT_LABEL (asm_out_file, fname);
 }
+#else
+char quash_darwin_warning_about_no_symbols_gcc_xcoffout;
 #endif /* XCOFF_DEBUGGING_INFO */

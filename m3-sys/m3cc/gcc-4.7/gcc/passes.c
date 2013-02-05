@@ -1179,7 +1179,6 @@ init_optimization_passes (void)
   NEXT_PASS (pass_warn_unused_result);
   NEXT_PASS (pass_diagnose_omp_blocks);
   NEXT_PASS (pass_diagnose_tm_blocks);
-  NEXT_PASS (pass_mudflap_1);
   NEXT_PASS (pass_lower_omp);
   NEXT_PASS (pass_lower_cf);
   NEXT_PASS (pass_lower_tm);
@@ -1254,7 +1253,6 @@ init_optimization_passes (void)
   NEXT_PASS (pass_ipa_whole_program_visibility);
   NEXT_PASS (pass_ipa_profile);
   NEXT_PASS (pass_ipa_cp);
-  NEXT_PASS (pass_ipa_cdtor_merge);
   NEXT_PASS (pass_ipa_inline);
   NEXT_PASS (pass_ipa_pure_const);
   NEXT_PASS (pass_ipa_reference);
@@ -1410,7 +1408,6 @@ init_optimization_passes (void)
   NEXT_PASS (pass_cleanup_eh);
   NEXT_PASS (pass_lower_resx);
   NEXT_PASS (pass_nrv);
-  NEXT_PASS (pass_mudflap_2);
   NEXT_PASS (pass_cleanup_cfg_post_optimizing);
   NEXT_PASS (pass_warn_function_noreturn);
 

@@ -1840,4 +1840,6 @@ vms_file_stats_name (const char *filename, long long *cdt, long *siz, char *rfo,
   return 0;
 #endif
 }
+#else
+char quash_darwin_warning_about_no_symbols_gcc_vmsdbgout;
 #endif

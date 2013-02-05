@@ -352,8 +352,6 @@ struct register_pass_info
 
 extern void tree_lowering_passes (tree decl);
 
-extern struct gimple_opt_pass pass_mudflap_1;
-extern struct gimple_opt_pass pass_mudflap_2;
 extern struct gimple_opt_pass pass_lower_cf;
 extern struct gimple_opt_pass pass_refactor_eh;
 extern struct gimple_opt_pass pass_lower_eh;
@@ -478,7 +476,6 @@ extern struct ipa_opt_pass_d pass_ipa_lto_wpa_fixup;
 extern struct ipa_opt_pass_d pass_ipa_lto_finish_out;
 extern struct simple_ipa_opt_pass pass_ipa_tm;
 extern struct ipa_opt_pass_d pass_ipa_profile;
-extern struct ipa_opt_pass_d pass_ipa_cdtor_merge;
 
 extern struct gimple_opt_pass pass_all_optimizations;
 extern struct gimple_opt_pass pass_cleanup_cfg_post_optimizing;

@@ -671,4 +671,6 @@ reorg_loops (bool do_reorder, struct hw_doloop_hooks *hooks)
   if (dump_file)
     print_rtl (dump_file, get_insns ());
 }
+#else
+char quash_darwin_warning_about_no_symbols_gcc_hw_doloop;
 #endif
