@@ -113,7 +113,7 @@ static int do_compare (const REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *, int);
 static void do_fix_trunc (REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *);
 
 static unsigned long rtd_divmod (REAL_VALUE_TYPE *, REAL_VALUE_TYPE *);
-static void decimal_from_integer (REAL_VALUE_TYPE *);
+static void decimal_from_integer (void);
 static void decimal_integer_string (char *, const REAL_VALUE_TYPE *,
 				    size_t);
 
@@ -2142,7 +2142,7 @@ real_from_integer (REAL_VALUE_TYPE *r, enum machine_mode mode,
     }
 
   if (DECIMAL_FLOAT_MODE_P (mode))
-    decimal_from_integer (r);
+    decimal_from_integer ();
   else if (mode != VOIDmode)
     real_convert (r, mode, r);
 }
@@ -2197,7 +2197,7 @@ decimal_integer_string (char *str, const REAL_VALUE_TYPE *r_orig,
 /* Convert a real with an integral value to decimal float.  */
 
 static void
-decimal_from_integer (REAL_VALUE_TYPE *r)
+decimal_from_integer (void)
 {
   gcc_unreachable ();
 }
