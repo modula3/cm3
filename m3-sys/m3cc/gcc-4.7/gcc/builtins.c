@@ -47,7 +47,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "target.h"
 #include "langhooks.h"
 #include "basic-block.h"
-#include "tree-mudflap.h"
 #include "tree-flow.h"
 #include "value-prof.h"
 #include "diagnostic-core.h"
@@ -2848,9 +2847,6 @@ tree
 build_va_arg_indirect_ref (tree addr)
 {
   addr = build_simple_mem_ref_loc (EXPR_LOCATION (addr), addr);
-
-  if (flag_mudflap) /* Don't instrument va_arg INDIRECT_REF.  */
-    mf_mark (addr);
 
   return addr;
 }

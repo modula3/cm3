@@ -74,7 +74,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "coverage.h"
 #include "value-prof.h"
 #include "alloc-pool.h"
-#include "tree-mudflap.h"
 #include "tree-pass.h"
 #include "gimple.h"
 #include "tree-ssa-alias.h"
@@ -585,10 +584,6 @@ compile_file (void)
     {
       varpool_assemble_pending_decls ();
       finish_aliases_2 ();
-
-      /* Likewise for mudflap static object registrations.  */
-      if (flag_mudflap)
-	mudflap_finish_file ();
 
       output_shared_constant_pool ();
       output_object_blocks ();

@@ -753,4 +753,6 @@ doloop_optimize_loops (void)
   verify_loop_structure ();
 #endif
 }
+#else
+char quash_darwin_warning_about_no_symbols_gcc_loop_doloop;
 #endif /* HAVE_doloop_end */
