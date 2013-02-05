@@ -134,7 +134,6 @@ static tree stabilize_va_list_loc (location_t, tree, int);
 static rtx expand_builtin_expect (tree, rtx);
 static tree rewrite_call_expr (location_t, tree, int, tree, int, ...);
 static bool validate_arg (const_tree, enum tree_code code);
-static bool integer_valued_real_p (tree);
 static bool readonly_data_expr (tree);
 static rtx expand_builtin_fabs (tree, rtx, rtx);
 static rtx expand_builtin_signbit (tree, rtx);
@@ -6346,100 +6345,6 @@ builtin_mathfn_code (const_tree t)
   return DECL_FUNCTION_CODE (fndecl);
 }
 
-/* Create builtin_expect with PRED and EXPECTED as its arguments and
-   return it as a truthvalue.  */
-
-static tree
-build_builtin_expect_predicate (location_t loc, tree pred, tree expected)
-{
-  tree fn, arg_types, pred_type, expected_type, call_expr, ret_type;
-
-  fn = built_in_decls[BUILT_IN_EXPECT];
-  arg_types = TYPE_ARG_TYPES (TREE_TYPE (fn));
-  ret_type = TREE_TYPE (TREE_TYPE (fn));
-  pred_type = TREE_VALUE (arg_types);
-  expected_type = TREE_VALUE (TREE_CHAIN (arg_types));
-
-  pred = fold_convert_loc (loc, pred_type, pred);
-  expected = fold_convert_loc (loc, expected_type, expected);
-  call_expr = build_call_expr_loc (loc, fn, 2, pred, expected);
-
-  return build2 (NE_EXPR, TREE_TYPE (pred), call_expr,
-		 build_int_cst (ret_type, 0));
-}
-
-/* Return true if the floating point expression T has an integer value.
-   We also allow +Inf, -Inf and NaN to be considered integer values.  */
-
-static bool
-integer_valued_real_p (tree t)
-{
-  switch (TREE_CODE (t))
-    {
-    case FLOAT_EXPR:
-      return true;
-
-    case ABS_EXPR:
-    case SAVE_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 0));
-
-    case COMPOUND_EXPR:
-    case MODIFY_EXPR:
-    case BIND_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 1));
-
-    case PLUS_EXPR:
-    case MINUS_EXPR:
-    case MULT_EXPR:
-    case MIN_EXPR:
-    case MAX_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 0))
-	     && integer_valued_real_p (TREE_OPERAND (t, 1));
-
-    case COND_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 1))
-	     && integer_valued_real_p (TREE_OPERAND (t, 2));
-
-    case REAL_CST:
-      return real_isinteger (TREE_REAL_CST_PTR (t), TYPE_MODE (TREE_TYPE (t)));
-
-    case NOP_EXPR:
-      {
-	tree type = TREE_TYPE (TREE_OPERAND (t, 0));
-	if (TREE_CODE (type) == INTEGER_TYPE)
-	  return true;
-	if (TREE_CODE (type) == REAL_TYPE)
-	  return integer_valued_real_p (TREE_OPERAND (t, 0));
-	break;
-      }
-
-    case CALL_EXPR:
-      switch (builtin_mathfn_code (t))
-	{
-	CASE_FLT_FN (BUILT_IN_CEIL):
-	CASE_FLT_FN (BUILT_IN_FLOOR):
-	CASE_FLT_FN (BUILT_IN_NEARBYINT):
-	CASE_FLT_FN (BUILT_IN_RINT):
-	CASE_FLT_FN (BUILT_IN_ROUND):
-	CASE_FLT_FN (BUILT_IN_TRUNC):
-	  return true;
-
-	CASE_FLT_FN (BUILT_IN_FMIN):
-	CASE_FLT_FN (BUILT_IN_FMAX):
-	  return integer_valued_real_p (CALL_EXPR_ARG (t, 0))
- 	    && integer_valued_real_p (CALL_EXPR_ARG (t, 1));
-
-	default:
-	  break;
-	}
-      break;
-
-    default:
-      break;
-    }
-  return false;
-}
-
 /* Return true if VAR is a VAR_DECL or a component thereof.  */
 
 static bool
@@ -6916,7 +6821,6 @@ fold_builtin_memcmp (location_t loc, tree arg1, tree arg2, tree len)
 static tree
 fold_builtin_2 (location_t loc, tree fndecl, tree arg0, tree arg1, bool ignore)
 {
-  tree type = TREE_TYPE (TREE_TYPE (fndecl));
   enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
 
   switch (fcode)
@@ -7641,34 +7545,6 @@ expand_builtin_memory_chk (tree exp, rtx target, enum machine_mode mode,
    varargs functions, and a more intrusive re-factoring would permit
    better sharing of code between the tree and statement-based
    versions of these functions.  */
-
-/* Construct a new CALL_EXPR using the tail of the argument list of STMT
-   along with N new arguments specified as the "..." parameters.  SKIP
-   is the number of arguments in STMT to be omitted.  This function is used
-   to do varargs-to-varargs transformations.  */
-
-static tree
-gimple_rewrite_call_expr (gimple stmt, int skip, tree fndecl, int n, ...)
-{
-  int oldnargs = gimple_call_num_args (stmt);
-  int nargs = oldnargs - skip + n;
-  tree fntype = TREE_TYPE (fndecl);
-  tree fn = build1 (ADDR_EXPR, build_pointer_type (fntype), fndecl);
-  tree *buffer;
-  int i, j;
-  va_list ap;
-  location_t loc = gimple_location (stmt);
-
-  buffer = XALLOCAVEC (tree, nargs);
-  va_start (ap, n);
-  for (i = 0; i < n; i++)
-    buffer[i] = va_arg (ap, tree);
-  va_end (ap);
-  for (j = skip; j < oldnargs; j++, i++)
-    buffer[i] = gimple_call_arg (stmt, j);
-
-  return fold (build_call_array_loc (loc, TREE_TYPE (fntype), fn, nargs, buffer));
-}
 
 /* A wrapper function for builtin folding that prevents warnings for
    "statement without effect" and the like, caused by removing the

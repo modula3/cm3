@@ -1629,19 +1629,6 @@ ipa_write_summaries (void)
   gcc_unreachable ();
 }
 
-
-/* Write all the summaries for the cgraph nodes in SET.  If SET is
-   NULL, write out all summaries of all nodes. */
-
-void
-ipa_write_summaries_of_cgraph_node_set (cgraph_node_set set)
-{
-  if (flag_generate_lto && !(errorcount || sorrycount))
-  {
-    gcc_unreachable ();
-  }
-}
-
 /* Same as execute_pass_list but assume that subpasses of IPA passes
    are local passes.  */
 
