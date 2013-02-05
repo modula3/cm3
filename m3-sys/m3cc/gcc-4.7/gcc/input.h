@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations for variables relating to reading the source file.
    Used by parsers, lexical analyzers, and error message routines.
    Copyright (C) 1993, 1997, 1998, 2000, 2003, 2004, 2007, 2008, 2009, 2010
@@ -54,7 +56,5 @@ extern location_t input_location;
 #define in_system_header_at(LOC) \
   ((linemap_location_in_system_header_p (line_table, LOC)))
 #define in_system_header (in_system_header_at (input_location))
-
-void dump_line_table_statistics (void);
 
 #endif

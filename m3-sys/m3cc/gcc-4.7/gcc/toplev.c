@@ -1789,7 +1789,6 @@ target_reinit (void)
 void
 dump_memory_report (bool final)
 {
-  dump_line_table_statistics ();
   ggc_print_statistics ();
   stringpool_statistics ();
   dump_tree_statistics ();

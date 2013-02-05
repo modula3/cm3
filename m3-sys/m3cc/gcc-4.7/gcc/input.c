@@ -51,9 +51,3 @@ expand_location (source_location loc)
 
   return xloc;
 }
-
-void
-dump_line_table_statistics (void)
-{
- gcc_unreachable ();
-}
