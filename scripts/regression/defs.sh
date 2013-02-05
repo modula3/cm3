@@ -623,12 +623,22 @@ test_build_system()
   fi
 
   echo " === build core system with current compiler"
+  echo type cm3cg
+       type cm3cg
+  echo cm3cg -version /dev/null
+       cm3cg -version /dev/null
+  echo type cm3
+       type cm3
+  echo cm3 -version
+       cm3 -version
   BUILDSCRIPT="./scripts/do-cm3-core.sh"
   if [ -z "$NOCLEAN" ]; then
-    OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
+    echo OMIT_GCC=yes $BUILDSCRIPT realclean
+         OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
   fi
   echo " === perform cm3 upgrade after cleaning everything"
-  OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
+  echo OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
+       OMIT_GCC=yes $BUILDSCRIPT realclean || exit 1
   ./scripts/upgrade.sh || exit 1
   echo " >>> OK build_upgrade ${DS} ${WS}"
 
