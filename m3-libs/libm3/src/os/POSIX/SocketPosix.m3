@@ -100,10 +100,11 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
   RAISES {OSError.E} =
   VAR
     name  : SockAddrIn;
+    nameLen: socklen_t := BYTESIZE(name);
     status: INTEGER;
   BEGIN
     SetAddress (t, ep, name);
-    status := bind (t.fd, ADR (name), BYTESIZE (name));
+    status := bind (t.fd, ADR (name), nameLen);
     IF status # 0 THEN
       VAR err := Unexpected; BEGIN
         IF GetError() = EADDRINUSE THEN err := PortBusy; END;
@@ -124,13 +125,14 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
   RAISES {OSError.E, Thread.Alerted} =
   VAR
     name: SockAddrIn;
+    nameLen: socklen_t := BYTESIZE(name);
     status: INTEGER;
   BEGIN
     SetAddress (t, ep, name);
     InitStream (t.fd);
 
     LOOP
-      status := connect (t.fd, ADR(name), BYTESIZE(name));
+      status := connect (t.fd, ADR(name), nameLen);
       IF status = 0 THEN EXIT; END;
 
       WITH errno = GetError() DO
@@ -177,7 +179,7 @@ PROCEDURE Accept (t: T): T
   RAISES {OSError.E, Thread.Alerted} =
   VAR
     name : SockAddrIn;
-    len  : INTEGER   := BYTESIZE(name);
+    len  : socklen_t := BYTESIZE(name);
     fd   : INTEGER;
     res  : T;
   BEGIN
@@ -272,7 +274,7 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
   RAISES {OSError.E} =
   VAR
     name  : SockAddrIn;
-    nameLen : INTEGER;
+    nameLen : socklen_t;
     len   : INTEGER;
     p_b   : ADDRESS := ADR (b[0]);
     fd    := t.fd;
@@ -312,11 +314,12 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
     p   : ADDRESS := ADR(b[0]);
     n   : INTEGER := NUMBER(b);
     name: SockAddrIn;
+    nameLen: socklen_t := BYTESIZE(name);
     fd  := t.fd;
   BEGIN
     WHILE n > 0 DO
       EndPointToAddress (ep, name);
-      len := sendto (fd, p, n, 0, ADR (name), BYTESIZE (name));
+      len := sendto (fd, p, n, 0, ADR (name), nameLen);
       IF n = len THEN RETURN END;
       CommonWrite(fd, len, p, n);
     END;
@@ -354,7 +357,7 @@ PROCEDURE Peek (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     name : SockAddrIn;
-    len  : INTEGER     := BYTESIZE (name);
+    len  : socklen_t := BYTESIZE (name);
     ep   : EndPoint;
   BEGIN
     IF recvfrom (t.fd, NIL, 0, MSG_PEEK,
@@ -369,7 +372,7 @@ PROCEDURE ThisEnd (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     name : SockAddrIn;
-    len  : INTEGER     := BYTESIZE (name);
+    len  : socklen_t := BYTESIZE (name);
   BEGIN
     IF t.ep.addr = NullAddress THEN
       t.ep.addr := GetHostAddr ();
@@ -390,6 +393,7 @@ PROCEDURE GetHostAddr (): Address
     hostent: struct_hostent;
     info : struct_hostent_star;
     ua   : struct_in_addr;
+    address: Address := NullAddress;
   BEGIN
     IF gethostname (ADR (host[0]), BYTESIZE (host)) # 0 THEN
       IOError (Unexpected);
@@ -401,7 +405,8 @@ PROCEDURE GetHostAddr (): Address
 
     ua := LOOPHOLE(info.h_addr_list,
                    UNTRACED REF UNTRACED REF struct_in_addr)^^;
-    RETURN LOOPHOLE (ua.s_addr, Address);
+    address.ipv4 := LOOPHOLE(ua.s_addr, AddressIPv4);
+    RETURN address;
   END GetHostAddr;
 
 PROCEDURE OtherEnd (t: T): EndPoint
@@ -431,13 +436,13 @@ PROCEDURE EndPointToAddress (READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn
   BEGIN
     name.sin_family      := AF_INET;
     name.sin_port        := htons (ep.port);
-    name.sin_addr.s_addr := LOOPHOLE (ep.addr, u_int);
+    name.sin_addr.s_addr := LOOPHOLE (ep.addr.ipv4, u_int);
     name.sin_zero        := Sin_Zero;
   END EndPointToAddress;
 
 PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint) =
   BEGIN
-    ep.addr := LOOPHOLE (name.sin_addr.s_addr, Address);
+    ep.addr.ipv4 := LOOPHOLE (name.sin_addr.s_addr, AddressIPv4);
     ep.port := ntohs (name.sin_port);
   END AddressToEndPoint;
 
@@ -445,13 +450,13 @@ PROCEDURE InitStream (fd: CARDINAL)
   RAISES {OSError.E} =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one : int := 1;
+    True : int := 1;
     linger := struct_linger{1, 1};
   BEGIN
     EVAL setsockopt(fd, SOL_SOCKET, SO_LINGER,
                     ADR(linger), BYTESIZE(linger));
     EVAL setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
-                    ADR(one), BYTESIZE(one));
+                    ADR(True), BYTESIZE(True));
 
     MakeNonBlocking (fd);
   END InitStream;
