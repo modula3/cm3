@@ -625,8 +625,8 @@ test_build_system()
   echo " === build core system with current compiler"
   echo type cm3cg
        type cm3cg
-  echo cm3cg -version /dev/null
-       cm3cg -version /dev/null
+  echo cm3cg -version
+       cm3cg -version </dev/null
   echo type cm3
        type cm3
   echo cm3 -version
