@@ -11,7 +11,7 @@ INTERFACE WinSock;
 
        (* Taken from WINSOCK.H from WINSOCK version 1.1 *)
 
-FROM Ctypes IMPORT char_star, char_star_star, char;
+FROM Ctypes IMPORT char_star, char_star_star, char, int;
 FROM WinBaseTypes IMPORT UINT8, UINT16, UINT32, INT16, INT32, PINT32, SIZE_T;
 FROM Word IMPORT Or, And, Shift, Not;
 
@@ -23,6 +23,7 @@ TYPE
   u_short = UINT16; (* compat *)
   u_int   = UINT32; (* compat *)
   u_long  = UINT32; (* compat *)
+  socklen_t = int; (* to be like Posix Usocket.i3 *)
 
 CONST
   FD_SETSIZE = 64;
