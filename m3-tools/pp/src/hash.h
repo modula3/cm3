@@ -87,12 +87,12 @@
 #define TRUE 1
 #define FALSE 0
 
-typedef struct keywordEntry {
-    char *keyword;
+typedef const struct keywordEntry {
+    const char *keyword;
     int lexval;
 } KEYWORDENTRY, *PTRKEYWORDENTRY;
 
-static KEYWORDENTRY aok[] = {
+static const KEYWORDENTRY aok[] = {
     /* array of keywords */
 { "AND", AND },
 { "ANY", ANY },
@@ -188,36 +188,16 @@ static KEYWORDENTRY aok[] = {
 */
 };
 
-static PTRKEYWORDENTRY hashtab[HASHSIZE] = {
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static PTRKEYWORDENTRY hashtab[HASHSIZE];
 
 #ifdef USE_PROTOS
 
-int hash(char*);
-int mystrcmp(char*, char*);
+int hash(const char*);
+int mystrcmp(const char*, const char*);
 char cap(char s);
 void install(PTRKEYWORDENTRY where);
 void insertKeywords(void);
-PTRKEYWORDENTRY lookup(char*);
+PTRKEYWORDENTRY lookup(const char*);
 
 #else
 
@@ -233,10 +213,10 @@ PTRKEYWORDENTRY *endhash = &(hashtab[HASHSIZE]);
 
 #ifdef USE_PROTOS
 int
-hash(char *s)
+hash(const char *s)
 #else
 int
-hash(s) char *s;
+hash(s) const char *s;
 #endif
 {
     int hashval;
@@ -246,7 +226,7 @@ hash(s) char *s;
 
 #ifdef USE_PROTOS
 PTRKEYWORDENTRY
-lookup(char *s)
+lookup(const char *s)
 #else
 PTRKEYWORDENTRY
 lookup(s) char *s;
@@ -270,10 +250,10 @@ void
 install(PTRKEYWORDENTRY where)
 #else
 void
-install(where)  PTRKEYWORDENTRY where;
+install(where) PTRKEYWORDENTRY where;
 #endif
 {
-    char *keyword;
+    const char *keyword;
     PTRKEYWORDENTRY *p1, *p;
     keyword = where->keyword;
     if (!lookup(keyword)){
@@ -298,13 +278,15 @@ install(where)  PTRKEYWORDENTRY where;
 
 #ifdef USE_PROTOS
 int
-mystrcmp(char *ss, char *tt)
+mystrcmp(const char *ss, const char *tt)
 #else
 int
-mystrcmp(ss,tt) char *ss, *tt;
+mystrcmp(ss,tt) const char *ss; const char *tt;
 #endif
-{register char *s, *t; register int hasUpper, hasLower; 
-  hasUpper = FALSE; hasLower = FALSE; s=ss; t=tt;
+{ const char *s = ss;
+  const char *t = tt; 
+  int hasUpper = FALSE;
+  int hasLower = FALSE; 
   while (1) {
     if (isupper(*s)) 
        if (*s++ == *t++ && !hasLower) hasUpper=TRUE; 
