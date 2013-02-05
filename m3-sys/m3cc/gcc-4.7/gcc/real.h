@@ -277,8 +277,6 @@ extern void real_to_integer2 (HOST_WIDE_INT *, HOST_WIDE_INT *,
 /* Initialize R from a decimal or hexadecimal string.  Return -1 if
    the value underflows, +1 if overflows, and 0 otherwise.  */
 extern int real_from_string (REAL_VALUE_TYPE *, const char *);
-/* Wrapper to allow different internal representation for decimal floats. */
-extern void real_from_string3 (REAL_VALUE_TYPE *, const char *, enum machine_mode);
 
 /* Initialize R from an integer pair HIGH/LOW.  */
 extern void real_from_integer (REAL_VALUE_TYPE *, enum machine_mode,

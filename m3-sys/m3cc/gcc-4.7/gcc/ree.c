@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Redundant Extension Elimination pass for the GNU compiler.
    Copyright (C) 2010, 2011, 2012 Free Software Foundation, Inc.
    Contributed by Ilya Enkovich (ilya.enkovich@intel.com)
@@ -542,7 +544,7 @@ make_defs_and_copies_lists (rtx extend_insn, const_rtx set_pat,
   while (!VEC_empty (rtx, state->work_list))
     {
       rtx def_insn = VEC_pop (rtx, state->work_list);
-      rtx reg1, reg2;
+      rtx reg1 = 0, reg2 = 0;
 
       gcc_assert (INSN_UID (def_insn) < max_insn_uid);
 

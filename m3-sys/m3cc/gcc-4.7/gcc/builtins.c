@@ -123,7 +123,7 @@ static tree fold_builtin_n (location_t, tree, tree *, int, bool);
 static tree fold_builtin_2 (location_t, tree, tree, tree, bool);
 static tree fold_builtin_3 (location_t, tree, tree, tree, tree, bool);
 static tree fold_builtin_4 (location_t, tree, tree, tree, tree, tree, bool);
-static tree fold_builtin_varargs (location_t, tree, tree, bool);
+#define fold_builtin_varargs(location_t, tree0, tree1, bool) (NULL_TREE)
 
 static rtx expand_builtin_object_size (tree);
 static rtx expand_builtin_memory_chk (tree, rtx, enum machine_mode,
@@ -5587,15 +5587,6 @@ fold_builtin_memcmp (location_t loc, tree arg1, tree arg2, tree len)
   return NULL_TREE;
 }
 
-/* Fold a fma operation with arguments ARG[012].  */
-
-tree
-fold_fma (location_t loc ATTRIBUTE_UNUSED,
-	  tree type, tree arg0, tree arg1, tree arg2)
-{
-  return NULL_TREE;
-}
-
 /* Fold a call to an unordered comparison function such as
    __builtin_isgreater().  FNDECL is the FUNCTION_DECL for the function
    being called and ARG0 and ARG1 are the arguments for the call.
@@ -5653,7 +5644,6 @@ fold_builtin_unordered_cmp (location_t loc, tree fndecl, tree arg0, tree arg1,
 static tree
 fold_builtin_2 (location_t loc, tree fndecl, tree arg0, tree arg1, bool ignore)
 {
-  tree type = TREE_TYPE (TREE_TYPE (fndecl));
   enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
 
   switch (fcode)
@@ -5808,20 +5798,6 @@ fold_builtin_n (location_t loc, tree fndecl, tree *args, int nargs, bool ignore)
       TREE_NO_WARNING (ret) = 1;
       return ret;
     }
-  return NULL_TREE;
-}
-
-/* Builtins with folding operations that operate on "..." arguments
-   need special handling; we need to store the arguments in a convenient
-   data structure before attempting any folding.  Fortunately there are
-   only a few builtins that fall into this category.  FNDECL is the
-   function, EXP is the CALL_EXPR for the call, and IGNORE is true if the
-   result of the function call is ignored.  */
-
-static tree
-fold_builtin_varargs (location_t loc, tree fndecl, tree exp,
-		      bool ignore ATTRIBUTE_UNUSED)
-{
   return NULL_TREE;
 }
 
