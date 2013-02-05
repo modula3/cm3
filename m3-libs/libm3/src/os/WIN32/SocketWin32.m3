@@ -14,7 +14,7 @@ FROM WinSock IMPORT accept, AF_INET, bind, closesocket, connect, FIONREAD,
   TCP_NODELAY, u_long, WSAEADDRINUSE, WSAEADDRNOTAVAIL, WSAECONNREFUSED,
   WSAECONNRESET, WSAEHOSTDOWN, WSAEHOSTUNREACH, WSAEISCONN, WSAEMFILE,
   WSAENETDOWN, WSAENETRESET, WSAENETUNREACH, WSAETIMEDOUT, WSACleanup,
-  WSAData, WSAGetLastError, WSAStartup;
+  WSAData, WSAGetLastError, WSAStartup, socklen_t;
 FROM Ctypes IMPORT int, char;
 
 CONST
@@ -86,10 +86,14 @@ PROCEDURE Status (<*UNUSED*> t: T): File.Status =
 
 PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
   RAISES {OSError.E} =
-  VAR name: SockAddrIn;
+  VAR
+    name: SockAddrIn;
+    nameLen: socklen_t := BYTESIZE(name);
+    status: INTEGER;
   BEGIN
     SetAddress (t, ep, name);
-    IF bind (t.sock, ADR (name), BYTESIZE (name)) = SockErr THEN
+    status := bind (t.sock, ADR (name), nameLen);
+    IF status # 0 THEN
       VAR err := Unexpected; x := GetError ();  BEGIN
         IF x = WSAEADDRINUSE THEN err := PortBusy; END;
         IOError (err, x);
@@ -145,7 +149,7 @@ PROCEDURE Accept (t: T): T
   RAISES {OSError.E, Thread.Alerted} =
   VAR
     name : SockAddrIn;
-    len  : INTEGER   := BYTESIZE(name);
+    len  : socklen_t := BYTESIZE(name);
     sock : SOCKET;
     err  : INTEGER;
     res  : T;
@@ -172,13 +176,13 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
   RAISES {OSError.E} =
   VAR
     name  : SockAddrIn;
-    nmLen : int;
+    nameLen : socklen_t;
     len   : int;
     p_b   : ADDRESS := ADR (b[0]);
   BEGIN
     IF (NOT mayBlock) AND (BytesAvailable (t) <= 0) THEN RETURN -1; END;
-    nmLen := BYTESIZE (name);
-    len := recvfrom (t.sock, p_b, NUMBER (b), 0, ADR (name), ADR (nmLen));
+    nameLen := BYTESIZE (name);
+    len := recvfrom (t.sock, p_b, NUMBER (b), 0, ADR (name), ADR (nameLen));
     IF len = SockErr THEN RETURN ReceiveError (); END;
     AddressToEndPoint (name, ep);
     RETURN len;
@@ -221,13 +225,14 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
   RAISES {OSError.E} =
   VAR
     len : INTEGER;
-    p   : ADDRESS    := ADR(b[0]);
-    n   : int := NUMBER(b);
+    p   : ADDRESS := ADR(b[0]);
+    n   : INTEGER := NUMBER(b);
     name: SockAddrIn;
+    nameLen: socklen_t := BYTESIZE(name);
   BEGIN
     WHILE n > 0 DO
       EndPointToAddress (ep, name);
-      len := sendto (t.sock, p, n, 0, ADR (name), BYTESIZE (name));
+      len := sendto (t.sock, p, n, 0, ADR (name), nameLen);
       IF len = SockErr THEN SendError (); END;
       INC (p, len);  DEC (n, len);
     END;
@@ -237,8 +242,8 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
   RAISES {OSError.E} =
   VAR
     len : INTEGER;
-    p   : ADDRESS    := ADR(b[0]);
-    n   : int := NUMBER(b);
+    p   : ADDRESS := ADR(b[0]);
+    n   : INTEGER := NUMBER(b);
   BEGIN
     WHILE n > 0 DO
       len := send (t.sock, p, n, 0);
@@ -280,7 +285,7 @@ PROCEDURE Peek (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     name : SockAddrIn;
-    len  : int := BYTESIZE (name);
+    len  : socklen_t := BYTESIZE (name);
     ep   : EndPoint;
   BEGIN
     IF recvfrom (t.sock, NIL, 0, MSG_PEEK,
@@ -295,7 +300,7 @@ PROCEDURE ThisEnd (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     name : SockAddrIn;
-    len  : int := BYTESIZE (name);
+    len  : socklen_t := BYTESIZE (name);
   BEGIN
     IF t.ep.addr = NullAddress THEN
       t.ep.addr := GetHostAddr ();
@@ -315,6 +320,7 @@ PROCEDURE GetHostAddr (): Address
     host : ARRAY [0..255] OF CHAR;
     info : struct_hostent_star;
     ua   : struct_in_addr;
+    address: Address := NullAddress;
   BEGIN
     IF gethostname (ADR (host[0]), BYTESIZE (host)) # 0 THEN
       IOFailed ();
@@ -326,14 +332,15 @@ PROCEDURE GetHostAddr (): Address
 
     ua := LOOPHOLE(info.h_addr_list,
                    UNTRACED REF UNTRACED REF struct_in_addr)^^;
-    RETURN LOOPHOLE (ua.s_addr, Address);
+    address.ipv4 := LOOPHOLE(ua.s_addr, AddressIPv4);
+    RETURN address;
   END GetHostAddr;
 
 PROCEDURE OtherEnd (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     addr : SockAddrIn;
-    len  : int := BYTESIZE (addr);
+    len  : socklen_t := BYTESIZE (addr);
     ep   : EndPoint;
   BEGIN
     IF getpeername (t.sock, ADR (addr), ADR (len)) < 0 THEN
@@ -393,7 +400,7 @@ PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint
 PROCEDURE InitSock (sock: SOCKET) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one: int := 1;
+    True: int := 1;
     linger := struct_linger{0, 0};
   BEGIN
     EVAL setsockopt (sock, SOL_SOCKET, SO_LINGER,
@@ -402,7 +409,7 @@ PROCEDURE InitSock (sock: SOCKET) =
     (**** WinSock documentation warns that this may cause problems
     ****)
     EVAL setsockopt (sock, IPPROTO_TCP, TCP_NODELAY,
-                     ADR(one), BYTESIZE(one));
+                     ADR(True), BYTESIZE(True));
   END InitSock;
 
 PROCEDURE IOFailed ()
