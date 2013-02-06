@@ -38,6 +38,10 @@
 #ifndef	_FNMATCH_H_
 #define	_FNMATCH_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define	FNM_NOMATCH	1	/* Match failed. */
 
 #define	FNM_NOESCAPE	0x01	/* Disable backslash escaping. */
@@ -52,6 +56,10 @@
 #define const	/* empty */
 #endif
 
-int	 fnmatch(const char *, const char *, int);
+int	 __cdecl fnmatch(const char *, const char *, int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* !_FNMATCH_H_ */
