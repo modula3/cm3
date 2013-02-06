@@ -2,7 +2,7 @@
 /* All rights reserved.                                      */
 /* See the file COPYRIGHT for a full description.            */
 
-#include "m3middle.h"
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C" {
