@@ -161,6 +161,8 @@
 #else
 #define M3_EXTERN_C         /* nothing */
 #define M3EXTERNC_BEGIN     /* nothing */
+#define M3_EXTERN_C_BEGIN   /* nothing */
+#define M3_EXTERN_C_END     /* nothing */
 #define M3_EXTERNC_BEGIN    /* nothing */
 #define M3EXTERNC_END       /* nothing */
 #define M3_EXTERNC_END      /* nothing */
@@ -514,6 +516,10 @@ M3toC__FreeSharedS(TEXT, const char*);
 TEXT
 __cdecl
 M3toC__CopyStoT(const char*);
+
+TEXT
+__cdecl
+M3toC__StoT(const char*);
 
 /* This MUST match DatePosix.i3.T.
  * The fields are ordered by size and alphabetically.
