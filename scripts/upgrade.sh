@@ -56,6 +56,13 @@ install_compiler() {
   install_config || exit 1
 }
 
+# delete lingering cm3cg in case old compiler/config uses it
+for a in cm3cg gcc/m3cgc1; do
+    for b in "" .exe; do
+        rm "$root/m3-sys/m3cc/${TARGET}/$a$b" || true
+    done
+done
+
 # Build the compiler with the installed version of the runtime;
 # do _not_ compile m3core and libm3 here.
 # Start with the front end.
