@@ -1,3 +1,7 @@
+/* copied from m3core so can build from older releases,
+ * in which there is no m3core/m3core.h
+ */
+
 #if _MSC_VER > 1000
 #pragma once
 #endif
