@@ -31,7 +31,7 @@ cd ${WS}/cm3/scripts/regression || {
 
 for a in cm3cg gcc/m3cgc1; do
     for b in "" .exe; do
-        rm ${WS}/cm3/m3-sys/m3cc/${TARGET}/$a$b || true
+        rm "${WS}/cm3/m3-sys/m3cc/${TARGET}/$a$b" || true
     done
 done
 
