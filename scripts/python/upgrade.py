@@ -20,6 +20,11 @@ def _CleanupEnvironment():
 
 SetupEnvironment()
 
+# delete lingering cm3cg in case old compiler/config uses it
+for a in ["cm3cg", "gcc/m3cgc1"]:
+    for b in ["", ".exe"]:
+        DeleteFile(Root + "m3-sys/m3cc/" + Target + "/" + a + b)
+
 #
 # clean everything
 #
