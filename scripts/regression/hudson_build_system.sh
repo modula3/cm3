@@ -29,6 +29,9 @@ cd ${WS}/cm3/scripts/regression || {
   exit 1
 }
 
+rm ${WS}/cm3/m3-sys/m3cc/${TARGET}/cm3cg || true
+rm ${WS}/cm3/m3-sys/m3cc/${TARGET}/gcc/m3cgc1 || true
+
 # echo 1 CM3CG is ${CM3CG}
 # if [ -z "${CM3CG}" ]; then
 #   case "${WS}" in
