@@ -6,10 +6,6 @@ extern "C" {
 
 TEXT
 __cdecl
-M3toC__StoT(const char*);
-
-TEXT
-__cdecl
 M3CC__UInt64ToText(UINT64 a, WORD_T base)
 {
     if (a == 0)
