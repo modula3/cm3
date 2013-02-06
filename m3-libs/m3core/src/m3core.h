@@ -5,6 +5,24 @@
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+#pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4115) /* named type definition in parentheses */
+#pragma warning(disable:4100) /* unused parameter */
+#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
+#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
+#pragma warning(disable:4514) /* unused inline function removed */
+#pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
+#pragma warning(disable:4226) /* nonstandard extension: __export */
+#pragma warning(disable:4820) /* padding inserted */
+#pragma warning(disable:4255) /* () change to (void) */
+#pragma warning(disable:4668) /* #if of undefined symbol */
+#endif
+
 #if __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__)
 #define M3_HAS_VISIBILITY 1
 #else
@@ -23,24 +41,6 @@
  */
 #if defined(__APPLE__) && !defined(__DARWIN_UNIX03)
 #define __DARWIN_UNIX03 0
-#endif
-
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_DEPRECATE
-#define _CRT_NONSTDC_NO_DEPRECATE
-#pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
-#pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
-#pragma warning(disable:4115) /* named type definition in parentheses */
-#pragma warning(disable:4100) /* unused parameter */
-#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
-#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
-#pragma warning(disable:4514) /* unused inline function removed */
-#pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */
-#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
-#pragma warning(disable:4226) /* nonstandard extension: __export */
-#pragma warning(disable:4820) /* padding inserted */
-#pragma warning(disable:4255) /* () change to (void) */
-#pragma warning(disable:4668) /* #if of undefined symbol */
 #endif
 
 #if __GNUC__ || __SUNPRO_C >= 0x590
