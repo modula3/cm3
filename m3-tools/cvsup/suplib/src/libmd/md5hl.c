@@ -7,52 +7,50 @@
  * ----------------------------------------------------------------------------
  */
 
-#if defined(__INTERIX) && !defined(_REENTRANT)
-#define _REENTRANT
-#endif
-
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "m3core.h"
 
 #include "md5.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 char *
+__cdecl
 MD5End(MD5_CTX *ctx, char *buf)
 {
-    int i;
-    unsigned char digest[16];
+    int i = { 0 };
+    unsigned char digest[16] = { 0 };
     static const char hex[]="0123456789abcdef";
 
     if (!buf)
-        buf = malloc(33);
+        buf = (char*)malloc(33);
     if (!buf)
-	return 0;
+        return 0;
     MD5Final(digest,ctx);
     for (i=0;i<16;i++) {
-	buf[i+i] = hex[digest[i] >> 4];
-	buf[i+i+1] = hex[digest[i] & 0x0f];
+        buf[i+i] = hex[digest[i] >> 4];
+        buf[i+i+1] = hex[digest[i] & 0x0f];
     }
     buf[i+i] = '\0';
     return buf;
 }
 
 char *
+__cdecl
 MD5File (char *filename, char *buf)
 {
-    unsigned char buffer[BUFSIZ];
-    MD5_CTX ctx;
-    int f,i,j;
+    unsigned char buffer[BUFSIZ] = { 0 };
+    MD5_CTX ctx = { 0 };
+    int f = { 0 };
+    int i = { 0 };
+    int j = { 0 };
 
     MD5Init(&ctx);
     f = open(filename,O_RDONLY);
     if (f < 0) return 0;
     while ((i = read(f,buffer,sizeof buffer)) > 0) {
-	MD5Update(&ctx,buffer,i);
+        MD5Update(&ctx,buffer,i);
     }
     j = errno;
     close(f);
@@ -62,11 +60,16 @@ MD5File (char *filename, char *buf)
 }
 
 char *
+__cdecl
 MD5Data (const unsigned char *data, unsigned int len, char *buf)
 {
-    MD5_CTX ctx;
+    MD5_CTX ctx = { 0 };
 
     MD5Init(&ctx);
     MD5Update(&ctx,data,len);
     return MD5End(&ctx, buf);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

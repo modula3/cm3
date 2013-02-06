@@ -26,16 +26,18 @@
  * edited for clarity and style only.
  */
 
-#include <sys/types.h>
+#include "m3core.h"
 
 #ifdef KERNEL
 #include <sys/param.h>
 #include <sys/systm.h>
-#else
-#include <string.h>
 #endif
 
 #include "md5.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static void MD5Transform(UINT32 [4], const unsigned char [64]);
 
@@ -54,13 +56,22 @@ static void MD5Transform(UINT32 [4], const unsigned char [64]);
  * a multiple of 4.
  */
 
+#ifdef __cplusplus
+static void
+Encode (
+	unsigned char *output,
+	UINT32 *input,
+	unsigned int len)
+#else
 static void
 Encode (output, input, len)
 	unsigned char *output;
 	UINT32 *input;
 	unsigned int len;
+#endif
 {
-	unsigned int i, j;
+	unsigned int i = { 0 };
+	unsigned int j = { 0 };
 
 	for (i = 0, j = 0; j < len; i++, j += 4) {
 		output[j] = (unsigned char)(input[i] & 0xff);
@@ -75,13 +86,22 @@ Encode (output, input, len)
  * a multiple of 4.
  */
 
+#ifdef __cplusplus
+static void
+Decode (
+	UINT32 *output,
+	const unsigned char *input,
+	unsigned int len)
+#else
 static void
 Decode (output, input, len)
 	UINT32 *output;
 	const unsigned char *input;
 	unsigned int len;
+#endif
 {
-	unsigned int i, j;
+	unsigned int i = { 0 };
+	unsigned int j = { 0 };
 
 	for (i = 0, j = 0; j < len; i++, j += 4)
 		output[i] = ((UINT32)input[j]) | (((UINT32)input[j+1]) << 8) |
@@ -131,9 +151,17 @@ static unsigned char PADDING[64] = {
 
 /* MD5 initialization. Begins an MD5 operation, writing a new context. */
 
+#ifdef __cplusplus
 void
+__cdecl
+MD5Init (
+	MD5_CTX *context)
+#else
+void
+__cdecl
 MD5Init (context)
 	MD5_CTX *context;
+#endif
 {
 
 	context->count[0] = context->count[1] = 0;
@@ -151,11 +179,21 @@ MD5Init (context)
  * context.
  */
 
+#ifdef __cplusplus
 void
+__cdecl
+MD5Update (
+	MD5_CTX *context,
+	const unsigned char *input,
+	unsigned int inputLen)
+#else
+void
+__cdecl
 MD5Update (context, input, inputLen)
 	MD5_CTX *context;
 	const unsigned char *input;
 	unsigned int inputLen;
+#endif
 {
 	unsigned int i, index, partLen;
 
@@ -194,13 +232,23 @@ MD5Update (context, input, inputLen)
  * the message digest and zeroizing the context.
  */
 
+#ifdef __cplusplus
 void
+__cdecl
+MD5Final (
+	unsigned char digest[16],
+	MD5_CTX *context)
+#else
+void
+__cdecl
 MD5Final (digest, context)
 	unsigned char digest[16];
 	MD5_CTX *context;
+#endif
 {
-	unsigned char bits[8];
-	unsigned int index, padLen;
+	unsigned char bits[8] = { 0 };
+	unsigned int index = { 0 };
+	unsigned int padLen = { 0 };
 
 	/* Save number of bits */
 	Encode (bits, context->count, 8);
@@ -222,10 +270,17 @@ MD5Final (digest, context)
 
 /* MD5 basic transformation. Transforms state based on block. */
 
+#ifdef __cplusplus
+static void
+MD5Transform (
+	UINT32 state[4],
+	const unsigned char block[64])
+#else
 static void
 MD5Transform (state, block)
 	UINT32 state[4];
 	const unsigned char block[64];
+#endif
 {
 	UINT32 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
 
@@ -327,3 +382,7 @@ MD5Transform (state, block)
 	/* Zeroize sensitive information. */
 	memset ((void *)x, 0, sizeof (x));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

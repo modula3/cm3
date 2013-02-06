@@ -26,6 +26,10 @@ documentation and/or software.
 #ifndef _SYS_MD5_H_
 #define _SYS_MD5_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * On all platforms I can think of, including the 64-bit Alpha, the type
  * "unsigned int" is 32 bits in size.  If your platform is an exception,
@@ -47,11 +51,15 @@ typedef struct MD5Context {
 #define const	/* empty */
 #endif
 
-void   MD5Init (MD5_CTX *);
-void   MD5Update (MD5_CTX *, const unsigned char *, unsigned int);
-void   MD5Final (unsigned char [16], MD5_CTX *);
-char * MD5End(MD5_CTX *, char *);
-char * MD5File(char *, char *);
-char * MD5Data(const unsigned char *, unsigned int, char *);
+void   __cdecl MD5Init (MD5_CTX *);
+void   __cdecl MD5Update (MD5_CTX *, const unsigned char *, unsigned int);
+void   __cdecl MD5Final (unsigned char [16], MD5_CTX *);
+char * __cdecl MD5End(MD5_CTX *, char *);
+char * __cdecl MD5File(char *, char *);
+char * __cdecl MD5Data(const unsigned char *, unsigned int, char *);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _SYS_MD5_H_ */
