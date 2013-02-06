@@ -29,8 +29,11 @@ cd ${WS}/cm3/scripts/regression || {
   exit 1
 }
 
-rm ${WS}/cm3/m3-sys/m3cc/${TARGET}/cm3cg || true
-rm ${WS}/cm3/m3-sys/m3cc/${TARGET}/gcc/m3cgc1 || true
+for a in cm3cg gcc/m3cgc1; do
+    for b in "" .exe;
+        do echo ${WS}/cm3/m3-sys/m3cc/${TARGET}/$a$b || true
+    done
+done
 
 # echo 1 CM3CG is ${CM3CG}
 # if [ -z "${CM3CG}" ]; then
