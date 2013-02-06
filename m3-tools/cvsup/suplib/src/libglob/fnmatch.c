@@ -36,6 +36,8 @@
  * From FreeBSD fnmatch.c 1.11
  */
 
+#include "m3core.h"
+
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)fnmatch.c	8.2 (Berkeley) 4/16/94";
 #endif /* LIBC_SCCS and not lint */
@@ -51,15 +53,21 @@ static char sccsid[] = "@(#)fnmatch.c	8.2 (Berkeley) 4/16/94";
 
 #include "fnmatch.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define	EOS	'\0'
 
 static const char *rangematch(const char *, char, int);
 
 int
+__cdecl
 fnmatch(const char *pattern, const char *string, int flags)
 {
-	const char *stringstart;
-	char c, test;
+	const char *stringstart = { 0 };
+	char c = { 0 };
+	char test = { 0 };
 
 	for (stringstart = string;;)
 		switch (c = *pattern++) {
@@ -152,8 +160,10 @@ fnmatch(const char *pattern, const char *string, int flags)
 static const char *
 rangematch(const char *pattern, char test, int flags)
 {
-	int negate, ok;
-	char c, c2;
+	int negate = { 0 };
+	int ok = { 0 };
+	char c = { 0 };
+	char c2 = { 0 };
 
 	/*
 	 * A bracket expression starting with an unquoted circumflex
@@ -196,3 +206,7 @@ rangematch(const char *pattern, char test, int flags)
 	}
 	return (ok == negate ? NULL : pattern);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
