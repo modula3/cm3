@@ -19,8 +19,13 @@ proc FileExists(a) is
     return not stale (a, a)
 end
 
-if equal(TARGET, "NT386") and equal(OS_TYPE, "POSIX")
-  % nothing -- no user thread support
+if (equal(TARGET, "NT386")
+    or equal(TARGET, "I386_NT")
+    or equal(TARGET, "AMD64_NT")
+    or equal(TARGET, "IA64_NT")
+    or equal(TARGET, "ARM_NT")
+    ) and equal(OS_TYPE, "POSIX")
+  % nothing -- no user thread support (Cygwin?)
 else
     if FileExists(path() & "/" & TARGET & "/m3makefile")
         include_dir (TARGET)
