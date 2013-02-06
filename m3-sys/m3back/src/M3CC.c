@@ -25,7 +25,7 @@ M3CC__UInt64ToText(UINT64 a, WORD_T base)
             a /= base;
             buf[--i] = ((c <= 9) ? (c + '0') : (c - 10 + 'A'));
         } while(a);
-        return M3toC__CopyStoT(buf);
+        return M3toC__CopyStoT(&buf[i]);
     }
 }
 
