@@ -1,6 +1,8 @@
 #include "m3core.h"
 
-M3_EXTERN_C_BEGIN
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 TEXT
 __cdecl
@@ -27,4 +29,6 @@ M3CC__UInt64ToText(UINT64 a, WORD_T base)
     }
 }
 
-M3_EXTERN_C_END
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
