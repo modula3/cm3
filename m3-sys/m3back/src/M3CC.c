@@ -16,9 +16,10 @@ M3CC__UInt64ToText(UINT64 a, WORD_T base)
         return M3toC__StoT("0");
     else
     {
-        char buf[65] = { 0 };
-        unsigned i = 64;
+        char buf[65];
+        unsigned i = 65;
         base &= 0xFF;
+        buf[--i] = 0;
         do
         {
             unsigned c = (unsigned)(a % (unsigned)base);
