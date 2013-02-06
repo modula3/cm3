@@ -646,22 +646,9 @@ PKGSDB = os.path.join(Scripts, "PKGS")
 #-----------------------------------------------------------------------------
 
 def GetConfigForDistribution(Target):
-#
-# Favor the config-no-install directory, else fallback to config.
-#
-    if False:
-        a = os.path.join(Root, "m3-sys", "cminstall", "src")
-        b = os.path.join(a, "config-no-install", Target)
-        if isfile(b):
-            return b
-        # b = os.path.join(a, "config", Target)
-        b = os.path.join(a, "config-no-install", Target)
-        # print("GetConfigForDistribution:" + b)
-        return b
-    else:
-        b = os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", Target)
-        # print("GetConfigForDistribution:" + b)
-        return b
+    b = os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", Target)
+    # print("GetConfigForDistribution:" + b)
+    return b
 
 #-----------------------------------------------------------------------------
 
@@ -878,17 +865,12 @@ def MakePackageDB():
         # and write their relative paths from Root to PKGSDB.
         #
         def Callback(Result, Directory, Names):
-            if os.path.basename(Directory) != "src":
-                return
-            if Directory.find("_darcs") != -1:
-                return
-            if Directory.find("examples/web") != -1:
-                return
-            if Directory.find("examples\\web") != -1:
-                return
-            if not "m3makefile" in Names:
-                return
-            if not isfile(os.path.join(Directory, "m3makefile")):
+            if (os.path.basename(Directory) != "src"
+                or Directory.find("_darcs") != -1
+                or Directory.find("examples/web") != -1
+                or Directory.find("examples\\web") != -1
+                or (not "m3makefile" in Names)
+                or (not isfile(os.path.join(Directory, "m3makefile")))):
                 return
             Result.append(Directory[len(Root) + 1:-4].replace('\\', "/") + "\n")
 
@@ -1135,7 +1117,7 @@ def Boot():
     # add -c to compiler but not link (i.e. not CCompilerFlags)
 
     Compile = "$(CC) $(CFLAGS) "
-    if not StringTagged(Config, "VMS"):
+    if not vms:
         Compile = Compile + " -c "
 
     AssembleOnTarget = not vms
@@ -1143,7 +1125,7 @@ def Boot():
 
     # pick assembler
 
-    if StringTagged(Target, "VMS") and AssembleOnTarget:
+    if vms and AssembleOnTarget:
         Assembler = "macro" # not right, come back to it later
         AssemblerFlags = "/alpha " # not right, come back to it later
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
