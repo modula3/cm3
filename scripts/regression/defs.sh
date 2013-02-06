@@ -630,7 +630,7 @@ test_build_system()
   echo type cm3
        type cm3 || true
   echo cm3 -version
-       cm3 -version || true
+       cm3 -version
   BUILDSCRIPT="./scripts/do-cm3-core.sh"
   if [ -z "$NOCLEAN" ]; then
     echo OMIT_GCC=yes $BUILDSCRIPT realclean
