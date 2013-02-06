@@ -37,7 +37,7 @@ void
 __cdecl
 FileAttr__SetModTime(const char* path, LONGINT mtime)
 {
-    struct timeval times[2];
+    struct timeval times[2] = { 0 };
 
     ZERO_MEMORY(times);
     gettimeofday(&times[0], NULL); /* Access time. */
@@ -46,7 +46,7 @@ FileAttr__SetModTime(const char* path, LONGINT mtime)
     times[1].tv_usec = 0;
     utimes(path, times);
 #else
-    struct utimebuf timebuf;
+    struct utimebuf timebuf = { 0 };
 
     ZERO_MEMORY(timebuf);
     timebuf.actime = times[0].tv_sec;
