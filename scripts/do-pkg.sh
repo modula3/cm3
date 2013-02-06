@@ -40,5 +40,5 @@ ACTION=`IGNORE_MISS=yes map_action $@`
 ADDARGS=`add_action_opts $@`
 P=`get_args $@`
 
-echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
+eval echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
