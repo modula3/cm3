@@ -2,7 +2,7 @@ MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
-IMPORT M3ID, TInt, TWord, ASCII, TextUtils, Cstdint, Long, Fmt, Thread, Stdio;
+IMPORT M3ID, TInt, TWord, ASCII, TextUtils, Fmt, Thread, Stdio;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -12,6 +12,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
+FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
 
 (* comparison is always false due to limited range of data type *)
 VAR AvoidGccTypeRangeWarnings := TRUE;
@@ -256,32 +257,6 @@ BEGIN
         DEC(j);
     END;
 END Reverse;
-
-TYPE  INT32 = Cstdint.int32_t;
-TYPE  INT64 = LONGINT;
-TYPE UINT32 = Cstdint.uint32_t;
-TYPE UINT64 = Long.T;
-TYPE Base_t = [2..36];
-
-PROCEDURE UInt64ToText(a: UINT64; base: Base_t): TEXT =
-VAR buf: ARRAY [0..BITSIZE(a) + 1] OF CHAR;
-    i := LAST(buf);
-    c: UINT64;
-    d: CHAR;
-BEGIN
-    REPEAT
-        c := a MOD VAL(base, UINT64);
-        IF c <= 9L THEN
-            d := VAL(c + VAL(ORD('0'), UINT64), CHAR);
-        ELSE
-            d := VAL(c - 10L + VAL(ORD('A'), UINT64), CHAR);
-        END;
-        buf[i] := d;
-        a := a DIV VAL(base, UINT64);
-        DEC(i);
-    UNTIL a = 0L;
-    RETURN Text.FromChars(SUBARRAY(buf, i + 1, LAST(buf) - i));
-END UInt64ToText;
 
 PROCEDURE Int64ToText(a: INT64; base: Base_t): TEXT =
 BEGIN

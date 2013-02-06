@@ -22,6 +22,8 @@ Module ("TWordN")
 
 Module    ("M3x86")
 Module    ("M3C")
+interface ("M3CC")
+c_source  ("M3CC")
 interface ("M3x86Rep")
 module    ("Wrx86")
 module    ("Stackx86")
