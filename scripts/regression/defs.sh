@@ -306,7 +306,7 @@ fi
 SSH="ssh"; export SSH
 if [ "$TESTHOSTNAME" = "current10s" -o "$TESTHOSTNAME" = "current9s" -o \
      "$TESTHOSTNAME" = "current10x" -o "$TESTHOSTNAME" = "current9x" -o \
-     "$TESTHOSTNAME" = "dublin10s" -o "$TESTHOSTNAME" = "dublin9x" -o \
+     "$TESTHOSTNAME" = "dublin10s" -o "$TESTHOSTNAME" = "dublin9s" -o \
      "$TESTHOSTNAME" = "dublin10x" -o "$TESTHOSTNAME" = "dublin9x" ]; then
   SSH="ssh login.opencsw.org ssh -l hudson"
   ship_www() {
