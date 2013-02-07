@@ -1,7 +1,7 @@
 #!/bin/sh
 
-set -e
-set -x
+#set -e
+#set -x
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
