@@ -11,7 +11,20 @@ REM v1.4, 01/13/2010, R.Coleburn, skip m3core, libm3, and mklib in 1st phase; us
 REM v1.5, 01/15/2010, R.Coleburn, add extra checks at end of each stage to ensure new cm3.exe was produced and copied to target bin folder.
 REM v1.6, 03/11/2010, R.Coleburn, add feature to search PATH env var when trying to locate root of cm3 installation
 REM v1.7, 11/28/2010, R.Coleburn, add "-skip m3cc" to all build stages because this package isn't used on Windows
+rem v1.8, 02/06/2013, R.Coleburn, Add error exit codes.  Fix bug of attempting cm3.exe install after build error.
+rem ---------------------------------------------------------------------------
+rem EXIT CODES:
+rem ----------
+rem    0=ok; no errors
+rem    1=Unsupported OS
+rem    2=Usage error, e.g., Invalid command line options
+rem    3=Invalid system environment settings
+rem    4=Invalid cm3 environment settings
+rem    5=Fatal error, e.g., Unable to create file/folder
+rem    6=User abort
 REM ===========================================================================
+
+
 
 :Init
 :----
@@ -20,6 +33,7 @@ set _cm3_Answ=
 set _cm3_Arg=
 set _cm3_CM3Args=-realclean -clean -build -ship
 set _cm3_CM3Failure=
+set _cm3_ExitCode=0
 set _cm3_Group=min
 set _cm3_PkgInfo=
 set _cm3_PkgPath=
@@ -89,7 +103,8 @@ echo.
 :--------
 REM Find root of CM3 installation, copy required files to bin, and Ensure CM3 command line environment has been setup.
 if not "%CM3_ROOT%"=="" if exist "%CM3_ROOT%\bin\cm3.exe" if exist "%CM3_ROOT%\pkg" goto FoundRoot
-if not "%CM3_ROOT%"=="" echo ERROR:  Specified CM3_ROOT (%CM3_ROOT%) is missing a required folder. & goto END
+if not "%CM3_ROOT%"=="" echo ERROR:  Specified CM3_ROOT (%CM3_ROOT%) is missing a required folder. & (set _cm3_ExitCode=4) & goto END
+
 pushd ..
 cd ..
 cd ..
@@ -104,13 +119,14 @@ if defined CM3_ROOT if exist "%CM3_ROOT%\bin\cm3.exe" call :FN_FQPathNoSpaces CM
 if defined CM3_ROOT if exist "%CM3_ROOT%\bin\cm3.exe" if exist "%CM3_ROOT%\pkg" goto FoundRoot
 set CM3_ROOT=
 echo ERROR:  Could not find root of CM3 installation.
+set _cm3_ExitCode=4
 goto END
 
 :FoundRoot
 echo CM3 Root = %CM3_ROOT%
 echo.
 set _cm3_DO=%_cm3_TMP1%do-cm3.cmd
-if not exist "%_cm3_DO%" echo ERROR:  Missing script "%_cm3_DO%" & goto END
+if not exist "%_cm3_DO%" echo ERROR:  Missing script "%_cm3_DO%" & (set _cm3_ExitCode=5) & goto END
 echo Copying .CMD scripts and documentation to %CM3_ROOT%\bin ...
 for %%f in (Documentation_cm3Proj.pdf Documentation_cm3CommandShell.pdf Documentation_CM3StartIDE.pdf) do if exist "..\..\doc\%%f" copy /y "..\..\doc\%%f" "%CM3_ROOT%\bin"
 for %%f in (Documentation_cm3Proj.htm Documentation_cm3CommandShell.htm Documentation_CM3StartIDE.htm) do if exist "..\..\doc\%%f" copy /y "..\..\doc\%%f" "%CM3_ROOT%\bin"
@@ -153,6 +169,7 @@ if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" goto FindSourceTree
 
 :NoPkgInfo
 echo ERROR:  Unable to locate PkgInfo.txt file.
+set _cm3_ExitCode=5
 goto END
 
 :FN_PkgInfo
@@ -199,6 +216,7 @@ popd
 if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
 
 echo ERROR:  Unable to locate package source tree.
+set _cm3_ExitCode=5
 goto END
 
 
@@ -211,16 +229,16 @@ if "%_cm3_NoPause%"=="TRUE" set _z_ctrlArgs=%_z_ctrlArgs% -nopause
 if /I not "%_cm3_CfgDone%"=="TRUE" call :FN_UpdateConfig
 echo Creating config ...
 if not exist "%CM3_ROOT%\bin\config" mkdir %CM3_ROOT%\bin\config
-if not exist "%CM3_ROOT%\bin\config" echo ERROR:  Unable to create folder "%CM3_ROOT%\bin\config" & goto END
+if not exist "%CM3_ROOT%\bin\config" echo ERROR:  Unable to create folder "%CM3_ROOT%\bin\config" & (set _cm3_ExitCode=5) & goto END
 copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\* %CM3_ROOT%\bin\config
-if errorlevel 1 echo ERROR:  Problem copying files. & goto END
+if errorlevel 1 echo ERROR:  Problem copying files. & (set _cm3_ExitCode=5) & goto END
 echo Creating "%CM3_ROOT%\bin\cm3.cfg" ...
 if exist "%CM3_ROOT%\bin\cm3.cfg" del /f %CM3_ROOT%\bin\cm3.cfg
 REM OLD: echo INSTALL_ROOT = path() ^& "/..">%CM3_ROOT%\bin\cm3.cfg
 REM OLD: echo include(path() ^& "/config/NT386")>>%CM3_ROOT%\bin\cm3.cfg
 copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\cm3.cfg %CM3_ROOT%\bin\cm3.cfg
-if errorlevel 1 echo ERROR:  Problem copying files. & goto END
-if not exist "%CM3_ROOT%\bin\cm3.cfg" echo ERROR:  Problem copying files. & goto END
+if errorlevel 1 echo ERROR:  Problem copying files. & (set _cm3_ExitCode=5) & goto END
+if not exist "%CM3_ROOT%\bin\cm3.cfg" echo ERROR:  Problem copying files. & (set _cm3_ExitCode=5) & goto END
 if not "%_cm3_Verbose%"=="TRUE" goto SkipCFGlist
 echo.
 echo %CM3_ROOT%\bin\cm3.cfg
@@ -265,6 +283,7 @@ goto END
 
 :FN_FinishStage
 :--------------
+if "%_cm3_CM3Failure%"=="TRUE" echo ...skipping installation of cm3.exe due to errors... & goto :EOF
 if not exist "%_cm3_PkgTree%m3-sys\cm3\NT386\cm3.exe" goto StageFailure
 echo ...installing new cm3.exe as "%CM3_ROOT%\bin\cm3.exe" ...
 if exist "%CM3_ROOT%\bin\cm3.exe" del /f "%CM3_ROOT%\bin\cm3.exe"
@@ -276,6 +295,7 @@ goto :EOF
 
 :StageFailure
 set _cm3_CM3Failure=TRUE
+set _z_ExitCode=5
 echo ERROR: Stage Failure--cm3.exe was not created successfully!  Aborting...
 goto :EOF
 
@@ -299,6 +319,7 @@ goto :EOF
 
 :FatalSetupCM3
 :-------------
+set _z_ExitCode=3
 echo ERROR:  Unable to successfully run "c:\cm3\bin\cm3CommandShell.CMD"
 echo         Please edit this .CMD file to provide correct path.
 goto END
@@ -352,6 +373,7 @@ goto U2
 
 :Usage
 :-----
+set _cm3_ExitCode=2
 echo =====   -----------------------------------------------------------------------
 :U2
 echo.
@@ -381,6 +403,8 @@ echo.
 :END
 :---
 REM Remove environment variables and temporary files, then exit.
+if "%_cm3_CM3Failure%"=="TRUE" if "%_cm3_ExitCode%"=="0" set _cm3_ExitCode=5
+if not "%_cm3_ExitCode%"=="0" if /I "%_cm3_Verbose%"=="TRUE" set _cm3_
 
 rem echo _cm3_Answ=%_cm3_Answ%
 set _cm3_Answ=
@@ -441,3 +465,4 @@ set _z_ctrlArgs=
 
 echo ===END RCC_upgradeCM3===
 echo on
+@EXIT /B %_cm3_ExitCode%
