@@ -17,9 +17,24 @@ REM v1.11, 10/29/2009, R.Coleburn, various optimizations
 REM v1.12, 01/12/2010, R.Coleburn, repair multiple bugs in "if defined xxx if exist %xxx% del %xxx%" construct
 REM v1.20, 01/13/2010, R.Coleburn, add "-skip" directive.  Force argument keywords to be prefixed by "-".
 REM v1.21, 09/12/2010, R.Coleburn, add Windows7 OS detection.
+REM v1.22, 05/13/2012, R.Coleburn, improved error detection when invoking cm3.
+rem v1.30, 02/06/2013, R.Coleburn, Improve OS detection.  Add error exit codes.  
+rem                                Fix bug of not setting _cm3_CM3Failure=TRUE on fatal error for relay in environment to other cooperating CMD files.
+rem ---------------------------------------------------------------------------
+rem EXIT CODES:
+rem ----------
+rem    0=ok; no errors
+rem    1=Unsupported OS
+rem    2=Usage error, e.g., Invalid command line options
+rem    3=Invalid system environment settings
+rem    4=Invalid cm3 environment settings
+rem    5=Fatal error, e.g., Unable to create file/folder
+rem    6=User abort
 REM ===========================================================================
 
 
+
+set _z_ExitCode=0
 goto Welcome
 
 
@@ -45,7 +60,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.21, 09/12/2010, Randy Coleburn
+echo do-cm3, v1.30, 02/06/2013, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -56,33 +71,89 @@ echo.
 REM Ensure that the underlying operating system is supported by this script.
 REM
 if /I not "%OS%"=="Windows_NT" goto UnsupportedOS
-set _z_ThisOS=
-ver | (find /I "Windows 2000" >>NUL:) && set _z_ThisOS=2000
-ver | (find /I "Windows XP" >>NUL:) && set _z_ThisOS=XP
-ver | (find /I "Windows Version 5.2" >>NUL:) && set _z_ThisOS=XP_64bit
-ver | (find /I "Version 6.0.6" >>NUL:) && set  _z_ThisOS=Vista
-ver | (find /I "Version 6.1.7" >>NUL:) && set  _z_ThisOS=Windows7
-if not "%_z_ThisOS%"=="" goto Init
+if /I "%_cm3_CommandReady%"=="TRUE" if not "%_cm3_ThisOS%"=="" goto ver_END
+
+set _cm3_ThisOS=
+ver | (find /I "2003" >NUL:) && ((set _cm3_ThisOS=2003) & goto ver_2003)
+ver | (find /I "XP"   >NUL:) && ((set _cm3_ThisOS=XP)   & goto ver_XP)
+ver | (find /I "2000" >NUL:) && ((set _cm3_ThisOS=2000) & goto ver_2000)
+ver | (find /I "NT"   >NUL:) && ((set _cm3_ThisOS=NT)   & goto ver_NT)
+
+if NOT exist %SystemRoot%\system32\systeminfo.exe goto ver_NoSysInfo
+FOR /F "usebackq tokens=3* delims=: " %%i IN (`systeminfo ^| find /I "OS Name"`) DO set _cm3_ThisOS_Long=%%i %%j
+echo %_cm3_ThisOS_Long% | (find /I "Windows Vista"       >NUL:) && ((set _cm3_ThisOS=Vista) & goto ver_Vista)
+echo %_cm3_ThisOS_Long% | (find /I "Windows 7"           >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
+echo %_cm3_ThisOS_Long% | (find /I "Windows Server 2008" >NUL:) && ((set _cm3_ThisOS=2008)  & goto ver_2008)
+
+:ver_NoSysInfo
+ver | (find /I "Version 5.2"   >NUL:) && ((set _cm3_ThisOS=XP)    & goto ver_XP)
+ver | (find /I "Version 6.0.6" >NUL:) && ((set _cm3_ThisOS=Vista) & goto ver_Vista)
+ver | (find /I "Version 6.1.7" >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
 
 :UnsupportedOS
 echo.
 echo %0
 echo.
-echo ERROR:  Currently, this script supports only Windows 2000, XP, Vista, and Windows 7.
-echo         This computer is operating:  
+if "%_cm3_ThisOS%"=="" echo ERROR:  Unable to determine host operating system.
+echo ERROR:  This script supports only Microsoft Windows 2000/XP/Vista/7 and Server 2003/2008.
+if NOT "%_cm3_ThisOS%"=="" echo         This computer is operating:  (%_cm3_ThisOS%) %_cm3_ThisOS_Long%
 ver
 set _z_ExitCode=1
 goto END
+
+:FN_GetNumBitsThisOS
+set _cm3_bitsOS=64
+REG.EXE Query "HKLM\Hardware\Description\System\CentralProcessor\0" | (find /I "x86" >NUL:) && (set _cm3_bitsOS=32)
+goto :EOF
+
+:ver_NT
+set _cm3_ThisOS_Long=Microsoft Windows NT
+goto UnsupportedOS
+goto ver_END
+
+:ver_2000
+set _cm3_ThisOS_Long=Microsoft Windows 2000
+goto ver_END
+
+:ver_XP
+set _cm3_ThisOS_Long=Microsoft Windows XP
+ver | (find /I "Version 5.2"   >NUL:) && ((set _cm3_bitsOS=64) & (set _cm3_ThisOS_Long=Microsoft Windows XP 64-bit Edition) & goto ver_END)
+goto ver_END
+
+:ver_Vista
+if "%_cm3_ThisOS_Long%"=="" set _cm3_ThisOS_Long=Microsoft Windows Vista (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_7
+if "%_cm3_ThisOS_Long%"=="" set _cm3_ThisOS_Long=Microsoft Windows 7 (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_2003
+call :FN_GetNumBitsThisOS
+set _cm3_ThisOS_Long=Microsoft Windows Server 2003 (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_2008
+call :FN_GetNumBitsThisOS
+set _cm3_ThisOS_Long=Microsoft Windows Server 2008 (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_END
+rem echo _cm3_ThisOS=%_cm3_ThisOS%
+rem echo _cm3_ThisOS_Long=%_cm3_ThisOS_Long%
+rem echo This computer is operating:  (%_cm3_ThisOS%) %_cm3_ThisOS_Long%
 
 
 
 :Init
 :----
 REM Initialize variables.
+if "%_cm3_ThisOS%"=="" goto UnsupportedOS
 set _z_Answ=
 set _z_Arg=
 set _z_CM3Args=
 set _z_CM3Failure=
+set _z_Fail=
 set _z_Group=
 set _z_Package=
 set _z_PkgInfo=
@@ -198,6 +269,7 @@ if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
 :NoPkgInfo
 echo ERROR:  Unable to locate "PkgInfo.txt" file.
+set _z_ExitCode=5
 goto END
 
 :FN_PkgInfo
@@ -244,6 +316,7 @@ popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
 echo ERROR:  Unable to locate package source tree.
+set _z_ExitCode=5
 goto END
 
 
@@ -280,7 +353,7 @@ if /I "%_z_NoPause%"=="TRUE" goto DoIt
 :AskContinue
 set /P _z_Answ=Do you want to continue (y=yes, n=no) ? 
 if /I "%_z_Answ%"=="Y" goto DoIt
-if /I "%_z_Answ%"=="N" goto END
+if /I "%_z_Answ%"=="N" ((set _z_ExitCode=6) & goto END)
 goto AskContinue
 
 
@@ -344,7 +417,7 @@ set _z_CM3Failure=
 call :FN_RemoveQuotes %_z_TempFile% _z_TMP1
 FOR /F "tokens=1 delims=" %%i in (%_z_TMP1%) do call :FN_DoPkg %%i
 echo.
-if not "%_z_CM3Failure%"=="" echo WARNING:  One or packages experienced a failure.  See result detail above.& echo.
+if not "%_z_CM3Failure%"=="" echo WARNING:  One or packages experienced a failure.  See result detail above.& echo.& set _cm3_FAILURE=TRUE
 if not exist %_z_ErrLog% goto END
 echo ERROR LOG SUMMARY:
 echo -----------------
@@ -357,6 +430,7 @@ goto END
 
 :FatalSetupCM3
 :-------------
+set _z_ExitCode=3
 echo ERROR:  Unable to successfully run "c:\cm3\bin\cm3SetupCmdEnv.CMD".
 echo         Please edit this .CMD file to provide correct path.
 goto END
@@ -442,6 +516,7 @@ for %%z in (%_z_Skip%) do if /I "%%z"=="%~nx1" set _z_Answ=1
 IF "%_z_Answ%"=="0" ( goto %2 ) ELSE ( goto %3 )
 echo ERROR: Failure in FN_ChkSkip function.
 set _z_CM3Failure=STOP
+set _z_ExitCode=5
 goto :EOF
 
 
@@ -474,19 +549,31 @@ REM Invoke CM3
 REM %1=CM3 mode (e.g. -build, -ship, -find, -depend, -clean, -realclean)
 REM %2=package
 if /I "%_z_CM3Failure%"=="STOP" goto :EOF
-cm3 %1
-if not errorlevel 1 goto :EOF
+:Retry
+set _z_Fail=TRUE
+(cm3 %1) && (set _z_Fail=)
+if errorlevel 1 set _z_Fail=TRUE
+if "%_z_Fail%"=="" goto :EOF
 set _z_CM3Failure=TRUE
+set _z_ExitCode=5
 echo.
 echo WARNING:  Encountered an error when processing package "%2" for "%1".
 echo WARNING:  Errors in package "%2" for "%1">>%_z_ErrLog%
 echo.
 if /I "%_z_NoPause%"=="TRUE" goto :EOF
 
+:AskRetry
+set /P _z_Answ=Do you want to retry the failed operation (y=yes, n=no) ? 
+echo.
+if /I "%_z_Answ%"=="Y" goto Retry
+if /I "%_z_Answ%"=="N" goto AskStop
+goto AskRetry
+
 :AskStop
 set /P _z_Answ=Do you want to continue (y=yes, n=no) ? 
+echo.
 if /I "%_z_Answ%"=="Y" goto :EOF
-if /I "%_z_Answ%"=="N" set _z_CM3Failure=STOP
+if /I "%_z_Answ%"=="N" ((set _z_CM3Failure=STOP) & (set _z_ExitCode=6))
 if /I "%_z_CM3Failure%"=="STOP" goto :EOF
 goto AskStop
 goto :EOF
@@ -516,6 +603,7 @@ goto U2
 
 :Usage
 :-----
+set _z_ExitCode=2
 echo =====   -----------------------------------------------------------------------
 :U2
 echo.
@@ -553,12 +641,16 @@ echo.
 :END
 :---
 REM Remove environment variables and temporary files, then exit.
+if not "%_z_ExitCode%"=="0" if /I "%_z_Verbose%"=="TRUE" set _z_
+if /I "%_z_CM3Failure%"=="TRUE" set _cm3_CM3Failure=TRUE
+if not "%_z_ExitCode%"=="0" set _cm3_CM3Failure=TRUE
 set _z_Answ=
 set _z_Arg=
 set _z_CM3Args=
 set _z_CM3Failure=
 call :FN_DelzErrLog
 set _z_ErrLog=
+set _z_Fail=
 set _z_Group=
 set _z_NoPause=
 set _z_Package=
@@ -573,3 +665,4 @@ set _z_Verbose=
 
 echo ===END do-cm3===
 echo on
+@EXIT /B %_z_ExitCode%
