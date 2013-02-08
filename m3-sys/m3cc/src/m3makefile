@@ -20,10 +20,10 @@ readonly TargeDefaultGccVersion = {
        "ARM_DARWIN" : "42",
      "AMD64_DARWIN" : "47",
       "I386_DARWIN" : "47",
-     "I386_SOLARIS" : "47",
-    "AMD64_SOLARIS" : "47",
-  "SPARC32_SOLARIS" : "47",
-  "SPARC64_SOLARIS" : "47",
+     "I386_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
+    "AMD64_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
+  "SPARC32_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
+  "SPARC64_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
 }
 
 include("platforms.quake")
