@@ -241,6 +241,15 @@ ThreadPThread__thread_create(WORD_T stackSize,
   pthread_attr_setstacksize(&attr, bytes);
 
   M3_RETRY(pthread_create(&pthread, &attr, start_routine, arg));
+  
+  if (r != 0)
+  {
+    fprintf(stderr,
+            "pthread_create(stack_size:0x%X):0x%X errno:0x%X\n",
+            (unsigned)stackSize,
+            (unsigned)r,
+            (unsigned)errno);
+  }
 
   pthread_attr_destroy(&attr);
 
