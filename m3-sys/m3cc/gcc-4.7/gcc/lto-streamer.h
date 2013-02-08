@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data structures and declarations used for reading and writing
    GIMPLE to a file stream.
 
@@ -785,7 +787,6 @@ extern void lto_append_block (struct lto_output_stream *);
 
 
 /* In lto-streamer.c.  */
-extern const char *lto_tag_name (enum LTO_tags);
 extern bitmap lto_bitmap_alloc (void);
 extern void lto_bitmap_free (bitmap);
 extern char *lto_get_section_name (int, const char *, struct lto_file_decl_data *);
@@ -932,92 +933,6 @@ lto_tag_to_gimple_code (enum LTO_tags tag)
 {
   gcc_assert (lto_tag_is_gimple_code_p (tag));
   return (enum gimple_code) ((unsigned) tag - NUM_TREE_CODES - 1);
-}
-
-
-/* Return the LTO tag corresponding to tree code CODE.  See enum
-   LTO_tags for details on the conversion.  */
-static inline enum LTO_tags
-lto_tree_code_to_tag (enum tree_code code)
-{
-  return (enum LTO_tags) ((unsigned) code + 1);
-}
-
-
-/* Return the tree code corresponding to TAG.  See enum LTO_tags for
-   details on the conversion.  */
-static inline enum tree_code
-lto_tag_to_tree_code (enum LTO_tags tag)
-{
-  gcc_assert (lto_tag_is_tree_code_p (tag));
-  return (enum tree_code) ((unsigned) tag - 1);
-}
-
-/* Check that tag ACTUAL == EXPECTED.  */
-static inline void
-lto_tag_check (enum LTO_tags actual, enum LTO_tags expected)
-{
-  if (actual != expected)
-    internal_error ("bytecode stream: expected tag %s instead of %s",
-		    lto_tag_name (expected), lto_tag_name (actual));
-}
-
-/* Check that tag ACTUAL is in the range [TAG1, TAG2].  */
-static inline void
-lto_tag_check_range (enum LTO_tags actual, enum LTO_tags tag1,
-		     enum LTO_tags tag2)
-{
-  if (actual < tag1 || actual > tag2)
-    internal_error ("bytecode stream: tag %s is not in the expected range "
-		    "[%s, %s]",
-		    lto_tag_name (actual),
-		    lto_tag_name (tag1),
-		    lto_tag_name (tag2));
-}
-
-/* Initialize an lto_out_decl_buffer ENCODER.  */
-static inline void
-lto_init_tree_ref_encoder (struct lto_tree_ref_encoder *encoder,
-			   htab_hash hash_fn, htab_eq eq_fn)
-{
-  encoder->tree_hash_table = htab_create (37, hash_fn, eq_fn, free);
-  encoder->next_index = 0;
-  encoder->trees = NULL;
-}
-
-
-/* Destory an lto_tree_ref_encoder ENCODER by freeing its contents.  The
-   memory used by ENCODER is not freed by this function.  */
-static inline void
-lto_destroy_tree_ref_encoder (struct lto_tree_ref_encoder *encoder)
-{
-  /* Hash table may be delete already.  */
-  if (encoder->tree_hash_table)
-    htab_delete (encoder->tree_hash_table);
-  VEC_free (tree, heap, encoder->trees);
-}
-
-/* Return the number of trees encoded in ENCODER. */
-static inline unsigned int
-lto_tree_ref_encoder_size (struct lto_tree_ref_encoder *encoder)
-{
-  return VEC_length (tree, encoder->trees);
-}
-
-/* Return the IDX-th tree in ENCODER. */
-static inline tree
-lto_tree_ref_encoder_get_tree (struct lto_tree_ref_encoder *encoder,
-			       unsigned int idx)
-{
-  return VEC_index (tree, encoder->trees, idx);
-}
-
-
-/* Return true if LABEL should be emitted in the global context.  */
-static inline bool
-emit_label_in_global_context_p (tree label)
-{
-  return DECL_NONLOCAL (label) || FORCED_LABEL (label);
 }
 
 DEFINE_DECL_STREAM_FUNCS (TYPE, type)
