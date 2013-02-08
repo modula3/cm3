@@ -15,6 +15,7 @@ rem ---------------
 rem v1.00, 10/26/2009, R.Coleburn, Initial Release.  This version is an "improved" replacement for my prior "cm3SetupCmdEnv.CMD" script.  It also adds support for Windows Vista.
 rem v1.10, 03/11/2010, R.Coleburn, check location of the running script, and also the PATH environment variable, as a potential locations for "bin/cm3.exe" when looking for the root of the cm3 installation.
 rem v1.20, 09/12/2010, R.Coleburn, Make Visual Studio 2010 Express the default. Adjust to deal with Vista and Windows7 OS identification.
+rem v1.30, 02/06/2013, R.Coleburn, Make Visual Studio 2012 Express the default.  Improve OS detection.
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -42,13 +43,14 @@ REM !!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!
 
 :DEFAULTS
 :--------
-set _cm3_VCSetup="C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+set _cm3_VCSetup="C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" x86
 set _cm3_SDKSetup=
 REM ---------------------------------------------------------------------------
 REM EXPLANATION (_cm3_VCSetup)
 REM    Set to absolute path of BAT/CMD that sets up Microsoft Visual Studio/C/C++
 REM    Set to empty to disable calling this auto setup routine.
 REM    Examples:
+REM       set _cm3_VCSetup="C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" x86
 REM       set _cm3_VCSetup="C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
 REM       set _cm3_VCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
 REM       set _cm3_VCSetup="C:\Program Files\Microsoft Visual Studio 8\VC\bin\VCVars32.bat"
@@ -71,7 +73,7 @@ echo.
 echo +------------------------------------------------------+
 echo ^|                 cm3CommandShell.CMD                  ^|
 echo ^|                 -------------------                  ^|
-echo ^| v1.20, September 12, 2010, written by Randy Coleburn ^|
+echo ^|  v1.30, February 6, 2012, written by Randy Coleburn  ^|
 echo +------------------------------------------------------+
 echo.
 
@@ -81,29 +83,82 @@ echo.
 :----------
 REM Ensure that the underlying operating system is supported by this script.
 REM
-if /I not "%OS%"=="Windows_NT" goto UnsupportedOS
+
 set _cm3_ThisOS=
-ver | (find /I "Windows 2000" >>NUL:) && set _cm3_ThisOS=2000
-ver | (find /I "Windows XP" >>NUL:) && set _cm3_ThisOS=XP
-ver | (find /I "Windows Version 5.2" >>NUL:) && set _cm3_ThisOS=XP_64bit
-ver | (find /I "Version 6.0.6" >>NUL:) && set _cm3_ThisOS=Vista
-ver | (find /I "Version 6.1.7" >>NUL:) && set _cm3_ThisOS=Windows7
-if not "%_cm3_ThisOS%"=="" goto Init
+ver | (find /I "2003" >NUL:) && ((set _cm3_ThisOS=2003) & goto ver_2003)
+ver | (find /I "XP"   >NUL:) && ((set _cm3_ThisOS=XP)   & goto ver_XP)
+ver | (find /I "2000" >NUL:) && ((set _cm3_ThisOS=2000) & goto ver_2000)
+ver | (find /I "NT"   >NUL:) && ((set _cm3_ThisOS=NT)   & goto ver_NT)
+
+if NOT exist %SystemRoot%\system32\systeminfo.exe goto ver_NoSysInfo
+FOR /F "usebackq tokens=3* delims=: " %%i IN (`systeminfo ^| find /I "OS Name"`) DO set _cm3_ThisOS_Long=%%i %%j
+echo %_cm3_ThisOS_Long% | (find /I "Windows Vista"       >NUL:) && ((set _cm3_ThisOS=Vista) & goto ver_Vista)
+echo %_cm3_ThisOS_Long% | (find /I "Windows 7"           >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
+echo %_cm3_ThisOS_Long% | (find /I "Windows Server 2008" >NUL:) && ((set _cm3_ThisOS=2008)  & goto ver_2008)
+
+:ver_NoSysInfo
+ver | (find /I "Version 5.2"   >NUL:) && ((set _cm3_ThisOS=XP)    & goto ver_XP)
+ver | (find /I "Version 6.0.6" >NUL:) && ((set _cm3_ThisOS=Vista) & goto ver_Vista)
+ver | (find /I "Version 6.1.7" >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
 
 :UnsupportedOS
 echo.
 echo %0
 echo.
-echo ERROR:  Currently, this script supports only Windows 2000, XP, Vista, and Windows 7.
-echo         This computer is operating:  
+if "%_cm3_ThisOS%"=="" echo ERROR:  Unable to determine host operating system.
+echo ERROR:  This script supports only Microsoft Windows 2000/XP/Vista/7 and Server 2003/2008.
+if NOT "%_cm3_ThisOS%"=="" echo         This computer is operating:  (%_cm3_ThisOS%) %_cm3_ThisOS_Long%
 ver
 set _cm3_ExitCode=1
 goto END
+
+:FN_GetNumBitsThisOS
+set _cm3_bitsOS=64
+REG.EXE Query "HKLM\Hardware\Description\System\CentralProcessor\0" | (find /I "x86" >NUL:) && (set _cm3_bitsOS=32)
+goto :EOF
+
+:ver_NT
+set _cm3_ThisOS_Long=Microsoft Windows NT
+goto UnsupportedOS
+goto ver_END
+
+:ver_2000
+set _cm3_ThisOS_Long=Microsoft Windows 2000
+goto ver_END
+
+:ver_XP
+set _cm3_ThisOS_Long=Microsoft Windows XP
+ver | (find /I "Version 5.2"   >NUL:) && ((set _cm3_bitsOS=64) & (set _cm3_ThisOS_Long=Microsoft Windows XP 64-bit Edition) & goto ver_END)
+goto ver_END
+
+:ver_Vista
+if "%_cm3_ThisOS_Long%"=="" set _cm3_ThisOS_Long=Microsoft Windows Vista (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_7
+if "%_cm3_ThisOS_Long%"=="" set _cm3_ThisOS_Long=Microsoft Windows 7 (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_2003
+call :FN_GetNumBitsThisOS
+set _cm3_ThisOS_Long=Microsoft Windows Server 2003 (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_2008
+call :FN_GetNumBitsThisOS
+set _cm3_ThisOS_Long=Microsoft Windows Server 2008 (%_cm3_bitsOS%-bit)
+goto ver_END
+
+:ver_END
+rem echo _cm3_ThisOS=%_cm3_ThisOS%
+rem echo _cm3_ThisOS_Long=%_cm3_ThisOS_Long%
+rem echo This computer is operating:  (%_cm3_ThisOS%) %_cm3_ThisOS_Long%
 
 
 
 :Init
 :----
+if "%_cm3_ThisOS%"=="" goto UnsupportedOS
 if "%_cm3_IDE%"=="" if defined CM3_IDE for %%a in (cm3IDE Reactor) do if /I "%%a"=="%CM3_IDE%" set _cm3_IDE=%%a
 if "%_cm3_IDE%"=="" set _cm3_IDE=cm3IDE
 if /I "%_cm3_IDE%"=="cm3IDE" if defined CM3_IDE_HOME if exist "%CM3_IDE_HOME%" set _cm3_HOME=%CM3_IDE_HOME%
@@ -153,6 +208,7 @@ goto InitEnviron
 :FN_KillTempVars
 :---------------
 REM Be careful not to remove vars that must survive, e.g., _cm3_CommandReady
+set _cm3_bitsOS=
 set _cm3_CD=
 set _cm3_CommonProfile=
 set _cm3_DocsHome=
@@ -171,6 +227,7 @@ set _cm3_SeenWinOpt=
 set _cm3_startIDE=
 set _cm3_Temp=
 set _cm3_ThisOS=
+set _cm3_ThisOS_Long=
 set _cm3_VCSetup=
 goto :EOF
 
@@ -209,7 +266,7 @@ echo System Environment:
 echo ------------------
 ver
 echo.
-echo                 OS = %_cm3_ThisOS%
+echo                 OS = %_cm3_ThisOS% (%_cm3_ThisOS_Long%)
 echo        SystemDrive = %SystemDrive%
 echo         SystemRoot = %SystemRoot%
 echo    SystemDirectory = %SystemDirectory%
@@ -268,7 +325,7 @@ if not exist "%ProgramFiles%" goto BadEnviron
 if "%UserProfile%"=="" goto BadEnviron
 if not exist "%UserProfile%" goto BadEnviron
 
-if /I not "%_cm3_ThisOS%"=="Vista" if /I not "%_cm3_ThisOS%"=="Windows7" goto PreVistaEnviron
+if /I not "%_cm3_ThisOS%"=="Vista" if /I not "%_cm3_ThisOS%"=="Win7" if /I not "%_cm3_ThisOS%"=="2008" goto PreVistaEnviron
 
 :VistaOr7Environ
 if "%Public%"=="" set Public=%SystemDrive%\Users\Public
@@ -433,7 +490,7 @@ rem Next line forces default assignment of IDE HOME folder if user has changed t
 if defined _cm3_HOME if defined _cm3_PriorIDE if not "%_cm3_PriorIDE%"=="%CM3_IDE%" if "%_cm3_PriorHome%"=="%_cm3_HOME%" set _cm3_HOME=
 
 set _cm3_DocsHome=%UserProfile%\Documents
-if /I not "%_cm3_ThisOS%"=="Vista" if /I not "%_cm3_ThisOS%"=="Windows7" set _cm3_DocsHome=%UserProfile%\My Documents
+if /I not "%_cm3_ThisOS%"=="Vista" if /I not "%_cm3_ThisOS%"=="Win7" if /I not "%_cm3_ThisOS%"=="2008" set _cm3_DocsHome=%UserProfile%\My Documents
 if "%_cm3_HOME%"=="" if /I "%CM3_IDE%"=="cm3IDE" set _cm3_HOME=%_cm3_DocsHome%\CM3_IDE_HOME
 if "%_cm3_HOME%"=="" if /I "%CM3_IDE%"=="Reactor" set _cm3_HOME=%_cm3_DocsHome%\REACTOR_HOME
 if not exist "%_cm3_HOME%" echo ...Creating folder "%_cm3_HOME%" & mkdir "%_cm3_HOME%"
@@ -635,6 +692,7 @@ goto END
 :---
 REM Clean up before exiting script.
 REM
+rem if not "%_cm3_ExitCode%"=="0" set _cm3_
 call :FN_KillTempVars
 @echo on
 @EXIT /B %_cm3_ExitCode%
