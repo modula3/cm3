@@ -20,10 +20,10 @@ readonly TargeDefaultGccVersion = {
        "ARM_DARWIN" : "42",
      "AMD64_DARWIN" : "47",
       "I386_DARWIN" : "47",
-     "I386_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
-    "AMD64_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
-  "SPARC32_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
-  "SPARC64_SOLARIS" : "45", % need to patch 4.7 to avoid gcc extensions
+     "I386_SOLARIS" : "47",
+    "AMD64_SOLARIS" : "47",
+  "SPARC32_SOLARIS" : "47",
+  "SPARC64_SOLARIS" : "47",
 }
 
 include("platforms.quake")
@@ -268,15 +268,18 @@ readonly GccBackendVersionData = {
   % 0: SourceDir we symlink out of gcc/gcc/m3cg to SourceDir/gcc/m3cg
   % 1: m3gty garbage collection syntax changed, need two versions
   % 2: #defines to guide gcc/gcc/m3cg/parse.c
-  "42": [ "../gcc-apple", "m3gty43.h", "#define GCC_APPLE 1\n#define GCC42 1\n" ],
-  "43": [ "../gcc", "m3gty43.h", "" ],
+  % 3: all-libdecnumber or empty
+
+  "42": [ "../gcc-apple", "m3gty43.h", "#define GCC_APPLE 1\n#define GCC42 1\n", " all-libdecnumber " ],
+  "43": [ "../gcc", "m3gty43.h", "", " all-libdecnumber " ],
   % "44" skipped
-  "45": [ "../gcc-4.5", "m3gty45.h", "#define GCC45 1\n" ],
-  "46": [ "../gcc-4.6", "m3gty45.h", "#define GCC45 1\n#define GCC46 1\n" ],
-  "47": [ "../gcc-4.7", "m3gty45.h", "#define GCC45 1\n#define GCC46 1\n#define GCC47 1\n" ],
+  "45": [ "../gcc-4.5", "m3gty45.h", "#define GCC45 1\n", " " ],
+  "46": [ "../gcc-4.6", "m3gty45.h", "#define GCC45 1\n#define GCC46 1\n", " " ],
+  "47": [ "../gcc-4.7", "m3gty45.h", "#define GCC45 1\n#define GCC46 1\n#define GCC47 1\n", " " ],
 }
 
 local SourceDir = GccBackendVersionData{GccVersion}[0]
+local all_libdecnumber = GccBackendVersionData{GccVersion}[3]
 
 if not GCC43
   local m3gty = GccBackendVersionData{GccVersion}[1]
@@ -560,15 +563,9 @@ end
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-if GCC47
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty"
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty " & all_libdecnumber
            % & " | tee -a " & Log
           ])
-else
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber"
-           % & " | tee -a " & Log
-          ])
-end
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %
