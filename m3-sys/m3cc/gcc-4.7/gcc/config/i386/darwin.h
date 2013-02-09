@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target definitions for x86 running Darwin.
    Copyright (C) 2001, 2002, 2004, 2005, 2006, 2007, 2008, 2010, 2011
    Free Software Foundation, Inc.
@@ -62,7 +64,7 @@ along with GCC; see the file COPYING3.  If not see
 #define WCHAR_TYPE_SIZE 32
 
 /* Generate branch islands stubs if this is true.  */
-extern int darwin_emit_branch_islands;
+#define darwin_emit_branch_islands (true)
 
 #undef TARGET_MACHO_BRANCH_ISLANDS
 #define TARGET_MACHO_BRANCH_ISLANDS darwin_emit_branch_islands

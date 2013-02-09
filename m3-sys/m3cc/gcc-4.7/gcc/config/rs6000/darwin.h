@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target definitions for PowerPC running Darwin (Mac OS X).
    Copyright (C) 1997, 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2010,
    2011 Free Software Foundation, Inc.
@@ -63,7 +65,7 @@
   while (0)
 
 /* Generate branch islands stubs if this is true.  */
-extern int darwin_emit_branch_islands;
+#define darwin_emit_branch_islands (true)
 
 #define SUBTARGET_OVERRIDE_OPTIONS darwin_rs6000_override_options ()
 

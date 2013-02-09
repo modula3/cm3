@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Functions for generic Darwin as target machine for GNU C compiler.
    Copyright (C) 1989, 1990, 1991, 1992, 1993, 2000, 2001, 2002, 2003, 2004,
    2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -47,7 +49,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "debug.h"
 #include "obstack.h"
-#include "lto-streamer.h"
 
 /* Darwin supports a feature called fix-and-continue, which is used
    for rapid turn around debugging.  When code is compiled with the
@@ -79,12 +80,6 @@ along with GCC; see the file COPYING3.  If not see
    of MACHO_SYMBOL_STATIC for the code that handles @code{static}
    symbol indirection.  */
 
-/* For darwin >= 9  (OSX 10.5) the linker is capable of making the necessary
-   branch islands and we no longer need to emit darwin stubs.
-   However, if we are generating code for earlier systems (or for use in the 
-   kernel) the stubs might still be required, and this will be set true.  */
-int darwin_emit_branch_islands = false;
-
 /* A flag to determine whether we are running c++ or obj-c++.  This has to be
    settable from non-c-family contexts too (i.e. we can't use the c_dialect_
    functions).  */
@@ -105,10 +100,6 @@ section * darwin_sections[NUM_DARWIN_SECTIONS];
 
 /* True if we're setting __attribute__ ((ms_struct)).  */
 int darwin_ms_struct = false;
-
-/* Earlier versions of Darwin as do not recognize an alignment field in 
-   .comm directives, this should be set for versions that allow it.  */
-int emit_aligned_common = false;
 
 /* A get_unnamed_section callback used to switch to an ObjC section.
    DIRECTIVE is as for output_section_asm_op.  */
@@ -1761,83 +1752,6 @@ darwin_label_is_anonymous_local_objc_name (const char *name)
   return (!strncmp ((const char *)p, "_OBJC_", 6));
 }
 
-/* LTO support for Mach-O.
-
-   This version uses three mach-o sections to encapsulate the (unlimited
-   number of) lto sections.
-
-   __GNU_LTO, __lto_sections  contains the concatented GNU LTO section data.
-   __GNU_LTO, __section_names contains the GNU LTO section names.
-   __GNU_LTO, __section_index contains an array of values that index these.
-
-   Indexed thus:
-     <section offset from the start of __GNU_LTO, __lto_sections>,
-     <section length>
-     <name offset from the start of __GNU_LTO, __section_names,
-     <name length>.
-
-   At present, for both m32 and m64 mach-o files each of these fields is
-   represented  by a uint32_t.  This is because, AFAICT, a mach-o object
-   cannot exceed 4Gb because the section_64 offset field (see below) is 32bits.
-
-    uint32_t offset;
-   "offset  An integer specifying the offset to this section in the file."  */
-
-/* Count lto section numbers.  */
-static unsigned int lto_section_num = 0;
-
-/* A vector of information about LTO sections, at present, we only have
-   the name.  TODO: see if we can get the data length somehow.  */
-typedef struct GTY (()) darwin_lto_section_e {
-  const char *sectname;
-} darwin_lto_section_e ;
-DEF_VEC_O(darwin_lto_section_e);
-DEF_VEC_ALLOC_O(darwin_lto_section_e, gc);
-
-static GTY (()) VEC (darwin_lto_section_e, gc) * lto_section_names;
-
-/* Segment for LTO data.  */
-#define LTO_SEGMENT_NAME "__GNU_LTO"
-
-/* Section wrapper scheme (used here to wrap the unlimited number of LTO
-   sections into three Mach-O ones).
-   NOTE: These names MUST be kept in sync with those in
-	 libiberty/simple-object-mach-o.  */
-#define LTO_SECTS_SECTION "__wrapper_sects"
-#define LTO_NAMES_SECTION "__wrapper_names"
-#define LTO_INDEX_SECTION "__wrapper_index"
-
-/* File to temporarily store LTO data.  This is appended to asm_out_file
-   in darwin_end_file.  */
-static FILE *lto_asm_out_file, *saved_asm_out_file;
-static char *lto_asm_out_name;
-
-/* Prepare asm_out_file for LTO output.  For darwin, this means hiding
-   asm_out_file and switching to an alternative output file.  */
-void
-darwin_asm_lto_start (void)
-{
-  gcc_assert (! saved_asm_out_file);
-  saved_asm_out_file = asm_out_file;
-  if (! lto_asm_out_name)
-    lto_asm_out_name = make_temp_file (".lto.s");
-  lto_asm_out_file = fopen (lto_asm_out_name, "a");
-  if (lto_asm_out_file == NULL)
-    fatal_error ("failed to open temporary file %s for LTO output",
-		 lto_asm_out_name);
-  asm_out_file = lto_asm_out_file;
-}
-
-/* Restore asm_out_file.  */
-void
-darwin_asm_lto_end (void)
-{
-  gcc_assert (saved_asm_out_file);
-  fclose (lto_asm_out_file);
-  asm_out_file = saved_asm_out_file;
-  saved_asm_out_file = NULL;
-}
-
 static void
 darwin_asm_dwarf_section (const char *name, unsigned int flags, tree decl);
 
@@ -1848,39 +1762,7 @@ darwin_asm_named_section (const char *name,
 			  unsigned int flags,
 			  tree decl ATTRIBUTE_UNUSED)
 {
-  /* LTO sections go in a special section that encapsulates the (unlimited)
-     number of GNU LTO sections within a single mach-o one.  */
-  if (strncmp (name, LTO_SECTION_NAME_PREFIX,
-	       strlen (LTO_SECTION_NAME_PREFIX)) == 0)
-    {
-      darwin_lto_section_e e;
-      /* We expect certain flags to be set...  */
-      gcc_assert ((flags & (SECTION_DEBUG | SECTION_NAMED))
-		  == (SECTION_DEBUG | SECTION_NAMED));
-
-      /* Switch to our combined section.  */
-      fprintf (asm_out_file, "\t.section %s,%s,regular,debug\n",
-	       LTO_SEGMENT_NAME, LTO_SECTS_SECTION);
-      /* Output a label for the start of this sub-section.  */
-      fprintf (asm_out_file, "L_GNU_LTO%d:\t;# %s\n",
-	       lto_section_num, name);
-      /* We have to jump through hoops to get the values of the intra-section
-         offsets... */
-      fprintf (asm_out_file, "\t.set L$gnu$lto$offs%d,L_GNU_LTO%d-L_GNU_LTO0\n",
-	       lto_section_num, lto_section_num);
-      fprintf (asm_out_file,
-	       "\t.set L$gnu$lto$size%d,L_GNU_LTO%d-L_GNU_LTO%d\n",
-	       lto_section_num, lto_section_num+1, lto_section_num);
-      lto_section_num++;
-      e.sectname = xstrdup (name);
-      /* Keep the names, we'll need to make a table later.
-         TODO: check that we do not revisit sections, that would break
-         the assumption of how this is done.  */
-      if (lto_section_names == NULL)
-        lto_section_names = VEC_alloc (darwin_lto_section_e, gc, 16);
-      VEC_safe_push (darwin_lto_section_e, gc, lto_section_names, &e);
-   }
-  else if (strncmp (name, "__DWARF,", 8) == 0)
+  if (strncmp (name, "__DWARF,", 8) == 0)
     darwin_asm_dwarf_section (name, flags, decl);
   else
     fprintf (asm_out_file, "\t.section %s\n", name);
@@ -2310,7 +2192,7 @@ darwin_emit_common (FILE *fp, const char *name,
 
   /* Earlier systems complain if the alignment exceeds the page size. 
      The magic number is 4096 * 8 - hard-coded for legacy systems.  */
-  if (!emit_aligned_common && (align > 32768UL))
+  if (align > 32768UL)
     align = 4096UL; /* In units.  */
   else
     align /= BITS_PER_UNIT;
@@ -2342,9 +2224,8 @@ darwin_emit_common (FILE *fp, const char *name,
 
   fputs ("\t.comm\t", fp);
   assemble_name (fp, name);
-  fprintf (fp, "," HOST_WIDE_INT_PRINT_UNSIGNED, 
-	   emit_aligned_common?size:rounded);
-  if (l2align && emit_aligned_common)
+  fprintf (fp, "," HOST_WIDE_INT_PRINT_UNSIGNED, rounded);
+  if (l2align)
     fprintf (fp, ",%u", l2align);
   fputs ("\n", fp);
 }
@@ -2774,88 +2655,7 @@ darwin_file_end (void)
       switch_to_section (darwin_sections[constructor_section]);
       switch_to_section (darwin_sections[destructor_section]);
       ASM_OUTPUT_ALIGN (asm_out_file, 1);
-    }
-
-  /* If there was LTO assembler output, append it to asm_out_file.  */
-  if (lto_asm_out_name)
-    {
-      int n;
-      char *buf, *lto_asm_txt;
-
-      /* Shouldn't be here if we failed to switch back.  */
-      gcc_assert (! saved_asm_out_file);
-
-      lto_asm_out_file = fopen (lto_asm_out_name, "r");
-      if (lto_asm_out_file == NULL)
-	fatal_error ("failed to open temporary file %s with LTO output",
-		     lto_asm_out_name);
-      fseek (lto_asm_out_file, 0, SEEK_END);
-      n = ftell (lto_asm_out_file);
-      if (n > 0)
-        {
-	  fseek (lto_asm_out_file, 0, SEEK_SET);
-	  lto_asm_txt = buf = (char *) xmalloc (n + 1);
-	  while (fgets (lto_asm_txt, n, lto_asm_out_file))
-	    fputs (lto_asm_txt, asm_out_file);
-	  /* Put a termination label.  */
-	  fprintf (asm_out_file, "\t.section %s,%s,regular,debug\n",
-		   LTO_SEGMENT_NAME, LTO_SECTS_SECTION);
-	  fprintf (asm_out_file, "L_GNU_LTO%d:\t;# end of lto\n",
-		   lto_section_num);
-	  /* Make sure our termination label stays in this section.  */
-	  fputs ("\t.space\t1\n", asm_out_file);
-	}
-
-      /* Remove the temporary file.  */
-      fclose (lto_asm_out_file);
-      unlink_if_ordinary (lto_asm_out_name);
-      free (lto_asm_out_name);
-    }
-
-  /* Output the names and indices.  */
-  if (lto_section_names && VEC_length (darwin_lto_section_e, lto_section_names))
-    {
-      int count;
-      darwin_lto_section_e *ref;
-      /* For now, we'll make the offsets 4 bytes and unaligned - we'll fix
-         the latter up ourselves.  */
-      const char *op = integer_asm_op (4,0);
-
-      /* Emit the names.  */
-      fprintf (asm_out_file, "\t.section %s,%s,regular,debug\n",
-	       LTO_SEGMENT_NAME, LTO_NAMES_SECTION);
-      FOR_EACH_VEC_ELT (darwin_lto_section_e, lto_section_names, count, ref)
-	{
-	  fprintf (asm_out_file, "L_GNU_LTO_NAME%d:\n", count);
-         /* We have to jump through hoops to get the values of the intra-section
-            offsets... */
-	  fprintf (asm_out_file,
-		   "\t.set L$gnu$lto$noff%d,L_GNU_LTO_NAME%d-L_GNU_LTO_NAME0\n",
-		   count, count);
-	  fprintf (asm_out_file,
-		   "\t.set L$gnu$lto$nsiz%d,L_GNU_LTO_NAME%d-L_GNU_LTO_NAME%d\n",
-		   count, count+1, count);
-	  fprintf (asm_out_file, "\t.asciz\t\"%s\"\n", ref->sectname);
-	}
-      fprintf (asm_out_file, "L_GNU_LTO_NAME%d:\t;# end\n", lto_section_num);
-      /* make sure our termination label stays in this section.  */
-      fputs ("\t.space\t1\n", asm_out_file);
-
-      /* Emit the Index.  */
-      fprintf (asm_out_file, "\t.section %s,%s,regular,debug\n",
-	       LTO_SEGMENT_NAME, LTO_INDEX_SECTION);
-      fputs ("\t.align\t2\n", asm_out_file);
-      fputs ("# Section offset, Section length, Name offset, Name length\n",
-	     asm_out_file);
-      FOR_EACH_VEC_ELT (darwin_lto_section_e, lto_section_names, count, ref)
-	{
-	  fprintf (asm_out_file, "%s L$gnu$lto$offs%d\t;# %s\n",
-		   op, count, ref->sectname);
-	  fprintf (asm_out_file, "%s L$gnu$lto$size%d\n", op, count);
-	  fprintf (asm_out_file, "%s L$gnu$lto$noff%d\n", op, count);
-	  fprintf (asm_out_file, "%s L$gnu$lto$nsiz%d\n", op, count);
-	}
-    }
+    }        
 
   /* If we have section anchors, then we must prevent the linker from
      re-arranging data.  */
@@ -3007,21 +2807,7 @@ darwin_override_options (void)
 
   if (flag_mkernel || flag_apple_kext)
     {
-      /* -mkernel implies -fapple-kext for C++ */
-      if (strcmp (lang_hooks.name, "GNU C++") == 0)
-	flag_apple_kext = 1;
-
-      flag_no_common = 1;
-
-      /* No EH in kexts.  */
-      flag_exceptions = 0;
-      /* No -fnon-call-exceptions data in kexts.  */
-      flag_non_call_exceptions = 0;
-      /* so no tables either.. */
-      flag_unwind_tables = 0;
-      flag_asynchronous_unwind_tables = 0;
-      /* We still need to emit branch islands for kernel context.  */
-      darwin_emit_branch_islands = true;
+      gcc_unreachable ();
     }
 
   if (flag_var_tracking
@@ -3031,25 +2817,8 @@ darwin_override_options (void)
       && write_symbols == DWARF2_DEBUG)
     flag_var_tracking_uninit = 1;
 
-  if (MACHO_DYNAMIC_NO_PIC_P)
-    {
-      if (flag_pic)
-	warning_at (UNKNOWN_LOCATION, 0,
-		 "%<-mdynamic-no-pic%> overrides %<-fpic%>, %<-fPIC%>,"
-		 " %<-fpie%> or %<-fPIE%>");
-      flag_pic = 0;
-    }
-  else if (flag_pic == 1)
-    {
-      /* Darwin's -fpic is -fPIC.  */
-      flag_pic = 2;
-    }
-
-  /* It is assumed that branch island stubs are needed for earlier systems.  */
-  if (generating_for_darwin_version < 9)
-    darwin_emit_branch_islands = true;
-  else
-    emit_aligned_common = true; /* Later systems can support aligned common.  */
+  /* Darwin's -fpic is -fPIC.  */
+  flag_pic = 2;
 
   /* The c_dialect...() macros are not available to us here.  */
   darwin_running_cxx = (strstr (lang_hooks.name, "C++") != 0);
