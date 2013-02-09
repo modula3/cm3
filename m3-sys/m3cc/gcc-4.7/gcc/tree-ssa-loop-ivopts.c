@@ -217,7 +217,7 @@ struct iv_cand
   unsigned id;		/* The number of the candidate.  */
   bool important;	/* Whether this is an "important" candidate, i.e. such
 			   that it should be considered by all uses.  */
-  ENUM_BITFIELD(iv_position) pos : 8;	/* Where it is computed.  */
+  ENUM_BITFIELD(iv_position, pos, 8);	/* Where it is computed.  */
   gimple incremented_at;/* For original biv, the statement where it is
 			   incremented.  */
   tree var_before;	/* The variable used for it before increment.  */

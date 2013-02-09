@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of target machine for GCC for IA-32.
    Copyright (C) 1988, 1992, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -2222,7 +2224,7 @@ struct GTY(()) machine_function {
 
   /* This value is used for amd64 targets and specifies the current abi
      to be used. MS_ABI means ms abi. Otherwise SYSV_ABI means sysv abi.  */
-  ENUM_BITFIELD(calling_abi) call_abi : 8;
+  ENUM_BITFIELD(calling_abi, call_abi, 8);
 
   /* Nonzero if the function accesses a previous frame.  */
   BOOL_BITFIELD accesses_prev_frame : 1;

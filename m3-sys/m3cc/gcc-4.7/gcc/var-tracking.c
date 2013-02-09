@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Variable tracking routines for the GNU compiler.
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012
    Free Software Foundation, Inc.
@@ -393,7 +395,7 @@ typedef struct variable_def
   char n_var_parts;
 
   /* What type of DV this is, according to enum onepart_enum.  */
-  ENUM_BITFIELD (onepart_enum) onepart : CHAR_BIT;
+  ENUM_BITFIELD(onepart_enum, onepart, CHAR_BIT);
 
   /* True if this variable_def struct is currently in the
      changed_variables hash table.  */

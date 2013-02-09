@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Tree SCC value numbering
    Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Contributed by Daniel Berlin <dberlin@dberlin.org>
@@ -37,7 +39,7 @@ typedef struct vn_nary_op_s
 {
   /* Unique identify that all expressions with the same value have. */
   unsigned int value_id;
-  ENUM_BITFIELD(tree_code) opcode : 16;
+  ENUM_BITFIELD(tree_code, opcode, 16);
   unsigned length : 16;
   hashval_t hashcode;
   tree result;

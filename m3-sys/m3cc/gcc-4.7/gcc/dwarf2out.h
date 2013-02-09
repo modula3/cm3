@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* dwarf2out.h - Various declarations for functions found in dwarf2out.c
    Copyright (C) 1998, 1999, 2000, 2003, 2007, 2010, 2011
    Free Software Foundation, Inc.
@@ -208,7 +210,7 @@ dw_val_node;
 
 typedef struct GTY(()) dw_loc_descr_struct {
   dw_loc_descr_ref dw_loc_next;
-  ENUM_BITFIELD (dwarf_location_atom) dw_loc_opc : 8;
+  ENUM_BITFIELD(dwarf_location_atom, dw_loc_opc, 8);
   /* Used to distinguish DW_OP_addr with a direct symbol relocation
      from DW_OP_addr with a dtp-relative symbol relocation.  */
   unsigned int dtprel : 1;

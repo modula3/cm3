@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Integrated Register Allocator (IRA) intercommunication header file.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -286,10 +288,10 @@ struct ira_allocno
   int regno;
   /* Mode of the allocno which is the mode of the corresponding
      pseudo-register.  */
-  ENUM_BITFIELD (machine_mode) mode : 8;
+  ENUM_BITFIELD(machine_mode, mode, 8);
   /* Register class which should be used for allocation for given
      allocno.  NO_REGS means that we should use memory.  */
-  ENUM_BITFIELD (reg_class) aclass : 16;
+  ENUM_BITFIELD(reg_class, aclass, 16);
   /* During the reload, value TRUE means that we should not reassign a
      hard register to the allocno got memory earlier.  It is set up
      when we removed memory-memory move insn before each iteration of

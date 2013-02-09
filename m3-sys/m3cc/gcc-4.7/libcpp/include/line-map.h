@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Map logical line numbers to (source file, line number) pairs.
    Copyright (C) 2001, 2003, 2004, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -205,7 +207,7 @@ struct GTY(()) line_map {
   source_location start_location;
 
   /* The reason for creation of this line map.  */
-  ENUM_BITFIELD (lc_reason) reason : CHAR_BIT;
+  ENUM_BITFIELD(lc_reason, reason, CHAR_BIT);
 
   union map_u {
     struct line_map_ordinary GTY((tag ("0"))) ordinary;
