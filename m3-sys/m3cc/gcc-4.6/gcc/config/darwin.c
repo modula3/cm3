@@ -2162,6 +2162,8 @@ darwin_emit_common (FILE *fp, const char *name,
      The magic number is 4096 * 8 - hard-coded for legacy systems.  */
   if (align > 32768UL)
     align = 4096UL; /* In units.  */
+  else
+    align /= BITS_PER_UNIT;
 
   /* Make sure we have a meaningful align.  */
   if (!align)
