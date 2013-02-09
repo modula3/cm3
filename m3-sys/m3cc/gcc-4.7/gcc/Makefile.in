@@ -407,7 +407,6 @@ FNMATCH_H   = $(srcdir)/../include/fnmatch.h
 
 # Linker plugin API headers
 LINKER_PLUGIN_API_H = $(srcdir)/../include/plugin-api.h
-LTO_SYMTAB_H = $(srcdir)/../include/lto-symtab.h
 
 # Default native SYSTEM_HEADER_DIR, to be overridden by targets.
 NATIVE_SYSTEM_HEADER_DIR = @NATIVE_SYSTEM_HEADER_DIR@
@@ -846,7 +845,7 @@ REAL_H = real.h $(MACHMODE_H)
 IRA_INT_H = ira.h ira-int.h $(CFGLOOP_H) alloc-pool.h
 DBGCNT_H = dbgcnt.h dbgcnt.def
 EBITMAP_H = ebitmap.h sbitmap.h
-LTO_STREAMER_H = lto-streamer.h $(LINKER_PLUGIN_API_H) $(TARGET_H) \
+LTO_STREAMER_H = $(LINKER_PLUGIN_API_H) $(TARGET_H) \
 		$(CGRAPH_H) $(VEC_H) vecprim.h $(TREE_H) $(GIMPLE_H) \
 		$(GCOV_IO_H) $(DIAGNOSTIC_H)
 TREE_VECTORIZER_H = tree-vectorizer.h $(TREE_DATA_REF_H)
@@ -3214,7 +3213,6 @@ GTFILES = $(CPP_ID_DATA_H) $(srcdir)/input.h $(srcdir)/coretypes.h \
   $(srcdir)/tree-ssa-alias.h \
   $(srcdir)/ipa-prop.h \
   $(srcdir)/trans-mem.c \
-  $(srcdir)/lto-streamer.h \
   $(srcdir)/target-globals.h \
   $(srcdir)/ipa-inline.h \
   @all_gtfiles@

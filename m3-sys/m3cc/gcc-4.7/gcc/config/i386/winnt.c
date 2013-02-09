@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines for insn-output.c for Windows NT.
    Contributed by Douglas Rupp (drupp@cs.washington.edu)
    Copyright (C) 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
@@ -36,7 +38,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "target.h"
 #include "except.h"
-#include "lto-streamer.h"
 
 /* i386/PE specific attribute support.
 
@@ -511,12 +512,6 @@ i386_pe_asm_named_section (const char *name, unsigned int flags,
 	*f++ = 'n';
 #endif
     }
-
-  /* LTO sections need 1-byte alignment to avoid confusing the
-     zlib decompression algorithm with trailing zero pad bytes.  */
-  if (strncmp (name, LTO_SECTION_NAME_PREFIX,
-			strlen (LTO_SECTION_NAME_PREFIX)) == 0)
-    *f++ = '0';
 
   *f = '\0';
 

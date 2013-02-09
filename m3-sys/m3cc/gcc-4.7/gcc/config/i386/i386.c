@@ -14295,9 +14295,7 @@ ix86_print_operand (FILE *file, rtx x, int code)
 	  return;
 
 	case ';':
-#ifndef HAVE_AS_IX86_REP_LOCK_PREFIX
-	  putc (';', file);
-#endif
+	  fputs ((ASSEMBLER_DIALECT == ASM_ATT) ? " ; " : " ", file);
 	  return;
 
 	case '@':
