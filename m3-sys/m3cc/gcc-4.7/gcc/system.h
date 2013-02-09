@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Get common system includes and various definitions and declarations based
    on autoconf macros.
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
@@ -643,6 +645,17 @@ extern int vsnprintf(char *, size_t, const char *, va_list);
 
 #ifndef HOST_BIT_BUCKET
 #define HOST_BIT_BUCKET "/dev/null"
+#endif
+
+/* Be conservative and only use enum bitfields with GCC.
+   FIXME: provide a complete autoconf test for buggy enum bitfields.  */
+
+#ifdef __cplusplus
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME : SIZE
+#elif (GCC_VERSION > 2000)
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) __extension__ enum TYPE NAME : SIZE
+#else
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME : SIZE
 #endif
 
 #ifndef offsetof

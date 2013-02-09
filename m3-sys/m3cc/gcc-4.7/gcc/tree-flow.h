@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Data and Control Flow Analysis for Trees.
    Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -182,7 +184,7 @@ struct GTY(()) var_ann_d {
   /* This field indicates whether or not the variable may need PHI nodes.
      See the enum's definition for more detailed information about the
      states.  */
-  ENUM_BITFIELD (need_phi_state) need_phi_state : 2;
+  ENUM_BITFIELD(need_phi_state, need_phi_state, 2);
 
   /* Used by var_map for the base index of ssa base variables.  */
   unsigned base_index;

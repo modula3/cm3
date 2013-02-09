@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* ANSI and traditional C compatability macros
    Copyright 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
    2002, 2003, 2004, 2005, 2006, 2007, 2009, 2010
@@ -420,11 +422,11 @@ So instead we use the macro below and test it against specific values.  */
    FIXME: provide a complete autoconf test for buggy enum bitfields.  */
 
 #ifdef __cplusplus
-#define ENUM_BITFIELD(TYPE) enum TYPE
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME : SIZE
 #elif (GCC_VERSION > 2000)
-#define ENUM_BITFIELD(TYPE) __extension__ enum TYPE
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) __extension__ enum TYPE NAME : SIZE
 #else
-#define ENUM_BITFIELD(TYPE) unsigned int
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME : SIZE
 #endif
 
 #ifdef __cplusplus

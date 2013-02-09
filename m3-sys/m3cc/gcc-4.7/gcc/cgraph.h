@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Callgraph handling code.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -236,7 +238,7 @@ struct GTY((chain_next ("%h.next"), chain_prev ("%h.previous"))) cgraph_node {
   unsigned same_body_alias : 1;
   /* How commonly executed the node is.  Initialized during branch
      probabilities pass.  */
-  ENUM_BITFIELD (node_frequency) frequency : 2;
+  ENUM_BITFIELD(node_frequency, frequency, 2);
   /* True when function can only be called at startup (from static ctor).  */
   unsigned only_called_at_startup : 1;
   /* True when function can only be called at startup (from static dtor).  */

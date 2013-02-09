@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Register Transfer Language (RTL) definitions for GCC
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -256,10 +258,10 @@ struct GTY(()) object_block {
 struct GTY((chain_next ("RTX_NEXT (&%h)"),
 	    chain_prev ("RTX_PREV (&%h)"), variable_size)) rtx_def {
   /* The kind of expression this is.  */
-  ENUM_BITFIELD(rtx_code) code: 16;
+  ENUM_BITFIELD(rtx_code, code, 16);
 
   /* The kind of value the expression has.  */
-  ENUM_BITFIELD(machine_mode) mode : 8;
+  ENUM_BITFIELD(machine_mode, mode, 8);
 
   /* 1 in a MEM if we should keep the alias set for this mem unchanged
      when we access a component.

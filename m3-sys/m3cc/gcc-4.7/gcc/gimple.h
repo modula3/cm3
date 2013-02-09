@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Gimple IR definitions.
 
    Copyright 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
@@ -279,7 +281,7 @@ typedef struct
 struct GTY(()) gimple_statement_base {
   /* [ WORD 1 ]
      Main identifying code for a tuple.  */
-  ENUM_BITFIELD(gimple_code) code : 8;
+  ENUM_BITFIELD(gimple_code, code, 8);
 
   /* Nonzero if a warning should not be emitted on this tuple.  */
   unsigned int no_warning	: 1;

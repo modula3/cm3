@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* -*- indented-text -*- */
 /* Process source files and output type information.
    Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
@@ -139,6 +141,9 @@ EOID	[^[:alnum:]_]
   return SCALAR;
 }
 
+"ENUM_BITFIELD"{WS}?"("{WS}?{ID}{WS}?,{WS}?{ID}{WS}?,{WS}?[_0-9A-Z]+{WS}?");" {
+  /* do nothing? */
+}
 
 {ID}/{EOID}			{
   *yylval = XDUPVAR (const char, yytext, yyleng, yyleng+1);

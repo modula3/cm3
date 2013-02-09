@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for CPP library.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
    2004, 2005, 2007, 2008, 2009, 2010, 2011
@@ -222,7 +224,7 @@ struct GTY(()) cpp_identifier {
    occupy 16 bytes on 32-bit hosts and 24 bytes on 64-bit hosts.  */
 struct GTY(()) cpp_token {
   source_location src_loc;	/* Location of first char of token.  */
-  ENUM_BITFIELD(cpp_ttype) type : CHAR_BIT;  /* token type */
+  ENUM_BITFIELD(cpp_ttype, type, CHAR_BIT);  /* token type */
   unsigned short flags;		/* flags - see above */
 
   union cpp_token_u
@@ -680,7 +682,7 @@ struct GTY(()) cpp_hashnode {
 					   then index into directive table.
 					   Otherwise, a NODE_OPERATOR.  */
   unsigned char rid_code;		/* Rid code - for front ends.  */
-  ENUM_BITFIELD(node_type) type : 6;	/* CPP node type.  */
+  ENUM_BITFIELD(node_type, type, 6);	/* CPP node type.  */
   unsigned int flags : 10;		/* CPP flags.  */
 
   union _cpp_hashnode_value GTY ((desc ("CPP_HASHNODE_VALUE_IDX (%1)"))) value;

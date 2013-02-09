@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Declarations for interface to insn recognizer and insn-output.c.
    Copyright (C) 1987, 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004,
    2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -265,7 +267,7 @@ struct insn_operand_data
 
   const char *const constraint;
 
-  ENUM_BITFIELD(machine_mode) const mode : 16;
+  ENUM_BITFIELD(machine_mode, const mode, 16);
 
   const char strict_low;
 

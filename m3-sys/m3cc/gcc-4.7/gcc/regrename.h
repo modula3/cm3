@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* This file contains definitions for the register renamer.
    Copyright (C) 2011
    Free Software Foundation, Inc.
@@ -63,7 +65,7 @@ struct du_chain
   /* The location inside the insn.  */
   rtx *loc;
   /* The register class required by the insn at this location.  */
-  ENUM_BITFIELD(reg_class) cl : 16;
+  ENUM_BITFIELD(reg_class, cl, 16);
 };
 
 /* This struct describes data gathered during regrename_analyze about
