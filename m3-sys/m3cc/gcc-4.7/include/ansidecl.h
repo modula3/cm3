@@ -422,11 +422,11 @@ So instead we use the macro below and test it against specific values.  */
    FIXME: provide a complete autoconf test for buggy enum bitfields.  */
 
 #ifdef __cplusplus
-#define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME : SIZE
+#define ENUM_BITFIELD(TYPE) enum TYPE
 #elif (GCC_VERSION > 2000)
-#define ENUM_BITFIELD(TYPE, NAME, SIZE) __extension__ enum TYPE NAME : SIZE
+#define ENUM_BITFIELD(TYPE) __extension__ enum TYPE
 #else
-#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME : SIZE
+#define ENUM_BITFIELD(TYPE) unsigned int
 #endif
 
 #ifdef __cplusplus

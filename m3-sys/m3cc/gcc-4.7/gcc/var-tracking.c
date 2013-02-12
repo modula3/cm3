@@ -395,7 +395,7 @@ typedef struct variable_def
   char n_var_parts;
 
   /* What type of DV this is, according to enum onepart_enum.  */
-  ENUM_BITFIELD(onepart_enum, onepart, CHAR_BIT);
+  ENUM_BITFIELD (onepart_enum) onepart : CHAR_BIT;
 
   /* True if this variable_def struct is currently in the
      changed_variables hash table.  */

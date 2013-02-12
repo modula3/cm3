@@ -216,7 +216,7 @@ typedef struct reg_stat_struct {
 
   unsigned HOST_WIDE_INT	last_set_nonzero_bits;
   char				last_set_sign_bit_copies;
-  ENUM_BITFIELD(machine_mode, last_set_mode, 8);
+  ENUM_BITFIELD(machine_mode)	last_set_mode : 8;
 
   /* Set nonzero if references to register n in expressions should not be
      used.  last_set_invalid is set nonzero when this register is being
@@ -251,7 +251,7 @@ typedef struct reg_stat_struct {
      truncation if we know that value already contains a truncated
      value.  */
 
-  ENUM_BITFIELD(machine_mode, truncated_to_mode, 8);
+  ENUM_BITFIELD(machine_mode)	truncated_to_mode : 8;
 } reg_stat_type;
 
 DEF_VEC_O(reg_stat_type);

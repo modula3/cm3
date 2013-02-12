@@ -141,10 +141,6 @@ EOID	[^[:alnum:]_]
   return SCALAR;
 }
 
-"ENUM_BITFIELD"{WS}?"("{WS}?{ID}{WS}?,{WS}?{ID}{WS}?,{WS}?[_0-9A-Z]+{WS}?");" {
-  /* do nothing? */
-}
-
 {ID}/{EOID}			{
   *yylval = XDUPVAR (const char, yytext, yyleng, yyleng+1);
   return ID;
