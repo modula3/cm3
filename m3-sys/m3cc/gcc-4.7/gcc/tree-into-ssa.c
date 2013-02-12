@@ -179,7 +179,7 @@ struct ssa_name_info
   /* This field indicates whether or not the variable may need PHI nodes.
      See the enum's definition for more detailed information about the
      states.  */
-  ENUM_BITFIELD(need_phi_state, need_phi_state, 2);
+  ENUM_BITFIELD (need_phi_state) need_phi_state : 2;
 
   /* Age of this record (so that info_for_ssa_name table can be cleared
      quickly); if AGE < CURRENT_INFO_FOR_SSA_NAME_AGE, then the fields

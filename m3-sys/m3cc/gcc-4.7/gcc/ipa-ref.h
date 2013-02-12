@@ -55,9 +55,9 @@ struct GTY(()) ipa_ref
   union ipa_ref_ptr_u GTY ((desc ("%1.refered_type"))) refered;
   gimple stmt;
   unsigned int refered_index;
-  ENUM_BITFIELD(ipa_ref_type, refering_type, 1);
-  ENUM_BITFIELD(ipa_ref_type, refered_type, 1);
-  ENUM_BITFIELD(ipa_ref_use, use, 2);
+  ENUM_BITFIELD (ipa_ref_type) refering_type:1;
+  ENUM_BITFIELD (ipa_ref_type) refered_type:1;
+  ENUM_BITFIELD (ipa_ref_use) use:2;
 };
 
 typedef struct ipa_ref ipa_ref_t;

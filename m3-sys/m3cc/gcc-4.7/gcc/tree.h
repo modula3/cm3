@@ -433,7 +433,7 @@ enum omp_clause_code
    fields.  */
 
 struct GTY(()) tree_base {
-  ENUM_BITFIELD(tree_code, code, 16);
+  ENUM_BITFIELD(tree_code) code : 16;
 
   unsigned side_effects_flag : 1;
   unsigned constant_flag : 1;
@@ -2417,7 +2417,7 @@ struct GTY(()) tree_type_common {
   unsigned restrict_flag : 1;
   unsigned contains_placeholder_bits : 2;
 
-  ENUM_BITFIELD(machine_mode, mode, 8);
+  ENUM_BITFIELD(machine_mode) mode : 8;
 
   unsigned string_flag : 1;
   unsigned lang_flag_0 : 1;
@@ -2877,7 +2877,7 @@ struct GTY(()) tree_decl_common {
   struct tree_decl_minimal common;
   tree size;
 
-  ENUM_BITFIELD(machine_mode, mode, 8);
+  ENUM_BITFIELD(machine_mode) mode : 8;
 
   unsigned nonlocal_flag : 1;
   unsigned virtual_flag : 1;
@@ -3282,10 +3282,10 @@ struct GTY(()) tree_decl_with_vis {
 
  unsigned seen_in_bind_expr : 1;
  unsigned comdat_flag : 1;
- ENUM_BITFIELD(symbol_visibility, visibility, 2);
+ ENUM_BITFIELD(symbol_visibility) visibility : 2;
  unsigned visibility_specified : 1;
  /* Belongs to VAR_DECL exclusively.  */
- ENUM_BITFIELD(tls_model, tls_model, 3);
+ ENUM_BITFIELD(tls_model) tls_model : 3;
 
  /* Belong to FUNCTION_DECL exclusively.  */
  unsigned init_priority_p : 1;
@@ -3557,8 +3557,8 @@ struct GTY(()) tree_function_decl {
      DECL_FUNCTION_CODE.  Otherwise unused.
      ???  The bitfield needs to be able to hold all target function
 	  codes as well.  */
-  ENUM_BITFIELD(built_in_function, function_code, 11);
-  ENUM_BITFIELD(built_in_class, built_in_class, 2);
+  ENUM_BITFIELD(built_in_function) function_code : 11;
+  ENUM_BITFIELD(built_in_class) built_in_class : 2;
 
   unsigned static_ctor_flag : 1;
   unsigned static_dtor_flag : 1;

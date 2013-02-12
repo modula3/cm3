@@ -34,7 +34,7 @@ struct dom_walk_data
      if it is set to CDI_DOMINATORS, then we walk the dominator tree,
      if it is set to CDI_POST_DOMINATORS, then we walk the post
      dominator tree.  */
-  ENUM_BITFIELD(cdi_direction, dom_direction, 2);
+  ENUM_BITFIELD (cdi_direction) dom_direction : 2;
 
   /* Function to initialize block local data.
 

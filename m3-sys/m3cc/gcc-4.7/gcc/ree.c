@@ -486,10 +486,10 @@ enum ext_modified_kind
 struct ext_modified
 {
   /* Mode from which ree has zero or sign extended the destination.  */
-  ENUM_BITFIELD(machine_mode, mode, 8);
+  ENUM_BITFIELD(machine_mode) mode : 8;
 
   /* Kind of modification of the insn.  */
-  ENUM_BITFIELD(ext_modified_kind, kind, 2);
+  ENUM_BITFIELD(ext_modified_kind) kind : 2;
 
   /* True if the insn is scheduled to be deleted.  */
   unsigned int deleted : 1;
