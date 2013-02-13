@@ -20,4 +20,4 @@ The contents of the file do not matter.
    - switching more targets to 4.7
    - removal of LTO
 
-D9FF06-5358-4D7B-8B37-B8DFB97B2696
+9FF06-5358-4D7B-8B37-B8DFB97B2696
