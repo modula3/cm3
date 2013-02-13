@@ -1,3 +1,6 @@
+/* some small modifications for Modula-3
+   e.g. NEED_64BIT_HOST_WIDE_INT always true, removed */
+
 /* config.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if building universal (internal helper macro) */
@@ -1641,12 +1644,6 @@
 /* Define if host mkdir takes a single argument. */
 #ifndef USED_FOR_TARGET
 #undef MKDIR_TAKES_ONE_ARG
-#endif
-
-
-/* Define to 1 if HOST_WIDE_INT must be 64 bits wide (see hwint.h). */
-#ifndef USED_FOR_TARGET
-#undef NEED_64BIT_HOST_WIDE_INT
 #endif
 
 

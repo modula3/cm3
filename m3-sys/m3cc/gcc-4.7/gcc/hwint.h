@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* HOST_WIDE_INT definitions for the GNU compiler.
    Copyright (C) 1998, 2002, 2004, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -57,7 +59,7 @@ extern char sizeof_long_long_must_be_8[sizeof(long long) == 8 ? 1 : -1];
    Thus, we use that unless we have to use 'long long' or '__int64'
    because we're targeting a 64-bit machine from a 32-bit host.  */
 
-#if HOST_BITS_PER_LONG >= 64 || !defined NEED_64BIT_HOST_WIDE_INT
+#if HOST_BITS_PER_LONG >= 64
 #   define HOST_BITS_PER_WIDE_INT HOST_BITS_PER_LONG
 #   define HOST_WIDE_INT long
 #else

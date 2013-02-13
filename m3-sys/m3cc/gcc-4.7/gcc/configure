@@ -11126,12 +11126,6 @@ else
 	done
 fi
 
-if test x$need_64bit_hwint = xyes; then
-
-$as_echo "#define NEED_64BIT_HOST_WIDE_INT 1" >>confdefs.h
-
-fi
-
 if test x$use_long_long_for_widest_fast_int = xyes; then
 
 $as_echo "#define USE_LONG_LONG_FOR_WIDEST_FAST_INT 1" >>confdefs.h
