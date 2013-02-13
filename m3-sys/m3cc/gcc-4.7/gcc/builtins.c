@@ -124,13 +124,11 @@ static tree fold_builtin_3 (location_t, tree, tree, tree, tree, bool);
 static tree fold_builtin_4 (location_t, tree, tree, tree, tree, tree, bool);
 #define fold_builtin_varargs(location_t, tree0, tree1, bool) (NULL_TREE)
 
-static rtx expand_builtin_object_size (tree);
 static rtx expand_builtin_memory_chk (tree, rtx, enum machine_mode,
 				      enum built_in_function);
 static void maybe_emit_chk_warning (tree, enum built_in_function);
 static void maybe_emit_sprintf_chk_warning (tree, enum built_in_function);
 static void maybe_emit_free_warning (tree);
-static tree fold_builtin_object_size (tree, tree);
 static bool init_target_chars (void);
 
 static unsigned HOST_WIDE_INT target_newline;
@@ -4894,7 +4892,8 @@ expand_builtin (tree exp, rtx target, rtx subtarget, enum machine_mode mode,
       return const0_rtx;
 
     case BUILT_IN_OBJECT_SIZE:
-      return expand_builtin_object_size (exp);
+      gcc_unreachable ();
+      return 0;
 
     case BUILT_IN_MEMCPY_CHK:
     case BUILT_IN_MEMPCPY_CHK:
@@ -5672,7 +5671,8 @@ fold_builtin_2 (location_t loc, tree fndecl, tree arg0, tree arg1, bool ignore)
       break;
 
     case BUILT_IN_OBJECT_SIZE:
-      return fold_builtin_object_size (arg0, arg1);
+      gcc_unreachable ();
+      return 0;
 
     case BUILT_IN_ATOMIC_ALWAYS_LOCK_FREE:
       return fold_builtin_atomic_always_lock_free (arg0, arg1);
@@ -6317,41 +6317,6 @@ fold_builtin_next_arg (tree exp, bool va_start_p)
   return false;
 }
 
-/* Expand a call EXP to __builtin_object_size.  */
-
-rtx
-expand_builtin_object_size (tree exp)
-{
-  tree ost;
-  int object_size_type;
-  tree fndecl = get_callee_fndecl (exp);
-
-  if (!validate_arglist (exp, POINTER_TYPE, INTEGER_TYPE, VOID_TYPE))
-    {
-      error ("%Kfirst argument of %D must be a pointer, second integer constant",
-	     exp, fndecl);
-      expand_builtin_trap ();
-      return const0_rtx;
-    }
-
-  ost = CALL_EXPR_ARG (exp, 1);
-  STRIP_NOPS (ost);
-
-  if (TREE_CODE (ost) != INTEGER_CST
-      || tree_int_cst_sgn (ost) < 0
-      || compare_tree_int (ost, 3) > 0)
-    {
-      error ("%Klast argument of %D is not integer constant between 0 and 3",
-	     exp, fndecl);
-      expand_builtin_trap ();
-      return const0_rtx;
-    }
-
-  object_size_type = tree_low_cst (ost, 0);
-
-  return object_size_type < 2 ? constm1_rtx : const0_rtx;
-}
-
 /* Expand EXP, a call to the __mem{cpy,pcpy,move,set}_chk builtin.
    FCODE is the BUILT_IN_* to use.
    Return NULL_RTX if we failed; the caller should emit a normal call,
@@ -6619,56 +6584,6 @@ maybe_emit_free_warning (tree exp)
   else
     warning_at (tree_nonartificial_location (exp), OPT_Wfree_nonheap_object,
 		"%Kattempt to free a non-heap object", exp);
-}
-
-/* Fold a call to __builtin_object_size with arguments PTR and OST,
-   if possible.  */
-
-tree
-fold_builtin_object_size (tree ptr, tree ost)
-{
-  unsigned HOST_WIDE_INT bytes;
-  int object_size_type;
-
-  if (!validate_arg (ptr, POINTER_TYPE)
-      || !validate_arg (ost, INTEGER_TYPE))
-    return NULL_TREE;
-
-  STRIP_NOPS (ost);
-
-  if (TREE_CODE (ost) != INTEGER_CST
-      || tree_int_cst_sgn (ost) < 0
-      || compare_tree_int (ost, 3) > 0)
-    return NULL_TREE;
-
-  object_size_type = tree_low_cst (ost, 0);
-
-  /* __builtin_object_size doesn't evaluate side-effects in its arguments;
-     if there are any side-effects, it returns (size_t) -1 for types 0 and 1
-     and (size_t) 0 for types 2 and 3.  */
-  if (TREE_SIDE_EFFECTS (ptr))
-    return build_int_cst_type (size_type_node, object_size_type < 2 ? -1 : 0);
-
-  if (TREE_CODE (ptr) == ADDR_EXPR)
-    {
-      bytes = compute_builtin_object_size (ptr, object_size_type);
-      if (double_int_fits_to_tree_p (size_type_node,
-				     uhwi_to_double_int (bytes)))
-	return build_int_cstu (size_type_node, bytes);
-    }
-  else if (TREE_CODE (ptr) == SSA_NAME)
-    {
-      /* If object size is not known yet, delay folding until
-       later.  Maybe subsequent passes will help determining
-       it.  */
-      bytes = compute_builtin_object_size (ptr, object_size_type);
-      if (bytes != (unsigned HOST_WIDE_INT) (object_size_type < 2 ? -1 : 0)
-          && double_int_fits_to_tree_p (size_type_node,
-					uhwi_to_double_int (bytes)))
-	return build_int_cstu (size_type_node, bytes);
-    }
-
-  return NULL_TREE;
 }
 
 /* Fold a call to the __mem{cpy,pcpy,move,set}_chk builtin.
