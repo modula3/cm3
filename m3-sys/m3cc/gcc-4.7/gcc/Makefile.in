@@ -3426,12 +3426,12 @@ $(genprog:%=build/gen%$(build_exeext)): build/gen%$(build_exeext): build/gen%.o 
 # Generated source files for gengtype.  Prepend inclusion of
 # bconfig.h because AIX requires _LARGE_FILES to be defined before
 # any system header is included.
-gengtype-lex.c : gengtype-lex.l
-	-$(FLEX) $(FLEXFLAGS) -o$@ $< && { \
-	  echo '#include "bconfig.h"' > $@.tmp; \
-	  cat $@ >> $@.tmp; \
-	  mv $@.tmp $@; \
-	}
+#gengtype-lex.c : gengtype-lex.l
+#	-$(FLEX) $(FLEXFLAGS) -o$@ $< && { \
+#	  echo '#include "bconfig.h"' > $@.tmp; \
+#	  cat $@ >> $@.tmp; \
+#	  mv $@.tmp $@; \
+#	}
 
 # Note for the stamp targets, we run the program `true' instead of
 # having an empty command (nothing following the semicolon).
