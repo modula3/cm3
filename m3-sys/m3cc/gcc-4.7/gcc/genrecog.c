@@ -1641,7 +1641,7 @@ write_afterward (struct decision *start, struct decision *afterward,
 static void
 print_host_wide_int (HOST_WIDE_INT val)
 {
-  HOST_WIDE_INT min = (unsigned HOST_WIDE_INT)1 << (HOST_BITS_PER_WIDE_INT-1);
+  HOST_WIDE_INT min = ((HOST_WIDE_INT)1) << (HOST_BITS_PER_WIDE_INT-1);
   if (val == min)
     printf ("(" HOST_WIDE_INT_PRINT_DEC_C "-1)", val + 1);
   else
