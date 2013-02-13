@@ -1085,7 +1085,7 @@ scale_bbs_frequencies_int (basic_block *bbs, int nbbs, int num, int den)
 
 /* numbers smaller than this value are safe to multiply without getting
    64bit overflow.  */
-#define MAX_SAFE_MULTIPLIER (1 << (sizeof (HOST_WIDEST_INT) * 4 - 1))
+#define MAX_SAFE_MULTIPLIER (((gcov_type)1) << (sizeof (HOST_WIDEST_INT) * 4 - 1))
 
 /* Multiply all frequencies of basic blocks in array BBS of length NBBS
    by NUM/DEN, in gcov_type arithmetic.  More accurate than previous
