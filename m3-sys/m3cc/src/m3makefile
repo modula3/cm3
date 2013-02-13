@@ -188,7 +188,9 @@ readonly m3cc_config = {
 } % m3cc_config
 
 sparc64_assembler_config = "gcc_cv_as_sparc_register_op=yes"
-solaris_assembler_config = "gcc_cv_as_sparc_register_op=yes gcc_cv_as_weak=yes gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes"
+% for newer systems
+%solaris_assembler_config = "gcc_cv_as_sparc_register_op=yes gcc_cv_as_weak=yes gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes"
+solaris_assembler_config = "gcc_cv_as_sparc_register_op=yes gcc_cv_as_weak=yes gcc_cv_as_hidden=no gcc_cv_ld_hidden=no"
 
 readonly m3cc_env = {
   "SPARC64_FREEBSD" : sparc64_assembler_config,
