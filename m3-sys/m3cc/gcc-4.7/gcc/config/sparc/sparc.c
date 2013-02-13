@@ -938,8 +938,8 @@ sparc_option_override (void)
       p = ASTRDUP (sparc_debug_string);
       while ((q = strtok (p, ",")) != NULL)
 	{
-	  bool invert;
-	  int mask;
+	  bool invert = { 0 };
+	  int mask = { 0 };
 
 	  p = NULL;
 	  if (*q == '!')
@@ -10994,7 +10994,12 @@ sparc_expand_compare_and_swap_12 (rtx bool_result, rtx result, rtx mem,
   rtx newvalue = gen_reg_rtx (SImode);
   rtx res = gen_reg_rtx (SImode);
   rtx resv = gen_reg_rtx (SImode);
-  rtx memsi, val, mask, end_label, loop_label, cc;
+  rtx memsi = { 0 };
+  rtx val = { 0 };
+  rtx mask = { 0 };
+  rtx end_label = { 0 };
+  rtx loop_label = { 0 };
+  rtx cc = { 0 };
 
   emit_insn (gen_rtx_SET (VOIDmode, addr,
 			  gen_rtx_AND (Pmode, addr1, GEN_INT (-4))));
@@ -11089,9 +11094,13 @@ sparc_expand_compare_and_swap_12 (rtx bool_result, rtx result, rtx mem,
 void
 sparc_expand_compare_and_swap (rtx operands[])
 {
-  rtx bval, retval, mem, oldval, newval;
-  enum machine_mode mode;
-  enum memmodel model;
+  rtx bval = { 0 };
+  rtx retval = { 0 };
+  rtx mem = { 0 };
+  rtx oldval = { 0 };
+  rtx newval = { 0 };
+  enum machine_mode mode = (enum machine_mode)0;
+  enum memmodel model = (enum memmodel)0;
 
   bval = operands[0];
   retval = operands[1];
@@ -11130,7 +11139,9 @@ sparc_expand_compare_and_swap (rtx operands[])
 void
 sparc_expand_vec_perm_bmask (enum machine_mode vmode, rtx sel)
 {
-  rtx t_1, t_2, t_3;
+  rtx t_1 = { 0 };
+  rtx t_2 = { 0 };
+  rtx t_3 = { 0 };
 
   sel = gen_lowpart (DImode, sel);
   switch (vmode)
@@ -11392,7 +11403,7 @@ sparc_preferred_reload_class (rtx x, reg_class_t rclass)
 const char *
 output_v8plus_mult (rtx insn, rtx *operands, const char *opcode)
 {
-  char mulstr[32];
+  char mulstr[32] = { 0 };
 
   gcc_assert (! TARGET_ARCH64);
 
@@ -11470,8 +11481,9 @@ static void
 vector_init_bshuffle (rtx target, rtx elt, enum machine_mode mode,
 		      enum machine_mode inner_mode)
 {
-  rtx t1, final_insn;
-  int bmask;
+  rtx t1 = { 0 };
+  rtx final_insn = { 0 };
+  int bmask = { 0 };
 
   t1 = gen_reg_rtx (mode);
 
@@ -11507,7 +11519,11 @@ vector_init_bshuffle (rtx target, rtx elt, enum machine_mode mode,
 static void
 vector_init_fpmerge (rtx target, rtx elt)
 {
-  rtx t1, t2, t2_low, t3, t3_low;
+  rtx t1 = { 0 };
+  rtx t2 = { 0 };
+  rtx t2_low = { 0 };
+  rtx t3 = { 0 };
+  rtx t3_low = { 0 };
 
   t1 = gen_reg_rtx (V4QImode);
   elt = convert_modes (SImode, QImode, elt, true);
@@ -11531,7 +11547,7 @@ static void
 vector_init_faligndata (rtx target, rtx elt)
 {
   rtx t1 = gen_reg_rtx (V4HImode);
-  int i;
+  int i = { 0 };
 
   elt = convert_modes (SImode, HImode, elt, true);
   emit_move_insn (gen_lowpart (SImode, t1), elt);
@@ -11552,9 +11568,10 @@ sparc_expand_vector_init (rtx target, rtx vals)
   const enum machine_mode mode = GET_MODE (target);
   const enum machine_mode inner_mode = GET_MODE_INNER (mode);
   const int n_elts = GET_MODE_NUNITS (mode);
-  int i, n_var = 0;
-  bool all_same;
-  rtx mem;
+  int i = { 0 };
+  int n_var = { 0 };
+  bool all_same = { 0 };
+  rtx mem = { 0 };
 
   all_same = true;
   for (i = 0; i < n_elts; i++)
@@ -11697,8 +11714,10 @@ bool
 sparc_expand_conditional_move (enum machine_mode mode, rtx *operands)
 {
   enum rtx_code rc = GET_CODE (operands[1]);
-  enum machine_mode cmp_mode;
-  rtx cc_reg, dst, cmp;
+  enum machine_mode cmp_mode = (enum machine_mode)0;
+  rtx cc_reg = { 0 };
+  rtx dst = { 0 };
+  rtx cmp = { 0 };
 
   cmp = operands[1];
   if (GET_MODE (XEXP (cmp, 0)) == DImode && !TARGET_ARCH64)
@@ -11757,7 +11776,13 @@ sparc_expand_conditional_move (enum machine_mode mode, rtx *operands)
 void
 sparc_expand_vcond (enum machine_mode mode, rtx *operands, int ccode, int fcode)
 {
-  rtx mask, cop0, cop1, fcmp, cmask, bshuf, gsr;
+  rtx mask = { 0 };
+  rtx cop0 = { 0 };
+  rtx cop1 = { 0 };
+  rtx fcmp = { 0 };
+  rtx cmask = { 0 };
+  rtx bshuf = { 0 };
+  rtx gsr = { 0 };
   enum rtx_code code = GET_CODE (operands[3]);
 
   mask = gen_reg_rtx (Pmode);
@@ -11765,7 +11790,7 @@ sparc_expand_vcond (enum machine_mode mode, rtx *operands, int ccode, int fcode)
   cop1 = operands[5];
   if (code == LT || code == GE)
     {
-      rtx t;
+      rtx t = { 0 };
 
       code = swap_condition (code);
       t = cop0; cop0 = cop1; cop1 = t;
@@ -11821,8 +11846,10 @@ sparc_regmode_natural_size (enum machine_mode mode)
 bool
 sparc_modes_tieable_p (enum machine_mode mode1, enum machine_mode mode2)
 {
-  enum mode_class mclass1, mclass2;
-  unsigned short size1, size2;
+  enum mode_class mclass1 = (enum mode_class)0;
+  enum mode_class mclass2 = (enum mode_class)0;
+  unsigned short size1 = { 0 };
+  unsigned short size2 = { 0 };
 
   if (mode1 == mode2)
     return true;
