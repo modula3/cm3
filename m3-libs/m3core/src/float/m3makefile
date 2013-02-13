@@ -18,6 +18,9 @@ _FloatPieces = {
 
 _FloatPiecesNoC99 = {
     "NT",
+    "SOLsun",           % Solaris 2.9
+    "SOLgnu",           % Solaris 2.9
+    "SPARC32_SOLARIS",  % Solaris 2.9
 }
 
 _FloatPiecesC99 = {
@@ -39,7 +42,9 @@ if _FloatPieces contains TARGET
   % nothing
 else
     _FloatPieces{TARGET} = [ ]
-    if _FloatPiecesC99 contains TARGET_OS and not _FloatPiecesNoC99 contains TARGET_OS
+    if (_FloatPiecesC99 contains TARGET_OS
+            and not _FloatPiecesNoC99 contains TARGET_OS
+            and not _FloatPiecesNoC99 contains TARGET)
         _FloatPieces{TARGET} = ["C99"]
     else
         _FloatPieces{TARGET} = ["IEEE-default"]
