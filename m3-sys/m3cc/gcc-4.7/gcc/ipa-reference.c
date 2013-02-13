@@ -944,41 +944,6 @@ propagate (void)
   return 0;
 }
 
-/* Return true if we need to write summary of NODE. */
-
-static bool
-write_node_summary_p (struct cgraph_node *node,
-		      cgraph_node_set set,
-		      varpool_node_set vset,
-		      bitmap ltrans_statics)
-{
-  ipa_reference_optimization_summary_t info;
-
-  /* See if we have (non-empty) info.  */
-  if (!node->analyzed || node->global.inlined_to)
-    return false;
-  info = get_reference_optimization_summary (node);
-  if (!info || (bitmap_empty_p (info->statics_not_read)
-		&& bitmap_empty_p (info->statics_not_written)))
-    return false;
-
-  /* See if we want to encode it.
-     Encode also referenced functions since constant folding might turn it into
-     a direct call.
-
-     In future we might also want to include summaries of functions references
-     by initializers of constant variables references in current unit.  */
-  if (!reachable_from_this_partition_p (node, set)
-      && !referenced_from_this_partition_p (&node->ref_list, set, vset))
-    return false;
-
-  /* See if the info has non-empty intersections with vars we want to encode.  */
-  if (!bitmap_intersect_p (info->statics_not_read, ltrans_statics)
-      && !bitmap_intersect_p (info->statics_not_written, ltrans_statics))
-    return false;
-  return true;
-}
-
 static bool
 gate_reference (void)
 {
