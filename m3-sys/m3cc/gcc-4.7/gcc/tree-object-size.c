@@ -60,7 +60,6 @@ compute_object_sizes (void)
 	}
     }
 
-  fini_object_sizes ();
   return 0;
 }
 
