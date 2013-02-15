@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# This stub works around broken CVS compression on current10x.opencsw.org.
+# This stub works around broken CVS compression at opencsw.org.
 # Put in $HOME/bin/cvs.
 
 import os, sys
@@ -14,7 +14,7 @@ if not os.access(cvs, os.X_OK):
   sys.stderr.write(cvs + " not executable\n")
   sys.exit(1)
 
-if os.uname()[1] == "current10x" and "-z3" in sys.argv:
+if "-z3" in sys.argv:
   sys.argv.remove("-z3")
 
 sys.argv[0] = cvs
