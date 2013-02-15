@@ -69,7 +69,7 @@ proc configure_linker() is
 end
 
 SYSTEM_LIBS = {
-    "LIBC"      : [ "-lpthread", "-lrt", "-lm", "-lnsl", "-lsocket" ],
+    "LIBC"      : [ "-lpthread", "-lrt", "-lm", "-lnsl", "-lsocket", "-lc" ],
     "LEX-YACC"   : [ "-ll" ],
     % "FLEX-BISON" : [ "-L/usr/sfw/lib", "-lfl" ],
     % "POSTGRES95" : [ ],
