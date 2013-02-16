@@ -4,9 +4,10 @@
 readonly TARGET = "SPARC64_SOLARIS"
 readonly GNU_PLATFORM = "sparc64-sun-solaris2.10" % "cpu-os" string for GNU
 readonly C_COMPILER = "SUN"
-readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -K PIC -xarch=v9"
 SunXArch = "generic64" % or v9, equivalent?
 SunXRegs = "-xregs=no%appl"
+
+SolarisAssemblerFlags = "-Qy -s -K PIC -xarch=v9"
 
 include("SPARC64.common")
 include("Solaris.common")

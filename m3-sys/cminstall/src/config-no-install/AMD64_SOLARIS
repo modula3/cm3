@@ -5,10 +5,12 @@ readonly TARGET = "AMD64_SOLARIS"
 readonly GNU_PLATFORM = "i586-sun-solaris2.10" % "cpu-os" string for GNU
                                                % deliberately i586
 readonly C_COMPILER = "SUN" % or GNU to use gcc (untested)
-readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -xarch=generic64"
 SunXArch = "generic64" % or amd64, equivalent?
 SunXRegs = ""
 m3back_debug = "-gstabs" % Sun assembler doesn't like .stabd.
+
+% -K PIC ?
+SolarisAssemblerFlags = "-Qy -s -xarch=generic64"
 
 include("AMD64.common")
 include("Solaris.common")
