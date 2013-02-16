@@ -1,3 +1,5 @@
+# Modula-3: modified
+
 # @configure_input@
 # Makefile for libcpp.  Run 'configure' to generate Makefile from Makefile.in
 
@@ -45,7 +47,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 LDFLAGS = @LDFLAGS@
 LIBICONV =
-LIBINTL = @LIBINTL@
+LIBINTL = 
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 SHELL = @SHELL@
@@ -91,8 +93,7 @@ libcpp.a: $(libcpp_a_OBJS)
 makedepend$(EXEEXT): $(makedepend_OBJS) libcpp.a ../libiberty/libiberty.a
 	@rm -f makedepend$(EXEEXT)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o makedepend$(EXEEXT) \
-	  $(makedepend_OBJS) libcpp.a ../libiberty/libiberty.a \
-	  $(LIBINTL)
+	  $(makedepend_OBJS) libcpp.a ../libiberty/libiberty.a
 
 # Rules to rebuild the configuration
 

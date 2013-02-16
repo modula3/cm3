@@ -33,7 +33,7 @@ readonly Platform_info = {
   "I386_NETBSD" : "i586-unknown-netbsdelf",
   "I386_NT"     : "i586-pc-mingw32",
   "I386_OPENBSD" : "i586-openbsd",
-  "I386_SOLARIS" : "i586-sun-solaris2.10",
+  "I386_SOLARIS" : "i586-sun-solaris2.9",
   "IA64_FREEBSD" : "ia64-freebsd7",
   "IA64_HPUX" : "ia64-hpux",
   "IA64_LINUX" : "ia64-linux",
@@ -67,7 +67,7 @@ readonly Platform_info = {
   "SPARC32_SOLARIS" : "sparc-sun-solaris2.9",
   "SPARC64_LINUX" : "sparc64-linux",
   "SPARC64_OPENBSD" : "sparc64-openbsd",
-  "SPARC64_SOLARIS" : "sparc64-sun-solaris2.10",
+  "SPARC64_SOLARIS" : "sparc64-sun-solaris2.9",
   "SPARC_SOLARIS" : "sparc-sun-solaris2.9",
   "Tru64v5"   : "alpha-dec-osf5.1",
 }
