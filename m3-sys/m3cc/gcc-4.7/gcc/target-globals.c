@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target-dependent globals.
    Copyright (C) 2010  Free Software Foundation, Inc.
 
@@ -84,5 +86,9 @@ save_target_globals (void)
   target_reinit ();
   return g;
 }
+
+#else
+
+char quash_darwin_warning_about_no_symbols_gcc_target_globals;
 
 #endif
