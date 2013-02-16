@@ -18,9 +18,11 @@ _FloatPieces = {
 
 _FloatPiecesNoC99 = {
     "NT",
-    "SOLsun",           % Solaris 2.9
-    "SOLgnu",           % Solaris 2.9
-    "SPARC32_SOLARIS",  % Solaris 2.9
+    "SOLsun",           % Solaris <2.10
+    "SOLgnu",           % Solaris <2.10
+    "SPARC32_SOLARIS",  % Solaris <2.10
+    "SPARC64_SOLARIS",  % Solaris <2.10
+    "I386_SOLARIS",     % Solaris <2.10
 }
 
 _FloatPiecesC99 = {
