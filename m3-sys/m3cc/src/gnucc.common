@@ -72,6 +72,14 @@ proc FileExists (a) is
     return not stale (a, a)
 end
 
+proc SunCC_Check (a) is
+        return FileExists(a & "/bin/cc") and FileExists(a & "/bin/CC")
+end
+
+proc SunCC_Get (a) is
+        return "CC=" & a & "/bin/cc CXX=" & a & "/bin/CC "
+end
+
 if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLARIS")
        or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
 
@@ -100,6 +108,22 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
           else
             env = "CXX=/usr/bin/CC " & env
           end
+
+        else if SunCC_Check("/opt/solarisstudio12.3")
+            env = SunCC_Get("/opt/solarisstudio12.3") & env
+
+        else if SunCC_Check("/opt/solstudio12.2")
+            env = SunCC_Get("/opt/solstudio12.2") & env
+
+        else if SunCC_Check("/opt/studio/SOS12/SUNWspro")
+            env = SunCC_Get("/opt/studio/SOS12/SUNWspro") & env
+
+        else if SunCC_Check("/opt/studio/SOS11/SUNWspro")
+            env = SunCC_Get("/opt/studio/SOS11/SUNWspro") & env
+
+        else if SunCC_Check("/opt/SUNWspro")
+            env = SunCC_Get("/opt/SUNWspro") & env
+
         % gcc 3.4.3 can't compile gcc 4.5.1 targeting AMD64_SOLARIS
         % see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=45929
         % It would be nice to split up the files for portability.
@@ -109,11 +133,7 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
             gcc = "/usr/sfw/bin:"
         else if FileExists("/opt/csw/gcc4/bin/gcc")
             gcc = "/opt/csw/gcc4/bin:"
-        else if FileExists("/opt/solarisstudio12.3/bin/CC") and FileExists("/opt/solarisstudio12.3/bin/cc")
-            env = "CC=/opt/solarisstudio12.3/bin/cc CXX=/usr/bin/CC " & env
-        else if FileExists("/opt/solstudio12.2/bin/CC") and FileExists("/opt/solstudio12.2/bin/cc")
-            env = "CC=/opt/solstudio12.2/bin/cc CXX=/opt/solstudio12.2/bin/CC " & env
-        end end end end end end
+        end end end end end end end end
     end
 
     if ccs or gcc
