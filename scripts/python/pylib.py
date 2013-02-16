@@ -1857,10 +1857,10 @@ def _CopyCompiler(From, To):
     froms = [ ]
     for a in ["cm3", "mklib", "cm3cg", "mips-tfile"]:
         for b in [".exe", ""]:
-            c = a + b
+            c = os.path.join(From, a + b)
             froms += [c]
             if not any_exist:
-                any_exist = FileExists(os.path.join(From, c))
+                any_exist = FileExists(c)
 
     if not any_exist:
         FatalError("none of " + ", ".join(froms) + " exist")
