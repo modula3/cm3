@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Building internal representation for IRA.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.

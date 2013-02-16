@@ -431,7 +431,7 @@ static HARD_REG_SET temp_hard_regset;
 static void
 setup_reg_mode_hard_regset (void)
 {
-  int i, m, hard_regno;
+  int i = { 0 }, m = { 0 }, hard_regno = { 0 };
 
   for (m = 0; m < NUM_MACHINE_MODES; m++)
     for (hard_regno = 0; hard_regno < FIRST_PSEUDO_REGISTER; hard_regno++)
@@ -452,8 +452,8 @@ setup_reg_mode_hard_regset (void)
 static void
 setup_class_hard_regs (void)
 {
-  int cl, i, hard_regno, n;
-  HARD_REG_SET processed_hard_reg_set;
+  int cl = { 0 }, i = { 0 }, hard_regno = { 0 }, n = { 0 };
+  HARD_REG_SET processed_hard_reg_set = { 0 };
 
   ira_assert (SHRT_MAX >= FIRST_PSEUDO_REGISTER);
   for (cl = (int) N_REG_CLASSES - 1; cl >= 0; cl--)
@@ -496,7 +496,7 @@ setup_class_hard_regs (void)
 static void
 setup_available_class_regs (void)
 {
-  int i, j;
+  int i = { 0 }, j = { 0 };
 
   memset (ira_available_class_regs, 0, sizeof (ira_available_class_regs));
   for (i = 0; i < N_REG_CLASSES; i++)
@@ -534,8 +534,8 @@ setup_alloc_regs (bool use_hard_frame_p)
 static void
 setup_reg_subclasses (void)
 {
-  int i, j;
-  HARD_REG_SET temp_hard_regset2;
+  int i = { 0 }, j = { 0 };
+  HARD_REG_SET temp_hard_regset2 = { 0 };
 
   for (i = 0; i < N_REG_CLASSES; i++)
     for (j = 0; j < N_REG_CLASSES; j++)
@@ -553,7 +553,7 @@ setup_reg_subclasses (void)
       for (j = 0; j < N_REG_CLASSES; j++)
 	if (i != j)
 	  {
-	    enum reg_class *p;
+	    enum reg_class *p = 0;
 
 	    COPY_HARD_REG_SET (temp_hard_regset2, reg_class_contents[j]);
 	    AND_COMPL_HARD_REG_SET (temp_hard_regset2, no_unit_alloc_regs);
@@ -573,8 +573,8 @@ setup_reg_subclasses (void)
 static void
 setup_class_subset_and_memory_move_costs (void)
 {
-  int cl, cl2, mode, cost;
-  HARD_REG_SET temp_hard_regset2;
+  int cl = { 0 }, cl2 = { 0 }, mode = { 0 }, cost = { 0 };
+  HARD_REG_SET temp_hard_regset2 = { 0 };
 
   for (mode = 0; mode < MAX_MACHINE_MODE; mode++)
     ira_memory_move_cost[mode][NO_REGS][0]
@@ -753,9 +753,9 @@ setup_stack_reg_pressure_class (void)
   ira_stack_reg_pressure_class = NO_REGS;
 #ifdef STACK_REGS
   {
-    int i, best, size;
-    enum reg_class cl;
-    HARD_REG_SET temp_hard_regset2;
+    int i = { 0 }, best = { 0 }, size = { 0 };
+    enum reg_class cl = (enum reg_class)0;
+    HARD_REG_SET temp_hard_regset2 = { 0 };
 
     CLEAR_HARD_REG_SET (temp_hard_regset);
     for (i = FIRST_STACK_REG; i <= LAST_STACK_REG; i++)
@@ -793,12 +793,12 @@ setup_stack_reg_pressure_class (void)
 static void
 setup_pressure_classes (void)
 {
-  int cost, i, n, curr;
-  int cl, cl2;
-  enum reg_class pressure_classes[N_REG_CLASSES];
-  int m;
-  HARD_REG_SET temp_hard_regset2;
-  bool insert_p;
+  int cost = { 0 }, i = { 0 }, n = { 0 }, curr = { 0 };
+  int cl = { 0 }, cl2 = { 0 };
+  enum reg_class pressure_classes[N_REG_CLASSES] = { (enum reg_class)0 };
+  int m = { 0 };
+  HARD_REG_SET temp_hard_regset2 = { 0 };
+  bool insert_p = { 0 };
 
   n = 0;
   for (cl = 0; cl < N_REG_CLASSES; cl++)
@@ -951,9 +951,9 @@ setup_pressure_classes (void)
 static void
 setup_allocno_and_important_classes (void)
 {
-  int i, j, n, cl;
-  bool set_p;
-  HARD_REG_SET temp_hard_regset2;
+  int i = { 0 }, j = { 0 }, n = { 0 }, cl = { 0 };
+  bool set_p = { 0 };
+  HARD_REG_SET temp_hard_regset2 = { 0 };
   static enum reg_class classes[LIM_REG_CLASSES + 1];
 
   n = 0;
@@ -1056,9 +1056,9 @@ static void
 setup_class_translate_array (enum reg_class *class_translate,
 			     int classes_num, enum reg_class *classes)
 {
-  int cl, mode;
-  enum reg_class aclass, best_class, *cl_ptr;
-  int i, cost, min_cost, best_cost;
+  int cl = { 0 }, mode = { 0 };
+  enum reg_class aclass = (enum reg_class)0, best_class = (enum reg_class)0, *cl_ptr = { 0 };
+  int i = { 0 }, cost = { 0 }, min_cost = { 0 }, best_cost = { 0 };
 
   for (cl = 0; cl < N_REG_CLASSES; cl++)
     class_translate[cl] = NO_REGS;
@@ -1131,8 +1131,8 @@ comp_reg_classes_func (const void *v1p, const void *v2p)
 {
   enum reg_class cl1 = *(const enum reg_class *) v1p;
   enum reg_class cl2 = *(const enum reg_class *) v2p;
-  enum reg_class tcl1, tcl2;
-  int diff;
+  enum reg_class tcl1 = (enum reg_class)0, tcl2 = (enum reg_class)0;
+  int diff = { 0 };
 
   tcl1 = ira_allocno_class_translate[cl1];
   tcl2 = ira_allocno_class_translate[cl2];
@@ -1156,7 +1156,7 @@ comp_reg_classes_func (const void *v1p, const void *v2p)
 static void
 reorder_important_classes (void)
 {
-  int i;
+  int i = { 0 };
 
   for (i = 0; i < N_REG_CLASSES; i++)
     allocno_class_order[i] = -1;
@@ -1175,9 +1175,9 @@ reorder_important_classes (void)
 static void
 setup_reg_class_relations (void)
 {
-  int i, cl1, cl2, cl3;
-  HARD_REG_SET intersection_set, union_set, temp_set2;
-  bool important_class_p[N_REG_CLASSES];
+  int i = { 0 }, cl1 = { 0 }, cl2 = { 0 }, cl3 = { 0 };
+  HARD_REG_SET intersection_set = { 0 }, union_set = { 0 }, temp_set2 = { 0 };
+  bool important_class_p[N_REG_CLASSES] = { 0 };
 
   memset (important_class_p, 0, sizeof (important_class_p));
   for (i = 0; i < ira_important_classes_num; i++)
@@ -1220,7 +1220,7 @@ setup_reg_class_relations (void)
 	      /* CL1 and CL2 are important classes and CL1 allocatable
 		 hard register set is inside of CL2 allocatable hard
 		 registers -- make CL1 a superset of CL2.  */
-	      enum reg_class *p;
+	      enum reg_class *p = { 0 };
 
 	      p = &ira_reg_class_super_classes[cl1][0];
 	      while (*p != LIM_REG_CLASSES)
@@ -1332,7 +1332,7 @@ print_classes (FILE *f, bool pressure_p)
 				     ? ira_pressure_class_translate
 				     : ira_allocno_class_translate);
   static const char *const reg_class_names[] = REG_CLASS_NAMES;
-  int i;
+  int i = { 0 };
 
   fprintf (f, "%s classes:\n", pressure_p ? "Pressure" : "Allocno");
   for (i = 0; i < classes_num; i++)
@@ -1612,7 +1612,7 @@ ira_init_once (void)
 static void
 free_register_move_costs (void)
 {
-  int mode;
+  int mode = { 0 };
 
   for (mode = 0; mode < MAX_MACHINE_MODE; mode++)
     {
@@ -2762,10 +2762,10 @@ static int recorded_label_ref;
 static int
 update_equiv_regs (void)
 {
-  rtx insn;
-  basic_block bb;
-  int loop_depth;
-  bitmap cleared_regs;
+  rtx insn = { 0 };
+  basic_block bb = { 0 };
+  int loop_depth = { 0 };
+  bitmap cleared_regs = { 0 };
 
   /* We need to keep track of whether or not we recorded a LABEL_REF so
      that we know if the jump optimizer needs to be rerun.  */
@@ -3065,7 +3065,7 @@ update_equiv_regs (void)
 	   insn != PREV_INSN (BB_HEAD (bb));
 	   insn = PREV_INSN (insn))
 	{
-	  rtx link;
+	  rtx link = { 0 };
 
 	  if (! INSN_P (insn))
 	    continue;

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IRA hard register and memory cost calculation for allocnos or pseudos.
    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012
    Free Software Foundation, Inc.
@@ -1217,7 +1219,7 @@ record_operand_costs (rtx insn, enum reg_class *pref)
 {
   const char *constraints[MAX_RECOG_OPERANDS];
   enum machine_mode modes[MAX_RECOG_OPERANDS];
-  int i;
+  int i = { 0 };
 
   for (i = 0; i < recog_data.n_operands; i++)
     {
@@ -1257,7 +1259,7 @@ record_operand_costs (rtx insn, enum reg_class *pref)
     if (constraints[i][0] == '%')
       {
 	const char *xconstraints[MAX_RECOG_OPERANDS];
-	int j;
+	int j = { 0 };
 
 	/* Handle commutative operands by swapping the constraints.
 	   We assume the modes are the same.  */
@@ -1283,10 +1285,10 @@ record_operand_costs (rtx insn, enum reg_class *pref)
 static rtx
 scan_one_insn (rtx insn)
 {
-  enum rtx_code pat_code;
-  rtx set, note;
-  int i, k;
-  bool counted_mem;
+  enum rtx_code pat_code = (enum rtx_code)0;
+  rtx set = { 0 }, note = { 0 };
+  int i = { 0 }, k = { 0 };
+  bool counted_mem = { 0 };
 
   if (!NONDEBUG_INSN_P (insn))
     return insn;
@@ -1379,16 +1381,16 @@ scan_one_insn (rtx insn)
 static void
 print_allocno_costs (FILE *f)
 {
-  int k;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  int k = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   ira_assert (allocno_p);
   fprintf (f, "\n");
   FOR_EACH_ALLOCNO (a, ai)
     {
-      int i, rclass;
-      basic_block bb;
+      int i = { 0 }, rclass = { 0 };
+      basic_block bb = { 0 };
       int regno = ALLOCNO_REGNO (a);
       cost_classes_t cost_classes_ptr = regno_cost_classes[regno];
       enum reg_class *cost_classes = cost_classes_ptr->classes;
@@ -1428,10 +1430,10 @@ print_allocno_costs (FILE *f)
 static void
 print_pseudo_costs (FILE *f)
 {
-  int regno, k;
-  int rclass;
-  cost_classes_t cost_classes_ptr;
-  enum reg_class *cost_classes;
+  int regno = { 0 }, k = { 0 };
+  int rclass = { 0 };
+  cost_classes_t cost_classes_ptr = { 0 };
+  enum reg_class *cost_classes = { 0 };
 
   ira_assert (! allocno_p);
   fprintf (f, "\n");
@@ -1462,7 +1464,7 @@ print_pseudo_costs (FILE *f)
 static void
 process_bb_for_costs (basic_block bb)
 {
-  rtx insn;
+  rtx insn = { 0 };
 
   frequency = REG_FREQ_FROM_BB (bb);
   if (frequency == 0)
@@ -1476,7 +1478,7 @@ process_bb_for_costs (basic_block bb)
 static void
 process_bb_node_for_costs (ira_loop_tree_node_t loop_tree_node)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
 
   bb = loop_tree_node->bb;
   if (bb != NULL)
@@ -1489,10 +1491,10 @@ process_bb_node_for_costs (ira_loop_tree_node_t loop_tree_node)
 static void
 find_costs_and_classes (FILE *dump_file)
 {
-  int i, k, start, max_cost_classes_num;
-  int pass;
-  basic_block bb;
-  enum reg_class *regno_best_class;
+  int i = { 0 }, k = { 0 }, start = { 0 }, max_cost_classes_num = { 0 };
+  int pass = { 0 };
+  basic_block bb = { 0 };
+  enum reg_class *regno_best_class = { 0 };
 
   init_recog ();
   regno_best_class
@@ -1572,7 +1574,7 @@ find_costs_and_classes (FILE *dump_file)
 	}
       else
 	{
-	  basic_block bb;
+	  basic_block bb = { 0 };
 
 	  FOR_EACH_BB (bb)
 	    process_bb_for_costs (bb);
@@ -1585,15 +1587,15 @@ find_costs_and_classes (FILE *dump_file)
 	 find which class is preferred.  */
       for (i = max_reg_num () - 1; i >= FIRST_PSEUDO_REGISTER; i--)
 	{
-	  ira_allocno_t a, parent_a;
-	  int rclass, a_num, parent_a_num, add_cost;
-	  ira_loop_tree_node_t parent;
-	  int best_cost, allocno_cost;
-	  enum reg_class best, alt_class;
+	  ira_allocno_t a = { 0 }, parent_a = { 0 };
+	  int rclass = { 0 }, a_num = { 0 }, parent_a_num = { 0 }, add_cost = { 0 };
+	  ira_loop_tree_node_t parent = { 0 };
+	  int best_cost = { 0 }, allocno_cost = { 0 };
+	  enum reg_class best = (enum reg_class)0, alt_class = (enum reg_class)0;
 	  cost_classes_t cost_classes_ptr = regno_cost_classes[i];
 	  enum reg_class *cost_classes = cost_classes_ptr->classes;
 	  int *i_costs = temp_costs->cost;
-	  int i_mem_cost;
+	  int i_mem_cost = { 0 };
 	  int equiv_savings = regno_equiv_gains[i];
 
 	  if (! allocno_p)
@@ -1827,13 +1829,13 @@ find_costs_and_classes (FILE *dump_file)
 static void
 process_bb_node_for_hard_reg_moves (ira_loop_tree_node_t loop_tree_node)
 {
-  int i, freq, cost, src_regno, dst_regno, hard_regno;
-  bool to_p;
-  ira_allocno_t a;
-  enum reg_class rclass, hard_reg_class;
-  enum machine_mode mode;
-  basic_block bb;
-  rtx insn, set, src, dst;
+  int i = { 0 }, freq = { 0 }, cost = { 0 }, src_regno = { 0 }, dst_regno = { 0 }, hard_regno = { 0 };
+  bool to_p = { 0 };
+  ira_allocno_t a = { 0 };
+  enum reg_class rclass = (enum reg_class)0, hard_reg_class = (enum reg_class)0;
+  enum machine_mode mode = (enum machine_mode)0;
+  basic_block bb = { 0 };
+  rtx insn = { 0 }, set = { 0 }, src = { 0 }, dst = { 0 };
 
   bb = loop_tree_node->bb;
   if (bb == NULL)
@@ -1899,12 +1901,13 @@ process_bb_node_for_hard_reg_moves (ira_loop_tree_node_t loop_tree_node)
 static void
 setup_allocno_class_and_costs (void)
 {
-  int i, j, n, regno, hard_regno, num;
-  int *reg_costs;
-  enum reg_class aclass, rclass;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
-  cost_classes_t cost_classes_ptr;
+  int i = { 0 }, j = { 0 }, n = { 0 }, regno = { 0 }, hard_regno = { 0 }, num = { 0 };
+  int *reg_costs = { 0 };
+  enum reg_class aclass = (enum reg_class)0;
+  enum reg_class rclass = (enum reg_class)0;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  cost_classes_t cost_classes_ptr = { 0 };
 
   ira_assert (allocno_p);
   FOR_EACH_ALLOCNO (a, ai)
@@ -1953,7 +1956,7 @@ setup_allocno_class_and_costs (void)
 void
 ira_init_costs_once (void)
 {
-  int i;
+  int i = { 0 };
 
   init_cost = NULL;
   for (i = 0; i < MAX_RECOG_OPERANDS; i++)
@@ -1968,7 +1971,7 @@ ira_init_costs_once (void)
 static void
 free_ira_costs (void)
 {
-  int i;
+  int i = { 0 };
 
   free (init_cost);
   init_cost = NULL;
@@ -1987,7 +1990,7 @@ free_ira_costs (void)
 void
 ira_init_costs (void)
 {
-  int i;
+  int i = { 0 };
 
   free_ira_costs ();
   max_struct_costs_size
@@ -2085,15 +2088,19 @@ ira_set_pseudo_classes (FILE *dump_file)
 void
 ira_tune_allocno_costs (void)
 {
-  int j, n, regno;
-  int cost, min_cost, *reg_costs;
+  int j = { 0 };
+  int n = { 0 };
+  int regno = { 0 };
+  int cost = { 0 };
+  int min_cost = { 0 };
+  int *reg_costs = { 0 };
   enum reg_class aclass, rclass;
   enum machine_mode mode;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
-  ira_allocno_object_iterator oi;
-  ira_object_t obj;
-  bool skip_p;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  ira_allocno_object_iterator oi = { 0 };
+  ira_object_t obj = { 0 };
+  bool skip_p = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     {
