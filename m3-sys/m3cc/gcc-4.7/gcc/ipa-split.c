@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Function splitting pass
    Copyright (C) 2010, 2011, 2012
    Free Software Foundation, Inc.
@@ -194,8 +196,8 @@ verify_non_ssa_vars (struct split_point *current, bitmap non_ssa_vars,
 {
   bitmap seen = BITMAP_ALLOC (NULL);
   VEC (basic_block,heap) *worklist = NULL;
-  edge e;
-  edge_iterator ei;
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
   bool ok = true;
 
   FOR_EACH_EDGE (e, ei, current->entry_bb->preds)
@@ -288,9 +290,9 @@ done:
 static void
 check_forbidden_calls (gimple stmt)
 {
-  imm_use_iterator use_iter;
-  use_operand_p use_p;
-  tree lhs;
+  imm_use_iterator use_iter = { 0 };
+  use_operand_p use_p = { 0 };
+  tree lhs = { 0 };
 
   /* At the moment, __builtin_constant_p is the only forbidden
      predicate function call (see PR49642).  */
@@ -341,8 +343,8 @@ check_forbidden_calls (gimple stmt)
 static bool
 dominated_by_forbidden (basic_block bb)
 {
-  unsigned dom_bb;
-  bitmap_iterator bi;
+  unsigned dom_bb = { 0 };
+  bitmap_iterator bi = { 0 };
 
   EXECUTE_IF_SET_IN_BITMAP (forbidden_dominators, 1, dom_bb, bi)
     {
@@ -361,15 +363,15 @@ static void
 consider_split (struct split_point *current, bitmap non_ssa_vars,
 		basic_block return_bb)
 {
-  tree parm;
+  tree parm = { 0 };
   unsigned int num_args = 0;
-  unsigned int call_overhead;
-  edge e;
-  edge_iterator ei;
-  gimple_stmt_iterator bsi;
-  unsigned int i;
+  unsigned int call_overhead = { 0 };
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
+  gimple_stmt_iterator bsi = { 0 };
+  unsigned int i = { 0 };
   int incoming_freq = 0;
-  tree retval;
+  tree retval = { 0 };
 
   if (dump_file && (dump_flags & TDF_DETAILS))
     dump_split_point (dump_file, current);
@@ -611,9 +613,9 @@ consider_split (struct split_point *current, bitmap non_ssa_vars,
 static basic_block
 find_return_bb (void)
 {
-  edge e;
+  edge e = { 0 };
   basic_block return_bb = EXIT_BLOCK_PTR;
-  gimple_stmt_iterator bsi;
+  gimple_stmt_iterator bsi = { 0 };
   bool found_return = false;
   tree retval = NULL_TREE;
 
@@ -655,7 +657,7 @@ find_return_bb (void)
 static tree
 find_retval (basic_block return_bb)
 {
-  gimple_stmt_iterator bsi;
+  gimple_stmt_iterator bsi = { 0 };
   for (bsi = gsi_start_bb (return_bb); !gsi_end_p (bsi); gsi_next (&bsi))
     if (gimple_code (gsi_stmt (bsi)) == GIMPLE_RETURN)
       return gimple_return_retval (gsi_stmt (bsi));
@@ -721,9 +723,9 @@ visit_bb (basic_block bb, basic_block return_bb,
 	  bitmap set_ssa_names, bitmap used_ssa_names,
 	  bitmap non_ssa_vars)
 {
-  gimple_stmt_iterator bsi;
-  edge e;
-  edge_iterator ei;
+  gimple_stmt_iterator bsi = { 0 };
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
   bool can_split = true;
 
   for (bsi = gsi_start_bb (bb); !gsi_end_p (bsi); gsi_next (&bsi))
@@ -892,11 +894,11 @@ DEF_VEC_ALLOC_O(stack_entry,heap);
 static void
 find_split_points (int overall_time, int overall_size)
 {
-  stack_entry first;
+  stack_entry first = { 0 };
   VEC(stack_entry, heap) *stack = NULL;
-  basic_block bb;
+  basic_block bb = { 0 };
   basic_block return_bb = find_return_bb ();
-  struct split_point current;
+  struct split_point current = { 0 };
 
   current.header_time = overall_time;
   current.header_size = overall_size;
@@ -1044,21 +1046,21 @@ static void
 split_function (struct split_point *split_point)
 {
   VEC (tree, heap) *args_to_pass = NULL;
-  bitmap args_to_skip;
-  tree parm;
+  bitmap args_to_skip = { 0 };
+  tree parm = { 0 };
   int num = 0;
   struct cgraph_node *node, *cur_node = cgraph_get_node (current_function_decl);
   basic_block return_bb = find_return_bb ();
-  basic_block call_bb;
-  gimple_stmt_iterator gsi;
-  gimple call;
-  edge e;
-  edge_iterator ei;
+  basic_block call_bb = { 0 };
+  gimple_stmt_iterator gsi = { 0 };
+  gimple call = { 0 };
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
   tree retval = NULL, real_retval = NULL;
   bool split_part_return_p = false;
   gimple last_stmt = NULL;
-  unsigned int i;
-  tree arg;
+  unsigned int i = { 0 };
+  tree arg = { 0 };
 
   if (dump_file)
     {
@@ -1341,7 +1343,7 @@ split_function (struct split_point *split_point)
 	 */
       else
 	{
-	  gimple ret;
+	  gimple ret = { 0 };
 	  if (split_point->split_part_set_retval
 	      && !VOID_TYPE_P (TREE_TYPE (TREE_TYPE (current_function_decl))))
 	    {
@@ -1396,8 +1398,8 @@ split_function (struct split_point *split_point)
 static unsigned int
 execute_split_functions (void)
 {
-  gimple_stmt_iterator bsi;
-  basic_block bb;
+  gimple_stmt_iterator bsi = { 0 };
+  basic_block bb = { 0 };
   int overall_time = 0, overall_size = 0;
   int todo = 0;
   struct cgraph_node *node = cgraph_get_node (current_function_decl);

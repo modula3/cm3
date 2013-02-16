@@ -123,12 +123,13 @@ init_loop_tree_node (struct ira_loop_tree_node *node, int loop_num)
 static void
 create_loop_tree_nodes (void)
 {
-  unsigned int i, j;
-  bool skip_p;
-  edge_iterator ei;
-  edge e;
-  VEC (edge, heap) *edges;
-  loop_p loop;
+  unsigned int i = { 0 };
+  unsigned int j = { 0 };
+  bool skip_p = { 0 };
+  edge_iterator ei = { 0 };
+  edge e = { 0 };
+  VEC (edge, heap) *edges = { 0 };
+  loop_p loop = { 0 };
 
   ira_bb_nodes
     = ((struct ira_loop_tree_node *)
@@ -189,8 +190,8 @@ create_loop_tree_nodes (void)
 static bool
 more_one_region_p (void)
 {
-  unsigned int i;
-  loop_p loop;
+  unsigned int i = { 0 };
+  loop_p loop = { 0 };
 
   if (current_loops != NULL)
     FOR_EACH_VEC_ELT (loop_p, ira_loops.larray, i, loop)
@@ -220,8 +221,8 @@ finish_loop_tree_node (ira_loop_tree_node_t loop)
 static void
 finish_loop_tree_nodes (void)
 {
-  unsigned int i;
-  loop_p loop;
+  unsigned int i = { 0 };
+  loop_p loop = { 0 };
 
   if (current_loops == NULL)
     finish_loop_tree_node (&ira_loop_nodes[0]);
@@ -254,9 +255,10 @@ finish_loop_tree_nodes (void)
 static void
 add_loop_to_tree (struct loop *loop)
 {
-  int loop_num;
-  struct loop *parent;
-  ira_loop_tree_node_t loop_node, parent_node;
+  int loop_num = { 0 };
+  struct loop *parent = { 0 };
+  ira_loop_tree_node_t loop_node = { 0 };
+  ira_loop_tree_node_t parent_node = { 0 };
 
   /* We can not use loop node access macros here because of potential
      checking and because the nodes are not initialized enough
@@ -305,8 +307,9 @@ add_loop_to_tree (struct loop *loop)
 static int
 setup_loop_tree_level (ira_loop_tree_node_t loop_node, int level)
 {
-  int height, max_height;
-  ira_loop_tree_node_t subloop_node;
+  int height = { 0 };
+  int max_height = { 0 };
+  ira_loop_tree_node_t subloop_node = { 0 };
 
   ira_assert (loop_node->bb == NULL);
   loop_node->level = level;
@@ -329,9 +332,10 @@ setup_loop_tree_level (ira_loop_tree_node_t loop_node, int level)
 static void
 form_loop_tree (void)
 {
-  basic_block bb;
-  struct loop *parent;
-  ira_loop_tree_node_t bb_node, loop_node;
+  basic_block bb = { 0 };
+  struct loop *parent = { 0 };
+  ira_loop_tree_node_t bb_node = { 0 };
+  ira_loop_tree_node_t loop_node;
 
   /* We can not use loop/bb node access macros because of potential
      checking and because the nodes are not initialized enough
@@ -545,8 +549,8 @@ ira_create_allocno (int regno, bool cap_p,
 void
 ira_set_allocno_class (ira_allocno_t a, enum reg_class aclass)
 {
-  ira_allocno_object_iterator oi;
-  ira_object_t obj;
+  ira_allocno_object_iterator oi = { 0 };
+  ira_object_t obj = { 0 };
 
   ALLOCNO_CLASS (a) = aclass;
   FOR_EACH_ALLOCNO_OBJECT (a, obj, oi)
@@ -566,7 +570,7 @@ ira_create_allocno_objects (ira_allocno_t a)
   enum machine_mode mode = ALLOCNO_MODE (a);
   enum reg_class aclass = ALLOCNO_CLASS (a);
   int n = ira_reg_class_max_nregs[aclass][mode];
-  int i;
+  int i = { 0 };
 
   if (GET_MODE_SIZE (mode) != 2 * UNITS_PER_WORD || n != 2)
     n = 1;
@@ -596,7 +600,7 @@ static void
 merge_hard_reg_conflicts (ira_allocno_t from, ira_allocno_t to,
 			  bool total_only)
 {
-  int i;
+  int i = { 0 };
   gcc_assert (ALLOCNO_NUM_OBJECTS (to) == ALLOCNO_NUM_OBJECTS (from));
   for (i = 0; i < ALLOCNO_NUM_OBJECTS (to); i++)
     {
@@ -622,8 +626,8 @@ merge_hard_reg_conflicts (ira_allocno_t from, ira_allocno_t to,
 void
 ior_hard_reg_conflicts (ira_allocno_t a, HARD_REG_SET *set)
 {
-  ira_allocno_object_iterator i;
-  ira_object_t obj;
+  ira_allocno_object_iterator i = { 0 };
+  ira_object_t obj = { 0 };
 
   FOR_EACH_ALLOCNO_OBJECT (a, obj, i)
     {
@@ -637,7 +641,7 @@ ior_hard_reg_conflicts (ira_allocno_t a, HARD_REG_SET *set)
 bool
 ira_conflict_vector_profitable_p (ira_object_t obj, int num)
 {
-  int nw;
+  int nw = { 0 };
   int max = OBJECT_MAX (obj);
   int min = OBJECT_MIN (obj);
 
@@ -656,8 +660,8 @@ ira_conflict_vector_profitable_p (ira_object_t obj, int num)
 void
 ira_allocate_conflict_vec (ira_object_t obj, int num)
 {
-  int size;
-  ira_object_t *vec;
+  int size = { 0 };
+  ira_object_t *vec = { 0 };
 
   ira_assert (OBJECT_CONFLICT_ARRAY (obj) == NULL);
   num++; /* for NULL end marker  */
@@ -674,7 +678,7 @@ ira_allocate_conflict_vec (ira_object_t obj, int num)
 static void
 allocate_conflict_bit_vec (ira_object_t obj)
 {
-  unsigned int size;
+  unsigned int size = { 0 };
 
   ira_assert (OBJECT_CONFLICT_ARRAY (obj) == NULL);
   size = ((OBJECT_MAX (obj) - OBJECT_MIN (obj) + IRA_INT_BITS)
@@ -700,8 +704,8 @@ ira_allocate_object_conflicts (ira_object_t obj, int num)
 static void
 add_to_conflicts (ira_object_t obj1, ira_object_t obj2)
 {
-  int num;
-  unsigned int size;
+  int num = { 0 };
+  unsigned int size = { 0 };
 
   if (OBJECT_CONFLICT_VEC_P (obj1))
     {
@@ -818,8 +822,10 @@ static int curr_conflict_check_tick;
 static void
 compress_conflict_vec (ira_object_t obj)
 {
-  ira_object_t *vec, conflict_obj;
-  int i, j;
+  ira_object_t *vec = { 0 };
+  ira_object_t *conflict_obj = { 0 };
+  int i = { 0 };
+  int j = { 0 };
 
   ira_assert (OBJECT_CONFLICT_VEC_P (obj));
   vec = OBJECT_CONFLICT_VEC (obj);
@@ -841,8 +847,8 @@ compress_conflict_vec (ira_object_t obj)
 static void
 compress_conflict_vecs (void)
 {
-  ira_object_t obj;
-  ira_object_iterator oi;
+  ira_object_t obj = { 0 };
+  ira_object_iterator oi = { 0 };
 
   conflict_check = (int *) ira_allocate (sizeof (int) * ira_objects_num);
   memset (conflict_check, 0, sizeof (int) * ira_objects_num);
@@ -860,7 +866,7 @@ compress_conflict_vecs (void)
 void
 ira_print_expanded_allocno (ira_allocno_t a)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
 
   fprintf (ira_dump_file, " a%d(r%d", ALLOCNO_NUM (a), ALLOCNO_REGNO (a));
   if ((bb = ALLOCNO_LOOP_TREE_NODE (a)->bb) != NULL)
