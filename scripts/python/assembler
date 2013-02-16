@@ -19,12 +19,12 @@ PossibleAssemblers = [
     "/usr/bin/as",
     ]
 
-for as in PossibleAssemblers:
-    if os.access(as, os.X_OK):
+for a in PossibleAssemblers:
+    if os.access(a, os.X_OK):
         break;
-if not os.access(as, os.X_OK):
-    as = "as"
+if not os.access(a, os.X_OK):
+    a = "as"
 
-sys.argv[0] = as
+sys.argv[0] = a
 print(" ".join(sys.argv)) # won't show quotes, ok
-os.execvp(as, sys.argv)
+os.execvp(a, sys.argv)
