@@ -1024,6 +1024,17 @@ def Boot():
     BuildLocal += " -boot -keep -DM3CC_TARGET=" + Config
 
     Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
+    BootDir = "./cm3-boot-" + Target + "-" + Version
+
+    try:
+        shutil.rmtree(BootDir)
+    except:
+        pass
+    try:
+        os.mkdir(BootDir)
+    except:
+        pass
+ 
 
     # This information is duplicated from the config files.
     # TBD: put it only in one place.
@@ -1130,7 +1141,8 @@ def Boot():
         AssemblerFlags = "/alpha " # not right, come back to it later
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
-        Assembler = "/usr/ccs/bin/as"
+        Assembler = "./assembler"
+        CopyFile("./assembler", BootDir)
     elif StringTagged(Target, "OSF"):
         Assembler = "/usr/bin/as"
     else:
@@ -1184,23 +1196,12 @@ def Boot():
     Assembler = _SqueezeSpaces(Assembler)
     AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
 
-    BootDir = "./cm3-boot-" + Target + "-" + Version
-
     P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front", "cm3" ])
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
-
-    try:
-        shutil.rmtree(BootDir)
-    except:
-        pass
-    try:
-        os.mkdir(BootDir)
-    except:
-        pass
 
     #
     # This would probably be a good use of XSL (xml style sheets)
