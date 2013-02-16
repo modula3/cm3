@@ -1,0 +1,19 @@
+#! /usr/bin/env python
+
+import os, sys
+
+PossibleExecutables = [
+    "/usr/bin/cc",
+    "/opt/studio/SOS11/SUNWspro/bin/cc",
+    ]
+
+for Executable in PossibleExecutables:
+    if os.access(Executable, os.X_OK):
+        break;
+if not os.access(Executable, os.X_OK):
+  sys.stderr.write(Executable + " not executable\n")
+  sys.exit(1)
+
+sys.argv[0] = Executable
+print(" ".join(sys.argv)) # won't show quotes, ok
+os.execvp(Executable, sys.argv)
