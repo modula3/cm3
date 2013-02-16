@@ -2,11 +2,13 @@
 % See file COPYRIGHT-CMASS for details.
 
 readonly GNU_PLATFORM = "sparc-sun-solaris2.10" % "cpu-os" string for GNU
-readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -K PIC -xarch=v8plus"
 SunXArch = "v8plus"
 SunXRegs = "-xregs=no%appl"
 %M3_USE_STACK_WALKER = TRUE
 %m3back_debug = "-g"
 m3back_optimize = "-O2"
+
+SolarisAssemblerFlags = "-Qy -s -K PIC -xarch=v8plus"
+
 include("SPARC.common")
 include("Solaris.common")

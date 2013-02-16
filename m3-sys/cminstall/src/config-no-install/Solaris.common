@@ -13,6 +13,29 @@ readonly WordSize = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
 proc configure_c_compiler() is
 end
 
+proc configure_assembler() is
+    if defined("SYSTEM_ASM")
+        return
+    end
+    % Solaris 5.9: fbe exists and supports .hidden, as does not support .hidden
+    % Solaris 5.10: both fbe and as support .hidden
+    % Solaris 5.11: fbe is gone, as supports .hidden
+    % Solaris 5.8: like 5.9, but /opt/studio/SOS11/SUNWspro/bin/fbe
+    readonly local PossibleAssemblers = [
+        "/usr/bin/fbe",
+        "/opt/studio/SOS11/SUNWspro/bin/fbe",
+        "/usr/ccs/bin/as",
+        ]
+    foreach a in PossibleAssemblers
+        if FileExists(a)
+            SYSTEM_ASM = a & " " & SolarisAssemblerFlags
+            return
+        end
+    end
+    error("unable to find assembler among " & PossibleAssemblers)
+end
+
+
 if equal (C_COMPILER, "SUN")
 
   proc configure_c_compiler() is

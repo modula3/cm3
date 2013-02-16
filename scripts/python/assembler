@@ -1,0 +1,30 @@
+#! /usr/bin/env python
+
+# Solaris:
+#  fbe is the assembler the C compiler sometimes uses.
+#  It is sometimes better than as.
+#  e.g. on Solaris 2.9, it understands .hidden.
+#  But it isn't always present.
+
+import os, sys
+
+# Solaris 5.9: fbe exists and supports .hidden, as does not support .hidden
+# Solaris 5.10: both fbe and as support .hidden
+# Solaris 5.11: fbe is gone, as supports .hidden
+# Solaris 5.8: like 5.9, but /opt/studio/SOS11/SUNWspro/bin/fbe
+PossibleAssemblers = [
+    "/usr/bin/fbe",
+    "/opt/studio/SOS11/SUNWspro/bin/fbe",
+    "/usr/ccs/bin/as",
+    "/usr/bin/as",
+    ]
+
+for as in PossibleAssemblers:
+    if os.access(as, os.X_OK):
+        break;
+if not os.access(as, os.X_OK):
+    as = "as"
+
+sys.argv[0] = as
+print(" ".join(sys.argv)) # won't show quotes, ok
+os.execvp(as, sys.argv)
