@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* IRA processing allocno lives to build allocno live ranges.
    Copyright (C) 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -91,7 +93,7 @@ static int *allocno_saved_at_call;
 static void
 make_hard_regno_born (int regno)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
 
   SET_HARD_REG_BIT (hard_regs_live, regno);
   EXECUTE_IF_SET_IN_SPARSESET (objects_live, i)
@@ -134,9 +136,10 @@ static void
 update_allocno_pressure_excess_length (ira_object_t obj)
 {
   ira_allocno_t a = OBJECT_ALLOCNO (obj);
-  int start, i;
+  int start = { 0 };
+  int i = { 0 };
   enum reg_class aclass, pclass, cl;
-  live_range_t p;
+  live_range_t p = { 0 };
 
   aclass = ALLOCNO_CLASS (a);
   pclass = ira_pressure_class_translate[aclass];
@@ -161,7 +164,7 @@ update_allocno_pressure_excess_length (ira_object_t obj)
 static void
 make_object_dead (ira_object_t obj)
 {
-  live_range_t lr;
+  live_range_t lr = { 0 };
 
   sparseset_clear_bit (objects_live, OBJECT_CONFLICT_ID (obj));
   lr = OBJECT_LIVE_RANGES (obj);
@@ -181,7 +184,7 @@ static int curr_reg_pressure[N_REG_CLASSES];
 static void
 inc_register_pressure (enum reg_class pclass, int n)
 {
-  int i;
+  int i = { 0 };
   enum reg_class cl;
 
   for (i = 0;
@@ -207,8 +210,8 @@ inc_register_pressure (enum reg_class pclass, int n)
 static void
 dec_register_pressure (enum reg_class pclass, int nregs)
 {
-  int i;
-  unsigned int j;
+  int i = { 0 };
+  unsigned int j = { 0 };
   enum reg_class cl;
   bool set_p = false;
 
@@ -248,7 +251,9 @@ mark_pseudo_regno_live (int regno)
 {
   ira_allocno_t a = ira_curr_regno_allocno_map[regno];
   enum reg_class pclass;
-  int i, n, nregs;
+  int i = { 0 };
+  int n = { 0 };
+  int nregs = { 0 };
 
   if (a == NULL)
     return;
@@ -285,9 +290,9 @@ static void
 mark_pseudo_regno_subword_live (int regno, int subword)
 {
   ira_allocno_t a = ira_curr_regno_allocno_map[regno];
-  int n;
+  int n = { 0 };
   enum reg_class pclass;
-  ira_object_t obj;
+  ira_object_t obj = { 0 };
 
   if (a == NULL)
     return;
@@ -379,7 +384,9 @@ static void
 mark_pseudo_regno_dead (int regno)
 {
   ira_allocno_t a = ira_curr_regno_allocno_map[regno];
-  int n, i, nregs;
+  int n = { 0 };
+  int i = { 0 };
+  int nregs = { 0 };
   enum reg_class cl;
 
   if (a == NULL)
@@ -414,9 +421,9 @@ static void
 mark_pseudo_regno_subword_dead (int regno, int subword)
 {
   ira_allocno_t a = ira_curr_regno_allocno_map[regno];
-  int n;
+  int n = { 0 };
   enum reg_class cl;
-  ira_object_t obj;
+  ira_object_t obj = { 0 };
 
   if (a == NULL)
     return;
@@ -519,7 +526,7 @@ make_pseudo_conflict (rtx reg, enum reg_class cl, rtx dreg, rtx orig_dreg,
 		      bool advance_p)
 {
   rtx orig_reg = reg;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   if (GET_CODE (reg) == SUBREG)
     reg = SUBREG_REG (reg);
@@ -584,10 +591,11 @@ check_and_make_def_use_conflict (rtx dreg, rtx orig_dreg,
 static void
 check_and_make_def_conflict (int alt, int def, enum reg_class def_cl)
 {
-  int use, use_match;
-  ira_allocno_t a;
+  int use = { 0 };
+  int use_match = { 0 };
+  ira_allocno_t a = { 0 };
   enum reg_class use_cl, acl;
-  bool advance_p;
+  bool advance_p = { 0 };
   rtx dreg = recog_data.operand[def];
   rtx orig_dreg = dreg;
 
@@ -609,7 +617,7 @@ check_and_make_def_conflict (int alt, int def, enum reg_class def_cl)
 
   for (use = 0; use < recog_data.n_operands; use++)
     {
-      int alt1;
+      int alt1 = { 0 };
 
       if (use == def || recog_data.operand_type[use] == OP_OUT)
 	continue;
@@ -660,8 +668,9 @@ check_and_make_def_conflict (int alt, int def, enum reg_class def_cl)
 static void
 make_early_clobber_and_input_conflicts (void)
 {
-  int alt;
-  int def, def_match;
+  int alt = { 0 };
+  int def = { 0 };
+  int def_match = { 0 };
   enum reg_class def_cl;
 
   for (alt = 0; alt < recog_data.n_alternatives; alt++)
@@ -694,7 +703,7 @@ make_early_clobber_and_input_conflicts (void)
 static bool
 mark_hard_reg_early_clobbers (rtx insn, bool live_p)
 {
-  df_ref *def_rec;
+  df_ref *def_rec = { 0 };
   bool set_p = false;
 
   for (def_rec = DF_INSN_DEFS (insn); *def_rec; def_rec++)
@@ -726,8 +735,9 @@ mark_hard_reg_early_clobbers (rtx insn, bool live_p)
 static enum reg_class
 single_reg_class (const char *constraints, rtx op, rtx equiv_const)
 {
-  int curr_alt, c;
-  bool ignore_p;
+  int curr_alt = { 0 };
+  int c = { 0 };
+  bool ignore_p = { 0 };
   enum reg_class cl, next_cl;
 
   cl = NO_REGS;
@@ -876,10 +886,13 @@ single_reg_operand_class (int op_num)
 void
 ira_implicitly_set_insn_hard_regs (HARD_REG_SET *set)
 {
-  int i, curr_alt, c, regno = 0;
-  bool ignore_p;
+  int i = { 0 };
+  int curr_alt = { 0 };
+  int c = { 0 };
+  int regno = 0;
+  bool ignore_p = { 0 };
   enum reg_class cl;
-  rtx op;
+  rtx op = { 0 };
   enum machine_mode mode;
 
   CLEAR_HARD_REG_SET (*set);
@@ -941,11 +954,13 @@ ira_implicitly_set_insn_hard_regs (HARD_REG_SET *set)
 static void
 process_single_reg_class_operands (bool in_p, int freq)
 {
-  int i, regno;
-  unsigned int px;
+  int i = { 0 };
+  int regno = { 0 };
+  unsigned int px = { 0 };
   enum reg_class cl;
-  rtx operand;
-  ira_allocno_t operand_a, a;
+  rtx operand = { 0 };
+  ira_allocno_t operand_a = { 0 };
+  ira_allocno_t a = { 0 };
 
   for (i = 0; i < recog_data.n_operands; i++)
     {
@@ -983,8 +998,9 @@ process_single_reg_class_operands (bool in_p, int freq)
 
 		    (subreg:YMODE (reg:XMODE XREGNO) OFFSET).  */
 	      enum machine_mode ymode, xmode;
-	      int xregno, yregno;
-	      HOST_WIDE_INT offset;
+	      int xregno = { 0 };
+	      int yregno = { 0 };
+	      HOST_WIDE_INT offset = { 0 };
 
 	      xmode = recog_data.operand_mode[i];
 	      xregno = ira_class_hard_regs[cl][0];
@@ -994,7 +1010,7 @@ process_single_reg_class_operands (bool in_p, int freq)
 	      if (yregno >= 0
 		  && ira_class_hard_reg_index[aclass][yregno] >= 0)
 		{
-		  int cost;
+		  int cost = { 0 };
 
 		  ira_allocate_and_set_costs
 		    (&ALLOCNO_CONFLICT_HARD_REG_COSTS (operand_a),
@@ -1032,8 +1048,8 @@ process_single_reg_class_operands (bool in_p, int freq)
 static bool
 bb_has_abnormal_call_pred (basic_block bb)
 {
-  edge e;
-  edge_iterator ei;
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
 
   FOR_EACH_EDGE (e, ei, bb->preds)
     {
@@ -1050,14 +1066,15 @@ bb_has_abnormal_call_pred (basic_block bb)
 static void
 process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
 {
-  int i, freq;
-  unsigned int j;
-  basic_block bb;
-  rtx insn;
-  bitmap_iterator bi;
-  bitmap reg_live_out;
-  unsigned int px;
-  bool set_p;
+  int i = { 0 };
+  int freq = { 0 };
+  unsigned int j = { 0 };
+  basic_block bb = { 0 };
+  rtx insn = { 0 };
+  bitmap_iterator bi = { 0 };
+  bitmap reg_live_out = { 0 };
+  unsigned int px = { 0 };
+  bool set_p = { 0 };
 
   bb = loop_tree_node->bb;
   if (bb != NULL)
@@ -1115,8 +1132,9 @@ process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
 	 pessimistic, but it probably doesn't matter much in practice.  */
       FOR_BB_INSNS_REVERSE (bb, insn)
 	{
-	  df_ref *def_rec, *use_rec;
-	  bool call_p;
+	  df_ref *def_rec = { 0 };
+	  df_ref *use_rec = { 0 };
+	  bool call_p = { 0 };
 
 	  if (!NONDEBUG_INSN_P (insn))
 	    continue;
@@ -1154,13 +1172,13 @@ process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
 	  if (GET_CODE (PATTERN (insn)) == PARALLEL && multiple_sets (insn))
 	    for (use_rec = DF_INSN_USES (insn); *use_rec; use_rec++)
 	      {
-		int i;
-		rtx reg;
+		int i = { 0 };
+		rtx reg = { 0 };
 
 		reg = DF_REF_REG (*use_rec);
 		for (i = XVECLEN (PATTERN (insn), 0) - 1; i >= 0; i--)
 		  {
-		    rtx set;
+		    rtx set = { 0 };
 
 		    set = XVECEXP (PATTERN (insn), 0, i);
 		    if (GET_CODE (set) == SET
@@ -1327,9 +1345,9 @@ process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
 static void
 create_start_finish_chains (void)
 {
-  ira_object_t obj;
-  ira_object_iterator oi;
-  live_range_t r;
+  ira_object_t obj = { 0 };
+  ira_object_iterator oi = { 0 };
+  live_range_t r = { 0 };
 
   ira_start_point_ranges
     = (live_range_t *) ira_allocate (ira_max_point * sizeof (live_range_t));
@@ -1363,15 +1381,20 @@ ira_rebuild_start_finish_chains (void)
 static void
 remove_some_program_points_and_update_live_ranges (void)
 {
-  unsigned i;
-  int n;
-  int *map;
-  ira_object_t obj;
-  ira_object_iterator oi;
-  live_range_t r;
-  sbitmap born_or_dead, born, dead;
-  sbitmap_iterator sbi;
-  bool born_p, dead_p, prev_born_p, prev_dead_p;
+  unsigned i = { 0 };
+  int n = { 0 };
+  int *map = { 0 };
+  ira_object_t obj = { 0 };
+  ira_object_iterator oi = { 0 };
+  live_range_t r = { 0 };
+  sbitmap born_or_dead = { 0 };
+  sbitmap born = { 0 };
+  sbitmap dead = { 0 };
+  sbitmap_iterator sbi = { 0 };
+  bool born_p = { 0 };
+  bool dead_p = { 0 };
+  bool prev_born_p = { 0 };
+  bool prev_dead_p = { 0 };
   
   born = sbitmap_alloc (ira_max_point);
   dead = sbitmap_alloc (ira_max_point);
@@ -1449,7 +1472,7 @@ static void
 print_allocno_live_ranges (FILE *f, ira_allocno_t a)
 {
   int n = ALLOCNO_NUM_OBJECTS (a);
-  int i;
+  int i = { 0 };
 
   for (i = 0; i < n; i++)
     {
@@ -1472,8 +1495,8 @@ ira_debug_allocno_live_ranges (ira_allocno_t a)
 static void
 print_live_ranges (FILE *f)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     print_allocno_live_ranges (f, a);
