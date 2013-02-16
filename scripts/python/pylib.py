@@ -1034,14 +1034,13 @@ def Boot():
         os.mkdir(BootDir)
     except:
         pass
- 
 
     # This information is duplicated from the config files.
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
     vms = StringTagged(Config, "VMS")
-    
+
     # pick the compiler
     
     c = "c" in sys.argv
@@ -1055,6 +1054,8 @@ def Boot():
     elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
         CCompiler = "/usr/bin/cc"
         CCompilerFlags = "-g -mt -xldscope=symbolic "
+        CCompiler = "./c_compiler"
+        CopyFile("./c_compiler", BootDir)
     elif Config == "ALPHA_OSF":
         CCompiler = "/usr/bin/cc"
         CCompilerFlags = "-g -pthread"
