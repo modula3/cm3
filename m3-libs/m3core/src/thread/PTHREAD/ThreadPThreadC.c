@@ -241,7 +241,15 @@ ThreadPThread__thread_create(WORD_T stackSize,
   pthread_attr_setstacksize(&attr, bytes);
 
   M3_RETRY(pthread_create(&pthread, &attr, start_routine, arg));
-  
+#ifdef __sun
+  if (r == ENOENT)
+  {
+    fprintf(stderr,
+            "You got the nonfunctional pthread stubs on Solaris earlier than 5.10. "
+            "You need to adjust your build commands, such as to link to -lpthread "
+            " ahead of -lc.\n");
+  }
+#endif  
   if (r != 0)
   {
     fprintf(stderr,
