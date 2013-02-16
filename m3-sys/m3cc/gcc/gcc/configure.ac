@@ -323,7 +323,8 @@ AC_CHECK_TYPES([__int64], [AC_CHECK_SIZEOF(__int64)])
 # So, we only use -pedantic if we can disable those warnings.
 
 ACX_PROG_CC_WARNING_OPTS([-W -Wall -Wwrite-strings -Wstrict-prototypes \
-			  -Wmissing-prototypes], [loose_warn])
+			  -Wmissing-prototypes \
+			  -Wno-missing-field-initializers], [loose_warn])
 ACX_PROG_CC_WARNING_OPTS([-Wc++-compat], [cxx_compat_warn])
 ACX_PROG_CC_WARNING_OPTS([-Wold-style-definition \
                           -Wmissing-format-attribute], [strict_warn])
