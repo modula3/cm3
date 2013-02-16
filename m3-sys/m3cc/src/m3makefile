@@ -77,6 +77,9 @@ readonly m3cc_config = {
   "PPC64_LINUX"  : "-with-gnu-as -with-gnu-ld",
   "SPARC32_LINUX": "-with-gnu-as -with-gnu-ld",
   "SPARC64_LINUX": "-with-gnu-as -with-gnu-ld",
+  "I386_SOLARIS" : "-enable-obsolete",    % for Solaris 5.8
+  "SPARC32_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
+  "SPARC64_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
   "LINUXLIBC6"   : "-with-gnu-as -with-gnu-ld",
   "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-float=soft "
                    & "-enable-target-optspace -enable-threads -enable-shared",
