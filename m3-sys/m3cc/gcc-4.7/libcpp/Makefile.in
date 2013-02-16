@@ -1,6 +1,6 @@
-# @configure_input@
-
 # Modula-3: modified
+
+# @configure_input@
 
 # Makefile for libcpp.  Run 'configure' to generate Makefile from Makefile.in
 
@@ -49,8 +49,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 LDFLAGS = @LDFLAGS@
-LIBICONV = @LIBICONV@
-LIBINTL = @LIBINTL@
+LIBICONV = 
+LIBINTL = 
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 SHELL = @SHELL@
