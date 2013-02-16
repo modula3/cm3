@@ -185,7 +185,7 @@ static void
 inc_register_pressure (enum reg_class pclass, int n)
 {
   int i = { 0 };
-  enum reg_class cl;
+  enum reg_class cl = (enum reg_class)0;
 
   for (i = 0;
        (cl = ira_reg_class_super_classes[pclass][i]) != LIM_REG_CLASSES;
@@ -212,7 +212,7 @@ dec_register_pressure (enum reg_class pclass, int nregs)
 {
   int i = { 0 };
   unsigned int j = { 0 };
-  enum reg_class cl;
+  enum reg_class cl = (enum reg_class)0;
   bool set_p = false;
 
   for (i = 0;
@@ -250,7 +250,7 @@ static void
 mark_pseudo_regno_live (int regno)
 {
   ira_allocno_t a = ira_curr_regno_allocno_map[regno];
-  enum reg_class pclass;
+  enum reg_class pclass = (enum reg_class)0;
   int i = { 0 };
   int n = { 0 };
   int nregs = { 0 };
@@ -291,7 +291,7 @@ mark_pseudo_regno_subword_live (int regno, int subword)
 {
   ira_allocno_t a = ira_curr_regno_allocno_map[regno];
   int n = { 0 };
-  enum reg_class pclass;
+  enum reg_class pclass = (enum reg_class)0;
   ira_object_t obj = { 0 };
 
   if (a == NULL)
@@ -387,7 +387,7 @@ mark_pseudo_regno_dead (int regno)
   int n = { 0 };
   int i = { 0 };
   int nregs = { 0 };
-  enum reg_class cl;
+  enum reg_class cl = (enum reg_class)0;
 
   if (a == NULL)
     return;
@@ -671,7 +671,7 @@ make_early_clobber_and_input_conflicts (void)
   int alt = { 0 };
   int def = { 0 };
   int def_match = { 0 };
-  enum reg_class def_cl;
+  enum reg_class def_cl = (enum reg_class)0;
 
   for (alt = 0; alt < recog_data.n_alternatives; alt++)
     for (def = 0; def < recog_data.n_operands; def++)
@@ -738,7 +738,7 @@ single_reg_class (const char *constraints, rtx op, rtx equiv_const)
   int curr_alt = { 0 };
   int c = { 0 };
   bool ignore_p = { 0 };
-  enum reg_class cl, next_cl;
+  enum reg_class cl = (enum reg_class)0, next_cl = (enum reg_class)0;
 
   cl = NO_REGS;
   for (ignore_p = false, curr_alt = 0;
@@ -893,7 +893,7 @@ ira_implicitly_set_insn_hard_regs (HARD_REG_SET *set)
   bool ignore_p = { 0 };
   enum reg_class cl;
   rtx op = { 0 };
-  enum machine_mode mode;
+  enum machine_mode mode = (enum machine_mode)0;
 
   CLEAR_HARD_REG_SET (*set);
   for (i = 0; i < recog_data.n_operands; i++)
@@ -1093,10 +1093,10 @@ process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
       for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
 	if (TEST_HARD_REG_BIT (hard_regs_live, i))
 	  {
-	    enum reg_class aclass, pclass, cl;
+	    enum reg_class cl = (enum reg_class)0;
 
-	    aclass = ira_allocno_class_translate[REGNO_REG_CLASS (i)];
-	    pclass = ira_pressure_class_translate[aclass];
+	    enum reg_class aclass = ira_allocno_class_translate[REGNO_REG_CLASS (i)];
+	    enum reg_class pclass = ira_pressure_class_translate[aclass];
 	    for (j = 0;
 		 (cl = ira_reg_class_super_classes[pclass][j])
 		   != LIM_REG_CLASSES;

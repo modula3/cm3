@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Integrated Register Allocator.  Changing code and generating moves.
    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -107,8 +109,8 @@ static VEC(void_p, heap) *new_allocno_emit_data_vec;
 void
 ira_initiate_emit_data (void)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   ira_allocno_emit_data
     = (ira_emit_data_t) ira_allocate (ira_allocnos_num
@@ -125,9 +127,9 @@ ira_initiate_emit_data (void)
 void
 ira_finish_emit_data (void)
 {
-  void_p p;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  void_p p = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   ira_free (ira_allocno_emit_data);
   FOR_EACH_ALLOCNO (a, ai)
@@ -145,7 +147,7 @@ ira_finish_emit_data (void)
 static ira_allocno_t
 create_new_allocno (int regno, ira_loop_tree_node_t loop_tree_node)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   a = ira_create_allocno (regno, false, loop_tree_node);
   ALLOCNO_ADD_DATA (a) = ira_allocate (sizeof (struct ira_emit_data));
@@ -194,7 +196,7 @@ static int max_regno_before_changing;
 static move_t
 create_move (ira_allocno_t to, ira_allocno_t from)
 {
-  move_t move;
+  move_t move = { 0 };
 
   move = (move_t) ira_allocate (sizeof (struct move));
   move->deps = NULL;
@@ -220,7 +222,7 @@ free_move (move_t move)
 static void
 free_move_list (move_t head)
 {
-  move_t next;
+  move_t next = { 0 };
 
   for (; head != NULL; head = next)
     {
@@ -266,10 +268,10 @@ ira_debug_move_list (move_t list)
 static bool
 change_regs (rtx *loc)
 {
-  int i, regno, result = false;
-  const char *fmt;
-  enum rtx_code code;
-  rtx reg;
+  int i = { 0 }, regno = { 0 }, result = false;
+  const char *fmt = { 0 };
+  enum rtx_code code = (enum rtx_code)0;
+  rtx reg = { 0 };
 
   if (*loc == NULL_RTX)
     return false;
@@ -312,7 +314,7 @@ change_regs (rtx *loc)
 static void
 add_to_edge_list (edge e, move_t move, bool head_p)
 {
-  move_t last;
+  move_t last = { 0 };
 
   if (head_p || e->aux == NULL)
     {
@@ -333,7 +335,7 @@ add_to_edge_list (edge e, move_t move, bool head_p)
 static rtx
 create_new_reg (rtx original_reg)
 {
-  rtx new_reg;
+  rtx new_reg = { 0 };
 
   new_reg = gen_reg_rtx (GET_MODE (original_reg));
   ORIGINAL_REGNO (new_reg) = ORIGINAL_REGNO (original_reg);
@@ -362,9 +364,9 @@ subloop_tree_node_p (ira_loop_tree_node_t subnode, ira_loop_tree_node_t node)
 static void
 set_allocno_reg (ira_allocno_t allocno, rtx reg)
 {
-  int regno;
-  ira_allocno_t a;
-  ira_loop_tree_node_t node;
+  int regno = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_loop_tree_node_t node = { 0 };
 
   node = ALLOCNO_LOOP_TREE_NODE (allocno);
   for (a = ira_regno_allocno_map[ALLOCNO_REGNO (allocno)];
@@ -398,9 +400,9 @@ set_allocno_reg (ira_allocno_t allocno, rtx reg)
 static bool
 entered_from_non_parent_p (ira_loop_tree_node_t loop_node)
 {
-  ira_loop_tree_node_t bb_node, src_loop_node, parent;
-  edge e;
-  edge_iterator ei;
+  ira_loop_tree_node_t bb_node = { 0 }, src_loop_node = { 0 }, parent = { 0 };
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
 
   for (bb_node = loop_node->children;
        bb_node != NULL;
@@ -435,8 +437,8 @@ entered_from_non_parent_p (ira_loop_tree_node_t loop_node)
 static void
 setup_entered_from_non_parent_p (void)
 {
-  unsigned int i;
-  loop_p loop;
+  unsigned int i = { 0 };
+  loop_p loop = { 0 };
 
   ira_assert (current_loops != NULL);
   FOR_EACH_VEC_ELT (loop_p, ira_loops.larray, i, loop)
@@ -453,9 +455,9 @@ setup_entered_from_non_parent_p (void)
 static bool
 store_can_be_removed_p (ira_allocno_t src_allocno, ira_allocno_t dest_allocno)
 {
-  int regno, orig_regno;
-  ira_allocno_t a;
-  ira_loop_tree_node_t node;
+  int regno = { 0 }, orig_regno = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_loop_tree_node_t node = { 0 };
 
   ira_assert (ALLOCNO_CAP_MEMBER (src_allocno) == NULL
 	      && ALLOCNO_CAP_MEMBER (dest_allocno) == NULL);
@@ -493,11 +495,11 @@ store_can_be_removed_p (ira_allocno_t src_allocno, ira_allocno_t dest_allocno)
 static void
 generate_edge_moves (edge e)
 {
-  ira_loop_tree_node_t src_loop_node, dest_loop_node;
-  unsigned int regno;
-  bitmap_iterator bi;
-  ira_allocno_t src_allocno, dest_allocno, *src_map, *dest_map;
-  move_t move;
+  ira_loop_tree_node_t src_loop_node = { 0 }, dest_loop_node = { 0 };
+  unsigned int regno = { 0 };
+  bitmap_iterator bi = { 0 };
+  ira_allocno_t src_allocno = { 0 }, dest_allocno = { 0 }, *src_map = { 0 }, *dest_map = { 0 };
+  move_t move = { 0 };
 
   src_loop_node = IRA_BB_NODE (e->src)->parent;
   dest_loop_node = IRA_BB_NODE (e->dest)->parent;
@@ -555,14 +557,14 @@ static bitmap renamed_regno_bitmap;
 static void
 change_loop (ira_loop_tree_node_t node)
 {
-  bitmap_iterator bi;
-  unsigned int i;
-  int regno;
-  bool used_p;
-  ira_allocno_t allocno, parent_allocno, *map;
-  rtx insn, original_reg;
-  enum reg_class aclass, pclass;
-  ira_loop_tree_node_t parent;
+  bitmap_iterator bi = { 0 };
+  unsigned int i = { 0 };
+  int regno = { 0 };
+  bool used_p = { 0 };
+  ira_allocno_t allocno = { 0 }, parent_allocno = { 0 }, *map = { 0 };
+  rtx insn = { 0 }, original_reg = { 0 };
+  enum reg_class aclass = (enum reg_class)0, pclass = (enum reg_class)0;
+  ira_loop_tree_node_t parent = { 0 };
 
   if (node != ira_loop_tree_root)
     {
@@ -654,9 +656,9 @@ change_loop (ira_loop_tree_node_t node)
 static void
 set_allocno_somewhere_renamed_p (void)
 {
-  unsigned int regno;
-  ira_allocno_t allocno;
-  ira_allocno_iterator ai;
+  unsigned int regno = { 0 };
+  ira_allocno_t allocno = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (allocno, ai)
     {
@@ -672,8 +674,8 @@ set_allocno_somewhere_renamed_p (void)
 static bool
 eq_edge_move_lists_p (VEC(edge,gc) *vec)
 {
-  move_t list;
-  int i;
+  move_t list = { 0 };
+  int i = { 0 };
 
   list = (move_t) EDGE_I (vec, 0)->aux;
   for (i = EDGE_COUNT (vec) - 1; i > 0; i--)
@@ -688,10 +690,10 @@ eq_edge_move_lists_p (VEC(edge,gc) *vec)
 static void
 unify_moves (basic_block bb, bool start_p)
 {
-  int i;
-  edge e;
-  move_t list;
-  VEC(edge,gc) *vec;
+  int i = { 0 };
+  edge e = { 0 };
+  move_t list = { 0 };
+  VEC(edge,gc) *vec = { 0 };
 
   vec = (start_p ? bb->preds : bb->succs);
   if (EDGE_COUNT (vec) == 0 || ! eq_edge_move_lists_p (vec))
@@ -747,7 +749,7 @@ static int curr_tick;
 static void
 traverse_moves (move_t move)
 {
-  int i;
+  int i = { 0 };
 
   if (move->visited_p)
     return;
@@ -764,9 +766,9 @@ traverse_moves (move_t move)
 static move_t
 modify_move_list (move_t list)
 {
-  int i, n, nregs, hard_regno;
-  ira_allocno_t to, from;
-  move_t move, new_move, set_move, first, last;
+  int i = { 0 }, n = { 0 }, nregs = { 0 }, hard_regno = { 0 };
+  ira_allocno_t to = { 0 }, from = { 0 };
+  move_t move = { 0 }, new_move = { 0 }, set_move = { 0 }, first = { 0 }, last = { 0 };
 
   if (list == NULL)
     return NULL;
@@ -834,8 +836,8 @@ modify_move_list (move_t list)
 		&& ALLOCNO_HARD_REGNO
 		   (hard_regno_last_set[hard_regno + i]->to) >= 0)
 	      {
-		int n, j;
-		ira_allocno_t new_allocno;
+		int n = { 0 }, j = { 0 };
+		ira_allocno_t new_allocno = { 0 };
 
 		set_move = hard_regno_last_set[hard_regno + i];
 		/* It does not matter what loop_tree_node (of TO or
@@ -902,10 +904,10 @@ modify_move_list (move_t list)
 static rtx
 emit_move_list (move_t list, int freq)
 {
-  int cost, regno;
-  rtx result, insn, set, to;
-  enum machine_mode mode;
-  enum reg_class aclass;
+  int cost = { 0 }, regno = { 0 };
+  rtx result = { 0 }, insn = { 0 }, set = { 0 }, to = { 0 };
+  enum machine_mode mode = (enum machine_mode)0;
+  enum reg_class aclass = (enum reg_class)0;
 
   start_sequence ();
   for (; list != NULL; list = list->next)
@@ -981,10 +983,10 @@ emit_move_list (move_t list, int freq)
 static void
 emit_moves (void)
 {
-  basic_block bb;
-  edge_iterator ei;
-  edge e;
-  rtx insns, tmp;
+  basic_block bb = { 0 };
+  edge_iterator ei = { 0 };
+  edge e = { 0 };
+  rtx insns = { 0 }, tmp = { 0 };
 
   FOR_EACH_BB (bb)
     {
@@ -1037,7 +1039,7 @@ emit_moves (void)
 static void
 update_costs (ira_allocno_t a, bool read_p, int freq)
 {
-  ira_loop_tree_node_t parent;
+  ira_loop_tree_node_t parent = { 0 };
 
   for (;;)
     {
@@ -1062,14 +1064,14 @@ static void
 add_range_and_copies_from_move_list (move_t list, ira_loop_tree_node_t node,
 				     bitmap live_through, int freq)
 {
-  int start, n;
-  unsigned int regno;
-  move_t move;
-  ira_allocno_t a;
-  ira_copy_t cp;
-  live_range_t r;
-  bitmap_iterator bi;
-  HARD_REG_SET hard_regs_live;
+  int start = { 0 }, n = { 0 };
+  unsigned int regno = { 0 };
+  move_t move = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_copy_t cp = { 0 };
+  live_range_t r = { 0 };
+  bitmap_iterator bi = { 0 };
+  HARD_REG_SET hard_regs_live = { 0 };
 
   if (list == NULL)
     return;
@@ -1085,7 +1087,7 @@ add_range_and_copies_from_move_list (move_t list, ira_loop_tree_node_t node,
     {
       ira_allocno_t from = move->from;
       ira_allocno_t to = move->to;
-      int nr, i;
+      int nr = { 0 }, i = { 0 };
 
       bitmap_clear_bit (live_through, ALLOCNO_REGNO (from));
       bitmap_clear_bit (live_through, ALLOCNO_REGNO (to));
@@ -1150,7 +1152,7 @@ add_range_and_copies_from_move_list (move_t list, ira_loop_tree_node_t node,
     }
   for (move = list; move != NULL; move = move->next)
     {
-      int nr, i;
+      int nr = { 0 }, i = { 0 };
       nr = ALLOCNO_NUM_OBJECTS (move->to);
       for (i = 0; i < nr; i++)
 	{
@@ -1169,8 +1171,8 @@ add_range_and_copies_from_move_list (move_t list, ira_loop_tree_node_t node,
     }
   EXECUTE_IF_SET_IN_BITMAP (live_through, FIRST_PSEUDO_REGISTER, regno, bi)
     {
-      ira_allocno_t to;
-      int nr, i;
+      ira_allocno_t to = { 0 };
+      int nr = { 0 }, i = { 0 };
 
       a = node->regno_allocno_map[regno];
       if ((to = ALLOCNO_EMIT_DATA (a)->mem_optimized_dest) != NULL)
@@ -1196,11 +1198,11 @@ add_range_and_copies_from_move_list (move_t list, ira_loop_tree_node_t node,
 static void
 add_ranges_and_copies (void)
 {
-  basic_block bb;
-  edge_iterator ei;
-  edge e;
-  ira_loop_tree_node_t node;
-  bitmap live_through;
+  basic_block bb = { 0 };
+  edge_iterator ei = { 0 };
+  edge e = { 0 };
+  ira_loop_tree_node_t node = { 0 };
+  bitmap live_through = { 0 };
 
   live_through = ira_allocate_bitmap ();
   FOR_EACH_BB (bb)
@@ -1232,12 +1234,12 @@ add_ranges_and_copies (void)
 void
 ira_emit (bool loops_p)
 {
-  basic_block bb;
-  rtx insn;
-  edge_iterator ei;
-  edge e;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  basic_block bb = { 0 };
+  rtx insn = { 0 };
+  edge_iterator ei = { 0 };
+  edge e = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     ALLOCNO_EMIT_DATA (a)->reg = regno_reg_rtx[ALLOCNO_REGNO (a)];
