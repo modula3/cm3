@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Subroutines for insn-output.c for SPARC.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
@@ -10663,7 +10665,10 @@ sparc_reorg (void)
   /* We need to have the (essentially) final form of the insn stream in order
      to properly detect the various hazards.  Run delay slot scheduling.  */
   if (optimize > 0 && flag_delayed_branch)
-    dbr_schedule (get_insns ());
+    {
+      cleanup_barriers ();
+      dbr_schedule (get_insns ());
+    }
 
   /* Now look for specific patterns in the insn stream.  */
   for (insn = get_insns (); insn; insn = next)
