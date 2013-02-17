@@ -46,7 +46,7 @@ M3CG m3cg: m3cgc1$(exeext)
 M3CG_OBJS = m3cg/parse.o attribs.o
 
 m3cgc1$(exeext): $(M3CG_OBJS) $(BACKEND) $(LIBDEPS)
-	$(CXX) $(ALL_CFLAGS) $(LDFLAGS) -o $@ $(M3CG_OBJS) $(BACKEND) $(LIBS) $(GMPLIBS) $(BACKENDLIBS)
+	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ $(M3CG_OBJS) $(BACKEND) $(LIBS) $(GMPLIBS) $(BACKENDLIBS)
 
 m3cg/parse.o: m3cg/parse.c $(CONFIG_H) $(SYSTEM_H) $(HASHTAB_H) coretypes.h \
   $(TM_H) $(TREE_H) flags.h output.h $(RTL_H) $(GGC_H) toplev.h \
