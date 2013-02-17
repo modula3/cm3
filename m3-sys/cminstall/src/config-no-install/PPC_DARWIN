@@ -6,7 +6,5 @@ readonly TARGET = "PPC_DARWIN"
 readonly GNU_PLATFORM = "powerpc-darwin6" % "cpu-os" string for GNU
 DarwinArch = "ppc"
 
-USE_C_BACKEND = TRUE
-
 include("PPC.common")
 include("Darwin.common")
