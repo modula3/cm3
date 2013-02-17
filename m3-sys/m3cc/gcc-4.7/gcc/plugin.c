@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Support for GCC plugin mechanism.
    Copyright (C) 2009, 2010, 2011 Free Software Foundation, Inc.
 
@@ -30,10 +32,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "plugin.h"
 #include "timevar.h"
 #include "ggc.h"
-
-#ifdef ENABLE_PLUGIN
-#include "plugin-version.h"
-#endif
 
 #define GCC_PLUGIN_STRINGIFY0(X) #X
 #define GCC_PLUGIN_STRINGIFY1(X) GCC_PLUGIN_STRINGIFY0 (X)
@@ -79,16 +77,6 @@ static struct callback_info **plugin_callbacks = plugin_callbacks_init;
 
 /* For invoke_plugin_callbacks(), see plugin.h.  */
 bool flag_plugin_added = false;
-
-#ifdef ENABLE_PLUGIN
-/* Each plugin should define an initialization function with exactly
-   this name.  */
-static const char *str_plugin_init_func_name = "plugin_init";
-
-/* Each plugin should define this symbol to assert that it is
-   distributed under a GPL-compatible license.  */
-static const char *str_license = "plugin_is_GPL_compatible";
-#endif
 
 /* Helper function for the hash table that compares the base_name of the
    existing entry (S1) with the given string (S2).  */
@@ -538,107 +526,12 @@ invoke_plugin_callbacks_full (int event, void *gcc_data)
   return retval;
 }
 
-#ifdef ENABLE_PLUGIN
-/* We need a union to cast dlsym return value to a function pointer
-   as ISO C forbids assignment between function pointer and 'void *'.
-   Use explicit union instead of __extension__(<union_cast>) for
-   portability.  */
-#define PTR_UNION_TYPE(TOTYPE) union { void *_q; TOTYPE _nq; }
-#define PTR_UNION_AS_VOID_PTR(NAME) (NAME._q)
-#define PTR_UNION_AS_CAST_PTR(NAME) (NAME._nq)
-
-/* Try to initialize PLUGIN. Return true if successful. */
-
-static bool
-try_init_one_plugin (struct plugin_name_args *plugin)
-{
-  void *dl_handle;
-  plugin_init_func plugin_init;
-  const char *err;
-  PTR_UNION_TYPE (plugin_init_func) plugin_init_union;
-
-  /* We use RTLD_NOW to accelerate binding and detect any mismatch
-     between the API expected by the plugin and the GCC API; we use
-     RTLD_GLOBAL which is useful to plugins which themselves call
-     dlopen.  */
-  dl_handle = dlopen (plugin->full_name, RTLD_NOW | RTLD_GLOBAL);
-  if (!dl_handle)
-    {
-      error ("cannot load plugin %s\n%s", plugin->full_name, dlerror ());
-      return false;
-    }
-
-  /* Clear any existing error.  */
-  dlerror ();
-
-  /* Check the plugin license.  */
-  if (dlsym (dl_handle, str_license) == NULL)
-    fatal_error ("plugin %s is not licensed under a GPL-compatible license\n"
-		 "%s", plugin->full_name, dlerror ());
-
-  PTR_UNION_AS_VOID_PTR (plugin_init_union) =
-      dlsym (dl_handle, str_plugin_init_func_name);
-  plugin_init = PTR_UNION_AS_CAST_PTR (plugin_init_union);
-
-  if ((err = dlerror ()) != NULL)
-    {
-      error ("cannot find %s in plugin %s\n%s", str_plugin_init_func_name,
-             plugin->full_name, err);
-      return false;
-    }
-
-  /* Call the plugin-provided initialization routine with the arguments.  */
-  if ((*plugin_init) (plugin, &gcc_version))
-    {
-      error ("fail to initialize plugin %s", plugin->full_name);
-      return false;
-    }
-
-  return true;
-}
-
-
-/* Routine to dlopen and initialize one plugin. This function is passed to
-   (and called by) the hash table traverse routine. Return 1 for the
-   htab_traverse to continue scan, 0 to stop.
-
-   SLOT - slot of the hash table element
-   INFO - auxiliary pointer handed to hash table traverse routine
-          (unused in this function)  */
-
-static int
-init_one_plugin (void **slot, void * ARG_UNUSED (info))
-{
-  struct plugin_name_args *plugin = (struct plugin_name_args *) *slot;
-  bool ok = try_init_one_plugin (plugin);
-  if (!ok)
-    {
-      htab_remove_elt (plugin_name_args_tab, plugin->base_name);
-      XDELETE (plugin);
-    }
-  return 1;
-}
-
-#endif	/* ENABLE_PLUGIN  */
-
 /* Main plugin initialization function.  Called from compile_file() in
    toplev.c.  */
 
 void
 initialize_plugins (void)
 {
-  /* If no plugin was specified in the command-line, simply return.  */
-  if (!plugin_name_args_tab)
-    return;
-
-  timevar_push (TV_PLUGIN_INIT);
-
-#ifdef ENABLE_PLUGIN
-  /* Traverse and initialize each plugin specified in the command-line.  */
-  htab_traverse_noresize (plugin_name_args_tab, init_one_plugin, NULL);
-#endif
-
-  timevar_pop (TV_PLUGIN_INIT);
 }
 
 /* Release memory used by one plugin. */

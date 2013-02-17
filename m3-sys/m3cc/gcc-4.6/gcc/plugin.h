@@ -56,12 +56,6 @@ static inline int
 invoke_plugin_callbacks (int event ATTRIBUTE_UNUSED,
 			 void *gcc_data ATTRIBUTE_UNUSED)
 {
-#ifdef ENABLE_PLUGIN
-  /* True iff at least one plugin has been added.  */
-  if (flag_plugin_added)
-    return invoke_plugin_callbacks_full (event, gcc_data);
-#endif
-
   return PLUGEVT_NO_CALLBACK;
 }
 

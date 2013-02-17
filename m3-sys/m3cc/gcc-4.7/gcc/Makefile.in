@@ -311,7 +311,7 @@ PLUGINCFLAGS = @CXXFLAGS@
 endif
 
 # Libs and linker options needed for plugin support
-PLUGINLIBS = @pluginlibs@
+PLUGINLIBS = 
 
 enable_plugin = @enable_plugin@
 
@@ -909,7 +909,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 # How to link with both our special library facilities
 # and the system's installed libraries.
 LIBS = @LIBS@ libcommon.a $(CPPLIB) $(LIBIBERTY) $(HOST_LIBS)
-BACKENDLIBS = $(PLUGINLIBS) $(HOST_LIBS)
+BACKENDLIBS = $(HOST_LIBS)
 
 # Likewise, for use in the tools that must run on this machine
 # even if we are cross-building GCC.
