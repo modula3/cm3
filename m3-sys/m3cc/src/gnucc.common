@@ -77,7 +77,7 @@ proc SunCC_Check (a) is
 end
 
 proc SunCC_Get (a) is
-        return "CC=" & a & "/bin/cc CXX=" & a & "/bin/CC "
+        return "CC=" & a & "/bin/cc CXX=\"" & a & "/bin/CC -staticlib=Crun -staticlib=Cstd\" "
 end
 
 if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLARIS")
