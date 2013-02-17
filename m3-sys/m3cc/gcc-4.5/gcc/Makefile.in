@@ -314,7 +314,7 @@ PLUGINCC = @CC@
 PLUGINCFLAGS = @CFLAGS@
 
 # Libs and linker options needed for plugin support
-PLUGINLIBS = @pluginlibs@
+PLUGINLIBS = 
 
 enable_plugin = @enable_plugin@
 
@@ -976,7 +976,7 @@ BUILD_LIBDEPS= $(BUILD_LIBIBERTY)
 # and the system's installed libraries.
 LIBS = @LIBS@ $(CPPLIB) $(LIBIBERTY) \
 	$(HOST_LIBS)
-BACKENDLIBS = $(PLUGINLIBS) $(HOST_LIBS)
+BACKENDLIBS = $(HOST_LIBS)
 # Any system libraries needed just for GNAT.
 SYSLIBS = @GNAT_LIBEXC@
 
