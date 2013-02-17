@@ -59,7 +59,7 @@ XGETTEXT = @XGETTEXT@
 CCDEPMODE = @CCDEPMODE@
 CXXDEPMODE = @CXXDEPMODE@
 DEPDIR = @DEPDIR@
-NOEXCEPTION_FLAGS = @noexception_flags@
+NOEXCEPTION_FLAGS = 
 
 datarootdir = @datarootdir@
 datadir = @datadir@
@@ -76,7 +76,7 @@ INCLUDES = -I$(srcdir) -I. -I$(srcdir)/../include @INCINTL@ \
 	-I$(srcdir)/include
 
 ALL_CFLAGS = $(CFLAGS) $(WARN_CFLAGS) $(INCLUDES) $(CPPFLAGS)
-ALL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(NOEXCEPTION_FLAGS) $(INCLUDES) \
+ALL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(INCLUDES) \
 	$(CPPFLAGS)
 
 # The name of the compiler to use.

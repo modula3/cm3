@@ -14491,12 +14491,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $lt_cv_prog_compiler_rtti_exceptions" >&5
 $as_echo "$lt_cv_prog_compiler_rtti_exceptions" >&6; }
 
-if test x"$lt_cv_prog_compiler_rtti_exceptions" = xyes; then
-    lt_prog_compiler_no_builtin_flag="$lt_prog_compiler_no_builtin_flag -fno-rtti -fno-exceptions"
-else
-    :
-fi
-
 fi
 
 

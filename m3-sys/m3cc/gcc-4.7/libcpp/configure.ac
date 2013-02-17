@@ -1,6 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
+# Modula-3: modified
+
 AC_PREREQ(2.64)
 AC_INIT(cpplib, [ ], gcc-bugs@gcc.gnu.org, cpplib)
 AC_CONFIG_SRCDIR(ucnid.h)
@@ -38,10 +40,6 @@ ACX_PROG_CC_WARNING_OPTS([-W -Wall -Wno-narrowing -Wwrite-strings \
 ACX_PROG_CC_WARNING_OPTS([-Wstrict-prototypes -Wmissing-prototypes \
 			  -Wold-style-definition -Wc++-compat], [c_warn])
 ACX_PROG_CC_WARNING_ALMOST_PEDANTIC([-Wno-long-long])
-
-# Disable exceptions and RTTI if building with g++
-ACX_PROG_CC_WARNING_OPTS(
-       m4_quote(m4_do([-fno-exceptions -fno-rtti])), [noexception_flags])
 
 # Only enable with --enable-werror-always until existing warnings are
 # corrected.
