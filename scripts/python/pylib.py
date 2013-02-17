@@ -1141,6 +1141,9 @@ def Boot():
     if vms and AssembleOnTarget:
         Assembler = "macro" # not right, come back to it later
         AssemblerFlags = "/alpha " # not right, come back to it later
+    elif Target == "AMD64_SOLARIS":
+        # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
+        Assembler = "/usr/ccs/bin/as"
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
         Assembler = "./assembler"

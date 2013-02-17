@@ -21,6 +21,7 @@ proc configure_assembler() is
     % Solaris 5.10: both fbe and as support .hidden
     % Solaris 5.11: fbe is gone, as supports .hidden
     % Solaris 5.8: like 5.9, but /opt/studio/SOS11/SUNWspro/bin/fbe
+    % AMD64_SOLARIS: always /usr/ccs/bin/as (in config)
     readonly local PossibleAssemblers = [
         "/usr/bin/fbe",
         "/opt/studio/SOS11/SUNWspro/bin/fbe",
