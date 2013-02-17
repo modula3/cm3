@@ -272,10 +272,10 @@ readonly GccBackendVersionData = {
   % 0: SourceDir we symlink out of gcc/gcc/m3cg to SourceDir/gcc/m3cg
   % 1: m3gty garbage collection syntax changed, need two versions
   % 2: #defines to guide gcc/gcc/m3cg/parse.c
-  % 3: all-libdecnumber or empty
+  % 3: extra targets or empty (e.g. all-libdecnumber)
 
   "42": [ "../gcc-apple", "m3gty43.h", "#define GCC_APPLE 1\n#define GCC42 1\n", " all-libdecnumber " ],
-  "43": [ "../gcc", "m3gty43.h", "", " all-libdecnumber " ],
+  "43": [ "../gcc", "m3gty43.h", "", " all-libdecnumber all-gmp " ],
   % "44" skipped
   "45": [ "../gcc-4.5", "m3gty45.h", "#define GCC45 1\n", " " ],
   "46": [ "../gcc-4.6", "m3gty45.h", "#define GCC45 1\n#define GCC46 1\n", " " ],
@@ -283,7 +283,7 @@ readonly GccBackendVersionData = {
 }
 
 local SourceDir = GccBackendVersionData{GccVersion}[0]
-local all_libdecnumber = GccBackendVersionData{GccVersion}[3]
+local extra_targets = GccBackendVersionData{GccVersion}[3]
 
 if not GCC43
   local m3gty = GccBackendVersionData{GccVersion}[1]
@@ -570,11 +570,7 @@ end
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
 
-if GCC43
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & MAKE_PARALLEL & " all-gmp"])
-end
-
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & MAKE_PARALLEL & " all-build-libiberty all-libiberty " & all_libdecnumber
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & MAKE_PARALLEL & " all-build-libiberty all-libiberty " &  extra_targets
            % & " | tee -a " & Log
           ])
 %
