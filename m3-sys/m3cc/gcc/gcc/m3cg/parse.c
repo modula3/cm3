@@ -85,9 +85,6 @@ extern "C" {
 #define BUILT_IN_SYNC_FETCH_AND_XOR_N           BUILT_IN_FETCH_AND_XOR_N
 #define BUILT_IN_SYNC_BOOL_COMPARE_AND_SWAP_N   BUILT_IN_BOOL_COMPARE_AND_SWAP_N
 #define cgraph_get_create_node                  cgraph_node
-typedef int global_bindings_p_return_type;
-#else
-typedef bool global_bindings_p_return_type;
 #endif
 
 typedef char* PSTR;
@@ -155,8 +152,7 @@ builtin_function (PCSTR name, tree type,
 		  tree attrs);
 
 static tree getdecls (void);
-static global_bindings_p_return_type
-global_bindings_p (void);
+static bool global_bindings_p (void);
 #if !GCC45
 static void insert_block (tree block);
 #endif
@@ -1628,7 +1624,7 @@ m3_signed_or_unsigned_type (int unsignedp, tree type)
     return m3_type_for_size (TYPE_PRECISION (type), unsignedp);
 }
 
-static global_bindings_p_return_type
+static bool
 global_bindings_p (void)
 /* Return non-zero if we are currently in the global binding level.  */
 {

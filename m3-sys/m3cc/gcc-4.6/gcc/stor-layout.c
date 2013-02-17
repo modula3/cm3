@@ -135,7 +135,7 @@ variable_size (tree size)
   /* If the language-processor is to take responsibility for variable-sized
      items (e.g., languages which have elaboration procedures like Ada),
      just return SIZE unchanged.  */
-  if (lang_hooks.decls.global_bindings_p () < 0)
+  if (lang_hooks.decls.global_bindings_p ())
     return size;
 
   size = save_expr (size);
