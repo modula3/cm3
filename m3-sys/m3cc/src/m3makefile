@@ -78,6 +78,8 @@ readonly m3cc_config = {
   "PPC64_LINUX"  : "-with-gnu-as -with-gnu-ld",
   "SPARC32_LINUX": "-with-gnu-as -with-gnu-ld",
   "SPARC64_LINUX": "-with-gnu-as -with-gnu-ld",
+  "SOLsun"       : "-enable-obsolete",    % for Solaris 5.8
+  "SOLgnu"       : "-enable-obsolete",    % for Solaris 5.8
   "I386_SOLARIS" : "-enable-obsolete",    % for Solaris 5.8
   "SPARC32_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
   "SPARC64_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
