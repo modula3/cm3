@@ -5575,7 +5575,7 @@ function_arg_record_value (const_tree type, enum machine_mode mode,
       if (nregs + slotno > SPARC_INT_ARG_MAX)
 	nregs = SPARC_INT_ARG_MAX - slotno;
     }
-  gcc_assert (nregs != 0);
+  gcc_assert (nregs != 0 || parms.stack);
 
   parms.ret = gen_rtx_PARALLEL (mode, rtvec_alloc (parms.stack + nregs));
 
