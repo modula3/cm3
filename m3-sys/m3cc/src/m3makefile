@@ -313,6 +313,8 @@ end
 if GCC43
   link_file("../gmp-4.3.2", SourceDir & "/gmp")
 end
+%link_file("/src/mpfr-2.4.2", SourceDir & "/mpfr")
+%link_file("/src/mpc-0.8.2", SourceDir & "/mpc")
 
 % figure out where we're going to build gcc
 build_dir = "../" & BUILD_DIR
@@ -506,7 +508,7 @@ end
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
 
-local MAKE_PARALLEL = " -j20 "
+local MAKE_PARALLEL = " -j4 "
 %local MAKE_PARALLEL = ""
 
 env = env & " MAKE=\"" & GNU_MAKE & MAKE_PARALLEL & " \" "
