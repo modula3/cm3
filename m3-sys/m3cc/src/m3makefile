@@ -7,6 +7,7 @@
 %
 % user can say cm3 -DM3CC_TARGET=FreeBSD4, for example.
 % -DM3CC_GCC_VERSION=47
+% -DGCC45
 %
 
 % current default is gcc 4.7 for most platforms
