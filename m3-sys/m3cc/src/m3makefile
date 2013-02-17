@@ -503,8 +503,10 @@ end
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
 
+local MAKE_PARALLEL = " -j20 "
+%local MAKE_PARALLEL = ""
 
-env = env & " MAKE=" & GNU_MAKE & " "
+env = env & " MAKE=\"" & GNU_MAKE & MAKE_PARALLEL & " \" "
 
 %
 % Problems building gmp/mpfr:
@@ -566,21 +568,26 @@ end
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty " & all_libdecnumber
+
+if GCC43
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & MAKE_PARALLEL & " all-gmp"])
+end
+
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & MAKE_PARALLEL & " all-build-libiberty all-libiberty " & all_libdecnumber
            % & " | tee -a " & Log
           ])
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %
-m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a"
+m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & MAKE_PARALLEL & " libcpp.a"
           % & " | tee -a " & Log
           ])
-m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg"
+m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & MAKE_PARALLEL & " s-modes insn-config.h m3cg"
           % & " | tee -a " & Log
           ])
 
 if DoMipsTfile
-  m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " mips-tfile"
+  m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & MAKE_PARALLEL & " mips-tfile"
             % & " | tee -a " & Log
             ])
 end
