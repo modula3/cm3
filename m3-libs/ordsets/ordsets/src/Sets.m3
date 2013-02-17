@@ -18,13 +18,10 @@
    in this form any more. GMD has been merged with "Fraunhofergesellschaft".   
 *) 
 
-(* $Id: Sets.m3,v 1.4 2013-02-17 20:52:27 rodney Exp $ *)
+(* $Id: Sets.m3,v 1.5 2013-02-17 23:20:33 jkrell Exp $ *)
 
-(* $Log: not supported by cvs2svn $
-   Revision 1.3  2013-02-17 20:45:21  rodney
-   Fix more checkin damage.
-   Revision 1.2  2012-07-19 18:43:56  rodney
-   Fix damage from initial checkin. 
+(*
+   $Log: not supported by cvs2svn $
 *) 
 
 (*
