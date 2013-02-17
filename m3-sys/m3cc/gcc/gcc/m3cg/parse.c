@@ -31,7 +31,7 @@ using namespace std;
 #include <errno.h>
 #include <setjmp.h>
 #include <limits.h>
-#if !GCC45
+#if !GCC42 && !GCC45 /* i.e. GCC43 */
 #include "gmp.h"
 #endif
 extern "C" {
@@ -189,7 +189,9 @@ static tree scan_label (size_t* a);
 
 static struct language_function* m3_language_function (void);
 static void m3_volatilize_decl (tree decl);
+#if !GCC42
 static void m3_volatilize_current_function (void);
+#endif
 
 static void m3_breakpoint(void);
 #if GCC46
@@ -216,6 +218,9 @@ static bool m3_init (void);
 tree convert (tree type, tree expr);
 
 #if !GCC47 /* copied from gcc 4.7 */
+#ifdef __cplusplus
+extern "C" {
+#endif
 tree
 build_case_label (tree low_value, tree high_value, tree label_decl)
 /* Create a CASE_LABEL_EXPR tree node and return it.  */
@@ -232,6 +237,9 @@ build_case_label (tree low_value, tree high_value, tree label_decl)
 
   return t;
 }
+#ifdef __cplusplus
+}
+#endif
 #endif
 
 /*======================================================= OPTION HANDLING ===*/
@@ -1020,6 +1028,8 @@ get_volatize (void)
     return m3_language_function () && m3_language_function ()->volatil;
 }
 
+#if !GCC42
+
 static void
 set_volatize (bool a ATTRIBUTE_UNUSED)
 {
@@ -1029,6 +1039,8 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
     return;
   m3_language_function ()->volatil = a;
 }
+
+#endif
 
 /* The front end language hooks (addresses of code for this front
    end).  These are not really very language-dependent, i.e.
@@ -3335,12 +3347,11 @@ m3_volatilize_decl (tree decl)
   }
 }
 
+#if !GCC42
+
 static void
 m3_volatilize_current_function (void)
 {
-  if (GCC42)
-    return;
-
   /* note it for later so that later temporaries and locals ("WITH")
    * are also made volatile */
   set_volatize (true);
@@ -3361,6 +3372,8 @@ m3_volatilize_current_function (void)
        decl; decl = TREE_CHAIN (decl))
     m3_volatilize_decl (decl);
 }
+
+#endif
 
 static void
 m3_swap (void)
