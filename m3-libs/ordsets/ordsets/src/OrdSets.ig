@@ -52,6 +52,11 @@ GENERIC INTERFACE OrdSets ( Element )
    SRC M3, PM3, EZM3, and earlier CM3 versions are not.  As of 2012-7-15,
    Pickles do not handle these.  Enable this with DoPseudoPointers, in 
    OrdSets.mg.  
+
+   Up through 2013-02-17, Pickles will not tolerate this misaligned
+   pointers.  Also, up through the same date, even without misaligned
+   pointers, pickles will not correctly convert these sets between different
+   word sizes.     
 *) 
 
 (* Thread safety: 

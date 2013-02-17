@@ -46,7 +46,12 @@ GENERIC MODULE OrdSets ( )
    unnecessary runtime tests.  If TRUE, you will need a later Modula-3
    compiler and garbage collector that tolerate misaligned pointers.
    CM3 5.8 is sufficient.  SRC M3, PM3, EZM3, and earlier CM3 versions
-   are not.
+   are not.  
+
+   Up through 2013-02-17, Pickles will not tolerate this misaligned
+   pointers.  Also, up through the same date, even without misaligned
+   pointers, pickles will not correctly convert these sets between different
+   word sizes.     
 *)
 ; CONST DoPseudoPointers = FALSE  
 
