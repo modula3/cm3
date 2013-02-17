@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* The lang_hooks data structure.
    Copyright 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
 
@@ -158,9 +160,10 @@ struct lang_hooks_for_types
 
 struct lang_hooks_for_decls
 {
-  /* Returns nonzero if we are in the global binding level.  Ada
-     returns -1 for an undocumented reason used in stor-layout.c.  */
-  int (*global_bindings_p) (void);
+  /* Return true if we are in the global binding level.  This hook is really
+     needed only if the language supports variable-sized types at the global
+     level, i.e. declared outside subprograms.  */
+  bool (*global_bindings_p) (void);
 
   /* Insert BLOCK at the end of the list of subblocks of the
      current binding level.  This is used when a BIND_EXPR is expanded,
