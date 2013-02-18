@@ -59,6 +59,7 @@ MODULE Test EXPORTS Main
 ; VAR GTestCt := 0 
 ; VAR GTotalCt := 0 
 ; VAR GFailureCt := 0 
+; VAR GCompareCt := 0  
 
 ; TYPE TimeTyp = LONGREAL 
 ; VAR GOldSetsTick : TimeTyp := 0.0D0 
@@ -83,6 +84,7 @@ MODULE Test EXPORTS Main
 
 ; VAR GDoOld : BOOLEAN := FALSE 
 ; VAR GDoNew : BOOLEAN := FALSE 
+; VAR GDoCompareTests : BOOLEAN := FALSE 
 ; VAR GDoSymDiff : BOOLEAN := FALSE 
 ; VAR GDoCompareOperands : BOOLEAN := FALSE 
 ; VAR GDoCompareResults : BOOLEAN := FALSE 
@@ -97,6 +99,7 @@ MODULE Test EXPORTS Main
   ; BEGIN 
       GDoOld := FALSE 
     ; GDoNew := FALSE 
+    ; GDoCompareTests := FALSE 
     ; GDoSymDiff := FALSE 
     ; GDoCompareOperands := FALSE 
     ; GDoCompareResults := FALSE 
@@ -113,11 +116,13 @@ MODULE Test EXPORTS Main
             LChar := Text . GetChar ( LParam , RCharNo ) 
           ; CASE LChar 
             OF 'a' 
-            => GDoNew := TRUE  
+            => GDoCompareTests := TRUE  
+            ; GDoNew := TRUE  
             ; GDoCompareOperands := TRUE  
             ; GDoCompareResults := TRUE  
             ; GDoOld := TRUE 
             ; GDoSymDiff := TRUE 
+            | 'c' => GDoCompareTests := TRUE 
             | 'h' => GDoDisplayHelp := TRUE 
             | 'o' => GDoNew := TRUE  
             | 'p' => GDoCompareOperands := TRUE  
@@ -154,6 +159,7 @@ MODULE Test EXPORTS Main
       WL ( "Usage: OrdSetsTest {-{option}}" ) 
     ; WL ( "  Options are: " ) 
     ; WL ( "  -a Do all tests, -o, -p, -r, -s, -y." ) 
+    ; WL ( "  -c Run fixed tests on Compare." ) 
     ; WL ( "  -h Display help text and exit." ) 
     ; WL ( "  -o Test the new OrdSets module (instantiated for INTEGER)." ) 
     ; WL ( "  -p Compare IntSet/OrdSet values of operands of operations." ) 
@@ -1642,11 +1648,97 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoIsElement
 
+; PROCEDURE R ( Lo , Hi : INTEGER ) : IntSets . T 
+  (* Compactly callable constructor for a range set. *) 
+
+  = BEGIN 
+      RETURN IntSets . Range ( Lo , Hi ) 
+    END R 
+
+; PROCEDURE B ( X , Y , Z , W , H , Q : INTEGER := IntSets . NullElem ) 
+  : IntSets . T 
+  (* Compactly callable constructor for abit set. *) 
+
+  = VAR A : ARRAY [ 0 .. 5 ] OF INTEGER 
+
+  ; BEGIN 
+      A := ARRAY [ 0 .. 5 ] OF INTEGER { X , Y , Z , W , H , Q } 
+    ; RETURN IntSets . FromArray ( A ) 
+    END B 
+
+; PROCEDURE DoCompare 
+    ( Left , Right : IntSets . T ; Expected : [ - 1 .. 1 ] ) 
+
+  = VAR LResult : [ - 1 .. 1 ] 
+
+  ; BEGIN 
+      StartTimingNew ( ) 
+    ; LResult := IntSets . Compare ( Left , Right ) 
+    ; StopTimingNew ( ) 
+    ; IF GDoCompareResults 
+      THEN 
+        CompareInt ( Expected , LResult , "Compare" , 0 )
+      END (* IF *) 
+    ; INC ( GCompareCt )
+    ; INC ( GTotalCt )
+    END DoCompare 
+
+; PROCEDURE CompareTests ( ) 
+
+  = BEGIN 
+      IF GDoCompareTests 
+      THEN 
+        Wr . PutText ( PWrT , "Tests on Compare." ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; GCompareCt := 0 
+
+      ; DoCompare ( R ( 4 , 10 ) , R ( 5 , 10 ) , - 1 ) 
+      ; DoCompare ( R ( 5 , 10 ) , R ( 4 , 10 ) , 1 ) 
+      ; DoCompare ( R ( 4 , 10 ) , R ( 4 , 11 ) , - 1 ) 
+      ; DoCompare ( R ( 4 , 11 ) , R ( 4 , 10 ) , 1 ) 
+      ; DoCompare ( R ( 4 , 10 ) , R ( 4 , 10 ) , 0 ) 
+
+      ; DoCompare ( B ( 4 , 10 ) , B ( 5 , 10 ) , - 1 ) 
+      ; DoCompare ( B ( 5 , 10 ) , B ( 4 , 10 ) , 1 ) 
+
+      ; DoCompare ( R ( 4 , 10 ) , B ( 5 , 10 ) , -1 ) 
+      ; DoCompare ( B ( 5 , 10 ) , R ( 4 , 10 ) , 1 ) 
+      ; DoCompare ( R ( 5 , 10 ) , B ( 3 , 10 ) , 1 ) 
+      ; DoCompare ( B ( 3 , 10 ) , R ( 5 , 10 ) , - 1 ) 
+      ; DoCompare ( R ( 5 , 9 ) , B ( 5 , 10 ) , 1 ) 
+      ; DoCompare ( B ( 5 , 10 ) , R ( 5 , 9 ) , - 1 ) 
+      ; DoCompare ( R ( 5 , 10 ) , B ( 5 , 10 ) , 1 ) 
+      ; DoCompare ( B ( 5 , 10 ) , R ( 5 , 10 ) , - 1 ) 
+      ; DoCompare ( R ( 5 , 8 ) , B ( 5 , 10 ) , 1 ) 
+      ; DoCompare ( B ( 5 , 10 ) , R ( 5 , 8 ) , - 1 ) 
+      ; DoCompare ( R ( 5 , 8 ) , B ( 5 , 6 , 7 , 10 ) , 1 ) 
+      ; DoCompare ( B ( 5 , 6 , 7 , 10 ) , R ( 5 , 8 ) , - 1 ) 
+      ; DoCompare ( R ( 5 , 8 ) , B ( 5 , 6 , 7 , 8 , 10 ) , - 1 ) 
+      ; DoCompare ( B ( 5 , 6 , 7 , 8 , 10 ) , R ( 5 , 8 ) , 1 ) 
+
+      ; DoCompare ( B ( 16 , 135 ) , B ( 16 , 135 ) , 0 ) 
+      ; DoCompare ( B ( 16 , 135 ) , B ( 16 , 195 ) , - 1 ) 
+      ; DoCompare ( B ( 16 , 195 ) , B ( 16 , 135 ) , 1 ) 
+      ; DoCompare ( B ( 16 , 65 , 135 ) , B ( 16 , 66 , 195 ) , 1 ) 
+      ; DoCompare ( B ( 16 , 66 , 195 ) , B ( 16 , 65 , 135 ) , - 1 ) 
+      ; DoCompare ( B ( 16 , 66 , 135 ) , B ( 16 , 65 , 195 ) , - 1 ) 
+      ; DoCompare ( B ( 16 , 65 , 195 ) , B ( 16 , 66 , 135 ) , 1 ) 
+
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . PutText ( PWrT , "Completed " ) 
+      ; Wr . PutText ( PWrT , Fmt . Int ( GCompareCt ) ) 
+      ; Wr . PutText ( PWrT , " tests on Compare." ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . Flush ( PWrT ) 
+      END (* IF *) 
+    END CompareTests 
+
 ; PROCEDURE Tests ( N : CARDINAL ) 
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
-      ResetProgress ( ) 
+      CompareTests ( ) 
+    ; ResetProgress ( ) 
     ; GTestCt := 0 
     ; FOR RI := 1 TO N 
       DO
@@ -1683,7 +1775,7 @@ MODULE Test EXPORTS Main
       ELSIF GDoDisplayVersion 
       THEN 
         DisplayVersion ( ) 
-      ELSIF NOT ( GDoOld OR GDoNew ) 
+      ELSIF NOT ( GDoOld OR GDoNew OR GDoCompareTests ) 
       THEN  
         WL ( "No Tests specified." ) 
       ; Wr . Flush ( PWrT ) 

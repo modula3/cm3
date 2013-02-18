@@ -181,6 +181,11 @@ GENERIC INTERFACE OrdSets ( Element )
      never does any heap allocation. 
   *) 
 
+; PROCEDURE Compare ( Set1 , Set2 : T ) : [ - 1 .. 1 ] (* <, =, >*)  
+  (* Compare two sets according to an arbitrary but consistent total ordering
+     on their abstract velues. 
+  *) 
+
 ; TYPE HashTyp = Word . T 
 
 ; PROCEDURE Hash ( Set : T ) : HashTyp

@@ -6887,6 +6887,211 @@ GENERIC MODULE OrdSets ( )
     ; RETURN DisjointResult
     END Disjoint
 
+(* =========================== Set value comparison. ======================= *) 
+
+; PROCEDURE CompareRangeBitset 
+    ( RSetLo , RSetHi : ValidIElemTyp 
+    ; READONLY BSetInfo : BitsetInfoTyp 
+    ; READONLY BSetBitwords : ARRAY OF BitwordTyp 
+    ) 
+  : [ - 1 .. 1 ] 
+
+  = VAR LAbsentIElem : IElemTyp 
+
+  ; BEGIN (* CompareRangeBitset *) 
+      IF RSetLo < BSetInfo . BitsetLo 
+      THEN RETURN - 1  
+      ELSIF RSetLo > BSetInfo . BitsetLo 
+      THEN RETURN 1  
+      ELSIF RSetHi >= BSetInfo . BitsetHi - 1  
+      THEN (* By invariant, a Bitset has an absent element in the range
+              BitSetLo + 1 .. BitsetHi - 1, and this is covered by the
+              RangeSet, which thus is greater. *) 
+        RETURN 1 
+      ELSE 
+        LAbsentIElem 
+          := LeastAbsentIElemOfBSetInRange
+               ( BSetInfo , BSetBitwords , RSetLo + 1 , RSetHi ) 
+      ; IF LAbsentIElem = IElemNull 
+        THEN (* The Bitset has all the elements the Rangeset has, plus at 
+                least one higher-numberd element. *) 
+          RETURN - 1  
+        ELSE RETURN 1 
+        END (* IF *) 
+      END (* IF *)  
+    END CompareRangeBitset 
+
+; PROCEDURE CompareBitsets  
+    ( READONLY BSet1Info : BitsetInfoTyp 
+    ; READONLY BSet1Bitwords : ARRAY OF BitwordTyp 
+    ; READONLY BSet2Info : BitsetInfoTyp 
+    ; READONLY BSet2Bitwords : ARRAY OF BitwordTyp 
+    ) 
+  : [ - 1 .. 1 ] 
+  (* PRE: BSet1Info . BitsetLo = BSet2Info . BitsetLo *) 
+  (* PRE: BSet1Info . BitsetHi <= BSet2Info . BitsetHi *)  
+
+
+  = VAR LLoBitwordNo , LHiBitwordNo1 , LHiBitwordNo2 , LBitwordNo : BitwordNoTyp 
+  ; VAR LSet1Ss , LSet2Ss : ArraySsTyp 
+  ; VAR LBitword1 , LBitword2 , LBitwordXor : BitwordTyp 
+  ; VAR LDiffBitNo : BitNoTyp 
+
+  ; BEGIN 
+      LLoBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetLo ) 
+    ; LHiBitwordNo1 := BitwordNoOfIElem ( BSet1Info . BitsetHi ) 
+    ; LHiBitwordNo2 := BitwordNoOfIElem ( BSet2Info . BitsetHi ) 
+    ; LBitwordNo := LLoBitwordNo 
+    ; LSet1Ss := ArraySsOfBitwordNo ( LBitwordNo , BSet1Info . Bias ) 
+    ; LSet2Ss := ArraySsOfBitwordNo ( LBitwordNo , BSet2Info . Bias ) 
+    ; LBitword1 := BSet1Bitwords [ LSet1Ss ] 
+    ; LBitword1 
+        := Word . And ( LBitword1 , GEMaskOfIElem ( BSet1Info . BitsetLo ) ) 
+      (* Remove lo garbage bits. *) 
+    ; LBitword2 := BSet1Bitwords [ LSet2Ss ] 
+    ; LBitword2 
+        := Word . And ( LBitword2 , GEMaskOfIElem ( BSet2Info . BitsetLo ) ) 
+      (* Remove lo garbage bits. *) 
+    ; LOOP 
+        IF LBitwordNo = LHiBitwordNo1 
+        THEN (* Last word, where we need to zero high bits. *)
+          LBitword1 
+            := Word . And ( LBitword1 , LEMaskOfIElem ( BSet1Info . BitsetHi ) )
+        END (* IF *) 
+      ; IF LBitwordNo = LHiBitwordNo2 
+        THEN (* Last word, where we need to zero high bits. *)
+          LBitword2 
+            := Word . And ( LBitword2 , LEMaskOfIElem ( BSet2Info . BitsetHi ) )
+        END (* IF *)
+      ; IF LBitword1 = LBitword2 
+        THEN 
+          IF LBitwordNo = LHiBitwordNo1 
+          THEN IF LBitwordNo = LHiBitwordNo2 
+            THEN (* => BSet1Info . BitsetHi = BSet2Info . BitsetHi *) 
+              RETURN 0 
+            ELSE (* Bitset2 has a higher Bitword, which has a member. *) 
+              RETURN - 1 
+            END (* IF *) 
+          ELSE (* Equal bitwords, not the last to consider. *) 
+            INC ( LBitwordNo ) 
+          ; INC ( LSet1Ss ) 
+          ; LBitword1 := BSet1Bitwords [ LSet1Ss ] 
+          ; INC ( LSet2Ss ) 
+          ; LBitword2 := BSet2Bitwords [ LSet2Ss ] 
+          (* And loop. *) 
+          END (* IF *) 
+        ELSE (* Unequal bitwords. *) 
+          LBitwordXor := Word . Xor ( LBitword1 , LBitword2 ) 
+        ; LDiffBitNo := Least1BitNoInBitword ( LBitwordXor )       
+        ; IF Word . And ( Word . Shift ( 1 , LDiffBitNo ) , LBitword1 ) = 0 
+          THEN RETURN - 1 
+          ELSE RETURN 1
+          END (* IF *) 
+        END (* IF *) 
+      END (* LOOP *)   
+    END CompareBitsets 
+
+(* VISIBLE: *) 
+; PROCEDURE Compare ( Set1 , Set2 : T ) : [ - 1 .. 1 ] (* <, =, >*)  
+  (* Compare two sets according to an arbitrary but consistent total ordering
+     on their abstract velues. 
+  *) 
+
+  (* The ordering: 
+     - Empty is lowest
+     - Otherwise, if min elements are unequal, use them.
+     - Otherwise, use the lowest element whose presence differs, 
+       absent being lower.
+     - If no such element, the sets are equal. 
+  *) 
+
+  = VAR CompareResult : [ - 1 .. 1 ] 
+
+  ; PROCEDURE InnerCompare
+      ( READONLY DInfo1 : DissectInfo
+      ; READONLY Bitwords1 : ARRAY OF BitwordTyp
+      ; READONLY DInfo2 : DissectInfo
+      ; READONLY Bitwords2 : ARRAY OF BitwordTyp
+      )
+
+    = BEGIN (* InnerCompare *)
+      (* Empty is always lowest: *) 
+        IF NUMBER( Bitwords1 ) = 0
+        THEN IF NUMBER( Bitwords2 ) = 0 
+          THEN (* Both are empty. *) 
+            CompareResult := 0 
+          ELSE (* Set1 is empty and Set2 is not *)
+            CompareResult := - 1 
+          END (* IF *) 
+        ELSE IF NUMBER( Bitwords2 ) = 0
+          THEN (* Set2 is empty and Set1 is not. *) 
+            CompareResult := 1 
+          ELSE (* Both sets are nonempty. *) 
+            IF DInfo1 . RangeLo # IElemNull
+            THEN (* Set1 is a Rangeset. *)
+              IF DInfo2 . RangeLo # IElemNull
+              THEN (* Set1 is a Rangeset and Set2 is a Rangeset. *)
+                IF DInfo1 . RangeLo < DInfo2 . RangeLo 
+                THEN CompareResult := - 1 
+                ELSIF DInfo1 . RangeLo > DInfo2 . RangeLo 
+                THEN CompareResult := 1 
+                ELSIF DInfo1 . RangeHi < DInfo2 . RangeHi
+                THEN CompareResult := - 1 
+                ELSIF DInfo1 . RangeHi > DInfo2 . RangeHi
+                THEN CompareResult := 1 
+                ELSE CompareResult := 0 
+                END (* IF *)
+              ELSE (* Set1 is a Rangeset and Set2 is a Bitset. *)
+                CompareResult 
+                  := CompareRangeBitset 
+                       ( DInfo1 . RangeLo , DInfo1 . RangeHi 
+                       , DInfo2 . BitsetInfo , Bitwords2 
+                       ) 
+              END (* IF *)
+            ELSE (* Set1 is a Bitset. *)
+              IF DInfo2 . RangeLo # IElemNull
+              THEN (* Set1 is a Bitset and Set2 is a Rangeset. *)
+                CompareResult 
+                  := - CompareRangeBitset 
+                         ( DInfo2 . RangeLo , DInfo2 . RangeHi 
+                         , DInfo1 . BitsetInfo , Bitwords1 
+                         ) 
+
+              ELSE (* Set1 is a Bitset and Set2 is a Bitset. *)
+                IF DInfo1 . BitsetInfo . BitsetLo 
+                   < DInfo2 . BitsetInfo . BitsetLo 
+                THEN CompareResult := - 1 
+                ELSIF DInfo1 . BitsetInfo . BitsetLo 
+                      > DInfo2 . BitsetInfo . BitsetLo 
+                THEN CompareResult := 1  
+                ELSIF DInfo1 . BitsetInfo . BitsetHi 
+                      < DInfo2 . BitsetInfo . BitsetHi 
+                THEN 
+                  CompareResult 
+                    := CompareBitsets 
+                         ( DInfo1 . BitsetInfo , Bitwords1  
+                         , DInfo2 . BitsetInfo , Bitwords2  
+                         )   
+                ELSE 
+                  CompareResult 
+                    := CompareBitsets 
+                         ( DInfo2 . BitsetInfo , Bitwords2  
+                         , DInfo1 . BitsetInfo , Bitwords1  
+                         )   
+                END (* IF *) 
+              END (* IF *)
+            END (* IF *)
+          END (* IF *)  
+        END (* IF *) 
+      END InnerCompare 
+
+  ; BEGIN (* Compare *)
+      <* FATAL ANY *> BEGIN 
+        CallWithTwoSets ( Set1 , Set2 , InnerCompare )
+      END (* Block *) 
+    ; RETURN CompareResult
+    END Compare
+
 (* ============================ Hash codes. ================================ *) 
 
 (* All these statistics counters apply only to Bitsets. *) 
