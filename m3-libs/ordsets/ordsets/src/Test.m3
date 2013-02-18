@@ -1685,12 +1685,17 @@ MODULE Test EXPORTS Main
 
 ; PROCEDURE CompareTests ( ) 
 
-  = BEGIN 
+  = <* FATAL Thread . Alerted , Wr . Failure *> 
+    BEGIN 
       IF GDoCompareTests 
       THEN 
         Wr . PutText ( PWrT , "Tests on Compare." ) 
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; GCompareCt := 0 
+
+      ; DoCompare ( IntSets . Empty ( ) , R ( 5 , 10 ) , - 1 ) 
+      ; DoCompare ( R ( 5 , 10 ) , IntSets . Empty ( ) , 1 ) 
+      ; DoCompare ( IntSets . Empty ( ) , IntSets . Empty ( ) , 0 ) 
 
       ; DoCompare ( R ( 4 , 10 ) , R ( 5 , 10 ) , - 1 ) 
       ; DoCompare ( R ( 5 , 10 ) , R ( 4 , 10 ) , 1 ) 
