@@ -18,10 +18,10 @@
    in this form any more. GMD has been merged with "Fraunhofergesellschaft".   
 *) 
 
-(* $Id: Sets.i3,v 1.5 2013-02-17 23:20:25 jkrell Exp $ *) 
-
 (*
-   $Log: not supported by cvs2svn $
+   Revision 1.5  2013-02-17 23:20:25  jkrell
+   try to fix CVS keyword expansion, maybe just remove them entirely
+
 *)
 
 (* 
