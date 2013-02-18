@@ -22,18 +22,19 @@ proc configure_assembler() is
     % Solaris 5.11: fbe is gone, as supports .hidden
     % Solaris 5.8: like 5.9, but /opt/studio/SOS11/SUNWspro/bin/fbe
     % AMD64_SOLARIS: always /usr/ccs/bin/as (in config)
-    readonly local PossibleAssemblers = [
+    readonly local possible = [
         "/usr/bin/fbe",
+        % One wonders if the cc probe list should inform other options here.
         "/opt/studio/SOS11/SUNWspro/bin/fbe",
         "/usr/ccs/bin/as",
         ]
-    foreach a in PossibleAssemblers
+    foreach a in possible
         if FileExists(a)
             SYSTEM_ASM = a & " " & SolarisAssemblerFlags
             return
         end
     end
-    error("unable to find assembler among " & PossibleAssemblers)
+    error("unable to find assembler among " & possible)
 end
 
 
@@ -42,6 +43,23 @@ if equal (C_COMPILER, "SUN")
   proc configure_c_compiler() is
     if defined("SYSTEM_CC")
       return
+    end
+
+    local proc find_cc() is
+        readonly local possible = [
+            "/usr",
+            "/opt/solarisstudio12.3",
+            "/opt/solstudio12.2",
+            "/opt/studio/SOS12/SUNWspro",
+            "/opt/studio/SOS11/SUNWspro",
+            ]
+        foreach a in possible
+            local b = a & "/bin/cc"
+            if FileExists(b)
+                return b
+            end
+        end
+        error("unable to find cc (bin/cc) among " & possible)
     end
 
     % newer compiler says:
@@ -54,14 +72,11 @@ if equal (C_COMPILER, "SUN")
     % We presumably can't just always use the new syntax, in case
     % we are using older tools that don't understand it.
 
-    local cc = "/usr/bin/cc"
-    if not FileExists(cc)
-        cc = "/opt/studio/SOS11/SUNWspro/bin/cc"
-    end
-    cc = cc & " -g -mt -xldscope=symbolic " & SunXRegs & " "
+    local cc = find_cc() & " -g -mt -xldscope=symbolic " & SunXRegs & " "
     local old = "-xarch=" & SunXArch
     local new = "-m" & WordSize
     if equal(WORD_SIZE, "32BITS") and not equal(TARGET, "I386_SOLARIS")
+      % SOLsun, SOLgnu, SPARC32_SOLARIS, SPARC_SOLARIS
       new = new & " -xarch=sparc"
     end
     if equal(try_exec("@" & cc & old & " 2>&1 | fgrep \" " & new & " \" > /dev/null"), 0)
