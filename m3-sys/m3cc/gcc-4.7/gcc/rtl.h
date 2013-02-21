@@ -504,7 +504,7 @@ struct GTY((variable_size)) rtvec_def {
 
 /* General accessor macros for accessing the fields of an rtx.  */
 
-#if defined ENABLE_RTL_CHECKING && (GCC_VERSION >= 2007)
+#if defined(ENABLE_RTL_CHECKING) && ENABLE_CHECKING_GCC_VERSION
 /* The bit with a star outside the statement expr and an & inside is
    so that N can be evaluated only once.  */
 #define RTL_CHECK1(RTX, N, C1) __extension__				\
