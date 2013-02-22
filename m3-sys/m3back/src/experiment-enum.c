@@ -5,6 +5,19 @@ typedef unsigned short UINT16;
 typedef unsigned int UINT32;
 typedef unsigned long long UINT64;
 
+#define GCC_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
+
+#ifdef __cplusplus
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) enum TYPE NAME : SIZE
+#elif (GCC_VERSION > 2000)
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) __extension__ enum TYPE NAME : SIZE
+#else
+#define ENUM_BITFIELD(TYPE, NAME, SIZE) unsigned int NAME : SIZE
+#endif
+
+/* gcc -fshort-enums makes enums shrink to fit their values.
+   adding in a "large" value ensures the size grows to desired.
+   This also combats this behavior, if present, in any other compiler. */
 #define M3_ENUM_FORCE_UINT16(name) ,M3_ENUM_FORCE_INT_##name = 1 << 15
 #define M3_ENUM_FORCE_UINT32(name) ,M3_ENUM_FORCE_INT_##name = ((UINT32)1) << 31
 #define M3_ENUM_FORCE_UINT64(name) ,M3_ENUM_FORCE_INT_##name = ((UINT64)1) << 63
