@@ -3629,10 +3629,9 @@ PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("case_jump");
+    print(self, "switch(" & s0.CText() & "){\n");
     IF CaseDefaultAssertFalse THEN
-        print(self, "switch(" & s0.CText() & "){\ndefault:assert(!\"case_jump hit default\");\n");
-    ELSE
-        print(self, "switch(" & s0.CText() & "){");
+        print(self, "default:assert(!\"case_jump hit default\");\n");
     END;
     FOR i := FIRST(labels) TO LAST(labels) DO
         print(self, "case " & IntToDec(i) & ":goto L" & LabelToText(labels[i]) & ";\n");
