@@ -57,10 +57,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         params : TextSeq.T := NIL;
         op_index: INTEGER := 0;
         
-        enum_type: TEXT := NIL;
-        (*enum: Enum_t := NIL;*)
-        enum_id: TEXT := NIL;
-        enum_value: CARDINAL := 0;
         unit_name := "L_";
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
         param_count := 0;
@@ -76,10 +72,10 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         labels_max := LAST(Label);
         labels: REF ARRAY (*Label=INTEGER*) OF BOOLEAN := NIL;
         
-        (* initialization support *)
+        (* initialization and record declaration support *)
         
-        init_fields: TextSeq.T := NIL;
-        current_init_offset: INTEGER := 0;
+        fields: TextSeq.T := NIL;
+        current_offset: INTEGER := 0;
         initializer: TextSeq.T := NIL;
         initializer_comma: TEXT := "";
         
@@ -216,9 +212,10 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
 CONST HandlerNamePieces = ARRAY OF TEXT { "_M3_LINE_", "_I3_LINE_" };
 
-(*
-VAR BitSizeToEnumCGType := ARRAY [0..32] OF M3CG.Type { M3CG.Type.Void, .. };
-*)
+VAR BitsToCGUInt := ARRAY [8..64] OF M3CG.Type { M3CG.Type.Void, .. };
+VAR BitsToInt := ARRAY [8..64] OF TEXT {NIL, ..};
+VAR BitsToUInt := ARRAY [8..64] OF TEXT {NIL, ..};
+VAR BitsToDec := ARRAY [8..64] OF TEXT {NIL, ..};
 
 PROCEDURE SetLineDirective(self: T) =
 VAR start := ARRAY BOOLEAN OF TEXT{" /* ", (*"#"*)"//"}[output_line_directives];
@@ -258,21 +255,21 @@ BEGIN
     END;
 END Reverse;
 
-PROCEDURE Int64ToText(a: INT64; base: Base_t): TEXT =
+PROCEDURE Int64ToText(a: INT64; base: Base_t; minus_char := "-"): TEXT =
 BEGIN
     IF a >= 0L THEN
         RETURN UInt64ToText(a, base);
     END;
-    RETURN "-" & UInt64ToText((-(a + 1L)) + 1L, base);
+    RETURN minus_char & UInt64ToText((-(a + 1L)) + 1L, base);
 END Int64ToText;
 
 <*UNUSED*>PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;
 PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END UInt64ToHex;
-<*UNUSED*>PROCEDURE  Int64ToDec(a:  INT64): TEXT = BEGIN RETURN  Int64ToText(a, 10); END Int64ToDec;
-<*UNUSED*>PROCEDURE  Int32ToDec(a:  INT32): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 10); END Int32ToDec;
+<*UNUSED*>PROCEDURE  Int64ToDec(a: INT64; minus_char := "-"): TEXT = BEGIN RETURN  Int64ToText(a, 10, minus_char); END Int64ToDec;
+<*UNUSED*>PROCEDURE  Int32ToDec(a: INT32; minus_char := "-"): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 10, minus_char); END Int32ToDec;
 PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
-PROCEDURE IntToHex(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 16); END IntToHex;
-PROCEDURE IntToDec(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END IntToDec;
+PROCEDURE IntToHex(a: INTEGER; minus_char := "-"): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 16, minus_char); END IntToHex;
+PROCEDURE IntToDec(a: INTEGER; minus_char := "-"): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10, minus_char); END IntToDec;
 
 <*UNUSED*>CONST Int32ToHex = UInt32ToHex;
 <*UNUSED*>CONST Int64ToHex = UInt64ToHex;
@@ -282,6 +279,7 @@ CONST LabelToHex = IntToHex;
 CONST BoolToText = ARRAY BOOLEAN OF TEXT{"FALSE", "TRUE"};
 
 CONST reservedWords = ARRAY OF TEXT{
+(* avoid using these identifiers for function names, local variables, parameter names, etc. *)
 "__cdecl", "__except", "__fastcall", "__finally",
 "__int16", "__int32", "__int64", "__int8",
 "__stdcall", "__try", "_cdecl", "_fastcall",
@@ -393,33 +391,32 @@ TYPE Type_t = OBJECT
     name_text: TEXT;*)
 END;
 
-(*
-TYPE CField = M3CField.T;
-TYPE CFieldSeq = M3CFieldSeq.T;
-
-(* We probably need "Ordinal_t": Integer_t, Enum_t, Subrange_t *)
+(* We probably need "Ordinal_t" as base for: Integer_t, Enum_t, Subrange_t *)
 
 TYPE Integer_t = Type_t OBJECT END;
 TYPE Float_t  = Type_t OBJECT END;
 TYPE Record_t  = Type_t OBJECT END;
 
-TYPE Enum_t  = Type_t OBJECT
-    min: Target.Int; (* alwways zero *)
-    max: Target.Int;
+TYPE Subrange_t  = Type_t OBJECT
+    min: Target.Int := TInt.Zero;
+    max: Target.Int := TInt.Zero;
 END;
 
-TYPE Subrange_t  = Type_t OBJECT
-    min: Target.Int;
-    max: Target.Int;
+TYPE Enum_t  = Subrange_t OBJECT
+    names: REF ARRAY OF Name := NIL;
 END;
+
+(*
+TYPE CField = M3CField.T;
+TYPE CFieldSeq = M3CFieldSeq.T;
 
 TYPE Ref_t  = Type_t OBJECT
     referent: Type_t;
 END;
 
 TYPE Array_t = Type_t OBJECT
-    index_typeid: INTEGER;
-    element_typeid: INTEGER;
+    index_typeid: INTEGER := 0;
+    element_typeid: INTEGER := 0;
     index_type: Type_t;
     element_type: Type_t;
 END;
@@ -543,7 +540,7 @@ TYPE Expr_t = OBJECT
     minmax_valid := minMaxFalse;
     minmax := int64MinMax;
     m3cgtype: M3CG.Type := M3CG.Type.Void;
-    typeid: TypeUID;
+    typeid: TypeUID := 0;
     type: Type_t := NIL;
     c_text: TEXT := NIL;
     c_unop_text: TEXT := NIL;  (* e.g. ~, -, ! *)
@@ -1197,11 +1194,11 @@ BEGIN
     self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
     self.multipass.self := self;
     self.c := cfile;
-    self.init_fields := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
+    self.fields := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
     self.initializer := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
     self.stack := NEW(RefSeq.T).init();         (* CONSIDER compute maximum depth and use an array *)
     self.params := NEW(TextSeq.T).init();       (* CONSIDER compute maximum and use an array *)
-(*
+
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
     EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Int64.cg_type, typeid := UID_LONGINT));
@@ -1211,12 +1208,12 @@ BEGIN
     EVAL self.Type_Init(NEW(Float_t, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL));
     EVAL self.Type_Init(NEW(Float_t, cg_type := Target.Extended.cg_type, typeid := UID_XREEL));
 
-    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := 1));
-    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := 16_FF));
-    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := 16_FFFF));
+    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1)));
+    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF)));
+    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF)));
 
-    EVAL self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_31, min := 0, max := 31));
-    EVAL self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_63, min := 0, max := 31));
+    EVAL self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_31, min := TInt.Zero, max := IntToTarget(self, 31)));
+    EVAL self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_63, min := TInt.Zero, max := IntToTarget(self, 63)));
 
     EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_MUTEX));
     EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_TEXT));
@@ -1231,8 +1228,8 @@ BEGIN
     EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC6));
     EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC7));
     EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC8));
-*)
-    (* EVAL Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL)); *)
+
+    EVAL self.Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL));
     RETURN self.multipass;
 END New;
 
@@ -1256,7 +1253,7 @@ PROCEDURE Prefix_Start(self: T; multipass: Multipass_t) =
 BEGIN
     self.comment("begin unit");
     self.comment("M3_TARGET = ", Target.System_name);
-    self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
+    self.comment("M3_WORDSIZE = ", BitsToDec[Target.Word.size]);
     self.static_link_id := M3ID.Add("_static_link");
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
@@ -1285,7 +1282,7 @@ PROCEDURE multipass_end_unit(self: Multipass_t) =
    This function is in control of coordinating the passes.
  *)
 VAR x := self.self;
-    index: INTEGER;
+    index := 0;
 BEGIN
     M3CG_MultiPass.end_unit(self); (* let M3CG_MultiPass do its usual last step *)
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.begin_unit]);
@@ -1294,6 +1291,10 @@ BEGIN
     HelperFunctions(self);
     GetStructSizes(self);
     Prefix_End(x);
+
+    (* declare/define all enums *)
+    
+    DeclareEnums(self);
 
     (* forward declare functions/variables in this module and imports *)
     
@@ -1376,17 +1377,13 @@ END set_source_line;
 <*NOWARN*>PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) =
 BEGIN
     self.comment("declare_typename");
-    (*
-    print(self, "typedef M" & TypeidToHex(typeid) & " " & M3ID.ToText(name) & ";\n");
-    *)
+    print(self, "typedef " & TypeIDToText(typeid) & " " & M3ID.ToText(name) & ";\n");
 END declare_typename;
 
-(*
 PROCEDURE TypeIDToText(x: INTEGER): TEXT =
 BEGIN
-    RETURN "M" & Fmt.Unsigned(x);
+    RETURN "M" & IntToHex(x, "M");
 END TypeIDToText;
-*)
 
 <*NOWARN*>PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
 BEGIN
@@ -1449,38 +1446,103 @@ BEGIN
 *)
   END declare_open_array;
 
-<*NOWARN*>PROCEDURE declare_enum(self: T; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
+TYPE DeclareEnums_t = M3CG_DoNothing.T BRANDED "M3C.DeclareEnums_t" OBJECT
+    self: T := NIL;
+    enum: Enum_t := NIL;
+    value := -1;
+    element_count := -1;
+    enums: REF ARRAY OF Enum_t := NIL;
+    index := 0;
+OVERRIDES
+    declare_enum := declare_enum;
+    declare_enum_elt := declare_enum_elt;
+END;
+
+PROCEDURE DeclareEnums(multipass: Multipass_t) =
+VAR x := multipass.self;
+    self: DeclareEnums_t := NIL;
+    enums: REF ARRAY OF Enum_t := NIL;
+    enum: Enum_t;
+    element_count, index, bit_size := 0;
+    typeid: TypeUID := 0;
+    int_type, id, start, cast, end: TEXT := NIL;
+    names: REF ARRAY OF Name := NIL;
 BEGIN
-    self.comment("declare_enum");
-    SuppressLineDirective(self, n_elts, "declare_enum n_elts");
-    <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
-    (*
-    WITH type = NEW(Enum_t, typeid := typeid, max := n_elts - 1, cg_type := BitSizeToEnumCGType[bit_size]) DO
-        <* ASSERT self.enum = NIL *>
-        self.enum := type;
-        EVAL Type_Init(type);
-        self.enum_id := TypeIDToText(typeid);
-        self.enum_value := 0;
-        self.enum_type := "UINT" & IntToDec(bit_size);
-        print(self, "typedef " & self.enum_type & " " & self.enum_id & ";");
+    IF multipass.op_data[M3CG_Binary.Op.declare_enum] = NIL THEN
+        RETURN;
     END;
-*)
+    x.comment("begin pass: DeclareEnums");
+    self := NEW(DeclareEnums_t, self := x);
+    enums := NEW(REF ARRAY OF Enum_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_enum]^));
+    self.enums := enums;
+    multipass.Replay(self, index);    
+    FOR i := 0 TO NUMBER(enums^) - 1 DO
+        enum := enums[i];
+        typeid := enum.typeid;
+        bit_size := enum.bit_size;
+        id := TypeIDToText(typeid);
+        int_type := BitsToUInt[bit_size];
+        start := "#define " & id & "_";
+        cast := " ((" & int_type & ")";
+        end := ") /*declare_enum_elt*/\n";
+        names := enum.names;
+        element_count := NUMBER(names^);
+        SuppressLineDirective(x, element_count, "declare_enum n_elts");
+        print(x, "typedef " & int_type & " " & id & "; /*declare_enum*/\n");
+        FOR i := 0 TO element_count - 1 DO
+            print(x, start & M3ID.ToText(names^[i]) & cast & IntToDec(i) & end);
+        END;
+    END;
+    x.comment("end pass: DeclareEnums");
+END DeclareEnums;
+
+PROCEDURE declare_enum(self: DeclareEnums_t; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
+VAR x := self.self;
+    enum: Enum_t;
+BEGIN
+    x.comment("declare_enum");
+    <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
+    <* ASSERT n_elts > 0 *>
+    <* ASSERT self.enum = NIL *>
+    <* ASSERT self.value = -1 *>
+    <* ASSERT self.index >= 0 *>
+    enum := NEW(Enum_t,
+                typeid := typeid,
+                min := TInt.Zero,
+                max := IntToTarget(x, n_elts - 1),
+                names := NEW(REF ARRAY OF Name, n_elts),
+                cg_type := BitsToCGUInt[bit_size]);
+    self.enums[self.index] := enum;
+    INC(self.index);
+    <* ASSERT self.enum = NIL AND self.value = -1 *>
+    self.enum := enum;
+    self.element_count := n_elts;
+    EVAL x.Type_Init(enum);
+    self.value := 0;
 END declare_enum;
 
-<*NOWARN*>PROCEDURE declare_enum_elt(self: T; name: Name) =
+PROCEDURE declare_enum_elt(self: DeclareEnums_t; name: Name) =
+VAR value := self.value;
+    element_count := self.element_count;
+    x := self.self;
 BEGIN
-    self.comment("declare_enum_elt");
-    SuppressLineDirective(self, -1, "declare_enum_elt");
-(*
-    print(self, "#define " & self.enum_id & "_" & M3ID.ToText(name) & " ((" & self.enum_type & ")" & IntToDec(self.enum_value) & ")\n");
-    INC(self.enum_value);
-    IF self.enum_value = self.enum.max + 1 THEN
-        self.enum := NIL;
-        self.enum_id := NIL;
-        self.enum_type := NIL;
-        self.enum_value := 10000;
+    x.comment("declare_enum_elt");
+    SuppressLineDirective(x, -1, "declare_enum_elt");
+    IF value < 0 OR value >= element_count THEN
+        x.Err ("declare_enum_elt overflow");
+        RETURN;
     END;
-*)
+    <* ASSERT self.enum # NIL *>
+    <* ASSERT self.enum.names # NIL *>
+    <* ASSERT NUMBER(self.enum.names^) = element_count *>
+    self.enum.names[value] := name;
+    INC(value);
+    IF value = element_count THEN
+        self.enum := NIL;
+        self.value := -1;
+        RETURN;
+    END;
+    self.value := value;
   END declare_enum_elt;
 
 <*NOWARN*>PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
@@ -1950,12 +2012,12 @@ CONST Ops = ARRAY OF Op{
         Op.copy_n,
         Op.fence,
         Op.zero,
-        Op.check_range, (* bug *)
-        Op.xor,         (* bug *)
-        Op.compare,     (* bug *)
-        Op.if_compare,  (* bug *)
-        Op.if_true,     (* bug *)
-        Op.if_false     (* bug *)
+        Op.check_range, (* bug -- we use helper function only to quash gcc warnings *)
+        Op.xor,         (* bug -- we use helper function only to quash gcc warnings *)
+        Op.compare,     (* bug -- we use helper function only to quash gcc warnings *)
+        Op.if_compare,  (* bug -- we use helper function only to quash gcc warnings *)
+        Op.if_true,     (* bug -- we use helper function only to quash gcc warnings *)
+        Op.if_false     (* bug -- we use helper function only to quash gcc warnings *)
     };
 CONST OpsThatCanFault = ARRAY OF Op{
         Op.abort,
@@ -2767,8 +2829,7 @@ BEGIN
     RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.InFrameType() & " " & var.InFrameName();
 END Var_InFrameDeclare;
 
-PROCEDURE internal_declare_local(
-(* returns derived Var_t instead of base M3CG.Var *)
+PROCEDURE declare_local(
     self: T;
     name: Name;
     byte_size: ByteSize;
@@ -2793,21 +2854,6 @@ BEGIN
     END;
     self.current_proc.locals.addhi(var);
     RETURN var;
-END internal_declare_local;
-
-PROCEDURE declare_local(
-(* returns derived Var_t instead of base M3CG.Var *)
-    self: T;
-    name: Name;
-    byte_size: ByteSize;
-    alignment: Alignment;
-    type: M3CG.Type;
-    typeid: TypeUID;
-    in_memory: BOOLEAN;
-    up_level: BOOLEAN;
-    frequency: Frequency): Var_t =
-BEGIN
-    RETURN internal_declare_local(self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency);
 END declare_local;
 
 TYPE FunctionPrototype_t = { Declare, Define };
@@ -2972,7 +3018,7 @@ END free_temp;
 PROCEDURE begin_init(self: T; <*UNUSED*>v: M3CG.Var) =
 BEGIN
     self.comment("begin_init");
-    self.current_init_offset := 0;
+    self.current_offset := 0;
     self.initializer_comma := "";
     SuppressLineDirective(self, 1, "begin_init");
 END begin_init;
@@ -2998,7 +3044,7 @@ END initializer_addhi;
 
 PROCEDURE end_init(self: T; v: M3CG.Var) =
 VAR var := NARROW(v, Var_t);
-    init_fields := self.init_fields;
+    fields := self.fields;
     initializer := self.initializer;
     var_name := M3ID.ToText(var.name);
     const := ARRAY BOOLEAN OF TEXT{"", " const "}[var.const];
@@ -3008,8 +3054,8 @@ BEGIN
     end_init_helper(self);
 
     print(self, "struct " & var_name & "_t{");
-    WHILE init_fields.size() > 0 DO
-        print(self, init_fields.remlo());
+    WHILE fields.size() > 0 DO
+        print(self, fields.remlo());
     END;
     print(self, "};\n");
 
@@ -3039,15 +3085,15 @@ BEGIN
 END Segments_end_init;
 
 PROCEDURE init_to_offset(self: T; offset: ByteOffset) =
-VAR pad := offset - self.current_init_offset;
+VAR pad := offset - self.current_offset;
 BEGIN
     (* self.comment("init_to_offset offset=", IntToDec(offset)); *)
-    <* ASSERT offset >= self.current_init_offset *>
+    <* ASSERT offset >= self.current_offset *>
     <* ASSERT pad >= 0 *>
-    <* ASSERT self.current_init_offset >= 0 *>
+    <* ASSERT self.current_offset >= 0 *>
     IF pad > 0 THEN
         end_init_helper(self);
-        self.init_fields.addhi("char " & M3ID.ToText(GenerateName(self)) & "[" & IntToDec(pad) & "];\n");
+        self.fields.addhi("char " & M3ID.ToText(GenerateName(self)) & "[" & IntToDec(pad) & "];\n");
         initializer_addhi(self, CONST_TEXT_LEFT_BRACE);
         FOR i := 1 TO pad DO
             initializer_addhi(self, "0 /* " & Fmt.Int(i) & " */ ");
@@ -3059,7 +3105,7 @@ END init_to_offset;
 PROCEDURE end_init_helper(self: T) =
 BEGIN
     IF self.init_type_count > 0 THEN
-        self.init_fields.addhi("[" & IntToDec(self.init_type_count) & "];\n");
+        self.fields.addhi("[" & IntToDec(self.init_type_count) & "];\n");
         self.initializer.addhi("}");
     END;
     self.init_type_count := 0;
@@ -3068,14 +3114,14 @@ END end_init_helper;
 PROCEDURE init_helper(self: T; offset: ByteOffset; type: M3CG.Type) =
 BEGIN
     init_to_offset(self, offset);
-    IF offset = 0 OR self.init_type # type OR offset # self.current_init_offset THEN
+    IF offset = 0 OR self.init_type # type OR offset # self.current_offset THEN
         end_init_helper(self);
-        self.init_fields.addhi(typeToText[type] & " " & M3ID.ToText(GenerateName(self)));
+        self.fields.addhi(typeToText[type] & " " & M3ID.ToText(GenerateName(self)));
         initializer_addhi(self, CONST_TEXT_LEFT_BRACE);
     END;
     INC(self.init_type_count);
     self.init_type := type;
-    self.current_init_offset := offset + TargetMap.CG_Bytes[type];
+    self.current_offset := offset + TargetMap.CG_Bytes[type];
 END init_helper;
 
 PROCEDURE init_int(self: T; offset: ByteOffset; READONLY value: Target.Int; type: M3CG.Type) =
@@ -3835,6 +3881,15 @@ BEGIN
     self.comment("load_nil");
     push(self, M3CG.Type.Addr, CTextToExpr("0")); (* UNDONE NULL or (ADDRESS)0? *)
 END load_nil;
+
+PROCEDURE TIntInc(self: T; i: Target.Int): Target.Int =
+VAR j: Target.Int;
+BEGIN
+    IF NOT TInt.Add(i, TInt.One, j) THEN
+        self.Err ("failed to increment target integer");
+    END;
+    RETURN j;
+END TIntInc;
 
 CONST IntToTInt = IntToTarget;
 
@@ -4912,9 +4967,18 @@ BEGIN
 END fetch_and_op;
 
 BEGIN
-(*
-    BitSizeToEnumCGType[8] := M3CG.Type.Word8;
-    BitSizeToEnumCGType[16] := M3CG.Type.Word16;
-    BitSizeToEnumCGType[32] := M3CG.Type.Word32;
-*)
+    BitsToCGUInt[8] := M3CG.Type.Word8;
+    BitsToCGUInt[16] := M3CG.Type.Word16;
+    BitsToCGUInt[32] := M3CG.Type.Word32;
+    BitsToCGUInt[64] := M3CG.Type.Word64;
+    BitsToDec[8] := "8";
+    BitsToDec[16] := "16";
+    BitsToDec[32] := "32";
+    BitsToDec[64] := "64";
+    FOR i := 8 TO 64 DO
+        IF BitsToDec[i] # NIL THEN
+            BitsToInt[i] := "INT" & BitsToDec[i];
+            BitsToUInt[i] := "U" & BitsToInt[i];
+        END;
+    END;
 END M3C.
