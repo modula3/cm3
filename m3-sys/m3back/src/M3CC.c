@@ -11,18 +11,16 @@ M3CC__UInt64ToText(UINT64 a, WORD_T base);
 #if 0
 #include <stdio.h>
 #include <string.h>
-#define M3toC__StoT(a) a
-#define M3toC__CopyStoT(a) strdup(a)
+#define M3toC__StoT(a) (a)
+#define M3toC__CopyStoT(a) (strdup(a))
 int main()
 {
-    int i;
+    int i = { 0 };
     printf("%s\n", M3CC__UInt64ToText(0, 2));
     printf("%s\n", M3CC__UInt64ToText(255, 16));
     printf("%s\n", M3CC__UInt64ToText(9, 8));
     for (i = 0; i < 37; ++i)
-    {
         printf("%s\n", M3CC__UInt64ToText(i, 36));
-    }
 }
 #endif
 
