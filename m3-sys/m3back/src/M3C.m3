@@ -104,7 +104,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         width := 0;
 
     METHODS
-        Type_Init(type: Type_t): Type_t := Type_Init;
+        Type_Init(type: Type_t) := Type_Init;
 
     OVERRIDES
         end_unit   := end_unit;
@@ -395,7 +395,19 @@ END;
 
 TYPE Integer_t = Type_t OBJECT END;
 TYPE Float_t  = Type_t OBJECT END;
-TYPE Record_t  = Type_t OBJECT END;
+
+TYPE Field_t  = Type_t OBJECT
+    bit_offset := -1;
+    bit_size := -1;
+    name: Name;
+    (*type: Type_t;*)
+    typeid: TypeUID := -1;
+END;
+
+TYPE Record_t  = Type_t OBJECT
+    bit_size := -1;
+    fields: REF ARRAY OF Field_t := NIL;
+END;
 
 TYPE Subrange_t  = Type_t OBJECT
     min: Target.Int := TInt.Zero;
@@ -407,8 +419,6 @@ TYPE Enum_t  = Subrange_t OBJECT
 END;
 
 (*
-TYPE CField = M3CField.T;
-TYPE CFieldSeq = M3CFieldSeq.T;
 
 TYPE Ref_t  = Type_t OBJECT
     referent: Type_t;
@@ -432,7 +442,7 @@ BEGIN
 END TypeidToType_Get;
 *)
 
-PROCEDURE Type_Init(self: T; type: Type_t): Type_t =
+PROCEDURE Type_Init(self: T; type: Type_t) =
 BEGIN
     IF type.bit_size = 0 THEN
         type.bit_size := TargetMap.CG_Size[type.cg_type];
@@ -441,7 +451,6 @@ BEGIN
         type.byte_size := TargetMap.CG_Bytes[type.cg_type];
     END;
     EVAL self.typeidToType.put(type.typeid, type);
-    RETURN type;
 END Type_Init;
 
 (* see RTBuiltin.mx
@@ -766,8 +775,8 @@ END;
 
 TYPE Proc_t = M3CG.Proc OBJECT
     name: Name := 0;
-    n_params: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
-    n_params_without_static_link: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
+    parameter_count: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
+    parameter_count_without_static_link: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
     return_type: M3CG.Type;
     level: INTEGER := 0;
     callingConvention: CallingConvention;
@@ -848,17 +857,17 @@ VAR is_common := (proc.parent = NIL
                   AND proc.return_type = M3CG.Type.Void);
     is_RTHooks_ReportFault := (is_common
                                AND proc.name = self.RTHooks_ReportFault_id
-                               AND proc.n_params = 2);
+                               AND proc.parameter_count = 2);
     is_RTHooks_AssertFailed := (is_common
                                 AND proc.name = self.RTHooks_AssertFailed_id
-                                AND proc.n_params = 3);
+                                AND proc.parameter_count = 3);
 BEGIN
     proc.is_RTHooks_Raise := (is_common
                               AND proc.name = self.RTHooks_Raise_id
-                              AND proc.n_params = 4);
+                              AND proc.parameter_count = 4);
     proc.is_RTException_Raise := (is_common
                                   AND proc.name = self.RTException_Raise_id
-                                  AND proc.n_params = 1);
+                                  AND proc.parameter_count = 1);
     IF is_RTHooks_ReportFault THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
@@ -868,14 +877,14 @@ BEGIN
     END;
     proc.self := self;
     proc.name := Proc_FixName(proc.self, proc.name);
-    proc.is_exception_handler := proc.level > 0 AND proc.n_params = 1 AND IsNameExceptionHandler(self, M3ID.ToText(proc.name));
-    proc.n_params_without_static_link := proc.n_params;
+    proc.is_exception_handler := proc.level > 0 AND proc.parameter_count = 1 AND IsNameExceptionHandler(self, M3ID.ToText(proc.name));
+    proc.parameter_count_without_static_link := proc.parameter_count;
     proc.add_static_link := proc.level > 0;
-    INC(proc.n_params, ORD(proc.add_static_link));
+    INC(proc.parameter_count, ORD(proc.add_static_link));
     proc.locals := NEW(RefSeq.T).init();
     proc.blocks := NEW(RefSeq.T).init();
     proc.block_stack := NEW(RefSeq.T).init();
-    proc.params := NEW(REF ARRAY OF Var_t, proc.n_params);
+    proc.params := NEW(REF ARRAY OF Var_t, proc.parameter_count);
     proc.ForwardDeclareFrameType(); (* TODO do not always do this *)
     RETURN proc;
 END Proc_Init;
@@ -1199,37 +1208,37 @@ BEGIN
     self.stack := NEW(RefSeq.T).init();         (* CONSIDER compute maximum depth and use an array *)
     self.params := NEW(TextSeq.T).init();       (* CONSIDER compute maximum and use an array *)
 
-    EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
-    EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
-    EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Int64.cg_type, typeid := UID_LONGINT));
-    EVAL self.Type_Init(NEW(Integer_t, cg_type := Target.Word64.cg_type, typeid := UID_LONGWORD));
+    self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER));
+    self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD));
+    self.Type_Init(NEW(Integer_t, cg_type := Target.Int64.cg_type, typeid := UID_LONGINT));
+    self.Type_Init(NEW(Integer_t, cg_type := Target.Word64.cg_type, typeid := UID_LONGWORD));
 
-    EVAL self.Type_Init(NEW(Float_t, cg_type := Target.Real.cg_type, typeid := UID_REEL));
-    EVAL self.Type_Init(NEW(Float_t, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL));
-    EVAL self.Type_Init(NEW(Float_t, cg_type := Target.Extended.cg_type, typeid := UID_XREEL));
+    self.Type_Init(NEW(Float_t, cg_type := Target.Real.cg_type, typeid := UID_REEL));
+    self.Type_Init(NEW(Float_t, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL));
+    self.Type_Init(NEW(Float_t, cg_type := Target.Extended.cg_type, typeid := UID_XREEL));
 
-    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1)));
-    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF)));
-    EVAL self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF)));
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1)));
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF)));
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF)));
 
-    EVAL self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_31, min := TInt.Zero, max := IntToTarget(self, 31)));
-    EVAL self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_63, min := TInt.Zero, max := IntToTarget(self, 63)));
+    self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_31, min := TInt.Zero, max := IntToTarget(self, 31)));
+    self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_63, min := TInt.Zero, max := IntToTarget(self, 63)));
 
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_MUTEX));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_TEXT));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ROOT));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_REFANY));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC1));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC2));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC3));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC4));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC5));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC6));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC7));
-    EVAL self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC8));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_MUTEX));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_TEXT));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ROOT));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_REFANY));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC1));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC2));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC3));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC4));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC5));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC6));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC7));
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC8));
 
-    EVAL self.Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL));
+    self.Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL));
     RETURN self.multipass;
 END New;
 
@@ -1292,9 +1301,10 @@ BEGIN
     GetStructSizes(self);
     Prefix_End(x);
 
-    (* declare/define all enums *)
+    (* declare/define types *)
     
     DeclareEnums(self);
+    DeclareRecords(self);
 
     (* forward declare functions/variables in this module and imports *)
     
@@ -1487,7 +1497,7 @@ BEGIN
         end := ") /*declare_enum_elt*/\n";
         names := enum.names;
         element_count := NUMBER(names^);
-        SuppressLineDirective(x, element_count, "declare_enum n_elts");
+        SuppressLineDirective(x, element_count, "declare_enum element_count");
         print(x, "typedef " & int_type & " " & id & "; /*declare_enum*/\n");
         FOR i := 0 TO element_count - 1 DO
             print(x, start & M3ID.ToText(names^[i]) & cast & IntToDec(i) & end);
@@ -1496,28 +1506,28 @@ BEGIN
     x.comment("end pass: DeclareEnums");
 END DeclareEnums;
 
-PROCEDURE declare_enum(self: DeclareEnums_t; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) =
+PROCEDURE declare_enum(self: DeclareEnums_t; typeid: TypeUID; element_count: INTEGER; bit_size: BitSize) =
 VAR x := self.self;
     enum: Enum_t;
 BEGIN
     x.comment("declare_enum");
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
-    <* ASSERT n_elts > 0 *>
+    <* ASSERT element_count > 0 *>
     <* ASSERT self.enum = NIL *>
     <* ASSERT self.value = -1 *>
     <* ASSERT self.index >= 0 *>
     enum := NEW(Enum_t,
                 typeid := typeid,
                 min := TInt.Zero,
-                max := IntToTarget(x, n_elts - 1),
-                names := NEW(REF ARRAY OF Name, n_elts),
+                max := IntToTarget(x, element_count - 1),
+                names := NEW(REF ARRAY OF Name, element_count),
                 cg_type := BitsToCGUInt[bit_size]);
     self.enums[self.index] := enum;
     INC(self.index);
     <* ASSERT self.enum = NIL AND self.value = -1 *>
     self.enum := enum;
-    self.element_count := n_elts;
-    EVAL x.Type_Init(enum);
+    self.element_count := element_count;
+    x.Type_Init(enum);
     self.value := 0;
 END declare_enum;
 
@@ -1527,7 +1537,6 @@ VAR value := self.value;
     x := self.self;
 BEGIN
     x.comment("declare_enum_elt");
-    SuppressLineDirective(x, -1, "declare_enum_elt");
     IF value < 0 OR value >= element_count THEN
         x.Err ("declare_enum_elt overflow");
         RETURN;
@@ -1550,16 +1559,82 @@ BEGIN
     self.comment("declare_packed");
 END declare_packed;
 
-<*NOWARN*>PROCEDURE declare_record(self: T; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) =
+TYPE DeclareRecords_t = M3CG_DoNothing.T BRANDED "M3C.DeclareRecords_t" OBJECT
+    self: T := NIL;
+    records: REF ARRAY OF Record_t := NIL;
+    record: Record_t := NIL;
+    previous_field: Field_t := NIL;
+    record_index, field_index, field_count := 0;
+OVERRIDES
+    declare_record := declare_record;
+    declare_field := declare_field;
+END;
+
+PROCEDURE DeclareRecords(multipass: Multipass_t) =
+VAR x := multipass.self;
+    self: DeclareRecords_t := NIL;
+    index := 0;
 BEGIN
-    self.comment("declare_record");
-    SuppressLineDirective(self, n_fields, "declare_record n_fields");
+    IF multipass.op_data[M3CG_Binary.Op.declare_record] = NIL THEN
+        RETURN;
+    END;
+    x.comment("begin pass: DeclareRecords");
+    self := NEW(DeclareRecords_t, self := x);
+    self.records := NEW(REF ARRAY OF Record_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_record]^));
+    multipass.Replay(self, index);    
+    x.comment("end pass: DeclareRecords");
+END DeclareRecords;
+
+PROCEDURE declare_record(self: DeclareRecords_t; typeid: TypeUID; bit_size: BitSize; field_count: INTEGER) =
+VAR record: Record_t := NIL;
+    x := self.self;
+BEGIN
+    IF x.debug > -1 THEN
+        print(x, "/* declare_record field_count:" & Fmt.Int(field_count) & " */\n");
+    ELSE
+        x.comment("declare_record");
+    END;
+    IF self.record_index < 0 OR self.record_index >= NUMBER(self.records^) THEN
+        x.Err ("declare_record overflow");
+        RETURN;
+    END;
+    record := NEW(Record_t, typeid := typeid, bit_size := bit_size, fields := NEW(REF ARRAY OF Field_t, field_count));
+    self.record := record;
+    self.records[self.record_index] := record;
+    INC(self.record_index);
+    Type_Init(self.self, record);
+    self.field_index := 0;
+    self.previous_field := NIL;
+    self.field_count := field_count;
 END declare_record;
 
-<*NOWARN*>PROCEDURE declare_field(self: T; name: Name; offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+PROCEDURE declare_field(self: DeclareRecords_t; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+VAR field: Field_t;
+    previous_field := self.previous_field;
+    x := self.self;
 BEGIN
-    self.comment("declare_field");
-    SuppressLineDirective(self, -1, "declare_field");
+    IF x.debug > -1 THEN
+        print(x, "/* declare_field " & M3ID.ToText(name) & " */\n");
+    ELSE
+        x.comment("declare_field");
+    END;
+    IF self.field_index < 0 OR self.field_index >= self.field_count OR self.record = NIL THEN
+        (* skip objects for now
+        x.Err ("declare_field overflow");
+        *)
+        RETURN;
+    END;
+    field := NEW(Field_t, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid, name := name);
+    self.record.fields[self.field_index] := field;
+    INC(self.field_index);
+    IF previous_field # NIL AND previous_field.bit_offset + previous_field.bit_size > bit_offset THEN
+        x.Err ("declare_field: fields out of order");
+        RETURN;
+    END;
+    IF self.field_index = self.field_count THEN
+        self.record := NIL;
+    END;
+    previous_field := field;
 END declare_field;
 
 <*NOWARN*>PROCEDURE declare_set(self: T; typeid, domain: TypeUID; bit_size: BitSize) =
@@ -1582,10 +1657,10 @@ BEGIN
     self.comment("declare_indirect");
 END declare_indirect;
 
-<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
+<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention) =
 BEGIN
     self.comment("declare_proctype");
-    (* SuppressLineDirective(self, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises"); *)
+    (* SuppressLineDirective(self, param_count + (ORD(raise_count >= 0) * raise_count), "declare_proctype param_count + raise_count"); *)
 END declare_proctype;
 
 <*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) =
@@ -1600,10 +1675,10 @@ BEGIN
     (* SuppressLineDirective(self, -1, "declare_raises"); *)
 END declare_raises;
 
-<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize) =
 BEGIN
     self.comment("declare_object");
-    (* SuppressLineDirective(self, n_fields + n_methods, "declare_object n_fields + n_methods"); *)
+    (* SuppressLineDirective(self, field_count + method_count, "declare_object field_count + method_count"); *)
 END declare_object;
 
 <*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) =
@@ -2603,11 +2678,11 @@ END;
 PROCEDURE Imports_import_procedure(
     self: Imports_t;
     name: Name;
-    n_params: INTEGER;
+    parameter_count: INTEGER;
     return_type: M3CG.Type;
     callingConvention: CallingConvention): M3CG.Proc =
 BEGIN
-    RETURN import_procedure(self.self, name, n_params, return_type, callingConvention);
+    RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention);
 END Imports_import_procedure;
 
 PROCEDURE Imports_declare_param(
@@ -2961,7 +3036,7 @@ BEGIN
     function.uplevels := function.uplevels OR up_level;
     SuppressLineDirective(self, -1, "declare_param");
     INC(self.param_count);
-    IF name # self.static_link_id AND self.param_count = function.n_params_without_static_link THEN
+    IF name # self.static_link_id AND self.param_count = function.parameter_count_without_static_link THEN
         last_param(self);
     END;
     RETURN var;
@@ -3327,9 +3402,9 @@ END Segments_init_float;
 
 (*------------------------------------------------------------ PROCEDUREs ---*)
 
-PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER;
+PROCEDURE import_procedure(self: T; name: Name; parameter_count: INTEGER;
                            return_type: M3CG.Type; callingConvention: CallingConvention): M3CG.Proc =
-VAR proc := NEW(Proc_t, name := name, n_params := n_params,
+VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
 BEGIN
@@ -3338,10 +3413,10 @@ BEGIN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
         no_return(self);
     END;
-    SuppressLineDirective(self, n_params, "import_procedure n_params");
+    SuppressLineDirective(self, parameter_count, "import_procedure parameter_count");
     self.param_proc := proc;
     self.param_count := 0;
-    IF n_params = 0 THEN
+    IF parameter_count = 0 THEN
         last_param(self);
     END;
     RETURN proc;
@@ -3350,7 +3425,7 @@ END import_procedure;
 PROCEDURE Locals_declare_procedure(
     self: Locals_t;
     name: Name;
-    n_params: INTEGER;
+    parameter_count: INTEGER;
     return_type: M3CG.Type;
     level: INTEGER;
     callingConvention: CallingConvention;
@@ -3360,7 +3435,7 @@ BEGIN
     RETURN declare_procedure(
         self.self,
         name,
-        n_params,
+        parameter_count,
         return_type,
         level,
         callingConvention,
@@ -3368,11 +3443,11 @@ BEGIN
         parent);
 END Locals_declare_procedure;
 
-PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER;
+PROCEDURE declare_procedure(self: T; name: Name; parameter_count: INTEGER;
                             return_type: M3CG.Type; level: INTEGER;
                             callingConvention: CallingConvention;
                             exported: BOOLEAN; parent: M3CG.Proc): M3CG.Proc =
-VAR proc := NEW(Proc_t, name := name, n_params := n_params,
+VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
@@ -3386,10 +3461,10 @@ BEGIN
     IF NOT self.in_proc THEN
         self.current_proc := proc;
     END;
-    IF n_params = 0 THEN
+    IF parameter_count = 0 THEN
         last_param(self);
     END;
-    SuppressLineDirective(self, n_params, "declare_procedure n_params");
+    SuppressLineDirective(self, parameter_count, "declare_procedure parameter_count");
     RETURN proc;
 END declare_procedure;
 
