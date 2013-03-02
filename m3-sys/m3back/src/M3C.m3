@@ -24,7 +24,7 @@ VAR CaseDefaultAssertFalse := FALSE;
   CONST output_line_directives = TRUE;
   CONST output_extra_newlines = FALSE;
   CONST inline_extract = FALSE;
-  
+
 (* ztype: zero extended type -- a "larger" type that is a multiple of 32 bits in size
  *                              a type to store in registers, a type
  *                              to store on the compile-time or runtime stack
@@ -47,7 +47,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         typeidToType: IntRefTbl.T := NIL; (* FUTURE INTEGER => Type_t *)
         temp_vars: REF ARRAY OF Var_t := NIL; (* for check_* to avoid double evaluation, and pop_static_link *)
         current_block: Block_t := NIL;
-    
+
         multipass: Multipass_t := NIL;
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
@@ -56,7 +56,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index: INTEGER := 0;
-        
+
         unit_name := "L_";
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
         param_count := 0;
@@ -66,25 +66,25 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         RTHooks_Raise_id: M3ID.T := 0;
         RTHooks_ReportFault_id: M3ID.T := 0;
         RTHooks_ReportFault_imported_or_declared := FALSE;
-        
+
         (* labels *)
         labels_min := FIRST(Label);
         labels_max := LAST(Label);
         labels: REF ARRAY (*Label=INTEGER*) OF BOOLEAN := NIL;
-        
+
         (* initialization and record declaration support *)
-        
+
         fields: TextSeq.T := NIL;
         current_offset: INTEGER := 0;
         initializer: TextSeq.T := NIL;
         initializer_comma: TEXT := "";
-        
+
         (* initializers are aggregated into arrays to avoid
         redeclaring the types and generating new field names *)
-        
+
         init_type := Type.Void;
         init_type_count := 0;
-        
+
         (* line directive support *)
         file: TEXT := NIL;
         line: INTEGER := 0;
@@ -92,7 +92,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         nl_line_directive := "\n"; (* line_directive + "\n" *)
         last_char_was_newline := FALSE;
         suppress_line_directive: INTEGER := 0;
-        
+
         static_link     : Var_t := NIL; (* based on M3x86 *)
         current_proc    : Proc_t := NIL; (* based on M3x86 *)
         param_proc      : Proc_t := NIL; (* based on M3x86 *)
@@ -1287,7 +1287,7 @@ END Prefix_End;
 PROCEDURE multipass_end_unit(self: Multipass_t) =
 (* called at the end of the first pass -- we have everything
    in memory now, except for the end_unit itself.
-   
+
    This function is in control of coordinating the passes.
  *)
 VAR x := self.self;
@@ -1302,12 +1302,12 @@ BEGIN
     Prefix_End(x);
 
     (* declare/define types *)
-    
+
     DeclareEnums(self);
     DeclareRecords(self);
 
     (* forward declare functions/variables in this module and imports *)
-    
+
     x.comment("begin pass: imports");
     self.Replay(NEW(Imports_t, self := x), index);
     x.comment("end pass: imports");
@@ -1324,10 +1324,10 @@ BEGIN
     x.comment("begin pass: segments/globals");
     self.Replay(NEW(Segments_t, self := x), index);
     x.comment("end pass: segments/globals");
-    
+
     (* labels -- which are used *)
     DiscoverUsedLabels(self);
-    
+
     (* variables -- which are used *)
     DiscoverUsedVariables(self);
 
@@ -1485,7 +1485,7 @@ BEGIN
     self := NEW(DeclareEnums_t, self := x);
     enums := NEW(REF ARRAY OF Enum_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_enum]^));
     self.enums := enums;
-    multipass.Replay(self, index);    
+    multipass.Replay(self, index);
     FOR i := 0 TO NUMBER(enums^) - 1 DO
         enum := enums[i];
         typeid := enum.typeid;
@@ -1581,7 +1581,7 @@ BEGIN
     x.comment("begin pass: DeclareRecords");
     self := NEW(DeclareRecords_t, self := x);
     self.records := NEW(REF ARRAY OF Record_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_record]^));
-    multipass.Replay(self, index);    
+    multipass.Replay(self, index);
     x.comment("end pass: DeclareRecords");
 END DeclareRecords;
 
@@ -1979,7 +1979,7 @@ VAR x := self.self;
     index: INTEGER;
 BEGIN
     x.comment("begin pass: discover used labels");
-    
+
     (* First estimate label count via op count.
        This is correct, except for case_jump.
     *)
@@ -2143,7 +2143,7 @@ VAR x := self.self;
     index: INTEGER;
 BEGIN
     x.comment("begin pass: helper functions");
-     
+
     FOR i := FIRST(data) TO LAST(data) DO
         IF self.op_counts[data[i].op] > 0 THEN
             print(x, data[i].text);
@@ -2703,7 +2703,7 @@ END Imports_declare_param;
 PROCEDURE Imports_import_global(
     self: Imports_t;
     name: Name;
-    byte_size: ByteSize; 
+    byte_size: ByteSize;
     alignment: Alignment;
     type: M3CG.Type;
     typeid: TypeUID): M3CG.Var =
@@ -2748,20 +2748,20 @@ BEGIN
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         INC(count, NUMBER(self.op_data[Ops[i]]^));
     END;
-    
+
     (* make worst case array -- if all the ops declare a struct *)
-    
+
     sizes := NEW(REF ARRAY OF INTEGER, count);
-    
+
     (* replay the ops through this little pass *)
-    
+
     getStructSizes.sizes := sizes;
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         self.Replay(getStructSizes, index, self.op_data[Ops[i]]);
     END;
 
     (* sort, unique, output *)
-    
+
     IntArraySort.Sort(SUBARRAY(sizes^, 0, getStructSizes.count));
     prev := -1;
     FOR i := 0 TO getStructSizes.count - 1 DO
@@ -3585,7 +3585,7 @@ BEGIN
             END;
         END;
     END;
-    
+
     (* declare and zero non-uplevel struct param values (uplevels are in the frame struct) *)
 
     FOR i := FIRST(params^) TO LAST(params^) DO
@@ -3595,7 +3595,7 @@ BEGIN
             END;
         END;
     END;
-    
+
     (* declare frame of uplevels *)
 
     IF proc.forward_declared_frame_type THEN
@@ -4131,7 +4131,7 @@ END TIntExtendOrTruncate;
 
 PROCEDURE
 op2(
-    self: T; 
+    self: T;
     type: M3CG.Type;
     name: TEXT;
     op: TEXT;
@@ -4692,7 +4692,7 @@ BEGIN
     self.comment("check_index");
     <* ASSERT type = Target.Integer.cg_type *>
     (* ASSERT (NOT s0.is_const) OR TInt.GE(s0.int_value, TInt.Zero) *)
-    
+
     self.swap(type, type);
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
@@ -4935,7 +4935,7 @@ END load_static_link;
 
 (*----------------------------------------------------------------- misc. ---*)
 
-PROCEDURE comment_1(VAR text: TEXT; VAR length: INTEGER) = 
+PROCEDURE comment_1(VAR text: TEXT; VAR length: INTEGER) =
 BEGIN
     IF text = NIL THEN
         text := "";
