@@ -232,7 +232,9 @@ PROCEDURE CallFinallyHandler (info: CG.Var;
   END CallFinallyHandler;
 
 PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
+  CONST Alloca_jmpbuf = FALSE;
   VAR new: BOOLEAN;
+      label_already_allocated: CG.Label;
   BEGIN
     (* int setjmp(void* ); *)
     IF (setjmp = NIL) THEN
@@ -246,8 +248,51 @@ PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
                                f := CG.Never);
       END;
     END;
+    
+    IF Alloca_jmpbuf THEN
+      label_already_allocated := CG.Next_label ();
+
+      (* void* _alloca(size_t); *)
+      IF (alloca = NIL) THEN
+        alloca := CG.Import_procedure (M3ID.Add ("m3_alloca"), 1, CG.Type.Addr,
+                                       Target.DefaultCall, new);
+        IF (new) THEN
+          EVAL CG.Declare_param (M3ID.NoID, Target.Word.size, Target.Word.align,
+                                 Target.Word.cg_type, 0, in_memory := FALSE,
+                                 up_level := FALSE, f := CG.Never);
+        END;
+      END;
+      (* extern /*const*/ size_t Csetjmp__Jumpbuf_size/* = sizeof(jmp_buf)*/; *)
+      IF (Jumpbuf_size = NIL) THEN
+        Jumpbuf_size := CG.Import_global (M3ID.Add ("Csetjmp__Jumpbuf_size"),
+                                          Target.Word.size, Target.Word.align,
+                                          Target.Word.cg_type, 0);
+      END;
+    
+      (* if (!frame.jmpbuf)
+           frame.jmpbuf = alloca(Csetjmp__Jumpbuf_size);
+      *)
+      CG.Load_addr (frame, M3RT.EF1_jmpbuf);
+      CG.Load_nil ();
+      CG.If_compare (Target.Address.cg_type, CG.Cmp.NE, label_already_allocated, CG.Likely);
+
+      CG.Start_call_direct (alloca, 0, Target.Address.cg_type);
+      CG.Load_int (Target.Word.cg_type, Jumpbuf_size);
+      CG.Pop_param (Target.Word.cg_type);
+      CG.Call_direct (alloca, Target.Address.cg_type);
+      CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+      CG.Store_addr (frame, M3RT.EF1_jmpbuf);
+
+      CG.Set_label (label_already_allocated);
+    END;
+
+    (* setjmp(frame.jmpbuf) or setjmp(&frame.jmpbuf) *)
     CG.Start_call_direct (setjmp, 0, Target.Integer.cg_type);
-    CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, 64);
+    IF Alloca_jmpbuf THEN
+      CG.Load_addr (frame, M3RT.EF1_jmpbuf);
+    ELSE
+      CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, 64);
+    END;
     CG.Pop_param (CG.Type.Addr);
     CG.Call_direct (setjmp, Target.Integer.cg_type);
     CG.If_true (handler, CG.Never);
