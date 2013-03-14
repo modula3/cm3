@@ -71,7 +71,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         anonymousCounter := -1;
         c      : Wr.T := NIL;
         debug := 0;
-        debug_declare := 1;
+        debug_declare := 0;
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index: INTEGER := 0;
@@ -246,7 +246,7 @@ VAR BitsToCGUInt := ARRAY BitSizeRange_t OF M3CG.Type { M3CG.Type.Void, .. };
 VAR BitsToDec := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "8", "16", "32", "64" *)
 VAR BitsToInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "INT8", "INT16", "INT32", "INT64" *)
 VAR BitsToUInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};   (* "UINT8", "UINT16", "UINT32", "UINT64" *)
-VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF M3CG.Type;
+(*VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF M3CG.Type;*)
 
 PROCEDURE SetLineDirective(self: T) =
 VAR start := ARRAY BOOLEAN OF TEXT{" /* ", (*"#"*)"//"}[output_line_directives];
@@ -1495,7 +1495,7 @@ BEGIN
     END;
     RETURN;
 
-    print(self, "/*typedef " & TypeIDToText(typeid) & " " & NameT(name) & ";*/\n");
+    print(self, "typedef " & TypeIDToText(typeid) & " " & NameT(name) & ";\n");
 END declare_typename;
 
 PROCEDURE TypeIDToText(x: INTEGER(*TypeUID*)): TEXT =
@@ -1929,6 +1929,20 @@ BEGIN
     x.comment("end pass: DeclareSubranges");
 END DeclareSubranges;
 
+PROCEDURE SubrangeCGType(READONLY min, max: Target.Int; bit_size: BitSize): M3CG.Type =
+(* duplicate the logic of m3front/src/types/SubrangeType;
+   m3front should pass us down cg_type directly, and not
+   bother with bit_size, domain *)
+BEGIN
+    IF TInt.EQ(min, TInt.Zero) AND TInt.EQ(max, TInt.MOne) THEN
+        RETURN BitsToCGInt[bit_size];
+    END;
+    IF TInt.LE(TInt.Zero, min) THEN
+        RETURN BitsToCGUInt[bit_size];
+    END;
+    RETURN BitsToCGInt[bit_size];
+END SubrangeCGType;
+
 PROCEDURE declare_subrange(self: DeclareSubranges_t; typeid, domain: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
 VAR x := self.self;
     subrange: Subrange_t;
@@ -1939,11 +1953,10 @@ BEGIN
         self.comment("declare_subrange");
     END;
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 OR bit_size = 64 *>
-    <* ASSERT TInt.LE(min, max) OR TWord.LE(min, max) *>
     <* ASSERT typeid # domain *>
     subrange := NEW(Subrange_t, min := min, max := max, typeid := typeid,
         domain_typeid := domain, bit_size := bit_size,
-        cg_type := SignedAndBitsToCGType[TInt.LT(min, TInt.Zero)][bit_size]);
+        cg_type := SubrangeCGType(min, max, bit_size));
     self.subranges[self.index] := subrange;
     INC(self.index);
     x.Type_Init(subrange);
@@ -5439,6 +5452,6 @@ BEGIN
             BitsToUInt[i] := "U" & BitsToInt[i];
         END;
     END;
-    SignedAndBitsToCGType[TRUE] := BitsToCGInt;
-    SignedAndBitsToCGType[FALSE] := BitsToCGUInt;
+    (*SignedAndBitsToCGType[TRUE] := BitsToCGInt;
+    SignedAndBitsToCGType[FALSE] := BitsToCGUInt;*)
 END M3C.
