@@ -36,25 +36,10 @@ VAR CaseDefaultAssertFalse := FALSE;
 
 TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
         self: T;
+        declareTypes: DeclareTypes_t := NIL;
     OVERRIDES
         end_unit := multipass_end_unit;
-
         set_runtime_proc := set_runtime_proc;
-        declare_exception := declare_exception;
-        reveal_opaque := reveal_opaque;
-        declare_array := declare_array;
-        declare_open_array := declare_open_array;
-        declare_packed := declare_packed;
-        declare_set := declare_set;
-        declare_pointer := declare_pointer;
-        declare_indirect := declare_indirect;
-        declare_proctype := declare_proctype;
-        declare_formal := declare_formal;
-        declare_raises := declare_raises;
-        declare_object := declare_object;
-        declare_method := declare_method;
-        declare_opaque := declare_opaque;
-
     END;
 
 TYPE
@@ -246,7 +231,7 @@ VAR BitsToCGUInt := ARRAY BitSizeRange_t OF M3CG.Type { M3CG.Type.Void, .. };
 VAR BitsToDec := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "8", "16", "32", "64" *)
 VAR BitsToInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "INT8", "INT16", "INT32", "INT64" *)
 VAR BitsToUInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};   (* "UINT8", "UINT16", "UINT32", "UINT64" *)
-(*VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF M3CG.Type;*)
+VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF M3CG.Type;
 
 PROCEDURE SetLineDirective(self: T) =
 VAR start := ARRAY BOOLEAN OF TEXT{" /* ", (*"#"*)"//"}[output_line_directives];
@@ -419,14 +404,32 @@ BEGIN
 END Var_FixName;
 
 TYPE Type_t = OBJECT
+    defined := FALSE;
     bit_size: INTEGER := 0;  (* FUTURE Target.Int or LONGINT *)
     byte_size: INTEGER := 0; (* FUTURE Target.Int or LONGINT *)
     typeid: INTEGER(*TypeUID*) := 0;
     cg_type: M3CG.Type := M3CG.Type.Addr;
     text: TEXT := NIL;
     typeidText: TEXT := NIL;
-    points_to: Type_t := NIL;
+METHODS
+    Define();
+    CanBeDefined(): BOOLEAN := Type_CanBeDefined;
 END;
+
+PROCEDURE Type_CanBeDefined(type: Type_t): BOOLEAN =
+BEGIN
+    RETURN TRUE;
+END Type_CanBeDefined;
+
+TYPE PointerType_t = Type_t OBJECT
+    points_to: Type_t := NIL;
+OVERRIDES
+    Define := PointerType_Define;
+END;
+
+PROCEDURE PointerType_Define(type: PointerType_t) =
+BEGIN
+END PointerType_Define;
 
 (* We probably need "Ordinal_t" as base for: Integer_t, Enum_t, Subrange_t *)
 
@@ -436,12 +439,18 @@ TYPE Float_t  = Type_t OBJECT END;
 TYPE Field_t  = Type_t OBJECT
     bit_offset := -1;
     name: Name;
-    (*type: Type_t;*)
+    type: Type_t := NIL;
 END;
 
 TYPE Record_t  = Type_t OBJECT
     fields: REF ARRAY OF Field_t := NIL;
+OVERRIDES
+    Define := Record_Define;
 END;
+
+PROCEDURE Record_Define(type: Record_t) =
+BEGIN
+END Record_Define;
 
 TYPE Subrange_t  = Type_t OBJECT
     min: Target.Int := TInt.Zero;
@@ -470,13 +479,14 @@ END;
 TYPE FixedArray_t = Array_t OBJECT END;
 TYPE OpenArray_t = Array_t OBJECT END;
 
-PROCEDURE TypeidToType_Get(typeid: INTEGER(*TypeUID*)): Type_t =
+*)
+
+PROCEDURE TypeidToType_Get(self: T; typeid: INTEGER(*TypeUID*)): Type_t =
 VAR type: REFANY := NIL;
 BEGIN
-    EVAL typeidToType.get(typeid, type);
+    EVAL self.typeidToType.get(typeid, type);
     RETURN NARROW(type, Type_t);
 END TypeidToType_Get;
-*)
 
 PROCEDURE Type_Init(self: T; type: Type_t; typedef := FALSE) =
 VAR typeidText := TypeIDToText(type.typeid);
@@ -1399,10 +1409,14 @@ BEGIN
     Prefix_End(x);
 
     (* declare/define types *)
+    
+    self.declareTypes := NEW(DeclareTypes_t, self := x);
 
+    DeclareRecords1(self);
     DeclareEnums(self);
     DeclareSubranges(self);
-    DeclareRecords(self);
+    DeclarePointers(self);
+    DeclareRecords2(self);
 
     (* forward declare functions/variables in this module and imports *)
 
@@ -1503,15 +1517,15 @@ BEGIN
     RETURN "M" & IntToHex(x, "M");
 END TypeIDToText;
 
-PROCEDURE declare_array(multipass: Multipass_t; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
-VAR self := multipass.self;
+PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_array typeid:" & TypeIDToText(typeid)
+    IF DebugDeclare(x) THEN
+        x.comment("declare_array typeid:" & TypeIDToText(typeid)
         & " index_typeid:" & TypeIDToText(index_typeid) & " element_typeid:"
         & TypeIDToText(element_typeid) & " total_bit_size:" & IntToDec(total_bit_size));
     ELSE
-        self.comment("declare_array");
+        x.comment("declare_array");
     END
 (*
     WITH index_type = TypeidToType_Get(index_typeid),
@@ -1542,15 +1556,15 @@ BEGIN
 *)
   END declare_array;
 
-PROCEDURE declare_open_array(multipass: Multipass_t; typeid, element_typeid: TypeUID; bit_size: BitSize) =
-VAR self := multipass.self;
+PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_open_array typeid:" & TypeIDToText(typeid)
+    IF DebugDeclare(x) THEN
+        x.comment("declare_open_array typeid:" & TypeIDToText(typeid)
         & " element_typeid:" & TypeIDToText(element_typeid) & " bit_size:"
         & IntToDec(bit_size));
     ELSE
-        self.comment("declare_open_array");
+        x.comment("declare_open_array");
     END;
     <* ASSERT bit_size MOD 32 = 0 *>
 (*
@@ -1578,21 +1592,9 @@ BEGIN
 *)
   END declare_open_array;
 
-TYPE DeclareEnums_t = M3CG_DoNothing.T BRANDED "M3C.DeclareEnums_t" OBJECT
-    self: T := NIL;
-    enum: Enum_t := NIL;
-    value := -1;
-    element_count := -1;
-    enums: REF ARRAY OF Enum_t := NIL;
-    index := 0;
-OVERRIDES
-    declare_enum := declare_enum;
-    declare_enum_elt := declare_enum_elt;
-END;
-
 PROCEDURE DeclareEnums(multipass: Multipass_t) =
 VAR x := multipass.self;
-    self: DeclareEnums_t := NIL;
+    self: DeclareTypes_t := NIL;
     enums: REF ARRAY OF Enum_t := NIL;
     enum: Enum_t;
     element_count, index, bit_size := 0;
@@ -1604,7 +1606,7 @@ BEGIN
         RETURN;
     END;
     x.comment("begin pass: DeclareEnums");
-    self := NEW(DeclareEnums_t, self := x);
+    self := NEW(DeclareTypes_t, self := x);
     enums := NEW(REF ARRAY OF Enum_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_enum]^));
     self.enums := enums;
     multipass.Replay(self, index);
@@ -1629,7 +1631,7 @@ BEGIN
     x.comment("end pass: DeclareEnums");
 END DeclareEnums;
 
-PROCEDURE declare_enum(self: DeclareEnums_t; typeid: TypeUID; element_count: INTEGER; bit_size: BitSize) =
+PROCEDURE declare_enum(self: DeclareTypes_t; typeid: TypeUID; element_count: INTEGER; bit_size: BitSize) =
 VAR x := self.self;
     enum: Enum_t;
 BEGIN
@@ -1637,7 +1639,7 @@ BEGIN
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
     <* ASSERT element_count > 0 *>
     <* ASSERT self.enum = NIL *>
-    <* ASSERT self.value = -1 *>
+    <* ASSERT self.enum_value = -1 *>
     <* ASSERT self.index >= 0 *>
     enum := NEW(Enum_t,
                 typeid := typeid,
@@ -1648,86 +1650,113 @@ BEGIN
                 text := TypeIDToText(typeid));
     self.enums[self.index] := enum;
     INC(self.index);
-    <* ASSERT self.enum = NIL AND self.value = -1 *>
+    <* ASSERT self.enum = NIL AND self.enum_value = -1 *>
     self.enum := enum;
     self.element_count := element_count;
     x.Type_Init(enum);
-    self.value := 0;
+    self.enum_value := 0;
 END declare_enum;
 
-PROCEDURE declare_enum_elt(self: DeclareEnums_t; name: Name) =
-VAR value := self.value;
+PROCEDURE declare_enum_elt(self: DeclareTypes_t; name: Name) =
+VAR enum_value := self.enum_value;
     element_count := self.element_count;
     x := self.self;
 BEGIN
     x.comment("declare_enum_elt");
-    IF value < 0 OR value >= element_count THEN
+    IF enum_value < 0 OR enum_value >= element_count THEN
         x.Err ("declare_enum_elt overflow");
         RETURN;
     END;
     <* ASSERT self.enum # NIL *>
     <* ASSERT self.enum.names # NIL *>
     <* ASSERT NUMBER(self.enum.names^) = element_count *>
-    self.enum.names[value] := name;
-    INC(value);
-    IF value = element_count THEN
+    self.enum.names[enum_value] := name;
+    INC(enum_value);
+    IF enum_value = element_count THEN
         self.enum := NIL;
-        self.value := -1;
+        self.enum_value := -1;
         RETURN;
     END;
-    self.value := value;
+    self.enum_value := enum_value;
   END declare_enum_elt;
 
-PROCEDURE declare_packed(multipass: Multipass_t; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
-VAR self := multipass.self;
+PROCEDURE declare_packed(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_packed typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " base:" & TypeIDToText(base));
+    IF DebugDeclare(x) THEN
+        x.comment("declare_packed typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " base:" & TypeIDToText(base));
     ELSE
-        self.comment("declare_packed");
+        x.comment("declare_packed");
     END;
 END declare_packed;
 
-TYPE DeclareRecords_t = M3CG_DoNothing.T BRANDED "M3C.DeclareRecords_t" OBJECT
+TYPE DeclareTypes_t = M3CG_DoNothing.T BRANDED "M3C.DeclareTypes_t" OBJECT
     self: T := NIL;
+
+    (* declare_enum, declare_enum_elt *)
+    enum: Enum_t := NIL;
+    enum_value := -1;
+    element_count := -1;
+    enums: REF ARRAY OF Enum_t := NIL;
+
+    (* declare_record, declare_field *)
     records: REF ARRAY OF Record_t := NIL;
     record: Record_t := NIL;
     previous_field: Field_t := NIL;
     record_index, field_index, field_count := 0;
+
+    (* declare_pointer *)
+    pointer: PointerType_t := NIL;
+    pointers: REF ARRAY OF PointerType_t := NIL;
+
+    index := 0;
 OVERRIDES
+    declare_enum := declare_enum;
+    declare_enum_elt := declare_enum_elt;
     declare_record := declare_record;
     declare_field := declare_field;
+    declare_pointer := declare_pointer;
+    declare_set := declare_set;
+    declare_packed := declare_packed;
+    declare_exception := declare_exception;
+    reveal_opaque := reveal_opaque;
+    declare_array := declare_array;
+    declare_open_array := declare_open_array;
+    declare_indirect := declare_indirect;
+    declare_proctype := declare_proctype;
+    declare_formal := declare_formal;
+    declare_raises := declare_raises;
+    declare_object := declare_object;
+    declare_method := declare_method;
+    declare_opaque := declare_opaque;
 END;
 
-PROCEDURE DeclareRecords(multipass: Multipass_t) =
+PROCEDURE DeclareRecords1(multipass: Multipass_t) =
 VAR x := multipass.self;
-    self: DeclareRecords_t := NIL;
-    index := 0;
+    self: DeclareTypes_t := NIL;
+    record_count, index := 0;
     record: Record_t := NIL;
-    field: Field_t := NIL;
     records: REF ARRAY OF Record_t := NIL;
-    bit_offset := 0;
-    bit_pad := 0;
-    bit_size := 0;
-    int_type: BitSizeRange_t;
-    name := "";
-    id := "";
-    i := 0;
+    name, id := "";
+    declare_records := multipass.op_data[M3CG_Binary.Op.declare_record];
 BEGIN
+
     RETURN;
 
-    IF multipass.op_data[M3CG_Binary.Op.declare_record] = NIL THEN
+    IF declare_records = NIL THEN
         RETURN;
     END;
-    x.comment("begin pass: DeclareRecords");
-    self := NEW(DeclareRecords_t, self := x);
-    records := NEW(REF ARRAY OF Record_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_record]^));
+    self := NEW(DeclareTypes_t, self := x);
+    record_count := NUMBER(declare_records^);
+    x.comment("begin pass: DeclareRecords2 count:" & IntToDec(record_count));
+    records := NEW(REF ARRAY OF Record_t, record_count);
     self.records := records;
     multipass.Replay(self, index);
 
-    FOR j := 0 TO NUMBER(records^) - 1 DO
+    FOR j := 0 TO record_count - 1 DO
         record := records[j];
         IF record # NIL THEN
+            record.defined := FALSE;
             id := record.typeidText;
             (* struct _foo; typedef struct _foo foo; struct _foo {
             Do not use typedef struct _foo foo because struct _foo could
@@ -1736,106 +1765,173 @@ BEGIN
             print(x, "struct _" & id & ";typedef struct _" & id & " " & id & ";\n");
         END;
     END;
-    FOR j := 0 TO NUMBER(records^) - 1 DO
+    x.comment("end pass: DeclareRecords1");
+END DeclareRecords1;
+
+PROCEDURE DeclareRecords2(multipass: Multipass_t) =
+VAR x := multipass.self;
+    self := multipass.declareTypes;
+    i, record_count, field_count := 0;
+    record: Record_t := NIL;
+    field: Field_t := NIL;
+    records := self.records;
+    pending: REF ARRAY OF Record_t := NIL;
+    pending_head, pending_tail := 0;
+    bit_offset, bit_pad, bit_size := 0;
+    int_type: BitSizeRange_t;
+    name, id := "";
+    can_be_defined := FALSE;
+    declare_records := multipass.op_data[M3CG_Binary.Op.declare_record];
+    field_type: Type_t := NIL;
+BEGIN
+
+    RETURN;
+
+    IF declare_records = NIL THEN
+        RETURN;
+    END;
+    record_count := NUMBER(declare_records^);
+    x.comment("begin pass: DeclareRecords2 count:" & IntToDec(record_count));
+    pending := NEW(REF ARRAY OF Record_t, record_count);
+
+    FOR j := 0 TO record_count - 1 DO
         record := records[j];
         IF record # NIL THEN
-            bit_size := record.bit_size;
-            print(x, "struct _" & record.typeidText & "{\n");
-            FOR j := 0 TO NUMBER(record.fields^) - 1 DO
-                field := record.fields[j];
-                name := NameT(field.name);
-                IF field.bit_offset < bit_offset THEN
-                    x.Err("fields not in offset order");
+            pending[pending_tail] := records[j];
+            INC(pending_tail);
+        END;
+    END;
+    WHILE pending_tail > pending_head DO
+        FOR j := pending_head TO pending_tail - 1 DO
+            record := pending[j MOD record_count];
+            IF record # NIL AND NOT record.defined THEN
+                can_be_defined := TRUE;
+                field_count := NUMBER(record.fields^);
+                FOR j := 0 TO field_count - 1 DO
+                    field := record.fields[j];
+                    field_type := field.type;
+                    IF field_type = NIL THEN
+                        field_type := TypeidToType_Get(x, field.typeid);
+                        IF field_type # NIL THEN
+                            field.type := field_type;
+                            RTIO.PutText("resolved field.type " & TypeIDToText(field.typeid) & "\n");
+                            RTIO.Flush();
+                        END;
+                    END;
+                    IF field_type = NIL OR NOT field_type.defined THEN
+                        can_be_defined := FALSE;
+                        RTIO.PutText("pending field.type " & TypeIDToText(field.typeid) & " (1)\n");
+                        RTIO.Flush();
+                        EXIT;
+                    END;
                 END;
-                bit_pad := field.bit_offset - bit_offset;
-                (*
-                  padding: array of bytes followed by bitfield
-                *)
-                IF bit_pad > 0 THEN
-    
-                    (* Eat up bits, to the next byte boundary or up to the next field, whichever is earlier. *)
-                    IF (bit_offset MOD 8) # 0 THEN
-                        i := MIN(bit_pad, 8 - (bit_pad MOD 8));
-                        print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
-                        INC(bit_offset, i);
-                        DEC(bit_pad, i);
+                INC(pending_head);
+                IF NOT can_be_defined THEN
+                    pending[pending_tail MOD record_count] := record;
+                    INC(pending_tail);
+                ELSE
+                    record.defined := TRUE;
+                    bit_size := record.bit_size;
+                    print(x, "struct _" & record.typeidText & "{\n");
+                    FOR j := 0 TO field_count - 1 DO
+                        field := record.fields[j];
+                        name := NameT(field.name);
+                        IF field.bit_offset < bit_offset THEN
+                            x.Err("fields not in offset order");
+                        END;
+                        bit_pad := field.bit_offset - bit_offset;
+                        (*
+                          padding: array of bytes followed by bitfield
+                        *)
+                        IF bit_pad > 0 THEN
+            
+                            (* Eat up bits, to the next byte boundary or up to the next field, whichever is earlier. *)
+                            IF (bit_offset MOD 8) # 0 THEN
+                                i := MIN(bit_pad, 8 - (bit_pad MOD 8));
+                                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                                INC(bit_offset, i);
+                                DEC(bit_pad, i);
+                            END;
+                            
+                            (* Eat up bytes to the field. *)
+                            IF bit_pad >= 8 THEN
+                                i := bit_pad DIV 8;
+                                print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
+                                i := i * 8;
+                                INC(bit_offset, i);
+                                DEC(bit_pad, i);
+                            END;
+            
+                            (* Eat up bits to the field. *)
+                            <* ASSERT bit_pad < 8 *>
+                            IF bit_pad > 0 THEN
+                                i := bit_pad;
+                                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                                INC(bit_offset, i);
+                                DEC(bit_pad, i);
+                            END;
+                        END;
+                        
+                        (* Handle bitfields specially. *)
+                        IF (field.bit_size MOD 8) # 0 THEN
+                            IF field.bit_size > 64 THEN
+                                x.Err("bitfield larger than 64 bits");
+                            ELSIF field.bit_size > 32 THEN
+                                int_type := 64;
+                            ELSIF field.bit_size > 16 THEN
+                                int_type := 32;
+                            ELSIF field.bit_size > 8 THEN
+                                int_type := 16;
+                            ELSE
+                                int_type := 8;
+                            END;
+                            print(x, BitsToUInt[int_type] & " " & name & ":" & IntToDec(field.bit_size) & ";\n");
+                        ELSE
+                            print(x, TypeIDToText(field.typeid) & " " & name & ";\n");
+                        END;
+                        INC(bit_offset, field.bit_size);
                     END;
                     
-                    (* Eat up bytes to the field. *)
-                    IF bit_pad >= 8 THEN
-                        i := bit_pad DIV 8;
-                        print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
-                        i := i * 8;
-                        INC(bit_offset, i);
-                        DEC(bit_pad, i);
+                    (* pad out end of record *)
+                    IF bit_offset > bit_size THEN
+                        x.Err("record fields exceed record");
                     END;
-    
-                    (* Eat up bits to the field. *)
-                    <* ASSERT bit_pad < 8 *>
+                    bit_pad := bit_size - bit_offset;
                     IF bit_pad > 0 THEN
-                        i := bit_pad;
-                        print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
-                        INC(bit_offset, i);
-                        DEC(bit_pad, i);
+                        i := bit_pad MOD 8;
+                        IF i > 0 THEN
+                            i := 8 - i;
+                            print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                            INC(bit_offset, i);
+                            DEC(bit_pad, i);
+                        END;
+                        <* ASSERT (bit_pad MOD 8) = 0 *>
+                        IF bit_pad > 0 THEN
+                            i := bit_pad DIV 8;
+                            print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "]\n");
+                            i := i * 8;
+                            INC(bit_offset, i);
+                            DEC(bit_pad, i);
+                        END;
                     END;
-                END;
-                
-                (* Handle bitfields specially. *)
-                IF (field.bit_size MOD 8) # 0 THEN
-                    IF field.bit_size > 64 THEN
-                        x.Err("bitfield larger than 64 bits");
-                    ELSIF field.bit_size > 32 THEN
-                        int_type := 64;
-                    ELSIF field.bit_size > 16 THEN
-                        int_type := 32;
-                    ELSIF field.bit_size > 8 THEN
-                        int_type := 16;
-                    ELSE
-                        int_type := 8;
+                    IF bit_offset # bit_size THEN
+                        x.Err("failed to declare record to correct size");
                     END;
-                    print(x, BitsToUInt[int_type] & " " & name & ":" & IntToDec(field.bit_size) & ";\n");
-                ELSE
-                    print(x, TypeIDToText(field.typeid) & " " & name & ";\n");
-                END;
-                INC(bit_offset, field.bit_size);
-            END;
-            
-            (* pad out end of record *)
-            IF bit_offset > bit_size THEN
-                x.Err("record fields exceed record");
-            END;
-            bit_pad := bit_size - bit_offset;
-            IF bit_pad > 0 THEN
-                i := bit_pad MOD 8;
-                IF i > 0 THEN
-                    i := 8 - i;
-                    print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
-                    INC(bit_offset, i);
-                    DEC(bit_pad, i);
-                END;
-                <* ASSERT (bit_pad MOD 8) = 0 *>
-                IF bit_pad > 0 THEN
-                    i := bit_pad DIV 8;
-                    print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "]\n");
-                    i := i * 8;
-                    INC(bit_offset, i);
-                    DEC(bit_pad, i);
+                    print(x, "};\n");
                 END;
             END;
-            IF bit_offset # bit_size THEN
-                x.Err("failed to declare record to correct size");
-            END;
-            print(x, "};\n");
         END;
     END;
 
-    x.comment("end pass: DeclareRecords");
-END DeclareRecords;
+    x.comment("end pass: DeclareRecords2");
+END DeclareRecords2;
 
-PROCEDURE declare_record(self: DeclareRecords_t; typeid: TypeUID; bit_size: BitSize; field_count: INTEGER) =
+PROCEDURE declare_record(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; field_count: INTEGER) =
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
+    RETURN;
+
     IF DebugDeclare(x) THEN
         print(x, "/* declare_record typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " field_count:" & IntToDec(field_count) & " */\n");
     ELSE
@@ -1858,11 +1954,12 @@ BEGIN
     self.field_count := field_count;
 END declare_record;
 
-PROCEDURE declare_field(self: DeclareRecords_t; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+PROCEDURE declare_field(self: DeclareTypes_t; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
 VAR field: Field_t;
     previous_field := self.previous_field;
     x := self.self;
 BEGIN
+    RETURN;
     IF DebugDeclare(x) THEN
         print(x, "/* declare_field " & NameT(name) & " */\n");
     ELSE
@@ -1874,7 +1971,13 @@ BEGIN
         *)
         RETURN;
     END;
-    field := NEW(Field_t, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid, name := name);
+    field := NEW(Field_t, bit_offset := bit_offset, bit_size := bit_size,
+            typeid := typeid, name := name,
+            type := TypeidToType_Get(x, typeid));
+    IF field.type = NIL THEN
+        RTIO.PutText("pending field.type " & TypeIDToText(field.typeid) & " (2)\n");
+        RTIO.Flush();
+    END;
     self.record.fields[self.field_index] := field;
     INC(self.field_index);
     IF previous_field # NIL AND previous_field.bit_offset + previous_field.bit_size > bit_offset THEN
@@ -1887,10 +1990,10 @@ BEGIN
     previous_field := field;
 END declare_field;
 
-PROCEDURE declare_set(multipass: Multipass_t; typeid, domain: TypeUID; bit_size: BitSize) =
-VAR self := multipass.self;
+PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain: TypeUID; bit_size: BitSize) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
+    IF DebugDeclare(x) THEN
         self.comment("declare_set typeid:" & TypeIDToText(typeid) & " domain:"
             & TypeIDToText(domain) & " bit_size:" & IntToDec(bit_size));
     ELSE
@@ -1929,18 +2032,18 @@ BEGIN
     x.comment("end pass: DeclareSubranges");
 END DeclareSubranges;
 
+PROCEDURE SubrangeIsSigned(READONLY min, max: Target.Int): BOOLEAN =
+(* slightly strange logic -- see m3front/src/types/SubrangeType *)
+BEGIN
+    RETURN TInt.LT(min, TInt.Zero) OR TInt.LT(max, TInt.Zero);
+END SubrangeIsSigned;
+
 PROCEDURE SubrangeCGType(READONLY min, max: Target.Int; bit_size: BitSize): M3CG.Type =
-(* duplicate the logic of m3front/src/types/SubrangeType;
+(* slightly strange logic -- see m3front/src/types/SubrangeType
    m3front should pass us down cg_type directly, and not
    bother with bit_size, domain *)
 BEGIN
-    IF TInt.EQ(min, TInt.Zero) AND TInt.EQ(max, TInt.MOne) THEN
-        RETURN BitsToCGInt[bit_size];
-    END;
-    IF TInt.LE(TInt.Zero, min) THEN
-        RETURN BitsToCGUInt[bit_size];
-    END;
-    RETURN BitsToCGInt[bit_size];
+    RETURN SignedAndBitsToCGType[SubrangeIsSigned(min, max)][bit_size];
 END SubrangeCGType;
 
 PROCEDURE declare_subrange(self: DeclareSubranges_t; typeid, domain: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
@@ -1968,10 +2071,30 @@ BEGIN
     RETURN text;
 END TextOrNIL;
 
-PROCEDURE declare_pointer(multipass: Multipass_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
-VAR self := multipass.self;
+PROCEDURE DeclarePointers(multipass: Multipass_t) =
+VAR x := multipass.self;
+    self := multipass.declareTypes;
+    pointers: REF ARRAY OF PointerType_t := NIL;
+    pointer: PointerType_t;
+    index := 0;
 BEGIN
-    IF DebugDeclare(self) THEN
+    IF multipass.op_data[M3CG_Binary.Op.declare_pointer] = NIL THEN
+        RETURN;
+    END;
+    x.comment("begin pass: DeclarePointers count:" & IntToDec(NUMBER(multipass.op_data[M3CG_Binary.Op.declare_pointer]^)));
+    pointers := NEW(REF ARRAY OF PointerType_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_pointer]^));
+    self.pointers := pointers;
+    multipass.Replay(self, index);
+    FOR i := 0 TO NUMBER(pointers^) - 1 DO
+        pointer := pointers[i];
+    END;
+    x.comment("end pass: DeclarePointers");
+END DeclarePointers;
+
+PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+VAR x := self.self;
+BEGIN
+    IF DebugDeclare(x) THEN
         self.comment("declare_pointer typeid:" & TypeIDToText(typeid) & " target:"
         & TypeIDToText(target) & " brand:" & TextOrNIL(brand) & " traced:"
         & BoolToText[traced]);
@@ -1980,14 +2103,14 @@ BEGIN
     END;
 END declare_pointer;
 
-PROCEDURE declare_indirect(multipass: Multipass_t; typeid, target: TypeUID) =
-VAR self := multipass.self;
+PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_indirect typeid:" & TypeIDToText(typeid) & " target:"
+    IF DebugDeclare(x) THEN
+        x.comment("declare_indirect typeid:" & TypeIDToText(typeid) & " target:"
         & TypeIDToText(target));
     ELSE
-        self.comment("declare_indirect");
+        x.comment("declare_indirect");
     END
 END declare_indirect;
 
@@ -1997,100 +2120,100 @@ BEGIN
     RETURN callingConvention.name;
 END CallingConventionToText;
 
-PROCEDURE declare_proctype(multipass: Multipass_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention) =
-VAR self := multipass.self;
+PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_proctype typeid:" & TypeIDToText(typeid)
+    IF DebugDeclare(x) THEN
+        x.comment("declare_proctype typeid:" & TypeIDToText(typeid)
         & " param_count:" & IntToDec(param_count) & " result:"
         & TypeIDToText(result) & " raise_count:" & IntToDec(raise_count)
         & " callingConvention:" & CallingConventionToText(callingConvention));
     ELSE
-        self.comment("declare_proctype");
+        x.comment("declare_proctype");
     END
     (* SuppressLineDirective(self, param_count + (ORD(raise_count >= 0) * raise_count), "declare_proctype param_count + raise_count"); *)
 END declare_proctype;
 
-PROCEDURE declare_formal(multipass: Multipass_t; name: Name; typeid: TypeUID) =
-VAR self := multipass.self;
+PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_formal name:" & NameT(name) & " typeid:"
+    IF DebugDeclare(x) THEN
+        x.comment("declare_formal name:" & NameT(name) & " typeid:"
         & TypeIDToText(typeid));
     ELSE
-        self.comment("declare_formal");
+        x.comment("declare_formal");
     END
     (* SuppressLineDirective(self, -1, "declare_formal"); *)
 END declare_formal;
 
-PROCEDURE declare_raises(multipass: Multipass_t; name: Name) =
-VAR self := multipass.self;
+PROCEDURE declare_raises(self: DeclareTypes_t; name: Name) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_raises name:" & NameT(name));
+    IF DebugDeclare(x) THEN
+        x.comment("declare_raises name:" & NameT(name));
     ELSE
-        self.comment("declare_raises");
+        x.comment("declare_raises");
     END
     (* SuppressLineDirective(self, -1, "declare_raises"); *)
 END declare_raises;
 
-PROCEDURE declare_object(multipass: Multipass_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize) =
-VAR self := multipass.self;
+PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_object typeid:" & TypeIDToText(typeid) & " super:"
+    IF DebugDeclare(x) THEN
+        x.comment("declare_object typeid:" & TypeIDToText(typeid) & " super:"
         & TypeIDToText(super) & " brand:" & TextOrNIL(brand) & " traced:"
         & BoolToText[traced] & " field_count:" & IntToDec(field_count)
         & " method_count:" & IntToDec(method_count) & " field_size:"
         & IntToDec(field_size));
     ELSE
-        self.comment("declare_object");
+        x.comment("declare_object");
     END
     (* SuppressLineDirective(self, field_count + method_count, "declare_object field_count + method_count"); *)
 END declare_object;
 
-PROCEDURE declare_method(multipass: Multipass_t; name: Name; signature: TypeUID) =
-VAR self := multipass.self;
+PROCEDURE declare_method(self: DeclareTypes_t; name: Name; signature: TypeUID) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_method name:" & NameT(name) & " signature:"
+    IF DebugDeclare(x) THEN
+        x.comment("declare_method name:" & NameT(name) & " signature:"
         & TypeIDToText(signature));
     ELSE
-        self.comment("declare_method");
+        x.comment("declare_method");
     END;
-    SuppressLineDirective(self, -1, "declare_method");
+    SuppressLineDirective(x, -1, "declare_method");
 END declare_method;
 
-PROCEDURE declare_opaque(multipass: Multipass_t; typeid, super: TypeUID) =
-VAR self := multipass.self;
+PROCEDURE declare_opaque(self: DeclareTypes_t; typeid, super: TypeUID) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_opaque typeid:" & TypeIDToText(typeid) & " super:" & TypeIDToText(super));
+    IF DebugDeclare(x) THEN
+        x.comment("declare_opaque typeid:" & TypeIDToText(typeid) & " super:" & TypeIDToText(super));
     ELSE
-        self.comment("declare_opaque");
+        x.comment("declare_opaque");
     END;
 END declare_opaque;
 
-PROCEDURE reveal_opaque(multipass: Multipass_t; lhs, rhs: TypeUID) =
-VAR self := multipass.self;
+PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("reveal_opaque lhs:" & TypeIDToText(lhs) & " rhs:" & TypeIDToText(rhs));
+    IF DebugDeclare(x) THEN
+        x.comment("reveal_opaque lhs:" & TypeIDToText(lhs) & " rhs:" & TypeIDToText(rhs));
     ELSE
-        self.comment("reveal_opaque");
+        x.comment("reveal_opaque");
     END
 END reveal_opaque;
 
-PROCEDURE declare_exception(multipass: Multipass_t; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
-VAR self := multipass.self;
+PROCEDURE declare_exception(self: DeclareTypes_t; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
+VAR x := self.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_exception name:" & NameT(name) & " arg_type:"
+    IF DebugDeclare(x) THEN
+        x.comment("declare_exception name:" & NameT(name) & " arg_type:"
             & TypeIDToText(arg_type) & " raise_proc:" & BoolToText[raise_proc]
             & " base:" & VarNameT(base)
             & " offset:" & IntToDec(offset));
     ELSE
-        self.comment("declare_exception");
+        x.comment("declare_exception");
     END;
 END declare_exception;
 
@@ -5452,6 +5575,6 @@ BEGIN
             BitsToUInt[i] := "U" & BitsToInt[i];
         END;
     END;
-    (*SignedAndBitsToCGType[TRUE] := BitsToCGInt;
-    SignedAndBitsToCGType[FALSE] := BitsToCGUInt;*)
+    SignedAndBitsToCGType[TRUE] := BitsToCGInt;
+    SignedAndBitsToCGType[FALSE] := BitsToCGUInt;
 END M3C.
