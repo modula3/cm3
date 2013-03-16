@@ -1409,14 +1409,8 @@ BEGIN
     Prefix_End(x);
 
     (* declare/define types *)
-    
-    self.declareTypes := NEW(DeclareTypes_t, self := x);
 
-    DeclareRecords1(self);
-    DeclareEnums(self);
-    DeclareSubranges(self);
-    DeclarePointers(self);
-    DeclareRecords2(self);
+    DeclareTypes(self);
 
     (* forward declare functions/variables in this module and imports *)
 
@@ -1592,24 +1586,15 @@ BEGIN
 *)
   END declare_open_array;
 
-PROCEDURE DeclareEnums(multipass: Multipass_t) =
-VAR x := multipass.self;
-    self: DeclareTypes_t := NIL;
-    enums: REF ARRAY OF Enum_t := NIL;
-    enum: Enum_t;
+PROCEDURE DeclareEnums(self: DeclareTypes_t) =
+VAR x := self.self;
+    enums := self.enums;
+    enum: Enum_t := NIL;
     element_count, index, bit_size := 0;
     typeid: INTEGER(*TypeUID*) := 0;
     int_type, id, start, cast, end: TEXT := NIL;
     names: REF ARRAY OF Name := NIL;
 BEGIN
-    IF multipass.op_data[M3CG_Binary.Op.declare_enum] = NIL THEN
-        RETURN;
-    END;
-    x.comment("begin pass: DeclareEnums");
-    self := NEW(DeclareTypes_t, self := x);
-    enums := NEW(REF ARRAY OF Enum_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_enum]^));
-    self.enums := enums;
-    multipass.Replay(self, index);
     FOR i := 0 TO NUMBER(enums^) - 1 DO
         enum := enums[i];
         typeid := enum.typeid;
@@ -1628,7 +1613,6 @@ BEGIN
             print(x, start & NameT(names^[i]) & cast & IntToDec(i) & end);
         END;
     END;
-    x.comment("end pass: DeclareEnums");
 END DeclareEnums;
 
 PROCEDURE declare_enum(self: DeclareTypes_t; typeid: TypeUID; element_count: INTEGER; bit_size: BitSize) =
@@ -1640,7 +1624,7 @@ BEGIN
     <* ASSERT element_count > 0 *>
     <* ASSERT self.enum = NIL *>
     <* ASSERT self.enum_value = -1 *>
-    <* ASSERT self.index >= 0 *>
+    <* ASSERT self.enum_index >= 0 *>
     enum := NEW(Enum_t,
                 typeid := typeid,
                 min := TInt.Zero,
@@ -1648,8 +1632,8 @@ BEGIN
                 names := NEW(REF ARRAY OF Name, element_count),
                 cg_type := BitsToCGUInt[bit_size],
                 text := TypeIDToText(typeid));
-    self.enums[self.index] := enum;
-    INC(self.index);
+    self.enums[self.enum_index] := enum;
+    INC(self.enum_index);
     <* ASSERT self.enum = NIL AND self.enum_value = -1 *>
     self.enum := enum;
     self.element_count := element_count;
@@ -1698,6 +1682,7 @@ TYPE DeclareTypes_t = M3CG_DoNothing.T BRANDED "M3C.DeclareTypes_t" OBJECT
     enum_value := -1;
     element_count := -1;
     enums: REF ARRAY OF Enum_t := NIL;
+    enum_index := 0;
 
     (* declare_record, declare_field *)
     records: REF ARRAY OF Record_t := NIL;
@@ -1705,11 +1690,15 @@ TYPE DeclareTypes_t = M3CG_DoNothing.T BRANDED "M3C.DeclareTypes_t" OBJECT
     previous_field: Field_t := NIL;
     record_index, field_index, field_count := 0;
 
+    subrange: Subrange_t := NIL;
+    subranges: REF ARRAY OF Subrange_t := NIL;
+    subrange_index := 0;
+
     (* declare_pointer *)
     pointer: PointerType_t := NIL;
     pointers: REF ARRAY OF PointerType_t := NIL;
+    pointer_index := 0;
 
-    index := 0;
 OVERRIDES
     declare_enum := declare_enum;
     declare_enum_elt := declare_enum_elt;
@@ -1729,30 +1718,38 @@ OVERRIDES
     declare_object := declare_object;
     declare_method := declare_method;
     declare_opaque := declare_opaque;
+    declare_subrange := declare_subrange;
 END;
 
-PROCEDURE DeclareRecords1(multipass: Multipass_t) =
+PROCEDURE DeclareTypes(multipass: Multipass_t) =
 VAR x := multipass.self;
-    self: DeclareTypes_t := NIL;
-    record_count, index := 0;
-    record: Record_t := NIL;
-    records: REF ARRAY OF Record_t := NIL;
-    name, id := "";
-    declare_records := multipass.op_data[M3CG_Binary.Op.declare_record];
+    self := NEW(DeclareTypes_t,
+                self := x,
+                enums := NEW(REF ARRAY OF Enum_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_enum]^)),
+                records := NEW(REF ARRAY OF Record_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_record]^)),
+                subranges := NEW(REF ARRAY OF Subrange_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_subrange]^)),
+                pointers := NEW(REF ARRAY OF PointerType_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_pointer]^))
+                );
+    index := 0;
 BEGIN
-
-    RETURN;
-
-    IF declare_records = NIL THEN
-        RETURN;
-    END;
-    self := NEW(DeclareTypes_t, self := x);
-    record_count := NUMBER(declare_records^);
-    x.comment("begin pass: DeclareRecords2 count:" & IntToDec(record_count));
-    records := NEW(REF ARRAY OF Record_t, record_count);
-    self.records := records;
+    x.comment("begin pass: DeclareTypes");
     multipass.Replay(self, index);
+    DeclareRecords1(self);
+    DeclareEnums(self);
+    DeclareSubranges(self);
+    DeclarePointers(self);
+    DeclareRecords2(self);
+    x.comment("end pass: DeclareTypes");
+END DeclareTypes;
 
+PROCEDURE DeclareRecords1(self: DeclareTypes_t) =
+VAR x := self.self;
+    record: Record_t := NIL;
+    records := self.records;
+    record_count := NUMBER(records^);
+    name, id := "";
+BEGIN
+    x.comment("begin pass: DeclareRecords1");
     FOR j := 0 TO record_count - 1 DO
         record := records[j];
         IF record # NIL THEN
@@ -1768,31 +1765,25 @@ BEGIN
     x.comment("end pass: DeclareRecords1");
 END DeclareRecords1;
 
-PROCEDURE DeclareRecords2(multipass: Multipass_t) =
-VAR x := multipass.self;
-    self := multipass.declareTypes;
-    i, record_count, field_count := 0;
+PROCEDURE DeclareRecords2(self: DeclareTypes_t) =
+VAR x := self.self;
+    records := self.records;
+    record_count := NUMBER(records^);
+    pending := NEW(REF ARRAY OF Record_t, record_count);
+    i, field_count := 0;
     record: Record_t := NIL;
     field: Field_t := NIL;
-    records := self.records;
-    pending: REF ARRAY OF Record_t := NIL;
     pending_head, pending_tail := 0;
     bit_offset, bit_pad, bit_size := 0;
     int_type: BitSizeRange_t;
     name, id := "";
     can_be_defined := FALSE;
-    declare_records := multipass.op_data[M3CG_Binary.Op.declare_record];
     field_type: Type_t := NIL;
 BEGIN
 
     RETURN;
 
-    IF declare_records = NIL THEN
-        RETURN;
-    END;
-    record_count := NUMBER(declare_records^);
     x.comment("begin pass: DeclareRecords2 count:" & IntToDec(record_count));
-    pending := NEW(REF ARRAY OF Record_t, record_count);
 
     FOR j := 0 TO record_count - 1 DO
         record := records[j];
@@ -2001,30 +1992,12 @@ BEGIN
     END;
 END declare_set;
 
-TYPE DeclareSubranges_t = M3CG_DoNothing.T BRANDED "M3C.DeclareSubranges_t" OBJECT
-    self: T := NIL;
+PROCEDURE DeclareSubranges(self: DeclareTypes_t) =
+VAR x := self.self;
+    subranges := self.subranges;
     subrange: Subrange_t := NIL;
-    subranges: REF ARRAY OF Subrange_t := NIL;
-    index := 0;
-OVERRIDES
-    declare_subrange := declare_subrange;
-END;
-
-PROCEDURE DeclareSubranges(multipass: Multipass_t) =
-VAR x := multipass.self;
-    self: DeclareSubranges_t := NIL;
-    subranges: REF ARRAY OF Subrange_t := NIL;
-    subrange: Subrange_t;
-    index := 0;
 BEGIN
-    IF multipass.op_data[M3CG_Binary.Op.declare_subrange] = NIL THEN
-        RETURN;
-    END;
-    x.comment("begin pass: DeclareSubranges count:" & IntToDec(NUMBER(multipass.op_data[M3CG_Binary.Op.declare_subrange]^)));
-    self := NEW(DeclareSubranges_t, self := x);
-    subranges := NEW(REF ARRAY OF Subrange_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_subrange]^));
-    self.subranges := subranges;
-    multipass.Replay(self, index);
+    x.comment("begin pass: DeclareSubranges count:" & IntToDec(NUMBER(subranges^)));
     FOR i := 0 TO NUMBER(subranges^) - 1 DO
         subrange := subranges[i];
         print(x, "/* typedef " & TypeIDToText(subrange.domain_typeid) & " " & TypeIDToText(subrange.typeid) & ";*/\n");
@@ -2046,7 +2019,7 @@ BEGIN
     RETURN SignedAndBitsToCGType[SubrangeIsSigned(min, max)][bit_size];
 END SubrangeCGType;
 
-PROCEDURE declare_subrange(self: DeclareSubranges_t; typeid, domain: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
+PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
 VAR x := self.self;
     subrange: Subrange_t;
 BEGIN
@@ -2060,8 +2033,8 @@ BEGIN
     subrange := NEW(Subrange_t, min := min, max := max, typeid := typeid,
         domain_typeid := domain, bit_size := bit_size,
         cg_type := SubrangeCGType(min, max, bit_size));
-    self.subranges[self.index] := subrange;
-    INC(self.index);
+    self.subranges[self.subrange_index] := subrange;
+    INC(self.subrange_index);
     x.Type_Init(subrange);
 END declare_subrange;
 
@@ -2071,20 +2044,12 @@ BEGIN
     RETURN text;
 END TextOrNIL;
 
-PROCEDURE DeclarePointers(multipass: Multipass_t) =
-VAR x := multipass.self;
-    self := multipass.declareTypes;
-    pointers: REF ARRAY OF PointerType_t := NIL;
+PROCEDURE DeclarePointers(self: DeclareTypes_t) =
+VAR x := self.self;
+    pointers := self.pointers;
     pointer: PointerType_t;
-    index := 0;
 BEGIN
-    IF multipass.op_data[M3CG_Binary.Op.declare_pointer] = NIL THEN
-        RETURN;
-    END;
-    x.comment("begin pass: DeclarePointers count:" & IntToDec(NUMBER(multipass.op_data[M3CG_Binary.Op.declare_pointer]^)));
-    pointers := NEW(REF ARRAY OF PointerType_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_pointer]^));
-    self.pointers := pointers;
-    multipass.Replay(self, index);
+    x.comment("begin pass: DeclarePointers count:" & IntToDec(NUMBER(pointers^)));
     FOR i := 0 TO NUMBER(pointers^) - 1 DO
         pointer := pointers[i];
     END;
@@ -5474,8 +5439,10 @@ BEGIN
     END;
     a := " /* " & a & b & c & d & " */\n";
     print(self, a);
-    RTIO.PutText(a);
-    RTIO.Flush();
+    IF self.debug > 1 THEN
+        RTIO.PutText(a);
+        RTIO.Flush();
+    END;
 END comment;
 
 (*--------------------------------------------------------------- atomics ---*)
