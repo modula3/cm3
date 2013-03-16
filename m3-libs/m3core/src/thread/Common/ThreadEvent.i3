@@ -12,8 +12,8 @@ TYPE
   Kind = {Changed, Running, Deleted};
 
   T = RECORD
-        kind: Kind;
         id: ThreadF.Id := 0;
+        kind: Kind;
         state := ThreadF.State.dead; END;
 
 END ThreadEvent.
