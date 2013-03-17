@@ -1,6 +1,6 @@
 MODULE M3C;
 
-IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN;
+IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN, IntIntTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
 IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio;
 FROM TargetMap IMPORT CG_Bytes;
@@ -36,7 +36,6 @@ VAR CaseDefaultAssertFalse := FALSE;
 
 TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
         self: T;
-        declareTypes: DeclareTypes_t := NIL;
     OVERRIDES
         end_unit := multipass_end_unit;
         set_runtime_proc := set_runtime_proc;
@@ -48,6 +47,8 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
 
         typeidToType: IntRefTbl.T := NIL; (* FUTURE INTEGER => Type_t *)
+        pendingTypes: RefSeq.T := NIL; (* Type_t *)
+        declareTypes: DeclareTypes_t := NIL;
         temp_vars: REF ARRAY OF Var_t := NIL; (* for check_* to avoid double evaluation, and pop_static_link *)
         current_block: Block_t := NIL;
 
@@ -56,7 +57,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         anonymousCounter := -1;
         c      : Wr.T := NIL;
         debug := 0;
-        debug_declare := 0;
+        debug_declare := 1;
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index: INTEGER := 0;
@@ -252,11 +253,6 @@ BEGIN
     END;
 END SetLineDirective;
 
-TYPE ReplacementName_t = RECORD
-    id: M3ID.T;
-    replacement_id: M3ID.T;
-END;
-
 <*UNUSED*>PROCEDURE Reverse(VAR a: ARRAY OF CHAR) =
 VAR i := FIRST(a);
     j := LAST(a);
@@ -338,23 +334,21 @@ CONST suppressImports = ARRAY OF TEXT{
 *)
 
 VAR replacementNames_Inited := FALSE;
-VAR replacementNames: ARRAY [FIRST(reservedWords) .. LAST(reservedWords)] OF ReplacementName_t;
+VAR replacementNames_Table := NEW(IntIntTbl.Default).init(NUMBER(reservedWords));
 
 PROCEDURE ReplaceName(id: M3ID.T): M3ID.T =
-(* TODO: This is inefficient linear search. Use qsort. *)
+VAR replacement: INTEGER;
 BEGIN
     IF replacementNames_Inited = FALSE THEN
         FOR i := FIRST(reservedWords) TO LAST(reservedWords) DO
             WITH text = reservedWords[i] DO
-                replacementNames[i] := ReplacementName_t{id := M3ID.Add(text), replacement_id := M3ID.Add("m3_" & text)};
+                EVAL replacementNames_Table.put(M3ID.Add(text), M3ID.Add("m3_" & text));
             END;
         END;
         replacementNames_Inited := TRUE;
     END;
-    FOR i := FIRST(replacementNames) TO LAST(replacementNames) DO
-        IF replacementNames[i].id = id THEN
-            RETURN replacementNames[i].replacement_id;
-        END;
+    IF replacementNames_Table.get(id, replacement) THEN
+        RETURN replacement;
     END;
     RETURN id;
 END ReplaceName;
@@ -404,7 +398,7 @@ BEGIN
 END Var_FixName;
 
 TYPE Type_t = OBJECT
-    defined := FALSE;
+    internal_defined := FALSE;
     bit_size: INTEGER := 0;  (* FUTURE Target.Int or LONGINT *)
     byte_size: INTEGER := 0; (* FUTURE Target.Int or LONGINT *)
     typeid: INTEGER(*TypeUID*) := 0;
@@ -412,62 +406,274 @@ TYPE Type_t = OBJECT
     text: TEXT := NIL;
     typeidText: TEXT := NIL;
 METHODS
-    Define();
-    CanBeDefined(): BOOLEAN := Type_CanBeDefined;
+    internal_forwardDeclare(self: T) := internal_type_forwardDeclare; (* useful for structs and maybe enums *)
+    internal_define(self: T);
+    internal_canBeDefined(self: T): BOOLEAN;
 END;
 
-PROCEDURE Type_CanBeDefined(type: Type_t): BOOLEAN =
+PROCEDURE internal_type_forwardDeclare(<*UNUSED*>type: Type_t; <*UNUSED*>self: T) =
 BEGIN
-    RETURN TRUE;
+END internal_type_forwardDeclare;
+
+PROCEDURE Type_Define(type: Type_t; self: T) =
+BEGIN
+    IF type.internal_defined THEN
+        RETURN;
+    END;
+    type.internal_define(self);
+    type.internal_defined := TRUE;
+END Type_Define;
+
+PROCEDURE Type_ForwardDeclare(type: Type_t; self: T) =
+BEGIN
+    type.internal_forwardDeclare(self);
+END Type_ForwardDeclare;
+
+PROCEDURE Type_CanBeDefined(type: Type_t; self: T): BOOLEAN =
+BEGIN
+    RETURN type.internal_defined OR type.internal_canBeDefined(self);
 END Type_CanBeDefined;
 
-TYPE PointerType_t = Type_t OBJECT
-    points_to: Type_t := NIL;
+TYPE Type_CanBeDefinedTrue_t = Type_t OBJECT
 OVERRIDES
-    Define := PointerType_Define;
+    internal_canBeDefined := internal_type_canBeDefinedTrue;
 END;
 
-PROCEDURE PointerType_Define(type: PointerType_t) =
+PROCEDURE internal_type_typedef(type: Type_t; self: T) =
+(* A reusable value for Type_Define. *)
 BEGIN
-END PointerType_Define;
+    print(self, "/*internal_type_typedef*/typedef " & cgtypeToText[type.cg_type] & " " & type.text & ";\n");
+END internal_type_typedef;
 
-(* We probably need "Ordinal_t" as base for: Integer_t, Enum_t, Subrange_t *)
+PROCEDURE internal_type_canBeDefinedTrue(<*UNUSED*>type: Type_CanBeDefinedTrue_t; <*UNUSED*>self: T): BOOLEAN =
+BEGIN
+    RETURN TRUE;
+END internal_type_canBeDefinedTrue;
 
-TYPE Integer_t = Type_t OBJECT END;
-TYPE Float_t  = Type_t OBJECT END;
+TYPE Pointer_t = Type_t OBJECT
+    points_to_type: Type_t := NIL;
+    points_to_typeid: INTEGER(*TypeUID*) := 0;
+    brand: TEXT := NIL;
+    traced := FALSE;
+OVERRIDES
+    internal_define := internal_pointer_define;
+    internal_canBeDefined := internal_pointer_canBeDefined;
+END;
 
-TYPE Field_t  = Type_t OBJECT
-    bit_offset := -1;
+PROCEDURE internal_pointer_define(type: Pointer_t; self: T) =
+(* Does branding make a difference? *)
+VAR x := self;
+BEGIN
+    print(x, "/*internal_pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
+END internal_pointer_define;
+
+PROCEDURE TypeResolve(self: T; typeid: INTEGER; VAR type: Type_t): BOOLEAN =
+BEGIN
+    IF type # NIL THEN
+        RETURN TRUE;
+    END;
+    type := TypeidToType_Get(self, typeid);
+    RETURN type # NIL;
+END TypeResolve;
+
+PROCEDURE internal_pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
+BEGIN
+    RETURN TypeResolve(self, type.points_to_typeid, type.points_to_type) AND type.points_to_type.internal_defined;
+END internal_pointer_canBeDefined;
+
+(* We need "Ordinal_t" as base for: Integer_t, Enum_t, Subrange_t? *)
+
+TYPE Integer_t = Type_CanBeDefinedTrue_t OBJECT
+OVERRIDES
+    internal_define := internal_type_typedef;
+END;
+
+TYPE Float_t  = Type_CanBeDefinedTrue_t OBJECT
+OVERRIDES
+    internal_define := internal_type_typedef;
+END;
+
+TYPE Field_t = REF RECORD
+    bit_offset, bit_size, typeid := -1;
     name: Name;
     type: Type_t := NIL;
 END;
 
-TYPE Record_t  = Type_t OBJECT
-    fields: REF ARRAY OF Field_t := NIL;
+TYPE Record_t = Type_t OBJECT
+    fields: RefSeq.T := NIL; (* Field_t *)
 OVERRIDES
-    Define := Record_Define;
+    internal_forwardDeclare := record_forwardDeclare;
+    internal_canBeDefined := internal_record_canBeDefined;
+    internal_define := internal_record_define;
 END;
 
-PROCEDURE Record_Define(type: Record_t) =
+PROCEDURE record_forwardDeclare(type: Record_t; self: T) =
+VAR id := type.typeidText;
 BEGIN
-END Record_Define;
+    (*  typedef struct foo foo is different than
+        struct foo; typedef struct foo foo, in the presence of C++ namespaces,
+        so use the second form
+    *)
+    print(self, "/*record_forwardDeclare*/struct " & id & ";typedef struct " & id & " " & id & ";\n");
+END record_forwardDeclare;
 
-TYPE Subrange_t  = Type_t OBJECT
+PROCEDURE internal_record_canBeDefined(type: Record_t; self: T): BOOLEAN =
+VAR field: Field_t := NIL;
+    fields := type.fields;
+BEGIN
+    FOR i := 0 TO fields.size() - 1 DO
+        field := NARROW(fields.get(i), Field_t);
+        <* ASSERT field # NIL *>
+        IF NOT (TypeResolve(self, field.typeid, field.type) AND Type_CanBeDefined(field.type, self)) THEN
+            self.comment("internal_record_canBeDefined: pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
+            RETURN FALSE;
+        END;
+    END;
+    RETURN TRUE;
+END internal_record_canBeDefined;
+
+PROCEDURE internal_record_define(record: Record_t; self: T) =
+VAR x := self;
+    fields := record.fields;
+    field_count := fields.size();
+    bit_size := record.bit_size;
+    int_type, i, bit_pad, bit_offset := 0;
+    field: Field_t := NIL;
+    name := "";
+BEGIN
+    print(x, "/*internal_record_define*/struct " & record.typeidText & "{\n");
+    FOR j := 0 TO field_count - 1 DO
+        field := NARROW(record.fields.get(j), Field_t);
+        name := NameT(field.name);
+        IF field.bit_offset < bit_offset THEN
+            Err(x, "fields not in offset order bit_offset:" & IntToDec(bit_offset) & " field.bit_offset:" &
+                IntToDec(field.bit_offset) & " name:" & name);
+        END;
+        bit_pad := field.bit_offset - bit_offset;
+        (*
+          padding: array of bytes followed by bitfield
+        *)
+        IF bit_pad > 0 THEN
+
+            (* Eat up bits, to the next byte boundary or up to the next field, whichever is earlier. *)
+            IF (bit_offset MOD 8) # 0 THEN
+                i := MIN(bit_pad, 8 - (bit_pad MOD 8));
+                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                INC(bit_offset, i);
+                DEC(bit_pad, i);
+            END;
+            
+            (* Eat up bytes to the field. *)
+            IF bit_pad >= 8 THEN
+                i := bit_pad DIV 8;
+                print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
+                i := i * 8;
+                INC(bit_offset, i);
+                DEC(bit_pad, i);
+            END;
+
+            (* Eat up bits to the field. *)
+            <* ASSERT bit_pad < 8 *>
+            IF bit_pad > 0 THEN
+                i := bit_pad;
+                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                INC(bit_offset, i);
+                DEC(bit_pad, i);
+            END;
+        END;
+        
+        (* Handle bitfields specially. *)
+        IF (field.bit_size MOD 8) # 0 THEN
+            IF field.bit_size > 64 THEN
+                Err(x, "bitfield larger than 64 bits");
+            ELSIF field.bit_size > 32 THEN
+                int_type := 64;
+            ELSIF field.bit_size > 16 THEN
+                int_type := 32;
+            ELSIF field.bit_size > 8 THEN
+                int_type := 16;
+            ELSE
+                int_type := 8;
+            END;
+            print(x, BitsToUInt[int_type] & " " & name & ":" & IntToDec(field.bit_size) & ";\n");
+        ELSE
+            print(x, TypeIDToText(field.typeid) & " " & name & ";\n");
+        END;
+        INC(bit_offset, field.bit_size);
+    END;
+    
+    (* pad out end of record *)
+    IF bit_offset > bit_size THEN
+        Err(x, "record fields exceed record");
+    END;
+    bit_pad := bit_size - bit_offset;
+    IF bit_pad > 0 THEN
+        i := bit_pad MOD 8;
+        IF i > 0 THEN
+            i := 8 - i;
+            print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+            INC(bit_offset, i);
+            DEC(bit_pad, i);
+        END;
+        <* ASSERT (bit_pad MOD 8) = 0 *>
+        IF bit_pad > 0 THEN
+            i := bit_pad DIV 8;
+            print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
+            i := i * 8;
+            INC(bit_offset, i);
+            DEC(bit_pad, i);
+        END;
+    END;
+    IF bit_offset # bit_size THEN
+        Err(x, "failed to declare record to correct size");
+    END;
+    print(x, "};\n");
+END internal_record_define;
+
+TYPE Subrange_t = Type_t OBJECT
     min: Target.Int := TInt.Zero;
     max: Target.Int := TInt.Zero;
-    domain: Type_t;
+    domain_type: Type_t := NIL;
     domain_typeid: INTEGER(*TypeUID*) := 0;
+OVERRIDES
+    internal_define := internal_subrange_define;
+    internal_canBeDefined := internal_subrange_canBeDefined;
 END;
+
+PROCEDURE internal_subrange_define(subrange: Subrange_t; self: T) =
+VAR x := self;
+BEGIN
+    print(x, "/*internal_subrange_define*/typedef " & subrange.domain_type.text & " " & subrange.text & ";\n");
+END internal_subrange_define;
+
+PROCEDURE internal_subrange_canBeDefined(type: Subrange_t; self: T): BOOLEAN =
+BEGIN
+    RETURN TypeResolve(self, type.domain_typeid, type.domain_type) AND type.domain_type.internal_defined;
+END internal_subrange_canBeDefined;
 
 TYPE Enum_t  = Subrange_t OBJECT
     names: REF ARRAY OF Name := NIL;
+OVERRIDES
+    internal_define := internal_enum_define;
 END;
 
-(*
-
-TYPE Ref_t  = Type_t OBJECT
-    referent: Type_t;
-END;
+PROCEDURE internal_enum_define(enum: Enum_t; x: T) =
+VAR bit_size := enum.bit_size;
+    id := enum.text;
+    int_type := BitsToUInt[bit_size];
+    start := "#define " & id & "_";
+    cast := " ((" & int_type & ")";
+    end := ") /*declare_enum_elt*/\n";
+    names := enum.names;
+    element_count := NUMBER(names^);
+BEGIN
+    SuppressLineDirective(x, element_count, "declare_enum element_count");
+    (* TODO cplusplus and GNU C can do better *)
+    print(x, "/*internal_enum_define*/typedef " & int_type & " " & id & "; /*declare_enum*/\n");
+    FOR i := 0 TO element_count - 1 DO
+        print(x, start & NameT(names^[i]) & cast & IntToDec(i) & end);
+    END;
+END internal_enum_define;
 
 TYPE Array_t = Type_t OBJECT
     index_typeid: INTEGER := 0;
@@ -476,15 +682,37 @@ TYPE Array_t = Type_t OBJECT
     element_type: Type_t;
 END;
 
-TYPE FixedArray_t = Array_t OBJECT END;
-TYPE OpenArray_t = Array_t OBJECT END;
+TYPE FixedArray_t = Array_t OBJECT
+OVERRIDES
+    internal_define := internal_fixedArray_define;
+    internal_canBeDefined := internal_fixedArray_canBeDefined;
+END;
 
-*)
+PROCEDURE internal_fixedArray_define(type: FixedArray_t; x: T) =
+BEGIN
+    (* TODO forward declaration is possible here *)
+    print(x, "/*internal_fixedArray_define*/struct " & type.text & ";typedef struct " & type.text & " " & type.text & ";");
+    print(x, "/*internal_fixedArray_define*/struct " & type.text & "{");
+    print(x, type.element_type.text);
+    print(x, " _elts[");
+    print(x, IntToDec(type.bit_size DIV type.element_type.bit_size));
+    print(x, "];};");
+END internal_fixedArray_define;
+
+PROCEDURE internal_fixedArray_canBeDefined(type: FixedArray_t; self: T): BOOLEAN =
+BEGIN
+    RETURN TypeResolve(self, type.element_typeid, type.element_type) AND Type_CanBeDefined(type.element_type, self);
+END internal_fixedArray_canBeDefined;
+
+(*TYPE OpenArray_t = Array_t OBJECT END;*)
 
 PROCEDURE TypeidToType_Get(self: T; typeid: INTEGER(*TypeUID*)): Type_t =
 VAR type: REFANY := NIL;
 BEGIN
     EVAL self.typeidToType.get(typeid, type);
+    IF type = NIL THEN
+        RETURN NIL;
+    END;
     RETURN NARROW(type, Type_t);
 END TypeidToType_Get;
 
@@ -498,15 +726,24 @@ BEGIN
     IF type.byte_size = 0 THEN
         type.byte_size := TargetMap.CG_Bytes[type.cg_type];
     END;
-    IF typedef THEN
-        (* typedef INT32 M1234; and such
-           TODO don't do this, it makes the code less readoable. *)
-        print(self, "typedef " & cgtypeToText[type.cg_type] & " " & typeidText & ";\n");
-    END;
     IF type.text = NIL THEN
         type.text := typeidText;
     END;
     EVAL self.typeidToType.put(type.typeid, type);
+    
+    (*IF type.CanBeDefined() THEN
+        Type_Define(type);
+    ELSE
+        self.pendingTypes.addhi(type);
+    END;
+    *)
+    IF typedef THEN
+        (* typedef INT32 M1234; and such
+           TODO don't do this, it makes the code less readoable. *)
+        print(self, "/*Type_Init*/typedef " & cgtypeToText[type.cg_type] & " " & typeidText & ";\n");
+        type.internal_defined := TRUE;
+    END;
+    self.pendingTypes.addhi(type);
 END Type_Init;
 
 (* see RTBuiltin.mx
@@ -873,12 +1110,13 @@ END;
 
 PROCEDURE Proc_ForwardDeclareFrameType(proc: Proc_t) =
 VAR self := proc.self;
+    frame_type: TEXT;
 BEGIN
     IF proc.forward_declared_frame_type THEN
         RETURN;
     END;
-    print(self, "struct " & proc.FrameType() & ";\n");
-    print(self, "typedef struct " & proc.FrameType() & " " & proc.FrameType() & ";\n");
+    frame_type := proc.FrameType();
+    print(self, "/*Proc_ForwardDeclareFrameType*/struct " & frame_type & ";typedef struct " & frame_type & " " & frame_type & ";\n");
     proc.forward_declared_frame_type := TRUE;
 END Proc_ForwardDeclareFrameType;
 
@@ -998,9 +1236,9 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef char* ADDRESS;",
 "typedef char* STRUCT;",
 "typedef signed char INT8;",
-"typedef unsigned char UINT8;",
+"typedef unsigned char UINT8, CHAR, BOOLEAN;",
 "typedef short INT16;",
-"typedef unsigned short UINT16;",
+"typedef unsigned short UINT16, WIDECHAR;",
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
@@ -1149,7 +1387,7 @@ CONST typeIsSignedInt = ARRAY CGType OF BOOLEAN {
     FALSE, FALSE, FALSE, (* real, longreal, extended *)
     FALSE, FALSE, FALSE (* address, struct, void *)
 };
-CONST typeSizeBits = ARRAY CGType OF [0..64] {
+<*UNUSED*>CONST typeSizeBits = ARRAY CGType OF [0..64] {
     8, 8, 16, 16, 32, 32, 64, 64,
     32, 64, 64, (* real, longreal, extended *)
     0, 0, 0 (* address, struct, void *)
@@ -1303,10 +1541,11 @@ BEGIN
     self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
     self.multipass.self := self;
     self.c := cfile;
-    self.fields := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
-    self.initializer := NEW(TextSeq.T).init();  (* CONSIDER compute size or maximum and use an array *)
-    self.stack := NEW(RefSeq.T).init();         (* CONSIDER compute maximum depth and use an array *)
-    self.params := NEW(TextSeq.T).init();       (* CONSIDER compute maximum and use an array *)
+    self.fields := NEW(TextSeq.T).init();
+    self.initializer := NEW(TextSeq.T).init();
+    self.stack := NEW(RefSeq.T).init();
+    self.params := NEW(TextSeq.T).init();
+    self.pendingTypes := NEW(RefSeq.T).init();
 
     RETURN self.multipass;
 END New;
@@ -1324,18 +1563,18 @@ BEGIN
     self.Type_Init(NEW(Float_t, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"), typedef := TRUE);
     self.Type_Init(NEW(Float_t, cg_type := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"), typedef := TRUE);
 
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1), text := "UINT8"), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF), text := "UINT8"), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF), text := "UINT16"), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1)), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF)), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF)), typedef := TRUE);
 
-    self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_31, min := TInt.Zero, max := IntToTarget(self, 31), text := "INTEGER"), typedef := TRUE);
-    self.Type_Init(NEW(Subrange_t, cg_type := Target.Integer.cg_type, typeid := UID_RANGE_0_63, min := TInt.Zero, max := IntToTarget(self, 63), text := "INTEGER"), typedef := TRUE);
+    self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size);
+    self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size);
 
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_MUTEX, text := "MUTEX"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_TEXT, text := "TEXT"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ROOT, text := "ROOT"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_REFANY, text := "REFANY"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR, text := "ADDRRESS"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR, text := "ADDRESS"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC1, text := "PROC1"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC2, text := "PROC2"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC3, text := "PROC3"), typedef := TRUE);
@@ -1345,7 +1584,7 @@ BEGIN
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC7, text := "PROC7"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC8, text := "PROC8"), typedef := TRUE);
 
-    self.Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL));
+    (* self.Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL)); *)
 END DeclareBuiltinTypes;
 
 (*------------------------------------------------ READONLY configuration ---*)
@@ -1403,7 +1642,6 @@ BEGIN
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.begin_unit]);
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.set_error_handler]);
     Prefix_Start(x, self);
-    DeclareBuiltinTypes(x);
     HelperFunctions(self);
     GetStructSizes(self);
     Prefix_End(x);
@@ -1503,7 +1741,7 @@ BEGIN
     END;
     RETURN;
 
-    print(self, "typedef " & TypeIDToText(typeid) & " " & NameT(name) & ";\n");
+    print(self, "/*declare_typename*/typedef " & TypeIDToText(typeid) & " " & NameT(name) & ";\n");
 END declare_typename;
 
 PROCEDURE TypeIDToText(x: INTEGER(*TypeUID*)): TEXT =
@@ -1520,34 +1758,16 @@ BEGIN
         & TypeIDToText(element_typeid) & " total_bit_size:" & IntToDec(total_bit_size));
     ELSE
         x.comment("declare_array");
-    END
-(*
-    WITH index_type = TypeidToType_Get(index_typeid),
-         element_type =  TypeidToType_Get(element_typeid) DO
-      IF index_type = NIL THEN
-        RTIO.PutText("declare_array nil index_type\n");
-        RTIO.Flush();
-      END;
-      IF element_type = NIL THEN
-        RTIO.PutText("declare_array nil element_type\n");
-        RTIO.Flush();
-      END;
-      EVAL typeidToType.put(typeid, NEW(FixedArray_t,
-              typeid := typeid,
-              byte_size := total_bit_size DIV 8,
-              bit_size := total_bit_size,
-              index_type := index_type,
-              element_type := element_type));
-
-      print(self, "typedef struct{");
-      print(self, TypeIDToText(element_typeid));
-      print(self, " _elts[");
-      print(self, IntToDec(total_bit_size DIV element_type.bit_size));
-      print(self, "];}");
-      print(self, TypeIDToText(typeid));
-      print(self, ";");
     END;
-*)
+    x.Type_Init(NEW(FixedArray_t,
+        typeid := typeid,
+        index_typeid := index_typeid,
+        (*index_type := TypeidToType_Get(x, index_typeid),*)
+        element_typeid := element_typeid,
+        (*element_type := TypeidToType_Get(x, element_typeid),*)
+        bit_size := total_bit_size,
+        byte_size := total_bit_size DIV 8
+        ));
   END declare_array;
 
 PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize) =
@@ -1567,7 +1787,7 @@ BEGIN
             RTIO.PutText("declare_array nil element_type\n");
             RTIO.Flush();
         END;
-        print(self, "typedef struct { ");
+        print(self, "/*declare_open_array*/typedef struct { ");
         print(self, TypeIDToText(element_typeid));
         print(self, "* _elts; CARDINAL _size");
         IF bit_size > Target.Integer.size * 2 THEN
@@ -1586,45 +1806,19 @@ BEGIN
 *)
   END declare_open_array;
 
-PROCEDURE DeclareEnums(self: DeclareTypes_t) =
-VAR x := self.self;
-    enums := self.enums;
-    enum: Enum_t := NIL;
-    element_count, index, bit_size := 0;
-    typeid: INTEGER(*TypeUID*) := 0;
-    int_type, id, start, cast, end: TEXT := NIL;
-    names: REF ARRAY OF Name := NIL;
-BEGIN
-    FOR i := 0 TO NUMBER(enums^) - 1 DO
-        enum := enums[i];
-        typeid := enum.typeid;
-        bit_size := enum.bit_size;
-        id := enum.text;
-        int_type := BitsToUInt[bit_size];
-        start := "#define " & id & "_";
-        cast := " ((" & int_type & ")";
-        end := ") /*declare_enum_elt*/\n";
-        names := enum.names;
-        element_count := NUMBER(names^);
-        SuppressLineDirective(x, element_count, "declare_enum element_count");
-        (* TODO cplusplus and GNU C can do better *)
-        print(x, "typedef " & int_type & " " & id & "; /*declare_enum*/\n");
-        FOR i := 0 TO element_count - 1 DO
-            print(x, start & NameT(names^[i]) & cast & IntToDec(i) & end);
-        END;
-    END;
-END DeclareEnums;
-
 PROCEDURE declare_enum(self: DeclareTypes_t; typeid: TypeUID; element_count: INTEGER; bit_size: BitSize) =
 VAR x := self.self;
     enum: Enum_t;
 BEGIN
-    x.comment("declare_enum");
+    IF DebugDeclare(x) THEN
+        x.comment("declare_enum typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " element_count:" & IntToDec(element_count));
+    ELSE
+        x.comment("declare_enum");
+    END;
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
     <* ASSERT element_count > 0 *>
     <* ASSERT self.enum = NIL *>
     <* ASSERT self.enum_value = -1 *>
-    <* ASSERT self.enum_index >= 0 *>
     enum := NEW(Enum_t,
                 typeid := typeid,
                 min := TInt.Zero,
@@ -1632,31 +1826,29 @@ BEGIN
                 names := NEW(REF ARRAY OF Name, element_count),
                 cg_type := BitsToCGUInt[bit_size],
                 text := TypeIDToText(typeid));
-    self.enums[self.enum_index] := enum;
-    INC(self.enum_index);
     <* ASSERT self.enum = NIL AND self.enum_value = -1 *>
     self.enum := enum;
-    self.element_count := element_count;
+    self.enum_element_count := element_count;
     x.Type_Init(enum);
     self.enum_value := 0;
 END declare_enum;
 
 PROCEDURE declare_enum_elt(self: DeclareTypes_t; name: Name) =
 VAR enum_value := self.enum_value;
-    element_count := self.element_count;
+    enum_element_count := self.enum_element_count;
     x := self.self;
 BEGIN
     x.comment("declare_enum_elt");
-    IF enum_value < 0 OR enum_value >= element_count THEN
-        x.Err ("declare_enum_elt overflow");
+    IF enum_value < 0 OR enum_value >= enum_element_count THEN
+        Err(x, "declare_enum_elt overflow");
         RETURN;
     END;
     <* ASSERT self.enum # NIL *>
     <* ASSERT self.enum.names # NIL *>
-    <* ASSERT NUMBER(self.enum.names^) = element_count *>
+    <* ASSERT NUMBER(self.enum.names^) = enum_element_count *>
     self.enum.names[enum_value] := name;
     INC(enum_value);
-    IF enum_value = element_count THEN
+    IF enum_value = enum_element_count THEN
         self.enum := NIL;
         self.enum_value := -1;
         RETURN;
@@ -1680,24 +1872,12 @@ TYPE DeclareTypes_t = M3CG_DoNothing.T BRANDED "M3C.DeclareTypes_t" OBJECT
     (* declare_enum, declare_enum_elt *)
     enum: Enum_t := NIL;
     enum_value := -1;
-    element_count := -1;
-    enums: REF ARRAY OF Enum_t := NIL;
-    enum_index := 0;
+    enum_element_count := -1;
 
     (* declare_record, declare_field *)
-    records: REF ARRAY OF Record_t := NIL;
     record: Record_t := NIL;
     previous_field: Field_t := NIL;
-    record_index, field_index, field_count := 0;
-
-    subrange: Subrange_t := NIL;
-    subranges: REF ARRAY OF Subrange_t := NIL;
-    subrange_index := 0;
-
-    (* declare_pointer *)
-    pointer: PointerType_t := NIL;
-    pointers: REF ARRAY OF PointerType_t := NIL;
-    pointer_index := 0;
+    field_count, field_index := 0;
 
 OVERRIDES
     declare_enum := declare_enum;
@@ -1723,256 +1903,82 @@ END;
 
 PROCEDURE DeclareTypes(multipass: Multipass_t) =
 VAR x := multipass.self;
-    self := NEW(DeclareTypes_t,
-                self := x,
-                enums := NEW(REF ARRAY OF Enum_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_enum]^)),
-                records := NEW(REF ARRAY OF Record_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_record]^)),
-                subranges := NEW(REF ARRAY OF Subrange_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_subrange]^)),
-                pointers := NEW(REF ARRAY OF PointerType_t, NUMBER(multipass.op_data[M3CG_Binary.Op.declare_pointer]^))
-                );
+    self := NEW(DeclareTypes_t, self := x);
     index := 0;
+    retry := 0; (* hack until the work is complete *)
 BEGIN
+    x.declareTypes := self;
     x.comment("begin pass: DeclareTypes");
     multipass.Replay(self, index);
-    DeclareRecords1(self);
-    DeclareEnums(self);
-    DeclareSubranges(self);
-    DeclarePointers(self);
-    DeclareRecords2(self);
-    x.comment("end pass: DeclareTypes");
-END DeclareTypes;
-
-PROCEDURE DeclareRecords1(self: DeclareTypes_t) =
-VAR x := self.self;
-    record: Record_t := NIL;
-    records := self.records;
-    record_count := NUMBER(records^);
-    name, id := "";
-BEGIN
-    x.comment("begin pass: DeclareRecords1");
-    FOR j := 0 TO record_count - 1 DO
-        record := records[j];
-        IF record # NIL THEN
-            record.defined := FALSE;
-            id := record.typeidText;
-            (* struct _foo; typedef struct _foo foo; struct _foo {
-            Do not use typedef struct _foo foo because struct _foo could
-            have been declared earlier in a namespace and this could refer to that,
-            instead of introducing a new type. *)
-            print(x, "struct _" & id & ";typedef struct _" & id & " " & id & ";\n");
-        END;
-    END;
-    x.comment("end pass: DeclareRecords1");
-END DeclareRecords1;
-
-PROCEDURE DeclareRecords2(self: DeclareTypes_t) =
-VAR x := self.self;
-    records := self.records;
-    record_count := NUMBER(records^);
-    pending := NEW(REF ARRAY OF Record_t, record_count);
-    i, field_count := 0;
-    record: Record_t := NIL;
-    field: Field_t := NIL;
-    pending_head, pending_tail := 0;
-    bit_offset, bit_pad, bit_size := 0;
-    int_type: BitSizeRange_t;
-    name, id := "";
-    can_be_defined := FALSE;
-    field_type: Type_t := NIL;
-BEGIN
-
-    RETURN;
-
-    x.comment("begin pass: DeclareRecords2 count:" & IntToDec(record_count));
-
-    FOR j := 0 TO record_count - 1 DO
-        record := records[j];
-        IF record # NIL THEN
-            pending[pending_tail] := records[j];
-            INC(pending_tail);
-        END;
-    END;
-    WHILE pending_tail > pending_head DO
-        FOR j := pending_head TO pending_tail - 1 DO
-            record := pending[j MOD record_count];
-            IF record # NIL AND NOT record.defined THEN
-                can_be_defined := TRUE;
-                field_count := NUMBER(record.fields^);
-                FOR j := 0 TO field_count - 1 DO
-                    field := record.fields[j];
-                    field_type := field.type;
-                    IF field_type = NIL THEN
-                        field_type := TypeidToType_Get(x, field.typeid);
-                        IF field_type # NIL THEN
-                            field.type := field_type;
-                            RTIO.PutText("resolved field.type " & TypeIDToText(field.typeid) & "\n");
-                            RTIO.Flush();
-                        END;
-                    END;
-                    IF field_type = NIL OR NOT field_type.defined THEN
-                        can_be_defined := FALSE;
-                        RTIO.PutText("pending field.type " & TypeIDToText(field.typeid) & " (1)\n");
-                        RTIO.Flush();
-                        EXIT;
-                    END;
-                END;
-                INC(pending_head);
-                IF NOT can_be_defined THEN
-                    pending[pending_tail MOD record_count] := record;
-                    INC(pending_tail);
-                ELSE
-                    record.defined := TRUE;
-                    bit_size := record.bit_size;
-                    print(x, "struct _" & record.typeidText & "{\n");
-                    FOR j := 0 TO field_count - 1 DO
-                        field := record.fields[j];
-                        name := NameT(field.name);
-                        IF field.bit_offset < bit_offset THEN
-                            x.Err("fields not in offset order");
-                        END;
-                        bit_pad := field.bit_offset - bit_offset;
-                        (*
-                          padding: array of bytes followed by bitfield
-                        *)
-                        IF bit_pad > 0 THEN
-            
-                            (* Eat up bits, to the next byte boundary or up to the next field, whichever is earlier. *)
-                            IF (bit_offset MOD 8) # 0 THEN
-                                i := MIN(bit_pad, 8 - (bit_pad MOD 8));
-                                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
-                                INC(bit_offset, i);
-                                DEC(bit_pad, i);
-                            END;
-                            
-                            (* Eat up bytes to the field. *)
-                            IF bit_pad >= 8 THEN
-                                i := bit_pad DIV 8;
-                                print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
-                                i := i * 8;
-                                INC(bit_offset, i);
-                                DEC(bit_pad, i);
-                            END;
-            
-                            (* Eat up bits to the field. *)
-                            <* ASSERT bit_pad < 8 *>
-                            IF bit_pad > 0 THEN
-                                i := bit_pad;
-                                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
-                                INC(bit_offset, i);
-                                DEC(bit_pad, i);
-                            END;
-                        END;
-                        
-                        (* Handle bitfields specially. *)
-                        IF (field.bit_size MOD 8) # 0 THEN
-                            IF field.bit_size > 64 THEN
-                                x.Err("bitfield larger than 64 bits");
-                            ELSIF field.bit_size > 32 THEN
-                                int_type := 64;
-                            ELSIF field.bit_size > 16 THEN
-                                int_type := 32;
-                            ELSIF field.bit_size > 8 THEN
-                                int_type := 16;
-                            ELSE
-                                int_type := 8;
-                            END;
-                            print(x, BitsToUInt[int_type] & " " & name & ":" & IntToDec(field.bit_size) & ";\n");
-                        ELSE
-                            print(x, TypeIDToText(field.typeid) & " " & name & ";\n");
-                        END;
-                        INC(bit_offset, field.bit_size);
-                    END;
-                    
-                    (* pad out end of record *)
-                    IF bit_offset > bit_size THEN
-                        x.Err("record fields exceed record");
-                    END;
-                    bit_pad := bit_size - bit_offset;
-                    IF bit_pad > 0 THEN
-                        i := bit_pad MOD 8;
-                        IF i > 0 THEN
-                            i := 8 - i;
-                            print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
-                            INC(bit_offset, i);
-                            DEC(bit_pad, i);
-                        END;
-                        <* ASSERT (bit_pad MOD 8) = 0 *>
-                        IF bit_pad > 0 THEN
-                            i := bit_pad DIV 8;
-                            print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "]\n");
-                            i := i * 8;
-                            INC(bit_offset, i);
-                            DEC(bit_pad, i);
-                        END;
-                    END;
-                    IF bit_offset # bit_size THEN
-                        x.Err("failed to declare record to correct size");
-                    END;
-                    print(x, "};\n");
-                END;
+    DeclareBuiltinTypes(x);    
+    WHILE retry < 40 AND x.pendingTypes.size() > 0 DO
+        WITH type = NARROW(x.pendingTypes.remlo(), Type_t) DO
+            IF Type_CanBeDefined(type, x) THEN
+                Type_Define(type, x);
+            ELSE
+                x.pendingTypes.addhi(type);
             END;
         END;
+        INC(retry);
     END;
-
-    x.comment("end pass: DeclareRecords2");
-END DeclareRecords2;
+    x.comment("giving up with " & IntToDec(x.pendingTypes.size()) & " remaining");
+    x.comment("end pass: DeclareTypes");
+END DeclareTypes;
 
 PROCEDURE declare_record(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; field_count: INTEGER) =
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
-    RETURN;
-
     IF DebugDeclare(x) THEN
-        print(x, "/* declare_record typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " field_count:" & IntToDec(field_count) & " */\n");
+        x.comment("declare_record typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " field_count:" & IntToDec(field_count));
     ELSE
         x.comment("declare_record");
-    END;
-    IF self.record_index < 0 OR self.record_index >= NUMBER(self.records^) THEN
-        x.Err ("declare_record overflow");
-        RETURN;
     END;
     IF field_count = 0 OR typeid = -1 THEN
         RETURN;
     END;
-    record := NEW(Record_t, text := TypeIDToText(typeid), typeid := typeid, bit_size := bit_size, fields := NEW(REF ARRAY OF Field_t, field_count));
+    record := NEW(Record_t,
+                  text := TypeIDToText(typeid),
+                  typeid := typeid,
+                  bit_size := bit_size,
+                  fields := NEW(RefSeq.T).init(field_count));
     self.record := record;
-    self.records[self.record_index] := record;
-    INC(self.record_index);
     Type_Init(self.self, record);
-    self.field_index := 0;
+    Type_ForwardDeclare(record, x);
     self.previous_field := NIL;
     self.field_count := field_count;
+    self.field_index := 0;
 END declare_record;
 
 PROCEDURE declare_field(self: DeclareTypes_t; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
-VAR field: Field_t;
+VAR field: Field_t := NIL;
     previous_field := self.previous_field;
     x := self.self;
 BEGIN
-    RETURN;
     IF DebugDeclare(x) THEN
-        print(x, "/* declare_field " & NameT(name) & " */\n");
+        x.comment("declare_field " & NameT(name)
+            & " bit_size:" & IntToDec(bit_size)
+            & " bit_offset:" & IntToDec(bit_offset)
+            & " typeid:" & TypeIDToText(typeid));
     ELSE
         x.comment("declare_field");
     END;
     IF self.field_index < 0 OR self.field_index >= self.field_count OR self.record = NIL THEN
         (* skip objects for now
-        x.Err ("declare_field overflow");
+        Err(x, "declare_field overflow");
         *)
         RETURN;
     END;
-    field := NEW(Field_t, bit_offset := bit_offset, bit_size := bit_size,
-            typeid := typeid, name := name,
-            type := TypeidToType_Get(x, typeid));
-    IF field.type = NIL THEN
-        RTIO.PutText("pending field.type " & TypeIDToText(field.typeid) & " (2)\n");
-        RTIO.Flush();
+    name := ReplaceName(name);
+    field := NEW(Field_t, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid, name := name);
+    self.record.fields.addhi(field);
+    IF previous_field # NIL AND previous_field.bit_offset + previous_field.bit_size > bit_offset THEN
+        Err(x, "declare_field: fields out of order");
+        RETURN;
     END;
-    self.record.fields[self.field_index] := field;
     INC(self.field_index);
     IF previous_field # NIL AND previous_field.bit_offset + previous_field.bit_size > bit_offset THEN
-        x.Err ("declare_field: fields out of order");
+        Err(x, "declare_field: fields out of order");
         RETURN;
     END;
     IF self.field_index = self.field_count THEN
@@ -1981,29 +1987,16 @@ BEGIN
     previous_field := field;
 END declare_field;
 
-PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain: TypeUID; bit_size: BitSize) =
+PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain_type: TypeUID; bit_size: BitSize) =
 VAR x := self.self;
 BEGIN
     IF DebugDeclare(x) THEN
-        self.comment("declare_set typeid:" & TypeIDToText(typeid) & " domain:"
-            & TypeIDToText(domain) & " bit_size:" & IntToDec(bit_size));
+        self.comment("declare_set typeid:" & TypeIDToText(typeid) & " domain_type:"
+            & TypeIDToText(domain_type) & " bit_size:" & IntToDec(bit_size));
     ELSE
         self.comment("declare_set");
     END;
 END declare_set;
-
-PROCEDURE DeclareSubranges(self: DeclareTypes_t) =
-VAR x := self.self;
-    subranges := self.subranges;
-    subrange: Subrange_t := NIL;
-BEGIN
-    x.comment("begin pass: DeclareSubranges count:" & IntToDec(NUMBER(subranges^)));
-    FOR i := 0 TO NUMBER(subranges^) - 1 DO
-        subrange := subranges[i];
-        print(x, "/* typedef " & TypeIDToText(subrange.domain_typeid) & " " & TypeIDToText(subrange.typeid) & ";*/\n");
-    END;
-    x.comment("end pass: DeclareSubranges");
-END DeclareSubranges;
 
 PROCEDURE SubrangeIsSigned(READONLY min, max: Target.Int): BOOLEAN =
 (* slightly strange logic -- see m3front/src/types/SubrangeType *)
@@ -2019,23 +2012,28 @@ BEGIN
     RETURN SignedAndBitsToCGType[SubrangeIsSigned(min, max)][bit_size];
 END SubrangeCGType;
 
-PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
+PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
 VAR x := self.self;
-    subrange: Subrange_t;
 BEGIN
     IF DebugDeclare(x) THEN
-        self.comment("declare_subrange typeid:" & TypeIDToText(typeid) & "domain:" & TypeIDToText(domain) & "min:" & TInt.ToText(min) & "max:" & TInt.ToText(max) & "bit_size:" & IntToDec(bit_size));
+        x.comment("declare_subrange typeid:" & TypeIDToText(typeid)
+            & " domain_type:" & TypeIDToText(domain_typeid)
+            & " min:" & TInt.ToText(min)
+            & " max:" & TInt.ToText(max)
+            & " bit_size:" & IntToDec(bit_size));
     ELSE
-        self.comment("declare_subrange");
+        x.comment("declare_subrange");
     END;
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 OR bit_size = 64 *>
-    <* ASSERT typeid # domain *>
-    subrange := NEW(Subrange_t, min := min, max := max, typeid := typeid,
-        domain_typeid := domain, bit_size := bit_size,
-        cg_type := SubrangeCGType(min, max, bit_size));
-    self.subranges[self.subrange_index] := subrange;
-    INC(self.subrange_index);
-    x.Type_Init(subrange);
+    <* ASSERT typeid # domain_typeid *>
+    x.Type_Init(NEW(Subrange_t,
+        min := min,
+        max := max,
+        typeid := typeid,
+        domain_typeid := domain_typeid,
+        (*domain_type := TypeidToType_Get(x, domain_typeid),*)
+        bit_size := bit_size,
+        cg_type := SubrangeCGType(min, max, bit_size)));
 END declare_subrange;
 
 PROCEDURE TextOrNIL(text: TEXT): TEXT =
@@ -2043,18 +2041,6 @@ BEGIN
     IF text = NIL THEN RETURN "<NIL>" END;
     RETURN text;
 END TextOrNIL;
-
-PROCEDURE DeclarePointers(self: DeclareTypes_t) =
-VAR x := self.self;
-    pointers := self.pointers;
-    pointer: PointerType_t;
-BEGIN
-    x.comment("begin pass: DeclarePointers count:" & IntToDec(NUMBER(pointers^)));
-    FOR i := 0 TO NUMBER(pointers^) - 1 DO
-        pointer := pointers[i];
-    END;
-    x.comment("end pass: DeclarePointers");
-END DeclarePointers;
 
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
 VAR x := self.self;
@@ -2066,14 +2052,21 @@ BEGIN
     ELSE
         self.comment("declare_pointer");
     END;
+    x.Type_Init(
+        NEW(Pointer_t,
+            typeid := typeid,
+            points_to_typeid := target,
+            (*points_to_type := TypeidToType_Get(x, target),*)
+            brand := brand,
+            traced := traced));
 END declare_pointer;
 
 PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID) =
 VAR x := self.self;
 BEGIN
     IF DebugDeclare(x) THEN
-        x.comment("declare_indirect typeid:" & TypeIDToText(typeid) & " target:"
-        & TypeIDToText(target));
+        x.comment("declare_indirect typeid:" & TypeIDToText(typeid)
+        & " target:" & TypeIDToText(target));
     ELSE
         x.comment("declare_indirect");
     END
@@ -2090,8 +2083,9 @@ VAR x := self.self;
 BEGIN
     IF DebugDeclare(x) THEN
         x.comment("declare_proctype typeid:" & TypeIDToText(typeid)
-        & " param_count:" & IntToDec(param_count) & " result:"
-        & TypeIDToText(result) & " raise_count:" & IntToDec(raise_count)
+        & " param_count:" & IntToDec(param_count)
+        & " result:" & TypeIDToText(result)
+        & " raise_count:" & IntToDec(raise_count)
         & " callingConvention:" & CallingConventionToText(callingConvention));
     ELSE
         x.comment("declare_proctype");
@@ -2103,8 +2097,8 @@ PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID) =
 VAR x := self.self;
 BEGIN
     IF DebugDeclare(x) THEN
-        x.comment("declare_formal name:" & NameT(name) & " typeid:"
-        & TypeIDToText(typeid));
+        x.comment("declare_formal name:" & NameT(name)
+        & " typeid:" & TypeIDToText(typeid));
     ELSE
         x.comment("declare_formal");
     END
@@ -2133,7 +2127,7 @@ BEGIN
         & IntToDec(field_size));
     ELSE
         x.comment("declare_object");
-    END
+    END;
     (* SuppressLineDirective(self, field_count + method_count, "declare_object field_count + method_count"); *)
 END declare_object;
 
@@ -2166,7 +2160,7 @@ BEGIN
         x.comment("reveal_opaque lhs:" & TypeIDToText(lhs) & " rhs:" & TypeIDToText(rhs));
     ELSE
         x.comment("reveal_opaque");
-    END
+    END;
 END reveal_opaque;
 
 PROCEDURE declare_exception(self: DeclareTypes_t; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
@@ -2190,7 +2184,7 @@ BEGIN
     IF DebugDeclare(self) THEN
         self.comment("set_runtime_proc name:" & NameT(name));
     ELSE
-        self.comment("set_runtime_proc name");
+        self.comment("set_runtime_proc");
     END
 END set_runtime_proc;
 
@@ -2239,8 +2233,8 @@ BEGIN
         END;
     END;
     text := NameT(fixed_name);
-    print(self, "struct " & text & "_t;\n");
-    print(self, "typedef struct " & text & "_t " & text & "_t;\n");
+    print(self, "/*declare_segment*/struct " & text & "_t;\n");
+    print(self, "/*declare_segment*/typedef struct " & text & "_t " & text & "_t;\n");
     RETURN var;
   END declare_segment;
 
@@ -3984,7 +3978,7 @@ VAR proc := NARROW(p, Proc_t);
 BEGIN
     self.comment("internal_begin_procedure");
     IF self.in_proc THEN (* TODO don't require this *)
-        self.Err ("internal_begin_procedure: in_proc; C backend requires "
+        Err(self, "internal_begin_procedure: in_proc; C backend requires "
             & "M3_FRONT_FLAGS = [\"-unfold_nested_procs\"] in config file");
     END;
     self.in_proc := TRUE;
@@ -4441,7 +4435,7 @@ PROCEDURE TIntInc(self: T; i: Target.Int): Target.Int =
 VAR j: Target.Int;
 BEGIN
     IF NOT TInt.Add(i, TInt.One, j) THEN
-        self.Err ("failed to increment target integer");
+        Err(self, "failed to increment target integer");
     END;
     RETURN j;
 END TIntInc;
@@ -4452,7 +4446,7 @@ PROCEDURE IntToTarget(self: T; i: INTEGER): Target.Int =
 VAR j: Target.Int;
 BEGIN
     IF NOT TInt.FromInt(i, j) THEN
-        self.Err ("failed to convert host integer to target integer");
+        Err(self, "failed to convert host integer to target integer");
     END;
     RETURN j;
 END IntToTarget;
@@ -5414,6 +5408,12 @@ BEGIN
 END load_static_link;
 
 (*----------------------------------------------------------------- misc. ---*)
+
+PROCEDURE Err(self: T; text: TEXT) =
+BEGIN
+    self.comment("ERROR:" & text);
+    self.Err(text);
+END Err;
 
 PROCEDURE comment_1(VAR text: TEXT; VAR length: INTEGER) =
 BEGIN
