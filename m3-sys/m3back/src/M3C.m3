@@ -60,7 +60,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         debug_declare := 1;
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
-        op_index: INTEGER := 0;
+        op_index := 0;
 
         unit_name := "L_";
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
@@ -80,9 +80,9 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         (* initialization and record declaration support *)
 
         fields: TextSeq.T := NIL;
-        current_offset: INTEGER := 0;
+        current_offset := 0;
         initializer: TextSeq.T := NIL;
-        initializer_comma: TEXT := "";
+        initializer_comma := "";
 
         (* initializers are aggregated into arrays to avoid
         redeclaring the types and generating new field names *)
@@ -92,11 +92,11 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
         (* line directive support *)
         file: TEXT := NIL;
-        line: INTEGER := 0;
+        line := 0;
         line_directive := ""; (* combination of file/line *)
         nl_line_directive := "\n"; (* line_directive + "\n" *)
         last_char_was_newline := FALSE;
-        suppress_line_directive: INTEGER := 0;
+        suppress_line_directive := 0;
 
         static_link     : Var_t := NIL; (* based on M3x86 *)
         current_proc    : Proc_t := NIL; (* based on M3x86 *)
@@ -337,7 +337,7 @@ VAR replacementNames_Inited := FALSE;
 VAR replacementNames_Table := NEW(IntIntTbl.Default).init(NUMBER(reservedWords));
 
 PROCEDURE ReplaceName(id: M3ID.T): M3ID.T =
-VAR replacement: INTEGER;
+VAR replacement := 0;
 BEGIN
     IF replacementNames_Inited = FALSE THEN
         FOR i := FIRST(reservedWords) TO LAST(reservedWords) DO
@@ -370,7 +370,7 @@ BEGIN
 END GenerateNameText;
 
 PROCEDURE Proc_FixName(self: T; name: Name): Name =
-VAR text: TEXT;
+VAR text: TEXT := NIL;
 BEGIN
     IF name = M3ID.NoID THEN
         RETURN GenerateName(self);
@@ -397,58 +397,76 @@ BEGIN
     RETURN name;
 END Var_FixName;
 
+TYPE Type_State = {None, ForwardDeclared, Defined};
+
 TYPE Type_t = OBJECT
-    internal_defined := FALSE;
-    bit_size: INTEGER := 0;  (* FUTURE Target.Int or LONGINT *)
-    byte_size: INTEGER := 0; (* FUTURE Target.Int or LONGINT *)
+    bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
+    byte_size := 0; (* FUTURE Target.Int or LONGINT *)
     typeid: INTEGER(*TypeUID*) := 0;
-    cg_type: M3CG.Type := M3CG.Type.Addr;
     text: TEXT := NIL;
-    typeidText: TEXT := NIL;
+    cg_type: M3CG.Type := M3CG.Type.Addr;
+    state := Type_State.None;
 METHODS
-    internal_forwardDeclare(self: T) := internal_type_forwardDeclare; (* useful for structs and maybe enums *)
-    internal_define(self: T);
-    internal_canBeDefined(self: T): BOOLEAN;
+    canBeForwardDeclared(self: T): BOOLEAN := type_canBeForwardDeclared; (* useful for structs *)
+    forwardDeclare(self: T) := type_forwardDeclare; (* useful for structs *)
+    define(self: T);
+    canBeDefined(self: T): BOOLEAN;
 END;
 
-PROCEDURE internal_type_forwardDeclare(<*UNUSED*>type: Type_t; <*UNUSED*>self: T) =
+PROCEDURE Type_IsDefined(type: Type_t): BOOLEAN =
 BEGIN
-END internal_type_forwardDeclare;
+    RETURN type.state = Type_State.Defined;
+END Type_IsDefined;
+
+PROCEDURE type_canBeForwardDeclared(<*UNUSED*>type: Type_t; <*UNUSED*>self: T): BOOLEAN =
+BEGIN
+    RETURN FALSE;
+END type_canBeForwardDeclared;
+
+PROCEDURE type_forwardDeclare(<*UNUSED*>type: Type_t; <*UNUSED*>self: T) =
+BEGIN
+END type_forwardDeclare;
 
 PROCEDURE Type_Define(type: Type_t; self: T) =
 BEGIN
-    IF type.internal_defined THEN
+    IF ORD(type.state) >= ORD(Type_State.Defined) THEN
         RETURN;
     END;
-    type.internal_define(self);
-    type.internal_defined := TRUE;
+    type.define(self);
+    type.state := Type_State.Defined;
 END Type_Define;
 
 PROCEDURE Type_ForwardDeclare(type: Type_t; self: T) =
 BEGIN
-    type.internal_forwardDeclare(self);
+    IF ORD(type.state) >= ORD(Type_State.ForwardDeclared) THEN
+        RETURN;
+    END;
+    type.forwardDeclare(self);
+    IF ORD(type.state) < ORD(Type_State.ForwardDeclared) THEN
+        type.state := Type_State.ForwardDeclared;
+    END;
 END Type_ForwardDeclare;
 
 PROCEDURE Type_CanBeDefined(type: Type_t; self: T): BOOLEAN =
 BEGIN
-    RETURN type.internal_defined OR type.internal_canBeDefined(self);
+    RETURN type.state = Type_State.Defined OR type.canBeDefined(self);
 END Type_CanBeDefined;
 
 TYPE Type_CanBeDefinedTrue_t = Type_t OBJECT
 OVERRIDES
-    internal_canBeDefined := internal_type_canBeDefinedTrue;
+    canBeDefined := type_canBeDefinedTrue;
 END;
 
-PROCEDURE internal_type_typedef(type: Type_t; self: T) =
+PROCEDURE type_typedef(type: Type_t; self: T) =
 (* A reusable value for Type_Define. *)
 BEGIN
-    print(self, "/*internal_type_typedef*/typedef " & cgtypeToText[type.cg_type] & " " & type.text & ";\n");
-END internal_type_typedef;
+    print(self, "/*type_typedef*/typedef " & cgtypeToText[type.cg_type] & " " & type.text & ";\n");
+END type_typedef;
 
-PROCEDURE internal_type_canBeDefinedTrue(<*UNUSED*>type: Type_CanBeDefinedTrue_t; <*UNUSED*>self: T): BOOLEAN =
+PROCEDURE type_canBeDefinedTrue(<*UNUSED*>type: Type_CanBeDefinedTrue_t; <*UNUSED*>self: T): BOOLEAN =
 BEGIN
     RETURN TRUE;
-END internal_type_canBeDefinedTrue;
+END type_canBeDefinedTrue;
 
 TYPE Pointer_t = Type_t OBJECT
     points_to_type: Type_t := NIL;
@@ -456,16 +474,16 @@ TYPE Pointer_t = Type_t OBJECT
     brand: TEXT := NIL;
     traced := FALSE;
 OVERRIDES
-    internal_define := internal_pointer_define;
-    internal_canBeDefined := internal_pointer_canBeDefined;
+    define := pointer_define;
+    canBeDefined := pointer_canBeDefined;
 END;
 
-PROCEDURE internal_pointer_define(type: Pointer_t; self: T) =
+PROCEDURE pointer_define(type: Pointer_t; self: T) =
 (* Does branding make a difference? *)
 VAR x := self;
 BEGIN
-    print(x, "/*internal_pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
-END internal_pointer_define;
+    print(x, "/*pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
+END pointer_define;
 
 PROCEDURE TypeResolve(self: T; typeid: INTEGER; VAR type: Type_t): BOOLEAN =
 BEGIN
@@ -476,21 +494,22 @@ BEGIN
     RETURN type # NIL;
 END TypeResolve;
 
-PROCEDURE internal_pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
+PROCEDURE pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
 BEGIN
-    RETURN TypeResolve(self, type.points_to_typeid, type.points_to_type) AND type.points_to_type.internal_defined;
-END internal_pointer_canBeDefined;
+    RETURN TypeResolve(self, type.points_to_typeid, type.points_to_type)
+        AND ORD(type.points_to_type.state) >= ORD(Type_State.ForwardDeclared);
+END pointer_canBeDefined;
 
 (* We need "Ordinal_t" as base for: Integer_t, Enum_t, Subrange_t? *)
 
 TYPE Integer_t = Type_CanBeDefinedTrue_t OBJECT
 OVERRIDES
-    internal_define := internal_type_typedef;
+    define := type_typedef;
 END;
 
 TYPE Float_t  = Type_CanBeDefinedTrue_t OBJECT
 OVERRIDES
-    internal_define := internal_type_typedef;
+    define := type_typedef;
 END;
 
 TYPE Field_t = REF RECORD
@@ -502,13 +521,19 @@ END;
 TYPE Record_t = Type_t OBJECT
     fields: RefSeq.T := NIL; (* Field_t *)
 OVERRIDES
-    internal_forwardDeclare := record_forwardDeclare;
-    internal_canBeDefined := internal_record_canBeDefined;
-    internal_define := internal_record_define;
+    canBeForwardDeclared := record_canBeForwardDeclared;
+    forwardDeclare := record_forwardDeclare;
+    canBeDefined := record_canBeDefined;
+    define := record_define;
 END;
 
+PROCEDURE record_canBeForwardDeclared(<*UNUSED*>type: Record_t; <*UNUSED*>self: T): BOOLEAN =
+BEGIN
+    RETURN TRUE;
+END record_canBeForwardDeclared;
+
 PROCEDURE record_forwardDeclare(type: Record_t; self: T) =
-VAR id := type.typeidText;
+VAR id := type.text;
 BEGIN
     (*  typedef struct foo foo is different than
         struct foo; typedef struct foo foo, in the presence of C++ namespaces,
@@ -517,22 +542,22 @@ BEGIN
     print(self, "/*record_forwardDeclare*/struct " & id & ";typedef struct " & id & " " & id & ";\n");
 END record_forwardDeclare;
 
-PROCEDURE internal_record_canBeDefined(type: Record_t; self: T): BOOLEAN =
+PROCEDURE record_canBeDefined(type: Record_t; self: T): BOOLEAN =
 VAR field: Field_t := NIL;
     fields := type.fields;
 BEGIN
     FOR i := 0 TO fields.size() - 1 DO
         field := NARROW(fields.get(i), Field_t);
         <* ASSERT field # NIL *>
-        IF NOT (TypeResolve(self, field.typeid, field.type) AND Type_CanBeDefined(field.type, self)) THEN
-            self.comment("internal_record_canBeDefined: pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
+        IF NOT (TypeResolve(self, field.typeid, field.type) AND Type_IsDefined(field.type)) THEN
+            self.comment("record_canBeDefined: pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
             RETURN FALSE;
         END;
     END;
     RETURN TRUE;
-END internal_record_canBeDefined;
+END record_canBeDefined;
 
-PROCEDURE internal_record_define(record: Record_t; self: T) =
+PROCEDURE record_define(record: Record_t; self: T) =
 VAR x := self;
     fields := record.fields;
     field_count := fields.size();
@@ -541,7 +566,7 @@ VAR x := self;
     field: Field_t := NIL;
     name := "";
 BEGIN
-    print(x, "/*internal_record_define*/struct " & record.typeidText & "{\n");
+    print(x, "/*record_define*/struct " & record.text & "{\n");
     FOR j := 0 TO field_count - 1 DO
         field := NARROW(record.fields.get(j), Field_t);
         name := NameT(field.name);
@@ -597,7 +622,7 @@ BEGIN
             END;
             print(x, BitsToUInt[int_type] & " " & name & ":" & IntToDec(field.bit_size) & ";\n");
         ELSE
-            print(x, TypeIDToText(field.typeid) & " " & name & ";\n");
+            print(x, field.type.text & " " & name & ";\n");
         END;
         INC(bit_offset, field.bit_size);
     END;
@@ -628,7 +653,7 @@ BEGIN
         Err(x, "failed to declare record to correct size");
     END;
     print(x, "};\n");
-END internal_record_define;
+END record_define;
 
 TYPE Subrange_t = Type_t OBJECT
     min: Target.Int := TInt.Zero;
@@ -636,28 +661,28 @@ TYPE Subrange_t = Type_t OBJECT
     domain_type: Type_t := NIL;
     domain_typeid: INTEGER(*TypeUID*) := 0;
 OVERRIDES
-    internal_define := internal_subrange_define;
-    internal_canBeDefined := internal_subrange_canBeDefined;
+    define := subrange_define;
+    canBeDefined := subrange_canBeDefined;
 END;
 
-PROCEDURE internal_subrange_define(subrange: Subrange_t; self: T) =
+PROCEDURE subrange_define(subrange: Subrange_t; self: T) =
 VAR x := self;
 BEGIN
-    print(x, "/*internal_subrange_define*/typedef " & subrange.domain_type.text & " " & subrange.text & ";\n");
-END internal_subrange_define;
+    print(x, "/*subrange_define*/typedef " & subrange.domain_type.text & " " & subrange.text & ";\n");
+END subrange_define;
 
-PROCEDURE internal_subrange_canBeDefined(type: Subrange_t; self: T): BOOLEAN =
+PROCEDURE subrange_canBeDefined(type: Subrange_t; self: T): BOOLEAN =
 BEGIN
-    RETURN TypeResolve(self, type.domain_typeid, type.domain_type) AND type.domain_type.internal_defined;
-END internal_subrange_canBeDefined;
+    RETURN TypeResolve(self, type.domain_typeid, type.domain_type) AND type.domain_type.state = Type_State.Defined;
+END subrange_canBeDefined;
 
 TYPE Enum_t  = Subrange_t OBJECT
     names: REF ARRAY OF Name := NIL;
 OVERRIDES
-    internal_define := internal_enum_define;
+    define := enum_define;
 END;
 
-PROCEDURE internal_enum_define(enum: Enum_t; x: T) =
+PROCEDURE enum_define(enum: Enum_t; x: T) =
 VAR bit_size := enum.bit_size;
     id := enum.text;
     int_type := BitsToUInt[bit_size];
@@ -669,40 +694,40 @@ VAR bit_size := enum.bit_size;
 BEGIN
     SuppressLineDirective(x, element_count, "declare_enum element_count");
     (* TODO cplusplus and GNU C can do better *)
-    print(x, "/*internal_enum_define*/typedef " & int_type & " " & id & "; /*declare_enum*/\n");
+    print(x, "/*enum_define*/typedef " & int_type & " " & id & "; /*declare_enum*/\n");
     FOR i := 0 TO element_count - 1 DO
         print(x, start & NameT(names^[i]) & cast & IntToDec(i) & end);
     END;
-END internal_enum_define;
+END enum_define;
 
 TYPE Array_t = Type_t OBJECT
-    index_typeid: INTEGER := 0;
-    element_typeid: INTEGER := 0;
+    index_typeid := 0;
+    element_typeid := 0;
     index_type: Type_t;
     element_type: Type_t;
 END;
 
 TYPE FixedArray_t = Array_t OBJECT
 OVERRIDES
-    internal_define := internal_fixedArray_define;
-    internal_canBeDefined := internal_fixedArray_canBeDefined;
+    define := fixedArray_define;
+    canBeDefined := fixedArray_canBeDefined;
 END;
 
-PROCEDURE internal_fixedArray_define(type: FixedArray_t; x: T) =
+PROCEDURE fixedArray_define(type: FixedArray_t; x: T) =
 BEGIN
     (* TODO forward declaration is possible here *)
-    print(x, "/*internal_fixedArray_define*/struct " & type.text & ";typedef struct " & type.text & " " & type.text & ";");
-    print(x, "/*internal_fixedArray_define*/struct " & type.text & "{");
+    print(x, "/*fixedArray_define*/struct " & type.text & ";typedef struct " & type.text & " " & type.text & ";\n");
+    print(x, "/*fixedArray_define*/struct " & type.text & "{");
     print(x, type.element_type.text);
     print(x, " _elts[");
     print(x, IntToDec(type.bit_size DIV type.element_type.bit_size));
-    print(x, "];};");
-END internal_fixedArray_define;
+    print(x, "];};\n");
+END fixedArray_define;
 
-PROCEDURE internal_fixedArray_canBeDefined(type: FixedArray_t; self: T): BOOLEAN =
+PROCEDURE fixedArray_canBeDefined(type: FixedArray_t; self: T): BOOLEAN =
 BEGIN
-    RETURN TypeResolve(self, type.element_typeid, type.element_type) AND Type_CanBeDefined(type.element_type, self);
-END internal_fixedArray_canBeDefined;
+    RETURN TypeResolve(self, type.element_typeid, type.element_type) AND Type_IsDefined(type.element_type);
+END fixedArray_canBeDefined;
 
 (*TYPE OpenArray_t = Array_t OBJECT END;*)
 
@@ -717,9 +742,8 @@ BEGIN
 END TypeidToType_Get;
 
 PROCEDURE Type_Init(self: T; type: Type_t; typedef := FALSE) =
-VAR typeidText := TypeIDToText(type.typeid);
+VAR typedef2 := FALSE;
 BEGIN
-    type.typeidText := typeidText;
     IF type.bit_size = 0 THEN
         type.bit_size := TargetMap.CG_Size[type.cg_type];
     END;
@@ -727,23 +751,25 @@ BEGIN
         type.byte_size := TargetMap.CG_Bytes[type.cg_type];
     END;
     IF type.text = NIL THEN
-        type.text := typeidText;
+        type.text := TypeIDToText(type.typeid);
+        typedef2 := TRUE;
     END;
     EVAL self.typeidToType.put(type.typeid, type);
     
-    (*IF type.CanBeDefined() THEN
-        Type_Define(type);
-    ELSE
-        self.pendingTypes.addhi(type);
-    END;
-    *)
     IF typedef THEN
         (* typedef INT32 M1234; and such
            TODO don't do this, it makes the code less readoable. *)
-        print(self, "/*Type_Init*/typedef " & cgtypeToText[type.cg_type] & " " & typeidText & ";\n");
-        type.internal_defined := TRUE;
+        print(self, "/*Type_Init*/typedef " & cgtypeToText[type.cg_type] & " " & type.text & ";\n");
+        IF typedef2 THEN
+            print(self, "/*Type_Init*/typedef " & cgtypeToText[type.cg_type] & " " & TypeIDToText(type.typeid) & ";\n");
+        END;
+        type.state := Type_State.Defined;
     END;
-    self.pendingTypes.addhi(type);
+    IF Type_CanBeDefined(type, self) THEN
+        Type_Define(type, self);
+    ELSE
+        self.pendingTypes.addhi(type);
+    END;
 END Type_Init;
 
 (* see RTBuiltin.mx
@@ -1017,7 +1043,7 @@ TYPE Var_t = M3CG.Var OBJECT
     m3cgtype: M3CG.Type;
     typeid: INTEGER(*TypeUID*);
     points_to_m3cgtype: M3CG.Type; (* future *)
-    type_text: TEXT;
+    type_text: TEXT := NIL;
     const := FALSE;
     imported := FALSE;
     exported := FALSE;
@@ -1064,21 +1090,21 @@ BEGIN
 END VarNameT;
 
 TYPE Block_t = OBJECT
-    sibling: Block_t;
-    parent: Block_t;
-    child: Block_t;
-    proc: Proc_t;
-    vars: Var_t;
-    top_in_proc: Block_t;
-    name: TEXT; (* for frame *)
+    sibling: Block_t := NIL;
+    parent: Block_t := NIL;
+    child: Block_t := NIL;
+    proc: Proc_t := NIL;
+    vars: Var_t := NIL;
+    top_in_proc: Block_t := NIL;
+    name: TEXT := NIL; (* for frame *)
 END;
 
 TYPE Proc_t = M3CG.Proc OBJECT
     name: Name := 0;
-    parameter_count: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
-    parameter_count_without_static_link: INTEGER := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
+    parameter_count := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
+    parameter_count_without_static_link := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
     return_type: M3CG.Type;
-    level: INTEGER := 0;
+    level := 0;
     callingConvention: CallingConvention;
     exported := FALSE;
     imported := FALSE;
@@ -1110,13 +1136,11 @@ END;
 
 PROCEDURE Proc_ForwardDeclareFrameType(proc: Proc_t) =
 VAR self := proc.self;
-    frame_type: TEXT;
 BEGIN
     IF proc.forward_declared_frame_type THEN
         RETURN;
     END;
-    frame_type := proc.FrameType();
-    print(self, "/*Proc_ForwardDeclareFrameType*/struct " & frame_type & ";typedef struct " & frame_type & " " & frame_type & ";\n");
+    print(self, "/*Proc_ForwardDeclareFrameType*/FORWARD_STRUCT(" & proc.FrameType() & ")\n");
     proc.forward_declared_frame_type := TRUE;
 END Proc_ForwardDeclareFrameType;
 
@@ -1233,12 +1257,15 @@ CONST Prefix = ARRAY OF TEXT {
 "#pragma warning(disable:4255) /* () change to (void) */",
 "#pragma warning(disable:4668) /* #if of undefined symbol */",
 "#endif",
-"typedef char* ADDRESS;",
-"typedef char* STRUCT;",
+"typedef char* ADDRESS;", (* TODO remove this when we finish strong typing *)
+"typedef char* STRUCT;",  (* TODO remove this when we finish strong typing *)
 "typedef signed char INT8;",
-"typedef unsigned char UINT8, CHAR, BOOLEAN;",
+"typedef unsigned char UINT8;",
+(*"typedef UINT8 CHAR;",*) (* DeclareBuiltinTypes *)
+(*"typedef UINT8 BOOLEAN;",*) (* DeclareBuiltinTypes *)
 "typedef short INT16;",
-"typedef unsigned short UINT16, WIDECHAR;",
+"typedef unsigned short UINT16;",
+(*"typedef UINT16 WIDECHAR;",*) (* DeclareBuiltinTypes *)
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
@@ -1254,18 +1281,18 @@ CONST Prefix = ARRAY OF TEXT {
 "#endif",
 
 "#if defined(_WIN64)",
-"typedef __int64 ptrdiff_t;",
+(*"typedef __int64 ptrdiff_t;",*)
 "typedef unsigned __int64 size_t;",
 "#elif defined(_WIN32)",
-"typedef int ptrdiff_t;",
+(*"typedef int ptrdiff_t;",*)
 "typedef unsigned size_t;",
 "#elif defined(__APPLE__)",
 "typedef unsigned long size_t;",
-"#ifdef __LP64__",
-"typedef long ptrdiff_t;",
-"#else",
-"typedef int ptrdiff_t;",
-"#endif",
+(*"#ifdef __LP64__",*)
+(*"typedef long ptrdiff_t;",*)
+(*"#else",*)
+(*"typedef int ptrdiff_t;",*)
+(*"#endif",*)
 "#else",
 "#include <stddef.h>", (* try to remove this, it is slow -- need size_t, ptrdiff_t *)
 "#endif",
@@ -1274,12 +1301,19 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef double LONGREAL;",
 "typedef /*long*/ double EXTENDED;",
 
-"#if defined(__cplusplus) || __STDC__",
-"typedef void* PVOID;",
+"#if defined(__cplusplus)",
+"#define FORWARD_STRUCT(a) struct a;",
 "#else",
-"typedef char* PVOID;",
+"#define FORWARD_STRUCT(a) struct a; typedef struct a a;",
 "#endif",
-"typedef PVOID TEXT,MUTEX,ROOT,REFANY,PROC1,PROC2,PROC3,PROC4,PROC5,PROC6,PROC7,PROC8;",
+
+(* handled in DeclareBuiltinTypes *)
+(*"#if defined(__cplusplus) || __STDC__",*)
+(*"typedef void* PVOID;",*)
+(*"#else",*)
+(*"typedef char* PVOID;",*)
+(*"#endif",*)
+(*"typedef PVOID TEXT,MUTEX,ROOT,REFANY,PROC1,PROC2,PROC3,PROC4,PROC5,PROC6,PROC7,PROC8;",*)
 
 "#ifdef __cplusplus",
 "extern \"C\" {",
@@ -1305,16 +1339,16 @@ CONST Prefix = ARRAY OF TEXT {
 
 (* WORD_T/INTEGER are always exactly the same size as a pointer.
  * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. *)
-"#if __INITIAL_POINTER_SIZE == 64",
-"typedef __int64 INTEGER;",
-"typedef unsigned __int64 WORD_T;",
-"#else",
-"typedef ptrdiff_t INTEGER;",
-"typedef size_t WORD_T;",
-"#endif",
+(*"#if __INITIAL_POINTER_SIZE == 64",*) (* handled in DeclareBuiltinTypes *)
+(*"typedef __int64 INTEGER;",*) (* handled in DeclareBuiltinTypes *)
+(*"typedef unsigned __int64 WORD_T;",*) (* handled in DeclareBuiltinTypes *)
+(*"#else",*) (* handled in DeclareBuiltinTypes *)
+(*"typedef ptrdiff_t INTEGER;",*) (* handled in DeclareBuiltinTypes *)
+(*"typedef size_t WORD_T;",*) (* handled in DeclareBuiltinTypes *)
+(*"#endif",*) (* handled in DeclareBuiltinTypes *)
 
-"typedef WORD_T* SET;",
-"#define SET_GRAIN (sizeof(WORD_T)*8)",
+(*"typedef WORD_T* SET;",*) (* moved to HelperFunctions *)
+(*"#define SET_GRAIN (sizeof(WORD_T)*8)",*) (* moved to HelperFunctions *)
 
 ""};
 
@@ -1474,7 +1508,7 @@ BEGIN
 END SuppressLineDirective;
 
 PROCEDURE print(self: T; text: TEXT) = <*FATAL ANY*>
-VAR length: INTEGER;
+VAR length := 0;
     text_last_char := '\000';
 BEGIN
     IF text = NIL THEN
@@ -1554,18 +1588,20 @@ END New;
 
 PROCEDURE DeclareBuiltinTypes(self: T) =
 BEGIN
-    self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"), typedef := TRUE);
-    self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"), typedef := TRUE);
-    self.Type_Init(NEW(Integer_t, cg_type := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"), typedef := TRUE);
-    self.Type_Init(NEW(Integer_t, cg_type := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"), typedef := TRUE);
+    self.Type_Init(NEW(Integer_t, (*state := Type_State.Defined,*) cg_type := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
+    (*DeclareTypes_FlushOnce(self);*)
+    self.Type_Init(NEW(Integer_t, (*state := Type_State.Defined,*) cg_type := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
+    (*DeclareTypes_FlushOnce(self);*)
+    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cg_type := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"));
+    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cg_type := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"));
 
-    self.Type_Init(NEW(Float_t, cg_type := Target.Real.cg_type, typeid := UID_REEL, text := "REAL"), typedef := TRUE);
-    self.Type_Init(NEW(Float_t, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"), typedef := TRUE);
-    self.Type_Init(NEW(Float_t, cg_type := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"), typedef := TRUE);
+    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Real.cg_type, typeid := UID_REEL, text := "REAL"));
+    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"));
+    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"));
 
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1)), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF)), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF)), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, (*state := Type_State.Defined,*) cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1)), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, (*state := Type_State.Defined,*) cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF)), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, (*state := Type_State.Defined,*) cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF)), typedef := TRUE);
 
     self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size);
     self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size);
@@ -1603,7 +1639,7 @@ END set_error_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
-PROCEDURE Prefix_Start(self: T; multipass: Multipass_t) =
+PROCEDURE Prefix_Print(self: T; multipass: Multipass_t) =
 BEGIN
     self.comment("begin unit");
     self.comment("M3_TARGET = ", Target.System_name);
@@ -1622,12 +1658,7 @@ BEGIN
     FOR i := FIRST(Prefix) TO LAST(Prefix) DO
         print(self, Prefix[i] & "\n");
     END;
-END Prefix_Start;
-
-PROCEDURE Prefix_End(self: T) =
-BEGIN
-    SuppressLineDirective(self, -1, "begin_unit");
-END Prefix_End;
+END Prefix_Print;
 
 PROCEDURE multipass_end_unit(self: Multipass_t) =
 (* called at the end of the first pass -- we have everything
@@ -1641,14 +1672,14 @@ BEGIN
     M3CG_MultiPass.end_unit(self); (* let M3CG_MultiPass do its usual last step *)
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.begin_unit]);
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.set_error_handler]);
-    Prefix_Start(x, self);
-    HelperFunctions(self);
-    GetStructSizes(self);
-    Prefix_End(x);
+    Prefix_Print(x, self);
 
     (* declare/define types *)
 
     DeclareTypes(self);
+
+    HelperFunctions(self);
+    GetStructSizes(self); (* TODO remove this when we finish strong typing *)
 
     (* forward declare functions/variables in this module and imports *)
 
@@ -1788,14 +1819,14 @@ BEGIN
             RTIO.Flush();
         END;
         print(self, "/*declare_open_array*/typedef struct { ");
-        print(self, TypeIDToText(element_typeid));
+        print(self, element_type.text);
         print(self, "* _elts; CARDINAL _size");
         IF bit_size > Target.Integer.size * 2 THEN
             print(self, "s[");
             print(self, IntToDec((bit_size - Target.Integer.size) DIV Target.Integer.size));
             print(self, "]");
         END;
-        print(self, ";}" & TypeIDToText(element_typeid) & ";");
+        print(self, ";}" & element_type.text & ";");
         EVAL typeidToType.put(typeid, NEW(OpenArray_t,
         typeid := typeid,
         byte_size := bit_size DIV 8,
@@ -1808,7 +1839,7 @@ BEGIN
 
 PROCEDURE declare_enum(self: DeclareTypes_t; typeid: TypeUID; element_count: INTEGER; bit_size: BitSize) =
 VAR x := self.self;
-    enum: Enum_t;
+    enum: Enum_t := NIL;
 BEGIN
     IF DebugDeclare(x) THEN
         x.comment("declare_enum typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " element_count:" & IntToDec(element_count));
@@ -1901,6 +1932,23 @@ OVERRIDES
     declare_subrange := declare_subrange;
 END;
 
+PROCEDURE DeclareTypes_FlushOnce(x: T) =
+VAR self := x.declareTypes;
+    index := 0;
+    retry := 0; (* hack until the work is complete *)
+BEGIN
+    IF x.pendingTypes.size() > 0 THEN
+        WITH type = NARROW(x.pendingTypes.remlo(), Type_t) DO
+            IF Type_CanBeDefined(type, x) THEN
+                Type_Define(type, x);
+            ELSE
+                x.comment("DeclareTypes_FlushOnce pending:" & type.text);
+                x.pendingTypes.addhi(type);
+            END;
+        END;
+    END;
+END DeclareTypes_FlushOnce;
+
 PROCEDURE DeclareTypes(multipass: Multipass_t) =
 VAR x := multipass.self;
     self := NEW(DeclareTypes_t, self := x);
@@ -1909,16 +1957,10 @@ VAR x := multipass.self;
 BEGIN
     x.declareTypes := self;
     x.comment("begin pass: DeclareTypes");
-    multipass.Replay(self, index);
     DeclareBuiltinTypes(x);    
+    multipass.Replay(self, index);
     WHILE retry < 40 AND x.pendingTypes.size() > 0 DO
-        WITH type = NARROW(x.pendingTypes.remlo(), Type_t) DO
-            IF Type_CanBeDefined(type, x) THEN
-                Type_Define(type, x);
-            ELSE
-                x.pendingTypes.addhi(type);
-            END;
-        END;
+        DeclareTypes_FlushOnce(x);
         INC(retry);
     END;
     x.comment("giving up with " & IntToDec(x.pendingTypes.size()) & " remaining");
@@ -2372,7 +2414,7 @@ CONST Ops = ARRAY OF Op{
     };
 VAR x := self.self;
     pass := NEW(DiscoverUsedVariables_t);
-    index: INTEGER;
+    index := 0;
 BEGIN
     x.comment("begin pass: discover used variables");
     FOR i := FIRST(Ops) TO LAST(Ops) DO
@@ -2455,7 +2497,7 @@ CONST Ops = ARRAY OF Op{
 VAR x := self.self;
     pass := NEW(DiscoverUsedLabels_t);
     count_pass := NEW(CountUsedLabels_t);
-    index: INTEGER;
+    index := 0;
 BEGIN
     x.comment("begin pass: discover used labels");
 
@@ -2583,7 +2625,7 @@ CONST OpsThatCanFault = ARRAY OF Op{
         Op.check_eq
     };
 TYPE T1 = RECORD op: Op; text: TEXT END;
-CONST data = ARRAY OF T1{
+CONST setData = ARRAY OF T1{
     T1{Op.set_union, "static void __stdcall m3_set_union(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]|c[i];}"},
     T1{Op.set_difference, "static void __stdcall m3_set_difference(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]&(~c[i]);}"},
     T1{Op.set_intersection, "static void __stdcall m3_set_intersection(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]&c[i];}"},
@@ -2619,13 +2661,18 @@ CONST data = ARRAY OF T1{
     };
 VAR x := self.self;
     helperFunctions := NEW(HelperFunctions_t).Init(x);
-    index: INTEGER;
+    index := 0;
+    setAny := FALSE;
 BEGIN
     x.comment("begin pass: helper functions");
 
-    FOR i := FIRST(data) TO LAST(data) DO
-        IF self.op_counts[data[i].op] > 0 THEN
-            print(x, data[i].text);
+    FOR i := FIRST(setData) TO LAST(setData) DO
+        IF self.op_counts[setData[i].op] > 0 THEN
+            IF NOT setAny THEN
+                print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T)*8)\n");
+                setAny := TRUE;
+            END;
+            print(x, setData[i].text);
         END;
     END;
     FOR i := FIRST(OpsThatCanFault) TO LAST(OpsThatCanFault) DO
@@ -2721,7 +2768,7 @@ BEGIN
         HelperFunctions_print_array(self, first);
     END;
     IF NOT type IN types THEN
-        print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")");
+        print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")\n");
         types := types + SET OF CGType{type};
     END;
 END HelperFunctions_helper_with_type_and_array;
@@ -3220,7 +3267,7 @@ VAR size := 0;
     getStructSizes := NEW(GetStructSizes_t);
     sizes: REF ARRAY OF INTEGER := NIL;
     x := self.self;
-    index: INTEGER;
+    index := 0;
 BEGIN
     (* count up how many ops we are going to walk *)
 
@@ -3415,7 +3462,7 @@ TYPE FunctionPrototype_t = { Declare, Define };
 PROCEDURE function_prototype(proc: Proc_t; kind: FunctionPrototype_t): TEXT =
 VAR params := proc.params;
     text := cgtypeToText[proc.return_type] & "\n__cdecl\n" & NameT(proc.name);
-    after_param: TEXT;
+    after_param: TEXT := NIL;
     ansi := TRUE (*NOT is_exception_handler*);
     define_kr := NOT ansi AND kind = FunctionPrototype_t.Define;
     kr_part2 := "";
@@ -3466,8 +3513,8 @@ END no_return;
 
 PROCEDURE last_param(self: T) =
 VAR proc := self.param_proc;
-    prototype: TEXT;
-    param: Var_t;
+    prototype: TEXT := NIL;
+    param: Var_t := NIL;
 BEGIN
     IF proc.no_return THEN
         no_return(self);
