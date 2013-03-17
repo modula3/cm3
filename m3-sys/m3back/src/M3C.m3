@@ -1589,9 +1589,7 @@ END New;
 PROCEDURE DeclareBuiltinTypes(self: T) =
 BEGIN
     self.Type_Init(NEW(Integer_t, (*state := Type_State.Defined,*) cg_type := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
-    (*DeclareTypes_FlushOnce(self);*)
     self.Type_Init(NEW(Integer_t, (*state := Type_State.Defined,*) cg_type := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
-    (*DeclareTypes_FlushOnce(self);*)
     self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cg_type := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"));
     self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cg_type := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"));
 
@@ -1957,7 +1955,7 @@ VAR x := multipass.self;
 BEGIN
     x.declareTypes := self;
     x.comment("begin: DeclareTypes");
-    DeclareBuiltinTypes(x);    
+    DeclareBuiltinTypes(x); (* This must be before replay. *)   
     multipass.Replay(self, index);
     WHILE retry < 40 AND x.pendingTypes.size() > 0 DO
         DeclareTypes_FlushOnce(x);
