@@ -514,7 +514,7 @@ END;
 
 TYPE Field_t = REF RECORD
     bit_offset, bit_size, typeid := -1;
-    name: Name;
+    name: Name := 0;
     type: Type_t := NIL;
 END;
 
