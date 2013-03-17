@@ -1683,22 +1683,22 @@ BEGIN
 
     (* forward declare functions/variables in this module and imports *)
 
-    x.comment("begin pass: imports");
+    x.comment("begin: imports");
     self.Replay(NEW(Imports_t, self := x), index);
-    x.comment("end pass: imports");
+    x.comment("end: imports");
 
     (* discover all locals, including temps and params and check_* *)
 
-    x.comment("begin pass: locals");
+    x.comment("begin: locals");
     x.temp_vars := NEW(REF ARRAY OF Var_t, NUMBER(self.data^));
     self.Replay(NEW(Locals_t, self := x), x.op_index);
-    x.comment("end pass: locals");
+    x.comment("end: locals");
 
     (* segments/globals *)
 
-    x.comment("begin pass: segments/globals");
+    x.comment("begin: segments/globals");
     self.Replay(NEW(Segments_t, self := x), index);
-    x.comment("end pass: segments/globals");
+    x.comment("end: segments/globals");
 
     (* labels -- which are used *)
     DiscoverUsedLabels(self);
@@ -1956,7 +1956,7 @@ VAR x := multipass.self;
     retry := 0; (* hack until the work is complete *)
 BEGIN
     x.declareTypes := self;
-    x.comment("begin pass: DeclareTypes");
+    x.comment("begin: DeclareTypes");
     DeclareBuiltinTypes(x);    
     multipass.Replay(self, index);
     WHILE retry < 40 AND x.pendingTypes.size() > 0 DO
@@ -1964,7 +1964,7 @@ BEGIN
         INC(retry);
     END;
     x.comment("giving up with " & IntToDec(x.pendingTypes.size()) & " remaining");
-    x.comment("end pass: DeclareTypes");
+    x.comment("end: DeclareTypes");
 END DeclareTypes;
 
 PROCEDURE declare_record(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; field_count: INTEGER) =
@@ -2416,11 +2416,11 @@ VAR x := self.self;
     pass := NEW(DiscoverUsedVariables_t);
     index := 0;
 BEGIN
-    x.comment("begin pass: discover used variables");
+    x.comment("begin: discover used variables");
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         self.Replay(pass, index, self.op_data[Ops[i]]);
     END;
-   x.comment("end pass: discover used variables");
+   x.comment("end: discover used variables");
 END DiscoverUsedVariables;
 
 TYPE CountUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.CountUsedLabels_t" OBJECT
@@ -2499,7 +2499,7 @@ VAR x := self.self;
     count_pass := NEW(CountUsedLabels_t);
     index := 0;
 BEGIN
-    x.comment("begin pass: discover used labels");
+    x.comment("begin: discover used labels");
 
     (* First estimate label count via op count.
        This is correct, except for case_jump.
@@ -2529,7 +2529,7 @@ BEGIN
         END;
     END;
 
-   x.comment("end pass: discover used labels");
+   x.comment("end: discover used labels");
 END DiscoverUsedLabels;
 
 TYPE Segments_t = M3CG_DoNothing.T BRANDED "M3C.Segments_t" OBJECT
@@ -2664,7 +2664,7 @@ VAR x := self.self;
     index := 0;
     setAny := FALSE;
 BEGIN
-    x.comment("begin pass: helper functions");
+    x.comment("begin: helper functions");
 
     FOR i := FIRST(setData) TO LAST(setData) DO
         IF self.op_counts[setData[i].op] > 0 THEN
@@ -2685,7 +2685,7 @@ BEGIN
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         self.Replay(helperFunctions, index, self.op_data[Ops[i]]);
     END;
-    x.comment("end pass: helper functions");
+    x.comment("end: helper functions");
 END HelperFunctions;
 
 TYPE HelperFunctions_t = M3CG_DoNothing.T BRANDED "M3C.HelperFunctions_t" OBJECT
