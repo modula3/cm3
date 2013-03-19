@@ -26,7 +26,7 @@ CONST
   Max8  = Int{16_FF, 0, ..};
   Max16 = Int{16_FF, 16_FF, 0, ..};
   Max32 = Int{16_FF, 16_FF, 16_FF, 16_FF, 0, ..};
-  Max64 = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF};
+  Max64 = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 0};
 
 PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];
                VAR i: Int): BOOLEAN;
