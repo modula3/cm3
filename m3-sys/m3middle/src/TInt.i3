@@ -19,12 +19,13 @@ INTERFACE TInt;
 *)
 
 CONST Size = BITSIZE(Int);
-TYPE Int = (* OPAQUE *) ARRAY [0..7] OF IByte;
+TYPE Int = (* OPAQUE *) ARRAY [0..8] OF IByte;
 TYPE IByte = BITS 8 FOR [0..16_ff];
 
 CONST
   Zero   = Int{ 0, 0,..};
   One    = Int{ 1, 0,..};
+  Two    = Int{ 2, 0,..};
   MOne   = Int{16_FF,..};
 
   Min8   = Int{16_80, 16_FF,..};
@@ -33,8 +34,8 @@ CONST
   Max16  = Int{16_FF, 16_7f, 16_00,..};
   Min32  = Int{16_00, 16_00, 16_00, 16_80, 16_FF,..};
   Max32  = Int{16_FF, 16_FF, 16_FF, 16_7f, 16_00,..};
-  Min64  = Int{16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_80};
-  Max64  = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_7f};
+  Min64  = Int{16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_80, 16_FF};
+  Max64  = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_7f, 0};
 
 PROCEDURE FromInt (x: INTEGER;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
