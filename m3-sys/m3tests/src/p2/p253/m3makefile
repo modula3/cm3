@@ -1,0 +1,7 @@
+m3back_optimize = ""
+module("Private")
+module("Public")
+c_source("c")
+implementation("Main")
+build_standalone()
+include ("../../Test.common")
