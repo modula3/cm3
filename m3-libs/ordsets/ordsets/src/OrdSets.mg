@@ -6932,7 +6932,8 @@ GENERIC MODULE OrdSets ( )
   (* PRE: BSet1Info . BitsetHi <= BSet2Info . BitsetHi *)  
 
 
-  = VAR LLoBitwordNo , LHiBitwordNo1 , LHiBitwordNo2 , LBitwordNo : BitwordNoTyp 
+  = VAR LLoBitwordNo , LHiBitwordNo1 , LHiBitwordNo2 , LBitwordNo 
+        : BitwordNoTyp 
   ; VAR LSet1Ss , LSet2Ss : ArraySsTyp 
   ; VAR LBitword1 , LBitword2 , LBitwordXor : BitwordTyp 
   ; VAR LDiffBitNo : BitNoTyp 
@@ -6948,7 +6949,7 @@ GENERIC MODULE OrdSets ( )
     ; LBitword1 
         := Word . And ( LBitword1 , GEMaskOfIElem ( BSet1Info . BitsetLo ) ) 
       (* Remove lo garbage bits. *) 
-    ; LBitword2 := BSet1Bitwords [ LSet2Ss ] 
+    ; LBitword2 := BSet2Bitwords [ LSet2Ss ] 
     ; LBitword2 
         := Word . And ( LBitword2 , GEMaskOfIElem ( BSet2Info . BitsetLo ) ) 
       (* Remove lo garbage bits. *) 
@@ -7016,14 +7017,14 @@ GENERIC MODULE OrdSets ( )
 
     = BEGIN (* InnerCompare *)
       (* Empty is always lowest: *) 
-        IF NUMBER( Bitwords1 ) = 0
-        THEN IF NUMBER( Bitwords2 ) = 0 
+        IF DInfo1 . Set = NIL 
+        THEN IF DInfo2 . Set = NIL  
           THEN (* Both are empty. *) 
             CompareResult := 0 
           ELSE (* Set1 is empty and Set2 is not *)
             CompareResult := - 1 
           END (* IF *) 
-        ELSE IF NUMBER( Bitwords2 ) = 0
+        ELSE IF DInfo2 . Set = NIL 
           THEN (* Set2 is empty and Set1 is not. *) 
             CompareResult := 1 
           ELSE (* Both sets are nonempty. *) 
@@ -7074,10 +7075,10 @@ GENERIC MODULE OrdSets ( )
                          )   
                 ELSE 
                   CompareResult 
-                    := CompareBitsets 
-                         ( DInfo2 . BitsetInfo , Bitwords2  
-                         , DInfo1 . BitsetInfo , Bitwords1  
-                         )   
+                    := - CompareBitsets 
+                           ( DInfo2 . BitsetInfo , Bitwords2  
+                           , DInfo1 . BitsetInfo , Bitwords1  
+                           )   
                 END (* IF *) 
               END (* IF *)
             END (* IF *)
@@ -7420,22 +7421,26 @@ GENERIC MODULE OrdSets ( )
       )
     RAISES ANY
 
-    = VAR LLoBitwordNo , LHiBitwordNo : BitwordNoTyp 
+    = VAR LIElem : IElemTyp  
+    ; VAR LLoBitwordNo , LHiBitwordNo : BitwordNoTyp 
     ; VAR LBitword : BitwordTyp 
     ; VAR LSs : ArraySsTyp 
     ; VAR LBit0IElem : ValidIElemTyp 
  
     ; BEGIN (* InnerForAllDo *)
         IF DInfo . RangeLo # IElemNull
-        THEN (* Set is a Rangeset. *)
-          FOR RIElem := DInfo . RangeLo TO DInfo . RangeHi 
-          DO Proc ( VAL ( RIElem , ValidElemT ) ) 
-          END (* FOR *) 
-
+        THEN (* Set is a Rangeset, and has at least one element. *)
+          LIElem := DInfo . RangeLo 
+        ; LOOP 
+            Proc ( VAL ( LIElem , ValidElemT ) ) 
+          ; IF LIElem >= DInfo . RangeHi 
+            THEN EXIT 
+            ELSE INC ( LIElem ) 
+            END (* IF *) 
+          END (* LOOP *) 
         ELSIF NUMBER ( Bitwords ) = 0
         THEN (* Set is empty. *) 
           (* Do nothing. *) 
-
         ELSE (* Set is a Bitset. *)
           LLoBitwordNo := BitwordNoOfIElem ( DInfo . BitsetInfo . BitsetLo ) 
         ; LHiBitwordNo := BitwordNoOfIElem ( DInfo . BitsetInfo . BitsetHi ) 
@@ -7656,10 +7661,16 @@ GENERIC MODULE OrdSets ( )
         IF RangeLoIElem # IElemNull 
         THEN 
           IF RangeLoIElem < RangeHiIElem 
-          THEN 
-            Lt := ElemImage ( VAL ( RangeLoIElem , ElemT ) ) & ".." 
-                  & ElemImage ( VAL ( RangeHiIElem , ElemT ) )
-          ELSE 
+          THEN (* Plural range. *) 
+            IF RangeHiIElem - 1 = RangeLoIElem 
+            THEN (* Doubleton range, use a comma. *)  
+              Lt := ElemImage ( VAL ( RangeLoIElem , ElemT ) ) & "," 
+                    & ElemImage ( VAL ( RangeHiIElem , ElemT ) )
+            ELSE (* At least three in range, use "..". *) 
+              Lt := ElemImage ( VAL ( RangeLoIElem , ElemT ) ) & ".." 
+                    & ElemImage ( VAL ( RangeHiIElem , ElemT ) )
+            END (* IF *) 
+          ELSE (* Singleton "range". *) 
             Lt := ElemImage ( VAL ( RangeHiIElem , ElemT ) )
           END (* IF *)  
         ; IF IsFirstElem 

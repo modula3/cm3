@@ -1,4 +1,4 @@
-  
+ 
 (* -----------------------------------------------------------------------1- *)
 (* File Test.i3  Modula-3 source code.  for OrdSets.                         *)
 (* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
@@ -56,7 +56,8 @@ MODULE Test EXPORTS Main
 
 ; VAR GFillCt := 0 
 ; VAR GOperationCt := 0 
-; VAR GTestCt := 0 
+; VAR GImageCt := 0 
+; VAR GPredCt := 0 
 ; VAR GTotalCt := 0 
 ; VAR GFailureCt := 0 
 ; VAR GCompareCt := 0  
@@ -82,9 +83,11 @@ MODULE Test EXPORTS Main
 ; VAR GProgressLine : ARRAY [ 0 .. GLen ] OF CHAR 
 ; VAR GProgressLen : CARDINAL := 0 
 
+; VAR GDoImageTests : BOOLEAN := FALSE 
 ; VAR GDoOld : BOOLEAN := FALSE 
 ; VAR GDoNew : BOOLEAN := FALSE 
 ; VAR GDoCompareTests : BOOLEAN := FALSE 
+; VAR GDoRandomTests : BOOLEAN := FALSE 
 ; VAR GDoSymDiff : BOOLEAN := FALSE 
 ; VAR GDoCompareOperands : BOOLEAN := FALSE 
 ; VAR GDoCompareResults : BOOLEAN := FALSE 
@@ -97,9 +100,11 @@ MODULE Test EXPORTS Main
   ; VAR LChar : CHAR 
 
   ; BEGIN 
-      GDoOld := FALSE 
+      GDoImageTests := FALSE 
+    ; GDoOld := FALSE 
     ; GDoNew := FALSE 
     ; GDoCompareTests := FALSE 
+    ; GDoRandomTests := FALSE 
     ; GDoSymDiff := FALSE 
     ; GDoCompareOperands := FALSE 
     ; GDoCompareResults := FALSE 
@@ -117,13 +122,16 @@ MODULE Test EXPORTS Main
           ; CASE LChar 
             OF 'a' 
             => GDoCompareTests := TRUE  
+            ; GDoImageTests := TRUE 
             ; GDoNew := TRUE  
             ; GDoCompareOperands := TRUE  
             ; GDoCompareResults := TRUE  
             ; GDoOld := TRUE 
             ; GDoSymDiff := TRUE 
             | 'c' => GDoCompareTests := TRUE 
+            | 'd' => GDoRandomTests := TRUE 
             | 'h' => GDoDisplayHelp := TRUE 
+            | 'i' => GDoImageTests := TRUE 
             | 'o' => GDoNew := TRUE  
             | 'p' => GDoCompareOperands := TRUE  
             | 'r' => GDoCompareResults := TRUE  
@@ -158,9 +166,11 @@ MODULE Test EXPORTS Main
     BEGIN 
       WL ( "Usage: OrdSetsTest {-{option}}" ) 
     ; WL ( "  Options are: " ) 
-    ; WL ( "  -a Do all tests, -o, -p, -r, -s, -y." ) 
+    ; WL ( "  -a Do all tests, -i, -o, -p, -r, -s, -y." ) 
     ; WL ( "  -c Run fixed tests on Compare." ) 
+    ; WL ( "  -d Run many randomly generated tests." ) 
     ; WL ( "  -h Display help text and exit." ) 
+    ; WL ( "  -i Run tests on Image function." ) 
     ; WL ( "  -o Test the new OrdSets module (instantiated for INTEGER)." ) 
     ; WL ( "  -p Compare IntSet/OrdSet values of operands of operations." ) 
     ; WL ( "     (only if both -o and -s are specified." ) 
@@ -1672,12 +1682,11 @@ MODULE Test EXPORTS Main
   = VAR LResult : [ - 1 .. 1 ] 
 
   ; BEGIN 
-      StartTimingNew ( ) 
-    ; LResult := IntSets . Compare ( Left , Right ) 
-    ; StopTimingNew ( ) 
+      LResult := IntSets . Compare ( Left , Right ) 
     ; IF GDoCompareResults 
       THEN 
         CompareInt ( Expected , LResult , "Compare" , 0 )
+(* FIXME: CompareInt really doesnt' display quite the right info. *) 
       END (* IF *) 
     ; INC ( GCompareCt )
     ; INC ( GTotalCt )
@@ -1722,8 +1731,8 @@ MODULE Test EXPORTS Main
       ; DoCompare ( B ( 5 , 6 , 7 , 8 , 10 ) , R ( 5 , 8 ) , 1 ) 
 
       ; DoCompare ( B ( 16 , 135 ) , B ( 16 , 135 ) , 0 ) 
-      ; DoCompare ( B ( 16 , 135 ) , B ( 16 , 195 ) , - 1 ) 
-      ; DoCompare ( B ( 16 , 195 ) , B ( 16 , 135 ) , 1 ) 
+      ; DoCompare ( B ( 16 , 135 ) , B ( 16 , 195 ) , 1 ) 
+      ; DoCompare ( B ( 16 , 195 ) , B ( 16 , 135 ) , - 1 ) 
       ; DoCompare ( B ( 16 , 65 , 135 ) , B ( 16 , 66 , 195 ) , 1 ) 
       ; DoCompare ( B ( 16 , 66 , 195 ) , B ( 16 , 65 , 135 ) , - 1 ) 
       ; DoCompare ( B ( 16 , 66 , 135 ) , B ( 16 , 65 , 195 ) , - 1 ) 
@@ -1738,13 +1747,149 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END CompareTests 
 
-; PROCEDURE Tests ( N : CARDINAL ) 
+; PROCEDURE IntImage ( I : IntSets . ValidElemT ) : TEXT 
+  (* Wrapper to match params. *) 
+
+  = BEGIN 
+      RETURN Fmt . Int ( I ) 
+    END IntImage 
+
+; PROCEDURE TestImage 
+   ( S : IntSets . T 
+   ; Expected : TEXT 
+   ; Prefix : TEXT := "" 
+   ; LineLen : CARDINAL := 80 
+   ) 
+
+  = VAR LImage : TEXT 
+
+  ; BEGIN 
+      LImage := IntSets . Image ( S , IntImage , Prefix , LineLen ) 
+    ; INC ( GImageCt ) 
+    ; IF Text . Equal ( LImage , Expected ) 
+      THEN 
+        Wr . PutText ( PWrT , "Image as expected: \"" ) 
+      ; Wr . PutText ( PWrT , LImage ) 
+      ; Wr . PutText ( PWrT , "\"" ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . Flush ( PWrT ) 
+      ELSE 
+        INC ( GFailureCt ) 
+      ; Wr . PutText ( PWrT , "Expected Image: \"" ) 
+      ; Wr . PutText ( PWrT , Expected ) 
+      ; Wr . PutText ( PWrT , "\"" ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . PutText ( PWrT , "  Actual Image: \"" ) 
+      ; Wr . PutText ( PWrT , LImage ) 
+      ; Wr . PutText ( PWrT , "\"" ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . Flush ( PWrT ) 
+      END (* IF *) 
+    END TestImage 
+
+; TYPE AOI = ARRAY OF INTEGER 
+
+; CONST Last = LAST ( IntSets . ValidElemT ) 
+; CONST First = FIRST ( IntSets . ValidElemT ) 
+
+; PROCEDURE DoImages ( ) 
+
+  = VAR LImageFailureCt : INTEGER := 0 
+
+  ; BEGIN 
+      Wr . PutText ( PWrT , "Tests on Image function" ) 
+    ; Wr . PutText ( PWrT , Wr . EOL ) 
+    ; LImageFailureCt := - GFailureCt 
+    ; TestImage 
+        ( IntSets . Empty ( ) 
+        , "{}"
+        ) 
+    ; TestImage 
+        ( IntSets . Singleton ( 5 ) 
+        , "{5}"
+        ) 
+    ; TestImage 
+        ( IntSets . Range ( 3 , 4 ) 
+        , "{3,4}"
+        ) 
+    ; TestImage 
+        ( IntSets . Range ( 3 , 8 ) 
+        , "{3..8}"
+        ) 
+    ; TestImage 
+        ( IntSets . FromArray ( AOI { 1 , 3 , 5 , 6 , 8 , 9 , 10 , 12 } ) 
+        , "{1,3,5,6,8..10,12}"
+        ) 
+(* TODO: To test cases against the bottom of the INTEGER range, we would need
+         a different instantiation of OrdSets with ValidElemT at the bottom. *)
+    ; IF LAST ( INTEGER ) = 16_7FFFFFFF
+      THEN (* 32-bit host. *) 
+        TestImage 
+          ( IntSets . Singleton ( First ) 
+          , "{-2147483647}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( First , First + 1 ) 
+          , "{-2147483647,-2147483646}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( First , First + 2 ) 
+          , "{-2147483647..-2147483645}"
+          ) 
+      ; TestImage 
+          ( IntSets . Singleton ( Last ) 
+          , "{2147483647}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( Last - 1 , Last ) 
+          , "{2147483646,2147483647}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( Last - 2 , Last ) 
+          , "{2147483645..2147483647}"
+          ) 
+      ELSE (* 64-bit host *) 
+        TestImage 
+          ( IntSets . Singleton ( First ) 
+          , "{-9223372036854775807}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( First , First + 1 ) 
+          , "{-9223372036854775807,-9223372036854775806}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( First , First + 2 ) 
+          , "{-9223372036854775807..-9223372036854775805}"
+          ) 
+      ; TestImage 
+          ( IntSets . Singleton ( Last ) 
+          , "{9223372036854775807}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( Last - 1 , Last ) 
+          , "{9223372036854775806,9223372036854775807}"
+          ) 
+      ; TestImage 
+          ( IntSets . Range ( Last - 2 , Last ) 
+          , "{9223372036854775805..9223372036854775807}"
+          ) 
+      END (* IF *) 
+
+    ; INC ( LImageFailureCt , GFailureCt ) 
+    ; Wr . PutText ( PWrT , "Completed " ) 
+    ; Wr . PutText ( PWrT , Fmt . Int ( GImageCt ) )  
+    ; Wr . PutText ( PWrT , " tests on Image function, with " ) 
+    ; Wr . PutText ( PWrT , Fmt . Int ( LImageFailureCt ) )  
+    ; Wr . PutText ( PWrT , " failures." ) 
+    ; Wr . PutText ( PWrT , Wr . EOL ) 
+    END DoImages 
+
+; PROCEDURE Predicates ( N : CARDINAL ) 
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
-      CompareTests ( ) 
-    ; ResetProgress ( ) 
-    ; GTestCt := 0 
+      ResetProgress ( ) 
+    ; GPredCt := 0 
     ; FOR RI := 1 TO N 
       DO
         CASE RandV . integer ( 0 , 8 ) <* NOWARN *> 
@@ -1758,12 +1903,12 @@ MODULE Test EXPORTS Main
         | 7 => DoIsElement ( )   
         | 8 => DoDisjoint ( )   
         END (* CASE *) 
-      ; NoteProgress ( (* VAR *) GTestCt ) 
+      ; NoteProgress ( (* VAR *) GPredCt ) 
       END (* FOR *) 
-    ; ShowExactProgress ( GTestCt ) 
+    ; ShowExactProgress ( GPredCt ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
-    END Tests    
+    END Predicates    
 
 ; PROCEDURE Work ( ) 
 
@@ -1780,119 +1925,129 @@ MODULE Test EXPORTS Main
       ELSIF GDoDisplayVersion 
       THEN 
         DisplayVersion ( ) 
-      ELSIF NOT ( GDoOld OR GDoNew OR GDoCompareTests ) 
+      ELSIF NOT ( GDoImageTests OR GDoRandomTests OR GDoCompareTests ) 
       THEN  
         WL ( "No Tests specified." ) 
       ; Wr . Flush ( PWrT ) 
       ELSE 
-        IF NOT ( GDoOld AND GDoNew )
+        IF GDoImageTests 
+        THEN 
+          DoImages ( ) 
+        END (* IF *) 
+      ; CompareTests ( ) 
+      ; IF NOT ( GDoOld AND GDoNew )
         THEN 
           GDoCompareOperands := FALSE 
         ; GDoCompareResults := FALSE 
         END (*  IF *)  
-      ; Wr . PutText ( PWrT , "Estimating overhead of timing." ) 
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-      ; Wr . Flush ( PWrT ) 
-      ; EstimateTimingOverhead ( ) 
-
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-      ; Wr . PutText ( PWrT , "One tick = " ) 
-      ; Wr . PutText ( PWrT , Fmt . Int ( SpinCt ) ) 
-      ; Wr . PutText ( PWrT , " operations. " ) 
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-
-      ; IF WrT # PWrT 
+      ; IF GDoRandomTests AND ( GDoOld OR GDoNew ) 
         THEN 
-          Wr . PutText ( WrT , "Generating initial singleton and range sets." )
+          Wr . PutText ( PWrT , "Estimating overhead of timing." ) 
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+        ; Wr . Flush ( PWrT ) 
+        ; EstimateTimingOverhead ( ) 
+
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+        ; Wr . PutText ( PWrT , "One tick = " ) 
+        ; Wr . PutText ( PWrT , Fmt . Int ( SpinCt ) ) 
+        ; Wr . PutText ( PWrT , " operations. " ) 
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+
+        ; IF WrT # PWrT 
+          THEN 
+            Wr . PutText 
+              ( WrT , "Generating initial singleton and range sets." )
+          ; Wr . PutText ( WrT , Wr . EOL ) 
+          ; Wr . Flush ( WrT ) 
+          END (* IF *) 
+        ; Wr . PutText 
+            ( PWrT , "Generating initial singleton and range sets." ) 
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+        ; Wr . Flush ( PWrT ) 
+        ; FillBase ( 50000 ) 
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+
+        ; IF WrT # PWrT 
+          THEN 
+            Wr . PutText ( WrT , "Generating additional operand sets." ) 
+          ; Wr . PutText ( WrT , Wr . EOL ) 
+          ; Wr . Flush ( WrT ) 
+          END (* IF *) 
+        ; Wr . PutText ( PWrT , "Generating additional operand sets." ) 
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+        ; Wr . Flush ( PWrT ) 
+        ; MoreSets ( 100000 ) 
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+
+        ; IF WrT # PWrT 
+          THEN 
+            Wr . PutText ( WrT , "Operations that produce new sets." ) 
+          ; Wr . PutText ( WrT , Wr . EOL ) 
+          ; Wr . Flush ( WrT ) 
+          END (* IF *) 
+        ; Wr . PutText ( PWrT , "Operations that produce new sets." ) 
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+        ; Wr . Flush ( PWrT ) 
+        ; Operations ( 500000 ) 
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+        ; INC ( GTotalCt , GOperationCt )
+
+        ; IF WrT # PWrT 
+          THEN 
+            Wr . PutText ( WrT , "Predicates on sets." ) 
+          ; Wr . PutText ( WrT , Wr . EOL ) 
+          ; Wr . Flush ( WrT ) 
+          END (* IF *) 
+        ; Wr . PutText ( PWrT , "Predicates on sets." ) 
+        ; Wr . PutText ( PWrT , Wr . EOL ) 
+        ; Wr . Flush ( PWrT ) 
+        ; Predicates ( 500000 ) 
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+        ; INC ( GTotalCt , GPredCt ) 
+
+        ; Wr . PutText ( WrT , "Total tests failed:   " ) 
+        ; Wr . PutText 
+            ( WrT , Fmt . Pad ( Fmt . Int ( GFailureCt ) , TestCtPad ) )
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+        ; Wr . PutText ( WrT , "Total tests executed: " ) 
+        ; Wr . PutText 
+            ( WrT , Fmt . Pad ( Fmt . Int ( GTotalCt ) , TestCtPad ) )
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+
+        ; Wr . PutText 
+            ( WrT , "Estimated seconds of instrumentation overhead per call: " )
+        ; Wr . PutText ( WrT , Fmt . LongReal ( GTimingOverheadTick ) ) 
+        ; Wr . PutText ( WrT , ", using Time: " ) 
+        ; Wr . PutText ( WrT , Fmt . LongReal ( GTimingOverheadTime ) ) 
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+
+        ; Wr . PutText ( WrT , "Seconds spent in old Sets module:    " ) 
+        ; GOldSetsTick 
+            := GOldSetsTick 
+               - FLOAT ( GOldTimedCt , LONGREAL ) * GTimingOverheadTick 
+        ; GOldSetsTime 
+            := GOldSetsTime 
+               - FLOAT ( GOldTimedCt , LONGREAL ) * GTimingOverheadTime 
+        ; Wr . PutText ( WrT , Fmt . LongReal ( GOldSetsTick ) ) 
+        ; Wr . PutText ( WrT , ", using Time: " ) 
+        ; Wr . PutText ( WrT , Fmt . LongReal ( GOldSetsTime ) ) 
+        ; Wr . PutText ( WrT , Wr . EOL ) 
+
+        ; Wr . PutText ( WrT , "Seconds spent in new IntSets module: " ) 
+        ; GNewSetsTick 
+            := GNewSetsTick 
+               - FLOAT ( GNewTimedCt , LONGREAL ) * GTimingOverheadTick 
+        ; GNewSetsTime 
+            := GNewSetsTime 
+               - FLOAT ( GNewTimedCt , LONGREAL ) * GTimingOverheadTime 
+        ; Wr . PutText ( WrT , Fmt . LongReal ( GNewSetsTick ) ) 
+        ; Wr . PutText ( WrT , ", using Time: " ) 
+        ; Wr . PutText ( WrT , Fmt . LongReal ( GNewSetsTime ) ) 
+        ; Wr . PutText ( WrT , Wr . EOL ) 
         ; Wr . PutText ( WrT , Wr . EOL ) 
         ; Wr . Flush ( WrT ) 
         END (* IF *) 
-      ; Wr . PutText ( PWrT , "Generating initial singleton and range sets." ) 
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-      ; Wr . Flush ( PWrT ) 
-      ; FillBase ( 50000 ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-
-      ; IF WrT # PWrT 
-        THEN 
-          Wr . PutText ( WrT , "Generating additional operand sets." ) 
-        ; Wr . PutText ( WrT , Wr . EOL ) 
-        ; Wr . Flush ( WrT ) 
-        END (* IF *) 
-      ; Wr . PutText ( PWrT , "Generating additional operand sets." ) 
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-      ; Wr . Flush ( PWrT ) 
-      ; MoreSets ( 100000 ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-
-      ; IF WrT # PWrT 
-        THEN 
-          Wr . PutText ( WrT , "Operations that produce new sets." ) 
-        ; Wr . PutText ( WrT , Wr . EOL ) 
-        ; Wr . Flush ( WrT ) 
-        END (* IF *) 
-      ; Wr . PutText ( PWrT , "Operations that produce new sets." ) 
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-      ; Wr . Flush ( PWrT ) 
-      ; Operations ( 500000 ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-      ; INC ( GTotalCt , GOperationCt )
-
-      ; IF WrT # PWrT 
-        THEN 
-          Wr . PutText ( WrT , "Predicates on sets." ) 
-        ; Wr . PutText ( WrT , Wr . EOL ) 
-        ; Wr . Flush ( WrT ) 
-        END (* IF *) 
-      ; Wr . PutText ( PWrT , "Predicates on sets." ) 
-      ; Wr . PutText ( PWrT , Wr . EOL ) 
-      ; Wr . Flush ( PWrT ) 
-      ; Tests ( 500000 ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-      ; INC ( GTotalCt , GTestCt ) 
-
-      ; Wr . PutText ( WrT , "Total tests failed:   " ) 
-      ; Wr . PutText 
-          ( WrT , Fmt . Pad ( Fmt . Int ( GFailureCt ) , TestCtPad ) )
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-      ; Wr . PutText ( WrT , "Total tests executed: " ) 
-      ; Wr . PutText 
-          ( WrT , Fmt . Pad ( Fmt . Int ( GTotalCt ) , TestCtPad ) )
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-
-      ; Wr . PutText 
-          ( WrT , "Estimated seconds of instrumentation overhead per call: " ) 
-      ; Wr . PutText ( WrT , Fmt . LongReal ( GTimingOverheadTick ) ) 
-      ; Wr . PutText ( WrT , ", using Time: " ) 
-      ; Wr . PutText ( WrT , Fmt . LongReal ( GTimingOverheadTime ) ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-
-      ; Wr . PutText ( WrT , "Seconds spent in old Sets module:    " ) 
-      ; GOldSetsTick 
-          := GOldSetsTick 
-             - FLOAT ( GOldTimedCt , LONGREAL ) * GTimingOverheadTick 
-      ; GOldSetsTime 
-          := GOldSetsTime 
-             - FLOAT ( GOldTimedCt , LONGREAL ) * GTimingOverheadTime 
-      ; Wr . PutText ( WrT , Fmt . LongReal ( GOldSetsTick ) ) 
-      ; Wr . PutText ( WrT , ", using Time: " ) 
-      ; Wr . PutText ( WrT , Fmt . LongReal ( GOldSetsTime ) ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-
-      ; Wr . PutText ( WrT , "Seconds spent in new IntSets module: " ) 
-      ; GNewSetsTick 
-          := GNewSetsTick 
-             - FLOAT ( GNewTimedCt , LONGREAL ) * GTimingOverheadTick 
-      ; GNewSetsTime 
-          := GNewSetsTime 
-             - FLOAT ( GNewTimedCt , LONGREAL ) * GTimingOverheadTime 
-      ; Wr . PutText ( WrT , Fmt . LongReal ( GNewSetsTick ) ) 
-      ; Wr . PutText ( WrT , ", using Time: " ) 
-      ; Wr . PutText ( WrT , Fmt . LongReal ( GNewSetsTime ) ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-      ; Wr . PutText ( WrT , Wr . EOL ) 
-      ; Wr . Flush ( WrT ) 
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; Wr . Flush ( PWrT ) 
       END (* IF *) 
