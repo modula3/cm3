@@ -5,6 +5,7 @@ TYPE Private <: ROOT;
 
 TYPE T = Private OBJECT
     a := 1;
+    c := 3;
 METHODS
     F1() := F1;
 END;
