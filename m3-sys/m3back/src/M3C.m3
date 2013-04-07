@@ -2363,7 +2363,7 @@ BEGIN
     x.comment("begin: DeclareTypes");
     DeclareBuiltinTypes(x); (* This must be before replay. *)
     multipass.Replay(self, index);
-(*
+
     size_before := x.pendingTypes.size();
     WHILE size_before > 0 DO
         DeclareTypes_FlushOnce(x);
@@ -2373,7 +2373,7 @@ BEGIN
         END;
         size_before := size_after;
     END;
-*)    
+(*
     WHILE retry < 40 AND x.pendingTypes.size() > 0 DO
         DeclareTypes_FlushOnce(x);
         INC(retry);
@@ -2381,6 +2381,7 @@ BEGIN
     IF x.pendingTypes.size() > 0 THEN
         x.comment("giving up with " & IntToDec(x.pendingTypes.size()) & " remaining");
     END;
+*)
     x.comment("end: DeclareTypes");
 END DeclareTypes;
 
