@@ -2,7 +2,7 @@ MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN, IntIntTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
-IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio;
+IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -838,10 +838,11 @@ BEGIN
         field := NARROW(fields.get(i), Field_t);
         <* ASSERT field # NIL *>
         IF NOT ResolveType(self, field.typeid, field.type) THEN
+            self.comment("1 record_canBeDefined: typeid:" & type.text & " pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
             RETURN FALSE;
         END;
         IF NOT ((field.type.IsDefined() (*OR field.type.CanBeDefined(self)*))) THEN
-            self.comment("record_canBeDefined: typeid:" & type.text & " pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
+            self.comment("2 record_canBeDefined: typeid:" & type.text & " pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
             RETURN FALSE;
         END;
     END;
@@ -1042,7 +1043,6 @@ OVERRIDES
     isArray := type_isType_true;
     canBeForwardDeclared := type_canBeForwardDeclared_true;
     forwardDeclare := array_forwardDeclare;
-    canBeDefined := array_canBeDefined;
 END;
 
 PROCEDURE array_forwardDeclare(type: Array_t; self: T) =
@@ -1058,6 +1058,7 @@ END array_forwardDeclare;
 TYPE FixedArray_t = Array_t OBJECT
 OVERRIDES
     define := fixedArray_define;
+    canBeDefined := fixedArray_canBeDefined;
 END;
 
 PROCEDURE fixedArray_define(type: FixedArray_t; x: T) =
@@ -1070,23 +1071,44 @@ BEGIN
     print(x, "];};\n");
 END fixedArray_define;
 
-PROCEDURE array_canBeDefined(type: Array_t; self: T): BOOLEAN =
+PROCEDURE fixedArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
 BEGIN
     RETURN ResolveType(self, type.element_typeid, type.element_type) AND (type.element_type.IsDefined() (*OR type.element_type.CanBeDefined(self)*));
-END array_canBeDefined;
+END fixedArray_canBeDefined;
 
 TYPE OpenArray_t = Array_t OBJECT
 OVERRIDES
     define := openArray_define;
+    canBeDefined := openArray_canBeDefined;
 END;
+
+PROCEDURE openArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
+BEGIN
+    RETURN ResolveType(self, type.element_typeid, type.element_type)
+        AND Type_IsForwardDeclared(type.element_type);
+END openArray_canBeDefined;
 
 PROCEDURE openArray_define(type: OpenArray_t; x: T) =
 VAR text := "";
+    element_type := type.element_type;
+    element_type_text: TEXT := NIL;
+    Integer_size := Target.Integer.size;
+    dimensions := (type.bit_size - Integer_size) DIV Integer_size;
 BEGIN
-    type.element_type.Define(x);
-    text := "/*openArray_define*/struct " & type.text & "{\n" & type.element_type.text & "* _elts;\nCARDINAL _size";
-    IF type.bit_size > Target.Integer.size * 2 THEN
-        text := text & "s[" & IntToDec((type.bit_size - Target.Integer.size) DIV Target.Integer.size) & "]";
+    <* ASSERT dimensions >= 1 *>
+    IF element_type # NIL THEN
+        element_type_text := element_type.text;
+    END;
+    IF TRUE OR element_type_text = NIL THEN
+        element_type_text := "char";
+    END;
+    text := "/*openArray_define*/struct " & type.text & "{\n" & element_type_text;
+    FOR i := 1 TO dimensions DO
+        text := text & "*";
+    END;
+    text := text & "_elts;\nCARDINAL _size";
+    IF dimensions > 1 THEN
+        text := text & "s[" & IntToDec(dimensions) & "]";
     END;
     print(x, text & ";\n};");
 END openArray_define;
@@ -1137,33 +1159,34 @@ BEGIN
 END Type_Init;
 
 (* see RTBuiltin.mx
-   see RT0.i3 *)
-<*NOWARN*>CONST UID_INTEGER = 16_195C2A74; (* INTEGER *)
-<*NOWARN*>CONST UID_LONGINT = 16_05562176; (* LONGINT *)
-<*NOWARN*>CONST UID_WORD = 16_97E237E2; (* CARDINAL *)
-<*NOWARN*>CONST UID_LONGWORD = 16_9CED36E7; (* LONGCARD *)
-<*NOWARN*>CONST UID_REEL = 16_48E16572; (* REAL *)
-<*NOWARN*>CONST UID_LREEL = 16_94FE32F6; (* LONGREAL *)
-<*NOWARN*>CONST UID_XREEL = 16_9EE024E3; (* EXTENDED *)
-<*NOWARN*>CONST UID_BOOLEAN = 16_1E59237D; (* BOOLEAN [0..1] *)
-<*NOWARN*>CONST UID_CHAR = 16_56E16863; (* CHAR [0..255] *)
-<*NOWARN*>CONST UID_WIDECHAR = 16_88F439FC;
-<*NOWARN*>CONST UID_MUTEX = 16_1541F475; (* MUTEX *)
-<*NOWARN*>CONST UID_TEXT = 16_50F86574; (* TEXT *)
-<*NOWARN*>CONST UID_UNTRACED_ROOT = 16_898EA789; (* UNTRACED ROOT *)
-<*NOWARN*>CONST UID_ROOT = 16_9D8FB489; (* ROOT *)
-<*NOWARN*>CONST UID_REFANY = 16_1C1C45E6; (* REFANY *)
-<*NOWARN*>CONST UID_ADDR = 16_08402063; (* ADDRESS *)
-<*NOWARN*>CONST UID_RANGE_0_31 = 16_2DA6581D; (* [0..31] *)
-<*NOWARN*>CONST UID_RANGE_0_63 = 16_2FA3581D; (* [0..63] *)
-<*NOWARN*>CONST UID_PROC1 = 16_9C9DE465; (* PROCEDURE (x, y: INTEGER): INTEGER *)
-<*NOWARN*>CONST UID_PROC2 = 16_20AD399F; (* PROCEDURE (x, y: INTEGER): BOOLEAN *)
-<*NOWARN*>CONST UID_PROC3 = 16_3CE4D13B; (* PROCEDURE (x: INTEGER): INTEGER *)
-<*NOWARN*>CONST UID_PROC4 = 16_FA03E372; (* PROCEDURE (x, n: INTEGER): INTEGER *)
-<*NOWARN*>CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *)
-<*NOWARN*>CONST UID_PROC6 = 16_DC1B3625; (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
-<*NOWARN*>CONST UID_PROC7 = 16_EE17DF2C; (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
-<*NOWARN*>CONST UID_PROC8 = 16_B740EFD0; (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
+   see RT0.i3
+   see output of m3front -vsdebug *)
+CONST UID_INTEGER = 16_195C2A74; (* INTEGER *)
+CONST UID_LONGINT = 16_05562176; (* LONGINT *)
+CONST UID_WORD = (* 16_97E237E2 *) -1746782238; (* CARDINAL *)
+CONST UID_LONGWORD = 16_9CED36E7; (* LONGCARD *)
+CONST UID_REEL = 16_48E16572; (* REAL *)
+CONST UID_LREEL = (* 16_94FE32F6 *) -1795280138; (* LONGREAL *)
+CONST UID_XREEL = (* 16_9EE024E3 *) -1629477661; (* EXTENDED *)
+CONST UID_BOOLEAN = 16_1E59237D; (* BOOLEAN [0..1] *)
+CONST UID_CHAR = 16_56E16863; (* CHAR [0..255] *)
+CONST UID_WIDECHAR = (* 16_88F439FC *) -1997260292;
+CONST UID_MUTEX = 16_1541F475; (* MUTEX *)
+CONST UID_TEXT = 16_50F86574; (* TEXT *)
+CONST UID_UNTRACED_ROOT = (* 16_898EA789 *) -1987139703; (* UNTRACED ROOT *)
+CONST UID_ROOT = (* 16_9D8FB489 *) -1651526519; (* ROOT *)
+CONST UID_REFANY = 16_1C1C45E6; (* REFANY *)
+CONST UID_ADDR = 16_08402063; (* ADDRESS *)
+CONST UID_RANGE_0_31 = 16_2DA6581D; (* [0..31] *)
+CONST UID_RANGE_0_63 = 16_2FA3581D; (* [0..63] *)
+CONST UID_PROC1 = 16_9C9DE465; (* PROCEDURE (x, y: INTEGER): INTEGER *)
+CONST UID_PROC2 = 16_20AD399F; (* PROCEDURE (x, y: INTEGER): BOOLEAN *)
+CONST UID_PROC3 = 16_3CE4D13B; (* PROCEDURE (x: INTEGER): INTEGER *)
+CONST UID_PROC4 = 16_FA03E372; (* PROCEDURE (x, n: INTEGER): INTEGER *)
+CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *)
+CONST UID_PROC6 = 16_DC1B3625; (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
+CONST UID_PROC7 = 16_EE17DF2C; (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
+CONST UID_PROC8 = 16_B740EFD0; (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
 TYPE ExprType = {
@@ -1962,9 +1985,9 @@ BEGIN
     self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"));
     self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"));
 
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1)), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF)), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF)), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1), text := "BOOLEAN"), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF), text := "CHAR"), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF), text := "WIDECHAR"), typedef := TRUE);
 
     self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size);
     self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size);
@@ -1972,6 +1995,7 @@ BEGIN
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_MUTEX, text := "MUTEX"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_TEXT, text := "TEXT"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ROOT, text := "ROOT"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_UNTRACED_ROOT, text := "UNTRACED_ROOT"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_REFANY, text := "REFANY"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR, text := TextAddress), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC1, text := "PROC1"), typedef := TRUE);
@@ -2138,7 +2162,7 @@ END declare_typename;
 
 PROCEDURE TypeIDToText(x: INTEGER(*TypeUID*)): TEXT =
 BEGIN
-    RETURN "M" & IntToHex(x, "M");
+    RETURN "M" & IntToHex(Word.And(16_FFFFFFFF, x), "M");
 END TypeIDToText;
 
 PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
@@ -2308,12 +2332,15 @@ OVERRIDES
 END;
 
 PROCEDURE DeclareTypes_FlushOnce(x: T) =
+VAR size := x.pendingTypes.size();
 BEGIN
-    IF x.pendingTypes.size() > 0 THEN
+    FOR i := 1 TO size DO
         WITH type = NARROW(x.pendingTypes.remlo(), Type_t) DO
             IF type.IsDefined() THEN
                 (* nothing *)
+                x.comment("DeclareTypes_FlushOnce IsDefined:" & type.text);
             ELSIF type.CanBeDefined(x) THEN
+                x.comment("DeclareTypes_FlushOnce CanBeDefined:" & type.text);
                 type.Define(x);
             ELSE
                 x.comment("DeclareTypes_FlushOnce pending:" & type.text);
@@ -2337,7 +2364,9 @@ BEGIN
         DeclareTypes_FlushOnce(x);
         INC(retry);
     END;
-    x.comment("giving up with " & IntToDec(x.pendingTypes.size()) & " remaining");
+    IF x.pendingTypes.size() > 0 THEN
+        x.comment("giving up with " & IntToDec(x.pendingTypes.size()) & " remaining");
+    END;
     x.comment("end: DeclareTypes");
 END DeclareTypes;
 
@@ -2350,7 +2379,7 @@ BEGIN
     ELSE
         x.comment("declare_record");
     END;
-    IF field_count = 0 OR typeid = -1 THEN
+    IF typeid = -1 THEN
         RETURN;
     END;
     record := NEW(Record_t,
@@ -2358,10 +2387,15 @@ BEGIN
                   typeid := typeid,
                   bit_size := bit_size,
                   fields := NEW(RefSeq.T).init(field_count));
-    self.record := record;
     self.previous_field := NIL;
     self.field_count := field_count;
     self.field_index := 0;
+    IF field_count = 0 THEN
+        Type_Init(x, record);
+        self.record := NIL;
+    ELSE
+        self.record := record;
+    END;
 END declare_record;
 
 PROCEDURE declare_field(self: DeclareTypes_t; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
@@ -2397,9 +2431,9 @@ BEGIN
     END;
     previous_field := field;
     IF self.field_index = self.field_count THEN
-        Type_Init(self.self, self.record);
+        Type_Init(x, self.record);
         self.record := NIL;
-        previous_field := NIL;
+        self.previous_field := NIL;
     END;
 END declare_field;
 
@@ -2407,11 +2441,15 @@ PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain_type: TypeUID; bit_si
 VAR x := self.self;
 BEGIN
     IF DebugDeclare(x) THEN
-        self.comment("declare_set typeid:" & TypeIDToText(typeid) & " domain_type:"
+        x.comment("declare_set typeid:" & TypeIDToText(typeid) & " domain_type:"
             & TypeIDToText(domain_type) & " bit_size:" & IntToDec(bit_size));
     ELSE
-        self.comment("declare_set");
+        x.comment("declare_set");
     END;
+    IF (bit_size MOD Target.Integer.size) # 0 THEN
+        Err(x, "declare_set not multiple of integer size");
+    END;
+    self.declare_array(typeid, UID_WORD, UID_WORD, bit_size);
 END declare_set;
 
 PROCEDURE SubrangeIsSigned(READONLY min, max: Target.Int): BOOLEAN =
@@ -2461,11 +2499,11 @@ PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: 
 VAR x := self.self;
 BEGIN
     IF DebugDeclare(x) THEN
-        self.comment("declare_pointer typeid:" & TypeIDToText(typeid) & " target:"
+        x.comment("declare_pointer typeid:" & TypeIDToText(typeid) & " target:"
         & TypeIDToText(target) & " brand:" & TextOrNIL(brand) & " traced:"
         & BoolToText[traced]);
     ELSE
-        self.comment("declare_pointer");
+        x.comment("declare_pointer");
     END;
     x.Type_Init(
         NEW(Pointer_t,
