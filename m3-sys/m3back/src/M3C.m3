@@ -2355,11 +2355,23 @@ VAR x := multipass.self;
     self := NEW(DeclareTypes_t, self := x);
     index := 0;
     retry := 0; (* hack until the work is complete *)
+    size_before, size_after := 0;
 BEGIN
     x.declareTypes := self;
     x.comment("begin: DeclareTypes");
     DeclareBuiltinTypes(x); (* This must be before replay. *)
     multipass.Replay(self, index);
+(*
+    size_before := x.pendingTypes.size();
+    WHILE size_before > 0 DO
+        DeclareTypes_FlushOnce(x);
+        size_after := x.pendingTypes.size();
+        IF size_after >= size_before THEN
+            Err(x, "DeclareTypes not progressing");
+        END;
+        size_before := size_after;
+    END;
+*)    
     WHILE retry < 40 AND x.pendingTypes.size() > 0 DO
         DeclareTypes_FlushOnce(x);
         INC(retry);
