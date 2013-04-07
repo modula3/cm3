@@ -1137,7 +1137,9 @@ BEGIN
     IF type.text = NIL THEN
         type.text := TypeIDToText(type.typeid);
     END;
-    EVAL self.typeidToType.put(type.typeid, type);
+    IF type.typeid # -1 THEN
+        EVAL self.typeidToType.put(type.typeid, type);
+    END;
 
     IF typedef THEN
         (* typedef INT32 M1234; and such
@@ -2583,19 +2585,41 @@ BEGIN
 END declare_raises;
 
 PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize) =
-VAR x := self.self;
+VAR record: Record_t := NIL;
+    x := self.self;
 BEGIN
     IF DebugDeclare(x) THEN
         x.comment("declare_object typeid:" & TypeIDToText(typeid) & " super:"
-        & TypeIDToText(super) & " brand:" & TextOrNIL(brand) & " traced:"
-        & BoolToText[traced] & " field_count:" & IntToDec(field_count)
-        & " method_count:" & IntToDec(method_count) & " field_size:"
-        & IntToDec(field_size));
+            & TypeIDToText(super) & " brand:" & TextOrNIL(brand) & " traced:"
+            & BoolToText[traced] & " field_count:" & IntToDec(field_count)
+            & " method_count:" & IntToDec(method_count) & " field_size:"
+            & IntToDec(field_size));
     ELSE
         x.comment("declare_object");
     END;
     (* SuppressLineDirective(self, field_count + method_count, "declare_object field_count + method_count"); *)
-    self.declare_record(typeid, field_size, field_count);
+
+    record := NEW(Record_t,
+                  text := TypeIDToText(typeid) & "_record_for_object",
+                  typeid := -1,
+                  bit_size := field_size,
+                  fields := NEW(RefSeq.T).init(field_count));
+    self.previous_field := NIL;
+    self.field_count := field_count;
+    self.field_index := 0;
+    IF field_count = 0 THEN
+        Type_Init(x, record);
+        self.record := NIL;
+    ELSE
+        self.record := record;
+    END;
+    x.Type_Init(
+        NEW(Pointer_t,
+            typeid := typeid,
+            points_to_type := record,
+            points_to_typeid := -1,
+            brand := brand,
+            traced := traced));
 END declare_object;
 
 PROCEDURE declare_method(self: DeclareTypes_t; name: Name; signature: TypeUID) =
