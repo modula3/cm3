@@ -900,7 +900,7 @@ dbxout_finish_complex_stabs (tree sym, STAB_CODE_TYPE code,
       DBX_FINISH_STABS (sym, code, line, addr, label, number);
     }
   obstack_free (&stabstr_ob, str);
-}
+} /* dbxout_finish_complex_stabs */ 
 
 #if defined (DBX_DEBUGGING_INFO)
 
@@ -3087,7 +3087,7 @@ dbxout_symbol_location (tree decl, tree type, const char *suffix, rtx home)
   DBX_STATIC_BLOCK_END (asm_out_file, code);
 #endif
   return 1;
-}
+} /* dbxout_symbol_location */
 
 /* Output the symbol name of DECL for a stabs, with suffix SUFFIX.
    Then output LETTER to indicate the kind of location the symbol has.  */
