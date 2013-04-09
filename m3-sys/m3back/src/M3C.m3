@@ -1748,32 +1748,32 @@ CONST Prefix = ARRAY OF TEXT {
 };
 
 CONST intLiteralPrefix = ARRAY CGType OF TEXT {
-    "",  "((INT8)",
-    "",  "((INT16)",
-    "", "",
-    "M3_UINT64(", "M3_INT64(",
-    NIL, ..
+    "",  "((INT8)",             (* 0 1 *)
+    "",  "((INT16)",            (* 2 2 *)
+    "", "",                     (* 4 3 *)
+    "M3_UINT64(", "M3_INT64(",  (* 6 7 *)
+    NIL, ..  (* 8 REAL 9 LONGREAL A EXTENDED B ADDRESS C STRUCT D void *)
 };
 
 CONST intLiteralSuffix = ARRAY CGType OF TEXT {
-    "U",  ")",
-    "U",  ")",
-    "U", "",
-    ")", ")",
-    NIL, ..
+    "U",  ")",  (* 0 1 UINT8  INT8 *)
+    "U",  ")",  (* 2 3 UINT16 INT16 *)
+    "U", "",    (* 4 5 UINT32 INT32 *)
+    ")", ")",   (* 6 7 UINT64 INT64 *)
+    NIL, ..     (* 8 REAL 9 LONGREAL A EXTENDED B ADDRESS C STRUCT D void *)
 };
 
 CONST cgtypeToText = ARRAY CGType OF TEXT {
-    "UINT8",  "INT8",
-    "UINT16", "INT16",
-    "UINT32", "INT32",
-    "UINT64", "INT64",
-    "float",  (* REAL *)
-    "double", (* LONGREAL *)
-    "EXTENDED",
-    TextAddress,
-    "STRUCT",
-    "void"
+    "UINT8",  "INT8",           (* 0 1 *)
+    "UINT16", "INT16",          (* 2 3 *)
+    "UINT32", "INT32",          (* 4 5 *)
+    "UINT64", "INT64",          (* 6 7 *)
+    "float",  (* REAL *)        (* 8 *)
+    "double", (* LONGREAL *)    (* 9 *)
+    "EXTENDED",                 (* A *)
+    TextAddress,                (* B *)
+    "STRUCT",                   (* C *)
+    "void"                      (* D *)
 };
 
 TYPE IntegerTypes = [M3CG.Type.Word8 .. M3CG.Type.Int64];
