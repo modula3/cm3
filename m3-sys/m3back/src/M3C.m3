@@ -1248,7 +1248,7 @@ TYPE Expr_t = OBJECT
     self: T := NIL;
     expr_type := ExprType.Invalid;
     current_proc: Proc_t := NIL;
-    points_to_m3cgtype: M3CG.Type := M3CG.Type.Void;
+    points_to_cgtype: M3CG.Type := M3CG.Type.Void;
     points_to_typeid: INTEGER(*TypeUID*) := 0;
     float_value: Target.Float;
     text_value: TEXT := NIL;
@@ -1256,7 +1256,7 @@ TYPE Expr_t = OBJECT
     could possibly have, represented by range lists, not just one range. *)
     minmax_valid := minMaxFalse;
     minmax := int64MinMax;
-    m3cgtype: M3CG.Type := M3CG.Type.Void;
+    cgtype: M3CG.Type := M3CG.Type.Void;
     typeid: INTEGER(*TypeUID*) := 0;
     type: Type_t := NIL;
     c_text: TEXT := NIL;
@@ -1295,7 +1295,7 @@ TYPE Expr_ConstantInt_t = Expr_t OBJECT OVERRIDES CText := Expr_ConstantInt_CTex
 PROCEDURE Expr_ConstantInt_CText(self: Expr_ConstantInt_t): TEXT =
 BEGIN
     (* ASSERT self.minmax[Min] = self.minmax[Max] *)
-    RETURN TIntLiteral(self.m3cgtype, self.minmax[Min]);
+    RETURN TIntLiteral(self.cgtype, self.minmax[Min]);
 END Expr_ConstantInt_CText;
 
 TYPE Expr_Cast_t = Expr_Unary_t OBJECT
@@ -1305,7 +1305,7 @@ TYPE Expr_Cast_t = Expr_Unary_t OBJECT
 END;
 PROCEDURE Expr_Cast_CText(self: Expr_Cast_t): TEXT =
 VAR type_text := self.type_text;
-    m3cgtype := self.m3cgtype;
+    cgtype := self.cgtype;
     force := self.force;
     left := self.left;
     left_text := left.CText();
@@ -1313,7 +1313,7 @@ VAR type_text := self.type_text;
     lparen := "";
     rparen := "";
 BEGIN
-    <* ASSERT (m3cgtype = M3CG.Type.Void) # (self.type_text = NIL) *>
+    <* ASSERT (cgtype = M3CG.Type.Void) # (self.type_text = NIL) *>
     IF NOT force THEN
         (* We might need "force_cast":
         INT16 a, b, c = a + b;
@@ -1324,10 +1324,10 @@ BEGIN
                 remove := 1; (* I've never seen this. *)
             END;
         ELSE
-            type_text := cgtypeToText[m3cgtype];
+            type_text := cgtypeToText[cgtype];
             lparen := "(";
             rparen := ")";
-            IF left.m3cgtype = m3cgtype AND m3cgtype # M3CG.Type.Addr THEN
+            IF left.cgtype = cgtype AND cgtype # M3CG.Type.Addr THEN
                 remove := 2; (* This happens fairly often. *)
             END;
         END;
@@ -1360,14 +1360,14 @@ END TextOrNil;
 
 PROCEDURE Expr_Assert(self: Expr_t) =
 VAR type_text := self.type_text;
-    m3cgtype := self.m3cgtype;
+    cgtype := self.cgtype;
     ok := FALSE;
 BEGIN
     IF FALSE THEN
-        IF NOT ((m3cgtype = M3CG.Type.Void) # (type_text = NIL)) THEN
-            RTIO.PutText("m3cgtype:" & cgtypeToText[m3cgtype] & " type_text:" & TextOrNil(type_text) & "\n");
+        IF NOT ((cgtype = M3CG.Type.Void) # (type_text = NIL)) THEN
+            RTIO.PutText("cgtype:" & cgtypeToText[cgtype] & " type_text:" & TextOrNil(type_text) & "\n");
             RTIO.Flush();
-            <* ASSERT (m3cgtype = M3CG.Type.Void) # (type_text = NIL) *>
+            <* ASSERT (cgtype = M3CG.Type.Void) # (type_text = NIL) *>
         END;
     END;
     IF self.expr_type = ExprType.Variable THEN
@@ -1429,9 +1429,9 @@ TYPE Var_t = M3CG.Var OBJECT
     used := FALSE;
     name: Name := 0;
     name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
-    m3cgtype: M3CG.Type;
+    cgtype: M3CG.Type;
     typeid: INTEGER(*TypeUID*);
-    points_to_m3cgtype: M3CG.Type; (* future *)
+    points_to_cgtype: M3CG.Type; (* future *)
     type_text: TEXT := NIL;
     const := FALSE;
     imported := FALSE;
@@ -2684,7 +2684,7 @@ END set_runtime_proc;
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: M3CG.Type; <*UNUSED*>typeid: TypeUID): M3CG.Var =
-VAR var := NEW(Var_t, self := self, m3cgtype := type, name := name, imported := TRUE).Init();
+VAR var := NEW(Var_t, self := self, cgtype := type, name := name, imported := TRUE).Init();
 BEGIN
     self.comment("import_global");
     <* ASSERT (byte_size MOD alignment) = 0 *>
@@ -2800,7 +2800,7 @@ END Segments_declare_constant;
 
 PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: M3CG.Type; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
-VAR   var := NEW(Var_t, self := self, m3cgtype := type, name := name, const := const,
+VAR   var := NEW(Var_t, self := self, cgtype := type, name := name, const := const,
                  (*inited := inited, typeid := typeid, alignment := alignment,*)
                  exported := exported, global := TRUE,
                  proc := self.current_proc, byte_size := byte_size).Init();
@@ -3841,10 +3841,10 @@ PROCEDURE Param_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN RETURN var.type_text; END;
     IF TRUE THEN
-        RETURN cgtypeToText[var.m3cgtype];
+        RETURN cgtypeToText[var.cgtype];
     ELSE
-        IF var.m3cgtype # M3CG.Type.Struct THEN
-            RETURN cgtypeToText[var.m3cgtype];
+        IF var.cgtype # M3CG.Type.Struct THEN
+            RETURN cgtypeToText[var.cgtype];
         END;
         RETURN Struct(var.byte_size) & "*";
     END;
@@ -3855,15 +3855,15 @@ BEGIN
     IF var.type_text # NIL THEN
         RETURN var.type_text;
     END;
-    IF var.m3cgtype # M3CG.Type.Struct THEN
-        RETURN cgtypeToText[var.m3cgtype];
+    IF var.cgtype # M3CG.Type.Struct THEN
+        RETURN cgtypeToText[var.cgtype];
     END;
     RETURN Struct(var.byte_size);
 END Var_Type;
 
 PROCEDURE Param_Name(var: Var_t): TEXT =
 BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.m3cgtype = M3CG.Type.Struct] & NameT(var.name);
+    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.cgtype = M3CG.Type.Struct] & NameT(var.name);
 END Param_Name;
 
 PROCEDURE Var_Name(var: Var_t): TEXT =
@@ -3891,7 +3891,7 @@ PROCEDURE declare_local(
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency): Var_t =
-VAR var := NEW(Var_t, self := self, m3cgtype := type, name := name, up_level := up_level,
+VAR var := NEW(Var_t, self := self, cgtype := type, name := name, up_level := up_level,
                in_memory := in_memory, byte_size := byte_size, proc := self.current_proc).Init();
 BEGIN
     IF DebugDeclare(self) THEN
@@ -4004,7 +4004,7 @@ PROCEDURE internal_declare_param(
     <*UNUSED*>frequency: Frequency;
     type_text: TEXT): M3CG.Var =
 VAR function := self.param_proc;
-    var := NEW(Param_t, self := self, m3cgtype := type, name := name, byte_size := byte_size,
+    var := NEW(Param_t, self := self, cgtype := type, name := name, byte_size := byte_size,
                in_memory := in_memory, up_level := up_level, proc := function, type_text := type_text).Init();
 BEGIN
     self.comment("declare_param");
@@ -4269,7 +4269,7 @@ PROCEDURE TIntToExpr(self: T; READONLY i: Target.Int): Expr_t =
 VAR e := NEW(Expr_ConstantInt_t,
              expr_type := ExprType.ConstantInt,
              self := self,
-             m3cgtype := Target.Integer.cg_type);
+             cgtype := Target.Integer.cg_type);
 BEGIN
     e.minmax[Min] := i;
     e.minmax[Max] := i;
@@ -4549,7 +4549,7 @@ BEGIN
     FOR i := 0 TO proc.Locals_Size() - 1 DO
         WITH local = proc.Locals(i) DO
             IF (NOT local.up_level) AND local.used THEN
-                IF local.m3cgtype = M3CG.Type.Struct THEN
+                IF local.cgtype = M3CG.Type.Struct THEN
                     print(self, local.Declare() & ";\n");
                 ELSE
                     print(self, local.Declare() & " = 0;\n");
@@ -4562,7 +4562,7 @@ BEGIN
 
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
-            IF (NOT param.up_level) AND (param.m3cgtype = M3CG.Type.Struct) AND param.used THEN
+            IF (NOT param.up_level) AND (param.cgtype = M3CG.Type.Struct) AND param.used THEN
                 print(self, Struct(param.byte_size) & " " & Var_Name(param) & ";\n");
             END;
         END;
@@ -4580,7 +4580,7 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level AND param.used THEN
-                    IF param.m3cgtype # M3CG.Type.Struct THEN
+                    IF param.cgtype # M3CG.Type.Struct THEN
                         print(self, frame_name & "." & Var_Name(param) & "=" & Param_Name(param) & ";\n");
                     ELSE
                         print(self, frame_name & "." & Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
@@ -4597,7 +4597,7 @@ BEGIN
 
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
-            IF (NOT param.up_level) AND param.m3cgtype = M3CG.Type.Struct AND param.used THEN
+            IF (NOT param.up_level) AND param.cgtype = M3CG.Type.Struct AND param.used THEN
                 print(self, Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
             END;
         END;
@@ -4667,7 +4667,7 @@ TYPE internal_compare_t = RECORD
     value := FALSE;
     comment: TEXT := NIL;
     text: TEXT := NIL;
-    m3cgtype := CGType.Void;
+    cgtype := CGType.Void;
 END;
 
 (*PROCEDURE remove_comments(text: TEXT): TEXT =
@@ -4772,13 +4772,13 @@ PROCEDURE Variable(self: T; var: Var_t): Expr_t =
 VAR expr := NEW(Expr_Variable_t,
                 expr_type := ExprType.Variable,
                 var := var,
-                m3cgtype := var.m3cgtype,
+                cgtype := var.cgtype,
                 typeid := var.typeid,
                 current_proc := self.current_proc);
 BEGIN
 (* TODO: subranges *)
-    expr.minmax_valid := minMaxPossiblyValidForType[var.m3cgtype];
-    expr.minmax := typeMinMax[var.m3cgtype];
+    expr.minmax_valid := minMaxPossiblyValidForType[var.cgtype];
+    expr.minmax := typeMinMax[var.cgtype];
     RETURN expr;
 END Variable;
 
@@ -4786,8 +4786,8 @@ PROCEDURE AddressOf(expr: Expr_t): Expr_t =
 BEGIN
     RETURN NEW(Expr_t,
                expr_type := ExprType.AddressOf,
-               m3cgtype := M3CG.Type.Addr,
-               points_to_m3cgtype := expr.m3cgtype,
+               cgtype := M3CG.Type.Addr,
+               points_to_cgtype := expr.cgtype,
                points_to_typeid := expr.typeid,
                left := expr,
                c_unop_text := "(ADDRESS)&");
@@ -4798,7 +4798,7 @@ BEGIN
     RETURN
         NEW(Expr_t,
             expr_type := ExprType.Deref,
-            m3cgtype := expr.points_to_m3cgtype,
+            cgtype := expr.points_to_cgtype,
             typeid := expr.points_to_typeid,
             left := expr,
             c_unop_text := "*");
@@ -4840,13 +4840,13 @@ VAR var := NARROW(v, Var_t);
 BEGIN
     self.comment("load");
     IF FALSE THEN
-        IF NOT in_mtype = var.m3cgtype THEN
-            RTIO.PutText("load in_mtype:" & cgtypeToText[in_mtype] & " var.m3cgtype:" & cgtypeToText[var.m3cgtype]);
+        IF NOT in_mtype = var.cgtype THEN
+            RTIO.PutText("load in_mtype:" & cgtypeToText[in_mtype] & " var.cgtype:" & cgtypeToText[var.cgtype]);
             RTIO.Flush();
-            <* ASSERT in_mtype = var.m3cgtype *>
+            <* ASSERT in_mtype = var.cgtype *>
         END;
     END;
-    IF offset # 0 OR var.m3cgtype # in_mtype THEN
+    IF offset # 0 OR var.cgtype # in_mtype THEN
         expr := AddressOf(expr);
         IF offset # 0 THEN
             expr := cast(expr, type := M3CG.Type.Addr);
@@ -4906,7 +4906,7 @@ BEGIN
     IF mtype # ztype THEN
         expr := cast(expr, ztype);
     END;
-    expr.m3cgtype := ztype;
+    expr.cgtype := ztype;
     push(self, ztype, expr);
 END load_indirect;
 
@@ -4971,14 +4971,14 @@ BEGIN
     <* ASSERT signed OR unsigned *>
     expr.minmax_valid[Min] := TRUE;
     expr.minmax_valid[Max] := TRUE;
-    expr.m3cgtype := type;
+    expr.cgtype := type;
     IF typeIsUnsignedInt[type] THEN TIntN.ZeroExtend(i, size)
     ELSIF typeIsSignedInt[type] THEN TIntN.SignExtend(i, size) END;
     <* ASSERT readonly_i = i *>
     expr.minmax[Min] := i;
     expr.minmax[Max] := i;
     expr := cast(expr, type);
-    expr.m3cgtype := type;
+    expr.cgtype := type;
     (* TIntLiteral includes suffixes like U, ULL, UI64, etc. *)
     push(self, type, expr);
 END load_target_integer;
@@ -5000,10 +5000,10 @@ PROCEDURE InternalTransferMinMax2(
     to: Expr_t;
     VAR to_valid: BOOLEAN;
     VAR to_value: Target.Int): BOOLEAN =
-VAR from_type     := from.m3cgtype;
+VAR from_type     := from.cgtype;
     from_signed   := typeIsSignedInt[from_type];
     from_unsigned := typeIsUnsignedInt[from_type];
-    to_type       := to.m3cgtype;
+    to_type       := to.cgtype;
     to_signed     := typeIsSignedInt[to_type];
     to_unsigned   := typeIsUnsignedInt[to_type];
 BEGIN
@@ -5042,11 +5042,11 @@ PROCEDURE TransferMinMax(from, to: Expr_t) =
 BEGIN
     to.minmax_valid := minMaxFalse;
     RETURN;
-    IF NOT typeIsInteger[to.m3cgtype] THEN
+    IF NOT typeIsInteger[to.cgtype] THEN
         to.minmax_valid := minMaxFalse;
         RETURN;
     END;
-    IF from.m3cgtype = to.m3cgtype THEN
+    IF from.cgtype = to.cgtype THEN
         to.minmax := from.minmax;
         to.minmax_valid := from.minmax_valid;
         RETURN;
@@ -5054,12 +5054,12 @@ BEGIN
     IF NOT InternalTransferMinMax1(from, to, Min)
             OR NOT InternalTransferMinMax1(from, to, Max) THEN
         (* punt and extend range arbitrarily; this could be better *)
-        to.minmax := typeMinMax[to.m3cgtype];
+        to.minmax := typeMinMax[to.cgtype];
     END;
 END TransferMinMax;
 
 PROCEDURE cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
-VAR e := NEW(Expr_Cast_t, m3cgtype := type, type_text := type_text, left := expr);
+VAR e := NEW(Expr_Cast_t, cgtype := type, type_text := type_text, left := expr);
 BEGIN
     <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
     (* casts are either truncating or sign extending or zero extending *)
@@ -5070,7 +5070,7 @@ END cast;
 PROCEDURE old_Cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
-    RETURN NEW(Expr_Cast_t, m3cgtype := type, type_text := type_text, left := expr);
+    RETURN NEW(Expr_Cast_t, cgtype := type, type_text := type_text, left := expr);
 END old_Cast;
 
 PROCEDURE CastAndDeref(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
