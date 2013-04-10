@@ -268,21 +268,21 @@ BEGIN
     END;
 END Reverse;
 
-PROCEDURE Int64ToText(a: INT64; base: Base_t; minus_char := "-"): TEXT =
+PROCEDURE Int64ToText(a: INT64; base: Base_t): TEXT =
 BEGIN
     IF a >= 0L THEN
         RETURN UInt64ToText(a, base);
     END;
-    RETURN minus_char & UInt64ToText((-(a + 1L)) + 1L, base);
+    RETURN "-" & UInt64ToText((-(a + 1L)) + 1L, base);
 END Int64ToText;
 
-<*UNUSED*>PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;
+(*PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;*)
 PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END UInt64ToHex;
-<*UNUSED*>PROCEDURE  Int64ToDec(a: INT64; minus_char := "-"): TEXT = BEGIN RETURN  Int64ToText(a, 10, minus_char); END Int64ToDec;
-<*UNUSED*>PROCEDURE  Int32ToDec(a: INT32; minus_char := "-"): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 10, minus_char); END Int32ToDec;
+(*PROCEDURE Int64ToDec(a: INT64): TEXT = BEGIN RETURN Int64ToText(a, 10); END Int64ToDec;*)
+(*PROCEDURE Int32ToDec(a: INT32): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END Int32ToDec;*)
 PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
-PROCEDURE IntToHex(a: INTEGER; minus_char := "-"): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 16, minus_char); END IntToHex;
-PROCEDURE IntToDec(a: INTEGER; minus_char := "-"): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10, minus_char); END IntToDec;
+PROCEDURE IntToHex(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 16); END IntToHex;
+PROCEDURE IntToDec(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END IntToDec;
 
 <*UNUSED*>CONST Int32ToHex = UInt32ToHex;
 <*UNUSED*>CONST Int64ToHex = UInt64ToHex;
@@ -592,6 +592,7 @@ METHODS
     IsDefined(): BOOLEAN := Type_IsDefined;
     ForwardDeclare(self: T) := Type_ForwardDeclare; (* useful for structs *)
     IsForwardDeclared(): BOOLEAN := Type_IsForwardDeclared; (* useful for structs *)
+    (* GetMinimumBitSize(): INTEGER FUTURE Target.Int := Type_GetMinimumBitSize; *)
 
 (* protected lowercase) *)
     canBeForwardDeclared(self: T): BOOLEAN := type_canBeForwardDeclared_false; (* useful for structs *)
@@ -608,18 +609,25 @@ METHODS
     isPointer(): BOOLEAN := type_isType_false;
     isPacked(): BOOLEAN := type_isType_false;
     toPacked(): Packed_t := type_toPacked_nil;
-    getMinimumBitSize(): INTEGER (* FUTURE Target.Int *) := type_getMinimumBitSize;
+    (* getMinimumBitSize(): INTEGER FUTURE Target.Int := type_getMinimumBitSize; *)
 END;
+
+(*
+PROCEDURE Type_GetMinimumBitSize(type: Type_t): INTEGER FUTURE Target.Int =
+BEGIN
+    RETURN type.getMinimumBitSize();
+END Type_GetMinimumBitSize;
+
+PROCEDURE type_getMinimumBitSize(type: Type_t): INTEGER FUTURE Target.Int =
+BEGIN
+    RETURN type.bit_size;
+END type_getMinimumBitSize;
+*)
 
 PROCEDURE type_toPacked_nil(<*UNUSED*>type: Type_t): Packed_t =
 BEGIN
     RETURN NIL;
 END type_toPacked_nil;
-
-PROCEDURE type_getMinimumBitSize(type: Type_t): INTEGER (* FUTURE Target.Int *) =
-BEGIN
-    RETURN type.bit_size;
-END type_getMinimumBitSize;
 
 PROCEDURE type_isType_true(<*UNUSED*>type: Type_t): BOOLEAN =
 BEGIN
@@ -962,10 +970,11 @@ OVERRIDES
     define := subrange_define;
     canBeDefined := subrange_canBeDefined;
     isSubrange := type_isType_true;
-    getMinimumBitSize := subrange_getMinimumBitSize;
+    (* getMinimumBitSize := subrange_getMinimumBitSize; *)
 END;
 
-PROCEDURE subrange_getMinimumBitSize(subrange: Subrange_t): INTEGER (* FUTURE Target.Int *) =
+(*
+PROCEDURE subrange_getMinimumBitSize(subrange: Subrange_t): INTEGER FUTURE Target.Int =
 VAR count := TInt.Zero;
     max_for_bits, temp := TInt.Two;
     min := subrange.min;
@@ -991,12 +1000,22 @@ BEGIN
     RTIO.Flush();
     RETURN i;
 END subrange_getMinimumBitSize;
+*)
 
 PROCEDURE subrange_define(subrange: Subrange_t; self: T) =
 VAR x := self;
+    text := "";
+    type: Type_t := NIL;
 BEGIN
-    subrange.domain_type.Define(self);
-    print(x, "/*subrange_define*/typedef " & subrange.domain_type.text & " " & subrange.text & ";\n");
+    IF ResolveType(self, subrange.domain_typeid, subrange.domain_type)
+            AND subrange.domain_type.bit_size = subrange.bit_size THEN
+        subrange.domain_type.Define(self);
+        text := subrange.domain_type.text;
+    ELSE
+        text := cgtypeToText[subrange.cg_type];
+    END;
+    print(x, "/*subrange_define*/typedef " & text & " " & subrange.text & ";\n");
+    (* subrange.text := text; *)
 END subrange_define;
 
 PROCEDURE subrange_canBeDefined(type: Subrange_t; self: T): BOOLEAN =
@@ -1179,8 +1198,8 @@ CONST UID_UNTRACED_ROOT = (* 16_898EA789 *) -1987139703; (* UNTRACED ROOT *)
 CONST UID_ROOT = (* 16_9D8FB489 *) -1651526519; (* ROOT *)
 CONST UID_REFANY = 16_1C1C45E6; (* REFANY *)
 CONST UID_ADDR = 16_08402063; (* ADDRESS *)
-CONST UID_RANGE_0_31 = 16_2DA6581D; (* [0..31] *)
-CONST UID_RANGE_0_63 = 16_2FA3581D; (* [0..63] *)
+(*CONST UID_RANGE_0_31 = 16_2DA6581D; [0..31] *)
+(*CONST UID_RANGE_0_63 = 16_2FA3581D; [0..63] *)
 CONST UID_PROC1 = 16_9C9DE465; (* PROCEDURE (x, y: INTEGER): INTEGER *)
 CONST UID_PROC2 = 16_20AD399F; (* PROCEDURE (x, y: INTEGER): BOOLEAN *)
 CONST UID_PROC3 = 16_3CE4D13B; (* PROCEDURE (x: INTEGER): INTEGER *)
@@ -1525,11 +1544,12 @@ END;
 
 PROCEDURE Proc_ForwardDeclareFrameType(proc: Proc_t) =
 VAR self := proc.self;
+    id := proc.FrameType();
 BEGIN
     IF proc.forward_declared_frame_type THEN
         RETURN;
     END;
-    print(self, "/*Proc_ForwardDeclareFrameType*/FORWARD_STRUCT(" & proc.FrameType() & ")\n");
+    print(self, "/*Proc_ForwardDeclareFrameType*/struct " & id & ";typedef struct " & id & " " & id & ";\n");
     proc.forward_declared_frame_type := TRUE;
 END Proc_ForwardDeclareFrameType;
 
@@ -1689,12 +1709,6 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef float REAL;",
 "typedef double LONGREAL;",
 "typedef /*long*/ double EXTENDED;",
-
-"#if defined(__cplusplus)",
-"#define FORWARD_STRUCT(a) struct a;",
-"#else",
-"#define FORWARD_STRUCT(a) struct a; typedef struct a a;",
-"#endif",
 
 (* handled in DeclareBuiltinTypes *)
 (*"#if defined(__cplusplus) || __STDC__",*)
@@ -1991,8 +2005,8 @@ BEGIN
     self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF), text := "CHAR"), typedef := TRUE);
     self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF), text := "WIDECHAR"), typedef := TRUE);
 
-    self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size);
-    self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size);
+    (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
+    (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
 
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_MUTEX, text := "MUTEX"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_TEXT, text := "TEXT"), typedef := TRUE);
@@ -2064,7 +2078,6 @@ BEGIN
     Prefix_Print(x, self);
 
     (* declare/define types *)
-
     DeclareTypes(self);
 
     HelperFunctions(self);
@@ -2164,7 +2177,7 @@ END declare_typename;
 
 PROCEDURE TypeIDToText(x: INTEGER(*TypeUID*)): TEXT =
 BEGIN
-    RETURN "M" & IntToHex(Word.And(16_FFFFFFFF, x), "M");
+    RETURN "T" & IntToHex(Word.And(16_FFFFFFFF, x));
 END TypeIDToText;
 
 PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
@@ -2464,7 +2477,11 @@ BEGIN
     IF (bit_size MOD Target.Integer.size) # 0 THEN
         Err(x, "declare_set not multiple of integer size");
     END;
-    self.declare_array(typeid, UID_WORD, UID_WORD, bit_size);
+    IF bit_size = Target.Integer.size THEN
+        x.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := typeid));
+    ELSE
+        self.declare_array(typeid, UID_WORD, UID_WORD, bit_size);
+    END;
 END declare_set;
 
 PROCEDURE SubrangeIsSigned(READONLY min, max: Target.Int): BOOLEAN =
@@ -2601,7 +2618,7 @@ BEGIN
     (* SuppressLineDirective(self, field_count + method_count, "declare_object field_count + method_count"); *)
 
     record := NEW(Record_t,
-                  text := TypeIDToText(typeid) & "_record_for_object",
+                  text := TypeIDToText(typeid) & "_fields",
                   typeid := -1,
                   bit_size := field_size,
                   fields := NEW(RefSeq.T).init(field_count));
@@ -3886,13 +3903,16 @@ PROCEDURE declare_local(
     name: Name;
     byte_size: ByteSize;
     <*UNUSED*>alignment: Alignment;
-    type: M3CG.Type;
+    cgtype: M3CG.Type;
     typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency): Var_t =
-VAR var := NEW(Var_t, self := self, cgtype := type, name := name, up_level := up_level,
-               in_memory := in_memory, byte_size := byte_size, proc := self.current_proc).Init();
+VAR var := NEW(Var_t, self := self, cgtype := cgtype, name := name,
+               up_level := up_level, in_memory := in_memory,
+               byte_size := byte_size, typeid := typeid,
+               proc := self.current_proc).Init();
+    type: Type_t;
 BEGIN
     IF DebugDeclare(self) THEN
         self.comment("declare_local name:" & NameT(var.name) & " typeid:" & TypeIDToText(typeid));
@@ -3903,6 +3923,9 @@ BEGIN
     <* ASSERT self.current_proc.locals # NIL *>
     IF up_level THEN
         self.current_proc.uplevels := TRUE;
+    END;
+    IF ResolveType(self, typeid, type) AND type # NIL AND type.text # NIL THEN
+        var.type_text := type.text;
     END;
     self.current_proc.locals.addhi(var);
     RETURN var;
@@ -3977,7 +4000,7 @@ BEGIN
             CG_Bytes[M3CG.Type.Addr], (* size *)
             CG_Bytes[M3CG.Type.Addr], (* alignment *)
             M3CG.Type.Addr,
-            UID_ADDR,
+            -1,
             FALSE(*?*), (* in memory *)
             TRUE, (* up_level, sort of -- needs to be stored, but is never written, can be read from direct parameter
                      This gets it stored in begin_function. *)
@@ -3997,18 +4020,40 @@ PROCEDURE internal_declare_param(
     name: Name;
     byte_size: ByteSize;
     <*UNUSED*>alignment: Alignment;
-    type: M3CG.Type;
-    <*UNUSED*>typeid: TypeUID;
+    cgtype: M3CG.Type;
+    typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
     type_text: TEXT): M3CG.Var =
 VAR function := self.param_proc;
-    var := NEW(Param_t, self := self, cgtype := type, name := name, byte_size := byte_size,
-               in_memory := in_memory, up_level := up_level, proc := function, type_text := type_text).Init();
+    var: Var_t := NIL;
+    type: Type_t := NIL;
 BEGIN
-    self.comment("declare_param");
-    (* self.comment("declare_param " & NameT(var.name)); *)
+    IF DebugDeclare(self) THEN
+        self.comment("declare_param " & TextOrNIL(NameT(name)));
+    ELSE
+        self.comment("declare_param");
+    END;
+
+    IF type_text = NIL THEN
+        IF typeid # -1 THEN
+            IF NOT ResolveType(self, typeid, type) THEN
+                (* Err(self, "unable to resolve type"); *)
+            END;
+        END;
+        IF type # NIL THEN
+            type_text := type.text & " /* strong_type1 */ ";
+        END;
+        IF type_text = NIL THEN
+            type_text := cgtypeToText[cgtype] & " /* strong_type2 */ ";
+        END;
+    END;
+
+    var := NEW(Param_t, self := self, cgtype := cgtype, name := name,
+        byte_size := byte_size, in_memory := in_memory, up_level := up_level,
+        proc := function, type_text := type_text).Init();
+
     function.params[self.param_count] := var;
     function.uplevels := function.uplevels OR up_level;
     SuppressLineDirective(self, -1, "declare_param");
@@ -4034,7 +4079,8 @@ BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
     END;
-    RETURN internal_declare_param(self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency, NIL);
+    RETURN internal_declare_param(self, name, byte_size, alignment, type,
+        typeid, in_memory, up_level, frequency, cgtypeToText[type]);
 END declare_param;
 
 PROCEDURE
@@ -4549,11 +4595,7 @@ BEGIN
     FOR i := 0 TO proc.Locals_Size() - 1 DO
         WITH local = proc.Locals(i) DO
             IF (NOT local.up_level) AND local.used THEN
-                IF local.cgtype = M3CG.Type.Struct THEN
-                    print(self, local.Declare() & ";\n");
-                ELSE
-                    print(self, local.Declare() & " = 0;\n");
-                END;
+                print(self, local.Declare() & " = { 0 };\n");
             END;
         END;
     END;
@@ -4736,6 +4778,7 @@ END case_jump;
 PROCEDURE exit_proc(self: T; type: M3CG.Type) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
 VAR proc := self.current_proc;
+    cast1, cast2 := "";
 BEGIN
     self.comment("exit_proc");
     <* ASSERT self.in_proc *>
@@ -4752,7 +4795,11 @@ BEGIN
             print(self, "return;\n");
         END;
     ELSE
-        print(self, "return " & get(self).CText() & ";\n");
+        IF type = M3CG.Type.Addr OR type = M3CG.Type.Struct THEN
+            cast1 := "(ADDRESS)("; (* TODO remove this once return types are better *)
+            cast2 := ")"; (* TODO remove this once return types are better *)
+        END;
+        print(self, "return " & cast1 & get(self).CText() & cast2 & ";\n");
         pop(self);
     END;
 END exit_proc;
@@ -4760,12 +4807,13 @@ END exit_proc;
 (*------------------------------------------------------------ load/store ---*)
 
 PROCEDURE address_plus_offset(in: TEXT; in_offset: INTEGER): Expr_t =
+VAR pre := "("; post := ")";
 BEGIN
     IF in_offset # 0 THEN
-        RETURN CTextToExpr("((" & IntToDec(in_offset) & ")+(ADDRESS)(" & in & "))");
-    ELSE
-        RETURN CTextToExpr("(" & in & ")");
+        pre := "((" & IntToDec(in_offset) & ")+(ADDRESS)(";
+        post := "))";
     END;
+    RETURN CTextToExpr(pre & in & post);
 END address_plus_offset;
 
 PROCEDURE Variable(self: T; var: Var_t): Expr_t =
@@ -5128,11 +5176,17 @@ PROCEDURE compare(self: T; ztype: ZType; itype: IType; op: CompareOp) =
 (* s1.itype := (s1.ztype op s0.ztype); pop *)
 VAR s0 := get(self, 0);
     s1 := get(self, 1);
+    cast1 := "";
+    cast2 := "";
 BEGIN
     self.comment("compare");
     pop(self, 2);
+    IF ztype = M3CG.Type.Addr THEN
+        cast1 := "((ADDRESS)";
+        cast2 := ")";
+    END;
     IF AvoidGccTypeRangeWarnings THEN
-        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(" & s1.CText() & "," & s0.CText() & ")"), itype));
+        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(" & cast1 & s1.CText() & cast2 & "," & cast1 & s0.CText() & cast2 & ")"), itype));
     ELSE
         push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
     END;
