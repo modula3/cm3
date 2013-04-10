@@ -734,7 +734,7 @@ A fixed array type declaration has the form:
 where \verb|Index| is an ordinal type and \verb|Element| is any type other
 than an open array type.  The values of type \verb|T| are arrays whose element
 type is \verb|Element| and whose length is the number of elements of the type
-\verb|Index|.
+\verb|Index|.  If \verb|Element| is an empty type, then so is \verb|T|.
 
 If \verb|a| has type \verb|T|, then \verb|a[i]| designates the element of
 \verb|a| whose position corresponds to the position of \verb|i| in
@@ -768,7 +768,8 @@ An open array type declaration has the form:
 where \verb|Element| is any type.  The values of \verb|T| are arrays whose
 element type is \verb|Element| and whose length is arbitrary.  The index type
 of an open array is the integer subrange \verb|[0..n-1]|, where \verb|n| is
-the length of the array.
+the length of the array.   If \verb|Element| is an empty type, then so 
+is \verb|T|.
 
 An open array type can be used only as the type of a formal parameter, the
 referent of a reference type, the element type of another open array type, or
