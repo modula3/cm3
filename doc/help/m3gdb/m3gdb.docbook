@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Docbook documentation on m3gdb, the Modula-3-enhanced version of gdb.--> 
+<!-- Docbook documentation on m3gdb, the Modula-3-enhanced version of the gdb debugger.--> 
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V4.5//EN"
                   "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
   [ <!ENTITY gdb "gdb">
@@ -1206,7 +1206,7 @@
 
   <para>
     There are many things you can do to aid debugging, just by
-    using &m3gdb; commands to print and set variables call 
+    using &m3gdb; commands to print and set variables and to call 
     procedures in the runtime system.  
   </para> 
 
