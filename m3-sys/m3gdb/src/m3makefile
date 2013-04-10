@@ -3,12 +3,17 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
-% Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
+% Last modified on Weds Apr 10 09:17 CDT by Rodney Bates. 
 %
 
 %
 % user can say cm3 -DM3GDB_HOST=amd64-freebsd or
 % cm3 -DM3GDB_HOST=i686-pc-linux-gnu, for example.
+%
+
+%
+% User can say cm3 -DM3GDB_TARGET=FreeBSD4, for example, to build a cross
+% debugger that runs on the host but debugs programs running on FreeBSD4. 
 %
 
 if not ({"AMD64_DARWIN", "ARM_DARWIN", "I386_DARWIN", "PPC_DARWIN",
