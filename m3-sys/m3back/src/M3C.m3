@@ -4965,7 +4965,7 @@ BEGIN
                (* TODO points_to_type := expr.type, *)
                left := expr,
                (* TODO c_unop_text := "&" *)
-               (* TODO c_unop_text := "(void*)&" *)
+               (* TODO c_unop_text := "(void* )&" *)
                c_unop_text := "(ADDRESS)&"
                );
 END AddressOf;
