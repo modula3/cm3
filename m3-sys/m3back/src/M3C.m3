@@ -47,7 +47,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
 
-        typeidToType: IntRefTbl.T := NIL; (* FUTURE INTEGER => Type_t *)
+        typeidToType: IntRefTbl.T := NIL;
         pendingTypes: RefSeq.T := NIL; (* Type_t *)
         declareTypes: DeclareTypes_t := NIL;
         temp_vars: REF ARRAY OF Var_t := NIL; (* for check_* to avoid double evaluation, and pop_static_link *)
@@ -2450,15 +2450,7 @@ BEGIN
         END;
         size_before := size_after;
     END;
-(*
-    WHILE retry < 40 AND x.pendingTypes.size() > 0 DO
-        DeclareTypes_FlushOnce(x);
-        INC(retry);
-    END;
-    IF x.pendingTypes.size() > 0 THEN
-        x.comment("giving up with " & IntToDec(x.pendingTypes.size()) & " remaining");
-    END;
-*)
+
     x.comment("end: DeclareTypes");
 END DeclareTypes;
 
