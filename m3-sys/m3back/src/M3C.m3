@@ -3953,11 +3953,13 @@ END Var_Name;
 
 PROCEDURE Var_Declare(var: Var_t): TEXT =
 BEGIN
+    <* ASSERT NOT (var.global OR var.exported) *> (* only locals/params for now *)
     RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & " " & var.Name();
 END Var_Declare;
 
 PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
 BEGIN
+    <* ASSERT NOT (var.global OR var.exported) *> (* only locals/params for now *)
     RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.InFrameType() & " " & var.InFrameName();
 END Var_InFrameDeclare;
 
