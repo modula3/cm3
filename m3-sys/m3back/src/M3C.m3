@@ -1142,7 +1142,9 @@ END openArray_define;
 PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
 VAR type: REFANY := NIL;
 BEGIN
-    EVAL self.typeidToType.get(typeid, type);
+    IF typeid # -1 THEN
+        EVAL self.typeidToType.get(typeid, type);
+    END;
     IF type = NIL THEN
         RETURN NIL;
     END;
@@ -1160,14 +1162,10 @@ BEGIN
     typedefs[0] := type.text;
     typedefs[1] := TypeIDToText(type.typeid);
 
-    IF cgtype = CGType.Struct THEN (* TODO remove this *)
-        type.text := Struct(type.bit_size DIV 8);
-    END;
-
     IF type.text = NIL THEN
         IF type.typeid = -1 THEN
             IF cgtype = CGType.Struct THEN
-                type.text := Struct(type.bit_size DIV 8);
+                type.text := " /* Type_Init Struct */ " & Struct(type.bit_size DIV 8);
             ELSE
                 type.text := cgtypeToText[cgtype];
             END;
@@ -1180,7 +1178,7 @@ BEGIN
     END;
 
     IF typedef THEN
-        (* typedef INT32 M1234; and such
+        (* typedef INT32 T1234; and such
            TODO don't do this, it makes the code less readoable. *)
         FOR i := FIRST(typedefs) TO LAST(typedefs) DO
             IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
@@ -1311,6 +1309,7 @@ TYPE Expr_t = OBJECT
     current_proc: Proc_t := NIL;
     points_to_cgtype: CGType := CGType.Void;
     points_to_typeid: TypeUID := 0;
+    (* TODO points_to_type: Type_t := NIL; *)
     float_value: Target.Float;
     text_value: TEXT := NIL;
     (* The right generalization here is a set of values the expression
@@ -3943,27 +3942,20 @@ END Struct;
 PROCEDURE Param_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN
-        RETURN var.type_text;
+        RETURN " /* Param_Type 1 */ " & var.type_text;
     END;
-    IF TRUE THEN
-        RETURN cgtypeToText[var.cgtype];
-    ELSE
-        IF var.cgtype # CGType.Struct THEN
-            RETURN cgtypeToText[var.cgtype];
-        END;
-        RETURN Struct(var.byte_size) & "*";
-    END;
+    RETURN " /* Param_Type 2 */ " & cgtypeToText[var.cgtype];
 END Param_Type;
 
 PROCEDURE Var_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN
-        RETURN var.type_text;
+        RETURN " /* Var_Type 1 */ " & var.type_text;
     END;
     IF var.cgtype # CGType.Struct THEN
-        RETURN cgtypeToText[var.cgtype];
+        RETURN " /* Var_Type 2 */ " & cgtypeToText[var.cgtype];
     END;
-    RETURN Struct(var.byte_size);
+    RETURN " /* Var_Type 3 */ " & Struct(var.byte_size);
 END Var_Type;
 
 PROCEDURE Param_Name(var: Var_t): TEXT =
@@ -3977,8 +3969,13 @@ BEGIN
 END Var_Name;
 
 PROCEDURE Var_Declare(var: Var_t): TEXT =
+VAR star := " ";
 BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & " " & var.Name();
+    IF var.cgtype = CGType.Struct THEN
+        star := "*";
+        star := " "; (* TODO remove this *)
+    END;
+    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & star & var.Name();
 END Var_Declare;
 
 PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
@@ -4001,7 +3998,7 @@ VAR var := NEW(Var_t,
         name := name,
         up_level := up_level,
         byte_size := byte_size,
-        (* TODO put this back typeid := typeid, *)
+        typeid := typeid,
         proc := self.current_proc).Init();
     type: Type_t;
 BEGIN
@@ -4015,11 +4012,9 @@ BEGIN
     IF up_level THEN
         self.current_proc.uplevels := TRUE;
     END;
-    (* TODO put this back
     IF ResolveType(self, typeid, type) AND type # NIL AND type.text # NIL THEN
         var.type_text := type.text;
     END;
-    *)
     self.current_proc.locals.addhi(var);
     RETURN var;
 END declare_local;
@@ -4145,6 +4140,7 @@ BEGIN
         END;
     END;
 *)
+
     var := NEW(Param_t,
         self := self,
         cgtype := cgtype,
@@ -4184,7 +4180,7 @@ BEGIN
         type,
         typeid,
         up_level,
-        NIL(* TODO? cgtypeToText[type]*));
+        NIL);
 END declare_param;
 
 PROCEDURE
@@ -4664,6 +4660,8 @@ VAR proc := NARROW(p, Proc_t);
     frame_name := proc.FrameName();
     frame_type := proc.FrameType();
     params := proc.params;
+    star := "";
+    cast := "";
 BEGIN
     IF DebugDeclare(self) THEN
         self.comment("begin_procedure:" & NameT(proc.name));
@@ -4724,7 +4722,7 @@ BEGIN
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
             IF (NOT param.up_level) AND (param.cgtype = CGType.Struct) AND param.used THEN
-                print(self, Struct(param.byte_size) & " " & Var_Name(param) & ";\n");
+                print(self, Var_Type(param) & " " & Var_Name(param) & ";\n");
             END;
         END;
     END;
@@ -4741,11 +4739,13 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level AND param.used THEN
-                    IF param.cgtype # CGType.Struct THEN
-                        print(self, frame_name & "." & Var_Name(param) & "=" & Param_Name(param) & ";\n");
-                    ELSE
-                        print(self, frame_name & "." & Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
+                    star := "";
+                    cast := "";
+                    IF param.cgtype = CGType.Struct THEN
+                        star := "*";
+                        cast := "(" & Var_Type(param) & "*)"; (* TODO remove this *)
                     END;
+                    print(self, frame_name & "." & Var_Name(param) & "=" & star & cast & Param_Name(param) & ";\n");
                 END;
             END;
         END;
@@ -4759,7 +4759,11 @@ BEGIN
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
             IF (NOT param.up_level) AND param.cgtype = CGType.Struct AND param.used THEN
-                print(self, Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
+                cast := "";
+                IF param.cgtype = CGType.Struct THEN
+                    cast := "(" & Var_Type(param) & "*)"; (* TODO remove this *)
+                END;
+                print(self, Var_Name(param) & "=*" & cast & Param_Name(param) & ";\n");
             END;
         END;
     END;
@@ -4950,14 +4954,20 @@ BEGIN
 END Variable;
 
 PROCEDURE AddressOf(expr: Expr_t): Expr_t =
+(* TODO VAR type: Type_t; *)
 BEGIN
+    (* TODO EVAL ResolveType(expr.typeid, type); *)
     RETURN NEW(Expr_t,
                expr_type := ExprType.AddressOf,
                cgtype := CGType.Addr,
                points_to_cgtype := expr.cgtype,
                points_to_typeid := expr.typeid,
+               (* TODO points_to_type := expr.type, *)
                left := expr,
-               c_unop_text := "(ADDRESS)&");
+               (* TODO c_unop_text := "&" *)
+               (* TODO c_unop_text := "(void*)&" *)
+               TODO c_unop_text := "(ADDRESS)&"
+               );
 END AddressOf;
 
 PROCEDURE Deref(expr: Expr_t): Expr_t =
