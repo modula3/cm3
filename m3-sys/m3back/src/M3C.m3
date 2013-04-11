@@ -14,6 +14,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
 CONST NameT = M3ID.ToText;
+TYPE CGType = M3CG.Type;
 
 (* comparison is always false due to limited range of data type *)
 VAR AvoidGccTypeRangeWarnings := TRUE;
@@ -231,12 +232,12 @@ int64, uint64: TEXT; END { "ADDRESS", "INT8", "UINT8", "INT16", "UINT16", "INT32
 
 TYPE BitSizeRange_t = [8..64];
 (*TYPE BitSizeEnum_t = [8,16,32,64];*)
-VAR BitsToCGInt := ARRAY BitSizeRange_t OF M3CG.Type { M3CG.Type.Void, .. };
-VAR BitsToCGUInt := ARRAY BitSizeRange_t OF M3CG.Type { M3CG.Type.Void, .. };
+VAR BitsToCGInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
+VAR BitsToCGUInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
 VAR BitsToDec := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "8", "16", "32", "64" *)
 VAR BitsToInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "INT8", "INT16", "INT32", "INT64" *)
 VAR BitsToUInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};   (* "UINT8", "UINT16", "UINT32", "UINT64" *)
-VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF M3CG.Type;
+VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF CGType;
 
 PROCEDURE SetLineDirective(self: T) =
 VAR start := ARRAY BOOLEAN OF TEXT{" /* ", (*"#"*)"//"}[output_line_directives];
@@ -586,7 +587,7 @@ TYPE Type_t = OBJECT
     byte_size := 0; (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
     text: TEXT := NIL;
-    cg_type: M3CG.Type := M3CG.Type.Addr;
+    cg_type: CGType := CGType.Addr;
     state := Type_State.None;
 METHODS
 (* public (Uppercase) *)
@@ -1292,7 +1293,7 @@ TYPE Expr_t = OBJECT
     self: T := NIL;
     expr_type := ExprType.Invalid;
     current_proc: Proc_t := NIL;
-    points_to_cgtype: M3CG.Type := M3CG.Type.Void;
+    points_to_cgtype: CGType := CGType.Void;
     points_to_typeid: TypeUID := 0;
     float_value: Target.Float;
     text_value: TEXT := NIL;
@@ -1300,7 +1301,7 @@ TYPE Expr_t = OBJECT
     could possibly have, represented by range lists, not just one range. *)
     minmax_valid := minMaxFalse;
     minmax := int64MinMax;
-    cgtype: M3CG.Type := M3CG.Type.Void;
+    cgtype: CGType := CGType.Void;
     typeid: TypeUID := 0;
     type: Type_t := NIL;
     c_text: TEXT := NIL;
@@ -1359,7 +1360,7 @@ VAR type_text := self.type_text; (* TODO self.type.text *)
     lparen := "";
     rparen := "";
 BEGIN
-    <* ASSERT (cgtype = M3CG.Type.Void) # (self.type_text = NIL) *> (* TODO type_text *)
+    <* ASSERT (cgtype = CGType.Void) # (self.type_text = NIL) *> (* TODO type_text *)
     IF NOT force THEN
         (* We might need "force_cast":
         INT16 a, b, c = a + b;
@@ -1374,7 +1375,7 @@ BEGIN
             type_text := cgtypeToText[cgtype];
             lparen := "(";
             rparen := ")";
-            IF left.cgtype = cgtype AND cgtype # M3CG.Type.Addr THEN
+            IF left.cgtype = cgtype AND cgtype # CGType.Addr THEN
                 remove := 2; (* This happens fairly often. *)
             END;
         END;
@@ -1396,7 +1397,7 @@ VAR type_text := self.type_text;
     lparen := "";
     rparen := "";
 BEGIN
-    <* ASSERT (cgtype = M3CG.Type.Void) # (self.type_text = NIL) *>
+    <* ASSERT (cgtype = CGType.Void) # (self.type_text = NIL) *>
     IF NOT force THEN
         (* We might need "force_cast":
         INT16 a, b, c = a + b;
@@ -1410,7 +1411,7 @@ BEGIN
             type_text := cgtypeToText[cgtype];
             lparen := "(";
             rparen := ")";
-            IF left.cgtype = cgtype AND cgtype # M3CG.Type.Addr THEN
+            IF left.cgtype = cgtype AND cgtype # CGType.Addr THEN
                 remove := 2; (* This happens fairly often. *)
             END;
         END;
@@ -1447,10 +1448,10 @@ VAR type_text := self.type_text;
     ok := FALSE;
 BEGIN
     IF FALSE THEN
-        IF NOT ((cgtype = M3CG.Type.Void) # (type_text = NIL)) THEN
+        IF NOT ((cgtype = CGType.Void) # (type_text = NIL)) THEN
             RTIO.PutText("cgtype:" & cgtypeToText[cgtype] & " type_text:" & TextOrNil(type_text) & "\n");
             RTIO.Flush();
-            <* ASSERT (cgtype = M3CG.Type.Void) # (type_text = NIL) *>
+            <* ASSERT (cgtype = CGType.Void) # (type_text = NIL) *>
         END;
     END;
     IF self.expr_type = ExprType.Variable THEN
@@ -1512,9 +1513,9 @@ TYPE Var_t = M3CG.Var OBJECT
     used := FALSE;
     name: Name := 0;
     name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
-    cgtype: M3CG.Type;
+    cgtype: CGType;
     typeid: TypeUID;
-    points_to_cgtype: M3CG.Type; (* future *)
+    points_to_cgtype: CGType; (* future *)
     type_text: TEXT := NIL;
     const := FALSE;
     imported := FALSE;
@@ -1575,7 +1576,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     name: Name := 0;
     parameter_count := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
     parameter_count_without_static_link := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
-    return_type: M3CG.Type;
+    return_type: CGType;
     level := 0;
     callingConvention: CallingConvention;
     exported := FALSE;
@@ -1662,7 +1663,7 @@ PROCEDURE Proc_Init(proc: Proc_t; self: T): Proc_t =
 VAR is_common := (proc.parent = NIL
                   AND (proc.exported = TRUE OR proc.imported = TRUE)
                   AND proc.level = 0
-                  AND proc.return_type = M3CG.Type.Void);
+                  AND proc.return_type = CGType.Void);
     is_RTHooks_ReportFault := (is_common
                                AND proc.name = self.RTHooks_ReportFault_id
                                AND proc.parameter_count = 2);
@@ -1854,7 +1855,7 @@ CONST cgtypeToText = ARRAY CGType OF TEXT {
     "void"                      (* D *)
 };
 
-TYPE IntegerTypes = [M3CG.Type.Word8 .. M3CG.Type.Int64];
+TYPE IntegerTypes = [CGType.Word8 .. CGType.Int64];
 
 CONST cgtypeIsInteger = ARRAY CGType OF BOOLEAN {
     TRUE, TRUE, (* 8 *)
@@ -1928,10 +1929,10 @@ CONST typeMinMax = ARRAY CGType OF MinMaxInt_t {
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }  (* void  *)
 };
 CONST typeToUnsigned = ARRAY IntegerTypes OF IntegerTypes {
-    M3CG.Type.Word8, M3CG.Type.Word8,
-    M3CG.Type.Word16, M3CG.Type.Word16,
-    M3CG.Type.Word32, M3CG.Type.Word32,
-    M3CG.Type.Word64, M3CG.Type.Word64
+    CGType.Word8, CGType.Word8,
+    CGType.Word16, CGType.Word16,
+    CGType.Word32, CGType.Word32,
+    CGType.Word64, CGType.Word64
 };
 CONST CompareOpC = ARRAY CompareOp OF TEXT { "==", "!=", ">", ">=", "<", "<=" };
 CONST ConvertOpName = ARRAY ConvertOp OF TEXT { "round", "trunc", "floor", "ceil" };
@@ -1959,7 +1960,7 @@ BEGIN
     END;
 END pop;
 
-PROCEDURE push(self: T; <*UNUSED*>type: M3CG.Type; expression: Expr_t) =
+PROCEDURE push(self: T; <*UNUSED*>type: CGType; expression: Expr_t) =
 BEGIN
     self.stack.addlo(expression);
 END push;
@@ -2553,7 +2554,7 @@ BEGIN
     RETURN TInt.LT(min, TInt.Zero) OR TInt.LT(max, TInt.Zero);
 END SubrangeIsSigned;
 
-PROCEDURE SubrangeCGType(READONLY min, max: Target.Int; bit_size: BitSize): M3CG.Type =
+PROCEDURE SubrangeCGType(READONLY min, max: Target.Int; bit_size: BitSize): CGType =
 (* slightly strange logic -- see m3front/src/types/SubrangeType
    m3front should pass us down cg_type directly, and not
    bother with bit_size, domain *)
@@ -2763,7 +2764,7 @@ END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: M3CG.Type; <*UNUSED*>typeid: TypeUID): M3CG.Var =
+PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: CGType; <*UNUSED*>typeid: TypeUID): M3CG.Var =
 VAR var := NEW(Var_t, self := self, cgtype := type, name := name, imported := TRUE).Init();
 BEGIN
     self.comment("import_global");
@@ -2816,7 +2817,7 @@ PROCEDURE bind_segment(
     v: M3CG.Var;
     byte_size: ByteSize;
     alignment: Alignment;
-    <*UNUSED*>type: M3CG.Type;
+    <*UNUSED*>type: CGType;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN) =
 VAR var := NARROW(v, Var_t);
@@ -2831,7 +2832,7 @@ PROCEDURE Segments_bind_segment(
     var: M3CG.Var;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     exported: BOOLEAN;
     inited: BOOLEAN) =
 BEGIN
@@ -2839,14 +2840,14 @@ BEGIN
 END Segments_bind_segment;
 
 PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment;
-                         type: M3CG.Type; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
+                         type: CGType; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
 BEGIN
     self.comment("declare_global");
     RETURN DeclareGlobal(self, name, byte_size, alignment, type, typeid, exported, inited, FALSE);
 END declare_global;
 
 PROCEDURE Segments_declare_global(self: Segments_t; name: Name; byte_size: ByteSize; alignment: Alignment;
-                                  type: M3CG.Type; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
+                                  type: CGType; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN declare_global(self.self, name, byte_size, alignment, type, typeid, exported, inited);
 END Segments_declare_global;
@@ -2856,7 +2857,7 @@ PROCEDURE declare_constant(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
     inited: BOOLEAN): M3CG.Var =
@@ -2870,7 +2871,7 @@ PROCEDURE Segments_declare_constant(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
     inited: BOOLEAN): M3CG.Var =
@@ -2878,7 +2879,7 @@ BEGIN
     RETURN declare_constant(self.self, name, byte_size, alignment, type, typeid, exported, inited);
 END Segments_declare_constant;
 
-PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: M3CG.Type; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
+PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: CGType; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR   var := NEW(Var_t, self := self, cgtype := type, name := name, const := const,
                  (*inited := inited, typeid := typeid, alignment := alignment,*)
@@ -3502,7 +3503,7 @@ BEGIN
     HelperFunctions_insert(self, type);
 END HelperFunctions_insert_mn;
 
-PROCEDURE HelperFunctions_pop(self: HelperFunctions_t; type: M3CG.Type) =
+PROCEDURE HelperFunctions_pop(self: HelperFunctions_t; type: CGType) =
 CONST text = "#define m3_pop_T(T) static void __stdcall m3_pop_##T(volatile T a) { }";
 BEGIN
     HelperFunctions_helper_with_type(self, "pop", type, self.data.pop, text);
@@ -3645,7 +3646,7 @@ PROCEDURE Locals_declare_param(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
@@ -3668,7 +3669,7 @@ PROCEDURE Locals_declare_local(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
@@ -3679,7 +3680,7 @@ END Locals_declare_local;
 
 TYPE AllocateTemps_t = Locals_t;
 
-PROCEDURE AllocateTemps_common(self: AllocateTemps_t; type: M3CG.Type) =
+PROCEDURE AllocateTemps_common(self: AllocateTemps_t; type: CGType) =
 VAR x := self.self;
 BEGIN
     x.comment("AllocateTemps_common");
@@ -3693,7 +3694,7 @@ PROCEDURE AllocateTemps_check_nil(self: AllocateTemps_t; <*UNUSED*>code: Runtime
 VAR x := self.self;
 BEGIN
     x.comment("AllocateTemps_check_nil");
-    AllocateTemps_common(self, M3CG.Type.Addr);
+    AllocateTemps_common(self, CGType.Addr);
 END AllocateTemps_check_nil;
 
 PROCEDURE AllocateTemps_check_lo(self: AllocateTemps_t; type: IType; <*UNUSED*>READONLY i: Target.Int; <*UNUSED*>code: RuntimeError) =
@@ -3736,7 +3737,7 @@ PROCEDURE Imports_import_procedure(
     self: Imports_t;
     name: Name;
     parameter_count: INTEGER;
-    return_type: M3CG.Type;
+    return_type: CGType;
     callingConvention: CallingConvention): M3CG.Proc =
 BEGIN
     RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention);
@@ -3747,7 +3748,7 @@ PROCEDURE Imports_declare_param(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
@@ -3762,7 +3763,7 @@ PROCEDURE Imports_import_global(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     typeid: TypeUID): M3CG.Var =
 BEGIN
     RETURN import_global(self.self, name, byte_size, alignment, type, typeid);
@@ -3772,7 +3773,7 @@ TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
     count := 0;
 METHODS
-    Declare(type: M3CG.Type; byte_size: ByteSize; alignment: Alignment): M3CG.Var := GetStructSizes_Declare;
+    Declare(type: CGType; byte_size: ByteSize; alignment: Alignment): M3CG.Var := GetStructSizes_Declare;
 OVERRIDES
     declare_constant := GetStructSizes_declare_constant;
     declare_global := GetStructSizes_declare_global;
@@ -3837,12 +3838,12 @@ BEGIN
 
 END GetStructSizes;
 
-PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: M3CG.Type; byte_size: ByteSize; alignment: Alignment): M3CG.Var =
+PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: CGType; byte_size: ByteSize; alignment: Alignment): M3CG.Var =
 BEGIN
     <* ASSERT byte_size >= 0 *>
     <* ASSERT (byte_size MOD alignment) = 0 *>
     byte_size := MAX(byte_size, 1);
-    IF type = M3CG.Type.Struct THEN
+    IF type = CGType.Struct THEN
         self.sizes[self.count] := byte_size;
         INC(self.count);
     END;
@@ -3853,7 +3854,7 @@ PROCEDURE GetStructSizes_declare_temp(
     self: GetStructSizes_t;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
@@ -3864,7 +3865,7 @@ PROCEDURE GetStructSizes_declare_global(
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
@@ -3877,7 +3878,7 @@ PROCEDURE GetStructSizes_import_global(
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     <*UNUSED*>typeid: TypeUID): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
@@ -3888,7 +3889,7 @@ PROCEDURE GetStructSizes_declare_constant(
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN): M3CG.Var =
@@ -3901,7 +3902,7 @@ PROCEDURE GetStructSizes_declare_local_or_param(
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
@@ -3923,7 +3924,7 @@ BEGIN
     IF TRUE THEN
         RETURN cgtypeToText[var.cgtype];
     ELSE
-        IF var.cgtype # M3CG.Type.Struct THEN
+        IF var.cgtype # CGType.Struct THEN
             RETURN cgtypeToText[var.cgtype];
         END;
         RETURN Struct(var.byte_size) & "*";
@@ -3935,7 +3936,7 @@ BEGIN
     IF var.type_text # NIL THEN
         RETURN var.type_text;
     END;
-    IF var.cgtype # M3CG.Type.Struct THEN
+    IF var.cgtype # CGType.Struct THEN
         RETURN cgtypeToText[var.cgtype];
     END;
     RETURN Struct(var.byte_size);
@@ -3943,7 +3944,7 @@ END Var_Type;
 
 PROCEDURE Param_Name(var: Var_t): TEXT =
 BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.cgtype = M3CG.Type.Struct] & NameT(var.name);
+    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.cgtype = CGType.Struct] & NameT(var.name);
 END Param_Name;
 
 PROCEDURE Var_Name(var: Var_t): TEXT =
@@ -3968,7 +3969,7 @@ PROCEDURE declare_local(
     name: Name;
     byte_size: ByteSize;
     <*UNUSED*>alignment: Alignment;
-    cgtype: M3CG.Type;
+    cgtype: CGType;
     typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
@@ -4062,9 +4063,9 @@ BEGIN
         param := NARROW(internal_declare_param(
             self,
             self.static_link_id,
-            CG_Bytes[M3CG.Type.Addr], (* size *)
-            CG_Bytes[M3CG.Type.Addr], (* alignment *)
-            M3CG.Type.Addr,
+            CG_Bytes[CGType.Addr], (* size *)
+            CG_Bytes[CGType.Addr], (* alignment *)
+            CGType.Addr,
             -1,
             FALSE(*?*), (* in memory *)
             TRUE, (* up_level, sort of -- needs to be stored, but is never written, can be read from direct parameter
@@ -4085,7 +4086,7 @@ PROCEDURE internal_declare_param(
     name: Name;
     byte_size: ByteSize;
     <*UNUSED*>alignment: Alignment;
-    cgtype: M3CG.Type;
+    cgtype: CGType;
     typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
@@ -4135,7 +4136,7 @@ declare_param(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     typeid: TypeUID;
     in_memory: BOOLEAN;
     up_level: BOOLEAN;
@@ -4154,14 +4155,14 @@ internal_declare_temp(
     self: T;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: M3CG.Type;
+    type: CGType;
     in_memory:BOOLEAN): Var_t =
 BEGIN
     self.comment("declare_temp");
     RETURN declare_local(self, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
 END internal_declare_temp;
 
-PROCEDURE Locals_declare_temp(self: Locals_t; byte_size: ByteSize; alignment: Alignment; type: M3CG.Type; in_memory:BOOLEAN): M3CG.Var =
+PROCEDURE Locals_declare_temp(self: Locals_t; byte_size: ByteSize; alignment: Alignment; type: CGType; in_memory:BOOLEAN): M3CG.Var =
 BEGIN
     RETURN internal_declare_temp(self.self, byte_size, alignment, type, in_memory);
 END Locals_declare_temp;
@@ -4269,7 +4270,7 @@ BEGIN
     self.init_type_count := 0;
 END end_init_helper;
 
-PROCEDURE init_helper(self: T; offset: ByteOffset; type: M3CG.Type) =
+PROCEDURE init_helper(self: T; offset: ByteOffset; type: CGType) =
 BEGIN
     init_to_offset(self, offset);
     IF offset = 0 OR self.init_type # type OR offset # self.current_offset THEN
@@ -4282,7 +4283,7 @@ BEGIN
     self.current_offset := offset + TargetMap.CG_Bytes[type];
 END init_helper;
 
-PROCEDURE init_int(self: T; offset: ByteOffset; READONLY value: Target.Int; type: M3CG.Type) =
+PROCEDURE init_int(self: T; offset: ByteOffset; READONLY value: Target.Int; type: CGType) =
 BEGIN
     self.comment("init_int");
     init_helper(self, offset, type);
@@ -4290,7 +4291,7 @@ BEGIN
     initializer_addhi(self, TIntLiteral(type, value));
 END init_int;
 
-PROCEDURE Segments_init_int(self: Segments_t; offset: ByteOffset; READONLY value: Target.Int; type: M3CG.Type) =
+PROCEDURE Segments_init_int(self: Segments_t; offset: ByteOffset; READONLY value: Target.Int; type: CGType) =
 BEGIN
     init_int(self.self, offset, value, type);
 END Segments_init_int;
@@ -4299,7 +4300,7 @@ PROCEDURE init_proc(self: T; offset: ByteOffset; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
 BEGIN
     self.comment("init_proc");
-    init_helper(self, offset, M3CG.Type.Addr); (* FUTURE: better typing *)
+    init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
     initializer_addhi(self, "(ADDRESS)&" & NameT(proc.name));
 END init_proc;
 
@@ -4325,7 +4326,7 @@ VAR var := NARROW(v, Var_t);
     bias_text := "";
 BEGIN
     self.comment("init_var");
-    init_helper(self, offset, M3CG.Type.Addr); (* FUTURE: better typing *)
+    init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
     IF bias # 0 THEN
         bias_text := IntToDec(bias) & "+";
     END;
@@ -4361,7 +4362,7 @@ BEGIN
         RETURN;
     END;
     FOR i := 0 TO length - 1 DO
-        init_helper(self, offset + i, M3CG.Type.Word8);
+        init_helper(self, offset + i, CGType.Word8);
         ch := Text.GetChar(value, i);
         IF ch IN Printable THEN
             initializer_addhi(self, "'" & Text.Sub(value, i, 1) & "'");
@@ -4393,23 +4394,23 @@ BEGIN
     RETURN TIntToExpr(self, IntToTInt(self, i));
 END IntToExpr;
 
-PROCEDURE TIntLiteral(type: M3CG.Type; READONLY i: Target.Int): TEXT =
+PROCEDURE TIntLiteral(type: CGType; READONLY i: Target.Int): TEXT =
 VAR ok1 := TRUE;
     ok2 := TRUE;
 BEGIN
     CASE type OF
-        | M3CG.Type.Int8   => ok1 := TInt.GE(i, TInt.Min8 );
+        | CGType.Int8   => ok1 := TInt.GE(i, TInt.Min8 );
                               (*ok2 := TInt.LE(i, TInt.Max8);*)
-        | M3CG.Type.Int16  => ok1 := TInt.GE(i, TInt.Min16);
+        | CGType.Int16  => ok1 := TInt.GE(i, TInt.Min16);
                               (*ok2 := TInt.LE(i, TInt.Max16);*)
-        | M3CG.Type.Int32  => ok1 := TInt.GE(i, TInt.Min32);
+        | CGType.Int32  => ok1 := TInt.GE(i, TInt.Min32);
                               (*ok2 := TInt.LE(i, TInt.Max32);*)
-        | M3CG.Type.Int64  => ok1 := TInt.GE(i, TInt.Min64);
+        | CGType.Int64  => ok1 := TInt.GE(i, TInt.Min64);
                               ok2 := TInt.LE(i, TInt.Max64);
-        | M3CG.Type.Word8  => ok1 := TWord.LE(i, TWord.Max8);
-        | M3CG.Type.Word16 => ok1 := TWord.LE(i, TWord.Max16);
-        | M3CG.Type.Word32 => ok1 := TWord.LE(i, TWord.Max32);
-        | M3CG.Type.Word64 => ok1 := TWord.LE(i, TWord.Max64);
+        | CGType.Word8  => ok1 := TWord.LE(i, TWord.Max8);
+        | CGType.Word16 => ok1 := TWord.LE(i, TWord.Max16);
+        | CGType.Word32 => ok1 := TWord.LE(i, TWord.Max32);
+        | CGType.Word64 => ok1 := TWord.LE(i, TWord.Max64);
         ELSE
             RTIO.PutText("TIntLiteral:invalid type=" & cgtypeToText[type] & "\n");
             RTIO.Flush();
@@ -4424,16 +4425,16 @@ BEGIN
         RTIO.Flush();
         <* ASSERT FALSE *>
     END;
-    IF type = M3CG.Type.Int32 AND TInt.EQ(i, TInt.Min32) THEN
+    IF type = CGType.Int32 AND TInt.EQ(i, TInt.Min32) THEN
         RETURN "-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max32) & intLiteralSuffix[type] & "-1";
-    ELSIF type = M3CG.Type.Int64 AND TInt.EQ(i, TInt.Min64) THEN
+    ELSIF type = CGType.Int64 AND TInt.EQ(i, TInt.Min64) THEN
         RETURN "-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max64) & intLiteralSuffix[type] & "-1";
     ELSE
         RETURN intLiteralPrefix[type] & TInt.ToText(i) & intLiteralSuffix[type];
     END;
 END TIntLiteral;
 
-PROCEDURE IntLiteral(self: T; type: M3CG.Type; i: INTEGER): TEXT =
+PROCEDURE IntLiteral(self: T; type: CGType; i: INTEGER): TEXT =
 BEGIN
     RETURN TIntLiteral(type, IntToTarget(self, i));
 END IntLiteral;
@@ -4486,7 +4487,7 @@ END Segments_init_float;
 (*------------------------------------------------------------ PROCEDUREs ---*)
 
 PROCEDURE import_procedure(self: T; name: Name; parameter_count: INTEGER;
-                           return_type: M3CG.Type; callingConvention: CallingConvention): M3CG.Proc =
+                           return_type: CGType; callingConvention: CallingConvention): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
@@ -4509,7 +4510,7 @@ PROCEDURE Locals_declare_procedure(
     self: Locals_t;
     name: Name;
     parameter_count: INTEGER;
-    return_type: M3CG.Type;
+    return_type: CGType;
     level: INTEGER;
     callingConvention: CallingConvention;
     exported: BOOLEAN;
@@ -4527,7 +4528,7 @@ BEGIN
 END Locals_declare_procedure;
 
 PROCEDURE declare_procedure(self: T; name: Name; parameter_count: INTEGER;
-                            return_type: M3CG.Type; level: INTEGER;
+                            return_type: CGType; level: INTEGER;
                             callingConvention: CallingConvention;
                             exported: BOOLEAN; parent: M3CG.Proc): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
@@ -4669,7 +4670,7 @@ BEGIN
 
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
-            IF (NOT param.up_level) AND (param.cgtype = M3CG.Type.Struct) AND param.used THEN
+            IF (NOT param.up_level) AND (param.cgtype = CGType.Struct) AND param.used THEN
                 print(self, Struct(param.byte_size) & " " & Var_Name(param) & ";\n");
             END;
         END;
@@ -4687,7 +4688,7 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level AND param.used THEN
-                    IF param.cgtype # M3CG.Type.Struct THEN
+                    IF param.cgtype # CGType.Struct THEN
                         print(self, frame_name & "." & Var_Name(param) & "=" & Param_Name(param) & ";\n");
                     ELSE
                         print(self, frame_name & "." & Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
@@ -4704,7 +4705,7 @@ BEGIN
 
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
-            IF (NOT param.up_level) AND param.cgtype = M3CG.Type.Struct AND param.used THEN
+            IF (NOT param.up_level) AND param.cgtype = CGType.Struct AND param.used THEN
                 print(self, Var_Name(param) & "=*(" & Struct(param.byte_size) & "*" & ")(" & Param_Name(param) & ");\n");
             END;
         END;
@@ -4840,7 +4841,7 @@ BEGIN
     pop(self);
 END case_jump;
 
-PROCEDURE exit_proc(self: T; type: M3CG.Type) =
+PROCEDURE exit_proc(self: T; type: CGType) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
 VAR proc := self.current_proc;
     cast1, cast2 := "";
@@ -4851,16 +4852,16 @@ BEGIN
     <* ASSERT NOT proc.is_RTException_Raise *>
     IF proc.no_return THEN
         <* ASSERT proc.exit_proc_skipped = 0 *>
-        <* ASSERT type = M3CG.Type.Void  *>
+        <* ASSERT type = CGType.Void  *>
         INC(proc.exit_proc_skipped);
         RETURN;
     END;
-    IF type = M3CG.Type.Void THEN
+    IF type = CGType.Void THEN
         IF NOT proc.is_RTHooks_Raise THEN
             print(self, "return;\n");
         END;
     ELSE
-        IF type = M3CG.Type.Addr OR type = M3CG.Type.Struct THEN
+        IF type = CGType.Addr OR type = CGType.Struct THEN
             cast1 := "(ADDRESS)("; (* TODO remove this once return types are better *)
             cast2 := ")"; (* TODO remove this once return types are better *)
         END;
@@ -4899,7 +4900,7 @@ PROCEDURE AddressOf(expr: Expr_t): Expr_t =
 BEGIN
     RETURN NEW(Expr_t,
                expr_type := ExprType.AddressOf,
-               cgtype := M3CG.Type.Addr,
+               cgtype := CGType.Addr,
                points_to_cgtype := expr.cgtype,
                points_to_typeid := expr.typeid,
                left := expr,
@@ -4962,7 +4963,7 @@ BEGIN
     IF offset # 0 OR var.cgtype # in_mtype THEN
         expr := AddressOf(expr);
         IF offset # 0 THEN
-            expr := cast(expr, type := M3CG.Type.Addr);
+            expr := cast(expr, type := CGType.Addr);
             expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
         END;
         expr := cast(expr, type_text := "(" & cgtypeToText[in_mtype] & " * )");
@@ -4998,10 +4999,10 @@ BEGIN
     self.comment("load_address");
     expr := AddressOf(Variable(self, var));
     IF offset # 0 THEN
-        expr := cast(expr, type := M3CG.Type.Addr);
+        expr := cast(expr, type := CGType.Addr);
         expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
     END;
-    push(self, M3CG.Type.Addr, expr);
+    push(self, CGType.Addr, expr);
 END load_address;
 
 PROCEDURE load_indirect(self: T; offset: ByteOffset; mtype: MType; ztype: ZType) =
@@ -5012,7 +5013,7 @@ BEGIN
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     pop(self);
     IF offset # 0 THEN
-        expr := cast(expr, type := M3CG.Type.Addr); (* might be redundant *)
+        expr := cast(expr, type := CGType.Addr); (* might be redundant *)
         expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
     END;
     expr := CastAndDeref(expr, type_text := "(" & cgtypeToText[mtype] & "*)"); (* cast might be redundant *)
@@ -5039,7 +5040,7 @@ PROCEDURE load_nil(self: T) =
 (* push; s0.A := NIL *)
 BEGIN
     self.comment("load_nil");
-    push(self, M3CG.Type.Addr, CTextToExpr("0")); (* UNDONE NULL or (ADDRESS)0? *)
+    push(self, CGType.Addr, CTextToExpr("0")); (* UNDONE NULL or (ADDRESS)0? *)
 END load_nil;
 
 <*UNUSED*>PROCEDURE TIntInc(self: T; i: Target.Int): Target.Int =
@@ -5171,27 +5172,27 @@ BEGIN
     END;
 END TransferMinMax;
 
-PROCEDURE cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
+PROCEDURE cast(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
 VAR e := NEW(Expr_Cast_t, cgtype := type, type_text := type_text, left := expr);
 BEGIN
-    <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
+    <* ASSERT (type = CGType.Void) # (type_text = NIL) *>
     (* casts are either truncating or sign extending or zero extending *)
     TransferMinMax(expr, e);
     RETURN e;
 END cast;
 
-<*UNUSED*>PROCEDURE old_Cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
+<*UNUSED*>PROCEDURE old_Cast(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
-    <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
+    <* ASSERT (type = CGType.Void) # (type_text = NIL) *>
     RETURN NEW(Expr_Cast_t, cgtype := type, type_text := type_text, left := expr);
 END old_Cast;
 
-PROCEDURE CastAndDeref(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
+PROCEDURE CastAndDeref(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     RETURN Deref(cast(expr, type, type_text));
 END CastAndDeref;
 
-PROCEDURE op1(self: T; type: M3CG.Type; name, op: TEXT) =
+PROCEDURE op1(self: T; type: CGType; name, op: TEXT) =
 (* unary operation *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
@@ -5217,7 +5218,7 @@ END TIntExtendOrTruncate;
 PROCEDURE
 op2(
     self: T;
-    type: M3CG.Type;
+    type: CGType;
     name: TEXT;
     op: TEXT;
     <*UNUSED*>intOp: TIntOp2_t := TInt.Add;
@@ -5246,7 +5247,7 @@ VAR s0 := get(self, 0);
 BEGIN
     self.comment("compare");
     pop(self, 2);
-    IF ztype = M3CG.Type.Addr THEN
+    IF ztype = CGType.Addr THEN
         cast1 := "((ADDRESS)";
         cast2 := ")";
     END;
@@ -5367,9 +5368,9 @@ END cvt_float;
 
 PROCEDURE set_op3(self: T; byte_size: ByteSize; op: TEXT) =
 (* s2.B := s1.B op s0.B; pop(3) *)
-VAR s0 := cast(get(self, 0), M3CG.Type.Addr);
-    s1 := cast(get(self, 1), M3CG.Type.Addr);
-    s2 := cast(get(self, 2), M3CG.Type.Addr);
+VAR s0 := cast(get(self, 0), CGType.Addr);
+    s1 := cast(get(self, 1), CGType.Addr);
+    s2 := cast(get(self, 2), CGType.Addr);
     target_word_bytes := Target.Word.bytes;
 BEGIN
     self.comment(op);
@@ -5405,7 +5406,7 @@ END set_sym_difference;
 PROCEDURE set_member(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.type := (s0.type IN s1.B); pop *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), M3CG.Type.Void, "(SET)");
+    s1 := cast(get(self, 1), CGType.Void, "(SET)");
 BEGIN
     self.comment("set_member");
     pop(self, 2);
@@ -5415,8 +5416,8 @@ END set_member;
 PROCEDURE set_compare(self: T; byte_size: ByteSize; op: CompareOp; type: IType) =
 (* s1.type := (s1.B op s0.B); pop *)
 VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
-    s0 := cast(get(self, ORD(swap)), M3CG.Type.Void, "(SET)");
-    s1 := cast(get(self, ORD(NOT swap)), M3CG.Type.Void, "(SET)");
+    s0 := cast(get(self, ORD(swap)), CGType.Void, "(SET)");
+    s1 := cast(get(self, ORD(NOT swap)), CGType.Void, "(SET)");
     target_word_bytes := Target.Word.bytes;
     eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
 BEGIN
@@ -5443,7 +5444,7 @@ PROCEDURE set_range(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s2.A [s1.type .. s0.type] := 1's; pop(3) *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
-    s2 := cast(get(self, 2), M3CG.Type.Void, "(SET)");
+    s2 := cast(get(self, 2), CGType.Void, "(SET)");
 BEGIN
     self.comment("set_range");
     pop(self, 3);
@@ -5453,7 +5454,7 @@ END set_range;
 PROCEDURE set_singleton(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.A [s0.type] := 1; pop(2) *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), M3CG.Type.Void, "(SET)");
+    s1 := cast(get(self, 1), CGType.Void, "(SET)");
 BEGIN
     self.comment("set_singleton");
     pop(self, 2);
@@ -5516,7 +5517,7 @@ BEGIN
     shift_left_or_right(self, type, "shift_right", ">>");
 END shift_right;
 
-PROCEDURE shift_or_rotate(self: T; type: IType; which: TEXT; count_type: M3CG.Type) =
+PROCEDURE shift_or_rotate(self: T; type: IType; which: TEXT; count_type: CGType) =
 VAR s0 := cast(get(self, 0), count_type);
     s1 := cast(get(self, 1), type);
 BEGIN
@@ -5642,7 +5643,7 @@ END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
 
-PROCEDURE swap(self: T; <*UNUSED*>a, b: M3CG.Type) =
+PROCEDURE swap(self: T; <*UNUSED*>a, b: CGType) =
 (* tmp := s1; s1 := s0; s0 := tmp *)
 VAR temp := get(self, 1);
 BEGIN
@@ -5651,7 +5652,7 @@ BEGIN
     self.stack.put(0, temp);
 END swap;
 
-PROCEDURE cg_pop(self: T; type: M3CG.Type) =
+PROCEDURE cg_pop(self: T; type: CGType) =
 (* pop(1) (i.e. discard s0) *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
@@ -5727,8 +5728,8 @@ PROCEDURE check_nil(self: T; code: RuntimeError) =
 VAR t := self.temp_vars[self.op_index];
 BEGIN
     self.comment("check_nil");
-    self.store(t, 0, M3CG.Type.Addr, M3CG.Type.Addr);
-    self.load(t, 0, M3CG.Type.Addr, M3CG.Type.Addr);
+    self.store(t, 0, CGType.Addr, CGType.Addr);
+    self.load(t, 0, CGType.Addr, CGType.Addr);
     print(self, "/*check_nil*/if(!" & get(self).CText() & ")");
     reportfault(self, code);
 END check_nil;
@@ -5820,17 +5821,17 @@ END reportfault;
 
 PROCEDURE add_offset(self: T; offset: INTEGER) =
 (* s0.A := s0.A + offset *)
-VAR s0 := cast(get(self, 0), M3CG.Type.Addr);
+VAR s0 := cast(get(self, 0), CGType.Addr);
 BEGIN
     self.comment("add_offset");
     pop(self);
-    push(self, M3CG.Type.Addr, address_plus_offset(s0.CText(), offset));
+    push(self, CGType.Addr, address_plus_offset(s0.CText(), offset));
 END add_offset;
 
 PROCEDURE index_address(self: T; type: IType; size: INTEGER) =
 (* s1.A := s1.A + s0.type * size; pop *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), M3CG.Type.Addr);
+    s1 := cast(get(self, 1), CGType.Addr);
     size_text := IntToDec(size);
 BEGIN
     self.comment("index_address");
@@ -5839,7 +5840,7 @@ BEGIN
         <* ASSERT FALSE *>
     ELSE
         pop(self, 2);
-        push(self, M3CG.Type.Addr, paren(CTextToExpr(s1.CText() & "+" & paren(CTextToExpr(size_text & "*" & s0.CText())).CText())));
+        push(self, CGType.Addr, paren(CTextToExpr(s1.CText() & "+" & paren(CTextToExpr(size_text & "*" & s0.CText())).CText())));
     END;
 END index_address;
 
@@ -5853,7 +5854,7 @@ BEGIN
     self.in_proc_call := TRUE;
 END start_call_helper;
 
-PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: M3CG.Type) =
+PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
@@ -5861,13 +5862,13 @@ BEGIN
     start_call_helper(self);
     (* workaround frontend bug? *)
     IF proc.is_exception_handler THEN
-        push(self, M3CG.Type.Addr, CTextToExpr("0"));
+        push(self, CGType.Addr, CTextToExpr("0"));
         pop_parameter_helper(self, "0");
     END;
     self.proc_being_called := proc;
 END start_call_direct;
 
-PROCEDURE start_call_indirect(self: T; <*UNUSED*>type: M3CG.Type; <*UNUSED*>callingConvention: CallingConvention) =
+PROCEDURE start_call_indirect(self: T; <*UNUSED*>type: CGType; <*UNUSED*>callingConvention: CallingConvention) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 BEGIN
     self.comment("start_call_indirect");
@@ -5892,7 +5893,7 @@ END pop_param;
 PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
 (* pop s0 and make it the "next" parameter in the current call
  * NOTE: it is passed by value *)
-VAR s0 := cast(get(self, 0), M3CG.Type.Addr);
+VAR s0 := cast(get(self, 0), CGType.Addr);
 BEGIN
     self.comment("pop_struct");
     <* ASSERT (byte_size MOD alignment) = 0 *>
@@ -5906,19 +5907,19 @@ BEGIN
     self.comment("pop_static_link");
     <* ASSERT self.in_proc_call *>
     self.static_link := var;
-    self.store(var, 0, M3CG.Type.Addr, M3CG.Type.Addr);
+    self.store(var, 0, CGType.Addr, CGType.Addr);
 END pop_static_link;
 
 PROCEDURE Locals_pop_static_link(self: Locals_t) =
 VAR x := self.self;
-    var := internal_declare_temp(x, CG_Bytes[M3CG.Type.Addr], CG_Bytes[M3CG.Type.Addr], M3CG.Type.Addr, FALSE);
+    var := internal_declare_temp(x, CG_Bytes[CGType.Addr], CG_Bytes[CGType.Addr], CGType.Addr, FALSE);
 BEGIN
     <* ASSERT x.temp_vars # NIL *>
     x.temp_vars[x.op_index] := var;
     var.used := TRUE;
 END Locals_pop_static_link;
 
-PROCEDURE call_helper(self: T; type: M3CG.Type; proc: TEXT) =
+PROCEDURE call_helper(self: T; type: CGType; proc: TEXT) =
 VAR comma := "";
 BEGIN
     <* ASSERT self.in_proc_call *>
@@ -5930,7 +5931,7 @@ BEGIN
       comma := ",";
     END;
     proc := proc & ")";
-    IF type = M3CG.Type.Void THEN
+    IF type = CGType.Void THEN
         print(self, proc & ";\n");
     ELSE
         push(self, type, CTextToExpr(proc));
@@ -5961,7 +5962,7 @@ BEGIN
     RETURN static_link;
 END get_static_link;
 
-PROCEDURE call_direct(self: T; p: M3CG.Proc; type: M3CG.Type) =
+PROCEDURE call_direct(self: T; p: M3CG.Proc; type: CGType) =
 (* call the procedure identified by M3CG.Proc p. The procedure
    returns a value of type type. *)
 VAR proc := NARROW(p, Proc_t);
@@ -5977,7 +5978,7 @@ BEGIN
     call_helper(self, type, NameT(proc.name));
 END call_direct;
 
-PROCEDURE call_indirect(self: T; type: M3CG.Type; <*UNUSED*>callingConvention: CallingConvention) =
+PROCEDURE call_indirect(self: T; type: CGType; <*UNUSED*>callingConvention: CallingConvention) =
 (* call the procedure whose address is in s0.A and pop s0. The
    procedure returns a value of type type. *)
 VAR s0 := get(self, 0);
@@ -6008,7 +6009,7 @@ VAR proc := NARROW(p, Proc_t);
 BEGIN
     self.comment("load_procedure");
     (* UNDONE? typeing? *)
-    push(self, M3CG.Type.Addr, CTextToExpr(NameT(proc.name)));
+    push(self, CGType.Addr, CTextToExpr(NameT(proc.name)));
 END load_procedure;
 
 PROCEDURE load_static_link(self: T; p: M3CG.Proc) =
@@ -6020,7 +6021,7 @@ BEGIN
         self.load_nil();
         RETURN;
     END;
-    push(self, M3CG.Type.Addr, CTextToExpr(get_static_link(self, target)));
+    push(self, CGType.Addr, CTextToExpr(get_static_link(self, target)));
 END load_static_link;
 
 (*----------------------------------------------------------------- misc. ---*)
@@ -6140,14 +6141,14 @@ BEGIN
 END fetch_and_op;
 
 BEGIN
-    BitsToCGUInt[8] := M3CG.Type.Word8;
-    BitsToCGUInt[16] := M3CG.Type.Word16;
-    BitsToCGUInt[32] := M3CG.Type.Word32;
-    BitsToCGUInt[64] := M3CG.Type.Word64;
-    BitsToCGInt[8] := M3CG.Type.Int8;
-    BitsToCGInt[16] := M3CG.Type.Int16;
-    BitsToCGInt[32] := M3CG.Type.Int32;
-    BitsToCGInt[64] := M3CG.Type.Int64;
+    BitsToCGUInt[8] := CGType.Word8;
+    BitsToCGUInt[16] := CGType.Word16;
+    BitsToCGUInt[32] := CGType.Word32;
+    BitsToCGUInt[64] := CGType.Word64;
+    BitsToCGInt[8] := CGType.Int8;
+    BitsToCGInt[16] := CGType.Int16;
+    BitsToCGInt[32] := CGType.Int32;
+    BitsToCGInt[64] := CGType.Int64;
     BitsToDec[8] := "8";
     BitsToDec[16] := "16";
     BitsToDec[32] := "32";
