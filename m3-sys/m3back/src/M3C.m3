@@ -585,7 +585,7 @@ TYPE Type_t = OBJECT
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
     text: TEXT := NIL;
-    cg_type: CGType := CGType.Addr;
+    cgtype: CGType := CGType.Addr;
     state := Type_State.None;
 METHODS
 (* public (Uppercase) *)
@@ -714,7 +714,7 @@ END;
 PROCEDURE type_typedef(type: Type_t; self: T) =
 (* A reusable value for Type_Define. *)
 BEGIN
-    print(self, "/*type_typedef*/typedef " & cgtypeToText[type.cg_type] & " " & type.text & ";\n");
+    print(self, "/*type_typedef*/typedef " & cgtypeToText[type.cgtype] & " " & type.text & ";\n");
 END type_typedef;
 
 PROCEDURE type_canBeDefined_true(<*UNUSED*>type: Type_CanBeDefinedTrue_t; <*UNUSED*>self: T): BOOLEAN =
@@ -1013,7 +1013,7 @@ BEGIN
         subrange.domain_type.Define(self);
         text := subrange.domain_type.text;
     ELSE
-        text := cgtypeToText[subrange.cg_type];
+        text := cgtypeToText[subrange.cgtype];
     END;
     print(x, "/*subrange_define*/typedef " & text & " " & subrange.text & ";\n");
     (* subrange.text := text; *)
@@ -1148,7 +1148,7 @@ VAR typedefs := ARRAY [0..1] OF TEXT{NIL, NIL};
 BEGIN
     (* TODO require bit_size be set *)
     IF type.bit_size = 0 THEN
-        type.bit_size := TargetMap.CG_Size[type.cg_type];
+        type.bit_size := TargetMap.CG_Size[type.cgtype];
     END;
     typedefs[0] := type.text;
     typedefs[1] := TypeIDToText(type.typeid);
@@ -1164,7 +1164,7 @@ BEGIN
            TODO don't do this, it makes the code less readoable. *)
         FOR i := FIRST(typedefs) TO LAST(typedefs) DO
             IF typedefs[i] # NIL AND typedefs[i] # Texts.address THEN
-                print(self, "/*Type_Init*/typedef " & cgtypeToText[type.cg_type] & " " & typedefs[i] & ";\n");
+                print(self, "/*Type_Init*/typedef " & cgtypeToText[type.cgtype] & " " & typedefs[i] & ";\n");
             END;
         END;
         type.state := Type_State.Defined;
@@ -2052,37 +2052,37 @@ END New;
 
 PROCEDURE DeclareBuiltinTypes(self: T) =
 BEGIN
-    self.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
-    self.Type_Init(NEW(Integer_t, cg_type := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
+    self.Type_Init(NEW(Integer_t, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
+    self.Type_Init(NEW(Integer_t, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
     print(self, "typedef WORD_T CARDINAL;\n");
-    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cg_type := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"));
-    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cg_type := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"));
+    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"));
+    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"));
 
-    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Real.cg_type, typeid := UID_REEL, text := "REAL"));
-    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"));
-    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cg_type := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"));
+    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cgtype := Target.Real.cg_type, typeid := UID_REEL, text := "REAL"));
+    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cgtype := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"));
+    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cgtype := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"));
 
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1), text := "BOOLEAN"), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF), text := "CHAR"), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cg_type := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF), text := "WIDECHAR"), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1), text := "BOOLEAN"), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF), text := "CHAR"), typedef := TRUE);
+    self.Type_Init(NEW(Enum_t, cgtype := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF), text := "WIDECHAR"), typedef := TRUE);
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
 
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_MUTEX, text := "MUTEX"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_TEXT, text := "TEXT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ROOT, text := "ROOT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_UNTRACED_ROOT, text := "UNTRACED_ROOT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_REFANY, text := "REFANY"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR, text := Texts.address), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC1, text := "PROC1"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC2, text := "PROC2"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC3, text := "PROC3"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC4, text := "PROC4"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC5, text := "PROC5"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC6, text := "PROC6"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC7, text := "PROC7"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC8, text := "PROC8"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_MUTEX, text := "MUTEX"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_TEXT, text := "TEXT"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_ROOT, text := "ROOT"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_UNTRACED_ROOT, text := "UNTRACED_ROOT"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_REFANY, text := "REFANY"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_ADDR, text := Texts.address), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC1, text := "PROC1"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC2, text := "PROC2"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC3, text := "PROC3"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC4, text := "PROC4"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC5, text := "PROC5"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC6, text := "PROC6"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC7, text := "PROC7"), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC8, text := "PROC8"), typedef := TRUE);
 
     (* self.Type_Init(NEW(Type_t, bit_size := 0, typeid := UID_NULL)); *)
 END DeclareBuiltinTypes;
@@ -2317,7 +2317,7 @@ BEGIN
                 min := TInt.Zero,
                 max := IntToTarget(x, element_count - 1),
                 names := NEW(REF ARRAY OF Name, element_count),
-                cg_type := BitsToCGUInt[bit_size],
+                cgtype := BitsToCGUInt[bit_size],
                 text := TypeIDToText(typeid));
     <* ASSERT self.enum = NIL AND self.enum_value = -1 *>
     self.enum := enum;
@@ -2526,7 +2526,7 @@ BEGIN
         Err(x, "declare_set not multiple of integer size");
     END;
     IF bit_size = Target.Integer.size THEN
-        x.Type_Init(NEW(Integer_t, cg_type := Target.Integer.cg_type, typeid := typeid));
+        x.Type_Init(NEW(Integer_t, cgtype := Target.Integer.cg_type, typeid := typeid));
     ELSE
         self.declare_array(typeid, UID_WORD, UID_WORD, bit_size);
     END;
@@ -2540,7 +2540,7 @@ END SubrangeIsSigned;
 
 PROCEDURE SubrangeCGType(READONLY min, max: Target.Int; bit_size: BitSize): CGType =
 (* slightly strange logic -- see m3front/src/types/SubrangeType
-   m3front should pass us down cg_type directly, and not
+   m3front should pass us down cgtype directly, and not
    bother with bit_size, domain *)
 BEGIN
     RETURN SignedAndBitsToCGType[SubrangeIsSigned(min, max)][bit_size];
@@ -2566,7 +2566,7 @@ BEGIN
         typeid := typeid,
         domain_typeid := domain_typeid,
         bit_size := bit_size,
-        cg_type := SubrangeCGType(min, max, bit_size)));
+        cgtype := SubrangeCGType(min, max, bit_size)));
 END declare_subrange;
 
 PROCEDURE TextOrNIL(text: TEXT): TEXT =
@@ -2623,7 +2623,7 @@ BEGIN
     ELSE
         x.comment("declare_proctype");
     END;
-    x.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO *)    
+    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO *)    
     (* SuppressLineDirective(self, param_count + (ORD(raise_count >= 0) * raise_count), "declare_proctype param_count + raise_count"); *)
 END declare_proctype;
 
@@ -2708,7 +2708,7 @@ BEGIN
     ELSE
         x.comment("declare_opaque");
     END;
-    x.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO *)
+    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO *)
 END declare_opaque;
 
 PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =
