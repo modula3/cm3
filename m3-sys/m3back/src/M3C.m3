@@ -224,7 +224,7 @@ END DebugDeclare;
 
 CONST HandlerNamePieces = ARRAY OF TEXT { "_M3_LINE_", "_I3_LINE_" };
 
-CONST Text_left_brace = "}";
+CONST Text_left_brace = "{";
 CONST Text_address = "ADDRESS";
 CONST Text_int8 = "INT8";
 CONST Text_uint8 = "UINT8";
