@@ -224,7 +224,10 @@ END DebugDeclare;
 (*---------------------------------------------------------------------------*)
 
 CONST HandlerNamePieces = ARRAY OF TEXT { "_M3_LINE_", "_I3_LINE_" };
-CONST TextAddress = "ADDRESS";
+
+CONST Texts = RECORD address, int8, uint8, int16, uint16, int32, uint32,
+int64, uint64: TEXT; END { "ADDRESS", "INT8", "UINT8", "INT16", "UINT16", "INT32",
+"UINT32", "INT64", "UINT64" };
 
 TYPE BitSizeRange_t = [8..64];
 (*TYPE BitSizeEnum_t = [8,16,32,64];*)
@@ -581,7 +584,7 @@ TYPE Type_State = {None, ForwardDeclared, CanBeDefined, Defined};
 TYPE Type_t = OBJECT
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
     byte_size := 0; (* FUTURE Target.Int or LONGINT *)
-    typeid: INTEGER(*TypeUID*) := 0;
+    typeid: TypeUID := 0;
     text: TEXT := NIL;
     cg_type: M3CG.Type := M3CG.Type.Addr;
     state := Type_State.None;
@@ -727,7 +730,7 @@ END type_canBeDefined_false;
 
 TYPE Pointer_t = Type_t OBJECT
     points_to_type: Type_t := NIL;
-    points_to_typeid: INTEGER(*TypeUID*) := 0;
+    points_to_typeid: TypeUID := 0;
     brand: TEXT := NIL;
     traced := FALSE;
 OVERRIDES
@@ -746,7 +749,7 @@ BEGIN
 END pointer_define;
 
 TYPE Packed_t = Type_t OBJECT
-    base_typeid: INTEGER(*TypeUID*) := 0;
+    base_typeid: TypeUID := 0;
     base_type: Type_t := NIL;
 OVERRIDES
     define := packed_define;
@@ -965,7 +968,7 @@ TYPE Subrange_t = Ordinal_t OBJECT
     min: Target.Int := TInt.Zero;
     max: Target.Int := TInt.Zero;
     domain_type: Type_t := NIL;
-    domain_typeid: INTEGER(*TypeUID*) := 0;
+    domain_typeid: TypeUID := 0;
 OVERRIDES
     define := subrange_define;
     canBeDefined := subrange_canBeDefined;
@@ -1005,7 +1008,6 @@ END subrange_getMinimumBitSize;
 PROCEDURE subrange_define(subrange: Subrange_t; self: T) =
 VAR x := self;
     text := "";
-    type: Type_t := NIL;
 BEGIN
     IF ResolveType(self, subrange.domain_typeid, subrange.domain_type)
             AND subrange.domain_type.bit_size = subrange.bit_size THEN
@@ -1132,7 +1134,7 @@ BEGIN
     print(x, text & ";\n};");
 END openArray_define;
 
-PROCEDURE TypeidToType_Get(self: T; typeid: INTEGER(*TypeUID*)): Type_t =
+PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
 VAR type: REFANY := NIL;
 BEGIN
     EVAL self.typeidToType.get(typeid, type);
@@ -1164,7 +1166,7 @@ BEGIN
         (* typedef INT32 M1234; and such
            TODO don't do this, it makes the code less readoable. *)
         FOR i := FIRST(typedefs) TO LAST(typedefs) DO
-            IF typedefs[i] # NIL AND typedefs[i] # TextAddress THEN
+            IF typedefs[i] # NIL AND typedefs[i] # Texts.address THEN
                 print(self, "/*Type_Init*/typedef " & cgtypeToText[type.cg_type] & " " & typedefs[i] & ";\n");
             END;
         END;
@@ -1179,35 +1181,58 @@ BEGIN
     END;
 END Type_Init;
 
+PROCEDURE SignExtend(a, b: INTEGER): INTEGER =
+BEGIN
+    b := Word.LeftShift(-1, b - 1);
+    IF Word.And(a, b) # 0 THEN
+        a := Word.Or(a, b);
+    END;
+    RETURN a;
+END SignExtend;
+
+PROCEDURE SignExtend32(a: INTEGER): INT32 =
+BEGIN
+    RETURN SignExtend(a, 32);
+END SignExtend32;
+
+CONST IntegerToTypeid = SignExtend32;
+
 (* see RTBuiltin.mx
    see RT0.i3
-   see output of m3front -vsdebug *)
-CONST UID_INTEGER = 16_195C2A74; (* INTEGER *)
+   see output of m3front -vsdebug
+   typeids are 32bit.
+   16_FFFFFFFF on a 64bit system is a large 64bit value
+   that does not fit in 32bits. It gets a range error at runtime.
+   Two unsatisfactory solutions:
+     - CONST foo = -1 (* 16_FFFFFFFF *);
+     - VAR foo := IntegerToTypeid(16_FFFFFFFF);
+*)
+VAR UID_INTEGER := IntegerToTypeid(16_195C2A74); (* INTEGER *)
 CONST UID_LONGINT = 16_05562176; (* LONGINT *)
-CONST UID_WORD = (* 16_97E237E2 *) -1746782238; (* CARDINAL *)
-CONST UID_LONGWORD = 16_9CED36E7; (* LONGCARD *)
+VAR UID_WORD := IntegerToTypeid(16_97E237E2); (* CARDINAL *)
+VAR UID_LONGWORD := IntegerToTypeid(16_9CED36E7); (* LONGCARD *)
 CONST UID_REEL = 16_48E16572; (* REAL *)
-CONST UID_LREEL = (* 16_94FE32F6 *) -1795280138; (* LONGREAL *)
-CONST UID_XREEL = (* 16_9EE024E3 *) -1629477661; (* EXTENDED *)
+VAR UID_LREEL := IntegerToTypeid(16_94FE32F6); (* LONGREAL *)
+VAR UID_XREEL := IntegerToTypeid(16_9EE024E3); (* EXTENDED *)
 CONST UID_BOOLEAN = 16_1E59237D; (* BOOLEAN [0..1] *)
 CONST UID_CHAR = 16_56E16863; (* CHAR [0..255] *)
-CONST UID_WIDECHAR = (* 16_88F439FC *) -1997260292;
+VAR UID_WIDECHAR := IntegerToTypeid(16_88F439FC);
 CONST UID_MUTEX = 16_1541F475; (* MUTEX *)
 CONST UID_TEXT = 16_50F86574; (* TEXT *)
-CONST UID_UNTRACED_ROOT = (* 16_898EA789 *) -1987139703; (* UNTRACED ROOT *)
-CONST UID_ROOT = (* 16_9D8FB489 *) -1651526519; (* ROOT *)
+VAR UID_UNTRACED_ROOT := IntegerToTypeid(16_898EA789); (* UNTRACED ROOT *)
+VAR UID_ROOT := IntegerToTypeid(16_9D8FB489); (* ROOT *)
 CONST UID_REFANY = 16_1C1C45E6; (* REFANY *)
 CONST UID_ADDR = 16_08402063; (* ADDRESS *)
-(*CONST UID_RANGE_0_31 = 16_2DA6581D; [0..31] *)
-(*CONST UID_RANGE_0_63 = 16_2FA3581D; [0..63] *)
-CONST UID_PROC1 = 16_9C9DE465; (* PROCEDURE (x, y: INTEGER): INTEGER *)
+(*VAR UID_RANGE_0_31 := 16_2DA6581D; [0..31] *)
+(*VAR UID_RANGE_0_63 := 16_2FA3581D; [0..63] *)
+VAR UID_PROC1 := IntegerToTypeid(16_9C9DE465); (* PROCEDURE (x, y: INTEGER): INTEGER *)
 CONST UID_PROC2 = 16_20AD399F; (* PROCEDURE (x, y: INTEGER): BOOLEAN *)
 CONST UID_PROC3 = 16_3CE4D13B; (* PROCEDURE (x: INTEGER): INTEGER *)
-CONST UID_PROC4 = 16_FA03E372; (* PROCEDURE (x, n: INTEGER): INTEGER *)
+VAR UID_PROC4 :=  IntegerToTypeid(16_FA03E372); (* PROCEDURE (x, n: INTEGER): INTEGER *)
 CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *)
-CONST UID_PROC6 = 16_DC1B3625; (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
-CONST UID_PROC7 = 16_EE17DF2C; (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
-CONST UID_PROC8 = 16_B740EFD0; (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
+VAR UID_PROC6 := IntegerToTypeid(16_DC1B3625); (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
+VAR UID_PROC7 := IntegerToTypeid(16_EE17DF2C); (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
+VAR UID_PROC8 := IntegerToTypeid(16_B740EFD0); (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 <*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
 
 TYPE ExprType = {
@@ -1268,7 +1293,7 @@ TYPE Expr_t = OBJECT
     expr_type := ExprType.Invalid;
     current_proc: Proc_t := NIL;
     points_to_cgtype: M3CG.Type := M3CG.Type.Void;
-    points_to_typeid: INTEGER(*TypeUID*) := 0;
+    points_to_typeid: TypeUID := 0;
     float_value: Target.Float;
     text_value: TEXT := NIL;
     (* The right generalization here is a set of values the expression
@@ -1276,7 +1301,7 @@ TYPE Expr_t = OBJECT
     minmax_valid := minMaxFalse;
     minmax := int64MinMax;
     cgtype: M3CG.Type := M3CG.Type.Void;
-    typeid: INTEGER(*TypeUID*) := 0;
+    typeid: TypeUID := 0;
     type: Type_t := NIL;
     c_text: TEXT := NIL;
     c_unop_text: TEXT := NIL;  (* e.g. ~, -, ! *)
@@ -1291,10 +1316,10 @@ TYPE Expr_t = OBJECT
         Mult(right: Expr_t): Expr_t (*:= expr_mult*);
 END;
 
-TYPE Expr_Constant_t = Expr_t OBJECT END;
-TYPE Expr_AddressOf_t = Expr_t OBJECT END;
-TYPE Expr_Ordinal_t = Expr_t OBJECT END;
-TYPE Expr_Deref_t = Expr_t OBJECT END;
+<*UNUSED*>TYPE Expr_Constant_t = Expr_t OBJECT END;
+<*UNUSED*>TYPE Expr_AddressOf_t = Expr_t OBJECT END;
+<*UNUSED*>TYPE Expr_Ordinal_t = Expr_t OBJECT END;
+<*UNUSED*>TYPE Expr_Deref_t = Expr_t OBJECT END;
 
 TYPE Expr_Variable_t = Expr_t OBJECT
     var: Var_t := NIL;
@@ -1322,6 +1347,45 @@ TYPE Expr_Cast_t = Expr_Unary_t OBJECT
     OVERRIDES
         CText := Expr_Cast_CText;
 END;
+
+PROCEDURE new_Expr_Cast_CText(self: Expr_Cast_t): TEXT =
+VAR type_text := self.type_text; (* TODO self.type.text *)
+    cgtype := self.cgtype;
+    force := self.force;
+    left := self.left;
+    left_text := left.CText();
+    left_type_text := left.type_text; (* TODO left.type.text *)
+    remove := 0;
+    lparen := "";
+    rparen := "";
+BEGIN
+    <* ASSERT (cgtype = M3CG.Type.Void) # (self.type_text = NIL) *> (* TODO type_text *)
+    IF NOT force THEN
+        (* We might need "force_cast":
+        INT16 a, b, c = a + b;
+        => a + b is "int" and needs cast to INT16
+        *)
+        IF type_text # NIL
+                AND left_type_text # NIL
+                AND (left_type_text = type_text
+                    OR Text.Equal(left_type_text, type_text)) THEN
+            remove := 1; (* I've never seen this. *)
+        ELSE
+            type_text := cgtypeToText[cgtype];
+            lparen := "(";
+            rparen := ")";
+            IF left.cgtype = cgtype AND cgtype # M3CG.Type.Addr THEN
+                remove := 2; (* This happens fairly often. *)
+            END;
+        END;
+    END;
+    IF remove > 0 THEN
+        RETURN " /* cast_removed" & IntToDec(remove) & ": " & type_text & " */ " & left_text;
+    ELSE
+        RETURN "(" & lparen & type_text & rparen & "(" & left_text & "))";
+    END;
+END new_Expr_Cast_CText;
+
 PROCEDURE Expr_Cast_CText(self: Expr_Cast_t): TEXT =
 VAR type_text := self.type_text;
     cgtype := self.cgtype;
@@ -1449,7 +1513,7 @@ TYPE Var_t = M3CG.Var OBJECT
     name: Name := 0;
     name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
     cgtype: M3CG.Type;
-    typeid: INTEGER(*TypeUID*);
+    typeid: TypeUID;
     points_to_cgtype: M3CG.Type; (* future *)
     type_text: TEXT := NIL;
     const := FALSE;
@@ -1778,21 +1842,21 @@ CONST intLiteralSuffix = ARRAY CGType OF TEXT {
 };
 
 CONST cgtypeToText = ARRAY CGType OF TEXT {
-    "UINT8",  "INT8",           (* 0 1 *)
-    "UINT16", "INT16",          (* 2 3 *)
-    "UINT32", "INT32",          (* 4 5 *)
-    "UINT64", "INT64",          (* 6 7 *)
+    Texts.uint8,  Texts.int8,   (* 0 1 *)
+    Texts.uint16, Texts.int16,  (* 2 3 *)
+    Texts.uint32, Texts.int32,  (* 4 5 *)
+    Texts.uint64, Texts.int64,  (* 6 7 *)
     "float",  (* REAL *)        (* 8 *)
     "double", (* LONGREAL *)    (* 9 *)
     "EXTENDED",                 (* A *)
-    TextAddress,                (* B *)
+    Texts.address,              (* B *)
     "STRUCT",                   (* C *)
     "void"                      (* D *)
 };
 
 TYPE IntegerTypes = [M3CG.Type.Word8 .. M3CG.Type.Int64];
 
-CONST typeIsInteger = ARRAY CGType OF BOOLEAN {
+CONST cgtypeIsInteger = ARRAY CGType OF BOOLEAN {
     TRUE, TRUE, (* 8 *)
     TRUE, TRUE, (* 16 *)
     TRUE, TRUE, (* 32 *)
@@ -1808,7 +1872,7 @@ CONST minMaxPossiblyValidForType = ARRAY CGType OF MinMaxBool_t {
     minMaxFalse, minMaxFalse, minMaxFalse, (* real, longreal, extended *)
     minMaxFalse, minMaxFalse, minMaxFalse (* address, struct, void *)
 };
-CONST typeIsUnsignedInt = ARRAY CGType OF BOOLEAN {
+CONST cgtypeIsUnsignedInt = ARRAY CGType OF BOOLEAN {
     TRUE, FALSE, (* 8 *)
     TRUE, FALSE, (* 16 *)
     TRUE, FALSE, (* 32 *)
@@ -1816,7 +1880,7 @@ CONST typeIsUnsignedInt = ARRAY CGType OF BOOLEAN {
     FALSE, FALSE, FALSE, (* real, longreal, extended *)
     FALSE, FALSE, FALSE (* address, struct, void *)
 };
-CONST typeIsSignedInt = ARRAY CGType OF BOOLEAN {
+CONST cgtypeIsSignedInt = ARRAY CGType OF BOOLEAN {
     FALSE, TRUE, (* 8 *)
     FALSE, TRUE, (* 16 *)
     FALSE, TRUE, (* 32 *)
@@ -1824,12 +1888,12 @@ CONST typeIsSignedInt = ARRAY CGType OF BOOLEAN {
     FALSE, FALSE, FALSE, (* real, longreal, extended *)
     FALSE, FALSE, FALSE (* address, struct, void *)
 };
-<*UNUSED*>CONST typeSizeBits = ARRAY CGType OF [0..64] {
+<*UNUSED*>CONST cgtypeSizeBits = ARRAY CGType OF [0..64] {
     8, 8, 16, 16, 32, 32, 64, 64,
     32, 64, 64, (* real, longreal, extended *)
     0, 0, 0 (* address, struct, void *)
 };
-CONST typeSizeBytes = ARRAY CGType OF [0..8] {
+CONST cgtypeSizeBytes = ARRAY CGType OF [0..8] {
     1, 1, 2, 2, 4, 4, 8, 8,
     4, 8, 8, (* real, longreal, extended *)
     0, 0, 0 (* address, struct, void *)
@@ -2013,7 +2077,7 @@ BEGIN
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ROOT, text := "ROOT"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_UNTRACED_ROOT, text := "UNTRACED_ROOT"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_REFANY, text := "REFANY"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR, text := TextAddress), typedef := TRUE);
+    self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_ADDR, text := Texts.address), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC1, text := "PROC1"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC2, text := "PROC2"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC3, text := "PROC3"), typedef := TRUE);
@@ -2175,7 +2239,7 @@ BEGIN
     print(self, "/*declare_typename typedef " & TypeIDToText(typeid) & " " & NameT(name) & ";*/\n");
 END declare_typename;
 
-PROCEDURE TypeIDToText(x: INTEGER(*TypeUID*)): TEXT =
+PROCEDURE TypeIDToText(x: TypeUID): TEXT =
 BEGIN
     RETURN "T" & IntToHex(Word.And(16_FFFFFFFF, x));
 END TypeIDToText;
@@ -2369,7 +2433,6 @@ PROCEDURE DeclareTypes(multipass: Multipass_t) =
 VAR x := multipass.self;
     self := NEW(DeclareTypes_t, self := x);
     index := 0;
-    retry := 0; (* hack until the work is complete *)
     size_before, size_after := 0;
 BEGIN
     x.declareTypes := self;
@@ -3299,7 +3362,7 @@ CONST text = ARRAY OF TEXT{
 "}"
 };
 BEGIN
-    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type]) THEN
+    IF NOT (((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type]) THEN
         HelperFunctions_pos(self);
         HelperFunctions_helper_with_type_and_array(self, "div", type, self.data.div, text);
     END;
@@ -3323,7 +3386,7 @@ CONST text = ARRAY OF TEXT{
 "}"
 };
 BEGIN
-    IF NOT (((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type]) THEN
+    IF NOT (((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type]) THEN
         HelperFunctions_pos(self);
         HelperFunctions_helper_with_type_and_array(self, "mod", type, self.data.mod, text);
     END;
@@ -4559,7 +4622,7 @@ BEGIN
     (* declare frame type *)
 
     IF proc.forward_declared_frame_type THEN
-        print(self, "struct " & frame_type & " {");
+        print(self, "struct " & frame_type & " {\n");
 
         (* add field to ensure frame not empty *)
         (* TODO only do this if necessary *)
@@ -4701,7 +4764,7 @@ BEGIN
     print(self, "goto L" & LabelToHex(label) & ";\n");
 END jump;
 
-TYPE internal_compare_t = RECORD
+<*UNUSED*>TYPE internal_compare_t = RECORD
     op: CompareOp;
     left: Expr_t := NIL;
     right: Expr_t := NIL;
@@ -4977,7 +5040,7 @@ BEGIN
     push(self, M3CG.Type.Addr, CTextToExpr("0")); (* UNDONE NULL or (ADDRESS)0? *)
 END load_nil;
 
-PROCEDURE TIntInc(self: T; i: Target.Int): Target.Int =
+<*UNUSED*>PROCEDURE TIntInc(self: T; i: Target.Int): Target.Int =
 VAR j: Target.Int;
 BEGIN
     IF NOT TInt.Add(i, TInt.One, j) THEN
@@ -5011,17 +5074,17 @@ PROCEDURE load_target_integer(self: T; type: IType; READONLY readonly_i: Target.
 (* push; s0.type := i *)
 VAR i := readonly_i;
     expr := CTextToExpr(TIntLiteral(type, i));
-    size := typeSizeBytes[type];
-    signed   := typeIsSignedInt[type];
-    unsigned := typeIsUnsignedInt[type];
+    size := cgtypeSizeBytes[type];
+    signed   := cgtypeIsSignedInt[type];
+    unsigned := cgtypeIsUnsignedInt[type];
 BEGIN
     self.comment("load_integer");
     <* ASSERT signed OR unsigned *>
     expr.minmax_valid[Min] := TRUE;
     expr.minmax_valid[Max] := TRUE;
     expr.cgtype := type;
-    IF typeIsUnsignedInt[type] THEN TIntN.ZeroExtend(i, size)
-    ELSIF typeIsSignedInt[type] THEN TIntN.SignExtend(i, size) END;
+    IF cgtypeIsUnsignedInt[type] THEN TIntN.ZeroExtend(i, size)
+    ELSIF cgtypeIsSignedInt[type] THEN TIntN.SignExtend(i, size) END;
     <* ASSERT readonly_i = i *>
     expr.minmax[Min] := i;
     expr.minmax[Max] := i;
@@ -5049,11 +5112,11 @@ PROCEDURE InternalTransferMinMax2(
     VAR to_valid: BOOLEAN;
     VAR to_value: Target.Int): BOOLEAN =
 VAR from_type     := from.cgtype;
-    from_signed   := typeIsSignedInt[from_type];
-    from_unsigned := typeIsUnsignedInt[from_type];
+    from_signed   := cgtypeIsSignedInt[from_type];
+    from_unsigned := cgtypeIsUnsignedInt[from_type];
     to_type       := to.cgtype;
-    to_signed     := typeIsSignedInt[to_type];
-    to_unsigned   := typeIsUnsignedInt[to_type];
+    to_signed     := cgtypeIsSignedInt[to_type];
+    to_unsigned   := cgtypeIsUnsignedInt[to_type];
 BEGIN
     RETURN FALSE;
 
@@ -5090,7 +5153,7 @@ PROCEDURE TransferMinMax(from, to: Expr_t) =
 BEGIN
     to.minmax_valid := minMaxFalse;
     RETURN;
-    IF NOT typeIsInteger[to.cgtype] THEN
+    IF NOT cgtypeIsInteger[to.cgtype] THEN
         to.minmax_valid := minMaxFalse;
         RETURN;
     END;
@@ -5115,7 +5178,7 @@ BEGIN
     RETURN e;
 END cast;
 
-PROCEDURE old_Cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
+<*UNUSED*>PROCEDURE old_Cast(expr: Expr_t; type: M3CG.Type := M3CG.Type.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT (type = M3CG.Type.Void) # (type_text = NIL) *>
     RETURN NEW(Expr_Cast_t, cgtype := type, type_text := type_text, left := expr);
@@ -5141,9 +5204,9 @@ TYPE TFloatOp2_t = PROCEDURE (READONLY a, b: Target.Float; VAR f: Target.Float):
 TYPE TIntExtendOrTruncate_t = PROCEDURE (READONLY in: Target.Int; byte_size: CARDINAL; VAR out: Target.Int): BOOLEAN;
 
 PROCEDURE TIntExtendOrTruncate(READONLY in: Target.Int; type: CGType; VAR out: Target.Int): BOOLEAN =
-VAR size := typeSizeBytes[type];
-    signed   := typeIsSignedInt[type];
-    unsigned := typeIsUnsignedInt[type];
+VAR size := cgtypeSizeBytes[type];
+    signed   := cgtypeIsSignedInt[type];
+    unsigned := cgtypeIsUnsignedInt[type];
 BEGIN
     <* ASSERT signed OR unsigned *>
     RETURN ((ARRAY BOOLEAN OF TIntExtendOrTruncate_t{TWord.Truncate, TInt.Extend})[signed])(in, size, out);
@@ -5223,7 +5286,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("div");
     pop(self, 2);
-    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type] THEN
+    IF ((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "/" & s0.CText()), type));
     ELSE
         push(self, type, cast(CTextToExpr("m3_div_" & cgtypeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
@@ -5237,7 +5300,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("mod");
     pop(self, 2);
-    IF ((a = b) AND (a # Sign.Unknown)) OR typeIsUnsignedInt[type] THEN
+    IF ((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "%" & s0.CText()), type));
     ELSE
         push(self, type, cast(CTextToExpr("m3_mod_" & cgtypeToText[type] & "(" & s1.CText() & "," & s0.CText() & ")"), type));
@@ -5447,7 +5510,7 @@ END shift_left;
 PROCEDURE shift_right(self: T; type: IType) =
 (* s1.type := Word.Shift  (s1.type, -s0.type); pop *)
 BEGIN
-    <* ASSERT typeIsUnsignedInt[type] *>
+    <* ASSERT cgtypeIsUnsignedInt[type] *>
     shift_left_or_right(self, type, "shift_right", ">>");
 END shift_right;
 
@@ -6087,12 +6150,14 @@ BEGIN
     BitsToDec[16] := "16";
     BitsToDec[32] := "32";
     BitsToDec[64] := "64";
-    FOR i := 8 TO 64 DO
-        IF BitsToDec[i] # NIL THEN
-            BitsToInt[i] := "INT" & BitsToDec[i];
-            BitsToUInt[i] := "U" & BitsToInt[i];
-        END;
-    END;
+    BitsToInt[8] := Texts.int8;
+    BitsToInt[16] := Texts.int16;
+    BitsToInt[32] := Texts.int32;
+    BitsToInt[64] := Texts.int64;
+    BitsToUInt[8] := Texts.uint8;
+    BitsToUInt[16] := Texts.uint16;
+    BitsToUInt[32] := Texts.uint32;
+    BitsToUInt[64] := Texts.uint64;
     SignedAndBitsToCGType[TRUE] := BitsToCGInt;
     SignedAndBitsToCGType[FALSE] := BitsToCGUInt;
 END M3C.
