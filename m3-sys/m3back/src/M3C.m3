@@ -4966,7 +4966,7 @@ BEGIN
                left := expr,
                (* TODO c_unop_text := "&" *)
                (* TODO c_unop_text := "(void*)&" *)
-               TODO c_unop_text := "(ADDRESS)&"
+               c_unop_text := "(ADDRESS)&"
                );
 END AddressOf;
 
