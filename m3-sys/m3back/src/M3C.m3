@@ -583,7 +583,6 @@ TYPE Type_State = {None, ForwardDeclared, CanBeDefined, Defined};
 
 TYPE Type_t = OBJECT
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
-    byte_size := 0; (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
     text: TEXT := NIL;
     cg_type: CGType := CGType.Addr;
@@ -1147,11 +1146,9 @@ END TypeidToType_Get;
 PROCEDURE Type_Init(self: T; type: Type_t; typedef := FALSE) =
 VAR typedefs := ARRAY [0..1] OF TEXT{NIL, NIL};
 BEGIN
+    (* TODO require bit_size be set *)
     IF type.bit_size = 0 THEN
         type.bit_size := TargetMap.CG_Size[type.cg_type];
-    END;
-    IF type.byte_size = 0 THEN
-        type.byte_size := TargetMap.CG_Bytes[type.cg_type];
     END;
     typedefs[0] := type.text;
     typedefs[1] := TypeIDToText(type.typeid);
@@ -2087,7 +2084,7 @@ BEGIN
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC7, text := "PROC7"), typedef := TRUE);
     self.Type_Init(NEW(Type_t, cg_type := Target.Address.cg_type, typeid := UID_PROC8, text := "PROC8"), typedef := TRUE);
 
-    (* self.Type_Init(NEW(Type_t, bit_size := 0, byte_size := 0, typeid := UID_NULL)); *)
+    (* self.Type_Init(NEW(Type_t, bit_size := 0, typeid := UID_NULL)); *)
 END DeclareBuiltinTypes;
 
 (*------------------------------------------------ READONLY configuration ---*)
@@ -2258,8 +2255,7 @@ BEGIN
         typeid := typeid,
         index_typeid := index_typeid,
         element_typeid := element_typeid,
-        bit_size := bit_size,
-        byte_size := bit_size DIV 8
+        bit_size := bit_size
         ));
   END declare_array;
 
@@ -2277,8 +2273,7 @@ BEGIN
     x.Type_Init(NEW(OpenArray_t,
         typeid := typeid,
         element_typeid := element_typeid,
-        bit_size := bit_size,
-        byte_size := bit_size DIV 8
+        bit_size := bit_size
         ));
 (*
     WITH element_type = TypeidToType_Get(element_typeid) DO
@@ -2297,7 +2292,6 @@ BEGIN
         print(self, ";}" & element_type.text & ";");
         EVAL typeidToType.put(typeid, NEW(OpenArray_t,
         typeid := typeid,
-        byte_size := bit_size DIV 8,
         bit_size := bit_size,
         element_typeid := element_typeid,
         element_type := element_type));
@@ -2370,8 +2364,7 @@ BEGIN
     x.Type_Init(NEW(Packed_t,
         typeid := typeid,
         base_typeid := base_typeid,
-        bit_size := bit_size,
-        byte_size := bit_size DIV 8
+        bit_size := bit_size
         ));
 END declare_packed;
 
@@ -3945,7 +3938,6 @@ END Var_Name;
 
 PROCEDURE Var_Declare(var: Var_t): TEXT =
 BEGIN
-    <* ASSERT NOT (var.global OR var.exported) *> (* only locals/params for now *)
     RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & " " & var.Name();
 END Var_Declare;
 
