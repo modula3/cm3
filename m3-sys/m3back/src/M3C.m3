@@ -14,7 +14,6 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
 CONST NameT = M3ID.ToText;
-TYPE CGType = M3CG.Type;
 
 (* comparison is always false due to limited range of data type *)
 VAR AvoidGccTypeRangeWarnings := TRUE;
@@ -1349,7 +1348,7 @@ TYPE Expr_Cast_t = Expr_Unary_t OBJECT
         CText := Expr_Cast_CText;
 END;
 
-PROCEDURE new_Expr_Cast_CText(self: Expr_Cast_t): TEXT =
+<*UNUSED*>PROCEDURE new_Expr_Cast_CText(self: Expr_Cast_t): TEXT =
 VAR type_text := self.type_text; (* TODO self.type.text *)
     cgtype := self.cgtype;
     force := self.force;
