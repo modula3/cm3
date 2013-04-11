@@ -1539,7 +1539,6 @@ TYPE Var_t = M3CG.Var OBJECT
     global := FALSE;
     byte_size := -1; (* esp. for structs *)
     up_level := FALSE; (* local accessed from nested function *)
-    in_memory := FALSE; (* ? *)
     is_static_link := FALSE; (* micro optimization -- uplevel but accessed directly *)
     next_in_block: Var_t := NIL;
     proc: Proc_t := NIL;
@@ -3667,9 +3666,9 @@ PROCEDURE Locals_declare_param(
     alignment: Alignment;
     type: CGType;
     typeid: TypeUID;
-    in_memory: BOOLEAN;
+    <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -3678,9 +3677,7 @@ BEGIN
         alignment,
         type,
         typeid,
-        in_memory,
-        up_level,
-        frequency);
+        up_level);
 END Locals_declare_param;
 
 PROCEDURE Locals_declare_local(
@@ -3690,11 +3687,11 @@ PROCEDURE Locals_declare_local(
     alignment: Alignment;
     type: CGType;
     typeid: TypeUID;
-    in_memory: BOOLEAN;
+    <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency): M3CG.Var =
 BEGIN
-    RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, in_memory, up_level, frequency);
+    RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, up_level);
 END Locals_declare_local;
 
 TYPE AllocateTemps_t = Locals_t;
@@ -3703,7 +3700,7 @@ PROCEDURE AllocateTemps_common(self: AllocateTemps_t; type: CGType) =
 VAR x := self.self;
 BEGIN
     x.comment("AllocateTemps_common");
-    WITH t = internal_declare_temp(x, CG_Bytes[type], CG_Bytes[type], type, FALSE) DO
+    WITH t = internal_declare_temp(x, CG_Bytes[type], CG_Bytes[type], type) DO
         t.used := TRUE;
         x.temp_vars[x.op_index] := t;
     END;
@@ -3769,9 +3766,9 @@ PROCEDURE Imports_declare_param(
     alignment: Alignment;
     type: CGType;
     typeid: TypeUID;
-    in_memory: BOOLEAN;
+    <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -3780,9 +3777,7 @@ BEGIN
         alignment,
         type,
         typeid,
-        in_memory,
-        up_level,
-        frequency);
+        up_level);
 END Imports_declare_param;
 
 PROCEDURE Imports_import_global(
@@ -3999,15 +3994,12 @@ PROCEDURE declare_local(
     <*UNUSED*>alignment: Alignment;
     cgtype: CGType;
     typeid: TypeUID;
-    in_memory: BOOLEAN;
-    up_level: BOOLEAN;
-    <*UNUSED*>frequency: Frequency): Var_t =
+    up_level: BOOLEAN): Var_t =
 VAR var := NEW(Var_t,
         self := self,
         cgtype := cgtype,
         name := name,
         up_level := up_level,
-        in_memory := in_memory,
         byte_size := byte_size,
         (* TODO put this back typeid := typeid, *)
         proc := self.current_proc).Init();
@@ -4102,10 +4094,8 @@ BEGIN
             CG_Bytes[CGType.Addr], (* alignment *)
             CGType.Addr,
             -1,
-            FALSE(*?*), (* in memory *)
             TRUE, (* up_level, sort of -- needs to be stored, but is never written, can be read from direct parameter
                      This gets it stored in begin_function. *)
-            M3CG.Never,
             NARROW(proc.parent, Proc_t).FrameType() & "*"), Var_t);
         param.used := TRUE;
     END;
@@ -4123,9 +4113,7 @@ PROCEDURE internal_declare_param(
     <*UNUSED*>alignment: Alignment;
     cgtype: CGType;
     typeid: TypeUID;
-    in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    <*UNUSED*>frequency: Frequency := M3CG.Never;
     type_text: TEXT := NIL): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
@@ -4136,7 +4124,6 @@ BEGIN
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
-            & " in_memory:" & BoolToText[in_memory]
             & " type_text:" & TextOrNIL(type_text)
             );
     ELSE
@@ -4163,7 +4150,6 @@ BEGIN
         cgtype := cgtype,
         name := name,
         byte_size := byte_size,
-        in_memory := in_memory,
         up_level := up_level,
         proc := function,
         type_text := type_text).Init();
@@ -4185,9 +4171,7 @@ declare_param(
     alignment: Alignment;
     type: CGType;
     typeid: TypeUID;
-    in_memory: BOOLEAN;
-    up_level: BOOLEAN;
-    frequency: Frequency): M3CG.Var =
+    up_level: BOOLEAN): M3CG.Var =
 BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
@@ -4199,9 +4183,7 @@ BEGIN
         alignment,
         type,
         typeid,
-        in_memory,
         up_level,
-        frequency,
         NIL(* TODO? cgtypeToText[type]*));
 END declare_param;
 
@@ -4211,23 +4193,26 @@ internal_declare_temp(
     self: T;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: CGType;
-    in_memory:BOOLEAN): Var_t =
+    type: CGType): Var_t =
 BEGIN
     IF DebugDeclare(self) THEN
         self.comment(
             "declare_temp byte_size:" & IntToDec(byte_size)
-            & " cgtype:" & cgtypeToText[type]
-            & " in_memory:" & BoolToText[in_memory]);
+            & " cgtype:" & cgtypeToText[type]);
     ELSE
         self.comment("declare_temp");
     END;
-    RETURN declare_local(self, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
+    RETURN declare_local(self, 0, byte_size, alignment, type, -1, FALSE);
 END internal_declare_temp;
 
-PROCEDURE Locals_declare_temp(self: Locals_t; byte_size: ByteSize; alignment: Alignment; type: CGType; in_memory:BOOLEAN): M3CG.Var =
+PROCEDURE Locals_declare_temp(
+    self: Locals_t;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: CGType;
+    <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
 BEGIN
-    RETURN internal_declare_temp(self.self, byte_size, alignment, type, in_memory);
+    RETURN internal_declare_temp(self.self, byte_size, alignment, type);
 END Locals_declare_temp;
 
 PROCEDURE free_temp(self: T; <*NOWARN*>v: M3CG.Var) =
@@ -5980,7 +5965,7 @@ END pop_static_link;
 
 PROCEDURE Locals_pop_static_link(self: Locals_t) =
 VAR x := self.self;
-    var := internal_declare_temp(x, CG_Bytes[CGType.Addr], CG_Bytes[CGType.Addr], CGType.Addr, FALSE);
+    var := internal_declare_temp(x, CG_Bytes[CGType.Addr], CG_Bytes[CGType.Addr], CGType.Addr);
 BEGIN
     <* ASSERT x.temp_vars # NIL *>
     x.temp_vars[x.op_index] := var;
