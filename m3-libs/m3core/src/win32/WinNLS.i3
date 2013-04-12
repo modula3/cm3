@@ -205,6 +205,8 @@ CONST
   CP_OEMCP = 1;              (* default to OEM  code page *)
   CP_MACCP = 2;              (* default to MAC  code page *)
 
+  CP_UTF8 = 65001;           (* GLib native codepage. *)
+
 
 (*
  *  Country Codes.
