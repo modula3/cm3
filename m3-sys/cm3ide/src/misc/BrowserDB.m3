@@ -185,7 +185,7 @@ PROCEDURE ScanRepository (VAR s: Scan)
       TRY
         WHILE iter.next (nm) DO
           path := OS.MakePath (s.pkg_root.path, nm);
-          IF OS.IsDirectory (path) THEN
+          IF NOT Text.Equal(nm, ".svn") AND OS.IsDirectory (path) THEN
             s.cur_pkg := ID.Add (nm);
             ScanPkg (s, path);
           END;
@@ -483,6 +483,10 @@ PROCEDURE IsSourceName (path, file: TEXT;  in_src_dir: BOOLEAN): BOOLEAN =
       RETURN FALSE;
     END;
 
+    IF Text.Equal(file, ".svn") THEN
+      RETURN FALSE;
+    END;
+    
     (* subdirectory? *)
     path := OS.MakePath (path, file);
     IF OS.IsDirectory (path) THEN RETURN TRUE; END;
@@ -506,11 +510,15 @@ PROCEDURE ScanNewDir (VAR s: Scan;  dir: Dir.T;  path: TEXT;  in_src_dir: BOOLEA
       iter := FS.Iterate (path);
       TRY
         WHILE iter.next (file) DO
-          n := ScanFile (s, path, file, in_src_dir);
-          IF (n # NIL) THEN
-            n.parent := dir;
-            n.sibling := dir.contents;
-            dir.contents := n;
+          (* This is where we can ignore subdirectories like .svn, CVS..
+          *)
+          IF NOT Text.Equal(file, ".svn") THEN
+            n := ScanFile (s, path, file, in_src_dir);
+            IF (n # NIL) THEN
+              n.parent := dir;
+              n.sibling := dir.contents;
+              dir.contents := n;
+            END;
           END;
         END;
       FINALLY
