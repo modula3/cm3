@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html256"
   HREF="2_2_4Records.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -43,7 +44,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Previous:</B> <A NAME="tex2html249"
   HREF="2_2_2Floating_point_types.html">2.2.2 Floating-point types</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H3><A NAME="SECTION00015300000000000000">
@@ -51,19 +52,19 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </H3>
 
 <P>
-An <I>array</I> is an indexed collection of component variables, called the
-<I>elements</I> of the array.  The indexes are the values of an ordinal type,
-called the <I>index type</I> of the array.  The elements all have the same
-size and the same type, called the <I>element type</I> of the array.
+An <SPAN  CLASS="textit">array</SPAN> is an indexed collection of component variables, called the
+<SPAN  CLASS="textit">elements</SPAN> of the array.  The indexes are the values of an ordinal type,
+called the <SPAN  CLASS="textit">index type</SPAN> of the array.  The elements all have the same
+size and the same type, called the <SPAN  CLASS="textit">element type</SPAN> of the array.
 
 <P>
-There are two kinds of array types, <I>fixed</I> and <I>open</I>.  The length
+There are two kinds of array types, <SPAN  CLASS="textit">fixed</SPAN> and <SPAN  CLASS="textit">open</SPAN>.  The length
 of a fixed array is determined at compile time.  The length of an open array
 type is determined at runtime, when it is allocated or bound.  The length
 cannot be changed thereafter.
 
 <P>
-The <I>shape</I> of a multi-dimensional array is the sequence of its lengths
+The <SPAN  CLASS="textit">shape</SPAN> of a multi-dimensional array is the sequence of its lengths
 in each dimension.  More precisely, the shape of an array is its length
 followed by the shape of any of its elements; the shape of a non-array is the
 empty sequence.
@@ -81,7 +82,7 @@ A fixed array type declaration has the form:
 where <code>Index</code> is an ordinal type and <code>Element</code> is any type other
 than an open array type.  The values of type <code>T</code> are arrays whose element
 type is <code>Element</code> and whose length is the number of elements of the type
-<code>Index</code>.
+<code>Index</code>.  If <code>Element</code> is an empty type, then so is <code>T</code>.
 
 <P>
 If <code>a</code> has type <code>T</code>, then <code>a[i]</code> designates the element of
@@ -118,7 +119,8 @@ An open array type declaration has the form:
 where <code>Element</code> is any type.  The values of <code>T</code> are arrays whose
 element type is <code>Element</code> and whose length is arbitrary.  The index type
 of an open array is the integer subrange <code>[0..n-1]</code>, where <code>n</code> is
-the length of the array.
+the length of the array.   If <code>Element</code> is an empty type, then so 
+is <code>T</code>.
 
 <P>
 An open array type can be used only as the type of a formal parameter, the
@@ -135,7 +137,8 @@ Examples of array types:
 </PRE>
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html256"
   HREF="2_2_4Records.html">
@@ -152,7 +155,7 @@ Examples of array types:
 <B> Up:</B> <A NAME="tex2html255"
   HREF="2_2Types.html">2.2 Types</A>
 <B> Previous:</B> <A NAME="tex2html249"
-  HREF="2_2_2Floating_point_types.html">2.2.2 Floating-point types</A>
+  HREF="2_2_2Floating_point_types.html">2.2.2 Floating-point types</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de

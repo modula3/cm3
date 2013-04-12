@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html898"
   HREF="2_6_14Text_operations.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -43,7 +44,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Previous:</B> <A NAME="tex2html891"
   HREF="2_6_12Boolean_operations.html">2.6.12 Boolean operations</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H3><A NAME="SECTION000191300000000000000">
@@ -64,9 +65,9 @@ object type or traced reference type, and <code>x</code> must be assignable to
 <code>T</code>.
 
 <P><PRE><TT>
- 		 		 <code>TYPECODE</code> 		 <code>(T: RefType)       : CARDINAL</code>
-		 		 		 <code>(r: REFANY)        : CARDINAL</code>
-		 		 		 <code>(r: UNTRACED ROOT) : CARDINAL</code>  
+ 		 		 <code>TYPECODE</code> 		 <code>(T: RefType)       : CARDINAL</code> 
+<BR><code>(r: REFANY)        : CARDINAL</code> 
+<BR><code>(r: UNTRACED ROOT) : CARDINAL</code>  
 </TT></PRE>
 Every object type or traced reference type (including NULL) has an associated
 integer code.  Different types have different codes.  The code for a type is
@@ -76,8 +77,8 @@ returns the code for the allocated type of r.  It is a static error if T is
 REFANY or is not an object type or traced reference type.
 
 <P><PRE><TT>
- 		 		 <code>ORD</code> 		 <code>(element: Ordinal): INTEGER</code>
-		 		 <code>VAL</code> 		 <code>(i: INTEGER; T: OrdinalType): T</code>  
+ 		 		 <code>ORD</code> 		 <code>(element: Ordinal): INTEGER</code> 
+<BR><code>VAL</code> 		 <code>(i: INTEGER; T: OrdinalType): T</code>  
 </TT></PRE>
 <code>ORD</code> converts an element of an enumeration to the integer that
 represents its position in the enumeration order.  The first value in any
@@ -96,9 +97,9 @@ runtime error for the value of <code>i</code> to be out of range for <code>T</co
 If <code>n</code> is an integer of type <code>T</code>, <code>ORD(n) = VAL(n, T) = n</code>.
 
 <P><PRE><TT>
- 		 <code>NUMBER</code> 		 <code>(T: OrdinalType)    : CARDINAL</code>
-		 		 <code>(A: FixedArrayType) : CARDINAL</code>
-		 		 <code>(a: Array)          : CARDINAL</code>  
+ 		 <code>NUMBER</code> 		 <code>(T: OrdinalType)    : CARDINAL</code> 
+<BR><code>(A: FixedArrayType) : CARDINAL</code> 
+<BR><code>(a: Array)          : CARDINAL</code>  
 </TT></PRE>
 For an ordinal type <code>T</code>, <code>NUMBER(T)</code> returns the number of elements
 in <code>T</code>.  For a fixed array type <code>A</code>, <code>NUMBER(A)</code> is defined by
@@ -107,15 +108,15 @@ in <code>T</code>.  For a fixed array type <code>A</code>, <code>NUMBER(A)</code
 expression <code>a</code> will be evaluated only if it denotes an open array.
 
 <P><PRE><TT>
- 		 <code>FIRST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code>
-		 		 <code>(T: FloatType)      : T</code>
-		 		 <code>(A: FixedArrayType) : BaseType(IndexType(A))</code>
-		 		 <code>(a: Array)          : BaseType(IndexType(a))</code> 
-&nbsp;
-		 <code>LAST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code>
-		 		 <code>(T: FloatType)      : T</code>
-		 		 <code>(A: FixedArrayType) : BaseType(IndexType(A))</code>
-		 		 <code>(a: Array)          : BaseType(IndexType(a))</code>  
+ 		 <code>FIRST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code> 
+<BR><code>(T: FloatType)      : T</code> 
+<BR><code>(A: FixedArrayType) : BaseType(IndexType(A))</code> 
+<BR><code>(a: Array)          : BaseType(IndexType(a))</code> 
+<BR>
+<BR><code>LAST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code> 
+<BR><code>(T: FloatType)      : T</code> 
+<BR><code>(A: FixedArrayType) : BaseType(IndexType(A))</code> 
+<BR><code>(a: Array)          : BaseType(IndexType(a))</code>  
 </TT></PRE>
 For a non-empty ordinal type <code>T</code>, <code>FIRST</code> returns the smallest value
 of <code>T</code> and <code>LAST</code> returns the largest value.  If <code>T</code> is the
@@ -138,14 +139,14 @@ if <code>a</code> is an open array, <code>FIRST(a)</code> and <code>LAST(a)</cod
 <code>INTEGER</code>.
 
 <P><PRE><TT>
- 		 <code>BITSIZE</code> 		 <code>(x: Any)  : CARDINAL</code>
-		 		 <code>(T: Type) : CARDINAL</code> 
-&nbsp;
-		 <code>BYTESIZE</code> 		 <code>(x: Any)  : CARDINAL</code>
-		 		 <code>(T: Type) : CARDINAL</code> 
-&nbsp;
-		 <code>ADRSIZE</code> 		 <code>(x: Any)  : CARDINAL</code>
-		 		 <code>(T: Type) : CARDINAL</code>  
+ 		 <code>BITSIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code> 
+<BR>
+<BR><code>BYTESIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code> 
+<BR>
+<BR><code>ADRSIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code>  
 </TT></PRE>
 These operations return the size of the variable <code>x</code> or of variables of
 type <code>T</code>.  <code>BITSIZE</code> returns the number of bits, <code>BYTESIZE</code> the
@@ -155,7 +156,8 @@ array type.  A designator <code>x</code> will be evaluated only if its type is a
 open array type.
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html898"
   HREF="2_6_14Text_operations.html">
@@ -172,7 +174,7 @@ open array type.
 <B> Up:</B> <A NAME="tex2html897"
   HREF="2_6Expressions.html">2.6 Expressions</A>
 <B> Previous:</B> <A NAME="tex2html891"
-  HREF="2_6_12Boolean_operations.html">2.6.12 Boolean operations</A>
+  HREF="2_6_12Boolean_operations.html">2.6.12 Boolean operations</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de

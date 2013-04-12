@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html868"
   HREF="2_6_11Relations.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -43,7 +44,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Previous:</B> <A NAME="tex2html861"
   HREF="2_6_9New.html">2.6.9 New</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H3><A NAME="SECTION000191000000000000000">
@@ -71,11 +72,12 @@ computed as <code>x+(y+z)</code>, since addition is not associative either for
 bounded integers or for floating-point values.
 
 <P><PRE><TT>
- 		prefix 		 <code>+</code> 		 <code>(x: Integer)    : Integer</code>
-		 		 		 <code>(x: Float)      : Float</code>
-		infix 		 <code>+</code> 		 <code>(x,y: Integer)  : Integer</code>
-		 		 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		prefix 		 <code>+</code> 		 <code>(x: Integer)    : Integer</code> 
+<BR><code>(x: Float)      : Float</code> 
+<BR>
+infix 		 <code>+</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 As a prefix operator, <code>+x</code> returns <code>x</code>.  As an infix operator on
 numeric arguments, <code>+</code> denotes addition.  On sets, <code>+</code> denotes set
@@ -85,11 +87,12 @@ same, and the result is the same type as both.  In unsafe modules, <code>+</code
 extended to <code>ADDRESS</code>.
 
 <P><PRE><TT>
- 		prefix 		 <code>-</code> 		 <code>(x: Integer)    : Integer</code>
-		 		 		 <code>(x: Float)      : Float</code>
-		infix 		 <code>-</code> 		 <code>(x,y: Integer)  : Integer</code>
-		 		 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		prefix 		 <code>-</code> 		 <code>(x: Integer)    : Integer</code> 
+<BR><code>(x: Float)      : Float</code> 
+<BR>
+infix 		 <code>-</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 As a prefix operator, <code>-x</code> is the negative of <code>x</code>.  As an infix
 operator on numeric arguments, <code>-</code> denotes subtraction.  On sets,
@@ -99,9 +102,9 @@ the same, and the result is the same type as both.  In unsafe modules,
 <code>-</code> is extended to <code>ADDRESS</code>.
 
 <P><PRE><TT>
- 		infix 		 <code>*</code> 		 <code>(x,y: Integer)  : Integer</code>
-		 		 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		infix 		 <code>*</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 On numeric arguments, <code>*</code> denotes multiplication.  On sets, <code>*</code>
 denotes intersection.  That is, <code>e IN (x * y)</code> if and only if
@@ -109,8 +112,8 @@ denotes intersection.  That is, <code>e IN (x * y)</code> if and only if
 same, and the result is the same type as both.
 
 <P><PRE><TT>
- 		infix 		 <code>/</code> 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		infix 		 <code>/</code> 		 <code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 On reals, <code>/</code> denotes division.  On sets, <code>/</code> denotes symmetric
 difference.  That is, <code>e IN (x / y)</code> if and only if
@@ -118,9 +121,10 @@ difference.  That is, <code>e IN (x / y)</code> if and only if
 same, and the result is the same type as both.
 
 <P><PRE><TT>
- 		infix 		 <code>DIV</code> 		 <code>(x,y: Integer) : Integer</code>
-		infix 		 <code>MOD</code> 		 <code>(x,y: Integer) : Integer</code>
-		 		 		 <code>(x,y: Float)   : Float</code>  
+ 		infix 		 <code>DIV</code> 		 <code>(x,y: Integer) : Integer</code> 
+<BR>
+infix 		 <code>MOD</code> 		 <code>(x,y: Integer) : Integer</code> 
+<BR><code>(x,y: Float)   : Float</code>  
 </TT></PRE>
 The value <code>x DIV y</code> is the floor of the quotient of <code>x</code> and
 <code>y</code>; that is, the maximum integer not exceeding the real number <code>z</code>
@@ -141,15 +145,15 @@ types of <code>x</code> and <code>y</code> must be the same, and the result is t
 type as both.
 
 <P><PRE><TT>
- 		 <code>ABS</code> 		 <code>(x: Integer) : Integer</code>
-		 		 <code>(x: Float)   : Float</code>  
+ 		 <code>ABS</code> 		 <code>(x: Integer) : Integer</code> 
+<BR><code>(x: Float)   : Float</code>  
 </TT></PRE>
 <code>ABS(x)</code> is the absolute value of <code>x</code>.  The type of <code>ABS(x)</code> is
 the same as the type of <code>x</code>.
 
 <P><PRE><TT>
- 		 <code>FLOAT</code> 		 <code>(x: Integer; T: Type := REAL): T</code>
-		 		 <code>(x: Float;   T: Type := REAL): T</code>  
+ 		 <code>FLOAT</code> 		 <code>(x: Integer; T: Type := REAL): T</code> 
+<BR><code>(x: Float;   T: Type := REAL): T</code>  
 </TT></PRE>
 <code>FLOAT(x, T)</code> is a floating-point value of type <code>T</code> that is equal to
 or very near <code>x</code>.  The type <code>T</code> must be a floating-point type; it
@@ -157,16 +161,16 @@ defaults to <code>REAL</code>.  The exact semantics depend on the thread's curre
 rounding mode, as explained in the required interface <code>FloatMode</code>.
 
 <P><PRE><TT>
- 		 <code>FLOOR</code> 		 <code>(x: Float; T: Type := INTEGER): T</code>
-		 <code>CEILING</code> 		 <code>(x: Float; T: Type := INTEGER): T</code>  
+ 		 <code>FLOOR</code> 		 <code>(x: Float; T: Type := INTEGER): T</code> 
+<BR><code>CEILING</code> 		 <code>(x: Float; T: Type := INTEGER): T</code>  
 </TT></PRE>
 <code>FLOOR(x)</code> is the greatest integer not exceeding <code>x</code>.
 <code>CEILING(x)</code> is the least integer not less than <code>x</code>.
 The type <code>T</code> must be an integer type; it defaults to <code>INTEGER</code>.
 
 <P><PRE><TT>
- 		 <code>ROUND</code> 		 <code>(r: Float; T: Type := INTEGER): T</code>
-		 <code>TRUNC</code> 		 <code>(r: Float; T: Type := INTEGER): T</code>  
+ 		 <code>ROUND</code> 		 <code>(r: Float; T: Type := INTEGER): T</code> 
+<BR><code>TRUNC</code> 		 <code>(r: Float; T: Type := INTEGER): T</code>  
 </TT></PRE>
 <code>ROUND(r)</code> is the nearest integer to <code>r</code>; ties are broken according
 to the constant <code>RoundDefault</code> in the required interface
@@ -176,8 +180,8 @@ to the constant <code>RoundDefault</code> in the required interface
 The type <code>T</code> must be an integer type; it defaults to <code>INTEGER</code>.
 
 <P><PRE><TT>
- 		 <code>MAX</code>, <code>MIN</code> 		 <code>(x,y: Ordinal) : Ordinal</code>
-		 		 <code>(x,y: Float)   : Float</code>  
+ 		 <code>MAX</code>, <code>MIN</code> 		 <code>(x,y: Ordinal) : Ordinal</code> 
+<BR><code>(x,y: Float)   : Float</code>  
 </TT></PRE>
 <code>MAX</code> returns the greater of the two values <code>x</code> and <code>y</code>;
 <code>MIN</code> returns the lesser.  If <code>x</code> and <code>y</code> are ordinals, they
@@ -186,7 +190,8 @@ and <code>y</code> are floats, they must have the same type, and the result is t
 same type as both.
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html868"
   HREF="2_6_11Relations.html">
@@ -203,7 +208,7 @@ same type as both.
 <B> Up:</B> <A NAME="tex2html867"
   HREF="2_6Expressions.html">2.6 Expressions</A>
 <B> Previous:</B> <A NAME="tex2html861"
-  HREF="2_6_9New.html">2.6.9 New</A>
+  HREF="2_6_9New.html">2.6.9 New</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de

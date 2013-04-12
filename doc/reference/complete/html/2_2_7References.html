@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html296"
   HREF="2_2_8Procedures.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -43,7 +44,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Previous:</B> <A NAME="tex2html289"
   HREF="2_2_6Sets.html">2.2.6 Sets</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H3><A NAME="SECTION00015700000000000000">
@@ -51,14 +52,14 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </H3>
 
 <P>
-A <I>reference</I> value is either <code>NIL</code> or the address of a variable,
+A <SPAN  CLASS="textit">reference</SPAN> value is either <code>NIL</code> or the address of a variable,
 called the referent.
 
 <P>
-A reference type is either <I>traced</I> or <I>untraced</I>.  When all traced
+A reference type is either <SPAN  CLASS="textit">traced</SPAN> or <SPAN  CLASS="textit">untraced</SPAN>.  When all traced
 references to a piece of allocated storage are gone, the implementation
-reclaims the storage.  Two reference types are of the same <I>reference
-  class</I> if they are both traced or both untraced.  A general type is traced
+reclaims the storage.  Two reference types are of the same <SPAN  CLASS="textit">reference
+  class</SPAN> if they are both traced or both untraced.  A general type is traced
 if it is a traced reference type, a record type any of whose field types is
 traced, an array type whose element type is traced, or a packed type whose
 underlying unpacked type is traced.
@@ -69,7 +70,7 @@ A declaration for a traced reference type has the form:
     TYPE T = REF Type
 </PRE>
 where <code>Type</code> is any type.  The values of <code>T</code> are traced references
-to variables of type <code>Type</code>, which is called the <I>referent type</I> of
+to variables of type <code>Type</code>, which is called the <SPAN  CLASS="textit">referent type</SPAN> of
 <code>T</code>.
 
 <P>
@@ -84,7 +85,7 @@ type <code>Type</code>.
 <P>
 In both the traced and untraced cases, the keyword <code>REF</code> can optionally
 be preceded by ``<code>BRANDED b</code>'' where <code>b</code> is a text constant called
-the <I>brand</I>.  Brands distinguish types that would otherwise be the same;
+the <SPAN  CLASS="textit">brand</SPAN>.  Brands distinguish types that would otherwise be the same;
 they have no other semantic effect.  All brands in a program must be distinct.
 If <code>BRANDED</code> is present and <code>b</code> is absent, the implementation
 automatically supplies a unique value for <code>b</code>.  Explicit brands are
@@ -126,7 +127,8 @@ Examples of reference types:
 </PRE>
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html296"
   HREF="2_2_8Procedures.html">
@@ -143,7 +145,7 @@ Examples of reference types:
 <B> Up:</B> <A NAME="tex2html295"
   HREF="2_2Types.html">2.2 Types</A>
 <B> Previous:</B> <A NAME="tex2html289"
-  HREF="2_2_6Sets.html">2.2.6 Sets</A>
+  HREF="2_2_6Sets.html">2.2.6 Sets</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de
