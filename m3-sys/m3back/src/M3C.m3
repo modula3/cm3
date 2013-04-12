@@ -4876,7 +4876,7 @@ BEGIN
     self.comment("if_compare");
     pop(self, 2);
     IF AvoidGccTypeRangeWarnings THEN
-        print(self, "if(m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(" & s1.CText() & ",\n " & s0.CText() & "))goto L" & LabelToText(label) & ";\n");
+        print(self, "if(m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(\n " & s1.CText() & ",\n " & s0.CText() & "))goto L" & LabelToText(label) & ";\n");
     ELSE
         print(self, "if(" & s1.CText() & CompareOpC[op] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
     END;
@@ -5315,7 +5315,7 @@ BEGIN
         cast2 := ")";
     END;
     IF AvoidGccTypeRangeWarnings THEN
-        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(" & cast1 & s1.CText() & cast2 & ",\n " & cast1 & s0.CText() & cast2 & ")"), itype));
+        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(\n " & cast1 & s1.CText() & cast2 & ",\n " & cast1 & s0.CText() & cast2 & ")"), itype));
     ELSE
         push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
     END;
@@ -5355,7 +5355,7 @@ BEGIN
     IF ((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "/" & s0.CText()), type));
     ELSE
-        push(self, type, cast(CTextToExpr("m3_div_" & cgtypeToText[type] & "(" & s1.CText() & ",\n " & s0.CText() & ")"), type));
+        push(self, type, cast(CTextToExpr("m3_div_" & cgtypeToText[type] & "(\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
     END;
 END div;
 
@@ -5369,7 +5369,7 @@ BEGIN
     IF ((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "%" & s0.CText()), type));
     ELSE
-        push(self, type, cast(CTextToExpr("m3_mod_" & cgtypeToText[type] & "(" & s1.CText() & ",\n " & s0.CText() & ")"), type));
+        push(self, type, cast(CTextToExpr("m3_mod_" & cgtypeToText[type] & "(\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
     END;
 END mod;
 
@@ -5385,7 +5385,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("abs");
     pop(self);
-    push(self, type, CTextToExpr("m3_abs_" & cgtypeToText[type] & "(" & s0.CText() & ")"));
+    push(self, type, CTextToExpr("m3_abs_" & cgtypeToText[type] & "(\n " & s0.CText() & ")"));
 END abs;
 
 PROCEDURE max(self: T; type: ZType) =
@@ -5395,7 +5395,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("max");
     pop(self, 2);
-    push(self, type, CTextToExpr("m3_max_" & cgtypeToText[type] & "(" & s0.CText() & ",\n " & s1.CText() & ")"));
+    push(self, type, CTextToExpr("m3_max_" & cgtypeToText[type] & "(\n " & s0.CText() & ",\n " & s1.CText() & ")"));
 END max;
 
 PROCEDURE min(self: T; type: ZType) =
@@ -5405,7 +5405,7 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("min");
     pop(self, 2);
-    push(self, type, CTextToExpr("m3_min_" & cgtypeToText[type] & "(" & s0.CText() & ",\n " & s1.CText() & ")"));
+    push(self, type, CTextToExpr("m3_min_" & cgtypeToText[type] & "(\n " & s0.CText() & ",\n " & s1.CText() & ")"));
 END min;
 
 PROCEDURE cvt_int(self: T; from_float_type: RType; to_integer_type: IType; op: ConvertOp) =
@@ -5414,7 +5414,7 @@ VAR s0 := cast(get(self, 0), from_float_type);
 BEGIN
     self.comment("cvt_int");
     pop(self);
-    push(self, to_integer_type, cast(CTextToExpr("m3_" & ConvertOpName[op] & "(" & s0.CText() & ")"), to_integer_type));
+    push(self, to_integer_type, cast(CTextToExpr("m3_" & ConvertOpName[op] & "(\n " & s0.CText() & ")"), to_integer_type));
 END cvt_int;
 
 PROCEDURE cvt_float(self: T; from_arithmetic_type: AType; to_float_type: RType) =
@@ -5439,7 +5439,7 @@ BEGIN
     self.comment(op);
     <* ASSERT (byte_size MOD target_word_bytes) = 0 *>
     pop(self, 3);
-    print(self, "m3_" & op & "(" & IntToDec(byte_size DIV target_word_bytes) & ",(WORD_T*)" & s0.CText() & ",(WORD_T*)" & s1.CText() & ",(WORD_T*)" & s2.CText() & ");\n");
+    print(self, "m3_" & op & "(\n " & IntToDec(byte_size DIV target_word_bytes) & ",(WORD_T*)" & s0.CText() & ",(WORD_T*)" & s1.CText() & ",(WORD_T*)" & s2.CText() & ");\n");
 END set_op3;
 
 PROCEDURE set_union(self: T; byte_size: ByteSize) =
@@ -5496,7 +5496,7 @@ BEGIN
     END;
     IF op IN SET OF CompareOp{CompareOp.LT, CompareOp.LE} THEN
         byte_size := byte_size DIV target_word_bytes;
-        push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(" & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
+        push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
     ELSE
         <* ASSERT op IN SET OF CompareOp{CompareOp.EQ, CompareOp.NE} *>
         push(self, type, cast(CTextToExpr("memcmp(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));
@@ -5552,7 +5552,7 @@ BEGIN
     self.comment("xor");
     IF AvoidGccTypeRangeWarnings THEN
         pop(self, 2);
-        push(self, type, CTextToExpr("m3_xor_" & cgtypeToText[type] & "(" & s1.CText() & ",\n " & s0.CText() & ")"));
+        push(self, type, CTextToExpr("m3_xor_" & cgtypeToText[type] & "(\n " & s1.CText() & ",\n " & s0.CText() & ")"));
     ELSE
         op2(self, type, "xor", "^");
     END;
@@ -5586,7 +5586,7 @@ VAR s0 := cast(get(self, 0), count_type);
 BEGIN
     self.comment(which);
     pop(self, 2);
-    push(self, type, CTextToExpr("m3_" & which & "_" & cgtypeToText[type] & "(" & s1.CText() & ",\n " & s0.CText() & ")"));
+    push(self, type, CTextToExpr("m3_" & which & "_" & cgtypeToText[type] & "(\n " & s1.CText() & ",\n " & s0.CText() & ")"));
 END shift_or_rotate;
 
 PROCEDURE shift(self: T; type: IType) =
@@ -5638,9 +5638,9 @@ BEGIN
     <* ASSERT sign_extend = FALSE *>
     pop(self, 3);
     IF inline_extract THEN
-        push(self, type, CTextToExpr("m3_extract(" & cgtypeToText[typeToUnsigned[type]] & ",\n " & value.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
+        push(self, type, CTextToExpr("m3_extract(\n " & cgtypeToText[typeToUnsigned[type]] & ",\n " & value.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
     ELSE
-        push(self, type, CTextToExpr("m3_extract_" & cgtypeToText[typeToUnsigned[type]] & "(" & value.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
+        push(self, type, CTextToExpr("m3_extract_" & cgtypeToText[typeToUnsigned[type]] & "(\n " & value.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
     END;
 END extract;
 
@@ -5658,7 +5658,7 @@ VAR count := cast(get(self, 0), Target.Word.cg_type);
     value := cast(get(self, 1), type);
 BEGIN
     pop(self, 2);
-    push(self, type, CTextToExpr("m3_sign_extend_" & cgtypeToText[type] & "(" & value.CText() & ",\n " & count.CText() & ")"));
+    push(self, type, CTextToExpr("m3_sign_extend_" & cgtypeToText[type] & "(\n " & value.CText() & ",\n " & count.CText() & ")"));
 END do_sign_extend;
 
 PROCEDURE extract_mn(self: T; type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL) =
@@ -5684,7 +5684,7 @@ VAR count := cast(get(self, 0), Target.Word.cg_type);
 BEGIN
     self.comment("insert");
     pop(self, 4);
-    push(self, type, CTextToExpr("m3_insert_" & cgtypeToText[type] & "(" & to.CText() & ",\n " & from.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
+    push(self, type, CTextToExpr("m3_insert_" & cgtypeToText[type] & "(\n " & to.CText() & ",\n " & from.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
 END insert;
 
 PROCEDURE insert_n(self: T; type: IType; count: CARDINAL) =
@@ -5734,7 +5734,7 @@ VAR s0 := cast(get(self, 0), itype);
 BEGIN
     self.comment("copy_n");
     pop(self, 3);
-    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s2.CText() & ",\n " & s1.CText() & ",\n " & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0.CText() & ");\n");
+    print(self, MemCopyOrMove[ORD(overlap)] & "(\n " & s2.CText() & ",\n " & s1.CText() & ",\n " & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0.CText() & ");\n");
 END copy_n;
 
 PROCEDURE copy(self: T; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
@@ -5744,7 +5744,7 @@ VAR s0 := get(self, 0);
 BEGIN
     self.comment("copy");
     pop(self, 2);
-    print(self, MemCopyOrMove[ORD(overlap)] & "(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntToDec(CG_Bytes[mtype] * n) & ");\n");
+    print(self, MemCopyOrMove[ORD(overlap)] & "(\n " & s1.CText() & ",\n " & s0.CText() & ",\n " & IntToDec(CG_Bytes[mtype] * n) & ");\n");
 END copy;
 
 <*NOWARN*>PROCEDURE zero_n(self: T; itype: IType; mtype: MType) =
@@ -5828,7 +5828,7 @@ BEGIN
     self.comment("check_range");
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "if(m3_check_range_" & cgtypeToText[type] & "(" & get(self).CText() & ",\n " & low_expr.CText() & ",\n " & high_expr.CText() & "))");
+    print(self, "if(m3_check_range_" & cgtypeToText[type] & "(\n " & get(self).CText() & ",\n " & low_expr.CText() & ",\n " & high_expr.CText() & "))");
     reportfault(self, code);
 END check_range;
 
@@ -5877,7 +5877,7 @@ VAR info := ORD (code) + self.line * 32;
 BEGIN
     <* ASSERT ORD (code) < 32 *> (* lose fault code not ok *)
     (* ASSERT self.line <= (LAST(INTEGER) DIV 32) *) (* losing line number ok *)
-    print(self, self.report_fault & "(" & IntToDec(info) & ");\n");
+    print(self, self.report_fault & "(\n " & IntToDec(info) & ");\n");
 END reportfault;
 
 (*---------------------------------------------------- address arithmetic ---*)
@@ -5988,7 +5988,7 @@ BEGIN
     <* ASSERT self.in_proc_call *>
     self.proc_being_called := NIL;
     self.in_proc_call := FALSE;
-    proc := proc & "(";
+    proc := proc & "(\n ";
     WHILE self.params.size() > 0 DO
       proc := proc & comma & self.params.remlo();
       comma := ",\n ";
