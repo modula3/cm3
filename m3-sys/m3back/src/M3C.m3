@@ -1814,9 +1814,9 @@ CONST Prefix = ARRAY OF TEXT {
 "#define STRUCT4(n) typedef struct { volatile UINT32 a[(n)/4]; } STRUCT(n);",   (* TODO prune if not used *)
 "#define STRUCT8(n) typedef struct { volatile UINT64 a[(n)/8]; } STRUCT(n);",   (* TODO prune if not used *)
 "#ifdef __cplusplus",
-"#define M3_DOTDOTDOT ...",
+"#define DOTDOTDOT ...",
 "#else",
-"#define M3_DOTDOTDOT",
+"#define DOTDOTDOT",
 "#endif",
 
 (* WORD_T/INTEGER are always exactly the same size as a pointer.
@@ -6060,7 +6060,7 @@ BEGIN
     END;
 
     (* UNDONE: cast to more accurate function type *)
-    call_helper(self, type, "((" & cgtypeToText[type] & " (__cdecl*)(M3_DOTDOTDOT))" & s0.CText() & ")");
+    call_helper(self, type, "((" & cgtypeToText[type] & " (__cdecl*)(DOTDOTDOT))" & s0.CText() & ")");
 
 END call_indirect;
 
