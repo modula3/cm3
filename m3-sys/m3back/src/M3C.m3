@@ -1808,11 +1808,11 @@ CONST Prefix = ARRAY OF TEXT {
 "#define __stdcall /* nothing */",
 "#endif",
 
-"#define M3STRUCT(n) m3struct_##n##_t",                                             (* TODO prune if not used *)
-"#define M3STRUCT1(n) typedef struct { volatile UINT8 a[n]; } M3STRUCT(n);",        (* TODO prune if not used *)
-"#define M3STRUCT2(n) typedef struct { volatile UINT16 a[(n)/2]; } M3STRUCT(n);",   (* TODO prune if not used *)
-"#define M3STRUCT4(n) typedef struct { volatile UINT32 a[(n)/4]; } M3STRUCT(n);",   (* TODO prune if not used *)
-"#define M3STRUCT8(n) typedef struct { volatile UINT64 a[(n)/8]; } M3STRUCT(n);",   (* TODO prune if not used *)
+"#define STRUCT(n) struct_##n##_t",                                             (* TODO prune if not used *)
+"#define STRUCT1(n) typedef struct { volatile UINT8 a[n]; } STRUCT(n);",        (* TODO prune if not used *)
+"#define STRUCT2(n) typedef struct { volatile UINT16 a[(n)/2]; } STRUCT(n);",   (* TODO prune if not used *)
+"#define STRUCT4(n) typedef struct { volatile UINT32 a[(n)/4]; } STRUCT(n);",   (* TODO prune if not used *)
+"#define STRUCT8(n) typedef struct { volatile UINT64 a[(n)/8]; } STRUCT(n);",   (* TODO prune if not used *)
 "#ifdef __cplusplus",
 "#define M3_DOTDOTDOT ...",
 "#else",
@@ -3850,7 +3850,7 @@ BEGIN
             prev := size;
             FOR unit := FIRST(units) TO LAST(units) DO
                 IF (size MOD units[unit]) = 0 THEN
-                    print(x, "M3STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
+                    print(x, "STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
                     EXIT;
                 END;
             END;
@@ -3936,7 +3936,7 @@ PROCEDURE Struct(size: INTEGER): TEXT =
 BEGIN
     <* ASSERT size >= 0 *>
     size := MAX(size, 1);
-    RETURN "M3STRUCT(" & IntToDec(size) & ")";
+    RETURN "STRUCT(" & IntToDec(size) & ")";
 END Struct;
 
 PROCEDURE Param_Type(var: Var_t): TEXT =
