@@ -241,7 +241,6 @@ TYPE BitSizeRange_t = [8..64];
 (*TYPE BitSizeEnum_t = [8,16,32,64];*)
 VAR BitsToCGInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
 VAR BitsToCGUInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
-VAR BitsToDec := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "8", "16", "32", "64" *)
 VAR BitsToInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "INT8", "INT16", "INT32", "INT64" *)
 VAR BitsToUInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};   (* "UINT8", "UINT16", "UINT32", "UINT64" *)
 VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF CGType;
@@ -2127,7 +2126,7 @@ PROCEDURE Prefix_Print(self: T; multipass: Multipass_t) =
 BEGIN
     self.comment("begin unit");
     self.comment("M3_TARGET = ", Target.System_name);
-    self.comment("M3_WORDSIZE = ", BitsToDec[Target.Word.size]);
+    self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
     self.static_link_id := M3ID.Add("_static_link");
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
@@ -6306,10 +6305,6 @@ BEGIN
     BitsToCGInt[16] := CGType.Int16;
     BitsToCGInt[32] := CGType.Int32;
     BitsToCGInt[64] := CGType.Int64;
-    BitsToDec[8] := "8";
-    BitsToDec[16] := "16";
-    BitsToDec[32] := "32";
-    BitsToDec[64] := "64";
     BitsToInt[8] := Text_int8;
     BitsToInt[16] := Text_int16;
     BitsToInt[32] := Text_int32;
