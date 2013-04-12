@@ -22,7 +22,7 @@ PROCEDURE Main(
     VAR var_param_record_uplevel:R1;
     READONLY readonly_param_record:R1;
     READONLY readonly_param_record_uplevel:R1
-    ) =
+    ):R1 =
 VAR
     local_integer:INTEGER;
     local_integer_uplevel:INTEGER;
@@ -52,6 +52,16 @@ BEGIN
     INC(local_record.a, 2);
     F1();
     F2(F1);
+    IF FALSE THEN RETURN R1{} END;
+    IF FALSE THEN RETURN param_record END;
+    IF FALSE THEN RETURN param_record_uplevel END;
+    IF FALSE THEN RETURN var_param_record END;
+    IF FALSE THEN RETURN var_param_record_uplevel END;
+    IF FALSE THEN RETURN readonly_param_record END;
+    IF FALSE THEN RETURN readonly_param_record_uplevel END;
+    IF FALSE THEN RETURN local_record_uplevel END;
+    IF FALSE THEN RETURN local_record END;
+    RETURN R1{};
 END Main;
 
 VAR
@@ -68,7 +78,7 @@ VAR
     xreadonly_param_record:=R1{a:=11000};
     xreadonly_param_record_uplevel:=R1{a:=12000};
 BEGIN
-    Main(
+    EVAL Main(
         xparam_integer,
         xparam_integer_uplevel,
         xvar_param_integer,
