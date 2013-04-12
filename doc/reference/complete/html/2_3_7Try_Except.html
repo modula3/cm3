@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html434"
   HREF="2_3_8Try_Finally.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -43,7 +44,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Previous:</B> <A NAME="tex2html427"
   HREF="2_3_6Raise.html">2.3.6 Raise</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H3><A NAME="SECTION00016700000000000000">
@@ -63,27 +64,27 @@ A <code>TRY</code>-<code>EXCEPT</code> statement has the form:
     END
 </PRE>
 where <code>Body</code> and each <code>Handler</code> are statements, each <code>id</code> names
-an exception, and each <code>v_</code><IMG
+an exception, and each <code>v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> is an identifier.  The
-``<code>ELSE Handler_0</code>'' and each ``<code>(v_</code><IMG
+ ALT="$i$"></SPAN> is an identifier.  The
+``<code>ELSE Handler_0</code>'' and each ``<code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"><code>)</code>'' are optional.
+ ALT="$i$"></SPAN><code>)</code>'' are optional.
 It is a static error for an exception to be named more than once in the list
 of <code>id</code>'s.
 
 <P>
 The statement executes <code>Body</code>.  If the outcome is normal, the except
-clause is ignored.  If <code>Body</code> raises any listed exception <code>id_</code><IMG
+clause is ignored.  If <code>Body</code> raises any listed exception <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$">,
-then <code>Handler_</code><IMG
+ ALT="$i$"></SPAN>,
+then <code>Handler_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> is executed.  If <code>Body</code> raises any other
+ ALT="$i$"></SPAN> is executed.  If <code>Body</code> raises any other
 exception and ``<code>ELSE Handler_0</code>'' is present, then it is executed.  In
 either case, the outcome of the <code>TRY</code> statement is the outcome of the
 selected handler.  If <code>Body</code> raises an unlisted exception and
@@ -91,45 +92,45 @@ selected handler.  If <code>Body</code> raises an unlisted exception and
 statement is the exception raised by <code>Body</code>.
 
 <P>
-Each <code>(v_</code><IMG
+Each <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"><code>)</code> declares a variable whose type is the argument type
-of the exception <code>id_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> declares a variable whose type is the argument type
+of the exception <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> and whose scope is <code>Handler_</code><IMG
+ ALT="$i$"></SPAN> and whose scope is <code>Handler_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$">.  When an
-exception <code>id_</code><IMG
+ ALT="$i$"></SPAN>.  When an
+exception <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> paired with an argument <code>x</code> is handled,
-<code>v_</code><IMG
+ ALT="$i$"></SPAN> paired with an argument <code>x</code> is handled,
+<code>v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> is initialized to <code>x</code> before <code>Handler_</code><IMG
+ ALT="$i$"></SPAN> is initialized to <code>x</code> before <code>Handler_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> is executed.
-It is a static error to include <code>(v_</code><IMG
+ ALT="$i$"></SPAN> is executed.
+It is a static error to include <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"><code>)</code> if exception
-<code>id_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> if exception
+<code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> does not take an argument.
+ ALT="$i$"></SPAN> does not take an argument.
 
 <P>
-If <code>(v_</code><IMG
+If <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"><code>)</code> is absent, then <code>id_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> is absent, then <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> can be a list of
+ ALT="$i$"></SPAN> can be a list of
 exceptions separated by commas, as shorthand for a list in which the rest of
 the handler is repeated for each exception.  That is:
 <PRE>
@@ -146,7 +147,8 @@ of a handler for that exception.  A ``<code>TRY EXCEPT ELSE</code>'' counts as a
 handler for all exceptions.
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html434"
   HREF="2_3_8Try_Finally.html">
@@ -163,7 +165,7 @@ handler for all exceptions.
 <B> Up:</B> <A NAME="tex2html433"
   HREF="2_3Statements.html">2.3 Statements</A>
 <B> Previous:</B> <A NAME="tex2html427"
-  HREF="2_3_6Raise.html">2.3.6 Raise</A>
+  HREF="2_3_6Raise.html">2.3.6 Raise</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de

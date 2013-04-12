@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html926"
   HREF="2_8Syntax.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -43,7 +44,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Previous:</B> <A NAME="tex2html919"
   HREF="2_6_15Constant_expressions.html">2.6.15 Constant expressions</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H2><A NAME="SECTION000110000000000000000">
@@ -52,8 +53,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <P>
 <BLOCKQUOTE>
-<I>There are some cases that no law can be framed to cover.
-    --Aristotle</I>
+<SPAN  CLASS="textit">There are some cases that no law can be framed to cover.
+    --Aristotle</SPAN>
 
 </BLOCKQUOTE>
 
@@ -81,10 +82,13 @@ type of <code>T)</code>.  The division must come out even.
 
 <P>
 The following operations are primarily used for address arithmetic:<PRE><TT>
- 		 		 <code>ADR</code> 		 <code>(VAR x: Any)            : ADDRESS</code>
-		infix 		 <code>+</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code>
-		infix 		 <code>-</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code>
-		infix 		 <code>-</code> 		 <code>(x,y: ADDRESS)          : INTEGER</code>  
+ 		 		 <code>ADR</code> 		 <code>(VAR x: Any)            : ADDRESS</code> 
+<BR>
+infix 		 <code>+</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code> 
+<BR>
+infix 		 <code>-</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code> 
+<BR>
+infix 		 <code>-</code> 		 <code>(x,y: ADDRESS)          : INTEGER</code>  
 </TT></PRE>
 <code>ADR(x)</code> is the address of the variable <code>x</code>.  The actual argument
 must be a designator but need not be writable.  The operations <code>+</code> and
@@ -98,8 +102,8 @@ not even that long if the implementation uses a compacting collector).
 <P>
 In unsafe modules the <code>INC</code> and <code>DEC</code> statements apply to addresses
 as well as ordinals:<PRE><TT>
- 		 <code>INC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code>
-		 <code>DEC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code>  
+ 		 <code>INC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code> 
+<BR><code>DEC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code>  
 </TT></PRE>
 These are short for <code>x := x + n</code> and <code>x := x - n</code>, except that
 <code>x</code> is evaluated only once.
@@ -132,7 +136,8 @@ implementation-dependent, since the garbage collector probably will not trace
 them through <code>u</code>.
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html926"
   HREF="2_8Syntax.html">
@@ -149,7 +154,7 @@ them through <code>u</code>.
 <B> Up:</B> <A NAME="tex2html925"
   HREF="Modula_3_Language_definitio.html">Modula-3: Language definition</A>
 <B> Previous:</B> <A NAME="tex2html919"
-  HREF="2_6_15Constant_expressions.html">2.6.15 Constant expressions</A>
+  HREF="2_6_15Constant_expressions.html">2.6.15 Constant expressions</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de

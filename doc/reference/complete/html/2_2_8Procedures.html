@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html306"
   HREF="2_2_9Objects.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -43,7 +44,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Previous:</B> <A NAME="tex2html299"
   HREF="2_2_7References.html">2.2.7 References</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H3><A NAME="SECTION00015800000000000000">
@@ -51,31 +52,31 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </H3>
 
 <P>
-A <I>procedure</I> is either <code>NIL</code> or a triple consisting of:
+A <SPAN  CLASS="textit">procedure</SPAN> is either <code>NIL</code> or a triple consisting of:
 
 <UL>
-<LI>the <I>body</I>, which is a statement,
+<LI>the <SPAN  CLASS="textit">body</SPAN>, which is a statement,
 </LI>
-<LI>the <I>signature</I>, which specifies the procedure's formal arguments,
+<LI>the <SPAN  CLASS="textit">signature</SPAN>, which specifies the procedure's formal arguments,
   result type, and raises set (the set of exceptions that the procedure can
   raise),
 </LI>
-<LI>the <I>environment</I>, which is the scope with respect to which
+<LI>the <SPAN  CLASS="textit">environment</SPAN>, which is the scope with respect to which
   variable names in the body will be interpreted.
 </LI>
 </UL>
 
 <P>
-A procedure that returns a result is called a <I>function procedure</I>; a
-procedure that does not return a result is called a <I>proper procedure</I>.
-A <I>top-level</I> procedure is a procedure declared in the outermost scope of
-a module.  Any other procedure is a <I>local</I> procedure.  A local procedure
+A procedure that returns a result is called a <SPAN  CLASS="textit">function procedure</SPAN>; a
+procedure that does not return a result is called a <SPAN  CLASS="textit">proper procedure</SPAN>.
+A <SPAN  CLASS="textit">top-level</SPAN> procedure is a procedure declared in the outermost scope of
+a module.  Any other procedure is a <SPAN  CLASS="textit">local</SPAN> procedure.  A local procedure
 can be passed as a parameter but not assigned, since in a stack implementation
 a local procedure becomes invalid when the frame for the procedure containing
 it is popped.
 
 <P>
-A <I>procedure constant</I> is an identifier declared as a procedure.  (As
+A <SPAN  CLASS="textit">procedure constant</SPAN> is an identifier declared as a procedure.  (As
 opposed to a procedure variable, which is a variable declared with a procedure
 type.)
 
@@ -91,10 +92,10 @@ where <code>sig</code> is a signature specification, which has the form:
 where
 
 <UL>
-<LI>Each <code>formal_</code><IMG
+<LI>Each <code>formal_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.png"
- ALT="$i$"> is a formal parameter declaration, as described
+ ALT="$i$"></SPAN> is a formal parameter declaration, as described
   below.
 </LI>
 <LI><code>R</code> is the result type, which can be any type but an open array
@@ -150,7 +151,7 @@ default values are included.
 
 <P>
 A procedure value <code>P</code> is a member of the type <code>T</code> if it is
-<code>NIL</code> or its signature is <I>covered</I> by the signature of <code>T</code>,
+<code>NIL</code> or its signature is <SPAN  CLASS="textit">covered</SPAN> by the signature of <code>T</code>,
 where <code>signature_1</code> covers <code>signature_2</code> if:
 
 <UL>
@@ -202,7 +203,8 @@ In a procedure type, <code>RAISES</code> binds to the closest preceding
 </PRE>
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html306"
   HREF="2_2_9Objects.html">
@@ -219,7 +221,7 @@ In a procedure type, <code>RAISES</code> binds to the closest preceding
 <B> Up:</B> <A NAME="tex2html305"
   HREF="2_2Types.html">2.2 Types</A>
 <B> Previous:</B> <A NAME="tex2html299"
-  HREF="2_2_7References.html">2.2.7 References</A>
+  HREF="2_2_7References.html">2.2.7 References</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de

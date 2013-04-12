@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="../../../../normal.css">
@@ -25,7 +25,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <A NAME="tex2html205"
   HREF="2_2Types.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
@@ -33,7 +34,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   HREF="Modula_3_Language_definitio.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
 <A NAME="tex2html197"
-  HREF="0_0_0_91_4_9_Simplicity.html">
+  HREF="0_0_0_9_1_4_9_Simplicity.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
 <BR>
 <B> Next:</B> <A NAME="tex2html206"
@@ -41,9 +42,9 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <B> Up:</B> <A NAME="tex2html204"
   HREF="Modula_3_Language_definitio.html">Modula-3: Language definition</A>
 <B> Previous:</B> <A NAME="tex2html198"
-  HREF="0_0_0_91_4_9_Simplicity.html">0.0.0.9 1.4.9 Simplicity.</A>
+  HREF="0_0_0_9_1_4_9_Simplicity.html">0.0.0.9 1.4.9 Simplicity.</A>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H2><A NAME="SECTION00014000000000000000">
@@ -52,47 +53,48 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <P>
 A Modula-3 program specifies a computation that acts on a sequence of digital
-components called <I>locations</I>.  A <I>variable</I> is a set of locations
+components called <SPAN  CLASS="textit">locations</SPAN>.  A <SPAN  CLASS="textit">variable</SPAN> is a set of locations
 that represents a mathematical value according to a convention determined by
-the variable's <I>type</I>.  If a value can be represented by some variable of
-type <code>T</code>, then we say that the value is a <I>member</I> of <code>T</code> and
-<code>T</code> <I>contains</I> the value.
+the variable's <SPAN  CLASS="textit">type</SPAN>.  If a value can be represented by some variable of
+type <code>T</code>, then we say that the value is a <SPAN  CLASS="textit">member</SPAN> of <code>T</code> and
+<code>T</code> <SPAN  CLASS="textit">contains</SPAN> the value.
 
 <P>
-An <I>identifier</I> is a symbol declared as a name for a variable, type,
+An <SPAN  CLASS="textit">identifier</SPAN> is a symbol declared as a name for a variable, type,
 procedure, etc.  The region of the program over which a declaration applies is
-called the <I>scope</I> of the declaration.  Scopes can be nested.  The
+called the <SPAN  CLASS="textit">scope</SPAN> of the declaration.  Scopes can be nested.  The
 meaning of an identifier is determined by the smallest enclosing scope in
 which the identifier is declared.
 
 <P>
-An <I>expression</I> specifies a computation that produces a value or
-variable.  Expressions that produce variables are called <I>designators</I>.
+An <SPAN  CLASS="textit">expression</SPAN> specifies a computation that produces a value or
+variable.  Expressions that produce variables are called <SPAN  CLASS="textit">designators</SPAN>.
 A designator can denote either a variable or the value of that variable,
-depending on the context.  Some designators are <I>readonly</I>, which means
+depending on the context.  Some designators are <SPAN  CLASS="textit">readonly</SPAN>, which means
 that they cannot be used in contexts that might change the value of the
-variable.  A designator that is not readonly is called <I>writable</I>.
+variable.  A designator that is not readonly is called <SPAN  CLASS="textit">writable</SPAN>.
 Expressions whose values can be determined statically are called
-<I>constant expressions</I> ; they are never designators.
+<SPAN  CLASS="textit">constant expressions</SPAN> ; they are never designators.
 
 <P>
-A <I>static error</I> is an error that the implementation must detect before
+A <SPAN  CLASS="textit">static error</SPAN> is an error that the implementation must detect before
 program execution.  Violations of the language definition are static errors
 unless they are explicitly classified as runtime errors.
 
 <P>
-A <I>checked runtime error</I> is an error that the implementation must detect
+A <SPAN  CLASS="textit">checked runtime error</SPAN> is an error that the implementation must detect
 and report at runtime.  The method for reporting such errors is
 implementation-dependent.  (If the implementation maps them into exceptions,
 then a program could handle these exceptions and continue.)
 
 <P>
-An <I>unchecked runtime error</I> is an error that is not guaranteed to be
+An <SPAN  CLASS="textit">unchecked runtime error</SPAN> is an error that is not guaranteed to be
 detected, and can cause the subsequent behavior of the computation to be
 arbitrary.  Unchecked runtime errors can occur only in unsafe modules.
 
 <P>
-<HR>
+
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <A NAME="tex2html205"
   HREF="2_2Types.html">
@@ -101,7 +103,7 @@ arbitrary.  Unchecked runtime errors can occur only in unsafe modules.
   HREF="Modula_3_Language_definitio.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
 <A NAME="tex2html197"
-  HREF="0_0_0_91_4_9_Simplicity.html">
+  HREF="0_0_0_9_1_4_9_Simplicity.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
 <BR>
 <B> Next:</B> <A NAME="tex2html206"
@@ -109,7 +111,7 @@ arbitrary.  Unchecked runtime errors can occur only in unsafe modules.
 <B> Up:</B> <A NAME="tex2html204"
   HREF="Modula_3_Language_definitio.html">Modula-3: Language definition</A>
 <B> Previous:</B> <A NAME="tex2html198"
-  HREF="0_0_0_91_4_9_Simplicity.html">0.0.0.9 1.4.9 Simplicity.</A>
+  HREF="0_0_0_9_1_4_9_Simplicity.html">0.0.0.9 1.4.9 Simplicity.</A></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de

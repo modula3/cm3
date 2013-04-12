@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 
-<!--Converted with LaTeX2HTML 2002-2-1 (1.70)
+<!--Converted with LaTeX2HTML 2008 (1.71)
 original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
@@ -13,7 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
-<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="m3-defn-complete.css">
@@ -21,13 +21,14 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY >
-<!--Navigation Panel-->
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
 <IMG WIDTH="81" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next_inactive" SRC="nx_grp_g.png"> 
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_g.png"> 
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev_g.png">   
 <BR>
 <BR>
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 
 <H1><A NAME="SECTION00010000000000000000">
@@ -35,16 +36,16 @@ Modula-3: Language definition</A>
 </H1>
 
 <P>
-<B>Designed and written by Luca Cardelli, James Donahue, Lucille
-  Glassman, Mick Jordan, Bill Kalsow, and Greg Nelson.</B>
+<SPAN  CLASS="textbf">Designed and written by Luca Cardelli, James Donahue, Lucille
+  Glassman, Mick Jordan, Bill Kalsow, and Greg Nelson.</SPAN>
 
 <P>
 <BLOCKQUOTE>
-<I>The language designer should be familiar with many alternative
+<SPAN  CLASS="textit">The language designer should be familiar with many alternative
     features designed by others, and should have excellent judgment in
     choosing the best and rejecting any that are mutually inconsistent... One
     thing he should not do is to include untried ideas of his own.  His task is
-    consolidation, not innovation.  --C.A.R. Hoare</I>
+    consolidation, not innovation.  --C.A.R. Hoare</SPAN>
 
 </BLOCKQUOTE>
 
@@ -199,7 +200,7 @@ Maurice Wilkes had the inspiration that sparked the project.
 Our technical starting point was Modula-2+, which was designed by Paul Rovner,
 Roy Levin, John Wick, Andrew Birrell, Butler Lampson, and Garret Swart.  We
 made good use of the ruthlessly complete description of Modula-2+ in
-Mary-Claire van Leunen's <I>Modula-2+ User's Manual</I>.  The ideas in the
+Mary-Claire van Leunen's <SPAN  CLASS="textit">Modula-2+ User's Manual</SPAN>.  The ideas in the
 ``+'' part of Modula-2+ were mostly derived from the Mesa and Cedar languages
 developed at Xerox PARC.
 
@@ -235,10 +236,10 @@ and Bob Taylor and Sam Fuller in particular.
 
 <P>
 <BLOCKQUOTE>
-<I>He that will not apply new remedies must expect new evils: for time is
+<SPAN  CLASS="textit">He that will not apply new remedies must expect new evils: for time is
     the greatest innovator, and if time of course alter things to the worse,
     and wisdom and counsel shall not alter them to the better, what shall be
-    the end? --Francis Bacon</I>
+    the end? --Francis Bacon</SPAN>
 
 </BLOCKQUOTE>
 
@@ -374,8 +375,8 @@ device drivers.
 </H3>
 
 <P>
-[ This section discusses the organization of the entire book, <I>Systems
-  Programming with Modula-3</I>.  It doesn't seem worth including this material
+[ This section discusses the organization of the entire book, <SPAN  CLASS="textit">Systems
+  Programming with Modula-3</SPAN>.  It doesn't seem worth including this material
 in the on-line version. ]
 
 <P>
@@ -391,7 +392,7 @@ features of Modula-3.
 <P>
 
 <H4><A NAME="SECTION00013410000000000000">
-0.0.0.1 1.4.1 Interfaces.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">1</SPAN> 1.4.1 Interfaces.</A>
 </H4>
 
 <P>
@@ -399,8 +400,8 @@ One of Modula-2's most successful features is the provision for explicit
 interfaces between modules.  Interfaces are retained with essentially no
 changes in Modula-3.  An interface to a module is a collection of declarations
 that reveal the public parts of a module; things in the module that are not
-declared in the interface are private.  A module <I>imports</I> the interfaces
-it depends on and <I>exports</I> the interface (or, in Modula-3, the
+declared in the interface are private.  A module <SPAN  CLASS="textit">imports</SPAN> the interfaces
+it depends on and <SPAN  CLASS="textit">exports</SPAN> the interface (or, in Modula-3, the
 interfaces) that it implements.
 
 <P>
@@ -422,14 +423,14 @@ for interfaces.
 <P>
 
 <H4><A NAME="SECTION00013420000000000000">
-0.0.0.2 1.4.2 Objects.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">2</SPAN> 1.4.2 Objects.</A>
 </H4>
 
 <P>
 The better we understand our programs, the bigger the building blocks we use
 to structure them.  After the instruction came the statement, after the
 statement came the procedure, after the procedure came the interface.  The
-next step seems to be the <I>abstract type</I>.
+next step seems to be the <SPAN  CLASS="textit">abstract type</SPAN>.
 
 <P>
 At the theoretical level, an abstract type is a type defined by the
@@ -437,7 +438,7 @@ specifications of its operations instead of by the representation of its data.
 As realized in modern programming languages, a value of an abstract type is
 represented by an ``object'' whose operations are implemented by a suite of
 procedure values called the object's ``methods''.  A new object type can be
-defined as a <I>subtype</I> of an existing type, in which case the new type
+defined as a <SPAN  CLASS="textit">subtype</SPAN> of an existing type, in which case the new type
 has all the methods of the old type, and possibly new ones as well
 (inheritance).  The new type can provide new implementations for the old
 methods (overriding).
@@ -462,7 +463,7 @@ design cost will be repaid with interest.
 
 <P>
 The combination of object types with Modula-2 opaque types produces something
-new: the <I>partially opaque type</I>, where some of an object's fields are
+new: the <SPAN  CLASS="textit">partially opaque type</SPAN>, where some of an object's fields are
 visible in a scope and others are hidden.  Because the committee had no
 experience with partially opaque types, the first version of Modula-3
 restricted them severely; but after a year of experience it was clear that
@@ -485,7 +486,7 @@ typechecking.
 <P>
 
 <H4><A NAME="SECTION00013430000000000000">
-0.0.0.3 1.4.3 Generics.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">3</SPAN> 1.4.3 Generics.</A>
 </H4>
 
 <P>
@@ -515,7 +516,7 @@ rules associated with Ada generics are too complicated for our taste.)
 <P>
 
 <H4><A NAME="SECTION00013440000000000000">
-0.0.0.4 1.4.4 Threads.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">4</SPAN> 1.4.4 Threads.</A>
 </H4>
 
 <P>
@@ -558,11 +559,11 @@ shared variables, and apparently they are widely used.
 <P>
 
 <H4><A NAME="SECTION00013450000000000000">
-0.0.0.5 1.4.5 Safety.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">5</SPAN> 1.4.5 Safety.</A>
 </H4>
 
 <P>
-A language feature is <I>unsafe</I> if its misuse can corrupt the runtime
+A language feature is <SPAN  CLASS="textit">unsafe</SPAN> if its misuse can corrupt the runtime
 system so that further execution of the program is not faithful to the
 language semantics.  An example of an unsafe feature is array assignment
 without bounds checking: if the index is out of bounds, then an arbitrary
@@ -599,7 +600,7 @@ them.
 <P>
 
 <H4><A NAME="SECTION00013460000000000000">
-0.0.0.6 1.4.6 Garbage collection.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">6</SPAN> 1.4.6 Garbage collection.</A>
 </H4>
 
 <P>
@@ -646,7 +647,7 @@ respects, traced and untraced references behave identically.
 <P>
 
 <H4><A NAME="SECTION00013470000000000000">
-0.0.0.7 1.4.7 Exceptions.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">7</SPAN> 1.4.7 Exceptions.</A>
 </H4>
 
 <P>
@@ -673,7 +674,7 @@ for it.
 <P>
 
 <H4><A NAME="SECTION00013480000000000000">
-0.0.0.8 1.4.8 Type system.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">8</SPAN> 1.4.8 Type system.</A>
 </H4>
 
 <P>
@@ -696,7 +697,7 @@ We adopted several principles in order to make Modula-3's type system as
 uniform as possible.  First, there are no ambiguous types or target-typing:
 the type of every expression is determined by its subexpressions, not by its
 use.  Second, there are no automatic conversions.  In some cases the
-<I>representation</I> of a value changes when it is assigned (for example,
+<SPAN  CLASS="textit">representation</SPAN> of a value changes when it is assigned (for example,
 when assigning to a packed field of a record type) but the abstract value
 itself is transferred without change.  Third, the rules for type compatibility
 are defined in terms of a single subtype relation.  The subtype relation is
@@ -706,7 +707,7 @@ defining the type compatibility rules for conventional types.
 <P>
 
 <H4><A NAME="SECTION00013490000000000000">
-0.0.0.9 1.4.9 Simplicity.</A>
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">9</SPAN> 1.4.9 Simplicity.</A>
 </H4>
 
 <P>
@@ -746,42 +747,42 @@ combination.
 
 <P>
 A Modula-3 program specifies a computation that acts on a sequence of digital
-components called <I>locations</I>.  A <I>variable</I> is a set of locations
+components called <SPAN  CLASS="textit">locations</SPAN>.  A <SPAN  CLASS="textit">variable</SPAN> is a set of locations
 that represents a mathematical value according to a convention determined by
-the variable's <I>type</I>.  If a value can be represented by some variable of
-type <code>T</code>, then we say that the value is a <I>member</I> of <code>T</code> and
-<code>T</code> <I>contains</I> the value.
+the variable's <SPAN  CLASS="textit">type</SPAN>.  If a value can be represented by some variable of
+type <code>T</code>, then we say that the value is a <SPAN  CLASS="textit">member</SPAN> of <code>T</code> and
+<code>T</code> <SPAN  CLASS="textit">contains</SPAN> the value.
 
 <P>
-An <I>identifier</I> is a symbol declared as a name for a variable, type,
+An <SPAN  CLASS="textit">identifier</SPAN> is a symbol declared as a name for a variable, type,
 procedure, etc.  The region of the program over which a declaration applies is
-called the <I>scope</I> of the declaration.  Scopes can be nested.  The
+called the <SPAN  CLASS="textit">scope</SPAN> of the declaration.  Scopes can be nested.  The
 meaning of an identifier is determined by the smallest enclosing scope in
 which the identifier is declared.
 
 <P>
-An <I>expression</I> specifies a computation that produces a value or
-variable.  Expressions that produce variables are called <I>designators</I>.
+An <SPAN  CLASS="textit">expression</SPAN> specifies a computation that produces a value or
+variable.  Expressions that produce variables are called <SPAN  CLASS="textit">designators</SPAN>.
 A designator can denote either a variable or the value of that variable,
-depending on the context.  Some designators are <I>readonly</I>, which means
+depending on the context.  Some designators are <SPAN  CLASS="textit">readonly</SPAN>, which means
 that they cannot be used in contexts that might change the value of the
-variable.  A designator that is not readonly is called <I>writable</I>.
+variable.  A designator that is not readonly is called <SPAN  CLASS="textit">writable</SPAN>.
 Expressions whose values can be determined statically are called
-<I>constant expressions</I> ; they are never designators.
+<SPAN  CLASS="textit">constant expressions</SPAN> ; they are never designators.
 
 <P>
-A <I>static error</I> is an error that the implementation must detect before
+A <SPAN  CLASS="textit">static error</SPAN> is an error that the implementation must detect before
 program execution.  Violations of the language definition are static errors
 unless they are explicitly classified as runtime errors.
 
 <P>
-A <I>checked runtime error</I> is an error that the implementation must detect
+A <SPAN  CLASS="textit">checked runtime error</SPAN> is an error that the implementation must detect
 and report at runtime.  The method for reporting such errors is
 implementation-dependent.  (If the implementation maps them into exceptions,
 then a program could handle these exceptions and continue.)
 
 <P>
-An <I>unchecked runtime error</I> is an error that is not guaranteed to be
+An <SPAN  CLASS="textit">unchecked runtime error</SPAN> is an error that is not guaranteed to be
 detected, and can cause the subsequent behavior of the computation to be
 arbitrary.  Unchecked runtime errors can occur only in unsafe modules.
 
@@ -793,8 +794,8 @@ arbitrary.  Unchecked runtime errors can occur only in unsafe modules.
 
 <P>
 <BLOCKQUOTE>
-<I>I am the voice of today, the herald of tomorrow... I am the leaden
-    army that conquers the world--I am TYPE.  --Frederic William Goudy</I>
+<SPAN  CLASS="textit">I am the voice of today, the herald of tomorrow... I am the leaden
+    army that conquers the world--I am TYPE.  --Frederic William Goudy</SPAN>
 
 </BLOCKQUOTE>
 
@@ -807,7 +808,7 @@ types, the expansion is the infinite limit of the partial expansions.  A type
 expression is generally allowed wherever a type is required.
 
 <P>
-A type is <I>empty</I> if it contains no values.  For example, <code>[1..0]</code>
+A type is <SPAN  CLASS="textit">empty</SPAN> if it contains no values.  For example, <code>[1..0]</code>
 is an empty type.  Empty types can be used to build non-empty types (for
 example, <code>SET OF [1..0]</code>, which is not empty because it contains the
 empty set).  It is a static error to declare a variable of an empty type.
@@ -834,7 +835,7 @@ Thus the phrase ``type of <code>x</code>'' means ``type of the expression
 <P>
 However, there is one sense in which a value can be said to have a type: every
 object or traced reference value includes a code for a type, called the
-<I>allocated type</I> of the reference value.  The allocated type is tested by
+<SPAN  CLASS="textit">allocated type</SPAN> of the reference value.  The allocated type is tested by
 <code>TYPECASE</code>.
 
 <P>
@@ -856,19 +857,19 @@ An enumeration type is declared like this:
     TYPE T = {id_1, id_2, ..., id_n}
 </PRE>
 where the <code>id</code>'s are distinct identifiers.  The type <code>T</code> is an
-ordered set of <code>n</code> values; the expression <code>T.id_</code><IMG
+ordered set of <code>n</code> values; the expression <code>T.id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> denotes the
-<IMG
+ ALT="$i$"></SPAN> denotes the
+<SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">'th value of the type in increasing order.  The empty enumeration
+ ALT="$i$"></SPAN>'th value of the type in increasing order.  The empty enumeration
 <code>{ }</code> is allowed.
 
 <P>
-Integers and enumeration elements are collectively called <I>ordinal
-  values</I>.  The <I>base type</I> of an ordinal value <code>v</code> is
+Integers and enumeration elements are collectively called <SPAN  CLASS="textit">ordinal
+  values</SPAN>.  The <SPAN  CLASS="textit">base type</SPAN> of an ordinal value <code>v</code> is
 <code>INTEGER</code> (or <code>LONGINT</code>) if <code>v</code> is an integer (or extended
 range integer, respectively), otherwise it is the unique enumeration type
 that contains <code>v</code>.
@@ -962,19 +963,19 @@ properties of these types are specified by required interfaces.
 </H3>
 
 <P>
-An <I>array</I> is an indexed collection of component variables, called the
-<I>elements</I> of the array.  The indexes are the values of an ordinal type,
-called the <I>index type</I> of the array.  The elements all have the same
-size and the same type, called the <I>element type</I> of the array.
+An <SPAN  CLASS="textit">array</SPAN> is an indexed collection of component variables, called the
+<SPAN  CLASS="textit">elements</SPAN> of the array.  The indexes are the values of an ordinal type,
+called the <SPAN  CLASS="textit">index type</SPAN> of the array.  The elements all have the same
+size and the same type, called the <SPAN  CLASS="textit">element type</SPAN> of the array.
 
 <P>
-There are two kinds of array types, <I>fixed</I> and <I>open</I>.  The length
+There are two kinds of array types, <SPAN  CLASS="textit">fixed</SPAN> and <SPAN  CLASS="textit">open</SPAN>.  The length
 of a fixed array is determined at compile time.  The length of an open array
 type is determined at runtime, when it is allocated or bound.  The length
 cannot be changed thereafter.
 
 <P>
-The <I>shape</I> of a multi-dimensional array is the sequence of its lengths
+The <SPAN  CLASS="textit">shape</SPAN> of a multi-dimensional array is the sequence of its lengths
 in each dimension.  More precisely, the shape of an array is its length
 followed by the shape of any of its elements; the shape of a non-array is the
 empty sequence.
@@ -992,7 +993,7 @@ A fixed array type declaration has the form:
 where <code>Index</code> is an ordinal type and <code>Element</code> is any type other
 than an open array type.  The values of type <code>T</code> are arrays whose element
 type is <code>Element</code> and whose length is the number of elements of the type
-<code>Index</code>.
+<code>Index</code>.  If <code>Element</code> is an empty type, then so is <code>T</code>.
 
 <P>
 If <code>a</code> has type <code>T</code>, then <code>a[i]</code> designates the element of
@@ -1029,7 +1030,8 @@ An open array type declaration has the form:
 where <code>Element</code> is any type.  The values of <code>T</code> are arrays whose
 element type is <code>Element</code> and whose length is arbitrary.  The index type
 of an open array is the integer subrange <code>[0..n-1]</code>, where <code>n</code> is
-the length of the array.
+the length of the array.   If <code>Element</code> is an empty type, then so 
+is <code>T</code>.
 
 <P>
 An open array type can be used only as the type of a formal parameter, the
@@ -1052,7 +1054,7 @@ Examples of array types:
 </H3>
 
 <P>
-A <I>record</I> is a sequence of named variables, called the <I>fields</I> of
+A <SPAN  CLASS="textit">record</SPAN> is a sequence of named variables, called the <SPAN  CLASS="textit">fields</SPAN> of
 the record.  Different fields can have different types.  The name and type of
 each field is statically determined by the record's type.  The expression
 <code>r.f</code> designates the field named <code>f</code> in the record <code>r</code>.
@@ -1149,7 +1151,7 @@ integers from spanning word boundaries.
 </H3>
 
 <P>
-A <I>set</I> is a collection of values taken from some ordinal type.  A set
+A <SPAN  CLASS="textit">set</SPAN> is a collection of values taken from some ordinal type.  A set
 type declaration has the form:
 <PRE>
     TYPE T = SET OF Base
@@ -1174,14 +1176,14 @@ programmers should expect <code>SET OF [0..1023]</code> to be practical, but not
 </H3>
 
 <P>
-A <I>reference</I> value is either <code>NIL</code> or the address of a variable,
+A <SPAN  CLASS="textit">reference</SPAN> value is either <code>NIL</code> or the address of a variable,
 called the referent.
 
 <P>
-A reference type is either <I>traced</I> or <I>untraced</I>.  When all traced
+A reference type is either <SPAN  CLASS="textit">traced</SPAN> or <SPAN  CLASS="textit">untraced</SPAN>.  When all traced
 references to a piece of allocated storage are gone, the implementation
-reclaims the storage.  Two reference types are of the same <I>reference
-  class</I> if they are both traced or both untraced.  A general type is traced
+reclaims the storage.  Two reference types are of the same <SPAN  CLASS="textit">reference
+  class</SPAN> if they are both traced or both untraced.  A general type is traced
 if it is a traced reference type, a record type any of whose field types is
 traced, an array type whose element type is traced, or a packed type whose
 underlying unpacked type is traced.
@@ -1192,7 +1194,7 @@ A declaration for a traced reference type has the form:
     TYPE T = REF Type
 </PRE>
 where <code>Type</code> is any type.  The values of <code>T</code> are traced references
-to variables of type <code>Type</code>, which is called the <I>referent type</I> of
+to variables of type <code>Type</code>, which is called the <SPAN  CLASS="textit">referent type</SPAN> of
 <code>T</code>.
 
 <P>
@@ -1207,7 +1209,7 @@ type <code>Type</code>.
 <P>
 In both the traced and untraced cases, the keyword <code>REF</code> can optionally
 be preceded by ``<code>BRANDED b</code>'' where <code>b</code> is a text constant called
-the <I>brand</I>.  Brands distinguish types that would otherwise be the same;
+the <SPAN  CLASS="textit">brand</SPAN>.  Brands distinguish types that would otherwise be the same;
 they have no other semantic effect.  All brands in a program must be distinct.
 If <code>BRANDED</code> is present and <code>b</code> is absent, the implementation
 automatically supplies a unique value for <code>b</code>.  Explicit brands are
@@ -1255,31 +1257,31 @@ Examples of reference types:
 </H3>
 
 <P>
-A <I>procedure</I> is either <code>NIL</code> or a triple consisting of:
+A <SPAN  CLASS="textit">procedure</SPAN> is either <code>NIL</code> or a triple consisting of:
 
 <UL>
-<LI>the <I>body</I>, which is a statement,
+<LI>the <SPAN  CLASS="textit">body</SPAN>, which is a statement,
 </LI>
-<LI>the <I>signature</I>, which specifies the procedure's formal arguments,
+<LI>the <SPAN  CLASS="textit">signature</SPAN>, which specifies the procedure's formal arguments,
   result type, and raises set (the set of exceptions that the procedure can
   raise),
 </LI>
-<LI>the <I>environment</I>, which is the scope with respect to which
+<LI>the <SPAN  CLASS="textit">environment</SPAN>, which is the scope with respect to which
   variable names in the body will be interpreted.
 </LI>
 </UL>
 
 <P>
-A procedure that returns a result is called a <I>function procedure</I>; a
-procedure that does not return a result is called a <I>proper procedure</I>.
-A <I>top-level</I> procedure is a procedure declared in the outermost scope of
-a module.  Any other procedure is a <I>local</I> procedure.  A local procedure
+A procedure that returns a result is called a <SPAN  CLASS="textit">function procedure</SPAN>; a
+procedure that does not return a result is called a <SPAN  CLASS="textit">proper procedure</SPAN>.
+A <SPAN  CLASS="textit">top-level</SPAN> procedure is a procedure declared in the outermost scope of
+a module.  Any other procedure is a <SPAN  CLASS="textit">local</SPAN> procedure.  A local procedure
 can be passed as a parameter but not assigned, since in a stack implementation
 a local procedure becomes invalid when the frame for the procedure containing
 it is popped.
 
 <P>
-A <I>procedure constant</I> is an identifier declared as a procedure.  (As
+A <SPAN  CLASS="textit">procedure constant</SPAN> is an identifier declared as a procedure.  (As
 opposed to a procedure variable, which is a variable declared with a procedure
 type.)
 
@@ -1295,10 +1297,10 @@ where <code>sig</code> is a signature specification, which has the form:
 where
 
 <UL>
-<LI>Each <code>formal_</code><IMG
+<LI>Each <code>formal_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is a formal parameter declaration, as described
+ ALT="$i$"></SPAN> is a formal parameter declaration, as described
   below.
 </LI>
 <LI><code>R</code> is the result type, which can be any type but an open array
@@ -1354,7 +1356,7 @@ default values are included.
 
 <P>
 A procedure value <code>P</code> is a member of the type <code>T</code> if it is
-<code>NIL</code> or its signature is <I>covered</I> by the signature of <code>T</code>,
+<code>NIL</code> or its signature is <SPAN  CLASS="textit">covered</SPAN> by the signature of <code>T</code>,
 where <code>signature_1</code> covers <code>signature_2</code> if:
 
 <UL>
@@ -1412,7 +1414,7 @@ In a procedure type, <code>RAISES</code> binds to the closest preceding
 </H3>
 
 <P>
-An <I>object</I> is either <code>NIL</code> or a reference to a data record paired
+An <SPAN  CLASS="textit">object</SPAN> is either <code>NIL</code> or a reference to a data record paired
 with a method suite, which is a record of procedures that will accept the
 object as a first argument.
 
@@ -1473,8 +1475,8 @@ The declaration of an object type has the form:
 </PRE>
 where <code>ST</code> is an optional supertype, <code>Fields</code> is a list of field
 declarations, exactly as in a record type, <code>Methods</code> is a list of
-<I>method declarations</I> and <code>Overrides</code> is a list of <I>method
-  overrides</I>.  The fields of <code>T</code> consist of the fields of <code>ST</code>
+<SPAN  CLASS="textit">method declarations</SPAN> and <code>Overrides</code> is a list of <SPAN  CLASS="textit">method
+  overrides</SPAN>.  The fields of <code>T</code> consist of the fields of <code>ST</code>
 followed by the fields declared in <code>Fields</code>.  The methods of <code>T</code>
 consist of the methods of <code>ST</code> modified by <code>Overrides</code> and followed
 by the methods declared in <code>Methods</code>.  <code>T</code> has the same reference
@@ -1520,7 +1522,7 @@ supertype of <code>T</code>, and dropping its first parameter must result in a
 signature that is covered by the signature of <code>ST</code>'s <code>m</code> method.
 
 <P>
-<B>Examples.</B>  Consider the following declarations:
+<SPAN  CLASS="textbf">Examples.</SPAN>  Consider the following declarations:
 <PRE>
     TYPE
       A  = OBJECT a: INTEGER; METHODS p() END;
@@ -1657,20 +1659,20 @@ For array types,<PRE>
 &lt;: (ARRAY OF)^m  (ARRAY OF)^n
       ARRAY I_1 OF ... ARRAY I_p OF T
 </PRE><BLOCKQUOTE>
-  if <code>NUMBER(I_</code><IMG
+  if <code>NUMBER(I_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>) = NUMBER(K_</code><IMG
+ ALT="$i$"></SPAN><code>) = NUMBER(K_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>)</code>
+ ALT="$i$"></SPAN><code>)</code>
   for <!-- MATH
  $i = 1, ..., \verb|p|$
  -->
-<IMG
+<SPAN CLASS="MATH"><IMG
  WIDTH="74" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="m3-defn-completeimg2.png"
- ALT="$i = 1, ..., \verb\vert p\vert$">.
+ ALT="$i = 1, ..., \verb\vert p\vert$"></SPAN>.
 
 </BLOCKQUOTE>
 That is, an array type <code>A</code> is a subtype of an array type <code>B</code> if they
@@ -1776,9 +1778,9 @@ interfaces <code>Text</code> and <code>Thread</code>.
 
 <P>
 <BLOCKQUOTE>
-<I>Look into any carpenter's tool-bag and see how many different hammers,
+<SPAN  CLASS="textit">Look into any carpenter's tool-bag and see how many different hammers,
     chisels, planes and screw-drivers he keeps there--not for ostentation or
-    luxury, but for different sorts of jobs.  --Robert Graves and Alan Hodge</I>
+    luxury, but for different sorts of jobs.  --Robert Graves and Alan Hodge</SPAN>
 
 </BLOCKQUOTE>
 
@@ -1789,7 +1791,7 @@ outcome is an exception, it can optionally be paired with an argument.
 
 <P>
 We define the semantics of <code>EXIT</code> and <code>RETURN</code> with exceptions
-called the <I>exit-exception</I> and the <I>return-exception</I>.  The
+called the <SPAN  CLASS="textit">exit-exception</SPAN> and the <SPAN  CLASS="textit">return-exception</SPAN>.  The
 exit-exception takes no argument; the return-exception takes an argument of
 arbitrary type.  Programs cannot name these exceptions explicitly.
 
@@ -1820,7 +1822,7 @@ To specify the typechecking of assignment statements we need to define
 expressions and variables, and between expressions and types.
 
 <P>
-A type <code>T</code> is <I>assignable</I> to a type <code>U</code> if:
+A type <code>T</code> is <SPAN  CLASS="textit">assignable</SPAN> to a type <code>U</code> if:
 
 <UL>
 <LI><code>T &lt;: U</code>, or
@@ -1834,7 +1836,7 @@ A type <code>T</code> is <I>assignable</I> to a type <code>U</code> if:
 </UL>
 
 <P>
-An expression <code>e</code> is <I>assignable</I> to a variable <code>v</code> if:
+An expression <code>e</code> is <SPAN  CLASS="textit">assignable</SPAN> to a variable <code>v</code> if:
 
 <UL>
 <LI>the type of <code>e</code> is assignable to the type of <code>v</code>, and
@@ -1852,7 +1854,7 @@ value of a procedure parameter is local or global, assigning a local procedure
 is a runtime rather than a static error.
 
 <P>
-An expression e is <I>assignable</I> to a type <code>T</code> if e is assignable to
+An expression e is <SPAN  CLASS="textit">assignable</SPAN> to a type <code>T</code> if e is assignable to
 some variable of type <code>T</code>.  (If <code>T</code> is not an open array type, this
 is the same as saying that <code>e</code> is assignable to any variable of type
 <code>T</code>.)
@@ -1913,7 +1915,7 @@ A procedure call has the form:
     P(Bindings)
 </PRE>
 where <code>P</code> is a procedure-valued expression and <code>Bindings</code> is a list
-of <I>keyword</I> or <I>positional</I> bindings.  A keyword binding has the
+of <SPAN  CLASS="textit">keyword</SPAN> or <SPAN  CLASS="textit">positional</SPAN> bindings.  A keyword binding has the
 form <code>name := actual</code>, where <code>actual</code> is an expression and
 <code>name</code> is an identifier.  A positional binding has the form
 <code>actual</code>, where <code>actual</code> is an expression.  When keyword and
@@ -1924,10 +1926,10 @@ still required.
 <P>
 The list of bindings is rewritten to fit the signature of <code>P</code>'s type as
 follows: First, each positional binding <code>actual</code> is converted and added
-to the list of keyword bindings by supplying the name of the <IMG
+to the list of keyword bindings by supplying the name of the <SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">'th formal
+ ALT="$i$"></SPAN>'th formal
 parameter, where <code>actual</code> is the i'th binding in <code>Bindings</code>.
 Second, for each parameter that has a default and is not bound after the first
 step, the binding <code>name := default</code> is added to the list of bindings,
@@ -2092,27 +2094,27 @@ A <code>TRY</code>-<code>EXCEPT</code> statement has the form:
     END
 </PRE>
 where <code>Body</code> and each <code>Handler</code> are statements, each <code>id</code> names
-an exception, and each <code>v_</code><IMG
+an exception, and each <code>v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is an identifier.  The
-``<code>ELSE Handler_0</code>'' and each ``<code>(v_</code><IMG
+ ALT="$i$"></SPAN> is an identifier.  The
+``<code>ELSE Handler_0</code>'' and each ``<code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>)</code>'' are optional.
+ ALT="$i$"></SPAN><code>)</code>'' are optional.
 It is a static error for an exception to be named more than once in the list
 of <code>id</code>'s.
 
 <P>
 The statement executes <code>Body</code>.  If the outcome is normal, the except
-clause is ignored.  If <code>Body</code> raises any listed exception <code>id_</code><IMG
+clause is ignored.  If <code>Body</code> raises any listed exception <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">,
-then <code>Handler_</code><IMG
+ ALT="$i$"></SPAN>,
+then <code>Handler_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is executed.  If <code>Body</code> raises any other
+ ALT="$i$"></SPAN> is executed.  If <code>Body</code> raises any other
 exception and ``<code>ELSE Handler_0</code>'' is present, then it is executed.  In
 either case, the outcome of the <code>TRY</code> statement is the outcome of the
 selected handler.  If <code>Body</code> raises an unlisted exception and
@@ -2120,45 +2122,45 @@ selected handler.  If <code>Body</code> raises an unlisted exception and
 statement is the exception raised by <code>Body</code>.
 
 <P>
-Each <code>(v_</code><IMG
+Each <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>)</code> declares a variable whose type is the argument type
-of the exception <code>id_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> declares a variable whose type is the argument type
+of the exception <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> and whose scope is <code>Handler_</code><IMG
+ ALT="$i$"></SPAN> and whose scope is <code>Handler_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">.  When an
-exception <code>id_</code><IMG
+ ALT="$i$"></SPAN>.  When an
+exception <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> paired with an argument <code>x</code> is handled,
-<code>v_</code><IMG
+ ALT="$i$"></SPAN> paired with an argument <code>x</code> is handled,
+<code>v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is initialized to <code>x</code> before <code>Handler_</code><IMG
+ ALT="$i$"></SPAN> is initialized to <code>x</code> before <code>Handler_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is executed.
-It is a static error to include <code>(v_</code><IMG
+ ALT="$i$"></SPAN> is executed.
+It is a static error to include <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>)</code> if exception
-<code>id_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> if exception
+<code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> does not take an argument.
+ ALT="$i$"></SPAN> does not take an argument.
 
 <P>
-If <code>(v_</code><IMG
+If <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>)</code> is absent, then <code>id_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> is absent, then <code>id_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> can be a list of
+ ALT="$i$"></SPAN> can be a list of
 exceptions separated by commas, as shorthand for a list in which the rest of
 the handler is repeated for each exception.  That is:
 <PRE>
@@ -2299,24 +2301,24 @@ An <code>IF</code> statement has the form:
     END
 </PRE>
 where the <code>B</code>'s are boolean expressions and the <code>S</code>'s are
-statements.  The ``<code>ELSE S_0</code>'' and each ``<code>ELSIF</code> <code>B_</code><IMG
+statements.  The ``<code>ELSE S_0</code>'' and each ``<code>ELSIF</code> <code>B_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">
-<code>THEN</code> <code>S_</code><IMG
+ ALT="$i$"></SPAN>
+<code>THEN</code> <code>S_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">'' are optional.
+ ALT="$i$"></SPAN>'' are optional.
 
 <P>
-The statement evaluates the <code>B</code>'s in order until some <code>B_</code><IMG
+The statement evaluates the <code>B</code>'s in order until some <code>B_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">
-evaluates to <code>TRUE</code>, and then executes <code>S_</code><IMG
+ ALT="$i$"></SPAN>
+evaluates to <code>TRUE</code>, and then executes <code>S_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">.  If none of the
+ ALT="$i$"></SPAN>.  If none of the
 expressions evaluates to <code>TRUE</code> and ``<code>ELSE S_0</code>'' is present,
 <code>S_0</code> is executed.  If none of the expressions evaluates to <code>TRUE</code>
 and ``<code>ELSE S_0</code>'' is absent, the statement is a no-op (except for any
@@ -2477,21 +2479,21 @@ if the value of any of the constant expressions is not a member of the type of
 
 <P>
 The statement evaluates <code>Expr</code>.  If the resulting value is in any
-<code>L_</code><IMG
+<code>L_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">, then <code>S_</code><IMG
+ ALT="$i$"></SPAN>, then <code>S_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is executed.  If the value is in no
-<code>L_</code><IMG
+ ALT="$i$"></SPAN> is executed.  If the value is in no
+<code>L_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> and ``<code>ELSE S_0</code>'' is present, then it is executed.  If the
-value is in no <code>L_</code><IMG
+ ALT="$i$"></SPAN> and ``<code>ELSE S_0</code>'' is present, then it is executed.  If the
+value is in no <code>L_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> and ``<code>ELSE S_0</code>'' is absent, a checked
+ ALT="$i$"></SPAN> and ``<code>ELSE S_0</code>'' is absent, a checked
 runtime error occurs.
 
 <P>
@@ -2518,49 +2520,49 @@ The ``<code>ELSE S_0</code>'' and each ``<code>(v)</code>'' are optional.
 
 <P>
 The statement evaluates <code>Expr</code>.  If the resulting reference value is a
-member of any listed type <code>T_</code><IMG
+member of any listed type <code>T_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">, then <code>S_</code><IMG
+ ALT="$i$"></SPAN>, then <code>S_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is executed, for the
-minimum such <IMG
+ ALT="$i$"></SPAN> is executed, for the
+minimum such <SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">.  (Thus a <code>NULL</code> case is useful only if it comes first.)
+ ALT="$i$"></SPAN>.  (Thus a <code>NULL</code> case is useful only if it comes first.)
 If the value is a member of no listed type and ``<code>ELSE S_0</code>'' is present,
 then it is executed.  If the value is a member of no listed type and
 ``<code>ELSE S_0</code>'' is absent, a checked runtime error occurs.
 
 <P>
-Each <code>(v_</code><IMG
+Each <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>)</code> declares a variable whose type is <code>T_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> declares a variable whose type is <code>T_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> and
-whose scope is <code>S_</code><IMG
+ ALT="$i$"></SPAN> and
+whose scope is <code>S_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$">.  If <code>v_</code><IMG
+ ALT="$i$"></SPAN>.  If <code>v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is present, it is initialized to
-the value of <code>Expr</code> before <code>S_</code><IMG
+ ALT="$i$"></SPAN> is present, it is initialized to
+the value of <code>Expr</code> before <code>S_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> is executed.
+ ALT="$i$"></SPAN> is executed.
 
 <P>
-If <code>(v_</code><IMG
+If <code>(v_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"><code>)</code> is absent, then <code>T_</code><IMG
+ ALT="$i$"></SPAN><code>)</code> is absent, then <code>T_</code><SPAN CLASS="MATH"><IMG
  WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
  SRC="m3-defn-completeimg1.png"
- ALT="$i$"> can be a list of type
+ ALT="$i$"></SPAN> can be a list of type
 expressions separated by commas, as shorthand for a list in which the rest of
 the branch is repeated for each type expression.  That is:
 <PRE>
@@ -2641,11 +2643,11 @@ In unsafe modules, <code>INC</code> and <code>DEC</code> are extended to <code>A
 
 <P>
 <BLOCKQUOTE>
-<I>There are two basic methods of declaring high or low before the
+<SPAN  CLASS="textit">There are two basic methods of declaring high or low before the
     showdown in all High-Low Poker games.  They are (1) simultaneous
     declarations, and (2) consecutive declarations... It is a sad but true
     fact that the consecutive method spoils the game.  --John Scarne's Guide
-    to Modern Poker</I>
+    to Modern Poker</SPAN>
 
 </BLOCKQUOTE>
 
@@ -2797,11 +2799,11 @@ module.  All declared exceptions are distinct.
 </H3>
 
 <P>
-An <I>opaque type</I> is a name that denotes an unknown subtype of some given
+An <SPAN  CLASS="textit">opaque type</SPAN> is a name that denotes an unknown subtype of some given
 reference type.  For example, an opaque subtype of <code>REFANY</code> is an unknown
 traced reference type; an opaque subtype of <code>UNTRACED ROOT</code> is an unknown
 untraced object type.  The actual type denoted by an opaque type name is
-called its <I>concrete type</I>.
+called its <SPAN  CLASS="textit">concrete type</SPAN>.
 
 <P>
 Different scopes can reveal different information about an opaque type.  For
@@ -2825,11 +2827,11 @@ be revealed elsewhere in the program.
 </H3>
 
 <P>
-A <I>revelation</I> introduces information about an opaque type into a scope.
+A <SPAN  CLASS="textit">revelation</SPAN> introduces information about an opaque type into a scope.
 Unlike other declarations, revelations introduce no new names.
 
 <P>
-There are two kinds of revelations, <I>partial</I> and <I>complete</I>.  A
+There are two kinds of revelations, <SPAN  CLASS="textit">partial</SPAN> and <SPAN  CLASS="textit">complete</SPAN>.  A
 program can contain any number of partial revelations for an opaque type; it
 must contain exactly one complete revelation.
 
@@ -2896,7 +2898,7 @@ type, and can access the <code>count</code> field.
 <P>
 A constant, type, or procedure declaration <code>N = E</code>, a variable
 declaration <code>N: E</code>, an exception declaration <code>N(E)</code>, or a revelation
-<code>N = E</code> is <I>recursive</I> if <code>N</code> occurs in any partial expansion
+<code>N = E</code> is <SPAN  CLASS="textit">recursive</SPAN> if <code>N</code> occurs in any partial expansion
 of <code>E</code>.  A variable declaration <code>N := I</code> where the type is omitted
 is recursive if <code>N</code> occurs in any partial expansion of the type <code>E</code>
 of <code>I</code>.  Such declarations are allowed if every occurrence of <code>N</code> in
@@ -2943,40 +2945,40 @@ Examples of legal non-recursive declarations:
 
 <P>
 <BLOCKQUOTE>
-<I>Art, it seems to me, should simplify.  That, indeed, is very nearly
+<SPAN  CLASS="textit">Art, it seems to me, should simplify.  That, indeed, is very nearly
     the whole of the higher artistic process; finding what conventions of form
     and what detail one can do without and yet preserve the spirit of the
-    whole.  --Willa Cather</I>
+    whole.  --Willa Cather</SPAN>
 
 </BLOCKQUOTE>
 
 <P>
-A <I>module</I> is like a block, except for the visibility of names.  An entity
+A <SPAN  CLASS="textit">module</SPAN> is like a block, except for the visibility of names.  An entity
 is visible in a block if it is declared in the block or in some enclosing
 block; an entity is visible in a module if it is declared in the module or in
 an interface that is imported or exported by the module.
 
 <P>
-An <I>interface</I> is a group of declarations.  Declarations in interfaces
+An <SPAN  CLASS="textit">interface</SPAN> is a group of declarations.  Declarations in interfaces
 are the same as in blocks, except that any variable initializations must be
 constant, and procedure declarations must specify only the signature, not the
 body.
 
 <P>
-A module <code>X</code> <I>exports</I> an interface <code>I</code> to supply bodies for
+A module <code>X</code> <SPAN  CLASS="textit">exports</SPAN> an interface <code>I</code> to supply bodies for
 one or more of the procedures declared in the interface.  A module or
-interface <code>X</code> <I>imports</I> an interface <code>I</code> to make the entities
+interface <code>X</code> <SPAN  CLASS="textit">imports</SPAN> an interface <code>I</code> to make the entities
 declared in <code>I</code> visible in <code>X</code>.
 
 <P>
-A <I>program</I> is a collection of modules and interfaces that contains every
+A <SPAN  CLASS="textit">program</SPAN> is a collection of modules and interfaces that contains every
 interface imported or exported by any of its modules or interfaces, and in
 which no procedure, module, or interface is multiply defined.  The effect of
 executing a program is to execute the bodies of each of its modules.  The
 order of execution of the modules is constrained by the initialization rule.
 
 <P>
-The module whose body is executed last is called the <I>main module</I>.
+The module whose body is executed last is called the <SPAN  CLASS="textit">main module</SPAN>.
 Implementations are expected to provide a way to specify the main module, in
 case the initialization rule does not determine it uniquely.  The recommended
 rule is that the main module be the one that exports the interface
@@ -2987,7 +2989,7 @@ Program execution terminates when the body of the main module terminates, even
 if concurrent threads of control are still executing.
 
 <P>
-The names of the modules and interfaces of a program are called <I>global</I>
+The names of the modules and interfaces of a program are called <SPAN  CLASS="textit">global</SPAN>
 names.  The method for looking up global names--for example, by file system
 search paths--is implementation-dependent.
 
@@ -3011,7 +3013,7 @@ local name <code>J</code>.  The entities and revelations declared in <code>I</co
 accessible in the importing module or interface, but the entities and
 revelations imported into <code>I</code> do not.  To refer to the entity declared
 with name <code>N</code> in the interface <code>I</code>, the importer must use the
-<I>qualified identifier</I> <code>J.N</code>.
+<SPAN  CLASS="textit">qualified identifier</SPAN> <code>J.N</code>.
 
 <P>
 The statement <code>IMPORT I</code> is short for <code>IMPORT I AS I</code>.
@@ -3074,7 +3076,7 @@ A module has the form:
 </PRE>
 where <code>id</code> is an identifier that names the module, <code>Interfaces</code> is a
 list of distinct names of interfaces exported by the module, <code>Imports</code> is
-a list of import statements, and <code>Block</code> is a block, the <I>body</I> of
+a list of import statements, and <code>Block</code> is a block, the <SPAN  CLASS="textit">body</SPAN> of
 the module.  The name <code>id</code> must be repeated after the <code>END</code> that
 terminates the body.  ``<code>EXPORTS Interfaces</code>'' can be omitted, in which
 case <code>Interfaces</code> defaults to <code>id</code>.
@@ -3333,11 +3335,11 @@ If module <code>M</code> depends on module <code>N</code> and <code>N</code> doe
 <code>M</code>, then <code>N</code>'s body will be executed before <code>M</code>'s body, where:
 
 <UL>
-<LI>A module <code>M</code> <I>depends on</I> a module <code>N</code> if <code>M</code> uses
+<LI>A module <code>M</code> <SPAN  CLASS="textit">depends on</SPAN> a module <code>N</code> if <code>M</code> uses
   an interface that <code>N</code> exports or if <code>M</code> depends on a module that
   depends on <code>N</code>.
 </LI>
-<LI>A module <code>M</code> <I>uses</I> an interface <code>I</code> if <code>M</code> imports
+<LI>A module <code>M</code> <SPAN  CLASS="textit">uses</SPAN> an interface <code>I</code> if <code>M</code> imports
   or exports <code>I</code> or if <code>M</code> uses an interface that (directly or
   indirectly) imports <code>I</code>.
 </LI>
@@ -3355,12 +3357,12 @@ implementation-dependent.
 
 <P>
 The keyword <code>UNSAFE</code> can precede the declaration of any interface or
-module to indicate that it is <I>unsafe</I>; that is, uses the unsafe features
+module to indicate that it is <SPAN  CLASS="textit">unsafe</SPAN>; that is, uses the unsafe features
 of the language.  An interface or module not explicitly labeled <code>UNSAFE</code>
-is called <I>safe</I>.
+is called <SPAN  CLASS="textit">safe</SPAN>.
 
 <P>
-An interface is <I>intrinsically safe</I> if there is no way to produce an
+An interface is <SPAN  CLASS="textit">intrinsically safe</SPAN> if there is no way to produce an
 unchecked runtime error by using the interface in a safe module.  If all
 modules that export a safe interface are safe, the compiler guarantees the
 intrinsic safety of the interface.  If any of the modules that export a safe
@@ -3379,8 +3381,8 @@ safe module to import or export an unsafe interface.
 
 <P>
 <BLOCKQUOTE>
-<I>The rules of logical syntax must follow of themselves, if we only
-    know how every single sign signifies.  --Ludwig Wittgenstein</I>
+<SPAN  CLASS="textit">The rules of logical syntax must follow of themselves, if we only
+    know how every single sign signifies.  --Ludwig Wittgenstein</SPAN>
 
 </BLOCKQUOTE>
 
@@ -3532,7 +3534,7 @@ their fully parenthesized forms:
 </BLOCKQUOTE>
 
 <P>
-Operators without special syntax are <I>procedural</I>.  An application of a
+Operators without special syntax are <SPAN  CLASS="textit">procedural</SPAN>.  An application of a
 procedural operator has the form <code>op(args)</code>, where <code>op</code> is the
 operation and <code>args</code> is the list of argument expressions.  For example,
 <code>MAX</code> and <code>MIN</code> are procedural operators.
@@ -3544,10 +3546,10 @@ operation and <code>args</code> is the list of argument expressions.  For exampl
 </H3>
 
 <P>
-An identifier is a <I>writable designator</I> if it is declared as a variable,
+An identifier is a <SPAN  CLASS="textit">writable designator</SPAN> if it is declared as a variable,
 is a <code>VAR</code> or <code>VALUE</code> parameter, is a local of a <code>TYPECASE</code> or
 <code>TRY</code>-<code>EXCEPT</code> statement, or is a <code>WITH</code> local that is bound to a
-writable designator.  An identifier is a <I>readonly designator</I> if it is a
+writable designator.  An identifier is a <SPAN  CLASS="textit">readonly designator</SPAN> if it is a
 <code>READONLY</code> parameter, a local of a <code>FOR</code> statement, or a <code>WITH</code>
 local bound to a non-designator or readonly designator.
 
@@ -3563,7 +3565,7 @@ modules, <code>LOOPHOLE</code> can also produce a designator.
 <DD><code>r^</code> 
 <BR>
 denotes the the referent of <code>r</code>; this operation is called
-  <I>dereferencing</I>.  The expression <code>r^</code> is always a writable
+  <SPAN  CLASS="textit">dereferencing</SPAN>.  The expression <code>r^</code> is always a writable
   designator.  It is a static error if the type of <code>r</code> is <code>REFANY</code>,
   <code>ADDRESS</code>, <code>NULL</code>, an object type, or an opaque type, and a
   checked runtime error if <code>r</code> is <code>NIL</code>.  The type of <code>r^</code> is
@@ -3943,11 +3945,12 @@ computed as <code>x+(y+z)</code>, since addition is not associative either for
 bounded integers or for floating-point values.
 
 <P><PRE><TT>
- 		prefix 		 <code>+</code> 		 <code>(x: Integer)    : Integer</code>
-		 		 		 <code>(x: Float)      : Float</code>
-		infix 		 <code>+</code> 		 <code>(x,y: Integer)  : Integer</code>
-		 		 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		prefix 		 <code>+</code> 		 <code>(x: Integer)    : Integer</code> 
+<BR><code>(x: Float)      : Float</code> 
+<BR>
+infix 		 <code>+</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 As a prefix operator, <code>+x</code> returns <code>x</code>.  As an infix operator on
 numeric arguments, <code>+</code> denotes addition.  On sets, <code>+</code> denotes set
@@ -3957,11 +3960,12 @@ same, and the result is the same type as both.  In unsafe modules, <code>+</code
 extended to <code>ADDRESS</code>.
 
 <P><PRE><TT>
- 		prefix 		 <code>-</code> 		 <code>(x: Integer)    : Integer</code>
-		 		 		 <code>(x: Float)      : Float</code>
-		infix 		 <code>-</code> 		 <code>(x,y: Integer)  : Integer</code>
-		 		 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		prefix 		 <code>-</code> 		 <code>(x: Integer)    : Integer</code> 
+<BR><code>(x: Float)      : Float</code> 
+<BR>
+infix 		 <code>-</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 As a prefix operator, <code>-x</code> is the negative of <code>x</code>.  As an infix
 operator on numeric arguments, <code>-</code> denotes subtraction.  On sets,
@@ -3971,9 +3975,9 @@ the same, and the result is the same type as both.  In unsafe modules,
 <code>-</code> is extended to <code>ADDRESS</code>.
 
 <P><PRE><TT>
- 		infix 		 <code>*</code> 		 <code>(x,y: Integer)  : Integer</code>
-		 		 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		infix 		 <code>*</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 On numeric arguments, <code>*</code> denotes multiplication.  On sets, <code>*</code>
 denotes intersection.  That is, <code>e IN (x * y)</code> if and only if
@@ -3981,8 +3985,8 @@ denotes intersection.  That is, <code>e IN (x * y)</code> if and only if
 same, and the result is the same type as both.
 
 <P><PRE><TT>
- 		infix 		 <code>/</code> 		 <code>(x,y: Float)    : Float</code>
-		 		 		 <code>(x,y: Set)      : Set</code>  
+ 		infix 		 <code>/</code> 		 <code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
 </TT></PRE>
 On reals, <code>/</code> denotes division.  On sets, <code>/</code> denotes symmetric
 difference.  That is, <code>e IN (x / y)</code> if and only if
@@ -3990,9 +3994,10 @@ difference.  That is, <code>e IN (x / y)</code> if and only if
 same, and the result is the same type as both.
 
 <P><PRE><TT>
- 		infix 		 <code>DIV</code> 		 <code>(x,y: Integer) : Integer</code>
-		infix 		 <code>MOD</code> 		 <code>(x,y: Integer) : Integer</code>
-		 		 		 <code>(x,y: Float)   : Float</code>  
+ 		infix 		 <code>DIV</code> 		 <code>(x,y: Integer) : Integer</code> 
+<BR>
+infix 		 <code>MOD</code> 		 <code>(x,y: Integer) : Integer</code> 
+<BR><code>(x,y: Float)   : Float</code>  
 </TT></PRE>
 The value <code>x DIV y</code> is the floor of the quotient of <code>x</code> and
 <code>y</code>; that is, the maximum integer not exceeding the real number <code>z</code>
@@ -4013,15 +4018,15 @@ types of <code>x</code> and <code>y</code> must be the same, and the result is t
 type as both.
 
 <P><PRE><TT>
- 		 <code>ABS</code> 		 <code>(x: Integer) : Integer</code>
-		 		 <code>(x: Float)   : Float</code>  
+ 		 <code>ABS</code> 		 <code>(x: Integer) : Integer</code> 
+<BR><code>(x: Float)   : Float</code>  
 </TT></PRE>
 <code>ABS(x)</code> is the absolute value of <code>x</code>.  The type of <code>ABS(x)</code> is
 the same as the type of <code>x</code>.
 
 <P><PRE><TT>
- 		 <code>FLOAT</code> 		 <code>(x: Integer; T: Type := REAL): T</code>
-		 		 <code>(x: Float;   T: Type := REAL): T</code>  
+ 		 <code>FLOAT</code> 		 <code>(x: Integer; T: Type := REAL): T</code> 
+<BR><code>(x: Float;   T: Type := REAL): T</code>  
 </TT></PRE>
 <code>FLOAT(x, T)</code> is a floating-point value of type <code>T</code> that is equal to
 or very near <code>x</code>.  The type <code>T</code> must be a floating-point type; it
@@ -4029,16 +4034,16 @@ defaults to <code>REAL</code>.  The exact semantics depend on the thread's curre
 rounding mode, as explained in the required interface <code>FloatMode</code>.
 
 <P><PRE><TT>
- 		 <code>FLOOR</code> 		 <code>(x: Float; T: Type := INTEGER): T</code>
-		 <code>CEILING</code> 		 <code>(x: Float; T: Type := INTEGER): T</code>  
+ 		 <code>FLOOR</code> 		 <code>(x: Float; T: Type := INTEGER): T</code> 
+<BR><code>CEILING</code> 		 <code>(x: Float; T: Type := INTEGER): T</code>  
 </TT></PRE>
 <code>FLOOR(x)</code> is the greatest integer not exceeding <code>x</code>.
 <code>CEILING(x)</code> is the least integer not less than <code>x</code>.
 The type <code>T</code> must be an integer type; it defaults to <code>INTEGER</code>.
 
 <P><PRE><TT>
- 		 <code>ROUND</code> 		 <code>(r: Float; T: Type := INTEGER): T</code>
-		 <code>TRUNC</code> 		 <code>(r: Float; T: Type := INTEGER): T</code>  
+ 		 <code>ROUND</code> 		 <code>(r: Float; T: Type := INTEGER): T</code> 
+<BR><code>TRUNC</code> 		 <code>(r: Float; T: Type := INTEGER): T</code>  
 </TT></PRE>
 <code>ROUND(r)</code> is the nearest integer to <code>r</code>; ties are broken according
 to the constant <code>RoundDefault</code> in the required interface
@@ -4048,8 +4053,8 @@ to the constant <code>RoundDefault</code> in the required interface
 The type <code>T</code> must be an integer type; it defaults to <code>INTEGER</code>.
 
 <P><PRE><TT>
- 		 <code>MAX</code>, <code>MIN</code> 		 <code>(x,y: Ordinal) : Ordinal</code>
-		 		 <code>(x,y: Float)   : Float</code>  
+ 		 <code>MAX</code>, <code>MIN</code> 		 <code>(x,y: Ordinal) : Ordinal</code> 
+<BR><code>(x,y: Float)   : Float</code>  
 </TT></PRE>
 <code>MAX</code> returns the greater of the two values <code>x</code> and <code>y</code>;
 <code>MIN</code> returns the lesser.  If <code>x</code> and <code>y</code> are ordinals, they
@@ -4083,10 +4088,10 @@ elements are equal.  Records are equal if they have the same fields and
 corresponding fields are equal.
 
 <P><PRE><TT>
- 		infix 		 <code>&lt;=</code>, <code>&gt;=</code> 		 <code>(x,y: Ordinal) : BOOLEAN</code>
-		 		 		 <code>(x,y: Float)   : BOOLEAN</code>
-		 		 		 <code>(x,y: ADDRESS) : BOOLEAN</code>
-		 		 		 <code>(x,y: Set)     : BOOLEAN</code>  
+ 		infix 		 <code>&lt;=</code>, <code>&gt;=</code> 		 <code>(x,y: Ordinal) : BOOLEAN</code> 
+<BR><code>(x,y: Float)   : BOOLEAN</code> 
+<BR><code>(x,y: ADDRESS) : BOOLEAN</code> 
+<BR><code>(x,y: Set)     : BOOLEAN</code>  
 </TT></PRE>
 In the first three cases, <code>&lt;=</code> returns <code>TRUE</code> if <code>x</code> is at most
 as large as <code>y</code>.  In the last case, <code>&lt;=</code> returns <code>TRUE</code> if
@@ -4096,10 +4101,10 @@ static error if the type of <code>x</code> is not assignable to the type of
 <code>y &lt;= x</code>.
 
 <P><PRE><TT>
- 		infix 		 <code>&gt;</code>, <code>&lt;</code> 		 <code>(x,y: Ordinal) : BOOLEAN</code>
-		 		 		 <code>(x,y: Float)   : BOOLEAN</code>
-		 		 		 <code>(x,y: ADDRESS) : BOOLEAN</code>
-		 		 		 <code>(x,y: Set)     : BOOLEAN</code>  
+ 		infix 		 <code>&gt;</code>, <code>&lt;</code> 		 <code>(x,y: Ordinal) : BOOLEAN</code> 
+<BR><code>(x,y: Float)   : BOOLEAN</code> 
+<BR><code>(x,y: ADDRESS) : BOOLEAN</code> 
+<BR><code>(x,y: Set)     : BOOLEAN</code>  
 </TT></PRE>
 In all cases, <code>x &lt; y</code> means <code>(x $&lt;$= y) AND (x \# y)</code>, and
 <code>x &gt; y</code> means <code>y &lt; x</code>.  It is a static error if the type of <code>x</code>
@@ -4124,9 +4129,11 @@ error occurs, but <code>IN</code> returns <code>FALSE</code>.
 </H3>
 
 <P><PRE><TT>
- 		prefix 		 <code>NOT</code> 		 <code>(p: BOOLEAN)   : BOOLEAN</code>
-		infix 		 <code>AND</code> 		 <code>(p,q: BOOLEAN) : BOOLEAN</code>
-		infix 		 <code>OR</code> 		 <code>(p,q: BOOLEAN) : BOOLEAN</code>  
+ 		prefix 		 <code>NOT</code> 		 <code>(p: BOOLEAN)   : BOOLEAN</code> 
+<BR>
+infix 		 <code>AND</code> 		 <code>(p,q: BOOLEAN) : BOOLEAN</code> 
+<BR>
+infix 		 <code>OR</code> 		 <code>(p,q: BOOLEAN) : BOOLEAN</code>  
 </TT></PRE>
 <code>NOT p</code> is the complement of <code>p</code>.
 
@@ -4158,9 +4165,9 @@ object type or traced reference type, and <code>x</code> must be assignable to
 <code>T</code>.
 
 <P><PRE><TT>
- 		 		 <code>TYPECODE</code> 		 <code>(T: RefType)       : CARDINAL</code>
-		 		 		 <code>(r: REFANY)        : CARDINAL</code>
-		 		 		 <code>(r: UNTRACED ROOT) : CARDINAL</code>  
+ 		 		 <code>TYPECODE</code> 		 <code>(T: RefType)       : CARDINAL</code> 
+<BR><code>(r: REFANY)        : CARDINAL</code> 
+<BR><code>(r: UNTRACED ROOT) : CARDINAL</code>  
 </TT></PRE>
 Every object type or traced reference type (including NULL) has an associated
 integer code.  Different types have different codes.  The code for a type is
@@ -4170,8 +4177,8 @@ returns the code for the allocated type of r.  It is a static error if T is
 REFANY or is not an object type or traced reference type.
 
 <P><PRE><TT>
- 		 		 <code>ORD</code> 		 <code>(element: Ordinal): INTEGER</code>
-		 		 <code>VAL</code> 		 <code>(i: INTEGER; T: OrdinalType): T</code>  
+ 		 		 <code>ORD</code> 		 <code>(element: Ordinal): INTEGER</code> 
+<BR><code>VAL</code> 		 <code>(i: INTEGER; T: OrdinalType): T</code>  
 </TT></PRE>
 <code>ORD</code> converts an element of an enumeration to the integer that
 represents its position in the enumeration order.  The first value in any
@@ -4190,9 +4197,9 @@ runtime error for the value of <code>i</code> to be out of range for <code>T</co
 If <code>n</code> is an integer of type <code>T</code>, <code>ORD(n) = VAL(n, T) = n</code>.
 
 <P><PRE><TT>
- 		 <code>NUMBER</code> 		 <code>(T: OrdinalType)    : CARDINAL</code>
-		 		 <code>(A: FixedArrayType) : CARDINAL</code>
-		 		 <code>(a: Array)          : CARDINAL</code>  
+ 		 <code>NUMBER</code> 		 <code>(T: OrdinalType)    : CARDINAL</code> 
+<BR><code>(A: FixedArrayType) : CARDINAL</code> 
+<BR><code>(a: Array)          : CARDINAL</code>  
 </TT></PRE>
 For an ordinal type <code>T</code>, <code>NUMBER(T)</code> returns the number of elements
 in <code>T</code>.  For a fixed array type <code>A</code>, <code>NUMBER(A)</code> is defined by
@@ -4201,15 +4208,15 @@ in <code>T</code>.  For a fixed array type <code>A</code>, <code>NUMBER(A)</code
 expression <code>a</code> will be evaluated only if it denotes an open array.
 
 <P><PRE><TT>
- 		 <code>FIRST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code>
-		 		 <code>(T: FloatType)      : T</code>
-		 		 <code>(A: FixedArrayType) : BaseType(IndexType(A))</code>
-		 		 <code>(a: Array)          : BaseType(IndexType(a))</code> 
-&nbsp;
-		 <code>LAST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code>
-		 		 <code>(T: FloatType)      : T</code>
-		 		 <code>(A: FixedArrayType) : BaseType(IndexType(A))</code>
-		 		 <code>(a: Array)          : BaseType(IndexType(a))</code>  
+ 		 <code>FIRST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code> 
+<BR><code>(T: FloatType)      : T</code> 
+<BR><code>(A: FixedArrayType) : BaseType(IndexType(A))</code> 
+<BR><code>(a: Array)          : BaseType(IndexType(a))</code> 
+<BR>
+<BR><code>LAST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code> 
+<BR><code>(T: FloatType)      : T</code> 
+<BR><code>(A: FixedArrayType) : BaseType(IndexType(A))</code> 
+<BR><code>(a: Array)          : BaseType(IndexType(a))</code>  
 </TT></PRE>
 For a non-empty ordinal type <code>T</code>, <code>FIRST</code> returns the smallest value
 of <code>T</code> and <code>LAST</code> returns the largest value.  If <code>T</code> is the
@@ -4232,14 +4239,14 @@ if <code>a</code> is an open array, <code>FIRST(a)</code> and <code>LAST(a)</cod
 <code>INTEGER</code>.
 
 <P><PRE><TT>
- 		 <code>BITSIZE</code> 		 <code>(x: Any)  : CARDINAL</code>
-		 		 <code>(T: Type) : CARDINAL</code> 
-&nbsp;
-		 <code>BYTESIZE</code> 		 <code>(x: Any)  : CARDINAL</code>
-		 		 <code>(T: Type) : CARDINAL</code> 
-&nbsp;
-		 <code>ADRSIZE</code> 		 <code>(x: Any)  : CARDINAL</code>
-		 		 <code>(T: Type) : CARDINAL</code>  
+ 		 <code>BITSIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code> 
+<BR>
+<BR><code>BYTESIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code> 
+<BR>
+<BR><code>ADRSIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code>  
 </TT></PRE>
 These operations return the size of the variable <code>x</code> or of variables of
 type <code>T</code>.  <code>BITSIZE</code> returns the number of bits, <code>BYTESIZE</code> the
@@ -4288,8 +4295,8 @@ Literals and top-level procedure constants are legal in constant expressions.
 
 <P>
 <BLOCKQUOTE>
-<I>There are some cases that no law can be framed to cover.
-    --Aristotle</I>
+<SPAN  CLASS="textit">There are some cases that no law can be framed to cover.
+    --Aristotle</SPAN>
 
 </BLOCKQUOTE>
 
@@ -4317,10 +4324,13 @@ type of <code>T)</code>.  The division must come out even.
 
 <P>
 The following operations are primarily used for address arithmetic:<PRE><TT>
- 		 		 <code>ADR</code> 		 <code>(VAR x: Any)            : ADDRESS</code>
-		infix 		 <code>+</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code>
-		infix 		 <code>-</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code>
-		infix 		 <code>-</code> 		 <code>(x,y: ADDRESS)          : INTEGER</code>  
+ 		 		 <code>ADR</code> 		 <code>(VAR x: Any)            : ADDRESS</code> 
+<BR>
+infix 		 <code>+</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code> 
+<BR>
+infix 		 <code>-</code> 		 <code>(x: ADDRESS, y:INTEGER) : ADDRESS</code> 
+<BR>
+infix 		 <code>-</code> 		 <code>(x,y: ADDRESS)          : INTEGER</code>  
 </TT></PRE>
 <code>ADR(x)</code> is the address of the variable <code>x</code>.  The actual argument
 must be a designator but need not be writable.  The operations <code>+</code> and
@@ -4334,8 +4344,8 @@ not even that long if the implementation uses a compacting collector).
 <P>
 In unsafe modules the <code>INC</code> and <code>DEC</code> statements apply to addresses
 as well as ordinals:<PRE><TT>
- 		 <code>INC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code>
-		 <code>DEC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code>  
+ 		 <code>INC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code> 
+<BR><code>DEC</code> 		 <code>(VAR x: ADDRESS; n: INTEGER := 1)</code>  
 </TT></PRE>
 These are short for <code>x := x + n</code> and <code>x := x - n</code>, except that
 <code>x</code> is evaluated only once.
@@ -4375,9 +4385,9 @@ them through <code>u</code>.
 
 <P>
 <BLOCKQUOTE>
-<I>Care should be taken, when using colons and semicolons in the same
+<SPAN  CLASS="textit">Care should be taken, when using colons and semicolons in the same
     sentence, that the reader understands how far the force of each sign
-    carries.  --Robert Graves and Alan Hodge</I>
+    carries.  --Robert Graves and Alan Hodge</SPAN>
 
 </BLOCKQUOTE>
 
@@ -4729,7 +4739,7 @@ OtherChar = " " | "!" | "#" | "$" | "%" | "&amp;" | "(" | ")"
           | "_" | "`" | "{" | "|" | "}" | "~"
           | ExtendedChar
 
-ExtendedChar = any char with ISO-Latin-1 code in [8_ 240..8_ 377].
+ExtendedChar = any char with ISO-Latin-1 code in [8_240..8_377].
 </PRE>
 
 <P>
@@ -4798,10 +4808,10 @@ About this document ...</A>
 </H1>
  <STRONG>Modula-3: Language definition</STRONG><P>
 This document was generated using the
-<A HREF="http://www.latex2html.org/"><STRONG>LaTeX</STRONG>2<tt>HTML</tt></A> translator Version 2002-2-1 (1.70)
+<A HREF="http://www.latex2html.org/"><STRONG>LaTeX</STRONG>2<tt>HTML</tt></A> translator Version 2008 (1.71)
 <P>
 Copyright &#169; 1993, 1994, 1995, 1996,
-<A HREF="http://cbl.leeds.ac.uk/nikos/personal.html">Nikos Drakos</A>, 
+Nikos Drakos, 
 Computer Based Learning Unit, University of Leeds.
 <BR>
 Copyright &#169; 1997, 1998, 1999,
@@ -4811,12 +4821,13 @@ Mathematics Department, Macquarie University, Sydney.
 The command line arguments were: <BR>
  <STRONG>latex2html</STRONG> <TT>-address m3-support@elego.de -link 0 -split 0 -show_section_numbers -local_icons -no_subdir -prefix m3-defn-complete m3-defn-complete.tex</TT>
 <P>
-The translation was initiated by Olaf Wagner on 2010-04-29<HR>
+The translation was initiated by Rodney M. Bates on 2013-04-10
+<DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <IMG WIDTH="81" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next_inactive" SRC="nx_grp_g.png"> 
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_g.png"> 
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev_g.png">   
-<BR>
+<BR></DIV>
 <!--End of Navigation Panel-->
 <ADDRESS>
 m3-support@elego.de
