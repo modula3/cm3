@@ -1759,13 +1759,13 @@ CONST Prefix = ARRAY OF TEXT {
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
-"#define  M3_INT64(x) x##I64",
-"#define M3_UINT64(x) x##UI64",
+"#define  INT64_(x) x##I64",
+"#define UINT64_(x) x##UI64",
 "#else",
 "typedef long long INT64;",
 "typedef unsigned long long UINT64;",
-"#define  M3_INT64(x) x##LL",
-"#define M3_UINT64(x) x##ULL",
+"#define  INT64_(x) x##LL",
+"#define UINT64_(x) x##ULL",
 "#endif",
 
 "#if defined(_WIN64)",
@@ -1844,7 +1844,7 @@ CONST intLiteralPrefix = ARRAY CGType OF TEXT {
     "",  "((INT8)",             (* 0 1 *)
     "",  "((INT16)",            (* 2 2 *)
     "", "",                     (* 4 3 *)
-    "M3_UINT64(", "M3_INT64(",  (* 6 7 *)
+    "UINT64_(", "INT64_(",      (* 6 7 *)
     NIL, ..  (* 8 REAL 9 LONGREAL A EXTENDED B ADDRESS C STRUCT D void *)
 };
 
