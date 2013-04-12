@@ -100,8 +100,10 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         static_link     : Var_t := NIL; (* based on M3x86 *)
         current_proc    : Proc_t := NIL; (* based on M3x86 *)
         param_proc      : Proc_t := NIL; (* based on M3x86 *)
+        dummy_proc      : Proc_t := NIL; (* avoid null derefs for indirect calls *)
         in_proc         : BOOLEAN := FALSE; (* based on M3x86 *)
         in_proc_call    : BOOLEAN := FALSE; (* based on M3x86 *)
+        in_call_indirect := FALSE;
         proc_being_called : Proc_t := NIL;
         report_fault: TEXT := NIL; (* based on M3x86 -- reportlabel, global_var *)
         report_fault_used := FALSE;
@@ -1310,6 +1312,7 @@ TYPE Expr_t = OBJECT
     points_to_cgtype: CGType := CGType.Void;
     points_to_typeid: TypeUID := 0;
     (* TODO points_to_type: Type_t := NIL; *)
+    (* int_value := TInt.Zero *) (* TODO replace minMax with this *)
     float_value: Target.Float;
     text_value: TEXT := NIL;
     (* The right generalization here is a set of values the expression
@@ -1409,8 +1412,6 @@ VAR type_text := self.type_text;
     left := self.left;
     left_text := left.CText();
     remove := 0;
-    lparen := "";
-    rparen := "";
 BEGIN
     <* ASSERT (cgtype = CGType.Void) # (self.type_text = NIL) *>
     IF NOT force THEN
@@ -1424,17 +1425,15 @@ BEGIN
             END;
         ELSE
             type_text := cgtypeToText[cgtype];
-            lparen := "(";
-            rparen := ")";
             IF left.cgtype = cgtype AND cgtype # CGType.Addr THEN
                 remove := 2; (* This happens fairly often. *)
             END;
         END;
     END;
     IF remove > 0 THEN
-        RETURN " /* cast_removed" & IntToDec(remove) & ": " & type_text & " */ " & left_text;
+        RETURN " /* cast_removed" & IntToDec(remove) & ": (" & type_text & ") */ " & left_text;
     ELSE
-        RETURN "(" & lparen & type_text & rparen & "(" & left_text & "))";
+        RETURN "((" & type_text & ")(" & left_text & "))";
     END;
 END Expr_Cast_CText;
 
@@ -1529,9 +1528,9 @@ TYPE Var_t = M3CG.Var OBJECT
     name: Name := 0;
     name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
     cgtype: CGType;
-    typeid: TypeUID;
+    typeid: TypeUID := -1;
     points_to_cgtype: CGType; (* future *)
-    type_text: TEXT := NIL;
+    type_text: TEXT := NIL; (* TODO replace with type:Type_t.text *)
     const := FALSE;
     imported := FALSE;
     exported := FALSE;
@@ -1557,6 +1556,7 @@ TYPE Param_t = Var_t OBJECT
     OVERRIDES
         Name := Param_Name;
         Type := Param_Type;
+        Declare := Param_Declare;
 END;
 
 (* TYPE LocalVar = Var_t;  FUTURE *)
@@ -1864,7 +1864,7 @@ CONST cgtypeToText = ARRAY CGType OF TEXT {
     "float",  (* REAL *)        (* 8 *)
     "double", (* LONGREAL *)    (* 9 *)
     "EXTENDED",                 (* A *)
-    Text_address,              (* B *)
+    Text_address,               (* B *)
     "STRUCT",                   (* C *)
     "void"                      (* D *)
 };
@@ -2059,9 +2059,11 @@ BEGIN
     self.c := cfile;
     self.fields := NEW(TextSeq.T).init();
     self.initializer := NEW(TextSeq.T).init();
-    self.stack := NEW(RefSeq.T).init();
-    self.params := NEW(TextSeq.T).init();
+    self.stack := NEW(RefSeq.T).init(); (* Expr_t *)
+    self.params := NEW(TextSeq.T).init(); (* TODO Expr_t *)
     self.pendingTypes := NEW(RefSeq.T).init();
+    self.dummy_proc := NEW(Proc_t);             (* avoid null derefs for indirect calls *)
+    self.proc_being_called := self.dummy_proc;  (* avoid null derefs for indirect calls *)
 
     RETURN self.multipass;
 END New;
@@ -2641,7 +2643,7 @@ BEGIN
     ELSE
         x.comment("declare_proctype");
     END;
-    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO *)    
+    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO? *)    
     (* SuppressLineDirective(self, param_count + (ORD(raise_count >= 0) * raise_count), "declare_proctype param_count + raise_count"); *)
 END declare_proctype;
 
@@ -2726,7 +2728,7 @@ BEGIN
     ELSE
         x.comment("declare_opaque");
     END;
-    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO *)
+    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO? *)
 END declare_opaque;
 
 PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =
@@ -2766,17 +2768,18 @@ END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: CGType; <*UNUSED*>typeid: TypeUID): M3CG.Var =
+PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; cgtype: CGType; typeid: TypeUID): M3CG.Var =
 VAR var := NEW(Var_t,
         self := self,
-        cgtype := type,
+        cgtype := cgtype,
+        typeid := typeid,
         name := name,
         imported := TRUE).Init();
 BEGIN
     self.comment("import_global");
     <* ASSERT (byte_size MOD alignment) = 0 *>
     <* ASSERT NOT self.in_proc *>
-    print(self, "extern " & cgtypeToText[type] & " " & NameT(var.name) & ";\n");
+    print(self, "extern " & cgtypeToText[cgtype] & " " & NameT(var.name) & ";\n");
     RETURN var;
 END import_global;
 
@@ -2789,10 +2792,11 @@ BEGIN
     RETURN declare_segment(self.self, name, typeid, const);
 END Locals_declare_segment;
 
-PROCEDURE declare_segment(self: T; name: Name; <*UNUSED*>typeid: TypeUID; const: BOOLEAN): M3CG.Var =
+PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; const: BOOLEAN): M3CG.Var =
 VAR var := NEW(Var_t,
         self := self,
         name := name,
+        typeid := typeid,
         const := const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
@@ -2888,16 +2892,26 @@ BEGIN
     RETURN declare_constant(self.self, name, byte_size, alignment, type, typeid, exported, inited);
 END Segments_declare_constant;
 
-PROCEDURE DeclareGlobal(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: CGType; <*UNUSED*>typeid: TypeUID; exported: BOOLEAN; <*UNUSED*>inited: BOOLEAN; const: BOOLEAN): M3CG.Var =
+PROCEDURE DeclareGlobal(
+    self: T;
+    name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: CGType;
+    typeid: TypeUID;
+    exported: BOOLEAN;
+    <*UNUSED*>inited:
+    BOOLEAN; const:
+    BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR var := NEW(Var_t,
         self := self,
         cgtype := type,
         name := name,
         const := const,
-        (*inited := inited,
         typeid := typeid,
-        alignment := alignment,*)
+        (*inited := inited, TODO?
+        alignment := alignment, TODO? *)
         exported := exported,
         global := TRUE,
         proc := self.current_proc,
@@ -3571,7 +3585,7 @@ CONST text = ARRAY CompareOp OF TEXT {
     "#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
     "#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
     "#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
-    "#define m3_le_T(T) static WORD_T  __stdcall m3_le_##T(T x, T y){return x<=y;}" };
+    "#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}" };
 BEGIN
     IF NOT AvoidGccTypeRangeWarnings THEN
         RETURN;
@@ -3939,14 +3953,6 @@ BEGIN
     RETURN "STRUCT(" & IntToDec(size) & ")";
 END Struct;
 
-PROCEDURE Param_Type(var: Var_t): TEXT =
-BEGIN
-    IF var.type_text # NIL THEN
-        RETURN " /* Param_Type 1 */ " & var.type_text;
-    END;
-    RETURN " /* Param_Type 2 */ " & cgtypeToText[var.cgtype];
-END Param_Type;
-
 PROCEDURE Var_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN
@@ -3958,24 +3964,14 @@ BEGIN
     RETURN " /* Var_Type 3 */ " & Struct(var.byte_size);
 END Var_Type;
 
-PROCEDURE Param_Name(var: Var_t): TEXT =
-BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.cgtype = CGType.Struct] & NameT(var.name);
-END Param_Name;
-
 PROCEDURE Var_Name(var: Var_t): TEXT =
 BEGIN
     RETURN NameT(var.name);
 END Var_Name;
 
 PROCEDURE Var_Declare(var: Var_t): TEXT =
-VAR star := " ";
 BEGIN
-    IF var.cgtype = CGType.Struct THEN
-        star := "*";
-        star := " "; (* TODO remove this *)
-    END;
-    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & star & var.Name();
+    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & " " & var.Name();
 END Var_Declare;
 
 PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
@@ -3983,6 +3979,28 @@ BEGIN
     <* ASSERT NOT (var.global OR var.exported) *> (* only locals/params for now *)
     RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.InFrameType() & " " & var.InFrameName();
 END Var_InFrameDeclare;
+
+PROCEDURE Param_Type(var: Var_t): TEXT =
+BEGIN
+    IF var.type_text # NIL THEN
+        RETURN " /* Param_Type 1 */ " & var.type_text;
+    END;
+    RETURN " /* Param_Type 2 */ " & cgtypeToText[var.cgtype];
+END Param_Type;
+
+PROCEDURE Param_Name(var: Var_t): TEXT =
+BEGIN
+    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.cgtype = CGType.Struct] & NameT(var.name);
+END Param_Name;
+
+PROCEDURE Param_Declare(var: Var_t): TEXT =
+VAR star := " ";
+BEGIN
+    IF var.cgtype = CGType.Struct THEN
+        star := "*";
+    END;
+    RETURN var.Type() & star & var.Name();
+END Param_Declare;
 
 PROCEDURE declare_local(
     self: T;
@@ -4003,7 +4021,11 @@ VAR var := NEW(Var_t,
     type: Type_t;
 BEGIN
     IF DebugDeclare(self) THEN
-        self.comment("declare_local name:" & NameT(var.name) & " cgtype:" & cgtypeToText[cgtype] & " typeid:" & TypeIDToText(typeid));
+        self.comment("declare_local name:" & NameT(var.name)
+            & " typeid:" & TypeIDToText(typeid)
+            & " cgtype:" & cgtypeToText[cgtype]
+            & " up_level:" & BoolToText[up_level]
+            & " byte_size:" & IntToDec(byte_size));
     ELSE
         self.comment("declare_local");
     END;
@@ -4115,17 +4137,16 @@ VAR function := self.param_proc;
     type: Type_t := NIL;
 BEGIN
     IF DebugDeclare(self) THEN
-        self.comment("declare_param name:" & TextOrNIL(NameT(name))
+        self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
             & " type_text:" & TextOrNIL(type_text)
             );
     ELSE
-        self.comment("declare_param");
+        self.comment("internal_declare_param");
     END;
 
-(* TODO put this back
     IF type_text = NIL THEN
         IF typeid # -1 THEN
             IF NOT ResolveType(self, typeid, type) THEN
@@ -4134,17 +4155,21 @@ BEGIN
         END;
         IF type # NIL THEN
             type_text := type.text & " /* strong_type1 */ ";
+            IF  cgtype = CGType.Addr
+                    AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
+                type_text := type_text & " * " & " /* strong_type3 */ ";
+            END;
         END;
         IF type_text = NIL THEN
             type_text := cgtypeToText[cgtype] & " /* strong_type2 */ ";
         END;
     END;
-*)
 
     var := NEW(Param_t,
         self := self,
-        cgtype := cgtype,
         name := name,
+        cgtype := cgtype,
+        typeid := typeid,
         byte_size := byte_size,
         up_level := up_level,
         proc := function,
@@ -4325,7 +4350,11 @@ BEGIN
     self.current_offset := offset + TargetMap.CG_Bytes[type];
 END init_helper;
 
-PROCEDURE init_int(self: T; offset: ByteOffset; READONLY value: Target.Int; type: CGType) =
+PROCEDURE init_int(
+    self: T;
+    offset: ByteOffset;
+    READONLY value: Target.Int;
+    type: CGType) =
 BEGIN
     self.comment("init_int");
     init_helper(self, offset, type);
@@ -4333,7 +4362,11 @@ BEGIN
     initializer_addhi(self, TIntLiteral(type, value));
 END init_int;
 
-PROCEDURE Segments_init_int(self: Segments_t; offset: ByteOffset; READONLY value: Target.Int; type: CGType) =
+PROCEDURE Segments_init_int(
+    self: Segments_t;
+    offset: ByteOffset;
+    READONLY value: Target.Int;
+    type: CGType) =
 BEGIN
     init_int(self.self, offset, value, type);
 END Segments_init_int;
@@ -4514,27 +4547,36 @@ BEGIN
     RETURN Text.FromChars(SUBARRAY(cBuf, 0, j));
 END FloatLiteral;
 
-PROCEDURE init_float(self: T; offset: ByteOffset; READONLY float: Target.Float) =
+PROCEDURE init_float(
+    self: T; offset: ByteOffset; READONLY float: Target.Float) =
 BEGIN
     self.comment("init_float");
     init_helper(self, offset, TargetMap.Float_types[TFloat.Prec(float)].cg_type);
     initializer_addhi(self, FloatLiteral(float));
 END init_float;
 
-PROCEDURE Segments_init_float(self: Segments_t; offset: ByteOffset; READONLY float: Target.Float) =
+PROCEDURE Segments_init_float(
+    self: Segments_t; offset: ByteOffset; READONLY float: Target.Float) =
 BEGIN
     init_float(self.self, offset, float);
 END Segments_init_float;
 
 (*------------------------------------------------------------ PROCEDUREs ---*)
 
-PROCEDURE import_procedure(self: T; name: Name; parameter_count: INTEGER;
-                           return_type: CGType; callingConvention: CallingConvention): M3CG.Proc =
+PROCEDURE import_procedure(
+    self: T; name: Name; parameter_count: INTEGER;
+    return_type: CGType; callingConvention: CallingConvention): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
 BEGIN
-    self.comment("import_procedure");
+    IF DebugDeclare(self) THEN
+        self.comment("import_procedure name:" & NameT(name)
+            & " parameter_count:" & IntToDec(parameter_count)
+            & " return_type:" & cgtypeToText[return_type]);
+    ELSE
+        self.comment("import_procedure");
+    END;
     IF name = self.RTHooks_ReportFault_id THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
         no_return(self);
@@ -4569,16 +4611,35 @@ BEGIN
         parent);
 END Locals_declare_procedure;
 
-PROCEDURE declare_procedure(self: T; name: Name; parameter_count: INTEGER;
-                            return_type: CGType; level: INTEGER;
-                            callingConvention: CallingConvention;
-                            exported: BOOLEAN; parent: M3CG.Proc): M3CG.Proc =
+PROCEDURE ProcNameOrNIL(proc: M3CG.Proc): TEXT =
+BEGIN
+    IF proc = NIL THEN
+        RETURN "NIL";
+    END;
+    RETURN NameT(NARROW(proc, Proc_t).name);
+END ProcNameOrNIL;
+
+PROCEDURE declare_procedure(
+    self: T; name: Name; parameter_count: INTEGER;
+    return_type: CGType; level: INTEGER;
+    callingConvention: CallingConvention;
+    exported: BOOLEAN; parent: M3CG.Proc): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
 BEGIN
-    self.comment("declare_procedure");
+    IF DebugDeclare(self) THEN
+        self.comment("declare_procedure name:" & NameT(name)
+            & " parameter_count:" & IntToDec(parameter_count)
+            & " return_type:" & cgtypeToText[return_type]
+            & " exported:" & BoolToText[exported]
+            & " level:" & IntToDec(level)
+            & " parent:" & ProcNameOrNIL(parent)
+            );
+    ELSE
+        self.comment("declare_procedure");
+    END;
     IF name = self.RTHooks_ReportFault_id THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
@@ -4661,7 +4722,6 @@ VAR proc := NARROW(p, Proc_t);
     frame_type := proc.FrameType();
     params := proc.params;
     star := "";
-    cast := "";
 BEGIN
     IF DebugDeclare(self) THEN
         self.comment("begin_procedure:" & NameT(proc.name));
@@ -4740,12 +4800,10 @@ BEGIN
             WITH param = params[i] DO
                 IF param.up_level AND param.used THEN
                     star := "";
-                    cast := "";
                     IF param.cgtype = CGType.Struct THEN
                         star := "*";
-                        cast := "(" & Var_Type(param) & "*)"; (* TODO remove this *)
                     END;
-                    print(self, frame_name & "." & Var_Name(param) & "=" & star & cast & Param_Name(param) & ";\n");
+                    print(self, frame_name & "." & Var_Name(param) & "=" & star & Param_Name(param) & ";\n");
                 END;
             END;
         END;
@@ -4759,11 +4817,7 @@ BEGIN
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
             IF (NOT param.up_level) AND param.cgtype = CGType.Struct AND param.used THEN
-                cast := "";
-                IF param.cgtype = CGType.Struct THEN
-                    cast := "(" & Var_Type(param) & "*)"; (* TODO remove this *)
-                END;
-                print(self, Var_Name(param) & "=*" & cast & Param_Name(param) & ";\n");
+                print(self, Var_Name(param) & "=*" & Param_Name(param) & ";\n");
             END;
         END;
     END;
@@ -4964,9 +5018,9 @@ BEGIN
                points_to_typeid := expr.typeid,
                (* TODO points_to_type := expr.type, *)
                left := expr,
-               (* TODO c_unop_text := "&" *)
+               c_unop_text := "&"
                (* TODO c_unop_text := "(void* )&" *)
-               c_unop_text := "(ADDRESS)&"
+               (* c_unop_text := "(ADDRESS)&" *)
                );
 END AddressOf;
 
@@ -5029,7 +5083,7 @@ BEGIN
             expr := cast(expr, type := CGType.Addr);
             expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
         END;
-        expr := cast(expr, type_text := "(" & cgtypeToText[in_mtype] & " * )");
+        expr := cast(expr, type_text := cgtypeToText[in_mtype] & "*");
         expr := Deref(expr);
     END;
     IF in_mtype # out_ztype THEN
@@ -5079,7 +5133,7 @@ BEGIN
         expr := cast(expr, type := CGType.Addr); (* might be redundant *)
         expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
     END;
-    expr := CastAndDeref(expr, type_text := "(" & cgtypeToText[mtype] & "*)"); (* cast might be redundant *)
+    expr := CastAndDeref(expr, type_text := cgtypeToText[mtype] & "*"); (* cast might be redundant *)
     IF mtype # ztype THEN
         expr := cast(expr, ztype);
     END;
@@ -5469,7 +5523,7 @@ END set_sym_difference;
 PROCEDURE set_member(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.type := (s0.type IN s1.B); pop *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), CGType.Void, "(SET)");
+    s1 := cast(get(self, 1), CGType.Void, "SET");
 BEGIN
     self.comment("set_member");
     pop(self, 2);
@@ -5479,8 +5533,8 @@ END set_member;
 PROCEDURE set_compare(self: T; byte_size: ByteSize; op: CompareOp; type: IType) =
 (* s1.type := (s1.B op s0.B); pop *)
 VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
-    s0 := cast(get(self, ORD(swap)), CGType.Void, "(SET)");
-    s1 := cast(get(self, ORD(NOT swap)), CGType.Void, "(SET)");
+    s0 := cast(get(self, ORD(swap)), CGType.Void, "SET");
+    s1 := cast(get(self, ORD(NOT swap)), CGType.Void, "SET");
     target_word_bytes := Target.Word.bytes;
     eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
 BEGIN
@@ -5507,7 +5561,7 @@ PROCEDURE set_range(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s2.A [s1.type .. s0.type] := 1's; pop(3) *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
-    s2 := cast(get(self, 2), CGType.Void, "(SET)");
+    s2 := cast(get(self, 2), CGType.Void, "SET");
 BEGIN
     self.comment("set_range");
     pop(self, 3);
@@ -5517,7 +5571,7 @@ END set_range;
 PROCEDURE set_singleton(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.A [s0.type] := 1; pop(2) *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), CGType.Void, "(SET)");
+    s1 := cast(get(self, 1), CGType.Void, "SET");
 BEGIN
     self.comment("set_singleton");
     pop(self, 2);
@@ -5877,7 +5931,7 @@ VAR info := ORD (code) + self.line * 32;
 BEGIN
     <* ASSERT ORD (code) < 32 *> (* lose fault code not ok *)
     (* ASSERT self.line <= (LAST(INTEGER) DIV 32) *) (* losing line number ok *)
-    print(self, self.report_fault & "(\n " & IntToDec(info) & ");\n");
+    print(self, self.report_fault & "(" & IntToDec(info) & ");\n");
 END reportfault;
 
 (*---------------------------------------------------- address arithmetic ---*)
@@ -5923,12 +5977,14 @@ VAR proc := NARROW(p, Proc_t);
 BEGIN
     self.comment("start_call_direct");
     start_call_helper(self);
+    self.in_call_indirect := FALSE;
+    self.proc_being_called := proc;
+
     (* workaround frontend bug? *)
     IF proc.is_exception_handler THEN
         push(self, CGType.Addr, CTextToExpr("0"));
         pop_parameter_helper(self, "0");
     END;
-    self.proc_being_called := proc;
 END start_call_direct;
 
 PROCEDURE start_call_indirect(self: T; <*UNUSED*>type: CGType; <*UNUSED*>callingConvention: CallingConvention) =
@@ -5936,6 +5992,7 @@ PROCEDURE start_call_indirect(self: T; <*UNUSED*>type: CGType; <*UNUSED*>calling
 BEGIN
     self.comment("start_call_indirect");
     start_call_helper(self);
+    self.in_call_indirect := TRUE;
 END start_call_indirect;
 
 PROCEDURE pop_parameter_helper(self: T; param: TEXT) =
@@ -5947,20 +6004,34 @@ END pop_parameter_helper;
 
 PROCEDURE pop_param(self: T; type: MType) =
 (* pop s0 and make it the "next" parameter in the current call *)
+(* TODO try to remove cast *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
     self.comment("pop_param");
     pop_parameter_helper(self, s0.CText());
 END pop_param;
 
-PROCEDURE pop_struct(self: T; <*UNUSED*>typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
+PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
 (* pop s0 and make it the "next" parameter in the current call
  * NOTE: it is passed by value *)
-VAR s0 := cast(get(self, 0), CGType.Addr);
+VAR s0 := get(self, 0);
 BEGIN
-    self.comment("pop_struct");
+    IF DebugDeclare(self) THEN
+        self.comment("pop_struct");
+    ELSE
+        self.comment("pop_struct typeid:" & TypeIDToText(typeid) & "byte_size:" & IntToDec(byte_size));
+    END;
     <* ASSERT (byte_size MOD alignment) = 0 *>
-    <* ASSERT byte_size >= 0 *>
+    <* ASSERT byte_size >= 0 *>    
+
+    (* TODO trestle/InstalledVBT.m3 passes undeclared structs by value in indirect calls;
+    indirect calls have the function pointer cast to untyped *)
+
+    IF self.in_call_indirect THEN
+        s0 := cast(s0, CGType.Addr);
+    ELSE
+        s0 := cast(s0, type_text := TypeIDToText(typeid) & "*");
+    END;
     pop_parameter_helper(self, s0.CText());
 END pop_struct;
 
@@ -5983,16 +6054,36 @@ BEGIN
 END Locals_pop_static_link;
 
 PROCEDURE call_helper(self: T; type: CGType; proc: TEXT) =
-VAR comma := "";
+VAR comma, t1, t2, t3, t4 := "";
+    index := 0;
+    direct := NOT self.in_call_indirect;
+    types := self.proc_being_called.params;
+    values := self.params;
 BEGIN
     <* ASSERT self.in_proc_call *>
-    self.proc_being_called := NIL;
-    self.in_proc_call := FALSE;
     proc := proc & "(\n ";
-    WHILE self.params.size() > 0 DO
-      proc := proc & comma & self.params.remlo();
-      comma := ",\n ";
+    WHILE values.size() > 0 DO
+        t1 := "";
+        t2 := "";
+        t3 := "";
+        t4 := "";
+        IF direct THEN
+            WITH param = types[index] DO
+                IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
+                    t1 := " /* call_helper t1 */ (";
+                    (* TODO type.text *)
+                    t2 := " /* call_helper t2 */ " & param.type_text;
+                    t3 := " /* call_helper t3 */ )(";
+                    t4 := " /* call_helper t4 */ )";
+                END;
+            END;
+            INC(index);
+        END;
+        proc := proc & comma & t1 & t2 & t3 & values.remlo() & t4;
+        comma := ",\n ";
     END;
+    self.proc_being_called := self.dummy_proc;
+    self.in_proc_call := FALSE;
     proc := proc & ")";
     IF type = CGType.Void THEN
         print(self, proc & ";\n");
@@ -6060,7 +6151,10 @@ BEGIN
     END;
 
     (* UNDONE: cast to more accurate function type *)
-    call_helper(self, type, "((" & cgtypeToText[type] & " (__cdecl*)(DOTDOTDOT))" & s0.CText() & ")");
+    call_helper(
+        self,
+        type,
+        "((" & cgtypeToText[type] & " (__cdecl*)(DOTDOTDOT))" & s0.CText() & ")");
 
 END call_indirect;
 
