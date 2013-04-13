@@ -308,6 +308,8 @@ CONST reservedWords = ARRAY OF TEXT{
 "DBG",
 "NDEBUG",
 "NULL",
+(* TODO fill in strings here like INT8, STRUCT, DOTDOTDOT that we use,
+so i.e. they can be used for parameter, local, field names *)
 (*
 "_ANSI_SOURCE",
 "_CHAR_UNSIGNED",
@@ -1567,11 +1569,13 @@ BEGIN
     RETURN var;
 END Var_Init;
 
-PROCEDURE VarNameT(var: M3CG.Var): TEXT =
+PROCEDURE VarNameT(v: M3CG.Var): TEXT =
 BEGIN
-    IF var = NIL THEN RETURN "NIL" END;
-    (*RETURN NameT(NARROW(var, Var_t).name);*)
-    RETURN "VarNameT";
+    TYPECASE v OF
+        NULL => RETURN "NIL"
+        | Var_t(var) => RETURN Var_Name(var);
+        ELSE RETURN "VarNotType"
+    END;
 END VarNameT;
 
 TYPE Block_t = OBJECT
@@ -2220,7 +2224,7 @@ PROCEDURE set_source_file(self: T; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
 BEGIN
-    IF self.debug > 2 THEN
+    IF DebugVerbose(self) THEN
         self.comment("set_source_file file:", file);
     ELSE
         self.comment("set_source_file");
@@ -2233,9 +2237,9 @@ PROCEDURE set_source_line(self: T; line: INTEGER) =
 (* Sets the current source line number. Subsequent statements
 and expressions are associated with this source location. *)
 BEGIN
-    IF self.debug > 2 THEN
+    IF self.debug > 3 THEN
         self.comment("set_source_line ", IntToDec(line));
-    ELSE
+    ELSIF self.debug > 2 THEN
         self.comment("set_source_line");
     END;
     self.line := line;
@@ -2264,8 +2268,9 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_array typeid:" & TypeIDToText(typeid)
-        & " index_typeid:" & TypeIDToText(index_typeid) & " element_typeid:"
-        & TypeIDToText(element_typeid) & " bit_size:" & IntToDec(bit_size));
+            & " index_typeid:" & TypeIDToText(index_typeid)
+            & " element_typeid:" & TypeIDToText(element_typeid)
+            & " bit_size:" & IntToDec(bit_size));
     ELSE
         x.comment("declare_array");
     END;
@@ -2282,8 +2287,8 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_open_array typeid:" & TypeIDToText(typeid)
-        & " element_typeid:" & TypeIDToText(element_typeid) & " bit_size:"
-        & IntToDec(bit_size));
+            & " element_typeid:" & TypeIDToText(element_typeid)
+            & " bit_size:" & IntToDec(bit_size));
     ELSE
         x.comment("declare_open_array");
     END;
@@ -2323,8 +2328,8 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_enum typeid:" & TypeIDToText(typeid)
-        & " bit_size:" & IntToDec(bit_size)
-        & " element_count:" & IntToDec(element_count));
+            & " bit_size:" & IntToDec(bit_size)
+            & " element_count:" & IntToDec(element_count));
     ELSE
         x.comment("declare_enum");
     END;
@@ -2378,8 +2383,8 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_packed typeid:" & TypeIDToText(typeid)
-        & " bit_size:" & IntToDec(bit_size)
-        & " base:" & TypeIDToText(base_typeid));
+            & " bit_size:" & IntToDec(bit_size)
+            & " base:" & TypeIDToText(base_typeid));
     ELSE
         x.comment("declare_packed");
     END;
@@ -2605,9 +2610,9 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
-        & " target:" & TypeIDToText(target)
-        & " brand:" & TextOrNIL(brand)
-        & " traced:" & BoolToText[traced]);
+            & " target:" & TypeIDToText(target)
+            & " brand:" & TextOrNIL(brand)
+            & " traced:" & BoolToText[traced]);
     ELSE
         x.comment("declare_pointer");
     END;
@@ -2624,7 +2629,7 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_indirect typeid:", TypeIDToText(typeid),
-        " target:", TypeIDToText(target));
+            " target:", TypeIDToText(target));
     ELSE
         x.comment("declare_indirect");
     END;
@@ -2642,10 +2647,10 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_proctype typeid:" & TypeIDToText(typeid)
-        & " param_count:" & IntToDec(param_count)
-        & " result:" & TypeIDToText(result)
-        & " raise_count:" & IntToDec(raise_count)
-        & " callingConvention:" & CallingConventionToText(callingConvention));
+            & " param_count:" & IntToDec(param_count)
+            & " result:" & TypeIDToText(result)
+            & " raise_count:" & IntToDec(raise_count)
+            & " callingConvention:" & CallingConventionToText(callingConvention));
     ELSE
         x.comment("declare_proctype");
     END;
@@ -2721,7 +2726,7 @@ VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_method name:", NameT(name),
-        " signature:", TypeIDToText(signature));
+            " signature:", TypeIDToText(signature));
     ELSE
         x.comment("declare_method");
     END;
@@ -2744,7 +2749,8 @@ PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
-        x.comment("reveal_opaque lhs:", TypeIDToText(lhs), " rhs:" & TypeIDToText(rhs));
+        x.comment("reveal_opaque lhs:", TypeIDToText(lhs),
+            " rhs:" & TypeIDToText(rhs));
     ELSE
         x.comment("reveal_opaque");
     END;
@@ -2812,7 +2818,9 @@ VAR var := NEW(Var_t,
     text: TEXT := NIL;
     length := 0;
 BEGIN
-    self.comment("declare_segment");
+    self.comment("declare_segment name:" & NameT(name)
+        & "typeid:" & TypeIDToText(typeid)
+        & "const:" & BoolToText[const]);
     IF name # 0 THEN
         text := NameT(name);
         length := Text.Length(text);
@@ -2840,12 +2848,21 @@ PROCEDURE bind_segment(
     v: M3CG.Var;
     byte_size: ByteSize;
     alignment: Alignment;
-    <*UNUSED*>type: CGType;
-    <*UNUSED*>exported: BOOLEAN;
-    <*UNUSED*>inited: BOOLEAN) =
+    cgtype: CGType;
+    exported: BOOLEAN;
+    inited: BOOLEAN) =
 VAR var := NARROW(v, Var_t);
 BEGIN
-    self.comment("bind_segment");
+    IF DebugVerbose(self) THEN
+        self.comment("bind_segment var:" & VarNameT(v)
+            & " byte_size:" & IntToDec(byte_size)
+            & " cgtype:" & cgtypeToText[cgtype]
+            & " exported:" & BoolToText[exported]
+            & " inited:" & BoolToText[inited]);
+    ELSE
+        self.comment("bind_segment");
+    END;
+
     <* ASSERT (byte_size MOD alignment) = 0 *>
     var.byte_size := byte_size;
 END bind_segment;
@@ -2862,17 +2879,40 @@ BEGIN
     bind_segment(self.self, var, byte_size, alignment, type, exported, inited);
 END Segments_bind_segment;
 
-PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment;
-                         type: CGType; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
+PROCEDURE declare_global(
+    self: T;
+    name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    cgtype: CGType;
+    typeid: TypeUID;
+    exported: BOOLEAN;
+    inited: BOOLEAN): M3CG.Var =
 BEGIN
-    self.comment("declare_global");
-    RETURN DeclareGlobal(self, name, byte_size, alignment, type, typeid, exported, inited, FALSE);
+    IF DebugVerbose(self) THEN
+        self.comment("declare_global name:" & NameT(name)
+            & " byte_size:" & IntToDec(byte_size)
+            & " cgtype:" & cgtypeToText[cgtype]
+            & " typeid:" & TypeIDToText(typeid)
+            & " exported:" & BoolToText[exported]
+            & " inited:" & BoolToText[inited]);
+    ELSE
+        self.comment("declare_global");
+    END;
+    RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, FALSE);
 END declare_global;
 
-PROCEDURE Segments_declare_global(self: Segments_t; name: Name; byte_size: ByteSize; alignment: Alignment;
-                                  type: CGType; typeid: TypeUID; exported: BOOLEAN; inited: BOOLEAN): M3CG.Var =
+PROCEDURE Segments_declare_global(
+    self: Segments_t;
+    name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    cgtype: CGType;
+    typeid: TypeUID;
+    exported: BOOLEAN;
+    inited: BOOLEAN): M3CG.Var =
 BEGIN
-    RETURN declare_global(self.self, name, byte_size, alignment, type, typeid, exported, inited);
+    RETURN declare_global(self.self, name, byte_size, alignment, cgtype, typeid, exported, inited);
 END Segments_declare_global;
 
 PROCEDURE declare_constant(
@@ -2880,13 +2920,23 @@ PROCEDURE declare_constant(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: CGType;
+    cgtype: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
     inited: BOOLEAN): M3CG.Var =
 BEGIN
-    self.comment("declare_constant");
-    RETURN DeclareGlobal(self, name, byte_size, alignment, type, typeid, exported, inited, TRUE);
+    IF DebugVerbose(self) THEN
+        self.comment("declare_global name:" & NameT(name)
+            & " byte_size:" & IntToDec(byte_size)
+            & " cgtype:" & cgtypeToText[cgtype]
+            & " typeid:" & TypeIDToText(typeid)
+            & " exported:" & BoolToText[exported]
+            & " inited:" & BoolToText[inited]
+            );
+    ELSE
+        self.comment("declare_constant");
+    END;
+    RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, TRUE);
 END declare_constant;
 
 PROCEDURE Segments_declare_constant(
@@ -2894,12 +2944,12 @@ PROCEDURE Segments_declare_constant(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: CGType;
+    cgtype: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
     inited: BOOLEAN): M3CG.Var =
 BEGIN
-    RETURN declare_constant(self.self, name, byte_size, alignment, type, typeid, exported, inited);
+    RETURN declare_constant(self.self, name, byte_size, alignment, cgtype, typeid, exported, inited);
 END Segments_declare_constant;
 
 PROCEDURE DeclareGlobal(
@@ -2907,21 +2957,20 @@ PROCEDURE DeclareGlobal(
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
-    type: CGType;
+    cgtype: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
-    <*UNUSED*>inited:
-    BOOLEAN; const:
-    BOOLEAN): M3CG.Var =
+    <*UNUSED*>inited: BOOLEAN;
+    const: BOOLEAN): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR var := NEW(Var_t,
         self := self,
-        cgtype := type,
+        cgtype := cgtype,
         name := name,
         const := const,
         typeid := typeid,
-        (*inited := inited, TODO?
-        alignment := alignment, TODO? *)
+        (* inited := inited, TODO? *)
+        (* alignment := alignment, TODO? *)
         exported := exported,
         global := TRUE,
         proc := self.current_proc,
@@ -5122,7 +5171,12 @@ PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
 VAR var := NARROW(v, Var_t);
     expr: Expr_t := NIL;
 BEGIN
-    self.comment("load_address");
+    IF DebugVerbose(self) THEN
+        self.comment("load_address var:", Var_Name(var),
+            " offset:", IntToDec(offset));
+    ELSE
+        self.comment("load_address");
+    END;
     expr := AddressOf(Variable(self, var));
     IF offset # 0 THEN
         expr := cast(expr, type := CGType.Addr);
@@ -5191,7 +5245,7 @@ END IntToTarget;
 
 PROCEDURE load_host_integer(self: T; type: IType; i: INTEGER) =
 BEGIN
-    IF self.debug > 1 THEN
+    IF DebugVerbose(self) THEN
         comment(self, "load_host_integer:", IntToDec(i));
     ELSE
         comment(self, "load_host_integer");
@@ -6223,7 +6277,7 @@ BEGIN
     END;
     a := " /* " & a & b & c & d & " */\n";
     print(self, a);
-    IF self.debug > 2 THEN
+    IF self.debug > 4 THEN
         RTIO.PutText(a);
         RTIO.Flush();
     END;
