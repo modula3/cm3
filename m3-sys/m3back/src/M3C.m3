@@ -1456,6 +1456,12 @@ BEGIN
     RETURN ARRAY BOOLEAN OF TEXT{"NIL", a}[a # NIL];
 END TextOrNil;
 
+PROCEDURE TextOrNIL(text: TEXT): TEXT =
+BEGIN
+    IF text = NIL THEN RETURN "<NIL>" END;
+    RETURN text;
+END TextOrNIL;
+
 PROCEDURE Expr_Assert(self: Expr_t) =
 VAR type_text := self.type_text;
     cgtype := self.cgtype;
@@ -2599,12 +2605,6 @@ BEGIN
         cgtype := SubrangeCGType(min, max, bit_size)));
 END declare_subrange;
 
-PROCEDURE TextOrNIL(text: TEXT): TEXT =
-BEGIN
-    IF text = NIL THEN RETURN "<NIL>" END;
-    RETURN text;
-END TextOrNIL;
-
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
 VAR x := self.self;
 BEGIN
@@ -2818,7 +2818,7 @@ VAR var := NEW(Var_t,
     text: TEXT := NIL;
     length := 0;
 BEGIN
-    self.comment("declare_segment name:" & NameT(name)
+    self.comment("declare_segment name:" & TextOrNIL(NameT(name))
         & "typeid:" & TypeIDToText(typeid)
         & "const:" & BoolToText[const]);
     IF name # 0 THEN
@@ -4200,8 +4200,7 @@ BEGIN
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
-            & " type_text:" & TextOrNIL(type_text)
-            );
+            & " type_text:" & TextOrNIL(type_text));
     ELSE
         self.comment("internal_declare_param");
     END;
