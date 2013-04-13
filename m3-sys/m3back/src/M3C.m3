@@ -2890,7 +2890,7 @@ PROCEDURE declare_global(
     inited: BOOLEAN): M3CG.Var =
 BEGIN
     IF DebugVerbose(self) THEN
-        self.comment("declare_global name:" & NameT(name)
+        self.comment("declare_global name:" & TextOrNIL(NameT(name))
             & " byte_size:" & IntToDec(byte_size)
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
