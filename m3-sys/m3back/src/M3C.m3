@@ -55,8 +55,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 0;
-        debug_declare := 1;
+        debug := 2;
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -217,10 +216,10 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE DebugDeclare(<*UNUSED*>self:T): BOOLEAN =
+PROCEDURE DebugVerbose(self:T): BOOLEAN =
 BEGIN
-    RETURN TRUE (* self.debug > 1 OR self.debug_declare > 0 *);
-END DebugDeclare;
+    RETURN self.debug > 1;
+END DebugVerbose;
 
 (*---------------------------------------------------------------------------*)
 
@@ -2221,8 +2220,8 @@ PROCEDURE set_source_file(self: T; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
 BEGIN
-    IF self.debug > 1 THEN
-        self.comment("set_source_file file:" & file);
+    IF self.debug > 2 THEN
+        self.comment("set_source_file file:", file);
     ELSE
         self.comment("set_source_file");
     END;
@@ -2234,8 +2233,8 @@ PROCEDURE set_source_line(self: T; line: INTEGER) =
 (* Sets the current source line number. Subsequent statements
 and expressions are associated with this source location. *)
 BEGIN
-    IF self.debug > 1 THEN
-        self.comment("set_source_line " & IntToDec(line));
+    IF self.debug > 2 THEN
+        self.comment("set_source_line ", IntToDec(line));
     ELSE
         self.comment("set_source_line");
     END;
@@ -2247,8 +2246,8 @@ END set_source_line;
 
 PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) =
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("declare_typename typeid:" & TypeIDToText(typeid) & " name:" & NameT(name));
+    IF DebugVerbose(self) THEN
+        self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & NameT(name));
     ELSE
         self.comment("declare_typename");
     END;
@@ -2263,7 +2262,7 @@ END TypeIDToText;
 PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
+    IF DebugVerbose(x) THEN
         x.comment("declare_array typeid:" & TypeIDToText(typeid)
         & " index_typeid:" & TypeIDToText(index_typeid) & " element_typeid:"
         & TypeIDToText(element_typeid) & " bit_size:" & IntToDec(bit_size));
@@ -2281,7 +2280,7 @@ BEGIN
 PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
+    IF DebugVerbose(x) THEN
         x.comment("declare_open_array typeid:" & TypeIDToText(typeid)
         & " element_typeid:" & TypeIDToText(element_typeid) & " bit_size:"
         & IntToDec(bit_size));
@@ -2322,8 +2321,10 @@ PROCEDURE declare_enum(self: DeclareTypes_t; typeid: TypeUID; element_count: INT
 VAR x := self.self;
     enum: Enum_t := NIL;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_enum typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " element_count:" & IntToDec(element_count));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_enum typeid:" & TypeIDToText(typeid)
+        & " bit_size:" & IntToDec(bit_size)
+        & " element_count:" & IntToDec(element_count));
     ELSE
         x.comment("declare_enum");
     END;
@@ -2349,8 +2350,8 @@ VAR enum_value := self.enum_value;
     enum_element_count := self.enum_element_count;
     x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_enum_elt name:" & IntToDec(name));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_enum_elt name:", IntToDec(name));
     ELSE
         x.comment("declare_enum_elt");
     END;
@@ -2375,8 +2376,10 @@ BEGIN
 PROCEDURE declare_packed(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; base_typeid: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_packed typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " base:" & TypeIDToText(base_typeid));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_packed typeid:" & TypeIDToText(typeid)
+        & " bit_size:" & IntToDec(bit_size)
+        & " base:" & TypeIDToText(base_typeid));
     ELSE
         x.comment("declare_packed");
     END;
@@ -2469,8 +2472,10 @@ PROCEDURE declare_record(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSiz
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_record typeid:" & TypeIDToText(typeid) & " bit_size:" & IntToDec(bit_size) & " field_count:" & IntToDec(field_count));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_record typeid:" & TypeIDToText(typeid)
+            & " bit_size:" & IntToDec(bit_size)
+            & " field_count:" & IntToDec(field_count));
     ELSE
         x.comment("declare_record");
     END;
@@ -2498,7 +2503,7 @@ VAR field: Field_t := NIL;
     previous_field := self.previous_field;
     x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
+    IF DebugVerbose(x) THEN
         x.comment("declare_field " & NameT(name)
             & " bit_size:" & IntToDec(bit_size)
             & " bit_offset:" & IntToDec(bit_offset)
@@ -2535,9 +2540,10 @@ END declare_field;
 PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain_type: TypeUID; bit_size: BitSize) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_set typeid:" & TypeIDToText(typeid) & " domain_type:"
-            & TypeIDToText(domain_type) & " bit_size:" & IntToDec(bit_size));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_set typeid:" & TypeIDToText(typeid)
+            & " domain_type:" & TypeIDToText(domain_type)
+            & " bit_size:" & IntToDec(bit_size));
     ELSE
         x.comment("declare_set");
     END;
@@ -2568,7 +2574,7 @@ END SubrangeCGType;
 PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
+    IF DebugVerbose(x) THEN
         x.comment("declare_subrange typeid:" & TypeIDToText(typeid)
             & " domain_type:" & TypeIDToText(domain_typeid)
             & " min:" & TInt.ToText(min)
@@ -2597,10 +2603,11 @@ END TextOrNIL;
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_pointer typeid:" & TypeIDToText(typeid) & " target:"
-        & TypeIDToText(target) & " brand:" & TextOrNIL(brand) & " traced:"
-        & BoolToText[traced]);
+    IF DebugVerbose(x) THEN
+        x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
+        & " target:" & TypeIDToText(target)
+        & " brand:" & TextOrNIL(brand)
+        & " traced:" & BoolToText[traced]);
     ELSE
         x.comment("declare_pointer");
     END;
@@ -2615,9 +2622,9 @@ END declare_pointer;
 PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_indirect typeid:" & TypeIDToText(typeid)
-        & " target:" & TypeIDToText(target));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_indirect typeid:", TypeIDToText(typeid),
+        " target:", TypeIDToText(target));
     ELSE
         x.comment("declare_indirect");
     END;
@@ -2633,7 +2640,7 @@ END CallingConventionToText;
 PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
+    IF DebugVerbose(x) THEN
         x.comment("declare_proctype typeid:" & TypeIDToText(typeid)
         & " param_count:" & IntToDec(param_count)
         & " result:" & TypeIDToText(result)
@@ -2649,9 +2656,9 @@ END declare_proctype;
 PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_formal name:" & NameT(name)
-        & " typeid:" & TypeIDToText(typeid));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_formal name:", NameT(name),
+            " typeid:", TypeIDToText(typeid));
     ELSE
         x.comment("declare_formal");
     END
@@ -2661,8 +2668,8 @@ END declare_formal;
 PROCEDURE declare_raises(self: DeclareTypes_t; name: Name) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_raises name:" & NameT(name));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_raises name:", NameT(name));
     ELSE
         x.comment("declare_raises");
     END
@@ -2673,12 +2680,14 @@ PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TE
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_object typeid:" & TypeIDToText(typeid) & " super:"
-            & TypeIDToText(super) & " brand:" & TextOrNIL(brand) & " traced:"
-            & BoolToText[traced] & " field_count:" & IntToDec(field_count)
-            & " method_count:" & IntToDec(method_count) & " field_size:"
-            & IntToDec(field_size));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_object typeid:" & TypeIDToText(typeid)
+            & " super:" & TypeIDToText(super)
+            & " brand:" & TextOrNIL(brand)
+            & " traced:" & BoolToText[traced]
+            & " field_count:" & IntToDec(field_count)
+            & " method_count:" & IntToDec(method_count)
+            & " field_size:" & IntToDec(field_size));
     ELSE
         x.comment("declare_object");
     END;
@@ -2710,9 +2719,9 @@ END declare_object;
 PROCEDURE declare_method(self: DeclareTypes_t; name: Name; signature: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_method name:" & NameT(name) & " signature:"
-        & TypeIDToText(signature));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_method name:", NameT(name),
+        " signature:", TypeIDToText(signature));
     ELSE
         x.comment("declare_method");
     END;
@@ -2722,8 +2731,9 @@ END declare_method;
 PROCEDURE declare_opaque(self: DeclareTypes_t; typeid, super: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_opaque typeid:" & TypeIDToText(typeid) & " super:" & TypeIDToText(super));
+    IF DebugVerbose(x) THEN
+        x.comment("declare_opaque typeid:", TypeIDToText(typeid),
+            " super:", TypeIDToText(super));
     ELSE
         x.comment("declare_opaque");
     END;
@@ -2733,8 +2743,8 @@ END declare_opaque;
 PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("reveal_opaque lhs:" & TypeIDToText(lhs) & " rhs:" & TypeIDToText(rhs));
+    IF DebugVerbose(x) THEN
+        x.comment("reveal_opaque lhs:", TypeIDToText(lhs), " rhs:" & TypeIDToText(rhs));
     ELSE
         x.comment("reveal_opaque");
     END;
@@ -2743,9 +2753,10 @@ END reveal_opaque;
 PROCEDURE declare_exception(self: DeclareTypes_t; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
 VAR x := self.self;
 BEGIN
-    IF DebugDeclare(x) THEN
-        x.comment("declare_exception name:" & NameT(name) & " arg_type:"
-            & TypeIDToText(arg_type) & " raise_proc:" & BoolToText[raise_proc]
+    IF DebugVerbose(x) THEN
+        x.comment("declare_exception name:" & NameT(name)
+            & " arg_type:" & TypeIDToText(arg_type)
+            & " raise_proc:" & BoolToText[raise_proc]
             & " base:" & VarNameT(base)
             & " offset:" & IntToDec(offset));
     ELSE
@@ -2758,8 +2769,8 @@ END declare_exception;
 PROCEDURE set_runtime_proc(multipass: Multipass_t; name: Name; <*UNUSED*>p: M3CG.Proc) =
 VAR self := multipass.self;
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("set_runtime_proc name:" & NameT(name));
+    IF DebugVerbose(self) THEN
+        self.comment("set_runtime_proc name:", NameT(name));
     ELSE
         self.comment("set_runtime_proc");
     END
@@ -4019,7 +4030,7 @@ VAR var := NEW(Var_t,
         proc := self.current_proc).Init();
     type: Type_t;
 BEGIN
-    IF DebugDeclare(self) THEN
+    IF DebugVerbose(self) THEN
         self.comment("declare_local name:" & NameT(var.name)
             & " typeid:" & TypeIDToText(typeid)
             & " cgtype:" & cgtypeToText[cgtype]
@@ -4135,7 +4146,7 @@ VAR function := self.param_proc;
     var: Var_t := NIL;
     type: Type_t := NIL;
 BEGIN
-    IF DebugDeclare(self) THEN
+    IF DebugVerbose(self) THEN
         self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
@@ -4215,10 +4226,9 @@ internal_declare_temp(
     alignment: Alignment;
     type: CGType): Var_t =
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment(
-            "declare_temp byte_size:" & IntToDec(byte_size)
-            & " cgtype:" & cgtypeToText[type]);
+    IF DebugVerbose(self) THEN
+        self.comment("declare_temp byte_size:", IntToDec(byte_size),
+            " cgtype:", cgtypeToText[type]);
     ELSE
         self.comment("declare_temp");
     END;
@@ -4569,7 +4579,7 @@ VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
 BEGIN
-    IF DebugDeclare(self) THEN
+    IF DebugVerbose(self) THEN
         self.comment("import_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]);
@@ -4628,7 +4638,7 @@ VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
 BEGIN
-    IF DebugDeclare(self) THEN
+    IF DebugVerbose(self) THEN
         self.comment("declare_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
@@ -4688,8 +4698,8 @@ END Locals_end_block;
 PROCEDURE internal_begin_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("internal_begin_procedure:" & NameT(proc.name));
+    IF DebugVerbose(self) THEN
+        self.comment("internal_begin_procedure:", NameT(proc.name));
     ELSE
         self.comment("internal_begin_procedure");
     END;
@@ -4722,8 +4732,8 @@ VAR proc := NARROW(p, Proc_t);
     params := proc.params;
     star := "";
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("begin_procedure:" & NameT(proc.name));
+    IF DebugVerbose(self) THEN
+        self.comment("begin_procedure:", NameT(proc.name));
     ELSE
         self.comment("begin_procedure");
     END;
@@ -5182,7 +5192,7 @@ END IntToTarget;
 PROCEDURE load_host_integer(self: T; type: IType; i: INTEGER) =
 BEGIN
     IF self.debug > 1 THEN
-        comment(self, "load_host_integer:" & IntToDec(i));
+        comment(self, "load_host_integer:", IntToDec(i));
     ELSE
         comment(self, "load_host_integer");
     END;
@@ -6015,10 +6025,11 @@ PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: A
  * NOTE: it is passed by value *)
 VAR s0 := get(self, 0);
 BEGIN
-    IF DebugDeclare(self) THEN
-        self.comment("pop_struct");
+    IF DebugVerbose(self) THEN
+        self.comment("pop_struct typeid:" & TypeIDToText(typeid),
+            "byte_size:", IntToDec(byte_size));
     ELSE
-        self.comment("pop_struct typeid:" & TypeIDToText(typeid) & "byte_size:" & IntToDec(byte_size));
+        self.comment("pop_struct");
     END;
     <* ASSERT (byte_size MOD alignment) = 0 *>
     <* ASSERT byte_size >= 0 *>    
@@ -6212,7 +6223,7 @@ BEGIN
     END;
     a := " /* " & a & b & c & d & " */\n";
     print(self, a);
-    IF self.debug > 1 THEN
+    IF self.debug > 2 THEN
         RTIO.PutText(a);
         RTIO.Flush();
     END;
