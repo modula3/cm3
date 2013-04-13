@@ -2857,7 +2857,6 @@ BEGIN
         self.comment("bind_segment var:" & Var_Name(var)
             & " byte_size:" & IntToDec(byte_size)
             & " cgtype:" & cgtypeToText[cgtype]
-            & " typeid:" & TypeIDToText(typeid)
             & " exported:" & BoolToText[exported]
             & " inited:" & BoolToText[inited]);
     ELSE
@@ -6013,7 +6012,6 @@ PROCEDURE index_address(self: T; type: IType; size: INTEGER) =
 (* s1.A := s1.A + s0.type * size; pop *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), CGType.Addr);
-    size_text := IntToDec(size);
 BEGIN
     self.comment("index_address");
     IF size = 0 THEN
@@ -6021,7 +6019,10 @@ BEGIN
         <* ASSERT FALSE *>
     ELSE
         pop(self, 2);
-        push(self, CGType.Addr, paren(CTextToExpr(s1.CText() & "+" & paren(CTextToExpr(size_text & "*" & s0.CText())).CText())));
+        IF size # 1 THEN
+            s0 := CTextToExpr(IntToDec(size) & "*" & paren(s0).CText());
+        END;
+        push(self, CGType.Addr, paren(CTextToExpr(s1.CText() & "+" & paren(s0).CText())));
     END;
 END index_address;
 
