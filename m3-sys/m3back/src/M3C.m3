@@ -2854,9 +2854,10 @@ PROCEDURE bind_segment(
 VAR var := NARROW(v, Var_t);
 BEGIN
     IF DebugVerbose(self) THEN
-        self.comment("bind_segment var:" & VarNameT(v)
+        self.comment("bind_segment var:" & Var_Name(var)
             & " byte_size:" & IntToDec(byte_size)
             & " cgtype:" & cgtypeToText[cgtype]
+            & " typeid:" & TypeIDToText(typeid)
             & " exported:" & BoolToText[exported]
             & " inited:" & BoolToText[inited]);
     ELSE
@@ -2969,8 +2970,8 @@ VAR var := NEW(Var_t,
         name := name,
         const := const,
         typeid := typeid,
-        (* inited := inited, TODO? *)
-        (* alignment := alignment, TODO? *)
+        (*inited := inited, TODO?
+        alignment := alignment, TODO? *)
         exported := exported,
         global := TRUE,
         proc := self.current_proc,
