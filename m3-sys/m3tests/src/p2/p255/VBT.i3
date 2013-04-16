@@ -6,7 +6,7 @@
 
 INTERFACE VBT;
 
-TYPE T = OBJECT METHODS
+TYPE VBT_T = OBJECT METHODS
 init(op: PaintOp_T := PaintOp_TransparentSwap;
      txt: Pixmap_T := Pixmap_Gray;
      READONLY delta := Point_T{0});
