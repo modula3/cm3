@@ -1,0 +1,6 @@
+m3back_optimize = ""
+interface("VBT")            % Trestle
+module("HighlightVBT")      % Trestle
+implementation("Main")
+build_standalone()
+include ("../../Test.common")
