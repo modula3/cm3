@@ -9,4 +9,7 @@ INTERFACE HighlightVBT;
 IMPORT VBT;
 TYPE HighlightVBT_T <: VBT.VBT_T;
 
+VAR HighlightVBT_var_a := 2;
+VAR HighlightVBT_var_b := 3;
+
 END HighlightVBT.
