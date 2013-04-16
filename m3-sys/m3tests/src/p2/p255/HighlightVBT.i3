@@ -7,6 +7,6 @@
 INTERFACE HighlightVBT;
 
 IMPORT VBT;
-TYPE T <: VBT.T;
+TYPE HighlightVBT_T <: VBT.VBT_T;
 
 END HighlightVBT.

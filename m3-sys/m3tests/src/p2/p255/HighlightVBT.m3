@@ -8,10 +8,10 @@ MODULE HighlightVBT;
 
 IMPORT VBT;
 
-REVEAL T = VBT.T BRANDED OBJECT OVERRIDES init := Be; END;
+REVEAL HighlightVBT_T = VBT.VBT_T BRANDED OBJECT OVERRIDES init := Be; END;
 
 PROCEDURE Be(
-    <*UNUSED*>v: T;
+    <*UNUSED*>v: HighlightVBT_T;
     <*UNUSED*>op: VBT.PaintOp_T;
     <*UNUSED*>txt: VBT.Pixmap_T;
     <*UNUSED*>READONLY delta: VBT.Point_T) =
