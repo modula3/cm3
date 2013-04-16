@@ -9,7 +9,7 @@ INTERFACE VBT;
 TYPE T = OBJECT METHODS
 init(op: PaintOp_T := PaintOp_TransparentSwap;
      txt: Pixmap_T := Pixmap_Gray;
-     READONLY delta := Point_T{h := 0, v := 1});
+     READONLY delta := Point_T{0});
 END;
 
 TYPE Pixmap_T = RECORD pm: INTEGER END;
@@ -19,6 +19,6 @@ TYPE PaintOp_T = RECORD op:INTEGER END;
 CONST PaintOp_Swap = PaintOp_T{3};
 CONST PaintOp_TransparentSwap = PaintOp_T{13};
 
-TYPE Point_T = RECORD h, v: INTEGER END;
+TYPE Point_T = RECORD h: INTEGER END;
 
 END VBT.
