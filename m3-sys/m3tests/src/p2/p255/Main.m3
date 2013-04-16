@@ -8,9 +8,7 @@ IMPORT HighlightVBT;
 
 PROCEDURE Main() =
 BEGIN
-    NEW(HighlightVBT.T).init(NIL);
-    NEW(HighlightVBT.T).init(NIL);
-    NEW(HighlightVBT.T).init(NIL);
+    NEW(HighlightVBT.T).init();
 END Main;
 
 BEGIN
