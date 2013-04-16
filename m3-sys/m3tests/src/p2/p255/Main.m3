@@ -6,7 +6,7 @@ constants that it could/should. *)
 MODULE Main;
 IMPORT HighlightVBT;
 
-VAR Main_b := 1;
+VAR Main_var_b := 1;
 
 PROCEDURE Main() =
 BEGIN
@@ -17,7 +17,7 @@ END Main;
 
 BEGIN
     INC(HighlightVBT.HighlightVBT_var_a);
-    INC(Main_b);
+    INC(Main_var_b);
     Main();
     INC(HighlightVBT.HighlightVBT_var_b);
 END Main.
