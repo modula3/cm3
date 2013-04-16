@@ -11,7 +11,7 @@ IMPORT VBT;
 REVEAL T = VBT.T BRANDED OBJECT OVERRIDES init := Be; END;
 
 PROCEDURE Be(
-    <*UNUSED*>ch: VBT.T;
+    <*UNUSED*>v: T;
     <*UNUSED*>op: VBT.PaintOp_T;
     <*UNUSED*>txt: VBT.Pixmap_T;
     <*UNUSED*>READONLY delta: VBT.Point_T) =
