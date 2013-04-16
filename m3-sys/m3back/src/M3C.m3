@@ -46,6 +46,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
 
         typeidToType: IntRefTbl.T := NIL;
+        popStructWarnUnknownTypes: IntRefTbl.T := NIL;
         pendingTypes: RefSeq.T := NIL; (* Type_t *)
         declareTypes: DeclareTypes_t := NIL;
         temp_vars: REF ARRAY OF Var_t := NIL; (* for check_* to avoid double evaluation, and pop_static_link *)
@@ -2060,7 +2061,8 @@ END print;
 PROCEDURE New (cfile: Wr.T): M3CG.T =
 VAR self := NEW (T);
 BEGIN
-    self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE *)
+    self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
+    self.popStructWarnUnknownTypes := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
     self.multipass := NEW(Multipass_t).Init();
     self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
     self.multipass.self := self;
@@ -6079,10 +6081,13 @@ PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: A
 (* pop s0 and make it the "next" parameter in the current call
  * NOTE: it is passed by value *)
 VAR s0 := get(self, 0);
+    type: Type_t := NIL;
+    error, type_text: TEXT := NIL;
+    cgtype := CGType.Void;
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("pop_struct typeid:" & TypeIDToText(typeid),
-            "byte_size:", IntToDec(byte_size));
+            " byte_size:", IntToDec(byte_size));
     ELSE
         self.comment("pop_struct");
     END;
@@ -6092,11 +6097,23 @@ BEGIN
     (* TODO trestle/InstalledVBT.m3 passes undeclared structs by value in indirect calls;
     indirect calls have the function pointer cast to untyped *)
 
-    IF self.in_call_indirect THEN
-        s0 := cast(s0, CGType.Addr);
+    IF ResolveType(self, typeid, type) THEN
+        (* type_text := type.text & "*"; TODO switch to this *)
+        type_text := TypeIDToText(typeid) & "*";
     ELSE
-        s0 := cast(s0, type_text := TypeIDToText(typeid) & "*");
+        cgtype := CGType.Addr;
+        error := "pop_struct: unknown typeid:" & TypeIDToText(typeid);
+        IF self.in_call_indirect THEN
+            (* only warn once per type per unit *)
+            IF NOT self.popStructWarnUnknownTypes.put(typeid, NIL) THEN
+                RTIO.PutText("warning: " & error & "\n");
+                RTIO.Flush();
+            END;
+        ELSE
+            Err(self, error);
+        END;
     END;
+    s0 := cast(s0, cgtype, type_text);
     pop_parameter_helper(self, s0.CText());
 END pop_struct;
 
