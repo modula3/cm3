@@ -10,6 +10,7 @@ PROCEDURE Main() =
 BEGIN
     NEW(HighlightVBT.HighlightVBT_T).init();
     NEW(HighlightVBT.HighlightVBT_T).init();
+    NEW(HighlightVBT.HighlightVBT_T).init();
 END Main;
 
 BEGIN

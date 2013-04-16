@@ -12,13 +12,13 @@ init(op: PaintOp_T := PaintOp_TransparentSwap;
      READONLY delta := Point_T{0});
 END;
 
-TYPE Pixmap_T = RECORD p255_1: INTEGER END;
+TYPE Pixmap_T = RECORD Pixmap_T_field: INTEGER END;
 CONST Pixmap_Gray = Pixmap_T{1};
 
-TYPE PaintOp_T = RECORD p255_2:INTEGER END;
-CONST PaintOp_Swap = PaintOp_T{3};
-CONST PaintOp_TransparentSwap = PaintOp_T{13};
+TYPE PaintOp_T = RECORD PaintOp_T_field:INTEGER END;
+CONST PaintOp_Swap = PaintOp_T{2};
+CONST PaintOp_TransparentSwap = PaintOp_T{3};
 
-TYPE Point_T = RECORD h: INTEGER END;
+TYPE Point_T = RECORD Point_T_field: INTEGER END;
 
 END VBT.
