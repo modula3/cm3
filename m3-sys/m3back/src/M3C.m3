@@ -2266,7 +2266,7 @@ BEGIN
     print(self, "/*declare_typename typedef " & TypeIDToText(typeid) & " " & NameT(name) & ";*/\n");
 END declare_typename;
 
-PROCEDURE TypeIDToText(x: TypeUID): TEXT =
+PROCEDURE TypeIDToText(x: M3CG.TypeUID): TEXT =
 BEGIN
     RETURN "T" & IntToHex(Word.And(16_FFFFFFFF, x));
 END TypeIDToText;
@@ -6082,8 +6082,8 @@ PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: A
  * NOTE: it is passed by value *)
 VAR s0 := get(self, 0);
     type: Type_t := NIL;
-    error, type_text: TEXT := NIL;
-    cgtype := CGType.Void;
+    typeid_text := TypeIDToText(typeid); (* TODO type.text *)
+    type_text, error: TEXT := NIL;
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("pop_struct typeid:" & TypeIDToText(typeid),
@@ -6099,10 +6099,10 @@ BEGIN
 
     IF ResolveType(self, typeid, type) THEN
         (* type_text := type.text & "*"; TODO switch to this *)
-        type_text := TypeIDToText(typeid) & "*";
+        type_text := typeid_text & "*";
     ELSE
-        cgtype := CGType.Addr;
-        error := "pop_struct: unknown typeid:" & TypeIDToText(typeid);
+        error := "pop_struct: unknown typeid:" & typeid_text;
+        type_text := " /* " & error & " */ ADDRESS ";
         IF self.in_call_indirect THEN
             (* only warn once per type per unit *)
             IF NOT self.popStructWarnUnknownTypes.put(typeid, NIL) THEN
@@ -6113,7 +6113,7 @@ BEGIN
             Err(self, error);
         END;
     END;
-    s0 := cast(s0, cgtype, type_text);
+    s0 := cast(s0, CGType.Void, type_text);
     pop_parameter_helper(self, s0.CText());
 END pop_struct;
 
