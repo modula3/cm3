@@ -2767,26 +2767,22 @@ PROCEDURE Force_pair (commute: BOOLEAN): BOOLEAN =
   VAR s1 := stack [SCheck (1, "Force_pair")].kind = VKind.Stacked;
   VAR s2 := stack [SCheck (2, "Force_pair")].kind = VKind.Stacked;
   BEGIN
-    IF s1 AND s2 THEN
-      (* both elements are already stacked *)
-      RETURN FALSE;
-    ELSIF s2 THEN
-      (* bottom element is already stacked *)
-      Force ();
-      RETURN FALSE;
-    ELSIF s1 THEN
-      Swap ();
-      Force ();
-      IF commute THEN RETURN TRUE END;
-      Swap ();
-      RETURN FALSE;
+    IF s2 THEN (* second element is already stacked *)
+        IF NOT s1 THEN (* first element is not already stacked *)
+            Force ();
+        END;
+        RETURN FALSE;
+    ELSIF s1 THEN (* first element is already stacked *)
+        Swap ();
+        Force ();
+        IF NOT commute THEN Swap (); END;
     ELSE (* neither element is stacked *)
-      Swap ();
-      Force ();
-      Swap ();
-      Force ();
-      RETURN FALSE;
+        IF NOT commute THEN Swap (); END;
+        Force ();
+        Swap ();
+        Force ();
     END;
+    RETURN commute;
   END Force_pair;
 
 PROCEDURE SLV_align (n: INTEGER): INTEGER =
