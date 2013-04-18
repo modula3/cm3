@@ -209,12 +209,12 @@ typedef char Formatter_t;
 int yyinput (void);
 void BufferLexeme (int addLength);
 void CapBufferLexeme (int addLength);
-void PR (char *s);
-void PRID(char *s);
-void PK (char *s);
-void PF(char *s, char *f);
-void PRID(char *s);
-void PRNONL (char *s);
+void PR (const char *s);
+void PRID(const char *s);
+void PK (const char *s);
+void PF(const char *s, const char *f);
+void PRID(const char *s);
+void PRNONL (const char *s);
 void BE (double n);
 void EN (void);
 void ENF (void);
@@ -1743,7 +1743,7 @@ static PROC Formatter__End;
 #include <string.h>
 
 #ifdef USE_PROTOS
-void PR (char *s)
+void PR (const char *s)
 #else
 PR (s)
 char *s;
@@ -1755,7 +1755,7 @@ char *s;
 }
 
 #ifdef USE_PROTOS
-void PK (char *s)
+void PK (const char *s)
 #else
 PK (s)
     char *s;
@@ -1779,7 +1779,7 @@ PF(s, f)
     Formatter__SetFont(formatter, fonts->body);
 }
 
-static char *builtins[] = {
+static const char *builtins[] = {
     "ABS",
     "ADDRESS",
     "ADR",
@@ -1825,14 +1825,14 @@ static char *builtins[] = {
 };
 
 #ifdef USE_PROTOS
-void PRID(char *s)
+void PRID(const char *s)
 #else
 PRID(s)
     register char *s;
 #endif
 {
     register int i;
-    register char *b;
+    register const char *b;
 
     for (i = 0; (b = builtins[i]) != NULL; ++i) {
 	if (*b == *s && strcmp(b, s) == 0) {
@@ -1845,7 +1845,7 @@ PRID(s)
 
 #ifdef USE_PROTOS
 void
-PRNONL (char *s)
+PRNONL (const char *s)
 #else
 PRNONL (s)
 char *s;
@@ -2122,7 +2122,7 @@ initParser (infile, outfile, emacs, caps, fontInfo,
 }
 
 #ifdef USE_PROTOS
-void yyerror(char *s)
+void yyerror(const char *s)
 #else
 yyerror(s) char *s;
 #endif
@@ -2182,7 +2182,7 @@ PrintNPS(initNPS)
 }
 
 #ifdef USE_PROTOS
-int FixedComment(char *s)
+int FixedComment(const char *s)
 #else
 int FixedComment(s)
     char *s;
