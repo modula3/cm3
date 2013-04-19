@@ -339,6 +339,18 @@ typedef   signed long long  INT64;
 typedef unsigned long long UINT64;
 #endif
 
+typedef float REAL;
+typedef double LONGREAL;
+typedef double EXTENDED;
+#if defined(__cplusplus) || __STDC__
+typedef void* PVOID;
+#else
+typedef char* PVOID;
+#endif
+typedef PVOID ADDRESS;
+typedef ADDRESS TEXT;
+typedef ADDRESS MUTEX;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -448,10 +460,13 @@ char* __cdecl Utime__ctime(const m3_time_t* m);
 #endif
 void __cdecl Utime__tzset(void);
 
-
-/* Some compilers don't like this, will adjust as needed. */
-#if 1
-#define M3_STATIC_ASSERT(expr) typedef char M3PASTE(m3_static_assert, __LINE__)[(expr)?1:-1]
+#if 1 /* Some compilers don't like this, will adjust as needed. */
+#if __GNUC__ /* gcc 4.8 warns about unused local typedefs. */
+#define GCC_ATTRIBUTE_UNUSED __attribute__ ((unused))
+#else
+#define GCC_ATTRIBUTE_UNUSED /* nothing */
+#endif
+#define M3_STATIC_ASSERT(expr) GCC_ATTRIBUTE_UNUSED typedef char M3PASTE(m3_static_assert, __LINE__)[(expr)?1:-1]
 #else
 #define M3_STATIC_ASSERT(expr) assert(expr)
 #endif
