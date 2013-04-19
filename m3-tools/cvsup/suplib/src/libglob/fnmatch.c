@@ -146,8 +146,8 @@ fnmatch(const char *pattern, const char *string, int flags)
 				  tolower((unsigned char)*string)))
 				;
 			else if ((flags & FNM_PREFIX_DIRS) && *string == EOS &&
-			     (c == '/' && string != stringstart ||
-			     string == stringstart+1 && *stringstart == '/') )
+			     ((c == '/' && string != stringstart) ||
+			     (string == stringstart+1 && *stringstart == '/')))
 				return (0);
 			else
 				return (FNM_NOMATCH);
