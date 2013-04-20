@@ -16,7 +16,8 @@ FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
 CONST NameT = M3ID.ToText;
 
 VAR AvoidGccTypeRangeWarnings := TRUE; (* comparison is always false due to limited range of data type *)
-<*UNUSED*>VAR PassStructsByValue := FALSE; (* TODO change this *)
+VAR PassStructsByValue := FALSE; (* TODO change this *)
+VAR ReturnStructsByValue := FALSE; (* TODO change this *)
 VAR CaseDefaultAssertFalse := FALSE;
 
 (* Taken together, these help debugging, as you get more lines in the
@@ -46,7 +47,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
 
         typeidToType: IntRefTbl.T := NIL;
-        popStructWarnUnknownTypes: IntRefTbl.T := NIL;
         pendingTypes: RefSeq.T := NIL; (* Type_t *)
         declareTypes: DeclareTypes_t := NIL;
         temp_vars: REF ARRAY OF Var_t := NIL; (* for check_* to avoid double evaluation, and pop_static_link *)
@@ -212,7 +212,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         compare_exchange := compare_exchange;
         fence := fence;
         fetch_and_op := fetch_and_op;
-
     END;
 
 (*---------------------------------------------------------------------------*)
@@ -246,7 +245,7 @@ VAR BitsToUInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};   (* "UINT8", "UINT16"
 VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF CGType;
 
 PROCEDURE SetLineDirective(self: T) =
-VAR start := ARRAY BOOLEAN OF TEXT{" /* ", (*"#"*)"//"}[output_line_directives];
+VAR start := ARRAY BOOLEAN OF TEXT{" /* ", "#"(*"//"*)}[output_line_directives];
     newline := ARRAY BOOLEAN OF TEXT{"", "\n"}[output_line_directives];
     end := ARRAY BOOLEAN OF TEXT{" */ ", "\n"}[output_line_directives];
 BEGIN
@@ -2062,7 +2061,6 @@ PROCEDURE New (cfile: Wr.T): M3CG.T =
 VAR self := NEW (T);
 BEGIN
     self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
-    self.popStructWarnUnknownTypes := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
     self.multipass := NEW(Multipass_t).Init();
     self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
     self.multipass.self := self;
@@ -4036,9 +4034,14 @@ BEGIN
 END Var_Declare;
 
 PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
+(* InFrame means in frame struct for uplevels. *)
+VAR struct := " ";
 BEGIN
     <* ASSERT NOT (var.global OR var.exported) *> (* only locals/params for now *)
-    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.InFrameType() & " " & var.InFrameName();
+    IF PassStructsByValue AND var.cgtype = CGType.Struct AND var.up_level THEN
+        struct := "*";
+    END;
+    RETURN var.InFrameType() & struct & var.InFrameName();
 END Var_InFrameDeclare;
 
 PROCEDURE Param_Type(var: Var_t): TEXT =
@@ -4050,17 +4053,21 @@ BEGIN
 END Param_Type;
 
 PROCEDURE Param_Name(var: Var_t): TEXT =
+VAR struct := "";
 BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"","_param_struct_pointer_"}[var.cgtype = CGType.Struct] & NameT(var.name);
+    IF var.cgtype = CGType.Struct AND NOT PassStructsByValue THEN
+        struct := "_param_struct_pointer_";
+    END;
+    RETURN struct & NameT(var.name);
 END Param_Name;
 
 PROCEDURE Param_Declare(var: Var_t): TEXT =
-VAR star := " ";
+VAR struct := " ";
 BEGIN
-    IF var.cgtype = CGType.Struct THEN
-        star := "*";
+    IF NOT PassStructsByValue AND var.cgtype = CGType.Struct THEN
+        struct := "*";
     END;
-    RETURN var.Type() & star & var.Name();
+    RETURN var.Type() & struct & var.Name();
 END Param_Declare;
 
 PROCEDURE declare_local(
@@ -4780,7 +4787,7 @@ VAR proc := NARROW(p, Proc_t);
     frame_name := proc.FrameName();
     frame_type := proc.FrameType();
     params := proc.params;
-    star := "";
+    struct := "";
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("begin_procedure:", NameT(proc.name));
@@ -4838,10 +4845,12 @@ BEGIN
 
     (* declare and zero non-uplevel struct param values (uplevels are in the frame struct) *)
 
-    FOR i := FIRST(params^) TO LAST(params^) DO
-        WITH param = params[i] DO
-            IF (NOT param.up_level) AND (param.cgtype = CGType.Struct) AND param.used THEN
-                print(self, Var_Type(param) & " " & Var_Name(param) & ";\n");
+    IF NOT PassStructsByValue THEN
+        FOR i := FIRST(params^) TO LAST(params^) DO
+            WITH param = params[i] DO
+                IF (NOT param.up_level) AND (param.cgtype = CGType.Struct) AND param.used THEN
+                    print(self, Var_Type(param) & " " & Var_Name(param) & ";\n");
+                END;
             END;
         END;
     END;
@@ -4858,11 +4867,15 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level AND param.used THEN
-                    star := "";
+                    struct := "";
                     IF param.cgtype = CGType.Struct THEN
-                        star := "*";
+                        IF PassStructsByValue THEN
+                            struct := "&";
+                        ELSE
+                            struct := "*";
+                        END;
                     END;
-                    print(self, frame_name & "." & Var_Name(param) & "=" & star & Param_Name(param) & ";\n");
+                    print(self, frame_name & "." & Var_Name(param) & "=" & struct & Param_Name(param) & ";\n");
                 END;
             END;
         END;
@@ -4875,7 +4888,7 @@ BEGIN
 
     FOR i := FIRST(params^) TO LAST(params^) DO
         WITH param = params[i] DO
-            IF (NOT param.up_level) AND param.cgtype = CGType.Struct AND param.used THEN
+            IF (NOT PassStructsByValue) AND (NOT param.up_level) AND param.cgtype = CGType.Struct AND param.used THEN
                 print(self, Var_Name(param) & "=*" & Param_Name(param) & ";\n");
             END;
         END;
@@ -5031,7 +5044,7 @@ BEGIN
             print(self, "return;\n");
         END;
     ELSE
-        IF type = CGType.Addr OR type = CGType.Struct THEN
+        IF type = CGType.Addr OR (NOT ReturnStructsByValue AND type = CGType.Struct) THEN
             cast1 := "(ADDRESS)("; (* TODO remove this once return types are better *)
             cast2 := ")"; (* TODO remove this once return types are better *)
         END;
@@ -6082,8 +6095,7 @@ PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: A
  * NOTE: it is passed by value *)
 VAR s0 := get(self, 0);
     type: Type_t := NIL;
-    typeid_text := TypeIDToText(typeid); (* TODO type.text *)
-    type_text, error: TEXT := NIL;
+    type_text: TEXT := NIL;
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("pop_struct typeid:" & TypeIDToText(typeid),
@@ -6092,28 +6104,17 @@ BEGIN
         self.comment("pop_struct");
     END;
     <* ASSERT (byte_size MOD alignment) = 0 *>
-    <* ASSERT byte_size >= 0 *>    
+    <* ASSERT byte_size >= 0 *>
 
-    (* TODO trestle/InstalledVBT.m3 passes undeclared structs by value in indirect calls;
-    indirect calls have the function pointer cast to untyped *)
-
-    IF ResolveType(self, typeid, type) THEN
-        (* type_text := type.text & "*"; TODO switch to this *)
-        type_text := typeid_text & "*";
-    ELSE
-        error := "pop_struct: unknown typeid:" & typeid_text;
-        type_text := " /* " & error & " */ ADDRESS ";
-        IF self.in_call_indirect THEN
-            (* only warn once per type per unit *)
-            IF NOT self.popStructWarnUnknownTypes.put(typeid, NIL) THEN
-                RTIO.PutText("warning: " & error & "\n");
-                RTIO.Flush();
-            END;
-        ELSE
-            Err(self, error);
-        END;
+    (* type_text := type.text & "*"; TODO switch to this *)
+    type_text := TypeIDToText(typeid) & "*";
+    IF NOT ResolveType(self, typeid, type) THEN
+        Err(self, "pop_struct: unknown typeid:" & type_text);
     END;
-    s0 := cast(s0, CGType.Void, type_text);
+    s0 := cast(s0, type_text := type_text);
+    IF PassStructsByValue THEN
+        s0 := Deref(s0);
+    END;
     pop_parameter_helper(self, s0.CText());
 END pop_struct;
 
