@@ -470,6 +470,7 @@ PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
       CG.Pop_param (CG.Type.Addr)
     ELSIF (is_struct) THEN
       EVAL Type.CheckInfo (t.tipe, info);
+      Type.Compile (t.tipe);
       CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
     ELSE (* by-value scalar *)
       CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
