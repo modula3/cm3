@@ -1,0 +1,6 @@
+m3back_optimize = ""
+module("A")
+module("B")
+implementation("Main")
+build_standalone()
+include ("../../Test.common")

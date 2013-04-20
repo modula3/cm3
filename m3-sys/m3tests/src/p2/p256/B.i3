@@ -1,0 +1,5 @@
+INTERFACE B;
+
+PROCEDURE Exported();
+
+END B.
