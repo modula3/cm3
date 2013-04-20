@@ -1603,6 +1603,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     callingConvention: CallingConvention;
     exported := FALSE;
     imported := FALSE;
+    used := FALSE;
     parent: Proc_t := NIL;
     params: REF ARRAY OF Var_t(*Param_t*);
     locals: RefSeq.T := NIL; (* Var_t *)
@@ -3813,6 +3814,13 @@ BEGIN
     AllocateTemps_common(self, type);
 END AllocateTemps_check_index;
 
+TYPE MarkUsedProcs_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsedProcs_t" OBJECT
+OVERRIDES
+    call_direct := MarkUsedProcs_call_direct;
+    load_proc := MarkUsedProcs_load_proc;
+    init_proc := MarkUsedProcs_init_proc;
+END;
+
 TYPE Imports_t = M3CG_DoNothing.T BRANDED "M3C.Imports_t" OBJECT
     self: T;
 OVERRIDES
@@ -4104,6 +4112,13 @@ BEGIN
     END;
     IF ResolveType(self, typeid, type) AND type # NIL AND type.text # NIL THEN
         var.type_text := type.text;
+    ELSE
+        IF typeid # -1 AND typeid # 0 THEN
+            Err(self, "declare_local: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
+        ELSE
+            (* RTIO.PutText("warning: declare_local: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
+            RTIO.Flush(); *) (* this occurs frequently *)
+        END;
     END;
     self.current_proc.locals.addhi(var);
     RETURN var;
@@ -4215,9 +4230,12 @@ BEGIN
     END;
 
     IF type_text = NIL THEN
-        IF typeid # -1 THEN
-            IF NOT ResolveType(self, typeid, type) THEN
-                (* Err(self, "unable to resolve type"); *)
+        IF NOT ResolveType(self, typeid, type) THEN
+            IF typeid # -1 AND typeid # 0 THEN
+                Err(self, "declare_param: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
+            ELSE
+                (* RTIO.PutText("warning: declare_param: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
+                RTIO.Flush(); *)
             END;
         END;
         IF type # NIL THEN
@@ -4444,6 +4462,11 @@ BEGIN
     init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
     initializer_addhi(self, "(ADDRESS)&" & NameT(proc.name));
 END init_proc;
+
+PROCEDURE MarkUsedProcs_init_proc(self: Segments_t; offset: ByteOffset; p: M3CG.Proc) =
+BEGIN
+    NARROW(p, Proc_t).used := TRUE;
+END MarkUsedProcs_init_proc;
 
 PROCEDURE Segments_init_proc(self: Segments_t; offset: ByteOffset; p: M3CG.Proc) =
 BEGIN
@@ -6050,6 +6073,11 @@ BEGIN
     self.in_proc_call := TRUE;
 END start_call_helper;
 
+PROCEDURE MarkUsedProcs_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
+BEGIN
+    NARROW(p, Proc_t).used := TRUE;
+END MarkUsedProcs_call_direct;
+
 PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 VAR proc := NARROW(p, Proc_t);
@@ -6242,6 +6270,11 @@ BEGIN
 END call_indirect;
 
 (*------------------------------------------- procedure and closure types ---*)
+
+PROCEDURE MarkUsedProcs_load_procedure(<*UNUSED*>self: T; p: M3CG.Proc) =
+BEGIN
+    NARROW(p, Proc_t).used := TRUE;
+END MarkUsedProcs_load_procedure;
 
 PROCEDURE load_procedure(self: T; p: M3CG.Proc) =
 (* push; s0.A := ADDR (proc's body) *)
