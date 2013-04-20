@@ -2193,10 +2193,10 @@ BEGIN
     x.comment("end: segments/globals");
 
     (* labels -- which are used *)
-    DiscoverUsedLabels(self);
+    MarkUsedLabels(self);
 
     (* variables -- which are used *)
-    DiscoverUsedVariables(self);
+    MarkUsedVariables(self);
 
     (* last pass *)
 
@@ -2983,49 +2983,49 @@ BEGIN
     RETURN var;
 END DeclareGlobal;
 
-TYPE DiscoverUsedVariables_t = M3CG_DoNothing.T BRANDED "M3C.DiscoverUsedVariables_t" OBJECT
+TYPE MarkUsedVariables_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsedVariables_t" OBJECT
 OVERRIDES
-    load := DiscoverUsedVariables_load;
-    load_address := DiscoverUsedVariables_load_address;
-    store := DiscoverUsedVariables_store;
+    load := MarkUsedVariables_load;
+    load_address := MarkUsedVariables_load_address;
+    store := MarkUsedVariables_store;
 END;
 
-PROCEDURE DiscoverUsedVariables_common(var: M3CG.Var) =
+PROCEDURE MarkUsedVariables_common(var: M3CG.Var) =
 BEGIN
     NARROW(var, Var_t).used := TRUE;
-END DiscoverUsedVariables_common;
+END MarkUsedVariables_common;
 
-PROCEDURE DiscoverUsedVariables_load(
-    <*UNUSED*>self: DiscoverUsedVariables_t;
+PROCEDURE MarkUsedVariables_load(
+    <*UNUSED*>self: MarkUsedVariables_t;
     var: M3CG.Var;
     <*UNUSED*>offset: ByteOffset;
     <*UNUSED*>mtype: MType;
     <*UNUSED*>ztype: ZType) =
 BEGIN
-    DiscoverUsedVariables_common(var);
-END DiscoverUsedVariables_load;
+    MarkUsedVariables_common(var);
+END MarkUsedVariables_load;
 
-PROCEDURE DiscoverUsedVariables_load_address(
-    <*UNUSED*>self: DiscoverUsedVariables_t;
+PROCEDURE MarkUsedVariables_load_address(
+    <*UNUSED*>self: MarkUsedVariables_t;
     var: M3CG.Var;
     <*UNUSED*>offset: ByteOffset) =
 BEGIN
-    DiscoverUsedVariables_common(var);
-END DiscoverUsedVariables_load_address;
+    MarkUsedVariables_common(var);
+END MarkUsedVariables_load_address;
 
-PROCEDURE DiscoverUsedVariables_store(
-    <*UNUSED*>self: DiscoverUsedVariables_t;
+PROCEDURE MarkUsedVariables_store(
+    <*UNUSED*>self: MarkUsedVariables_t;
     var: M3CG.Var;
     <*UNUSED*>offset: ByteOffset;
     <*UNUSED*>ztype: ZType;
     <*UNUSED*>mtype: MType) =
 BEGIN
-    DiscoverUsedVariables_common(var);
-END DiscoverUsedVariables_store;
+    MarkUsedVariables_common(var);
+END MarkUsedVariables_store;
 
-PROCEDURE DiscoverUsedVariables(self: Multipass_t) =
+PROCEDURE MarkUsedVariables(self: Multipass_t) =
 (* frontend creates unreferenced variables, that gcc -Wall complains about;
-   the point of this pass is to discover which variables are actually used,
+   the point of this pass is to mark which variables are actually used,
    so that later code ignores unused variables
 *)
 TYPE Op = M3CG_Binary.Op;
@@ -3036,15 +3036,15 @@ CONST Ops = ARRAY OF Op{
         Op.store
     };
 VAR x := self.self;
-    pass := NEW(DiscoverUsedVariables_t);
+    pass := NEW(MarkUsedVariables_t);
     index := 0;
 BEGIN
-    x.comment("begin: discover used variables");
+    x.comment("begin: mark used variables");
     FOR i := FIRST(Ops) TO LAST(Ops) DO
         self.Replay(pass, index, self.op_data[Ops[i]]);
     END;
-   x.comment("end: discover used variables");
-END DiscoverUsedVariables;
+   x.comment("end: mark used variables");
+END MarkUsedVariables;
 
 TYPE CountUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.CountUsedLabels_t" OBJECT
     count := 0;
@@ -3052,57 +3052,57 @@ OVERRIDES
     case_jump := CountUsedLabels_case_jump;
 END;
 
-TYPE DiscoverUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.DiscoverUsedLabels_t" OBJECT
+TYPE MarkUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsedLabels_t" OBJECT
     array: REF ARRAY OF Label := NIL;
     index := 0;
     min := LAST(Label);
     max := FIRST(Label);
 OVERRIDES
-    jump := DiscoverUsedLabels_jump;
-    if_true := DiscoverUsedLabels_if_true;
-    if_false := DiscoverUsedLabels_if_true;
-    if_compare := DiscoverUsedLabels_if_compare;
-    case_jump := DiscoverUsedLabels_case_jump;
+    jump := MarkUsedLabels_jump;
+    if_true := MarkUsedLabels_if_true;
+    if_false := MarkUsedLabels_if_true;
+    if_compare := MarkUsedLabels_if_compare;
+    case_jump := MarkUsedLabels_case_jump;
 END;
 
-PROCEDURE DiscoverUsedLabels_jump(self: DiscoverUsedLabels_t; label: Label) =
+PROCEDURE MarkUsedLabels_jump(self: MarkUsedLabels_t; label: Label) =
 BEGIN
     self.min := MIN(self.min, label);
     self.max := MAX(self.max, label);
     self.array[self.index] := label;
     INC(self.index);
-END DiscoverUsedLabels_jump;
+END MarkUsedLabels_jump;
 
-PROCEDURE DiscoverUsedLabels_if_true(self: DiscoverUsedLabels_t; <*UNUSED*>itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
+PROCEDURE MarkUsedLabels_if_true(self: MarkUsedLabels_t; <*UNUSED*>itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
 BEGIN
-    DiscoverUsedLabels_jump(self, label);
-END DiscoverUsedLabels_if_true;
+    MarkUsedLabels_jump(self, label);
+END MarkUsedLabels_if_true;
 
-PROCEDURE DiscoverUsedLabels_if_compare(
-    self: DiscoverUsedLabels_t;
+PROCEDURE MarkUsedLabels_if_compare(
+    self: MarkUsedLabels_t;
     <*UNUSED*>ztype: ZType;
     <*UNUSED*>op: CompareOp;
     label: Label;
     <*UNUSED*>frequency: Frequency) =
 BEGIN
-    DiscoverUsedLabels_jump(self, label);
-END DiscoverUsedLabels_if_compare;
+    MarkUsedLabels_jump(self, label);
+END MarkUsedLabels_if_compare;
 
-PROCEDURE DiscoverUsedLabels_case_jump(self: DiscoverUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
+PROCEDURE MarkUsedLabels_case_jump(self: MarkUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
 BEGIN
     FOR i := FIRST(labels) TO LAST(labels) DO
-        DiscoverUsedLabels_jump(self, labels[i]);
+        MarkUsedLabels_jump(self, labels[i]);
     END;
-END DiscoverUsedLabels_case_jump;
+END MarkUsedLabels_case_jump;
 
 PROCEDURE CountUsedLabels_case_jump(self: CountUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
 BEGIN
     INC(self.count, NUMBER(labels));
 END CountUsedLabels_case_jump;
 
-PROCEDURE DiscoverUsedLabels(self: Multipass_t) =
+PROCEDURE MarkUsedLabels(self: Multipass_t) =
 (* frontend creates unreferenced labels, that gcc -Wall complains about;
-   the point of this pass is to discover which labels are actually used,
+   the point of this pass is to mark which labels are actually used,
    so that later set_label ignores unused labels
 *)
 TYPE Op = M3CG_Binary.Op;
@@ -3118,11 +3118,11 @@ CONST Ops = ARRAY OF Op{
         Op.case_jump
     };
 VAR x := self.self;
-    pass := NEW(DiscoverUsedLabels_t);
+    pass := NEW(MarkUsedLabels_t);
     count_pass := NEW(CountUsedLabels_t);
     index := 0;
 BEGIN
-    x.comment("begin: discover used labels");
+    x.comment("begin: mark used labels");
 
     (* First estimate label count via op count.
        This is correct, except for case_jump.
@@ -3152,8 +3152,8 @@ BEGIN
         END;
     END;
 
-   x.comment("end: discover used labels");
-END DiscoverUsedLabels;
+   x.comment("end: mark used labels");
+END MarkUsedLabels;
 
 TYPE Segments_t = M3CG_DoNothing.T BRANDED "M3C.Segments_t" OBJECT
 (* The goal of this pass is to build up segments/globals before they are used.
@@ -3816,8 +3816,8 @@ END AllocateTemps_check_index;
 
 TYPE MarkUsedProcs_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsedProcs_t" OBJECT
 OVERRIDES
-    call_direct := MarkUsedProcs_call_direct;
-    load_proc := MarkUsedProcs_load_proc;
+    start_call_direct := MarkUsedProcs_start_call_direct;
+    load_procedure := MarkUsedProcs_load_procedure;
     init_proc := MarkUsedProcs_init_proc;
 END;
 
@@ -4463,7 +4463,8 @@ BEGIN
     initializer_addhi(self, "(ADDRESS)&" & NameT(proc.name));
 END init_proc;
 
-PROCEDURE MarkUsedProcs_init_proc(self: Segments_t; offset: ByteOffset; p: M3CG.Proc) =
+PROCEDURE MarkUsedProcs_init_proc(<*UNUSED*>self: MarkUsedProcs_t;
+    <*UNUSED*>offset: ByteOffset; p: M3CG.Proc) =
 BEGIN
     NARROW(p, Proc_t).used := TRUE;
 END MarkUsedProcs_init_proc;
@@ -6073,10 +6074,11 @@ BEGIN
     self.in_proc_call := TRUE;
 END start_call_helper;
 
-PROCEDURE MarkUsedProcs_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
+PROCEDURE MarkUsedProcs_start_call_direct(<*UNUSED*>self: MarkUsedProcs_t;
+    p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 BEGIN
     NARROW(p, Proc_t).used := TRUE;
-END MarkUsedProcs_call_direct;
+END MarkUsedProcs_start_call_direct;
 
 PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 (* begin a procedure call to a procedure at static level 'level'. *)
@@ -6271,7 +6273,7 @@ END call_indirect;
 
 (*------------------------------------------- procedure and closure types ---*)
 
-PROCEDURE MarkUsedProcs_load_procedure(<*UNUSED*>self: T; p: M3CG.Proc) =
+PROCEDURE MarkUsedProcs_load_procedure(<*UNUSED*>self: MarkUsedProcs_t; p: M3CG.Proc) =
 BEGIN
     NARROW(p, Proc_t).used := TRUE;
 END MarkUsedProcs_load_procedure;
