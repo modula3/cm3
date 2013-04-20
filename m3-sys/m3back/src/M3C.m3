@@ -46,6 +46,8 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
 
+        imported_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
+        declared_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         typeidToType: IntRefTbl.T := NIL;
         pendingTypes: RefSeq.T := NIL; (* Type_t *)
         declareTypes: DeclareTypes_t := NIL;
@@ -2073,6 +2075,8 @@ BEGIN
     self.pendingTypes := NEW(RefSeq.T).init();
     self.dummy_proc := NEW(Proc_t);             (* avoid null derefs for indirect calls *)
     self.proc_being_called := self.dummy_proc;  (* avoid null derefs for indirect calls *)
+    self.imported_procs := NEW(RefSeq.T).init();
+    self.declared_procs := NEW(RefSeq.T).init();
 
     RETURN self.multipass;
 END New;
@@ -2192,11 +2196,8 @@ BEGIN
     self.Replay(NEW(Segments_t, self := x), index);
     x.comment("end: segments/globals");
 
-    (* labels -- which are used *)
-    MarkUsedLabels(self);
-
-    (* variables -- which are used *)
-    MarkUsedVariables(self);
+    (* labels, variables, maybe procedures -- which are used *)
+    MarkUsed(self);
 
     (* last pass *)
 
@@ -2983,68 +2984,38 @@ BEGIN
     RETURN var;
 END DeclareGlobal;
 
-TYPE MarkUsedVariables_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsedVariables_t" OBJECT
-OVERRIDES
-    load := MarkUsedVariables_load;
-    load_address := MarkUsedVariables_load_address;
-    store := MarkUsedVariables_store;
-END;
-
-PROCEDURE MarkUsedVariables_common(var: M3CG.Var) =
+PROCEDURE MarkUsed_var(var: M3CG.Var) =
 BEGIN
     NARROW(var, Var_t).used := TRUE;
-END MarkUsedVariables_common;
+END MarkUsed_var;
 
-PROCEDURE MarkUsedVariables_load(
-    <*UNUSED*>self: MarkUsedVariables_t;
+PROCEDURE MarkUsed_load(
+    <*UNUSED*>self: MarkUsed_t;
     var: M3CG.Var;
     <*UNUSED*>offset: ByteOffset;
     <*UNUSED*>mtype: MType;
     <*UNUSED*>ztype: ZType) =
 BEGIN
-    MarkUsedVariables_common(var);
-END MarkUsedVariables_load;
+    MarkUsed_var(var);
+END MarkUsed_load;
 
-PROCEDURE MarkUsedVariables_load_address(
-    <*UNUSED*>self: MarkUsedVariables_t;
+PROCEDURE MarkUsed_load_address(
+    <*UNUSED*>self: MarkUsed_t;
     var: M3CG.Var;
     <*UNUSED*>offset: ByteOffset) =
 BEGIN
-    MarkUsedVariables_common(var);
-END MarkUsedVariables_load_address;
+    MarkUsed_var(var);
+END MarkUsed_load_address;
 
-PROCEDURE MarkUsedVariables_store(
-    <*UNUSED*>self: MarkUsedVariables_t;
+PROCEDURE MarkUsed_store(
+    <*UNUSED*>self: MarkUsed_t;
     var: M3CG.Var;
     <*UNUSED*>offset: ByteOffset;
     <*UNUSED*>ztype: ZType;
     <*UNUSED*>mtype: MType) =
 BEGIN
-    MarkUsedVariables_common(var);
-END MarkUsedVariables_store;
-
-PROCEDURE MarkUsedVariables(self: Multipass_t) =
-(* frontend creates unreferenced variables, that gcc -Wall complains about;
-   the point of this pass is to mark which variables are actually used,
-   so that later code ignores unused variables
-*)
-TYPE Op = M3CG_Binary.Op;
-CONST Ops = ARRAY OF Op{
-    (* operands that use a variable -- marking the variable as used *)
-        Op.load,
-        Op.load_address,
-        Op.store
-    };
-VAR x := self.self;
-    pass := NEW(MarkUsedVariables_t);
-    index := 0;
-BEGIN
-    x.comment("begin: mark used variables");
-    FOR i := FIRST(Ops) TO LAST(Ops) DO
-        self.Replay(pass, index, self.op_data[Ops[i]]);
-    END;
-   x.comment("end: mark used variables");
-END MarkUsedVariables;
+    MarkUsed_var(var);
+END MarkUsed_store;
 
 TYPE CountUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.CountUsedLabels_t" OBJECT
     count := 0;
@@ -3052,108 +3023,143 @@ OVERRIDES
     case_jump := CountUsedLabels_case_jump;
 END;
 
-TYPE MarkUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsedLabels_t" OBJECT
-    array: REF ARRAY OF Label := NIL;
+TYPE MarkUsed_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsed_t" OBJECT
+    labels: REF ARRAY OF Label := NIL;
     index := 0;
-    min := LAST(Label);
-    max := FIRST(Label);
+    labels_min := LAST(Label);
+    labels_max := FIRST(Label);
 OVERRIDES
-    jump := MarkUsedLabels_jump;
-    if_true := MarkUsedLabels_if_true;
-    if_false := MarkUsedLabels_if_true;
-    if_compare := MarkUsedLabels_if_compare;
-    case_jump := MarkUsedLabels_case_jump;
+(* frontend creates unreferenced labels, that gcc -Wall complains about;
+   the point of this pass is to mark which labels are actually used,
+   so that later set_label ignores unused labels
+*)
+    jump := MarkUsed_label;
+    if_true := MarkUsed_if_true;
+    if_false := MarkUsed_if_true;
+    if_compare := MarkUsed_if_compare;
+    case_jump := MarkUsed_case_jump;
+
+(* frontend creates unreferenced variables, that gcc -Wall complains about;
+   the point of this pass is to mark which variables are actually used,
+   so that later code ignores unused variables
+*)
+    load := MarkUsed_load;
+    load_address := MarkUsed_load_address;
+    store := MarkUsed_store;
+
+    (* procedures *)
+    start_call_direct := MarkUsed_start_call_direct;
+    load_procedure := MarkUsed_load_procedure;
+    init_proc := MarkUsed_init_proc;
 END;
 
-PROCEDURE MarkUsedLabels_jump(self: MarkUsedLabels_t; label: Label) =
+PROCEDURE MarkUsed_label(self: MarkUsed_t; label: Label) =
 BEGIN
-    self.min := MIN(self.min, label);
-    self.max := MAX(self.max, label);
-    self.array[self.index] := label;
+    self.labels_min := MIN(self.labels_min, label);
+    self.labels_max := MAX(self.labels_max, label);
+    self.labels[self.index] := label;
     INC(self.index);
-END MarkUsedLabels_jump;
+END MarkUsed_label;
 
-PROCEDURE MarkUsedLabels_if_true(self: MarkUsedLabels_t; <*UNUSED*>itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
+PROCEDURE MarkUsed_if_true(self: MarkUsed_t; <*UNUSED*>itype: IType; label: Label; <*UNUSED*>frequency: Frequency) =
 BEGIN
-    MarkUsedLabels_jump(self, label);
-END MarkUsedLabels_if_true;
+    MarkUsed_label(self, label);
+END MarkUsed_if_true;
 
-PROCEDURE MarkUsedLabels_if_compare(
-    self: MarkUsedLabels_t;
+PROCEDURE MarkUsed_if_compare(
+    self: MarkUsed_t;
     <*UNUSED*>ztype: ZType;
     <*UNUSED*>op: CompareOp;
     label: Label;
     <*UNUSED*>frequency: Frequency) =
 BEGIN
-    MarkUsedLabels_jump(self, label);
-END MarkUsedLabels_if_compare;
+    MarkUsed_label(self, label);
+END MarkUsed_if_compare;
 
-PROCEDURE MarkUsedLabels_case_jump(self: MarkUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
+PROCEDURE MarkUsed_case_jump(self: MarkUsed_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
 BEGIN
     FOR i := FIRST(labels) TO LAST(labels) DO
-        MarkUsedLabels_jump(self, labels[i]);
+        MarkUsed_label(self, labels[i]);
     END;
-END MarkUsedLabels_case_jump;
+END MarkUsed_case_jump;
 
 PROCEDURE CountUsedLabels_case_jump(self: CountUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
 BEGIN
     INC(self.count, NUMBER(labels));
 END CountUsedLabels_case_jump;
 
-PROCEDURE MarkUsedLabels(self: Multipass_t) =
-(* frontend creates unreferenced labels, that gcc -Wall complains about;
-   the point of this pass is to mark which labels are actually used,
-   so that later set_label ignores unused labels
+PROCEDURE MarkUsed(self: Multipass_t) =
+(* frontend creates unreferenced labels and variables
+   that gcc -Wall complains about; find out which are used and mark them,
+   so we can skip others later
+   for procedures, I'd just like to suppress declaring unused imports
 *)
 TYPE Op = M3CG_Binary.Op;
-CONST Ops = ARRAY OF Op{
+CONST LabelOps = ARRAY OF Op{
     (* operands that goto a label -- marking the label as used
        Except for case_jump, these ops use one label each.
-       case_jump requires more specific analysis
-    *)
+       case_jump requires more specific analysis *)
         Op.jump,
         Op.if_true,
         Op.if_false,
         Op.if_compare,
         Op.case_jump
     };
+CONST VarProcOps = ARRAY OF Op{
+    (* operands that use a variable -- marking the variable as used *)
+        Op.load,
+        Op.load_address,
+        Op.store,
+
+    (* operands that use procedures *)
+        Op.start_call_direct,
+        Op.load_procedure,
+        Op.init_proc
+    };
 VAR x := self.self;
-    pass := NEW(MarkUsedLabels_t);
+    pass := NEW(MarkUsed_t);
     count_pass := NEW(CountUsedLabels_t);
     index := 0;
 BEGIN
-    x.comment("begin: mark used labels");
+    x.comment("begin: mark used");
 
     (* First estimate label count via op count.
        This is correct, except for case_jump.
     *)
-    FOR i := FIRST(Ops) TO LAST(Ops) DO
-        INC(pass.index, self.op_counts[Ops[i]]);
+    FOR i := FIRST(LabelOps) TO LAST(LabelOps) DO
+        INC(pass.index, self.op_counts[LabelOps[i]]);
     END;
     (* Subtract off case_jump, and then count it accurately. *)
     DEC(pass.index, self.op_counts[Op.case_jump]);
+    index := 0;
     self.Replay(count_pass, index, self.op_data[Op.case_jump]);
     INC(pass.index, count_pass.count);
 
     IF pass.index # 0 THEN
-        pass.array := NEW(REF ARRAY OF Label, pass.index);
+        pass.labels := NEW(REF ARRAY OF Label, pass.index);
         pass.index := 0;
-        FOR i := FIRST(Ops) TO LAST(Ops) DO
-            self.Replay(pass, index, self.op_data[Ops[i]]);
+        FOR i := FIRST(LabelOps) TO LAST(LabelOps) DO
+            index := 0;
+            self.Replay(pass, index, self.op_data[LabelOps[i]]);
         END;
-        x.labels := NEW(REF ARRAY OF BOOLEAN, pass.max - pass.min + 1);
-        x.labels_min := pass.min;
-        x.labels_max := pass.max;
+        x.labels := NEW(REF ARRAY OF BOOLEAN, pass.labels_max - pass.labels_min + 1);
+        x.labels_min := pass.labels_min;
+        x.labels_max := pass.labels_max;
         FOR i := FIRST(x.labels^) TO LAST(x.labels^) DO
             x.labels[i] := FALSE;
         END;
         FOR i := 0 TO pass.index - 1 DO
-            x.labels[pass.array[i] - pass.min] := TRUE;
+            x.labels[pass.labels[i] - pass.labels_min] := TRUE;
         END;
     END;
+    
+    index := 0;
+    FOR i := FIRST(VarProcOps) TO LAST(VarProcOps) DO
+        self.Replay(pass, index, self.op_data[VarProcOps[i]]);
+    END;
 
-   x.comment("end: mark used labels");
-END MarkUsedLabels;
+   x.comment("end: mark used");
+END MarkUsed;
 
 TYPE Segments_t = M3CG_DoNothing.T BRANDED "M3C.Segments_t" OBJECT
 (* The goal of this pass is to build up segments/globals before they are used.
@@ -3814,13 +3820,6 @@ BEGIN
     AllocateTemps_common(self, type);
 END AllocateTemps_check_index;
 
-TYPE MarkUsedProcs_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsedProcs_t" OBJECT
-OVERRIDES
-    start_call_direct := MarkUsedProcs_start_call_direct;
-    load_procedure := MarkUsedProcs_load_procedure;
-    init_proc := MarkUsedProcs_init_proc;
-END;
-
 TYPE Imports_t = M3CG_DoNothing.T BRANDED "M3C.Imports_t" OBJECT
     self: T;
 OVERRIDES
@@ -4179,6 +4178,7 @@ BEGIN
 END no_return;
 
 PROCEDURE last_param(self: T) =
+(* TODO do this later, after MarkUsed *)
 VAR proc := self.param_proc;
     prototype: TEXT := NIL;
     param: Var_t := NIL;
@@ -4463,11 +4463,16 @@ BEGIN
     initializer_addhi(self, "(ADDRESS)&" & NameT(proc.name));
 END init_proc;
 
-PROCEDURE MarkUsedProcs_init_proc(<*UNUSED*>self: MarkUsedProcs_t;
-    <*UNUSED*>offset: ByteOffset; p: M3CG.Proc) =
+PROCEDURE MarkUsed_proc(p: M3CG.Proc) =
 BEGIN
     NARROW(p, Proc_t).used := TRUE;
-END MarkUsedProcs_init_proc;
+END MarkUsed_proc;
+
+PROCEDURE MarkUsed_init_proc(<*UNUSED*>self: MarkUsed_t;
+    <*UNUSED*>offset: ByteOffset; p: M3CG.Proc) =
+BEGIN
+    MarkUsed_proc(p);
+END MarkUsed_init_proc;
 
 PROCEDURE Segments_init_proc(self: Segments_t; offset: ByteOffset; p: M3CG.Proc) =
 BEGIN
@@ -4677,6 +4682,7 @@ BEGIN
     IF parameter_count = 0 THEN
         last_param(self);
     END;
+    self.imported_procs.addhi(proc);
     RETURN proc;
 END import_procedure;
 
@@ -4742,6 +4748,7 @@ BEGIN
         last_param(self);
     END;
     SuppressLineDirective(self, parameter_count, "declare_procedure parameter_count");
+    self.declared_procs.addhi(proc);
     RETURN proc;
 END declare_procedure;
 
@@ -6074,11 +6081,11 @@ BEGIN
     self.in_proc_call := TRUE;
 END start_call_helper;
 
-PROCEDURE MarkUsedProcs_start_call_direct(<*UNUSED*>self: MarkUsedProcs_t;
+PROCEDURE MarkUsed_start_call_direct(<*UNUSED*>self: MarkUsed_t;
     p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 BEGIN
-    NARROW(p, Proc_t).used := TRUE;
-END MarkUsedProcs_start_call_direct;
+    MarkUsed_proc(p);
+END MarkUsed_start_call_direct;
 
 PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 (* begin a procedure call to a procedure at static level 'level'. *)
@@ -6273,10 +6280,10 @@ END call_indirect;
 
 (*------------------------------------------- procedure and closure types ---*)
 
-PROCEDURE MarkUsedProcs_load_procedure(<*UNUSED*>self: MarkUsedProcs_t; p: M3CG.Proc) =
+PROCEDURE MarkUsed_load_procedure(<*UNUSED*>self: MarkUsed_t; p: M3CG.Proc) =
 BEGIN
-    NARROW(p, Proc_t).used := TRUE;
-END MarkUsedProcs_load_procedure;
+    MarkUsed_proc(p);
+END MarkUsed_load_procedure;
 
 PROCEDURE load_procedure(self: T; p: M3CG.Proc) =
 (* push; s0.A := ADDR (proc's body) *)
