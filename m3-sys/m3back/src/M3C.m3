@@ -1605,7 +1605,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     callingConvention: CallingConvention;
     exported := FALSE;
     imported := FALSE;
-    used := FALSE;
+    used := 0;
     parent: Proc_t := NIL;
     params: REF ARRAY OF Var_t(*Param_t*);
     locals: RefSeq.T := NIL; (* Var_t *)
@@ -4465,7 +4465,7 @@ END init_proc;
 
 PROCEDURE MarkUsed_proc(p: M3CG.Proc) =
 BEGIN
-    NARROW(p, Proc_t).used := TRUE;
+    INC(NARROW(p, Proc_t).used);
 END MarkUsed_proc;
 
 PROCEDURE MarkUsed_init_proc(<*UNUSED*>self: MarkUsed_t;
