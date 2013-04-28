@@ -8,6 +8,15 @@ end
 if SYSTEM_LIBS contains "ODBC"
     import("libm3")
     import_sys_lib ("ODBC")
-    include_dir ("WIN32") % correct for POSIX too
+
+% The head compiler will compile files SQL.i3, SQLext.[im]3 in the WIN32
+% subdirectory, for any platform.  The release 5.8 compiler will not.  
+% Keep the distinct versions until a new release is made.  
+    if equal (TARGET, "NT386")
+        include_dir ("WIN32")
+    else
+        include_dir (OS_TYPE)
+    end
+
     Library("m3odbc")
 end
