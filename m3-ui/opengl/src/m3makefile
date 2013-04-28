@@ -9,11 +9,13 @@ if defined("configure_system_libs")
   configure_system_libs()
 end 
 
+% The head compiler will compile files GL.i3 and GLu.i3 in the WIN32
+% subdirectory, for any platform.  The release 5.8 compiler will not.  
+% Keep the distinct versions until a new release is made.  
 if SYSTEM_LIBS contains "OPENGL"
   import_sys_lib ("OPENGL")
-  include_dir ("WIN32")
-  if equal(OS_TYPE, "POSIX")
-    include_dir ("POSIX")
-  end
+
+  include_dir (OS_TYPE)
+
   Library ("opengl")
 end
