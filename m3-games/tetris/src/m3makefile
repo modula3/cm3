@@ -6,7 +6,9 @@
 %      modified on Wed Aug 17 15:08:24 PDT 1994 by kalsow
 %      modified on Mon May 04 14:52:49 PDT 1992 by muller
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end
 
 if not equal(TARGET, "MIPS64EL_OPENBSD")
 

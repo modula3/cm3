@@ -6,7 +6,9 @@
 %      modified on Wed Jan 12 15:55:18 PST 1994 by kalsow
 %      modified on Mon May 04 15:16:48 PDT 1992 by muller
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end
 
 if SYSTEM_LIBS contains "X11"
   import ("X11R4")

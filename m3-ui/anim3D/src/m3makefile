@@ -8,7 +8,9 @@
 import ("parseparams")
 import ("vbtkit")
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 Interface ("X_PEX_Base")
 Interface ("X_PEX_BaseProxy")

@@ -5,7 +5,9 @@
 /* Last modified on Wed Oct 11 13:58:15 PDT 1995 by najork                   */
 /*       Created on Fri Feb 18 10:17:09 PST 1994 by najork                   */
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 if SYSTEM_LIBS contains "DECPEX"
   import_sys_lib ("DECPEX")

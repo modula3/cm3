@@ -12,7 +12,9 @@ h_source ("addenv")
 h_source ("sql1")
 h_source ("sqlext1")
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 if not SYSTEM_LIBS contains "POSTGRES95"
   write ("WARNING: Your system configuration does not define the", CR,

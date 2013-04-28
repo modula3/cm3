@@ -8,7 +8,9 @@
 %      modified on Fri Apr 30 12:17:55 PDT 1993 by mjordan
 %      modified on Tue Feb 11 17:34:10 PST 1992 by muller
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 import("libm3")
 if SYSTEM_LIBS contains "X11"
