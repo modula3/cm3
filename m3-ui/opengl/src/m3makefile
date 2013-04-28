@@ -5,7 +5,9 @@
 /* Last modified on Wed Oct 11 14:00:40 PDT 1995 by najork                   */
 /*       Created on Fri Oct  2 16:04:26 PDT 1995 by najork                   */
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 if SYSTEM_LIBS contains "OPENGL"
   import_sys_lib ("OPENGL")

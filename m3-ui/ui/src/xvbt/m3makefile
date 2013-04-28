@@ -10,7 +10,9 @@
 %      modified on Fri Apr 16 09:42:42 PDT 1993 by steveg
 %      modified on Mon Feb 24 14:00:03 PST 1992 by muller
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 if not (SYSTEM_LIBS contains "X11")
   build_standalone()

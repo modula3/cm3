@@ -6,7 +6,9 @@
 %      modified on Fri Nov  5 16:41:57 PST 1993 by detlefs
 %      modified on Mon Jan 18 19:09:20 PST 1993 by muller
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 if SYSTEM_LIBS contains "LEX-YACC"
   if equal (TARGET, "HPPA")

@@ -39,7 +39,9 @@ import("set")
 import("tcp")
 import("tempfiles")
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 if SYSTEM_LIBS contains "Z"
   import_sys_lib("Z")

@@ -7,7 +7,9 @@
 %
 % Contributed by Harry George (hgeorge@eskimo.com), 5/16/95
 
-configure_system_libs()
+if defined("configure_system_libs")
+  configure_system_libs()
+end 
 
 if SYSTEM_LIBS contains "MOTIF"
   import_sys_lib ("MOTIF")
