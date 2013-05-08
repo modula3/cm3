@@ -110,7 +110,7 @@ readonly m3cc_config = {
   %
   % I thought this was just about what assembler/linker the gcc driver runs,
   % but it also affect the contents of the assembly.
-  % For example, SPARC64_SOLARIS output isn't being accepted by SUN as..
+  % For example, SPARC64_SOLARIS output is not being accepted by SUN as..
   % #ifdef HAVE_AS_REGISTER_PSEUDO_OP
   % D:\dev2\cm3.2\m3-sys\m3cc\gcc\gcc\config\sparc\sparc.c(3842):
   %   fprintf (file, "\t.register\t%%g%d, #%s\n", i,
@@ -133,8 +133,8 @@ readonly m3cc_config = {
   % see: http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
   %      http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
   % GNU assembler is ok with .stabd.
-  % Sun assembler doesn't like .stabd.
-  % Sun assembler doesn't like cross section subtraction, as occurs
+  % Sun assembler does not like .stabd.
+  % Sun assembler does not like cross section subtraction, as occurs
   % with -fPIC -funwind-table -m64, but gcc 4.4.0 fix backported.
   % GNU assembler moves around: /usr/sfw/bin/gas vs. /opt/csw/gnu/as
   % If buiding native gcc driver, add:
@@ -155,17 +155,17 @@ readonly m3cc_config = {
   %    32bit: CC="cc       -Wp,-H16376 -D_CLASSIC_TYPES -D_HPUX_SOURCE"
   %    64bit: CC="cc +DD64 -Wp,-H16376 -D_CLASSIC_TYPES -D_HPUX_SOURCE"
   %  Getting patches for ld can help, esp. if building libstdc++.
-  %  This gcc won't support -g.
+  %  This gcc will not support -g.
   %  Build current binutils with gcc -- just gas.
   %     http://gcc.gnu.org/install/specific.html offers building
-  %     binutils first but current binutils doesn't work that way.
+  %     binutils first but current binutils does not work that way.
   %  Rebuild gcc 3.3.6 with -with-as=path -with-gnu-as.
   %  Build current gcc also with -with-as=path -with-gnu-as.
   %  32bit and 64bit HPPA-HPUX require separate -prefix.
   %    -program-suffix=32 does not suffice.
   %  I use /usr/local/32 and /usr/local/64.
-  %  Also, vendor tar often can't extract all of gcc, e.g. libstdc++,
-  %  so use GNU tar. And vendor make often can't build gcc, get GNU make.
+  %  Also, vendor tar often can not extract all of gcc, e.g. libstdc++,
+  %  so use GNU tar. And vendor make often can not build gcc, get GNU make.
   %
   % m3cg is not actually ever going to run as, only the gcc driver does,
   % but build/configure is still picky about it -- it affects
@@ -180,15 +180,15 @@ readonly m3cc_config = {
   % or -with-as=/usr/local/64/bin/gas
   
   "HPPA"  : "-with-gnu-as",
-  % The HP assembler doesn't understand inline debugger info.
+  % The HP assembler does not understand inline debugger info.
 
   "IRIX5" : "-with-stabs -with-gnu-as"
   % mips-sgi-irix5 does not support debugging using the native
-  % assembler.  If you don't have gas, delete the config options above.
+  % assembler.  If you do not have gas, delete the config options above.
   % You will need the latest version of gas (binutils-2.5 or better).
   % -with-stabs is necessary because Modula-3 v3.3 generates funny
-  % symbol names that can't be parsed by the ECOFF debugging
-  % directives.  [Modula-3 v3.4 and later don't generate funny
+  % symbol names that can not be parsed by the ECOFF debugging
+  % directives.  [Modula-3 v3.4 and later do not generate funny
   % symbol names. -- Bill Kalsow 1/13/94]
 
 } % m3cc_config
@@ -316,7 +316,7 @@ end
 %link_file("/src/mpfr-2.4.2", SourceDir & "/mpfr")
 %link_file("/src/mpc-0.8.2", SourceDir & "/mpc")
 
-% figure out where we're going to build gcc
+% figure out where we are going to build gcc
 build_dir = "../" & BUILD_DIR
 
 if not Native build_dir = "../" & HOST & "-" & M3CC_TARGET end
@@ -436,7 +436,7 @@ Configure = "  "
 %Configure = " -enable-build-with-cxx -enable-obsolete "
 
 if not equal (HOST, M3CC_TARGET)
-  Configure = Configure & " -with-sysroot" % shouldn't matter
+  Configure = Configure & " -with-sysroot" % should not matter
     
   %
   % This is the essential cross build step.
@@ -449,7 +449,7 @@ if Native % host == target == build
   %
   % Config.guess on SPARC32_LINUX yields sparc64 and m3cg
   % then just always fails with internal errors, so be explicit.
-  % This is reasonable in all builds, but let's not upset that apple cart.
+  % This is reasonable in all builds, but let us not upset that apple cart.
   % We still let host and build be guessed, leading to a typically
   % sparc64 hosted cm3cg. Actual sparc32 systems (vs. sparc64) are rare
   % (Linux kernel no longer supports such hardware) so this should be ok.
@@ -518,7 +518,7 @@ env = env & " MAKE=\"" & GNU_MAKE & MAKE_PARALLEL & " \" "
 %   Documentation is built into the source tree, leading cvs diff
 %   to slowly output a LOT of extra content, not good, avoid that.
 %   Automake and autoconf are causing problems building on NT, even when they are installed.
-%   We don't need their results usually. Libtool is also a problem, possibly a cascade.
+%   We do not need their results usually. Libtool is also a problem, possibly a cascade.
 %
 env = env & " AUTOCONF=:"
 env = env & " AUTOMAKE=:"
@@ -578,7 +578,7 @@ m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & MAKE_PARALLEL & " all-build-
            % & " | tee -a " & Log
           ])
 %
-% make just libcpp.a, don't bother with makedepend.exe
+% make just libcpp.a, do not bother with makedepend.exe
 %
 m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & MAKE_PARALLEL & " libcpp.a"
           % & " | tee -a " & Log
