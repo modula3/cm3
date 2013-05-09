@@ -271,7 +271,7 @@ proc GetM3Back() is
         if not equal (target, "-")
           if not equal (target, "") or equal (HOST, TARGET)
             if not equal (host, "") or equal (HOST, TARGET)
-              foreach root in [ m3cc, bin ]
+              foreach root in [ bin ]
                 if root
                   foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
                     foreach exe in [".exe", ""]
