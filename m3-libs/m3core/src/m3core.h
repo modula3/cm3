@@ -369,8 +369,6 @@ typedef size_t WORD_T;
 /* LONGINT is always signed and exactly 64 bits. */
 typedef INT64 LONGINT;
 
-typedef void* ADDRESS;
-
 /* see Utypes.i3; we assert that these are large enough, they don't have
 be exactly correctly sizes, and often are not */
 typedef LONGINT m3_dev_t;
@@ -516,9 +514,6 @@ UINT32 __cdecl Uin__ntohl(UINT32 x);
 UINT16 __cdecl Uin__ntohs(UINT16 x);
 UINT32 __cdecl Uin__htonl(UINT32 x);
 UINT16 __cdecl Uin__htons(UINT16 x);
-
-typedef double LONGREAL;
-typedef void* TEXT;
 
 const char*
 __cdecl
