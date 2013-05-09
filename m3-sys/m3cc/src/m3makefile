@@ -382,19 +382,22 @@ readonly proc postcp() is
     end
   end
   if Native
-    BindExport (AppendExeExtension ("cm3cg"))
-    if DoMipsTfile
-      BindExport ("mips-tfile")
-    end
-  end
-end
-
-deriveds("", ["cm3cg", "cm3cg.exe"])
-
-if Native
-  BindExport (AppendExeExtension ("cm3cg"))
-  if DoMipsTfile
-    BindExport ("mips-tfile")
+    % Some platforms do not allow overwriting binaries that are currently
+    % executed, hence the default is not to install the cm3cg binary in place.
+    % This also saves the user from accidentally overwriting the currently
+    % used compiler. To install the binary, you can either use the
+    % install-cm3-compiler script from the scripts/ directory or set the
+    % INSTALL_CM3_IN_BIN environment variable to "yes".
+    if equal($INSTALL_CM3_IN_BIN, "yes")
+      deriveds("", ["cm3cg", "cm3cg.exe"])
+      write ( "Forced ship of cm3cg.") 
+      BindExport (AppendExeExtension ("cm3cg"))
+      if DoMipsTfile
+	BindExport ("mips-tfile")
+      end
+    else 
+      write ( "Not shipping cm3cg.") 
+    end 
   end
 end
 
