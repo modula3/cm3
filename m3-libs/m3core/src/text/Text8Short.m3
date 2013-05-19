@@ -5,11 +5,13 @@ UNSAFE MODULE Text8Short;
 
 IMPORT TextClass;
 
+IMPORT TextStats;
+
 REVEAL
   T = Public BRANDED "Text8Short.T" OBJECT OVERRIDES
-    get_info  := GetInfo;
-    get_char  := GetChar;
-    get_chars := GetChars;
+    get_info  := T8SGetInfo;
+    get_char  := T8SGetChar;
+    get_chars := T8SGetChars;
   END;
 
 PROCEDURE New (READONLY a: ARRAY OF CHAR): T =
@@ -18,29 +20,30 @@ PROCEDURE New (READONLY a: ARRAY OF CHAR): T =
     t.len := NUMBER (a);
     IF (t.len > 0) THEN SUBARRAY (t.contents, 0, t.len) := a; END;
     t.contents[t.len] := '\000';
+    TextStats.NoteAllocText8Short(t);
     RETURN t;
   END New;
 
-PROCEDURE GetInfo (t: T;  VAR info: TextClass.Info) =
+PROCEDURE T8SGetInfo (t: T;  VAR info: TextClass.Info) =
   BEGIN
     info.start  := ADR (t.contents[0]);
     info.length := t.len;
     info.wide   := FALSE;
-  END GetInfo;
+  END T8SGetInfo;
 
-PROCEDURE GetChar (t: T;  i: CARDINAL): CHAR =
+PROCEDURE T8SGetChar (t: T;  i: CARDINAL): CHAR =
   BEGIN
     IF i >= t.len THEN (* force a subscript fault *) i := LAST (INTEGER); END;
     RETURN t.contents[i];
-  END GetChar;
+  END T8SGetChar;
 
-PROCEDURE GetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
+PROCEDURE T8SGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
   VAR n := MIN (NUMBER (a), t.len - start);
   BEGIN
     IF (n > 0) THEN
       SUBARRAY (a, 0, n) := SUBARRAY (t.contents, start, n);
     END;
-  END GetChars;
+  END T8SGetChars;
 
 BEGIN
 END Text8Short.
