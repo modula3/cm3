@@ -176,7 +176,7 @@ UNSAFE MODULE TextUtils
           RAISE BadInvariant ( "TextCat, b is NIL" ) 
         ELSE
           VerifyText ( TC . a ) 
-        ; VerifyText ( TC . a ) 
+        ; VerifyText ( TC . b ) 
         ; VAR LALen := Text . Length ( TC . a ) 
         ; VAR LBLen := Text . Length ( TC . b ) 
         ; VAR LAWide := Wide ( TC . a )  
