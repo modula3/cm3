@@ -13,10 +13,10 @@ MODULE Test EXPORTS Main
 ; IMPORT TextCat 
 ; IMPORT TextClass 
 ; IMPORT TextRd 
+; IMPORT TextStats 
 ; IMPORT Tick
 ; IMPORT Time
 ; IMPORT Thread
-; IMPORT Word  
 ; IMPORT Wr 
 
 ; IMPORT UnsafeUtils 
@@ -31,15 +31,15 @@ MODULE Test EXPORTS Main
 ; VAR GTextNos := ARRAY [ 0 .. MaxTexts ] OF INTEGER { - 1 , .. } 
 ; VAR GStoredTextCt : CARDINAL := 1 
 ; VAR GTotalTextCt : CARDINAL := 0 
-; VAR BaseTextCt : CARDINAL := 50000
-; VAR OperationCt : CARDINAL := 100000
+; VAR GPlannedBaseCt : CARDINAL := 50000
+; VAR GPlannedOpCt : CARDINAL := 100000
 ; VAR QueryCt : CARDINAL := 100000
 
 
 ; VAR RandV := NEW ( Random . Default ) . init ( fixed := TRUE ) 
 
-; VAR GFillCt := 0 
-; VAR GOperationCt := 0 
+; VAR GCurrentBaseCt := 0 
+; VAR GCurrentOpCt := 0 
 ; VAR GTestCt := 0 
 ; VAR GTotalCt := 0 
 ; VAR GFailureCt := 0 
@@ -62,8 +62,8 @@ MODULE Test EXPORTS Main
 (* These are used to accumulate totals, while the variables
    in TextClass accumulate for subintervals.
 *) 
-; VAR GOldOps , GNewOps : REF TextClass . OpsInfo  
-; VAR GOldObjs , GNewObjs : REF TextClass . ObjsInfo  
+; VAR GOldOps , GNewOps : REF TextStats . OpsInfo  
+; VAR GOldObjs , GNewObjs : REF TextStats . ObjsInfo  
 
 ; CONST GLen = 80 
 ; VAR GProgressLine : ARRAY [ 0 .. GLen ] OF CHAR 
@@ -85,10 +85,11 @@ MODULE Test EXPORTS Main
 ; PROCEDURE GetParams ( ) 
 
   = VAR LParam : TEXT 
-  ; VAR LParamNo : CARDINAL 
+  ; VAR LParamNo : CARDINAL := 0  
   ; VAR LChar : CHAR 
 
   ; BEGIN 
+    (* Set default options: *) 
       GDoOld := FALSE 
     ; GDoNew := FALSE 
     ; GDoUnbal := FALSE 
@@ -99,13 +100,13 @@ MODULE Test EXPORTS Main
     ; GDoDisplayHelp := FALSE 
     ; GDoDisplayVersion := FALSE 
     ; GBaseLength := 0 
-    ; BaseTextCt := 50000
-    ; OperationCt := 100000
+    ; GPlannedBaseCt := 50000
+    ; GPlannedOpCt := 100000
     ; QueryCt := 100000
 
-    ; TextClass . Flatten := FALSE
-    ; TextClass . MaxFlat8 := 32
-    ; TextClass . MaxFlatWide := 16
+    ; TextClass . Flatten := TRUE
+    ; TextClass . MaxFlat8 := 64
+    ; TextClass . MaxFlatWide := 64
 
     ; LParamNo := 1 
     ; WHILE LParamNo < Params . Count  
@@ -162,28 +163,27 @@ MODULE Test EXPORTS Main
               ; GDoCompareResults := TRUE  
               ; GDoCheckTexts := TRUE 
               ; TextClass . Flatten := TRUE 
-              ; TextClass . MaxFlat8 := 32
-              ; TextClass . MaxFlatWide := 16
+              ; TextClass . MaxFlat8 := 64
+              ; TextClass . MaxFlatWide := 64
               ; GBaseLength := 0 
-              ; TextClass . Flatten := TRUE  
-              | 'b' => IF NumArg ( GBaseLength ) THEN EXIT END  
+              | 'b' => IF NumArg ( (*IN OUT*) GBaseLength ) THEN EXIT END  
               | 'c' => GDoCheckTexts := TRUE 
-              | 'd' => IF NumArg ( OperationCt ) THEN EXIT END  
-              | 'f' => IF NumArg ( TextClass . MaxFlat8 ) 
+              | 'd' => IF NumArg ( (*IN OUT*) GPlannedOpCt ) THEN EXIT END  
+              | 'f' => IF NumArg ( (*IN OUT*) TextClass . MaxFlat8 ) 
                        THEN 
-                         TextClass . MaxFlatWide := TextClass . MaxFlat8 DIV 2 
+                         TextClass . MaxFlatWide := TextClass . MaxFlat8  
                        ; TextClass . Flatten := TextClass . MaxFlat8 > 0  
                        ; EXIT 
                        ELSE 
                          TextClass . Flatten := FALSE 
                        END (* IF *)    
-              | 'g' => IF NumArg ( BaseTextCt ) THEN EXIT END  
+              | 'g' => IF NumArg ( (*IN OUT*) GPlannedBaseCt ) THEN EXIT END  
               | 'h' => GDoDisplayHelp := TRUE 
               | 'l' => GDoUnbal := TRUE 
               | 'n' => GDoNew := TRUE  
               | 'o' => GDoOld := TRUE 
               | 'p' => GDoCompareOperands := TRUE  
-              | 'q' => IF NumArg ( QueryCt ) THEN EXIT END  
+              | 'q' => IF NumArg ( (*IN OUT*) QueryCt ) THEN EXIT END  
               | 'r' 
               => GDoUnbal := TRUE 
               ; GDoLToR := FALSE 
@@ -224,14 +224,14 @@ MODULE Test EXPORTS Main
     BEGIN 
       WL ( "Usage: OrdTextsTest {-{option}}" ) 
     ; WL ( "  Options are: " ) 
-    ; WL ( "  -a Do all tests: -n -o -s -f 32." ) 
+    ; WL ( "  -a Do all tests: -n -o -s -f 64." ) 
     ; WL ( "  -b <n> All base TEXT strings will have exact length <n>." ) 
     ; WL ( "         Random, if -b or <n> is omitted or <n> is zero." ) 
     ; WL ( "  -c Check computed TEXT representations for validity." ) 
     ; WL ( "  -d <n> Do <n> Cat and/or Sub operations." ) 
     ; WL ( "     defaults to 100000" ) 
-    ; WL ( "  -f The new Cat flattens results not longer than <n> bytes." ) 
-    ; WL ( "     Defaults to zero (no flattening)." ) 
+    ; WL ( "  -f The new Cat flattens results not longer than <n> characters." )
+    ; WL ( "     Defaults to 64." ) 
     ; WL ( "  -g <n> Generate <n> initial flat TEXTs." ) 
     ; WL ( "     defaults to 50000" ) 
     ; WL ( "  -h Display help text and exit." ) 
@@ -290,7 +290,7 @@ MODULE Test EXPORTS Main
     ; Wr . Flush ( PWrT )    
     END RedisplayProgress 
 
-; PROCEDURE NoteProgress ( VAR Ct : INTEGER ) 
+; PROCEDURE NoteProgress ( VAR (*IN OUT*) Ct : INTEGER ) 
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
@@ -717,39 +717,39 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END CheckText 
 
-; PROCEDURE OpLabel ( Op : TextClass . Op ) : TEXT  
+; PROCEDURE OpLabel ( FOp : TextStats . Op ) : TEXT  
 
   = BEGIN 
-      CASE Op 
-      OF TextClass . Op . FromChar =>      RETURN "FromCh   "
-      | TextClass . Op . FromWideChar =>   RETURN "FromWCh  "
-      | TextClass . Op . FromChars =>      RETURN "FromChs  "
-      | TextClass . Op . FromWideChars =>  RETURN "FromWChs "
-      | TextClass . Op . Cat =>            RETURN "Cat      "
-      | TextClass . Op . Sub =>            RETURN "Sub      "
-      | TextClass . Op . Equal =>          RETURN "Equal    "
-      | TextClass . Op . Compare =>        RETURN "Compare  "
-      | TextClass . Op . Hash =>           RETURN "Hash     "
-      | TextClass . Op . HasWideChars =>   RETURN "HasWideCh"
-      | TextClass . Op . GetChar =>        RETURN "GetCh    "
-      | TextClass . Op . GetWideChar =>    RETURN "GetWCh   "
-      | TextClass . Op . SetChars =>       RETURN "SetCh    "
-      | TextClass . Op . SetWideChars =>   RETURN "SetWCh   "
-      | TextClass . Op . FindChar =>       RETURN "FindCh   "
-      | TextClass . Op . FindWideChar =>   RETURN "FindWCh  "
-      | TextClass . Op . FindCharR =>      RETURN "FindChR  "
-      | TextClass . Op . FindWideCharR =>  RETURN "FindWChR "
-      | TextClass . Op . MultiCat =>       RETURN "MultiCat "
-      | TextClass . Op . get_char =>       RETURN "get_ch   "
-      | TextClass . Op . get_wide_char =>  RETURN "get_w_ch "
-      | TextClass . Op . get_chars =>      RETURN "get_chs  "
-      | TextClass . Op . get_wide_chars => RETURN "get_w_chs"
+      CASE FOp 
+      OF TextStats . Op . FromChar =>      RETURN "FromCh   "
+      | TextStats . Op . FromWideChar =>   RETURN "FromWCh  "
+      | TextStats . Op . FromChars =>      RETURN "FromChs  "
+      | TextStats . Op . FromWideChars =>  RETURN "FromWChs "
+      | TextStats . Op . Cat =>            RETURN "Cat      "
+      | TextStats . Op . Sub =>            RETURN "Sub      "
+      | TextStats . Op . Equal =>          RETURN "Equal    "
+      | TextStats . Op . Compare =>        RETURN "Compare  "
+      | TextStats . Op . Hash =>           RETURN "Hash     "
+      | TextStats . Op . HasWideChars =>   RETURN "HasWideCh"
+      | TextStats . Op . GetChar =>        RETURN "GetCh    "
+      | TextStats . Op . GetWideChar =>    RETURN "GetWCh   "
+      | TextStats . Op . SetChars =>       RETURN "SetCh    "
+      | TextStats . Op . SetWideChars =>   RETURN "SetWCh   "
+      | TextStats . Op . FindChar =>       RETURN "FindCh   "
+      | TextStats . Op . FindWideChar =>   RETURN "FindWCh  "
+      | TextStats . Op . FindCharR =>      RETURN "FindChR  "
+      | TextStats . Op . FindWideCharR =>  RETURN "FindWChR "
+      | TextStats . Op . MultiCat =>       RETURN "MultiCat "
+      | TextStats . Op . get_char =>       RETURN "get_ch   "
+      | TextStats . Op . get_wide_char =>  RETURN "get_w_ch "
+      | TextStats . Op . get_chars =>      RETURN "get_chs  "
+      | TextStats . Op . get_wide_chars => RETURN "get_w_chs"
       ELSE                                 RETURN "         "
       END (* CASE *) 
     END OpLabel 
 
 ; PROCEDURE DisplayOpLine 
-    ( READONLY OpInfo : TextClass . OpInfo ; Age , OpLabel : TEXT )
+    ( READONLY OpInfo : TextStats . OpInfo ; Age , OpLabel : TEXT )
 
   = VAR AvgTime , AvgRecurse , AvgIter : REAL 
 
@@ -801,7 +801,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DisplayOpLine 
 
-; PROCEDURE DisplayOps ( OldOps , NewOps : REF TextClass . OpsInfo )
+; PROCEDURE DisplayOps ( OldOps , NewOps : REF TextStats . OpsInfo )
 
   = VAR TotalOldTime1 , TotalOldTime2 , TotalNewTime1 , TotalNewTime2 : REAL 
 
@@ -823,7 +823,7 @@ MODULE Test EXPORTS Main
       ; TotalOldTime2 := 0.0 
       ; TotalNewTime1 := 0.0 
       ; TotalNewTime2 := 0.0 
-      ; FOR ROp := FIRST ( TextClass . Op ) TO TextClass . Op . MultiCat
+      ; FOR ROp := FIRST ( TextStats . Op ) TO TextStats . Op . MultiCat  
         DO
           IF OldOps # NIL 
           THEN 
@@ -833,9 +833,16 @@ MODULE Test EXPORTS Main
           END (* IF *) 
         ; IF NewOps # NIL 
           THEN 
-            DisplayOpLine ( NewOps ^ [ ROp ] , "New " , OpLabel ( ROp ) )  
-          ; TotalNewTime1 := TotalNewTime1 + NewOps ^ [ ROp ] . Time1
-          ; TotalNewTime2 := TotalNewTime2 + NewOps ^ [ ROp ] . Time2
+            DisplayOpLine ( NewOps ^ [ ROp ] , "New " , OpLabel ( ROp ) ) 
+          ; IF ROp # TextStats . Op . MultiCat  
+            (* For New, MultiCat calls Cat, thus the time is charged to both
+               Cat and MultiCat.  So we let Cat supply the only contribution
+               to the total.
+            *) 
+            THEN  
+              TotalNewTime1 := TotalNewTime1 + NewOps ^ [ ROp ] . Time1
+            ; TotalNewTime2 := TotalNewTime2 + NewOps ^ [ ROp ] . Time2
+            END (* IF *) 
           END (* IF *) 
         END (* FOR *) 
 
@@ -871,11 +878,15 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( WrT , "----------------------------------------" )
       ; Wr . PutText ( WrT , "----------------------------------" )
       ; Wr . PutText ( WrT , Wr . EOL ) 
+      ; Wr . PutText ( WrT , "--------- ( These times are included in the top-" )
+      ; Wr . PutText ( WrT , "level operation times above. ) ---------" )
+      ; Wr . PutText ( WrT , "----------------------------------" )
+      ; Wr . PutText ( WrT , Wr . EOL ) 
       ; TotalOldTime1 := 0.0 
       ; TotalOldTime2 := 0.0 
       ; TotalNewTime1 := 0.0 
       ; TotalNewTime2 := 0.0 
-      ; FOR ROp := TextClass . Op . get_char TO LAST ( TextClass . Op ) 
+      ; FOR ROp := TextStats . Op . get_char TO LAST ( TextStats . Op ) 
         DO
           IF OldOps # NIL 
           THEN 
@@ -925,17 +936,19 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DisplayOps 
 
-; PROCEDURE CheckpointOps ( ) 
+; PROCEDURE AccumulateOps ( ) 
+  (* Add recent Operation statistics from TextClass to Global totals, and 
+     reinitialize the former. 
+  *) 
 
   = BEGIN 
-      DisplayOps ( TextClass . OldOps , TextClass . NewOps ) 
-    ; IF TextClass . OldOps # NIL 
+      IF TextStats . OldOps # NIL 
       THEN 
         IF GOldOps # NIL 
         THEN 
-          FOR ROp := FIRST ( TextClass . Op ) TO LAST ( TextClass . Op ) 
+          FOR ROp := FIRST ( TextStats . Op ) TO LAST ( TextStats . Op ) 
           DO 
-            WITH WS = GOldOps ^ [ ROp ] , WL = TextClass . OldOps [ ROp ] 
+            WITH WS = GOldOps ^ [ ROp ] , WL = TextStats . OldOps [ ROp ] 
             DO 
               WS . Time1 := WS . Time1 + WL . Time1 
             ; WS . Time2 := WS . Time2 + WL . Time2 
@@ -947,15 +960,15 @@ MODULE Test EXPORTS Main
             END (* WITH *) 
           END (* FOR *) 
         END (* IF *) 
-      ; TextClass . InitOps ( TextClass . OldOps ^ ) 
+      ; TextStats . InitOps ( TextStats . OldOps ^ ) 
       END (* IF *) 
-    ; IF TextClass . NewOps # NIL 
+    ; IF TextStats . NewOps # NIL 
       THEN 
         IF GNewOps # NIL 
         THEN 
-          FOR ROp := FIRST ( TextClass . Op ) TO LAST ( TextClass . Op ) 
+          FOR ROp := FIRST ( TextStats . Op ) TO LAST ( TextStats . Op ) 
           DO 
-            WITH WS = GNewOps ^ [ ROp ] , WL = TextClass . NewOps [ ROp ] 
+            WITH WS = GNewOps ^ [ ROp ] , WL = TextStats . NewOps [ ROp ] 
             DO 
               WS . Time1 := WS . Time1 + WL . Time1 
             ; WS . Time2 := WS . Time2 + WL . Time2 
@@ -967,30 +980,28 @@ MODULE Test EXPORTS Main
             END (* WITH *) 
           END (* FOR *) 
         END (* IF *) 
-      ; TextClass . InitOps ( TextClass . NewOps ^ ) 
+      ; TextStats . InitOps ( TextStats . NewOps ^ ) 
       END (* IF *) 
-    END CheckpointOps 
+    END AccumulateOps 
 
-; PROCEDURE ObjLabel ( Obj : TextClass . Obj ) : TEXT 
+; PROCEDURE ObjLabel ( Obj : TextStats . Obj ) : TEXT 
 
   = BEGIN 
       CASE Obj 
-      OF TextClass . Obj . Text8Short => RETURN "T8Short  " 
-      | TextClass . Obj . Text8 =>       RETURN "T8       "
-      | TextClass . Obj . Text8Chars =>  RETURN "T8Chars  "
-      | TextClass . Obj . Text16Short => RETURN "T16Short "
-      | TextClass . Obj . Text16 =>      RETURN "T16      "
-      | TextClass . Obj . Text16Chars => RETURN "T16Chars "
-      | TextClass . Obj . TextCat =>     RETURN "TextCat  "
-      | TextClass . Obj . TextSub =>     RETURN "TextSub  "
+      OF TextStats . Obj . Text8Short => RETURN "T8Short  " 
+      | TextStats . Obj . Text8 =>       RETURN "T8       "
+      | TextStats . Obj . Text8Chars =>  RETURN "T8Chars  "
+      | TextStats . Obj . Text16Short => RETURN "T16Short "
+      | TextStats . Obj . Text16 =>      RETURN "T16      "
+      | TextStats . Obj . Text16Chars => RETURN "T16Chars "
+      | TextStats . Obj . TextCat =>     RETURN "TextCat  "
+      | TextStats . Obj . TextSub =>     RETURN "TextSub  "
       ELSE                               RETURN "         "
       END (* CASE *) 
     END ObjLabel 
 
-; CONST HeapSz = BYTESIZE ( Word . T )
-
 ; PROCEDURE DisplayObjLine 
-    ( ObjInfo : TextClass . ObjInfo ; Age : TEXT ; Obj : TextClass . Obj )  
+    ( ObjInfo : TextStats . ObjInfo ; Age : TEXT ; Obj : TextStats . Obj )  
 
   = VAR AvgAllocSize , AvgRetainedSize : REAL 
   ; VAR AllocSize , CollectSize : INTEGER  
@@ -998,20 +1009,18 @@ MODULE Test EXPORTS Main
 
   ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
-      IF ObjInfo . AllocCt # 0 
+      IF ObjInfo . AllocCt # 0 OR ObjInfo . CollectCt # 0 
       THEN
         Wr . PutText ( WrT , Age ) 
       ; Wr . PutText ( WrT , ObjLabel ( Obj ) ) 
       ; Wr . PutText 
-         ( WrT , Fmt . Pad ( Fmt . Int ( ObjInfo . AllocCt ) , 10 ) ) 
-      ; AllocSize 
-          := ObjInfo . AllocSize + ObjInfo . AllocCt * HeapSz 
+          ( WrT , Fmt . Pad ( Fmt . Int ( ObjInfo . AllocCt ) , 10 ) ) 
+      ; AllocSize := ObjInfo . AllocSize 
       ; Wr . PutText 
          ( WrT , Fmt . Pad ( Fmt . Int ( AllocSize ) , 10 ) )
       ; IF ObjInfo . AllocSize # 0 
         THEN 
-          AvgAllocSize 
-            := FLOAT ( ObjInfo . AllocSize ) / FLOAT ( ObjInfo . AllocCt )  
+          AvgAllocSize := FLOAT ( AllocSize ) / FLOAT ( ObjInfo . AllocCt )  
         ; Wr . PutText 
             ( WrT 
             , Fmt . Pad 
@@ -1021,8 +1030,7 @@ MODULE Test EXPORTS Main
         END (* IF *) 
       ; Wr . PutText 
           ( WrT , Fmt . Pad ( Fmt . Int ( ObjInfo . AllocChars ) , 10 ) ) 
-      ; CollectSize 
-          := ObjInfo . CollectSize + ObjInfo . CollectCt * HeapSz 
+      ; CollectSize := ObjInfo . CollectSize 
       ; RetainedCt := ObjInfo . AllocCt - ObjInfo . CollectCt 
       ; RetainedSize := AllocSize - CollectSize  
       ; Wr . PutText ( WrT , Fmt . Pad ( Fmt . Int ( RetainedCt ) , 10 ) ) 
@@ -1043,7 +1051,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DisplayObjLine 
 
-; PROCEDURE DisplayObjs ( OldObjs , NewObjs : REF TextClass . ObjsInfo )
+; PROCEDURE DisplayObjs ( OldObjs , NewObjs : REF TextStats . ObjsInfo )
 
   = VAR TotalOldAllocCt , TotalOldAllocSize : INTEGER 
   ; VAR TotalOldCollectCt , TotalOldCollectSize : INTEGER 
@@ -1056,12 +1064,12 @@ MODULE Test EXPORTS Main
       THEN 
         Wr . PutText ( WrT , Wr . EOL ) 
       ; Wr . Flush ( WrT )    
-      ; Wr . PutText ( WrT , "------- Heap statistics: ------------------" )
-      ; Wr . PutText ( WrT , "-------------------------------" )
+      ; Wr . PutText ( WrT , "------- Heap statistics: ---------------------" )
+      ; Wr . PutText ( WrT , "-----------------------------------------------" )
       ; Wr . PutText ( WrT , Wr . EOL ) 
       ; Wr . PutText ( WrT , "Object kind " )
       ; Wr . PutText ( WrT , "    AllocCt   AllocSz  AllocAvg AllocChrs" )
-      ; Wr . PutText ( WrT , "   RetainCt  RetainSz RetainAvg CollChars" )
+      ; Wr . PutText ( WrT , "  RetainCt  RetainSz RetainAvg CollChars" )
       ; Wr . PutText ( WrT , Wr . EOL ) 
       ; TotalOldAllocCt := 0 
       ; TotalOldAllocSize := 0 
@@ -1071,27 +1079,23 @@ MODULE Test EXPORTS Main
       ; TotalNewAllocSize := 0 
       ; TotalNewCollectCt := 0 
       ; TotalNewCollectSize := 0 
-      ; FOR RObj := FIRST ( TextClass . Obj ) TO LAST ( TextClass . Obj ) 
+      ; FOR RObj := FIRST ( TextStats . Obj ) TO LAST ( TextStats . Obj ) 
         DO
           IF OldObjs # NIL 
           THEN 
             DisplayObjLine ( OldObjs ^ [ RObj ] , "Old " , RObj )  
           ; INC ( TotalOldAllocCt , OldObjs ^ [ RObj ] . AllocCt ) 
           ; INC ( TotalOldAllocSize , OldObjs ^ [ RObj ] . AllocSize ) 
-          ; INC ( TotalOldAllocSize , OldObjs ^ [ RObj ] . AllocCt * HeapSz ) 
           ; INC ( TotalOldCollectCt , OldObjs ^ [ RObj ] . CollectCt ) 
           ; INC ( TotalOldCollectSize , OldObjs ^ [ RObj ] . CollectSize ) 
-          ; INC ( TotalOldCollectSize , OldObjs ^ [ RObj ] . CollectCt * HeapSz ) 
           END (* IF *) 
         ; IF NewObjs # NIL 
           THEN 
             DisplayObjLine ( NewObjs ^ [ RObj ] , "New " , RObj )  
           ; INC ( TotalNewAllocCt , NewObjs ^ [ RObj ] . AllocCt ) 
           ; INC ( TotalNewAllocSize , NewObjs ^ [ RObj ] . AllocSize ) 
-          ; INC ( TotalNewAllocSize , NewObjs ^ [ RObj ] . AllocCt * HeapSz ) 
           ; INC ( TotalNewCollectCt , NewObjs ^ [ RObj ] . CollectCt ) 
           ; INC ( TotalNewCollectSize , NewObjs ^ [ RObj ] . CollectSize ) 
-          ; INC ( TotalNewCollectSize , NewObjs ^ [ RObj ] . CollectCt * HeapSz ) 
           END (* IF *) 
         END (* FOR *) 
 
@@ -1131,24 +1135,26 @@ MODULE Test EXPORTS Main
               ( Fmt . Int ( TotalNewAllocSize - TotalNewCollectSize ) , 10 ) 
           )
       ; Wr . PutText ( WrT , Wr . EOL ) 
-      ; Wr . PutText ( WrT , "-------------------------------------------" )
-      ; Wr . PutText ( WrT , "-------------------------------" )
+      ; Wr . PutText ( WrT , "----------------------------------------------" )
+      ; Wr . PutText ( WrT , "-----------------------------------------------" )
       ; Wr . PutText ( WrT , Wr . EOL ) 
       ; Wr . Flush ( WrT )    
       END (* IF *) 
     END DisplayObjs 
 
-; PROCEDURE CheckpointObjs ( ) 
+; PROCEDURE AccumulateObjs ( ) 
+  (* Add recent Object statistics from TextClass to Global totals, and 
+     reinitialize the former. 
+  *) 
 
   = BEGIN 
-      DisplayObjs ( TextClass . OldObjs , TextClass . NewObjs ) 
-    ; IF TextClass . OldObjs # NIL 
+      IF TextStats . OldObjs # NIL 
       THEN 
         IF GOldObjs # NIL 
         THEN 
-          FOR RObj := FIRST ( TextClass . Obj ) TO LAST ( TextClass . Obj ) 
+          FOR RObj := FIRST ( TextStats . Obj ) TO LAST ( TextStats . Obj ) 
           DO 
-            WITH WS = GOldObjs ^ [ RObj ] , WL = TextClass . OldObjs [ RObj ] 
+            WITH WS = GOldObjs ^ [ RObj ] , WL = TextStats . OldObjs [ RObj ] 
             DO 
               INC ( WS . AllocCt , WL . AllocCt ) 
             ; INC ( WS . AllocSize , WL . AllocSize ) 
@@ -1159,15 +1165,15 @@ MODULE Test EXPORTS Main
             END (* WITH *) 
           END (* FOR *) 
         END (* IF *) 
-      ; TextClass . InitObjs ( TextClass . OldObjs ^ ) 
+      ; TextStats . InitObjs ( TextStats . OldObjs ^ ) 
       END (* IF *) 
-    ; IF TextClass . NewObjs # NIL 
+    ; IF TextStats . NewObjs # NIL 
       THEN 
         IF GNewObjs # NIL 
         THEN 
-          FOR RObj := FIRST ( TextClass . Obj ) TO LAST ( TextClass . Obj ) 
+          FOR RObj := FIRST ( TextStats . Obj ) TO LAST ( TextStats . Obj ) 
           DO 
-            WITH WS = GNewObjs ^ [ RObj ] , WL = TextClass . NewObjs [ RObj ] 
+            WITH WS = GNewObjs ^ [ RObj ] , WL = TextStats . NewObjs [ RObj ] 
             DO 
               INC ( WS . AllocCt , WL . AllocCt ) 
             ; INC ( WS . AllocSize , WL . AllocSize ) 
@@ -1178,9 +1184,9 @@ MODULE Test EXPORTS Main
             END (* WITH *) 
           END (* FOR *) 
         END (* IF *) 
-      ; TextClass . InitObjs ( TextClass . NewObjs ^ ) 
+      ; TextStats . InitObjs ( TextStats . NewObjs ^ ) 
       END (* IF *) 
-    END CheckpointObjs 
+    END AccumulateObjs 
 
 ; VAR GLastCheckpointCt : INTEGER := 0
 
@@ -1198,8 +1204,10 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( WrT , Label ) 
       ; Wr . PutText ( WrT , ":" ) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
-      ; CheckpointOps ( ) 
-      ; CheckpointObjs ( ) 
+      ; DisplayOps ( TextStats . OldOps , TextStats . NewOps ) 
+      ; AccumulateOps ( ) 
+      ; DisplayObjs ( TextStats . OldObjs , TextStats . NewObjs ) 
+      ; AccumulateObjs ( ) 
       ; GLastCheckpointCt := OperationCt 
       END (* IF *) 
     END PrintCheckpoint 
@@ -1321,10 +1329,41 @@ MODULE Test EXPORTS Main
       RTCollector . Disable ( ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . PutText 
-        ( PWrT , "Garbage collection disabled for better timing." ) 
+        ( PWrT , "Garbage collection disabled for better time measurement." ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
     END StopCollection 
+
+; VAR CollectTwice : BOOLEAN := TRUE  
+; VAR PauseForWeakRefs : BOOLEAN := FALSE 
+
+; PROCEDURE Collect ( ) 
+
+  = <* FATAL Thread . Alerted , Wr . Failure *> 
+    BEGIN 
+      Wr . PutText ( PWrT , Wr . EOL ) 
+    ; Wr . PutText ( PWrT , "Garbage collection triggered ... " ) 
+    ; Wr . Flush ( PWrT ) 
+    ; RTCollector . Collect ( ) 
+    ; RTCollectorSRC . StartCollection ( ) 
+    ; RTCollectorSRC . FinishCollection ( ) 
+    ; Wr . PutText ( PWrT , "completed ... " ) 
+    ; IF CollectTwice 
+      THEN 
+        RTCollector . Collect ( ) 
+      ; RTCollectorSRC . StartCollection ( ) 
+      ; RTCollectorSRC . FinishCollection ( ) 
+      ; Wr . PutText ( PWrT , "twice ... " )
+      END (* IF *) 
+    ; IF PauseForWeakRefs 
+      THEN 
+        Wr . PutText ( PWrT , "giving weak refs time ... " ) 
+      ; Thread . Pause ( 10.0D0 )  
+      END (* IF *) 
+    ; Wr . PutText ( PWrT , "done." ) 
+    ; Wr . PutText ( PWrT , Wr . EOL ) 
+    ; Wr . Flush ( PWrT ) 
+    END Collect 
 
 ; PROCEDURE ResumeCollection ( ) 
 
@@ -1334,11 +1373,23 @@ MODULE Test EXPORTS Main
     ; Wr . PutText ( PWrT , "Garbage collection enabled and triggered ... " ) 
     ; Wr . Flush ( PWrT ) 
     ; RTCollector . Enable ( ) 
+    ; RTCollector . Collect ( ) 
     ; RTCollectorSRC . StartCollection ( ) 
     ; RTCollectorSRC . FinishCollection ( ) 
-    ; Thread . Pause ( 2.0D0 )  
-      (* ^Hopefully, this will get weakRef cleanups all processed. *) 
-    ; Wr . PutText ( PWrT , "Garbage collection completed." ) 
+    ; Wr . PutText ( PWrT , "completed ... " ) 
+    ; IF CollectTwice 
+      THEN 
+        RTCollector . Collect ( ) 
+      ; RTCollectorSRC . StartCollection ( ) 
+      ; RTCollectorSRC . FinishCollection ( ) 
+      ; Wr . PutText ( PWrT , "twice ... " )
+      END (* IF *) 
+    ; IF PauseForWeakRefs 
+      THEN 
+        Wr . PutText ( PWrT , "giving weak refs time ... " ) 
+      ; Thread . Pause ( 10.0D0 )  
+      END (* IF *) 
+    ; Wr . PutText ( PWrT , "done." ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
     END ResumeCollection 
@@ -1369,13 +1420,13 @@ MODULE Test EXPORTS Main
       ; GTextNos [ LSs ] := GTotalTextCt 
       ; INC ( GTotalTextCt ) 
       ; DEC ( N )  
-      ; NoteProgress ( (* VAR *) GFillCt ) 
+      ; NoteProgress ( (* VAR *) GCurrentBaseCt ) 
       END FillTextLiteral 
 
   ; <* FATAL Thread . Alerted , Wr . Failure *> 
-    BEGIN
+    BEGIN (* FillBase *) 
       ResetProgress ( ) 
-    ; GFillCt := 0 
+    ; GCurrentBaseCt := 0 
     ; GLastCheckpointCt := 0  
     ; GOldTexts [ 0 ] := ""
     ; GNewTexts [ 0 ] := "" 
@@ -1444,7 +1495,7 @@ MODULE Test EXPORTS Main
     ; FillTextLiteral ( "cdefghijklmnopqrstuvwxyz" ) 
     ; FillTextLiteral ( "bcdefghijklmnopqrstuvwxyz" ) 
     ; FillTextLiteral ( "abcdefghijklmnopqrstuvwxyz" ) 
-    ; FOR RI := 1 TO N 
+    ; FOR RI := GCurrentBaseCt TO N - 1  
       DO 
         IF GStoredTextCt >= MaxTexts 
         THEN LSs := RandV . integer ( 1 , MaxTexts )   
@@ -1602,9 +1653,9 @@ MODULE Test EXPORTS Main
       ; GNewTexts [ LSs ] := LNewText   
       ; GTextNos [ LSs ] := GTotalTextCt 
       ; INC ( GTotalTextCt ) 
-      ; NoteProgress ( (* VAR *) GFillCt ) 
+      ; NoteProgress ( (* VAR *) GCurrentBaseCt ) 
       END (* FOR *)  
-    ; ShowExactProgress ( GFillCt ) 
+    ; ShowExactProgress ( GCurrentBaseCt ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
     ; ResumeCollection ( ) 
@@ -1629,7 +1680,7 @@ MODULE Test EXPORTS Main
       THEN 
         TextClass . Old := FALSE 
       ; StartTimingNew ( ) 
-      ; NewResult := Text.Cat ( NewOp1 , NewOp2 )  
+      ; NewResult := Text . Cat ( NewOp1 , NewOp2 )  
       ; StopTimingNew ( ) 
       ; TextClass . Old := TRUE
       ; CheckText ( NewResult , "Cat-new" , GTotalTextCt ) 
@@ -1654,7 +1705,7 @@ MODULE Test EXPORTS Main
   = VAR LLo , LHi , LResult : INTEGER 
 
   ; BEGIN 
-      LLo := MAX ( 0 , GFillCt - 1 - ( GStoredTextCt - GFillCt ) ) 
+      LLo := MAX ( 0 , GCurrentBaseCt - 1 - ( GStoredTextCt - GCurrentBaseCt ) ) 
     ; LHi := GStoredTextCt - 1 
     ; LResult := RandV . integer ( LLo , LHi )  
     ; RETURN LResult 
@@ -1676,7 +1727,7 @@ MODULE Test EXPORTS Main
     ; InnerCat 
         ( LOldOp1 , LOldOp2 , LNewOp1 , LNewOp2 
         , LOldResult , LNewResult 
-        , GTextNos [ LSs1 ] ,GTextNos [ LSs2 ] 
+        , GTextNos [ LSs1 ] , GTextNos [ LSs2 ] 
         ) 
     ; GOldTexts [ Ss ] := LOldResult
     ; GNewTexts [ Ss ] := LNewResult
@@ -1718,8 +1769,7 @@ MODULE Test EXPORTS Main
         THEN 
           TextClass . Old := FALSE 
         ; StartTimingNew ( ) 
-        ; LNewResult 
-            := Text . Sub ( LNewOp , LLo , LLen )  
+        ; LNewResult := Text . Sub ( LNewOp , LLo , LLen )  
         ; StopTimingNew ( ) 
         ; TextClass . Old := TRUE
         ; CheckText ( LNewResult , "Sub-new" , GTotalTextCt ) 
@@ -1774,7 +1824,6 @@ MODULE Test EXPORTS Main
           TextClass . Old := FALSE 
         ; StartTimingNew ( ) 
         ; LNewResult := TextCat . NewMulti ( SUBARRAY ( NewOpnds , 0 , RI ) )  
-
         ; StopTimingNew ( ) 
         ; TextClass . Old := TRUE
         ; CheckText ( LNewResult , "Mulit-new" , GTotalTextCt ) 
@@ -1788,21 +1837,21 @@ MODULE Test EXPORTS Main
     ; GNewTexts [ Ss ] := LNewResult
     END DoMultiCat 
 
-; PROCEDURE RandOperations ( N : CARDINAL ; MinSs : CARDINAL ) 
+; PROCEDURE RandOperations ( N : CARDINAL ; MinResultSs : CARDINAL ) 
 
   = VAR LN : INTEGER 
 
   ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
       ResetProgress ( ) 
-    ; GOperationCt := 0
+    ; GCurrentOpCt := 0
     ; GLastCheckpointCt := 0  
     ; StopCollection ( ) 
     ; FOR RI := 1 TO N 
       DO
         IF GStoredTextCt >= MaxTexts 
         THEN 
-          LN := RandV . integer ( MinSs , MaxTexts )   
+          LN := RandV . integer ( MinResultSs , MaxTexts )   
         ELSE
           LN := GStoredTextCt 
         END (* IF *)
@@ -1817,24 +1866,24 @@ MODULE Test EXPORTS Main
         THEN 
           INC ( GStoredTextCt ) 
         END (* IF *)
-      ; NoteProgress ( GOperationCt ) 
+      ; NoteProgress ( GCurrentOpCt ) 
       ; IF RI MOD StatsInterval = 0 
         THEN
           ResumeCollection ( ) 
-        ; PrintCheckpoint ( "operations" , GOperationCt ) 
+        ; PrintCheckpoint ( "operations" , GCurrentOpCt ) 
         ; StopCollection ( ) 
         END (* IF *) 
       END (* FOR *) 
-    ; ShowExactProgress ( GOperationCt ) 
+    ; ShowExactProgress ( GCurrentOpCt ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
     ; ResumeCollection ( ) 
-    ; PrintCheckpoint ( "operations" , GOperationCt ) 
+    ; PrintCheckpoint ( "operations" , GCurrentOpCt ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
     END RandOperations    
 
-; PROCEDURE AsymCats ( N : CARDINAL ; MinSs : CARDINAL ; LToR : BOOLEAN ) 
+; PROCEDURE AsymCats ( N : CARDINAL ; MinResultSs : CARDINAL ; LToR : BOOLEAN ) 
 
   = VAR LN , LSs : INTEGER 
   ; VAR LCatCt : CARDINAL 
@@ -1845,7 +1894,7 @@ MODULE Test EXPORTS Main
   ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
       ResetProgress ( ) 
-    ; GOperationCt := 0
+    ; GCurrentOpCt := 0
     ; GLastCheckpointCt := 0  
     ; LCatCt := 0  
     ; LLeafCt := 0 
@@ -1854,12 +1903,12 @@ MODULE Test EXPORTS Main
       DO 
         IF GStoredTextCt >= MaxTexts 
         THEN 
-          LN := RandV . integer ( MinSs , MaxTexts )   
+          LN := RandV . integer ( MinResultSs , MaxTexts )   
         ELSE
           LN := GStoredTextCt 
         END (* IF *)
       ; LLeafCt := RandV . integer ( 20 , 500 )  
-      ; LSs := RandV . integer ( 0 , GFillCt - 1 )   
+      ; LSs := RandV . integer ( 0 , GCurrentBaseCt - 1 )   
       ; LOldPartial := GOldTexts [ LSs ] 
       ; LNewPartial := GNewTexts [ LSs ] 
       ; DEC ( LLeafCt ) 
@@ -1870,7 +1919,7 @@ MODULE Test EXPORTS Main
           ; GNewTexts [ LN ] := LNewPartial
           ; EXIT 
           ELSE 
-            LSs := RandV . integer ( 0 , GFillCt - 1 )   
+            LSs := RandV . integer ( 0 , GCurrentBaseCt - 1 )   
           ; LOldOp := GOldTexts [ LSs ] 
           ; LNewOp := GNewTexts [ LSs ] 
           ; IF LToR 
@@ -1891,11 +1940,11 @@ MODULE Test EXPORTS Main
           ; LNewPartial := LNewResult 
           ; DEC ( LLeafCt ) 
           ; INC ( LCatCt ) 
-          ; NoteProgress ( GOperationCt ) 
+          ; NoteProgress ( GCurrentOpCt ) 
           ; IF LCatCt MOD StatsInterval = 0 
             THEN
               ResumeCollection ( ) 
-            ; PrintCheckpoint ( "concatenations" , GOperationCt ) 
+            ; PrintCheckpoint ( "concatenations" , GCurrentOpCt ) 
             ; StopCollection ( ) 
             END (* IF *) 
           END (* IF *)  
@@ -1907,16 +1956,16 @@ MODULE Test EXPORTS Main
           INC ( GStoredTextCt ) 
         END (* IF *)
       END (* WHILE *) 
-    ; ShowExactProgress ( GOperationCt ) 
+    ; ShowExactProgress ( GCurrentOpCt ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
     ; ResumeCollection ( ) 
-    ; PrintCheckpoint ( "concatenations" , GOperationCt ) 
+    ; PrintCheckpoint ( "concatenations" , GCurrentOpCt ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
     END AsymCats    
 
-; PROCEDURE DoEmpty ( MinSs : CARDINAL ) 
+; PROCEDURE DoEmpty ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs : CARDINAL 
   ; VAR LOldOp : TEXT 
@@ -1924,7 +1973,7 @@ MODULE Test EXPORTS Main
   ; VAR LOldResult , LNewResult : BOOLEAN  
 
   ; BEGIN 
-      LSs  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp := GOldTexts [ LSs ] 
     ; LNewOp := GNewTexts [ LSs ] 
     ; IF GDoOld 
@@ -1952,7 +2001,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoEmpty
 
-; PROCEDURE DoHasWideChars ( MinSs : CARDINAL ) 
+; PROCEDURE DoHasWideChars ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs : CARDINAL 
   ; VAR LOldOp : TEXT 
@@ -1960,7 +2009,7 @@ MODULE Test EXPORTS Main
   ; VAR LOldResult , LNewResult : BOOLEAN  
 
   ; BEGIN 
-      LSs  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp := GOldTexts [ LSs ] 
     ; LNewOp := GNewTexts [ LSs ] 
     ; IF GDoOld 
@@ -2012,7 +2061,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoHasWideChars  
 
-; PROCEDURE DoLength ( MinSs : CARDINAL ) 
+; PROCEDURE DoLength ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs : CARDINAL 
   ; VAR LOldOp : TEXT 
@@ -2020,7 +2069,7 @@ MODULE Test EXPORTS Main
   ; VAR LOldResult , LNewResult : INTEGER  
 
   ; BEGIN 
-      LSs  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp := GOldTexts [ LSs ] 
     ; LNewOp := GNewTexts [ LSs ] 
     ; IF GDoOld 
@@ -2048,7 +2097,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoLength
 
-; PROCEDURE DoHash ( MinSs : CARDINAL ) 
+; PROCEDURE DoHash ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs : CARDINAL 
   ; VAR LOldOp : TEXT 
@@ -2056,7 +2105,7 @@ MODULE Test EXPORTS Main
   ; VAR LOldResult , LNewResult : INTEGER  
 
   ; BEGIN 
-      LSs  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp := GOldTexts [ LSs ] 
     ; LNewOp := GNewTexts [ LSs ] 
     ; IF GDoOld 
@@ -2084,7 +2133,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoHash
 
-; PROCEDURE DoEqual ( MinSs : CARDINAL ) 
+; PROCEDURE DoEqual ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs1 , LSs2 : CARDINAL 
   ; VAR LOldOp1 , LOldOp2 : TEXT 
@@ -2092,8 +2141,8 @@ MODULE Test EXPORTS Main
   ; VAR LOldResult , LNewResult : BOOLEAN 
 
   ; BEGIN 
-      LSs1  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
-    ; LSs2  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs1  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
+    ; LSs2  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp1 := GOldTexts [ LSs1 ] 
     ; LOldOp2 := GOldTexts [ LSs2 ] 
     ; LNewOp1 := GNewTexts [ LSs1 ] 
@@ -2127,7 +2176,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoEqual
 
-; PROCEDURE DoCompare ( MinSs : CARDINAL ) 
+; PROCEDURE DoCompare ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs1 , LSs2 : CARDINAL 
   ; VAR LOldOp1 , LOldOp2 : TEXT 
@@ -2135,8 +2184,8 @@ MODULE Test EXPORTS Main
   ; VAR LOldResult , LNewResult : [ - 1 .. 1 ]  
 
   ; BEGIN 
-      LSs1  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
-    ; LSs2  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs1  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
+    ; LSs2  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp1 := GOldTexts [ LSs1 ] 
     ; LOldOp2 := GOldTexts [ LSs2 ] 
     ; LNewOp1 := GNewTexts [ LSs1 ] 
@@ -2172,7 +2221,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoCompare
 
-; PROCEDURE DoGetChar ( MinSs : CARDINAL ) 
+; PROCEDURE DoGetChar ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs : CARDINAL 
   ; VAR LOldOp : TEXT 
@@ -2183,7 +2232,7 @@ MODULE Test EXPORTS Main
   ; VAR LIsWide : BOOLEAN := FALSE  
 
   ; BEGIN 
-      LSs  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp := GOldTexts [ LSs ] 
     ; LNewOp := GNewTexts [ LSs ] 
     ; IF GDoOld 
@@ -2254,7 +2303,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoGetChar 
 
-; PROCEDURE DoSetChars ( MinSs : CARDINAL ) 
+; PROCEDURE DoSetChars ( MinOpndSs : CARDINAL ) 
 
   = VAR LSs : CARDINAL 
   ; VAR LOldOp : TEXT 
@@ -2265,7 +2314,7 @@ MODULE Test EXPORTS Main
   ; VAR LIsWide : BOOLEAN := FALSE  
 
   ; BEGIN 
-      LSs  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp := GOldTexts [ LSs ] 
     ; LNewOp := GNewTexts [ LSs ] 
     ; IF GDoOld 
@@ -2339,7 +2388,7 @@ MODULE Test EXPORTS Main
     END DoSetChars 
 
 ; PROCEDURE DoFindChar 
-    ( Msg : TEXT ; MinSs : CARDINAL ; Present , LToR : BOOLEAN ) 
+    ( Msg : TEXT ; MinOpndSs : CARDINAL ; Present , LToR : BOOLEAN ) 
 
   = VAR LSs : CARDINAL 
   ; VAR LOldOp : TEXT 
@@ -2351,7 +2400,7 @@ MODULE Test EXPORTS Main
   ; VAR LIsWide : BOOLEAN := FALSE  
 
   ; BEGIN 
-      LSs  := RandV . integer ( MinSs , GStoredTextCt - 1 )   
+      LSs  := RandV . integer ( MinOpndSs , GStoredTextCt - 1 )   
     ; LOldOp := GOldTexts [ LSs ] 
     ; LNewOp := GNewTexts [ LSs ] 
     ; IF GDoOld 
@@ -2455,7 +2504,7 @@ MODULE Test EXPORTS Main
       END (* IF *) 
     END DoFindChar 
 
-; PROCEDURE Queries ( N : CARDINAL ; MinSs : CARDINAL ) 
+; PROCEDURE Queries ( N : CARDINAL ; MinOpndSs : CARDINAL ) 
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
@@ -2466,26 +2515,26 @@ MODULE Test EXPORTS Main
     ; FOR RI := 1 TO N 
       DO
         CASE RandV . integer ( 0 , 11 ) <* NOWARN *> 
-        OF 0 => DoEmpty ( MinSs ) 
-        | 1 => DoLength ( MinSs )  
-        | 2 => DoHash ( MinSs )  
-        | 3 => DoHasWideChars ( MinSs )
-        | 4 => DoEqual ( MinSs )  
-        | 5 => DoCompare ( MinSs )  
-        | 6 => DoGetChar ( MinSs )  
-        | 7 => DoSetChars ( MinSs )  
+        OF 0 => DoEmpty ( MinOpndSs ) 
+        | 1 => DoLength ( MinOpndSs )  
+        | 2 => DoHash ( MinOpndSs )  
+        | 3 => DoHasWideChars ( MinOpndSs )
+        | 4 => DoEqual ( MinOpndSs )  
+        | 5 => DoCompare ( MinOpndSs )  
+        | 6 => DoGetChar ( MinOpndSs )  
+        | 7 => DoSetChars ( MinOpndSs )  
         | 8 
         => DoFindChar 
-             ( "FindChar, present" , MinSs , Present := TRUE , LToR := TRUE ) 
+             ( "FindChar, present" , MinOpndSs , Present := TRUE , LToR := TRUE ) 
         | 9 
         => DoFindChar 
-             ( "FindCharR, present" , MinSs , Present := TRUE , LToR := FALSE ) 
+             ( "FindCharR, present" , MinOpndSs , Present := TRUE , LToR := FALSE ) 
         | 10 
         => DoFindChar 
-             ( "FindChar, absent" , MinSs , Present := FALSE , LToR := TRUE ) 
+             ( "FindChar, absent" , MinOpndSs , Present := FALSE , LToR := TRUE ) 
         | 11 
         => DoFindChar 
-             ( "FindCharR, absent" , MinSs , Present := FALSE , LToR := FALSE )
+             ( "FindCharR, absent" , MinOpndSs , Present := FALSE , LToR := FALSE )
         END (* CASE *) 
       ; NoteProgress ( GTestCt ) 
       ; IF RI MOD StatsInterval = 0 
@@ -2539,19 +2588,20 @@ MODULE Test EXPORTS Main
       ; Wr . Flush ( PWrT ) 
       ; EstimateTimingOverhead ( ) 
 
-      ; TextClass . AllocOps ( TextClass . OldOps ) 
-      ; TextClass . AllocOps ( TextClass . NewOps ) 
-      ; TextClass . AllocObjs ( TextClass . OldObjs ) 
-      ; TextClass . AllocObjs ( TextClass . NewObjs ) 
+      ; TextStats . AllocOps ( TextStats . OldOps ) 
+      ; TextStats . AllocOps ( TextStats . NewOps ) 
+      ; TextStats . AllocObjs ( TextStats . OldObjs ) 
+      ; TextStats . AllocObjs ( TextStats . NewObjs ) 
 
-      ; TextClass . AllocOps ( GOldOps ) 
-      ; TextClass . AllocOps ( GNewOps ) 
-      ; TextClass . AllocObjs ( GOldObjs ) 
-      ; TextClass . AllocObjs ( GNewObjs ) 
+      ; TextStats . AllocOps ( GOldOps ) 
+      ; TextStats . AllocOps ( GNewOps ) 
+      ; TextStats . AllocObjs ( GOldObjs ) 
+      ; TextStats . AllocObjs ( GNewObjs ) 
 
       ; TextClass . Old := TRUE
       ; TextClass . CollectStats := FALSE 
 
+      (* Generate base strings to build from. *) 
       ; IF WrT # PWrT 
         THEN 
           Wr . PutText 
@@ -2563,10 +2613,11 @@ MODULE Test EXPORTS Main
           ( PWrT , "Generating initial leaf strings." ) 
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; Wr . Flush ( PWrT ) 
-      ; FillBase ( BaseTextCt ) 
+      ; FillBase ( GPlannedBaseCt ) 
       ; Wr . PutText ( WrT , Wr . EOL )
-      ; RTCollector . Collect ( ) 
- 
+      ; Collect ( ) 
+
+      (* Do operations that Build new strings. *) 
       ; IF GDoUnbal 
         THEN OpString := "Highly unbalanced concatenations."
         ELSE OpString := "Operations that produce new strings." 
@@ -2581,16 +2632,22 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; Wr . Flush ( PWrT ) 
       ; IF GDoUnbal 
-        THEN AsymCats ( OperationCt , OperationCt , GDoLToR ) 
-        ELSE RandOperations ( OperationCt , OperationCt ) 
+        THEN 
+          AsymCats 
+            ( GPlannedOpCt , MinResultSs := GCurrentBaseCt , LToR := GDoLToR ) 
+        ELSE RandOperations ( GPlannedOpCt , MinResultSs := GCurrentBaseCt ) 
         END (* IF *) 
 
       ; Wr . PutText ( WrT , Wr . EOL ) 
+      ; Collect ( ) 
       ; Wr . PutText ( WrT , "Up through all operations:   " ) 
+      ; AccumulateOps ( ) 
       ; DisplayOps ( GOldOps , GNewOps )
+      ; AccumulateObjs ( ) 
       ; DisplayObjs ( GOldObjs , GNewObjs )
-      ; INC ( GTotalCt , GOperationCt )
+      ; INC ( GTotalCt , GCurrentOpCt )
 
+      (* Do query operations on strings. *) 
       ; IF WrT # PWrT 
         THEN 
           Wr . PutText ( WrT , "Queries on strings." ) 
@@ -2602,16 +2659,33 @@ MODULE Test EXPORTS Main
       ; Wr . Flush ( PWrT ) 
       ; IF GDoUnbal 
         THEN 
-          Queries ( QueryCt , GFillCt ) 
+          Queries ( QueryCt , MinOpndSs := GCurrentBaseCt ) 
         ELSE 
-          Queries ( QueryCt , 0 ) 
+          Queries ( QueryCt , MinOpndSs := 0 ) 
         END (* IF *) 
-
+ 
+      (* Cumulative statistic for the whole run. *) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
       ; Wr . PutText ( WrT , "For the entire run:   " ) 
+      ; AccumulateOps ( ) 
       ; DisplayOps ( GOldOps , GNewOps )
+      ; Wr . PutText ( WrT , Wr . EOL ) 
+      ; Wr . PutText ( WrT , "(With base texts retained:)" ) 
+      ; AccumulateObjs ( )  
       ; DisplayObjs ( GOldObjs , GNewObjs )
 
+      (* Memory retention statistice after collecting some operand strings. *) 
+      ; Wr . PutText ( WrT , Wr . EOL ) 
+      ; Wr . PutText ( WrT , "(With base texts collected:)" ) 
+      ; FOR RI := 0 TO GCurrentBaseCt - 1 
+        DO GOldTexts [ RI ] := NIL 
+        ; GNewTexts [ RI ] := NIL 
+        END (* FOR *) 
+      ; Collect ( ) 
+      ; AccumulateObjs ( )  
+      ; DisplayObjs ( GOldObjs , GNewObjs )
+
+      (* Tree shape statistics. *) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
       ; Wr . PutText 
           ( WrT , "------- Concatenation tree statistics: ------------------" ) 
@@ -2621,7 +2695,9 @@ MODULE Test EXPORTS Main
       ; IF GDoUnbal 
         THEN 
           DisplayTextMeasures 
-            ( SUBARRAY ( GOldTexts , GFillCt , GStoredTextCt - GFillCt ) ) 
+            ( SUBARRAY 
+                ( GOldTexts , GCurrentBaseCt , GStoredTextCt - GCurrentBaseCt )
+            )
         ELSE 
           DisplayTextMeasures ( SUBARRAY ( GOldTexts , 0 , GStoredTextCt ) ) 
         END (* IF *) 
@@ -2630,7 +2706,9 @@ MODULE Test EXPORTS Main
       ; IF GDoUnbal 
         THEN 
           DisplayTextMeasures 
-            ( SUBARRAY ( GNewTexts , GFillCt , GStoredTextCt - GFillCt ) ) 
+            ( SUBARRAY 
+                ( GNewTexts , GCurrentBaseCt , GStoredTextCt - GCurrentBaseCt )
+            ) 
         ELSE 
           DisplayTextMeasures ( SUBARRAY ( GNewTexts , 0 , GStoredTextCt ) ) 
         END (* IF *) 
@@ -2638,6 +2716,7 @@ MODULE Test EXPORTS Main
           ( WrT , "---------------------------------------------------------" ) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
 
+      (* Summary of behavioral tests. *) 
       ; INC ( GTotalCt , GTestCt ) 
       ; Wr . PutText ( WrT , "Total tests failed:   " ) 
       ; Wr . PutText ( WrT , Fmt . Pad ( Fmt . Int ( GFailureCt ) , 7 ) )
@@ -2646,14 +2725,19 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( WrT , Fmt . Pad ( Fmt . Int ( GTotalCt ) , 7 ) )
       ; Wr . PutText ( WrT , Wr . EOL ) 
 
+      (* Total execution times, measured with call time included. *) 
       ; Wr . PutText 
-          ( WrT , "Estimated seconds of instrumentation overhead per call: " ) 
+          ( WrT , "Estimated seconds of instrumentation overhead per call, using Tick: " ) 
       ; Wr . PutText ( WrT , Fmt . LongReal ( GTimingOverheadTick ) ) 
       ; Wr . PutText ( WrT , ", using Time: " ) 
       ; Wr . PutText ( WrT , Fmt . LongReal ( GTimingOverheadTime ) ) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
 
-      ; Wr . PutText ( WrT , "Seconds spent in old Text procedures: " ) 
+      ; Wr . PutText 
+          ( WrT , "The times below include call & return overhead. " ) 
+      ; Wr . PutText ( WrT , Wr . EOL ) 
+      ; Wr . PutText 
+          ( WrT , "Seconds spent in old Text procedures, using Tick: " ) 
       ; GOldTextsTick 
           := GOldTextsTick 
              - FLOAT ( GOldTimedCt , LONGREAL ) * GTimingOverheadTick 
@@ -2665,7 +2749,8 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( WrT , Fmt . LongReal ( GOldTextsTime ) ) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
 
-      ; Wr . PutText ( WrT , "Seconds spent in new Text procedures: " ) 
+      ; Wr . PutText 
+          ( WrT , "Seconds spent in new Text procedures, using Tick: " ) 
       ; GNewTextsTick 
           := GNewTextsTick 
              - FLOAT ( GNewTimedCt , LONGREAL ) * GTimingOverheadTick 
@@ -2676,6 +2761,8 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( WrT , ", using Time: " ) 
       ; Wr . PutText ( WrT , Fmt . LongReal ( GNewTextsTime ) ) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
+      ; Wr . PutText ( WrT , "Above times include call overhead. " ) 
+      ; Wr . PutText ( WrT , Wr . EOL ) 
       ; Wr . PutText ( WrT , Wr . EOL ) 
       ; Wr . Flush ( WrT ) 
       ; Wr . PutText ( PWrT , Wr . EOL ) 
@@ -2684,7 +2771,7 @@ MODULE Test EXPORTS Main
     END Work  
 
 ; BEGIN 
-    TextClass . InitInstrumentation ( ) 
+    TextStats . InitInstrumentation ( ) 
   ; Work ( ) 
   END Test 
 . 

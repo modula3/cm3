@@ -1,5 +1,5 @@
-This is an experimental replacement for the various
-library code involving the type TEXT.  
+This is an experimental replacement for various library code involving
+the type TEXT.
 
 Approach:
 
@@ -28,7 +28,7 @@ tail-recursion instances to iteration.  Recursion remains when:
 In concatenations, I "flattened" concatenation results that do not
 exceed a length cutoff.  By "flattening", I mean copying into a single
 node of type Text8.T, Text8Short.T, Text16, or Text16Short.T.  I
-experimentally tuned the length cutoff to 32 bytes, for best
+experimentally tuned the length cutoff to 64 characters, for best
 compromise among speed and time and in various use cases.
 
 In concatenations, I did some heuristic rebalancing.  I used the
@@ -67,8 +67,9 @@ Testing:
 The modified code can be dynamically switched between the old and new
 algorithms.  It is also loaded with instrumentation.  All of this will
 slow it down, but the old/new comparisons should not have significant
-bias.  TextClass.i3 has a lot of new stuff to allow clients to control
-the algorithms and collect results from the instrumentation.
+bias.  TextClass.i3 has some new stuff to allow clients to control
+the algorithms.  New interface TextStats collects a bunch of raw 
+instrumentation data.
 
 If people decide they like this package, I will produce a version with
 all this extra stuff stripped out.
@@ -110,7 +111,11 @@ algorithms toss no garbage.
 
 In the special case of linear concatentations with all leaf strings
 having length one, the new algorithms allocate over twice as much
-heap storage but retain 63% less. 
+heap storage but retain 63% less.
+
+NOTE: in recent tests, attempts to force garbage collection to complete
+are apparently not working, giving sometimes high numbers for storage
+retention.   
 
 
 
