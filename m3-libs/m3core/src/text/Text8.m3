@@ -5,11 +5,13 @@ UNSAFE MODULE Text8;
 
 IMPORT TextClass, Text8Short;
 
+IMPORT TextStats;
+
 REVEAL
   T = Public BRANDED "Text8.T" OBJECT OVERRIDES
-    get_info  := GetInfo;
-    get_char  := GetChar;
-    get_chars := GetChars;
+    get_info  := T8GetInfo;
+    get_char  := T8GetChar;
+    get_chars := T8GetChars;
   END;
 
 PROCEDURE New (READONLY a: ARRAY OF CHAR): TEXT =
@@ -26,29 +28,31 @@ PROCEDURE Create (n: CARDINAL): T =
   BEGIN
     t.contents := NEW (REF ARRAY OF CHAR, n + 1);
     t.contents[n] := '\000';
+    TextStats.NoteAllocText8(t);
+    TextStats.NoteAllocText8Chars(t.contents);
     RETURN t;
   END Create;
 
-PROCEDURE GetInfo (t: T;  VAR info: TextClass.Info) =
+PROCEDURE T8GetInfo (t: T;  VAR info: TextClass.Info) =
   BEGIN
     info.start  := ADR (t.contents[0]);
     info.length := MAX (0, LAST (t.contents^));
     info.wide   := FALSE;
-  END GetInfo;
+  END T8GetInfo;
 
-PROCEDURE GetChar (t: T;  i: CARDINAL): CHAR =
+PROCEDURE T8GetChar (t: T;  i: CARDINAL): CHAR =
   BEGIN
     IF i = LAST (t.contents^) THEN (* force a subscript fault *) INC (i) END;
     RETURN t.contents[i];
-  END GetChar;
+  END T8GetChar;
 
-PROCEDURE GetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
+PROCEDURE T8GetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
   VAR n := MIN (NUMBER (a), LAST (t.contents^) - start);
   BEGIN
     IF (n > 0) THEN
       SUBARRAY (a, 0, n) := SUBARRAY (t.contents^, start, n);
     END;
-  END GetChars;
+  END T8GetChars;
 
 BEGIN
 END Text8.

@@ -1,3 +1,4 @@
+
 (* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
@@ -7,6 +8,13 @@
 INTERFACE TextClass;
 
 CONST Brand = "Text-2.0";
+
+VAR Old: BOOLEAN := FALSE; (* Set this TRUE to use old CM3 TEXT algorithms. *) 
+VAR Flatten: BOOLEAN := TRUE; (* Set FALSE to never flatten Cat trees. *) 
+VAR MaxFlat8 : CARDINAL := 64;    (* CHARs, Including the terminating null. *) 
+VAR MaxFlatWide : CARDINAL := 32; (* WIDECHARs, Including terminating null. *) 
+
+VAR CollectStats : BOOLEAN := FALSE; 
 
 REVEAL
   TEXT = BRANDED Brand OBJECT
@@ -42,6 +50,7 @@ PROCEDURE GetChars (t: TEXT;  VAR a: ARRAY OF CHAR;  start: CARDINAL);
 PROCEDURE GetWideChars (t: TEXT;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL);
 (* Returns the result of "EXTEND"ing the characters returned by
    "t.get_chars (a, start)". *)
+
 
 END TextClass.
 

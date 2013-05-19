@@ -25,6 +25,8 @@ Module ("Text16Short")
 Module ("TextSub")
 Module ("TextCat")
 
+Module ("TextStats")
+
 Module ("TextConv")
 
 
