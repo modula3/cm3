@@ -1,0 +1,36 @@
+
+%% -----------------------------------------------------------------------1- %%
+%% File m3makefile in VarArray/src.  Modula-3 quake code.                    %%
+%% Copyright 2012, Rodney M. Bates.                                          %%
+%% rodney.m.bates@acm.org                                                    %%
+%% Licensed under the Gnu Public License, version 2 or later.                %%
+%% -----------------------------------------------------------------------2- %%
+
+import("libm3")
+
+generic_module("Ranges")
+
+build_generic_intf("IntRanges","Ranges",["Integer"],VISIBLE)
+build_generic_impl("IntRanges","Ranges",[])
+
+% These are just to prove it compiles with non-integer. 
+build_generic_intf("CharRanges","Ranges",["Char"],VISIBLE)
+build_generic_impl("CharRanges","Ranges",[])
+
+generic_module("VarArray")
+
+build_generic_intf("IntCharVarArray","VarArray",["Integer","Char","IntRanges"],VISIBLE)
+build_generic_impl("IntCharVarArray","VarArray",["IntRanges"])
+
+build_generic_intf("IntIntVarArray","VarArray",["Integer","Integer","IntRanges"],VISIBLE)
+build_generic_impl("IntIntVarArray","VarArray",["IntRanges"])
+
+% These are just to prove it compiles with non-integer. 
+build_generic_intf("CharCharVarArray","VarArray",["Char","Char","CharRanges"],VISIBLE)
+build_generic_impl("CharCharVarArray","VarArray",["CharRanges"])
+
+module("Spinner")
+
+implementation("TestVarArray") 
+program("TestVarArray")
+
