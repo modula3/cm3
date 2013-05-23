@@ -92,13 +92,23 @@ struct nesting_info
   tree context;
   tree new_local_var_chain;
   tree debug_var_chain;
-  tree frame_type;
-  tree frame_decl;
-  tree chain_field;
-  tree chain_decl;
+  tree frame_type;  /* Type of the non-local frame struct. */
+  tree frame_decl;  /* Vardecl of the non-local frame struct. */
+  tree chain_field; /* A field of the non-local frame struct that contains 
+                       a copy of the static link.  Used at runtime when 
+                       we followed one SL to get here (and thus we know the 
+                       address of only the non-local frame struct, not of the 
+                       activation record that contains it), and we need to 
+                       follow another static link. */ 
+  tree chain_decl;  /* Vardecl of the static link stored in the activation 
+                       record itself.  This is not contained in the non-local
+                       frame struct.  It is used to follow the first static
+                       link from the executing frame. */ 
   tree nl_goto_field;
 
-  bool any_parm_remapped;
+  bool any_parm_remapped; /* The non-local frame struct contains a pointer
+                             to a parameter.  This will be a copy of the
+                             pointer that was passed by the caller. */ 
   bool any_tramp_created;
   char static_chain_added;
 };
@@ -211,9 +221,13 @@ insert_field_into_struct (tree type, tree field)
     TYPE_ALIGN (type) = DECL_ALIGN (field);
 }
 
-/* Build or return the RECORD_TYPE that describes the frame state that is
-   shared between INFO->CONTEXT and its nested functions.  This record will
-   not be complete until finalize_nesting_tree; up until that point we'll
+/* This must agree with the string defined by the same name in m3gdb, file
+   m3-util.c */ 
+static const char * nonlocal_var_rec_name = "_nonlocal_var_rec"; 
+
+/* Build or return the RECORD_TYPE that describes the non-local frame struct 
+   that is shared between INFO->CONTEXT and its nested functions.  This record 
+   will not be complete until finalize_nesting_tree; up until that point we'll
    be adding fields as necessary.
 
    We also build the DECL that represents this frame in the function.  */
@@ -235,7 +249,8 @@ get_frame_type (struct nesting_info *info)
       free (name);
 
       info->frame_type = type;
-      info->frame_decl = create_tmp_var_for (info, type, "FRAME");
+      info->frame_decl 
+        = create_tmp_var_for (info, type, nonlocal_var_rec_name);
 
       /* ??? Always make it addressable for now, since it is meant to
 	 be pointed to by the static chain pointer.  This pessimizes
@@ -244,6 +259,8 @@ get_frame_type (struct nesting_info *info)
 	 reachable, but the true pessimization is to create the non-
 	 local frame structure in the first place.  */
       TREE_ADDRESSABLE (info->frame_decl) = 1;
+      /* m3gdb needs to know about this variable. */ 
+      DECL_IGNORED_P (info->frame_decl) = 0;  
     }
   return type;
 }
@@ -316,6 +333,10 @@ lookup_field_for_decl (struct nesting_info *info, tree decl,
   return (tree) *slot;
 }
 
+/* This must agree with the string defined by the same name in m3gdb, file
+   m3_util.c */ 
+static const char * static_link_var_name = "_static_link_var"; 
+
 /* Build or return the variable that holds the static chain within
    INFO->CONTEXT.  This variable may only be used within INFO->CONTEXT.  */
 
@@ -337,10 +358,15 @@ get_chain_decl (struct nesting_info *info)
 	 Note also that it's represented as a parameter.  This is more
 	 close to the truth, since the initial value does come from
 	 the caller.  */
-      decl = build_decl (DECL_SOURCE_LOCATION (info->context),
-			 PARM_DECL, create_tmp_var_name ("CHAIN"), type);
+      decl = build_decl 
+               (DECL_SOURCE_LOCATION (info->context),
+                PARM_DECL, get_identifier (static_link_var_name), type);
+      TREE_CHAIN (decl) = NULL; /* Possibly redundant, but dbxout needs it. */ 
       DECL_ARTIFICIAL (decl) = 1;
-      DECL_IGNORED_P (decl) = 1;
+
+      /* m3gdb needs to know about this variable. */ 
+      DECL_IGNORED_P (decl) = 0;
+
       TREE_USED (decl) = 1;
       DECL_CONTEXT (decl) = info->context;
       DECL_ARG_TYPE (decl) = type;
@@ -362,7 +388,11 @@ get_chain_decl (struct nesting_info *info)
   return decl;
 }
 
-/* Build or return the field within the non-local frame state that holds
+/* This must agree with the string defined by the same name in m3gdb, file
+   m3_util.c */ 
+static const char * static_link_copy_field_name = "_static_link_copy_field"; 
+
+/* Build or return the field within the non-local frame struct that holds
    the static chain for INFO->CONTEXT.  This is the way to walk back up
    multiple nesting levels.  */
 
@@ -376,10 +406,12 @@ get_chain_field (struct nesting_info *info)
       tree type = build_pointer_type (get_frame_type (info->outer));
 
       field = make_node (FIELD_DECL);
-      DECL_NAME (field) = get_identifier ("__chain");
+      DECL_NAME (field) = get_identifier (static_link_copy_field_name);
       TREE_TYPE (field) = type;
       DECL_ALIGN (field) = TYPE_ALIGN (type);
       DECL_NONADDRESSABLE_P (field) = 1;
+      /* m3gdb should know about this field. */ 
+      DECL_IGNORED_P (field) = 0;  
 
       insert_field_into_struct (get_frame_type (info), field);
 
@@ -535,7 +567,7 @@ lookup_tramp_for_decl (struct nesting_info *info, tree decl,
   return (tree) *slot;
 }
 
-/* Build or return the field within the non-local frame state that holds
+/* Build or return the field within the non-local frame struct that holds
    the non-local goto "jmp_buf".  The buffer itself is maintained by the
    rtl middle-end as dynamic stack space is allocated.  */
 
@@ -1888,6 +1920,8 @@ convert_tramp_reference_op (tree *tp, int *walk_subtrees, void *data)
   switch (TREE_CODE (t))
     {
     case ADDR_EXPR:
+      if (TREE_STATIC (t))
+	break;
       /* Build
 	   T.1 = &CHAIN->tramp;
 	   T.2 = __builtin_adjust_trampoline (T.1);
