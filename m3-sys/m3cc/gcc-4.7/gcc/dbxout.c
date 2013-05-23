@@ -47,7 +47,7 @@ along with GCC; see the file COPYING3.  If not see
    The first one is marked as continued with a double-backslash at the
    end of its "name".
 
-   The kind-of-symbol letter distinguished function names from global
+   The kind-of-symbol letter distinguishes function names from global
    variables from file-scope variables from parameters from auto
    variables in memory from typedef names from register variables.
    See `dbxout_symbol'.
@@ -157,6 +157,11 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef DBX_CONTIN_CHAR
 #define DBX_CONTIN_CHAR '\\'
 #endif
+
+/* Keep this string consistent with that of the same name in m3gdb, 
+   m3-lang.c. rodney.m.bates@acm.org. */ 
+static const char * procedures_have_extra_block_string 
+  = "procedures_have_extra_block."; 
 
 enum typestatus {TYPE_UNSEEN, TYPE_XREF, TYPE_DEFINED};
 
@@ -1080,6 +1085,11 @@ dbxout_init (const char *input_file_name)
   dbxout_begin_simple_stabs ("gcc2_compiled.", N_OPT);
   dbxout_stab_value_zero ();
 #endif
+
+  /* Emit an N_OPT stab to indicate that procedures have an extra block. 
+     Needed by m3gdb.  rodney.m.bates@acm.org. */
+  dbxout_begin_simple_stabs (procedures_have_extra_block_string, N_OPT);
+  dbxout_stab_value_zero ();
 
   base_input_file = lastfile = input_file_name;
 
@@ -2470,8 +2480,12 @@ dbxout_expand_expr (tree expr)
 	 way to express that in stabs.  Also, there are name mangling issues
 	 here.  We end up with references to undefined symbols if we don't
 	 disable debug info for these variables.  */
+      /* This change eliminates debug output for most variables and 
+         undermines m3gdb's ability to access them.  rodney.m.bates@acm.org. */
+#if 0 
       if (!targetm.have_tls && DECL_THREAD_LOCAL_P (expr))
 	return NULL;
+#endif 
       if (TREE_STATIC (expr)
 	  && !TREE_ASM_WRITTEN (expr)
 	  && !DECL_HAS_VALUE_EXPR_P (expr)
@@ -2655,7 +2669,7 @@ dbxout_symbol (tree decl, int local ATTRIBUTE_UNUSED)
 
       /* We now have a used symbol.  We need to generate the info for
          the symbol's type in addition to the symbol itself.  These
-         type symbols are queued to be generated after were done with
+         type symbols are queued to be generated after we are done with
          the symbol itself (otherwise they would fight over the
          stabstr obstack).
 
@@ -2959,6 +2973,28 @@ dbxout_symbol (tree decl, int local ATTRIBUTE_UNUSED)
       break;
     }
   DBXOUT_DECR_NESTING;
+  return result;
+}
+
+/* Special-purpose function to write stabs for the static_chain_decl. 
+   So far, this is not working.  m3gdb needs the place in the activation
+   record where the SL is stored.  Right now, the SL is not necessarily
+   stored at all, but may just be kept in a register.  DECL_RTL and 
+   DECL_INCOMING_RTL may both have register expressions.  But stabs
+   entries for register variables, of kind N_RSYM, are currently ignored
+   by gdb in dbxread.c, and making it read them could create problems
+   elsewhere, because there can be other variables for which both an
+   N_RSYM and an N_LSYM stabs entry are created. rodney.m.bates@acm.org.    
+*/ 
+static int 
+dbxout_static_chain_decl (tree decl) 
+{ int result = 0;
+  tree type =  DECL_ARG_TYPE (decl); 
+  rtx decl_rtl = DECL_RTL (decl);
+  if (decl_rtl)
+    { decl_rtl = eliminate_regs (decl_rtl, 0, NULL_RTX);
+      result = dbxout_symbol_location (decl, type, 0, decl_rtl);
+    }
   return result;
 }
 
@@ -3418,7 +3454,7 @@ dbxout_syms (tree syms)
   return result;
 }
 
-/* The following two functions output definitions of function parameters.
+/* The following three functions output definitions of function parameters.
    Each parameter gets a definition locating it in the parameter list.
    Each parameter that is a register variable gets a second definition
    locating it in the register.
@@ -3430,8 +3466,8 @@ dbxout_syms (tree syms)
 /* Output definitions, referring to storage in the parmlist,
    of all the parms in PARMS, which is a chain of PARM_DECL nodes.  */
 
-void
-dbxout_parms (tree parms)
+static void
+dbxout_parms_1 (tree parms, bool is_memory)
 {
   ++debug_nesting;
   emit_pending_bincls_if_required ();
@@ -3461,7 +3497,8 @@ dbxout_parms (tree parms)
 	  }
 #endif
 
-	if (PARM_PASSED_IN_MEMORY (parms))
+	if (is_memory || PARM_PASSED_IN_MEMORY (parms)) 
+          /* ^m3gdb support rodney.m.bates@acm.org. */ 
 	  {
 	    rtx inrtl = XEXP (DECL_INCOMING_RTL (parms), 0);
 
@@ -3622,6 +3659,11 @@ dbxout_parms (tree parms)
   DBXOUT_DECR_NESTING;
 }
 
+void
+dbxout_parms (tree parms)
+  { dbxout_parms_1 ( parms, /* is_memory */ false ); 
+  } 
+
 /* Output definitions for the places where parms live during the function,
    when different from where they were passed, when the parms were passed
    in memory.
@@ -3740,6 +3782,12 @@ dbxout_block (tree block, int depth, tree args)
 	  did_output = 0;
 	  if (debug_info_level != DINFO_LEVEL_TERSE || depth == 0)
 	    did_output = dbxout_syms (BLOCK_VARS (block));
+          did_output = 1; /* Omitting the LBRAC/RBRAC for blocks with no
+                             locals makes the stabs block structure
+                             inconsistent with Modula-3 linker names for
+                             nested procedures, and leaves m3gdb unable to
+                             figure out what blocks they are nested in.
+                             rodney.m.bates@acm.org */
 	  if (args)
 	    dbxout_reg_parms (args);
 
@@ -3810,6 +3858,15 @@ dbxout_begin_function (tree decl)
   TREE_USED (decl) = saved_tree_used1;
 
   dbxout_parms (DECL_ARGUMENTS (decl));
+
+  /* m3gdb is more robust if it gets the static link declaration.
+     rodney.m.bates@acm.org*/ 
+  { tree static_decl = DECL_STRUCT_FUNCTION (decl)->static_chain_decl; 
+    if ( static_decl ) 
+      { dbxout_static_chain_decl (static_decl); } 
+      
+  } 
+
   if (DECL_NAME (DECL_RESULT (decl)) != 0)
     dbxout_symbol (DECL_RESULT (decl), 1);
 }
