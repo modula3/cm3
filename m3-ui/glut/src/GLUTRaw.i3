@@ -14,7 +14,7 @@ IMPORT Ctypes AS C;
 
 <* EXTERNAL glutInit *>
 PROCEDURE Init (VAR pargc: C.int;
-READONLY argv: (*ARRAY OF*) C.char_star;
+ argv: ADDRESS;
 );
 
 <* EXTERNAL glutInitWindowPosition *>
