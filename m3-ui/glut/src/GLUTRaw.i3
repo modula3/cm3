@@ -13,63 +13,49 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL glutInit *>
-PROCEDURE Init (VAR pargc: C.int;
- argv: ADDRESS;
-);
+PROCEDURE Init (VAR pargc: C.int; argv: ADDRESS; );
 
 <* EXTERNAL glutInitWindowPosition *>
-PROCEDURE InitWindowPosition (x, y: C.int;
-);
+PROCEDURE InitWindowPosition (x, y: C.int; );
 
 <* EXTERNAL glutInitWindowSize *>
-PROCEDURE InitWindowSize (width, height: C.int;
-);
+PROCEDURE InitWindowSize (width, height: C.int; );
 
 <* EXTERNAL glutInitDisplayMode *>
-PROCEDURE InitDisplayMode (displayMode: C.unsigned_int;
-);
+PROCEDURE InitDisplayMode (displayMode: C.unsigned_int; );
 
 <* EXTERNAL glutInitDisplayString *>
-PROCEDURE InitDisplayString ( displayMode: C.char_star;
-);
+PROCEDURE InitDisplayString (displayMode: C.char_star; );
 
 <* EXTERNAL glutMainLoop *>
 PROCEDURE MainLoop ();
 
 <* EXTERNAL glutCreateWindow *>
-PROCEDURE CreateWindow ( title: C.char_star;
-): C.int;
+PROCEDURE CreateWindow (title: C.char_star; ): C.int;
 
 <* EXTERNAL glutCreateSubWindow *>
-PROCEDURE CreateSubWindow (window, x, y, width, height: C.int;
-): C.int;
+PROCEDURE CreateSubWindow (window, x, y, width, height: C.int; ): C.int;
 
 <* EXTERNAL glutDestroyWindow *>
-PROCEDURE DestroyWindow (window: C.int;
-);
+PROCEDURE DestroyWindow (window: C.int; );
 
 <* EXTERNAL glutSetWindow *>
-PROCEDURE SetWindow (window: C.int;
-);
+PROCEDURE SetWindow (window: C.int; );
 
 <* EXTERNAL glutGetWindow *>
 PROCEDURE GetWindow (): C.int;
 
 <* EXTERNAL glutSetWindowTitle *>
-PROCEDURE SetWindowTitle ( title: C.char_star;
-);
+PROCEDURE SetWindowTitle (title: C.char_star; );
 
 <* EXTERNAL glutSetIconTitle *>
-PROCEDURE SetIconTitle ( title: C.char_star;
-);
+PROCEDURE SetIconTitle (title: C.char_star; );
 
 <* EXTERNAL glutReshapeWindow *>
-PROCEDURE ReshapeWindow (width, height: C.int;
-);
+PROCEDURE ReshapeWindow (width, height: C.int; );
 
 <* EXTERNAL glutPositionWindow *>
-PROCEDURE PositionWindow (x, y: C.int;
-);
+PROCEDURE PositionWindow (x, y: C.int; );
 
 <* EXTERNAL glutShowWindow *>
 PROCEDURE ShowWindow ();
@@ -90,8 +76,7 @@ PROCEDURE PopWindow ();
 PROCEDURE FullScreen ();
 
 <* EXTERNAL glutPostWindowRedisplay *>
-PROCEDURE PostWindowRedisplay (window: C.int;
-);
+PROCEDURE PostWindowRedisplay (window: C.int; );
 
 <* EXTERNAL glutPostRedisplay *>
 PROCEDURE PostRedisplay ();
@@ -100,12 +85,10 @@ PROCEDURE PostRedisplay ();
 PROCEDURE SwapBuffers ();
 
 <* EXTERNAL glutWarpPointer *>
-PROCEDURE WarpPointer (x, y: C.int;
-);
+PROCEDURE WarpPointer (x, y: C.int; );
 
 <* EXTERNAL glutSetCursor *>
-PROCEDURE SetCursor (cursor: C.int;
-);
+PROCEDURE SetCursor (cursor: C.int; );
 
 <* EXTERNAL glutEstablishOverlay *>
 PROCEDURE EstablishOverlay ();
@@ -114,15 +97,13 @@ PROCEDURE EstablishOverlay ();
 PROCEDURE RemoveOverlay ();
 
 <* EXTERNAL glutUseLayer *>
-PROCEDURE UseLayer (layer: C.unsigned_int;
-);
+PROCEDURE UseLayer (layer: C.unsigned_int; );
 
 <* EXTERNAL glutPostOverlayRedisplay *>
 PROCEDURE PostOverlayRedisplay ();
 
 <* EXTERNAL glutPostWindowOverlayRedisplay *>
-PROCEDURE PostWindowOverlayRedisplay (window: C.int;
-);
+PROCEDURE PostWindowOverlayRedisplay (window: C.int; );
 
 <* EXTERNAL glutShowOverlay *>
 PROCEDURE ShowOverlay ();
@@ -131,220 +112,164 @@ PROCEDURE ShowOverlay ();
 PROCEDURE HideOverlay ();
 
 <* EXTERNAL glutDestroyMenu *>
-PROCEDURE DestroyMenu (menu: C.int;
-);
+PROCEDURE DestroyMenu (menu: C.int; );
 
 <* EXTERNAL glutGetMenu *>
 PROCEDURE GetMenu (): C.int;
 
 <* EXTERNAL glutSetMenu *>
-PROCEDURE SetMenu (menu: C.int;
-);
+PROCEDURE SetMenu (menu: C.int; );
 
 <* EXTERNAL glutAddMenuEntry *>
-PROCEDURE AddMenuEntry ( label: C.char_star;
-value: C.int;
-);
+PROCEDURE AddMenuEntry (label: C.char_star; value: C.int; );
 
 <* EXTERNAL glutAddSubMenu *>
-PROCEDURE AddSubMenu ( label: C.char_star;
-subMenu: C.int;
-);
+PROCEDURE AddSubMenu (label: C.char_star; subMenu: C.int; );
 
 <* EXTERNAL glutChangeToMenuEntry *>
-PROCEDURE ChangeToMenuEntry (item: C.int;
- label: C.char_star;
-value: C.int;
-);
+PROCEDURE ChangeToMenuEntry
+  (item: C.int; label: C.char_star; value: C.int; );
 
 <* EXTERNAL glutChangeToSubMenu *>
-PROCEDURE ChangeToSubMenu (item: C.int;
- label: C.char_star;
-value: C.int;
-);
+PROCEDURE ChangeToSubMenu
+  (item: C.int; label: C.char_star; value: C.int; );
 
 <* EXTERNAL glutRemoveMenuItem *>
-PROCEDURE RemoveMenuItem (item: C.int;
-);
+PROCEDURE RemoveMenuItem (item: C.int; );
 
 <* EXTERNAL glutAttachMenu *>
-PROCEDURE AttachMenu (button: C.int;
-);
+PROCEDURE AttachMenu (button: C.int; );
 
 <* EXTERNAL glutDetachMenu *>
-PROCEDURE DetachMenu (button: C.int;
-);
+PROCEDURE DetachMenu (button: C.int; );
 
 TYPE
-  BYTE = [0..255];
-  CallBack0T = PROCEDURE();
-  CallBack1T = PROCEDURE(p1 : INTEGER);
-  CallBack2T = PROCEDURE(p1,p2 : INTEGER);
-  CallBack3T = PROCEDURE(p1,p2,p3 : INTEGER);
-  CallBack4T = PROCEDURE(p1,p2,p3,p4 : INTEGER);
-  CallBack5T = PROCEDURE(p1 : BYTE; p2,p3 : INTEGER);
-  CallBack6T = PROCEDURE(p1 : CARDINAL; p2,p3,p4 : INTEGER);
+  BYTE = [0 .. 255];
+  CallBack0T = PROCEDURE ();
+  CallBack1T = PROCEDURE (p1: INTEGER);
+  CallBack2T = PROCEDURE (p1, p2: INTEGER);
+  CallBack3T = PROCEDURE (p1, p2, p3: INTEGER);
+  CallBack4T = PROCEDURE (p1, p2, p3, p4: INTEGER);
+  CallBack5T = PROCEDURE (p1: BYTE; p2, p3: INTEGER);
+  CallBack6T = PROCEDURE (p1: CARDINAL; p2, p3, p4: INTEGER);
 
 
 <* EXTERNAL glutCreateMenu *>
-PROCEDURE CreateMenu ( callback: CallBack1T;
-): C.int;
+PROCEDURE CreateMenu (callback: CallBack1T; ): C.int;
 
 <* EXTERNAL glutTimerFunc *>
-PROCEDURE TimerFunc (time: C.unsigned_int;
- callback: CallBack1T;
-value: C.int;
-);
+PROCEDURE TimerFunc
+  (time: C.unsigned_int; callback: CallBack1T; value: C.int; );
 
 <* EXTERNAL glutIdleFunc *>
-PROCEDURE IdleFunc ( callback: CallBack0T;
-);
+PROCEDURE IdleFunc (callback: CallBack0T; );
 
 <* EXTERNAL glutKeyboardFunc *>
-PROCEDURE KeyboardFunc ( callback: CallBack5T;
-);
+PROCEDURE KeyboardFunc (callback: CallBack5T; );
 
 <* EXTERNAL glutSpecialFunc *>
-PROCEDURE SpecialFunc ( callback: CallBack3T;
-);
+PROCEDURE SpecialFunc (callback: CallBack3T; );
 
 <* EXTERNAL glutReshapeFunc *>
-PROCEDURE ReshapeFunc ( callback: CallBack2T;
-);
+PROCEDURE ReshapeFunc (callback: CallBack2T; );
 
 <* EXTERNAL glutVisibilityFunc *>
-PROCEDURE VisibilityFunc ( callback: CallBack1T;
-);
+PROCEDURE VisibilityFunc (callback: CallBack1T; );
 
 <* EXTERNAL glutDisplayFunc *>
-PROCEDURE DisplayFunc ( callback: CallBack0T;
-);
+PROCEDURE DisplayFunc (callback: CallBack0T; );
 
 <* EXTERNAL glutMouseFunc *>
-PROCEDURE MouseFunc ( callback: CallBack4T;
-);
+PROCEDURE MouseFunc (callback: CallBack4T; );
 
 <* EXTERNAL glutMotionFunc *>
-PROCEDURE MotionFunc ( callback: CallBack2T;
-);
+PROCEDURE MotionFunc (callback: CallBack2T; );
 
 <* EXTERNAL glutPassiveMotionFunc *>
-PROCEDURE PassiveMotionFunc ( callback: CallBack2T;
-);
+PROCEDURE PassiveMotionFunc (callback: CallBack2T; );
 
 <* EXTERNAL glutEntryFunc *>
-PROCEDURE EntryFunc ( callback: CallBack1T;
-);
+PROCEDURE EntryFunc (callback: CallBack1T; );
 
 <* EXTERNAL glutKeyboardUpFunc *>
-PROCEDURE KeyboardUpFunc ( callback: CallBack5T;
-);
+PROCEDURE KeyboardUpFunc (callback: CallBack5T; );
 
 <* EXTERNAL glutSpecialUpFunc *>
-PROCEDURE SpecialUpFunc ( callback: CallBack3T;
-);
+PROCEDURE SpecialUpFunc (callback: CallBack3T; );
 
 <* EXTERNAL glutJoystickFunc *>
-PROCEDURE JoystickFunc ( callback: CallBack6T;
-pollInterval: C.int;
-);
+PROCEDURE JoystickFunc (callback: CallBack6T; pollInterval: C.int; );
 
 <* EXTERNAL glutMenuStateFunc *>
-PROCEDURE MenuStateFunc ( callback: CallBack1T;
-);
+PROCEDURE MenuStateFunc (callback: CallBack1T; );
 
 <* EXTERNAL glutMenuStatusFunc *>
-PROCEDURE MenuStatusFunc ( callback: CallBack3T;
-);
+PROCEDURE MenuStatusFunc (callback: CallBack3T; );
 
 <* EXTERNAL glutOverlayDisplayFunc *>
-PROCEDURE OverlayDisplayFunc ( callback: CallBack0T;
-);
+PROCEDURE OverlayDisplayFunc (callback: CallBack0T; );
 
 <* EXTERNAL glutWindowStatusFunc *>
-PROCEDURE WindowStatusFunc ( callback: CallBack1T;
-);
+PROCEDURE WindowStatusFunc (callback: CallBack1T; );
 
 <* EXTERNAL glutSpaceballMotionFunc *>
-PROCEDURE SpaceballMotionFunc ( callback: CallBack3T;
-);
+PROCEDURE SpaceballMotionFunc (callback: CallBack3T; );
 
 <* EXTERNAL glutSpaceballRotateFunc *>
-PROCEDURE SpaceballRotateFunc ( callback: CallBack3T;
-);
+PROCEDURE SpaceballRotateFunc (callback: CallBack3T; );
 
 <* EXTERNAL glutSpaceballButtonFunc *>
-PROCEDURE SpaceballButtonFunc ( callback: CallBack2T;
-);
+PROCEDURE SpaceballButtonFunc (callback: CallBack2T; );
 
 <* EXTERNAL glutButtonBoxFunc *>
-PROCEDURE ButtonBoxFunc ( callback: CallBack2T;
-);
+PROCEDURE ButtonBoxFunc (callback: CallBack2T; );
 
 <* EXTERNAL glutDialsFunc *>
-PROCEDURE DialsFunc ( callback: CallBack2T;
-);
+PROCEDURE DialsFunc (callback: CallBack2T; );
 
 <* EXTERNAL glutTabletMotionFunc *>
-PROCEDURE TabletMotionFunc ( callback: CallBack2T;
-);
+PROCEDURE TabletMotionFunc (callback: CallBack2T; );
 
 <* EXTERNAL glutTabletButtonFunc *>
-PROCEDURE TabletButtonFunc ( callback: CallBack4T;
-);
+PROCEDURE TabletButtonFunc (callback: CallBack4T; );
 
 <* EXTERNAL glutGet *>
-PROCEDURE Get (query: C.unsigned_int;
-): C.int;
+PROCEDURE Get (query: C.unsigned_int; ): C.int;
 
 <* EXTERNAL glutDeviceGet *>
-PROCEDURE DeviceGet (query: C.unsigned_int;
-): C.int;
+PROCEDURE DeviceGet (query: C.unsigned_int; ): C.int;
 
 <* EXTERNAL glutGetModifiers *>
 PROCEDURE GetModifiers (): C.int;
 
 <* EXTERNAL glutLayerGet *>
-PROCEDURE LayerGet (query: C.unsigned_int;
-): C.int;
+PROCEDURE LayerGet (query: C.unsigned_int; ): C.int;
 
 <* EXTERNAL glutWireCube *>
-PROCEDURE WireCube (size: LONGREAL;
-);
+PROCEDURE WireCube (size: LONGREAL; );
 
 <* EXTERNAL glutSolidCube *>
-PROCEDURE SolidCube (size: LONGREAL;
-);
+PROCEDURE SolidCube (size: LONGREAL; );
 
 <* EXTERNAL glutWireSphere *>
-PROCEDURE WireSphere (radius: LONGREAL;
-slices, stacks: INTEGER;
-);
+PROCEDURE WireSphere (radius: LONGREAL; slices, stacks: INTEGER; );
 
 <* EXTERNAL glutSolidSphere *>
-PROCEDURE SolidSphere (radius: LONGREAL;
-slices, stacks: INTEGER;
-);
+PROCEDURE SolidSphere (radius: LONGREAL; slices, stacks: INTEGER; );
 
 <* EXTERNAL glutWireCone *>
-PROCEDURE WireCone (base, height: LONGREAL;
-slices, stacks: INTEGER;
-);
+PROCEDURE WireCone (base, height: LONGREAL; slices, stacks: INTEGER; );
 
 <* EXTERNAL glutSolidCone *>
-PROCEDURE SolidCone (base, height: LONGREAL;
-slices, stacks: INTEGER;
-);
+PROCEDURE SolidCone (base, height: LONGREAL; slices, stacks: INTEGER; );
 
 <* EXTERNAL glutWireTorus *>
-PROCEDURE WireTorus (innerRadius, outerRadius: LONGREAL;
-sides, rings: INTEGER;
-);
+PROCEDURE WireTorus
+  (innerRadius, outerRadius: LONGREAL; sides, rings: INTEGER; );
 
 <* EXTERNAL glutSolidTorus *>
-PROCEDURE SolidTorus (innerRadius, outerRadius: LONGREAL;
-sides, rings: INTEGER;
-);
+PROCEDURE SolidTorus
+  (innerRadius, outerRadius: LONGREAL; sides, rings: INTEGER; );
 
 <* EXTERNAL glutWireDodecahedron *>
 PROCEDURE WireDodecahedron ();
@@ -371,16 +296,13 @@ PROCEDURE WireIcosahedron ();
 PROCEDURE SolidIcosahedron ();
 
 <* EXTERNAL glutWireTeapot *>
-PROCEDURE WireTeapot (size: LONGREAL;
-);
+PROCEDURE WireTeapot (size: LONGREAL; );
 
 <* EXTERNAL glutSolidTeapot *>
-PROCEDURE SolidTeapot (size: LONGREAL;
-);
+PROCEDURE SolidTeapot (size: LONGREAL; );
 
 <* EXTERNAL glutGameModeString *>
-PROCEDURE GameModeString ( string: C.char_star;
-);
+PROCEDURE GameModeString (string: C.char_star; );
 
 <* EXTERNAL glutEnterGameMode *>
 PROCEDURE EnterGameMode (): C.int;
@@ -389,12 +311,10 @@ PROCEDURE EnterGameMode (): C.int;
 PROCEDURE LeaveGameMode ();
 
 <* EXTERNAL glutGameModeGet *>
-PROCEDURE GameModeGet (query: C.unsigned_int;
-): C.int;
+PROCEDURE GameModeGet (query: C.unsigned_int; ): C.int;
 
 <* EXTERNAL glutVideoResizeGet *>
-PROCEDURE VideoResizeGet (query: C.unsigned_int;
-): C.int;
+PROCEDURE VideoResizeGet (query: C.unsigned_int; ): C.int;
 
 <* EXTERNAL glutSetupVideoResizing *>
 PROCEDURE SetupVideoResizing ();
@@ -403,40 +323,31 @@ PROCEDURE SetupVideoResizing ();
 PROCEDURE StopVideoResizing ();
 
 <* EXTERNAL glutVideoResize *>
-PROCEDURE VideoResize (x, y, width, height: C.int;
-);
+PROCEDURE VideoResize (x, y, width, height: C.int; );
 
 <* EXTERNAL glutVideoPan *>
-PROCEDURE VideoPan (x, y, width, height: C.int;
-);
+PROCEDURE VideoPan (x, y, width, height: C.int; );
 
 <* EXTERNAL glutSetColor *>
-PROCEDURE SetColor (color: C.int;
-red, green, blue: REAL;
-);
+PROCEDURE SetColor (color: C.int; red, green, blue: REAL; );
 
 <* EXTERNAL glutGetColor *>
-PROCEDURE GetColor (color, component: C.int;
-): REAL;
+PROCEDURE GetColor (color, component: C.int; ): REAL;
 
 <* EXTERNAL glutCopyColormap *>
-PROCEDURE CopyColormap (window: C.int;
-);
+PROCEDURE CopyColormap (window: C.int; );
 
 <* EXTERNAL glutIgnoreKeyRepeat *>
-PROCEDURE IgnoreKeyRepeat (ignore: C.int;
-);
+PROCEDURE IgnoreKeyRepeat (ignore: C.int; );
 
 <* EXTERNAL glutSetKeyRepeat *>
-PROCEDURE SetKeyRepeat (repeatMode: C.int;
-);
+PROCEDURE SetKeyRepeat (repeatMode: C.int; );
 
 <* EXTERNAL glutForceJoystickFunc *>
 PROCEDURE ForceJoystickFunc ();
 
 <* EXTERNAL glutExtensionSupported *>
-PROCEDURE ExtensionSupported ( extension: C.char_star;
-): C.int;
+PROCEDURE ExtensionSupported (extension: C.char_star; ): C.int;
 
 <* EXTERNAL glutReportErrors *>
 PROCEDURE ReportErrors ();
@@ -448,39 +359,31 @@ PROCEDURE MainLoopEvent ();
 PROCEDURE LeaveMainLoop ();
 
 <* EXTERNAL glutMouseWheelFunc *>
-PROCEDURE MouseWheelFunc ( callback: CallBack4T;
-);
+PROCEDURE MouseWheelFunc (callback: CallBack4T; );
 
 <* EXTERNAL glutCloseFunc *>
-PROCEDURE CloseFunc ( callback: CallBack0T;
-);
+PROCEDURE CloseFunc (callback: CallBack0T; );
 
 <* EXTERNAL glutWMCloseFunc *>
-PROCEDURE WMCloseFunc ( callback: CallBack0T;
-);
+PROCEDURE WMCloseFunc (callback: CallBack0T; );
 
 <* EXTERNAL glutMenuDestroyFunc *>
-PROCEDURE MenuDestroyFunc ( callback: CallBack0T;
-);
+PROCEDURE MenuDestroyFunc (callback: CallBack0T; );
 
 <* EXTERNAL glutSetOption *>
-PROCEDURE SetOption (option_flag: C.unsigned_int;
-value: C.int;
-);
+PROCEDURE SetOption (option_flag: C.unsigned_int; value: C.int; );
 
 <* EXTERNAL glutGetWindowData *>
 PROCEDURE GetWindowData (): REFANY;
 
 <* EXTERNAL glutSetWindowData *>
-PROCEDURE SetWindowData ( data: REFANY;
-);
+PROCEDURE SetWindowData (data: REFANY; );
 
 <* EXTERNAL glutGetMenuData *>
 PROCEDURE GetMenuData (): REFANY;
 
 <* EXTERNAL glutSetMenuData *>
-PROCEDURE SetMenuData ( data: REFANY;
-);
+PROCEDURE SetMenuData (data: REFANY; );
 
 <* EXTERNAL glutWireRhombicDodecahedron *>
 PROCEDURE WireRhombicDodecahedron ();
@@ -490,94 +393,89 @@ PROCEDURE SolidRhombicDodecahedron ();
 
 <* EXTERNAL glutWireSierpinskiSponge *>
 PROCEDURE WireSierpinskiSponge (num_levels: C.int;
-VAR offset: ARRAY [0..2] OF LONGREAL;
-scale: LONGREAL;
-);
+                                VAR offset: ARRAY [0 .. 2] OF LONGREAL;
+                                    scale : LONGREAL;                   );
 
 <* EXTERNAL glutSolidSierpinskiSponge *>
 PROCEDURE SolidSierpinskiSponge (num_levels: C.int;
-VAR offset: ARRAY [0..2] OF LONGREAL;
-scale: LONGREAL;
-);
+                                 VAR offset: ARRAY [0 .. 2] OF LONGREAL;
+                                     scale : LONGREAL;                   );
 
 <* EXTERNAL glutWireCylinder *>
-PROCEDURE WireCylinder (radius, height: LONGREAL;
-slices, stacks: INTEGER;
-);
+PROCEDURE WireCylinder
+  (radius, height: LONGREAL; slices, stacks: INTEGER; );
 
 <* EXTERNAL glutSolidCylinder *>
-PROCEDURE SolidCylinder (radius, height: LONGREAL;
-slices, stacks: INTEGER;
-);
+PROCEDURE SolidCylinder
+  (radius, height: LONGREAL; slices, stacks: INTEGER; );
 
 <* EXTERNAL glutGetProcAddress *>
-PROCEDURE GetProcAddress ( procName: C.char_star;
-): REF CallBack0T;
+PROCEDURE GetProcAddress (procName: C.char_star; ): REF CallBack0T;
 
 <* EXTERNAL glutBitmapCharacter *>
-PROCEDURE BitmapCharacter ( font: ADDRESS;
-character: C.int;
-);
+PROCEDURE BitmapCharacter (font: ADDRESS; character: C.int; );
 
 <* EXTERNAL glutBitmapWidth *>
-PROCEDURE BitmapWidth ( font: ADDRESS;
-character: C.int;
-): C.int;
+PROCEDURE BitmapWidth (font: ADDRESS; character: C.int; ): C.int;
 
 <* EXTERNAL glutStrokeCharacter *>
-PROCEDURE StrokeCharacter ( font: ADDRESS;
-character: C.int;
-);
+PROCEDURE StrokeCharacter (font: ADDRESS; character: C.int; );
 
 <* EXTERNAL glutStrokeWidth *>
-PROCEDURE StrokeWidth ( font: ADDRESS;
-character: C.int;
-): C.int;
+PROCEDURE StrokeWidth (font: ADDRESS; character: C.int; ): C.int;
 
 <* EXTERNAL glutBitmapLength *>
-PROCEDURE BitmapLength ( font: ADDRESS;
- string: C.char_star;
-): C.int;
+PROCEDURE BitmapLength (font: ADDRESS; string: C.char_star; ): C.int;
 
 <* EXTERNAL glutStrokeLength *>
-PROCEDURE StrokeLength ( font: ADDRESS;
- string: C.char_star;
-): C.int;
+PROCEDURE StrokeLength (font: ADDRESS; string: C.char_star; ): C.int;
 
 <* EXTERNAL glutBitmapHeight *>
-PROCEDURE BitmapHeight ( font: ADDRESS;
-): C.int;
+PROCEDURE BitmapHeight (font: ADDRESS; ): C.int;
 
 <* EXTERNAL glutStrokeHeight *>
-PROCEDURE StrokeHeight ( font: ADDRESS;
-): REAL;
+PROCEDURE StrokeHeight (font: ADDRESS; ): REAL;
 
 <* EXTERNAL glutBitmapString *>
-PROCEDURE BitmapString ( font: ADDRESS;
- string: C.char_star;
-);
+PROCEDURE BitmapString (font: ADDRESS; string: C.char_star; );
 
 <* EXTERNAL glutStrokeString *>
-PROCEDURE StrokeString ( font: ADDRESS;
- string: C.char_star;
-);
+PROCEDURE StrokeString (font: ADDRESS; string: C.char_star; );
 
-<* EXTERNAL *> VAR glutStrokeRoman: C.char;
+<* EXTERNAL *>
+VAR
+  glutStrokeRoman: C.char;
 
-<* EXTERNAL *> VAR glutStrokeMonoRoman: C.char;
+<* EXTERNAL *>
+VAR
+  glutStrokeMonoRoman: C.char;
 
-<* EXTERNAL *> VAR glutBitmap9By15: C.char;
+<* EXTERNAL *>
+VAR
+  glutBitmap9By15: C.char;
 
-<* EXTERNAL *> VAR glutBitmap8By13: C.char;
+<* EXTERNAL *>
+VAR
+  glutBitmap8By13: C.char;
 
-<* EXTERNAL *> VAR glutBitmapTimesRoman10: C.char;
+<* EXTERNAL *>
+VAR
+  glutBitmapTimesRoman10: C.char;
 
-<* EXTERNAL *> VAR glutBitmapTimesRoman24: C.char;
+<* EXTERNAL *>
+VAR
+  glutBitmapTimesRoman24: C.char;
 
-<* EXTERNAL *> VAR glutBitmapHelvetica10: C.char;
+<* EXTERNAL *>
+VAR
+  glutBitmapHelvetica10: C.char;
 
-<* EXTERNAL *> VAR glutBitmapHelvetica12: C.char;
+<* EXTERNAL *>
+VAR
+  glutBitmapHelvetica12: C.char;
 
-<* EXTERNAL *> VAR glutBitmapHelvetica18: C.char;
+<* EXTERNAL *>
+VAR
+  glutBitmapHelvetica18: C.char;
 
 END GLUTRaw.
