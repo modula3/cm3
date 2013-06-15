@@ -20,6 +20,7 @@
 %typemap(m3wrapfreearg) char *         %{FreeString($1_name,$1);%}
 
 //the char** typemaps
+/*
 %typemap(m3rawinmode)   char **        %{READONLY%}
 %typemap(m3wrapinmode)  char **        %{READONLY%}
 %typemap(m3rawintype)   char **        %{(*ARRAY OF*) C.char_star%}
@@ -28,6 +29,37 @@
 %typemap(m3wrapinconv)  char **        %{$1 := NewString($1_name[0]);%}
 %typemap(m3wrapargraw)  char **        %{$1%}
 %typemap(m3wrapfreearg) char **        %{FreeString($1_name[0],$1);%}
+*/
+//char ** for argv
+/*
+%typemap("m3rawinmode")   char **    %{%}
+%typemap("m3wrapinmode")  char **    %{READONLY%}
+%typemap("m3rawintype")   char **    %{ADDRESS%}
+%typemap("m3wrapintype")  char **    %{ARRAY OF TEXT%}
+%typemap("m3wrapargraw")  char **    %{ADR(m3argv[0])%}
+%typemap("m3wrapargvar")  char **    %{%}
+%typemap("m3wrapinconv")  char **
+%{m3argv := NEW(UNTRACED REF ARRAY OF C.char_star, m3argc + 1);
+FOR i := 0 TO m3argc  - 1 DO
+m3argv[i] := M3toC.CopyTtoS($1_name[i]);
+END;
+m3argv[m3argc] := NIL;%}
+*/
+
+%typemap("m3rawinmode")   char **    %{%}
+%typemap("m3wrapinmode")  char **    %{READONLY%}
+%typemap("m3rawintype")   char **    %{ADDRESS%}
+%typemap("m3wrapintype")  char **    %{ARRAY OF TEXT%}
+%typemap("m3wrapargvar")  char **    %{$1 := NEW(UNTRACED REF ARRAY OF C.char_star, argc + 1);%}
+%typemap("m3wrapinconv")  char **   %{
+
+FOR i := 0 TO argc  - 1 DO
+$1[i] := M3toC.CopyTtoS($1_name[i]);
+END;
+$1[argc] := NIL;%}
+
+%typemap("m3wrapargraw")  char **   %{ADR($1[0])%}
+
 
 //the void * typemaps
 %typemap("m3wrapintype")  const void * %{REFANY%}
@@ -177,11 +209,11 @@ result : T;%};
 %typemap("m3wrapretraw")   MYSQL *       %{ret%};
 %typemap("m3wrapretconv")  MYSQL *       %{result%};
 %typemap("m3wrapretcheck") MYSQL *       %{result := LOOPHOLE(ret,T);
-IF result = NIL THEN 
-  RAISE ConnE; 
+IF result = NIL THEN
+  RAISE ConnE;
 END;%};
 
-//This adds the RAISES clause to the proc 
+//This adds the RAISES clause to the proc
 %typemap("m3wrapretcheck:throws")  MYSQL * %{ConnE%}
 
 
@@ -217,7 +249,7 @@ IF result = NIL THEN RAISE ResultE; END;%};
 %typemap("m3wrapargraw")    MYSQL_RES *  %{$1%}
 %typemap("m3wrapargvar")    MYSQL_RES *  %{$1: MySQLRaw.RefMysqlResT := LOOPHOLE($1_name,MySQLRaw.RefMysqlResT);%}
 
-//This adds the RAISES clause to the proc 
+//This adds the RAISES clause to the proc
 %typemap("m3wrapretcheck:throws")  MYSQL_RES * %{ResultE%}
 //Need to import MySQLRaw
 %typemap("m3wrapintype:import")  MYSQL_RES *res %{MySQLRaw%}
@@ -273,8 +305,8 @@ result : ManagerT;
 %typemap("m3wrapretraw")   MYSQL_MANAGER *     %{ret%};
 %typemap("m3wrapretconv")  MYSQL_MANAGER *     %{result%};
 %typemap("m3wrapretcheck") MYSQL_MANAGER *     %{result := LOOPHOLE(ret,ManagerT);
-IF result = NIL THEN 
-  RAISE ConnE; 
+IF result = NIL THEN
+  RAISE ConnE;
 END;%};
 
 %typemap("m3wrapretcheck:throws")  MYSQL_MANAGER * %{ConnE%}
@@ -332,7 +364,7 @@ result : StmtT;%};
 %typemap("m3wrapretcheck")  MYSQL_STMT *  %{result := LOOPHOLE(ret,StmtT);
 IF result = NIL THEN RAISE ResultE; END;%};
 
-//This adds the RAISES clause to the proc 
+//This adds the RAISES clause to the proc
 %typemap("m3wrapretcheck:throws")  MYSQL_STMT * %{ResultE%}
 
 //MYSQL_BIND typemaps
@@ -389,7 +421,7 @@ TYPE
 //%typemap(m3wrapinname)  int (*) (void **, const char *, void *) %{local_callback_0%}
 %typemap(m3wrapargvar)  int (*local_infile_init) (void **, const char *, void *) %{
 PROCEDURE P0(p1 : REF C.void_star; p2 : C.char_star; p3 : C.void_star) : C.int =
-VAR 
+VAR
   r1 : REF ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := p3;
@@ -403,7 +435,7 @@ END P0;
 %typemap(m3wrapargraw)  int (*local_infile_read) (void *, char *, unsigned int) %{<*NOWARN*>P1%}
 %typemap(m3wrapargvar)  int (*local_infile_read) (void *, char *, unsigned int) %{
 PROCEDURE P1(p1 : C.void_star; p2 : C.char_star; p3 : C.unsigned_int) : C.int =
-VAR 
+VAR
   r1 : ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := p3;
@@ -417,7 +449,7 @@ END P1;
 %typemap(m3wrapargraw)  int (*local_infile_error) (void *, char *, unsigned int) %{<*NOWARN*>P2%}
 %typemap(m3wrapargvar)  int (*local_infile_error) (void *, char *, unsigned int) %{
 PROCEDURE P2(p1 : C.void_star; p2 : C.char_star; p3 : C.unsigned_int) : C.int =
-VAR 
+VAR
   r1 : ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := p3;
@@ -452,7 +484,7 @@ TYPE
 
 %typemap(m3wrapargvar)  char * (*extend_buffer) (void *, char *, unsigned long *) %{
 PROCEDURE P0(p1 : C.void_star; p2 : C.char_star; p3 : REF C.unsigned_long) : C.char_star =
-VAR 
+VAR
   r1 : ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := LOOPHOLE(p3, REF LONGINT);
