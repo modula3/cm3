@@ -13,17 +13,24 @@ IMPORT GLUTRaw;
 IMPORT M3toC;
 IMPORT Ctypes AS C;
 
-PROCEDURE Init (VALUE pargc: CARDINAL;
+
+VAR
+  m3argc : C.int;
+  m3argv : UNTRACED REF ARRAY OF C.char_star;
+
+PROCEDURE Init ( pargc: CARDINAL;
 READONLY argv: ARRAY OF TEXT;
 ) =
 VAR
-arg1: C.int;
-arg2: C.char_star;
+
 BEGIN
-arg1 := pargc;
-arg2 := M3toC.SharedTtoS(argv[0]);
-GLUTRaw.Init(arg1, arg2);
-M3toC.FreeSharedS(argv[0],arg2);
+m3argc := ORD(pargc);
+m3argv := NEW(UNTRACED REF ARRAY OF C.char_star, m3argc + 1);
+FOR i := 0 TO m3argc  - 1 DO
+m3argv[i] := M3toC.CopyTtoS(argv[i]);
+END;
+m3argv[m3argc] := NIL;
+GLUTRaw.Init(m3argc, ADR(m3argv[0]));
 END Init;
 
 PROCEDURE InitWindowPosition (x, y: INTEGER;

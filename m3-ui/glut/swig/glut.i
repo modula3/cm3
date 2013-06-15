@@ -15,6 +15,11 @@ import ("opengl")
 import_lib("glut","/usr/lib")
 %}
 
+%insert(m3wrapimpl) %{
+VAR
+  m3argc : C.int;
+  m3argv : UNTRACED REF ARRAY OF C.char_star;
+%}
 
 %insert(m3wrapintf) %{
 
