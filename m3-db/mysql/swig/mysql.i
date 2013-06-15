@@ -141,6 +141,7 @@ include_dir("class")
 %rename("SetLocalInfileHandler") mysql_set_local_infile_handler;
 %rename("SetLocalInfileDefault") mysql_set_local_infile_default;
 
+
 %include "mysqltypes.i"
 %include "mysqlmaps.i"
 %include "mysqlapi.i"
