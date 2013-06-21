@@ -1,0 +1,149 @@
+%override the system linker for c++ links
+
+if equal(OS_TYPE, "POSIX")
+  SYSTEM_LD = "g++ -gstabs+ -m64 -fPIC -mno-align-double"
+end
+
+
+%swig defines
+
+%uncomment this define to enable the swig process
+%SWIGBUILD="1"
+
+%if you have a local swig enable it here
+%SWIGLOC="/home/user/swigtest/src/swig-2.0.4/"
+
+if defined("SWIGLOC")
+  SWIGBASE=SWIGLOC
+  SWIGLIBS=" -I" & SWIGBASE & "Lib" & " -I" &  SWIGBASE & "Lib/modula3"
+else
+  SWIGBASE=" "
+  SWIGLIBS=" "
+end
+
+QT_INCLUDE = " -I/usr/include/qt4 "
+
+SWIGQTINC = QT_INCLUDE & " -I../../m3qtcore/src"
+SWIGINCLUDES = SWIGLIBS & SWIGQTINC
+
+%SWIGENUM =  " -generateenumchecks "
+SWIGENUM = ""
+
+if defined("SWIGLOC")
+  SWIG=SWIGBASE & "swig" & SWIGINCLUDES & SWIGENUM & " -c++  -modula3"
+else
+%normal case if installed
+  SWIG="swig " & SWIGQTINC & SWIGENUM & " -c++ -modula3"
+end
+
+
+%some debug parms before -c++
+%-debug-tmsearch
+%-debug-top 4
+
+%import the qt libs
+
+import_lib("QtCore","/usr/lib")
+import_lib("QtGui","/usr/lib")
+
+
+proc doswig(source) is
+
+  local args = source
+
+%  write(SWIG & "\n")
+  write("swig " & args & "\n")
+  return try_exec ("@" & SWIG, args)
+
+end
+
+
+proc compile_cxx(source, options) is
+  local SYSTEM_CXX = "g++"
+
+  local args = options
+  %write("compiling " & source & " " & args & "\n")
+  write("compiling " & source & "\n")
+
+  return try_exec ("@" & SYSTEM_CXX, args, "-c -g", source)
+
+end
+
+
+proc cxx_source(source) is
+
+  srcfile  = source & ".cxx"
+  destfile = source & ".o"
+  srcloc  = "../src/" & srcfile
+  destloc = "../src/" & destfile
+  options  = "-o" & destloc & QT_INCLUDE & " -fpic"
+
+  if stale(destloc,srcloc)
+    ret = compile_cxx( srcloc, options)
+  end
+
+end
+
+
+%pretty print the source
+
+proc dopp(src) is
+
+  write("pretty print " & src & "\n")
+
+  m3file = path() & "/" & src
+  %tmpfile = path() & "/tmp_pp"
+  tmpfile = path() & "/" & src & ".tmp_pp"
+
+  exec("@m3pp " & m3file & " > " & tmpfile)
+  exec("@mv " & tmpfile & " " & m3file)
+
+end
+
+
+%proc to compile a module and a raw
+
+proc qtbuild(src) is
+
+  raw  = src & "Raw"
+  wrap = src & "_wrap"
+  wrapcxx = wrap & ".cxx"
+  wrapout = wrap & ".o"
+  srcwrap  = "../src/" & wrapcxx
+  destwrap = "../src/" & wrapout
+  options  = "-o" & destwrap & QT_INCLUDE & " -fpic"
+
+  srcswig  = path() & "/" & src & ".i"
+  destswig = path() & "/" & src & ".i3"
+
+  if defined("SWIGBUILD")
+    if stale(destswig,srcswig)
+      ret = doswig(srcswig)
+    end
+  end
+
+  if stale(destwrap,srcwrap)
+    ret = compile_cxx( srcwrap, options)
+  end
+
+  if defined("pp")
+
+    %if pp is defined on the command line as in -Dpp then pretty print
+    %the 4 modula3 files we generate
+
+    dopp(src & ".i3")
+    dopp(src & ".m3")
+    dopp(raw & ".i3")
+    dopp(raw & ".m3")
+
+  else
+
+    %Normal case we build the module
+
+    module(raw)
+    module(src)
+    import_obj(wrap)
+
+  end
+
+end
