@@ -15,67 +15,49 @@ TYPE
 
   T = DynamicQObject;
 
-  CallbackProc = PROCEDURE(obj : ADDRESS; args : ADDRESS);
+  CallbackProc = PROCEDURE (obj: ADDRESS; args: ADDRESS);
 
-PROCEDURE ConvertInt(args : ADDRESS; parmNo : INTEGER) : INTEGER;
-PROCEDURE ConvertObj(args : ADDRESS; parmNo : INTEGER) : ADDRESS;
+PROCEDURE ConvertInt (args: ADDRESS; parmNo: INTEGER): INTEGER;
+PROCEDURE ConvertObj (args: ADDRESS; parmNo: INTEGER): ADDRESS;
 
 
 
 TYPE
-AbstractDynamicSlot <: AbstractDynamicSlotPublic;
-AbstractDynamicSlotPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-destroyCxx();
-END;
+  AbstractDynamicSlot <: AbstractDynamicSlotPublic;
+  AbstractDynamicSlotPublic =
+    BRANDED OBJECT cxxObj: ADDRESS;  METHODS destroyCxx (); END;
 
-AbstractDynamicQObject <: AbstractDynamicQObjectPublic;
-AbstractDynamicQObjectPublic =
-QObject BRANDED OBJECT
-METHODS
-qt_metacall(c, id: INTEGER;
- arguments: REF ADDRESS;
-): INTEGER;  (*  virtual *)
-emitDynamicSignal( signal: TEXT;
- arguments: REF ADDRESS;
-): BOOLEAN;
-connectDynamicSlot( obj: QObject;
- signal, slot: TEXT;
-): BOOLEAN;
-connectDynamicSignal( signal: TEXT;
- obj: QObject;
- slot: TEXT;
-): BOOLEAN;
-destroyCxx();
-END;
+  AbstractDynamicQObject <: AbstractDynamicQObjectPublic;
+  AbstractDynamicQObjectPublic =
+    QObject BRANDED OBJECT
+    METHODS
+      qt_metacall (c, id: INTEGER; arguments: REF ADDRESS; ):
+                   INTEGER;      (* virtual *)
+      emitDynamicSignal  (signal: TEXT; arguments: REF ADDRESS; ): BOOLEAN;
+      connectDynamicSlot (obj: QObject; signal, slot: TEXT; ): BOOLEAN;
+      connectDynamicSignal (signal: TEXT; obj: QObject; slot: TEXT; ):
+                            BOOLEAN;
+      destroyCxx ();
+    END;
 
-DynamicQObject <: DynamicQObjectPublic;
-DynamicQObjectPublic =
-AbstractDynamicQObject BRANDED OBJECT
-METHODS
-init_0 ( fn: CallbackProc;
- obj: ADDRESS;
-) : DynamicQObject;
-createSlot( slot: TEXT;
-): AbstractDynamicSlot;  (*  virtual *)
-destroyCxx();
-END;
+  DynamicQObject <: DynamicQObjectPublic;
+  DynamicQObjectPublic =
+    AbstractDynamicQObject BRANDED OBJECT
+    METHODS
+      init_0     (fn: CallbackProc; obj: ADDRESS; ): DynamicQObject;
+      createSlot (slot: TEXT; ): AbstractDynamicSlot; (* virtual *)
+      destroyCxx ();
+    END;
 
-Slot <: SlotPublic;
-SlotPublic =
-AbstractDynamicSlot BRANDED OBJECT
-METHODS
-init_0 ( parent: DynamicQObject;
- fn: CallbackProc;
- obj: ADDRESS;
-) : Slot;
-call( sender: QObject;
- arguments: REF ADDRESS;
-);  (*  virtual *)
-destroyCxx();
-END;
+  Slot <: SlotPublic;
+  SlotPublic =
+    AbstractDynamicSlot BRANDED OBJECT
+    METHODS
+      init_0 (parent: DynamicQObject; fn: CallbackProc; obj: ADDRESS; ):
+              Slot;
+      call       (sender: QObject; arguments: REF ADDRESS; ); (* virtual *)
+      destroyCxx ();
+    END;
 
 
 END QtDynamic.

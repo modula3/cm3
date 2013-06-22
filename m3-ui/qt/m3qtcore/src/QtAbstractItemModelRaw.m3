@@ -12,7 +12,7 @@ MODULE QtAbstractItemModelRaw;
 
 
 REVEAL
-QModelIndex = UNTRACED BRANDED REF RECORD (*Dummy*) END;
-QPersistentModelIndex = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+  QModelIndex = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+  QPersistentModelIndex = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtAbstractItemModelRaw.

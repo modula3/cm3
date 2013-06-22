@@ -16,407 +16,338 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QModelIndex0 (): QModelIndex;
 
 <* EXTERNAL New_QModelIndex1 *>
-PROCEDURE New_QModelIndex1 ( other: ADDRESS;
-): QModelIndex;
+PROCEDURE New_QModelIndex1 (other: ADDRESS; ): QModelIndex;
 
 <* EXTERNAL Delete_QModelIndex *>
-PROCEDURE Delete_QModelIndex ( self: QModelIndex;
-);
+PROCEDURE Delete_QModelIndex (self: QModelIndex; );
 
 <* EXTERNAL QModelIndex_row *>
-PROCEDURE QModelIndex_row ( self: QModelIndex;
-): C.int;
+PROCEDURE QModelIndex_row (self: QModelIndex; ): C.int;
 
 <* EXTERNAL QModelIndex_column *>
-PROCEDURE QModelIndex_column ( self: QModelIndex;
-): C.int;
+PROCEDURE QModelIndex_column (self: QModelIndex; ): C.int;
 
 <* EXTERNAL QModelIndex_internalId *>
-PROCEDURE QModelIndex_internalId ( self: QModelIndex;
-): C.unsigned_long;
+PROCEDURE QModelIndex_internalId (self: QModelIndex; ): C.unsigned_long;
 
 <* EXTERNAL QModelIndex_parent *>
-PROCEDURE QModelIndex_parent ( self: QModelIndex;
-): ADDRESS;
+PROCEDURE QModelIndex_parent (self: QModelIndex; ): ADDRESS;
 
 <* EXTERNAL QModelIndex_sibling *>
-PROCEDURE QModelIndex_sibling ( self: QModelIndex;
-row, column: C.int;
-): ADDRESS;
+PROCEDURE QModelIndex_sibling (self: QModelIndex; row, column: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QModelIndex_child *>
-PROCEDURE QModelIndex_child ( self: QModelIndex;
-row, column: C.int;
-): ADDRESS;
+PROCEDURE QModelIndex_child (self: QModelIndex; row, column: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QModelIndex_flags *>
-PROCEDURE QModelIndex_flags ( self: QModelIndex;
-): C.int;
+PROCEDURE QModelIndex_flags (self: QModelIndex; ): C.int;
 
 <* EXTERNAL QModelIndex_model *>
-PROCEDURE QModelIndex_model ( self: QModelIndex;
-): ADDRESS;
+PROCEDURE QModelIndex_model (self: QModelIndex; ): ADDRESS;
 
 <* EXTERNAL QModelIndex_isValid *>
-PROCEDURE QModelIndex_isValid ( self: QModelIndex;
-): BOOLEAN;
+PROCEDURE QModelIndex_isValid (self: QModelIndex; ): BOOLEAN;
 
-TYPE
-QModelIndex <: ADDRESS;
+TYPE QModelIndex <: ADDRESS;
 
 <* EXTERNAL New_QPersistentModelIndex0 *>
 PROCEDURE New_QPersistentModelIndex0 (): QPersistentModelIndex;
 
 <* EXTERNAL New_QPersistentModelIndex1 *>
-PROCEDURE New_QPersistentModelIndex1 ( index: ADDRESS;
-): QPersistentModelIndex;
+PROCEDURE New_QPersistentModelIndex1 (index: ADDRESS; ):
+  QPersistentModelIndex;
 
 <* EXTERNAL New_QPersistentModelIndex2 *>
-PROCEDURE New_QPersistentModelIndex2 ( other: ADDRESS;
-): QPersistentModelIndex;
+PROCEDURE New_QPersistentModelIndex2 (other: ADDRESS; ):
+  QPersistentModelIndex;
 
 <* EXTERNAL Delete_QPersistentModelIndex *>
-PROCEDURE Delete_QPersistentModelIndex ( self: QPersistentModelIndex;
-);
+PROCEDURE Delete_QPersistentModelIndex (self: QPersistentModelIndex; );
 
 <* EXTERNAL QPersistentModelIndex_row *>
-PROCEDURE QPersistentModelIndex_row ( self: QPersistentModelIndex;
-): C.int;
+PROCEDURE QPersistentModelIndex_row (self: QPersistentModelIndex; ): C.int;
 
 <* EXTERNAL QPersistentModelIndex_column *>
-PROCEDURE QPersistentModelIndex_column ( self: QPersistentModelIndex;
-): C.int;
+PROCEDURE QPersistentModelIndex_column (self: QPersistentModelIndex; ):
+  C.int;
 
 <* EXTERNAL QPersistentModelIndex_internalId *>
-PROCEDURE QPersistentModelIndex_internalId ( self: QPersistentModelIndex;
-): C.unsigned_long;
+PROCEDURE QPersistentModelIndex_internalId (self: QPersistentModelIndex; ):
+  C.unsigned_long;
 
 <* EXTERNAL QPersistentModelIndex_parent *>
-PROCEDURE QPersistentModelIndex_parent ( self: QPersistentModelIndex;
-): ADDRESS;
+PROCEDURE QPersistentModelIndex_parent (self: QPersistentModelIndex; ):
+  ADDRESS;
 
 <* EXTERNAL QPersistentModelIndex_sibling *>
-PROCEDURE QPersistentModelIndex_sibling ( self: QPersistentModelIndex;
-row, column: C.int;
-): ADDRESS;
+PROCEDURE QPersistentModelIndex_sibling
+  (self: QPersistentModelIndex; row, column: C.int; ): ADDRESS;
 
 <* EXTERNAL QPersistentModelIndex_child *>
-PROCEDURE QPersistentModelIndex_child ( self: QPersistentModelIndex;
-row, column: C.int;
-): ADDRESS;
+PROCEDURE QPersistentModelIndex_child
+  (self: QPersistentModelIndex; row, column: C.int; ): ADDRESS;
 
 <* EXTERNAL QPersistentModelIndex_flags *>
-PROCEDURE QPersistentModelIndex_flags ( self: QPersistentModelIndex;
-): C.int;
+PROCEDURE QPersistentModelIndex_flags (self: QPersistentModelIndex; ):
+  C.int;
 
 <* EXTERNAL QPersistentModelIndex_model *>
-PROCEDURE QPersistentModelIndex_model ( self: QPersistentModelIndex;
-): ADDRESS;
+PROCEDURE QPersistentModelIndex_model (self: QPersistentModelIndex; ):
+  ADDRESS;
 
 <* EXTERNAL QPersistentModelIndex_isValid *>
-PROCEDURE QPersistentModelIndex_isValid ( self: QPersistentModelIndex;
-): BOOLEAN;
+PROCEDURE QPersistentModelIndex_isValid (self: QPersistentModelIndex; ):
+  BOOLEAN;
 
-TYPE
-QPersistentModelIndex <: ADDRESS;
+TYPE QPersistentModelIndex <: ADDRESS;
 
 <* EXTERNAL Delete_QAbstractItemModel *>
-PROCEDURE Delete_QAbstractItemModel ( self: QAbstractItemModel;
-);
+PROCEDURE Delete_QAbstractItemModel (self: QAbstractItemModel; );
 
 <* EXTERNAL QAbstractItemModel_hasIndex *>
-PROCEDURE QAbstractItemModel_hasIndex ( self: QAbstractItemModel;
-row, column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_hasIndex
+  (self: QAbstractItemModel; row, column: C.int; parent: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_hasIndex1 *>
-PROCEDURE QAbstractItemModel_hasIndex1 ( self: QAbstractItemModel;
-row, column: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_hasIndex1
+  (self: QAbstractItemModel; row, column: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_sibling *>
-PROCEDURE QAbstractItemModel_sibling ( self: QAbstractItemModel;
-row, column: C.int;
- idx: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_sibling
+  (self: QAbstractItemModel; row, column: C.int; idx: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_hasChildren *>
-PROCEDURE QAbstractItemModel_hasChildren ( self: QAbstractItemModel;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_hasChildren
+  (self: QAbstractItemModel; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_hasChildren1 *>
-PROCEDURE QAbstractItemModel_hasChildren1 ( self: QAbstractItemModel;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_hasChildren1 (self: QAbstractItemModel; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_setData *>
-PROCEDURE QAbstractItemModel_setData ( self: QAbstractItemModel;
- index, value: ADDRESS;
-role: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_setData
+  (self: QAbstractItemModel; index, value: ADDRESS; role: C.int; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_setData1 *>
-PROCEDURE QAbstractItemModel_setData1 ( self: QAbstractItemModel;
- index, value: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_setData1
+  (self: QAbstractItemModel; index, value: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_setHeaderData *>
-PROCEDURE QAbstractItemModel_setHeaderData ( self: QAbstractItemModel;
-section, orientation: C.int;
- value: ADDRESS;
-role: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_setHeaderData
+  (self                : QAbstractItemModel;
+   section, orientation: C.int;
+   value               : ADDRESS;
+   role                : C.int;              ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_setHeaderData1 *>
-PROCEDURE QAbstractItemModel_setHeaderData1 ( self: QAbstractItemModel;
-section, orientation: C.int;
- value: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_setHeaderData1 (self: QAbstractItemModel;
+                                             section, orientation: C.int;
+                                             value: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_mimeTypes *>
-PROCEDURE QAbstractItemModel_mimeTypes ( self: QAbstractItemModel;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_mimeTypes (self: QAbstractItemModel; ):
+  ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_mimeData *>
-PROCEDURE QAbstractItemModel_mimeData ( self: QAbstractItemModel;
- indexes: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_mimeData
+  (self: QAbstractItemModel; indexes: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_dropMimeData *>
-PROCEDURE QAbstractItemModel_dropMimeData ( self: QAbstractItemModel;
- data: ADDRESS;
-action, row, column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_dropMimeData (self: QAbstractItemModel;
+                                           data: ADDRESS;
+                                           action, row, column: C.int;
+                                           parent             : ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_supportedDropActions *>
-PROCEDURE QAbstractItemModel_supportedDropActions ( self: QAbstractItemModel;
-): C.int;
+PROCEDURE QAbstractItemModel_supportedDropActions
+  (self: QAbstractItemModel; ): C.int;
 
 <* EXTERNAL QAbstractItemModel_supportedDragActions *>
-PROCEDURE QAbstractItemModel_supportedDragActions ( self: QAbstractItemModel;
-): C.int;
+PROCEDURE QAbstractItemModel_supportedDragActions
+  (self: QAbstractItemModel; ): C.int;
 
 <* EXTERNAL QAbstractItemModel_setSupportedDragActions *>
-PROCEDURE QAbstractItemModel_setSupportedDragActions ( self: QAbstractItemModel;
-arg2: C.int;
-);
+PROCEDURE QAbstractItemModel_setSupportedDragActions
+  (self: QAbstractItemModel; arg2: C.int; );
 
 <* EXTERNAL QAbstractItemModel_insertRows *>
-PROCEDURE QAbstractItemModel_insertRows ( self: QAbstractItemModel;
-row, count: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertRows
+  (self: QAbstractItemModel; row, count: C.int; parent: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_insertRows1 *>
-PROCEDURE QAbstractItemModel_insertRows1 ( self: QAbstractItemModel;
-row, count: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertRows1
+  (self: QAbstractItemModel; row, count: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_insertColumns *>
-PROCEDURE QAbstractItemModel_insertColumns ( self: QAbstractItemModel;
-column, count: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertColumns
+  (self: QAbstractItemModel; column, count: C.int; parent: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_insertColumns1 *>
-PROCEDURE QAbstractItemModel_insertColumns1 ( self: QAbstractItemModel;
-column, count: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertColumns1
+  (self: QAbstractItemModel; column, count: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeRows *>
-PROCEDURE QAbstractItemModel_removeRows ( self: QAbstractItemModel;
-row, count: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeRows
+  (self: QAbstractItemModel; row, count: C.int; parent: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeRows1 *>
-PROCEDURE QAbstractItemModel_removeRows1 ( self: QAbstractItemModel;
-row, count: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeRows1
+  (self: QAbstractItemModel; row, count: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeColumns *>
-PROCEDURE QAbstractItemModel_removeColumns ( self: QAbstractItemModel;
-column, count: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeColumns
+  (self: QAbstractItemModel; column, count: C.int; parent: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeColumns1 *>
-PROCEDURE QAbstractItemModel_removeColumns1 ( self: QAbstractItemModel;
-column, count: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeColumns1
+  (self: QAbstractItemModel; column, count: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_insertRow *>
-PROCEDURE QAbstractItemModel_insertRow ( self: QAbstractItemModel;
-row: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertRow
+  (self: QAbstractItemModel; row: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_insertRow1 *>
-PROCEDURE QAbstractItemModel_insertRow1 ( self: QAbstractItemModel;
-row: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertRow1
+  (self: QAbstractItemModel; row: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_insertColumn *>
-PROCEDURE QAbstractItemModel_insertColumn ( self: QAbstractItemModel;
-column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertColumn
+  (self: QAbstractItemModel; column: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_insertColumn1 *>
-PROCEDURE QAbstractItemModel_insertColumn1 ( self: QAbstractItemModel;
-column: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_insertColumn1
+  (self: QAbstractItemModel; column: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeRow *>
-PROCEDURE QAbstractItemModel_removeRow ( self: QAbstractItemModel;
-row: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeRow
+  (self: QAbstractItemModel; row: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeRow1 *>
-PROCEDURE QAbstractItemModel_removeRow1 ( self: QAbstractItemModel;
-row: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeRow1
+  (self: QAbstractItemModel; row: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeColumn *>
-PROCEDURE QAbstractItemModel_removeColumn ( self: QAbstractItemModel;
-column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeColumn
+  (self: QAbstractItemModel; column: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_removeColumn1 *>
-PROCEDURE QAbstractItemModel_removeColumn1 ( self: QAbstractItemModel;
-column: C.int;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_removeColumn1
+  (self: QAbstractItemModel; column: C.int; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_fetchMore *>
-PROCEDURE QAbstractItemModel_fetchMore ( self: QAbstractItemModel;
- parent: ADDRESS;
-);
+PROCEDURE QAbstractItemModel_fetchMore
+  (self: QAbstractItemModel; parent: ADDRESS; );
 
 <* EXTERNAL QAbstractItemModel_canFetchMore *>
-PROCEDURE QAbstractItemModel_canFetchMore ( self: QAbstractItemModel;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_canFetchMore
+  (self: QAbstractItemModel; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_flags *>
-PROCEDURE QAbstractItemModel_flags ( self: QAbstractItemModel;
- index: ADDRESS;
-): C.int;
+PROCEDURE QAbstractItemModel_flags
+  (self: QAbstractItemModel; index: ADDRESS; ): C.int;
 
 <* EXTERNAL QAbstractItemModel_sort *>
-PROCEDURE QAbstractItemModel_sort ( self: QAbstractItemModel;
-column, order: C.int;
-);
+PROCEDURE QAbstractItemModel_sort
+  (self: QAbstractItemModel; column, order: C.int; );
 
 <* EXTERNAL QAbstractItemModel_sort1 *>
-PROCEDURE QAbstractItemModel_sort1 ( self: QAbstractItemModel;
-column: C.int;
-);
+PROCEDURE QAbstractItemModel_sort1
+  (self: QAbstractItemModel; column: C.int; );
 
 <* EXTERNAL QAbstractItemModel_buddy *>
-PROCEDURE QAbstractItemModel_buddy ( self: QAbstractItemModel;
- index: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_buddy
+  (self: QAbstractItemModel; index: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_match *>
-PROCEDURE QAbstractItemModel_match ( self: QAbstractItemModel;
- start: ADDRESS;
-role: C.int;
- value: ADDRESS;
-hits, flags: C.int;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_match (self       : QAbstractItemModel;
+                                    start      : ADDRESS;
+                                    role       : C.int;
+                                    value      : ADDRESS;
+                                    hits, flags: C.int;              ):
+  ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_match1 *>
-PROCEDURE QAbstractItemModel_match1 ( self: QAbstractItemModel;
- start: ADDRESS;
-role: C.int;
- value: ADDRESS;
-hits: C.int;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_match1 (self : QAbstractItemModel;
+                                     start: ADDRESS;
+                                     role : C.int;
+                                     value: ADDRESS;
+                                     hits : C.int;              ): ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_match2 *>
-PROCEDURE QAbstractItemModel_match2 ( self: QAbstractItemModel;
- start: ADDRESS;
-role: C.int;
- value: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_match2 (self : QAbstractItemModel;
+                                     start: ADDRESS;
+                                     role : C.int;
+                                     value: ADDRESS;            ): ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_span *>
-PROCEDURE QAbstractItemModel_span ( self: QAbstractItemModel;
- index: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_span
+  (self: QAbstractItemModel; index: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_parent1_0 *>
-PROCEDURE QAbstractItemModel_parent1_0 ( self: QAbstractItemModel;
-): ADDRESS;
+PROCEDURE QAbstractItemModel_parent1_0 (self: QAbstractItemModel; ):
+  ADDRESS;
 
 <* EXTERNAL QAbstractItemModel_submit *>
-PROCEDURE QAbstractItemModel_submit ( self: QAbstractItemModel;
-): BOOLEAN;
+PROCEDURE QAbstractItemModel_submit (self: QAbstractItemModel; ): BOOLEAN;
 
 <* EXTERNAL QAbstractItemModel_revert *>
-PROCEDURE QAbstractItemModel_revert ( self: QAbstractItemModel;
-);
+PROCEDURE QAbstractItemModel_revert (self: QAbstractItemModel; );
 
-TYPE
-QAbstractItemModel = ADDRESS;
+TYPE QAbstractItemModel = ADDRESS;
 
 <* EXTERNAL Delete_QAbstractTableModel *>
-PROCEDURE Delete_QAbstractTableModel ( self: QAbstractTableModel;
-);
+PROCEDURE Delete_QAbstractTableModel (self: QAbstractTableModel; );
 
 <* EXTERNAL QAbstractTableModel_index *>
-PROCEDURE QAbstractTableModel_index ( self: QAbstractTableModel;
-row, column: C.int;
- parent: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractTableModel_index
+  (self: QAbstractTableModel; row, column: C.int; parent: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QAbstractTableModel_index1 *>
-PROCEDURE QAbstractTableModel_index1 ( self: QAbstractTableModel;
-row, column: C.int;
-): ADDRESS;
+PROCEDURE QAbstractTableModel_index1
+  (self: QAbstractTableModel; row, column: C.int; ): ADDRESS;
 
 <* EXTERNAL QAbstractTableModel_dropMimeData *>
-PROCEDURE QAbstractTableModel_dropMimeData ( self: QAbstractTableModel;
- data: ADDRESS;
-action, row, column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractTableModel_dropMimeData
+  (self               : QAbstractTableModel;
+   data               : ADDRESS;
+   action, row, column: C.int;
+   parent             : ADDRESS;             ): BOOLEAN;
 
-TYPE
-QAbstractTableModel = ADDRESS;
+TYPE QAbstractTableModel = ADDRESS;
 
 <* EXTERNAL Delete_QAbstractListModel *>
-PROCEDURE Delete_QAbstractListModel ( self: QAbstractListModel;
-);
+PROCEDURE Delete_QAbstractListModel (self: QAbstractListModel; );
 
 <* EXTERNAL QAbstractListModel_index *>
-PROCEDURE QAbstractListModel_index ( self: QAbstractListModel;
-row, column: C.int;
- parent: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractListModel_index
+  (self: QAbstractListModel; row, column: C.int; parent: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QAbstractListModel_index1 *>
-PROCEDURE QAbstractListModel_index1 ( self: QAbstractListModel;
-row, column: C.int;
-): ADDRESS;
+PROCEDURE QAbstractListModel_index1
+  (self: QAbstractListModel; row, column: C.int; ): ADDRESS;
 
 <* EXTERNAL QAbstractListModel_index2 *>
-PROCEDURE QAbstractListModel_index2 ( self: QAbstractListModel;
-row: C.int;
-): ADDRESS;
+PROCEDURE QAbstractListModel_index2
+  (self: QAbstractListModel; row: C.int; ): ADDRESS;
 
 <* EXTERNAL QAbstractListModel_dropMimeData *>
-PROCEDURE QAbstractListModel_dropMimeData ( self: QAbstractListModel;
- data: ADDRESS;
-action, row, column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractListModel_dropMimeData (self: QAbstractListModel;
+                                           data: ADDRESS;
+                                           action, row, column: C.int;
+                                           parent             : ADDRESS; ):
+  BOOLEAN;
 
-TYPE
-QAbstractListModel = ADDRESS;
+TYPE QAbstractListModel = ADDRESS;
 
 END QtAbstractItemModelRaw.

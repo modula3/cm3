@@ -14,143 +14,117 @@ IMPORT QtMarginsRaw;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QMargins0 (self:QMargins;): QMargins =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtMarginsRaw.New_QMargins0();
+PROCEDURE New_QMargins0 (self: QMargins; ): QMargins =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtMarginsRaw.New_QMargins0();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QMargins);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QMargins);
 
-RETURN self;
-END New_QMargins0;
+    RETURN self;
+  END New_QMargins0;
 
-PROCEDURE New_QMargins1 (self:QMargins;left, top, right, bottom: INTEGER;
-): QMargins =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtMarginsRaw.New_QMargins1(left, top, right, bottom);
+PROCEDURE New_QMargins1
+  (self: QMargins; left, top, right, bottom: INTEGER; ): QMargins =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtMarginsRaw.New_QMargins1(left, top, right, bottom);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QMargins);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QMargins);
 
-RETURN self;
-END New_QMargins1;
+    RETURN self;
+  END New_QMargins1;
 
-PROCEDURE QMargins_isNull ( self: QMargins;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMarginsRaw.QMargins_isNull(selfAdr);
-END QMargins_isNull;
+PROCEDURE QMargins_isNull (self: QMargins; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMarginsRaw.QMargins_isNull(selfAdr);
+  END QMargins_isNull;
 
-PROCEDURE QMargins_left ( self: QMargins;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMarginsRaw.QMargins_left(selfAdr);
-END QMargins_left;
+PROCEDURE QMargins_left (self: QMargins; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMarginsRaw.QMargins_left(selfAdr);
+  END QMargins_left;
 
-PROCEDURE QMargins_top ( self: QMargins;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMarginsRaw.QMargins_top(selfAdr);
-END QMargins_top;
+PROCEDURE QMargins_top (self: QMargins; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMarginsRaw.QMargins_top(selfAdr);
+  END QMargins_top;
 
-PROCEDURE QMargins_right ( self: QMargins;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMarginsRaw.QMargins_right(selfAdr);
-END QMargins_right;
+PROCEDURE QMargins_right (self: QMargins; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMarginsRaw.QMargins_right(selfAdr);
+  END QMargins_right;
 
-PROCEDURE QMargins_bottom ( self: QMargins;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMarginsRaw.QMargins_bottom(selfAdr);
-END QMargins_bottom;
+PROCEDURE QMargins_bottom (self: QMargins; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMarginsRaw.QMargins_bottom(selfAdr);
+  END QMargins_bottom;
 
-PROCEDURE QMargins_setLeft ( self: QMargins;
-left: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMarginsRaw.QMargins_setLeft(selfAdr, left);
-END QMargins_setLeft;
+PROCEDURE QMargins_setLeft (self: QMargins; left: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMarginsRaw.QMargins_setLeft(selfAdr, left);
+  END QMargins_setLeft;
 
-PROCEDURE QMargins_setTop ( self: QMargins;
-top: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMarginsRaw.QMargins_setTop(selfAdr, top);
-END QMargins_setTop;
+PROCEDURE QMargins_setTop (self: QMargins; top: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMarginsRaw.QMargins_setTop(selfAdr, top);
+  END QMargins_setTop;
 
-PROCEDURE QMargins_setRight ( self: QMargins;
-right: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMarginsRaw.QMargins_setRight(selfAdr, right);
-END QMargins_setRight;
+PROCEDURE QMargins_setRight (self: QMargins; right: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMarginsRaw.QMargins_setRight(selfAdr, right);
+  END QMargins_setRight;
 
-PROCEDURE QMargins_setBottom ( self: QMargins;
-bottom: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMarginsRaw.QMargins_setBottom(selfAdr, bottom);
-END QMargins_setBottom;
+PROCEDURE QMargins_setBottom (self: QMargins; bottom: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMarginsRaw.QMargins_setBottom(selfAdr, bottom);
+  END QMargins_setBottom;
 
-PROCEDURE Delete_QMargins ( self: QMargins;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMarginsRaw.Delete_QMargins(selfAdr);
-END Delete_QMargins;
+PROCEDURE Delete_QMargins (self: QMargins; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMarginsRaw.Delete_QMargins(selfAdr);
+  END Delete_QMargins;
 
-PROCEDURE Cleanup_QMargins(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QMargins := ref;
-BEGIN
-  Delete_QMargins(obj);
- END Cleanup_QMargins;
+PROCEDURE Cleanup_QMargins
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QMargins := ref;
+  BEGIN
+    Delete_QMargins(obj);
+  END Cleanup_QMargins;
 
-PROCEDURE Destroy_QMargins(self : QMargins) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QMargins);
-END Destroy_QMargins;
+PROCEDURE Destroy_QMargins (self: QMargins) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QMargins);
+  END Destroy_QMargins;
 
 REVEAL
-QMargins =
-QMarginsPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QMargins0;
-init_1 := New_QMargins1;
-isNull := QMargins_isNull;
-left := QMargins_left;
-top := QMargins_top;
-right := QMargins_right;
-bottom := QMargins_bottom;
-setLeft := QMargins_setLeft;
-setTop := QMargins_setTop;
-setRight := QMargins_setRight;
-setBottom := QMargins_setBottom;
-destroyCxx := Destroy_QMargins;
-END;
+  QMargins = QMarginsPublic BRANDED OBJECT
+             OVERRIDES
+               init_0     := New_QMargins0;
+               init_1     := New_QMargins1;
+               isNull     := QMargins_isNull;
+               left       := QMargins_left;
+               top        := QMargins_top;
+               right      := QMargins_right;
+               bottom     := QMargins_bottom;
+               setLeft    := QMargins_setLeft;
+               setTop     := QMargins_setTop;
+               setRight   := QMargins_setRight;
+               setBottom  := QMargins_setBottom;
+               destroyCxx := Destroy_QMargins;
+             END;
 
 
 BEGIN

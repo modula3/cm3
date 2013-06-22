@@ -11,7 +11,6 @@ MODULE QtDynamicRaw;
 
 
 
-REVEAL
-AbstractDynamicSlot = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL AbstractDynamicSlot = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtDynamicRaw.

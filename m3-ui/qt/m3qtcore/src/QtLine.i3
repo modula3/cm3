@@ -8,126 +8,90 @@
 
 INTERFACE QtLine;
 
-FROM QtPoint IMPORT QPoint,QPointF;
+FROM QtPoint IMPORT QPoint, QPointF;
 
 
 
 
 TYPE
-QLine <: QLinePublic;
-QLinePublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QLine;
-init_1 ( pt1, pt2: QPoint;
-) : QLine;
-init_2 (x1, y1, x2, y2: INTEGER;
-) : QLine;
-isNull(): BOOLEAN;
-p1(): QPoint;
-p2(): QPoint;
-x1(): INTEGER;
-y1(): INTEGER;
-x2(): INTEGER;
-y2(): INTEGER;
-dx(): INTEGER;
-dy(): INTEGER;
-translate( p: QPoint;
-);
-translate1(dx, dy: INTEGER;
-);
-translated( p: QPoint;
-): QLine;
-translated1(dx, dy: INTEGER;
-): QLine;
-setP1( p1: QPoint;
-);
-setP2( p2: QPoint;
-);
-setPoints( p1, p2: QPoint;
-);
-setLine(x1, y1, x2, y2: INTEGER;
-);
-EqualEqual( d: QLine;
-): BOOLEAN;
-NotEqual( d: QLine;
-): BOOLEAN;
-destroyCxx();
-END;
+  QLine <: QLinePublic;
+  QLinePublic = BRANDED OBJECT
+                  cxxObj: ADDRESS;
+                METHODS
+                  init_0      (): QLine;
+                  init_1      (pt1, pt2: QPoint; ): QLine;
+                  init_2      (x1, y1, x2, y2: INTEGER; ): QLine;
+                  isNull      (): BOOLEAN;
+                  p1          (): QPoint;
+                  p2          (): QPoint;
+                  x1          (): INTEGER;
+                  y1          (): INTEGER;
+                  x2          (): INTEGER;
+                  y2          (): INTEGER;
+                  dx          (): INTEGER;
+                  dy          (): INTEGER;
+                  translate   (p: QPoint; );
+                  translate1  (dx, dy: INTEGER; );
+                  translated  (p: QPoint; ): QLine;
+                  translated1 (dx, dy: INTEGER; ): QLine;
+                  setP1       (p1: QPoint; );
+                  setP2       (p2: QPoint; );
+                  setPoints   (p1, p2: QPoint; );
+                  setLine     (x1, y1, x2, y2: INTEGER; );
+                  EqualEqual  (d: QLine; ): BOOLEAN;
+                  NotEqual    (d: QLine; ): BOOLEAN;
+                  destroyCxx  ();
+                END;
 
 
-TYPE (* Enum IntersectType *)
-  IntersectType = {
- NoIntersection,
- BoundedIntersection,
- UnboundedIntersection};
-PROCEDURE FromPolar (length, angle: LONGREAL;
-): QLineF;
+TYPE                             (* Enum IntersectType *)
+  IntersectType =
+    {NoIntersection, BoundedIntersection, UnboundedIntersection};
+PROCEDURE FromPolar (length, angle: LONGREAL; ): QLineF;
 
 
 TYPE
-QLineF <: QLineFPublic;
-QLineFPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QLineF;
-init_1 ( pt1, pt2: QPointF;
-) : QLineF;
-init_2 (x1, y1, x2, y2: LONGREAL;
-) : QLineF;
-init_3 ( line: QLine;
-) : QLineF;
-isNull(): BOOLEAN;
-p1(): QPointF;
-p2(): QPointF;
-x1(): LONGREAL;
-y1(): LONGREAL;
-x2(): LONGREAL;
-y2(): LONGREAL;
-dx(): LONGREAL;
-dy(): LONGREAL;
-length(): LONGREAL;
-setLength(len: LONGREAL;
-);
-angle(): LONGREAL;
-setAngle(angle: LONGREAL;
-);
-angleTo( l: QLineF;
-): LONGREAL;
-unitVector(): QLineF;
-normalVector(): QLineF;
-intersect( l: QLineF;
- intersectionPoint: QPointF;
-): IntersectType;
-angle1( l: QLineF;
-): LONGREAL;
-pointAt(t: LONGREAL;
-): QPointF;
-translate( p: QPointF;
-);
-translate1(dx, dy: LONGREAL;
-);
-translated( p: QPointF;
-): QLineF;
-translated1(dx, dy: LONGREAL;
-): QLineF;
-setP1( p1: QPointF;
-);
-setP2( p2: QPointF;
-);
-setPoints( p1, p2: QPointF;
-);
-setLine(x1, y1, x2, y2: LONGREAL;
-);
-EqualEqual( d: QLineF;
-): BOOLEAN;
-NotEqual( d: QLineF;
-): BOOLEAN;
-toLine(): QLine;
-destroyCxx();
-END;
+  QLineF <: QLineFPublic;
+  QLineFPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0       (): QLineF;
+      init_1       (pt1, pt2: QPointF; ): QLineF;
+      init_2       (x1, y1, x2, y2: LONGREAL; ): QLineF;
+      init_3       (line: QLine; ): QLineF;
+      isNull       (): BOOLEAN;
+      p1           (): QPointF;
+      p2           (): QPointF;
+      x1           (): LONGREAL;
+      y1           (): LONGREAL;
+      x2           (): LONGREAL;
+      y2           (): LONGREAL;
+      dx           (): LONGREAL;
+      dy           (): LONGREAL;
+      length       (): LONGREAL;
+      setLength    (len: LONGREAL; );
+      angle        (): LONGREAL;
+      setAngle     (angle: LONGREAL; );
+      angleTo      (l: QLineF; ): LONGREAL;
+      unitVector   (): QLineF;
+      normalVector (): QLineF;
+      intersect   (l: QLineF; intersectionPoint: QPointF; ): IntersectType;
+      angle1      (l: QLineF; ): LONGREAL;
+      pointAt     (t: LONGREAL; ): QPointF;
+      translate   (p: QPointF; );
+      translate1  (dx, dy: LONGREAL; );
+      translated  (p: QPointF; ): QLineF;
+      translated1 (dx, dy: LONGREAL; ): QLineF;
+      setP1       (p1: QPointF; );
+      setP2       (p2: QPointF; );
+      setPoints   (p1, p2: QPointF; );
+      setLine     (x1, y1, x2, y2: LONGREAL; );
+      EqualEqual  (d: QLineF; ): BOOLEAN;
+      NotEqual    (d: QLineF; ): BOOLEAN;
+      toLine      (): QLine;
+      destroyCxx  ();
+    END;
 
 
 END QtLine.

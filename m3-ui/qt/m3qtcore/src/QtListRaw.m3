@@ -11,7 +11,6 @@ MODULE QtListRaw;
 
 
 
-REVEAL
-QStringListBase = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QStringListBase = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtListRaw.

@@ -12,34 +12,26 @@ FROM QtNamespace IMPORT CaseSensitivity;
 
 
 FROM QtList IMPORT QStringListBase;
-TYPE
-  T = QStringList;
+TYPE T = QStringList;
 
 
 TYPE
-QStringList <: QStringListPublic;
-QStringListPublic =
-QStringListBase BRANDED OBJECT
-METHODS
-init_0 () : QStringList;
-init_1 ( i: TEXT;
-) : QStringList;
-sort();
-removeDuplicates(): INTEGER;
-join( sep: TEXT;
-): TEXT;
-filter( str: TEXT;
-cs: CaseSensitivity;
-): QStringList;
-filter1( str: TEXT;
-): QStringList;
-replaceInStrings( before, after: TEXT;
-cs: CaseSensitivity;
-): QStringList;
-replaceInStrings1( before, after: TEXT;
-): QStringList;
-destroyCxx();
-END;
+  QStringList <: QStringListPublic;
+  QStringListPublic =
+    QStringListBase BRANDED OBJECT
+    METHODS
+      init_0           (): QStringList;
+      init_1           (i: TEXT; ): QStringList;
+      sort             ();
+      removeDuplicates (): INTEGER;
+      join             (sep: TEXT; ): TEXT;
+      filter           (str: TEXT; cs: CaseSensitivity; ): QStringList;
+      filter1          (str: TEXT; ): QStringList;
+      replaceInStrings (before, after: TEXT; cs: CaseSensitivity; ):
+                        QStringList;
+      replaceInStrings1 (before, after: TEXT; ): QStringList;
+      destroyCxx        ();
+    END;
 
 
 END QtStringList.

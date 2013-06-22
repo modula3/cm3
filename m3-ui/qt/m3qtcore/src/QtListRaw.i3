@@ -18,222 +18,161 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QStringListBase (): QStringListBase;
 
 <* EXTERNAL Delete_QStringListBase *>
-PROCEDURE Delete_QStringListBase ( self: QStringListBase;
-);
+PROCEDURE Delete_QStringListBase (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_size *>
-PROCEDURE QStringListBase_size ( self: QStringListBase;
-): C.int;
+PROCEDURE QStringListBase_size (self: QStringListBase; ): C.int;
 
 <* EXTERNAL QStringListBase_detach *>
-PROCEDURE QStringListBase_detach ( self: QStringListBase;
-);
+PROCEDURE QStringListBase_detach (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_detachShared *>
-PROCEDURE QStringListBase_detachShared ( self: QStringListBase;
-);
+PROCEDURE QStringListBase_detachShared (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_isDetached *>
-PROCEDURE QStringListBase_isDetached ( self: QStringListBase;
-): BOOLEAN;
+PROCEDURE QStringListBase_isDetached (self: QStringListBase; ): BOOLEAN;
 
 <* EXTERNAL QStringListBase_setSharable *>
-PROCEDURE QStringListBase_setSharable ( self: QStringListBase;
-sharable: BOOLEAN;
-);
+PROCEDURE QStringListBase_setSharable
+  (self: QStringListBase; sharable: BOOLEAN; );
 
 <* EXTERNAL QStringListBase_isEmpty *>
-PROCEDURE QStringListBase_isEmpty ( self: QStringListBase;
-): BOOLEAN;
+PROCEDURE QStringListBase_isEmpty (self: QStringListBase; ): BOOLEAN;
 
 <* EXTERNAL QStringListBase_clear *>
-PROCEDURE QStringListBase_clear ( self: QStringListBase;
-);
+PROCEDURE QStringListBase_clear (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_at *>
-PROCEDURE QStringListBase_at ( self: QStringListBase;
-i: C.int;
-): ADDRESS;
+PROCEDURE QStringListBase_at (self: QStringListBase; i: C.int; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_append *>
-PROCEDURE QStringListBase_append ( self: QStringListBase;
- t: ADDRESS;
-);
+PROCEDURE QStringListBase_append (self: QStringListBase; t: ADDRESS; );
 
 <* EXTERNAL QStringListBase_prepend *>
-PROCEDURE QStringListBase_prepend ( self: QStringListBase;
- t: ADDRESS;
-);
+PROCEDURE QStringListBase_prepend (self: QStringListBase; t: ADDRESS; );
 
 <* EXTERNAL QStringListBase_insert *>
-PROCEDURE QStringListBase_insert ( self: QStringListBase;
-i: C.int;
- t: ADDRESS;
-);
+PROCEDURE QStringListBase_insert
+  (self: QStringListBase; i: C.int; t: ADDRESS; );
 
 <* EXTERNAL QStringListBase_replace *>
-PROCEDURE QStringListBase_replace ( self: QStringListBase;
-i: C.int;
- t: ADDRESS;
-);
+PROCEDURE QStringListBase_replace
+  (self: QStringListBase; i: C.int; t: ADDRESS; );
 
 <* EXTERNAL QStringListBase_removeAt *>
-PROCEDURE QStringListBase_removeAt ( self: QStringListBase;
-i: C.int;
-);
+PROCEDURE QStringListBase_removeAt (self: QStringListBase; i: C.int; );
 
 <* EXTERNAL QStringListBase_removeAll *>
-PROCEDURE QStringListBase_removeAll ( self: QStringListBase;
- t: ADDRESS;
-): C.int;
+PROCEDURE QStringListBase_removeAll (self: QStringListBase; t: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStringListBase_removeOne *>
-PROCEDURE QStringListBase_removeOne ( self: QStringListBase;
- t: ADDRESS;
-): BOOLEAN;
+PROCEDURE QStringListBase_removeOne (self: QStringListBase; t: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QStringListBase_takeAt *>
-PROCEDURE QStringListBase_takeAt ( self: QStringListBase;
-i: C.int;
-): ADDRESS;
+PROCEDURE QStringListBase_takeAt (self: QStringListBase; i: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QStringListBase_takeFirst *>
-PROCEDURE QStringListBase_takeFirst ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_takeFirst (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_takeLast *>
-PROCEDURE QStringListBase_takeLast ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_takeLast (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_move *>
-PROCEDURE QStringListBase_move ( self: QStringListBase;
-from, to: C.int;
-);
+PROCEDURE QStringListBase_move (self: QStringListBase; from, to: C.int; );
 
 <* EXTERNAL QStringListBase_swap *>
-PROCEDURE QStringListBase_swap ( self: QStringListBase;
-i, j: C.int;
-);
+PROCEDURE QStringListBase_swap (self: QStringListBase; i, j: C.int; );
 
 <* EXTERNAL QStringListBase_indexOf *>
-PROCEDURE QStringListBase_indexOf ( self: QStringListBase;
- t: ADDRESS;
-from: C.int;
-): C.int;
+PROCEDURE QStringListBase_indexOf
+  (self: QStringListBase; t: ADDRESS; from: C.int; ): C.int;
 
 <* EXTERNAL QStringListBase_indexOf1 *>
-PROCEDURE QStringListBase_indexOf1 ( self: QStringListBase;
- t: ADDRESS;
-): C.int;
+PROCEDURE QStringListBase_indexOf1 (self: QStringListBase; t: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStringListBase_lastIndexOf *>
-PROCEDURE QStringListBase_lastIndexOf ( self: QStringListBase;
- t: ADDRESS;
-from: C.int;
-): C.int;
+PROCEDURE QStringListBase_lastIndexOf
+  (self: QStringListBase; t: ADDRESS; from: C.int; ): C.int;
 
 <* EXTERNAL QStringListBase_lastIndexOf1 *>
-PROCEDURE QStringListBase_lastIndexOf1 ( self: QStringListBase;
- t: ADDRESS;
-): C.int;
+PROCEDURE QStringListBase_lastIndexOf1
+  (self: QStringListBase; t: ADDRESS; ): C.int;
 
 <* EXTERNAL QStringListBase_count *>
-PROCEDURE QStringListBase_count ( self: QStringListBase;
- t: ADDRESS;
-): C.int;
+PROCEDURE QStringListBase_count (self: QStringListBase; t: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStringListBase_count1 *>
-PROCEDURE QStringListBase_count1 ( self: QStringListBase;
-): C.int;
+PROCEDURE QStringListBase_count1 (self: QStringListBase; ): C.int;
 
 <* EXTERNAL QStringListBase_length *>
-PROCEDURE QStringListBase_length ( self: QStringListBase;
-): C.int;
+PROCEDURE QStringListBase_length (self: QStringListBase; ): C.int;
 
 <* EXTERNAL QStringListBase_first *>
-PROCEDURE QStringListBase_first ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_first (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_first1 *>
-PROCEDURE QStringListBase_first1 ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_first1 (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_last *>
-PROCEDURE QStringListBase_last ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_last (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_last1 *>
-PROCEDURE QStringListBase_last1 ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_last1 (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_removeFirst *>
-PROCEDURE QStringListBase_removeFirst ( self: QStringListBase;
-);
+PROCEDURE QStringListBase_removeFirst (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_removeLast *>
-PROCEDURE QStringListBase_removeLast ( self: QStringListBase;
-);
+PROCEDURE QStringListBase_removeLast (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_startsWith *>
-PROCEDURE QStringListBase_startsWith ( self: QStringListBase;
- t: ADDRESS;
-): BOOLEAN;
+PROCEDURE QStringListBase_startsWith (self: QStringListBase; t: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QStringListBase_endsWith *>
-PROCEDURE QStringListBase_endsWith ( self: QStringListBase;
- t: ADDRESS;
-): BOOLEAN;
+PROCEDURE QStringListBase_endsWith (self: QStringListBase; t: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QStringListBase_value *>
-PROCEDURE QStringListBase_value ( self: QStringListBase;
-i: C.int;
-): ADDRESS;
+PROCEDURE QStringListBase_value (self: QStringListBase; i: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QStringListBase_value1 *>
-PROCEDURE QStringListBase_value1 ( self: QStringListBase;
-i: C.int;
- defaultValue: ADDRESS;
-): ADDRESS;
+PROCEDURE QStringListBase_value1
+  (self: QStringListBase; i: C.int; defaultValue: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_push_back *>
-PROCEDURE QStringListBase_push_back ( self: QStringListBase;
- t: ADDRESS;
-);
+PROCEDURE QStringListBase_push_back (self: QStringListBase; t: ADDRESS; );
 
 <* EXTERNAL QStringListBase_push_front *>
-PROCEDURE QStringListBase_push_front ( self: QStringListBase;
- t: ADDRESS;
-);
+PROCEDURE QStringListBase_push_front (self: QStringListBase; t: ADDRESS; );
 
 <* EXTERNAL QStringListBase_front *>
-PROCEDURE QStringListBase_front ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_front (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_front1 *>
-PROCEDURE QStringListBase_front1 ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_front1 (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_back *>
-PROCEDURE QStringListBase_back ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_back (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_back1 *>
-PROCEDURE QStringListBase_back1 ( self: QStringListBase;
-): ADDRESS;
+PROCEDURE QStringListBase_back1 (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_pop_front *>
-PROCEDURE QStringListBase_pop_front ( self: QStringListBase;
-);
+PROCEDURE QStringListBase_pop_front (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_pop_back *>
-PROCEDURE QStringListBase_pop_back ( self: QStringListBase;
-);
+PROCEDURE QStringListBase_pop_back (self: QStringListBase; );
 
 <* EXTERNAL QStringListBase_empty *>
-PROCEDURE QStringListBase_empty ( self: QStringListBase;
-): BOOLEAN;
+PROCEDURE QStringListBase_empty (self: QStringListBase; ): BOOLEAN;
 
-TYPE
-QStringListBase <: ADDRESS;
+TYPE QStringListBase <: ADDRESS;
 
 END QtListRaw.

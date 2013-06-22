@@ -10,214 +10,154 @@ INTERFACE QtAbstractItemModel;
 
 FROM QtStringList IMPORT QStringList;
 FROM QtSize IMPORT QSize;
-FROM QCoreStubs IMPORT QMimeData,QModelIndexList,QVariant;
+FROM QCoreStubs IMPORT QMimeData, QModelIndexList, QVariant;
 FROM QtObject IMPORT QObject;
-FROM QtNamespace IMPORT Orientation,ItemFlags,DropActions,DropAction,MatchFlags,SortOrder;
+FROM QtNamespace IMPORT Orientation, ItemFlags, DropActions, DropAction,
+                        MatchFlags, SortOrder;
 
 
 
 
 TYPE
-QModelIndex <: QModelIndexPublic;
-QModelIndexPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QModelIndex;
-init_1 ( other: QModelIndex;
-) : QModelIndex;
-row(): INTEGER;
-column(): INTEGER;
-internalId(): CARDINAL;
-parent(): QModelIndex;
-sibling(row, column: INTEGER;
-): QModelIndex;
-child(row, column: INTEGER;
-): QModelIndex;
-flags(): ItemFlags;
-model(): QAbstractItemModel;
-isValid(): BOOLEAN;
-destroyCxx();
-END;
+  QModelIndex <: QModelIndexPublic;
+  QModelIndexPublic = BRANDED OBJECT
+                        cxxObj: ADDRESS;
+                      METHODS
+                        init_0     (): QModelIndex;
+                        init_1     (other: QModelIndex; ): QModelIndex;
+                        row        (): INTEGER;
+                        column     (): INTEGER;
+                        internalId (): CARDINAL;
+                        parent     (): QModelIndex;
+                        sibling    (row, column: INTEGER; ): QModelIndex;
+                        child      (row, column: INTEGER; ): QModelIndex;
+                        flags      (): ItemFlags;
+                        model      (): QAbstractItemModel;
+                        isValid    (): BOOLEAN;
+                        destroyCxx ();
+                      END;
 
-QPersistentModelIndex <: QPersistentModelIndexPublic;
-QPersistentModelIndexPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QPersistentModelIndex;
-init_1 ( index: QModelIndex;
-) : QPersistentModelIndex;
-init_2 ( other: QPersistentModelIndex;
-) : QPersistentModelIndex;
-row(): INTEGER;
-column(): INTEGER;
-internalId(): CARDINAL;
-parent(): QModelIndex;
-sibling(row, column: INTEGER;
-): QModelIndex;
-child(row, column: INTEGER;
-): QModelIndex;
-flags(): ItemFlags;
-model(): QAbstractItemModel;
-isValid(): BOOLEAN;
-destroyCxx();
-END;
+  QPersistentModelIndex <: QPersistentModelIndexPublic;
+  QPersistentModelIndexPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0     (): QPersistentModelIndex;
+      init_1     (index: QModelIndex; ): QPersistentModelIndex;
+      init_2     (other: QPersistentModelIndex; ): QPersistentModelIndex;
+      row        (): INTEGER;
+      column     (): INTEGER;
+      internalId (): CARDINAL;
+      parent     (): QModelIndex;
+      sibling    (row, column: INTEGER; ): QModelIndex;
+      child      (row, column: INTEGER; ): QModelIndex;
+      flags      (): ItemFlags;
+      model      (): QAbstractItemModel;
+      isValid    (): BOOLEAN;
+      destroyCxx ();
+    END;
 
-QAbstractItemModel <: QAbstractItemModelPublic;
-QAbstractItemModelPublic =
-QObject BRANDED OBJECT
-METHODS
-hasIndex(row, column: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;
-hasIndex1(row, column: INTEGER;
-): BOOLEAN;
-sibling(row, column: INTEGER;
- idx: QModelIndex;
-): QModelIndex;
-hasChildren( parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-hasChildren1(): BOOLEAN;  (*  virtual *)
-setData( index: QModelIndex;
- value: QVariant;
-role: INTEGER;
-): BOOLEAN;  (*  virtual *)
-setData1( index: QModelIndex;
- value: QVariant;
-): BOOLEAN;  (*  virtual *)
-setHeaderData(section: INTEGER;
-orientation: Orientation;
- value: QVariant;
-role: INTEGER;
-): BOOLEAN;  (*  virtual *)
-setHeaderData1(section: INTEGER;
-orientation: Orientation;
- value: QVariant;
-): BOOLEAN;  (*  virtual *)
-mimeTypes(): QStringList;  (*  virtual *)
-mimeData( indexes: QModelIndexList;
-): QMimeData;  (*  virtual *)
-dropMimeData( data: QMimeData;
-action: DropAction;
-row, column: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-supportedDropActions(): DropActions;  (*  virtual *)
-supportedDragActions(): DropActions;
-setSupportedDragActions(arg1: DropActions;
-);
-insertRows(row, count: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-insertRows1(row, count: INTEGER;
-): BOOLEAN;  (*  virtual *)
-insertColumns(column, count: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-insertColumns1(column, count: INTEGER;
-): BOOLEAN;  (*  virtual *)
-removeRows(row, count: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-removeRows1(row, count: INTEGER;
-): BOOLEAN;  (*  virtual *)
-removeColumns(column, count: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-removeColumns1(column, count: INTEGER;
-): BOOLEAN;  (*  virtual *)
-insertRow(row: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;
-insertRow1(row: INTEGER;
-): BOOLEAN;
-insertColumn(column: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;
-insertColumn1(column: INTEGER;
-): BOOLEAN;
-removeRow(row: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;
-removeRow1(row: INTEGER;
-): BOOLEAN;
-removeColumn(column: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;
-removeColumn1(column: INTEGER;
-): BOOLEAN;
-fetchMore( parent: QModelIndex;
-);  (*  virtual *)
-canFetchMore( parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-flags( index: QModelIndex;
-): ItemFlags;  (*  virtual *)
-sort(column: INTEGER;
-order: SortOrder;
-);  (*  virtual *)
-sort1(column: INTEGER;
-);  (*  virtual *)
-buddy( index: QModelIndex;
-): QModelIndex;  (*  virtual *)
-match( start: QModelIndex;
-role: INTEGER;
- value: QVariant;
-hits: INTEGER;
-flags: MatchFlags;
-): QModelIndexList;  (*  virtual *)
-match1( start: QModelIndex;
-role: INTEGER;
- value: QVariant;
-hits: INTEGER;
-): QModelIndexList;  (*  virtual *)
-match2( start: QModelIndex;
-role: INTEGER;
- value: QVariant;
-): QModelIndexList;  (*  virtual *)
-span( index: QModelIndex;
-): QSize;  (*  virtual *)
-parent1_0(): QObject;
-submit(): BOOLEAN;  (*  virtual *)
-revert();  (*  virtual *)
-destroyCxx();
-END;
+  QAbstractItemModel <: QAbstractItemModelPublic;
+  QAbstractItemModelPublic =
+    QObject BRANDED OBJECT
+    METHODS
+      hasIndex     (row, column: INTEGER; parent: QModelIndex; ): BOOLEAN;
+      hasIndex1    (row, column: INTEGER; ): BOOLEAN;
+      sibling      (row, column: INTEGER; idx: QModelIndex; ): QModelIndex;
+      hasChildren  (parent: QModelIndex; ): BOOLEAN; (* virtual *)
+      hasChildren1 (): BOOLEAN;  (* virtual *)
+      setData (index: QModelIndex; value: QVariant; role: INTEGER; ):
+               BOOLEAN;          (* virtual *)
+      setData1 (index: QModelIndex; value: QVariant; ):
+                BOOLEAN;         (* virtual *)
+      setHeaderData (section    : INTEGER;
+                     orientation: Orientation;
+                     value      : QVariant;
+                     role       : INTEGER;     ): BOOLEAN; (* virtual *)
+      setHeaderData1 (section    : INTEGER;
+                      orientation: Orientation;
+                      value      : QVariant;    ): BOOLEAN; (* virtual *)
+      mimeTypes (): QStringList; (* virtual *)
+      mimeData  (indexes: QModelIndexList; ): QMimeData; (* virtual *)
+      dropMimeData (data       : QMimeData;
+                    action     : DropAction;
+                    row, column: INTEGER;
+                    parent     : QModelIndex; ): BOOLEAN; (* virtual *)
+      supportedDropActions    (): DropActions; (* virtual *)
+      supportedDragActions    (): DropActions;
+      setSupportedDragActions (arg1: DropActions; );
+      insertRows (row, count: INTEGER; parent: QModelIndex; ):
+                  BOOLEAN;       (* virtual *)
+      insertRows1 (row, count: INTEGER; ): BOOLEAN; (* virtual *)
+      insertColumns (column, count: INTEGER; parent: QModelIndex; ):
+                     BOOLEAN;    (* virtual *)
+      insertColumns1 (column, count: INTEGER; ): BOOLEAN; (* virtual *)
+      removeRows (row, count: INTEGER; parent: QModelIndex; ):
+                  BOOLEAN;       (* virtual *)
+      removeRows1 (row, count: INTEGER; ): BOOLEAN; (* virtual *)
+      removeColumns (column, count: INTEGER; parent: QModelIndex; ):
+                     BOOLEAN;    (* virtual *)
+      removeColumns1 (column, count: INTEGER; ): BOOLEAN; (* virtual *)
+      insertRow      (row: INTEGER; parent: QModelIndex; ): BOOLEAN;
+      insertRow1     (row: INTEGER; ): BOOLEAN;
+      insertColumn   (column: INTEGER; parent: QModelIndex; ): BOOLEAN;
+      insertColumn1  (column: INTEGER; ): BOOLEAN;
+      removeRow      (row: INTEGER; parent: QModelIndex; ): BOOLEAN;
+      removeRow1     (row: INTEGER; ): BOOLEAN;
+      removeColumn   (column: INTEGER; parent: QModelIndex; ): BOOLEAN;
+      removeColumn1  (column: INTEGER; ): BOOLEAN;
+      fetchMore      (parent: QModelIndex; ); (* virtual *)
+      canFetchMore   (parent: QModelIndex; ): BOOLEAN; (* virtual *)
+      flags          (index: QModelIndex; ): ItemFlags; (* virtual *)
+      sort           (column: INTEGER; order: SortOrder; ); (* virtual *)
+      sort1          (column: INTEGER; ); (* virtual *)
+      buddy          (index: QModelIndex; ): QModelIndex; (* virtual *)
+      match (start: QModelIndex;
+             role : INTEGER;
+             value: QVariant;
+             hits : INTEGER;
+             flags: MatchFlags;  ): QModelIndexList; (* virtual *)
+      match1 (start: QModelIndex;
+              role : INTEGER;
+              value: QVariant;
+              hits : INTEGER;     ): QModelIndexList; (* virtual *)
+      match2 (start: QModelIndex; role: INTEGER; value: QVariant; ):
+              QModelIndexList;   (* virtual *)
+      span       (index: QModelIndex; ): QSize; (* virtual *)
+      parent1_0  (): QObject;
+      submit     (): BOOLEAN;    (* virtual *)
+      revert     ();             (* virtual *)
+      destroyCxx ();
+    END;
 
-QAbstractTableModel <: QAbstractTableModelPublic;
-QAbstractTableModelPublic =
-QAbstractItemModel BRANDED OBJECT
-METHODS
-index(row, column: INTEGER;
- parent: QModelIndex;
-): QModelIndex;  (*  virtual *)
-index1(row, column: INTEGER;
-): QModelIndex;  (*  virtual *)
-dropMimeData( data: QMimeData;
-action: DropAction;
-row, column: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-destroyCxx();
-END;
+  QAbstractTableModel <: QAbstractTableModelPublic;
+  QAbstractTableModelPublic =
+    QAbstractItemModel BRANDED OBJECT
+    METHODS
+      index (row, column: INTEGER; parent: QModelIndex; ):
+             QModelIndex;        (* virtual *)
+      index1 (row, column: INTEGER; ): QModelIndex; (* virtual *)
+      dropMimeData (data       : QMimeData;
+                    action     : DropAction;
+                    row, column: INTEGER;
+                    parent     : QModelIndex; ): BOOLEAN; (* virtual *)
+      destroyCxx ();
+    END;
 
-QAbstractListModel <: QAbstractListModelPublic;
-QAbstractListModelPublic =
-QAbstractItemModel BRANDED OBJECT
-METHODS
-index(row, column: INTEGER;
- parent: QModelIndex;
-): QModelIndex;  (*  virtual *)
-index1(row, column: INTEGER;
-): QModelIndex;  (*  virtual *)
-index2(row: INTEGER;
-): QModelIndex;
-dropMimeData( data: QMimeData;
-action: DropAction;
-row, column: INTEGER;
- parent: QModelIndex;
-): BOOLEAN;  (*  virtual *)
-destroyCxx();
-END;
+  QAbstractListModel <: QAbstractListModelPublic;
+  QAbstractListModelPublic =
+    QAbstractItemModel BRANDED OBJECT
+    METHODS
+      index (row, column: INTEGER; parent: QModelIndex; ):
+             QModelIndex;        (* virtual *)
+      index1 (row, column: INTEGER; ): QModelIndex; (* virtual *)
+      index2 (row: INTEGER; ): QModelIndex;
+      dropMimeData (data       : QMimeData;
+                    action     : DropAction;
+                    row, column: INTEGER;
+                    parent     : QModelIndex; ): BOOLEAN; (* virtual *)
+      destroyCxx ();
+    END;
 
 
 END QtAbstractItemModel.

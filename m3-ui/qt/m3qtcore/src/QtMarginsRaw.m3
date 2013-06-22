@@ -11,7 +11,6 @@ MODULE QtMarginsRaw;
 
 
 
-REVEAL
-QMargins = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QMargins = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtMarginsRaw.
