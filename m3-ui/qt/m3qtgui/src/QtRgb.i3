@@ -1,0 +1,35 @@
+INTERFACE QtRgb;
+
+TYPE
+  T = QRgb;
+  QRgb = INTEGER; (* or Word.T *)
+
+PROCEDURE qRed (rgb: CARDINAL;
+): INTEGER;
+
+PROCEDURE qGreen (rgb: CARDINAL;
+): INTEGER;
+
+PROCEDURE qBlue (rgb: CARDINAL;
+): INTEGER;
+
+PROCEDURE qAlpha (rgb: CARDINAL;
+): INTEGER;
+
+PROCEDURE qRgb (r, g, b: INTEGER;
+): CARDINAL;
+
+PROCEDURE qRgba (r, g, b, a: INTEGER;
+): CARDINAL;
+
+PROCEDURE qGray (r, g, b: INTEGER;
+): INTEGER;
+
+PROCEDURE qGray1 (rgb: CARDINAL;
+): INTEGER;
+
+PROCEDURE qIsGray (rgb: CARDINAL;
+): BOOLEAN;
+
+
+END QtRgb.
