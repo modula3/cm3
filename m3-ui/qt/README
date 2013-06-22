@@ -1,0 +1,59 @@
+This is a Modula3 binding to part of the Qt library.
+
+The version of Qt that has been bound is version 4.6. There is no support for version 3.
+A future binding should support the current Qt version 5.
+
+Requirements - You need Qt installed plus the development files which means the headers.
+As part of building the M3 libraries some C++ files are compiled which are the C
+wrappers to the Qt library. These need a C++ compiler and linker. The build process
+uses a quake include file named qinclude located in the common directory. If the headers
+are in unusual places you will have to modify that file.
+
+Build and ship m3qtcore then build and ship m3qtgui.
+
+Thus far, only part of QtCore and a fair proportion of QtGui have been wrapped. However
+further development should ensure most of the widgets in the gui should be available.
+I only wrapped as much of the core as was needed to support the gui. Any classes that have
+not been wrapped but are referenced in wrapped objects should have a stub object in one of
+the stub modules. Not all methods have been wrapped. Sometimes the method instantiated a
+template that had not been wrapped eg QList QHash, sometimes a strange C++ problem.
+
+The wrapping mechanism uses SWIG. See their website for details.
+
+This version has a rather clumsy implementation of Qt's signals and slots. It should be
+redesigned and reimplemented, perhaps along the lines of the pyside implementation.
+It does not support a method signature as a slot just an ordinary procedure. All slots
+have the same signature and the client is responsible for marshalling the parameters. The
+vast proportion of signals emit a single simple parameter or class so it is not such a big
+deal. See some of the test programs for details.
+
+Qt has a lot of overloaded constructors and methods. In modula3 the object constructor is a
+method with the name init and if its overloaded then init1, init2 etc. The same applies to
+methods with an integer suffix to the method name. To figure out which one you need consult
+the Qt documentation and or the modula3 interface.
+
+In some classes I have bound the operators which produce am M3 method with a name like
+Op_LessThan however in a lot of cases operators were ignored.
+
+The modula3 object hierachy follows the Qt C++ hierachy. The base level M3 object holds an
+address of the real C++ object allocated in a constructor call or a method returning a
+class. M3 objects are collected normally and a weak reference will then delete the C++
+object. Any premature collections or double deletions should be reported as a bug. Thus far
+no memory leaks have been found. Note that creation of QObjects or subclasses therof with a
+parent specified will crash the program if the parent is collected before the child since
+Qt deletes all children of an object. Just ensure the parent is reachable before the child
+is collected.
+
+Abstract virtual methods were not wrapped, (although they could be). If a method is a C++
+virtual method the corresponding M3 method has a comment against it. Static methods
+become normal M3 procedures. Most interfaces have a single class. I have aliased the main
+type to T in accordance with M3 tradition.
+
+Enumerations are messy. Sometimes the C++ enum can be mapped directly to an M3 enumeration
+type. Others with reassignment of values become a collection of constants. The (rather
+abitrary) type becomes a subrange of min to max of those constants. Still its possible
+to pass a bad enumeration to the M3 method and the C++ will accept it and not do what
+you are expecting. It is possible to generate runtime enum checking but that has been
+left out in the current release.
+
+Enjoy
