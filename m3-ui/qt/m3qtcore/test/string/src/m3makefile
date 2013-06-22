@@ -1,0 +1,6 @@
+import("libm3")
+import("m3qtcore")
+
+implementation("Main")
+
+program("test")
