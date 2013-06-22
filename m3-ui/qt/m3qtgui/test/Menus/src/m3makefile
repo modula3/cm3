@@ -1,0 +1,8 @@
+import("libm3")
+import("m3qtcore")
+import("m3qtgui")
+
+module("Window")
+implementation("Main")
+
+program("test")
