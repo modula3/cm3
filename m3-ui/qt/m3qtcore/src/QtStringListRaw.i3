@@ -18,49 +18,35 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QStringList0 (): QStringList;
 
 <* EXTERNAL New_QStringList1 *>
-PROCEDURE New_QStringList1 ( i: ADDRESS;
-): QStringList;
+PROCEDURE New_QStringList1 (i: ADDRESS; ): QStringList;
 
 <* EXTERNAL QStringList_sort *>
-PROCEDURE QStringList_sort ( self: QStringList;
-);
+PROCEDURE QStringList_sort (self: QStringList; );
 
 <* EXTERNAL QStringList_removeDuplicates *>
-PROCEDURE QStringList_removeDuplicates ( self: QStringList;
-): C.int;
+PROCEDURE QStringList_removeDuplicates (self: QStringList; ): C.int;
 
 <* EXTERNAL QStringList_join *>
-PROCEDURE QStringList_join ( self: QStringList;
- sep: ADDRESS;
-): ADDRESS;
+PROCEDURE QStringList_join (self: QStringList; sep: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStringList_filter *>
-PROCEDURE QStringList_filter ( self: QStringList;
- str: ADDRESS;
-cs: C.int;
-): ADDRESS;
+PROCEDURE QStringList_filter
+  (self: QStringList; str: ADDRESS; cs: C.int; ): ADDRESS;
 
 <* EXTERNAL QStringList_filter1 *>
-PROCEDURE QStringList_filter1 ( self: QStringList;
- str: ADDRESS;
-): ADDRESS;
+PROCEDURE QStringList_filter1 (self: QStringList; str: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStringList_replaceInStrings *>
-PROCEDURE QStringList_replaceInStrings ( self: QStringList;
- before, after: ADDRESS;
-cs: C.int;
-): ADDRESS;
+PROCEDURE QStringList_replaceInStrings
+  (self: QStringList; before, after: ADDRESS; cs: C.int; ): ADDRESS;
 
 <* EXTERNAL QStringList_replaceInStrings1 *>
-PROCEDURE QStringList_replaceInStrings1 ( self: QStringList;
- before, after: ADDRESS;
-): ADDRESS;
+PROCEDURE QStringList_replaceInStrings1
+  (self: QStringList; before, after: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL Delete_QStringList *>
-PROCEDURE Delete_QStringList ( self: QStringList;
-);
+PROCEDURE Delete_QStringList (self: QStringList; );
 
-TYPE
-QStringList = ADDRESS;
+TYPE QStringList = ADDRESS;
 
 END QtStringListRaw.

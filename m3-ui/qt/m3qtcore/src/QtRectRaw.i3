@@ -16,678 +16,440 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QRect0 (): QRect;
 
 <* EXTERNAL New_QRect1 *>
-PROCEDURE New_QRect1 ( topleft, bottomright: ADDRESS;
-): QRect;
+PROCEDURE New_QRect1 (topleft, bottomright: ADDRESS; ): QRect;
 
 <* EXTERNAL New_QRect2 *>
-PROCEDURE New_QRect2 ( topleft, size: ADDRESS;
-): QRect;
+PROCEDURE New_QRect2 (topleft, size: ADDRESS; ): QRect;
 
 <* EXTERNAL New_init *>
-PROCEDURE New_init (left, top, width, height: C.int;
-): QRect;
+PROCEDURE New_init (left, top, width, height: C.int; ): QRect;
 
 <* EXTERNAL QRect_isNull *>
-PROCEDURE QRect_isNull ( self: QRect;
-): BOOLEAN;
+PROCEDURE QRect_isNull (self: QRect; ): BOOLEAN;
 
 <* EXTERNAL QRect_isEmpty *>
-PROCEDURE QRect_isEmpty ( self: QRect;
-): BOOLEAN;
+PROCEDURE QRect_isEmpty (self: QRect; ): BOOLEAN;
 
 <* EXTERNAL QRect_isValid *>
-PROCEDURE QRect_isValid ( self: QRect;
-): BOOLEAN;
+PROCEDURE QRect_isValid (self: QRect; ): BOOLEAN;
 
 <* EXTERNAL QRect_left *>
-PROCEDURE QRect_left ( self: QRect;
-): C.int;
+PROCEDURE QRect_left (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_top *>
-PROCEDURE QRect_top ( self: QRect;
-): C.int;
+PROCEDURE QRect_top (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_right *>
-PROCEDURE QRect_right ( self: QRect;
-): C.int;
+PROCEDURE QRect_right (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_bottom *>
-PROCEDURE QRect_bottom ( self: QRect;
-): C.int;
+PROCEDURE QRect_bottom (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_normalized *>
-PROCEDURE QRect_normalized ( self: QRect;
-): ADDRESS;
+PROCEDURE QRect_normalized (self: QRect; ): ADDRESS;
 
 <* EXTERNAL QRect_x *>
-PROCEDURE QRect_x ( self: QRect;
-): C.int;
+PROCEDURE QRect_x (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_y *>
-PROCEDURE QRect_y ( self: QRect;
-): C.int;
+PROCEDURE QRect_y (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_setLeft *>
-PROCEDURE QRect_setLeft ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_setLeft (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_setTop *>
-PROCEDURE QRect_setTop ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_setTop (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_setRight *>
-PROCEDURE QRect_setRight ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_setRight (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_setBottom *>
-PROCEDURE QRect_setBottom ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_setBottom (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_setX *>
-PROCEDURE QRect_setX ( self: QRect;
-x: C.int;
-);
+PROCEDURE QRect_setX (self: QRect; x: C.int; );
 
 <* EXTERNAL QRect_setY *>
-PROCEDURE QRect_setY ( self: QRect;
-y: C.int;
-);
+PROCEDURE QRect_setY (self: QRect; y: C.int; );
 
 <* EXTERNAL QRect_setTopLeft *>
-PROCEDURE QRect_setTopLeft ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_setTopLeft (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_setBottomRight *>
-PROCEDURE QRect_setBottomRight ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_setBottomRight (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_setTopRight *>
-PROCEDURE QRect_setTopRight ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_setTopRight (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_setBottomLeft *>
-PROCEDURE QRect_setBottomLeft ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_setBottomLeft (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_topLeft *>
-PROCEDURE QRect_topLeft ( self: QRect;
-): ADDRESS;
+PROCEDURE QRect_topLeft (self: QRect; ): ADDRESS;
 
 <* EXTERNAL QRect_bottomRight *>
-PROCEDURE QRect_bottomRight ( self: QRect;
-): ADDRESS;
+PROCEDURE QRect_bottomRight (self: QRect; ): ADDRESS;
 
 <* EXTERNAL QRect_topRight *>
-PROCEDURE QRect_topRight ( self: QRect;
-): ADDRESS;
+PROCEDURE QRect_topRight (self: QRect; ): ADDRESS;
 
 <* EXTERNAL QRect_bottomLeft *>
-PROCEDURE QRect_bottomLeft ( self: QRect;
-): ADDRESS;
+PROCEDURE QRect_bottomLeft (self: QRect; ): ADDRESS;
 
 <* EXTERNAL QRect_center *>
-PROCEDURE QRect_center ( self: QRect;
-): ADDRESS;
+PROCEDURE QRect_center (self: QRect; ): ADDRESS;
 
 <* EXTERNAL QRect_moveLeft *>
-PROCEDURE QRect_moveLeft ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_moveLeft (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_moveTop *>
-PROCEDURE QRect_moveTop ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_moveTop (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_moveRight *>
-PROCEDURE QRect_moveRight ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_moveRight (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_moveBottom *>
-PROCEDURE QRect_moveBottom ( self: QRect;
-pos: C.int;
-);
+PROCEDURE QRect_moveBottom (self: QRect; pos: C.int; );
 
 <* EXTERNAL QRect_moveTopLeft *>
-PROCEDURE QRect_moveTopLeft ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_moveTopLeft (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_moveBottomRight *>
-PROCEDURE QRect_moveBottomRight ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_moveBottomRight (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_moveTopRight *>
-PROCEDURE QRect_moveTopRight ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_moveTopRight (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_moveBottomLeft *>
-PROCEDURE QRect_moveBottomLeft ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_moveBottomLeft (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_moveCenter *>
-PROCEDURE QRect_moveCenter ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_moveCenter (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_translate *>
-PROCEDURE QRect_translate ( self: QRect;
-dx, dy: C.int;
-);
+PROCEDURE QRect_translate (self: QRect; dx, dy: C.int; );
 
 <* EXTERNAL QRect_translate1 *>
-PROCEDURE QRect_translate1 ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_translate1 (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_translated *>
-PROCEDURE QRect_translated ( self: QRect;
-dx, dy: C.int;
-): ADDRESS;
+PROCEDURE QRect_translated (self: QRect; dx, dy: C.int; ): ADDRESS;
 
 <* EXTERNAL QRect_translated1 *>
-PROCEDURE QRect_translated1 ( self: QRect;
- p: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_translated1 (self: QRect; p: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_moveTo *>
-PROCEDURE QRect_moveTo ( self: QRect;
-x, t: C.int;
-);
+PROCEDURE QRect_moveTo (self: QRect; x, t: C.int; );
 
 <* EXTERNAL QRect_moveTo1 *>
-PROCEDURE QRect_moveTo1 ( self: QRect;
- p: ADDRESS;
-);
+PROCEDURE QRect_moveTo1 (self: QRect; p: ADDRESS; );
 
 <* EXTERNAL QRect_setRect *>
-PROCEDURE QRect_setRect ( self: QRect;
-x, y, w, h: C.int;
-);
+PROCEDURE QRect_setRect (self: QRect; x, y, w, h: C.int; );
 
 <* EXTERNAL QRect_getRect *>
-PROCEDURE QRect_getRect ( self: QRect;
- x, y, w, h: C.int;
-);
+PROCEDURE QRect_getRect (self: QRect; x, y, w, h: C.int; );
 
 <* EXTERNAL QRect_setCoords *>
-PROCEDURE QRect_setCoords ( self: QRect;
-x1, y1, x2, y2: C.int;
-);
+PROCEDURE QRect_setCoords (self: QRect; x1, y1, x2, y2: C.int; );
 
 <* EXTERNAL QRect_getCoords *>
-PROCEDURE QRect_getCoords ( self: QRect;
- x1, y1, x2, y2: C.int;
-);
+PROCEDURE QRect_getCoords (self: QRect; x1, y1, x2, y2: C.int; );
 
 <* EXTERNAL QRect_adjust *>
-PROCEDURE QRect_adjust ( self: QRect;
-x1, y1, x2, y2: C.int;
-);
+PROCEDURE QRect_adjust (self: QRect; x1, y1, x2, y2: C.int; );
 
 <* EXTERNAL QRect_adjusted *>
-PROCEDURE QRect_adjusted ( self: QRect;
-x1, y1, x2, y2: C.int;
-): ADDRESS;
+PROCEDURE QRect_adjusted (self: QRect; x1, y1, x2, y2: C.int; ): ADDRESS;
 
 <* EXTERNAL QRect_size *>
-PROCEDURE QRect_size ( self: QRect;
-): ADDRESS;
+PROCEDURE QRect_size (self: QRect; ): ADDRESS;
 
 <* EXTERNAL QRect_width *>
-PROCEDURE QRect_width ( self: QRect;
-): C.int;
+PROCEDURE QRect_width (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_height *>
-PROCEDURE QRect_height ( self: QRect;
-): C.int;
+PROCEDURE QRect_height (self: QRect; ): C.int;
 
 <* EXTERNAL QRect_setWidth *>
-PROCEDURE QRect_setWidth ( self: QRect;
-w: C.int;
-);
+PROCEDURE QRect_setWidth (self: QRect; w: C.int; );
 
 <* EXTERNAL QRect_setHeight *>
-PROCEDURE QRect_setHeight ( self: QRect;
-h: C.int;
-);
+PROCEDURE QRect_setHeight (self: QRect; h: C.int; );
 
 <* EXTERNAL QRect_setSize *>
-PROCEDURE QRect_setSize ( self: QRect;
- s: ADDRESS;
-);
+PROCEDURE QRect_setSize (self: QRect; s: ADDRESS; );
 
 <* EXTERNAL QRect_PlusEqual *>
-PROCEDURE QRect_PlusEqual ( self: QRect;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_PlusEqual (self: QRect; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_MinusEqual *>
-PROCEDURE QRect_MinusEqual ( self: QRect;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_MinusEqual (self: QRect; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_MultiplyEqual *>
-PROCEDURE QRect_MultiplyEqual ( self: QRect;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_MultiplyEqual (self: QRect; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_DivideEqual *>
-PROCEDURE QRect_DivideEqual ( self: QRect;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_DivideEqual (self: QRect; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_contains *>
-PROCEDURE QRect_contains ( self: QRect;
- p: ADDRESS;
-proper: BOOLEAN;
-): BOOLEAN;
+PROCEDURE QRect_contains (self: QRect; p: ADDRESS; proper: BOOLEAN; ):
+  BOOLEAN;
 
 <* EXTERNAL QRect_contains1 *>
-PROCEDURE QRect_contains1 ( self: QRect;
- p: ADDRESS;
-): BOOLEAN;
+PROCEDURE QRect_contains1 (self: QRect; p: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QRect_contains2 *>
-PROCEDURE QRect_contains2 ( self: QRect;
-x, y: C.int;
-): BOOLEAN;
+PROCEDURE QRect_contains2 (self: QRect; x, y: C.int; ): BOOLEAN;
 
 <* EXTERNAL QRect_contains3 *>
-PROCEDURE QRect_contains3 ( self: QRect;
-x, y: C.int;
-proper: BOOLEAN;
-): BOOLEAN;
+PROCEDURE QRect_contains3 (self: QRect; x, y: C.int; proper: BOOLEAN; ):
+  BOOLEAN;
 
 <* EXTERNAL QRect_contains4 *>
-PROCEDURE QRect_contains4 ( self: QRect;
- r: ADDRESS;
-proper: BOOLEAN;
-): BOOLEAN;
+PROCEDURE QRect_contains4 (self: QRect; r: ADDRESS; proper: BOOLEAN; ):
+  BOOLEAN;
 
 <* EXTERNAL QRect_contains5 *>
-PROCEDURE QRect_contains5 ( self: QRect;
- r: ADDRESS;
-): BOOLEAN;
+PROCEDURE QRect_contains5 (self: QRect; r: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QRect_unite *>
-PROCEDURE QRect_unite ( self: QRect;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_unite (self: QRect; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_united *>
-PROCEDURE QRect_united ( self: QRect;
- other: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_united (self: QRect; other: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_intersect *>
-PROCEDURE QRect_intersect ( self: QRect;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_intersect (self: QRect; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_intersected *>
-PROCEDURE QRect_intersected ( self: QRect;
- other: ADDRESS;
-): ADDRESS;
+PROCEDURE QRect_intersected (self: QRect; other: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRect_intersects *>
-PROCEDURE QRect_intersects ( self: QRect;
- r: ADDRESS;
-): BOOLEAN;
+PROCEDURE QRect_intersects (self: QRect; r: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL Delete_QRect *>
-PROCEDURE Delete_QRect ( self: QRect;
-);
+PROCEDURE Delete_QRect (self: QRect; );
 
-TYPE
-QRect <: ADDRESS;
+TYPE QRect <: ADDRESS;
 
 <* EXTERNAL New_QRectF0 *>
 PROCEDURE New_QRectF0 (): QRectF;
 
 <* EXTERNAL New_QRectF1 *>
-PROCEDURE New_QRectF1 ( topleft, size: ADDRESS;
-): QRectF;
+PROCEDURE New_QRectF1 (topleft, size: ADDRESS; ): QRectF;
 
 <* EXTERNAL New_QRectF2 *>
-PROCEDURE New_QRectF2 ( topleft, bottomRight: ADDRESS;
-): QRectF;
+PROCEDURE New_QRectF2 (topleft, bottomRight: ADDRESS; ): QRectF;
 
 <* EXTERNAL New_QRectF3 *>
-PROCEDURE New_QRectF3 (left, top, width, height: C.double;
-): QRectF;
+PROCEDURE New_QRectF3 (left, top, width, height: C.double; ): QRectF;
 
 <* EXTERNAL New_QRectF4 *>
-PROCEDURE New_QRectF4 ( rect: ADDRESS;
-): QRectF;
+PROCEDURE New_QRectF4 (rect: ADDRESS; ): QRectF;
 
 <* EXTERNAL QRectF_isNull *>
-PROCEDURE QRectF_isNull ( self: QRectF;
-): BOOLEAN;
+PROCEDURE QRectF_isNull (self: QRectF; ): BOOLEAN;
 
 <* EXTERNAL QRectF_isEmpty *>
-PROCEDURE QRectF_isEmpty ( self: QRectF;
-): BOOLEAN;
+PROCEDURE QRectF_isEmpty (self: QRectF; ): BOOLEAN;
 
 <* EXTERNAL QRectF_isValid *>
-PROCEDURE QRectF_isValid ( self: QRectF;
-): BOOLEAN;
+PROCEDURE QRectF_isValid (self: QRectF; ): BOOLEAN;
 
 <* EXTERNAL QRectF_normalized *>
-PROCEDURE QRectF_normalized ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_normalized (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_left *>
-PROCEDURE QRectF_left ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_left (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_top *>
-PROCEDURE QRectF_top ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_top (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_right *>
-PROCEDURE QRectF_right ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_right (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_bottom *>
-PROCEDURE QRectF_bottom ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_bottom (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_x *>
-PROCEDURE QRectF_x ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_x (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_y *>
-PROCEDURE QRectF_y ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_y (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_setLeft *>
-PROCEDURE QRectF_setLeft ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_setLeft (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_setTop *>
-PROCEDURE QRectF_setTop ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_setTop (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_setRight *>
-PROCEDURE QRectF_setRight ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_setRight (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_setBottom *>
-PROCEDURE QRectF_setBottom ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_setBottom (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_setX *>
-PROCEDURE QRectF_setX ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_setX (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_setY *>
-PROCEDURE QRectF_setY ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_setY (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_topLeft *>
-PROCEDURE QRectF_topLeft ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_topLeft (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_bottomRight *>
-PROCEDURE QRectF_bottomRight ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_bottomRight (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_topRight *>
-PROCEDURE QRectF_topRight ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_topRight (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_bottomLeft *>
-PROCEDURE QRectF_bottomLeft ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_bottomLeft (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_center *>
-PROCEDURE QRectF_center ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_center (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_setTopLeft *>
-PROCEDURE QRectF_setTopLeft ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_setTopLeft (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_setBottomRight *>
-PROCEDURE QRectF_setBottomRight ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_setBottomRight (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_setTopRight *>
-PROCEDURE QRectF_setTopRight ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_setTopRight (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_setBottomLeft *>
-PROCEDURE QRectF_setBottomLeft ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_setBottomLeft (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_moveLeft *>
-PROCEDURE QRectF_moveLeft ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_moveLeft (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_moveTop *>
-PROCEDURE QRectF_moveTop ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_moveTop (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_moveRight *>
-PROCEDURE QRectF_moveRight ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_moveRight (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_moveBottom *>
-PROCEDURE QRectF_moveBottom ( self: QRectF;
-pos: C.double;
-);
+PROCEDURE QRectF_moveBottom (self: QRectF; pos: C.double; );
 
 <* EXTERNAL QRectF_moveTopLeft *>
-PROCEDURE QRectF_moveTopLeft ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_moveTopLeft (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_moveBottomRight *>
-PROCEDURE QRectF_moveBottomRight ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_moveBottomRight (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_moveTopRight *>
-PROCEDURE QRectF_moveTopRight ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_moveTopRight (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_moveBottomLeft *>
-PROCEDURE QRectF_moveBottomLeft ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_moveBottomLeft (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_moveCenter *>
-PROCEDURE QRectF_moveCenter ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_moveCenter (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_translate *>
-PROCEDURE QRectF_translate ( self: QRectF;
-dx, dy: C.double;
-);
+PROCEDURE QRectF_translate (self: QRectF; dx, dy: C.double; );
 
 <* EXTERNAL QRectF_translate1 *>
-PROCEDURE QRectF_translate1 ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_translate1 (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_translated *>
-PROCEDURE QRectF_translated ( self: QRectF;
-dx, dy: C.double;
-): ADDRESS;
+PROCEDURE QRectF_translated (self: QRectF; dx, dy: C.double; ): ADDRESS;
 
 <* EXTERNAL QRectF_translated1 *>
-PROCEDURE QRectF_translated1 ( self: QRectF;
- p: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_translated1 (self: QRectF; p: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_moveTo *>
-PROCEDURE QRectF_moveTo ( self: QRectF;
-x, t: C.double;
-);
+PROCEDURE QRectF_moveTo (self: QRectF; x, t: C.double; );
 
 <* EXTERNAL QRectF_moveTo1 *>
-PROCEDURE QRectF_moveTo1 ( self: QRectF;
- p: ADDRESS;
-);
+PROCEDURE QRectF_moveTo1 (self: QRectF; p: ADDRESS; );
 
 <* EXTERNAL QRectF_setRect *>
-PROCEDURE QRectF_setRect ( self: QRectF;
-x, y, w, h: C.double;
-);
+PROCEDURE QRectF_setRect (self: QRectF; x, y, w, h: C.double; );
 
 <* EXTERNAL QRectF_getRect *>
-PROCEDURE QRectF_getRect ( self: QRectF;
- x, y, w, h: C.double;
-);
+PROCEDURE QRectF_getRect (self: QRectF; x, y, w, h: C.double; );
 
 <* EXTERNAL QRectF_setCoords *>
-PROCEDURE QRectF_setCoords ( self: QRectF;
-x1, y1, x2, y2: C.double;
-);
+PROCEDURE QRectF_setCoords (self: QRectF; x1, y1, x2, y2: C.double; );
 
 <* EXTERNAL QRectF_getCoords *>
-PROCEDURE QRectF_getCoords ( self: QRectF;
- x1, y1, x2, y2: C.double;
-);
+PROCEDURE QRectF_getCoords (self: QRectF; x1, y1, x2, y2: C.double; );
 
 <* EXTERNAL QRectF_adjust *>
-PROCEDURE QRectF_adjust ( self: QRectF;
-x1, y1, x2, y2: C.double;
-);
+PROCEDURE QRectF_adjust (self: QRectF; x1, y1, x2, y2: C.double; );
 
 <* EXTERNAL QRectF_adjusted *>
-PROCEDURE QRectF_adjusted ( self: QRectF;
-x1, y1, x2, y2: C.double;
-): ADDRESS;
+PROCEDURE QRectF_adjusted (self: QRectF; x1, y1, x2, y2: C.double; ):
+  ADDRESS;
 
 <* EXTERNAL QRectF_size *>
-PROCEDURE QRectF_size ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_size (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_width *>
-PROCEDURE QRectF_width ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_width (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_height *>
-PROCEDURE QRectF_height ( self: QRectF;
-): C.double;
+PROCEDURE QRectF_height (self: QRectF; ): C.double;
 
 <* EXTERNAL QRectF_setWidth *>
-PROCEDURE QRectF_setWidth ( self: QRectF;
-w: C.double;
-);
+PROCEDURE QRectF_setWidth (self: QRectF; w: C.double; );
 
 <* EXTERNAL QRectF_setHeight *>
-PROCEDURE QRectF_setHeight ( self: QRectF;
-h: C.double;
-);
+PROCEDURE QRectF_setHeight (self: QRectF; h: C.double; );
 
 <* EXTERNAL QRectF_setSize *>
-PROCEDURE QRectF_setSize ( self: QRectF;
- s: ADDRESS;
-);
+PROCEDURE QRectF_setSize (self: QRectF; s: ADDRESS; );
 
 <* EXTERNAL QRectF_PlusEqual *>
-PROCEDURE QRectF_PlusEqual ( self: QRectF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_PlusEqual (self: QRectF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_MinusEqual *>
-PROCEDURE QRectF_MinusEqual ( self: QRectF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_MinusEqual (self: QRectF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_MultiplyEqual *>
-PROCEDURE QRectF_MultiplyEqual ( self: QRectF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_MultiplyEqual (self: QRectF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_DivideEqual *>
-PROCEDURE QRectF_DivideEqual ( self: QRectF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_DivideEqual (self: QRectF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_contains *>
-PROCEDURE QRectF_contains ( self: QRectF;
- p: ADDRESS;
-): BOOLEAN;
+PROCEDURE QRectF_contains (self: QRectF; p: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QRectF_contains1 *>
-PROCEDURE QRectF_contains1 ( self: QRectF;
-x, y: C.double;
-): BOOLEAN;
+PROCEDURE QRectF_contains1 (self: QRectF; x, y: C.double; ): BOOLEAN;
 
 <* EXTERNAL QRectF_contains2 *>
-PROCEDURE QRectF_contains2 ( self: QRectF;
- r: ADDRESS;
-): BOOLEAN;
+PROCEDURE QRectF_contains2 (self: QRectF; r: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QRectF_unite *>
-PROCEDURE QRectF_unite ( self: QRectF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_unite (self: QRectF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_united *>
-PROCEDURE QRectF_united ( self: QRectF;
- other: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_united (self: QRectF; other: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_intersect *>
-PROCEDURE QRectF_intersect ( self: QRectF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_intersect (self: QRectF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_intersected *>
-PROCEDURE QRectF_intersected ( self: QRectF;
- other: ADDRESS;
-): ADDRESS;
+PROCEDURE QRectF_intersected (self: QRectF; other: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QRectF_intersects *>
-PROCEDURE QRectF_intersects ( self: QRectF;
- r: ADDRESS;
-): BOOLEAN;
+PROCEDURE QRectF_intersects (self: QRectF; r: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QRectF_toRect *>
-PROCEDURE QRectF_toRect ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_toRect (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL QRectF_toAlignedRect *>
-PROCEDURE QRectF_toAlignedRect ( self: QRectF;
-): ADDRESS;
+PROCEDURE QRectF_toAlignedRect (self: QRectF; ): ADDRESS;
 
 <* EXTERNAL Delete_QRectF *>
-PROCEDURE Delete_QRectF ( self: QRectF;
-);
+PROCEDURE Delete_QRectF (self: QRectF; );
 
-TYPE
-QRectF <: ADDRESS;
+TYPE QRectF <: ADDRESS;
 
 END QtRectRaw.

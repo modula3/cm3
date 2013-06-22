@@ -11,7 +11,6 @@ MODULE QtByteArrayRaw;
 
 
 
-REVEAL
-QByteArray = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QByteArray = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtByteArrayRaw.

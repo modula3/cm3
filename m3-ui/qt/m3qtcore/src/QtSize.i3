@@ -11,95 +11,65 @@ INTERFACE QtSize;
 FROM QtNamespace IMPORT AspectRatioMode;
 
 
-TYPE
-  T = QSize;
+TYPE T = QSize;
 
 
 TYPE
-QSize <: QSizePublic;
-QSizePublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QSize;
-init_1 (w, h: INTEGER;
-) : QSize;
-isNull(): BOOLEAN;
-isEmpty(): BOOLEAN;
-isValid(): BOOLEAN;
-width(): INTEGER;
-height(): INTEGER;
-setWidth(w: INTEGER;
-);
-setHeight(h: INTEGER;
-);
-transpose();
-scale(w, h: INTEGER;
-mode: AspectRatioMode;
-);
-scale1( s: QSize;
-mode: AspectRatioMode;
-);
-expandedTo( arg1: QSize;
-): QSize;
-boundedTo( arg1: QSize;
-): QSize;
-rwidth(): UNTRACED REF INTEGER;
-rheight(): UNTRACED REF INTEGER;
-PlusEqual( arg1: QSize;
-): QSize;
-MinusEqual( arg1: QSize;
-): QSize;
-MultiplyEqual(c: LONGREAL;
-): QSize;
-DivideEqual(c: LONGREAL;
-): QSize;
-destroyCxx();
-END;
+  QSize <: QSizePublic;
+  QSizePublic = BRANDED OBJECT
+                  cxxObj: ADDRESS;
+                METHODS
+                  init_0        (): QSize;
+                  init_1        (w, h: INTEGER; ): QSize;
+                  isNull        (): BOOLEAN;
+                  isEmpty       (): BOOLEAN;
+                  isValid       (): BOOLEAN;
+                  width         (): INTEGER;
+                  height        (): INTEGER;
+                  setWidth      (w: INTEGER; );
+                  setHeight     (h: INTEGER; );
+                  transpose     ();
+                  scale         (w, h: INTEGER; mode: AspectRatioMode; );
+                  scale1        (s: QSize; mode: AspectRatioMode; );
+                  expandedTo    (arg1: QSize; ): QSize;
+                  boundedTo     (arg1: QSize; ): QSize;
+                  rwidth        (): UNTRACED REF INTEGER;
+                  rheight       (): UNTRACED REF INTEGER;
+                  PlusEqual     (arg1: QSize; ): QSize;
+                  MinusEqual    (arg1: QSize; ): QSize;
+                  MultiplyEqual (c: LONGREAL; ): QSize;
+                  DivideEqual   (c: LONGREAL; ): QSize;
+                  destroyCxx    ();
+                END;
 
-QSizeF <: QSizeFPublic;
-QSizeFPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QSizeF;
-init_1 ( sz: QSize;
-) : QSizeF;
-init_2 (w, h: LONGREAL;
-) : QSizeF;
-isNull(): BOOLEAN;
-isEmpty(): BOOLEAN;
-isValid(): BOOLEAN;
-width(): LONGREAL;
-height(): LONGREAL;
-setWidth(w: LONGREAL;
-);
-setHeight(h: LONGREAL;
-);
-transpose();
-scale(w, h: LONGREAL;
-mode: AspectRatioMode;
-);
-scale1( s: QSizeF;
-mode: AspectRatioMode;
-);
-expandedTo( arg1: QSizeF;
-): QSizeF;
-boundedTo( arg1: QSizeF;
-): QSizeF;
-rwidth(): UNTRACED REF LONGREAL;
-rheight(): UNTRACED REF LONGREAL;
-PlusEqual( arg1: QSizeF;
-): QSizeF;
-MinusEqual( arg1: QSizeF;
-): QSizeF;
-MultiplyEqual(c: LONGREAL;
-): QSizeF;
-DivideEqual(c: LONGREAL;
-): QSizeF;
-toSize(): QSize;
-destroyCxx();
-END;
+  QSizeF <: QSizeFPublic;
+  QSizeFPublic = BRANDED OBJECT
+                   cxxObj: ADDRESS;
+                 METHODS
+                   init_0        (): QSizeF;
+                   init_1        (sz: QSize; ): QSizeF;
+                   init_2        (w, h: LONGREAL; ): QSizeF;
+                   isNull        (): BOOLEAN;
+                   isEmpty       (): BOOLEAN;
+                   isValid       (): BOOLEAN;
+                   width         (): LONGREAL;
+                   height        (): LONGREAL;
+                   setWidth      (w: LONGREAL; );
+                   setHeight     (h: LONGREAL; );
+                   transpose     ();
+                   scale         (w, h: LONGREAL; mode: AspectRatioMode; );
+                   scale1        (s: QSizeF; mode: AspectRatioMode; );
+                   expandedTo    (arg1: QSizeF; ): QSizeF;
+                   boundedTo     (arg1: QSizeF; ): QSizeF;
+                   rwidth        (): UNTRACED REF LONGREAL;
+                   rheight       (): UNTRACED REF LONGREAL;
+                   PlusEqual     (arg1: QSizeF; ): QSizeF;
+                   MinusEqual    (arg1: QSizeF; ): QSizeF;
+                   MultiplyEqual (c: LONGREAL; ): QSizeF;
+                   DivideEqual   (c: LONGREAL; ): QSizeF;
+                   toSize        (): QSize;
+                   destroyCxx    ();
+                 END;
 
 
 END QtSize.

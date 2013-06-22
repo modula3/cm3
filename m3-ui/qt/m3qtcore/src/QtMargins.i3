@@ -14,29 +14,24 @@ INTERFACE QtMargins;
 
 
 TYPE
-QMargins <: QMarginsPublic;
-QMarginsPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QMargins;
-init_1 (left, top, right, bottom: INTEGER;
-) : QMargins;
-isNull(): BOOLEAN;
-left(): INTEGER;
-top(): INTEGER;
-right(): INTEGER;
-bottom(): INTEGER;
-setLeft(left: INTEGER;
-);
-setTop(top: INTEGER;
-);
-setRight(right: INTEGER;
-);
-setBottom(bottom: INTEGER;
-);
-destroyCxx();
-END;
+  QMargins <: QMarginsPublic;
+  QMarginsPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0     (): QMargins;
+      init_1     (left, top, right, bottom: INTEGER; ): QMargins;
+      isNull     (): BOOLEAN;
+      left       (): INTEGER;
+      top        (): INTEGER;
+      right      (): INTEGER;
+      bottom     (): INTEGER;
+      setLeft    (left: INTEGER; );
+      setTop     (top: INTEGER; );
+      setRight   (right: INTEGER; );
+      setBottom  (bottom: INTEGER; );
+      destroyCxx ();
+    END;
 
 
 END QtMargins.

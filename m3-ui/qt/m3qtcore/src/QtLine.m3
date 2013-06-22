@@ -9,779 +9,688 @@
 UNSAFE MODULE QtLine;
 
 
-FROM QtPoint IMPORT QPoint,QPointF;
+FROM QtPoint IMPORT QPoint, QPointF;
 IMPORT QtLineRaw;
 
 
 IMPORT WeakRef;
 
 
-PROCEDURE New_QLine0 (self:QLine;): QLine =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtLineRaw.New_QLine0();
+PROCEDURE New_QLine0 (self: QLine; ): QLine =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtLineRaw.New_QLine0();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLine);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLine);
 
-RETURN self;
-END New_QLine0;
+    RETURN self;
+  END New_QLine0;
 
-PROCEDURE New_QLine1 (self:QLine; pt1, pt2: QPoint;
-): QLine =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(pt1.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt2.cxxObj,ADDRESS);
-BEGIN
-result := QtLineRaw.New_QLine1(arg1tmp, arg2tmp);
+PROCEDURE New_QLine1 (self: QLine; pt1, pt2: QPoint; ): QLine =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(pt1.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt2.cxxObj, ADDRESS);
+  BEGIN
+    result := QtLineRaw.New_QLine1(arg1tmp, arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLine);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLine);
 
-RETURN self;
-END New_QLine1;
+    RETURN self;
+  END New_QLine1;
 
-PROCEDURE New_QLine2 (self:QLine;x1, y1, x2, y2: INTEGER;
-): QLine =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtLineRaw.New_QLine2(x1, y1, x2, y2);
+PROCEDURE New_QLine2 (self: QLine; x1, y1, x2, y2: INTEGER; ): QLine =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtLineRaw.New_QLine2(x1, y1, x2, y2);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLine);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLine);
 
-RETURN self;
-END New_QLine2;
+    RETURN self;
+  END New_QLine2;
 
-PROCEDURE QLine_isNull ( self: QLine;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_isNull(selfAdr);
-END QLine_isNull;
+PROCEDURE QLine_isNull (self: QLine; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_isNull(selfAdr);
+  END QLine_isNull;
 
-PROCEDURE QLine_p1 ( self: QLine;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLine_p1(selfAdr);
+PROCEDURE QLine_p1 (self: QLine; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLine_p1(selfAdr);
 
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QLine_p1;
+    RETURN result;
+  END QLine_p1;
 
-PROCEDURE QLine_p2 ( self: QLine;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLine_p2(selfAdr);
+PROCEDURE QLine_p2 (self: QLine; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLine_p2(selfAdr);
 
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QLine_p2;
+    RETURN result;
+  END QLine_p2;
 
-PROCEDURE QLine_x1 ( self: QLine;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_x1(selfAdr);
-END QLine_x1;
+PROCEDURE QLine_x1 (self: QLine; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_x1(selfAdr);
+  END QLine_x1;
 
-PROCEDURE QLine_y1 ( self: QLine;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_y1(selfAdr);
-END QLine_y1;
+PROCEDURE QLine_y1 (self: QLine; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_y1(selfAdr);
+  END QLine_y1;
 
-PROCEDURE QLine_x2 ( self: QLine;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_x2(selfAdr);
-END QLine_x2;
+PROCEDURE QLine_x2 (self: QLine; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_x2(selfAdr);
+  END QLine_x2;
 
-PROCEDURE QLine_y2 ( self: QLine;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_y2(selfAdr);
-END QLine_y2;
+PROCEDURE QLine_y2 (self: QLine; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_y2(selfAdr);
+  END QLine_y2;
 
-PROCEDURE QLine_dx ( self: QLine;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_dx(selfAdr);
-END QLine_dx;
+PROCEDURE QLine_dx (self: QLine; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_dx(selfAdr);
+  END QLine_dx;
 
-PROCEDURE QLine_dy ( self: QLine;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_dy(selfAdr);
-END QLine_dy;
+PROCEDURE QLine_dy (self: QLine; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_dy(selfAdr);
+  END QLine_dy;
 
-PROCEDURE QLine_translate ( self: QLine;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLine_translate(selfAdr, arg2tmp);
-END QLine_translate;
+PROCEDURE QLine_translate (self: QLine; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLine_translate(selfAdr, arg2tmp);
+  END QLine_translate;
 
-PROCEDURE QLine_translate1 ( self: QLine;
-dx, dy: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLine_translate1(selfAdr, dx, dy);
-END QLine_translate1;
+PROCEDURE QLine_translate1 (self: QLine; dx, dy: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLine_translate1(selfAdr, dx, dy);
+  END QLine_translate1;
 
-PROCEDURE QLine_translated ( self: QLine;
- p: QPoint;
-): QLine =
-VAR
-ret:ADDRESS; result : QLine;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLine_translated(selfAdr, arg2tmp);
+PROCEDURE QLine_translated (self: QLine; p: QPoint; ): QLine =
+  VAR
+    ret    : ADDRESS;
+    result : QLine;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLine_translated(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QLine) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLine);
-ELSE
-  result := NEW(QLine);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QLine) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QLine);
+    ELSE
+      result := NEW(QLine);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QLine_translated;
+    RETURN result;
+  END QLine_translated;
 
-PROCEDURE QLine_translated1 ( self: QLine;
-dx, dy: INTEGER;
-): QLine =
-VAR
-ret:ADDRESS; result : QLine;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLine_translated1(selfAdr, dx, dy);
+PROCEDURE QLine_translated1 (self: QLine; dx, dy: INTEGER; ): QLine =
+  VAR
+    ret    : ADDRESS;
+    result : QLine;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLine_translated1(selfAdr, dx, dy);
 
-IF ISTYPE(result,QLine) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLine);
-ELSE
-  result := NEW(QLine);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QLine) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QLine);
+    ELSE
+      result := NEW(QLine);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QLine_translated1;
+    RETURN result;
+  END QLine_translated1;
 
-PROCEDURE QLine_setP1 ( self: QLine;
- p1: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p1.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLine_setP1(selfAdr, arg2tmp);
-END QLine_setP1;
+PROCEDURE QLine_setP1 (self: QLine; p1: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p1.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLine_setP1(selfAdr, arg2tmp);
+  END QLine_setP1;
 
-PROCEDURE QLine_setP2 ( self: QLine;
- p2: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p2.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLine_setP2(selfAdr, arg2tmp);
-END QLine_setP2;
+PROCEDURE QLine_setP2 (self: QLine; p2: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p2.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLine_setP2(selfAdr, arg2tmp);
+  END QLine_setP2;
 
-PROCEDURE QLine_setPoints ( self: QLine;
- p1, p2: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p1.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(p2.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLine_setPoints(selfAdr, arg2tmp, arg3tmp);
-END QLine_setPoints;
+PROCEDURE QLine_setPoints (self: QLine; p1, p2: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p1.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(p2.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLine_setPoints(selfAdr, arg2tmp, arg3tmp);
+  END QLine_setPoints;
 
-PROCEDURE QLine_setLine ( self: QLine;
-x1, y1, x2, y2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLine_setLine(selfAdr, x1, y1, x2, y2);
-END QLine_setLine;
+PROCEDURE QLine_setLine (self: QLine; x1, y1, x2, y2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLine_setLine(selfAdr, x1, y1, x2, y2);
+  END QLine_setLine;
 
-PROCEDURE QLine_EqualEqual ( self, d: QLine;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(d.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_EqualEqual(selfAdr, arg2tmp);
-END QLine_EqualEqual;
+PROCEDURE QLine_EqualEqual (self, d: QLine; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(d.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_EqualEqual(selfAdr, arg2tmp);
+  END QLine_EqualEqual;
 
-PROCEDURE QLine_NotEqual ( self, d: QLine;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(d.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLine_NotEqual(selfAdr, arg2tmp);
-END QLine_NotEqual;
+PROCEDURE QLine_NotEqual (self, d: QLine; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(d.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLine_NotEqual(selfAdr, arg2tmp);
+  END QLine_NotEqual;
 
-PROCEDURE Delete_QLine ( self: QLine;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.Delete_QLine(selfAdr);
-END Delete_QLine;
+PROCEDURE Delete_QLine (self: QLine; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.Delete_QLine(selfAdr);
+  END Delete_QLine;
 
-PROCEDURE Cleanup_QLine(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QLine := ref;
-BEGIN
-  Delete_QLine(obj);
- END Cleanup_QLine;
+PROCEDURE Cleanup_QLine
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QLine := ref;
+  BEGIN
+    Delete_QLine(obj);
+  END Cleanup_QLine;
 
-PROCEDURE Destroy_QLine(self : QLine) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QLine);
-END Destroy_QLine;
+PROCEDURE Destroy_QLine (self: QLine) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QLine);
+  END Destroy_QLine;
 
 REVEAL
-QLine =
-QLinePublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QLine0;
-init_1 := New_QLine1;
-init_2 := New_QLine2;
-isNull := QLine_isNull;
-p1 := QLine_p1;
-p2 := QLine_p2;
-x1 := QLine_x1;
-y1 := QLine_y1;
-x2 := QLine_x2;
-y2 := QLine_y2;
-dx := QLine_dx;
-dy := QLine_dy;
-translate := QLine_translate;
-translate1 := QLine_translate1;
-translated := QLine_translated;
-translated1 := QLine_translated1;
-setP1 := QLine_setP1;
-setP2 := QLine_setP2;
-setPoints := QLine_setPoints;
-setLine := QLine_setLine;
-EqualEqual := QLine_EqualEqual;
-NotEqual := QLine_NotEqual;
-destroyCxx := Destroy_QLine;
-END;
-
-PROCEDURE New_QLineF0 (self:QLineF;): QLineF =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtLineRaw.New_QLineF0();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineF);
-
-RETURN self;
-END New_QLineF0;
-
-PROCEDURE New_QLineF1 (self:QLineF; pt1, pt2: QPointF;
-): QLineF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(pt1.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt2.cxxObj,ADDRESS);
-BEGIN
-result := QtLineRaw.New_QLineF1(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineF);
-
-RETURN self;
-END New_QLineF1;
-
-PROCEDURE New_QLineF2 (self:QLineF;x1, y1, x2, y2: LONGREAL;
-): QLineF =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtLineRaw.New_QLineF2(x1, y1, x2, y2);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineF);
-
-RETURN self;
-END New_QLineF2;
-
-PROCEDURE New_QLineF3 (self:QLineF; line: QLine;
-): QLineF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(line.cxxObj,ADDRESS);
-BEGIN
-result := QtLineRaw.New_QLineF3(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineF);
-
-RETURN self;
-END New_QLineF3;
-
-PROCEDURE FromPolar (length, angle: LONGREAL;
-): QLineF =
-VAR
-ret:ADDRESS; result : QLineF;
-BEGIN
-ret := QtLineRaw.FromPolar(length, angle);
-
-(*IF ISTYPE(result,QLineF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLineF);
-ELSE*)
-  result := NEW(QLineF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-(*END;*)
-
-RETURN result;
-END FromPolar;
-
-PROCEDURE QLineF_isNull ( self: QLineF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_isNull(selfAdr);
-END QLineF_isNull;
-
-PROCEDURE QLineF_p1 ( self: QLineF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_p1(selfAdr);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineF_p1;
-
-PROCEDURE QLineF_p2 ( self: QLineF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_p2(selfAdr);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineF_p2;
-
-PROCEDURE QLineF_x1 ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_x1(selfAdr);
-END QLineF_x1;
-
-PROCEDURE QLineF_y1 ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_y1(selfAdr);
-END QLineF_y1;
-
-PROCEDURE QLineF_x2 ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_x2(selfAdr);
-END QLineF_x2;
-
-PROCEDURE QLineF_y2 ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_y2(selfAdr);
-END QLineF_y2;
-
-PROCEDURE QLineF_dx ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_dx(selfAdr);
-END QLineF_dx;
-
-PROCEDURE QLineF_dy ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_dy(selfAdr);
-END QLineF_dy;
-
-PROCEDURE QLineF_length ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_length(selfAdr);
-END QLineF_length;
-
-PROCEDURE QLineF_setLength ( self: QLineF;
-len: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_setLength(selfAdr, len);
-END QLineF_setLength;
-
-PROCEDURE QLineF_angle ( self: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_angle(selfAdr);
-END QLineF_angle;
-
-PROCEDURE QLineF_setAngle ( self: QLineF;
-angle: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_setAngle(selfAdr, angle);
-END QLineF_setAngle;
-
-PROCEDURE QLineF_angleTo ( self, l: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(l.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_angleTo(selfAdr, arg2tmp);
-END QLineF_angleTo;
-
-PROCEDURE QLineF_unitVector ( self: QLineF;
-): QLineF =
-VAR
-ret:ADDRESS; result : QLineF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_unitVector(selfAdr);
-
-IF ISTYPE(result,QLineF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLineF);
-ELSE
-  result := NEW(QLineF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QLineF_unitVector;
-
-PROCEDURE QLineF_normalVector ( self: QLineF;
-): QLineF =
-VAR
-ret:ADDRESS; result : QLineF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_normalVector(selfAdr);
-
-IF ISTYPE(result,QLineF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLineF);
-ELSE
-  result := NEW(QLineF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QLineF_normalVector;
-
-PROCEDURE QLineF_intersect ( self, l: QLineF;
- intersectionPoint: QPointF;
-): IntersectType =
-VAR
-ret:INTEGER; result : IntersectType;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(l.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(intersectionPoint.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_intersect(selfAdr, arg2tmp, arg3tmp);
-result := VAL(ret,IntersectType);  
-RETURN result;
-END QLineF_intersect;
-
-PROCEDURE QLineF_angle1 ( self, l: QLineF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(l.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_angle1(selfAdr, arg2tmp);
-END QLineF_angle1;
-
-PROCEDURE QLineF_pointAt ( self: QLineF;
-t: LONGREAL;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_pointAt(selfAdr, t);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineF_pointAt;
-
-PROCEDURE QLineF_translate ( self: QLineF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_translate(selfAdr, arg2tmp);
-END QLineF_translate;
-
-PROCEDURE QLineF_translate1 ( self: QLineF;
-dx, dy: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_translate1(selfAdr, dx, dy);
-END QLineF_translate1;
-
-PROCEDURE QLineF_translated ( self: QLineF;
- p: QPointF;
-): QLineF =
-VAR
-ret:ADDRESS; result : QLineF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_translated(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QLineF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLineF);
-ELSE
-  result := NEW(QLineF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QLineF_translated;
-
-PROCEDURE QLineF_translated1 ( self: QLineF;
-dx, dy: LONGREAL;
-): QLineF =
-VAR
-ret:ADDRESS; result : QLineF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_translated1(selfAdr, dx, dy);
-
-IF ISTYPE(result,QLineF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLineF);
-ELSE
-  result := NEW(QLineF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QLineF_translated1;
-
-PROCEDURE QLineF_setP1 ( self: QLineF;
- p1: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p1.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_setP1(selfAdr, arg2tmp);
-END QLineF_setP1;
-
-PROCEDURE QLineF_setP2 ( self: QLineF;
- p2: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p2.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_setP2(selfAdr, arg2tmp);
-END QLineF_setP2;
-
-PROCEDURE QLineF_setPoints ( self: QLineF;
- p1, p2: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p1.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(p2.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_setPoints(selfAdr, arg2tmp, arg3tmp);
-END QLineF_setPoints;
-
-PROCEDURE QLineF_setLine ( self: QLineF;
-x1, y1, x2, y2: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.QLineF_setLine(selfAdr, x1, y1, x2, y2);
-END QLineF_setLine;
-
-PROCEDURE QLineF_EqualEqual ( self, d: QLineF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(d.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_EqualEqual(selfAdr, arg2tmp);
-END QLineF_EqualEqual;
-
-PROCEDURE QLineF_NotEqual ( self, d: QLineF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(d.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineRaw.QLineF_NotEqual(selfAdr, arg2tmp);
-END QLineF_NotEqual;
-
-PROCEDURE QLineF_toLine ( self: QLineF;
-): QLine =
-VAR
-ret:ADDRESS; result : QLine;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineRaw.QLineF_toLine(selfAdr);
-
-IF ISTYPE(result,QLine) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QLine);
-ELSE
-  result := NEW(QLine);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QLineF_toLine;
-
-PROCEDURE Delete_QLineF ( self: QLineF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineRaw.Delete_QLineF(selfAdr);
-END Delete_QLineF;
-
-PROCEDURE Cleanup_QLineF(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QLineF := ref;
-BEGIN
-  Delete_QLineF(obj);
- END Cleanup_QLineF;
-
-PROCEDURE Destroy_QLineF(self : QLineF) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QLineF);
-END Destroy_QLineF;
+  QLine = QLinePublic BRANDED OBJECT
+          OVERRIDES
+            init_0      := New_QLine0;
+            init_1      := New_QLine1;
+            init_2      := New_QLine2;
+            isNull      := QLine_isNull;
+            p1          := QLine_p1;
+            p2          := QLine_p2;
+            x1          := QLine_x1;
+            y1          := QLine_y1;
+            x2          := QLine_x2;
+            y2          := QLine_y2;
+            dx          := QLine_dx;
+            dy          := QLine_dy;
+            translate   := QLine_translate;
+            translate1  := QLine_translate1;
+            translated  := QLine_translated;
+            translated1 := QLine_translated1;
+            setP1       := QLine_setP1;
+            setP2       := QLine_setP2;
+            setPoints   := QLine_setPoints;
+            setLine     := QLine_setLine;
+            EqualEqual  := QLine_EqualEqual;
+            NotEqual    := QLine_NotEqual;
+            destroyCxx  := Destroy_QLine;
+          END;
+
+PROCEDURE New_QLineF0 (self: QLineF; ): QLineF =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtLineRaw.New_QLineF0();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineF);
+
+    RETURN self;
+  END New_QLineF0;
+
+PROCEDURE New_QLineF1 (self: QLineF; pt1, pt2: QPointF; ): QLineF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(pt1.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt2.cxxObj, ADDRESS);
+  BEGIN
+    result := QtLineRaw.New_QLineF1(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineF);
+
+    RETURN self;
+  END New_QLineF1;
+
+PROCEDURE New_QLineF2 (self: QLineF; x1, y1, x2, y2: LONGREAL; ): QLineF =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtLineRaw.New_QLineF2(x1, y1, x2, y2);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineF);
+
+    RETURN self;
+  END New_QLineF2;
+
+PROCEDURE New_QLineF3 (self: QLineF; line: QLine; ): QLineF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(line.cxxObj, ADDRESS);
+  BEGIN
+    result := QtLineRaw.New_QLineF3(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineF);
+
+    RETURN self;
+  END New_QLineF3;
+
+PROCEDURE FromPolar (length, angle: LONGREAL; ): QLineF =
+  VAR
+    ret   : ADDRESS;
+    result: QLineF;
+  BEGIN
+    ret := QtLineRaw.FromPolar(length, angle);
+
+    (*IF ISTYPE(result,QLineF) AND ret = selfAdr THEN result :=
+       LOOPHOLE(self,QLineF); ELSE*)
+    result := NEW(QLineF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+    (*END;*)
+
+    RETURN result;
+  END FromPolar;
+
+PROCEDURE QLineF_isNull (self: QLineF; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_isNull(selfAdr);
+  END QLineF_isNull;
+
+PROCEDURE QLineF_p1 (self: QLineF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_p1(selfAdr);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineF_p1;
+
+PROCEDURE QLineF_p2 (self: QLineF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_p2(selfAdr);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineF_p2;
+
+PROCEDURE QLineF_x1 (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_x1(selfAdr);
+  END QLineF_x1;
+
+PROCEDURE QLineF_y1 (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_y1(selfAdr);
+  END QLineF_y1;
+
+PROCEDURE QLineF_x2 (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_x2(selfAdr);
+  END QLineF_x2;
+
+PROCEDURE QLineF_y2 (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_y2(selfAdr);
+  END QLineF_y2;
+
+PROCEDURE QLineF_dx (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_dx(selfAdr);
+  END QLineF_dx;
+
+PROCEDURE QLineF_dy (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_dy(selfAdr);
+  END QLineF_dy;
+
+PROCEDURE QLineF_length (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_length(selfAdr);
+  END QLineF_length;
+
+PROCEDURE QLineF_setLength (self: QLineF; len: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_setLength(selfAdr, len);
+  END QLineF_setLength;
+
+PROCEDURE QLineF_angle (self: QLineF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_angle(selfAdr);
+  END QLineF_angle;
+
+PROCEDURE QLineF_setAngle (self: QLineF; angle: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_setAngle(selfAdr, angle);
+  END QLineF_setAngle;
+
+PROCEDURE QLineF_angleTo (self, l: QLineF; ): LONGREAL =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(l.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_angleTo(selfAdr, arg2tmp);
+  END QLineF_angleTo;
+
+PROCEDURE QLineF_unitVector (self: QLineF; ): QLineF =
+  VAR
+    ret    : ADDRESS;
+    result : QLineF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_unitVector(selfAdr);
+
+    IF ISTYPE(result, QLineF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QLineF);
+    ELSE
+      result := NEW(QLineF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QLineF_unitVector;
+
+PROCEDURE QLineF_normalVector (self: QLineF; ): QLineF =
+  VAR
+    ret    : ADDRESS;
+    result : QLineF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_normalVector(selfAdr);
+
+    IF ISTYPE(result, QLineF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QLineF);
+    ELSE
+      result := NEW(QLineF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QLineF_normalVector;
+
+PROCEDURE QLineF_intersect (self, l: QLineF; intersectionPoint: QPointF; ):
+  IntersectType =
+  VAR
+    ret    : INTEGER;
+    result : IntersectType;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp                := LOOPHOLE(l.cxxObj, ADDRESS);
+    arg3tmp                := LOOPHOLE(intersectionPoint.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_intersect(selfAdr, arg2tmp, arg3tmp);
+    result := VAL(ret, IntersectType);
+    RETURN result;
+  END QLineF_intersect;
+
+PROCEDURE QLineF_angle1 (self, l: QLineF; ): LONGREAL =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(l.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_angle1(selfAdr, arg2tmp);
+  END QLineF_angle1;
+
+PROCEDURE QLineF_pointAt (self: QLineF; t: LONGREAL; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_pointAt(selfAdr, t);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineF_pointAt;
+
+PROCEDURE QLineF_translate (self: QLineF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_translate(selfAdr, arg2tmp);
+  END QLineF_translate;
+
+PROCEDURE QLineF_translate1 (self: QLineF; dx, dy: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_translate1(selfAdr, dx, dy);
+  END QLineF_translate1;
+
+PROCEDURE QLineF_translated (self: QLineF; p: QPointF; ): QLineF =
+  VAR
+    ret    : ADDRESS;
+    result : QLineF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_translated(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QLineF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QLineF);
+    ELSE
+      result := NEW(QLineF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QLineF_translated;
+
+PROCEDURE QLineF_translated1 (self: QLineF; dx, dy: LONGREAL; ): QLineF =
+  VAR
+    ret    : ADDRESS;
+    result : QLineF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_translated1(selfAdr, dx, dy);
+
+    IF ISTYPE(result, QLineF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QLineF);
+    ELSE
+      result := NEW(QLineF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QLineF_translated1;
+
+PROCEDURE QLineF_setP1 (self: QLineF; p1: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p1.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_setP1(selfAdr, arg2tmp);
+  END QLineF_setP1;
+
+PROCEDURE QLineF_setP2 (self: QLineF; p2: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p2.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_setP2(selfAdr, arg2tmp);
+  END QLineF_setP2;
+
+PROCEDURE QLineF_setPoints (self: QLineF; p1, p2: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p1.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(p2.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_setPoints(selfAdr, arg2tmp, arg3tmp);
+  END QLineF_setPoints;
+
+PROCEDURE QLineF_setLine (self: QLineF; x1, y1, x2, y2: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.QLineF_setLine(selfAdr, x1, y1, x2, y2);
+  END QLineF_setLine;
+
+PROCEDURE QLineF_EqualEqual (self, d: QLineF; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(d.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_EqualEqual(selfAdr, arg2tmp);
+  END QLineF_EqualEqual;
+
+PROCEDURE QLineF_NotEqual (self, d: QLineF; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(d.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineRaw.QLineF_NotEqual(selfAdr, arg2tmp);
+  END QLineF_NotEqual;
+
+PROCEDURE QLineF_toLine (self: QLineF; ): QLine =
+  VAR
+    ret    : ADDRESS;
+    result : QLine;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineRaw.QLineF_toLine(selfAdr);
+
+    IF ISTYPE(result, QLine) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QLine);
+    ELSE
+      result := NEW(QLine);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QLineF_toLine;
+
+PROCEDURE Delete_QLineF (self: QLineF; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineRaw.Delete_QLineF(selfAdr);
+  END Delete_QLineF;
+
+PROCEDURE Cleanup_QLineF
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QLineF := ref;
+  BEGIN
+    Delete_QLineF(obj);
+  END Cleanup_QLineF;
+
+PROCEDURE Destroy_QLineF (self: QLineF) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QLineF);
+  END Destroy_QLineF;
 
 REVEAL
-QLineF =
-QLineFPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QLineF0;
-init_1 := New_QLineF1;
-init_2 := New_QLineF2;
-init_3 := New_QLineF3;
-isNull := QLineF_isNull;
-p1 := QLineF_p1;
-p2 := QLineF_p2;
-x1 := QLineF_x1;
-y1 := QLineF_y1;
-x2 := QLineF_x2;
-y2 := QLineF_y2;
-dx := QLineF_dx;
-dy := QLineF_dy;
-length := QLineF_length;
-setLength := QLineF_setLength;
-angle := QLineF_angle;
-setAngle := QLineF_setAngle;
-angleTo := QLineF_angleTo;
-unitVector := QLineF_unitVector;
-normalVector := QLineF_normalVector;
-intersect := QLineF_intersect;
-angle1 := QLineF_angle1;
-pointAt := QLineF_pointAt;
-translate := QLineF_translate;
-translate1 := QLineF_translate1;
-translated := QLineF_translated;
-translated1 := QLineF_translated1;
-setP1 := QLineF_setP1;
-setP2 := QLineF_setP2;
-setPoints := QLineF_setPoints;
-setLine := QLineF_setLine;
-EqualEqual := QLineF_EqualEqual;
-NotEqual := QLineF_NotEqual;
-toLine := QLineF_toLine;
-destroyCxx := Destroy_QLineF;
-END;
+  QLineF = QLineFPublic BRANDED OBJECT
+           OVERRIDES
+             init_0       := New_QLineF0;
+             init_1       := New_QLineF1;
+             init_2       := New_QLineF2;
+             init_3       := New_QLineF3;
+             isNull       := QLineF_isNull;
+             p1           := QLineF_p1;
+             p2           := QLineF_p2;
+             x1           := QLineF_x1;
+             y1           := QLineF_y1;
+             x2           := QLineF_x2;
+             y2           := QLineF_y2;
+             dx           := QLineF_dx;
+             dy           := QLineF_dy;
+             length       := QLineF_length;
+             setLength    := QLineF_setLength;
+             angle        := QLineF_angle;
+             setAngle     := QLineF_setAngle;
+             angleTo      := QLineF_angleTo;
+             unitVector   := QLineF_unitVector;
+             normalVector := QLineF_normalVector;
+             intersect    := QLineF_intersect;
+             angle1       := QLineF_angle1;
+             pointAt      := QLineF_pointAt;
+             translate    := QLineF_translate;
+             translate1   := QLineF_translate1;
+             translated   := QLineF_translated;
+             translated1  := QLineF_translated1;
+             setP1        := QLineF_setP1;
+             setP2        := QLineF_setP2;
+             setPoints    := QLineF_setPoints;
+             setLine      := QLineF_setLine;
+             EqualEqual   := QLineF_EqualEqual;
+             NotEqual     := QLineF_NotEqual;
+             toLine       := QLineF_toLine;
+             destroyCxx   := Destroy_QLineF;
+           END;
 
 
 BEGIN

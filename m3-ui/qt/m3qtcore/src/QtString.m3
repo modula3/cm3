@@ -18,171 +18,156 @@ FROM QtNamespace IMPORT Initialization;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QString0 (self:QString;): QString =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtStringRaw.New_QString0();
+PROCEDURE New_QString0 (self: QString; ): QString =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtStringRaw.New_QString0();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QString);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QString);
 
-RETURN self;
-END New_QString0;
+    RETURN self;
+  END New_QString0;
 
-PROCEDURE Delete_QString ( self: QString;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtStringRaw.Delete_QString(selfAdr);
-END Delete_QString;
+PROCEDURE Delete_QString (self: QString; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.Delete_QString(selfAdr);
+  END Delete_QString;
 
-PROCEDURE QString_size ( self: QString;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtStringRaw.QString_size(selfAdr);
-END QString_size;
+PROCEDURE QString_size (self: QString; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_size(selfAdr);
+  END QString_size;
 
-PROCEDURE QString_count ( self: QString;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtStringRaw.QString_count(selfAdr);
-END QString_count;
+PROCEDURE QString_count (self: QString; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_count(selfAdr);
+  END QString_count;
 
-PROCEDURE QString_length ( self: QString;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtStringRaw.QString_length(selfAdr);
-END QString_length;
+PROCEDURE QString_length (self: QString; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_length(selfAdr);
+  END QString_length;
 
-PROCEDURE QString_count1 ( self: QString;
- s: TEXT;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_s := NEW(QString).initQString(s);
-arg2tmp :=  LOOPHOLE(qstr_s.cxxObj,ADDRESS);
-BEGIN
-RETURN QtStringRaw.QString_count1(selfAdr, arg2tmp);
-END QString_count1;
+PROCEDURE QString_count1 (self: QString; s: TEXT; ): INTEGER =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_s           := NEW(QString).initQString(s);
+    arg2tmp          := LOOPHOLE(qstr_s.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_count1(selfAdr, arg2tmp);
+  END QString_count1;
 
-PROCEDURE QString_toUtf8 ( self: QString;
-): QByteArray =
-VAR
-ret:ADDRESS; result : QByteArray;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtStringRaw.QString_toUtf8(selfAdr);
+PROCEDURE QString_toUtf8 (self: QString; ): QByteArray =
+  VAR
+    ret    : ADDRESS;
+    result : QByteArray;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_toUtf8(selfAdr);
 
-IF ISTYPE(result,QByteArray) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QByteArray);
-ELSE
-  result := NEW(QByteArray);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QByteArray) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QByteArray);
+    ELSE
+      result := NEW(QByteArray);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QString_toUtf8;
+    RETURN result;
+  END QString_toUtf8;
 
-PROCEDURE QString_toLocal8Bit ( self: QString;
-): QByteArray =
-VAR
-ret:ADDRESS; result : QByteArray;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtStringRaw.QString_toLocal8Bit(selfAdr);
+PROCEDURE QString_toLocal8Bit (self: QString; ): QByteArray =
+  VAR
+    ret    : ADDRESS;
+    result : QByteArray;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_toLocal8Bit(selfAdr);
 
-IF ISTYPE(result,QByteArray) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QByteArray);
-ELSE
-  result := NEW(QByteArray);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QByteArray) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QByteArray);
+    ELSE
+      result := NEW(QByteArray);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QString_toLocal8Bit;
+    RETURN result;
+  END QString_toLocal8Bit;
 
-PROCEDURE New_initQString (self:QString; ch: TEXT;
-): QString =
-VAR
-result : ADDRESS;
-arg1tmp: C.char_star;
-BEGIN
-arg1tmp := M3toC.CopyTtoS(ch);
-result := QtStringRaw.New_initQString(arg1tmp);
+PROCEDURE New_initQString (self: QString; ch: TEXT; ): QString =
+  VAR
+    result : ADDRESS;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(ch);
+    result := QtStringRaw.New_initQString(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QString);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QString);
 
 
 
-RETURN self;
-END New_initQString;
+    RETURN self;
+  END New_initQString;
 
-PROCEDURE New_QString1 (self:QString; a: QByteArray;
-): QString =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-result := QtStringRaw.New_QString1(arg1tmp);
+PROCEDURE New_QString1 (self: QString; a: QByteArray; ): QString =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    result := QtStringRaw.New_QString1(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QString);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QString);
 
-RETURN self;
-END New_QString1;
+    RETURN self;
+  END New_QString1;
 
-PROCEDURE New_QString2 (self:QString;size: INTEGER;
-arg2: Initialization;
-): QString =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtStringRaw.New_QString2(size, ORD(arg2));
+PROCEDURE New_QString2
+  (self: QString; size: INTEGER; arg2: Initialization; ): QString =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtStringRaw.New_QString2(size, ORD(arg2));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QString);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QString);
 
-RETURN self;
-END New_QString2;
+    RETURN self;
+  END New_QString2;
 
-PROCEDURE Cleanup_QString(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QString := ref;
-BEGIN
-  Delete_QString(obj);
- END Cleanup_QString;
+PROCEDURE Cleanup_QString
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QString := ref;
+  BEGIN
+    Delete_QString(obj);
+  END Cleanup_QString;
 
-PROCEDURE Destroy_QString(self : QString) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QString);
-END Destroy_QString;
+PROCEDURE Destroy_QString (self: QString) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QString);
+  END Destroy_QString;
 
 REVEAL
-QString =
-QStringPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QString0;
-size := QString_size;
-count := QString_count;
-length := QString_length;
-count1 := QString_count1;
-toUtf8 := QString_toUtf8;
-toLocal8Bit := QString_toLocal8Bit;
-initQString := New_initQString;
-init_1 := New_QString1;
-init_2 := New_QString2;
-destroyCxx := Destroy_QString;
-END;
+  QString = QStringPublic BRANDED OBJECT
+            OVERRIDES
+              init_0      := New_QString0;
+              size        := QString_size;
+              count       := QString_count;
+              length      := QString_length;
+              count1      := QString_count1;
+              toUtf8      := QString_toUtf8;
+              toLocal8Bit := QString_toLocal8Bit;
+              initQString := New_initQString;
+              init_1      := New_QString1;
+              init_2      := New_QString2;
+              destroyCxx  := Destroy_QString;
+            END;
 
 
 BEGIN

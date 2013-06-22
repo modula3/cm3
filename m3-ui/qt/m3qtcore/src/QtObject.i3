@@ -11,75 +11,55 @@ INTERFACE QtObject;
 FROM QtNamespace IMPORT ConnectionType;
 
 
-TYPE
-  T = QObject;
+TYPE T = QObject;
 
-PROCEDURE Connect ( sender: QObject;
- signal: TEXT;
- receiver: QObject;
- member: TEXT;
-arg5: ConnectionType;
-): BOOLEAN;
+PROCEDURE Connect (sender  : QObject;
+                   signal  : TEXT;
+                   receiver: QObject;
+                   member  : TEXT;
+                   arg5    : ConnectionType; ): BOOLEAN;
 
-PROCEDURE Disconnect ( sender: QObject;
- signal: TEXT;
- receiver: QObject;
- member: TEXT;
-): BOOLEAN;
+PROCEDURE Disconnect
+  (sender: QObject; signal: TEXT; receiver: QObject; member: TEXT; ):
+  BOOLEAN;
 
 PROCEDURE RegisterUserData (): CARDINAL;
 
 
 TYPE
-QObject <: QObjectPublic;
-QObjectPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 ( parent: QObject;
-) : QObject;
-init_1 () : QObject;
-event( arg1: REFANY (*QEvent*);
-): BOOLEAN;  (*  virtual *)
-eventFilter( arg1: QObject;
- arg2: REFANY (*QEvent*);
-): BOOLEAN;  (*  virtual *)
-objectName(): TEXT;
-setObjectName( name: TEXT;
-);
-isWidgetType(): BOOLEAN;
-signalsBlocked(): BOOLEAN;
-blockSignals(b: BOOLEAN;
-): BOOLEAN;
-startTimer(interval: INTEGER;
-): INTEGER;
-killTimer(id: INTEGER;
-);
-setParent( arg1: QObject;
-);
-installEventFilter( arg1: QObject;
-);
-removeEventFilter( arg1: QObject;
-);
-connect1( sender: QObject;
- signal, member: TEXT;
-type: ConnectionType;
-): BOOLEAN;
-disconnect1( signal: TEXT;
- receiver: QObject;
- member: TEXT;
-): BOOLEAN;
-disconnect2( receiver: QObject;
- member: TEXT;
-): BOOLEAN;
-dumpObjectTree();
-dumpObjectInfo();
-parent(): QObject;
-inherits( classname: TEXT;
-): BOOLEAN;
-deleteLater();
-destroyCxx();
-END;
+  QObject <: QObjectPublic;
+  QObjectPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0 (parent: QObject; ): QObject;
+      init_1 (): QObject;
+      event  (arg1: REFANY (*QEvent*); ): BOOLEAN; (* virtual *)
+      eventFilter (arg1: QObject; arg2: REFANY (*QEvent*); ):
+                   BOOLEAN;      (* virtual *)
+      objectName         (): TEXT;
+      setObjectName      (name: TEXT; );
+      isWidgetType       (): BOOLEAN;
+      signalsBlocked     (): BOOLEAN;
+      blockSignals       (b: BOOLEAN; ): BOOLEAN;
+      startTimer         (interval: INTEGER; ): INTEGER;
+      killTimer          (id: INTEGER; );
+      setParent          (arg1: QObject; );
+      installEventFilter (arg1: QObject; );
+      removeEventFilter  (arg1: QObject; );
+      connect1 (sender        : QObject;
+                signal, member: TEXT;
+                type          : ConnectionType; ): BOOLEAN;
+      disconnect1 (signal: TEXT; receiver: QObject; member: TEXT; ):
+                   BOOLEAN;
+      disconnect2    (receiver: QObject; member: TEXT; ): BOOLEAN;
+      dumpObjectTree ();
+      dumpObjectInfo ();
+      parent         (): QObject;
+      inherits       (classname: TEXT; ): BOOLEAN;
+      deleteLater    ();
+      destroyCxx     ();
+    END;
 
 
 END QtObject.

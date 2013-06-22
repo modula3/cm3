@@ -9,1942 +9,1701 @@
 UNSAFE MODULE QtRect;
 
 
-FROM QtSize IMPORT QSize,QSizeF;
+FROM QtSize IMPORT QSize, QSizeF;
 IMPORT QtRectRaw;
-FROM QtPoint IMPORT QPoint,QPointF;
+FROM QtPoint IMPORT QPoint, QPointF;
 
 
 IMPORT WeakRef;
 IMPORT Ctypes AS C;
 
-PROCEDURE New_QRect0 (self:QRect;): QRect =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtRectRaw.New_QRect0();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRect);
-
-RETURN self;
-END New_QRect0;
-
-PROCEDURE New_QRect1 (self:QRect; topleft, bottomright: QPoint;
-): QRect =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(topleft.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(bottomright.cxxObj,ADDRESS);
-BEGIN
-result := QtRectRaw.New_QRect1(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRect);
-
-RETURN self;
-END New_QRect1;
-
-PROCEDURE New_QRect2 (self:QRect; topleft: QPoint;
- size: QSize;
-): QRect =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(topleft.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(size.cxxObj,ADDRESS);
-BEGIN
-result := QtRectRaw.New_QRect2(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRect);
-
-RETURN self;
-END New_QRect2;
-
-PROCEDURE New_init (self:QRect;left, top, width, height: INTEGER;
-): QRect =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtRectRaw.New_init(left, top, width, height);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRect);
-
-RETURN self;
-END New_init;
-
-PROCEDURE QRect_isNull ( self: QRect;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_isNull(selfAdr);
-END QRect_isNull;
-
-PROCEDURE QRect_isEmpty ( self: QRect;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_isEmpty(selfAdr);
-END QRect_isEmpty;
-
-PROCEDURE QRect_isValid ( self: QRect;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_isValid(selfAdr);
-END QRect_isValid;
-
-PROCEDURE QRect_left ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_left(selfAdr);
-END QRect_left;
-
-PROCEDURE QRect_top ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_top(selfAdr);
-END QRect_top;
-
-PROCEDURE QRect_right ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_right(selfAdr);
-END QRect_right;
-
-PROCEDURE QRect_bottom ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_bottom(selfAdr);
-END QRect_bottom;
-
-PROCEDURE QRect_normalized ( self: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_normalized(selfAdr);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_normalized;
-
-PROCEDURE QRect_x ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_x(selfAdr);
-END QRect_x;
-
-PROCEDURE QRect_y ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_y(selfAdr);
-END QRect_y;
-
-PROCEDURE QRect_setLeft ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setLeft(selfAdr, pos);
-END QRect_setLeft;
-
-PROCEDURE QRect_setTop ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setTop(selfAdr, pos);
-END QRect_setTop;
-
-PROCEDURE QRect_setRight ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setRight(selfAdr, pos);
-END QRect_setRight;
-
-PROCEDURE QRect_setBottom ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setBottom(selfAdr, pos);
-END QRect_setBottom;
-
-PROCEDURE QRect_setX ( self: QRect;
-x: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setX(selfAdr, x);
-END QRect_setX;
-
-PROCEDURE QRect_setY ( self: QRect;
-y: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setY(selfAdr, y);
-END QRect_setY;
-
-PROCEDURE QRect_setTopLeft ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setTopLeft(selfAdr, arg2tmp);
-END QRect_setTopLeft;
-
-PROCEDURE QRect_setBottomRight ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setBottomRight(selfAdr, arg2tmp);
-END QRect_setBottomRight;
-
-PROCEDURE QRect_setTopRight ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setTopRight(selfAdr, arg2tmp);
-END QRect_setTopRight;
-
-PROCEDURE QRect_setBottomLeft ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setBottomLeft(selfAdr, arg2tmp);
-END QRect_setBottomLeft;
-
-PROCEDURE QRect_topLeft ( self: QRect;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_topLeft(selfAdr);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRect_topLeft;
-
-PROCEDURE QRect_bottomRight ( self: QRect;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_bottomRight(selfAdr);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRect_bottomRight;
-
-PROCEDURE QRect_topRight ( self: QRect;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_topRight(selfAdr);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRect_topRight;
-
-PROCEDURE QRect_bottomLeft ( self: QRect;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_bottomLeft(selfAdr);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRect_bottomLeft;
-
-PROCEDURE QRect_center ( self: QRect;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_center(selfAdr);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRect_center;
-
-PROCEDURE QRect_moveLeft ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveLeft(selfAdr, pos);
-END QRect_moveLeft;
-
-PROCEDURE QRect_moveTop ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveTop(selfAdr, pos);
-END QRect_moveTop;
-
-PROCEDURE QRect_moveRight ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveRight(selfAdr, pos);
-END QRect_moveRight;
-
-PROCEDURE QRect_moveBottom ( self: QRect;
-pos: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveBottom(selfAdr, pos);
-END QRect_moveBottom;
-
-PROCEDURE QRect_moveTopLeft ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveTopLeft(selfAdr, arg2tmp);
-END QRect_moveTopLeft;
-
-PROCEDURE QRect_moveBottomRight ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveBottomRight(selfAdr, arg2tmp);
-END QRect_moveBottomRight;
-
-PROCEDURE QRect_moveTopRight ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveTopRight(selfAdr, arg2tmp);
-END QRect_moveTopRight;
-
-PROCEDURE QRect_moveBottomLeft ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveBottomLeft(selfAdr, arg2tmp);
-END QRect_moveBottomLeft;
-
-PROCEDURE QRect_moveCenter ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveCenter(selfAdr, arg2tmp);
-END QRect_moveCenter;
-
-PROCEDURE QRect_translate ( self: QRect;
-dx, dy: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_translate(selfAdr, dx, dy);
-END QRect_translate;
-
-PROCEDURE QRect_translate1 ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_translate1(selfAdr, arg2tmp);
-END QRect_translate1;
-
-PROCEDURE QRect_translated ( self: QRect;
-dx, dy: INTEGER;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_translated(selfAdr, dx, dy);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_translated;
-
-PROCEDURE QRect_translated1 ( self: QRect;
- p: QPoint;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_translated1(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_translated1;
-
-PROCEDURE QRect_moveTo ( self: QRect;
-x, t: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveTo(selfAdr, x, t);
-END QRect_moveTo;
-
-PROCEDURE QRect_moveTo1 ( self: QRect;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_moveTo1(selfAdr, arg2tmp);
-END QRect_moveTo1;
-
-PROCEDURE QRect_setRect ( self: QRect;
-x, y, w, h: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setRect(selfAdr, x, y, w, h);
-END QRect_setRect;
-
-PROCEDURE QRect_getRect ( self: QRect;
-VAR x, y, w, h: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := x;
-arg3tmp := y;
-arg4tmp := w;
-arg5tmp := h;
-QtRectRaw.QRect_getRect(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-x := arg2tmp;
-y := arg3tmp;
-w := arg4tmp;
-h := arg5tmp;
-END QRect_getRect;
-
-PROCEDURE QRect_setCoords ( self: QRect;
-x1, y1, x2, y2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setCoords(selfAdr, x1, y1, x2, y2);
-END QRect_setCoords;
-
-PROCEDURE QRect_getCoords ( self: QRect;
-VAR x1, y1, x2, y2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := x1;
-arg3tmp := y1;
-arg4tmp := x2;
-arg5tmp := y2;
-QtRectRaw.QRect_getCoords(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-x1 := arg2tmp;
-y1 := arg3tmp;
-x2 := arg4tmp;
-y2 := arg5tmp;
-END QRect_getCoords;
-
-PROCEDURE QRect_adjust ( self: QRect;
-x1, y1, x2, y2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_adjust(selfAdr, x1, y1, x2, y2);
-END QRect_adjust;
-
-PROCEDURE QRect_adjusted ( self: QRect;
-x1, y1, x2, y2: INTEGER;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_adjusted(selfAdr, x1, y1, x2, y2);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_adjusted;
-
-PROCEDURE QRect_size ( self: QRect;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_size(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRect_size;
-
-PROCEDURE QRect_width ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_width(selfAdr);
-END QRect_width;
-
-PROCEDURE QRect_height ( self: QRect;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_height(selfAdr);
-END QRect_height;
-
-PROCEDURE QRect_setWidth ( self: QRect;
-w: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setWidth(selfAdr, w);
-END QRect_setWidth;
-
-PROCEDURE QRect_setHeight ( self: QRect;
-h: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setHeight(selfAdr, h);
-END QRect_setHeight;
-
-PROCEDURE QRect_setSize ( self: QRect;
- s: QSize;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(s.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRect_setSize(selfAdr, arg2tmp);
-END QRect_setSize;
-
-PROCEDURE QRect_PlusEqual ( self, r: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_PlusEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_PlusEqual;
-
-PROCEDURE QRect_MinusEqual ( self, r: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_MinusEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_MinusEqual;
-
-PROCEDURE QRect_MultiplyEqual ( self, r: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_MultiplyEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_MultiplyEqual;
-
-PROCEDURE QRect_DivideEqual ( self, r: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_DivideEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_DivideEqual;
-
-PROCEDURE QRect_contains ( self: QRect;
- p: QPoint;
-proper: BOOLEAN;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_contains(selfAdr, arg2tmp, proper);
-END QRect_contains;
-
-PROCEDURE QRect_contains1 ( self: QRect;
- p: QPoint;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_contains1(selfAdr, arg2tmp);
-END QRect_contains1;
-
-PROCEDURE QRect_contains2 ( self: QRect;
-x, y: INTEGER;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_contains2(selfAdr, x, y);
-END QRect_contains2;
-
-PROCEDURE QRect_contains3 ( self: QRect;
-x, y: INTEGER;
-proper: BOOLEAN;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_contains3(selfAdr, x, y, proper);
-END QRect_contains3;
-
-PROCEDURE QRect_contains4 ( self, r: QRect;
-proper: BOOLEAN;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_contains4(selfAdr, arg2tmp, proper);
-END QRect_contains4;
-
-PROCEDURE QRect_contains5 ( self, r: QRect;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_contains5(selfAdr, arg2tmp);
-END QRect_contains5;
-
-PROCEDURE QRect_unite ( self, r: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_unite(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_unite;
-
-PROCEDURE QRect_united ( self, other: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(other.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_united(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_united;
-
-PROCEDURE QRect_intersect ( self, r: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_intersect(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_intersect;
-
-PROCEDURE QRect_intersected ( self, other: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(other.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRect_intersected(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRect_intersected;
-
-PROCEDURE QRect_intersects ( self, r: QRect;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRect_intersects(selfAdr, arg2tmp);
-END QRect_intersects;
-
-PROCEDURE Delete_QRect ( self: QRect;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.Delete_QRect(selfAdr);
-END Delete_QRect;
-
-PROCEDURE Cleanup_QRect(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QRect := ref;
-BEGIN
-  Delete_QRect(obj);
- END Cleanup_QRect;
-
-PROCEDURE Destroy_QRect(self : QRect) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QRect);
-END Destroy_QRect;
+PROCEDURE New_QRect0 (self: QRect; ): QRect =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtRectRaw.New_QRect0();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRect);
+
+    RETURN self;
+  END New_QRect0;
+
+PROCEDURE New_QRect1 (self: QRect; topleft, bottomright: QPoint; ): QRect =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(topleft.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(bottomright.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRectRaw.New_QRect1(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRect);
+
+    RETURN self;
+  END New_QRect1;
+
+PROCEDURE New_QRect2 (self: QRect; topleft: QPoint; size: QSize; ): QRect =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(topleft.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(size.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRectRaw.New_QRect2(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRect);
+
+    RETURN self;
+  END New_QRect2;
+
+PROCEDURE New_init (self: QRect; left, top, width, height: INTEGER; ):
+  QRect =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtRectRaw.New_init(left, top, width, height);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRect);
+
+    RETURN self;
+  END New_init;
+
+PROCEDURE QRect_isNull (self: QRect; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_isNull(selfAdr);
+  END QRect_isNull;
+
+PROCEDURE QRect_isEmpty (self: QRect; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_isEmpty(selfAdr);
+  END QRect_isEmpty;
+
+PROCEDURE QRect_isValid (self: QRect; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_isValid(selfAdr);
+  END QRect_isValid;
+
+PROCEDURE QRect_left (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_left(selfAdr);
+  END QRect_left;
+
+PROCEDURE QRect_top (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_top(selfAdr);
+  END QRect_top;
+
+PROCEDURE QRect_right (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_right(selfAdr);
+  END QRect_right;
+
+PROCEDURE QRect_bottom (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_bottom(selfAdr);
+  END QRect_bottom;
+
+PROCEDURE QRect_normalized (self: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_normalized(selfAdr);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_normalized;
+
+PROCEDURE QRect_x (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_x(selfAdr);
+  END QRect_x;
+
+PROCEDURE QRect_y (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_y(selfAdr);
+  END QRect_y;
+
+PROCEDURE QRect_setLeft (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setLeft(selfAdr, pos);
+  END QRect_setLeft;
+
+PROCEDURE QRect_setTop (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setTop(selfAdr, pos);
+  END QRect_setTop;
+
+PROCEDURE QRect_setRight (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setRight(selfAdr, pos);
+  END QRect_setRight;
+
+PROCEDURE QRect_setBottom (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setBottom(selfAdr, pos);
+  END QRect_setBottom;
+
+PROCEDURE QRect_setX (self: QRect; x: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setX(selfAdr, x);
+  END QRect_setX;
+
+PROCEDURE QRect_setY (self: QRect; y: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setY(selfAdr, y);
+  END QRect_setY;
+
+PROCEDURE QRect_setTopLeft (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setTopLeft(selfAdr, arg2tmp);
+  END QRect_setTopLeft;
+
+PROCEDURE QRect_setBottomRight (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setBottomRight(selfAdr, arg2tmp);
+  END QRect_setBottomRight;
+
+PROCEDURE QRect_setTopRight (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setTopRight(selfAdr, arg2tmp);
+  END QRect_setTopRight;
+
+PROCEDURE QRect_setBottomLeft (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setBottomLeft(selfAdr, arg2tmp);
+  END QRect_setBottomLeft;
+
+PROCEDURE QRect_topLeft (self: QRect; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_topLeft(selfAdr);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRect_topLeft;
+
+PROCEDURE QRect_bottomRight (self: QRect; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_bottomRight(selfAdr);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRect_bottomRight;
+
+PROCEDURE QRect_topRight (self: QRect; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_topRight(selfAdr);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRect_topRight;
+
+PROCEDURE QRect_bottomLeft (self: QRect; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_bottomLeft(selfAdr);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRect_bottomLeft;
+
+PROCEDURE QRect_center (self: QRect; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_center(selfAdr);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRect_center;
+
+PROCEDURE QRect_moveLeft (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveLeft(selfAdr, pos);
+  END QRect_moveLeft;
+
+PROCEDURE QRect_moveTop (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveTop(selfAdr, pos);
+  END QRect_moveTop;
+
+PROCEDURE QRect_moveRight (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveRight(selfAdr, pos);
+  END QRect_moveRight;
+
+PROCEDURE QRect_moveBottom (self: QRect; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveBottom(selfAdr, pos);
+  END QRect_moveBottom;
+
+PROCEDURE QRect_moveTopLeft (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveTopLeft(selfAdr, arg2tmp);
+  END QRect_moveTopLeft;
+
+PROCEDURE QRect_moveBottomRight (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveBottomRight(selfAdr, arg2tmp);
+  END QRect_moveBottomRight;
+
+PROCEDURE QRect_moveTopRight (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveTopRight(selfAdr, arg2tmp);
+  END QRect_moveTopRight;
+
+PROCEDURE QRect_moveBottomLeft (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveBottomLeft(selfAdr, arg2tmp);
+  END QRect_moveBottomLeft;
+
+PROCEDURE QRect_moveCenter (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveCenter(selfAdr, arg2tmp);
+  END QRect_moveCenter;
+
+PROCEDURE QRect_translate (self: QRect; dx, dy: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_translate(selfAdr, dx, dy);
+  END QRect_translate;
+
+PROCEDURE QRect_translate1 (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_translate1(selfAdr, arg2tmp);
+  END QRect_translate1;
+
+PROCEDURE QRect_translated (self: QRect; dx, dy: INTEGER; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_translated(selfAdr, dx, dy);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_translated;
+
+PROCEDURE QRect_translated1 (self: QRect; p: QPoint; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_translated1(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_translated1;
+
+PROCEDURE QRect_moveTo (self: QRect; x, t: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveTo(selfAdr, x, t);
+  END QRect_moveTo;
+
+PROCEDURE QRect_moveTo1 (self: QRect; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_moveTo1(selfAdr, arg2tmp);
+  END QRect_moveTo1;
+
+PROCEDURE QRect_setRect (self: QRect; x, y, w, h: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setRect(selfAdr, x, y, w, h);
+  END QRect_setRect;
+
+PROCEDURE QRect_getRect (self: QRect; VAR x, y, w, h: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := x;
+    arg3tmp := y;
+    arg4tmp := w;
+    arg5tmp := h;
+    QtRectRaw.QRect_getRect(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    x := arg2tmp;
+    y := arg3tmp;
+    w := arg4tmp;
+    h := arg5tmp;
+  END QRect_getRect;
+
+PROCEDURE QRect_setCoords (self: QRect; x1, y1, x2, y2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setCoords(selfAdr, x1, y1, x2, y2);
+  END QRect_setCoords;
+
+PROCEDURE QRect_getCoords (self: QRect; VAR x1, y1, x2, y2: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := x1;
+    arg3tmp := y1;
+    arg4tmp := x2;
+    arg5tmp := y2;
+    QtRectRaw.QRect_getCoords(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    x1 := arg2tmp;
+    y1 := arg3tmp;
+    x2 := arg4tmp;
+    y2 := arg5tmp;
+  END QRect_getCoords;
+
+PROCEDURE QRect_adjust (self: QRect; x1, y1, x2, y2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_adjust(selfAdr, x1, y1, x2, y2);
+  END QRect_adjust;
+
+PROCEDURE QRect_adjusted (self: QRect; x1, y1, x2, y2: INTEGER; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_adjusted(selfAdr, x1, y1, x2, y2);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_adjusted;
+
+PROCEDURE QRect_size (self: QRect; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_size(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRect_size;
+
+PROCEDURE QRect_width (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_width(selfAdr);
+  END QRect_width;
+
+PROCEDURE QRect_height (self: QRect; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_height(selfAdr);
+  END QRect_height;
+
+PROCEDURE QRect_setWidth (self: QRect; w: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setWidth(selfAdr, w);
+  END QRect_setWidth;
+
+PROCEDURE QRect_setHeight (self: QRect; h: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setHeight(selfAdr, h);
+  END QRect_setHeight;
+
+PROCEDURE QRect_setSize (self: QRect; s: QSize; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(s.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRect_setSize(selfAdr, arg2tmp);
+  END QRect_setSize;
+
+PROCEDURE QRect_PlusEqual (self, r: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_PlusEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_PlusEqual;
+
+PROCEDURE QRect_MinusEqual (self, r: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_MinusEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_MinusEqual;
+
+PROCEDURE QRect_MultiplyEqual (self, r: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_MultiplyEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_MultiplyEqual;
+
+PROCEDURE QRect_DivideEqual (self, r: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_DivideEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_DivideEqual;
+
+PROCEDURE QRect_contains (self: QRect; p: QPoint; proper: BOOLEAN; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_contains(selfAdr, arg2tmp, proper);
+  END QRect_contains;
+
+PROCEDURE QRect_contains1 (self: QRect; p: QPoint; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_contains1(selfAdr, arg2tmp);
+  END QRect_contains1;
+
+PROCEDURE QRect_contains2 (self: QRect; x, y: INTEGER; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_contains2(selfAdr, x, y);
+  END QRect_contains2;
+
+PROCEDURE QRect_contains3 (self: QRect; x, y: INTEGER; proper: BOOLEAN; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_contains3(selfAdr, x, y, proper);
+  END QRect_contains3;
+
+PROCEDURE QRect_contains4 (self, r: QRect; proper: BOOLEAN; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_contains4(selfAdr, arg2tmp, proper);
+  END QRect_contains4;
+
+PROCEDURE QRect_contains5 (self, r: QRect; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_contains5(selfAdr, arg2tmp);
+  END QRect_contains5;
+
+PROCEDURE QRect_unite (self, r: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_unite(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_unite;
+
+PROCEDURE QRect_united (self, other: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_united(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_united;
+
+PROCEDURE QRect_intersect (self, r: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_intersect(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_intersect;
+
+PROCEDURE QRect_intersected (self, other: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRect_intersected(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRect_intersected;
+
+PROCEDURE QRect_intersects (self, r: QRect; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRect_intersects(selfAdr, arg2tmp);
+  END QRect_intersects;
+
+PROCEDURE Delete_QRect (self: QRect; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.Delete_QRect(selfAdr);
+  END Delete_QRect;
+
+PROCEDURE Cleanup_QRect
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QRect := ref;
+  BEGIN
+    Delete_QRect(obj);
+  END Cleanup_QRect;
+
+PROCEDURE Destroy_QRect (self: QRect) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QRect);
+  END Destroy_QRect;
 
 REVEAL
-QRect =
-QRectPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QRect0;
-init_1 := New_QRect1;
-init_2 := New_QRect2;
-init := New_init;
-isNull := QRect_isNull;
-isEmpty := QRect_isEmpty;
-isValid := QRect_isValid;
-left := QRect_left;
-top := QRect_top;
-right := QRect_right;
-bottom := QRect_bottom;
-normalized := QRect_normalized;
-x := QRect_x;
-y := QRect_y;
-setLeft := QRect_setLeft;
-setTop := QRect_setTop;
-setRight := QRect_setRight;
-setBottom := QRect_setBottom;
-setX := QRect_setX;
-setY := QRect_setY;
-setTopLeft := QRect_setTopLeft;
-setBottomRight := QRect_setBottomRight;
-setTopRight := QRect_setTopRight;
-setBottomLeft := QRect_setBottomLeft;
-topLeft := QRect_topLeft;
-bottomRight := QRect_bottomRight;
-topRight := QRect_topRight;
-bottomLeft := QRect_bottomLeft;
-center := QRect_center;
-moveLeft := QRect_moveLeft;
-moveTop := QRect_moveTop;
-moveRight := QRect_moveRight;
-moveBottom := QRect_moveBottom;
-moveTopLeft := QRect_moveTopLeft;
-moveBottomRight := QRect_moveBottomRight;
-moveTopRight := QRect_moveTopRight;
-moveBottomLeft := QRect_moveBottomLeft;
-moveCenter := QRect_moveCenter;
-translate := QRect_translate;
-translate1 := QRect_translate1;
-translated := QRect_translated;
-translated1 := QRect_translated1;
-moveTo := QRect_moveTo;
-moveTo1 := QRect_moveTo1;
-setRect := QRect_setRect;
-getRect := QRect_getRect;
-setCoords := QRect_setCoords;
-getCoords := QRect_getCoords;
-adjust := QRect_adjust;
-adjusted := QRect_adjusted;
-size := QRect_size;
-width := QRect_width;
-height := QRect_height;
-setWidth := QRect_setWidth;
-setHeight := QRect_setHeight;
-setSize := QRect_setSize;
-PlusEqual := QRect_PlusEqual;
-MinusEqual := QRect_MinusEqual;
-MultiplyEqual := QRect_MultiplyEqual;
-DivideEqual := QRect_DivideEqual;
-contains := QRect_contains;
-contains1 := QRect_contains1;
-contains2 := QRect_contains2;
-contains3 := QRect_contains3;
-contains4 := QRect_contains4;
-contains5 := QRect_contains5;
-unite := QRect_unite;
-united := QRect_united;
-intersect := QRect_intersect;
-intersected := QRect_intersected;
-intersects := QRect_intersects;
-destroyCxx := Destroy_QRect;
-END;
-
-PROCEDURE New_QRectF0 (self:QRectF;): QRectF =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtRectRaw.New_QRectF0();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRectF);
-
-RETURN self;
-END New_QRectF0;
-
-PROCEDURE New_QRectF1 (self:QRectF; topleft: QPointF;
- size: QSizeF;
-): QRectF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(topleft.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(size.cxxObj,ADDRESS);
-BEGIN
-result := QtRectRaw.New_QRectF1(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRectF);
-
-RETURN self;
-END New_QRectF1;
-
-PROCEDURE New_QRectF2 (self:QRectF; topleft, bottomRight: QPointF;
-): QRectF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(topleft.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(bottomRight.cxxObj,ADDRESS);
-BEGIN
-result := QtRectRaw.New_QRectF2(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRectF);
-
-RETURN self;
-END New_QRectF2;
-
-PROCEDURE New_QRectF3 (self:QRectF;left, top, width, height: LONGREAL;
-): QRectF =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtRectRaw.New_QRectF3(left, top, width, height);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRectF);
-
-RETURN self;
-END New_QRectF3;
-
-PROCEDURE New_QRectF4 (self:QRectF; rect: QRect;
-): QRectF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-result := QtRectRaw.New_QRectF4(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRectF);
-
-RETURN self;
-END New_QRectF4;
-
-PROCEDURE QRectF_isNull ( self: QRectF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_isNull(selfAdr);
-END QRectF_isNull;
-
-PROCEDURE QRectF_isEmpty ( self: QRectF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_isEmpty(selfAdr);
-END QRectF_isEmpty;
-
-PROCEDURE QRectF_isValid ( self: QRectF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_isValid(selfAdr);
-END QRectF_isValid;
-
-PROCEDURE QRectF_normalized ( self: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_normalized(selfAdr);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_normalized;
-
-PROCEDURE QRectF_left ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_left(selfAdr);
-END QRectF_left;
-
-PROCEDURE QRectF_top ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_top(selfAdr);
-END QRectF_top;
-
-PROCEDURE QRectF_right ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_right(selfAdr);
-END QRectF_right;
-
-PROCEDURE QRectF_bottom ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_bottom(selfAdr);
-END QRectF_bottom;
-
-PROCEDURE QRectF_x ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_x(selfAdr);
-END QRectF_x;
-
-PROCEDURE QRectF_y ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_y(selfAdr);
-END QRectF_y;
-
-PROCEDURE QRectF_setLeft ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setLeft(selfAdr, pos);
-END QRectF_setLeft;
-
-PROCEDURE QRectF_setTop ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setTop(selfAdr, pos);
-END QRectF_setTop;
-
-PROCEDURE QRectF_setRight ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setRight(selfAdr, pos);
-END QRectF_setRight;
-
-PROCEDURE QRectF_setBottom ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setBottom(selfAdr, pos);
-END QRectF_setBottom;
-
-PROCEDURE QRectF_setX ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setX(selfAdr, pos);
-END QRectF_setX;
-
-PROCEDURE QRectF_setY ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setY(selfAdr, pos);
-END QRectF_setY;
-
-PROCEDURE QRectF_topLeft ( self: QRectF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_topLeft(selfAdr);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRectF_topLeft;
-
-PROCEDURE QRectF_bottomRight ( self: QRectF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_bottomRight(selfAdr);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRectF_bottomRight;
-
-PROCEDURE QRectF_topRight ( self: QRectF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_topRight(selfAdr);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRectF_topRight;
-
-PROCEDURE QRectF_bottomLeft ( self: QRectF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_bottomLeft(selfAdr);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRectF_bottomLeft;
-
-PROCEDURE QRectF_center ( self: QRectF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_center(selfAdr);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRectF_center;
-
-PROCEDURE QRectF_setTopLeft ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setTopLeft(selfAdr, arg2tmp);
-END QRectF_setTopLeft;
-
-PROCEDURE QRectF_setBottomRight ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setBottomRight(selfAdr, arg2tmp);
-END QRectF_setBottomRight;
-
-PROCEDURE QRectF_setTopRight ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setTopRight(selfAdr, arg2tmp);
-END QRectF_setTopRight;
-
-PROCEDURE QRectF_setBottomLeft ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setBottomLeft(selfAdr, arg2tmp);
-END QRectF_setBottomLeft;
-
-PROCEDURE QRectF_moveLeft ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveLeft(selfAdr, pos);
-END QRectF_moveLeft;
-
-PROCEDURE QRectF_moveTop ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveTop(selfAdr, pos);
-END QRectF_moveTop;
-
-PROCEDURE QRectF_moveRight ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveRight(selfAdr, pos);
-END QRectF_moveRight;
-
-PROCEDURE QRectF_moveBottom ( self: QRectF;
-pos: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveBottom(selfAdr, pos);
-END QRectF_moveBottom;
-
-PROCEDURE QRectF_moveTopLeft ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveTopLeft(selfAdr, arg2tmp);
-END QRectF_moveTopLeft;
-
-PROCEDURE QRectF_moveBottomRight ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveBottomRight(selfAdr, arg2tmp);
-END QRectF_moveBottomRight;
-
-PROCEDURE QRectF_moveTopRight ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveTopRight(selfAdr, arg2tmp);
-END QRectF_moveTopRight;
-
-PROCEDURE QRectF_moveBottomLeft ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveBottomLeft(selfAdr, arg2tmp);
-END QRectF_moveBottomLeft;
-
-PROCEDURE QRectF_moveCenter ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveCenter(selfAdr, arg2tmp);
-END QRectF_moveCenter;
-
-PROCEDURE QRectF_translate ( self: QRectF;
-dx, dy: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_translate(selfAdr, dx, dy);
-END QRectF_translate;
-
-PROCEDURE QRectF_translate1 ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_translate1(selfAdr, arg2tmp);
-END QRectF_translate1;
-
-PROCEDURE QRectF_translated ( self: QRectF;
-dx, dy: LONGREAL;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_translated(selfAdr, dx, dy);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_translated;
-
-PROCEDURE QRectF_translated1 ( self: QRectF;
- p: QPointF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_translated1(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_translated1;
-
-PROCEDURE QRectF_moveTo ( self: QRectF;
-x, t: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveTo(selfAdr, x, t);
-END QRectF_moveTo;
-
-PROCEDURE QRectF_moveTo1 ( self: QRectF;
- p: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_moveTo1(selfAdr, arg2tmp);
-END QRectF_moveTo1;
-
-PROCEDURE QRectF_setRect ( self: QRectF;
-x, y, w, h: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setRect(selfAdr, x, y, w, h);
-END QRectF_setRect;
-
-PROCEDURE QRectF_getRect ( self: QRectF;
-VAR x, y, w, h: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg2tmp := x;
-arg3tmp := y;
-arg4tmp := w;
-arg5tmp := h;
-QtRectRaw.QRectF_getRect(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-x := arg2tmp;
-y := arg3tmp;
-w := arg4tmp;
-h := arg5tmp;
-END QRectF_getRect;
-
-PROCEDURE QRectF_setCoords ( self: QRectF;
-x1, y1, x2, y2: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setCoords(selfAdr, x1, y1, x2, y2);
-END QRectF_setCoords;
-
-PROCEDURE QRectF_getCoords ( self: QRectF;
-VAR x1, y1, x2, y2: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg2tmp := x1;
-arg3tmp := y1;
-arg4tmp := x2;
-arg5tmp := y2;
-QtRectRaw.QRectF_getCoords(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-x1 := arg2tmp;
-y1 := arg3tmp;
-x2 := arg4tmp;
-y2 := arg5tmp;
-END QRectF_getCoords;
-
-PROCEDURE QRectF_adjust ( self: QRectF;
-x1, y1, x2, y2: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_adjust(selfAdr, x1, y1, x2, y2);
-END QRectF_adjust;
-
-PROCEDURE QRectF_adjusted ( self: QRectF;
-x1, y1, x2, y2: LONGREAL;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_adjusted(selfAdr, x1, y1, x2, y2);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_adjusted;
-
-PROCEDURE QRectF_size ( self: QRectF;
-): QSizeF =
-VAR
-ret:ADDRESS; result : QSizeF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_size(selfAdr);
-
-  result := NEW(QSizeF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QRectF_size;
-
-PROCEDURE QRectF_width ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_width(selfAdr);
-END QRectF_width;
-
-PROCEDURE QRectF_height ( self: QRectF;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_height(selfAdr);
-END QRectF_height;
-
-PROCEDURE QRectF_setWidth ( self: QRectF;
-w: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setWidth(selfAdr, w);
-END QRectF_setWidth;
-
-PROCEDURE QRectF_setHeight ( self: QRectF;
-h: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setHeight(selfAdr, h);
-END QRectF_setHeight;
-
-PROCEDURE QRectF_setSize ( self: QRectF;
- s: QSizeF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(s.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.QRectF_setSize(selfAdr, arg2tmp);
-END QRectF_setSize;
-
-PROCEDURE QRectF_PlusEqual ( self, r: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_PlusEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_PlusEqual;
-
-PROCEDURE QRectF_MinusEqual ( self, r: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_MinusEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_MinusEqual;
-
-PROCEDURE QRectF_MultiplyEqual ( self, r: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_MultiplyEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_MultiplyEqual;
-
-PROCEDURE QRectF_DivideEqual ( self, r: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_DivideEqual(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_DivideEqual;
-
-PROCEDURE QRectF_contains ( self: QRectF;
- p: QPointF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_contains(selfAdr, arg2tmp);
-END QRectF_contains;
-
-PROCEDURE QRectF_contains1 ( self: QRectF;
-x, y: LONGREAL;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_contains1(selfAdr, x, y);
-END QRectF_contains1;
-
-PROCEDURE QRectF_contains2 ( self, r: QRectF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_contains2(selfAdr, arg2tmp);
-END QRectF_contains2;
-
-PROCEDURE QRectF_unite ( self, r: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_unite(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_unite;
-
-PROCEDURE QRectF_united ( self, other: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(other.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_united(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_united;
-
-PROCEDURE QRectF_intersect ( self, r: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_intersect(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_intersect;
-
-PROCEDURE QRectF_intersected ( self, other: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(other.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_intersected(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QRectF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRectF);
-ELSE
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_intersected;
-
-PROCEDURE QRectF_intersects ( self, r: QRectF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-RETURN QtRectRaw.QRectF_intersects(selfAdr, arg2tmp);
-END QRectF_intersects;
-
-PROCEDURE QRectF_toRect ( self: QRectF;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_toRect(selfAdr);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_toRect;
-
-PROCEDURE QRectF_toAlignedRect ( self: QRectF;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRectRaw.QRectF_toAlignedRect(selfAdr);
-
-IF ISTYPE(result,QRect) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QRect);
-ELSE
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QRectF_toAlignedRect;
-
-PROCEDURE Delete_QRectF ( self: QRectF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRectRaw.Delete_QRectF(selfAdr);
-END Delete_QRectF;
-
-PROCEDURE Cleanup_QRectF(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QRectF := ref;
-BEGIN
-  Delete_QRectF(obj);
- END Cleanup_QRectF;
-
-PROCEDURE Destroy_QRectF(self : QRectF) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QRectF);
-END Destroy_QRectF;
+  QRect = QRectPublic BRANDED OBJECT
+          OVERRIDES
+            init_0          := New_QRect0;
+            init_1          := New_QRect1;
+            init_2          := New_QRect2;
+            init            := New_init;
+            isNull          := QRect_isNull;
+            isEmpty         := QRect_isEmpty;
+            isValid         := QRect_isValid;
+            left            := QRect_left;
+            top             := QRect_top;
+            right           := QRect_right;
+            bottom          := QRect_bottom;
+            normalized      := QRect_normalized;
+            x               := QRect_x;
+            y               := QRect_y;
+            setLeft         := QRect_setLeft;
+            setTop          := QRect_setTop;
+            setRight        := QRect_setRight;
+            setBottom       := QRect_setBottom;
+            setX            := QRect_setX;
+            setY            := QRect_setY;
+            setTopLeft      := QRect_setTopLeft;
+            setBottomRight  := QRect_setBottomRight;
+            setTopRight     := QRect_setTopRight;
+            setBottomLeft   := QRect_setBottomLeft;
+            topLeft         := QRect_topLeft;
+            bottomRight     := QRect_bottomRight;
+            topRight        := QRect_topRight;
+            bottomLeft      := QRect_bottomLeft;
+            center          := QRect_center;
+            moveLeft        := QRect_moveLeft;
+            moveTop         := QRect_moveTop;
+            moveRight       := QRect_moveRight;
+            moveBottom      := QRect_moveBottom;
+            moveTopLeft     := QRect_moveTopLeft;
+            moveBottomRight := QRect_moveBottomRight;
+            moveTopRight    := QRect_moveTopRight;
+            moveBottomLeft  := QRect_moveBottomLeft;
+            moveCenter      := QRect_moveCenter;
+            translate       := QRect_translate;
+            translate1      := QRect_translate1;
+            translated      := QRect_translated;
+            translated1     := QRect_translated1;
+            moveTo          := QRect_moveTo;
+            moveTo1         := QRect_moveTo1;
+            setRect         := QRect_setRect;
+            getRect         := QRect_getRect;
+            setCoords       := QRect_setCoords;
+            getCoords       := QRect_getCoords;
+            adjust          := QRect_adjust;
+            adjusted        := QRect_adjusted;
+            size            := QRect_size;
+            width           := QRect_width;
+            height          := QRect_height;
+            setWidth        := QRect_setWidth;
+            setHeight       := QRect_setHeight;
+            setSize         := QRect_setSize;
+            PlusEqual       := QRect_PlusEqual;
+            MinusEqual      := QRect_MinusEqual;
+            MultiplyEqual   := QRect_MultiplyEqual;
+            DivideEqual     := QRect_DivideEqual;
+            contains        := QRect_contains;
+            contains1       := QRect_contains1;
+            contains2       := QRect_contains2;
+            contains3       := QRect_contains3;
+            contains4       := QRect_contains4;
+            contains5       := QRect_contains5;
+            unite           := QRect_unite;
+            united          := QRect_united;
+            intersect       := QRect_intersect;
+            intersected     := QRect_intersected;
+            intersects      := QRect_intersects;
+            destroyCxx      := Destroy_QRect;
+          END;
+
+PROCEDURE New_QRectF0 (self: QRectF; ): QRectF =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtRectRaw.New_QRectF0();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRectF);
+
+    RETURN self;
+  END New_QRectF0;
+
+PROCEDURE New_QRectF1 (self: QRectF; topleft: QPointF; size: QSizeF; ):
+  QRectF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(topleft.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(size.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRectRaw.New_QRectF1(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRectF);
+
+    RETURN self;
+  END New_QRectF1;
+
+PROCEDURE New_QRectF2 (self: QRectF; topleft, bottomRight: QPointF; ):
+  QRectF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(topleft.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(bottomRight.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRectRaw.New_QRectF2(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRectF);
+
+    RETURN self;
+  END New_QRectF2;
+
+PROCEDURE New_QRectF3 (self: QRectF; left, top, width, height: LONGREAL; ):
+  QRectF =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtRectRaw.New_QRectF3(left, top, width, height);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRectF);
+
+    RETURN self;
+  END New_QRectF3;
+
+PROCEDURE New_QRectF4 (self: QRectF; rect: QRect; ): QRectF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRectRaw.New_QRectF4(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRectF);
+
+    RETURN self;
+  END New_QRectF4;
+
+PROCEDURE QRectF_isNull (self: QRectF; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_isNull(selfAdr);
+  END QRectF_isNull;
+
+PROCEDURE QRectF_isEmpty (self: QRectF; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_isEmpty(selfAdr);
+  END QRectF_isEmpty;
+
+PROCEDURE QRectF_isValid (self: QRectF; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_isValid(selfAdr);
+  END QRectF_isValid;
+
+PROCEDURE QRectF_normalized (self: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_normalized(selfAdr);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_normalized;
+
+PROCEDURE QRectF_left (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_left(selfAdr);
+  END QRectF_left;
+
+PROCEDURE QRectF_top (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_top(selfAdr);
+  END QRectF_top;
+
+PROCEDURE QRectF_right (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_right(selfAdr);
+  END QRectF_right;
+
+PROCEDURE QRectF_bottom (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_bottom(selfAdr);
+  END QRectF_bottom;
+
+PROCEDURE QRectF_x (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_x(selfAdr);
+  END QRectF_x;
+
+PROCEDURE QRectF_y (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_y(selfAdr);
+  END QRectF_y;
+
+PROCEDURE QRectF_setLeft (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setLeft(selfAdr, pos);
+  END QRectF_setLeft;
+
+PROCEDURE QRectF_setTop (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setTop(selfAdr, pos);
+  END QRectF_setTop;
+
+PROCEDURE QRectF_setRight (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setRight(selfAdr, pos);
+  END QRectF_setRight;
+
+PROCEDURE QRectF_setBottom (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setBottom(selfAdr, pos);
+  END QRectF_setBottom;
+
+PROCEDURE QRectF_setX (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setX(selfAdr, pos);
+  END QRectF_setX;
+
+PROCEDURE QRectF_setY (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setY(selfAdr, pos);
+  END QRectF_setY;
+
+PROCEDURE QRectF_topLeft (self: QRectF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_topLeft(selfAdr);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRectF_topLeft;
+
+PROCEDURE QRectF_bottomRight (self: QRectF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_bottomRight(selfAdr);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRectF_bottomRight;
+
+PROCEDURE QRectF_topRight (self: QRectF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_topRight(selfAdr);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRectF_topRight;
+
+PROCEDURE QRectF_bottomLeft (self: QRectF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_bottomLeft(selfAdr);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRectF_bottomLeft;
+
+PROCEDURE QRectF_center (self: QRectF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_center(selfAdr);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRectF_center;
+
+PROCEDURE QRectF_setTopLeft (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setTopLeft(selfAdr, arg2tmp);
+  END QRectF_setTopLeft;
+
+PROCEDURE QRectF_setBottomRight (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setBottomRight(selfAdr, arg2tmp);
+  END QRectF_setBottomRight;
+
+PROCEDURE QRectF_setTopRight (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setTopRight(selfAdr, arg2tmp);
+  END QRectF_setTopRight;
+
+PROCEDURE QRectF_setBottomLeft (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setBottomLeft(selfAdr, arg2tmp);
+  END QRectF_setBottomLeft;
+
+PROCEDURE QRectF_moveLeft (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveLeft(selfAdr, pos);
+  END QRectF_moveLeft;
+
+PROCEDURE QRectF_moveTop (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveTop(selfAdr, pos);
+  END QRectF_moveTop;
+
+PROCEDURE QRectF_moveRight (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveRight(selfAdr, pos);
+  END QRectF_moveRight;
+
+PROCEDURE QRectF_moveBottom (self: QRectF; pos: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveBottom(selfAdr, pos);
+  END QRectF_moveBottom;
+
+PROCEDURE QRectF_moveTopLeft (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveTopLeft(selfAdr, arg2tmp);
+  END QRectF_moveTopLeft;
+
+PROCEDURE QRectF_moveBottomRight (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveBottomRight(selfAdr, arg2tmp);
+  END QRectF_moveBottomRight;
+
+PROCEDURE QRectF_moveTopRight (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveTopRight(selfAdr, arg2tmp);
+  END QRectF_moveTopRight;
+
+PROCEDURE QRectF_moveBottomLeft (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveBottomLeft(selfAdr, arg2tmp);
+  END QRectF_moveBottomLeft;
+
+PROCEDURE QRectF_moveCenter (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveCenter(selfAdr, arg2tmp);
+  END QRectF_moveCenter;
+
+PROCEDURE QRectF_translate (self: QRectF; dx, dy: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_translate(selfAdr, dx, dy);
+  END QRectF_translate;
+
+PROCEDURE QRectF_translate1 (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_translate1(selfAdr, arg2tmp);
+  END QRectF_translate1;
+
+PROCEDURE QRectF_translated (self: QRectF; dx, dy: LONGREAL; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_translated(selfAdr, dx, dy);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_translated;
+
+PROCEDURE QRectF_translated1 (self: QRectF; p: QPointF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_translated1(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_translated1;
+
+PROCEDURE QRectF_moveTo (self: QRectF; x, t: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveTo(selfAdr, x, t);
+  END QRectF_moveTo;
+
+PROCEDURE QRectF_moveTo1 (self: QRectF; p: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_moveTo1(selfAdr, arg2tmp);
+  END QRectF_moveTo1;
+
+PROCEDURE QRectF_setRect (self: QRectF; x, y, w, h: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setRect(selfAdr, x, y, w, h);
+  END QRectF_setRect;
+
+PROCEDURE QRectF_getRect (self: QRectF; VAR x, y, w, h: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg2tmp := x;
+    arg3tmp := y;
+    arg4tmp := w;
+    arg5tmp := h;
+    QtRectRaw.QRectF_getRect(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    x := arg2tmp;
+    y := arg3tmp;
+    w := arg4tmp;
+    h := arg5tmp;
+  END QRectF_getRect;
+
+PROCEDURE QRectF_setCoords (self: QRectF; x1, y1, x2, y2: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setCoords(selfAdr, x1, y1, x2, y2);
+  END QRectF_setCoords;
+
+PROCEDURE QRectF_getCoords (self: QRectF; VAR x1, y1, x2, y2: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg2tmp := x1;
+    arg3tmp := y1;
+    arg4tmp := x2;
+    arg5tmp := y2;
+    QtRectRaw.QRectF_getCoords(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    x1 := arg2tmp;
+    y1 := arg3tmp;
+    x2 := arg4tmp;
+    y2 := arg5tmp;
+  END QRectF_getCoords;
+
+PROCEDURE QRectF_adjust (self: QRectF; x1, y1, x2, y2: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_adjust(selfAdr, x1, y1, x2, y2);
+  END QRectF_adjust;
+
+PROCEDURE QRectF_adjusted (self: QRectF; x1, y1, x2, y2: LONGREAL; ):
+  QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_adjusted(selfAdr, x1, y1, x2, y2);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_adjusted;
+
+PROCEDURE QRectF_size (self: QRectF; ): QSizeF =
+  VAR
+    ret    : ADDRESS;
+    result : QSizeF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_size(selfAdr);
+
+    result := NEW(QSizeF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QRectF_size;
+
+PROCEDURE QRectF_width (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_width(selfAdr);
+  END QRectF_width;
+
+PROCEDURE QRectF_height (self: QRectF; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_height(selfAdr);
+  END QRectF_height;
+
+PROCEDURE QRectF_setWidth (self: QRectF; w: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setWidth(selfAdr, w);
+  END QRectF_setWidth;
+
+PROCEDURE QRectF_setHeight (self: QRectF; h: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setHeight(selfAdr, h);
+  END QRectF_setHeight;
+
+PROCEDURE QRectF_setSize (self: QRectF; s: QSizeF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(s.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.QRectF_setSize(selfAdr, arg2tmp);
+  END QRectF_setSize;
+
+PROCEDURE QRectF_PlusEqual (self, r: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_PlusEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_PlusEqual;
+
+PROCEDURE QRectF_MinusEqual (self, r: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_MinusEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_MinusEqual;
+
+PROCEDURE QRectF_MultiplyEqual (self, r: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_MultiplyEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_MultiplyEqual;
+
+PROCEDURE QRectF_DivideEqual (self, r: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_DivideEqual(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_DivideEqual;
+
+PROCEDURE QRectF_contains (self: QRectF; p: QPointF; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_contains(selfAdr, arg2tmp);
+  END QRectF_contains;
+
+PROCEDURE QRectF_contains1 (self: QRectF; x, y: LONGREAL; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_contains1(selfAdr, x, y);
+  END QRectF_contains1;
+
+PROCEDURE QRectF_contains2 (self, r: QRectF; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_contains2(selfAdr, arg2tmp);
+  END QRectF_contains2;
+
+PROCEDURE QRectF_unite (self, r: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_unite(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_unite;
+
+PROCEDURE QRectF_united (self, other: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_united(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_united;
+
+PROCEDURE QRectF_intersect (self, r: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_intersect(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_intersect;
+
+PROCEDURE QRectF_intersected (self, other: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_intersected(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QRectF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRectF);
+    ELSE
+      result := NEW(QRectF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_intersected;
+
+PROCEDURE QRectF_intersects (self, r: QRectF; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtRectRaw.QRectF_intersects(selfAdr, arg2tmp);
+  END QRectF_intersects;
+
+PROCEDURE QRectF_toRect (self: QRectF; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_toRect(selfAdr);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_toRect;
+
+PROCEDURE QRectF_toAlignedRect (self: QRectF; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRectRaw.QRectF_toAlignedRect(selfAdr);
+
+    IF ISTYPE(result, QRect) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QRect);
+    ELSE
+      result := NEW(QRect);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QRectF_toAlignedRect;
+
+PROCEDURE Delete_QRectF (self: QRectF; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRectRaw.Delete_QRectF(selfAdr);
+  END Delete_QRectF;
+
+PROCEDURE Cleanup_QRectF
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QRectF := ref;
+  BEGIN
+    Delete_QRectF(obj);
+  END Cleanup_QRectF;
+
+PROCEDURE Destroy_QRectF (self: QRectF) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QRectF);
+  END Destroy_QRectF;
 
 REVEAL
-QRectF =
-QRectFPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QRectF0;
-init_1 := New_QRectF1;
-init_2 := New_QRectF2;
-init_3 := New_QRectF3;
-init_4 := New_QRectF4;
-isNull := QRectF_isNull;
-isEmpty := QRectF_isEmpty;
-isValid := QRectF_isValid;
-normalized := QRectF_normalized;
-left := QRectF_left;
-top := QRectF_top;
-right := QRectF_right;
-bottom := QRectF_bottom;
-x := QRectF_x;
-y := QRectF_y;
-setLeft := QRectF_setLeft;
-setTop := QRectF_setTop;
-setRight := QRectF_setRight;
-setBottom := QRectF_setBottom;
-setX := QRectF_setX;
-setY := QRectF_setY;
-topLeft := QRectF_topLeft;
-bottomRight := QRectF_bottomRight;
-topRight := QRectF_topRight;
-bottomLeft := QRectF_bottomLeft;
-center := QRectF_center;
-setTopLeft := QRectF_setTopLeft;
-setBottomRight := QRectF_setBottomRight;
-setTopRight := QRectF_setTopRight;
-setBottomLeft := QRectF_setBottomLeft;
-moveLeft := QRectF_moveLeft;
-moveTop := QRectF_moveTop;
-moveRight := QRectF_moveRight;
-moveBottom := QRectF_moveBottom;
-moveTopLeft := QRectF_moveTopLeft;
-moveBottomRight := QRectF_moveBottomRight;
-moveTopRight := QRectF_moveTopRight;
-moveBottomLeft := QRectF_moveBottomLeft;
-moveCenter := QRectF_moveCenter;
-translate := QRectF_translate;
-translate1 := QRectF_translate1;
-translated := QRectF_translated;
-translated1 := QRectF_translated1;
-moveTo := QRectF_moveTo;
-moveTo1 := QRectF_moveTo1;
-setRect := QRectF_setRect;
-getRect := QRectF_getRect;
-setCoords := QRectF_setCoords;
-getCoords := QRectF_getCoords;
-adjust := QRectF_adjust;
-adjusted := QRectF_adjusted;
-size := QRectF_size;
-width := QRectF_width;
-height := QRectF_height;
-setWidth := QRectF_setWidth;
-setHeight := QRectF_setHeight;
-setSize := QRectF_setSize;
-PlusEqual := QRectF_PlusEqual;
-MinusEqual := QRectF_MinusEqual;
-MultiplyEqual := QRectF_MultiplyEqual;
-DivideEqual := QRectF_DivideEqual;
-contains := QRectF_contains;
-contains1 := QRectF_contains1;
-contains2 := QRectF_contains2;
-unite := QRectF_unite;
-united := QRectF_united;
-intersect := QRectF_intersect;
-intersected := QRectF_intersected;
-intersects := QRectF_intersects;
-toRect := QRectF_toRect;
-toAlignedRect := QRectF_toAlignedRect;
-destroyCxx := Destroy_QRectF;
-END;
+  QRectF = QRectFPublic BRANDED OBJECT
+           OVERRIDES
+             init_0          := New_QRectF0;
+             init_1          := New_QRectF1;
+             init_2          := New_QRectF2;
+             init_3          := New_QRectF3;
+             init_4          := New_QRectF4;
+             isNull          := QRectF_isNull;
+             isEmpty         := QRectF_isEmpty;
+             isValid         := QRectF_isValid;
+             normalized      := QRectF_normalized;
+             left            := QRectF_left;
+             top             := QRectF_top;
+             right           := QRectF_right;
+             bottom          := QRectF_bottom;
+             x               := QRectF_x;
+             y               := QRectF_y;
+             setLeft         := QRectF_setLeft;
+             setTop          := QRectF_setTop;
+             setRight        := QRectF_setRight;
+             setBottom       := QRectF_setBottom;
+             setX            := QRectF_setX;
+             setY            := QRectF_setY;
+             topLeft         := QRectF_topLeft;
+             bottomRight     := QRectF_bottomRight;
+             topRight        := QRectF_topRight;
+             bottomLeft      := QRectF_bottomLeft;
+             center          := QRectF_center;
+             setTopLeft      := QRectF_setTopLeft;
+             setBottomRight  := QRectF_setBottomRight;
+             setTopRight     := QRectF_setTopRight;
+             setBottomLeft   := QRectF_setBottomLeft;
+             moveLeft        := QRectF_moveLeft;
+             moveTop         := QRectF_moveTop;
+             moveRight       := QRectF_moveRight;
+             moveBottom      := QRectF_moveBottom;
+             moveTopLeft     := QRectF_moveTopLeft;
+             moveBottomRight := QRectF_moveBottomRight;
+             moveTopRight    := QRectF_moveTopRight;
+             moveBottomLeft  := QRectF_moveBottomLeft;
+             moveCenter      := QRectF_moveCenter;
+             translate       := QRectF_translate;
+             translate1      := QRectF_translate1;
+             translated      := QRectF_translated;
+             translated1     := QRectF_translated1;
+             moveTo          := QRectF_moveTo;
+             moveTo1         := QRectF_moveTo1;
+             setRect         := QRectF_setRect;
+             getRect         := QRectF_getRect;
+             setCoords       := QRectF_setCoords;
+             getCoords       := QRectF_getCoords;
+             adjust          := QRectF_adjust;
+             adjusted        := QRectF_adjusted;
+             size            := QRectF_size;
+             width           := QRectF_width;
+             height          := QRectF_height;
+             setWidth        := QRectF_setWidth;
+             setHeight       := QRectF_setHeight;
+             setSize         := QRectF_setSize;
+             PlusEqual       := QRectF_PlusEqual;
+             MinusEqual      := QRectF_MinusEqual;
+             MultiplyEqual   := QRectF_MultiplyEqual;
+             DivideEqual     := QRectF_DivideEqual;
+             contains        := QRectF_contains;
+             contains1       := QRectF_contains1;
+             contains2       := QRectF_contains2;
+             unite           := QRectF_unite;
+             united          := QRectF_united;
+             intersect       := QRectF_intersect;
+             intersected     := QRectF_intersected;
+             intersects      := QRectF_intersects;
+             toRect          := QRectF_toRect;
+             toAlignedRect   := QRectF_toAlignedRect;
+             destroyCxx      := Destroy_QRectF;
+           END;
 
 
 BEGIN
