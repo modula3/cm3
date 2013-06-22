@@ -16,130 +16,88 @@ FROM QtKeySequence IMPORT QKeySequence;
 FROM QtNamespace IMPORT ShortcutContext;
 
 
-TYPE
-  T = QAction;
+TYPE T = QAction;
 
 
-TYPE (* Enum MenuRole *)
-  MenuRole = {
- NoRole,
- TextHeuristicRole,
- ApplicationSpecificRole,
- AboutQtRole,
- AboutRole,
- PreferencesRole,
- QuitRole};
+TYPE                             (* Enum MenuRole *)
+  MenuRole = {NoRole, TextHeuristicRole, ApplicationSpecificRole,
+              AboutQtRole, AboutRole, PreferencesRole, QuitRole};
 
-TYPE (* Enum SoftKeyRole *)
-  SoftKeyRole = {
- NoSoftKey,
- PositiveSoftKey,
- NegativeSoftKey,
- SelectSoftKey};
+TYPE                             (* Enum SoftKeyRole *)
+  SoftKeyRole =
+    {NoSoftKey, PositiveSoftKey, NegativeSoftKey, SelectSoftKey};
 
-CONST (* Enum Priority *)
-  LowPriority = 0;
+CONST                            (* Enum Priority *)
+  LowPriority    = 0;
   NormalPriority = 128;
-  HighPriority = 256;
+  HighPriority   = 256;
 
-TYPE (* Enum Priority *)
-  Priority = [0..256];
+TYPE                             (* Enum Priority *)
+  Priority = [0 .. 256];
 
-TYPE (* Enum ActionEvent *)
-  ActionEvent = {
- Trigger,
- Hover};
+TYPE                             (* Enum ActionEvent *)
+  ActionEvent = {Trigger, Hover};
 
 TYPE
-QAction <: QActionPublic;
-QActionPublic =
-QObject BRANDED OBJECT
-METHODS
-init_0 ( parent: QObject;
-) : QAction;
-init_1 ( text: TEXT;
- parent: QObject;
-) : QAction;
-init_2 ( icon: QIcon;
- text: TEXT;
- parent: QObject;
-) : QAction;
-setActionGroup( group: QActionGroup;
-);
-actionGroup(): QActionGroup;
-setIcon( icon: QIcon;
-);
-icon(): QIcon;
-setText( text: TEXT;
-);
-text(): TEXT;
-setIconText( text: TEXT;
-);
-iconText(): TEXT;
-setToolTip( tip: TEXT;
-);
-toolTip(): TEXT;
-setStatusTip( statusTip: TEXT;
-);
-statusTip(): TEXT;
-setWhatsThis( what: TEXT;
-);
-whatsThis(): TEXT;
-setPriority(priority: Priority;
-);
-priority(): Priority;
-menu(): REFANY;
-setMenu( menu: REFANY;
-);
-setSeparator(b: BOOLEAN;
-);
-isSeparator(): BOOLEAN;
-setShortcut( shortcut: QKeySequence;
-);
-shortcut(): QKeySequence;
-setShortcutContext(context: ShortcutContext;
-);
-shortcutContext(): ShortcutContext;
-setAutoRepeat(arg1: BOOLEAN;
-);
-autoRepeat(): BOOLEAN;
-setFont( font: QFont;
-);
-font(): QFont;
-setCheckable(arg1: BOOLEAN;
-);
-isCheckable(): BOOLEAN;
-isChecked(): BOOLEAN;
-isEnabled(): BOOLEAN;
-isVisible(): BOOLEAN;
-activate(event: ActionEvent;
-);
-showStatusText( widget: REFANY;
-): BOOLEAN;
-showStatusText1(): BOOLEAN;
-setMenuRole(menuRole: MenuRole;
-);
-menuRole(): MenuRole;
-setSoftKeyRole(softKeyRole: SoftKeyRole;
-);
-softKeyRole(): SoftKeyRole;
-setIconVisibleInMenu(visible: BOOLEAN;
-);
-isIconVisibleInMenu(): BOOLEAN;
-parentWidget(): REFANY;
-trigger();
-hover();
-setChecked(arg1: BOOLEAN;
-);
-toggle();
-setEnabled(arg1: BOOLEAN;
-);
-setDisabled(b: BOOLEAN;
-);
-setVisible(arg1: BOOLEAN;
-);
-destroyCxx();
-END;
+  QAction <: QActionPublic;
+  QActionPublic =
+    QObject BRANDED OBJECT
+    METHODS
+      init_0         (parent: QObject; ): QAction;
+      init_1         (text: TEXT; parent: QObject; ): QAction;
+      init_2         (icon: QIcon; text: TEXT; parent: QObject; ): QAction;
+      setActionGroup (group: QActionGroup; );
+      actionGroup    (): QActionGroup;
+      setIcon        (icon: QIcon; );
+      icon           (): QIcon;
+      setText        (text: TEXT; );
+      text           (): TEXT;
+      setIconText    (text: TEXT; );
+      iconText       (): TEXT;
+      setToolTip     (tip: TEXT; );
+      toolTip        (): TEXT;
+      setStatusTip   (statusTip: TEXT; );
+      statusTip      (): TEXT;
+      setWhatsThis   (what: TEXT; );
+      whatsThis      (): TEXT;
+      setPriority    (priority: Priority; );
+      priority       (): Priority;
+      menu           (): REFANY;
+      setMenu        (menu: REFANY; );
+      setSeparator   (b: BOOLEAN; );
+      isSeparator    (): BOOLEAN;
+      setShortcut    (shortcut: QKeySequence; );
+      shortcut       (): QKeySequence;
+      setShortcutContext   (context: ShortcutContext; );
+      shortcutContext      (): ShortcutContext;
+      setAutoRepeat        (arg1: BOOLEAN; );
+      autoRepeat           (): BOOLEAN;
+      setFont              (font: QFont; );
+      font                 (): QFont;
+      setCheckable         (arg1: BOOLEAN; );
+      isCheckable          (): BOOLEAN;
+      isChecked            (): BOOLEAN;
+      isEnabled            (): BOOLEAN;
+      isVisible            (): BOOLEAN;
+      activate             (event: ActionEvent; );
+      showStatusText       (widget: REFANY; ): BOOLEAN;
+      showStatusText1      (): BOOLEAN;
+      setMenuRole          (menuRole: MenuRole; );
+      menuRole             (): MenuRole;
+      setSoftKeyRole       (softKeyRole: SoftKeyRole; );
+      softKeyRole          (): SoftKeyRole;
+      setIconVisibleInMenu (visible: BOOLEAN; );
+      isIconVisibleInMenu  (): BOOLEAN;
+      parentWidget         (): REFANY;
+      trigger              ();
+      hover                ();
+      setChecked           (arg1: BOOLEAN; );
+      toggle               ();
+      setEnabled           (arg1: BOOLEAN; );
+      setDisabled          (b: BOOLEAN; );
+      setVisible           (arg1: BOOLEAN; );
+      destroyCxx           ();
+    END;
 
 
 END QtAction.

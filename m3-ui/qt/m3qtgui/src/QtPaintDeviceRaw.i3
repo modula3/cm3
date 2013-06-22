@@ -15,58 +15,44 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL Delete_QPaintDevice *>
-PROCEDURE Delete_QPaintDevice ( self: QPaintDevice;
-);
+PROCEDURE Delete_QPaintDevice (self: QPaintDevice; );
 
 <* EXTERNAL QPaintDevice_devType *>
-PROCEDURE QPaintDevice_devType ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_devType (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_paintingActive *>
-PROCEDURE QPaintDevice_paintingActive ( self: ADDRESS;
-): BOOLEAN;
+PROCEDURE QPaintDevice_paintingActive (self: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QPaintDevice_width *>
-PROCEDURE QPaintDevice_width ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_width (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_height *>
-PROCEDURE QPaintDevice_height ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_height (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_widthMM *>
-PROCEDURE QPaintDevice_widthMM ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_widthMM (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_heightMM *>
-PROCEDURE QPaintDevice_heightMM ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_heightMM (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_logicalDpiX *>
-PROCEDURE QPaintDevice_logicalDpiX ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_logicalDpiX (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_logicalDpiY *>
-PROCEDURE QPaintDevice_logicalDpiY ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_logicalDpiY (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_physicalDpiX *>
-PROCEDURE QPaintDevice_physicalDpiX ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_physicalDpiX (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_physicalDpiY *>
-PROCEDURE QPaintDevice_physicalDpiY ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_physicalDpiY (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_colorCount *>
-PROCEDURE QPaintDevice_colorCount ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_colorCount (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QPaintDevice_depth *>
-PROCEDURE QPaintDevice_depth ( self: ADDRESS;
-): C.int;
+PROCEDURE QPaintDevice_depth (self: ADDRESS; ): C.int;
 
-TYPE
-QPaintDevice <: ADDRESS;
+TYPE QPaintDevice <: ADDRESS;
 
 END QtPaintDeviceRaw.

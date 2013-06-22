@@ -12,7 +12,7 @@ MODULE QtItemSelectionModelRaw;
 
 
 REVEAL
-QItemSelectionRange = UNTRACED BRANDED REF RECORD (*Dummy*) END;
-QItemSelection = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+  QItemSelectionRange = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+  QItemSelection = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtItemSelectionModelRaw.

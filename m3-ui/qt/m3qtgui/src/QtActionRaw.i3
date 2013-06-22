@@ -15,246 +15,168 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QAction0 *>
-PROCEDURE New_QAction0 ( parent: ADDRESS;
-): QAction;
+PROCEDURE New_QAction0 (parent: ADDRESS; ): QAction;
 
 <* EXTERNAL New_QAction1 *>
-PROCEDURE New_QAction1 ( text, parent: ADDRESS;
-): QAction;
+PROCEDURE New_QAction1 (text, parent: ADDRESS; ): QAction;
 
 <* EXTERNAL New_QAction2 *>
-PROCEDURE New_QAction2 ( icon, text, parent: ADDRESS;
-): QAction;
+PROCEDURE New_QAction2 (icon, text, parent: ADDRESS; ): QAction;
 
 <* EXTERNAL Delete_QAction *>
-PROCEDURE Delete_QAction ( self: QAction;
-);
+PROCEDURE Delete_QAction (self: QAction; );
 
 <* EXTERNAL QAction_setActionGroup *>
-PROCEDURE QAction_setActionGroup ( self: QAction;
- group: ADDRESS;
-);
+PROCEDURE QAction_setActionGroup (self: QAction; group: ADDRESS; );
 
 <* EXTERNAL QAction_actionGroup *>
-PROCEDURE QAction_actionGroup ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_actionGroup (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setIcon *>
-PROCEDURE QAction_setIcon ( self: QAction;
- icon: ADDRESS;
-);
+PROCEDURE QAction_setIcon (self: QAction; icon: ADDRESS; );
 
 <* EXTERNAL QAction_icon *>
-PROCEDURE QAction_icon ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_icon (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setText *>
-PROCEDURE QAction_setText ( self: QAction;
- text: ADDRESS;
-);
+PROCEDURE QAction_setText (self: QAction; text: ADDRESS; );
 
 <* EXTERNAL QAction_text *>
-PROCEDURE QAction_text ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_text (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setIconText *>
-PROCEDURE QAction_setIconText ( self: QAction;
- text: ADDRESS;
-);
+PROCEDURE QAction_setIconText (self: QAction; text: ADDRESS; );
 
 <* EXTERNAL QAction_iconText *>
-PROCEDURE QAction_iconText ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_iconText (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setToolTip *>
-PROCEDURE QAction_setToolTip ( self: QAction;
- tip: ADDRESS;
-);
+PROCEDURE QAction_setToolTip (self: QAction; tip: ADDRESS; );
 
 <* EXTERNAL QAction_toolTip *>
-PROCEDURE QAction_toolTip ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_toolTip (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setStatusTip *>
-PROCEDURE QAction_setStatusTip ( self: QAction;
- statusTip: ADDRESS;
-);
+PROCEDURE QAction_setStatusTip (self: QAction; statusTip: ADDRESS; );
 
 <* EXTERNAL QAction_statusTip *>
-PROCEDURE QAction_statusTip ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_statusTip (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setWhatsThis *>
-PROCEDURE QAction_setWhatsThis ( self: QAction;
- what: ADDRESS;
-);
+PROCEDURE QAction_setWhatsThis (self: QAction; what: ADDRESS; );
 
 <* EXTERNAL QAction_whatsThis *>
-PROCEDURE QAction_whatsThis ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_whatsThis (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setPriority *>
-PROCEDURE QAction_setPriority ( self: QAction;
-priority: C.int;
-);
+PROCEDURE QAction_setPriority (self: QAction; priority: C.int; );
 
 <* EXTERNAL QAction_priority *>
-PROCEDURE QAction_priority ( self: QAction;
-): C.int;
+PROCEDURE QAction_priority (self: QAction; ): C.int;
 
 <* EXTERNAL QAction_menu *>
-PROCEDURE QAction_menu ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_menu (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setMenu *>
-PROCEDURE QAction_setMenu ( self: QAction;
- menu: ADDRESS;
-);
+PROCEDURE QAction_setMenu (self: QAction; menu: ADDRESS; );
 
 <* EXTERNAL QAction_setSeparator *>
-PROCEDURE QAction_setSeparator ( self: QAction;
-b: BOOLEAN;
-);
+PROCEDURE QAction_setSeparator (self: QAction; b: BOOLEAN; );
 
 <* EXTERNAL QAction_isSeparator *>
-PROCEDURE QAction_isSeparator ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_isSeparator (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_setShortcut *>
-PROCEDURE QAction_setShortcut ( self: QAction;
- shortcut: ADDRESS;
-);
+PROCEDURE QAction_setShortcut (self: QAction; shortcut: ADDRESS; );
 
 <* EXTERNAL QAction_shortcut *>
-PROCEDURE QAction_shortcut ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_shortcut (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setShortcutContext *>
-PROCEDURE QAction_setShortcutContext ( self: QAction;
-context: C.int;
-);
+PROCEDURE QAction_setShortcutContext (self: QAction; context: C.int; );
 
 <* EXTERNAL QAction_shortcutContext *>
-PROCEDURE QAction_shortcutContext ( self: QAction;
-): C.int;
+PROCEDURE QAction_shortcutContext (self: QAction; ): C.int;
 
 <* EXTERNAL QAction_setAutoRepeat *>
-PROCEDURE QAction_setAutoRepeat ( self: QAction;
-arg2: BOOLEAN;
-);
+PROCEDURE QAction_setAutoRepeat (self: QAction; arg2: BOOLEAN; );
 
 <* EXTERNAL QAction_autoRepeat *>
-PROCEDURE QAction_autoRepeat ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_autoRepeat (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_setFont *>
-PROCEDURE QAction_setFont ( self: QAction;
- font: ADDRESS;
-);
+PROCEDURE QAction_setFont (self: QAction; font: ADDRESS; );
 
 <* EXTERNAL QAction_font *>
-PROCEDURE QAction_font ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_font (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_setCheckable *>
-PROCEDURE QAction_setCheckable ( self: QAction;
-arg2: BOOLEAN;
-);
+PROCEDURE QAction_setCheckable (self: QAction; arg2: BOOLEAN; );
 
 <* EXTERNAL QAction_isCheckable *>
-PROCEDURE QAction_isCheckable ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_isCheckable (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_isChecked *>
-PROCEDURE QAction_isChecked ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_isChecked (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_isEnabled *>
-PROCEDURE QAction_isEnabled ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_isEnabled (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_isVisible *>
-PROCEDURE QAction_isVisible ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_isVisible (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_activate *>
-PROCEDURE QAction_activate ( self: QAction;
-event: C.int;
-);
+PROCEDURE QAction_activate (self: QAction; event: C.int; );
 
 <* EXTERNAL QAction_showStatusText *>
-PROCEDURE QAction_showStatusText ( self: QAction;
- widget: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAction_showStatusText (self: QAction; widget: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QAction_showStatusText1 *>
-PROCEDURE QAction_showStatusText1 ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_showStatusText1 (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_setMenuRole *>
-PROCEDURE QAction_setMenuRole ( self: QAction;
-menuRole: C.int;
-);
+PROCEDURE QAction_setMenuRole (self: QAction; menuRole: C.int; );
 
 <* EXTERNAL QAction_menuRole *>
-PROCEDURE QAction_menuRole ( self: QAction;
-): C.int;
+PROCEDURE QAction_menuRole (self: QAction; ): C.int;
 
 <* EXTERNAL QAction_setSoftKeyRole *>
-PROCEDURE QAction_setSoftKeyRole ( self: QAction;
-softKeyRole: C.int;
-);
+PROCEDURE QAction_setSoftKeyRole (self: QAction; softKeyRole: C.int; );
 
 <* EXTERNAL QAction_softKeyRole *>
-PROCEDURE QAction_softKeyRole ( self: QAction;
-): C.int;
+PROCEDURE QAction_softKeyRole (self: QAction; ): C.int;
 
 <* EXTERNAL QAction_setIconVisibleInMenu *>
-PROCEDURE QAction_setIconVisibleInMenu ( self: QAction;
-visible: BOOLEAN;
-);
+PROCEDURE QAction_setIconVisibleInMenu (self: QAction; visible: BOOLEAN; );
 
 <* EXTERNAL QAction_isIconVisibleInMenu *>
-PROCEDURE QAction_isIconVisibleInMenu ( self: QAction;
-): BOOLEAN;
+PROCEDURE QAction_isIconVisibleInMenu (self: QAction; ): BOOLEAN;
 
 <* EXTERNAL QAction_parentWidget *>
-PROCEDURE QAction_parentWidget ( self: QAction;
-): ADDRESS;
+PROCEDURE QAction_parentWidget (self: QAction; ): ADDRESS;
 
 <* EXTERNAL QAction_trigger *>
-PROCEDURE QAction_trigger ( self: QAction;
-);
+PROCEDURE QAction_trigger (self: QAction; );
 
 <* EXTERNAL QAction_hover *>
-PROCEDURE QAction_hover ( self: QAction;
-);
+PROCEDURE QAction_hover (self: QAction; );
 
 <* EXTERNAL QAction_setChecked *>
-PROCEDURE QAction_setChecked ( self: QAction;
-arg2: BOOLEAN;
-);
+PROCEDURE QAction_setChecked (self: QAction; arg2: BOOLEAN; );
 
 <* EXTERNAL QAction_toggle *>
-PROCEDURE QAction_toggle ( self: QAction;
-);
+PROCEDURE QAction_toggle (self: QAction; );
 
 <* EXTERNAL QAction_setEnabled *>
-PROCEDURE QAction_setEnabled ( self: QAction;
-arg2: BOOLEAN;
-);
+PROCEDURE QAction_setEnabled (self: QAction; arg2: BOOLEAN; );
 
 <* EXTERNAL QAction_setDisabled *>
-PROCEDURE QAction_setDisabled ( self: QAction;
-b: BOOLEAN;
-);
+PROCEDURE QAction_setDisabled (self: QAction; b: BOOLEAN; );
 
 <* EXTERNAL QAction_setVisible *>
-PROCEDURE QAction_setVisible ( self: QAction;
-arg2: BOOLEAN;
-);
+PROCEDURE QAction_setVisible (self: QAction; arg2: BOOLEAN; );
 
-TYPE
-QAction = ADDRESS;
+TYPE QAction = ADDRESS;
 
 END QtActionRaw.

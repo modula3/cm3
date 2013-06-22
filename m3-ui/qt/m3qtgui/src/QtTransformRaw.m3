@@ -11,7 +11,6 @@ MODULE QtTransformRaw;
 
 
 
-REVEAL
-QTransform = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QTransform = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtTransformRaw.

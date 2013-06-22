@@ -15,401 +15,278 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QTextEdit0 *>
-PROCEDURE New_QTextEdit0 ( parent: ADDRESS;
-): QTextEdit;
+PROCEDURE New_QTextEdit0 (parent: ADDRESS; ): QTextEdit;
 
 <* EXTERNAL New_QTextEdit1 *>
 PROCEDURE New_QTextEdit1 (): QTextEdit;
 
 <* EXTERNAL New_QTextEdit2 *>
-PROCEDURE New_QTextEdit2 ( text, parent: ADDRESS;
-): QTextEdit;
+PROCEDURE New_QTextEdit2 (text, parent: ADDRESS; ): QTextEdit;
 
 <* EXTERNAL New_QTextEdit3 *>
-PROCEDURE New_QTextEdit3 ( text: ADDRESS;
-): QTextEdit;
+PROCEDURE New_QTextEdit3 (text: ADDRESS; ): QTextEdit;
 
 <* EXTERNAL Delete_QTextEdit *>
-PROCEDURE Delete_QTextEdit ( self: QTextEdit;
-);
+PROCEDURE Delete_QTextEdit (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_setDocument *>
-PROCEDURE QTextEdit_setDocument ( self: QTextEdit;
- document: ADDRESS;
-);
+PROCEDURE QTextEdit_setDocument (self: QTextEdit; document: ADDRESS; );
 
 <* EXTERNAL QTextEdit_document *>
-PROCEDURE QTextEdit_document ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_document (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_setTextCursor *>
-PROCEDURE QTextEdit_setTextCursor ( self: QTextEdit;
- cursor: ADDRESS;
-);
+PROCEDURE QTextEdit_setTextCursor (self: QTextEdit; cursor: ADDRESS; );
 
 <* EXTERNAL QTextEdit_textCursor *>
-PROCEDURE QTextEdit_textCursor ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_textCursor (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_isReadOnly *>
-PROCEDURE QTextEdit_isReadOnly ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_isReadOnly (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_setReadOnly *>
-PROCEDURE QTextEdit_setReadOnly ( self: QTextEdit;
-ro: BOOLEAN;
-);
+PROCEDURE QTextEdit_setReadOnly (self: QTextEdit; ro: BOOLEAN; );
 
 <* EXTERNAL QTextEdit_setTextInteractionFlags *>
-PROCEDURE QTextEdit_setTextInteractionFlags ( self: QTextEdit;
-flags: C.int;
-);
+PROCEDURE QTextEdit_setTextInteractionFlags
+  (self: QTextEdit; flags: C.int; );
 
 <* EXTERNAL QTextEdit_textInteractionFlags *>
-PROCEDURE QTextEdit_textInteractionFlags ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_textInteractionFlags (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_fontPointSize *>
-PROCEDURE QTextEdit_fontPointSize ( self: QTextEdit;
-): C.double;
+PROCEDURE QTextEdit_fontPointSize (self: QTextEdit; ): C.double;
 
 <* EXTERNAL QTextEdit_fontFamily *>
-PROCEDURE QTextEdit_fontFamily ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_fontFamily (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_fontWeight *>
-PROCEDURE QTextEdit_fontWeight ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_fontWeight (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_fontUnderline *>
-PROCEDURE QTextEdit_fontUnderline ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_fontUnderline (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_fontItalic *>
-PROCEDURE QTextEdit_fontItalic ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_fontItalic (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_textColor *>
-PROCEDURE QTextEdit_textColor ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_textColor (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_textBackgroundColor *>
-PROCEDURE QTextEdit_textBackgroundColor ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_textBackgroundColor (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_currentFont *>
-PROCEDURE QTextEdit_currentFont ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_currentFont (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_alignment *>
-PROCEDURE QTextEdit_alignment ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_alignment (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_mergeCurrentCharFormat *>
-PROCEDURE QTextEdit_mergeCurrentCharFormat ( self: QTextEdit;
- modifier: ADDRESS;
-);
+PROCEDURE QTextEdit_mergeCurrentCharFormat
+  (self: QTextEdit; modifier: ADDRESS; );
 
 <* EXTERNAL QTextEdit_setCurrentCharFormat *>
-PROCEDURE QTextEdit_setCurrentCharFormat ( self: QTextEdit;
- format: ADDRESS;
-);
+PROCEDURE QTextEdit_setCurrentCharFormat
+  (self: QTextEdit; format: ADDRESS; );
 
 <* EXTERNAL QTextEdit_currentCharFormat *>
-PROCEDURE QTextEdit_currentCharFormat ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_currentCharFormat (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_autoFormatting *>
-PROCEDURE QTextEdit_autoFormatting ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_autoFormatting (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_setAutoFormatting *>
-PROCEDURE QTextEdit_setAutoFormatting ( self: QTextEdit;
-features: C.int;
-);
+PROCEDURE QTextEdit_setAutoFormatting (self: QTextEdit; features: C.int; );
 
 <* EXTERNAL QTextEdit_tabChangesFocus *>
-PROCEDURE QTextEdit_tabChangesFocus ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_tabChangesFocus (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_setTabChangesFocus *>
-PROCEDURE QTextEdit_setTabChangesFocus ( self: QTextEdit;
-b: BOOLEAN;
-);
+PROCEDURE QTextEdit_setTabChangesFocus (self: QTextEdit; b: BOOLEAN; );
 
 <* EXTERNAL QTextEdit_setDocumentTitle *>
-PROCEDURE QTextEdit_setDocumentTitle ( self: QTextEdit;
- title: ADDRESS;
-);
+PROCEDURE QTextEdit_setDocumentTitle (self: QTextEdit; title: ADDRESS; );
 
 <* EXTERNAL QTextEdit_documentTitle *>
-PROCEDURE QTextEdit_documentTitle ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_documentTitle (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_isUndoRedoEnabled *>
-PROCEDURE QTextEdit_isUndoRedoEnabled ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_isUndoRedoEnabled (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_setUndoRedoEnabled *>
-PROCEDURE QTextEdit_setUndoRedoEnabled ( self: QTextEdit;
-enable: BOOLEAN;
-);
+PROCEDURE QTextEdit_setUndoRedoEnabled
+  (self: QTextEdit; enable: BOOLEAN; );
 
 <* EXTERNAL QTextEdit_lineWrapMode *>
-PROCEDURE QTextEdit_lineWrapMode ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_lineWrapMode (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_setLineWrapMode *>
-PROCEDURE QTextEdit_setLineWrapMode ( self: QTextEdit;
-mode: C.int;
-);
+PROCEDURE QTextEdit_setLineWrapMode (self: QTextEdit; mode: C.int; );
 
 <* EXTERNAL QTextEdit_lineWrapColumnOrWidth *>
-PROCEDURE QTextEdit_lineWrapColumnOrWidth ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_lineWrapColumnOrWidth (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_setLineWrapColumnOrWidth *>
-PROCEDURE QTextEdit_setLineWrapColumnOrWidth ( self: QTextEdit;
-w: C.int;
-);
+PROCEDURE QTextEdit_setLineWrapColumnOrWidth (self: QTextEdit; w: C.int; );
 
 <* EXTERNAL QTextEdit_wordWrapMode *>
-PROCEDURE QTextEdit_wordWrapMode ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_wordWrapMode (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_setWordWrapMode *>
-PROCEDURE QTextEdit_setWordWrapMode ( self: QTextEdit;
-policy: C.int;
-);
+PROCEDURE QTextEdit_setWordWrapMode (self: QTextEdit; policy: C.int; );
 
 <* EXTERNAL QTextEdit_find *>
-PROCEDURE QTextEdit_find ( self: QTextEdit;
- exp: ADDRESS;
-options: C.int;
-): BOOLEAN;
+PROCEDURE QTextEdit_find (self: QTextEdit; exp: ADDRESS; options: C.int; ):
+  BOOLEAN;
 
 <* EXTERNAL QTextEdit_find1 *>
-PROCEDURE QTextEdit_find1 ( self: QTextEdit;
- exp: ADDRESS;
-): BOOLEAN;
+PROCEDURE QTextEdit_find1 (self: QTextEdit; exp: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_toPlainText *>
-PROCEDURE QTextEdit_toPlainText ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_toPlainText (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_toHtml *>
-PROCEDURE QTextEdit_toHtml ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_toHtml (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_ensureCursorVisible *>
-PROCEDURE QTextEdit_ensureCursorVisible ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_ensureCursorVisible (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_createStandardContextMenu *>
-PROCEDURE QTextEdit_createStandardContextMenu ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_createStandardContextMenu (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_createStandardContextMenu1 *>
-PROCEDURE QTextEdit_createStandardContextMenu1 ( self: QTextEdit;
- position: ADDRESS;
-): ADDRESS;
+PROCEDURE QTextEdit_createStandardContextMenu1
+  (self: QTextEdit; position: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_cursorForPosition *>
-PROCEDURE QTextEdit_cursorForPosition ( self: QTextEdit;
- pos: ADDRESS;
-): ADDRESS;
+PROCEDURE QTextEdit_cursorForPosition (self: QTextEdit; pos: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QTextEdit_cursorRect *>
-PROCEDURE QTextEdit_cursorRect ( self: QTextEdit;
- cursor: ADDRESS;
-): ADDRESS;
+PROCEDURE QTextEdit_cursorRect (self: QTextEdit; cursor: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QTextEdit_cursorRect1 *>
-PROCEDURE QTextEdit_cursorRect1 ( self: QTextEdit;
-): ADDRESS;
+PROCEDURE QTextEdit_cursorRect1 (self: QTextEdit; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_anchorAt *>
-PROCEDURE QTextEdit_anchorAt ( self: QTextEdit;
- pos: ADDRESS;
-): ADDRESS;
+PROCEDURE QTextEdit_anchorAt (self: QTextEdit; pos: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QTextEdit_overwriteMode *>
-PROCEDURE QTextEdit_overwriteMode ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_overwriteMode (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_setOverwriteMode *>
-PROCEDURE QTextEdit_setOverwriteMode ( self: QTextEdit;
-overwrite: BOOLEAN;
-);
+PROCEDURE QTextEdit_setOverwriteMode
+  (self: QTextEdit; overwrite: BOOLEAN; );
 
 <* EXTERNAL QTextEdit_tabStopWidth *>
-PROCEDURE QTextEdit_tabStopWidth ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_tabStopWidth (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_setTabStopWidth *>
-PROCEDURE QTextEdit_setTabStopWidth ( self: QTextEdit;
-width: C.int;
-);
+PROCEDURE QTextEdit_setTabStopWidth (self: QTextEdit; width: C.int; );
 
 <* EXTERNAL QTextEdit_cursorWidth *>
-PROCEDURE QTextEdit_cursorWidth ( self: QTextEdit;
-): C.int;
+PROCEDURE QTextEdit_cursorWidth (self: QTextEdit; ): C.int;
 
 <* EXTERNAL QTextEdit_setCursorWidth *>
-PROCEDURE QTextEdit_setCursorWidth ( self: QTextEdit;
-width: C.int;
-);
+PROCEDURE QTextEdit_setCursorWidth (self: QTextEdit; width: C.int; );
 
 <* EXTERNAL QTextEdit_acceptRichText *>
-PROCEDURE QTextEdit_acceptRichText ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_acceptRichText (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_setAcceptRichText *>
-PROCEDURE QTextEdit_setAcceptRichText ( self: QTextEdit;
-accept: BOOLEAN;
-);
+PROCEDURE QTextEdit_setAcceptRichText (self: QTextEdit; accept: BOOLEAN; );
 
 <* EXTERNAL QTextEdit_moveCursor *>
-PROCEDURE QTextEdit_moveCursor ( self: QTextEdit;
-operation, mode: C.int;
-);
+PROCEDURE QTextEdit_moveCursor (self: QTextEdit; operation, mode: C.int; );
 
 <* EXTERNAL QTextEdit_moveCursor1 *>
-PROCEDURE QTextEdit_moveCursor1 ( self: QTextEdit;
-operation: C.int;
-);
+PROCEDURE QTextEdit_moveCursor1 (self: QTextEdit; operation: C.int; );
 
 <* EXTERNAL QTextEdit_canPaste *>
-PROCEDURE QTextEdit_canPaste ( self: QTextEdit;
-): BOOLEAN;
+PROCEDURE QTextEdit_canPaste (self: QTextEdit; ): BOOLEAN;
 
 <* EXTERNAL QTextEdit_setFontPointSize *>
-PROCEDURE QTextEdit_setFontPointSize ( self: QTextEdit;
-s: C.double;
-);
+PROCEDURE QTextEdit_setFontPointSize (self: QTextEdit; s: C.double; );
 
 <* EXTERNAL QTextEdit_setFontFamily *>
-PROCEDURE QTextEdit_setFontFamily ( self: QTextEdit;
- fontFamily: ADDRESS;
-);
+PROCEDURE QTextEdit_setFontFamily (self: QTextEdit; fontFamily: ADDRESS; );
 
 <* EXTERNAL QTextEdit_setFontWeight *>
-PROCEDURE QTextEdit_setFontWeight ( self: QTextEdit;
-w: C.int;
-);
+PROCEDURE QTextEdit_setFontWeight (self: QTextEdit; w: C.int; );
 
 <* EXTERNAL QTextEdit_setFontUnderline *>
-PROCEDURE QTextEdit_setFontUnderline ( self: QTextEdit;
-b: BOOLEAN;
-);
+PROCEDURE QTextEdit_setFontUnderline (self: QTextEdit; b: BOOLEAN; );
 
 <* EXTERNAL QTextEdit_setFontItalic *>
-PROCEDURE QTextEdit_setFontItalic ( self: QTextEdit;
-b: BOOLEAN;
-);
+PROCEDURE QTextEdit_setFontItalic (self: QTextEdit; b: BOOLEAN; );
 
 <* EXTERNAL QTextEdit_setTextColor *>
-PROCEDURE QTextEdit_setTextColor ( self: QTextEdit;
- c: ADDRESS;
-);
+PROCEDURE QTextEdit_setTextColor (self: QTextEdit; c: ADDRESS; );
 
 <* EXTERNAL QTextEdit_setTextBackgroundColor *>
-PROCEDURE QTextEdit_setTextBackgroundColor ( self: QTextEdit;
- c: ADDRESS;
-);
+PROCEDURE QTextEdit_setTextBackgroundColor (self: QTextEdit; c: ADDRESS; );
 
 <* EXTERNAL QTextEdit_setCurrentFont *>
-PROCEDURE QTextEdit_setCurrentFont ( self: QTextEdit;
- f: ADDRESS;
-);
+PROCEDURE QTextEdit_setCurrentFont (self: QTextEdit; f: ADDRESS; );
 
 <* EXTERNAL QTextEdit_setAlignment *>
-PROCEDURE QTextEdit_setAlignment ( self: QTextEdit;
-a: C.int;
-);
+PROCEDURE QTextEdit_setAlignment (self: QTextEdit; a: C.int; );
 
 <* EXTERNAL QTextEdit_setPlainText *>
-PROCEDURE QTextEdit_setPlainText ( self: QTextEdit;
- text: ADDRESS;
-);
+PROCEDURE QTextEdit_setPlainText (self: QTextEdit; text: ADDRESS; );
 
 <* EXTERNAL QTextEdit_setHtml *>
-PROCEDURE QTextEdit_setHtml ( self: QTextEdit;
- text: ADDRESS;
-);
+PROCEDURE QTextEdit_setHtml (self: QTextEdit; text: ADDRESS; );
 
 <* EXTERNAL QTextEdit_setText *>
-PROCEDURE QTextEdit_setText ( self: QTextEdit;
- text: ADDRESS;
-);
+PROCEDURE QTextEdit_setText (self: QTextEdit; text: ADDRESS; );
 
 <* EXTERNAL QTextEdit_cut *>
-PROCEDURE QTextEdit_cut ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_cut (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_copy *>
-PROCEDURE QTextEdit_copy ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_copy (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_paste *>
-PROCEDURE QTextEdit_paste ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_paste (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_undo *>
-PROCEDURE QTextEdit_undo ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_undo (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_redo *>
-PROCEDURE QTextEdit_redo ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_redo (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_clear *>
-PROCEDURE QTextEdit_clear ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_clear (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_selectAll *>
-PROCEDURE QTextEdit_selectAll ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_selectAll (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_insertPlainText *>
-PROCEDURE QTextEdit_insertPlainText ( self: QTextEdit;
- text: ADDRESS;
-);
+PROCEDURE QTextEdit_insertPlainText (self: QTextEdit; text: ADDRESS; );
 
 <* EXTERNAL QTextEdit_insertHtml *>
-PROCEDURE QTextEdit_insertHtml ( self: QTextEdit;
- text: ADDRESS;
-);
+PROCEDURE QTextEdit_insertHtml (self: QTextEdit; text: ADDRESS; );
 
 <* EXTERNAL QTextEdit_append *>
-PROCEDURE QTextEdit_append ( self: QTextEdit;
- text: ADDRESS;
-);
+PROCEDURE QTextEdit_append (self: QTextEdit; text: ADDRESS; );
 
 <* EXTERNAL QTextEdit_scrollToAnchor *>
-PROCEDURE QTextEdit_scrollToAnchor ( self: QTextEdit;
- name: ADDRESS;
-);
+PROCEDURE QTextEdit_scrollToAnchor (self: QTextEdit; name: ADDRESS; );
 
 <* EXTERNAL QTextEdit_zoomIn *>
-PROCEDURE QTextEdit_zoomIn ( self: QTextEdit;
-range: C.int;
-);
+PROCEDURE QTextEdit_zoomIn (self: QTextEdit; range: C.int; );
 
 <* EXTERNAL QTextEdit_zoomIn1 *>
-PROCEDURE QTextEdit_zoomIn1 ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_zoomIn1 (self: QTextEdit; );
 
 <* EXTERNAL QTextEdit_zoomOut *>
-PROCEDURE QTextEdit_zoomOut ( self: QTextEdit;
-range: C.int;
-);
+PROCEDURE QTextEdit_zoomOut (self: QTextEdit; range: C.int; );
 
 <* EXTERNAL QTextEdit_zoomOut1 *>
-PROCEDURE QTextEdit_zoomOut1 ( self: QTextEdit;
-);
+PROCEDURE QTextEdit_zoomOut1 (self: QTextEdit; );
 
-TYPE
-QTextEdit = ADDRESS;
+TYPE QTextEdit = ADDRESS;
 
 END QtTextEditRaw.

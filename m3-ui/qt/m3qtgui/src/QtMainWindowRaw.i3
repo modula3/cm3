@@ -15,254 +15,190 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QMainWindow0 *>
-PROCEDURE New_QMainWindow0 ( parent: ADDRESS;
-flags: C.int;
-): QMainWindow;
+PROCEDURE New_QMainWindow0 (parent: ADDRESS; flags: C.int; ): QMainWindow;
 
 <* EXTERNAL New_QMainWindow1 *>
-PROCEDURE New_QMainWindow1 ( parent: ADDRESS;
-): QMainWindow;
+PROCEDURE New_QMainWindow1 (parent: ADDRESS; ): QMainWindow;
 
 <* EXTERNAL New_QMainWindow2 *>
 PROCEDURE New_QMainWindow2 (): QMainWindow;
 
 <* EXTERNAL Delete_QMainWindow *>
-PROCEDURE Delete_QMainWindow ( self: QMainWindow;
-);
+PROCEDURE Delete_QMainWindow (self: QMainWindow; );
 
 <* EXTERNAL QMainWindow_iconSize *>
-PROCEDURE QMainWindow_iconSize ( self: QMainWindow;
-): ADDRESS;
+PROCEDURE QMainWindow_iconSize (self: QMainWindow; ): ADDRESS;
 
 <* EXTERNAL QMainWindow_setIconSize *>
-PROCEDURE QMainWindow_setIconSize ( self: QMainWindow;
- iconSize: ADDRESS;
-);
+PROCEDURE QMainWindow_setIconSize (self: QMainWindow; iconSize: ADDRESS; );
 
 <* EXTERNAL QMainWindow_toolButtonStyle *>
-PROCEDURE QMainWindow_toolButtonStyle ( self: QMainWindow;
-): C.int;
+PROCEDURE QMainWindow_toolButtonStyle (self: QMainWindow; ): C.int;
 
 <* EXTERNAL QMainWindow_setToolButtonStyle *>
-PROCEDURE QMainWindow_setToolButtonStyle ( self: QMainWindow;
-toolButtonStyle: C.int;
-);
+PROCEDURE QMainWindow_setToolButtonStyle
+  (self: QMainWindow; toolButtonStyle: C.int; );
 
 <* EXTERNAL QMainWindow_isAnimated *>
-PROCEDURE QMainWindow_isAnimated ( self: QMainWindow;
-): BOOLEAN;
+PROCEDURE QMainWindow_isAnimated (self: QMainWindow; ): BOOLEAN;
 
 <* EXTERNAL QMainWindow_isDockNestingEnabled *>
-PROCEDURE QMainWindow_isDockNestingEnabled ( self: QMainWindow;
-): BOOLEAN;
+PROCEDURE QMainWindow_isDockNestingEnabled (self: QMainWindow; ): BOOLEAN;
 
 <* EXTERNAL QMainWindow_documentMode *>
-PROCEDURE QMainWindow_documentMode ( self: QMainWindow;
-): BOOLEAN;
+PROCEDURE QMainWindow_documentMode (self: QMainWindow; ): BOOLEAN;
 
 <* EXTERNAL QMainWindow_setDocumentMode *>
-PROCEDURE QMainWindow_setDocumentMode ( self: QMainWindow;
-enabled: BOOLEAN;
-);
+PROCEDURE QMainWindow_setDocumentMode
+  (self: QMainWindow; enabled: BOOLEAN; );
 
 <* EXTERNAL QMainWindow_setDockOptions *>
-PROCEDURE QMainWindow_setDockOptions ( self: QMainWindow;
-options: C.int;
-);
+PROCEDURE QMainWindow_setDockOptions (self: QMainWindow; options: C.int; );
 
 <* EXTERNAL QMainWindow_dockOptions *>
-PROCEDURE QMainWindow_dockOptions ( self: QMainWindow;
-): C.int;
+PROCEDURE QMainWindow_dockOptions (self: QMainWindow; ): C.int;
 
 <* EXTERNAL QMainWindow_isSeparator *>
-PROCEDURE QMainWindow_isSeparator ( self: QMainWindow;
- pos: ADDRESS;
-): BOOLEAN;
+PROCEDURE QMainWindow_isSeparator (self: QMainWindow; pos: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QMainWindow_menuBar *>
-PROCEDURE QMainWindow_menuBar ( self: QMainWindow;
-): ADDRESS;
+PROCEDURE QMainWindow_menuBar (self: QMainWindow; ): ADDRESS;
 
 <* EXTERNAL QMainWindow_setMenuBar *>
-PROCEDURE QMainWindow_setMenuBar ( self: QMainWindow;
- menubar: ADDRESS;
-);
+PROCEDURE QMainWindow_setMenuBar (self: QMainWindow; menubar: ADDRESS; );
 
 <* EXTERNAL QMainWindow_menuWidget *>
-PROCEDURE QMainWindow_menuWidget ( self: QMainWindow;
-): ADDRESS;
+PROCEDURE QMainWindow_menuWidget (self: QMainWindow; ): ADDRESS;
 
 <* EXTERNAL QMainWindow_setMenuWidget *>
-PROCEDURE QMainWindow_setMenuWidget ( self: QMainWindow;
- menubar: ADDRESS;
-);
+PROCEDURE QMainWindow_setMenuWidget
+  (self: QMainWindow; menubar: ADDRESS; );
 
 <* EXTERNAL QMainWindow_statusBar *>
-PROCEDURE QMainWindow_statusBar ( self: QMainWindow;
-): ADDRESS;
+PROCEDURE QMainWindow_statusBar (self: QMainWindow; ): ADDRESS;
 
 <* EXTERNAL QMainWindow_setStatusBar *>
-PROCEDURE QMainWindow_setStatusBar ( self: QMainWindow;
- statusbar: ADDRESS;
-);
+PROCEDURE QMainWindow_setStatusBar
+  (self: QMainWindow; statusbar: ADDRESS; );
 
 <* EXTERNAL QMainWindow_centralWidget *>
-PROCEDURE QMainWindow_centralWidget ( self: QMainWindow;
-): ADDRESS;
+PROCEDURE QMainWindow_centralWidget (self: QMainWindow; ): ADDRESS;
 
 <* EXTERNAL QMainWindow_setCentralWidget *>
-PROCEDURE QMainWindow_setCentralWidget ( self: QMainWindow;
- widget: ADDRESS;
-);
+PROCEDURE QMainWindow_setCentralWidget
+  (self: QMainWindow; widget: ADDRESS; );
 
 <* EXTERNAL QMainWindow_setCorner *>
-PROCEDURE QMainWindow_setCorner ( self: QMainWindow;
-corner, area: C.int;
-);
+PROCEDURE QMainWindow_setCorner (self: QMainWindow; corner, area: C.int; );
 
 <* EXTERNAL QMainWindow_corner *>
-PROCEDURE QMainWindow_corner ( self: QMainWindow;
-corner: C.int;
-): C.int;
+PROCEDURE QMainWindow_corner (self: QMainWindow; corner: C.int; ): C.int;
 
 <* EXTERNAL QMainWindow_addToolBarBreak *>
-PROCEDURE QMainWindow_addToolBarBreak ( self: QMainWindow;
-area: C.int;
-);
+PROCEDURE QMainWindow_addToolBarBreak (self: QMainWindow; area: C.int; );
 
 <* EXTERNAL QMainWindow_addToolBarBreak1 *>
-PROCEDURE QMainWindow_addToolBarBreak1 ( self: QMainWindow;
-);
+PROCEDURE QMainWindow_addToolBarBreak1 (self: QMainWindow; );
 
 <* EXTERNAL QMainWindow_insertToolBarBreak *>
-PROCEDURE QMainWindow_insertToolBarBreak ( self: QMainWindow;
- before: ADDRESS;
-);
+PROCEDURE QMainWindow_insertToolBarBreak
+  (self: QMainWindow; before: ADDRESS; );
 
 <* EXTERNAL QMainWindow_addToolBar *>
-PROCEDURE QMainWindow_addToolBar ( self: QMainWindow;
-area: C.int;
- toolbar: ADDRESS;
-);
+PROCEDURE QMainWindow_addToolBar
+  (self: QMainWindow; area: C.int; toolbar: ADDRESS; );
 
 <* EXTERNAL QMainWindow_addToolBar1 *>
-PROCEDURE QMainWindow_addToolBar1 ( self: QMainWindow;
- toolbar: ADDRESS;
-);
+PROCEDURE QMainWindow_addToolBar1 (self: QMainWindow; toolbar: ADDRESS; );
 
 <* EXTERNAL QMainWindow_addToolBar2 *>
-PROCEDURE QMainWindow_addToolBar2 ( self: QMainWindow;
- title: ADDRESS;
-): ADDRESS;
+PROCEDURE QMainWindow_addToolBar2 (self: QMainWindow; title: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QMainWindow_insertToolBar *>
-PROCEDURE QMainWindow_insertToolBar ( self: QMainWindow;
- before, toolbar: ADDRESS;
-);
+PROCEDURE QMainWindow_insertToolBar
+  (self: QMainWindow; before, toolbar: ADDRESS; );
 
 <* EXTERNAL QMainWindow_removeToolBar *>
-PROCEDURE QMainWindow_removeToolBar ( self: QMainWindow;
- toolbar: ADDRESS;
-);
+PROCEDURE QMainWindow_removeToolBar
+  (self: QMainWindow; toolbar: ADDRESS; );
 
 <* EXTERNAL QMainWindow_removeToolBarBreak *>
-PROCEDURE QMainWindow_removeToolBarBreak ( self: QMainWindow;
- before: ADDRESS;
-);
+PROCEDURE QMainWindow_removeToolBarBreak
+  (self: QMainWindow; before: ADDRESS; );
 
 <* EXTERNAL QMainWindow_setUnifiedTitleAndToolBarOnMac *>
-PROCEDURE QMainWindow_setUnifiedTitleAndToolBarOnMac ( self: QMainWindow;
-set: BOOLEAN;
-);
+PROCEDURE QMainWindow_setUnifiedTitleAndToolBarOnMac
+  (self: QMainWindow; set: BOOLEAN; );
 
 <* EXTERNAL QMainWindow_unifiedTitleAndToolBarOnMac *>
-PROCEDURE QMainWindow_unifiedTitleAndToolBarOnMac ( self: QMainWindow;
-): BOOLEAN;
+PROCEDURE QMainWindow_unifiedTitleAndToolBarOnMac (self: QMainWindow; ):
+  BOOLEAN;
 
 <* EXTERNAL QMainWindow_toolBarArea *>
-PROCEDURE QMainWindow_toolBarArea ( self: QMainWindow;
- toolbar: ADDRESS;
-): C.int;
+PROCEDURE QMainWindow_toolBarArea (self: QMainWindow; toolbar: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QMainWindow_toolBarBreak *>
-PROCEDURE QMainWindow_toolBarBreak ( self: QMainWindow;
- toolbar: ADDRESS;
-): BOOLEAN;
+PROCEDURE QMainWindow_toolBarBreak (self: QMainWindow; toolbar: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QMainWindow_addDockWidget *>
-PROCEDURE QMainWindow_addDockWidget ( self: QMainWindow;
-area: C.int;
- dockwidget: ADDRESS;
-);
+PROCEDURE QMainWindow_addDockWidget
+  (self: QMainWindow; area: C.int; dockwidget: ADDRESS; );
 
 <* EXTERNAL QMainWindow_addDockWidget1 *>
-PROCEDURE QMainWindow_addDockWidget1 ( self: QMainWindow;
-area: C.int;
- dockwidget: ADDRESS;
-orientation: C.int;
-);
+PROCEDURE QMainWindow_addDockWidget1 (self       : QMainWindow;
+                                      area       : C.int;
+                                      dockwidget : ADDRESS;
+                                      orientation: C.int;       );
 
 <* EXTERNAL QMainWindow_splitDockWidget *>
-PROCEDURE QMainWindow_splitDockWidget ( self: QMainWindow;
- after, dockwidget: ADDRESS;
-orientation: C.int;
-);
+PROCEDURE QMainWindow_splitDockWidget
+  (self: QMainWindow; after, dockwidget: ADDRESS; orientation: C.int; );
 
 <* EXTERNAL QMainWindow_tabifyDockWidget *>
-PROCEDURE QMainWindow_tabifyDockWidget ( self: QMainWindow;
- first, second: ADDRESS;
-);
+PROCEDURE QMainWindow_tabifyDockWidget
+  (self: QMainWindow; first, second: ADDRESS; );
 
 <* EXTERNAL QMainWindow_removeDockWidget *>
-PROCEDURE QMainWindow_removeDockWidget ( self: QMainWindow;
- dockwidget: ADDRESS;
-);
+PROCEDURE QMainWindow_removeDockWidget
+  (self: QMainWindow; dockwidget: ADDRESS; );
 
 <* EXTERNAL QMainWindow_restoreDockWidget *>
-PROCEDURE QMainWindow_restoreDockWidget ( self: QMainWindow;
- dockwidget: ADDRESS;
-): BOOLEAN;
+PROCEDURE QMainWindow_restoreDockWidget
+  (self: QMainWindow; dockwidget: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QMainWindow_dockWidgetArea *>
-PROCEDURE QMainWindow_dockWidgetArea ( self: QMainWindow;
- dockwidget: ADDRESS;
-): C.int;
+PROCEDURE QMainWindow_dockWidgetArea
+  (self: QMainWindow; dockwidget: ADDRESS; ): C.int;
 
 <* EXTERNAL QMainWindow_saveState *>
-PROCEDURE QMainWindow_saveState ( self: QMainWindow;
-version: C.int;
-): ADDRESS;
+PROCEDURE QMainWindow_saveState (self: QMainWindow; version: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QMainWindow_saveState1 *>
-PROCEDURE QMainWindow_saveState1 ( self: QMainWindow;
-): ADDRESS;
+PROCEDURE QMainWindow_saveState1 (self: QMainWindow; ): ADDRESS;
 
 <* EXTERNAL QMainWindow_restoreState *>
-PROCEDURE QMainWindow_restoreState ( self: QMainWindow;
- state: ADDRESS;
-version: C.int;
-): BOOLEAN;
+PROCEDURE QMainWindow_restoreState
+  (self: QMainWindow; state: ADDRESS; version: C.int; ): BOOLEAN;
 
 <* EXTERNAL QMainWindow_restoreState1 *>
-PROCEDURE QMainWindow_restoreState1 ( self: QMainWindow;
- state: ADDRESS;
-): BOOLEAN;
+PROCEDURE QMainWindow_restoreState1 (self: QMainWindow; state: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QMainWindow_createPopupMenu *>
-PROCEDURE QMainWindow_createPopupMenu ( self: QMainWindow;
-): ADDRESS;
+PROCEDURE QMainWindow_createPopupMenu (self: QMainWindow; ): ADDRESS;
 
 <* EXTERNAL QMainWindow_setAnimated *>
-PROCEDURE QMainWindow_setAnimated ( self: QMainWindow;
-enabled: BOOLEAN;
-);
+PROCEDURE QMainWindow_setAnimated (self: QMainWindow; enabled: BOOLEAN; );
 
 <* EXTERNAL QMainWindow_setDockNestingEnabled *>
-PROCEDURE QMainWindow_setDockNestingEnabled ( self: QMainWindow;
-enabled: BOOLEAN;
-);
+PROCEDURE QMainWindow_setDockNestingEnabled
+  (self: QMainWindow; enabled: BOOLEAN; );
 
-TYPE
-QMainWindow = ADDRESS;
+TYPE QMainWindow = ADDRESS;
 
 END QtMainWindowRaw.

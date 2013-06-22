@@ -15,46 +15,38 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL Delete_QAbstractItemDelegate *>
-PROCEDURE Delete_QAbstractItemDelegate ( self: QAbstractItemDelegate;
-);
+PROCEDURE Delete_QAbstractItemDelegate (self: QAbstractItemDelegate; );
 
 <* EXTERNAL QAbstractItemDelegate_createEditor *>
-PROCEDURE QAbstractItemDelegate_createEditor ( self: QAbstractItemDelegate;
- parent, option, index: ADDRESS;
-): ADDRESS;
+PROCEDURE QAbstractItemDelegate_createEditor
+  (self: QAbstractItemDelegate; parent, option, index: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QAbstractItemDelegate_setEditorData *>
-PROCEDURE QAbstractItemDelegate_setEditorData ( self: QAbstractItemDelegate;
- editor, index: ADDRESS;
-);
+PROCEDURE QAbstractItemDelegate_setEditorData
+  (self: QAbstractItemDelegate; editor, index: ADDRESS; );
 
 <* EXTERNAL QAbstractItemDelegate_setModelData *>
-PROCEDURE QAbstractItemDelegate_setModelData ( self: QAbstractItemDelegate;
- editor, model, index: ADDRESS;
-);
+PROCEDURE QAbstractItemDelegate_setModelData
+  (self: QAbstractItemDelegate; editor, model, index: ADDRESS; );
 
 <* EXTERNAL QAbstractItemDelegate_updateEditorGeometry *>
-PROCEDURE QAbstractItemDelegate_updateEditorGeometry ( self: QAbstractItemDelegate;
- editor, option, index: ADDRESS;
-);
+PROCEDURE QAbstractItemDelegate_updateEditorGeometry
+  (self: QAbstractItemDelegate; editor, option, index: ADDRESS; );
 
 <* EXTERNAL QAbstractItemDelegate_editorEvent *>
-PROCEDURE QAbstractItemDelegate_editorEvent ( self: QAbstractItemDelegate;
- event, model, option, index: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemDelegate_editorEvent
+  (self: QAbstractItemDelegate; event, model, option, index: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL ElidedText *>
-PROCEDURE ElidedText ( fontMetrics: ADDRESS;
-width, mode: C.int;
- text: ADDRESS;
-): ADDRESS;
+PROCEDURE ElidedText
+  (fontMetrics: ADDRESS; width, mode: C.int; text: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QAbstractItemDelegate_helpEvent *>
-PROCEDURE QAbstractItemDelegate_helpEvent ( self: QAbstractItemDelegate;
- event, view, option, index: ADDRESS;
-): BOOLEAN;
+PROCEDURE QAbstractItemDelegate_helpEvent
+  (self: QAbstractItemDelegate; event, view, option, index: ADDRESS; ):
+  BOOLEAN;
 
-TYPE
-QAbstractItemDelegate = ADDRESS;
+TYPE QAbstractItemDelegate = ADDRESS;
 
 END QtAbstractItemDelegateRaw.

@@ -13,38 +13,28 @@ FROM QtWidget IMPORT QWidget;
 
 FROM QtFrame IMPORT QFrame;
 
-TYPE
-  T = QStackedWidget;
+TYPE T = QStackedWidget;
 
 
 TYPE
-QStackedWidget <: QStackedWidgetPublic;
-QStackedWidgetPublic =
-QFrame BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QStackedWidget;
-init_1 () : QStackedWidget;
-addWidget( w: QWidget;
-): INTEGER;
-insertWidget(index: INTEGER;
- w: QWidget;
-): INTEGER;
-removeWidget( w: QWidget;
-);
-currentWidget(): QWidget;
-currentIndex(): INTEGER;
-indexOf( arg1: QWidget;
-): INTEGER;
-widget(arg1: INTEGER;
-): QWidget;
-count(): INTEGER;
-setCurrentIndex(index: INTEGER;
-);
-setCurrentWidget( w: QWidget;
-);
-destroyCxx();
-END;
+  QStackedWidget <: QStackedWidgetPublic;
+  QStackedWidgetPublic =
+    QFrame BRANDED OBJECT
+    METHODS
+      init_0           (parent: QWidget; ): QStackedWidget;
+      init_1           (): QStackedWidget;
+      addWidget        (w: QWidget; ): INTEGER;
+      insertWidget     (index: INTEGER; w: QWidget; ): INTEGER;
+      removeWidget     (w: QWidget; );
+      currentWidget    (): QWidget;
+      currentIndex     (): INTEGER;
+      indexOf          (arg1: QWidget; ): INTEGER;
+      widget           (arg1: INTEGER; ): QWidget;
+      count            (): INTEGER;
+      setCurrentIndex  (index: INTEGER; );
+      setCurrentWidget (w: QWidget; );
+      destroyCxx       ();
+    END;
 
 
 END QtStackedWidget.

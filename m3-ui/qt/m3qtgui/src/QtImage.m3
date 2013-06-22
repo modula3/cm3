@@ -15,1681 +15,1542 @@ FROM QtByteArray IMPORT QByteArray;
 IMPORT QtImageRaw;
 IMPORT M3toC;
 FROM QtMatrix IMPORT QMatrix;
-FROM QGuiStubs IMPORT QPaintEngine,QIODevice;
+FROM QGuiStubs IMPORT QPaintEngine, QIODevice;
 FROM QtString IMPORT QString;
 IMPORT Ctypes AS C;
 FROM QtPoint IMPORT QPoint;
 FROM QtTransform IMPORT QTransform;
 FROM QtRect IMPORT QRect;
-FROM QtNamespace IMPORT ImageConversionFlags,AspectRatioMode,TransformationMode,MaskMode;
+FROM QtNamespace IMPORT ImageConversionFlags, AspectRatioMode,
+                        TransformationMode, MaskMode;
 
 
 IMPORT WeakRef;
 
-PROCEDURE New_QImage0 (self:QImage;): QImage =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtImageRaw.New_QImage0();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage0;
-
-PROCEDURE New_QImage1 (self:QImage; size: QSize;
-format: Format;
-): QImage =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(size.cxxObj,ADDRESS);
-BEGIN
-result := QtImageRaw.New_QImage1(arg1tmp, ORD(format));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage1;
-
-PROCEDURE New_QImage2 (self:QImage;width, height: INTEGER;
-format: Format;
-): QImage =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtImageRaw.New_QImage2(width, height, ORD(format));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage2;
-
-PROCEDURE New_QImage3 (self:QImage; data: UNTRACED REF CHAR;
-width, height: INTEGER;
-format: Format;
-): QImage =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtImageRaw.New_QImage3(data, width, height, ORD(format));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage3;
-
-PROCEDURE New_QImage4 (self:QImage; data: UNTRACED REF CHAR;
-width, height: INTEGER;
-format: Format;
-): QImage =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtImageRaw.New_QImage4(data, width, height, ORD(format));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage4;
-
-PROCEDURE New_QImage5 (self:QImage; data: UNTRACED REF CHAR;
-width, height, bytesPerLine: INTEGER;
-format: Format;
-): QImage =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtImageRaw.New_QImage5(data, width, height, bytesPerLine, ORD(format));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage5;
-
-PROCEDURE New_QImage6 (self:QImage; data: UNTRACED REF CHAR;
-width, height, bytesPerLine: INTEGER;
-format: Format;
-): QImage =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtImageRaw.New_QImage6(data, width, height, bytesPerLine, ORD(format));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage6;
-
-PROCEDURE New_QImage7 (self:QImage; fileName, format: TEXT;
-): QImage =
-VAR
-result : ADDRESS;
-qstr_fileName := NEW(QString).initQString(fileName);
-arg1tmp :=  LOOPHOLE(qstr_fileName.cxxObj,ADDRESS);
-arg2tmp: C.char_star;
-BEGIN
-arg2tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.New_QImage7(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-
-
-RETURN self;
-END New_QImage7;
-
-PROCEDURE New_QImage8 (self:QImage; fileName: TEXT;
-): QImage =
-VAR
-result : ADDRESS;
-qstr_fileName := NEW(QString).initQString(fileName);
-arg1tmp :=  LOOPHOLE(qstr_fileName.cxxObj,ADDRESS);
-BEGIN
-result := QtImageRaw.New_QImage8(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage8;
-
-PROCEDURE New_QImage9 (self:QImage; fileName, format: TEXT;
-): QImage =
-VAR
-result : ADDRESS;
-arg1tmp: C.char_star;
-arg2tmp: C.char_star;
-BEGIN
-arg1tmp := M3toC.CopyTtoS(fileName);
-arg2tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.New_QImage9(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-
-
-
-
-RETURN self;
-END New_QImage9;
-
-PROCEDURE New_QImage10 (self:QImage; fileName: TEXT;
-): QImage =
-VAR
-result : ADDRESS;
-arg1tmp: C.char_star;
-BEGIN
-arg1tmp := M3toC.CopyTtoS(fileName);
-result := QtImageRaw.New_QImage10(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-
-
-RETURN self;
-END New_QImage10;
-
-PROCEDURE New_QImage11 (self:QImage; arg1: QImage;
-): QImage =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(arg1.cxxObj,ADDRESS);
-BEGIN
-result := QtImageRaw.New_QImage11(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-
-RETURN self;
-END New_QImage11;
-
-PROCEDURE Delete_QImage ( self: QImage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.Delete_QImage(selfAdr);
-END Delete_QImage;
-
-PROCEDURE QImage_isNull ( self: QImage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_isNull(selfAdr);
-END QImage_isNull;
-
-PROCEDURE QImage_devType ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_devType(selfAdr);
-END QImage_devType;
-
-PROCEDURE QImage_detach ( self: QImage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_detach(selfAdr);
-END QImage_detach;
-
-PROCEDURE QImage_isDetached ( self: QImage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_isDetached(selfAdr);
-END QImage_isDetached;
-
-PROCEDURE QImage_copy ( self: QImage;
- rect: QRect;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_copy(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_copy;
-
-PROCEDURE QImage_copy1 ( self: QImage;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_copy1(selfAdr);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_copy1;
-
-PROCEDURE QImage_copy2 ( self: QImage;
-x, y, w, h: INTEGER;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_copy2(selfAdr, x, y, w, h);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_copy2;
-
-PROCEDURE QImage_format ( self: QImage;
-): Format =
-VAR
-ret:INTEGER; result : Format;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_format(selfAdr);
-result := VAL(ret,Format);  
-RETURN result;
-END QImage_format;
-
-PROCEDURE QImage_convertToFormat ( self: QImage;
-f: Format;
-flags: ImageConversionFlags;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_convertToFormat(selfAdr, ORD(f), ORD(flags));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_convertToFormat;
-
-PROCEDURE QImage_convertToFormat1 ( self: QImage;
-f: Format;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_convertToFormat1(selfAdr, ORD(f));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_convertToFormat1;
-
-PROCEDURE QImage_width ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_width(selfAdr);
-END QImage_width;
-
-PROCEDURE QImage_height ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_height(selfAdr);
-END QImage_height;
-
-PROCEDURE QImage_size ( self: QImage;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_size(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QImage_size;
-
-PROCEDURE QImage_rect ( self: QImage;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_rect(selfAdr);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QImage_rect;
-
-PROCEDURE QImage_depth ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_depth(selfAdr);
-END QImage_depth;
-
-PROCEDURE QImage_colorCount ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_colorCount(selfAdr);
-END QImage_colorCount;
-
-PROCEDURE QImage_color ( self: QImage;
-i: INTEGER;
-): QtRgb.T =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_color(selfAdr, i);
-END QImage_color;
-
-PROCEDURE QImage_setColor ( self: QImage;
-i: INTEGER;
-c: QtRgb.T;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setColor(selfAdr, i, c);
-END QImage_setColor;
-
-PROCEDURE QImage_setColorCount ( self: QImage;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setColorCount(selfAdr, arg2);
-END QImage_setColorCount;
-
-PROCEDURE QImage_allGray ( self: QImage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_allGray(selfAdr);
-END QImage_allGray;
-
-PROCEDURE QImage_isGrayscale ( self: QImage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_isGrayscale(selfAdr);
-END QImage_isGrayscale;
-
-PROCEDURE QImage_bits ( self: QImage;
-): UNTRACED REF CHAR =
-VAR
-ret:ADDRESS; result : UNTRACED REF CHAR;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_bits(selfAdr);
-result := LOOPHOLE(result,UNTRACED REF CHAR);
-RETURN result;
-END QImage_bits;
-
-PROCEDURE QImage_bits1 ( self: QImage;
-): UNTRACED REF CHAR =
-VAR
-ret:ADDRESS; result : UNTRACED REF CHAR;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_bits1(selfAdr);
-result := LOOPHOLE(result,UNTRACED REF CHAR);
-RETURN result;
-END QImage_bits1;
-
-PROCEDURE QImage_byteCount ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_byteCount(selfAdr);
-END QImage_byteCount;
-
-PROCEDURE QImage_scanLine ( self: QImage;
-arg2: INTEGER;
-): UNTRACED REF CHAR =
-VAR
-ret:ADDRESS; result : UNTRACED REF CHAR;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scanLine(selfAdr, arg2);
-result := LOOPHOLE(result,UNTRACED REF CHAR);
-RETURN result;
-END QImage_scanLine;
-
-PROCEDURE QImage_scanLine1 ( self: QImage;
-arg2: INTEGER;
-): UNTRACED REF CHAR =
-VAR
-ret:ADDRESS; result : UNTRACED REF CHAR;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scanLine1(selfAdr, arg2);
-result := LOOPHOLE(result,UNTRACED REF CHAR);
-RETURN result;
-END QImage_scanLine1;
-
-PROCEDURE QImage_bytesPerLine ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_bytesPerLine(selfAdr);
-END QImage_bytesPerLine;
-
-PROCEDURE QImage_valid ( self: QImage;
-x, y: INTEGER;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_valid(selfAdr, x, y);
-END QImage_valid;
-
-PROCEDURE QImage_valid1 ( self: QImage;
- pt: QPoint;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_valid1(selfAdr, arg2tmp);
-END QImage_valid1;
-
-PROCEDURE QImage_pixelIndex ( self: QImage;
-x, y: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_pixelIndex(selfAdr, x, y);
-END QImage_pixelIndex;
-
-PROCEDURE QImage_pixelIndex1 ( self: QImage;
- pt: QPoint;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_pixelIndex1(selfAdr, arg2tmp);
-END QImage_pixelIndex1;
-
-PROCEDURE QImage_pixel ( self: QImage;
-x, y: INTEGER;
-): QtRgb.T =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_pixel(selfAdr, x, y);
-END QImage_pixel;
-
-PROCEDURE QImage_pixel1 ( self: QImage;
- pt: QPoint;
-): QtRgb.T =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_pixel1(selfAdr, arg2tmp);
-END QImage_pixel1;
-
-PROCEDURE QImage_setPixel ( self: QImage;
-x, y: INTEGER;
-index_or_rgb: CARDINAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setPixel(selfAdr, x, y, index_or_rgb);
-END QImage_setPixel;
-
-PROCEDURE QImage_setPixel1 ( self: QImage;
- pt: QPoint;
-index_or_rgb: CARDINAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setPixel1(selfAdr, arg2tmp, index_or_rgb);
-END QImage_setPixel1;
-
-PROCEDURE QImage_fill ( self: QImage;
-pixel: CARDINAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_fill(selfAdr, pixel);
-END QImage_fill;
-
-PROCEDURE QImage_hasAlphaChannel ( self: QImage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_hasAlphaChannel(selfAdr);
-END QImage_hasAlphaChannel;
-
-PROCEDURE QImage_setAlphaChannel ( self, alphaChannel: QImage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(alphaChannel.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setAlphaChannel(selfAdr, arg2tmp);
-END QImage_setAlphaChannel;
-
-PROCEDURE QImage_alphaChannel ( self: QImage;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_alphaChannel(selfAdr);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_alphaChannel;
-
-PROCEDURE QImage_createAlphaMask ( self: QImage;
-flags: ImageConversionFlags;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_createAlphaMask(selfAdr, ORD(flags));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_createAlphaMask;
-
-PROCEDURE QImage_createAlphaMask1 ( self: QImage;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_createAlphaMask1(selfAdr);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_createAlphaMask1;
-
-PROCEDURE QImage_createHeuristicMask ( self: QImage;
-clipTight: BOOLEAN;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_createHeuristicMask(selfAdr, clipTight);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_createHeuristicMask;
-
-PROCEDURE QImage_createHeuristicMask1 ( self: QImage;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_createHeuristicMask1(selfAdr);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_createHeuristicMask1;
-
-PROCEDURE QImage_createMaskFromColor ( self: QImage;
-color: QtRgb.T;
-mode: MaskMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_createMaskFromColor(selfAdr, color, ORD(mode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_createMaskFromColor;
-
-PROCEDURE QImage_createMaskFromColor1 ( self: QImage;
-color: QtRgb.T;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_createMaskFromColor1(selfAdr, color);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_createMaskFromColor1;
-
-PROCEDURE QImage_scaled ( self: QImage;
-w, h: INTEGER;
-aspectMode: AspectRatioMode;
-mode: TransformationMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaled(selfAdr, w, h, ORD(aspectMode), ORD(mode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaled;
-
-PROCEDURE QImage_scaled1 ( self: QImage;
-w, h: INTEGER;
-aspectMode: AspectRatioMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaled1(selfAdr, w, h, ORD(aspectMode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaled1;
-
-PROCEDURE QImage_scaled2 ( self: QImage;
-w, h: INTEGER;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaled2(selfAdr, w, h);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaled2;
-
-PROCEDURE QImage_scaled3 ( self: QImage;
- s: QSize;
-aspectMode: AspectRatioMode;
-mode: TransformationMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(s.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaled3(selfAdr, arg2tmp, ORD(aspectMode), ORD(mode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaled3;
-
-PROCEDURE QImage_scaled4 ( self: QImage;
- s: QSize;
-aspectMode: AspectRatioMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(s.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaled4(selfAdr, arg2tmp, ORD(aspectMode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaled4;
-
-PROCEDURE QImage_scaled5 ( self: QImage;
- s: QSize;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(s.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaled5(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaled5;
-
-PROCEDURE QImage_scaledToWidth ( self: QImage;
-w: INTEGER;
-mode: TransformationMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaledToWidth(selfAdr, w, ORD(mode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaledToWidth;
-
-PROCEDURE QImage_scaledToWidth1 ( self: QImage;
-w: INTEGER;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaledToWidth1(selfAdr, w);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaledToWidth1;
-
-PROCEDURE QImage_scaledToHeight ( self: QImage;
-h: INTEGER;
-mode: TransformationMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaledToHeight(selfAdr, h, ORD(mode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaledToHeight;
-
-PROCEDURE QImage_scaledToHeight1 ( self: QImage;
-h: INTEGER;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_scaledToHeight1(selfAdr, h);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_scaledToHeight1;
-
-PROCEDURE QImage_transformed ( self: QImage;
- matrix: QMatrix;
-mode: TransformationMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_transformed(selfAdr, arg2tmp, ORD(mode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_transformed;
-
-PROCEDURE QImage_transformed1 ( self: QImage;
- matrix: QMatrix;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_transformed1(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_transformed1;
-
-PROCEDURE Image_TrueMatrix ( arg1: QMatrix;
-w, h: INTEGER;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-arg1tmp :=  LOOPHOLE(arg1.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.Image_TrueMatrix(arg1tmp, w, h);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END Image_TrueMatrix;
-
-PROCEDURE QImage_transformed2 ( self: QImage;
- matrix: QTransform;
-mode: TransformationMode;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_transformed2(selfAdr, arg2tmp, ORD(mode));
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_transformed2;
-
-PROCEDURE QImage_transformed3 ( self: QImage;
- matrix: QTransform;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_transformed3(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_transformed3;
-
-PROCEDURE Image_TrueMatrix1 ( arg1: QTransform;
-w, h: INTEGER;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-arg1tmp :=  LOOPHOLE(arg1.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.Image_TrueMatrix1(arg1tmp, w, h);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END Image_TrueMatrix1;
-
-PROCEDURE QImage_mirrored ( self: QImage;
-horizontally, vertically: BOOLEAN;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_mirrored(selfAdr, horizontally, vertically);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_mirrored;
-
-PROCEDURE QImage_mirrored1 ( self: QImage;
-horizontally: BOOLEAN;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_mirrored1(selfAdr, horizontally);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_mirrored1;
-
-PROCEDURE QImage_mirrored2 ( self: QImage;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_mirrored2(selfAdr);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_mirrored2;
-
-PROCEDURE QImage_rgbSwapped ( self: QImage;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_rgbSwapped(selfAdr);
-
-IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QImage_rgbSwapped;
-
-PROCEDURE QImage_invertPixels ( self: QImage;
-arg2: InvertMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_invertPixels(selfAdr, ORD(arg2));
-END QImage_invertPixels;
-
-PROCEDURE QImage_invertPixels1 ( self: QImage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_invertPixels1(selfAdr);
-END QImage_invertPixels1;
-
-PROCEDURE QImage_load ( self: QImage;
- device: QIODevice;
- format: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(device.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.QImage_load(selfAdr, arg2tmp, arg3tmp);
-
-
-RETURN result;
-END QImage_load;
-
-PROCEDURE QImage_load1 ( self: QImage;
- fileName, format: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_fileName := NEW(QString).initQString(fileName);
-arg2tmp :=  LOOPHOLE(qstr_fileName.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.QImage_load1(selfAdr, arg2tmp, arg3tmp);
-
-
-RETURN result;
-END QImage_load1;
-
-PROCEDURE QImage_load2 ( self: QImage;
- fileName: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_fileName := NEW(QString).initQString(fileName);
-arg2tmp :=  LOOPHOLE(qstr_fileName.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_load2(selfAdr, arg2tmp);
-END QImage_load2;
-
-PROCEDURE QImage_loadFromData ( self: QImage;
- buf: UNTRACED REF CHAR;
-len: INTEGER;
- format: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg4tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.QImage_loadFromData(selfAdr, buf, len, arg4tmp);
-
-
-RETURN result;
-END QImage_loadFromData;
-
-PROCEDURE QImage_loadFromData1 ( self: QImage;
- buf: UNTRACED REF CHAR;
-len: INTEGER;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_loadFromData1(selfAdr, buf, len);
-END QImage_loadFromData1;
-
-PROCEDURE QImage_loadFromData2 ( self: QImage;
- data: QByteArray;
- aformat: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(data.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(aformat);
-result := QtImageRaw.QImage_loadFromData2(selfAdr, arg2tmp, arg3tmp);
-
-
-RETURN result;
-END QImage_loadFromData2;
-
-PROCEDURE QImage_loadFromData3 ( self: QImage;
- data: QByteArray;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(data.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_loadFromData3(selfAdr, arg2tmp);
-END QImage_loadFromData3;
-
-PROCEDURE QImage_save ( self: QImage;
- fileName, format: TEXT;
-quality: INTEGER;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_fileName := NEW(QString).initQString(fileName);
-arg2tmp :=  LOOPHOLE(qstr_fileName.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.QImage_save(selfAdr, arg2tmp, arg3tmp, quality);
-
-
-RETURN result;
-END QImage_save;
-
-PROCEDURE QImage_save1 ( self: QImage;
- fileName, format: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_fileName := NEW(QString).initQString(fileName);
-arg2tmp :=  LOOPHOLE(qstr_fileName.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.QImage_save1(selfAdr, arg2tmp, arg3tmp);
-
-
-RETURN result;
-END QImage_save1;
-
-PROCEDURE QImage_save2 ( self: QImage;
- fileName: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_fileName := NEW(QString).initQString(fileName);
-arg2tmp :=  LOOPHOLE(qstr_fileName.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_save2(selfAdr, arg2tmp);
-END QImage_save2;
-
-PROCEDURE QImage_save3 ( self: QImage;
- device: QIODevice;
- format: TEXT;
-quality: INTEGER;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(device.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.QImage_save3(selfAdr, arg2tmp, arg3tmp, quality);
-
-
-RETURN result;
-END QImage_save3;
-
-PROCEDURE QImage_save4 ( self: QImage;
- device: QIODevice;
- format: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(device.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-result: BOOLEAN;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(format);
-result := QtImageRaw.QImage_save4(selfAdr, arg2tmp, arg3tmp);
-
-
-RETURN result;
-END QImage_save4;
-
-PROCEDURE QImage_save5 ( self: QImage;
- device: QIODevice;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(device.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_save5(selfAdr, arg2tmp);
-END QImage_save5;
-
-PROCEDURE Image_FromData ( data: UNTRACED REF CHAR;
-size: INTEGER;
- format: TEXT;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-arg3tmp: C.char_star;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(format);
-ret := QtImageRaw.Image_FromData(data, size, arg3tmp);
-
-(*IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE*)
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-(*END;*)
-
-
-
-RETURN result;
-END Image_FromData;
-
-PROCEDURE Image_FromData1 ( data: UNTRACED REF CHAR;
-size: INTEGER;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-BEGIN
-ret := QtImageRaw.Image_FromData1(data, size);
-
-(*IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE*)
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-(*END;*)
-
-RETURN result;
-END Image_FromData1;
-
-PROCEDURE Image_FromData2 ( data: QByteArray;
- format: TEXT;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-arg1tmp :=  LOOPHOLE(data.cxxObj,ADDRESS);
-arg2tmp: C.char_star;
-BEGIN
-arg2tmp := M3toC.CopyTtoS(format);
-ret := QtImageRaw.Image_FromData2(arg1tmp, arg2tmp);
-
-(*IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE*)
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-(*END;*)
-
-
-
-RETURN result;
-END Image_FromData2;
-
-PROCEDURE Image_FromData3 ( data: QByteArray;
-): QImage =
-VAR
-ret:ADDRESS; result : QImage;
-arg1tmp :=  LOOPHOLE(data.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.Image_FromData3(arg1tmp);
-
-(*IF ISTYPE(result,QImage) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QImage);
-ELSE*)
-  result := NEW(QImage);
-  result.cxxObj := ret;
-  result.destroyCxx();
-(*END;*)
-
-RETURN result;
-END Image_FromData3;
-
-PROCEDURE QImage_serialNumber ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_serialNumber(selfAdr);
-END QImage_serialNumber;
-
-PROCEDURE QImage_cacheKey ( self: QImage;
-): CARDINAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_cacheKey(selfAdr);
-END QImage_cacheKey;
-
-PROCEDURE QImage_paintEngine ( self: QImage;
-): QPaintEngine =
-VAR
-ret:ADDRESS; result : QPaintEngine;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_paintEngine(selfAdr);
-
-  result := NEW(QPaintEngine);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QImage_paintEngine;
-
-PROCEDURE QImage_dotsPerMeterX ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_dotsPerMeterX(selfAdr);
-END QImage_dotsPerMeterX;
-
-PROCEDURE QImage_dotsPerMeterY ( self: QImage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_dotsPerMeterY(selfAdr);
-END QImage_dotsPerMeterY;
-
-PROCEDURE QImage_setDotsPerMeterX ( self: QImage;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setDotsPerMeterX(selfAdr, arg2);
-END QImage_setDotsPerMeterX;
-
-PROCEDURE QImage_setDotsPerMeterY ( self: QImage;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setDotsPerMeterY(selfAdr, arg2);
-END QImage_setDotsPerMeterY;
-
-PROCEDURE QImage_offset ( self: QImage;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtImageRaw.QImage_offset(selfAdr);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QImage_offset;
-
-PROCEDURE QImage_setOffset ( self: QImage;
- arg2: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtImageRaw.QImage_setOffset(selfAdr, arg2tmp);
-END QImage_setOffset;
-
-PROCEDURE QImage_data_ptr ( self: QImage;
-): UNTRACED REF CHAR =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtImageRaw.QImage_data_ptr(selfAdr);
-END QImage_data_ptr;
-
-PROCEDURE Cleanup_QImage(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QImage := ref;
-BEGIN
-  Delete_QImage(obj);
- END Cleanup_QImage;
-
-PROCEDURE Destroy_QImage(self : QImage) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QImage);
-END Destroy_QImage;
+PROCEDURE New_QImage0 (self: QImage; ): QImage =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtImageRaw.New_QImage0();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage0;
+
+PROCEDURE New_QImage1 (self: QImage; size: QSize; format: Format; ):
+  QImage =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(size.cxxObj, ADDRESS);
+  BEGIN
+    result := QtImageRaw.New_QImage1(arg1tmp, ORD(format));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage1;
+
+PROCEDURE New_QImage2
+  (self: QImage; width, height: INTEGER; format: Format; ): QImage =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtImageRaw.New_QImage2(width, height, ORD(format));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage2;
+
+PROCEDURE New_QImage3 (self         : QImage;
+                       data         : UNTRACED REF CHAR;
+                       width, height: INTEGER;
+                       format       : Format;            ): QImage =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtImageRaw.New_QImage3(data, width, height, ORD(format));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage3;
+
+PROCEDURE New_QImage4 (self         : QImage;
+                       data         : UNTRACED REF CHAR;
+                       width, height: INTEGER;
+                       format       : Format;            ): QImage =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtImageRaw.New_QImage4(data, width, height, ORD(format));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage4;
+
+PROCEDURE New_QImage5 (self                       : QImage;
+                       data                       : UNTRACED REF CHAR;
+                       width, height, bytesPerLine: INTEGER;
+                       format                     : Format;            ):
+  QImage =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtImageRaw.New_QImage5(
+                data, width, height, bytesPerLine, ORD(format));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage5;
+
+PROCEDURE New_QImage6 (self                       : QImage;
+                       data                       : UNTRACED REF CHAR;
+                       width, height, bytesPerLine: INTEGER;
+                       format                     : Format;            ):
+  QImage =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtImageRaw.New_QImage6(
+                data, width, height, bytesPerLine, ORD(format));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage6;
+
+PROCEDURE New_QImage7 (self: QImage; fileName, format: TEXT; ): QImage =
+  VAR
+    result       : ADDRESS;
+    qstr_fileName              := NEW(QString).initQString(fileName);
+    arg1tmp                    := LOOPHOLE(qstr_fileName.cxxObj, ADDRESS);
+    arg2tmp      : C.char_star;
+  BEGIN
+    arg2tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.New_QImage7(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+
+
+    RETURN self;
+  END New_QImage7;
+
+PROCEDURE New_QImage8 (self: QImage; fileName: TEXT; ): QImage =
+  VAR
+    result       : ADDRESS;
+    qstr_fileName          := NEW(QString).initQString(fileName);
+    arg1tmp                := LOOPHOLE(qstr_fileName.cxxObj, ADDRESS);
+  BEGIN
+    result := QtImageRaw.New_QImage8(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage8;
+
+PROCEDURE New_QImage9 (self: QImage; fileName, format: TEXT; ): QImage =
+  VAR
+    result : ADDRESS;
+    arg1tmp: C.char_star;
+    arg2tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(fileName);
+    arg2tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.New_QImage9(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+
+
+
+
+    RETURN self;
+  END New_QImage9;
+
+PROCEDURE New_QImage10 (self: QImage; fileName: TEXT; ): QImage =
+  VAR
+    result : ADDRESS;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(fileName);
+    result := QtImageRaw.New_QImage10(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+
+
+    RETURN self;
+  END New_QImage10;
+
+PROCEDURE New_QImage11 (self: QImage; arg1: QImage; ): QImage =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(arg1.cxxObj, ADDRESS);
+  BEGIN
+    result := QtImageRaw.New_QImage11(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+
+    RETURN self;
+  END New_QImage11;
+
+PROCEDURE Delete_QImage (self: QImage; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.Delete_QImage(selfAdr);
+  END Delete_QImage;
+
+PROCEDURE QImage_isNull (self: QImage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_isNull(selfAdr);
+  END QImage_isNull;
+
+PROCEDURE QImage_devType (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_devType(selfAdr);
+  END QImage_devType;
+
+PROCEDURE QImage_detach (self: QImage; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_detach(selfAdr);
+  END QImage_detach;
+
+PROCEDURE QImage_isDetached (self: QImage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_isDetached(selfAdr);
+  END QImage_isDetached;
+
+PROCEDURE QImage_copy (self: QImage; rect: QRect; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_copy(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_copy;
+
+PROCEDURE QImage_copy1 (self: QImage; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_copy1(selfAdr);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_copy1;
+
+PROCEDURE QImage_copy2 (self: QImage; x, y, w, h: INTEGER; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_copy2(selfAdr, x, y, w, h);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_copy2;
+
+PROCEDURE QImage_format (self: QImage; ): Format =
+  VAR
+    ret    : INTEGER;
+    result : Format;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_format(selfAdr);
+    result := VAL(ret, Format);
+    RETURN result;
+  END QImage_format;
+
+PROCEDURE QImage_convertToFormat
+  (self: QImage; f: Format; flags: ImageConversionFlags; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_convertToFormat(selfAdr, ORD(f), ORD(flags));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_convertToFormat;
+
+PROCEDURE QImage_convertToFormat1 (self: QImage; f: Format; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_convertToFormat1(selfAdr, ORD(f));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_convertToFormat1;
+
+PROCEDURE QImage_width (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_width(selfAdr);
+  END QImage_width;
+
+PROCEDURE QImage_height (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_height(selfAdr);
+  END QImage_height;
+
+PROCEDURE QImage_size (self: QImage; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_size(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QImage_size;
+
+PROCEDURE QImage_rect (self: QImage; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_rect(selfAdr);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QImage_rect;
+
+PROCEDURE QImage_depth (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_depth(selfAdr);
+  END QImage_depth;
+
+PROCEDURE QImage_colorCount (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_colorCount(selfAdr);
+  END QImage_colorCount;
+
+PROCEDURE QImage_color (self: QImage; i: INTEGER; ): QtRgb.T =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_color(selfAdr, i);
+  END QImage_color;
+
+PROCEDURE QImage_setColor (self: QImage; i: INTEGER; c: QtRgb.T; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setColor(selfAdr, i, c);
+  END QImage_setColor;
+
+PROCEDURE QImage_setColorCount (self: QImage; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setColorCount(selfAdr, arg2);
+  END QImage_setColorCount;
+
+PROCEDURE QImage_allGray (self: QImage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_allGray(selfAdr);
+  END QImage_allGray;
+
+PROCEDURE QImage_isGrayscale (self: QImage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_isGrayscale(selfAdr);
+  END QImage_isGrayscale;
+
+PROCEDURE QImage_bits (self: QImage; ): UNTRACED REF CHAR =
+  VAR
+    ret    : ADDRESS;
+    result : UNTRACED REF CHAR;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_bits(selfAdr);
+    result := LOOPHOLE(result, UNTRACED REF CHAR);
+    RETURN result;
+  END QImage_bits;
+
+PROCEDURE QImage_bits1 (self: QImage; ): UNTRACED REF CHAR =
+  VAR
+    ret    : ADDRESS;
+    result : UNTRACED REF CHAR;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_bits1(selfAdr);
+    result := LOOPHOLE(result, UNTRACED REF CHAR);
+    RETURN result;
+  END QImage_bits1;
+
+PROCEDURE QImage_byteCount (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_byteCount(selfAdr);
+  END QImage_byteCount;
+
+PROCEDURE QImage_scanLine (self: QImage; arg2: INTEGER; ):
+  UNTRACED REF CHAR =
+  VAR
+    ret    : ADDRESS;
+    result : UNTRACED REF CHAR;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scanLine(selfAdr, arg2);
+    result := LOOPHOLE(result, UNTRACED REF CHAR);
+    RETURN result;
+  END QImage_scanLine;
+
+PROCEDURE QImage_scanLine1 (self: QImage; arg2: INTEGER; ):
+  UNTRACED REF CHAR =
+  VAR
+    ret    : ADDRESS;
+    result : UNTRACED REF CHAR;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scanLine1(selfAdr, arg2);
+    result := LOOPHOLE(result, UNTRACED REF CHAR);
+    RETURN result;
+  END QImage_scanLine1;
+
+PROCEDURE QImage_bytesPerLine (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_bytesPerLine(selfAdr);
+  END QImage_bytesPerLine;
+
+PROCEDURE QImage_valid (self: QImage; x, y: INTEGER; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_valid(selfAdr, x, y);
+  END QImage_valid;
+
+PROCEDURE QImage_valid1 (self: QImage; pt: QPoint; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_valid1(selfAdr, arg2tmp);
+  END QImage_valid1;
+
+PROCEDURE QImage_pixelIndex (self: QImage; x, y: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_pixelIndex(selfAdr, x, y);
+  END QImage_pixelIndex;
+
+PROCEDURE QImage_pixelIndex1 (self: QImage; pt: QPoint; ): INTEGER =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_pixelIndex1(selfAdr, arg2tmp);
+  END QImage_pixelIndex1;
+
+PROCEDURE QImage_pixel (self: QImage; x, y: INTEGER; ): QtRgb.T =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_pixel(selfAdr, x, y);
+  END QImage_pixel;
+
+PROCEDURE QImage_pixel1 (self: QImage; pt: QPoint; ): QtRgb.T =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_pixel1(selfAdr, arg2tmp);
+  END QImage_pixel1;
+
+PROCEDURE QImage_setPixel
+  (self: QImage; x, y: INTEGER; index_or_rgb: CARDINAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setPixel(selfAdr, x, y, index_or_rgb);
+  END QImage_setPixel;
+
+PROCEDURE QImage_setPixel1
+  (self: QImage; pt: QPoint; index_or_rgb: CARDINAL; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setPixel1(selfAdr, arg2tmp, index_or_rgb);
+  END QImage_setPixel1;
+
+PROCEDURE QImage_fill (self: QImage; pixel: CARDINAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_fill(selfAdr, pixel);
+  END QImage_fill;
+
+PROCEDURE QImage_hasAlphaChannel (self: QImage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_hasAlphaChannel(selfAdr);
+  END QImage_hasAlphaChannel;
+
+PROCEDURE QImage_setAlphaChannel (self, alphaChannel: QImage; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(alphaChannel.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setAlphaChannel(selfAdr, arg2tmp);
+  END QImage_setAlphaChannel;
+
+PROCEDURE QImage_alphaChannel (self: QImage; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_alphaChannel(selfAdr);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_alphaChannel;
+
+PROCEDURE QImage_createAlphaMask
+  (self: QImage; flags: ImageConversionFlags; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_createAlphaMask(selfAdr, ORD(flags));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_createAlphaMask;
+
+PROCEDURE QImage_createAlphaMask1 (self: QImage; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_createAlphaMask1(selfAdr);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_createAlphaMask1;
+
+PROCEDURE QImage_createHeuristicMask (self: QImage; clipTight: BOOLEAN; ):
+  QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_createHeuristicMask(selfAdr, clipTight);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_createHeuristicMask;
+
+PROCEDURE QImage_createHeuristicMask1 (self: QImage; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_createHeuristicMask1(selfAdr);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_createHeuristicMask1;
+
+PROCEDURE QImage_createMaskFromColor
+  (self: QImage; color: QtRgb.T; mode: MaskMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtImageRaw.QImage_createMaskFromColor(selfAdr, color, ORD(mode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_createMaskFromColor;
+
+PROCEDURE QImage_createMaskFromColor1 (self: QImage; color: QtRgb.T; ):
+  QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_createMaskFromColor1(selfAdr, color);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_createMaskFromColor1;
+
+PROCEDURE QImage_scaled (self      : QImage;
+                         w, h      : INTEGER;
+                         aspectMode: AspectRatioMode;
+                         mode      : TransformationMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtImageRaw.QImage_scaled(selfAdr, w, h, ORD(aspectMode), ORD(mode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaled;
+
+PROCEDURE QImage_scaled1
+  (self: QImage; w, h: INTEGER; aspectMode: AspectRatioMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaled1(selfAdr, w, h, ORD(aspectMode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaled1;
+
+PROCEDURE QImage_scaled2 (self: QImage; w, h: INTEGER; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaled2(selfAdr, w, h);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaled2;
+
+PROCEDURE QImage_scaled3 (self      : QImage;
+                          s         : QSize;
+                          aspectMode: AspectRatioMode;
+                          mode      : TransformationMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(s.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaled3(
+             selfAdr, arg2tmp, ORD(aspectMode), ORD(mode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaled3;
+
+PROCEDURE QImage_scaled4
+  (self: QImage; s: QSize; aspectMode: AspectRatioMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(s.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaled4(selfAdr, arg2tmp, ORD(aspectMode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaled4;
+
+PROCEDURE QImage_scaled5 (self: QImage; s: QSize; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(s.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaled5(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaled5;
+
+PROCEDURE QImage_scaledToWidth
+  (self: QImage; w: INTEGER; mode: TransformationMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaledToWidth(selfAdr, w, ORD(mode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaledToWidth;
+
+PROCEDURE QImage_scaledToWidth1 (self: QImage; w: INTEGER; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaledToWidth1(selfAdr, w);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaledToWidth1;
+
+PROCEDURE QImage_scaledToHeight
+  (self: QImage; h: INTEGER; mode: TransformationMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaledToHeight(selfAdr, h, ORD(mode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaledToHeight;
+
+PROCEDURE QImage_scaledToHeight1 (self: QImage; h: INTEGER; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_scaledToHeight1(selfAdr, h);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_scaledToHeight1;
+
+PROCEDURE QImage_transformed
+  (self: QImage; matrix: QMatrix; mode: TransformationMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_transformed(selfAdr, arg2tmp, ORD(mode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_transformed;
+
+PROCEDURE QImage_transformed1 (self: QImage; matrix: QMatrix; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_transformed1(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_transformed1;
+
+PROCEDURE Image_TrueMatrix (arg1: QMatrix; w, h: INTEGER; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    arg1tmp          := LOOPHOLE(arg1.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.Image_TrueMatrix(arg1tmp, w, h);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END Image_TrueMatrix;
+
+PROCEDURE QImage_transformed2
+  (self: QImage; matrix: QTransform; mode: TransformationMode; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_transformed2(selfAdr, arg2tmp, ORD(mode));
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_transformed2;
+
+PROCEDURE QImage_transformed3 (self: QImage; matrix: QTransform; ):
+  QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_transformed3(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_transformed3;
+
+PROCEDURE Image_TrueMatrix1 (arg1: QTransform; w, h: INTEGER; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    arg1tmp             := LOOPHOLE(arg1.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.Image_TrueMatrix1(arg1tmp, w, h);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END Image_TrueMatrix1;
+
+PROCEDURE QImage_mirrored
+  (self: QImage; horizontally, vertically: BOOLEAN; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_mirrored(selfAdr, horizontally, vertically);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_mirrored;
+
+PROCEDURE QImage_mirrored1 (self: QImage; horizontally: BOOLEAN; ):
+  QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_mirrored1(selfAdr, horizontally);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_mirrored1;
+
+PROCEDURE QImage_mirrored2 (self: QImage; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_mirrored2(selfAdr);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_mirrored2;
+
+PROCEDURE QImage_rgbSwapped (self: QImage; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_rgbSwapped(selfAdr);
+
+    IF ISTYPE(result, QImage) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QImage);
+    ELSE
+      result := NEW(QImage);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QImage_rgbSwapped;
+
+PROCEDURE QImage_invertPixels (self: QImage; arg2: InvertMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_invertPixels(selfAdr, ORD(arg2));
+  END QImage_invertPixels;
+
+PROCEDURE QImage_invertPixels1 (self: QImage; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_invertPixels1(selfAdr);
+  END QImage_invertPixels1;
+
+PROCEDURE QImage_load (self: QImage; device: QIODevice; format: TEXT; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp              := LOOPHOLE(device.cxxObj, ADDRESS);
+    arg3tmp: C.char_star;
+    result : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.QImage_load(selfAdr, arg2tmp, arg3tmp);
+
+
+    RETURN result;
+  END QImage_load;
+
+PROCEDURE QImage_load1 (self: QImage; fileName, format: TEXT; ): BOOLEAN =
+  VAR
+    selfAdr      : ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_fileName              := NEW(QString).initQString(fileName);
+    arg2tmp                    := LOOPHOLE(qstr_fileName.cxxObj, ADDRESS);
+    arg3tmp      : C.char_star;
+    result       : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.QImage_load1(selfAdr, arg2tmp, arg3tmp);
+
+
+    RETURN result;
+  END QImage_load1;
+
+PROCEDURE QImage_load2 (self: QImage; fileName: TEXT; ): BOOLEAN =
+  VAR
+    selfAdr      : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_fileName          := NEW(QString).initQString(fileName);
+    arg2tmp                := LOOPHOLE(qstr_fileName.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_load2(selfAdr, arg2tmp);
+  END QImage_load2;
+
+PROCEDURE QImage_loadFromData
+  (self: QImage; buf: UNTRACED REF CHAR; len: INTEGER; format: TEXT; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp: C.char_star;
+    result : BOOLEAN;
+  BEGIN
+    arg4tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.QImage_loadFromData(selfAdr, buf, len, arg4tmp);
+
+
+    RETURN result;
+  END QImage_loadFromData;
+
+PROCEDURE QImage_loadFromData1
+  (self: QImage; buf: UNTRACED REF CHAR; len: INTEGER; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_loadFromData1(selfAdr, buf, len);
+  END QImage_loadFromData1;
+
+PROCEDURE QImage_loadFromData2
+  (self: QImage; data: QByteArray; aformat: TEXT; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp              := LOOPHOLE(data.cxxObj, ADDRESS);
+    arg3tmp: C.char_star;
+    result : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(aformat);
+    result := QtImageRaw.QImage_loadFromData2(selfAdr, arg2tmp, arg3tmp);
+
+
+    RETURN result;
+  END QImage_loadFromData2;
+
+PROCEDURE QImage_loadFromData3 (self: QImage; data: QByteArray; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(data.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_loadFromData3(selfAdr, arg2tmp);
+  END QImage_loadFromData3;
+
+PROCEDURE QImage_save
+  (self: QImage; fileName, format: TEXT; quality: INTEGER; ): BOOLEAN =
+  VAR
+    selfAdr      : ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_fileName              := NEW(QString).initQString(fileName);
+    arg2tmp                    := LOOPHOLE(qstr_fileName.cxxObj, ADDRESS);
+    arg3tmp      : C.char_star;
+    result       : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.QImage_save(selfAdr, arg2tmp, arg3tmp, quality);
+
+
+    RETURN result;
+  END QImage_save;
+
+PROCEDURE QImage_save1 (self: QImage; fileName, format: TEXT; ): BOOLEAN =
+  VAR
+    selfAdr      : ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_fileName              := NEW(QString).initQString(fileName);
+    arg2tmp                    := LOOPHOLE(qstr_fileName.cxxObj, ADDRESS);
+    arg3tmp      : C.char_star;
+    result       : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.QImage_save1(selfAdr, arg2tmp, arg3tmp);
+
+
+    RETURN result;
+  END QImage_save1;
+
+PROCEDURE QImage_save2 (self: QImage; fileName: TEXT; ): BOOLEAN =
+  VAR
+    selfAdr      : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_fileName          := NEW(QString).initQString(fileName);
+    arg2tmp                := LOOPHOLE(qstr_fileName.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_save2(selfAdr, arg2tmp);
+  END QImage_save2;
+
+PROCEDURE QImage_save3
+  (self: QImage; device: QIODevice; format: TEXT; quality: INTEGER; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp              := LOOPHOLE(device.cxxObj, ADDRESS);
+    arg3tmp: C.char_star;
+    result : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.QImage_save3(selfAdr, arg2tmp, arg3tmp, quality);
+
+
+    RETURN result;
+  END QImage_save3;
+
+PROCEDURE QImage_save4 (self: QImage; device: QIODevice; format: TEXT; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp              := LOOPHOLE(device.cxxObj, ADDRESS);
+    arg3tmp: C.char_star;
+    result : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(format);
+    result := QtImageRaw.QImage_save4(selfAdr, arg2tmp, arg3tmp);
+
+
+    RETURN result;
+  END QImage_save4;
+
+PROCEDURE QImage_save5 (self: QImage; device: QIODevice; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(device.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_save5(selfAdr, arg2tmp);
+  END QImage_save5;
+
+PROCEDURE Image_FromData
+  (data: UNTRACED REF CHAR; size: INTEGER; format: TEXT; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    arg3tmp: C.char_star;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(format);
+    ret := QtImageRaw.Image_FromData(data, size, arg3tmp);
+
+    (*IF ISTYPE(result,QImage) AND ret = selfAdr THEN result :=
+       LOOPHOLE(self,QImage); ELSE*)
+    result := NEW(QImage);
+    result.cxxObj := ret;
+    result.destroyCxx();
+    (*END;*)
+
+
+
+    RETURN result;
+  END Image_FromData;
+
+PROCEDURE Image_FromData1 (data: UNTRACED REF CHAR; size: INTEGER; ):
+  QImage =
+  VAR
+    ret   : ADDRESS;
+    result: QImage;
+  BEGIN
+    ret := QtImageRaw.Image_FromData1(data, size);
+
+    (*IF ISTYPE(result,QImage) AND ret = selfAdr THEN result :=
+       LOOPHOLE(self,QImage); ELSE*)
+    result := NEW(QImage);
+    result.cxxObj := ret;
+    result.destroyCxx();
+    (*END;*)
+
+    RETURN result;
+  END Image_FromData1;
+
+PROCEDURE Image_FromData2 (data: QByteArray; format: TEXT; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    arg1tmp              := LOOPHOLE(data.cxxObj, ADDRESS);
+    arg2tmp: C.char_star;
+  BEGIN
+    arg2tmp := M3toC.CopyTtoS(format);
+    ret := QtImageRaw.Image_FromData2(arg1tmp, arg2tmp);
+
+    (*IF ISTYPE(result,QImage) AND ret = selfAdr THEN result :=
+       LOOPHOLE(self,QImage); ELSE*)
+    result := NEW(QImage);
+    result.cxxObj := ret;
+    result.destroyCxx();
+    (*END;*)
+
+
+
+    RETURN result;
+  END Image_FromData2;
+
+PROCEDURE Image_FromData3 (data: QByteArray; ): QImage =
+  VAR
+    ret    : ADDRESS;
+    result : QImage;
+    arg1tmp          := LOOPHOLE(data.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.Image_FromData3(arg1tmp);
+
+    (*IF ISTYPE(result,QImage) AND ret = selfAdr THEN result :=
+       LOOPHOLE(self,QImage); ELSE*)
+    result := NEW(QImage);
+    result.cxxObj := ret;
+    result.destroyCxx();
+    (*END;*)
+
+    RETURN result;
+  END Image_FromData3;
+
+PROCEDURE QImage_serialNumber (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_serialNumber(selfAdr);
+  END QImage_serialNumber;
+
+PROCEDURE QImage_cacheKey (self: QImage; ): CARDINAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_cacheKey(selfAdr);
+  END QImage_cacheKey;
+
+PROCEDURE QImage_paintEngine (self: QImage; ): QPaintEngine =
+  VAR
+    ret    : ADDRESS;
+    result : QPaintEngine;
+    selfAdr: ADDRESS      := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_paintEngine(selfAdr);
+
+    result := NEW(QPaintEngine);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QImage_paintEngine;
+
+PROCEDURE QImage_dotsPerMeterX (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_dotsPerMeterX(selfAdr);
+  END QImage_dotsPerMeterX;
+
+PROCEDURE QImage_dotsPerMeterY (self: QImage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_dotsPerMeterY(selfAdr);
+  END QImage_dotsPerMeterY;
+
+PROCEDURE QImage_setDotsPerMeterX (self: QImage; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setDotsPerMeterX(selfAdr, arg2);
+  END QImage_setDotsPerMeterX;
+
+PROCEDURE QImage_setDotsPerMeterY (self: QImage; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setDotsPerMeterY(selfAdr, arg2);
+  END QImage_setDotsPerMeterY;
+
+PROCEDURE QImage_offset (self: QImage; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtImageRaw.QImage_offset(selfAdr);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QImage_offset;
+
+PROCEDURE QImage_setOffset (self: QImage; arg2: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtImageRaw.QImage_setOffset(selfAdr, arg2tmp);
+  END QImage_setOffset;
+
+PROCEDURE QImage_data_ptr (self: QImage; ): UNTRACED REF CHAR =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtImageRaw.QImage_data_ptr(selfAdr);
+  END QImage_data_ptr;
+
+PROCEDURE Cleanup_QImage
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QImage := ref;
+  BEGIN
+    Delete_QImage(obj);
+  END Cleanup_QImage;
+
+PROCEDURE Destroy_QImage (self: QImage) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QImage);
+  END Destroy_QImage;
 
 REVEAL
-QImage =
-QImagePublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QImage0;
-init_1 := New_QImage1;
-init_2 := New_QImage2;
-init_3 := New_QImage3;
-init_4 := New_QImage4;
-init_5 := New_QImage5;
-init_6 := New_QImage6;
-init_7 := New_QImage7;
-init_8 := New_QImage8;
-init_9 := New_QImage9;
-init_10 := New_QImage10;
-init_11 := New_QImage11;
-isNull := QImage_isNull;
-devType := QImage_devType;
-detach := QImage_detach;
-isDetached := QImage_isDetached;
-copy := QImage_copy;
-copy1 := QImage_copy1;
-copy2 := QImage_copy2;
-format := QImage_format;
-convertToFormat := QImage_convertToFormat;
-convertToFormat1 := QImage_convertToFormat1;
-width := QImage_width;
-height := QImage_height;
-size := QImage_size;
-rect := QImage_rect;
-depth := QImage_depth;
-colorCount := QImage_colorCount;
-color := QImage_color;
-setColor := QImage_setColor;
-setColorCount := QImage_setColorCount;
-allGray := QImage_allGray;
-isGrayscale := QImage_isGrayscale;
-bits := QImage_bits;
-bits1 := QImage_bits1;
-byteCount := QImage_byteCount;
-scanLine := QImage_scanLine;
-scanLine1 := QImage_scanLine1;
-bytesPerLine := QImage_bytesPerLine;
-valid := QImage_valid;
-valid1 := QImage_valid1;
-pixelIndex := QImage_pixelIndex;
-pixelIndex1 := QImage_pixelIndex1;
-pixel := QImage_pixel;
-pixel1 := QImage_pixel1;
-setPixel := QImage_setPixel;
-setPixel1 := QImage_setPixel1;
-fill := QImage_fill;
-hasAlphaChannel := QImage_hasAlphaChannel;
-setAlphaChannel := QImage_setAlphaChannel;
-alphaChannel := QImage_alphaChannel;
-createAlphaMask := QImage_createAlphaMask;
-createAlphaMask1 := QImage_createAlphaMask1;
-createHeuristicMask := QImage_createHeuristicMask;
-createHeuristicMask1 := QImage_createHeuristicMask1;
-createMaskFromColor := QImage_createMaskFromColor;
-createMaskFromColor1 := QImage_createMaskFromColor1;
-scaled := QImage_scaled;
-scaled1 := QImage_scaled1;
-scaled2 := QImage_scaled2;
-scaled3 := QImage_scaled3;
-scaled4 := QImage_scaled4;
-scaled5 := QImage_scaled5;
-scaledToWidth := QImage_scaledToWidth;
-scaledToWidth1 := QImage_scaledToWidth1;
-scaledToHeight := QImage_scaledToHeight;
-scaledToHeight1 := QImage_scaledToHeight1;
-transformed := QImage_transformed;
-transformed1 := QImage_transformed1;
-transformed2 := QImage_transformed2;
-transformed3 := QImage_transformed3;
-mirrored := QImage_mirrored;
-mirrored1 := QImage_mirrored1;
-mirrored2 := QImage_mirrored2;
-rgbSwapped := QImage_rgbSwapped;
-invertPixels := QImage_invertPixels;
-invertPixels1 := QImage_invertPixels1;
-load := QImage_load;
-load1 := QImage_load1;
-load2 := QImage_load2;
-loadFromData := QImage_loadFromData;
-loadFromData1 := QImage_loadFromData1;
-loadFromData2 := QImage_loadFromData2;
-loadFromData3 := QImage_loadFromData3;
-save := QImage_save;
-save1 := QImage_save1;
-save2 := QImage_save2;
-save3 := QImage_save3;
-save4 := QImage_save4;
-save5 := QImage_save5;
-serialNumber := QImage_serialNumber;
-cacheKey := QImage_cacheKey;
-paintEngine := QImage_paintEngine;
-dotsPerMeterX := QImage_dotsPerMeterX;
-dotsPerMeterY := QImage_dotsPerMeterY;
-setDotsPerMeterX := QImage_setDotsPerMeterX;
-setDotsPerMeterY := QImage_setDotsPerMeterY;
-offset := QImage_offset;
-setOffset := QImage_setOffset;
-data_ptr := QImage_data_ptr;
-destroyCxx := Destroy_QImage;
-END;
+  QImage = QImagePublic BRANDED OBJECT
+           OVERRIDES
+             init_0               := New_QImage0;
+             init_1               := New_QImage1;
+             init_2               := New_QImage2;
+             init_3               := New_QImage3;
+             init_4               := New_QImage4;
+             init_5               := New_QImage5;
+             init_6               := New_QImage6;
+             init_7               := New_QImage7;
+             init_8               := New_QImage8;
+             init_9               := New_QImage9;
+             init_10              := New_QImage10;
+             init_11              := New_QImage11;
+             isNull               := QImage_isNull;
+             devType              := QImage_devType;
+             detach               := QImage_detach;
+             isDetached           := QImage_isDetached;
+             copy                 := QImage_copy;
+             copy1                := QImage_copy1;
+             copy2                := QImage_copy2;
+             format               := QImage_format;
+             convertToFormat      := QImage_convertToFormat;
+             convertToFormat1     := QImage_convertToFormat1;
+             width                := QImage_width;
+             height               := QImage_height;
+             size                 := QImage_size;
+             rect                 := QImage_rect;
+             depth                := QImage_depth;
+             colorCount           := QImage_colorCount;
+             color                := QImage_color;
+             setColor             := QImage_setColor;
+             setColorCount        := QImage_setColorCount;
+             allGray              := QImage_allGray;
+             isGrayscale          := QImage_isGrayscale;
+             bits                 := QImage_bits;
+             bits1                := QImage_bits1;
+             byteCount            := QImage_byteCount;
+             scanLine             := QImage_scanLine;
+             scanLine1            := QImage_scanLine1;
+             bytesPerLine         := QImage_bytesPerLine;
+             valid                := QImage_valid;
+             valid1               := QImage_valid1;
+             pixelIndex           := QImage_pixelIndex;
+             pixelIndex1          := QImage_pixelIndex1;
+             pixel                := QImage_pixel;
+             pixel1               := QImage_pixel1;
+             setPixel             := QImage_setPixel;
+             setPixel1            := QImage_setPixel1;
+             fill                 := QImage_fill;
+             hasAlphaChannel      := QImage_hasAlphaChannel;
+             setAlphaChannel      := QImage_setAlphaChannel;
+             alphaChannel         := QImage_alphaChannel;
+             createAlphaMask      := QImage_createAlphaMask;
+             createAlphaMask1     := QImage_createAlphaMask1;
+             createHeuristicMask  := QImage_createHeuristicMask;
+             createHeuristicMask1 := QImage_createHeuristicMask1;
+             createMaskFromColor  := QImage_createMaskFromColor;
+             createMaskFromColor1 := QImage_createMaskFromColor1;
+             scaled               := QImage_scaled;
+             scaled1              := QImage_scaled1;
+             scaled2              := QImage_scaled2;
+             scaled3              := QImage_scaled3;
+             scaled4              := QImage_scaled4;
+             scaled5              := QImage_scaled5;
+             scaledToWidth        := QImage_scaledToWidth;
+             scaledToWidth1       := QImage_scaledToWidth1;
+             scaledToHeight       := QImage_scaledToHeight;
+             scaledToHeight1      := QImage_scaledToHeight1;
+             transformed          := QImage_transformed;
+             transformed1         := QImage_transformed1;
+             transformed2         := QImage_transformed2;
+             transformed3         := QImage_transformed3;
+             mirrored             := QImage_mirrored;
+             mirrored1            := QImage_mirrored1;
+             mirrored2            := QImage_mirrored2;
+             rgbSwapped           := QImage_rgbSwapped;
+             invertPixels         := QImage_invertPixels;
+             invertPixels1        := QImage_invertPixels1;
+             load                 := QImage_load;
+             load1                := QImage_load1;
+             load2                := QImage_load2;
+             loadFromData         := QImage_loadFromData;
+             loadFromData1        := QImage_loadFromData1;
+             loadFromData2        := QImage_loadFromData2;
+             loadFromData3        := QImage_loadFromData3;
+             save                 := QImage_save;
+             save1                := QImage_save1;
+             save2                := QImage_save2;
+             save3                := QImage_save3;
+             save4                := QImage_save4;
+             save5                := QImage_save5;
+             serialNumber         := QImage_serialNumber;
+             cacheKey             := QImage_cacheKey;
+             paintEngine          := QImage_paintEngine;
+             dotsPerMeterX        := QImage_dotsPerMeterX;
+             dotsPerMeterY        := QImage_dotsPerMeterY;
+             setDotsPerMeterX     := QImage_setDotsPerMeterX;
+             setDotsPerMeterY     := QImage_setDotsPerMeterY;
+             offset               := QImage_offset;
+             setOffset            := QImage_setOffset;
+             data_ptr             := QImage_data_ptr;
+             destroyCxx           := Destroy_QImage;
+           END;
 
 
 BEGIN

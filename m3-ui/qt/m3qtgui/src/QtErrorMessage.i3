@@ -14,26 +14,21 @@ FROM QtWidget IMPORT QWidget;
 
 FROM QtDialog IMPORT QDialog;
 
-TYPE
-  T = QErrorMessage;
+TYPE T = QErrorMessage;
 
 PROCEDURE QtHandler (): QErrorMessage;
 
 
 TYPE
-QErrorMessage <: QErrorMessagePublic;
-QErrorMessagePublic =
-QDialog BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QErrorMessage;
-init_1 () : QErrorMessage;
-showMessage( message: TEXT;
-);
-showMessage1( message, type: TEXT;
-);
-destroyCxx();
-END;
+  QErrorMessage <: QErrorMessagePublic;
+  QErrorMessagePublic = QDialog BRANDED OBJECT
+                        METHODS
+                          init_0       (parent: QWidget; ): QErrorMessage;
+                          init_1       (): QErrorMessage;
+                          showMessage  (message: TEXT; );
+                          showMessage1 (message, type: TEXT; );
+                          destroyCxx   ();
+                        END;
 
 
 END QtErrorMessage.

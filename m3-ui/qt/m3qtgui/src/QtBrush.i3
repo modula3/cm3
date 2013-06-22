@@ -15,209 +15,138 @@ FROM QtMatrix IMPORT QMatrix;
 FROM QGuiStubs IMPORT QGradientStops;
 FROM QtTransform IMPORT QTransform;
 FROM QtPoint IMPORT QPointF;
-FROM QtNamespace IMPORT BrushStyle,GlobalColor;
+FROM QtNamespace IMPORT BrushStyle, GlobalColor;
+
+
+TYPE T = QBrush;
 
 
 TYPE
-  T = QBrush;
+  QBrush <: QBrushPublic;
+  QBrushPublic = BRANDED OBJECT
+                   cxxObj: ADDRESS;
+                 METHODS
+                   init_0  (): QBrush;
+                   init_1  (bs: BrushStyle; ): QBrush;
+                   init_2  (color: QColor; bs: BrushStyle; ): QBrush;
+                   init_3  (color: QColor; ): QBrush;
+                   init_4  (color: GlobalColor; bs: BrushStyle; ): QBrush;
+                   init_5  (color: GlobalColor; ): QBrush;
+                   init_6  (color: QColor; pixmap: QPixmap; ): QBrush;
+                   init_7  (color: GlobalColor; pixmap: QPixmap; ): QBrush;
+                   init_8  (pixmap: QPixmap; ): QBrush;
+                   init_9  (image: QImage; ): QBrush;
+                   init_10 (brush: QBrush; ): QBrush;
+                   init_11 (gradient: QGradient; ): QBrush;
+                   Op_Brush_Assign    (brush: QBrush; ): QBrush;
+                   style              (): BrushStyle;
+                   setStyle           (arg1: BrushStyle; );
+                   matrix             (): QMatrix;
+                   setMatrix          (mat: QMatrix; );
+                   transform          (): QTransform;
+                   setTransform       (arg1: QTransform; );
+                   texture            (): QPixmap;
+                   setTexture         (pixmap: QPixmap; );
+                   textureImage       (): QImage;
+                   setTextureImage    (image: QImage; );
+                   color              (): QColor;
+                   setColor           (color: QColor; );
+                   setColor1          (color: GlobalColor; );
+                   gradient           (): QGradient;
+                   isOpaque           (): BOOLEAN;
+                   Op_Brush_Equals    (b: QBrush; ): BOOLEAN;
+                   Op_Brush_NotEquals (b: QBrush; ): BOOLEAN;
+                   isDetached         (): BOOLEAN;
+                   destroyCxx         ();
+                 END;
 
 
-TYPE
-QBrush <: QBrushPublic;
-QBrushPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QBrush;
-init_1 (bs: BrushStyle;
-) : QBrush;
-init_2 ( color: QColor;
-bs: BrushStyle;
-) : QBrush;
-init_3 ( color: QColor;
-) : QBrush;
-init_4 (color: GlobalColor;
-bs: BrushStyle;
-) : QBrush;
-init_5 (color: GlobalColor;
-) : QBrush;
-init_6 ( color: QColor;
- pixmap: QPixmap;
-) : QBrush;
-init_7 (color: GlobalColor;
- pixmap: QPixmap;
-) : QBrush;
-init_8 ( pixmap: QPixmap;
-) : QBrush;
-init_9 ( image: QImage;
-) : QBrush;
-init_10 ( brush: QBrush;
-) : QBrush;
-init_11 ( gradient: QGradient;
-) : QBrush;
-Op_Brush_Assign( brush: QBrush;
-): QBrush;
-style(): BrushStyle;
-setStyle(arg1: BrushStyle;
-);
-matrix(): QMatrix;
-setMatrix( mat: QMatrix;
-);
-transform(): QTransform;
-setTransform( arg1: QTransform;
-);
-texture(): QPixmap;
-setTexture( pixmap: QPixmap;
-);
-textureImage(): QImage;
-setTextureImage( image: QImage;
-);
-color(): QColor;
-setColor( color: QColor;
-);
-setColor1(color: GlobalColor;
-);
-gradient(): QGradient;
-isOpaque(): BOOLEAN;
-Op_Brush_Equals( b: QBrush;
-): BOOLEAN;
-Op_Brush_NotEquals( b: QBrush;
-): BOOLEAN;
-isDetached(): BOOLEAN;
-destroyCxx();
-END;
+TYPE                             (* Enum Type *)
+  Type = {LinearGradient, RadialGradient, ConicalGradient, NoGradient};
 
+TYPE                             (* Enum Spread *)
+  Spread = {PadSpread, ReflectSpread, RepeatSpread};
 
-TYPE (* Enum Type *)
-  Type = {
- LinearGradient,
- RadialGradient,
- ConicalGradient,
- NoGradient};
+TYPE                             (* Enum CoordinateMode *)
+  CoordinateMode = {LogicalMode, StretchToDeviceMode, ObjectBoundingMode};
 
-TYPE (* Enum Spread *)
-  Spread = {
- PadSpread,
- ReflectSpread,
- RepeatSpread};
-
-TYPE (* Enum CoordinateMode *)
-  CoordinateMode = {
- LogicalMode,
- StretchToDeviceMode,
- ObjectBoundingMode};
-
-TYPE (* Enum InterpolationMode *)
-  InterpolationMode = {
- ColorInterpolation,
- ComponentInterpolation};
+TYPE                             (* Enum InterpolationMode *)
+  InterpolationMode = {ColorInterpolation, ComponentInterpolation};
 
 TYPE
-QGradient <: QGradientPublic;
-QGradientPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QGradient;
-type(): Type;
-setSpread(spread: Spread;
-);
-spread(): Spread;
-setColorAt(pos: LONGREAL;
- color: QColor;
-);
-setStops( stops: QGradientStops;
-);
-stops(): QGradientStops;
-coordinateMode(): CoordinateMode;
-setCoordinateMode(mode: CoordinateMode;
-);
-interpolationMode(): InterpolationMode;
-setInterpolationMode(mode: InterpolationMode;
-);
-Op_Grad_Equals( gradient: QGradient;
-): BOOLEAN;
-OpGrad_NotEquals( other: QGradient;
-): BOOLEAN;
-Op_Grad_Equals1( gradient: QGradient;
-): BOOLEAN;
-destroyCxx();
-END;
+  QGradient <: QGradientPublic;
+  QGradientPublic = BRANDED OBJECT
+                      cxxObj: ADDRESS;
+                    METHODS
+                      init_0            (): QGradient;
+                      type              (): Type;
+                      setSpread         (spread: Spread; );
+                      spread            (): Spread;
+                      setColorAt        (pos: LONGREAL; color: QColor; );
+                      setStops          (stops: QGradientStops; );
+                      stops             (): QGradientStops;
+                      coordinateMode    (): CoordinateMode;
+                      setCoordinateMode (mode: CoordinateMode; );
+                      interpolationMode (): InterpolationMode;
+                      setInterpolationMode (mode: InterpolationMode; );
+                      Op_Grad_Equals   (gradient: QGradient; ): BOOLEAN;
+                      OpGrad_NotEquals (other: QGradient; ): BOOLEAN;
+                      Op_Grad_Equals1  (gradient: QGradient; ): BOOLEAN;
+                      destroyCxx       ();
+                    END;
 
-QLinearGradient <: QLinearGradientPublic;
-QLinearGradientPublic =
-QGradient BRANDED OBJECT
-METHODS
-init_0 () : QLinearGradient;
-init_1 ( start, finalStop: QPointF;
-) : QLinearGradient;
-init_2 (xStart, yStart, xFinalStop, yFinalStop: LONGREAL;
-) : QLinearGradient;
-start(): QPointF;
-setStart( start: QPointF;
-);
-setStart1(x, y: LONGREAL;
-);
-finalStop(): QPointF;
-setFinalStop( stop: QPointF;
-);
-setFinalStop1(x, y: LONGREAL;
-);
-destroyCxx();
-END;
+  QLinearGradient <: QLinearGradientPublic;
+  QLinearGradientPublic =
+    QGradient BRANDED OBJECT
+    METHODS
+      init_0 (): QLinearGradient;
+      init_1 (start, finalStop: QPointF; ): QLinearGradient;
+      init_2 (xStart, yStart, xFinalStop, yFinalStop: LONGREAL; ):
+              QLinearGradient;
+      start         (): QPointF;
+      setStart      (start: QPointF; );
+      setStart1     (x, y: LONGREAL; );
+      finalStop     (): QPointF;
+      setFinalStop  (stop: QPointF; );
+      setFinalStop1 (x, y: LONGREAL; );
+      destroyCxx    ();
+    END;
 
-QRadialGradient <: QRadialGradientPublic;
-QRadialGradientPublic =
-QGradient BRANDED OBJECT
-METHODS
-init_0 () : QRadialGradient;
-init_1 ( center: QPointF;
-radius: LONGREAL;
- focalPoint: QPointF;
-) : QRadialGradient;
-init_2 (cx, cy, radius, fx, fy: LONGREAL;
-) : QRadialGradient;
-init_3 ( center: QPointF;
-radius: LONGREAL;
-) : QRadialGradient;
-init_4 (cx, cy, radius: LONGREAL;
-) : QRadialGradient;
-center(): QPointF;
-setCenter( center: QPointF;
-);
-setCenter1(x, y: LONGREAL;
-);
-focalPoint(): QPointF;
-setFocalPoint( focalPoint: QPointF;
-);
-setFocalPoint1(x, y: LONGREAL;
-);
-radius(): LONGREAL;
-setRadius(radius: LONGREAL;
-);
-destroyCxx();
-END;
+  QRadialGradient <: QRadialGradientPublic;
+  QRadialGradientPublic =
+    QGradient BRANDED OBJECT
+    METHODS
+      init_0 (): QRadialGradient;
+      init_1 (center: QPointF; radius: LONGREAL; focalPoint: QPointF; ):
+              QRadialGradient;
+      init_2        (cx, cy, radius, fx, fy: LONGREAL; ): QRadialGradient;
+      init_3        (center: QPointF; radius: LONGREAL; ): QRadialGradient;
+      init_4        (cx, cy, radius: LONGREAL; ): QRadialGradient;
+      center        (): QPointF;
+      setCenter     (center: QPointF; );
+      setCenter1    (x, y: LONGREAL; );
+      focalPoint    (): QPointF;
+      setFocalPoint (focalPoint: QPointF; );
+      setFocalPoint1 (x, y: LONGREAL; );
+      radius         (): LONGREAL;
+      setRadius      (radius: LONGREAL; );
+      destroyCxx     ();
+    END;
 
-QConicalGradient <: QConicalGradientPublic;
-QConicalGradientPublic =
-QGradient BRANDED OBJECT
-METHODS
-init_0 () : QConicalGradient;
-init_1 ( center: QPointF;
-startAngle: LONGREAL;
-) : QConicalGradient;
-init_2 (cx, cy, startAngle: LONGREAL;
-) : QConicalGradient;
-center(): QPointF;
-setCenter( center: QPointF;
-);
-setCenter1(x, y: LONGREAL;
-);
-angle(): LONGREAL;
-setAngle(angle: LONGREAL;
-);
-destroyCxx();
-END;
+  QConicalGradient <: QConicalGradientPublic;
+  QConicalGradientPublic =
+    QGradient BRANDED OBJECT
+    METHODS
+      init_0 (): QConicalGradient;
+      init_1 (center: QPointF; startAngle: LONGREAL; ): QConicalGradient;
+      init_2 (cx, cy, startAngle: LONGREAL; ): QConicalGradient;
+      center (): QPointF;
+      setCenter  (center: QPointF; );
+      setCenter1 (x, y: LONGREAL; );
+      angle      (): LONGREAL;
+      setAngle   (angle: LONGREAL; );
+      destroyCxx ();
+    END;
 
 
 END QtBrush.

@@ -21,33 +21,29 @@ TYPE
 
 
 
-CONST (* Enum FontFilter *)
-  AllFonts = 0;
-  ScalableFonts = 1;
-  NonScalableFonts = 2;
-  MonospacedFonts = 4;
+CONST                            (* Enum FontFilter *)
+  AllFonts          = 0;
+  ScalableFonts     = 1;
+  NonScalableFonts  = 2;
+  MonospacedFonts   = 4;
   ProportionalFonts = 8;
 
-TYPE (* Enum FontFilter *)
-  FontFilter = [0..8];
+TYPE                             (* Enum FontFilter *)
+  FontFilter = [0 .. 8];
 
 TYPE
-QFontComboBox <: QFontComboBoxPublic;
-QFontComboBoxPublic =
-QComboBox BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QFontComboBox;
-init_1 () : QFontComboBox;
-setFontFilters(filters: FontFilters;
-);
-fontFilters(): FontFilters;
-currentFont(): QFont;
-sizeHint(): QSize;  (*  virtual *)
-setCurrentFont( f: QFont;
-);
-destroyCxx();
-END;
+  QFontComboBox <: QFontComboBoxPublic;
+  QFontComboBoxPublic = QComboBox BRANDED OBJECT
+                        METHODS
+                          init_0 (parent: QWidget; ): QFontComboBox;
+                          init_1 (): QFontComboBox;
+                          setFontFilters (filters: FontFilters; );
+                          fontFilters    (): FontFilters;
+                          currentFont    (): QFont;
+                          sizeHint       (): QSize; (* virtual *)
+                          setCurrentFont (f: QFont; );
+                          destroyCxx     ();
+                        END;
 
 
 END QtFontComboBox.

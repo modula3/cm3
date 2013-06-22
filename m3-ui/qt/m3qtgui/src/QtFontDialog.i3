@@ -20,77 +20,53 @@ TYPE
   FontDialogOptions = INTEGER;
 
 
-CONST (* Enum FontDialogOption *)
-  NoButtons = 1;
+CONST                            (* Enum FontDialogOption *)
+  NoButtons           = 1;
   DontUseNativeDialog = 2;
 
-TYPE (* Enum FontDialogOption *)
-  FontDialogOption = [1..2];
-PROCEDURE GetFont (VAR ok: BOOLEAN;
- initial: QFont;
- parent: QWidget;
- title: TEXT;
-options: FontDialogOptions;
-): QFont;
+TYPE                             (* Enum FontDialogOption *)
+  FontDialogOption = [1 .. 2];
+PROCEDURE GetFont (VAR ok     : BOOLEAN;
+                       initial: QFont;
+                       parent : QWidget;
+                       title  : TEXT;
+                       options: FontDialogOptions; ): QFont;
 
-PROCEDURE GetFont1 (VAR ok: BOOLEAN;
- initial: QFont;
- parent: QWidget;
- title: TEXT;
-): QFont;
+PROCEDURE GetFont1
+  (VAR ok: BOOLEAN; initial: QFont; parent: QWidget; title: TEXT; ): QFont;
 
-PROCEDURE GetFont2 (VAR ok: BOOLEAN;
- initial: QFont;
- parent: QWidget;
-): QFont;
+PROCEDURE GetFont2 (VAR ok: BOOLEAN; initial: QFont; parent: QWidget; ):
+  QFont;
 
-PROCEDURE GetFont3 (VAR ok: BOOLEAN;
- initial: QFont;
-): QFont;
+PROCEDURE GetFont3 (VAR ok: BOOLEAN; initial: QFont; ): QFont;
 
-PROCEDURE GetFont4 (VAR ok: BOOLEAN;
- parent: QWidget;
-): QFont;
+PROCEDURE GetFont4 (VAR ok: BOOLEAN; parent: QWidget; ): QFont;
 
-PROCEDURE GetFont5 (VAR ok: BOOLEAN;
-): QFont;
+PROCEDURE GetFont5 (VAR ok: BOOLEAN; ): QFont;
 
 
 TYPE
-QFontDialog <: QFontDialogPublic;
-QFontDialogPublic =
-QDialog BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QFontDialog;
-init_1 () : QFontDialog;
-init_2 ( initial: QFont;
- parent: QWidget;
-) : QFontDialog;
-init_3 ( initial: QFont;
-) : QFontDialog;
-setCurrentFont( font: QFont;
-);
-currentFont(): QFont;
-selectedFont(): QFont;
-setOption(option: FontDialogOption;
-on: BOOLEAN;
-);
-setOption1(option: FontDialogOption;
-);
-testOption(option: FontDialogOption;
-): BOOLEAN;
-setOptions(options: FontDialogOptions;
-);
-options(): FontDialogOptions;
-open0_0();
-open1( receiver: QObject;
- member: TEXT;
-);
-setVisible(visible: BOOLEAN;
-);  (*  virtual *)
-destroyCxx();
-END;
+  QFontDialog <: QFontDialogPublic;
+  QFontDialogPublic =
+    QDialog BRANDED OBJECT
+    METHODS
+      init_0         (parent: QWidget; ): QFontDialog;
+      init_1         (): QFontDialog;
+      init_2         (initial: QFont; parent: QWidget; ): QFontDialog;
+      init_3         (initial: QFont; ): QFontDialog;
+      setCurrentFont (font: QFont; );
+      currentFont    (): QFont;
+      selectedFont   (): QFont;
+      setOption      (option: FontDialogOption; on: BOOLEAN; );
+      setOption1     (option: FontDialogOption; );
+      testOption     (option: FontDialogOption; ): BOOLEAN;
+      setOptions     (options: FontDialogOptions; );
+      options        (): FontDialogOptions;
+      open0_0        ();
+      open1          (receiver: QObject; member: TEXT; );
+      setVisible     (visible: BOOLEAN; ); (* virtual *)
+      destroyCxx     ();
+    END;
 
 
 END QtFontDialog.

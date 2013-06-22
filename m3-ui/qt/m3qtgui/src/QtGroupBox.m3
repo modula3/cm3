@@ -19,219 +19,192 @@ FROM QtNamespace IMPORT AlignmentFlag;
 IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE New_QGroupBox0 (self:QGroupBox; parent: QWidget;
-): QGroupBox =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtGroupBoxRaw.New_QGroupBox0(arg1tmp);
+PROCEDURE New_QGroupBox0 (self: QGroupBox; parent: QWidget; ): QGroupBox =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtGroupBoxRaw.New_QGroupBox0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGroupBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGroupBox);
 
-RETURN self;
-END New_QGroupBox0;
+    RETURN self;
+  END New_QGroupBox0;
 
-PROCEDURE New_QGroupBox1 (self:QGroupBox;): QGroupBox =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtGroupBoxRaw.New_QGroupBox1();
+PROCEDURE New_QGroupBox1 (self: QGroupBox; ): QGroupBox =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtGroupBoxRaw.New_QGroupBox1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGroupBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGroupBox);
 
-RETURN self;
-END New_QGroupBox1;
+    RETURN self;
+  END New_QGroupBox1;
 
-PROCEDURE New_QGroupBox2 (self:QGroupBox; title: TEXT;
- parent: QWidget;
-): QGroupBox =
-VAR
-result : ADDRESS;
-qstr_title := NEW(QString).initQString(title);
-arg1tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtGroupBoxRaw.New_QGroupBox2(arg1tmp, arg2tmp);
+PROCEDURE New_QGroupBox2 (self: QGroupBox; title: TEXT; parent: QWidget; ):
+  QGroupBox =
+  VAR
+    result    : ADDRESS;
+    qstr_title          := NEW(QString).initQString(title);
+    arg1tmp             := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    arg2tmp             := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtGroupBoxRaw.New_QGroupBox2(arg1tmp, arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGroupBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGroupBox);
 
-RETURN self;
-END New_QGroupBox2;
+    RETURN self;
+  END New_QGroupBox2;
 
-PROCEDURE New_QGroupBox3 (self:QGroupBox; title: TEXT;
-): QGroupBox =
-VAR
-result : ADDRESS;
-qstr_title := NEW(QString).initQString(title);
-arg1tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-BEGIN
-result := QtGroupBoxRaw.New_QGroupBox3(arg1tmp);
+PROCEDURE New_QGroupBox3 (self: QGroupBox; title: TEXT; ): QGroupBox =
+  VAR
+    result    : ADDRESS;
+    qstr_title          := NEW(QString).initQString(title);
+    arg1tmp             := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+  BEGIN
+    result := QtGroupBoxRaw.New_QGroupBox3(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGroupBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGroupBox);
 
-RETURN self;
-END New_QGroupBox3;
+    RETURN self;
+  END New_QGroupBox3;
 
-PROCEDURE Delete_QGroupBox ( self: QGroupBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGroupBoxRaw.Delete_QGroupBox(selfAdr);
-END Delete_QGroupBox;
+PROCEDURE Delete_QGroupBox (self: QGroupBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGroupBoxRaw.Delete_QGroupBox(selfAdr);
+  END Delete_QGroupBox;
 
-PROCEDURE QGroupBox_title ( self: QGroupBox;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGroupBoxRaw.QGroupBox_title(selfAdr);
+PROCEDURE QGroupBox_title (self: QGroupBox; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGroupBoxRaw.QGroupBox_title(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QGroupBox_title;
+    RETURN result;
+  END QGroupBox_title;
 
-PROCEDURE QGroupBox_setTitle ( self: QGroupBox;
- title: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-BEGIN
-QtGroupBoxRaw.QGroupBox_setTitle(selfAdr, arg2tmp);
-END QGroupBox_setTitle;
+PROCEDURE QGroupBox_setTitle (self: QGroupBox; title: TEXT; ) =
+  VAR
+    selfAdr   : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_title          := NEW(QString).initQString(title);
+    arg2tmp             := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+  BEGIN
+    QtGroupBoxRaw.QGroupBox_setTitle(selfAdr, arg2tmp);
+  END QGroupBox_setTitle;
 
-PROCEDURE QGroupBox_alignment ( self: QGroupBox;
-): AlignmentFlag =
-VAR
-ret:INTEGER; result : AlignmentFlag;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGroupBoxRaw.QGroupBox_alignment(selfAdr);
-result := VAL(ret,AlignmentFlag);  
-RETURN result;
-END QGroupBox_alignment;
+PROCEDURE QGroupBox_alignment (self: QGroupBox; ): AlignmentFlag =
+  VAR
+    ret    : INTEGER;
+    result : AlignmentFlag;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGroupBoxRaw.QGroupBox_alignment(selfAdr);
+    result := VAL(ret, AlignmentFlag);
+    RETURN result;
+  END QGroupBox_alignment;
 
-PROCEDURE QGroupBox_setAlignment ( self: QGroupBox;
-alignment: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGroupBoxRaw.QGroupBox_setAlignment(selfAdr, alignment);
-END QGroupBox_setAlignment;
+PROCEDURE QGroupBox_setAlignment (self: QGroupBox; alignment: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGroupBoxRaw.QGroupBox_setAlignment(selfAdr, alignment);
+  END QGroupBox_setAlignment;
 
-PROCEDURE QGroupBox_minimumSizeHint ( self: QGroupBox;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGroupBoxRaw.QGroupBox_minimumSizeHint(selfAdr);
+PROCEDURE QGroupBox_minimumSizeHint (self: QGroupBox; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGroupBoxRaw.QGroupBox_minimumSizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QGroupBox_minimumSizeHint;
+    RETURN result;
+  END QGroupBox_minimumSizeHint;
 
-PROCEDURE QGroupBox_isFlat ( self: QGroupBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtGroupBoxRaw.QGroupBox_isFlat(selfAdr);
-END QGroupBox_isFlat;
+PROCEDURE QGroupBox_isFlat (self: QGroupBox; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtGroupBoxRaw.QGroupBox_isFlat(selfAdr);
+  END QGroupBox_isFlat;
 
-PROCEDURE QGroupBox_setFlat ( self: QGroupBox;
-flat: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGroupBoxRaw.QGroupBox_setFlat(selfAdr, flat);
-END QGroupBox_setFlat;
+PROCEDURE QGroupBox_setFlat (self: QGroupBox; flat: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGroupBoxRaw.QGroupBox_setFlat(selfAdr, flat);
+  END QGroupBox_setFlat;
 
-PROCEDURE QGroupBox_isCheckable ( self: QGroupBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtGroupBoxRaw.QGroupBox_isCheckable(selfAdr);
-END QGroupBox_isCheckable;
+PROCEDURE QGroupBox_isCheckable (self: QGroupBox; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtGroupBoxRaw.QGroupBox_isCheckable(selfAdr);
+  END QGroupBox_isCheckable;
 
-PROCEDURE QGroupBox_setCheckable ( self: QGroupBox;
-checkable: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGroupBoxRaw.QGroupBox_setCheckable(selfAdr, checkable);
-END QGroupBox_setCheckable;
+PROCEDURE QGroupBox_setCheckable (self: QGroupBox; checkable: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGroupBoxRaw.QGroupBox_setCheckable(selfAdr, checkable);
+  END QGroupBox_setCheckable;
 
-PROCEDURE QGroupBox_isChecked ( self: QGroupBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtGroupBoxRaw.QGroupBox_isChecked(selfAdr);
-END QGroupBox_isChecked;
+PROCEDURE QGroupBox_isChecked (self: QGroupBox; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtGroupBoxRaw.QGroupBox_isChecked(selfAdr);
+  END QGroupBox_isChecked;
 
-PROCEDURE QGroupBox_setChecked ( self: QGroupBox;
-checked: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGroupBoxRaw.QGroupBox_setChecked(selfAdr, checked);
-END QGroupBox_setChecked;
+PROCEDURE QGroupBox_setChecked (self: QGroupBox; checked: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGroupBoxRaw.QGroupBox_setChecked(selfAdr, checked);
+  END QGroupBox_setChecked;
 
-PROCEDURE Cleanup_QGroupBox(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QGroupBox := ref;
-BEGIN
-  Delete_QGroupBox(obj);
- END Cleanup_QGroupBox;
+PROCEDURE Cleanup_QGroupBox
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QGroupBox := ref;
+  BEGIN
+    Delete_QGroupBox(obj);
+  END Cleanup_QGroupBox;
 
-PROCEDURE Destroy_QGroupBox(self : QGroupBox) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QGroupBox);
-END Destroy_QGroupBox;
+PROCEDURE Destroy_QGroupBox (self: QGroupBox) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QGroupBox);
+  END Destroy_QGroupBox;
 
 REVEAL
-QGroupBox =
-QGroupBoxPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QGroupBox0;
-init_1 := New_QGroupBox1;
-init_2 := New_QGroupBox2;
-init_3 := New_QGroupBox3;
-title := QGroupBox_title;
-setTitle := QGroupBox_setTitle;
-alignment := QGroupBox_alignment;
-setAlignment := QGroupBox_setAlignment;
-minimumSizeHint := QGroupBox_minimumSizeHint;
-isFlat := QGroupBox_isFlat;
-setFlat := QGroupBox_setFlat;
-isCheckable := QGroupBox_isCheckable;
-setCheckable := QGroupBox_setCheckable;
-isChecked := QGroupBox_isChecked;
-setChecked := QGroupBox_setChecked;
-destroyCxx := Destroy_QGroupBox;
-END;
+  QGroupBox = QGroupBoxPublic BRANDED OBJECT
+              OVERRIDES
+                init_0          := New_QGroupBox0;
+                init_1          := New_QGroupBox1;
+                init_2          := New_QGroupBox2;
+                init_3          := New_QGroupBox3;
+                title           := QGroupBox_title;
+                setTitle        := QGroupBox_setTitle;
+                alignment       := QGroupBox_alignment;
+                setAlignment    := QGroupBox_setAlignment;
+                minimumSizeHint := QGroupBox_minimumSizeHint;
+                isFlat          := QGroupBox_isFlat;
+                setFlat         := QGroupBox_setFlat;
+                isCheckable     := QGroupBox_isCheckable;
+                setCheckable    := QGroupBox_setCheckable;
+                isChecked       := QGroupBox_isChecked;
+                setChecked      := QGroupBox_setChecked;
+                destroyCxx      := Destroy_QGroupBox;
+              END;
 
 
 BEGIN

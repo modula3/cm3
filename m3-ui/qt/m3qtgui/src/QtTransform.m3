@@ -10,997 +10,933 @@ UNSAFE MODULE QtTransform;
 
 
 IMPORT QtTransformRaw;
-FROM QtPolygon IMPORT QPolygon,QPolygonF;
-FROM QtLine IMPORT QLine,QLineF;
+FROM QtPolygon IMPORT QPolygon, QPolygonF;
+FROM QtLine IMPORT QLine, QLineF;
 FROM QtMatrix IMPORT QMatrix;
 FROM QGuiStubs IMPORT QPainterPath;
-FROM QtPoint IMPORT QPoint,QPointF;
+FROM QtPoint IMPORT QPoint, QPointF;
 FROM QtRegion IMPORT QRegion;
-FROM QtNamespace IMPORT Axis,Initialization;
-FROM QtRect IMPORT QRect,QRectF;
+FROM QtNamespace IMPORT Axis, Initialization;
+FROM QtRect IMPORT QRect, QRectF;
 
 
 IMPORT WeakRef;
 IMPORT Ctypes AS C;
 
-PROCEDURE New_QTransform0 (self:QTransform;arg1: Initialization;
-): QTransform =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTransformRaw.New_QTransform0(ORD(arg1));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTransform);
-
-RETURN self;
-END New_QTransform0;
-
-PROCEDURE New_QTransform1 (self:QTransform;): QTransform =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTransformRaw.New_QTransform1();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTransform);
-
-RETURN self;
-END New_QTransform1;
-
-PROCEDURE New_QTransform2 (self:QTransform;h11, h12, h13, h21, h22, h23, h31, h32, h33: LONGREAL;
-): QTransform =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTransformRaw.New_QTransform2(h11, h12, h13, h21, h22, h23, h31, h32, h33);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTransform);
-
-RETURN self;
-END New_QTransform2;
-
-PROCEDURE New_QTransform3 (self:QTransform;h11, h12, h13, h21, h22, h23, h31, h32: LONGREAL;
-): QTransform =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTransformRaw.New_QTransform3(h11, h12, h13, h21, h22, h23, h31, h32);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTransform);
-
-RETURN self;
-END New_QTransform3;
-
-PROCEDURE New_QTransform4 (self:QTransform;h11, h12, h21, h22, dx, dy: LONGREAL;
-): QTransform =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTransformRaw.New_QTransform4(h11, h12, h21, h22, dx, dy);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTransform);
-
-RETURN self;
-END New_QTransform4;
-
-PROCEDURE New_QTransform5 (self:QTransform; mtx: QMatrix;
-): QTransform =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(mtx.cxxObj,ADDRESS);
-BEGIN
-result := QtTransformRaw.New_QTransform5(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTransform);
-
-RETURN self;
-END New_QTransform5;
-
-PROCEDURE QTransform_isAffine ( self: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_isAffine(selfAdr);
-END QTransform_isAffine;
-
-PROCEDURE QTransform_isIdentity ( self: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_isIdentity(selfAdr);
-END QTransform_isIdentity;
-
-PROCEDURE QTransform_isInvertible ( self: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_isInvertible(selfAdr);
-END QTransform_isInvertible;
-
-PROCEDURE QTransform_isScaling ( self: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_isScaling(selfAdr);
-END QTransform_isScaling;
-
-PROCEDURE QTransform_isRotating ( self: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_isRotating(selfAdr);
-END QTransform_isRotating;
-
-PROCEDURE QTransform_isTranslating ( self: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_isTranslating(selfAdr);
-END QTransform_isTranslating;
-
-PROCEDURE QTransform_type ( self: QTransform;
-): TransformationType =
-VAR
-ret:INTEGER; transformResult : TransformationType;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_type(selfAdr);
-transformResult := VAL(ret,TransformationType);  
-RETURN transformResult;
-END QTransform_type;
-
-PROCEDURE QTransform_determinant ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_determinant(selfAdr);
-END QTransform_determinant;
-
-PROCEDURE QTransform_det ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_det(selfAdr);
-END QTransform_det;
-
-PROCEDURE QTransform_m11 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m11(selfAdr);
-END QTransform_m11;
-
-PROCEDURE QTransform_m12 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m12(selfAdr);
-END QTransform_m12;
-
-PROCEDURE QTransform_m13 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m13(selfAdr);
-END QTransform_m13;
-
-PROCEDURE QTransform_m21 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m21(selfAdr);
-END QTransform_m21;
-
-PROCEDURE QTransform_m22 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m22(selfAdr);
-END QTransform_m22;
-
-PROCEDURE QTransform_m23 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m23(selfAdr);
-END QTransform_m23;
-
-PROCEDURE QTransform_m31 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m31(selfAdr);
-END QTransform_m31;
-
-PROCEDURE QTransform_m32 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m32(selfAdr);
-END QTransform_m32;
-
-PROCEDURE QTransform_m33 ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_m33(selfAdr);
-END QTransform_m33;
-
-PROCEDURE QTransform_dx ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_dx(selfAdr);
-END QTransform_dx;
-
-PROCEDURE QTransform_dy ( self: QTransform;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_dy(selfAdr);
-END QTransform_dy;
-
-PROCEDURE QTransform_setMatrix ( self: QTransform;
-m11, m12, m13, m21, m22, m23, m31, m32, m33: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTransformRaw.QTransform_setMatrix(selfAdr, m11, m12, m13, m21, m22, m23, m31, m32, m33);
-END QTransform_setMatrix;
-
-PROCEDURE QTransform_inverted ( self: QTransform;
-VAR invertible: BOOLEAN;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_inverted(selfAdr, invertible);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_inverted;
-
-PROCEDURE QTransform_inverted1 ( self: QTransform;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_inverted1(selfAdr);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_inverted1;
-
-PROCEDURE QTransform_adjoint ( self: QTransform;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_adjoint(selfAdr);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_adjoint;
-
-PROCEDURE QTransform_transposed ( self: QTransform;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_transposed(selfAdr);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_transposed;
-
-PROCEDURE QTransform_translate ( self: QTransform;
-dx, dy: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_translate(selfAdr, dx, dy);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_translate;
-
-PROCEDURE QTransform_scale ( self: QTransform;
-sx, sy: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_scale(selfAdr, sx, sy);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_scale;
-
-PROCEDURE QTransform_shear ( self: QTransform;
-sh, sv: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_shear(selfAdr, sh, sv);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_shear;
-
-PROCEDURE QTransform_rotate ( self: QTransform;
-a: LONGREAL;
-axis: Axis;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_rotate(selfAdr, a, ORD(axis));
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_rotate;
-
-PROCEDURE QTransform_rotate1 ( self: QTransform;
-a: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_rotate1(selfAdr, a);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_rotate1;
-
-PROCEDURE QTransform_rotateRadians ( self: QTransform;
-a: LONGREAL;
-axis: Axis;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_rotateRadians(selfAdr, a, ORD(axis));
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_rotateRadians;
-
-PROCEDURE QTransform_rotateRadians1 ( self: QTransform;
-a: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_rotateRadians1(selfAdr, a);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_rotateRadians1;
-
-PROCEDURE SquareToQuad ( square: QPolygonF;
- transformResult: QTransform;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(square.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(transformResult.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.SquareToQuad(arg1tmp, arg2tmp);
-END SquareToQuad;
-
-PROCEDURE QuadToSquare ( quad: QPolygonF;
- transformResult: QTransform;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(quad.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(transformResult.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QuadToSquare(arg1tmp, arg2tmp);
-END QuadToSquare;
-
-PROCEDURE QuadToQuad ( one, two: QPolygonF;
- transformResult: QTransform;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(one.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(two.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(transformResult.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QuadToQuad(arg1tmp, arg2tmp, arg3tmp);
-END QuadToQuad;
-
-PROCEDURE QTransform_Op_Equals ( self, arg2: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_Op_Equals(selfAdr, arg2tmp);
-END QTransform_Op_Equals;
-
-PROCEDURE QTransform_Op_NotEquals ( self, arg2: QTransform;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTransformRaw.QTransform_Op_NotEquals(selfAdr, arg2tmp);
-END QTransform_Op_NotEquals;
-
-PROCEDURE QTransform_Op_TimesEquals ( self, arg2: QTransform;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_Op_TimesEquals(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_Op_TimesEquals;
-
-PROCEDURE QTransform_Op_Assign ( self, arg2: QTransform;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_Op_Assign(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_Op_Assign;
-
-PROCEDURE QTransform_reset ( self: QTransform;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTransformRaw.QTransform_reset(selfAdr);
-END QTransform_reset;
-
-PROCEDURE QTransform_map ( self: QTransform;
- p: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map(selfAdr, arg2tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map;
-
-PROCEDURE QTransform_map1 ( self: QTransform;
- p: QPointF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map1(selfAdr, arg2tmp);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map1;
-
-PROCEDURE QTransform_map2 ( self: QTransform;
- l: QLine;
-): QLine =
-VAR
-ret:ADDRESS; result : QLine;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(l.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map2(selfAdr, arg2tmp);
-
-  result := NEW(QLine);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map2;
-
-PROCEDURE QTransform_map3 ( self: QTransform;
- l: QLineF;
-): QLineF =
-VAR
-ret:ADDRESS; result : QLineF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(l.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map3(selfAdr, arg2tmp);
-
-  result := NEW(QLineF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map3;
-
-PROCEDURE QTransform_map4 ( self: QTransform;
- a: QPolygonF;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map4(selfAdr, arg2tmp);
-
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map4;
-
-PROCEDURE QTransform_map5 ( self: QTransform;
- a: QPolygon;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map5(selfAdr, arg2tmp);
-
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map5;
-
-PROCEDURE QTransform_map6 ( self: QTransform;
- r: QRegion;
-): QRegion =
-VAR
-ret:ADDRESS; result : QRegion;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map6(selfAdr, arg2tmp);
-
-  result := NEW(QRegion);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map6;
-
-PROCEDURE QTransform_map7 ( self: QTransform;
- p: QPainterPath;
-): QPainterPath =
-VAR
-ret:ADDRESS; result : QPainterPath;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_map7(selfAdr, arg2tmp);
-
-  result := NEW(QPainterPath);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_map7;
-
-PROCEDURE QTransform_mapToPolygon ( self: QTransform;
- r: QRect;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_mapToPolygon(selfAdr, arg2tmp);
-
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_mapToPolygon;
-
-PROCEDURE QTransform_mapRect ( self: QTransform;
- arg2: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_mapRect(selfAdr, arg2tmp);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_mapRect;
-
-PROCEDURE QTransform_mapRect1 ( self: QTransform;
- arg2: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_mapRect1(selfAdr, arg2tmp);
-
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_mapRect1;
-
-PROCEDURE QTransform_map8 ( self: QTransform;
-x, y: INTEGER;
-VAR tx, ty: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg4tmp := tx;
-arg5tmp := ty;
-QtTransformRaw.QTransform_map8(selfAdr, x, y, arg4tmp, arg5tmp);
-tx := arg4tmp;
-ty := arg5tmp;
-END QTransform_map8;
-
-PROCEDURE QTransform_map9 ( self: QTransform;
-x, y: LONGREAL;
-VAR tx, ty: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg4tmp := tx;
-arg5tmp := ty;
-QtTransformRaw.QTransform_map9(selfAdr, x, y, arg4tmp, arg5tmp);
-tx := arg4tmp;
-ty := arg5tmp;
-END QTransform_map9;
-
-PROCEDURE QTransform_toAffine ( self: QTransform;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_toAffine(selfAdr);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTransform_toAffine;
-
-PROCEDURE QTransform_Op_TimesEquals1 ( self: QTransform;
-div: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_Op_TimesEquals1(selfAdr, div);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_Op_TimesEquals1;
-
-PROCEDURE QTransform_Op_DivEquals ( self: QTransform;
-div: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_Op_DivEquals(selfAdr, div);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_Op_DivEquals;
-
-PROCEDURE QTransform_Op_PlusEquals ( self: QTransform;
-div: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_Op_PlusEquals(selfAdr, div);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_Op_PlusEquals;
-
-PROCEDURE QTransform_Op_MinusEquals ( self: QTransform;
-div: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTransformRaw.QTransform_Op_MinusEquals(selfAdr, div);
-
-IF ISTYPE(result,QTransform) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QTransform);
-ELSE
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QTransform_Op_MinusEquals;
-
-PROCEDURE FromTranslate (dx, dy: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-BEGIN
-ret := QtTransformRaw.FromTranslate(dx, dy);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromTranslate;
-
-PROCEDURE FromScale (dx, dy: LONGREAL;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-BEGIN
-ret := QtTransformRaw.FromScale(dx, dy);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromScale;
-
-PROCEDURE Delete_QTransform ( self: QTransform;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTransformRaw.Delete_QTransform(selfAdr);
-END Delete_QTransform;
-
-PROCEDURE Cleanup_QTransform(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QTransform := ref;
-BEGIN
-  Delete_QTransform(obj);
- END Cleanup_QTransform;
-
-PROCEDURE Destroy_QTransform(self : QTransform) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QTransform);
-END Destroy_QTransform;
+PROCEDURE New_QTransform0 (self: QTransform; arg1: Initialization; ):
+  QTransform =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTransformRaw.New_QTransform0(ORD(arg1));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTransform);
+
+    RETURN self;
+  END New_QTransform0;
+
+PROCEDURE New_QTransform1 (self: QTransform; ): QTransform =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTransformRaw.New_QTransform1();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTransform);
+
+    RETURN self;
+  END New_QTransform1;
+
+PROCEDURE New_QTransform2
+  (self: QTransform; h11, h12, h13, h21, h22, h23, h31, h32, h33: LONGREAL; ):
+  QTransform =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTransformRaw.New_QTransform2(
+                h11, h12, h13, h21, h22, h23, h31, h32, h33);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTransform);
+
+    RETURN self;
+  END New_QTransform2;
+
+PROCEDURE New_QTransform3
+  (self: QTransform; h11, h12, h13, h21, h22, h23, h31, h32: LONGREAL; ):
+  QTransform =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTransformRaw.New_QTransform3(
+                h11, h12, h13, h21, h22, h23, h31, h32);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTransform);
+
+    RETURN self;
+  END New_QTransform3;
+
+PROCEDURE New_QTransform4
+  (self: QTransform; h11, h12, h21, h22, dx, dy: LONGREAL; ): QTransform =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTransformRaw.New_QTransform4(h11, h12, h21, h22, dx, dy);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTransform);
+
+    RETURN self;
+  END New_QTransform4;
+
+PROCEDURE New_QTransform5 (self: QTransform; mtx: QMatrix; ): QTransform =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(mtx.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTransformRaw.New_QTransform5(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTransform);
+
+    RETURN self;
+  END New_QTransform5;
+
+PROCEDURE QTransform_isAffine (self: QTransform; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_isAffine(selfAdr);
+  END QTransform_isAffine;
+
+PROCEDURE QTransform_isIdentity (self: QTransform; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_isIdentity(selfAdr);
+  END QTransform_isIdentity;
+
+PROCEDURE QTransform_isInvertible (self: QTransform; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_isInvertible(selfAdr);
+  END QTransform_isInvertible;
+
+PROCEDURE QTransform_isScaling (self: QTransform; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_isScaling(selfAdr);
+  END QTransform_isScaling;
+
+PROCEDURE QTransform_isRotating (self: QTransform; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_isRotating(selfAdr);
+  END QTransform_isRotating;
+
+PROCEDURE QTransform_isTranslating (self: QTransform; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_isTranslating(selfAdr);
+  END QTransform_isTranslating;
+
+PROCEDURE QTransform_type (self: QTransform; ): TransformationType =
+  VAR
+    ret            : INTEGER;
+    transformResult: TransformationType;
+    selfAdr        : ADDRESS            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_type(selfAdr);
+    transformResult := VAL(ret, TransformationType);
+    RETURN transformResult;
+  END QTransform_type;
+
+PROCEDURE QTransform_determinant (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_determinant(selfAdr);
+  END QTransform_determinant;
+
+PROCEDURE QTransform_det (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_det(selfAdr);
+  END QTransform_det;
+
+PROCEDURE QTransform_m11 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m11(selfAdr);
+  END QTransform_m11;
+
+PROCEDURE QTransform_m12 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m12(selfAdr);
+  END QTransform_m12;
+
+PROCEDURE QTransform_m13 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m13(selfAdr);
+  END QTransform_m13;
+
+PROCEDURE QTransform_m21 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m21(selfAdr);
+  END QTransform_m21;
+
+PROCEDURE QTransform_m22 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m22(selfAdr);
+  END QTransform_m22;
+
+PROCEDURE QTransform_m23 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m23(selfAdr);
+  END QTransform_m23;
+
+PROCEDURE QTransform_m31 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m31(selfAdr);
+  END QTransform_m31;
+
+PROCEDURE QTransform_m32 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m32(selfAdr);
+  END QTransform_m32;
+
+PROCEDURE QTransform_m33 (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_m33(selfAdr);
+  END QTransform_m33;
+
+PROCEDURE QTransform_dx (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_dx(selfAdr);
+  END QTransform_dx;
+
+PROCEDURE QTransform_dy (self: QTransform; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_dy(selfAdr);
+  END QTransform_dy;
+
+PROCEDURE QTransform_setMatrix
+  (self: QTransform; m11, m12, m13, m21, m22, m23, m31, m32, m33: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTransformRaw.QTransform_setMatrix(
+      selfAdr, m11, m12, m13, m21, m22, m23, m31, m32, m33);
+  END QTransform_setMatrix;
+
+PROCEDURE QTransform_inverted
+  (self: QTransform; VAR invertible: BOOLEAN; ): QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_inverted(selfAdr, invertible);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_inverted;
+
+PROCEDURE QTransform_inverted1 (self: QTransform; ): QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_inverted1(selfAdr);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_inverted1;
+
+PROCEDURE QTransform_adjoint (self: QTransform; ): QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_adjoint(selfAdr);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_adjoint;
+
+PROCEDURE QTransform_transposed (self: QTransform; ): QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_transposed(selfAdr);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_transposed;
+
+PROCEDURE QTransform_translate (self: QTransform; dx, dy: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_translate(selfAdr, dx, dy);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_translate;
+
+PROCEDURE QTransform_scale (self: QTransform; sx, sy: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_scale(selfAdr, sx, sy);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_scale;
+
+PROCEDURE QTransform_shear (self: QTransform; sh, sv: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_shear(selfAdr, sh, sv);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_shear;
+
+PROCEDURE QTransform_rotate (self: QTransform; a: LONGREAL; axis: Axis; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_rotate(selfAdr, a, ORD(axis));
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_rotate;
+
+PROCEDURE QTransform_rotate1 (self: QTransform; a: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_rotate1(selfAdr, a);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_rotate1;
+
+PROCEDURE QTransform_rotateRadians
+  (self: QTransform; a: LONGREAL; axis: Axis; ): QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_rotateRadians(selfAdr, a, ORD(axis));
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_rotateRadians;
+
+PROCEDURE QTransform_rotateRadians1 (self: QTransform; a: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_rotateRadians1(selfAdr, a);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_rotateRadians1;
+
+PROCEDURE SquareToQuad (square: QPolygonF; transformResult: QTransform; ):
+  BOOLEAN =
+  VAR
+    arg1tmp := LOOPHOLE(square.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(transformResult.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.SquareToQuad(arg1tmp, arg2tmp);
+  END SquareToQuad;
+
+PROCEDURE QuadToSquare (quad: QPolygonF; transformResult: QTransform; ):
+  BOOLEAN =
+  VAR
+    arg1tmp := LOOPHOLE(quad.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(transformResult.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QuadToSquare(arg1tmp, arg2tmp);
+  END QuadToSquare;
+
+PROCEDURE QuadToQuad (one, two: QPolygonF; transformResult: QTransform; ):
+  BOOLEAN =
+  VAR
+    arg1tmp := LOOPHOLE(one.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(two.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(transformResult.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QuadToQuad(arg1tmp, arg2tmp, arg3tmp);
+  END QuadToQuad;
+
+PROCEDURE QTransform_Op_Equals (self, arg2: QTransform; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_Op_Equals(selfAdr, arg2tmp);
+  END QTransform_Op_Equals;
+
+PROCEDURE QTransform_Op_NotEquals (self, arg2: QTransform; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTransformRaw.QTransform_Op_NotEquals(selfAdr, arg2tmp);
+  END QTransform_Op_NotEquals;
+
+PROCEDURE QTransform_Op_TimesEquals (self, arg2: QTransform; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp             := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_Op_TimesEquals(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_Op_TimesEquals;
+
+PROCEDURE QTransform_Op_Assign (self, arg2: QTransform; ): QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp             := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_Op_Assign(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_Op_Assign;
+
+PROCEDURE QTransform_reset (self: QTransform; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTransformRaw.QTransform_reset(selfAdr);
+  END QTransform_reset;
+
+PROCEDURE QTransform_map (self: QTransform; p: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map(selfAdr, arg2tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map;
+
+PROCEDURE QTransform_map1 (self: QTransform; p: QPointF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map1(selfAdr, arg2tmp);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map1;
+
+PROCEDURE QTransform_map2 (self: QTransform; l: QLine; ): QLine =
+  VAR
+    ret    : ADDRESS;
+    result : QLine;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(l.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map2(selfAdr, arg2tmp);
+
+    result := NEW(QLine);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map2;
+
+PROCEDURE QTransform_map3 (self: QTransform; l: QLineF; ): QLineF =
+  VAR
+    ret    : ADDRESS;
+    result : QLineF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(l.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map3(selfAdr, arg2tmp);
+
+    result := NEW(QLineF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map3;
+
+PROCEDURE QTransform_map4 (self: QTransform; a: QPolygonF; ): QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map4(selfAdr, arg2tmp);
+
+    result := NEW(QPolygonF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map4;
+
+PROCEDURE QTransform_map5 (self: QTransform; a: QPolygon; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map5(selfAdr, arg2tmp);
+
+    result := NEW(QPolygon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map5;
+
+PROCEDURE QTransform_map6 (self: QTransform; r: QRegion; ): QRegion =
+  VAR
+    ret    : ADDRESS;
+    result : QRegion;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map6(selfAdr, arg2tmp);
+
+    result := NEW(QRegion);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map6;
+
+PROCEDURE QTransform_map7 (self: QTransform; p: QPainterPath; ):
+  QPainterPath =
+  VAR
+    ret    : ADDRESS;
+    result : QPainterPath;
+    selfAdr: ADDRESS      := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp               := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_map7(selfAdr, arg2tmp);
+
+    result := NEW(QPainterPath);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_map7;
+
+PROCEDURE QTransform_mapToPolygon (self: QTransform; r: QRect; ):
+  QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_mapToPolygon(selfAdr, arg2tmp);
+
+    result := NEW(QPolygon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_mapToPolygon;
+
+PROCEDURE QTransform_mapRect (self: QTransform; arg2: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_mapRect(selfAdr, arg2tmp);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_mapRect;
+
+PROCEDURE QTransform_mapRect1 (self: QTransform; arg2: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_mapRect1(selfAdr, arg2tmp);
+
+    result := NEW(QRectF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_mapRect1;
+
+PROCEDURE QTransform_map8
+  (self: QTransform; x, y: INTEGER; VAR tx, ty: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg4tmp := tx;
+    arg5tmp := ty;
+    QtTransformRaw.QTransform_map8(selfAdr, x, y, arg4tmp, arg5tmp);
+    tx := arg4tmp;
+    ty := arg5tmp;
+  END QTransform_map8;
+
+PROCEDURE QTransform_map9
+  (self: QTransform; x, y: LONGREAL; VAR tx, ty: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg4tmp := tx;
+    arg5tmp := ty;
+    QtTransformRaw.QTransform_map9(selfAdr, x, y, arg4tmp, arg5tmp);
+    tx := arg4tmp;
+    ty := arg5tmp;
+  END QTransform_map9;
+
+PROCEDURE QTransform_toAffine (self: QTransform; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_toAffine(selfAdr);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTransform_toAffine;
+
+PROCEDURE QTransform_Op_TimesEquals1 (self: QTransform; div: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_Op_TimesEquals1(selfAdr, div);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_Op_TimesEquals1;
+
+PROCEDURE QTransform_Op_DivEquals (self: QTransform; div: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_Op_DivEquals(selfAdr, div);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_Op_DivEquals;
+
+PROCEDURE QTransform_Op_PlusEquals (self: QTransform; div: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_Op_PlusEquals(selfAdr, div);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_Op_PlusEquals;
+
+PROCEDURE QTransform_Op_MinusEquals (self: QTransform; div: LONGREAL; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTransformRaw.QTransform_Op_MinusEquals(selfAdr, div);
+
+    IF ISTYPE(result, QTransform) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QTransform);
+    ELSE
+      result := NEW(QTransform);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QTransform_Op_MinusEquals;
+
+PROCEDURE FromTranslate (dx, dy: LONGREAL; ): QTransform =
+  VAR
+    ret   : ADDRESS;
+    result: QTransform;
+  BEGIN
+    ret := QtTransformRaw.FromTranslate(dx, dy);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromTranslate;
+
+PROCEDURE FromScale (dx, dy: LONGREAL; ): QTransform =
+  VAR
+    ret   : ADDRESS;
+    result: QTransform;
+  BEGIN
+    ret := QtTransformRaw.FromScale(dx, dy);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromScale;
+
+PROCEDURE Delete_QTransform (self: QTransform; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTransformRaw.Delete_QTransform(selfAdr);
+  END Delete_QTransform;
+
+PROCEDURE Cleanup_QTransform
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QTransform := ref;
+  BEGIN
+    Delete_QTransform(obj);
+  END Cleanup_QTransform;
+
+PROCEDURE Destroy_QTransform (self: QTransform) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QTransform);
+  END Destroy_QTransform;
 
 REVEAL
-QTransform =
-QTransformPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QTransform0;
-init_1 := New_QTransform1;
-init_2 := New_QTransform2;
-init_3 := New_QTransform3;
-init_4 := New_QTransform4;
-init_5 := New_QTransform5;
-isAffine := QTransform_isAffine;
-isIdentity := QTransform_isIdentity;
-isInvertible := QTransform_isInvertible;
-isScaling := QTransform_isScaling;
-isRotating := QTransform_isRotating;
-isTranslating := QTransform_isTranslating;
-type := QTransform_type;
-determinant := QTransform_determinant;
-det := QTransform_det;
-m11 := QTransform_m11;
-m12 := QTransform_m12;
-m13 := QTransform_m13;
-m21 := QTransform_m21;
-m22 := QTransform_m22;
-m23 := QTransform_m23;
-m31 := QTransform_m31;
-m32 := QTransform_m32;
-m33 := QTransform_m33;
-dx := QTransform_dx;
-dy := QTransform_dy;
-setMatrix := QTransform_setMatrix;
-inverted := QTransform_inverted;
-inverted1 := QTransform_inverted1;
-adjoint := QTransform_adjoint;
-transposed := QTransform_transposed;
-translate := QTransform_translate;
-scale := QTransform_scale;
-shear := QTransform_shear;
-rotate := QTransform_rotate;
-rotate1 := QTransform_rotate1;
-rotateRadians := QTransform_rotateRadians;
-rotateRadians1 := QTransform_rotateRadians1;
-Op_Equals := QTransform_Op_Equals;
-Op_NotEquals := QTransform_Op_NotEquals;
-Op_TimesEquals := QTransform_Op_TimesEquals;
-Op_Assign := QTransform_Op_Assign;
-reset := QTransform_reset;
-map := QTransform_map;
-map1 := QTransform_map1;
-map2 := QTransform_map2;
-map3 := QTransform_map3;
-map4 := QTransform_map4;
-map5 := QTransform_map5;
-map6 := QTransform_map6;
-map7 := QTransform_map7;
-mapToPolygon := QTransform_mapToPolygon;
-mapRect := QTransform_mapRect;
-mapRect1 := QTransform_mapRect1;
-map8 := QTransform_map8;
-map9 := QTransform_map9;
-toAffine := QTransform_toAffine;
-Op_TimesEquals1 := QTransform_Op_TimesEquals1;
-Op_DivEquals := QTransform_Op_DivEquals;
-Op_PlusEquals := QTransform_Op_PlusEquals;
-Op_MinusEquals := QTransform_Op_MinusEquals;
-destroyCxx := Destroy_QTransform;
-END;
+  QTransform = QTransformPublic BRANDED OBJECT
+               OVERRIDES
+                 init_0          := New_QTransform0;
+                 init_1          := New_QTransform1;
+                 init_2          := New_QTransform2;
+                 init_3          := New_QTransform3;
+                 init_4          := New_QTransform4;
+                 init_5          := New_QTransform5;
+                 isAffine        := QTransform_isAffine;
+                 isIdentity      := QTransform_isIdentity;
+                 isInvertible    := QTransform_isInvertible;
+                 isScaling       := QTransform_isScaling;
+                 isRotating      := QTransform_isRotating;
+                 isTranslating   := QTransform_isTranslating;
+                 type            := QTransform_type;
+                 determinant     := QTransform_determinant;
+                 det             := QTransform_det;
+                 m11             := QTransform_m11;
+                 m12             := QTransform_m12;
+                 m13             := QTransform_m13;
+                 m21             := QTransform_m21;
+                 m22             := QTransform_m22;
+                 m23             := QTransform_m23;
+                 m31             := QTransform_m31;
+                 m32             := QTransform_m32;
+                 m33             := QTransform_m33;
+                 dx              := QTransform_dx;
+                 dy              := QTransform_dy;
+                 setMatrix       := QTransform_setMatrix;
+                 inverted        := QTransform_inverted;
+                 inverted1       := QTransform_inverted1;
+                 adjoint         := QTransform_adjoint;
+                 transposed      := QTransform_transposed;
+                 translate       := QTransform_translate;
+                 scale           := QTransform_scale;
+                 shear           := QTransform_shear;
+                 rotate          := QTransform_rotate;
+                 rotate1         := QTransform_rotate1;
+                 rotateRadians   := QTransform_rotateRadians;
+                 rotateRadians1  := QTransform_rotateRadians1;
+                 Op_Equals       := QTransform_Op_Equals;
+                 Op_NotEquals    := QTransform_Op_NotEquals;
+                 Op_TimesEquals  := QTransform_Op_TimesEquals;
+                 Op_Assign       := QTransform_Op_Assign;
+                 reset           := QTransform_reset;
+                 map             := QTransform_map;
+                 map1            := QTransform_map1;
+                 map2            := QTransform_map2;
+                 map3            := QTransform_map3;
+                 map4            := QTransform_map4;
+                 map5            := QTransform_map5;
+                 map6            := QTransform_map6;
+                 map7            := QTransform_map7;
+                 mapToPolygon    := QTransform_mapToPolygon;
+                 mapRect         := QTransform_mapRect;
+                 mapRect1        := QTransform_mapRect1;
+                 map8            := QTransform_map8;
+                 map9            := QTransform_map9;
+                 toAffine        := QTransform_toAffine;
+                 Op_TimesEquals1 := QTransform_Op_TimesEquals1;
+                 Op_DivEquals    := QTransform_Op_DivEquals;
+                 Op_PlusEquals   := QTransform_Op_PlusEquals;
+                 Op_MinusEquals  := QTransform_Op_MinusEquals;
+                 destroyCxx      := Destroy_QTransform;
+               END;
 
 
 BEGIN

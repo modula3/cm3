@@ -16,80 +16,56 @@ FROM QtNamespace IMPORT Orientation;
 
 FROM QtFrame IMPORT QFrame;
 
-TYPE
-  T = QSplitter;
+TYPE T = QSplitter;
 
 
 TYPE
-QSplitter <: QSplitterPublic;
-QSplitterPublic =
-QFrame BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QSplitter;
-init_1 () : QSplitter;
-init_2 (arg1: Orientation;
- parent: QWidget;
-) : QSplitter;
-init_3 (arg1: Orientation;
-) : QSplitter;
-addWidget( widget: QWidget;
-);
-insertWidget(index: INTEGER;
- widget: QWidget;
-);
-setOrientation(arg1: Orientation;
-);
-orientation(): Orientation;
-setChildrenCollapsible(arg1: BOOLEAN;
-);
-childrenCollapsible(): BOOLEAN;
-setCollapsible(index: INTEGER;
-arg2: BOOLEAN;
-);
-isCollapsible(index: INTEGER;
-): BOOLEAN;
-setOpaqueResize(opaque: BOOLEAN;
-);
-setOpaqueResize1();
-opaqueResize(): BOOLEAN;
-refresh();
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-saveState(): QByteArray;
-restoreState( state: QByteArray;
-): BOOLEAN;
-handleWidth(): INTEGER;
-setHandleWidth(arg1: INTEGER;
-);
-indexOf( w: QWidget;
-): INTEGER;
-widget(index: INTEGER;
-): QWidget;
-count(): INTEGER;
-getRange(index: INTEGER;
-VAR arg2, arg3: INTEGER;
-);
-setStretchFactor(index, stretch: INTEGER;
-);
-destroyCxx();
-END;
+  QSplitter <: QSplitterPublic;
+  QSplitterPublic =
+    QFrame BRANDED OBJECT
+    METHODS
+      init_0         (parent: QWidget; ): QSplitter;
+      init_1         (): QSplitter;
+      init_2         (arg1: Orientation; parent: QWidget; ): QSplitter;
+      init_3         (arg1: Orientation; ): QSplitter;
+      addWidget      (widget: QWidget; );
+      insertWidget   (index: INTEGER; widget: QWidget; );
+      setOrientation (arg1: Orientation; );
+      orientation    (): Orientation;
+      setChildrenCollapsible (arg1: BOOLEAN; );
+      childrenCollapsible    (): BOOLEAN;
+      setCollapsible         (index: INTEGER; arg2: BOOLEAN; );
+      isCollapsible          (index: INTEGER; ): BOOLEAN;
+      setOpaqueResize        (opaque: BOOLEAN; );
+      setOpaqueResize1       ();
+      opaqueResize           (): BOOLEAN;
+      refresh                ();
+      sizeHint               (): QSize; (* virtual *)
+      minimumSizeHint        (): QSize; (* virtual *)
+      saveState              (): QByteArray;
+      restoreState           (state: QByteArray; ): BOOLEAN;
+      handleWidth            (): INTEGER;
+      setHandleWidth         (arg1: INTEGER; );
+      indexOf                (w: QWidget; ): INTEGER;
+      widget                 (index: INTEGER; ): QWidget;
+      count                  (): INTEGER;
+      getRange               (index: INTEGER; VAR arg2, arg3: INTEGER; );
+      setStretchFactor       (index, stretch: INTEGER; );
+      destroyCxx             ();
+    END;
 
-QSplitterHandle <: QSplitterHandlePublic;
-QSplitterHandlePublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 (o: Orientation;
- parent: QSplitter;
-) : QSplitterHandle;
-setOrientation(o: Orientation;
-);
-orientation(): Orientation;
-opaqueResize(): BOOLEAN;
-splitter(): QSplitter;
-sizeHint(): QSize;  (*  virtual *)
-destroyCxx();
-END;
+  QSplitterHandle <: QSplitterHandlePublic;
+  QSplitterHandlePublic =
+    QWidget BRANDED OBJECT
+    METHODS
+      init_0 (o: Orientation; parent: QSplitter; ): QSplitterHandle;
+      setOrientation (o: Orientation; );
+      orientation    (): Orientation;
+      opaqueResize   (): BOOLEAN;
+      splitter       (): QSplitter;
+      sizeHint       (): QSize;  (* virtual *)
+      destroyCxx     ();
+    END;
 
 
 END QtSplitter.

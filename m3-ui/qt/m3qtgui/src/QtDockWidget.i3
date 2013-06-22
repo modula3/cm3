@@ -10,7 +10,7 @@ INTERFACE QtDockWidget;
 
 FROM QtWidget IMPORT QWidget;
 FROM QtAction IMPORT QAction;
-FROM QtNamespace IMPORT WindowTypes,DockWidgetArea,DockWidgetAreas;
+FROM QtNamespace IMPORT WindowTypes, DockWidgetArea, DockWidgetAreas;
 
 
 TYPE
@@ -19,59 +19,45 @@ TYPE
   DockWidgetFeatures = INTEGER;
 
 
-CONST (* Enum DockWidgetFeature *)
-  DockWidgetClosable = 1;
-  DockWidgetMovable = 2;
-  DockWidgetFloatable = 4;
+CONST                            (* Enum DockWidgetFeature *)
+  DockWidgetClosable         = 1;
+  DockWidgetMovable          = 2;
+  DockWidgetFloatable        = 4;
   DockWidgetVerticalTitleBar = 8;
-  DockWidgetFeatureMask = 15;
-  AllDockWidgetFeatures = 0;
-  NoDockWidgetFeatures = 0;
-  Reserved = 255;
+  DockWidgetFeatureMask      = 15;
+  AllDockWidgetFeatures      = 0;
+  NoDockWidgetFeatures       = 0;
+  Reserved                   = 255;
 
-TYPE (* Enum DockWidgetFeature *)
-  DockWidgetFeature = [0..255];
+TYPE                             (* Enum DockWidgetFeature *)
+  DockWidgetFeature = [0 .. 255];
 
 TYPE
-QDockWidget <: QDockWidgetPublic;
-QDockWidgetPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( title: TEXT;
- parent: QWidget;
-flags: WindowTypes;
-) : QDockWidget;
-init_1 ( title: TEXT;
- parent: QWidget;
-) : QDockWidget;
-init_2 ( title: TEXT;
-) : QDockWidget;
-init_3 ( parent: QWidget;
-flags: WindowTypes;
-) : QDockWidget;
-init_4 ( parent: QWidget;
-) : QDockWidget;
-init_5 () : QDockWidget;
-widget(): QWidget;
-setWidget( widget: QWidget;
-);
-setFeatures(features: DockWidgetFeatures;
-);
-features(): DockWidgetFeatures;
-setFloating(floating: BOOLEAN;
-);
-isFloating(): BOOLEAN;
-setAllowedAreas(areas: DockWidgetAreas;
-);
-allowedAreas(): DockWidgetAreas;
-setTitleBarWidget( widget: QWidget;
-);
-titleBarWidget(): QWidget;
-isAreaAllowed(area: DockWidgetArea;
-): BOOLEAN;
-toggleViewAction(): QAction;
-destroyCxx();
-END;
+  QDockWidget <: QDockWidgetPublic;
+  QDockWidgetPublic =
+    QWidget BRANDED OBJECT
+    METHODS
+      init_0 (title: TEXT; parent: QWidget; flags: WindowTypes; ):
+              QDockWidget;
+      init_1          (title: TEXT; parent: QWidget; ): QDockWidget;
+      init_2          (title: TEXT; ): QDockWidget;
+      init_3          (parent: QWidget; flags: WindowTypes; ): QDockWidget;
+      init_4          (parent: QWidget; ): QDockWidget;
+      init_5          (): QDockWidget;
+      widget          (): QWidget;
+      setWidget       (widget: QWidget; );
+      setFeatures     (features: DockWidgetFeatures; );
+      features        (): DockWidgetFeatures;
+      setFloating     (floating: BOOLEAN; );
+      isFloating      (): BOOLEAN;
+      setAllowedAreas (areas: DockWidgetAreas; );
+      allowedAreas    (): DockWidgetAreas;
+      setTitleBarWidget (widget: QWidget; );
+      titleBarWidget    (): QWidget;
+      isAreaAllowed     (area: DockWidgetArea; ): BOOLEAN;
+      toggleViewAction  (): QAction;
+      destroyCxx        ();
+    END;
 
 
 END QtDockWidget.

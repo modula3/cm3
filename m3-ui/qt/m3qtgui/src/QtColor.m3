@@ -21,1661 +21,1458 @@ IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 FROM QtString IMPORT QString;
 
-PROCEDURE New_QColor0 (self:QColor;): QColor =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtColorRaw.New_QColor0();
+PROCEDURE New_QColor0 (self: QColor; ): QColor =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtColorRaw.New_QColor0();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor0;
+    RETURN self;
+  END New_QColor0;
 
-PROCEDURE New_QColor1 (self:QColor;color: GlobalColor;
-): QColor =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtColorRaw.New_QColor1(ORD(color));
+PROCEDURE New_QColor1 (self: QColor; color: GlobalColor; ): QColor =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtColorRaw.New_QColor1(ORD(color));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor1;
+    RETURN self;
+  END New_QColor1;
 
-PROCEDURE New_QColor2 (self:QColor;r, g, b, a: INTEGER;
-): QColor =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtColorRaw.New_QColor2(r, g, b, a);
+PROCEDURE New_QColor2 (self: QColor; r, g, b, a: INTEGER; ): QColor =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtColorRaw.New_QColor2(r, g, b, a);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor2;
+    RETURN self;
+  END New_QColor2;
 
-PROCEDURE New_QColor3 (self:QColor;r, g, b: INTEGER;
-): QColor =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtColorRaw.New_QColor3(r, g, b);
+PROCEDURE New_QColor3 (self: QColor; r, g, b: INTEGER; ): QColor =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtColorRaw.New_QColor3(r, g, b);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor3;
+    RETURN self;
+  END New_QColor3;
 
-PROCEDURE New_QColor4 (self:QColor;rgb: QtRgb.T;
-): QColor =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtColorRaw.New_QColor4(rgb);
+PROCEDURE New_QColor4 (self: QColor; rgb: QtRgb.T; ): QColor =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtColorRaw.New_QColor4(rgb);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor4;
+    RETURN self;
+  END New_QColor4;
 
-PROCEDURE New_QColor5 (self:QColor; name: TEXT;
-): QColor =
-VAR
-result : ADDRESS;
-qstr_name := NEW(QString).initQString(name);
-arg1tmp :=  LOOPHOLE(qstr_name.cxxObj,ADDRESS);
-BEGIN
-result := QtColorRaw.New_QColor5(arg1tmp);
+PROCEDURE New_QColor5 (self: QColor; name: TEXT; ): QColor =
+  VAR
+    result   : ADDRESS;
+    qstr_name          := NEW(QString).initQString(name);
+    arg1tmp            := LOOPHOLE(qstr_name.cxxObj, ADDRESS);
+  BEGIN
+    result := QtColorRaw.New_QColor5(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor5;
+    RETURN self;
+  END New_QColor5;
 
-PROCEDURE New_QColor6 (self:QColor; name: TEXT;
-): QColor =
-VAR
-result : ADDRESS;
-arg1tmp: C.char_star;
-BEGIN
-arg1tmp := M3toC.CopyTtoS(name);
-result := QtColorRaw.New_QColor6(arg1tmp);
+PROCEDURE New_QColor6 (self: QColor; name: TEXT; ): QColor =
+  VAR
+    result : ADDRESS;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(name);
+    result := QtColorRaw.New_QColor6(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
 
 
-RETURN self;
-END New_QColor6;
+    RETURN self;
+  END New_QColor6;
 
-PROCEDURE New_QColor7 (self:QColor; color: QColor;
-): QColor =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(color.cxxObj,ADDRESS);
-BEGIN
-result := QtColorRaw.New_QColor7(arg1tmp);
+PROCEDURE New_QColor7 (self: QColor; color: QColor; ): QColor =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(color.cxxObj, ADDRESS);
+  BEGIN
+    result := QtColorRaw.New_QColor7(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor7;
+    RETURN self;
+  END New_QColor7;
 
-PROCEDURE New_QColor8 (self:QColor;spec: Spec;
-): QColor =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtColorRaw.New_QColor8(ORD(spec));
+PROCEDURE New_QColor8 (self: QColor; spec: Spec; ): QColor =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtColorRaw.New_QColor8(ORD(spec));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
 
-RETURN self;
-END New_QColor8;
+    RETURN self;
+  END New_QColor8;
 
-PROCEDURE QColor_isValid ( self: QColor;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_isValid(selfAdr);
-END QColor_isValid;
+PROCEDURE QColor_isValid (self: QColor; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_isValid(selfAdr);
+  END QColor_isValid;
 
-PROCEDURE QColor_name ( self: QColor;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_name(selfAdr);
+PROCEDURE QColor_name (self: QColor; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_name(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QColor_name;
+    RETURN result;
+  END QColor_name;
 
-PROCEDURE QColor_setNamedColor ( self: QColor;
- name: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_name := NEW(QString).initQString(name);
-arg2tmp :=  LOOPHOLE(qstr_name.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setNamedColor(selfAdr, arg2tmp);
-END QColor_setNamedColor;
+PROCEDURE QColor_setNamedColor (self: QColor; name: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_name          := NEW(QString).initQString(name);
+    arg2tmp            := LOOPHOLE(qstr_name.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setNamedColor(selfAdr, arg2tmp);
+  END QColor_setNamedColor;
 
 PROCEDURE ColorNames (): QStringList =
-VAR
-ret:ADDRESS; result : QStringList;
-BEGIN
-ret := QtColorRaw.ColorNames();
-
-  result := NEW(QStringList);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END ColorNames;
-
-PROCEDURE QColor_spec ( self: QColor;
-): Spec =
-VAR
-ret:INTEGER; result : Spec;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_spec(selfAdr);
-result := VAL(ret,Spec);  
-RETURN result;
-END QColor_spec;
-
-PROCEDURE QColor_alpha ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_alpha(selfAdr);
-END QColor_alpha;
-
-PROCEDURE QColor_setAlpha ( self: QColor;
-alpha: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setAlpha(selfAdr, alpha);
-END QColor_setAlpha;
-
-PROCEDURE QColor_alphaF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_alphaF(selfAdr);
-END QColor_alphaF;
-
-PROCEDURE QColor_setAlphaF ( self: QColor;
-alpha: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setAlphaF(selfAdr, alpha);
-END QColor_setAlphaF;
-
-PROCEDURE QColor_red ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_red(selfAdr);
-END QColor_red;
-
-PROCEDURE QColor_green ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_green(selfAdr);
-END QColor_green;
-
-PROCEDURE QColor_blue ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_blue(selfAdr);
-END QColor_blue;
-
-PROCEDURE QColor_setRed ( self: QColor;
-red: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRed(selfAdr, red);
-END QColor_setRed;
-
-PROCEDURE QColor_setGreen ( self: QColor;
-green: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setGreen(selfAdr, green);
-END QColor_setGreen;
-
-PROCEDURE QColor_setBlue ( self: QColor;
-blue: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setBlue(selfAdr, blue);
-END QColor_setBlue;
-
-PROCEDURE QColor_redF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_redF(selfAdr);
-END QColor_redF;
-
-PROCEDURE QColor_greenF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_greenF(selfAdr);
-END QColor_greenF;
-
-PROCEDURE QColor_blueF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_blueF(selfAdr);
-END QColor_blueF;
-
-PROCEDURE QColor_setRedF ( self: QColor;
-red: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRedF(selfAdr, red);
-END QColor_setRedF;
-
-PROCEDURE QColor_setGreenF ( self: QColor;
-green: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setGreenF(selfAdr, green);
-END QColor_setGreenF;
-
-PROCEDURE QColor_setBlueF ( self: QColor;
-blue: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setBlueF(selfAdr, blue);
-END QColor_setBlueF;
-
-PROCEDURE QColor_getRgb ( self: QColor;
-VAR r, g, b, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := r;
-arg3tmp := g;
-arg4tmp := b;
-arg5tmp := a;
-QtColorRaw.QColor_getRgb(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-r := arg2tmp;
-g := arg3tmp;
-b := arg4tmp;
-a := arg5tmp;
-END QColor_getRgb;
-
-PROCEDURE QColor_getRgb1 ( self: QColor;
-VAR r, g, b: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-BEGIN
-arg2tmp := r;
-arg3tmp := g;
-arg4tmp := b;
-QtColorRaw.QColor_getRgb1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-r := arg2tmp;
-g := arg3tmp;
-b := arg4tmp;
-END QColor_getRgb1;
-
-PROCEDURE QColor_setRgb ( self: QColor;
-r, g, b, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRgb(selfAdr, r, g, b, a);
-END QColor_setRgb;
-
-PROCEDURE QColor_setRgb1 ( self: QColor;
-r, g, b: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRgb1(selfAdr, r, g, b);
-END QColor_setRgb1;
-
-PROCEDURE QColor_getRgbF ( self: QColor;
-VAR r, g, b, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg2tmp := r;
-arg3tmp := g;
-arg4tmp := b;
-arg5tmp := a;
-QtColorRaw.QColor_getRgbF(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-r := arg2tmp;
-g := arg3tmp;
-b := arg4tmp;
-a := arg5tmp;
-END QColor_getRgbF;
-
-PROCEDURE QColor_getRgbF1 ( self: QColor;
-VAR r, g, b: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-BEGIN
-arg2tmp := r;
-arg3tmp := g;
-arg4tmp := b;
-QtColorRaw.QColor_getRgbF1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-r := arg2tmp;
-g := arg3tmp;
-b := arg4tmp;
-END QColor_getRgbF1;
-
-PROCEDURE QColor_setRgbF ( self: QColor;
-r, g, b, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRgbF(selfAdr, r, g, b, a);
-END QColor_setRgbF;
-
-PROCEDURE QColor_setRgbF1 ( self: QColor;
-r, g, b: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRgbF1(selfAdr, r, g, b);
-END QColor_setRgbF1;
-
-PROCEDURE QColor_rgba ( self: QColor;
-): QtRgb.T =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_rgba(selfAdr);
-END QColor_rgba;
-
-PROCEDURE QColor_setRgba ( self: QColor;
-rgba: QtRgb.T;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRgba(selfAdr, rgba);
-END QColor_setRgba;
-
-PROCEDURE QColor_rgb ( self: QColor;
-): QtRgb.T =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_rgb(selfAdr);
-END QColor_rgb;
-
-PROCEDURE QColor_setRgb2 ( self: QColor;
-rgb: QtRgb.T;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setRgb2(selfAdr, rgb);
-END QColor_setRgb2;
-
-PROCEDURE QColor_hue ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hue(selfAdr);
-END QColor_hue;
-
-PROCEDURE QColor_saturation ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_saturation(selfAdr);
-END QColor_saturation;
-
-PROCEDURE QColor_hsvHue ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hsvHue(selfAdr);
-END QColor_hsvHue;
-
-PROCEDURE QColor_hsvSaturation ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hsvSaturation(selfAdr);
-END QColor_hsvSaturation;
-
-PROCEDURE QColor_value ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_value(selfAdr);
-END QColor_value;
-
-PROCEDURE QColor_hueF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hueF(selfAdr);
-END QColor_hueF;
-
-PROCEDURE QColor_saturationF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_saturationF(selfAdr);
-END QColor_saturationF;
-
-PROCEDURE QColor_hsvHueF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hsvHueF(selfAdr);
-END QColor_hsvHueF;
-
-PROCEDURE QColor_hsvSaturationF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hsvSaturationF(selfAdr);
-END QColor_hsvSaturationF;
-
-PROCEDURE QColor_valueF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_valueF(selfAdr);
-END QColor_valueF;
-
-PROCEDURE QColor_getHsv ( self: QColor;
-VAR h, s, v, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := v;
-arg5tmp := a;
-QtColorRaw.QColor_getHsv(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-h := arg2tmp;
-s := arg3tmp;
-v := arg4tmp;
-a := arg5tmp;
-END QColor_getHsv;
-
-PROCEDURE QColor_getHsv1 ( self: QColor;
-VAR h, s, v: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := v;
-QtColorRaw.QColor_getHsv1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-h := arg2tmp;
-s := arg3tmp;
-v := arg4tmp;
-END QColor_getHsv1;
-
-PROCEDURE QColor_setHsv ( self: QColor;
-h, s, v, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHsv(selfAdr, h, s, v, a);
-END QColor_setHsv;
-
-PROCEDURE QColor_setHsv1 ( self: QColor;
-h, s, v: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHsv1(selfAdr, h, s, v);
-END QColor_setHsv1;
-
-PROCEDURE QColor_getHsvF ( self: QColor;
-VAR h, s, v, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := v;
-arg5tmp := a;
-QtColorRaw.QColor_getHsvF(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-h := arg2tmp;
-s := arg3tmp;
-v := arg4tmp;
-a := arg5tmp;
-END QColor_getHsvF;
-
-PROCEDURE QColor_getHsvF1 ( self: QColor;
-VAR h, s, v: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := v;
-QtColorRaw.QColor_getHsvF1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-h := arg2tmp;
-s := arg3tmp;
-v := arg4tmp;
-END QColor_getHsvF1;
-
-PROCEDURE QColor_setHsvF ( self: QColor;
-h, s, v, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHsvF(selfAdr, h, s, v, a);
-END QColor_setHsvF;
-
-PROCEDURE QColor_setHsvF1 ( self: QColor;
-h, s, v: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHsvF1(selfAdr, h, s, v);
-END QColor_setHsvF1;
-
-PROCEDURE QColor_cyan ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_cyan(selfAdr);
-END QColor_cyan;
-
-PROCEDURE QColor_magenta ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_magenta(selfAdr);
-END QColor_magenta;
-
-PROCEDURE QColor_yellow ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_yellow(selfAdr);
-END QColor_yellow;
-
-PROCEDURE QColor_black ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_black(selfAdr);
-END QColor_black;
-
-PROCEDURE QColor_cyanF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_cyanF(selfAdr);
-END QColor_cyanF;
-
-PROCEDURE QColor_magentaF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_magentaF(selfAdr);
-END QColor_magentaF;
-
-PROCEDURE QColor_yellowF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_yellowF(selfAdr);
-END QColor_yellowF;
-
-PROCEDURE QColor_blackF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_blackF(selfAdr);
-END QColor_blackF;
-
-PROCEDURE QColor_getCmyk ( self: QColor;
-VAR c, m, y, k, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-arg6tmp: C.int;
-BEGIN
-arg2tmp := c;
-arg3tmp := m;
-arg4tmp := y;
-arg5tmp := k;
-arg6tmp := a;
-QtColorRaw.QColor_getCmyk(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp, arg6tmp);
-c := arg2tmp;
-m := arg3tmp;
-y := arg4tmp;
-k := arg5tmp;
-a := arg6tmp;
-END QColor_getCmyk;
-
-PROCEDURE QColor_getCmyk1 ( self: QColor;
-VAR c, m, y, k: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := c;
-arg3tmp := m;
-arg4tmp := y;
-arg5tmp := k;
-QtColorRaw.QColor_getCmyk1(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-c := arg2tmp;
-m := arg3tmp;
-y := arg4tmp;
-k := arg5tmp;
-END QColor_getCmyk1;
-
-PROCEDURE QColor_setCmyk ( self: QColor;
-c, m, y, k, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setCmyk(selfAdr, c, m, y, k, a);
-END QColor_setCmyk;
-
-PROCEDURE QColor_setCmyk1 ( self: QColor;
-c, m, y, k: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setCmyk1(selfAdr, c, m, y, k);
-END QColor_setCmyk1;
-
-PROCEDURE QColor_getCmykF ( self: QColor;
-VAR c, m, y, k, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-arg5tmp: C.double;
-arg6tmp: C.double;
-BEGIN
-arg2tmp := c;
-arg3tmp := m;
-arg4tmp := y;
-arg5tmp := k;
-arg6tmp := a;
-QtColorRaw.QColor_getCmykF(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp, arg6tmp);
-c := arg2tmp;
-m := arg3tmp;
-y := arg4tmp;
-k := arg5tmp;
-a := arg6tmp;
-END QColor_getCmykF;
-
-PROCEDURE QColor_getCmykF1 ( self: QColor;
-VAR c, m, y, k: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg2tmp := c;
-arg3tmp := m;
-arg4tmp := y;
-arg5tmp := k;
-QtColorRaw.QColor_getCmykF1(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-c := arg2tmp;
-m := arg3tmp;
-y := arg4tmp;
-k := arg5tmp;
-END QColor_getCmykF1;
-
-PROCEDURE QColor_setCmykF ( self: QColor;
-c, m, y, k, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setCmykF(selfAdr, c, m, y, k, a);
-END QColor_setCmykF;
-
-PROCEDURE QColor_setCmykF1 ( self: QColor;
-c, m, y, k: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setCmykF1(selfAdr, c, m, y, k);
-END QColor_setCmykF1;
-
-PROCEDURE QColor_hslHue ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hslHue(selfAdr);
-END QColor_hslHue;
-
-PROCEDURE QColor_hslSaturation ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hslSaturation(selfAdr);
-END QColor_hslSaturation;
-
-PROCEDURE QColor_lightness ( self: QColor;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_lightness(selfAdr);
-END QColor_lightness;
-
-PROCEDURE QColor_hslHueF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hslHueF(selfAdr);
-END QColor_hslHueF;
-
-PROCEDURE QColor_hslSaturationF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_hslSaturationF(selfAdr);
-END QColor_hslSaturationF;
-
-PROCEDURE QColor_lightnessF ( self: QColor;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_lightnessF(selfAdr);
-END QColor_lightnessF;
-
-PROCEDURE QColor_getHsl ( self: QColor;
-VAR h, s, l, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := l;
-arg5tmp := a;
-QtColorRaw.QColor_getHsl(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-h := arg2tmp;
-s := arg3tmp;
-l := arg4tmp;
-a := arg5tmp;
-END QColor_getHsl;
-
-PROCEDURE QColor_getHsl1 ( self: QColor;
-VAR h, s, l: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := l;
-QtColorRaw.QColor_getHsl1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-h := arg2tmp;
-s := arg3tmp;
-l := arg4tmp;
-END QColor_getHsl1;
-
-PROCEDURE QColor_setHsl ( self: QColor;
-h, s, l, a: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHsl(selfAdr, h, s, l, a);
-END QColor_setHsl;
-
-PROCEDURE QColor_setHsl1 ( self: QColor;
-h, s, l: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHsl1(selfAdr, h, s, l);
-END QColor_setHsl1;
-
-PROCEDURE QColor_getHslF ( self: QColor;
-VAR h, s, l, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := l;
-arg5tmp := a;
-QtColorRaw.QColor_getHslF(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-h := arg2tmp;
-s := arg3tmp;
-l := arg4tmp;
-a := arg5tmp;
-END QColor_getHslF;
-
-PROCEDURE QColor_getHslF1 ( self: QColor;
-VAR h, s, l: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.double;
-arg3tmp: C.double;
-arg4tmp: C.double;
-BEGIN
-arg2tmp := h;
-arg3tmp := s;
-arg4tmp := l;
-QtColorRaw.QColor_getHslF1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-h := arg2tmp;
-s := arg3tmp;
-l := arg4tmp;
-END QColor_getHslF1;
-
-PROCEDURE QColor_setHslF ( self: QColor;
-h, s, l, a: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHslF(selfAdr, h, s, l, a);
-END QColor_setHslF;
-
-PROCEDURE QColor_setHslF1 ( self: QColor;
-h, s, l: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.QColor_setHslF1(selfAdr, h, s, l);
-END QColor_setHslF1;
-
-PROCEDURE QColor_toRgb ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_toRgb(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_toRgb;
-
-PROCEDURE QColor_toHsv ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_toHsv(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_toHsv;
-
-PROCEDURE QColor_toCmyk ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_toCmyk(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_toCmyk;
-
-PROCEDURE QColor_toHsl ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_toHsl(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_toHsl;
-
-PROCEDURE QColor_convertTo ( self: QColor;
-colorSpec: Spec;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_convertTo(selfAdr, ORD(colorSpec));
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_convertTo;
-
-PROCEDURE FromRgb (rgb: QtRgb.T;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromRgb(rgb);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromRgb;
-
-PROCEDURE FromRgba (rgba: QtRgb.T;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromRgba(rgba);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromRgba;
-
-PROCEDURE FromRgb1 (r, g, b, a: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromRgb1(r, g, b, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromRgb1;
-
-PROCEDURE FromRgb2 (r, g, b: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromRgb2(r, g, b);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromRgb2;
-
-PROCEDURE FromRgbF (r, g, b, a: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromRgbF(r, g, b, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromRgbF;
-
-PROCEDURE FromRgbF1 (r, g, b: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromRgbF1(r, g, b);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromRgbF1;
-
-PROCEDURE FromHsv (h, s, v, a: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHsv(h, s, v, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHsv;
-
-PROCEDURE FromHsv1 (h, s, v: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHsv1(h, s, v);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHsv1;
-
-PROCEDURE FromHsvF (h, s, v, a: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHsvF(h, s, v, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHsvF;
-
-PROCEDURE FromHsvF1 (h, s, v: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHsvF1(h, s, v);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHsvF1;
-
-PROCEDURE FromCmyk (c, m, y, k, a: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromCmyk(c, m, y, k, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromCmyk;
-
-PROCEDURE FromCmyk1 (c, m, y, k: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromCmyk1(c, m, y, k);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromCmyk1;
-
-PROCEDURE FromCmykF (c, m, y, k, a: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromCmykF(c, m, y, k, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromCmykF;
-
-PROCEDURE FromCmykF1 (c, m, y, k: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromCmykF1(c, m, y, k);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromCmykF1;
-
-PROCEDURE FromHsl (h, s, l, a: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHsl(h, s, l, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHsl;
-
-PROCEDURE FromHsl1 (h, s, l: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHsl1(h, s, l);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHsl1;
-
-PROCEDURE FromHslF (h, s, l, a: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHslF(h, s, l, a);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHslF;
-
-PROCEDURE FromHslF1 (h, s, l: LONGREAL;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-BEGIN
-ret := QtColorRaw.FromHslF1(h, s, l);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END FromHslF1;
-
-PROCEDURE QColor_light ( self: QColor;
-f: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_light(selfAdr, f);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_light;
-
-PROCEDURE QColor_light1 ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_light1(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_light1;
-
-PROCEDURE QColor_lighter ( self: QColor;
-f: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_lighter(selfAdr, f);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_lighter;
-
-PROCEDURE QColor_lighter1 ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_lighter1(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_lighter1;
-
-PROCEDURE QColor_dark ( self: QColor;
-f: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_dark(selfAdr, f);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_dark;
-
-PROCEDURE QColor_dark1 ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_dark1(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_dark1;
-
-PROCEDURE QColor_darker ( self: QColor;
-f: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_darker(selfAdr, f);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_darker;
-
-PROCEDURE QColor_darker1 ( self: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_darker1(selfAdr);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QColor_darker1;
-
-PROCEDURE QColor_Op_Assign ( self, arg2: QColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_Op_Assign(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QColor) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QColor);
-ELSE
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QColor_Op_Assign;
-
-PROCEDURE QColor_Op_Assign1 ( self: QColor;
-color: GlobalColor;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColorRaw.QColor_Op_Assign1(selfAdr, ORD(color));
-
-IF ISTYPE(result,QColor) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QColor);
-ELSE
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QColor_Op_Assign1;
-
-PROCEDURE QColor_Op_Equals ( self, c: QColor;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(c.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_Op_Equals(selfAdr, arg2tmp);
-END QColor_Op_Equals;
-
-PROCEDURE QColor_Op_NotEquals ( self, c: QColor;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(c.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColorRaw.QColor_Op_NotEquals(selfAdr, arg2tmp);
-END QColor_Op_NotEquals;
-
-PROCEDURE Delete_QColor ( self: QColor;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColorRaw.Delete_QColor(selfAdr);
-END Delete_QColor;
-
-PROCEDURE Cleanup_QColor(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QColor := ref;
-BEGIN
-  Delete_QColor(obj);
- END Cleanup_QColor;
-
-PROCEDURE Destroy_QColor(self : QColor) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QColor);
-END Destroy_QColor;
+  VAR
+    ret   : ADDRESS;
+    result: QStringList;
+  BEGIN
+    ret := QtColorRaw.ColorNames();
+
+    result := NEW(QStringList);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END ColorNames;
+
+PROCEDURE QColor_spec (self: QColor; ): Spec =
+  VAR
+    ret    : INTEGER;
+    result : Spec;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_spec(selfAdr);
+    result := VAL(ret, Spec);
+    RETURN result;
+  END QColor_spec;
+
+PROCEDURE QColor_alpha (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_alpha(selfAdr);
+  END QColor_alpha;
+
+PROCEDURE QColor_setAlpha (self: QColor; alpha: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setAlpha(selfAdr, alpha);
+  END QColor_setAlpha;
+
+PROCEDURE QColor_alphaF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_alphaF(selfAdr);
+  END QColor_alphaF;
+
+PROCEDURE QColor_setAlphaF (self: QColor; alpha: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setAlphaF(selfAdr, alpha);
+  END QColor_setAlphaF;
+
+PROCEDURE QColor_red (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_red(selfAdr);
+  END QColor_red;
+
+PROCEDURE QColor_green (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_green(selfAdr);
+  END QColor_green;
+
+PROCEDURE QColor_blue (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_blue(selfAdr);
+  END QColor_blue;
+
+PROCEDURE QColor_setRed (self: QColor; red: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRed(selfAdr, red);
+  END QColor_setRed;
+
+PROCEDURE QColor_setGreen (self: QColor; green: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setGreen(selfAdr, green);
+  END QColor_setGreen;
+
+PROCEDURE QColor_setBlue (self: QColor; blue: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setBlue(selfAdr, blue);
+  END QColor_setBlue;
+
+PROCEDURE QColor_redF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_redF(selfAdr);
+  END QColor_redF;
+
+PROCEDURE QColor_greenF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_greenF(selfAdr);
+  END QColor_greenF;
+
+PROCEDURE QColor_blueF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_blueF(selfAdr);
+  END QColor_blueF;
+
+PROCEDURE QColor_setRedF (self: QColor; red: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRedF(selfAdr, red);
+  END QColor_setRedF;
+
+PROCEDURE QColor_setGreenF (self: QColor; green: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setGreenF(selfAdr, green);
+  END QColor_setGreenF;
+
+PROCEDURE QColor_setBlueF (self: QColor; blue: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setBlueF(selfAdr, blue);
+  END QColor_setBlueF;
+
+PROCEDURE QColor_getRgb (self: QColor; VAR r, g, b, a: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := r;
+    arg3tmp := g;
+    arg4tmp := b;
+    arg5tmp := a;
+    QtColorRaw.QColor_getRgb(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    r := arg2tmp;
+    g := arg3tmp;
+    b := arg4tmp;
+    a := arg5tmp;
+  END QColor_getRgb;
+
+PROCEDURE QColor_getRgb1 (self: QColor; VAR r, g, b: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+  BEGIN
+    arg2tmp := r;
+    arg3tmp := g;
+    arg4tmp := b;
+    QtColorRaw.QColor_getRgb1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+    r := arg2tmp;
+    g := arg3tmp;
+    b := arg4tmp;
+  END QColor_getRgb1;
+
+PROCEDURE QColor_setRgb (self: QColor; r, g, b, a: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRgb(selfAdr, r, g, b, a);
+  END QColor_setRgb;
+
+PROCEDURE QColor_setRgb1 (self: QColor; r, g, b: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRgb1(selfAdr, r, g, b);
+  END QColor_setRgb1;
+
+PROCEDURE QColor_getRgbF (self: QColor; VAR r, g, b, a: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg2tmp := r;
+    arg3tmp := g;
+    arg4tmp := b;
+    arg5tmp := a;
+    QtColorRaw.QColor_getRgbF(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    r := arg2tmp;
+    g := arg3tmp;
+    b := arg4tmp;
+    a := arg5tmp;
+  END QColor_getRgbF;
+
+PROCEDURE QColor_getRgbF1 (self: QColor; VAR r, g, b: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+  BEGIN
+    arg2tmp := r;
+    arg3tmp := g;
+    arg4tmp := b;
+    QtColorRaw.QColor_getRgbF1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+    r := arg2tmp;
+    g := arg3tmp;
+    b := arg4tmp;
+  END QColor_getRgbF1;
+
+PROCEDURE QColor_setRgbF (self: QColor; r, g, b, a: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRgbF(selfAdr, r, g, b, a);
+  END QColor_setRgbF;
+
+PROCEDURE QColor_setRgbF1 (self: QColor; r, g, b: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRgbF1(selfAdr, r, g, b);
+  END QColor_setRgbF1;
+
+PROCEDURE QColor_rgba (self: QColor; ): QtRgb.T =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_rgba(selfAdr);
+  END QColor_rgba;
+
+PROCEDURE QColor_setRgba (self: QColor; rgba: QtRgb.T; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRgba(selfAdr, rgba);
+  END QColor_setRgba;
+
+PROCEDURE QColor_rgb (self: QColor; ): QtRgb.T =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_rgb(selfAdr);
+  END QColor_rgb;
+
+PROCEDURE QColor_setRgb2 (self: QColor; rgb: QtRgb.T; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setRgb2(selfAdr, rgb);
+  END QColor_setRgb2;
+
+PROCEDURE QColor_hue (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hue(selfAdr);
+  END QColor_hue;
+
+PROCEDURE QColor_saturation (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_saturation(selfAdr);
+  END QColor_saturation;
+
+PROCEDURE QColor_hsvHue (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hsvHue(selfAdr);
+  END QColor_hsvHue;
+
+PROCEDURE QColor_hsvSaturation (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hsvSaturation(selfAdr);
+  END QColor_hsvSaturation;
+
+PROCEDURE QColor_value (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_value(selfAdr);
+  END QColor_value;
+
+PROCEDURE QColor_hueF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hueF(selfAdr);
+  END QColor_hueF;
+
+PROCEDURE QColor_saturationF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_saturationF(selfAdr);
+  END QColor_saturationF;
+
+PROCEDURE QColor_hsvHueF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hsvHueF(selfAdr);
+  END QColor_hsvHueF;
+
+PROCEDURE QColor_hsvSaturationF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hsvSaturationF(selfAdr);
+  END QColor_hsvSaturationF;
+
+PROCEDURE QColor_valueF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_valueF(selfAdr);
+  END QColor_valueF;
+
+PROCEDURE QColor_getHsv (self: QColor; VAR h, s, v, a: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := v;
+    arg5tmp := a;
+    QtColorRaw.QColor_getHsv(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    v := arg4tmp;
+    a := arg5tmp;
+  END QColor_getHsv;
+
+PROCEDURE QColor_getHsv1 (self: QColor; VAR h, s, v: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := v;
+    QtColorRaw.QColor_getHsv1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    v := arg4tmp;
+  END QColor_getHsv1;
+
+PROCEDURE QColor_setHsv (self: QColor; h, s, v, a: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHsv(selfAdr, h, s, v, a);
+  END QColor_setHsv;
+
+PROCEDURE QColor_setHsv1 (self: QColor; h, s, v: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHsv1(selfAdr, h, s, v);
+  END QColor_setHsv1;
+
+PROCEDURE QColor_getHsvF (self: QColor; VAR h, s, v, a: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := v;
+    arg5tmp := a;
+    QtColorRaw.QColor_getHsvF(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    v := arg4tmp;
+    a := arg5tmp;
+  END QColor_getHsvF;
+
+PROCEDURE QColor_getHsvF1 (self: QColor; VAR h, s, v: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := v;
+    QtColorRaw.QColor_getHsvF1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    v := arg4tmp;
+  END QColor_getHsvF1;
+
+PROCEDURE QColor_setHsvF (self: QColor; h, s, v, a: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHsvF(selfAdr, h, s, v, a);
+  END QColor_setHsvF;
+
+PROCEDURE QColor_setHsvF1 (self: QColor; h, s, v: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHsvF1(selfAdr, h, s, v);
+  END QColor_setHsvF1;
+
+PROCEDURE QColor_cyan (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_cyan(selfAdr);
+  END QColor_cyan;
+
+PROCEDURE QColor_magenta (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_magenta(selfAdr);
+  END QColor_magenta;
+
+PROCEDURE QColor_yellow (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_yellow(selfAdr);
+  END QColor_yellow;
+
+PROCEDURE QColor_black (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_black(selfAdr);
+  END QColor_black;
+
+PROCEDURE QColor_cyanF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_cyanF(selfAdr);
+  END QColor_cyanF;
+
+PROCEDURE QColor_magentaF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_magentaF(selfAdr);
+  END QColor_magentaF;
+
+PROCEDURE QColor_yellowF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_yellowF(selfAdr);
+  END QColor_yellowF;
+
+PROCEDURE QColor_blackF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_blackF(selfAdr);
+  END QColor_blackF;
+
+PROCEDURE QColor_getCmyk (self: QColor; VAR c, m, y, k, a: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+    arg6tmp: C.int;
+  BEGIN
+    arg2tmp := c;
+    arg3tmp := m;
+    arg4tmp := y;
+    arg5tmp := k;
+    arg6tmp := a;
+    QtColorRaw.QColor_getCmyk(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp, arg6tmp);
+    c := arg2tmp;
+    m := arg3tmp;
+    y := arg4tmp;
+    k := arg5tmp;
+    a := arg6tmp;
+  END QColor_getCmyk;
+
+PROCEDURE QColor_getCmyk1 (self: QColor; VAR c, m, y, k: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := c;
+    arg3tmp := m;
+    arg4tmp := y;
+    arg5tmp := k;
+    QtColorRaw.QColor_getCmyk1(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    c := arg2tmp;
+    m := arg3tmp;
+    y := arg4tmp;
+    k := arg5tmp;
+  END QColor_getCmyk1;
+
+PROCEDURE QColor_setCmyk (self: QColor; c, m, y, k, a: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setCmyk(selfAdr, c, m, y, k, a);
+  END QColor_setCmyk;
+
+PROCEDURE QColor_setCmyk1 (self: QColor; c, m, y, k: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setCmyk1(selfAdr, c, m, y, k);
+  END QColor_setCmyk1;
+
+PROCEDURE QColor_getCmykF (self: QColor; VAR c, m, y, k, a: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+    arg6tmp: C.double;
+  BEGIN
+    arg2tmp := c;
+    arg3tmp := m;
+    arg4tmp := y;
+    arg5tmp := k;
+    arg6tmp := a;
+    QtColorRaw.QColor_getCmykF(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp, arg6tmp);
+    c := arg2tmp;
+    m := arg3tmp;
+    y := arg4tmp;
+    k := arg5tmp;
+    a := arg6tmp;
+  END QColor_getCmykF;
+
+PROCEDURE QColor_getCmykF1 (self: QColor; VAR c, m, y, k: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg2tmp := c;
+    arg3tmp := m;
+    arg4tmp := y;
+    arg5tmp := k;
+    QtColorRaw.QColor_getCmykF1(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    c := arg2tmp;
+    m := arg3tmp;
+    y := arg4tmp;
+    k := arg5tmp;
+  END QColor_getCmykF1;
+
+PROCEDURE QColor_setCmykF (self: QColor; c, m, y, k, a: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setCmykF(selfAdr, c, m, y, k, a);
+  END QColor_setCmykF;
+
+PROCEDURE QColor_setCmykF1 (self: QColor; c, m, y, k: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setCmykF1(selfAdr, c, m, y, k);
+  END QColor_setCmykF1;
+
+PROCEDURE QColor_hslHue (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hslHue(selfAdr);
+  END QColor_hslHue;
+
+PROCEDURE QColor_hslSaturation (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hslSaturation(selfAdr);
+  END QColor_hslSaturation;
+
+PROCEDURE QColor_lightness (self: QColor; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_lightness(selfAdr);
+  END QColor_lightness;
+
+PROCEDURE QColor_hslHueF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hslHueF(selfAdr);
+  END QColor_hslHueF;
+
+PROCEDURE QColor_hslSaturationF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_hslSaturationF(selfAdr);
+  END QColor_hslSaturationF;
+
+PROCEDURE QColor_lightnessF (self: QColor; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_lightnessF(selfAdr);
+  END QColor_lightnessF;
+
+PROCEDURE QColor_getHsl (self: QColor; VAR h, s, l, a: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := l;
+    arg5tmp := a;
+    QtColorRaw.QColor_getHsl(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    l := arg4tmp;
+    a := arg5tmp;
+  END QColor_getHsl;
+
+PROCEDURE QColor_getHsl1 (self: QColor; VAR h, s, l: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := l;
+    QtColorRaw.QColor_getHsl1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    l := arg4tmp;
+  END QColor_getHsl1;
+
+PROCEDURE QColor_setHsl (self: QColor; h, s, l, a: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHsl(selfAdr, h, s, l, a);
+  END QColor_setHsl;
+
+PROCEDURE QColor_setHsl1 (self: QColor; h, s, l: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHsl1(selfAdr, h, s, l);
+  END QColor_setHsl1;
+
+PROCEDURE QColor_getHslF (self: QColor; VAR h, s, l, a: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := l;
+    arg5tmp := a;
+    QtColorRaw.QColor_getHslF(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    l := arg4tmp;
+    a := arg5tmp;
+  END QColor_getHslF;
+
+PROCEDURE QColor_getHslF1 (self: QColor; VAR h, s, l: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.double;
+    arg3tmp: C.double;
+    arg4tmp: C.double;
+  BEGIN
+    arg2tmp := h;
+    arg3tmp := s;
+    arg4tmp := l;
+    QtColorRaw.QColor_getHslF1(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+    h := arg2tmp;
+    s := arg3tmp;
+    l := arg4tmp;
+  END QColor_getHslF1;
+
+PROCEDURE QColor_setHslF (self: QColor; h, s, l, a: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHslF(selfAdr, h, s, l, a);
+  END QColor_setHslF;
+
+PROCEDURE QColor_setHslF1 (self: QColor; h, s, l: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.QColor_setHslF1(selfAdr, h, s, l);
+  END QColor_setHslF1;
+
+PROCEDURE QColor_toRgb (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_toRgb(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_toRgb;
+
+PROCEDURE QColor_toHsv (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_toHsv(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_toHsv;
+
+PROCEDURE QColor_toCmyk (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_toCmyk(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_toCmyk;
+
+PROCEDURE QColor_toHsl (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_toHsl(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_toHsl;
+
+PROCEDURE QColor_convertTo (self: QColor; colorSpec: Spec; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_convertTo(selfAdr, ORD(colorSpec));
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_convertTo;
+
+PROCEDURE FromRgb (rgb: QtRgb.T; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromRgb(rgb);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromRgb;
+
+PROCEDURE FromRgba (rgba: QtRgb.T; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromRgba(rgba);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromRgba;
+
+PROCEDURE FromRgb1 (r, g, b, a: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromRgb1(r, g, b, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromRgb1;
+
+PROCEDURE FromRgb2 (r, g, b: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromRgb2(r, g, b);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromRgb2;
+
+PROCEDURE FromRgbF (r, g, b, a: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromRgbF(r, g, b, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromRgbF;
+
+PROCEDURE FromRgbF1 (r, g, b: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromRgbF1(r, g, b);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromRgbF1;
+
+PROCEDURE FromHsv (h, s, v, a: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHsv(h, s, v, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHsv;
+
+PROCEDURE FromHsv1 (h, s, v: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHsv1(h, s, v);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHsv1;
+
+PROCEDURE FromHsvF (h, s, v, a: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHsvF(h, s, v, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHsvF;
+
+PROCEDURE FromHsvF1 (h, s, v: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHsvF1(h, s, v);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHsvF1;
+
+PROCEDURE FromCmyk (c, m, y, k, a: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromCmyk(c, m, y, k, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromCmyk;
+
+PROCEDURE FromCmyk1 (c, m, y, k: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromCmyk1(c, m, y, k);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromCmyk1;
+
+PROCEDURE FromCmykF (c, m, y, k, a: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromCmykF(c, m, y, k, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromCmykF;
+
+PROCEDURE FromCmykF1 (c, m, y, k: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromCmykF1(c, m, y, k);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromCmykF1;
+
+PROCEDURE FromHsl (h, s, l, a: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHsl(h, s, l, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHsl;
+
+PROCEDURE FromHsl1 (h, s, l: INTEGER; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHsl1(h, s, l);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHsl1;
+
+PROCEDURE FromHslF (h, s, l, a: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHslF(h, s, l, a);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHslF;
+
+PROCEDURE FromHslF1 (h, s, l: LONGREAL; ): QColor =
+  VAR
+    ret   : ADDRESS;
+    result: QColor;
+  BEGIN
+    ret := QtColorRaw.FromHslF1(h, s, l);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromHslF1;
+
+PROCEDURE QColor_light (self: QColor; f: INTEGER; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_light(selfAdr, f);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_light;
+
+PROCEDURE QColor_light1 (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_light1(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_light1;
+
+PROCEDURE QColor_lighter (self: QColor; f: INTEGER; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_lighter(selfAdr, f);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_lighter;
+
+PROCEDURE QColor_lighter1 (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_lighter1(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_lighter1;
+
+PROCEDURE QColor_dark (self: QColor; f: INTEGER; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_dark(selfAdr, f);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_dark;
+
+PROCEDURE QColor_dark1 (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_dark1(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_dark1;
+
+PROCEDURE QColor_darker (self: QColor; f: INTEGER; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_darker(selfAdr, f);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_darker;
+
+PROCEDURE QColor_darker1 (self: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_darker1(selfAdr);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QColor_darker1;
+
+PROCEDURE QColor_Op_Assign (self, arg2: QColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_Op_Assign(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QColor) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QColor);
+    ELSE
+      result := NEW(QColor);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QColor_Op_Assign;
+
+PROCEDURE QColor_Op_Assign1 (self: QColor; color: GlobalColor; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColorRaw.QColor_Op_Assign1(selfAdr, ORD(color));
+
+    IF ISTYPE(result, QColor) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QColor);
+    ELSE
+      result := NEW(QColor);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QColor_Op_Assign1;
+
+PROCEDURE QColor_Op_Equals (self, c: QColor; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(c.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_Op_Equals(selfAdr, arg2tmp);
+  END QColor_Op_Equals;
+
+PROCEDURE QColor_Op_NotEquals (self, c: QColor; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(c.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.QColor_Op_NotEquals(selfAdr, arg2tmp);
+  END QColor_Op_NotEquals;
+
+PROCEDURE Delete_QColor (self: QColor; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColorRaw.Delete_QColor(selfAdr);
+  END Delete_QColor;
+
+PROCEDURE Cleanup_QColor
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QColor := ref;
+  BEGIN
+    Delete_QColor(obj);
+  END Cleanup_QColor;
+
+PROCEDURE Destroy_QColor (self: QColor) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QColor);
+  END Destroy_QColor;
 
 REVEAL
-QColor =
-QColorPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QColor0;
-init_1 := New_QColor1;
-init_2 := New_QColor2;
-init_3 := New_QColor3;
-init_4 := New_QColor4;
-init_5 := New_QColor5;
-init_6 := New_QColor6;
-init_7 := New_QColor7;
-init_8 := New_QColor8;
-isValid := QColor_isValid;
-name := QColor_name;
-setNamedColor := QColor_setNamedColor;
-spec := QColor_spec;
-alpha := QColor_alpha;
-setAlpha := QColor_setAlpha;
-alphaF := QColor_alphaF;
-setAlphaF := QColor_setAlphaF;
-red := QColor_red;
-green := QColor_green;
-blue := QColor_blue;
-setRed := QColor_setRed;
-setGreen := QColor_setGreen;
-setBlue := QColor_setBlue;
-redF := QColor_redF;
-greenF := QColor_greenF;
-blueF := QColor_blueF;
-setRedF := QColor_setRedF;
-setGreenF := QColor_setGreenF;
-setBlueF := QColor_setBlueF;
-getRgb := QColor_getRgb;
-getRgb1 := QColor_getRgb1;
-setRgb := QColor_setRgb;
-setRgb1 := QColor_setRgb1;
-getRgbF := QColor_getRgbF;
-getRgbF1 := QColor_getRgbF1;
-setRgbF := QColor_setRgbF;
-setRgbF1 := QColor_setRgbF1;
-rgba := QColor_rgba;
-setRgba := QColor_setRgba;
-rgb := QColor_rgb;
-setRgb2 := QColor_setRgb2;
-hue := QColor_hue;
-saturation := QColor_saturation;
-hsvHue := QColor_hsvHue;
-hsvSaturation := QColor_hsvSaturation;
-value := QColor_value;
-hueF := QColor_hueF;
-saturationF := QColor_saturationF;
-hsvHueF := QColor_hsvHueF;
-hsvSaturationF := QColor_hsvSaturationF;
-valueF := QColor_valueF;
-getHsv := QColor_getHsv;
-getHsv1 := QColor_getHsv1;
-setHsv := QColor_setHsv;
-setHsv1 := QColor_setHsv1;
-getHsvF := QColor_getHsvF;
-getHsvF1 := QColor_getHsvF1;
-setHsvF := QColor_setHsvF;
-setHsvF1 := QColor_setHsvF1;
-cyan := QColor_cyan;
-magenta := QColor_magenta;
-yellow := QColor_yellow;
-black := QColor_black;
-cyanF := QColor_cyanF;
-magentaF := QColor_magentaF;
-yellowF := QColor_yellowF;
-blackF := QColor_blackF;
-getCmyk := QColor_getCmyk;
-getCmyk1 := QColor_getCmyk1;
-setCmyk := QColor_setCmyk;
-setCmyk1 := QColor_setCmyk1;
-getCmykF := QColor_getCmykF;
-getCmykF1 := QColor_getCmykF1;
-setCmykF := QColor_setCmykF;
-setCmykF1 := QColor_setCmykF1;
-hslHue := QColor_hslHue;
-hslSaturation := QColor_hslSaturation;
-lightness := QColor_lightness;
-hslHueF := QColor_hslHueF;
-hslSaturationF := QColor_hslSaturationF;
-lightnessF := QColor_lightnessF;
-getHsl := QColor_getHsl;
-getHsl1 := QColor_getHsl1;
-setHsl := QColor_setHsl;
-setHsl1 := QColor_setHsl1;
-getHslF := QColor_getHslF;
-getHslF1 := QColor_getHslF1;
-setHslF := QColor_setHslF;
-setHslF1 := QColor_setHslF1;
-toRgb := QColor_toRgb;
-toHsv := QColor_toHsv;
-toCmyk := QColor_toCmyk;
-toHsl := QColor_toHsl;
-convertTo := QColor_convertTo;
-light := QColor_light;
-light1 := QColor_light1;
-lighter := QColor_lighter;
-lighter1 := QColor_lighter1;
-dark := QColor_dark;
-dark1 := QColor_dark1;
-darker := QColor_darker;
-darker1 := QColor_darker1;
-Op_Assign := QColor_Op_Assign;
-Op_Assign1 := QColor_Op_Assign1;
-Op_Equals := QColor_Op_Equals;
-Op_NotEquals := QColor_Op_NotEquals;
-destroyCxx := Destroy_QColor;
-END;
+  QColor = QColorPublic BRANDED OBJECT
+           OVERRIDES
+             init_0         := New_QColor0;
+             init_1         := New_QColor1;
+             init_2         := New_QColor2;
+             init_3         := New_QColor3;
+             init_4         := New_QColor4;
+             init_5         := New_QColor5;
+             init_6         := New_QColor6;
+             init_7         := New_QColor7;
+             init_8         := New_QColor8;
+             isValid        := QColor_isValid;
+             name           := QColor_name;
+             setNamedColor  := QColor_setNamedColor;
+             spec           := QColor_spec;
+             alpha          := QColor_alpha;
+             setAlpha       := QColor_setAlpha;
+             alphaF         := QColor_alphaF;
+             setAlphaF      := QColor_setAlphaF;
+             red            := QColor_red;
+             green          := QColor_green;
+             blue           := QColor_blue;
+             setRed         := QColor_setRed;
+             setGreen       := QColor_setGreen;
+             setBlue        := QColor_setBlue;
+             redF           := QColor_redF;
+             greenF         := QColor_greenF;
+             blueF          := QColor_blueF;
+             setRedF        := QColor_setRedF;
+             setGreenF      := QColor_setGreenF;
+             setBlueF       := QColor_setBlueF;
+             getRgb         := QColor_getRgb;
+             getRgb1        := QColor_getRgb1;
+             setRgb         := QColor_setRgb;
+             setRgb1        := QColor_setRgb1;
+             getRgbF        := QColor_getRgbF;
+             getRgbF1       := QColor_getRgbF1;
+             setRgbF        := QColor_setRgbF;
+             setRgbF1       := QColor_setRgbF1;
+             rgba           := QColor_rgba;
+             setRgba        := QColor_setRgba;
+             rgb            := QColor_rgb;
+             setRgb2        := QColor_setRgb2;
+             hue            := QColor_hue;
+             saturation     := QColor_saturation;
+             hsvHue         := QColor_hsvHue;
+             hsvSaturation  := QColor_hsvSaturation;
+             value          := QColor_value;
+             hueF           := QColor_hueF;
+             saturationF    := QColor_saturationF;
+             hsvHueF        := QColor_hsvHueF;
+             hsvSaturationF := QColor_hsvSaturationF;
+             valueF         := QColor_valueF;
+             getHsv         := QColor_getHsv;
+             getHsv1        := QColor_getHsv1;
+             setHsv         := QColor_setHsv;
+             setHsv1        := QColor_setHsv1;
+             getHsvF        := QColor_getHsvF;
+             getHsvF1       := QColor_getHsvF1;
+             setHsvF        := QColor_setHsvF;
+             setHsvF1       := QColor_setHsvF1;
+             cyan           := QColor_cyan;
+             magenta        := QColor_magenta;
+             yellow         := QColor_yellow;
+             black          := QColor_black;
+             cyanF          := QColor_cyanF;
+             magentaF       := QColor_magentaF;
+             yellowF        := QColor_yellowF;
+             blackF         := QColor_blackF;
+             getCmyk        := QColor_getCmyk;
+             getCmyk1       := QColor_getCmyk1;
+             setCmyk        := QColor_setCmyk;
+             setCmyk1       := QColor_setCmyk1;
+             getCmykF       := QColor_getCmykF;
+             getCmykF1      := QColor_getCmykF1;
+             setCmykF       := QColor_setCmykF;
+             setCmykF1      := QColor_setCmykF1;
+             hslHue         := QColor_hslHue;
+             hslSaturation  := QColor_hslSaturation;
+             lightness      := QColor_lightness;
+             hslHueF        := QColor_hslHueF;
+             hslSaturationF := QColor_hslSaturationF;
+             lightnessF     := QColor_lightnessF;
+             getHsl         := QColor_getHsl;
+             getHsl1        := QColor_getHsl1;
+             setHsl         := QColor_setHsl;
+             setHsl1        := QColor_setHsl1;
+             getHslF        := QColor_getHslF;
+             getHslF1       := QColor_getHslF1;
+             setHslF        := QColor_setHslF;
+             setHslF1       := QColor_setHslF1;
+             toRgb          := QColor_toRgb;
+             toHsv          := QColor_toHsv;
+             toCmyk         := QColor_toCmyk;
+             toHsl          := QColor_toHsl;
+             convertTo      := QColor_convertTo;
+             light          := QColor_light;
+             light1         := QColor_light1;
+             lighter        := QColor_lighter;
+             lighter1       := QColor_lighter1;
+             dark           := QColor_dark;
+             dark1          := QColor_dark1;
+             darker         := QColor_darker;
+             darker1        := QColor_darker1;
+             Op_Assign      := QColor_Op_Assign;
+             Op_Assign1     := QColor_Op_Assign1;
+             Op_Equals      := QColor_Op_Equals;
+             Op_NotEquals   := QColor_Op_NotEquals;
+             destroyCxx     := Destroy_QColor;
+           END;
 
 
 BEGIN

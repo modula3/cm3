@@ -10,58 +10,43 @@ INTERFACE QtDialog;
 
 FROM QtSize IMPORT QSize;
 FROM QtWidget IMPORT QWidget;
-FROM QtNamespace IMPORT WindowTypes,Orientation;
+FROM QtNamespace IMPORT WindowTypes, Orientation;
 
 
-TYPE
-  T = QDialog;
+TYPE T = QDialog;
 
 
 
-TYPE (* Enum DialogCode *)
-  DialogCode = {
- Rejected,
- Accepted};
+TYPE                             (* Enum DialogCode *)
+  DialogCode = {Rejected, Accepted};
 
 TYPE
-QDialog <: QDialogPublic;
-QDialogPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-f: WindowTypes;
-) : QDialog;
-init_1 ( parent: QWidget;
-) : QDialog;
-init_2 () : QDialog;
-result(): INTEGER;
-setVisible(visible: BOOLEAN;
-);  (*  virtual *)
-setOrientation(orientation: Orientation;
-);
-orientation(): Orientation;
-setExtension( extension: QWidget;
-);
-extension(): QWidget;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-setSizeGripEnabled(arg1: BOOLEAN;
-);
-isSizeGripEnabled(): BOOLEAN;
-setModal(modal: BOOLEAN;
-);
-setResult(r: INTEGER;
-);
-open();
-exec(): INTEGER;
-done(arg1: INTEGER;
-);  (*  virtual *)
-accept();  (*  virtual *)
-reject();  (*  virtual *)
-showExtension(arg1: BOOLEAN;
-);
-destroyCxx();
-END;
+  QDialog <: QDialogPublic;
+  QDialogPublic = QWidget BRANDED OBJECT
+                  METHODS
+                    init_0 (parent: QWidget; f: WindowTypes; ): QDialog;
+                    init_1 (parent: QWidget; ): QDialog;
+                    init_2 (): QDialog;
+                    result (): INTEGER;
+                    setVisible         (visible: BOOLEAN; ); (* virtual *)
+                    setOrientation     (orientation: Orientation; );
+                    orientation        (): Orientation;
+                    setExtension       (extension: QWidget; );
+                    extension          (): QWidget;
+                    sizeHint           (): QSize; (* virtual *)
+                    minimumSizeHint    (): QSize; (* virtual *)
+                    setSizeGripEnabled (arg1: BOOLEAN; );
+                    isSizeGripEnabled  (): BOOLEAN;
+                    setModal           (modal: BOOLEAN; );
+                    setResult          (r: INTEGER; );
+                    open               ();
+                    exec               (): INTEGER;
+                    done               (arg1: INTEGER; ); (* virtual *)
+                    accept             (); (* virtual *)
+                    reject             (); (* virtual *)
+                    showExtension      (arg1: BOOLEAN; );
+                    destroyCxx         ();
+                  END;
 
 
 END QtDialog.

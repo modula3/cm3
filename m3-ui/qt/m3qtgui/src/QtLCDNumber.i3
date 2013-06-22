@@ -14,67 +14,46 @@ FROM QtWidget IMPORT QWidget;
 
 FROM QtFrame IMPORT QFrame;
 
-TYPE
-  T = QLCDNumber;
+TYPE T = QLCDNumber;
 
 
-TYPE (* Enum Mode *)
-  Mode = {
- Hex,
- Dec,
- Oct,
- Bin};
+TYPE                             (* Enum Mode *)
+  Mode = {Hex, Dec, Oct, Bin};
 
-TYPE (* Enum SegmentStyle *)
-  SegmentStyle = {
- Outline,
- Filled,
- Flat};
+TYPE                             (* Enum SegmentStyle *)
+  SegmentStyle = {Outline, Filled, Flat};
 
 TYPE
-QLCDNumber <: QLCDNumberPublic;
-QLCDNumberPublic =
-QFrame BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QLCDNumber;
-init_1 () : QLCDNumber;
-init_2 (numDigits: CARDINAL;
- parent: QWidget;
-) : QLCDNumber;
-init_3 (numDigits: CARDINAL;
-) : QLCDNumber;
-smallDecimalPoint(): BOOLEAN;
-digitCount(): INTEGER;
-setDigitCount(nDigits: INTEGER;
-);
-checkOverflow(num: LONGREAL;
-): BOOLEAN;
-checkOverflow1(num: INTEGER;
-): BOOLEAN;
-mode(): Mode;
-setMode(arg1: Mode;
-);
-segmentStyle(): SegmentStyle;
-setSegmentStyle(arg1: SegmentStyle;
-);
-value(): LONGREAL;
-intValue(): INTEGER;
-sizeHint(): QSize;  (*  virtual *)
-display( str: TEXT;
-);
-display1(num: INTEGER;
-);
-display2(num: LONGREAL;
-);
-setHexMode();
-setDecMode();
-setOctMode();
-setBinMode();
-setSmallDecimalPoint(arg1: BOOLEAN;
-);
-destroyCxx();
-END;
+  QLCDNumber <: QLCDNumberPublic;
+  QLCDNumberPublic =
+    QFrame BRANDED OBJECT
+    METHODS
+      init_0 (parent: QWidget; ): QLCDNumber;
+      init_1 (): QLCDNumber;
+      init_2 (numDigits: CARDINAL; parent: QWidget; ): QLCDNumber;
+      init_3 (numDigits: CARDINAL; ): QLCDNumber;
+      smallDecimalPoint    (): BOOLEAN;
+      digitCount           (): INTEGER;
+      setDigitCount        (nDigits: INTEGER; );
+      checkOverflow        (num: LONGREAL; ): BOOLEAN;
+      checkOverflow1       (num: INTEGER; ): BOOLEAN;
+      mode                 (): Mode;
+      setMode              (arg1: Mode; );
+      segmentStyle         (): SegmentStyle;
+      setSegmentStyle      (arg1: SegmentStyle; );
+      value                (): LONGREAL;
+      intValue             (): INTEGER;
+      sizeHint             (): QSize; (* virtual *)
+      display              (str: TEXT; );
+      display1             (num: INTEGER; );
+      display2             (num: LONGREAL; );
+      setHexMode           ();
+      setDecMode           ();
+      setOctMode           ();
+      setBinMode           ();
+      setSmallDecimalPoint (arg1: BOOLEAN; );
+      destroyCxx           ();
+    END;
 
 
 END QtLCDNumber.

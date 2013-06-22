@@ -18,235 +18,179 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QItemSelectionRange0 (): QItemSelectionRange;
 
 <* EXTERNAL New_QItemSelectionRange1 *>
-PROCEDURE New_QItemSelectionRange1 ( other: ADDRESS;
-): QItemSelectionRange;
+PROCEDURE New_QItemSelectionRange1 (other: ADDRESS; ): QItemSelectionRange;
 
 <* EXTERNAL New_QItemSelectionRange2 *>
-PROCEDURE New_QItemSelectionRange2 ( topLeft, bottomRight: ADDRESS;
-): QItemSelectionRange;
+PROCEDURE New_QItemSelectionRange2 (topLeft, bottomRight: ADDRESS; ):
+  QItemSelectionRange;
 
 <* EXTERNAL New_QItemSelectionRange3 *>
-PROCEDURE New_QItemSelectionRange3 ( index: ADDRESS;
-): QItemSelectionRange;
+PROCEDURE New_QItemSelectionRange3 (index: ADDRESS; ): QItemSelectionRange;
 
 <* EXTERNAL QItemSelectionRange_top *>
-PROCEDURE QItemSelectionRange_top ( self: ADDRESS;
-): C.int;
+PROCEDURE QItemSelectionRange_top (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QItemSelectionRange_left *>
-PROCEDURE QItemSelectionRange_left ( self: ADDRESS;
-): C.int;
+PROCEDURE QItemSelectionRange_left (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QItemSelectionRange_bottom *>
-PROCEDURE QItemSelectionRange_bottom ( self: ADDRESS;
-): C.int;
+PROCEDURE QItemSelectionRange_bottom (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QItemSelectionRange_right *>
-PROCEDURE QItemSelectionRange_right ( self: ADDRESS;
-): C.int;
+PROCEDURE QItemSelectionRange_right (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QItemSelectionRange_width *>
-PROCEDURE QItemSelectionRange_width ( self: ADDRESS;
-): C.int;
+PROCEDURE QItemSelectionRange_width (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QItemSelectionRange_height *>
-PROCEDURE QItemSelectionRange_height ( self: ADDRESS;
-): C.int;
+PROCEDURE QItemSelectionRange_height (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QItemSelectionRange_topLeft *>
-PROCEDURE QItemSelectionRange_topLeft ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionRange_topLeft (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionRange_bottomRight *>
-PROCEDURE QItemSelectionRange_bottomRight ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionRange_bottomRight (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionRange_parent *>
-PROCEDURE QItemSelectionRange_parent ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionRange_parent (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionRange_model *>
-PROCEDURE QItemSelectionRange_model ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionRange_model (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionRange_contains *>
-PROCEDURE QItemSelectionRange_contains ( self, index: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionRange_contains (self, index: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionRange_contains1 *>
-PROCEDURE QItemSelectionRange_contains1 ( self: ADDRESS;
-row, column: C.int;
- parentIndex: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionRange_contains1
+  (self: ADDRESS; row, column: C.int; parentIndex: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionRange_intersects *>
-PROCEDURE QItemSelectionRange_intersects ( self, other: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionRange_intersects (self, other: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionRange_intersect *>
-PROCEDURE QItemSelectionRange_intersect ( self, other: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionRange_intersect (self, other: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionRange_intersected *>
-PROCEDURE QItemSelectionRange_intersected ( self, other: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionRange_intersected (self, other: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QItemSelectionRange_isValid *>
-PROCEDURE QItemSelectionRange_isValid ( self: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionRange_isValid (self: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionRange_indexes *>
-PROCEDURE QItemSelectionRange_indexes ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionRange_indexes (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL Delete_QItemSelectionRange *>
-PROCEDURE Delete_QItemSelectionRange ( self: ADDRESS;
-);
+PROCEDURE Delete_QItemSelectionRange (self: ADDRESS; );
 
-TYPE
-QItemSelectionRange <: ADDRESS;
+TYPE QItemSelectionRange <: ADDRESS;
 
 <* EXTERNAL New_QItemSelectionModel0 *>
-PROCEDURE New_QItemSelectionModel0 ( model: ADDRESS;
-): QItemSelectionModel;
+PROCEDURE New_QItemSelectionModel0 (model: ADDRESS; ): QItemSelectionModel;
 
 <* EXTERNAL New_QItemSelectionModel1 *>
-PROCEDURE New_QItemSelectionModel1 ( model, parent: ADDRESS;
-): QItemSelectionModel;
+PROCEDURE New_QItemSelectionModel1 (model, parent: ADDRESS; ):
+  QItemSelectionModel;
 
 <* EXTERNAL Delete_QItemSelectionModel *>
-PROCEDURE Delete_QItemSelectionModel ( self: ADDRESS;
-);
+PROCEDURE Delete_QItemSelectionModel (self: ADDRESS; );
 
 <* EXTERNAL QItemSelectionModel_currentIndex *>
-PROCEDURE QItemSelectionModel_currentIndex ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_currentIndex (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_isSelected *>
-PROCEDURE QItemSelectionModel_isSelected ( self, index: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionModel_isSelected (self, index: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionModel_isRowSelected *>
-PROCEDURE QItemSelectionModel_isRowSelected ( self: ADDRESS;
-row: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionModel_isRowSelected
+  (self: ADDRESS; row: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionModel_isColumnSelected *>
-PROCEDURE QItemSelectionModel_isColumnSelected ( self: ADDRESS;
-column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionModel_isColumnSelected
+  (self: ADDRESS; column: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionModel_rowIntersectsSelection *>
-PROCEDURE QItemSelectionModel_rowIntersectsSelection ( self: ADDRESS;
-row: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionModel_rowIntersectsSelection
+  (self: ADDRESS; row: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionModel_columnIntersectsSelection *>
-PROCEDURE QItemSelectionModel_columnIntersectsSelection ( self: ADDRESS;
-column: C.int;
- parent: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionModel_columnIntersectsSelection
+  (self: ADDRESS; column: C.int; parent: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionModel_hasSelection *>
-PROCEDURE QItemSelectionModel_hasSelection ( self: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelectionModel_hasSelection (self: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelectionModel_selectedIndexes *>
-PROCEDURE QItemSelectionModel_selectedIndexes ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_selectedIndexes (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_selectedRows *>
-PROCEDURE QItemSelectionModel_selectedRows ( self: ADDRESS;
-column: C.int;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_selectedRows
+  (self: ADDRESS; column: C.int; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_selectedRows1 *>
-PROCEDURE QItemSelectionModel_selectedRows1 ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_selectedRows1 (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_selectedColumns *>
-PROCEDURE QItemSelectionModel_selectedColumns ( self: ADDRESS;
-row: C.int;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_selectedColumns
+  (self: ADDRESS; row: C.int; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_selectedColumns1 *>
-PROCEDURE QItemSelectionModel_selectedColumns1 ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_selectedColumns1 (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_selection *>
-PROCEDURE QItemSelectionModel_selection ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_selection (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_model *>
-PROCEDURE QItemSelectionModel_model ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelectionModel_model (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelectionModel_setCurrentIndex *>
-PROCEDURE QItemSelectionModel_setCurrentIndex ( self, index: ADDRESS;
-command: C.int;
-);
+PROCEDURE QItemSelectionModel_setCurrentIndex
+  (self, index: ADDRESS; command: C.int; );
 
 <* EXTERNAL QItemSelectionModel_select *>
-PROCEDURE QItemSelectionModel_select ( self, index: ADDRESS;
-command: C.int;
-);
+PROCEDURE QItemSelectionModel_select
+  (self, index: ADDRESS; command: C.int; );
 
 <* EXTERNAL QItemSelectionModel_select1 *>
-PROCEDURE QItemSelectionModel_select1 ( self, selection: ADDRESS;
-command: C.int;
-);
+PROCEDURE QItemSelectionModel_select1
+  (self, selection: ADDRESS; command: C.int; );
 
 <* EXTERNAL QItemSelectionModel_clear *>
-PROCEDURE QItemSelectionModel_clear ( self: ADDRESS;
-);
+PROCEDURE QItemSelectionModel_clear (self: ADDRESS; );
 
 <* EXTERNAL QItemSelectionModel_reset *>
-PROCEDURE QItemSelectionModel_reset ( self: ADDRESS;
-);
+PROCEDURE QItemSelectionModel_reset (self: ADDRESS; );
 
 <* EXTERNAL QItemSelectionModel_clearSelection *>
-PROCEDURE QItemSelectionModel_clearSelection ( self: ADDRESS;
-);
+PROCEDURE QItemSelectionModel_clearSelection (self: ADDRESS; );
 
-TYPE
-QItemSelectionModel = ADDRESS;
+TYPE QItemSelectionModel = ADDRESS;
 
 <* EXTERNAL New_QItemSelection0 *>
 PROCEDURE New_QItemSelection0 (): QItemSelection;
 
 <* EXTERNAL New_QItemSelection1 *>
-PROCEDURE New_QItemSelection1 ( topLeft, bottomRight: ADDRESS;
-): QItemSelection;
+PROCEDURE New_QItemSelection1 (topLeft, bottomRight: ADDRESS; ):
+  QItemSelection;
 
 <* EXTERNAL QItemSelection_select *>
-PROCEDURE QItemSelection_select ( self, topLeft, bottomRight: ADDRESS;
-);
+PROCEDURE QItemSelection_select (self, topLeft, bottomRight: ADDRESS; );
 
 <* EXTERNAL QItemSelection_contains *>
-PROCEDURE QItemSelection_contains ( self, index: ADDRESS;
-): BOOLEAN;
+PROCEDURE QItemSelection_contains (self, index: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QItemSelection_indexes *>
-PROCEDURE QItemSelection_indexes ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QItemSelection_indexes (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QItemSelection_merge *>
-PROCEDURE QItemSelection_merge ( self, other: ADDRESS;
-command: C.int;
-);
+PROCEDURE QItemSelection_merge (self, other: ADDRESS; command: C.int; );
 
 <* EXTERNAL Split *>
-PROCEDURE Split ( range, other, result: ADDRESS;
-);
+PROCEDURE Split (range, other, result: ADDRESS; );
 
 <* EXTERNAL Delete_QItemSelection *>
-PROCEDURE Delete_QItemSelection ( self: ADDRESS;
-);
+PROCEDURE Delete_QItemSelection (self: ADDRESS; );
 
-TYPE
-QItemSelection <: ADDRESS;
+TYPE QItemSelection <: ADDRESS;
 
 END QtItemSelectionModelRaw.

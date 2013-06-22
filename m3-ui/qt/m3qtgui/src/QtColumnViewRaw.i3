@@ -15,74 +15,55 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QColumnView0 *>
-PROCEDURE New_QColumnView0 ( parent: ADDRESS;
-): QColumnView;
+PROCEDURE New_QColumnView0 (parent: ADDRESS; ): QColumnView;
 
 <* EXTERNAL New_QColumnView1 *>
 PROCEDURE New_QColumnView1 (): QColumnView;
 
 <* EXTERNAL Delete_QColumnView *>
-PROCEDURE Delete_QColumnView ( self: QColumnView;
-);
+PROCEDURE Delete_QColumnView (self: QColumnView; );
 
 <* EXTERNAL QColumnView_scrollTo *>
-PROCEDURE QColumnView_scrollTo ( self: QColumnView;
- index: ADDRESS;
-hint: C.int;
-);
+PROCEDURE QColumnView_scrollTo
+  (self: QColumnView; index: ADDRESS; hint: C.int; );
 
 <* EXTERNAL QColumnView_scrollTo1 *>
-PROCEDURE QColumnView_scrollTo1 ( self: QColumnView;
- index: ADDRESS;
-);
+PROCEDURE QColumnView_scrollTo1 (self: QColumnView; index: ADDRESS; );
 
 <* EXTERNAL QColumnView_sizeHint *>
-PROCEDURE QColumnView_sizeHint ( self: QColumnView;
-): ADDRESS;
+PROCEDURE QColumnView_sizeHint (self: QColumnView; ): ADDRESS;
 
 <* EXTERNAL QColumnView_visualRect *>
-PROCEDURE QColumnView_visualRect ( self: QColumnView;
- index: ADDRESS;
-): ADDRESS;
+PROCEDURE QColumnView_visualRect (self: QColumnView; index: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QColumnView_setModel *>
-PROCEDURE QColumnView_setModel ( self: QColumnView;
- model: ADDRESS;
-);
+PROCEDURE QColumnView_setModel (self: QColumnView; model: ADDRESS; );
 
 <* EXTERNAL QColumnView_setSelectionModel *>
-PROCEDURE QColumnView_setSelectionModel ( self: QColumnView;
- selectionModel: ADDRESS;
-);
+PROCEDURE QColumnView_setSelectionModel
+  (self: QColumnView; selectionModel: ADDRESS; );
 
 <* EXTERNAL QColumnView_setRootIndex *>
-PROCEDURE QColumnView_setRootIndex ( self: QColumnView;
- index: ADDRESS;
-);
+PROCEDURE QColumnView_setRootIndex (self: QColumnView; index: ADDRESS; );
 
 <* EXTERNAL QColumnView_selectAll *>
-PROCEDURE QColumnView_selectAll ( self: QColumnView;
-);
+PROCEDURE QColumnView_selectAll (self: QColumnView; );
 
 <* EXTERNAL QColumnView_setResizeGripsVisible *>
-PROCEDURE QColumnView_setResizeGripsVisible ( self: QColumnView;
-visible: BOOLEAN;
-);
+PROCEDURE QColumnView_setResizeGripsVisible
+  (self: QColumnView; visible: BOOLEAN; );
 
 <* EXTERNAL QColumnView_resizeGripsVisible *>
-PROCEDURE QColumnView_resizeGripsVisible ( self: QColumnView;
-): BOOLEAN;
+PROCEDURE QColumnView_resizeGripsVisible (self: QColumnView; ): BOOLEAN;
 
 <* EXTERNAL QColumnView_previewWidget *>
-PROCEDURE QColumnView_previewWidget ( self: QColumnView;
-): ADDRESS;
+PROCEDURE QColumnView_previewWidget (self: QColumnView; ): ADDRESS;
 
 <* EXTERNAL QColumnView_setPreviewWidget *>
-PROCEDURE QColumnView_setPreviewWidget ( self: QColumnView;
- widget: ADDRESS;
-);
+PROCEDURE QColumnView_setPreviewWidget
+  (self: QColumnView; widget: ADDRESS; );
 
-TYPE
-QColumnView = ADDRESS;
+TYPE QColumnView = ADDRESS;
 
 END QtColumnViewRaw.

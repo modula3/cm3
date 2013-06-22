@@ -18,52 +18,38 @@ TYPE
   QPageSetupDialog_PageSetupDialogOptions = INTEGER;
 
 
-CONST (* Enum PageSetupDialogOption *)
-  None = 0;
+CONST                            (* Enum PageSetupDialogOption *)
+  None         = 0;
   DontUseSheet = 1;
-  OwnsPrinter = -2147483648;
+  OwnsPrinter  = -2147483648;
 
-TYPE (* Enum PageSetupDialogOption *)
-  PageSetupDialogOption = [-2147483648..1];
+TYPE                             (* Enum PageSetupDialogOption *)
+  PageSetupDialogOption = [-2147483648 .. 1];
 
 TYPE
-QPageSetupDialog <: QPageSetupDialogPublic;
-QPageSetupDialogPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 ( printer: QPrinter;
- parent: QWidget;
-) : QPageSetupDialog;
-init_1 ( printer: QPrinter;
-) : QPageSetupDialog;
-init_2 ( parent: QWidget;
-) : QPageSetupDialog;
-init_3 () : QPageSetupDialog;
-addEnabledOption(option: PageSetupDialogOption;
-);
-setEnabledOptions(options: QPageSetupDialog_PageSetupDialogOptions;
-);
-enabledOptions(): QPageSetupDialog_PageSetupDialogOptions;
-isOptionEnabled(option: PageSetupDialogOption;
-): BOOLEAN;
-setOption(option: PageSetupDialogOption;
-on: BOOLEAN;
-);
-setOption1(option: PageSetupDialogOption;
-);
-testOption(option: PageSetupDialogOption;
-): BOOLEAN;
-setOptions(options: QPageSetupDialog_PageSetupDialogOptions;
-);
-options(): QPageSetupDialog_PageSetupDialogOptions;
-exec(): INTEGER;  (*  virtual *)
-open0_0();
-open1( receiver: QObject;
- member: TEXT;
-);
-destroyCxx();
-END;
+  QPageSetupDialog <: QPageSetupDialogPublic;
+  QPageSetupDialogPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0 (printer: QPrinter; parent: QWidget; ): QPageSetupDialog;
+      init_1 (printer: QPrinter; ): QPageSetupDialog;
+      init_2 (parent: QWidget; ): QPageSetupDialog;
+      init_3 (): QPageSetupDialog;
+      addEnabledOption (option: PageSetupDialogOption; );
+      setEnabledOptions (options: QPageSetupDialog_PageSetupDialogOptions; );
+      enabledOptions  (): QPageSetupDialog_PageSetupDialogOptions;
+      isOptionEnabled (option: PageSetupDialogOption; ): BOOLEAN;
+      setOption       (option: PageSetupDialogOption; on: BOOLEAN; );
+      setOption1      (option: PageSetupDialogOption; );
+      testOption      (option: PageSetupDialogOption; ): BOOLEAN;
+      setOptions      (options: QPageSetupDialog_PageSetupDialogOptions; );
+      options         (): QPageSetupDialog_PageSetupDialogOptions;
+      exec            (): INTEGER; (* virtual *)
+      open0_0         ();
+      open1           (receiver: QObject; member: TEXT; );
+      destroyCxx      ();
+    END;
 
 
 END QtPageSetupDialog.

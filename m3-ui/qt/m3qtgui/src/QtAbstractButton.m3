@@ -20,329 +20,290 @@ IMPORT QtAbstractButtonRaw;
 IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE Delete_QAbstractButton ( self: QAbstractButton;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.Delete_QAbstractButton(selfAdr);
-END Delete_QAbstractButton;
+PROCEDURE Delete_QAbstractButton (self: QAbstractButton; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.Delete_QAbstractButton(selfAdr);
+  END Delete_QAbstractButton;
 
-PROCEDURE QAbstractButton_setText ( self: QAbstractButton;
- text: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg2tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setText(selfAdr, arg2tmp);
-END QAbstractButton_setText;
+PROCEDURE QAbstractButton_setText (self: QAbstractButton; text: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg2tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setText(selfAdr, arg2tmp);
+  END QAbstractButton_setText;
 
-PROCEDURE QAbstractButton_text ( self: QAbstractButton;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractButtonRaw.QAbstractButton_text(selfAdr);
+PROCEDURE QAbstractButton_text (self: QAbstractButton; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractButtonRaw.QAbstractButton_text(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QAbstractButton_text;
+    RETURN result;
+  END QAbstractButton_text;
 
-PROCEDURE QAbstractButton_setIcon ( self: QAbstractButton;
- icon: QIcon;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(icon.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setIcon(selfAdr, arg2tmp);
-END QAbstractButton_setIcon;
+PROCEDURE QAbstractButton_setIcon (self: QAbstractButton; icon: QIcon; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(icon.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setIcon(selfAdr, arg2tmp);
+  END QAbstractButton_setIcon;
 
-PROCEDURE QAbstractButton_icon ( self: QAbstractButton;
-): QIcon =
-VAR
-ret:ADDRESS; result : QIcon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractButtonRaw.QAbstractButton_icon(selfAdr);
+PROCEDURE QAbstractButton_icon (self: QAbstractButton; ): QIcon =
+  VAR
+    ret    : ADDRESS;
+    result : QIcon;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractButtonRaw.QAbstractButton_icon(selfAdr);
 
-  result := NEW(QIcon);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QIcon);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QAbstractButton_icon;
+    RETURN result;
+  END QAbstractButton_icon;
 
-PROCEDURE QAbstractButton_iconSize ( self: QAbstractButton;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractButtonRaw.QAbstractButton_iconSize(selfAdr);
+PROCEDURE QAbstractButton_iconSize (self: QAbstractButton; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractButtonRaw.QAbstractButton_iconSize(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QAbstractButton_iconSize;
+    RETURN result;
+  END QAbstractButton_iconSize;
 
-PROCEDURE QAbstractButton_setShortcut ( self: QAbstractButton;
- key: QKeySequence;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(key.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setShortcut(selfAdr, arg2tmp);
-END QAbstractButton_setShortcut;
+PROCEDURE QAbstractButton_setShortcut
+  (self: QAbstractButton; key: QKeySequence; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(key.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setShortcut(selfAdr, arg2tmp);
+  END QAbstractButton_setShortcut;
 
-PROCEDURE QAbstractButton_shortcut ( self: QAbstractButton;
-): QKeySequence =
-VAR
-ret:ADDRESS; result : QKeySequence;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractButtonRaw.QAbstractButton_shortcut(selfAdr);
+PROCEDURE QAbstractButton_shortcut (self: QAbstractButton; ):
+  QKeySequence =
+  VAR
+    ret    : ADDRESS;
+    result : QKeySequence;
+    selfAdr: ADDRESS      := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractButtonRaw.QAbstractButton_shortcut(selfAdr);
 
-  result := NEW(QKeySequence);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QKeySequence);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QAbstractButton_shortcut;
+    RETURN result;
+  END QAbstractButton_shortcut;
 
-PROCEDURE QAbstractButton_setCheckable ( self: QAbstractButton;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setCheckable(selfAdr, arg2);
-END QAbstractButton_setCheckable;
+PROCEDURE QAbstractButton_setCheckable
+  (self: QAbstractButton; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setCheckable(selfAdr, arg2);
+  END QAbstractButton_setCheckable;
 
-PROCEDURE QAbstractButton_isCheckable ( self: QAbstractButton;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractButtonRaw.QAbstractButton_isCheckable(selfAdr);
-END QAbstractButton_isCheckable;
+PROCEDURE QAbstractButton_isCheckable (self: QAbstractButton; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractButtonRaw.QAbstractButton_isCheckable(selfAdr);
+  END QAbstractButton_isCheckable;
 
-PROCEDURE QAbstractButton_isChecked ( self: QAbstractButton;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractButtonRaw.QAbstractButton_isChecked(selfAdr);
-END QAbstractButton_isChecked;
+PROCEDURE QAbstractButton_isChecked (self: QAbstractButton; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractButtonRaw.QAbstractButton_isChecked(selfAdr);
+  END QAbstractButton_isChecked;
 
-PROCEDURE QAbstractButton_setDown ( self: QAbstractButton;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setDown(selfAdr, arg2);
-END QAbstractButton_setDown;
+PROCEDURE QAbstractButton_setDown
+  (self: QAbstractButton; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setDown(selfAdr, arg2);
+  END QAbstractButton_setDown;
 
-PROCEDURE QAbstractButton_isDown ( self: QAbstractButton;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractButtonRaw.QAbstractButton_isDown(selfAdr);
-END QAbstractButton_isDown;
+PROCEDURE QAbstractButton_isDown (self: QAbstractButton; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractButtonRaw.QAbstractButton_isDown(selfAdr);
+  END QAbstractButton_isDown;
 
-PROCEDURE QAbstractButton_setAutoRepeat ( self: QAbstractButton;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setAutoRepeat(selfAdr, arg2);
-END QAbstractButton_setAutoRepeat;
+PROCEDURE QAbstractButton_setAutoRepeat
+  (self: QAbstractButton; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setAutoRepeat(selfAdr, arg2);
+  END QAbstractButton_setAutoRepeat;
 
-PROCEDURE QAbstractButton_autoRepeat ( self: QAbstractButton;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractButtonRaw.QAbstractButton_autoRepeat(selfAdr);
-END QAbstractButton_autoRepeat;
+PROCEDURE QAbstractButton_autoRepeat (self: QAbstractButton; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractButtonRaw.QAbstractButton_autoRepeat(selfAdr);
+  END QAbstractButton_autoRepeat;
 
-PROCEDURE QAbstractButton_setAutoRepeatDelay ( self: QAbstractButton;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setAutoRepeatDelay(selfAdr, arg2);
-END QAbstractButton_setAutoRepeatDelay;
+PROCEDURE QAbstractButton_setAutoRepeatDelay
+  (self: QAbstractButton; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setAutoRepeatDelay(selfAdr, arg2);
+  END QAbstractButton_setAutoRepeatDelay;
 
-PROCEDURE QAbstractButton_autoRepeatDelay ( self: QAbstractButton;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractButtonRaw.QAbstractButton_autoRepeatDelay(selfAdr);
-END QAbstractButton_autoRepeatDelay;
+PROCEDURE QAbstractButton_autoRepeatDelay (self: QAbstractButton; ):
+  INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractButtonRaw.QAbstractButton_autoRepeatDelay(selfAdr);
+  END QAbstractButton_autoRepeatDelay;
 
-PROCEDURE QAbstractButton_setAutoRepeatInterval ( self: QAbstractButton;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setAutoRepeatInterval(selfAdr, arg2);
-END QAbstractButton_setAutoRepeatInterval;
+PROCEDURE QAbstractButton_setAutoRepeatInterval
+  (self: QAbstractButton; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setAutoRepeatInterval(
+      selfAdr, arg2);
+  END QAbstractButton_setAutoRepeatInterval;
 
-PROCEDURE QAbstractButton_autoRepeatInterval ( self: QAbstractButton;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractButtonRaw.QAbstractButton_autoRepeatInterval(selfAdr);
-END QAbstractButton_autoRepeatInterval;
+PROCEDURE QAbstractButton_autoRepeatInterval (self: QAbstractButton; ):
+  INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractButtonRaw.QAbstractButton_autoRepeatInterval(selfAdr);
+  END QAbstractButton_autoRepeatInterval;
 
-PROCEDURE QAbstractButton_setAutoExclusive ( self: QAbstractButton;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setAutoExclusive(selfAdr, arg2);
-END QAbstractButton_setAutoExclusive;
+PROCEDURE QAbstractButton_setAutoExclusive
+  (self: QAbstractButton; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setAutoExclusive(selfAdr, arg2);
+  END QAbstractButton_setAutoExclusive;
 
-PROCEDURE QAbstractButton_autoExclusive ( self: QAbstractButton;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractButtonRaw.QAbstractButton_autoExclusive(selfAdr);
-END QAbstractButton_autoExclusive;
+PROCEDURE QAbstractButton_autoExclusive (self: QAbstractButton; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractButtonRaw.QAbstractButton_autoExclusive(selfAdr);
+  END QAbstractButton_autoExclusive;
 
-PROCEDURE QAbstractButton_group ( self: QAbstractButton;
-): QButtonGroup =
-VAR
-ret:ADDRESS; result : QButtonGroup;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractButtonRaw.QAbstractButton_group(selfAdr);
+PROCEDURE QAbstractButton_group (self: QAbstractButton; ): QButtonGroup =
+  VAR
+    ret    : ADDRESS;
+    result : QButtonGroup;
+    selfAdr: ADDRESS      := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractButtonRaw.QAbstractButton_group(selfAdr);
 
-  result := NEW(QButtonGroup);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QButtonGroup);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QAbstractButton_group;
+    RETURN result;
+  END QAbstractButton_group;
 
-PROCEDURE QAbstractButton_setIconSize ( self: QAbstractButton;
- size: QSize;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(size.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setIconSize(selfAdr, arg2tmp);
-END QAbstractButton_setIconSize;
+PROCEDURE QAbstractButton_setIconSize
+  (self: QAbstractButton; size: QSize; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(size.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setIconSize(selfAdr, arg2tmp);
+  END QAbstractButton_setIconSize;
 
-PROCEDURE QAbstractButton_animateClick ( self: QAbstractButton;
-msec: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_animateClick(selfAdr, msec);
-END QAbstractButton_animateClick;
+PROCEDURE QAbstractButton_animateClick
+  (self: QAbstractButton; msec: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_animateClick(selfAdr, msec);
+  END QAbstractButton_animateClick;
 
-PROCEDURE QAbstractButton_animateClick1 ( self: QAbstractButton;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_animateClick1(selfAdr);
-END QAbstractButton_animateClick1;
+PROCEDURE QAbstractButton_animateClick1 (self: QAbstractButton; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_animateClick1(selfAdr);
+  END QAbstractButton_animateClick1;
 
-PROCEDURE QAbstractButton_click ( self: QAbstractButton;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_click(selfAdr);
-END QAbstractButton_click;
+PROCEDURE QAbstractButton_click (self: QAbstractButton; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_click(selfAdr);
+  END QAbstractButton_click;
 
-PROCEDURE QAbstractButton_toggle ( self: QAbstractButton;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_toggle(selfAdr);
-END QAbstractButton_toggle;
+PROCEDURE QAbstractButton_toggle (self: QAbstractButton; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_toggle(selfAdr);
+  END QAbstractButton_toggle;
 
-PROCEDURE QAbstractButton_setChecked ( self: QAbstractButton;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractButtonRaw.QAbstractButton_setChecked(selfAdr, arg2);
-END QAbstractButton_setChecked;
+PROCEDURE QAbstractButton_setChecked
+  (self: QAbstractButton; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractButtonRaw.QAbstractButton_setChecked(selfAdr, arg2);
+  END QAbstractButton_setChecked;
 
-PROCEDURE Cleanup_QAbstractButton(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QAbstractButton := ref;
-BEGIN
-  Delete_QAbstractButton(obj);
- END Cleanup_QAbstractButton;
+PROCEDURE Cleanup_QAbstractButton
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QAbstractButton := ref;
+  BEGIN
+    Delete_QAbstractButton(obj);
+  END Cleanup_QAbstractButton;
 
-PROCEDURE Destroy_QAbstractButton(self : QAbstractButton) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QAbstractButton);
-END Destroy_QAbstractButton;
+PROCEDURE Destroy_QAbstractButton (self: QAbstractButton) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QAbstractButton);
+  END Destroy_QAbstractButton;
 
 REVEAL
-QAbstractButton =
-QAbstractButtonPublic BRANDED OBJECT
-OVERRIDES
-setText := QAbstractButton_setText;
-text := QAbstractButton_text;
-setIcon := QAbstractButton_setIcon;
-icon := QAbstractButton_icon;
-iconSize := QAbstractButton_iconSize;
-setShortcut := QAbstractButton_setShortcut;
-shortcut := QAbstractButton_shortcut;
-setCheckable := QAbstractButton_setCheckable;
-isCheckable := QAbstractButton_isCheckable;
-isChecked := QAbstractButton_isChecked;
-setDown := QAbstractButton_setDown;
-isDown := QAbstractButton_isDown;
-setAutoRepeat := QAbstractButton_setAutoRepeat;
-autoRepeat := QAbstractButton_autoRepeat;
-setAutoRepeatDelay := QAbstractButton_setAutoRepeatDelay;
-autoRepeatDelay := QAbstractButton_autoRepeatDelay;
-setAutoRepeatInterval := QAbstractButton_setAutoRepeatInterval;
-autoRepeatInterval := QAbstractButton_autoRepeatInterval;
-setAutoExclusive := QAbstractButton_setAutoExclusive;
-autoExclusive := QAbstractButton_autoExclusive;
-group := QAbstractButton_group;
-setIconSize := QAbstractButton_setIconSize;
-animateClick := QAbstractButton_animateClick;
-animateClick1 := QAbstractButton_animateClick1;
-click := QAbstractButton_click;
-toggle := QAbstractButton_toggle;
-setChecked := QAbstractButton_setChecked;
-destroyCxx := Destroy_QAbstractButton;
-END;
+  QAbstractButton =
+    QAbstractButtonPublic BRANDED OBJECT
+    OVERRIDES
+      setText               := QAbstractButton_setText;
+      text                  := QAbstractButton_text;
+      setIcon               := QAbstractButton_setIcon;
+      icon                  := QAbstractButton_icon;
+      iconSize              := QAbstractButton_iconSize;
+      setShortcut           := QAbstractButton_setShortcut;
+      shortcut              := QAbstractButton_shortcut;
+      setCheckable          := QAbstractButton_setCheckable;
+      isCheckable           := QAbstractButton_isCheckable;
+      isChecked             := QAbstractButton_isChecked;
+      setDown               := QAbstractButton_setDown;
+      isDown                := QAbstractButton_isDown;
+      setAutoRepeat         := QAbstractButton_setAutoRepeat;
+      autoRepeat            := QAbstractButton_autoRepeat;
+      setAutoRepeatDelay    := QAbstractButton_setAutoRepeatDelay;
+      autoRepeatDelay       := QAbstractButton_autoRepeatDelay;
+      setAutoRepeatInterval := QAbstractButton_setAutoRepeatInterval;
+      autoRepeatInterval    := QAbstractButton_autoRepeatInterval;
+      setAutoExclusive      := QAbstractButton_setAutoExclusive;
+      autoExclusive         := QAbstractButton_autoExclusive;
+      group                 := QAbstractButton_group;
+      setIconSize           := QAbstractButton_setIconSize;
+      animateClick          := QAbstractButton_animateClick;
+      animateClick1         := QAbstractButton_animateClick1;
+      click                 := QAbstractButton_click;
+      toggle                := QAbstractButton_toggle;
+      setChecked            := QAbstractButton_setChecked;
+      destroyCxx            := Destroy_QAbstractButton;
+    END;
 
 
 BEGIN

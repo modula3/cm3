@@ -15,115 +15,84 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QLCDNumber0 *>
-PROCEDURE New_QLCDNumber0 ( parent: ADDRESS;
-): QLCDNumber;
+PROCEDURE New_QLCDNumber0 (parent: ADDRESS; ): QLCDNumber;
 
 <* EXTERNAL New_QLCDNumber1 *>
 PROCEDURE New_QLCDNumber1 (): QLCDNumber;
 
 <* EXTERNAL New_QLCDNumber2 *>
-PROCEDURE New_QLCDNumber2 (numDigits: CARDINAL;
- parent: ADDRESS;
-): QLCDNumber;
+PROCEDURE New_QLCDNumber2 (numDigits: CARDINAL; parent: ADDRESS; ):
+  QLCDNumber;
 
 <* EXTERNAL New_QLCDNumber3 *>
-PROCEDURE New_QLCDNumber3 (numDigits: CARDINAL;
-): QLCDNumber;
+PROCEDURE New_QLCDNumber3 (numDigits: CARDINAL; ): QLCDNumber;
 
 <* EXTERNAL Delete_QLCDNumber *>
-PROCEDURE Delete_QLCDNumber ( self: QLCDNumber;
-);
+PROCEDURE Delete_QLCDNumber (self: QLCDNumber; );
 
 <* EXTERNAL QLCDNumber_smallDecimalPoint *>
-PROCEDURE QLCDNumber_smallDecimalPoint ( self: QLCDNumber;
-): BOOLEAN;
+PROCEDURE QLCDNumber_smallDecimalPoint (self: QLCDNumber; ): BOOLEAN;
 
 <* EXTERNAL QLCDNumber_digitCount *>
-PROCEDURE QLCDNumber_digitCount ( self: QLCDNumber;
-): C.int;
+PROCEDURE QLCDNumber_digitCount (self: QLCDNumber; ): C.int;
 
 <* EXTERNAL QLCDNumber_setDigitCount *>
-PROCEDURE QLCDNumber_setDigitCount ( self: QLCDNumber;
-nDigits: C.int;
-);
+PROCEDURE QLCDNumber_setDigitCount (self: QLCDNumber; nDigits: C.int; );
 
 <* EXTERNAL QLCDNumber_checkOverflow *>
-PROCEDURE QLCDNumber_checkOverflow ( self: QLCDNumber;
-num: C.double;
-): BOOLEAN;
+PROCEDURE QLCDNumber_checkOverflow (self: QLCDNumber; num: C.double; ):
+  BOOLEAN;
 
 <* EXTERNAL QLCDNumber_checkOverflow1 *>
-PROCEDURE QLCDNumber_checkOverflow1 ( self: QLCDNumber;
-num: C.int;
-): BOOLEAN;
+PROCEDURE QLCDNumber_checkOverflow1 (self: QLCDNumber; num: C.int; ):
+  BOOLEAN;
 
 <* EXTERNAL QLCDNumber_mode *>
-PROCEDURE QLCDNumber_mode ( self: QLCDNumber;
-): C.int;
+PROCEDURE QLCDNumber_mode (self: QLCDNumber; ): C.int;
 
 <* EXTERNAL QLCDNumber_setMode *>
-PROCEDURE QLCDNumber_setMode ( self: QLCDNumber;
-arg2: C.int;
-);
+PROCEDURE QLCDNumber_setMode (self: QLCDNumber; arg2: C.int; );
 
 <* EXTERNAL QLCDNumber_segmentStyle *>
-PROCEDURE QLCDNumber_segmentStyle ( self: QLCDNumber;
-): C.int;
+PROCEDURE QLCDNumber_segmentStyle (self: QLCDNumber; ): C.int;
 
 <* EXTERNAL QLCDNumber_setSegmentStyle *>
-PROCEDURE QLCDNumber_setSegmentStyle ( self: QLCDNumber;
-arg2: C.int;
-);
+PROCEDURE QLCDNumber_setSegmentStyle (self: QLCDNumber; arg2: C.int; );
 
 <* EXTERNAL QLCDNumber_value *>
-PROCEDURE QLCDNumber_value ( self: QLCDNumber;
-): C.double;
+PROCEDURE QLCDNumber_value (self: QLCDNumber; ): C.double;
 
 <* EXTERNAL QLCDNumber_intValue *>
-PROCEDURE QLCDNumber_intValue ( self: QLCDNumber;
-): C.int;
+PROCEDURE QLCDNumber_intValue (self: QLCDNumber; ): C.int;
 
 <* EXTERNAL QLCDNumber_sizeHint *>
-PROCEDURE QLCDNumber_sizeHint ( self: QLCDNumber;
-): ADDRESS;
+PROCEDURE QLCDNumber_sizeHint (self: QLCDNumber; ): ADDRESS;
 
 <* EXTERNAL QLCDNumber_display *>
-PROCEDURE QLCDNumber_display ( self: QLCDNumber;
- str: ADDRESS;
-);
+PROCEDURE QLCDNumber_display (self: QLCDNumber; str: ADDRESS; );
 
 <* EXTERNAL QLCDNumber_display1 *>
-PROCEDURE QLCDNumber_display1 ( self: QLCDNumber;
-num: C.int;
-);
+PROCEDURE QLCDNumber_display1 (self: QLCDNumber; num: C.int; );
 
 <* EXTERNAL QLCDNumber_display2 *>
-PROCEDURE QLCDNumber_display2 ( self: QLCDNumber;
-num: C.double;
-);
+PROCEDURE QLCDNumber_display2 (self: QLCDNumber; num: C.double; );
 
 <* EXTERNAL QLCDNumber_setHexMode *>
-PROCEDURE QLCDNumber_setHexMode ( self: QLCDNumber;
-);
+PROCEDURE QLCDNumber_setHexMode (self: QLCDNumber; );
 
 <* EXTERNAL QLCDNumber_setDecMode *>
-PROCEDURE QLCDNumber_setDecMode ( self: QLCDNumber;
-);
+PROCEDURE QLCDNumber_setDecMode (self: QLCDNumber; );
 
 <* EXTERNAL QLCDNumber_setOctMode *>
-PROCEDURE QLCDNumber_setOctMode ( self: QLCDNumber;
-);
+PROCEDURE QLCDNumber_setOctMode (self: QLCDNumber; );
 
 <* EXTERNAL QLCDNumber_setBinMode *>
-PROCEDURE QLCDNumber_setBinMode ( self: QLCDNumber;
-);
+PROCEDURE QLCDNumber_setBinMode (self: QLCDNumber; );
 
 <* EXTERNAL QLCDNumber_setSmallDecimalPoint *>
-PROCEDURE QLCDNumber_setSmallDecimalPoint ( self: QLCDNumber;
-arg2: BOOLEAN;
-);
+PROCEDURE QLCDNumber_setSmallDecimalPoint
+  (self: QLCDNumber; arg2: BOOLEAN; );
 
-TYPE
-QLCDNumber = ADDRESS;
+TYPE QLCDNumber = ADDRESS;
 
 END QtLCDNumberRaw.

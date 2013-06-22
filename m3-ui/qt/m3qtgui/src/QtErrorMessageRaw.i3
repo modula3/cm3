@@ -14,30 +14,25 @@ INTERFACE QtErrorMessageRaw;
 
 
 <* EXTERNAL New_QErrorMessage0 *>
-PROCEDURE New_QErrorMessage0 ( parent: ADDRESS;
-): QErrorMessage;
+PROCEDURE New_QErrorMessage0 (parent: ADDRESS; ): QErrorMessage;
 
 <* EXTERNAL New_QErrorMessage1 *>
 PROCEDURE New_QErrorMessage1 (): QErrorMessage;
 
 <* EXTERNAL Delete_QErrorMessage *>
-PROCEDURE Delete_QErrorMessage ( self: QErrorMessage;
-);
+PROCEDURE Delete_QErrorMessage (self: QErrorMessage; );
 
 <* EXTERNAL QtHandler *>
 PROCEDURE QtHandler (): ADDRESS;
 
 <* EXTERNAL QErrorMessage_showMessage *>
-PROCEDURE QErrorMessage_showMessage ( self: QErrorMessage;
- message: ADDRESS;
-);
+PROCEDURE QErrorMessage_showMessage
+  (self: QErrorMessage; message: ADDRESS; );
 
 <* EXTERNAL QErrorMessage_showMessage1 *>
-PROCEDURE QErrorMessage_showMessage1 ( self: QErrorMessage;
- message, type: ADDRESS;
-);
+PROCEDURE QErrorMessage_showMessage1
+  (self: QErrorMessage; message, type: ADDRESS; );
 
-TYPE
-QErrorMessage = ADDRESS;
+TYPE QErrorMessage = ADDRESS;
 
 END QtErrorMessageRaw.

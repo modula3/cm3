@@ -12,40 +12,28 @@ FROM QtIcon IMPORT QIcon;
 FROM QtObject IMPORT QObject;
 
 
-TYPE
-  T = QActionGroup;
+TYPE T = QActionGroup;
 
 
 TYPE
-QActionGroup <: QActionGroupPublic;
-QActionGroupPublic =
-QObject BRANDED OBJECT
-METHODS
-init_0 ( parent: QObject;
-) : QActionGroup;
-addAction( a: REFANY (*QAction*);
-): REFANY;
-addAction1( text: TEXT;
-): REFANY;
-addAction2( icon: QIcon;
- text: TEXT;
-): REFANY;
-removeAction( a: REFANY (*QAction*);
-);
-checkedAction(): REFANY;
-isExclusive(): BOOLEAN;
-isEnabled(): BOOLEAN;
-isVisible(): BOOLEAN;
-setEnabled(arg1: BOOLEAN;
-);
-setDisabled(b: BOOLEAN;
-);
-setVisible(arg1: BOOLEAN;
-);
-setExclusive(arg1: BOOLEAN;
-);
-destroyCxx();
-END;
+  QActionGroup <: QActionGroupPublic;
+  QActionGroupPublic = QObject BRANDED OBJECT
+                       METHODS
+                         init_0        (parent: QObject; ): QActionGroup;
+                         addAction     (a: REFANY (*QAction*); ): REFANY;
+                         addAction1    (text: TEXT; ): REFANY;
+                         addAction2    (icon: QIcon; text: TEXT; ): REFANY;
+                         removeAction  (a: REFANY (*QAction*); );
+                         checkedAction (): REFANY;
+                         isExclusive   (): BOOLEAN;
+                         isEnabled     (): BOOLEAN;
+                         isVisible     (): BOOLEAN;
+                         setEnabled    (arg1: BOOLEAN; );
+                         setDisabled   (b: BOOLEAN; );
+                         setVisible    (arg1: BOOLEAN; );
+                         setExclusive  (arg1: BOOLEAN; );
+                         destroyCxx    ();
+                       END;
 
 
 END QtActionGroup.

@@ -17,124 +17,117 @@ FROM QtWidget IMPORT QWidget;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QFontComboBox0 (self:QFontComboBox; parent: QWidget;
-): QFontComboBox =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtFontComboBoxRaw.New_QFontComboBox0(arg1tmp);
+PROCEDURE New_QFontComboBox0 (self: QFontComboBox; parent: QWidget; ):
+  QFontComboBox =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFontComboBoxRaw.New_QFontComboBox0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFontComboBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFontComboBox);
 
-RETURN self;
-END New_QFontComboBox0;
+    RETURN self;
+  END New_QFontComboBox0;
 
-PROCEDURE New_QFontComboBox1 (self:QFontComboBox;): QFontComboBox =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtFontComboBoxRaw.New_QFontComboBox1();
+PROCEDURE New_QFontComboBox1 (self: QFontComboBox; ): QFontComboBox =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtFontComboBoxRaw.New_QFontComboBox1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFontComboBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFontComboBox);
 
-RETURN self;
-END New_QFontComboBox1;
+    RETURN self;
+  END New_QFontComboBox1;
 
-PROCEDURE Delete_QFontComboBox ( self: QFontComboBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontComboBoxRaw.Delete_QFontComboBox(selfAdr);
-END Delete_QFontComboBox;
+PROCEDURE Delete_QFontComboBox (self: QFontComboBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontComboBoxRaw.Delete_QFontComboBox(selfAdr);
+  END Delete_QFontComboBox;
 
-PROCEDURE QFontComboBox_setFontFilters ( self: QFontComboBox;
-filters: FontFilters;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontComboBoxRaw.QFontComboBox_setFontFilters(selfAdr, ORD(filters));
-END QFontComboBox_setFontFilters;
+PROCEDURE QFontComboBox_setFontFilters
+  (self: QFontComboBox; filters: FontFilters; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontComboBoxRaw.QFontComboBox_setFontFilters(selfAdr, ORD(filters));
+  END QFontComboBox_setFontFilters;
 
-PROCEDURE QFontComboBox_fontFilters ( self: QFontComboBox;
-): FontFilters =
-VAR
-ret:INTEGER; result : FontFilters;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontComboBoxRaw.QFontComboBox_fontFilters(selfAdr);
-result := VAL(ret,FontFilters);  
-RETURN result;
-END QFontComboBox_fontFilters;
+PROCEDURE QFontComboBox_fontFilters (self: QFontComboBox; ): FontFilters =
+  VAR
+    ret    : INTEGER;
+    result : FontFilters;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontComboBoxRaw.QFontComboBox_fontFilters(selfAdr);
+    result := VAL(ret, FontFilters);
+    RETURN result;
+  END QFontComboBox_fontFilters;
 
-PROCEDURE QFontComboBox_currentFont ( self: QFontComboBox;
-): QFont =
-VAR
-ret:ADDRESS; result : QFont;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontComboBoxRaw.QFontComboBox_currentFont(selfAdr);
+PROCEDURE QFontComboBox_currentFont (self: QFontComboBox; ): QFont =
+  VAR
+    ret    : ADDRESS;
+    result : QFont;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontComboBoxRaw.QFontComboBox_currentFont(selfAdr);
 
-  result := NEW(QFont);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QFont);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QFontComboBox_currentFont;
+    RETURN result;
+  END QFontComboBox_currentFont;
 
-PROCEDURE QFontComboBox_sizeHint ( self: QFontComboBox;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontComboBoxRaw.QFontComboBox_sizeHint(selfAdr);
+PROCEDURE QFontComboBox_sizeHint (self: QFontComboBox; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontComboBoxRaw.QFontComboBox_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QFontComboBox_sizeHint;
+    RETURN result;
+  END QFontComboBox_sizeHint;
 
-PROCEDURE QFontComboBox_setCurrentFont ( self: QFontComboBox;
- f: QFont;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(f.cxxObj,ADDRESS);
-BEGIN
-QtFontComboBoxRaw.QFontComboBox_setCurrentFont(selfAdr, arg2tmp);
-END QFontComboBox_setCurrentFont;
+PROCEDURE QFontComboBox_setCurrentFont (self: QFontComboBox; f: QFont; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(f.cxxObj, ADDRESS);
+  BEGIN
+    QtFontComboBoxRaw.QFontComboBox_setCurrentFont(selfAdr, arg2tmp);
+  END QFontComboBox_setCurrentFont;
 
-PROCEDURE Cleanup_QFontComboBox(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QFontComboBox := ref;
-BEGIN
-  Delete_QFontComboBox(obj);
- END Cleanup_QFontComboBox;
+PROCEDURE Cleanup_QFontComboBox
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QFontComboBox := ref;
+  BEGIN
+    Delete_QFontComboBox(obj);
+  END Cleanup_QFontComboBox;
 
-PROCEDURE Destroy_QFontComboBox(self : QFontComboBox) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QFontComboBox);
-END Destroy_QFontComboBox;
+PROCEDURE Destroy_QFontComboBox (self: QFontComboBox) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QFontComboBox);
+  END Destroy_QFontComboBox;
 
 REVEAL
-QFontComboBox =
-QFontComboBoxPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QFontComboBox0;
-init_1 := New_QFontComboBox1;
-setFontFilters := QFontComboBox_setFontFilters;
-fontFilters := QFontComboBox_fontFilters;
-currentFont := QFontComboBox_currentFont;
-sizeHint := QFontComboBox_sizeHint;
-setCurrentFont := QFontComboBox_setCurrentFont;
-destroyCxx := Destroy_QFontComboBox;
-END;
+  QFontComboBox = QFontComboBoxPublic BRANDED OBJECT
+                  OVERRIDES
+                    init_0         := New_QFontComboBox0;
+                    init_1         := New_QFontComboBox1;
+                    setFontFilters := QFontComboBox_setFontFilters;
+                    fontFilters    := QFontComboBox_fontFilters;
+                    currentFont    := QFontComboBox_currentFont;
+                    sizeHint       := QFontComboBox_sizeHint;
+                    setCurrentFont := QFontComboBox_setCurrentFont;
+                    destroyCxx     := Destroy_QFontComboBox;
+                  END;
 
 
 BEGIN

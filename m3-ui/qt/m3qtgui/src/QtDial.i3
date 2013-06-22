@@ -13,32 +13,26 @@ FROM QtWidget IMPORT QWidget;
 
 
 FROM QtAbstractSlider IMPORT QAbstractSlider;
-TYPE
-  T = QDial;
+TYPE T = QDial;
 
 
 TYPE
-QDial <: QDialPublic;
-QDialPublic =
-QAbstractSlider BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QDial;
-init_1 () : QDial;
-wrapping(): BOOLEAN;
-notchSize(): INTEGER;
-setNotchTarget(target: LONGREAL;
-);
-notchTarget(): LONGREAL;
-notchesVisible(): BOOLEAN;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-setNotchesVisible(visible: BOOLEAN;
-);
-setWrapping(on: BOOLEAN;
-);
-destroyCxx();
-END;
+  QDial <: QDialPublic;
+  QDialPublic = QAbstractSlider BRANDED OBJECT
+                METHODS
+                  init_0            (parent: QWidget; ): QDial;
+                  init_1            (): QDial;
+                  wrapping          (): BOOLEAN;
+                  notchSize         (): INTEGER;
+                  setNotchTarget    (target: LONGREAL; );
+                  notchTarget       (): LONGREAL;
+                  notchesVisible    (): BOOLEAN;
+                  sizeHint          (): QSize; (* virtual *)
+                  minimumSizeHint   (): QSize; (* virtual *)
+                  setNotchesVisible (visible: BOOLEAN; );
+                  setWrapping       (on: BOOLEAN; );
+                  destroyCxx        ();
+                END;
 
 
 END QtDial.

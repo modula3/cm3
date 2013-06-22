@@ -11,7 +11,7 @@ UNSAFE MODULE QtUndoView;
 
 FROM QtIcon IMPORT QIcon;
 IMPORT QtUndoViewRaw;
-FROM QGuiStubs IMPORT QUndoStack,QUndoGroup;
+FROM QGuiStubs IMPORT QUndoStack, QUndoGroup;
 FROM QtWidget IMPORT QWidget;
 FROM QtString IMPORT QString;
 
@@ -19,235 +19,220 @@ FROM QtString IMPORT QString;
 IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE New_QUndoView0 (self:QUndoView; parent: QWidget;
-): QUndoView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtUndoViewRaw.New_QUndoView0(arg1tmp);
+PROCEDURE New_QUndoView0 (self: QUndoView; parent: QWidget; ): QUndoView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtUndoViewRaw.New_QUndoView0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QUndoView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QUndoView);
 
-RETURN self;
-END New_QUndoView0;
+    RETURN self;
+  END New_QUndoView0;
 
-PROCEDURE New_QUndoView1 (self:QUndoView;): QUndoView =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtUndoViewRaw.New_QUndoView1();
+PROCEDURE New_QUndoView1 (self: QUndoView; ): QUndoView =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtUndoViewRaw.New_QUndoView1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QUndoView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QUndoView);
 
-RETURN self;
-END New_QUndoView1;
+    RETURN self;
+  END New_QUndoView1;
 
-PROCEDURE New_QUndoView2 (self:QUndoView; stack: QUndoStack;
- parent: QWidget;
-): QUndoView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(stack.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtUndoViewRaw.New_QUndoView2(arg1tmp, arg2tmp);
+PROCEDURE New_QUndoView2
+  (self: QUndoView; stack: QUndoStack; parent: QWidget; ): QUndoView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(stack.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtUndoViewRaw.New_QUndoView2(arg1tmp, arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QUndoView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QUndoView);
 
-RETURN self;
-END New_QUndoView2;
+    RETURN self;
+  END New_QUndoView2;
 
-PROCEDURE New_QUndoView3 (self:QUndoView; stack: QUndoStack;
-): QUndoView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(stack.cxxObj,ADDRESS);
-BEGIN
-result := QtUndoViewRaw.New_QUndoView3(arg1tmp);
+PROCEDURE New_QUndoView3 (self: QUndoView; stack: QUndoStack; ):
+  QUndoView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(stack.cxxObj, ADDRESS);
+  BEGIN
+    result := QtUndoViewRaw.New_QUndoView3(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QUndoView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QUndoView);
 
-RETURN self;
-END New_QUndoView3;
+    RETURN self;
+  END New_QUndoView3;
 
-PROCEDURE New_QUndoView4 (self:QUndoView; group: QUndoGroup;
- parent: QWidget;
-): QUndoView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(group.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtUndoViewRaw.New_QUndoView4(arg1tmp, arg2tmp);
+PROCEDURE New_QUndoView4
+  (self: QUndoView; group: QUndoGroup; parent: QWidget; ): QUndoView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(group.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtUndoViewRaw.New_QUndoView4(arg1tmp, arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QUndoView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QUndoView);
 
-RETURN self;
-END New_QUndoView4;
+    RETURN self;
+  END New_QUndoView4;
 
-PROCEDURE New_QUndoView5 (self:QUndoView; group: QUndoGroup;
-): QUndoView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(group.cxxObj,ADDRESS);
-BEGIN
-result := QtUndoViewRaw.New_QUndoView5(arg1tmp);
+PROCEDURE New_QUndoView5 (self: QUndoView; group: QUndoGroup; ):
+  QUndoView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(group.cxxObj, ADDRESS);
+  BEGIN
+    result := QtUndoViewRaw.New_QUndoView5(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QUndoView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QUndoView);
 
-RETURN self;
-END New_QUndoView5;
+    RETURN self;
+  END New_QUndoView5;
 
-PROCEDURE Delete_QUndoView ( self: QUndoView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtUndoViewRaw.Delete_QUndoView(selfAdr);
-END Delete_QUndoView;
+PROCEDURE Delete_QUndoView (self: QUndoView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtUndoViewRaw.Delete_QUndoView(selfAdr);
+  END Delete_QUndoView;
 
-PROCEDURE QUndoView_stack ( self: QUndoView;
-): QUndoStack =
-VAR
-ret:ADDRESS; result : QUndoStack;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtUndoViewRaw.QUndoView_stack(selfAdr);
+PROCEDURE QUndoView_stack (self: QUndoView; ): QUndoStack =
+  VAR
+    ret    : ADDRESS;
+    result : QUndoStack;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtUndoViewRaw.QUndoView_stack(selfAdr);
 
-  result := NEW(QUndoStack);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QUndoStack);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QUndoView_stack;
+    RETURN result;
+  END QUndoView_stack;
 
-PROCEDURE QUndoView_group ( self: QUndoView;
-): QUndoGroup =
-VAR
-ret:ADDRESS; result : QUndoGroup;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtUndoViewRaw.QUndoView_group(selfAdr);
+PROCEDURE QUndoView_group (self: QUndoView; ): QUndoGroup =
+  VAR
+    ret    : ADDRESS;
+    result : QUndoGroup;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtUndoViewRaw.QUndoView_group(selfAdr);
 
-  result := NEW(QUndoGroup);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QUndoGroup);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QUndoView_group;
+    RETURN result;
+  END QUndoView_group;
 
-PROCEDURE QUndoView_setEmptyLabel ( self: QUndoView;
- label: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg2tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-QtUndoViewRaw.QUndoView_setEmptyLabel(selfAdr, arg2tmp);
-END QUndoView_setEmptyLabel;
+PROCEDURE QUndoView_setEmptyLabel (self: QUndoView; label: TEXT; ) =
+  VAR
+    selfAdr   : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_label          := NEW(QString).initQString(label);
+    arg2tmp             := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    QtUndoViewRaw.QUndoView_setEmptyLabel(selfAdr, arg2tmp);
+  END QUndoView_setEmptyLabel;
 
-PROCEDURE QUndoView_emptyLabel ( self: QUndoView;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtUndoViewRaw.QUndoView_emptyLabel(selfAdr);
+PROCEDURE QUndoView_emptyLabel (self: QUndoView; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtUndoViewRaw.QUndoView_emptyLabel(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QUndoView_emptyLabel;
+    RETURN result;
+  END QUndoView_emptyLabel;
 
-PROCEDURE QUndoView_setCleanIcon ( self: QUndoView;
- icon: QIcon;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(icon.cxxObj,ADDRESS);
-BEGIN
-QtUndoViewRaw.QUndoView_setCleanIcon(selfAdr, arg2tmp);
-END QUndoView_setCleanIcon;
+PROCEDURE QUndoView_setCleanIcon (self: QUndoView; icon: QIcon; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(icon.cxxObj, ADDRESS);
+  BEGIN
+    QtUndoViewRaw.QUndoView_setCleanIcon(selfAdr, arg2tmp);
+  END QUndoView_setCleanIcon;
 
-PROCEDURE QUndoView_cleanIcon ( self: QUndoView;
-): QIcon =
-VAR
-ret:ADDRESS; result : QIcon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtUndoViewRaw.QUndoView_cleanIcon(selfAdr);
+PROCEDURE QUndoView_cleanIcon (self: QUndoView; ): QIcon =
+  VAR
+    ret    : ADDRESS;
+    result : QIcon;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtUndoViewRaw.QUndoView_cleanIcon(selfAdr);
 
-  result := NEW(QIcon);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QIcon);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QUndoView_cleanIcon;
+    RETURN result;
+  END QUndoView_cleanIcon;
 
-PROCEDURE QUndoView_setStack ( self: QUndoView;
- stack: QUndoStack;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(stack.cxxObj,ADDRESS);
-BEGIN
-QtUndoViewRaw.QUndoView_setStack(selfAdr, arg2tmp);
-END QUndoView_setStack;
+PROCEDURE QUndoView_setStack (self: QUndoView; stack: QUndoStack; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(stack.cxxObj, ADDRESS);
+  BEGIN
+    QtUndoViewRaw.QUndoView_setStack(selfAdr, arg2tmp);
+  END QUndoView_setStack;
 
-PROCEDURE QUndoView_setGroup ( self: QUndoView;
- group: QUndoGroup;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(group.cxxObj,ADDRESS);
-BEGIN
-QtUndoViewRaw.QUndoView_setGroup(selfAdr, arg2tmp);
-END QUndoView_setGroup;
+PROCEDURE QUndoView_setGroup (self: QUndoView; group: QUndoGroup; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(group.cxxObj, ADDRESS);
+  BEGIN
+    QtUndoViewRaw.QUndoView_setGroup(selfAdr, arg2tmp);
+  END QUndoView_setGroup;
 
-PROCEDURE Cleanup_QUndoView(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QUndoView := ref;
-BEGIN
-  Delete_QUndoView(obj);
- END Cleanup_QUndoView;
+PROCEDURE Cleanup_QUndoView
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QUndoView := ref;
+  BEGIN
+    Delete_QUndoView(obj);
+  END Cleanup_QUndoView;
 
-PROCEDURE Destroy_QUndoView(self : QUndoView) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QUndoView);
-END Destroy_QUndoView;
+PROCEDURE Destroy_QUndoView (self: QUndoView) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QUndoView);
+  END Destroy_QUndoView;
 
 REVEAL
-QUndoView =
-QUndoViewPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QUndoView0;
-init_1 := New_QUndoView1;
-init_2 := New_QUndoView2;
-init_3 := New_QUndoView3;
-init_4 := New_QUndoView4;
-init_5 := New_QUndoView5;
-stack := QUndoView_stack;
-group := QUndoView_group;
-setEmptyLabel := QUndoView_setEmptyLabel;
-emptyLabel := QUndoView_emptyLabel;
-setCleanIcon := QUndoView_setCleanIcon;
-cleanIcon := QUndoView_cleanIcon;
-setStack := QUndoView_setStack;
-setGroup := QUndoView_setGroup;
-destroyCxx := Destroy_QUndoView;
-END;
+  QUndoView = QUndoViewPublic BRANDED OBJECT
+              OVERRIDES
+                init_0        := New_QUndoView0;
+                init_1        := New_QUndoView1;
+                init_2        := New_QUndoView2;
+                init_3        := New_QUndoView3;
+                init_4        := New_QUndoView4;
+                init_5        := New_QUndoView5;
+                stack         := QUndoView_stack;
+                group         := QUndoView_group;
+                setEmptyLabel := QUndoView_setEmptyLabel;
+                emptyLabel    := QUndoView_emptyLabel;
+                setCleanIcon  := QUndoView_setCleanIcon;
+                cleanIcon     := QUndoView_cleanIcon;
+                setStack      := QUndoView_setStack;
+                setGroup      := QUndoView_setGroup;
+                destroyCxx    := Destroy_QUndoView;
+              END;
 
 
 BEGIN

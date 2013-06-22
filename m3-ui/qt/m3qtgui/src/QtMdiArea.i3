@@ -11,7 +11,7 @@ INTERFACE QtMdiArea;
 FROM QtSize IMPORT QSize;
 FROM QtMdiSubWindow IMPORT QMdiSubWindow;
 FROM QtWidget IMPORT QWidget;
-FROM QtTabWidget IMPORT TabShape,TabPosition;
+FROM QtTabWidget IMPORT TabShape, TabPosition;
 FROM QtBrush IMPORT QBrush;
 FROM QtNamespace IMPORT WindowTypes;
 
@@ -23,77 +23,56 @@ TYPE
   AreaOptions = INTEGER;
 
 
-CONST (* Enum AreaOption *)
+CONST                            (* Enum AreaOption *)
   DontMaximizeSubWindowOnActivation = 1;
 
-TYPE (* Enum AreaOption *)
-  AreaOption = [1..1];
+TYPE                             (* Enum AreaOption *)
+  AreaOption = [1 .. 1];
 
-TYPE (* Enum WindowOrder *)
-  WindowOrder = {
- CreationOrder,
- StackingOrder,
- ActivationHistoryOrder};
+TYPE                             (* Enum WindowOrder *)
+  WindowOrder = {CreationOrder, StackingOrder, ActivationHistoryOrder};
 
-TYPE (* Enum ViewMode *)
-  ViewMode = {
- SubWindowView,
- TabbedView};
+TYPE                             (* Enum ViewMode *)
+  ViewMode = {SubWindowView, TabbedView};
 
 TYPE
-QMdiArea <: QMdiAreaPublic;
-QMdiAreaPublic =
-QAbstractScrollArea BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QMdiArea;
-init_1 () : QMdiArea;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-currentSubWindow(): QMdiSubWindow;
-activeSubWindow(): QMdiSubWindow;
-addSubWindow( widget: QWidget;
-flags: WindowTypes;
-): QMdiSubWindow;
-addSubWindow1( widget: QWidget;
-): QMdiSubWindow;
-removeSubWindow( widget: QWidget;
-);
-background(): QBrush;
-setBackground( background: QBrush;
-);
-activationOrder(): WindowOrder;
-setActivationOrder(order: WindowOrder;
-);
-setOption(option: AreaOption;
-on: BOOLEAN;
-);
-setOption1(option: AreaOption;
-);
-testOption(opton: AreaOption;
-): BOOLEAN;
-setViewMode(mode: ViewMode;
-);
-viewMode(): ViewMode;
-documentMode(): BOOLEAN;
-setDocumentMode(enabled: BOOLEAN;
-);
-setTabShape(shape: TabShape;
-);
-tabShape(): TabShape;
-setTabPosition(position: TabPosition;
-);
-tabPosition(): TabPosition;
-setActiveSubWindow( window: QMdiSubWindow;
-);
-tileSubWindows();
-cascadeSubWindows();
-closeActiveSubWindow();
-closeAllSubWindows();
-activateNextSubWindow();
-activatePreviousSubWindow();
-destroyCxx();
-END;
+  QMdiArea <: QMdiAreaPublic;
+  QMdiAreaPublic =
+    QAbstractScrollArea BRANDED OBJECT
+    METHODS
+      init_0           (parent: QWidget; ): QMdiArea;
+      init_1           (): QMdiArea;
+      sizeHint         (): QSize; (* virtual *)
+      minimumSizeHint  (): QSize; (* virtual *)
+      currentSubWindow (): QMdiSubWindow;
+      activeSubWindow  (): QMdiSubWindow;
+      addSubWindow  (widget: QWidget; flags: WindowTypes; ): QMdiSubWindow;
+      addSubWindow1 (widget: QWidget; ): QMdiSubWindow;
+      removeSubWindow           (widget: QWidget; );
+      background                (): QBrush;
+      setBackground             (background: QBrush; );
+      activationOrder           (): WindowOrder;
+      setActivationOrder        (order: WindowOrder; );
+      setOption                 (option: AreaOption; on: BOOLEAN; );
+      setOption1                (option: AreaOption; );
+      testOption                (opton: AreaOption; ): BOOLEAN;
+      setViewMode               (mode: ViewMode; );
+      viewMode                  (): ViewMode;
+      documentMode              (): BOOLEAN;
+      setDocumentMode           (enabled: BOOLEAN; );
+      setTabShape               (shape: TabShape; );
+      tabShape                  (): TabShape;
+      setTabPosition            (position: TabPosition; );
+      tabPosition               (): TabPosition;
+      setActiveSubWindow        (window: QMdiSubWindow; );
+      tileSubWindows            ();
+      cascadeSubWindows         ();
+      closeActiveSubWindow      ();
+      closeAllSubWindows        ();
+      activateNextSubWindow     ();
+      activatePreviousSubWindow ();
+      destroyCxx                ();
+    END;
 
 
 END QtMdiArea.

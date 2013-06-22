@@ -15,251 +15,175 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QBoxLayout0 *>
-PROCEDURE New_QBoxLayout0 (arg1: C.int;
- parent: ADDRESS;
-): QBoxLayout;
+PROCEDURE New_QBoxLayout0 (arg1: C.int; parent: ADDRESS; ): QBoxLayout;
 
 <* EXTERNAL New_QBoxLayout1 *>
-PROCEDURE New_QBoxLayout1 (arg1: C.int;
-): QBoxLayout;
+PROCEDURE New_QBoxLayout1 (arg1: C.int; ): QBoxLayout;
 
 <* EXTERNAL Delete_QBoxLayout *>
-PROCEDURE Delete_QBoxLayout ( self: QBoxLayout;
-);
+PROCEDURE Delete_QBoxLayout (self: QBoxLayout; );
 
 <* EXTERNAL QBoxLayout_direction *>
-PROCEDURE QBoxLayout_direction ( self: QBoxLayout;
-): C.int;
+PROCEDURE QBoxLayout_direction (self: QBoxLayout; ): C.int;
 
 <* EXTERNAL QBoxLayout_setDirection *>
-PROCEDURE QBoxLayout_setDirection ( self: QBoxLayout;
-arg2: C.int;
-);
+PROCEDURE QBoxLayout_setDirection (self: QBoxLayout; arg2: C.int; );
 
 <* EXTERNAL QBoxLayout_addSpacing *>
-PROCEDURE QBoxLayout_addSpacing ( self: QBoxLayout;
-size: C.int;
-);
+PROCEDURE QBoxLayout_addSpacing (self: QBoxLayout; size: C.int; );
 
 <* EXTERNAL QBoxLayout_addStretch *>
-PROCEDURE QBoxLayout_addStretch ( self: QBoxLayout;
-stretch: C.int;
-);
+PROCEDURE QBoxLayout_addStretch (self: QBoxLayout; stretch: C.int; );
 
 <* EXTERNAL QBoxLayout_addStretch1 *>
-PROCEDURE QBoxLayout_addStretch1 ( self: QBoxLayout;
-);
+PROCEDURE QBoxLayout_addStretch1 (self: QBoxLayout; );
 
 <* EXTERNAL QBoxLayout_addSpacerItem *>
-PROCEDURE QBoxLayout_addSpacerItem ( self: QBoxLayout;
- spacerItem: ADDRESS;
-);
+PROCEDURE QBoxLayout_addSpacerItem
+  (self: QBoxLayout; spacerItem: ADDRESS; );
 
 <* EXTERNAL QBoxLayout_addWidget *>
-PROCEDURE QBoxLayout_addWidget ( self: QBoxLayout;
- arg2: ADDRESS;
-stretch, alignment: C.int;
-);
+PROCEDURE QBoxLayout_addWidget
+  (self: QBoxLayout; arg2: ADDRESS; stretch, alignment: C.int; );
 
 <* EXTERNAL QBoxLayout_addWidget1 *>
-PROCEDURE QBoxLayout_addWidget1 ( self: QBoxLayout;
- arg2: ADDRESS;
-stretch: C.int;
-);
+PROCEDURE QBoxLayout_addWidget1
+  (self: QBoxLayout; arg2: ADDRESS; stretch: C.int; );
 
 <* EXTERNAL QBoxLayout_addWidget2 *>
-PROCEDURE QBoxLayout_addWidget2 ( self: QBoxLayout;
- arg2: ADDRESS;
-);
+PROCEDURE QBoxLayout_addWidget2 (self: QBoxLayout; arg2: ADDRESS; );
 
 <* EXTERNAL QBoxLayout_addLayout *>
-PROCEDURE QBoxLayout_addLayout ( self: QBoxLayout;
- layout: ADDRESS;
-stretch: C.int;
-);
+PROCEDURE QBoxLayout_addLayout
+  (self: QBoxLayout; layout: ADDRESS; stretch: C.int; );
 
 <* EXTERNAL QBoxLayout_addLayout1 *>
-PROCEDURE QBoxLayout_addLayout1 ( self: QBoxLayout;
- layout: ADDRESS;
-);
+PROCEDURE QBoxLayout_addLayout1 (self: QBoxLayout; layout: ADDRESS; );
 
 <* EXTERNAL QBoxLayout_addStrut *>
-PROCEDURE QBoxLayout_addStrut ( self: QBoxLayout;
-arg2: C.int;
-);
+PROCEDURE QBoxLayout_addStrut (self: QBoxLayout; arg2: C.int; );
 
 <* EXTERNAL QBoxLayout_addItem *>
-PROCEDURE QBoxLayout_addItem ( self: QBoxLayout;
- arg2: ADDRESS;
-);
+PROCEDURE QBoxLayout_addItem (self: QBoxLayout; arg2: ADDRESS; );
 
 <* EXTERNAL QBoxLayout_insertSpacing *>
-PROCEDURE QBoxLayout_insertSpacing ( self: QBoxLayout;
-index, size: C.int;
-);
+PROCEDURE QBoxLayout_insertSpacing
+  (self: QBoxLayout; index, size: C.int; );
 
 <* EXTERNAL QBoxLayout_insertStretch *>
-PROCEDURE QBoxLayout_insertStretch ( self: QBoxLayout;
-index, stretch: C.int;
-);
+PROCEDURE QBoxLayout_insertStretch
+  (self: QBoxLayout; index, stretch: C.int; );
 
 <* EXTERNAL QBoxLayout_insertStretch1 *>
-PROCEDURE QBoxLayout_insertStretch1 ( self: QBoxLayout;
-index: C.int;
-);
+PROCEDURE QBoxLayout_insertStretch1 (self: QBoxLayout; index: C.int; );
 
 <* EXTERNAL QBoxLayout_insertSpacerItem *>
-PROCEDURE QBoxLayout_insertSpacerItem ( self: QBoxLayout;
-index: C.int;
- spacerItem: ADDRESS;
-);
+PROCEDURE QBoxLayout_insertSpacerItem
+  (self: QBoxLayout; index: C.int; spacerItem: ADDRESS; );
 
 <* EXTERNAL QBoxLayout_insertWidget *>
-PROCEDURE QBoxLayout_insertWidget ( self: QBoxLayout;
-index: C.int;
- widget: ADDRESS;
-stretch, alignment: C.int;
-);
+PROCEDURE QBoxLayout_insertWidget (self              : QBoxLayout;
+                                   index             : C.int;
+                                   widget            : ADDRESS;
+                                   stretch, alignment: C.int;      );
 
 <* EXTERNAL QBoxLayout_insertWidget1 *>
-PROCEDURE QBoxLayout_insertWidget1 ( self: QBoxLayout;
-index: C.int;
- widget: ADDRESS;
-stretch: C.int;
-);
+PROCEDURE QBoxLayout_insertWidget1
+  (self: QBoxLayout; index: C.int; widget: ADDRESS; stretch: C.int; );
 
 <* EXTERNAL QBoxLayout_insertWidget2 *>
-PROCEDURE QBoxLayout_insertWidget2 ( self: QBoxLayout;
-index: C.int;
- widget: ADDRESS;
-);
+PROCEDURE QBoxLayout_insertWidget2
+  (self: QBoxLayout; index: C.int; widget: ADDRESS; );
 
 <* EXTERNAL QBoxLayout_insertLayout *>
-PROCEDURE QBoxLayout_insertLayout ( self: QBoxLayout;
-index: C.int;
- layout: ADDRESS;
-stretch: C.int;
-);
+PROCEDURE QBoxLayout_insertLayout
+  (self: QBoxLayout; index: C.int; layout: ADDRESS; stretch: C.int; );
 
 <* EXTERNAL QBoxLayout_insertLayout1 *>
-PROCEDURE QBoxLayout_insertLayout1 ( self: QBoxLayout;
-index: C.int;
- layout: ADDRESS;
-);
+PROCEDURE QBoxLayout_insertLayout1
+  (self: QBoxLayout; index: C.int; layout: ADDRESS; );
 
 <* EXTERNAL QBoxLayout_spacing *>
-PROCEDURE QBoxLayout_spacing ( self: QBoxLayout;
-): C.int;
+PROCEDURE QBoxLayout_spacing (self: QBoxLayout; ): C.int;
 
 <* EXTERNAL QBoxLayout_setSpacing *>
-PROCEDURE QBoxLayout_setSpacing ( self: QBoxLayout;
-spacing: C.int;
-);
+PROCEDURE QBoxLayout_setSpacing (self: QBoxLayout; spacing: C.int; );
 
 <* EXTERNAL QBoxLayout_setStretchFactor *>
-PROCEDURE QBoxLayout_setStretchFactor ( self: QBoxLayout;
- w: ADDRESS;
-stretch: C.int;
-): BOOLEAN;
+PROCEDURE QBoxLayout_setStretchFactor
+  (self: QBoxLayout; w: ADDRESS; stretch: C.int; ): BOOLEAN;
 
 <* EXTERNAL QBoxLayout_setStretchFactor1 *>
-PROCEDURE QBoxLayout_setStretchFactor1 ( self: QBoxLayout;
- l: ADDRESS;
-stretch: C.int;
-): BOOLEAN;
+PROCEDURE QBoxLayout_setStretchFactor1
+  (self: QBoxLayout; l: ADDRESS; stretch: C.int; ): BOOLEAN;
 
 <* EXTERNAL QBoxLayout_setStretch *>
-PROCEDURE QBoxLayout_setStretch ( self: QBoxLayout;
-index, stretch: C.int;
-);
+PROCEDURE QBoxLayout_setStretch
+  (self: QBoxLayout; index, stretch: C.int; );
 
 <* EXTERNAL QBoxLayout_stretch *>
-PROCEDURE QBoxLayout_stretch ( self: QBoxLayout;
-index: C.int;
-): C.int;
+PROCEDURE QBoxLayout_stretch (self: QBoxLayout; index: C.int; ): C.int;
 
 <* EXTERNAL QBoxLayout_sizeHint *>
-PROCEDURE QBoxLayout_sizeHint ( self: QBoxLayout;
-): ADDRESS;
+PROCEDURE QBoxLayout_sizeHint (self: QBoxLayout; ): ADDRESS;
 
 <* EXTERNAL QBoxLayout_minimumSize *>
-PROCEDURE QBoxLayout_minimumSize ( self: QBoxLayout;
-): ADDRESS;
+PROCEDURE QBoxLayout_minimumSize (self: QBoxLayout; ): ADDRESS;
 
 <* EXTERNAL QBoxLayout_maximumSize *>
-PROCEDURE QBoxLayout_maximumSize ( self: QBoxLayout;
-): ADDRESS;
+PROCEDURE QBoxLayout_maximumSize (self: QBoxLayout; ): ADDRESS;
 
 <* EXTERNAL QBoxLayout_hasHeightForWidth *>
-PROCEDURE QBoxLayout_hasHeightForWidth ( self: QBoxLayout;
-): BOOLEAN;
+PROCEDURE QBoxLayout_hasHeightForWidth (self: QBoxLayout; ): BOOLEAN;
 
 <* EXTERNAL QBoxLayout_heightForWidth *>
-PROCEDURE QBoxLayout_heightForWidth ( self: QBoxLayout;
-arg2: C.int;
-): C.int;
+PROCEDURE QBoxLayout_heightForWidth (self: QBoxLayout; arg2: C.int; ):
+  C.int;
 
 <* EXTERNAL QBoxLayout_minimumHeightForWidth *>
-PROCEDURE QBoxLayout_minimumHeightForWidth ( self: QBoxLayout;
-arg2: C.int;
-): C.int;
+PROCEDURE QBoxLayout_minimumHeightForWidth
+  (self: QBoxLayout; arg2: C.int; ): C.int;
 
 <* EXTERNAL QBoxLayout_expandingDirections *>
-PROCEDURE QBoxLayout_expandingDirections ( self: QBoxLayout;
-): C.int;
+PROCEDURE QBoxLayout_expandingDirections (self: QBoxLayout; ): C.int;
 
 <* EXTERNAL QBoxLayout_invalidate *>
-PROCEDURE QBoxLayout_invalidate ( self: QBoxLayout;
-);
+PROCEDURE QBoxLayout_invalidate (self: QBoxLayout; );
 
 <* EXTERNAL QBoxLayout_itemAt *>
-PROCEDURE QBoxLayout_itemAt ( self: QBoxLayout;
-arg2: C.int;
-): ADDRESS;
+PROCEDURE QBoxLayout_itemAt (self: QBoxLayout; arg2: C.int; ): ADDRESS;
 
 <* EXTERNAL QBoxLayout_takeAt *>
-PROCEDURE QBoxLayout_takeAt ( self: QBoxLayout;
-arg2: C.int;
-): ADDRESS;
+PROCEDURE QBoxLayout_takeAt (self: QBoxLayout; arg2: C.int; ): ADDRESS;
 
 <* EXTERNAL QBoxLayout_count *>
-PROCEDURE QBoxLayout_count ( self: QBoxLayout;
-): C.int;
+PROCEDURE QBoxLayout_count (self: QBoxLayout; ): C.int;
 
 <* EXTERNAL QBoxLayout_setGeometry *>
-PROCEDURE QBoxLayout_setGeometry ( self: QBoxLayout;
- arg2: ADDRESS;
-);
+PROCEDURE QBoxLayout_setGeometry (self: QBoxLayout; arg2: ADDRESS; );
 
-TYPE
-QBoxLayout = ADDRESS;
+TYPE QBoxLayout = ADDRESS;
 
 <* EXTERNAL New_QHBoxLayout0 *>
 PROCEDURE New_QHBoxLayout0 (): QHBoxLayout;
 
 <* EXTERNAL New_QHBoxLayout1 *>
-PROCEDURE New_QHBoxLayout1 ( parent: ADDRESS;
-): QHBoxLayout;
+PROCEDURE New_QHBoxLayout1 (parent: ADDRESS; ): QHBoxLayout;
 
 <* EXTERNAL Delete_QHBoxLayout *>
-PROCEDURE Delete_QHBoxLayout ( self: QHBoxLayout;
-);
+PROCEDURE Delete_QHBoxLayout (self: QHBoxLayout; );
 
-TYPE
-QHBoxLayout = ADDRESS;
+TYPE QHBoxLayout = ADDRESS;
 
 <* EXTERNAL New_QVBoxLayout0 *>
 PROCEDURE New_QVBoxLayout0 (): QVBoxLayout;
 
 <* EXTERNAL New_QVBoxLayout1 *>
-PROCEDURE New_QVBoxLayout1 ( parent: ADDRESS;
-): QVBoxLayout;
+PROCEDURE New_QVBoxLayout1 (parent: ADDRESS; ): QVBoxLayout;
 
 <* EXTERNAL Delete_QVBoxLayout *>
-PROCEDURE Delete_QVBoxLayout ( self: QVBoxLayout;
-);
+PROCEDURE Delete_QVBoxLayout (self: QVBoxLayout; );
 
-TYPE
-QVBoxLayout = ADDRESS;
+TYPE QVBoxLayout = ADDRESS;
 
 END QtBoxLayoutRaw.

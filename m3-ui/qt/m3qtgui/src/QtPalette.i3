@@ -14,142 +14,111 @@ FROM QtNamespace IMPORT GlobalColor;
 
 
 
-TYPE
-  T = QPalette;
+TYPE T = QPalette;
 
 
-CONST (* Enum ColorGroup *)
-  Active = 0;
-  Disabled = 1;
-  Inactive = 2;
+CONST                            (* Enum ColorGroup *)
+  Active       = 0;
+  Disabled     = 1;
+  Inactive     = 2;
   NColorGroups = 3;
-  Current = 4;
-  All = 5;
-  Normal = 0;
+  Current      = 4;
+  All          = 5;
+  Normal       = 0;
 
-TYPE (* Enum ColorGroup *)
-  ColorGroup = [0..5];
+TYPE                             (* Enum ColorGroup *)
+  ColorGroup = [0 .. 5];
 
-CONST (* Enum ColorRole *)
-  WindowText = 0;
-  Button = 1;
-  Light = 2;
-  Midlight = 3;
-  Dark = 4;
-  Mid = 5;
-  Text = 6;
-  BrightText = 7;
-  ButtonText = 8;
-  Base = 9;
-  Window = 10;
-  Shadow = 11;
-  Highlight = 12;
+CONST                            (* Enum ColorRole *)
+  WindowText      = 0;
+  Button          = 1;
+  Light           = 2;
+  Midlight        = 3;
+  Dark            = 4;
+  Mid             = 5;
+  Text            = 6;
+  BrightText      = 7;
+  ButtonText      = 8;
+  Base            = 9;
+  Window          = 10;
+  Shadow          = 11;
+  Highlight       = 12;
   HighlightedText = 13;
-  Link = 14;
-  LinkVisited = 15;
-  AlternateBase = 16;
-  NoRole = 17;
-  ToolTipBase = 18;
-  ToolTipText = 19;
-  NColorRoles = 1;
-  Foreground = 0;
-  Background = 10;
+  Link            = 14;
+  LinkVisited     = 15;
+  AlternateBase   = 16;
+  NoRole          = 17;
+  ToolTipBase     = 18;
+  ToolTipText     = 19;
+  NColorRoles     = 1;
+  Foreground      = 0;
+  Background      = 10;
 
-TYPE (* Enum ColorRole *)
-  ColorRole = [0..19];
+TYPE                             (* Enum ColorRole *)
+  ColorRole = [0 .. 19];
 
 TYPE
-QPalette <: QPalettePublic;
-QPalettePublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QPalette;
-init_1 ( button: QColor;
-) : QPalette;
-init_2 (button: GlobalColor;
-) : QPalette;
-init_3 ( button, window: QColor;
-) : QPalette;
-init_4 ( windowText, button, light, dark, mid, text, bright_text, base, window: QBrush;
-) : QPalette;
-init_5 ( windowText, window, light, dark, mid, text, base: QColor;
-) : QPalette;
-init_6 ( palette: QPalette;
-) : QPalette;
-Op_Brush_Assign( palette: QPalette;
-): QPalette;
-currentColorGroup(): ColorGroup;
-setCurrentColorGroup(cg: ColorGroup;
-);
-color(cg: ColorGroup;
-cr: ColorRole;
-): QColor;
-brush(cg: ColorGroup;
-cr: ColorRole;
-): QBrush;
-setColor(cg: ColorGroup;
-cr: ColorRole;
- color: QColor;
-);
-setColor1(cr: ColorRole;
- color: QColor;
-);
-setBrush(cr: ColorRole;
- brush: QBrush;
-);
-isBrushSet(cg: ColorGroup;
-cr: ColorRole;
-): BOOLEAN;
-setBrush1(cg: ColorGroup;
-cr: ColorRole;
- brush: QBrush;
-);
-setColorGroup(cr: ColorGroup;
- windowText, button, light, dark, mid, text, bright_text, base, window: QBrush;
-);
-isEqual(cr1, cr2: ColorGroup;
-): BOOLEAN;
-color1(cr: ColorRole;
-): QColor;
-brush1(cr: ColorRole;
-): QBrush;
-foreground(): QBrush;
-windowText(): QBrush;
-button(): QBrush;
-light(): QBrush;
-dark(): QBrush;
-mid(): QBrush;
-text(): QBrush;
-base(): QBrush;
-alternateBase(): QBrush;
-toolTipBase(): QBrush;
-toolTipText(): QBrush;
-background(): QBrush;
-window(): QBrush;
-midlight(): QBrush;
-brightText(): QBrush;
-buttonText(): QBrush;
-shadow(): QBrush;
-highlight(): QBrush;
-highlightedText(): QBrush;
-link(): QBrush;
-linkVisited(): QBrush;
-Op_Brush_Equals( p: QPalette;
-): BOOLEAN;
-Op_Brush_NotEquals( p: QPalette;
-): BOOLEAN;
-isCopyOf( p: QPalette;
-): BOOLEAN;
-serialNumber(): INTEGER;
-cacheKey(): CARDINAL;
-resolve( arg1: QPalette;
-): QPalette;
-resolve1(): CARDINAL;
-resolve2(mask: CARDINAL;
-);
-destroyCxx();
-END;
+  QPalette <: QPalettePublic;
+  QPalettePublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0 (): QPalette;
+      init_1 (button: QColor; ): QPalette;
+      init_2 (button: GlobalColor; ): QPalette;
+      init_3 (button, window: QColor; ): QPalette;
+      init_4 (windowText, button, light, dark, mid, text, bright_text,
+                base, window: QBrush; ): QPalette;
+      init_5 (windowText, window, light, dark, mid, text, base: QColor; ):
+              QPalette;
+      init_6               (palette: QPalette; ): QPalette;
+      Op_Brush_Assign      (palette: QPalette; ): QPalette;
+      currentColorGroup    (): ColorGroup;
+      setCurrentColorGroup (cg: ColorGroup; );
+      color                (cg: ColorGroup; cr: ColorRole; ): QColor;
+      brush                (cg: ColorGroup; cr: ColorRole; ): QBrush;
+      setColor   (cg: ColorGroup; cr: ColorRole; color: QColor; );
+      setColor1  (cr: ColorRole; color: QColor; );
+      setBrush   (cr: ColorRole; brush: QBrush; );
+      isBrushSet (cg: ColorGroup; cr: ColorRole; ): BOOLEAN;
+      setBrush1  (cg: ColorGroup; cr: ColorRole; brush: QBrush; );
+      setColorGroup (cr: ColorGroup;
+                     windowText, button, light, dark, mid, text,
+                       bright_text, base, window: QBrush; );
+      isEqual            (cr1, cr2: ColorGroup; ): BOOLEAN;
+      color1             (cr: ColorRole; ): QColor;
+      brush1             (cr: ColorRole; ): QBrush;
+      foreground         (): QBrush;
+      windowText         (): QBrush;
+      button             (): QBrush;
+      light              (): QBrush;
+      dark               (): QBrush;
+      mid                (): QBrush;
+      text               (): QBrush;
+      base               (): QBrush;
+      alternateBase      (): QBrush;
+      toolTipBase        (): QBrush;
+      toolTipText        (): QBrush;
+      background         (): QBrush;
+      window             (): QBrush;
+      midlight           (): QBrush;
+      brightText         (): QBrush;
+      buttonText         (): QBrush;
+      shadow             (): QBrush;
+      highlight          (): QBrush;
+      highlightedText    (): QBrush;
+      link               (): QBrush;
+      linkVisited        (): QBrush;
+      Op_Brush_Equals    (p: QPalette; ): BOOLEAN;
+      Op_Brush_NotEquals (p: QPalette; ): BOOLEAN;
+      isCopyOf           (p: QPalette; ): BOOLEAN;
+      serialNumber       (): INTEGER;
+      cacheKey           (): CARDINAL;
+      resolve            (arg1: QPalette; ): QPalette;
+      resolve1           (): CARDINAL;
+      resolve2           (mask: CARDINAL; );
+      destroyCxx         ();
+    END;
 
 
 END QtPalette.

@@ -15,44 +15,32 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QApplication0 *>
-PROCEDURE New_QApplication0 (VAR argc: C.int;
- argv: ADDRESS;
-arg3: C.int;
-): QApplication;
+PROCEDURE New_QApplication0
+  (VAR argc: C.int; argv: ADDRESS; arg3: C.int; ): QApplication;
 
 <* EXTERNAL New_QApplication1 *>
-PROCEDURE New_QApplication1 (VAR argc: C.int;
- argv: ADDRESS;
-): QApplication;
+PROCEDURE New_QApplication1 (VAR argc: C.int; argv: ADDRESS; ):
+  QApplication;
 
 <* EXTERNAL New_QApplication2 *>
-PROCEDURE New_QApplication2 (VAR argc: C.int;
- argv: ADDRESS;
-GUIenabled: BOOLEAN;
-arg4: C.int;
-): QApplication;
+PROCEDURE New_QApplication2
+  (VAR argc: C.int; argv: ADDRESS; GUIenabled: BOOLEAN; arg4: C.int; ):
+  QApplication;
 
 <* EXTERNAL New_QApplication3 *>
-PROCEDURE New_QApplication3 (VAR argc: C.int;
- argv: ADDRESS;
-GUIenabled: BOOLEAN;
-): QApplication;
+PROCEDURE New_QApplication3
+  (VAR argc: C.int; argv: ADDRESS; GUIenabled: BOOLEAN; ): QApplication;
 
 <* EXTERNAL New_QApplication4 *>
-PROCEDURE New_QApplication4 (VAR argc: C.int;
- argv: ADDRESS;
-arg3, arg4: C.int;
-): QApplication;
+PROCEDURE New_QApplication4
+  (VAR argc: C.int; argv: ADDRESS; arg3, arg4: C.int; ): QApplication;
 
 <* EXTERNAL New_QApplication5 *>
-PROCEDURE New_QApplication5 (VAR argc: C.int;
- argv: ADDRESS;
-arg3: C.int;
-): QApplication;
+PROCEDURE New_QApplication5
+  (VAR argc: C.int; argv: ADDRESS; arg3: C.int; ): QApplication;
 
 <* EXTERNAL Delete_QApplication *>
-PROCEDURE Delete_QApplication ( self: QApplication;
-);
+PROCEDURE Delete_QApplication (self: QApplication; );
 
 <* EXTERNAL AppType *>
 PROCEDURE AppType (): C.int;
@@ -61,34 +49,28 @@ PROCEDURE AppType (): C.int;
 PROCEDURE Style (): ADDRESS;
 
 <* EXTERNAL SetStyle *>
-PROCEDURE SetStyle ( arg1: ADDRESS;
-);
+PROCEDURE SetStyle (arg1: ADDRESS; );
 
 <* EXTERNAL SetStyle1 *>
-PROCEDURE SetStyle1 ( arg1: ADDRESS;
-): ADDRESS;
+PROCEDURE SetStyle1 (arg1: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL GetColorSpec *>
 PROCEDURE GetColorSpec (): C.int;
 
 <* EXTERNAL SetColorSpec *>
-PROCEDURE SetColorSpec (arg1: C.int;
-);
+PROCEDURE SetColorSpec (arg1: C.int; );
 
 <* EXTERNAL SetGraphicsSystem *>
-PROCEDURE SetGraphicsSystem ( arg1: ADDRESS;
-);
+PROCEDURE SetGraphicsSystem (arg1: ADDRESS; );
 
 <* EXTERNAL OverrideCursor *>
 PROCEDURE OverrideCursor (): ADDRESS;
 
 <* EXTERNAL SetOverrideCursor *>
-PROCEDURE SetOverrideCursor ( arg1: ADDRESS;
-);
+PROCEDURE SetOverrideCursor (arg1: ADDRESS; );
 
 <* EXTERNAL ChangeOverrideCursor *>
-PROCEDURE ChangeOverrideCursor ( arg1: ADDRESS;
-);
+PROCEDURE ChangeOverrideCursor (arg1: ADDRESS; );
 
 <* EXTERNAL RestoreOverrideCursor *>
 PROCEDURE RestoreOverrideCursor ();
@@ -97,48 +79,37 @@ PROCEDURE RestoreOverrideCursor ();
 PROCEDURE Palette (): ADDRESS;
 
 <* EXTERNAL Palette1 *>
-PROCEDURE Palette1 ( arg1: ADDRESS;
-): ADDRESS;
+PROCEDURE Palette1 (arg1: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL Palette2 *>
-PROCEDURE Palette2 ( className: C.char_star;
-): ADDRESS;
+PROCEDURE Palette2 (className: C.char_star; ): ADDRESS;
 
 <* EXTERNAL SetPalette *>
-PROCEDURE SetPalette ( arg1: ADDRESS;
- className: C.char_star;
-);
+PROCEDURE SetPalette (arg1: ADDRESS; className: C.char_star; );
 
 <* EXTERNAL SetPalette1 *>
-PROCEDURE SetPalette1 ( arg1: ADDRESS;
-);
+PROCEDURE SetPalette1 (arg1: ADDRESS; );
 
 <* EXTERNAL Font *>
 PROCEDURE Font (): ADDRESS;
 
 <* EXTERNAL Font1 *>
-PROCEDURE Font1 ( arg1: ADDRESS;
-): ADDRESS;
+PROCEDURE Font1 (arg1: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL Font2 *>
-PROCEDURE Font2 ( className: C.char_star;
-): ADDRESS;
+PROCEDURE Font2 (className: C.char_star; ): ADDRESS;
 
 <* EXTERNAL SetFont *>
-PROCEDURE SetFont ( arg1: ADDRESS;
- className: C.char_star;
-);
+PROCEDURE SetFont (arg1: ADDRESS; className: C.char_star; );
 
 <* EXTERNAL SetFont1 *>
-PROCEDURE SetFont1 ( arg1: ADDRESS;
-);
+PROCEDURE SetFont1 (arg1: ADDRESS; );
 
 <* EXTERNAL FontMetrics *>
 PROCEDURE FontMetrics (): ADDRESS;
 
 <* EXTERNAL SetWindowIcon *>
-PROCEDURE SetWindowIcon ( icon: ADDRESS;
-);
+PROCEDURE SetWindowIcon (icon: ADDRESS; );
 
 <* EXTERNAL ActivePopupWidget *>
 PROCEDURE ActivePopupWidget (): ADDRESS;
@@ -153,24 +124,19 @@ PROCEDURE FocusWidget (): ADDRESS;
 PROCEDURE ActiveWindow (): ADDRESS;
 
 <* EXTERNAL SetActiveWindow *>
-PROCEDURE SetActiveWindow ( act: ADDRESS;
-);
+PROCEDURE SetActiveWindow (act: ADDRESS; );
 
 <* EXTERNAL WidgetAt *>
-PROCEDURE WidgetAt ( p: ADDRESS;
-): ADDRESS;
+PROCEDURE WidgetAt (p: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL WidgetAt1 *>
-PROCEDURE WidgetAt1 (x, y: C.int;
-): ADDRESS;
+PROCEDURE WidgetAt1 (x, y: C.int; ): ADDRESS;
 
 <* EXTERNAL TopLevelAt *>
-PROCEDURE TopLevelAt ( p: ADDRESS;
-): ADDRESS;
+PROCEDURE TopLevelAt (p: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL TopLevelAt1 *>
-PROCEDURE TopLevelAt1 (x, y: C.int;
-): ADDRESS;
+PROCEDURE TopLevelAt1 (x, y: C.int; ): ADDRESS;
 
 <* EXTERNAL SyncX *>
 PROCEDURE SyncX ();
@@ -179,13 +145,10 @@ PROCEDURE SyncX ();
 PROCEDURE Beep ();
 
 <* EXTERNAL Alert *>
-PROCEDURE Alert ( widget: ADDRESS;
-duration: C.int;
-);
+PROCEDURE Alert (widget: ADDRESS; duration: C.int; );
 
 <* EXTERNAL Alert1 *>
-PROCEDURE Alert1 ( widget: ADDRESS;
-);
+PROCEDURE Alert1 (widget: ADDRESS; );
 
 <* EXTERNAL KeyboardModifiers *>
 PROCEDURE KeyboardModifiers (): C.int;
@@ -194,64 +157,55 @@ PROCEDURE KeyboardModifiers (): C.int;
 PROCEDURE MouseButtons (): C.int;
 
 <* EXTERNAL SetDesktopSettingsAware *>
-PROCEDURE SetDesktopSettingsAware (arg1: BOOLEAN;
-);
+PROCEDURE SetDesktopSettingsAware (arg1: BOOLEAN; );
 
 <* EXTERNAL DesktopSettingsAware *>
 PROCEDURE DesktopSettingsAware (): BOOLEAN;
 
 <* EXTERNAL SetCursorFlashTime *>
-PROCEDURE SetCursorFlashTime (arg1: C.int;
-);
+PROCEDURE SetCursorFlashTime (arg1: C.int; );
 
 <* EXTERNAL CursorFlashTime *>
 PROCEDURE CursorFlashTime (): C.int;
 
 <* EXTERNAL SetDoubleClickInterval *>
-PROCEDURE SetDoubleClickInterval (arg1: C.int;
-);
+PROCEDURE SetDoubleClickInterval (arg1: C.int; );
 
 <* EXTERNAL DoubleClickInterval *>
 PROCEDURE DoubleClickInterval (): C.int;
 
 <* EXTERNAL SetKeyboardInputInterval *>
-PROCEDURE SetKeyboardInputInterval (arg1: C.int;
-);
+PROCEDURE SetKeyboardInputInterval (arg1: C.int; );
 
 <* EXTERNAL KeyboardInputInterval *>
 PROCEDURE KeyboardInputInterval (): C.int;
 
 <* EXTERNAL SetWheelScrollLines *>
-PROCEDURE SetWheelScrollLines (arg1: C.int;
-);
+PROCEDURE SetWheelScrollLines (arg1: C.int; );
 
 <* EXTERNAL WheelScrollLines *>
 PROCEDURE WheelScrollLines (): C.int;
 
 <* EXTERNAL SetGlobalStrut *>
-PROCEDURE SetGlobalStrut ( arg1: ADDRESS;
-);
+PROCEDURE SetGlobalStrut (arg1: ADDRESS; );
 
 <* EXTERNAL GlobalStrut *>
 PROCEDURE GlobalStrut (): ADDRESS;
 
 <* EXTERNAL SetStartDragTime *>
-PROCEDURE SetStartDragTime (ms: C.int;
-);
+PROCEDURE SetStartDragTime (ms: C.int; );
 
 <* EXTERNAL StartDragTime *>
 PROCEDURE StartDragTime (): C.int;
 
 <* EXTERNAL SetStartDragDistance *>
-PROCEDURE SetStartDragDistance (l: C.int;
-);
+PROCEDURE SetStartDragDistance (l: C.int; );
 
 <* EXTERNAL StartDragDistance *>
 PROCEDURE StartDragDistance (): C.int;
 
 <* EXTERNAL SetLayoutDirection *>
-PROCEDURE SetLayoutDirection (direction: C.int;
-);
+PROCEDURE SetLayoutDirection (direction: C.int; );
 
 <* EXTERNAL AppLayoutDirection *>
 PROCEDURE AppLayoutDirection (): C.int;
@@ -263,38 +217,29 @@ PROCEDURE IsRightToLeft (): BOOLEAN;
 PROCEDURE IsLeftToRight (): BOOLEAN;
 
 <* EXTERNAL IsEffectEnabled *>
-PROCEDURE IsEffectEnabled (arg1: C.int;
-): BOOLEAN;
+PROCEDURE IsEffectEnabled (arg1: C.int; ): BOOLEAN;
 
 <* EXTERNAL SetEffectEnabled *>
-PROCEDURE SetEffectEnabled (arg1: C.int;
-enable: BOOLEAN;
-);
+PROCEDURE SetEffectEnabled (arg1: C.int; enable: BOOLEAN; );
 
 <* EXTERNAL SetEffectEnabled1 *>
-PROCEDURE SetEffectEnabled1 (arg1: C.int;
-);
+PROCEDURE SetEffectEnabled1 (arg1: C.int; );
 
 <* EXTERNAL QApplication_isSessionRestored *>
-PROCEDURE QApplication_isSessionRestored ( self: QApplication;
-): BOOLEAN;
+PROCEDURE QApplication_isSessionRestored (self: QApplication; ): BOOLEAN;
 
 <* EXTERNAL QApplication_sessionId *>
-PROCEDURE QApplication_sessionId ( self: QApplication;
-): ADDRESS;
+PROCEDURE QApplication_sessionId (self: QApplication; ): ADDRESS;
 
 <* EXTERNAL QApplication_sessionKey *>
-PROCEDURE QApplication_sessionKey ( self: QApplication;
-): ADDRESS;
+PROCEDURE QApplication_sessionKey (self: QApplication; ): ADDRESS;
 
 <* EXTERNAL QApplication_setInputContext *>
-PROCEDURE QApplication_setInputContext ( self: QApplication;
- arg2: ADDRESS;
-);
+PROCEDURE QApplication_setInputContext
+  (self: QApplication; arg2: ADDRESS; );
 
 <* EXTERNAL QApplication_inputContext *>
-PROCEDURE QApplication_inputContext ( self: QApplication;
-): ADDRESS;
+PROCEDURE QApplication_inputContext (self: QApplication; ): ADDRESS;
 
 <* EXTERNAL KeyboardInputDirection *>
 PROCEDURE KeyboardInputDirection (): C.int;
@@ -303,29 +248,24 @@ PROCEDURE KeyboardInputDirection (): C.int;
 PROCEDURE Exec (): C.int;
 
 <* EXTERNAL SetQuitOnLastWindowClosed *>
-PROCEDURE SetQuitOnLastWindowClosed (quit: BOOLEAN;
-);
+PROCEDURE SetQuitOnLastWindowClosed (quit: BOOLEAN; );
 
 <* EXTERNAL QuitOnLastWindowClosed *>
 PROCEDURE QuitOnLastWindowClosed (): BOOLEAN;
 
 <* EXTERNAL QApplication_styleSheet *>
-PROCEDURE QApplication_styleSheet ( self: QApplication;
-): ADDRESS;
+PROCEDURE QApplication_styleSheet (self: QApplication; ): ADDRESS;
 
 <* EXTERNAL QApplication_setStyleSheet *>
-PROCEDURE QApplication_setStyleSheet ( self: QApplication;
- sheet: ADDRESS;
-);
+PROCEDURE QApplication_setStyleSheet
+  (self: QApplication; sheet: ADDRESS; );
 
 <* EXTERNAL QApplication_setAutoSipEnabled *>
-PROCEDURE QApplication_setAutoSipEnabled ( self: QApplication;
-enabled: BOOLEAN;
-);
+PROCEDURE QApplication_setAutoSipEnabled
+  (self: QApplication; enabled: BOOLEAN; );
 
 <* EXTERNAL QApplication_autoSipEnabled *>
-PROCEDURE QApplication_autoSipEnabled ( self: QApplication;
-): BOOLEAN;
+PROCEDURE QApplication_autoSipEnabled (self: QApplication; ): BOOLEAN;
 
 <* EXTERNAL CloseAllWindows *>
 PROCEDURE CloseAllWindows ();
@@ -333,7 +273,6 @@ PROCEDURE CloseAllWindows ();
 <* EXTERNAL AboutQt *>
 PROCEDURE AboutQt ();
 
-TYPE
-QApplication <: ADDRESS;
+TYPE QApplication <: ADDRESS;
 
 END QtApplicationRaw.

@@ -12,149 +12,90 @@ FROM QtLayoutItem IMPORT QLayoutItem;
 FROM QtSize IMPORT QSize;
 FROM QtLayout IMPORT QLayout;
 FROM QtWidget IMPORT QWidget;
-FROM QtNamespace IMPORT AlignmentFlag,Orientations;
+FROM QtNamespace IMPORT AlignmentFlag, Orientations;
 FROM QtRect IMPORT QRect;
 
 
-TYPE
-  T = QFormLayout;
+TYPE T = QFormLayout;
 
 
-TYPE (* Enum FieldGrowthPolicy *)
-  FieldGrowthPolicy = {
- FieldsStayAtSizeHint,
- ExpandingFieldsGrow,
- AllNonFixedFieldsGrow};
+TYPE                             (* Enum FieldGrowthPolicy *)
+  FieldGrowthPolicy =
+    {FieldsStayAtSizeHint, ExpandingFieldsGrow, AllNonFixedFieldsGrow};
 
-TYPE (* Enum RowWrapPolicy *)
-  RowWrapPolicy = {
- DontWrapRows,
- WrapLongRows,
- WrapAllRows};
+TYPE                             (* Enum RowWrapPolicy *)
+  RowWrapPolicy = {DontWrapRows, WrapLongRows, WrapAllRows};
 
-CONST (* Enum ItemRole *)
-  LabelRole = 0;
-  FieldRole = 1;
+CONST                            (* Enum ItemRole *)
+  LabelRole    = 0;
+  FieldRole    = 1;
   SpanningRole = 2;
 
-TYPE (* Enum ItemRole *)
-  ItemRole = [0..2];
+TYPE                             (* Enum ItemRole *)
+  ItemRole = [0 .. 2];
 
 TYPE
-QFormLayout <: QFormLayoutPublic;
-QFormLayoutPublic =
-QLayout BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QFormLayout;
-init_1 () : QFormLayout;
-setFieldGrowthPolicy(policy: FieldGrowthPolicy;
-);
-fieldGrowthPolicy(): FieldGrowthPolicy;
-setRowWrapPolicy(policy: RowWrapPolicy;
-);
-rowWrapPolicy(): RowWrapPolicy;
-setLabelAlignment(alignment: AlignmentFlag;
-);
-labelAlignment(): AlignmentFlag;
-setFormAlignment(alignment: AlignmentFlag;
-);
-formAlignment(): AlignmentFlag;
-setHorizontalSpacing(spacing: INTEGER;
-);
-horizontalSpacing(): INTEGER;
-setVerticalSpacing(spacing: INTEGER;
-);
-verticalSpacing(): INTEGER;
-spacing(): INTEGER;
-setSpacing(arg1: INTEGER;
-);
-addRow( label, field: QWidget;
-);
-addRow1( label: QWidget;
- field: QLayout;
-);
-addRow2( labelText: TEXT;
- field: QWidget;
-);
-addRow3( labelText: TEXT;
- field: QLayout;
-);
-addRow4( widget: QWidget;
-);
-addRow5( layout: QLayout;
-);
-insertRow(row: INTEGER;
- label, field: QWidget;
-);
-insertRow1(row: INTEGER;
- label: QWidget;
- field: QLayout;
-);
-insertRow2(row: INTEGER;
- labelText: TEXT;
- field: QWidget;
-);
-insertRow3(row: INTEGER;
- labelText: TEXT;
- field: QLayout;
-);
-insertRow4(row: INTEGER;
- widget: QWidget;
-);
-insertRow5(row: INTEGER;
- layout: QLayout;
-);
-setItem(row: INTEGER;
-role: ItemRole;
- item: QLayoutItem;
-);
-setWidget(row: INTEGER;
-role: ItemRole;
- widget: QWidget;
-);
-setLayout(row: INTEGER;
-role: ItemRole;
- layout: QLayout;
-);
-itemAt(row: INTEGER;
-role: ItemRole;
-): QLayoutItem;
-getItemPosition(index: INTEGER;
-VAR rowPtr: INTEGER;
-VAR rolePtr: ItemRole;
-);
-getWidgetPosition( widget: QWidget;
-VAR rowPtr: INTEGER;
-VAR rolePtr: ItemRole;
-);
-getLayoutPosition( layout: QLayout;
-VAR rowPtr: INTEGER;
-VAR rolePtr: ItemRole;
-);
-labelForField( field: QWidget;
-): QWidget;
-labelForField1( field: QLayout;
-): QWidget;
-addItem( item: QLayoutItem;
-);  (*  virtual *)
-itemAt1(index: INTEGER;
-): QLayoutItem;  (*  virtual *)
-takeAt(index: INTEGER;
-): QLayoutItem;  (*  virtual *)
-setGeometry( rect: QRect;
-);  (*  virtual *)
-minimumSize(): QSize;  (*  virtual *)
-sizeHint(): QSize;  (*  virtual *)
-invalidate();  (*  virtual *)
-hasHeightForWidth(): BOOLEAN;  (*  virtual *)
-heightForWidth(width: INTEGER;
-): INTEGER;  (*  virtual *)
-expandingDirections(): Orientations;  (*  virtual *)
-count(): INTEGER;  (*  virtual *)
-rowCount(): INTEGER;
-destroyCxx();
-END;
+  QFormLayout <: QFormLayoutPublic;
+  QFormLayoutPublic =
+    QLayout BRANDED OBJECT
+    METHODS
+      init_0               (parent: QWidget; ): QFormLayout;
+      init_1               (): QFormLayout;
+      setFieldGrowthPolicy (policy: FieldGrowthPolicy; );
+      fieldGrowthPolicy    (): FieldGrowthPolicy;
+      setRowWrapPolicy     (policy: RowWrapPolicy; );
+      rowWrapPolicy        (): RowWrapPolicy;
+      setLabelAlignment    (alignment: AlignmentFlag; );
+      labelAlignment       (): AlignmentFlag;
+      setFormAlignment     (alignment: AlignmentFlag; );
+      formAlignment        (): AlignmentFlag;
+      setHorizontalSpacing (spacing: INTEGER; );
+      horizontalSpacing    (): INTEGER;
+      setVerticalSpacing   (spacing: INTEGER; );
+      verticalSpacing      (): INTEGER;
+      spacing              (): INTEGER;
+      setSpacing           (arg1: INTEGER; );
+      addRow               (label, field: QWidget; );
+      addRow1              (label: QWidget; field: QLayout; );
+      addRow2              (labelText: TEXT; field: QWidget; );
+      addRow3              (labelText: TEXT; field: QLayout; );
+      addRow4              (widget: QWidget; );
+      addRow5              (layout: QLayout; );
+      insertRow            (row: INTEGER; label, field: QWidget; );
+      insertRow1 (row: INTEGER; label: QWidget; field: QLayout; );
+      insertRow2 (row: INTEGER; labelText: TEXT; field: QWidget; );
+      insertRow3 (row: INTEGER; labelText: TEXT; field: QLayout; );
+      insertRow4 (row: INTEGER; widget: QWidget; );
+      insertRow5 (row: INTEGER; layout: QLayout; );
+      setItem    (row: INTEGER; role: ItemRole; item: QLayoutItem; );
+      setWidget  (row: INTEGER; role: ItemRole; widget: QWidget; );
+      setLayout  (row: INTEGER; role: ItemRole; layout: QLayout; );
+      itemAt     (row: INTEGER; role: ItemRole; ): QLayoutItem;
+      getItemPosition (    index  : INTEGER;
+                       VAR rowPtr : INTEGER;
+                       VAR rolePtr: ItemRole; );
+      getWidgetPosition (    widget : QWidget;
+                         VAR rowPtr : INTEGER;
+                         VAR rolePtr: ItemRole; );
+      getLayoutPosition (    layout : QLayout;
+                         VAR rowPtr : INTEGER;
+                         VAR rolePtr: ItemRole; );
+      labelForField       (field: QWidget; ): QWidget;
+      labelForField1      (field: QLayout; ): QWidget;
+      addItem             (item: QLayoutItem; ); (* virtual *)
+      itemAt1             (index: INTEGER; ): QLayoutItem; (* virtual *)
+      takeAt              (index: INTEGER; ): QLayoutItem; (* virtual *)
+      setGeometry         (rect: QRect; ); (* virtual *)
+      minimumSize         (): QSize; (* virtual *)
+      sizeHint            (): QSize; (* virtual *)
+      invalidate          ();    (* virtual *)
+      hasHeightForWidth   (): BOOLEAN; (* virtual *)
+      heightForWidth      (width: INTEGER; ): INTEGER; (* virtual *)
+      expandingDirections (): Orientations; (* virtual *)
+      count               (): INTEGER; (* virtual *)
+      rowCount            (): INTEGER;
+      destroyCxx          ();
+    END;
 
 
 END QtFormLayout.

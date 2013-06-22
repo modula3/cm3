@@ -15,181 +15,132 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QSpinBox0 *>
-PROCEDURE New_QSpinBox0 ( parent: ADDRESS;
-): QSpinBox;
+PROCEDURE New_QSpinBox0 (parent: ADDRESS; ): QSpinBox;
 
 <* EXTERNAL New_QSpinBox1 *>
 PROCEDURE New_QSpinBox1 (): QSpinBox;
 
 <* EXTERNAL QSpinBox_value *>
-PROCEDURE QSpinBox_value ( self: QSpinBox;
-): C.int;
+PROCEDURE QSpinBox_value (self: QSpinBox; ): C.int;
 
 <* EXTERNAL QSpinBox_prefix *>
-PROCEDURE QSpinBox_prefix ( self: QSpinBox;
-): ADDRESS;
+PROCEDURE QSpinBox_prefix (self: QSpinBox; ): ADDRESS;
 
 <* EXTERNAL QSpinBox_setPrefix *>
-PROCEDURE QSpinBox_setPrefix ( self: QSpinBox;
- prefix: ADDRESS;
-);
+PROCEDURE QSpinBox_setPrefix (self: QSpinBox; prefix: ADDRESS; );
 
 <* EXTERNAL QSpinBox_suffix *>
-PROCEDURE QSpinBox_suffix ( self: QSpinBox;
-): ADDRESS;
+PROCEDURE QSpinBox_suffix (self: QSpinBox; ): ADDRESS;
 
 <* EXTERNAL QSpinBox_setSuffix *>
-PROCEDURE QSpinBox_setSuffix ( self: QSpinBox;
- suffix: ADDRESS;
-);
+PROCEDURE QSpinBox_setSuffix (self: QSpinBox; suffix: ADDRESS; );
 
 <* EXTERNAL QSpinBox_cleanText *>
-PROCEDURE QSpinBox_cleanText ( self: QSpinBox;
-): ADDRESS;
+PROCEDURE QSpinBox_cleanText (self: QSpinBox; ): ADDRESS;
 
 <* EXTERNAL QSpinBox_singleStep *>
-PROCEDURE QSpinBox_singleStep ( self: QSpinBox;
-): C.int;
+PROCEDURE QSpinBox_singleStep (self: QSpinBox; ): C.int;
 
 <* EXTERNAL QSpinBox_setSingleStep *>
-PROCEDURE QSpinBox_setSingleStep ( self: QSpinBox;
-val: C.int;
-);
+PROCEDURE QSpinBox_setSingleStep (self: QSpinBox; val: C.int; );
 
 <* EXTERNAL QSpinBox_minimum *>
-PROCEDURE QSpinBox_minimum ( self: QSpinBox;
-): C.int;
+PROCEDURE QSpinBox_minimum (self: QSpinBox; ): C.int;
 
 <* EXTERNAL QSpinBox_setMinimum *>
-PROCEDURE QSpinBox_setMinimum ( self: QSpinBox;
-min: C.int;
-);
+PROCEDURE QSpinBox_setMinimum (self: QSpinBox; min: C.int; );
 
 <* EXTERNAL QSpinBox_maximum *>
-PROCEDURE QSpinBox_maximum ( self: QSpinBox;
-): C.int;
+PROCEDURE QSpinBox_maximum (self: QSpinBox; ): C.int;
 
 <* EXTERNAL QSpinBox_setMaximum *>
-PROCEDURE QSpinBox_setMaximum ( self: QSpinBox;
-max: C.int;
-);
+PROCEDURE QSpinBox_setMaximum (self: QSpinBox; max: C.int; );
 
 <* EXTERNAL QSpinBox_setRange *>
-PROCEDURE QSpinBox_setRange ( self: QSpinBox;
-min, max: C.int;
-);
+PROCEDURE QSpinBox_setRange (self: QSpinBox; min, max: C.int; );
 
 <* EXTERNAL QSpinBox_setValue *>
-PROCEDURE QSpinBox_setValue ( self: QSpinBox;
-val: C.int;
-);
+PROCEDURE QSpinBox_setValue (self: QSpinBox; val: C.int; );
 
 <* EXTERNAL Delete_QSpinBox *>
-PROCEDURE Delete_QSpinBox ( self: QSpinBox;
-);
+PROCEDURE Delete_QSpinBox (self: QSpinBox; );
 
-TYPE
-QSpinBox = ADDRESS;
+TYPE QSpinBox = ADDRESS;
 
 <* EXTERNAL New_QDoubleSpinBox0 *>
-PROCEDURE New_QDoubleSpinBox0 ( parent: ADDRESS;
-): QDoubleSpinBox;
+PROCEDURE New_QDoubleSpinBox0 (parent: ADDRESS; ): QDoubleSpinBox;
 
 <* EXTERNAL New_QDoubleSpinBox1 *>
 PROCEDURE New_QDoubleSpinBox1 (): QDoubleSpinBox;
 
 <* EXTERNAL QDoubleSpinBox_value *>
-PROCEDURE QDoubleSpinBox_value ( self: QDoubleSpinBox;
-): C.double;
+PROCEDURE QDoubleSpinBox_value (self: QDoubleSpinBox; ): C.double;
 
 <* EXTERNAL QDoubleSpinBox_prefix *>
-PROCEDURE QDoubleSpinBox_prefix ( self: QDoubleSpinBox;
-): ADDRESS;
+PROCEDURE QDoubleSpinBox_prefix (self: QDoubleSpinBox; ): ADDRESS;
 
 <* EXTERNAL QDoubleSpinBox_setPrefix *>
-PROCEDURE QDoubleSpinBox_setPrefix ( self: QDoubleSpinBox;
- prefix: ADDRESS;
-);
+PROCEDURE QDoubleSpinBox_setPrefix
+  (self: QDoubleSpinBox; prefix: ADDRESS; );
 
 <* EXTERNAL QDoubleSpinBox_suffix *>
-PROCEDURE QDoubleSpinBox_suffix ( self: QDoubleSpinBox;
-): ADDRESS;
+PROCEDURE QDoubleSpinBox_suffix (self: QDoubleSpinBox; ): ADDRESS;
 
 <* EXTERNAL QDoubleSpinBox_setSuffix *>
-PROCEDURE QDoubleSpinBox_setSuffix ( self: QDoubleSpinBox;
- suffix: ADDRESS;
-);
+PROCEDURE QDoubleSpinBox_setSuffix
+  (self: QDoubleSpinBox; suffix: ADDRESS; );
 
 <* EXTERNAL QDoubleSpinBox_cleanText *>
-PROCEDURE QDoubleSpinBox_cleanText ( self: QDoubleSpinBox;
-): ADDRESS;
+PROCEDURE QDoubleSpinBox_cleanText (self: QDoubleSpinBox; ): ADDRESS;
 
 <* EXTERNAL QDoubleSpinBox_singleStep *>
-PROCEDURE QDoubleSpinBox_singleStep ( self: QDoubleSpinBox;
-): C.double;
+PROCEDURE QDoubleSpinBox_singleStep (self: QDoubleSpinBox; ): C.double;
 
 <* EXTERNAL QDoubleSpinBox_setSingleStep *>
-PROCEDURE QDoubleSpinBox_setSingleStep ( self: QDoubleSpinBox;
-val: C.double;
-);
+PROCEDURE QDoubleSpinBox_setSingleStep
+  (self: QDoubleSpinBox; val: C.double; );
 
 <* EXTERNAL QDoubleSpinBox_minimum *>
-PROCEDURE QDoubleSpinBox_minimum ( self: QDoubleSpinBox;
-): C.double;
+PROCEDURE QDoubleSpinBox_minimum (self: QDoubleSpinBox; ): C.double;
 
 <* EXTERNAL QDoubleSpinBox_setMinimum *>
-PROCEDURE QDoubleSpinBox_setMinimum ( self: QDoubleSpinBox;
-min: C.double;
-);
+PROCEDURE QDoubleSpinBox_setMinimum
+  (self: QDoubleSpinBox; min: C.double; );
 
 <* EXTERNAL QDoubleSpinBox_maximum *>
-PROCEDURE QDoubleSpinBox_maximum ( self: QDoubleSpinBox;
-): C.double;
+PROCEDURE QDoubleSpinBox_maximum (self: QDoubleSpinBox; ): C.double;
 
 <* EXTERNAL QDoubleSpinBox_setMaximum *>
-PROCEDURE QDoubleSpinBox_setMaximum ( self: QDoubleSpinBox;
-max: C.double;
-);
+PROCEDURE QDoubleSpinBox_setMaximum
+  (self: QDoubleSpinBox; max: C.double; );
 
 <* EXTERNAL QDoubleSpinBox_setRange *>
-PROCEDURE QDoubleSpinBox_setRange ( self: QDoubleSpinBox;
-min, max: C.double;
-);
+PROCEDURE QDoubleSpinBox_setRange
+  (self: QDoubleSpinBox; min, max: C.double; );
 
 <* EXTERNAL QDoubleSpinBox_decimals *>
-PROCEDURE QDoubleSpinBox_decimals ( self: QDoubleSpinBox;
-): C.int;
+PROCEDURE QDoubleSpinBox_decimals (self: QDoubleSpinBox; ): C.int;
 
 <* EXTERNAL QDoubleSpinBox_setDecimals *>
-PROCEDURE QDoubleSpinBox_setDecimals ( self: QDoubleSpinBox;
-prec: C.int;
-);
+PROCEDURE QDoubleSpinBox_setDecimals (self: QDoubleSpinBox; prec: C.int; );
 
 <* EXTERNAL QDoubleSpinBox_valueFromText *>
-PROCEDURE QDoubleSpinBox_valueFromText ( self: QDoubleSpinBox;
- text: ADDRESS;
-): C.double;
+PROCEDURE QDoubleSpinBox_valueFromText
+  (self: QDoubleSpinBox; text: ADDRESS; ): C.double;
 
 <* EXTERNAL QDoubleSpinBox_textFromValue *>
-PROCEDURE QDoubleSpinBox_textFromValue ( self: QDoubleSpinBox;
-val: C.double;
-): ADDRESS;
+PROCEDURE QDoubleSpinBox_textFromValue
+  (self: QDoubleSpinBox; val: C.double; ): ADDRESS;
 
 <* EXTERNAL QDoubleSpinBox_fixup *>
-PROCEDURE QDoubleSpinBox_fixup ( self: QDoubleSpinBox;
- str: ADDRESS;
-);
+PROCEDURE QDoubleSpinBox_fixup (self: QDoubleSpinBox; str: ADDRESS; );
 
 <* EXTERNAL QDoubleSpinBox_setValue *>
-PROCEDURE QDoubleSpinBox_setValue ( self: QDoubleSpinBox;
-val: C.double;
-);
+PROCEDURE QDoubleSpinBox_setValue (self: QDoubleSpinBox; val: C.double; );
 
 <* EXTERNAL Delete_QDoubleSpinBox *>
-PROCEDURE Delete_QDoubleSpinBox ( self: QDoubleSpinBox;
-);
+PROCEDURE Delete_QDoubleSpinBox (self: QDoubleSpinBox; );
 
-TYPE
-QDoubleSpinBox = ADDRESS;
+TYPE QDoubleSpinBox = ADDRESS;
 
 END QtSpinBoxRaw.

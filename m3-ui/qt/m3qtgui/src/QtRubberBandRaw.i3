@@ -15,53 +15,36 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QRubberBand0 *>
-PROCEDURE New_QRubberBand0 (arg1: C.int;
- arg2: ADDRESS;
-): QRubberBand;
+PROCEDURE New_QRubberBand0 (arg1: C.int; arg2: ADDRESS; ): QRubberBand;
 
 <* EXTERNAL New_QRubberBand1 *>
-PROCEDURE New_QRubberBand1 (arg1: C.int;
-): QRubberBand;
+PROCEDURE New_QRubberBand1 (arg1: C.int; ): QRubberBand;
 
 <* EXTERNAL Delete_QRubberBand *>
-PROCEDURE Delete_QRubberBand ( self: QRubberBand;
-);
+PROCEDURE Delete_QRubberBand (self: QRubberBand; );
 
 <* EXTERNAL QRubberBand_shape *>
-PROCEDURE QRubberBand_shape ( self: QRubberBand;
-): C.int;
+PROCEDURE QRubberBand_shape (self: QRubberBand; ): C.int;
 
 <* EXTERNAL QRubberBand_setGeometry *>
-PROCEDURE QRubberBand_setGeometry ( self: QRubberBand;
- r: ADDRESS;
-);
+PROCEDURE QRubberBand_setGeometry (self: QRubberBand; r: ADDRESS; );
 
 <* EXTERNAL QRubberBand_setGeometry1 *>
-PROCEDURE QRubberBand_setGeometry1 ( self: QRubberBand;
-x, y, w, h: C.int;
-);
+PROCEDURE QRubberBand_setGeometry1
+  (self: QRubberBand; x, y, w, h: C.int; );
 
 <* EXTERNAL QRubberBand_move *>
-PROCEDURE QRubberBand_move ( self: QRubberBand;
-x, y: C.int;
-);
+PROCEDURE QRubberBand_move (self: QRubberBand; x, y: C.int; );
 
 <* EXTERNAL QRubberBand_move1 *>
-PROCEDURE QRubberBand_move1 ( self: QRubberBand;
- p: ADDRESS;
-);
+PROCEDURE QRubberBand_move1 (self: QRubberBand; p: ADDRESS; );
 
 <* EXTERNAL QRubberBand_resize *>
-PROCEDURE QRubberBand_resize ( self: QRubberBand;
-w, h: C.int;
-);
+PROCEDURE QRubberBand_resize (self: QRubberBand; w, h: C.int; );
 
 <* EXTERNAL QRubberBand_resize1 *>
-PROCEDURE QRubberBand_resize1 ( self: QRubberBand;
- s: ADDRESS;
-);
+PROCEDURE QRubberBand_resize1 (self: QRubberBand; s: ADDRESS; );
 
-TYPE
-QRubberBand = ADDRESS;
+TYPE QRubberBand = ADDRESS;
 
 END QtRubberBandRaw.

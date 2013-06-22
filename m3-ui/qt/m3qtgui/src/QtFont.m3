@@ -18,881 +18,754 @@ IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 FROM QtString IMPORT QString;
 
-PROCEDURE New_QFont0 (self:QFont;): QFont =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtFontRaw.New_QFont0();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-
-RETURN self;
-END New_QFont0;
-
-PROCEDURE New_QFont1 (self:QFont; family: TEXT;
-pointSize, weight: INTEGER;
-italic: BOOLEAN;
-): QFont =
-VAR
-result : ADDRESS;
-qstr_family := NEW(QString).initQString(family);
-arg1tmp :=  LOOPHOLE(qstr_family.cxxObj,ADDRESS);
-BEGIN
-result := QtFontRaw.New_QFont1(arg1tmp, pointSize, weight, italic);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-
-RETURN self;
-END New_QFont1;
-
-PROCEDURE New_QFont2 (self:QFont; family: TEXT;
-pointSize, weight: INTEGER;
-): QFont =
-VAR
-result : ADDRESS;
-qstr_family := NEW(QString).initQString(family);
-arg1tmp :=  LOOPHOLE(qstr_family.cxxObj,ADDRESS);
-BEGIN
-result := QtFontRaw.New_QFont2(arg1tmp, pointSize, weight);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-
-RETURN self;
-END New_QFont2;
-
-PROCEDURE New_QFont3 (self:QFont; family: TEXT;
-pointSize: INTEGER;
-): QFont =
-VAR
-result : ADDRESS;
-qstr_family := NEW(QString).initQString(family);
-arg1tmp :=  LOOPHOLE(qstr_family.cxxObj,ADDRESS);
-BEGIN
-result := QtFontRaw.New_QFont3(arg1tmp, pointSize);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-
-RETURN self;
-END New_QFont3;
-
-PROCEDURE New_QFont4 (self:QFont; family: TEXT;
-): QFont =
-VAR
-result : ADDRESS;
-qstr_family := NEW(QString).initQString(family);
-arg1tmp :=  LOOPHOLE(qstr_family.cxxObj,ADDRESS);
-BEGIN
-result := QtFontRaw.New_QFont4(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-
-RETURN self;
-END New_QFont4;
-
-PROCEDURE New_QFont5 (self:QFont; arg1: QFont;
- pd: QPaintDevice;
-): QFont =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(arg1.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pd.cxxObj,ADDRESS);
-BEGIN
-result := QtFontRaw.New_QFont5(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-
-RETURN self;
-END New_QFont5;
-
-PROCEDURE New_QFont6 (self:QFont; arg1: QFont;
-): QFont =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(arg1.cxxObj,ADDRESS);
-BEGIN
-result := QtFontRaw.New_QFont6(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-
-RETURN self;
-END New_QFont6;
-
-PROCEDURE Delete_QFont ( self: QFont;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.Delete_QFont(selfAdr);
-END Delete_QFont;
-
-PROCEDURE QFont_family ( self: QFont;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_family(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QFont_family;
-
-PROCEDURE QFont_setFamily ( self: QFont;
- arg2: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setFamily(selfAdr, arg2tmp);
-END QFont_setFamily;
-
-PROCEDURE QFont_pointSize ( self: QFont;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_pointSize(selfAdr);
-END QFont_pointSize;
-
-PROCEDURE QFont_setPointSize ( self: QFont;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setPointSize(selfAdr, arg2);
-END QFont_setPointSize;
-
-PROCEDURE QFont_pointSizeF ( self: QFont;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_pointSizeF(selfAdr);
-END QFont_pointSizeF;
-
-PROCEDURE QFont_setPointSizeF ( self: QFont;
-arg2: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setPointSizeF(selfAdr, arg2);
-END QFont_setPointSizeF;
-
-PROCEDURE QFont_pixelSize ( self: QFont;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_pixelSize(selfAdr);
-END QFont_pixelSize;
-
-PROCEDURE QFont_setPixelSize ( self: QFont;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setPixelSize(selfAdr, arg2);
-END QFont_setPixelSize;
-
-PROCEDURE QFont_weight ( self: QFont;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_weight(selfAdr);
-END QFont_weight;
-
-PROCEDURE QFont_setWeight ( self: QFont;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setWeight(selfAdr, arg2);
-END QFont_setWeight;
-
-PROCEDURE QFont_bold ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_bold(selfAdr);
-END QFont_bold;
-
-PROCEDURE QFont_setBold ( self: QFont;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setBold(selfAdr, arg2);
-END QFont_setBold;
-
-PROCEDURE QFont_setStyle ( self: QFont;
-style: Style;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setStyle(selfAdr, ORD(style));
-END QFont_setStyle;
-
-PROCEDURE QFont_style ( self: QFont;
-): Style =
-VAR
-ret:INTEGER; result : Style;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_style(selfAdr);
-result := VAL(ret,Style);  
-RETURN result;
-END QFont_style;
-
-PROCEDURE QFont_italic ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_italic(selfAdr);
-END QFont_italic;
-
-PROCEDURE QFont_setItalic ( self: QFont;
-b: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setItalic(selfAdr, b);
-END QFont_setItalic;
-
-PROCEDURE QFont_underline ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_underline(selfAdr);
-END QFont_underline;
-
-PROCEDURE QFont_setUnderline ( self: QFont;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setUnderline(selfAdr, arg2);
-END QFont_setUnderline;
-
-PROCEDURE QFont_overline ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_overline(selfAdr);
-END QFont_overline;
-
-PROCEDURE QFont_setOverline ( self: QFont;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setOverline(selfAdr, arg2);
-END QFont_setOverline;
-
-PROCEDURE QFont_strikeOut ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_strikeOut(selfAdr);
-END QFont_strikeOut;
-
-PROCEDURE QFont_setStrikeOut ( self: QFont;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setStrikeOut(selfAdr, arg2);
-END QFont_setStrikeOut;
-
-PROCEDURE QFont_fixedPitch ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_fixedPitch(selfAdr);
-END QFont_fixedPitch;
-
-PROCEDURE QFont_setFixedPitch ( self: QFont;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setFixedPitch(selfAdr, arg2);
-END QFont_setFixedPitch;
-
-PROCEDURE QFont_kerning ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_kerning(selfAdr);
-END QFont_kerning;
-
-PROCEDURE QFont_setKerning ( self: QFont;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setKerning(selfAdr, arg2);
-END QFont_setKerning;
-
-PROCEDURE QFont_styleHint ( self: QFont;
-): StyleHint =
-VAR
-ret:INTEGER; result : StyleHint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_styleHint(selfAdr);
-result := VAL(ret,StyleHint);  
-RETURN result;
-END QFont_styleHint;
-
-PROCEDURE QFont_styleStrategy ( self: QFont;
-): StyleStrategy =
-VAR
-ret:INTEGER; result : StyleStrategy;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_styleStrategy(selfAdr);
-result := VAL(ret,StyleStrategy);  
-RETURN result;
-END QFont_styleStrategy;
-
-PROCEDURE QFont_setStyleHint ( self: QFont;
-arg2: StyleHint;
-arg3: StyleStrategy;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setStyleHint(selfAdr, ORD(arg2), ORD(arg3));
-END QFont_setStyleHint;
-
-PROCEDURE QFont_setStyleHint1 ( self: QFont;
-arg2: StyleHint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setStyleHint1(selfAdr, ORD(arg2));
-END QFont_setStyleHint1;
-
-PROCEDURE QFont_setStyleStrategy ( self: QFont;
-s: StyleStrategy;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setStyleStrategy(selfAdr, ORD(s));
-END QFont_setStyleStrategy;
-
-PROCEDURE QFont_stretch ( self: QFont;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_stretch(selfAdr);
-END QFont_stretch;
-
-PROCEDURE QFont_setStretch ( self: QFont;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setStretch(selfAdr, arg2);
-END QFont_setStretch;
-
-PROCEDURE QFont_letterSpacing ( self: QFont;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_letterSpacing(selfAdr);
-END QFont_letterSpacing;
-
-PROCEDURE QFont_letterSpacingType ( self: QFont;
-): SpacingType =
-VAR
-ret:INTEGER; result : SpacingType;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_letterSpacingType(selfAdr);
-result := VAL(ret,SpacingType);  
-RETURN result;
-END QFont_letterSpacingType;
-
-PROCEDURE QFont_setLetterSpacing ( self: QFont;
-type: SpacingType;
-spacing: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setLetterSpacing(selfAdr, ORD(type), spacing);
-END QFont_setLetterSpacing;
-
-PROCEDURE QFont_wordSpacing ( self: QFont;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_wordSpacing(selfAdr);
-END QFont_wordSpacing;
-
-PROCEDURE QFont_setWordSpacing ( self: QFont;
-spacing: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setWordSpacing(selfAdr, spacing);
-END QFont_setWordSpacing;
-
-PROCEDURE QFont_setCapitalization ( self: QFont;
-arg2: Capitalization;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setCapitalization(selfAdr, ORD(arg2));
-END QFont_setCapitalization;
-
-PROCEDURE QFont_capitalization ( self: QFont;
-): Capitalization =
-VAR
-ret:INTEGER; result : Capitalization;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_capitalization(selfAdr);
-result := VAL(ret,Capitalization);  
-RETURN result;
-END QFont_capitalization;
-
-PROCEDURE QFont_rawMode ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_rawMode(selfAdr);
-END QFont_rawMode;
-
-PROCEDURE QFont_setRawMode ( self: QFont;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setRawMode(selfAdr, arg2);
-END QFont_setRawMode;
-
-PROCEDURE QFont_exactMatch ( self: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_exactMatch(selfAdr);
-END QFont_exactMatch;
-
-PROCEDURE QFont_Op_Assign ( self, arg2: QFont;
-): QFont =
-VAR
-ret:ADDRESS; result : QFont;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_Op_Assign(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QFont) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QFont);
-ELSE
-  result := NEW(QFont);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QFont_Op_Assign;
-
-PROCEDURE QFont_Op_Equals ( self, arg2: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_Op_Equals(selfAdr, arg2tmp);
-END QFont_Op_Equals;
-
-PROCEDURE QFont_Op_NotEquals ( self, arg2: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_Op_NotEquals(selfAdr, arg2tmp);
-END QFont_Op_NotEquals;
-
-PROCEDURE QFont_Op_LessThan ( self, arg2: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_Op_LessThan(selfAdr, arg2tmp);
-END QFont_Op_LessThan;
-
-PROCEDURE QFont_isCopyOf ( self, arg2: QFont;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_isCopyOf(selfAdr, arg2tmp);
-END QFont_isCopyOf;
-
-PROCEDURE QFont_setRawName ( self: QFont;
- arg2: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_setRawName(selfAdr, arg2tmp);
-END QFont_setRawName;
-
-PROCEDURE QFont_rawName ( self: QFont;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_rawName(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QFont_rawName;
-
-PROCEDURE QFont_key ( self: QFont;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_key(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QFont_key;
-
-PROCEDURE QFont_toString ( self: QFont;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_toString(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QFont_toString;
-
-PROCEDURE QFont_fromString ( self: QFont;
- arg2: TEXT;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_fromString(selfAdr, arg2tmp);
-END QFont_fromString;
-
-PROCEDURE Substitute ( arg1: TEXT;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-qstr_arg1 := NEW(QString).initQString(arg1);
-arg1tmp :=  LOOPHOLE(qstr_arg1.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.Substitute(arg1tmp);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END Substitute;
-
-PROCEDURE InsertSubstitution ( arg1, arg2: TEXT;
-) =
-VAR
-qstr_arg1 := NEW(QString).initQString(arg1);
-arg1tmp :=  LOOPHOLE(qstr_arg1.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.InsertSubstitution(arg1tmp, arg2tmp);
-END InsertSubstitution;
-
-PROCEDURE InsertSubstitutions ( arg1: TEXT;
- arg2: QStringList;
-) =
-VAR
-qstr_arg1 := NEW(QString).initQString(arg1);
-arg1tmp :=  LOOPHOLE(qstr_arg1.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.InsertSubstitutions(arg1tmp, arg2tmp);
-END InsertSubstitutions;
-
-PROCEDURE RemoveSubstitution ( arg1: TEXT;
-) =
-VAR
-qstr_arg1 := NEW(QString).initQString(arg1);
-arg1tmp :=  LOOPHOLE(qstr_arg1.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.RemoveSubstitution(arg1tmp);
-END RemoveSubstitution;
+PROCEDURE New_QFont0 (self: QFont; ): QFont =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtFontRaw.New_QFont0();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+
+    RETURN self;
+  END New_QFont0;
+
+PROCEDURE New_QFont1 (self             : QFont;
+                      family           : TEXT;
+                      pointSize, weight: INTEGER;
+                      italic           : BOOLEAN; ): QFont =
+  VAR
+    result     : ADDRESS;
+    qstr_family          := NEW(QString).initQString(family);
+    arg1tmp              := LOOPHOLE(qstr_family.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFontRaw.New_QFont1(arg1tmp, pointSize, weight, italic);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+
+    RETURN self;
+  END New_QFont1;
+
+PROCEDURE New_QFont2
+  (self: QFont; family: TEXT; pointSize, weight: INTEGER; ): QFont =
+  VAR
+    result     : ADDRESS;
+    qstr_family          := NEW(QString).initQString(family);
+    arg1tmp              := LOOPHOLE(qstr_family.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFontRaw.New_QFont2(arg1tmp, pointSize, weight);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+
+    RETURN self;
+  END New_QFont2;
+
+PROCEDURE New_QFont3 (self: QFont; family: TEXT; pointSize: INTEGER; ):
+  QFont =
+  VAR
+    result     : ADDRESS;
+    qstr_family          := NEW(QString).initQString(family);
+    arg1tmp              := LOOPHOLE(qstr_family.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFontRaw.New_QFont3(arg1tmp, pointSize);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+
+    RETURN self;
+  END New_QFont3;
+
+PROCEDURE New_QFont4 (self: QFont; family: TEXT; ): QFont =
+  VAR
+    result     : ADDRESS;
+    qstr_family          := NEW(QString).initQString(family);
+    arg1tmp              := LOOPHOLE(qstr_family.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFontRaw.New_QFont4(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+
+    RETURN self;
+  END New_QFont4;
+
+PROCEDURE New_QFont5 (self: QFont; arg1: QFont; pd: QPaintDevice; ):
+  QFont =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(arg1.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pd.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFontRaw.New_QFont5(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+
+    RETURN self;
+  END New_QFont5;
+
+PROCEDURE New_QFont6 (self: QFont; arg1: QFont; ): QFont =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(arg1.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFontRaw.New_QFont6(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+
+    RETURN self;
+  END New_QFont6;
+
+PROCEDURE Delete_QFont (self: QFont; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.Delete_QFont(selfAdr);
+  END Delete_QFont;
+
+PROCEDURE QFont_family (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_family(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QFont_family;
+
+PROCEDURE QFont_setFamily (self: QFont; arg2: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2          := NEW(QString).initQString(arg2);
+    arg2tmp            := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setFamily(selfAdr, arg2tmp);
+  END QFont_setFamily;
+
+PROCEDURE QFont_pointSize (self: QFont; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_pointSize(selfAdr);
+  END QFont_pointSize;
+
+PROCEDURE QFont_setPointSize (self: QFont; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setPointSize(selfAdr, arg2);
+  END QFont_setPointSize;
+
+PROCEDURE QFont_pointSizeF (self: QFont; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_pointSizeF(selfAdr);
+  END QFont_pointSizeF;
+
+PROCEDURE QFont_setPointSizeF (self: QFont; arg2: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setPointSizeF(selfAdr, arg2);
+  END QFont_setPointSizeF;
+
+PROCEDURE QFont_pixelSize (self: QFont; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_pixelSize(selfAdr);
+  END QFont_pixelSize;
+
+PROCEDURE QFont_setPixelSize (self: QFont; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setPixelSize(selfAdr, arg2);
+  END QFont_setPixelSize;
+
+PROCEDURE QFont_weight (self: QFont; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_weight(selfAdr);
+  END QFont_weight;
+
+PROCEDURE QFont_setWeight (self: QFont; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setWeight(selfAdr, arg2);
+  END QFont_setWeight;
+
+PROCEDURE QFont_bold (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_bold(selfAdr);
+  END QFont_bold;
+
+PROCEDURE QFont_setBold (self: QFont; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setBold(selfAdr, arg2);
+  END QFont_setBold;
+
+PROCEDURE QFont_setStyle (self: QFont; style: Style; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setStyle(selfAdr, ORD(style));
+  END QFont_setStyle;
+
+PROCEDURE QFont_style (self: QFont; ): Style =
+  VAR
+    ret    : INTEGER;
+    result : Style;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_style(selfAdr);
+    result := VAL(ret, Style);
+    RETURN result;
+  END QFont_style;
+
+PROCEDURE QFont_italic (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_italic(selfAdr);
+  END QFont_italic;
+
+PROCEDURE QFont_setItalic (self: QFont; b: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setItalic(selfAdr, b);
+  END QFont_setItalic;
+
+PROCEDURE QFont_underline (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_underline(selfAdr);
+  END QFont_underline;
+
+PROCEDURE QFont_setUnderline (self: QFont; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setUnderline(selfAdr, arg2);
+  END QFont_setUnderline;
+
+PROCEDURE QFont_overline (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_overline(selfAdr);
+  END QFont_overline;
+
+PROCEDURE QFont_setOverline (self: QFont; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setOverline(selfAdr, arg2);
+  END QFont_setOverline;
+
+PROCEDURE QFont_strikeOut (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_strikeOut(selfAdr);
+  END QFont_strikeOut;
+
+PROCEDURE QFont_setStrikeOut (self: QFont; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setStrikeOut(selfAdr, arg2);
+  END QFont_setStrikeOut;
+
+PROCEDURE QFont_fixedPitch (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_fixedPitch(selfAdr);
+  END QFont_fixedPitch;
+
+PROCEDURE QFont_setFixedPitch (self: QFont; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setFixedPitch(selfAdr, arg2);
+  END QFont_setFixedPitch;
+
+PROCEDURE QFont_kerning (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_kerning(selfAdr);
+  END QFont_kerning;
+
+PROCEDURE QFont_setKerning (self: QFont; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setKerning(selfAdr, arg2);
+  END QFont_setKerning;
+
+PROCEDURE QFont_styleHint (self: QFont; ): StyleHint =
+  VAR
+    ret    : INTEGER;
+    result : StyleHint;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_styleHint(selfAdr);
+    result := VAL(ret, StyleHint);
+    RETURN result;
+  END QFont_styleHint;
+
+PROCEDURE QFont_styleStrategy (self: QFont; ): StyleStrategy =
+  VAR
+    ret    : INTEGER;
+    result : StyleStrategy;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_styleStrategy(selfAdr);
+    result := VAL(ret, StyleStrategy);
+    RETURN result;
+  END QFont_styleStrategy;
+
+PROCEDURE QFont_setStyleHint
+  (self: QFont; arg2: StyleHint; arg3: StyleStrategy; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setStyleHint(selfAdr, ORD(arg2), ORD(arg3));
+  END QFont_setStyleHint;
+
+PROCEDURE QFont_setStyleHint1 (self: QFont; arg2: StyleHint; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setStyleHint1(selfAdr, ORD(arg2));
+  END QFont_setStyleHint1;
+
+PROCEDURE QFont_setStyleStrategy (self: QFont; s: StyleStrategy; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setStyleStrategy(selfAdr, ORD(s));
+  END QFont_setStyleStrategy;
+
+PROCEDURE QFont_stretch (self: QFont; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_stretch(selfAdr);
+  END QFont_stretch;
+
+PROCEDURE QFont_setStretch (self: QFont; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setStretch(selfAdr, arg2);
+  END QFont_setStretch;
+
+PROCEDURE QFont_letterSpacing (self: QFont; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_letterSpacing(selfAdr);
+  END QFont_letterSpacing;
+
+PROCEDURE QFont_letterSpacingType (self: QFont; ): SpacingType =
+  VAR
+    ret    : INTEGER;
+    result : SpacingType;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_letterSpacingType(selfAdr);
+    result := VAL(ret, SpacingType);
+    RETURN result;
+  END QFont_letterSpacingType;
+
+PROCEDURE QFont_setLetterSpacing
+  (self: QFont; type: SpacingType; spacing: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setLetterSpacing(selfAdr, ORD(type), spacing);
+  END QFont_setLetterSpacing;
+
+PROCEDURE QFont_wordSpacing (self: QFont; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_wordSpacing(selfAdr);
+  END QFont_wordSpacing;
+
+PROCEDURE QFont_setWordSpacing (self: QFont; spacing: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setWordSpacing(selfAdr, spacing);
+  END QFont_setWordSpacing;
+
+PROCEDURE QFont_setCapitalization (self: QFont; arg2: Capitalization; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setCapitalization(selfAdr, ORD(arg2));
+  END QFont_setCapitalization;
+
+PROCEDURE QFont_capitalization (self: QFont; ): Capitalization =
+  VAR
+    ret    : INTEGER;
+    result : Capitalization;
+    selfAdr: ADDRESS        := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_capitalization(selfAdr);
+    result := VAL(ret, Capitalization);
+    RETURN result;
+  END QFont_capitalization;
+
+PROCEDURE QFont_rawMode (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_rawMode(selfAdr);
+  END QFont_rawMode;
+
+PROCEDURE QFont_setRawMode (self: QFont; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setRawMode(selfAdr, arg2);
+  END QFont_setRawMode;
+
+PROCEDURE QFont_exactMatch (self: QFont; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_exactMatch(selfAdr);
+  END QFont_exactMatch;
+
+PROCEDURE QFont_Op_Assign (self, arg2: QFont; ): QFont =
+  VAR
+    ret    : ADDRESS;
+    result : QFont;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_Op_Assign(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QFont) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QFont);
+    ELSE
+      result := NEW(QFont);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QFont_Op_Assign;
+
+PROCEDURE QFont_Op_Equals (self, arg2: QFont; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_Op_Equals(selfAdr, arg2tmp);
+  END QFont_Op_Equals;
+
+PROCEDURE QFont_Op_NotEquals (self, arg2: QFont; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_Op_NotEquals(selfAdr, arg2tmp);
+  END QFont_Op_NotEquals;
+
+PROCEDURE QFont_Op_LessThan (self, arg2: QFont; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_Op_LessThan(selfAdr, arg2tmp);
+  END QFont_Op_LessThan;
+
+PROCEDURE QFont_isCopyOf (self, arg2: QFont; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_isCopyOf(selfAdr, arg2tmp);
+  END QFont_isCopyOf;
+
+PROCEDURE QFont_setRawName (self: QFont; arg2: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2          := NEW(QString).initQString(arg2);
+    arg2tmp            := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setRawName(selfAdr, arg2tmp);
+  END QFont_setRawName;
+
+PROCEDURE QFont_rawName (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_rawName(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QFont_rawName;
+
+PROCEDURE QFont_key (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_key(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QFont_key;
+
+PROCEDURE QFont_toString (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_toString(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QFont_toString;
+
+PROCEDURE QFont_fromString (self: QFont; arg2: TEXT; ): BOOLEAN =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2          := NEW(QString).initQString(arg2);
+    arg2tmp            := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_fromString(selfAdr, arg2tmp);
+  END QFont_fromString;
+
+PROCEDURE Substitute (arg1: TEXT; ): TEXT =
+  VAR
+    ret      : ADDRESS;
+    qstr                  := NEW(QString);
+    ba       : QByteArray;
+    result   : TEXT;
+    qstr_arg1             := NEW(QString).initQString(arg1);
+    arg1tmp               := LOOPHOLE(qstr_arg1.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.Substitute(arg1tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END Substitute;
+
+PROCEDURE InsertSubstitution (arg1, arg2: TEXT; ) =
+  VAR
+    qstr_arg1 := NEW(QString).initQString(arg1);
+    arg1tmp   := LOOPHOLE(qstr_arg1.cxxObj, ADDRESS);
+    qstr_arg2 := NEW(QString).initQString(arg2);
+    arg2tmp   := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.InsertSubstitution(arg1tmp, arg2tmp);
+  END InsertSubstitution;
+
+PROCEDURE InsertSubstitutions (arg1: TEXT; arg2: QStringList; ) =
+  VAR
+    qstr_arg1 := NEW(QString).initQString(arg1);
+    arg1tmp   := LOOPHOLE(qstr_arg1.cxxObj, ADDRESS);
+    arg2tmp   := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.InsertSubstitutions(arg1tmp, arg2tmp);
+  END InsertSubstitutions;
+
+PROCEDURE RemoveSubstitution (arg1: TEXT; ) =
+  VAR
+    qstr_arg1 := NEW(QString).initQString(arg1);
+    arg1tmp   := LOOPHOLE(qstr_arg1.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.RemoveSubstitution(arg1tmp);
+  END RemoveSubstitution;
 
 PROCEDURE Initialize () =
-BEGIN
-QtFontRaw.Initialize();
-END Initialize;
+  BEGIN
+    QtFontRaw.Initialize();
+  END Initialize;
 
 PROCEDURE Cleanup () =
-BEGIN
-QtFontRaw.Cleanup();
-END Cleanup;
+  BEGIN
+    QtFontRaw.Cleanup();
+  END Cleanup;
 
 PROCEDURE CacheStatistics () =
-BEGIN
-QtFontRaw.CacheStatistics();
-END CacheStatistics;
+  BEGIN
+    QtFontRaw.CacheStatistics();
+  END CacheStatistics;
 
-PROCEDURE QFont_defaultFamily ( self: QFont;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_defaultFamily(selfAdr);
+PROCEDURE QFont_defaultFamily (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_defaultFamily(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QFont_defaultFamily;
+    RETURN result;
+  END QFont_defaultFamily;
 
-PROCEDURE QFont_lastResortFamily ( self: QFont;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_lastResortFamily(selfAdr);
+PROCEDURE QFont_lastResortFamily (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_lastResortFamily(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QFont_lastResortFamily;
+    RETURN result;
+  END QFont_lastResortFamily;
 
-PROCEDURE QFont_lastResortFont ( self: QFont;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_lastResortFont(selfAdr);
+PROCEDURE QFont_lastResortFont (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_lastResortFont(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QFont_lastResortFont;
+    RETURN result;
+  END QFont_lastResortFont;
 
-PROCEDURE QFont_resolve ( self, arg2: QFont;
-): QFont =
-VAR
-ret:ADDRESS; result : QFont;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtFontRaw.QFont_resolve(selfAdr, arg2tmp);
+PROCEDURE QFont_resolve (self, arg2: QFont; ): QFont =
+  VAR
+    ret    : ADDRESS;
+    result : QFont;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_resolve(selfAdr, arg2tmp);
 
-  result := NEW(QFont);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QFont);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QFont_resolve;
+    RETURN result;
+  END QFont_resolve;
 
-PROCEDURE QFont_resolve1 ( self: QFont;
-): CARDINAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFontRaw.QFont_resolve1(selfAdr);
-END QFont_resolve1;
+PROCEDURE QFont_resolve1 (self: QFont; ): CARDINAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFontRaw.QFont_resolve1(selfAdr);
+  END QFont_resolve1;
 
-PROCEDURE QFont_resolve2 ( self: QFont;
-mask: CARDINAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFontRaw.QFont_resolve2(selfAdr, mask);
-END QFont_resolve2;
+PROCEDURE QFont_resolve2 (self: QFont; mask: CARDINAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_resolve2(selfAdr, mask);
+  END QFont_resolve2;
 
-PROCEDURE Cleanup_QFont(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QFont := ref;
-BEGIN
-  Delete_QFont(obj);
- END Cleanup_QFont;
+PROCEDURE Cleanup_QFont
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QFont := ref;
+  BEGIN
+    Delete_QFont(obj);
+  END Cleanup_QFont;
 
-PROCEDURE Destroy_QFont(self : QFont) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QFont);
-END Destroy_QFont;
+PROCEDURE Destroy_QFont (self: QFont) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QFont);
+  END Destroy_QFont;
 
 REVEAL
-QFont =
-QFontPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QFont0;
-init_1 := New_QFont1;
-init_2 := New_QFont2;
-init_3 := New_QFont3;
-init_4 := New_QFont4;
-init_5 := New_QFont5;
-init_6 := New_QFont6;
-family := QFont_family;
-setFamily := QFont_setFamily;
-pointSize := QFont_pointSize;
-setPointSize := QFont_setPointSize;
-pointSizeF := QFont_pointSizeF;
-setPointSizeF := QFont_setPointSizeF;
-pixelSize := QFont_pixelSize;
-setPixelSize := QFont_setPixelSize;
-weight := QFont_weight;
-setWeight := QFont_setWeight;
-bold := QFont_bold;
-setBold := QFont_setBold;
-setStyle := QFont_setStyle;
-style := QFont_style;
-italic := QFont_italic;
-setItalic := QFont_setItalic;
-underline := QFont_underline;
-setUnderline := QFont_setUnderline;
-overline := QFont_overline;
-setOverline := QFont_setOverline;
-strikeOut := QFont_strikeOut;
-setStrikeOut := QFont_setStrikeOut;
-fixedPitch := QFont_fixedPitch;
-setFixedPitch := QFont_setFixedPitch;
-kerning := QFont_kerning;
-setKerning := QFont_setKerning;
-styleHint := QFont_styleHint;
-styleStrategy := QFont_styleStrategy;
-setStyleHint := QFont_setStyleHint;
-setStyleHint1 := QFont_setStyleHint1;
-setStyleStrategy := QFont_setStyleStrategy;
-stretch := QFont_stretch;
-setStretch := QFont_setStretch;
-letterSpacing := QFont_letterSpacing;
-letterSpacingType := QFont_letterSpacingType;
-setLetterSpacing := QFont_setLetterSpacing;
-wordSpacing := QFont_wordSpacing;
-setWordSpacing := QFont_setWordSpacing;
-setCapitalization := QFont_setCapitalization;
-capitalization := QFont_capitalization;
-rawMode := QFont_rawMode;
-setRawMode := QFont_setRawMode;
-exactMatch := QFont_exactMatch;
-Op_Assign := QFont_Op_Assign;
-Op_Equals := QFont_Op_Equals;
-Op_NotEquals := QFont_Op_NotEquals;
-Op_LessThan := QFont_Op_LessThan;
-isCopyOf := QFont_isCopyOf;
-setRawName := QFont_setRawName;
-rawName := QFont_rawName;
-key := QFont_key;
-toString := QFont_toString;
-fromString := QFont_fromString;
-defaultFamily := QFont_defaultFamily;
-lastResortFamily := QFont_lastResortFamily;
-lastResortFont := QFont_lastResortFont;
-resolve := QFont_resolve;
-resolve1 := QFont_resolve1;
-resolve2 := QFont_resolve2;
-destroyCxx := Destroy_QFont;
-END;
+  QFont = QFontPublic BRANDED OBJECT
+          OVERRIDES
+            init_0            := New_QFont0;
+            init_1            := New_QFont1;
+            init_2            := New_QFont2;
+            init_3            := New_QFont3;
+            init_4            := New_QFont4;
+            init_5            := New_QFont5;
+            init_6            := New_QFont6;
+            family            := QFont_family;
+            setFamily         := QFont_setFamily;
+            pointSize         := QFont_pointSize;
+            setPointSize      := QFont_setPointSize;
+            pointSizeF        := QFont_pointSizeF;
+            setPointSizeF     := QFont_setPointSizeF;
+            pixelSize         := QFont_pixelSize;
+            setPixelSize      := QFont_setPixelSize;
+            weight            := QFont_weight;
+            setWeight         := QFont_setWeight;
+            bold              := QFont_bold;
+            setBold           := QFont_setBold;
+            setStyle          := QFont_setStyle;
+            style             := QFont_style;
+            italic            := QFont_italic;
+            setItalic         := QFont_setItalic;
+            underline         := QFont_underline;
+            setUnderline      := QFont_setUnderline;
+            overline          := QFont_overline;
+            setOverline       := QFont_setOverline;
+            strikeOut         := QFont_strikeOut;
+            setStrikeOut      := QFont_setStrikeOut;
+            fixedPitch        := QFont_fixedPitch;
+            setFixedPitch     := QFont_setFixedPitch;
+            kerning           := QFont_kerning;
+            setKerning        := QFont_setKerning;
+            styleHint         := QFont_styleHint;
+            styleStrategy     := QFont_styleStrategy;
+            setStyleHint      := QFont_setStyleHint;
+            setStyleHint1     := QFont_setStyleHint1;
+            setStyleStrategy  := QFont_setStyleStrategy;
+            stretch           := QFont_stretch;
+            setStretch        := QFont_setStretch;
+            letterSpacing     := QFont_letterSpacing;
+            letterSpacingType := QFont_letterSpacingType;
+            setLetterSpacing  := QFont_setLetterSpacing;
+            wordSpacing       := QFont_wordSpacing;
+            setWordSpacing    := QFont_setWordSpacing;
+            setCapitalization := QFont_setCapitalization;
+            capitalization    := QFont_capitalization;
+            rawMode           := QFont_rawMode;
+            setRawMode        := QFont_setRawMode;
+            exactMatch        := QFont_exactMatch;
+            Op_Assign         := QFont_Op_Assign;
+            Op_Equals         := QFont_Op_Equals;
+            Op_NotEquals      := QFont_Op_NotEquals;
+            Op_LessThan       := QFont_Op_LessThan;
+            isCopyOf          := QFont_isCopyOf;
+            setRawName        := QFont_setRawName;
+            rawName           := QFont_rawName;
+            key               := QFont_key;
+            toString          := QFont_toString;
+            fromString        := QFont_fromString;
+            defaultFamily     := QFont_defaultFamily;
+            lastResortFamily  := QFont_lastResortFamily;
+            lastResortFont    := QFont_lastResortFont;
+            resolve           := QFont_resolve;
+            resolve1          := QFont_resolve1;
+            resolve2          := QFont_resolve2;
+            destroyCxx        := Destroy_QFont;
+          END;
 
 
 BEGIN

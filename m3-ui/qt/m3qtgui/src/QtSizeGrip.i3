@@ -12,22 +12,18 @@ FROM QtSize IMPORT QSize;
 FROM QtWidget IMPORT QWidget;
 
 
-TYPE
-  T = QSizeGrip;
+TYPE T = QSizeGrip;
 
 
 TYPE
-QSizeGrip <: QSizeGripPublic;
-QSizeGripPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QSizeGrip;
-sizeHint(): QSize;  (*  virtual *)
-setVisible(arg1: BOOLEAN;
-);  (*  virtual *)
-destroyCxx();
-END;
+  QSizeGrip <: QSizeGripPublic;
+  QSizeGripPublic = QWidget BRANDED OBJECT
+                    METHODS
+                      init_0     (parent: QWidget; ): QSizeGrip;
+                      sizeHint   (): QSize; (* virtual *)
+                      setVisible (arg1: BOOLEAN; ); (* virtual *)
+                      destroyCxx ();
+                    END;
 
 
 END QtSizeGrip.

@@ -11,30 +11,28 @@ INTERFACE QtPaintDevice;
 
 
 
-TYPE
-  T = QPaintDevice;
+TYPE T = QPaintDevice;
 
 
 TYPE
-QPaintDevice <: QPaintDevicePublic;
-QPaintDevicePublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-devType(): INTEGER;  (*  virtual *)
-paintingActive(): BOOLEAN;
-width(): INTEGER;
-height(): INTEGER;
-widthMM(): INTEGER;
-heightMM(): INTEGER;
-logicalDpiX(): INTEGER;
-logicalDpiY(): INTEGER;
-physicalDpiX(): INTEGER;
-physicalDpiY(): INTEGER;
-colorCount(): INTEGER;
-depth(): INTEGER;
-destroyCxx();
-END;
+  QPaintDevice <: QPaintDevicePublic;
+  QPaintDevicePublic = BRANDED OBJECT
+                         cxxObj: ADDRESS;
+                       METHODS
+                         devType        (): INTEGER; (* virtual *)
+                         paintingActive (): BOOLEAN;
+                         width          (): INTEGER;
+                         height         (): INTEGER;
+                         widthMM        (): INTEGER;
+                         heightMM       (): INTEGER;
+                         logicalDpiX    (): INTEGER;
+                         logicalDpiY    (): INTEGER;
+                         physicalDpiX   (): INTEGER;
+                         physicalDpiY   (): INTEGER;
+                         colorCount     (): INTEGER;
+                         depth          (): INTEGER;
+                         destroyCxx     ();
+                       END;
 
 
 END QtPaintDevice.

@@ -14,7 +14,7 @@ FROM QtPushButton IMPORT QPushButton;
 FROM QtPixmap IMPORT QPixmap;
 FROM QtObject IMPORT QObject;
 FROM QtWidget IMPORT QWidget;
-FROM QtNamespace IMPORT WindowTypes,TextFormat,WindowModality;
+FROM QtNamespace IMPORT WindowTypes, TextFormat, WindowModality;
 
 
 FROM QtDialog IMPORT QDialog;
@@ -24,399 +24,328 @@ TYPE
   StandardButtons = INTEGER;
 
 
-CONST (* Enum Icon *)
-  NoIcon = 0;
+CONST                            (* Enum Icon *)
+  NoIcon      = 0;
   Information = 1;
-  Warning = 2;
-  Critical = 3;
-  Question = 4;
+  Warning     = 2;
+  Critical    = 3;
+  Question    = 4;
 
-TYPE (* Enum Icon *)
-  Icon = [0..4];
+TYPE                             (* Enum Icon *)
+  Icon = [0 .. 4];
 
-CONST (* Enum ButtonRole *)
-  InvalidRole = -1;
-  AcceptRole = 0;
-  RejectRole = 1;
+CONST                            (* Enum ButtonRole *)
+  InvalidRole     = -1;
+  AcceptRole      = 0;
+  RejectRole      = 1;
   DestructiveRole = 2;
-  ActionRole = 3;
-  HelpRole = 4;
-  YesRole = 5;
-  NoRole = 6;
-  ResetRole = 7;
-  ApplyRole = 8;
-  NRoles = 9;
+  ActionRole      = 3;
+  HelpRole        = 4;
+  YesRole         = 5;
+  NoRole          = 6;
+  ResetRole       = 7;
+  ApplyRole       = 8;
+  NRoles          = 9;
 
-TYPE (* Enum ButtonRole *)
-  ButtonRole = [-1..9];
+TYPE                             (* Enum ButtonRole *)
+  ButtonRole = [-1 .. 9];
 
-CONST (* Enum StandardButton *)
-  NoButton = 0;
-  Ok = 1024;
-  Save = 2048;
-  SaveAll = 4096;
-  Open = 8192;
-  Yes = 16384;
-  YesToAll = 32768;
-  No = 65536;
-  NoToAll = 131072;
-  Abort = 262144;
-  Retry = 524288;
-  Ignore = 1048576;
-  Close = 2097152;
-  Cancel = 4194304;
-  Discard = 8388608;
-  Help = 16777216;
-  Apply = 33554432;
-  Reset = 67108864;
+CONST                            (* Enum StandardButton *)
+  NoButton        = 0;
+  Ok              = 1024;
+  Save            = 2048;
+  SaveAll         = 4096;
+  Open            = 8192;
+  Yes             = 16384;
+  YesToAll        = 32768;
+  No              = 65536;
+  NoToAll         = 131072;
+  Abort           = 262144;
+  Retry           = 524288;
+  Ignore          = 1048576;
+  Close           = 2097152;
+  Cancel          = 4194304;
+  Discard         = 8388608;
+  Help            = 16777216;
+  Apply           = 33554432;
+  Reset           = 67108864;
   RestoreDefaults = 134217728;
-  FirstButton = 1024;
-  LastButton = 134217728;
-  YesAll = 32768;
-  NoAll = 131072;
-  Default = 256;
-  Escape = 512;
-  FlagMask = 768;
-  ButtonMask = -1;
+  FirstButton     = 1024;
+  LastButton      = 134217728;
+  YesAll          = 32768;
+  NoAll           = 131072;
+  Default         = 256;
+  Escape          = 512;
+  FlagMask        = 768;
+  ButtonMask      = -1;
 
-TYPE (* Enum StandardButton *)
-  StandardButton = [-1..134217728];
-PROCEDURE InfoDialog ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-defaultButton: StandardButton;
-): StandardButton;
+TYPE                             (* Enum StandardButton *)
+  StandardButton = [-1 .. 134217728];
+PROCEDURE InfoDialog (parent       : QWidget;
+                      title, text  : TEXT;
+                      buttons      : StandardButtons;
+                      defaultButton: StandardButton;  ): StandardButton;
 
-PROCEDURE InfoDialog1 ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-): StandardButton;
+PROCEDURE InfoDialog1
+  (parent: QWidget; title, text: TEXT; buttons: StandardButtons; ):
+  StandardButton;
 
-PROCEDURE InfoDialog2 ( parent: QWidget;
- title, text: TEXT;
-): StandardButton;
+PROCEDURE InfoDialog2 (parent: QWidget; title, text: TEXT; ):
+  StandardButton;
 
-PROCEDURE QuestionDialog ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-defaultButton: StandardButton;
-): StandardButton;
+PROCEDURE QuestionDialog (parent       : QWidget;
+                          title, text  : TEXT;
+                          buttons      : StandardButtons;
+                          defaultButton: StandardButton;  ):
+  StandardButton;
 
-PROCEDURE QuestionDialog1 ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-): StandardButton;
+PROCEDURE QuestionDialog1
+  (parent: QWidget; title, text: TEXT; buttons: StandardButtons; ):
+  StandardButton;
 
-PROCEDURE QuestionDialog2 ( parent: QWidget;
- title, text: TEXT;
-): StandardButton;
+PROCEDURE QuestionDialog2 (parent: QWidget; title, text: TEXT; ):
+  StandardButton;
 
-PROCEDURE WarningDialog ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-defaultButton: StandardButton;
-): StandardButton;
+PROCEDURE WarningDialog (parent       : QWidget;
+                         title, text  : TEXT;
+                         buttons      : StandardButtons;
+                         defaultButton: StandardButton;  ): StandardButton;
 
-PROCEDURE WarningDialog1 ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-): StandardButton;
+PROCEDURE WarningDialog1
+  (parent: QWidget; title, text: TEXT; buttons: StandardButtons; ):
+  StandardButton;
 
-PROCEDURE WarningDialog2 ( parent: QWidget;
- title, text: TEXT;
-): StandardButton;
+PROCEDURE WarningDialog2 (parent: QWidget; title, text: TEXT; ):
+  StandardButton;
 
-PROCEDURE CriticalDialog ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-defaultButton: StandardButton;
-): StandardButton;
+PROCEDURE CriticalDialog (parent       : QWidget;
+                          title, text  : TEXT;
+                          buttons      : StandardButtons;
+                          defaultButton: StandardButton;  ):
+  StandardButton;
 
-PROCEDURE CriticalDialog1 ( parent: QWidget;
- title, text: TEXT;
-buttons: StandardButtons;
-): StandardButton;
+PROCEDURE CriticalDialog1
+  (parent: QWidget; title, text: TEXT; buttons: StandardButtons; ):
+  StandardButton;
 
-PROCEDURE CriticalDialog2 ( parent: QWidget;
- title, text: TEXT;
-): StandardButton;
+PROCEDURE CriticalDialog2 (parent: QWidget; title, text: TEXT; ):
+  StandardButton;
 
-PROCEDURE About ( parent: QWidget;
- title, text: TEXT;
-);
+PROCEDURE About (parent: QWidget; title, text: TEXT; );
 
-PROCEDURE InfoDialog3 ( parent: QWidget;
- title, text: TEXT;
-button0, button1, button2: INTEGER;
-): INTEGER;
+PROCEDURE InfoDialog3 (parent                   : QWidget;
+                       title, text              : TEXT;
+                       button0, button1, button2: INTEGER; ): INTEGER;
 
-PROCEDURE InfoDialog4 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: INTEGER;
-): INTEGER;
+PROCEDURE InfoDialog4
+  (parent: QWidget; title, text: TEXT; button0, button1: INTEGER; ):
+  INTEGER;
 
-PROCEDURE InfoDialog5 ( parent: QWidget;
- title, text: TEXT;
-button0: INTEGER;
-): INTEGER;
+PROCEDURE InfoDialog5
+  (parent: QWidget; title, text: TEXT; button0: INTEGER; ): INTEGER;
 
-PROCEDURE InfoDialog6 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber, escapeButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE InfoDialog6
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber, escapeButtonNumber           : INTEGER; ): INTEGER;
 
-PROCEDURE InfoDialog7 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE InfoDialog7
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber                               : INTEGER; ): INTEGER;
 
-PROCEDURE InfoDialog8 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-): INTEGER;
+PROCEDURE InfoDialog8
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;    ): INTEGER;
 
-PROCEDURE InfoDialog9 ( parent: QWidget;
- title, text, button0Text, button1Text: TEXT;
-): INTEGER;
+PROCEDURE InfoDialog9
+  (parent: QWidget; title, text, button0Text, button1Text: TEXT; ):
+  INTEGER;
 
-PROCEDURE InfoDialog10 ( parent: QWidget;
- title, text, button0Text: TEXT;
-): INTEGER;
+PROCEDURE InfoDialog10 (parent: QWidget; title, text, button0Text: TEXT; ):
+  INTEGER;
 
-PROCEDURE InfoDialog11 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: StandardButton;
-): StandardButton;
+PROCEDURE InfoDialog11
+  (parent: QWidget; title, text: TEXT; button0, button1: StandardButton; ):
+  StandardButton;
 
-PROCEDURE InfoDialog12 ( parent: QWidget;
- title, text: TEXT;
-button0: StandardButton;
-): StandardButton;
+PROCEDURE InfoDialog12
+  (parent: QWidget; title, text: TEXT; button0: StandardButton; ):
+  StandardButton;
 
-PROCEDURE QuestionDialog3 ( parent: QWidget;
- title, text: TEXT;
-button0, button1, button2: INTEGER;
-): INTEGER;
+PROCEDURE QuestionDialog3 (parent                   : QWidget;
+                           title, text              : TEXT;
+                           button0, button1, button2: INTEGER; ): INTEGER;
 
-PROCEDURE QuestionDialog4 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: INTEGER;
-): INTEGER;
+PROCEDURE QuestionDialog4
+  (parent: QWidget; title, text: TEXT; button0, button1: INTEGER; ):
+  INTEGER;
 
-PROCEDURE QuestionDialog5 ( parent: QWidget;
- title, text: TEXT;
-button0: INTEGER;
-): INTEGER;
+PROCEDURE QuestionDialog5
+  (parent: QWidget; title, text: TEXT; button0: INTEGER; ): INTEGER;
 
-PROCEDURE QuestionDialog6 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber, escapeButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE QuestionDialog6
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber, escapeButtonNumber           : INTEGER; ): INTEGER;
 
-PROCEDURE QuestionDialog7 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE QuestionDialog7
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber                               : INTEGER; ): INTEGER;
 
-PROCEDURE QuestionDialog8 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-): INTEGER;
+PROCEDURE QuestionDialog8
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;    ): INTEGER;
 
-PROCEDURE QuestionDialog9 ( parent: QWidget;
- title, text, button0Text, button1Text: TEXT;
-): INTEGER;
+PROCEDURE QuestionDialog9
+  (parent: QWidget; title, text, button0Text, button1Text: TEXT; ):
+  INTEGER;
 
-PROCEDURE QuestionDialog10 ( parent: QWidget;
- title, text, button0Text: TEXT;
-): INTEGER;
+PROCEDURE QuestionDialog10
+  (parent: QWidget; title, text, button0Text: TEXT; ): INTEGER;
 
-PROCEDURE QuestionDialog11 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: StandardButton;
-): INTEGER;
+PROCEDURE QuestionDialog11
+  (parent: QWidget; title, text: TEXT; button0, button1: StandardButton; ):
+  INTEGER;
 
-PROCEDURE WarningDialog3 ( parent: QWidget;
- title, text: TEXT;
-button0, button1, button2: INTEGER;
-): INTEGER;
+PROCEDURE WarningDialog3 (parent                   : QWidget;
+                          title, text              : TEXT;
+                          button0, button1, button2: INTEGER; ): INTEGER;
 
-PROCEDURE WarningDialog4 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: INTEGER;
-): INTEGER;
+PROCEDURE WarningDialog4
+  (parent: QWidget; title, text: TEXT; button0, button1: INTEGER; ):
+  INTEGER;
 
-PROCEDURE WarningDialog5 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber, escapeButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE WarningDialog5
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber, escapeButtonNumber           : INTEGER; ): INTEGER;
 
-PROCEDURE WarningDialog6 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE WarningDialog6
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber                               : INTEGER; ): INTEGER;
 
-PROCEDURE WarningDialog7 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-): INTEGER;
+PROCEDURE WarningDialog7
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;    ): INTEGER;
 
-PROCEDURE WarningDialog8 ( parent: QWidget;
- title, text, button0Text, button1Text: TEXT;
-): INTEGER;
+PROCEDURE WarningDialog8
+  (parent: QWidget; title, text, button0Text, button1Text: TEXT; ):
+  INTEGER;
 
-PROCEDURE WarningDialog9 ( parent: QWidget;
- title, text, button0Text: TEXT;
-): INTEGER;
+PROCEDURE WarningDialog9
+  (parent: QWidget; title, text, button0Text: TEXT; ): INTEGER;
 
-PROCEDURE WarningDialog10 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: StandardButton;
-): INTEGER;
+PROCEDURE WarningDialog10
+  (parent: QWidget; title, text: TEXT; button0, button1: StandardButton; ):
+  INTEGER;
 
-PROCEDURE CriticalDialog3 ( parent: QWidget;
- title, text: TEXT;
-button0, button1, button2: INTEGER;
-): INTEGER;
+PROCEDURE CriticalDialog3 (parent                   : QWidget;
+                           title, text              : TEXT;
+                           button0, button1, button2: INTEGER; ): INTEGER;
 
-PROCEDURE CriticalDialog4 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: INTEGER;
-): INTEGER;
+PROCEDURE CriticalDialog4
+  (parent: QWidget; title, text: TEXT; button0, button1: INTEGER; ):
+  INTEGER;
 
-PROCEDURE CriticalDialog5 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber, escapeButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE CriticalDialog5
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber, escapeButtonNumber           : INTEGER; ): INTEGER;
 
-PROCEDURE CriticalDialog6 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-defaultButtonNumber: INTEGER;
-): INTEGER;
+PROCEDURE CriticalDialog6
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;
+   defaultButtonNumber                               : INTEGER; ): INTEGER;
 
-PROCEDURE CriticalDialog7 ( parent: QWidget;
- title, text, button0Text, button1Text, button2Text: TEXT;
-): INTEGER;
+PROCEDURE CriticalDialog7
+  (parent                                            : QWidget;
+   title, text, button0Text, button1Text, button2Text: TEXT;    ): INTEGER;
 
-PROCEDURE CriticalDialog8 ( parent: QWidget;
- title, text, button0Text, button1Text: TEXT;
-): INTEGER;
+PROCEDURE CriticalDialog8
+  (parent: QWidget; title, text, button0Text, button1Text: TEXT; ):
+  INTEGER;
 
-PROCEDURE CriticalDialog9 ( parent: QWidget;
- title, text, button0Text: TEXT;
-): INTEGER;
+PROCEDURE CriticalDialog9
+  (parent: QWidget; title, text, button0Text: TEXT; ): INTEGER;
 
-PROCEDURE CriticalDialog10 ( parent: QWidget;
- title, text: TEXT;
-button0, button1: StandardButton;
-): INTEGER;
+PROCEDURE CriticalDialog10
+  (parent: QWidget; title, text: TEXT; button0, button1: StandardButton; ):
+  INTEGER;
 
-PROCEDURE StandardIcon (icon: Icon;
-): QPixmap;
+PROCEDURE StandardIcon (icon: Icon; ): QPixmap;
 
 
 TYPE
-QMessageBox <: QMessageBoxPublic;
-QMessageBoxPublic =
-QDialog BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QMessageBox;
-init_1 () : QMessageBox;
-init_2 (icon: Icon;
- title, text: TEXT;
-buttons: StandardButtons;
- parent: QWidget;
-flags: WindowTypes;
-) : QMessageBox;
-init_3 (icon: Icon;
- title, text: TEXT;
-buttons: StandardButtons;
- parent: QWidget;
-) : QMessageBox;
-init_4 (icon: Icon;
- title, text: TEXT;
-buttons: StandardButtons;
-) : QMessageBox;
-init_5 (icon: Icon;
- title, text: TEXT;
-) : QMessageBox;
-init_6 ( title, text: TEXT;
-icon: Icon;
-button0, button1, button2: INTEGER;
- parent: QWidget;
-f: WindowTypes;
-) : QMessageBox;
-init_7 ( title, text: TEXT;
-icon: Icon;
-button0, button1, button2: INTEGER;
- parent: QWidget;
-) : QMessageBox;
-init_8 ( title, text: TEXT;
-icon: Icon;
-button0, button1, button2: INTEGER;
-) : QMessageBox;
-addButton( button: QAbstractButton;
-role: ButtonRole;
-);
-addButton1( text: TEXT;
-role: ButtonRole;
-): QPushButton;
-addButton2(button: StandardButton;
-): QPushButton;
-removeButton( button: QAbstractButton;
-);
-open0_0();
-open1( receiver: QObject;
- member: TEXT;
-);
-buttonRole( button: QAbstractButton;
-): ButtonRole;
-setStandardButtons(buttons: StandardButtons;
-);
-standardButtons(): StandardButtons;
-standardButton( button: QAbstractButton;
-): StandardButton;
-button(which: StandardButton;
-): QAbstractButton;
-defaultButton(): QPushButton;
-setDefaultButton( button: QPushButton;
-);
-setDefaultButton1(button: StandardButton;
-);
-escapeButton(): QAbstractButton;
-setEscapeButton( button: QAbstractButton;
-);
-setEscapeButton1(button: StandardButton;
-);
-clickedButton(): QAbstractButton;
-text(): TEXT;
-setText( text: TEXT;
-);
-icon(): Icon;
-setIcon(arg1: Icon;
-);
-iconPixmap(): QPixmap;
-setIconPixmap( pixmap: QPixmap;
-);
-textFormat(): TextFormat;
-setTextFormat(format: TextFormat;
-);
-sizeHint(): QSize;  (*  virtual *)
-buttonText(button: INTEGER;
-): TEXT;
-setButtonText(button: INTEGER;
- text: TEXT;
-);
-informativeText(): TEXT;
-setInformativeText( text: TEXT;
-);
-detailedText(): TEXT;
-setDetailedText( text: TEXT;
-);
-setWindowTitle( title: TEXT;
-);
-setWindowModality(windowModality: WindowModality;
-);
-destroyCxx();
-END;
+  QMessageBox <: QMessageBoxPublic;
+  QMessageBoxPublic =
+    QDialog BRANDED OBJECT
+    METHODS
+      init_0 (parent: QWidget; ): QMessageBox;
+      init_1 (): QMessageBox;
+      init_2 (icon       : Icon;
+              title, text: TEXT;
+              buttons    : StandardButtons;
+              parent     : QWidget;
+              flags      : WindowTypes;     ): QMessageBox;
+      init_3 (icon       : Icon;
+              title, text: TEXT;
+              buttons    : StandardButtons;
+              parent     : QWidget;         ): QMessageBox;
+      init_4 (icon: Icon; title, text: TEXT; buttons: StandardButtons; ):
+              QMessageBox;
+      init_5 (icon: Icon; title, text: TEXT; ): QMessageBox;
+      init_6 (title, text              : TEXT;
+              icon                     : Icon;
+              button0, button1, button2: INTEGER;
+              parent                   : QWidget;
+              f                        : WindowTypes; ): QMessageBox;
+      init_7 (title, text              : TEXT;
+              icon                     : Icon;
+              button0, button1, button2: INTEGER;
+              parent                   : QWidget; ): QMessageBox;
+      init_8 (title, text              : TEXT;
+              icon                     : Icon;
+              button0, button1, button2: INTEGER; ): QMessageBox;
+      addButton          (button: QAbstractButton; role: ButtonRole; );
+      addButton1         (text: TEXT; role: ButtonRole; ): QPushButton;
+      addButton2         (button: StandardButton; ): QPushButton;
+      removeButton       (button: QAbstractButton; );
+      open0_0            ();
+      open1              (receiver: QObject; member: TEXT; );
+      buttonRole         (button: QAbstractButton; ): ButtonRole;
+      setStandardButtons (buttons: StandardButtons; );
+      standardButtons    (): StandardButtons;
+      standardButton     (button: QAbstractButton; ): StandardButton;
+      button             (which: StandardButton; ): QAbstractButton;
+      defaultButton      (): QPushButton;
+      setDefaultButton   (button: QPushButton; );
+      setDefaultButton1  (button: StandardButton; );
+      escapeButton       (): QAbstractButton;
+      setEscapeButton    (button: QAbstractButton; );
+      setEscapeButton1   (button: StandardButton; );
+      clickedButton      (): QAbstractButton;
+      text               (): TEXT;
+      setText            (text: TEXT; );
+      icon               (): Icon;
+      setIcon            (arg1: Icon; );
+      iconPixmap         (): QPixmap;
+      setIconPixmap      (pixmap: QPixmap; );
+      textFormat         (): TextFormat;
+      setTextFormat      (format: TextFormat; );
+      sizeHint           (): QSize; (* virtual *)
+      buttonText         (button: INTEGER; ): TEXT;
+      setButtonText      (button: INTEGER; text: TEXT; );
+      informativeText    (): TEXT;
+      setInformativeText (text: TEXT; );
+      detailedText       (): TEXT;
+      setDetailedText    (text: TEXT; );
+      setWindowTitle     (title: TEXT; );
+      setWindowModality  (windowModality: WindowModality; );
+      destroyCxx         ();
+    END;
 
 
 END QtMessageBox.

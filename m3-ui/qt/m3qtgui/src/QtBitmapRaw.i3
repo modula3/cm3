@@ -18,63 +18,44 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QBitmap0 (): QBitmap;
 
 <* EXTERNAL New_QBitmap1 *>
-PROCEDURE New_QBitmap1 ( arg1: ADDRESS;
-): QBitmap;
+PROCEDURE New_QBitmap1 (arg1: ADDRESS; ): QBitmap;
 
 <* EXTERNAL New_QBitmap2 *>
-PROCEDURE New_QBitmap2 (w, h: C.int;
-): QBitmap;
+PROCEDURE New_QBitmap2 (w, h: C.int; ): QBitmap;
 
 <* EXTERNAL New_QBitmap3 *>
-PROCEDURE New_QBitmap3 ( arg1: ADDRESS;
-): QBitmap;
+PROCEDURE New_QBitmap3 (arg1: ADDRESS; ): QBitmap;
 
 <* EXTERNAL New_QBitmap4 *>
-PROCEDURE New_QBitmap4 ( fileName: ADDRESS;
- format: C.char_star;
-): QBitmap;
+PROCEDURE New_QBitmap4 (fileName: ADDRESS; format: C.char_star; ): QBitmap;
 
 <* EXTERNAL New_QBitmap5 *>
-PROCEDURE New_QBitmap5 ( fileName: ADDRESS;
-): QBitmap;
+PROCEDURE New_QBitmap5 (fileName: ADDRESS; ): QBitmap;
 
 <* EXTERNAL Delete_QBitmap *>
-PROCEDURE Delete_QBitmap ( self: QBitmap;
-);
+PROCEDURE Delete_QBitmap (self: QBitmap; );
 
 <* EXTERNAL QBitmap_clear *>
-PROCEDURE QBitmap_clear ( self: QBitmap;
-);
+PROCEDURE QBitmap_clear (self: QBitmap; );
 
 <* EXTERNAL FromBitmapImage *>
-PROCEDURE FromBitmapImage ( image: ADDRESS;
-flags: C.int;
-): ADDRESS;
+PROCEDURE FromBitmapImage (image: ADDRESS; flags: C.int; ): ADDRESS;
 
 <* EXTERNAL FromBitmapImage1 *>
-PROCEDURE FromBitmapImage1 ( image: ADDRESS;
-): ADDRESS;
+PROCEDURE FromBitmapImage1 (image: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL FromData *>
-PROCEDURE FromData ( size, bits: ADDRESS;
-monoFormat: C.int;
-): ADDRESS;
+PROCEDURE FromData (size, bits: ADDRESS; monoFormat: C.int; ): ADDRESS;
 
 <* EXTERNAL FromData1 *>
-PROCEDURE FromData1 ( size, bits: ADDRESS;
-): ADDRESS;
+PROCEDURE FromData1 (size, bits: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QBitmap_transformed *>
-PROCEDURE QBitmap_transformed ( self: QBitmap;
- arg2: ADDRESS;
-): ADDRESS;
+PROCEDURE QBitmap_transformed (self: QBitmap; arg2: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QBitmap_transformed1 *>
-PROCEDURE QBitmap_transformed1 ( self: QBitmap;
- matrix: ADDRESS;
-): ADDRESS;
+PROCEDURE QBitmap_transformed1 (self: QBitmap; matrix: ADDRESS; ): ADDRESS;
 
-TYPE
-QBitmap = ADDRESS;
+TYPE QBitmap = ADDRESS;
 
 END QtBitmapRaw.

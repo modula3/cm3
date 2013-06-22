@@ -16,44 +16,37 @@ FROM QtNamespace IMPORT Orientation;
 
 FROM QtAbstractSlider IMPORT QAbstractSlider;
 
-TYPE
-  T = QSlider;
+TYPE T = QSlider;
 
 
-CONST (* Enum TickPosition *)
-  NoTicks = 0;
-  TicksAbove = 1;
-  TicksLeft = 1;
-  TicksBelow = 2;
-  TicksRight = 2;
+CONST                            (* Enum TickPosition *)
+  NoTicks        = 0;
+  TicksAbove     = 1;
+  TicksLeft      = 1;
+  TicksBelow     = 2;
+  TicksRight     = 2;
   TicksBothSides = 3;
 
-TYPE (* Enum TickPosition *)
-  TickPosition = [0..3];
+TYPE                             (* Enum TickPosition *)
+  TickPosition = [0 .. 3];
 
 TYPE
-QSlider <: QSliderPublic;
-QSliderPublic =
-QAbstractSlider BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QSlider;
-init_1 () : QSlider;
-init_2 (orientation: Orientation;
- parent: QWidget;
-) : QSlider;
-init_3 (orientation: Orientation;
-) : QSlider;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-setTickPosition(position: TickPosition;
-);
-tickPosition(): TickPosition;
-setTickInterval(ti: INTEGER;
-);
-tickInterval(): INTEGER;
-destroyCxx();
-END;
+  QSlider <: QSliderPublic;
+  QSliderPublic =
+    QAbstractSlider BRANDED OBJECT
+    METHODS
+      init_0   (parent: QWidget; ): QSlider;
+      init_1   (): QSlider;
+      init_2   (orientation: Orientation; parent: QWidget; ): QSlider;
+      init_3   (orientation: Orientation; ): QSlider;
+      sizeHint (): QSize;        (* virtual *)
+      minimumSizeHint (): QSize; (* virtual *)
+      setTickPosition (position: TickPosition; );
+      tickPosition    (): TickPosition;
+      setTickInterval (ti: INTEGER; );
+      tickInterval    (): INTEGER;
+      destroyCxx      ();
+    END;
 
 
 END QtSlider.

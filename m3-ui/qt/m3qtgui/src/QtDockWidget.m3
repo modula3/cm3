@@ -13,276 +13,258 @@ IMPORT QtDockWidgetRaw;
 FROM QtString IMPORT QString;
 FROM QtWidget IMPORT QWidget;
 FROM QtAction IMPORT QAction;
-FROM QtNamespace IMPORT WindowTypes,DockWidgetArea,DockWidgetAreas;
+FROM QtNamespace IMPORT WindowTypes, DockWidgetArea, DockWidgetAreas;
 
 
 IMPORT WeakRef;
 
-PROCEDURE New_QDockWidget0 (self:QDockWidget; title: TEXT;
- parent: QWidget;
-flags: WindowTypes;
-): QDockWidget =
-VAR
-result : ADDRESS;
-qstr_title := NEW(QString).initQString(title);
-arg1tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDockWidgetRaw.New_QDockWidget0(arg1tmp, arg2tmp, ORD(flags));
+PROCEDURE New_QDockWidget0
+  (self: QDockWidget; title: TEXT; parent: QWidget; flags: WindowTypes; ):
+  QDockWidget =
+  VAR
+    result    : ADDRESS;
+    qstr_title          := NEW(QString).initQString(title);
+    arg1tmp             := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    arg2tmp             := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result :=
+      QtDockWidgetRaw.New_QDockWidget0(arg1tmp, arg2tmp, ORD(flags));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDockWidget);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDockWidget);
 
-RETURN self;
-END New_QDockWidget0;
+    RETURN self;
+  END New_QDockWidget0;
 
-PROCEDURE New_QDockWidget1 (self:QDockWidget; title: TEXT;
- parent: QWidget;
-): QDockWidget =
-VAR
-result : ADDRESS;
-qstr_title := NEW(QString).initQString(title);
-arg1tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDockWidgetRaw.New_QDockWidget1(arg1tmp, arg2tmp);
+PROCEDURE New_QDockWidget1
+  (self: QDockWidget; title: TEXT; parent: QWidget; ): QDockWidget =
+  VAR
+    result    : ADDRESS;
+    qstr_title          := NEW(QString).initQString(title);
+    arg1tmp             := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    arg2tmp             := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDockWidgetRaw.New_QDockWidget1(arg1tmp, arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDockWidget);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDockWidget);
 
-RETURN self;
-END New_QDockWidget1;
+    RETURN self;
+  END New_QDockWidget1;
 
-PROCEDURE New_QDockWidget2 (self:QDockWidget; title: TEXT;
-): QDockWidget =
-VAR
-result : ADDRESS;
-qstr_title := NEW(QString).initQString(title);
-arg1tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-BEGIN
-result := QtDockWidgetRaw.New_QDockWidget2(arg1tmp);
+PROCEDURE New_QDockWidget2 (self: QDockWidget; title: TEXT; ):
+  QDockWidget =
+  VAR
+    result    : ADDRESS;
+    qstr_title          := NEW(QString).initQString(title);
+    arg1tmp             := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDockWidgetRaw.New_QDockWidget2(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDockWidget);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDockWidget);
 
-RETURN self;
-END New_QDockWidget2;
+    RETURN self;
+  END New_QDockWidget2;
 
-PROCEDURE New_QDockWidget3 (self:QDockWidget; parent: QWidget;
-flags: WindowTypes;
-): QDockWidget =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDockWidgetRaw.New_QDockWidget3(arg1tmp, ORD(flags));
+PROCEDURE New_QDockWidget3
+  (self: QDockWidget; parent: QWidget; flags: WindowTypes; ): QDockWidget =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDockWidgetRaw.New_QDockWidget3(arg1tmp, ORD(flags));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDockWidget);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDockWidget);
 
-RETURN self;
-END New_QDockWidget3;
+    RETURN self;
+  END New_QDockWidget3;
 
-PROCEDURE New_QDockWidget4 (self:QDockWidget; parent: QWidget;
-): QDockWidget =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDockWidgetRaw.New_QDockWidget4(arg1tmp);
+PROCEDURE New_QDockWidget4 (self: QDockWidget; parent: QWidget; ):
+  QDockWidget =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDockWidgetRaw.New_QDockWidget4(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDockWidget);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDockWidget);
 
-RETURN self;
-END New_QDockWidget4;
+    RETURN self;
+  END New_QDockWidget4;
 
-PROCEDURE New_QDockWidget5 (self:QDockWidget;): QDockWidget =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtDockWidgetRaw.New_QDockWidget5();
+PROCEDURE New_QDockWidget5 (self: QDockWidget; ): QDockWidget =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtDockWidgetRaw.New_QDockWidget5();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDockWidget);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDockWidget);
 
-RETURN self;
-END New_QDockWidget5;
+    RETURN self;
+  END New_QDockWidget5;
 
-PROCEDURE Delete_QDockWidget ( self: QDockWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDockWidgetRaw.Delete_QDockWidget(selfAdr);
-END Delete_QDockWidget;
+PROCEDURE Delete_QDockWidget (self: QDockWidget; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDockWidgetRaw.Delete_QDockWidget(selfAdr);
+  END Delete_QDockWidget;
 
-PROCEDURE QDockWidget_widget ( self: QDockWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDockWidgetRaw.QDockWidget_widget(selfAdr);
+PROCEDURE QDockWidget_widget (self: QDockWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDockWidgetRaw.QDockWidget_widget(selfAdr);
 
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDockWidget_widget;
+    RETURN result;
+  END QDockWidget_widget;
 
-PROCEDURE QDockWidget_setWidget ( self: QDockWidget;
- widget: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-BEGIN
-QtDockWidgetRaw.QDockWidget_setWidget(selfAdr, arg2tmp);
-END QDockWidget_setWidget;
+PROCEDURE QDockWidget_setWidget (self: QDockWidget; widget: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtDockWidgetRaw.QDockWidget_setWidget(selfAdr, arg2tmp);
+  END QDockWidget_setWidget;
 
-PROCEDURE QDockWidget_setFeatures ( self: QDockWidget;
-features: DockWidgetFeatures;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDockWidgetRaw.QDockWidget_setFeatures(selfAdr, ORD(features));
-END QDockWidget_setFeatures;
+PROCEDURE QDockWidget_setFeatures
+  (self: QDockWidget; features: DockWidgetFeatures; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDockWidgetRaw.QDockWidget_setFeatures(selfAdr, ORD(features));
+  END QDockWidget_setFeatures;
 
-PROCEDURE QDockWidget_features ( self: QDockWidget;
-): DockWidgetFeatures =
-VAR
-ret:INTEGER; result : DockWidgetFeatures;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDockWidgetRaw.QDockWidget_features(selfAdr);
-result := VAL(ret,DockWidgetFeatures);  
-RETURN result;
-END QDockWidget_features;
+PROCEDURE QDockWidget_features (self: QDockWidget; ): DockWidgetFeatures =
+  VAR
+    ret    : INTEGER;
+    result : DockWidgetFeatures;
+    selfAdr: ADDRESS            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDockWidgetRaw.QDockWidget_features(selfAdr);
+    result := VAL(ret, DockWidgetFeatures);
+    RETURN result;
+  END QDockWidget_features;
 
-PROCEDURE QDockWidget_setFloating ( self: QDockWidget;
-floating: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDockWidgetRaw.QDockWidget_setFloating(selfAdr, floating);
-END QDockWidget_setFloating;
+PROCEDURE QDockWidget_setFloating
+  (self: QDockWidget; floating: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDockWidgetRaw.QDockWidget_setFloating(selfAdr, floating);
+  END QDockWidget_setFloating;
 
-PROCEDURE QDockWidget_isFloating ( self: QDockWidget;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtDockWidgetRaw.QDockWidget_isFloating(selfAdr);
-END QDockWidget_isFloating;
+PROCEDURE QDockWidget_isFloating (self: QDockWidget; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDockWidgetRaw.QDockWidget_isFloating(selfAdr);
+  END QDockWidget_isFloating;
 
-PROCEDURE QDockWidget_setAllowedAreas ( self: QDockWidget;
-areas: DockWidgetAreas;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDockWidgetRaw.QDockWidget_setAllowedAreas(selfAdr, ORD(areas));
-END QDockWidget_setAllowedAreas;
+PROCEDURE QDockWidget_setAllowedAreas
+  (self: QDockWidget; areas: DockWidgetAreas; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDockWidgetRaw.QDockWidget_setAllowedAreas(selfAdr, ORD(areas));
+  END QDockWidget_setAllowedAreas;
 
-PROCEDURE QDockWidget_allowedAreas ( self: QDockWidget;
-): DockWidgetAreas =
-VAR
-ret:INTEGER; result : DockWidgetAreas;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDockWidgetRaw.QDockWidget_allowedAreas(selfAdr);
-result := VAL(ret,DockWidgetAreas);  
-RETURN result;
-END QDockWidget_allowedAreas;
+PROCEDURE QDockWidget_allowedAreas (self: QDockWidget; ): DockWidgetAreas =
+  VAR
+    ret    : INTEGER;
+    result : DockWidgetAreas;
+    selfAdr: ADDRESS         := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDockWidgetRaw.QDockWidget_allowedAreas(selfAdr);
+    result := VAL(ret, DockWidgetAreas);
+    RETURN result;
+  END QDockWidget_allowedAreas;
 
-PROCEDURE QDockWidget_setTitleBarWidget ( self: QDockWidget;
- widget: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-BEGIN
-QtDockWidgetRaw.QDockWidget_setTitleBarWidget(selfAdr, arg2tmp);
-END QDockWidget_setTitleBarWidget;
+PROCEDURE QDockWidget_setTitleBarWidget
+  (self: QDockWidget; widget: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtDockWidgetRaw.QDockWidget_setTitleBarWidget(selfAdr, arg2tmp);
+  END QDockWidget_setTitleBarWidget;
 
-PROCEDURE QDockWidget_titleBarWidget ( self: QDockWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDockWidgetRaw.QDockWidget_titleBarWidget(selfAdr);
+PROCEDURE QDockWidget_titleBarWidget (self: QDockWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDockWidgetRaw.QDockWidget_titleBarWidget(selfAdr);
 
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDockWidget_titleBarWidget;
+    RETURN result;
+  END QDockWidget_titleBarWidget;
 
-PROCEDURE QDockWidget_isAreaAllowed ( self: QDockWidget;
-area: DockWidgetArea;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtDockWidgetRaw.QDockWidget_isAreaAllowed(selfAdr, ORD(area));
-END QDockWidget_isAreaAllowed;
+PROCEDURE QDockWidget_isAreaAllowed
+  (self: QDockWidget; area: DockWidgetArea; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDockWidgetRaw.QDockWidget_isAreaAllowed(selfAdr, ORD(area));
+  END QDockWidget_isAreaAllowed;
 
-PROCEDURE QDockWidget_toggleViewAction ( self: QDockWidget;
-): QAction =
-VAR
-ret:ADDRESS; result : QAction;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDockWidgetRaw.QDockWidget_toggleViewAction(selfAdr);
+PROCEDURE QDockWidget_toggleViewAction (self: QDockWidget; ): QAction =
+  VAR
+    ret    : ADDRESS;
+    result : QAction;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDockWidgetRaw.QDockWidget_toggleViewAction(selfAdr);
 
-  result := NEW(QAction);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QAction);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDockWidget_toggleViewAction;
+    RETURN result;
+  END QDockWidget_toggleViewAction;
 
-PROCEDURE Cleanup_QDockWidget(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QDockWidget := ref;
-BEGIN
-  Delete_QDockWidget(obj);
- END Cleanup_QDockWidget;
+PROCEDURE Cleanup_QDockWidget
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QDockWidget := ref;
+  BEGIN
+    Delete_QDockWidget(obj);
+  END Cleanup_QDockWidget;
 
-PROCEDURE Destroy_QDockWidget(self : QDockWidget) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QDockWidget);
-END Destroy_QDockWidget;
+PROCEDURE Destroy_QDockWidget (self: QDockWidget) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QDockWidget);
+  END Destroy_QDockWidget;
 
 REVEAL
-QDockWidget =
-QDockWidgetPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QDockWidget0;
-init_1 := New_QDockWidget1;
-init_2 := New_QDockWidget2;
-init_3 := New_QDockWidget3;
-init_4 := New_QDockWidget4;
-init_5 := New_QDockWidget5;
-widget := QDockWidget_widget;
-setWidget := QDockWidget_setWidget;
-setFeatures := QDockWidget_setFeatures;
-features := QDockWidget_features;
-setFloating := QDockWidget_setFloating;
-isFloating := QDockWidget_isFloating;
-setAllowedAreas := QDockWidget_setAllowedAreas;
-allowedAreas := QDockWidget_allowedAreas;
-setTitleBarWidget := QDockWidget_setTitleBarWidget;
-titleBarWidget := QDockWidget_titleBarWidget;
-isAreaAllowed := QDockWidget_isAreaAllowed;
-toggleViewAction := QDockWidget_toggleViewAction;
-destroyCxx := Destroy_QDockWidget;
-END;
+  QDockWidget = QDockWidgetPublic BRANDED OBJECT
+                OVERRIDES
+                  init_0            := New_QDockWidget0;
+                  init_1            := New_QDockWidget1;
+                  init_2            := New_QDockWidget2;
+                  init_3            := New_QDockWidget3;
+                  init_4            := New_QDockWidget4;
+                  init_5            := New_QDockWidget5;
+                  widget            := QDockWidget_widget;
+                  setWidget         := QDockWidget_setWidget;
+                  setFeatures       := QDockWidget_setFeatures;
+                  features          := QDockWidget_features;
+                  setFloating       := QDockWidget_setFloating;
+                  isFloating        := QDockWidget_isFloating;
+                  setAllowedAreas   := QDockWidget_setAllowedAreas;
+                  allowedAreas      := QDockWidget_allowedAreas;
+                  setTitleBarWidget := QDockWidget_setTitleBarWidget;
+                  titleBarWidget    := QDockWidget_titleBarWidget;
+                  isAreaAllowed     := QDockWidget_isAreaAllowed;
+                  toggleViewAction  := QDockWidget_toggleViewAction;
+                  destroyCxx        := Destroy_QDockWidget;
+                END;
 
 
 BEGIN

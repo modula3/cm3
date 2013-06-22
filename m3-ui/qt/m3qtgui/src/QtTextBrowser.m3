@@ -18,242 +18,213 @@ IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 FROM QtString IMPORT QString;
 
-PROCEDURE New_QTextBrowser0 (self:QTextBrowser; parent: QWidget;
-): QTextBrowser =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtTextBrowserRaw.New_QTextBrowser0(arg1tmp);
+PROCEDURE New_QTextBrowser0 (self: QTextBrowser; parent: QWidget; ):
+  QTextBrowser =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTextBrowserRaw.New_QTextBrowser0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTextBrowser);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTextBrowser);
 
-RETURN self;
-END New_QTextBrowser0;
+    RETURN self;
+  END New_QTextBrowser0;
 
-PROCEDURE New_QTextBrowser1 (self:QTextBrowser;): QTextBrowser =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTextBrowserRaw.New_QTextBrowser1();
+PROCEDURE New_QTextBrowser1 (self: QTextBrowser; ): QTextBrowser =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTextBrowserRaw.New_QTextBrowser1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTextBrowser);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTextBrowser);
 
-RETURN self;
-END New_QTextBrowser1;
+    RETURN self;
+  END New_QTextBrowser1;
 
-PROCEDURE Delete_QTextBrowser ( self: QTextBrowser;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.Delete_QTextBrowser(selfAdr);
-END Delete_QTextBrowser;
+PROCEDURE Delete_QTextBrowser (self: QTextBrowser; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.Delete_QTextBrowser(selfAdr);
+  END Delete_QTextBrowser;
 
-PROCEDURE QTextBrowser_source ( self: QTextBrowser;
-): QUrl =
-VAR
-ret:ADDRESS; result : QUrl;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTextBrowserRaw.QTextBrowser_source(selfAdr);
+PROCEDURE QTextBrowser_source (self: QTextBrowser; ): QUrl =
+  VAR
+    ret    : ADDRESS;
+    result : QUrl;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTextBrowserRaw.QTextBrowser_source(selfAdr);
 
-  result := NEW(QUrl);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QUrl);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QTextBrowser_source;
+    RETURN result;
+  END QTextBrowser_source;
 
-PROCEDURE QTextBrowser_isBackwardAvailable ( self: QTextBrowser;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTextBrowserRaw.QTextBrowser_isBackwardAvailable(selfAdr);
-END QTextBrowser_isBackwardAvailable;
+PROCEDURE QTextBrowser_isBackwardAvailable (self: QTextBrowser; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTextBrowserRaw.QTextBrowser_isBackwardAvailable(selfAdr);
+  END QTextBrowser_isBackwardAvailable;
 
-PROCEDURE QTextBrowser_isForwardAvailable ( self: QTextBrowser;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTextBrowserRaw.QTextBrowser_isForwardAvailable(selfAdr);
-END QTextBrowser_isForwardAvailable;
+PROCEDURE QTextBrowser_isForwardAvailable (self: QTextBrowser; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTextBrowserRaw.QTextBrowser_isForwardAvailable(selfAdr);
+  END QTextBrowser_isForwardAvailable;
 
-PROCEDURE QTextBrowser_clearHistory ( self: QTextBrowser;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_clearHistory(selfAdr);
-END QTextBrowser_clearHistory;
+PROCEDURE QTextBrowser_clearHistory (self: QTextBrowser; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_clearHistory(selfAdr);
+  END QTextBrowser_clearHistory;
 
-PROCEDURE QTextBrowser_historyTitle ( self: QTextBrowser;
-arg2: INTEGER;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTextBrowserRaw.QTextBrowser_historyTitle(selfAdr, arg2);
+PROCEDURE QTextBrowser_historyTitle (self: QTextBrowser; arg2: INTEGER; ):
+  TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTextBrowserRaw.QTextBrowser_historyTitle(selfAdr, arg2);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QTextBrowser_historyTitle;
+    RETURN result;
+  END QTextBrowser_historyTitle;
 
-PROCEDURE QTextBrowser_historyUrl ( self: QTextBrowser;
-arg2: INTEGER;
-): QUrl =
-VAR
-ret:ADDRESS; result : QUrl;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTextBrowserRaw.QTextBrowser_historyUrl(selfAdr, arg2);
+PROCEDURE QTextBrowser_historyUrl (self: QTextBrowser; arg2: INTEGER; ):
+  QUrl =
+  VAR
+    ret    : ADDRESS;
+    result : QUrl;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTextBrowserRaw.QTextBrowser_historyUrl(selfAdr, arg2);
 
-  result := NEW(QUrl);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QUrl);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QTextBrowser_historyUrl;
+    RETURN result;
+  END QTextBrowser_historyUrl;
 
-PROCEDURE QTextBrowser_backwardHistoryCount ( self: QTextBrowser;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTextBrowserRaw.QTextBrowser_backwardHistoryCount(selfAdr);
-END QTextBrowser_backwardHistoryCount;
+PROCEDURE QTextBrowser_backwardHistoryCount (self: QTextBrowser; ):
+  INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTextBrowserRaw.QTextBrowser_backwardHistoryCount(selfAdr);
+  END QTextBrowser_backwardHistoryCount;
 
-PROCEDURE QTextBrowser_forwardHistoryCount ( self: QTextBrowser;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTextBrowserRaw.QTextBrowser_forwardHistoryCount(selfAdr);
-END QTextBrowser_forwardHistoryCount;
+PROCEDURE QTextBrowser_forwardHistoryCount (self: QTextBrowser; ):
+  INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTextBrowserRaw.QTextBrowser_forwardHistoryCount(selfAdr);
+  END QTextBrowser_forwardHistoryCount;
 
-PROCEDURE QTextBrowser_openExternalLinks ( self: QTextBrowser;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTextBrowserRaw.QTextBrowser_openExternalLinks(selfAdr);
-END QTextBrowser_openExternalLinks;
+PROCEDURE QTextBrowser_openExternalLinks (self: QTextBrowser; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTextBrowserRaw.QTextBrowser_openExternalLinks(selfAdr);
+  END QTextBrowser_openExternalLinks;
 
-PROCEDURE QTextBrowser_setOpenExternalLinks ( self: QTextBrowser;
-open: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_setOpenExternalLinks(selfAdr, open);
-END QTextBrowser_setOpenExternalLinks;
+PROCEDURE QTextBrowser_setOpenExternalLinks
+  (self: QTextBrowser; open: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_setOpenExternalLinks(selfAdr, open);
+  END QTextBrowser_setOpenExternalLinks;
 
-PROCEDURE QTextBrowser_openLinks ( self: QTextBrowser;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTextBrowserRaw.QTextBrowser_openLinks(selfAdr);
-END QTextBrowser_openLinks;
+PROCEDURE QTextBrowser_openLinks (self: QTextBrowser; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTextBrowserRaw.QTextBrowser_openLinks(selfAdr);
+  END QTextBrowser_openLinks;
 
-PROCEDURE QTextBrowser_setOpenLinks ( self: QTextBrowser;
-open: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_setOpenLinks(selfAdr, open);
-END QTextBrowser_setOpenLinks;
+PROCEDURE QTextBrowser_setOpenLinks (self: QTextBrowser; open: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_setOpenLinks(selfAdr, open);
+  END QTextBrowser_setOpenLinks;
 
-PROCEDURE QTextBrowser_setSource ( self: QTextBrowser;
- name: QUrl;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(name.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_setSource(selfAdr, arg2tmp);
-END QTextBrowser_setSource;
+PROCEDURE QTextBrowser_setSource (self: QTextBrowser; name: QUrl; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(name.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_setSource(selfAdr, arg2tmp);
+  END QTextBrowser_setSource;
 
-PROCEDURE QTextBrowser_backward ( self: QTextBrowser;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_backward(selfAdr);
-END QTextBrowser_backward;
+PROCEDURE QTextBrowser_backward (self: QTextBrowser; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_backward(selfAdr);
+  END QTextBrowser_backward;
 
-PROCEDURE QTextBrowser_forward ( self: QTextBrowser;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_forward(selfAdr);
-END QTextBrowser_forward;
+PROCEDURE QTextBrowser_forward (self: QTextBrowser; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_forward(selfAdr);
+  END QTextBrowser_forward;
 
-PROCEDURE QTextBrowser_home ( self: QTextBrowser;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_home(selfAdr);
-END QTextBrowser_home;
+PROCEDURE QTextBrowser_home (self: QTextBrowser; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_home(selfAdr);
+  END QTextBrowser_home;
 
-PROCEDURE QTextBrowser_reload ( self: QTextBrowser;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTextBrowserRaw.QTextBrowser_reload(selfAdr);
-END QTextBrowser_reload;
+PROCEDURE QTextBrowser_reload (self: QTextBrowser; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTextBrowserRaw.QTextBrowser_reload(selfAdr);
+  END QTextBrowser_reload;
 
-PROCEDURE Cleanup_QTextBrowser(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QTextBrowser := ref;
-BEGIN
-  Delete_QTextBrowser(obj);
- END Cleanup_QTextBrowser;
+PROCEDURE Cleanup_QTextBrowser
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QTextBrowser := ref;
+  BEGIN
+    Delete_QTextBrowser(obj);
+  END Cleanup_QTextBrowser;
 
-PROCEDURE Destroy_QTextBrowser(self : QTextBrowser) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QTextBrowser);
-END Destroy_QTextBrowser;
+PROCEDURE Destroy_QTextBrowser (self: QTextBrowser) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QTextBrowser);
+  END Destroy_QTextBrowser;
 
 REVEAL
-QTextBrowser =
-QTextBrowserPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QTextBrowser0;
-init_1 := New_QTextBrowser1;
-source := QTextBrowser_source;
-isBackwardAvailable := QTextBrowser_isBackwardAvailable;
-isForwardAvailable := QTextBrowser_isForwardAvailable;
-clearHistory := QTextBrowser_clearHistory;
-historyTitle := QTextBrowser_historyTitle;
-historyUrl := QTextBrowser_historyUrl;
-backwardHistoryCount := QTextBrowser_backwardHistoryCount;
-forwardHistoryCount := QTextBrowser_forwardHistoryCount;
-openExternalLinks := QTextBrowser_openExternalLinks;
-setOpenExternalLinks := QTextBrowser_setOpenExternalLinks;
-openLinks := QTextBrowser_openLinks;
-setOpenLinks := QTextBrowser_setOpenLinks;
-setSource := QTextBrowser_setSource;
-backward := QTextBrowser_backward;
-forward := QTextBrowser_forward;
-home := QTextBrowser_home;
-reload := QTextBrowser_reload;
-destroyCxx := Destroy_QTextBrowser;
-END;
+  QTextBrowser =
+    QTextBrowserPublic BRANDED OBJECT
+    OVERRIDES
+      init_0               := New_QTextBrowser0;
+      init_1               := New_QTextBrowser1;
+      source               := QTextBrowser_source;
+      isBackwardAvailable  := QTextBrowser_isBackwardAvailable;
+      isForwardAvailable   := QTextBrowser_isForwardAvailable;
+      clearHistory         := QTextBrowser_clearHistory;
+      historyTitle         := QTextBrowser_historyTitle;
+      historyUrl           := QTextBrowser_historyUrl;
+      backwardHistoryCount := QTextBrowser_backwardHistoryCount;
+      forwardHistoryCount  := QTextBrowser_forwardHistoryCount;
+      openExternalLinks    := QTextBrowser_openExternalLinks;
+      setOpenExternalLinks := QTextBrowser_setOpenExternalLinks;
+      openLinks            := QTextBrowser_openLinks;
+      setOpenLinks         := QTextBrowser_setOpenLinks;
+      setSource            := QTextBrowser_setSource;
+      backward             := QTextBrowser_backward;
+      forward              := QTextBrowser_forward;
+      home                 := QTextBrowser_home;
+      reload               := QTextBrowser_reload;
+      destroyCxx           := Destroy_QTextBrowser;
+    END;
 
 
 BEGIN

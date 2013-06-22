@@ -18,80 +18,59 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QSizePolicy0 (): QSizePolicy;
 
 <* EXTERNAL New_QSizePolicy1 *>
-PROCEDURE New_QSizePolicy1 (horizontal, vertical: C.int;
-): QSizePolicy;
+PROCEDURE New_QSizePolicy1 (horizontal, vertical: C.int; ): QSizePolicy;
 
 <* EXTERNAL New_QSizePolicy2 *>
-PROCEDURE New_QSizePolicy2 (horizontal, vertical, type: C.int;
-): QSizePolicy;
+PROCEDURE New_QSizePolicy2 (horizontal, vertical, type: C.int; ):
+  QSizePolicy;
 
 <* EXTERNAL QSizePolicy_horizontalPolicy *>
-PROCEDURE QSizePolicy_horizontalPolicy ( self: QSizePolicy;
-): C.int;
+PROCEDURE QSizePolicy_horizontalPolicy (self: QSizePolicy; ): C.int;
 
 <* EXTERNAL QSizePolicy_verticalPolicy *>
-PROCEDURE QSizePolicy_verticalPolicy ( self: QSizePolicy;
-): C.int;
+PROCEDURE QSizePolicy_verticalPolicy (self: QSizePolicy; ): C.int;
 
 <* EXTERNAL QSizePolicy_controlType *>
-PROCEDURE QSizePolicy_controlType ( self: QSizePolicy;
-): C.int;
+PROCEDURE QSizePolicy_controlType (self: QSizePolicy; ): C.int;
 
 <* EXTERNAL QSizePolicy_setHorizontalPolicy *>
-PROCEDURE QSizePolicy_setHorizontalPolicy ( self: QSizePolicy;
-d: C.int;
-);
+PROCEDURE QSizePolicy_setHorizontalPolicy (self: QSizePolicy; d: C.int; );
 
 <* EXTERNAL QSizePolicy_setVerticalPolicy *>
-PROCEDURE QSizePolicy_setVerticalPolicy ( self: QSizePolicy;
-d: C.int;
-);
+PROCEDURE QSizePolicy_setVerticalPolicy (self: QSizePolicy; d: C.int; );
 
 <* EXTERNAL QSizePolicy_setControlType *>
-PROCEDURE QSizePolicy_setControlType ( self: QSizePolicy;
-type: C.int;
-);
+PROCEDURE QSizePolicy_setControlType (self: QSizePolicy; type: C.int; );
 
 <* EXTERNAL QSizePolicy_expandingDirections *>
-PROCEDURE QSizePolicy_expandingDirections ( self: QSizePolicy;
-): C.int;
+PROCEDURE QSizePolicy_expandingDirections (self: QSizePolicy; ): C.int;
 
 <* EXTERNAL QSizePolicy_setHeightForWidth *>
-PROCEDURE QSizePolicy_setHeightForWidth ( self: QSizePolicy;
-b: BOOLEAN;
-);
+PROCEDURE QSizePolicy_setHeightForWidth (self: QSizePolicy; b: BOOLEAN; );
 
 <* EXTERNAL QSizePolicy_hasHeightForWidth *>
-PROCEDURE QSizePolicy_hasHeightForWidth ( self: QSizePolicy;
-): BOOLEAN;
+PROCEDURE QSizePolicy_hasHeightForWidth (self: QSizePolicy; ): BOOLEAN;
 
 <* EXTERNAL QSizePolicy_horizontalStretch *>
-PROCEDURE QSizePolicy_horizontalStretch ( self: QSizePolicy;
-): C.int;
+PROCEDURE QSizePolicy_horizontalStretch (self: QSizePolicy; ): C.int;
 
 <* EXTERNAL QSizePolicy_verticalStretch *>
-PROCEDURE QSizePolicy_verticalStretch ( self: QSizePolicy;
-): C.int;
+PROCEDURE QSizePolicy_verticalStretch (self: QSizePolicy; ): C.int;
 
 <* EXTERNAL QSizePolicy_setHorizontalStretch *>
-PROCEDURE QSizePolicy_setHorizontalStretch ( self: QSizePolicy;
-stretchFactor: CHAR;
-);
+PROCEDURE QSizePolicy_setHorizontalStretch
+  (self: QSizePolicy; stretchFactor: CHAR; );
 
 <* EXTERNAL QSizePolicy_setVerticalStretch *>
-PROCEDURE QSizePolicy_setVerticalStretch ( self: QSizePolicy;
-stretchFactor: CHAR;
-);
+PROCEDURE QSizePolicy_setVerticalStretch
+  (self: QSizePolicy; stretchFactor: CHAR; );
 
 <* EXTERNAL QSizePolicy_transpose *>
-PROCEDURE QSizePolicy_transpose ( self: QSizePolicy;
-);
+PROCEDURE QSizePolicy_transpose (self: QSizePolicy; );
 
 <* EXTERNAL Delete_QSizePolicy *>
-PROCEDURE Delete_QSizePolicy ( self: QSizePolicy;
-);
+PROCEDURE Delete_QSizePolicy (self: QSizePolicy; );
 
-TYPE
-QSizePolicy <: ADDRESS;
+TYPE QSizePolicy <: ADDRESS;
 
 END QtSizePolicyRaw.

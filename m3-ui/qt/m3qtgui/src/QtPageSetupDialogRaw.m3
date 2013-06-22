@@ -11,7 +11,6 @@ MODULE QtPageSetupDialogRaw;
 
 
 
-REVEAL
-QPageSetupDialog = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QPageSetupDialog = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtPageSetupDialogRaw.

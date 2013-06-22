@@ -15,441 +15,328 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QGraphicsView0 *>
-PROCEDURE New_QGraphicsView0 ( parent: ADDRESS;
-): QGraphicsView;
+PROCEDURE New_QGraphicsView0 (parent: ADDRESS; ): QGraphicsView;
 
 <* EXTERNAL New_QGraphicsView1 *>
 PROCEDURE New_QGraphicsView1 (): QGraphicsView;
 
 <* EXTERNAL New_QGraphicsView2 *>
-PROCEDURE New_QGraphicsView2 ( scene, parent: ADDRESS;
-): QGraphicsView;
+PROCEDURE New_QGraphicsView2 (scene, parent: ADDRESS; ): QGraphicsView;
 
 <* EXTERNAL New_QGraphicsView3 *>
-PROCEDURE New_QGraphicsView3 ( scene: ADDRESS;
-): QGraphicsView;
+PROCEDURE New_QGraphicsView3 (scene: ADDRESS; ): QGraphicsView;
 
 <* EXTERNAL Delete_QGraphicsView *>
-PROCEDURE Delete_QGraphicsView ( self: QGraphicsView;
-);
+PROCEDURE Delete_QGraphicsView (self: QGraphicsView; );
 
 <* EXTERNAL QGraphicsView_sizeHint *>
-PROCEDURE QGraphicsView_sizeHint ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_sizeHint (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_renderHints *>
-PROCEDURE QGraphicsView_renderHints ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_renderHints (self: QGraphicsView; ): C.int;
 
 <* EXTERNAL QGraphicsView_setRenderHint *>
-PROCEDURE QGraphicsView_setRenderHint ( self: QGraphicsView;
-hint: C.int;
-enabled: BOOLEAN;
-);
+PROCEDURE QGraphicsView_setRenderHint
+  (self: QGraphicsView; hint: C.int; enabled: BOOLEAN; );
 
 <* EXTERNAL QGraphicsView_setRenderHint1 *>
-PROCEDURE QGraphicsView_setRenderHint1 ( self: QGraphicsView;
-hint: C.int;
-);
+PROCEDURE QGraphicsView_setRenderHint1
+  (self: QGraphicsView; hint: C.int; );
 
 <* EXTERNAL QGraphicsView_setRenderHints *>
-PROCEDURE QGraphicsView_setRenderHints ( self: QGraphicsView;
-hints: C.int;
-);
+PROCEDURE QGraphicsView_setRenderHints
+  (self: QGraphicsView; hints: C.int; );
 
 <* EXTERNAL QGraphicsView_alignment *>
-PROCEDURE QGraphicsView_alignment ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_alignment (self: QGraphicsView; ): C.int;
 
 <* EXTERNAL QGraphicsView_setAlignment *>
-PROCEDURE QGraphicsView_setAlignment ( self: QGraphicsView;
-alignment: C.int;
-);
+PROCEDURE QGraphicsView_setAlignment
+  (self: QGraphicsView; alignment: C.int; );
 
 <* EXTERNAL QGraphicsView_transformationAnchor *>
-PROCEDURE QGraphicsView_transformationAnchor ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_transformationAnchor (self: QGraphicsView; ):
+  C.int;
 
 <* EXTERNAL QGraphicsView_setTransformationAnchor *>
-PROCEDURE QGraphicsView_setTransformationAnchor ( self: QGraphicsView;
-anchor: C.int;
-);
+PROCEDURE QGraphicsView_setTransformationAnchor
+  (self: QGraphicsView; anchor: C.int; );
 
 <* EXTERNAL QGraphicsView_resizeAnchor *>
-PROCEDURE QGraphicsView_resizeAnchor ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_resizeAnchor (self: QGraphicsView; ): C.int;
 
 <* EXTERNAL QGraphicsView_setResizeAnchor *>
-PROCEDURE QGraphicsView_setResizeAnchor ( self: QGraphicsView;
-anchor: C.int;
-);
+PROCEDURE QGraphicsView_setResizeAnchor
+  (self: QGraphicsView; anchor: C.int; );
 
 <* EXTERNAL QGraphicsView_viewportUpdateMode *>
-PROCEDURE QGraphicsView_viewportUpdateMode ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_viewportUpdateMode (self: QGraphicsView; ): C.int;
 
 <* EXTERNAL QGraphicsView_setViewportUpdateMode *>
-PROCEDURE QGraphicsView_setViewportUpdateMode ( self: QGraphicsView;
-mode: C.int;
-);
+PROCEDURE QGraphicsView_setViewportUpdateMode
+  (self: QGraphicsView; mode: C.int; );
 
 <* EXTERNAL QGraphicsView_optimizationFlags *>
-PROCEDURE QGraphicsView_optimizationFlags ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_optimizationFlags (self: QGraphicsView; ): C.int;
 
 <* EXTERNAL QGraphicsView_setOptimizationFlag *>
-PROCEDURE QGraphicsView_setOptimizationFlag ( self: QGraphicsView;
-flag: C.int;
-enabled: BOOLEAN;
-);
+PROCEDURE QGraphicsView_setOptimizationFlag
+  (self: QGraphicsView; flag: C.int; enabled: BOOLEAN; );
 
 <* EXTERNAL QGraphicsView_setOptimizationFlag1 *>
-PROCEDURE QGraphicsView_setOptimizationFlag1 ( self: QGraphicsView;
-flag: C.int;
-);
+PROCEDURE QGraphicsView_setOptimizationFlag1
+  (self: QGraphicsView; flag: C.int; );
 
 <* EXTERNAL QGraphicsView_setOptimizationFlags *>
-PROCEDURE QGraphicsView_setOptimizationFlags ( self: QGraphicsView;
-flags: C.int;
-);
+PROCEDURE QGraphicsView_setOptimizationFlags
+  (self: QGraphicsView; flags: C.int; );
 
 <* EXTERNAL QGraphicsView_dragMode *>
-PROCEDURE QGraphicsView_dragMode ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_dragMode (self: QGraphicsView; ): C.int;
 
 <* EXTERNAL QGraphicsView_setDragMode *>
-PROCEDURE QGraphicsView_setDragMode ( self: QGraphicsView;
-mode: C.int;
-);
+PROCEDURE QGraphicsView_setDragMode (self: QGraphicsView; mode: C.int; );
 
 <* EXTERNAL QGraphicsView_rubberBandSelectionMode *>
-PROCEDURE QGraphicsView_rubberBandSelectionMode ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_rubberBandSelectionMode (self: QGraphicsView; ):
+  C.int;
 
 <* EXTERNAL QGraphicsView_setRubberBandSelectionMode *>
-PROCEDURE QGraphicsView_setRubberBandSelectionMode ( self: QGraphicsView;
-mode: C.int;
-);
+PROCEDURE QGraphicsView_setRubberBandSelectionMode
+  (self: QGraphicsView; mode: C.int; );
 
 <* EXTERNAL QGraphicsView_cacheMode *>
-PROCEDURE QGraphicsView_cacheMode ( self: QGraphicsView;
-): C.int;
+PROCEDURE QGraphicsView_cacheMode (self: QGraphicsView; ): C.int;
 
 <* EXTERNAL QGraphicsView_setCacheMode *>
-PROCEDURE QGraphicsView_setCacheMode ( self: QGraphicsView;
-mode: C.int;
-);
+PROCEDURE QGraphicsView_setCacheMode (self: QGraphicsView; mode: C.int; );
 
 <* EXTERNAL QGraphicsView_resetCachedContent *>
-PROCEDURE QGraphicsView_resetCachedContent ( self: QGraphicsView;
-);
+PROCEDURE QGraphicsView_resetCachedContent (self: QGraphicsView; );
 
 <* EXTERNAL QGraphicsView_isInteractive *>
-PROCEDURE QGraphicsView_isInteractive ( self: QGraphicsView;
-): BOOLEAN;
+PROCEDURE QGraphicsView_isInteractive (self: QGraphicsView; ): BOOLEAN;
 
 <* EXTERNAL QGraphicsView_setInteractive *>
-PROCEDURE QGraphicsView_setInteractive ( self: QGraphicsView;
-allowed: BOOLEAN;
-);
+PROCEDURE QGraphicsView_setInteractive
+  (self: QGraphicsView; allowed: BOOLEAN; );
 
 <* EXTERNAL QGraphicsView_scene *>
-PROCEDURE QGraphicsView_scene ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_scene (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_setScene *>
-PROCEDURE QGraphicsView_setScene ( self: QGraphicsView;
- scene: ADDRESS;
-);
+PROCEDURE QGraphicsView_setScene (self: QGraphicsView; scene: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_sceneRect *>
-PROCEDURE QGraphicsView_sceneRect ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_sceneRect (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_setSceneRect *>
-PROCEDURE QGraphicsView_setSceneRect ( self: QGraphicsView;
- rect: ADDRESS;
-);
+PROCEDURE QGraphicsView_setSceneRect
+  (self: QGraphicsView; rect: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_setSceneRect1 *>
-PROCEDURE QGraphicsView_setSceneRect1 ( self: QGraphicsView;
-x, y, w, h: C.double;
-);
+PROCEDURE QGraphicsView_setSceneRect1
+  (self: QGraphicsView; x, y, w, h: C.double; );
 
 <* EXTERNAL QGraphicsView_matrix *>
-PROCEDURE QGraphicsView_matrix ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_matrix (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_setMatrix *>
-PROCEDURE QGraphicsView_setMatrix ( self: QGraphicsView;
- matrix: ADDRESS;
-combine: BOOLEAN;
-);
+PROCEDURE QGraphicsView_setMatrix
+  (self: QGraphicsView; matrix: ADDRESS; combine: BOOLEAN; );
 
 <* EXTERNAL QGraphicsView_setMatrix1 *>
-PROCEDURE QGraphicsView_setMatrix1 ( self: QGraphicsView;
- matrix: ADDRESS;
-);
+PROCEDURE QGraphicsView_setMatrix1
+  (self: QGraphicsView; matrix: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_resetMatrix *>
-PROCEDURE QGraphicsView_resetMatrix ( self: QGraphicsView;
-);
+PROCEDURE QGraphicsView_resetMatrix (self: QGraphicsView; );
 
 <* EXTERNAL QGraphicsView_transform *>
-PROCEDURE QGraphicsView_transform ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_transform (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_viewportTransform *>
-PROCEDURE QGraphicsView_viewportTransform ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_viewportTransform (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_isTransformed *>
-PROCEDURE QGraphicsView_isTransformed ( self: QGraphicsView;
-): BOOLEAN;
+PROCEDURE QGraphicsView_isTransformed (self: QGraphicsView; ): BOOLEAN;
 
 <* EXTERNAL QGraphicsView_setTransform *>
-PROCEDURE QGraphicsView_setTransform ( self: QGraphicsView;
- matrix: ADDRESS;
-combine: BOOLEAN;
-);
+PROCEDURE QGraphicsView_setTransform
+  (self: QGraphicsView; matrix: ADDRESS; combine: BOOLEAN; );
 
 <* EXTERNAL QGraphicsView_setTransform1 *>
-PROCEDURE QGraphicsView_setTransform1 ( self: QGraphicsView;
- matrix: ADDRESS;
-);
+PROCEDURE QGraphicsView_setTransform1
+  (self: QGraphicsView; matrix: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_resetTransform *>
-PROCEDURE QGraphicsView_resetTransform ( self: QGraphicsView;
-);
+PROCEDURE QGraphicsView_resetTransform (self: QGraphicsView; );
 
 <* EXTERNAL QGraphicsView_rotate *>
-PROCEDURE QGraphicsView_rotate ( self: QGraphicsView;
-angle: C.double;
-);
+PROCEDURE QGraphicsView_rotate (self: QGraphicsView; angle: C.double; );
 
 <* EXTERNAL QGraphicsView_scale *>
-PROCEDURE QGraphicsView_scale ( self: QGraphicsView;
-sx, sy: C.double;
-);
+PROCEDURE QGraphicsView_scale (self: QGraphicsView; sx, sy: C.double; );
 
 <* EXTERNAL QGraphicsView_shear *>
-PROCEDURE QGraphicsView_shear ( self: QGraphicsView;
-sh, sv: C.double;
-);
+PROCEDURE QGraphicsView_shear (self: QGraphicsView; sh, sv: C.double; );
 
 <* EXTERNAL QGraphicsView_translate *>
-PROCEDURE QGraphicsView_translate ( self: QGraphicsView;
-dx, dy: C.double;
-);
+PROCEDURE QGraphicsView_translate
+  (self: QGraphicsView; dx, dy: C.double; );
 
 <* EXTERNAL QGraphicsView_centerOn *>
-PROCEDURE QGraphicsView_centerOn ( self: QGraphicsView;
- pos: ADDRESS;
-);
+PROCEDURE QGraphicsView_centerOn (self: QGraphicsView; pos: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_centerOn1 *>
-PROCEDURE QGraphicsView_centerOn1 ( self: QGraphicsView;
-x, y: C.double;
-);
+PROCEDURE QGraphicsView_centerOn1 (self: QGraphicsView; x, y: C.double; );
 
 <* EXTERNAL QGraphicsView_centerOn2 *>
-PROCEDURE QGraphicsView_centerOn2 ( self: QGraphicsView;
- item: ADDRESS;
-);
+PROCEDURE QGraphicsView_centerOn2 (self: QGraphicsView; item: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_ensureVisible *>
-PROCEDURE QGraphicsView_ensureVisible ( self: QGraphicsView;
- rect: ADDRESS;
-xmargin, ymargin: C.int;
-);
+PROCEDURE QGraphicsView_ensureVisible
+  (self: QGraphicsView; rect: ADDRESS; xmargin, ymargin: C.int; );
 
 <* EXTERNAL QGraphicsView_ensureVisible1 *>
-PROCEDURE QGraphicsView_ensureVisible1 ( self: QGraphicsView;
- rect: ADDRESS;
-xmargin: C.int;
-);
+PROCEDURE QGraphicsView_ensureVisible1
+  (self: QGraphicsView; rect: ADDRESS; xmargin: C.int; );
 
 <* EXTERNAL QGraphicsView_ensureVisible2 *>
-PROCEDURE QGraphicsView_ensureVisible2 ( self: QGraphicsView;
- rect: ADDRESS;
-);
+PROCEDURE QGraphicsView_ensureVisible2
+  (self: QGraphicsView; rect: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_ensureVisible3 *>
-PROCEDURE QGraphicsView_ensureVisible3 ( self: QGraphicsView;
-x, y, w, h: C.double;
-xmargin, ymargin: C.int;
-);
+PROCEDURE QGraphicsView_ensureVisible3
+  (self: QGraphicsView; x, y, w, h: C.double; xmargin, ymargin: C.int; );
 
 <* EXTERNAL QGraphicsView_ensureVisible4 *>
-PROCEDURE QGraphicsView_ensureVisible4 ( self: QGraphicsView;
-x, y, w, h: C.double;
-xmargin: C.int;
-);
+PROCEDURE QGraphicsView_ensureVisible4
+  (self: QGraphicsView; x, y, w, h: C.double; xmargin: C.int; );
 
 <* EXTERNAL QGraphicsView_ensureVisible5 *>
-PROCEDURE QGraphicsView_ensureVisible5 ( self: QGraphicsView;
-x, y, w, h: C.double;
-);
+PROCEDURE QGraphicsView_ensureVisible5
+  (self: QGraphicsView; x, y, w, h: C.double; );
 
 <* EXTERNAL QGraphicsView_ensureVisible6 *>
-PROCEDURE QGraphicsView_ensureVisible6 ( self: QGraphicsView;
- item: ADDRESS;
-xmargin, ymargin: C.int;
-);
+PROCEDURE QGraphicsView_ensureVisible6
+  (self: QGraphicsView; item: ADDRESS; xmargin, ymargin: C.int; );
 
 <* EXTERNAL QGraphicsView_ensureVisible7 *>
-PROCEDURE QGraphicsView_ensureVisible7 ( self: QGraphicsView;
- item: ADDRESS;
-xmargin: C.int;
-);
+PROCEDURE QGraphicsView_ensureVisible7
+  (self: QGraphicsView; item: ADDRESS; xmargin: C.int; );
 
 <* EXTERNAL QGraphicsView_ensureVisible8 *>
-PROCEDURE QGraphicsView_ensureVisible8 ( self: QGraphicsView;
- item: ADDRESS;
-);
+PROCEDURE QGraphicsView_ensureVisible8
+  (self: QGraphicsView; item: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_fitInView *>
-PROCEDURE QGraphicsView_fitInView ( self: QGraphicsView;
- rect: ADDRESS;
-aspectRadioMode: C.int;
-);
+PROCEDURE QGraphicsView_fitInView
+  (self: QGraphicsView; rect: ADDRESS; aspectRadioMode: C.int; );
 
 <* EXTERNAL QGraphicsView_fitInView1 *>
-PROCEDURE QGraphicsView_fitInView1 ( self: QGraphicsView;
- rect: ADDRESS;
-);
+PROCEDURE QGraphicsView_fitInView1 (self: QGraphicsView; rect: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_fitInView2 *>
-PROCEDURE QGraphicsView_fitInView2 ( self: QGraphicsView;
-x, y, w, h: C.double;
-aspectRadioMode: C.int;
-);
+PROCEDURE QGraphicsView_fitInView2
+  (self: QGraphicsView; x, y, w, h: C.double; aspectRadioMode: C.int; );
 
 <* EXTERNAL QGraphicsView_fitInView3 *>
-PROCEDURE QGraphicsView_fitInView3 ( self: QGraphicsView;
-x, y, w, h: C.double;
-);
+PROCEDURE QGraphicsView_fitInView3
+  (self: QGraphicsView; x, y, w, h: C.double; );
 
 <* EXTERNAL QGraphicsView_fitInView4 *>
-PROCEDURE QGraphicsView_fitInView4 ( self: QGraphicsView;
- item: ADDRESS;
-aspectRadioMode: C.int;
-);
+PROCEDURE QGraphicsView_fitInView4
+  (self: QGraphicsView; item: ADDRESS; aspectRadioMode: C.int; );
 
 <* EXTERNAL QGraphicsView_fitInView5 *>
-PROCEDURE QGraphicsView_fitInView5 ( self: QGraphicsView;
- item: ADDRESS;
-);
+PROCEDURE QGraphicsView_fitInView5 (self: QGraphicsView; item: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_itemAt *>
-PROCEDURE QGraphicsView_itemAt ( self: QGraphicsView;
- pos: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_itemAt (self: QGraphicsView; pos: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QGraphicsView_itemAt1 *>
-PROCEDURE QGraphicsView_itemAt1 ( self: QGraphicsView;
-x, y: C.int;
-): ADDRESS;
+PROCEDURE QGraphicsView_itemAt1 (self: QGraphicsView; x, y: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapToScene *>
-PROCEDURE QGraphicsView_mapToScene ( self: QGraphicsView;
- point: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapToScene (self: QGraphicsView; point: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapToScene1 *>
-PROCEDURE QGraphicsView_mapToScene1 ( self: QGraphicsView;
- rect: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapToScene1 (self: QGraphicsView; rect: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapToScene2 *>
-PROCEDURE QGraphicsView_mapToScene2 ( self: QGraphicsView;
- polygon: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapToScene2
+  (self: QGraphicsView; polygon: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapToScene3 *>
-PROCEDURE QGraphicsView_mapToScene3 ( self: QGraphicsView;
- path: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapToScene3 (self: QGraphicsView; path: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapFromScene *>
-PROCEDURE QGraphicsView_mapFromScene ( self: QGraphicsView;
- point: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapFromScene
+  (self: QGraphicsView; point: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapFromScene1 *>
-PROCEDURE QGraphicsView_mapFromScene1 ( self: QGraphicsView;
- rect: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapFromScene1
+  (self: QGraphicsView; rect: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapFromScene2 *>
-PROCEDURE QGraphicsView_mapFromScene2 ( self: QGraphicsView;
- polygon: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapFromScene2
+  (self: QGraphicsView; polygon: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapFromScene3 *>
-PROCEDURE QGraphicsView_mapFromScene3 ( self: QGraphicsView;
- path: ADDRESS;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapFromScene3
+  (self: QGraphicsView; path: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapToScene4 *>
-PROCEDURE QGraphicsView_mapToScene4 ( self: QGraphicsView;
-x, y: C.int;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapToScene4 (self: QGraphicsView; x, y: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapToScene5 *>
-PROCEDURE QGraphicsView_mapToScene5 ( self: QGraphicsView;
-x, y, w, h: C.int;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapToScene5
+  (self: QGraphicsView; x, y, w, h: C.int; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapFromScene4 *>
-PROCEDURE QGraphicsView_mapFromScene4 ( self: QGraphicsView;
-x, y: C.double;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapFromScene4
+  (self: QGraphicsView; x, y: C.double; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_mapFromScene5 *>
-PROCEDURE QGraphicsView_mapFromScene5 ( self: QGraphicsView;
-x, y, w, h: C.double;
-): ADDRESS;
+PROCEDURE QGraphicsView_mapFromScene5
+  (self: QGraphicsView; x, y, w, h: C.double; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_backgroundBrush *>
-PROCEDURE QGraphicsView_backgroundBrush ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_backgroundBrush (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_setBackgroundBrush *>
-PROCEDURE QGraphicsView_setBackgroundBrush ( self: QGraphicsView;
- brush: ADDRESS;
-);
+PROCEDURE QGraphicsView_setBackgroundBrush
+  (self: QGraphicsView; brush: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_foregroundBrush *>
-PROCEDURE QGraphicsView_foregroundBrush ( self: QGraphicsView;
-): ADDRESS;
+PROCEDURE QGraphicsView_foregroundBrush (self: QGraphicsView; ): ADDRESS;
 
 <* EXTERNAL QGraphicsView_setForegroundBrush *>
-PROCEDURE QGraphicsView_setForegroundBrush ( self: QGraphicsView;
- brush: ADDRESS;
-);
+PROCEDURE QGraphicsView_setForegroundBrush
+  (self: QGraphicsView; brush: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_invalidateScene *>
-PROCEDURE QGraphicsView_invalidateScene ( self: QGraphicsView;
- rect: ADDRESS;
-layers: C.int;
-);
+PROCEDURE QGraphicsView_invalidateScene
+  (self: QGraphicsView; rect: ADDRESS; layers: C.int; );
 
 <* EXTERNAL QGraphicsView_invalidateScene1 *>
-PROCEDURE QGraphicsView_invalidateScene1 ( self: QGraphicsView;
- rect: ADDRESS;
-);
+PROCEDURE QGraphicsView_invalidateScene1
+  (self: QGraphicsView; rect: ADDRESS; );
 
 <* EXTERNAL QGraphicsView_invalidateScene2 *>
-PROCEDURE QGraphicsView_invalidateScene2 ( self: QGraphicsView;
-);
+PROCEDURE QGraphicsView_invalidateScene2 (self: QGraphicsView; );
 
 <* EXTERNAL QGraphicsView_updateSceneRect *>
-PROCEDURE QGraphicsView_updateSceneRect ( self: QGraphicsView;
- rect: ADDRESS;
-);
+PROCEDURE QGraphicsView_updateSceneRect
+  (self: QGraphicsView; rect: ADDRESS; );
 
-TYPE
-QGraphicsView = ADDRESS;
+TYPE QGraphicsView = ADDRESS;
 
 END QtGraphicsViewRaw.

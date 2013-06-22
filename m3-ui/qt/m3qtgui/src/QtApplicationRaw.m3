@@ -11,7 +11,6 @@ MODULE QtApplicationRaw;
 
 
 
-REVEAL
-QApplication = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QApplication = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtApplicationRaw.

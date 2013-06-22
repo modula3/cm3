@@ -9,1160 +9,1082 @@
 UNSAFE MODULE QtGraphicsView;
 
 
-FROM QtPolygon IMPORT QPolygon,QPolygonF;
+FROM QtPolygon IMPORT QPolygon, QPolygonF;
 FROM QtSize IMPORT QSize;
 IMPORT QtGraphicsViewRaw;
-FROM QGuiStubs IMPORT QPainterPath,QGraphicsScene,RenderHints,RenderHint,QGraphicsItem,SceneLayers;
+FROM QGuiStubs IMPORT QPainterPath, QGraphicsScene, RenderHints,
+                      RenderHint, QGraphicsItem, SceneLayers;
 FROM QtMatrix IMPORT QMatrix;
 FROM QtWidget IMPORT QWidget;
 FROM QtTransform IMPORT QTransform;
-FROM QtPoint IMPORT QPointF,QPoint;
+FROM QtPoint IMPORT QPointF, QPoint;
 FROM QtBrush IMPORT QBrush;
-FROM QtNamespace IMPORT AlignmentFlag,ItemSelectionMode,AspectRatioMode;
-FROM QtRect IMPORT QRect,QRectF;
+FROM QtNamespace IMPORT AlignmentFlag, ItemSelectionMode, AspectRatioMode;
+FROM QtRect IMPORT QRect, QRectF;
 
 
 IMPORT WeakRef;
 
-PROCEDURE New_QGraphicsView0 (self:QGraphicsView; parent: QWidget;
-): QGraphicsView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtGraphicsViewRaw.New_QGraphicsView0(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGraphicsView);
-
-RETURN self;
-END New_QGraphicsView0;
-
-PROCEDURE New_QGraphicsView1 (self:QGraphicsView;): QGraphicsView =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtGraphicsViewRaw.New_QGraphicsView1();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGraphicsView);
-
-RETURN self;
-END New_QGraphicsView1;
-
-PROCEDURE New_QGraphicsView2 (self:QGraphicsView; scene: QGraphicsScene;
- parent: QWidget;
-): QGraphicsView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(scene.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtGraphicsViewRaw.New_QGraphicsView2(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGraphicsView);
-
-RETURN self;
-END New_QGraphicsView2;
-
-PROCEDURE New_QGraphicsView3 (self:QGraphicsView; scene: QGraphicsScene;
-): QGraphicsView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(scene.cxxObj,ADDRESS);
-BEGIN
-result := QtGraphicsViewRaw.New_QGraphicsView3(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QGraphicsView);
-
-RETURN self;
-END New_QGraphicsView3;
-
-PROCEDURE Delete_QGraphicsView ( self: QGraphicsView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.Delete_QGraphicsView(selfAdr);
-END Delete_QGraphicsView;
-
-PROCEDURE QGraphicsView_sizeHint ( self: QGraphicsView;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_sizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_sizeHint;
-
-PROCEDURE QGraphicsView_renderHints ( self: QGraphicsView;
-): RenderHints =
-VAR
-ret:INTEGER; result : RenderHints;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_renderHints(selfAdr);
-result := VAL(ret,RenderHints);  
-RETURN result;
-END QGraphicsView_renderHints;
-
-PROCEDURE QGraphicsView_setRenderHint ( self: QGraphicsView;
-hint: RenderHint;
-enabled: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setRenderHint(selfAdr, ORD(hint), enabled);
-END QGraphicsView_setRenderHint;
-
-PROCEDURE QGraphicsView_setRenderHint1 ( self: QGraphicsView;
-hint: RenderHint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setRenderHint1(selfAdr, ORD(hint));
-END QGraphicsView_setRenderHint1;
-
-PROCEDURE QGraphicsView_setRenderHints ( self: QGraphicsView;
-hints: RenderHints;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setRenderHints(selfAdr, ORD(hints));
-END QGraphicsView_setRenderHints;
-
-PROCEDURE QGraphicsView_alignment ( self: QGraphicsView;
-): AlignmentFlag =
-VAR
-ret:INTEGER; result : AlignmentFlag;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_alignment(selfAdr);
-result := VAL(ret,AlignmentFlag);  
-RETURN result;
-END QGraphicsView_alignment;
-
-PROCEDURE QGraphicsView_setAlignment ( self: QGraphicsView;
-alignment: AlignmentFlag;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setAlignment(selfAdr, ORD(alignment));
-END QGraphicsView_setAlignment;
-
-PROCEDURE QGraphicsView_transformationAnchor ( self: QGraphicsView;
-): ViewportAnchor =
-VAR
-ret:INTEGER; result : ViewportAnchor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_transformationAnchor(selfAdr);
-result := VAL(ret,ViewportAnchor);  
-RETURN result;
-END QGraphicsView_transformationAnchor;
-
-PROCEDURE QGraphicsView_setTransformationAnchor ( self: QGraphicsView;
-anchor: ViewportAnchor;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setTransformationAnchor(selfAdr, ORD(anchor));
-END QGraphicsView_setTransformationAnchor;
-
-PROCEDURE QGraphicsView_resizeAnchor ( self: QGraphicsView;
-): ViewportAnchor =
-VAR
-ret:INTEGER; result : ViewportAnchor;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_resizeAnchor(selfAdr);
-result := VAL(ret,ViewportAnchor);  
-RETURN result;
-END QGraphicsView_resizeAnchor;
-
-PROCEDURE QGraphicsView_setResizeAnchor ( self: QGraphicsView;
-anchor: ViewportAnchor;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setResizeAnchor(selfAdr, ORD(anchor));
-END QGraphicsView_setResizeAnchor;
-
-PROCEDURE QGraphicsView_viewportUpdateMode ( self: QGraphicsView;
-): ViewportUpdateMode =
-VAR
-ret:INTEGER; result : ViewportUpdateMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_viewportUpdateMode(selfAdr);
-result := VAL(ret,ViewportUpdateMode);  
-RETURN result;
-END QGraphicsView_viewportUpdateMode;
-
-PROCEDURE QGraphicsView_setViewportUpdateMode ( self: QGraphicsView;
-mode: ViewportUpdateMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setViewportUpdateMode(selfAdr, ORD(mode));
-END QGraphicsView_setViewportUpdateMode;
-
-PROCEDURE QGraphicsView_optimizationFlags ( self: QGraphicsView;
-): OptimizationFlags =
-VAR
-ret:INTEGER; result : OptimizationFlags;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_optimizationFlags(selfAdr);
-result := VAL(ret,OptimizationFlags);  
-RETURN result;
-END QGraphicsView_optimizationFlags;
-
-PROCEDURE QGraphicsView_setOptimizationFlag ( self: QGraphicsView;
-flag: OptimizationFlag;
-enabled: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setOptimizationFlag(selfAdr, ORD(flag), enabled);
-END QGraphicsView_setOptimizationFlag;
-
-PROCEDURE QGraphicsView_setOptimizationFlag1 ( self: QGraphicsView;
-flag: OptimizationFlag;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setOptimizationFlag1(selfAdr, ORD(flag));
-END QGraphicsView_setOptimizationFlag1;
-
-PROCEDURE QGraphicsView_setOptimizationFlags ( self: QGraphicsView;
-flags: OptimizationFlags;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setOptimizationFlags(selfAdr, ORD(flags));
-END QGraphicsView_setOptimizationFlags;
-
-PROCEDURE QGraphicsView_dragMode ( self: QGraphicsView;
-): DragMode =
-VAR
-ret:INTEGER; result : DragMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_dragMode(selfAdr);
-result := VAL(ret,DragMode);  
-RETURN result;
-END QGraphicsView_dragMode;
-
-PROCEDURE QGraphicsView_setDragMode ( self: QGraphicsView;
-mode: DragMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setDragMode(selfAdr, ORD(mode));
-END QGraphicsView_setDragMode;
-
-PROCEDURE QGraphicsView_rubberBandSelectionMode ( self: QGraphicsView;
-): ItemSelectionMode =
-VAR
-ret:INTEGER; result : ItemSelectionMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_rubberBandSelectionMode(selfAdr);
-result := VAL(ret,ItemSelectionMode);  
-RETURN result;
-END QGraphicsView_rubberBandSelectionMode;
-
-PROCEDURE QGraphicsView_setRubberBandSelectionMode ( self: QGraphicsView;
-mode: ItemSelectionMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setRubberBandSelectionMode(selfAdr, ORD(mode));
-END QGraphicsView_setRubberBandSelectionMode;
-
-PROCEDURE QGraphicsView_cacheMode ( self: QGraphicsView;
-): CacheMode =
-VAR
-ret:INTEGER; result : CacheMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_cacheMode(selfAdr);
-result := VAL(ret,CacheMode);  
-RETURN result;
-END QGraphicsView_cacheMode;
-
-PROCEDURE QGraphicsView_setCacheMode ( self: QGraphicsView;
-mode: CacheMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setCacheMode(selfAdr, ORD(mode));
-END QGraphicsView_setCacheMode;
-
-PROCEDURE QGraphicsView_resetCachedContent ( self: QGraphicsView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_resetCachedContent(selfAdr);
-END QGraphicsView_resetCachedContent;
-
-PROCEDURE QGraphicsView_isInteractive ( self: QGraphicsView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtGraphicsViewRaw.QGraphicsView_isInteractive(selfAdr);
-END QGraphicsView_isInteractive;
-
-PROCEDURE QGraphicsView_setInteractive ( self: QGraphicsView;
-allowed: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setInteractive(selfAdr, allowed);
-END QGraphicsView_setInteractive;
-
-PROCEDURE QGraphicsView_scene ( self: QGraphicsView;
-): QGraphicsScene =
-VAR
-ret:ADDRESS; result : QGraphicsScene;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_scene(selfAdr);
-
-  result := NEW(QGraphicsScene);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_scene;
-
-PROCEDURE QGraphicsView_setScene ( self: QGraphicsView;
- scene: QGraphicsScene;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(scene.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setScene(selfAdr, arg2tmp);
-END QGraphicsView_setScene;
-
-PROCEDURE QGraphicsView_sceneRect ( self: QGraphicsView;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_sceneRect(selfAdr);
-
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_sceneRect;
-
-PROCEDURE QGraphicsView_setSceneRect ( self: QGraphicsView;
- rect: QRectF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setSceneRect(selfAdr, arg2tmp);
-END QGraphicsView_setSceneRect;
-
-PROCEDURE QGraphicsView_setSceneRect1 ( self: QGraphicsView;
-x, y, w, h: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setSceneRect1(selfAdr, x, y, w, h);
-END QGraphicsView_setSceneRect1;
-
-PROCEDURE QGraphicsView_matrix ( self: QGraphicsView;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_matrix(selfAdr);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_matrix;
-
-PROCEDURE QGraphicsView_setMatrix ( self: QGraphicsView;
- matrix: QMatrix;
-combine: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setMatrix(selfAdr, arg2tmp, combine);
-END QGraphicsView_setMatrix;
-
-PROCEDURE QGraphicsView_setMatrix1 ( self: QGraphicsView;
- matrix: QMatrix;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setMatrix1(selfAdr, arg2tmp);
-END QGraphicsView_setMatrix1;
-
-PROCEDURE QGraphicsView_resetMatrix ( self: QGraphicsView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_resetMatrix(selfAdr);
-END QGraphicsView_resetMatrix;
-
-PROCEDURE QGraphicsView_transform ( self: QGraphicsView;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_transform(selfAdr);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_transform;
-
-PROCEDURE QGraphicsView_viewportTransform ( self: QGraphicsView;
-): QTransform =
-VAR
-ret:ADDRESS; result : QTransform;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_viewportTransform(selfAdr);
-
-  result := NEW(QTransform);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_viewportTransform;
-
-PROCEDURE QGraphicsView_isTransformed ( self: QGraphicsView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtGraphicsViewRaw.QGraphicsView_isTransformed(selfAdr);
-END QGraphicsView_isTransformed;
-
-PROCEDURE QGraphicsView_setTransform ( self: QGraphicsView;
- matrix: QTransform;
-combine: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setTransform(selfAdr, arg2tmp, combine);
-END QGraphicsView_setTransform;
-
-PROCEDURE QGraphicsView_setTransform1 ( self: QGraphicsView;
- matrix: QTransform;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setTransform1(selfAdr, arg2tmp);
-END QGraphicsView_setTransform1;
-
-PROCEDURE QGraphicsView_resetTransform ( self: QGraphicsView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_resetTransform(selfAdr);
-END QGraphicsView_resetTransform;
-
-PROCEDURE QGraphicsView_rotate ( self: QGraphicsView;
-angle: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_rotate(selfAdr, angle);
-END QGraphicsView_rotate;
-
-PROCEDURE QGraphicsView_scale ( self: QGraphicsView;
-sx, sy: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_scale(selfAdr, sx, sy);
-END QGraphicsView_scale;
-
-PROCEDURE QGraphicsView_shear ( self: QGraphicsView;
-sh, sv: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_shear(selfAdr, sh, sv);
-END QGraphicsView_shear;
-
-PROCEDURE QGraphicsView_translate ( self: QGraphicsView;
-dx, dy: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_translate(selfAdr, dx, dy);
-END QGraphicsView_translate;
-
-PROCEDURE QGraphicsView_centerOn ( self: QGraphicsView;
- pos: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pos.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_centerOn(selfAdr, arg2tmp);
-END QGraphicsView_centerOn;
-
-PROCEDURE QGraphicsView_centerOn1 ( self: QGraphicsView;
-x, y: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_centerOn1(selfAdr, x, y);
-END QGraphicsView_centerOn1;
-
-PROCEDURE QGraphicsView_centerOn2 ( self: QGraphicsView;
- item: QGraphicsItem;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_centerOn2(selfAdr, arg2tmp);
-END QGraphicsView_centerOn2;
-
-PROCEDURE QGraphicsView_ensureVisible ( self: QGraphicsView;
- rect: QRectF;
-xmargin, ymargin: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible(selfAdr, arg2tmp, xmargin, ymargin);
-END QGraphicsView_ensureVisible;
-
-PROCEDURE QGraphicsView_ensureVisible1 ( self: QGraphicsView;
- rect: QRectF;
-xmargin: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible1(selfAdr, arg2tmp, xmargin);
-END QGraphicsView_ensureVisible1;
-
-PROCEDURE QGraphicsView_ensureVisible2 ( self: QGraphicsView;
- rect: QRectF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible2(selfAdr, arg2tmp);
-END QGraphicsView_ensureVisible2;
-
-PROCEDURE QGraphicsView_ensureVisible3 ( self: QGraphicsView;
-x, y, w, h: LONGREAL;
-xmargin, ymargin: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible3(selfAdr, x, y, w, h, xmargin, ymargin);
-END QGraphicsView_ensureVisible3;
-
-PROCEDURE QGraphicsView_ensureVisible4 ( self: QGraphicsView;
-x, y, w, h: LONGREAL;
-xmargin: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible4(selfAdr, x, y, w, h, xmargin);
-END QGraphicsView_ensureVisible4;
-
-PROCEDURE QGraphicsView_ensureVisible5 ( self: QGraphicsView;
-x, y, w, h: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible5(selfAdr, x, y, w, h);
-END QGraphicsView_ensureVisible5;
-
-PROCEDURE QGraphicsView_ensureVisible6 ( self: QGraphicsView;
- item: QGraphicsItem;
-xmargin, ymargin: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible6(selfAdr, arg2tmp, xmargin, ymargin);
-END QGraphicsView_ensureVisible6;
-
-PROCEDURE QGraphicsView_ensureVisible7 ( self: QGraphicsView;
- item: QGraphicsItem;
-xmargin: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible7(selfAdr, arg2tmp, xmargin);
-END QGraphicsView_ensureVisible7;
-
-PROCEDURE QGraphicsView_ensureVisible8 ( self: QGraphicsView;
- item: QGraphicsItem;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_ensureVisible8(selfAdr, arg2tmp);
-END QGraphicsView_ensureVisible8;
-
-PROCEDURE QGraphicsView_fitInView ( self: QGraphicsView;
- rect: QRectF;
-aspectRadioMode: AspectRatioMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_fitInView(selfAdr, arg2tmp, ORD(aspectRadioMode));
-END QGraphicsView_fitInView;
-
-PROCEDURE QGraphicsView_fitInView1 ( self: QGraphicsView;
- rect: QRectF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_fitInView1(selfAdr, arg2tmp);
-END QGraphicsView_fitInView1;
-
-PROCEDURE QGraphicsView_fitInView2 ( self: QGraphicsView;
-x, y, w, h: LONGREAL;
-aspectRadioMode: AspectRatioMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_fitInView2(selfAdr, x, y, w, h, ORD(aspectRadioMode));
-END QGraphicsView_fitInView2;
-
-PROCEDURE QGraphicsView_fitInView3 ( self: QGraphicsView;
-x, y, w, h: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_fitInView3(selfAdr, x, y, w, h);
-END QGraphicsView_fitInView3;
-
-PROCEDURE QGraphicsView_fitInView4 ( self: QGraphicsView;
- item: QGraphicsItem;
-aspectRadioMode: AspectRatioMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_fitInView4(selfAdr, arg2tmp, ORD(aspectRadioMode));
-END QGraphicsView_fitInView4;
-
-PROCEDURE QGraphicsView_fitInView5 ( self: QGraphicsView;
- item: QGraphicsItem;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_fitInView5(selfAdr, arg2tmp);
-END QGraphicsView_fitInView5;
-
-PROCEDURE QGraphicsView_itemAt ( self: QGraphicsView;
- pos: QPoint;
-): QGraphicsItem =
-VAR
-ret:ADDRESS; result : QGraphicsItem;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pos.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_itemAt(selfAdr, arg2tmp);
-
-  result := NEW(QGraphicsItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_itemAt;
-
-PROCEDURE QGraphicsView_itemAt1 ( self: QGraphicsView;
-x, y: INTEGER;
-): QGraphicsItem =
-VAR
-ret:ADDRESS; result : QGraphicsItem;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_itemAt1(selfAdr, x, y);
-
-  result := NEW(QGraphicsItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_itemAt1;
-
-PROCEDURE QGraphicsView_mapToScene ( self: QGraphicsView;
- point: QPoint;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(point.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapToScene(selfAdr, arg2tmp);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapToScene;
-
-PROCEDURE QGraphicsView_mapToScene1 ( self: QGraphicsView;
- rect: QRect;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapToScene1(selfAdr, arg2tmp);
-
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapToScene1;
-
-PROCEDURE QGraphicsView_mapToScene2 ( self: QGraphicsView;
- polygon: QPolygon;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(polygon.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapToScene2(selfAdr, arg2tmp);
-
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapToScene2;
-
-PROCEDURE QGraphicsView_mapToScene3 ( self: QGraphicsView;
- path: QPainterPath;
-): QPainterPath =
-VAR
-ret:ADDRESS; result : QPainterPath;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(path.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapToScene3(selfAdr, arg2tmp);
-
-  result := NEW(QPainterPath);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapToScene3;
-
-PROCEDURE QGraphicsView_mapFromScene ( self: QGraphicsView;
- point: QPointF;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(point.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene(selfAdr, arg2tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapFromScene;
-
-PROCEDURE QGraphicsView_mapFromScene1 ( self: QGraphicsView;
- rect: QRectF;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene1(selfAdr, arg2tmp);
-
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapFromScene1;
-
-PROCEDURE QGraphicsView_mapFromScene2 ( self: QGraphicsView;
- polygon: QPolygonF;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(polygon.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene2(selfAdr, arg2tmp);
-
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapFromScene2;
-
-PROCEDURE QGraphicsView_mapFromScene3 ( self: QGraphicsView;
- path: QPainterPath;
-): QPainterPath =
-VAR
-ret:ADDRESS; result : QPainterPath;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(path.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene3(selfAdr, arg2tmp);
-
-  result := NEW(QPainterPath);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapFromScene3;
-
-PROCEDURE QGraphicsView_mapToScene4 ( self: QGraphicsView;
-x, y: INTEGER;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapToScene4(selfAdr, x, y);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapToScene4;
-
-PROCEDURE QGraphicsView_mapToScene5 ( self: QGraphicsView;
-x, y, w, h: INTEGER;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapToScene5(selfAdr, x, y, w, h);
-
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapToScene5;
-
-PROCEDURE QGraphicsView_mapFromScene4 ( self: QGraphicsView;
-x, y: LONGREAL;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene4(selfAdr, x, y);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapFromScene4;
-
-PROCEDURE QGraphicsView_mapFromScene5 ( self: QGraphicsView;
-x, y, w, h: LONGREAL;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene5(selfAdr, x, y, w, h);
-
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_mapFromScene5;
-
-PROCEDURE QGraphicsView_backgroundBrush ( self: QGraphicsView;
-): QBrush =
-VAR
-ret:ADDRESS; result : QBrush;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_backgroundBrush(selfAdr);
-
-  result := NEW(QBrush);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_backgroundBrush;
-
-PROCEDURE QGraphicsView_setBackgroundBrush ( self: QGraphicsView;
- brush: QBrush;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(brush.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setBackgroundBrush(selfAdr, arg2tmp);
-END QGraphicsView_setBackgroundBrush;
-
-PROCEDURE QGraphicsView_foregroundBrush ( self: QGraphicsView;
-): QBrush =
-VAR
-ret:ADDRESS; result : QBrush;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtGraphicsViewRaw.QGraphicsView_foregroundBrush(selfAdr);
-
-  result := NEW(QBrush);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QGraphicsView_foregroundBrush;
-
-PROCEDURE QGraphicsView_setForegroundBrush ( self: QGraphicsView;
- brush: QBrush;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(brush.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_setForegroundBrush(selfAdr, arg2tmp);
-END QGraphicsView_setForegroundBrush;
-
-PROCEDURE QGraphicsView_invalidateScene ( self: QGraphicsView;
- rect: QRectF;
-layers: SceneLayers;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_invalidateScene(selfAdr, arg2tmp, ORD(layers));
-END QGraphicsView_invalidateScene;
-
-PROCEDURE QGraphicsView_invalidateScene1 ( self: QGraphicsView;
- rect: QRectF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_invalidateScene1(selfAdr, arg2tmp);
-END QGraphicsView_invalidateScene1;
-
-PROCEDURE QGraphicsView_invalidateScene2 ( self: QGraphicsView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_invalidateScene2(selfAdr);
-END QGraphicsView_invalidateScene2;
-
-PROCEDURE QGraphicsView_updateSceneRect ( self: QGraphicsView;
- rect: QRectF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtGraphicsViewRaw.QGraphicsView_updateSceneRect(selfAdr, arg2tmp);
-END QGraphicsView_updateSceneRect;
-
-PROCEDURE Cleanup_QGraphicsView(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QGraphicsView := ref;
-BEGIN
-  Delete_QGraphicsView(obj);
- END Cleanup_QGraphicsView;
-
-PROCEDURE Destroy_QGraphicsView(self : QGraphicsView) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QGraphicsView);
-END Destroy_QGraphicsView;
+PROCEDURE New_QGraphicsView0 (self: QGraphicsView; parent: QWidget; ):
+  QGraphicsView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtGraphicsViewRaw.New_QGraphicsView0(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGraphicsView);
+
+    RETURN self;
+  END New_QGraphicsView0;
+
+PROCEDURE New_QGraphicsView1 (self: QGraphicsView; ): QGraphicsView =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtGraphicsViewRaw.New_QGraphicsView1();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGraphicsView);
+
+    RETURN self;
+  END New_QGraphicsView1;
+
+PROCEDURE New_QGraphicsView2
+  (self: QGraphicsView; scene: QGraphicsScene; parent: QWidget; ):
+  QGraphicsView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(scene.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtGraphicsViewRaw.New_QGraphicsView2(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGraphicsView);
+
+    RETURN self;
+  END New_QGraphicsView2;
+
+PROCEDURE New_QGraphicsView3
+  (self: QGraphicsView; scene: QGraphicsScene; ): QGraphicsView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(scene.cxxObj, ADDRESS);
+  BEGIN
+    result := QtGraphicsViewRaw.New_QGraphicsView3(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QGraphicsView);
+
+    RETURN self;
+  END New_QGraphicsView3;
+
+PROCEDURE Delete_QGraphicsView (self: QGraphicsView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.Delete_QGraphicsView(selfAdr);
+  END Delete_QGraphicsView;
+
+PROCEDURE QGraphicsView_sizeHint (self: QGraphicsView; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_sizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_sizeHint;
+
+PROCEDURE QGraphicsView_renderHints (self: QGraphicsView; ): RenderHints =
+  VAR
+    ret    : INTEGER;
+    result : RenderHints;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_renderHints(selfAdr);
+    result := VAL(ret, RenderHints);
+    RETURN result;
+  END QGraphicsView_renderHints;
+
+PROCEDURE QGraphicsView_setRenderHint
+  (self: QGraphicsView; hint: RenderHint; enabled: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setRenderHint(
+      selfAdr, ORD(hint), enabled);
+  END QGraphicsView_setRenderHint;
+
+PROCEDURE QGraphicsView_setRenderHint1
+  (self: QGraphicsView; hint: RenderHint; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setRenderHint1(selfAdr, ORD(hint));
+  END QGraphicsView_setRenderHint1;
+
+PROCEDURE QGraphicsView_setRenderHints
+  (self: QGraphicsView; hints: RenderHints; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setRenderHints(selfAdr, ORD(hints));
+  END QGraphicsView_setRenderHints;
+
+PROCEDURE QGraphicsView_alignment (self: QGraphicsView; ): AlignmentFlag =
+  VAR
+    ret    : INTEGER;
+    result : AlignmentFlag;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_alignment(selfAdr);
+    result := VAL(ret, AlignmentFlag);
+    RETURN result;
+  END QGraphicsView_alignment;
+
+PROCEDURE QGraphicsView_setAlignment
+  (self: QGraphicsView; alignment: AlignmentFlag; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setAlignment(selfAdr, ORD(alignment));
+  END QGraphicsView_setAlignment;
+
+PROCEDURE QGraphicsView_transformationAnchor (self: QGraphicsView; ):
+  ViewportAnchor =
+  VAR
+    ret    : INTEGER;
+    result : ViewportAnchor;
+    selfAdr: ADDRESS        := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_transformationAnchor(selfAdr);
+    result := VAL(ret, ViewportAnchor);
+    RETURN result;
+  END QGraphicsView_transformationAnchor;
+
+PROCEDURE QGraphicsView_setTransformationAnchor
+  (self: QGraphicsView; anchor: ViewportAnchor; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setTransformationAnchor(
+      selfAdr, ORD(anchor));
+  END QGraphicsView_setTransformationAnchor;
+
+PROCEDURE QGraphicsView_resizeAnchor (self: QGraphicsView; ):
+  ViewportAnchor =
+  VAR
+    ret    : INTEGER;
+    result : ViewportAnchor;
+    selfAdr: ADDRESS        := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_resizeAnchor(selfAdr);
+    result := VAL(ret, ViewportAnchor);
+    RETURN result;
+  END QGraphicsView_resizeAnchor;
+
+PROCEDURE QGraphicsView_setResizeAnchor
+  (self: QGraphicsView; anchor: ViewportAnchor; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setResizeAnchor(selfAdr, ORD(anchor));
+  END QGraphicsView_setResizeAnchor;
+
+PROCEDURE QGraphicsView_viewportUpdateMode (self: QGraphicsView; ):
+  ViewportUpdateMode =
+  VAR
+    ret    : INTEGER;
+    result : ViewportUpdateMode;
+    selfAdr: ADDRESS            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_viewportUpdateMode(selfAdr);
+    result := VAL(ret, ViewportUpdateMode);
+    RETURN result;
+  END QGraphicsView_viewportUpdateMode;
+
+PROCEDURE QGraphicsView_setViewportUpdateMode
+  (self: QGraphicsView; mode: ViewportUpdateMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setViewportUpdateMode(
+      selfAdr, ORD(mode));
+  END QGraphicsView_setViewportUpdateMode;
+
+PROCEDURE QGraphicsView_optimizationFlags (self: QGraphicsView; ):
+  OptimizationFlags =
+  VAR
+    ret    : INTEGER;
+    result : OptimizationFlags;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_optimizationFlags(selfAdr);
+    result := VAL(ret, OptimizationFlags);
+    RETURN result;
+  END QGraphicsView_optimizationFlags;
+
+PROCEDURE QGraphicsView_setOptimizationFlag
+  (self: QGraphicsView; flag: OptimizationFlag; enabled: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setOptimizationFlag(
+      selfAdr, ORD(flag), enabled);
+  END QGraphicsView_setOptimizationFlag;
+
+PROCEDURE QGraphicsView_setOptimizationFlag1
+  (self: QGraphicsView; flag: OptimizationFlag; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setOptimizationFlag1(
+      selfAdr, ORD(flag));
+  END QGraphicsView_setOptimizationFlag1;
+
+PROCEDURE QGraphicsView_setOptimizationFlags
+  (self: QGraphicsView; flags: OptimizationFlags; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setOptimizationFlags(
+      selfAdr, ORD(flags));
+  END QGraphicsView_setOptimizationFlags;
+
+PROCEDURE QGraphicsView_dragMode (self: QGraphicsView; ): DragMode =
+  VAR
+    ret    : INTEGER;
+    result : DragMode;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_dragMode(selfAdr);
+    result := VAL(ret, DragMode);
+    RETURN result;
+  END QGraphicsView_dragMode;
+
+PROCEDURE QGraphicsView_setDragMode
+  (self: QGraphicsView; mode: DragMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setDragMode(selfAdr, ORD(mode));
+  END QGraphicsView_setDragMode;
+
+PROCEDURE QGraphicsView_rubberBandSelectionMode (self: QGraphicsView; ):
+  ItemSelectionMode =
+  VAR
+    ret    : INTEGER;
+    result : ItemSelectionMode;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtGraphicsViewRaw.QGraphicsView_rubberBandSelectionMode(selfAdr);
+    result := VAL(ret, ItemSelectionMode);
+    RETURN result;
+  END QGraphicsView_rubberBandSelectionMode;
+
+PROCEDURE QGraphicsView_setRubberBandSelectionMode
+  (self: QGraphicsView; mode: ItemSelectionMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setRubberBandSelectionMode(
+      selfAdr, ORD(mode));
+  END QGraphicsView_setRubberBandSelectionMode;
+
+PROCEDURE QGraphicsView_cacheMode (self: QGraphicsView; ): CacheMode =
+  VAR
+    ret    : INTEGER;
+    result : CacheMode;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_cacheMode(selfAdr);
+    result := VAL(ret, CacheMode);
+    RETURN result;
+  END QGraphicsView_cacheMode;
+
+PROCEDURE QGraphicsView_setCacheMode
+  (self: QGraphicsView; mode: CacheMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setCacheMode(selfAdr, ORD(mode));
+  END QGraphicsView_setCacheMode;
+
+PROCEDURE QGraphicsView_resetCachedContent (self: QGraphicsView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_resetCachedContent(selfAdr);
+  END QGraphicsView_resetCachedContent;
+
+PROCEDURE QGraphicsView_isInteractive (self: QGraphicsView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtGraphicsViewRaw.QGraphicsView_isInteractive(selfAdr);
+  END QGraphicsView_isInteractive;
+
+PROCEDURE QGraphicsView_setInteractive
+  (self: QGraphicsView; allowed: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setInteractive(selfAdr, allowed);
+  END QGraphicsView_setInteractive;
+
+PROCEDURE QGraphicsView_scene (self: QGraphicsView; ): QGraphicsScene =
+  VAR
+    ret    : ADDRESS;
+    result : QGraphicsScene;
+    selfAdr: ADDRESS        := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_scene(selfAdr);
+
+    result := NEW(QGraphicsScene);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_scene;
+
+PROCEDURE QGraphicsView_setScene
+  (self: QGraphicsView; scene: QGraphicsScene; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(scene.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setScene(selfAdr, arg2tmp);
+  END QGraphicsView_setScene;
+
+PROCEDURE QGraphicsView_sceneRect (self: QGraphicsView; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_sceneRect(selfAdr);
+
+    result := NEW(QRectF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_sceneRect;
+
+PROCEDURE QGraphicsView_setSceneRect
+  (self: QGraphicsView; rect: QRectF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setSceneRect(selfAdr, arg2tmp);
+  END QGraphicsView_setSceneRect;
+
+PROCEDURE QGraphicsView_setSceneRect1
+  (self: QGraphicsView; x, y, w, h: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setSceneRect1(selfAdr, x, y, w, h);
+  END QGraphicsView_setSceneRect1;
+
+PROCEDURE QGraphicsView_matrix (self: QGraphicsView; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_matrix(selfAdr);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_matrix;
+
+PROCEDURE QGraphicsView_setMatrix
+  (self: QGraphicsView; matrix: QMatrix; combine: BOOLEAN; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setMatrix(selfAdr, arg2tmp, combine);
+  END QGraphicsView_setMatrix;
+
+PROCEDURE QGraphicsView_setMatrix1
+  (self: QGraphicsView; matrix: QMatrix; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setMatrix1(selfAdr, arg2tmp);
+  END QGraphicsView_setMatrix1;
+
+PROCEDURE QGraphicsView_resetMatrix (self: QGraphicsView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_resetMatrix(selfAdr);
+  END QGraphicsView_resetMatrix;
+
+PROCEDURE QGraphicsView_transform (self: QGraphicsView; ): QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_transform(selfAdr);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_transform;
+
+PROCEDURE QGraphicsView_viewportTransform (self: QGraphicsView; ):
+  QTransform =
+  VAR
+    ret    : ADDRESS;
+    result : QTransform;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_viewportTransform(selfAdr);
+
+    result := NEW(QTransform);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_viewportTransform;
+
+PROCEDURE QGraphicsView_isTransformed (self: QGraphicsView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtGraphicsViewRaw.QGraphicsView_isTransformed(selfAdr);
+  END QGraphicsView_isTransformed;
+
+PROCEDURE QGraphicsView_setTransform
+  (self: QGraphicsView; matrix: QTransform; combine: BOOLEAN; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setTransform(selfAdr, arg2tmp, combine);
+  END QGraphicsView_setTransform;
+
+PROCEDURE QGraphicsView_setTransform1
+  (self: QGraphicsView; matrix: QTransform; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setTransform1(selfAdr, arg2tmp);
+  END QGraphicsView_setTransform1;
+
+PROCEDURE QGraphicsView_resetTransform (self: QGraphicsView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_resetTransform(selfAdr);
+  END QGraphicsView_resetTransform;
+
+PROCEDURE QGraphicsView_rotate (self: QGraphicsView; angle: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_rotate(selfAdr, angle);
+  END QGraphicsView_rotate;
+
+PROCEDURE QGraphicsView_scale (self: QGraphicsView; sx, sy: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_scale(selfAdr, sx, sy);
+  END QGraphicsView_scale;
+
+PROCEDURE QGraphicsView_shear (self: QGraphicsView; sh, sv: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_shear(selfAdr, sh, sv);
+  END QGraphicsView_shear;
+
+PROCEDURE QGraphicsView_translate
+  (self: QGraphicsView; dx, dy: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_translate(selfAdr, dx, dy);
+  END QGraphicsView_translate;
+
+PROCEDURE QGraphicsView_centerOn (self: QGraphicsView; pos: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pos.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_centerOn(selfAdr, arg2tmp);
+  END QGraphicsView_centerOn;
+
+PROCEDURE QGraphicsView_centerOn1 (self: QGraphicsView; x, y: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_centerOn1(selfAdr, x, y);
+  END QGraphicsView_centerOn1;
+
+PROCEDURE QGraphicsView_centerOn2
+  (self: QGraphicsView; item: QGraphicsItem; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_centerOn2(selfAdr, arg2tmp);
+  END QGraphicsView_centerOn2;
+
+PROCEDURE QGraphicsView_ensureVisible
+  (self: QGraphicsView; rect: QRectF; xmargin, ymargin: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible(
+      selfAdr, arg2tmp, xmargin, ymargin);
+  END QGraphicsView_ensureVisible;
+
+PROCEDURE QGraphicsView_ensureVisible1
+  (self: QGraphicsView; rect: QRectF; xmargin: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible1(
+      selfAdr, arg2tmp, xmargin);
+  END QGraphicsView_ensureVisible1;
+
+PROCEDURE QGraphicsView_ensureVisible2
+  (self: QGraphicsView; rect: QRectF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible2(selfAdr, arg2tmp);
+  END QGraphicsView_ensureVisible2;
+
+PROCEDURE QGraphicsView_ensureVisible3
+  (self: QGraphicsView; x, y, w, h: LONGREAL; xmargin, ymargin: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible3(
+      selfAdr, x, y, w, h, xmargin, ymargin);
+  END QGraphicsView_ensureVisible3;
+
+PROCEDURE QGraphicsView_ensureVisible4
+  (self: QGraphicsView; x, y, w, h: LONGREAL; xmargin: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible4(
+      selfAdr, x, y, w, h, xmargin);
+  END QGraphicsView_ensureVisible4;
+
+PROCEDURE QGraphicsView_ensureVisible5
+  (self: QGraphicsView; x, y, w, h: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible5(selfAdr, x, y, w, h);
+  END QGraphicsView_ensureVisible5;
+
+PROCEDURE QGraphicsView_ensureVisible6
+  (self: QGraphicsView; item: QGraphicsItem; xmargin, ymargin: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible6(
+      selfAdr, arg2tmp, xmargin, ymargin);
+  END QGraphicsView_ensureVisible6;
+
+PROCEDURE QGraphicsView_ensureVisible7
+  (self: QGraphicsView; item: QGraphicsItem; xmargin: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible7(
+      selfAdr, arg2tmp, xmargin);
+  END QGraphicsView_ensureVisible7;
+
+PROCEDURE QGraphicsView_ensureVisible8
+  (self: QGraphicsView; item: QGraphicsItem; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_ensureVisible8(selfAdr, arg2tmp);
+  END QGraphicsView_ensureVisible8;
+
+PROCEDURE QGraphicsView_fitInView
+  (self: QGraphicsView; rect: QRectF; aspectRadioMode: AspectRatioMode; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_fitInView(
+      selfAdr, arg2tmp, ORD(aspectRadioMode));
+  END QGraphicsView_fitInView;
+
+PROCEDURE QGraphicsView_fitInView1 (self: QGraphicsView; rect: QRectF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_fitInView1(selfAdr, arg2tmp);
+  END QGraphicsView_fitInView1;
+
+PROCEDURE QGraphicsView_fitInView2 (self           : QGraphicsView;
+                                    x, y, w, h     : LONGREAL;
+                                    aspectRadioMode: AspectRatioMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_fitInView2(
+      selfAdr, x, y, w, h, ORD(aspectRadioMode));
+  END QGraphicsView_fitInView2;
+
+PROCEDURE QGraphicsView_fitInView3
+  (self: QGraphicsView; x, y, w, h: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_fitInView3(selfAdr, x, y, w, h);
+  END QGraphicsView_fitInView3;
+
+PROCEDURE QGraphicsView_fitInView4 (self           : QGraphicsView;
+                                    item           : QGraphicsItem;
+                                    aspectRadioMode: AspectRatioMode; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_fitInView4(
+      selfAdr, arg2tmp, ORD(aspectRadioMode));
+  END QGraphicsView_fitInView4;
+
+PROCEDURE QGraphicsView_fitInView5
+  (self: QGraphicsView; item: QGraphicsItem; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_fitInView5(selfAdr, arg2tmp);
+  END QGraphicsView_fitInView5;
+
+PROCEDURE QGraphicsView_itemAt (self: QGraphicsView; pos: QPoint; ):
+  QGraphicsItem =
+  VAR
+    ret    : ADDRESS;
+    result : QGraphicsItem;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp                := LOOPHOLE(pos.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_itemAt(selfAdr, arg2tmp);
+
+    result := NEW(QGraphicsItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_itemAt;
+
+PROCEDURE QGraphicsView_itemAt1 (self: QGraphicsView; x, y: INTEGER; ):
+  QGraphicsItem =
+  VAR
+    ret    : ADDRESS;
+    result : QGraphicsItem;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_itemAt1(selfAdr, x, y);
+
+    result := NEW(QGraphicsItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_itemAt1;
+
+PROCEDURE QGraphicsView_mapToScene (self: QGraphicsView; point: QPoint; ):
+  QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(point.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapToScene(selfAdr, arg2tmp);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapToScene;
+
+PROCEDURE QGraphicsView_mapToScene1 (self: QGraphicsView; rect: QRect; ):
+  QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapToScene1(selfAdr, arg2tmp);
+
+    result := NEW(QPolygonF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapToScene1;
+
+PROCEDURE QGraphicsView_mapToScene2
+  (self: QGraphicsView; polygon: QPolygon; ): QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(polygon.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapToScene2(selfAdr, arg2tmp);
+
+    result := NEW(QPolygonF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapToScene2;
+
+PROCEDURE QGraphicsView_mapToScene3
+  (self: QGraphicsView; path: QPainterPath; ): QPainterPath =
+  VAR
+    ret    : ADDRESS;
+    result : QPainterPath;
+    selfAdr: ADDRESS      := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp               := LOOPHOLE(path.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapToScene3(selfAdr, arg2tmp);
+
+    result := NEW(QPainterPath);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapToScene3;
+
+PROCEDURE QGraphicsView_mapFromScene
+  (self: QGraphicsView; point: QPointF; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(point.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene(selfAdr, arg2tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapFromScene;
+
+PROCEDURE QGraphicsView_mapFromScene1
+  (self: QGraphicsView; rect: QRectF; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene1(selfAdr, arg2tmp);
+
+    result := NEW(QPolygon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapFromScene1;
+
+PROCEDURE QGraphicsView_mapFromScene2
+  (self: QGraphicsView; polygon: QPolygonF; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(polygon.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene2(selfAdr, arg2tmp);
+
+    result := NEW(QPolygon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapFromScene2;
+
+PROCEDURE QGraphicsView_mapFromScene3
+  (self: QGraphicsView; path: QPainterPath; ): QPainterPath =
+  VAR
+    ret    : ADDRESS;
+    result : QPainterPath;
+    selfAdr: ADDRESS      := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp               := LOOPHOLE(path.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene3(selfAdr, arg2tmp);
+
+    result := NEW(QPainterPath);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapFromScene3;
+
+PROCEDURE QGraphicsView_mapToScene4 (self: QGraphicsView; x, y: INTEGER; ):
+  QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapToScene4(selfAdr, x, y);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapToScene4;
+
+PROCEDURE QGraphicsView_mapToScene5
+  (self: QGraphicsView; x, y, w, h: INTEGER; ): QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtGraphicsViewRaw.QGraphicsView_mapToScene5(selfAdr, x, y, w, h);
+
+    result := NEW(QPolygonF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapToScene5;
+
+PROCEDURE QGraphicsView_mapFromScene4
+  (self: QGraphicsView; x, y: LONGREAL; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_mapFromScene4(selfAdr, x, y);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapFromScene4;
+
+PROCEDURE QGraphicsView_mapFromScene5
+  (self: QGraphicsView; x, y, w, h: LONGREAL; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtGraphicsViewRaw.QGraphicsView_mapFromScene5(selfAdr, x, y, w, h);
+
+    result := NEW(QPolygon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_mapFromScene5;
+
+PROCEDURE QGraphicsView_backgroundBrush (self: QGraphicsView; ): QBrush =
+  VAR
+    ret    : ADDRESS;
+    result : QBrush;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_backgroundBrush(selfAdr);
+
+    result := NEW(QBrush);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_backgroundBrush;
+
+PROCEDURE QGraphicsView_setBackgroundBrush
+  (self: QGraphicsView; brush: QBrush; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(brush.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setBackgroundBrush(selfAdr, arg2tmp);
+  END QGraphicsView_setBackgroundBrush;
+
+PROCEDURE QGraphicsView_foregroundBrush (self: QGraphicsView; ): QBrush =
+  VAR
+    ret    : ADDRESS;
+    result : QBrush;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtGraphicsViewRaw.QGraphicsView_foregroundBrush(selfAdr);
+
+    result := NEW(QBrush);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QGraphicsView_foregroundBrush;
+
+PROCEDURE QGraphicsView_setForegroundBrush
+  (self: QGraphicsView; brush: QBrush; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(brush.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_setForegroundBrush(selfAdr, arg2tmp);
+  END QGraphicsView_setForegroundBrush;
+
+PROCEDURE QGraphicsView_invalidateScene
+  (self: QGraphicsView; rect: QRectF; layers: SceneLayers; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_invalidateScene(
+      selfAdr, arg2tmp, ORD(layers));
+  END QGraphicsView_invalidateScene;
+
+PROCEDURE QGraphicsView_invalidateScene1
+  (self: QGraphicsView; rect: QRectF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_invalidateScene1(selfAdr, arg2tmp);
+  END QGraphicsView_invalidateScene1;
+
+PROCEDURE QGraphicsView_invalidateScene2 (self: QGraphicsView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_invalidateScene2(selfAdr);
+  END QGraphicsView_invalidateScene2;
+
+PROCEDURE QGraphicsView_updateSceneRect
+  (self: QGraphicsView; rect: QRectF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtGraphicsViewRaw.QGraphicsView_updateSceneRect(selfAdr, arg2tmp);
+  END QGraphicsView_updateSceneRect;
+
+PROCEDURE Cleanup_QGraphicsView
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QGraphicsView := ref;
+  BEGIN
+    Delete_QGraphicsView(obj);
+  END Cleanup_QGraphicsView;
+
+PROCEDURE Destroy_QGraphicsView (self: QGraphicsView) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QGraphicsView);
+  END Destroy_QGraphicsView;
 
 REVEAL
-QGraphicsView =
-QGraphicsViewPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QGraphicsView0;
-init_1 := New_QGraphicsView1;
-init_2 := New_QGraphicsView2;
-init_3 := New_QGraphicsView3;
-sizeHint := QGraphicsView_sizeHint;
-renderHints := QGraphicsView_renderHints;
-setRenderHint := QGraphicsView_setRenderHint;
-setRenderHint1 := QGraphicsView_setRenderHint1;
-setRenderHints := QGraphicsView_setRenderHints;
-alignment := QGraphicsView_alignment;
-setAlignment := QGraphicsView_setAlignment;
-transformationAnchor := QGraphicsView_transformationAnchor;
-setTransformationAnchor := QGraphicsView_setTransformationAnchor;
-resizeAnchor := QGraphicsView_resizeAnchor;
-setResizeAnchor := QGraphicsView_setResizeAnchor;
-viewportUpdateMode := QGraphicsView_viewportUpdateMode;
-setViewportUpdateMode := QGraphicsView_setViewportUpdateMode;
-optimizationFlags := QGraphicsView_optimizationFlags;
-setOptimizationFlag := QGraphicsView_setOptimizationFlag;
-setOptimizationFlag1 := QGraphicsView_setOptimizationFlag1;
-setOptimizationFlags := QGraphicsView_setOptimizationFlags;
-dragMode := QGraphicsView_dragMode;
-setDragMode := QGraphicsView_setDragMode;
-rubberBandSelectionMode := QGraphicsView_rubberBandSelectionMode;
-setRubberBandSelectionMode := QGraphicsView_setRubberBandSelectionMode;
-cacheMode := QGraphicsView_cacheMode;
-setCacheMode := QGraphicsView_setCacheMode;
-resetCachedContent := QGraphicsView_resetCachedContent;
-isInteractive := QGraphicsView_isInteractive;
-setInteractive := QGraphicsView_setInteractive;
-scene := QGraphicsView_scene;
-setScene := QGraphicsView_setScene;
-sceneRect := QGraphicsView_sceneRect;
-setSceneRect := QGraphicsView_setSceneRect;
-setSceneRect1 := QGraphicsView_setSceneRect1;
-matrix := QGraphicsView_matrix;
-setMatrix := QGraphicsView_setMatrix;
-setMatrix1 := QGraphicsView_setMatrix1;
-resetMatrix := QGraphicsView_resetMatrix;
-transform := QGraphicsView_transform;
-viewportTransform := QGraphicsView_viewportTransform;
-isTransformed := QGraphicsView_isTransformed;
-setTransform := QGraphicsView_setTransform;
-setTransform1 := QGraphicsView_setTransform1;
-resetTransform := QGraphicsView_resetTransform;
-rotate := QGraphicsView_rotate;
-scale := QGraphicsView_scale;
-shear := QGraphicsView_shear;
-translate := QGraphicsView_translate;
-centerOn := QGraphicsView_centerOn;
-centerOn1 := QGraphicsView_centerOn1;
-centerOn2 := QGraphicsView_centerOn2;
-ensureVisible := QGraphicsView_ensureVisible;
-ensureVisible1 := QGraphicsView_ensureVisible1;
-ensureVisible2 := QGraphicsView_ensureVisible2;
-ensureVisible3 := QGraphicsView_ensureVisible3;
-ensureVisible4 := QGraphicsView_ensureVisible4;
-ensureVisible5 := QGraphicsView_ensureVisible5;
-ensureVisible6 := QGraphicsView_ensureVisible6;
-ensureVisible7 := QGraphicsView_ensureVisible7;
-ensureVisible8 := QGraphicsView_ensureVisible8;
-fitInView := QGraphicsView_fitInView;
-fitInView1 := QGraphicsView_fitInView1;
-fitInView2 := QGraphicsView_fitInView2;
-fitInView3 := QGraphicsView_fitInView3;
-fitInView4 := QGraphicsView_fitInView4;
-fitInView5 := QGraphicsView_fitInView5;
-itemAt := QGraphicsView_itemAt;
-itemAt1 := QGraphicsView_itemAt1;
-mapToScene := QGraphicsView_mapToScene;
-mapToScene1 := QGraphicsView_mapToScene1;
-mapToScene2 := QGraphicsView_mapToScene2;
-mapToScene3 := QGraphicsView_mapToScene3;
-mapFromScene := QGraphicsView_mapFromScene;
-mapFromScene1 := QGraphicsView_mapFromScene1;
-mapFromScene2 := QGraphicsView_mapFromScene2;
-mapFromScene3 := QGraphicsView_mapFromScene3;
-mapToScene4 := QGraphicsView_mapToScene4;
-mapToScene5 := QGraphicsView_mapToScene5;
-mapFromScene4 := QGraphicsView_mapFromScene4;
-mapFromScene5 := QGraphicsView_mapFromScene5;
-backgroundBrush := QGraphicsView_backgroundBrush;
-setBackgroundBrush := QGraphicsView_setBackgroundBrush;
-foregroundBrush := QGraphicsView_foregroundBrush;
-setForegroundBrush := QGraphicsView_setForegroundBrush;
-invalidateScene := QGraphicsView_invalidateScene;
-invalidateScene1 := QGraphicsView_invalidateScene1;
-invalidateScene2 := QGraphicsView_invalidateScene2;
-updateSceneRect := QGraphicsView_updateSceneRect;
-destroyCxx := Destroy_QGraphicsView;
-END;
+  QGraphicsView =
+    QGraphicsViewPublic BRANDED OBJECT
+    OVERRIDES
+      init_0                  := New_QGraphicsView0;
+      init_1                  := New_QGraphicsView1;
+      init_2                  := New_QGraphicsView2;
+      init_3                  := New_QGraphicsView3;
+      sizeHint                := QGraphicsView_sizeHint;
+      renderHints             := QGraphicsView_renderHints;
+      setRenderHint           := QGraphicsView_setRenderHint;
+      setRenderHint1          := QGraphicsView_setRenderHint1;
+      setRenderHints          := QGraphicsView_setRenderHints;
+      alignment               := QGraphicsView_alignment;
+      setAlignment            := QGraphicsView_setAlignment;
+      transformationAnchor    := QGraphicsView_transformationAnchor;
+      setTransformationAnchor := QGraphicsView_setTransformationAnchor;
+      resizeAnchor            := QGraphicsView_resizeAnchor;
+      setResizeAnchor         := QGraphicsView_setResizeAnchor;
+      viewportUpdateMode      := QGraphicsView_viewportUpdateMode;
+      setViewportUpdateMode   := QGraphicsView_setViewportUpdateMode;
+      optimizationFlags       := QGraphicsView_optimizationFlags;
+      setOptimizationFlag     := QGraphicsView_setOptimizationFlag;
+      setOptimizationFlag1    := QGraphicsView_setOptimizationFlag1;
+      setOptimizationFlags    := QGraphicsView_setOptimizationFlags;
+      dragMode                := QGraphicsView_dragMode;
+      setDragMode             := QGraphicsView_setDragMode;
+      rubberBandSelectionMode := QGraphicsView_rubberBandSelectionMode;
+      setRubberBandSelectionMode := QGraphicsView_setRubberBandSelectionMode;
+      cacheMode          := QGraphicsView_cacheMode;
+      setCacheMode       := QGraphicsView_setCacheMode;
+      resetCachedContent := QGraphicsView_resetCachedContent;
+      isInteractive      := QGraphicsView_isInteractive;
+      setInteractive     := QGraphicsView_setInteractive;
+      scene              := QGraphicsView_scene;
+      setScene           := QGraphicsView_setScene;
+      sceneRect          := QGraphicsView_sceneRect;
+      setSceneRect       := QGraphicsView_setSceneRect;
+      setSceneRect1      := QGraphicsView_setSceneRect1;
+      matrix             := QGraphicsView_matrix;
+      setMatrix          := QGraphicsView_setMatrix;
+      setMatrix1         := QGraphicsView_setMatrix1;
+      resetMatrix        := QGraphicsView_resetMatrix;
+      transform          := QGraphicsView_transform;
+      viewportTransform  := QGraphicsView_viewportTransform;
+      isTransformed      := QGraphicsView_isTransformed;
+      setTransform       := QGraphicsView_setTransform;
+      setTransform1      := QGraphicsView_setTransform1;
+      resetTransform     := QGraphicsView_resetTransform;
+      rotate             := QGraphicsView_rotate;
+      scale              := QGraphicsView_scale;
+      shear              := QGraphicsView_shear;
+      translate          := QGraphicsView_translate;
+      centerOn           := QGraphicsView_centerOn;
+      centerOn1          := QGraphicsView_centerOn1;
+      centerOn2          := QGraphicsView_centerOn2;
+      ensureVisible      := QGraphicsView_ensureVisible;
+      ensureVisible1     := QGraphicsView_ensureVisible1;
+      ensureVisible2     := QGraphicsView_ensureVisible2;
+      ensureVisible3     := QGraphicsView_ensureVisible3;
+      ensureVisible4     := QGraphicsView_ensureVisible4;
+      ensureVisible5     := QGraphicsView_ensureVisible5;
+      ensureVisible6     := QGraphicsView_ensureVisible6;
+      ensureVisible7     := QGraphicsView_ensureVisible7;
+      ensureVisible8     := QGraphicsView_ensureVisible8;
+      fitInView          := QGraphicsView_fitInView;
+      fitInView1         := QGraphicsView_fitInView1;
+      fitInView2         := QGraphicsView_fitInView2;
+      fitInView3         := QGraphicsView_fitInView3;
+      fitInView4         := QGraphicsView_fitInView4;
+      fitInView5         := QGraphicsView_fitInView5;
+      itemAt             := QGraphicsView_itemAt;
+      itemAt1            := QGraphicsView_itemAt1;
+      mapToScene         := QGraphicsView_mapToScene;
+      mapToScene1        := QGraphicsView_mapToScene1;
+      mapToScene2        := QGraphicsView_mapToScene2;
+      mapToScene3        := QGraphicsView_mapToScene3;
+      mapFromScene       := QGraphicsView_mapFromScene;
+      mapFromScene1      := QGraphicsView_mapFromScene1;
+      mapFromScene2      := QGraphicsView_mapFromScene2;
+      mapFromScene3      := QGraphicsView_mapFromScene3;
+      mapToScene4        := QGraphicsView_mapToScene4;
+      mapToScene5        := QGraphicsView_mapToScene5;
+      mapFromScene4      := QGraphicsView_mapFromScene4;
+      mapFromScene5      := QGraphicsView_mapFromScene5;
+      backgroundBrush    := QGraphicsView_backgroundBrush;
+      setBackgroundBrush := QGraphicsView_setBackgroundBrush;
+      foregroundBrush    := QGraphicsView_foregroundBrush;
+      setForegroundBrush := QGraphicsView_setForegroundBrush;
+      invalidateScene    := QGraphicsView_invalidateScene;
+      invalidateScene1   := QGraphicsView_invalidateScene1;
+      invalidateScene2   := QGraphicsView_invalidateScene2;
+      updateSceneRect    := QGraphicsView_updateSceneRect;
+      destroyCxx         := Destroy_QGraphicsView;
+    END;
 
 
 BEGIN

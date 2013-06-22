@@ -8,158 +8,115 @@
 
 INTERFACE QtTransform;
 
-FROM QtPolygon IMPORT QPolygon,QPolygonF;
-FROM QtLine IMPORT QLine,QLineF;
+FROM QtPolygon IMPORT QPolygon, QPolygonF;
+FROM QtLine IMPORT QLine, QLineF;
 FROM QtMatrix IMPORT QMatrix;
 FROM QGuiStubs IMPORT QPainterPath;
-FROM QtPoint IMPORT QPoint,QPointF;
+FROM QtPoint IMPORT QPoint, QPointF;
 FROM QtRegion IMPORT QRegion;
-FROM QtNamespace IMPORT Axis,Initialization;
-FROM QtRect IMPORT QRect,QRectF;
+FROM QtNamespace IMPORT Axis, Initialization;
+FROM QtRect IMPORT QRect, QRectF;
 
 
 
-TYPE
-  T = QTransform;
+TYPE T = QTransform;
 
 
-CONST (* Enum TransformationType *)
-  TxNone = 0;
+CONST                            (* Enum TransformationType *)
+  TxNone      = 0;
   TxTranslate = 1;
-  TxScale = 2;
-  TxRotate = 4;
-  TxShear = 8;
-  TxProject = 16;
+  TxScale     = 2;
+  TxRotate    = 4;
+  TxShear     = 8;
+  TxProject   = 16;
 
-TYPE (* Enum TransformationType *)
-  TransformationType = [0..16];
-PROCEDURE SquareToQuad ( square: QPolygonF;
- transformResult: QTransform;
-): BOOLEAN;
+TYPE                             (* Enum TransformationType *)
+  TransformationType = [0 .. 16];
+PROCEDURE SquareToQuad (square: QPolygonF; transformResult: QTransform; ):
+  BOOLEAN;
 
-PROCEDURE QuadToSquare ( quad: QPolygonF;
- transformResult: QTransform;
-): BOOLEAN;
+PROCEDURE QuadToSquare (quad: QPolygonF; transformResult: QTransform; ):
+  BOOLEAN;
 
-PROCEDURE QuadToQuad ( one, two: QPolygonF;
- transformResult: QTransform;
-): BOOLEAN;
+PROCEDURE QuadToQuad (one, two: QPolygonF; transformResult: QTransform; ):
+  BOOLEAN;
 
-PROCEDURE FromTranslate (dx, dy: LONGREAL;
-): QTransform;
+PROCEDURE FromTranslate (dx, dy: LONGREAL; ): QTransform;
 
-PROCEDURE FromScale (dx, dy: LONGREAL;
-): QTransform;
+PROCEDURE FromScale (dx, dy: LONGREAL; ): QTransform;
 
 
 TYPE
-QTransform <: QTransformPublic;
-QTransformPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 (arg1: Initialization;
-) : QTransform;
-init_1 () : QTransform;
-init_2 (h11, h12, h13, h21, h22, h23, h31, h32, h33: LONGREAL;
-) : QTransform;
-init_3 (h11, h12, h13, h21, h22, h23, h31, h32: LONGREAL;
-) : QTransform;
-init_4 (h11, h12, h21, h22, dx, dy: LONGREAL;
-) : QTransform;
-init_5 ( mtx: QMatrix;
-) : QTransform;
-isAffine(): BOOLEAN;
-isIdentity(): BOOLEAN;
-isInvertible(): BOOLEAN;
-isScaling(): BOOLEAN;
-isRotating(): BOOLEAN;
-isTranslating(): BOOLEAN;
-type(): TransformationType;
-determinant(): LONGREAL;
-det(): LONGREAL;
-m11(): LONGREAL;
-m12(): LONGREAL;
-m13(): LONGREAL;
-m21(): LONGREAL;
-m22(): LONGREAL;
-m23(): LONGREAL;
-m31(): LONGREAL;
-m32(): LONGREAL;
-m33(): LONGREAL;
-dx(): LONGREAL;
-dy(): LONGREAL;
-setMatrix(m11, m12, m13, m21, m22, m23, m31, m32, m33: LONGREAL;
-);
-inverted(VAR invertible: BOOLEAN;
-): QTransform;
-inverted1(): QTransform;
-adjoint(): QTransform;
-transposed(): QTransform;
-translate(dx, dy: LONGREAL;
-): QTransform;
-scale(sx, sy: LONGREAL;
-): QTransform;
-shear(sh, sv: LONGREAL;
-): QTransform;
-rotate(a: LONGREAL;
-axis: Axis;
-): QTransform;
-rotate1(a: LONGREAL;
-): QTransform;
-rotateRadians(a: LONGREAL;
-axis: Axis;
-): QTransform;
-rotateRadians1(a: LONGREAL;
-): QTransform;
-Op_Equals( arg1: QTransform;
-): BOOLEAN;
-Op_NotEquals( arg1: QTransform;
-): BOOLEAN;
-Op_TimesEquals( arg1: QTransform;
-): QTransform;
-Op_Assign( arg1: QTransform;
-): QTransform;
-reset();
-map( p: QPoint;
-): QPoint;
-map1( p: QPointF;
-): QPointF;
-map2( l: QLine;
-): QLine;
-map3( l: QLineF;
-): QLineF;
-map4( a: QPolygonF;
-): QPolygonF;
-map5( a: QPolygon;
-): QPolygon;
-map6( r: QRegion;
-): QRegion;
-map7( p: QPainterPath;
-): QPainterPath;
-mapToPolygon( r: QRect;
-): QPolygon;
-mapRect( arg1: QRect;
-): QRect;
-mapRect1( arg1: QRectF;
-): QRectF;
-map8(x, y: INTEGER;
-VAR tx, ty: INTEGER;
-);
-map9(x, y: LONGREAL;
-VAR tx, ty: LONGREAL;
-);
-toAffine(): QMatrix;
-Op_TimesEquals1(div: LONGREAL;
-): QTransform;
-Op_DivEquals(div: LONGREAL;
-): QTransform;
-Op_PlusEquals(div: LONGREAL;
-): QTransform;
-Op_MinusEquals(div: LONGREAL;
-): QTransform;
-destroyCxx();
-END;
+  QTransform <: QTransformPublic;
+  QTransformPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0 (arg1: Initialization; ): QTransform;
+      init_1 (): QTransform;
+      init_2 (h11, h12, h13, h21, h22, h23, h31, h32, h33: LONGREAL; ):
+              QTransform;
+      init_3 (h11, h12, h13, h21, h22, h23, h31, h32: LONGREAL; ):
+              QTransform;
+      init_4        (h11, h12, h21, h22, dx, dy: LONGREAL; ): QTransform;
+      init_5        (mtx: QMatrix; ): QTransform;
+      isAffine      (): BOOLEAN;
+      isIdentity    (): BOOLEAN;
+      isInvertible  (): BOOLEAN;
+      isScaling     (): BOOLEAN;
+      isRotating    (): BOOLEAN;
+      isTranslating (): BOOLEAN;
+      type          (): TransformationType;
+      determinant   (): LONGREAL;
+      det           (): LONGREAL;
+      m11           (): LONGREAL;
+      m12           (): LONGREAL;
+      m13           (): LONGREAL;
+      m21           (): LONGREAL;
+      m22           (): LONGREAL;
+      m23           (): LONGREAL;
+      m31           (): LONGREAL;
+      m32           (): LONGREAL;
+      m33           (): LONGREAL;
+      dx            (): LONGREAL;
+      dy            (): LONGREAL;
+      setMatrix  (m11, m12, m13, m21, m22, m23, m31, m32, m33: LONGREAL; );
+      inverted   (VAR invertible: BOOLEAN; ): QTransform;
+      inverted1  (): QTransform;
+      adjoint    (): QTransform;
+      transposed (): QTransform;
+      translate  (dx, dy: LONGREAL; ): QTransform;
+      scale      (sx, sy: LONGREAL; ): QTransform;
+      shear      (sh, sv: LONGREAL; ): QTransform;
+      rotate     (a: LONGREAL; axis: Axis; ): QTransform;
+      rotate1    (a: LONGREAL; ): QTransform;
+      rotateRadians   (a: LONGREAL; axis: Axis; ): QTransform;
+      rotateRadians1  (a: LONGREAL; ): QTransform;
+      Op_Equals       (arg1: QTransform; ): BOOLEAN;
+      Op_NotEquals    (arg1: QTransform; ): BOOLEAN;
+      Op_TimesEquals  (arg1: QTransform; ): QTransform;
+      Op_Assign       (arg1: QTransform; ): QTransform;
+      reset           ();
+      map             (p: QPoint; ): QPoint;
+      map1            (p: QPointF; ): QPointF;
+      map2            (l: QLine; ): QLine;
+      map3            (l: QLineF; ): QLineF;
+      map4            (a: QPolygonF; ): QPolygonF;
+      map5            (a: QPolygon; ): QPolygon;
+      map6            (r: QRegion; ): QRegion;
+      map7            (p: QPainterPath; ): QPainterPath;
+      mapToPolygon    (r: QRect; ): QPolygon;
+      mapRect         (arg1: QRect; ): QRect;
+      mapRect1        (arg1: QRectF; ): QRectF;
+      map8            (x, y: INTEGER; VAR tx, ty: INTEGER; );
+      map9            (x, y: LONGREAL; VAR tx, ty: LONGREAL; );
+      toAffine        (): QMatrix;
+      Op_TimesEquals1 (div: LONGREAL; ): QTransform;
+      Op_DivEquals    (div: LONGREAL; ): QTransform;
+      Op_PlusEquals   (div: LONGREAL; ): QTransform;
+      Op_MinusEquals  (div: LONGREAL; ): QTransform;
+      destroyCxx      ();
+    END;
 
 
 END QtTransform.

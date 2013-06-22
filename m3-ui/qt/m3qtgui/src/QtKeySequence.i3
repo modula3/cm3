@@ -11,131 +11,61 @@ INTERFACE QtKeySequence;
 
 
 
-TYPE
-  T = QKeySequence;
+TYPE T = QKeySequence;
 
 
-TYPE (* Enum StandardKey *)
-  StandardKey = {
- UnknownKey,
- HelpContents,
- WhatsThis,
- Open,
- Close,
- Save,
- New,
- Delete,
- Cut,
- Copy,
- Paste,
- Undo,
- Redo,
- Back,
- Forward,
- Refresh,
- ZoomIn,
- ZoomOut,
- Print,
- AddTab,
- NextChild,
- PreviousChild,
- Find,
- FindNext,
- FindPrevious,
- Replace,
- SelectAll,
- Bold,
- Italic,
- Underline,
- MoveToNextChar,
- MoveToPreviousChar,
- MoveToNextWord,
- MoveToPreviousWord,
- MoveToNextLine,
- MoveToPreviousLine,
- MoveToNextPage,
- MoveToPreviousPage,
- MoveToStartOfLine,
- MoveToEndOfLine,
- MoveToStartOfBlock,
- MoveToEndOfBlock,
- MoveToStartOfDocument,
- MoveToEndOfDocument,
- SelectNextChar,
- SelectPreviousChar,
- SelectNextWord,
- SelectPreviousWord,
- SelectNextLine,
- SelectPreviousLine,
- SelectNextPage,
- SelectPreviousPage,
- SelectStartOfLine,
- SelectEndOfLine,
- SelectStartOfBlock,
- SelectEndOfBlock,
- SelectStartOfDocument,
- SelectEndOfDocument,
- DeleteStartOfWord,
- DeleteEndOfWord,
- DeleteEndOfLine,
- InsertParagraphSeparator,
- InsertLineSeparator,
- SaveAs,
- Preferences,
- Quit};
+TYPE                             (* Enum StandardKey *)
+  StandardKey =
+    {UnknownKey, HelpContents, WhatsThis, Open, Close, Save, New, Delete,
+     Cut, Copy, Paste, Undo, Redo, Back, Forward, Refresh, ZoomIn, ZoomOut,
+     Print, AddTab, NextChild, PreviousChild, Find, FindNext, FindPrevious,
+     Replace, SelectAll, Bold, Italic, Underline, MoveToNextChar,
+     MoveToPreviousChar, MoveToNextWord, MoveToPreviousWord,
+     MoveToNextLine, MoveToPreviousLine, MoveToNextPage,
+     MoveToPreviousPage, MoveToStartOfLine, MoveToEndOfLine,
+     MoveToStartOfBlock, MoveToEndOfBlock, MoveToStartOfDocument,
+     MoveToEndOfDocument, SelectNextChar, SelectPreviousChar,
+     SelectNextWord, SelectPreviousWord, SelectNextLine,
+     SelectPreviousLine, SelectNextPage, SelectPreviousPage,
+     SelectStartOfLine, SelectEndOfLine, SelectStartOfBlock,
+     SelectEndOfBlock, SelectStartOfDocument, SelectEndOfDocument,
+     DeleteStartOfWord, DeleteEndOfWord, DeleteEndOfLine,
+     InsertParagraphSeparator, InsertLineSeparator, SaveAs, Preferences,
+     Quit};
 
-TYPE (* Enum SequenceMatch *)
-  SequenceMatch = {
- NoMatch,
- PartialMatch,
- ExactMatch};
+TYPE                             (* Enum SequenceMatch *)
+  SequenceMatch = {NoMatch, PartialMatch, ExactMatch};
 
-TYPE (* Enum SequenceFormat *)
-  SequenceFormat = {
- NativeText,
- PortableText};
-PROCEDURE FromString ( str: TEXT;
-format: SequenceFormat;
-): QKeySequence;
+TYPE                             (* Enum SequenceFormat *)
+  SequenceFormat = {NativeText, PortableText};
+PROCEDURE FromString (str: TEXT; format: SequenceFormat; ): QKeySequence;
 
-PROCEDURE FromString1 ( str: TEXT;
-): QKeySequence;
+PROCEDURE FromString1 (str: TEXT; ): QKeySequence;
 
-PROCEDURE Mnemonic ( text: TEXT;
-): QKeySequence;
+PROCEDURE Mnemonic (text: TEXT; ): QKeySequence;
 
 
 TYPE
-QKeySequence <: QKeySequencePublic;
-QKeySequencePublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QKeySequence;
-init_1 ( key: TEXT;
-) : QKeySequence;
-init_2 (k1, k2, k3, k4: INTEGER;
-) : QKeySequence;
-init_3 (k1, k2, k3: INTEGER;
-) : QKeySequence;
-init_4 (k1, k2: INTEGER;
-) : QKeySequence;
-init_5 (k1: INTEGER;
-) : QKeySequence;
-init_6 ( ks: QKeySequence;
-) : QKeySequence;
-init_7 (key: StandardKey;
-) : QKeySequence;
-count(): CARDINAL;
-isEmpty(): BOOLEAN;
-toString(format: SequenceFormat;
-): TEXT;
-toString1(): TEXT;
-matches( seq: QKeySequence;
-): SequenceMatch;
-isDetached(): BOOLEAN;
-destroyCxx();
-END;
+  QKeySequence <: QKeySequencePublic;
+  QKeySequencePublic = BRANDED OBJECT
+                         cxxObj: ADDRESS;
+                       METHODS
+                         init_0  (): QKeySequence;
+                         init_1  (key: TEXT; ): QKeySequence;
+                         init_2  (k1, k2, k3, k4: INTEGER; ): QKeySequence;
+                         init_3  (k1, k2, k3: INTEGER; ): QKeySequence;
+                         init_4  (k1, k2: INTEGER; ): QKeySequence;
+                         init_5  (k1: INTEGER; ): QKeySequence;
+                         init_6  (ks: QKeySequence; ): QKeySequence;
+                         init_7  (key: StandardKey; ): QKeySequence;
+                         count   (): CARDINAL;
+                         isEmpty (): BOOLEAN;
+                         toString   (format: SequenceFormat; ): TEXT;
+                         toString1  (): TEXT;
+                         matches    (seq: QKeySequence; ): SequenceMatch;
+                         isDetached (): BOOLEAN;
+                         destroyCxx ();
+                       END;
 
 
 END QtKeySequence.

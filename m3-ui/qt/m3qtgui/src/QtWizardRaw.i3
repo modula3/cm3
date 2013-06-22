@@ -15,276 +15,190 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QWizard0 *>
-PROCEDURE New_QWizard0 ( parent: ADDRESS;
-flags: C.int;
-): QWizard;
+PROCEDURE New_QWizard0 (parent: ADDRESS; flags: C.int; ): QWizard;
 
 <* EXTERNAL New_QWizard1 *>
-PROCEDURE New_QWizard1 ( parent: ADDRESS;
-): QWizard;
+PROCEDURE New_QWizard1 (parent: ADDRESS; ): QWizard;
 
 <* EXTERNAL New_QWizard2 *>
 PROCEDURE New_QWizard2 (): QWizard;
 
 <* EXTERNAL Delete_QWizard *>
-PROCEDURE Delete_QWizard ( self: QWizard;
-);
+PROCEDURE Delete_QWizard (self: QWizard; );
 
 <* EXTERNAL QWizard_addPage *>
-PROCEDURE QWizard_addPage ( self: QWizard;
- page: ADDRESS;
-): C.int;
+PROCEDURE QWizard_addPage (self: QWizard; page: ADDRESS; ): C.int;
 
 <* EXTERNAL QWizard_setPage *>
-PROCEDURE QWizard_setPage ( self: QWizard;
-id: C.int;
- page: ADDRESS;
-);
+PROCEDURE QWizard_setPage (self: QWizard; id: C.int; page: ADDRESS; );
 
 <* EXTERNAL QWizard_removePage *>
-PROCEDURE QWizard_removePage ( self: QWizard;
-id: C.int;
-);
+PROCEDURE QWizard_removePage (self: QWizard; id: C.int; );
 
 <* EXTERNAL QWizard_page *>
-PROCEDURE QWizard_page ( self: QWizard;
-id: C.int;
-): ADDRESS;
+PROCEDURE QWizard_page (self: QWizard; id: C.int; ): ADDRESS;
 
 <* EXTERNAL QWizard_hasVisitedPage *>
-PROCEDURE QWizard_hasVisitedPage ( self: QWizard;
-id: C.int;
-): BOOLEAN;
+PROCEDURE QWizard_hasVisitedPage (self: QWizard; id: C.int; ): BOOLEAN;
 
 <* EXTERNAL QWizard_setStartId *>
-PROCEDURE QWizard_setStartId ( self: QWizard;
-id: C.int;
-);
+PROCEDURE QWizard_setStartId (self: QWizard; id: C.int; );
 
 <* EXTERNAL QWizard_startId *>
-PROCEDURE QWizard_startId ( self: QWizard;
-): C.int;
+PROCEDURE QWizard_startId (self: QWizard; ): C.int;
 
 <* EXTERNAL QWizard_currentPage *>
-PROCEDURE QWizard_currentPage ( self: QWizard;
-): ADDRESS;
+PROCEDURE QWizard_currentPage (self: QWizard; ): ADDRESS;
 
 <* EXTERNAL QWizard_currentId *>
-PROCEDURE QWizard_currentId ( self: QWizard;
-): C.int;
+PROCEDURE QWizard_currentId (self: QWizard; ): C.int;
 
 <* EXTERNAL QWizard_validateCurrentPage *>
-PROCEDURE QWizard_validateCurrentPage ( self: QWizard;
-): BOOLEAN;
+PROCEDURE QWizard_validateCurrentPage (self: QWizard; ): BOOLEAN;
 
 <* EXTERNAL QWizard_nextId *>
-PROCEDURE QWizard_nextId ( self: QWizard;
-): C.int;
+PROCEDURE QWizard_nextId (self: QWizard; ): C.int;
 
 <* EXTERNAL QWizard_setWizardStyle *>
-PROCEDURE QWizard_setWizardStyle ( self: QWizard;
-style: C.int;
-);
+PROCEDURE QWizard_setWizardStyle (self: QWizard; style: C.int; );
 
 <* EXTERNAL QWizard_wizardStyle *>
-PROCEDURE QWizard_wizardStyle ( self: QWizard;
-): C.int;
+PROCEDURE QWizard_wizardStyle (self: QWizard; ): C.int;
 
 <* EXTERNAL QWizard_setOption *>
-PROCEDURE QWizard_setOption ( self: QWizard;
-option: C.int;
-on: BOOLEAN;
-);
+PROCEDURE QWizard_setOption (self: QWizard; option: C.int; on: BOOLEAN; );
 
 <* EXTERNAL QWizard_setOption1 *>
-PROCEDURE QWizard_setOption1 ( self: QWizard;
-option: C.int;
-);
+PROCEDURE QWizard_setOption1 (self: QWizard; option: C.int; );
 
 <* EXTERNAL QWizard_testOption *>
-PROCEDURE QWizard_testOption ( self: QWizard;
-option: C.int;
-): BOOLEAN;
+PROCEDURE QWizard_testOption (self: QWizard; option: C.int; ): BOOLEAN;
 
 <* EXTERNAL QWizard_setOptions *>
-PROCEDURE QWizard_setOptions ( self: QWizard;
-options: C.int;
-);
+PROCEDURE QWizard_setOptions (self: QWizard; options: C.int; );
 
 <* EXTERNAL QWizard_options *>
-PROCEDURE QWizard_options ( self: QWizard;
-): C.int;
+PROCEDURE QWizard_options (self: QWizard; ): C.int;
 
 <* EXTERNAL QWizard_setButtonText *>
-PROCEDURE QWizard_setButtonText ( self: QWizard;
-which: C.int;
- text: ADDRESS;
-);
+PROCEDURE QWizard_setButtonText
+  (self: QWizard; which: C.int; text: ADDRESS; );
 
 <* EXTERNAL QWizard_buttonText *>
-PROCEDURE QWizard_buttonText ( self: QWizard;
-which: C.int;
-): ADDRESS;
+PROCEDURE QWizard_buttonText (self: QWizard; which: C.int; ): ADDRESS;
 
 <* EXTERNAL QWizard_setButton *>
-PROCEDURE QWizard_setButton ( self: QWizard;
-which: C.int;
- button: ADDRESS;
-);
+PROCEDURE QWizard_setButton
+  (self: QWizard; which: C.int; button: ADDRESS; );
 
 <* EXTERNAL QWizard_button *>
-PROCEDURE QWizard_button ( self: QWizard;
-which: C.int;
-): ADDRESS;
+PROCEDURE QWizard_button (self: QWizard; which: C.int; ): ADDRESS;
 
 <* EXTERNAL QWizard_setTitleFormat *>
-PROCEDURE QWizard_setTitleFormat ( self: QWizard;
-format: C.int;
-);
+PROCEDURE QWizard_setTitleFormat (self: QWizard; format: C.int; );
 
 <* EXTERNAL QWizard_titleFormat *>
-PROCEDURE QWizard_titleFormat ( self: QWizard;
-): C.int;
+PROCEDURE QWizard_titleFormat (self: QWizard; ): C.int;
 
 <* EXTERNAL QWizard_setSubTitleFormat *>
-PROCEDURE QWizard_setSubTitleFormat ( self: QWizard;
-format: C.int;
-);
+PROCEDURE QWizard_setSubTitleFormat (self: QWizard; format: C.int; );
 
 <* EXTERNAL QWizard_subTitleFormat *>
-PROCEDURE QWizard_subTitleFormat ( self: QWizard;
-): C.int;
+PROCEDURE QWizard_subTitleFormat (self: QWizard; ): C.int;
 
 <* EXTERNAL QWizard_setPixmap *>
-PROCEDURE QWizard_setPixmap ( self: QWizard;
-which: C.int;
- pixmap: ADDRESS;
-);
+PROCEDURE QWizard_setPixmap
+  (self: QWizard; which: C.int; pixmap: ADDRESS; );
 
 <* EXTERNAL QWizard_pixmap *>
-PROCEDURE QWizard_pixmap ( self: QWizard;
-which: C.int;
-): ADDRESS;
+PROCEDURE QWizard_pixmap (self: QWizard; which: C.int; ): ADDRESS;
 
 <* EXTERNAL QWizard_setDefaultProperty *>
-PROCEDURE QWizard_setDefaultProperty ( self: QWizard;
- className, property, changedSignal: C.char_star;
-);
+PROCEDURE QWizard_setDefaultProperty
+  (self: QWizard; className, property, changedSignal: C.char_star; );
 
 <* EXTERNAL QWizard_setVisible *>
-PROCEDURE QWizard_setVisible ( self: QWizard;
-visible: BOOLEAN;
-);
+PROCEDURE QWizard_setVisible (self: QWizard; visible: BOOLEAN; );
 
 <* EXTERNAL QWizard_sizeHint *>
-PROCEDURE QWizard_sizeHint ( self: QWizard;
-): ADDRESS;
+PROCEDURE QWizard_sizeHint (self: QWizard; ): ADDRESS;
 
 <* EXTERNAL QWizard_back *>
-PROCEDURE QWizard_back ( self: QWizard;
-);
+PROCEDURE QWizard_back (self: QWizard; );
 
 <* EXTERNAL QWizard_next *>
-PROCEDURE QWizard_next ( self: QWizard;
-);
+PROCEDURE QWizard_next (self: QWizard; );
 
 <* EXTERNAL QWizard_restart *>
-PROCEDURE QWizard_restart ( self: QWizard;
-);
+PROCEDURE QWizard_restart (self: QWizard; );
 
-TYPE
-QWizard = ADDRESS;
+TYPE QWizard = ADDRESS;
 
 <* EXTERNAL New_QWizardPage0 *>
-PROCEDURE New_QWizardPage0 ( parent: ADDRESS;
-): QWizardPage;
+PROCEDURE New_QWizardPage0 (parent: ADDRESS; ): QWizardPage;
 
 <* EXTERNAL New_QWizardPage1 *>
 PROCEDURE New_QWizardPage1 (): QWizardPage;
 
 <* EXTERNAL QWizardPage_setTitle *>
-PROCEDURE QWizardPage_setTitle ( self: QWizardPage;
- title: ADDRESS;
-);
+PROCEDURE QWizardPage_setTitle (self: QWizardPage; title: ADDRESS; );
 
 <* EXTERNAL QWizardPage_title *>
-PROCEDURE QWizardPage_title ( self: QWizardPage;
-): ADDRESS;
+PROCEDURE QWizardPage_title (self: QWizardPage; ): ADDRESS;
 
 <* EXTERNAL QWizardPage_setSubTitle *>
-PROCEDURE QWizardPage_setSubTitle ( self: QWizardPage;
- subTitle: ADDRESS;
-);
+PROCEDURE QWizardPage_setSubTitle (self: QWizardPage; subTitle: ADDRESS; );
 
 <* EXTERNAL QWizardPage_subTitle *>
-PROCEDURE QWizardPage_subTitle ( self: QWizardPage;
-): ADDRESS;
+PROCEDURE QWizardPage_subTitle (self: QWizardPage; ): ADDRESS;
 
 <* EXTERNAL QWizardPage_setPixmap *>
-PROCEDURE QWizardPage_setPixmap ( self: QWizardPage;
-which: C.int;
- pixmap: ADDRESS;
-);
+PROCEDURE QWizardPage_setPixmap
+  (self: QWizardPage; which: C.int; pixmap: ADDRESS; );
 
 <* EXTERNAL QWizardPage_pixmap *>
-PROCEDURE QWizardPage_pixmap ( self: QWizardPage;
-which: C.int;
-): ADDRESS;
+PROCEDURE QWizardPage_pixmap (self: QWizardPage; which: C.int; ): ADDRESS;
 
 <* EXTERNAL QWizardPage_setFinalPage *>
-PROCEDURE QWizardPage_setFinalPage ( self: QWizardPage;
-finalPage: BOOLEAN;
-);
+PROCEDURE QWizardPage_setFinalPage
+  (self: QWizardPage; finalPage: BOOLEAN; );
 
 <* EXTERNAL QWizardPage_isFinalPage *>
-PROCEDURE QWizardPage_isFinalPage ( self: QWizardPage;
-): BOOLEAN;
+PROCEDURE QWizardPage_isFinalPage (self: QWizardPage; ): BOOLEAN;
 
 <* EXTERNAL QWizardPage_setCommitPage *>
-PROCEDURE QWizardPage_setCommitPage ( self: QWizardPage;
-commitPage: BOOLEAN;
-);
+PROCEDURE QWizardPage_setCommitPage
+  (self: QWizardPage; commitPage: BOOLEAN; );
 
 <* EXTERNAL QWizardPage_isCommitPage *>
-PROCEDURE QWizardPage_isCommitPage ( self: QWizardPage;
-): BOOLEAN;
+PROCEDURE QWizardPage_isCommitPage (self: QWizardPage; ): BOOLEAN;
 
 <* EXTERNAL QWizardPage_setButtonText *>
-PROCEDURE QWizardPage_setButtonText ( self: QWizardPage;
-which: C.int;
- text: ADDRESS;
-);
+PROCEDURE QWizardPage_setButtonText
+  (self: QWizardPage; which: C.int; text: ADDRESS; );
 
 <* EXTERNAL QWizardPage_buttonText *>
-PROCEDURE QWizardPage_buttonText ( self: QWizardPage;
-which: C.int;
-): ADDRESS;
+PROCEDURE QWizardPage_buttonText (self: QWizardPage; which: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QWizardPage_initializePage *>
-PROCEDURE QWizardPage_initializePage ( self: QWizardPage;
-);
+PROCEDURE QWizardPage_initializePage (self: QWizardPage; );
 
 <* EXTERNAL QWizardPage_cleanupPage *>
-PROCEDURE QWizardPage_cleanupPage ( self: QWizardPage;
-);
+PROCEDURE QWizardPage_cleanupPage (self: QWizardPage; );
 
 <* EXTERNAL QWizardPage_validatePage *>
-PROCEDURE QWizardPage_validatePage ( self: QWizardPage;
-): BOOLEAN;
+PROCEDURE QWizardPage_validatePage (self: QWizardPage; ): BOOLEAN;
 
 <* EXTERNAL QWizardPage_isComplete *>
-PROCEDURE QWizardPage_isComplete ( self: QWizardPage;
-): BOOLEAN;
+PROCEDURE QWizardPage_isComplete (self: QWizardPage; ): BOOLEAN;
 
 <* EXTERNAL QWizardPage_nextId *>
-PROCEDURE QWizardPage_nextId ( self: QWizardPage;
-): C.int;
+PROCEDURE QWizardPage_nextId (self: QWizardPage; ): C.int;
 
 <* EXTERNAL Delete_QWizardPage *>
-PROCEDURE Delete_QWizardPage ( self: QWizardPage;
-);
+PROCEDURE Delete_QWizardPage (self: QWizardPage; );
 
-TYPE
-QWizardPage = ADDRESS;
+TYPE QWizardPage = ADDRESS;
 
 END QtWizardRaw.

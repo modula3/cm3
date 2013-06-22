@@ -15,65 +15,50 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QStackedWidget0 *>
-PROCEDURE New_QStackedWidget0 ( parent: ADDRESS;
-): QStackedWidget;
+PROCEDURE New_QStackedWidget0 (parent: ADDRESS; ): QStackedWidget;
 
 <* EXTERNAL New_QStackedWidget1 *>
 PROCEDURE New_QStackedWidget1 (): QStackedWidget;
 
 <* EXTERNAL Delete_QStackedWidget *>
-PROCEDURE Delete_QStackedWidget ( self: QStackedWidget;
-);
+PROCEDURE Delete_QStackedWidget (self: QStackedWidget; );
 
 <* EXTERNAL QStackedWidget_addWidget *>
-PROCEDURE QStackedWidget_addWidget ( self: QStackedWidget;
- w: ADDRESS;
-): C.int;
+PROCEDURE QStackedWidget_addWidget (self: QStackedWidget; w: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStackedWidget_insertWidget *>
-PROCEDURE QStackedWidget_insertWidget ( self: QStackedWidget;
-index: C.int;
- w: ADDRESS;
-): C.int;
+PROCEDURE QStackedWidget_insertWidget
+  (self: QStackedWidget; index: C.int; w: ADDRESS; ): C.int;
 
 <* EXTERNAL QStackedWidget_removeWidget *>
-PROCEDURE QStackedWidget_removeWidget ( self: QStackedWidget;
- w: ADDRESS;
-);
+PROCEDURE QStackedWidget_removeWidget (self: QStackedWidget; w: ADDRESS; );
 
 <* EXTERNAL QStackedWidget_currentWidget *>
-PROCEDURE QStackedWidget_currentWidget ( self: QStackedWidget;
-): ADDRESS;
+PROCEDURE QStackedWidget_currentWidget (self: QStackedWidget; ): ADDRESS;
 
 <* EXTERNAL QStackedWidget_currentIndex *>
-PROCEDURE QStackedWidget_currentIndex ( self: QStackedWidget;
-): C.int;
+PROCEDURE QStackedWidget_currentIndex (self: QStackedWidget; ): C.int;
 
 <* EXTERNAL QStackedWidget_indexOf *>
-PROCEDURE QStackedWidget_indexOf ( self: QStackedWidget;
- arg2: ADDRESS;
-): C.int;
+PROCEDURE QStackedWidget_indexOf (self: QStackedWidget; arg2: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStackedWidget_widget *>
-PROCEDURE QStackedWidget_widget ( self: QStackedWidget;
-arg2: C.int;
-): ADDRESS;
+PROCEDURE QStackedWidget_widget (self: QStackedWidget; arg2: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QStackedWidget_count *>
-PROCEDURE QStackedWidget_count ( self: QStackedWidget;
-): C.int;
+PROCEDURE QStackedWidget_count (self: QStackedWidget; ): C.int;
 
 <* EXTERNAL QStackedWidget_setCurrentIndex *>
-PROCEDURE QStackedWidget_setCurrentIndex ( self: QStackedWidget;
-index: C.int;
-);
+PROCEDURE QStackedWidget_setCurrentIndex
+  (self: QStackedWidget; index: C.int; );
 
 <* EXTERNAL QStackedWidget_setCurrentWidget *>
-PROCEDURE QStackedWidget_setCurrentWidget ( self: QStackedWidget;
- w: ADDRESS;
-);
+PROCEDURE QStackedWidget_setCurrentWidget
+  (self: QStackedWidget; w: ADDRESS; );
 
-TYPE
-QStackedWidget = ADDRESS;
+TYPE QStackedWidget = ADDRESS;
 
 END QtStackedWidgetRaw.

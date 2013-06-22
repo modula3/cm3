@@ -11,7 +11,6 @@ MODULE QtLayoutItemRaw;
 
 
 
-REVEAL
-QLayoutItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QLayoutItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtLayoutItemRaw.

@@ -11,7 +11,7 @@ UNSAFE MODULE QtColumnView;
 
 FROM QtSize IMPORT QSize;
 IMPORT QtColumnViewRaw;
-FROM QtAbstractItemModel IMPORT QModelIndex,QAbstractItemModel;
+FROM QtAbstractItemModel IMPORT QModelIndex, QAbstractItemModel;
 FROM QtWidget IMPORT QWidget;
 FROM QtItemSelectionModel IMPORT QItemSelectionModel;
 FROM QtAbstractItemView IMPORT ScrollHint;
@@ -20,204 +20,188 @@ FROM QtRect IMPORT QRect;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QColumnView0 (self:QColumnView; parent: QWidget;
-): QColumnView =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtColumnViewRaw.New_QColumnView0(arg1tmp);
+PROCEDURE New_QColumnView0 (self: QColumnView; parent: QWidget; ):
+  QColumnView =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtColumnViewRaw.New_QColumnView0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColumnView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColumnView);
 
-RETURN self;
-END New_QColumnView0;
+    RETURN self;
+  END New_QColumnView0;
 
-PROCEDURE New_QColumnView1 (self:QColumnView;): QColumnView =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtColumnViewRaw.New_QColumnView1();
+PROCEDURE New_QColumnView1 (self: QColumnView; ): QColumnView =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtColumnViewRaw.New_QColumnView1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QColumnView);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QColumnView);
 
-RETURN self;
-END New_QColumnView1;
+    RETURN self;
+  END New_QColumnView1;
 
-PROCEDURE Delete_QColumnView ( self: QColumnView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.Delete_QColumnView(selfAdr);
-END Delete_QColumnView;
+PROCEDURE Delete_QColumnView (self: QColumnView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.Delete_QColumnView(selfAdr);
+  END Delete_QColumnView;
 
-PROCEDURE QColumnView_scrollTo ( self: QColumnView;
- index: QModelIndex;
-hint: ScrollHint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_scrollTo(selfAdr, arg2tmp, ORD(hint));
-END QColumnView_scrollTo;
+PROCEDURE QColumnView_scrollTo
+  (self: QColumnView; index: QModelIndex; hint: ScrollHint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_scrollTo(selfAdr, arg2tmp, ORD(hint));
+  END QColumnView_scrollTo;
 
-PROCEDURE QColumnView_scrollTo1 ( self: QColumnView;
- index: QModelIndex;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_scrollTo1(selfAdr, arg2tmp);
-END QColumnView_scrollTo1;
+PROCEDURE QColumnView_scrollTo1 (self: QColumnView; index: QModelIndex; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_scrollTo1(selfAdr, arg2tmp);
+  END QColumnView_scrollTo1;
 
-PROCEDURE QColumnView_sizeHint ( self: QColumnView;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColumnViewRaw.QColumnView_sizeHint(selfAdr);
+PROCEDURE QColumnView_sizeHint (self: QColumnView; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColumnViewRaw.QColumnView_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QColumnView_sizeHint;
+    RETURN result;
+  END QColumnView_sizeHint;
 
-PROCEDURE QColumnView_visualRect ( self: QColumnView;
- index: QModelIndex;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-ret := QtColumnViewRaw.QColumnView_visualRect(selfAdr, arg2tmp);
+PROCEDURE QColumnView_visualRect (self: QColumnView; index: QModelIndex; ):
+  QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColumnViewRaw.QColumnView_visualRect(selfAdr, arg2tmp);
 
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QColumnView_visualRect;
+    RETURN result;
+  END QColumnView_visualRect;
 
-PROCEDURE QColumnView_setModel ( self: QColumnView;
- model: QAbstractItemModel;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(model.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_setModel(selfAdr, arg2tmp);
-END QColumnView_setModel;
+PROCEDURE QColumnView_setModel
+  (self: QColumnView; model: QAbstractItemModel; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(model.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_setModel(selfAdr, arg2tmp);
+  END QColumnView_setModel;
 
-PROCEDURE QColumnView_setSelectionModel ( self: QColumnView;
- selectionModel: QItemSelectionModel;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(selectionModel.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_setSelectionModel(selfAdr, arg2tmp);
-END QColumnView_setSelectionModel;
+PROCEDURE QColumnView_setSelectionModel
+  (self: QColumnView; selectionModel: QItemSelectionModel; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(selectionModel.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_setSelectionModel(selfAdr, arg2tmp);
+  END QColumnView_setSelectionModel;
 
-PROCEDURE QColumnView_setRootIndex ( self: QColumnView;
- index: QModelIndex;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_setRootIndex(selfAdr, arg2tmp);
-END QColumnView_setRootIndex;
+PROCEDURE QColumnView_setRootIndex
+  (self: QColumnView; index: QModelIndex; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_setRootIndex(selfAdr, arg2tmp);
+  END QColumnView_setRootIndex;
 
-PROCEDURE QColumnView_selectAll ( self: QColumnView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_selectAll(selfAdr);
-END QColumnView_selectAll;
+PROCEDURE QColumnView_selectAll (self: QColumnView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_selectAll(selfAdr);
+  END QColumnView_selectAll;
 
-PROCEDURE QColumnView_setResizeGripsVisible ( self: QColumnView;
-visible: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_setResizeGripsVisible(selfAdr, visible);
-END QColumnView_setResizeGripsVisible;
+PROCEDURE QColumnView_setResizeGripsVisible
+  (self: QColumnView; visible: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_setResizeGripsVisible(selfAdr, visible);
+  END QColumnView_setResizeGripsVisible;
 
-PROCEDURE QColumnView_resizeGripsVisible ( self: QColumnView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtColumnViewRaw.QColumnView_resizeGripsVisible(selfAdr);
-END QColumnView_resizeGripsVisible;
+PROCEDURE QColumnView_resizeGripsVisible (self: QColumnView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColumnViewRaw.QColumnView_resizeGripsVisible(selfAdr);
+  END QColumnView_resizeGripsVisible;
 
-PROCEDURE QColumnView_previewWidget ( self: QColumnView;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtColumnViewRaw.QColumnView_previewWidget(selfAdr);
+PROCEDURE QColumnView_previewWidget (self: QColumnView; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtColumnViewRaw.QColumnView_previewWidget(selfAdr);
 
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QColumnView_previewWidget;
+    RETURN result;
+  END QColumnView_previewWidget;
 
-PROCEDURE QColumnView_setPreviewWidget ( self: QColumnView;
- widget: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-BEGIN
-QtColumnViewRaw.QColumnView_setPreviewWidget(selfAdr, arg2tmp);
-END QColumnView_setPreviewWidget;
+PROCEDURE QColumnView_setPreviewWidget
+  (self: QColumnView; widget: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtColumnViewRaw.QColumnView_setPreviewWidget(selfAdr, arg2tmp);
+  END QColumnView_setPreviewWidget;
 
-PROCEDURE Cleanup_QColumnView(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QColumnView := ref;
-BEGIN
-  Delete_QColumnView(obj);
- END Cleanup_QColumnView;
+PROCEDURE Cleanup_QColumnView
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QColumnView := ref;
+  BEGIN
+    Delete_QColumnView(obj);
+  END Cleanup_QColumnView;
 
-PROCEDURE Destroy_QColumnView(self : QColumnView) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QColumnView);
-END Destroy_QColumnView;
+PROCEDURE Destroy_QColumnView (self: QColumnView) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QColumnView);
+  END Destroy_QColumnView;
 
 REVEAL
-QColumnView =
-QColumnViewPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QColumnView0;
-init_1 := New_QColumnView1;
-scrollTo := QColumnView_scrollTo;
-scrollTo1 := QColumnView_scrollTo1;
-sizeHint := QColumnView_sizeHint;
-visualRect := QColumnView_visualRect;
-setModel := QColumnView_setModel;
-setSelectionModel := QColumnView_setSelectionModel;
-setRootIndex := QColumnView_setRootIndex;
-selectAll := QColumnView_selectAll;
-setResizeGripsVisible := QColumnView_setResizeGripsVisible;
-resizeGripsVisible := QColumnView_resizeGripsVisible;
-previewWidget := QColumnView_previewWidget;
-setPreviewWidget := QColumnView_setPreviewWidget;
-destroyCxx := Destroy_QColumnView;
-END;
+  QColumnView =
+    QColumnViewPublic BRANDED OBJECT
+    OVERRIDES
+      init_0                := New_QColumnView0;
+      init_1                := New_QColumnView1;
+      scrollTo              := QColumnView_scrollTo;
+      scrollTo1             := QColumnView_scrollTo1;
+      sizeHint              := QColumnView_sizeHint;
+      visualRect            := QColumnView_visualRect;
+      setModel              := QColumnView_setModel;
+      setSelectionModel     := QColumnView_setSelectionModel;
+      setRootIndex          := QColumnView_setRootIndex;
+      selectAll             := QColumnView_selectAll;
+      setResizeGripsVisible := QColumnView_setResizeGripsVisible;
+      resizeGripsVisible    := QColumnView_resizeGripsVisible;
+      previewWidget         := QColumnView_previewWidget;
+      setPreviewWidget      := QColumnView_setPreviewWidget;
+      destroyCxx            := Destroy_QColumnView;
+    END;
 
 
 BEGIN

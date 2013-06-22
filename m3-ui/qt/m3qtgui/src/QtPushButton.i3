@@ -15,47 +15,33 @@ FROM QtMenu IMPORT QMenu;
 
 
 FROM QtAbstractButton IMPORT QAbstractButton;
-TYPE
-  T = QPushButton;
+TYPE T = QPushButton;
 
 
 TYPE
-QPushButton <: QPushButtonPublic;
-QPushButtonPublic =
-QAbstractButton BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QPushButton;
-init_1 () : QPushButton;
-init_2 ( text: TEXT;
- parent: QWidget;
-) : QPushButton;
-init_3 ( text: TEXT;
-) : QPushButton;
-init_4 ( icon: QIcon;
- text: TEXT;
- parent: QWidget;
-) : QPushButton;
-init_5 ( icon: QIcon;
- text: TEXT;
-) : QPushButton;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-autoDefault(): BOOLEAN;
-setAutoDefault(arg1: BOOLEAN;
-);
-isDefault(): BOOLEAN;
-setDefault(arg1: BOOLEAN;
-);
-setMenu( menu: QMenu;
-);
-menu(): QMenu;
-setFlat(arg1: BOOLEAN;
-);
-isFlat(): BOOLEAN;
-showMenu();
-destroyCxx();
-END;
+  QPushButton <: QPushButtonPublic;
+  QPushButtonPublic =
+    QAbstractButton BRANDED OBJECT
+    METHODS
+      init_0   (parent: QWidget; ): QPushButton;
+      init_1   (): QPushButton;
+      init_2   (text: TEXT; parent: QWidget; ): QPushButton;
+      init_3   (text: TEXT; ): QPushButton;
+      init_4   (icon: QIcon; text: TEXT; parent: QWidget; ): QPushButton;
+      init_5   (icon: QIcon; text: TEXT; ): QPushButton;
+      sizeHint (): QSize;        (* virtual *)
+      minimumSizeHint (): QSize; (* virtual *)
+      autoDefault     (): BOOLEAN;
+      setAutoDefault  (arg1: BOOLEAN; );
+      isDefault       (): BOOLEAN;
+      setDefault      (arg1: BOOLEAN; );
+      setMenu         (menu: QMenu; );
+      menu            (): QMenu;
+      setFlat         (arg1: BOOLEAN; );
+      isFlat          (): BOOLEAN;
+      showMenu        ();
+      destroyCxx      ();
+    END;
 
 
 END QtPushButton.
