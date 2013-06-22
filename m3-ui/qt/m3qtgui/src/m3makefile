@@ -1,0 +1,226 @@
+%regenerate any symlinks (unix specific)
+
+if not fs_exists( "../src/qinclude" )
+  ret = try_exec("ln -s ../../common/qinclude ../src/qinclude ")
+end
+if not fs_exists( "../src/common.i" )
+  ret = try_exec("ln -s ../../common/common.i ../src/common.i ")
+end
+if not fs_exists( "../src/m3qt.i" )
+  ret = try_exec("ln -s ../../common/m3qt.i ../src/m3qt.i ")
+end
+if not fs_exists( "../src/cmaps.i" )
+  ret = try_exec("ln -s ../../common/cmaps.i ../src/cmaps.i ")
+end
+
+include("qinclude")
+
+import("libm3")
+import("m3qtcore")
+
+interface("QGuiStubs")
+
+module("QtRgb")
+
+%----------------------------------
+
+%QRgbColorFontBrush branch
+
+%%%% do not build not a swig module QtRgb
+qtbuild("QtColor")
+qtbuild("QtFont")
+qtbuild("QtBrush")
+qtbuild("QtPalette")
+qtbuild("QtStyle")
+
+%----------------------------------
+
+%QMatrixTransform branch
+
+qtbuild("QtMatrix")
+qtbuild("QtTransform")
+
+%----------------------------------
+
+%QPictureMovie branch
+
+qtbuild("QtPicture")
+qtbuild("QtPixmap")
+qtbuild("QtMovie")
+
+%----------------------------------
+
+%QRegionBitmap branch
+
+qtbuild("QtPolygon")
+qtbuild("QtImage")
+qtbuild("QtBitmap")
+qtbuild("QtRegion")
+qtbuild("QtIcon")
+
+%----------------------------------
+
+%QAbstractButton branch
+
+qtbuild("QtAbstractButton")
+qtbuild("QtCheckBox")
+qtbuild("QtPushButton")
+qtbuild("QtRadioButton")
+qtbuild("QtToolButton")
+
+%----------------------------------
+
+%QAbstractSlider branch
+
+qtbuild("QtAbstractSlider")
+qtbuild("QtDial")
+qtbuild("QtScrollBar")
+qtbuild("QtSlider")
+
+%----------------------------------
+
+%QAbstractSpinBox branch
+
+qtbuild("QtAbstractSpinBox")
+%contains DateEdit and TimeEdit classes
+qtbuild("QtDateTimeEdit")
+%contains QDoubleSpinBox
+qtbuild("QtSpinBox")
+
+%----------------------------------
+
+%QAbastractScrollArea branch
+
+qtbuild("QtAbstractScrollArea")
+qtbuild("QtTextEdit")
+qtbuild("QtTextBrowser")
+qtbuild("QtGraphicsView")
+qtbuild("QtMdiArea")
+qtbuild("QtScrollArea")
+
+%----------------------------------
+
+%QAbstractItemView branch
+
+qtbuild("QtAbstractItemView")
+qtbuild("QtListView")
+qtbuild("QtListWidget")
+qtbuild("QtUndoView")
+qtbuild("QtTableView")
+qtbuild("QtTableWidget")
+qtbuild("QtTreeView")
+qtbuild("QtTreeWidget")
+qtbuild("QtColumnView")
+qtbuild("QtHeaderView")
+
+%----------------------------------
+
+%QItemSelection branch
+
+qtbuild("QtItemSelectionModel")
+qtbuild("QtAbstractItemDelegate")
+
+%----------------------------------
+
+%QFrame branch
+
+qtbuild("QtFrame")
+qtbuild("QtLabel")
+qtbuild("QtSplitter")
+qtbuild("QtStackedWidget")
+qtbuild("QtToolBox")
+qtbuild("QtLCDNumber")
+
+%----------------------------------
+
+%QComboBox branch
+
+qtbuild("QtComboBox")
+qtbuild("QtFontComboBox")
+
+%----------------------------------
+
+%QDialog branch
+
+qtbuild("QtDialog")
+qtbuild("QtColorDialog")
+qtbuild("QtAbstractPrintDialog")
+qtbuild("QtErrorMessage")
+qtbuild("QtFileDialog")
+qtbuild("QtFontDialog")
+qtbuild("QtInputDialog")
+qtbuild("QtMessageBox")
+qtbuild("QtPageSetupDialog")
+qtbuild("QtProgressDialog")
+qtbuild("QtWizard")
+
+%----------------------------------
+
+%QWidget1 branch
+
+qtbuild("QtCalendarWidget")
+qtbuild("QtDesktopWidget")
+qtbuild("QtDialogButtonBox")
+qtbuild("QtDockWidget")
+
+%----------------------------------
+
+%QWidget2 branch
+
+qtbuild("QtLineEdit")
+qtbuild("QtFocusFrame")
+qtbuild("QtGroupBox")
+
+%----------------------------------
+
+%QWidget3 branch
+
+qtbuild("QtMenu")
+qtbuild("QtMdiSubWindow")
+qtbuild("QtMenuBar")
+qtbuild("QtProgressBar")
+qtbuild("QtRubberBand")
+qtbuild("QtAction")
+qtbuild("QtActionGroup")
+qtbuild("QtKeySequence")
+
+%----------------------------------
+
+%QWidget4 branch
+
+qtbuild("QtSizeGrip")
+qtbuild("QtSplashScreen")
+qtbuild("QtStatusBar")
+
+%----------------------------------
+
+%QWidget5 branch
+
+qtbuild("QtTabWidget")
+qtbuild("QtTabBar")
+qtbuild("QtToolBar")
+%this will produce link errors unless you have embedded linux installed
+%qtbuild("QtWSEmbedWidget")
+
+%----------------------------------
+
+%QLayout branch
+
+qtbuild("QtSizePolicy")
+qtbuild("QtLayoutItem")
+qtbuild("QtLayout")
+qtbuild("QtBoxLayout")
+qtbuild("QtGridLayout")
+qtbuild("QtStackedLayout")
+qtbuild("QtFormLayout")
+
+%----------------------------------
+
+%m3gui branch
+
+qtbuild("QtWidget")
+qtbuild("QtPaintDevice")
+qtbuild("QtMainWindow")
+qtbuild("QtApplication")
+
+library("m3qtgui")
